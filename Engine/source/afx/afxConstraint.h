@@ -278,14 +278,14 @@ public:
   virtual           ~afxPointConstraint();
 
   virtual void      set(Point3F point, Point3F vector);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos);
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override;
 
-  virtual SceneObject* getSceneObject() { return 0; }
-  virtual void      restoreObject(SceneObject*) { }
-  virtual U16       getScopeId() { return 0; }
-  virtual U32       getTriggers() { return 0; }
+  SceneObject* getSceneObject() override { return 0; }
+  void      restoreObject(SceneObject*) override { }
+  U16       getScopeId() override { return 0; }
+  U32       getTriggers() override { return 0; }
 
-  virtual void      unset() { set(Point3F::Zero, Point3F(0,0,1)); }
+  void      unset() override { set(Point3F::Zero, Point3F(0,0,1)); }
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -305,14 +305,14 @@ public:
   virtual           ~afxTransformConstraint();
 
   virtual void      set(const MatrixF& xfm);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos);
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override;
 
-  virtual SceneObject* getSceneObject() { return 0; }
-  virtual void      restoreObject(SceneObject*) { }
-  virtual U16       getScopeId() { return 0; }
-  virtual U32       getTriggers() { return 0; }
+  SceneObject* getSceneObject() override { return 0; }
+  void      restoreObject(SceneObject*) override { }
+  U16       getScopeId() override { return 0; }
+  U32       getTriggers() override { return 0; }
 
-  virtual void      unset() { set(MatrixF::Identity); }
+  void      unset() override { set(MatrixF::Identity); }
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -341,27 +341,27 @@ public:
   virtual           ~afxShapeConstraint();
 
   virtual void      set(ShapeBase* shape);
-  virtual void      set_scope_id(U16 scope_id);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos);
+  void      set_scope_id(U16 scope_id) override;
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override;
 
-  virtual U32       setAnimClip(const char* clip, F32 pos, F32 rate, F32 trans, bool is_death_anim);
-  virtual void      resetAnimation(U32 tag);
-  virtual U32       lockAnimation();
-  virtual void      unlockAnimation(U32 tag);
-  virtual F32       getAnimClipDuration(const char* clip);
+  U32       setAnimClip(const char* clip, F32 pos, F32 rate, F32 trans, bool is_death_anim) override;
+  void      resetAnimation(U32 tag) override;
+  U32       lockAnimation() override;
+  void      unlockAnimation(U32 tag) override;
+  F32       getAnimClipDuration(const char* clip) override;
 
   void              remapAnimation(U32 tag, ShapeBase* other_shape);
 
-  virtual S32       getDamageState();
+  S32       getDamageState() override;
 
-  virtual SceneObject* getSceneObject() { return mShape; }
-  virtual void      restoreObject(SceneObject*);
-  virtual U16       getScopeId() { return mScope_id; }
-  virtual U32       getTriggers();
+  SceneObject* getSceneObject() override { return mShape; }
+  void      restoreObject(SceneObject*) override;
+  U16       getScopeId() override { return mScope_id; }
+  U32       getTriggers() override;
 
-  virtual void      onDeleteNotify(SimObject*);
+  void      onDeleteNotify(SimObject*) override;
 
-  virtual void      unset() { set(0); }
+  void      unset() override { set(0); }
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -380,14 +380,14 @@ public:
   /*C*/             afxShapeNodeConstraint(afxConstraintMgr*);
   /*C*/             afxShapeNodeConstraint(afxConstraintMgr*, StringTableEntry arb_name, StringTableEntry arb_node);
 
-  virtual void      set(ShapeBase* shape);
-  virtual void      set_scope_id(U16 scope_id);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos);
-  virtual void      restoreObject(SceneObject*);
+  void      set(ShapeBase* shape) override;
+  void      set_scope_id(U16 scope_id) override;
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override;
+  void      restoreObject(SceneObject*) override;
 
   S32               getNodeID() const { return mShape_node_ID; }
 
-  virtual void      onDeleteNotify(SimObject*);
+  void      onDeleteNotify(SimObject*) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -415,17 +415,17 @@ public:
   virtual           ~afxObjectConstraint();
 
   virtual void      set(SceneObject* obj);
-  virtual void      set_scope_id(U16 scope_id);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos);
+  void      set_scope_id(U16 scope_id) override;
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override;
 
-  virtual SceneObject* getSceneObject() { return mObj; }
-  virtual void      restoreObject(SceneObject*);
-  virtual U16       getScopeId() { return mScope_id; }
-  virtual U32       getTriggers();
+  SceneObject* getSceneObject() override { return mObj; }
+  void      restoreObject(SceneObject*) override;
+  U16       getScopeId() override { return mScope_id; }
+  U32       getTriggers() override;
 
-  virtual void      onDeleteNotify(SimObject*);
+  void      onDeleteNotify(SimObject*) override;
 
-  virtual void      unset() { set(0); }
+  void      unset() override { set(0); }
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -452,23 +452,23 @@ public:
   /*C*/             afxEffectConstraint(afxConstraintMgr*, StringTableEntry effect_name);
   virtual           ~afxEffectConstraint();
 
-  virtual bool      getPosition(Point3F& pos, F32 hist=0.0f); 
-  virtual bool      getTransform(MatrixF& xfm, F32 hist=0.0f);
-  virtual bool      getAltitudes(F32& terrain_alt, F32& interior_alt);
+  bool      getPosition(Point3F& pos, F32 hist=0.0f) override; 
+  bool      getTransform(MatrixF& xfm, F32 hist=0.0f) override;
+  bool      getAltitudes(F32& terrain_alt, F32& interior_alt) override;
 
   virtual void      set(afxEffectWrapper* effect);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) { }
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override { }
 
-  virtual U32       setAnimClip(const char* clip, F32 pos, F32 rate, F32 trans, bool is_death_anim);
-  virtual void      resetAnimation(U32 tag);
-  virtual F32       getAnimClipDuration(const char* clip);
+  U32       setAnimClip(const char* clip, F32 pos, F32 rate, F32 trans, bool is_death_anim) override;
+  void      resetAnimation(U32 tag) override;
+  F32       getAnimClipDuration(const char* clip) override;
 
-  virtual SceneObject* getSceneObject() { return 0; }
-  virtual void      restoreObject(SceneObject*) { }
-  virtual U16       getScopeId() { return 0; }
-  virtual U32       getTriggers();
+  SceneObject* getSceneObject() override { return 0; }
+  void      restoreObject(SceneObject*) override { }
+  U16       getScopeId() override { return 0; }
+  U32       getTriggers() override;
 
-  virtual void      unset() { set(0); }
+  void      unset() override { set(0); }
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -487,10 +487,10 @@ public:
   /*C*/             afxEffectNodeConstraint(afxConstraintMgr*);
   /*C*/             afxEffectNodeConstraint(afxConstraintMgr*, StringTableEntry name, StringTableEntry node);
 
-  virtual bool      getPosition(Point3F& pos, F32 hist=0.0f); 
-  virtual bool      getTransform(MatrixF& xfm, F32 hist=0.0f);
+  bool      getPosition(Point3F& pos, F32 hist=0.0f) override; 
+  bool      getTransform(MatrixF& xfm, F32 hist=0.0f) override;
 
-  virtual void      set(afxEffectWrapper* effect);
+  void      set(afxEffectWrapper* effect) override;
 
   S32               getNodeID() const { return mEffect_node_ID; }
 };
@@ -532,14 +532,14 @@ class afxSampleXfmBuffer : public afxSampleBuffer
 protected:
   MatrixF*          mXfm_buffer;
 
-  virtual void      recSample(U32 idx, void* data);
+  void      recSample(U32 idx, void* data) override;
 
 public:
   /*C*/             afxSampleXfmBuffer();
   virtual           ~afxSampleXfmBuffer();
 
-  virtual void      configHistory(F32 hist_len, U8 sample_rate);
-  virtual void      getSample(F32 lag, void* data, bool& oob);
+  void      configHistory(F32 hist_len, U8 sample_rate) override;
+  void      getSample(F32 lag, void* data, bool& oob) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -558,11 +558,11 @@ public:
   /*C*/             afxPointHistConstraint(afxConstraintMgr*);
   virtual           ~afxPointHistConstraint();
 
-  virtual void      set(Point3F point, Point3F vector);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos);
+  void      set(Point3F point, Point3F vector) override;
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override;
 
-  virtual bool      getPosition(Point3F& pos, F32 hist=0.0f);
-  virtual bool      getTransform(MatrixF& xfm, F32 hist=0.0f);
+  bool      getPosition(Point3F& pos, F32 hist=0.0f) override;
+  bool      getTransform(MatrixF& xfm, F32 hist=0.0f) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -581,11 +581,11 @@ public:
   /*C*/             afxTransformHistConstraint(afxConstraintMgr*);
   virtual           ~afxTransformHistConstraint();
 
-  virtual void      set(const MatrixF& xfm);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos);
+  void      set(const MatrixF& xfm) override;
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override;
 
-  virtual bool      getPosition(Point3F& pos, F32 hist=0.0f);
-  virtual bool      getTransform(MatrixF& xfm, F32 hist=0.0f);
+  bool      getPosition(Point3F& pos, F32 hist=0.0f) override;
+  bool      getTransform(MatrixF& xfm, F32 hist=0.0f) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -605,14 +605,14 @@ public:
   /*C*/             afxShapeHistConstraint(afxConstraintMgr*, StringTableEntry arb_name);
   virtual           ~afxShapeHistConstraint();
 
-  virtual void      set(ShapeBase* shape);
-  virtual void      set_scope_id(U16 scope_id);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos);
+  void      set(ShapeBase* shape) override;
+  void      set_scope_id(U16 scope_id) override;
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override;
 
-  virtual bool      getPosition(Point3F& pos, F32 hist=0.0f);
-  virtual bool      getTransform(MatrixF& xfm, F32 hist=0.0f);
+  bool      getPosition(Point3F& pos, F32 hist=0.0f) override;
+  bool      getTransform(MatrixF& xfm, F32 hist=0.0f) override;
 
-  virtual void      onDeleteNotify(SimObject*);
+  void      onDeleteNotify(SimObject*) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -632,14 +632,14 @@ public:
   /*C*/             afxShapeNodeHistConstraint(afxConstraintMgr*, StringTableEntry arb_name, StringTableEntry arb_node);
   virtual           ~afxShapeNodeHistConstraint();
 
-  virtual void      set(ShapeBase* shape);
-  virtual void      set_scope_id(U16 scope_id);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos);
+  void      set(ShapeBase* shape) override;
+  void      set_scope_id(U16 scope_id) override;
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override;
 
-  virtual bool      getPosition(Point3F& pos, F32 hist=0.0f);
-  virtual bool      getTransform(MatrixF& xfm, F32 hist=0.0f);
+  bool      getPosition(Point3F& pos, F32 hist=0.0f) override;
+  bool      getTransform(MatrixF& xfm, F32 hist=0.0f) override;
 
-  virtual void      onDeleteNotify(SimObject*);
+  void      onDeleteNotify(SimObject*) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -661,14 +661,14 @@ public:
                     afxObjectHistConstraint(afxConstraintMgr*, StringTableEntry arb_name);
   virtual           ~afxObjectHistConstraint();
 
-  virtual void      set(SceneObject* obj);
-  virtual void      set_scope_id(U16 scope_id);
-  virtual void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos);
+  void      set(SceneObject* obj) override;
+  void      set_scope_id(U16 scope_id) override;
+  void      sample(F32 dt, U32 elapsed_ms, const Point3F* cam_pos) override;
 
-  virtual bool      getPosition(Point3F& pos, F32 hist=0.0f);
-  virtual bool      getTransform(MatrixF& xfm, F32 hist=0.0f);
+  bool      getPosition(Point3F& pos, F32 hist=0.0f) override;
+  bool      getTransform(MatrixF& xfm, F32 hist=0.0f) override;
 
-  virtual void      onDeleteNotify(SimObject*);
+  void      onDeleteNotify(SimObject*) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

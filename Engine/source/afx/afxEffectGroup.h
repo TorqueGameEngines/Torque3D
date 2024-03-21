@@ -60,7 +60,7 @@ class afxEffectGroupData : public afxEffectBaseData
     U32 id;
   public:
     egValidator(U32 id) { this->id = id; }
-    void validateType(SimObject *object, void *typePtr);
+    void validateType(SimObject *object, void *typePtr) override;
   };
 
   bool          do_id_convert;
@@ -82,16 +82,16 @@ public:
   /*C*/         afxEffectGroupData();
   /*C*/         afxEffectGroupData(const afxEffectGroupData&, bool = false);
 
-  virtual void  reloadReset();
+  void  reloadReset() override;
 
-  virtual void  packData(BitStream*);
-  virtual void  unpackData(BitStream*);
+  void  packData(BitStream*) override;
+  void  unpackData(BitStream*) override;
 
-  bool          preload(bool server, String &errorStr);
+  bool          preload(bool server, String &errorStr) override;
 
-  virtual void  gather_cons_defs(Vector<afxConstraintDef>& defs);
+  void  gather_cons_defs(Vector<afxConstraintDef>& defs) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 

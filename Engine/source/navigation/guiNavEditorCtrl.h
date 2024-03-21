@@ -62,7 +62,7 @@ public:
    /// @name SimObject
    /// @{
 
-   bool onAdd();
+   bool onAdd() override;
    static void initPersistFields();
 
    /// @}
@@ -70,24 +70,24 @@ public:
    /// @name GuiControl
    /// @{
 
-   virtual void onSleep();
-   virtual void onRender(Point2I offset, const RectI &updateRect);
+   void onSleep() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
    /// @}
 
    /// @name EditTSCtrl
    /// @{
 
-   void get3DCursor(GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_);
+   void get3DCursor(GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_) override;
    bool get3DCentre(Point3F &pos);
-   void on3DMouseDown(const Gui3DMouseEvent & event);
-   void on3DMouseUp(const Gui3DMouseEvent & event);
-   void on3DMouseMove(const Gui3DMouseEvent & event);
-   void on3DMouseDragged(const Gui3DMouseEvent & event);
-   void on3DMouseEnter(const Gui3DMouseEvent & event);
-   void on3DMouseLeave(const Gui3DMouseEvent & event);
-   void updateGuiInfo();      
-   void renderScene(const RectI & updateRect);
+   void on3DMouseDown(const Gui3DMouseEvent & event) override;
+   void on3DMouseUp(const Gui3DMouseEvent & event) override;
+   void on3DMouseMove(const Gui3DMouseEvent & event) override;
+   void on3DMouseDragged(const Gui3DMouseEvent & event) override;
+   void on3DMouseEnter(const Gui3DMouseEvent & event) override;
+   void on3DMouseLeave(const Gui3DMouseEvent & event) override;
+   void updateGuiInfo() override;      
+   void renderScene(const RectI & updateRect) override;
 
    /// @}
 
@@ -177,8 +177,8 @@ public:
 
    SimObjectId mObjId;
 
-   virtual void undo();
-   virtual void redo() { undo(); }
+   void undo() override;
+   void redo() override { undo(); }
 };
 #endif
 #endif

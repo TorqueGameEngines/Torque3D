@@ -62,9 +62,9 @@ public:
    ProximityMineData();
    DECLARE_CONOBJECT( ProximityMineData );
    static void initPersistFields();
-   bool preload( bool server, String& errorStr );
-   virtual void packData( BitStream* stream );
-   virtual void unpackData( BitStream* stream );
+   bool preload( bool server, String& errorStr ) override;
+   void packData( BitStream* stream ) override;
+   void unpackData( BitStream* stream ) override;
 };
 
 //----------------------------------------------------------------------------
@@ -99,7 +99,7 @@ protected:
 
    void setDeployedPos( const Point3F& pos, const Point3F& normal );
 
-   void prepRenderImage( SceneRenderState* state );
+   void prepRenderImage( SceneRenderState* state ) override;
    void renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat );
 
 public:
@@ -110,18 +110,18 @@ public:
 
    static void consoleInit();
 
-   bool onAdd();
-   void onRemove();
-   bool onNewDataBlock( GameBaseData* dptr, bool reload );
+   bool onAdd() override;
+   void onRemove() override;
+   bool onNewDataBlock( GameBaseData* dptr, bool reload ) override;
 
-   virtual void setTransform( const MatrixF& mat );
-   void processTick( const Move* move );
+   void setTransform( const MatrixF& mat ) override;
+   void processTick( const Move* move ) override;
    void explode();
 
-   void advanceTime( F32 dt );
+   void advanceTime( F32 dt ) override;
 
-   U32  packUpdate  ( NetConnection* conn, U32 mask, BitStream* stream );
-   void unpackUpdate( NetConnection* conn, BitStream* stream );
+   U32  packUpdate  ( NetConnection* conn, U32 mask, BitStream* stream ) override;
+   void unpackUpdate( NetConnection* conn, BitStream* stream ) override;
 };
 
 #endif // _PROXIMITYMINE_H_

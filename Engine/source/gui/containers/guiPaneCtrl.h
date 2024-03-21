@@ -97,16 +97,16 @@ class GuiPaneControl : public GuiControl
       virtual void setCaptionID(const char *id);
       
       // GuiControl.
-      virtual bool onWake();
+      bool onWake() override;
 
-      virtual void onMouseDown(const GuiEvent &event);
-      virtual void onMouseUp(const GuiEvent &event);
-      virtual void onMouseMove(const GuiEvent &event);
-      virtual void onMouseLeave(const GuiEvent &event);
-      virtual void onMouseEnter(const GuiEvent &event);
+      void onMouseDown(const GuiEvent &event) override;
+      void onMouseUp(const GuiEvent &event) override;
+      void onMouseMove(const GuiEvent &event) override;
+      void onMouseLeave(const GuiEvent &event) override;
+      void onMouseEnter(const GuiEvent &event) override;
 
-      virtual bool resize(const Point2I &newPosition, const Point2I &newExtent);
-      virtual void onRender(Point2I offset, const RectI &updateRect);
+      bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
+      void onRender(Point2I offset, const RectI &updateRect) override;
 
       static void initPersistFields();
       

@@ -87,16 +87,16 @@ public:
 public:
 
    // Returns the bounding box in world coordinates
-   Box3F getBoundingBox() const;
-   Box3F getBoundingBox(const MatrixF& mat, const Point3F& scale) const;
+   Box3F getBoundingBox() const override;
+   Box3F getBoundingBox(const MatrixF& mat, const Point3F& scale) const override;
 
-   void getFeatures(const MatrixF& mat, const VectorF& n, ConvexFeature* cf);
+   void getFeatures(const MatrixF& mat, const VectorF& n, ConvexFeature* cf) override;
 
    // This returns a list of convex faces to collide against
-   void getPolyList(AbstractPolyList* list);
+   void getPolyList(AbstractPolyList* list) override;
 
    // This returns the furthest point from the input vector
-   Point3F support(const VectorF& v) const;
+   Point3F support(const VectorF& v) const override;
 };
 
 
@@ -152,16 +152,16 @@ protected:
    Vector<matMap>  mChangingMaterials;
    Vector<matMap>  mMaterials;
 
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    // Collision
    void prepCollision();
-   bool castRay(const Point3F& start, const Point3F& end, RayInfo* info);
-   bool castRayRendered(const Point3F& start, const Point3F& end, RayInfo* info);
-   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere);
-   bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F& box, const SphereF&);
-   void buildConvex(const Box3F& box, Convex* convex);
+   bool castRay(const Point3F& start, const Point3F& end, RayInfo* info) override;
+   bool castRayRendered(const Point3F& start, const Point3F& end, RayInfo* info) override;
+   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere) override;
+   bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F& box, const SphereF&) override;
+   void buildConvex(const Box3F& box, Convex* convex) override;
 
    bool _createShape();
 
@@ -173,11 +173,11 @@ protected:
    void onShapeChanged();
 
    // ProcessObject
-   virtual void processTick(const Move* move);
-   virtual void interpolateTick(F32 delta);
-   virtual void advanceTime(F32 dt);
+   void processTick(const Move* move) override;
+   void interpolateTick(F32 delta) override;
+   void advanceTime(F32 dt) override;
 
-   virtual void onDynamicModified(const char* slotName, const char* newValue);
+   void onDynamicModified(const char* slotName, const char* newValue) override;
 
    /// Start or stop processing ticks depending on our state.
    void _updateShouldTick();
@@ -249,16 +249,16 @@ public:
    void reSkin();
 
    // NetObject
-   U32 packUpdate(NetConnection* conn, U32 mask, BitStream* stream);
-   void unpackUpdate(NetConnection* conn, BitStream* stream);
+   U32 packUpdate(NetConnection* conn, U32 mask, BitStream* stream) override;
+   void unpackUpdate(NetConnection* conn, BitStream* stream) override;
 
    // SceneObject
-   void setTransform(const MatrixF& mat);
-   void onScaleChanged();
-   void prepRenderImage(SceneRenderState* state);
-   void inspectPostApply();
-   virtual void onMount(SceneObject* obj, S32 node);
-   virtual void onUnmount(SceneObject* obj, S32 node);
+   void setTransform(const MatrixF& mat) override;
+   void onScaleChanged() override;
+   void prepRenderImage(SceneRenderState* state) override;
+   void inspectPostApply() override;
+   void onMount(SceneObject* obj, S32 node) override;
+   void onUnmount(SceneObject* obj, S32 node) override;
 
    /// The type of mesh data use for collision queries.
    MeshType getCollisionType() const { return mCollisionType; }
@@ -274,7 +274,7 @@ public:
    const Vector<S32>& getLOSDetails() const { return mLOSDetails; }
    bool hasAnim() { return mAmbientThread != NULL; }
 #ifdef TORQUE_TOOLS
-   virtual void onInspect(GuiInspector*);
+   void onInspect(GuiInspector*) override;
 #endif
    void updateMaterials();
 
@@ -282,10 +282,10 @@ public:
    bool hasNode(const char* nodeName);
    void getNodeTransform(const char *nodeName, const MatrixF &xfm, MatrixF *outMat);
 
-   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+   void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList) override;
 
 private:
-   virtual void   onStaticModified(const char* slotName, const char* newValue = NULL);
+   void   onStaticModified(const char* slotName, const char* newValue = NULL) override;
 protected:
    Vector<S32>    mDecalDetails;
    Vector<S32>* mDecalDetailsPtr;
@@ -309,7 +309,7 @@ public:
    Point2F        mGradientRange;
 private:
    void           set_special_typing();
-   virtual void setSelectionFlags(U8 flags);
+   void setSelectionFlags(U8 flags) override;
 };
 
 typedef TSStatic::MeshType TSMeshType;

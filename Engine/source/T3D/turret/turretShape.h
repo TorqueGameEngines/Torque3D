@@ -88,10 +88,10 @@ public:
 
    static void initPersistFields();
 
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 
-   virtual bool preload(bool server, String &errorStr);
+   bool preload(bool server, String &errorStr) override;
 
    DECLARE_CALLBACK( void, onMountObject, ( SceneObject* turret, SceneObject* obj, S32 node ) );
    DECLARE_CALLBACK( void, onUnmountObject, ( SceneObject* turret, SceneObject* obj ) );
@@ -150,7 +150,7 @@ protected:
    void _applyLimits(Point3F& rot);
    bool _outsideLimits(Point3F& rot);        ///< Return true if any angle is outside of the limits
 
-   void onUnmount(SceneObject* obj,S32 node);
+   void onUnmount(SceneObject* obj,S32 node) override;
 
    // Script level control
    bool allowManualRotation;
@@ -158,9 +158,9 @@ protected:
 
    void updateAnimation(F32 dt);
 
-   virtual void onImage(U32 imageSlot, bool unmount);
-   virtual void onImageRecoil(U32 imageSlot,ShapeBaseImageData::StateData::RecoilState);
-   virtual void onImageStateAnimation(U32 imageSlot, const char* seqName, bool direction, bool scaleToState, F32 stateTimeOutValue);
+   void onImage(U32 imageSlot, bool unmount) override;
+   void onImageRecoil(U32 imageSlot,ShapeBaseImageData::StateData::RecoilState) override;
+   void onImageStateAnimation(U32 imageSlot, const char* seqName, bool direction, bool scaleToState, F32 stateTimeOutValue) override;
 
 public:
 
@@ -169,18 +169,18 @@ public:
 
    static void initPersistFields();   
 
-   bool onAdd();
-   void onRemove();
-   bool onNewDataBlock(GameBaseData *dptr, bool reload);
+   bool onAdd() override;
+   void onRemove() override;
+   bool onNewDataBlock(GameBaseData *dptr, bool reload) override;
 
    const char* getStateName();
-   virtual void updateDamageLevel();
+   void updateDamageLevel() override;
 
-   virtual void processTick(const Move *move);
-   virtual void interpolateTick(F32 dt);
-   virtual void advanceTime(F32 dt);
+   void processTick(const Move *move) override;
+   void interpolateTick(F32 dt) override;
+   void advanceTime(F32 dt) override;
 
-   virtual void setTransform( const MatrixF &mat );
+   void setTransform( const MatrixF &mat ) override;
 
    virtual bool getAllowManualRotation() { return allowManualRotation; }
    virtual void setAllowManualRotation(bool allow) { setMaskBits(TurretUpdateMask); allowManualRotation = allow; }
@@ -197,28 +197,28 @@ public:
 
    bool doRespawn() { return mRespawn; };
 
-   virtual void mountObject( SceneObject *obj, S32 node, const MatrixF &xfm = MatrixF::Identity );
-   virtual void unmountObject( SceneObject *obj );
+   void mountObject( SceneObject *obj, S32 node, const MatrixF &xfm = MatrixF::Identity ) override;
+   void unmountObject( SceneObject *obj ) override;
 
-   virtual void getCameraParameters(F32 *min,F32* max,Point3F* offset,MatrixF* rot);
-   virtual void getCameraTransform(F32* pos,MatrixF* mat);
+   void getCameraParameters(F32 *min,F32* max,Point3F* offset,MatrixF* rot) override;
+   void getCameraTransform(F32* pos,MatrixF* mat) override;
 
-   virtual void writePacketData( GameConnection* conn, BitStream* stream );
-   virtual void readPacketData( GameConnection* conn, BitStream* stream );
-   virtual U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   virtual void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   void writePacketData( GameConnection* conn, BitStream* stream ) override;
+   void readPacketData( GameConnection* conn, BitStream* stream ) override;
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 
    virtual void getWeaponMountTransform( S32 index, const MatrixF &xfm, MatrixF *outMat );
    virtual void getRenderWeaponMountTransform( F32 delta, S32 index, const MatrixF &xfm, MatrixF *outMat );
 
-   virtual void getImageTransform(U32 imageSlot,MatrixF* mat);
-   virtual void getRenderImageTransform(U32 imageSlot,MatrixF* mat,bool noEyeOffset=false);
+   void getImageTransform(U32 imageSlot,MatrixF* mat) override;
+   void getRenderImageTransform(U32 imageSlot,MatrixF* mat,bool noEyeOffset=false) override;
 
-   virtual void getImageTransform(U32 imageSlot,S32 node, MatrixF* mat);
-   virtual void getRenderImageTransform(U32 imageSlot,S32 node, MatrixF* mat);
+   void getImageTransform(U32 imageSlot,S32 node, MatrixF* mat) override;
+   void getRenderImageTransform(U32 imageSlot,S32 node, MatrixF* mat) override;
 
-   virtual void prepRenderImage( SceneRenderState* state );
-   virtual void prepBatchRender( SceneRenderState *state, S32 mountedImageIndex );
+   void prepRenderImage( SceneRenderState* state ) override;
+   void prepBatchRender( SceneRenderState *state, S32 mountedImageIndex ) override;
 
    DECLARE_CONOBJECT(TurretShape);
 };

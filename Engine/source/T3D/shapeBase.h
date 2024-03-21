@@ -117,7 +117,7 @@ class ShapeBaseConvex : public Convex
    Box3F       box;
 
   public:
-   ShapeBaseConvex() :pShapeBase(NULL), transform(NULL), hullId(0), nodeTransform(0) { mType = ShapeBaseConvexType; }
+   ShapeBaseConvex() :pShapeBase(NULL), nodeTransform(0), transform(NULL), hullId(0) { mType = ShapeBaseConvexType; }
    ShapeBaseConvex(const ShapeBaseConvex& cv) {
       mObject    = cv.mObject;
       pShapeBase = cv.pShapeBase;
@@ -128,12 +128,12 @@ class ShapeBaseConvex : public Convex
    }
 
    void findNodeTransform();
-   const MatrixF& getTransform() const;
-   Box3F getBoundingBox() const;
-   Box3F getBoundingBox(const MatrixF& mat, const Point3F& scale) const;
-   Point3F      support(const VectorF& v) const;
-   void         getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf);
-   void         getPolyList(AbstractPolyList* list);
+   const MatrixF& getTransform() const override;
+   Box3F getBoundingBox() const override;
+   Box3F getBoundingBox(const MatrixF& mat, const Point3F& scale) const override;
+   Point3F      support(const VectorF& v) const override;
+   void         getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf) override;
+   void         getPolyList(AbstractPolyList* list) override;
 };
 
 //--------------------------------------------------------------------------
@@ -494,14 +494,14 @@ struct ShapeBaseImageData: public GameBaseData {
    DECLARE_CONOBJECT(ShapeBaseImageData);
    ShapeBaseImageData();
    ~ShapeBaseImageData();
-   bool onAdd();
-   bool preload(bool server, String &errorStr);
+   bool onAdd() override;
+   bool preload(bool server, String &errorStr) override;
    S32 lookupState(const char* name);  ///< Get a state by name.
    static void initPersistFields();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
    
-   void inspectPostApply();
+   void inspectPostApply() override;
 
    void handleStateSoundTrack(const U32& stateId);
 
@@ -644,7 +644,7 @@ public:
 
    /// @}
 
-   virtual bool preload(bool server, String &errorStr);
+   bool preload(bool server, String &errorStr) override;
    void computeAccelerator(U32 i);
    S32  findMountPoint(U32 n);
 
@@ -655,8 +655,8 @@ public:
    ShapeBaseData();
    ~ShapeBaseData();
    static void initPersistFields();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
    /// @}
 
    /// @name Callbacks
@@ -969,7 +969,7 @@ protected:
    void queueCollision( SceneObject *object, const VectorF &vec);
 
    /// @see SceneObject
-   virtual void onCollision( SceneObject *object, const VectorF &vec );
+   void onCollision( SceneObject *object, const VectorF &vec ) override;
 
    /// @}
  protected:
@@ -1126,7 +1126,7 @@ protected:
 
    /// @name Events
    /// @{
-   virtual void onDeleteNotify(SimObject*);
+   void onDeleteNotify(SimObject*) override;
    virtual void onImage(U32 imageSlot, bool unmount);
    virtual void onImageRecoil(U32 imageSlot,ShapeBaseImageData::StateData::RecoilState);
    virtual void onImageStateAnimation(U32 imageSlot, const char* seqName, bool direction, bool scaleToState, F32 stateTimeOutValue);
@@ -1197,11 +1197,11 @@ public:
    /// @name Initialization
    /// @{
 
-   bool onAdd();
-   void onRemove();
-   void onSceneRemove();
+   bool onAdd() override;
+   void onRemove() override;
+   void onSceneRemove() override;
    static void consoleInit();
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
 
    /// @}
 
@@ -1407,10 +1407,10 @@ public:
 
    /// @name Mounted objects
    /// @{   
-   virtual void onMount( SceneObject *obj, S32 node );   
-   virtual void onUnmount( SceneObject *obj,S32 node );   
-   virtual void getMountTransform( S32 index, const MatrixF &xfm, MatrixF *outMat );
-   virtual void getRenderMountTransform( F32 delta, S32 index, const MatrixF &xfm, MatrixF *outMat );
+   void onMount( SceneObject *obj, S32 node ) override;   
+   void onUnmount( SceneObject *obj,S32 node ) override;   
+   void getMountTransform( S32 index, const MatrixF &xfm, MatrixF *outMat ) override;
+   void getRenderMountTransform( F32 delta, S32 index, const MatrixF &xfm, MatrixF *outMat ) override;
    /// @}
 
    /// Returns where the AI should be to repair this object
@@ -1613,11 +1613,11 @@ public:
    /// @todo Find out what pos does
    /// @param   pos   TODO: Find out what this does
    /// @param   mat   Camera transform (out)
-   virtual void getCameraTransform(F32* pos,MatrixF* mat);
+   void getCameraTransform(F32* pos,MatrixF* mat) override;
 
    /// Gets the view transform for a particular eye, taking into account the current absolute 
    /// orient and position values of the display device.
-   virtual void getEyeCameraTransform( IDisplayDevice *display, U32 eyeId, MatrixF *outMat );
+   void getEyeCameraTransform( IDisplayDevice *display, U32 eyeId, MatrixF *outMat ) override;
 
    /// Gets the index of a node inside a mounted image given the name
    /// @param   imageSlot   Image slot
@@ -1703,7 +1703,7 @@ public:
    /// @{
 
    /// Returns the level of screenflash that should be used
-   virtual F32  getDamageFlash() const;
+   F32  getDamageFlash() const override;
 
    /// Sets the flash level
    /// @param   amt   Level of flash
@@ -1711,7 +1711,7 @@ public:
 
    /// White out is the flash-grenade blindness effect
    /// This returns the level of flash to create
-   virtual F32  getWhiteOut() const;
+   F32  getWhiteOut() const override;
 
    /// Set the level of flash blindness
    virtual void setWhiteOut(const F32);
@@ -1722,12 +1722,12 @@ public:
 
    /// Sets the velocity of this object
    /// @param   vel   Velocity vector
-   virtual void setVelocity(const VectorF& vel);
+   void setVelocity(const VectorF& vel) override;
 
    /// Applies an impulse force to this object
    /// @param   pos   Position where impulse came from in world space
    /// @param   vec   Velocity vector (Impulse force F = m * v)
-   virtual void applyImpulse(const Point3F& pos,const VectorF& vec);
+   void applyImpulse(const Point3F& pos,const VectorF& vec) override;
 
    /// @}
 
@@ -1735,17 +1735,17 @@ public:
    /// @{
 
    /// Returns the object controlling this object
-   ShapeBase* getControllingObject()   { return mControllingObject; }
+   ShapeBase* getControllingObject() override   { return mControllingObject; }
 
    /// Sets the controlling object
    /// @param   obj   New controlling object
    virtual void setControllingObject(ShapeBase* obj);
    
    ///
-   virtual void setControllingClient( GameConnection* connection );
+   void setControllingClient( GameConnection* connection ) override;
 
    /// Returns the object this is controlling
-   virtual ShapeBase* getControlObject();
+   ShapeBase* getControlObject() override;
 
    /// sets the object this is controlling
    /// @param   obj   New controlled object
@@ -1758,35 +1758,35 @@ public:
    bool isFirstPerson() const;
 
    /// Returns true if the camera uses this objects eye point (defined by modeler)
-   bool useObjsEyePoint() const;
+   bool useObjsEyePoint() const override;
 
    /// Returns true if this object can only be used as a first person camera
-   bool onlyFirstPerson() const;
+   bool onlyFirstPerson() const override;
 
    /// Returns the vertical field of view in degrees for 
    /// this object if used as a camera.
-   virtual F32 getCameraFov() { return mCameraFov; }
+   F32 getCameraFov() override { return mCameraFov; }
 
    /// Returns the default vertical field of view in degrees
    /// if this object is used as a camera.
-   virtual F32 getDefaultCameraFov() { return mDataBlock->cameraDefaultFov; }
+   F32 getDefaultCameraFov() override { return mDataBlock->cameraDefaultFov; }
 
    /// Sets the vertical field of view in degrees for this 
    /// object if used as a camera.
    /// @param   yfov  The vertical FOV in degrees to test.
-   virtual void setCameraFov(F32 fov);
+   void setCameraFov(F32 fov) override;
 
    /// Returns true if the vertical FOV in degrees is within 
    /// allowable parameters of the datablock.
    /// @param   yfov  The vertical FOV in degrees to test.
    /// @see ShapeBaseData::cameraMinFov
    /// @see ShapeBaseData::cameraMaxFov
-   virtual bool isValidCameraFov(F32 fov);
+   bool isValidCameraFov(F32 fov) override;
    /// @}
 
 
-   void processTick(const Move *move);
-   void advanceTime(F32 dt);
+   void processTick(const Move *move) override;
+   void advanceTime(F32 dt) override;
 
    /// @name Rendering
    /// @{
@@ -1795,7 +1795,7 @@ public:
    TSShape const* getShape();
 
    /// @see SceneObject
-   virtual void prepRenderImage( SceneRenderState* state );
+   void prepRenderImage( SceneRenderState* state ) override;
 
    /// Used from ShapeBase::_prepRenderImage() to submit render 
    /// instances for the main shape or its mounted elements.
@@ -1809,12 +1809,12 @@ public:
    /// @}
 
    /// Control object scoping
-   void onCameraScopeQuery(NetConnection *cr, CameraScopeQuery *camInfo);
+   void onCameraScopeQuery(NetConnection *cr, CameraScopeQuery *camInfo) override;
 
-   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info);
-   bool castRayRendered(const Point3F &start, const Point3F &end, RayInfo* info);
-   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF& sphere);
-   void buildConvex(const Box3F& box, Convex* convex);
+   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info) override;
+   bool castRayRendered(const Point3F &start, const Point3F &end, RayInfo* info) override;
+   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF& sphere) override;
+   void buildConvex(const Box3F& box, Convex* convex) override;
 
    /// @name Rendering
    /// @{
@@ -1829,7 +1829,7 @@ public:
    /// it is removed entirely from collisions, it is not ghosted and is
    /// essentially "non existant" as far as simulation is concerned.
    /// @param   hidden   True if object is to be hidden
-   virtual void setHidden(bool hidden);
+   void setHidden(bool hidden) override;
 
    /// Returns true if this object can be damaged
    bool isInvincible();
@@ -1846,8 +1846,8 @@ public:
    //void registerLights(LightManager * lightManager, bool lightingScene);
 
    // ISceneLight
-   virtual void submitLights( LightManager *lm, bool staticLighting );
-   virtual LightInfo* getLight() { return NULL; }
+   void submitLights( LightManager *lm, bool staticLighting ) override;
+   LightInfo* getLight() override { return NULL; }
 
    /// @}
 
@@ -1861,20 +1861,20 @@ public:
    /// Returns the height of the liquid on this object
    F32 getLiquidHeight()  { return mLiquidHeight; }
 
-   virtual WaterObject* getCurrentWaterObject();
+   WaterObject* getCurrentWaterObject() override;
 
    void setCurrentWaterObject( WaterObject *obj );
-   void setTransform(const MatrixF & mat);
-   virtual F32 getMass() const { return mMass; }
+   void setTransform(const MatrixF & mat) override;
+   F32 getMass() const override { return mMass; }
 
    /// @name Network
    /// @{
 
-   F32 getUpdatePriority(CameraScopeQuery *focusObject, U32 updateMask, S32 updateSkips);
-   U32  packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn, BitStream *stream);
-   void writePacketData(GameConnection *conn, BitStream *stream);
-   void readPacketData(GameConnection *conn, BitStream *stream);
+   F32 getUpdatePriority(CameraScopeQuery *focusObject, U32 updateMask, S32 updateSkips) override;
+   U32  packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn, BitStream *stream) override;
+   void writePacketData(GameConnection *conn, BitStream *stream) override;
+   void readPacketData(GameConnection *conn, BitStream *stream) override;
 
    /// @}
 
@@ -1933,7 +1933,7 @@ public:
    virtual U32 lockAnimation() { return 0; }
    virtual bool isAnimationLocked() const { return false; }
 
-   virtual void setSelectionFlags(U8 flags);
+   void setSelectionFlags(U8 flags) override;
 };
 
 

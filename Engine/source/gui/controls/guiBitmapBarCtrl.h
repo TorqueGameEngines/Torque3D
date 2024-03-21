@@ -39,7 +39,7 @@ protected:
 public:
    GuiBitmapBarCtrl();
    static void initPersistFields();
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
    DECLARE_CONOBJECT(GuiBitmapBarCtrl);
    DECLARE_CATEGORY("Gui Images");

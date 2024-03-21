@@ -57,13 +57,13 @@ class Win32RedBookDevice : public RedBookDevice
 
       U32 getDeviceId();
 
-      bool open();
-      bool close();
-      bool play(U32);
-      bool stop();
-      bool getTrackCount(U32 *);
-      bool getVolume(F32 *);
-      bool setVolume(F32);
+      bool open() override;
+      bool close() override;
+      bool play(U32) override;
+      bool stop() override;
+      bool getTrackCount(U32 *) override;
+      bool getVolume(F32 *) override;
+      bool setVolume(F32) override;
 };
 
 //------------------------------------------------------------------------------

@@ -109,9 +109,9 @@ public:
 
    DECLARE_CONOBJECT( ForestBrush );
 
-   virtual bool onAdd();
+   bool onAdd() override;
 
-   virtual void addObject(SimObject*);
+   void addObject(SimObject*) override;
 
    static SimGroup* getGroup();
 
@@ -135,9 +135,9 @@ public:
 
    DECLARE_CONOBJECT(ForestBrushGroup);
 
-   virtual bool onAdd();
+   bool onAdd() override;
 
-   virtual void addObject(SimObject*);
+   void addObject(SimObject*) override;
 
    bool containsBrushData(const ForestBrush* inData);
 protected:

@@ -151,7 +151,7 @@ static U32 gHeartbeatSeq = 0;
 class DemoNetInterface : public NetInterface
 {
 public:
-   void handleInfoPacket(const NetAddress *address, U8 packetType, BitStream *stream);
+   void handleInfoPacket(const NetAddress *address, U8 packetType, BitStream *stream) override;
 };
 
 DemoNetInterface gNetInterface;
@@ -323,7 +323,7 @@ class ProcessMasterQueryEvent : public SimEvent
       {
          session = _session;
       }
-      void process( SimObject *object )
+      void process( SimObject *object ) override
       {
          processMasterServerQuery( session );
       }
@@ -338,7 +338,7 @@ class ProcessPingEvent : public SimEvent
       {
          session = _session;
       }
-      void process( SimObject *object )
+      void process( SimObject *object ) override
       {
          processPingsAndQueries( session );
       }
@@ -354,7 +354,7 @@ class ProcessPacketEvent : public SimEvent
          session = _session;
       }
 
-      void process( SimObject *object )
+      void process( SimObject *object ) override
       {
          processServerListPackets( session );
       }
@@ -369,7 +369,7 @@ class HeartbeatEvent : public SimEvent
       {
          mSeq = seq;
       }
-      void process( SimObject *object )
+      void process( SimObject *object ) override
       {
          processHeartbeat(mSeq);
       }

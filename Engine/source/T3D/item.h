@@ -60,8 +60,8 @@ struct ItemData: public ShapeBaseData {
    ItemData();
    DECLARE_CONOBJECT(ItemData);
    static void initPersistFields();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 };
 
 
@@ -145,17 +145,17 @@ class Item: public ShapeBase
    void updateVelocity(const F32 dt);
    void updatePos(const U32 mask, const F32 dt);
    void updateWorkingCollisionSet(const U32 mask, const F32 dt);
-   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere);
-   void buildConvex(const Box3F& box, Convex* convex);
-   void onDeleteNotify(SimObject*);
+   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere) override;
+   void buildConvex(const Box3F& box, Convex* convex) override;
+   void onDeleteNotify(SimObject*) override;
 
    static bool _setStatic(void *object, const char *index, const char *data);
    static bool _setRotate(void *object, const char *index, const char *data);
 
   protected:
    void _updatePhysics();
-   void prepRenderImage(SceneRenderState *state);
-   void advanceTime(F32 dt);
+   void prepRenderImage(SceneRenderState *state) override;
+   void advanceTime(F32 dt) override;
 
   public:
    DECLARE_CONOBJECT(Item);
@@ -167,25 +167,25 @@ class Item: public ShapeBase
    static void initPersistFields();
    static void consoleInit();
 
-   bool onAdd();
-   void onRemove();
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool onAdd() override;
+   void onRemove() override;
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
 
    bool isStatic()   { return mStatic; }
    bool isAtRest()   { return mAtRest; }
    bool isRotating() { return mRotate; }
-   Point3F getVelocity() const;
-   void setVelocity(const VectorF& vel);
-   void applyImpulse(const Point3F& pos,const VectorF& vec);
+   Point3F getVelocity() const override;
+   void setVelocity(const VectorF& vel) override;
+   void applyImpulse(const Point3F& pos,const VectorF& vec) override;
    void setCollisionTimeout(ShapeBase* obj);
    ShapeBase* getCollisionObject()   { return mCollisionObject; };
 
-   void processTick(const Move *move);
-   void interpolateTick(F32 delta);
-   virtual void setTransform(const MatrixF &mat);
+   void processTick(const Move *move) override;
+   void interpolateTick(F32 delta) override;
+   void setTransform(const MatrixF &mat) override;
 
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 };
 
 typedef Item::LightType ItemLightType;

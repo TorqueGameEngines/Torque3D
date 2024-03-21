@@ -219,9 +219,9 @@ class GuiScrollCtrl : public GuiContainer
       // you can change the bitmap array dynamically.
       void loadBitmapArray();
 
-      void addObject(SimObject *obj);
-      bool resize(const Point2I &newPosition, const Point2I &newExtent);
-      void childResized(GuiControl *child);
+      void addObject(SimObject *obj) override;
+      bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
+      void childResized(GuiControl *child) override;
       Point2I getChildPos() { return mChildPos; }
       Point2I getChildRelPos() { return mChildRelPos; };
       Point2I getChildExtent() { return mChildExt; }
@@ -244,24 +244,24 @@ class GuiScrollCtrl : public GuiContainer
       Region getCurHitRegion(void) { return mHitRegion; }
 
       // GuiControl
-      virtual bool onKeyDown(const GuiEvent &event);
-      virtual void onMouseDown(const GuiEvent &event);
-      virtual bool onMouseDownEditor( const GuiEvent& event, Point2I offset );
-      virtual void onMouseUp(const GuiEvent &event);
-      virtual void onMouseDragged(const GuiEvent &event);
-      virtual bool onMouseWheelUp(const GuiEvent &event);
-      virtual bool onMouseWheelDown(const GuiEvent &event);
+      bool onKeyDown(const GuiEvent &event) override;
+      void onMouseDown(const GuiEvent &event) override;
+      bool onMouseDownEditor( const GuiEvent& event, Point2I offset ) override;
+      void onMouseUp(const GuiEvent &event) override;
+      void onMouseDragged(const GuiEvent &event) override;
+      bool onMouseWheelUp(const GuiEvent &event) override;
+      bool onMouseWheelDown(const GuiEvent &event) override;
 
-      virtual bool onWake();
-      virtual void onSleep();
+      bool onWake() override;
+      void onSleep() override;
 
-      virtual void onPreRender();
-      virtual void onRender(Point2I offset, const RectI &updateRect);
+      void onPreRender() override;
+      void onRender(Point2I offset, const RectI &updateRect) override;
       virtual void drawBorder(const Point2I &offset, bool isFirstResponder);
       virtual void drawVScrollBar(const Point2I &offset);
       virtual void drawHScrollBar(const Point2I &offset);
       virtual void drawScrollCorner(const Point2I &offset);
-      virtual GuiControl* findHitControl(const Point2I &pt, S32 initialLayer = -1);
+      GuiControl* findHitControl(const Point2I &pt, S32 initialLayer = -1) override;
 
       static void initPersistFields();
 

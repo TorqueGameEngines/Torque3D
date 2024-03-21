@@ -45,11 +45,11 @@ public:
   /*C*/         afxXM_BoxAdaptData();
   /*C*/         afxXM_BoxAdaptData(const afxXM_BoxAdaptData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_BoxAdaptData);
 };
@@ -68,7 +68,7 @@ class afxXM_BoxAdapt : public afxXM_WeightedBase
 public:
   /*C*/           afxXM_BoxAdapt(afxXM_BoxAdaptData*, afxEffectWrapper*);
 
-  virtual void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

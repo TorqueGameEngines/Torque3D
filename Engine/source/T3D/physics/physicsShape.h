@@ -64,13 +64,13 @@ public:
 
    DECLARE_CONOBJECT(PhysicsShapeData);
    static void initPersistFields();   
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
    
    // GameBaseData
-   void packData(BitStream* stream);
-   void unpackData(BitStream* stream);   
-   bool preload(bool server, String &errorBuffer );
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;   
+   bool preload(bool server, String &errorBuffer ) override;
 
 public:
 
@@ -237,28 +237,28 @@ public:
    // SimObject
    static void consoleInit();
    static void initPersistFields();
-   void inspectPostApply();
-   bool onAdd();
-   void onRemove();   
+   void inspectPostApply() override;
+   bool onAdd() override;
+   void onRemove() override;   
    
    // SceneObject
-   void prepRenderImage( SceneRenderState *state );
-   void setTransform( const MatrixF &mat );
-   F32 getMass() const;
-   Point3F getVelocity() const { return mState.linVelocity; }
-   void applyImpulse( const Point3F &pos, const VectorF &vec );
-   void applyRadialImpulse( const Point3F &origin, F32 radius, F32 magnitude );
+   void prepRenderImage( SceneRenderState *state ) override;
+   void setTransform( const MatrixF &mat ) override;
+   F32 getMass() const override;
+   Point3F getVelocity() const override { return mState.linVelocity; }
+   void applyImpulse( const Point3F &pos, const VectorF &vec ) override;
+   void applyRadialImpulse( const Point3F &origin, F32 radius, F32 magnitude ) override;
    void applyTorque( const Point3F &torque );
    void applyForce( const Point3F &force );
-   void setScale(const VectorF & scale);
+   void setScale(const VectorF & scale) override;
 
    // GameBase
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
-   void interpolateTick( F32 delta );
-   void processTick( const Move *move );
-   void advanceTime( F32 timeDelta );
-   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn, BitStream *stream );
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
+   void interpolateTick( F32 delta ) override;
+   void processTick( const Move *move ) override;
+   void advanceTime( F32 timeDelta ) override;
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
 
    bool isDestroyed() const { return mDestroyed; }
    void destroy();

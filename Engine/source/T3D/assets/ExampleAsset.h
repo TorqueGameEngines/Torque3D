@@ -49,14 +49,14 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(ExampleAsset);
 
 protected:
-   virtual void            initializeAsset(void) {}
-   virtual void            onAssetRefresh(void) {}
+   void            initializeAsset(void) override {}
+   void            onAssetRefresh(void) override {}
 };
 
 DefineConsoleType(TypeExampleAssetPtr, ExampleAsset)

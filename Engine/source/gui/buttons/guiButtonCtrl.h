@@ -35,8 +35,8 @@ protected:
 public:
    DECLARE_CONOBJECT(GuiButtonCtrl);
    GuiButtonCtrl();
-   bool onWake();
-   void onRender(Point2I offset, const RectI &updateRect);
+   bool onWake() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
 };
 
 #endif //_GUI_BUTTON_CTRL_H

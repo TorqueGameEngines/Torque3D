@@ -44,7 +44,7 @@ public:
    virtual ~FileStreamObject();
    DECLARE_CONOBJECT(FileStreamObject);
 
-   virtual bool onAdd();
+   bool onAdd() override;
 
    //-----------------------------------------------------------------------------
    /// @brief Open a file

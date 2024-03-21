@@ -49,14 +49,14 @@ public:
   /*C*/         afxXM_LocalOffsetData();
   /*C*/         afxXM_LocalOffsetData(const afxXM_LocalOffsetData&, bool = false);
   
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
   
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
   
   DECLARE_CONOBJECT(afxXM_LocalOffsetData);
 };
@@ -71,7 +71,7 @@ class afxXM_LocalOffset_weighted : public afxXM_WeightedBase
   
 public:
   /*C*/         afxXM_LocalOffset_weighted(afxXM_LocalOffsetData*, afxEffectWrapper*);
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -87,7 +87,7 @@ class afxXM_LocalOffset_fixed : public afxXM_Base
   
 public:
   /*C*/         afxXM_LocalOffset_fixed(afxXM_LocalOffsetData*, afxEffectWrapper*);
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -100,7 +100,7 @@ class afxXM_LocalOffset2_weighted : public afxXM_WeightedBase
   
 public:
   /*C*/         afxXM_LocalOffset2_weighted(afxXM_LocalOffsetData*, afxEffectWrapper*);
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -116,7 +116,7 @@ class afxXM_LocalOffset2_fixed : public afxXM_Base
   
 public:
   /*C*/         afxXM_LocalOffset2_fixed(afxXM_LocalOffsetData*, afxEffectWrapper*);
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -134,14 +134,14 @@ public:
   /*C*/         afxXM_WorldOffsetData();
   /*C*/         afxXM_WorldOffsetData(const afxXM_WorldOffsetData&, bool = false);
   
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
   
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
   
   DECLARE_CONOBJECT(afxXM_WorldOffsetData);
 };
@@ -156,7 +156,7 @@ class afxXM_WorldOffset_weighted : public afxXM_WeightedBase
 public:
   /*C*/         afxXM_WorldOffset_weighted(afxXM_WorldOffsetData*, afxEffectWrapper*);
   
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -171,7 +171,7 @@ class afxXM_WorldOffset_fixed : public afxXM_Base
   
 public:
   /*C*/         afxXM_WorldOffset_fixed(afxXM_WorldOffsetData*, afxEffectWrapper*);
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -184,7 +184,7 @@ class afxXM_WorldOffset2_weighted : public afxXM_WeightedBase
 public:
   /*C*/         afxXM_WorldOffset2_weighted(afxXM_WorldOffsetData*, afxEffectWrapper*);
   
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -199,7 +199,7 @@ class afxXM_WorldOffset2_fixed : public afxXM_Base
   
 public:
   /*C*/         afxXM_WorldOffset2_fixed(afxXM_WorldOffsetData*, afxEffectWrapper*);
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

@@ -131,10 +131,10 @@ class LightningStrikeEvent : public NetEvent
    LightningStrikeEvent();
    ~LightningStrikeEvent();
 
-   void pack(NetConnection*, BitStream*);
-   void write(NetConnection*, BitStream*){}
-   void unpack(NetConnection*, BitStream*);
-   void process(NetConnection*);
+   void pack(NetConnection*, BitStream*) override;
+   void write(NetConnection*, BitStream*) override{}
+   void unpack(NetConnection*, BitStream*) override;
+   void process(NetConnection*) override;
 
    DECLARE_CONOBJECT(LightningStrikeEvent);
 };

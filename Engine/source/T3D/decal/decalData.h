@@ -103,14 +103,14 @@ class DecalData : public SimDataBlock
 
       DECLARE_CONOBJECT(DecalData);
       static void initPersistFields();
-      virtual void onStaticModified( const char *slotName, const char *newValue = NULL );
+      void onStaticModified( const char *slotName, const char *newValue = NULL ) override;
       
-      virtual bool onAdd();
-      virtual void onRemove();
+      bool onAdd() override;
+      void onRemove() override;
 
-      virtual bool preload( bool server, String &errorStr );
-      virtual void packData( BitStream* );
-      virtual void unpackData( BitStream* );      
+      bool preload( bool server, String &errorStr ) override;
+      void packData( BitStream* ) override;
+      void unpackData( BitStream* ) override;      
       
       Material* getMaterialDefinition();
       BaseMatInstance* getMaterialInstance();
@@ -118,7 +118,7 @@ class DecalData : public SimDataBlock
       static SimSet* getSet();
       static DecalData* findDatablock( String lookupName );
 
-      virtual void inspectPostApply();
+      void inspectPostApply() override;
       void reloadRects();
 
    protected:

@@ -140,11 +140,11 @@ public:
 
    static void initPersistFields();
 
-   virtual bool onAdd();
-   virtual bool preload(bool server, String &errorStr);
+   bool onAdd() override;
+   bool preload(bool server, String &errorStr) override;
 
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 
    S32 lookupState(const char* name);  ///< Get a state by name.
 };
@@ -271,9 +271,9 @@ public:
 
    static void initPersistFields();   
 
-   bool onAdd();
-   void onRemove();
-   bool onNewDataBlock(GameBaseData *dptr, bool reload);
+   bool onAdd() override;
+   void onRemove() override;
+   bool onNewDataBlock(GameBaseData *dptr, bool reload) override;
 
    void addToIgnoreList(ShapeBase* obj);
    void removeFromIgnoreList(ShapeBase* obj);
@@ -305,7 +305,7 @@ public:
    void setAllGunsFiring(bool fire);
    void setGunSlotFiring(S32 slot, bool fire);
 
-   virtual void setTransform(const MatrixF &mat);
+   void setTransform(const MatrixF &mat) override;
    void getScanTransform(MatrixF& mat);
    void getAimTransform(MatrixF& mat);
 
@@ -316,13 +316,13 @@ public:
 
    void recenterTurret();
 
-   virtual void processTick(const Move *move);
-   virtual void advanceTime(F32 dt);
+   void processTick(const Move *move) override;
+   void advanceTime(F32 dt) override;
 
-   virtual U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   virtual void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 
-   void prepBatchRender( SceneRenderState *state, S32 mountedImageIndex );
+   void prepBatchRender( SceneRenderState *state, S32 mountedImageIndex ) override;
 
    DECLARE_CONOBJECT(AITurretShape);
 };

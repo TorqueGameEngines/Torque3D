@@ -51,13 +51,13 @@ public:
   /*C*/             afxPlayerMovementData();
   /*C*/             afxPlayerMovementData(const afxPlayerMovementData&, bool = false);
 
-  virtual bool      onAdd();
-  virtual void      packData(BitStream*);
-  virtual void      unpackData(BitStream*);
+  bool      onAdd() override;
+  void      packData(BitStream*) override;
+  void      unpackData(BitStream*) override;
 
   bool              hasMovementOverride();
 
-  virtual bool      allowSubstitutions() const { return true; }
+  bool      allowSubstitutions() const override { return true; }
 
   static void       initPersistFields();
 

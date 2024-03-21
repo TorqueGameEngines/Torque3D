@@ -55,14 +55,14 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(ParticleAsset);
 
 protected:
-   virtual void            initializeAsset(void) {}
-   virtual void            onAssetRefresh(void) {}
+   void            initializeAsset(void) override {}
+   void            onAssetRefresh(void) override {}
 };
 
 DefineConsoleType(TypeParticleAssetPtr, ParticleAsset)
@@ -81,8 +81,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeParticleAssetPtr);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 };
 #endif
 #endif // _ASSET_BASE_H_

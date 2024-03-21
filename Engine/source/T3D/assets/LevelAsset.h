@@ -77,7 +77,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(LevelAsset);
@@ -133,8 +133,8 @@ protected:
    static const char* getNavmeshFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getNavmeshFile(); }
 
 
-   virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void);
+   void            initializeAsset(void) override;
+   void            onAssetRefresh(void) override;
    void                    loadAsset();
 };
 

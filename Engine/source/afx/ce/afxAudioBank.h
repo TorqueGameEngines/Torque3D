@@ -48,15 +48,15 @@ public:
 
    static void        initPersistFields();
 
-   virtual bool       onAdd();
-   virtual void       packData(BitStream* stream);
-   virtual void       unpackData(BitStream* stream);
+   bool       onAdd() override;
+   void       packData(BitStream* stream) override;
+   void       unpackData(BitStream* stream) override;
 
-   bool               preload(bool server, String &errorStr);
+   bool               preload(bool server, String &errorStr) override;
 
    afxAudioBank*      cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
-   virtual void       onPerformSubstitutions();
-   virtual bool       allowSubstitutions() const { return true; }
+   void       onPerformSubstitutions() override;
+   bool       allowSubstitutions() const override { return true; }
 
    DECLARE_CONOBJECT(afxAudioBank);
 };

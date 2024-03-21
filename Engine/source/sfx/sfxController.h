@@ -185,14 +185,14 @@ class SFXController : public SFXSource
       static SFXController* _create( SFXPlayList* playList );
       
       // SFXSource.
-      virtual void _play();
-      virtual void _pause();
-      virtual void _stop();
-      virtual void _onParameterEvent( SFXParameter* parameter, SFXParameterEvent event );
-      virtual void _updateVolume( const MatrixF& listener );
-      virtual void _updatePitch();
-      virtual void _updatePriority();
-      virtual void _update();
+      void _play() override;
+      void _pause() override;
+      void _stop() override;
+      void _onParameterEvent( SFXParameter* parameter, SFXParameterEvent event ) override;
+      void _updateVolume( const MatrixF& listener ) override;
+      void _updatePitch() override;
+      void _updatePriority() override;
+      void _update() override;
       
    public:
    

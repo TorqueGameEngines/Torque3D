@@ -61,12 +61,12 @@ public:
    GuiPopupMenuTextListCtrl();
 
    // GuiControl overloads:
-   bool onKeyDown(const GuiEvent &event);
-   void onMouseDown(const GuiEvent &event);
-   void onMouseUp(const GuiEvent &event);
-   void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver);
+   bool onKeyDown(const GuiEvent &event) override;
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
+   void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver) override;
 
-   virtual void onCellHighlighted(Point2I cell); //  Added
+   void onCellHighlighted(Point2I cell) override; //  Added
 };
 
 class GuiPopupMenuBackgroundCtrl : public GuiControl
@@ -75,10 +75,10 @@ class GuiPopupMenuBackgroundCtrl : public GuiControl
 
 public:
    GuiPopupMenuBackgroundCtrl();
-   void onMouseDown(const GuiEvent &event);
-   void onMouseUp(const GuiEvent &event);
-   void onMouseMove(const GuiEvent &event);
-   void onMouseDragged(const GuiEvent &event);
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
+   void onMouseMove(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override;
 
    void close();
 

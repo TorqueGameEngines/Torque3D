@@ -43,7 +43,7 @@ public:
    DECLARE_CONOBJECT( GuiVariableInspector );
    DECLARE_CATEGORY( "Gui Editor" );
 
-   virtual void inspectObject( SimObject *object ) {}
+   void inspectObject( SimObject *object ) override {}
 
    virtual void loadVars( String searchString );
 

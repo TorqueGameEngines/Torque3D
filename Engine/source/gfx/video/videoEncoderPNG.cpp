@@ -33,7 +33,7 @@ class VideoEncoderPNG : public VideoEncoder
 
 public:
    /// Begins accepting frames for encoding
-   bool begin()
+   bool begin() override
    {
       mPath += "\\";
       mCurrentFrame = 0;
@@ -42,7 +42,7 @@ public:
    }
 
    /// Pushes a new frame into the video stream
-   bool pushFrame( GBitmap * bitmap )
+   bool pushFrame( GBitmap * bitmap ) override
    {
       String framePath = mPath + String::ToString("%.6u.png", mCurrentFrame);
 
@@ -56,12 +56,12 @@ public:
    }
 
    /// Finishes the encoding and closes the video
-   bool end()
+   bool end() override
    {
       return true;
    }
 
-   void setResolution( Point2I* resolution ) 
+   void setResolution( Point2I* resolution ) override 
    {      
       mResolution = *resolution; 
    }

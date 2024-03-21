@@ -126,8 +126,8 @@ public:
    F32 getPixVersion() const { return mPixVersion; }
 
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    // ConsoleObject
    static void initPersistFields();

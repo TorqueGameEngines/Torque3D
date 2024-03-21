@@ -43,14 +43,14 @@ class FilterStream : public Stream
    // Mandatory overrides.  By default, these are simply passed to
    //  whatever is returned from getStream();
   protected:
-   bool _read(const U32 in_numBytes,  void* out_pBuffer);
-   bool _write(const U32 in_numBytes, const void* in_pBuffer);
+   bool _read(const U32 in_numBytes,  void* out_pBuffer) override;
+   bool _write(const U32 in_numBytes, const void* in_pBuffer) override;
   public:
-   bool hasCapability(const Capability) const;
+   bool hasCapability(const Capability) const override;
 
-   U32  getPosition() const;
-   bool setPosition(const U32 in_newPosition);
-   U32  getStreamSize();
+   U32  getPosition() const override;
+   bool setPosition(const U32 in_newPosition) override;
+   U32  getStreamSize() override;
 };
 
 #endif //_FILTERSTREAM_H_

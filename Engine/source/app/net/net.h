@@ -37,13 +37,13 @@ public:
 
    ~RemoteCommandEvent();
 
-   virtual void pack(NetConnection* conn, BitStream *bstream);
+   void pack(NetConnection* conn, BitStream *bstream) override;
 
-   virtual void write(NetConnection* conn, BitStream *bstream);
+   void write(NetConnection* conn, BitStream *bstream) override;
 
-   virtual void unpack(NetConnection* conn, BitStream *bstream);
+   void unpack(NetConnection* conn, BitStream *bstream) override;
 
-   virtual void process(NetConnection *conn);
+   void process(NetConnection *conn) override;
 
    static void sendRemoteCommand(NetConnection *conn, S32 argc, const char **argv);
 	 

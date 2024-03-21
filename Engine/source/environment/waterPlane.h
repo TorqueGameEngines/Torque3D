@@ -92,10 +92,10 @@ private:
    Frustum        mFrustum;
    
    SceneData setupSceneGraphInfo( SceneRenderState *state );
-   void setShaderParams( SceneRenderState *state, BaseMatInstance* mat, const WaterMatParams& paramHandles );
+   void setShaderParams( SceneRenderState *state, BaseMatInstance* mat, const WaterMatParams& paramHandles ) override;
    void setupVBIB( SceneRenderState *state );
-   virtual void prepRenderImage( SceneRenderState *state );
-   virtual void innerRender( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
+   void innerRender( SceneRenderState *state ) override;
    void setMultiPassProjection();
 
 protected:
@@ -103,11 +103,11 @@ protected:
    //-------------------------------------------------------
    // Standard engine functions
    //-------------------------------------------------------
-   bool onAdd();
-   void onRemove();   
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
-   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info);
+   bool onAdd() override;
+   void onRemove() override;   
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
+   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info) override;
 
 public:
    WaterPlane();
@@ -116,17 +116,17 @@ public:
    DECLARE_CONOBJECT(WaterPlane);   
 
    static void initPersistFields();
-   void onStaticModified( const char* slotName, const char*newValue = NULL );
-   virtual void inspectPostApply();
-   virtual void setTransform( const MatrixF & mat );
-   virtual F32 distanceTo( const Point3F& point ) const;
-   virtual bool buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere );
+   void onStaticModified( const char* slotName, const char*newValue = NULL ) override;
+   void inspectPostApply() override;
+   void setTransform( const MatrixF & mat ) override;
+   F32 distanceTo( const Point3F& point ) const override;
+   bool buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere ) override;
 
    // WaterObject
-   virtual F32 getWaterCoverage( const Box3F &worldBox ) const;
-   virtual F32 getSurfaceHeight( const Point2F &pos ) const;
+   F32 getWaterCoverage( const Box3F &worldBox ) const override;
+   F32 getSurfaceHeight( const Point2F &pos ) const override;
    virtual void onReflectionInfoChanged();
-   virtual bool isUnderwater( const Point3F &pnt ) const;
+   bool isUnderwater( const Point3F &pnt ) const override;
 
    // WaterBlock   
    bool isPointSubmerged ( const Point3F &pos, bool worldSpace = true ) const{ return true; }
@@ -142,7 +142,7 @@ public:
 protected:
 
    // WaterObject
-   virtual void _getWaterPlane( const Point3F &camPos, PlaneF &outPlane, Point3F &outPos );
+   void _getWaterPlane( const Point3F &camPos, PlaneF &outPlane, Point3F &outPos ) override;
 };
 
 #endif // _WATERPLANE_H_

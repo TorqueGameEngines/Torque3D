@@ -63,13 +63,13 @@ class GuiBitmapCtrl : public GuiControl
       void setBitmapHandle(GFXTexHandle handle, bool resize = false);
 
       // GuiControl.
-      bool onWake();
-      void onSleep();
-      void inspectPostApply();
+      bool onWake() override;
+      void onSleep() override;
+      void inspectPostApply() override;
 
       void updateSizing();
 
-      void onRender(Point2I offset, const RectI &updateRect);
+      void onRender(Point2I offset, const RectI &updateRect) override;
       void setValue(S32 x, S32 y);
 
       DECLARE_CONOBJECT( GuiBitmapCtrl );

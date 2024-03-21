@@ -86,7 +86,7 @@ public:
    virtual void prepare() = 0;
 
    // GFXResource
-   virtual const String describeSelf() const;
+   const String describeSelf() const override;
 };
 
 

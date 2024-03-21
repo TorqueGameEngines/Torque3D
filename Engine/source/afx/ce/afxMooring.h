@@ -43,11 +43,11 @@ public:
   /*C*/         afxMooringData();
   /*C*/         afxMooringData(const afxMooringData&, bool = false);
 
-  virtual bool  onAdd();
-  virtual void  packData(BitStream*);
-  virtual void  unpackData(BitStream*);
+  bool  onAdd() override;
+  void  packData(BitStream*) override;
+  void  unpackData(BitStream*) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
@@ -82,15 +82,15 @@ public:
   /*C*/                 afxMooring(U32 networking, U32 chor_id, StringTableEntry cons_name);
   /*D*/                 ~afxMooring();
 
-  virtual bool          onNewDataBlock(GameBaseData* dptr, bool reload);
-  virtual void          advanceTime(F32 dt);
-  virtual bool          onAdd();
-  virtual void          onRemove();
-  virtual U32           packUpdate(NetConnection*, U32, BitStream*);
-  virtual void          unpackUpdate(NetConnection*, BitStream*);
-  virtual void          setTransform(const MatrixF&);
+  bool          onNewDataBlock(GameBaseData* dptr, bool reload) override;
+  void          advanceTime(F32 dt) override;
+  bool          onAdd() override;
+  void          onRemove() override;
+  U32           packUpdate(NetConnection*, U32, BitStream*) override;
+  void          unpackUpdate(NetConnection*, BitStream*) override;
+  void          setTransform(const MatrixF&) override;
 
-  virtual void          prepRenderImage(SceneRenderState*);
+  void          prepRenderImage(SceneRenderState*) override;
 
   DECLARE_CONOBJECT(afxMooring);
   DECLARE_CATEGORY("UNLISTED");

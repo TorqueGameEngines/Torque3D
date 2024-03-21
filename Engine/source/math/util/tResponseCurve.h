@@ -208,8 +208,8 @@ public:
 
    DECLARE_CONOBJECT( SimResponseCurve );
 
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    void addPoint( F32 value, F32 time );
    F32 getValue( F32 time );

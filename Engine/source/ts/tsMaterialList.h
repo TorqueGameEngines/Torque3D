@@ -69,7 +69,7 @@ class TSMaterialList : public MaterialList
    TSMaterialList();
    TSMaterialList(const TSMaterialList*);
    ~TSMaterialList();
-   void free();
+   void free() override;
 
    U32 getFlags(U32 index);
    void setFlags(U32 index, U32 value);
@@ -91,7 +91,7 @@ class TSMaterialList : public MaterialList
    /// @}
 
 protected:
-   virtual void mapMaterial( U32 index );
+   void mapMaterial( U32 index ) override;
 };
 
 

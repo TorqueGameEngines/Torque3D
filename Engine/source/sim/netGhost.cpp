@@ -63,7 +63,7 @@ public:
    ~GhostAlwaysObjectEvent()
       { delete object; }
 
-   void pack(NetConnection *ps, BitStream *bstream)
+   void pack(NetConnection *ps, BitStream *bstream) override
    {
       bstream->writeInt(ghostIndex, NetConnection::GhostIdBitSize);
 
@@ -83,7 +83,7 @@ public:
 #endif
       }
    }
-   void write(NetConnection *ps, BitStream *bstream)
+   void write(NetConnection *ps, BitStream *bstream) override
    {
       bstream->writeInt(ghostIndex, NetConnection::GhostIdBitSize);
       if(bstream->writeFlag(validObject))
@@ -100,7 +100,7 @@ public:
 #endif
       }
    }
-   void unpack(NetConnection *ps, BitStream *bstream)
+   void unpack(NetConnection *ps, BitStream *bstream) override
    {
       ghostIndex = bstream->readInt(NetConnection::GhostIdBitSize);
 
@@ -136,7 +136,7 @@ public:
          validObject = false;
       }
    }
-   void process(NetConnection *ps)
+   void process(NetConnection *ps) override
    {
       Con::executef("onGhostAlwaysObjectReceived");
 

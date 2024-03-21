@@ -72,7 +72,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    virtual void setDataField(StringTableEntry slotName, const char* array, const char* value);
 
@@ -92,8 +92,8 @@ public:
    DECLARE_CONOBJECT(TerrainAsset);
 
 protected:
-   virtual void initializeAsset();
-   virtual void onAssetRefresh(void);
+   void initializeAsset() override;
+   void onAssetRefresh(void) override;
 
    static bool setTerrainFileName(void *obj, const char *index, const char *data) { static_cast<TerrainAsset*>(obj)->setTerrainFileName(data); return false; }
    static const char* getTerrainFileName(void* obj, const char* data) { return static_cast<TerrainAsset*>(obj)->getTerrainFileName(); }
@@ -115,8 +115,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeTerrainAssetPtr);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 };
 
 class GuiInspectorTypeTerrainAssetId : public GuiInspectorTypeTerrainAssetPtr

@@ -69,25 +69,25 @@ public:
    typedef NetEvent Parent;
    ConnectionMessageEvent(U32 msg=0, U32 seq=0, U32 gc=0)
       { message = msg; sequence = seq; ghostCount = gc;}
-   void pack(NetConnection *, BitStream *bstream)
+   void pack(NetConnection *, BitStream *bstream) override
    {
       bstream->write(sequence);
       bstream->writeInt(message, 3);
       bstream->writeInt(ghostCount, NetConnection::GhostIdBitSize + 1);
    }
-   void write(NetConnection *, BitStream *bstream)
+   void write(NetConnection *, BitStream *bstream) override
    {
       bstream->write(sequence);
       bstream->writeInt(message, 3);
       bstream->writeInt(ghostCount, NetConnection::GhostIdBitSize + 1);
    }
-   void unpack(NetConnection *, BitStream *bstream)
+   void unpack(NetConnection *, BitStream *bstream) override
    {
       bstream->read(&sequence);
       message = bstream->readInt(3);
       ghostCount = bstream->readInt(NetConnection::GhostIdBitSize + 1);
    }
-   void process(NetConnection *ps)
+   void process(NetConnection *ps) override
    {
       ps->handleConnectionMessage(message, sequence, ghostCount);
    }
@@ -790,7 +790,7 @@ public:
       stream.setBuffer(buffer, inStream->getPosition());
       stream.setPosition(inStream->getPosition());
    }
-   void process(SimObject *object)
+   void process(SimObject *object) override
    {
       ((NetConnection *) object)->sendPacket(&stream);
    }

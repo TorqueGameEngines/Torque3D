@@ -132,16 +132,16 @@ class ExplosionData : public GameBaseData {
 
    ExplosionData();
    DECLARE_CONOBJECT(ExplosionData);
-   bool onAdd();
-   bool preload(bool server, String &errorStr);
+   bool onAdd() override;
+   bool preload(bool server, String &errorStr) override;
    static void  initPersistFields();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 public:
    /*C*/          ExplosionData(const ExplosionData&, bool = false);
    /*D*/          ~ExplosionData();
    ExplosionData* cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
-   virtual bool   allowSubstitutions() const { return true; }
+   bool   allowSubstitutions() const override { return true; }
 
    void onShapeChanged() {}
 };
@@ -175,12 +175,12 @@ class Explosion : public GameBase, public ISceneLight
    U32      mCollideType;
 
   protected:
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
    bool explode();
 
-   void processTick(const Move *move);
-   void advanceTime(F32 dt);
+   void processTick(const Move *move) override;
+   void advanceTime(F32 dt) override;
    void updateEmitters( F32 dt );
    void launchDebris( Point3F &axis );
    void spawnSubExplosions();
@@ -188,7 +188,7 @@ class Explosion : public GameBase, public ISceneLight
 
    // Rendering
   protected:
-   void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
    void prepBatchRender(SceneRenderState *state);
    void prepModelView(SceneRenderState*);
 
@@ -198,10 +198,10 @@ class Explosion : public GameBase, public ISceneLight
    void setInitialState(const Point3F& point, const Point3F& normal, const F32 fade = 1.0);
 
    // ISceneLight
-   virtual void submitLights( LightManager *lm, bool staticLighting );
-   virtual LightInfo* getLight() { return mLight; }
+   void submitLights( LightManager *lm, bool staticLighting ) override;
+   LightInfo* getLight() override { return mLight; }
 
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
    void setCollideType( U32 cType ){ mCollideType = cType; }
 
    DECLARE_CONOBJECT(Explosion);

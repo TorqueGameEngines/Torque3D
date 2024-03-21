@@ -149,9 +149,9 @@ public:
     virtual ~ModuleManager() {}
 
     /// SimObject overrides
-    virtual bool onAdd();
-    virtual void onRemove();
-    virtual void onDeleteNotify( SimObject *object );
+    bool onAdd() override;
+    void onRemove() override;
+    void onDeleteNotify( SimObject *object ) override;
     static void initPersistFields();
 
     /// Declare Console Object.

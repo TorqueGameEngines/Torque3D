@@ -72,9 +72,9 @@ class GuiDragAndDropControl : public GuiControl
       void startDragging(Point2I offset = Point2I(0, 0));
 
       // GuiControl.
-      virtual void onMouseDown(const GuiEvent& event);
-      virtual void onMouseDragged(const GuiEvent& event);
-      virtual void onMouseUp(const GuiEvent& event);
+      void onMouseDown(const GuiEvent& event) override;
+      void onMouseDragged(const GuiEvent& event) override;
+      void onMouseUp(const GuiEvent& event) override;
 
       static void initPersistFields();
 

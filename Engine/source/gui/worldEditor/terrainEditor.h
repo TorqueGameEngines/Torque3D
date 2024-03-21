@@ -143,12 +143,12 @@ public:
 
    BoxBrush(TerrainEditor * editor) : Brush(editor){}
    
-   const char *getType() const { return "box"; }
-   void rebuild();
+   const char *getType() const override { return "box"; }
+   void rebuild() override;
 
 protected:
 
-   void _renderOutline();
+   void _renderOutline() override;
 };
 
 class EllipseBrush : public Brush
@@ -157,12 +157,12 @@ public:
 
    EllipseBrush(TerrainEditor * editor) : Brush(editor){}
    
-   const char *getType() const { return "ellipse"; }
-   void rebuild();
+   const char *getType() const override { return "ellipse"; }
+   void rebuild() override;
 
 protected:
 
-   void _renderOutline();
+   void _renderOutline() override;
 };
 
 class SelectionBrush : public Brush
@@ -171,14 +171,14 @@ public:
 
    SelectionBrush(TerrainEditor * editor);
 
-   const char *getType() const { return "selection"; }
-   void rebuild();
+   const char *getType() const override { return "selection"; }
+   void rebuild() override;
    void render(Vector<GFXVertexPCT> & vertexBuffer, S32 & verts, S32 & elems, S32 & prims, const LinearColorF & inColorFull, const LinearColorF & inColorNone, const LinearColorF & outColorFull, const LinearColorF & outColorNone) const;
-   void setSize(const Point2I &){}
+   void setSize(const Point2I &) override{}
 
 protected:
 
-   void _renderOutline() {}
+   void _renderOutline() override {}
 };
 
 
@@ -217,7 +217,7 @@ class TerrainEditor : public EditTSCtrl
 		
 		void mirrorTerrain(S32 mirrorIndex);
 		
-      TerrainBlock* getActiveTerrain() { return mActiveTerrain; };
+      TerrainBlock* getActiveTerrain() override { return mActiveTerrain; };
 
       void scheduleGridUpdate() { mNeedsGridUpdate = true; }
       void scheduleMaterialUpdate() { mNeedsMaterialUpdate = true; }
@@ -291,8 +291,8 @@ class TerrainEditor : public EditTSCtrl
 
          Selection *mSel;
          
-         virtual void undo();
-         virtual void redo() { undo(); }
+         void undo() override;
+         void redo() override { undo(); }
       };
 
       void submitUndo( Selection *sel );
@@ -315,8 +315,8 @@ class TerrainEditor : public EditTSCtrl
          Vector<U8> mLayerMap;         
          Vector<TerrainMaterial*> mMaterials;
 
-         virtual void undo();
-         virtual void redo();
+         void undo() override;
+         void redo() override;
       };
 
       bool mIsDirty; // dirty flag for writing terrain.
@@ -452,28 +452,28 @@ class TerrainEditor : public EditTSCtrl
    public:
 
       // SimObject
-      bool onAdd();
-      void onDeleteNotify(SimObject * object);
+      bool onAdd() override;
+      void onDeleteNotify(SimObject * object) override;
 
       static void initPersistFields();
 
       // GuiControl
-      bool onWake();
-      void onSleep();      
+      bool onWake() override;
+      void onSleep() override;      
 
       // EditTSCtrl
-      bool onInputEvent( const InputEventInfo & evt );
-      void on3DMouseUp( const Gui3DMouseEvent & evt );
-      void on3DMouseDown( const Gui3DMouseEvent & evt );
-      void on3DMouseMove( const Gui3DMouseEvent & evt );
-      void on3DMouseDragged( const Gui3DMouseEvent & evt );
-      bool onMouseWheelUp( const GuiEvent & evt );
-      bool onMouseWheelDown( const GuiEvent & evt );            
-      void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &evt );   
-      void onPreRender();
-      void renderScene(const RectI & updateRect);
-      void renderGui( Point2I offset, const RectI &updateRect );
-      void updateGuiInfo();
+      bool onInputEvent( const InputEventInfo & evt ) override;
+      void on3DMouseUp( const Gui3DMouseEvent & evt ) override;
+      void on3DMouseDown( const Gui3DMouseEvent & evt ) override;
+      void on3DMouseMove( const Gui3DMouseEvent & evt ) override;
+      void on3DMouseDragged( const Gui3DMouseEvent & evt ) override;
+      bool onMouseWheelUp( const GuiEvent & evt ) override;
+      bool onMouseWheelDown( const GuiEvent & evt ) override;            
+      void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &evt ) override;   
+      void onPreRender() override;
+      void renderScene(const RectI & updateRect) override;
+      void renderGui( Point2I offset, const RectI &updateRect ) override;
+      void updateGuiInfo() override;
 
       // Determine if the given grid point is valid within a non-wrap
       // around terrain.

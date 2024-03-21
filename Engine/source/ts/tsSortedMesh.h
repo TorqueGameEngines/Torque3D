@@ -60,15 +60,15 @@ public:
    // render methods..
    void render(S32 frame, S32 matFrame, TSMaterialList *);
 
-   bool buildPolyList( S32 frame, AbstractPolyList *polyList, U32 &surfaceKey, TSMaterialList *materials );
-   bool castRay( S32 frame, const Point3F &start, const Point3F &end, RayInfo *rayInfo, TSMaterialList *materials );
-   bool buildConvexHull(); ///< does nothing, skins don't use this
+   bool buildPolyList( S32 frame, AbstractPolyList *polyList, U32 &surfaceKey, TSMaterialList *materials ) override;
+   bool castRay( S32 frame, const Point3F &start, const Point3F &end, RayInfo *rayInfo, TSMaterialList *materials ) override;
+   bool buildConvexHull() override; ///< does nothing, skins don't use this
                            ///
                            ///  @returns false ALWAYS
    S32 getNumPolys();
 
-   void assemble(bool skip);
-   void disassemble();
+   void assemble(bool skip) override;
+   void disassemble() override;
 
    TSSortedMesh() {
       alwaysWriteDepth = false;

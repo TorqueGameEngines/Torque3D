@@ -67,7 +67,7 @@
 class ObjectDeleteEvent : public SimEvent
 {
 public:
-  void process(SimObject *object)
+  void process(SimObject *object) override
   {
     object->deleteObject();
   }

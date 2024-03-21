@@ -62,8 +62,8 @@ public:
    EventManagerListener(): mSubscribers(64, false) {}
 
    /// Called by the EventManager queue when an event is triggered. Calls all listeners subscribed to the triggered event.
-   virtual bool onMessageReceived( StringTableEntry queue, const char* event, const char* data );
-   virtual bool onMessageObjectReceived( StringTableEntry queue, Message *msg ) { return true; };
+   bool onMessageReceived( StringTableEntry queue, const char* event, const char* data ) override;
+   bool onMessageObjectReceived( StringTableEntry queue, Message *msg ) override { return true; };
 };
 
 /// @addtogroup msgsys Message System

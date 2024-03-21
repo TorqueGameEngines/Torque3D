@@ -47,11 +47,11 @@ class TerrainConvex : public Convex
    TerrainConvex( const TerrainConvex& cv );
 
    // Convex
-   Box3F getBoundingBox() const;
-   Box3F getBoundingBox(const MatrixF& mat, const Point3F& scale) const;
-   Point3F support(const VectorF& v) const;
-   void getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf);
-   void getPolyList(AbstractPolyList* list);
+   Box3F getBoundingBox() const override;
+   Box3F getBoundingBox(const MatrixF& mat, const Point3F& scale) const override;
+   Point3F support(const VectorF& v) const override;
+   void getFeatures(const MatrixF& mat,const VectorF& n, ConvexFeature* cf) override;
+   void getPolyList(AbstractPolyList* list) override;
 };
 
 #endif // _TERRCOLL_H_

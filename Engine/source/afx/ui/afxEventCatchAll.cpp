@@ -34,21 +34,21 @@ class afxEventCatchAll : public GuiControl
 public:
   /* C */         afxEventCatchAll() { }
 
-  virtual void    getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent);
+  void    getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent) override;
   
-  virtual void    onMouseUp(const GuiEvent&);
-  virtual void    onMouseDown(const GuiEvent&);
-  virtual void    onMouseMove(const GuiEvent&);
-  virtual void    onMouseDragged(const GuiEvent&);
-  virtual void    onMouseEnter(const GuiEvent&);
-  virtual void    onMouseLeave(const GuiEvent&);
+  void    onMouseUp(const GuiEvent&) override;
+  void    onMouseDown(const GuiEvent&) override;
+  void    onMouseMove(const GuiEvent&) override;
+  void    onMouseDragged(const GuiEvent&) override;
+  void    onMouseEnter(const GuiEvent&) override;
+  void    onMouseLeave(const GuiEvent&) override;
   
-  virtual bool    onMouseWheelUp(const GuiEvent&);
-  virtual bool    onMouseWheelDown(const GuiEvent&);
+  bool    onMouseWheelUp(const GuiEvent&) override;
+  bool    onMouseWheelDown(const GuiEvent&) override;
   
-  virtual void    onRightMouseDown(const GuiEvent&);
-  virtual void    onRightMouseUp(const GuiEvent&);
-  virtual void    onRightMouseDragged(const GuiEvent&);
+  void    onRightMouseDown(const GuiEvent&) override;
+  void    onRightMouseUp(const GuiEvent&) override;
+  void    onRightMouseDragged(const GuiEvent&) override;
   
   DECLARE_CONOBJECT(afxEventCatchAll);
   DECLARE_CATEGORY("AFX");

@@ -364,8 +364,8 @@ public:
    ~GuiCursor(void);
    static void initPersistFields();
 
-   bool onAdd(void);
-   void onRemove();
+   bool onAdd(void) override;
+   void onRemove() override;
    void render(const Point2I &pos);
 
    void onImageChanged() {}
@@ -601,12 +601,12 @@ public:
    ~GuiControlProfile();
    static void initPersistFields();
    
-   bool onAdd();
+   bool onAdd() override;
 
-   void onStaticModified(const char* slotName, const char* newValue = NULL );
+   void onStaticModified(const char* slotName, const char* newValue = NULL ) override;
 
    /// Called when mProfileForChildren is deleted
-    virtual void onDeleteNotify(SimObject *object);
+    void onDeleteNotify(SimObject *object) override;
 
    /// This method creates an array of bitmaps from one single bitmap with
    /// separator color. The separator color is whatever color is in pixel 0,0

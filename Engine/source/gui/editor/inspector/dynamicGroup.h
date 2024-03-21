@@ -45,8 +45,8 @@ public:
    // inspectGroup is overridden in GuiInspectorDynamicGroup to inspect an 
    // objects FieldDictionary (dynamic fields) instead of regular persistent
    // fields.
-   bool inspectGroup();
-   virtual void updateAllFields();
+   bool inspectGroup() override;
+   void updateAllFields() override;
 
    // For scriptable dynamic field additions
    void addDynamicField();
@@ -58,7 +58,7 @@ public:
    virtual SimFieldDictionary::Entry* findDynamicFieldInDictionary( StringTableEntry fieldName );
 protected:
    // create our inner controls when we add
-   virtual bool createContent();
+   bool createContent() override;
 
 };
 

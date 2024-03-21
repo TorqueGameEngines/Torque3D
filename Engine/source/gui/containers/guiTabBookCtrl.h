@@ -133,18 +133,18 @@ class GuiTabBookCtrl : public GuiContainer
       /// @name Control Events
       /// @{
        
-      bool onWake();
-      void onRender( Point2I offset, const RectI &updateRect );
+      bool onWake() override;
+      void onRender( Point2I offset, const RectI &updateRect ) override;
       
       /// @}
 
       /// @name Child events
       /// @{
       
-      void onChildRemoved( GuiControl* child );
-      void onChildAdded( GuiControl *child );
-      bool reOrder(SimObject* obj, SimObject* target);
-      bool acceptsAsChild( SimObject* object ) const;
+      void onChildRemoved( GuiControl* child ) override;
+      void onChildAdded( GuiControl *child ) override;
+      bool reOrder(SimObject* obj, SimObject* target) override;
+      bool acceptsAsChild( SimObject* object ) const override;
       
       /// @}
 
@@ -203,7 +203,7 @@ class GuiTabBookCtrl : public GuiContainer
       /// @{
 
       /// Update ourselves by hooking common GuiControl functionality.
-      void setUpdate();
+      void setUpdate() override;
 
       /// Balance a top/bottom tab row
       void balanceRow( S32 row, S32 totalTabWidth );
@@ -218,7 +218,7 @@ class GuiTabBookCtrl : public GuiContainer
       void calculatePageTabs();
 
       /// Get client area of tab book
-      virtual const RectI getClientRect();
+      const RectI getClientRect() override;
 
       /// Find the tab that was hit by the current event, if any
       /// @param   event   The GuiEvent that caused this function call
@@ -240,7 +240,7 @@ class GuiTabBookCtrl : public GuiContainer
       ///
       /// @param   newPosition   The new position of the control
       /// @param   newExtent   The new extent of the control
-      bool resize(const Point2I &newPosition, const Point2I &newExtent);
+      bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
 
       /// Called when a child page is resized
       /// This method is overridden so that we may handle resizing of our child tab
@@ -248,23 +248,23 @@ class GuiTabBookCtrl : public GuiContainer
       /// This ensures we keep our sizing in sync when we our children are sized or moved.
       ///
       /// @param   child   A pointer to the child control that has been resized
-      void childResized(GuiControl *child);
+      void childResized(GuiControl *child) override;
 
       /// @}
 
-      virtual bool onKeyDown(const GuiEvent &event);
+      bool onKeyDown(const GuiEvent &event) override;
 
 
       /// @name Mouse Events
       /// @{
       
-      virtual void onMouseDown( const GuiEvent &event );
-      virtual void onMouseUp( const GuiEvent &event );
-      virtual void onMouseDragged( const GuiEvent &event );
-      virtual void onMouseMove( const GuiEvent &event );
-      virtual void onMouseLeave( const GuiEvent &event );
-      virtual bool onMouseDownEditor( const GuiEvent &event, Point2I offset );
-      virtual void onRightMouseUp( const GuiEvent& event );
+      void onMouseDown( const GuiEvent &event ) override;
+      void onMouseUp( const GuiEvent &event ) override;
+      void onMouseDragged( const GuiEvent &event ) override;
+      void onMouseMove( const GuiEvent &event ) override;
+      void onMouseLeave( const GuiEvent &event ) override;
+      bool onMouseDownEditor( const GuiEvent &event, Point2I offset ) override;
+      void onRightMouseUp( const GuiEvent& event ) override;
       
       /// @}
 };

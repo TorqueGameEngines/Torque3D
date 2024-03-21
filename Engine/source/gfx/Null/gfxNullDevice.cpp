@@ -42,17 +42,17 @@ private:
 public:
 
    ///
-   virtual const String &getRendererString() const { static String sRS("GFX Null Device Renderer"); return sRS; }
+   const String &getRendererString() const override { static String sRS("GFX Null Device Renderer"); return sRS; }
 
 protected:
 
-   virtual void setupCardCapabilities() { };
+   void setupCardCapabilities() override { };
 
-   virtual bool _queryCardCap(const String &query, U32 &foundResult){ return false; }
-   virtual bool _queryFormat(const GFXFormat fmt, const GFXTextureProfile *profile, bool &inOutAutogenMips) { inOutAutogenMips = false; return false; }
+   bool _queryCardCap(const String &query, U32 &foundResult) override{ return false; }
+   bool _queryFormat(const GFXFormat fmt, const GFXTextureProfile *profile, bool &inOutAutogenMips) override { inOutAutogenMips = false; return false; }
    
 public:
-   virtual void init()
+   void init() override
    {
       mCardDescription = "GFX Null Device Card";
       mChipSet = "NULL Device";
@@ -68,14 +68,16 @@ public:
    GFXNullTextureObject(GFXDevice * aDevice, GFXTextureProfile *profile); 
    ~GFXNullTextureObject() { kill(); };
 
-   virtual void pureVirtualCrash() { };
+#ifdef TORQUE_DEBUG
+   void pureVirtualCrash() override {}
+#endif
 
-   virtual GFXLockedRect * lock( U32 mipLevel = 0, RectI *inRect = NULL ) { return NULL; };
-   virtual void unlock( U32 mipLevel = 0) {};
-   virtual bool copyToBmp(GBitmap *) { return false; };
+   GFXLockedRect * lock( U32 mipLevel = 0, RectI *inRect = NULL ) override { return NULL; };
+   void unlock( U32 mipLevel = 0) override {};
+   bool copyToBmp(GBitmap *) override { return false; };
 
-   virtual void zombify() {}
-   virtual void resurrect() {}
+   void zombify() override {}
+   void resurrect() override {}
 };
 
 GFXNullTextureObject::GFXNullTextureObject(GFXDevice * aDevice, GFXTextureProfile *profile) :
@@ -88,13 +90,13 @@ GFXNullTextureObject::GFXNullTextureObject(GFXDevice * aDevice, GFXTextureProfil
 class GFXNullTextureManager : public GFXTextureManager
 {
 public:
-   GFXTextureObject* createTexture(GBitmap* bmp, const String& resourceName, GFXTextureProfile* profile, bool deleteBmp) { return nullptr; } // _createNullTextureObject();}
-   GFXTextureObject* createTexture(DDSFile* dds, GFXTextureProfile* profile, bool deleteDDS) { return nullptr; }
-   GFXTextureObject* createTexture(const Torque::Path& path, GFXTextureProfile* profile) { return nullptr; }
-   GFXTextureObject* createTexture(U32 width, U32 height, void* pixels, GFXFormat format, GFXTextureProfile* profile) { return nullptr; }
-   GFXTextureObject* createTexture(U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels = 1) { return nullptr; }
-   GFXTextureObject* createTexture(U32 width, U32 height, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels, S32 antialiasLevel) { return nullptr; }
-   GFXTextureObject* createCompositeTexture(GBitmap* bmp[4], U32 inputKey[4], const String& resourceName, GFXTextureProfile* profile, bool deleteBmp) { return nullptr; }
+   GFXTextureObject* createTexture(GBitmap* bmp, const String& resourceName, GFXTextureProfile* profile, bool deleteBmp) override { return nullptr; } // _createNullTextureObject();}
+   GFXTextureObject* createTexture(DDSFile* dds, GFXTextureProfile* profile, bool deleteDDS) override { return nullptr; }
+   GFXTextureObject* createTexture(const Torque::Path& path, GFXTextureProfile* profile) override { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, void* pixels, GFXFormat format, GFXTextureProfile* profile) override { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels = 1) override { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels, S32 antialiasLevel) override { return nullptr; }
+   GFXTextureObject* createCompositeTexture(GBitmap* bmp[4], U32 inputKey[4], const String& resourceName, GFXTextureProfile* profile, bool deleteBmp) override { return nullptr; }
 protected:
       GFXTextureObject *_createTextureObject( U32 height, 
                                                       U32 width, 
@@ -104,7 +106,7 @@ protected:
                                                       U32 numMipLevels, 
                                                       bool forceMips = false, 
                                                       S32 antialiasLevel = 0, 
-                                                      GFXTextureObject *inTex = NULL )
+                                                      GFXTextureObject *inTex = NULL ) override
       { 
          GFXNullTextureObject *retTex;
          if ( inTex )
@@ -124,26 +126,26 @@ protected:
       };
 
       /// Load a texture from a proper DDSFile instance.
-      virtual bool _loadTexture(GFXTextureObject *texture, DDSFile *dds){ return true; };
+      bool _loadTexture(GFXTextureObject *texture, DDSFile *dds) override{ return true; };
 
       /// Load data into a texture from a GBitmap using the internal API.
-      virtual bool _loadTexture(GFXTextureObject *texture, GBitmap *bmp){ return true; };
+      bool _loadTexture(GFXTextureObject *texture, GBitmap *bmp) override{ return true; };
 
       /// Load data into a texture from a raw buffer using the internal API.
       ///
       /// Note that the size of the buffer is assumed from the parameters used
       /// for this GFXTextureObject's _createTexture call.
-      virtual bool _loadTexture(GFXTextureObject *texture, void *raw){ return true; };
+      bool _loadTexture(GFXTextureObject *texture, void *raw) override{ return true; };
 
       /// Refresh a texture using the internal API.
-      virtual bool _refreshTexture(GFXTextureObject *texture){ return true; };
+      bool _refreshTexture(GFXTextureObject *texture) override{ return true; };
 
       /// Free a texture (but do not delete the GFXTextureObject) using the internal
       /// API.
       ///
       /// This is only called during zombification for textures which need it, so you
       /// don't need to do any internal safety checks.
-      virtual bool _freeTexture(GFXTextureObject *texture, bool zombify=false) { return true; };
+      bool _freeTexture(GFXTextureObject *texture, bool zombify=false) override { return true; };
 
       virtual U32 _getTotalVideoMemory() { return 0; };
       virtual U32 _getFreeVideoMemory() { return 0; };
@@ -154,19 +156,19 @@ class GFXNullCubemap : public GFXCubemap
    friend class GFXDevice;
 private:
    // should only be called by GFXDevice
-   virtual void setToTexUnit( U32 tuNum ) { };
+   void setToTexUnit( U32 tuNum ) override { };
 
 public:
-   virtual void initStatic( GFXTexHandle *faces ) { };
-   virtual void initStatic( DDSFile *dds ) { };
-   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0) { };
-   virtual U32 getSize() const { return 0; }
-   virtual GFXFormat getFormat() const { return GFXFormatR8G8B8A8; }
+   void initStatic( GFXTexHandle *faces ) override { };
+   void initStatic( DDSFile *dds ) override { };
+   void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0) override { };
+   U32 getSize() const override { return 0; }
+   GFXFormat getFormat() const override { return GFXFormatR8G8B8A8; }
 
    virtual ~GFXNullCubemap(){};
 
-   virtual void zombify() {}
-   virtual void resurrect() {}
+   void zombify() override {}
+   void resurrect() override {}
 };
 
 class GFXNullCubemapArray : public GFXCubemapArray
@@ -174,16 +176,16 @@ class GFXNullCubemapArray : public GFXCubemapArray
    friend class GFXDevice;
 private:
    // should only be called by GFXDevice
-   virtual void setToTexUnit(U32 tuNum) { };
+   void setToTexUnit(U32 tuNum) override { };
 
 public:
-   virtual void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount) { };
-   virtual void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format) { };
-   virtual void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot) { };
-   virtual void copyTo(GFXCubemapArray *pDstCubemap) { }
+   void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount) override { };
+   void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format) override { };
+   void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot) override { };
+   void copyTo(GFXCubemapArray *pDstCubemap) override { }
    virtual ~GFXNullCubemapArray() {};
-   virtual void zombify() {}
-   virtual void resurrect() {}
+   void zombify() override {}
+   void resurrect() override {}
 };
 
 class GFXNullTextureArray : public GFXTextureArray
@@ -209,12 +211,12 @@ public:
                         U32 vertexSize, 
                         GFXBufferType bufferType ) :
       GFXVertexBuffer(device, numVerts, vertexFormat, vertexSize, bufferType) {tempBuf =NULL;};
-   virtual void lock(U32 vertexStart, U32 vertexEnd, void **vertexPtr);
-   virtual void unlock();
-   virtual void prepare();
+   void lock(U32 vertexStart, U32 vertexEnd, void **vertexPtr) override;
+   void unlock() override;
+   void prepare() override;
 
-   virtual void zombify() {}
-   virtual void resurrect() {}
+   void zombify() override {}
+   void resurrect() override {}
 };
 
 void GFXNullVertexBuffer::lock(U32 vertexStart, U32 vertexEnd, void **vertexPtr) 
@@ -246,12 +248,12 @@ public:
                            GFXBufferType bufferType ) :
       GFXPrimitiveBuffer(device, indexCount, primitiveCount, bufferType), temp( NULL ) {};
 
-   virtual void lock(U32 indexStart, U32 indexEnd, void **indexPtr); ///< locks this primitive buffer for writing into
-   virtual void unlock(); ///< unlocks this primitive buffer.
-   virtual void prepare() { };  ///< prepares this primitive buffer for use on the device it was allocated on
+   void lock(U32 indexStart, U32 indexEnd, void **indexPtr) override; ///< locks this primitive buffer for writing into
+   void unlock() override; ///< unlocks this primitive buffer.
+   void prepare() override { };  ///< prepares this primitive buffer for use on the device it was allocated on
 
-   virtual void zombify() {}
-   virtual void resurrect() {}
+   void zombify() override {}
+   void resurrect() override {}
 };
 
 void GFXNullPrimitiveBuffer::lock(U32 indexStart, U32 indexEnd, void **indexPtr)
@@ -273,17 +275,17 @@ class GFXNullStateBlock : public GFXStateBlock
 {
 public:
    /// Returns the hash value of the desc that created this block
-   virtual U32 getHashValue() const { return 0; };
+   U32 getHashValue() const override { return 0; };
 
    /// Returns a GFXStateBlockDesc that this block represents
-   virtual const GFXStateBlockDesc& getDesc() const { return mDefaultDesc; }
+   const GFXStateBlockDesc& getDesc() const override { return mDefaultDesc; }
 
    //
    // GFXResource
    //
-   virtual void zombify() { }
+   void zombify() override { }
    /// When called the resource should restore all device sensitive information destroyed by zombify()
-   virtual void resurrect() { }
+   void resurrect() override { }
 private:
    GFXStateBlockDesc mDefaultDesc;
 };

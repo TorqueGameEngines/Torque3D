@@ -49,17 +49,17 @@ public:
    //
 
    /// Returns the hash value of the desc that created this block
-   virtual U32 getHashValue() const;
+   U32 getHashValue() const override;
 
    /// Returns a GFXStateBlockDesc that this block represents
-   virtual const GFXStateBlockDesc& getDesc() const;   
+   const GFXStateBlockDesc& getDesc() const override;   
 
    //
    // GFXResource
    //
-   virtual void zombify() { }
+   void zombify() override { }
    /// When called the resource should restore all device sensitive information destroyed by zombify()
-   virtual void resurrect() { }
+   void resurrect() override { }
 private:
    GFXStateBlockDesc mDesc;
    U32 mCachedHashValue;

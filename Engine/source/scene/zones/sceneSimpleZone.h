@@ -86,7 +86,7 @@ class SceneSimpleZone : public SceneZoneSpace
       virtual void _updateOrientedWorldBox() { mOrientedWorldBox.set( getTransform(), getScale() ); }
 
       // SceneObject.
-      virtual bool onSceneAdd();
+      bool onSceneAdd() override;
 
    public:
 
@@ -115,24 +115,24 @@ class SceneSimpleZone : public SceneZoneSpace
       /// @{
 
       // SimObject.
-      virtual String describeSelf() const;
+      String describeSelf() const override;
 
       static void initPersistFields();
 
       // NetObject
-      virtual U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-      virtual void unpackUpdate( NetConnection *conn, BitStream *stream );
+      U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+      void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
 
       // SceneObject
-      virtual void prepRenderImage( SceneRenderState* state );
-      virtual void setTransform( const MatrixF& mat );
+      void prepRenderImage( SceneRenderState* state ) override;
+      void setTransform( const MatrixF& mat ) override;
 
       // SceneZoneSpace.
-      virtual U32 getPointZone( const Point3F &p );
-      virtual bool getOverlappingZones( const Box3F& aabb, U32* outZones, U32& outNumZones );
-      virtual void traverseZones( SceneTraversalState* state );
-      virtual bool getZoneAmbientLightColor( U32 zone, LinearColorF& outColor ) const;
-      virtual void traverseZones( SceneTraversalState* state, U32 startZoneId );
+      U32 getPointZone( const Point3F &p ) override;
+      bool getOverlappingZones( const Box3F& aabb, U32* outZones, U32& outNumZones ) override;
+      void traverseZones( SceneTraversalState* state ) override;
+      bool getZoneAmbientLightColor( U32 zone, LinearColorF& outColor ) const override;
+      void traverseZones( SceneTraversalState* state, U32 startZoneId ) override;
 
       /// @}
 

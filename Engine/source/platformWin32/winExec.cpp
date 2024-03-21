@@ -43,7 +43,7 @@ class ExecuteThread : public Thread
 public:
    ExecuteThread(const char *executable, const char *args = NULL, const char *directory = NULL);
 
-   virtual void run(void *arg = 0);
+   void run(void *arg = 0) override;
 };
 
 //-----------------------------------------------------------------------------
@@ -62,7 +62,7 @@ public:
       mOK = ok;
    }
 
-   virtual void process(SimObject *object)
+   void process(SimObject *object) override
    {
       if( Con::isFunction( "onExecuteDone" ) )
          Con::executef( "onExecuteDone", Con::getIntArg( mOK ) );

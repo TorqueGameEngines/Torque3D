@@ -538,14 +538,14 @@ class EngineSimpleTypeInfo : public EngineTypeInfo
          mTypeFlags.set( EngineTypeInstantiable );
       }
       
-      virtual bool constructInstance( void* ptr ) const
+      bool constructInstance( void* ptr ) const override
       {
          T* p = reinterpret_cast< T* >( ptr );
          *p = T();
          return true;
       }
       
-      virtual void destructInstance( void* ptr ) const
+      void destructInstance( void* ptr ) const override
       {
          // Nothing to do.
       }
@@ -567,14 +567,14 @@ class EngineStructTypeInfo : public EngineTypeInfo
          mTypeFlags.set( EngineTypeInstantiable );
       }
       
-      virtual bool constructInstance( void* ptr ) const
+      bool constructInstance( void* ptr ) const override
       {
          T* p = reinterpret_cast< T* >( ptr );
          *p = T();
          return true;
       }
    
-      virtual void destructInstance( void* ptr ) const
+      void destructInstance( void* ptr ) const override
       {
          T* p = reinterpret_cast< T* >( ptr );
          destructInPlace( p );
@@ -609,12 +609,12 @@ class EngineClassTypeInfo : public EngineTypeInfo
             mTypeFlags.set( EngineTypeSingleton );
       }
       
-      virtual bool constructInstance( void* ptr ) const
+      bool constructInstance( void* ptr ) const override
       {
          return Base::_construct( ptr );
       }
    
-      virtual void destructInstance( void* ptr ) const
+      void destructInstance( void* ptr ) const override
       {
          return Base::_destruct( ptr );
       }

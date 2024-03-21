@@ -33,16 +33,16 @@ public:
 	GFXGLPrimitiveBuffer(GFXDevice *device, U32 indexCount, U32 primitiveCount, GFXBufferType bufferType);
 	~GFXGLPrimitiveBuffer();
 
-	virtual void lock(U32 indexStart, U32 indexEnd, void **indexPtr); ///< only write lock are supported
-	virtual void unlock(); ///<
-	virtual void prepare();  ///< binds the buffer
+	void lock(U32 indexStart, U32 indexEnd, void **indexPtr) override; ///< only write lock are supported
+	void unlock() override; ///<
+	void prepare() override;  ///< binds the buffer
    virtual void finish(); ///< We're done with this buffer
 
 	virtual void* getBuffer(); ///< returns NULL
 
    // GFXResource interface
-   virtual void zombify();
-   virtual void resurrect();
+   void zombify() override;
+   void resurrect() override;
    
 private:
 	/// Handle to our GL buffer object

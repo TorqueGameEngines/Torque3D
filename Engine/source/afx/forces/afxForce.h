@@ -42,11 +42,11 @@ public:
   /*C*/         afxForceData();
   /*C*/         afxForceData(const afxForceData&, bool = false);
 
-  virtual bool  onAdd();
-  virtual void  packData(BitStream* stream);
-  virtual void  unpackData(BitStream* stream);
+  bool  onAdd() override;
+  void  packData(BitStream* stream) override;
+  void  unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
   virtual afxForceData* cloneAndPerformSubstitutions(const SimObject*, S32 index=0)=0;
 
   static void   initPersistFields();

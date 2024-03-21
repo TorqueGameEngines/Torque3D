@@ -45,7 +45,7 @@ public:
    ShadowMatInstance( Material *mat );
    virtual ~ShadowMatInstance() {}
 
-   virtual bool setupPass( SceneRenderState *state, const SceneData &sgData );
+   bool setupPass( SceneRenderState *state, const SceneData &sgData ) override;
 };
 
 class ShadowMaterialHook : public MatInstanceHook
@@ -56,7 +56,7 @@ public:
 
    // MatInstanceHook
    virtual ~ShadowMaterialHook();
-   virtual const MatInstanceHookType& getType() const { return Type; }
+   const MatInstanceHookType& getType() const override { return Type; }
 
    /// The material hook type.
    static const MatInstanceHookType Type;

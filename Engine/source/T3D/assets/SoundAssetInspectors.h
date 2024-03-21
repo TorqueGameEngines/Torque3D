@@ -17,8 +17,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSoundAssetPtr);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 };
 
 class GuiInspectorTypeSoundAssetId : public GuiInspectorTypeSoundAssetPtr

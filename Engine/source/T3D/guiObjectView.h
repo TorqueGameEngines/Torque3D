@@ -175,7 +175,7 @@ class GuiObjectView : public GuiTSCtrl
       void _initMount();
       
       ///
-      void onStaticModified( StringTableEntry slotName, const char* newValue );
+      void onStaticModified( StringTableEntry slotName, const char* newValue ) override;
 
    public:
    
@@ -267,19 +267,19 @@ class GuiObjectView : public GuiTSCtrl
       /// @}
       
       // GuiTsCtrl.
-      bool onWake();
+      bool onWake() override;
 
-      void onMouseEnter( const GuiEvent& event );
-      void onMouseLeave( const GuiEvent& event );
-      void onMouseDown( const GuiEvent& event );
-      void onMouseUp( const GuiEvent& event );
-      void onMouseDragged( const GuiEvent& event );
-      void onRightMouseDown( const GuiEvent& event );
-      void onRightMouseUp( const GuiEvent& event );
-      void onRightMouseDragged( const GuiEvent& event );
+      void onMouseEnter( const GuiEvent& event ) override;
+      void onMouseLeave( const GuiEvent& event ) override;
+      void onMouseDown( const GuiEvent& event ) override;
+      void onMouseUp( const GuiEvent& event ) override;
+      void onMouseDragged( const GuiEvent& event ) override;
+      void onRightMouseDown( const GuiEvent& event ) override;
+      void onRightMouseUp( const GuiEvent& event ) override;
+      void onRightMouseDragged( const GuiEvent& event ) override;
 
-      bool processCameraQuery( CameraQuery* query );
-      void renderWorld( const RectI& updateRect );
+      bool processCameraQuery( CameraQuery* query ) override;
+      void renderWorld( const RectI& updateRect ) override;
       
       static void initPersistFields();
 

@@ -149,24 +149,24 @@ public:
    /// @name Event Handling
    /// @{
 
-   virtual void onTimedOut();
-   virtual void onConnectTimedOut();
-   virtual void onDisconnect(const char *reason);
-   virtual void onConnectionRejected(const char *reason);
-   virtual void onConnectionEstablished(bool isInitiator);
-   virtual void handleStartupError(const char *errorString);
+   void onTimedOut() override;
+   void onConnectTimedOut() override;
+   void onDisconnect(const char *reason) override;
+   void onConnectionRejected(const char *reason) override;
+   void onConnectionEstablished(bool isInitiator) override;
+   void handleStartupError(const char *errorString) override;
    /// @}
 
    /// @name Packet I/O
    /// @{
 
-   virtual void writeConnectRequest(BitStream *stream);
-   virtual bool readConnectRequest(BitStream *stream, const char **errorString);
-   virtual void writeConnectAccept(BitStream *stream);
-   virtual bool readConnectAccept(BitStream *stream, const char **errorString);
+   void writeConnectRequest(BitStream *stream) override;
+   bool readConnectRequest(BitStream *stream, const char **errorString) override;
+   void writeConnectAccept(BitStream *stream) override;
+   bool readConnectAccept(BitStream *stream, const char **errorString) override;
    /// @}
 
-   bool canRemoteCreate();
+   bool canRemoteCreate() override;
 
    void setVisibleGhostDistance(F32 dist);
    F32 getVisibleGhostDistance();
@@ -188,7 +188,7 @@ protected:
       S32 cameraFov;
       GamePacketNotify();
    };
-   PacketNotify *allocNotify();
+   PacketNotify *allocNotify() override;
 
    bool mControlForceMismatch;
 
@@ -223,28 +223,28 @@ protected:
    /// @name Packet I/O
    /// @{
 
-   void readPacket      (BitStream *bstream);
-   void writePacket     (BitStream *bstream, PacketNotify *note);
-   void packetReceived  (PacketNotify *note);
-   void packetDropped   (PacketNotify *note);
-   void connectionError (const char *errorString);
+   void readPacket      (BitStream *bstream) override;
+   void writePacket     (BitStream *bstream, PacketNotify *note) override;
+   void packetReceived  (PacketNotify *note) override;
+   void packetDropped   (PacketNotify *note) override;
+   void connectionError (const char *errorString) override;
 
-   void writeDemoStartBlock   (ResizeBitStream *stream);
-   bool readDemoStartBlock    (BitStream *stream);
-   void handleRecordedBlock   (U32 type, U32 size, void *data);
+   void writeDemoStartBlock   (ResizeBitStream *stream) override;
+   bool readDemoStartBlock    (BitStream *stream) override;
+   void handleRecordedBlock   (U32 type, U32 size, void *data) override;
    /// @}
-   void ghostWriteExtra(NetObject *,BitStream *);
-   void ghostReadExtra(NetObject *,BitStream *, bool newGhost);
-   void ghostPreRead(NetObject *, bool newGhost);
+   void ghostWriteExtra(NetObject *,BitStream *) override;
+   void ghostReadExtra(NetObject *,BitStream *, bool newGhost) override;
+   void ghostPreRead(NetObject *, bool newGhost) override;
    
-   virtual void onEndGhosting();
+   void onEndGhosting() override;
 
 public:
 
    DECLARE_CONOBJECT(GameConnection);
-   void handleConnectionMessage(U32 message, U32 sequence, U32 ghostCount);
+   void handleConnectionMessage(U32 message, U32 sequence, U32 ghostCount) override;
    void preloadDataBlock(SimDataBlock *block);
-   void fileDownloadSegmentComplete();
+   void fileDownloadSegmentComplete() override;
    void preloadNextDataBlock(bool hadNew);
    
    static void consoleInit();
@@ -253,8 +253,8 @@ public:
    GameConnection();
    ~GameConnection();
 
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    static GameConnection *getConnectionToServer() 
    { 
@@ -362,8 +362,8 @@ public:
    bool isFirstPerson() const  { return mCameraPos == 0; }
    bool isAIControlled() { return mAIControlled; }
 
-   void doneScopingScene();
-   void demoPlaybackComplete();
+   void doneScopingScene() override;
+   void demoPlaybackComplete() override;
 
    void setMissionCRC(U32 crc)           { mMissionCRC = crc; }
    U32  getMissionCRC()           { return(mMissionCRC); }
@@ -399,7 +399,7 @@ private:
    bool          mChangedSelectedObj;
    U32           mPreSelectTimestamp;
 protected:
-   virtual void  onDeleteNotify(SimObject*);
+   void  onDeleteNotify(SimObject*) override;
 public:   
    void          setRolloverObj(SceneObject*);   
    SceneObject*  getRolloverObj() { return  mRolloverObj; }   

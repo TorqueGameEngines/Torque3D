@@ -36,14 +36,14 @@
 class blTerrainSystem : public SceneLightingInterface
 {
 public:
-   virtual void init();
-   virtual U32 addObjectType();
-   virtual SceneLighting::ObjectProxy* createObjectProxy(SceneObject* obj, SceneLighting::ObjectProxyList* sceneObjects);
-   virtual PersistInfo::PersistChunk* createPersistChunk(const U32 chunkType);
-   virtual bool createPersistChunkFromProxy(SceneLighting::ObjectProxy* objproxy, PersistInfo::PersistChunk **ret);      
+   void init() override;
+   U32 addObjectType() override;
+   SceneLighting::ObjectProxy* createObjectProxy(SceneObject* obj, SceneLighting::ObjectProxyList* sceneObjects) override;
+   PersistInfo::PersistChunk* createPersistChunk(const U32 chunkType) override;
+   bool createPersistChunkFromProxy(SceneLighting::ObjectProxy* objproxy, PersistInfo::PersistChunk **ret) override;      
 
    // Given a ray, this will return the color from the lightmap of this object, return true if handled
-   virtual bool getColorFromRayInfo(const RayInfo & collision, LinearColorF& result) const;
+   bool getColorFromRayInfo(const RayInfo & collision, LinearColorF& result) const override;
 };
 
 #endif // !_BLTERRAINSYSTEM_H_

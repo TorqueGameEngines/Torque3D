@@ -300,11 +300,11 @@ public:
 
    Resource<TerrainFile> getFile() const { return mFile; };
 
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
-   void onEditorEnable();
-   void onEditorDisable();
+   void onEditorEnable() override;
+   void onEditorDisable() override;
 
    /// Adds a new material as the top layer or 
    /// inserts it at the specified index.
@@ -418,7 +418,7 @@ public:
                                  StringTableEntry &matName ) const;
 
    // only the editor currently uses this method - should always be using a ray to collide with
-   bool collideBox( const Point3F &start, const Point3F &end, RayInfo* info )
+   bool collideBox( const Point3F &start, const Point3F &end, RayInfo* info ) override
    {
       return castRay( start, end, info );
    }
@@ -461,14 +461,14 @@ public:
    U32 getScreenError() const { return smLODScale * mScreenError; }
 
    // SceneObject
-   void setTransform( const MatrixF &mat );
-   void setScale( const VectorF &scale );
+   void setTransform( const MatrixF &mat ) override;
+   void setScale( const VectorF &scale ) override;
 
-   void prepRenderImage  ( SceneRenderState* state );
+   void prepRenderImage  ( SceneRenderState* state ) override;
 
-   void buildConvex(const Box3F& box,Convex* convex);
-   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere);
-   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info);
+   void buildConvex(const Box3F& box,Convex* convex) override;
+   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere) override;
+   bool castRay(const Point3F &start, const Point3F &end, RayInfo* info) override;
    bool castRayI(const Point3F &start, const Point3F &end, RayInfo* info, bool emptyCollide);
    
    bool castRayBlock(   const Point3F &pStart, 
@@ -490,11 +490,11 @@ public:
    DECLARE_CONOBJECT(TerrainBlock);
    DECLARE_CATEGORY("Environment \t BackGround");
    static void initPersistFields();
-   U32 packUpdate   (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
-   void inspectPostApply();
+   U32 packUpdate   (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
+   void inspectPostApply() override;
 
-   virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList);
+   void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList) override;
 
    const StringTableEntry getTerrain() const
    {

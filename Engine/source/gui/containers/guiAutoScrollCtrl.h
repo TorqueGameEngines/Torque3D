@@ -136,17 +136,17 @@ class GuiAutoScrollCtrl : public GuiTickCtrl
       
       void reset();
             
-      virtual bool onWake();
-      virtual void onSleep();
+      bool onWake() override;
+      void onSleep() override;
 
-      virtual void onChildAdded( GuiControl* control );
-      virtual void onChildRemoved( GuiControl* control );
-      virtual bool resize( const Point2I& newPosition, const Point2I& newExtent );
-      virtual void childResized( GuiControl *child );
+      void onChildAdded( GuiControl* control ) override;
+      void onChildRemoved( GuiControl* control ) override;
+      bool resize( const Point2I& newPosition, const Point2I& newExtent ) override;
+      void childResized( GuiControl *child ) override;
 
-      virtual void processTick();
-      virtual void advanceTime( F32 timeDelta );
-      virtual void inspectPostApply();
+      void processTick() override;
+      void advanceTime( F32 timeDelta ) override;
+      void inspectPostApply() override;
 
       static void initPersistFields();
 

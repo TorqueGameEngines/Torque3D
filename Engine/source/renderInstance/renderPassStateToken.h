@@ -79,9 +79,9 @@ public:
    RenderPassStateBin();
    virtual ~RenderPassStateBin();
 
-   void render(SceneRenderState *state);
-   void clear();
-   void sort();
+   void render(SceneRenderState *state) override;
+   void clear() override;
+   void sort() override;
 };
 
 #endif // _RENDERPASSSTATETOKEN_H_

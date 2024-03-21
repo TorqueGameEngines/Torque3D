@@ -156,14 +156,14 @@ class SFXVoice :  public StrongRefBase,
       ///
       /// @note For looping sounds, this will return the position in the
       ///   current cycle and not the total number of samples played so far.
-      virtual U32 getPosition() const;
+      U32 getPosition() const override;
 
       /// Sets the playback position to the given sample count.
       ///
       /// @param sample Offset in number of samples.  This is allowed to use an offset
       ///   accumulated from multiple cycles.  Each cycle will wrap around back to the
       ///   beginning of the buffer.
-      virtual void setPosition( U32 sample );
+      void setPosition( U32 sample ) override;
 
       /// @return the current playback status.
       /// @note For streaming voices, the reaction to for the voice to update its status

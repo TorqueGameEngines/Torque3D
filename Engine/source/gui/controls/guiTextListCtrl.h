@@ -59,8 +59,8 @@ class GuiTextListCtrl : public GuiArrayCtrl
    S32   mRowHeightPadding;
 
    U32 getRowWidth(Entry *row);
-   bool cellSelected(Point2I cell);
-   void onCellSelected(Point2I cell);
+   bool cellSelected(Point2I cell) override;
+   void onCellSelected(Point2I cell) override;
 
   public:
    GuiTextListCtrl();
@@ -77,12 +77,12 @@ class GuiTextListCtrl : public GuiArrayCtrl
    virtual void setCellSize( const Point2I &size ){ mCellSize = size; }
    virtual void getCellSize(       Point2I &size ){ size = mCellSize; }
 
-   const char *getScriptValue();
-   void setScriptValue(const char *value);
+   const char *getScriptValue() override;
+   void setScriptValue(const char *value) override;
 
    U32 getNumEntries();
 
-   void clear();
+   void clear() override;
    virtual void addEntry(U32 id, const char *text);
    virtual void insertEntry(U32 id, const char *text, S32 index);
    void setEntry(U32 id, const char *text);
@@ -93,7 +93,7 @@ class GuiTextListCtrl : public GuiArrayCtrl
 
    U32 getEntryId(U32 index);
 
-   bool onWake();
+   bool onWake() override;
    void removeEntry(U32 id);
    virtual void removeEntryByIndex(S32 id);
    virtual void sort(U32 column, bool increasing = true);
@@ -103,14 +103,14 @@ class GuiTextListCtrl : public GuiArrayCtrl
    U32 getSelectedRow();
    const char *getSelectedText();
 
-   bool onKeyDown(const GuiEvent &event);
-   bool onGamepadAxisUp(const GuiEvent& event);
-   bool onGamepadAxisDown(const GuiEvent& event);
+   bool onKeyDown(const GuiEvent &event) override;
+   bool onGamepadAxisUp(const GuiEvent& event) override;
+   bool onGamepadAxisDown(const GuiEvent& event) override;
 
-   virtual void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver);
+   void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver) override;
 
-   void setSize(Point2I newSize);
-   void onRemove();
+   void setSize(Point2I newSize) override;
+   void onRemove() override;
    void addColumnOffset(S32 offset) { mColumnOffsets.push_back(offset); }
    void clearColumnOffsets() { mColumnOffsets.clear(); }
 };

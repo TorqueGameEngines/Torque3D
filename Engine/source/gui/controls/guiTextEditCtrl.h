@@ -112,7 +112,7 @@ public:
    DECLARE_DESCRIPTION( "A control that allows to edit a single line of text. ");
    static void initPersistFields();
 
-   bool onAdd();
+   bool onAdd() override;
 
    /// Get the contents of the control.
    ///
@@ -121,7 +121,7 @@ public:
    virtual void getRenderText(char *dest);
 
    void setText(S32 tag);
-   virtual void setText(const UTF8* txt);
+   void setText(const UTF8* txt) override;
    virtual void setText(const UTF16* txt);
    S32   getCursorPos()   { return( mCursorPos ); }
    void  setCursorPos( const S32 newPos );
@@ -136,30 +136,30 @@ public:
    void clearSelectedText();
 
    void forceValidateText();
-   const char *getScriptValue();
-   void setScriptValue(const char *value);
+   const char *getScriptValue() override;
+   void setScriptValue(const char *value) override;
 
    bool getSinkAllKeys() { return mSinkAllKeyEvents; }
    void setSinkAllKeys(bool state) { mSinkAllKeyEvents = state; }
 
-   virtual bool onKeyDown(const GuiEvent &event);
-   virtual void onMouseDown(const GuiEvent &event);
-   virtual void onMouseDragged(const GuiEvent &event);
-   virtual void onMouseUp(const GuiEvent &event);
+   bool onKeyDown(const GuiEvent &event) override;
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
    
    void onCopy(bool andCut);
    void onPaste();
    void onUndo();
 
-   virtual void setFirstResponder();
-   virtual void onLoseFirstResponder();
+   void setFirstResponder() override;
+   void onLoseFirstResponder() override;
 
    bool hasText();
 
-   void onStaticModified(const char* slotName, const char* newValue = NULL);
+   void onStaticModified(const char* slotName, const char* newValue = NULL) override;
 
-   void onPreRender();
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onPreRender() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
    virtual void drawText( const RectI &drawRect, bool isFocused );
 
    bool dealWithEnter( bool clearResponder );

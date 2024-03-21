@@ -42,15 +42,15 @@ public:
    Win32FileSystem(String volume);
    ~Win32FileSystem();
 
-   String   getTypeStr() const { return "Win32"; }
+   String   getTypeStr() const override { return "Win32"; }
 
-   FileNodeRef resolve(const Path& path);
+   FileNodeRef resolve(const Path& path) override;
    void verifyCompatibility(const Path& _path, WIN32_FIND_DATAW _info);
-   FileNodeRef create(const Path& path,FileNode::Mode);
-   bool remove(const Path& path);
-   bool rename(const Path& from,const Path& to);
-   Path mapTo(const Path& path);
-   Path mapFrom(const Path& path);
+   FileNodeRef create(const Path& path,FileNode::Mode) override;
+   bool remove(const Path& path) override;
+   bool rename(const Path& from,const Path& to) override;
+   Path mapTo(const Path& path) override;
+   Path mapFrom(const Path& path) override;
 
 private:
    String mVolume;
@@ -65,24 +65,24 @@ class Win32File: public File
 public:
    ~Win32File();
 
-   Path getName() const;
-   NodeStatus getStatus() const;
-   bool getAttributes(Attributes*);
-   U64 getSize();
+   Path getName() const override;
+   NodeStatus getStatus() const override;
+   bool getAttributes(Attributes*) override;
+   U64 getSize() override;
 
-   U32 getPosition();
-   U32 setPosition(U32,SeekMode);
+   U32 getPosition() override;
+   U32 setPosition(U32,SeekMode) override;
 
-   bool open(AccessMode);
-   bool close();
+   bool open(AccessMode) override;
+   bool close() override;
 
-   U32 read(void* dst, U32 size);
-   U32 write(const void* src, U32 size);
+   U32 read(void* dst, U32 size) override;
+   U32 write(const void* src, U32 size) override;
 
 private:
    friend class Win32FileSystem;
 
-   U32 calculateChecksum();
+   U32 calculateChecksum() override;
 
    Path     mPath;
    String   mName;
@@ -103,18 +103,18 @@ class Win32Directory: public Directory
 public:
    ~Win32Directory();
 
-   Path getName() const;
-   NodeStatus getStatus() const;
-   bool getAttributes(Attributes*);
+   Path getName() const override;
+   NodeStatus getStatus() const override;
+   bool getAttributes(Attributes*) override;
 
-   bool open();
-   bool close();
-   bool read(Attributes*);
+   bool open() override;
+   bool close() override;
+   bool read(Attributes*) override;
 
 private:
    friend class Win32FileSystem;
 
-   U32 calculateChecksum();
+   U32 calculateChecksum() override;
 
    Path     mPath;
    String   mName;

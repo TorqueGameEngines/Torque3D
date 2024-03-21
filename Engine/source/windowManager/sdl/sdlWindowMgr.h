@@ -61,7 +61,7 @@ protected:
    friend class PlatformWindowSDL;
    friend class FileDialog; // TODO SDL REMOVE
 
-   virtual void _processCmdLineArgs(const S32 argc, const char **argv);
+   void _processCmdLineArgs(const S32 argc, const char **argv) override;
 
    /// Link the specified window into the window list.
    void linkWindow(PlatformWindowSDL *w);
@@ -101,34 +101,34 @@ public:
    PlatformWindowManagerSDL();
    ~PlatformWindowManagerSDL();
 
-   virtual RectI getPrimaryDesktopArea();
-   virtual S32       getDesktopBitDepth();
-   virtual Point2I   getDesktopResolution();
+   RectI getPrimaryDesktopArea() override;
+   S32       getDesktopBitDepth() override;
+   Point2I   getDesktopResolution() override;
 
-   virtual S32 findFirstMatchingMonitor(const char* name);
-   virtual U32 getMonitorCount();
-   virtual const char* getMonitorName(U32 index);
-   virtual RectI getMonitorRect(U32 index);
-   virtual RectI getMonitorUsableRect(U32 index);
-   virtual U32 getMonitorModeCount(U32 monitorIndex);
-   virtual const String getMonitorMode(U32 monitorIndex, U32 modeIndex);
-   virtual const String getMonitorDesktopMode(U32 monitorIndex);
+   S32 findFirstMatchingMonitor(const char* name) override;
+   U32 getMonitorCount() override;
+   const char* getMonitorName(U32 index) override;
+   RectI getMonitorRect(U32 index) override;
+   RectI getMonitorUsableRect(U32 index) override;
+   U32 getMonitorModeCount(U32 monitorIndex) override;
+   const String getMonitorMode(U32 monitorIndex, U32 modeIndex) override;
+   const String getMonitorDesktopMode(U32 monitorIndex) override;
 
-   virtual void getMonitorRegions(Vector<RectI> &regions);
-   virtual PlatformWindow *createWindow(GFXDevice *device, const GFXVideoMode &mode);
-   virtual void getWindows(VectorPtr<PlatformWindow*> &windows);
+   void getMonitorRegions(Vector<RectI> &regions) override;
+   PlatformWindow *createWindow(GFXDevice *device, const GFXVideoMode &mode) override;
+   void getWindows(VectorPtr<PlatformWindow*> &windows) override;
 
-   virtual void setParentWindow(void* newParent);
-   virtual void* getParentWindow();
+   void setParentWindow(void* newParent) override;
+   void* getParentWindow() override;
 
-   virtual PlatformWindow *getWindowById(WindowId id);
-   virtual PlatformWindow *getFirstWindow();
-   virtual PlatformWindow* getFocusedWindow();
+   PlatformWindow *getWindowById(WindowId id) override;
+   PlatformWindow *getFirstWindow() override;
+   PlatformWindow* getFocusedWindow() override;
 
-   virtual void lowerCurtain();
-   virtual void raiseCurtain();
+   void lowerCurtain() override;
+   void raiseCurtain() override;
 
-   virtual void setDisplayWindow(bool set) { mDisplayWindow = set; }
+   void setDisplayWindow(bool set) override { mDisplayWindow = set; }
 
    /// Stores the input state so that the event loop will fire a check if we need
    /// to change how keyboard input is being handled.

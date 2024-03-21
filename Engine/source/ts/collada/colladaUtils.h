@@ -672,14 +672,14 @@ public:
    }
 
    /// Most primitives can use these common implementations
-   const char* getElementName() { return primitive->getElementName(); }
-   const char* getMaterial() { return (FindMatch::isMatchMultipleExprs(ColladaUtils::getOptions().neverImportMat, primitive->getMaterial(), false)) ? NULL : primitive->getMaterial(); }
-   const domInputLocalOffset_Array& getInputs() { return primitive->getInput_array(); }
-   S32 getStride() const { return stride; }
+   const char* getElementName() override { return primitive->getElementName(); }
+   const char* getMaterial() override { return (FindMatch::isMatchMultipleExprs(ColladaUtils::getOptions().neverImportMat, primitive->getMaterial(), false)) ? NULL : primitive->getMaterial(); }
+   const domInputLocalOffset_Array& getInputs() override { return primitive->getInput_array(); }
+   S32 getStride() const override { return stride; }
 
    /// Each supported primitive needs to implement this method (and convert
    /// to triangles if required)
-   const domListOfUInts *getTriangleData() { return NULL; }
+   const domListOfUInts *getTriangleData() override { return NULL; }
 };
 
 //-----------------------------------------------------------------------------

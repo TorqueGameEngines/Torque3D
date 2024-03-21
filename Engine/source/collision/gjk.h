@@ -63,19 +63,19 @@ struct GjkCollisionState: public CollisionState
    bool closest(VectorF& v);
    bool degenerate(const VectorF& w);
    void nextBit();
-   void swap();
+   void swap() override;
    void reset(const MatrixF& a2w, const MatrixF& b2w);
 
    GjkCollisionState();
    ~GjkCollisionState();
 
-   void set(Convex* a,Convex* b,const MatrixF& a2w, const MatrixF& b2w);
+   void set(Convex* a,Convex* b,const MatrixF& a2w, const MatrixF& b2w) override;
 
    void getCollisionInfo(const MatrixF& mat, Collision* info);
    void getClosestPoints(Point3F& p1, Point3F& p2);
    bool intersect(const MatrixF& a2w, const MatrixF& b2w);
    F32 distance(const MatrixF& a2w, const MatrixF& b2w, const F32 dontCareDist,
-                       const MatrixF* w2a = NULL, const MatrixF* _w2b = NULL);
+                       const MatrixF* w2a = NULL, const MatrixF* _w2b = NULL) override;
 };
 
 

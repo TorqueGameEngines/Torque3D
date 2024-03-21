@@ -374,7 +374,7 @@ public:
    const String& getPixelShaderFile() const { return mPixelFile.getFullPath(); }
 
    // GFXResource
-   const String describeSelf() const { return mDescription; }
+   const String describeSelf() const override { return mDescription; }
 
    // Get instancing vertex format
    GFXVertexFormat *getInstancingFormat() { return mInstancingFormat; }

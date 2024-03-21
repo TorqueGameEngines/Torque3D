@@ -45,8 +45,8 @@ public:
 
   void set(F32 a, F32 b, F32 a_var, F32 b_var, bool sync_var);
 
-  virtual void interpolate(F32 t, afxXM_Params& params)=0;
-  virtual void pulse();
+  void interpolate(F32 t, afxXM_Params& params) override =0;
+  void pulse() override;
 };
 
 afxXM_WaveInterp_Scalar::afxXM_WaveInterp_Scalar() 
@@ -88,7 +88,7 @@ protected:
   U32 offset;
 public:
   afxXM_WaveInterp_Scalar_Add(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     *((F32*)(((char*)(&params)) + offset)) += mLerp(mA, mB,t);
   }
@@ -102,7 +102,7 @@ protected:
   U32 offset;
 public:
   afxXM_WaveInterp_Scalar_Mul(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     *((F32*)(((char*)(&params)) + offset)) *= mLerp(mA, mB,t);
   }
@@ -116,7 +116,7 @@ protected:
   U32 offset;
 public:
   afxXM_WaveInterp_Scalar_Rep(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     *((F32*)(((char*)(&params)) + offset)) = mLerp(mA, mB,t);
   }
@@ -130,7 +130,7 @@ protected:
   U32 offset;
 public:
   afxXM_WaveInterp_Scalar_PointAdd(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     F32 scalar_at_t = mLerp(mA, mB,t);
     Point3F point_at_t(scalar_at_t, scalar_at_t, scalar_at_t);
@@ -146,7 +146,7 @@ protected:
   U32 offset;
 public:
   afxXM_WaveInterp_Scalar_PointMul(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     *((Point3F*)(((char*)(&params)) + offset)) *= mLerp(mA, mB,t);
   }
@@ -160,7 +160,7 @@ protected:
   U32 offset;
 public:
   afxXM_WaveInterp_Scalar_PointRep(U32 o) : afxXM_WaveInterp_Scalar() { offset = o; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     F32 scalar_at_t = mLerp(mA, mB,t);
     Point3F point_at_t(scalar_at_t, scalar_at_t, scalar_at_t);
@@ -177,7 +177,7 @@ protected:
   U32       offset;
 public:
   afxXM_WaveInterp_Scalar_Axis_PointAdd(U32 o, Point3F ax) : afxXM_WaveInterp_Scalar() { offset = o; axis = ax; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     Point3F point_at_t = axis* mLerp(mA, mB,t);
     *((Point3F*)(((char*)(&params)) + offset)) += point_at_t;
@@ -191,7 +191,7 @@ protected:
   U32       offset;
 public:
   afxXM_WaveInterp_Scalar_LocalAxis_PointAdd(U32 o, Point3F ax) : afxXM_WaveInterp_Scalar() { offset = o; axis = ax; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     Point3F local_axis(axis); 
     params.ori.mulV(local_axis);
@@ -209,7 +209,7 @@ protected:
   U32       offset;
 public:
   afxXM_WaveInterp_Scalar_Axis_PointMul(U32 o, Point3F ax) : afxXM_WaveInterp_Scalar() { offset = o; axis = ax; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     Point3F point_at_t = axis* mLerp(mA, mB,t);
     *((Point3F*)(((char*)(&params)) + offset)) *= point_at_t;
@@ -223,7 +223,7 @@ protected:
   U32       offset;
 public:
   afxXM_WaveInterp_Scalar_LocalAxis_PointMul(U32 o, Point3F ax) : afxXM_WaveInterp_Scalar() { offset = o; axis = ax; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     Point3F local_axis(axis); 
     params.ori.mulV(local_axis);
@@ -241,7 +241,7 @@ protected:
   U32       offset;
 public:
   afxXM_WaveInterp_Scalar_Axis_PointRep(U32 o, Point3F ax) : afxXM_WaveInterp_Scalar() { offset = o; axis = ax; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     Point3F point_at_t = axis* mLerp(mA, mB,t);
     *((Point3F*)(((char*)(&params)) + offset)) = point_at_t;
@@ -255,7 +255,7 @@ protected:
   U32       offset;
 public:
   afxXM_WaveInterp_Scalar_LocalAxis_PointRep(U32 o, Point3F ax) : afxXM_WaveInterp_Scalar() { offset = o; axis = ax; }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     Point3F local_axis(axis); 
     params.ori.mulV(local_axis);
@@ -270,7 +270,7 @@ class afxXM_WaveInterp_Scalar_ColorAdd : public afxXM_WaveInterp_Scalar
 {
 public:
   afxXM_WaveInterp_Scalar_ColorAdd() : afxXM_WaveInterp_Scalar() { }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     F32 scalar_at_t = mLerp(mA, mB,t);
     LinearColorF color_at_t(scalar_at_t, scalar_at_t, scalar_at_t, scalar_at_t);
@@ -284,7 +284,7 @@ class afxXM_WaveInterp_Scalar_ColorMul : public afxXM_WaveInterp_Scalar
 {
 public:
   afxXM_WaveInterp_Scalar_ColorMul() : afxXM_WaveInterp_Scalar() { }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     params.color *= mLerp(mA, mB,t);
   }
@@ -296,7 +296,7 @@ class afxXM_WaveInterp_Scalar_ColorRep : public afxXM_WaveInterp_Scalar
 {
 public:
   afxXM_WaveInterp_Scalar_ColorRep() : afxXM_WaveInterp_Scalar() { }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     F32 scalar_at_t = mLerp(mA, mB,t);
     params.color.set(scalar_at_t, scalar_at_t, scalar_at_t, scalar_at_t);
@@ -311,7 +311,7 @@ protected:
   Point3F axis;
 public:
   afxXM_WaveInterp_Scalar_OriMul(Point3F& ax) : afxXM_WaveInterp_Scalar() { axis = ax;  }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     F32 theta = mDegToRad(mLerp(mA, mB,t));
     AngAxisF rot_aa(axis, theta);
@@ -328,7 +328,7 @@ protected:
   Point3F axis;
 public:
   afxXM_WaveInterp_Scalar_OriRep(Point3F& ax) : afxXM_WaveInterp_Scalar() { axis = ax;  }
-  virtual void interpolate(F32 t, afxXM_Params& params)
+  void interpolate(F32 t, afxXM_Params& params) override
   {
     F32 theta = mDegToRad(mLerp(mA, mB,t));
     AngAxisF rot_aa(axis, theta);
@@ -586,14 +586,14 @@ public:
   /*C*/         afxXM_WaveScalarData();
   /*C*/         afxXM_WaveScalarData(const afxXM_WaveScalarData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_WaveScalarData);
 };
@@ -712,14 +712,14 @@ public:
   /*C*/         afxXM_WaveRiderScalarData();
   /*C*/         afxXM_WaveRiderScalarData(const afxXM_WaveRiderScalarData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_WaveRiderScalarData);
 };

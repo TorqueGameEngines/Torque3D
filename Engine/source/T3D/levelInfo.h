@@ -128,9 +128,9 @@ class LevelInfo : public NetObject
       /// @name SimObject Inheritance
       /// @{
 
-      virtual bool onAdd();
-      virtual void onRemove();
-      virtual void inspectPostApply();
+      bool onAdd() override;
+      void onRemove() override;
+      void inspectPostApply() override;
 
       static void initPersistFields();
 
@@ -144,8 +144,8 @@ class LevelInfo : public NetObject
          UpdateMask = BIT(0)
       };
 
-      virtual U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-      virtual void unpackUpdate( NetConnection *conn, BitStream *stream );
+      U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+      void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
       static bool _setLevelAccuTexture(void *object, const char *index, const char *data);
       void setLevelAccuTexture(StringTableEntry name);
       /// @}

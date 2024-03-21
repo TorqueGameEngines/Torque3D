@@ -68,17 +68,17 @@ class TerrainBaseMapFeatHLSL : public TerrainFeatHLSL
 {
 public:
 
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
           
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual String getName() { return "Terrain Base Texture"; }
+   String getName() override { return "Terrain Base Texture"; }
 
-   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
+   U32 getOutputTargets( const MaterialFeatureData &fd ) const override;
 };
 
 
@@ -93,17 +93,17 @@ public:
 
    TerrainDetailMapFeatHLSL();
 
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual String getName() { return "Terrain Detail Texture"; }
+   String getName() override { return "Terrain Detail Texture"; }
 
-   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
+   U32 getOutputTargets( const MaterialFeatureData &fd ) const override;
 };
 
 
@@ -118,17 +118,17 @@ public:
 
    TerrainMacroMapFeatHLSL();
 
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual String getName() { return "Terrain Macro Texture"; }
+   String getName() override { return "Terrain Macro Texture"; }
 
-   virtual U32 getOutputTargets( const MaterialFeatureData &fd ) const;
+   U32 getOutputTargets( const MaterialFeatureData &fd ) const override;
 };
 
 
@@ -136,65 +136,65 @@ class TerrainNormalMapFeatHLSL : public TerrainFeatHLSL
 {
 public:
 
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual String getName() { return "Terrain Normal Texture"; }
+   String getName() override { return "Terrain Normal Texture"; }
 };
 
 class TerrainLightMapFeatHLSL : public TerrainFeatHLSL
 {
 public:
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-                            const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+                            const MaterialFeatureData &fd ) override;
           
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual String getName() { return "Terrain Lightmap Texture"; }
+   String getName() override { return "Terrain Lightmap Texture"; }
 };
 
 class TerrainORMMapFeatHLSL : public TerrainFeatHLSL
 {
 public:
 
-   virtual void processVert(Vector<ShaderComponent*> &componentList,
-      const MaterialFeatureData &fd);
+   void processVert(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd) override;
 
-   virtual void processPix(Vector<ShaderComponent*> &componentList,
-      const MaterialFeatureData &fd);
+   void processPix(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd) override;
 
-   virtual Resources getResources(const MaterialFeatureData &fd);
+   Resources getResources(const MaterialFeatureData &fd) override;
 
-   virtual U32 getOutputTargets(const MaterialFeatureData &fd) const;
-   virtual String getName() { return "Composite Matinfo map"; }
+   U32 getOutputTargets(const MaterialFeatureData &fd) const override;
+   String getName() override { return "Composite Matinfo map"; }
 };
 
 class TerrainBlankInfoMapFeatHLSL : public TerrainFeatHLSL
 {
 public:
 
-   virtual void processPix(Vector<ShaderComponent*> &componentList,
-      const MaterialFeatureData &fd);
-   virtual String getName() { return "Blank Matinfo map"; }
+   void processPix(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd) override;
+   String getName() override { return "Blank Matinfo map"; }
 };
 
 class TerrainHeightMapBlendHLSL : public TerrainFeatHLSL
 {
 public:
 
-   virtual void processVert(Vector<ShaderComponent*>& componentList,
-      const MaterialFeatureData& fd);
+   void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
 
-   virtual void processPix(Vector<ShaderComponent*>& componentList,
-      const MaterialFeatureData& fd);
+   void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
 
-   virtual String getName() { return "Terrain Heightmap Blend"; }
+   String getName() override { return "Terrain Heightmap Blend"; }
 };
 
 #endif // _TERRFEATUREHLSL_H_

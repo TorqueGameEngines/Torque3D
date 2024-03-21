@@ -34,21 +34,21 @@ const U32 MaxMipMaps = 13; //todo this needs a proper static value somewhere to 
 class GFXD3D11Cubemap : public GFXCubemap
 {
 public:
-   virtual void initStatic( GFXTexHandle *faces );
-   virtual void initStatic( DDSFile *dds );
-   virtual void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0);
-   virtual void setToTexUnit( U32 tuNum );
-   virtual U32 getSize() const { return mTexSize; }
-   virtual GFXFormat getFormat() const { return mFaceFormat; }
+   void initStatic( GFXTexHandle *faces ) override;
+   void initStatic( DDSFile *dds ) override;
+   void initDynamic( U32 texSize, GFXFormat faceFormat = GFXFormatR8G8B8A8, U32 mipLevels = 0) override;
+   void setToTexUnit( U32 tuNum ) override;
+   U32 getSize() const override { return mTexSize; }
+   GFXFormat getFormat() const override { return mFaceFormat; }
 
    GFXD3D11Cubemap();
    virtual ~GFXD3D11Cubemap();
 
    // GFXResource interface
-   virtual void zombify();
-   virtual void resurrect();
+   void zombify() override;
+   void resurrect() override;
 
-   virtual bool isInitialized() { return mTexture ? true : false; }
+   bool isInitialized() override { return mTexture ? true : false; }
 
    // Get functions
    ID3D11ShaderResourceView* getSRView();
@@ -83,18 +83,18 @@ class GFXD3D11CubemapArray : public GFXCubemapArray
 public:
    GFXD3D11CubemapArray();
    virtual ~GFXD3D11CubemapArray();
-   virtual void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount);
-   virtual void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format);
-   virtual void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot);
-   virtual void copyTo(GFXCubemapArray *pDstCubemap);
-   virtual void setToTexUnit(U32 tuNum);
+   void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount) override;
+   void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format) override;
+   void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot) override;
+   void copyTo(GFXCubemapArray *pDstCubemap) override;
+   void setToTexUnit(U32 tuNum) override;
 
    ID3D11ShaderResourceView* getSRView() { return mSRView; }
    ID3D11Texture2D* get2DTex() { return mTexture; }
 
    // GFXResource interface
-   virtual void zombify();
-   virtual void resurrect();
+   void zombify() override;
+   void resurrect() override;
 
 private:
    friend class GFXD3D11TextureTarget;

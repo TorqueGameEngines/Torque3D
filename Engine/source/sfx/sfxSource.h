@@ -382,7 +382,7 @@ class SFXSource : public SimGroup
 
       /// We overload this to disable creation of 
       /// a source via script 'new'.
-      virtual bool processArguments( S32 argc, ConsoleValue *argv );
+      bool processArguments( S32 argc, ConsoleValue *argv ) override;
       
       // Console getters/setters.
       static bool _setDescription( void *obj, const char *index, const char *data );
@@ -643,11 +643,11 @@ class SFXSource : public SimGroup
       /// @}
             
       // SimGroup.
-      virtual bool onAdd();
-      virtual void onRemove();
-      virtual void onDeleteNotify( SimObject* object );
+      bool onAdd() override;
+      void onRemove() override;
+      void onDeleteNotify( SimObject* object ) override;
       virtual bool acceptsAsChild( SimObject* object );
-      virtual void onGroupAdd();
+      void onGroupAdd() override;
       
       static void initPersistFields();
       

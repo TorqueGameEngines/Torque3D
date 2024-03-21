@@ -52,8 +52,8 @@ public:
    DECLARE_CONOBJECT(GuiPanel);
 
    // GuiControl
-   void onRender(Point2I offset, const RectI &updateRect);
-   void setVisible(bool value) { Parent::setVisible(value); setUpdateLayout( updateParent ); }
+   void onRender(Point2I offset, const RectI &updateRect) override;
+   void setVisible(bool value) override { Parent::setVisible(value); setUpdateLayout( updateParent ); }
 };
 /// @}
 

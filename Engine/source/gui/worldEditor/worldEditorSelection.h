@@ -137,9 +137,9 @@ class WorldEditorSelection : public SimPersistSet
       void invalidateCentroid() { mCentroidValid = false; }
       
       // SimSet.
-      virtual void addObject( SimObject* );
-      virtual void removeObject( SimObject* );
-      virtual void setCanSave( bool value );
+      void addObject( SimObject* ) override;
+      void removeObject( SimObject* ) override;
+      void setCanSave( bool value ) override;
       
       static void initPersistFields();
                   

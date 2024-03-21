@@ -69,15 +69,15 @@ public:
    virtual ~GFXD3D11ShaderConstHandle();
    void addDesc(GFXShaderStage stage, const GFXShaderConstDesc& desc);
    const GFXShaderConstDesc getDesc(GFXShaderStage stage);
-   const String& getName() const { return mDesc.name; }
-   GFXShaderConstType getType() const { return mDesc.constType; }
-   U32 getArraySize() const { return mDesc.arraySize; }
+   const String& getName() const override { return mDesc.name; }
+   GFXShaderConstType getType() const override { return mDesc.constType; }
+   U32 getArraySize() const override { return mDesc.arraySize; }
 
    U32 getSize() const { return mDesc.size; }
    void setValid(bool valid) { mValid = valid; }
    /// @warning This will always return the value assigned when the shader was
    /// initialized.  If the value is later changed this method won't reflect that.
-   S32 getSamplerRegister() const { return (!isSampler() || !mValid) ? -1 : mDesc.samplerReg; }
+   S32 getSamplerRegister() const override { return (!isSampler() || !mValid) ? -1 : mDesc.samplerReg; }
 
    // Returns true if this is a handle to a sampler register.
    bool isSampler() const
@@ -124,32 +124,32 @@ public:
    void onShaderReload(GFXD3D11Shader *shader);
 
    // GFXShaderConstBuffer
-   virtual GFXShader* getShader();
-   virtual void set(GFXShaderConstHandle* handle, const F32 fv);
-   virtual void set(GFXShaderConstHandle* handle, const Point2F& fv);
-   virtual void set(GFXShaderConstHandle* handle, const Point3F& fv);
-   virtual void set(GFXShaderConstHandle* handle, const Point4F& fv);
-   virtual void set(GFXShaderConstHandle* handle, const PlaneF& fv);
-   virtual void set(GFXShaderConstHandle* handle, const LinearColorF& fv);
-   virtual void set(GFXShaderConstHandle* handle, const S32 f);
-   virtual void set(GFXShaderConstHandle* handle, const Point2I& fv);
-   virtual void set(GFXShaderConstHandle* handle, const Point3I& fv);
-   virtual void set(GFXShaderConstHandle* handle, const Point4I& fv);
-   virtual void set(GFXShaderConstHandle* handle, const AlignedArray<F32>& fv);
-   virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point2F>& fv);
-   virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point3F>& fv);
-   virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point4F>& fv);
-   virtual void set(GFXShaderConstHandle* handle, const AlignedArray<S32>& fv);
-   virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point2I>& fv);
-   virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point3I>& fv);
-   virtual void set(GFXShaderConstHandle* handle, const AlignedArray<Point4I>& fv);
-   virtual void set(GFXShaderConstHandle* handle, const MatrixF& mat, const GFXShaderConstType matType = GFXSCT_Float4x4);
-   virtual void set(GFXShaderConstHandle* handle, const MatrixF* mat, const U32 arraySize, const GFXShaderConstType matrixType = GFXSCT_Float4x4);
+   GFXShader* getShader() override;
+   void set(GFXShaderConstHandle* handle, const F32 fv) override;
+   void set(GFXShaderConstHandle* handle, const Point2F& fv) override;
+   void set(GFXShaderConstHandle* handle, const Point3F& fv) override;
+   void set(GFXShaderConstHandle* handle, const Point4F& fv) override;
+   void set(GFXShaderConstHandle* handle, const PlaneF& fv) override;
+   void set(GFXShaderConstHandle* handle, const LinearColorF& fv) override;
+   void set(GFXShaderConstHandle* handle, const S32 f) override;
+   void set(GFXShaderConstHandle* handle, const Point2I& fv) override;
+   void set(GFXShaderConstHandle* handle, const Point3I& fv) override;
+   void set(GFXShaderConstHandle* handle, const Point4I& fv) override;
+   void set(GFXShaderConstHandle* handle, const AlignedArray<F32>& fv) override;
+   void set(GFXShaderConstHandle* handle, const AlignedArray<Point2F>& fv) override;
+   void set(GFXShaderConstHandle* handle, const AlignedArray<Point3F>& fv) override;
+   void set(GFXShaderConstHandle* handle, const AlignedArray<Point4F>& fv) override;
+   void set(GFXShaderConstHandle* handle, const AlignedArray<S32>& fv) override;
+   void set(GFXShaderConstHandle* handle, const AlignedArray<Point2I>& fv) override;
+   void set(GFXShaderConstHandle* handle, const AlignedArray<Point3I>& fv) override;
+   void set(GFXShaderConstHandle* handle, const AlignedArray<Point4I>& fv) override;
+   void set(GFXShaderConstHandle* handle, const MatrixF& mat, const GFXShaderConstType matType = GFXSCT_Float4x4) override;
+   void set(GFXShaderConstHandle* handle, const MatrixF* mat, const U32 arraySize, const GFXShaderConstType matrixType = GFXSCT_Float4x4) override;
 
    // GFXResource
-   virtual const String describeSelf() const;
-   virtual void zombify() {}
-   virtual void resurrect() {}
+   const String describeSelf() const override;
+   void zombify() override {}
+   void resurrect() override {}
 
 protected:
    friend class GFXD3D11Shader;
@@ -182,19 +182,19 @@ public:
    virtual ~GFXD3D11Shader();
 
    // GFXShader
-   virtual GFXShaderConstBufferRef allocConstBuffer();
-   virtual const Vector<GFXShaderConstDesc>& getShaderConstDesc() const;
-   virtual GFXShaderConstHandle* getShaderConstHandle(const String& name);
-   virtual GFXShaderConstHandle* findShaderConstHandle(const String& name);
-   virtual U32 getAlignmentValue(const GFXShaderConstType constType) const;
+   GFXShaderConstBufferRef allocConstBuffer() override;
+   const Vector<GFXShaderConstDesc>& getShaderConstDesc() const override;
+   GFXShaderConstHandle* getShaderConstHandle(const String& name) override;
+   GFXShaderConstHandle* findShaderConstHandle(const String& name) override;
+   U32 getAlignmentValue(const GFXShaderConstType constType) const override;
 
    // GFXResource
-   virtual void zombify();
-   virtual void resurrect();
+   void zombify() override;
+   void resurrect() override;
 
 protected:
 
-   virtual bool _init();
+   bool _init() override;
 
    ID3D11VertexShader *mVertShader;
    ID3D11PixelShader *mPixShader;

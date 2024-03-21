@@ -105,11 +105,11 @@ class SFXFileStream : public SFXStream
       void close();
 
       // SFXStream.
-      const SFXFormat& getFormat() const { return mFormat; }
-      U32 getSampleCount() const { return mSamples; }
-      U32 getDataLength() const { return mSamples * mFormat.getBytesPerSample(); }
-      U32 getDuration() const { return mFormat.getDuration( mSamples ); }
-      bool isEOS() const;
+      const SFXFormat& getFormat() const override { return mFormat; }
+      U32 getSampleCount() const override { return mSamples; }
+      U32 getDataLength() const override { return mSamples * mFormat.getBytesPerSample(); }
+      U32 getDuration() const override { return mFormat.getDuration( mSamples ); }
+      bool isEOS() const override;
 };
 
 #endif // _SFXFILESTREAM_H_

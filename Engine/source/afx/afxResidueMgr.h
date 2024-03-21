@@ -153,7 +153,7 @@ public:
   /*D*/             ~afxResidueMgr();
 
   void              cleanup();
-  virtual void      onDeleteNotify(SimObject *obj);
+  void      onDeleteNotify(SimObject *obj) override;
     
 public:
   void              residueAdvanceTime();

@@ -44,8 +44,8 @@ class SFXWavStream : public SFXFileStream,
       U32 mDataStart;
 
       // SFXFileStream
-      virtual bool _readHeader();
-      virtual void _close();
+      bool _readHeader() override;
+      void _close() override;
 
    public:
 
@@ -62,9 +62,9 @@ class SFXWavStream : public SFXFileStream,
       virtual ~SFXWavStream();
 
       // SFXStream
-      virtual void reset();
-      virtual U32 read( U8 *buffer, U32 length );
-      virtual SFXStream* clone() const
+      void reset() override;
+      U32 read( U8 *buffer, U32 length ) override;
+      SFXStream* clone() const override
       {
          SFXWavStream* stream = new SFXWavStream( *this );
          if( !stream->mStream )
@@ -73,8 +73,8 @@ class SFXWavStream : public SFXFileStream,
       }
 
       // IPositionable
-      virtual U32 getPosition() const;
-      virtual void setPosition( U32 offset );
+      U32 getPosition() const override;
+      void setPosition( U32 offset ) override;
 };
 
 #endif  // _SFXWAVSTREAM_H_

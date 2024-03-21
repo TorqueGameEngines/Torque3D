@@ -48,7 +48,7 @@ public:
 
    virtual ~AdvancedLightBufferConditioner();
 
-   virtual String getName()
+   String getName() override
    {
       return String("Light Buffer Conditioner ") + String( mColorFormat == RGB ? "[RGB]" : "[LUV]" );
    }
@@ -56,10 +56,10 @@ public:
 protected:
    ColorFormat mColorFormat;
 
-   virtual Var *_conditionOutput( Var *unconditionedOutput, MultiLine *meta );
-   virtual Var *_unconditionInput( Var *conditionedInput, MultiLine *meta );
-   virtual Var *printMethodHeader( MethodType methodType, const String &methodName, Stream &stream, MultiLine *meta );
-   virtual void printMethodFooter( MethodType methodType, Var *retVar, Stream &stream, MultiLine *meta );
+   Var *_conditionOutput( Var *unconditionedOutput, MultiLine *meta ) override;
+   Var *_unconditionInput( Var *conditionedInput, MultiLine *meta ) override;
+   Var *printMethodHeader( MethodType methodType, const String &methodName, Stream &stream, MultiLine *meta ) override;
+   void printMethodFooter( MethodType methodType, Var *retVar, Stream &stream, MultiLine *meta ) override;
 };
 
 #endif // _ADVANCED_LIGHTBUFFER_CONDITIONER_H_

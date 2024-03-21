@@ -176,11 +176,11 @@ class TSShapeInstance
       MeshObjectInstance();
       virtual ~MeshObjectInstance() {}
 
-      void render( S32 objectDetail, TSVertexBufferHandle &vb, TSMaterialList *, TSRenderState &rdata, F32 alpha, const char *meshName );
+      void render( S32 objectDetail, TSVertexBufferHandle &vb, TSMaterialList *, TSRenderState &rdata, F32 alpha, const char *meshName ) override;
 
-      void updateVertexBuffer( S32 objectDetail, U8 *buffer );
+      void updateVertexBuffer( S32 objectDetail, U8 *buffer ) override;
 
-      bool bufferNeedsUpdate(S32 objectDetail);
+      bool bufferNeedsUpdate(S32 objectDetail) override;
 
       /// Gets the mesh with specified detail level
       TSMesh * getMesh(S32 num) const { return num<object->numMeshes ? *(meshList+num) : NULL; }
@@ -188,15 +188,15 @@ class TSShapeInstance
      /// @name Collision Routines
      /// @{
 
-      bool buildPolyList( S32 objectDetail, AbstractPolyList *polyList, U32 &surfaceKey, TSMaterialList *materials );
-      bool getFeatures( S32 objectDetail, const MatrixF &mat, const Point3F &n, ConvexFeature *feature, U32 &surfaceKey );
-      void support( S32 od, const Point3F &v, F32 *currMaxDP, Point3F *currSupport );
-      bool castRay( S32 objectDetail, const Point3F &start, const Point3F &end, RayInfo *info, TSMaterialList *materials );
+      bool buildPolyList( S32 objectDetail, AbstractPolyList *polyList, U32 &surfaceKey, TSMaterialList *materials ) override;
+      bool getFeatures( S32 objectDetail, const MatrixF &mat, const Point3F &n, ConvexFeature *feature, U32 &surfaceKey ) override;
+      void support( S32 od, const Point3F &v, F32 *currMaxDP, Point3F *currSupport ) override;
+      bool castRay( S32 objectDetail, const Point3F &start, const Point3F &end, RayInfo *info, TSMaterialList *materials ) override;
       bool castRayRendered( S32 objectDetail, const Point3F &start, const Point3F &end, RayInfo *info, TSMaterialList *materials );
 
       bool buildPolyListOpcode( S32 objectDetail, AbstractPolyList *polyList, const Box3F &box, TSMaterialList* materials );
-      bool castRayOpcode( S32 objectDetail, const Point3F &start, const Point3F &end, RayInfo *info, TSMaterialList *materials );
-      bool buildConvexOpcode( const MatrixF &mat, S32 objectDetail, const Box3F &bounds, Convex *c, Convex *list );
+      bool castRayOpcode( S32 objectDetail, const Point3F &start, const Point3F &end, RayInfo *info, TSMaterialList *materials ) override;
+      bool buildConvexOpcode( const MatrixF &mat, S32 objectDetail, const Box3F &bounds, Convex *c, Convex *list ) override;
 
      /// @}
    };

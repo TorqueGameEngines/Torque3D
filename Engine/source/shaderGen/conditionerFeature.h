@@ -51,7 +51,7 @@ public:
    ConditionerFeature( const GFXFormat bufferFormat );
    virtual ~ConditionerFeature();
 
-   virtual Material::BlendOp getBlendOp()
+   Material::BlendOp getBlendOp() override
    { 
       return Material::None; 
    }
@@ -60,10 +60,10 @@ public:
    virtual bool setBufferFormat(const GFXFormat bufferFormat) { bool ret = mBufferFormat == bufferFormat; mBufferFormat = bufferFormat; return ret; }
 
    // zero-out these methods
-   virtual Var* getVertTexCoord( const String &name ) { AssertFatal( false, "don't use this." ); return NULL; }
-   virtual LangElement *setupTexSpaceMat(  Vector<ShaderComponent*> &componentList, Var **texSpaceMat ) { AssertFatal( false, "don't use this." );  return NULL; }
-   virtual LangElement *expandNormalMap( LangElement *sampleNormalOp, LangElement *normalDecl, LangElement *normalVar, const MaterialFeatureData &fd ) { AssertFatal( false, "don't use this." );  return NULL; }
-   virtual LangElement *assignColor( LangElement *elem, Material::BlendOp blend, LangElement *lerpElem = NULL, ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget ) { AssertFatal( false, "don't use this." ); return NULL; }
+   Var* getVertTexCoord( const String &name ) override { AssertFatal( false, "don't use this." ); return NULL; }
+   LangElement *setupTexSpaceMat(  Vector<ShaderComponent*> &componentList, Var **texSpaceMat ) override { AssertFatal( false, "don't use this." );  return NULL; }
+   LangElement *expandNormalMap( LangElement *sampleNormalOp, LangElement *normalDecl, LangElement *normalVar, const MaterialFeatureData &fd ) override { AssertFatal( false, "don't use this." );  return NULL; }
+   LangElement *assignColor( LangElement *elem, Material::BlendOp blend, LangElement *lerpElem = NULL, ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget ) override { AssertFatal( false, "don't use this." ); return NULL; }
 
    // conditioned output
    virtual LangElement *assignOutput( Var *unconditionedOutput, ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget );
@@ -128,7 +128,7 @@ public:
    ConditionerMethodDependency( ConditionerFeature *conditioner, const ConditionerFeature::MethodType methodType ) :
       mConditioner(conditioner), mMethodType(methodType) {}
 
-   virtual void print( Stream &s ) const;
+   void print( Stream &s ) const override;
 
    // Auto insert information into a macro
    virtual void createMethodMacro( const String &methodName, Vector<GFXShaderMacro> &macros );

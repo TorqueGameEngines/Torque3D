@@ -53,8 +53,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSoundControls);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 };
 //RDTODO: make 3D sound emitters yield their source when being culled
 
@@ -244,16 +244,16 @@ class SFXEmitter : public SceneObject
       void stop();
 
       // SimObject
-      bool onAdd();
-      void onRemove();
-      void onStaticModified( const char *slotName, const char *newValue = NULL );
-      U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-      void unpackUpdate( NetConnection *conn, BitStream *stream );
-      void setTransform( const MatrixF &mat );
-      void setScale( const VectorF &scale );
-      bool containsPoint( const Point3F& point ) { return false; }
-      void prepRenderImage( SceneRenderState* state );
-      void inspectPostApply();
+      bool onAdd() override;
+      void onRemove() override;
+      void onStaticModified( const char *slotName, const char *newValue = NULL ) override;
+      U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+      void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
+      void setTransform( const MatrixF &mat ) override;
+      void setScale( const VectorF &scale ) override;
+      bool containsPoint( const Point3F& point ) override { return false; }
+      void prepRenderImage( SceneRenderState* state ) override;
+      void inspectPostApply() override;
 
       static void initPersistFields();
       static void consoleInit();

@@ -33,46 +33,46 @@ class VertPixelConnectorGLSL : public ShaderConnector
 public:
 
    // ShaderConnector
-   virtual Var* getElement(   RegisterType type, 
+   Var* getElement(   RegisterType type, 
                               U32 numElements = 1, 
-                              U32 numRegisters = -1 );
-   virtual void setName( const char *newName );
-   virtual void reset();
-   virtual void sortVars();
+                              U32 numRegisters = -1 ) override;
+   void setName( const char *newName ) override;
+   void reset() override;
+   void sortVars() override;
 
    virtual void print( Stream &stream) {} // TODO OPENGL temporal fix for dedicated build on Linux
-   virtual void print( Stream &stream, bool isVerterShader );
+   void print( Stream &stream, bool isVerterShader ) override;
    void printStructDefines( Stream &stream, bool in );
-   virtual void printOnMain( Stream &stream, bool isVerterShader );
+   void printOnMain( Stream &stream, bool isVerterShader ) override;
 };
 
 class AppVertConnectorGLSL : public ShaderConnector
 {
 public:
-   virtual Var* getElement(   RegisterType type, 
+   Var* getElement(   RegisterType type, 
                               U32 numElements = 1, 
-                              U32 numRegisters = -1 );
-   virtual void setName( const char *newName );
-   virtual void reset();
-   virtual void sortVars();
+                              U32 numRegisters = -1 ) override;
+   void setName( const char *newName ) override;
+   void reset() override;
+   void sortVars() override;
    
    virtual void print( Stream &stream) {} // TODO OPENGL temporal fix for dedicated build on Linux
-   virtual void print( Stream &stream, bool isVerterShader );   
-   virtual void printOnMain( Stream &stream, bool isVerterShader );
+   void print( Stream &stream, bool isVerterShader ) override;   
+   void printOnMain( Stream &stream, bool isVerterShader ) override;
 };
 
 
 class VertexParamsDefGLSL : public ParamsDef
 {
 public:
-   virtual void print( Stream &stream, bool isVerterShader );   
+   void print( Stream &stream, bool isVerterShader ) override;   
 };
 
 
 class PixelParamsDefGLSL : public ParamsDef
 {
 public:
-   virtual void print( Stream &stream, bool isVerterShader );
+   void print( Stream &stream, bool isVerterShader ) override;
 };
 
 #endif // _SHADERCOMP_GLSL_H_

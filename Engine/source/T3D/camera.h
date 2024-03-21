@@ -49,8 +49,8 @@ class CameraData: public ShapeBaseData
       DECLARE_DESCRIPTION( "A datablock that describes a camera." );
 
       static void initPersistFields();
-      virtual void packData(BitStream* stream);
-      virtual void unpackData(BitStream* stream);
+      void packData(BitStream* stream) override;
+      void unpackData(BitStream* stream) override;
 };
 
 
@@ -161,14 +161,14 @@ class Camera: public ShapeBase
       static bool _setNewtonField( void *object, const char *index, const char *data );
 
       // ShapeBase.
-      virtual F32 getCameraFov();
-      virtual void setCameraFov( F32 fov );
-      virtual F32 getDefaultCameraFov();
-      virtual bool isValidCameraFov( F32 fov );
-      virtual F32 getDamageFlash() const;
-      virtual F32 getWhiteOut() const;
-      virtual void setTransform( const MatrixF& mat );
-      virtual void setRenderTransform( const MatrixF& mat );
+      F32 getCameraFov() override;
+      void setCameraFov( F32 fov ) override;
+      F32 getDefaultCameraFov() override;
+      bool isValidCameraFov( F32 fov ) override;
+      F32 getDamageFlash() const override;
+      F32 getWhiteOut() const override;
+      void setTransform( const MatrixF& mat ) override;
+      void setRenderTransform( const MatrixF& mat ) override;
 
    public:
 
@@ -188,7 +188,7 @@ class Camera: public ShapeBase
       void setOrbitMode( GameBase *obj, const Point3F& pos, const Point3F& rot, const Point3F& offset,
                          F32 minDist, F32 maxDist, F32 curDist, bool ownClientObject, bool locked = false );
       void setTrackObject( GameBase *obj, const Point3F& offset);
-      void onDeleteNotify( SimObject* obj );
+      void onDeleteNotify( SimObject* obj ) override;
 
       GameBase* getOrbitObject()      { return(mOrbitObject); }
       bool isObservingClientObject()   { return(mObservingClientObject); }
@@ -197,8 +197,8 @@ class Camera: public ShapeBase
       /// @{
 
       void setNewtonFlyMode();
-      VectorF getVelocity() const { return mVelocity; }
-      void setVelocity( const VectorF& vel );
+      VectorF getVelocity() const override { return mVelocity; }
+      void setVelocity( const VectorF& vel ) override;
       VectorF getAngularVelocity() const { return mAngularVelocity; }
       void setAngularVelocity( const VectorF& vel );
       bool isRotationDamped() {return mNewtonRotation;}
@@ -232,27 +232,27 @@ class Camera: public ShapeBase
       static void initPersistFields();
       static void consoleInit();
 
-      virtual void onEditorEnable();
-      virtual void onEditorDisable();
+      void onEditorEnable() override;
+      void onEditorDisable() override;
 
-      virtual bool onAdd();
-      virtual void onRemove();
-      virtual bool onNewDataBlock( GameBaseData *dptr, bool reload );
-      virtual void processTick( const Move* move );
-      virtual void interpolateTick( F32 delta);
-      virtual void getCameraTransform( F32* pos,MatrixF* mat );
-      virtual void getEyeCameraTransform( IDisplayDevice *display, U32 eyeId, MatrixF *outMat );
+      bool onAdd() override;
+      void onRemove() override;
+      bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
+      void processTick( const Move* move ) override;
+      void interpolateTick( F32 delta) override;
+      void getCameraTransform( F32* pos,MatrixF* mat ) override;
+      void getEyeCameraTransform( IDisplayDevice *display, U32 eyeId, MatrixF *outMat ) override;
 
-      virtual void writePacketData( GameConnection* conn, BitStream* stream );
-      virtual void readPacketData( GameConnection* conn, BitStream* stream );
-      virtual U32  packUpdate( NetConnection* conn, U32 mask, BitStream* stream );
-      virtual void unpackUpdate( NetConnection* conn, BitStream* stream );
+      void writePacketData( GameConnection* conn, BitStream* stream ) override;
+      void readPacketData( GameConnection* conn, BitStream* stream ) override;
+      U32  packUpdate( NetConnection* conn, U32 mask, BitStream* stream ) override;
+      void unpackUpdate( NetConnection* conn, BitStream* stream ) override;
 
       DECLARE_CONOBJECT( Camera );
       DECLARE_CATEGORY("Actor \t Controllable");
       DECLARE_DESCRIPTION( "Represents a position, direction and field of view to render a scene from." );
       static F32 getMovementSpeed() { return smMovementSpeed; }
-      bool isCamera() const { return true; }
+      bool isCamera() const override { return true; }
 
       //Not yet implemented
       GFXTexHandle getCameraRenderTarget() { return GFXTexHandle(); }

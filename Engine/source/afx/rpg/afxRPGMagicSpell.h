@@ -90,9 +90,9 @@ public:
   char*             formatDesc(char* buffer, int len) const;
   bool              requiresTarget() { return (spell_target == TARGET_ENEMY || spell_target == TARGET_CORPSE || spell_target == TARGET_FRIEND); }
 
-  virtual bool      onAdd();
-  virtual void      packData(BitStream*);
-  virtual void      unpackData(BitStream*);
+  bool      onAdd() override;
+  void      packData(BitStream*) override;
+  void      unpackData(BitStream*) override;
 
   static void       initPersistFields();
 

@@ -37,9 +37,9 @@ public:
    PSSMLightShadowMap( LightInfo *light );
 
    // LightShadowMap
-   virtual ShadowType getShadowType() const { return ShadowType_PSSM; }
-   virtual void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState );
-   virtual void setShaderParameters(GFXShaderConstBuffer* params, LightingShaderConstants* lsc);
+   ShadowType getShadowType() const override { return ShadowType_PSSM; }
+   void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState ) override;
+   void setShaderParameters(GFXShaderConstBuffer* params, LightingShaderConstants* lsc) override;
 
    /// Used to scale TSShapeInstance::smDetailAdjust to have
    /// objects lod quicker when in the PSSM shadow.

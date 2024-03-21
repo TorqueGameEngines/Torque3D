@@ -19,18 +19,18 @@ public:
    GuiOffscreenCanvas();
    ~GuiOffscreenCanvas();
    
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
    
-   void renderFrame(bool preRenderOnly, bool bufferSwap);
+   void renderFrame(bool preRenderOnly, bool bufferSwap) override;
    virtual void onFrameRendered();
    
-   Point2I getWindowSize();
+   Point2I getWindowSize() override;
 
-   Point2I getCursorPos();
-   void setCursorPos(const Point2I &pt);
-   void showCursor(bool state);
-   bool isCursorShown();
+   Point2I getCursorPos() override;
+   void setCursorPos(const Point2I &pt) override;
+   void showCursor(bool state) override;
+   bool isCursorShown() override;
    
    void _onTextureEvent( GFXTexCallbackCode code );
 

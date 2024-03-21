@@ -34,7 +34,7 @@
 
 class GFXTexHandle;
 class GFXCubemap;
-class CustomShaderBindingData;
+struct CustomShaderBindingData;
 
 struct SceneData
 {

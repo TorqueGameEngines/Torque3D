@@ -38,7 +38,7 @@ private:
 public:   
   /*C*/         afxStatusLabel();
 
-  virtual void  onMouseDown(const GuiEvent &event);
+  void  onMouseDown(const GuiEvent &event) override;
 
   DECLARE_CONOBJECT(afxStatusLabel);
   DECLARE_CATEGORY("AFX");

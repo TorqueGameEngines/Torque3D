@@ -41,7 +41,7 @@ public:
    virtual ~InstancingMaterialHook();
 
    // MatInstanceHook
-   virtual const MatInstanceHookType& getType() const { return Type; }
+   const MatInstanceHookType& getType() const override { return Type; }
 
    /// Returns the instancing material instance or the input material 
    /// instance if one could not be created.

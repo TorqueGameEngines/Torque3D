@@ -72,13 +72,13 @@ public:
    /*D*/          ~afxZodiacTerrainRenderer();
 
    // RenderBinManager
-   virtual void   sort(){}  // don't sort them
-   virtual void   clear();
+   void   sort() override{}  // don't sort them
+   void   clear() override;
 
    void           initShader();
    void           addZodiac(U32 zode_idx, const Point3F& pos, F32 ang, const TerrainBlock*, const TerrCell*, const MatrixF& mRenderObjToWorld, F32 camDist);
 
-   virtual void   render(SceneRenderState*);
+   void   render(SceneRenderState*) override;
 
    static afxZodiacTerrainRenderer* getMaster();
 

@@ -53,7 +53,7 @@ public:
       minV = minValue;
       maxV = maxValue;
    }
-   void validateType(SimObject *object, void *typePtr);
+   void validateType(SimObject *object, void *typePtr) override;
    F32 getMin() { return minV; };
    F32 getMax() { return maxV; };
 };
@@ -68,7 +68,7 @@ public:
       minV = minValue;
       maxV = maxValue;
    }
-   void validateType(SimObject *object, void *typePtr);
+   void validateType(SimObject *object, void *typePtr) override;
    F32 getMin() { return minV; };
    F32 getMax() { return maxV; };
 };
@@ -88,7 +88,7 @@ public:
       maxV = maxValueScaled;
       factor = scaleFactor;
    }
-   void validateType(SimObject *object, void *typePtr);
+   void validateType(SimObject *object, void *typePtr) override;
 };
 
 /// Vector normalization validator
@@ -97,7 +97,7 @@ class Point3NormalizeValidator : public TypeValidator
    F32 length;
 public:
    Point3NormalizeValidator(F32 normalizeLength = 1.0f) : length(normalizeLength) { }
-   void validateType(SimObject *object, void *typePtr);
+   void validateType(SimObject *object, void *typePtr) override;
    F32 getLength() { return length; };
 };
 

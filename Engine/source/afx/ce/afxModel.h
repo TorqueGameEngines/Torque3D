@@ -85,12 +85,12 @@ public:
   /*C*/                 afxModelData(const afxModelData&, bool = false);
   /*D*/                 ~afxModelData();
 
-  bool                  preload(bool server, String &errorStr);
-  void                  packData(BitStream* stream);
-  void                  unpackData(BitStream* stream);
+  bool                  preload(bool server, String &errorStr) override;
+  void                  packData(BitStream* stream) override;
+  void                  unpackData(BitStream* stream) override;
 
-  virtual void          onPerformSubstitutions();
-  virtual bool          allowSubstitutions() const { return true; }
+  void          onPerformSubstitutions() override;
+  bool          allowSubstitutions() const override { return true; }
 
   static void           initPersistFields();
 
@@ -130,22 +130,22 @@ private:
 protected:
   Vector<S32>           mCollisionDetails;
   Vector<S32>           mLOSDetails;
-  bool                  castRay(const Point3F &start, const Point3F &end, RayInfo* info);
+  bool                  castRay(const Point3F &start, const Point3F &end, RayInfo* info) override;
 
-  virtual void          advanceTime(F32 dt);
+  void          advanceTime(F32 dt) override;
 
-  virtual void          prepRenderImage(SceneRenderState*);
+  void          prepRenderImage(SceneRenderState*) override;
 
   void                  renderObject(SceneRenderState*);
 
-  virtual bool          onAdd();
-  virtual void          onRemove();
+  bool          onAdd() override;
+  void          onRemove() override;
 
 public:
   /*C*/                 afxModel();
   /*D*/                 ~afxModel();
 
-  virtual bool          onNewDataBlock(GameBaseData* dptr, bool reload);
+  bool          onNewDataBlock(GameBaseData* dptr, bool reload) override;
 
   void                  setFadeAmount(F32 amt) { fade_amt = amt; }
   void                  setSequenceRateFactor(F32 factor);

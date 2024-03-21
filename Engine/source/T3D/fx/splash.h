@@ -130,11 +130,11 @@ public:
 
    SplashData();
    DECLARE_CONOBJECT(SplashData);
-   bool onAdd();
-   bool preload(bool server, String &errorStr);
+   bool onAdd() override;
+   bool preload(bool server, String &errorStr) override;
    static void  initPersistFields();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 };
 
 //--------------------------------------------------------------------------
@@ -172,10 +172,10 @@ protected:
    S32         mDelayMS;
 
 protected:
-   bool        onAdd();
-   void        onRemove();
-   void        processTick(const Move *move);
-   void        advanceTime(F32 dt);
+   bool        onAdd() override;
+   void        onRemove() override;
+   void        processTick(const Move *move) override;
+   void        advanceTime(F32 dt) override;
    void        updateEmitters( F32 dt );
    void        updateWave( F32 dt );
    void        updateColor();
@@ -190,10 +190,10 @@ public:
    ~Splash();
    void setInitialState(const Point3F& point, const Point3F& normal, const F32 fade = 1.0);
 
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream* stream);
-   void unpackUpdate(NetConnection *conn,           BitStream* stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream* stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream* stream) override;
 
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
    DECLARE_CONOBJECT(Splash);
    DECLARE_CATEGORY("UNLISTED");
 };

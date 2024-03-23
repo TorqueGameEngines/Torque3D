@@ -48,6 +48,8 @@
    #include "sfx/media/sfxVorbisStream.h"
 #endif
 
+#include "sfx/media/sfxSndStream.h"
+
 
 MODULE_BEGIN( SFX )
 
@@ -355,7 +357,7 @@ void SFXSystem::init()
    // the order here does matter!
    SFXFileStream::registerExtension( ".wav", ( SFXFILESTREAM_CREATE_FN ) SFXWavStream::create );
    #ifdef TORQUE_OGGVORBIS
-      SFXFileStream::registerExtension( ".ogg", ( SFXFILESTREAM_CREATE_FN ) SFXVorbisStream::create );
+      SFXFileStream::registerExtension( ".ogg", ( SFXFILESTREAM_CREATE_FN ) SFXSndStream::create );
    #endif
    
    // Create the stream thread pool.

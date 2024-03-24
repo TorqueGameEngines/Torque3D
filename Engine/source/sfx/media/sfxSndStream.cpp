@@ -113,7 +113,7 @@ U32 SFXSndStream::read(U8* buffer, U32 length)
       Con::errorf("SFXSndStream - read: %s", sf_strerror(sndFile));
    }
 
-   return framesRead;
+   return framesRead * mFormat.getBytesPerSample();
 }
 
 bool SFXSndStream::isEOS() const

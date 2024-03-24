@@ -128,6 +128,7 @@ void SFXSndStream::setPosition(U32 offset)
 sf_count_t SFXSndStream::sndSeek(sf_count_t offset, int whence, void* user_data)
 {
    VIO_DATA* vf = (VIO_DATA*)user_data;
+   Stream* stream = reinterpret_cast<Stream*>(vf->data);
 
    switch (whence)
    {
@@ -140,13 +141,13 @@ sf_count_t SFXSndStream::sndSeek(sf_count_t offset, int whence, void* user_data)
       break;
 
    case SEEK_END:
-      vf->offset = vf->length + offset;
+      vf->offset = vf->length - offset;
       break;
    default:
       break;
    };
 
-   return vf->offset;
+   return stream->setPosition(vf->offset) ? 0 : -1;
 }
 
 sf_count_t SFXSndStream::sndRead(void* ptr, sf_count_t count, void* user_data)
@@ -157,8 +158,7 @@ sf_count_t SFXSndStream::sndRead(void* ptr, sf_count_t count, void* user_data)
    if (vf->offset + count > vf->length)
       count = vf->length - vf->offset;
 
-   stream->read((U32)(count), reinterpret_cast<U8*>(ptr));
-
+   stream->read((U32)(count), ptr);
    vf->offset += count;
 
    return count;

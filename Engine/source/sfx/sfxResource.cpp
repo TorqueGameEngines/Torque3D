@@ -64,10 +64,11 @@ Resource< SFXResource > SFXResource::load( String filename )
    return ResourceManager::get().load( filename );
 }
 
-SFXResource::SFXResource( String fileName, SFXStream *stream )
+SFXResource::SFXResource( String fileName, const ThreadSafeRef<SFXStream>& stream)
    : mFileName( fileName ),
      mFormat( stream->getFormat() ),
-     mDuration( stream->getDuration() )
+     mDuration( stream->getDuration() ),
+     mStream(stream)
 {
 }
 
@@ -76,7 +77,7 @@ bool SFXResource::exists( String filename )
    return SFXFileStream::exists( filename );
 }
 
-SFXStream* SFXResource::openStream()
+ThreadSafeRef<SFXStream> SFXResource::openStream()
 {
-   return SFXFileStream::create( mFileName );
+   return mStream;
 }

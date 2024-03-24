@@ -64,11 +64,12 @@ bool SFXSndStream::_readHeader()
       bitsPerSample = 24;
       break;
    case SF_FORMAT_PCM_32:
+   case SF_FORMAT_FLOAT:
       bitsPerSample = 32;
       break;
    default:
-      // Other formats not supported or not recognized
-      bitsPerSample = -1;
+      // missed, set it to 16 anyway.
+      bitsPerSample = 16;
       break;
    }
 
@@ -107,22 +108,27 @@ U32 SFXSndStream::read(U8* buffer, U32 length)
    U32 framesRead = 0;
 
    framesRead = sf_readf_short(sndFile, (short*)buffer, sfinfo.frames);
+   if (framesRead != sfinfo.frames)
+   {
+      Con::errorf("SFXSndStream - read: %s", sf_strerror(sndFile));
+   }
 
    return framesRead;
 }
 
 bool SFXSndStream::isEOS() const
 {
-   return false;
+   return (Parent::isEOS() || (mStream && vio_data.length == vio_data.offset));
 }
 
 U32 SFXSndStream::getPosition() const
 {
-   return U32();
+   return vio_data.offset;
 }
 
 void SFXSndStream::setPosition(U32 offset)
 {
+   sf_seek(sndFile, offset / mFormat.getBytesPerSample(), SEEK_SET);
 }
 
 sf_count_t SFXSndStream::sndSeek(sf_count_t offset, int whence, void* user_data)

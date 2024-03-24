@@ -44,12 +44,6 @@ typedef SFXFileStream* ( *SFXFILESTREAM_CREATE_FN )( Stream *stream );
 class SFXFileStream : public SFXStream
 {
    protected:
-      typedef Vector< String > ExtensionsVector;
-      typedef Vector< SFXFILESTREAM_CREATE_FN > CreateFnsVector;
-
-      static ExtensionsVector smExtensions;
-      static CreateFnsVector smCreateFns;
-
       /// The file stream we're reading from.
       Stream *mStream;
 
@@ -78,13 +72,6 @@ class SFXFileStream : public SFXStream
       virtual void _close() = 0;
 
    public:
-
-      ///
-      static void registerExtension( String ext, SFXFILESTREAM_CREATE_FN create_fn );
-
-      ///
-      static void unregisterExtension( String ext );
-   
       /// This is a helper function used to create an appropriate SFXStream
       /// for the requested sound file.
       ///

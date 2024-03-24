@@ -41,7 +41,9 @@ foreach(lang ${languages})
 endforeach()
 
 set(CMAKE_FRAMEWORK_PATH "/Applications/XCode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks")
+set(CMAKE_MODULE_LINKER_FLAGS "-rpath @executable_path/../Frameworks -rpath @loader_path/../Frameworks")
 set(CMAKE_SHARED_LINKER_FLAGS "-rpath @executable_path/../Frameworks -rpath @loader_path/../Frameworks")
+set(CMAKE_INSTALL_NAME_DIR "@rpath")
 set(CMAKE_FIND_FRAMEWORK FIRST)
 # minimum for multi arch build is 11.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "" FORCE)

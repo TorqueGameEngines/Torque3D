@@ -362,7 +362,6 @@ void Dictionary::remove(Dictionary::Entry *ent)
 
    *walk = (ent->nextEntry);
 
-   destructInPlace(ent);
    hashTable->mChunker.free(ent);
 
    hashTable->count--;

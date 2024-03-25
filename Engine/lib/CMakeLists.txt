@@ -266,7 +266,7 @@ add_subdirectory(libogg ${TORQUE_LIB_TARG_DIRECTORY}/libogg )
 add_subdirectory(libvorbis ${TORQUE_LIB_TARG_DIRECTORY}/libvorbis EXCLUDE_FROM_ALL)
 
 advanced_option(INSTALL_PKGCONFIG_MODULES "" OFF)
-sadvanced_optionet(INSTALL_CMAKE_CONFIG_MODULE "" OFF)
+advanced_option(INSTALL_CMAKE_CONFIG_MODULE "" OFF)
 add_subdirectory(flac ${TORQUE_LIB_TARG_DIRECTORY}/flac EXCLUDE_FROM_ALL)
 
 advanced_option(INSTALL_DOCS "" OFF)

@@ -15,7 +15,7 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 
 # All link libraries. Modules should append to this the path to specify additional link libraries (.a, .lib, .dylib, .so)
 set(TORQUE_LINK_LIBRARIES tinyxml collada squish opcode assimp FLAC FLAC++ ogg vorbis  
-			vorbisfile vorbisenc opus speex sndfile SDL2 glad pcre convexDecomp zlib)
+			vorbisfile vorbisenc opus sndfile SDL2 glad pcre convexDecomp zlib)
 
 if(TORQUE_TESTING)
 set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest gmock)

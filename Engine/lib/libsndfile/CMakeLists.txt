@@ -394,7 +394,7 @@ target_link_libraries (sndfile
 		$<$<BOOL:${HAVE_EXTERNAL_XIPH_LIBS}>:Ogg::ogg>
 		$<$<BOOL:${HAVE_EXTERNAL_XIPH_LIBS}>:vorbisenc>
 		$<$<BOOL:${HAVE_EXTERNAL_XIPH_LIBS}>:FLAC::FLAC>
-		$<$<AND:$<BOOL:${ENABLE_EXPERIMENTAL}>,$<BOOL:${HAVE_EXTERNAL_XIPH_LIBS}>,$<BOOL:${HAVE_SPEEX}>>:speex>
+		$<$<AND:$<BOOL:${ENABLE_EXPERIMENTAL}>,$<BOOL:${HAVE_EXTERNAL_XIPH_LIBS}>,$<BOOL:${HAVE_SPEEX}>>:Speex::Speex>
 		$<$<BOOL:${HAVE_EXTERNAL_XIPH_LIBS}>:Opus::opus>
 		$<$<BOOL:${HAVE_MPEG}>:MPG123::libmpg123>
 		$<$<BOOL:${HAVE_MPEG}>:mp3lame::mp3lame>

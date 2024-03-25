@@ -200,5 +200,3 @@ if(BUILD_TESTING)
     add_test(NAME test_framing COMMAND $<TARGET_FILE:test_framing>)
 endif()
 
-set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-include(CPack)

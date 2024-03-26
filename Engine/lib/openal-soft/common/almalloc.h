@@ -29,9 +29,11 @@ void *al_calloc(size_t alignment, size_t size);
 #define DEF_NEWDEL(T)                                                         \
     void *operator new(size_t size)                                           \
     {                                                                         \
-        void *ret = al_malloc(alignof(T), size);                              \
-        if(!ret) throw std::bad_alloc();                                      \
-        return ret;                                                           \
+        static_assert(&operator new == &T::operator new,                      \
+            "Incorrect container type specified");                            \
+        if(void *ret{al_malloc(alignof(T), size)})                            \
+            return ret;                                                       \
+        throw std::bad_alloc();                                               \
     }                                                                         \
     void *operator new[](size_t size) { return operator new(size); }          \
     void operator delete(void *block) noexcept { al_free(block); }            \
@@ -50,6 +52,8 @@ enum FamCount : size_t { };
 #define DEF_FAM_NEWDEL(T, FamMem)                                             \
     static constexpr size_t Sizeof(size_t count) noexcept                     \
     {                                                                         \
+        static_assert(&Sizeof == &T::Sizeof,                                  \
+            "Incorrect container type specified");                            \
         return std::max(decltype(FamMem)::Sizeof(count, offsetof(T, FamMem)), \
             sizeof(T));                                                       \
     }                                                                         \
@@ -68,8 +72,10 @@ enum FamCount : size_t { };
 
 namespace al {
 
-template<typename T, std::size_t alignment=alignof(T)>
+template<typename T, std::size_t Align=alignof(T)>
 struct allocator {
+    static constexpr std::size_t alignment{std::max(Align, alignof(T))};
+
     using value_type = T;
     using reference = T&;
     using const_reference = const T&;
@@ -81,7 +87,7 @@ struct allocator {
 
     template<typename U>
     struct rebind {
-        using other = allocator<U, (alignment<alignof(U))?alignof(U):alignment>;
+        using other = allocator<U, Align>;
     };
 
     constexpr explicit allocator() noexcept = default;
@@ -100,6 +106,18 @@ template<typename T, std::size_t N, typename U, std::size_t M>
 constexpr bool operator==(const allocator<T,N>&, const allocator<U,M>&) noexcept { return true; }
 template<typename T, std::size_t N, typename U, std::size_t M>
 constexpr bool operator!=(const allocator<T,N>&, const allocator<U,M>&) noexcept { return false; }
+
+
+template<typename T>
+constexpr T *to_address(T *p) noexcept
+{
+    static_assert(!std::is_function<T>::value, "Can't be a function type");
+    return p;
+}
+
+template<typename T>
+constexpr auto to_address(const T &p) noexcept
+{ return to_address(p.operator->()); }
 
 
 template<typename T, typename ...Args>

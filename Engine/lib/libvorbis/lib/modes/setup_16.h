@@ -6,12 +6,11 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2009             *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation https://xiph.org/                     *
  *                                                                  *
  ********************************************************************
 
  function: 16kHz settings
- last mod: $Id: setup_16.h 16894 2010-02-12 20:32:12Z xiphmont $
 
  ********************************************************************/
 

@@ -20,41 +20,11 @@
 #include "vector.h"
 
 #ifdef ALSOFT_EAX
-#include "al/eax_eax_call.h"
-#include "al/eax_fx_slot_index.h"
-#include "al/eax_fx_slots.h"
-#include "al/eax_utils.h"
-
-
-using EaxContextSharedDirtyFlagsValue = std::uint_least8_t;
-
-struct EaxContextSharedDirtyFlags
-{
-    using EaxIsBitFieldStruct = bool;
-
-    EaxContextSharedDirtyFlagsValue primary_fx_slot_id : 1;
-}; // EaxContextSharedDirtyFlags
-
-
-using ContextDirtyFlagsValue = std::uint_least8_t;
-
-struct ContextDirtyFlags
-{
-    using EaxIsBitFieldStruct = bool;
-
-    ContextDirtyFlagsValue guidPrimaryFXSlotID : 1;
-    ContextDirtyFlagsValue flDistanceFactor : 1;
-    ContextDirtyFlagsValue flAirAbsorptionHF : 1;
-    ContextDirtyFlagsValue flHFReference : 1;
-    ContextDirtyFlagsValue flMacroFXFactor : 1;
-}; // ContextDirtyFlags
-
-
-struct EaxAlIsExtensionPresentResult
-{
-    ALboolean is_present;
-    bool is_return;
-}; // EaxAlIsExtensionPresentResult
+#include "al/eax/call.h"
+#include "al/eax/exception.h"
+#include "al/eax/fx_slot_index.h"
+#include "al/eax/fx_slots.h"
+#include "al/eax/utils.h"
 #endif // ALSOFT_EAX
 
 struct ALeffect;
@@ -98,9 +68,6 @@ struct EffectSlotSubList {
 struct ALCcontext : public al::intrusive_ref<ALCcontext>, ContextBase {
     const al::intrusive_ptr<ALCdevice> mALDevice;
 
-    /* Wet buffers used by effect slots. */
-    al::vector<WetBufferPtr> mWetBuffers;
-
 
     bool mPropsDirty{true};
     bool mDeferUpdates{false};
@@ -135,6 +102,8 @@ struct ALCcontext : public al::intrusive_ref<ALCcontext>, ContextBase {
     std::unique_ptr<ALeffectslot> mDefaultSlot;
 
     const char *mExtensionList{nullptr};
+
+    std::string mExtensionListOverride{};
 
 
     ALCcontext(al::intrusive_ptr<ALCdevice> device);
@@ -181,6 +150,7 @@ struct ALCcontext : public al::intrusive_ref<ALCcontext>, ContextBase {
     void setError(ALenum errorCode, const char *msg, ...);
 
     /* Process-wide current context */
+    static std::atomic<bool> sGlobalContextLock;
     static std::atomic<ALCcontext*> sGlobalContext;
 
 private:
@@ -217,13 +187,10 @@ public:
 
 #ifdef ALSOFT_EAX
 public:
-    bool has_eax() const noexcept { return eax_is_initialized_; }
+    bool hasEax() const noexcept { return mEaxIsInitialized; }
+    bool eaxIsCapable() const noexcept;
 
-    bool eax_is_capable() const noexcept;
-
-
-    void eax_uninitialize() noexcept;
-
+    void eaxUninitialize() noexcept;
 
     ALenum eax_eax_set(
         const GUID* property_set_id,
@@ -239,241 +206,310 @@ public:
         ALvoid* property_value,
         ALuint property_value_size);
 
+    void eaxSetLastError() noexcept;
 
-    void eax_update_filters();
+    EaxFxSlotIndex eaxGetPrimaryFxSlotIndex() const noexcept
+    { return mEaxPrimaryFxSlotIndex; }
 
-    void eax_commit_and_update_sources();
+    const ALeffectslot& eaxGetFxSlot(EaxFxSlotIndexValue fx_slot_index) const
+    { return mEaxFxSlots.get(fx_slot_index); }
+    ALeffectslot& eaxGetFxSlot(EaxFxSlotIndexValue fx_slot_index)
+    { return mEaxFxSlots.get(fx_slot_index); }
 
+    bool eaxNeedsCommit() const noexcept { return mEaxNeedsCommit; }
+    void eaxCommit();
 
-    void eax_set_last_error() noexcept;
-
-
-    EaxFxSlotIndex eax_get_previous_primary_fx_slot_index() const noexcept
-    { return eax_previous_primary_fx_slot_index_; }
-    EaxFxSlotIndex eax_get_primary_fx_slot_index() const noexcept
-    { return eax_primary_fx_slot_index_; }
-
-    const ALeffectslot& eax_get_fx_slot(EaxFxSlotIndexValue fx_slot_index) const
-    { return eax_fx_slots_.get(fx_slot_index); }
-    ALeffectslot& eax_get_fx_slot(EaxFxSlotIndexValue fx_slot_index)
-    { return eax_fx_slots_.get(fx_slot_index); }
-
-    void eax_commit_fx_slots()
-    { eax_fx_slots_.commit(); }
+    void eaxCommitFxSlots()
+    { mEaxFxSlots.commit(); }
 
 private:
-    struct Eax
+    static constexpr auto eax_primary_fx_slot_id_dirty_bit = EaxDirtyFlags{1} << 0;
+    static constexpr auto eax_distance_factor_dirty_bit = EaxDirtyFlags{1} << 1;
+    static constexpr auto eax_air_absorption_hf_dirty_bit = EaxDirtyFlags{1} << 2;
+    static constexpr auto eax_hf_reference_dirty_bit = EaxDirtyFlags{1} << 3;
+    static constexpr auto eax_macro_fx_factor_dirty_bit = EaxDirtyFlags{1} << 4;
+
+    using Eax4Props = EAX40CONTEXTPROPERTIES;
+
+    struct Eax4State {
+        Eax4Props i; // Immediate.
+        Eax4Props d; // Deferred.
+    };
+
+    using Eax5Props = EAX50CONTEXTPROPERTIES;
+
+    struct Eax5State {
+        Eax5Props i; // Immediate.
+        Eax5Props d; // Deferred.
+    };
+
+    class ContextException : public EaxException
     {
-        EAX50CONTEXTPROPERTIES context{};
-    }; // Eax
+    public:
+        explicit ContextException(const char* message)
+            : EaxException{"EAX_CONTEXT", message}
+        {}
+    };
 
+    struct Eax4PrimaryFxSlotIdValidator {
+        void operator()(const GUID& guidPrimaryFXSlotID) const
+        {
+            if(guidPrimaryFXSlotID != EAX_NULL_GUID &&
+                guidPrimaryFXSlotID != EAXPROPERTYID_EAX40_FXSlot0 &&
+                guidPrimaryFXSlotID != EAXPROPERTYID_EAX40_FXSlot1 &&
+                guidPrimaryFXSlotID != EAXPROPERTYID_EAX40_FXSlot2 &&
+                guidPrimaryFXSlotID != EAXPROPERTYID_EAX40_FXSlot3)
+            {
+                eax_fail_unknown_primary_fx_slot_id();
+            }
+        }
+    };
 
-    bool eax_is_initialized_{};
-    bool eax_is_tried_{};
-    bool eax_are_legacy_fx_slots_unlocked_{};
+    struct Eax4DistanceFactorValidator {
+        void operator()(float flDistanceFactor) const
+        {
+            eax_validate_range<ContextException>(
+                "Distance Factor",
+                flDistanceFactor,
+                EAXCONTEXT_MINDISTANCEFACTOR,
+                EAXCONTEXT_MAXDISTANCEFACTOR);
+        }
+    };
 
-    long eax_last_error_{};
-    unsigned long eax_speaker_config_{};
+    struct Eax4AirAbsorptionHfValidator {
+        void operator()(float flAirAbsorptionHF) const
+        {
+            eax_validate_range<ContextException>(
+                "Air Absorption HF",
+                flAirAbsorptionHF,
+                EAXCONTEXT_MINAIRABSORPTIONHF,
+                EAXCONTEXT_MAXAIRABSORPTIONHF);
+        }
+    };
 
-    EaxFxSlotIndex eax_previous_primary_fx_slot_index_{};
-    EaxFxSlotIndex eax_primary_fx_slot_index_{};
-    EaxFxSlots eax_fx_slots_{};
+    struct Eax4HfReferenceValidator {
+        void operator()(float flHFReference) const
+        {
+            eax_validate_range<ContextException>(
+                "HF Reference",
+                flHFReference,
+                EAXCONTEXT_MINHFREFERENCE,
+                EAXCONTEXT_MAXHFREFERENCE);
+        }
+    };
 
-    EaxContextSharedDirtyFlags eax_context_shared_dirty_flags_{};
+    struct Eax4AllValidator {
+        void operator()(const EAX40CONTEXTPROPERTIES& all) const
+        {
+            Eax4PrimaryFxSlotIdValidator{}(all.guidPrimaryFXSlotID);
+            Eax4DistanceFactorValidator{}(all.flDistanceFactor);
+            Eax4AirAbsorptionHfValidator{}(all.flAirAbsorptionHF);
+            Eax4HfReferenceValidator{}(all.flHFReference);
+        }
+    };
 
-    Eax eax_{};
-    Eax eax_d_{};
-    EAXSESSIONPROPERTIES eax_session_{};
+    struct Eax5PrimaryFxSlotIdValidator {
+        void operator()(const GUID& guidPrimaryFXSlotID) const
+        {
+            if(guidPrimaryFXSlotID != EAX_NULL_GUID &&
+                guidPrimaryFXSlotID != EAXPROPERTYID_EAX50_FXSlot0 &&
+                guidPrimaryFXSlotID != EAXPROPERTYID_EAX50_FXSlot1 &&
+                guidPrimaryFXSlotID != EAXPROPERTYID_EAX50_FXSlot2 &&
+                guidPrimaryFXSlotID != EAXPROPERTYID_EAX50_FXSlot3)
+            {
+                eax_fail_unknown_primary_fx_slot_id();
+            }
+        }
+    };
 
-    ContextDirtyFlags eax_context_dirty_flags_{};
+    struct Eax5MacroFxFactorValidator {
+        void operator()(float flMacroFXFactor) const
+        {
+            eax_validate_range<ContextException>(
+                "Macro FX Factor",
+                flMacroFXFactor,
+                EAXCONTEXT_MINMACROFXFACTOR,
+                EAXCONTEXT_MAXMACROFXFACTOR);
+        }
+    };
 
-    std::string eax_extension_list_{};
+    struct Eax5AllValidator {
+        void operator()(const EAX50CONTEXTPROPERTIES& all) const
+        {
+            Eax5PrimaryFxSlotIdValidator{}(all.guidPrimaryFXSlotID);
+            Eax4DistanceFactorValidator{}(all.flDistanceFactor);
+            Eax4AirAbsorptionHfValidator{}(all.flAirAbsorptionHF);
+            Eax4HfReferenceValidator{}(all.flHFReference);
+            Eax5MacroFxFactorValidator{}(all.flMacroFXFactor);
+        }
+    };
 
+    struct Eax5EaxVersionValidator {
+        void operator()(unsigned long ulEAXVersion) const
+        {
+            eax_validate_range<ContextException>(
+                "EAX version",
+                ulEAXVersion,
+                EAXCONTEXT_MINEAXSESSION,
+                EAXCONTEXT_MAXEAXSESSION);
+        }
+    };
 
-    [[noreturn]]
-    static void eax_fail(
-        const char* message);
+    struct Eax5MaxActiveSendsValidator {
+        void operator()(unsigned long ulMaxActiveSends) const
+        {
+            eax_validate_range<ContextException>(
+                "Max Active Sends",
+                ulMaxActiveSends,
+                EAXCONTEXT_MINMAXACTIVESENDS,
+                EAXCONTEXT_MAXMAXACTIVESENDS);
+        }
+    };
 
+    struct Eax5SessionAllValidator {
+        void operator()(const EAXSESSIONPROPERTIES& all) const
+        {
+            Eax5EaxVersionValidator{}(all.ulEAXVersion);
+            Eax5MaxActiveSendsValidator{}(all.ulMaxActiveSends);
+        }
+    };
+
+    struct Eax5SpeakerConfigValidator {
+        void operator()(unsigned long ulSpeakerConfig) const
+        {
+            eax_validate_range<ContextException>(
+                "Speaker Config",
+                ulSpeakerConfig,
+                EAXCONTEXT_MINSPEAKERCONFIG,
+                EAXCONTEXT_MAXSPEAKERCONFIG);
+        }
+    };
+
+    bool mEaxIsInitialized{};
+    bool mEaxIsTried{};
+
+    long mEaxLastError{};
+    unsigned long mEaxSpeakerConfig{};
+
+    EaxFxSlotIndex mEaxPrimaryFxSlotIndex{};
+    EaxFxSlots mEaxFxSlots{};
+
+    int mEaxVersion{}; // Current EAX version.
+    bool mEaxNeedsCommit{};
+    EaxDirtyFlags mEaxDf{}; // Dirty flags for the current EAX version.
+    Eax5State mEax123{}; // EAX1/EAX2/EAX3 state.
+    Eax4State mEax4{}; // EAX4 state.
+    Eax5State mEax5{}; // EAX5 state.
+    Eax5Props mEax{}; // Current EAX state.
+    EAXSESSIONPROPERTIES mEaxSession{};
+
+    [[noreturn]] static void eax_fail(const char* message);
+    [[noreturn]] static void eax_fail_unknown_property_set_id();
+    [[noreturn]] static void eax_fail_unknown_primary_fx_slot_id();
+    [[noreturn]] static void eax_fail_unknown_property_id();
+    [[noreturn]] static void eax_fail_unknown_version();
+
+    // Gets a value from EAX call,
+    // validates it,
+    // and updates the current value.
+    template<typename TValidator, typename TProperty>
+    static void eax_set(const EaxCall& call, TProperty& property)
+    {
+        const auto& value = call.get_value<ContextException, const TProperty>();
+        TValidator{}(value);
+        property = value;
+    }
+
+    // Gets a new value from EAX call,
+    // validates it,
+    // updates the deferred value,
+    // updates a dirty flag.
+    template<
+        typename TValidator,
+        EaxDirtyFlags TDirtyBit,
+        typename TMemberResult,
+        typename TProps,
+        typename TState>
+    void eax_defer(const EaxCall& call, TState& state, TMemberResult TProps::*member) noexcept
+    {
+        const auto& src = call.get_value<ContextException, const TMemberResult>();
+        TValidator{}(src);
+        const auto& dst_i = state.i.*member;
+        auto& dst_d = state.d.*member;
+        dst_d = src;
+
+        if(dst_i != dst_d)
+            mEaxDf |= TDirtyBit;
+    }
+
+    template<
+        EaxDirtyFlags TDirtyBit,
+        typename TMemberResult,
+        typename TProps,
+        typename TState>
+    void eax_context_commit_property(TState& state, EaxDirtyFlags& dst_df,
+        TMemberResult TProps::*member) noexcept
+    {
+        if((mEaxDf & TDirtyBit) != EaxDirtyFlags{})
+        {
+            dst_df |= TDirtyBit;
+            const auto& src_d = state.d.*member;
+            state.i.*member = src_d;
+            mEax.*member = src_d;
+        }
+    }
 
     void eax_initialize_extensions();
-
     void eax_initialize();
 
-
     bool eax_has_no_default_effect_slot() const noexcept;
-
     void eax_ensure_no_default_effect_slot() const;
-
     bool eax_has_enough_aux_sends() const noexcept;
-
     void eax_ensure_enough_aux_sends() const;
-
     void eax_ensure_compatibility();
-
 
     unsigned long eax_detect_speaker_configuration() const;
     void eax_update_speaker_configuration();
 
-
     void eax_set_last_error_defaults() noexcept;
+    void eax_session_set_defaults() noexcept;
+    static void eax4_context_set_defaults(Eax4Props& props) noexcept;
+    static void eax4_context_set_defaults(Eax4State& state) noexcept;
+    static void eax5_context_set_defaults(Eax5Props& props) noexcept;
+    static void eax5_context_set_defaults(Eax5State& state) noexcept;
+    void eax_context_set_defaults();
+    void eax_set_defaults();
 
-    void eax_set_session_defaults() noexcept;
+    void eax_dispatch_fx_slot(const EaxCall& call);
+    void eax_dispatch_source(const EaxCall& call);
 
-    void eax_set_context_defaults() noexcept;
+    void eax_get_misc(const EaxCall& call);
+    void eax4_get(const EaxCall& call, const Eax4Props& props);
+    void eax5_get(const EaxCall& call, const Eax5Props& props);
+    void eax_get(const EaxCall& call);
 
-    void eax_set_defaults() noexcept;
-
-    void eax_initialize_sources();
-
-
-    void eax_unlock_legacy_fx_slots(const EaxEaxCall& eax_call) noexcept;
-
-
-    void eax_dispatch_fx_slot(
-        const EaxEaxCall& eax_call);
-
-    void eax_dispatch_source(
-        const EaxEaxCall& eax_call);
-
-
-    void eax_get_primary_fx_slot_id(
-        const EaxEaxCall& eax_call);
-
-    void eax_get_distance_factor(
-        const EaxEaxCall& eax_call);
-
-    void eax_get_air_absorption_hf(
-        const EaxEaxCall& eax_call);
-
-    void eax_get_hf_reference(
-        const EaxEaxCall& eax_call);
-
-    void eax_get_last_error(
-        const EaxEaxCall& eax_call);
-
-    void eax_get_speaker_config(
-        const EaxEaxCall& eax_call);
-
-    void eax_get_session(
-        const EaxEaxCall& eax_call);
-
-    void eax_get_macro_fx_factor(
-        const EaxEaxCall& eax_call);
-
-    void eax_get_context_all(
-        const EaxEaxCall& eax_call);
-
-    void eax_get(
-        const EaxEaxCall& eax_call);
-
-
-    void eax_set_primary_fx_slot_id();
-
-    void eax_set_distance_factor();
-
-    void eax_set_air_absorbtion_hf();
-
-    void eax_set_hf_reference();
-
-    void eax_set_macro_fx_factor();
-
-    void eax_set_context();
+    void eax_context_commit_primary_fx_slot_id();
+    void eax_context_commit_distance_factor();
+    void eax_context_commit_air_absorbtion_hf();
+    void eax_context_commit_hf_reference();
+    void eax_context_commit_macro_fx_factor();
 
     void eax_initialize_fx_slots();
 
-
     void eax_update_sources();
 
+    void eax_set_misc(const EaxCall& call);
+    void eax4_defer_all(const EaxCall& call, Eax4State& state);
+    void eax4_defer(const EaxCall& call, Eax4State& state);
+    void eax5_defer_all(const EaxCall& call, Eax5State& state);
+    void eax5_defer(const EaxCall& call, Eax5State& state);
+    void eax_set(const EaxCall& call);
 
-    void eax_validate_primary_fx_slot_id(
-        const GUID& primary_fx_slot_id);
-
-    void eax_validate_distance_factor(
-        float distance_factor);
-
-    void eax_validate_air_absorption_hf(
-        float air_absorption_hf);
-
-    void eax_validate_hf_reference(
-        float hf_reference);
-
-    void eax_validate_speaker_config(
-        unsigned long speaker_config);
-
-    void eax_validate_session_eax_version(
-        unsigned long eax_version);
-
-    void eax_validate_session_max_active_sends(
-        unsigned long max_active_sends);
-
-    void eax_validate_session(
-        const EAXSESSIONPROPERTIES& eax_session);
-
-    void eax_validate_macro_fx_factor(
-        float macro_fx_factor);
-
-    void eax_validate_context_all(
-        const EAX40CONTEXTPROPERTIES& context_all);
-
-    void eax_validate_context_all(
-        const EAX50CONTEXTPROPERTIES& context_all);
-
-
-    void eax_defer_primary_fx_slot_id(
-        const GUID& primary_fx_slot_id);
-
-    void eax_defer_distance_factor(
-        float distance_factor);
-
-    void eax_defer_air_absorption_hf(
-        float air_absorption_hf);
-
-    void eax_defer_hf_reference(
-        float hf_reference);
-
-    void eax_defer_macro_fx_factor(
-        float macro_fx_factor);
-
-    void eax_defer_context_all(
-        const EAX40CONTEXTPROPERTIES& context_all);
-
-    void eax_defer_context_all(
-        const EAX50CONTEXTPROPERTIES& context_all);
-
-
-    void eax_defer_context_all(
-        const EaxEaxCall& eax_call);
-
-    void eax_defer_primary_fx_slot_id(
-        const EaxEaxCall& eax_call);
-
-    void eax_defer_distance_factor(
-        const EaxEaxCall& eax_call);
-
-    void eax_defer_air_absorption_hf(
-        const EaxEaxCall& eax_call);
-
-    void eax_defer_hf_reference(
-        const EaxEaxCall& eax_call);
-
-    void eax_set_session(
-        const EaxEaxCall& eax_call);
-
-    void eax_defer_macro_fx_factor(
-        const EaxEaxCall& eax_call);
-
-    void eax_set(
-        const EaxEaxCall& eax_call);
-
-    void eax_apply_deferred();
+    void eax4_context_commit(Eax4State& state, EaxDirtyFlags& dst_df);
+    void eax5_context_commit(Eax5State& state, EaxDirtyFlags& dst_df);
+    void eax_context_commit();
 #endif // ALSOFT_EAX
 };
-
-#define SETERR_RETURN(ctx, err, retval, ...) do {                             \
-    (ctx)->setError((err), __VA_ARGS__);                                      \
-    return retval;                                                            \
-} while(0)
-
 
 using ContextRef = al::intrusive_ptr<ALCcontext>;
 

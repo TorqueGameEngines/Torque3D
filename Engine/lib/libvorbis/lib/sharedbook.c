@@ -6,16 +6,16 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2015             *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation https://xiph.org/                     *
  *                                                                  *
  ********************************************************************
 
  function: basic shared codebook operations
- last mod: $Id: sharedbook.c 19457 2015-03-03 00:15:29Z giles $
 
  ********************************************************************/
 
 #include <stdlib.h>
+#include <limits.h>
 #include <math.h>
 #include <string.h>
 #include <ogg/ogg.h>
@@ -50,7 +50,7 @@ long _float32_pack(float val){
     sign=0x80000000;
     val= -val;
   }
-  exp= floor(log(val)/log(2.f)+.001); //+epsilon
+  exp= floor(log(val)/log(2.f)+.001); /* +epsilon */
   mant=rint(ldexp(val,(VQ_FMAN-1)-exp));
   exp=(exp+VQ_FEXP_BIAS)<<VQ_FMAN;
 
@@ -62,7 +62,15 @@ float _float32_unpack(long val){
   int    sign=val&0x80000000;
   long   exp =(val&0x7fe00000L)>>VQ_FMAN;
   if(sign)mant= -mant;
-  return(ldexp(mant,exp-(VQ_FMAN-1)-VQ_FEXP_BIAS));
+  exp=exp-(VQ_FMAN-1)-VQ_FEXP_BIAS;
+  /* clamp excessive exponent values */
+  if (exp>63){
+    exp=63;
+  }
+  if (exp<-63){
+    exp=-63;
+  }
+  return(ldexp(mant,exp));
 }
 
 /* given a list of word lengths, generate a list of codewords.  Works
@@ -158,25 +166,34 @@ ogg_uint32_t *_make_words(char *l,long n,long sparsecount){
    that's portable and totally safe against roundoff, but I haven't
    thought of it.  Therefore, we opt on the side of caution */
 long _book_maptype1_quantvals(const static_codebook *b){
-  long vals=floor(pow((float)b->entries,1.f/b->dim));
+  long vals;
+  if(b->entries<1){
+    return(0);
+  }
+  vals=floor(pow((float)b->entries,1.f/b->dim));
 
   /* the above *should* be reliable, but we'll not assume that FP is
      ever reliable when bitstream sync is at stake; verify via integer
      means that vals really is the greatest value of dim for which
      vals^b->bim <= b->entries */
   /* treat the above as an initial guess */
+  if(vals<1){
+    vals=1;
+  }
   while(1){
     long acc=1;
     long acc1=1;
     int i;
     for(i=0;i<b->dim;i++){
+      if(b->entries/vals<acc)break;
       acc*=vals;
-      acc1*=vals+1;
+      if(LONG_MAX/(vals+1)<acc1)acc1=LONG_MAX;
+      else acc1*=vals+1;
     }
-    if(acc<=b->entries && acc1>b->entries){
+    if(i>=b->dim && acc<=b->entries && acc1>b->entries){
       return(vals);
     }else{
-      if(acc>b->entries){
+      if(i<b->dim || acc>b->entries){
         vals--;
       }else{
         vals++;
@@ -285,7 +302,7 @@ int vorbis_book_init_encode(codebook *c,const static_codebook *s){
   c->used_entries=s->entries;
   c->dim=s->dim;
   c->codelist=_make_words(s->lengthlist,s->entries,0);
-  //c->valuelist=_book_unquantize(s,s->entries,NULL);
+  /* c->valuelist=_book_unquantize(s,s->entries,NULL); */
   c->quantvals=_book_maptype1_quantvals(s);
   c->minval=(int)rint(_float32_unpack(s->q_min));
   c->delta=(int)rint(_float32_unpack(s->q_delta));
@@ -564,6 +581,7 @@ void run_test(static_codebook *b,float *comp){
       exit(1);
     }
   }
+  free(out);
 }
 
 int main(){

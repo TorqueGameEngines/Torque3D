@@ -17,7 +17,7 @@
 #include "version.h"
 
 
-std::vector<DriverIface> DriverList;
+std::vector<DriverIfacePtr> DriverList;
 
 thread_local DriverIface *ThreadCtxDriver;
 
@@ -84,13 +84,13 @@ static void AddModule(HMODULE module, const WCHAR *name)
 {
     for(auto &drv : DriverList)
     {
-        if(drv.Module == module)
+        if(drv->Module == module)
         {
             TRACE("Skipping already-loaded module %p\n", decltype(std::declval<void*>()){module});
             FreeLibrary(module);
             return;
         }
-        if(drv.Name == name)
+        if(drv->Name == name)
         {
             TRACE("Skipping similarly-named module %ls\n", name);
             FreeLibrary(module);
@@ -98,8 +98,8 @@ static void AddModule(HMODULE module, const WCHAR *name)
         }
     }
 
-    DriverList.emplace_back(name, module);
-    DriverIface &newdrv = DriverList.back();
+    DriverList.emplace_back(std::make_unique<DriverIface>(name, module));
+    DriverIface &newdrv = *DriverList.back();
 
     /* Load required functions. */
     int err = 0;
@@ -189,18 +189,6 @@ static void AddModule(HMODULE module, const WCHAR *name)
     LOAD_PROC(alGenBuffers);
     LOAD_PROC(alDeleteBuffers);
     LOAD_PROC(alIsBuffer);
-    LOAD_PROC(alBufferf);
-    LOAD_PROC(alBuffer3f);
-    LOAD_PROC(alBufferfv);
-    LOAD_PROC(alBufferi);
-    LOAD_PROC(alBuffer3i);
-    LOAD_PROC(alBufferiv);
-    LOAD_PROC(alGetBufferf);
-    LOAD_PROC(alGetBuffer3f);
-    LOAD_PROC(alGetBufferfv);
-    LOAD_PROC(alGetBufferi);
-    LOAD_PROC(alGetBuffer3i);
-    LOAD_PROC(alGetBufferiv);
     LOAD_PROC(alBufferData);
     LOAD_PROC(alDopplerFactor);
     LOAD_PROC(alDopplerVelocity);
@@ -218,6 +206,28 @@ static void AddModule(HMODULE module, const WCHAR *name)
             WARN("Failed to query ALC version for %ls, assuming 1.0\n", name);
             newdrv.ALCVer = MAKE_ALC_VER(1, 0);
         }
+
+#undef LOAD_PROC
+#define LOAD_PROC(x) do {                                                      \
+    newdrv.x = reinterpret_cast<decltype(newdrv.x)>(reinterpret_cast<void*>(   \
+        GetProcAddress(module, #x)));                                          \
+    if(!newdrv.x)                                                              \
+    {                                                                          \
+        WARN("Failed to find optional entry point for %s in %ls\n", #x, name); \
+    }                                                                          \
+} while(0)
+    LOAD_PROC(alBufferf);
+    LOAD_PROC(alBuffer3f);
+    LOAD_PROC(alBufferfv);
+    LOAD_PROC(alBufferi);
+    LOAD_PROC(alBuffer3i);
+    LOAD_PROC(alBufferiv);
+    LOAD_PROC(alGetBufferf);
+    LOAD_PROC(alGetBuffer3f);
+    LOAD_PROC(alGetBufferfv);
+    LOAD_PROC(alGetBufferi);
+    LOAD_PROC(alGetBuffer3i);
+    LOAD_PROC(alGetBufferiv);
 
 #undef LOAD_PROC
 #define LOAD_PROC(x) do {                                                     \

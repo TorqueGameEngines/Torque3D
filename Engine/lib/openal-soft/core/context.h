@@ -3,12 +3,14 @@
 
 #include <array>
 #include <atomic>
+#include <bitset>
 #include <cstddef>
 #include <memory>
 #include <thread>
 
 #include "almalloc.h"
 #include "alspan.h"
+#include "async_event.h"
 #include "atomic.h"
 #include "bufferline.h"
 #include "threads.h"
@@ -38,17 +40,6 @@ enum class DistanceModel : unsigned char {
 
     Default = InverseClamped
 };
-
-
-struct WetBuffer {
-    bool mInUse;
-    al::FlexArray<FloatBufferLine, 16> mBuffer;
-
-    WetBuffer(size_t count) : mBuffer{count} { }
-
-    DEF_FAM_NEWDEL(WetBuffer, mBuffer)
-};
-using WetBufferPtr = std::unique_ptr<WetBuffer>;
 
 
 struct ContextProps {
@@ -146,7 +137,8 @@ struct ContextBase {
     std::thread mEventThread;
     al::semaphore mEventSem;
     std::unique_ptr<RingBuffer> mAsyncEvents;
-    std::atomic<uint> mEnabledEvts{0u};
+    using AsyncEventBitset = std::bitset<AsyncEvent::UserEventCount>;
+    std::atomic<AsyncEventBitset> mEnabledEvts{0u};
 
     /* Asynchronous voice change actions are processed as a linked list of
      * VoiceChange objects by the mixer, which is atomically appended to.
@@ -161,6 +153,13 @@ struct ContextBase {
 
     using VoicePropsCluster = std::unique_ptr<VoicePropsItem[]>;
     al::vector<VoicePropsCluster> mVoicePropClusters;
+
+
+    static constexpr size_t EffectSlotClusterSize{4};
+    EffectSlot *getEffectSlot();
+
+    using EffectSlotCluster = std::unique_ptr<EffectSlot[]>;
+    al::vector<EffectSlotCluster> mEffectSlotClusters;
 
 
     ContextBase(DeviceBase *device);

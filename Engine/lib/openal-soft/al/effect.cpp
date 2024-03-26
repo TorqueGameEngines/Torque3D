@@ -54,7 +54,7 @@
 #ifdef ALSOFT_EAX
 #include <cassert>
 
-#include "eax_exception.h"
+#include "eax/exception.h"
 #endif // ALSOFT_EAX
 
 const EffectList gEffectList[16]{
@@ -86,6 +86,7 @@ effect_exception::effect_exception(ALenum code, const char *msg, ...) : mErrorCo
     setMessage(msg, args);
     va_end(args);
 }
+effect_exception::~effect_exception() = default;
 
 namespace {
 
@@ -139,7 +140,7 @@ const EffectPropsItem *getEffectPropsItemByType(ALenum type)
     auto iter = std::find_if(std::begin(EffectPropsList), std::end(EffectPropsList),
         [type](const EffectPropsItem &item) noexcept -> bool
         { return item.Type == type; });
-    return (iter != std::end(EffectPropsList)) ? std::addressof(*iter) : nullptr;
+    return (iter != std::end(EffectPropsList)) ? al::to_address(iter) : nullptr;
 }
 
 void InitEffectParams(ALeffect *effect, ALenum type)
@@ -166,14 +167,14 @@ bool EnsureEffects(ALCdevice *device, size_t needed)
 
     while(needed > count)
     {
-        if UNLIKELY(device->EffectList.size() >= 1<<25)
+        if(device->EffectList.size() >= 1<<25) UNLIKELY
             return false;
 
         device->EffectList.emplace_back();
         auto sublist = device->EffectList.end() - 1;
         sublist->FreeMask = ~0_u64;
         sublist->Effects = static_cast<ALeffect*>(al_calloc(alignof(ALeffect), sizeof(ALeffect)*64));
-        if UNLIKELY(!sublist->Effects)
+        if(!sublist->Effects) UNLIKELY
         {
             device->EffectList.pop_back();
             return false;
@@ -219,10 +220,10 @@ inline ALeffect *LookupEffect(ALCdevice *device, ALuint id)
     const size_t lidx{(id-1) >> 6};
     const ALuint slidx{(id-1) & 0x3f};
 
-    if UNLIKELY(lidx >= device->EffectList.size())
+    if(lidx >= device->EffectList.size()) UNLIKELY
         return nullptr;
     EffectSubList &sublist = device->EffectList[lidx];
-    if UNLIKELY(sublist.FreeMask & (1_u64 << slidx))
+    if(sublist.FreeMask & (1_u64 << slidx)) UNLIKELY
         return nullptr;
     return sublist.Effects + slidx;
 }
@@ -233,11 +234,11 @@ AL_API void AL_APIENTRY alGenEffects(ALsizei n, ALuint *effects)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
-    if UNLIKELY(n < 0)
+    if(n < 0) UNLIKELY
         context->setError(AL_INVALID_VALUE, "Generating %d effects", n);
-    if UNLIKELY(n <= 0) return;
+    if(n <= 0) UNLIKELY return;
 
     ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
@@ -247,7 +248,7 @@ START_API_FUNC
         return;
     }
 
-    if LIKELY(n == 1)
+    if(n == 1) LIKELY
     {
         /* Special handling for the easy and normal case. */
         ALeffect *effect{AllocEffect(device)};
@@ -273,11 +274,11 @@ AL_API void AL_APIENTRY alDeleteEffects(ALsizei n, const ALuint *effects)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
-    if UNLIKELY(n < 0)
+    if(n < 0) UNLIKELY
         context->setError(AL_INVALID_VALUE, "Deleting %d effects", n);
-    if UNLIKELY(n <= 0) return;
+    if(n <= 0) UNLIKELY return;
 
     ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
@@ -288,7 +289,7 @@ START_API_FUNC
 
     const ALuint *effects_end = effects + n;
     auto inveffect = std::find_if_not(effects, effects_end, validate_effect);
-    if UNLIKELY(inveffect != effects_end)
+    if(inveffect != effects_end) UNLIKELY
     {
         context->setError(AL_INVALID_NAME, "Invalid effect ID %u", *inveffect);
         return;
@@ -308,7 +309,7 @@ AL_API ALboolean AL_APIENTRY alIsEffect(ALuint effect)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if LIKELY(context)
+    if(context) LIKELY
     {
         ALCdevice *device{context->mALDevice.get()};
         std::lock_guard<std::mutex> _{device->EffectLock};
@@ -323,13 +324,13 @@ AL_API void AL_APIENTRY alEffecti(ALuint effect, ALenum param, ALint value)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     ALeffect *aleffect{LookupEffect(device, effect)};
-    if UNLIKELY(!aleffect)
+    if(!aleffect) UNLIKELY
         context->setError(AL_INVALID_NAME, "Invalid effect ID %u", effect);
     else if(param == AL_EFFECT_TYPE)
     {
@@ -373,13 +374,13 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     ALeffect *aleffect{LookupEffect(device, effect)};
-    if UNLIKELY(!aleffect)
+    if(!aleffect) UNLIKELY
         context->setError(AL_INVALID_NAME, "Invalid effect ID %u", effect);
     else try
     {
@@ -396,13 +397,13 @@ AL_API void AL_APIENTRY alEffectf(ALuint effect, ALenum param, ALfloat value)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     ALeffect *aleffect{LookupEffect(device, effect)};
-    if UNLIKELY(!aleffect)
+    if(!aleffect) UNLIKELY
         context->setError(AL_INVALID_NAME, "Invalid effect ID %u", effect);
     else try
     {
@@ -419,13 +420,13 @@ AL_API void AL_APIENTRY alEffectfv(ALuint effect, ALenum param, const ALfloat *v
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     ALeffect *aleffect{LookupEffect(device, effect)};
-    if UNLIKELY(!aleffect)
+    if(!aleffect) UNLIKELY
         context->setError(AL_INVALID_NAME, "Invalid effect ID %u", effect);
     else try
     {
@@ -442,13 +443,13 @@ AL_API void AL_APIENTRY alGetEffecti(ALuint effect, ALenum param, ALint *value)
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     const ALeffect *aleffect{LookupEffect(device, effect)};
-    if UNLIKELY(!aleffect)
+    if(!aleffect) UNLIKELY
         context->setError(AL_INVALID_NAME, "Invalid effect ID %u", effect);
     else if(param == AL_EFFECT_TYPE)
         *value = aleffect->type;
@@ -474,13 +475,13 @@ START_API_FUNC
     }
 
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     const ALeffect *aleffect{LookupEffect(device, effect)};
-    if UNLIKELY(!aleffect)
+    if(!aleffect) UNLIKELY
         context->setError(AL_INVALID_NAME, "Invalid effect ID %u", effect);
     else try
     {
@@ -497,13 +498,13 @@ AL_API void AL_APIENTRY alGetEffectf(ALuint effect, ALenum param, ALfloat *value
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     const ALeffect *aleffect{LookupEffect(device, effect)};
-    if UNLIKELY(!aleffect)
+    if(!aleffect) UNLIKELY
         context->setError(AL_INVALID_NAME, "Invalid effect ID %u", effect);
     else try
     {
@@ -520,13 +521,13 @@ AL_API void AL_APIENTRY alGetEffectfv(ALuint effect, ALenum param, ALfloat *valu
 START_API_FUNC
 {
     ContextRef context{GetContextRef()};
-    if UNLIKELY(!context) return;
+    if(!context) UNLIKELY return;
 
     ALCdevice *device{context->mALDevice.get()};
     std::lock_guard<std::mutex> _{device->EffectLock};
 
     const ALeffect *aleffect{LookupEffect(device, effect)};
-    if UNLIKELY(!aleffect)
+    if(!aleffect) UNLIKELY
         context->setError(AL_INVALID_NAME, "Invalid effect ID %u", effect);
     else try
     {

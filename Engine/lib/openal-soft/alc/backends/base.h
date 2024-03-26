@@ -41,11 +41,6 @@ protected:
     void setDefaultChannelOrder();
     /** Sets the default channel order used by WaveFormatEx. */
     void setDefaultWFXChannelOrder();
-
-#ifdef _WIN32
-    /** Sets the channel order given the WaveFormatEx mask. */
-    void setChannelOrderFromWFXMask(uint chanmask);
-#endif
 };
 using BackendPtr = std::unique_ptr<BackendBase>;
 
@@ -108,13 +103,9 @@ public:
 #else
     [[gnu::format(printf, 3, 4)]]
 #endif
-    backend_exception(backend_error code, const char *msg, ...) : mErrorCode{code}
-    {
-        std::va_list args;
-        va_start(args, msg);
-        setMessage(msg, args);
-        va_end(args);
-    }
+    backend_exception(backend_error code, const char *msg, ...);
+    ~backend_exception() override;
+
     backend_error errorCode() const noexcept { return mErrorCode; }
 };
 

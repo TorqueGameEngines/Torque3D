@@ -36,9 +36,11 @@ struct LerpTag;
 #endif
 
 template<>
-float *Resample_<LerpTag,SSE4Tag>(const InterpState*, float *RESTRICT src, uint frac,
-    uint increment, const al::span<float> dst)
+void Resample_<LerpTag,SSE4Tag>(const InterpState*, const float *RESTRICT src, uint frac,
+    const uint increment, const al::span<float> dst)
 {
+    ASSUME(frac < MixerFracOne);
+
     const __m128i increment4{_mm_set1_epi32(static_cast<int>(increment*4))};
     const __m128 fracOne4{_mm_set1_ps(1.0f/MixerFracOne)};
     const __m128i fracMask4{_mm_set1_epi32(MixerFracMask)};
@@ -90,5 +92,4 @@ float *Resample_<LerpTag,SSE4Tag>(const InterpState*, float *RESTRICT src, uint 
             frac &= MixerFracMask;
         } while(--todo);
     }
-    return dst.data();
 }

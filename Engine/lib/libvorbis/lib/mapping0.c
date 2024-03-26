@@ -6,12 +6,11 @@
  * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
  *                                                                  *
  * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2010             *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
+ * by the Xiph.Org Foundation https://xiph.org/                     *
  *                                                                  *
  ********************************************************************
 
  function: channel mapping 0 implementation
- last mod: $Id: mapping0.c 19441 2015-01-21 01:17:41Z xiphmont $
 
  ********************************************************************/
 
@@ -93,7 +92,6 @@ static vorbis_info_mapping *mapping0_unpack(vorbis_info *vi,oggpack_buffer *opb)
   int i,b;
   vorbis_info_mapping0 *info=_ogg_calloc(1,sizeof(*info));
   codec_setup_info     *ci=vi->codec_setup;
-  memset(info,0,sizeof(*info));
   if(vi->channels<=0)goto err_out;
 
   b=oggpack_read(opb,1);

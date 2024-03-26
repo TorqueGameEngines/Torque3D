@@ -14,8 +14,12 @@
 template<typename Real>
 void BiquadFilterR<Real>::setParams(BiquadType type, Real f0norm, Real gain, Real rcpQ)
 {
-    // Limit gain to -100dB
-    assert(gain > 0.00001f);
+    /* HACK: Limit gain to -100dB. This shouldn't ever happen, all callers
+     * already clamp to minimum of 0.001, or have a limited range of values
+     * that don't go below 0.126. But it seems to with some callers. This needs
+     * to be investigated.
+     */
+    gain = std::max(gain, Real(0.00001));
 
     const Real w0{al::numbers::pi_v<Real>*2.0f * f0norm};
     const Real sin_w0{std::sin(w0)};

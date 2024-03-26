@@ -20,7 +20,7 @@
 #include "vector.h"
 
 #ifdef ALSOFT_EAX
-#include "al/eax_x_ram.h"
+#include "al/eax/x_ram.h"
 #endif // ALSOFT_EAX
 
 struct ALbuffer;
@@ -141,7 +141,7 @@ struct ALCdevice : public al::intrusive_ref<ALCdevice>, DeviceBase {
     { return GetConfigValueBool(DeviceName.c_str(), block, key, def); }
 
     template<typename T>
-    al::optional<T> configValue(const char *block, const char *key) = delete;
+    inline al::optional<T> configValue(const char *block, const char *key) = delete;
 
     DEF_NEWDEL(ALCdevice)
 };

@@ -7,6 +7,9 @@
 #include <iterator>
 #include <type_traits>
 
+#include "almalloc.h"
+#include "altraits.h"
+
 namespace al {
 
 template<typename T>
@@ -42,37 +45,39 @@ class span;
 
 namespace detail_ {
     template<typename... Ts>
-    struct make_void { using type = void; };
-    template<typename... Ts>
-    using void_t = typename make_void<Ts...>::type;
+    using void_t = void;
 
     template<typename T>
     struct is_span_ : std::false_type { };
     template<typename T, size_t E>
     struct is_span_<span<T,E>> : std::true_type { };
     template<typename T>
-    using is_span = is_span_<std::remove_cv_t<T>>;
+    constexpr bool is_span_v = is_span_<std::remove_cv_t<T>>::value;
 
     template<typename T>
     struct is_std_array_ : std::false_type { };
     template<typename T, size_t N>
     struct is_std_array_<std::array<T,N>> : std::true_type { };
     template<typename T>
-    using is_std_array = is_std_array_<std::remove_cv_t<T>>;
+    constexpr bool is_std_array_v = is_std_array_<std::remove_cv_t<T>>::value;
 
     template<typename T, typename = void>
-    struct has_size_and_data : std::false_type { };
+    constexpr bool has_size_and_data = false;
     template<typename T>
-    struct has_size_and_data<T,
+    constexpr bool has_size_and_data<T,
         void_t<decltype(al::size(std::declval<T>())), decltype(al::data(std::declval<T>()))>>
-        : std::true_type { };
+        = true;
+
+    template<typename T, typename U>
+    constexpr bool is_array_compatible = std::is_convertible<T(*)[],U(*)[]>::value;
+
+    template<typename C, typename T>
+    constexpr bool is_valid_container = !is_span_v<C> && !is_std_array_v<C>
+        && !std::is_array<C>::value && has_size_and_data<C>
+        && is_array_compatible<std::remove_pointer_t<decltype(al::data(std::declval<C&>()))>,T>;
 } // namespace detail_
 
-#define REQUIRES(...) bool rt_=true, std::enable_if_t<rt_ && (__VA_ARGS__),bool> = true
-#define IS_VALID_CONTAINER(C)                                                 \
-    !detail_::is_span<C>::value && !detail_::is_std_array<C>::value &&        \
-    !std::is_array<C>::value && detail_::has_size_and_data<C>::value &&       \
-    std::is_convertible<std::remove_pointer_t<decltype(al::data(std::declval<C&>()))>(*)[],element_type(*)[]>::value
+#define REQUIRES(...) std::enable_if_t<(__VA_ARGS__),bool> = true
 
 template<typename T, size_t E>
 class span {
@@ -94,23 +99,33 @@ public:
 
     static constexpr size_t extent{E};
 
-    template<REQUIRES(extent==0)>
+    template<bool is0=(extent == 0), REQUIRES(is0)>
     constexpr span() noexcept { }
-    constexpr span(pointer ptr, index_type /*count*/) : mData{ptr} { }
-    constexpr span(pointer first, pointer /*last*/) : mData{first} { }
-    constexpr span(element_type (&arr)[E]) noexcept : span{al::data(arr), al::size(arr)} { }
+    template<typename U>
+    constexpr explicit span(U iter, index_type) : mData{to_address(iter)} { }
+    template<typename U, typename V, REQUIRES(!std::is_convertible<V,size_t>::value)>
+    constexpr explicit span(U first, V) : mData{to_address(first)} { }
+
+    constexpr span(type_identity_t<element_type> (&arr)[E]) noexcept
+        : span{al::data(arr), al::size(arr)}
+    { }
     constexpr span(std::array<value_type,E> &arr) noexcept : span{al::data(arr), al::size(arr)} { }
-    template<REQUIRES(std::is_const<element_type>::value)>
+    template<typename U=T, REQUIRES(std::is_const<U>::value)>
     constexpr span(const std::array<value_type,E> &arr) noexcept
       : span{al::data(arr), al::size(arr)}
     { }
-    template<typename U, REQUIRES(IS_VALID_CONTAINER(U))>
-    constexpr span(U &cont) : span{al::data(cont), al::size(cont)} { }
-    template<typename U, REQUIRES(IS_VALID_CONTAINER(const U))>
-    constexpr span(const U &cont) : span{al::data(cont), al::size(cont)} { }
-    template<typename U, REQUIRES(!std::is_same<element_type,U>::value
-        && std::is_convertible<U(*)[],element_type(*)[]>::value)>
-    constexpr span(const span<U,E> &span_) noexcept : span{al::data(span_), al::size(span_)} { }
+
+    template<typename U, REQUIRES(detail_::is_valid_container<U, element_type>)>
+    constexpr explicit span(U&& cont) : span{al::data(cont), al::size(cont)} { }
+
+    template<typename U, index_type N, REQUIRES(!std::is_same<element_type,U>::value
+        && detail_::is_array_compatible<U,element_type> && N == dynamic_extent)>
+    constexpr explicit span(const span<U,N> &span_) noexcept
+        : span{al::data(span_), al::size(span_)}
+    { }
+    template<typename U, index_type N, REQUIRES(!std::is_same<element_type,U>::value
+        && detail_::is_array_compatible<U,element_type> && N == extent)>
+    constexpr span(const span<U,N> &span_) noexcept : span{al::data(span_), al::size(span_)} { }
     constexpr span(const span&) noexcept = default;
 
     constexpr span& operator=(const span &rhs) noexcept = default;
@@ -199,22 +214,30 @@ public:
     static constexpr size_t extent{dynamic_extent};
 
     constexpr span() noexcept = default;
-    constexpr span(pointer ptr, index_type count) : mData{ptr}, mDataEnd{ptr+count} { }
-    constexpr span(pointer first, pointer last) : mData{first}, mDataEnd{last} { }
+    template<typename U>
+    constexpr span(U iter, index_type count)
+        : mData{to_address(iter)}, mDataEnd{to_address(iter)+count}
+    { }
+    template<typename U, typename V, REQUIRES(!std::is_convertible<V,size_t>::value)>
+    constexpr span(U first, V last) : span{to_address(first), static_cast<size_t>(last-first)}
+    { }
+
     template<size_t N>
-    constexpr span(element_type (&arr)[N]) noexcept : span{al::data(arr), al::size(arr)} { }
+    constexpr span(type_identity_t<element_type> (&arr)[N]) noexcept
+        : span{al::data(arr), al::size(arr)}
+    { }
     template<size_t N>
     constexpr span(std::array<value_type,N> &arr) noexcept : span{al::data(arr), al::size(arr)} { }
-    template<size_t N, REQUIRES(std::is_const<element_type>::value)>
+    template<size_t N, typename U=T, REQUIRES(std::is_const<U>::value)>
     constexpr span(const std::array<value_type,N> &arr) noexcept
       : span{al::data(arr), al::size(arr)}
     { }
-    template<typename U, REQUIRES(IS_VALID_CONTAINER(U))>
-    constexpr span(U &cont) : span{al::data(cont), al::size(cont)} { }
-    template<typename U, REQUIRES(IS_VALID_CONTAINER(const U))>
-    constexpr span(const U &cont) : span{al::data(cont), al::size(cont)} { }
+
+    template<typename U, REQUIRES(detail_::is_valid_container<U, element_type>)>
+    constexpr span(U&& cont) : span{al::data(cont), al::size(cont)} { }
+
     template<typename U, size_t N, REQUIRES((!std::is_same<element_type,U>::value || extent != N)
-        && std::is_convertible<U(*)[],element_type(*)[]>::value)>
+        && detail_::is_array_compatible<U,element_type>)>
     constexpr span(const span<U,N> &span_) noexcept : span{al::data(span_), al::size(span_)} { }
     constexpr span(const span&) noexcept = default;
 
@@ -299,7 +322,31 @@ constexpr inline auto span<T,E>::subspan(size_t offset, size_t count) const
         span<element_type>{mData+offset, mData+offset+count};
 }
 
-#undef IS_VALID_CONTAINER
+/* Helpers to deal with the lack of user-defined deduction guides (C++17). */
+template<typename T, typename U>
+constexpr auto as_span(T ptr, U count_or_end)
+{
+    using value_type = typename std::pointer_traits<T>::element_type;
+    return span<value_type>{ptr, count_or_end};
+}
+template<typename T, size_t N>
+constexpr auto as_span(T (&arr)[N]) noexcept { return span<T,N>{al::data(arr), al::size(arr)}; }
+template<typename T, size_t N>
+constexpr auto as_span(std::array<T,N> &arr) noexcept
+{ return span<T,N>{al::data(arr), al::size(arr)}; }
+template<typename T, size_t N>
+constexpr auto as_span(const std::array<T,N> &arr) noexcept
+{ return span<std::add_const_t<T>,N>{al::data(arr), al::size(arr)}; }
+template<typename U, REQUIRES(!detail_::is_span_v<U> && !detail_::is_std_array_v<U>
+    && !std::is_array<U>::value && detail_::has_size_and_data<U>)>
+constexpr auto as_span(U&& cont)
+{
+    using value_type = std::remove_pointer_t<decltype(al::data(std::declval<U&>()))>;
+    return span<value_type>{al::data(cont), al::size(cont)};
+}
+template<typename T, size_t N>
+constexpr auto as_span(span<T,N> span_) noexcept { return span_; }
+
 #undef REQUIRES
 
 } // namespace al

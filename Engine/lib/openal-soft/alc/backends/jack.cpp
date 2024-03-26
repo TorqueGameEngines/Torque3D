@@ -160,6 +160,11 @@ using JackPortsPtr = std::unique_ptr<const char*[],JackDeleter>;
 struct DeviceEntry {
     std::string mName;
     std::string mPattern;
+
+    template<typename T, typename U>
+    DeviceEntry(T&& name, U&& pattern)
+        : mName{std::forward<T>(name)}, mPattern{std::forward<U>(pattern)}
+    { }
 };
 
 al::vector<DeviceEntry> PlaybackList;
@@ -187,7 +192,7 @@ void EnumerateDevices(jack_client_t *client, al::vector<DeviceEntry> &list)
                 continue;
 
             std::string name{portdev.data(), portdev.size()};
-            list.emplace_back(DeviceEntry{name, name+":"});
+            list.emplace_back(name, name+":");
             const auto &entry = list.back();
             TRACE("Got device: %s = %s\n", entry.mName.c_str(), entry.mPattern.c_str());
         }
@@ -197,7 +202,7 @@ void EnumerateDevices(jack_client_t *client, al::vector<DeviceEntry> &list)
         if(ports[0] && list.empty())
         {
             WARN("No device names found in available ports, adding a generic name.\n");
-            list.emplace_back(DeviceEntry{"JACK", ""});
+            list.emplace_back("JACK", "");
         }
     }
 
@@ -238,8 +243,8 @@ void EnumerateDevices(jack_client_t *client, al::vector<DeviceEntry> &list)
             else
             {
                 /* Otherwise, add a new device entry. */
-                list.emplace_back(DeviceEntry{std::string{name.data(), name.size()},
-                    std::string{pattern.data(), pattern.size()}});
+                list.emplace_back(std::string{name.data(), name.size()},
+                    std::string{pattern.data(), pattern.size()});
                 const auto &entry = list.back();
                 TRACE("Got custom device: %s = %s\n", entry.mName.c_str(), entry.mPattern.c_str());
             }
@@ -340,7 +345,7 @@ int JackPlayback::processRt(jack_nframes_t numframes) noexcept
         out[numchans++] = static_cast<float*>(jack_port_get_buffer(port, numframes));
     }
 
-    if LIKELY(mPlaying.load(std::memory_order_acquire))
+    if(mPlaying.load(std::memory_order_acquire)) LIKELY
         mDevice->renderSamples({out.data(), numchans}, static_cast<uint>(numframes));
     else
     {
@@ -364,7 +369,7 @@ int JackPlayback::process(jack_nframes_t numframes) noexcept
     }
 
     jack_nframes_t total{0};
-    if LIKELY(mPlaying.load(std::memory_order_acquire))
+    if(mPlaying.load(std::memory_order_acquire)) LIKELY
     {
         auto data = mRing->getReadVector();
         jack_nframes_t todo{minu(numframes, static_cast<uint>(data.first.len))};
@@ -492,7 +497,7 @@ void JackPlayback::open(const char *name)
         mPortPattern = iter->mPattern;
     }
 
-    mRTMixing = GetConfigValueBool(name, "jack", "rt-mix", 1);
+    mRTMixing = GetConfigValueBool(name, "jack", "rt-mix", true);
     jack_set_process_callback(mClient,
         mRTMixing ? &JackPlayback::processRtC : &JackPlayback::processC, this);
 
@@ -669,7 +674,7 @@ bool JackBackendFactory::init()
     if(!jack_load())
         return false;
 
-    if(!GetConfigValueBool(nullptr, "jack", "spawn-server", 0))
+    if(!GetConfigValueBool(nullptr, "jack", "spawn-server", false))
         ClientOptions = static_cast<jack_options_t>(ClientOptions | JackNoStartServer);
 
     const PathNamePair &binname = GetProcBinary();

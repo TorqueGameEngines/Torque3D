@@ -350,7 +350,7 @@ SFXBuffer* SFXProfile::_createBuffer()
          Con::printf( "%s SFX: %s (%i channels, %i kHz, %.02f sec, %i kb)",
             mDescription->mIsStreaming ? "Streaming" : "Loading", resource->getFileName().c_str(),
             format.getChannels(),
-            format.getSamplesPerSecond() / 1000,
+            format.getSamplesPerSecond(),
             F32( resource->getDuration() ) / 1000.0f,
             format.getDataLength( resource->getDuration() ) / 1024 );
          #endif

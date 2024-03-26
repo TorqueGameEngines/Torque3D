@@ -38,7 +38,7 @@
 #include "sfx/sfxMemoryStream.h"
 #include "sfx/sfxSound.h"
 #ifdef SPLIT_VORBIS
-   #include "sfx/media/sfxVorbisStream.h"
+   #include "sfx/media/sfxSndStream.h"
 #endif
 
 #include "core/stream/fileStream.h"
@@ -524,7 +524,7 @@ bool TheoraTexture::setFile( const String& filename, SFXDescription* desc )
    stream = FileStream::createAndOpen( filename, Torque::FS::File::Read );
    if( stream )
    {
-      ThreadSafeRef< SFXStream > vorbisStream = SFXVorbisStream::create( stream );
+      ThreadSafeRef< SFXStream > vorbisStream = SFXSndStream::create( stream );
       if( !vorbisStream )
       {
          Con::errorf( "TheoraTexture - could not create Vorbis stream for '%s'", filename.c_str() );

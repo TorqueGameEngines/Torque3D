@@ -10,6 +10,7 @@
 #include "alnumeric.h"
 #include "core/device.h"
 #include "core/logging.h"
+#include "ringbuffer.h"
 
 #include "oboe/Oboe.h"
 
@@ -80,7 +81,10 @@ bool OboePlayback::reset()
     builder.setCallback(this);
 
     if(mDevice->Flags.test(FrequencyRequest))
+    {
+        builder.setSampleRateConversionQuality(oboe::SampleRateConversionQuality::High);
         builder.setSampleRate(static_cast<int32_t>(mDevice->Frequency));
+    }
     if(mDevice->Flags.test(ChannelsRequest))
     {
         /* Only use mono or stereo at user request. There's no telling what
@@ -103,6 +107,10 @@ bool OboePlayback::reset()
             break;
         case DevFmtInt:
         case DevFmtUInt:
+#if OBOE_VERSION_MAJOR > 1 || (OBOE_VERSION_MAJOR == 1 && OBOE_VERSION_MINOR >= 6)
+            format = oboe::AudioFormat::I32;
+            break;
+#endif
         case DevFmtFloat:
             format = oboe::AudioFormat::Float;
             break;
@@ -151,6 +159,12 @@ bool OboePlayback::reset()
     case oboe::AudioFormat::Float:
         mDevice->FmtType = DevFmtFloat;
         break;
+#if OBOE_VERSION_MAJOR > 1 || (OBOE_VERSION_MAJOR == 1 && OBOE_VERSION_MINOR >= 6)
+    case oboe::AudioFormat::I32:
+        mDevice->FmtType = DevFmtInt;
+        break;
+    case oboe::AudioFormat::I24:
+#endif
     case oboe::AudioFormat::Unspecified:
     case oboe::AudioFormat::Invalid:
         throw al::backend_exception{al::backend_error::DeviceError,
@@ -188,13 +202,15 @@ void OboePlayback::stop()
 }
 
 
-struct OboeCapture final : public BackendBase {
+struct OboeCapture final : public BackendBase, public oboe::AudioStreamCallback {
     OboeCapture(DeviceBase *device) : BackendBase{device} { }
 
     oboe::ManagedStream mStream;
 
-    std::vector<al::byte> mSamples;
-    uint mLastAvail{0u};
+    RingBufferPtr mRing{nullptr};
+
+    oboe::DataCallbackResult onAudioReady(oboe::AudioStream *oboeStream, void *audioData,
+        int32_t numFrames) override;
 
     void open(const char *name) override;
     void start() override;
@@ -202,6 +218,14 @@ struct OboeCapture final : public BackendBase {
     void captureSamples(al::byte *buffer, uint samples) override;
     uint availableSamples() override;
 };
+
+oboe::DataCallbackResult OboeCapture::onAudioReady(oboe::AudioStream*, void *audioData,
+    int32_t numFrames)
+{
+    mRing->write(audioData, static_cast<uint32_t>(numFrames));
+    return oboe::DataCallbackResult::Continue;
+}
+
 
 void OboeCapture::open(const char *name)
 {
@@ -217,8 +241,8 @@ void OboeCapture::open(const char *name)
         ->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::High)
         ->setChannelConversionAllowed(true)
         ->setFormatConversionAllowed(true)
-        ->setBufferCapacityInFrames(static_cast<int32_t>(mDevice->BufferSize))
-        ->setSampleRate(static_cast<int32_t>(mDevice->Frequency));
+        ->setSampleRate(static_cast<int32_t>(mDevice->Frequency))
+        ->setCallback(this);
     /* Only use mono or stereo at user request. There's no telling what
      * other counts may be inferred as.
      */
@@ -234,13 +258,15 @@ void OboeCapture::open(const char *name)
     case DevFmtX51:
     case DevFmtX61:
     case DevFmtX71:
+    case DevFmtX714:
+    case DevFmtX3D71:
     case DevFmtAmbi3D:
         throw al::backend_exception{al::backend_error::DeviceError, "%s capture not supported",
             DevFmtChannelsString(mDevice->FmtChans)};
     }
 
     /* FIXME: This really should support UByte, but Oboe doesn't. We'll need to
-     * use a temp buffer and convert.
+     * convert.
      */
     switch(mDevice->FmtType)
     {
@@ -250,10 +276,14 @@ void OboeCapture::open(const char *name)
     case DevFmtFloat:
         builder.setFormat(oboe::AudioFormat::Float);
         break;
+    case DevFmtInt:
+#if OBOE_VERSION_MAJOR > 1 || (OBOE_VERSION_MAJOR == 1 && OBOE_VERSION_MINOR >= 6)
+        builder.setFormat(oboe::AudioFormat::I32);
+        break;
+#endif
     case DevFmtByte:
     case DevFmtUByte:
     case DevFmtUShort:
-    case DevFmtInt:
     case DevFmtUInt:
         throw al::backend_exception{al::backend_error::DeviceError,
             "%s capture samples not supported", DevFmtTypeString(mDevice->FmtType)};
@@ -263,21 +293,12 @@ void OboeCapture::open(const char *name)
     if(result != oboe::Result::OK)
         throw al::backend_exception{al::backend_error::DeviceError, "Failed to create stream: %s",
             oboe::convertToText(result)};
-    if(static_cast<int32_t>(mDevice->BufferSize) > mStream->getBufferCapacityInFrames())
-        throw al::backend_exception{al::backend_error::DeviceError,
-            "Buffer size too large (%u > %d)", mDevice->BufferSize,
-            mStream->getBufferCapacityInFrames()};
-    auto buffer_result = mStream->setBufferSizeInFrames(static_cast<int32_t>(mDevice->BufferSize));
-    if(!buffer_result)
-        throw al::backend_exception{al::backend_error::DeviceError,
-            "Failed to set buffer size: %s", oboe::convertToText(buffer_result.error())};
-    else if(buffer_result.value() < static_cast<int32_t>(mDevice->BufferSize))
-        throw al::backend_exception{al::backend_error::DeviceError,
-            "Failed to set large enough buffer size (%u > %d)", mDevice->BufferSize,
-            buffer_result.value()};
-    mDevice->BufferSize = static_cast<uint>(buffer_result.value());
 
     TRACE("Got stream with properties:\n%s", oboe::convertToText(mStream.get()));
+
+    /* Ensure a minimum ringbuffer size of 100ms. */
+    mRing = RingBuffer::Create(maxu(mDevice->BufferSize, mDevice->Frequency/10),
+        static_cast<uint32_t>(mStream->getBytesPerFrame()), false);
 
     mDevice->DeviceName = name;
 }
@@ -292,23 +313,6 @@ void OboeCapture::start()
 
 void OboeCapture::stop()
 {
-    /* Capture any unread samples before stopping. Oboe drops whatever's left
-     * in the stream.
-     */
-    if(auto availres = mStream->getAvailableFrames())
-    {
-        const auto avail = std::max(static_cast<uint>(availres.value()), mLastAvail);
-        const size_t frame_size{static_cast<uint32_t>(mStream->getBytesPerFrame())};
-        const size_t pos{mSamples.size()};
-        mSamples.resize(pos + avail*frame_size);
-
-        auto result = mStream->read(&mSamples[pos], availres.value(), 0);
-        uint got{bool{result} ? static_cast<uint>(result.value()) : 0u};
-        if(got < avail)
-            std::fill_n(&mSamples[pos + got*frame_size], (avail-got)*frame_size, al::byte{});
-        mLastAvail = 0;
-    }
-
     const oboe::Result result{mStream->stop()};
     if(result != oboe::Result::OK)
         throw al::backend_exception{al::backend_error::DeviceError, "Failed to stop stream: %s",
@@ -316,38 +320,10 @@ void OboeCapture::stop()
 }
 
 uint OboeCapture::availableSamples()
-{
-    /* Keep track of the max available frame count, to ensure it doesn't go
-     * backwards.
-     */
-    if(auto result = mStream->getAvailableFrames())
-        mLastAvail = std::max(static_cast<uint>(result.value()), mLastAvail);
-
-    const auto frame_size = static_cast<uint32_t>(mStream->getBytesPerFrame());
-    return static_cast<uint>(mSamples.size()/frame_size) + mLastAvail;
-}
+{ return static_cast<uint>(mRing->readSpace()); }
 
 void OboeCapture::captureSamples(al::byte *buffer, uint samples)
-{
-    const auto frame_size = static_cast<uint>(mStream->getBytesPerFrame());
-    if(const size_t storelen{mSamples.size()})
-    {
-        const auto instore = static_cast<uint>(storelen / frame_size);
-        const uint tocopy{std::min(samples, instore) * frame_size};
-        std::copy_n(mSamples.begin(), tocopy, buffer);
-        mSamples.erase(mSamples.begin(), mSamples.begin() + tocopy);
-
-        buffer += tocopy;
-        samples -= tocopy/frame_size;
-        if(!samples) return;
-    }
-
-    auto result = mStream->read(buffer, static_cast<int32_t>(samples), 0);
-    uint got{bool{result} ? static_cast<uint>(result.value()) : 0u};
-    if(got < samples)
-        std::fill_n(buffer + got*frame_size, (samples-got)*frame_size, al::byte{});
-    mLastAvail = std::max(mLastAvail, samples) - samples;
-}
+{ mRing->read(buffer, samples); }
 
 } // namespace
 

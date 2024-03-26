@@ -53,17 +53,19 @@
 #drivers =
 
 ## channels:
-#  Sets the output channel configuration. If left unspecified, one will try to
-#  be detected from the system, and defaulting to stereo. The available values
-#  are: mono, stereo, quad, surround51, surround61, surround71, ambi1, ambi2,
-#  ambi3. Note that the ambi* configurations provide ambisonic channels of the
-#  given order (using ACN ordering and SN3D normalization by default), which
-#  need to be decoded to play correctly on speakers.
+#  Sets the default output channel configuration. If left unspecified, one will
+#  try to be detected from the system, with a fallback to stereo. The available
+#  values are: mono, stereo, quad, surround51, surround61, surround71,
+#  surround3d71, ambi1, ambi2, ambi3. Note that the ambi* configurations output
+#  ambisonic channels of the given order (using ACN ordering and SN3D
+#  normalization by default), which need to be decoded to play correctly on
+#  speakers.
 #channels =
 
 ## sample-type:
-#  Sets the output sample type. Currently, all mixing is done with 32-bit float
-#  and converted to the output sample type as needed. Available values are:
+#  Sets the default output sample type. Currently, all mixing is done with
+#  32-bit float and converted to the output sample type as needed. Available
+#  values are:
 #  int8    - signed 8-bit int
 #  uint8   - unsigned 8-bit int
 #  int16   - signed 16-bit int
@@ -74,8 +76,8 @@
 #sample-type = float32
 
 ## frequency:
-#  Sets the output frequency. If left unspecified it will try to detect a
-#  default from the system, otherwise it will default to 44100.
+#  Sets the default output frequency. If left unspecified it will try to detect
+#  a default from the system, otherwise it will fallback to 48000.
 #frequency =
 
 ## period_size:
@@ -99,13 +101,16 @@
 #stereo-mode = auto
 
 ## stereo-encoding:
-#  Specifies the encoding method for non-HRTF stereo output. 'panpot' (default)
-#  uses standard amplitude panning (aka pair-wise, stereo pair, etc) between
-#  -30 and +30 degrees, while 'uhj' creates stereo-compatible two-channel UHJ
-#  output, which encodes some surround sound information into stereo output
-#  that can be decoded with a surround sound receiver. If crossfeed filters are
-#  used, UHJ is disabled.
-#stereo-encoding = panpot
+#  Specifies the default encoding method for stereo output. Valid values are:
+#  basic - Standard amplitude panning (aka pair-wise, stereo pair, etc) between
+#          -30 and +30 degrees.
+#  uhj - Creates a stereo-compatible two-channel UHJ mix, which encodes some
+#        surround sound information into stereo output that can be decoded with
+#        a surround sound receiver.
+#  hrtf - Uses filters to provide better spatialization of sounds while using
+#         stereo headphones.
+#  If crossfeed filters are used, basic stereo mixing is used.
+#stereo-encoding = basic
 
 ## ambi-format:
 #  Specifies the channel order and normalization for the "ambi*" set of channel
@@ -114,12 +119,8 @@
 #ambi-format = ambix
 
 ## hrtf:
-#  Controls HRTF processing. These filters provide better spatialization of
-#  sounds while using headphones, but do require a bit more CPU power. While
-#  HRTF is used, the cf_level option is ignored. Setting this to auto (default)
-#  will allow HRTF to be used when headphones are detected or the app requests
-#  it, while setting true or false will forcefully enable or disable HRTF
-#  respectively.
+#  Deprecated. Consider using stereo-encoding instead. Valid values are auto,
+#  off, and on.
 #hrtf = auto
 
 ## hrtf-mode:
@@ -139,7 +140,7 @@
 #  Specifies the impulse response size, in samples, for the HRTF filter. Larger
 #  values increase the filter quality, while smaller values reduce processing
 #  cost. A value of 0 (default) uses the full filter size in the dataset, and
-#  the default dataset has a filter size of 32 samples at 44.1khz.
+#  the default dataset has a filter size of 64 samples at 48khz.
 #hrtf-size = 0
 
 ## default-hrtf:
@@ -187,7 +188,7 @@
 #            between 24 and 48 points, with anti-aliasing)
 #  fast_bsinc24 - same as bsinc24, except without interpolation between down-
 #                 sampling scales
-#resampler = linear
+#resampler = cubic
 
 ## rt-prio: (global)
 #  Sets the real-time priority value for the mixing thread. Not all drivers may
@@ -265,9 +266,9 @@
 ## default-reverb: (global)
 #  A reverb preset that applies by default to all sources on send 0
 #  (applications that set their own slots on send 0 will override this).
-#  Available presets are: None, Generic, PaddedCell, Room, Bathroom,
+#  Available presets include: None, Generic, PaddedCell, Room, Bathroom,
 #  Livingroom, Stoneroom, Auditorium, ConcertHall, Cave, Arena, Hangar,
-#  CarpetedHallway, Hallway, StoneCorridor, Alley, Forest, City, Moutains,
+#  CarpetedHallway, Hallway, StoneCorridor, Alley, Forest, City, Mountains,
 #  Quarry, Plain, ParkingLot, SewerPipe, Underwater, Drugged, Dizzy, Psychotic.
 #default-reverb =
 
@@ -305,22 +306,22 @@
 ## nfc:
 #  Enables near-field control filters. This simulates and compensates for low-
 #  frequency effects caused by the curvature of nearby sound-waves, which
-#  creates a more realistic perception of sound distance. Note that the effect
-#  may be stronger or weaker than intended if the application doesn't use or
-#  specify an appropriate unit scale, or if incorrect speaker distances are set
-#  in the decoder configuration file.
+#  creates a more realistic perception of sound distance with surround sound
+#  output. Note that the effect may be stronger or weaker than intended if the
+#  application doesn't use or specify an appropriate unit scale, or if
+#  incorrect speaker distances are set. For HRTF output, hrtf-mode must be set
+#  to one of the ambi* values for this to function.
 #nfc = false
 
-## nfc-ref-delay
-#  Specifies the reference delay value for ambisonic output when NFC filters
-#  are enabled. If channels is set to one of the ambi* formats, this option
-#  enables NFC-HOA output with the specified Reference Delay parameter. The
-#  specified value can then be shared with an appropriate NFC-HOA decoder to
-#  reproduce correct near-field effects. Keep in mind that despite being
-#  designed for higher-order ambisonics, this also applies to first-order
-#  output. When left unset, normal output is created with no near-field
-#  simulation. Requires the nfc option to also be enabled.
-#nfc-ref-delay =
+## speaker-dist:
+#  Specifies the speaker distance in meters, used by the near-field control
+#  filters with surround sound output. For ambisonic output modes, this value
+#  is the basis for the NFC-HOA Reference Delay parameter (calculated as
+#  delay_seconds = speaker_dist/343.3). This value is not used when a decoder
+#  configuration is set for the output mode (since they specify the per-speaker
+#  distances, overriding this setting), or when the NFC filters are off. Valid
+#  values range from 0.1 to 10.
+#speaker-dist = 1
 
 ## quad:
 #  Decoder configuration file for Quadraphonic channel output. See
@@ -339,10 +340,35 @@
 
 ## surround71:
 #  Decoder configuration file for 7.1 Surround channel output. See
-#  docs/ambdec.txt for a description of the file format. Note: This can be used
-#  to enable 3D7.1 with the appropriate configuration and speaker placement,
-#  see docs/3D7.1.txt.
+#  docs/ambdec.txt for a description of the file format.
 #surround71 =
+
+## surround3d71:
+#  Decoder configuration file for 3D7.1 Surround channel output. See
+#  docs/ambdec.txt for a description of the file format. See also
+#  docs/3D7.1.txt for information about 3D7.1.
+#surround3d71 =
+
+##
+## UHJ and Super Stereo stuff
+##
+[uhj]
+
+## decode-filter: (global)
+#  Specifies the all-pass filter type for UHJ decoding and Super Stereo
+#  processing. Valid values are:
+#  iir - utilizes dual IIR filters, providing a wide pass-band with low CPU
+#        use, but causes additional phase shifts on the signal.
+#  fir256 - utilizes a 256-point FIR filter, providing more stable results but
+#           exhibiting attenuation in the lower and higher frequency bands.
+#  fir512 - utilizes a 512-point FIR filter, providing a wider pass-band than
+#           fir256, at the cost of more CPU use.
+#decode-filter = iir
+
+## encode-filter: (global)
+#  Specifies the all-pass filter type for UHJ output encoding. Valid values are
+#  the same as for decode-filter.
+#encode-filter = iir
 
 ##
 ## Reverb effect stuff (includes EAX reverb)
@@ -371,6 +397,12 @@
 #  support even when no nodes may be reported at initialization time.
 #assume-audio = false
 
+## rt-mix:
+#  Renders samples directly in the real-time processing callback. This allows
+#  for lower latency and less overall CPU utilization, but can increase the
+#  risk of underruns when increasing the amount of work the mixer needs to do.
+#rt-mix = true
+
 ##
 ## PulseAudio backend stuff
 ##
@@ -380,7 +412,7 @@
 #  Attempts to autospawn a PulseAudio server whenever needed (initializing the
 #  backend, enumerating devices, etc). Setting autospawn to false in Pulse's
 #  client.conf will still prevent autospawning even if this is set to true.
-#spawn-server = true
+#spawn-server = false
 
 ## allow-moves: (global)
 #  Allows PulseAudio to move active streams to different devices. Note that the
@@ -542,6 +574,14 @@
 ##
 [wasapi]
 
+## allow-resampler:
+#  Specifies whether to allow an extra resampler pass on the output. Enabling
+#  this will allow the playback device to be set to a different sample rate
+#  than the actual output can accept, causing the backend to apply its own
+#  resampling pass after OpenAL Soft mixes the sources and processes effects
+#  for output.
+#allow-resampler = true
+
 ##
 ## DirectSound backend stuff
 ##
@@ -597,6 +637,21 @@
 ## files, *NOT* system- or user-level!)
 ##
 [game_compat]
+
+## nfc-scale: (global)
+#  A meters-per-unit distance scale applied to NFC filters. If a game doesn't
+#  use real-world meters for in-game units, the filters may create a too-near
+#  or too-distant effect. For instance, if the game uses 1 foot per unit, a
+#  value of 0.3048 will correctly adjust the filters. Or if the game uses 1
+#  kilometer per unit, a value of 1000 will correctly adjust the filters.
+#nfc-scale = 1
+
+## enable-sub-data-ext: (global)
+#  Enables the AL_SOFT_buffer_sub_data extension, disabling the
+#  AL_EXT_SOURCE_RADIUS extension. These extensions are incompatible, so only
+#  one can be available. The latter extension is more commonly used, but this
+#  option can be enabled for older apps that want the former extension.
+#enable-sub-data-ext = false
 
 ## reverse-x: (global)
 #  Reverses the local X (left-right) position of 3D sound sources.

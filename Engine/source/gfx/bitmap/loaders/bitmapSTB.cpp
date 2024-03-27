@@ -328,19 +328,8 @@ bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len)
    stream.read(len, data);
 
    S32 width, height, comp = 0;
-   if (stbi_info_from_memory(data, len, &width, &height, &comp))
-   {
-      const char* stbErr = stbi_failure_reason();
 
-      if (!stbErr)
-         stbErr = "Unknown Error!";
-
-      Con::errorf("STB get memory info: %s", stbErr);
-   }
-
-   S32 reqCom = comp;
-
-   unsigned char* pixelData = stbi_load_from_memory((const U8*)data, (int)len, &width, &height, &comp, reqCom);
+   unsigned char* pixelData = stbi_load_from_memory((const U8*)data, (int)len, &width, &height, &comp, 0);
 
    if (!pixelData)
    {

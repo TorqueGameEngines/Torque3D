@@ -24,7 +24,7 @@ jobs:
               
         steps:
             - name: Download Linux Test Report
-              uses: dawidd6/action-download-artifact@v2
+              uses: dawidd6/action-download-artifact@v3
               with:
                 path: Linux
                 name: ${{matrix.config.artifact-name}}

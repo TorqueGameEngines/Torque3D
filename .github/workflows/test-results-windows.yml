@@ -24,7 +24,7 @@ jobs:
 
         steps:
             - name: Download Windows Test Report
-              uses: dawidd6/action-download-artifact@v2
+              uses: dawidd6/action-download-artifact@v3
               with:
                 path: Windows
                 name: ${{matrix.config.artifact-name}}

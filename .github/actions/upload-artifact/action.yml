@@ -17,3 +17,4 @@ runs:
             name: ${{inputs.name}}
             path: ${{inputs.path}}
             retention-days: 1
+            overwrite: true

@@ -32,7 +32,7 @@ jobs:
                 run_id: ${{ github.event.workflow_run.id }}
 
             - name: Test Reporter
-              uses: phoenix-actions/test-reporting@v12
+              uses: phoenix-actions/test-reporting@v14
               with:
                 artifact: ${{matrix.config.artifact-name}}
                 name: ${{matrix.config.name}}

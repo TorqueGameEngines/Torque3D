@@ -65,7 +65,7 @@ jobs:
                 
 
             - name: Configure, Build & Install
-              uses: threeal/cmake-action@v1.2.0
+              uses: threeal/cmake-action@v1.3.0
               with:
                 source-dir: ${{github.workspace}}
                 build-dir: ${{github.workspace}}/build

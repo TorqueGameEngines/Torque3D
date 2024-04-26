@@ -7,7 +7,7 @@ inputs:
     path:
         description: The path to the upload.
         required: true
-        default: "**/My Projects/Torque3D/game/test_detail.xml"
+        default: "Torque3D/My Projects/Torque3D/game/test_detail.xml"
 runs:
     using: "composite"
     steps:

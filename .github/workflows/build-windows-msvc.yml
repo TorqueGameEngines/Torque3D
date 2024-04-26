@@ -62,3 +62,4 @@ jobs:
               uses: ./.github/actions/upload-artifact
               with:
                 name: torque3dWindowsMSVCUnitTest
+                path: "${{github.workspace}}/My Projects/Torque3D/game/test_detail.xml"

@@ -65,4 +65,5 @@ jobs:
             - name: Upload Artifact
               uses: ./.github/actions/upload-artifact
               with:
-                name: torque3dMacOSXCLANGUnitTest
+                name: test_detail.xml
+                path: "${{github.workspace}}/My Projects/Torque3D/game"

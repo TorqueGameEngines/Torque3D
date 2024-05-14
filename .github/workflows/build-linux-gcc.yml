@@ -12,6 +12,10 @@ env:
 concurrency:
     group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-linux
     cancel-in-progress: true
+
+permissions:
+  checks: write
+
 jobs:
     build-linux:
         if: github.repository == 'TorqueGameEngines/Torque3D'
@@ -84,8 +88,10 @@ jobs:
                 cd "${{github.workspace}}/My Projects/Torque3D/game"
                 ./Torque3D runTests.tscript
 
-            - name: Upload Artifact
-              uses: ./.github/actions/upload-artifact
+            - name: Test Reporter
+              uses: phoenix-actions/test-reporting@v14
               with:
-                name: torque3dLinuxGCCUnitTest
-                path: "${{github.workspace}}/My Projects/Torque3D/game/test_detail.xml"
+                name: Linux test results
+                path: "**/My Projects/Torque3D/game/test_detail.xml"
+                reporter: java-junit
+                fail-on-error: false

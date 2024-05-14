@@ -1695,50 +1695,6 @@ void ConvexShape::renderFaceEdges( S32 faceid, const ColorI &color /*= ColorI::W
    }
 }
 
-void ConvexShape::renderFaceVerts(S32 faceid, const ColorI& color)
-{
-   const Vector< ConvexShape::Face >& faceList = mGeometry.faces;
-
-   if (faceid >= faceList.size())
-      return;
-
-   GFXDrawUtil* drawer = GFX->getDrawUtil();
-
-   GFXTransformSaver saver;
-   MatrixF xfm(mObjToWorld);
-   xfm.scale(mObjScale);
-   GFX->multWorld(xfm);
-
-   GFXStateBlockDesc desc;
-   desc.setBlend(true);
-   GFX->setStateBlockByDesc(desc);
-
-   MatrixF projBias(true);
-   const Frustum& frustum = GFX->getFrustum();
-   MathUtils::getZBiasProjectionMatrix(0.001f, frustum, &projBias);
-   GFX->setProjectionMatrix(projBias);
-
-   S32 s = faceid;
-   S32 e = faceid + 1;
-
-   if (faceid == -1)
-   {
-      s = 0;
-      e = faceList.size();
-   }
-
-   for (S32 i = s; i < e; i++)
-   {
-      const ConvexShape::Face& face = faceList[i];
-      const Vector< U32 >& facePntList = face.points;
-      const Vector< Point3F >& pointList = mGeometry.points;
-
-      for (S32 j = 0; j < facePntList.size(); j++) {
-         drawer->drawCube(desc, Point3F(0.05f, 0.05f, 0.05f), pointList[facePntList[j]], color);
-      }
-   }
-}
-
 void ConvexShape::getSurfaceTriangles( S32 surfId, Vector< Point3F > *outPoints, Vector< Point2F > *outCoords, bool worldSpace )
 {
    S32 faceId = -1;

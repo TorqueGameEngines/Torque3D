@@ -86,6 +86,8 @@ public:
 
    bool setActiveTool( ConvexEditorTool *tool );
 
+   void drawFacePlane( ConvexShape *shape, S32 faceId );
+
    void scaleFace( ConvexShape *shape, S32 faceId, Point3F scale );
 
    void translateFace( ConvexShape *shape, S32 faceId, const Point3F &displace );
@@ -133,7 +135,6 @@ public:
    void updateShape();
 
    float getGridSnapSize() { return mGridPlaneSize; }
-   bool getGridSnap() { return mGridSnap; }
    /// Interface with Tools.
    /// @{ 
 

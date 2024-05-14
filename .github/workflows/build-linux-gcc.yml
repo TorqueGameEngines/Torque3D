@@ -91,6 +91,7 @@ jobs:
             - name: Test Reporter
               uses: phoenix-actions/test-reporting@v14
               with:
+                github_token: ${{ secrets.GITHUB_TOKEN }}
                 name: Linux test results
                 path: "**/My Projects/Torque3D/game/test_detail.xml"
                 reporter: java-junit

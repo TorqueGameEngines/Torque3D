@@ -1,23 +1,25 @@
-function AssetBrowser::setupCreateNewTerrainAsset(%this)
+AssetBrowser::registerAssetType("TerrainAsset", "Terrains"); 
+
+function TerrainAsset::setupCreateNew()
 {
    NewAssetPropertiesInspector.startGroup("Terrain");
-   NewAssetPropertiesInspector.addField("resolution", "Terrain Texture Resolution", "list",  "Is this script used on the server?", "1024", "256,512,1024,2048,4096", %this.newAssetSettings);
-   NewAssetPropertiesInspector.addField("genWithNoise", "Generate Terrain With Noise", "bool",  "Is this script used on the server?", "0", "2", %this.newAssetSettings);
+   NewAssetPropertiesInspector.addField("resolution", "Terrain Texture Resolution", "list",  "Is this script used on the server?", "1024", "256,512,1024,2048,4096", $CurrentAssetBrowser.newAssetSettings);
+   NewAssetPropertiesInspector.addField("genWithNoise", "Generate Terrain With Noise", "bool",  "Is this script used on the server?", "0", "2", $CurrentAssetBrowser.newAssetSettings);
    NewAssetPropertiesInspector.endGroup();
    
    /*NewAssetPropertiesInspector.startGroup("Terrain - Import");
-   NewAssetPropertiesInspector.addField("importDetails", "Import Heightmap", "button",  "Import an existing heightmap", "", "Canvas.pushDialog( TerrainImportGui );", %this.newAssetSettings);
+   NewAssetPropertiesInspector.addField("importDetails", "Import Heightmap", "button",  "Import an existing heightmap", "", "Canvas.pushDialog( TerrainImportGui );", $CurrentAssetBrowser.newAssetSettings);
    NewAssetPropertiesInspector.endGroup();*/
 }
 
-function AssetBrowser::createTerrainAsset(%this)
+function TerrainAsset::onCreateNew()
 {
-   %moduleName = AssetBrowser.newAssetSettings.moduleName;
+   %moduleName = $CurrentAssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
       
-   %assetName = AssetBrowser.newAssetSettings.assetName;      
+   %assetName = $CurrentAssetBrowser.newAssetSettings.assetName;      
    
-   %assetType = AssetBrowser.newAssetSettings.assetType;
+   %assetType = $CurrentAssetBrowser.newAssetSettings.assetType;
    %assetPath = NewAssetTargetAddress.getText() @ "/";
    
    //Ensure anything we generate goes into the right directory
@@ -31,8 +33,8 @@ function AssetBrowser::createTerrainAsset(%this)
       AssetName = %assetName;
       versionId = 1;
       terrainFile = %assetName @ ".ter";
-      resolution = %this.newAssetSettings.resolution;
-      genWithNoise = %this.newAssetSettings.genWithNoise;
+      resolution = $CurrentAssetBrowser.newAssetSettings.resolution;
+      genWithNoise = $CurrentAssetBrowser.newAssetSettings.genWithNoise;
    };
    
    TamlWrite(%asset, %tamlpath);
@@ -40,9 +42,9 @@ function AssetBrowser::createTerrainAsset(%this)
    %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.refresh();
+	$CurrentAssetBrowser.refresh();
 	
-	$createdTerrainBlock = TerrainBlock::createNew( %assetName, %this.newAssetSettings.resolution, "", %this.newAssetSettings.genWithNoise );
+	$createdTerrainBlock = TerrainBlock::createNew( %assetName, $CurrentAssetBrowser.newAssetSettings.resolution, "", $CurrentAssetBrowser.newAssetSettings.genWithNoise );
 	
 	MECreateUndoAction::submit($createdTerrainBlock);
       
@@ -55,12 +57,12 @@ function AssetBrowser::createTerrainAsset(%this)
       // This will update an existing terrain with the name %terrainName,
       // or create a new one if %terrainName isn't a TerrainBlock
       $createdTerrainBlock = TerrainBlock::import(  $createdTerrainBlock, 
-                                                    AssetBrowser.newAssetSettings.heightMapPng, 
-                                                    AssetBrowser.newAssetSettings.metersPerPixel, 
-                                                    AssetBrowser.newAssetSettings.heightScale, 
-                                                    AssetBrowser.newAssetSettings.opacityNames, 
-                                                    AssetBrowser.newAssetSettings.materialNames,
-                                                    AssetBrowser.newAssetSettings.flipYAxis );
+                                                    $CurrentAssetBrowser.newAssetSettings.heightMapPng, 
+                                                    $CurrentAssetBrowser.newAssetSettings.metersPerPixel, 
+                                                    $CurrentAssetBrowser.newAssetSettings.heightScale, 
+                                                    $CurrentAssetBrowser.newAssetSettings.opacityNames, 
+                                                    $CurrentAssetBrowser.newAssetSettings.materialNames,
+                                                    $CurrentAssetBrowser.newAssetSettings.flipYAxis );
 
       if ( isObject( $createdTerrainBlock ) )
       {
@@ -130,87 +132,35 @@ function createTerrainBlock(%assetId)
    //
 }
 
-function AssetBrowser::editTerrainAsset(%this, %assetDef)
+
+function TerrainAsset::onWorldEditorDropped(%this, %position)
 {
+   createTerrainBlock(%this.getAssetId());
 }
 
-function AssetBrowser::duplicateTerrainAsset(%this, %assetDef, %targetModule)
+function TerrainAsset::buildBrowserElement(%this, %previewData)
 {
-}
-
-function AssetBrowser::importTerrainAsset(%this, %assetDef)
-{
-}
-
-function AssetBrowser::dragAndDropTerrainAsset(%this, %assetDef, %dropTarget)
-{
-   if(!isObject(%dropTarget))
-      return;
-}
-
-function AssetBrowser::onTerrainAssetEditorDropped(%this, %assetDef, %position)
-{
-   createTerrainBlock(%assetDef.getAssetId());
-}
-
-function AssetBrowser::renameTerrainAsset(%this, %assetDef, %newAssetId, %originalName, %newName)
-{
-}
-
-function AssetBrowser::deleteTerrainAsset(%this, %assetDef)
-{
-}
-
-function AssetBrowser::moveTerrainAsset(%this, %assetDef, %destination)
-{
-   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
-   
-   %newAssetPath = moveAssetFile(%assetDef, %destination);
-   
-   if(%newAssetPath $= "")
-      return false;
-
-   moveAssetLooseFile(%assetDef.getTerrainFilePath(), %destination);
-   
-   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
-   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
-}
-
-function AssetBrowser::buildTerrainAssetPreview(%this, %assetDef, %previewData)
-{
-   %previewData.assetName = %assetDef.assetName;
+   %previewData.assetName = %this.assetName;
    %previewData.assetPath = "";
    
    %previewData.previewImage = "ToolsModule:terrainIcon_image";
    
-   %previewData.assetFriendlyName = %assetDef.gameObjectName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @
+   %previewData.assetFriendlyName = %this.gameObjectName;
+   %previewData.assetDesc = %this.description;
+   %previewData.tooltip = "Asset Name: " @ %this.assetName @
       "\nAsset Type: Terrain Asset" @ 
-      "\nAsset Definition ID: " @ %assetDef @
-      "\nDefinition Path: " @ %assetDef.getTerrainFilePath(); 
+      "\nAsset Definition ID: " @ %this @
+      "\nDefinition Path: " @ %this.getTerrainFilePath(); 
       
    if(%this.selectMode)
    {
-      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+      %previewData.doubleClickCommand = $CurrentAssetBrowser @ ".selectAsset( " @ $CurrentAssetBrowser @ ".selectedAsset );";
    }
    else
    {
       if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
          %previewData.doubleClickCommand = "";
       else
-         %previewData.doubleClickCommand = "createTerrainBlock(\""@%assetDef.getAssetId()@"\");";
+         %previewData.doubleClickCommand = "createTerrainBlock(\""@%this.getAssetId()@"\");";
    }
-}
-
-function GuiInspectorTypeTerrainAssetPtr::onClick( %this, %fieldName )
-{
-   //Get our data
-   %obj = %this.getInspector().getInspectObject(0);
-}
-
-function GuiInspectorTypeTerrainAssetPtr::onControlDropped( %this, %payload, %position )
-{
-   
 }

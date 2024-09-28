@@ -27,30 +27,9 @@ function initializeAssetBrowser()
    $AssetBrowser::collectionSetsFile = "tools/assetBrowser/searchCollectionSets.xml";
    $AssetBrowser::currentImportConfig = "";
    
-   if(!isObject(AssetFilterTypeList))
-   {
-      new ArrayObject(AssetFilterTypeList);
+   if(!isObject(ABAssetTypesList))
+      new ArrayObject(ABAssetTypesList){};
 
-      AssetFilterTypeList.add("All");
-      AssetFilterTypeList.add("ComponentAsset");
-      AssetFilterTypeList.add("CppAsset");
-      AssetFilterTypeList.add("CubemapAsset");
-      AssetFilterTypeList.add("GameObjectAsset");
-      AssetFilterTypeList.add("GUIAsset");
-      AssetFilterTypeList.add("ImageAsset");
-      AssetFilterTypeList.add("LevelAsset");
-      AssetFilterTypeList.add("MaterialAsset");
-      AssetFilterTypeList.add("ParticleAsset");
-      AssetFilterTypeList.add("PostFXAsset");
-      AssetFilterTypeList.add("ScriptAsset");
-      AssetFilterTypeList.add("ShapeAsset");
-      AssetFilterTypeList.add("ShapeAnimationAsset");
-      AssetFilterTypeList.add("SoundAsset");
-      AssetFilterTypeList.add("StateMachineAsset");
-      AssetFilterTypeList.add("TerrainAsset");
-      AssetFilterTypeList.add("TerrainMaterialAsset");
-   }
-   
    exec("./scripts/profiles." @ $TorqueScriptFileExtension);
    
    exec("./guis/assetBrowser.gui");
@@ -89,9 +68,9 @@ function initializeAssetBrowser()
    exec("./scripts/setAssetTarget." @ $TorqueScriptFileExtension);
    
    //Processing for the different asset types
-   exec("./scripts/assetTypes/component." @ $TorqueScriptFileExtension); 
+   exec("./scripts/assetTypes/genericAsset." @ $TorqueScriptFileExtension); 
+   
    exec("./scripts/assetTypes/cpp." @ $TorqueScriptFileExtension);
-   exec("./scripts/assetTypes/gameObject." @ $TorqueScriptFileExtension);   
    exec("./scripts/assetTypes/gui." @ $TorqueScriptFileExtension);
    exec("./scripts/assetTypes/image." @ $TorqueScriptFileExtension);  
    exec("./scripts/assetTypes/level." @ $TorqueScriptFileExtension); 
@@ -100,8 +79,7 @@ function initializeAssetBrowser()
    exec("./scripts/assetTypes/script." @ $TorqueScriptFileExtension);
    exec("./scripts/assetTypes/shape." @ $TorqueScriptFileExtension);
    exec("./scripts/assetTypes/shapeAnimation." @ $TorqueScriptFileExtension); 
-   exec("./scripts/assetTypes/sound." @ $TorqueScriptFileExtension); 
-   exec("./scripts/assetTypes/stateMachine." @ $TorqueScriptFileExtension);   
+   exec("./scripts/assetTypes/sound." @ $TorqueScriptFileExtension);    
    exec("./scripts/assetTypes/cubemap." @ $TorqueScriptFileExtension);  
    exec("./scripts/assetTypes/folder." @ $TorqueScriptFileExtension);  
    exec("./scripts/assetTypes/terrain." @ $TorqueScriptFileExtension);

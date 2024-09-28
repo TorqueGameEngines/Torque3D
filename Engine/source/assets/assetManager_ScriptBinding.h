@@ -432,6 +432,20 @@ DefineEngineMethod(AssetManager, getAssetTags, S32, (), ,
 
 //-----------------------------------------------------------------------------
 
+DefineEngineMethod(AssetManager, getAssetLooseFiles, const char*, (const char* assetId), (""),
+   "Finds the specified asset Id and gets a list of its loose files.\n"
+   "@param assetId The selected asset Id.\n"
+   "@return A tab-delinated list of loose files associated to the assetId.\n")
+{
+   // Fetch asset Id.
+   const char* pAssetId = assetId;
+
+   // Delete asset.
+   return object->getAssetLooseFiles(pAssetId);
+}
+
+//-----------------------------------------------------------------------------
+
 DefineEngineMethod(AssetManager, findAllAssets, S32, (const char* assetQuery, bool ignoreInternal, bool ignorePrivate), ("", true, true),
    "Performs an asset query searching for all assets optionally ignoring internal assets.\n"
    "@param assetQuery The asset query object that will be populated with the results.\n"

@@ -72,7 +72,7 @@ public:
 
    Constraint(PosDimensions inPosRanges[MaxPosTypes], RotDimensions inRotRanges[MaxPosTypes])
    {
-      *mPosRanges = *inRanges;
+      *mPosRanges = *inPosRanges;
       *mRotRanges = *inRotRanges;
    }
    Constraint(PosDimensions inPos[2], RotDimensions inRot[2], PosDimensions inScale[2])
@@ -95,7 +95,7 @@ public:
 
    Constraint<PosDimensions,RotDimensions> fromString(String inString)
    {
-      return Constraint<Dimensions, RotDimensions>();
+      return Constraint<PosDimensions, RotDimensions>();
    }
 
    Constraint() = default;

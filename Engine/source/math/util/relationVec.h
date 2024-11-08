@@ -24,7 +24,7 @@
 #define _RELATIONVEC_H_
 
 #ifndef _MATHUTILS_H_
-#include "math\mathUtils.h"
+#include "math/mathUtils.h"
 #endif
 
 #ifndef _CONSTRAINTS_H_

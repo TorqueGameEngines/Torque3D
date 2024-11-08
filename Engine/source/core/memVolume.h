@@ -48,14 +48,14 @@ namespace Torque
          MemFileSystem(String volume);
          ~MemFileSystem();
 
-         String   getTypeStr() const { return "Mem"; }
+         String   getTypeStr() const override { return "Mem"; }
 
-         FileNodeRef resolve(const Path& path);
-         FileNodeRef create(const Path& path,FileNode::Mode);
-         bool remove(const Path& path);
-         bool rename(const Path& from,const Path& to);
-         Path mapTo(const Path& path);
-         Path mapFrom(const Path& path);
+         FileNodeRef resolve(const Path& path) override;
+         FileNodeRef create(const Path& path,FileNode::Mode) override;
+         bool remove(const Path& path) override;
+         bool rename(const Path& from,const Path& to) override;
+         Path mapTo(const Path& path) override;
+         Path mapFrom(const Path& path) override;
 
       private:
          String mVolume;
@@ -73,21 +73,21 @@ namespace Torque
          MemFile(MemFileSystem* fs, MemFileData* fileData);
          virtual ~MemFile();
 
-         Path getName() const;
-         NodeStatus getStatus() const;
-         bool getAttributes(Attributes*);
+         Path getName() const override;
+         NodeStatus getStatus() const override;
+         bool getAttributes(Attributes*) override;
 
-         U32 getPosition();
-         U32 setPosition(U32,SeekMode);
+         U32 getPosition() override;
+         U32 setPosition(U32,SeekMode) override;
 
-         bool open(AccessMode);
-         bool close();
+         bool open(AccessMode) override;
+         bool close() override;
 
-         U32 read(void* dst, U32 size);
-         U32 write(const void* src, U32 size);
+         U32 read(void* dst, U32 size) override;
+         U32 write(const void* src, U32 size) override;
 
       private:
-         U32 calculateChecksum();
+         U32 calculateChecksum() override;
 
          MemFileSystem* mFileSystem;
          MemFileData* mFileData;
@@ -107,20 +107,20 @@ namespace Torque
          MemDirectory(MemFileSystem* fs, MemDirectoryData* dir);
          ~MemDirectory();
 
-         Path getName() const;
-         NodeStatus getStatus() const;
-         bool getAttributes(Attributes*);
+         Path getName() const override;
+         NodeStatus getStatus() const override;
+         bool getAttributes(Attributes*) override;
 
-         bool open();
-         bool close();
-         bool read(Attributes*);
+         bool open() override;
+         bool close() override;
+         bool read(Attributes*) override;
 
       private:
          friend class MemFileSystem;
          MemFileSystem* mFileSystem;
          MemDirectoryData* mDirectoryData;
 
-         U32 calculateChecksum();         
+         U32 calculateChecksum() override;         
          
          NodeStatus   mStatus;
          U32 mSearchIndex;         

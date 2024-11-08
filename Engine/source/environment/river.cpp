@@ -134,11 +134,11 @@ public:
    RiverNodeEvent() { mNodeList = NULL; }
    virtual ~RiverNodeEvent() { }
 
-   virtual void pack(NetConnection*, BitStream*);
-   virtual void unpack(NetConnection*, BitStream*);
+   void pack(NetConnection*, BitStream*) override;
+   void unpack(NetConnection*, BitStream*) override;
 
-   virtual void copyIntoList(NodeListManager::NodeList* copyInto);
-   virtual void padListToSize();
+   void copyIntoList(NodeListManager::NodeList* copyInto) override;
+   void padListToSize() override;
 
    DECLARE_CONOBJECT(RiverNodeEvent);
 };
@@ -266,7 +266,7 @@ public:
    RiverNodeListNotify( River* river, U32 listId ) { mRiver = river; mListId = listId; }
    virtual ~RiverNodeListNotify() { mRiver = NULL; }
 
-   virtual void sendNotification( NodeListManager::NodeList* list );
+   void sendNotification( NodeListManager::NodeList* list ) override;
 };
 
 void RiverNodeListNotify::sendNotification( NodeListManager::NodeList* list )

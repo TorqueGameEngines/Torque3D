@@ -103,18 +103,18 @@ public:
    static void initPersistFields();
 
    //Parent methods
-   bool onWake();
-   void onSleep();
-   void inspectPostApply();
-   void onStaticModified(const char* slotName, const char* newValue = NULL);
-   bool resize(const Point2I &newPosition, const Point2I &newExtent);
+   bool onWake() override;
+   void onSleep() override;
+   void inspectPostApply() override;
+   void onStaticModified(const char* slotName, const char* newValue = NULL) override;
+   bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
 
    void setBitmap(const char *name);
 
    //  Used to set the optional error bitmap
    void setErrorBitmap(const char *name);
 
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
    void onImageChanged() {}
 };

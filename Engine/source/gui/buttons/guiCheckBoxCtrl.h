@@ -46,8 +46,8 @@ class GuiCheckBoxCtrl : public GuiButtonBaseCtrl
       S32 getIndent() const { return mIndent; }
       void setIndent( S32 value ) { mIndent = value; }
 
-      void onRender( Point2I offset, const RectI &updateRect );
-      bool onWake();
+      void onRender( Point2I offset, const RectI &updateRect ) override;
+      bool onWake() override;
 
       void autoSize();
 

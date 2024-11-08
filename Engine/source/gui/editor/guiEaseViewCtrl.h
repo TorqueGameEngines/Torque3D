@@ -49,10 +49,10 @@ class GuiEaseViewCtrl : public GuiControl
    
       GuiEaseViewCtrl();
 
-      bool onWake();
-      void onSleep();
+      bool onWake() override;
+      void onSleep() override;
 
-      void onRender( Point2I, const RectI &);
+      void onRender( Point2I, const RectI &) override;
       static void initPersistFields();
       
       DECLARE_CONOBJECT( GuiEaseViewCtrl );

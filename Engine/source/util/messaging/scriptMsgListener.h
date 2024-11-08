@@ -66,16 +66,16 @@ public:
 
    ///////////////////////////////////////////////////////////////////////
 
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    ///////////////////////////////////////////////////////////////////////
 
-   virtual bool onMessageReceived(StringTableEntry queue, const char* event, const char* data);
-   virtual bool onMessageObjectReceived(StringTableEntry queue, Message *msg);
+   bool onMessageReceived(StringTableEntry queue, const char* event, const char* data) override;
+   bool onMessageObjectReceived(StringTableEntry queue, Message *msg) override;
 
-   virtual void onAddToQueue(StringTableEntry queue);
-   virtual void onRemoveFromQueue(StringTableEntry queue);
+   void onAddToQueue(StringTableEntry queue) override;
+   void onRemoveFromQueue(StringTableEntry queue) override;
 };
 
 // @}

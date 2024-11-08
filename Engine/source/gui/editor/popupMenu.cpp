@@ -35,7 +35,7 @@ bool PopupMenu::smSelectionEventHandled = false;
 class PopUpNotifyRemoveEvent : public SimEvent
 {
 public:
-   void process(SimObject *object)
+   void process(SimObject *object) override
    {
       PopupMenu::smPopupMenuEvent.remove((PopupMenu *)object, &PopupMenu::handleSelectEvent);
    }

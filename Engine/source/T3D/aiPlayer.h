@@ -157,11 +157,11 @@ public:
 
    static void initPersistFields();
 
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
-   virtual bool getAIMove( Move *move );
-   virtual void updateMove(const Move *move);
+   bool getAIMove( Move *move ) override;
+   void updateMove(const Move *move) override;
    /// Clear out the current path.
    void clearPath();
    /// Stop searching for cover.
@@ -176,7 +176,7 @@ public:
    void setAimLocation( const Point3F &location );
    Point3F getAimLocation() const { return mAimLocation; }
    void clearAim();
-   void getMuzzleVector(U32 imageSlot,VectorF* vec);
+   void getMuzzleVector(U32 imageSlot,VectorF* vec) override;
    bool checkInLos(GameBase* target = NULL, bool _useMuzzle = false, bool _checkEnabled = false);
    bool checkInFoV(GameBase* target = NULL, F32 camFov = 45.0f, bool _checkEnabled = false);
    F32 getTargetDistance(GameBase* target, bool _checkEnabled);

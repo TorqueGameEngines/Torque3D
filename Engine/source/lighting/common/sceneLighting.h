@@ -201,7 +201,7 @@ public:
       sgObjectIndex = objectIndex;
       sgEvent = event;
    }
-   void process(SimObject * object)
+   void process(SimObject * object) override
    {
       AssertFatal(object, "SceneLightingProcessEvent:: null event object!");
       if(!object)

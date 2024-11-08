@@ -1,0 +1,7 @@
+<GUIAsset
+    canSave="true"
+    canSaveDynamicFields="true"
+    AssetName="ShaderEditorGui, EditorGuiGroup"
+    scriptFile="@assetFile=shaderEditorGui.ed.gui"
+    GUIFile="@assetFile=shaderEditorGui.ed.gui"
+    VersionId="1"/>

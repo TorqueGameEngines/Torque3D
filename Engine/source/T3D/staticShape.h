@@ -48,11 +48,11 @@ struct StaticShapeData: public ShapeBaseData {
    //
    DECLARE_CONOBJECT(StaticShapeData);
    static void initPersistFields();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 public:
    StaticShapeData(const StaticShapeData&, bool = false);
-   virtual bool   allowSubstitutions() const { return true; }
+   bool   allowSubstitutions() const override { return true; }
 };
 
 
@@ -65,7 +65,7 @@ class StaticShape: public ShapeBase
    StaticShapeData*  mDataBlock;
    bool              mPowered;
 
-   void onUnmount(SceneObject* obj,S32 node);
+   void onUnmount(SceneObject* obj,S32 node) override;
 
 protected:
    enum MaskBits {
@@ -80,16 +80,16 @@ public:
    StaticShape();
    ~StaticShape();
 
-   bool onAdd();
-   void onRemove();
-   bool onNewDataBlock(GameBaseData *dptr, bool reload);
+   bool onAdd() override;
+   void onRemove() override;
+   bool onNewDataBlock(GameBaseData *dptr, bool reload) override;
 
-   void processTick(const Move *move);
-   void interpolateTick(F32 delta);
-   void setTransform(const MatrixF &mat);
+   void processTick(const Move *move) override;
+   void interpolateTick(F32 delta) override;
+   void setTransform(const MatrixF &mat) override;
 
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 
    // power
    void setPowered(bool power)      {mPowered = power;}

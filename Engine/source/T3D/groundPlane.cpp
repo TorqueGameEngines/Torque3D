@@ -272,37 +272,35 @@ void GroundPlane::buildConvex( const Box3F& box, Convex* convex )
       return;
 
    // See if we already have a convex in the working set.
-   BoxConvex *boxConvex = NULL;
+   PlaneConvex *planeConvex = NULL;
    CollisionWorkingList &wl = convex->getWorkingList();
    CollisionWorkingList *itr = wl.wLink.mNext;
    for ( ; itr != &wl; itr = itr->wLink.mNext )
    {
-      if (  itr->mConvex->getType() == BoxConvexType &&
+      if (  itr->mConvex->getType() == PlaneConvexType &&
             itr->mConvex->getObject() == this )
       {
-         boxConvex = (BoxConvex*)itr->mConvex;
+         planeConvex = (PlaneConvex*)itr->mConvex;
          break;
       }
    }
 
-   if ( !boxConvex )
+   if ( !planeConvex)
    {
-      boxConvex = new BoxConvex;
-      mConvexList->registerObject( boxConvex );
-      boxConvex->init( this );
+      planeConvex = new PlaneConvex;
+      mConvexList->registerObject(planeConvex);
+      planeConvex->init( this );
 
-      convex->addToWorkingList( boxConvex );
+      convex->addToWorkingList(planeConvex);
    }
 
    // Update our convex to best match the queried box
-   if ( boxConvex )
+   if (planeConvex)
    {
       Point3F queryCenter = box.getCenter();
 
-      boxConvex->mCenter      = Point3F( queryCenter.x, queryCenter.y, -GROUND_PLANE_BOX_HEIGHT_HALF );
-      boxConvex->mSize        = Point3F( box.getExtents().x,
-                                         box.getExtents().y,
-                                         GROUND_PLANE_BOX_HEIGHT_HALF );
+      planeConvex->mCenter = Point3F( queryCenter.x, queryCenter.y, 0 );
+      planeConvex->mSize   = Point3F( box.getExtents().x, box.getExtents().y, 0 );
    }
 }
 

@@ -68,12 +68,12 @@ static FileTime sLastModTime;    // Modification time of the last loaded Collada
 // Custom warning/error message handler
 class myErrorHandler : public daeErrorHandler
 {
-	void handleError( daeString msg )
+	void handleError( daeString msg ) override
    {
       Con::errorf("Error: %s", msg);
    }
 
-	void handleWarning( daeString msg )
+	void handleWarning( daeString msg ) override
    {
       Con::errorf("Warning: %s", msg);
    }

@@ -35,40 +35,40 @@ private:
 public:
 
    // ShaderConnector
-   virtual Var* getElement(   RegisterType type, 
+   Var* getElement(   RegisterType type, 
                               U32 numElements = 1, 
-                              U32 numRegisters = -1 );
+                              U32 numRegisters = -1 ) override;
    virtual Var* getIndexedElement(  U32 index,
                                     RegisterType type, 
                                     U32 numElements = 1, 
                                     U32 numRegisters = -1 );
        
-   virtual void setName( const char *newName );
-   virtual void reset();
-   virtual void sortVars();
+   void setName( const char *newName ) override;
+   void reset() override;
+   void sortVars() override;
 
-   virtual void print( Stream &stream, bool isVertexShader );
+   void print( Stream &stream, bool isVertexShader ) override;
 };
 
 
 class ParamsDefHLSL : public ParamsDef
 {
 protected:
-   virtual void assignConstantNumbers();
+   void assignConstantNumbers() override;
 };
 
 
 class VertexParamsDefHLSL : public ParamsDefHLSL
 {
 public:
-   virtual void print( Stream &stream, bool isVerterShader );
+   void print( Stream &stream, bool isVerterShader ) override;
 };
 
 
 class PixelParamsDefHLSL : public ParamsDefHLSL
 {
 public:
-   virtual void print( Stream &stream, bool isVerterShader );
+   void print( Stream &stream, bool isVerterShader ) override;
 };
 
 #endif // _SHADERCOMP_HLSL_H_

@@ -51,18 +51,18 @@ public:
    static void initPersistFields();
 
    // SimObject
-   virtual void onRemove();
-   virtual void onDeleteNotify( SimObject *object );
+   void onRemove() override;
+   void onDeleteNotify( SimObject *object ) override;
 
    // GuiControl
-   virtual void parentResized( const RectI &oldParentRect, const RectI &newParentRect );
-   virtual bool resize( const Point2I &newPosition, const Point2I &newExtent );
-   virtual GuiControl* findHitControl( const Point2I &pt, S32 initialLayer );   
-   virtual void getCursor( GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent );
-   virtual void onMouseMove( const GuiEvent &event );
-   virtual void onMouseDown( const GuiEvent &event );
-   virtual void onMouseUp( const GuiEvent &event );
-   virtual void onMouseDragged( const GuiEvent &event );
+   void parentResized( const RectI &oldParentRect, const RectI &newParentRect ) override;
+   bool resize( const Point2I &newPosition, const Point2I &newExtent ) override;
+   GuiControl* findHitControl( const Point2I &pt, S32 initialLayer ) override;   
+   void getCursor( GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent ) override;
+   void onMouseMove( const GuiEvent &event ) override;
+   void onMouseDown( const GuiEvent &event ) override;
+   void onMouseUp( const GuiEvent &event ) override;
+   void onMouseDragged( const GuiEvent &event ) override;
 
    // GuiInspector
    

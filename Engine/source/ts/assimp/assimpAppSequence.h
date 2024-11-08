@@ -34,18 +34,18 @@ public:
 
    aiAnimation *mAnim;
 
-   virtual void setActive(bool active);
+   void setActive(bool active) override;
 
-   virtual S32 getNumTriggers() const { return 0; }
-   virtual void getTrigger(S32 index, TSShape::Trigger& trigger) const { trigger.state = 0; }
+   S32 getNumTriggers() const override { return 0; }
+   void getTrigger(S32 index, TSShape::Trigger& trigger) const override { trigger.state = 0; }
 
-   virtual const char* getName() const { return mSequenceName.c_str(); }
+   const char* getName() const override { return mSequenceName.c_str(); }
 
-   F32 getStart() const { return seqStart; }
-   F32 getEnd() const { return seqEnd; }
+   F32 getStart() const override { return seqStart; }
+   F32 getEnd() const override { return seqEnd; }
    void setEnd(F32 end) { seqEnd = end; }
 
-   virtual U32 getFlags() const;
-   virtual F32 getPriority() const;
-   virtual F32 getBlendRefTime() const;
+   U32 getFlags() const override;
+   F32 getPriority() const override;
+   F32 getBlendRefTime() const override;
 };

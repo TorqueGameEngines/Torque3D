@@ -46,10 +46,10 @@ public:
   /*C*/       afxStaticShapeData();
   /*C*/       afxStaticShapeData(const afxStaticShapeData&, bool = false);
 
-  void        packData(BitStream* stream);
-  void        unpackData(BitStream* stream);
+  void        packData(BitStream* stream) override;
+  void        unpackData(BitStream* stream) override;
 
-  virtual bool allowSubstitutions() const { return true; }
+  bool allowSubstitutions() const override { return true; }
 
   static void initPersistFields();
 
@@ -72,7 +72,7 @@ private:
   StringTableEntry      mGhost_cons_name;
 
 protected:
-  virtual void          prepRenderImage(SceneRenderState*);
+  void          prepRenderImage(SceneRenderState*) override;
 
 public:
   /*C*/                 afxStaticShape();
@@ -80,10 +80,10 @@ public:
 
   void                  init(U32 chor_id, StringTableEntry cons_name);
 
-  virtual bool          onNewDataBlock(GameBaseData* dptr, bool reload);
-  virtual void          advanceTime(F32 dt);
-  virtual U32           packUpdate(NetConnection*, U32, BitStream*);
-  virtual void          unpackUpdate(NetConnection*, BitStream*);
+  bool          onNewDataBlock(GameBaseData* dptr, bool reload) override;
+  void          advanceTime(F32 dt) override;
+  U32           packUpdate(NetConnection*, U32, BitStream*) override;
+  void          unpackUpdate(NetConnection*, BitStream*) override;
 
   const char*           getShapeFileName() const { return mDataBlock->mShapeAsset->getShapeFileName(); }
   void                  setVisibility(bool flag) { mIs_visible = flag; }

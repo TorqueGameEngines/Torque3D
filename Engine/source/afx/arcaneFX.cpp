@@ -69,11 +69,11 @@ public:
   ClientZoneInEvent() { mGuaranteeType = Guaranteed; }
   ~ClientZoneInEvent() { }
 
-  virtual void pack(NetConnection*, BitStream*bstream) { }
-  virtual void write(NetConnection*, BitStream *bstream) { }
-  virtual void unpack(NetConnection* /*ps*/, BitStream *bstream) { }
+  void pack(NetConnection*, BitStream*bstream) override { }
+  void write(NetConnection*, BitStream *bstream) override { }
+  void unpack(NetConnection* /*ps*/, BitStream *bstream) override { }
 
-  virtual void process(NetConnection* conn)
+  void process(NetConnection* conn) override
   {
     GameConnection* game_conn = dynamic_cast<GameConnection*>(conn);
     if (game_conn && !game_conn->isZonedIn())

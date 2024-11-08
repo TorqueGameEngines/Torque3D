@@ -51,7 +51,7 @@ torqueAddSourceDirectories("app" "app/net")
 # Handle console
 torqueAddSourceDirectories("console")
 torqueAddSourceDirectories("console/torquescript")
-
+set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "ts/vhacd")
 # Handle Platform
 torqueAddSourceDirectories("platform" "platform/threads" "platform/async"
                                   "platform/input" "platform/output")
@@ -320,7 +320,7 @@ endif (WIN32)
 
 # Prepare OSX Plist
 if (APPLE)
-  set(MACOSX_RESOURCES "${CMAKE_SOURCE_DIR}/Tools/CMake/torque.icns" 
+  set(MACOSX_RESOURCES
   "${TORQUE_APP_GAME_DIRECTORY}/data"
   "${TORQUE_APP_GAME_DIRECTORY}/core"
   "${TORQUE_APP_GAME_DIRECTORY}/tools"
@@ -340,6 +340,8 @@ if (APPLE)
 
 	set(EXECUTABLE_NAME "${TORQUE_APP_NAME}")
 	configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/Info.plist.in" "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist" COPYONLY)
+  file( COPY "${CMAKE_SOURCE_DIR}/Tools/CMake/app_assets/apple/App.xcassets" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}/source")
+  
 endif (APPLE)
 
 addDef(TORQUE_DEBUG Debug)
@@ -381,19 +383,29 @@ else()
 endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
 
 if (APPLE)
-	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
+	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE 
+    ${TORQUE_SOURCE_FILES})
+
+  target_sources(${TORQUE_APP_NAME} PRIVATE "${TORQUE_APP_ROOT_DIRECTORY}/source/App.xcassets")
+
+  set_source_files_properties( "${TORQUE_APP_ROOT_DIRECTORY}/source/App.xcassets" PROPERTIES 
+        MACOSX_PACKAGE_LOCATION Resources)
+
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES 
-  BUNDLE true
+  MACOSX_BUNDLE true
   MACOSX_BUNDLE_INFO_PLIST "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist"
+  XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.torque3d.${TORQUE_APP_NAME}"
+  INSTALL_RPATH "@executable_path/../Frameworks"
+  XCODE_ATTRIBUTE_SKIP_INSTALL NO
+  BUILD_WITH_INSTALL_RPATH ON
   XCODE_ATTRIBUTE_INSTALL_PATH "/Applications"
-  XCODE_ATTRIBUTE_SKIP_INSTALL "No"
+  XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
   XCODE_ATTRIBUTE_LINKER_DISPLAYS_MANGLED_NAMES[variant=Debug] YES
   XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH[variant=Debug] YES
   XCODE_ATTRIBUTE_ENABLE_TESTABILITY[variant=Debug] YES
   XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=Debug] parent
   XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=RelWithDebInfo] parent
-  XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=Release] resource
-  MACOSX_RPATH TRUE)
+  XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=Release] resource)
 
 elseif (WIN32)
 	add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})
@@ -454,6 +466,8 @@ target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 
 if(APPLE)
   target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_FRAMEWORKS})
+
+
 endif(APPLE)
 
 if(WIN32)
@@ -486,7 +500,9 @@ append_defs()
 foreach (LIBRARY_BINARY ${TORQUE_ADDITIONAL_LIBRARY_BINARIES})
   if (APPLE)
     # For OSX, we want these binaries to be copied to the Frameworks directory
-    add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/$(CONFIGURATION)")
+    add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD 
+    COMMAND ${CMAKE_COMMAND} -E make_directory  "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks"
+    COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/$(CONFIGURATION)")
   else()
     # All other platforms expect the file next to the executable
     add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}")
@@ -507,7 +523,14 @@ if (UNIX)
 		  if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
         if (APPLE)
           set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES 
-          XCODE_ATTRIBUTE_INSTALL_PATH "@rpath")
+          XCODE_ATTRIBUTE_SKIP_INSTALL YES
+          )
+          add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD 
+          COMMAND ${CMAKE_COMMAND} -E make_directory  "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks"
+          COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${GAME_LINK_LIBRARY}>" "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/$<TARGET_FILE_NAME:${GAME_LINK_LIBRARY}>"
+          COMMAND ${CMAKE_COMMAND} -E create_symlink "$<TARGET_FILE:${GAME_LINK_LIBRARY}>" "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/$<TARGET_LINKER_FILE_NAME:${GAME_LINK_LIBRARY}>"
+          COMMAND ${CMAKE_COMMAND} -E create_symlink "$<TARGET_FILE:${GAME_LINK_LIBRARY}>" "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/lib$<TARGET_LINKER_FILE_BASE_NAME:${GAME_LINK_LIBRARY}>.1.dylib"
+          )
         else()
           set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}")
         endif(APPLE)

@@ -22,7 +22,7 @@ public:
 
    ~GFXD3D11TextureArray() { Release();  };
 
-   void init();
+   void init() override;
    void setToTexUnit(U32 tuNum) override;
 
    void createResourceView(DXGI_FORMAT format, U32 numMipLevels, U32 usageFlags);

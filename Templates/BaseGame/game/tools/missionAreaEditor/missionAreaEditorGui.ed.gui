@@ -67,7 +67,7 @@ $guiContent = new GuiMissionAreaEditorCtrl(MissionAreaEditorGui, EditorGuiGroup)
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "::  Mission Area";
+      text = ":: Mission Area";
       
       new GuiContainer(MissionAreaEditorTerrainPanel){
          profile = "ToolsGuiDefaultProfile";
@@ -234,7 +234,7 @@ $guiContent = new GuiMissionAreaEditorCtrl(MissionAreaEditorGui, EditorGuiGroup)
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "::  Mission Area Editor - Properties";
+      text = ":: Mission Area Editor - Properties";
       
       new GuiContainer(MissionAreaEditorPropertiesPanel){ //Mission Area Properties
          isContainer = "1";

@@ -407,8 +407,9 @@ U32 SFXEmitter::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
       stream->writeAffineTransform(mObjToWorld);
 
    // track
-   if (stream->writeFlag(mask & DirtyUpdateMask))
+   if (stream->writeFlag(mask & DirtyUpdateMask)){
       PACK_ASSET(con, Sound);
+   }
    //if (stream->writeFlag(mDirty.test(Track)))
    //   sfxWrite( stream, mTrack );
 

@@ -101,18 +101,18 @@ public:
    // move this procedure to Particle
    void initializeParticle(Particle*, const Point3F&);
 
-   void packData(BitStream* stream);
-   void unpackData(BitStream* stream);
-   bool onAdd();
-   bool preload(bool server, String &errorStr);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
+   bool onAdd() override;
+   bool preload(bool server, String &errorStr) override;
    DECLARE_CONOBJECT(ParticleData);
    static void  initPersistFields();
 
    bool reload(char errorBuffer[256]);
   public:
    /*C*/  ParticleData(const ParticleData&, bool = false);
-   virtual void onPerformSubstitutions();
-   virtual bool allowSubstitutions() const { return true; }
+   void onPerformSubstitutions() override;
+   bool allowSubstitutions() const override { return true; }
   protected:
    F32   spinBias;
    bool  randomizeSpinDir;

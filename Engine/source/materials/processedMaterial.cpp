@@ -197,7 +197,7 @@ void ProcessedMaterial::addStateBlockDesc(const GFXStateBlockDesc& sb)
    mUserDefined = sb;
 }
 
-void ProcessedMaterial::_initStateBlockTemplates(GFXStateBlockDesc& stateTranslucent, GFXStateBlockDesc& stateGlow, GFXStateBlockDesc& stateReflect)
+void ProcessedMaterial::_initStateBlockTemplates(GFXStateBlockDesc& stateTranslucent, GFXStateBlockDesc& stateReflect)
 {
    // Translucency   
    stateTranslucent.blendDefined = true;
@@ -210,10 +210,6 @@ void ProcessedMaterial::_initStateBlockTemplates(GFXStateBlockDesc& stateTranslu
    stateTranslucent.alphaTestRef = mMaterial->mAlphaRef;
    stateTranslucent.alphaTestFunc = GFXCmpGreaterEqual;
    stateTranslucent.samplersDefined = true;
-
-   // Glow   
-   stateGlow.zDefined = true;
-   stateGlow.zWriteEnable = false;
 
    // Reflect   
    stateReflect.cullDefined = true;
@@ -316,11 +312,10 @@ void ProcessedMaterial::_initPassStateBlock( RenderPassData *rpd, GFXStateBlockD
 void ProcessedMaterial::_initRenderStateStateBlocks( RenderPassData *rpd )
 {
    GFXStateBlockDesc stateTranslucent;
-   GFXStateBlockDesc stateGlow;
    GFXStateBlockDesc stateReflect;
    GFXStateBlockDesc statePass;
 
-   _initStateBlockTemplates( stateTranslucent, stateGlow, stateReflect );
+   _initStateBlockTemplates( stateTranslucent, stateReflect );
    _initPassStateBlock( rpd, statePass );
 
    // Ok, we've got our templates set up, let's combine them together based on state and
@@ -333,8 +328,6 @@ void ProcessedMaterial::_initRenderStateStateBlocks( RenderPassData *rpd )
          stateFinal.addDesc(stateReflect);
       if (i & RenderPassData::STATE_TRANSLUCENT)
          stateFinal.addDesc(stateTranslucent);
-      if (i & RenderPassData::STATE_GLOW)
-         stateFinal.addDesc(stateGlow);
 
       stateFinal.addDesc(statePass);
 
@@ -358,9 +351,6 @@ U32 ProcessedMaterial::_getRenderStateIndex( const SceneRenderState *sceneState,
    //
    // For example sgData.visibility would be bad to use
    // in here without changing how RenderMeshMgr works.
-
-   if ( sgData.binType == SceneData::GlowBin )
-      currState |= RenderPassData::STATE_GLOW;
 
    if ( sceneState && sceneState->isReflectPass() )
       currState |= RenderPassData::STATE_REFLECT;
@@ -462,11 +452,27 @@ void ProcessedMaterial::_setStageData()
       }
 
       // NormalMap
-      if (mMaterial->getNormalMap(i) != StringTable->EmptyString())
+      if (mMaterial->mNormalMapAsset[i] && !mMaterial->mNormalMapAsset[i].isNull())
       {
          mStages[i].setTex(MFT_NormalMap, mMaterial->getNormalMapResource(i));
+         //mStages[i].setTex(MFT_DiffuseMap, _createTexture(mMaterial->getDiffuseMap(i), &GFXStaticTextureSRGBProfile));
          if (!mStages[i].getTex(MFT_NormalMap))
-            mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->getNormalMap(i), i);
+         {
+            // Load a debug texture to make it clear to the user 
+            // that the texture for this stage was missing.
+            mStages[i].setTex(MFT_NormalMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXNormalMapProfile));
+         }
+      }
+      else if (mMaterial->mNormalMapName[i] != StringTable->EmptyString())
+      {
+         mStages[i].setTex(MFT_NormalMap, _createTexture(mMaterial->mNormalMapName[i], &GFXNormalMapProfile));
+         if (!mStages[i].getTex(MFT_NormalMap))
+         {
+            //If we start with a #, we're probably actually attempting to hit a named target and it may not get a hit on the first pass. So we'll
+            //pass on the error rather than spamming the console
+            if (!String(mMaterial->mNormalMapName[i]).startsWith("#"))
+               mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->mNormalMapName[i], i);
+         }
       }
 
       // Detail Normal Map

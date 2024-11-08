@@ -38,7 +38,6 @@
 #include "T3D/physics/physicsBody.h"
 #include "T3D/physics/physicsCollision.h"
 
-
 bool Trigger::smRenderTriggers = false;
 
 //-----------------------------------------------------------------------------
@@ -381,7 +380,7 @@ void Trigger::initPersistFields()
 
    addField("TripOnce", TypeBool, Offset(mTripOnce, Trigger),"Do we trigger callacks just the once?");
    addField("TripCondition", TypeRealString, Offset(mTripCondition, Trigger),"evaluation condition to trip callbacks (true/false)");
-   addField("TrippedBy", TypeS32, Offset(mTrippedBy, Trigger), "typemask filter");
+   addField("TrippedBy", TypeGameTypeMasksType, Offset(mTrippedBy, Trigger), "typemask filter");
    addProtectedField("enterCommand", TypeCommand, Offset(mEnterCommand, Trigger), &setEnterCmd, &defaultProtectedGetFn,
       "The command to execute when an object enters this trigger. Object id stored in %%obj. Maximum 1023 characters." );
    addProtectedField("leaveCommand", TypeCommand, Offset(mLeaveCommand, Trigger), &setLeaveCmd, &defaultProtectedGetFn,

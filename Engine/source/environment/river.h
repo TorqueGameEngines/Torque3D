@@ -387,33 +387,33 @@ public:
    static void consoleInit();
 
    // SimObject      
-   bool onAdd();
-   void onRemove();
-   void inspectPostApply();
-   void onStaticModified(const char* slotName, const char*newValue = NULL);
-   void writeFields(Stream &stream, U32 tabStop);
-   bool writeField( StringTableEntry fieldname, const char *value );
+   bool onAdd() override;
+   void onRemove() override;
+   void inspectPostApply() override;
+   void onStaticModified(const char* slotName, const char*newValue = NULL) override;
+   void writeFields(Stream &stream, U32 tabStop) override;
+   bool writeField( StringTableEntry fieldname, const char *value ) override;
 
    // NetObject
-   U32 packUpdate(NetConnection *, U32, BitStream *);
-   void unpackUpdate(NetConnection *, BitStream *);
+   U32 packUpdate(NetConnection *, U32, BitStream *) override;
+   void unpackUpdate(NetConnection *, BitStream *) override;
 
    // SceneObject   
-   virtual void setTransform( const MatrixF &mat );
-   virtual void setScale( const VectorF &scale );
-	virtual bool castRay(const Point3F &start, const Point3F &end, RayInfo* info);
-	virtual bool collideBox(const Point3F &start, const Point3F &end, RayInfo* info);
+   void setTransform( const MatrixF &mat ) override;
+   void setScale( const VectorF &scale ) override;
+	bool castRay(const Point3F &start, const Point3F &end, RayInfo* info) override;
+	bool collideBox(const Point3F &start, const Point3F &end, RayInfo* info) override;
    virtual bool containsPoint( const Point3F& point ) const { return containsPoint( point, NULL ); }
-   virtual bool buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere );
+   bool buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere ) override;
 
    // WaterObject
-   virtual F32 getWaterCoverage( const Box3F &worldBox ) const;   
-   virtual F32 getSurfaceHeight( const Point2F &pos ) const;
-   virtual VectorF getFlow( const Point3F &pos ) const;   
+   F32 getWaterCoverage( const Box3F &worldBox ) const override;   
+   F32 getSurfaceHeight( const Point2F &pos ) const override;
+   VectorF getFlow( const Point3F &pos ) const override;   
    virtual void onReflectionInfoChanged();
-   virtual void updateUnderwaterEffect( SceneRenderState *state );
+   void updateUnderwaterEffect( SceneRenderState *state ) override;
    
-   virtual bool isUnderwater( const Point3F &pnt ) const;
+   bool isUnderwater( const Point3F &pnt ) const override;
    F32 distanceToSurface( const Point3F &pnt, U32 segmentIdx );
    bool containsPoint( const Point3F &worldPos, U32 *nodeIdx ) const;
 
@@ -487,9 +487,9 @@ protected:
    bool _getTerrainHeight( F32 x, F32 y, F32 &height ); 
 
    // WaterObject
-   virtual void setShaderParams( SceneRenderState *state, BaseMatInstance *mat, const WaterMatParams &paramHandles );   
-   virtual void innerRender( SceneRenderState *state );
-   virtual void _getWaterPlane( const Point3F &camPos, PlaneF &outPlane, Point3F &outPos );
+   void setShaderParams( SceneRenderState *state, BaseMatInstance *mat, const WaterMatParams &paramHandles ) override;   
+   void innerRender( SceneRenderState *state ) override;
+   void _getWaterPlane( const Point3F &camPos, PlaneF &outPlane, Point3F &outPos ) override;
 
 protected:
 

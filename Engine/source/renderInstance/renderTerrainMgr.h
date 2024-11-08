@@ -83,7 +83,7 @@ protected:
    static bool _clearStats( GFXDevice::GFXDeviceEventType type );
 
    // RenderBinManager
-   virtual void internalAddElement( RenderInst *inst );
+   void internalAddElement( RenderInst *inst ) override;
 
 public:
 
@@ -96,9 +96,9 @@ public:
    DECLARE_CONOBJECT(RenderTerrainMgr);
 
    // RenderBinManager
-   virtual void sort();
-   virtual void render( SceneRenderState *state );
-   virtual void clear();
+   void sort() override;
+   void render( SceneRenderState *state ) override;
+   void clear() override;
 
 };
 

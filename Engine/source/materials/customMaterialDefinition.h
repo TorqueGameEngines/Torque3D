@@ -58,8 +58,8 @@ public:
    //
    // SimObject interface
    //
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    //
    // ConsoleObject interface
@@ -72,7 +72,7 @@ protected:
    U32 mFlags[MAX_TEX_PER_PASS];   
    GFXStateBlockData* mStateBlockData;
 
-   virtual void _mapMaterial();
+   void _mapMaterial() override;
 };
 
 #endif

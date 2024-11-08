@@ -46,24 +46,24 @@ class SceneRootZone : public SceneSimpleZone
    protected:
 
       // SceneObject.
-      virtual bool onSceneAdd();
-      virtual void onSceneRemove();
+      bool onSceneAdd() override;
+      void onSceneRemove() override;
 
    public:
 
       SceneRootZone();
 
       // SimObject.
-      virtual bool onAdd();
-      virtual void onRemove();
-      virtual String describeSelf() const;
+      bool onAdd() override;
+      void onRemove() override;
+      String describeSelf() const override;
 
       // SceneObject.
       virtual bool containsPoint( const Point3F &point ) const;
 
       // SceneZoneSpace.
       virtual U32 getPointZone( const Point3F &p ) const;
-      virtual bool getOverlappingZones( const Box3F& aabb, U32* outZones, U32& outNumZones );
+      bool getOverlappingZones( const Box3F& aabb, U32* outZones, U32& outNumZones ) override;
 };
 
 #endif //_SCENEROOTZONE_H_

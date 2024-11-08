@@ -3,6 +3,7 @@
 
 #include "biquad.h"
 
+#include <array>
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -14,8 +15,12 @@
 template<typename Real>
 void BiquadFilterR<Real>::setParams(BiquadType type, Real f0norm, Real gain, Real rcpQ)
 {
-    // Limit gain to -100dB
-    assert(gain > 0.00001f);
+    /* HACK: Limit gain to -100dB. This shouldn't ever happen, all callers
+     * already clamp to minimum of 0.001, or have a limited range of values
+     * that don't go below 0.126. But it seems to with some callers. This needs
+     * to be investigated.
+     */
+    gain = std::max(gain, Real(0.00001));
 
     const Real w0{al::numbers::pi_v<Real>*2.0f * f0norm};
     const Real sin_w0{std::sin(w0)};
@@ -23,8 +28,8 @@ void BiquadFilterR<Real>::setParams(BiquadType type, Real f0norm, Real gain, Rea
     const Real alpha{sin_w0/2.0f * rcpQ};
 
     Real sqrtgain_alpha_2;
-    Real a[3]{ 1.0f, 0.0f, 0.0f };
-    Real b[3]{ 1.0f, 0.0f, 0.0f };
+    std::array<Real,3> a{{1.0f, 0.0f, 0.0f}};
+    std::array<Real,3> b{{1.0f, 0.0f, 0.0f}};
 
     /* Calculate filter coefficients depending on filter type */
     switch(type)
@@ -90,7 +95,7 @@ void BiquadFilterR<Real>::setParams(BiquadType type, Real f0norm, Real gain, Rea
 }
 
 template<typename Real>
-void BiquadFilterR<Real>::process(const al::span<const Real> src, Real *dst)
+void BiquadFilterR<Real>::process(const al::span<const Real> src, const al::span<Real> dst)
 {
     const Real b0{mB0};
     const Real b1{mB1};
@@ -115,7 +120,7 @@ void BiquadFilterR<Real>::process(const al::span<const Real> src, Real *dst)
         z2 = input*b2 - output*a2;
         return output;
     };
-    std::transform(src.cbegin(), src.cend(), dst, proc_sample);
+    std::transform(src.cbegin(), src.cend(), dst.begin(), proc_sample);
 
     mZ1 = z1;
     mZ2 = z2;
@@ -123,7 +128,7 @@ void BiquadFilterR<Real>::process(const al::span<const Real> src, Real *dst)
 
 template<typename Real>
 void BiquadFilterR<Real>::dualProcess(BiquadFilterR &other, const al::span<const Real> src,
-    Real *dst)
+    const al::span<Real> dst)
 {
     const Real b00{mB0};
     const Real b01{mB1};
@@ -152,7 +157,7 @@ void BiquadFilterR<Real>::dualProcess(BiquadFilterR &other, const al::span<const
         z12 = input*b12 - output*a12;
         return output;
     };
-    std::transform(src.cbegin(), src.cend(), dst, proc_sample);
+    std::transform(src.cbegin(), src.cend(), dst.begin(), proc_sample);
 
     mZ1 = z01;
     mZ2 = z02;

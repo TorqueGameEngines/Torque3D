@@ -47,22 +47,22 @@ public:
    DECLARE_CONOBJECT(GameTSCtrl);
    DECLARE_DESCRIPTION( "A control that renders a 3D view from the current control object." );
 
-   bool processCameraQuery(CameraQuery *query);
-   void renderWorld(const RectI &updateRect);
+   bool processCameraQuery(CameraQuery *query) override;
+   void renderWorld(const RectI &updateRect) override;
 
    // GuiControl
-   virtual void onMouseDown(const GuiEvent &evt);
-   virtual void onRightMouseDown(const GuiEvent &evt);
-   virtual void onMiddleMouseDown(const GuiEvent &evt);
+   void onMouseDown(const GuiEvent &evt) override;
+   void onRightMouseDown(const GuiEvent &evt) override;
+   void onMiddleMouseDown(const GuiEvent &evt) override;
 
-   virtual void onMouseUp(const GuiEvent &evt);
-   virtual void onRightMouseUp(const GuiEvent &evt);
-   virtual void onMiddleMouseUp(const GuiEvent &evt);
+   void onMouseUp(const GuiEvent &evt) override;
+   void onRightMouseUp(const GuiEvent &evt) override;
+   void onMiddleMouseUp(const GuiEvent &evt) override;
 
-   void onMouseMove(const GuiEvent &evt);
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onMouseMove(const GuiEvent &evt) override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
-   virtual bool onAdd();
+   bool onAdd() override;
 };
 
 #endif

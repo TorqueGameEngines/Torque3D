@@ -44,6 +44,48 @@
 
 #include "sim/netObject.h"
 
+ImplementBitfieldType(GameTypeMasksType,
+   "The type of animation effect to apply to this material.\n"
+   "@ingroup GFX\n\n")
+{ SceneObjectTypes::StaticObjectType, "StaticObjectType", "Static Objects.\n" },
+{ SceneObjectTypes::EnvironmentObjectType, "EnvironmentObjectType" , "Objects considered part of the background or environment of a level.\n" },
+{ SceneObjectTypes::TerrainObjectType, "TerrainObjectType" , "Terrain Objects.\n" },
+{ SceneObjectTypes::WaterObjectType, "WaterObjectType", "Water Objects.\n" },
+{ SceneObjectTypes::TriggerObjectType, "TriggerObjectType", "Interactive Trigger Objects.\n" },
+{ SceneObjectTypes::MarkerObjectType, "MarkerObjectType", "Marker Objects, utilized primarily for tooling.\n" },
+{ SceneObjectTypes::LightObjectType, "LightObjectType", "Lights.\n" },
+{ SceneObjectTypes::ZoneObjectType, "ZoneObjectType", "zones.\n" },
+{ SceneObjectTypes::StaticShapeObjectType, "StaticShapeObjectType", "Static Shape Objects. Distinct from StaticObjectType in that Static Shapes have additional functionality and behaviors.\n" },
+{ SceneObjectTypes::DynamicShapeObjectType, "DynamicShapeObjectType", "Any sort of Dynamic Object.\n" },
+{ SceneObjectTypes::GameBaseObjectType, "GameBaseObjectType", "Any Gamebase-based Objects. Objects generally associated to gameplay functionality.\n" },
+{ SceneObjectTypes::GameBaseHiFiObjectType, "GameBaseHiFiObjectType", "Specialised Gamebase-based Objects. currently narrowly used. if at all.\n" },
+{ SceneObjectTypes::ShapeBaseObjectType, "ShapeBaseObjectType", "Any Gamebase-based Objects. Objects generally associated to gameplay functionality.\n" },
+{ SceneObjectTypes::CameraObjectType, "CameraObjectType", "Camera Objects.\n" },
+{ SceneObjectTypes::PlayerObjectType, "PlayerObjectType", "Player Objects.\n" },
+{ SceneObjectTypes::ItemObjectType, "ItemObjectType", "Item Objects.\n" },
+{ SceneObjectTypes::VehicleObjectType, "VehicleObjectType", "Any sort of Vehicle Object.\n" },
+{ SceneObjectTypes::VehicleBlockerObjectType, "VehicleBlockerObjectType", "\n" },
+{ SceneObjectTypes::ProjectileObjectType, "ProjectileObjectType", "Projectiles.\n" },
+{ SceneObjectTypes::ExplosionObjectType, "ExplosionObjectType", "Explosion and Effects.\n" },
+{ SceneObjectTypes::CorpseObjectType, "CorpseObjectType", "Corpses of controlled objects.\n" },
+{ SceneObjectTypes::DebrisObjectType, "DebrisObjectType", "Debris or debris-like things such as shell casings.\n" },
+{ SceneObjectTypes::PhysicalZoneObjectType, "PhysicalZoneObjectType", "Physical Zones. Distinct from triggers in that they have physics forces applications.\n" },
+{ SceneObjectTypes::EntityObjectType, "EntityObjectType", "A generic entity.\n" },
+{ SceneObjectTypes::InteriorLikeObjectType, "InteriorLikeObjectType", "InteriorLikeObjectType (deprecated).\n" },
+{ SceneObjectTypes::TerrainLikeObjectType, "TerrainLikeObjectType", "Pseudo-terrains, like groundplanes, or meshroads.\n" },
+#if defined(AFX_CAP_AFXMODEL_TYPE) 
+{ SceneObjectTypes::afxModelObjectType, "afxModelObjectType", "afx-specific model typemask.\n" },
+#else
+{ SceneObjectTypes::N_A_27, "N_A_27", "unused 27th bit.\n" },
+#endif
+{ SceneObjectTypes::N_A_28, "N_A_28", "unused 28th bit.\n" },
+{ SceneObjectTypes::PathShapeObjectType, "PathShapeObjectType", "Path-following Objects.\n" },
+{ SceneObjectTypes::TurretObjectType, "TurretObjectType", "Turret Objects.\n" },
+{ SceneObjectTypes::N_A_31, "N_A_31", "unused 31st bit.\n" },
+{ SceneObjectTypes::N_A_32, "N_A_32", "unused 32nd bit.\n" },
+
+EndImplementBitfieldType;
+
 IMPLEMENT_CONOBJECT( SimObject );
 
 // See full description in the new CHM manual
@@ -751,7 +793,7 @@ void SimObject::destroySelf()
 class SimObjectDeleteEvent : public SimEvent
 {
 public:
-   void process(SimObject *object)
+   void process(SimObject *object) override
    {
       object->deleteObject();
    }
@@ -3072,6 +3114,13 @@ DefineEngineMethod( SimObject, setFieldValue, bool, ( const char* fieldName, con
 {
    char fieldNameBuffer[ 1024 ];
    char arrayIndexBuffer[ 64 ];
+
+   if( !fieldName || !fieldName[0] )
+   {
+      AssertFatal(false, "SimObject::setFieldValue - Invalid field name.");
+      Con::errorf( "SimObject::setFieldValue - Invalid field name." );
+      return false;
+   }
    
    // Parse out index if the field is given in the form of 'name[index]'.
    

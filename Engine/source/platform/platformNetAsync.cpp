@@ -76,7 +76,7 @@ struct NetAsync::NameLookupWorkItem : public ThreadPool::WorkItem
    }
 
 protected:
-   virtual void execute()
+   void execute() override
    {
 	  NetAddress address;
 	  Net::Error error = Net::stringToAddress(mRequest.remoteAddr, &address, true);

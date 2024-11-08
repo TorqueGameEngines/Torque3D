@@ -76,24 +76,24 @@ public:
    ~ScatterSky();
 
    // SimObject
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    // ISceneLight
-   virtual void submitLights( LightManager *lm, bool staticLighting );
-   virtual LightInfo* getLight() { return mLight; }
+   void submitLights( LightManager *lm, bool staticLighting ) override;
+   LightInfo* getLight() override { return mLight; }
 
    // ConsoleObject
    DECLARE_CONOBJECT(ScatterSky);
    DECLARE_CATEGORY("Environment \t Background");
-   void inspectPostApply();
+   void inspectPostApply() override;
    static void initPersistFields();
 
    // Network
-   U32  packUpdate  ( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn,           BitStream *stream );
+   U32  packUpdate  ( NetConnection *conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *conn,           BitStream *stream ) override;
 
-   void prepRenderImage( SceneRenderState* state );
+   void prepRenderImage( SceneRenderState* state ) override;
   
    ///
    void setAzimuth( F32 azimuth );
@@ -158,8 +158,8 @@ protected:
    static bool ptSetAzimuth( void *object, const char *index, const char *data );
 
    // SimObject.
-   virtual void _onSelected();
-   virtual void _onUnselected();
+   void _onSelected() override;
+   void _onUnselected() override;
 
 protected:
 

@@ -103,8 +103,8 @@ class SFXALBuffer : public SFXBuffer
       }
 
       // SFXBuffer.
-      virtual void write( SFXInternal::SFXStreamPacket* const* packets, U32 num );
-      void _flush();
+      void write( SFXInternal::SFXStreamPacket* const* packets, U32 num ) override;
+      void _flush() override;
 
    public:
 

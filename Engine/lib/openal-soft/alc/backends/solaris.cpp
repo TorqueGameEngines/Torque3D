@@ -35,24 +35,26 @@
 #include <poll.h>
 #include <math.h>
 #include <string.h>
+#include <vector>
 
 #include <thread>
 #include <functional>
 
-#include "albyte.h"
 #include "alc/alconfig.h"
+#include "alstring.h"
+#include "althrd_setname.h"
 #include "core/device.h"
 #include "core/helpers.h"
 #include "core/logging.h"
-#include "threads.h"
-#include "vector.h"
 
 #include <sys/audioio.h>
 
 
 namespace {
 
-constexpr char solaris_device[] = "Solaris Default";
+using namespace std::string_view_literals;
+
+[[nodiscard]] constexpr auto GetDefaultName() noexcept { return "Solaris Default"sv; }
 
 std::string solaris_driver{"/dev/audio"};
 
@@ -63,7 +65,7 @@ struct SolarisBackend final : public BackendBase {
 
     int mixerProc();
 
-    void open(const char *name) override;
+    void open(std::string_view name) override;
     bool reset() override;
     void start() override;
     void stop() override;
@@ -71,12 +73,10 @@ struct SolarisBackend final : public BackendBase {
     int mFd{-1};
 
     uint mFrameStep{};
-    al::vector<al::byte> mBuffer;
+    std::vector<std::byte> mBuffer;
 
     std::atomic<bool> mKillNow{true};
     std::thread mThread;
-
-    DEF_NEWDEL(SolarisBackend)
 };
 
 SolarisBackend::~SolarisBackend()
@@ -89,10 +89,10 @@ SolarisBackend::~SolarisBackend()
 int SolarisBackend::mixerProc()
 {
     SetRTPriority();
-    althrd_setname(MIXER_THREAD_NAME);
+    althrd_setname(GetMixerThreadName());
 
     const size_t frame_step{mDevice->channelsFromFmt()};
-    const uint frame_size{mDevice->frameSizeFromFmt()};
+    const size_t frame_size{mDevice->frameSizeFromFmt()};
 
     while(!mKillNow.load(std::memory_order_acquire)
         && mDevice->Connected.load(std::memory_order_acquire))
@@ -116,12 +116,12 @@ int SolarisBackend::mixerProc()
             continue;
         }
 
-        al::byte *write_ptr{mBuffer.data()};
-        size_t to_write{mBuffer.size()};
-        mDevice->renderSamples(write_ptr, static_cast<uint>(to_write/frame_size), frame_step);
-        while(to_write > 0 && !mKillNow.load(std::memory_order_acquire))
+        al::span<std::byte> buffer{mBuffer};
+        mDevice->renderSamples(buffer.data(), static_cast<uint>(buffer.size()/frame_size),
+            frame_step);
+        while(!buffer.empty() && !mKillNow.load(std::memory_order_acquire))
         {
-            ssize_t wrote{write(mFd, write_ptr, to_write)};
+            ssize_t wrote{write(mFd, buffer.data(), buffer.size())};
             if(wrote < 0)
             {
                 if(errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
@@ -131,8 +131,7 @@ int SolarisBackend::mixerProc()
                 break;
             }
 
-            to_write -= static_cast<size_t>(wrote);
-            write_ptr += wrote;
+            buffer = buffer.subspan(static_cast<size_t>(wrote));
         }
     }
 
@@ -140,13 +139,13 @@ int SolarisBackend::mixerProc()
 }
 
 
-void SolarisBackend::open(const char *name)
+void SolarisBackend::open(std::string_view name)
 {
-    if(!name)
-        name = solaris_device;
-    else if(strcmp(name, solaris_device) != 0)
-        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%s\" not found",
-            name};
+    if(name.empty())
+        name = GetDefaultName();
+    else if(name != GetDefaultName())
+        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%.*s\" not found",
+            al::sizei(name), name.data()};
 
     int fd{::open(solaris_driver.c_str(), O_WRONLY)};
     if(fd == -1)
@@ -231,7 +230,7 @@ bool SolarisBackend::reset()
     setDefaultChannelOrder();
 
     mBuffer.resize(mDevice->UpdateSize * size_t{frame_size});
-    std::fill(mBuffer.begin(), mBuffer.end(), al::byte{});
+    std::fill(mBuffer.begin(), mBuffer.end(), std::byte{});
 
     return true;
 }
@@ -268,7 +267,7 @@ BackendFactory &SolarisBackendFactory::getFactory()
 
 bool SolarisBackendFactory::init()
 {
-    if(auto devopt = ConfigValueStr(nullptr, "solaris", "device"))
+    if(auto devopt = ConfigValueStr({}, "solaris", "device"))
         solaris_driver = std::move(*devopt);
     return true;
 }
@@ -276,23 +275,19 @@ bool SolarisBackendFactory::init()
 bool SolarisBackendFactory::querySupport(BackendType type)
 { return type == BackendType::Playback; }
 
-std::string SolarisBackendFactory::probe(BackendType type)
+auto SolarisBackendFactory::enumerate(BackendType type) -> std::vector<std::string>
 {
-    std::string outnames;
     switch(type)
     {
     case BackendType::Playback:
-    {
-        struct stat buf;
-        if(stat(solaris_driver.c_str(), &buf) == 0)
-            outnames.append(solaris_device, sizeof(solaris_device));
-    }
-    break;
+        if(struct stat buf{}; stat(solaris_driver.c_str(), &buf) == 0)
+            return std::vector{std::string{GetDefaultName()}};
+        break;
 
     case BackendType::Capture:
         break;
     }
-    return outnames;
+    return {};
 }
 
 BackendPtr SolarisBackendFactory::createBackend(DeviceBase *device, BackendType type)

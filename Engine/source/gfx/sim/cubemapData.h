@@ -53,7 +53,7 @@ public:
    CubemapData();
    ~CubemapData();
 
-   bool onAdd();
+   bool onAdd() override;
    static void initPersistFields();
 
    DECLARE_CONOBJECT(CubemapData);

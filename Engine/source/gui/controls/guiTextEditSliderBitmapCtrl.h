@@ -56,23 +56,23 @@ public:
    virtual void getText(char *dest);  // dest must be of size
                                       // StructDes::MAX_STRING_LEN + 1
 
-   virtual void setText(const char *txt);
+   void setText(const char *txt) override;
 
    void setValue();
    void checkRange();
    void checkIncValue();
    void timeInc(U32 elapseTime);
 
-   virtual bool onKeyDown(const GuiEvent &event);
-   virtual void onMouseDown(const GuiEvent &event);
-   virtual void onMouseDragged(const GuiEvent &event);
-   virtual void onMouseUp(const GuiEvent &event);
-   virtual bool onMouseWheelUp(const GuiEvent &event);
-   virtual bool onMouseWheelDown(const GuiEvent &event);
+   bool onKeyDown(const GuiEvent &event) override;
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
+   bool onMouseWheelUp(const GuiEvent &event) override;
+   bool onMouseWheelDown(const GuiEvent &event) override;
 	
-	bool onWake();
-   virtual void onPreRender();
-   virtual void onRender(Point2I offset, const RectI &updateRect);
+	bool onWake() override;
+   void onPreRender() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
 	void setBitmap(const char *name);
 

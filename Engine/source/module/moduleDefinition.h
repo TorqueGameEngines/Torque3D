@@ -194,6 +194,8 @@ public:
     inline void             setModuleLocked( const bool status )                { mLocked = status; }
     inline bool             getModuleLocked( void ) const                       { return mLocked; }
     inline ModuleManager*   getModuleManager( void ) const                      { return mpModuleManager; }
+
+    using Parent::save;
     bool                    save( void );
 
     /// Declare Console Object.

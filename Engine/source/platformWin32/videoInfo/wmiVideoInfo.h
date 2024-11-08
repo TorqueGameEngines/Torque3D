@@ -52,8 +52,8 @@ private:
 
 protected:
    static const WCHAR *smPVIQueryTypeToWMIString [];
-   bool _queryProperty( const PVIQueryType queryType, const U32 adapterId, String *outValue );
-   bool _initialize();
+   bool _queryProperty( const PVIQueryType queryType, const U32 adapterId, String *outValue ) override;
+   bool _initialize() override;
    String _lookUpVendorId(U32 vendorId);
 
 public:

@@ -59,28 +59,28 @@ public:
       }
    }
 
-   virtual void pack(NetConnection *, BitStream *bstream)
+   void pack(NetConnection *, BitStream *bstream) override
    {
       bstream->writeRangedU32(nameCount, 0, MaxFileNames);
       for(U32 i = 0; i < nameCount; i++)
          bstream->writeString(mFileNames[i]);
    }
 
-   virtual void write(NetConnection *, BitStream *bstream)
+   void write(NetConnection *, BitStream *bstream) override
    {
       bstream->writeRangedU32(nameCount, 0, MaxFileNames);
       for(U32 i = 0; i < nameCount; i++)
          bstream->writeString(mFileNames[i]);
    }
 
-   virtual void unpack(NetConnection *, BitStream *bstream)
+   void unpack(NetConnection *, BitStream *bstream) override
    {
       nameCount = bstream->readRangedU32(0, MaxFileNames);
       for(U32 i = 0; i < nameCount; i++)
          bstream->readString(mFileNames[i]);
    }
 
-   virtual void process(NetConnection *connection)
+   void process(NetConnection *connection) override
    {
       U32 i;
       for(i = 0; i < nameCount; i++)
@@ -120,30 +120,30 @@ public:
       chunkLen = len;
    }
    
-   virtual void pack(NetConnection *, BitStream *bstream)
+   void pack(NetConnection *, BitStream *bstream) override
    {
       bstream->writeRangedU32(chunkLen, 0, ChunkSize);
       bstream->write(chunkLen, chunkData);
    }
    
-   virtual void write(NetConnection *, BitStream *bstream)
+   void write(NetConnection *, BitStream *bstream) override
    {
       bstream->writeRangedU32(chunkLen, 0, ChunkSize);
       bstream->write(chunkLen, chunkData);
    }
    
-   virtual void unpack(NetConnection *, BitStream *bstream)
+   void unpack(NetConnection *, BitStream *bstream) override
    {
       chunkLen = bstream->readRangedU32(0, ChunkSize);
       bstream->read(chunkLen, chunkData);
    }
    
-   virtual void process(NetConnection *connection)
+   void process(NetConnection *connection) override
    {
       connection->chunkReceived(chunkData, chunkLen);
    }
    
-   virtual void notifyDelivered(NetConnection *nc, bool madeIt)
+   void notifyDelivered(NetConnection *nc, bool madeIt) override
    {
       if(!nc->isRemoved())
         nc->sendFileChunk();

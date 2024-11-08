@@ -50,7 +50,7 @@ public:
 
    static void initPersistFields();
 
-   bool onKeyDown(const GuiEvent &event);
+   bool onKeyDown(const GuiEvent &event) override;
 };
 
 #endif //_GUI_TEXTEDIT_CTRL_H

@@ -50,23 +50,23 @@ public:
   /*C*/             afxEA_Model();
   /*D*/             ~afxEA_Model();
 
-  virtual void      ea_set_datablock(SimDataBlock*);
-  virtual bool      ea_start();
-  virtual bool      ea_update(F32 dt);
-  virtual void      ea_finish(bool was_stopped);
-  virtual void      ea_set_scope_status(bool flag);
-  virtual void      onDeleteNotify(SimObject*);
+  void      ea_set_datablock(SimDataBlock*) override;
+  bool      ea_start() override;
+  bool      ea_update(F32 dt) override;
+  void      ea_finish(bool was_stopped) override;
+  void      ea_set_scope_status(bool flag) override;
+  void      onDeleteNotify(SimObject*) override;
 
-  virtual void      getUpdatedBoxCenter(Point3F& pos);
+  void      getUpdatedBoxCenter(Point3F& pos) override;
 
-  virtual TSShape*          getTSShape();
-  virtual TSShapeInstance*  getTSShapeInstance();
-  virtual SceneObject*      ea_get_scene_object() const;
+  TSShape*          getTSShape() override;
+  TSShapeInstance*  getTSShapeInstance() override;
+  SceneObject*      ea_get_scene_object() const override;
   virtual U32               ea_get_triggers() const;
 
-  virtual U32       setAnimClip(const char* clip, F32 pos, F32 rate, F32 trans);
-  virtual void      resetAnimation(U32 tag);
-  virtual F32       getAnimClipDuration(const char* clip);
+  U32       setAnimClip(const char* clip, F32 pos, F32 rate, F32 trans) override;
+  void      resetAnimation(U32 tag) override;
+  F32       getAnimClipDuration(const char* clip) override;
 };
 
 
@@ -230,12 +230,12 @@ class afxEA_ModelDesc : public afxEffectAdapterDesc, public afxEffectDefs
   static afxEA_ModelDesc desc;
 
 public:
-  virtual bool  testEffectType(const SimDataBlock*) const;
-  virtual bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const;
-  virtual bool  runsOnServer(const afxEffectWrapperData*) const { return false; }
-  virtual bool  runsOnClient(const afxEffectWrapperData*) const { return true; }
+  bool  testEffectType(const SimDataBlock*) const override;
+  bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const override;
+  bool  runsOnServer(const afxEffectWrapperData*) const override { return false; }
+  bool  runsOnClient(const afxEffectWrapperData*) const override { return true; }
 
-  virtual afxEffectWrapper* create() const { return new afxEA_Model; }
+  afxEffectWrapper* create() const override { return new afxEA_Model; }
 };
 
 //~~~~~~~~~~~~~~~~~~~~//

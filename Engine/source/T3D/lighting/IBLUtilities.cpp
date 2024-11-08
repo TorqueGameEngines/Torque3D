@@ -171,7 +171,7 @@ namespace IBLUtilities
             prefilterConsts->setSafe(prefilterRoughnessSC, roughness);
             prefilterConsts->setSafe(prefilterMipSizeSC, mipSize);
             U32 size = prefilterSize * mPow(0.5f, mip);
-            renderTarget->attachTexture(GFXTextureTarget::Color0, cubemapOut, face, mip);
+            renderTarget->attachTexture(GFXTextureTarget::Color0, cubemapOut, face);
             GFX->setActiveRenderTarget(renderTarget, false);//we set the viewport ourselves
             GFX->setViewport(RectI(0, 0, size, size));
             GFX->clear(GFXClearTarget, LinearColorF::BLACK, 1.0f, 0);

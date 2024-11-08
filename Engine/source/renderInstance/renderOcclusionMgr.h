@@ -41,7 +41,7 @@ public:
 
    // RenderOcclusionMgr
    virtual void init();
-   virtual void render(SceneRenderState * state);
+   void render(SceneRenderState * state) override;
 
    // ConsoleObject
    static void consoleInit();

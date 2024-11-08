@@ -47,7 +47,7 @@ public:
    AssimpAppMaterial(aiMaterial* mtl);
    ~AssimpAppMaterial() { }
 
-   String getName() const { return name; }
+   String getName() const override { return name; }
    Material* createMaterial(const Torque::Path& path) const;
    void initMaterial(const Torque::Path& path, Material* mat) const;
 

@@ -42,19 +42,19 @@ class StdClientProcessList : public ClientProcessList
 protected:
    
    // ProcessList
-   void onTickObject(ProcessObject *);
-   void advanceObjects();
-   void onAdvanceObjects();
+   void onTickObject(ProcessObject *) override;
+   void advanceObjects() override;
+   void onAdvanceObjects() override;
    
 public:
 
    StdClientProcessList();  
 
    // ProcessList
-   bool advanceTime( SimTime timeDelta );
+   bool advanceTime( SimTime timeDelta ) override;
    
    // ClientProcessList
-   void clientCatchup( GameConnection *conn );
+   void clientCatchup( GameConnection *conn ) override;
    
    static void init();
    static void shutdown();
@@ -67,9 +67,9 @@ class StdServerProcessList : public ServerProcessList
 protected:
 
    // ProcessList
-   void onPreTickObject( ProcessObject *pobj );
-   void onTickObject( ProcessObject *pobj );
-   void advanceObjects();
+   void onPreTickObject( ProcessObject *pobj ) override;
+   void onTickObject( ProcessObject *pobj ) override;
+   void advanceObjects() override;
 
 public:
 

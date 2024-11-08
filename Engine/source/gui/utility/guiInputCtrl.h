@@ -48,10 +48,10 @@ public:
    GuiInputCtrl();
 
    // GuiControl.
-   virtual bool onWake();
-   virtual void onSleep();
+   bool onWake() override;
+   void onSleep() override;
 
-   virtual bool onInputEvent( const InputEventInfo &event );
+   bool onInputEvent( const InputEventInfo &event ) override;
 
    static void initPersistFields();
 

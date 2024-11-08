@@ -110,7 +110,7 @@ $guiContent = new GuiControl(convexEditorToolbar, EditorGuiGroup) {
       MinExtent = "1 1";
       bitmapAsset = "ToolsModule:separator_h_image";
    };
-   new GuiContainer() {
+   new GuiContainer(CESnapOptions) {
       canSaveDynamicFields = "0";
       Enabled = "1";
       isContainer = "1";

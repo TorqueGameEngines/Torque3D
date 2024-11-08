@@ -44,7 +44,7 @@ class RibbonData : public GameBaseData
    typedef GameBaseData Parent;
 
 protected:
-   bool onAdd();
+   bool onAdd() override;
 
 public:
 
@@ -70,9 +70,9 @@ public:
 
    RibbonData();
 
-   void packData(BitStream*);
-   void unpackData(BitStream*);
-   bool preload(bool server, String &errorBuffer);
+   void packData(BitStream*) override;
+   void unpackData(BitStream*) override;
+   bool preload(bool server, String &errorBuffer) override;
 
    static void initPersistFields();
    DECLARE_CONOBJECT(RibbonData);
@@ -104,13 +104,13 @@ class Ribbon : public GameBase
 
 protected:
 
-   bool onAdd();
-   void processTick(const Move*);
-   void advanceTime(F32);
-   void interpolateTick(F32 delta);
+   bool onAdd() override;
+   void processTick(const Move*) override;
+   void advanceTime(F32) override;
+   void interpolateTick(F32 delta) override;
 
    // Rendering
-   void prepRenderImage(SceneRenderState *state);
+   void prepRenderImage(SceneRenderState *state) override;
    void setShaderParams();
 
    ///Checks to see if ribbon is too long
@@ -126,8 +126,8 @@ public:
    DECLARE_CONOBJECT(Ribbon);
    DECLARE_CATEGORY("UNLISTED");
    static void initPersistFields();
-   bool onNewDataBlock(GameBaseData*,bool);
-   void onRemove();
+   bool onNewDataBlock(GameBaseData*,bool) override;
+   void onRemove() override;
 
    /// Used to add another segment to the ribbon.
    void addSegmentPoint(Point3F &point, MatrixF &mat);

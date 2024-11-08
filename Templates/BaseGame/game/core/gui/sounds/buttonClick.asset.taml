@@ -1,0 +1,10 @@
+<SoundAsset
+    AssetName="buttonClick"
+    sourceGroup="AudioChannelDefault"
+    MaxDistance="100">
+    <SoundAsset.slots>
+        <slots_beginarray
+            SoundFile="@assetFile=buttonClick.wav"
+            MaxDistance="100"/>
+    </SoundAsset.slots>
+</SoundAsset>

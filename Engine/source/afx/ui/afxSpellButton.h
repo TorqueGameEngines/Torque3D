@@ -82,15 +82,15 @@ public:
   afxMagicSpellData*      getSpellDataBlock() const;
   afxRPGMagicSpellData*   getSpellRPGDataBlock() const;
   
-  virtual bool      onAdd();
-  virtual bool      onWake();
-  virtual void      onSleep();
-  virtual void      inspectPostApply();
-  virtual void      onMouseEnter(const GuiEvent &event);
-  virtual void      onMouseLeave(const GuiEvent &event);
-  virtual void      onRender(Point2I offset, const RectI &updateRect);
+  bool      onAdd() override;
+  bool      onWake() override;
+  void      onSleep() override;
+  void      inspectPostApply() override;
+  void      onMouseEnter(const GuiEvent &event) override;
+  void      onMouseLeave(const GuiEvent &event) override;
+  void      onRender(Point2I offset, const RectI &updateRect) override;
 
-  virtual void      onDeleteNotify(SimObject*);
+  void      onDeleteNotify(SimObject*) override;
   
   static void       initPersistFields();
   

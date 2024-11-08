@@ -133,21 +133,21 @@ class  GuiContainer : public GuiControl
       /// @name GuiControl Inherited
       /// @{
       
-      virtual void onChildAdded(GuiControl* control);
-      virtual void onChildRemoved(GuiControl* control);
-      virtual bool resize( const Point2I &newPosition, const Point2I &newExtent );
-      virtual void childResized(GuiControl *child);
-      virtual void addObject(SimObject *obj);
-      virtual void removeObject(SimObject *obj);
-      virtual bool reOrder(SimObject* obj, SimObject* target);
-      virtual void onPreRender();
+      void onChildAdded(GuiControl* control) override;
+      void onChildRemoved(GuiControl* control) override;
+      bool resize( const Point2I &newPosition, const Point2I &newExtent ) override;
+      void childResized(GuiControl *child) override;
+      void addObject(SimObject *obj) override;
+      void removeObject(SimObject *obj) override;
+      bool reOrder(SimObject* obj, SimObject* target) override;
+      void onPreRender() override;
       
       /// GuiContainer deals with parentResized calls differently than GuiControl.  It will
       /// update the layout for all of it's non-docked child controls.  parentResized calls
       /// on the child controls will be handled by their default functions, but for our
       /// purposes we want at least our immediate children to use the anchors that they have
       /// set on themselves. - JDD [9/20/2006]
-      virtual void parentResized(const RectI &oldParentRect, const RectI &newParentRect);
+      void parentResized(const RectI &oldParentRect, const RectI &newParentRect) override;
       
       /// @}
 };

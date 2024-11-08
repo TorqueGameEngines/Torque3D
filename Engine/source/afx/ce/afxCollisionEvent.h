@@ -43,10 +43,10 @@ public:
   /*C*/                 afxCollisionEventData();
   /*C*/                 afxCollisionEventData(const afxCollisionEventData&, bool = false);
 
-  void                  packData(BitStream* stream);
-  void                  unpackData(BitStream* stream);
+  void                  packData(BitStream* stream) override;
+  void                  unpackData(BitStream* stream) override;
 
-  virtual bool          allowSubstitutions() const { return true; }
+  bool          allowSubstitutions() const override { return true; }
 
   static void           initPersistFields();
 

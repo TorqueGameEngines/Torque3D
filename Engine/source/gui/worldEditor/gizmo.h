@@ -80,7 +80,7 @@ public:
 
    DECLARE_CONOBJECT( GizmoProfile );
 
-   virtual bool onAdd();
+   bool onAdd() override;
 
    static void initPersistFields();
    static void consoleInit();
@@ -192,8 +192,8 @@ public:
    DECLARE_CONOBJECT( Gizmo );
 
    // SimObject
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
    static void initPersistFields();
 
    // Mutators
@@ -313,7 +313,6 @@ protected:
    void _renderAxisText();   
    void _renderPlane();
    Point3F _snapPoint( const Point3F &pnt ) const;
-   F32 _snapFloat( const F32 &val, const F32 &snap ) const;
    GizmoAlignment _filteredAlignment();
    void _updateState( bool collideGizmo = true );
    void _updateEnabledAxices();

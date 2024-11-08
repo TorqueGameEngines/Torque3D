@@ -271,24 +271,24 @@ class SimSet : public SimObject, public TamlChildren
       // SimObject.
       DECLARE_CONOBJECT( SimSet );
 
-      virtual void onRemove();
-      virtual void onDeleteNotify(SimObject *object);
+      void onRemove() override;
+      void onDeleteNotify(SimObject *object) override;
 
-      virtual SimObject* findObject( const char* name );
+      SimObject* findObject( const char* name ) override;
 
-      virtual void write(Stream &stream, U32 tabStop, U32 flags = 0);
-      virtual bool writeObject(Stream *stream);
-      virtual bool readObject(Stream *stream);
+      void write(Stream &stream, U32 tabStop, U32 flags = 0) override;
+      bool writeObject(Stream *stream) override;
+      bool readObject(Stream *stream) override;
 
-      virtual SimSet* clone();
+      SimSet* clone() override;
 
       // TamlChildren
-      virtual U32 getTamlChildCount(void) const
+      U32 getTamlChildCount(void) const override
       {
          return (U32)size();
       }
 
-      virtual SimObject* getTamlChild(const U32 childIndex) const
+      SimObject* getTamlChild(const U32 childIndex) const override
       {
          // Sanity!
          AssertFatal(childIndex < (U32)size(), "SimSet::getTamlChild() - Child index is out of range.");
@@ -300,7 +300,7 @@ class SimSet : public SimObject, public TamlChildren
          return at(childIndex);
       }
 
-      virtual void addTamlChild(SimObject* pSimObject)
+      void addTamlChild(SimObject* pSimObject) override
       {
          // Sanity!
          AssertFatal(pSimObject != NULL, "SimSet::addTamlChild() - Cannot add a NULL child object.");
@@ -452,19 +452,19 @@ class SimGroup: public SimSet
       void addObject( SimObject* object, const char* name );
 
       // SimSet.
-      virtual void addObject( SimObject* object );
-      virtual void removeObject( SimObject* object );
-      virtual void pushObject( SimObject* object );
-      virtual void popObject();
-      virtual void clear();
+      void addObject( SimObject* object ) override;
+      void removeObject( SimObject* object ) override;
+      void pushObject( SimObject* object ) override;
+      void popObject() override;
+      void clear() override;
       
-      virtual SimGroup* clone();
-      virtual SimGroup* deepClone();
+      SimGroup* clone() override;
+      SimGroup* deepClone() override;
 
-      virtual SimObject* findObject(const char* name);
-      virtual void onRemove();
+      SimObject* findObject(const char* name) override;
+      void onRemove() override;
 
-      virtual bool processArguments( S32 argc, ConsoleValue *argv );
+      bool processArguments( S32 argc, ConsoleValue *argv ) override;
 
       virtual SimObject* getObject(const S32& index);
 

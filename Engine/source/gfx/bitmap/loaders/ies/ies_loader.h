@@ -37,6 +37,7 @@
 #ifndef _H_IES_LOADER_H_
 #define _H_IES_LOADER_H_
 
+#include <cstdint>
 #include <vector>
 #include <string>
 

@@ -51,7 +51,7 @@ class DecalRoadUpdateEvent : public SimEvent
 public:
 
    DecalRoadUpdateEvent( U32 mask, U32 ms ) { mMask = mask; mMs = ms; }
-   virtual void process( SimObject *object );
+   void process( SimObject *object ) override;
 
    U32 mMask;
    U32 mMs;
@@ -161,23 +161,23 @@ public:
    static void consoleInit();
 
 	// SimObject      
-	bool onAdd();
-	void onRemove();
-	void onEditorEnable();
-	void onEditorDisable();
-	void inspectPostApply();
-   void onStaticModified(const char* slotName, const char*newValue = NULL);
-   void writeFields(Stream &stream, U32 tabStop);
-   bool writeField( StringTableEntry fieldname, const char *value );
+	bool onAdd() override;
+	void onRemove() override;
+	void onEditorEnable() override;
+	void onEditorDisable() override;
+	void inspectPostApply() override;
+   void onStaticModified(const char* slotName, const char*newValue = NULL) override;
+   void writeFields(Stream &stream, U32 tabStop) override;
+   bool writeField( StringTableEntry fieldname, const char *value ) override;
    
 	// NetObject
-	U32 packUpdate(NetConnection *, U32, BitStream *);
-	void unpackUpdate(NetConnection *, BitStream *);	
+	U32 packUpdate(NetConnection *, U32, BitStream *) override;
+	void unpackUpdate(NetConnection *, BitStream *) override;	
 
    // SceneObject
-	virtual void prepRenderImage( SceneRenderState* state );
-   virtual void setTransform( const MatrixF &mat );
-   virtual void setScale( const VectorF &scale );
+	void prepRenderImage( SceneRenderState* state ) override;
+   void setTransform( const MatrixF &mat ) override;
+   void setScale( const VectorF &scale ) override;
    virtual bool containsPoint( const Point3F& point ) const { return containsPoint( point, NULL ); } 
 
    // fxRoad Public Methods

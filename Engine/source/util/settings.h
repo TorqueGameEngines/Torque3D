@@ -52,6 +52,7 @@ public:
    const UTF8 *value(const UTF8 *settingName, const UTF8 *defaultValue = "");
    void remove(const UTF8 *settingName, bool includeDefaults = false);
    void clearAllFields();
+   void write(Stream& stream, U32 tabStop, U32 flags = 0) override { Con::errorf("Settings: Can Not write a file interface object to a file"); }; //Don't allow writing Settings objects *to* files
    bool write();
    bool read();
    void readLayer(SimXMLDocument *document, String groupStack = String(""));

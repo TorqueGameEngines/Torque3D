@@ -136,7 +136,7 @@ public:
       return mWindowHandle;
    }
 
-   virtual void* getSystemWindow(const WindowSystem system);
+   void* getSystemWindow(const WindowSystem system) override;
 
    HMENU &getMenuHandle()
    {
@@ -161,57 +161,57 @@ public:
    /// Allow windows to translate messages. Used for accelerators.
    bool translateMessage(MSG &msg);
 
-   virtual GFXDevice *getGFXDevice();
-   virtual GFXWindowTarget *getGFXTarget();
+   GFXDevice *getGFXDevice() override;
+   GFXWindowTarget *getGFXTarget() override;
    
-   virtual void _setVideoMode(const GFXVideoMode &mode);
-   virtual const GFXVideoMode &getVideoMode();
-   virtual bool clearFullscreen();
-   virtual bool isFullscreen();
-   virtual void _setFullscreen(const bool fullscreen);
+   void _setVideoMode(const GFXVideoMode &mode) override;
+   const GFXVideoMode &getVideoMode() override;
+   bool clearFullscreen() override;
+   bool isFullscreen() override;
+   void _setFullscreen(const bool fullscreen) override;
    
-   virtual bool setCaption(const char *cap);
-   virtual const char *getCaption();
+   bool setCaption(const char *cap) override;
+   const char *getCaption() override;
    
    // Window Client Area Extent
-   virtual void setClientExtent( const Point2I newExtent );
-   virtual const Point2I getClientExtent();
+   void setClientExtent( const Point2I newExtent ) override;
+   const Point2I getClientExtent() override;
   
    // Window Bounds
-   virtual void setBounds(const RectI &newBounds);
-   virtual const RectI getBounds() const;
+   void setBounds(const RectI &newBounds) override;
+   const RectI getBounds() const override;
 
    // Window Position
-   virtual void setPosition( const Point2I newPosition );
-   virtual const Point2I getPosition();
-   virtual void centerWindow();
-   virtual bool setSize(const Point2I &newSize);
+   void setPosition( const Point2I newPosition ) override;
+   const Point2I getPosition() override;
+   void centerWindow() override;
+   bool setSize(const Point2I &newSize) override;
    
    // Coordinate space conversion.
-   virtual Point2I clientToScreen( const Point2I& pos );
-   virtual Point2I screenToClient( const Point2I& pos );
+   Point2I clientToScreen( const Point2I& pos ) override;
+   Point2I screenToClient( const Point2I& pos ) override;
 
-   virtual bool isOpen();
-   virtual bool isVisible();
-   virtual bool isFocused();
-   virtual bool isMinimized();
-   virtual bool isMaximized();
+   bool isOpen() override;
+   bool isVisible() override;
+   bool isFocused() override;
+   bool isMinimized() override;
+   bool isMaximized() override;
 
-   virtual void minimize();
-   virtual void maximize();
-   virtual void hide();
-   virtual void show();
-   virtual void close();
-   virtual void restore();
-   virtual void setFocus();
+   void minimize() override;
+   void maximize() override;
+   void hide() override;
+   void show() override;
+   void close() override;
+   void restore() override;
+   void setFocus() override;
 
-   virtual void setMouseLocked(bool enable);
-   virtual bool isMouseLocked() const { return mMouseLocked; };
-   virtual bool shouldLockMouse() const { return mShouldLockMouse; };
+   void setMouseLocked(bool enable) override;
+   bool isMouseLocked() const override { return mMouseLocked; };
+   bool shouldLockMouse() const override { return mShouldLockMouse; };
 
-   virtual WindowId getWindowId();
+   WindowId getWindowId() override;
 
-   virtual PlatformWindow * getNextWindow() const
+   PlatformWindow * getNextWindow() const override
    {
       return mNextWindow;
    }
@@ -227,6 +227,6 @@ public:
 
    /// Return the platform specific object needed to create or attach an
    /// accelerated graohics drawing context on or to the window
-   virtual void* getPlatformDrawable() const { return mWindowHandle; }
+   void* getPlatformDrawable() const override { return mWindowHandle; }
 };
 #endif

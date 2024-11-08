@@ -70,6 +70,7 @@ public:
    /// Returns the size of the faces.
    virtual U32 getSize() const = 0;
 
+   virtual void generateMipMaps() = 0;
    /// Returns the face texture format.
    virtual GFXFormat getFormat() const = 0;
 
@@ -81,7 +82,7 @@ public:
 
    // GFXResource interface
    /// The resource should put a description of itself (number of vertices, size/width of texture, etc.) in buffer
-   virtual const String describeSelf() const;
+   const String describeSelf() const override;
 
    /// Get the number of mip maps
    const U32 getMipMapLevels() const { return mMipMapLevels; }
@@ -147,7 +148,7 @@ public:
    /// Returns the format
    const GFXFormat getFormat() const { return mFormat; }
 
-   virtual const String describeSelf() const;
+   const String describeSelf() const override;
 };
 
 /// A reference counted handle to a cubemap array resource.

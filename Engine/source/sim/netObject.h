@@ -287,14 +287,14 @@ public:
    NetObject();
    ~NetObject();
 
-   virtual String describeSelf() const;
+   String describeSelf() const override;
 
    /// @name Miscellaneous
    /// @{
    DECLARE_CONOBJECT(NetObject);
    static void initPersistFields();
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
    /// @}
 
    static void collapseDirtyList();

@@ -48,10 +48,10 @@ protected:
       
    };
 
-   void init();
+   void init() override;
 
 public:
-   SFXDevice *createDevice( const String& deviceName, bool useHardware, S32 maxBuffers );
+   SFXDevice *createDevice( const String& deviceName, bool useHardware, S32 maxBuffers ) override;
 
 };
 

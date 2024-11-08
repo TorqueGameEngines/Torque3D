@@ -40,6 +40,7 @@
 #ifndef _TAML_CALLBACKS_H_
 #include "persistence/taml/tamlCallbacks.h"
 #endif
+#include "T3D/objectTypes.h"
 
 class Stream;
 class LightManager;
@@ -391,13 +392,13 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       static bool _doPrototype(void* object, const char* index, const char* data);
    protected:
       /// Taml callbacks.
-      virtual void onTamlPreWrite(void) {}
-      virtual void onTamlPostWrite(void) {}
-      virtual void onTamlPreRead(void) {}
-      virtual void onTamlPostRead(const TamlCustomNodes& customNodes) {}
-      virtual void onTamlAddParent(SimObject* pParentObject) {}
-      virtual void onTamlCustomWrite(TamlCustomNodes& customNodes) {}
-      virtual void onTamlCustomRead(const TamlCustomNodes& customNodes);
+      void onTamlPreWrite(void) override {}
+      void onTamlPostWrite(void) override {}
+      void onTamlPreRead(void) override {}
+      void onTamlPostRead(const TamlCustomNodes& customNodes) override {}
+      void onTamlAddParent(SimObject* pParentObject) override {}
+      void onTamlCustomWrite(TamlCustomNodes& customNodes) override {}
+      void onTamlCustomRead(const TamlCustomNodes& customNodes) override;
    
       /// Id number for this object.
       SimObjectId mId;
@@ -454,7 +455,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       virtual void _onUnselected() {}
    
       /// We can provide more detail, like object name and id.
-      virtual String _getLogMessage(const char* fmt, va_list args) const;
+      String _getLogMessage(const char* fmt, va_list args) const override;
    
       DEFINE_CREATE_METHOD
       {
@@ -465,7 +466,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
 
       
       // EngineObject.
-      virtual void _destroySelf();
+      void _destroySelf() override;
 
    public:
       
@@ -952,7 +953,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       /// @{
 
       /// Return a textual description of the object.
-      virtual String describeSelf() const;
+      String describeSelf() const override;
 
       /// Dump the contents of this object to the console.  Use the Torque Script dump() and dumpF() functions to 
       /// call this.  
@@ -993,7 +994,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       }
 
       // EngineObject.
-      virtual void destroySelf();
+      void destroySelf() override;
 protected:
    bool   is_temp_clone;
 public:
@@ -1009,6 +1010,8 @@ public:
    virtual void reloadReset() { }
 };
 
+typedef SceneObjectTypes GameTypeMasksType;
+DefineBitfieldType(GameTypeMasksType);
 
 /// Smart SimObject pointer.
 ///

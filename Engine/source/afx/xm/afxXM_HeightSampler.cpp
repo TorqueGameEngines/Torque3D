@@ -42,14 +42,14 @@ public:
   /*C*/         afxXM_HeightSamplerData();
   /*C*/         afxXM_HeightSamplerData(const afxXM_HeightSamplerData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_HeightSamplerData);
 };
@@ -65,7 +65,7 @@ class afxXM_HeightSampler : public afxXM_WeightedBase
 public:
   /*C*/           afxXM_HeightSampler(afxXM_HeightSamplerData*, afxEffectWrapper*);
 
-  virtual void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void    updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

@@ -48,14 +48,14 @@ public:
   /*C*/         afxXM_ShockwaveData();
   /*C*/         afxXM_ShockwaveData(const afxXM_ShockwaveData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_ShockwaveData);
 };
@@ -73,7 +73,7 @@ class afxXM_Shockwave : public afxXM_Base
 public:
   /*C*/         afxXM_Shockwave(afxXM_ShockwaveData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

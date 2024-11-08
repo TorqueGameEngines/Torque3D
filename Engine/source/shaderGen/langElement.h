@@ -136,7 +136,7 @@ struct Var : public LangElement
    void setConnectName(const char *newName );
    void setType(const char *newType );
   
-   virtual void print( Stream &stream );
+   void print( Stream &stream ) override;
 
    // Construct a uniform / shader const var
    void setUniform(const String& constType, const String& constName, ConstantSortPosition sortPos);
@@ -176,7 +176,7 @@ public:
    }
 
    void addStatement( LangElement *elem );
-   virtual void print( Stream &stream );
+   void print( Stream &stream ) override;
 };
 
 

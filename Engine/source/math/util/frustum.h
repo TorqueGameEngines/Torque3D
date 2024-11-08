@@ -186,16 +186,16 @@ struct FrustumData : public PolyhedronData
       void _update() const;
 
       FrustumData()
-         : mIsOrtho(false),
+         : mDirty( false ),
+         mIsOrtho(false),
+         mIsInverted( false ),
+         mTransform(MatrixF(true)),
          mNearLeft(-1.0f),
          mNearRight(1.0f),
          mNearTop(1.0f),
          mNearBottom(-1.0f),
          mNearDist(0.1f),
-         mFarDist(1.0f),
-         mTransform(MatrixF(true)),
-         mDirty( false ),
-         mIsInverted( false ) {}
+         mFarDist(1.0f) {}
 
    public:
 

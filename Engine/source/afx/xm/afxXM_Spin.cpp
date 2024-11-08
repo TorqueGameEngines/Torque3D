@@ -51,15 +51,15 @@ public:
   /*C*/         afxXM_SpinData() : spin_axis(0,0,1), spin_angle(0),  spin_angle_var(0), spin_rate(0), spin_rate_var(0) { }
   /*C*/         afxXM_SpinData(const afxXM_SpinData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
-  bool          onAdd();
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
+  bool          onAdd() override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_SpinData);
 };
@@ -77,7 +77,7 @@ class afxXM_Spin_weighted : public afxXM_WeightedBase
 public:
   /*C*/         afxXM_Spin_weighted(afxXM_SpinData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
@@ -93,7 +93,7 @@ class afxXM_Spin_fixed : public afxXM_Base
 public:
   /*C*/         afxXM_Spin_fixed(afxXM_SpinData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

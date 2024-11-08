@@ -495,6 +495,9 @@ void ProximityMine::processTick( const Move* move )
                return;
             }
             break;
+         default:
+            // just break out, unknown state, covers warnings for not fulfilling all possiblities in enum.
+            break;
       }
    }
 }

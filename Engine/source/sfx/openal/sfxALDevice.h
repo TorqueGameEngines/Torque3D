@@ -87,12 +87,12 @@ class SFXALDevice : public SFXDevice
    public:
 
       // SFXDevice.
-      virtual SFXBuffer* createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description );
-      virtual SFXVoice* createVoice( bool is3D, SFXBuffer *buffer );
-      virtual void setListener( U32 index, const SFXListenerProperties& listener );
-      virtual void setDistanceModel( SFXDistanceModel model );
-      virtual void setDopplerFactor( F32 factor );
-      virtual void setRolloffFactor( F32 factor );
+      SFXBuffer* createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description ) override;
+      SFXVoice* createVoice( bool is3D, SFXBuffer *buffer ) override;
+      void setListener( U32 index, const SFXListenerProperties& listener ) override;
+      void setDistanceModel( SFXDistanceModel model ) override;
+      void setDopplerFactor( F32 factor ) override;
+      void setRolloffFactor( F32 factor ) override;
 #if defined(AL_ALEXT_PROTOTYPES)
       //function for openAL to open slots
       virtual void openSlots();
@@ -103,7 +103,7 @@ class SFXALDevice : public SFXDevice
       //get values from sfxreverbproperties and pass it to openal device
       virtual void setReverb(const SFXReverbProperties& reverb);
 #endif
-      virtual void resetReverb() {}
+      void resetReverb() override {}
 };
 
 #endif // _SFXALDEVICE_H_

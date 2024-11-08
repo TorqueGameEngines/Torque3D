@@ -215,3 +215,100 @@ const MatrixF& OrthoBoxConvex::getTransform() const
    return mOrthoMatrixCache;
 }
 
+Point3F PlaneConvex::getVertex(S32 v)
+{
+   Point3F p = mCenter;
+   p.x += (v & 1) ? mSize.x : -mSize.x;
+   p.y += (v & 2) ? mSize.y : -mSize.y;
+   
+   return p;
+}
+
+void PlaneConvex::emitEdge(S32 v1, S32 v2, const MatrixF& mat, ConvexFeature* cf)
+{
+   S32 vc = cf->mVertexList.size();
+   cf->mVertexList.increment(2);
+   Point3F* vp = cf->mVertexList.begin();
+   mat.mulP(getVertex(v1), &vp[vc]);
+   mat.mulP(getVertex(v2), &vp[vc + 1]);
+
+   cf->mEdgeList.increment();
+   ConvexFeature::Edge& edge = cf->mEdgeList.last();
+   edge.vertex[0] = vc;
+   edge.vertex[1] = vc + 1;
+}
+
+void PlaneConvex::emitFace(const MatrixF& mat, ConvexFeature* cf) {
+   // Assuming sFace contains a single face definition for the plane
+   Face& face = sFace[4];
+
+   // Emit vertices
+   S32 vc = cf->mVertexList.size();
+   cf->mVertexList.increment(4);
+   Point3F* vp = cf->mVertexList.begin();
+   for (S32 v = 0; v < 4; v++) {
+      mat.mulP(getVertex(face.vertex[v]), &vp[vc + v]);
+   }
+
+   // Emit edges
+   cf->mEdgeList.increment(4);
+   ConvexFeature::Edge* edge = cf->mEdgeList.end() - 4;
+   for (S32 e = 0; e < 4; e++) {
+      edge[e].vertex[0] = vc + e;
+      edge[e].vertex[1] = vc + ((e + 1) & 3);
+   }
+
+   // Emit 2 triangle faces
+   cf->mFaceList.increment(2);
+   ConvexFeature::Face* ef = cf->mFaceList.end() - 2;
+   mat.getColumn(face.axis, &ef->normal);
+   ef[1].normal = ef[0].normal;
+   ef[1].vertex[0] = ef[0].vertex[0] = vc;
+   ef[1].vertex[1] = ef[0].vertex[2] = vc + 2;
+   ef[0].vertex[1] = vc + 1;
+   ef[1].vertex[2] = vc + 3;
+}
+
+Point3F PlaneConvex::support(const VectorF& v) const {
+   Point3F p = mCenter;
+   p.x += (v.x >= 0) ? mSize.x : -mSize.x;
+   p.y += (v.y >= 0) ? mSize.y : -mSize.y;
+   return p;
+}
+
+void PlaneConvex::getFeatures(const MatrixF& mat, const VectorF& n, ConvexFeature* cf)
+{
+   cf->material = 0;
+   cf->mObject = mObject;
+
+   // Emit edges
+   for (S32 i = 0; i < 4; ++i) {
+      S32 next = (i + 1) % 4;
+      emitEdge(i, next, mat, cf);
+   }
+
+   emitFace(mat, cf);
+}
+
+void PlaneConvex::getPolyList(AbstractPolyList* list)
+{
+   list->setTransform(&getTransform(), getScale());
+   list->setObject(getObject());
+
+   U32 base =  list->addPoint(mCenter + Point3F(-mSize.x, -mSize.y, -mSize.z));
+               list->addPoint(mCenter + Point3F(mSize.x, -mSize.y, -mSize.z));
+               list->addPoint(mCenter + Point3F(-mSize.x, mSize.y, -mSize.z));
+               list->addPoint(mCenter + Point3F(mSize.x, mSize.y, -mSize.z));
+
+   list->begin(0, 0);
+
+   list->vertex(base + sFace[4].vertex[3]);
+   list->vertex(base + sFace[4].vertex[2]);
+   list->vertex(base + sFace[4].vertex[1]);
+   list->vertex(base + sFace[4].vertex[0]);
+
+   list->plane(base + sFace[4].vertex[2],
+               base + sFace[4].vertex[1],
+               base + sFace[4].vertex[0]);
+   list->end();
+}

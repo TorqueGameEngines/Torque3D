@@ -56,13 +56,13 @@ public:
   /*C*/       afxParticleEmitterData();
   /*C*/       afxParticleEmitterData(const afxParticleEmitterData&, bool = false);
 
-  void        packData(BitStream* stream);
-  void        unpackData(BitStream* stream);
-  bool        onAdd();
+  void        packData(BitStream* stream) override;
+  void        unpackData(BitStream* stream) override;
+  bool        onAdd() override;
 
-  bool        preload(bool server, String &errorStr);
+  bool        preload(bool server, String &errorStr) override;
 
-  virtual bool allowSubstitutions() const { return true; }
+  bool allowSubstitutions() const override { return true; }
 
   static void initPersistFields();
 
@@ -80,13 +80,13 @@ public:
   /*C*/       afxParticleEmitterVectorData();
   /*C*/       afxParticleEmitterVectorData(const afxParticleEmitterVectorData&, bool = false);
 
-  void        packData(BitStream* stream);
-  void        unpackData(BitStream* stream);
-  bool        onAdd();
+  void        packData(BitStream* stream) override;
+  void        unpackData(BitStream* stream) override;
+  bool        onAdd() override;
 
-  bool        preload(bool server, String &errorStr);
+  bool        preload(bool server, String &errorStr) override;
 
-  virtual bool allowSubstitutions() const { return true; }
+  bool allowSubstitutions() const override { return true; }
 
   static void initPersistFields();
 
@@ -108,13 +108,13 @@ public:
   /*C*/       afxParticleEmitterConeData();
   /*C*/       afxParticleEmitterConeData(const afxParticleEmitterConeData&, bool = false);
 
-  void        packData(BitStream* stream);
-  void        unpackData(BitStream* stream);
-  bool        onAdd();
+  void        packData(BitStream* stream) override;
+  void        unpackData(BitStream* stream) override;
+  bool        onAdd() override;
 
-  bool        preload(bool server, String &errorStr);
+  bool        preload(bool server, String &errorStr) override;
 
-  virtual bool allowSubstitutions() const { return true; }
+  bool allowSubstitutions() const override { return true; }
 
   static void initPersistFields();
 
@@ -150,14 +150,14 @@ public:
   /*C*/                 afxParticleEmitterPathData();
   /*C*/                 afxParticleEmitterPathData(const afxParticleEmitterPathData&, bool = false);
 
-  void                  packData(BitStream* stream);
-  void                  unpackData(BitStream* stream);
-  bool                  onAdd();
+  void                  packData(BitStream* stream) override;
+  void                  unpackData(BitStream* stream) override;
+  bool                  onAdd() override;
 
-  bool                  preload(bool server, String &errorStr);
+  bool                  preload(bool server, String &errorStr) override;
 
-  virtual void          onPerformSubstitutions();
-  virtual bool          allowSubstitutions() const { return true; }
+  void          onPerformSubstitutions() override;
+  bool          allowSubstitutions() const override { return true; }
 
   static void           initPersistFields();
 
@@ -182,13 +182,13 @@ public:
   /*C*/                 afxParticleEmitterDiscData();
   /*C*/                 afxParticleEmitterDiscData(const afxParticleEmitterDiscData&, bool = false);
 
-  void                  packData(BitStream* stream);
-  void                  unpackData(BitStream* stream);
-  bool                  onAdd();
+  void                  packData(BitStream* stream) override;
+  void                  unpackData(BitStream* stream) override;
+  bool                  onAdd() override;
 
-  bool                  preload(bool server, String &errorStr);
+  bool                  preload(bool server, String &errorStr) override;
 
-  virtual bool          allowSubstitutions() const { return true; }
+  bool          allowSubstitutions() const override { return true; }
 
   static void           initPersistFields();
 
@@ -225,7 +225,7 @@ protected:
   void          afx_emitParticles(const Point3F& start, const Point3F& end, const Point3F& velocity, const U32 numMilliseconds);
   void          preCompute(const MatrixF& mat);
 
-  virtual void  sub_particleUpdate(Particle*);
+  void  sub_particleUpdate(Particle*) override;
   virtual void  sub_preCompute(const MatrixF& mat)=0;
   virtual void  sub_addParticle(const Point3F& pos, const Point3F& vel, const U32 age_offset, S32 part_idx)=0;
 
@@ -233,13 +233,13 @@ public:
   /*C*/         afxParticleEmitter();
   /*D*/         ~afxParticleEmitter();
 
-  virtual void  emitParticlesExt(const MatrixF& xfm, const Point3F& point, const Point3F& velocity, const U32 numMilliseconds);
+  void  emitParticlesExt(const MatrixF& xfm, const Point3F& point, const Point3F& velocity, const U32 numMilliseconds) override;
 
   afxParticleEmitterData* getDataBlock(){ return mDataBlock; }
   void          setAFXOwner(const SimObject* owner) { afx_owner = owner; }
-  bool          onNewDataBlock(GameBaseData* dptr, bool reload);
-  bool          onAdd();
-  void          onRemove();
+  bool          onNewDataBlock(GameBaseData* dptr, bool reload) override;
+  bool          onAdd() override;
+  void          onRemove() override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -256,11 +256,11 @@ public:
   /*C*/       afxParticleEmitterVector();
   /*D*/       ~afxParticleEmitterVector();
 
-  bool        onNewDataBlock(GameBaseData* dptr, bool reload);
+  bool        onNewDataBlock(GameBaseData* dptr, bool reload) override;
 
 protected:
-  void        sub_preCompute(const MatrixF& mat);
-  void        sub_addParticle(const Point3F& pos, const Point3F& vel, const U32 age_offse, S32 part_idxt);
+  void        sub_preCompute(const MatrixF& mat) override;
+  void        sub_addParticle(const Point3F& pos, const Point3F& vel, const U32 age_offse, S32 part_idxt) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -278,11 +278,11 @@ public:
   /*C*/       afxParticleEmitterCone();
   /*D*/       ~afxParticleEmitterCone();
 
-  bool        onNewDataBlock(GameBaseData* dptr, bool reload);
+  bool        onNewDataBlock(GameBaseData* dptr, bool reload) override;
 
 protected:
-  void        sub_preCompute(const MatrixF& mat);
-  void        sub_addParticle(const Point3F& pos, const Point3F& vel, const U32 age_offset, S32 part_idx);
+  void        sub_preCompute(const MatrixF& mat) override;
+  void        sub_addParticle(const Point3F& pos, const Point3F& vel, const U32 age_offset, S32 part_idx) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -309,13 +309,13 @@ public:
   /*C*/       afxParticleEmitterPath();
   /*D*/       ~afxParticleEmitterPath();
 
-  bool        onNewDataBlock(GameBaseData* dptr, bool reload);
+  bool        onNewDataBlock(GameBaseData* dptr, bool reload) override;
 
 protected:
-  bool        onAdd();
-  void        onRemove();
-  void        sub_preCompute(const MatrixF& mat);
-  void        sub_addParticle(const Point3F& pos, const Point3F& vel, const U32 age_offset, S32 part_idx);
+  bool        onAdd() override;
+  void        onRemove() override;
+  void        sub_preCompute(const MatrixF& mat) override;
+  void        sub_addParticle(const Point3F& pos, const Point3F& vel, const U32 age_offset, S32 part_idx) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -333,11 +333,11 @@ public:
   /*C*/       afxParticleEmitterDisc();
   /*D*/       ~afxParticleEmitterDisc();
 
-  bool        onNewDataBlock(GameBaseData* dptr, bool reload);
+  bool        onNewDataBlock(GameBaseData* dptr, bool reload) override;
 
 protected:
-  void        sub_preCompute(const MatrixF& mat);
-  void        sub_addParticle(const Point3F& pos, const Point3F& vel, const U32 age_offset, S32 part_idx);
+  void        sub_preCompute(const MatrixF& mat) override;
+  void        sub_addParticle(const Point3F& pos, const Point3F& vel, const U32 age_offset, S32 part_idx) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

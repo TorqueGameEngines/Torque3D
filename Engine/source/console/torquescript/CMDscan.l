@@ -1,3 +1,4 @@
+%option yylineno nounput
 %{
 
 // flex --nounput -o CMDscan.cpp -P CMD CMDscan.l
@@ -9,7 +10,7 @@
 #include "platform/platform.h"
 #include "core/stringTable.h"
 #include "console/console.h"
-#include "console/compiler.h"
+#include "console/torquescript/compiler.h"
 #include "console/dynamicTypes.h"
 #include "core/strings/stringFunctions.h"
 
@@ -30,7 +31,7 @@ inline Token< T > MakeToken( T value, U32 lineNumber )
    return result;
 }
 
-#include "console/cmdgram.h"
+#include "console/torquescript/CMDgram.h"
 
 // HACK: C++17 and beyond can't use register keyword
 #define register
@@ -54,6 +55,8 @@ static int Sc_ScanIdent();
 #define FLEX_DEBUG 0
 #endif
 
+Vector<String> lines;
+
 // Install our own input code...
 #undef CMDgetc
 int CMDgetc();
@@ -62,7 +65,7 @@ int CMDgetc();
 #ifndef isatty
 inline int isatty(int) { return 0; }
 #endif
-
+static int yycolumn = 1;
 // Wrap our getc, so that lex doesn't try to do its own buffering/file IO.
 #define YY_INPUT(buf,result,max_size) \
    { \
@@ -71,16 +74,18 @@ inline int isatty(int) { return 0; }
             (c = CMDgetc()) != EOF && c != '\n'; ++n ) \
          buf[n] = (char) c; \
       if ( c == '\n' ) \
-         buf[n++] = (char) c; \
+         buf[n++] = (char) c; yycolumn = 1;\
       result = n; \
    }
 
-// General helper stuff.
-static int lineIndex;
+#define YY_USER_ACTION do { \
+    CMDlloc.first_line = CMDlloc.last_line = yylineno; \
+    CMDlloc.first_column = yycolumn; CMDlloc.last_column = yycolumn + yyleng - 1; \
+    yycolumn += yyleng; \
+    } while(0);
 
 // File state
 void CMDSetScanBuffer(const char *sb, const char *fn);
-const char * CMDgetFileLine(int &lineNumber);
 
 // Error reporting
 void CMDerror(const char * s, ...);
@@ -111,38 +116,45 @@ HEXDIGIT [a-fA-F0-9]
 ("///"([^/\n\r][^\n\r]*)?[\n\r]+)+ { return(Sc_ScanDocBlock()); }
 "//"[^\n\r]*   ;
 [\r]        ;
-[\n]        {lineIndex++;}
+\n.*        { 
+   yycolumn = 1;
+   lines.push_back(String::ToString("%s", yytext+1));
+   if (lines.size() > Con::getIntVariable("$scriptErrorLineCount", 10))
+      lines.erase(lines.begin());
+
+   yyless(1);
+}
 \"(\\.|[^\\"\n\r])*\"      { return(Sc_ScanString(STRATOM)); }
 \'(\\.|[^\\'\n\r])*\'      { return(Sc_ScanString(TAGATOM)); }
-"=="        { CMDlval.i = MakeToken< int >( opEQ, lineIndex ); return opEQ; }
-"!="        { CMDlval.i = MakeToken< int >( opNE, lineIndex ); return opNE; }
-">="        { CMDlval.i = MakeToken< int >( opGE, lineIndex ); return opGE; }
-"<="        { CMDlval.i = MakeToken< int >( opLE, lineIndex ); return opLE; }
-"&&"        { CMDlval.i = MakeToken< int >( opAND, lineIndex ); return opAND; }
-"||"        { CMDlval.i = MakeToken< int >( opOR, lineIndex ); return opOR; }
-"::"        { CMDlval.i = MakeToken< int >( opCOLONCOLON, lineIndex ); return opCOLONCOLON; }
-"--"        { CMDlval.i = MakeToken< int >( opMINUSMINUS, lineIndex ); return opMINUSMINUS; }
-"++"        { CMDlval.i = MakeToken< int >( opPLUSPLUS, lineIndex ); return opPLUSPLUS; }
-"$="        { CMDlval.i = MakeToken< int >( opSTREQ, lineIndex ); return opSTREQ; }
-"!$="       { CMDlval.i = MakeToken< int >( opSTRNE, lineIndex ); return opSTRNE; }
-"<<"        { CMDlval.i = MakeToken< int >( opSHL, lineIndex ); return opSHL; }
-">>"        { CMDlval.i = MakeToken< int >( opSHR, lineIndex ); return opSHR; }
-"+="        { CMDlval.i = MakeToken< int >( opPLASN, lineIndex ); return opPLASN; }
-"-="        { CMDlval.i = MakeToken< int >( opMIASN, lineIndex ); return opMIASN; }
-"*="        { CMDlval.i = MakeToken< int >( opMLASN, lineIndex ); return opMLASN; }
-"/="        { CMDlval.i = MakeToken< int >( opDVASN, lineIndex ); return opDVASN; }
-"%="        { CMDlval.i = MakeToken< int >( opMODASN, lineIndex ); return opMODASN; }
-"&="        { CMDlval.i = MakeToken< int >( opANDASN, lineIndex ); return opANDASN; }
-"^="        { CMDlval.i = MakeToken< int >( opXORASN, lineIndex ); return opXORASN; }
-"|="        { CMDlval.i = MakeToken< int >( opORASN, lineIndex ); return opORASN; }
-"<<="       { CMDlval.i = MakeToken< int >( opSLASN, lineIndex ); return opSLASN; }
-">>="       { CMDlval.i = MakeToken< int >( opSRASN, lineIndex ); return opSRASN; }
-"->"        { CMDlval.i = MakeToken< int >( opINTNAME, lineIndex ); return opINTNAME; }
-"-->"       { CMDlval.i = MakeToken< int >( opINTNAMER, lineIndex ); return opINTNAMER; }
-"NL"        { CMDlval.i = MakeToken< int >( '\n', lineIndex ); return '@'; }
-"TAB"       { CMDlval.i = MakeToken< int >( '\t', lineIndex ); return '@'; }
-"SPC"       { CMDlval.i = MakeToken< int >( ' ', lineIndex ); return '@'; }
-"@"         { CMDlval.i = MakeToken< int >( 0, lineIndex ); return '@'; }
+"=="        { CMDlval.i = MakeToken< int >( opEQ, yylineno ); return opEQ; }
+"!="        { CMDlval.i = MakeToken< int >( opNE, yylineno ); return opNE; }
+">="        { CMDlval.i = MakeToken< int >( opGE, yylineno ); return opGE; }
+"<="        { CMDlval.i = MakeToken< int >( opLE, yylineno ); return opLE; }
+"&&"        { CMDlval.i = MakeToken< int >( opAND, yylineno ); return opAND; }
+"||"        { CMDlval.i = MakeToken< int >( opOR, yylineno ); return opOR; }
+"::"        { CMDlval.i = MakeToken< int >( opCOLONCOLON, yylineno ); return opCOLONCOLON; }
+"--"        { CMDlval.i = MakeToken< int >( opMINUSMINUS, yylineno ); return opMINUSMINUS; }
+"++"        { CMDlval.i = MakeToken< int >( opPLUSPLUS, yylineno ); return opPLUSPLUS; }
+"$="        { CMDlval.i = MakeToken< int >( opSTREQ, yylineno ); return opSTREQ; }
+"!$="       { CMDlval.i = MakeToken< int >( opSTRNE, yylineno ); return opSTRNE; }
+"<<"        { CMDlval.i = MakeToken< int >( opSHL, yylineno ); return opSHL; }
+">>"        { CMDlval.i = MakeToken< int >( opSHR, yylineno ); return opSHR; }
+"+="        { CMDlval.i = MakeToken< int >( opPLASN, yylineno ); return opPLASN; }
+"-="        { CMDlval.i = MakeToken< int >( opMIASN, yylineno ); return opMIASN; }
+"*="        { CMDlval.i = MakeToken< int >( opMLASN, yylineno ); return opMLASN; }
+"/="        { CMDlval.i = MakeToken< int >( opDVASN, yylineno ); return opDVASN; }
+"%="        { CMDlval.i = MakeToken< int >( opMODASN, yylineno ); return opMODASN; }
+"&="        { CMDlval.i = MakeToken< int >( opANDASN, yylineno ); return opANDASN; }
+"^="        { CMDlval.i = MakeToken< int >( opXORASN, yylineno ); return opXORASN; }
+"|="        { CMDlval.i = MakeToken< int >( opORASN, yylineno ); return opORASN; }
+"<<="       { CMDlval.i = MakeToken< int >( opSLASN, yylineno ); return opSLASN; }
+">>="       { CMDlval.i = MakeToken< int >( opSRASN, yylineno ); return opSRASN; }
+"->"        { CMDlval.i = MakeToken< int >( opINTNAME, yylineno ); return opINTNAME; }
+"-->"       { CMDlval.i = MakeToken< int >( opINTNAMER, yylineno ); return opINTNAMER; }
+"NL"        { CMDlval.i = MakeToken< int >( '\n', yylineno ); return '@'; }
+"TAB"       { CMDlval.i = MakeToken< int >( '\t', yylineno ); return '@'; }
+"SPC"       { CMDlval.i = MakeToken< int >( ' ', yylineno ); return '@'; }
+"@"         { CMDlval.i = MakeToken< int >( 0, yylineno ); return '@'; }
 "/*" { /* this comment stops syntax highlighting from getting messed up when editing the lexer in TextPad */
          int c = 0, l;
          for ( ; ; )
@@ -156,10 +168,6 @@ HEXDIGIT [a-fA-F0-9]
                CMDerror( "unexpected end of file found in comment" );
                break;
             }
-
-            // Increment line numbers.
-            else if ( c == '\n' )
-               lineIndex++;
 
             // Did we find the end of the comment?
             else if ( l == '*' && c == '/' )
@@ -189,37 +197,37 @@ HEXDIGIT [a-fA-F0-9]
 "%" |
 "^" |
 "~" |
-"="         { CMDlval.i = MakeToken< int >( CMDtext[ 0 ], lineIndex ); return CMDtext[ 0 ]; }
-"in"        { CMDlval.i = MakeToken< int >( rwIN, lineIndex ); return(rwIN); }
-"or"        { CMDlval.i = MakeToken< int >( rwCASEOR, lineIndex ); return(rwCASEOR); }
-"break"     { CMDlval.i = MakeToken< int >( rwBREAK, lineIndex ); return(rwBREAK); }
-"return"    { CMDlval.i = MakeToken< int >( rwRETURN, lineIndex ); return(rwRETURN); }
-"else"      { CMDlval.i = MakeToken< int >( rwELSE, lineIndex ); return(rwELSE); }
-"assert"    { CMDlval.i = MakeToken< int >( rwASSERT, lineIndex ); return(rwASSERT); }
-"while"     { CMDlval.i = MakeToken< int >( rwWHILE, lineIndex ); return(rwWHILE); }
-"do"        { CMDlval.i = MakeToken< int >( rwDO, lineIndex ); return(rwDO); }
-"if"        { CMDlval.i = MakeToken< int >( rwIF, lineIndex ); return(rwIF); }
-"foreach$"  { CMDlval.i = MakeToken< int >( rwFOREACHSTR, lineIndex ); return(rwFOREACHSTR); }
-"foreach"   { CMDlval.i = MakeToken< int >( rwFOREACH, lineIndex ); return(rwFOREACH); }
-"for"       { CMDlval.i = MakeToken< int >( rwFOR, lineIndex ); return(rwFOR); }
-"continue"  { CMDlval.i = MakeToken< int >( rwCONTINUE, lineIndex ); return(rwCONTINUE); }
-"function"  { CMDlval.i = MakeToken< int >( rwDEFINE, lineIndex ); return(rwDEFINE); }
-"new"       { CMDlval.i = MakeToken< int >( rwDECLARE, lineIndex ); return(rwDECLARE); }
-"singleton" { CMDlval.i = MakeToken< int >( rwDECLARESINGLETON, lineIndex ); return(rwDECLARESINGLETON); }
-"datablock" { CMDlval.i = MakeToken< int >( rwDATABLOCK, lineIndex ); return(rwDATABLOCK); }
-"case"      { CMDlval.i = MakeToken< int >( rwCASE, lineIndex ); return(rwCASE); }
-"switch$"   { CMDlval.i = MakeToken< int >( rwSWITCHSTR, lineIndex ); return(rwSWITCHSTR); }
-"switch"    { CMDlval.i = MakeToken< int >( rwSWITCH, lineIndex ); return(rwSWITCH); }
-"default"   { CMDlval.i = MakeToken< int >( rwDEFAULT, lineIndex ); return(rwDEFAULT); }
-"package"   { CMDlval.i = MakeToken< int >( rwPACKAGE, lineIndex ); return(rwPACKAGE); }
-"namespace" { CMDlval.i = MakeToken< int >( rwNAMESPACE, lineIndex ); return(rwNAMESPACE); }
-"true"      { CMDlval.i = MakeToken< int >( 1, lineIndex ); return INTCONST; }
-"false"     { CMDlval.i = MakeToken< int >( 0, lineIndex ); return INTCONST; }
+"="         { CMDlval.i = MakeToken< int >( CMDtext[ 0 ], yylineno ); return CMDtext[ 0 ]; }
+"in"        { CMDlval.i = MakeToken< int >( rwIN, yylineno ); return(rwIN); }
+"or"        { CMDlval.i = MakeToken< int >( rwCASEOR, yylineno ); return(rwCASEOR); }
+"break"     { CMDlval.i = MakeToken< int >( rwBREAK, yylineno ); return(rwBREAK); }
+"return"    { CMDlval.i = MakeToken< int >( rwRETURN, yylineno ); return(rwRETURN); }
+"else"      { CMDlval.i = MakeToken< int >( rwELSE, yylineno ); return(rwELSE); }
+"assert"    { CMDlval.i = MakeToken< int >( rwASSERT, yylineno ); return(rwASSERT); }
+"while"     { CMDlval.i = MakeToken< int >( rwWHILE, yylineno ); return(rwWHILE); }
+"do"        { CMDlval.i = MakeToken< int >( rwDO, yylineno ); return(rwDO); }
+"if"        { CMDlval.i = MakeToken< int >( rwIF, yylineno ); return(rwIF); }
+"foreach$"  { CMDlval.i = MakeToken< int >( rwFOREACHSTR, yylineno ); return(rwFOREACHSTR); }
+"foreach"   { CMDlval.i = MakeToken< int >( rwFOREACH, yylineno ); return(rwFOREACH); }
+"for"       { CMDlval.i = MakeToken< int >( rwFOR, yylineno ); return(rwFOR); }
+"continue"  { CMDlval.i = MakeToken< int >( rwCONTINUE, yylineno ); return(rwCONTINUE); }
+"function"  { CMDlval.i = MakeToken< int >( rwDEFINE, yylineno ); return(rwDEFINE); }
+"new"       { CMDlval.i = MakeToken< int >( rwDECLARE, yylineno ); return(rwDECLARE); }
+"singleton" { CMDlval.i = MakeToken< int >( rwDECLARESINGLETON, yylineno ); return(rwDECLARESINGLETON); }
+"datablock" { CMDlval.i = MakeToken< int >( rwDATABLOCK, yylineno ); return(rwDATABLOCK); }
+"case"      { CMDlval.i = MakeToken< int >( rwCASE, yylineno ); return(rwCASE); }
+"switch$"   { CMDlval.i = MakeToken< int >( rwSWITCHSTR, yylineno ); return(rwSWITCHSTR); }
+"switch"    { CMDlval.i = MakeToken< int >( rwSWITCH, yylineno ); return(rwSWITCH); }
+"default"   { CMDlval.i = MakeToken< int >( rwDEFAULT, yylineno ); return(rwDEFAULT); }
+"package"   { CMDlval.i = MakeToken< int >( rwPACKAGE, yylineno ); return(rwPACKAGE); }
+"namespace" { CMDlval.i = MakeToken< int >( rwNAMESPACE, yylineno ); return(rwNAMESPACE); }
+"true"      { CMDlval.i = MakeToken< int >( 1, yylineno ); return INTCONST; }
+"false"     { CMDlval.i = MakeToken< int >( 0, yylineno ); return INTCONST; }
 {VAR}       { return(Sc_ScanVar()); }
 
 {ID}        { return Sc_ScanIdent(); }
 0[xX]{HEXDIGIT}+ return(Sc_ScanHex());
-{INTEGER}   { CMDtext[CMDleng] = 0; CMDlval.i = MakeToken< int >( dAtoi(CMDtext), lineIndex ); return INTCONST; }
+{INTEGER}   { CMDtext[CMDleng] = 0; CMDlval.i = MakeToken< int >( dAtoi(CMDtext), yylineno ); return INTCONST; }
 {FLOAT}     return Sc_ScanNum();
 {ILID}      return(ILLEGAL_TOKEN);
 .           return(ILLEGAL_TOKEN);
@@ -228,6 +236,7 @@ HEXDIGIT [a-fA-F0-9]
 static const char *scanBuffer;
 static const char *fileName;
 static int scanIndex;
+extern YYLTYPE CMDlloc;
 
 const char * CMDGetCurrentFile()
 {
@@ -236,7 +245,7 @@ const char * CMDGetCurrentFile()
 
 int CMDGetCurrentLine()
 {
-   return lineIndex;
+   return yylineno;
 }
 
 extern bool gConsoleSyntaxError;
@@ -254,74 +263,28 @@ void CMDerror(const char *format, ...)
 #else
    vsnprintf( tempBuf, BUFMAX, format, args );
 #endif
-    va_end(args);
+   va_end(args);
 
    if(fileName)
    {
-      Con::errorf(ConsoleLogEntry::Script, "%s Line: %d - %s", fileName, lineIndex, tempBuf);
-
-#ifndef NO_ADVANCED_ERROR_REPORT
-      // dhc - lineIndex is bogus.  let's try to add some sanity back in.
-      int i,j,n;
-      char c;
-      int linediv = 1;
-      // first, walk the buffer, trying to detect line ending type.
-      // this is imperfect, if inconsistant line endings exist...
-      for (i=0; i<scanIndex; i++)
-      {
-         c = scanBuffer[i];
-         if (c=='\r' && scanBuffer[i+1]=='\n') linediv = 2; // crlf detected
-         if (c=='\r' || c=='\n' || c==0) break; // enough for us to stop.
-      }
-      // grab some of the chars starting at the error location - lineending.
-      i = 1; j = 0; n = 1;
-      // find prev lineending
-      while (n<BUFMAX-8 && i<scanIndex) // cap at file start
-      {
-         c = scanBuffer[scanIndex-i];
-         if ((c=='\r' || c=='\n') && i>BUFMAX>>2) break; // at least get a little data
-         n++; i++;
-      }
-      // find next lineending
-      while (n<BUFMAX-8 && j<BUFMAX>>1) // cap at half-buf-size forward
-      {
-         c = scanBuffer[scanIndex+j];
-         if (c==0) break;
-         if ((c=='\r' || c=='\n') && j>BUFMAX>>2) break; // at least get a little data
-         n++; j++;
-      }
-      if (i) i--; // chop off extra linefeed.
-      if (j) j--; // chop off extra linefeed.
-      // build our little text block
-      if (i) dStrncpy(tempBuf,scanBuffer+scanIndex-i,i);
-      dStrncpy(tempBuf+i,"##", 2); // bracketing.
-      tempBuf[i+2] = scanBuffer[scanIndex]; // copy the halt character.
-      dStrncpy(tempBuf+i+3,"##", 2); // bracketing.
-      if (j) dStrncpy(tempBuf+i+5,scanBuffer+scanIndex+1,j); // +1 to go past current char.
-      tempBuf[i+j+5] = 0; // null terminate
-      for(n=0; n<i+j+5; n++) // convert CR to LF if alone...
-         if (tempBuf[n]=='\r' && tempBuf[n+1]!='\n') tempBuf[n] = '\n';
-      // write out to console the advanced error report
-      Con::warnf(ConsoleLogEntry::Script, ">>> Advanced script error report.  Line %d.", lineIndex);
-      Con::warnf(ConsoleLogEntry::Script, ">>> Some error context, with ## on sides of error halt:");
-      Con::errorf(ConsoleLogEntry::Script, "%s", tempBuf);
-      Con::warnf(ConsoleLogEntry::Script, ">>> Error report complete.\n");
-#endif
-
+      Con::errorf(ConsoleLogEntry::Script, "%s Line: %d - %s", fileName, yylineno, tempBuf);
       // Update the script-visible error buffer.
       const char *prevStr = Con::getVariable("$ScriptError");
       if (prevStr[0])
-         dSprintf(tempBuf, sizeof(tempBuf), "%s\n%s Line: %d - Syntax error.", prevStr, fileName, lineIndex);
+         dSprintf(tempBuf, sizeof(tempBuf), "%s\n%s Line: %d - Syntax error.", prevStr, fileName, yylineno);
       else
-         dSprintf(tempBuf, sizeof(tempBuf), "%s Line: %d - Syntax error.", fileName, lineIndex);
+         dSprintf(tempBuf, sizeof(tempBuf), "%s Line: %d - Syntax error.", fileName, yylineno);
       Con::setVariable("$ScriptError", tempBuf);
 
       // We also need to mark that we came up with a new error.
       static S32 sScriptErrorHash=1000;
       Con::setIntVariable("$ScriptErrorHash", sScriptErrorHash++);
+
    }
    else
+   {
       Con::errorf(ConsoleLogEntry::Script, tempBuf);
+   }
 }
 
 void CMDSetScanBuffer(const char *sb, const char *fn)
@@ -329,7 +292,8 @@ void CMDSetScanBuffer(const char *sb, const char *fn)
    scanBuffer = sb;
    fileName = fn;
    scanIndex = 0;
-   lineIndex = 1;
+   yylineno = 1;
+   lines.clear();
 }
 
 int CMDgetc()
@@ -353,7 +317,7 @@ static int Sc_ScanVar()
    CMDtext[CMDleng] = 0;
 
    // Make it a stringtable string!
-   CMDlval.s = MakeToken< StringTableEntry >( StringTable->insert(CMDtext), lineIndex );
+   CMDlval.s = MakeToken< StringTableEntry >( StringTable->insert(CMDtext), yylineno );
    return(VAR);
 }
 
@@ -387,7 +351,7 @@ static int Sc_ScanDocBlock()
 {
    S32 len = dStrlen(CMDtext);
    char* text = (char *) consoleAlloc(len + 1);
-   S32 line = lineIndex;
+   S32 line = yylineno;
 
    for( S32 i = 0, j = 0; j <= len; j++ )
    {
@@ -399,9 +363,6 @@ static int Sc_ScanDocBlock()
 
       if( CMDtext[j] == '\r' )
          continue;
-
-      if( CMDtext[j] == '\n' )
-         lineIndex++;
 
       text[i++] = CMDtext[j];
    }
@@ -420,7 +381,7 @@ static int Sc_ScanString(int ret)
    char* buffer = ( char* ) consoleAlloc( bufferLen );
    dStrcpy( buffer, CMDtext + 1, bufferLen );
 
-   CMDlval.str = MakeToken< char* >( buffer, lineIndex );
+   CMDlval.str = MakeToken< char* >( buffer, yylineno );
    return ret;
 }
 
@@ -433,12 +394,12 @@ static int Sc_ScanIdent()
    if((type = ConsoleBaseType::getTypeByName(CMDtext)) != NULL)
    {
       /* It's a type */
-      CMDlval.i = MakeToken< int >( type->getTypeID(), lineIndex );
+      CMDlval.i = MakeToken< int >( type->getTypeID(), yylineno );
       return TYPEIDENT;
    }
 
    /* It's an identifier */
-   CMDlval.s = MakeToken< StringTableEntry >( StringTable->insert(CMDtext), lineIndex );
+   CMDlval.s = MakeToken< StringTableEntry >( StringTable->insert(CMDtext), yylineno );
    return IDENT;
 }
 
@@ -612,7 +573,7 @@ bool collapseEscape(char *buf)
 static int Sc_ScanNum()
 {
    CMDtext[CMDleng] = 0;
-   CMDlval.f = MakeToken< double >( dAtof(CMDtext), lineIndex );
+   CMDlval.f = MakeToken< double >( dAtof(CMDtext), yylineno );
    return(FLTCONST);
 }
 
@@ -620,7 +581,7 @@ static int Sc_ScanHex()
 {
    S32 val = 0;
    dSscanf(CMDtext, "%x", &val);
-   CMDlval.i = MakeToken< int >( val, lineIndex );
+   CMDlval.i = MakeToken< int >( val, yylineno );
    return INTCONST;
 }
 

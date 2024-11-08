@@ -196,20 +196,20 @@ public:
    void updateMountPosition();
 
    // SceneObject
-   virtual void setTransform( const MatrixF &mat );
-   void prepRenderImage( SceneRenderState *state );
+   void setTransform( const MatrixF &mat ) override;
+   void prepRenderImage( SceneRenderState *state ) override;
 
    // SimObject
-   bool onAdd();
-   void onRemove();
-   void inspectPostApply();
-   void onEditorEnable();
-   void onEditorDisable();
-   void onDeleteNotify(SimObject *object);
+   bool onAdd() override;
+   void onRemove() override;
+   void inspectPostApply() override;
+   void onEditorEnable() override;
+   void onEditorDisable() override;
+   void onDeleteNotify(SimObject *object) override;
 
    // NetObject
-   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn, BitStream *stream );
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
 
    // ConObject.
    static void initPersistFields();

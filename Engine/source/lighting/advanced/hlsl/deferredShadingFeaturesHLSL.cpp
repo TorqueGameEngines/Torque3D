@@ -264,16 +264,16 @@ void GlowMapHLSL::processPix(Vector<ShaderComponent*> &componentList, const Mate
          targ->setType("fragout");
          targ->setName(getOutputTargetVarName(ShaderFeature::RenderTarget3));
          targ->setStructName("OUT");
-         output = new GenOp("@ = float4(@.rgb*@,0);", targ, texOp, glowMul);
+         output = new GenOp("@ = float4(pow(max(@.rgb*@,0.0),3.54406804435),0);", targ, texOp, glowMul);
       }
       else
       {
-         output = new GenOp("@ += float4(@.rgb*@,0);", targ, texOp, glowMul);
+         output = new GenOp("@ += float4(pow(max(@.rgb*@,0.0),3.54406804435),0);", targ, texOp, glowMul);
       }
    }
    else
    {
-      output = new GenOp("@ += float4(@.rgb*@,@.a);", targ, texOp, glowMul, targ);
+      output = new GenOp("@ += float4(pow(max(@.rgb*@,0.0),3.54406804435),@.a);", targ, texOp, glowMul, targ);
    }
 
 }

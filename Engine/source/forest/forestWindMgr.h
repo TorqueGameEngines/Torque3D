@@ -62,9 +62,9 @@ protected:
 
    static WindAdvanceSignal smAdvanceSignal;
 
-   virtual void interpolateTick( F32 delta ) {};
-   virtual void processTick();
-   virtual void advanceTime( F32 timeDelta ) {};   
+   void interpolateTick( F32 delta ) override {};
+   void processTick() override;
+   void advanceTime( F32 timeDelta ) override {};   
 
 public:
 

@@ -67,8 +67,8 @@ public:
    void addObject( SimObject *object );
 
    // UndoAction
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
 };
 
 
@@ -106,8 +106,8 @@ public:
    void deleteObject( const Vector<SimObject*> &objectList );
 
    // UndoAction
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
 };
 
 class InspectorFieldUndoAction : public UndoAction
@@ -130,8 +130,8 @@ public:
    String mData;         
 
    // UndoAction
-   virtual void undo();
-   virtual void redo() { undo(); }
+   void undo() override;
+   void redo() override { undo(); }
 };
 
 #endif // _GUI_WORLDEDITOR_UNDOACTIONS_H_

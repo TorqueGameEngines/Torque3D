@@ -48,16 +48,16 @@ public:
   /*C*/             afxEA_StaticShape();
   /*D*/             ~afxEA_StaticShape();
 
-  virtual void      ea_set_datablock(SimDataBlock*);
-  virtual bool      ea_start();
-  virtual bool      ea_update(F32 dt);
-  virtual void      ea_finish(bool was_stopped);
-  virtual void      ea_set_scope_status(bool flag);
-  virtual void      onDeleteNotify(SimObject*);
+  void      ea_set_datablock(SimDataBlock*) override;
+  bool      ea_start() override;
+  bool      ea_update(F32 dt) override;
+  void      ea_finish(bool was_stopped) override;
+  void      ea_set_scope_status(bool flag) override;
+  void      onDeleteNotify(SimObject*) override;
 
-  virtual void              getUpdatedBoxCenter(Point3F& pos);
-  virtual TSShape*          getTSShape();
-  virtual TSShapeInstance*  getTSShapeInstance();
+  void              getUpdatedBoxCenter(Point3F& pos) override;
+  TSShape*          getTSShape() override;
+  TSShapeInstance*  getTSShapeInstance() override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//
@@ -222,12 +222,12 @@ class afxEA_StaticShapeDesc : public afxEffectAdapterDesc, public afxEffectDefs
   static afxEA_StaticShapeDesc desc;
 
 public:
-  virtual bool  testEffectType(const SimDataBlock*) const;
-  virtual bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const;
-  virtual bool  runsOnServer(const afxEffectWrapperData*) const { return true; }
-  virtual bool  runsOnClient(const afxEffectWrapperData*) const { return false; }
+  bool  testEffectType(const SimDataBlock*) const override;
+  bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const override;
+  bool  runsOnServer(const afxEffectWrapperData*) const override { return true; }
+  bool  runsOnClient(const afxEffectWrapperData*) const override { return false; }
 
-  virtual afxEffectWrapper* create() const { return new afxEA_StaticShape; }
+  afxEffectWrapper* create() const override { return new afxEA_StaticShape; }
 };
 
 afxEA_StaticShapeDesc afxEA_StaticShapeDesc::desc;

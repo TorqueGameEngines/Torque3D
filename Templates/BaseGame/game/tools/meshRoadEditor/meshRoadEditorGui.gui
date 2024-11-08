@@ -71,7 +71,7 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorInspectorPlugin );";
       EdgeSnap = "1";
-      text = "::  Mesh Road Editor - Roads";
+      text = ":: Mesh Road Editor - Roads";
       
       new GuiContainer(MeshRoadEditorRoadsPanel){
          profile = "ToolsGuiDefaultProfile";
@@ -267,7 +267,7 @@ $guiContent = new GuiMeshRoadEditorCtrl(MeshRoadEditorGui,EditorGuiGroup) {
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorPlugin );";
       EdgeSnap = "1";
-      text = "::  Mesh Road Editor - Properties";
+      text = ":: Mesh Road Editor - Properties";
 
       new GuiContainer(MeshRoadNodesPanel){ //Node Properties
          isContainer = "1";

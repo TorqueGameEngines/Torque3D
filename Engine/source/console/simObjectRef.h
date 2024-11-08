@@ -137,14 +137,14 @@ public:
 
 public:
 
-   virtual const char* getData( void *dptr, const EnumTable*, BitSet32 )
+   const char* getData( void *dptr, const EnumTable*, BitSet32 ) override
    {      
       SimObjectRef<T> *objRef = static_cast< SimObjectRef<T>* >( dptr );
       T *obj = *objRef;
       return T::__getObjectId( obj );
    }
 
-   virtual void setData( void* dptr, S32 argc, const char** argv, const EnumTable*, BitSet32 )
+   void setData( void* dptr, S32 argc, const char** argv, const EnumTable*, BitSet32 ) override
    {
       SimObjectRef<T> *objRef = static_cast< SimObjectRef<T>* >( dptr );
 
@@ -154,23 +154,23 @@ public:
       *objRef = argv[0];
    }
 
-   virtual const bool isDatablock() 
+   const bool isDatablock() override 
    { 
       return T::__smIsDatablock; 
    };
 
-   virtual const char* getTypeClassName()
+   const char* getTypeClassName() override
    {
       return T::getStaticClassRep()->getClassName();
    }
       
-   virtual void* getNativeVariable() 
+   void* getNativeVariable() override 
    { 
       SimObjectRef<T> *var = new SimObjectRef<T>(); 
       return (void*)var; 
    }
    
-   virtual void deleteNativeVariable( void *var ) 
+   void deleteNativeVariable( void *var ) override 
    { 
       SimObjectRef<T> *nativeVar = reinterpret_cast< SimObjectRef<T>* >( var ); 
       delete nativeVar; 

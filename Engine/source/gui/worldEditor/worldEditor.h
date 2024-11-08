@@ -150,8 +150,8 @@ class WorldEditor : public EditTSCtrl
 
          Vector<Entry>  mEntries;
 
-         virtual void undo();
-         virtual void redo() { undo(); }
+         void undo() override;
+         void redo() override { undo(); }
       };
 
       void submitUndo( Selection* sel, const UTF8* label="World Editor Action" );
@@ -389,7 +389,7 @@ class WorldEditor : public EditTSCtrl
 
       S32 mCurrentCursor;
       void setCursor(U32 cursor);
-      void get3DCursor(GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event);
+      void get3DCursor(GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event) override;
 
    public:
 
@@ -399,23 +399,23 @@ class WorldEditor : public EditTSCtrl
       void setDirty() { mIsDirty = true; }
 
       // SimObject
-      virtual bool onAdd();
-      virtual void onEditorEnable();
+      bool onAdd() override;
+      void onEditorEnable() override;
 
       // EditTSCtrl
-      void on3DMouseMove(const Gui3DMouseEvent & event);
-      void on3DMouseDown(const Gui3DMouseEvent & event);
-      void on3DMouseUp(const Gui3DMouseEvent & event);
-      void on3DMouseDragged(const Gui3DMouseEvent & event);
-      void on3DMouseEnter(const Gui3DMouseEvent & event);
-      void on3DMouseLeave(const Gui3DMouseEvent & event);
-      void on3DRightMouseDown(const Gui3DMouseEvent & event);
-      void on3DRightMouseUp(const Gui3DMouseEvent & event);
+      void on3DMouseMove(const Gui3DMouseEvent & event) override;
+      void on3DMouseDown(const Gui3DMouseEvent & event) override;
+      void on3DMouseUp(const Gui3DMouseEvent & event) override;
+      void on3DMouseDragged(const Gui3DMouseEvent & event) override;
+      void on3DMouseEnter(const Gui3DMouseEvent & event) override;
+      void on3DMouseLeave(const Gui3DMouseEvent & event) override;
+      void on3DRightMouseDown(const Gui3DMouseEvent & event) override;
+      void on3DRightMouseUp(const Gui3DMouseEvent & event) override;
 
-      void updateGuiInfo();
+      void updateGuiInfo() override;
 
       //
-      void renderScene(const RectI & updateRect);
+      void renderScene(const RectI & updateRect) override;
 
       static void initPersistFields();
 

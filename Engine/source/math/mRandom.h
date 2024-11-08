@@ -89,11 +89,11 @@ public:
 
    static void setGlobalRandSeed(U32 seed);
 
-   void setSeed(S32 s);
+   void setSeed(S32 s) override;
 //   using MRandomGenerator::randI;
     S32 randI(S32 i, S32 n);            ///< i..n integer generator
 
-   U32 randI( void );
+   U32 randI( void ) override;
 
 };
 
@@ -126,9 +126,9 @@ public:
    MRandomR250(S32 s);
    virtual ~MRandomR250() {}
 
-   void setSeed(S32 s);
+   void setSeed(S32 s) override;
 // using MRandomGenerator::randI;
-   U32 randI();
+   U32 randI() override;
 };
 
 

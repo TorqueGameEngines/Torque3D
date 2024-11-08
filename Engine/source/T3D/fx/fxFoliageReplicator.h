@@ -246,16 +246,16 @@ public:
    void HideReplication(void);
 
    // SceneObject
-   virtual void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
 
    // SimObject
-   bool onAdd();
-   void onRemove();
-   void inspectPostApply();
+   bool onAdd() override;
+   void onRemove() override;
+   void inspectPostApply() override;
 
    // NetObject
-   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn, BitStream *stream);
+   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn, BitStream *stream) override;
 
    // Editor
    void onGhostAlwaysDone();

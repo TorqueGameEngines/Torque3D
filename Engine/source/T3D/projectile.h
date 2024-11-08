@@ -68,7 +68,7 @@ class ProjectileData : public GameBaseData
    typedef GameBaseData Parent;
 
 protected:
-   bool onAdd();
+   bool onAdd() override;
 
 public:
    DECLARE_SHAPEASSET(ProjectileData, ProjectileShape, onShapeChanged);
@@ -134,9 +134,9 @@ public:
 
    ProjectileData();
 
-   void packData(BitStream*);
-   void unpackData(BitStream*);
-   bool preload(bool server, String &errorStr);
+   void packData(BitStream*) override;
+   void unpackData(BitStream*) override;
+   bool preload(bool server, String &errorStr) override;
 
    static bool setLifetime( void *object, const char *index, const char *data );
    static bool setArmingDelay( void *object, const char *index, const char *data );
@@ -152,7 +152,7 @@ public:
    DECLARE_CALLBACK( void, onCollision, ( Projectile* proj, SceneObject* col, F32 fade, Point3F pos, Point3F normal ) );
 public:
    ProjectileData(const ProjectileData&, bool = false);
-   virtual bool allowSubstitutions() const { return true; }
+   bool allowSubstitutions() const override { return true; }
 
    void onShapeChanged() {}
 };
@@ -190,26 +190,26 @@ public:
    DECLARE_CATEGORY("UNLISTED");
 
    // SimObject
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
    static void initPersistFields();
 
    // NetObject
-   F32 getUpdatePriority(CameraScopeQuery *focusObject, U32 updateMask, S32 updateSkips);
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   F32 getUpdatePriority(CameraScopeQuery *focusObject, U32 updateMask, S32 updateSkips) override;
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 
    // SceneObject
-   Point3F getVelocity() const { return mCurrVelocity; }
-   void processTick( const Move *move );   
-   void advanceTime( F32 dt );
-   void interpolateTick( F32 delta );   
+   Point3F getVelocity() const override { return mCurrVelocity; }
+   void processTick( const Move *move ) override;   
+   void advanceTime( F32 dt ) override;
+   void interpolateTick( F32 delta ) override;   
 
    // GameBase
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );      
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;      
 
    // Rendering
-   void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
    void prepBatchRender( SceneRenderState *state );   
 
    /// Updates velocity and position, and performs collision testing.
@@ -269,8 +269,8 @@ protected:
    TSThread*        mMaintainThread;
 
    // ISceneLight
-   virtual void submitLights( LightManager *lm, bool staticLighting );
-   virtual LightInfo* getLight() { return mLight; }
+   void submitLights( LightManager *lm, bool staticLighting ) override;
+   LightInfo* getLight() override { return mLight; }
    
    LightInfo *mLight;
    LightState mLightState;   

@@ -48,10 +48,12 @@ ConsoleDocClass( ShaderData,
 	"// Used for the procedural clould system\n"
 	"singleton ShaderData( CloudLayerShader )\n"
 	"{\n"
-   "	DXVertexShaderFile   = $Core::CommonShaderPath @ \"/cloudLayerV.hlsl\";\n"
-   "	DXPixelShaderFile    = $Core::CommonShaderPath @ \"/cloudLayerP.hlsl\";\n"
-   "	OGLVertexShaderFile = $Core::CommonShaderPath @ \"/gl/cloudLayerV.glsl\";\n"
-   "	OGLPixelShaderFile = $Core::CommonShaderPath @ \"/gl/cloudLayerP.glsl\";\n"
+   "	DXVertexShaderFile      = $Core::CommonShaderPath @ \"/cloudLayerV.hlsl\";\n"
+   "	DXPixelShaderFile       = $Core::CommonShaderPath @ \"/cloudLayerP.hlsl\";\n"
+   "	DXGeometryShaderFile    = $Core::CommonShaderPath @ \"/cloudLayerG.hlsl\";\n"
+   "	OGLVertexShaderFile     = $Core::CommonShaderPath @ \"/gl/cloudLayerV.glsl\";\n"
+   "	OGLPixelShaderFile      = $Core::CommonShaderPath @ \"/gl/cloudLayerP.glsl\";\n"
+   "	OGLGeometryShaderFile   = $Core::CommonShaderPath @ \"/gl/cloudLayerG.glsl\";\n"
 	"	pixVersion = 2.0;\n"
 	"};\n"
 	"@endtsexample\n\n"
@@ -67,70 +69,87 @@ ShaderData::ShaderData()
 
    for( int i = 0; i < NumTextures; ++i)
       mRTParams[i] = false;
+
+   mDXVertexShaderName = StringTable->EmptyString();
+   mDXPixelShaderName = StringTable->EmptyString();
+   mDXGeometryShaderName = StringTable->EmptyString();
+
+   mOGLVertexShaderName = StringTable->EmptyString();
+   mOGLPixelShaderName = StringTable->EmptyString();
+   mOGLGeometryShaderName = StringTable->EmptyString();
 }
 
 void ShaderData::initPersistFields()
 {
    docsURL;
-   addField("DXVertexShaderFile",   TypeStringFilename,  Offset(mDXVertexShaderName,   ShaderData),
-	   "@brief %Path to the DirectX vertex shader file to use for this ShaderData.\n\n"
-	   "It must contain only one program and no pixel shader, just the vertex shader."
-	   "It can be either an HLSL or assembly level shader. HLSL's must have a "
-	   "filename extension of .hlsl, otherwise its assumed to be an assembly file.");
+   addField("DXVertexShaderFile", TypeStringFilename, Offset(mDXVertexShaderName, ShaderData),
+      "@brief %Path to the DirectX vertex shader file to use for this ShaderData.\n\n"
+      "It must contain only one program and no pixel shader, just the vertex shader."
+      "It can be either an HLSL or assembly level shader. HLSL's must have a "
+      "filename extension of .hlsl, otherwise its assumed to be an assembly file.");
 
-   addField("DXPixelShaderFile",    TypeStringFilename,  Offset(mDXPixelShaderName,  ShaderData),
-	   "@brief %Path to the DirectX pixel shader file to use for this ShaderData.\n\n"
-	   "It must contain only one program and no vertex shader, just the pixel "
-	   "shader. It can be either an HLSL or assembly level shader. HLSL's "
-	   "must have a filename extension of .hlsl, otherwise its assumed to be an assembly file.");
+   addField("DXPixelShaderFile", TypeStringFilename, Offset(mDXPixelShaderName, ShaderData),
+      "@brief %Path to the DirectX pixel shader file to use for this ShaderData.\n\n"
+      "It must contain only one program and no vertex shader, just the pixel "
+      "shader. It can be either an HLSL or assembly level shader. HLSL's "
+      "must have a filename extension of .hlsl, otherwise its assumed to be an assembly file.");
 
-   addField("OGLVertexShaderFile",  TypeStringFilename,  Offset(mOGLVertexShaderName,   ShaderData),
-	   "@brief %Path to an OpenGL vertex shader file to use for this ShaderData.\n\n"
-	   "It must contain only one program and no pixel shader, just the vertex shader.");
+   addField("DXGeometryShaderFile", TypeStringFilename, Offset(mDXGeometryShaderName, ShaderData),
+      "@brief %Path to the DirectX geometry shader file to use for this ShaderData.\n\n"
+      "It can be either an HLSL or assembly level shader. HLSL's must have a "
+      "filename extension of .hlsl, otherwise its assumed to be an assembly file.");
 
-   addField("OGLPixelShaderFile",   TypeStringFilename,  Offset(mOGLPixelShaderName,  ShaderData),
-	   "@brief %Path to an OpenGL pixel shader file to use for this ShaderData.\n\n"
-	   "It must contain only one program and no vertex shader, just the pixel "
-	   "shader.");
+   addField("OGLVertexShaderFile", TypeStringFilename, Offset(mOGLVertexShaderName, ShaderData),
+      "@brief %Path to an OpenGL vertex shader file to use for this ShaderData.\n\n"
+      "It must contain only one program and no pixel shader, just the vertex shader.");
 
-   addField("useDevicePixVersion",  TypeBool,            Offset(mUseDevicePixVersion,   ShaderData),
-	   "@brief If true, the maximum pixel shader version offered by the graphics card will be used.\n\n"
-	   "Otherwise, the script-defined pixel shader version will be used.\n\n");
+   addField("OGLPixelShaderFile", TypeStringFilename, Offset(mOGLPixelShaderName, ShaderData),
+      "@brief %Path to an OpenGL pixel shader file to use for this ShaderData.\n\n"
+      "It must contain only one program and no vertex shader, just the pixel "
+      "shader.");
 
-   addField("pixVersion",           TypeF32,             Offset(mPixVersion,   ShaderData),
-	   "@brief Indicates target level the shader should be compiled.\n\n"
-	   "Valid numbers at the time of this writing are 1.1, 1.4, 2.0, and 3.0. "
-	   "The shader will not run properly if the hardware does not support the "
-	   "level of shader compiled.");
-   
-   addField("defines",              TypeRealString,      Offset(mDefines,   ShaderData), 
-	   "@brief String of case-sensitive defines passed to the shader compiler.\n\n"
+   addField("OGLGeometryShaderFile", TypeStringFilename, Offset(mOGLGeometryShaderName, ShaderData),
+      "@brief %Path to the OpenGL Geometry shader file to use for this ShaderData.\n\n");
+
+   addField("useDevicePixVersion", TypeBool, Offset(mUseDevicePixVersion, ShaderData),
+      "@brief If true, the maximum pixel shader version offered by the graphics card will be used.\n\n"
+      "Otherwise, the script-defined pixel shader version will be used.\n\n");
+
+   addField("pixVersion", TypeF32, Offset(mPixVersion, ShaderData),
+      "@brief Indicates target level the shader should be compiled.\n\n"
+      "Valid numbers at the time of this writing are 1.1, 1.4, 2.0, and 3.0. "
+      "The shader will not run properly if the hardware does not support the "
+      "level of shader compiled.");
+
+   addField("defines", TypeRealString, Offset(mDefines, ShaderData),
+      "@brief String of case-sensitive defines passed to the shader compiler.\n\n"
       "The string should be delimited by a semicolon, tab, or newline character."
-      
+
       "@tsexample\n"
-       "singleton ShaderData( FlashShader )\n"
-          "{\n"
-              "DXVertexShaderFile 	= $shaderGen::cachePath @ \"/postFx/flashV.hlsl\";\n"
-              "DXPixelShaderFile 	= $shaderGen::cachePath @ \"/postFx/flashP.hlsl\";\n\n"
-              " //Define setting the color of WHITE_COLOR.\n"
-              "defines = \"WHITE_COLOR=float4(1.0,1.0,1.0,0.0)\";\n\n"
-              "pixVersion = 2.0\n"
-          "}\n"
+      "singleton ShaderData( FlashShader )\n"
+      "{\n"
+      "DXVertexShaderFile 	   = $shaderGen::cachePath @ \"/postFx/flashV.hlsl\";\n"
+      "DXPixelShaderFile 	   = $shaderGen::cachePath @ \"/postFx/flashP.hlsl\";\n\n"
+      "DXGeometryShaderFile   = $shaderGen::cachePath @ \"/postFx/flashG.hlsl\";\n\n"
+      " //Define setting the color of WHITE_COLOR.\n"
+      "defines = \"WHITE_COLOR=float4(1.0,1.0,1.0,0.0)\";\n\n"
+      "pixVersion = 2.0\n"
+      "}\n"
       "@endtsexample\n\n"
-      );
+   );
 
-   addField("samplerNames",              TypeRealString,      Offset(mSamplerNames,   ShaderData), NumTextures, 
+   addField("samplerNames", TypeRealString, Offset(mSamplerNames, ShaderData), NumTextures,
       "@brief Indicates names of samplers present in shader. Order is important.\n\n"
-	   "Order of sampler names are used to assert correct sampler register/location"
+      "Order of sampler names are used to assert correct sampler register/location"
       "Other objects (GFXStateBlockData, PostEffect...) use index number to link samplers."
-      );
+   );
 
-   addField("rtParams",              TypeBool,      Offset(mRTParams,   ShaderData), NumTextures, "");
+   addField("rtParams", TypeBool, Offset(mRTParams, ShaderData), NumTextures, "");
 
    Parent::initPersistFields();
 
    // Make sure we get activation signals.
-   LightManager::smActivateSignal.notify( &ShaderData::_onLMActivate );
+   LightManager::smActivateSignal.notify(&ShaderData::_onLMActivate);
 }
 
 bool ShaderData::onAdd()
@@ -147,8 +166,8 @@ bool ShaderData::onAdd()
 
    for(int i = 0; i < NumTextures; ++i)
    {
-      if( mSamplerNames[i].isNotEmpty() && !mSamplerNames[i].startsWith("$") )      
-         mSamplerNames[i].insert(0, "$");      
+      if( mSamplerNames[i].isNotEmpty() && !mSamplerNames[i].startsWith("$") )
+         mSamplerNames[i].insert(0, "$");
    }
 
    return true;
@@ -164,12 +183,12 @@ void ShaderData::onRemove()
 
 const Vector<GFXShaderMacro>& ShaderData::_getMacros()
 {
-   // If they have already been processed then 
+   // If they have already been processed then
    // return the cached result.
    if ( mShaderMacros.size() != 0 || mDefines.isEmpty() )
       return mShaderMacros;
 
-   mShaderMacros.clear();  
+   mShaderMacros.clear();
    GFXShaderMacro macro;
    const U32 defineCount = StringUnit::getUnitCount( mDefines, ";\n\t" );
    for ( U32 i=0; i < defineCount; i++ )
@@ -195,7 +214,7 @@ GFXShader* ShaderData::getShader( const Vector<GFXShaderMacro> &macros )
 
    // Convert the final macro list to a string.
    String cacheKey;
-   GFXShaderMacro::stringize( macros, &cacheKey );   
+   GFXShaderMacro::stringize( macros, &cacheKey );
 
    // Lookup the shader for this instance.
    ShaderCache::Iterator iter = mShaders.find( cacheKey );
@@ -237,9 +256,13 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
    {
       case Direct3D11:
       {
-         success = shader->init( mDXVertexShaderName, 
-                                 mDXPixelShaderName, 
-                                 pixver,
+         if (mDXVertexShaderName != String::EmptyString)
+            shader->setShaderStageFile(GFXShaderStage::VERTEX_SHADER, mDXVertexShaderName);
+         if (mDXPixelShaderName != String::EmptyString)
+            shader->setShaderStageFile(GFXShaderStage::PIXEL_SHADER, mDXPixelShaderName);
+         if (mDXGeometryShaderName != String::EmptyString)
+            shader->setShaderStageFile(GFXShaderStage::GEOMETRY_SHADER, mDXGeometryShaderName);
+         success = shader->init( pixver,
                                  macros,
                                  samplers);
          break;
@@ -247,14 +270,19 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
 
       case OpenGL:
       {
-         success = shader->init( mOGLVertexShaderName,
-                                 mOGLPixelShaderName,
-                                 pixver,
+         if(mOGLVertexShaderName != String::EmptyString)
+            shader->setShaderStageFile(GFXShaderStage::VERTEX_SHADER, mOGLVertexShaderName);
+         if (mOGLPixelShaderName != String::EmptyString)
+            shader->setShaderStageFile(GFXShaderStage::PIXEL_SHADER, mOGLPixelShaderName);
+         if (mOGLGeometryShaderName != String::EmptyString)
+            shader->setShaderStageFile(GFXShaderStage::GEOMETRY_SHADER, mOGLGeometryShaderName);
+
+         success = shader->init( pixver,
                                  macros,
                                  samplers);
          break;
       }
-         
+
       default:
          // Other device types are assumed to not support shaders.
          success = false;
@@ -268,7 +296,7 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
    {
       if(descs[i].constType != GFXSCT_Sampler && descs[i].constType != GFXSCT_SamplerCube)
          continue;
-      
+
       GFXShaderConstHandle *handle = shader->findShaderConstHandle(descs[i].name);
       if(!handle || !handle->isValid())
          continue;
@@ -321,7 +349,7 @@ void ShaderData::_onLMActivate( const char *lm, bool activate )
 
 bool ShaderData::hasSamplerDef(const String &_samplerName, int &pos) const
 {
-   String samplerName = _samplerName.startsWith("$") ? _samplerName : "$"+_samplerName;   
+   String samplerName = _samplerName.startsWith("$") ? _samplerName : "$"+_samplerName;
    for(int i = 0; i < NumTextures; ++i)
    {
       if( mSamplerNames[i].equal(samplerName, String::NoCase ) )
@@ -342,9 +370,9 @@ bool ShaderData::_checkDefinition(GFXShader *shader)
    samplers.reserve(NumTextures);
    bool rtParams[NumTextures];
    for(int i = 0; i < NumTextures; ++i)
-      rtParams[i] = false;   
+      rtParams[i] = false;
 
-   const Vector<GFXShaderConstDesc> &shaderConstDesc = shader->getShaderConstDesc(); 
+   const Vector<GFXShaderConstDesc> &shaderConstDesc = shader->getShaderConstDesc();
 
    for(int i = 0; i < shaderConstDesc.size(); ++i)
    {
@@ -352,7 +380,7 @@ bool ShaderData::_checkDefinition(GFXShader *shader)
       if(desc.constType == GFXSCT_Sampler)
       {
          samplers.push_back(desc.name );
-      }      
+      }
    }
 
    for(int i = 0; i < samplers.size(); ++i)
@@ -361,14 +389,14 @@ bool ShaderData::_checkDefinition(GFXShader *shader)
       bool find = hasSamplerDef(samplers[i], pos);
 
       if(find && pos >= 0 && mRTParams[pos])
-      {              
+      {
          if( !shader->findShaderConstHandle( String::ToString("$rtParams%d", pos)) )
          {
             String errStr = String::ToString("ShaderData(%s) sampler[%d] used but rtParams%d not used in shader compilation. Possible error", shader->getPixelShaderFile().c_str(), pos, pos);
             Con::errorf(errStr);
             error = true;
          }
-      }     
+      }
 
       if(!find)
       {
@@ -377,7 +405,7 @@ bool ShaderData::_checkDefinition(GFXShader *shader)
          GFXAssertFatal(0, errStr);
          error = true;
       }
-   }  
+   }
 
    return !error;
 }

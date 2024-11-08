@@ -60,7 +60,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(ScriptAsset);
@@ -77,9 +77,9 @@ public:
    DECLARE_CALLBACK(void, onUnloadAsset, ());
 
 protected:
-   virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void);
-   virtual void            unloadAsset(void);
+   void            initializeAsset(void) override;
+   void            onAssetRefresh(void) override;
+   void            unloadAsset(void) override;
 
    static bool setScriptFile(void *obj, const char *index, const char *data) { static_cast<ScriptAsset*>(obj)->setScriptFile(data); return false; }
    static const char* getScriptFile(void* obj, const char* data) { return static_cast<ScriptAsset*>(obj)->getScriptFile(); }

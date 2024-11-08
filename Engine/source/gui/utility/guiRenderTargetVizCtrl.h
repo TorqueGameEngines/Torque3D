@@ -49,8 +49,8 @@ class GuiRenderTargetVizCtrl : public GuiControl
 public:
    DECLARE_CONOBJECT(GuiRenderTargetVizCtrl);
    GuiRenderTargetVizCtrl();
-   bool onWake();
-   void onRender(Point2I offset, const RectI &updateRect);
+   bool onWake() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
    static void initPersistFields();
 };

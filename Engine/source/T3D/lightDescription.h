@@ -82,14 +82,14 @@ public:
    DECLARE_CONOBJECT( LightDescription );
 
    static void initPersistFields();
-   virtual void inspectPostApply();
+   void inspectPostApply() override;
    
-   bool onAdd();
+   bool onAdd() override;
 
    // SimDataBlock
-   virtual bool preload( bool server, String &errorStr );
-   virtual void packData( BitStream *stream );
-   virtual void unpackData( BitStream *stream );
+   bool preload( bool server, String &errorStr ) override;
+   void packData( BitStream *stream ) override;
+   void unpackData( BitStream *stream ) override;
    
    //void animateLight( LightState *state );
    void submitLight( LightState *state, const MatrixF &xfm, LightManager *lm, SimObject *object );

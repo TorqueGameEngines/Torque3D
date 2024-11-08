@@ -36,7 +36,7 @@ class HoverVehicleData : public VehicleData
    typedef VehicleData Parent;
 
   protected:
-   bool onAdd();
+   bool onAdd() override;
 
    //-------------------------------------- Console set variables
   public:
@@ -112,9 +112,9 @@ class HoverVehicleData : public VehicleData
    HoverVehicleData();
    ~HoverVehicleData();
 
-   void packData(BitStream*);
-   void unpackData(BitStream*);
-   bool preload(bool server, String &errorStr);
+   void packData(BitStream*) override;
+   void unpackData(BitStream*) override;
+   bool preload(bool server, String &errorStr) override;
 
    DECLARE_CONOBJECT(HoverVehicleData);
    static void initPersistFields();
@@ -131,18 +131,18 @@ class HoverVehicle : public Vehicle
    SimObjectPtr<ParticleEmitter> mDustTrailEmitter;
 
   protected:
-   bool onAdd();
-   void onRemove();
-   bool onNewDataBlock(GameBaseData *dptr,bool reload);
+   bool onAdd() override;
+   void onRemove() override;
+   bool onNewDataBlock(GameBaseData *dptr,bool reload) override;
    void updateDustTrail( F32 dt );
 
    // Vehicle overrides
   protected:
-   void updateMove(const Move *move);
+   void updateMove(const Move *move) override;
 
    // Physics
   protected:
-   void updateForces(F32);
+   void updateForces(F32) override;
    F32 getBaseStabilizerLength() const;
 
    bool mFloating;
@@ -188,7 +188,7 @@ class HoverVehicle : public Vehicle
    static JetActivation sJetActivation[NumThrustDirections];
    SimObjectPtr<ParticleEmitter> mJetEmitter[HoverVehicleData::MaxJetNodes];
 
-   U32 getCollisionMask();
+   U32 getCollisionMask() override;
    void updateJet(F32 dt);
    void updateEmitter(bool active,F32 dt,ParticleEmitterData *emitter,S32 idx,S32 count);
   public:
@@ -197,14 +197,14 @@ class HoverVehicle : public Vehicle
 
    // Time/Move Management
   public:
-   void advanceTime(F32 dt);
+   void advanceTime(F32 dt) override;
 
    DECLARE_CONOBJECT(HoverVehicle);
    DECLARE_CATEGORY("Actor \t Controllable");
 //   static void initPersistFields();
 
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 };
 
 #endif // _H_HOVERVEHICLE

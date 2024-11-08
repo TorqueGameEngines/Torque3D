@@ -46,11 +46,11 @@ public:
   /*C*/         afxXM_AltitudeConformData();
   /*C*/         afxXM_AltitudeConformData(const afxXM_AltitudeConformData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_AltitudeConformData);
 };
@@ -70,7 +70,7 @@ class afxXM_AltitudeConform : public afxXM_WeightedBase
 public:
   /*C*/         afxXM_AltitudeConform(afxXM_AltitudeConformData*, afxEffectWrapper*, bool on_server);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

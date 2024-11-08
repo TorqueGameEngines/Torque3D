@@ -43,10 +43,10 @@ public:
     virtual ~TamlXmlParser() {}
 
     /// Whether the parser can change a property or not.
-    virtual bool canChangeProperty( void ) { return true; }
+    bool canChangeProperty( void ) override { return true; }
 
     /// Accept visitor.
-    virtual bool accept( const char* pFilename, TamlVisitor& visitor );
+    bool accept( const char* pFilename, TamlVisitor& visitor ) override;
 
 private:
     inline bool parseElement( tinyxml2::XMLElement* pXmlElement, TamlVisitor& visitor );

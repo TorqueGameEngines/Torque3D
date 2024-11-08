@@ -53,8 +53,8 @@ public:
 
    DECLARE_CONOBJECT(EditorTool);
 
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    //Called when the tool is activated on the World Editor
    virtual void onActivated(WorldEditor*);

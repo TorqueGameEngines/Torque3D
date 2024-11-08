@@ -1,31 +1,9 @@
 singleton GFXStateBlockData( Viz_DefaultVisualizeState )
 {
-   /*alphaDefined = true;
-   alphaTestEnable = true;
-   alphaTestRef = 1;
-   alphaTestFunc = GFXCmpGreaterEqual;
-         
-   // Do a one to one blend.
-   blendDefined = true;
-   blendEnable = true;
+   blendDefined = false;
+   blendEnable = false;
    blendSrc = GFXBlendOne;
-   blendDest = GFXBlendOne;
-   
-   zDefined = true;
-   zEnable = false;
-   zWriteEnable = false;
-   
-   samplersDefined = true;
-   samplerStates[0] = SamplerClampPoint;
-   samplerStates[1] = SamplerClampPoint;
-   samplerStates[2] = SamplerClampPoint;
-   samplerStates[3] = SamplerClampPoint;
-   samplerStates[4] = SamplerClampLinear;
-   samplerStates[5] = SamplerClampLinear;*/
-   blendDefined = true;
-   blendEnable = true;
-   blendSrc = GFXBlendSrcAlpha;
-   blendDest = GFXBlendInvSrcAlpha;
+   blendDest = GFXBlendZero;
    
    zDefined = true;
    zEnable = false;
@@ -36,7 +14,6 @@ singleton GFXStateBlockData( Viz_DefaultVisualizeState )
    samplerStates[1] = SamplerClampPoint;
    samplerStates[2] = SamplerClampPoint;
    samplerStates[3] = SamplerClampLinear;  // depthviz
-   samplerStates[4] = SamplerClampLinear;  // depthviz
 };
 
 singleton shaderData( Viz_TexelDensity )
@@ -92,7 +69,6 @@ singleton shaderData( Viz_SurfaceProperties )
    samplerNames[2] = "$matInfoBuffer";
    samplerNames[3] = "$ssaoMaskTex";
    samplerNames[4] = "$backbufferTex";
-   samplerNames[5] = "$glowBuffer";
 
    pixVersion = 2.0;
 };
@@ -106,7 +82,6 @@ singleton PostEffect( Viz_SurfacePropertiesPFX )
    texture[2] = "#matinfo";
    texture[3] = "#ssaoMask";
    texture[4] = "$backBuffer";
-   texture[5] = "#glowbuffer";
    
    target = "$backBuffer";
    renderPriority = 9999;
@@ -186,8 +161,6 @@ function toggleSurfacePropertiesViz( %mode )
          $Viz_SurfacePropertiesModeVar = "12";
       case "Backbuffer":
          $Viz_SurfacePropertiesModeVar = "13";
-      case "Glow":
-         $Viz_SurfacePropertiesModeVar = "14";
       default:
          $Viz_SurfacePropertiesModeVar = "-1";
    }
@@ -269,8 +242,8 @@ singleton PostEffect( Viz_ColorBlindnessPFX )
 {   
    isEnabled         = false;
    allowReflectPass  = false;
-   renderTime        = "PFXAfterBin";
-   renderBin         = "GlowBin";
+   renderTime        = "PFXBeforeBin";
+   renderBin         = "EditorBin";
    
    shader = Viz_ColorBlindness;
    stateBlock = PFX_DefaultStateBlock;

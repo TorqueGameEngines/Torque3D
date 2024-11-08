@@ -58,30 +58,30 @@ class ForestEditorCtrl : public EditTSCtrl
       DECLARE_CONOBJECT( ForestEditorCtrl );
 
       // SimObject
-      bool onAdd();
+      bool onAdd() override;
       static void initPersistFields();
 
       // GuiControl
-      virtual bool onWake();
-      virtual void onSleep();      
-      virtual void onMouseUp( const GuiEvent &event_ );
+      bool onWake() override;
+      void onSleep() override;      
+      void onMouseUp( const GuiEvent &event_ ) override;
 
       // EditTSCtrl      
-      void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ );
-      void on3DMouseDown( const Gui3DMouseEvent &event_ );
-      void on3DMouseUp( const Gui3DMouseEvent &event_ );
-      void on3DMouseMove( const Gui3DMouseEvent &event_ );
-      void on3DMouseDragged( const Gui3DMouseEvent &event_ );
-      void on3DMouseEnter( const Gui3DMouseEvent &event_ );
-      void on3DMouseLeave( const Gui3DMouseEvent &event_ );
-      void on3DRightMouseDown( const Gui3DMouseEvent &event_ );
-      void on3DRightMouseUp( const Gui3DMouseEvent &event_ );
-      bool onMouseWheelUp(const GuiEvent &event_);
-      bool onMouseWheelDown(const GuiEvent &event_);
-      void updateGuiInfo();      
-      void updateGizmo();
-      void renderScene( const RectI &updateRect );
-      void renderGui( Point2I offset, const RectI &updateRect );
+      void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ ) override;
+      void on3DMouseDown( const Gui3DMouseEvent &event_ ) override;
+      void on3DMouseUp( const Gui3DMouseEvent &event_ ) override;
+      void on3DMouseMove( const Gui3DMouseEvent &event_ ) override;
+      void on3DMouseDragged( const Gui3DMouseEvent &event_ ) override;
+      void on3DMouseEnter( const Gui3DMouseEvent &event_ ) override;
+      void on3DMouseLeave( const Gui3DMouseEvent &event_ ) override;
+      void on3DRightMouseDown( const Gui3DMouseEvent &event_ ) override;
+      void on3DRightMouseUp( const Gui3DMouseEvent &event_ ) override;
+      bool onMouseWheelUp(const GuiEvent &event_) override;
+      bool onMouseWheelDown(const GuiEvent &event_) override;
+      void updateGuiInfo() override;      
+      void updateGizmo() override;
+      void renderScene( const RectI &updateRect ) override;
+      void renderGui( Point2I offset, const RectI &updateRect ) override;
 
       /// Causes the editor to reselect the active forest.
       bool updateActiveForest( bool createNew );

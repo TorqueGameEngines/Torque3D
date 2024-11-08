@@ -79,12 +79,12 @@ class SFXALVoice : public SFXVoice
       void _lateBindStaticBufferIfNecessary();
 
       // SFXVoice.
-      virtual SFXStatus _status() const;
-      virtual void _play();
-      virtual void _pause();
-      virtual void _stop();
-      virtual void _seek( U32 sample );
-      virtual U32 _tell() const;
+      SFXStatus _status() const override;
+      void _play() override;
+      void _pause() override;
+      void _stop() override;
+      void _seek( U32 sample ) override;
+      U32 _tell() const override;
 
    public:
 
@@ -94,14 +94,14 @@ class SFXALVoice : public SFXVoice
       virtual ~SFXALVoice();
 
       /// SFXVoice
-      void setMinMaxDistance( F32 min, F32 max );
-      void play( bool looping );
-      void setVelocity( const VectorF& velocity );
-      void setTransform( const MatrixF& transform );
-      void setVolume( F32 volume );
-      void setPitch( F32 pitch );
-      void setCone( F32 innerAngle, F32 outerAngle, F32 outerVolume );
-      void setRolloffFactor( F32 factor );
+      void setMinMaxDistance( F32 min, F32 max ) override;
+      void play( bool looping ) override;
+      void setVelocity( const VectorF& velocity ) override;
+      void setTransform( const MatrixF& transform ) override;
+      void setVolume( F32 volume ) override;
+      void setPitch( F32 pitch ) override;
+      void setCone( F32 innerAngle, F32 outerAngle, F32 outerVolume ) override;
+      void setRolloffFactor( F32 factor ) override;
 };
 
 #endif // _SFXALVOICE_H_

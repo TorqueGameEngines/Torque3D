@@ -280,8 +280,8 @@ public:
    PersistenceManager();
    virtual ~PersistenceManager();
 
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    // Adds an object to the dirty list
    // Optionally changes the object's filename

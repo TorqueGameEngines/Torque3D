@@ -47,15 +47,15 @@ public:
 class afxHermiteEval : public afxCurveEval
 {
 public:
-  Point2F evaluateCurve(Point2F& v0, Point2F& v1, F32 t);
-  Point2F evaluateCurve(Point2F& v0, Point2F& v1, Point2F& t0, Point2F& t1, F32 t);
-  Point2F evaluateCurveTangent(Point2F& v0, Point2F& v1, F32 t);
-  Point2F evaluateCurveTangent(Point2F& v0, Point2F& v1, Point2F& t0, Point2F& t1, F32 t);
+  Point2F evaluateCurve(Point2F& v0, Point2F& v1, F32 t) override;
+  Point2F evaluateCurve(Point2F& v0, Point2F& v1, Point2F& t0, Point2F& t1, F32 t) override;
+  Point2F evaluateCurveTangent(Point2F& v0, Point2F& v1, F32 t) override;
+  Point2F evaluateCurveTangent(Point2F& v0, Point2F& v1, Point2F& t0, Point2F& t1, F32 t) override;
   
-  Point3F evaluateCurve(Point3F& v0, Point3F& v1, F32 t);
-  Point3F evaluateCurve(Point3F& v0, Point3F& v1, Point3F& t0, Point3F& t1, F32 t);
-  Point3F evaluateCurveTangent(Point3F& v0, Point3F& v1, F32 t);
-  Point3F evaluateCurveTangent(Point3F& v0, Point3F& v1, Point3F& t0, Point3F& t1, F32 t);
+  Point3F evaluateCurve(Point3F& v0, Point3F& v1, F32 t) override;
+  Point3F evaluateCurve(Point3F& v0, Point3F& v1, Point3F& t0, Point3F& t1, F32 t) override;
+  Point3F evaluateCurveTangent(Point3F& v0, Point3F& v1, F32 t) override;
+  Point3F evaluateCurveTangent(Point3F& v0, Point3F& v1, Point3F& t0, Point3F& t1, F32 t) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

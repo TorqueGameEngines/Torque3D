@@ -432,8 +432,8 @@ public:
    AssetImportConfig();
    virtual ~AssetImportConfig();
 
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    /// Engine.
    static void initPersistFields();
@@ -571,8 +571,8 @@ public:
    AssetImportObject();
    virtual ~AssetImportObject();
 
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    /// Engine.
    static void initPersistFields();
@@ -663,8 +663,8 @@ public:
    AssetImporter();
    virtual ~AssetImporter();
 
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    /// Engine.
    static void initPersistFields();

@@ -59,7 +59,7 @@ class GuiConsole : public GuiArrayCtrl
       /// @}
 
       // GuiArrayCtrl.
-      virtual void onCellSelected( Point2I cell );
+      void onCellSelected( Point2I cell ) override;
 
    public:
       GuiConsole();
@@ -68,9 +68,9 @@ class GuiConsole : public GuiArrayCtrl
       DECLARE_DESCRIPTION( "Control that displays the console log text." );
 
       // GuiArrayCtrl.
-      virtual bool onWake();
-      virtual void onPreRender();
-      virtual void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver);
+      bool onWake() override;
+      void onPreRender() override;
+      void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver) override;
 
       void setDisplayFilters(bool errors, bool warns, bool normal);
       bool getErrorFilter() { return mDisplayErrors; }

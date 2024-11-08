@@ -59,27 +59,27 @@ class GuiRoadEditorCtrl : public EditTSCtrl
       DECLARE_CONOBJECT(GuiRoadEditorCtrl);
 
       // SimObject
-      bool onAdd();
+      bool onAdd() override;
       static void initPersistFields();
 
       // GuiControl
-      virtual void onSleep();
-      virtual void onRender(Point2I offset, const RectI &updateRect);
+      void onSleep() override;
+      void onRender(Point2I offset, const RectI &updateRect) override;
 
       // EditTSCtrl      
-		bool onKeyDown(const GuiEvent& event);
-      void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ );
-      void on3DMouseDown(const Gui3DMouseEvent & event);
-      void on3DMouseUp(const Gui3DMouseEvent & event);
-      void on3DMouseMove(const Gui3DMouseEvent & event);
-      void on3DMouseDragged(const Gui3DMouseEvent & event);
-      void on3DMouseEnter(const Gui3DMouseEvent & event);
-      void on3DMouseLeave(const Gui3DMouseEvent & event);
-      void on3DRightMouseDown(const Gui3DMouseEvent & event);
-      void on3DRightMouseUp(const Gui3DMouseEvent & event);
-      void updateGuiInfo();      
-      void renderScene(const RectI & updateRect);
-      void renderGui(Point2I offset, const RectI &updateRect);
+		bool onKeyDown(const GuiEvent& event) override;
+      void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ ) override;
+      void on3DMouseDown(const Gui3DMouseEvent & event) override;
+      void on3DMouseUp(const Gui3DMouseEvent & event) override;
+      void on3DMouseMove(const Gui3DMouseEvent & event) override;
+      void on3DMouseDragged(const Gui3DMouseEvent & event) override;
+      void on3DMouseEnter(const Gui3DMouseEvent & event) override;
+      void on3DMouseLeave(const Gui3DMouseEvent & event) override;
+      void on3DRightMouseDown(const Gui3DMouseEvent & event) override;
+      void on3DRightMouseUp(const Gui3DMouseEvent & event) override;
+      void updateGuiInfo() override;      
+      void renderScene(const RectI & updateRect) override;
+      void renderGui(Point2I offset, const RectI &updateRect) override;
 
       bool getTerrainPos( const Gui3DMouseEvent & event, Point3F &tpos );
       void deleteSelectedNode();
@@ -165,8 +165,8 @@ class GuiRoadEditorUndoAction : public UndoAction
       U32 mSegmentsPerBatch;
       F32 mTextureLength;
 
-      virtual void undo();
-      virtual void redo() { undo(); }
+      void undo() override;
+      void redo() override { undo(); }
 };
 
 #endif

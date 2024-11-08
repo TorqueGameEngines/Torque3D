@@ -108,16 +108,16 @@ public:
   /*C*/             afxZodiacData();
   /*C*/             afxZodiacData(const afxZodiacData&, bool = false);
 
-  virtual bool      onAdd();
-  virtual void      packData(BitStream*);
-  virtual void      unpackData(BitStream*);
+  bool      onAdd() override;
+  void      packData(BitStream*) override;
+  void      unpackData(BitStream*) override;
 
-  bool              preload(bool server, String &errorStr);
+  bool              preload(bool server, String &errorStr) override;
 
-  virtual void      onStaticModified(const char* slotName, const char* newValue = NULL);
+  void      onStaticModified(const char* slotName, const char* newValue = NULL) override;
 
-  virtual void      onPerformSubstitutions();
-  virtual bool      allowSubstitutions() const { return true; }
+  void      onPerformSubstitutions() override;
+  bool      allowSubstitutions() const override { return true; }
 
   F32               calcRotationAngle(F32 elapsed, F32 rate_factor=1.0f);
 

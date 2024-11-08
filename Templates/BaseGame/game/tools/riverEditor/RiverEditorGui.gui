@@ -71,7 +71,7 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "::  River Editor - Rivers";
+      text = ":: River Editor - Rivers";
       
       /*
       new GuiBitmapButtonCtrl() {
@@ -316,7 +316,7 @@ $guiContent = new GuiRiverEditorCtrl(RiverEditorGui, EditorGuiGroup) {
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "::  River Editor - Properties";
+      text = ":: River Editor - Properties";
       
       new GuiContainer(RiverEditorOptionsPanel){ //Node Properties
          isContainer = "1";

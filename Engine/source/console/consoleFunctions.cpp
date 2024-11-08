@@ -2803,14 +2803,14 @@ DefineEngineFunction(getTimestamp, const char*, (), ,
    return returnBuffer;
 }
 
-#ifdef TORQUE_TOOLS
+#ifdef TORQUE_TOOLS_EXT_COMMANDS
 DefineEngineFunction(systemCommand, S32, (const char* commandLineAction, const char* callBackFunction), (""), "")
 {
-   if (commandLineAction != "")
+   if (commandLineAction && commandLineAction[0] != '\0')
    {
       S32 result = system(commandLineAction);
 
-      if (callBackFunction != "" && callBackFunction[0])
+      if (callBackFunction && callBackFunction[0] != '\0')
       {
          if (Con::isFunction(callBackFunction))
             Con::executef(callBackFunction, result);
@@ -2819,7 +2819,9 @@ DefineEngineFunction(systemCommand, S32, (const char* commandLineAction, const c
 
    return -1;
 }
+#endif
 
+#ifdef TORQUE_TOOLS
 const char* getDocsLink(const char* filename, U32 lineNumber)
 {
    Vector<String> fileStringSplit;

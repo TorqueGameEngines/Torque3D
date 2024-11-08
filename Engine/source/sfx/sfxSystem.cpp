@@ -43,10 +43,7 @@
 #include "core/util/autoPtr.h"
 #include "core/module.h"
 
-#include "sfx/media/sfxWavStream.h"
-#ifdef TORQUE_OGGVORBIS
-   #include "sfx/media/sfxVorbisStream.h"
-#endif
+
 
 
 MODULE_BEGIN( SFX )
@@ -350,13 +347,6 @@ void SFXSystem::init()
    AssertWarn( smSingleton == NULL, "SFX has already been initialized!" );
 
    SFXProvider::initializeAllProviders();
-
-   // Register the streams and resources.  Note that 
-   // the order here does matter!
-   SFXFileStream::registerExtension( ".wav", ( SFXFILESTREAM_CREATE_FN ) SFXWavStream::create );
-   #ifdef TORQUE_OGGVORBIS
-      SFXFileStream::registerExtension( ".ogg", ( SFXFILESTREAM_CREATE_FN ) SFXVorbisStream::create );
-   #endif
    
    // Create the stream thread pool.
    
@@ -375,11 +365,6 @@ void SFXSystem::init()
 void SFXSystem::destroy()
 {
    AssertWarn( smSingleton != NULL, "SFX has not been initialized!" );
-
-   SFXFileStream::unregisterExtension( ".wav" );
-   #ifdef TORQUE_OGGVORBIS
-      SFXFileStream::unregisterExtension( ".ogg" );
-   #endif
 
    delete smSingleton;
    smSingleton = NULL;

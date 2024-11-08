@@ -35,7 +35,6 @@
 #include "renderInstance/renderObjectMgr.h"
 #include "renderInstance/renderMeshMgr.h"
 #include "renderInstance/renderTranslucentMgr.h"
-#include "renderInstance/renderGlowMgr.h"
 #include "renderInstance/renderTerrainMgr.h"
 #include "core/util/safeDelete.h"
 #include "math/util/matrixSet.h"

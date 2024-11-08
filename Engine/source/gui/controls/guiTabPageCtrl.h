@@ -44,29 +44,29 @@ class GuiTabPageCtrl : public GuiTextCtrl
       
       static void initPersistFields();
 
-      bool onWake();    ///< The page awakens (becomes active)!
-      void onSleep();   ///< The page sleeps (zzzzZZ - becomes inactive)
-      void inspectPostApply();
+      bool onWake() override;    ///< The page awakens (becomes active)!
+      void onSleep() override;   ///< The page sleeps (zzzzZZ - becomes inactive)
+      void inspectPostApply() override;
 
       bool getFitBook() { return mFitBook; }
       void setFitBook(bool state) { mFitBook = state; }
 
-      GuiControl* findHitControl(const Point2I &pt, S32 initialLayer = -1); ///< Find which control is hit by the mouse starting at a specified layer
+      GuiControl* findHitControl(const Point2I &pt, S32 initialLayer = -1) override; ///< Find which control is hit by the mouse starting at a specified layer
 
-      void onMouseDown(const GuiEvent &event);  ///< Called when a mouseDown event occurs
-      bool onMouseDownEditor(const GuiEvent &event, Point2I offset );   ///< Called when a mouseDown event occurs and the GUI editor is active
+      void onMouseDown(const GuiEvent &event) override;  ///< Called when a mouseDown event occurs
+      bool onMouseDownEditor(const GuiEvent &event, Point2I offset ) override;   ///< Called when a mouseDown event occurs and the GUI editor is active
 
       S32 getTabIndex(void) { return mTabIndex; }  ///< Get the tab index of this control
 
       //only cycle tabs through the current window, so overwrite the method
-      GuiControl* findNextTabable(GuiControl *curResponder, bool firstCall = true);
-      GuiControl* findPrevTabable(GuiControl *curResponder, bool firstCall = true);
+      GuiControl* findNextTabable(GuiControl *curResponder, bool firstCall = true) override;
+      GuiControl* findPrevTabable(GuiControl *curResponder, bool firstCall = true) override;
 
       void selectWindow(void);               ///< Select this window
 
-      virtual void setText(const char *txt = NULL); ///< Override setText function to signal parent we need to update.
+      void setText(const char *txt = NULL) override; ///< Override setText function to signal parent we need to update.
 
-      void onRender(Point2I offset, const RectI &updateRect);  ///< Called when it's time to render this page to the scene
+      void onRender(Point2I offset, const RectI &updateRect) override;  ///< Called when it's time to render this page to the scene
 };
 
 #endif //_GUI_WINDOW_CTRL_H

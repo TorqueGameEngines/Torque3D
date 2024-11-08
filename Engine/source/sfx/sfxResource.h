@@ -30,9 +30,9 @@
    #include "core/resource.h"
 #endif
 
-
-class SFXStream;
-
+#ifndef _SFXSTREAM_H_
+#include "sfx/sfxStream.h"
+#endif
 
 /// This is the base class for all sound file resources including
 /// streamed sound files.  It acts much like an always in-core
@@ -68,10 +68,12 @@ class SFXResource
 
       /// The length of the sample in milliseconds.
       U32 mDuration;
+
+      ThreadSafeRef<SFXStream> mStream;
       
       /// Construct a resource instance for the given file.  Format and duration
       /// are read from the given stream.
-      SFXResource( String fileName, SFXStream* stream );
+      SFXResource( String fileName, const ThreadSafeRef<SFXStream>& stream);
       
    public:
 
@@ -103,7 +105,7 @@ class SFXResource
       const SFXFormat& getFormat() const { return mFormat; }
 
       /// Open a stream for reading the resource's sample data.
-      SFXStream* openStream();
+      ThreadSafeRef<SFXStream> openStream();
 
       // Internal.
       struct _NewHelper;

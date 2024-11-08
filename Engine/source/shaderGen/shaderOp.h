@@ -89,7 +89,7 @@ class DecOp : public ShaderOp
 
 public:
    DecOp( Var *in1 );
-   virtual void print( Stream &stream );
+   void print( Stream &stream ) override;
 };
 
 
@@ -107,7 +107,7 @@ class EchoOp : public ShaderOp
 public:
    EchoOp( const char * statement );
    ~EchoOp();
-   virtual void print( Stream &stream );
+   void print( Stream &stream ) override;
 };
 
 //----------------------------------------------------------------------------
@@ -122,7 +122,7 @@ class IndexOp : public ShaderOp
 
 public:
    IndexOp( Var* var, U32 index );
-   virtual void print( Stream &stream );
+   void print( Stream &stream ) override;
 };
 
 
@@ -159,7 +159,7 @@ class GenOp : public ShaderOp
 
 public:
    GenOp( const char * statement, ... );
-   virtual void print( Stream &stream );
+   void print( Stream &stream ) override;
 
 };
 

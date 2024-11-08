@@ -55,9 +55,9 @@ public:
 
    static void initPersistFields();
 
-   bool onWake();
-   void onSleep();
-   void onRender(Point2I offset, const RectI &updateRect);
+   bool onWake() override;
+   void onSleep() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
    DECLARE_CONOBJECT(GuiBitmapBorderCtrl);
    DECLARE_CATEGORY( "Gui Images" );
    DECLARE_DESCRIPTION( "A control that renders a skinned border." );

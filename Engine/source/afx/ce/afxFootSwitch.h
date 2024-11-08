@@ -40,10 +40,10 @@ public:
   /*C*/           afxFootSwitchData();
   /*C*/           afxFootSwitchData(const afxFootSwitchData&, bool = false);
 
-  virtual void    packData(BitStream*);
-  virtual void    unpackData(BitStream*);
+  void    packData(BitStream*) override;
+  void    unpackData(BitStream*) override;
 
-  virtual bool    allowSubstitutions() const { return true; }
+  bool    allowSubstitutions() const override { return true; }
 
   static void     initPersistFields();
 

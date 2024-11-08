@@ -32,12 +32,12 @@ public:
    static void initPersistFields();
 
    //Parental methods
-   bool onWake();
-   void onSleep();
+   bool onWake() override;
+   void onSleep() override;
 
    void setBitmap(const char *name);
 
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
    void onImageChanged() {}
 };

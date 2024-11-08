@@ -229,8 +229,8 @@ class SFXWorld : public ScopeTracker< NUM_DIMENSIONS, Object >
       F32 _getSortValue( Object object );
 
       // ScopeTracker.
-      virtual void _onScopeIn( Object object );
-      virtual void _onScopeOut( Object object );
+      void _onScopeIn( Object object ) override;
+      void _onScopeOut( Object object ) override;
    
    public:
    

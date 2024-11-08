@@ -47,7 +47,7 @@ MODULE_BEGIN( ShaderGen )
    {
       ManagedSingleton< ShaderGen >::createSingleton();
    }
-   
+
    MODULE_SHUTDOWN
    {
       ManagedSingleton< ShaderGen >::deleteSingleton();
@@ -94,7 +94,7 @@ bool ShaderGen::_handleGFXEvent(GFXDevice::GFXDeviceEventType event)
 }
 
 void ShaderGen::initShaderGen()
-{   
+{
    if (mInit)
       return;
 
@@ -125,7 +125,7 @@ void ShaderGen::initShaderGen()
    {
       // If we didn't get a path then we're gonna cache the shaders to
       // a virtualized memory file system.
-      mMemFS = new Torque::Mem::MemFileSystem( "shadergen:/" ); 
+      mMemFS = new Torque::Mem::MemFileSystem( "shadergen:/" );
       Torque::FS::Mount( "shadergen", mMemFS );
    }
    else
@@ -136,8 +136,8 @@ void ShaderGen::initShaderGen()
 }
 
 void ShaderGen::generateShader( const MaterialFeatureData &featureData,
-                                char *vertFile, 
-                                char *pixFile, 
+                                char *vertFile,
+                                char *pixFile,
                                 F32 *pixVersion,
                                 const GFXVertexFormat *vertexFormat,
                                 const char* cacheName,
@@ -155,23 +155,23 @@ void ShaderGen::generateShader( const MaterialFeatureData &featureData,
    char pixShaderName[256];
 
    // Note:  We use a postfix of _V/_P here so that it sorts the matching
-   // vert and pixel shaders together when listed alphabetically.   
+   // vert and pixel shaders together when listed alphabetically.
    dSprintf( vertShaderName, sizeof(vertShaderName), "shadergen:/%s_V.%s", cacheName, mFileEnding.c_str() );
    dSprintf( pixShaderName, sizeof(pixShaderName), "shadergen:/%s_P.%s", cacheName, mFileEnding.c_str() );
-   
+
    dStrcpy( vertFile, vertShaderName, 256 );
    dStrcpy( pixFile, pixShaderName, 256 );
-   
+
    // this needs to change - need to optimize down to ps v.1.1
    *pixVersion = GFX->getPixelShaderVersion();
-   
+
    if ( !Con::getBoolVariable( "ShaderGen::GenNewShaders", true ) )
    {
       // If we are not regenerating the shader we will return here.
       // But we must fill in the shader macros first!
 
       _processVertFeatures( macros, true );
-      _processPixFeatures( macros, true );      
+      _processPixFeatures( macros, true );
 
       return;
    }
@@ -190,7 +190,7 @@ void ShaderGen::generateShader( const MaterialFeatureData &featureData,
    _processVertFeatures(macros);
    _printVertShader( *s );
    delete s;
-   
+
    ((ShaderConnector*)mComponents[C_CONNECTOR])->reset();
    LangElement::deleteElements();
 
@@ -202,7 +202,7 @@ void ShaderGen::generateShader( const MaterialFeatureData &featureData,
       AssertFatal(false, "Failed to open Shader Stream" );
       delete s;
       return;
-   }   
+   }
 
    mOutput = new MultiLine;
    _processPixFeatures(macros);
@@ -284,7 +284,7 @@ void ShaderGen::_processVertFeatures( Vector<GFXShaderMacro> &macros, bool macro
             mOutput->addStatement( feature->getOutput() );
 
          feature->reset();
-         mOutput->addStatement( new GenOp( "   \r\n" ) );         
+         mOutput->addStatement( new GenOp( "   \r\n" ) );
       }
    }
 
@@ -327,7 +327,7 @@ void ShaderGen::_processPixFeatures( Vector<GFXShaderMacro> &macros, bool macros
          mOutput->addStatement( new GenOp( "   \r\n" ) );
       }
    }
-   
+
    ShaderConnector *connect = dynamic_cast<ShaderConnector *>( mComponents[C_CONNECTOR] );
    connect->sortVars();
 }
@@ -335,7 +335,7 @@ void ShaderGen::_processPixFeatures( Vector<GFXShaderMacro> &macros, bool macros
 void ShaderGen::_printFeatureList(Stream &stream)
 {
    mPrinter->printLine(stream, "// Features:");
-      
+
    const FeatureSet &features = mFeatureData.features;
 
    for( U32 i=0; i < features.getCount(); i++ )
@@ -376,7 +376,7 @@ void ShaderGen::_printDependencies(Stream &stream)
 
       for( U32 j=0; j < dependencies.size(); j++ )
       {
-         if (  j != i && 
+         if (  j != i &&
                *dependencies[i] == *dependencies[j] )
          {
             dup = true;
@@ -386,7 +386,7 @@ void ShaderGen::_printDependencies(Stream &stream)
 
       if ( dup )
          dependencies.erase( i );
-      else        
+      else
          i++;
    }
 
@@ -493,7 +493,10 @@ GFXShader* ShaderGen::getShader( const MaterialFeatureData &featureData, const G
    generateShader( featureData, vertFile, pixFile, &pixVersion, vertexFormat, cacheKey, shaderMacros );
 
    GFXShader *shader = GFX->createShader();
-   if (!shader->init(vertFile, pixFile, pixVersion, shaderMacros, samplers, &mInstancingFormat))
+   shader->setShaderStageFile(GFXShaderStage::VERTEX_SHADER, vertFile);
+   shader->setShaderStageFile(GFXShaderStage::PIXEL_SHADER, pixFile);
+
+   if (!shader->init(pixVersion, shaderMacros, samplers, &mInstancingFormat))
    {
       delete shader;
       return NULL;
@@ -508,5 +511,5 @@ void ShaderGen::flushProceduralShaders()
 {
    // The shaders are reference counted, so we
    // just need to clear the map.
-   mProcShaders.clear();  
+   mProcShaders.clear();
 }

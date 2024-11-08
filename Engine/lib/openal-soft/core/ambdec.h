@@ -3,14 +3,17 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
-#include "aloptional.h"
+#include "alspan.h"
 #include "core/ambidefs.h"
 
 /* Helpers to read .ambdec configuration files. */
 
 enum class AmbDecScale {
+    Unset,
     N3D,
     SN3D,
     FuMa,
@@ -21,7 +24,7 @@ struct AmbDecConf {
 
     unsigned int ChanMask{0u};
     unsigned int FreqBands{0u}; /* Must be 1 or 2 */
-    AmbDecScale CoeffScale{};
+    AmbDecScale CoeffScale{AmbDecScale::Unset};
 
     float XOverFreq{0.0f};
     float XOverRatio{0.0f};
@@ -33,22 +36,21 @@ struct AmbDecConf {
         float Elevation{0.0f};
         std::string Connection;
     };
-    size_t NumSpeakers{0};
-    std::unique_ptr<SpeakerConf[]> Speakers;
+    std::vector<SpeakerConf> Speakers;
 
     using CoeffArray = std::array<float,MaxAmbiChannels>;
-    std::unique_ptr<CoeffArray[]> Matrix;
+    std::vector<CoeffArray> Matrix;
 
     /* Unused when FreqBands == 1 */
-    float LFOrderGain[MaxAmbiOrder+1]{};
-    CoeffArray *LFMatrix;
+    std::array<float,MaxAmbiOrder+1> LFOrderGain{};
+    al::span<CoeffArray> LFMatrix;
 
-    float HFOrderGain[MaxAmbiOrder+1]{};
-    CoeffArray *HFMatrix;
+    std::array<float,MaxAmbiOrder+1> HFOrderGain{};
+    al::span<CoeffArray> HFMatrix;
 
     ~AmbDecConf();
 
-    al::optional<std::string> load(const char *fname) noexcept;
+    std::optional<std::string> load(const char *fname) noexcept;
 };
 
 #endif /* CORE_AMBDEC_H */

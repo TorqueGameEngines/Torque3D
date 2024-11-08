@@ -143,8 +143,8 @@ private:
 
 public:
    TorqueThreadStatic( T instanceVal ) : mInstance( instanceVal ) {}
-   virtual void *getMemInstPtr() { return &mInstance; }
-   virtual const void *getConstMemInstPtr() const { return &mInstance; }
+   void *getMemInstPtr() override { return &mInstance; }
+   const void *getConstMemInstPtr() const override { return &mInstance; }
 
    // I am not sure these are needed, and I don't want to create confusing-to-debug code
 #if 0

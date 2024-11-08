@@ -37,11 +37,11 @@ class ParaboloidVertTransformGLSL : public ShaderFeatureGLSL
 public:
 
    // ShaderFeature
-   virtual void processVert( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd );
-   virtual void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd );
-   virtual Resources getResources( const MaterialFeatureData &fd );
-   virtual String getName() { return "Paraboloid Vert Transform"; }
-   virtual Material::BlendOp getBlendOp() { return Material::None; }
+   void processVert( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override;
+   void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override;
+   Resources getResources( const MaterialFeatureData &fd ) override;
+   String getName() override { return "Paraboloid Vert Transform"; }
+   Material::BlendOp getBlendOp() override { return Material::None; }
 
 };
 

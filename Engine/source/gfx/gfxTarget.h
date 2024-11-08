@@ -93,7 +93,7 @@ public:
 
    // GFXResourceInterface
    /// The resource should put a description of itself (number of vertices, size/width of texture, etc.) in buffer
-   virtual const String describeSelf() const;
+   const String describeSelf() const override;
 
    /// This is called to set the render target.
    virtual void activate() { }

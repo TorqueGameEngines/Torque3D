@@ -287,7 +287,7 @@ public:
 
    // Allows the object to update its editable settings
    // from the server object to the client
-   virtual void inspectPostApply();
+   void inspectPostApply() override;
 
    static bool _setEnabled(void *object, const char *index, const char *data);
    static bool _doBake(void *object, const char *index, const char *data);
@@ -296,29 +296,29 @@ public:
    static bool _setReflectionMode(void *object, const char *index, const char *data);
 
    // Handle when we are added to the scene and removed from the scene
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    /// <summary>
    /// This is called when the object is deleted. It allows us to do special-case cleanup actions
    /// In probes' case, it's used to delete baked cubemap files
    /// </summary>
-   virtual void handleDeleteAction();
+   void handleDeleteAction() override;
 
    // Override this so that we can dirty the network flag when it is called
-   virtual void setTransform(const MatrixF &mat);
-   virtual const MatrixF& getTransform() const;
-   virtual void setScale(const VectorF &scale);
-   virtual const VectorF& getScale() const;
+   void setTransform(const MatrixF &mat) override;
+   const MatrixF& getTransform() const override;
+   void setScale(const VectorF &scale) override;
+   const VectorF& getScale() const override;
 
-   virtual bool writeField(StringTableEntry fieldname, const char *value);
+   bool writeField(StringTableEntry fieldname, const char *value) override;
 
    // This function handles sending the relevant data from the server
    // object to the client object
-   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
+   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override;
    // This function handles receiving relevant data from the server
    // object and applying it to the client object
-   void unpackUpdate(NetConnection *conn, BitStream *stream);
+   void unpackUpdate(NetConnection *conn, BitStream *stream) override;
 
    //--------------------------------------------------------------------------
    // Object Rendering
@@ -353,7 +353,7 @@ public:
    void processStaticCubemap();
 
    // This is the function that allows this object to submit itself for rendering
-   void prepRenderImage(SceneRenderState *state);
+   void prepRenderImage(SceneRenderState *state) override;
 
    void _onRenderViz(ObjectRenderInst *ri,
       SceneRenderState *state,

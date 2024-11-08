@@ -63,10 +63,10 @@ public:
    virtual void renderShadow( SceneRenderState *state );
 
    // Called by statics
-   virtual U32  packUpdate(SceneObject* obj, U32 checkMask, NetConnection *conn, U32 mask, BitStream *stream) { return 0; }
-   virtual void unpackUpdate(SceneObject* obj, NetConnection *conn, BitStream *stream) { }
+   U32  packUpdate(SceneObject* obj, U32 checkMask, NetConnection *conn, U32 mask, BitStream *stream) override { return 0; }
+   void unpackUpdate(SceneObject* obj, NetConnection *conn, BitStream *stream) override { }
 
-   virtual void reset();
+   void reset() override;
 };
 
 class BasicSceneObjectPluginFactory : public ManagedSingleton< BasicSceneObjectPluginFactory >

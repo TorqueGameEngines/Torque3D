@@ -53,7 +53,7 @@ public:
 
    DECLARE_CONOBJECT(StreamObject);
 
-   virtual bool onAdd();
+   bool onAdd() override;
 
    /// Set the stream to allow reuse of the object
    void setStream(Stream *stream)      { mStream = stream; }

@@ -105,10 +105,10 @@ class SFXState : public SimDataBlock
       void disable();
       
       // SimDataBlock.
-      virtual bool onAdd();
-      virtual bool preload( bool server, String& errorStr );
-      virtual void packData( BitStream* stream );
-      virtual void unpackData( BitStream* stream );
+      bool onAdd() override;
+      bool preload( bool server, String& errorStr ) override;
+      void packData( BitStream* stream ) override;
+      void unpackData( BitStream* stream ) override;
       
       static void initPersistFields();
    

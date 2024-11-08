@@ -58,10 +58,10 @@ public:
    virtual void setDeferredMaterial( DeferredMatInstance *mat );
 
    // RenderBinManager interface
-   virtual void render(SceneRenderState * state);
-   virtual void sort();
-   virtual void clear();
-   virtual void addElement( RenderInst *inst );
+   void render(SceneRenderState * state) override;
+   void sort() override;
+   void clear() override;
+   void addElement( RenderInst *inst ) override;
 
    // ConsoleObject
    DECLARE_CONOBJECT(RenderDeferredMgr);
@@ -77,7 +77,7 @@ public:
    static const GFXStateBlockDesc &getOpaqueStencilTestDesc();
    static const GFXStateBlockDesc &getOpaqueStenciWriteDesc(bool lightmappedGeometry = true);
 
-   virtual bool setTargetSize(const Point2I &newTargetSize);
+   bool setTargetSize(const Point2I &newTargetSize) override;
 
    inline BaseMatInstance* getDeferredMaterial( BaseMatInstance *mat );
 
@@ -96,7 +96,7 @@ protected:
 
    virtual void _registerFeatures();
    virtual void _unregisterFeatures();
-   virtual bool _updateTargets();
+   bool _updateTargets() override;
    virtual void _createDeferredMaterial();
 
    bool _lightManagerActivate(bool active);
@@ -120,12 +120,12 @@ class ProcessedDeferredMaterial : public ProcessedShaderMaterial
 public:   
    ProcessedDeferredMaterial(Material& mat, const RenderDeferredMgr *deferredMgr);
 
-   virtual U32 getNumStages();
+   U32 getNumStages() override;
 
-   virtual void addStateBlockDesc(const GFXStateBlockDesc& desc);
+   void addStateBlockDesc(const GFXStateBlockDesc& desc) override;
 
 protected:
-   virtual void _determineFeatures( U32 stageNum, MaterialFeatureData &fd, const FeatureSet &features );
+   void _determineFeatures( U32 stageNum, MaterialFeatureData &fd, const FeatureSet &features ) override;
 
    const RenderDeferredMgr *mDeferredMgr;
    bool mIsLightmappedGeometry;
@@ -147,11 +147,11 @@ public:
    }   
 
    // MatInstance
-   virtual bool init(   const FeatureSet &features, 
-                        const GFXVertexFormat *vertexFormat );
+   bool init(   const FeatureSet &features, 
+                        const GFXVertexFormat *vertexFormat ) override;
 
 protected:      
-   virtual ProcessedMaterial* getShaderMaterial();
+   ProcessedMaterial* getShaderMaterial() override;
 
    const RenderDeferredMgr *mDeferredMgr;
 };
@@ -166,7 +166,7 @@ public:
 
    virtual DeferredMatInstance *getDeferredMatInstance() { return mHookedDeferredMatInst; }
 
-   virtual const MatInstanceHookType& getType() const { return Type; }
+   const MatInstanceHookType& getType() const override { return Type; }
 
    /// The type for deferred material hooks.
    static const MatInstanceHookType Type;
@@ -190,17 +190,17 @@ public:
 
    }
 
-   virtual String getName()
+   String getName() override
    {
       return "Linear Eye-Space Depth Conditioner";
    }
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override;
 protected:
-   virtual Var *_conditionOutput( Var *unconditionedOutput, MultiLine *meta );
-   virtual Var *_unconditionInput( Var *conditionedInput, MultiLine *meta );
+   Var *_conditionOutput( Var *unconditionedOutput, MultiLine *meta ) override;
+   Var *_unconditionInput( Var *conditionedInput, MultiLine *meta ) override;
 
-   virtual Var *printMethodHeader( MethodType methodType, const String &methodName, Stream &stream, MultiLine *meta );
+   Var *printMethodHeader( MethodType methodType, const String &methodName, Stream &stream, MultiLine *meta ) override;
 };
 
 

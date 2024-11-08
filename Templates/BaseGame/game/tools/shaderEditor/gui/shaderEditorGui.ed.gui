@@ -1,0 +1,122 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(ShaderEditorGui) {
+   extent = "1280 720";
+   profile = "GuiDefaultProfile";
+   tooltipProfile = "ToolsGuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiFrameSetCtrl() {
+      columns = "0 320 1000";
+      borderWidth = "2";
+      borderColor = "10 10 10 0";
+      autoBalance = "1";
+      extent = "1280 720";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "ToolsGuiFrameSetProfile";
+      tooltipProfile = "ToolsGuiToolTipProfile";
+
+      new GuiControl() {
+         extent = "318 720";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         isContainer = "1";
+
+         new GuiSplitContainer() {
+            orientation = "Horizontal";
+            splitPoint = "0 200";
+            extent = "317 720";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = "ToolsGuiDefaultProfile";
+            tooltipProfile = "ToolsGuiToolTipProfile";
+
+            new GuiPanel(ShaderEditorPreview) {
+               docking = "Client";
+               extent = "317 198";
+               profile = "ToolsGuiButtonProfile";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               internalName = "Panel1";
+            };
+            new GuiPanel(ShaderEditorInspector) {
+               docking = "Client";
+               position = "0 202";
+               extent = "317 518";
+               profile = "ToolsGuiButtonProfile";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               internalName = "panel2";
+            };
+         };
+      };
+      new GuiControl() {
+         position = "320 0";
+         extent = "678 720";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "ToolsGuiButtonProfile";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         isContainer = "1";
+
+         new GuiShaderEditor(ShaderNodeGraph) {
+            extent = "678 720";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = "GuiShaderEditorProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+      };
+      new GuiControl(ShaderEditorSidebar) {
+         position = "1000 0";
+         extent = "280 720";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "ToolsGuiButtonProfile";
+         isContainer = "1";
+
+         new GuiTabBookCtrl(ShaderEditorTabBook) {
+            tabHeight = "20";
+            allowReorder = "1";
+            selectedPage = "0";
+            position = "3 5";
+            extent = "271 520";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = "ToolsGuiTabBookProfile";
+            tooltipProfile = "ToolsGuiToolTipProfile";
+
+            new GuiTabPageCtrl() {
+               fitBook = "1";
+               text = "Library";
+               position = "0 20";
+               extent = "271 500";
+               horizSizing = "width";
+               vertSizing = "height";
+               profile = "ToolsGuiTabPageProfile";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+
+               new GuiScrollCtrl() {
+                  hScrollBar = "dynamic";
+                  childMargin = "0 2";
+                  extent = "271 490";
+                  horizSizing = "width";
+                  vertSizing = "height";
+                  profile = "ToolsGuiScrollProfile";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+
+                  new GuiStackControl(ShaderToolbox) {
+                     extent = "591 1000";
+                     horizSizing = "width";
+                     profile = "ToolsGuiDefaultProfile";
+                     tooltipProfile = "ToolsGuiToolTipProfile";
+                  };
+               };
+            };
+         };
+      };
+   };
+};
+//--- OBJECT WRITE END ---

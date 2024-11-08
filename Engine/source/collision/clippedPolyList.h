@@ -119,16 +119,16 @@ public:
    void clear();
 
    // AbstractPolyList
-   bool isEmpty() const;
-   U32 addPoint(const Point3F& p);
-   U32 addPointAndNormal(const Point3F& p, const Point3F& normal);
-   U32 addPlane(const PlaneF& plane);
-   void begin(BaseMatInstance* material,U32 surfaceKey);
-   void plane(U32 v1,U32 v2,U32 v3);
-   void plane(const PlaneF& p);
-   void plane(const U32 index);
-   void vertex(U32 vi);
-   void end();
+   bool isEmpty() const override;
+   U32 addPoint(const Point3F& p) override;
+   U32 addPointAndNormal(const Point3F& p, const Point3F& normal) override;
+   U32 addPlane(const PlaneF& plane) override;
+   void begin(BaseMatInstance* material,U32 surfaceKey) override;
+   void plane(U32 v1,U32 v2,U32 v3) override;
+   void plane(const PlaneF& p) override;
+   void plane(const U32 index) override;
+   void vertex(U32 vi) override;
+   void end() override;
 
    /// Often after clipping you'll end up with orphan verticies
    /// that are unused by the poly list.  This removes these unused
@@ -145,7 +145,7 @@ public:
   protected:
 
    // AbstractPolyList
-   const PlaneF& getIndexedPlane(const U32 index);
+   const PlaneF& getIndexedPlane(const U32 index) override;
 };
 
 

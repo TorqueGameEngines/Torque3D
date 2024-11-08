@@ -503,47 +503,13 @@ void RenderProbeMgr::reloadTextures()
 void RenderProbeMgr::preBake()
 {
    RenderProbeMgr::smBakeReflectionProbes = true;
-   GFXShader::addGlobalMacro("CAPTURING", String("1"));
-
-   //Con::setVariable("$Probes::Capturing", "1");
-   mRenderMaximumNumOfLights = AdvancedLightBinManager::smMaximumNumOfLights;
-   mRenderUseLightFade = AdvancedLightBinManager::smUseLightFade;
-
-   AdvancedLightBinManager::smMaximumNumOfLights = -1;
-   AdvancedLightBinManager::smUseLightFade = false;
-
-   //kickstart rendering
-   LightManager* lm = LIGHTMGR;
-   if (lm)
-   {
-      SceneManager* sm = lm->getSceneManager();
-      if (sm && sm->getContainer() == &gClientContainer)
-      {
-         lm->deactivate();
-         lm->activate(sm);
-      }
-   }
+   Con::setBoolVariable("$ReflectionProbes::Capturing", RenderProbeMgr::smBakeReflectionProbes);
 }
 
 void RenderProbeMgr::postBake()
 {
    RenderProbeMgr::smBakeReflectionProbes = false;
-   GFXShader::addGlobalMacro("CAPTURING", String("0"));
-   //Con::setVariable("$Probes::Capturing", "0");
-   AdvancedLightBinManager::smMaximumNumOfLights = mRenderMaximumNumOfLights;
-   AdvancedLightBinManager::smUseLightFade = mRenderUseLightFade;
-
-   //kickstart rendering
-   LightManager* lm = LIGHTMGR;
-   if (lm)
-   {
-      SceneManager* sm = lm->getSceneManager();
-      if (sm && sm->getContainer() == &gClientContainer)
-      {
-         lm->deactivate();
-         lm->activate(sm);
-      }
-   }
+   Con::setBoolVariable("$ReflectionProbes::Capturing", RenderProbeMgr::smBakeReflectionProbes);
 }
 
 void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
@@ -652,9 +618,10 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
       clientProbe->mPrefilterMap->mCubemap->initDynamic(resolution, reflectFormat);
 
       GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
+      clientProbe->mPrefilterMap->mCubemap = cubeRefl.getCubemap();
 
       IBLUtilities::GenerateIrradianceMap(renderTarget, cubeRefl.getCubemap(), clientProbe->mIrridianceMap->mCubemap);
-      IBLUtilities::GeneratePrefilterMap(renderTarget, cubeRefl.getCubemap(), prefilterMipLevels, clientProbe->mPrefilterMap->mCubemap);
+      //IBLUtilities::GeneratePrefilterMap(renderTarget, cubeRefl.getCubemap(), prefilterMipLevels, clientProbe->mPrefilterMap->mCubemap);
 
       U32 endMSTime = Platform::getRealMilliseconds();
       F32 diffTime = F32(endMSTime - startMSTime);

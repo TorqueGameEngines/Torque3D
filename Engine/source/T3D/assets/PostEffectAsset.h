@@ -60,7 +60,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    void                    setScriptFile(const char* pScriptFile);
    inline StringTableEntry getScriptFile(void) const { return mScriptFile; };
@@ -78,8 +78,8 @@ public:
    DECLARE_CONOBJECT(PostEffectAsset);
 
 protected:
-   virtual void initializeAsset();
-   virtual void onAssetRefresh(void);
+   void initializeAsset() override;
+   void onAssetRefresh(void) override;
 
    static bool setScriptFile(void *obj, const char *index, const char *data) { static_cast<PostEffectAsset*>(obj)->setScriptFile(data); return false; }
    static const char* getScriptFile(void* obj, const char* data) { return static_cast<PostEffectAsset*>(obj)->getScriptFile(); }

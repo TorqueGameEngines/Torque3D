@@ -42,37 +42,37 @@ public:
 class afxXM_WaveformSine : public afxXM_Waveform
 {
 public:
-  virtual F32 evaluate(F32 t);
+  F32 evaluate(F32 t) override;
 };
 
 class afxXM_WaveformSquare : public afxXM_Waveform
 {
 public:
-  virtual F32 evaluate(F32 t);
+  F32 evaluate(F32 t) override;
 };
 
 class afxXM_WaveformTriangle : public afxXM_Waveform
 {
 public:
-  virtual F32 evaluate(F32 t);
+  F32 evaluate(F32 t) override;
 };
 
 class afxXM_WaveformSawtooth : public afxXM_Waveform
 {
 public:
-  virtual F32 evaluate(F32 t) { return t; }
+  F32 evaluate(F32 t) override { return t; }
 };
 
 class afxXM_WaveformNoise : public afxXM_Waveform
 {
 public:
-  virtual F32 evaluate(F32 t) { return gRandGen.randF(); };
+  F32 evaluate(F32 t) override { return gRandGen.randF(); };
 };
 
 class afxXM_WaveformOne : public afxXM_Waveform
 {
 public:
-  virtual F32 evaluate(F32 t) { return 1.0f; };
+  F32 evaluate(F32 t) override { return 1.0f; };
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
@@ -163,8 +163,8 @@ public:
   /*C*/           afxXM_WaveBaseData();
   /*C*/           afxXM_WaveBaseData(const afxXM_WaveBaseData&, bool = false);
 
-  void            packData(BitStream* stream);
-  void            unpackData(BitStream* stream);
+  void            packData(BitStream* stream) override;
+  void            unpackData(BitStream* stream) override;
 
   static void     initPersistFields();
 
@@ -203,8 +203,8 @@ public:
   /*C*/           afxXM_WaveRiderBaseData();
   /*C*/           afxXM_WaveRiderBaseData(const afxXM_WaveRiderBaseData&, bool = false);
 
-  void            packData(BitStream* stream);
-  void            unpackData(BitStream* stream);
+  void            packData(BitStream* stream) override;
+  void            unpackData(BitStream* stream) override;
 
   static void     initPersistFields();
 
@@ -249,7 +249,7 @@ public:
   /*C*/                 afxXM_WaveBase(afxXM_WaveBaseData*, afxEffectWrapper*, afxXM_WaveInterp*);
   /*D*/                 virtual ~afxXM_WaveBase();
 
-  virtual void          updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void          updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 inline F32 afxXM_WaveBase::calc_initial_speed()
@@ -302,7 +302,7 @@ public:
   /*C*/                 afxXM_WaveRiderBase(afxXM_WaveRiderBaseData*, afxEffectWrapper*, afxXM_WaveInterp*);
   /*D*/                 ~afxXM_WaveRiderBase();
 
-  virtual void          updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void          updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

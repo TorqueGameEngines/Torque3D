@@ -29,6 +29,8 @@
 #include "console/enginePrimitives.h"
 #include "console/engineTypes.h"
 
+#ifndef USE_TEMPLATE_MATRIX
+
 const MatrixF MatrixF::Identity( true );
 
 // idx(i,j) is index to element in column i, row j
@@ -209,3 +211,12 @@ EngineFieldTable::Field MatrixFEngineExport::getMatrixField()
    typedef MatrixF ThisType;
    return _FIELD_AS(F32, m, m, 16, "");
 }
+
+#else // !USE_TEMPLATE_MATRIX
+
+//------------------------------------
+// Templatized matrix class to replace MATRIXF above
+// due to templated class, all functions need to be inline
+//------------------------------------
+
+#endif // !USE_TEMPLATE_MATRIX

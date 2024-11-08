@@ -77,7 +77,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(LevelAsset);
@@ -111,7 +111,7 @@ public:
    void                    setBakedSceneFile(const char* pBakedSceneFile);
    inline StringTableEntry getBakedSceneFile(void) const { return mBakedSceneFile; };
 
-   SimObjectId load();
+   U32 load() override { return Ok; };
 
 protected:
    static bool setLevelFile(void *obj, const char *index, const char *data) { static_cast<LevelAsset*>(obj)->setLevelFile(data); return false; }
@@ -133,8 +133,8 @@ protected:
    static const char* getNavmeshFile(void* obj, const char* data) { return static_cast<LevelAsset*>(obj)->getNavmeshFile(); }
 
 
-   virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void);
+   void            initializeAsset(void) override;
+   void            onAssetRefresh(void) override;
    void                    loadAsset();
 };
 

@@ -50,7 +50,7 @@ class SFXSpace : public SceneAmbientSoundObject< ScenePolyhedralObject< SceneSpa
    protected:
 
       // SceneSpace.
-      virtual ColorI _getDefaultEditorSolidColor() const { return ColorI( 244, 135, 18, 45 ); }
+      ColorI _getDefaultEditorSolidColor() const override { return ColorI( 244, 135, 18, 45 ); }
 
    public:
 

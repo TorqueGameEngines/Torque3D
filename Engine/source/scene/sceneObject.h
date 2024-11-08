@@ -497,7 +497,7 @@ class SceneObject : public NetObject, public ProcessObject
       /// it is removed entirely from collisions, it is not ghosted and is
       /// essentially "non existant" as far as simulation is concerned.
       /// @param   hidden   True if object is to be hidden
-      virtual void setHidden( bool hidden );
+      void setHidden( bool hidden ) override;
 
       /// Builds a convex hull for this object.
       ///
@@ -732,22 +732,22 @@ class SceneObject : public NetObject, public ProcessObject
       ProcessList* getProcessList() const;
 
       // ProcessObject,
-      virtual void processAfter( ProcessObject *obj );
-      virtual void clearProcessAfter();
-      virtual ProcessObject* getAfterObject() const { return mAfterObject; }
-      virtual void setProcessTick( bool t );
+      void processAfter( ProcessObject *obj ) override;
+      void clearProcessAfter() override;
+      ProcessObject* getAfterObject() const override { return mAfterObject; }
+      void setProcessTick( bool t ) override;
 
       // NetObject.
-      virtual U32 packUpdate( NetConnection* conn, U32 mask, BitStream* stream );
-      virtual void unpackUpdate( NetConnection* conn, BitStream* stream );
-      virtual void onCameraScopeQuery( NetConnection* connection, CameraScopeQuery* query );
+      U32 packUpdate( NetConnection* conn, U32 mask, BitStream* stream ) override;
+      void unpackUpdate( NetConnection* conn, BitStream* stream ) override;
+      void onCameraScopeQuery( NetConnection* connection, CameraScopeQuery* query ) override;
 
       // SimObject.
-      virtual bool onAdd();
-      virtual void onRemove();
-      virtual void onDeleteNotify( SimObject *object );
-      virtual void inspectPostApply();
-      virtual bool writeField( StringTableEntry fieldName, const char* value );
+      bool onAdd() override;
+      void onRemove() override;
+      void onDeleteNotify( SimObject *object ) override;
+      void inspectPostApply() override;
+      bool writeField( StringTableEntry fieldName, const char* value ) override;
 
       static void initPersistFields();
 

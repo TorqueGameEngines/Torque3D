@@ -230,7 +230,7 @@ public:
    GuiGameSettingsCtrl();
    ~GuiGameSettingsCtrl();
 
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
    void onRenderListOption(Point2I currentOffset);
    void onRenderSliderOption(Point2I currentOffset);
@@ -240,17 +240,17 @@ public:
    /// Callback when the object is registered with the sim.
    ///
    /// \return True if the profile was successfully added, false otherwise.
-   bool onAdd();
+   bool onAdd() override;
 
    /// Callback when the control wakes up.
-   bool onWake();
+   bool onWake() override;
 
-   void onSleep();
+   void onSleep() override;
 
-   void clear();
+   void clear() override;
 
-   virtual void onMouseMove(const GuiEvent& event);
-   virtual void onMouseUp(const GuiEvent& event);
+   void onMouseMove(const GuiEvent& event) override;
+   void onMouseUp(const GuiEvent& event) override;
 
    DECLARE_CONOBJECT(GuiGameSettingsCtrl);
    DECLARE_CATEGORY( "Gui Game" );

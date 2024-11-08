@@ -48,22 +48,22 @@ class EditTSCtrl : public GuiTSCtrl
       void make3DMouseEvent(Gui3DMouseEvent & gui3Devent, const GuiEvent &event);
 
       // GuiControl
-      virtual void getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent);
-      virtual void onMouseUp(const GuiEvent & event);
-      virtual void onMouseDown(const GuiEvent & event);
-      virtual void onMouseMove(const GuiEvent & event);
-      virtual void onMouseDragged(const GuiEvent & event);
-      virtual void onMouseEnter(const GuiEvent & event);
-      virtual void onMouseLeave(const GuiEvent & event);
-      virtual void onRightMouseDown(const GuiEvent & event);
-      virtual void onRightMouseUp(const GuiEvent & event);
-      virtual void onRightMouseDragged(const GuiEvent & event);
-      virtual void onMiddleMouseDown(const GuiEvent & event);
-      virtual void onMiddleMouseUp(const GuiEvent & event);
-      virtual void onMiddleMouseDragged(const GuiEvent & event);
-      virtual bool onInputEvent(const InputEventInfo & event);
-      virtual bool onMouseWheelUp(const GuiEvent &event);
-      virtual bool onMouseWheelDown(const GuiEvent &event);
+      void getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent) override;
+      void onMouseUp(const GuiEvent & event) override;
+      void onMouseDown(const GuiEvent & event) override;
+      void onMouseMove(const GuiEvent & event) override;
+      void onMouseDragged(const GuiEvent & event) override;
+      void onMouseEnter(const GuiEvent & event) override;
+      void onMouseLeave(const GuiEvent & event) override;
+      void onRightMouseDown(const GuiEvent & event) override;
+      void onRightMouseUp(const GuiEvent & event) override;
+      void onRightMouseDragged(const GuiEvent & event) override;
+      void onMiddleMouseDown(const GuiEvent & event) override;
+      void onMiddleMouseUp(const GuiEvent & event) override;
+      void onMiddleMouseDragged(const GuiEvent & event) override;
+      bool onInputEvent(const InputEventInfo & event) override;
+      bool onMouseWheelUp(const GuiEvent &event) override;
+      bool onMouseWheelDown(const GuiEvent &event) override;
 
 
       virtual void updateGuiInfo() {};
@@ -73,7 +73,7 @@ class EditTSCtrl : public GuiTSCtrl
       virtual void renderGrid();
 
       // GuiTSCtrl
-      void renderWorld(const RectI & updateRect);
+      void renderWorld(const RectI & updateRect) override;
 
       void _renderScene(ObjectRenderInst*, SceneRenderState *state, BaseMatInstance*);
 
@@ -124,8 +124,8 @@ class EditTSCtrl : public GuiTSCtrl
       ~EditTSCtrl();
 
       // SimObject
-      bool onAdd();
-      void onRemove();
+      bool onAdd() override;
+      void onRemove() override;
 
       //
       bool        mRenderMissionArea;
@@ -172,10 +172,10 @@ class EditTSCtrl : public GuiTSCtrl
       // GuiTSCtrl
       virtual bool getCameraTransform(MatrixF* cameraMatrix);
       virtual void computeSceneBounds(Box3F& bounds);
-      bool processCameraQuery(CameraQuery * query);
+      bool processCameraQuery(CameraQuery * query) override;
 
       // guiControl
-      virtual void onRender(Point2I offset, const RectI &updateRect);
+      void onRender(Point2I offset, const RectI &updateRect) override;
       virtual void on3DMouseUp(const Gui3DMouseEvent &){};
       virtual void on3DMouseDown(const Gui3DMouseEvent &){};
       virtual void on3DMouseMove(const Gui3DMouseEvent &){};
@@ -191,7 +191,7 @@ class EditTSCtrl : public GuiTSCtrl
 
       virtual bool isMiddleMouseDown() {return mMiddleMouseDown;}
 
-      virtual bool resize(const Point2I& newPosition, const Point2I& newExtent);
+      bool resize(const Point2I& newPosition, const Point2I& newExtent) override;
 
       S32 getDisplayType() const {return mDisplayType;}
       virtual void setDisplayType(S32 type);

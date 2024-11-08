@@ -44,7 +44,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
       closeCommand = "MaterialEditorPropertiesWindow.setVisible(false);";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "::  Material Editor - Properties";
+      text = ":: Material Editor - Properties";
       
       new GuiContainer(MaterialEditorGuiContent){ // Client group
          isContainer = "1";

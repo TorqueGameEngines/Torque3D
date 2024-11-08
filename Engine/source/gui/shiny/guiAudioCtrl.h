@@ -58,9 +58,9 @@ private:
 protected:
 
    // So this can be instantiated and not be a pure virtual class
-   void interpolateTick( F32 delta ) {};
-   void processTick();
-   void advanceTime( F32 timeDelta ) {};
+   void interpolateTick( F32 delta ) override {};
+   void processTick() override;
+   void advanceTime( F32 timeDelta ) override {};
 
    S32 mTickPeriodMS;
    U32 mLastThink;
@@ -72,7 +72,6 @@ protected:
    bool mUseTrackDescriptionOnly;
 
    /// The description and variant values used by the local profile.
-   SFXDescription mDescription;
    SFXSource* mSourceGroup;
    F32 mVolume;
    F32 mPitch;
@@ -89,9 +88,10 @@ public:
    GuiAudioCtrl();
    ~GuiAudioCtrl();
    // GuiControl.
-   bool onWake();
-   void onSleep();
-   void setActive(bool value) {};
+   bool onWake() override;
+   void onSleep() override;
+   void onRemove() override;
+   void setActive(bool value) override {};
    bool testCondition();
    static void initPersistFields();
    DECLARE_CONOBJECT(GuiAudioCtrl);

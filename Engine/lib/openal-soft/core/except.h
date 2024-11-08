@@ -13,19 +13,20 @@ class base_exception : public std::exception {
     std::string mMessage;
 
 protected:
-    base_exception() = default;
-    virtual ~base_exception();
-
-    void setMessage(const char *msg, std::va_list args);
+    auto setMessage(const char *msg, std::va_list args) -> void;
 
 public:
-    const char *what() const noexcept override { return mMessage.c_str(); }
+    base_exception() = default;
+    base_exception(const base_exception&) = default;
+    base_exception(base_exception&&) = default;
+    ~base_exception() override;
+
+    auto operator=(const base_exception&) -> base_exception& = default;
+    auto operator=(base_exception&&) -> base_exception& = default;
+
+    [[nodiscard]] auto what() const noexcept -> const char* override { return mMessage.c_str(); }
 };
 
 } // namespace al
-
-#define START_API_FUNC try
-
-#define END_API_FUNC catch(...) { std::terminate(); }
 
 #endif /* CORE_EXCEPT_H */

@@ -74,22 +74,22 @@ public:
    RenderDeferredMgr* getDeferredRenderBin() { return mDeferredRenderBin; }
 
    // LightManager
-   virtual bool isCompatible() const;
-   virtual void activate( SceneManager *sceneManager );
-   virtual void deactivate();
-   virtual void registerGlobalLight(LightInfo *light, SimObject *obj);
-   virtual void unregisterAllLights();
-   virtual void setLightInfo( ProcessedMaterial *pmat, 
+   bool isCompatible() const override;
+   void activate( SceneManager *sceneManager ) override;
+   void deactivate() override;
+   void registerGlobalLight(LightInfo *light, SimObject *obj) override;
+   void unregisterAllLights() override;
+   void setLightInfo( ProcessedMaterial *pmat, 
                               const Material *mat, 
                               const SceneData &sgData, 
                               const SceneRenderState *state,
                               U32 pass, 
-                              GFXShaderConstBuffer *shaderConsts );
-   virtual bool setTextureStage( const SceneData &sgData, 
+                              GFXShaderConstBuffer *shaderConsts ) override;
+   bool setTextureStage( const SceneData &sgData, 
                                  const U32 currTexFlag, 
                                  const U32 textureSlot, 
                                  GFXShaderConstBuffer *shaderConsts, 
-                                 ShaderConstHandles *handles );
+                                 ShaderConstHandles *handles ) override;
 
    typedef GFXVertexPC LightVertex;
 
@@ -105,8 +105,8 @@ public:
 protected:   
 
    // LightManager
-   virtual void _addLightInfoEx( LightInfo *lightInfo );
-   virtual void _initLightFields();
+   void _addLightInfoEx( LightInfo *lightInfo ) override;
+   void _initLightFields() override;
 
    /// A simple protected singleton.  Use LightManager::findByName()
    /// to access this light manager.

@@ -160,8 +160,11 @@ enum SceneObjectTypes
    InteriorLikeObjectType =  BIT(24),
    TerrainLikeObjectType = BIT(25),
 #if defined(AFX_CAP_AFXMODEL_TYPE) 
-   afxModelObjectType = BIT(26)
+   afxModelObjectType = BIT(26),
+#else
+   N_A_27 = BIT(26),
 #endif 
+   N_A_28 = BIT(27),
 
    // PATHSHAPE 
    PathShapeObjectType = BIT( 28 ),
@@ -170,6 +173,8 @@ enum SceneObjectTypes
    /// A turret object.
    /// @see TurretShape
    TurretObjectType = BIT(29),
+   N_A_31 = BIT(30),
+   N_A_32 = BIT(31),
 
    /// @}
 };

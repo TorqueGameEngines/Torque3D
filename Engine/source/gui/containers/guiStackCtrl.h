@@ -73,14 +73,14 @@ public:
       vertStackBottom,   ///< Stack from bottom to top when vertical
    };
 
-   bool resize(const Point2I &newPosition, const Point2I &newExtent);
-   void childResized(GuiControl *child);
+   bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
+   void childResized(GuiControl *child) override;
    bool isFrozen() { return mResizing; };
    /// prevent resizing. useful when adding many items.
    void freeze(bool);
 
-   bool onWake();
-   void onSleep();
+   bool onWake() override;
+   void onSleep() override;
 
    void updatePanes();
 
@@ -89,10 +89,10 @@ public:
 
    S32 getCount() { return size(); }; /// Returns the number of children in the stack
 
-   void addObject(SimObject *obj);
-   void removeObject(SimObject *obj);
+   void addObject(SimObject *obj) override;
+   void removeObject(SimObject *obj) override;
 
-   bool reOrder(SimObject* obj, SimObject* target = 0);
+   bool reOrder(SimObject* obj, SimObject* target = 0) override;
 
    static void initPersistFields();
    

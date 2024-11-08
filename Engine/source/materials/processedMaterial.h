@@ -98,9 +98,8 @@ public:
    {
       STATE_REFLECT = 1,
       STATE_TRANSLUCENT = 2,
-      STATE_GLOW = 4,      
-      STATE_WIREFRAME = 8,
-      STATE_MAX = 16
+      STATE_WIREFRAME = 4,
+      STATE_MAX = 8
    };
 
    ///
@@ -301,7 +300,7 @@ protected:
    /// @{
 
    /// Creates the default state block templates, used by initStateBlocks.
-   virtual void _initStateBlockTemplates(GFXStateBlockDesc& stateTranslucent, GFXStateBlockDesc& stateGlow, GFXStateBlockDesc& stateReflect);
+   virtual void _initStateBlockTemplates(GFXStateBlockDesc& stateTranslucent, GFXStateBlockDesc& stateReflect);
 
    /// Does the base render state block setting, normally per pass.
    virtual void _initPassStateBlock( RenderPassData *rpd, GFXStateBlockDesc& result);

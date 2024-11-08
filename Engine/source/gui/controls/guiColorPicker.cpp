@@ -272,18 +272,18 @@ void GuiColorPickerCtrl::drawSelector(RectI &bounds, Point2I &selectorPos, Selec
    {
       case sVertical:
          // Now draw the vertical selector Up -> Pos
-         if (selectorPos.y != bounds.point.y+1)
+         if (selectorPos.y > bounds.point.y)
             GFX->getDrawUtil()->drawLine(selectorPos.x, bounds.point.y, selectorPos.x, selectorPos.y-sMax-1, color);
          // Down -> Pos
-         if (selectorPos.y != bounds.point.y+bounds.extent.y) 
+         if (selectorPos.y < bounds.point.y + bounds.extent.y)
             GFX->getDrawUtil()->drawLine(selectorPos.x,	selectorPos.y + sMax, selectorPos.x, bounds.point.y + bounds.extent.y, color);
       break;
       case sHorizontal:
          // Now draw the horizontal selector Left -> Pos
-         if (selectorPos.x != bounds.point.x) 
+         if (selectorPos.x > bounds.point.x)
             GFX->getDrawUtil()->drawLine(bounds.point.x, selectorPos.y-1, selectorPos.x-sMax, selectorPos.y-1, color);
          // Right -> Pos
-         if (selectorPos.x != bounds.point.x) 
+         if (selectorPos.x < bounds.point.x + bounds.extent.x)
             GFX->getDrawUtil()->drawLine(bounds.point.x+mSelectorPos.x+sMax, selectorPos.y-1, bounds.point.x + bounds.extent.x, selectorPos.y-1, color);
       break;
    }
@@ -388,12 +388,10 @@ void GuiColorPickerCtrl::onRender(Point2I offset, const RectI& updateRect)
       {
          Point2I resolution = getRoot()->getExtent();
 
-         U32 buf_x = offset.x + mSelectorPos.x + 1;
-         U32 buf_y = resolution.y - (extent.y - (offset.y + mSelectorPos.y + 1));
+         U32 buf_x = offset.x + mSelectorPos.x;
+         U32 buf_y = resolution.y - (extent.y - (offset.y + mSelectorPos.y));
 
          GFXTexHandle bb(resolution.x, resolution.y, GFXFormatR8G8B8A8_SRGB, &GFXRenderTargetSRGBProfile, avar("%s() - bb (line %d)", __FUNCTION__, __LINE__));
-
-         Point2I tmpPt(buf_x, buf_y);
 
          GFXTarget *targ = GFX->getActiveRenderTarget();
          targ->resolveTo(bb);
@@ -458,19 +456,7 @@ void GuiColorPickerCtrl::setSelectorPos(const LinearColorF & color)
 
 Point2I GuiColorPickerCtrl::findColor(const LinearColorF & color, const Point2I& offset, const Point2I& resolution, GBitmap& bmp)
 {
-   RectI rect;
    Point2I ext = getExtent();
-   if (mDisplayMode != pDropperBackground)
-   {
-      ext.x -= 3;
-      ext.y -= 2;
-      rect = RectI(Point2I(1, 1), ext);
-   }
-   else
-   {
-      rect = RectI(Point2I(0, 0), ext);
-   }
-
    Point2I closestPos(-1, -1);
 
    /* Debugging
@@ -498,12 +484,12 @@ Point2I GuiColorPickerCtrl::findColor(const LinearColorF & color, const Point2I&
    F32 closestVal(10000.0f);
    bool closestSet = false;
 
-   for (S32 x = rect.point.x; x <= rect.extent.x; x++)
+   for (S32 x = 0; x < ext.x; x++)
    {
-      for (S32 y = rect.point.y; y <= rect.extent.y; y++)
+      for (S32 y = 0; y < ext.y; y++)
       {
-         buf_x = offset.x + x + 1;
-         buf_y = (resolution.y - (offset.y + y + 1));
+         buf_x = offset.x + x;
+         buf_y = (resolution.y - (offset.y + y));
          buf_y = resolution.y - buf_y;
 
          //Get the color at that position
@@ -532,46 +518,11 @@ Point2I GuiColorPickerCtrl::findColor(const LinearColorF & color, const Point2I&
 
 void GuiColorPickerCtrl::setSelectorPos(const Point2I &pos)
 {
-   Point2I extent = getExtent();
-   RectI rect;
-   if (mDisplayMode != pDropperBackground) 
-   {
-      extent.x -= 3;
-      extent.y -= 2;
-      rect = RectI(Point2I(1,1), extent);
-   }
-   else
-   {
-      rect = RectI(Point2I(0,0), extent);
-   }
-   
-   if (rect.pointInRect(pos)) 
-   {
-      mSelectorPos = pos;
-      mPositionChanged = true;
-      // We now need to update
-      setUpdate();
-   }
-
-   else
-   {
-      if ((pos.x > rect.point.x) && (pos.x < (rect.point.x + rect.extent.x)))
-         mSelectorPos.x = pos.x;
-      else if (pos.x <= rect.point.x)
-         mSelectorPos.x = rect.point.x;
-      else if (pos.x >= (rect.point.x + rect.extent.x))
-         mSelectorPos.x = rect.point.x + rect.extent.x - 1;
-
-      if ((pos.y > rect.point.y) && (pos.y < (rect.point.y + rect.extent.y)))
-         mSelectorPos.y = pos.y;
-      else if (pos.y <= rect.point.y)
-         mSelectorPos.y = rect.point.y;
-      else if (pos.y >= (rect.point.y + rect.extent.y))
-         mSelectorPos.y = rect.point.y + rect.extent.y - 1;
-
-      mPositionChanged = true;
-      setUpdate();
-   }
+   Point2I ext = getExtent();
+   mSelectorPos.x = mClamp(pos.x, 1, ext.x - 1);
+   mSelectorPos.y = mClamp(pos.y, 1, ext.y - 1);
+   mPositionChanged = true;
+   setUpdate();
 }
 
 void GuiColorPickerCtrl::onMouseDown(const GuiEvent &event)

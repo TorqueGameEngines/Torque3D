@@ -40,7 +40,7 @@ public:
    void setOverrideMaterial(BaseMatInstance* overrideMaterial);
 
    // RenderBinManager interface
-   virtual void render(SceneRenderState * state);
+   void render(SceneRenderState * state) override;
 
    DECLARE_CONOBJECT(ForcedMaterialMeshMgr);
    static void initPersistFields();

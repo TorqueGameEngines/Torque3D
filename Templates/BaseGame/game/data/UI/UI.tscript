@@ -81,11 +81,20 @@ function UI::initClient(%this)
    
    if(isToolBuild())
       %this.queueExec("./tools/creator.tscript");
+      
+   //GameMenu actionmap
+   %this.queueExec("./scripts/defaultKeybinds.tscript");
 }
 
-function UI::onCreateClientConnection(%this){}
+function UI::onCreateClientConnection(%this)
+{
+   GameMenuToggleActionMap.push();
+}
 
-function UI::onDestroyClientConnection(%this){}
+function UI::onDestroyClientConnection(%this)
+{
+   GameMenuToggleActionMap.pop();
+}
 
 function UI::registerGameMenus(%this, %menusArrayObj)
 {

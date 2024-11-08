@@ -16,7 +16,7 @@
 
     add_library(libtheora ${LIBTHEORA_FILES})
     target_include_directories(libtheora PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
-    target_link_libraries(libtheora PUBLIC libogg)
+    target_link_libraries(libtheora PUBLIC ogg)
     target_compile_definitions(libtheora PUBLIC ${LIBTHEORA_COMPILE_DEFINES})
     set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "${CMAKE_CURRENT_SOURCE_DIR}/include/theora")
     #set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} libtheora PARENT_SCOPE)

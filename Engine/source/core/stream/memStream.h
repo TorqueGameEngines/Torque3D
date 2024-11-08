@@ -81,16 +81,16 @@ class MemStream : public Stream
    protected:
 
       // Stream
-      bool _read( const U32 in_numBytes,  void *out_pBuffer );
-      bool _write( const U32 in_numBytes, const void *in_pBuffer );
+      bool _read( const U32 in_numBytes,  void *out_pBuffer ) override;
+      bool _write( const U32 in_numBytes, const void *in_pBuffer ) override;
 
    public:
 
       // Stream
-      bool hasCapability( const Capability caps ) const;
-      U32 getPosition() const;
-      bool setPosition( const U32 in_newPosition );
-      U32 getStreamSize();
+      bool hasCapability( const Capability caps ) const override;
+      U32 getPosition() const override;
+      bool setPosition( const U32 in_newPosition ) override;
+      U32 getStreamSize() override;
 
       /// Returns the memory buffer.
       void *getBuffer() { return mBufferBase; }

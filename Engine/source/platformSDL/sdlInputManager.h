@@ -95,9 +95,9 @@ public:
 public:
    SDLInputManager();
 
-   bool enable();
-   void disable();
-   void process();
+   bool enable() override;
+   void disable() override;
+   void process() override;
 
    void processEvent(SDL_Event &evt);
 

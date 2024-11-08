@@ -34,8 +34,8 @@ public:
 
    DebugVizGLSL();
 
-   virtual void processPix(Vector<ShaderComponent*>& componentList,
-      const MaterialFeatureData& fd);
+   void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
 
-   virtual String getName() { return "Debug Viz"; }
+   String getName() override { return "Debug Viz"; }
 };

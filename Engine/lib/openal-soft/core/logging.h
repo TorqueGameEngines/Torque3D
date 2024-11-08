@@ -1,9 +1,7 @@
 #ifndef CORE_LOGGING_H
 #define CORE_LOGGING_H
 
-#include <stdio.h>
-
-#include "opthelpers.h"
+#include <cstdio>
 
 
 enum class LogLevel {
@@ -17,36 +15,22 @@ extern LogLevel gLogLevel;
 extern FILE *gLogFile;
 
 
-#if !defined(_WIN32) && !defined(__ANDROID__)
-#define TRACE(...) do {                                                       \
-    if UNLIKELY(gLogLevel >= LogLevel::Trace)                                 \
-        fprintf(gLogFile, "[ALSOFT] (II) " __VA_ARGS__);                      \
-} while(0)
+using LogCallbackFunc = void(*)(void *userptr, char level, const char *message, int length) noexcept;
 
-#define WARN(...) do {                                                        \
-    if UNLIKELY(gLogLevel >= LogLevel::Warning)                               \
-        fprintf(gLogFile, "[ALSOFT] (WW) " __VA_ARGS__);                      \
-} while(0)
+void al_set_log_callback(LogCallbackFunc callback, void *userptr);
 
-#define ERR(...) do {                                                         \
-    if UNLIKELY(gLogLevel >= LogLevel::Error)                                 \
-        fprintf(gLogFile, "[ALSOFT] (EE) " __VA_ARGS__);                      \
-} while(0)
 
+#ifdef __MINGW32__
+[[gnu::format(__MINGW_PRINTF_FORMAT,2,3)]]
 #else
-
-#ifdef __USE_MINGW_ANSI_STDIO
-[[gnu::format(gnu_printf,3,4)]]
-#else
-[[gnu::format(printf,3,4)]]
+[[gnu::format(printf,2,3)]]
 #endif
-void al_print(LogLevel level, FILE *logfile, const char *fmt, ...);
+void al_print(LogLevel level, const char *fmt, ...) noexcept;
 
-#define TRACE(...) al_print(LogLevel::Trace, gLogFile, "[ALSOFT] (II) " __VA_ARGS__)
+#define TRACE(...) al_print(LogLevel::Trace, __VA_ARGS__)
 
-#define WARN(...) al_print(LogLevel::Warning, gLogFile, "[ALSOFT] (WW) " __VA_ARGS__)
+#define WARN(...) al_print(LogLevel::Warning, __VA_ARGS__)
 
-#define ERR(...) al_print(LogLevel::Error, gLogFile, "[ALSOFT] (EE) " __VA_ARGS__)
-#endif
+#define ERR(...) al_print(LogLevel::Error, __VA_ARGS__)
 
 #endif /* CORE_LOGGING_H */

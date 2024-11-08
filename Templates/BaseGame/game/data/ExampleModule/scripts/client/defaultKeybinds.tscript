@@ -29,8 +29,6 @@ addKeyRemap("Jump", "ExampleMoveMap", "gamepad", "jump", "Jump");
 ExampleMoveMap.bind( keyboard, F2, showPlayerList );
 ExampleMoveMap.bind(keyboard, "ctrl h", hideHUDs);
 ExampleMoveMap.bind(keyboard, "alt p", doScreenShotHudless);
-ExampleMoveMap.bindCmd(keyboard, "escape", "", "Canvas.pushDialog(GameMenu);");
-ExampleMoveMap.bindCmd(gamepad, btn_start, "Canvas.pushDialog(GameMenu);", "" );
 
 //------------------------------------------------------------------------------
 // Movement Keys

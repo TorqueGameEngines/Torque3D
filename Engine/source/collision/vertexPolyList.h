@@ -37,21 +37,21 @@ public:
    virtual ~VertexPolyList() {}
 
    // AbstractPolyList
-   U32 addPoint(const Point3F& p);
-   U32 addPlane(const PlaneF& plane) { return 0; } 
-   void begin(BaseMatInstance* material,U32 surfaceKey) {}
-   void plane(U32 v1,U32 v2,U32 v3) {}
-   void plane(const PlaneF& p) {}
-   void plane(const U32 index) {}
-   void vertex(U32 vi) {}
-   void end() {}
-   const PlaneF& getIndexedPlane(const U32 index);
+   U32 addPoint(const Point3F& p) override;
+   U32 addPlane(const PlaneF& plane) override { return 0; } 
+   void begin(BaseMatInstance* material,U32 surfaceKey) override {}
+   void plane(U32 v1,U32 v2,U32 v3) override {}
+   void plane(const PlaneF& p) override {}
+   void plane(const U32 index) override {}
+   void vertex(U32 vi) override {}
+   void end() override {}
+   const PlaneF& getIndexedPlane(const U32 index) override;
 
    /// Clears any captured verts.
    void clear();
 
    /// Returns true if the polylist contains no verts.
-   bool isEmpty() const { return mVertexList.empty(); }
+   bool isEmpty() const override { return mVertexList.empty(); }
 
    /// Returns the vertex list.
    Vector<Point3F>& getVertexList() { return mVertexList; }

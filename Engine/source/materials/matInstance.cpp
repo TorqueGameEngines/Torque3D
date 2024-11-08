@@ -49,9 +49,9 @@ public:
    void loadHandle(ProcessedMaterial* pmat);
    
    // MaterialParameterHandle interface
-   const String& getName() const { return mName; }
-   virtual bool isValid() const; 
-   virtual S32 getSamplerRegister( U32 pass ) const;
+   const String& getName() const override { return mName; }
+   bool isValid() const override; 
+   S32 getSamplerRegister( U32 pass ) const override;
 private:   
    friend class MatInstParameters;
    String mName;

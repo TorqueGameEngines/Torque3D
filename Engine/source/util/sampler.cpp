@@ -164,7 +164,7 @@ class CSVSamplerBackend : public ISamplerBackend
    }
 
    /// Open the file and emit a row with the names of all enabled keys.
-   virtual bool init( const char* fileName )
+   bool init( const char* fileName ) override
    {
       if( !mStream.open( fileName, Torque::FS::File::Write ) )
       {
@@ -193,11 +193,11 @@ class CSVSamplerBackend : public ISamplerBackend
       return true;
    }
 
-   virtual void beginFrame()
+   void beginFrame() override
    {
    }
 
-   virtual void endFrame()
+   void endFrame() override
    {
       char buffer[ 256 ];
 
@@ -260,19 +260,19 @@ class CSVSamplerBackend : public ISamplerBackend
       return NULL; // silence compiler
    }
 
-   virtual void sample( U32 key, bool value )
+   void sample( U32 key, bool value ) override
    {
       lookup( key )->set( value );
    }
-   virtual void sample( U32 key, S32 value )
+   void sample( U32 key, S32 value ) override
    {
       lookup( key )->set( value );
    }
-   virtual void sample( U32 key, F32 value )
+   void sample( U32 key, F32 value ) override
    {
       lookup( key )->set( value );
    }
-   virtual void sample( U32 key, const char* value )
+   void sample( U32 key, const char* value ) override
    {
       lookup( key )->set( value );
    }

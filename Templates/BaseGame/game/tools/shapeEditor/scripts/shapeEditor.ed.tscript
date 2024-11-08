@@ -2935,11 +2935,18 @@ function ShapeEdColWindow::onWake( %this )
    %this-->colType.add( "18-DOP" );
    %this-->colType.add( "26-DOP" );
    %this-->colType.add( "Convex Hulls" );
+
+   %this-->fillMode.clear();
+   %this-->fillMode.add("Flood fill");
+   %this-->fillMode.add("Surface only");
+   %this-->fillMode.add("Raycast Fill");
+
+   %this-->fillMode.setSelected( %this-->fillMode.findText( "Flood fill" ), false );
 }
 
 function ShapeEdColWindow::update_onShapeSelectionChanged( %this )
 {
-   %this.lastColSettings = "" TAB "Bounds";
+   %this.lastColSettings = "" TAB "Bounds" TAB "Flood fill";
 
    // Initialise collision mesh target list
    %this-->colTarget.clear();
@@ -2979,6 +2986,8 @@ function ShapeEdColWindow::update_onCollisionChanged( %this )
       %this-->hullMaxSphereErrorText.setText( mFloor( %this-->hullMaxSphereError.getValue() ) );
       %this-->hullMaxCapsuleError.setValue( getField( %colData, 8 ) );
       %this-->hullMaxCapsuleErrorText.setText( mFloor( %this-->hullMaxCapsuleError.getValue() ) );
+      %fillModeID = %this-->fillMode.findText( getField( %colData, 9 ) );
+      %this-->fillMode.setSelected( %fillModeID, false );
    }
    else
    {
@@ -3007,6 +3016,7 @@ function ShapeEdColWindow::editCollisionOK( %this )
 {
    %type = %this-->colType.getText();
    %target = %this-->colTarget.getText();
+   %fillMode = %this-->fillMode.getText();
    %depth = %this-->hullDepth.getValue();
    %merge = %this-->hullMergeThreshold.getValue();
    %concavity = %this-->hullConcaveThreshold.getValue();
@@ -3015,7 +3025,7 @@ function ShapeEdColWindow::editCollisionOK( %this )
    %maxSphere = %this-->hullMaxSphereError.getValue();
    %maxCapsule = %this-->hullMaxCapsuleError.getValue();
 
-   ShapeEditor.doEditCollision( %type, %target, %depth, %merge, %concavity, %maxVerts,
+   ShapeEditor.doEditCollision( %type, %target, %fillMode, %depth, %merge, %concavity, %maxVerts,
                                  %maxBox, %maxSphere, %maxCapsule );
 }
 

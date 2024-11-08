@@ -54,8 +54,8 @@ public:
       close();
    }
 
-   virtual Path   getName() const { return mZipFilename; }
-   virtual NodeStatus getStatus() const
+   Path   getName() const override { return mZipFilename; }
+   NodeStatus getStatus() const override
    { 
       if (mZipStream) 
       {
@@ -76,7 +76,7 @@ public:
          return FileNode::Closed;
    }
 
-   virtual bool   getAttributes(Attributes* attr) 
+   bool   getAttributes(Attributes* attr) override 
    { 
       if (!attr)
          return false;
@@ -92,7 +92,7 @@ public:
       return true; 
    }
 
-   virtual U32 getPosition()
+   U32 getPosition() override
    {
       if (mZipStream)
          return mZipStream->getPosition();
@@ -100,7 +100,7 @@ public:
          return 0;
    }
 
-   virtual U32 setPosition(U32 pos, SeekMode mode)
+   U32 setPosition(U32 pos, SeekMode mode) override
    {
       if (!mZipStream || mode != Begin)
          return 0;
@@ -108,7 +108,7 @@ public:
          return mZipStream->setPosition(pos);
    }
 
-   virtual bool open(AccessMode mode)
+   bool open(AccessMode mode) override
    {
       // stream is already open so just check to make sure that they are using a valid mode
       if (mode == Read)
@@ -120,7 +120,7 @@ public:
       }
    }
 
-   virtual bool close()
+   bool close() override
    {
       if (mZipStream != NULL && mArchive != NULL)
       {
@@ -131,7 +131,7 @@ public:
       return true;
    }
 
-   virtual U32 read(void* dst, U32 size)
+   U32 read(void* dst, U32 size) override
    {
       if (mZipStream && mZipStream->read(size, dst) && mByteCount)
          return mByteCount->getLastBytesRead();
@@ -139,7 +139,7 @@ public:
          return 0;
    }
 
-   virtual U32 write(const void* src, U32 size)
+   U32 write(const void* src, U32 size) override
    {
       if (mZipStream && mZipStream->write(size, src) && mByteCount)
          return mByteCount->getLastBytesWritten();
@@ -148,7 +148,7 @@ public:
    }
 
    protected:
-      virtual U32    calculateChecksum()
+      U32    calculateChecksum() override
       {
          // JMQ: implement
          return 0;
@@ -180,15 +180,15 @@ public:
    {
    }
 
-   Torque::Path getName() const { return mPath; }
+   Torque::Path getName() const override { return mPath; }
 
    // getStatus() doesn't appear to be used for directories
-   NodeStatus getStatus() const
+   NodeStatus getStatus() const override
    {
       return FileNode::Open;
    }
 
-   bool getAttributes(Attributes* attr)
+   bool getAttributes(Attributes* attr) override
    {
       if (!attr)
          return false;
@@ -204,20 +204,20 @@ public:
       return true; 
    }
 
-   bool open()
+   bool open() override
    {
       // reset iterator
       if (mZipEntry)
          mChildIter = mZipEntry->mChildren.begin();
       return (mZipEntry != NULL && mArchive.getPointer() != NULL);
    }
-   bool close()
+   bool close() override
    {
       if (mZipEntry)
          mChildIter = mZipEntry->mChildren.end();
       return true;
    }
-   bool read(Attributes* attr)
+   bool read(Attributes* attr) override
    {
       if (!attr)
          return false;
@@ -244,7 +244,7 @@ public:
    }
 
 private:
-   U32 calculateChecksum() 
+   U32 calculateChecksum() override 
    {
       return 0;
    }
@@ -273,15 +273,15 @@ public:
    {
    }
 
-   Torque::Path getName() const { return mPath; }
+   Torque::Path getName() const override { return mPath; }
 
    // getStatus() doesn't appear to be used for directories
-   NodeStatus getStatus() const
+   NodeStatus getStatus() const override
    {
       return FileNode::Open;
    }
 
-   bool getAttributes(Attributes* attr)
+   bool getAttributes(Attributes* attr) override
    {
       if (!attr)
          return false;
@@ -299,17 +299,17 @@ public:
       return true; 
    }
 
-   bool open()
+   bool open() override
    {
       mRead = false;
       return (mArchive.getPointer() != NULL);
    }
-   bool close()
+   bool close() override
    {
       mRead = false;
       return true;
    }
-   bool read(Attributes* attr)
+   bool read(Attributes* attr) override
    {
       if (!attr)
          return false;
@@ -336,7 +336,7 @@ public:
    }
 
 private:
-   U32 calculateChecksum() 
+   U32 calculateChecksum() override 
    {
       return 0;
    }

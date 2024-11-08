@@ -93,32 +93,32 @@ public:
    /// \param enabled [optional] If this row is initially enabled. Default true.
    void addRow(const char* label, const char* optionsList, bool wrapOptions, const char* callback, S32 icon = -1, S32 yPad = 0, bool enabled = true);
 
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
    /// Callback when the mouse button is released.
    ///
    /// \param event A reference to the event that triggered the callback.
-   void onMouseUp(const GuiEvent &event);
+   void onMouseUp(const GuiEvent &event) override;
 
    /// Callback when a key is pressed.
    ///
    /// \param event The event that triggered this callback.
-   bool onKeyDown(const GuiEvent &event);
+   bool onKeyDown(const GuiEvent &event) override;
 
    /// Callback when a key is repeating.
    ///
    /// \param event The event that triggered this callback.
-   bool onKeyRepeat(const GuiEvent &event){ return onKeyDown(event); }
+   bool onKeyRepeat(const GuiEvent &event) override{ return onKeyDown(event); }
 
    /// Callback when the gamepad axis is activated.
    ///
    /// \param event A reference to the event that triggered the callback.
-   virtual bool onGamepadAxisLeft(const GuiEvent &event);
+   bool onGamepadAxisLeft(const GuiEvent &event) override;
 
    /// Callback when the gamepad axis is activated.
    ///
    /// \param event A reference to the event that triggered the callback.
-   virtual bool onGamepadAxisRight(const GuiEvent &event);
+   bool onGamepadAxisRight(const GuiEvent &event) override;
 
    virtual void clearRows();
 
@@ -128,7 +128,7 @@ public:
    DECLARE_CONOBJECT(GuiGameListOptionsCtrl);
    DECLARE_DESCRIPTION( "A control for showing pages of options that are gamepad friendly." );
    
-   virtual bool onAdd();
+   bool onAdd() override;
 
    /// Initializes fields accessible through the console.
    static void initPersistFields();
@@ -140,15 +140,15 @@ protected:
    ///
    /// \return True if the profile is of type GuiGameListOptionsProfile or false
    /// if the profile is of any other type.
-   bool hasValidProfile() const;
+   bool hasValidProfile() const override;
 
    /// Enforces the validity of the fields on this control and its profile (if the
    /// profile is valid, see: hasValidProfile).
-   void enforceConstraints();
+   void enforceConstraints() override;
 
    /// Adds lines around the column divisions to the feedback already provided
    /// in the Parent.
-   void onDebugRender(Point2I offset);
+   void onDebugRender(Point2I offset) override;
 
 private:
    /// Performs a click on the current option row. The x position is used to
@@ -183,7 +183,7 @@ class GuiGameListOptionsProfile : public GuiGameListMenuProfile
 
 public:
    /// Enforces range constraints on all required fields.
-   void enforceConstraints();
+   void enforceConstraints() override;
 
    GuiGameListOptionsProfile();
 

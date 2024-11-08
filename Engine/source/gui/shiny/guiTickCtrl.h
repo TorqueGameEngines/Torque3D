@@ -53,9 +53,9 @@ private:
 protected:
 
    // So this can be instantiated and not be a pure virtual class
-   virtual void interpolateTick( F32 delta ) {};
-   virtual void processTick() {};
-   virtual void advanceTime( F32 timeDelta ) {};
+   void interpolateTick( F32 delta ) override {};
+   void processTick() override {};
+   void advanceTime( F32 timeDelta ) override {};
 
 public:
    DECLARE_CONOBJECT( GuiTickCtrl );

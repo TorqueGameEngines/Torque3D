@@ -56,7 +56,7 @@ void afxEffectronData::ewValidator::validateType(SimObject* object, void* typePt
 class EffectronFinishStartupEvent : public SimEvent
 {
 public:
-  void process(SimObject* obj) 
+  void process(SimObject* obj) override 
   { 
      afxEffectron* eff = dynamic_cast<afxEffectron*>(obj);
      if (eff)

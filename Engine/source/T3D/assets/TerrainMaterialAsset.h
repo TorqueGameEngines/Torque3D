@@ -87,9 +87,9 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
-   U32 load();
+   U32 load() override;
 
    StringTableEntry getMaterialDefinitionName() { return mMatDefinitionName; }
    SimObjectPtr<TerrainMaterial> getMaterialDefinition() { return mMaterialDefinition; }
@@ -117,8 +117,8 @@ public:
    DECLARE_CONOBJECT(TerrainMaterialAsset);
 
 protected:
-   virtual void initializeAsset();
-   virtual void onAssetRefresh(void);
+   void initializeAsset() override;
+   void onAssetRefresh(void) override;
 
    static bool setScriptFile(void *obj, const char *index, const char *data) 
    { 
@@ -144,8 +144,8 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeTerrainMaterialAssetPtr);
    static void consoleInit();
 
-   virtual GuiControl* constructEditControl();
-   virtual bool updateRects();
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
 };
 class GuiInspectorTypeTerrainMaterialAssetId : public GuiInspectorTypeTerrainMaterialAssetPtr
 {

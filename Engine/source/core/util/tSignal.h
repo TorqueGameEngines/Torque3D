@@ -285,7 +285,7 @@ protected:
 
    struct SlotLinkImpl : public DelegateLinkImpl
    {      
-      SlotLinkImpl(SignalSlot<Signature>& slot) : mSlot( &slot ), DelegateLinkImpl( slot.getDelegate() )
+      SlotLinkImpl(SignalSlot<Signature>& slot) : DelegateLinkImpl( slot.getDelegate() ), mSlot( &slot )
       {
 
       }

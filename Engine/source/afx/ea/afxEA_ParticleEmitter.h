@@ -51,14 +51,14 @@ public:
   /*C*/             afxEA_ParticleEmitter();
   /*D*/             ~afxEA_ParticleEmitter();
 
-  virtual void      ea_set_datablock(SimDataBlock*);
-  virtual bool      ea_start();
-  virtual bool      ea_update(F32 dt);
-  virtual void      ea_finish(bool was_stopped);
+  void      ea_set_datablock(SimDataBlock*) override;
+  bool      ea_start() override;
+  bool      ea_update(F32 dt) override;
+  void      ea_finish(bool was_stopped) override;
 
-  virtual bool      ea_is_enabled() { return true; }
+  bool      ea_is_enabled() override { return true; }
 
-  virtual void      onDeleteNotify(SimObject*);
+  void      onDeleteNotify(SimObject*) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

@@ -299,12 +299,12 @@ class afxEA_ParticleEmitterDesc : public afxEffectAdapterDesc, public afxEffectD
   static afxEA_ParticleEmitterDesc desc;
 
 public:
-  virtual bool  testEffectType(const SimDataBlock*) const;
-  virtual bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const;
-  virtual bool  runsOnServer(const afxEffectWrapperData*) const { return false; }
-  virtual bool  runsOnClient(const afxEffectWrapperData*) const { return true; }
+  bool  testEffectType(const SimDataBlock*) const override;
+  bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const override;
+  bool  runsOnServer(const afxEffectWrapperData*) const override { return false; }
+  bool  runsOnClient(const afxEffectWrapperData*) const override { return true; }
 
-  virtual afxEffectWrapper* create() const { return new afxEA_ParticleEmitter; }
+  afxEffectWrapper* create() const override { return new afxEA_ParticleEmitter; }
 };
 
 afxEA_ParticleEmitterDesc afxEA_ParticleEmitterDesc::desc;

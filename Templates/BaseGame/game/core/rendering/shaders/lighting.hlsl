@@ -27,6 +27,7 @@
 //globals
 uniform float3 eyePosWorld;
 uniform float maxProbeDrawDistance;
+uniform int isCapturing;
 #ifndef TORQUE_SHADERGEN
 
 // These are the uniforms used by most lighting shaders.
@@ -55,10 +56,6 @@ uniform float4 albedo;
 #define MAX_FORWARD_PROBES 4
 
 #define MAX_FORWARD_LIGHT 4
-
-#ifndef CAPTURING
-#define CAPTURING 0
-#endif
 
 #ifndef DEBUGVIZ_ATTENUATION
 #define DEBUGVIZ_ATTENUATION 0
@@ -238,32 +235,28 @@ float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughnessSq);
    float3 Fr = D * F * Vis;
 
-#if CAPTURING == 1
-    return lerp(Fd + Fr,surface.baseColor.rgb,surface.metalness);
-#else
-   return Fd + Fr;
-#endif
-
+   if(isCapturing == 1)
+      return lerp(Fd + Fr,surface.baseColor.rgb,surface.metalness);
+   else
+      return Fd + Fr;
 }
 
 float3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
 {
-#if CAPTURING == 1
    float lightfloor = CAPTURE_LIGHT_FLOOR;
-#else
-   float lightfloor = 0.0;
-#endif
+   if(isCapturing != 1)
+      lightfloor = 0.0;
+        
    float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity, lightfloor) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
 }
 
 float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float shadow)
 {
-#if CAPTURING == 1
    float lightfloor = CAPTURE_LIGHT_FLOOR;
-#else
-   float lightfloor = 0.0;
-#endif
+   if(isCapturing != 1)
+      lightfloor = 0.0;
+      
    float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
    float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor) ;
    return evaluateStandardBRDF(surface,surfaceToLight) * factor;
@@ -271,11 +264,10 @@ float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 l
 
 float3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float3 lightDir, float2 lightSpotParams, float shadow)
 {
-#if CAPTURING == 1
    float lightfloor = CAPTURE_LIGHT_FLOOR;
-#else
-   float lightfloor = 0.0;
-#endif
+   if(isCapturing != 1)
+      lightfloor = 0.0;
+      
    float attenuation = 1.0f;
    attenuation *= getDistanceAtt(surfaceToLight.Lu, radius);
    attenuation *= getSpotAngleAtt(-surfaceToLight.L, lightDir, lightSpotParams.xy);
@@ -573,11 +565,11 @@ float4 computeForwardProbes(Surface surface,
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
-#if CAPTURING == 1
-    return float4(lerp((irradiance + specular* horizon),surface.baseColor.rgb,surface.metalness),0);
-#else
-   return float4((irradiance + specular* horizon) , 0);//alpha writes disabled
-#endif
+   
+   if(isCapturing == 1)
+      return float4(lerp((irradiance + specular* horizon),surface.baseColor.rgb,surface.metalness),0);
+   else
+      return float4((irradiance + specular* horizon) , 0);//alpha writes disabled
 }
 
 float4 debugVizForwardProbes(Surface surface,

@@ -460,6 +460,8 @@ void Prefab::_onFileChanged( const Torque::Path &path )
 
 Prefab* Prefab::getPrefabByChild( SimObject *child )
 {
+   if (child == NULL) return NULL;
+
    ChildToPrefabMap::Iterator itr = smChildToPrefabMap.find( child->getId() );
    if ( itr == smChildToPrefabMap.end() )
       return NULL;

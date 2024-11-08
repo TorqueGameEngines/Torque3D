@@ -1111,8 +1111,8 @@ DefineTSShapeConstructorMethod(renameNode, bool, (const char* oldName, const cha
    return true;
 }}
 
-DefineTSShapeConstructorMethod(addNode, bool, (const char* name, const char* parentName, TransformF txfm, bool isWorld), (TransformF::Identity, false),
-   (name, parentName, txfm, isWorld), false,
+DefineTSShapeConstructorMethod(addNode, bool, (const char* name, const char* parentName, TransformF txfm, bool isWorld, const char* target), (TransformF::Identity, false, ""),
+   (name, parentName, txfm, isWorld, target), false,
    "Add a new node.\n"
    "@param name name for the new node (must not already exist)\n"
    "@param parentName name of an existing node to be the parent of the new node. "
@@ -1125,7 +1125,7 @@ DefineTSShapeConstructorMethod(addNode, bool, (const char* name, const char* par
    "@tsexample\n"
    "%this.addNode( \"Nose\", \"Bip01 Head\", \"0 2 2 0 0 1 0\" );\n"
    "%this.addNode( \"myRoot\", \"\", \"0 0 4 0 0 1 1.57\" );\n"
-   "%this.addNode( \"Nodes\", \"Bip01 Head\", \"0 2 0 0 0 1 0\", true );\n"
+   "%this.addNode( \"Nodes\", \"Bip01 Head\", \"0 2 0 0 0 1 0\", true,\"Bounds\");\n"
    "@endtsexample\n")
 {
    Point3F pos(txfm.getPosition());
@@ -2433,6 +2433,7 @@ void TSShapeConstructor::ChangeSet::add( TSShapeConstructor::ChangeSet::Command&
       // Detail level commands
    case CmdRenameDetailLevel:       addCommand = addCmd_renameDetailLevel(cmd);         break;
    case CmdRemoveDetailLevel:       addCommand = addCmd_removeDetailLevel(cmd);         break;
+   case CmdAddCollisionDetail:      addCommand = addCmd_addDetailLevel(cmd);            break;
    case CmdSetDetailLevelSize:      addCommand = addCmd_setDetailSize(cmd);             break;
    case CmdAddImposter:             addCommand = addCmd_addImposter(cmd);               break;
    case CmdRemoveImposter:          addCommand = addCmd_removeImposter(cmd);            break;
@@ -2538,14 +2539,6 @@ bool TSShapeConstructor::ChangeSet::addCmd_renameNode(const TSShapeConstructor::
       Command& cmd = mCommands[index];
       switch (cmd.type)
       {
-      case CmdAddNode:
-         if (namesEqual(cmd.argv[0], newCmd.argv[0]))
-         {
-            cmd.argv[0] = newCmd.argv[1];       // Replace initial name argument
-            return false;
-         }
-         break;
-
       case CmdRenameNode:
          if (namesEqual(cmd.argv[1], newCmd.argv[0]))
          {
@@ -3302,6 +3295,28 @@ bool TSShapeConstructor::ChangeSet::addCmd_renameDetailLevel(const TSShapeConstr
    return true;
 }
 
+bool TSShapeConstructor::ChangeSet::addCmd_addDetailLevel(const TSShapeConstructor::ChangeSet::Command& newCmd)
+{
+   const char* targ = newCmd.argv[2];
+   for (S32 index = mCommands.size() - 1; index >= 0; index--)
+   {
+      Command& cmd = mCommands[index];
+      switch (cmd.type)
+      {
+         case CmdAddCollisionDetail:
+            if (!dStricmp(targ, cmd.argv[2]))
+            {
+               mCommands.erase(index);
+            }
+            break;
+         default:
+            break;
+      }
+   }
+
+   return true;
+}
+
 bool TSShapeConstructor::ChangeSet::addCmd_removeDetailLevel(const TSShapeConstructor::ChangeSet::Command& newCmd)
 {
    // Remove any previous command that references the detail, but stop if a mesh
@@ -3477,6 +3492,35 @@ void TSShapeConstructor::onActionPerformed()
       if (mShape && mShape->needsReinit())
       {
          mShape->init();
+      }
+   }
+}
+
+void TSShapeConstructor::cleanTargetNodes(const char* detail, const char* target)
+{
+   for (S32 index = mChangeSet.mCommands.size() - 1; index >= 0; index--)
+   {
+      ChangeSet::Command& cmd = mChangeSet.mCommands[index];
+      switch (cmd.type)
+      {
+      case ChangeSet::eCommandType::CmdAddNode:
+         // node name starts with col
+         if (dStrStartsWith(cmd.argv[0], "Col"))
+         {
+            // node has the same detail and same target
+            if (!dStricmp(detail, cmd.argv[1]) && !dStricmp(target, cmd.argv[4]))
+            {
+               // now remove it from shape
+               mShape->removeMesh(cmd.argv[0]);
+               mShape->removeNode(cmd.argv[0]);
+
+               // erase the command
+               mChangeSet.mCommands.erase(index);
+            }
+         }
+         break;
+      default:
+         break;
       }
    }
 }

@@ -91,8 +91,8 @@ class MessageVector : public SimObject
 
    //-------------------------------------- Internal interface
   protected:
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
   private:
    struct SpectatorRef {

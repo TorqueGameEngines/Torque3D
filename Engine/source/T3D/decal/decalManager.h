@@ -157,7 +157,7 @@ class DecalManager : public SceneObject
       U32 _generateConvexHull( const Vector<Point3F> &points, Vector<Point3F> *outPoints );
 
       // Rendering
-      void prepRenderImage( SceneRenderState *state );
+      void prepRenderImage( SceneRenderState *state ) override;
       
       void _generateWindingOrder( const Point3F &cornerPoint, Vector<Point3F> *sortPoints );
 
@@ -180,8 +180,8 @@ class DecalManager : public SceneObject
       bool _createDataFile();
 
       // SceneObject.
-      virtual bool onSceneAdd();
-      virtual void onSceneRemove();   public:
+      bool onSceneAdd() override;
+      void onSceneRemove() override;   public:
 
    public:
 

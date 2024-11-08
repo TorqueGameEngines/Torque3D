@@ -57,7 +57,7 @@ class GuiHealthBarHud : public GuiControl
 public:
    GuiHealthBarHud();
 
-   void onRender( Point2I, const RectI &);
+   void onRender( Point2I, const RectI &) override;
    static void initPersistFields();
    DECLARE_CONOBJECT( GuiHealthBarHud );
    DECLARE_CATEGORY( "Gui Game" );

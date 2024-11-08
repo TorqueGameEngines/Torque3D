@@ -45,15 +45,15 @@ public:
    DECLARE_CONOBJECT( GuiInspectorVariableField );
    DECLARE_CATEGORY( "Gui Editor" );
 
-   virtual bool onAdd();
+   bool onAdd() override;
 
 
-   virtual void setValue( const char* newValue );
-   virtual const char* getValue() { return NULL; }
-   virtual void updateValue();
-   virtual void setData( const char* data, bool callbacks = true );
-   virtual const char* getData( U32 inspectObjectIndex = 0 );
-   virtual void updateData() {};
+   void setValue( const char* newValue ) override;
+   const char* getValue() override { return NULL; }
+   void updateValue() override;
+   void setData( const char* data, bool callbacks = true ) override;
+   const char* getData( U32 inspectObjectIndex = 0 ) override;
+   void updateData() override {};
 
 protected:
    StringTableEntry mVariableName;

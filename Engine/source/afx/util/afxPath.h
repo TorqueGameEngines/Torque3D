@@ -80,16 +80,16 @@ public:
   /*C*/                 afxPathData(const afxPathData&, bool = false);
   /*D*/                 ~afxPathData();
 
-  virtual bool          onAdd();
-  virtual void          onRemove();
-  virtual void          packData(BitStream*);
-  virtual void          unpackData(BitStream*);
+  bool          onAdd() override;
+  void          onRemove() override;
+  void          packData(BitStream*) override;
+  void          unpackData(BitStream*) override;
 
-  bool                  preload(bool server, String &errorStr);
+  bool                  preload(bool server, String &errorStr) override;
 
-  virtual void          onStaticModified(const char* slotName, const char* newValue = NULL);
-  virtual void          onPerformSubstitutions();
-  virtual bool          allowSubstitutions() const { return true; }
+  void          onStaticModified(const char* slotName, const char* newValue = NULL) override;
+  void          onPerformSubstitutions() override;
+  bool          allowSubstitutions() const override { return true; }
 
   static void           initPersistFields();
 

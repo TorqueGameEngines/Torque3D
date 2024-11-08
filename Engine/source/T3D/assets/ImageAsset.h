@@ -119,7 +119,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(ImageAsset);
@@ -151,11 +151,11 @@ public:
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* imageAsset);
    static U32 getAssetById(String assetId, AssetPtr<ImageAsset>* imageAsset) { return getAssetById(assetId.c_str(), imageAsset); };
 
-   U32 load();
+   U32 load() override;
 
 protected:
-   virtual void            initializeAsset(void);
-   virtual void            onAssetRefresh(void);
+   void            initializeAsset(void) override;
+   void            onAssetRefresh(void) override;
 
    static bool setImageFileName(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ImageAsset*>(obj)->setImageFileName(data); return false; }
    static StringTableEntry getImageFileName(void* obj, StringTableEntry data) { return static_cast<ImageAsset*>(obj)->getImageFileName(); }

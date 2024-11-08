@@ -35,7 +35,7 @@ struct Token
    T value;
    S32 lineNumber;
 };
-#include "cmdgram.h"
+#include "CMDgram.h"
 
 namespace Compiler
 {
@@ -200,7 +200,9 @@ U32 IfStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    U32 endifIp, elseIp;
    addBreakLine(codeStream);
 
-   if (testExpr->getPreferredType() == TypeReqUInt)
+   TypeReq testType = testExpr->getPreferredType();
+
+   if (testType == TypeReqUInt)
    {
       integer = true;
    }
@@ -209,8 +211,16 @@ U32 IfStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
       integer = false;
    }
 
-   ip = testExpr->compile(codeStream, ip, integer ? TypeReqUInt : TypeReqFloat);
-   codeStream.emit(integer ? OP_JMPIFNOT : OP_JMPIFFNOT);
+   if (testType == TypeReqString || testType == TypeReqNone)
+   {
+      ip = testExpr->compile(codeStream, ip, TypeReqString);
+      codeStream.emit(OP_JMPNOTSTRING);
+   }
+   else
+   {
+      ip = testExpr->compile(codeStream, ip, integer ? TypeReqUInt : TypeReqFloat);
+      codeStream.emit(integer ? OP_JMPIFNOT : OP_JMPIFFNOT);
+   }
 
    if (elseBlock)
    {
@@ -932,6 +942,7 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       case TypeReqString: codeStream.emit(OP_SAVEVAR_STR);  break;
       case TypeReqUInt:   codeStream.emit(OP_SAVEVAR_UINT); break;
       case TypeReqFloat:  codeStream.emit(OP_SAVEVAR_FLT);  break;
+      default: break;
       }
    }
    else

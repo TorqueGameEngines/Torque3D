@@ -30,7 +30,6 @@ TORQUE_UNIFORM_SAMPLER2D(colorBuffer, 1);
 TORQUE_UNIFORM_SAMPLER2D(matInfoBuffer, 2);
 TORQUE_UNIFORM_SAMPLER2D(ssaoMaskTex, 3);
 TORQUE_UNIFORM_SAMPLER2D(backbufferTex, 4);
-TORQUE_UNIFORM_SAMPLER2D(glowBuffer, 5);
 
 uniform float mode;
 uniform float4x4 cameraToWorld;
@@ -76,8 +75,6 @@ float4 main( PFXVertToPix IN ) : TORQUE_TARGET0
         float4(TORQUE_TEX2D( ssaoMaskTex, IN.uv0 ).rgb, 1.0);
     else if(mode == 13)
         float4(TORQUE_TEX2D( backbufferTex, IN.uv0 ).rgb, 1.0);
-    else if(mode == 14)
-        float4(TORQUE_TEX2D( glowBuffer, IN.uv0 ).rgb, 1.0);
 
     return float4(0,0,0,1);   
 }

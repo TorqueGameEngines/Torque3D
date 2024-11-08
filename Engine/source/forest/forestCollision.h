@@ -66,12 +66,12 @@ public:
    }
 
    void           calculateTransform( const MatrixF &worldXfrm );
-   const MatrixF& getTransform() const { return mTransform; }
-   Box3F          getBoundingBox() const;
-   Box3F          getBoundingBox( const MatrixF &mat, const Point3F &scale) const;
-   Point3F        support( const VectorF &v ) const;
-   void           getFeatures( const MatrixF &mat, const VectorF &n, ConvexFeature *cf );
-   void           getPolyList( AbstractPolyList *list);
+   const MatrixF& getTransform() const override { return mTransform; }
+   Box3F          getBoundingBox() const override;
+   Box3F          getBoundingBox( const MatrixF &mat, const Point3F &scale) const override;
+   Point3F        support( const VectorF &v ) const override;
+   void           getFeatures( const MatrixF &mat, const VectorF &n, ConvexFeature *cf ) override;
+   void           getPolyList( AbstractPolyList *list) override;
 
 public:
 

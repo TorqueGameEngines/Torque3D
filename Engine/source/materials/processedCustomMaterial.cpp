@@ -35,7 +35,6 @@
 #include "materials/materialParameters.h"
 #include "gfx/sim/gfxStateBlockData.h"
 #include "core/util/safeDelete.h"
-#include "gfx/genericConstBuffer.h"
 #include "console/simFieldDictionary.h"
 #include "console/propertyParsing.h"
 #include "gfx/util/screenspace.h"
@@ -329,6 +328,7 @@ bool ProcessedCustomMaterial::setupPass( SceneRenderState *state, const SceneDat
 
    shaderConsts->setSafe(rpd->shaderHandles.mAccumTimeSC, MATMGR->getTotalTime());
    shaderConsts->setSafe(rpd->shaderHandles.mDampnessSC, MATMGR->getDampnessClamped());
+   shaderConsts->setSafe(rpd->shaderHandles.mIsCapturingSC, state ? (S32)state->isCapturing() : 0);
    
    return true;
 }

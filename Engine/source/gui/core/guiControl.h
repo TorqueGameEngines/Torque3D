@@ -327,7 +327,7 @@ class GuiControl : public SimGroup
       void setSizing(S32 horz, S32 vert);
       
       ///   Overrides Parent Serialization to allow specific controls to not be saved (Dynamic Controls, etc)
-      void write(Stream &stream, U32 tabStop, U32 flags);
+      void write(Stream &stream, U32 tabStop, U32 flags) override;
       
       /// Returns boolean as to whether any parent of this control has the 'no serialization' flag set.
       bool getCanSaveParent();
@@ -343,7 +343,7 @@ class GuiControl : public SimGroup
       
       GuiControl();
       virtual ~GuiControl();
-      virtual bool processArguments(S32 argc, ConsoleValue *argv);
+      bool processArguments(S32 argc, ConsoleValue *argv) override;
       
       static void initPersistFields();
       static void consoleInit();
@@ -382,8 +382,8 @@ class GuiControl : public SimGroup
       /// @param   value   True if object should be visible
       virtual void setVisible(bool value);
       inline bool isVisible() const { return mVisible; } ///< Returns true if the object is visible
-      virtual bool isHidden() const { return !isVisible(); }
-      virtual void setHidden( bool state ) { setVisible( !state ); }
+      bool isHidden() const override { return !isVisible(); }
+      void setHidden( bool state ) override { setVisible( !state ); }
       
       void setCanHit( bool value ) { mCanHit = value; }
       
@@ -413,18 +413,18 @@ class GuiControl : public SimGroup
       
       /// Adds an object as a child of this object.
       /// @param   obj   New child object of this control
-      void addObject(SimObject *obj);
+      void addObject(SimObject *obj) override;
       
       /// Removes a child object from this control.
       /// @param   obj Object to remove from this control
-      void removeObject(SimObject *obj);
+      void removeObject(SimObject *obj) override;
       
       GuiControl *getParent();  ///< Returns the control which owns this one.
       GuiCanvas *getRoot();     ///< Returns the root canvas of this control.
       
-      virtual bool acceptsAsChild( SimObject* object ) const;
+      bool acceptsAsChild( SimObject* object ) const override;
       
-      virtual void onGroupRemove();
+      void onGroupRemove() override;
       
       /// @}
       
@@ -535,16 +535,16 @@ class GuiControl : public SimGroup
       virtual void onPreRender();
       
       /// Called when this object is removed
-      virtual void onRemove();
+      void onRemove() override;
       
       /// Called when one of this objects children is removed
       virtual void onChildRemoved( GuiControl *child );
       
       /// Called when this object is added to the scene
-      virtual bool onAdd();
+      bool onAdd() override;
       
       /// Called when the mProfile or mToolTipProfile is deleted
-      virtual void onDeleteNotify(SimObject *object);
+      void onDeleteNotify(SimObject *object) override;
       
       /// Called when this object has a new child
       virtual void onChildAdded( GuiControl *child );
@@ -828,8 +828,8 @@ class GuiControl : public SimGroup
       /// of the final clipped text in pixels.
       U32 clipText( String &inOutText, U32 width ) const;
       
-      void inspectPostApply();
-      void inspectPreApply();
+      void inspectPostApply() override;
+      void inspectPreApply() override;
 protected:
       F32 fade_amt;
 public:

@@ -48,10 +48,10 @@ public:
    GFXGLTextureTarget(bool genMips);
    virtual ~GFXGLTextureTarget();
 
-   virtual const Point2I getSize();
-   virtual GFXFormat getFormat();
-   virtual void attachTexture(RenderSlot slot, GFXTextureObject *tex, U32 mipLevel=0, U32 zOffset = 0);
-   virtual void attachTexture(RenderSlot slot, GFXCubemap *tex, U32 face, U32 mipLevel=0);
+   const Point2I getSize() override;
+   GFXFormat getFormat() override;
+   void attachTexture(RenderSlot slot, GFXTextureObject *tex, U32 mipLevel=0, U32 zOffset = 0) override;
+   void attachTexture(RenderSlot slot, GFXCubemap *tex, U32 face, U32 mipLevel=0) override;
    virtual void clearAttachments();
 
    /// Functions to query internal state
@@ -62,14 +62,14 @@ public:
 
    /// @}
    
-   void deactivate();
-   void zombify();
-   void resurrect();
-   virtual const String describeSelf() const;
+   void deactivate() override;
+   void zombify() override;
+   void resurrect() override;
+   const String describeSelf() const override;
    
-   virtual void resolve();
+   void resolve() override;
    
-   virtual void resolveTo(GFXTextureObject* obj);
+   void resolveTo(GFXTextureObject* obj) override;
    
 protected:
 

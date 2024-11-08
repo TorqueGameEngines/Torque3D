@@ -63,19 +63,19 @@ public:
    virtual ~GBufferConditionerHLSL();
 
 
-   virtual void processVert( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd );
-   virtual void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd );
-   virtual Resources getResources( const MaterialFeatureData &fd );
-   virtual String getName() { return "GBuffer Conditioner"; }
+   void processVert( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override;
+   void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override;
+   Resources getResources( const MaterialFeatureData &fd ) override;
+   String getName() override { return "GBuffer Conditioner"; }
 
 protected:
 
-   virtual Var *printMethodHeader( MethodType methodType, const String &methodName, Stream &stream, MultiLine *meta );
+   Var *printMethodHeader( MethodType methodType, const String &methodName, Stream &stream, MultiLine *meta ) override;
 
    virtual GenOp* _posnegEncode( GenOp *val );
    virtual GenOp* _posnegDecode( GenOp *val );
-   virtual Var* _conditionOutput( Var *unconditionedOutput, MultiLine *meta );
-   virtual Var* _unconditionInput( Var *conditionedInput, MultiLine *meta );
+   Var* _conditionOutput( Var *unconditionedOutput, MultiLine *meta ) override;
+   Var* _unconditionInput( Var *conditionedInput, MultiLine *meta ) override;
 };
 
 #endif // _GBUFFER_CONDITIONER_HLSL_H_

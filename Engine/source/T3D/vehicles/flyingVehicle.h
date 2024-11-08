@@ -107,9 +107,9 @@ struct FlyingVehicleData: public VehicleData {
    FlyingVehicleData();
    DECLARE_CONOBJECT(FlyingVehicleData);
    static void initPersistFields();
-   bool preload(bool server, String &errorStr);
-   void packData(BitStream* stream);
-   void unpackData(BitStream* stream);
+   bool preload(bool server, String &errorStr) override;
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 };
 
 
@@ -166,9 +166,9 @@ class FlyingVehicle: public Vehicle
    SimObjectPtr<ParticleEmitter> mJetEmitter[FlyingVehicleData::MaxJetNodes];
 
    //
-   bool onNewDataBlock(GameBaseData* dptr,bool reload);
-   void updateMove(const Move *move);
-   void updateForces(F32);
+   bool onNewDataBlock(GameBaseData* dptr,bool reload) override;
+   void updateMove(const Move *move) override;
+   void updateForces(F32) override;
 //   bool collideBody(const MatrixF& mat,Collision* info);
    F32 getHeight();
 
@@ -177,7 +177,7 @@ class FlyingVehicle: public Vehicle
    void updateEngineSound(F32 level);
    void updateEmitter(bool active,F32 dt,ParticleEmitterData *emitter,S32 idx,S32 count);
 
-   U32 getCollisionMask();
+   U32 getCollisionMask() override;
   public:
    DECLARE_CONOBJECT(FlyingVehicle);
    DECLARE_CATEGORY("Actor \t Controllable");
@@ -186,15 +186,15 @@ class FlyingVehicle: public Vehicle
    FlyingVehicle();
    ~FlyingVehicle();
 
-   bool onAdd();
-   void onRemove();
-   void interpolateTick(F32 dt);
-   void advanceTime(F32 dt);
+   bool onAdd() override;
+   void onRemove() override;
+   void interpolateTick(F32 dt) override;
+   void advanceTime(F32 dt) override;
 
-   void writePacketData(GameConnection *conn, BitStream *stream);
-   void readPacketData(GameConnection *conn, BitStream *stream);
-   U32  packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn, BitStream *stream);
+   void writePacketData(GameConnection *conn, BitStream *stream) override;
+   void readPacketData(GameConnection *conn, BitStream *stream) override;
+   U32  packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn, BitStream *stream) override;
    void useCreateHeight(bool val);
 };
 

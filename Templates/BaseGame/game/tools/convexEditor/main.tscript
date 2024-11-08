@@ -130,6 +130,10 @@ function ConvexEditorPlugin::onActivated( %this )
          ConvexEditorScaleModeBtn.performClick();
    }
 
+   EWorldEditor.UseGridSnap = EditorSettings.value("WorldEditor/Tools/UseGridSnap");
+   CESnapOptions-->objectGridSnapBtn.setStateOn( EWorldEditor.UseGridSnap );
+   %this.setGridSnap( EWorldEditor.UseGridSnap );
+   
    Parent::onActivated( %this );
 }
 

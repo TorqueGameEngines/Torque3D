@@ -407,7 +407,7 @@ singleton PostEffect( DepthOfFieldPostFX )
    enabled = false;
    
    renderTime = "PFXAfterBin";
-   renderBin = "GlowBin";      
+   renderBin = "FogBin";      
    renderPriority = 0.1;
       
    shader = PFX_DOFDownSampleShader;

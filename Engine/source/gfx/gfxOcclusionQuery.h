@@ -77,9 +77,9 @@ public:
    static String statusToString( OcclusionQueryStatus status );
 
    // GFXResource
-   virtual void zombify() = 0;   
-   virtual void resurrect() = 0;
-   virtual const String describeSelf() const = 0;
+   void zombify() override = 0;   
+   void resurrect() override = 0;
+   const String describeSelf() const override = 0;
 };
 
 /// Handle for GFXOcclusionQuery than store last valid state

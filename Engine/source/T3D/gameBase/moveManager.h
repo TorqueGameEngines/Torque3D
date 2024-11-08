@@ -57,7 +57,7 @@ struct Move
    bool trigger[MaxTriggerKeys];
 
    Move();
-
+   virtual ~Move() {};
    virtual void pack(BitStream *stream, const Move * move = NULL);
    virtual void unpack(BitStream *stream, const Move * move = NULL);
    virtual void clamp();

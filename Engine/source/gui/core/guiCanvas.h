@@ -220,8 +220,8 @@ public:
    GuiCanvas();
    virtual ~GuiCanvas();
 
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 #ifdef TORQUE_TOOLS
    void setMenuBar(SimObject *obj);
    SimObject* getMenuBar() { return mMenuBarCtrl; }
@@ -373,7 +373,7 @@ public:
    /// Processes an input event
    /// @see InputEvent
    /// @param   event   Input event to process
-   virtual bool processInputEvent(InputEventInfo &inputEvent);
+   bool processInputEvent(InputEventInfo &inputEvent) override;
    /// @}
 
    /// @name Mouse Methods
@@ -450,7 +450,7 @@ public:
 
    /// Sets the first responder.
    /// @param   firstResponder    Control to designate as first responder
-   virtual void setFirstResponder(GuiControl *firstResponder);
+   void setFirstResponder(GuiControl *firstResponder) override;
 
    /// This is used to toggle processing of native OS accelerators, not
    /// to be confused with the Torque accelerator key system, to keep them

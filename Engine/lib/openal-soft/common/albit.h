@@ -1,14 +1,29 @@
 #ifndef AL_BIT_H
 #define AL_BIT_H
 
+#include <array>
+#ifndef __GNUC__
 #include <cstdint>
+#endif
+#include <cstring>
 #include <limits>
+#include <new>
 #include <type_traits>
 #if !defined(__GNUC__) && (defined(_WIN32) || defined(_WIN64))
 #include <intrin.h>
 #endif
 
 namespace al {
+
+template<typename To, typename From>
+std::enable_if_t<sizeof(To) == sizeof(From) && std::is_trivially_copyable_v<From>
+    && std::is_trivially_copyable_v<To>,
+To> bit_cast(const From &src) noexcept
+{
+    alignas(To) std::array<char,sizeof(To)> dst;
+    std::memcpy(dst.data(), &src, sizeof(To));
+    return *std::launder(reinterpret_cast<To*>(dst.data()));
+}
 
 #ifdef __BYTE_ORDER__
 enum class endian {

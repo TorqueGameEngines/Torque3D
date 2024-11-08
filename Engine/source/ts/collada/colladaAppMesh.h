@@ -135,7 +135,7 @@ public:
    /// Get the name of this mesh
    ///
    /// @return A string containing the name of this mesh
-   const char *getName(bool allowFixed=true);
+   const char *getName(bool allowFixed=true) override;
 
    //-----------------------------------------------------------------------
 
@@ -145,7 +145,7 @@ public:
    /// @param defaultVal   Reference to variable to hold return value
    ///
    /// @return True if a value was set, false if not
-   bool getFloat(const char *propName, F32 &defaultVal)
+   bool getFloat(const char *propName, F32 &defaultVal) override
    {
       return appNode->getFloat(propName,defaultVal);
    }
@@ -156,7 +156,7 @@ public:
    /// @param defaultVal   Reference to variable to hold return value
    ///
    /// @return True if a value was set, false if not
-   bool getInt(const char *propName, S32 &defaultVal)
+   bool getInt(const char *propName, S32 &defaultVal) override
    {
       return appNode->getInt(propName,defaultVal);
    }
@@ -167,13 +167,13 @@ public:
    /// @param defaultVal   Reference to variable to hold return value
    ///
    /// @return True if a value was set, false if not
-   bool getBool(const char *propName, bool &defaultVal)
+   bool getBool(const char *propName, bool &defaultVal) override
    {
       return appNode->getBool(propName,defaultVal);
    }
 
    /// Return true if this mesh is a skin
-   bool isSkin()
+   bool isSkin() override
    {
       if (instanceCtrl) {
          const domController* ctrl = daeSafeCast<domController>(instanceCtrl->getUrl().getElement());
@@ -185,48 +185,48 @@ public:
    }
 
    /// Get the skin data: bones, vertex weights etc
-   void lookupSkinData();
+   void lookupSkinData() override;
 
    /// Check if the mesh visibility is animated
    ///
    /// @param appSeq   Start/end time to check
    ///
    /// @return True if the mesh visibility is animated, false if not
-   bool animatesVis(const AppSequence* appSeq);
+   bool animatesVis(const AppSequence* appSeq) override;
 
    /// Check if the material used by this mesh is animated
    ///
    /// @param appSeq   Start/end time to check
    ///
    /// @return True if the material is animated, false if not
-   bool animatesMatFrame(const AppSequence* appSeq);
+   bool animatesMatFrame(const AppSequence* appSeq) override;
 
    /// Check if the mesh is animated
    ///
    /// @param appSeq   Start/end time to check
    ///
    /// @return True if the mesh is animated, false if not
-   bool animatesFrame(const AppSequence* appSeq);
+   bool animatesFrame(const AppSequence* appSeq) override;
 
    /// Generate the vertex, normal and triangle data for the mesh.
    ///
    /// @param time           Time at which to generate the mesh data
    /// @param objOffset      Transform to apply to the generated data (bounds transform)
-   void lockMesh(F32 time, const MatrixF& objOffset);
+   void lockMesh(F32 time, const MatrixF& objOffset) override;
 
    /// Get the transform of this mesh at a certain time
    ///
    /// @param time   Time at which to get the transform
    ///
    /// @return The mesh transform at the specified time
-   MatrixF getMeshTransform(F32 time);
+   MatrixF getMeshTransform(F32 time) override;
 
    /// Get the visibility of this mesh at a certain time
    ///
    /// @param time   Time at which to get visibility info
    ///
    /// @return Visibility from 0 (invisible) to 1 (opaque)
-   F32 getVisValue(F32 time);
+   F32 getVisValue(F32 time) override;
 };
 
 #endif // _COLLADA_APPMESH_H_

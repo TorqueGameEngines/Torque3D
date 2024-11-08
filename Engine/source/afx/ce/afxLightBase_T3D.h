@@ -56,11 +56,11 @@ public:
   /*C*/         afxT3DLightBaseData();
   /*C*/         afxT3DLightBaseData(const afxT3DLightBaseData&, bool = false);
 
-  virtual bool  onAdd();
-  virtual void  packData(BitStream*);
-  virtual void  unpackData(BitStream*);
+  bool  onAdd() override;
+  void  packData(BitStream*) override;
+  void  unpackData(BitStream*) override;
 
-  bool          preload(bool server, String &errorStr);
+  bool          preload(bool server, String &errorStr) override;
 
   static void   initPersistFields();
 

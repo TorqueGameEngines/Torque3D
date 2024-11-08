@@ -39,8 +39,8 @@ class AssimpShapeLoader : public TSShapeLoader
 protected:
    const struct aiScene* mScene;
 
-   virtual bool ignoreNode(const String& name);
-   virtual bool ignoreMesh(const String& name);
+   bool ignoreNode(const String& name) override;
+   bool ignoreMesh(const String& name) override;
    void detectDetails();
    void extractTexture(U32 index, aiTexture* pTex);
 
@@ -58,11 +58,11 @@ public:
    ~AssimpShapeLoader();
 
    void releaseImport();
-   void enumerateScene();
+   void enumerateScene() override;
    void updateMaterialsScript(const Torque::Path &path);
    void processAnimations();
 
-   void computeBounds(Box3F& bounds);
+   void computeBounds(Box3F& bounds) override;
 
    bool fillGuiTreeView(const char* shapePath, GuiTreeViewCtrl* tree);
 

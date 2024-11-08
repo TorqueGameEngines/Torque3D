@@ -77,7 +77,7 @@ void afxMagicSpellData::ewValidator::validateType(SimObject* object, void* typeP
 class SpellFinishStartupEvent : public SimEvent
 {
 public:
-  void process(SimObject* obj)
+  void process(SimObject* obj) override
   {
      afxMagicSpell* spell = dynamic_cast<afxMagicSpell*>(obj);
      if (spell)
@@ -574,10 +574,10 @@ class CastingPhrase_C : public afxPhrase
   F32           mCastbar_progress;
 public:
   /*C*/         CastingPhrase_C(ShapeBase* caster, bool notify_castbar);
-  virtual void  start(F32 startstamp, F32 timestamp);
-  virtual void  update(F32 dt, F32 timestamp);
-  virtual void  stop(F32 timestamp);
-  virtual void  interrupt(F32 timestamp);
+  void  start(F32 startstamp, F32 timestamp) override;
+  void  update(F32 dt, F32 timestamp) override;
+  void  stop(F32 timestamp) override;
+  void  interrupt(F32 timestamp) override;
 };
 
 CastingPhrase_C::CastingPhrase_C(ShapeBase* c, bool notify)

@@ -93,11 +93,11 @@ public:
 
    GroundCoverShaderConstHandles();
 
-   virtual void init( GFXShader *shader );
+   void init( GFXShader *shader ) override;
 
-   virtual void setConsts( SceneRenderState *state, 
+   void setConsts( SceneRenderState *state, 
                            const SceneData &sgData,
-                           GFXShaderConstBuffer *buffer );
+                           GFXShaderConstBuffer *buffer ) override;
 
    GroundCover *mGroundCover;
 
@@ -128,16 +128,16 @@ public:
    static void consoleInit();
    static void initPersistFields();
 
-   bool onAdd();
-   void onRemove();
-   void inspectPostApply();
+   bool onAdd() override;
+   void onRemove() override;
+   void inspectPostApply() override;
 
    // Network
-   U32 packUpdate( NetConnection *, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *, BitStream *stream );
+   U32 packUpdate( NetConnection *, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *, BitStream *stream ) override;
 
    // Rendering
-   void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
    
    // Editor
    void onTerrainUpdated( U32 flags, TerrainBlock *tblock, const Point2I& min, const Point2I& max );

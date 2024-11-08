@@ -52,15 +52,15 @@ class GuiMouseEventCtrl : public GuiControl
       DECLARE_CALLBACK( void, onRightMouseDragged, ( S32 modifier, Point2I mousePoint, S32 mouseClickCount ));
 
       // GuiControl
-      void onMouseDown(const GuiEvent & event);
-      void onMouseUp(const GuiEvent & event);
-      void onMouseMove(const GuiEvent & event);
-      void onMouseDragged(const GuiEvent & event);
-      void onMouseEnter(const GuiEvent & event);
-      void onMouseLeave(const GuiEvent & event);
-      void onRightMouseDown(const GuiEvent & event);
-      void onRightMouseUp(const GuiEvent & event);
-      void onRightMouseDragged(const GuiEvent & event);
+      void onMouseDown(const GuiEvent & event) override;
+      void onMouseUp(const GuiEvent & event) override;
+      void onMouseMove(const GuiEvent & event) override;
+      void onMouseDragged(const GuiEvent & event) override;
+      void onMouseEnter(const GuiEvent & event) override;
+      void onMouseLeave(const GuiEvent & event) override;
+      void onRightMouseDown(const GuiEvent & event) override;
+      void onRightMouseUp(const GuiEvent & event) override;
+      void onRightMouseDragged(const GuiEvent & event) override;
 
       static void initPersistFields();
 

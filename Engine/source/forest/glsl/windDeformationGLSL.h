@@ -43,22 +43,22 @@ public:
 
    WindDeformationGLSL();
 
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Wind Effect";
    }
 
-   virtual void determineFeature(   Material *material,
+   void determineFeature(   Material *material,
                                     const GFXVertexFormat *vertexFormat,
                                     U32 stageNum,
                                     const FeatureType &type,
                                     const FeatureSet &features,
-                                    MaterialFeatureData *outFeatureData );
+                                    MaterialFeatureData *outFeatureData ) override;
 
-   virtual ShaderFeatureConstHandles* createConstHandles( GFXShader *shader, SimObject *userObject );
+   ShaderFeatureConstHandles* createConstHandles( GFXShader *shader, SimObject *userObject ) override;
 };
 
 DeclareFeatureType( MFT_WindEffect );

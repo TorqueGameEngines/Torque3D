@@ -84,12 +84,12 @@ public:
   /*C*/         afxZodiacPlaneData();
   /*C*/         afxZodiacPlaneData(const afxZodiacPlaneData&, bool = false);
 
-  virtual void  packData(BitStream*);
-  virtual void  unpackData(BitStream*);
+  void  packData(BitStream*) override;
+  void  unpackData(BitStream*) override;
 
-  bool          preload(bool server, String &errorStr);
+  bool          preload(bool server, String &errorStr) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   F32           calcRotationAngle(F32 elapsed, F32 rate_factor=1.0f);
 
@@ -128,15 +128,15 @@ public:
   /*C*/                 afxZodiacPlane();
   /*D*/                 ~afxZodiacPlane();
 
-  virtual bool          onNewDataBlock(GameBaseData* dptr, bool reload);
-  virtual bool          onAdd();
-  virtual void          onRemove();
+  bool          onNewDataBlock(GameBaseData* dptr, bool reload) override;
+  bool          onAdd() override;
+  void          onRemove() override;
 
   void                  setRadius(F32 rad) { radius = rad; }
   void                  setColor(const LinearColorF& clr) { color = clr; }
   void                  setVisibility(bool flag) { is_visible = flag; }
 
-  virtual void          prepRenderImage(SceneRenderState*);
+  void          prepRenderImage(SceneRenderState*) override;
                                         
   void                  _renderZodiacPlane(ObjectRenderInst*, SceneRenderState*, BaseMatInstance*);
 

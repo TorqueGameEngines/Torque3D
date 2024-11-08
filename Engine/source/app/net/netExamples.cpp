@@ -42,13 +42,13 @@ public:
    ~SimpleMessageEvent()
       { dFree(msg); }
 
-   virtual void pack(NetConnection* /*ps*/, BitStream *bstream)
+   void pack(NetConnection* /*ps*/, BitStream *bstream) override
       { bstream->writeString(msg); }
-   virtual void write(NetConnection*, BitStream *bstream)
+   void write(NetConnection*, BitStream *bstream) override
       { bstream->writeString(msg); }
-   virtual void unpack(NetConnection* /*ps*/, BitStream *bstream)
+   void unpack(NetConnection* /*ps*/, BitStream *bstream) override
       { char buf[256]; bstream->readString(buf); msg = dStrdup(buf); }
-   virtual void process(NetConnection *)
+   void process(NetConnection *) override
       { Con::printf("RMSG %d  %s", mSourceId, msg); }
 
    DECLARE_CONOBJECT(SimpleMessageEvent);
@@ -112,12 +112,12 @@ public:
       mNetFlags.set(ScopeAlways | Ghostable);
       dStrcpy(message, "Hello World!", 256);
    }
-   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
+   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override
    {
       stream->writeString(message);
       return 0;
    }
-   void unpackUpdate(NetConnection *conn, BitStream *stream)
+   void unpackUpdate(NetConnection *conn, BitStream *stream) override
    {
       stream->readString(message);
       Con::printf("Got message: %s", message);

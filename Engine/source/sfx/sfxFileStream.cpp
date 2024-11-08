@@ -24,75 +24,29 @@
 #include "core/stream/fileStream.h"
 #include "console/console.h"
 #include "core/util/safeDelete.h"
-
-
-SFXFileStream::ExtensionsVector SFXFileStream::smExtensions( __FILE__, __LINE__ );
-SFXFileStream::CreateFnsVector SFXFileStream::smCreateFns( __FILE__, __LINE__ );
-
-
-void SFXFileStream::registerExtension( String ext, SFXFILESTREAM_CREATE_FN create_fn )
-{
-   // Register the stream creation first.
-   smExtensions.push_back( ext );
-   smCreateFns.push_back( create_fn );
-}
-
-void SFXFileStream::unregisterExtension( String ext )
-{
-   for( ExtensionsVector::iterator iter = smExtensions.begin();
-        iter != smExtensions.end(); ++ iter )
-      if( ( *iter ).equal( ext, String::NoCase ) )
-      {
-         smExtensions.erase( iter );
-         return;
-      }
-}
+#include "sfx/media/sfxSndStream.h"
 
 SFXFileStream* SFXFileStream::create( String filename )
 {
-   //RDTODO: if original file has an extension, we should try that first
-   
-   // First strip off our current extension (validating 
-   // against a list of known extensions so that we don't
-   // strip off the last part of a file name with a dot in it.
+    SFXFileStream *sfxStream = NULL;
 
-   String noExtension = Platform::stripExtension( filename, smExtensions );
+    Stream *stream = FileStream::createAndOpen(filename, Torque::FS::File::Read );
+    if ( !stream )
+        return NULL;
 
-   SFXFileStream *sfxStream = NULL;
-
-   for( U32 i = 0; i < smExtensions.size(); i++ ) 
-   {
-      String testName = noExtension + smExtensions[ i ];
-
-      Stream *stream = FileStream::createAndOpen( testName, Torque::FS::File::Read );
-      if ( !stream )
-         continue;
-
-      // Note that the creation function swallows up the 
-      // resource stream and will take care of deleting it.
-      sfxStream = smCreateFns[i]( stream );
-      if ( sfxStream )
-         return sfxStream;
-   }
+    // Note that the creation function swallows up the 
+    // resource stream and will take care of deleting it.
+    sfxStream = SFXSndStream::create( stream );
+    if ( sfxStream )
+        return sfxStream;
 
    return NULL;
 }
 
 bool SFXFileStream::exists( String filename )
 {
-   // First strip off our current extension (validating 
-   // against a list of known extensions so that we don't
-   // strip off the last part of a file name with a dot in it.
-
-   String noExtension = Platform::stripExtension( filename, smExtensions );
-
-   for( U32 i = 0; i < smExtensions.size(); i++ ) 
-   {
-      String testName = noExtension + smExtensions[ i ];
-      if( Torque::FS::IsFile( testName ) )
+      if( Torque::FS::IsFile(filename) )
          return true;
-   }
-
    return false;
 }
 

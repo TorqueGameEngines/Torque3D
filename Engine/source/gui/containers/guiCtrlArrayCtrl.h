@@ -47,18 +47,18 @@ private:
 public:
    GuiControlArrayControl();
 
-   bool resize(const Point2I &newPosition, const Point2I &newExtent);
+   bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
 
-   bool onWake();
-   void onSleep();
-   void inspectPostApply();
+   bool onWake() override;
+   void onSleep() override;
+   void inspectPostApply() override;
 
    bool updateArray();
 
-   void addObject(SimObject *obj);
-   void removeObject(SimObject *obj);
+   void addObject(SimObject *obj) override;
+   void removeObject(SimObject *obj) override;
 
-   bool reOrder(SimObject* obj, SimObject* target = 0);
+   bool reOrder(SimObject* obj, SimObject* target = 0) override;
 
    static void initPersistFields();
    DECLARE_CONOBJECT(GuiControlArrayControl);

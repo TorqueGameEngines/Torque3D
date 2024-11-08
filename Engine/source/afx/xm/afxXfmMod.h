@@ -83,8 +83,8 @@ public:
   /*C*/         afxXM_BaseData();
   /*C*/         afxXM_BaseData(const afxXM_BaseData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
   static void   initPersistFields();
 
@@ -140,8 +140,8 @@ public:
   bool          hasFixedWeight() const;
   F32           getWeightFactor() const;
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
   static void   initPersistFields();
 

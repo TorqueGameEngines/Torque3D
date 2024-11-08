@@ -48,25 +48,25 @@ protected:
 
 public:
 
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPixMacros(   Vector<GFXShaderMacro> &macros, 
-                                    const MaterialFeatureData &fd );
+   void processPixMacros(   Vector<GFXShaderMacro> &macros, 
+                                    const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp(){ return Material::None; }
+   Material::BlendOp getBlendOp() override{ return Material::None; }
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual void setTexData(   Material::StageData &stageDat,
+   void setTexData(   Material::StageData &stageDat,
                               const MaterialFeatureData &fd,
                               RenderPassData &passData,
-                              U32 &texIndex );
+                              U32 &texIndex ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Deferred RT Lighting";
    }
@@ -79,22 +79,22 @@ class DeferredBumpFeatHLSL : public BumpFeatHLSL
    typedef BumpFeatHLSL Parent;
 
 public:
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual Material::BlendOp getBlendOp() { return Material::LerpAlpha; }
+   Material::BlendOp getBlendOp() override { return Material::LerpAlpha; }
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual void setTexData(   Material::StageData &stageDat,
+   void setTexData(   Material::StageData &stageDat,
                               const MaterialFeatureData &fd,
                               RenderPassData &passData,
-                              U32 &texIndex );
+                              U32 &texIndex ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Bumpmap [Deferred]";
    }
@@ -107,22 +107,22 @@ class DeferredMinnaertHLSL : public ShaderFeatureHLSL
    typedef ShaderFeatureHLSL Parent;
    
 public:
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
-   virtual void processVert(  Vector<ShaderComponent*> &componentList,
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
+   void processVert(  Vector<ShaderComponent*> &componentList,
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPixMacros(   Vector<GFXShaderMacro> &macros, 
-                                    const MaterialFeatureData &fd );
+   void processPixMacros(   Vector<GFXShaderMacro> &macros, 
+                                    const MaterialFeatureData &fd ) override;
 
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
-   virtual void setTexData(   Material::StageData &stageDat,
+   void setTexData(   Material::StageData &stageDat,
                               const MaterialFeatureData &fd,
                               RenderPassData &passData,
-                              U32 &texIndex );
+                              U32 &texIndex ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Minnaert Shading [Deferred]";
    }
@@ -135,10 +135,10 @@ class DeferredSubSurfaceHLSL : public ShaderFeatureHLSL
    typedef ShaderFeatureHLSL Parent;
 
 public:
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Sub-Surface Approximation [Deferred]";
    }

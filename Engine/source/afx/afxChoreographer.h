@@ -49,10 +49,10 @@ public:
   /*C*/         afxChoreographerData();
   /*C*/         afxChoreographerData(const afxChoreographerData&, bool = false);
 
-  virtual void  packData(BitStream*);
-  virtual void  unpackData(BitStream*);
+  void  packData(BitStream*) override;
+  void  unpackData(BitStream*) override;
 
-  bool          preload(bool server, String &errorStr);
+  bool          preload(bool server, String &errorStr) override;
 
   static void   initPersistFields();
 
@@ -137,12 +137,12 @@ public:
 
   static void       initPersistFields();
 
-  virtual bool      onAdd();
-  virtual void      onRemove();
-  virtual void      onDeleteNotify(SimObject*);
-  virtual bool      onNewDataBlock(GameBaseData* dptr, bool reload);
-  virtual U32       packUpdate(NetConnection*, U32, BitStream*);
-  virtual void      unpackUpdate(NetConnection*, BitStream*);
+  bool      onAdd() override;
+  void      onRemove() override;
+  void      onDeleteNotify(SimObject*) override;
+  bool      onNewDataBlock(GameBaseData* dptr, bool reload) override;
+  U32       packUpdate(NetConnection*, U32, BitStream*) override;
+  void      unpackUpdate(NetConnection*, BitStream*) override;
 
   virtual void      sync_with_clients() { }
   
@@ -196,7 +196,7 @@ public:
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
 // missile watcher callbacks
 public:
-  virtual void  impactNotify(const Point3F& p, const Point3F& n, SceneObject*) { }
+  void  impactNotify(const Point3F& p, const Point3F& n, SceneObject*) override { }
 
   DECLARE_CONOBJECT(afxChoreographer);
   DECLARE_CATEGORY("UNLISTED");

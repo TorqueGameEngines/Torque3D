@@ -70,7 +70,7 @@ public:
    const String& getGroupName() const { return mCaption; };
    SimObjectPtr<GuiInspector> getInspector() { return mParent; };
 
-   bool onAdd();
+   bool onAdd() override;
    virtual bool inspectGroup();
 
    virtual void animateToContents();

@@ -44,11 +44,11 @@ public:
    DECLARE_CONOBJECT(GuiMissionAreaEditorCtrl);
 
    // SimObject
-   bool onAdd();
+   bool onAdd() override;
    static void initPersistFields();
 
    // EditTSCtrl      
-   void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ );
+   void get3DCursor( GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &event_ ) override;
 
    void setSelectedMissionArea( MissionArea *missionArea );
    MissionArea* getSelectedMissionArea() { return mSelMissionArea; };

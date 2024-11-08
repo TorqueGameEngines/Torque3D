@@ -822,7 +822,7 @@ DefineEngineStaticMethod(SDLInputManager, ControllerNameForIndex, const char *, 
    "@see https://wiki.libsdl.org/SDL_GameControllerNameForIndex \n"
    "@ingroup Input")
 {
-   if (sdlIndex >= 0 && sdlIndex < SDL_NumJoysticks() || !SDL_IsGameController(sdlIndex))
+   if ((sdlIndex >= 0 && sdlIndex < SDL_NumJoysticks()) || (!SDL_IsGameController(sdlIndex)))
       return SDL_GameControllerNameForIndex(sdlIndex);
    return NULL;
 }

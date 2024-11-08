@@ -163,7 +163,7 @@ protected:
    void updateThreads(F32 delta);
 
    // Rendering
-   void renderGrid();
+   void renderGrid() override;
    void renderNodes() const;
    void renderNodeAxes(S32 index, const LinearColorF& nodeColor) const;
    void renderNodeName(S32 index, const LinearColorF& textColor) const;
@@ -171,27 +171,27 @@ protected:
    void renderCollisionMeshes() const;
 
 public:
-   bool onWake();
+   bool onWake() override;
 
-   void setDisplayType(S32 type);
+   void setDisplayType(S32 type) override;
 
    /// @name Mouse event handlers
    ///@{
-   void onMouseDown(const GuiEvent& event) { handleMouseDown(event, NoneMode); }
-   void onMouseUp(const GuiEvent& event) { handleMouseUp(event, NoneMode); }
-   void onMouseMove(const GuiEvent& event) { handleMouseMove(event, NoneMode); }
-   void onMouseDragged(const GuiEvent& event) { handleMouseDragged(event, NoneMode); }
+   void onMouseDown(const GuiEvent& event) override { handleMouseDown(event, NoneMode); }
+   void onMouseUp(const GuiEvent& event) override { handleMouseUp(event, NoneMode); }
+   void onMouseMove(const GuiEvent& event) override { handleMouseMove(event, NoneMode); }
+   void onMouseDragged(const GuiEvent& event) override { handleMouseDragged(event, NoneMode); }
 
-   void onMiddleMouseDown(const GuiEvent& event) { handleMouseDown(event, MoveMode); }
-   void onMiddleMouseUp(const GuiEvent& event) { handleMouseUp(event, MoveMode); }
-   void onMiddleMouseDragged(const GuiEvent& event) { handleMouseDragged(event, MoveMode); }
+   void onMiddleMouseDown(const GuiEvent& event) override { handleMouseDown(event, MoveMode); }
+   void onMiddleMouseUp(const GuiEvent& event) override { handleMouseUp(event, MoveMode); }
+   void onMiddleMouseDragged(const GuiEvent& event) override { handleMouseDragged(event, MoveMode); }
 
-   void onRightMouseDown(const GuiEvent& event) { handleMouseDown(event, RotateMode); }
-   void onRightMouseUp(const GuiEvent& event) { handleMouseUp(event, RotateMode); }
-   void onRightMouseDragged(const GuiEvent& event) { handleMouseDragged(event, RotateMode); }
+   void onRightMouseDown(const GuiEvent& event) override { handleMouseDown(event, RotateMode); }
+   void onRightMouseUp(const GuiEvent& event) override { handleMouseUp(event, RotateMode); }
+   void onRightMouseDragged(const GuiEvent& event) override { handleMouseDragged(event, RotateMode); }
 
-   void on3DMouseWheelUp(const Gui3DMouseEvent& event);
-   void on3DMouseWheelDown(const Gui3DMouseEvent& event);
+   void on3DMouseWheelUp(const Gui3DMouseEvent& event) override;
+   void on3DMouseWheelDown(const Gui3DMouseEvent& event) override;
    ///@}
 
    // Setters/Getters
@@ -234,7 +234,7 @@ public:
    void refreshShape();
    void updateNodeTransforms();
 
-   void get3DCursor(GuiCursor *& cursor, bool& visible, const Gui3DMouseEvent& event_);
+   void get3DCursor(GuiCursor *& cursor, bool& visible, const Gui3DMouseEvent& event_) override;
 
    void fitToShape();
    void setOrbitPos( const Point3F& pos );
@@ -243,15 +243,15 @@ public:
 
    /// @name Rendering
    ///@{
-   bool getCameraTransform(MatrixF* cameraMatrix);
-   void computeSceneBounds(Box3F& bounds);
+   bool getCameraTransform(MatrixF* cameraMatrix) override;
+   void computeSceneBounds(Box3F& bounds) override;
 
    bool getMeshHidden(const char* name) const;
    void setMeshHidden(const char* name, bool hidden);
    void setAllMeshesHidden(bool hidden);
 
-   void renderWorld(const RectI& updateRect);
-   void renderGui(Point2I offset, const RectI& updateRect);
+   void renderWorld(const RectI& updateRect) override;
+   void renderGui(Point2I offset, const RectI& updateRect) override;
    ///@}
 
    DECLARE_CONOBJECT(GuiShapeEdPreview);

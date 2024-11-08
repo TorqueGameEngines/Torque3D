@@ -64,9 +64,9 @@ class OggVorbisDecoder : public OggDecoder,
       #endif
 
       // OggDecoder.
-      virtual bool _detect( ogg_page* startPage );
-      virtual bool _init();
-      virtual bool _packetin( ogg_packet* packet );
+      bool _detect( ogg_page* startPage ) override;
+      bool _init() override;
+      bool _packetin( ogg_packet* packet ) override;
    
    public:
    
@@ -82,10 +82,10 @@ class OggVorbisDecoder : public OggDecoder,
       U32 getSamplesPerSecond() const { return mVorbisInfo.rate; }
       
       // OggDecoder.
-      virtual const char* getName() const { return "Vorbis"; }
+      const char* getName() const override { return "Vorbis"; }
       
       // IInputStream.
-      virtual U32 read( RawData** buffer, U32 num );
+      U32 read( RawData** buffer, U32 num ) override;
 };
 
 #endif // !_OGGVORBISDECODER_H_

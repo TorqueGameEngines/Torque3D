@@ -122,9 +122,9 @@ public:
    
    GuiTSCtrl();
 
-   void onPreRender();
+   void onPreRender() override;
    void _internalRender(RectI guiViewport, RectI renderViewport, Frustum &frustum);
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
    virtual bool processCameraQuery(CameraQuery *query);
 
    /// Subclasses can override this to perform 3D rendering.
@@ -136,8 +136,8 @@ public:
    static void initPersistFields();
    static void consoleInit();
 
-   virtual bool onWake();
-   virtual void onSleep();
+   bool onWake() override;
+   void onSleep() override;
 
    /// Returns the last World Matrix set in onRender.
    const MatrixF& getLastWorldMatrix() const { return mSaveModelview; }

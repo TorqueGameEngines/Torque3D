@@ -202,7 +202,7 @@ public:
    virtual const GFXStateBlockDesc& getDesc() const = 0;
 
    /// Default implementation for GFXResource::describeSelf   
-   virtual const String describeSelf() const;
+   const String describeSelf() const override;
 };
 
 typedef StrongRefPtr<GFXStateBlock> GFXStateBlockRef;

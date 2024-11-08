@@ -14,7 +14,7 @@ namespace Con
       gLastEvalResult.valid = pLastEvalResult.valid;
       gLastEvalResult.error = pLastEvalResult.error;
       gLastEvalResult.value.setString(pLastEvalResult.value.getString());
-      return std::move(pLastEvalResult);
+      return pLastEvalResult;
    }
    inline EvalResult getLastEvalResult() { return setLastEvalResult(std::move(gLastEvalResult)); };
 
@@ -52,7 +52,7 @@ namespace Con
    {
       char buffer[4096];
       va_list args;
-      va_start(args, &string);
+      va_start(args, string);
       dVsprintf(buffer, sizeof(buffer), string, args);
       va_end(args);
 

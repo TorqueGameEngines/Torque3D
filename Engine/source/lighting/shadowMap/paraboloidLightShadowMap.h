@@ -36,9 +36,9 @@ public:
    ~ParaboloidLightShadowMap();
 
    // LightShadowMap
-   virtual ShadowType getShadowType() const;
-   virtual void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState );
-   virtual void setShaderParameters(GFXShaderConstBuffer* params, LightingShaderConstants* lsc);
+   ShadowType getShadowType() const override;
+   void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState ) override;
+   void setShaderParameters(GFXShaderConstBuffer* params, LightingShaderConstants* lsc) override;
 
 protected:
    Point2F mShadowMapScale;

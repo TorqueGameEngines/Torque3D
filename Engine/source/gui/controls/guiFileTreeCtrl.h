@@ -57,9 +57,9 @@ public:
    
    GuiFileTreeCtrl();
 
-   bool onWake();
-   bool onVirtualParentExpand(Item *item);
-   void onItemSelected( Item *item );
+   bool onWake() override;
+   bool onVirtualParentExpand(Item *item) override;
+   void onItemSelected( Item *item ) override;
    const String& getSelectedPath() { return mSelPath; }
    bool setSelectedPath( const char* path );
       

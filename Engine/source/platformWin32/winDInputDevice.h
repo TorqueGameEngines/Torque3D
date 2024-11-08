@@ -124,7 +124,7 @@ class DInputDevice : public InputDevice
       static bool joystickDetected();
       //
 
-      bool process();
+      bool process() override;
 };
 
 //------------------------------------------------------------------------------

@@ -51,14 +51,14 @@ public:
   /*C*/         afxXM_OscillateData();
   /*C*/         afxXM_OscillateData(const afxXM_OscillateData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_OscillateData);
 };
@@ -72,7 +72,7 @@ class afxXM_Oscillate_rot : public afxXM_WeightedBase
 public:
   /*C*/         afxXM_Oscillate_rot(afxXM_OscillateData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 class afxXM_Oscillate_scale : public afxXM_WeightedBase
@@ -84,7 +84,7 @@ class afxXM_Oscillate_scale : public afxXM_WeightedBase
 public:
   /*C*/         afxXM_Oscillate_scale(afxXM_OscillateData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 class afxXM_Oscillate_position : public afxXM_WeightedBase
@@ -96,7 +96,7 @@ class afxXM_Oscillate_position : public afxXM_WeightedBase
 public:
   /*C*/         afxXM_Oscillate_position(afxXM_OscillateData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 class afxXM_Oscillate_position2 : public afxXM_WeightedBase
@@ -108,7 +108,7 @@ class afxXM_Oscillate_position2 : public afxXM_WeightedBase
 public:
   /*C*/         afxXM_Oscillate_position2(afxXM_OscillateData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 class afxXM_Oscillate : public afxXM_WeightedBase
@@ -120,7 +120,7 @@ class afxXM_Oscillate : public afxXM_WeightedBase
 public:
   /*C*/         afxXM_Oscillate(afxXM_OscillateData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

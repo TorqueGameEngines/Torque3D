@@ -45,7 +45,7 @@
 
 class QuitEvent : public SimEvent
 {
-   void process(SimObject *object)
+   void process(SimObject *object) override
    {
       Platform::postQuitMessage(0);
    }
@@ -91,11 +91,11 @@ class SimDataBlockEvent : public NetEvent
       SimDataBlockEvent(SimDataBlock* obj = NULL, U32 index = 0, U32 total = 0, U32 missionSequence = 0);
       ~SimDataBlockEvent();
       
-      void pack(NetConnection *, BitStream *bstream);
-      void write(NetConnection *, BitStream *bstream);
-      void unpack(NetConnection *cptr, BitStream *bstream);
-      void process(NetConnection*);
-      void notifyDelivered(NetConnection *, bool);
+      void pack(NetConnection *, BitStream *bstream) override;
+      void write(NetConnection *, BitStream *bstream) override;
+      void unpack(NetConnection *cptr, BitStream *bstream) override;
+      void process(NetConnection*) override;
+      void notifyDelivered(NetConnection *, bool) override;
       
       #ifdef TORQUE_DEBUG_NET
       const char *getDebugName();
@@ -115,10 +115,10 @@ public:
    typedef NetEvent Parent;
    
    SimSoundAssetEvent(StringTableEntry assetId = StringTable->EmptyString(), const MatrixF* mat = NULL);
-   void pack(NetConnection*, BitStream* bstream);
-   void write(NetConnection*, BitStream* bstream);
-   void unpack(NetConnection*, BitStream* bstream);
-   void process(NetConnection*);
+   void pack(NetConnection*, BitStream* bstream) override;
+   void write(NetConnection*, BitStream* bstream) override;
+   void unpack(NetConnection*, BitStream* bstream) override;
+   void process(NetConnection*) override;
    DECLARE_CONOBJECT(SimSoundAssetEvent);
 };
 
@@ -130,10 +130,10 @@ class Sim2DAudioEvent: public NetEvent
   public:
    typedef NetEvent Parent;
    Sim2DAudioEvent(SFXProfile *profile=NULL);
-   void pack(NetConnection *, BitStream *bstream);
-   void write(NetConnection *, BitStream *bstream);
-   void unpack(NetConnection *, BitStream *bstream);
-   void process(NetConnection *);
+   void pack(NetConnection *, BitStream *bstream) override;
+   void write(NetConnection *, BitStream *bstream) override;
+   void unpack(NetConnection *, BitStream *bstream) override;
+   void process(NetConnection *) override;
    DECLARE_CONOBJECT(Sim2DAudioEvent);
 };
 
@@ -146,10 +146,10 @@ class Sim3DAudioEvent: public NetEvent
   public:
    typedef NetEvent Parent;
    Sim3DAudioEvent(SFXProfile *profile=NULL,const MatrixF* mat=NULL);
-   void pack(NetConnection *, BitStream *bstream);
-   void write(NetConnection *, BitStream *bstream);
-   void unpack(NetConnection *, BitStream *bstream);
-   void process(NetConnection *);
+   void pack(NetConnection *, BitStream *bstream) override;
+   void write(NetConnection *, BitStream *bstream) override;
+   void unpack(NetConnection *, BitStream *bstream) override;
+   void process(NetConnection *) override;
    DECLARE_CONOBJECT(Sim3DAudioEvent);
 };
 
@@ -166,13 +166,13 @@ class SetMissionCRCEvent : public NetEvent
       typedef NetEvent Parent;
       SetMissionCRCEvent(U32 crc = 0xffffffff)
          { mCrc = crc; }
-      void pack(NetConnection *, BitStream * bstream)
+      void pack(NetConnection *, BitStream * bstream) override
          { bstream->write(mCrc); }
-      void write(NetConnection * con, BitStream * bstream)
+      void write(NetConnection * con, BitStream * bstream) override
          { pack(con, bstream); }
-      void unpack(NetConnection *, BitStream * bstream)
+      void unpack(NetConnection *, BitStream * bstream) override
          { bstream->read(&mCrc); }
-      void process(NetConnection * con)
+      void process(NetConnection * con) override
          { static_cast<GameConnection*>(con)->setMissionCRC(mCrc); }
 
       DECLARE_CONOBJECT(SetMissionCRCEvent);

@@ -54,12 +54,12 @@ class SFXNullVoice : public SFXVoice
       bool mIsLooping;
 
       // SFXVoice.
-      virtual SFXStatus _status() const;
-      virtual void _play();
-      virtual void _pause();
-      virtual void _stop();
-      virtual void _seek( U32 sample );
-      virtual U32 _tell() const;
+      SFXStatus _status() const override;
+      void _play() override;
+      void _pause() override;
+      void _stop() override;
+      void _seek( U32 sample ) override;
+      U32 _tell() const override;
 
       ///
       U32 _getPlayTime() const
@@ -72,15 +72,15 @@ class SFXNullVoice : public SFXVoice
       virtual ~SFXNullVoice();
 
       /// SFXVoice
-      SFXStatus getStatus() const;
-      void setPosition( U32 sample );
-      void play( bool looping );
-      void setMinMaxDistance( F32 min, F32 max );
-      void setVelocity( const VectorF& velocity );
-      void setTransform( const MatrixF& transform );
-      void setVolume( F32 volume );
-      void setPitch( F32 pitch );
-      void setCone( F32 innerAngle, F32 outerAngle, F32 outerVolume );
+      SFXStatus getStatus() const override;
+      void setPosition( U32 sample ) override;
+      void play( bool looping ) override;
+      void setMinMaxDistance( F32 min, F32 max ) override;
+      void setVelocity( const VectorF& velocity ) override;
+      void setTransform( const MatrixF& transform ) override;
+      void setVolume( F32 volume ) override;
+      void setPitch( F32 pitch ) override;
+      void setCone( F32 innerAngle, F32 outerAngle, F32 outerVolume ) override;
 };
 
 #endif // _SFXNULLVOICE_H_

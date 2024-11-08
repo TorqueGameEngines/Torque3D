@@ -53,21 +53,21 @@ public:
       doFadeIn    = false;
       doFadeOut   = false;
    }
-   void onPreRender()
+   void onPreRender() override
    {
       Parent::onPreRender();
       setUpdate();
    }
-   void onMouseDown(const GuiEvent &)
+   void onMouseDown(const GuiEvent &) override
    {
       Con::executef(this, "click");
    }
-   bool onKeyDown(const GuiEvent &)
+   bool onKeyDown(const GuiEvent &) override
    {
       Con::executef(this, "click");
       return true;
    }
-   bool onWake()
+   bool onWake() override
    {
       if(!Parent::onWake())
          return false;
@@ -91,7 +91,7 @@ public:
       done = false;
    }
 
-   void onRender(Point2I offset, const RectI &updateRect)
+   void onRender(Point2I offset, const RectI &updateRect) override
    {
       U32 elapsed = Platform::getRealMilliseconds() - wakeTime;
 

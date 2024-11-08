@@ -81,33 +81,33 @@ public:
 	
 	GuiMenuBar();
 
-   void onRemove();
-   bool onWake();
-   void onSleep();
+   void onRemove() override;
+   bool onWake() override;
+   void onSleep() override;
 
-   virtual void addObject(SimObject* object);
+   void addObject(SimObject* object) override;
 
 	MenuEntry *findHitMenu(Point2I mousePoint);
 
-   void onPreRender();
-	void onRender(Point2I offset, const RectI &updateRect);
+   void onPreRender() override;
+	void onRender(Point2I offset, const RectI &updateRect) override;
 
    void checkMenuMouseMove(const GuiEvent &event);
-   void onMouseMove(const GuiEvent &event);
-   void onMouseEnter(const GuiEvent &event);
-   void onMouseLeave(const GuiEvent &event);
-   void onMouseDown(const GuiEvent &event);
-   void onMouseDragged(const GuiEvent &event);
-   void onMouseUp(const GuiEvent &event);
+   void onMouseMove(const GuiEvent &event) override;
+   void onMouseEnter(const GuiEvent &event) override;
+   void onMouseLeave(const GuiEvent &event) override;
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
    
-   void onAction();
+   void onAction() override;
    void closeMenu();
    void buildWindowAcceleratorMap( WindowInputGenerator &inputGenerator );
    void removeWindowAcceleratorMap( WindowInputGenerator &inputGenerator );
-   void acceleratorKeyPress(U32 index);
+   void acceleratorKeyPress(U32 index) override;
 
    //  Added to support 'ticks'
-   void processTick();
+   void processTick() override;
 
    void insert(SimObject* pObject, S32 pos);
    void remove(SimObject* pObject);

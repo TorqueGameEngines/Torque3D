@@ -75,11 +75,11 @@ public:
    DecalRoadNodeEvent() { mNodeList = NULL; }
    virtual ~DecalRoadNodeEvent() { }
 
-   virtual void pack(NetConnection*, BitStream*);
-   virtual void unpack(NetConnection*, BitStream*);
+   void pack(NetConnection*, BitStream*) override;
+   void unpack(NetConnection*, BitStream*) override;
 
-   virtual void copyIntoList(NodeListManager::NodeList* copyInto);
-   virtual void padListToSize();
+   void copyIntoList(NodeListManager::NodeList* copyInto) override;
+   void padListToSize() override;
 
    DECLARE_CONOBJECT(DecalRoadNodeEvent);
 };
@@ -192,7 +192,7 @@ public:
    DecalRoadNodeListNotify( DecalRoad* road, U32 listId ) { mRoad = road; mListId = listId; }
    virtual ~DecalRoadNodeListNotify() { mRoad = NULL; }
 
-   virtual void sendNotification( NodeListManager::NodeList* list );
+   void sendNotification( NodeListManager::NodeList* list ) override;
 };
 
 void DecalRoadNodeListNotify::sendNotification( NodeListManager::NodeList* list )

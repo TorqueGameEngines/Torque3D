@@ -89,10 +89,10 @@ public:
    DECLARE_CONOBJECT(CompoundUndoAction);
 
    virtual void addAction( UndoAction *action );
-   virtual void undo();
-   virtual void redo();
+   void undo() override;
+   void redo() override;
    
-   virtual void onDeleteNotify( SimObject* object );
+   void onDeleteNotify( SimObject* object ) override;
    
    U32 getNumChildren() const { return mChildren.size(); }
 };
@@ -215,10 +215,10 @@ public:
    {
    }
 
-   virtual void undo() { Con::executef(this, "undo"); };
-   virtual void redo() { Con::executef(this, "redo"); }
+   void undo() override { Con::executef(this, "undo"); };
+   void redo() override { Con::executef(this, "redo"); }
 
-   virtual bool onAdd()
+   bool onAdd() override
    {
       // Let Parent Do Work.
       if(!Parent::onAdd())
@@ -233,7 +233,7 @@ public:
       return true;
    };
 
-   virtual void onRemove()
+   void onRemove() override
    {
       if (mUndoManager)
          mUndoManager->removeAction((UndoAction*)this, true);

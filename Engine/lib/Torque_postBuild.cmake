@@ -2,7 +2,7 @@
 
 # When on Windows, we need to link against winsock and windows codecs
 if (WIN32)
-	set(TORQUE_LINK_WINDOWS ${TORQUE_LINK_WINDOWS} WS2_32.LIB windowscodecs.lib)	
+	set(TORQUE_LINK_WINDOWS ${TORQUE_LINK_WINDOWS} WS2_32.LIB windowscodecs.lib winmm.lib)	
 	if (TORQUE_D3D11)
 		set(TORQUE_LINK_WINDOWS ${TORQUE_LINK_WINDOWS} dxguid.lib)
 	endif (TORQUE_D3D11)
@@ -23,12 +23,8 @@ if (APPLE)
     if(NOT TORQUE_DEDICATED)
         addFramework("OpenGL")
         addFramework("CoreVideo")
-        if(TORQUE_SFX_OPENAL)
-            addFramework("OpenAL")
-            addFramework("CoreAudio")
-            addFramework("AudioUnit")
-            addFramework("AudioToolbox")
-        endif(TORQUE_SFX_OPENAL)
+        addFramework("AudioToolbox")
+        addFramework("AudioUnit")
     endif()
 endif (APPLE)
 

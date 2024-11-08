@@ -233,8 +233,37 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                internalName = "AssetBrowserBtn";
                canSave = "1";
                canSaveDynamicFields = "0";
-            };            
-            
+            };        
+            new GuiIconButtonCtrl() {
+               buttonMargin = "0 0";
+               bitmapAsset = "ToolsModule:console_n_image";
+               iconLocation = "Left";
+               sizeIconToButton = "0";
+               makeIconSquare = "0";
+               textLocation = "Center";
+               textMargin = "0";
+               autoSize = "0";
+               groupNum = "-1";
+               buttonType = "PushButton";
+               useMouseEvents = "0";
+               position = "132 0";
+               extent = "32 32";
+               minExtent = "8 2";
+               horizSizing = "right";
+               vertSizing = "bottom";
+               profile = "ToolsGuiDefaultProfile";
+               visible = "1";
+               active = "1";
+               command = "windowConsoleDlg.showWindow();";
+               tooltipProfile = "GuiToolTipProfile";
+               tooltip = "Open the console log in a window.";
+               hovertime = "1000";
+               isContainer = "0";
+               internalName = "ABwindowConsoleButton";
+               canSave = "1";
+               canSaveDynamicFields = "0";
+               buttonMargin = "-2 0";
+            };
             new GuiBitmapCtrl() {
                Enabled = "1";
                Profile = "ToolsGuiDefaultProfile";

@@ -51,15 +51,15 @@ public:
   /*C*/             afxEA_T3DPointLight();
   /*D*/             ~afxEA_T3DPointLight();
 
-  virtual void      ea_set_datablock(SimDataBlock*);
-  virtual bool      ea_start();
-  virtual bool      ea_update(F32 dt);
-  virtual void      ea_finish(bool was_stopped);
-  virtual void      ea_set_scope_status(bool flag);
-  virtual void      onDeleteNotify(SimObject*);
-  virtual void      getBaseColor(LinearColorF& color);
+  void      ea_set_datablock(SimDataBlock*) override;
+  bool      ea_start() override;
+  bool      ea_update(F32 dt) override;
+  void      ea_finish(bool was_stopped) override;
+  void      ea_set_scope_status(bool flag) override;
+  void      onDeleteNotify(SimObject*) override;
+  void      getBaseColor(LinearColorF& color) override;
 
-  virtual bool      ea_is_enabled() { return true; }
+  bool      ea_is_enabled() override { return true; }
 };
 
 //~~~~~~~~~~~~~~~~~~~~//
@@ -123,7 +123,7 @@ public:
     mLight->setColor(live_color);
   }
 
-  void submitLights(LightManager* lm, bool staticLighting)
+  void submitLights(LightManager* lm, bool staticLighting) override
   {
     if (mAnimState.active && mAnimationData && mFade_amt < 1.0f)
     {
@@ -265,12 +265,12 @@ class afxEA_T3DPointLightDesc : public afxEffectAdapterDesc, public afxEffectDef
   static afxEA_T3DPointLightDesc desc;
 
 public:
-  virtual bool  testEffectType(const SimDataBlock*) const;
-  virtual bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const;
-  virtual bool  runsOnServer(const afxEffectWrapperData*) const { return false; }
-  virtual bool  runsOnClient(const afxEffectWrapperData*) const { return true; }
+  bool  testEffectType(const SimDataBlock*) const override;
+  bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const override;
+  bool  runsOnServer(const afxEffectWrapperData*) const override { return false; }
+  bool  runsOnClient(const afxEffectWrapperData*) const override { return true; }
 
-  virtual afxEffectWrapper* create() const { return new afxEA_T3DPointLight; }
+  afxEffectWrapper* create() const override { return new afxEA_T3DPointLight; }
 };
 
 afxEA_T3DPointLightDesc afxEA_T3DPointLightDesc::desc;

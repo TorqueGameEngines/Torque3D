@@ -111,10 +111,10 @@ public:
    static void  consoleInit();
    static void  initPersistFields();   
 
-   virtual void onNameChange(const char *name);
-   virtual bool onAdd();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void onNameChange(const char *name) override;
+   bool onAdd() override;
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 
    /// Called from Forest the first time a datablock is used
    /// in order to lazy load content.

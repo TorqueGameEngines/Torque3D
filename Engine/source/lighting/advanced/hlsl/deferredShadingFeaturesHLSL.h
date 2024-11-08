@@ -29,64 +29,64 @@
 class DeferredOrmMapHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual String getName() { return "Deferred Shading: PBR Config Map"; }
+   String getName() override { return "Deferred Shading: PBR Config Map"; }
 
-   virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
+   U32 getOutputTargets(const MaterialFeatureData& fd) const override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-      const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+      const MaterialFeatureData &fd ) override;
    
-   virtual Resources getResources( const MaterialFeatureData &fd );
+   Resources getResources( const MaterialFeatureData &fd ) override;
 
    // Sets textures and texture flags for current pass
-   virtual void setTexData( Material::StageData &stageDat,
+   void setTexData( Material::StageData &stageDat,
                             const MaterialFeatureData &fd,
                             RenderPassData &passData,
-                            U32 &texIndex );
+                            U32 &texIndex ) override;
    
-   virtual void processVert( Vector<ShaderComponent*> &componentList,
-                             const MaterialFeatureData &fd );
+   void processVert( Vector<ShaderComponent*> &componentList,
+                             const MaterialFeatureData &fd ) override;
 };
 
 class MatInfoFlagsHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual String getName() { return "Deferred Shading: Mat Info Flags"; }
+   String getName() override { return "Deferred Shading: Mat Info Flags"; }
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-      const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+      const MaterialFeatureData &fd ) override;
 
-   virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
+   U32 getOutputTargets(const MaterialFeatureData& fd) const override;
 };
 
 class ORMConfigVarsHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual String getName() { return "Deferred Shading: PBR Config Explicit Numbers"; }
+   String getName() override { return "Deferred Shading: PBR Config Explicit Numbers"; }
 
-   virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
+   U32 getOutputTargets(const MaterialFeatureData& fd) const override;
 
-   virtual void processPix( Vector<ShaderComponent*> &componentList, 
-      const MaterialFeatureData &fd );
+   void processPix( Vector<ShaderComponent*> &componentList, 
+      const MaterialFeatureData &fd ) override;
 };
 
 class GlowMapHLSL : public ShaderFeatureHLSL
 {
 public:
-   virtual String getName() { return "Glow Map"; }
+   String getName() override { return "Glow Map"; }
 
-   virtual void processPix(Vector<ShaderComponent*> &componentList,
-      const MaterialFeatureData &fd);
+   void processPix(Vector<ShaderComponent*> &componentList,
+      const MaterialFeatureData &fd) override;
 
-   virtual U32 getOutputTargets(const MaterialFeatureData& fd) const;
+   U32 getOutputTargets(const MaterialFeatureData& fd) const override;
 
-   virtual Resources getResources(const MaterialFeatureData& fd);
+   Resources getResources(const MaterialFeatureData& fd) override;
 
    // Sets textures and texture flags for current pass
-   virtual void setTexData(Material::StageData& stageDat,
+   void setTexData(Material::StageData& stageDat,
       const MaterialFeatureData& fd,
       RenderPassData& passData,
-      U32& texIndex);
+      U32& texIndex) override;
 };
 
 #endif

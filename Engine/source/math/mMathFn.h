@@ -217,7 +217,22 @@ inline F32 mRound(const F32 val, const S32 n)
    S32 place = (S32) pow(10.0f, n);  
       
    return mFloor((val*place)+0.5)/place;  
-}  
+}
+
+inline F32 mRoundF(const F32 val, const F32 step)
+{
+   if (step == 0.0f)
+      return val;
+
+   F32 a = mFmod(val, step);
+
+   F32 temp = val;
+
+   if (mFabs(a) > (step / 2))
+      val < 0.0f ? temp -= step : temp += step;
+
+   return(temp - a);
+}
 
 inline S32 mAbs(const S32 val)
 {

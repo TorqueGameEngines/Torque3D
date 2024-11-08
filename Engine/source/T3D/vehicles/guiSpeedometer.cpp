@@ -51,7 +51,7 @@ class GuiSpeedometerHud : public GuiBitmapCtrl
 public:
    GuiSpeedometerHud();
 
-   void onRender( Point2I, const RectI &);
+   void onRender( Point2I, const RectI &) override;
    static void initPersistFields();
    DECLARE_CONOBJECT( GuiSpeedometerHud );
    DECLARE_CATEGORY( "Gui Game" );

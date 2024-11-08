@@ -72,10 +72,10 @@ namespace Win32
       HANDLE   *getHANDLES() { return mHandleList.address(); }
 
    private:
-      virtual void   internalProcessOnce();
+      void   internalProcessOnce() override;
 
-      virtual bool   internalAddNotification( const Path &dir );
-      virtual bool   internalRemoveNotification( const Path &dir );
+      bool   internalAddNotification( const Path &dir ) override;
+      bool   internalRemoveNotification( const Path &dir ) override;
 
       Vector<Path>   mDirs;
       Vector<HANDLE> mHandleList;

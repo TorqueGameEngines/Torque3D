@@ -3043,14 +3043,21 @@ DefineEngineMethod(GuiConvexEditorCtrl, getSelectedFaceZRot, float, (), ,
 }
 
 DefineEngineMethod(GuiConvexEditorCtrl, toggleGridSnapping, void, (),,
-   "@brief Mount objB to this object at the desired slot with optional transform.\n\n"
-
-   "@param objB  Object to mount onto us\n"
-   "@param slot  Mount slot ID\n"
-   "@param txfm (optional) mount offset transform\n"
-   "@return true if successful, false if failed (objB is not valid)")
+   "@brief toggle grid snapping state.\n\n")
 {
    object->toggleGridSnapping();
+}
+
+DefineEngineMethod(GuiConvexEditorCtrl, setGridSnap, void, (bool snap), ,
+   "@brief set grid snapping state.\n\n")
+{
+   object->setGridSnap(snap);
+}
+
+DefineEngineMethod(GuiConvexEditorCtrl, getGridSnap, bool, (), ,
+   "@brief set grid snapping state.\n\n")
+{
+   return object->getGridSnap();
 }
 
 DefineEngineMethod(GuiConvexEditorCtrl, setGridSnapSize, void, (float gridSize), (1.0),

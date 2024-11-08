@@ -55,9 +55,9 @@ class SFXNullDevice : public SFXDevice
    public:
 
       // SFXDevice.
-      virtual  SFXBuffer* createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description );
-      virtual SFXVoice* createVoice( bool is3D, SFXBuffer *buffer );
-      virtual void update();
+       SFXBuffer* createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description ) override;
+      SFXVoice* createVoice( bool is3D, SFXBuffer *buffer ) override;
+      void update() override;
 };
 
 #endif // _SFXNULLDEVICE_H_

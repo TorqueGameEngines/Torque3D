@@ -71,7 +71,7 @@ public:
     StringTableEntry getSortName(void) const     { return mSortName; }
 
     static void initPersistFields();                    ///< Persist Fields.
-    virtual void onRemove();                            ///< Called when the object is removed from the sim.
+    void onRemove() override;                            ///< Called when the object is removed from the sim.
 
     DECLARE_CONOBJECT(FieldBrushObject);
 };

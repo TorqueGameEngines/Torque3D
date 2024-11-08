@@ -223,6 +223,7 @@ class SceneRenderState
       /// Returns true if this is not one of the other rendering passes.
       bool isOtherPass() const { return mScenePassType >= SPT_Other; }
 
+      bool isCapturing() const { return Con::getBoolVariable("$ReflectionProbes::Capturing", false); };
       /// @}
 
       /// @name Render Style

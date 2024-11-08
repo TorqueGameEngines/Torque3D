@@ -44,20 +44,20 @@ public:
    ColladaAppSequence(const domAnimation_clip* clip);
    ~ColladaAppSequence();
 
-   void setActive(bool active);
+   void setActive(bool active) override;
 
    const domAnimation_clip* getClip() const { return pClip; }
 
    S32 getNumTriggers();
    void getTrigger(S32 index, TSShape::Trigger& trigger);
 
-   const char* getName() const;
+   const char* getName() const override;
 
-   F32 getStart() const { return seqStart; }
-   F32 getEnd() const { return seqEnd; }
+   F32 getStart() const override { return seqStart; }
+   F32 getEnd() const override { return seqEnd; }
    void setEnd(F32 end) { seqEnd = end; }
 
-   U32 getFlags() const;
+   U32 getFlags() const override;
    F32 getPriority();
    F32 getBlendRefTime();
 };

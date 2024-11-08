@@ -58,7 +58,7 @@ public:
 
    static void initPersistFields();
 
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 };
 
 typedef GuiSeparatorCtrl::separatorTypeOptions GuiSeparatorType;

@@ -259,9 +259,23 @@ extern S32        dStrcmp(const UTF16 *str1, const UTF16 *str2);
 extern S32        dStrnatcmp( const char* str1, const char* str2 );
 extern S32        dStrnatcasecmp( const char* str1, const char* str2 );
 
-inline bool dAtob(const char *str)
+inline bool dAtob(const char* str)
 {
-   return !dStricmp(str, "true") || dAtof(str);
+   if (str && str[0] != '\0')
+   {
+      if (dStricmp(str, "0") == 0)
+         return false;
+      if (dStricmp(str, "0.0") == 0)
+         return false;
+      if (dStricmp(str, "0.0f") == 0)
+         return false;
+      if (dStricmp(str, "null") == 0)
+         return false;
+      if (dStricmp(str, "false") == 0)
+         return false;
+      return true;
+   }
+   return false;
 }
 
 bool dStrEqual(const char* str1, const char* str2);

@@ -35,17 +35,17 @@ public:
 
    StdMoveList();
 
-   void clientWriteMovePacket(BitStream *);
-   void clientReadMovePacket(BitStream *);
+   void clientWriteMovePacket(BitStream *) override;
+   void clientReadMovePacket(BitStream *) override;
 
-   void serverWriteMovePacket(BitStream *);
-   void serverReadMovePacket(BitStream *);
+   void serverWriteMovePacket(BitStream *) override;
+   void serverReadMovePacket(BitStream *) override;
 
-   U32 getMoves(Move**,U32* numMoves);
-   void clearMoves(U32 count);
+   U32 getMoves(Move**,U32* numMoves) override;
+   void clearMoves(U32 count) override;
 
-   void advanceMove();
-   void onAdvanceObjects() {}
+   void advanceMove() override;
+   void onAdvanceObjects() override {}
 
 protected:
 

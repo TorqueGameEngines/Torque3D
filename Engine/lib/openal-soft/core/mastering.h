@@ -1,10 +1,14 @@
 #ifndef CORE_MASTERING_H
 #define CORE_MASTERING_H
 
+#include <array>
 #include <memory>
 
 #include "almalloc.h"
+#include "alnumeric.h"
+#include "alspan.h"
 #include "bufferline.h"
+#include "vector.h"
 
 struct SlidingHold;
 
@@ -21,16 +25,17 @@ using uint = unsigned int;
  *
  *   http://c4dm.eecs.qmul.ac.uk/audioengineering/compressors/
  */
-struct Compressor {
+class Compressor {
     size_t mNumChans{0u};
 
-    struct {
+    struct AutoFlags {
         bool Knee : 1;
         bool Attack : 1;
         bool Release : 1;
         bool PostGain : 1;
         bool Declip : 1;
-    } mAuto{};
+    };
+    AutoFlags mAuto{};
 
     uint mLookAhead{0};
 
@@ -44,11 +49,11 @@ struct Compressor {
     float mAttack{0.0f};
     float mRelease{0.0f};
 
-    alignas(16) float mSideChain[2*BufferLineSize]{};
-    alignas(16) float mCrestFactor[BufferLineSize]{};
+    alignas(16) std::array<float,BufferLineSize*2_uz> mSideChain{};
+    alignas(16) std::array<float,BufferLineSize> mCrestFactor{};
 
-    SlidingHold *mHold{nullptr};
-    FloatBufferLine *mDelay{nullptr};
+    std::unique_ptr<SlidingHold> mHold;
+    al::vector<FloatBufferLine,16> mDelay;
 
     float mCrestCoeff{0.0f};
     float mGainEstimate{0.0f};
@@ -60,12 +65,19 @@ struct Compressor {
     float mLastAttack{0.0f};
     float mLastGainDev{0.0f};
 
+    Compressor() = default;
 
+    void linkChannels(const uint SamplesToDo, const al::span<const FloatBufferLine> OutBuffer);
+    void crestDetector(const uint SamplesToDo);
+    void peakDetector(const uint SamplesToDo);
+    void peakHoldDetector(const uint SamplesToDo);
+    void gainCompressor(const uint SamplesToDo);
+    void signalDelay(const uint SamplesToDo, const al::span<FloatBufferLine> OutBuffer);
+
+public:
     ~Compressor();
     void process(const uint SamplesToDo, FloatBufferLine *OutBuffer);
-    int getLookAhead() const noexcept { return static_cast<int>(mLookAhead); }
-
-    DEF_PLACE_NEWDEL()
+    [[nodiscard]] auto getLookAhead() const noexcept -> uint { return mLookAhead; }
 
     /**
      * The compressor is initialized with the following settings:

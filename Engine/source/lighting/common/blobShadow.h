@@ -76,9 +76,9 @@ public:
 
    bool shouldRender(F32 camDist);
 
-   void update( const SceneRenderState *state ) {}
-   void render( F32 camDist, const TSRenderState &rdata );
-   U32 getLastRenderTime() const { return mLastRenderTime; }
+   void update( const SceneRenderState *state ) override {}
+   void render( F32 camDist, const TSRenderState &rdata ) override;
+   U32 getLastRenderTime() const override { return mLastRenderTime; }
 
    static void generateGenericShadowBitmap(S32 dim);
    static void deleteGenericShadowBitmap();

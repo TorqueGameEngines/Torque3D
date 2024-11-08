@@ -111,7 +111,7 @@ public:
    SimConsoleEvent(S32 argc, ConsoleValue *argv, bool onObject);
 
    ~SimConsoleEvent();
-   virtual void process(SimObject *object);
+   void process(SimObject *object) override;
 
    /// Creates a reference to our internal args list in argv
    void populateArgs(ConsoleValue *argv);
@@ -140,7 +140,7 @@ public:
    SimConsoleThreadExecEvent(S32 argc, ConsoleValue *argv, bool onObject, SimConsoleThreadExecCallback *callback);
 
    SimConsoleThreadExecCallback& getCB() { return *cb; }
-   virtual void process(SimObject *object);
+   void process(SimObject *object) override;
 };
 
 /// General purpose SimEvent which calls a Delegate<void()> callback.
@@ -151,7 +151,7 @@ public:
    U32 *mEventId;
    Delegate<void()> mCallback;
 
-   void process( SimObject* )
+   void process( SimObject* ) override
    {
       // Clear the event id and call the delegate.
       *mEventId = InvalidEventId;

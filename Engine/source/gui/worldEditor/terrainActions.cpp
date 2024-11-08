@@ -27,6 +27,35 @@
 #include "gui/core/guiCanvas.h"
 
 //------------------------------------------------------------------------------
+bool TerrainAction::isValid(GridInfo tile)
+{
+
+   const bool slopeLimit = mTerrainEditor->mSlopeMinAngle > 0.0f || mTerrainEditor->mSlopeMaxAngle < 90.0f;
+   const F32 minSlope = mSin(mDegToRad(90.0f - mTerrainEditor->mSlopeMinAngle));
+   const F32 maxSlope = mSin(mDegToRad(90.0f - mTerrainEditor->mSlopeMaxAngle));
+
+   const TerrainBlock* terrain = mTerrainEditor->getActiveTerrain();
+   const F32 squareSize = terrain->getSquareSize();
+
+   Point2F p;
+   Point3F norm;
+
+   if (slopeLimit)
+   {
+      p.x = tile.mGridPoint.gridPos.x * squareSize;
+      p.y = tile.mGridPoint.gridPos.y * squareSize;
+      if (!terrain->getNormal(p, &norm, true))
+         return false;
+
+      if (norm.z > minSlope ||
+         norm.z < maxSlope)
+         return false;
+   }
+   if (tile.mHeight < mTerrainEditor->mTileMinHeight || tile.mHeight > mTerrainEditor->mTileMaxHeight)
+      return false;
+
+   return true;
+}
 
 void SelectAction::process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type)
 {
@@ -200,32 +229,13 @@ void PaintMaterialAction::process(Selection * sel, const Gui3DMouseEvent &, bool
    if ( !selChanged || mat < 0 )
       return;
 
-   const bool slopeLimit = mTerrainEditor->mSlopeMinAngle > 0.0f || mTerrainEditor->mSlopeMaxAngle < 90.0f;
-   const F32 minSlope = mSin( mDegToRad( 90.0f - mTerrainEditor->mSlopeMinAngle ) );
-   const F32 maxSlope = mSin( mDegToRad( 90.0f - mTerrainEditor->mSlopeMaxAngle ) );
-
-   const TerrainBlock *terrain = mTerrainEditor->getActiveTerrain();
-   const F32 squareSize = terrain->getSquareSize();
-
-   Point2F p;
-   Point3F norm;
-
 
    for( U32 i = 0; i < sel->size(); i++ )
    {
       GridInfo &inf = (*sel)[i];
 
-      if ( slopeLimit )
-      {
-         p.x = inf.mGridPoint.gridPos.x * squareSize;
-         p.y = inf.mGridPoint.gridPos.y * squareSize;
-         if ( !terrain->getNormal( p, &norm, true ) )
-            continue;
-
-         if (  norm.z > minSlope ||
-               norm.z < maxSlope )
-            continue;  
-      }
+      if (!isValid(inf))
+         continue;
 
       // If grid is already set to our material, or it is an
       // empty grid spot, then skip painting.
@@ -298,6 +308,9 @@ void RaiseHeightAction::process( Selection *sel, const Gui3DMouseEvent &evt, boo
 
    for ( U32 i = 0; i < sel->size(); i++ )
    {
+      if (!isValid((*sel)[i]))
+         continue;
+
       mTerrainEditor->getUndoSel()->add((*sel)[i]);
       if ( (*sel)[i].mHeight < maxHeight )
       {
@@ -344,6 +357,9 @@ void LowerHeightAction::process(Selection * sel, const Gui3DMouseEvent &, bool s
 
    for(U32 i = 0; i < sel->size(); i++)
    {
+      if (!isValid((*sel)[i]))
+         continue;
+
       mTerrainEditor->getUndoSel()->add((*sel)[i]);
       if((*sel)[i].mHeight > maxHeight)
       {
@@ -365,6 +381,9 @@ void SetHeightAction::process(Selection * sel, const Gui3DMouseEvent &, bool sel
    {
       for(U32 i = 0; i < sel->size(); i++)
       {
+         if (!isValid((*sel)[i]))
+            continue;
+
          mTerrainEditor->getUndoSel()->add((*sel)[i]);
          (*sel)[i].mHeight = mTerrainEditor->mSetHeightVal;
          mTerrainEditor->setGridInfo((*sel)[i]);
@@ -388,6 +407,9 @@ void SetEmptyAction::process(Selection * sel, const Gui3DMouseEvent &, bool selC
 
       // Skip already empty blocks.
       if ( inf.mMaterial == U8_MAX )
+         continue;
+
+      if (!isValid(inf))
          continue;
 
       // The change flag needs to be set on the undo
@@ -441,6 +463,9 @@ void ScaleHeightAction::process(Selection * sel, const Gui3DMouseEvent &, bool s
    {
       for(U32 i = 0; i < sel->size(); i++)
       {
+         if (!isValid((*sel)[i]))
+            continue;
+
          mTerrainEditor->getUndoSel()->add((*sel)[i]);
          (*sel)[i].mHeight *= mTerrainEditor->mScaleVal;
          mTerrainEditor->setGridInfo((*sel)[i]);
@@ -579,6 +604,9 @@ void FlattenHeightAction::process(Selection * sel, const Gui3DMouseEvent &, bool
       // set it
       for(U32 i = 0; i < sel->size(); i++)
       {
+         if (!isValid((*sel)[i]))
+            continue;
+
          mTerrainEditor->getUndoSel()->add((*sel)[i]);
 
          //
@@ -666,7 +694,7 @@ void SmoothSlopeAction::process(Selection * sel, const Gui3DMouseEvent &, bool s
   
       F32 goalHeight;  
       for(U32 i = 0; i < sel->size(); i++)  
-      {  
+      {
          goalHeight = avgHeight + ((*sel)[i].mGridPoint.gridPos.x - avgPos.x)*avgSlope.x +  
             ((*sel)[i].mGridPoint.gridPos.y - avgPos.y)*avgSlope.y;  
          (*sel)[i].mHeight += (goalHeight - (*sel)[i].mHeight) * (*sel)[i].mWeight;  
@@ -694,6 +722,9 @@ void PaintNoiseAction::process(Selection * sel, const Gui3DMouseEvent &, bool se
    {
       for( U32 i = 0; i < sel->size(); i++ )
       {
+         if (!isValid((*sel)[i]))
+            continue;
+
          mTerrainEditor->getUndoSel()->add((*sel)[i]);
 
          const Point2I &gridPos = (*sel)[i].mGridPoint.gridPos;
@@ -702,6 +733,12 @@ void PaintNoiseAction::process(Selection * sel, const Gui3DMouseEvent &, bool se
                                           ( ( gridPos.y % mNoiseSize ) * mNoiseSize ) ];
 
          (*sel)[i].mHeight += (noiseVal - mMinMaxNoise.y * mScale) * (*sel)[i].mWeight * mTerrainEditor->mNoiseFactor;
+
+         if ((*sel)[i].mHeight > mTerrainEditor->mTileMaxHeight)
+            (*sel)[i].mHeight = mTerrainEditor->mTileMaxHeight;
+
+         if ((*sel)[i].mHeight < mTerrainEditor->mTileMinHeight)
+            (*sel)[i].mHeight = mTerrainEditor->mTileMinHeight;
 
          mTerrainEditor->setGridInfo((*sel)[i]);
       }

@@ -106,7 +106,7 @@ class GenericTimeSource : public IPositionable< Tick >,
 
       /// Return the number of ticks since the time source
       /// has been started.
-      TickType getPosition() const
+      TickType getPosition() const override
       {
          if( !isStarted() )
             return TypeTraits< TickType >::ZERO;
@@ -117,7 +117,7 @@ class GenericTimeSource : public IPositionable< Tick >,
       }
 
       ///
-      void setPosition( TickType pos )
+      void setPosition( TickType pos ) override
       {
          if( !isStarted() )
             mStartTime = pos;
@@ -132,14 +132,14 @@ class GenericTimeSource : public IPositionable< Tick >,
       }
 
       // IResettable.
-      virtual void reset()
+      void reset() override
       {
          mStartTime = TypeTraits< TickType >::MAX;
          mPauseTime = TypeTraits< TickType >::MAX;
       }
 
       // IProcess.
-      virtual void start()
+      void start() override
       {
          if( !isStarted() )
          {
@@ -154,11 +154,11 @@ class GenericTimeSource : public IPositionable< Tick >,
                mStartTime = now;
          }
       }
-      virtual void stop()
+      void stop() override
       {
          reset();
       }
-      virtual void pause()
+      void pause() override
       {
          if( !isPaused() )
             mPauseTime = mTimer.getTick();

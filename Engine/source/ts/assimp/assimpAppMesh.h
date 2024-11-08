@@ -53,7 +53,7 @@ public:
       //delete geomExt;
    }
 
-   void lookupSkinData();
+   void lookupSkinData() override;
 
    static void fixDetailSize(bool fixed, S32 size=2)
    {
@@ -64,7 +64,7 @@ public:
    /// Get the name of this mesh
    ///
    /// @return A string containing the name of this mesh
-   const char *getName(bool allowFixed=true);
+   const char *getName(bool allowFixed=true) override;
 
    //-----------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ public:
    /// @param defaultVal   Reference to variable to hold return value
    ///
    /// @return True if a value was set, false if not
-   bool getFloat(const char *propName, F32 &defaultVal)
+   bool getFloat(const char *propName, F32 &defaultVal) override
    {
       return appNode->getFloat(propName,defaultVal);
    }
@@ -85,7 +85,7 @@ public:
    /// @param defaultVal   Reference to variable to hold return value
    ///
    /// @return True if a value was set, false if not
-   bool getInt(const char *propName, S32 &defaultVal)
+   bool getInt(const char *propName, S32 &defaultVal) override
    {
       return appNode->getInt(propName,defaultVal);
    }
@@ -96,13 +96,13 @@ public:
    /// @param defaultVal   Reference to variable to hold return value
    ///
    /// @return True if a value was set, false if not
-   bool getBool(const char *propName, bool &defaultVal)
+   bool getBool(const char *propName, bool &defaultVal) override
    {
       return appNode->getBool(propName,defaultVal);
    }
 
    /// Return true if this mesh is a skin
-   bool isSkin()
+   bool isSkin() override
    {
       return mIsSkinMesh;
    }
@@ -111,15 +111,15 @@ public:
    ///
    /// @param time           Time at which to generate the mesh data
    /// @param objectOffset   Transform to apply to the generated data (bounds transform)
-   void lockMesh(F32 time, const MatrixF& objOffset);
+   void lockMesh(F32 time, const MatrixF& objOffset) override;
 
    /// Get the transform of this mesh at a certain time
    ///
    /// @param time   Time at which to get the transform
    ///
    /// @return The mesh transform at the specified time
-   MatrixF getMeshTransform(F32 time);
-   F32 getVisValue(F32 t);
+   MatrixF getMeshTransform(F32 time) override;
+   F32 getVisValue(F32 t) override;
 };
 
 #endif // _COLLADA_APPMESH_H_

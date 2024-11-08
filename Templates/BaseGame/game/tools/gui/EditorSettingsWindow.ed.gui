@@ -15,7 +15,7 @@ $guiContent = new GuiControl(EditorSettingsWindow,EditorGuiGroup) {
    canSaveDynamicFields = "1";
 
    new GuiWindowCollapseCtrl(ESettingsWindow) {
-      text = "::  Editor Settings";
+      text = ":: Editor Settings";
       resizeWidth = "0";
       resizeHeight = "0";
       canMove = "1";

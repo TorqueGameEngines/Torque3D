@@ -164,6 +164,8 @@ protected:
    GFXShaderConstHandle *mMatCameraToScreenSC;
    GFXShaderConstHandle *mMatScreenToCameraSC;
 
+   GFXShaderConstHandle* mIsCapturingSC;
+
    bool mAllowReflectPass;
 
    /// If true update the shader.
@@ -384,8 +386,8 @@ public:
    DECLARE_CONOBJECT(PostEffect);
 
    // SimObject
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
    static void initPersistFields();
 
    /// @name Callbacks

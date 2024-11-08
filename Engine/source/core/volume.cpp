@@ -384,14 +384,14 @@ class FileSystemRedirect: public FileSystem
 public:
    FileSystemRedirect(MountSystem* mfs,const Path& path);
 
-   String   getTypeStr() const { return "Redirect"; }
+   String   getTypeStr() const override { return "Redirect"; }
 
-   FileNodeRef resolve(const Path& path);
-   FileNodeRef create(const Path& path,FileNode::Mode);
-   bool remove(const Path& path);
-   bool rename(const Path& a,const Path& b);
-   Path mapTo(const Path& path);
-   Path mapFrom(const Path& path);
+   FileNodeRef resolve(const Path& path) override;
+   FileNodeRef create(const Path& path,FileNode::Mode) override;
+   bool remove(const Path& path) override;
+   bool rename(const Path& a,const Path& b) override;
+   Path mapTo(const Path& path) override;
+   Path mapFrom(const Path& path) override;
    
 private:
    Path _merge(const Path& path);
@@ -406,14 +406,14 @@ public:
 
    FileSystemRedirectChangeNotifier( FileSystem *fs );
 
-   bool addNotification( const Path &path, ChangeDelegate callback );   
-   bool removeNotification( const Path &path, ChangeDelegate callback );
+   bool addNotification( const Path &path, ChangeDelegate callback ) override;   
+   bool removeNotification( const Path &path, ChangeDelegate callback ) override;
 
 protected:
 
-   virtual void  internalProcessOnce() {}
-   virtual bool  internalAddNotification( const Path &dir ) { return false; }
-   virtual bool  internalRemoveNotification( const Path &dir ) { return false; }
+   void  internalProcessOnce() override {}
+   bool  internalAddNotification( const Path &dir ) override { return false; }
+   bool  internalRemoveNotification( const Path &dir ) override { return false; }
 };
 
 FileSystemRedirectChangeNotifier::FileSystemRedirectChangeNotifier( FileSystem *fs ) 

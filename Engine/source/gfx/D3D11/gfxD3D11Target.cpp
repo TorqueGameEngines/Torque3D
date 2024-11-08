@@ -217,7 +217,7 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXCubemap *tex, U32
 
    mTargets[slot] = cube->get2DTex();
    mTargets[slot]->AddRef();
-   mTargetViews[slot] = cube->getRTView(face, mipLevel);
+   mTargetViews[slot] = cube->getRTView(face);
    mTargetViews[slot]->AddRef();
    mTargetSRViews[slot] = cube->getSRView();
    mTargetSRViews[slot]->AddRef();

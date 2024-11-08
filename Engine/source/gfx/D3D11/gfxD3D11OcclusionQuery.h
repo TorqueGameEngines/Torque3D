@@ -45,14 +45,14 @@ public:
    GFXD3D11OcclusionQuery(GFXDevice *device);
    virtual ~GFXD3D11OcclusionQuery();
 
-   virtual bool begin();
-   virtual void end();   
-   virtual OcclusionQueryStatus getStatus(bool block, U32 *data = NULL);
+   bool begin() override;
+   void end() override;   
+   OcclusionQueryStatus getStatus(bool block, U32 *data = NULL) override;
 
    // GFXResource
-   virtual void zombify();   
-   virtual void resurrect();
-   virtual const String describeSelf() const;
+   void zombify() override;   
+   void resurrect() override;
+   const String describeSelf() const override;
 };
 
 #endif

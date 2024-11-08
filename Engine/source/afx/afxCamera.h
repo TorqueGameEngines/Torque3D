@@ -52,8 +52,8 @@ struct afxCameraData: public ShapeBaseData {
   //
   DECLARE_CONOBJECT(afxCameraData);
   static void initPersistFields();
-  virtual void packData(BitStream* stream);
-  virtual void unpackData(BitStream* stream);
+  void packData(BitStream* stream) override;
+  void unpackData(BitStream* stream) override;
 };
 
 
@@ -140,7 +140,7 @@ public:
   void            setThirdPersonSnapClient();
   const char*     getMode();
 
-  bool            isCamera() const { return true; }
+  bool            isCamera() const override { return true; }
 
   DECLARE_CONOBJECT(afxCamera);
   DECLARE_CATEGORY("UNLISTED");
@@ -151,35 +151,35 @@ private:          // 3POV SECTION
   bool            test_blocked_line(const Point3F& start, const Point3F& end);
 
 public:           // STD OVERRIDES SECTION
-  virtual bool    onAdd();
-  virtual void    onRemove();
-  virtual void    onDeleteNotify(SimObject *obj);
+  bool    onAdd() override;
+  void    onRemove() override;
+  void    onDeleteNotify(SimObject *obj) override;
 
-  virtual void    advanceTime(F32 dt);
-  virtual void    processTick(const Move* move);
-  virtual void    interpolateTick(F32 delta);
+  void    advanceTime(F32 dt) override;
+  void    processTick(const Move* move) override;
+  void    interpolateTick(F32 delta) override;
 
-  virtual void    writePacketData(GameConnection *conn, BitStream *stream);
-  virtual void    readPacketData(GameConnection *conn, BitStream *stream);
-  virtual U32     packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
-  virtual void    unpackUpdate(NetConnection *conn, BitStream *stream);
+  void    writePacketData(GameConnection *conn, BitStream *stream) override;
+  void    readPacketData(GameConnection *conn, BitStream *stream) override;
+  U32     packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override;
+  void    unpackUpdate(NetConnection *conn, BitStream *stream) override;
 
-  virtual void    onCameraScopeQuery(NetConnection* cr, CameraScopeQuery*);
-  virtual void    getCameraTransform(F32* pos,MatrixF* mat);
-  virtual void    setTransform(const MatrixF& mat);
+  void    onCameraScopeQuery(NetConnection* cr, CameraScopeQuery*) override;
+  void    getCameraTransform(F32* pos,MatrixF* mat) override;
+  void    setTransform(const MatrixF& mat) override;
 
-  virtual void    onEditorEnable();
-  virtual void    onEditorDisable();
+  void    onEditorEnable() override;
+  void    onEditorDisable() override;
 
-  virtual F32     getCameraFov();
-  virtual F32     getDefaultCameraFov();
-  virtual bool    isValidCameraFov(F32 fov);
-  virtual void    setCameraFov(F32 fov);
+  F32     getCameraFov() override;
+  F32     getDefaultCameraFov() override;
+  bool    isValidCameraFov(F32 fov) override;
+  void    setCameraFov(F32 fov) override;
 
-  virtual F32     getDamageFlash() const;
-  virtual F32     getWhiteOut() const;
+  F32     getDamageFlash() const override;
+  F32     getWhiteOut() const override;
 
-  virtual void setControllingClient( GameConnection* connection );
+  void setControllingClient( GameConnection* connection ) override;
 };
 
 

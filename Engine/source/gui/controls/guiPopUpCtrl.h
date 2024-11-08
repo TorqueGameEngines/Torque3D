@@ -50,7 +50,7 @@ protected:
    GuiPopupTextListCtrl *mTextList; 
 public:
    GuiPopUpBackgroundCtrl(GuiPopUpMenuCtrl *ctrl, GuiPopupTextListCtrl* textList);
-   void onMouseDown(const GuiEvent &event);
+   void onMouseDown(const GuiEvent &event) override;
 };
 
 class GuiPopupTextListCtrl : public GuiTextListCtrl
@@ -66,12 +66,12 @@ public:
    GuiPopupTextListCtrl(GuiPopUpMenuCtrl *ctrl);
 
    // GuiArrayCtrl overload:
-   void onCellSelected(Point2I cell);
+   void onCellSelected(Point2I cell) override;
 
    // GuiControl overloads:
-   bool onKeyDown(const GuiEvent &event);
-   void onMouseUp(const GuiEvent &event);
-   void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver);
+   bool onKeyDown(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
+   void onRenderCell(Point2I offset, Point2I cell, bool selected, bool mouseOver) override;
 };
 
 class GuiPopUpMenuCtrl : public GuiTextCtrl
@@ -141,26 +141,26 @@ public:
    GuiPopUpMenuCtrl(void);
    ~GuiPopUpMenuCtrl();   
    GuiScrollCtrl::Region mScrollDir;
-   bool onWake(); //  Added
-   bool onAdd();
-   void onSleep();
+   bool onWake() override; //  Added
+   bool onAdd() override;
+   void onSleep() override;
    void setBitmap(const char *name); //  Added
    void sort();
    void sortID(); //  Added
    void addEntry(const char *buf, S32 id = -1, U32 scheme = 0);
    void addScheme(U32 id, ColorI fontColor, ColorI fontColorHL, ColorI fontColorSEL);
-   void onRender(Point2I offset, const RectI &updateRect);
-   void onAction();
+   void onRender(Point2I offset, const RectI &updateRect) override;
+   void onAction() override;
    virtual void closePopUp();
-   void clear();
+   void clear() override;
 	void clearEntry( S32 entry ); //  Added
-   void onMouseDown(const GuiEvent &event);
-   void onMouseUp(const GuiEvent &event);
-   void onMouseEnter(const GuiEvent &event); //  Added
-   void onMouseLeave(const GuiEvent &); //  Added
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
+   void onMouseEnter(const GuiEvent &event) override; //  Added
+   void onMouseLeave(const GuiEvent &) override; //  Added
    void setupAutoScroll(const GuiEvent &event);
    void autoScroll();
-   bool onKeyDown(const GuiEvent &event);
+   bool onKeyDown(const GuiEvent &event) override;
    void reverseTextList();
    bool getFontColor(ColorI &fontColor, S32 id, bool selected, bool mouseOver);
    bool getColoredBox(ColorI &boxColor, S32 id); //  Added
@@ -170,7 +170,7 @@ public:
    void setSelected(S32 id, bool bNotifyScript = true);
    void setFirstSelected(bool bNotifyScript = true); //  Added
    void setNoneSelected();	//  Added
-   const char *getScriptValue();
+   const char *getScriptValue() override;
    const char *getTextById(S32 id);
    S32 findText( const char* text );
    S32 getNumEntries()   { return( mEntries.size() ); }

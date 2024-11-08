@@ -49,20 +49,20 @@ class afxStatusBar : public GuiControl, public afxProgressBase
 public:
   /*C*/             afxStatusBar();
 
-  virtual void      onRender(Point2I, const RectI&);
+  void      onRender(Point2I, const RectI&) override;
 
   void              setFraction(F32 frac);
   F32               getFraction() const { return fraction; }
 
-  virtual void      setProgress(F32 value) { setFraction(value); }
+  void      setProgress(F32 value) override { setFraction(value); }
 
   void              setShape(ShapeBase* s);
   void              clearShape() { setShape(NULL); }
 
-  virtual bool      onWake();
-  virtual void      onSleep();
-  virtual void      onMouseDown(const GuiEvent &event);
-  virtual void      onDeleteNotify(SimObject*);
+  bool      onWake() override;
+  void      onSleep() override;
+  void      onMouseDown(const GuiEvent &event) override;
+  void      onDeleteNotify(SimObject*) override;
 
   static void       initPersistFields();
 

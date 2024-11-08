@@ -88,7 +88,7 @@ public:
         // pretty much anything or everything could be invalid!
     }
 
-    virtual void resetState( void )
+    void resetState( void ) override
     {
         mFieldName = StringTable->EmptyString();
         *mFieldValue = 0;
@@ -371,7 +371,7 @@ public:
         // pretty much anything or everything could be invalid!
     }
 
-    virtual void resetState( void )
+    void resetState( void ) override
     {
         // We don't need to delete the write node as it'll get destroyed when the compilation is reset!
         mpProxyWriteNode = NULL;
@@ -703,7 +703,7 @@ public:
         resetState();
     }
 
-    virtual void resetState( void )
+    void resetState( void ) override
     {
         // Cache the nodes.
         while ( mNodes.size() > 0 )

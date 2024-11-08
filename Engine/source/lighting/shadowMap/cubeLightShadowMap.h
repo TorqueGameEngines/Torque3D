@@ -40,12 +40,12 @@ public:
    CubeLightShadowMap( LightInfo *light );
 
    // LightShadowMap
-   virtual bool hasShadowTex() const { return mCubemap.isValid(); }
-   virtual ShadowType getShadowType() const { return ShadowType_CubeMap; }
-   virtual void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState );
-   virtual void setShaderParameters( GFXShaderConstBuffer* params, LightingShaderConstants* lsc );
-   virtual void releaseTextures();
-   virtual bool setTextureStage( U32 currTexFlag, LightingShaderConstants* lsc );
+   bool hasShadowTex() const override { return mCubemap.isValid(); }
+   ShadowType getShadowType() const override { return ShadowType_CubeMap; }
+   void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState ) override;
+   void setShaderParameters( GFXShaderConstBuffer* params, LightingShaderConstants* lsc ) override;
+   void releaseTextures() override;
+   bool setTextureStage( U32 currTexFlag, LightingShaderConstants* lsc ) override;
 
 protected:   
 

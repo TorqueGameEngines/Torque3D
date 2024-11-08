@@ -42,7 +42,7 @@ public:
    
    GuiBackgroundCtrl();
 
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 };
 
 #endif

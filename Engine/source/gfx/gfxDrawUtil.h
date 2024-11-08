@@ -31,10 +31,10 @@
 #include "math/mPolyhedron.h"
 #endif
 
-
-
 class FontRenderBatcher;
 class Frustum;
+
+
 
 
 /// Helper class containing utility functions for useful drawing routines
@@ -46,28 +46,49 @@ public:
    ~GFXDrawUtil();
 
    //-----------------------------------------------------------------------------
-   // Draw Rectangles
+   // Draw Rectangles : OUTLINE
    //-----------------------------------------------------------------------------
-   void drawRect( const Point2F &upperLeft, const Point2F &lowerRight, const ColorI &color );
-   void drawRect( const RectF &rect, const ColorI &color );
-   void drawRect( const Point2I &upperLeft, const Point2I &lowerRight, const ColorI &color );
-   void drawRect( const RectI &rect, const ColorI &color );
-
-   void drawRectFill( const Point2F &upperL, const Point2F &lowerR, const ColorI &color );
-   void drawRectFill( const RectF &rect, const ColorI &color );
-   void drawRectFill( const Point2I &upperLeft, const Point2I &lowerRight, const ColorI &color );
-   void drawRectFill( const RectI &rect, const ColorI &color );
-
-   void draw2DSquare( const Point2F &screenPoint, F32 width, F32 spinAngle = 0.0f );
+   void drawRect(const Point2F& upperLeft, const Point2F& lowerRight, const ColorI& color);
+   void drawRect(const RectF& rect, const ColorI& color);
+   void drawRect(const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color);
+   void drawRect(const RectI& rect, const ColorI& color);
 
    //-----------------------------------------------------------------------------
-   // Draw Lines
+   // Draw Rectangles : FILL
+   //-----------------------------------------------------------------------------
+
+   void drawRectFill(const Point2F& upperL, const Point2F& lowerR, const ColorI& color, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0, 0, 0, 0));
+   void drawRectFill(const RectF& rect, const ColorI& color, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0, 0, 0, 0));
+   void drawRectFill(const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0, 0, 0, 0));
+   void drawRectFill(const RectI& rect, const ColorI& color, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0, 0, 0, 0));
+   void drawRoundedRect(const F32& cornerRadius, const RectI& rect, const ColorI& color, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0, 0, 0, 0));
+   void drawRoundedRect(const F32& cornerRadius, const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0, 0, 0, 0));
+   void drawRoundedRect(const F32& cornerRadius, const Point2F& upperLeft, const Point2F& lowerRight, const ColorI& color, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0, 0, 0, 0));
+
+   void draw2DSquare(const Point2F& screenPoint, F32 width, F32 spinAngle = 0.0f);
+
+   //-----------------------------------------------------------------------------
+   // Draw Circle : FILL
+   //-----------------------------------------------------------------------------
+   void drawCircleFill(const RectI& rect, const ColorI& color, F32 radius, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0, 0, 0, 0));
+   void drawCircleFill(const Point2I& upperLeft, const Point2I& lowerRight, const ColorI& color, F32 radius, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0, 0, 0, 0));
+   void drawCircleFill(const Point2F& upperLeft, const Point2F& lowerRight, const ColorI& color, F32 radius, const F32& borderSize = 0.0f, const ColorI& borderColor = ColorI(0, 0, 0, 0));
+
+   //-----------------------------------------------------------------------------
+   // Draw Lines : Single Pixel
    //-----------------------------------------------------------------------------
    void drawLine( const Point3F &startPt, const Point3F &endPt, const ColorI &color );
    void drawLine( const Point2F &startPt, const Point2F &endPt, const ColorI &color );
    void drawLine( const Point2I &startPt, const Point2I &endPt, const ColorI &color );
    void drawLine( F32 x1, F32 y1, F32 x2, F32 y2, const ColorI &color );
    void drawLine( F32 x1, F32 y1, F32 z1, F32 x2, F32 y2, F32 z2, const ColorI &color );
+
+   //-----------------------------------------------------------------------------
+   // Draw Lines : Thick
+   //-----------------------------------------------------------------------------
+   void drawThickLine(const Point2I& startPt, const Point2I& endPt, const ColorI& color, const F32& thickness);
+   void drawThickLine(const Point2F& startPt, const Point2F& endPt, const ColorI& color, const F32& thickness);
+   void drawThickLine(F32 x1, F32 y1, F32 z1, F32 x2, F32 y2, F32 z2, const ColorI& color, const F32& thickness);
 
    //-----------------------------------------------------------------------------
    // Draw Text
@@ -92,7 +113,7 @@ public:
 
    //-----------------------------------------------------------------------------
    // Draw Bitmaps
-   //-----------------------------------------------------------------------------  
+   //-----------------------------------------------------------------------------
    void drawBitmap( GFXTextureObject*texture, const Point2F &in_rAt, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
    void drawBitmapSR( GFXTextureObject*texture, const Point2F &in_rAt, const RectF &srcRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
    void drawBitmapStretch( GFXTextureObject*texture, const RectF &dstRect, const GFXBitmapFlip in_flip = GFXBitmapFlip_None, const GFXTextureFilterType filter = GFXTextureFilterPoint , bool in_wrap = true, F32 angle = 0.0f);
@@ -108,15 +129,15 @@ public:
    //-----------------------------------------------------------------------------
    void drawTriangle( const GFXStateBlockDesc &desc, const Point3F &p0, const Point3F &p1, const Point3F &p2, const ColorI &color, const MatrixF *xfm = NULL );
    void drawPolygon( const GFXStateBlockDesc& desc, const Point3F* points, U32 numPoints, const ColorI& color, const MatrixF* xfm = NULL );
-   void drawCube( const GFXStateBlockDesc &desc, const Point3F &size, const Point3F &pos, const ColorI &color, const MatrixF *xfm = NULL );   
-   void drawCube( const GFXStateBlockDesc &desc, const Box3F &box, const ColorI &color, const MatrixF *xfm = NULL );   
-   void drawObjectBox( const GFXStateBlockDesc &desc, const Point3F &size, const Point3F &pos, const MatrixF &objMat, const ColorI &color );   
-   void drawSphere( const GFXStateBlockDesc &desc, F32 radius, const Point3F &pos, const ColorI &color, bool drawTop = true, bool drawBottom = true, const MatrixF *xfm = NULL );      
+   void drawCube( const GFXStateBlockDesc &desc, const Point3F &size, const Point3F &pos, const ColorI &color, const MatrixF *xfm = NULL );
+   void drawCube( const GFXStateBlockDesc &desc, const Box3F &box, const ColorI &color, const MatrixF *xfm = NULL );
+   void drawObjectBox( const GFXStateBlockDesc &desc, const Point3F &size, const Point3F &pos, const MatrixF &objMat, const ColorI &color );
+   void drawSphere( const GFXStateBlockDesc &desc, F32 radius, const Point3F &pos, const ColorI &color, bool drawTop = true, bool drawBottom = true, const MatrixF *xfm = NULL );
    void drawCapsule( const GFXStateBlockDesc &desc, const Point3F &center, F32 radius, F32 height, const ColorI &color, const MatrixF *xfm = NULL );
-   void drawCone( const GFXStateBlockDesc &desc, const Point3F &basePnt, const Point3F &tipPnt, F32 baseRadius, const ColorI &color );      
-   void drawCylinder( const GFXStateBlockDesc &desc, const Point3F &basePnt, const Point3F &tipPnt, F32 baseRadius, const ColorI &color );      
+   void drawCone( const GFXStateBlockDesc &desc, const Point3F &basePnt, const Point3F &tipPnt, F32 baseRadius, const ColorI &color );
+   void drawCylinder( const GFXStateBlockDesc &desc, const Point3F &basePnt, const Point3F &tipPnt, F32 baseRadius, const ColorI &color );
    void drawArrow( const GFXStateBlockDesc &desc, const Point3F &start, const Point3F &end, const ColorI &color, F32 baseRad = 0.0f);
-   void drawFrustum( const Frustum& f, const ColorI &color );   
+   void drawFrustum( const Frustum& f, const ColorI &color );
 
    /// Draw a solid or wireframe (depending on fill mode of @a desc) polyhedron with the given color.
    ///
@@ -128,7 +149,7 @@ public:
 
    /// Draws a solid XY plane centered on the point with the specified dimensions.
    void drawSolidPlane( const GFXStateBlockDesc &desc, const Point3F &pos, const Point2F &size, const ColorI &color );
-   
+
    enum Plane
    {
       PlaneXY,
@@ -142,7 +163,7 @@ public:
    /// Draws axis lines representing the passed matrix.
    /// If scale is NULL axes will be drawn the length they exist within the MatrixF.
    /// If colors is NULL the default colors are RED, GREEEN, BLUE ( x, y, z ).
-   void drawTransform( const GFXStateBlockDesc &desc, const MatrixF &mat, const Point3F *scale = NULL, const ColorI colors[3] = NULL );  
+   void drawTransform( const GFXStateBlockDesc &desc, const MatrixF &mat, const Point3F *scale = NULL, const ColorI colors[3] = NULL );
 
 protected:
 
@@ -174,8 +195,21 @@ protected:
    GFXStateBlockRef mBitmapStretchWrapSB;
    GFXStateBlockRef mBitmapStretchWrapLinearSB;
    GFXStateBlockRef mRectFillSB;
-   
+
    FontRenderBatcher* mFontRenderBatcher;
+
+   // Expanded shaders
+   // rounded rectangle.
+   GFXShaderRef mRoundRectangleShader;
+   GFXShaderConstBufferRef mRoundRectangleShaderConsts;
+
+   // thick line.
+   GFXShaderRef mCircleShader;
+   GFXShaderConstBufferRef mCircleShaderConsts;
+
+   // thick line.
+   GFXShaderRef mThickLineShader;
+   GFXShaderConstBufferRef mThickLineShaderConsts;
 };
 
 #endif // _GFX_GFXDRAWER_H_

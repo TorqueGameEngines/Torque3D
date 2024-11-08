@@ -264,6 +264,231 @@ void GuiInspectorField::onRightMouseUp( const GuiEvent &event )
 }
 
 //-----------------------------------------------------------------------------
+void GuiInspectorField::setWordData(const S32& wordIndex, const char* data, bool callbacks)
+{
+
+   if (mSpecialEditField)
+   {
+      if (mTargetObject != nullptr && mVariableName != StringTable->EmptyString())
+      {
+         const char* fieldData = mTargetObject->getDataField(mVariableName, NULL);
+         const char* wordData = StringUnit::getUnit(fieldData, wordIndex, " \t\n");
+
+         S32 type = mField->type;
+         if (type == TypeS8 || type == TypeS32 || type == TypeF32 || type == TypeS32Vector
+            || type == TypeF32Vector
+            || type == TypeColorI
+            || type == TypeColorF
+            || type == TypePoint2I
+            || type == TypePoint2F
+            || type == TypePoint3F
+            || type == TypePoint4F
+            || type == TypeRectI
+            || type == TypeRectF
+            || type == TypeMatrixPosition
+            || type == TypeMatrixRotation
+            || type == TypeBox3F
+            || type == TypeRectUV
+            || type == TypeRotationF)
+         {
+            if (dAtof(wordData) != dAtof(data))
+               return;
+         }
+         else if(dStrEqual(wordData, data))
+            return;
+
+         StringBuilder newFieldData;
+         const U32 wordCount = StringUnit::getUnitCount(fieldData, " \t\n");
+         for (U32 i = 0; i < wordCount; i++)
+         {
+            if (i != 0)
+               newFieldData.append(" ");
+
+            if (i == wordIndex)
+               newFieldData.append(data);
+            else
+            {
+               newFieldData.append(StringUnit::getUnit(fieldData, i, " \t\n"));
+            }
+         }
+
+         mTargetObject->setDataField(mVariableName, NULL, newFieldData.end());
+
+         if (mCallbackName != StringTable->EmptyString())
+            Con::executef(mInspector, mCallbackName, mVariableName, newFieldData.end(), mTargetObject);
+      }
+      else if (mVariableName != StringTable->EmptyString())
+      {
+         const char* fieldData = Con::getVariable(mVariableName, "");
+         const char* wordData = StringUnit::getUnit(fieldData, wordIndex, " \t\n");
+
+         S32 type = mField->type;
+         if (type == TypeS8 || type == TypeS32 || type == TypeF32 || type == TypeS32Vector
+            || type == TypeF32Vector
+            || type == TypeColorI
+            || type == TypeColorF
+            || type == TypePoint2I
+            || type == TypePoint2F
+            || type == TypePoint3F
+            || type == TypePoint4F
+            || type == TypeRectI
+            || type == TypeRectF
+            || type == TypeMatrixPosition
+            || type == TypeMatrixRotation
+            || type == TypeBox3F
+            || type == TypeRectUV
+            || type == TypeRotationF)
+         {
+            if (dAtof(wordData) != dAtof(data))
+               return;
+         }
+         else if (dStrEqual(wordData, data))
+            return;
+
+         StringBuilder newFieldData;
+         const U32 wordCount = StringUnit::getUnitCount(fieldData, " \t\n");
+         for (U32 i = 0; i < wordCount; i++)
+         {
+            if (i != 0)
+               newFieldData.append(" ");
+
+            if (i == wordIndex)
+               newFieldData.append(data);
+            else
+            {
+               newFieldData.append(StringUnit::getUnit(fieldData, i, " \t\n"));
+            }
+         }
+
+         Con::setVariable(mVariableName, newFieldData.end());
+
+         if (mCallbackName != StringTable->EmptyString())
+            Con::executef(mInspector, mCallbackName, mVariableName, newFieldData.end());
+      }
+   }
+
+   if (mField == NULL)
+      return;
+
+   if (verifyData(data))
+   {
+      String strData = data;
+      const U32 numTargets = mInspector->getNumInspectObjects();
+
+      bool changed = false;
+      for (U32 i = 0; i < numTargets; ++i)
+      {
+         //For now, for simplicity's sake, you can only edit the components in a simple edit
+         SimObject* target = NULL;
+         if (numTargets == 1)
+         {
+            target = mTargetObject;
+
+            if (!target)
+               target = mInspector->getInspectObject(i);
+         }
+         else
+         {
+            target = mInspector->getInspectObject(i);
+         }
+
+         const char* fieldData = target->getDataField(mField->pFieldname, mFieldArrayIndex);
+         const char* wordData = StringUnit::getUnit(fieldData, wordIndex, " \t\n");
+
+         S32 type = mField->type;
+         if (type == TypeS8 || type == TypeS32 || type == TypeF32 || type == TypeS32Vector
+            || type == TypeF32Vector
+            || type == TypeColorI
+            || type == TypeColorF
+            || type == TypePoint2I
+            || type == TypePoint2F
+            || type == TypePoint3F
+            || type == TypePoint4F
+            || type == TypeRectI
+            || type == TypeRectF
+            || type == TypeMatrixPosition
+            || type == TypeMatrixRotation
+            || type == TypeBox3F
+            || type == TypeRectUV
+            || type == TypeRotationF)
+         {
+            if (dAtof(wordData) != dAtof(data))
+            {
+               changed = true;
+               break;
+            }
+         }
+         else if (!dStrEqual(wordData, data))
+         {
+            changed = true;
+            break;
+         }
+      }
+
+      if(!changed)
+         return;
+
+      if (callbacks && numTargets > 1)
+         Con::executef(mInspector, "onBeginCompoundEdit");
+
+      for (U32 i = 0; i < numTargets; ++i)
+      {
+         //For now, for simplicity's sake, you can only edit the components in a simple edit
+         SimObject* target = NULL;
+         if (numTargets == 1)
+         {
+            target = mTargetObject;
+
+            if (!target)
+               target = mInspector->getInspectObject(i);
+         }
+         else
+         {
+            target = mInspector->getInspectObject(i);
+         }
+
+         const char* fieldData = target->getDataField(mField->pFieldname, mFieldArrayIndex);
+
+         StringBuilder newFieldData;
+         const U32 wordCount = StringUnit::getUnitCount(fieldData, " \t\n");
+         for (U32 wc = 0; wc < wordCount; wc++)
+         {
+            if (wc != 0)
+               newFieldData.append(" ");
+
+            if (wc == wordIndex)
+               newFieldData.append(data);
+            else
+            {
+               newFieldData.append(StringUnit::getUnit(fieldData, wc, " \t\n"));
+            }
+         }
+
+         target->inspectPreApply();
+
+         // Fire callback single-object undo.
+
+         if (callbacks && !mField->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
+            Con::executef(mInspector, "onInspectorFieldModified",
+               target->getIdString(),
+               mField->pFieldname,
+               mFieldArrayIndex ? mFieldArrayIndex : "(null)",
+               fieldData,
+               newFieldData.end());
+
+         target->setDataField(mField->pFieldname, mFieldArrayIndex, newFieldData.end());
+
+         // Give the target a chance to validate.
+         target->inspectPostApply();
+      }
+
+      if (callbacks && numTargets > 1)
+         Con::executef(mInspector, "onEndCompoundEdit");
+   }
+
+   // Force our edit to update
+   updateValue();
+}
 
 void GuiInspectorField::setData( const char* data, bool callbacks )
 {
@@ -760,6 +985,12 @@ DefineEngineMethod( GuiInspectorField, getInspectedFieldType, const char*, (), ,
 DefineEngineMethod( GuiInspectorField, apply, void, ( const char * newValue, bool callbacks ), (true), "( string newValue, bool callbacks=true ) - Set the field's value. Suppress callbacks for undo if callbacks=false." )
 {
    object->setData( newValue, callbacks );
+}
+
+//-----------------------------------------------------------------------------
+DefineEngineMethod(GuiInspectorField, applyWord, void, (S32 wordIndex, const char* newValue, bool callbacks), (true), "( string newValue, bool callbacks=true ) - Set the field's value. Suppress callbacks for undo if callbacks=false.")
+{
+   object->setWordData(wordIndex, newValue, callbacks);
 }
 
 //-----------------------------------------------------------------------------

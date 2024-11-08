@@ -60,8 +60,9 @@ function RiverEditorGui::maxSize(%this, %window)
       
       %fixedWindow = RiverEditorTreeWindow;
       %fluidWindow = RiverEditorOptionsWindow;
-      %top = EditorGuiToolbar.extent.y + 6;
-      %bottom = %top + 65 - 6;
+      %offset = -1; // tweak the vertical offset so that it aligns neatly
+      %top = EditorGuiToolbar.extent.y + %offset;
+      %bottom = %top + 59;
       %maxHeight = Canvas.extent.y - %top - %bottom;
       
       // --- Fixed window (top) ------------------------------------------------

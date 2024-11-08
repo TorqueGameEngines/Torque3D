@@ -53,7 +53,7 @@ protected:
 public:
    GuiCrossHairHud();
 
-   void onRender( Point2I, const RectI &);
+   void onRender( Point2I, const RectI &) override;
    static void initPersistFields();
    DECLARE_CONOBJECT( GuiCrossHairHud );
    DECLARE_CATEGORY( "Gui Game" );

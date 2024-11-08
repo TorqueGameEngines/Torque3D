@@ -49,10 +49,10 @@ public:
   /*C*/             afxEA_CameraShake();
   /*D*/             ~afxEA_CameraShake();
 
-  virtual void      ea_set_datablock(SimDataBlock*);
-  virtual bool      ea_start();
-  virtual bool      ea_update(F32 dt);
-  virtual void      ea_finish(bool was_stopped);
+  void      ea_set_datablock(SimDataBlock*) override;
+  bool      ea_start() override;
+  bool      ea_update(F32 dt) override;
+  void      ea_finish(bool was_stopped) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//
@@ -172,13 +172,13 @@ class afxEA_CameraShakeDesc : public afxEffectAdapterDesc, public afxEffectDefs
   static afxEA_CameraShakeDesc desc;
 
 public:
-  virtual bool  testEffectType(const SimDataBlock*) const;
-  virtual bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const;
-  virtual bool  runsOnServer(const afxEffectWrapperData*) const { return false; }
-  virtual bool  runsOnClient(const afxEffectWrapperData*) const { return true; }
-  virtual bool  isPositional(const afxEffectWrapperData*) const { return false; }
+  bool  testEffectType(const SimDataBlock*) const override;
+  bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const override;
+  bool  runsOnServer(const afxEffectWrapperData*) const override { return false; }
+  bool  runsOnClient(const afxEffectWrapperData*) const override { return true; }
+  bool  isPositional(const afxEffectWrapperData*) const override { return false; }
 
-  virtual afxEffectWrapper* create() const { return new afxEA_CameraShake; }
+  afxEffectWrapper* create() const override { return new afxEA_CameraShake; }
 };
 
 afxEA_CameraShakeDesc afxEA_CameraShakeDesc::desc;

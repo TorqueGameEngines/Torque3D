@@ -45,11 +45,11 @@ class afxEA_ConsoleMessage : public afxEffectWrapper
 public:
   /*C*/             afxEA_ConsoleMessage();
 
-  virtual bool      isDone() { return displayed; }
+  bool      isDone() override { return displayed; }
 
-  virtual void      ea_set_datablock(SimDataBlock*);
-  virtual bool      ea_start();
-  virtual bool      ea_update(F32 dt);
+  void      ea_set_datablock(SimDataBlock*) override;
+  bool      ea_start() override;
+  bool      ea_update(F32 dt) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//
@@ -109,13 +109,13 @@ class afxEA_ConsoleMessageDesc : public afxEffectAdapterDesc, public afxEffectDe
   static afxEA_ConsoleMessageDesc desc;
 
 public:
-  virtual bool  testEffectType(const SimDataBlock*) const;
-  virtual bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const { return false; }
-  virtual bool  runsOnServer(const afxEffectWrapperData*) const { return true; }
-  virtual bool  runsOnClient(const afxEffectWrapperData*) const { return true; }
-  virtual bool  isPositional(const afxEffectWrapperData*) const { return false; }
+  bool  testEffectType(const SimDataBlock*) const override;
+  bool  requiresStop(const afxEffectWrapperData*, const afxEffectTimingData&) const override { return false; }
+  bool  runsOnServer(const afxEffectWrapperData*) const override { return true; }
+  bool  runsOnClient(const afxEffectWrapperData*) const override { return true; }
+  bool  isPositional(const afxEffectWrapperData*) const override { return false; }
 
-  virtual afxEffectWrapper* create() const { return new afxEA_ConsoleMessage; }
+  afxEffectWrapper* create() const override { return new afxEA_ConsoleMessage; }
 };
 
 afxEA_ConsoleMessageDesc afxEA_ConsoleMessageDesc::desc;

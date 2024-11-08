@@ -28,6 +28,9 @@ uint ChannelsFromDevFmt(DevFmtChannels chans, uint ambiorder) noexcept
     case DevFmtX51: return 6;
     case DevFmtX61: return 7;
     case DevFmtX71: return 8;
+    case DevFmtX714: return 12;
+    case DevFmtX7144: return 16;
+    case DevFmtX3D71: return 8;
     case DevFmtAmbi3D: return (ambiorder+1) * (ambiorder+1);
     }
     return 0;
@@ -57,6 +60,9 @@ const char *DevFmtChannelsString(DevFmtChannels chans) noexcept
     case DevFmtX51: return "5.1 Surround";
     case DevFmtX61: return "6.1 Surround";
     case DevFmtX71: return "7.1 Surround";
+    case DevFmtX714: return "7.1.4 Surround";
+    case DevFmtX7144: return "7.1.4.4 Surround";
+    case DevFmtX3D71: return "3D7.1 Surround";
     case DevFmtAmbi3D: return "Ambisonic 3D";
     }
     return "(unknown channels)";

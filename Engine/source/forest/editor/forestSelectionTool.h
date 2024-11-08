@@ -47,9 +47,9 @@ public:
 
 protected:
 
-   void offsetObject( ForestItem &object, const Point3F &delta );
-   void rotateObject( ForestItem &object, const EulerF &delta, const Point3F &origin );
-   void scaleObject( ForestItem &object, const Point3F &delta );
+   void offsetObject( ForestItem &object, const Point3F &delta ) override;
+   void rotateObject( ForestItem &object, const EulerF &delta, const Point3F &origin ) override;
+   void scaleObject( ForestItem &object, const Point3F &delta ) override;
 
 protected:
 
@@ -93,17 +93,17 @@ class ForestSelectionTool : public ForestTool
       DECLARE_CONOBJECT( ForestSelectionTool );
 
       // ForestTool
-      virtual void setParentEditor( ForestEditorCtrl *editor );
-      virtual void setActiveForest( Forest *forest );
-      virtual void on3DMouseDown( const Gui3DMouseEvent &evt );
-      virtual void on3DMouseUp( const Gui3DMouseEvent &evt );
-      virtual void on3DMouseMove( const Gui3DMouseEvent &evt );
-      virtual void on3DMouseDragged( const Gui3DMouseEvent &evt );
-      virtual void onRender3D();
-      virtual void onRender2D();
-      virtual bool updateGuiInfo();
-      virtual void updateGizmo();
-      virtual void onUndoAction();
+      void setParentEditor( ForestEditorCtrl *editor ) override;
+      void setActiveForest( Forest *forest ) override;
+      void on3DMouseDown( const Gui3DMouseEvent &evt ) override;
+      void on3DMouseUp( const Gui3DMouseEvent &evt ) override;
+      void on3DMouseMove( const Gui3DMouseEvent &evt ) override;
+      void on3DMouseDragged( const Gui3DMouseEvent &evt ) override;
+      void onRender3D() override;
+      void onRender2D() override;
+      bool updateGuiInfo() override;
+      void updateGizmo() override;
+      void onUndoAction() override;
 
       S32 getSelectionCount() const { return mSelection.size(); }
 

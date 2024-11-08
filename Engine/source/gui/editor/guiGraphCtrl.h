@@ -73,7 +73,7 @@ class GuiGraphCtrl : public GuiControl
       void setMax( S32 plotID, F32 max ) { mGraphMax[ plotID ] = max; }
 
       // GuiControl.
-      virtual void onRender(Point2I offset, const RectI &updateRect);
+      void onRender(Point2I offset, const RectI &updateRect) override;
 
       DECLARE_CONOBJECT(GuiGraphCtrl);
       DECLARE_CATEGORY( "Gui Other" );

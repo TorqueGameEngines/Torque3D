@@ -39,8 +39,8 @@ class ColladaAppNode : public AppNode
    friend class ColladaAppMesh;
 
    MatrixF getTransform(F32 time);
-   void buildMeshList();
-   void buildChildList();
+   void buildMeshList() override;
+   void buildChildList() override;
 
 protected:
 
@@ -69,10 +69,10 @@ public:
    const domNode* getDomNode() const { return p_domNode; }
 
    //-----------------------------------------------------------------------
-   const char *getName() { return mName; }
-   const char *getParentName() { return mParentName; }
+   const char *getName() override { return mName; }
+   const char *getParentName() override { return mParentName; }
 
-   bool isEqual(AppNode* node)
+   bool isEqual(AppNode* node) override
    {
       const ColladaAppNode* appNode = dynamic_cast<const ColladaAppNode*>(node);
       return (appNode && (appNode->p_domNode == p_domNode));
@@ -80,21 +80,21 @@ public:
 
    // Property look-ups: only float properties are stored, the rest are
    // converted from floats as needed
-   bool getFloat(const char* propName, F32& defaultVal)
+   bool getFloat(const char* propName, F32& defaultVal) override
    {
       Map<StringTableEntry,F32>::Iterator itr = mProps.find(propName);
       if (itr != mProps.end())
          defaultVal = itr->value;
       return false;
    }
-   bool getInt(const char* propName, S32& defaultVal)
+   bool getInt(const char* propName, S32& defaultVal) override
    {
       F32 value = defaultVal;
       bool ret = getFloat(propName, value);
       defaultVal = (S32)value;
       return ret;
    }
-   bool getBool(const char* propName, bool& defaultVal)
+   bool getBool(const char* propName, bool& defaultVal) override
    {
       F32 value = defaultVal;
       bool ret = getFloat(propName, value);
@@ -102,9 +102,9 @@ public:
       return ret;
    }
 
-   MatrixF getNodeTransform(F32 time);
-   bool animatesTransform(const AppSequence* appSeq);
-   bool isParentRoot() { return (appParent == NULL); }
+   MatrixF getNodeTransform(F32 time) override;
+   bool animatesTransform(const AppSequence* appSeq) override;
+   bool isParentRoot() override { return (appParent == NULL); }
 };
 
 #endif // _COLLADA_APPNODE_H_

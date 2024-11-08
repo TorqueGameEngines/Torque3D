@@ -1,17 +1,16 @@
 #ifndef CORE_FMT_TRAITS_H
 #define CORE_FMT_TRAITS_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include <array>
+#include <cstdint>
 
-#include "albyte.h"
-#include "buffer_storage.h"
+#include "storage_formats.h"
 
 
 namespace al {
 
-extern const int16_t muLawDecompressionTable[256];
-extern const int16_t aLawDecompressionTable[256];
+extern const std::array<std::int16_t,256> muLawDecompressionTable;
+extern const std::array<std::int16_t,256> aLawDecompressionTable;
 
 
 template<FmtType T>
@@ -19,62 +18,51 @@ struct FmtTypeTraits { };
 
 template<>
 struct FmtTypeTraits<FmtUByte> {
-    using Type = uint8_t;
+    using Type = std::uint8_t;
 
-    template<typename OutT>
-    static constexpr inline OutT to(const Type val) noexcept
-    { return val*OutT{1.0/128.0} - OutT{1.0}; }
+    constexpr float operator()(const Type val) const noexcept
+    { return float(val)*(1.0f/128.0f) - 1.0f; }
 };
 template<>
 struct FmtTypeTraits<FmtShort> {
-    using Type = int16_t;
+    using Type = std::int16_t;
 
-    template<typename OutT>
-    static constexpr inline OutT to(const Type val) noexcept { return val*OutT{1.0/32768.0}; }
+    constexpr float operator()(const Type val) const noexcept
+    { return float(val) * (1.0f/32768.0f); }
+};
+template<>
+struct FmtTypeTraits<FmtInt> {
+    using Type = std::int32_t;
+
+    constexpr float operator()(const Type val) const noexcept
+    { return static_cast<float>(val)*(1.0f/2147483648.0f); }
 };
 template<>
 struct FmtTypeTraits<FmtFloat> {
     using Type = float;
 
-    template<typename OutT>
-    static constexpr inline OutT to(const Type val) noexcept { return val; }
+    constexpr float operator()(const Type val) const noexcept { return val; }
 };
 template<>
 struct FmtTypeTraits<FmtDouble> {
     using Type = double;
 
-    template<typename OutT>
-    static constexpr inline OutT to(const Type val) noexcept { return static_cast<OutT>(val); }
+    constexpr float operator()(const Type val) const noexcept { return static_cast<float>(val); }
 };
 template<>
 struct FmtTypeTraits<FmtMulaw> {
-    using Type = uint8_t;
+    using Type = std::uint8_t;
 
-    template<typename OutT>
-    static constexpr inline OutT to(const Type val) noexcept
-    { return muLawDecompressionTable[val] * OutT{1.0/32768.0}; }
+    constexpr float operator()(const Type val) const noexcept
+    { return float(muLawDecompressionTable[val]) * (1.0f/32768.0f); }
 };
 template<>
 struct FmtTypeTraits<FmtAlaw> {
-    using Type = uint8_t;
+    using Type = std::uint8_t;
 
-    template<typename OutT>
-    static constexpr inline OutT to(const Type val) noexcept
-    { return aLawDecompressionTable[val] * OutT{1.0/32768.0}; }
+    constexpr float operator()(const Type val) const noexcept
+    { return float(aLawDecompressionTable[val]) * (1.0f/32768.0f); }
 };
-
-
-template<FmtType SrcType, typename DstT>
-inline void LoadSampleArray(DstT *RESTRICT dst, const al::byte *src, const size_t srcstep,
-    const size_t samples) noexcept
-{
-    using TypeTraits = FmtTypeTraits<SrcType>;
-    using SampleType = typename TypeTraits::Type;
-
-    const SampleType *RESTRICT ssrc{reinterpret_cast<const SampleType*>(src)};
-    for(size_t i{0u};i < samples;i++)
-        dst[i] = TypeTraits::template to<DstT>(ssrc[i*srcstep]);
-}
 
 } // namespace al
 

@@ -49,7 +49,7 @@ public:
 
    // MatInstanceHook
    virtual ~ImposterCaptureMaterialHook();
-   virtual const MatInstanceHookType& getType() const { return Type; }
+   const MatInstanceHookType& getType() const override { return Type; }
 
    /// The material hook type.
    static const MatInstanceHookType Type;

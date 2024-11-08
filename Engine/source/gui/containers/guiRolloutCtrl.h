@@ -118,7 +118,7 @@ class GuiRolloutCtrl : public GuiTickCtrl
 
       DECLARE_CALLBACK( void, onCollapsed, () );
       /// @}
-      virtual void processTick();
+      void processTick() override;
 
    public:
    
@@ -134,20 +134,20 @@ class GuiRolloutCtrl : public GuiTickCtrl
       static void initPersistFields();
 
       // Control Events
-      bool onWake();
-      void addObject(SimObject *obj);
-      void removeObject(SimObject *obj);
-      virtual void childResized(GuiControl *child);
+      bool onWake() override;
+      void addObject(SimObject *obj) override;
+      void removeObject(SimObject *obj) override;
+      void childResized(GuiControl *child) override;
 
       // Mouse Events
-      virtual void onMouseDown( const GuiEvent& event );
-      virtual void onMouseUp( const GuiEvent& event );
-      virtual void onRightMouseUp( const GuiEvent& event );
-      virtual bool onMouseUpEditor( const GuiEvent& event, Point2I offset );
+      void onMouseDown( const GuiEvent& event ) override;
+      void onMouseUp( const GuiEvent& event ) override;
+      void onRightMouseUp( const GuiEvent& event ) override;
+      bool onMouseUpEditor( const GuiEvent& event, Point2I offset ) override;
 
       // Sizing Helpers
       virtual void calculateHeights();
-      virtual bool resize( const Point2I &newPosition, const Point2I &newExtent );
+      bool resize( const Point2I &newPosition, const Point2I &newExtent ) override;
       virtual void sizeToContents();
       inline bool isExpanded() const { return mIsExpanded; }
 
@@ -172,8 +172,8 @@ class GuiRolloutCtrl : public GuiTickCtrl
       void setCanCollapse( bool value ) { mCanCollapse = value; }
 
       // Control Rendering
-      virtual void onRender(Point2I offset, const RectI &updateRect);
-      bool onAdd();
+      void onRender(Point2I offset, const RectI &updateRect) override;
+      bool onAdd() override;
 };
 
 #endif // _GUI_ROLLOUTCTRL_H_

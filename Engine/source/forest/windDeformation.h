@@ -40,10 +40,10 @@ public:
    GFXShaderConstHandle *mWindParams;
 
    // ShaderFeatureConstHandles
-   virtual void init( GFXShader *shader );
-   virtual void setConsts( SceneRenderState *state, 
+   void init( GFXShader *shader ) override;
+   void setConsts( SceneRenderState *state, 
                            const SceneData &sgData,
-                           GFXShaderConstBuffer *buffer );
+                           GFXShaderConstBuffer *buffer ) override;
 };
 
 

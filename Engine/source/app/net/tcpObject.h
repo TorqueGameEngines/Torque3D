@@ -83,7 +83,7 @@ public:
    void disconnect();
    State getState() { return mState; }
 
-   bool processArguments(S32 argc, ConsoleValue *argv);
+   bool processArguments(S32 argc, ConsoleValue *argv) override;
    void send(const U8 *buffer, U32 bufferLen);
 
    ///Send an entire file over tcp
@@ -96,7 +96,7 @@ public:
 
    void setPort(U16 port) { mPort = port; }
 
-   bool onAdd();
+   bool onAdd() override;
 
    DECLARE_CONOBJECT(TCPObject);
 

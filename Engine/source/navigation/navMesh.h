@@ -188,10 +188,10 @@ public:
    /// @name SimObject
    /// @{
 
-   virtual void onEditorEnable();
-   virtual void onEditorDisable();
+   void onEditorEnable() override;
+   void onEditorDisable() override;
 
-   void write(Stream &stream, U32 tabStop, U32 flags);
+   void write(Stream &stream, U32 tabStop, U32 flags) override;
 
    /// @}
 
@@ -200,8 +200,8 @@ public:
 
    static void initPersistFields();
 
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    enum flags {
       BuildFlag    = Parent::NextFreeMask << 0,
@@ -209,25 +209,25 @@ public:
       NextFreeMask = Parent::NextFreeMask << 2,
    };
 
-   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn, BitStream *stream);
+   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn, BitStream *stream) override;
 
-   void setTransform(const MatrixF &mat);
-   void setScale(const VectorF &scale);
+   void setTransform(const MatrixF &mat) override;
+   void setScale(const VectorF &scale) override;
 
    /// @}
 
    /// @name ProcessObject
    /// @{
 
-   void processTick(const Move *move);
+   void processTick(const Move *move) override;
 
    /// @}
 
    /// @name Rendering
    /// @{
 
-   void prepRenderImage(SceneRenderState *state);
+   void prepRenderImage(SceneRenderState *state) override;
    void render(ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat);
    void renderLinks(duDebugDraw &dd);
    void renderTileData(duDebugDrawTorque &dd, U32 tile);
@@ -247,7 +247,7 @@ public:
    /// Return the EventManager for all NavMeshes.
    static EventManager *getEventManager();
 
-   void inspectPostApply();
+   void inspectPostApply() override;
 
 protected:
 

@@ -69,7 +69,7 @@ class PhysicalZone : public SceneObject
    bool mActive;
 
    Convex* mConvexList;
-   void buildConvex(const Box3F& box, Convex* convex);
+   void buildConvex(const Box3F& box, Convex* convex) override;
 
   public:
    PhysicalZone();
@@ -80,17 +80,17 @@ class PhysicalZone : public SceneObject
    DECLARE_CATEGORY("Volume");
    static void consoleInit();
    static void initPersistFields();
-   bool onAdd();
-   void onRemove();
-   void inspectPostApply();
+   bool onAdd() override;
+   void onRemove() override;
+   void inspectPostApply() override;
 
    // NetObject
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 
    // SceneObject
-   void setTransform(const MatrixF &mat);
-   void prepRenderImage( SceneRenderState* state );
+   void setTransform(const MatrixF &mat) override;
+   void prepRenderImage( SceneRenderState* state ) override;
 
    inline F32 getVelocityMod() const      { return mVelocityMod; }
    inline F32 getGravityMod()  const      { return mGravityMod;  }
@@ -122,7 +122,7 @@ protected:
 public:
    enum ForceType { VECTOR, SPHERICAL, CYLINDRICAL };
    enum { FORCE_TYPE_BITS = 2 };
-   virtual void onStaticModified(const char* slotName, const char*newValue = NULL);
+   void onStaticModified(const char* slotName, const char*newValue = NULL) override;
    bool   isExcludedObject(SceneObject*) const;
    void   registerExcludedObject(SceneObject*);
    void   unregisterExcludedObject(SceneObject*);

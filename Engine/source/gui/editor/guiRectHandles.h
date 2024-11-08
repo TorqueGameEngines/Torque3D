@@ -49,11 +49,11 @@ public:
 
    static void initPersistFields();
 
-   virtual void onMouseUp(const GuiEvent &event);
-   virtual void onMouseDown(const GuiEvent &event);
-   virtual void onMouseDragged(const GuiEvent &event);
+   void onMouseUp(const GuiEvent &event) override;
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override;
 
-   virtual void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 };
 
 #endif

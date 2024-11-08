@@ -56,11 +56,11 @@ public:
     virtual ~GuiScriptNotifyCtrl();
     static void initPersistFields();
 
-    virtual bool resize(const Point2I &newPosition, const Point2I &newExtent);
+    bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
     virtual void childResized(GuiScriptNotifyCtrl *child);
-    virtual void parentResized(const RectI &oldParentRect, const RectI &newParentRect);
-    virtual void onChildRemoved( GuiControl *child );
-    virtual void onChildAdded( GuiControl *child );
+    void parentResized(const RectI &oldParentRect, const RectI &newParentRect) override;
+    void onChildRemoved( GuiControl *child ) override;
+    void onChildAdded( GuiControl *child ) override;
 
 	DECLARE_CALLBACK(void, onResize, (SimObjectId ID) );
 	DECLARE_CALLBACK(void, onChildAdded, (SimObjectId ID, SimObjectId childID));
@@ -94,10 +94,10 @@ public:
     //virtual void onMouseDownEditor(const GuiEvent &event, Point2I offset);
     //virtual void onRightMouseDownEditor(const GuiEvent &event, Point2I offset);
 
-    virtual void setFirstResponder(GuiControl *firstResponder);
-    virtual void setFirstResponder();
+    void setFirstResponder(GuiControl *firstResponder) override;
+    void setFirstResponder() override;
     void clearFirstResponder();
-    virtual void onLoseFirstResponder();
+    void onLoseFirstResponder() override;
 
     //virtual void acceleratorKeyPress(U32 index);
     //virtual void acceleratorKeyRelease(U32 index);
@@ -107,8 +107,8 @@ public:
 
     virtual void onMessage(GuiScriptNotifyCtrl *sender, S32 msg);    ///< Receive a message from another control
 
-    virtual void onDialogPush();
-    virtual void onDialogPop();
+    void onDialogPush() override;
+    void onDialogPop() override;
 
 };
 

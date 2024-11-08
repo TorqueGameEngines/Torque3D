@@ -74,6 +74,8 @@ const String ShaderGenVars::vectorLightDirection("$vectorLightDirection");
 const String ShaderGenVars::vectorLightColor("$vectorLightColor");
 const String ShaderGenVars::vectorLightBrightness("$vectorLightBrightness");
 
+const String ShaderGenVars::isCapturing("$isCapturing");
+
 const String ShaderGenVars::ormConfig("$ORMConfig");
 const String ShaderGenVars::roughness("$roughness");
 const String ShaderGenVars::metalness("$metalness");

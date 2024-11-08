@@ -48,7 +48,7 @@ singleton PostEffect( TurbulencePostFX )
    allowReflectPass = true;  
          
    renderTime = "PFXAfterDiffuse";
-   renderBin = "GlowBin";
+   renderBin = "FogBin";
    renderPriority = 0.5; // Render after the glows themselves
      
    shader = PFX_TurbulenceShader;  

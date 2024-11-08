@@ -108,7 +108,6 @@ class WorldEditorSelection : public SimPersistSet
       //
       void offset(const Point3F& delta, F32 gridSnap = 0.f );
       void setPosition(const Point3F & pos);
-      F32 _snapFloat(const F32 &val, const F32 &snap) const;
       void setCentroidPosition(bool useBoxCenter, const Point3F & pos);
 
       void orient(const MatrixF &, const Point3F &);
@@ -137,9 +136,9 @@ class WorldEditorSelection : public SimPersistSet
       void invalidateCentroid() { mCentroidValid = false; }
       
       // SimSet.
-      virtual void addObject( SimObject* );
-      virtual void removeObject( SimObject* );
-      virtual void setCanSave( bool value );
+      void addObject( SimObject* ) override;
+      void removeObject( SimObject* ) override;
+      void setCanSave( bool value ) override;
       
       static void initPersistFields();
                   

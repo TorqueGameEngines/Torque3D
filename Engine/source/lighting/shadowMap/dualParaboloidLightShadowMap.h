@@ -34,7 +34,7 @@ class DualParaboloidLightShadowMap : public ParaboloidLightShadowMap
 public:
    DualParaboloidLightShadowMap( LightInfo *light );
 
-   virtual void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState );
+   void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState ) override;
 };
 
 #endif // _DUALPARABOLOIDLIGHTSHADOWMAP_H_

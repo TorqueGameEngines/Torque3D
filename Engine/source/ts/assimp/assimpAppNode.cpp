@@ -283,7 +283,7 @@ void AssimpAppNode::assimpToTorqueMat(const aiMatrix4x4& inAssimpMat, MatrixF& o
       (F32)inAssimpMat.c3, (F32)inAssimpMat.c4));
 
    outMat.setRow(3, Point4F((F32)inAssimpMat.d1, (F32)inAssimpMat.d2,
-      (F32)inAssimpMat.d3, (F32)inAssimpMat.d4));
+      (F32)inAssimpMat.d3, ColladaUtils::getOptions().formatScaleFactor));// (F32)inAssimpMat.d4));
 }
 
 void AssimpAppNode::convertMat(MatrixF& outMat)

@@ -37,11 +37,11 @@ class VehicleBlocker : public SceneObject
    friend class VehicleBlockerConvex;
 
   protected:
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    // Collision
-   void buildConvex(const Box3F& box, Convex* convex);
+   void buildConvex(const Box3F& box, Convex* convex) override;
   protected:
    Convex* mConvexList;
 
@@ -55,8 +55,8 @@ class VehicleBlocker : public SceneObject
    DECLARE_CATEGORY("Volume");
    static void initPersistFields();
 
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
 };
 
 #endif // _H_VEHICLEBLOCKER

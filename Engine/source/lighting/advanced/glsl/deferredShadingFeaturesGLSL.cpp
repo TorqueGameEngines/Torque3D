@@ -261,16 +261,16 @@ void GlowMapGLSL::processPix(Vector<ShaderComponent*>& componentList, const Mate
          targ->setType("vec4");
          targ->setName(getOutputTargetVarName(ShaderFeature::RenderTarget3));
          targ->setStructName("OUT");
-         output = new GenOp("@ = vec4(@.rgb*@,0);", targ, texOp, glowMul);
+         output = new GenOp("@ = vec4(pow(max(@.rgb*@,0.0),vec3(3.54406804435,3.54406804435,3.54406804435)),0);", targ, texOp, glowMul);
       }
       else
       {
-         output = new GenOp("@ += vec4(@.rgb*@,0);", targ, texOp, glowMul);
+         output = new GenOp("@ += vec4(pow(max(@.rgb*@,0.0),vec3(3.54406804435,3.54406804435,3.54406804435)),0);", targ, texOp, glowMul);
       }
    }
    else
    {
-      output = new GenOp("@ += vec4(@.rgb*@,@.a);", targ, texOp, glowMul, targ);
+      output = new GenOp("@ += vec4(pow(max(@.rgb*@,0.0),vec3(3.54406804435,3.54406804435,3.54406804435)),@.a);", targ, texOp, glowMul, targ);
    }
 
 }

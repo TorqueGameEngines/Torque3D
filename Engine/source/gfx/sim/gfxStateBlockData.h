@@ -43,7 +43,7 @@ public:
    GFXStateBlockData();
 
    // SimObject
-   virtual bool onAdd();
+   bool onAdd() override;
    static void initPersistFields();  
 
    // GFXStateBlockData

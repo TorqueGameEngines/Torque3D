@@ -152,37 +152,37 @@ public:
    static void initPersistFields();   
 
    // SimObject
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    /// Overloaded from SceneObject to properly update
    /// the client side forest when changes occur within
    /// the mission editor.
-   void inspectPostApply();
+   void inspectPostApply() override;
 
    /// Overloaded from SceneObject for updating the 
    /// client side position of the forest.
-   void setTransform( const MatrixF &mat );
+   void setTransform( const MatrixF &mat ) override;
 
-   void prepRenderImage( SceneRenderState *state );
+   void prepRenderImage( SceneRenderState *state ) override;
 
    bool isTreeInRange( const Point2F& point, F32 radius ) const;
 
    // Network
-   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream );
-   void unpackUpdate( NetConnection *conn, BitStream *stream );
+   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
+   void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
 
    //IForestCollision *getCollision() const { return mCollision; }
 
    // SceneObject - Collision
-   virtual void buildConvex( const Box3F& box, Convex* convex );
-   virtual bool buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere );
-   virtual bool castRay( const Point3F &start, const Point3F &end, RayInfo *outInfo );
-   virtual bool castRayRendered( const Point3F &start, const Point3F &end, RayInfo *outInfo );
-   virtual bool collideBox( const Point3F &start, const Point3F &end, RayInfo *outInfo );
+   void buildConvex( const Box3F& box, Convex* convex ) override;
+   bool buildPolyList( PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere ) override;
+   bool castRay( const Point3F &start, const Point3F &end, RayInfo *outInfo ) override;
+   bool castRayRendered( const Point3F &start, const Point3F &end, RayInfo *outInfo ) override;
+   bool collideBox( const Point3F &start, const Point3F &end, RayInfo *outInfo ) override;
 
    // SceneObject - Other
-   virtual void applyRadialImpulse( const Point3F &origin, F32 radius, F32 magnitude );
+   void applyRadialImpulse( const Point3F &origin, F32 radius, F32 magnitude ) override;
 
    bool castRayBase( const Point3F &start, const Point3F &end, RayInfo *outInfo, bool rendered );
      
@@ -203,7 +203,7 @@ public:
    void saveDataFile( const char *path = NULL );
 
    ///
-   void clear() { mData->clear(); }
+   void clear() override { mData->clear(); }
 
    /// Called to rebuild the collision state.
    void updateCollision();

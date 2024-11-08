@@ -37,7 +37,7 @@ $Gui::fontTypeMono = "Arial";
 $GUI::fontSize[12] = 12;
 $GUI::fontSize[14] = 14;
 $GUI::fontSize[16] = 16;
-$GUI::fontSize[18] = 18;
+$GUI::fontSize[18] = 17;
 $GUI::fontSize[24] = 24;
 $GUI::fontSize[36] = 36;
 
@@ -195,8 +195,8 @@ new GuiControlProfile (ToolsGuiWindowProfile)
    hasBitmapArray = true;
    justify = "left";
    category = "Tools";
-   fontType = $Gui::fontTypeMedium;
-   fontSize = $GUI::fontSize[18];
+   fontType = $Gui::fontTypeBold;
+   fontSize = $GUI::fontSize[16];
 };
 
 if( !isObject( ToolsGuiPaneProfile ) )
@@ -211,7 +211,7 @@ new GuiControlProfile (ToolsGuiPaneProfile)
    borderColor = EditorSettings.value("Theme/windowBackgroundColor");
    category = "Tools";
    fontType = $Gui::fontTypeMedium;
-   fontSize = $GUI::fontSize[18];
+   fontSize = $GUI::fontSize[16];
 };
 
 if( !isObject( ToolsGuiToolbarWindowProfile ) )
@@ -943,6 +943,24 @@ singleton GuiControlProfile( GuiBackFillProfile )
    category = "Editor";
 };
 
+singleton GuiControlProfile( GuiDarkFillProfile )
+{
+   opaque = true;
+   fillColor = "25 25 25";
+   border = false;
+   category = "Editor";
+};
+
+singleton GuiControlProfile(GuiShaderEditorProfile : ToolsGuiDefaultProfile)
+{
+   opaque = true;
+   canKeyFocus = true;
+   border = true;
+   borderColor = "128 128 128 128";
+   borderColorHL = "128 128 0";
+   borderColorSEL = "128 0 128 128";
+};
+
 singleton GuiControlProfile( GuiControlListPopupProfile )
 {
    opaque = true;
@@ -1550,6 +1568,11 @@ if(!isObject(ToolsGuiConsoleLargeProfile))
 new GuiControlProfile(ToolsGuiConsoleLargeProfile : ToolsGuiConsoleProfile)
 {
    fontSize = $GUI::fontSize[16];
+};
+if(!isObject(ToolsGuiConsoleXLProfile))
+new GuiControlProfile(ToolsGuiConsoleXLProfile : ToolsGuiConsoleProfile)
+{
+   fontSize = $GUI::fontSize[18];
 };
 if(!isObject(ToolsGuiConsoleTextProfile))
 new GuiControlProfile(ToolsGuiConsoleTextProfile)

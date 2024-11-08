@@ -60,7 +60,7 @@ public:
       return open(String(), Torque::FS::File::ReadWrite);
    }
 
-   virtual void close()
+   void close() override
    {
       Parent::close();
 
@@ -70,7 +70,7 @@ public:
    }
 
    /// Disallow setPosition() 
-   virtual bool setPosition(const U32 i_newPosition)        { return false; }
+   bool setPosition(const U32 i_newPosition) override        { return false; }
 
    /// Seek back to the start of the file.
    /// This is used internally by the zip code and should never be called whilst

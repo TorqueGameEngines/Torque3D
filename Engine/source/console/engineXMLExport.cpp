@@ -553,7 +553,7 @@ static void exportScope(const EngineExportScope* scope, SimXMLDocument* xml, boo
          break;
 
       default:
-         AssertFatal(true, "Unknown EngineExportKind: " + exportInfo->getExportKind());
+         AssertFatal(false, avar("Unknown EngineExportKind: %d", exportInfo->getExportKind()));
          break;
       }
    }

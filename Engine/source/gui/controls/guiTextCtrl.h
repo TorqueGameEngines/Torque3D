@@ -59,8 +59,8 @@ public:
    static void initPersistFields();
 
    //Parental methods
-   bool onAdd();
-   virtual bool onWake();
+   bool onAdd() override;
+   bool onWake() override;
 
    //text methods
    virtual void setText(const char *txt = NULL);
@@ -75,18 +75,18 @@ public:
       { return static_cast<GuiTextCtrl*>(obj)->getText(); }
 
 
-   void inspectPostApply();
+   void inspectPostApply() override;
    //rendering methods
-   void onPreRender();
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onPreRender() override;
+   void onRender(Point2I offset, const RectI &updateRect) override;
    void displayText( S32 xOffset, S32 yOffset );
 
    // resizing
    void autoResize();
 
    //Console methods
-   const char *getScriptValue();
-   void setScriptValue(const char *value);
+   const char *getScriptValue() override;
+   void setScriptValue(const char *value) override;
 };
 
 #endif //_GUI_TEXT_CONTROL_H_

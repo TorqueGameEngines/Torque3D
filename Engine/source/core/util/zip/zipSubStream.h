@@ -47,8 +47,8 @@ class ZipSubRStream : public FilterStream, public IStreamByteCount
 
    U32 fillBuffer(const U32 in_attemptSize);
 public:
-   virtual U32 getLastBytesRead() { return m_lastBytesRead; }
-   virtual U32 getLastBytesWritten() { return 0; }
+   U32 getLastBytesRead() override { return m_lastBytesRead; }
+   U32 getLastBytesWritten() override { return 0; }
    
 
   public:
@@ -57,23 +57,23 @@ public:
 
    // Overrides of NFilterStream
   public:
-   bool    attachStream(Stream* io_pSlaveStream);
-   void    detachStream();
-   Stream* getStream();
+   bool    attachStream(Stream* io_pSlaveStream) override;
+   void    detachStream() override;
+   Stream* getStream() override;
 
    void setUncompressedSize(const U32);
 
    // Mandatory overrides.  By default, these are simply passed to
    //  whatever is returned from getStream();
   protected:
-   bool _read(const U32 in_numBytes,  void* out_pBuffer);
+   bool _read(const U32 in_numBytes,  void* out_pBuffer) override;
   public:
-   bool hasCapability(const Capability) const;
+   bool hasCapability(const Capability) const override;
 
-   U32  getPosition() const;
-   bool setPosition(const U32 in_newPosition);
+   U32  getPosition() const override;
+   bool setPosition(const U32 in_newPosition) override;
 
-   U32  getStreamSize();
+   U32  getStreamSize() override;
 };
 
 class ZipSubWStream : public FilterStream, public IStreamByteCount
@@ -91,8 +91,8 @@ class ZipSubWStream : public FilterStream, public IStreamByteCount
    U32 m_lastBytesWritten;
 
 public:
-   virtual U32 getLastBytesRead() { return m_lastBytesRead; }
-   virtual U32 getLastBytesWritten() { return m_lastBytesWritten; }
+   U32 getLastBytesRead() override { return m_lastBytesRead; }
+   U32 getLastBytesWritten() override { return m_lastBytesWritten; }
 
   public:
    ZipSubWStream();
@@ -100,22 +100,22 @@ public:
 
    // Overrides of NFilterStream
   public:
-   bool    attachStream(Stream* io_pSlaveStream);
-   void    detachStream();
-   Stream* getStream();
+   bool    attachStream(Stream* io_pSlaveStream) override;
+   void    detachStream() override;
+   Stream* getStream() override;
 
    // Mandatory overrides.  By default, these are simply passed to
    //  whatever is returned from getStream();
   protected:
-   bool _read(const U32 in_numBytes,  void* out_pBuffer);
-   bool _write(const U32 in_numBytes, const void* in_pBuffer);
+   bool _read(const U32 in_numBytes,  void* out_pBuffer) override;
+   bool _write(const U32 in_numBytes, const void* in_pBuffer) override;
   public:
-   bool hasCapability(const Capability) const;
+   bool hasCapability(const Capability) const override;
 
-   U32  getPosition() const;
-   bool setPosition(const U32 in_newPosition);
+   U32  getPosition() const override;
+   bool setPosition(const U32 in_newPosition) override;
 
-   U32  getStreamSize();
+   U32  getStreamSize() override;
 };
 
 #endif //_ZIPSUBSTREAM_H_

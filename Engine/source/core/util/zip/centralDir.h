@@ -65,8 +65,8 @@ public:
    CentralDir(FileHeader &fh);
    virtual ~CentralDir();
 
-   virtual bool read(Stream *stream);
-   virtual bool write(Stream *stream);
+   bool read(Stream *stream) override;
+   bool write(Stream *stream) override;
 
    void setFileComment(const char *comment);
 };

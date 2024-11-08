@@ -31,7 +31,7 @@ class ScreenShotGL : public ScreenShot
 {
 protected:
 
-   GBitmap* _captureBackBuffer();
+   GBitmap* _captureBackBuffer() override;
 
 };
 

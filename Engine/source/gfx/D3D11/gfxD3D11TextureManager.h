@@ -45,13 +45,13 @@ protected:
                                              U32 numMipLevels,
                                              bool forceMips = false,
                                              S32 antialiasLevel = 0,
-                                             GFXTextureObject *inTex = NULL );
+                                             GFXTextureObject *inTex = NULL ) override;
    
-   bool _loadTexture(GFXTextureObject *texture, DDSFile *dds);
-   bool _loadTexture(GFXTextureObject *texture, GBitmap *bmp);
-   bool _loadTexture(GFXTextureObject *texture, void *raw);
-   bool _refreshTexture(GFXTextureObject *texture);
-   bool _freeTexture(GFXTextureObject *texture, bool zombify = false);
+   bool _loadTexture(GFXTextureObject *texture, DDSFile *dds) override;
+   bool _loadTexture(GFXTextureObject *texture, GBitmap *bmp) override;
+   bool _loadTexture(GFXTextureObject *texture, void *raw) override;
+   bool _refreshTexture(GFXTextureObject *texture) override;
+   bool _freeTexture(GFXTextureObject *texture, bool zombify = false) override;
    
 private:
    U32 mCurTexSet[GFX_TEXTURE_STAGE_COUNT];

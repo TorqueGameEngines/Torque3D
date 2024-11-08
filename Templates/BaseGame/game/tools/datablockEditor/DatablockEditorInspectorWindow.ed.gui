@@ -23,7 +23,7 @@ $guiContent = new GuiControl() {
       minSize = "50 50";
       closeCommand = "DatablockEditorInspectorWindow.setVisible(false);";
       EdgeSnap = "1";
-      text = "::  Datablock Editor - Data";
+      text = ":: Datablock Editor - Data";
       Margin = "8 8 8 8";
       Padding = "0 0 0 0";
       AnchorTop = "1";
@@ -44,7 +44,37 @@ $guiContent = new GuiControl() {
       hovertime = "1000";
       internalName = "DatablockEditorInspectorWindow";
       canSaveDynamicFields = "0";
+      
+         new GuiTextEditCtrl( DatablockEditorInspectorFilter ) {
+            position = "5 -4";
+            extent = "341 20";
+            profile = "ToolsGuiTextEditProfile";
+            horizSizing = "width";
+            vertSizing = "bottom";
+            placeholderText = "Filter...";
+            validate = "DatablockEditorInspector.setSearchText($ThisControl.getText());";
+         };
 
+         new GuiBitmapButtonCtrl() {
+            bitmapAsset = "ToolsModule:clear_icon_n_image";
+            groupNum = "-1";
+            buttonType = "PushButton";
+            useMouseEvents = "0";
+            isContainer = "0";
+            Profile = "ToolsGuiDefaultProfile";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "325 -2";
+            Extent = "17 17";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            hovertime = "1000";
+            canSaveDynamicFields = "0";
+            command = "DatablockEditorInspectorFilter.setText(\"\");DatablockEditorInspector.setSearchText(\"\");";
+         };
+         
       new GuiContainer(DatablockEditorInspectorPanel) {
          Docking = "Client";
          Margin = "22 41 3 3";

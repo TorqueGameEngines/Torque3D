@@ -69,8 +69,8 @@ class Journal
       typedef void(*FuncPtr)();
       FuncPtr ptr;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   {}
-      void dispatch()                  { (*ptr)(); }
+      void read(Stream *file) override   {}
+      void dispatch() override                  { (*ptr)(); }
    };
 
    template <class A,class B,class C,class D,class E,class F,class G,class H,class I,class J,class K,class L,class M>
@@ -78,8 +78,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C,D,E,F,G,H,I,J,K,L,M);
       FuncPtr ptr; A a; B b; C c; D d; E e; F f; G g; H h; I i; J j; K k; L l; M m;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k,l,m); }
-      void dispatch()                  { (*ptr)(a,b,c,d,e,f,g,h,i,j,k,l,m); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k,l,m); }
+      void dispatch() override                  { (*ptr)(a,b,c,d,e,f,g,h,i,j,k,l,m); }
    };
 
    template <class A,class B,class C,class D,class E,class F,class G,class H,class I,class J,class K,class L>
@@ -87,8 +87,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C,D,E,F,G,H,I,J,K,L);
       FuncPtr ptr; A a; B b; C c; D d; E e; F f; G g; H h; I i; J j; K k; L l;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k,l); }
-      void dispatch()                  { (*ptr)(a,b,c,d,e,f,g,h,i,j,k,l); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k,l); }
+      void dispatch() override                  { (*ptr)(a,b,c,d,e,f,g,h,i,j,k,l); }
    };
 
    template <class A,class B,class C,class D,class E,class F,class G,class H,class I,class J,class K>
@@ -96,8 +96,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C,D,E,F,G,H,I,J,K);
       FuncPtr ptr; A a; B b; C c; D d; E e; F f; G g; H h; I i; J j; K k;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k); }
-      void dispatch()                  { (*ptr)(a,b,c,d,e,f,g,h,i,j,k); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k); }
+      void dispatch() override                  { (*ptr)(a,b,c,d,e,f,g,h,i,j,k); }
    };
 
    template <class A,class B,class C,class D,class E,class F,class G,class H,class I,class J>
@@ -105,8 +105,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C,D,E,F,G,H,I,J);
       FuncPtr ptr; A a; B b; C c; D d; E e; F f; G g; H h; I i; J j;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j); }
-      void dispatch()                  { (*ptr)(a,b,c,d,e,f,g,h,i,j); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j); }
+      void dispatch() override                  { (*ptr)(a,b,c,d,e,f,g,h,i,j); }
    };
 
    template <class A,class B,class C,class D,class E,class F,class G,class H,class I>
@@ -114,8 +114,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C,D,E,F,G,H,I);
       FuncPtr ptr; A a; B b; C c; D d; E e; F f; G g; H h; I i;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i); }
-      void dispatch()                  { (*ptr)(a,b,c,d,e,f,g,h,i); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i); }
+      void dispatch() override                  { (*ptr)(a,b,c,d,e,f,g,h,i); }
    };
 
    template <class A,class B,class C,class D,class E,class F,class G,class H>
@@ -123,8 +123,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C,D,E,F,G,H);
       FuncPtr ptr; A a; B b; C c; D d; E e; F f; G g; H h;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h); }
-      void dispatch()                  { (*ptr)(a,b,c,d,e,f,g,h); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h); }
+      void dispatch() override                  { (*ptr)(a,b,c,d,e,f,g,h); }
    };
 
    template <class A,class B,class C,class D,class E,class F,class G>
@@ -132,8 +132,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C,D,E,F,G);
       FuncPtr ptr; A a; B b; C c; D d; E e; F f; G g;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g); }
-      void dispatch()                  { (*ptr)(a,b,c,d,e,f,g); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g); }
+      void dispatch() override                  { (*ptr)(a,b,c,d,e,f,g); }
    };
 
    template <class A,class B,class C,class D,class E,class F>
@@ -141,8 +141,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C,D,E,F);
       FuncPtr ptr; A a; B b; C c; D d; E e; F f;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f); }
-      void dispatch()                  { (*ptr)(a,b,c,d,e,f); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f); }
+      void dispatch() override                  { (*ptr)(a,b,c,d,e,f); }
    };
 
    template <class A,class B,class C,class D,class E>
@@ -150,8 +150,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C,D,E);
       FuncPtr ptr; A a; B b; C c; D d; E e;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e); }
-      void dispatch()                  { (*ptr)(a,b,c,d,e); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e); }
+      void dispatch() override                  { (*ptr)(a,b,c,d,e); }
    };
 
    template <class A,class B,class C,class D>
@@ -159,8 +159,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C,D);
       FuncPtr ptr; A a; B b; C c; D d;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d); }
-      void dispatch()                  { (*ptr)(a,b,c,d); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d); }
+      void dispatch() override                  { (*ptr)(a,b,c,d); }
    };
 
    template <class A,class B,class C>
@@ -168,8 +168,8 @@ class Journal
       typedef void(*FuncPtr)(A,B,C);
       FuncPtr ptr; A a; B b; C c;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c); }
-      void dispatch()                  { (*ptr)(a,b,c); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c); }
+      void dispatch() override                  { (*ptr)(a,b,c); }
    };
 
    template <class A,class B>
@@ -177,8 +177,8 @@ class Journal
       typedef void(*FuncPtr)(A,B);
       FuncPtr ptr; A a; B b;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b); }
-      void dispatch()                  { (*ptr)(a,b); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b); }
+      void dispatch() override                  { (*ptr)(a,b); }
    };
 
    template <class A>
@@ -186,8 +186,8 @@ class Journal
       typedef void(*FuncPtr)(A);
       FuncPtr ptr; A a;
       FunctorDecl(FuncPtr p): ptr(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a); }
-      void dispatch()                  { (*ptr)(a); }
+      void read(Stream *file) override   { IOHelper::reads(file,a); }
+      void dispatch() override                  { (*ptr)(a); }
    };
 
    // Multiple argument object member function functor specialization
@@ -197,8 +197,8 @@ class Journal
       typedef U MethodPtr;
       ObjPtr obj; MethodPtr method;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   {}
-      void dispatch()                  { (obj->*method)(); }
+      void read(Stream *file) override   {}
+      void dispatch() override                  { (obj->*method)(); }
    };
 
    template <class T,class A,class B,class C,class D,class E,class F,class G,class H,class I,class J,class K,class L,class M>
@@ -207,8 +207,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C,D,E,F,G,H,I,J,K,L,M);
       ObjPtr obj; MethodPtr method; A a; B b; C c; D d; E e; F f; G g; H h; I i; J j; K k; L l; M m;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k,l,m); }
-      void dispatch()                  { (obj->*method)(a,b,c,d,e,f,g,h,i,j,k,l,m); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k,l,m); }
+      void dispatch() override                  { (obj->*method)(a,b,c,d,e,f,g,h,i,j,k,l,m); }
    };
 
    template <class T,class A,class B,class C,class D,class E,class F,class G,class H,class I,class J,class K,class L>
@@ -217,8 +217,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C,D,E,F,G,H,I,J,K,L);
       ObjPtr obj; MethodPtr method; A a; B b; C c; D d; E e; F f; G g; H h; I i; J j; K k; L l;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k,l); }
-      void dispatch()                  { (obj->*method)(a,b,c,d,e,f,g,h,i,j,k,l); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k,l); }
+      void dispatch() override                  { (obj->*method)(a,b,c,d,e,f,g,h,i,j,k,l); }
    };
 
    template <class T,class A,class B,class C,class D,class E,class F,class G,class H,class I,class J,class K>
@@ -227,8 +227,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C,D,E,F,G,H,I,J,K);
       ObjPtr obj; MethodPtr method; A a; B b; C c; D d; E e; F f; G g; H h; I i; J j; K k;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k); }
-      void dispatch()                  { (obj->*method)(a,b,c,d,e,f,g,h,i,j,k); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j,k); }
+      void dispatch() override                  { (obj->*method)(a,b,c,d,e,f,g,h,i,j,k); }
    };
 
    template <class T,class A,class B,class C,class D,class E,class F,class G,class H,class I,class J>
@@ -237,8 +237,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C,D,E,F,G,H,I,J);
       ObjPtr obj; MethodPtr method; A a; B b; C c; D d; E e; F f; G g; H h; I i; J j;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j); }
-      void dispatch()                  { (obj->*method)(a,b,c,d,e,f,g,h,i,j); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i,j); }
+      void dispatch() override                  { (obj->*method)(a,b,c,d,e,f,g,h,i,j); }
    };
 
    template <class T,class A,class B,class C,class D,class E,class F,class G,class H,class I>
@@ -247,8 +247,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C,D,E,F,G,H,I);
       ObjPtr obj; MethodPtr method; A a; B b; C c; D d; E e; F f; G g; H h; I i;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i); }
-      void dispatch()                  { (obj->*method)(a,b,c,d,e,f,g,h,i); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h,i); }
+      void dispatch() override                  { (obj->*method)(a,b,c,d,e,f,g,h,i); }
    };
 
    template <class T,class A,class B,class C,class D,class E,class F,class G,class H>
@@ -257,8 +257,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C,D,E,F,G,H);
       ObjPtr obj; MethodPtr method; A a; B b; C c; D d; E e; F f; G g; H h;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g,h); }
-      void dispatch()                  { (obj->*method)(a,b,c,d,e,f,g,h); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g,h); }
+      void dispatch() override                  { (obj->*method)(a,b,c,d,e,f,g,h); }
    };
 
    template <class T,class A,class B,class C,class D,class E,class F,class G>
@@ -267,8 +267,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C,D,E,F,G);
       ObjPtr obj; MethodPtr method; A a; B b; C c; D d; E e; F f; G g;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f,g); }
-      void dispatch()                  { (obj->*method)(a,b,c,d,e,f,g); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f,g); }
+      void dispatch() override                  { (obj->*method)(a,b,c,d,e,f,g); }
    };
 
    template <class T,class A,class B,class C,class D,class E,class F>
@@ -277,8 +277,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C,D,E,F);
       ObjPtr obj; MethodPtr method; A a; B b; C c; D d; E e; F f;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e,f); }
-      void dispatch()                  { (obj->*method)(a,b,c,d,e,f); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e,f); }
+      void dispatch() override                  { (obj->*method)(a,b,c,d,e,f); }
    };
 
    template <class T,class A,class B,class C,class D,class E>
@@ -287,8 +287,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C,D,E);
       ObjPtr obj; MethodPtr method; A a; B b; C c; D d; E e;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d,e); }
-      void dispatch()                  { (obj->*method)(a,b,c,d,e); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d,e); }
+      void dispatch() override                  { (obj->*method)(a,b,c,d,e); }
    };
 
    template <class T,class A,class B,class C,class D>
@@ -297,8 +297,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C,D);
       ObjPtr obj; MethodPtr method; A a; B b; C c; D d;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c,d); }
-      void dispatch()                  { (obj->*method)(a,b,c,d); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c,d); }
+      void dispatch() override                  { (obj->*method)(a,b,c,d); }
    };
 
    template <class T,class A,class B,class C>
@@ -307,8 +307,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B,C);
       ObjPtr obj; MethodPtr method; A a; B b; C c;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b,c); }
-      void dispatch()                  { (obj->*method)(a,b,c); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b,c); }
+      void dispatch() override                  { (obj->*method)(a,b,c); }
    };
 
    template <class T,class A,class B>
@@ -317,8 +317,8 @@ class Journal
       typedef void(T::*MethodPtr)(A,B);
       ObjPtr obj; MethodPtr method; A a; B b;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a,b); }
-      void dispatch()                  { (obj->*method)(a,b); }
+      void read(Stream *file) override   { IOHelper::reads(file,a,b); }
+      void dispatch() override                  { (obj->*method)(a,b); }
    };
 
    template <class T,class A>
@@ -327,8 +327,8 @@ class Journal
       typedef void(T::*MethodPtr)(A);
       ObjPtr obj; MethodPtr method; A a;
       MethodDecl(ObjPtr o,MethodPtr p): obj(o), method(p)   {}
-      void read(Stream *file)   { IOHelper::reads(file,a); }
-      void dispatch()                  { (obj->*method)(a); }
+      void read(Stream *file) override   { IOHelper::reads(file,a); }
+      void dispatch() override                  { (obj->*method)(a); }
    };
 
    // Function declarations
@@ -344,20 +344,20 @@ class Journal
    template<typename T>
    struct FuncRep: public FuncDecl {
       typename T::FuncPtr function;
-      virtual bool match(VoidPtr ptr,VoidMethod) const {
+      bool match(VoidPtr ptr,VoidMethod) const override {
          return function == (typename T::FuncPtr)ptr;
       }
-      T* create() const { return new T(function); };
+      T* create() const override { return new T(function); };
    };
 
    template<typename T>
    struct MethodRep: public FuncDecl {
       typename T::ObjPtr obj = NULL;
       typename T::MethodPtr method = NULL;
-      virtual bool match(VoidPtr ptr,VoidMethod func) const {
+      bool match(VoidPtr ptr,VoidMethod func) const override {
          return obj == (typename T::ObjPtr)ptr && method == (typename T::MethodPtr)func;
       }
-      T* create() const { return new T(obj,method); };
+      T* create() const override { return new T(obj,method); };
    };
 
    static FuncDecl* _FunctionList;

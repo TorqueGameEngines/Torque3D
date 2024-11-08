@@ -50,7 +50,7 @@ $guiContent = new GuiWindowCollapseCtrl(PE_Window) {
    minSize = "50 50";
    closeCommand = "";
    EdgeSnap = "0";
-   text = "::  Particle Editor";
+   text = ":: Particle Editor";
       
    new GuiTabBookCtrl(PE_TabBook) {
       canSaveDynamicFields = "0";

@@ -63,11 +63,11 @@ public:
   /*C*/             afxProjectileData();
   /*C*/             afxProjectileData(const afxProjectileData&, bool = false);
 
-  virtual bool      onAdd();
-  void              packData(BitStream* stream);
-  void              unpackData(BitStream* stream);
+  bool      onAdd() override;
+  void              packData(BitStream* stream) override;
+  void              unpackData(BitStream* stream) override;
 
-  virtual bool      allowSubstitutions() const { return true; }
+  bool      allowSubstitutions() const override { return true; }
 
   static void       initPersistFields();
 
@@ -97,15 +97,15 @@ public:
 
   void                init(Point3F& pos, Point3F& vel, ShapeBase* src_obj);
 
-  virtual bool        onNewDataBlock(GameBaseData* dptr, bool reload);
-  virtual void        processTick(const Move *move);
-  virtual void        interpolateTick(F32 delta);
-  virtual void        advanceTime(F32 dt);
-  virtual bool        onAdd();
-  virtual void        onRemove();
-  virtual U32         packUpdate(NetConnection*, U32, BitStream*);
-  virtual void        unpackUpdate(NetConnection*, BitStream*);
-  virtual void        explode(const Point3F& p, const Point3F& n, const U32 collideType);
+  bool        onNewDataBlock(GameBaseData* dptr, bool reload) override;
+  void        processTick(const Move *move) override;
+  void        interpolateTick(F32 delta) override;
+  void        advanceTime(F32 dt) override;
+  bool        onAdd() override;
+  void        onRemove() override;
+  U32         packUpdate(NetConnection*, U32, BitStream*) override;
+  void        unpackUpdate(NetConnection*, BitStream*) override;
+  void        explode(const Point3F& p, const Point3F& n, const U32 collideType) override;
 
   DECLARE_CONOBJECT(afxProjectile);
   DECLARE_CATEGORY("UNLISTED");

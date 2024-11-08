@@ -100,7 +100,7 @@ public:
       {
          eCommandType      type;       // Command type
          StringTableEntry  name;       // Command name
-         static const U32 MAX_ARGS = 10;
+         static const U32 MAX_ARGS = 11;
          String            argv[MAX_ARGS];   // Command arguments
          S32               argc;       // Number of arguments
          Command() : type(CmdInvalid), name(0), argc(0) { }
@@ -142,6 +142,7 @@ public:
       bool addCmd_setBounds(const Command& newCmd);
 
       bool addCmd_renameDetailLevel(const Command& newCmd);
+      bool addCmd_addDetailLevel(const Command& newCmd);
       bool addCmd_removeDetailLevel(const Command& newCmd);
       bool addCmd_setDetailSize(const Command& newCmd);
       bool addCmd_addImposter(const Command& newCmd);
@@ -212,12 +213,12 @@ public:
    static TSShapeConstructor* findShapeConstructorByAssetId(StringTableEntry path);
    static TSShapeConstructor* findShapeConstructorByFilename(const FileName& path);
 
-   bool onAdd();
+   bool onAdd() override;
 
    void onScriptChanged(const Torque::Path& path);
    void onActionPerformed();
 
-   bool writeField(StringTableEntry fieldname, const char* value);
+   bool writeField(StringTableEntry fieldname, const char* value) override;
    void writeChangeSet();
 
    void notifyShapeChanged();
@@ -253,6 +254,7 @@ public:
 
    /// @name Nodes
    ///@{
+   void cleanTargetNodes(const char* detail, const char* target);
    S32 getNodeCount();
    S32 getNodeIndex(const char* name);
    const char* getNodeName(S32 index);
@@ -265,7 +267,7 @@ public:
    TransformF getNodeTransform(const char* name, bool isWorld = false);
    bool setNodeTransform(const char* name, TransformF txfm, bool isWorld = false);
    bool renameNode(const char* oldName, const char* newName);
-   bool addNode(const char* name, const char* parentName, TransformF txfm = TransformF::Identity, bool isWorld = false);
+   bool addNode(const char* name, const char* parentName, TransformF txfm = TransformF::Identity, bool isWorld = false, const char* target = "");
    bool removeNode(const char* name);
    ///@}
 
@@ -315,7 +317,7 @@ public:
    const char* getImposterSettings(S32 index);
    S32 addImposter(S32 size, S32 equatorSteps, S32 polarSteps, S32 dl, S32 dim, bool includePoles, F32 polarAngle);
    bool removeImposter();
-   bool addCollisionDetail(S32 size, const char* type, const char* target, S32 depth = 4, F32 merge = 30.0f, F32 concavity = 30.0f, S32 maxVerts = 32, F32 boxMaxError = 0, F32 sphereMaxError = 0, F32 capsuleMaxError = 0);
+   bool addCollisionDetail(S32 size, const char* type, const char* target, S32 depth = 4, F32 minPercentage = 10.0f, S32 maxHull = 30, S32 maxVerts = 32, F32 boxMaxError = 0, F32 sphereMaxError = 0, F32 capsuleMaxError = 0, const char* fillMode = "flood fill");
    ///@}
 
    /// @name Sequences

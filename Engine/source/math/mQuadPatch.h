@@ -49,10 +49,10 @@ public:
 
    QuadPatch();
 
-   virtual void   calc( F32 t, Point3F &result );
-   virtual void   calc( Point3F *points, F32 t, Point3F &result );
-   virtual void   setControlPoint( Point3F &point, S32 index );
-   virtual void   submitControlPoints( SplCtrlPts &points );
+   void   calc( F32 t, Point3F &result ) override;
+   void   calc( Point3F *points, F32 t, Point3F &result ) override;
+   void   setControlPoint( Point3F &point, S32 index ) override;
+   void   submitControlPoints( SplCtrlPts &points ) override;
 
 
 };

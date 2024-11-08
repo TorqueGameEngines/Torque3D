@@ -54,10 +54,10 @@ protected:
 public:
    guiAnimBitmapCtrl();
    ~guiAnimBitmapCtrl();
-   bool onAdd();
+   bool onAdd() override;
 
    static void initPersistFields();
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
    DECLARE_CONOBJECT(guiAnimBitmapCtrl);
    DECLARE_CATEGORY("Gui Images");
    DECLARE_DESCRIPTION("A control that clips a bitmap based on %.");

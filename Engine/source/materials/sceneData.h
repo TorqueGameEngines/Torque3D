@@ -34,7 +34,7 @@
 
 class GFXTexHandle;
 class GFXCubemap;
-class CustomShaderBindingData;
+struct CustomShaderBindingData;
 
 struct SceneData
 {
@@ -44,10 +44,6 @@ struct SceneData
       /// A normal render bin that isn't one of 
       /// the special bins we care about.
       RegularBin = 0,
-
-      /// The glow render bin.
-      /// @see RenderGlowMgr
-      GlowBin,
 
       /// The deferred render bin.
       /// @RenderDeferredMgr

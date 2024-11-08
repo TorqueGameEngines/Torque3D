@@ -200,10 +200,10 @@ public:
 
    // GFXResource interface
    /// The resource should put a description of itself (number of vertices, size/width of texture, etc.) in buffer
-   virtual const String describeSelf() const;
+   const String describeSelf() const override;
 
    // StrongRefBase
-   virtual void destroySelf();
+   void destroySelf() override;
 };
 
 //-----------------------------------------------------------------------------

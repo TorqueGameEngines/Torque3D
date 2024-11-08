@@ -110,10 +110,10 @@ class GuiTheoraCtrl : public GuiControl
       }
 
       // GuiControl.
-      virtual bool onWake();
-      virtual void onSleep();
-      virtual void onRender( Point2I offset, const RectI &updateRect );
-      virtual void inspectPostApply();
+      bool onWake() override;
+      void onSleep() override;
+      void onRender( Point2I offset, const RectI &updateRect ) override;
+      void inspectPostApply() override;
 
       static void initPersistFields();
 

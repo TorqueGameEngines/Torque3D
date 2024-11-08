@@ -91,13 +91,13 @@ public:
       return mErrCodeStrings[errCode];
    };
    U32 getStatus() { return mLoadedState; };
-   U32 load() { return NotLoaded; };
+   virtual U32 load() { return NotLoaded; };
    AssetBase();
    virtual ~AssetBase();
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    /// Asset configuration.
    inline void             setAssetName(const char* pAssetName)              { if (mpOwningAssetManager == NULL) mpAssetDefinition->mAssetName = StringTable->insert(pAssetName); }

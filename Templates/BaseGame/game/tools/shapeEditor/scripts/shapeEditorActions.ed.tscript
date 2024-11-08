@@ -1046,7 +1046,7 @@ function ActionAddMeshFromFile::undo( %this )
 
 //------------------------------------------------------------------------------
 // Add/edit collision geometry
-function ShapeEditor::doEditCollision( %this, %type, %target, %depth, %merge, %concavity,
+function ShapeEditor::doEditCollision( %this, %type, %target, %fillMode, %depth, %merge, %concavity,
                                        %maxVerts, %boxMax, %sphereMax, %capsuleMax )
 {
    %colData = ShapeEdColWindow.lastColSettings;
@@ -1062,6 +1062,7 @@ function ShapeEditor::doEditCollision( %this, %type, %target, %depth, %merge, %c
    %action.oldBoxMax = getField( %colData, 6 );
    %action.oldSphereMax = getField( %colData, 7 );
    %action.oldCapsuleMax = getField( %colData, 8 );
+   %action.oldFillMode = getField(%colData, 9);
 
    %action.newType = %type;
    %action.newTarget = %target;
@@ -1072,50 +1073,33 @@ function ShapeEditor::doEditCollision( %this, %type, %target, %depth, %merge, %c
    %action.newBoxMax = %boxMax;
    %action.newSphereMax = %sphereMax;
    %action.newCapsuleMax = %capsuleMax;
+   %action.newFillMode = %fillMode;
 
    %this.doAction( %action );
 }
 
-function ActionEditCollision::updateCollision( %this, %type, %target, %depth, %merge, %concavity,
+function ActionEditCollision::updateCollision( %this, %type, %target, %fillMode, %depth, %merge, %concavity,
                                                %maxVerts, %boxMax, %sphereMax, %capsuleMax )
 {
    %colDetailSize = -1;
    %colNode = "Col" @ %colDetailSize;
-
+   %colData = ShapeEdColWindow.lastColSettings;
+   %oldTarget = getField( %colData, 1 );
    // TreeView items are case sensitive, but TSShape names are not, so fixup case
    // if needed
    %index = ShapeEditor.shape.getNodeIndex( %colNode );
    if ( %index != -1 )
       %colNode = ShapeEditor.shape.getNodeName( %index );
 
-   // First remove the old detail and collision nodes
-   %meshList = ShapeEditor.getDetailMeshList( %colDetailSize );
-   %meshCount = getFieldCount( %meshList );
-   if ( %meshCount > 0 )
-   {
-      ShapeEditor.shape.removeDetailLevel( %colDetailSize );
-      for ( %i = 0; %i < %meshCount; %i++ )
-         ShapeEdPropWindow.update_onMeshRemoved( getField( %meshList, %i ) );
-   }
-
-   %nodeList = ShapeEditor.getNodeNames( %colNode, "" );
-   %nodeCount = getFieldCount( %nodeList );
-   if ( %nodeCount > 0 )
-   {
-      for ( %i = 0; %i < %nodeCount; %i++ )
-         ShapeEditor.shape.removeNode( getField( %nodeList, %i ) );
-      ShapeEdPropWindow.update_onNodeRemoved( %nodeList, %nodeCount );
-   }
-
    // Add the new node and geometry
    if ( %type $= "" )
       return;
-
+   
    if ( !ShapeEditor.shape.addCollisionDetail( %colDetailSize, %type, %target,
                                                 %depth, %merge, %concavity, %maxVerts,
-                                                %boxMax, %sphereMax, %capsuleMax ) )
+                                                %boxMax, %sphereMax, %capsuleMax, %fillMode) )
       return false;
-
+      
    // Update UI
    %meshList = ShapeEditor.getDetailMeshList( %colDetailSize );
    ShapeEdPropWindow.update_onNodeAdded( %colNode, ShapeEditor.shape.getNodeCount() );    // will also add child nodes
@@ -1124,7 +1108,7 @@ function ActionEditCollision::updateCollision( %this, %type, %target, %depth, %m
       ShapeEdPropWindow.update_onMeshAdded( getField( %meshList, %i ) );
 
    ShapeEdColWindow.lastColSettings = %type TAB %target TAB %depth TAB %merge TAB
-      %concavity TAB %maxVerts TAB %boxMax TAB %sphereMax TAB %capsuleMax;
+      %concavity TAB %maxVerts TAB %boxMax TAB %sphereMax TAB %capsuleMax TAB %fillMode ;
    ShapeEdColWindow.update_onCollisionChanged();
 
    return true;
@@ -1133,7 +1117,7 @@ function ActionEditCollision::updateCollision( %this, %type, %target, %depth, %m
 function ActionEditCollision::doit( %this )
 {
    ShapeEdWaitGui.show( "Generating collision geometry..." );
-   %success = %this.updateCollision( %this.newType, %this.newTarget, %this.newDepth, %this.newMerge,
+   %success = %this.updateCollision( %this.newType, %this.newTarget, %this.newFillMode, %this.newDepth, %this.newMerge,
                                      %this.newConcavity, %this.newMaxVerts, %this.newBoxMax,
                                      %this.newSphereMax, %this.newCapsuleMax );
    ShapeEdWaitGui.hide();
@@ -1146,7 +1130,7 @@ function ActionEditCollision::undo( %this )
    Parent::undo( %this );
 
    ShapeEdWaitGui.show( "Generating collision geometry..." );
-   %this.updateCollision( %this.oldType, %this.oldTarget, %this.oldDepth, %this.oldMerge,
+   %this.updateCollision( %this.oldType, %this.oldTarget, %this.oldFillMode, %this.oldDepth, %this.oldMerge,
                           %this.oldConcavity, %this.oldMaxVerts, %this.oldBoxMax,
                           %this.oldSphereMax, %this.oldCapsuleMax );
    ShapeEdWaitGui.hide();

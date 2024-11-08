@@ -147,7 +147,7 @@ public:
 
    /// Engine.
    static void initPersistFields();
-   virtual void copyTo(SimObject* object);
+   void copyTo(SimObject* object) override;
 
    //SFXResource* getSound() { return mSoundResource; }
    Resource<SFXResource> getSoundResource(const U32 slotId = 0) { load(); return mSFXProfile[slotId].getResource(); }
@@ -156,7 +156,7 @@ public:
    DECLARE_CONOBJECT(SoundAsset);
 
    static bool _setSoundFile(void* object, const char* index, const char* data);
-   U32 load();
+   U32 load() override;
    inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
    SFXProfile* getSfxProfile(const U32 slotId = 0) { return &mSFXProfile[slotId]; }
    SFXPlayList* getSfxPlaylist() { return &mPlaylist; }
@@ -172,9 +172,9 @@ public:
    static U32 getAssetByFileName(StringTableEntry fileName, AssetPtr<SoundAsset>* matAsset);
 
 protected:
-   virtual void            initializeAsset(void);
+   void            initializeAsset(void) override;
    void _onResourceChanged(const Torque::Path & path);
-   virtual void            onAssetRefresh(void);
+   void            onAssetRefresh(void) override;
 };
 
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)

@@ -203,7 +203,7 @@ public:
       setStatus(false);      
    }
       
-   virtual void run( void* arg )
+   void run( void* arg ) override
    {      
       _setName( "TheoraEncoderThread" );
       while (!checkForStop())
@@ -214,7 +214,7 @@ public:
    }   
 
    /// Begins accepting frames for encoding
-   bool begin()
+   bool begin() override
    {
       mPath += ".ogv";
       mCurrentFrame = 0;
@@ -340,7 +340,7 @@ public:
    }
 
    /// Pushes a new frame into the video stream
-   bool pushFrame( GBitmap * bitmap )
+   bool pushFrame( GBitmap * bitmap ) override
    {      
                   
       // Push the bitmap into the frame list
@@ -356,7 +356,7 @@ public:
    }
 
    /// Finishes the encoding and closes the video
-   bool end()
+   bool end() override
    {  
       //Let's wait the thread stop doing whatever it needs to do
       stop();
@@ -375,7 +375,7 @@ public:
    }
    
 
-   void setResolution( Point2I* resolution ) 
+   void setResolution( Point2I* resolution ) override 
    { 
       /* Theora has a divisible-by-sixteen restriction for the encoded frame size */
       /* scale the picture size up to the nearest /16 and calculate offsets */

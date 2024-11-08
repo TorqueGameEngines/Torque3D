@@ -60,8 +60,8 @@ public:
    bool isSelectionEnabled();
 
    // RenderBinManager
-   virtual void addElement( RenderInst *inst );
-   virtual void render( SceneRenderState *state );
+   void addElement( RenderInst *inst ) override;
+   void render( SceneRenderState *state ) override;
 
    // ConsoleObject
    DECLARE_CONOBJECT( afxRenderHighlightMgr );

@@ -57,12 +57,12 @@ public:
    Point2I                   mUseEyePoint;      /// optionally use the eye point. x != 0 -> horiz.  y != 0 -> vert.  
   
   
-   virtual void   onRender            (Point2I offset, const RectI &updateRect);  
+   void   onRender            (Point2I offset, const RectI &updateRect) override;  
    virtual void   resizeDuringRender  ();  
   
-   virtual bool   onWake              ();  
-   virtual void   onSleep             ();  
-   virtual void   onDeleteNotify      (SimObject *object);  
+   bool   onWake              () override;  
+   void   onSleep             () override;  
+   void   onDeleteNotify      (SimObject *object) override;  
   
    void           doPositioning       ();  
    void           doProjection        ();  

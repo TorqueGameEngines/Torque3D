@@ -246,8 +246,8 @@ class GuiEditCtrl : public GuiControl
       DECLARE_CATEGORY( "Gui Editor" );
       DECLARE_DESCRIPTION( "Implements the framework for the GUI editor." );
 
-      bool onWake();
-      void onSleep();
+      bool onWake() override;
+      void onSleep() override;
       
       static void initPersistFields();
 
@@ -258,8 +258,8 @@ class GuiEditCtrl : public GuiControl
       void              getDragRect(RectI &b);
       void              drawNut(const Point2I &nut, ColorI &outlineColor, ColorI &nutColor);
       void              drawNuts(RectI &box, ColorI &outlineColor, ColorI &nutColor);
-      void              onPreRender();
-      void              onRender(Point2I offset, const RectI &updateRect);
+      void              onPreRender() override;
+      void              onRender(Point2I offset, const RectI &updateRect) override;
       void              addNewControl(GuiControl *ctrl);
       void              setCurrentAddSet(GuiControl *ctrl, bool clearSelection = true);
       GuiControl*       getCurrentAddSet();
@@ -314,7 +314,7 @@ class GuiEditCtrl : public GuiControl
       void              controlInspectPostApply(GuiControl* object);
 
       // Sizing Cursors
-      void              getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent);
+      void              getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent) override;
 
       U32               getSelectionSize() const { return mSelectedControls.size(); }
       const Vector<GuiControl *>& getSelected() const { return mSelectedControls; }
@@ -322,16 +322,16 @@ class GuiEditCtrl : public GuiControl
       SimGroup* getTrash() { return mTrash; }
       GuiControl* getAddSet() const { return mCurrentAddSet; }; //JDD
 
-      bool              onKeyDown(const GuiEvent &event);
-      void              onMouseDown(const GuiEvent &event);
-      void              onMouseUp(const GuiEvent &event);
-      void              onMouseDragged(const GuiEvent &event);
-      void              onRightMouseDown(const GuiEvent &event);
+      bool              onKeyDown(const GuiEvent &event) override;
+      void              onMouseDown(const GuiEvent &event) override;
+      void              onMouseUp(const GuiEvent &event) override;
+      void              onMouseDragged(const GuiEvent &event) override;
+      void              onRightMouseDown(const GuiEvent &event) override;
       
       mouseModes        getMouseMode() const { return mMouseDownMode; }
 
-      virtual bool      onAdd();
-      virtual void      onRemove();
+      bool      onAdd() override;
+      void      onRemove() override;
 
       void              setSnapToGrid(U32 gridsize);
 };

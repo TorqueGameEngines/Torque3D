@@ -1987,11 +1987,11 @@ void ReflectCubeFeatHLSL::processPix(  Vector<ShaderComponent*> &componentList,
 
    if (roughness) //try to grab roughness directly
    {
-      texCube = new GenOp("@.SampleLevel( @, float3(@).rgb, min((1.0 - @)*@ + 1.0, @))", cubeMapTex, cubeMap, reflectVec, roughness, cubeMips, cubeMips);
+      texCube = new GenOp("@.SampleLevel( @, float3(@).rgb, min(@*@ + 1.0, @))", cubeMapTex, cubeMap, reflectVec, roughness, cubeMips, cubeMips);
    }
    else if (glossColor)//failing that, try and find color data
    {
-      texCube = new GenOp("@.SampleLevel( @, float3(@).rgb, min((1.0 - @.b)*@ + 1.0, @))", cubeMapTex, cubeMap, reflectVec, glossColor, cubeMips, cubeMips);
+      texCube = new GenOp("@.SampleLevel( @, float3(@).rgb, min(@.b*@ + 1.0, @))", cubeMapTex, cubeMap, reflectVec, glossColor, cubeMips, cubeMips);
    }
    else //failing *that*, just draw the cubemap
    {
@@ -2592,22 +2592,21 @@ void AlphaTestHLSL::processPix(  Vector<ShaderComponent*> &componentList,
 //****************************************************************************
 // GlowMask
 //****************************************************************************
-
 void GlowMaskHLSL::processPix(   Vector<ShaderComponent*> &componentList,
                                  const MaterialFeatureData &fd )
 {
-   output = NULL;
-
-   // Get the output color... and make it black to mask out 
-   // glow passes rendered before us.
-   //
-   // The shader compiler will optimize out all the other
-   // code above that doesn't contribute to the alpha mask.
-   Var *color = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
-   if ( color )
-      output = new GenOp( "   @.rgb = 0;\r\n", color );
+   //determine output target
+   ShaderFeature::OutputTarget inTarg, outTarg;
+   inTarg = outTarg = ShaderFeature::DefaultTarget;
+   if (fd.features[MFT_isDeferred])
+   {
+      inTarg = ShaderFeature::RenderTarget1;
+      outTarg = ShaderFeature::RenderTarget3;
+   }
+   Var* inCol = (Var*)LangElement::find(getOutputTargetVarName(inTarg));
+   Var* outCol = (Var*)LangElement::find(getOutputTargetVarName(outTarg));
+   output = new GenOp("   @.rgb += @.rgb*10;\r\n", outCol, inCol);
 }
-
 
 //****************************************************************************
 // RenderTargetZero

@@ -42,11 +42,11 @@ public:
 	DECLARE_CALLBACK( void, onMouseDown, ());
 	DECLARE_CALLBACK( void, onDoubleClick, ());
 	GuiGradientSwatchCtrl();
-	void onMouseDown(const GuiEvent &);
-	void onRightMouseDown(const GuiEvent &);
-   void onMouseDragged(const GuiEvent &event);
-	void onRender(Point2I offset, const RectI &updateRect);
-	bool onWake();
+	void onMouseDown(const GuiEvent &) override;
+	void onRightMouseDown(const GuiEvent &) override;
+   void onMouseDragged(const GuiEvent &event) override;
+	void onRender(Point2I offset, const RectI &updateRect) override;
+	bool onWake() override;
 protected:
 	StringTableEntry  mColorFunction;
 };
@@ -121,7 +121,7 @@ public:
    GuiGradientCtrl();
 
    static void initPersistFields();
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
    bool mShowReticle;       ///< Show reticle on render
    /// @name Color Value Functions
    /// @{
@@ -134,19 +134,19 @@ public:
    
    /// @name Input Events
    /// @{
-   void onMouseDown(const GuiEvent &);
-   void onMouseUp(const GuiEvent &);
+   void onMouseDown(const GuiEvent &) override;
+   void onMouseUp(const GuiEvent &) override;
 
-   void onMouseEnter(const GuiEvent &);
-   void onMouseLeave(const GuiEvent &);
+   void onMouseEnter(const GuiEvent &) override;
+   void onMouseLeave(const GuiEvent &) override;
    /// @}
 
 	void addColorRange(ColorI color);
 	void setupDefaultRange();
 
-	bool onAdd();
-	void inspectPreApply();
-	void inspectPostApply();
+	bool onAdd() override;
+	void inspectPreApply() override;
+	void inspectPostApply() override;
 	void reInitSwatches( GuiGradientCtrl::PickMode );
    void addColorRange(Point2I pos, const LinearColorF& color);
 	void removeColorRange( GuiGradientSwatchCtrl* swatch );

@@ -62,8 +62,8 @@ public:
    static void initPersistFields();
 
    //Parental methods
-   bool onWake();
-   void onSleep();
+   bool onWake() override;
+   void onSleep() override;
 
    //text methods
    virtual void setText( const char *txt = NULL );
@@ -71,12 +71,12 @@ public:
 
    //rendering methods
    void calcResize();
-   void onPreRender();    // do special pre render processing
-   void onRender( Point2I offset, const RectI &updateRect );
+   void onPreRender() override;    // do special pre render processing
+   void onRender( Point2I offset, const RectI &updateRect ) override;
 
    //Console methods
-   const char* getScriptValue();
-   void setScriptValue( const char *value );
+   const char* getScriptValue() override;
+   void setScriptValue( const char *value ) override;
 };
 
 #endif //_GUI_TEXT_CONTROL_H_

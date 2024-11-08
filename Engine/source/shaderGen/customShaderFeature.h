@@ -65,8 +65,8 @@ public:
 	static void initPersistFields();
 
 	// Handle when we are added to the scene and removed from the scene
-	bool onAdd();
-	void onRemove();
+	bool onAdd() override;
+	void onRemove() override;
 
 	//shadergen setup
 	void addVariable(String name, String type, String defaultValue);

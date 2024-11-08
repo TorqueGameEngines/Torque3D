@@ -65,7 +65,7 @@ class afxMagicSpellData : public afxChoreographerData, public afxMagicSpellDefs
     U32 id;
   public:
     ewValidator(U32 id) { this->id = id; }
-    void validateType(SimObject *object, void *typePtr);
+    void validateType(SimObject *object, void *typePtr) override;
   };
 
   bool                  mDo_id_convert;
@@ -106,18 +106,18 @@ public:
   /*C*/                 afxMagicSpellData();
   /*C*/                 afxMagicSpellData(const afxMagicSpellData&, bool = false);
 
-  virtual void          reloadReset();
+  void          reloadReset() override;
 
-  virtual bool          onAdd();
-  virtual void          packData(BitStream*);
-  virtual void          unpackData(BitStream*);
-  virtual bool          writeField(StringTableEntry fieldname, const char* value);
+  bool          onAdd() override;
+  void          packData(BitStream*) override;
+  void          unpackData(BitStream*) override;
+  bool          writeField(StringTableEntry fieldname, const char* value) override;
 
-  bool                  preload(bool server, String &errorStr);
+  bool                  preload(bool server, String &errorStr) override;
 
   void                  gatherConstraintDefs(Vector<afxConstraintDef>&); 
 
-  virtual bool          allowSubstitutions() const { return true; }
+  bool          allowSubstitutions() const override { return true; }
 
   static void           initPersistFields();
 
@@ -208,7 +208,7 @@ public:
   class ObjectDeleteEvent : public SimEvent
   {
   public:
-    void process(SimObject *obj) { if (obj) obj->deleteObject(); }
+    void process(SimObject *obj) override { if (obj) obj->deleteObject(); }
   };
 
 private:
@@ -272,9 +272,9 @@ private:
   bool          is_impact_in_water(SceneObject* obj, const Point3F& p);
 
 protected:
-  virtual bool  remap_builtin_constraint(SceneObject*, const char* cons_name); // CONSTRAINT REMAPPING
-  virtual void  pack_constraint_info(NetConnection* conn, BitStream* stream);
-  virtual void  unpack_constraint_info(NetConnection* conn, BitStream* stream);
+  bool  remap_builtin_constraint(SceneObject*, const char* cons_name) override; // CONSTRAINT REMAPPING
+  void  pack_constraint_info(NetConnection* conn, BitStream* stream) override;
+  void  unpack_constraint_info(NetConnection* conn, BitStream* stream) override;
 
 private:
   afxMagicMissile*  mMissile;
@@ -292,11 +292,11 @@ private:
   void          launch_missile_c();
 
 public:
-  virtual void  impactNotify(const Point3F& p, const Point3F& n, SceneObject*);
-  virtual void  executeScriptEvent(const char* method, afxConstraint*, 
-                                   const MatrixF& pos, const char* data);
-  virtual void  inflictDamage(const char * label, const char* flavor, SimObjectId target,
-                              F32 amt, U8 count, F32 ad_amt, F32 rad, Point3F pos, F32 imp);
+  void  impactNotify(const Point3F& p, const Point3F& n, SceneObject*) override;
+  void  executeScriptEvent(const char* method, afxConstraint*, 
+                                   const MatrixF& pos, const char* data) override;
+  void  inflictDamage(const char * label, const char* flavor, SimObjectId target,
+                              F32 amt, U8 count, F32 ad_amt, F32 rad, Point3F pos, F32 imp) override;
 
 public:
   /*C*/         afxMagicSpell();
@@ -304,16 +304,16 @@ public:
   /*D*/         ~afxMagicSpell();
 
     // STANDARD OVERLOADED METHODS //
-  virtual bool  onNewDataBlock(GameBaseData* dptr, bool reload);
-  virtual void  processTick(const Move*);
-  virtual void  advanceTime(F32 dt);
-  virtual bool  onAdd();
-  virtual void  onRemove();
-  virtual void  onDeleteNotify(SimObject*);
-  virtual U32   packUpdate(NetConnection*, U32, BitStream*);
-  virtual void  unpackUpdate(NetConnection*, BitStream*);
+  bool  onNewDataBlock(GameBaseData* dptr, bool reload) override;
+  void  processTick(const Move*) override;
+  void  advanceTime(F32 dt) override;
+  bool  onAdd() override;
+  void  onRemove() override;
+  void  onDeleteNotify(SimObject*) override;
+  U32   packUpdate(NetConnection*, U32, BitStream*) override;
+  void  unpackUpdate(NetConnection*, BitStream*) override;
 
-  virtual void  sync_with_clients();
+  void  sync_with_clients() override;
   void          finish_startup();
 
   static void   initPersistFields();
@@ -361,7 +361,7 @@ public:
   afxMagicMissile*  getMissile() const { return mMissile; }
   SceneObject*      getImpactedObject() const { return mImpacted_obj; }
 
-  virtual void      restoreObject(SceneObject*);
+  void      restoreObject(SceneObject*) override;
 
   bool              activationCallInit(bool postponed=false);
   void              activate();

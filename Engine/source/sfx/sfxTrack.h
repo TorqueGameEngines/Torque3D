@@ -61,7 +61,7 @@ class SFXTrack : public SimDataBlock
       StringTableEntry mParameters[ MaxNumParameters ];
    
       /// Overload this to disable direct instantiation of this class via script 'new'.
-      virtual bool processArguments( S32 argc, ConsoleValue *argv );
+      bool processArguments( S32 argc, ConsoleValue *argv ) override;
 
    public:
          
@@ -86,11 +86,11 @@ class SFXTrack : public SimDataBlock
       void setParameter( U32 index, const char* name );
       
       // SimDataBlock.
-      virtual void packData( BitStream* stream );
-      virtual void unpackData( BitStream* stream );
-      virtual bool preload( bool server, String& errorStr );
-      virtual bool onAdd();
-      virtual void inspectPostApply();
+      void packData( BitStream* stream ) override;
+      void unpackData( BitStream* stream ) override;
+      bool preload( bool server, String& errorStr ) override;
+      bool onAdd() override;
+      void inspectPostApply() override;
       
       static void initPersistFields();
       

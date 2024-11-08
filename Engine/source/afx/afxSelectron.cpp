@@ -66,7 +66,7 @@ void afxSelectronData::ewValidator::validateType(SimObject* object, void* typePt
 class SelectronFinishStartupEvent : public SimEvent
 {
 public:
-  void process(SimObject* obj)
+  void process(SimObject* obj) override
   {
      afxSelectron* selectron = dynamic_cast<afxSelectron*>(obj);
      if (selectron)

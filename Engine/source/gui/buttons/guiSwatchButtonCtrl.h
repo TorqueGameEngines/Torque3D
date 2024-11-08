@@ -57,8 +57,8 @@ class GuiSwatchButtonCtrl : public GuiButtonBaseCtrl
       void setColor( const LinearColorF &color ) { mSwatchColor = color; }
 
       // GuiButtonBaseCtrl
-      virtual bool onWake();
-      virtual void onRender(Point2I offset, const RectI &updateRect);
+      bool onWake() override;
+      void onRender(Point2I offset, const RectI &updateRect) override;
 
       static void initPersistFields();
 

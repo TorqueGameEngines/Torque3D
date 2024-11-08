@@ -119,7 +119,7 @@ class GuiColorPickerCtrl : public GuiControl
    ~GuiColorPickerCtrl();
 
    static void initPersistFields();
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
    bool mShowReticle;       ///< Show reticle on render
    /// @name Color Value Functions
    /// @{
@@ -127,8 +127,8 @@ class GuiColorPickerCtrl : public GuiControl
    void setValue(LinearColorF &value) {mBaseColor = value;}
    /// NOTE: getValue() returns baseColor if pallet (since pallet controls can't "pick" colours themselves)
    LinearColorF getValue() { return mDisplayMode == pPallet ? mBaseColor : mPickColor; }
-   const char *getScriptValue();
-   void setScriptValue(const char *value);
+   const char *getScriptValue() override;
+   void setScriptValue(const char *value) override;
    void updateColor() {mPositionChanged = true;}
    /// @}
 
@@ -141,13 +141,13 @@ class GuiColorPickerCtrl : public GuiControl
 
    /// @name Input Events
    /// @{
-   void onMouseDown(const GuiEvent &);
-   void onMouseUp(const GuiEvent &);
-   void onMouseMove(const GuiEvent &event);
-   void onMouseDragged(const GuiEvent &event);
+   void onMouseDown(const GuiEvent &) override;
+   void onMouseUp(const GuiEvent &) override;
+   void onMouseMove(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override;
 
-   void onMouseEnter(const GuiEvent &);
-   void onMouseLeave(const GuiEvent &);
+   void onMouseEnter(const GuiEvent &) override;
+   void onMouseLeave(const GuiEvent &) override;
    /// @}
 };
 

@@ -29,11 +29,11 @@ struct ExtendedMove : public Move
 
    ExtendedMove();
 
-   virtual void pack(BitStream *stream, const Move * move = NULL);
-   virtual void unpack(BitStream *stream, const Move * move = NULL);
+   void pack(BitStream *stream, const Move * move = NULL) override;
+   void unpack(BitStream *stream, const Move * move = NULL) override;
 
-   virtual void clamp();
-   virtual void unclamp();
+   void clamp() override;
+   void unclamp() override;
 };
 
 extern const ExtendedMove NullExtendedMove;

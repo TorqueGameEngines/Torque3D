@@ -33,14 +33,14 @@ private:
 public:
    GFXD3D11CardProfiler();
    ~GFXD3D11CardProfiler();
-   void init();
+   void init() override;
 
 protected:
-   const String &getRendererString() const { static String sRS("Direct3D11"); return sRS; }
+   const String &getRendererString() const override { static String sRS("Direct3D11"); return sRS; }
 
-   void setupCardCapabilities();
-   bool _queryCardCap(const String &query, U32 &foundResult);
-   bool _queryFormat(const GFXFormat fmt, const GFXTextureProfile *profile, bool &inOutAutogenMips);
+   void setupCardCapabilities() override;
+   bool _queryCardCap(const String &query, U32 &foundResult) override;
+   bool _queryFormat(const GFXFormat fmt, const GFXTextureProfile *profile, bool &inOutAutogenMips) override;
 };
 
 #endif

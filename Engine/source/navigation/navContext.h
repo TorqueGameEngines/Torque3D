@@ -36,29 +36,29 @@ public:
 
 protected:
    /// Clears all log entries.
-   virtual void doResetLog();
+   void doResetLog() override;
 
    /// Logs a message.
    /// @param[in] category The category of the message.
    /// @param[in] msg      The formatted message.
    /// @param[in] len      The length of the formatted message.
-   virtual void doLog(const rcLogCategory category, const char* msg, const int len);
+   void doLog(const rcLogCategory category, const char* msg, const int len) override;
 
    /// Clears all timers. (Resets all to unused.)
-   virtual void doResetTimers();
+   void doResetTimers() override;
 
    /// Starts the specified performance timer.
    /// @param[in] label The category of timer.
-   virtual void doStartTimer(const rcTimerLabel label);
+   void doStartTimer(const rcTimerLabel label) override;
 
    /// Stops the specified performance timer.
    /// @param[in] label The category of the timer.
-   virtual void doStopTimer(const rcTimerLabel label);
+   void doStopTimer(const rcTimerLabel label) override;
 
    /// Returns the total accumulated time of the specified performance timer.
    /// @param[in] label The category of the timer.
    /// @return The accumulated time of the timer, or -1 if timers are disabled or the timer has never been started.
-   virtual int doGetAccumulatedTime(const rcTimerLabel label) const;
+   int doGetAccumulatedTime(const rcTimerLabel label) const override;
 
 private:
    /// Store start time and final time for each timer.

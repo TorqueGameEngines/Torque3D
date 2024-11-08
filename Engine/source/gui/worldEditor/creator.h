@@ -98,20 +98,20 @@ class CreatorTree : public GuiArrayCtrl
 
       //
       void sort();
-      void clear();
+      void clear() override;
 
       S32                           mTabSize;
       S32                           mMaxWidth;
       S32                           mTxtOffset;
 
       // GuiControl
-      void onMouseDown(const GuiEvent & event);
-      void onMouseDragged(const GuiEvent & event);
-      void onMouseUp(const GuiEvent & event);
-      bool onWake();
+      void onMouseDown(const GuiEvent & event) override;
+      void onMouseDragged(const GuiEvent & event) override;
+      void onMouseUp(const GuiEvent & event) override;
+      bool onWake() override;
 
       // GuiArrayCtrl
-      void onRenderCell(Point2I offset, Point2I cell, bool, bool);
+      void onRenderCell(Point2I offset, Point2I cell, bool, bool) override;
 
       DECLARE_CONOBJECT(CreatorTree);
       DECLARE_CATEGORY( "Gui Editor" );

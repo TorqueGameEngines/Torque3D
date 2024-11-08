@@ -745,6 +745,8 @@ TerrainEditor::TerrainEditor() :
 
    mSlopeMinAngle = 0.0f;
    mSlopeMaxAngle = 90.0f;
+   mTileMinHeight = 0;
+   mTileMaxHeight = 2047;
 }
 
 TerrainEditor::~TerrainEditor()
@@ -1741,7 +1743,7 @@ public:
    {
       mSequence = seq;
    }
-   void process(SimObject *object)
+   void process(SimObject *object) override
    {
       ((TerrainEditor *) object)->processActionTick(mSequence);
    }
@@ -2858,6 +2860,38 @@ DefineEngineMethod( TerrainEditor, setSlopeLimitMaxAngle, F32, (F32 angle), , ""
 	return angle;
 }
 
+DefineEngineMethod(TerrainEditor, getTileLimitMinHeight, F32, (), , "")
+{
+   return object->mTileMinHeight;
+}
+
+DefineEngineMethod(TerrainEditor, setTileLimitMinHeight, F32, (F32 height), , "")
+{
+   if (height < 0.0f)
+      height = 0.0f;
+
+   if (height > object->mTileMaxHeight)
+      height = object->mTileMaxHeight;
+
+   object->mTileMinHeight = height;
+   return height;
+}
+
+DefineEngineMethod(TerrainEditor, getTileLimitMaxHeight, F32, (), , "")
+{
+   return object->mTileMaxHeight;
+}
+
+DefineEngineMethod(TerrainEditor, setTileLimitMaxHeight, F32, (F32 height), , "")
+{
+   if (height > 2047.0f)
+      height = 2047.0f;
+   if (height < object->mTileMinHeight)
+      height = object->mTileMinHeight;
+
+   object->mTileMaxHeight = height;
+   return height;
+}
 //------------------------------------------------------------------------------
 void TerrainEditor::autoMaterialLayer( F32 mMinHeight, F32 mMaxHeight, F32 mMinSlope, F32 mMaxSlope, F32 mCoverage )
 {

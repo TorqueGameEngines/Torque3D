@@ -59,11 +59,11 @@ class SFXEnvironment : public SimDataBlock
       
       static void initPersistFields();
 
-      virtual bool onAdd();
-      virtual bool preload( bool server, String& errorStr );
-      virtual void packData( BitStream* stream );
-      virtual void unpackData( BitStream* stream );
-      virtual void inspectPostApply();
+      bool onAdd() override;
+      bool preload( bool server, String& errorStr ) override;
+      void packData( BitStream* stream ) override;
+      void unpackData( BitStream* stream ) override;
+      void inspectPostApply() override;
 
       /// @return The reverb properties of the sound environment.
       const SFXReverbProperties& getReverb() const { return mReverb; }

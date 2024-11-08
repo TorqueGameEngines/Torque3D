@@ -111,6 +111,7 @@ private:
     void compileCustomState( TamlWriteNode* pTamlWriteNode );
     void compileCustomNodeState( TamlCustomNode* pCustomNode );
 
+    void write(Stream& stream, U32 tabStop, U32 flags = 0) override { Con::errorf("Taml:Can Not write a file interface object to a file"); }; //Don't allow writing Taml objects *to* files
     bool write( FileStream& stream, SimObject* pSimObject, const TamlFormatMode formatMode );
     SimObject* read( FileStream& stream, const TamlFormatMode formatMode );
     template<typename T> inline T* read( FileStream& stream, const TamlFormatMode formatMode )
@@ -129,8 +130,8 @@ public:
     Taml();
     virtual ~Taml() {}
 
-    virtual bool onAdd();
-    virtual void onRemove();
+    bool onAdd() override;
+    void onRemove() override;
     static void initPersistFields();
 
     /// Format mode.

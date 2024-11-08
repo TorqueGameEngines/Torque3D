@@ -357,7 +357,7 @@ void Material::initPersistFields()
    endGroup("Lighting Properties");
 
    addGroup("Animation Properties");
-      addField("animFlags", TYPEID< AnimType >(), Offset(mAnimFlags, Material), MAX_STAGES,
+      addField("animFlags", TypeMaterialAnimType, Offset(mAnimFlags, Material), MAX_STAGES,
          "The types of animation to play on this material.");
 
       addField("scrollDir", TypePoint2F, Offset(mScrollDir, Material), MAX_STAGES,

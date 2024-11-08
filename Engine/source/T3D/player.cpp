@@ -4015,8 +4015,8 @@ void Player::updateActionThread()
    }
 
    if ((mActionAnimation.action == PlayerData::NullAnimation) ||
-       ((!mActionAnimation.waitForEnd || mActionAnimation.atEnd) &&
-       (!mActionAnimation.holdAtEnd && (mActionAnimation.delayTicks -= !mMountPending) <= 0)))
+      ((!mActionAnimation.waitForEnd || mActionAnimation.atEnd) &&
+         (!mActionAnimation.holdAtEnd && (mActionAnimation.delayTicks -= !mMountPending) <= 0)))
    {
       pickActionAnimation();
    }

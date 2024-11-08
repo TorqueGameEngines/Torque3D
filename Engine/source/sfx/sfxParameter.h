@@ -157,8 +157,8 @@ class SFXParameter : public SimObject
       EventSignal& getEventSignal() { return mEventSignal; }
       
       // SimObject.
-      virtual bool onAdd();
-      virtual void onRemove();
+      bool onAdd() override;
+      void onRemove() override;
       
       static void initPersistFields();
    

@@ -47,10 +47,10 @@ public:
    ColladaShapeLoader(domCOLLADA* _root);
    ~ColladaShapeLoader();
 
-   void enumerateScene();
-   bool ignoreNode(const String& name);
-   bool ignoreMesh(const String& name);
-   void computeBounds(Box3F& bounds);
+   void enumerateScene() override;
+   bool ignoreNode(const String& name) override;
+   bool ignoreMesh(const String& name) override;
+   void computeBounds(Box3F& bounds) override;
 
    static bool canLoadCachedDTS(const Torque::Path& path);
    static bool checkAndMountSketchup(const Torque::Path& path, String& mountPoint, Torque::Path& daePath);

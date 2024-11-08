@@ -29,7 +29,7 @@ class GuiNoMouseCtrl : public GuiControl
    public:
 
       // GuiControl
-      bool pointInControl(const Point2I &)   { return(false); }
+      bool pointInControl(const Point2I &) override   { return(false); }
       DECLARE_CONOBJECT(GuiNoMouseCtrl);
       DECLARE_CATEGORY( "Gui Other" );
 };

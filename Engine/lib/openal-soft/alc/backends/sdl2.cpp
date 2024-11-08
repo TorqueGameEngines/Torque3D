@@ -26,13 +26,17 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <string_view>
 
 #include "almalloc.h"
 #include "alnumeric.h"
 #include "core/device.h"
 #include "core/logging.h"
 
-#include <SDL2/SDL.h>
+_Pragma("GCC diagnostic push")
+_Pragma("GCC diagnostic ignored \"-Wold-style-cast\"")
+#include "SDL.h"
+_Pragma("GCC diagnostic pop")
 
 
 namespace {
@@ -43,17 +47,17 @@ namespace {
 #define DEVNAME_PREFIX ""
 #endif
 
-constexpr char defaultDeviceName[] = DEVNAME_PREFIX "Default Device";
+constexpr auto getDevicePrefix() noexcept -> std::string_view { return DEVNAME_PREFIX; }
+constexpr auto getDefaultDeviceName() noexcept -> std::string_view
+{ return DEVNAME_PREFIX "Default Device"; }
 
 struct Sdl2Backend final : public BackendBase {
     Sdl2Backend(DeviceBase *device) noexcept : BackendBase{device} { }
     ~Sdl2Backend() override;
 
     void audioCallback(Uint8 *stream, int len) noexcept;
-    static void audioCallbackC(void *ptr, Uint8 *stream, int len) noexcept
-    { static_cast<Sdl2Backend*>(ptr)->audioCallback(stream, len); }
 
-    void open(const char *name) override;
+    void open(std::string_view name) override;
     bool reset() override;
     void start() override;
     void stop() override;
@@ -65,8 +69,6 @@ struct Sdl2Backend final : public BackendBase {
     DevFmtChannels mFmtChans{};
     DevFmtType     mFmtType{};
     uint mUpdateSize{0u};
-
-    DEF_NEWDEL(Sdl2Backend)
 };
 
 Sdl2Backend::~Sdl2Backend()
@@ -83,7 +85,7 @@ void Sdl2Backend::audioCallback(Uint8 *stream, int len) noexcept
     mDevice->renderSamples(stream, ulen / mFrameSize, mDevice->channelsFromFmt());
 }
 
-void Sdl2Backend::open(const char *name)
+void Sdl2Backend::open(std::string_view name)
 {
     SDL_AudioSpec want{}, have{};
 
@@ -99,24 +101,39 @@ void Sdl2Backend::open(const char *name)
     case DevFmtFloat: want.format = AUDIO_F32; break;
     }
     want.channels = (mDevice->FmtChans == DevFmtMono) ? 1 : 2;
-    want.samples = static_cast<Uint16>(minu(mDevice->UpdateSize, 8192));
-    want.callback = &Sdl2Backend::audioCallbackC;
+    want.samples = static_cast<Uint16>(std::min(mDevice->UpdateSize, 8192u));
+    want.callback = [](void *ptr, Uint8 *stream, int len) noexcept
+    { return static_cast<Sdl2Backend*>(ptr)->audioCallback(stream, len); };
     want.userdata = this;
 
     /* Passing nullptr to SDL_OpenAudioDevice opens a default, which isn't
      * necessarily the first in the list.
      */
+    const auto defaultDeviceName = getDefaultDeviceName();
     SDL_AudioDeviceID devid;
-    if(!name || strcmp(name, defaultDeviceName) == 0)
+    if(name.empty() || name == defaultDeviceName)
+    {
+        name = defaultDeviceName;
         devid = SDL_OpenAudioDevice(nullptr, SDL_FALSE, &want, &have, SDL_AUDIO_ALLOW_ANY_CHANGE);
+    }
     else
     {
-        const size_t prefix_len = strlen(DEVNAME_PREFIX);
-        if(strncmp(name, DEVNAME_PREFIX, prefix_len) == 0)
-            devid = SDL_OpenAudioDevice(name+prefix_len, SDL_FALSE, &want, &have,
+        const auto namePrefix = getDevicePrefix();
+        if(name.size() >= namePrefix.size() && name.substr(0, namePrefix.size()) == namePrefix)
+        {
+            /* Copy the string_view to a string to ensure it's null terminated
+             * for this call.
+             */
+            const std::string devname{name.substr(namePrefix.size())};
+            devid = SDL_OpenAudioDevice(devname.c_str(), SDL_FALSE, &want, &have,
                 SDL_AUDIO_ALLOW_ANY_CHANGE);
+        }
         else
-            devid = SDL_OpenAudioDevice(name, SDL_FALSE, &want, &have, SDL_AUDIO_ALLOW_ANY_CHANGE);
+        {
+            const std::string devname{name};
+            devid = SDL_OpenAudioDevice(devname.c_str(), SDL_FALSE, &want, &have,
+                SDL_AUDIO_ALLOW_ANY_CHANGE);
+        }
     }
     if(!devid)
         throw al::backend_exception{al::backend_error::NoDevice, "%s", SDL_GetError()};
@@ -158,7 +175,7 @@ void Sdl2Backend::open(const char *name)
     mFmtType = devtype;
     mUpdateSize = have.samples;
 
-    mDevice->DeviceName = name ? name : defaultDeviceName;
+    mDevice->DeviceName = name;
 }
 
 bool Sdl2Backend::reset()
@@ -192,23 +209,27 @@ bool SDL2BackendFactory::init()
 bool SDL2BackendFactory::querySupport(BackendType type)
 { return type == BackendType::Playback; }
 
-std::string SDL2BackendFactory::probe(BackendType type)
+auto SDL2BackendFactory::enumerate(BackendType type) -> std::vector<std::string>
 {
-    std::string outnames;
+    std::vector<std::string> outnames;
 
     if(type != BackendType::Playback)
         return outnames;
 
     int num_devices{SDL_GetNumAudioDevices(SDL_FALSE)};
+    if(num_devices <= 0)
+        return outnames;
 
-    /* Includes null char. */
-    outnames.append(defaultDeviceName, sizeof(defaultDeviceName));
+    outnames.reserve(static_cast<unsigned int>(num_devices));
+    outnames.emplace_back(getDefaultDeviceName());
     for(int i{0};i < num_devices;++i)
     {
-        std::string name{DEVNAME_PREFIX};
-        name += SDL_GetAudioDeviceName(i, SDL_FALSE);
-        if(!name.empty())
-            outnames.append(name.c_str(), name.length()+1);
+        std::string outname{getDevicePrefix()};
+        if(const char *name = SDL_GetAudioDeviceName(i, SDL_FALSE))
+            outname += name;
+        else
+            outname += "Unknown Device Name #"+std::to_string(i);
+        outnames.emplace_back(std::move(outname));
     }
     return outnames;
 }

@@ -38,25 +38,25 @@ public:
    ZipFileSystem(String& zipFilename, bool zipNameIsDir = false);
    virtual ~ZipFileSystem();
 
-   String   getTypeStr() const { return "Zip"; }
+   String   getTypeStr() const override { return "Zip"; }
 
    // Strict resolve function will reteurn a node if it is mounted *AS* the requested path.
-   FileNodeRef resolve(const Path& path);
+   FileNodeRef resolve(const Path& path) override;
 
    // Loose resolve function will return a node if it is mounted as or under the requested path.
    // This is needed so mounted subdirectories will be included in recursive FindByPatern searches.
    // i.e. If data/ui.zip is mounted as data/ui, a search for data/*.module will only include files
    // under data/ui if the loose resolve function is used.
-   FileNodeRef resolveLoose(const Path& path);
+   FileNodeRef resolveLoose(const Path& path) override;
 
    // these are unsupported, ZipFileSystem is currently read only access
-   FileNodeRef create(const Path& path,FileNode::Mode) { return 0; }
-   bool remove(const Path& path) { return 0; }
-   bool rename(const Path& a,const Path& b) { return 0; }
+   FileNodeRef create(const Path& path,FileNode::Mode) override { return 0; }
+   bool remove(const Path& path) override { return 0; }
+   bool rename(const Path& a,const Path& b) override { return 0; }
 
    // these are unsupported
-   Path mapTo(const Path& path) { return path; }
-   Path mapFrom(const Path& path) { return path; }
+   Path mapTo(const Path& path) override { return path; }
+   Path mapFrom(const Path& path) override { return path; }
 
 public:
    /// Private interface for use by unit test only. 

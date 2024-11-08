@@ -85,18 +85,18 @@ FileObject::FileObject()
    mFileBuffer = NULL;
    mBufferSize = 0;
    mCurPos = 0;
-   stream = NULL;
+   mStream = NULL;
 }
 
 FileObject::~FileObject()
 {
    SAFE_DELETE_ARRAY(mFileBuffer);
-   SAFE_DELETE(stream);
+   SAFE_DELETE(mStream);
 }
 
 void FileObject::close()
 {
-   SAFE_DELETE(stream);
+   SAFE_DELETE(mStream);
    SAFE_DELETE_ARRAY(mFileBuffer);
    mFileBuffer = NULL;
    mBufferSize = mCurPos = 0;
@@ -112,10 +112,10 @@ bool FileObject::openForWrite(const char *fileName, const bool append)
    if( !buffer[ 0 ] )
       return false;
 
-   if((stream = FileStream::createAndOpen( fileName, append ? Torque::FS::File::WriteAppend : Torque::FS::File::Write )) == NULL)
+   if((mStream = FileStream::createAndOpen( fileName, append ? Torque::FS::File::WriteAppend : Torque::FS::File::Write )) == NULL)
       return false;
 
-   stream->setPosition( stream->getStreamSize() );
+   mStream->setPosition(mStream->getStreamSize() );
    return( true );
 }
 
@@ -225,17 +225,17 @@ void FileObject::peekLine( S32 peekLineOffset, U8* line, S32 length )
 
 void FileObject::writeLine(const U8 *line)
 {
-   stream->write(dStrlen((const char *) line), line);
-   stream->write(2, "\r\n");
+   mStream->write(dStrlen((const char *) line), line);
+   mStream->write(2, "\r\n");
 }
 
 void FileObject::writeObject( SimObject* object, const U8* objectPrepend )
 {
    if( objectPrepend == NULL )
-      stream->write(2, "\r\n");
+      mStream->write(2, "\r\n");
    else
-      stream->write(dStrlen((const char *) objectPrepend), objectPrepend );
-   object->write( *stream, 0 );
+      mStream->write(dStrlen((const char *) objectPrepend), objectPrepend );
+   object->write( *mStream, 0 );
 }
 
 DefineEngineMethod( FileObject, openForRead, bool, ( const char* filename ),,

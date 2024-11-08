@@ -2,10 +2,11 @@
 #define CORE_EFFECTSLOT_H
 
 #include <atomic>
+#include <memory>
 
-#include "almalloc.h"
 #include "device.h"
 #include "effects/base.h"
+#include "flexarray.h"
 #include "intrusive_ptr.h"
 
 struct EffectSlot;
@@ -18,20 +19,18 @@ enum class EffectSlotType : unsigned char {
     None,
     Reverb,
     Chorus,
-    Distortion,
-    Echo,
-    Flanger,
-    FrequencyShifter,
-    VocalMorpher,
-    PitchShifter,
-    RingModulator,
     Autowah,
     Compressor,
+    Convolution,
+    Dedicated,
+    Distortion,
+    Echo,
     Equalizer,
-    EAXReverb,
-    DedicatedLFE,
-    DedicatedDialog,
-    Convolution
+    Flanger,
+    FrequencyShifter,
+    PitchShifter,
+    RingModulator,
+    VocalMorpher,
 };
 
 struct EffectSlotProps {
@@ -45,12 +44,12 @@ struct EffectSlotProps {
     al::intrusive_ptr<EffectState> State;
 
     std::atomic<EffectSlotProps*> next;
-
-    DEF_NEWDEL(EffectSlotProps)
 };
 
 
 struct EffectSlot {
+    bool InUse{false};
+
     std::atomic<EffectSlotProps*> Update{nullptr};
 
     /* Wet buffer configuration is ACN channel order with N3D scaling.
@@ -66,7 +65,7 @@ struct EffectSlot {
 
     EffectSlotType EffectType{EffectSlotType::None};
     EffectProps mEffectProps{};
-    EffectState *mEffectState{nullptr};
+    al::intrusive_ptr<EffectState> mEffectState;
 
     float RoomRolloff{0.0f}; /* Added to the source's room rolloff, not multiplied. */
     float DecayTime{0.0f};
@@ -76,13 +75,10 @@ struct EffectSlot {
     float AirAbsorptionGainHF{1.0f};
 
     /* Mixing buffer used by the Wet mix. */
-    WetBuffer *mWetBuffer{nullptr};
+    al::vector<FloatBufferLine,16> mWetBuffer;
 
-    ~EffectSlot();
 
-    static EffectSlotArray *CreatePtrArray(size_t count) noexcept;
-
-    DISABLE_ALLOC()
+    static std::unique_ptr<EffectSlotArray> CreatePtrArray(size_t count);
 };
 
 #endif /* CORE_EFFECTSLOT_H */

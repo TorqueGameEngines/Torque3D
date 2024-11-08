@@ -52,16 +52,16 @@ public:
 
    static bool _editPostEffects(void* object, const char* index, const char* data);
 
-   virtual bool onAdd();
-   virtual void onRemove();
-   virtual void onPostAdd();
+   bool onAdd() override;
+   void onRemove() override;
+   void onPostAdd() override;
 
-   virtual void interpolateTick(F32 delta);
-   virtual void processTick();
-   virtual void advanceTime(F32 timeDelta);
+   void interpolateTick(F32 delta) override;
+   void processTick() override;
+   void advanceTime(F32 timeDelta) override;
 
-   virtual void addObject(SimObject* object);
-   virtual void removeObject(SimObject* object);
+   void addObject(SimObject* object) override;
+   void removeObject(SimObject* object) override;
 
    void addDynamicObject(SceneObject* object);
    void removeDynamicObject(SceneObject* object);
@@ -76,8 +76,8 @@ public:
 
    //
    //Networking
-   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn, BitStream *stream);
+   U32 packUpdate(NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn, BitStream *stream) override;
 
    //
    Vector<SceneObject*> getObjectsByClass(String className, bool checkSubscenes);

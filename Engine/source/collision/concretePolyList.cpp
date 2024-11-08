@@ -150,13 +150,13 @@ void ConcretePolyList::render()
    GFXStateBlockRef sb = GFX->createStateBlock( solidZDisable );
    GFX->setStateBlock( sb );
 
-   PrimBuild::color3i( 255, 0, 255 );
-
    Poly *p;
    Point3F *pnt;
 
    for ( p = mPolyList.begin(); p < mPolyList.end(); p++ )
    {
+      PrimBuild::color3i(255, 0, 255);
+
       PrimBuild::begin( GFXLineStrip, p->vertexCount + 1 );      
 
       for ( U32 i = 0; i < p->vertexCount; i++ )
@@ -168,6 +168,31 @@ void ConcretePolyList::render()
       pnt = &mVertexList[mIndexList[p->vertexStart]];
       PrimBuild::vertex3fv( pnt );
 
+      PrimBuild::end();
+
+      // Calculate the center of the polygon
+      Point3F centroid(0, 0, 0);
+      for (U32 i = 0; i < p->vertexCount; i++)
+      {
+         pnt = &mVertexList[mIndexList[p->vertexStart + i]];
+         centroid += *pnt;
+      }
+      centroid /= p->vertexCount;
+
+      // Calculate the end point of the normal line
+      Point3F norm = p->plane.getNormal();
+
+      U8 red = static_cast<U8>((norm.x + 1.0f) * 0.5f * 255);
+      U8 green = static_cast<U8>((norm.y + 1.0f) * 0.5f * 255);
+      U8 blue = static_cast<U8>((norm.z + 1.0f) * 0.5f * 255);
+
+      PrimBuild::color3i(red, green, blue);
+      Point3F normalEnd = centroid + norm;
+
+      // Draw the normal line
+      PrimBuild::begin(GFXLineList, 2);
+      PrimBuild::vertex3fv(centroid);
+      PrimBuild::vertex3fv(normalEnd);
       PrimBuild::end();
    }   
 }

@@ -38,29 +38,29 @@ public:
       mIndex = index;
       mString = string;
    }
-   virtual void pack(NetConnection* /*ps*/, BitStream *bstream)
+   void pack(NetConnection* /*ps*/, BitStream *bstream) override
    {
       bstream->writeInt(mIndex, ConnectionStringTable::EntryBitSize);
       bstream->writeString(mString.getString());
    }
-   virtual void write(NetConnection* /*ps*/, BitStream *bstream)
+   void write(NetConnection* /*ps*/, BitStream *bstream) override
    {
       bstream->writeInt(mIndex, ConnectionStringTable::EntryBitSize);
       bstream->writeString(mString.getString());
    }
-   virtual void unpack(NetConnection* /*con*/, BitStream *bstream)
+   void unpack(NetConnection* /*con*/, BitStream *bstream) override
    {
       char buf[256];
       mIndex = bstream->readInt(ConnectionStringTable::EntryBitSize);
       bstream->readString(buf);
       mString = NetStringHandle(buf);
    }
-   virtual void notifyDelivered(NetConnection *ps, bool madeit)
+   void notifyDelivered(NetConnection *ps, bool madeit) override
    {
       if(madeit)
          ps->confirmStringReceived(mString, mIndex);
    }
-   virtual void process(NetConnection *connection)
+   void process(NetConnection *connection) override
    {
 #ifdef TORQUE_DEBUG_NET
       Con::printf("Mapping string: %s to index: %d", mString.getString(), mIndex);

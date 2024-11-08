@@ -182,7 +182,7 @@ protected:
    void install();
 
 public:
-   TSShapeLoader() : boundsNode(0), shape(NULL) { }
+   TSShapeLoader() : shape(NULL), boundsNode(0) { }
    virtual ~TSShapeLoader();
 
    static const Torque::Path& getShapePath() { return shapePath; }

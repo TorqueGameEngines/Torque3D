@@ -91,7 +91,7 @@ public:
    virtual void reset() = 0;
    virtual void sortVars() = 0;
 
-   virtual void print( Stream &stream, bool isVerterShader ) = 0;
+   void print( Stream &stream, bool isVerterShader ) override = 0;
 };
 
 /// This is to provide common functionalty needed by vertex and pixel main defs

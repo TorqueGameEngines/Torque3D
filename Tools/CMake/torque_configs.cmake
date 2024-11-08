@@ -14,8 +14,8 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 							   TORQUE_UNICODE UNICODE _UNICODE)
 
 # All link libraries. Modules should append to this the path to specify additional link libraries (.a, .lib, .dylib, .so)
-set(TORQUE_LINK_LIBRARIES tinyxml collada squish opcode assimp
-                          SDL2 glad pcre convexDecomp zlib)
+set(TORQUE_LINK_LIBRARIES tinyxml collada squish opcode assimp FLAC FLAC++ ogg vorbis  
+			vorbisfile vorbisenc opus sndfile SDL2 glad pcre convexMath zlib)
 
 if(TORQUE_TESTING)
 set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest gmock)
@@ -71,9 +71,10 @@ advanced_option(TORQUE_DEBUG_NET "debug network" OFF)
 advanced_option(TORQUE_DEBUG_NET_MOVES "debug network moves" OFF)
 advanced_option(TORQUE_ENABLE_ASSERTS "enables or disable asserts" OFF)
 advanced_option(TORQUE_TOOLS "Enable or disable the tools" ON)
+advanced_option(TORQUE_TOOLS_EXT_COMMANDS "Enable or disable some extended functionality like shell commands or free write access" OFF)
 advanced_option(TORQUE_ENABLE_PROFILER "Enable or disable the profiler" OFF)
 advanced_option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
-
+advanced_option(USE_TEMPLATE_MATRIX "Set to true to use the new templated matrix class(still in beta)." OFF)
 #testing
 advanced_option(TORQUE_TESTING "Unit test build" OFF)
 

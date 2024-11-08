@@ -25,114 +25,119 @@
 #include <cmath>
 #include <complex>
 #include <cstdlib>
-#include <iterator>
+#include <variant>
 
 #include "alc/effects/base.h"
 #include "alcomplex.h"
-#include "almalloc.h"
 #include "alnumbers.h"
 #include "alnumeric.h"
 #include "alspan.h"
+#include "core/ambidefs.h"
 #include "core/bufferline.h"
 #include "core/context.h"
-#include "core/devformat.h"
 #include "core/device.h"
+#include "core/effects/base.h"
 #include "core/effectslot.h"
 #include "core/mixer.h"
 #include "core/mixer/defs.h"
 #include "intrusive_ptr.h"
+#include "opthelpers.h"
 
+struct BufferStorage;
 
 namespace {
 
 using uint = unsigned int;
 using complex_d = std::complex<double>;
 
-#define HIL_SIZE 1024
-#define OVERSAMP (1<<2)
+constexpr size_t HilSize{1024};
+constexpr size_t HilHalfSize{HilSize >> 1};
+constexpr size_t OversampleFactor{4};
 
-#define HIL_STEP     (HIL_SIZE / OVERSAMP)
-#define FIFO_LATENCY (HIL_STEP * (OVERSAMP-1))
+static_assert(HilSize%OversampleFactor == 0, "Factor must be a clean divisor of the size");
+constexpr size_t HilStep{HilSize / OversampleFactor};
 
 /* Define a Hann window, used to filter the HIL input and output. */
-std::array<double,HIL_SIZE> InitHannWindow()
-{
-    std::array<double,HIL_SIZE> ret;
-    /* Create lookup table of the Hann window for the desired size, i.e. HIL_SIZE */
-    for(size_t i{0};i < HIL_SIZE>>1;i++)
+struct Windower {
+    alignas(16) std::array<double,HilSize> mData{};
+
+    Windower()
     {
-        constexpr double scale{al::numbers::pi / double{HIL_SIZE}};
-        const double val{std::sin(static_cast<double>(i+1) * scale)};
-        ret[i] = ret[HIL_SIZE-1-i] = val * val;
+        /* Create lookup table of the Hann window for the desired size. */
+        for(size_t i{0};i < HilHalfSize;i++)
+        {
+            constexpr double scale{al::numbers::pi / double{HilSize}};
+            const double val{std::sin((static_cast<double>(i)+0.5) * scale)};
+            mData[i] = mData[HilSize-1-i] = val * val;
+        }
     }
-    return ret;
-}
-alignas(16) const std::array<double,HIL_SIZE> HannWindow = InitHannWindow();
+};
+const Windower gWindow{};
 
 
 struct FshifterState final : public EffectState {
     /* Effect parameters */
     size_t mCount{};
     size_t mPos{};
-    uint mPhaseStep[2]{};
-    uint mPhase[2]{};
-    double mSign[2]{};
+    std::array<uint,2> mPhaseStep{};
+    std::array<uint,2> mPhase{};
+    std::array<double,2> mSign{};
 
     /* Effects buffers */
-    double mInFIFO[HIL_SIZE]{};
-    complex_d mOutFIFO[HIL_STEP]{};
-    complex_d mOutputAccum[HIL_SIZE]{};
-    complex_d mAnalytic[HIL_SIZE]{};
-    complex_d mOutdata[BufferLineSize]{};
+    std::array<double,HilSize> mInFIFO{};
+    std::array<complex_d,HilStep> mOutFIFO{};
+    std::array<complex_d,HilSize> mOutputAccum{};
+    std::array<complex_d,HilSize> mAnalytic{};
+    std::array<complex_d,BufferLineSize> mOutdata{};
 
-    alignas(16) float mBufferOut[BufferLineSize]{};
+    alignas(16) FloatBufferLine mBufferOut{};
 
     /* Effect gains for each output channel */
-    struct {
-        float Current[MAX_OUTPUT_CHANNELS]{};
-        float Target[MAX_OUTPUT_CHANNELS]{};
-    } mGains[2];
+    struct OutGains {
+        std::array<float,MaxAmbiChannels> Current{};
+        std::array<float,MaxAmbiChannels> Target{};
+    };
+    std::array<OutGains,2> mGains;
 
 
-    void deviceUpdate(const DeviceBase *device, const Buffer &buffer) override;
+    void deviceUpdate(const DeviceBase *device, const BufferStorage *buffer) override;
     void update(const ContextBase *context, const EffectSlot *slot, const EffectProps *props,
         const EffectTarget target) override;
     void process(const size_t samplesToDo, const al::span<const FloatBufferLine> samplesIn,
         const al::span<FloatBufferLine> samplesOut) override;
-
-    DEF_NEWDEL(FshifterState)
 };
 
-void FshifterState::deviceUpdate(const DeviceBase*, const Buffer&)
+void FshifterState::deviceUpdate(const DeviceBase*, const BufferStorage*)
 {
     /* (Re-)initializing parameters and clear the buffers. */
     mCount = 0;
-    mPos = FIFO_LATENCY;
+    mPos = HilSize - HilStep;
 
-    std::fill(std::begin(mPhaseStep),   std::end(mPhaseStep),   0u);
-    std::fill(std::begin(mPhase),       std::end(mPhase),       0u);
-    std::fill(std::begin(mSign),        std::end(mSign),        1.0);
-    std::fill(std::begin(mInFIFO),      std::end(mInFIFO),      0.0);
-    std::fill(std::begin(mOutFIFO),     std::end(mOutFIFO),     complex_d{});
-    std::fill(std::begin(mOutputAccum), std::end(mOutputAccum), complex_d{});
-    std::fill(std::begin(mAnalytic),    std::end(mAnalytic),    complex_d{});
+    mPhaseStep.fill(0u);
+    mPhase.fill(0u);
+    mSign.fill(1.0);
+    mInFIFO.fill(0.0);
+    mOutFIFO.fill(complex_d{});
+    mOutputAccum.fill(complex_d{});
+    mAnalytic.fill(complex_d{});
 
     for(auto &gain : mGains)
     {
-        std::fill(std::begin(gain.Current), std::end(gain.Current), 0.0f);
-        std::fill(std::begin(gain.Target), std::end(gain.Target), 0.0f);
+        gain.Current.fill(0.0f);
+        gain.Target.fill(0.0f);
     }
 }
 
 void FshifterState::update(const ContextBase *context, const EffectSlot *slot,
-    const EffectProps *props, const EffectTarget target)
+    const EffectProps *props_, const EffectTarget target)
 {
+    auto &props = std::get<FshifterProps>(*props_);
     const DeviceBase *device{context->mDevice};
 
-    const float step{props->Fshifter.Frequency / static_cast<float>(device->Frequency)};
-    mPhaseStep[0] = mPhaseStep[1] = fastf2u(minf(step, 1.0f) * MixerFracOne);
+    const float step{props.Frequency / static_cast<float>(device->Frequency)};
+    mPhaseStep[0] = mPhaseStep[1] = fastf2u(std::min(step, 1.0f) * MixerFracOne);
 
-    switch(props->Fshifter.LeftDirection)
+    switch(props.LeftDirection)
     {
     case FShifterDirection::Down:
         mSign[0] = -1.0;
@@ -146,7 +151,7 @@ void FshifterState::update(const ContextBase *context, const EffectSlot *slot,
         break;
     }
 
-    switch(props->Fshifter.RightDirection)
+    switch(props.RightDirection)
     {
     case FShifterDirection::Down:
         mSign[1] = -1.0;
@@ -160,19 +165,24 @@ void FshifterState::update(const ContextBase *context, const EffectSlot *slot,
         break;
     }
 
-    const auto lcoeffs = CalcDirectionCoeffs({-1.0f, 0.0f, 0.0f}, 0.0f);
-    const auto rcoeffs = CalcDirectionCoeffs({ 1.0f, 0.0f, 0.0f}, 0.0f);
+    static constexpr auto inv_sqrt2 = static_cast<float>(1.0 / al::numbers::sqrt2);
+    static constexpr auto lcoeffs_pw = CalcDirectionCoeffs(std::array{-1.0f, 0.0f, 0.0f});
+    static constexpr auto rcoeffs_pw = CalcDirectionCoeffs(std::array{ 1.0f, 0.0f, 0.0f});
+    static constexpr auto lcoeffs_nrml = CalcDirectionCoeffs(std::array{-inv_sqrt2, 0.0f, inv_sqrt2});
+    static constexpr auto rcoeffs_nrml = CalcDirectionCoeffs(std::array{ inv_sqrt2, 0.0f, inv_sqrt2});
+    auto &lcoeffs = (device->mRenderMode != RenderMode::Pairwise) ? lcoeffs_nrml : lcoeffs_pw;
+    auto &rcoeffs = (device->mRenderMode != RenderMode::Pairwise) ? rcoeffs_nrml : rcoeffs_pw;
 
     mOutTarget = target.Main->Buffer;
-    ComputePanGains(target.Main, lcoeffs.data(), slot->Gain, mGains[0].Target);
-    ComputePanGains(target.Main, rcoeffs.data(), slot->Gain, mGains[1].Target);
+    ComputePanGains(target.Main, lcoeffs, slot->Gain, mGains[0].Target);
+    ComputePanGains(target.Main, rcoeffs, slot->Gain, mGains[1].Target);
 }
 
 void FshifterState::process(const size_t samplesToDo, const al::span<const FloatBufferLine> samplesIn, const al::span<FloatBufferLine> samplesOut)
 {
     for(size_t base{0u};base < samplesToDo;)
     {
-        size_t todo{minz(HIL_STEP-mCount, samplesToDo-base)};
+        size_t todo{std::min(HilStep-mCount, samplesToDo-base)};
 
         /* Fill FIFO buffer with samples data */
         const size_t pos{mPos};
@@ -185,50 +195,52 @@ void FshifterState::process(const size_t samplesToDo, const al::span<const Float
         mCount = count;
 
         /* Check whether FIFO buffer is filled */
-        if(mCount < HIL_STEP) break;
+        if(mCount < HilStep) break;
         mCount = 0;
-        mPos = (mPos+HIL_STEP) & (HIL_SIZE-1);
+        mPos = (mPos+HilStep) & (HilSize-1);
 
         /* Real signal windowing and store in Analytic buffer */
-        for(size_t src{mPos}, k{0u};src < HIL_SIZE;++src,++k)
-            mAnalytic[k] = mInFIFO[src]*HannWindow[k];
-        for(size_t src{0u}, k{HIL_SIZE-mPos};src < mPos;++src,++k)
-            mAnalytic[k] = mInFIFO[src]*HannWindow[k];
+        for(size_t src{mPos}, k{0u};src < HilSize;++src,++k)
+            mAnalytic[k] = mInFIFO[src]*gWindow.mData[k];
+        for(size_t src{0u}, k{HilSize-mPos};src < mPos;++src,++k)
+            mAnalytic[k] = mInFIFO[src]*gWindow.mData[k];
 
         /* Processing signal by Discrete Hilbert Transform (analytical signal). */
         complex_hilbert(mAnalytic);
 
         /* Windowing and add to output accumulator */
-        for(size_t dst{mPos}, k{0u};dst < HIL_SIZE;++dst,++k)
-            mOutputAccum[dst] += 2.0/OVERSAMP*HannWindow[k]*mAnalytic[k];
-        for(size_t dst{0u}, k{HIL_SIZE-mPos};dst < mPos;++dst,++k)
-            mOutputAccum[dst] += 2.0/OVERSAMP*HannWindow[k]*mAnalytic[k];
+        for(size_t dst{mPos}, k{0u};dst < HilSize;++dst,++k)
+            mOutputAccum[dst] += 2.0/OversampleFactor*gWindow.mData[k]*mAnalytic[k];
+        for(size_t dst{0u}, k{HilSize-mPos};dst < mPos;++dst,++k)
+            mOutputAccum[dst] += 2.0/OversampleFactor*gWindow.mData[k]*mAnalytic[k];
 
         /* Copy out the accumulated result, then clear for the next iteration. */
-        std::copy_n(mOutputAccum + mPos, HIL_STEP, mOutFIFO);
-        std::fill_n(mOutputAccum + mPos, HIL_STEP, complex_d{});
+        std::copy_n(mOutputAccum.cbegin() + mPos, HilStep, mOutFIFO.begin());
+        std::fill_n(mOutputAccum.begin() + mPos, HilStep, complex_d{});
     }
 
     /* Process frequency shifter using the analytic signal obtained. */
-    float *RESTRICT BufferOut{mBufferOut};
-    for(int c{0};c < 2;++c)
+    for(size_t c{0};c < 2;++c)
     {
+        const double sign{mSign[c]};
         const uint phase_step{mPhaseStep[c]};
         uint phase_idx{mPhase[c]};
-        for(size_t k{0};k < samplesToDo;++k)
-        {
-            const double phase{phase_idx * (al::numbers::pi*2.0 / MixerFracOne)};
-            BufferOut[k] = static_cast<float>(mOutdata[k].real()*std::cos(phase) +
-                mOutdata[k].imag()*std::sin(phase)*mSign[c]);
+        std::transform(mOutdata.cbegin(), mOutdata.cbegin()+samplesToDo, mBufferOut.begin(),
+            [&phase_idx,phase_step,sign](const complex_d &in) -> float
+            {
+                const double phase{phase_idx * (al::numbers::pi*2.0 / MixerFracOne)};
+                const auto out = static_cast<float>(in.real()*std::cos(phase) +
+                    in.imag()*std::sin(phase)*sign);
 
-            phase_idx += phase_step;
-            phase_idx &= MixerFracMask;
-        }
+                phase_idx += phase_step;
+                phase_idx &= MixerFracMask;
+                return out;
+            });
         mPhase[c] = phase_idx;
 
         /* Now, mix the processed sound data to the output. */
-        MixSamples({BufferOut, samplesToDo}, samplesOut, mGains[c].Current, mGains[c].Target,
-            maxz(samplesToDo, 512), 0);
+        MixSamples(al::span{mBufferOut}.first(samplesToDo), samplesOut, mGains[c].Current,
+            mGains[c].Target, std::max(samplesToDo, 512_uz), 0);
     }
 }
 

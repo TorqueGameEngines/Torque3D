@@ -43,21 +43,21 @@ public:
    DECLARE_CONOBJECT(afxGuiSubstitutionField);
    DECLARE_CATEGORY("AFX");
 
-   virtual void             setData( const char* data, bool callbacks = true );
-   virtual const char*      getData( U32 inspectObjectIndex = 0 );
-   virtual void             updateValue();
+   void             setData( const char* data, bool callbacks = true ) override;
+   const char*      getData( U32 inspectObjectIndex = 0 ) override;
+   void             updateValue() override;
 
    virtual void setToolTip( StringTableEntry data );
 
-   virtual bool onAdd();
+   bool onAdd() override;
 
-   virtual GuiControl* constructEditControl();
+   GuiControl* constructEditControl() override;
 
-   virtual void setValue( const char* newValue );
+   void setValue( const char* newValue ) override;
 
 protected:
 
-   virtual void _executeSelectedCallback();
+   void _executeSelectedCallback() override;
 
 protected:
 

@@ -62,6 +62,7 @@ namespace Compiler
 
       OP_JMPIFFNOT,
       OP_JMPIFNOT,
+      OP_JMPNOTSTRING,
       OP_JMPIFF,
       OP_JMPIF,
       OP_JMPIFNOT_NP,

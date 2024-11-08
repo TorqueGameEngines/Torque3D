@@ -123,12 +123,33 @@ function OptionsMenuList::syncGui(%this)
       }
       else if(%option.class $= "OptionsKeybindEntry")
       {
-         %bindImgAsset = getButtonBitmap(%option.device, getField(%option.keymap, 1));
-         
-         if(%bindImgAsset $= "UI:Keyboard_Black_Blank_image")
-            %bindImgAsset = "";
+         if(getWordCount(getField(%option.keymap, 1)) == 2)
+         {
+            %keymap = getField(%option.keymap, 1);
+            %modifierImgAsset = getButtonBitmap(%option.device, getWord(%keymap, 0));
             
-         %container-->bindButton.setBitmap(%bindImgAsset);
+            if(%modifierImgAsset $= "UI:Keyboard_Black_Blank_image")
+               %modifierImgAsset = "";
+               
+            %container-->modifierButton.setBitmap(%modifierImgAsset);
+            
+            //
+            %bindImgAsset = getButtonBitmap(%option.device, getWord(%keymap, 1));
+            
+            if(%bindImgAsset $= "UI:Keyboard_Black_Blank_image")
+               %bindImgAsset = "";
+               
+            %container-->bindButton.setBitmap(%bindImgAsset);
+         }
+         else
+         {
+            %bindImgAsset = getButtonBitmap(%option.device, getField(%option.keymap, 1));
+            
+            if(%bindImgAsset $= "UI:Keyboard_Black_Blank_image")
+               %bindImgAsset = "";
+               
+            %container-->bindButton.setBitmap(%bindImgAsset);
+         }
       }
    }
 }
@@ -624,6 +645,8 @@ function OptionsMenu::populateKeybinds(%this, %device, %controlsList)
    if($activeRemapControlSet $= "")
       $activeRemapControlSet = getField(%actionMapList, 0);
       
+   echo("============================================");
+      
    for(%am = 0; %am < getFieldCount(%actionMapList); %am++)
    {
       %currentActionMap = getField(%actionMapList, %am);
@@ -649,6 +672,8 @@ function OptionsMenu::populateKeybinds(%this, %device, %controlsList)
          %keyMap = buildFullMapString( %i, $RemapActionMap[%i], %device );
 
          %description = $RemapDescription[%i];
+         
+         echo("Added ActionMap Entry: " @ %actionMapName @ " | " @ %device @ " | " @ %keymap @ " | " @ %description);
          
          %remapEntry = addActionMapEntry(%actionMapName, %device, %keyMap, %i, %description);
          %controlsList.add(%remapEntry);
@@ -1045,20 +1070,64 @@ function addActionMapEntry(%actionMap, %device, %keyMap, %index, %description)
          horizSizing = "left";
          vertSizing = "height";
          internalName = "valuesContainer";
-         
-         new GuiIconButtonCtrl() {
-            position = "300 -10";
-            extent = "98 45";
-            BitmapAsset = "";
-            profile = GuiRemapActionMapButtonProfile;
-            sizeIconToButton = true;
-            makeIconSquare = true;
-            iconLocation = "center";
-            internalName = "bindButton";
-            active = false;
-         };
       };
    }; 
+   
+   %buttonContainer = %entry.findObjectByInternalName("valuesContainer");
+   echo("Keymap: " @ %keymap @ " | Keymap word count: " @ getWordCount(getField(%keyMap, 1)));
+   if(getWordCount(getField(%keyMap, 1)) == 2)
+   {
+      %modifierBtn = new GuiIconButtonCtrl() {
+         position = 156 SPC -10;
+         extent = "98 45";
+         BitmapAsset = "";
+         profile = GuiRemapActionMapButtonProfile;
+         sizeIconToButton = true;
+         makeIconSquare = true;
+         iconLocation = "center";
+         internalName = "modifierButton";
+         active = false;
+      };
+      
+      %combinerText = new GuiTextCtrl(){
+         position = 264 SPC -5;
+         extent = "20 45";
+         profile = MenuSubHeaderText;
+         text = " + ";
+      };
+      
+      %bindButton = new GuiIconButtonCtrl() {
+         position = "300 -10";
+         extent = "98 45";
+         BitmapAsset = "";
+         profile = GuiRemapActionMapButtonProfile;
+         sizeIconToButton = true;
+         makeIconSquare = true;
+         iconLocation = "center";
+         internalName = "bindButton";
+         active = false;
+      };
+      
+      %buttonContainer.add(%modifierBtn);
+      %buttonContainer.add(%combinerText);
+      %buttonContainer.add(%bindButton);
+   }
+   else 
+   {
+      %bindButton = new GuiIconButtonCtrl() {
+         position = "300 -10";
+         extent = "98 45";
+         BitmapAsset = "";
+         profile = GuiRemapActionMapButtonProfile;
+         sizeIconToButton = true;
+         makeIconSquare = true;
+         iconLocation = "center";
+         internalName = "bindButton";
+         active = false;
+      };
+      
+      %buttonContainer.add(%bindButton);
+   }
    
    return %entry; 
 }

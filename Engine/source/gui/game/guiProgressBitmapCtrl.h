@@ -70,13 +70,13 @@ class GuiProgressBitmapCtrl : public GuiTextCtrl
       void setBitmap( const char* name );
       
       //console related methods
-      virtual const char *getScriptValue();
-      virtual void setScriptValue(const char *value);
+      const char *getScriptValue() override;
+      void setScriptValue(const char *value) override;
 
       // GuiTextCtrl.
-      virtual void onPreRender();
-      virtual void onRender( Point2I offset, const RectI &updateRect );
-      virtual bool onWake();
+      void onPreRender() override;
+      void onRender( Point2I offset, const RectI &updateRect ) override;
+      bool onWake() override;
 
       DECLARE_CONOBJECT( GuiProgressBitmapCtrl );
       DECLARE_CATEGORY( "Gui Values" );

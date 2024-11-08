@@ -70,9 +70,9 @@ struct WheeledVehicleTire: public SimDataBlock
    WheeledVehicleTire();
    DECLARE_CONOBJECT(WheeledVehicleTire);
    static void initPersistFields();
-   bool preload(bool, String &errorStr);
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   bool preload(bool, String &errorStr) override;
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 
    void onShapeChanged() {}
 };
@@ -93,8 +93,8 @@ struct WheeledVehicleSpring: public SimDataBlock
    WheeledVehicleSpring();
    DECLARE_CONOBJECT(WheeledVehicleSpring);
    static void initPersistFields();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 };
 
 
@@ -146,10 +146,10 @@ struct WheeledVehicleData: public VehicleData
    WheeledVehicleData();
    DECLARE_CONOBJECT(WheeledVehicleData);
    static void initPersistFields();
-   bool preload(bool, String &errorStr);
+   bool preload(bool, String &errorStr) override;
    bool mirrorWheel(Wheel* we);
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 };
 
 
@@ -207,12 +207,12 @@ class WheeledVehicle: public Vehicle
    TSThread* mSteeringThread;
 
    //
-   bool onNewDataBlock( GameBaseData *dptr, bool reload );
-   void processTick(const Move *move);
-   void updateMove(const Move *move);
-   void updateForces(F32 dt);
+   bool onNewDataBlock( GameBaseData *dptr, bool reload ) override;
+   void processTick(const Move *move) override;
+   void updateMove(const Move *move) override;
+   void updateForces(F32 dt) override;
    void extendWheels(bool clientHack = false);
-   void prepBatchRender( SceneRenderState *state, S32 mountedImageIndex );
+   void prepBatchRender( SceneRenderState *state, S32 mountedImageIndex ) override;
 
    // Client sounds & particles
    void updateWheelThreads();
@@ -221,7 +221,7 @@ class WheeledVehicle: public Vehicle
    void updateSquealSound(F32 level);
    void updateJetSound();
 
-   virtual U32 getCollisionMask();
+   U32 getCollisionMask() override;
 
 public:
    DECLARE_CONOBJECT(WheeledVehicle);
@@ -231,10 +231,10 @@ public:
    WheeledVehicle();
    ~WheeledVehicle();
 
-   bool onAdd();
-   void onRemove();
-   void advanceTime(F32 dt);
-   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere);
+   bool onAdd() override;
+   void onRemove() override;
+   void advanceTime(F32 dt) override;
+   bool buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F &box, const SphereF &sphere) override;
 
    S32 getWheelCount();
    Wheel *getWheel(U32 index) {return &mWheel[index];}
@@ -245,10 +245,10 @@ public:
 
    void getWheelInstAndTransform( U32 wheel, TSShapeInstance** inst, MatrixF* xfrm ) const;
 
-   void writePacketData(GameConnection * conn, BitStream *stream);
-   void readPacketData(GameConnection * conn, BitStream *stream);
-   U32  packUpdate(NetConnection * conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection * conn, BitStream *stream);
+   void writePacketData(GameConnection * conn, BitStream *stream) override;
+   void readPacketData(GameConnection * conn, BitStream *stream) override;
+   U32  packUpdate(NetConnection * conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection * conn, BitStream *stream) override;
 };
 
 

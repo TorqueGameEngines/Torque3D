@@ -26,10 +26,10 @@ struct PathShapeData: public StaticShapeData {
    static void consoleInit();
 
    DECLARE_CONOBJECT(PathShapeData);
-   bool preload(bool server, String &errorStr);
+   bool preload(bool server, String &errorStr) override;
    static void initPersistFields();
-   virtual void packData(BitStream* stream);
-   virtual void unpackData(BitStream* stream);
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
 };
 
 
@@ -88,16 +88,16 @@ public:
 
    static void initPersistFields();
    static void consoleInit();
-   bool onAdd();
-   void onRemove();
-   bool onNewDataBlock(GameBaseData* dptr, bool reload);
+   bool onAdd() override;
+   void onRemove() override;
+   bool onNewDataBlock(GameBaseData* dptr, bool reload) override;
    void onNode(S32 node);
 
-   void processTick(const Move*);
-   void interpolateTick(F32 dt);
+   void processTick(const Move*) override;
+   void interpolateTick(F32 dt) override;
 
-   U32  packUpdate(NetConnection *, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *, BitStream *stream);
+   U32  packUpdate(NetConnection *, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *, BitStream *stream) override;
 
    void reset(F32 speed = 1);
    void pushFront(CameraSpline::Knot *knot);

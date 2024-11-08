@@ -188,17 +188,17 @@ class SFXDescription : public SimDataBlock
       static void initPersistFields();
 
       // SimDataBlock.
-      virtual bool onAdd();
-      virtual void packData( BitStream* stream );
-      virtual void unpackData( BitStream* stream );
-      virtual void inspectPostApply();
+      bool onAdd() override;
+      void packData( BitStream* stream ) override;
+      void unpackData( BitStream* stream ) override;
+      void inspectPostApply() override;
 
       /// Validates the description fixing any
       /// parameters that are out of range.
       void validate();
    public:
       SFXDescription(const SFXDescription&, bool);
-      virtual bool allowSubstitutions() const { return true; }
+      bool allowSubstitutions() const override { return true; }
 };
 
 

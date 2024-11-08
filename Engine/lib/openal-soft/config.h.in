@@ -1,20 +1,11 @@
-/* Define if deprecated EAX extensions are enabled */
-#cmakedefine ALSOFT_EAX
+/* Define the alignment attribute for externally callable functions. */
+#define FORCE_ALIGN @ALSOFT_FORCE_ALIGN@
 
 /* Define if HRTF data is embedded in the library */
 #cmakedefine ALSOFT_EMBED_HRTF_DATA
 
-/* Define if we have the posix_memalign function */
-#cmakedefine HAVE_POSIX_MEMALIGN
-
-/* Define if we have the _aligned_malloc function */
-#cmakedefine HAVE__ALIGNED_MALLOC
-
 /* Define if we have the proc_pidpath function */
 #cmakedefine HAVE_PROC_PIDPATH
-
-/* Define if we have the getopt function */
-#cmakedefine HAVE_GETOPT
 
 /* Define if we have DBus/RTKit */
 #cmakedefine HAVE_RTKIT
@@ -82,9 +73,6 @@
 /* Define if we have pthread_np.h */
 #cmakedefine HAVE_PTHREAD_NP_H
 
-/* Define if we have malloc.h */
-#cmakedefine HAVE_MALLOC_H
-
 /* Define if we have cpuid.h */
 #cmakedefine HAVE_CPUID_H
 
@@ -93,9 +81,6 @@
 
 /* Define if we have guiddef.h */
 #cmakedefine HAVE_GUIDDEF_H
-
-/* Define if we have initguid.h */
-#cmakedefine HAVE_INITGUID_H
 
 /* Define if we have GCC's __get_cpuid() */
 #cmakedefine HAVE_GCC_GET_CPUID
@@ -114,3 +99,9 @@
 
 /* Define if we have pthread_set_name_np() */
 #cmakedefine HAVE_PTHREAD_SET_NAME_NP
+
+/* Define the installation data directory */
+#cmakedefine ALSOFT_INSTALL_DATADIR "@ALSOFT_INSTALL_DATADIR@"
+
+/* Define whether build alsoft for winuwp */
+#cmakedefine ALSOFT_UWP

@@ -68,24 +68,24 @@ public:
 
    // ConsoleObject
    static void initPersistFields();
-   virtual bool onAdd();
+   bool onAdd() override;
 
    // GuiControl   
-   virtual bool onWake();
-   virtual void parentResized(const RectI &oldParentRect, const RectI &newParentRect);
-   virtual bool resize( const Point2I &newPosition, const Point2I &newExtent );   
-   virtual void onRender(Point2I offset, const RectI &updateRect);
-   virtual void onMouseDown(const GuiEvent &event);
-   virtual void onMouseUp(const GuiEvent &event);
-   virtual void onMouseDragged(const GuiEvent &event); 
+   bool onWake() override;
+   void parentResized(const RectI &oldParentRect, const RectI &newParentRect) override;
+   bool resize( const Point2I &newPosition, const Point2I &newExtent ) override;   
+   void onRender(Point2I offset, const RectI &updateRect) override;
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override; 
 
-   virtual bool layoutControls( RectI &clientRect );
-   virtual void getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent);
+   bool layoutControls( RectI &clientRect ) override;
+   void getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent) override;
    virtual inline Point2I getSplitPoint() { return mSplitPoint; };
    /// The Splitters entire Client Rectangle, this takes into account padding of this control
    virtual inline RectI getSplitRect() { return mSplitRect; };
    virtual void solvePanelConstraints(Point2I newDragPos, GuiContainer * firstPanel, GuiContainer * secondPanel, const RectI& clientRect);
-   virtual Point2I getMinExtent() const;   
+   Point2I getMinExtent() const override;   
 
    //Set the positin of the split handler
    void setSplitPoint(Point2I splitPoint);

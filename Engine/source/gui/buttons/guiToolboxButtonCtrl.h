@@ -60,16 +60,16 @@ public:
    static void initPersistFields();
 
    //Parent methods
-   bool onWake();
-   void onSleep();
-   void inspectPostApply();
+   bool onWake() override;
+   void onSleep() override;
+   void inspectPostApply() override;
 
    void setNormalBitmap( StringTableEntry bitmapName );
    void setLoweredBitmap( StringTableEntry bitmapName );
    void setHoverBitmap( StringTableEntry bitmapName );
    
 
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 };
 
 

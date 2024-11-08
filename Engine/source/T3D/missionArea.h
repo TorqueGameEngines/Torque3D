@@ -54,10 +54,10 @@ class MissionArea : public NetObject
 
    /// @name SimObject Inheritance
    /// @{
-   bool onAdd();
-   void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
-   void inspectPostApply();
+   void inspectPostApply() override;
 
    static void initPersistFields();
    /// @}
@@ -68,8 +68,8 @@ class MissionArea : public NetObject
       UpdateMask     = BIT(0)
    };
 
-   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream);
-   void unpackUpdate(NetConnection *conn,           BitStream *stream);
+   U32  packUpdate  (NetConnection *conn, U32 mask, BitStream *stream) override;
+   void unpackUpdate(NetConnection *conn,           BitStream *stream) override;
    /// @}
 
    DECLARE_CONOBJECT(MissionArea);

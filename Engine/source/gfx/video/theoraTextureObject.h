@@ -82,8 +82,8 @@ public:
    // SimObject.
    DECLARE_CONOBJECT( TheoraTextureObject );
 
-   virtual bool onAdd();
-   virtual void onRemove();
+   bool onAdd() override;
+   void onRemove() override;
 
    static void initPersistFields();
 };

@@ -362,7 +362,6 @@ void Dictionary::remove(Dictionary::Entry *ent)
 
    *walk = (ent->nextEntry);
 
-   destructInPlace(ent);
    hashTable->mChunker.free(ent);
 
    hashTable->count--;
@@ -1174,7 +1173,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, SimObject *
 
    if ((mMinArgs && argc < mMinArgs) || (mMaxArgs && argc > mMaxArgs))
    {
-      Con::warnf(ConsoleLogEntry::Script, "%s::%s - wrong number of arguments.", mNamespace->mName, mFunctionName);
+      Con::warnf(ConsoleLogEntry::Script, "%s::%s - wrong number of arguments. got %d, expected %d to %d", mNamespace->mName, mFunctionName, argc, mMinArgs, mMaxArgs);
       Con::warnf(ConsoleLogEntry::Script, "usage: %s", mUsage);
       return std::move(ConsoleValue());
    }

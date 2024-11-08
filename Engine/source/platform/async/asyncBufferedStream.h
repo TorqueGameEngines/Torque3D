@@ -151,7 +151,7 @@ class AsyncBufferedInputStream : public IInputStreamFilter< T, Stream >,
       void stop() { mIsStopped = true; }
 
       // IInputStream.
-      virtual U32 read( ElementType* buffer, U32 num );
+      U32 read( ElementType* buffer, U32 num ) override;
 };
 
 //-----------------------------------------------------------------------------
@@ -299,7 +299,7 @@ class AsyncBufferedReadItem : public ThreadWorkItem
       T mElement;
 
       // WorkItem
-      virtual void execute()
+      void execute() override
       {
          if( Deref( mSourceStream ).read( &mElement, 1 ) )
          {                  
@@ -309,7 +309,7 @@ class AsyncBufferedReadItem : public ThreadWorkItem
             mAsyncStream->_onArrival( mElement );
          }
       }
-      virtual void onCancelled()
+      void onCancelled() override
       {
          Parent::onCancelled();
          destructSingle( mElement );
@@ -354,7 +354,7 @@ class AsyncSingleBufferedInputStream : public AsyncBufferedInputStream< T, Strea
    protected:
          
       // AsyncBufferedInputStream.
-      virtual void _requestNext();
+      void _requestNext() override;
 
       /// Create a new work item that reads the next element.
       virtual void _newReadItem( ThreadSafeRef< ThreadWorkItem >& outRef )

@@ -38,7 +38,7 @@ public:
    ReflectionMatInstance( Material *mat );
    virtual ~ReflectionMatInstance() {}
 
-   virtual bool setupPass( SceneRenderState *state, const SceneData &sgData );
+   bool setupPass( SceneRenderState *state, const SceneData &sgData ) override;
 };
 
 class ReflectionMaterialHook : public MatInstanceHook
@@ -49,7 +49,7 @@ public:
 
    // MatInstanceHook
    virtual ~ReflectionMaterialHook();
-   virtual const MatInstanceHookType& getType() const { return Type; }
+   const MatInstanceHookType& getType() const override { return Type; }
 
    /// The material hook type.
    static const MatInstanceHookType Type;

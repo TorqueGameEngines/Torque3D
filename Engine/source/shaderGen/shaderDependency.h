@@ -59,8 +59,8 @@ public:
 
    ShaderIncludeDependency( const Torque::Path &pathToInclude );
 
-   virtual bool operator==( const ShaderDependency &cmpTo ) const;
-   virtual void print( Stream &s ) const;
+   bool operator==( const ShaderDependency &cmpTo ) const override;
+   void print( Stream &s ) const override;
 };
 
 #endif // _SHADER_DEPENDENCY_H_

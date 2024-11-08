@@ -266,7 +266,7 @@ public:
    GuiGameListMenuCtrl();
    ~GuiGameListMenuCtrl();
 
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
 
    void onRenderListOption(Row* row, Point2I currentOffset);
    void onRenderSliderOption(Row* row, Point2I currentOffset);
@@ -276,67 +276,67 @@ public:
    /// Callback when the object is registered with the sim.
    ///
    /// \return True if the profile was successfully added, false otherwise.
-   bool onAdd();
+   bool onAdd() override;
 
    /// Callback when the control wakes up.
-   bool onWake();
+   bool onWake() override;
 
    /// Callback when a key is pressed.
    ///
    /// \param event The event that triggered this callback.
-   bool onKeyDown(const GuiEvent &event);
+   bool onKeyDown(const GuiEvent &event) override;
 
    /// Callback when a key is repeating.
    ///
    /// \param event The event that triggered this callback.
-   bool onKeyRepeat(const GuiEvent &event){ return onKeyDown(event); }
+   bool onKeyRepeat(const GuiEvent &event) override{ return onKeyDown(event); }
 
    /// Callback when the mouse button is clicked on the control.
    ///
    /// \param event A reference to the event that triggered the callback.
-   void onMouseDown(const GuiEvent &event);
+   void onMouseDown(const GuiEvent &event) override;
 
    /// Callback when the mouse is dragged on the control.
    ///
    /// \param event A reference to the event that triggered the callback.
-   void onMouseDragged(const GuiEvent &event){ onMouseDown(event); }
+   void onMouseDragged(const GuiEvent &event) override{ onMouseDown(event); }
 
    /// Callback when the mouse leaves the control.
    ///
    /// \param event A reference to the event that triggered the callback.
-   void onMouseLeave(const GuiEvent &event);
+   void onMouseLeave(const GuiEvent &event) override;
 
    /// Callback when the mouse is moving over this control
    ///
    /// \param event A reference to the event that triggered the callback.
-   void onMouseMove(const GuiEvent &event);
+   void onMouseMove(const GuiEvent &event) override;
 
    /// Callback when the mouse button is released.
    ///
    /// \param event A reference to the event that triggered the callback.
-   void onMouseUp(const GuiEvent &event);
+   void onMouseUp(const GuiEvent &event) override;
 
-   virtual bool onInputEvent(const InputEventInfo& event);
-
-   /// Callback when the gamepad axis is activated.
-   ///
-   /// \param event A reference to the event that triggered the callback.
-   virtual bool onGamepadAxisUp(const GuiEvent & event);
+   bool onInputEvent(const InputEventInfo& event) override;
 
    /// Callback when the gamepad axis is activated.
    ///
    /// \param event A reference to the event that triggered the callback.
-   virtual bool onGamepadAxisDown(const GuiEvent & event);
+   bool onGamepadAxisUp(const GuiEvent & event) override;
 
    /// Callback when the gamepad axis is activated.
    ///
    /// \param event A reference to the event that triggered the callback.
-   virtual bool onGamepadAxisLeft(const GuiEvent& event);
+   bool onGamepadAxisDown(const GuiEvent & event) override;
 
    /// Callback when the gamepad axis is activated.
    ///
    /// \param event A reference to the event that triggered the callback.
-   virtual bool onGamepadAxisRight(const GuiEvent& event);
+   bool onGamepadAxisLeft(const GuiEvent& event) override;
+
+   /// Callback when the gamepad axis is activated.
+   ///
+   /// \param event A reference to the event that triggered the callback.
+   bool onGamepadAxisRight(const GuiEvent& event) override;
 
    void clearRows();
 
@@ -458,7 +458,7 @@ private:
 private:
    /// Recalculates the height of this control based on the stored row height and
    /// and padding on the rows.
-   virtual Point2I getMinExtent() const;
+   Point2I getMinExtent() const override;
 
    /// Makes sure the height will allow all rows to be displayed without being
    /// truncated.
@@ -537,7 +537,7 @@ public:
    /// Callback when the object is registered with the sim.
    ///
    /// \return True if the profile was successfully added, false otherwise.
-   bool onAdd();
+   bool onAdd() override;
 
    Point2I  mHitAreaUpperLeft;   ///< Offset for the upper left corner of the hit area
    Point2I  mHitAreaLowerRight;  ///< Offset for the lower right corner of the hit area

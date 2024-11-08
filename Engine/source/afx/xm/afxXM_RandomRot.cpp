@@ -49,15 +49,15 @@ public:
   /*C*/         afxXM_RandomRotData(); 
   /*C*/         afxXM_RandomRotData(const afxXM_RandomRotData&, bool = false);
 
-  void          packData(BitStream* stream);
-  void          unpackData(BitStream* stream);
-  bool          onAdd();
+  void          packData(BitStream* stream) override;
+  void          unpackData(BitStream* stream) override;
+  bool          onAdd() override;
 
-  virtual bool  allowSubstitutions() const { return true; }
+  bool  allowSubstitutions() const override { return true; }
 
   static void   initPersistFields();
 
-  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server);
+  afxXM_Base*   create(afxEffectWrapper* fx, bool on_server) override;
 
   DECLARE_CONOBJECT(afxXM_RandomRotData);
 };
@@ -71,7 +71,7 @@ class afxXM_RandomRot : public afxXM_Base
 public:
   /*C*/         afxXM_RandomRot(afxXM_RandomRotData*, afxEffectWrapper*);
 
-  virtual void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params);
+  void  updateParams(F32 dt, F32 elapsed, afxXM_Params& params) override;
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

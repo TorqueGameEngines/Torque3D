@@ -616,15 +616,15 @@ public:
    static void setLastError(const char *fmt,...);
 
    void checkMaxRate();
-   void handlePacket(BitStream *stream);
-   void processRawPacket(BitStream *stream);
-   void handleNotify(bool recvd);
-   void handleConnectionEstablished();
-   void keepAlive();
+   void handlePacket(BitStream *stream) override;
+   void processRawPacket(BitStream *stream) override;
+   void handleNotify(bool recvd) override;
+   void handleConnectionEstablished() override;
+   void keepAlive() override;
 
    const NetAddress *getNetAddress();
    void setNetAddress(const NetAddress *address);
-   Net::Error sendPacket(BitStream *stream);
+   Net::Error sendPacket(BitStream *stream) override;
 
 private:
    void netAddressTableInsert();
@@ -643,7 +643,7 @@ public:
 
    static void consoleInit();
 
-   void onRemove();
+   void onRemove() override;
 
    NetConnection();
    ~NetConnection();
@@ -1052,8 +1052,8 @@ public:
    void stopRecording();
    void stopDemoPlayback();
 
-   virtual void writeDemoStartBlock(ResizeBitStream *stream);
-   virtual bool readDemoStartBlock(BitStream *stream);
+   void writeDemoStartBlock(ResizeBitStream *stream) override;
+   bool readDemoStartBlock(BitStream *stream) override;
    virtual void demoPlaybackComplete();
 /// @}
 public:

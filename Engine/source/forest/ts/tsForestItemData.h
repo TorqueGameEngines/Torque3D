@@ -63,7 +63,7 @@ protected:
    void _updateCollisionDetails();
 
    // ForestItemData
-   void _preload() { _loadShape(); }
+   void _preload() override { _loadShape(); }
 
 public:
   
@@ -71,11 +71,11 @@ public:
    TSForestItemData();
    virtual ~TSForestItemData();
    
-   bool preload( bool server, String &errorBuffer );   
-   void onRemove();
-   bool onAdd();
+   bool preload( bool server, String &errorBuffer ) override;   
+   void onRemove() override;
+   bool onAdd() override;
 
-   virtual void inspectPostApply();
+   void inspectPostApply() override;
 
    TSLastDetail* getLastDetail() const;
 
@@ -86,10 +86,10 @@ public:
    const Vector<S32>& getLOSDetails() const { return mLOSDetails; }
 
    // ForestItemData
-   const Box3F& getObjBox() const { return mShape ? mShape->mBounds : Box3F::Zero; }
-   bool render( TSRenderState *rdata, const ForestItem& item ) const;
-   ForestCellBatch* allocateBatch() const;
-   bool canBillboard( const SceneRenderState *state, const ForestItem &item, F32 distToCamera ) const;
+   const Box3F& getObjBox() const override { return mShape ? mShape->mBounds : Box3F::Zero; }
+   bool render( TSRenderState *rdata, const ForestItem& item ) const override;
+   ForestCellBatch* allocateBatch() const override;
+   bool canBillboard( const SceneRenderState *state, const ForestItem &item, F32 distToCamera ) const override;
    bool buildPolyList( const ForestItem& item, AbstractPolyList *polyList, const Box3F *box ) const { return false; }
 };
 

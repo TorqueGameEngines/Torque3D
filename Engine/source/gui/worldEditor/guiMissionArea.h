@@ -119,20 +119,20 @@ public:
    DECLARE_CONOBJECT(GuiMissionAreaCtrl);
 
    // SimObject
-   bool onAdd();
+   bool onAdd() override;
    static void initPersistFields();
 
    // GuiControl
-   void onRender(Point2I offset, const RectI &updateRect);
-   bool onWake();
-   void onSleep();
+   void onRender(Point2I offset, const RectI &updateRect) override;
+   bool onWake() override;
+   void onSleep() override;
 
-   virtual void onMouseUp(const GuiEvent & event);
-   virtual void onMouseDown(const GuiEvent & event);
-   virtual void onMouseMove(const GuiEvent & event);
-   virtual void onMouseDragged(const GuiEvent & event);
-   virtual void onMouseEnter(const GuiEvent & event);
-   virtual void onMouseLeave(const GuiEvent & event);
+   void onMouseUp(const GuiEvent & event) override;
+   void onMouseDown(const GuiEvent & event) override;
+   void onMouseMove(const GuiEvent & event) override;
+   void onMouseDragged(const GuiEvent & event) override;
+   void onMouseEnter(const GuiEvent & event) override;
+   void onMouseLeave(const GuiEvent & event) override;
 
    void setMissionArea( MissionArea* area );
    void updateTerrain();
@@ -154,8 +154,8 @@ class GuiMissionAreaUndoAction : public UndoAction
       SimObjectId mObjId;
       RectI mArea;
 
-      virtual void undo();
-      virtual void redo() { undo(); }
+      void undo() override;
+      void redo() override { undo(); }
 };
 
 #endif // _GUIMISSIONAREA_H_

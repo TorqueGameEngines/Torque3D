@@ -87,26 +87,26 @@ class GuiSliderCtrl : public GuiControl
       const Point2F& getRange() const { return mRange; }
 
       // GuiControl.
-      bool onWake();
+      bool onWake() override;
 
-      void onMouseDown(const GuiEvent &event);
-      void onMouseDragged(const GuiEvent &event);
-      void onMouseUp(const GuiEvent &);
-      void onMouseLeave(const GuiEvent &);
-      void onMouseEnter(const GuiEvent &);
-      bool onMouseWheelUp(const GuiEvent &event);
-      bool onMouseWheelDown(const GuiEvent &event);
+      void onMouseDown(const GuiEvent &event) override;
+      void onMouseDragged(const GuiEvent &event) override;
+      void onMouseUp(const GuiEvent &) override;
+      void onMouseLeave(const GuiEvent &) override;
+      void onMouseEnter(const GuiEvent &) override;
+      bool onMouseWheelUp(const GuiEvent &event) override;
+      bool onMouseWheelDown(const GuiEvent &event) override;
       
-      void setActive( bool value );
+      void setActive( bool value ) override;
 
       F32 getValue() const { return mValue; }
-      void setScriptValue(const char *val) { setValue(dAtof(val)); }
+      void setScriptValue(const char *val) override { setValue(dAtof(val)); }
       void setValue(F32 val, bool doCallback=false);
 
-      void onRender(Point2I offset, const RectI &updateRect);
+      void onRender(Point2I offset, const RectI &updateRect) override;
       
-      virtual bool resize( const Point2I& newSize, const Point2I& newExtent );
-      virtual void parentResized( const RectI& oldParentRect, const RectI& newParentRect );
+      bool resize( const Point2I& newSize, const Point2I& newExtent ) override;
+      void parentResized( const RectI& oldParentRect, const RectI& newParentRect ) override;
 
       static void initPersistFields();
 

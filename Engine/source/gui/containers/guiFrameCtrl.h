@@ -99,17 +99,17 @@ public:
    GuiFrameSetCtrl(U32 columns, U32 rows, const U32 columnOffsets[] = NULL, const U32 rowOffsets[] = NULL);
    virtual ~GuiFrameSetCtrl();
 
-   void addObject(SimObject *obj);
-   void removeObject(SimObject *obj);
+   void addObject(SimObject *obj) override;
+   void removeObject(SimObject *obj) override;
 
-   virtual bool resize(const Point2I &newPosition, const Point2I &newExtent);
+   bool resize(const Point2I &newPosition, const Point2I &newExtent) override;
 
-   virtual void onMouseDown(const GuiEvent &event);
-   virtual void onMouseUp(const GuiEvent &event);
-   virtual void onMouseDragged(const GuiEvent &event);
+   void onMouseDown(const GuiEvent &event) override;
+   void onMouseUp(const GuiEvent &event) override;
+   void onMouseDragged(const GuiEvent &event) override;
 
-   bool onAdd();
-   void onRender(Point2I offset, const RectI &updateRect );
+   bool onAdd() override;
+   void onRender(Point2I offset, const RectI &updateRect ) override;
 protected:
    /* member variables */
    Vector<S32> mColumnOffsets;
@@ -133,7 +133,7 @@ protected:
    bool hitVerticalDivider(S32 x, const Point2I &point);
    bool hitHorizontalDivider(S32 y, const Point2I &point);
 
-   virtual void getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent);
+   void getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent &lastGuiEvent) override;
    void rebalance(const Point2I &newExtent);
 
    void computeSizes(bool balanceFrames = false);
@@ -159,7 +159,7 @@ public:
    void balanceFrames()    { computeSizes(true); }
    void updateSizes()      { computeSizes();     }
 
-   bool onWake();
+   bool onWake() override;
 
 private:
    GuiFrameSetCtrl(const GuiFrameSetCtrl &);

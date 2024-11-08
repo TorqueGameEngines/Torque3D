@@ -140,19 +140,6 @@ static void create_uuid_state(uuid_state *st)
     get_pseudo_node_identifier(&st->node);
 }
 
-/*
- * dav_format_opaquelocktoken - generates a text representation
- *    of an opaquelocktoken
- */
-static void format_token(char *target, const xuuid_t *u)
-{
-  sprintf(target, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-	  u->time_low, u->time_mid, u->time_hi_and_version,
-	  u->clock_seq_hi_and_reserved, u->clock_seq_low,
-	  u->node[0], u->node[1], u->node[2],
-	  u->node[3], u->node[4], u->node[5]);
-}
-
 /* convert a pair of hex digits to an integer value [0,255] */
 static int dav_parse_hexpair(const char *s)
 {
@@ -414,9 +401,16 @@ namespace Torque
    
    String UUID::toString() const
    {
-      char buffer[ 1024 ];
-      format_token( buffer, ( xuuid_t* ) this );
-      return buffer;
+      const xuuid_t* u = (xuuid_t*)this;
+      StringBuilder str;
+
+      str.format("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+         u->time_low, u->time_mid, u->time_hi_and_version,
+         u->clock_seq_hi_and_reserved, u->clock_seq_low,
+         u->node[0], u->node[1], u->node[2],
+         u->node[3], u->node[4], u->node[5]);
+
+      return str.end();
    }
    
    bool UUID::fromString( const char* str )

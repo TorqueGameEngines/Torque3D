@@ -42,7 +42,7 @@ class afxPhraseEffectData : public GameBaseData, public afxEffectDefs, public af
     U32 id;
   public:
     ewValidator(U32 id) { this->id = id; }
-    void validateType(SimObject *object, void *typePtr);
+    void validateType(SimObject *object, void *typePtr) override;
   };
 
   bool            do_id_convert;
@@ -88,17 +88,17 @@ public:
   /*C*/           afxPhraseEffectData();
   /*C*/           afxPhraseEffectData(const afxPhraseEffectData&, bool = false);
 
-  virtual void    reloadReset();
+  void    reloadReset() override;
 
-  virtual bool    onAdd();
-  virtual void    packData(BitStream*);
-  virtual void    unpackData(BitStream*);
+  bool    onAdd() override;
+  void    packData(BitStream*) override;
+  void    unpackData(BitStream*) override;
 
-  bool            preload(bool server, String &errorStr);
+  bool            preload(bool server, String &errorStr) override;
 
-  virtual void    gather_cons_defs(Vector<afxConstraintDef>& defs);
+  void    gather_cons_defs(Vector<afxConstraintDef>& defs) override;
 
-  virtual bool    allowSubstitutions() const { return true; }
+  bool    allowSubstitutions() const override { return true; }
 
   static void     initPersistFields();
 

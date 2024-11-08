@@ -12,6 +12,10 @@ env:
 concurrency:
     group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-linux
     cancel-in-progress: true
+
+permissions:
+  checks: write
+
 jobs:
     build-linux:
         if: github.repository == 'TorqueGameEngines/Torque3D'
@@ -30,11 +34,14 @@ jobs:
                 }
 
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - name: Print env
               run: |
                 echo github.event.action: ${{ github.event.action }}
                 echo github.event_name: ${{ github.event_name }}
+
+            - name: Run GIT Init
+              run: git init
 
             - name: Setup GCC problem matcher
               uses: ammaraskar/gcc-problem-matcher@master
@@ -65,7 +72,7 @@ jobs:
                 
 
             - name: Configure, Build & Install
-              uses: threeal/cmake-action@v1.2.0
+              uses: threeal/cmake-action@v1.3.0
               with:
                 source-dir: ${{github.workspace}}
                 build-dir: ${{github.workspace}}/build
@@ -81,7 +88,11 @@ jobs:
                 cd "${{github.workspace}}/My Projects/Torque3D/game"
                 ./Torque3D runTests.tscript
 
-            - name: Upload Artifact
-              uses: ./.github/actions/upload-artifact
+            - name: Test Reporter
+              uses: phoenix-actions/test-reporting@v14
               with:
-                name: torque3dLinuxGCCUnitTest
+                name: Linux test results
+                path: "**/My Projects/Torque3D/game/test_detail.xml"
+                reporter: java-junit
+                fail-on-error: false
+              if: github.event_name != 'pull_request'

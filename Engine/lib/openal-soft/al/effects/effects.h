@@ -1,51 +1,47 @@
 #ifndef AL_EFFECTS_EFFECTS_H
 #define AL_EFFECTS_EFFECTS_H
 
+#include <variant>
+
 #include "AL/al.h"
 
-#include "core/except.h"
+#include "al/error.h"
+#include "core/effects/base.h"
 
-#ifdef ALSOFT_EAX
-#include "al/eax_effect.h"
-#endif // ALSOFT_EAX
-
-union EffectProps;
-
-
-class effect_exception final : public al::base_exception {
-    ALenum mErrorCode;
-
-public:
-#ifdef __USE_MINGW_ANSI_STDIO
-    [[gnu::format(gnu_printf, 3, 4)]]
-#else
-    [[gnu::format(printf, 3, 4)]]
-#endif
-    effect_exception(ALenum code, const char *msg, ...);
-
-    ALenum errorCode() const noexcept { return mErrorCode; }
+#define DECL_HANDLER(N, T)                                                    \
+struct N {                                                                    \
+    using prop_type = T;                                                      \
+                                                                              \
+    static void SetParami(prop_type &props, ALenum param, int val);           \
+    static void SetParamiv(prop_type &props, ALenum param, const int *vals);  \
+    static void SetParamf(prop_type &props, ALenum param, float val);         \
+    static void SetParamfv(prop_type &props, ALenum param, const float *vals);\
+    static void GetParami(const prop_type &props, ALenum param, int *val);    \
+    static void GetParamiv(const prop_type &props, ALenum param, int *vals);  \
+    static void GetParamf(const prop_type &props, ALenum param, float *val);  \
+    static void GetParamfv(const prop_type &props, ALenum param, float *vals);\
 };
+DECL_HANDLER(NullEffectHandler, std::monostate)
+DECL_HANDLER(ReverbEffectHandler, ReverbProps)
+DECL_HANDLER(StdReverbEffectHandler, ReverbProps)
+DECL_HANDLER(AutowahEffectHandler, AutowahProps)
+DECL_HANDLER(ChorusEffectHandler, ChorusProps)
+DECL_HANDLER(CompressorEffectHandler, CompressorProps)
+DECL_HANDLER(DistortionEffectHandler, DistortionProps)
+DECL_HANDLER(EchoEffectHandler, EchoProps)
+DECL_HANDLER(EqualizerEffectHandler, EqualizerProps)
+DECL_HANDLER(FlangerEffectHandler, ChorusProps)
+DECL_HANDLER(FshifterEffectHandler, FshifterProps)
+DECL_HANDLER(ModulatorEffectHandler, ModulatorProps)
+DECL_HANDLER(PshifterEffectHandler, PshifterProps)
+DECL_HANDLER(VmorpherEffectHandler, VmorpherProps)
+DECL_HANDLER(DedicatedDialogEffectHandler, DedicatedProps)
+DECL_HANDLER(DedicatedLfeEffectHandler, DedicatedProps)
+DECL_HANDLER(ConvolutionEffectHandler, ConvolutionProps)
+#undef DECL_HANDLER
 
 
-struct EffectVtable {
-    void (*const setParami)(EffectProps *props, ALenum param, int val);
-    void (*const setParamiv)(EffectProps *props, ALenum param, const int *vals);
-    void (*const setParamf)(EffectProps *props, ALenum param, float val);
-    void (*const setParamfv)(EffectProps *props, ALenum param, const float *vals);
-
-    void (*const getParami)(const EffectProps *props, ALenum param, int *val);
-    void (*const getParamiv)(const EffectProps *props, ALenum param, int *vals);
-    void (*const getParamf)(const EffectProps *props, ALenum param, float *val);
-    void (*const getParamfv)(const EffectProps *props, ALenum param, float *vals);
-};
-
-#define DEFINE_ALEFFECT_VTABLE(T)           \
-const EffectVtable T##EffectVtable = {      \
-    T##_setParami, T##_setParamiv,          \
-    T##_setParamf, T##_setParamfv,          \
-    T##_getParami, T##_getParamiv,          \
-    T##_getParamf, T##_getParamfv,          \
-}
+using effect_exception = al::context_error;
 
 
 /* Default properties for the given effect types. */
@@ -63,30 +59,8 @@ extern const EffectProps FshifterEffectProps;
 extern const EffectProps ModulatorEffectProps;
 extern const EffectProps PshifterEffectProps;
 extern const EffectProps VmorpherEffectProps;
-extern const EffectProps DedicatedEffectProps;
+extern const EffectProps DedicatedDialogEffectProps;
+extern const EffectProps DedicatedLfeEffectProps;
 extern const EffectProps ConvolutionEffectProps;
-
-/* Vtables to get/set properties for the given effect types. */
-extern const EffectVtable NullEffectVtable;
-extern const EffectVtable ReverbEffectVtable;
-extern const EffectVtable StdReverbEffectVtable;
-extern const EffectVtable AutowahEffectVtable;
-extern const EffectVtable ChorusEffectVtable;
-extern const EffectVtable CompressorEffectVtable;
-extern const EffectVtable DistortionEffectVtable;
-extern const EffectVtable EchoEffectVtable;
-extern const EffectVtable EqualizerEffectVtable;
-extern const EffectVtable FlangerEffectVtable;
-extern const EffectVtable FshifterEffectVtable;
-extern const EffectVtable ModulatorEffectVtable;
-extern const EffectVtable PshifterEffectVtable;
-extern const EffectVtable VmorpherEffectVtable;
-extern const EffectVtable DedicatedEffectVtable;
-extern const EffectVtable ConvolutionEffectVtable;
-
-
-#ifdef ALSOFT_EAX
-EaxEffectUPtr eax_create_eax_effect(ALenum al_effect_type);
-#endif // ALSOFT_EAX
 
 #endif /* AL_EFFECTS_EFFECTS_H */

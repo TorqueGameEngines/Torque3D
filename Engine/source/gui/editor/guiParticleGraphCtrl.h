@@ -99,18 +99,18 @@ public:
    GuiParticleGraphCtrl();
    virtual ~GuiParticleGraphCtrl() { };
 
-   void onMouseMove(const GuiEvent &event);
-   void onMouseDown( const GuiEvent &event );
-   void onMouseUp( const GuiEvent &event );
-   void onMouseDragged( const GuiEvent &event );
-   void onRightMouseDown( const GuiEvent &event );
-   void onRightMouseUp( const GuiEvent &event );
-   void onRightMouseDragged( const GuiEvent &event );
+   void onMouseMove(const GuiEvent &event) override;
+   void onMouseDown( const GuiEvent &event ) override;
+   void onMouseUp( const GuiEvent &event ) override;
+   void onMouseDragged( const GuiEvent &event ) override;
+   void onRightMouseDown( const GuiEvent &event ) override;
+   void onRightMouseUp( const GuiEvent &event ) override;
+   void onRightMouseDragged( const GuiEvent &event ) override;
 
    //Parental methods
-   bool onWake();
+   bool onWake() override;
 
-   void onRender(Point2I offset, const RectI &updateRect);
+   void onRender(Point2I offset, const RectI &updateRect) override;
    bool renderGraphTooltip(Point2I cursorPos, StringTableEntry tooltip);
 
    // Graph interface

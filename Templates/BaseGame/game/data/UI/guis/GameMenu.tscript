@@ -64,6 +64,15 @@ function GameMenu::onSleep(%this)
    }
 }
 
+//This is just for general usage/fallback for ensuring we can get to the game menu
+if(!isObject( GameMenuToggleActionMap ) )
+{
+   new ActionMap(GameMenuToggleActionMap){};
+   
+   GameMenuToggleActionMap.bindCmd( keyboard, Escape, "toggleGameMenu();", "" );
+   GameMenuToggleActionMap.bindCmd( gamepad, btn_start, "toggleGameMenu();", "" );
+}
+
 if(!isObject( GameMenuActionMap ) )
 {
    new ActionMap(GameMenuActionMap){};
@@ -78,15 +87,27 @@ if(!isObject( GameMenuActionMap ) )
    GameMenuActionMap.bind( keyboard, Space, BaseUIActivateSelected );
    GameMenuActionMap.bind( gamepad, btn_a, BaseUIActivateSelected );
    
-   GameMenuActionMap.bindCmd( keyboard, Escape, "Canvas.popDialog(GameMenu);", "" );
+   GameMenuActionMap.bindCmd( keyboard, Escape, "toggleGameMenu();", "" );
    GameMenuActionMap.bindCmd( gamepad, btn_b, "Canvas.popDialog(GameMenu);", "" );
-   GameMenuActionMap.bindCmd( gamepad, btn_start, "Canvas.popDialog(GameMenu);", "" );
+   GameMenuActionMap.bindCmd( gamepad, btn_start, "toggleGameMenu();", "" );
    
    GameMenuActionMap.bind( keyboard, q, GameMenuPrevMenu );
    GameMenuActionMap.bind( gamepad, btn_l, GameMenuPrevMenu );
    
    GameMenuActionMap.bind( keyboard, e, GameMenuNextMenu );
    GameMenuActionMap.bind( gamepad, btn_r, GameMenuNextMenu );
+}
+
+function toggleGameMenu()
+{
+   if(GameMenu.isAwake() && GameMenu.isVisible())
+   {
+      Canvas.popDialog(GameMenu);
+   }
+   else
+   {
+      Canvas.pushDialog(GameMenu);  
+   }
 }
 
 function GameMenu::openGameMenu(%this, %menuName)
@@ -105,21 +126,6 @@ function GameMenu::openGameMenu(%this, %menuName)
    }
    
    %this.syncGui();
-}
-
-function openPauseMenuOptions()
-{
-   GameMenu.pushPage(OptionsMenu);
-}
-
-function pauseMenuExitToMenu()
-{
-   MessageBoxOKCancel("Exit?", "Do you wish to exit to the Main Menu?", "escapeFromGame();", "");
-}
-
-function pauseMenuExitToDesktop()
-{
-   MessageBoxOKCancel("Exit?", "Do you wish to exit to the desktop?", "quit();", "");
 }
 
 function GameMenuPrevMenu(%val)

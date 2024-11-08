@@ -42,9 +42,9 @@ public:
 
 	~GFXGLVertexBuffer();
 
-	virtual void lock(U32 vertexStart, U32 vertexEnd, void **vertexPtr); ///< Only write lock are supported. 
-	virtual void unlock(); ///<
-	virtual void prepare(); ///< Do nothing. Use void prepare(U32 stream, U32 divisor).
+	void lock(U32 vertexStart, U32 vertexEnd, void **vertexPtr) override; ///< Only write lock are supported. 
+	void unlock() override; ///<
+	void prepare() override; ///< Do nothing. Use void prepare(U32 stream, U32 divisor).
    virtual void finish(); ///< Do nothing.
 
    void prepare(U32 stream, U32 divisor);
@@ -52,8 +52,8 @@ public:
 	GLvoid* getBuffer(); ///< returns NULL
 
    // GFXResource interface
-   virtual void zombify();
-   virtual void resurrect();
+   void zombify() override;
+   void resurrect() override;
 
 private:
    friend class GFXGLDevice;

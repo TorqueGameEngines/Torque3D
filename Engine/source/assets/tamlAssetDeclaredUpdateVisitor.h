@@ -101,10 +101,10 @@ public:
     }
     const char* getAssetIdTo( void ) const { return mAssetIdTo; }
 
-    virtual bool wantsPropertyChanges( void ) { return true; }
-    virtual bool wantsRootOnly( void ) { return true; }
+    bool wantsPropertyChanges( void ) override { return true; }
+    bool wantsRootOnly( void ) override { return true; }
 
-    virtual bool visit( const TamlParser& parser, TamlVisitor::PropertyState& propertyState )
+    bool visit( const TamlParser& parser, TamlVisitor::PropertyState& propertyState ) override
     {
         // Debug Profiling.
         PROFILE_SCOPE(TamlAssetDeclaredUpdateVisitor_Visit);

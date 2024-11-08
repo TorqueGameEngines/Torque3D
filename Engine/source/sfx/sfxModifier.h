@@ -73,7 +73,7 @@ class SFXOneShotModifier : public SFXModifier
       SFXOneShotModifier( SFXSource* source, F32 triggerPos, bool removeWhenDone = false );
    
       // IPolled.
-      virtual bool update();
+      bool update() override;
 };
 
 /// An SFXModifier that is spans a certain range of playback time.
@@ -117,7 +117,7 @@ class SFXRangeModifier : public SFXModifier
       bool isActive() const { return mIsActive; }
       
       // IPolled.
-      virtual bool update();
+      bool update() override;
 };
 
 /// A volume fade effect (fade-in or fade-out).
@@ -149,9 +149,9 @@ class SFXFadeModifier : public SFXRangeModifier
       EOnEnd mOnEnd;
       
       // SFXModifier.
-      virtual void _onStart();
-      virtual void _onUpdate();
-      virtual void _onEnd();
+      void _onStart() override;
+      void _onUpdate() override;
+      void _onEnd() override;
       
    public:
    
@@ -181,7 +181,7 @@ class SFXMarkerModifier : public SFXOneShotModifier
       String mMarkerName;
       
       // SFXOneShotModifier
-      virtual void _onTrigger();
+      void _onTrigger() override;
    
    public:
    

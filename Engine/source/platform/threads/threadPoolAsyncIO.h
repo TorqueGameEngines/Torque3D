@@ -223,7 +223,7 @@ class AsyncReadItem : public AsyncIOItem< T, Stream >
       /// elements actually read from the stream.
       U32 mNumElementsRead;
 
-      virtual void execute();
+      void execute() override;
       
       void _allocBuffer()
       {

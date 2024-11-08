@@ -129,7 +129,7 @@ class AsyncPacketBufferedInputStream : public AsyncBufferedInputStream< Packet*,
             PacketType* mPacket;
 
             // WorkItem
-            virtual void execute()
+            void execute() override
             {
                Parent::execute();
                mPacket->mSizeActual += this->mNumElementsRead;
@@ -174,7 +174,7 @@ class AsyncPacketBufferedInputStream : public AsyncBufferedInputStream< Packet*,
                if( this->cancellationPoint() ) return;
                mAsyncStream->_onArrival( mPacket );
             }
-            virtual void onCancelled()
+            void onCancelled() override
             {
                Parent::onCancelled();
                destructSingle< PacketType* >( mPacket );
@@ -197,7 +197,7 @@ class AsyncPacketBufferedInputStream : public AsyncBufferedInputStream< Packet*,
       virtual PacketType* _newPacket( U32 packetSize ) { return constructSingle< PacketType* >( packetSize ); }
 
       /// Request the next packet from the underlying stream.
-      virtual void _requestNext();
+      void _requestNext() override;
 
       /// Create a new work item that reads "numElements" into "packet".
       virtual void _newReadItem( PacketReadItemRef& outRef,

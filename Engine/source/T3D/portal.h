@@ -132,9 +132,9 @@ class Portal : public Zone
       bool _generateCullingVolume( SceneTraversalState* state, SceneCullingVolume& outVolume ) const;
 
       // SceneSpace.
-      virtual void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat );
-      virtual ColorI _getDefaultEditorSolidColor() const { return ColorI( 0, 255, 0, 45 ); }
-      virtual ColorI _getDefaultEditorWireframeColor() const
+      void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat ) override;
+      ColorI _getDefaultEditorSolidColor() const override { return ColorI( 0, 255, 0, 45 ); }
+      ColorI _getDefaultEditorWireframeColor() const override
       {
          switch( mClassification )
          {
@@ -145,11 +145,11 @@ class Portal : public Zone
       }
 
       // SceneObject.
-      virtual void onSceneRemove();
+      void onSceneRemove() override;
 
       // SceneZoneSpace.
-      virtual void _traverseConnectedZoneSpaces( SceneTraversalState* state );
-      virtual void _disconnectAllZoneSpaces();
+      void _traverseConnectedZoneSpaces( SceneTraversalState* state ) override;
+      void _disconnectAllZoneSpaces() override;
 
    public:
 
@@ -190,20 +190,20 @@ class Portal : public Zone
       static void initPersistFields();
       static void consoleInit();
 
-      virtual bool writeField( StringTableEntry fieldName, const char* value );
-      virtual String describeSelf() const;
+      bool writeField( StringTableEntry fieldName, const char* value ) override;
+      String describeSelf() const override;
 
       // NetObject.
-      virtual U32 packUpdate( NetConnection* conn, U32 mask, BitStream* stream );
-      virtual void unpackUpdate( NetConnection* conn, BitStream* stream );
+      U32 packUpdate( NetConnection* conn, U32 mask, BitStream* stream ) override;
+      void unpackUpdate( NetConnection* conn, BitStream* stream ) override;
 
       // SceneObject.
-      virtual void setTransform( const MatrixF &mat );
+      void setTransform( const MatrixF &mat ) override;
 
       // SceneZoneSpace.
-      virtual void traverseZones( SceneTraversalState* state, U32 startZoneId );
-      virtual void connectZoneSpace( SceneZoneSpace* zoneSpace );
-      virtual void disconnectZoneSpace( SceneZoneSpace* zoneSpace );
+      void traverseZones( SceneTraversalState* state, U32 startZoneId ) override;
+      void connectZoneSpace( SceneZoneSpace* zoneSpace ) override;
+      void disconnectZoneSpace( SceneZoneSpace* zoneSpace ) override;
 
    private:
 

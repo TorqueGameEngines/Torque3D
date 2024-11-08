@@ -50,19 +50,19 @@ public:
    //****************************************************************************
    // Accu Texture
    //****************************************************************************
-   virtual void processVert(  Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processVert(  Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
-   virtual void processPix(   Vector<ShaderComponent*> &componentList, 
-                              const MaterialFeatureData &fd );
+   void processPix(   Vector<ShaderComponent*> &componentList, 
+                              const MaterialFeatureData &fd ) override;
 
    void getAccuVec( MultiLine *meta, LangElement *accuVec );
 
    Var* addOutAccuVec( Vector<ShaderComponent*> &componentList, MultiLine *meta );
 
-   virtual Material::BlendOp getBlendOp(){ return Material::LerpAlpha; }
+   Material::BlendOp getBlendOp() override{ return Material::LerpAlpha; }
 
-   virtual Resources getResources( const MaterialFeatureData &fd )
+   Resources getResources( const MaterialFeatureData &fd ) override
    {
       Resources res; 
       res.numTex = 1;
@@ -70,12 +70,12 @@ public:
       return res;
    }
 
-   virtual void setTexData(   Material::StageData &stageDat,
+   void setTexData(   Material::StageData &stageDat,
                               const MaterialFeatureData &fd,
                               RenderPassData &passData,
-                              U32 &texIndex );
+                              U32 &texIndex ) override;
 
-   virtual String getName()
+   String getName() override
    {
       return "Accu Texture";
    }
@@ -84,7 +84,7 @@ public:
 class AccuScaleFeature : public ShaderFeatureGLSL
 {
 public:
-   virtual void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+   void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override
    {
       // Find the constant value
       Var *accuScale = (Var *)( LangElement::find("accuScale") );
@@ -98,13 +98,13 @@ public:
       }
    }
 
-   virtual String getName() { return "Accu Scale"; }
+   String getName() override { return "Accu Scale"; }
 };
 
 class AccuDirectionFeature : public ShaderFeatureGLSL
 {
 public:
-   virtual void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+   void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override
    {
       // Find the constant value
       Var *accuDirection = (Var *)( LangElement::find("accuDirection") );
@@ -118,13 +118,13 @@ public:
       }
    }
 
-   virtual String getName() { return "Accu Direction"; }
+   String getName() override { return "Accu Direction"; }
 };
 
 class AccuStrengthFeature : public ShaderFeatureGLSL
 {
 public:
-   virtual void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+   void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override
    {
       // Find the constant value
       Var *accuStrength = (Var *)( LangElement::find("accuStrength") );
@@ -138,13 +138,13 @@ public:
       }
    }
 
-   virtual String getName() { return "Accu Strength"; }
+   String getName() override { return "Accu Strength"; }
 };
 
 class AccuCoverageFeature : public ShaderFeatureGLSL
 {
 public:
-   virtual void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+   void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override
    {
       // Find the constant value
       Var *accuCoverage = (Var *)( LangElement::find("accuCoverage") );
@@ -158,14 +158,14 @@ public:
       }
    }
 
-   virtual String getName() { return "Accu Coverage"; }
+   String getName() override { return "Accu Coverage"; }
 };
 
 
 class AccuSpecularFeature : public ShaderFeatureGLSL
 {
 public:
-   virtual void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd )
+   void processPix( Vector<ShaderComponent*> &componentList, const MaterialFeatureData &fd ) override
    {
       // Find the constant value
       Var *accuSpecular = (Var *)( LangElement::find("accuSpecular") );
@@ -179,7 +179,7 @@ public:
       }
    }
 
-   virtual String getName() { return "Accu Specular"; }
+   String getName() override { return "Accu Specular"; }
 };
 
 #endif

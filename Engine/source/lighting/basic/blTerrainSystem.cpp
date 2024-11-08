@@ -44,8 +44,8 @@ struct blTerrainChunk : public PersistInfo::PersistChunk
 
    GBitmap *mLightmap;
 
-   bool read(Stream &);
-   bool write(Stream &);
+   bool read(Stream &) override;
+   bool write(Stream &) override;
 };
 
 //------------------------------------------------------------------------------
@@ -134,18 +134,18 @@ public:
    bool getShadowedSquares(const Vector<PlaneF> &, Vector<U16> &);
 
    // lighting
-   void init();
-   bool preLight(LightInfo *);
-   void light(LightInfo *);
+   void init() override;
+   bool preLight(LightInfo *) override;
+   void light(LightInfo *) override;
 
    // persist
-   U32 getResourceCRC();
-   bool setPersistInfo(PersistInfo::PersistChunk *);
-   bool getPersistInfo(PersistInfo::PersistChunk *);
+   U32 getResourceCRC() override;
+   bool setPersistInfo(PersistInfo::PersistChunk *) override;
+   bool getPersistInfo(PersistInfo::PersistChunk *) override;
 
-   virtual bool supportsShadowVolume();
-   virtual void getClipPlanes(Vector<PlaneF>& planes);
-   virtual void addToShadowVolume(ShadowVolumeBSP * shadowVolume, LightInfo * light, S32 level);
+   bool supportsShadowVolume() override;
+   void getClipPlanes(Vector<PlaneF>& planes) override;
+   void addToShadowVolume(ShadowVolumeBSP * shadowVolume, LightInfo * light, S32 level) override;
 
    // events
    //virtual void processTGELightProcessEvent(U32 curr, U32 max, LightInfo* currlight); 

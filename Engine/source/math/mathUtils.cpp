@@ -827,7 +827,7 @@ void mShortestSegmentBetweenLines( const Line &line0, const Line &line1, LineSeg
 
    F32 denom = a*c - b*b;
 
-   if ( denom > -0.001f && denom < 0.001f )
+   if ( denom > -POINT_EPSILON && denom < POINT_EPSILON)
    {
       outSegment->p0 = line0.origin;
       outSegment->p1 = line1.origin + (e/c)*line1.direction;

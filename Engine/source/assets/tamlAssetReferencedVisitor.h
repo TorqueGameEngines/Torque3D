@@ -57,10 +57,10 @@ public:
 
     void clear( void ) { mAssetReferenced.clear(); }
 
-    virtual bool wantsPropertyChanges( void ) { return false; }
-    virtual bool wantsRootOnly( void ) { return false; }
+    bool wantsPropertyChanges( void ) override { return false; }
+    bool wantsRootOnly( void ) override { return false; }
 
-    virtual bool visit( const TamlParser& parser, TamlVisitor::PropertyState& propertyState )
+    bool visit( const TamlParser& parser, TamlVisitor::PropertyState& propertyState ) override
     {    
         // Debug Profiling.
         PROFILE_SCOPE(TamlAssetReferencedVisitor_Visit);

@@ -25,6 +25,7 @@
 #include "math/mPoint3.h"
 #include "math/mPoint4.h"
 
+#ifndef USE_TEMPLATE_MATRIX
 
 const Point2I Point2I::One(1, 1);
 const Point2I Point2I::Zero(0, 0);
@@ -59,6 +60,7 @@ const Point4I Point4I::Zero(0, 0, 0, 0);
 const Point4F Point4F::One(1.0f, 1.0f, 1.0f, 1.0f);
 const Point4F Point4F::Zero(0.0f, 0.0f, 0.0f, 0.0f);
 
+#endif // USE_TEMPLATE_MATRIX
 
 Point3F mPerp( const Point3F &inVec )
 {   

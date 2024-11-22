@@ -31,6 +31,7 @@
 #include "math/mPoint3.h"
 #endif
 
+#ifndef USE_TEMPLATE_MATRIX
 
 //------------------------------------------------------------------------------
 /// 4D integer point
@@ -247,5 +248,7 @@ inline bool mIsNaN( const Point4F &p )
 {
    return mIsNaN_F( p.x ) || mIsNaN_F( p.y ) || mIsNaN_F( p.z ) || mIsNaN_F( p.w );
 }
+
+#endif // USE_TEMPLATE_MATRIX
 
 #endif // _MPOINT4_H_

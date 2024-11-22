@@ -30,6 +30,8 @@
 #include "math/mPoint2.h"
 #endif
 
+#ifndef USE_TEMPLATE_MATRIX
+
 //------------------------------------------------------------------------------
 /// 3D integer point
 ///
@@ -1055,13 +1057,12 @@ inline Point3F mReflect( const Point3F &v, const Point3F &n )
    return v - 2 * n * mDot( v, n );
 }
 
-/// Returns a perpendicular vector to the unit length input vector.
-extern Point3F mPerp( const Point3F &normal );
-
 
 //------------------------------------------------------------------------------
 // Templated Point class.
 //------------------------------------------------------------------------------
+#else // USE_TEMPLATE_MATRIX
+
 #pragma warning(push) // nameless struct warning.
 #pragma warning(disable: 4201)
 template<typename DATA_TYPE, U32 size>
@@ -1596,52 +1597,6 @@ public:
    operator DATA_TYPE* () { return (data); }
    operator const DATA_TYPE* () const { return (DATA_TYPE*)(data); }
 
-   // Uncomment and replace union when template replaces other classes.
-   //// Accessors for x, y, z, w components, putting these in operators.
-   //DATA_TYPE& x() {
-   //   // not sure if needed since we have a hard set minimum of 2.
-   //   AssertFatal(size >= 2, "No X component in point.");
-   //   return data[0];
-   //}
-
-   //const DATA_TYPE& x() const {
-   //   // not sure if needed since we have a hard set minimum of 2.
-   //   AssertFatal(size >= 2, "No X component in point.");
-   //   return data[0];
-   //}
-
-   //DATA_TYPE& y() {
-   //   // not sure if needed since we have a hard set minimum of 2.
-   //   AssertFatal(size >= 2, "No Y component in point.");
-   //   return data[1];
-   //}
-
-   //const DATA_TYPE& y() const {
-   //   // not sure if needed since we have a hard set minimum of 2.
-   //   AssertFatal(size >= 2, "No Y component in point.");
-   //   return data[1];
-   //}
-
-   //DATA_TYPE& z() {
-   //   AssertFatal(size >= 3, "No Z component in point.");
-   //   return data[2];
-   //}
-
-   //const DATA_TYPE& z() const {
-   //   AssertFatal(size >= 3, "No Z component in point.");
-   //   return data[2];
-   //}
-
-   //DATA_TYPE& w() {
-   //   AssertFatal(size >= 4, "No W component in point.");
-   //   return data[3];
-   //}
-
-   //const DATA_TYPE& w() const {
-   //   AssertFatal(size >= 4, "No W component in point.");
-   //   return data[3];
-   //}
-   
    // ------ Static constants ------
    const static PointT One;
    const static PointT Zero;
@@ -1715,7 +1670,22 @@ const PointT<DATA_TYPE, size> PointT<DATA_TYPE, size>::UnitZ = [] {
    return p;
 }();
 
-#pragma warning(pop)
+typedef PointT<F32, 4> Point4F;
+typedef PointT<F32, 3> Point3F;
+typedef PointT<F32, 2> Point2F;
 
+typedef PointT<F64, 4> Point4D;
+typedef PointT<F64, 3> Point3D;
+typedef PointT<F64, 2> Point2D;
+
+typedef PointT<S32, 4> Point4I;
+typedef PointT<S32, 3> Point3I;
+typedef PointT<S32, 2> Point2I;
+
+#pragma warning(pop)
+#endif // USE_TEMPLATE_MATRIX
+
+/// Returns a perpendicular vector to the unit length input vector.
+extern Point3F mPerp(const Point3F& normal);
 
 #endif // _MPOINT3_H_

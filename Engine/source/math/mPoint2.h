@@ -27,6 +27,8 @@
 #include "math/mMathFn.h"
 #endif
 
+#ifndef USE_TEMPLATE_MATRIX
+
 //------------------------------------------------------------------------------
 /// 2D integer point
 ///
@@ -895,6 +897,8 @@ inline Point2D operator*(F64 mul, const Point2D& multiplicand)
    return multiplicand * mul;
 }
 
+#endif // USE_TEMPLATE_MATRIX
+
 inline F32 mDot(const Point2F &p1, const Point2F &p2)
 {
    return (p1.x*p2.x + p1.y*p2.y);
@@ -928,5 +932,6 @@ namespace DictHash
       return (key.x * 2230148873u) ^ key.y;
    }
 }
+
 
 #endif // _MPOINT2_H_

@@ -46,7 +46,7 @@ $guiContent = new GuiControl(TerrainImportGui, EditorGuiGroup) {
       minSize = "4 4";
       closeCommand = "Canvas.popDialog( TerrainImportGui );";
       EdgeSnap = "0";
-      text = "::  Import Terrain Height Map";
+      text = ":: Import Terrain Height Map";
 
       new GuiTextEditCtrl() {
          canSaveDynamicFields = "0";

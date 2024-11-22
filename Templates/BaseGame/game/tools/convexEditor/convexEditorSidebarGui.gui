@@ -5,7 +5,7 @@ $guiContnt = new GuiControl(ConvexEditorOptions)
    extent = "800 600";
    
    new GuiWindowCollapseCtrl(ConvexEditorOptionsWindow) {
-      text = "::  Sketch Tool - Properties";
+      text = ":: Sketch Tool - Properties";
       resizeWidth = "1";
       resizeHeight = "1";
       canMove = "1";

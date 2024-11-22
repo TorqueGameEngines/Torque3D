@@ -284,8 +284,9 @@ function MaterialEditorGui::maxSize(%this, %window)
       
       %fixedWindow = MaterialEditorPreviewWindow;
       %fluidWindow = MaterialEditorPropertiesWindow;
-      %top = EditorGuiToolbar.extent.y + 6;
-      %bottom = %top + 65 - 6;
+      %offset = -1; // tweak the vertical offset so that it aligns neatly
+      %top = EditorGuiToolbar.extent.y + %offset;
+      %bottom = %top + 59;
       %maxHeight = Canvas.extent.y - %top - %bottom;
       
       // --- Fixed window (top) ------------------------------------------------
@@ -784,8 +785,8 @@ function MaterialEditorGui::isMatEditorMaterial(%this, %material)
 
 function MaterialEditorGui::setMaterialNotDirty(%this)
 {
-   %propertyText = "::  Material Editor - Properties";
-   %previewText = "::  Material Editor - Preview";
+   %propertyText = ":: Material Editor - Properties";
+   %previewText = ":: Material Editor - Preview";
    MaterialEditorPropertiesWindow.text = %propertyText;
    MaterialEditorPreviewWindow.text = %previewText;
    
@@ -795,8 +796,8 @@ function MaterialEditorGui::setMaterialNotDirty(%this)
 
 function MaterialEditorGui::setMaterialDirty(%this)
 { 
-   %propertyText = "::  Material Editor - Properties *";
-   %previewText = "::  Material Editor - Preview *";
+   %propertyText = ":: Material Editor - Properties *";
+   %previewText = ":: Material Editor - Preview *";
    MaterialEditorPropertiesWindow.text = %propertyText;
    MaterialEditorPreviewWindow.text = %previewText;
    

@@ -779,6 +779,7 @@ bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor) const
       break;
 	 case GFXFormatL16:
 		 rColor.set(U8(U16((pLoc[0] << 8) + pLoc[1])), 0, 0, 0);
+       break;
      case GFXFormatR8G8B8:
      case GFXFormatR8G8B8X8:
         rColor.set( pLoc[0], pLoc[1], pLoc[2], 255 );

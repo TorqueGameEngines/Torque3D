@@ -66,7 +66,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "::  Navigation Editor";
+      text = ":: Navigation Editor";
 
       new GuiButtonCtrl() {
          Profile = "ToolsGuiButtonProfile";
@@ -271,7 +271,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "::  Navigation Editor - Properties";
+      text = ":: Navigation Editor - Properties";
       
       new GuiContainer(NavEditorOptionsPanel){ //Actions
          isContainer = "1";

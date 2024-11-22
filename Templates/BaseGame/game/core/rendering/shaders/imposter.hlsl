@@ -82,24 +82,22 @@ void imposter_v(
 
     // First check to see if we need to render the top billboard.   
     int index;
-    /*
-    if ( includePoles && ( lookPitch < polarAngle || lookPitch > sPi - polarAngle ) )
+    if ( includePoles && ( lookPitch < polarHalfStep || lookPitch > (M_PI_F - polarHalfStep) ) )
     {
-      index = numEquatorSteps * 3; 
+      index = numEquatorSteps * numPolarSteps; 
 
       // When we render the top/bottom billboard we always use
       // a fixed vector that matches the rotation of the object.
       rightVec = float3( 1, 0, 0 ) * sCornerRight[corner];
-      upVec = float3( 0, 1, 0 ) * sCornerUp[corner];
+      upVec = float3( 0, -1, 0 ) * sCornerUp[corner];
 
-      if ( lookPitch > sPi - polarAngle )
+      if ( lookPitch < polarHalfStep )
       {
          upVec = -upVec;
          index++;
       }
     }
     else
-    */
     {
         // Calculate the rotation around the z axis then add the
         // equator half step.  This gets the images to switch a
@@ -116,19 +114,22 @@ void imposter_v(
         // Normalize the result to 0 to 2PI.
         if ( rotZ < 0 )
             rotZ += M_2PI_F;
-        if ( rotZ > M_2PI_F )
+        else if ( rotZ > M_2PI_F )
             rotZ -= M_2PI_F;
+            
         if ( rotY < 0 )
             rotY += M_2PI_F;
-        if ( rotY > M_PI_F ) // Not M_2PI_F?
+        else if ( rotY > M_2PI_F )
             rotY -= M_2PI_F;
 
-        float polarIdx = round( abs( rotY ) / polarStepSize );
+        int polarIdx = max(min(round( rotY / polarStepSize ), numPolarSteps-2),0);
 
         // Get the index to the start of the right polar
         // images for this viewing angle.
         int numPolarOffset = numEquatorSteps * polarIdx;
-
+        if (includePoles)
+            numPolarOffset = (numEquatorSteps+2) * polarIdx;
+            
         // Calculate the final image index for lookup 
         // of the texture coords.
         index = ( rotZ / equatorStepSize ) + numPolarOffset;

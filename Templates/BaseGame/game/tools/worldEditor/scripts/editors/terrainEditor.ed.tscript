@@ -596,8 +596,9 @@ function TerrainPainterContainer::maxSize(%this, %window)
       
       %fixedWindow = EPainterPreview;
       %fluidWindow = EPainter;
-      %top = EditorGuiToolbar.extent.y + 6;
-      %bottom = %top + 65 - 6;
+      %offset = 23; // tweak the vertical offset so that it aligns neatly
+      %top = EditorGuiToolbar.extent.y + %offset;
+      %bottom = %top + 59;
       %maxHeight = Canvas.extent.y - %top - %bottom;
       
       // --- Fixed window (top) ------------------------------------------------
@@ -635,7 +636,7 @@ function TerrainPainterContainer::maxSize(%this, %window)
       // --- Windowed Console --------------------------------------------------
       if(isObject(windowConsoleControl))
       {
-         // Only resize the AssetBrowser if it's docked
+         // Only resize the console if it's docked
          if(windowConsoleControl.docked == true)
          {
             // The width is relative to the sidepanel

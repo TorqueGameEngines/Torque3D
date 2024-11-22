@@ -1,0 +1,10 @@
+<SoundAsset
+    AssetName="buttonHover"
+    sourceGroup="AudioChannelDefault"
+    MaxDistance="100">
+    <SoundAsset.slots>
+        <slots_beginarray
+            SoundFile="@assetFile=buttonHover.wav"
+            MaxDistance="100"/>
+    </SoundAsset.slots>
+</SoundAsset>

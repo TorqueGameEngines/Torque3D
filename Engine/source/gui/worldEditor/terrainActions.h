@@ -54,7 +54,7 @@ class TerrainAction
          End,
          Process
       };
-
+      bool isValid(GridInfo tile);
       //
       virtual void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type) = 0;
       virtual bool useMouseBrush() { return(true); }

@@ -102,45 +102,23 @@ function windowConsoleDlg::hideWindow(%this)
 
 function windowConsoleDlg::showWindow(%this)
 {
-   $WindowConsole::Open = true;
-   Canvas.pushDialog(%this);
-   %this-->Scroll.setVisible(true);
-   
-   // Add a tab to the asset browser
-   if($AssetBrowser::Open)
+   if($WindowConsole::Open)
    {
-      %text = "Asset Browser";
-      %command = "AssetBrowser.putToFront();";
-      
-      AssetBrowserWindow.text = ""; 
-      windowConsoleControl.text = ""; 
-      
-      windowConsoleControl.setTab(windowConsole_Tab1, "Console Log", "");
-      windowConsole_Tab1.setHidden(false);
-      windowConsole_Tab1.setActive(false);
-      
-      if(windowConsole_Tab2.text $= %text || windowConsole_Tab3.text $= %text || windowConsole_Tab4.text $= %text)
-      {
-         // we have a tab, don't do anything
-      }
-      else if(windowConsole_Tab2.hidden == true)
-      {
-         windowConsoleControl.setTab(windowConsole_Tab2, %text, %command);
-      }
-      else if(windowConsole_Tab3.hidden == true)
-      {
-         windowConsoleControl.setTab(windowConsole_Tab3, %text, %command);
-      }
-      else if(windowConsole_Tab4.hidden == true)
-      {
-         windowConsoleControl.setTab(windowConsole_Tab4, %text, %command);
-      }
-      else
-      {
-         warn("Ran out of tabs for AssetBrowserWindow - windowConsoleDlg::showWindow()");
-      }
+      // close the window when it's already opened
+      windowConsoleDlg.hideWindow();
+   }
+   else
+   {
+      // open the console window
+      $WindowConsole::Open = true;
+      Canvas.pushDialog(%this);
+      %this-->Scroll.setVisible(true);
+      // update all the windows (position and size)
+      EditorGui.updateSideBar();
    }
 }
+
+
 
 //-----------------------------------------------------------------------------
 
@@ -274,6 +252,10 @@ function windowConsoleDlg::incFont()
 {
    switch ($Con::font)
    {
+      case 16:
+         windowConsoleMessageLogView.setProfile(ToolsGuiConsoleXLProfile);
+         $Con::font = 18;
+         windowConsoleMessageLogView.refresh();
       case 14:
          windowConsoleMessageLogView.setProfile(ToolsGuiConsoleLargeProfile);
          $Con::font = 16;
@@ -296,6 +278,10 @@ function windowConsoleDlg::decFont()
       case 16:
          windowConsoleMessageLogView.setProfile(ToolsGuiConsoleMediumProfile);
          $Con::font = 14;
+         windowConsoleMessageLogView.refresh();
+      case 18:
+         windowConsoleMessageLogView.setProfile(ToolsGuiConsoleLargeProfile);
+         $Con::font = 16;
          windowConsoleMessageLogView.refresh();
    }
 }

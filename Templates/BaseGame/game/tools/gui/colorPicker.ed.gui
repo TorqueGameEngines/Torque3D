@@ -19,7 +19,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
    canSaveDynamicFields = "0";
 
    new GuiWindowCtrl(GuiPickerDlg) {
-      text = "Color Picker";
+      text = ":: Color Picker";
       resizeWidth = "0";
       resizeHeight = "0";
       canMove = "1";
@@ -45,8 +45,8 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
       canSaveDynamicFields = "0";
 
       new GuiBitmapBorderCtrl(){ // color blend
-         position = "3 24";
-         extent = "255 258";
+         position = "3 25";
+         extent = "260 260";
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
@@ -67,8 +67,8 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
             selectorGap = "1";
             displayMode = "BlendColor";
             actionOnMove = "1";
-            position = "1 0";
-            extent = "255 258";
+            position = "1 1";
+            extent = "255 255";
             minExtent = "8 2";
             horizSizing = "right";
             vertSizing = "bottom";
@@ -86,8 +86,8 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
          };
       };
       new GuiBitmapBorderCtrl(){ // Hue
-         position = "263 23";
-         extent = "25 261";
+         position = "265 25";
+         extent = "25 260";
          minExtent = "8 2";
          horizSizing = "right";
          vertSizing = "bottom";
@@ -109,7 +109,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
             displayMode = "VertColor";
             actionOnMove = "1";
             position = "1 1";
-            extent = "21 257";
+            extent = "20 255";
             minExtent = "8 2";
             horizSizing = "right";
             vertSizing = "bottom";
@@ -128,9 +128,9 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
       };
       new GuiTextCtrl() {
          text = "New";
-         position = "306 22";
+         position = "305 22";
          extent = "26 14";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiTextProfile";
       };
       new GuiBitmapBorderCtrl(){ // new old color
          position = "292 37";
@@ -162,9 +162,9 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
       };
       new GuiTextCtrl() {
          text = "Old";
-         position = "310 138";
+         position = "307 137";
          extent = "26 14";
-         profile = "GuiDefaultProfile";
+         profile = "ToolsGuiTextProfile";
       };
       new GuiBitmapBorderCtrl(){ // Color Text Fields
          position = "291 165";
@@ -185,7 +185,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
 
          new GuiControl() { // rgb
             position = "4 0";
-            extent = "52 75";
+            extent = "52 80";
             minExtent = "8 2";
             horizSizing = "right";
             vertSizing = "bottom";
@@ -209,7 +209,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                anchorBottom = "0";
                anchorLeft = "1";
                anchorRight = "0";
-               position = "5 6";
+               position = "1 6";
                extent = "8 18";
                minExtent = "8 2";
                horizSizing = "right";
@@ -228,12 +228,12 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
             };
             new GuiTextEditCtrl(Channel_R_Val) { // Red Channal
                text = "0";
-               maxLength = "4";
+               maxLength = "6";
                position = "14 6";
-               extent = "34 18";
+               extent = "34 28";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiTextEditProfileNumbersOnly";
+               profile = "ToolsGuiTextEditProfile";
                class = "ColorPickerRGBClass";
                tooltipProfile = "GuiToolTipProfile";
                tooltip = "Red Channel color value.";
@@ -247,7 +247,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                anchorBottom = "0";
                anchorLeft = "1";
                anchorRight = "0";
-               position = "4 29";
+               position = "0 29";
                extent = "8 18";
                minExtent = "8 2";
                horizSizing = "right";
@@ -266,12 +266,12 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
             };
             new GuiTextEditCtrl(Channel_G_Val) { // Green Channal
                text = "0";
-               maxLength = "4";
+               maxLength = "6";
                position = "14 29";
-               extent = "34 18";
+               extent = "34 28";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiTextEditProfileNumbersOnly";
+               profile = "ToolsGuiTextEditProfile";
                class = "ColorPickerRGBClass";
                tooltipProfile = "GuiToolTipProfile";
                tooltip = "Green Channel color value.";
@@ -285,7 +285,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                anchorBottom = "0";
                anchorLeft = "1";
                anchorRight = "0";
-               position = "5 52";
+               position = "1 52";
                extent = "8 18";
                minExtent = "8 2";
                horizSizing = "right";
@@ -304,12 +304,12 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
             };
             new GuiTextEditCtrl(Channel_B_Val) { // Blue Channal
                text = "0";
-               maxLength = "4";
+               maxLength = "6";
                position = "14 52";
-               extent = "34 18";
+               extent = "34 28";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiTextEditProfileNumbersOnly";
+               profile = "ToolsGuiTextEditProfile";
                class = "ColorPickerRGBClass";
                tooltipProfile = "GuiToolTipProfile";
                tooltip = "Blue Channel color value.";
@@ -341,7 +341,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                anchorBottom = "0";
                anchorLeft = "1";
                anchorRight = "0";
-               position = "5 6";
+               position = "1 6";
                extent = "8 18";
                minExtent = "8 2";
                horizSizing = "right";
@@ -365,7 +365,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                extent = "34 18";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiTextEditProfileNumbersOnly";
+               profile = "ToolsGuiTextEditProfile";
                class = "ColorPickerHSBClass";
                tooltipProfile = "GuiToolTipProfile";
                tooltip = "Hue Channel color value.";
@@ -404,7 +404,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                anchorBottom = "0";
                anchorLeft = "1";
                anchorRight = "0";
-               position = "4 29";
+               position = "0 29";
                extent = "8 18";
                minExtent = "8 2";
                horizSizing = "right";
@@ -428,7 +428,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                extent = "34 18";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiTextEditProfileNumbersOnly";
+               profile = "ToolsGuiTextEditProfile";
                class = "ColorPickerHSBClass";
                tooltipProfile = "GuiToolTipProfile";
                tooltip = "Saturation Channel color value.";
@@ -467,12 +467,12 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                anchorBottom = "0";
                anchorLeft = "1";
                anchorRight = "0";
-               position = "5 52";
+               position = "1 52";
                extent = "8 18";
                minExtent = "8 2";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "ToolsGuiTextProfile";
+               profile = "ToolsGuiTextProfile"; 
                visible = "1";
                active = "1";
                Clickable = "1";
@@ -491,7 +491,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                extent = "34 18";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiTextEditProfileNumbersOnly";
+               profile = "ToolsGuiTextEditProfile";
                class = "ColorPickerHSBClass";
                tooltipProfile = "GuiToolTipProfile";
                tooltip = "Brightness Channel color value. Aka value or lightness.";
@@ -668,7 +668,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                extent = "34 18";
                horizSizing = "right";
                vertSizing = "bottom";
-               profile = "GuiTextEditProfileNumbersOnly";
+               profile = "ToolsGuiTextEditProfile";
                altCommand = "$ThisControl.getParent().updateFromChild($ThisControl); updateColorPickerAlpha( $ThisControl.getValue() );";
                internalName = "TextEdit";
             };

@@ -448,6 +448,8 @@ class TerrainEditor : public EditTSCtrl
 
       F32 mSlopeMinAngle;
       F32 mSlopeMaxAngle;
+      F32 mTileMinHeight;
+      F32 mTileMaxHeight;
 
    public:
 

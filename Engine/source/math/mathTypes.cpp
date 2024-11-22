@@ -101,6 +101,7 @@ IMPLEMENT_STRUCT( RectF,
    FIELD( extent, extent, 1, "The width and height of the Rect.")
 
 END_IMPLEMENT_STRUCT;
+#ifndef USE_TEMPLATE_MATRIX
 IMPLEMENT_STRUCT( MatrixF,
    MatrixF, MathTypes,
    "" )
@@ -108,6 +109,15 @@ IMPLEMENT_STRUCT( MatrixF,
    MatrixFEngineExport::getMatrixField(),
 
 END_IMPLEMENT_STRUCT;
+#else
+IMPLEMENT_STRUCT(MatrixF,
+MatrixF, MathTypes,
+"")
+
+MatrixTemplateExport::getMatrixField<F32, 4, 4>(),
+
+END_IMPLEMENT_STRUCT;
+#endif
 IMPLEMENT_STRUCT( AngAxisF,
    AngAxisF, MathTypes,
    "" )

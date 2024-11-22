@@ -70,7 +70,7 @@ $guiContent = new GuiConvexEditorCtrl(ConvexEditorGui) {
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorInspectorPlugin );";
       EdgeSnap = "1";
-      text = "::  Convex Shape Editor";
+      text = ":: Convex Shape Editor";
       
       new GuiContainer(){
          profile = "ToolsGuiDefaultProfile";

@@ -160,7 +160,7 @@ function ParticleEditor::createParticleList( %this )
 
 function ParticleEditor::openEmitterPane( %this )
 {
-   PE_Window.text = "::  Particle Editor - Emitters";
+   PE_Window.text = ":: Particle Editor - Emitters";
    PE_EmitterEditor.guiSync();
    ParticleEditor.activeEditor = PE_EmitterEditor;
    
@@ -172,7 +172,7 @@ function ParticleEditor::openEmitterPane( %this )
 
 function ParticleEditor::openParticlePane( %this )
 {
-   PE_Window.text = "::  Particle Editor - Particles";
+   PE_Window.text = ":: Particle Editor - Particles";
    
    PE_ParticleEditor.guiSync();
    ParticleEditor.activeEditor = PE_ParticleEditor;
@@ -276,8 +276,9 @@ function ParticleEditor::maxSize(%this, %window)
       // prevent onResize after a resize
       %this.resizing = false;
       
-      %top = EditorGuiToolbar.extent.y + 6;
-      %bottom = %top + 65 - 6;
+      %offset = -1; // tweak the vertical offset so that it aligns neatly
+      %top = EditorGuiToolbar.extent.y + %offset;
+      %bottom = %top + 59;
       %maxHeight = Canvas.extent.y - %top - %bottom;
       
       // --- Fixed window (top) ------------------------------------------------

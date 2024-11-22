@@ -71,9 +71,10 @@ advanced_option(TORQUE_DEBUG_NET "debug network" OFF)
 advanced_option(TORQUE_DEBUG_NET_MOVES "debug network moves" OFF)
 advanced_option(TORQUE_ENABLE_ASSERTS "enables or disable asserts" OFF)
 advanced_option(TORQUE_TOOLS "Enable or disable the tools" ON)
+advanced_option(TORQUE_TOOLS_EXT_COMMANDS "Enable or disable some extended functionality like shell commands or free write access" OFF)
 advanced_option(TORQUE_ENABLE_PROFILER "Enable or disable the profiler" OFF)
 advanced_option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file path fields in the inspector." OFF)
-
+advanced_option(USE_TEMPLATE_MATRIX "Set to true to use the new templated matrix class(still in beta)." OFF)
 #testing
 advanced_option(TORQUE_TESTING "Unit test build" OFF)
 

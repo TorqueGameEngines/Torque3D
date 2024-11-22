@@ -36,7 +36,12 @@
 #endif
 
 
+#ifndef USE_TEMPLATE_MATRIX
 class MatrixF;
+#else
+template<typename DATA_TYPE, U32 rows, U32 cols> class Matrix;
+typedef Matrix<F32, 4, 4> MatrixF;
+#endif
 class SphereF;
 
 

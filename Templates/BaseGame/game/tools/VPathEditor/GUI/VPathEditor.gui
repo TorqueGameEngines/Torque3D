@@ -71,7 +71,7 @@ new VPathEditor(EVPathEditor) {
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorInspectorPlugin );";
       EdgeSnap = "1";
-      text = "::  Verve Path Editor";
+      text = ":: Verve Path Editor";
       
       new GuiContainer(){
          profile = GuiDefaultProfile;
@@ -218,7 +218,7 @@ new VPathEditor(EVPathEditor) {
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorPlugin );";
       EdgeSnap = "1";
-      text = "::  Verve Path - Properties";
+      text = ":: Verve Path - Properties";
 
       new GuiContainer(){ //Node Properties
          isContainer = "1";

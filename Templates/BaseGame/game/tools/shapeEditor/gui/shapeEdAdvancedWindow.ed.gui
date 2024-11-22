@@ -1,16 +1,16 @@
 // Let's check if the ShapeEdAdvancedWindow can be stacked in the side panel
 if (getWord($pref::Video::mode, 1) > 899 && isObject(ShapeEdSelectWindow) && isObject(ShapeEdPropWindow))
 { 
-   $ShapeEdAdvancedWindowPos = getWord($pref::Video::mode, 0) - 360 SPC getWord(ShapeEdSelectWindow.extent, 1) + getWord(ShapeEdPropWindow.extent, 1) + getWord(EditorGuiToolbar.extent, 1) + 12;
+   $ShapeEdAdvancedWindowPos = getWord($pref::Video::mode, 0) - 360 SPC getWord(ShapeEdSelectWindow.extent, 1) + getWord(ShapeEdPropWindow.extent, 1) + getWord(EditorGuiToolbar.extent, 1) + 12 - 7;
 }
 else 
 { 
-   $ShapeEdAdvancedWindowPos = getWord($pref::Video::mode, 0) - 720 SPC getWord(EditorGuiToolbar.extent, 1) + 6; 
+   $ShapeEdAdvancedWindowPos = getWord($pref::Video::mode, 0) - 720 SPC getWord(EditorGuiToolbar.extent, 1) + 6 - 7; 
 }
 
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
-   text = "::  Shape Editor - Advanced Properties";
+   text = ":: Shape Editor - Advanced Properties";
    resizeWidth = "0";
    resizeHeight = "0";
    canMove = "1";

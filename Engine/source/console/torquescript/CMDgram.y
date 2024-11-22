@@ -656,7 +656,7 @@ yyreport_syntax_error (const yypcontext_t *ctx)
       output += String::ToString("%5s | %*s", "", loc->first_column, "^");
    }
 
-   yyerror(output.c_str());
+   yyerror("%s", output.c_str());
 
    return ret;
 }

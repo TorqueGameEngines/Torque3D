@@ -32,7 +32,6 @@ uniform sampler2D colorBuffer;
 uniform sampler2D matInfoBuffer;
 uniform sampler2D ssaoMaskTex;
 uniform sampler2D backbufferTex;
-uniform sampler2D glowBuffer;
 
 uniform float mode;
 uniform vec3 eyePosWorld;
@@ -78,6 +77,4 @@ void main()
         OUT_col = vec4(texture( ssaoMaskTex, IN_uv0 ).rgb, 1.0);
     else if(mode == 13)
         OUT_col = vec4(texture( backbufferTex, IN_uv0 ).rgb, 1.0);
-    else if(mode == 14)
-        OUT_col = vec4(texture( glowBuffer, IN_uv0 ).rgb, 1.0);
 }

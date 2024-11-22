@@ -130,6 +130,8 @@ public:
    void setSelectedFaceVertFlip(bool flipped);
    void setSelectedFaceZRot(float degrees);
    void toggleGridSnapping();
+   bool getGridSnap() { return mGridSnap; };
+   void setGridSnap(bool snap) { mGridSnap = snap; };
    void setGridSnapSize(float gridSize);
 
    void updateShape();

@@ -92,42 +92,6 @@ function AssetBrowser::onDialogPop(%this)
 function AssetBrowser::onDialogPush(%this)
 {
    $AssetBrowser::Open = true;
-   
-   // Add a tab to the windowed console
-   if($WindowConsole::Open)
-   {
-      %text = "Console Log";
-      %command = "windowConsoleControl.putToFront();";
-      
-      AssetBrowserWindow.text = ""; 
-      windowConsoleControl.text = ""; 
-      
-      AssetBrowser.setTab(assetBrowser_Tab1, "Asset Browser", "");
-      assetBrowser_Tab1.setHidden(false);
-      assetBrowser_Tab1.setActive(false);
-      
-      if(assetBrowser_Tab2.text $= %text || assetBrowser_Tab3.text $= %text || assetBrowser_Tab4.text $= %text)
-      {
-         // we have a tab, don't do anything
-      }
-      else if(assetBrowser_Tab2.hidden == true)
-      {
-         AssetBrowser.setTab(assetBrowser_Tab2, %text, %command);
-      }
-      else if(assetBrowser_Tab3.hidden == true)
-      {
-         AssetBrowser.setTab(assetBrowser_Tab3, %text, %command);
-      }
-      else if(assetBrowser_Tab4.hidden == true)
-      {
-         AssetBrowser.setTab(assetBrowser_Tab4, %text, %command);
-      }
-      else
-      {
-         warn("Ran out of tabs for AssetBrowserWindow - windowConsoleDlg::showWindow()");
-      }
-   }
-   
    EditorGui.updateSideBar();
 }
 
@@ -699,7 +663,9 @@ function AssetBrowser::doRefresh(%this)
 
 function AssetBrowser::populatePreviewImages(%this)
 {
-   echo("AssetBrowser::populatePreviewImages() - Previews to generate: " @ AssetPreviewArray.count());
+   if (AssetPreviewArray.count()>0)
+      echo("AssetBrowser::populatePreviewImages() - Previews to generate: " @ AssetPreviewArray.count());
+      
    for(%i=0; %i < AssetPreviewArray.count(); %i++)
    {
       %previewButton = AssetPreviewArray.getKey(%i);
@@ -1526,7 +1492,8 @@ function AssetBrowser::rebuildAssetArray(%this)
    if(!%this.previewArrayDirty)
    {
       %this.previewArrayDirty = true;
-      %this.schedule(16, "doRebuildAssetArray");
+      cancel(%this.pendingRebuild);
+      %this.pendingRebuild = %this.schedule(16, "doRebuildAssetArray");
    }
 }
 
@@ -2899,6 +2866,5 @@ function AssetBrowserWindow::onResize(%this, %posX, %posY, %width, %height)
         AssetBrowser-->assetList.fillRowFirst = true;
     else
         AssetBrowser-->assetList.fillRowFirst = false;
-        
-    AssetBrowser.doRebuildAssetArray();
+    AssetBrowser.rebuildAssetArray();
 }

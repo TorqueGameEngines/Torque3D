@@ -73,7 +73,7 @@ $guiContent = new GuiRoadEditorCtrl(RoadEditorGui) {
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "::  Decal Road Editor - Roads & Paths";
+      text = ":: Decal Road Editor - Roads & Paths";
       
       /*
       new GuiBitmapButtonCtrl() {
@@ -317,7 +317,7 @@ $guiContent = new GuiRoadEditorCtrl(RoadEditorGui) {
       canMaximize = "0";
       minSize = "50 50";
       EdgeSnap = "1";
-      text = "::  Decal Road Editor - Properties";
+      text = ":: Decal Road Editor - Properties";
       
       new GuiContainer(RoadEditorProperties){ //Node Properties
          isContainer = "1";

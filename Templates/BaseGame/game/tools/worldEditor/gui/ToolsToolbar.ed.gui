@@ -9,12 +9,25 @@ $guiContent = new GuiContainer(EWToolsToolbar) {
    VertSizing = "bottom";
    Position = "0 38";
    Extent = "0 33";
-   MinExtent = "8 2";
+   MinExtent = "8 34";
    canSave = "1";
    Visible = "1";
    hovertime = "1000";
    isClosed = "0";
    isDynamic = "0";
+   
+   new GuiDecoyCtrl(EWToolsToolbarSpacer) {
+      profile = "ToolsMenubarProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "0 3";
+      extent = "4 33";
+      minExtent = "8 8";
+      visible = "1";
+      helpTag = "0";
+      useMouseEvents = "0";
+      isDecoy = "1";
+   };
    
    new GuiDynamicCtrlArrayControl(ToolsToolbarArray) {
       canSaveDynamicFields = "0";
@@ -24,15 +37,15 @@ $guiContent = new GuiContainer(EWToolsToolbar) {
       HorizSizing = "width";
       VertSizing = "bottom";
       position = "4 3";
-      Extent = "264 32";
-      MinExtent = "1024 32";
+      Extent = "264 33";
+      MinExtent = "1024 33";
       canSave = "1";
       Visible = "1";
       hovertime = "1000";
       colCount = "1";
       colSize = "29";
       RowSize = "27";
-      rowSpacing = "2";
+      rowSpacing = "1";
       colSpacing = "4";
    };
    new GuiBitmapButtonCtrl() {
@@ -61,7 +74,7 @@ $guiContent = new GuiContainer(EWToolsToolbar) {
       horizSizing = "right";
       vertSizing = "bottom";
       position = "1 1";
-      extent = "35 31";
+      extent = "35 33";
       minExtent = "8 8";
       visible = "0";
       helpTag = "0";

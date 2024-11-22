@@ -3342,7 +3342,7 @@ void ShapeBase::submitLights( LightManager *lm, bool staticLighting )
             image.lightInfo->setType( LightInfo::Point );
 
          MatrixF imageMat;
-         getRenderImageTransform( i, &imageMat );
+         getRenderMuzzleTransform( i, &imageMat );
 
          image.lightInfo->setTransform( imageMat );
 

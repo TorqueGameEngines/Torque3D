@@ -35,7 +35,12 @@ class RectI;
 class RectF;
 class Box3I;
 class Box3F;
+#ifndef USE_TEMPLATE_MATRIX
 class MatrixF;
+#else
+template<typename DATA_TYPE, U32 rows, U32 cols> class Matrix;
+typedef Matrix<F32, 4, 4> MatrixF;
+#endif
 class AngAxisF;
 class QuatF;
 class String;

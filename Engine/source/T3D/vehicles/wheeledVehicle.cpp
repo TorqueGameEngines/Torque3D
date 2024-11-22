@@ -797,6 +797,13 @@ void WheeledVehicle::updateMove(const Move* move)
    // Set the tail brake light thread direction based on the brake state.
    if (mTailLightThread)
       mShapeInstance->setTimeScale(mTailLightThread, mBraking? 1.0f : -1.0f);
+
+   // Update the steering animation: sequence time 0 is full right,
+   // and time 0.5 is straight ahead.
+   if (mSteeringThread) {
+      F32 t = (mSteering.x * mFabs(mSteering.x)) / mDataBlock->maxSteeringAngle;
+      mShapeInstance->setPos(mSteeringThread, 0.5 - t * 0.5);
+   }
 }
 
 

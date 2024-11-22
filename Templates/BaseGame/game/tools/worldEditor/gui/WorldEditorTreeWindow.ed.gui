@@ -44,7 +44,7 @@ $guiContent = new GuiControl() {
       minSize = "50 50";
       closeCommand = "EWTreeWindow.setVisible(false);";
       EdgeSnap = "1";
-      text = "::  World Edior - Scene Tree";
+      text = ":: World Editor - Scene Tree";
       
       new GuiTabBookCtrl(EditorTreeTabBook) {
          canSaveDynamicFields = "0";

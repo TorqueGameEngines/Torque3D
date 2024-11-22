@@ -628,6 +628,7 @@ function EditorGui::updateSideBar(%this)
 {   
    if(GuiEditorIsActive())
    {
+      // Update the Asset Browser's size
       if(isObject(AssetBrowserWindow) && isObject(GuiEditorSidebar))
       {
          if(AssetBrowserWindow.docked == true)
@@ -637,6 +638,19 @@ function EditorGui::updateSideBar(%this)
             %browserHeight = AssetBrowserWindow.extent.y;
             %browserPosY = Canvas.extent.y - AssetBrowserWindow.extent.y - 33;
             AssetBrowserWindow.resize(0, %browserPosY, %browserWidth, %browserHeight);
+         }
+      }
+      
+      // Update the Windowed Console's size
+      if(isObject(windowConsoleControl) && isObject(GuiEditorSidebar))
+      {
+         if(windowConsoleControl.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %consoleWidth = Canvas.extent.x - GuiEditorSidebar.extent.x;
+            %consoleHeight = windowConsoleControl.extent.y;
+            %consolePosY = Canvas.extent.y - windowConsoleControl.extent.y - 33;
+            windowConsoleControl.resize(0, %consolePosY, %consoleWidth, %consoleHeight);
          }
       }
       return;
@@ -1019,6 +1033,10 @@ function WorldEditorPlugin::onActivated( %this )
       ETransformSelection.setVisible(true);
    }
    
+   EWorldEditor.UseGridSnap = EditorSettings.value("WorldEditor/Tools/UseGridSnap");
+   ESnapOptions-->GridSnapButton.setStateOn( EWorldEditor.UseGridSnap );
+   SnapToBar-->objectGridSnapBtn.setStateOn( EWorldEditor.UseGridSnap );
+   
    Parent::onActivated(%this);
 }
 
@@ -1380,6 +1398,8 @@ function TerrainPainterPlugin::syncBrushInfo( %this )
    PaintBrushSizeTextEditContainer-->textEdit.text = getWord(ETerrainEditor.getBrushSize(), 0);
    PaintBrushSlopeControl-->SlopeMinAngle.text = ETerrainEditor.getSlopeLimitMinAngle();
    PaintBrushSlopeControl-->SlopeMaxAngle.text = ETerrainEditor.getSlopeLimitMaxAngle();
+   PaintBrushSlopeControlTE-->SlopeMinAngle.text = ETerrainEditor.getSlopeLimitMinAngle();
+   PaintBrushSlopeControlTE-->SlopeMaxAngle.text = ETerrainEditor.getSlopeLimitMaxAngle();
    PaintBrushPressureTextEditContainer-->textEdit.text = ETerrainEditor.getBrushPressure()*100;
    %brushType = ETerrainEditor.getBrushType();
    eval( "EWTerrainPainterToolbar-->" @ %brushType @ ".setStateOn(1);" );
@@ -1401,12 +1421,28 @@ function TerrainPainterPlugin::validateSlopeMaxAngle( %this )
 {
    %maxval = ETerrainEditor.getSlopeLimitMaxAngle();
    PaintBrushSlopeControl-->SlopeMaxAngle.setText(%maxval); 
+   PaintBrushSlopeControlTE-->SlopeMaxAngle.setText(%maxval); 
 }
 
 function TerrainPainterPlugin::validateSlopeMinAngle( %this )
 {
    %minval = ETerrainEditor.getSlopeLimitMinAngle();
-   PaintBrushSlopeControl-->SlopeMinAngle.setText(%minval);  
+   PaintBrushSlopeControl-->SlopeMinAngle.setText(%minval); 
+   PaintBrushSlopeControlTE-->SlopeMinAngle.setText(%minval);  
+}
+
+function TerrainPainterPlugin::validateTileMinHeight( %this )
+{
+   %maxval = ETerrainEditor.getTileLimitMinHeight();
+   PaintBrushSlopeControl-->tileMinHeight.setText(%maxval); 
+   PaintBrushSlopeControlTE-->tileMinHeight.setText(%maxval); 
+}
+
+function TerrainPainterPlugin::validateTileMaxHeight( %this )
+{
+   %minval = ETerrainEditor.getTileLimitMaxHeight();
+   PaintBrushSlopeControl-->tileMaxHeight.setText(%minval); 
+   PaintBrushSlopeControlTE-->tileMaxHeight.setText(%minval);  
 }
 
 function TerrainPainterPlugin::keyboardModifyBrushSize( %this, %amt)
@@ -1616,9 +1652,10 @@ function EWorldEditor::maxSize(%this, %window)
       
       %fixedWindow = EWTreeWindow;
       %fluidWindow = EWInspectorWindow;
-      %top = EditorGuiToolbar.extent.y + 6;
-      %bottom = %top + 65 - 6;
-      %maxHeight = Canvas.extent.y - %top - %bottom;
+      %offset = 25; // tweak the vertical offset so that it aligns neatly
+      %top = EditorGuiToolbar.extent.y + %offset;
+      %bottom = %top + 59;
+      %maxHeight = Canvas.extent.y - %top - %bottom + 12;
       
       // --- Fixed window (top) ------------------------------------------------
       // put it back if it moved
@@ -2487,7 +2524,8 @@ function EWorldEditor::syncGui( %this )
    ESnapOptions-->SnapSize.setText( EWorldEditor.getSoftSnapSize() );
    ESnapOptions-->GridSize.setText( EWorldEditor.getGridSize() );
    
-   ESnapOptions-->GridSnapButton.setStateOn( %this.getGridSnap() );
+   %this.UseGridSnap = EditorSettings.value("WorldEditor/Tools/UseGridSnap");
+   ESnapOptions-->GridSnapButton.setStateOn( %this.UseGridSnap );
    
    %this.UseGroupCenter = EditorSettings.value("WorldEditor/Tools/UseGroupCenter");
    
@@ -2761,7 +2799,9 @@ function toggleSnappingOptions( %var )
    }
    else if( %var $= "grid" )
    {
-      EWorldEditor.setGridSnap( !EWorldEditor.getGridSnap() );
+ 	   EWorldEditor.UseGridSnap = !EWorldEditor.UseGridSnap;
+	   EditorSettings.setValue("WorldEditor/Tools/UseGridSnap", EWorldEditor.UseGridSnap );
+      EWorldEditor.setGridSnap( EWorldEditor.UseGridSnap );
    }
    else if( %var $= "byGroup" )
    {
@@ -3083,6 +3123,8 @@ function EWorldEditorStatusBarCamera::onSelect( %this, %id, %text )
 function softSnapSizeSliderCtrlContainer::onWake(%this)
 {
    %this-->slider.setValue(EWorldEditorToolbar-->softSnapSizeTextEdit.getValue());
+   %pos = EWorldEditorToolbar-->softSnapSizeTextEdit.getGlobalPosition();
+   %this-->slider.setPositionGlobal(%pos.x, %pos.y + 25);
 }
 function softSnapSizeSliderCtrlContainer::onSliderChanged(%this)
 {
@@ -3095,16 +3137,22 @@ function PaintBrushSizeSliderCtrlContainer::onWake(%this)
 {
    %this-->slider.range = "1" SPC getWord(ETerrainEditor.maxBrushSize, 0);
    %this-->slider.setValue(PaintBrushSizeTextEditContainer-->textEdit.getValue());
+   %pos = PaintBrushSizeTextEditContainer.getGlobalPosition();
+   %this-->slider.setPositionGlobal(%pos.x, %pos.y + 25);
 }
 
 function PaintBrushPressureSliderCtrlContainer::onWake(%this)
 {
    %this-->slider.setValue(PaintBrushPressureTextEditContainer-->textEdit.getValue() / 100);
+   %pos = PaintBrushPressureTextEditContainer.getGlobalPosition();
+   %this-->slider.setPositionGlobal(%pos.x, %pos.y + 25);
 }
 
 function PaintBrushSoftnessSliderCtrlContainer::onWake(%this)
 {
    %this-->slider.setValue(PaintBrushSoftnessTextEditContainer-->textEdit.getValue() / 100);
+   %pos = PaintBrushSoftnessTextEditContainer.getGlobalPosition();
+   %this-->slider.setPositionGlobal(%pos.x, %pos.y + 25);
 }
 
 //------------------------------------------------------------------------------------
@@ -3113,26 +3161,37 @@ function TerrainBrushSizeSliderCtrlContainer::onWake(%this)
 {
    %this-->slider.range = "1" SPC getWord(ETerrainEditor.maxBrushSize, 0);
    %this-->slider.setValue(TerrainBrushSizeTextEditContainer-->textEdit.getValue());
+   %pos = TerrainBrushSizeTextEditContainer.getGlobalPosition();
+   %this-->slider.setPositionGlobal(%pos.x, %pos.y + 25);
 }
 
 function TerrainBrushPressureSliderCtrlContainer::onWake(%this)
 {
    %this-->slider.setValue(TerrainBrushPressureTextEditContainer-->textEdit.getValue() / 100.0);
+   %pos = TerrainBrushPressureTextEditContainer.getGlobalPosition();
+   %this-->slider.setPositionGlobal(%pos.x, %pos.y + 25);
 }
 
 function TerrainBrushSoftnessSliderCtrlContainer::onWake(%this)
 {
    %this-->slider.setValue(TerrainBrushSoftnessTextEditContainer-->textEdit.getValue() / 100.0);
+   %pos = TerrainBrushSoftnessTextEditContainer.getGlobalPosition();
+   %this-->slider.setPositionGlobal(%pos.x, %pos.y + 25);
 }
 
 function TerrainSetHeightSliderCtrlContainer::onWake(%this)
 {
    %this-->slider.setValue(TerrainSetHeightTextEditContainer-->textEdit.getValue());
+   %pos = TerrainSetHeightTextEditContainer.getGlobalPosition();
+   %this-->slider.setPositionGlobal(%pos.x, %pos.y + 25);
 }
+
 //------------------------------------------------------------------------------------
 function CameraSpeedDropdownCtrlContainer::onWake(%this)
 {
    %this-->slider.setValue(CameraSpeedDropdownContainer-->textEdit.getText());
+   %pos = CameraSpeedDropdownContainer.getGlobalPosition();
+   %this-->slider.setPositionGlobal(%pos.x, %pos.y + 25);
 }
 
 //------------------------------------------------------------------------------------

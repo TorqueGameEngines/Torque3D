@@ -32,7 +32,7 @@
 
 /// What's the name of your application? Used in a variety of places.
 #define TORQUE_APP_NAME            "@TORQUE_APP_NAME@"
-
+#cmakedefine USE_TEMPLATE_MATRIX
 /// What version of the application specific source code is this?
 ///
 /// Version number is major * 1000 + minor * 100 + revision * 10.

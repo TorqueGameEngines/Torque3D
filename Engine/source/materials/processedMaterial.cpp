@@ -452,11 +452,27 @@ void ProcessedMaterial::_setStageData()
       }
 
       // NormalMap
-      if (mMaterial->getNormalMap(i) != StringTable->EmptyString())
+      if (mMaterial->mNormalMapAsset[i] && !mMaterial->mNormalMapAsset[i].isNull())
       {
          mStages[i].setTex(MFT_NormalMap, mMaterial->getNormalMapResource(i));
+         //mStages[i].setTex(MFT_DiffuseMap, _createTexture(mMaterial->getDiffuseMap(i), &GFXStaticTextureSRGBProfile));
          if (!mStages[i].getTex(MFT_NormalMap))
-            mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->getNormalMap(i), i);
+         {
+            // Load a debug texture to make it clear to the user 
+            // that the texture for this stage was missing.
+            mStages[i].setTex(MFT_NormalMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXNormalMapProfile));
+         }
+      }
+      else if (mMaterial->mNormalMapName[i] != StringTable->EmptyString())
+      {
+         mStages[i].setTex(MFT_NormalMap, _createTexture(mMaterial->mNormalMapName[i], &GFXNormalMapProfile));
+         if (!mStages[i].getTex(MFT_NormalMap))
+         {
+            //If we start with a #, we're probably actually attempting to hit a named target and it may not get a hit on the first pass. So we'll
+            //pass on the error rather than spamming the console
+            if (!String(mMaterial->mNormalMapName[i]).startsWith("#"))
+               mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->mNormalMapName[i], i);
+         }
       }
 
       // Detail Normal Map

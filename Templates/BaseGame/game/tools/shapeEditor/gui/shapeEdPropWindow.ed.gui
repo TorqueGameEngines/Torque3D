@@ -27,7 +27,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdPropWindow) {
    canMaximize = "0";
    minSize = "50 50";
    EdgeSnap = "1";
-   text = "::  Shape Editor - Properties";
+   text = ":: Shape Editor - Properties";
 
    //---------------------------------------------------------------------
    // Sequence and Node editors

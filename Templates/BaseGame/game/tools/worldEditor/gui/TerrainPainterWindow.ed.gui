@@ -47,7 +47,7 @@ $guiContent = new GuiControl(TerrainPainterContainer,EditorGuiGroup) {
       minSize = "300 160";
       closeCommand = "EPainter.parentGroup.setVisible(false);";
       EdgeSnap = "1";
-      text = "::  Terrain Painter - Preview";
+      text = ":: Terrain Painter - Preview";
       
       new GuiContainer(EPainterPreviewCont){
          Docking = "Client";
@@ -293,7 +293,7 @@ $guiContent = new GuiControl(TerrainPainterContainer,EditorGuiGroup) {
       minSize = "152 300";
       closeCommand = "EPainter.parentGroup.setVisible(false);";
       EdgeSnap = "1";
-      text = "::  Terrain Painter - Selector";
+      text = ":: Terrain Painter - Selector";
       
       new GuiScrollCtrl( EPainterScroll ) {
          canSaveDynamicFields = "0";

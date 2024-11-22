@@ -72,7 +72,6 @@ protected:
    bool mUseTrackDescriptionOnly;
 
    /// The description and variant values used by the local profile.
-   SFXDescription mDescription;
    SFXSource* mSourceGroup;
    F32 mVolume;
    F32 mPitch;
@@ -91,6 +90,7 @@ public:
    // GuiControl.
    bool onWake() override;
    void onSleep() override;
+   void onRemove() override;
    void setActive(bool value) override {};
    bool testCondition();
    static void initPersistFields();

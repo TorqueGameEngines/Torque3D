@@ -69,7 +69,7 @@ $guiContent = new GuiDecalEditorCtrl(DecalEditorGui) {
       minSize = "50 50";
       closeCommand = "EditorGui.setEditor( WorldEditorInspectorPlugin );";
       EdgeSnap = "1";
-      text = "::  Decal Editor";
+      text = ":: Decal Editor";
          
       new GuiTabBookCtrl(DecalEditorTabBook) {
          canSaveDynamicFields = "0";
@@ -517,7 +517,7 @@ $guiContent = new GuiDecalEditorCtrl(DecalEditorGui) {
       minSize = "152 235";
       closeCommand = "EPainter.parentGroup.setVisible(false);";
       EdgeSnap = "1";
-      text = "::  Decal Properties";
+      text = ":: Decal Properties";
       
       new GuiScrollCtrl(DecalEditorTemplateProperties){
          canSaveDynamicFields = "0";

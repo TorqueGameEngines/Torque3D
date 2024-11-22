@@ -4,98 +4,13 @@ enable_language(OBJC)
 enable_language(OBJCXX)
 enable_language(CXX)
 
-find_program(XCODEBUILD_EXECUTABLE xcodebuild)
-execute_process(COMMAND ${XCODEBUILD_EXECUTABLE} -version -sdk macosx Path
-          OUTPUT_VARIABLE XCODE_SDK_ROOT_DIR
-          ERROR_QUIET
-          OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(CMAKE_SYSTEM_NAME Darwin)
+set(CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG "-Wl,-rpath,")
 
-set(XCODE_SDK_ROOT_DIR "${XCODE_SDK_ROOT_DIR}" CACHE INTERNAL "")
-# Specify the location or name of the platform SDK to be used in CMAKE_OSX_SYSROOT.
-set(CMAKE_OSX_SYSROOT "${XCODE_SDK_ROOT_DIR}" CACHE INTERNAL "")
-
-if (NOT DEFINED CMAKE_DEVELOPER_ROOT AND NOT CMAKE_GENERATOR MATCHES "Xcode")
-  get_filename_component(PLATFORM_SDK_DIR ${XCODE_SDK_ROOT_DIR} PATH)
-  get_filename_component(CMAKE_DEVELOPER_ROOT ${PLATFORM_SDK_DIR} PATH)
-  if (NOT EXISTS "${CMAKE_DEVELOPER_ROOT}")
-    message(FATAL_ERROR "Invalid CMAKE_DEVELOPER_ROOT: ${CMAKE_DEVELOPER_ROOT} does not exist.")
-  endif()
-endif()
-
-# Find (Apple's) libtool.
-if(DEFINED BUILD_LIBTOOL)
-  # Environment variables are always preserved.
-  set(ENV{_BUILD_LIBTOOL} "${BUILD_LIBTOOL}")
-elseif(DEFINED ENV{_BUILD_LIBTOOL})
-  set(BUILD_LIBTOOL "$ENV{_BUILD_LIBTOOL}")
-elseif(NOT DEFINED BUILD_LIBTOOL)
-  execute_process(COMMAND xcrun -sdk ${XCODE_SDK_ROOT_DIR} -find libtool
-          OUTPUT_VARIABLE BUILD_LIBTOOL
-          ERROR_QUIET
-          OUTPUT_STRIP_TRAILING_WHITESPACE)
-endif()
-
-get_property(languages GLOBAL PROPERTY ENABLED_LANGUAGES)
-foreach(lang ${languages})
-  set(CMAKE_${lang}_CREATE_STATIC_LIBRARY "${BUILD_LIBTOOL} -static -o <TARGET> <LINK_FLAGS> <OBJECTS> " CACHE INTERNAL "")
-endforeach()
-
-set(CMAKE_FRAMEWORK_PATH "/Applications/XCode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks")
-set(CMAKE_MODULE_LINKER_FLAGS "-rpath @executable_path/../Frameworks -rpath @loader_path/../Frameworks")
-set(CMAKE_SHARED_LINKER_FLAGS "-rpath @executable_path/../Frameworks -rpath @loader_path/../Frameworks")
-set(CMAKE_INSTALL_NAME_DIR "@rpath")
-set(CMAKE_FIND_FRAMEWORK FIRST)
 # minimum for multi arch build is 11.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "" FORCE)
 set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "" FORCE)
 set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET[arch=arm64] "11.0" CACHE STRING "arm 64 minimum deployment target" FORCE)
-set(CMAKE_XCODE_ATTRIBUTE_SDKROOT macosx)
-set(CMAKE_SYSTEM_NAME Darwin)
-
-set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
-
-set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
-set(CMAKE_SHARED_LIBRARY_PREFIX "lib")
-set(CMAKE_SHARED_LIBRARY_SUFFIX ".dylib")
-set(CMAKE_SHARED_MODULE_PREFIX "lib")
-set(CMAKE_SHARED_MODULE_SUFFIX ".so")
-
-set(CMAKE_C_COMPILER_TARGET x86_64-arm64-apple-macosx11)
-set(CMAKE_CXX_COMPILER_TARGET x86_64-arm64-apple-macosx11)
-set(CMAKE_ASM_COMPILER_TARGET x86_64-arm64-apple-macosx11)
-
-set(CMAKE_C_COMPILER_ABI ELF)
-set(CMAKE_CXX_COMPILER_ABI ELF)
-set(CMAKE_C_HAS_ISYSROOT 1)
-set(CMAKE_CXX_HAS_ISYSROOT 1)
-set(CMAKE_MODULE_EXISTS 1)
-set(CMAKE_DL_LIBS "")
-set(CMAKE_C_OSX_COMPATIBILITY_VERSION_FLAG "-compatibility_version ")
-set(CMAKE_C_OSX_CURRENT_VERSION_FLAG "-current_version ")
-set(CMAKE_CXX_OSX_COMPATIBILITY_VERSION_FLAG "${CMAKE_C_OSX_COMPATIBILITY_VERSION_FLAG}")
-set(CMAKE_CXX_OSX_CURRENT_VERSION_FLAG "${CMAKE_C_OSX_CURRENT_VERSION_FLAG}")
-set(CMAKE_MACOSX_BUNDLE YES)
-set(OBJC_VARS "-fobjc-abi-version=2 -DOBJC_OLD_DISPATCH_PROTOTYPES=0")
-
-set(CMAKE_OBJC_FLAGS "${C_TARGET_FLAGS} ${APPLE_TARGET_TRIPLE_FLAG} ${SDK_NAME_VERSION_FLAGS} ${BITCODE} ${VISIBILITY} ${FOBJC_ARC} ${OBJC_VARS} ${CMAKE_OBJC_FLAGS}")
-set(CMAKE_OBJC_FLAGS_DEBUG "-O0 -g ${CMAKE_OBJC_FLAGS_DEBUG}")
-set(CMAKE_OBJC_FLAGS_MINSIZEREL "-DNDEBUG -Os ${CMAKE_OBJC_FLAGS_MINSIZEREL}")
-set(CMAKE_OBJC_FLAGS_RELWITHDEBINFO "-DNDEBUG -O2 -g ${CMAKE_OBJC_FLAGS_RELWITHDEBINFO}")
-set(CMAKE_OBJC_FLAGS_RELEASE "-DNDEBUG -O3 ${CMAKE_OBJC_FLAGS_RELEASE}")
-set(CMAKE_OBJCXX_FLAGS "${C_TARGET_FLAGS} ${APPLE_TARGET_TRIPLE_FLAG} ${SDK_NAME_VERSION_FLAGS} ${BITCODE} ${VISIBILITY} ${FOBJC_ARC} ${OBJC_VARS} ${CMAKE_OBJCXX_FLAGS}")
-set(CMAKE_OBJCXX_FLAGS_DEBUG "-O0 -g ${CMAKE_OBJCXX_FLAGS_DEBUG}")
-set(CMAKE_OBJCXX_FLAGS_MINSIZEREL "-DNDEBUG -Os ${CMAKE_OBJCXX_FLAGS_MINSIZEREL}")
-set(CMAKE_OBJCXX_FLAGS_RELWITHDEBINFO "-DNDEBUG -O2 -g ${CMAKE_OBJCXX_FLAGS_RELWITHDEBINFO}")
-set(CMAKE_OBJCXX_FLAGS_RELEASE "-DNDEBUG -O3 ${CMAKE_OBJCXX_FLAGS_RELEASE}")
-set(CMAKE_OBJC_LINK_FLAGS "${C_TARGET_FLAGS} ${SDK_NAME_VERSION_FLAGS} -Wl,-search_paths_first ${CMAKE_OBJC_LINK_FLAGS}")
-set(CMAKE_OBJCXX_LINK_FLAGS "${C_TARGET_FLAGS} ${SDK_NAME_VERSION_FLAGS} -Wl,-search_paths_first ${CMAKE_OBJCXX_LINK_FLAGS}")
-
-set(CMAKE_PLATFORM_HAS_INSTALLNAME 1)
-set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "-dynamiclib -Wl,-headerpad_max_install_names")
-set(CMAKE_SHARED_MODULE_CREATE_C_FLAGS "-bundle -Wl,-headerpad_max_install_names")
-set(CMAKE_SHARED_MODULE_LOADER_C_FLAG "-Wl,-bundle_loader,")
-set(CMAKE_SHARED_MODULE_LOADER_CXX_FLAG "-Wl,-bundle_loader,")
-set(CMAKE_FIND_LIBRARY_SUFFIXES ".tbd" ".dylib" ".so" ".a")
 
 if(CMAKE_OSX_ARCHITECTURES MATCHES "((^|;|, )(arm64|arm64e|x86_64))+")
   set(CMAKE_C_SIZEOF_DATA_PTR 8)
@@ -111,28 +26,8 @@ else()
   set(CMAKE_SYSTEM_PROCESSOR "arm")
 endif()
 
-if(DEFINED CMAKE_INSTALL_NAME_TOOL)
-  # Environment variables are always preserved.
-  set(ENV{_CMAKE_INSTALL_NAME_TOOL} "${CMAKE_INSTALL_NAME_TOOL}")
-elseif(DEFINED ENV{_CMAKE_INSTALL_NAME_TOOL})
-  set(CMAKE_INSTALL_NAME_TOOL "$ENV{_CMAKE_INSTALL_NAME_TOOL}")
-elseif(NOT DEFINED CMAKE_INSTALL_NAME_TOOL)
-  execute_process(COMMAND xcrun -sdk ${XCODE_SDK_ROOT_DIR} -find install_name_tool
-          OUTPUT_VARIABLE CMAKE_INSTALL_NAME_TOOL_INT
-          ERROR_QUIET
-          OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(CMAKE_INSTALL_NAME_TOOL ${CMAKE_INSTALL_NAME_TOOL_INT} CACHE INTERNAL "")
-endif()
-
-# Only create a single Xcode project file
-set(CMAKE_XCODE_GENERATE_TOP_LEVEL_PROJECT_ONLY TRUE)
-# Add all libraries to project link phase (lets Xcode handle linking)
-set(CMAKE_XCODE_LINK_BUILD_PHASE_MODE KNOWN_LOCATION)
-set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
-
 # Enable codesigning with secure timestamp when not in Debug configuration (required for Notarization)
 set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=Release] "--timestamp")
-set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=RelWithDebInfo] "--timestamp")
 
 # Enable codesigning with hardened runtime option when not in Debug configuration (required for Notarization)
 #set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=Release] YES)
@@ -141,7 +36,12 @@ set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=RelWithDebInfo] "--times
 # Disable injection of Xcode's base entitlements used for debugging when not in Debug configuration (required for
 # Notarization)
 set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=Release] NO)
-set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=RelWithDebInfo] NO)
+set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+# Only create a single Xcode project file
+set(CMAKE_XCODE_GENERATE_TOP_LEVEL_PROJECT_ONLY TRUE)
+# Add all libraries to project link phase (lets Xcode handle linking)
+#set(CMAKE_XCODE_LINK_BUILD_PHASE_MODE KNOWN_LOCATION)
+#set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
 
 set(_release_configs RelWithDebInfo Release)
 if(CMAKE_BUILD_TYPE IN_LIST _release_configs)
@@ -154,12 +54,14 @@ set(CMAKE_USE_WIN32_THREADS_INIT 0)
 set(CMAKE_USE_PTHREADS_INIT 1)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+# Enable @rpath support
 set(CMAKE_MACOSX_RPATH 1)
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-# Debug configuration for quicker debug builds
-set(CMAKE_XCODE_ATTRIBUTE_LINKER_DISPLAYS_MANGLED_NAMES[variant=Debug] YES)
-set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH[variant=Debug] YES)
-set(CMAKE_XCODE_ATTRIBUTE_ENABLE_TESTABILITY[variant=Debug] YES)
+set(CMAKE_INSTALL_NAME_DIR "@rpath")
+
+# Set RPATH for both build and install
+set(CMAKE_INSTALL_RPATH "@executable_path/../Frameworks")
+set(CMAKE_BUILD_RPATH "@executable_path/../Frameworks")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 endif(APPLE)

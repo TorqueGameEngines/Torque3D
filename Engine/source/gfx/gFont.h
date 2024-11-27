@@ -39,18 +39,21 @@
 #ifndef _GFXTEXTUREHANDLE_H_
 #include "gfx/gfxTextureHandle.h"
 #endif
+#ifndef _TDICTIONARY_H_
+#include "core/util/tDictionary.h"
+#endif
 
 
 GFX_DeclareTextureProfile(GFXFontTextureProfile);
-#define Font_Table_MAX 65536
 
 class GFont
 {
 public:
+   typedef Map<U32, PlatformFont::CharInfo> typeCharMap;
    enum Constants 
    {
       TabWidthInSpaces = 3,
-      TextureSheetSize = 256,
+      TextureSheetSize = 512,
    };
 
 public:
@@ -128,10 +131,10 @@ public:
 
 protected:
    bool loadCharInfo(const UTF16 ch);
+   void generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, S32 sdfWidth, S32 sdfHeight, const F32 spreadFactor);
+   void padGlyphBitmap(const U8* original, S32 origWidth, S32 origHeight, U8* padded, S32 padWidth, S32 padHeight, S32 padding);
    void addBitmap(PlatformFont::CharInfo &charInfo);
    void addSheet(void);
-   void assignSheet(S32 sheetNum, GBitmap *bmp);
-
    void *mMutex;
 
 private:
@@ -143,6 +146,7 @@ private:
    S32 mCurX;
    S32 mCurY;
    S32 mCurSheet;
+   S32 mMaxRowHeight;
 
    bool mNeedSave;
    Torque::Path mGFTFile;
@@ -155,12 +159,8 @@ private:
    U32 mAscent;
    U32 mDescent;
 
-   /// List of character info structures, must be accessed through the 
-   /// getCharInfo(U32) function to account for remapping.
-   Vector<PlatformFont::CharInfo>  mCharInfoList;
-
-   /// Index remapping
-   S32             mRemapTable[Font_Table_MAX];
+   // Cache charinfo into a map.
+   typeCharMap mCharMap;
 };
 
 inline U32 GFont::getCharXIncrement(const UTF16 in_charIndex)
@@ -183,7 +183,8 @@ inline U32 GFont::getCharHeight(const UTF16 in_charIndex)
 
 inline bool GFont::isValidChar(const UTF16 in_charIndex) const
 {
-   if(mRemapTable[in_charIndex] != -1)
+   auto it = mCharMap.find(in_charIndex);
+   if (it != mCharMap.end())
       return true;
 
    if(mPlatformFont)

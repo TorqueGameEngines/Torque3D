@@ -65,6 +65,8 @@ public:
                            ///        rendered, i.e., \n, \r, etc.
       U32  xOffset;        ///< x offset into bitmap sheet
       U32  yOffset;        ///< y offset into bitmap sheet
+      U32  texWidth;
+      U32  texHeight;
       U32  width;          ///< width of character (pixels)
       U32  height;         ///< height of character (pixels)
       S32  xOrigin;

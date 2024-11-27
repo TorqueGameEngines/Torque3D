@@ -96,9 +96,9 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
          const F32 texWidth = (F32)tex->getWidth();
          const F32 texHeight = (F32)tex->getHeight();
          const F32 texLeft   = (F32)(ci.xOffset)             / texWidth;
-         const F32 texRight  = (F32)(ci.xOffset + ci.width)  / texWidth;
+         const F32 texRight  = (F32)(ci.xOffset + ci.texWidth)  / texWidth;
          const F32 texTop    = (F32)(ci.yOffset)             / texHeight;
-         const F32 texBottom = (F32)(ci.yOffset + ci.height) / texHeight;
+         const F32 texBottom = (F32)(ci.yOffset + ci.texHeight) / texHeight;
 
          const F32 fillConventionOffset = GFX->getFillConventionOffset();
          const F32 screenLeft   = drawX - fillConventionOffset;

@@ -195,13 +195,11 @@ Resource<GFont> GFont::create(const String &faceName, U32 size, const char *cach
 
 GFont::GFont()
 {
-   VECTOR_SET_ASSOCIATION(mCharInfoList);
    VECTOR_SET_ASSOCIATION(mTextureSheets);
 
-   std::fill_n(mRemapTable, Font_Table_MAX,-1);
-
-   mCurX = mCurY = mCurSheet = -1;
-
+   mCurX = mCurY = 0;
+   mCurSheet = -1;
+   mMaxRowHeight = 0;
    mPlatformFont = NULL;
    mSize = 0;
    mCharSet = 0;
@@ -212,6 +210,7 @@ GFont::GFont()
    mNeedSave = false;
    
    mMutex = Mutex::createMutex();
+   mCharMap.clear();
 }
 
 GFont::~GFont()
@@ -229,14 +228,10 @@ GFont::~GFont()
       stream.close();
    }
    
+   mCharMap.clear();
+
    S32 i;
-
-   for(i = 0;i < mCharInfoList.size();i++)
-   {
-       SAFE_DELETE_ARRAY(mCharInfoList[i].bitmapData);
-   }
-
-   for(i=0; i<mTextureSheets.size(); i++)
+   for(i=0; i <mTextureSheets.size(); i++)
       mTextureSheets[i] = NULL;
 
    SAFE_DELETE(mPlatformFont);
@@ -248,15 +243,17 @@ void GFont::dumpInfo() const
 {
    // Number and extent of mapped characters?
    U32 mapCount = 0, mapBegin=0xFFFF, mapEnd=0;
-   for(U32 i=0; i<0x10000; i++)
+   for (const auto& entry : mCharMap)
    {
-      if(mRemapTable[i] != -1)
-      {
-         mapCount++;
-         if(i<mapBegin) mapBegin = i;
-         if(i>mapEnd)   mapEnd   = i;
-      }
+      U32 charCode = entry.key;  // The key (character code)
+
+      mapCount++;  // Count this character
+
+      // Update the minimum and maximum character codes
+      if (charCode < mapBegin) mapBegin = charCode;
+      if (charCode > mapEnd)   mapEnd = charCode;
    }
+
 
 
    // Let's write out all the info we can on this font.
@@ -276,8 +273,9 @@ bool GFont::loadCharInfo(const UTF16 ch)
 {
    PROFILE_SCOPE(GFont_loadCharInfo);
 
-    if(mRemapTable[ch] != -1)
-        return true;    // Not really an error
+    auto it = mCharMap.find(ch);
+    if (it != mCharMap.end())
+       return true;
 
     if(mPlatformFont && mPlatformFont->isValidChar(ch))
     {
@@ -286,8 +284,7 @@ bool GFont::loadCharInfo(const UTF16 ch)
         if(ci.bitmapData)
             addBitmap(ci);
 
-        mCharInfoList.push_back(ci);
-        mRemapTable[ch] = mCharInfoList.size() - 1;
+        mCharMap[ch] = ci;
         
         mNeedSave = true;
         
@@ -298,45 +295,117 @@ bool GFont::loadCharInfo(const UTF16 ch)
     return false;
 }
 
+void GFont::generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, S32 sdfWidth, S32 sdfHeight, const F32 spreadFactor)
+{
+   for (S32 y = 0; y < sdfHeight; ++y)
+   {
+      for (S32 x = 0; x < sdfWidth; ++x)
+      {
+         F32 minDist = F32_MAX;
+
+         // Map SDF coordinates to original bitmap space
+         F32 scaledX = x * (F32)width / sdfWidth;
+         F32 scaledY = y * (F32)height / sdfHeight;
+
+         for (S32 by = 0; by < height; ++by)
+         {
+            for (S32 bx = 0; bx < width; ++bx)
+            {
+               bool isInside = bitmap[by * width + bx] > 0;
+               F32 dist = mSqrt((scaledX - bx) * (scaledX - bx) + (scaledY - by) * (scaledY - by));
+               if (isInside)
+                  minDist = mMin(minDist, dist);
+            }
+         }
+         // Normalize distance for SDF
+         F32 sdfValue = (1.0f - mMin(minDist, spreadFactor) / spreadFactor);
+
+         // Store the smoothed SDF value back to the bitmap
+         sdfBitmap[y * sdfWidth + x] = (U8)(255 * sdfValue);
+      }
+   }
+}
+
+void GFont::padGlyphBitmap(const U8* original, S32 origWidth, S32 origHeight, U8* padded, S32 padWidth, S32 padHeight, S32 padding)
+{
+   // Initialize padded bitmap with zeros
+   dMemset(padded, 0, padWidth * padHeight);
+
+   // Copy the original bitmap into the center of the padded bitmap
+   for (S32 y = 0; y < origHeight; ++y)
+   {
+      for (S32 x = 0; x < origWidth; ++x)
+      {
+         S32 srcIndex = y * origWidth + x;
+         S32 dstIndex = (y + padding) * padWidth + (x + padding);
+         padded[dstIndex] = original[srcIndex];
+      }
+   }
+}
+
 void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
 {
-   U32 nextCurX = U32(mCurX + charInfo.width ); /*7) & ~0x3;*/
-   U32 nextCurY = U32(mCurY + mPlatformFont->getFontHeight()); // + 7) & ~0x3;
+   const S32 padding = 8;
 
-   // These are here for postmortem debugging.
-   bool routeA = false, routeB = false;
+   // Dimensions for the padded bitmap and SDF
+   S32 paddedWidth = charInfo.width + (2 * padding);
+   S32 paddedHeight = charInfo.height + (2 * padding);
 
-   if(mCurSheet == -1 || nextCurY >= TextureSheetSize)
+   S32 sdfWidth = paddedWidth;
+   S32 sdfHeight = paddedHeight;
+
+   // Allocate buffers
+   FrameTemp<U8> paddedBitmap(paddedWidth * paddedHeight);
+
+   // Allocate buffer for SDF bitmap
+   FrameTemp<U8> sdfBitmap(sdfWidth * sdfHeight);
+
+   // Pad the original bitmap
+   padGlyphBitmap(charInfo.bitmapData, charInfo.width, charInfo.height, paddedBitmap, paddedWidth, paddedHeight, padding);
+
+   // Generate the SDF
+   F32 sdfSpread = 1.0f / (4.0f + (charInfo.width / charInfo.height));
+   sdfSpread = mMax(charInfo.width, charInfo.height) * sdfSpread;
+   generateSDF(paddedBitmap, paddedWidth, paddedHeight, sdfBitmap, sdfWidth, sdfHeight, sdfSpread);
+
+   U32 nextCurX = U32(mCurX + sdfWidth); /*7) & ~0x3;*/
+   U32 nextCurY = U32(mCurY + sdfHeight); // + 7) & ~0x3;
+
+   if (mCurSheet == -1)
    {
-      routeA = true;
       addSheet();
-
-      // Recalc our nexts.
-      nextCurX = U32(mCurX + charInfo.width); // + 7) & ~0x3;
-      nextCurY = U32(mCurY + mPlatformFont->getFontHeight()); // + 7) & ~0x3;
    }
 
-   if( nextCurX >= TextureSheetSize)
+   // Check if the current texture sheet is full and if we need to add a new one
+   if (nextCurY >= TextureSheetSize)
    {
-      routeB = true;
-      mCurX = 0;
-      mCurY = nextCurY;
-
-      // Recalc our nexts.
-      nextCurX = U32(mCurX + charInfo.width); // + 7) & ~0x3;
-      nextCurY = U32(mCurY + mPlatformFont->getFontHeight()); // + 7) & ~0x3;
+      // When nextCurY exceeds sheet height, add a new sheet
+      addSheet();
+      nextCurX = mCurX + sdfWidth;
+      nextCurY = mCurY + sdfHeight;
    }
 
-   // Check the Y once more - sometimes we advance to a new row and run off
-   // the end.
-   if(nextCurY >= TextureSheetSize)
+   // If the X position exceeds the sheet width, move to the next row
+   if (nextCurX >= TextureSheetSize)
    {
-      routeA = true;
-      addSheet();
+      // Move to the next row, reset mCurX and adjust mCurY
+      mCurX = 0;  // Reset to the start of the row
 
-      // Recalc our nexts.
-      nextCurX = U32(mCurX + charInfo.width); // + 7) & ~0x3;
-      nextCurY = U32(mCurY + mPlatformFont->getFontHeight()); // + 7) & ~0x3;
+      // Move down by the height of the tallest character in the current row
+      mCurY += mMaxRowHeight + padding;  // Add the row height and padding
+
+      // Ensure the Y position doesn't exceed the texture sheet height
+      if (mCurY >= TextureSheetSize)
+      {
+         // If we've exceeded the texture sheet height, add a new sheet
+         addSheet();
+         mCurX = 0;
+         mCurY = 0;  // Reset to the top of the new sheet
+      }
+
+      // Recalculate the position for the current character
+      nextCurX = mCurX + sdfWidth;
+      nextCurY = mCurY + sdfHeight;
    }
 
     charInfo.bitmapIndex = mCurSheet;
@@ -350,9 +419,17 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
 
    AssertFatal(bmp->getFormat() == GFXFormatA8, "GFont::addBitmap - cannot added characters to non-greyscale textures!");
 
-   for(y = 0;y < charInfo.height;y++)
-      for(x = 0;x < charInfo.width;x++)
-         *bmp->getAddress(x + charInfo.xOffset, y + charInfo.yOffset) = charInfo.bitmapData[y * charInfo.width + x];
+   for(y = 0;y < sdfHeight;y++)
+      for(x = 0;x < sdfWidth;x++)
+         *bmp->getAddress(x + charInfo.xOffset, y + charInfo.yOffset) = sdfBitmap[y * sdfWidth + x];
+
+   // update our width and height.
+   //charInfo.width = sdfWidth;
+   //charInfo.height = sdfHeight;
+   charInfo.texWidth = sdfWidth;
+   charInfo.texHeight = sdfHeight;
+
+   mMaxRowHeight = mMax(mMaxRowHeight, sdfHeight);
 
    mTextureSheets[mCurSheet].refresh();
 }
@@ -369,8 +446,6 @@ void GFont::addSheet()
     mTextureSheets.increment();
     mTextureSheets.last() = handle;
 
-    mCurX = 0;
-    mCurY = 0;
     mCurSheet = mTextureSheets.size() - 1;
 }
 
@@ -382,12 +457,11 @@ const PlatformFont::CharInfo &GFont::getCharInfo(const UTF16 in_charIndex)
 
     AssertFatal(in_charIndex, "GFont::getCharInfo - can't get info for char 0!");
 
-    if(mRemapTable[in_charIndex] == -1)
+    auto it = mCharMap.find(in_charIndex);
+    if (it == mCharMap.end())
         loadCharInfo(in_charIndex);
-
-    AssertFatal(mRemapTable[in_charIndex] != -1, "No remap info for this character");
     
-    return mCharInfoList[mRemapTable[in_charIndex]];
+    return mCharMap[in_charIndex];
 }
 
 const PlatformFont::CharInfo &GFont::getDefaultCharInfo()
@@ -657,54 +731,54 @@ void GFont::wrapString(const UTF8 *txt, U32 lineWidth, Vector<U32> &startLineOff
 
 bool GFont::read(Stream& io_rStream)
 {
-    // Handle versioning
-    U32 version;
-    io_rStream.read(&version);
-    if(version != csm_fileVersion)
-        return false;
+   // Handle versioning
+   U32 version;
+   io_rStream.read(&version);
+   if(version != csm_fileVersion)
+   return false;
 
-    char buf[256];
-    io_rStream.readString(buf);
-    mFaceName = buf;
+   char buf[256];
+   io_rStream.readString(buf);
+   mFaceName = buf;
 
-    io_rStream.read(&mSize);
-    io_rStream.read(&mCharSet);
+   io_rStream.read(&mSize);
+   io_rStream.read(&mCharSet);
 
-    io_rStream.read(&mHeight);
-    io_rStream.read(&mBaseline);
-    io_rStream.read(&mAscent);
-    io_rStream.read(&mDescent);
+   io_rStream.read(&mHeight);
+   io_rStream.read(&mBaseline);
+   io_rStream.read(&mAscent);
+   io_rStream.read(&mDescent);
 
-    U32 size = 0;
-    io_rStream.read(&size);
-    mCharInfoList.setSize(size);
-    U32 i;
-    for(i = 0; i < size; i++)
-    {
-        PlatformFont::CharInfo *ci = &mCharInfoList[i];
-        io_rStream.read(&ci->bitmapIndex);
-        io_rStream.read(&ci->xOffset);
-        io_rStream.read(&ci->yOffset);
-        io_rStream.read(&ci->width);
-        io_rStream.read(&ci->height);
-        io_rStream.read(&ci->xOrigin);
-        io_rStream.read(&ci->yOrigin);
-        io_rStream.read(&ci->xIncrement);
-        ci->bitmapData = NULL;
+   U32 size = 0;
+   io_rStream.read(&size);
+   for(U32 i = 0; i < size; i++)
+   {
+      U32 charCode;
+      io_rStream.read(&charCode);
+
+      PlatformFont::CharInfo ci;
+      io_rStream.read(&ci.bitmapIndex);
+      io_rStream.read(&ci.xOffset);
+      io_rStream.read(&ci.yOffset);
+      io_rStream.read(&ci.texWidth);
+      io_rStream.read(&ci.texHeight);
+      io_rStream.read(&ci.width);
+      io_rStream.read(&ci.height);
+      io_rStream.read(&ci.xOrigin);
+      io_rStream.read(&ci.yOrigin);
+      io_rStream.read(&ci.xIncrement);
+      ci.bitmapData = NULL;
+
+      // Insert the character information into the map
+      mCharMap[charCode] = ci;  // Insert the key-value pair into the map
    }
 
    U32 numSheets = 0;
    io_rStream.read(&numSheets);
    
-   for(i = 0; i < numSheets; i++)
+   for(U32 i = 0; i < numSheets; i++)
    {
        GBitmap *bmp = new GBitmap;
-       /*String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-       if(!bmp->readBitmap("png", path))
-       {
-           delete bmp;
-           return false;
-       }*/
        U32 len;
        io_rStream.read(&len);
 
@@ -724,32 +798,6 @@ bool GFont::read(Stream& io_rStream)
    io_rStream.read(&mCurY);
    io_rStream.read(&mCurSheet);
 
-   // Read the remap table.
-   U32 minGlyph, maxGlyph;
-   io_rStream.read(&minGlyph);
-   io_rStream.read(&maxGlyph);
-
-   if(maxGlyph >= minGlyph)
-   {
-      // Length of buffer..
-      U32 buffLen;
-      io_rStream.read(&buffLen);
-
-      // Read the buffer.
-      FrameTemp<S32> inBuff(buffLen);
-      io_rStream.read(buffLen, inBuff);
-
-      // Decompress.
-      uLongf destLen = (static_cast<unsigned long long>(maxGlyph) - minGlyph + 1) * sizeof(S32);
-      uncompress((Bytef*)&mRemapTable[minGlyph], &destLen, (Bytef*)(S32*)inBuff, buffLen);
-
-      AssertISV(destLen == (maxGlyph-minGlyph+1)*sizeof(S32), "GFont::read - invalid remap table data!");
-
-      // Make sure we've got the right endianness.
-      for(i = minGlyph; i <= maxGlyph; i++)
-         mRemapTable[i] = convertBEndianToHost(mRemapTable[i]);
-   }
-   
    return (io_rStream.getStatus() == Stream::Ok);
 }
 
@@ -768,27 +816,36 @@ bool GFont::write(Stream& stream)
     stream.write(mAscent);
     stream.write(mDescent);
 
-    // Write char info list
-    stream.write(U32(mCharInfoList.size()));
-    U32 i;
-    for(i = 0; i < mCharInfoList.size(); i++)
+    // Write char info count
+    stream.write(U32(mCharMap.size()));
+
+    // Write each character's info (iterate through the unordered_map)
+    for (const auto& entry : mCharMap)
     {
-        const PlatformFont::CharInfo *ci = &mCharInfoList[i];
-        stream.write(ci->bitmapIndex);
-        stream.write(ci->xOffset);
-        stream.write(ci->yOffset);
-        stream.write(ci->width);
-        stream.write(ci->height);
-        stream.write(ci->xOrigin);
-        stream.write(ci->yOrigin);
-        stream.write(ci->xIncrement);
-   }
+       U32 charCode = entry.key;  // Character code (U32)
+       stream.write(charCode);
+       const PlatformFont::CharInfo& ci = entry.value;  // CharInfo associated with the character
+
+       // Write each part of the CharInfo structure to the stream
+       stream.write(ci.bitmapIndex);
+       stream.write(ci.xOffset);
+       stream.write(ci.yOffset);
+       stream.write(ci.texWidth);
+       stream.write(ci.texHeight);
+       stream.write(ci.width);
+       stream.write(ci.height);
+       stream.write(ci.xOrigin);
+       stream.write(ci.yOrigin);
+       stream.write(ci.xIncrement);
+    }
 
    stream.write(mTextureSheets.size());
-   for (i = 0; i < mTextureSheets.size(); i++)
+   for (U32 i = 0; i < mTextureSheets.size(); i++)
    {
-      /*String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-      mTextureSheets[i].getBitmap()->writeBitmap("png", path);*/
+       // Debugging write out to images.
+      String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
+      mTextureSheets[i].getBitmap()->writeBitmap("png", path);
+      
 
       mTextureSheets[i].getBitmap()->writeBitmapStream("png", stream);
    }
@@ -797,45 +854,6 @@ bool GFont::write(Stream& stream)
    stream.write(mCurY);
    stream.write(mCurSheet);
 
-   // Get the min/max we have values for, and only write that range out.
-   S32 minGlyph = S32_MAX, maxGlyph = 0;
-
-   for(i = 0; i < 65536; i++)
-   {
-      if(mRemapTable[i] != -1)
-      {
-         if(i>maxGlyph) maxGlyph = i;
-         if(i<minGlyph) minGlyph = i;
-      }
-   }
-
-   stream.write(minGlyph);
-   stream.write(maxGlyph);
-
-   // Skip it if we don't have any glyphs to do...
-   if(maxGlyph >= minGlyph)
-   {
-      // Put everything big endian, to be consistent. Do this inplace.
-      for(i = minGlyph; i <= maxGlyph; i++)
-         mRemapTable[i] = convertHostToBEndian(mRemapTable[i]);
-
-      {
-         // Compress.
-         const U32 buffSize = 128 * 1024;
-         FrameTemp<S32> outBuff(buffSize);
-         uLongf destLen = buffSize * sizeof(S32);
-         compress2((Bytef*)(S32*)outBuff, &destLen, (Bytef*)(S32*)&mRemapTable[minGlyph], (static_cast<unsigned long long>(maxGlyph) - minGlyph + 1) * sizeof(S32), 9);
-
-         // Write out.
-         stream.write((U32)destLen);
-         stream.write(destLen, outBuff);
-      }
-
-      // Put us back to normal.
-      for(i = minGlyph; i <= maxGlyph; i++)
-         mRemapTable[i] = convertBEndianToHost(mRemapTable[i]);
-   }
-   
    return (stream.getStatus() == Stream::Ok);
 }
 
@@ -847,11 +865,11 @@ void GFont::exportStrip(const char *fileName, U32 padding, U32 kerning)
 
    S32 heightMin=0, heightMax=0;
 
-   for(S32 i=0; i<mCharInfoList.size(); i++)
+   for (const auto& entry : mCharMap)
    {
-      totalWidth += mCharInfoList[i].width + kerning + 2*padding;
-      heightMin = getMin((S32)heightMin, (S32)getBaseline() - (S32)mCharInfoList[i].yOrigin);
-      heightMax = getMax((S32)heightMax, (S32)getBaseline() - (S32)mCharInfoList[i].yOrigin + (S32)mCharInfoList[i].height);
+      totalWidth += entry.value.width + kerning + 2*padding;
+      heightMin = getMin((S32)heightMin, (S32)getBaseline() - (S32)entry.value.yOrigin);
+      heightMax = getMax((S32)heightMax, (S32)getBaseline() - (S32)entry.value.yOrigin + (S32)entry.value.height);
    }
 
    totalHeight = heightMax - heightMin + 2*padding;
@@ -864,21 +882,21 @@ void GFont::exportStrip(const char *fileName, U32 padding, U32 kerning)
    // Ok, copy some rects, taking into account padding, kerning, offset.
    U32 curWidth = kerning + padding;
 
-   for(S32 i=0; i<mCharInfoList.size(); i++)
+   for (const auto& entry : mCharMap)
    {
       // Skip invalid stuff.
-      if(mCharInfoList[i].bitmapIndex == -1 || mCharInfoList[i].height == 0 || mCharInfoList[i].width == 0)
+      if(entry.value.bitmapIndex == -1 || entry.value.height == 0 || entry.value.width == 0)
          continue;
 
       // Copy the rect.
-      U32 bitmap = mCharInfoList[i].bitmapIndex;
+      U32 bitmap = entry.value.bitmapIndex;
 
-      RectI ri(mCharInfoList[i].xOffset, mCharInfoList[i].yOffset, mCharInfoList[i].width, mCharInfoList[i].height );
-      Point2I outRi(curWidth, padding + getBaseline() - mCharInfoList[i].yOrigin);
+      RectI ri(entry.value.xOffset, entry.value.yOffset, entry.value.width, entry.value.height );
+      Point2I outRi(curWidth, padding + getBaseline() - entry.value.yOrigin);
       gb.copyRect(mTextureSheets[bitmap].getBitmap(), ri, outRi); 
 
       // Advance.
-      curWidth +=  mCharInfoList[i].width + kerning + 2*padding;
+      curWidth += entry.value.width + kerning + 2*padding;
    }
  
    // Done!
@@ -917,32 +935,32 @@ void GFont::importStrip(const char *fileName, U32 padding, U32 kerning)
 
    // Ok, snag some glyphs.
    Vector<GlyphMap> glyphList;
-   glyphList.reserve(mCharInfoList.size());
+   glyphList.reserve(mCharMap.size());
 
    U32 curWidth = 0;
-   for(S32 i=0; i<mCharInfoList.size(); i++)
+   for (auto& entry : mCharMap)
    {
       // Skip invalid stuff.
-      if(mCharInfoList[i].bitmapIndex == -1 || mCharInfoList[i].height == 0 || mCharInfoList[i].width == 0)
+      if(entry.value.bitmapIndex == -1 || entry.value.height == 0 || entry.value.width == 0)
          continue;
 
       // Allocate a new bitmap for this glyph, taking into account kerning and padding.
       glyphList.increment();
       GlyphMap& lastGlyphMap = glyphList.last();
-      lastGlyphMap.bitmap = new GBitmap(mCharInfoList[i].width + kerning + 2 * padding, mCharInfoList[i].height + 2 * padding, false, strip->getFormat());
-      lastGlyphMap.charId = i;
+      lastGlyphMap.bitmap = new GBitmap(entry.value.width + kerning + 2 * padding, entry.value.height + 2 * padding, false, strip->getFormat());
+      lastGlyphMap.charId = entry.key;
 
       // Copy the rect.
-      RectI ri(curWidth, getBaseline() - mCharInfoList[i].yOrigin, lastGlyphMap.bitmap->getWidth(), lastGlyphMap.bitmap->getHeight());
+      RectI ri(curWidth, getBaseline() - entry.value.yOrigin, lastGlyphMap.bitmap->getWidth(), lastGlyphMap.bitmap->getHeight());
       Point2I outRi(0,0);
       lastGlyphMap.bitmap->copyRect(strip, ri, outRi);
 
       // Update glyph attributes.
-      mCharInfoList[i].width = lastGlyphMap.bitmap->getWidth();
-      mCharInfoList[i].height = lastGlyphMap.bitmap->getHeight();
-      mCharInfoList[i].xOffset -= kerning + padding;
-      mCharInfoList[i].xIncrement += kerning;
-      mCharInfoList[i].yOffset -= padding;
+      entry.value.width = lastGlyphMap.bitmap->getWidth();
+      entry.value.height = lastGlyphMap.bitmap->getHeight();
+      entry.value.xOffset -= kerning + padding;
+      entry.value.xIncrement += kerning;
+      entry.value.yOffset -= padding;
 
       // Advance.
       curWidth += ri.extent.x;
@@ -961,7 +979,7 @@ void GFont::importStrip(const char *fileName, U32 padding, U32 kerning)
    S32 maxHeight = 0;
    for(U32 i = 0; i < glyphList.size(); i++)
    {
-      PlatformFont::CharInfo *ci = &mCharInfoList[glyphList[i].charId];
+      PlatformFont::CharInfo *ci = &mCharMap[glyphList[i].charId];
       
       if(ci->height > maxHeight)
          maxHeight = ci->height;
@@ -1021,7 +1039,7 @@ void GFont::importStrip(const char *fileName, U32 padding, U32 kerning)
    for(S32 i=0; i<glyphList.size(); i++)
    {
       // Copy each glyph into the appropriate place.
-      PlatformFont::CharInfo *ci = &mCharInfoList[glyphList[i].charId];
+      PlatformFont::CharInfo *ci = &mCharMap[glyphList[i].charId];
       U32 bi = ci->bitmapIndex;
       mTextureSheets[bi]->getBitmap()->copyRect(glyphList[i].bitmap, RectI(0,0, glyphList[i].bitmap->getWidth(),glyphList[i].bitmap->getHeight()), Point2I(ci->xOffset, ci->yOffset));
    }

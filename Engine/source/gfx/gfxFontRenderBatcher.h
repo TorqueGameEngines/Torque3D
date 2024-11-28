@@ -54,6 +54,10 @@ class FontRenderBatcher
 
    SheetMarker &getSheetMarker(U32 sheetID);
 
+   // font shader.
+   GFXShaderRef mFontShader;
+   GFXShaderConstBufferRef mFontShaderConsts;
+
 public:
    FontRenderBatcher();
 

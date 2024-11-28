@@ -22,6 +22,7 @@
 
 #include "gfx/gfxFontRenderBatcher.h"
 #include "gfx/gFont.h"
+#include "materials/shaderData.h"
 
 FontRenderBatcher::FontRenderBatcher() : mStorage(8096)
 {
@@ -48,6 +49,17 @@ FontRenderBatcher::FontRenderBatcher() : mStorage(8096)
       f.setColorWrites(true, true, true, false); // NOTE: comment this out if alpha write is needed
       mFontSB = GFX->createStateBlock(f);
    }
+
+   // Find ShaderData
+   ShaderData* shaderData;
+   mFontShader = Sim::findObject("SDFFontRenderingGUI", shaderData) ? shaderData->getShader() : NULL;
+   if (!mFontShader)
+   {
+      Con::errorf("FontRenderBatcher - could not find Font shader");
+   }
+   // Create ShaderConstBuffer and Handles
+   mFontShaderConsts = mFontShader->allocConstBuffer();
+
 }
 
 void FontRenderBatcher::render( F32 rot, const Point2F &offset )
@@ -89,16 +101,16 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
          const PlatformFont::CharInfo &ci = mFont->getCharInfo( m.c );
 
          // Where are we drawing it?
-         F32 drawY = offset.y + mFont->getBaseline() - ci.yOrigin * TEXT_MAG;
+         F32 drawY = offset.y + (mFont->getBaseline() * 0.25) - (ci.yOrigin * 0.25) - (mFont->getDescent() * 0.25);
          F32 drawX = offset.x + m.x + ci.xOrigin;
 
          // Figure some values.
          const F32 texWidth = (F32)tex->getWidth();
          const F32 texHeight = (F32)tex->getHeight();
          const F32 texLeft   = (F32)(ci.xOffset)             / texWidth;
-         const F32 texRight  = (F32)(ci.xOffset + ci.texWidth)  / texWidth;
+         const F32 texRight  = (F32)(ci.xOffset + ci.width)  / texWidth;
          const F32 texTop    = (F32)(ci.yOffset)             / texHeight;
-         const F32 texBottom = (F32)(ci.yOffset + ci.texHeight) / texHeight;
+         const F32 texBottom = (F32)(ci.yOffset + ci.height) / texHeight;
 
          const F32 fillConventionOffset = GFX->getFillConventionOffset();
          const F32 screenLeft   = drawX - fillConventionOffset;
@@ -172,8 +184,11 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
    AssertFatal(currentPt <= mLength * 6, "FontRenderBatcher::render - too many verts for length of string!");
 
    GFX->setVertexBuffer(verts);
-   GFX->setupGenericShaders( GFXDevice::GSAddColorTexture );
-
+   GFX->setShader(mFontShader);
+   GFX->setShaderConstBuffer(mFontShaderConsts);
+   MatrixF tempMatrix = GFX->getProjectionMatrix() * GFX->getViewMatrix() * GFX->getWorldMatrix();
+   mFontShaderConsts->set(mFontShader->getShaderConstHandle("$modelView"), tempMatrix, GFXSCT_Float4x4);
+   
    // Now do an optimal render!
    for( S32 i = 0; i < mSheets.size(); i++ )
    {
@@ -182,6 +197,8 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
 
       if(!mSheets[i]->numChars )
          continue;
+      Point2I texDim = mFont->getTextureHandle(i).getWidthHeight();
+      mFontShaderConsts->setSafe(mFontShader->getShaderConstHandle("$texDim"), Point2F(texDim.x, texDim.y));
       
       GFX->setTexture( 0, mFont->getTextureHandle(i) );
       GFX->drawPrimitive(GFXTriangleList, mSheets[i]->startVertex, mSheets[i]->numChars * 2);

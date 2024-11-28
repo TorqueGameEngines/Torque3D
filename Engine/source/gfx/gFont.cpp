@@ -137,7 +137,7 @@ Resource<GFont> GFont::create(const String &faceName, U32 size, const char *cach
    }
 
    // Otherwise attempt to have the platform generate a new font
-   PlatformFont *platFont = createPlatformFont(faceName, size, charset);
+   PlatformFont *platFont = createPlatformFont(faceName, size*4, charset);
    
    if (platFont == NULL)
    {
@@ -176,11 +176,10 @@ Resource<GFont> GFont::create(const String &faceName, U32 size, const char *cach
    font->mFaceName = faceName;
    font->mSize = size;
    font->mCharSet = charset;
-
-   font->mHeight   = platFont->getFontHeight();
+   font->mHeight   = platFont->getFontHeight() * 0.25;
    font->mBaseline = platFont->getFontBaseLine();
    font->mAscent   = platFont->getFontBaseLine();
-   font->mDescent  = platFont->getFontHeight() - platFont->getFontBaseLine();
+   font->mDescent  = (platFont->getFontHeight() - platFont->getFontBaseLine());
 
    // Flag it to save when we exit
    font->mNeedSave = true;
@@ -301,29 +300,197 @@ void GFont::generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, 
    {
       for (S32 x = 0; x < sdfWidth; ++x)
       {
-         F32 minDist = F32_MAX;
-
          // Map SDF coordinates to original bitmap space
          F32 scaledX = x * (F32)width / sdfWidth;
          F32 scaledY = y * (F32)height / sdfHeight;
 
+         F32 minDistInsideSquared = F32_MAX;  // Closest distance to an "inside" pixel
+         F32 minDistOutsideSquared = F32_MAX; // Closest distance to an "outside" pixel
+
+         // Iterate over the entire bitmap (can optimize to a smaller region)
          for (S32 by = 0; by < height; ++by)
          {
             for (S32 bx = 0; bx < width; ++bx)
             {
                bool isInside = bitmap[by * width + bx] > 0;
-               F32 dist = mSqrt((scaledX - bx) * (scaledX - bx) + (scaledY - by) * (scaledY - by));
+               F32 dx = scaledX - bx;
+               F32 dy = scaledY - by;
+               F32 distSquared = dx * dx + dy * dy;
+
+               // Update the minimum distances for inside and outside
                if (isInside)
-                  minDist = mMin(minDist, dist);
+                  minDistInsideSquared = mMin(minDistInsideSquared, distSquared);
+               else
+                  minDistOutsideSquared = mMin(minDistOutsideSquared, distSquared);
             }
          }
-         // Normalize distance for SDF
-         F32 sdfValue = (1.0f - mMin(minDist, spreadFactor) / spreadFactor);
 
-         // Store the smoothed SDF value back to the bitmap
-         sdfBitmap[y * sdfWidth + x] = (U8)(255 * sdfValue);
+         // Compute the signed distance
+         F32 minDistInside = mSqrt(minDistInsideSquared);
+         F32 minDistOutside = mSqrt(minDistOutsideSquared);
+         F32 signedDist = minDistOutside - minDistInside;
+
+         // Normalize the signed distance
+         F32 normalizedDist = 0.5f + (signedDist / spreadFactor) * 0.5f;
+
+         // Clamp and scale to [0, 255]
+         normalizedDist = mClampF(normalizedDist, 0.0f, 1.0f);
+         sdfBitmap[y * sdfWidth + x] = (U8)(255 * normalizedDist);
       }
    }
+   
+   //// FMM SDF method
+   //// Initialize distance field
+   //Vector<F32> distanceField;
+   //distanceField.setSize(sdfWidth * sdfHeight);
+   //distanceField.fill(F32_MAX);
+
+   //// Helper to check if a pixel is inside the glyph (foreground)
+   //auto isInside = [&](S32 x, S32 y) -> bool {
+   //   return bitmap[y * width + x] > 0;
+   //};
+
+   //// Priority queue vectors (x, y, distance)
+   //Vector<S32> pqX, pqY;
+   //Vector<F32> pqDist;
+
+   //// Initialize priority queue with foreground pixels (distance = 0)
+   //for (S32 y = 0; y < sdfHeight; ++y)
+   //{
+   //   for (S32 x = 0; x < sdfWidth; ++x)
+   //   {
+   //      // Map the SDF coordinates to the bitmap space
+   //      F32 scaledX = x * (F32)width / sdfWidth;
+   //      F32 scaledY = y * (F32)height / sdfHeight;
+
+   //      // Check if the pixel in the bitmap is inside (foreground)
+   //      bool inside = false;
+   //      for (S32 by = 0; by < height; ++by)
+   //      {
+   //         for (S32 bx = 0; bx < width; ++bx)
+   //         {
+   //            if (isInside(bx, by))
+   //            {
+   //               F32 dist = mSqrt((scaledX - bx) * (scaledX - bx) + (scaledY - by) * (scaledY - by));
+   //               if (dist < 1.0f) // Only consider close points as part of the glyph
+   //               {
+   //                  inside = true;
+   //                  break;
+   //               }
+   //            }
+   //         }
+   //         if (inside) break;
+   //      }
+
+   //      if (inside)
+   //      {
+   //         // Mark the foreground pixels with distance 0
+   //         distanceField[y * sdfWidth + x] = 0.0f;
+   //         pqX.push_back(x);
+   //         pqY.push_back(y);
+   //         pqDist.push_back(0.0f);
+   //      }
+   //      else
+   //      {
+   //         // Set the background pixels to a large distance initially
+   //         distanceField[y * sdfWidth + x] = F32_MAX;
+   //      }
+   //   }
+   //}
+
+   //// Neighbors for 8-way connectivity (up, down, left, right, and diagonals)
+   //const S32 dx[8] = { -1, 1, 0, 0, -1, 1, -1, 1 };
+   //const S32 dy[8] = { 0, 0, -1, 1, -1, -1, 1, 1 };
+
+   //// Fast Marching Method: propagate distances
+   //while (!pqX.empty())
+   //{
+   //   // Get the pixel with the smallest distance (priority queue)
+   //   S32 x = pqX.front();
+   //   S32 y = pqY.front();
+   //   F32 currentDist = pqDist.front();
+
+   //   pqX.erase(pqX.begin());
+   //   pqY.erase(pqY.begin());
+   //   pqDist.erase(pqDist.begin());
+
+   //   // Explore neighbors
+   //   for (S32 i = 0; i < 8; ++i)
+   //   {
+   //      S32 nx = x + dx[i];
+   //      S32 ny = y + dy[i];
+
+   //      if (nx >= 0 && ny >= 0 && nx < sdfWidth && ny < sdfHeight)
+   //      {
+   //         // Compute the new distance as the grid distance (simplified)
+   //         F32 newDist = currentDist + 1.0f;
+
+   //         if (newDist < distanceField[ny * sdfWidth + nx])
+   //         {
+   //            distanceField[ny * sdfWidth + nx] = newDist;
+
+   //            // Push the new distances to the "priority queue" (sorted vector)
+   //            pqX.push_back(nx);
+   //            pqY.push_back(ny);
+   //            pqDist.push_back(newDist);
+
+   //            // Sort the queue (to mimic priority)
+   //            for (S32 j = pqDist.size() - 1; j > 0; --j)
+   //            {
+   //               if (pqDist[j] < pqDist[j - 1])
+   //               {
+   //                  std::swap(pqX[j], pqX[j - 1]);
+   //                  std::swap(pqY[j], pqY[j - 1]);
+   //                  std::swap(pqDist[j], pqDist[j - 1]);
+   //               }
+   //            }
+   //         }
+   //      }
+   //   }
+   //}
+
+   //// Find the maximum distance in the field for normalization
+   //F32 maxDistance = 0.0f;
+   //for (S32 i = 0; i < sdfWidth * sdfHeight; ++i)
+   //{
+   //   if (distanceField[i] > maxDistance)
+   //   {
+   //      maxDistance = distanceField[i];
+   //   }
+   //}
+
+   //// Smoothing step: Apply Gaussian blur (or simple kernel filter)
+   //Vector<F32> smoothedField;
+   //smoothedField.setSize(sdfWidth* sdfHeight);
+   //smoothedField.fill(0.0f);
+
+   //for (S32 y = 1; y < sdfHeight - 1; ++y)
+   //{
+   //   for (S32 x = 1; x < sdfWidth - 1; ++x)
+   //   {
+   //      // Simple 3x3 box blur (you can replace it with Gaussian blur for better results)
+   //      F32 sum = 0.0f;
+   //      for (S32 dy = -1; dy <= 1; ++dy)
+   //      {
+   //         for (S32 dx = -1; dx <= 1; ++dx)
+   //         {
+   //            sum += distanceField[(y + dy) * sdfWidth + (x + dx)];
+   //         }
+   //      }
+   //      smoothedField[y * sdfWidth + x] = sum / 9.0f;  // Average of 3x3 neighborhood
+   //   }
+   //}
+
+   //// Invert the distance field so that foreground pixels are black (0), and background pixels are white (255)
+   //for (S32 y = 0; y < sdfHeight; ++y)
+   //{
+   //   for (S32 x = 0; x < sdfWidth; ++x)
+   //   {
+   //      // Normalize the value to the range [0, 255], inverted
+   //      F32 sdfValue = 1.0f - (smoothedField[y * sdfWidth + x] / maxDistance);
+   //      sdfBitmap[y * sdfWidth + x] = (U8)(255.0f * sdfValue);
+   //   }
+   //}
 }
 
 void GFont::padGlyphBitmap(const U8* original, S32 origWidth, S32 origHeight, U8* padded, S32 padWidth, S32 padHeight, S32 padding)
@@ -348,24 +515,22 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    const S32 padding = 8;
 
    // Dimensions for the padded bitmap and SDF
-   S32 paddedWidth = charInfo.width + (2 * padding);
-   S32 paddedHeight = charInfo.height + (2 * padding);
-
-   S32 sdfWidth = paddedWidth;
-   S32 sdfHeight = paddedHeight;
+   S32 paddedWidth = charInfo.width + (2 * (padding * 4));
+   S32 paddedHeight = charInfo.height + (2 * (padding * 4));
 
    // Allocate buffers
    FrameTemp<U8> paddedBitmap(paddedWidth * paddedHeight);
+   padGlyphBitmap(charInfo.bitmapData, charInfo.width, charInfo.height, paddedBitmap, paddedWidth, paddedHeight, padding*4);
+
+   S32 sdfWidth = paddedWidth * 0.25;
+   S32 sdfHeight = paddedHeight * 0.25;
 
    // Allocate buffer for SDF bitmap
    FrameTemp<U8> sdfBitmap(sdfWidth * sdfHeight);
 
-   // Pad the original bitmap
-   padGlyphBitmap(charInfo.bitmapData, charInfo.width, charInfo.height, paddedBitmap, paddedWidth, paddedHeight, padding);
-
    // Generate the SDF
-   F32 sdfSpread = 1.0f / (4.0f + (charInfo.width / charInfo.height));
-   sdfSpread = mMax(charInfo.width, charInfo.height) * sdfSpread;
+   F32 sdfSpread = 16.0f;// / (4.0f + (charInfo.width / charInfo.height));
+   //sdfSpread = mMax(charInfo.width, charInfo.height) * sdfSpread;
    generateSDF(paddedBitmap, paddedWidth, paddedHeight, sdfBitmap, sdfWidth, sdfHeight, sdfSpread);
 
    U32 nextCurX = U32(mCurX + sdfWidth); /*7) & ~0x3;*/
@@ -424,11 +589,9 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
          *bmp->getAddress(x + charInfo.xOffset, y + charInfo.yOffset) = sdfBitmap[y * sdfWidth + x];
 
    // update our width and height.
-   //charInfo.width = sdfWidth;
-   //charInfo.height = sdfHeight;
-   charInfo.texWidth = sdfWidth;
-   charInfo.texHeight = sdfHeight;
-
+   charInfo.width = sdfWidth;
+   charInfo.height = sdfHeight;
+   charInfo.xIncrement = charInfo.xIncrement * 0.25;
    mMaxRowHeight = mMax(mMaxRowHeight, sdfHeight);
 
    mTextureSheets[mCurSheet].refresh();

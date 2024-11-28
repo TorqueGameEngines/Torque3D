@@ -177,9 +177,9 @@ Resource<GFont> GFont::create(const String &faceName, U32 size, const char *cach
    font->mSize = size;
    font->mCharSet = charset;
    font->mHeight   = platFont->getFontHeight() * 0.25;
-   font->mBaseline = platFont->getFontBaseLine();
-   font->mAscent   = platFont->getFontBaseLine();
-   font->mDescent  = (platFont->getFontHeight() - platFont->getFontBaseLine());
+   font->mBaseline = platFont->getFontBaseLine() * 0.25;
+   font->mAscent   = platFont->getFontBaseLine() * 0.25;
+   font->mDescent  = (platFont->getFontHeight() - platFont->getFontBaseLine()) * 0.25;
 
    // Flag it to save when we exit
    font->mNeedSave = true;
@@ -276,10 +276,17 @@ bool GFont::loadCharInfo(const UTF16 ch)
     if (it != mCharMap.end())
        return true;
 
-    if(mPlatformFont && mPlatformFont->isValidChar(ch))
+    if (mPlatformFont && mPlatformFont->isValidChar(ch))
     {
-        Mutex::lockMutex(mMutex); // the CharInfo returned by mPlatformFont is static data, must protect from changes.
-        PlatformFont::CharInfo &ci = mPlatformFont->getCharInfo(ch);
+       Mutex::lockMutex(mMutex); // the CharInfo returned by mPlatformFont is static data, must protect from changes.
+       PlatformFont::CharInfo& ci = mPlatformFont->getCharInfo(ch);
+       if (ch == dT(' '))
+       {
+          ci.yOrigin *= 0.25;
+          ci.xOrigin *= 0.25;
+          ci.xIncrement = (ci.xIncrement * 0.25);
+       }
+
         if(ci.bitmapData)
             addBitmap(ci);
 
@@ -529,8 +536,8 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    FrameTemp<U8> sdfBitmap(sdfWidth * sdfHeight);
 
    // Generate the SDF
-   F32 sdfSpread = 16.0f;// / (4.0f + (charInfo.width / charInfo.height));
-   //sdfSpread = mMax(charInfo.width, charInfo.height) * sdfSpread;
+   F32 sdfSpread = 1.0 / (4.0f + (charInfo.width / charInfo.height));
+   sdfSpread = mMax(charInfo.width, charInfo.height) * sdfSpread;
    generateSDF(paddedBitmap, paddedWidth, paddedHeight, sdfBitmap, sdfWidth, sdfHeight, sdfSpread);
 
    U32 nextCurX = U32(mCurX + sdfWidth); /*7) & ~0x3;*/
@@ -591,7 +598,10 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    // update our width and height.
    charInfo.width = sdfWidth;
    charInfo.height = sdfHeight;
-   charInfo.xIncrement = charInfo.xIncrement * 0.25;
+   charInfo.yOrigin *= 0.25;
+   charInfo.xOrigin *= 0.25;
+   charInfo.xIncrement = (charInfo.xIncrement *0.25);
+
    mMaxRowHeight = mMax(mMaxRowHeight, sdfHeight);
 
    mTextureSheets[mCurSheet].refresh();

@@ -933,8 +933,6 @@ bool GFont::read(Stream& io_rStream)
       io_rStream.read(&ci.bitmapIndex);
       io_rStream.read(&ci.xOffset);
       io_rStream.read(&ci.yOffset);
-      io_rStream.read(&ci.texWidth);
-      io_rStream.read(&ci.texHeight);
       io_rStream.read(&ci.width);
       io_rStream.read(&ci.height);
       io_rStream.read(&ci.xOrigin);
@@ -1003,8 +1001,6 @@ bool GFont::write(Stream& stream)
        stream.write(ci.bitmapIndex);
        stream.write(ci.xOffset);
        stream.write(ci.yOffset);
-       stream.write(ci.texWidth);
-       stream.write(ci.texHeight);
        stream.write(ci.width);
        stream.write(ci.height);
        stream.write(ci.xOrigin);

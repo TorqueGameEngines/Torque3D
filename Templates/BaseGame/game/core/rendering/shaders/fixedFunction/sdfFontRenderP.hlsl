@@ -32,20 +32,20 @@ struct Conn
 TORQUE_UNIFORM_SAMPLER2D(diffuseMap, 0);
 uniform float2 texDim; 
 
-// Customizable parameters
-static const float sdfThreshold = 0.5;      // Center threshold for the edge of the glyph
+// Customizable parameters   
+static const float sdfThreshold = 0.55;      // Center threshold for the edge of the glyph
                                             // Min: 0.4 , Max: 0.6 
-static const float slopeMultiplier = 0.5;   // Multiplies the slope of the transition
+static const float slopeMultiplier = 1.0;   // Multiplies the slope of the transition
                                             // Min: 0.5 (softer edges), Max: 4.0 (sharper edges)
-static const float inBias = 0.0;            // Shifts the threshold inward
+static const float inBias = -0.05;          // Shifts the threshold inward 
                                             // Min: -0.05 (slightly thinner), Max: 0.0 (default, no inward shift)
-static const float outBias = 0.0;           // Shifts the threshold outward
+static const float outBias = 0.01;          // Shifts the threshold outward
                                             // Min: 0.0 (default, no outward shift), Max: 0.05 (slightly thicker)
 static const float smoothness = 0.05;       // Controls the falloff region
                                             // Min: 0.005 (very sharp edges), Max: 0.05 (soft, anti-aliased edges)
 static const int supersample = 1;           // Supersampling factor
                                             // Min: 1 (no supersampling), Max: 8 (high-quality, computationally expensive)
-static const float alphaThreshold = 0.0f;   // Sets the alpha threshold
+static const float alphaThreshold = 0.2f;   // Sets the alpha threshold 
 
 float4 main( Conn IN ) : TORQUE_TARGET0 
 {

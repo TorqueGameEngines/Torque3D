@@ -23,6 +23,7 @@
 #include "gfx/gfxFontRenderBatcher.h"
 #include "gfx/gFont.h"
 #include "materials/shaderData.h"
+#include "gfxDrawUtil.h"
 
 FontRenderBatcher::FontRenderBatcher() : mStorage(8096)
 {
@@ -93,7 +94,6 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
 
       mSheets[i]->startVertex = currentPt;
       const GFXTextureObject *tex = mFont->getTextureHandle(i);
-
       for( S32 j = 0; j < mSheets[i]->numChars; j++ )
       {
          // Get some general info to proceed with...
@@ -203,6 +203,33 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
       GFX->setTexture( 0, mFont->getTextureHandle(i) );
       GFX->drawPrimitive(GFXTriangleList, mSheets[i]->startVertex, mSheets[i]->numChars * 2);
    }
+
+#if 0
+   for (S32 i = 0; i < mSheets.size(); i++)
+   {
+      // Do some early outs...
+      if (!mSheets[i])
+         continue;
+
+      if (!mSheets[i]->numChars)
+         continue;
+      for (S32 j = 0; j < mSheets[i]->numChars; j++)
+      {
+         // Get some general info to proceed with...
+         const CharMarker& m = mSheets[i]->charIndex[j];
+         const PlatformFont::CharInfo& ci = mFont->getCharInfo(m.c);
+         F32 yStart = offset.y + mFont->getBaseline() - ci.yOrigin * TEXT_MAG;
+         F32 xStart = offset.x + m.x + ci.xOrigin;
+
+         // draw baseline
+         GFX->getDrawUtil()->drawLine(xStart, yStart + ci.yOrigin, xStart + ci.width, yStart + ci.yOrigin, ColorI::GREEN);
+         // draw origin line
+         GFX->getDrawUtil()->drawLine(xStart, yStart, xStart + ci.width, yStart, ColorI::RED);
+         // draw bounds
+         GFX->getDrawUtil()->drawRect(Point2F(xStart, yStart), Point2F(xStart + ci.width, yStart + ci.height), ColorI::BLUE);
+      }
+   }
+#endif
 }
 
 void FontRenderBatcher::queueChar( UTF16 c, S32 &currentX, GFXVertexColor &currentColor )

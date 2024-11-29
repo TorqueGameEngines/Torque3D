@@ -51,11 +51,6 @@ public:
         return mTextMetric.tmAscent;
     }
 
-    inline U32 getFontDescent() const override
-    {
-       return mTextMetric.tmDescent;
-    }
-
     PlatformFont::CharInfo &getCharInfo(const UTF16 ch) const override;
     PlatformFont::CharInfo &getCharInfo(const UTF8 *str) const override;
 

@@ -179,7 +179,7 @@ Resource<GFont> GFont::create(const String &faceName, U32 size, const char *cach
    font->mHeight   = (platFont->getFontHeight() * 0.25);
    font->mAscent   = (platFont->getFontBaseLine() * 0.25);
    font->mBaseline = (platFont->getFontBaseLine() * 0.25);
-   font->mDescent  = (platFont->getFontDescent() * 0.25);
+   font->mDescent  = (font->mHeight - font->mBaseline);
 
    // Flag it to save when we exit
    font->mNeedSave = true;

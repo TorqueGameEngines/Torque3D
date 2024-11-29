@@ -81,7 +81,6 @@ public:
 
    virtual U32 getFontHeight() const = 0;
    virtual U32 getFontBaseLine() const = 0;
-   virtual U32 getFontDescent() const = 0;
 
    virtual PlatformFont::CharInfo &getCharInfo(const UTF16 ch) const = 0;
    virtual PlatformFont::CharInfo &getCharInfo(const UTF8 *str) const = 0;

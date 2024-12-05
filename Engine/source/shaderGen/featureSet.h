@@ -42,6 +42,7 @@ protected:
    {      
       const FeatureType* type;
       S32 index;
+      void* argStruct;
    };
 
    /// The list of featurs.   
@@ -93,14 +94,21 @@ public:
    /// the feature index when it was added.
    const FeatureType& getAt( U32 index, S32 *outIndex = NULL ) const;
 
+   void* getArguments(U32 index) const;
+
    /// Returns true if this handle has this feature.
    bool hasFeature( const FeatureType &type, S32 index = -1 ) const;
 
    /// 
    void setFeature( const FeatureType &type, bool set, S32 index = -1 );
 
-   /// 
-   void addFeature( const FeatureType &type, S32 index = -1 );
+   /// <summary>
+   /// Adds a feauter to the feature set.
+   /// </summary>
+   /// <param name="type">The shader feature type.</param>
+   /// <param name="index">The inedx the shader feature will be sorted in the set.</param>
+   /// <param name="argStruct">A struct representing arguments for a shader feature.</param>
+   void addFeature( const FeatureType &type, S32 index = -1, void* argStruct = nullptr );
 
    /// 
    void removeFeature( const FeatureType &type );

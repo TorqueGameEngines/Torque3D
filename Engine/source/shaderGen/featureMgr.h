@@ -27,16 +27,28 @@
 #endif 
 #ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif 
+#endif
+
+#ifndef _UTIL_DELEGATE_H_
+#include "core/util/delegate.h"
+#endif
 
 class FeatureType;
 class ShaderFeature;
 
+typedef Delegate<ShaderFeature* (void*)> CreateShaderFeatureDelegate;
+
+/// <summary>
 /// Used by the feature manager.
+/// </summary>
+/// <param name="type">The shader feature type.</param>
+/// <param name="feature">The shader feature class.</param>
+/// <param name="createFunc">The static create function for this feature.</param>
 struct FeatureInfo
 {
    const FeatureType *type;
    ShaderFeature *feature;
+   CreateShaderFeatureDelegate createFunc;
 };
 
 
@@ -67,10 +79,26 @@ public:
    /// 
    ShaderFeature* getByType( const FeatureType &type );
 
-   // Allows other systems to add features.  index is 
-   // the enum in GFXMaterialFeatureData.
-   void registerFeature(   const FeatureType &type, 
-                           ShaderFeature *feature );
+   /// <summary>
+   /// Creates a shader feature of this type with the arguments provided.
+   /// </summary>
+   /// <param name="type">The shader feature type.</param>
+   /// <param name="argStruct">The arguments for setting up this isntance of the shaderFeature.</param>
+   /// <returns>An instance of the shader feature using its static createFunction taking in the
+   /// argument struct.
+   /// </returns>
+   ShaderFeature* createFeature(const FeatureType& type, void* argStruct);
+
+   /// <summary>
+   /// Allows other systems to add features.  index is 
+   /// the enum in GFXMaterialFeatureData.
+   /// </summary>
+   /// <param name="type">The shader feature type.</param>
+   /// <param name="feature">The shader feature (can be null if featureDelegate defined)</param>
+   /// <param name="featureDelegate">The feature delegate create function.</param>
+   void registerFeature(const FeatureType& type,
+                        ShaderFeature* feature = nullptr,
+                        CreateShaderFeatureDelegate featureDelegate = nullptr);
 
    // Unregister a feature.
    void unregisterFeature( const FeatureType &type );

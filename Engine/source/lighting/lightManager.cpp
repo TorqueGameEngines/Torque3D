@@ -549,7 +549,7 @@ DefineEngineFunction( setLightManager, bool, ( const char *name ),,
    "@return Returns true if the light manager is found and activated.\n"
    "@ingroup Lighting\n" )
 {
-   return gClientSceneGraph->setLightManager( name );
+   return getActiveClientScene()->setLightManager( name );
 }
 
 DefineEngineFunction( lightScene, bool, ( const char *completeCallbackFn, const char *mode ), ( nullAsType<const char*>(), nullAsType<const char*>() ),

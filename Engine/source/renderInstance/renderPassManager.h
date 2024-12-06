@@ -221,7 +221,7 @@ public:
    SceneManager* getSceneManager()
    {
       if ( !mSceneManager )
-         mSceneManager = gClientSceneGraph;
+         mSceneManager = getActiveClientScene();
 
       return mSceneManager;
    }

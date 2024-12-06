@@ -772,35 +772,35 @@ void EditTSCtrl::renderWorld(const RectI & updateRect)
 
    updateGizmo();
 
-   gClientSceneGraph->setDisplayTargetResolution(getExtent());
+   getActiveClientScene()->setDisplayTargetResolution(getExtent());
 
    // Use a render instance to do editor 3D scene 
    // rendering after HDR is processed and while the depth 
    // buffer is still intact.
-   RenderPassManager *rpm = gClientSceneGraph->getDefaultRenderPass();
+   RenderPassManager *rpm = getActiveClientScene()->getDefaultRenderPass();
    ObjectRenderInst *inst = rpm->allocInst<ObjectRenderInst>();
    inst->type = RenderPassManager::RIT_Editor;
    inst->renderDelegate.bind(this, &EditTSCtrl::_renderScene);
    rpm->addInst(inst);
 
    if( mDisplayType == DisplayTypePerspective )
-      gClientSceneGraph->renderScene( SPT_Diffuse );
+      getActiveClientScene()->renderScene( SPT_Diffuse );
    else
    {
       // If we are in an orthographic mode, do a special render
       // with AL, fog, and PostFX disabled.
 
-      FogData savedFogData = gClientSceneGraph->getFogData();
-      gClientSceneGraph->setFogData( FogData() );
+      FogData savedFogData = getActiveClientScene()->getFogData();
+      getActiveClientScene()->setFogData( FogData() );
 
       SceneRenderState renderState
       (
-         gClientSceneGraph,
+         getActiveClientScene(),
          SPT_Diffuse
       );
 
-      gClientSceneGraph->renderScene( &renderState );
-      gClientSceneGraph->setFogData( savedFogData );
+      getActiveClientScene()->renderScene( &renderState );
+      getActiveClientScene()->setFogData( savedFogData );
    }
 }
 
@@ -1088,8 +1088,8 @@ bool EditTSCtrl::processCameraQuery(CameraQuery * query)
 
    if (getCameraTransform(&query->cameraMatrix))
    {
-      query->farPlane = gClientSceneGraph->getVisibleDistance() * smVisibleDistanceScale;
-      query->nearPlane = gClientSceneGraph->getNearClip();
+      query->farPlane = getActiveClientScene()->getVisibleDistance() * smVisibleDistanceScale;
+      query->nearPlane = getActiveClientScene()->getNearClip();
       query->fov = mDegToRad(smCamFOV);
 
       if(query->ortho)

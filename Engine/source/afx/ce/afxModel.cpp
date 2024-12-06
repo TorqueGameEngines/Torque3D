@@ -573,7 +573,7 @@ bool afxModel::onAdd()
   }
 
   // tell engine the model exists
-  gClientSceneGraph->addObjectToScene(this);
+  getActiveClientScene()->addObjectToScene(this);
   removeFromProcessList();
   ClientProcessList::get()->addObject(this);
   conn->addObject(this);

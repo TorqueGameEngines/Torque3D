@@ -1034,7 +1034,7 @@ void afxConstraintMgr::initConstraintDefs(Vector<afxConstraintDef>& all_defs, bo
     mScoping_dist_sq = scoping_dist*scoping_dist;
   else
   {
-    SceneManager* sg = (on_server) ? gServerSceneGraph : gClientSceneGraph;
+    SceneManager* sg = (on_server) ? getActiveServerScene() : getActiveClientScene();
     F32 vis_dist = (sg) ? sg->getVisibleDistance() : 1000.0f;
 	mScoping_dist_sq = vis_dist*vis_dist;
   }

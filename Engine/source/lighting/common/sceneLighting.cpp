@@ -651,7 +651,7 @@ bool SceneLighting::lightScene(const char * callback, BitSet32 flags)
    gConnectionMissionCRC = con->getMissionCRC();
 
    // assumes we are in the world that needs lighting...
-   mSceneManager = gClientSceneGraph;
+   mSceneManager = getActiveClientScene();
 
    if(!light(flags))
    {

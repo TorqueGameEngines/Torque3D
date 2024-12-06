@@ -410,7 +410,7 @@ bool Splash::onAdd()
    mObjBox.maxExtents = Point3F(  1,  1,  1 );
    resetWorldBox();
 
-   gClientSceneGraph->addObjectToScene(this);
+   getActiveClientScene()->addObjectToScene(this);
 
    removeFromProcessList();
    ClientProcessList::get()->addObject(this);

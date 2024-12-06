@@ -40,7 +40,7 @@ bool ShadowManager::canActivate()
 
 void ShadowManager::activate()
 {
-   mSceneManager = gClientSceneGraph; //;getWorld()->findWorldManager<SceneManager>();
+   mSceneManager = getActiveClientScene(); //;getWorld()->findWorldManager<SceneManager>();
 }
 
 //------------------------------------------------------------------------------

@@ -505,7 +505,7 @@ void GuiObjectView::renderWorld( const RectI& updateRect )
    mv.inverse();
    mv.getColumn( 3, &cp );
 
-   RenderPassManager* renderPass = gClientSceneGraph->getDefaultRenderPass();
+   RenderPassManager* renderPass = getActiveClientScene()->getDefaultRenderPass();
 
    S32 time = Platform::getVirtualMilliseconds();
    S32 dt = time - mLastRenderTime;
@@ -524,7 +524,7 @@ void GuiObjectView::renderWorld( const RectI& updateRect )
 
    SceneRenderState state
    (
-      gClientSceneGraph,
+      getActiveClientScene(),
       SPT_Diffuse,
       SceneCameraState( GFX->getViewport(), frust, MatrixF::Identity, GFX->getProjectionMatrix() ),
       renderPass,
@@ -546,8 +546,8 @@ void GuiObjectView::renderWorld( const RectI& updateRect )
    if (Skylight::smSkylightProbe.isValid())
       PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
 
-   FogData savedFogData = gClientSceneGraph->getFogData();
-   gClientSceneGraph->setFogData(FogData());  // no fog in preview window
+   FogData savedFogData = getActiveClientScene()->getFogData();
+   getActiveClientScene()->setFogData(FogData());  // no fog in preview window
 
    if(mModelInstance)
    {
@@ -575,7 +575,7 @@ void GuiObjectView::renderWorld( const RectI& updateRect )
 
    renderPass->renderPass( &state );
 
-   gClientSceneGraph->setFogData(savedFogData);         // restore fog setting
+   getActiveClientScene()->setFogData(savedFogData);         // restore fog setting
    // Make sure to remove our fake sun.
    LIGHTMGR->unregisterAllLights();
 }

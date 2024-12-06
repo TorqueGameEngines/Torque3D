@@ -363,16 +363,10 @@ class SceneManager
       const MatrixF& getNonClipProjection() const { return mNonClipProj; }
 };
 
-//-----------------------------------------------------------------------------
+SceneManager* getActiveClientScene();
+void setActiveClientScene(SceneManager* scene);
 
-//TODO: these two need to go
-
-/// The client-side scene graph.  Not used if the engine is running
-/// as a dedicated server.
-extern SceneManager* gClientSceneGraph;
-
-/// The server-side scene graph.  Not used if the engine is running
-/// as a pure client.
-extern SceneManager* gServerSceneGraph;
+SceneManager* getActiveServerScene();
+void setActiveServerScene(SceneManager* scene);
 
 #endif //_SCENEMANAGER_H_

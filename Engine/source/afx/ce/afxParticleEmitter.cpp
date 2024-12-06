@@ -1015,7 +1015,7 @@ void afxParticleEmitter::afx_emitParticles(const Point3F& start, const Point3F& 
 
   if( n_parts > 0 && mSceneManager == NULL )
   {
-     gClientSceneGraph->addObjectToScene(this);
+     getActiveClientScene()->addObjectToScene(this);
      ClientProcessList::get()->addObject(this);
   }
 

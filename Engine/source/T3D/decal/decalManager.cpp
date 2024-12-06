@@ -61,12 +61,12 @@ MODULE_BEGIN( DecalManager )
    MODULE_INIT
    {
       gDecalManager = new DecalManager;
-      gClientSceneGraph->addObjectToScene( gDecalManager );
+      getActiveClientScene()->addObjectToScene( gDecalManager );
    }
    
    MODULE_SHUTDOWN
    {
-      gClientSceneGraph->removeObjectFromScene( gDecalManager );
+      getActiveClientScene()->removeObjectFromScene( gDecalManager );
       SAFE_DELETE( gDecalManager );
    }
 

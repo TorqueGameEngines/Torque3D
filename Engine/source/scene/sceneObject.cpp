@@ -353,9 +353,9 @@ void SceneObject::addToScene()
       return;
 
    if( isClientObject() )
-      gClientSceneGraph->addObjectToScene( this );
+      getActiveClientScene()->addObjectToScene( this );
    else
-      gServerSceneGraph->addObjectToScene( this );
+      getActiveServerScene()->addObjectToScene( this );
 }
 
 //-----------------------------------------------------------------------------

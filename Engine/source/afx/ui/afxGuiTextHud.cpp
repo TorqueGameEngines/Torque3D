@@ -24,7 +24,7 @@
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 
 #include "afx/arcaneFX.h"
-
+#include "scene/sceneManager.h"
 #include "gui/3d/guiTSControl.h"
 #include "gfx/gfxDrawUtil.h"
 #include "T3D/gameBase/gameConnection.h"
@@ -131,7 +131,7 @@ void afxGuiTextHud::onRender( Point2I, const RectI &updateRect)
    camFovCos = mCos(mDegToRad(camFovCos) / 2);
 
    // Visible distance info & name fading
-   F32 visDistance = gClientSceneGraph->getVisibleDistance();
+   F32 visDistance = getActiveClientScene()->getVisibleDistance();
    F32 visDistanceSqr = visDistance * visDistance;
    F32 fadeDistance = visDistance * mDistanceFade;
 

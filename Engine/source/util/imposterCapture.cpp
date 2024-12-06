@@ -412,7 +412,7 @@ void ImposterCapture::begin(  TSShapeInstance *shapeInst,
    // Set up scene state.
 
    mState = new SceneRenderState(
-      gClientSceneGraph,
+      getActiveClientScene(),
       SPT_Diffuse,
       SceneCameraState( viewport, frust, GFX->getWorldMatrix(),GFX->getProjectionMatrix() ),
       mRenderPass,

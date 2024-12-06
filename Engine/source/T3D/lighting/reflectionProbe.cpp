@@ -533,7 +533,7 @@ void ReflectionProbe::updateProbeParams()
       mProbeInfo.mPosition = Point3F::Zero;
       mProbeInfo.mTransform = MatrixF::Identity;
 
-      F32 visDist = gClientSceneGraph->getVisibleDistance();
+      F32 visDist = getActiveClientScene()->getVisibleDistance();
       Box3F skylightBounds = Box3F(visDist * 2);
 
       skylightBounds.setCenter(Point3F::Zero);

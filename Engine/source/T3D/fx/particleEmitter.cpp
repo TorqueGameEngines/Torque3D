@@ -1464,7 +1464,7 @@ void ParticleEmitter::emitParticles(const Point3F& start,
 
    if( n_parts > 0 && getSceneManager() == NULL )
    {
-      gClientSceneGraph->addObjectToScene(this);
+      getActiveClientScene()->addObjectToScene(this);
       ClientProcessList::get()->addObject(this);
    }
 
@@ -1534,7 +1534,7 @@ void ParticleEmitter::emitParticles(const Point3F& rCenter,
    // Make sure we're part of the world
    if( n_parts > 0 && getSceneManager() == NULL )
    {
-      gClientSceneGraph->addObjectToScene(this);
+      getActiveClientScene()->addObjectToScene(this);
       ClientProcessList::get()->addObject(this);
    }
 

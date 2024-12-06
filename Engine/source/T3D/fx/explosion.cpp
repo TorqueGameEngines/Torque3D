@@ -1070,7 +1070,7 @@ bool Explosion::onAdd()
       }
    }
 
-   gClientSceneGraph->addObjectToScene(this);
+   getActiveClientScene()->addObjectToScene(this);
 
    removeFromProcessList();
    ClientProcessList::get()->addObject(this);

@@ -327,7 +327,7 @@ void LevelInfo::_updateSceneGraph()
    if ( mNearClip <= 0.0f )
       mNearClip = 0.001f;
 
-   SceneManager* scene = isClientObject() ? gClientSceneGraph : gServerSceneGraph;
+   SceneManager* scene = isClientObject() ? getActiveClientScene() : getActiveServerScene();
    
    scene->setNearClip( mNearClip );
    scene->setVisibleDistance( mVisibleDistance );

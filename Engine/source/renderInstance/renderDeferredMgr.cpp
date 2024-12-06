@@ -225,8 +225,8 @@ void RenderDeferredMgr::addElement( RenderInst *inst )
    PROFILE_SCOPE( RenderDeferredMgr_addElement )
 
    // Skip out if this bin is disabled.
-   if (  gClientSceneGraph->getCurrentRenderState() &&
-         gClientSceneGraph->getCurrentRenderState()->disableAdvancedLightingBins() )
+   if (  getActiveClientScene()->getCurrentRenderState() &&
+         getActiveClientScene()->getCurrentRenderState()->disableAdvancedLightingBins() )
       return;
 
    // First what type of render instance is it?

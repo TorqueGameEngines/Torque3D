@@ -148,10 +148,10 @@ void GuiMaterialCtrl::onRender( Point2I offset, const RectI &updateRect )
 
    SceneRenderState state
    (
-      gClientSceneGraph,
+      getActiveClientScene(),
       SPT_Diffuse,
       SceneCameraState( GFX->getViewport(), frust, GFX->getWorldMatrix(), GFX->getProjectionMatrix() ),
-      gClientSceneGraph->getDefaultRenderPass(),
+      getActiveClientScene()->getDefaultRenderPass(),
       false
    );
 

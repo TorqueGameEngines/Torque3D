@@ -220,9 +220,8 @@ public:
    /// Get scene manager which this render pass belongs to.
    SceneManager* getSceneManager()
    {
-      if ( !mSceneManager )
-         mSceneManager = getActiveClientScene();
-
+      // always update to the activeClientScene.
+      mSceneManager = getActiveClientScene();
       return mSceneManager;
    }
 

@@ -28,8 +28,22 @@
 #ifndef _GUIMATERIALPREVIEW_H_
 #define _GUIMATERIALPREVIEW_H_
 
+#ifndef _GUITSCONTROL_H_
 #include "gui/3d/guiTSControl.h"
+#endif
+
+#ifndef _TSSHAPEINSTANCE_H_
 #include "ts/tsShapeInstance.h"
+#endif
+
+#ifndef _SCENEMANAGER_H_
+#include "scene/sceneManager.h"
+#endif
+
+#ifndef _SCOPED_SCENE_MANAGER_H_
+#include "scene/scopedSceneManager.h"
+#endif // !1
+
 
 class LightInfo;
 
@@ -75,6 +89,7 @@ protected:
    Point2I     mLastMousePoint;
 
    LightInfo*  mFakeSun;
+   SceneManager* mTempScene;
    void renderSunDirection() const;
 public:
    bool onWake() override;

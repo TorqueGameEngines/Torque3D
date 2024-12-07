@@ -1211,7 +1211,7 @@ bool afxMagicMissile::pointInWater(const Point3F &point)
       // but using the actual defined container when possible is the right
       // thing to do.  DAW
       AssertFatal(isClientObject(), "Server projectile has not been properly added");
-      gClientContainer.findObjects( boundsBox, WaterObjectType, findRouter, &info );
+      getActiveClientContainer()->findObjects( boundsBox, WaterObjectType, findRouter, &info );
    }
 
    return ( info.waterCoverage > 0.0f );
@@ -1244,7 +1244,7 @@ void afxMagicMissile::emitParticles(const Point3F& from, const Point3F& to, cons
    {
       // cast the ray to get the surface point of the water
       RayInfo rInfo;
-      if (gClientContainer.castRay(from, to, WaterObjectType, &rInfo))
+      if (getActiveClientContainer()->castRay(from, to, WaterObjectType, &rInfo))
       {
          create_splash(rInfo.point);
 
@@ -1261,7 +1261,7 @@ void afxMagicMissile::emitParticles(const Point3F& from, const Point3F& to, cons
       // cast the ray in the opposite direction since that point is out of the water, otherwise
       //  we hit water immediately and wont get the appropriate surface point
       RayInfo rInfo;
-      if (gClientContainer.castRay(to, from, WaterObjectType, &rInfo))
+      if (getActiveClientContainer()->castRay(to, from, WaterObjectType, &rInfo))
       {
       create_splash(rInfo.point);
 
@@ -1434,7 +1434,7 @@ void afxMagicMissile::processTick(const Move* move)
       if (ht < ht_min)
          ht = ht_min;
 
-      SceneContainer* container = (isServerObject()) ? &gServerContainer : &gClientContainer;
+      SceneContainer* container = (isServerObject()) ? getActiveServerContainer() : getActiveClientContainer();
       Point3F above_pos = new_pos; above_pos.z += 10000;
       Point3F below_pos = new_pos; below_pos.z -= 10000;
       RayInfo rInfo;

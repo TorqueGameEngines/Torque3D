@@ -73,7 +73,7 @@ void RadialImpulseEvent::unpack( NetConnection *ps, BitStream *bstream )
    
 void RadialImpulseEvent::process(NetConnection *con)
 { 
-   impulse( &gClientContainer, mPosition, mRadius, mMagnitude );   
+   impulse( getActiveClientContainer(), mPosition, mRadius, mMagnitude );   
 }
 
 void RadialImpulseEvent::_impulseCallback( SceneObject *obj, void *key )
@@ -127,7 +127,7 @@ DefineEngineStaticMethod(RadialImpulseEvent, send, void, (const char* inPosition
    dSscanf( inPosition, "%f %f %f", &position.x, &position.y, &position.z );
 
    // Apply server-side.
-   RadialImpulseEvent::impulse( &gServerContainer, position, radius, magnitude );
+   RadialImpulseEvent::impulse( getActiveServerContainer(), position, radius, magnitude );
 
    // Transmit event to each client to perform client-side...
 

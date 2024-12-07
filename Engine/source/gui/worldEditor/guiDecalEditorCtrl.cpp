@@ -604,7 +604,7 @@ bool GuiDecalEditorCtrl::getRayInfo( const Gui3DMouseEvent & event, RayInfo *rIn
 
    bool hit;         
          
-   hit = gServerContainer.castRayRendered( startPnt, endPnt, STATIC_COLLISION_TYPEMASK, rInfo );    
+   hit = getActiveServerContainer()->castRayRendered( startPnt, endPnt, STATIC_COLLISION_TYPEMASK, rInfo );    
    
    return hit;
 }

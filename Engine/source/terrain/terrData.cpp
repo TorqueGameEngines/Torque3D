@@ -103,7 +103,7 @@ TerrainBlock* getTerrainUnderWorldPoint(const Point3F & wPos)
 	F32 nearT = 1.0f;
 
 	SimpleQueryList queryList;
-	gServerContainer.findObjects( TerrainObjectType, SimpleQueryList::insertionCallback, &queryList);
+	getActiveServerContainer()->findObjects( TerrainObjectType, SimpleQueryList::insertionCallback, &queryList);
 
 	for (U32 i = 0; i < queryList.mList.size(); i++)
 	{

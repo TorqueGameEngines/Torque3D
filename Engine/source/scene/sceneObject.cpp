@@ -807,7 +807,7 @@ void SceneObject::onCameraScopeQuery( NetConnection* connection, CameraScopeQuer
    if( getSceneManager() )
       getSceneManager()->scopeScene( query, connection );
    else
-      gServerContainer.findObjects( 0xFFFFFFFF, scopeCallback, connection );
+      getActiveServerContainer()->findObjects( 0xFFFFFFFF, scopeCallback, connection );
 }
 
 //-----------------------------------------------------------------------------

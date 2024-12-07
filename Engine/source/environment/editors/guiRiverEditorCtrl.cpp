@@ -259,7 +259,7 @@ void GuiRiverEditorCtrl::_process3DMouseDown( const Gui3DMouseEvent& event )
 
    RayInfo ri;   
 
-   if ( gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri) )
+   if ( getActiveServerContainer()->castRay(startPnt, endPnt, StaticShapeObjectType, &ri) )
       endPnt = ri.point;
 
    River *riverPtr = NULL;
@@ -649,7 +649,7 @@ void GuiRiverEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 
       RayInfo ri;   
 
-      if ( gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri) )
+      if ( getActiveServerContainer()->castRay(startPnt, endPnt, StaticShapeObjectType, &ri) )
          endPnt = ri.point;
 
       River *pRiver = NULL;
@@ -1096,7 +1096,7 @@ bool GuiRiverEditorCtrl::getStaticPos( const Gui3DMouseEvent & event, Point3F &t
    RayInfo ri;
    bool hit;         
          
-   hit = gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri);    
+   hit = getActiveServerContainer()->castRay(startPnt, endPnt, StaticShapeObjectType, &ri);    
    tpos = ri.point;
    
    return hit;

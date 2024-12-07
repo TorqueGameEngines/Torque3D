@@ -3654,7 +3654,7 @@ MatrixF * Player::Death::fallToGround(F32 dt, const Point3F& loc, F32 curZ, F32 
 
    PROFILE_SCOPE(ConformToGround);
 
-   if (gClientContainer.castRay(pos, below, sPlayerConformMask, &coll))
+   if (getActiveClientContainer()->castRay(pos, below, sPlayerConformMask, &coll))
    {
       F32      adjust, height = (loc.z - coll.point.z), sink = curSink;
       VectorF  desNormal = coll.normal;
@@ -3682,7 +3682,7 @@ MatrixF * Player::Death::fallToGround(F32 dt, const Point3F& loc, F32 curZ, F32 
 
          // Do the three casts-
          for (c = 0; c < 3; c++)
-            if (gClientContainer.castRay(corners[c], downpts[c], sPlayerConformMask, &coll))
+            if (getActiveClientContainer()->castRay(corners[c], downpts[c], sPlayerConformMask, &coll))
                downpts[c] = coll.point;
             else
                break;
@@ -3936,7 +3936,7 @@ void Player::updateActionThread()
          mat.getColumn( 1, &rot );
          mat.mulP( Point3F( offset, 0.0f, 0.0f), &pos );
 
-         if( gClientContainer.castRay( Point3F( pos.x, pos.y, pos.z + 0.01f ),
+         if( getActiveClientContainer()->castRay( Point3F( pos.x, pos.y, pos.z + 0.01f ),
                Point3F( pos.x, pos.y, pos.z - 2.0f ),
                (U32)STATIC_COLLISION_TYPEMASK | (U32)VehicleObjectType, &rInfo ) )
          {
@@ -4767,7 +4767,7 @@ void Player::updateAttachment(){
     RayInfo rInfo;
     MatrixF mat = getTransform();
     mat.getColumn(3, &pos);
-    if (gServerContainer.castRay(Point3F(pos.x, pos.y, pos.z + 0.1f),
+    if (getActiveServerContainer()->castRay(Point3F(pos.x, pos.y, pos.z + 0.1f),
         Point3F(pos.x, pos.y, pos.z - 1.0f ),
         PathShapeObjectType, &rInfo))
     {
@@ -7080,7 +7080,7 @@ void Player:: playImpactSound()
       MatrixF mat = getTransform();
       mat.mulP(Point3F(mDataBlock->decalOffset,0.0f,0.0f), &pos);
 
-      if( gClientContainer.castRay( Point3F( pos.x, pos.y, pos.z + 0.01f ),
+      if( getActiveClientContainer()->castRay( Point3F( pos.x, pos.y, pos.z + 0.01f ),
                                     Point3F( pos.x, pos.y, pos.z - 2.0f ),
                                     (U32)STATIC_COLLISION_TYPEMASK | (U32)VehicleObjectType,
                                     &rInfo ) )
@@ -7132,7 +7132,7 @@ void Player::updateSplash()
 
 
          RayInfo rInfo;
-         if (gClientContainer.castRay(mLastPos, curPos,
+         if (getActiveClientContainer()->castRay(mLastPos, curPos,
                WaterObjectType, &rInfo)) {
             createSplash( rInfo.point, speed );
             mBubbleEmitterTime = 0.0;

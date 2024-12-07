@@ -201,7 +201,7 @@ void afxGuiTextHud::onRender( Point2I, const RectI &updateRect)
            SceneObject *mount = shape->getObjectMount();
            if (mount)
              mount->disableCollision();
-           bool los = !gClientContainer.castRay(camPos, shapePos,losMask, &info);
+           bool los = !getActiveClientContainer()->castRay(camPos, shapePos,losMask, &info);
            shape->enableCollision();
            if (mount)
              mount->enableCollision();
@@ -253,7 +253,7 @@ void afxGuiTextHud::onRender( Point2I, const RectI &updateRect)
        RayInfo info;
        if (spec->obj)
          spec->obj->disableCollision();
-       bool los = !gClientContainer.castRay(camPos, spec->pos, losMask, &info);
+       bool los = !getActiveClientContainer()->castRay(camPos, spec->pos, losMask, &info);
        if (spec->obj)
          spec->obj->enableCollision();
        if (!los)

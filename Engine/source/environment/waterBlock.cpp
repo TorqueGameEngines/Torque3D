@@ -238,7 +238,7 @@ void WaterBlock::setupVertexBlock( U32 width, U32 height, U32 rowOffset )
          // currently just testing for terrain and atlas
          // objects, but potentially any object that responds
          // to a ray cast could detected.
-         if(gClientContainer.castRay(start, end, 
+         if(getActiveClientContainer()->castRay(start, end, 
             //StaticObjectType | 
             //InteriorObjectType | 
             //ShapeBaseObjectType | 
@@ -275,7 +275,7 @@ void WaterBlock::setupVertexBlock( U32 width, U32 height, U32 rowOffset )
          // Cast a ray to do some AO-style shadowing.
          F32 &shadow = vert->depthData.y;
 
-         if(gClientContainer.castRay(worldPoint, worldPoint + sunVector * 9000.f, 
+         if(getActiveClientContainer()->castRay(worldPoint, worldPoint + sunVector * 9000.f, 
             //StaticObjectType | 
             //InteriorObjectType | 
             //ShapeBaseObjectType | 

@@ -223,7 +223,7 @@ void BasicSceneObjectPluginFactory::addLightPlugin(SceneObject* obj)
 void BasicSceneObjectPluginFactory::addToExistingObjects()
 {
    SimpleQueryList sql;  
-   gClientContainer.findObjects( shadowObjectTypeMask, SimpleQueryList::insertionCallback, &sql);
+   getActiveClientContainer()->findObjects( shadowObjectTypeMask, SimpleQueryList::insertionCallback, &sql);
    for (SceneObject** i = sql.mList.begin(); i != sql.mList.end(); i++)
       addLightPlugin(*i);
 }

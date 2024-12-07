@@ -350,7 +350,7 @@ bool LightFlareData::_testVisibility(const SceneRenderState *state, LightFlareSt
 
       RayInfo rayInfo;
 
-      if ( !gClientContainer.castRay( camPos, lightPos, LosMask, &rayInfo ) )
+      if ( !getActiveClientContainer()->castRay( camPos, lightPos, LosMask, &rayInfo ) )
          *outOcclusionFade = 1.0f;
 
       if ( control && fps )

@@ -158,7 +158,7 @@ afxXM_AltitudeConform::afxXM_AltitudeConform(afxXM_AltitudeConformData* db, afxE
 : afxXM_WeightedBase(db, fxw) 
 { 
   mConformData = db;
-  mContainer = (on_server) ? &gServerContainer : &gClientContainer;
+  mContainer = (on_server) ? getActiveServerContainer() : getActiveClientContainer();
   mDo_freeze = db->do_freeze;
   mIs_frozen = false;
   mTerrain_alt = -1.0f;

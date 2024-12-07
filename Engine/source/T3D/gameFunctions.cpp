@@ -132,7 +132,7 @@ DefineEngineFunction( containerFindFirst, const char*, (U32 typeMask, Point3F or
 
    //initialize the list, and do the query
    sgServerQueryList.mList.clear();
-   gServerContainer.findObjects(queryBox, typeMask, SimpleQueryList::insertionCallback, &sgServerQueryList);
+   getActiveServerContainer()->findObjects(queryBox, typeMask, SimpleQueryList::insertionCallback, &sgServerQueryList);
 
    //return the first element
    sgServerQueryIndex = 0;

@@ -520,7 +520,7 @@ void BoxBrush::_renderOutline()
          start.x = end.x = mousePos.x + tmp.x * squareSize * 0.5f * (F32)mSize.x;
          start.y = end.y = mousePos.y + tmp.y * squareSize * 0.5f * (F32)mSize.y;
 
-         hit = gServerContainer.castRay( start, end, TerrainObjectType, &ri );
+         hit = getActiveServerContainer()->castRay( start, end, TerrainObjectType, &ri );
 
          if ( hit )
             pointList.push_back( ri.point );
@@ -637,7 +637,7 @@ void EllipseBrush::_renderOutline()
       start.x = end.x = mousePos.x + vec.x * squareSize * (F32)mSize.x * 0.5f;
       start.y = end.y = mousePos.y + vec.y * squareSize * (F32)mSize.y * 0.5f;
 
-      hit = gServerContainer.castRay( start, end, TerrainObjectType, &ri );
+      hit = getActiveServerContainer()->castRay( start, end, TerrainObjectType, &ri );
 
       if ( hit )
          pointList.push_back( ri.point );
@@ -1204,7 +1204,7 @@ TerrainBlock* TerrainEditor::collide(const Gui3DMouseEvent & evt, Point3F & pos)
    Point3F end( evt.pos + ( evt.vec * 10000.0f ) );
 
    RayInfo rinfo;
-   bool hit = gServerContainer.castRay( start, end, mask, &rinfo );
+   bool hit = getActiveServerContainer()->castRay( start, end, mask, &rinfo );
 
    if ( !hit )
       return NULL;

@@ -229,7 +229,7 @@ void ForestBrushTool::onRender2D()
       end.x = start.x = mLastBrushPoint.x + vec.x * mSize;
       end.y = start.y = mLastBrushPoint.y + vec.y * mSize;
 
-      bool hit = gServerContainer.castRay( start, end, TerrainObjectType | StaticShapeObjectType, &ri );
+      bool hit = getActiveServerContainer()->castRay( start, end, TerrainObjectType | StaticShapeObjectType, &ri );
 
       if ( hit )
          pointList.push_back( ri.point );
@@ -557,7 +557,7 @@ bool ForestBrushTool::_updateBrushPoint( const Gui3DMouseEvent &event_ )
       mForest->disableCollision();
 
    RayInfo rinfo;
-   mDrawBrush = gServerContainer.castRay( start, end, mask, &rinfo );
+   mDrawBrush = getActiveServerContainer()->castRay( start, end, mask, &rinfo );
 
    if ( mForest )
       mForest->enableCollision();
@@ -673,7 +673,7 @@ bool ForestBrushTool::getGroundAt( const Point3F &worldPt, F32 *zValueOut, Vecto
    // the bottom of our brush radius.
 
    RayInfo rinfo;   
-   bool hit = gServerContainer.castRay( start, end, mask, &rinfo );
+   bool hit = getActiveServerContainer()->castRay( start, end, mask, &rinfo );
 
    if ( mForest )
       mForest->enableCollision();

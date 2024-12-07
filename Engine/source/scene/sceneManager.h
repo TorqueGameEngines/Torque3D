@@ -125,6 +125,9 @@ class SceneManager
       //visibility of objects later.
       Vector< SceneObject* > mRenderedObjectsList;
 
+      SceneContainer* mSceneContainer;
+      SceneManager* mServerSide;
+
    protected:
 
       /// Whether this is the client-side scene.
@@ -209,7 +212,7 @@ class SceneManager
       ~SceneManager();
 
       /// Return the SceneContainer for this scene.
-      SceneContainer* getContainer() const { return mIsClient ? &gClientContainer : &gServerContainer; }
+      SceneContainer* getContainer() const { return mIsClient ? getActiveClientContainer() : getActiveServerContainer(); }
 
       /// Return the manager for the zones in this scene.
       /// @note Only client scenes have a zone manager as for the server, no zoning data is kept.

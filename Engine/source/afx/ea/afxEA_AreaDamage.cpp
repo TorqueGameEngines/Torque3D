@@ -142,11 +142,11 @@ void afxEA_AreaDamage::do_runtime_substitutions()
 void afxEA_AreaDamage::deal_area_damage()
 { 
   // initContainerRadiusSearch -- afterwards Container::mSearchList contains objects within radius sorted by distance
-  gServerContainer.initRadiusSearch(impact_pos, damage_data->radius, ShapeBaseObjectType);
+  getActiveServerContainer()->initRadiusSearch(impact_pos, damage_data->radius, ShapeBaseObjectType);
   
   F32 halfradius = damage_data->radius*0.5f;
 
-  const Vector<SimObjectPtr<SceneObject>*>& list = gServerContainer.getRadiusSearchList();
+  const Vector<SimObjectPtr<SceneObject>*>& list = getActiveServerContainer()->getRadiusSearchList();
   for (S32 i = 0; i < list.size(); i++)
   {
     if (!list[i]->isNull())

@@ -247,7 +247,7 @@ void GuiShapeNameHud::onRender( Point2I, const RectI &updateRect)
             SceneObject *mount = shape->getObjectMount();
             if (mount)
                mount->disableCollision();
-            bool los = !gClientContainer.castRay(camPos, shapePos,losMask, &info);
+            bool los = !getActiveClientContainer()->castRay(camPos, shapePos,losMask, &info);
             shape->enableCollision();
             if (mount)
                mount->enableCollision();

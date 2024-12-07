@@ -936,7 +936,7 @@ bool Projectile::pointInWater(const Point3F &point)
       // but using the actual defined container when possible is the right
       // thing to do.  DAW
       AssertFatal(isClientObject(), "Server projectile has not been properly added");
-      gClientContainer.findObjects( boundsBox, WaterObjectType, findRouter, &info );
+      getActiveClientContainer()->findObjects( boundsBox, WaterObjectType, findRouter, &info );
    }
 
    return ( info.waterCoverage > 0.0f );
@@ -967,7 +967,7 @@ void Projectile::emitParticles(const Point3F& from, const Point3F& to, const Poi
    {
       // cast the ray to get the surface point of the water
       RayInfo rInfo;
-      if (gClientContainer.castRay(from, to, WaterObjectType, &rInfo))
+      if (getActiveClientContainer()->castRay(from, to, WaterObjectType, &rInfo))
       {
          MatrixF trans = getTransform();
          trans.setPosition(rInfo.point);
@@ -995,7 +995,7 @@ void Projectile::emitParticles(const Point3F& from, const Point3F& to, const Poi
       // cast the ray in the opposite direction since that point is out of the water, otherwise
       //  we hit water immediately and wont get the appropriate surface point
       RayInfo rInfo;
-      if (gClientContainer.castRay(to, from, WaterObjectType, &rInfo))
+      if (getActiveClientContainer()->castRay(to, from, WaterObjectType, &rInfo))
       {
          MatrixF trans = getTransform();
          trans.setPosition(rInfo.point);

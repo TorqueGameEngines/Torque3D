@@ -31,11 +31,12 @@
 #include "lighting/lightManager.h"
 #include "lighting/lightInfo.h"
 #include "core/resourceManager.h"
-#include "scene/sceneManager.h"
 #include "scene/sceneRenderState.h"
 #include "renderInstance/renderProbeMgr.h"
 #include "T3D/lighting/skylight.h"
 #include "gfx/gfxDrawUtil.h"
+
+#include "environment/skySphere.h"
 
 // GuiMaterialPreview
 GuiMaterialPreview::GuiMaterialPreview()
@@ -66,12 +67,16 @@ GuiMaterialPreview::GuiMaterialPreview()
    mReflectPriority = 0.0f;
    mMountedModel = NULL;
    mSkinTag = 0;
+
+   mTempScene = new SceneManager(true);
+   mTempScene->setFogData(FogData());
 }
 
 GuiMaterialPreview::~GuiMaterialPreview()
 {
    SAFE_DELETE(mModel);
    SAFE_DELETE(mFakeSun);
+   SAFE_DELETE(mTempScene);
 }
 
 bool GuiMaterialPreview::onWake()
@@ -375,8 +380,23 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
    mSaveProjection = GFX->getProjectionMatrix();
    mSaveWorldToScreenScale = GFX->getWorldToScreenScale();
 
-   FogData savedFogData = getActiveClientScene()->getFogData();
-   getActiveClientScene()->setFogData( FogData() );  // no fog in preview window
+   // BFW(Big fucking warning) DO NOT MERGE WITH THIS SETUP
+   // WE NEED PROPER SCENE MANAGEMENT NOT THIS TEST!
+   // use the ScopedSceneManager
+   {
+      ScopedSceneManager scopeManager(mTempScene);
+
+      SkySphere* bgSkybox = new SkySphere();
+      bgSkybox->_setMaterial("Prototyping:hdrMaterial");
+      bgSkybox->_initRender();
+      bgSkybox->_updateMaterial();
+      mTempScene->addObjectToScene(bgSkybox);
+      
+      mTempScene->renderScene(SPT_Diffuse);
+
+      mTempScene->removeObjectFromScene(bgSkybox);
+      delete bgSkybox;
+   }
 
    if (Skylight::smSkylightProbe.isValid())
       PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
@@ -430,8 +450,6 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
    {
       renderSunDirection();
    }
-
-   getActiveClientScene()->setFogData( savedFogData );         // restore fog setting
 
    // Make sure to remove our fake sun
    LIGHTMGR->unregisterAllLights();

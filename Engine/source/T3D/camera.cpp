@@ -1540,7 +1540,7 @@ void Camera::_validateEyePoint(F32 pos, MatrixF *mat)
                  ItemObjectType |
                  VehicleObjectType;
 
-      SceneContainer* pContainer = isServerObject() ? &gServerContainer : &gClientContainer;
+      SceneContainer* pContainer = isServerObject() ? getActiveServerContainer() : getActiveClientContainer();
       if (!pContainer->castRay(startPos, startPos - dir * 2.5 * pos, mask, &collision))
          endPos = startPos - dir * pos;
       else

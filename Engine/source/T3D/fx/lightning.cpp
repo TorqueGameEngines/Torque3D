@@ -690,7 +690,7 @@ void Lightning::processEvent(LightningStrikeEvent* pEvent)
          Point3F start = strikePoint;
          start.z = mObjScale.z * 0.5f + getPosition().z;
          strikePoint.z += -mObjScale.z * 0.5f;
-         bool rayHit = gClientContainer.castRay( start, strikePoint,
+         bool rayHit = getActiveClientContainer()->castRay( start, strikePoint,
                                       ((U32)STATIC_COLLISION_TYPEMASK | (U32)WaterObjectType),
                                       &rayInfo);
          if( rayHit )
@@ -807,7 +807,7 @@ void Lightning::strikeRandomPoint()
       start.z = mObjScale.z * 0.5f + getPosition().z;
       Point3F end = objectCenter;
       end.z = -mObjScale.z * 0.5f + getPosition().z;
-      bool rayHit = gServerContainer.castRay( start, end,
+      bool rayHit = getActiveServerContainer()->castRay( start, end,
                                    (0xFFFFFFFF),
                                    &rayInfo);
 

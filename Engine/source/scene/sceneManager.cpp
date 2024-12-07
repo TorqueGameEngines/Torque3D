@@ -57,7 +57,10 @@ MODULE_BEGIN( Scene )
    MODULE_INIT
    {
       setActiveClientScene(new SceneManager(true));
-      setActiveServerScene(new SceneManager(false));
+      setActiveServerScene(activeClientScene->mServerSide);
+
+      setActiveClientContainer(activeClientScene->mSceneContainer);
+      setActiveServerContainer(activeServerScene->mSceneContainer);
 
       Con::addVariable( "$Scene::lockCull", TypeBool, &SceneManager::smLockDiffuseFrustum,
          "Debug tool which locks the frustum culling to the current camera location.\n"
@@ -91,7 +94,6 @@ MODULE_BEGIN( Scene )
    MODULE_SHUTDOWN
    {
       SAFE_DELETE(activeClientScene);
-      SAFE_DELETE(activeServerScene);
    }
 
 MODULE_END;
@@ -144,22 +146,34 @@ SceneManager::SceneManager( bool isClient )
 
    if( isClient )
    {
-      mZoneManager = new SceneZoneSpaceManager( getContainer() );
+      mSceneContainer = new SceneContainer();
+      mZoneManager = new SceneZoneSpaceManager(mSceneContainer);
 
       // Add the root zone to the scene.
-
       addObjectToScene( mZoneManager->getRootZone() );
+
+      mServerSide = new SceneManager(false);
+   }
+   else
+   {
+      mSceneContainer = new SceneContainer();
    }
 }
 
 //-----------------------------------------------------------------------------
 
 SceneManager::~SceneManager()
-{   
-   SAFE_DELETE( mZoneManager );
+{
+   if (mIsClient) {
+      SAFE_DELETE(mZoneManager);
+      SAFE_DELETE(mServerSide);
+   }
+      
 
    if( mLightManager )
-      mLightManager->deactivate();   
+      mLightManager->deactivate();
+
+   SAFE_DELETE(mSceneContainer);
 }
 
 //-----------------------------------------------------------------------------

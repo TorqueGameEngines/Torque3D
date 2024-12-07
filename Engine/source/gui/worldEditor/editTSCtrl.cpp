@@ -1072,7 +1072,7 @@ void EditTSCtrl::computeSceneBounds(Box3F& bounds)
    bounds.maxExtents.set(-1e10, -1e10, -1e10);
 
    // Calculate the scene bounds
-   gClientContainer.findObjects(~(smSceneBoundsMask), sceneBoundsCalcCallback, &bounds);
+   getActiveClientContainer()->findObjects(~(smSceneBoundsMask), sceneBoundsCalcCallback, &bounds);
 }
 
 bool EditTSCtrl::processCameraQuery(CameraQuery * query)

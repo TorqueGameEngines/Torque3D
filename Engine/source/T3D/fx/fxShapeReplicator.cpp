@@ -301,10 +301,10 @@ void fxShapeReplicator::CreateShapes(void)
          // Is this the Server?
          if (isServerObject())
             // Perform Ray Cast Collision on Server Terrain.
-            CollisionResult = gServerContainer.castRay(ShapeStart, ShapeEnd, FXREPLICATOR_COLLISION_MASK, &RayEvent);
+            CollisionResult = getActiveServerContainer()->castRay(ShapeStart, ShapeEnd, FXREPLICATOR_COLLISION_MASK, &RayEvent);
          else
             // Perform Ray Cast Collision on Client Terrain.
-            CollisionResult = gClientContainer.castRay(	ShapeStart, ShapeEnd, FXREPLICATOR_COLLISION_MASK, &RayEvent);
+            CollisionResult = getActiveClientContainer()->castRay(	ShapeStart, ShapeEnd, FXREPLICATOR_COLLISION_MASK, &RayEvent);
 
          // Did we hit anything?
          if (CollisionResult)
@@ -330,12 +330,12 @@ void fxShapeReplicator::CreateShapes(void)
                if (isServerObject())
                {
                   // Yes, so do it on the server container.
-                  if (!gServerContainer.castRay( ShapeStart, ShapeEnd, FXREPLICATOR_NOWATER_COLLISION_MASK, &RayEvent)) continue;
+                  if (!getActiveServerContainer()->castRay( ShapeStart, ShapeEnd, FXREPLICATOR_NOWATER_COLLISION_MASK, &RayEvent)) continue;
                }
                else
                {
                   // No, so do it on the client container.
-                  if (!gClientContainer.castRay( ShapeStart, ShapeEnd, FXREPLICATOR_NOWATER_COLLISION_MASK, &RayEvent)) continue;
+                  if (!getActiveClientContainer()->castRay( ShapeStart, ShapeEnd, FXREPLICATOR_NOWATER_COLLISION_MASK, &RayEvent)) continue;
                }
             }
 

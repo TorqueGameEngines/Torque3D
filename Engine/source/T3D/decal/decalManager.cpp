@@ -660,7 +660,7 @@ DecalInstance* DecalManager::raycast( const Point3F &start, const Point3F &end, 
          
          RayInfo ri;
          bool containsPoint = false;
-         if ( gServerContainer.castRayRendered( start, end, STATIC_COLLISION_TYPEMASK, &ri ) )
+         if ( getActiveServerContainer()->castRayRendered( start, end, STATIC_COLLISION_TYPEMASK, &ri ) )
          {        
             Point2F poly[4];
             poly[0].set( inst->mPosition.x - (inst->mSize / 2), inst->mPosition.y + (inst->mSize / 2));

@@ -1322,7 +1322,7 @@ bool AIPlayer::checkInLos(GameBase* target, bool _useMuzzle, bool _checkEnabled)
       eyeMat.getColumn(3, &checkPoint );
    }
 
-   bool hit = !gServerContainer.castRay(checkPoint, target->getBoxCenter(), sAIPlayerLoSMask, &ri);
+   bool hit = !getActiveServerContainer()->castRay(checkPoint, target->getBoxCenter(), sAIPlayerLoSMask, &ri);
    enableCollision();
 
    for (S32 i = 0; i < mountCount; i++)

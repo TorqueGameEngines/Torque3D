@@ -1,0 +1,4 @@
+<ImageAsset
+    AssetName="rogland_clear_night_4k_image"
+    imageFile="@assetFile=rogland_clear_night_4k.hdr"
+    isHDRImage="true"/>

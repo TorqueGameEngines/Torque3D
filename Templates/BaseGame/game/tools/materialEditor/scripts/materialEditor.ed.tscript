@@ -144,6 +144,15 @@ function MaterialEditorGui::open(%this)
    
    //Sift through the RootGroup and find all loaded material items.
    MaterialEditorGui.updateAllFields();
+
+   // this is a hacky piece of shit script, but it means that updates will continue.
+   matEd_previewObjectView.setModel("ToolsModule:cubepreview");
+   matEd_previewObjectView.setModel("ToolsModule:spherepreview");
+   matEd_previewObjectView.setModel("ToolsModule:pyramidpreview");
+   matEd_previewObjectView.setModel("ToolsModule:cylinderpreview");
+   matEd_previewObjectView.setModel("ToolsModule:toruspreview");
+   matEd_previewObjectView.setModel("ToolsModule:torusknotpreview");
+
    MaterialEditorGui.updatePreviewObject();
 
    // If no selected object; go to material mode. And edit the last selected material

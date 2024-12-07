@@ -115,13 +115,7 @@ public:
    void onRightMouseDragged(const GuiEvent &event) override;
    bool onMouseWheelUp(const GuiEvent &event) override;
    bool onMouseWheelDown(const GuiEvent &event) override;
-   void onMiddleMouseUp(const GuiEvent &event) override;
-   void onMiddleMouseDown(const GuiEvent &event) override;
-   void onMiddleMouseDragged(const GuiEvent &event) override;
-   
-   // For Camera Panning.
-   void setTranslate(S32 modifier, F32 xstep, F32 ystep);
-   
+
    // For Light Translation.
    void setLightTranslate(S32 modifier, F32 xstep, F32 ystep);
    

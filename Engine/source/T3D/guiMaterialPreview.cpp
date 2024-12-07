@@ -154,28 +154,6 @@ void GuiMaterialPreview::setLightTranslate(S32 modifier, F32 xstep, F32 ystep)
    GuiMaterialPreview::mFakeSun->setDirection(relativeLightDirection);
 }
 
-// This is for panning the viewport camera.
-void GuiMaterialPreview::setTranslate(S32 modifier, F32 xstep, F32 ystep)
-{
-	F32 transstep = (modifier & SI_SHIFT ? mTransStep : (mTransStep*mTranMult));
-
-	F32 nominalDistance = 20.0;
-	Point3F vec = mCameraPos;
-	vec -= mOrbitPos;
-	transstep *= vec.len() / nominalDistance;
-
-	if (modifier & SI_PRIMARY_CTRL)
-	{
-		mOrbitRelPos.x += ( xstep * transstep );
-		mOrbitRelPos.y += ( ystep * transstep );
-	}
-	else
-	{
-		mOrbitRelPos.x += ( xstep * transstep );
-		mOrbitRelPos.z += ( ystep * transstep );
-	}
-}
-
 // Left Click
 void GuiMaterialPreview::onMouseDown(const GuiEvent &event)
 {
@@ -247,37 +225,6 @@ bool GuiMaterialPreview::onMouseWheelDown(const GuiEvent &event)
 {
 	mOrbitDist = (mOrbitDist + 0.10f);
 	return true;
-}
-
-// Mouse Wheel Click
-void GuiMaterialPreview::onMiddleMouseDown(const GuiEvent &event)
-{
-   if (!mActive || !mVisible || !mAwake)
-   {
-      return;
-   }
-   mMouseState = Panning;
-   mLastMousePoint = event.mousePoint;
-   mouseLock();
-}
-
-// Mouse Wheel Click Release
-void GuiMaterialPreview::onMiddleMouseUp(const GuiEvent &event)
-{
-   mouseUnlock();
-   mMouseState = None;
-}
-
-// Mouse Wheel Click Drag
-void GuiMaterialPreview::onMiddleMouseDragged(const GuiEvent &event)
-{
-   if (mMouseState != Panning)
-   {
-      return;
-   }
-   Point2I delta = event.mousePoint - mLastMousePoint;
-   mLastMousePoint = event.mousePoint;
-   setTranslate(event.modifier, delta.x, delta.y);
 }
 
 // This is used to set the model we want to view in the control object.

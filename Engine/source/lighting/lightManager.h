@@ -98,15 +98,12 @@ public:
    /// for filename use.
    const char* getId() const { return mId.c_str(); }
 
-   // Returns the scene manager passed at activation.
-   SceneManager* getSceneManager() { return mSceneManager; }
-
    // Should return true if this light manager is compatible
    // on the current platform and GFX device.
    virtual bool isCompatible() const = 0;
 
    // Called when the lighting manager should become active
-   virtual void activate( SceneManager *sceneManager );
+   virtual void activate();
 
    // Called when we don't want the light manager active (should clean up)
    virtual void deactivate();
@@ -225,8 +222,6 @@ protected:
    /// Is true if this light manager has been activated.
    bool mIsActive;
 
-   /// The scene graph the light manager is associated with.
-   SceneManager *mSceneManager;
 };
 
 /// Returns the current active light manager.

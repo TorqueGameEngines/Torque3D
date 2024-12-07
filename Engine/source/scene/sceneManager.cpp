@@ -722,7 +722,7 @@ bool SceneManager::_setLightManager( LightManager* lm )
    mLightManager = lm;
 
    if ( mLightManager )
-      mLightManager->activate( this );
+      mLightManager->activate();
 
    return true;
 }

@@ -185,11 +185,11 @@ function MaterialEditorGui::quit(%this)
    // First delete the model so that it releases
    // material instances that use the preview materials.
    matEd_previewObjectView.deleteModel();
-   
+
    // Now we can delete the preview materials and shaders
    // knowing that there are no matinstances using them.
    matEdCubeMapPreviewMat.delete();
-   materialEd_previewMaterial.delete();
+   //materialEd_previewMaterial.delete();
    materialEd_justAlphaMaterial.delete();
    materialEd_justAlphaShader.delete();
 }
@@ -746,8 +746,8 @@ function MaterialEditorGui::setActiveMaterial( %this, %material )
    
    // we create or recreate a material to hold in a pristine state
    // or, this crashes the ap. fix properly - BJR
-//   if(isObject(notDirtyMaterial))
-//      notDirtyMaterial.delete();
+   if(isObject(notDirtyMaterial))
+      notDirtyMaterial.delete();
       
    singleton Material(notDirtyMaterial)
    {

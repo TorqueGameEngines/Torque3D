@@ -69,23 +69,26 @@ GuiMaterialPreview::GuiMaterialPreview()
 
    // setup our scene.
    mTempScene = new SceneManager(true);
+   
    mTempScene->setFogData(FogData());
 
    mBGSky = new SkySphere();
    mBGSky->_setMaterial("Prototyping:hdrMaterial");
    mBGSky->_initRender();
    mBGSky->_updateMaterial();
+   
    mTempScene->addObjectToScene(mBGSky);
    
    mTSShape = new TSStatic();
    mTempScene->addObjectToScene(mTSShape);
+
 }
 
 GuiMaterialPreview::~GuiMaterialPreview()
 {
    SAFE_DELETE(mFakeSun);
 
-   mTempScene->removeObjectFromScene(mBGSky);
+   mBGSky->unregisterObject();
    SAFE_DELETE(mBGSky);
 
    if(mTSShape != NULL)
@@ -288,9 +291,9 @@ void GuiMaterialPreview::setObjectModel(const char* modelName)
    }
 
    mTSShape = new TSStatic();
+   mTempScene->addObjectToScene(mTSShape);
    mTSShape->_setShape(modelName);
    mTSShape->_createShape();
-   mTempScene->addObjectToScene(mTSShape);
    // Initialize camera values:
    mOrbitPos = mTSShape->mShapeInstance->getShape()->center;
    mMinOrbitDist = mTSShape->mShapeInstance->getShape()->mRadius;
@@ -300,7 +303,7 @@ void GuiMaterialPreview::setObjectModel(const char* modelName)
 
 void GuiMaterialPreview::deleteModel()
 {
-   mTempScene->removeObjectFromScene(mTSShape);
+   mTSShape->unregisterObject();
    SAFE_DELETE(mTSShape);
 }
 
@@ -389,6 +392,8 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
    mSaveWorldToScreenScale = GFX->getWorldToScreenScale();
 
    ScopedSceneManager scopeManager(mTempScene);
+
+   RenderPassManager* renderPass = mTempScene->getDefaultRenderPass();
 
    LIGHTMGR->unregisterAllLights();
    LIGHTMGR->setSpecialLight(LightManager::slSunLightType, mFakeSun);

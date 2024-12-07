@@ -48,7 +48,6 @@ LightManager::LightManager( const char *name, const char *id )
       mId( id ),
       mIsActive( false ),
       mDefaultLight( NULL ),
-      mSceneManager( NULL ),
       mCullPos( Point3F::Zero ),
       mAvailableSLInterfaces( NULL )
 { 
@@ -124,14 +123,12 @@ IMPLEMENT_GLOBAL_CALLBACK( onLightManagerActivate, void, ( const char *name ), (
    "@param name The name of the light manager being activated.\n"
    "@ingroup Lighting\n" );
 
-void LightManager::activate( SceneManager *sceneManager )
+void LightManager::activate( )
 {
-   AssertFatal( sceneManager, "LightManager::activate() - Got null scene manager!" );
    AssertFatal( mIsActive == false, "LightManager::activate() - Already activated!" );
    AssertFatal( smActiveLM == NULL, "LightManager::activate() - A previous LM is still active!" );
 
    mIsActive = true;
-   mSceneManager = sceneManager;
    smActiveLM = this;
 
    onLightManagerActivate_callback( getName() );
@@ -151,7 +148,6 @@ void LightManager::deactivate()
       onLightManagerDeactivate_callback( getName() );
 
    mIsActive = false;
-   mSceneManager = NULL;
    smActiveLM = NULL;
 
    // Just in case... make sure we're all clear.
@@ -220,12 +216,12 @@ void LightManager::registerGlobalLights( const Frustum *frustum, bool staticLigh
    {
       // We're processing static lighting or want all the lights
       // in the container registerd...  so no culling.
-      getSceneManager()->getContainer()->findObjectList( lightMask, &activeLights );
+      getActiveClientScene()->getContainer()->findObjectList(lightMask, &activeLights);
    }
    else
    {
       // Cull the lights using the frustum.
-      getSceneManager()->getContainer()->findObjectList(*frustum, lightMask, &activeLights);
+      getActiveClientScene()->getContainer()->findObjectList(*frustum, lightMask, &activeLights);
       /*
       for (U32 i = 0; i < activeLights.size(); ++i)
       {
@@ -531,7 +527,7 @@ bool LightManager::lightScene( const char* callback, const char* param )
 
 RenderDeferredMgr* LightManager::_findDeferredRenderBin()
 {
-   RenderPassManager* rpm = getSceneManager()->getDefaultRenderPass();
+   RenderPassManager* rpm = getActiveClientScene()->getDefaultRenderPass();
    for( U32 i = 0; i < rpm->getManagerCount(); i++ )
    {
       RenderBinManager *bin = rpm->getManager( i );
@@ -597,7 +593,6 @@ DefineEngineFunction( resetLightManager, void, (),,
    if ( !lm )
       return;
 
-   SceneManager *sm = lm->getSceneManager();
    lm->deactivate();
-   lm->activate( sm );
+   lm->activate();
 }

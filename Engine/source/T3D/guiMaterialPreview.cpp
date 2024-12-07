@@ -37,7 +37,6 @@
 #include "gfx/gfxDrawUtil.h"
 
 #include "environment/skySphere.h"
-#include "T3D/tsStatic.h"
 
 // GuiMaterialPreview
 GuiMaterialPreview::GuiMaterialPreview()
@@ -371,6 +370,8 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
    //S32 dt = time - lastRenderTime;
    lastRenderTime = time;
 
+   
+
    F32 left, right, top, bottom, nearPlane, farPlane;
    bool isOrtho;
    GFX->getFrustum( &left, &right, &bottom, &top, &nearPlane, &farPlane, &isOrtho);
@@ -379,30 +380,71 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
    mSaveProjection = GFX->getProjectionMatrix();
    mSaveWorldToScreenScale = GFX->getWorldToScreenScale();
 
-   ScopedSceneManager scopeManager(mTempScene);
+   // BFW(Big fucking warning) DO NOT MERGE WITH THIS SETUP
+   // WE NEED PROPER SCENE MANAGEMENT NOT THIS TEST!
+   // use the ScopedSceneManager
+   {
+      ScopedSceneManager scopeManager(mTempScene);
 
-   LIGHTMGR->unregisterAllLights();
-   LIGHTMGR->setSpecialLight(LightManager::slSunLightType, mFakeSun);
+      SkySphere* bgSkybox = new SkySphere();
+      bgSkybox->_setMaterial("Prototyping:hdrMaterial");
+      bgSkybox->_initRender();
+      bgSkybox->_updateMaterial();
+      mTempScene->addObjectToScene(bgSkybox);
+      
+      mTempScene->renderScene(SPT_Diffuse);
+
+      mTempScene->removeObjectFromScene(bgSkybox);
+      delete bgSkybox;
+   }
 
    if (Skylight::smSkylightProbe.isValid())
       PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
 
-   SkySphere* bgSkybox = new SkySphere();
-   bgSkybox->_setMaterial("Prototyping:hdrMaterial");
-   bgSkybox->_initRender();
-   bgSkybox->_updateMaterial();
-   mTempScene->addObjectToScene(bgSkybox);
+   RenderPassManager* renderPass = getActiveClientScene()->getDefaultRenderPass();
+   SceneRenderState state
+   (
+      getActiveClientScene(),
+      SPT_Diffuse,
+      SceneCameraState( GFX->getViewport(), mSaveFrustum, GFX->getWorldMatrix(), GFX->getProjectionMatrix() ),
+      renderPass,
+      true
+   );
 
-   TSStatic* shape = new TSStatic();
-   shape->mShapeInstance = mModel;
-   mTempScene->addObjectToScene(shape);
+   // Set up our TS render state here.
+   TSRenderState rdata;
+   rdata.setSceneState( &state );
 
-   mTempScene->renderScene(SPT_Diffuse);
+   // We might have some forward lit materials
+   // so pass down a query to gather lights.
+   LightQuery query;
+   query.init( SphereF( Point3F::Zero, 1.0f ) );
+   rdata.setLightQuery( &query );
 
-   mTempScene->removeObjectFromScene(bgSkybox);
-   mTempScene->removeObjectFromScene(shape);
-   delete bgSkybox;
-   delete shape;
+   // Set up pass transforms
+   renderPass->assignSharedXform(RenderPassManager::View, MatrixF::Identity);
+   renderPass->assignSharedXform(RenderPassManager::Projection, GFX->getProjectionMatrix());
+
+   LIGHTMGR->unregisterAllLights();
+   LIGHTMGR->setSpecialLight( LightManager::slSunLightType, mFakeSun );
+
+   if ( mModel )
+      mModel->render( rdata );
+
+   if ( mMountedModel )
+   {
+      // render a weapon
+	   /*
+      MatrixF mat;
+
+      GFX->pushWorldMatrix();
+      GFX->multWorld( mat );
+
+      GFX->popWorldMatrix();
+	  */
+   }
+
+   renderPass->renderPass( &state );
 
    if (mMouseState == MovingLight)
    {

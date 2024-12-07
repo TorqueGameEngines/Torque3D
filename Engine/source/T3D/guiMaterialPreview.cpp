@@ -393,8 +393,6 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
 
    ScopedSceneManager scopeManager(mTempScene);
 
-   RenderPassManager* renderPass = mTempScene->getDefaultRenderPass();
-
    LIGHTMGR->unregisterAllLights();
    LIGHTMGR->setSpecialLight(LightManager::slSunLightType, mFakeSun);
 

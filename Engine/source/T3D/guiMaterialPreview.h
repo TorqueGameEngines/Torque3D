@@ -44,6 +44,13 @@
 #include "scene/scopedSceneManager.h"
 #endif // !1
 
+#ifndef _SKYSPHERE_H_
+#include "environment/skySphere.h"
+#endif
+
+#ifndef _TSSTATIC_H_
+#include "T3D/tsStatic.h"
+#endif
 
 class LightInfo;
 
@@ -90,6 +97,10 @@ protected:
 
    LightInfo*  mFakeSun;
    SceneManager* mTempScene;
+
+   SkySphere* mBGSky;
+   TSStatic* mTSShape;
+
    void renderSunDirection() const;
 public:
    bool onWake() override;

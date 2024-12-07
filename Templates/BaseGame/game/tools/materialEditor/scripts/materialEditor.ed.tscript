@@ -48,7 +48,7 @@ function MaterialEditorGui::establishMaterials(%this)
       };
    }
 
-   if(!isObject(materialEd_previewMaterial))
+   if(!isObject(materialEd_justAlphaMaterial))
    {
       singleton CustomMaterial( materialEd_justAlphaMaterial )
       {
@@ -57,7 +57,7 @@ function MaterialEditorGui::establishMaterials(%this)
       };
    }
 
-   if(!isObject(materialEd_previewMaterial))
+   if(!isObject(materialEd_justAlphaShader))
    {
       //Custom shader to allow the display of just the alpha channel. 
       singleton ShaderData( materialEd_justAlphaShader )
@@ -182,7 +182,6 @@ function MaterialEditorGui::quit(%this)
    }
 
    MaterialEditorGui.setMaterialNotDirty();
-   
    // First delete the model so that it releases
    // material instances that use the preview materials.
    matEd_previewObjectView.deleteModel();
@@ -190,7 +189,7 @@ function MaterialEditorGui::quit(%this)
    // Now we can delete the preview materials and shaders
    // knowing that there are no matinstances using them.
    matEdCubeMapPreviewMat.delete();
-   //materialEd_previewMaterial.delete();
+   materialEd_previewMaterial.delete();
    materialEd_justAlphaMaterial.delete();
    materialEd_justAlphaShader.delete();
 }
@@ -672,32 +671,32 @@ function MaterialEditorGui::updatePreviewObject(%this)
 	{
 		case "sphere":
          matEd_quickPreview_Popup.selected = %newModel;
-         matEd_previewObjectView.setModel("tools/materialEditor/gui/spherepreview.dts");
+         matEd_previewObjectView.setModel("ToolsModule:spherepreview");
          matEd_previewObjectView.setOrbitDistance(4);
 				
 		case "cube":
          matEd_quickPreview_Popup.selected = %newModel;
-         matEd_previewObjectView.setModel("tools/materialEditor/gui/cubepreview.dts");
+         matEd_previewObjectView.setModel("ToolsModule:cubepreview");
          matEd_previewObjectView.setOrbitDistance(5);
 				
 		case "pyramid":
          matEd_quickPreview_Popup.selected = %newModel;
-         matEd_previewObjectView.setModel("tools/materialEditor/gui/pyramidpreview.dts");
+         matEd_previewObjectView.setModel("ToolsModule:pyramidpreview");
          matEd_previewObjectView.setOrbitDistance(5);
 				
 		case "cylinder":
          matEd_quickPreview_Popup.selected = %newModel;
-         matEd_previewObjectView.setModel("tools/materialEditor/gui/cylinderpreview.dts");
+         matEd_previewObjectView.setModel("ToolsModule:cylinderpreview");
          matEd_previewObjectView.setOrbitDistance(4.2);
 				
 		case "torus":
          matEd_quickPreview_Popup.selected = %newModel;
-         matEd_previewObjectView.setModel("tools/materialEditor/gui/toruspreview.dts");
+         matEd_previewObjectView.setModel("ToolsModule:toruspreview");
          matEd_previewObjectView.setOrbitDistance(4.2);
 				
 		case "knot":
          matEd_quickPreview_Popup.selected = %newModel;
-         matEd_previewObjectView.setModel("tools/materialEditor/gui/torusknotpreview.dts");
+         matEd_previewObjectView.setModel("ToolsModule:torusknotpreview");
 	}
 }
 

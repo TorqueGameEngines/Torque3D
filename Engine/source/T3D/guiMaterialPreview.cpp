@@ -37,11 +37,11 @@
 #include "gfx/gfxDrawUtil.h"
 
 #include "environment/skySphere.h"
+#include "T3D/tsStatic.h"
 
 // GuiMaterialPreview
 GuiMaterialPreview::GuiMaterialPreview()
 :  mMouseState(None),
-   mModel(NULL),
    runThread(0),
    lastRenderTime(0),
    mLastMousePoint(0, 0),
@@ -65,17 +65,32 @@ GuiMaterialPreview::GuiMaterialPreview()
    // By default don't do dynamic reflection
    // updates for this viewport.
    mReflectPriority = 0.0f;
-   mMountedModel = NULL;
    mSkinTag = 0;
 
+   // setup our scene.
    mTempScene = new SceneManager(true);
    mTempScene->setFogData(FogData());
+
+   mBGSky = new SkySphere();
+   mBGSky->_setMaterial("Prototyping:hdrMaterial");
+   mBGSky->_initRender();
+   mBGSky->_updateMaterial();
+   mTempScene->addObjectToScene(mBGSky);
+   
+   mTSShape = new TSStatic();
+   mTempScene->addObjectToScene(mTSShape);
 }
 
 GuiMaterialPreview::~GuiMaterialPreview()
 {
-   SAFE_DELETE(mModel);
    SAFE_DELETE(mFakeSun);
+
+   mTempScene->removeObjectFromScene(mBGSky);
+   SAFE_DELETE(mBGSky);
+
+   if(mTSShape != NULL)
+      deleteModel();
+
    SAFE_DELETE(mTempScene);
 }
 
@@ -265,29 +280,28 @@ void GuiMaterialPreview::onMiddleMouseDragged(const GuiEvent &event)
 // This is used to set the model we want to view in the control object.
 void GuiMaterialPreview::setObjectModel(const char* modelName)
 {
-   deleteModel();
+   if (mTSShape != NULL) {
+      if (dStrcmp(mTSShape->mShapeAssetId, modelName) == 0)
+         return;
 
-   Resource<TSShape> model = ResourceManager::get().load(modelName);
-   if (! bool(model))
-   {
-      Con::warnf(avar("GuiMaterialPreview: Failed to load model %s. Please check your model name and load a valid model.", modelName));
-      return;
+      deleteModel();
    }
 
-   mModel = new TSShapeInstance(model, true);
-   AssertFatal(mModel, avar("GuiMaterialPreview: Failed to load model %s. Please check your model name and load a valid model.", modelName));
-
+   mTSShape = new TSStatic();
+   mTSShape->_setShape(modelName);
+   mTSShape->_createShape();
+   mTempScene->addObjectToScene(mTSShape);
    // Initialize camera values:
-   mOrbitPos = mModel->getShape()->center;
-   mMinOrbitDist = mModel->getShape()->mRadius;
+   mOrbitPos = mTSShape->mShapeInstance->getShape()->center;
+   mMinOrbitDist = mTSShape->mShapeInstance->getShape()->mRadius;
 
    lastRenderTime = Platform::getVirtualMilliseconds();
 }
 
 void GuiMaterialPreview::deleteModel()
 {
-   SAFE_DELETE(mModel);
-   runThread = 0;
+   mTempScene->removeObjectFromScene(mTSShape);
+   SAFE_DELETE(mTSShape);
 }
 
 // This is called whenever there is a change in the camera.
@@ -362,15 +376,9 @@ void GuiMaterialPreview::onMouseLeave(const GuiEvent & event)
 
 void GuiMaterialPreview::renderWorld(const RectI &updateRect)
 {
-   // nothing to render, punt
-   if ( !mModel && !mMountedModel )
-      return;
-
    S32 time = Platform::getVirtualMilliseconds();
    //S32 dt = time - lastRenderTime;
    lastRenderTime = time;
-
-   
 
    F32 left, right, top, bottom, nearPlane, farPlane;
    bool isOrtho;
@@ -380,71 +388,15 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
    mSaveProjection = GFX->getProjectionMatrix();
    mSaveWorldToScreenScale = GFX->getWorldToScreenScale();
 
-   // BFW(Big fucking warning) DO NOT MERGE WITH THIS SETUP
-   // WE NEED PROPER SCENE MANAGEMENT NOT THIS TEST!
-   // use the ScopedSceneManager
-   {
-      ScopedSceneManager scopeManager(mTempScene);
+   ScopedSceneManager scopeManager(mTempScene);
 
-      SkySphere* bgSkybox = new SkySphere();
-      bgSkybox->_setMaterial("Prototyping:hdrMaterial");
-      bgSkybox->_initRender();
-      bgSkybox->_updateMaterial();
-      mTempScene->addObjectToScene(bgSkybox);
-      
-      mTempScene->renderScene(SPT_Diffuse);
-
-      mTempScene->removeObjectFromScene(bgSkybox);
-      delete bgSkybox;
-   }
+   LIGHTMGR->unregisterAllLights();
+   LIGHTMGR->setSpecialLight(LightManager::slSunLightType, mFakeSun);
 
    if (Skylight::smSkylightProbe.isValid())
       PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
 
-   RenderPassManager* renderPass = getActiveClientScene()->getDefaultRenderPass();
-   SceneRenderState state
-   (
-      getActiveClientScene(),
-      SPT_Diffuse,
-      SceneCameraState( GFX->getViewport(), mSaveFrustum, GFX->getWorldMatrix(), GFX->getProjectionMatrix() ),
-      renderPass,
-      true
-   );
-
-   // Set up our TS render state here.
-   TSRenderState rdata;
-   rdata.setSceneState( &state );
-
-   // We might have some forward lit materials
-   // so pass down a query to gather lights.
-   LightQuery query;
-   query.init( SphereF( Point3F::Zero, 1.0f ) );
-   rdata.setLightQuery( &query );
-
-   // Set up pass transforms
-   renderPass->assignSharedXform(RenderPassManager::View, MatrixF::Identity);
-   renderPass->assignSharedXform(RenderPassManager::Projection, GFX->getProjectionMatrix());
-
-   LIGHTMGR->unregisterAllLights();
-   LIGHTMGR->setSpecialLight( LightManager::slSunLightType, mFakeSun );
-
-   if ( mModel )
-      mModel->render( rdata );
-
-   if ( mMountedModel )
-   {
-      // render a weapon
-	   /*
-      MatrixF mat;
-
-      GFX->pushWorldMatrix();
-      GFX->multWorld( mat );
-
-      GFX->popWorldMatrix();
-	  */
-   }
-
-   renderPass->renderPass( &state );
+   mTempScene->renderScene(SPT_Diffuse);
 
    if (mMouseState == MovingLight)
    {
@@ -459,7 +411,7 @@ void GuiMaterialPreview::renderSunDirection() const
 {
    // Render four arrows aiming in the direction of the sun's light
    ColorI color = LinearColorF(mFakeSun->getColor()).toColorI();
-   F32 length = mModel->getShape()->mBounds.len() * 0.8f;
+   F32 length = mTSShape->mShapeInstance->getShape()->mBounds.len() * 0.8f;
 
    // Get the sun's vectors
    Point3F fwd = mFakeSun->getTransform().getForwardVector();
@@ -467,8 +419,8 @@ void GuiMaterialPreview::renderSunDirection() const
    Point3F right = mFakeSun->getTransform().getRightVector() * length / 8;
 
    // Calculate the start and end points of the first arrow (bottom left)
-   Point3F start = mModel->getShape()->center - fwd * length - up / 2 - right / 2;
-   Point3F end = mModel->getShape()->center - fwd * length / 3 - up / 2 - right / 2;
+   Point3F start = mTSShape->mShapeInstance->getShape()->center - fwd * length - up / 2 - right / 2;
+   Point3F end = mTSShape->mShapeInstance->getShape()->center - fwd * length / 3 - up / 2 - right / 2;
 
    GFXStateBlockDesc desc;
    desc.setZReadWrite(true, true);
@@ -494,7 +446,7 @@ void GuiMaterialPreview::resetViewport()
    mCameraRot.set( mDegToRad(30.0f), 0, mDegToRad(-30.0f) );
    mCameraPos.set(0.0f, 1.75f, 1.25f);
    mOrbitDist = 5.0f;
-   mOrbitPos = mModel->getShape()->center;
+   mOrbitPos = mTSShape->mShapeInstance->getShape()->center;
 
    // Reset the viewport's lighting.
    GuiMaterialPreview::mFakeSun->setColor( LinearColorF( 1.0f, 1.0f, 1.0f ) );
@@ -519,7 +471,7 @@ DefineEngineMethod(GuiMaterialPreview, setModel, void, ( const char* shapeName )
    object->setObjectModel(shapeName);
 }
 
-DefineEngineMethod(GuiMaterialPreview, deleteModel, void, (),,
+DefineEngineMethod(GuiMaterialPreview, deleteModel, void, (), ,
    "Deletes the preview model.\n")
 {
    object->deleteModel();

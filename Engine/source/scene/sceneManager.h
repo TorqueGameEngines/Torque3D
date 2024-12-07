@@ -212,7 +212,7 @@ class SceneManager
       ~SceneManager();
 
       /// Return the SceneContainer for this scene.
-      SceneContainer* getContainer() const { return mIsClient ? getActiveClientContainer() : getActiveServerContainer(); }
+      SceneContainer* getContainer() const { return mSceneContainer; }
 
       /// Return the manager for the zones in this scene.
       /// @note Only client scenes have a zone manager as for the server, no zoning data is kept.

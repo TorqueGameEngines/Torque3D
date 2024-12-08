@@ -222,10 +222,13 @@ bool GuiMaterialPreview::onMouseWheelDown(const GuiEvent &event)
 // This is used to set the model we want to view in the control object.
 void GuiMaterialPreview::setObjectModel(const char* modelName)
 {
-   ScopedSceneManager scopeManager(mTempScene);
+   
    mTSShape->_setShapeData(mTSShape, "", modelName);
    if (!mTSShape->isProperlyAdded())
+   {
+      ScopedSceneManager scopeManager(mTempScene);
       mTSShape->registerObject();
+   }
 
    // Initialize camera values:
    mOrbitPos = mTSShape->mShapeInstance->getShape()->center;

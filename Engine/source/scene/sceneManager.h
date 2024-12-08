@@ -127,6 +127,7 @@ class SceneManager
 
       SceneContainer* mSceneContainer;
       SceneManager* mServerSide;
+      SceneManager* mClientSide;
 
    protected:
 

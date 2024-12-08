@@ -137,6 +137,8 @@ SceneManager::SceneManager( bool isClient )
      mVisibleGhostDistance( 0 ),
      mNearClip( 0.1f ),
      mLightManager( NULL ),
+     mClientSide( NULL ),
+     mServerSide( NULL ),
      mAmbientLightColor( LinearColorF( 0.1f, 0.1f, 0.1f, 1.0f ) ),
      mDefaultRenderPass( NULL )
 {
@@ -153,10 +155,12 @@ SceneManager::SceneManager( bool isClient )
       addObjectToScene( mZoneManager->getRootZone() );
 
       mServerSide = new SceneManager(false);
+      mServerSide->mClientSide = this;
    }
    else
    {
       mSceneContainer = new SceneContainer();
+      mServerSide = NULL;
    }
 }
 

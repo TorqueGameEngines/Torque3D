@@ -36,9 +36,6 @@
 #include "T3D/lighting/skylight.h"
 #include "gfx/gfxDrawUtil.h"
 
-#include "environment/skySphere.h"
-#include "T3D/tsStatic.h"
-
 // GuiMaterialPreview
 GuiMaterialPreview::GuiMaterialPreview()
 :  mMouseState(None),
@@ -69,19 +66,14 @@ GuiMaterialPreview::GuiMaterialPreview()
 
    // setup our scene.
    mTempScene = new SceneManager(true);
-   
    mTempScene->setFogData(FogData());
 
+   ScopedSceneManager scopeManager(mTempScene);
    mBGSky = new SkySphere();
    mBGSky->_setMaterial("Prototyping:hdrMaterial");
-   mBGSky->_initRender();
-   mBGSky->_updateMaterial();
-   
-   mTempScene->addObjectToScene(mBGSky);
+   mBGSky->registerObject();
    
    mTSShape = new TSStatic();
-   mTempScene->addObjectToScene(mTSShape);
-
 }
 
 GuiMaterialPreview::~GuiMaterialPreview()
@@ -230,17 +222,11 @@ bool GuiMaterialPreview::onMouseWheelDown(const GuiEvent &event)
 // This is used to set the model we want to view in the control object.
 void GuiMaterialPreview::setObjectModel(const char* modelName)
 {
-   if (mTSShape != NULL) {
-      if (dStrcmp(mTSShape->mShapeAssetId, modelName) == 0)
-         return;
+   ScopedSceneManager scopeManager(mTempScene);
+   mTSShape->_setShapeData(mTSShape, "", modelName);
+   if (!mTSShape->isProperlyAdded())
+      mTSShape->registerObject();
 
-      deleteModel();
-   }
-
-   mTSShape = new TSStatic();
-   mTempScene->addObjectToScene(mTSShape);
-   mTSShape->_setShape(modelName);
-   mTSShape->_createShape();
    // Initialize camera values:
    mOrbitPos = mTSShape->mShapeInstance->getShape()->center;
    mMinOrbitDist = mTSShape->mShapeInstance->getShape()->mRadius;
@@ -419,12 +405,6 @@ DefineEngineMethod(GuiMaterialPreview, setModel, void, ( const char* shapeName )
    "@param shapeName Name of the model to display.\n")
 {
    object->setObjectModel(shapeName);
-}
-
-DefineEngineMethod(GuiMaterialPreview, deleteModel, void, (), ,
-   "Deletes the preview model.\n")
-{
-   object->deleteModel();
 }
 
 // Set orbit distance around the model.

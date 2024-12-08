@@ -71,8 +71,6 @@ protected:
 
    MouseState  mMouseState;
 
-   TSShapeInstance*  mModel;
-   TSShapeInstance*  mMountedModel;
    U32   mSkinTag;
 
    // For Camera Panning.

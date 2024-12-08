@@ -352,8 +352,11 @@ void SceneObject::addToScene()
    if( mSceneManager )
       return;
 
-   if( isClientObject() )
-      getActiveClientScene()->addObjectToScene( this );
+   if (isClientObject())
+      if (getServerObject())
+         static_cast<SceneObject*>(getServerObject())->mSceneManager->mClientSide->addObjectToScene(this);
+      else
+         getActiveClientScene()->addObjectToScene(this);
    else
       getActiveServerScene()->addObjectToScene( this );
 }

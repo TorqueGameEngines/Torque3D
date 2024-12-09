@@ -48,7 +48,7 @@ function MaterialEditorGui::establishMaterials(%this)
       };
    }
 
-   if(!isObject(materialEd_justAlphaMaterial))
+   if(!isObject(materialEd_previewMaterial))
    {
       singleton CustomMaterial( materialEd_justAlphaMaterial )
       {
@@ -57,7 +57,7 @@ function MaterialEditorGui::establishMaterials(%this)
       };
    }
 
-   if(!isObject(materialEd_justAlphaShader))
+   if(!isObject(materialEd_previewMaterial))
    {
       //Custom shader to allow the display of just the alpha channel. 
       singleton ShaderData( materialEd_justAlphaShader )
@@ -144,29 +144,19 @@ function MaterialEditorGui::open(%this)
    
    //Sift through the RootGroup and find all loaded material items.
    MaterialEditorGui.updateAllFields();
-
-   // this is a hacky piece of shit script, but it means that updates will continue.
-   matEd_previewObjectView.setModel("ToolsModule:cubepreview");
-   matEd_previewObjectView.setModel("ToolsModule:spherepreview");
-   matEd_previewObjectView.setModel("ToolsModule:pyramidpreview");
-   matEd_previewObjectView.setModel("ToolsModule:cylinderpreview");
-   matEd_previewObjectView.setModel("ToolsModule:toruspreview");
-   matEd_previewObjectView.setModel("ToolsModule:torusknotpreview");
-
    MaterialEditorGui.updatePreviewObject();
 
    // If no selected object; go to material mode. And edit the last selected material
    MaterialEditorGui.setMode();
    
-   MaterialEditorGui.preventUndo = true;   
+   MaterialEditorGui.preventUndo = true;
    
    if( MaterialEditorGui.currentMode $= "Mesh" )
       MaterialEditorGui.prepareActiveObject( true );
    else
       MaterialEditorGui.prepareActiveMaterial( "", true );
-      
+
    MaterialEditorGui.preventUndo = false;   
-      
 }
 
 function MaterialEditorGui::quit(%this)
@@ -178,11 +168,6 @@ function MaterialEditorGui::quit(%this)
       MaterialEditorGui.copyMaterials( notDirtyMaterial, materialEd_previewMaterial );
       MaterialEditorGui.copyMaterials( notDirtyMaterial, MaterialEditorGui.currentMaterial );
       MaterialEditorGui.guiSync( materialEd_previewMaterial );
-      
-      materialEd_previewMaterial.flush();
-      materialEd_previewMaterial.reload();
-      MaterialEditorGui.currentMaterial.flush();
-      MaterialEditorGui.currentMaterial.reload();
    }
    
    if( isObject(MaterialEditorGui.currentMaterial) )
@@ -549,22 +534,6 @@ function SubMaterialSelector::onSelect( %this )
          %assetDef = AssetDatabase.acquireAsset(%material);
          %material = %assetDef.materialDefinitionName;  
       }
-      /*// look for a newMaterial name to grab
-      // addiitonally, convert "." to "_" in case we have something like: "base.texname" as a material name   
-      // at the end we will have generated material name: "base_texname_mat"   
-      %material = getUniqueName( strreplace(%material, ".", "_") @ "_mat" );
-
-      new Material(%material) 
-      {
-         diffuseMap[0] = %origMat;   
-         mapTo = %origMat;
-         parentGroup = RootGroup;
-      };
-      
-      eval( "MaterialEditorGui.currentObject." @ strreplace(%this.getText(),".","_") @ " = " @ %material @ ";");
-      
-      if( MaterialEditorGui.currentObject.isMethod("postApply") )
-         MaterialEditorGui.currentObject.postApply();*/
    }
    else
    {
@@ -572,11 +541,12 @@ function SubMaterialSelector::onSelect( %this )
       if(%materialAssetId !$= "" && %materialAssetId !$= $Core::NoMaterialAssetFallback)
       {
          MaterialEditorGui.currentMaterialAsset = %materialAssetId;
-         %assetDef = AssetDatabase.acquireAsset(%material);
+         %assetDef = AssetDatabase.acquireAsset(%materialAssetId);
+         %material = %assetDef.materialDefinitionName;  
       }
    }
 
-   MaterialEditorGui.prepareActiveMaterial( %material.getId() );
+   MaterialEditorGui.prepareActiveMaterial( %material.getId());
 }
 
 //==============================================================================
@@ -655,10 +625,11 @@ function MaterialEditorGui::prepareActiveObject( %this, %override )
    }
    
    %id = SubMaterialSelector.findText( MaterialEditorGui.currentMaterial.mapTo );
+   
    if( %id != -1 )
       SubMaterialSelector.setSelected( %id );
    else
-      SubMaterialSelector.setSelected(0);	   
+      SubMaterialSelector.setSelected(0);
 }
 
 //==============================================================================
@@ -749,11 +720,6 @@ function MaterialEditorGui::setActiveMaterial( %this, %material )
 
    MaterialEditorGui.currentMaterial = %material;
    MaterialEditorGui.lastMaterial = %material;
-   
-   // we create or recreate a material to hold in a pristine state
-   // or, this crashes the ap. fix properly - BJR
-   if(isObject(notDirtyMaterial))
-      notDirtyMaterial.delete();
       
    singleton Material(notDirtyMaterial)
    {
@@ -768,16 +734,10 @@ function MaterialEditorGui::setActiveMaterial( %this, %material )
    %this.originalName = MaterialEditorGui.currentMaterial.name;
 
    // Copy materials over to other references
-   MaterialEditorGui.copyMaterials( MaterialEditorGui.currentMaterial, materialEd_previewMaterial );
    MaterialEditorGui.copyMaterials( MaterialEditorGui.currentMaterial, notDirtyMaterial );
-   MaterialEditorGui.guiSync( materialEd_previewMaterial );   
-     
-   // Necessary functionality in order to render correctly
-   materialEd_previewMaterial.flush();
-   materialEd_previewMaterial.reload();
-   MaterialEditorGui.currentMaterial.flush();
-   MaterialEditorGui.currentMaterial.reload();
-      
+   MaterialEditorGui.copyMaterials( MaterialEditorGui.currentMaterial, materialEd_previewMaterial );
+   MaterialEditorGui.guiSync( materialEd_previewMaterial );
+
    MaterialEditorGui.setMaterialNotDirty();
 }
 
@@ -994,9 +954,6 @@ function MaterialEditorGui::updateLivePreview(%this,%preview)
       MaterialEditorGui.copyMaterials( materialEd_previewMaterial, MaterialEditorGui.currentMaterial );
    else
       MaterialEditorGui.copyMaterials( notDirtyMaterial, MaterialEditorGui.currentMaterial );
-   
-   MaterialEditorGui.currentMaterial.flush();
-   MaterialEditorGui.currentMaterial.reload();
 }
 
 function MaterialEditorGui::copyMaterials( %this, %copyFrom, %copyTo)
@@ -1006,6 +963,8 @@ function MaterialEditorGui::copyMaterials( %this, %copyFrom, %copyTo)
    %copyTo.assignFieldsFrom( %copyFrom );
    %copyTo.mapTo = %mapTo;
 
+   %copyTo.flush();
+   %copyTo.reload();
 }
 
 function MaterialEditorGui::guiSync( %this, %material )
@@ -1053,7 +1012,7 @@ function MaterialEditorGui::guiSync( %this, %material )
         case "preMul": %selectedNum = 1;
         case "LerpAlpha": %selectedNum = 2;
         case "Mul": %selectedNum = 3;
-        case "": %selectedNum = 4;
+        case "Add": %selectedNum = 4;
         case "AddAlpha": %selectedNum = 5;
         case "Sub": %selectedNum = 6;
    }
@@ -1340,16 +1299,16 @@ function MaterialEditorGui::updateActiveMaterial(%this, %propertyField, %value, 
       MaterialEditorGui.submitUndo( %action );
    }
    
-   materialEd_previewMaterial.setFieldValue(%propertyField, %value);
-   materialEd_previewMaterial.flush();
-   materialEd_previewMaterial.reload();
-   
    if (MaterialEditorGui.livePreview == true)
    {
       MaterialEditorGui.currentMaterial.setFieldValue(%propertyField, %value);
       MaterialEditorGui.currentMaterial.flush();
       MaterialEditorGui.currentMaterial.reload();
    }
+
+   materialEd_previewMaterial.setFieldValue(%propertyField, %value);
+   materialEd_previewMaterial.flush();
+   materialEd_previewMaterial.reload();
 }
 
 function MaterialEditorGui::updateActiveMaterialName(%this, %name)
@@ -2191,11 +2150,6 @@ function MaterialEditorGui::saveDialogDontSave( %this, %material )
    MaterialEditorGui.copyMaterials( notDirtyMaterial, materialEd_previewMaterial );
    MaterialEditorGui.guiSync( materialEd_previewMaterial );
    
-   materialEd_previewMaterial.flush();
-   materialEd_previewMaterial.reload();
-   MaterialEditorGui.currentMaterial.flush();
-   MaterialEditorGui.currentMaterial.reload();
-   
    MaterialEditorGui.setMaterialNotDirty();
    
    if(AssetDatabase.isDeclaredAsset(%material))
@@ -2228,7 +2182,7 @@ function MaterialEditorGui::save( %this )
    }
    
    // Update the live object regardless in this case
-   MaterialEditorGui.updateLivePreview(true);
+   //MaterialEditorGui.updateLivePreview(true);
    
    %currentMaterial = MaterialEditorGui.currentMaterial;
    if( %currentMaterial == -1 )
@@ -2298,46 +2252,7 @@ function MaterialEditorGui::deleteMaterial( %this )
    %action = %this.createUndo(ActionDeleteMaterial, "Delete Material");
    %action.object = MaterialEditorGui.currentObject;
    %action.currentMode = MaterialEditorGui.currentMode;
-   
-   /*
-   if( MaterialEditorGui.currentMode $= "Mesh" )
-   {
-      %materialTarget = SubMaterialSelector.text;
-      %action.materialTarget = %materialTarget;   
-      
-      //create the stub material
-      %toMaterial = getUniqueName( "newMaterial" );
-      new Material(%toMaterial) 
-      {
-         diffuseMap[0] = "core/rendering/images/warnmat";
-         mapTo = "unmapped_mat";
-         parentGroup = RootGroup;
-      };
-         
-      %action.toMaterial = %toMaterial.getId();   
-      %action.fromMaterial = MaterialEditorGui.currentMaterial;
-      %action.fromMaterialOldFname = MaterialEditorGui.currentMaterial.getFilename();
-   }
-   else
-   {
-      // Grab first material we see; if theres not one, create one
-      %toMaterial = MaterialSet.getObject(0);
-      if( !isObject( %toMaterial ) )
-      {
-         %toMaterial = getUniqueName( "newMaterial" );
-         new Material(%toMaterial) 
-         {
-            diffuseMap[0] = "core/rendering/images/warnmat";
-            mapTo = "unmapped_mat";
-            parentGroup = RootGroup;
-         };    
-      }
-   
-      %action.toMaterial = %toMaterial.getId();
-      %action.fromMaterial = MaterialEditorGui.currentMaterial;
-   }
-   */
-   
+
    // Grab first material we see; if theres not one, create one
    %newMaterial = getUniqueName( "newMaterial" );
    new Material(%newMaterial) 
@@ -2396,18 +2311,13 @@ function MaterialEditorGui::clearMaterial(%this)
                      parentGroup = RootGroup;
                   };
    
-   MaterialEditorGui.copyMaterials( %tempMat, materialEd_previewMaterial );
-   MaterialEditorGui.guiSync( materialEd_previewMaterial );
-      
-   materialEd_previewMaterial.flush();
-   materialEd_previewMaterial.reload();
-   
    if (MaterialEditorGui.livePreview == true)
    {
       MaterialEditorGui.copyMaterials( %tempMat, MaterialEditorGui.currentMaterial );
-      MaterialEditorGui.currentMaterial.flush();
-      MaterialEditorGui.currentMaterial.reload();
    }
+
+   MaterialEditorGui.copyMaterials( %tempMat, materialEd_previewMaterial );
+   MaterialEditorGui.guiSync( materialEd_previewMaterial );
    
    MaterialEditorGui.setMaterialDirty();
    
@@ -2434,18 +2344,14 @@ function MaterialEditorGui::refreshMaterial(%this)
    MaterialEditorGui.submitUndo( %action );
    
    MaterialEditorGui.currentMaterial.setName( %this.originalName );
-   MaterialEditorGui.copyMaterials( notDirtyMaterial, materialEd_previewMaterial );
-   MaterialEditorGui.guiSync( materialEd_previewMaterial );
-      
-   materialEd_previewMaterial.flush();
-   materialEd_previewMaterial.reload();
-   
+
    if (MaterialEditorGui.livePreview == true)
    {
       MaterialEditorGui.copyMaterials( notDirtyMaterial, MaterialEditorGui.currentMaterial );
-      MaterialEditorGui.currentMaterial.flush();
-      MaterialEditorGui.currentMaterial.reload();
    }
+
+   MaterialEditorGui.copyMaterials( notDirtyMaterial, materialEd_previewMaterial );
+   MaterialEditorGui.guiSync( materialEd_previewMaterial );
    
    MaterialEditorGui.setMaterialNotDirty();
 }

@@ -35,6 +35,8 @@
 #include "renderInstance/renderProbeMgr.h"
 #include "T3D/lighting/skylight.h"
 #include "gfx/gfxDrawUtil.h"
+#include "math/mathUtils.h"
+#include "T3D/groundPlane.h"
 
 // GuiMaterialPreview
 GuiMaterialPreview::GuiMaterialPreview()
@@ -42,20 +44,19 @@ GuiMaterialPreview::GuiMaterialPreview()
    runThread(0),
    lastRenderTime(0),
    mLastMousePoint(0, 0),
-   mFakeSun(NULL),
    mMaxOrbitDist(5.0f),
    mMinOrbitDist(0.0f),
    mOrbitDist(5.0f)
 {
    mActive = true;
    mCameraMatrix.identity();
-   mCameraRot.set( mDegToRad(30.0f), 0, mDegToRad(-30.0f) );
+   mCameraRot.set(mDegToRad(3.0f), 0, mDegToRad(-30.0f) );
    mCameraPos.set(0.0f, 1.75f, 1.25f);
    mCameraMatrix.setColumn(3, mCameraPos);
    mOrbitPos.set(0.0f, 0.0f, 0.0f);
    mTransStep = 0.01f;
    mTranMult = 4.0;
-   mLightTransStep = 0.01f;
+   mLightTransStep = 0.5f;
    mLightTranMult = 4.0;
    mOrbitRelPos = Point3F(0,0,0);
 
@@ -69,19 +70,22 @@ GuiMaterialPreview::GuiMaterialPreview()
    mTempScene->setFogData(FogData());
 
    ScopedSceneManager scopeManager(mTempScene);
-   mBGSky = new SkySphere();
-   mBGSky->_setMaterial("Prototyping:hdrMaterial");
-   mBGSky->registerObject();
+   mRealSun = new Sun();
+   mRealSun->setField("brightness", "2.0");
+   mRealSun->setAzimuth(100.0f);
+   mRealSun->registerObject();
+
+   GroundPlane* plane = new GroundPlane();
+   plane->_setMaterial("ToolsModule:GreyPreview");
+   plane->registerObject();
    
    mTSShape = new TSStatic();
 }
 
 GuiMaterialPreview::~GuiMaterialPreview()
 {
-   SAFE_DELETE(mFakeSun);
-
-   mBGSky->unregisterObject();
-   SAFE_DELETE(mBGSky);
+   mRealSun->unregisterObject();
+   SAFE_DELETE(mRealSun);
 
    if(mTSShape != NULL)
       deleteModel();
@@ -94,14 +98,8 @@ bool GuiMaterialPreview::onWake()
    if( !Parent::onWake() )
       return false;
 
-   if (!mFakeSun)
-      mFakeSun = LightManager::createLightInfo();
-
-   mFakeSun->setColor( LinearColorF( 1.0f, 1.0f, 1.0f ) );
-   mFakeSun->setAmbient( LinearColorF( 0.5f, 0.5f, 0.5f ) );
-   mFakeSun->setDirection( VectorF( 0.0f, 0.707f, -0.707f ) );
-	mFakeSun->setPosition( mFakeSun->getDirection() * -10000.0f );
-   mFakeSun->setRange( 2000000.0f );
+   mRealSun->setColor( LinearColorF( 1.0f, 1.0f, 1.0f ) );
+   mRealSun->setAmbientColor( LinearColorF( 0.5f, 0.5f, 0.5f ) );
 
    return true;
 }
@@ -111,7 +109,7 @@ void GuiMaterialPreview::setAmbientLightColor( F32 r, F32 g, F32 b )
 {
    LinearColorF temp(r, g, b);
    temp.clamp();
-	GuiMaterialPreview::mFakeSun->setAmbient( temp );
+	mRealSun->setAmbientColor( temp );
 }
 
 // This function allows the light's color to be changed. This is exposed to script below.
@@ -119,7 +117,7 @@ void GuiMaterialPreview::setLightColor( F32 r, F32 g, F32 b )
 {
    LinearColorF temp(r, g, b);
    temp.clamp();
-	GuiMaterialPreview::mFakeSun->setColor( temp );
+   mRealSun->setColor( temp );
 }
 
 // This function is for moving the light in the scene. This needs to be adjusted to keep the light
@@ -129,21 +127,16 @@ void GuiMaterialPreview::setLightTranslate(S32 modifier, F32 xstep, F32 ystep)
 {
 	F32 _lighttransstep = (modifier & SI_SHIFT ? mLightTransStep : (mLightTransStep*mLightTranMult));
 
-	Point3F relativeLightDirection = GuiMaterialPreview::mFakeSun->getDirection();
-
-   F32 azimuth = mAtan2(relativeLightDirection.y, relativeLightDirection.x);
-   F32 elevation = mAsin(relativeLightDirection.z);
+   // Convert current direction to spherical coordinates (azimuth and elevation in radians)
+   F32 azimuth = mRealSun->getAzimuth();
+   F32 elevation = mRealSun->getElevation();
 
    // Modify azimuth and elevation based on input
-   azimuth += xstep * _lighttransstep;
-   elevation = mClampF(elevation + ystep * _lighttransstep, -M_2PI_F, M_2PI_F);
+   azimuth -= xstep * _lighttransstep; // Horizontal movement affects azimuth
+   elevation = elevation - ystep * _lighttransstep;
 
-   // Convert back to Cartesian coordinates
-   relativeLightDirection.x = mCos(elevation) * mCos(azimuth);
-   relativeLightDirection.y = mCos(elevation) * mSin(azimuth);
-   relativeLightDirection.z = mSin(elevation);
-
-   GuiMaterialPreview::mFakeSun->setDirection(relativeLightDirection);
+   // Update azimuth and elevation on the sun object
+   mRealSun->setDirection(azimuth, elevation);
 }
 
 // Left Click
@@ -171,9 +164,9 @@ void GuiMaterialPreview::onMouseDragged(const GuiEvent &event)
    // If we are MovingLight...
    else
    {
-   Point2I delta = event.mousePoint - mLastMousePoint;
-   mLastMousePoint = event.mousePoint;
-   setLightTranslate(event.modifier, delta.x, delta.y);
+      Point2I delta = event.mousePoint - mLastMousePoint;
+      mLastMousePoint = event.mousePoint;
+      setLightTranslate(event.modifier, delta.x, delta.y);
    }
 }
 
@@ -227,11 +220,13 @@ void GuiMaterialPreview::setObjectModel(const char* modelName)
    if (!mTSShape->isProperlyAdded())
    {
       ScopedSceneManager scopeManager(mTempScene);
+      mTSShape->setPosition(Point3F(0, 0, 1.5));
       mTSShape->registerObject();
    }
 
    // Initialize camera values:
-   mOrbitPos = mTSShape->mShapeInstance->getShape()->center;
+   mTSShape->setPosition(Point3F(0, 0, mTSShape->mShapeInstance->getShape()->mBounds.len_z() * 0.5f));
+   mOrbitPos = mTSShape->getPosition();
    mMinOrbitDist = mTSShape->mShapeInstance->getShape()->mRadius;
 
    lastRenderTime = Platform::getVirtualMilliseconds();
@@ -329,37 +324,42 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
 
    ScopedSceneManager scopeManager(mTempScene);
 
-   LIGHTMGR->unregisterAllLights();
-   LIGHTMGR->setSpecialLight(LightManager::slSunLightType, mFakeSun);
+   RenderPassManager* renderPass = mTempScene->getDefaultRenderPass();
+   SceneRenderState state
+   (
+      mTempScene,
+      SPT_Diffuse,
+      SceneCameraState::fromGFX(),
+      renderPass,
+      true
+   );
 
    if (Skylight::smSkylightProbe.isValid())
       PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
 
-   mTempScene->renderScene(SPT_Diffuse);
+   mTempScene->renderScene(&state);
 
    if (mMouseState == MovingLight)
    {
       renderSunDirection();
    }
 
-   // Make sure to remove our fake sun
-   LIGHTMGR->unregisterAllLights();
 }
 
 void GuiMaterialPreview::renderSunDirection() const
 {
    // Render four arrows aiming in the direction of the sun's light
-   ColorI color = LinearColorF(mFakeSun->getColor()).toColorI();
+   ColorI color = LinearColorF(mRealSun->getLight()->getColor()).toColorI();
    F32 length = mTSShape->mShapeInstance->getShape()->mBounds.len() * 0.8f;
 
    // Get the sun's vectors
-   Point3F fwd = mFakeSun->getTransform().getForwardVector();
-   Point3F up = mFakeSun->getTransform().getUpVector() * length / 8;
-   Point3F right = mFakeSun->getTransform().getRightVector() * length / 8;
+   Point3F fwd = mRealSun->getLight()->getTransform().getForwardVector();
+   Point3F up = mRealSun->getLight()->getTransform().getUpVector() * length / 8;
+   Point3F right = mRealSun->getLight()->getTransform().getRightVector() * length / 8;
 
    // Calculate the start and end points of the first arrow (bottom left)
-   Point3F start = mTSShape->mShapeInstance->getShape()->center - fwd * length - up / 2 - right / 2;
-   Point3F end = mTSShape->mShapeInstance->getShape()->center - fwd * length / 3 - up / 2 - right / 2;
+   Point3F start = mTSShape->getPosition() - fwd * length - up / 2 - right / 2;
+   Point3F end = mTSShape->getPosition() - fwd * length / 3 - up / 2 - right / 2;
 
    GFXStateBlockDesc desc;
    desc.setZReadWrite(true, true);
@@ -382,15 +382,14 @@ void GuiMaterialPreview::setOrbitDistance(F32 distance)
 void GuiMaterialPreview::resetViewport()
 {
    // Reset the camera's orientation.
-   mCameraRot.set( mDegToRad(30.0f), 0, mDegToRad(-30.0f) );
+   mCameraRot.set(mDegToRad(3.0f), 0, mDegToRad(-30.0f) );
    mCameraPos.set(0.0f, 1.75f, 1.25f);
    mOrbitDist = 5.0f;
-   mOrbitPos = mTSShape->mShapeInstance->getShape()->center;
+   mOrbitPos = mTSShape->getPosition();
 
    // Reset the viewport's lighting.
-   GuiMaterialPreview::mFakeSun->setColor( LinearColorF( 1.0f, 1.0f, 1.0f ) );
-   GuiMaterialPreview::mFakeSun->setAmbient( LinearColorF( 0.5f, 0.5f, 0.5f ) );
-   GuiMaterialPreview::mFakeSun->setDirection( VectorF( 0.0f, 0.707f, -0.707f ) );
+   GuiMaterialPreview::mRealSun->setColor( LinearColorF( 1.0f, 1.0f, 1.0f ) );
+   GuiMaterialPreview::mRealSun->setAmbientColor( LinearColorF( 0.5f, 0.5f, 0.5f ) );
 }
 
 // Expose the class and functions to the console.

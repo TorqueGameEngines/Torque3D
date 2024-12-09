@@ -52,6 +52,10 @@
 #include "T3D/tsStatic.h"
 #endif
 
+#ifndef _SUN_H_
+#include "environment/sun.h"
+#endif
+
 class LightInfo;
 
 class GuiMaterialPreview : public GuiTSCtrl
@@ -93,10 +97,9 @@ protected:
 
    Point2I     mLastMousePoint;
 
-   LightInfo*  mFakeSun;
    SceneManager* mTempScene;
 
-   SkySphere* mBGSky;
+   Sun* mRealSun;
    TSStatic* mTSShape;
 
    void renderSunDirection() const;

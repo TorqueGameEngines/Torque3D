@@ -79,6 +79,39 @@ public:
       ImageTypeCount = 11
    };
 
+   class Frame
+   {
+   public:
+      Frame(const S32 pixelOffsetX, const S32 pixelOffsetY,
+         const U32 pixelWidth, const U32 pixelHeight,
+         const F32 texelWidthScale, const F32 texelHeightScale,
+         StringTableEntry inRegionName = StringTable->EmptyString())
+         : regionName(inRegionName)
+      {
+         pixelOffset.set(pixelOffsetY, pixelOffsetY);
+         pixelSize.set(pixelWidth, pixelHeight);
+
+         texelLower.set(pixelOffsetX * texelWidthScale, pixelOffsetY * texelHeightScale);
+         texelSize.set(pixelWidth * texelWidthScale, pixelHeight * texelHeightScale);
+         texelUpper.set(texelLower.x + texelSize.x, texelLower.y + texelSize.y);
+      }
+
+      void setFlip(bool flipX, bool flipY)
+      {
+         if (flipX) mSwap(texelLower.x, texelUpper.x);
+         if (flipY) mSwap(texelLower.y, texelUpper.y);
+      }
+
+      Point2I pixelOffset;
+      Point2I pixelSize;
+
+      Point2F texelLower;
+      Point2F texelUpper;
+      Point2F texelSize;
+
+      StringTableEntry regionName;
+   };
+
    static StringTableEntry smNoImageAssetFallback;
 
    enum ImageAssetErrCode
@@ -96,26 +129,16 @@ public:
       if (errCode > ImageAssetErrCode::Extended) return "undefined error";
       return mErrCodeStrings[errCode - Parent::Extended];
    };
+private:
 
-protected:
-   StringTableEntry mImageFileName;
-   StringTableEntry mImagePath;
-   NamedTexTargetRef mNamedTarget;
-
-   bool mIsValidImage;
-   bool mUseMips;
-   bool mIsHDRImage;
-
-   ImageTypes mImageType;
-
+   StringTableEntry  mImageFile;
+   bool              mUseMips;
+   bool              mIsHDRImage;
+   GFXTexHandle      mTextureHandle;
+   ImageTypes        mImageType;
    HashMap<GFXTextureProfile*, GFXTexHandle> mResourceMap;
 
-   typedef Signal<void()> ImageAssetChanged;
-   ImageAssetChanged mChangeSignal;
-
-   typedef Signal<void(S32 index)> ImageAssetArrayChanged;
-   ImageAssetArrayChanged mChangeArraySignal;
-
+   void generateTexture(void);
 public:
    ImageAsset();
    virtual ~ImageAsset();
@@ -125,6 +148,10 @@ public:
 
    /// Engine.
    static void initPersistFields();
+
+   /// Sim
+   bool onAdd() override;
+   void onRemove() override;
    void copyTo(SimObject* object) override;
 
    /// Declare Console Object.
@@ -132,43 +159,74 @@ public:
 
    void _onResourceChanged(const Torque::Path& path);
 
-   ImageAssetChanged& getChangedSignal() { return mChangeSignal; }
-   ImageAssetArrayChanged& getChangedArraySignal() { return mChangeArraySignal; }
+   // asset Base load
+   U32 load() override;
 
-   void                    setImageFileName(StringTableEntry pScriptFile);
-   inline StringTableEntry getImageFileName(void) const { return mImageFileName; };
+   void                    setImageFile(StringTableEntry pImageFile);
+   inline StringTableEntry getImageFile(void) const { return mImageFile; };
 
-   inline StringTableEntry getImagePath(void) const { return mImagePath; };
+   void                    setGenMips(const bool pGenMips);
+   inline bool             getGenMips(void) const { return mUseMips; };
 
-   bool isValid() { return mIsValidImage; }
+   void                    setTextureHDR(const bool pIsHDR);
+   inline bool             getTextureHDR(void) const { return mIsHDRImage; };
 
-   GFXTexHandle getTexture(GFXTextureProfile* requestedProfile);
-
-   StringTableEntry getImageInfo();
+   inline GFXTexHandle& getTexture(void) { load(); generateTexture(); return mTextureHandle; }
+   GFXTexHandle            getTexture(GFXTextureProfile* requestedProfile);
 
    static StringTableEntry getImageTypeNameFromType(ImageTypes type);
-   static ImageTypes getImageTypeFromName(StringTableEntry name);
+   static ImageTypes       getImageTypeFromName(StringTableEntry name);
 
-   void setImageType(ImageTypes type) { mImageType = type; }
-   ImageTypes getImageType() { return mImageType; }
+   void                    setImageType(ImageTypes type) { mImageType = type; }
+   ImageTypes              getImageType() { return mImageType; }
+
+   inline U32              getTextureWidth(void) const { return mTextureHandle->getWidth(); }
+   inline U32              getTextureHeight(void) const { return mTextureHandle->getHeight(); }
+   inline U32              getTextureDepth(void) const { return mTextureHandle->getDepth(); }
+
+   inline U32              getTextureBitmapWidth(void) const { return mTextureHandle->getBitmapWidth(); }
+   inline U32              getTextureBitmapHeight(void) const { return mTextureHandle->getBitmapHeight(); }
+   inline U32              getTextureBitmapDepth(void) const { return mTextureHandle->getBitmapDepth(); }
+   bool                    isAssetValid(void) const override { return !mTextureHandle.isNull(); }
 
    static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset);
    static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* imageAsset);
    static U32 getAssetById(String assetId, AssetPtr<ImageAsset>* imageAsset) { return getAssetById(assetId.c_str(), imageAsset); };
 
-   U32 load() override;
+
+   const char* getImageInfo();
 
 protected:
-   void            initializeAsset(void) override;
-   void            onAssetRefresh(void) override;
+   // Asset Base callback
+   void initializeAsset(void) override;
+   void onAssetRefresh(void) override;
+   void _onFileChanged(const Torque::Path& path);
 
-   static bool setImageFileName(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ImageAsset*>(obj)->setImageFileName(data); return false; }
-   static StringTableEntry getImageFileName(void* obj, StringTableEntry data) { return static_cast<ImageAsset*>(obj)->getImageFileName(); }
+   /// Taml callbacks.
+   void onTamlPreWrite(void) override;
+   void onTamlPostWrite(void) override;
+
+protected:
+   // Texture file 
+   static bool setImageFile(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ImageAsset*>(obj)->setImageFile(data); return false; }
+   static const char* getImageFile(void* obj, StringTableEntry data) { return static_cast<ImageAsset*>(obj)->getImageFile(); }
+   static bool writeImageFile(void* obj, StringTableEntry pFieldName) { return static_cast<ImageAsset*>(obj)->getImageFile() != StringTable->EmptyString(); }
+
+   // Gen mips?
+   static bool setGenMips(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ImageAsset*>(obj)->setGenMips(dAtob(data)); return false; }
+   static bool writeGenMips(void* obj, StringTableEntry pFieldName) { return static_cast<ImageAsset*>(obj)->getGenMips() == true; }
+
+   // Texture Is Hdr?
+   static bool setTextureHDR(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ImageAsset*>(obj)->setTextureHDR(dAtob(data)); return false; }
+   static bool writeTextureHDR(void* obj, StringTableEntry pFieldName) { return static_cast<ImageAsset*>(obj)->getTextureHDR() == true; }
 };
 
 DefineConsoleType(TypeImageAssetPtr, ImageAsset)
 DefineConsoleType(TypeImageAssetId, String)
+
+DECLARE_STRUCT(AssetPtr<ImageAsset>)
+DefineConsoleType(TypeImageAssetPtrRefactor, AssetPtr<ImageAsset> )
 
 typedef ImageAsset::ImageTypes ImageAssetType;
 DefineEnumType(ImageAssetType);
@@ -196,10 +254,6 @@ public: \
    {\
       if(m##name##AssetId != _in || m##name##Name != _in)\
       {\
-         if (m##name##Asset.notNull())\
-         {\
-            m##name##Asset->getChangedSignal().remove(this, &className::changeFunc);\
-         }\
          if (_in == NULL || _in == StringTable->EmptyString())\
          {\
             m##name##Name = StringTable->EmptyString();\
@@ -251,10 +305,6 @@ public: \
       }\
       if (get##name() != StringTable->EmptyString() && m##name##Name != StringTable->insert("texhandle"))\
       {\
-         if (m##name##Asset.notNull())\
-         {\
-            m##name##Asset->getChangedSignal().notify(this, &className::changeFunc);\
-         }\
          \
          if (get##name()[0] != '$' && get##name()[0] != '#') {\
             m##name.set(get##name(), m##name##Profile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
@@ -285,11 +335,8 @@ public: \
    \
    const StringTableEntry get##name() const\
    {\
-      if (m##name##Asset && (m##name##Asset->getImageFileName() != StringTable->EmptyString()))\
-         if (m##name##Asset->getImageFileName()[0] == '#' || m##name##Asset->getImageFileName()[0] == '$')\
-            return m##name##Asset->getImageFileName();\
-         else\
-            return  Platform::makeRelativePathName(m##name##Asset->getImagePath(), Platform::getMainDotCsDir());\
+      if (m##name##Asset && (m##name##Asset->getImageFile() != StringTable->EmptyString()))\
+         return  Platform::makeRelativePathName(m##name##Asset->getImageFile(), Platform::getMainDotCsDir());\
       else if (m##name##AssetId != StringTable->EmptyString())\
          return m##name##AssetId;\
       else if (m##name##Name != StringTable->EmptyString())\
@@ -435,11 +482,8 @@ public: \
    \
    const StringTableEntry get##name(const U32& index) const\
    {\
-      if (m##name##Asset[index] && (m##name##Asset[index]->getImageFileName() != StringTable->EmptyString()))\
-         if (m##name##Asset[index]->getImageFileName()[0] == '#' || m##name##Asset[index]->getImageFileName()[0] == '$')\
-            return m##name##Asset[index]->getImageFileName();\
-         else\
-            return  Platform::makeRelativePathName(m##name##Asset[index]->getImagePath(), Platform::getMainDotCsDir());\
+      if (m##name##Asset[index] && (m##name##Asset[index]->getImageFile() != StringTable->EmptyString()))\
+         return  Platform::makeRelativePathName(m##name##Asset[index]->getImageFile(), Platform::getMainDotCsDir());\
       else if (m##name##AssetId[index] != StringTable->EmptyString())\
          return m##name##AssetId[index];\
       else if (m##name##Name[index] != StringTable->EmptyString())\
@@ -542,4 +586,19 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
 
 #pragma endregion
 
+#pragma region Refactor Asset Macros
 
+#define DECLARE_IMAGEASSET_REFACTOR(className, name, profile)                                                                                                                 \
+private:                                                                                                                                                                      \
+   AssetPtr<ImageAsset> m##name##Asset;                                                                                                                                       \
+public:                                                                                                                                                                       \
+   void _set##name(StringTableEntry _in);                                                                                                                                     \
+   inline StringTableEntry _get##name(void) const { return m##name##Asset.getAssetId(); }                                                                                     \
+   GFXTexHandle get##name() { return m##name##Asset.notNull() ? m##name##Asset->getTexture(&profile) : NULL; }                                                                \
+   AssetPtr<ImageAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
+   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}   
+
+#define INITPERSISTFIELD_IMAGEASSET_REFACTOR(name, consoleClass, docs)                                                                                                        \
+   addProtectedField(assetText(name, Asset), TypeImageAssetPtrRefactor, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
+
+#pragma endregion

@@ -531,5 +531,7 @@ inline F64 mSquared( F64 n )
    return n * n;
 }
 
+template< typename T >
+inline void mSwap(T& a, T& b) { T temp = b; b = a; a = temp; }
 
 #endif //_MMATHFN_H_

@@ -1877,7 +1877,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                      {
                         //got a match!
                         ImageAsset* foundImageAsset = AssetDatabase.acquireAsset<ImageAsset>(testAssetId.c_str());
-                        imagePath = foundImageAsset->getImagePath();
+                        imagePath = foundImageAsset->getImageFile();
 
                         AssetImportObject* newImageAssetObj = addImportingAsset("ImageAsset", imagePath, assetItem, "");
 
@@ -1921,7 +1921,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                         {
                            //got a match!
                            ImageAsset* foundImageAsset = AssetDatabase.acquireAsset<ImageAsset>(testAssetId.c_str());
-                           imagePath = foundImageAsset->getImagePath();
+                           imagePath = foundImageAsset->getImageFile();
 
                            AssetImportObject* newImageAssetObj = addImportingAsset("ImageAsset", imagePath, assetItem, "");
 
@@ -2834,7 +2834,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
 #endif
    
    newAsset->setAssetName(assetName);
-   newAsset->setImageFileName(imageFileName.c_str());
+   newAsset->setImageFile(imageFileName.c_str());
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later

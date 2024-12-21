@@ -203,7 +203,7 @@ bool GuiControlProfile::protectedSetBitmap( void *object, const char *index, con
       {
          if (profile->mBitmapAsset.notNull() && profile->getBitmap() != StringTable->insert("texHandle"))
          {
-            profile->mBitmap.set(profile->mBitmapAsset->getImagePath(), profile->mBitmapProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
+            profile->mBitmap.set(profile->mBitmapAsset->getImageFile(), profile->mBitmapProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
          }
 
          //verify the bitmap
@@ -648,7 +648,7 @@ void GuiControlProfile::incLoadCount()
       {
          if (mBitmapAsset.notNull() && getBitmap() != StringTable->insert("texHandle"))
          {
-            mBitmap.set(mBitmapAsset->getImagePath(), mBitmapProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
+            mBitmap.set(mBitmapAsset->getImageFile(), mBitmapProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
          }
 
          //verify the bitmap

@@ -349,11 +349,6 @@ void afxZodiacData::onPerformSubstitutions()
       {
          if (getTexture() != StringTable->EmptyString() && mTextureName != StringTable->insert("texhandle"))
          {
-            if (mTextureAsset.notNull())
-            {
-               mTextureAsset->getChangedSignal().notify(this, &afxZodiacData::onImageChanged);
-            }
-               
             mTexture.set(getTexture(), mTextureProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
          }
       }

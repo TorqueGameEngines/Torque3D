@@ -475,10 +475,6 @@ public:
    {
       if (mBitmapAssetId != _in || mBitmapName != _in)
       {
-         if (mBitmapAsset.notNull())
-         {
-            mBitmapAsset->getChangedSignal().remove(this, &GuiControlProfile::onBitmapChanged); 
-         }
          if (_in == StringTable->EmptyString())
          {
             mBitmapName = StringTable->EmptyString(); 
@@ -530,10 +526,6 @@ public:
       }
       if (getBitmap() != StringTable->EmptyString() && mBitmapName != StringTable->insert("texhandle"))
       {
-         if (mBitmapAsset.notNull())
-         {
-            mBitmapAsset->getChangedSignal().notify(this, &GuiControlProfile::onBitmapChanged);
-         }
       }
       else
       {
@@ -551,8 +543,8 @@ public:
    
    const StringTableEntry getBitmap() const
    {
-      if (mBitmapAsset && (mBitmapAsset->getImageFileName() != StringTable->EmptyString()))
-         return  Platform::makeRelativePathName(mBitmapAsset->getImagePath(), Platform::getMainDotCsDir());
+      if (mBitmapAsset && (mBitmapAsset->getImageFile() != StringTable->EmptyString()))
+         return  Platform::makeRelativePathName(mBitmapAsset->getImageFile(), Platform::getMainDotCsDir());
       else if (mBitmapAssetId != StringTable->EmptyString())
          return mBitmapAssetId;
       else if (mBitmapName != StringTable->EmptyString())

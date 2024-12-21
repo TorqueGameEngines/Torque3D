@@ -301,7 +301,7 @@ void GuiBitmapButtonCtrl::setBitmap( StringTableEntry name )
             if( mUseModifiers )
                baseName += modifiers[ i ];
 
-            mTextures[ i ].mTextureNormal = GFXTexHandle( mBitmapAsset->getImagePath(), &GFXDefaultGUIProfile, avar("%s() - mTextureNormal (line %d)", __FUNCTION__, __LINE__));
+            mTextures[ i ].mTextureNormal = GFXTexHandle( mBitmapAsset->getImageFile(), &GFXDefaultGUIProfile, avar("%s() - mTextureNormal (line %d)", __FUNCTION__, __LINE__));
             
             if( mUseStates )
             {
@@ -323,7 +323,7 @@ void GuiBitmapButtonCtrl::setBitmap( StringTableEntry name )
                         mTextures[i].mTextureNormalAsset->load();
                         if (mTextures[i].mTextureNormalAsset->getStatus() == AssetBase::Ok)
                         {
-                           mTextures[i].mTextureNormal = GFXTexHandle(mTextures[i].mTextureNormalAsset->getImagePath(), &GFXDefaultGUIProfile, avar("%s() - mTextureDepressed (line %d)", __FUNCTION__, __LINE__));
+                           mTextures[i].mTextureNormal = GFXTexHandle(mTextures[i].mTextureNormalAsset->getImageFile(), &GFXDefaultGUIProfile, avar("%s() - mTextureDepressed (line %d)", __FUNCTION__, __LINE__));
                            break;
                         }
                      }
@@ -345,7 +345,7 @@ void GuiBitmapButtonCtrl::setBitmap( StringTableEntry name )
                      mTextures[i].mTextureHilightAsset->load();
                      if (mTextures[i].mTextureHilightAsset->getStatus() == AssetBase::Ok)
                      {
-                        mTextures[i].mTextureHilight = GFXTexHandle(mTextures[i].mTextureHilightAsset->getImagePath(), &GFXDefaultGUIProfile, avar("%s() - mTextureDepressed (line %d)", __FUNCTION__, __LINE__));
+                        mTextures[i].mTextureHilight = GFXTexHandle(mTextures[i].mTextureHilightAsset->getImageFile(), &GFXDefaultGUIProfile, avar("%s() - mTextureDepressed (line %d)", __FUNCTION__, __LINE__));
                         break;
                      }
                   }
@@ -369,7 +369,7 @@ void GuiBitmapButtonCtrl::setBitmap( StringTableEntry name )
                      mTextures[i].mTextureDepressedAsset->load();
                      if (mTextures[i].mTextureDepressedAsset->getStatus() == AssetBase::Ok)
                      {
-                        mTextures[i].mTextureDepressed = GFXTexHandle(mTextures[i].mTextureDepressedAsset->getImagePath(), &GFXDefaultGUIProfile, avar("%s() - mTextureDepressed (line %d)", __FUNCTION__, __LINE__));
+                        mTextures[i].mTextureDepressed = GFXTexHandle(mTextures[i].mTextureDepressedAsset->getImageFile(), &GFXDefaultGUIProfile, avar("%s() - mTextureDepressed (line %d)", __FUNCTION__, __LINE__));
                         break;
                      }
                   }
@@ -393,7 +393,7 @@ void GuiBitmapButtonCtrl::setBitmap( StringTableEntry name )
                      mTextures[i].mTextureInactiveAsset->load();
                      if (mTextures[i].mTextureInactiveAsset->getStatus() == AssetBase::Ok)
                      {
-                        mTextures[i].mTextureInactive = GFXTexHandle(mTextures[i].mTextureInactiveAsset->getImagePath(), &GFXDefaultGUIProfile, avar("%s() - mTextureDepressed (line %d)", __FUNCTION__, __LINE__));
+                        mTextures[i].mTextureInactive = GFXTexHandle(mTextures[i].mTextureInactiveAsset->getImageFile(), &GFXDefaultGUIProfile, avar("%s() - mTextureDepressed (line %d)", __FUNCTION__, __LINE__));
                         break;
                      }
                   }

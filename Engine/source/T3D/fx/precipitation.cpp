@@ -129,11 +129,7 @@ PrecipitationData::PrecipitationData()
 {
    INIT_ASSET(Sound);
 
-   INIT_ASSET(Drop);
-
    mDropShaderName   = StringTable->EmptyString();
-
-   INIT_ASSET(Splash);
 
    mSplashShaderName = StringTable->EmptyString();
 
@@ -145,14 +141,8 @@ void PrecipitationData::initPersistFields()
 {
    docsURL;
    INITPERSISTFIELD_SOUNDASSET(Sound, PrecipitationData, "Looping SFXProfile effect to play while Precipitation is active.");
-
-   addProtectedField( "dropTexture", TypeFilename, Offset(mDropName, PrecipitationData), &_setDropData, &defaultProtectedGetFn,
-      "@brief Texture filename for drop particles.\n\n"
-      "The drop texture can contain several different drop sub-textures "
-      "arranged in a grid. There must be the same number of rows as columns. A "
-      "random frame will be chosen for each drop.", AbstractClassRep::FIELD_HideInInspectors );
       
-   INITPERSISTFIELD_IMAGEASSET(Drop, PrecipitationData, "@brief Texture for drop particles.\n\n"
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(Drop, PrecipitationData, "@brief Texture for drop particles.\n\n"
       "The drop texture can contain several different drop sub-textures "
       "arranged in a grid. There must be the same number of rows as columns. A "
       "random frame will be chosen for each drop.");
@@ -160,13 +150,7 @@ void PrecipitationData::initPersistFields()
    addField( "dropShader", TypeString, Offset(mDropShaderName, PrecipitationData),
       "The name of the shader used for raindrops." );
       
-   addProtectedField("splashTexture", TypeFilename, Offset(mSplashName, PrecipitationData), &_setSplashData, &defaultProtectedGetFn,
-      "@brief Texture filename for splash particles.\n\n"
-      "The splash texture can contain several different splash sub-textures "
-      "arranged in a grid. There must be the same number of rows as columns. A "
-      "random frame will be chosen for each splash.", AbstractClassRep::FIELD_HideInInspectors);
-
-   INITPERSISTFIELD_IMAGEASSET(Splash, PrecipitationData, "@brief Texture for splash particles.\n\n"
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(Splash, PrecipitationData, "@brief Texture for splash particles.\n\n"
       "The splash texture can contain several different splash sub-textures "
       "arranged in a grid. There must be the same number of rows as columns. A "
       "random frame will be chosen for each splash.");
@@ -206,11 +190,11 @@ void PrecipitationData::packData(BitStream* stream)
 
    PACKDATA_ASSET(Sound);
 
-   PACKDATA_ASSET(Drop);
+   PACKDATA_ASSET_REFACTOR(Drop);
 
    stream->writeString(mDropShaderName);
 
-   PACKDATA_ASSET(Splash);
+   PACKDATA_ASSET_REFACTOR(Splash);
 
    stream->writeString(mSplashShaderName);
    stream->write(mDropsPerSide);
@@ -223,11 +207,11 @@ void PrecipitationData::unpackData(BitStream* stream)
 
    UNPACKDATA_ASSET(Sound);
 
-   UNPACKDATA_ASSET(Drop);
+   UNPACKDATA_ASSET_REFACTOR(Drop);
 
    mDropShaderName = stream->readSTString();
 
-   UNPACKDATA_ASSET(Splash);
+   UNPACKDATA_ASSET_REFACTOR(Splash);
 
    mSplashShaderName = stream->readSTString();
    stream->read(&mDropsPerSide);
@@ -632,10 +616,10 @@ void Precipitation::initMaterials()
    mDropShader = NULL;
    mSplashShader = NULL;
 
-   if(pd->mDrop.isNull())
-      Con::warnf("Precipitation::initMaterials - failed to locate texture '%s'!", pd->getDrop());
+   if(pd->getDropAsset().isNull())
+      Con::warnf("Precipitation::initMaterials - failed to locate texture '%s'!", pd->getDropAsset().getAssetId());
    else
-      mDropHandle = pd->mDrop;
+      mDropHandle = pd->getDrop();
 
    if ( dStrlen(pd->mDropShaderName) > 0 )
    {
@@ -655,10 +639,10 @@ void Precipitation::initMaterials()
       }
    }
 
-   if (pd->mSplash.isNull())
-      Con::warnf("Precipitation::initMaterials - failed to locate texture '%s'!", pd->getSplash());
+   if (pd->getSplashAsset().isNull())
+      Con::warnf("Precipitation::initMaterials - failed to locate texture '%s'!", pd->getSplashAsset().getAssetId());
    else
-      mSplashHandle = pd->mSplash;
+      mSplashHandle = pd->getSplash();
 
    if ( dStrlen(pd->mSplashShaderName) > 0 )
    {

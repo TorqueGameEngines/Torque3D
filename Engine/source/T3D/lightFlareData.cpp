@@ -132,8 +132,6 @@ LightFlareData::LightFlareData()
 
    for ( U32 i = 0; i < MAX_ELEMENTS; i++ )   
       mElementDist[i] = -1.0f;
-
-   INIT_ASSET(FlareTexture);
 }
 
 LightFlareData::~LightFlareData()
@@ -161,7 +159,7 @@ void LightFlareData::initPersistFields()
       addField( "flareEnabled", TypeBool, Offset( mFlareEnabled, LightFlareData ),
          "Allows the user to disable this flare globally for any lights referencing it." );
 
-      INITPERSISTFIELD_IMAGEASSET(FlareTexture, LightFlareData, "The texture / sprite sheet for this flare.");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(FlareTexture, LightFlareData, "The texture / sprite sheet for this flare.");
 
       addArray( "Elements", MAX_ELEMENTS );
 
@@ -220,7 +218,7 @@ void LightFlareData::packData( BitStream *stream )
 
    stream->writeFlag( mFlareEnabled );
 
-   PACKDATA_ASSET(FlareTexture);
+   PACKDATA_ASSET_REFACTOR(FlareTexture);
 
    stream->write( mScale );
    stream->write( mOcclusionRadius );
@@ -245,7 +243,7 @@ void LightFlareData::unpackData( BitStream *stream )
 
    mFlareEnabled = stream->readFlag();
 
-   UNPACKDATA_ASSET(FlareTexture);
+   UNPACKDATA_ASSET_REFACTOR(FlareTexture);
 
    stream->read( &mScale );
    stream->read( &mOcclusionRadius );
@@ -540,7 +538,7 @@ void LightFlareData::prepRender(SceneRenderState *state, LightFlareState *flareS
 
    GFXVertexPCT *vert = flareState->vertBuffer.lock();
 
-   const Point2F oneOverTexSize( 1.0f / (F32)mFlareTexture.getWidth(), 1.0f / (F32)mFlareTexture.getHeight() );
+   const Point2F oneOverTexSize( 1.0f / (F32)getFlareTexture().getWidth(), 1.0f / (F32)getFlareTexture().getHeight());
 
    for ( U32 i = 0; i < mElementCount; i++ )
    {      
@@ -614,7 +612,7 @@ void LightFlareData::prepRender(SceneRenderState *state, LightFlareState *flareS
    ri->bbModelViewProj = &MatrixF::Identity;
    ri->count = elementCount;
    ri->blendStyle = ParticleRenderInst::BlendGreyscale;
-   ri->diffuseTex = mFlareTexture;
+   ri->diffuseTex = getFlareTexture();
    ri->softnessDistance = 1.0f; 
    ri->defaultKey = ri->diffuseTex ? (uintptr_t)ri->diffuseTex : (uintptr_t)ri->vertBuff; // Sort by texture too.
 

@@ -21,8 +21,7 @@ private:
    StringTableEntry mGameModeName;
    StringTableEntry mGameModeDesc;
 
-   DECLARE_IMAGEASSET(GameMode, PreviewImage, previewChange, GFXStaticTextureSRGBProfile);
-   DECLARE_ASSET_SETGET(GameMode, PreviewImage);
+   DECLARE_IMAGEASSET_REFACTOR(GameMode, PreviewImage, GFXStaticTextureSRGBProfile)
 
    bool mIsActive;
    bool mIsAlwaysActive;
@@ -44,8 +43,6 @@ public:
    DECLARE_CONOBJECT(GameMode);
 
    static void findGameModes(const char* gameModeList, Vector<GameMode*>* outGameModes);
-
-   void previewChange() {}
 
    DECLARE_CALLBACK(void, onActivated, ());
    DECLARE_CALLBACK(void, onDeactivated, ());

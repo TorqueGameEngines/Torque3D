@@ -38,24 +38,17 @@ class TerrainMaterial : public SimObject
 protected:
 
    ///
-  //FileName mDiffuseMap;
-
-   //AssetPtr<ImageAsset> mDiffuseAsset;
-
-   DECLARE_IMAGEASSET(TerrainMaterial, DiffuseMap, onDiffuseMapChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_ASSET_SETGET(TerrainMaterial, DiffuseMap);
+   DECLARE_IMAGEASSET_REFACTOR(TerrainMaterial, DiffuseMap, GFXStaticTextureSRGBProfile)
 
    /// The size of the diffuse base map in meters 
    /// used to generate its texture coordinates.
    F32 mDiffuseSize;
 
    ///
-   DECLARE_IMAGEASSET(TerrainMaterial, NormalMap, onNormalMapChanged, GFXNormalMapProfile);
-   DECLARE_ASSET_SETGET(TerrainMaterial, NormalMap);
+   DECLARE_IMAGEASSET_REFACTOR(TerrainMaterial, NormalMap, GFXNormalMapProfile)
 
    ///
-   DECLARE_IMAGEASSET(TerrainMaterial, DetailMap, onDetailMapChanged, GFXStaticTextureProfile);
-   DECLARE_ASSET_SETGET(TerrainMaterial, DetailMap);
+   DECLARE_IMAGEASSET_REFACTOR(TerrainMaterial, DetailMap, GFXStaticTextureProfile)
    
    /// The size of the detail map in meters used
    /// to generate the texture coordinates for the
@@ -69,8 +62,7 @@ protected:
    F32 mDetailDistance;
 
    ///
-   DECLARE_IMAGEASSET(TerrainMaterial, ORMConfigMap, onORMConfigMapChanged, GFXStaticTextureProfile);
-   DECLARE_ASSET_SETGET(TerrainMaterial, ORMConfigMap);
+   DECLARE_IMAGEASSET_REFACTOR(TerrainMaterial, ORMConfigMap, GFXStaticTextureProfile)
 
    bool mIsSRGB;
    bool mInvertRoughness;
@@ -81,8 +73,8 @@ protected:
    /// planes.
    bool mSideProjection;
 
-   DECLARE_IMAGEASSET(TerrainMaterial, MacroMap, onMacroMapChanged, GFXStaticTextureProfile);
-   DECLARE_ASSET_SETGET(TerrainMaterial, MacroMap);
+   DECLARE_IMAGEASSET_REFACTOR(TerrainMaterial, MacroMap, GFXStaticTextureProfile)
+
    F32 mMacroSize;
    F32 mMacroStrength;
    F32 mMacroDistance;
@@ -145,12 +137,6 @@ public:
    bool getIsSRGB() const { return mIsSRGB; }
 
    bool getInvertRoughness() const { return mInvertRoughness; }
-
-   void onDiffuseMapChanged() {}
-   void onNormalMapChanged() {}
-   void onDetailMapChanged() {}
-   void onORMConfigMapChanged() {}
-   void onMacroMapChanged() {}
 
 };
 

@@ -102,8 +102,6 @@ LevelInfo::LevelInfo()
 
    mAdvancedLightmapSupport = true;
 
-   INIT_ASSET(AccuTexture);
-
    // Register with the light manager activation signal, and we need to do it first
    // so the advanced light bin manager can be instructed about MRT lightmaps
    LightManager::smActivateSignal.notify(this, &LevelInfo::_onLMActivate, 0.01f);
@@ -114,9 +112,8 @@ LevelInfo::LevelInfo()
 LevelInfo::~LevelInfo()
 {
    LightManager::smActivateSignal.remove(this, &LevelInfo::_onLMActivate);
-   if (!mAccuTexture.isNull())
+   if (!mAccuTextureAsset.isNull())
    {
-      mAccuTexture.free();
       gLevelAccuMap.free();
    }
 }
@@ -174,7 +171,7 @@ void LevelInfo::initPersistFields()
       //addField( "advancedLightmapSupport", TypeBool, Offset( mAdvancedLightmapSupport, LevelInfo ),
       //   "Enable expanded support for mixing static and dynamic lighting (more costly)" );
 
-      INITPERSISTFIELD_IMAGEASSET(AccuTexture, LevelInfo, "Accumulation texture.");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(AccuTexture, LevelInfo, "Accumulation texture.");
 
    endGroup( "Lighting" );
    
@@ -224,7 +221,7 @@ U32 LevelInfo::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
    sfxWrite( stream, mSoundAmbience );
    stream->writeInt( mSoundDistanceModel, 1 );
 
-   PACK_ASSET(conn, AccuTexture);
+   PACK_ASSET_REFACTOR(conn, AccuTexture);
 
    return retMask;
 }
@@ -273,8 +270,8 @@ void LevelInfo::unpackUpdate(NetConnection *conn, BitStream *stream)
       SFX->setDistanceModel( mSoundDistanceModel );
    }
 
-   UNPACK_ASSET(conn, AccuTexture);
-   setLevelAccuTexture(getAccuTexture());
+   UNPACK_ASSET_REFACTOR(conn, AccuTexture);
+   setLevelAccuTexture();
 }
 
 //-----------------------------------------------------------------------------
@@ -370,24 +367,12 @@ void LevelInfo::_onLMActivate(const char *lm, bool enable)
 #endif
 }
 
-bool LevelInfo::_setLevelAccuTexture(void *object, const char *index, const char *data)
+void LevelInfo::setLevelAccuTexture()
 {
-   LevelInfo* volume = reinterpret_cast< LevelInfo* >(object);
-   volume->setLevelAccuTexture(StringTable->insert(data));
-   return false;
-}
-
-
-void LevelInfo::setLevelAccuTexture(StringTableEntry name)
-{
-   _setAccuTexture(name);
-
-   if (isClientObject() && getAccuTexture() != StringTable->EmptyString())
+   if (isClientObject() && mAccuTextureAsset.notNull())
    {
-      if (mAccuTexture.isNull())
-         Con::warnf("AccumulationVolume::setTexture - Unable to load texture: %s", getAccuTexture());
-      else
-         gLevelAccuMap = mAccuTexture;
+      gLevelAccuMap = getAccuTexture();
    }
+
    AccumulationVolume::refreshVolumes();
 }

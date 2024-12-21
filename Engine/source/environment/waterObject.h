@@ -203,10 +203,6 @@ protected:
    /// Callback used internally when smEnableTrueReflections changes.
    void _onEnableTrueReflections();
 
-   void onRippleTexChanged() {}
-   void onFoamTexChanged() {}
-   void onDepthGradientTexChanged() {}
-
 protected:
 
    static bool _setFullReflect( void *object, const char *index, const char *data );
@@ -273,12 +269,9 @@ protected:
    F32 mDepthGradientMax;
 
    // Other textures
-   DECLARE_IMAGEASSET(WaterObject, RippleTex, onRippleTexChanged, GFXStaticTextureProfile);
-   DECLARE_ASSET_NET_SETGET(WaterObject, RippleTex, TextureMask);
-   DECLARE_IMAGEASSET(WaterObject, FoamTex, onFoamTexChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_ASSET_NET_SETGET(WaterObject, FoamTex, TextureMask);
-   DECLARE_IMAGEASSET(WaterObject, DepthGradientTex, onDepthGradientTexChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_ASSET_NET_SETGET(WaterObject, DepthGradientTex, TextureMask);
+   DECLARE_IMAGEASSET_NET_REFACTOR(WaterObject, RippleTex, GFXStaticTextureProfile, TextureMask)
+   DECLARE_IMAGEASSET_NET_REFACTOR(WaterObject, FoamTex, GFXStaticTextureSRGBProfile, TextureMask)
+   DECLARE_IMAGEASSET_NET_REFACTOR(WaterObject, DepthGradientTex, GFXStaticTextureSRGBProfile, TextureMask)
 
    StringTableEntry mCubemapName;
 

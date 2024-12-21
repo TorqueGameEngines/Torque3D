@@ -612,6 +612,38 @@ public:                                                                         
          m##name##Asset = _in;                                                                                                                                                \
       }                                                                                                                                                                       \
    };                                                                                                                                                                         \
+                                                                                                                                                                              \
+   inline StringTableEntry _get##name(void) const { return m##name##Asset.getAssetId(); }                                                                                     \
+   GFXTexHandle get##name() { return m##name##Asset.notNull() ? m##name##Asset->getTexture(&profile) : NULL; }                                                                \
+   AssetPtr<ImageAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
+   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}
+
+#define DECLARE_IMAGEASSET_NET_REFACTOR(className, name, profile, mask)                                                                                                                 \
+private:                                                                                                                                                                      \
+   AssetPtr<ImageAsset> m##name##Asset;                                                                                                                                       \
+public:                                                                                                                                                                       \
+   void _set##name(StringTableEntry _in){                                                                                                                                     \
+      if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
+         return;                                                                                                                                                              \
+                                                                                                                                                                              \
+      if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
+      {                                                                                                                                                                       \
+         StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                  \
+         AssetQuery query;                                                                                                                                                    \
+         S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
+         if (foundAssetcount != 0)                                                                                                                                            \
+         {                                                                                                                                                                    \
+            imageAssetId = query.mAssetList[0];                                                                                                                               \
+         }                                                                                                                                                                    \
+         m##name##Asset = imageAssetId;                                                                                                                                       \
+      }                                                                                                                                                                       \
+      else                                                                                                                                                                    \
+      {                                                                                                                                                                       \
+         m##name##Asset = _in;                                                                                                                                                \
+      }                                                                                                                                                                       \
+      setMaskBits(mask);                                                                                                                                                      \
+   };                                                                                                                                                                         \
+                                                                                                                                                                              \
    inline StringTableEntry _get##name(void) const { return m##name##Asset.getAssetId(); }                                                                                     \
    GFXTexHandle get##name() { return m##name##Asset.notNull() ? m##name##Asset->getTexture(&profile) : NULL; }                                                                \
    AssetPtr<ImageAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \

@@ -81,11 +81,6 @@ TerrainMaterial::TerrainMaterial()
       mIsSRGB(false),
       mInvertRoughness(false)
 {
-   INIT_ASSET(DiffuseMap);
-   INIT_ASSET(NormalMap);
-   INIT_ASSET(DetailMap);
-   INIT_ASSET(ORMConfigMap);
-   INIT_ASSET(MacroMap);
 }
 
 TerrainMaterial::~TerrainMaterial()
@@ -97,10 +92,10 @@ FRangeValidator hardnessValidator(0.0f, 0.999f);
 void TerrainMaterial::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET(DiffuseMap, TerrainMaterial,"Base Albedo stretched over the whole map");
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(DiffuseMap, TerrainMaterial,"Base Albedo stretched over the whole map");
    addField( "diffuseSize", TypeF32, Offset( mDiffuseSize, TerrainMaterial ), "Used to scale the diffuse map to the material square" );
 
-   INITPERSISTFIELD_IMAGEASSET(NormalMap, TerrainMaterial,"NormalMap");
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(NormalMap, TerrainMaterial,"NormalMap");
    addField( "parallaxScale", TypeF32, Offset( mParallaxScale, TerrainMaterial ), "Used to scale the height from the normal map to give some self "
 	   "occlusion effect (aka parallax) to the terrain material" );
 
@@ -113,7 +108,7 @@ void TerrainMaterial::initPersistFields()
    addFieldV("blendHeightHardness", TypeF32, Offset(mBlendHardness, TerrainMaterial), &hardnessValidator, "How sharply this layer blends with other textures."
       "0->1, soft->hard.");
 
-   INITPERSISTFIELD_IMAGEASSET(DetailMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo up close.");
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(DetailMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo up close.");
    addField( "detailSize", TypeF32, Offset( mDetailSize, TerrainMaterial ), "Used to scale the detail map to the material square" );
    addField( "detailStrength", TypeF32, Offset( mDetailStrength, TerrainMaterial ), "Exponentially sharpens or lightens the detail map rendering on the material" );
    addField( "detailDistance", TypeF32, Offset( mDetailDistance, TerrainMaterial ), "Changes how far camera can see the detail map rendering on the material" );
@@ -121,12 +116,12 @@ void TerrainMaterial::initPersistFields()
    addField( "useSideProjection", TypeBool, Offset( mSideProjection, TerrainMaterial ),"Makes that terrain material project along the sides of steep "
 	   "slopes instead of projected downwards");
 
-   INITPERSISTFIELD_IMAGEASSET(ORMConfigMap, TerrainMaterial, "AO|Roughness|metalness map (uses DetailMap UV Coords)");
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(ORMConfigMap, TerrainMaterial, "AO|Roughness|metalness map (uses DetailMap UV Coords)");
    addField("isSRGB", TypeBool, Offset(mIsSRGB, TerrainMaterial), "Is the PBR Config map's image in sRGB format?");
    addField("invertRoughness", TypeBool, Offset(mInvertRoughness, TerrainMaterial), "Should the roughness channel of the PBR Config map be inverted?");
 
    //Macro maps additions
-   INITPERSISTFIELD_IMAGEASSET(MacroMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo at a distance.");
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(MacroMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo at a distance.");
    addField( "macroSize", TypeF32, Offset( mMacroSize, TerrainMaterial ), "Used to scale the Macro map to the material square" );
    addField( "macroStrength", TypeF32, Offset( mMacroStrength, TerrainMaterial ), "Exponentially sharpens or lightens the Macro map rendering on the material" );
    addField( "macroDistance", TypeF32, Offset( mMacroDistance, TerrainMaterial ), "Changes how far camera can see the Macro map rendering on the material" );
@@ -228,8 +223,8 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
 //material.getDiffuseMap(); //returns the raw file referenced
 //material.getDiffuseMapAsset(); //returns the asset id
 //material.setDiffuseMap(%texture); //tries to set the asset and failing that attempts a flat file reference
-DEF_ASSET_BINDS(TerrainMaterial, DiffuseMap);
-DEF_ASSET_BINDS(TerrainMaterial, NormalMap);
-DEF_ASSET_BINDS(TerrainMaterial, DetailMap);
-DEF_ASSET_BINDS(TerrainMaterial, ORMConfigMap);
-DEF_ASSET_BINDS(TerrainMaterial, MacroMap);
+DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, DiffuseMap)
+DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, NormalMap)
+DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, DetailMap)
+DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, ORMConfigMap)
+DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, MacroMap)

@@ -1415,7 +1415,7 @@ singleton GuiControlProfile( ToolsGuiMenuBarProfile )
 
 singleton GuiControlProfile( ToolsMenubarProfile : ToolsGuiDefaultProfile ) 
 {
-   bitmap = "./menubar";
+   bitmaAsset = "ToolsModule:menubar_image";
    category = "Editor";
    
    opaque = true;
@@ -1433,7 +1433,7 @@ singleton GuiControlProfile (menubarProfile)
    border = -2;
    category = "Editor";
    
-   bitmap = "./menubar";
+   bitmaAsset = "ToolsModule:menubar_image";
    category = "Editor";
    
    fillColor = EditorSettings.value("Theme/windowBackgroundColor");
@@ -1447,35 +1447,35 @@ singleton GuiControlProfile (editorMenubarProfile)
 {
    border = -2;
    category = "Editor";
-   bitmap = "./editor-menubar";
+   bitmaAsset = "ToolsModule:editor_menubar_image";
    category = "Editor";
 };
 singleton GuiControlProfile (editorMenu_wBorderProfile) 
 {
    border = -2;
    category = "Editor";
-   bitmap = "./menu-fullborder";
+   bitmaAsset = "ToolsModule:menu_fullborder_image";
    category = "Editor";
 };
 singleton GuiControlProfile (inspectorStyleRolloutProfile) 
 {
    border = -2;
    category = "Editor";
-   bitmap = "./inspector-style-rollout";
+   bitmaAsset = "ToolsModule:inspector_style_rollout_image";
    category = "Editor";
 };
 singleton GuiControlProfile (inspectorStyleRolloutListProfile) 
 {
    border = -2;
    category = "Editor";
-   bitmap = "./inspector-style-rollout-list";
+   bitmaAsset = "ToolsModule:inspector_style_rollout_list_image";
    category = "Editor";
 };
 singleton GuiControlProfile (inspectorStyleRolloutDarkProfile) 
 {
    border = -2;
    category = "Editor";
-   bitmap = "./inspector-style-rollout-dark";
+   bitmaAsset = "ToolsModule:inspector_style_rollout_dark_image";
    
    fillColor = EditorSettings.value("Theme/windowBackgroundColor");
    fontColor = EditorSettings.value("Theme/headerTextColor");
@@ -1486,14 +1486,14 @@ singleton GuiControlProfile (inspectorStyleRolloutInnerProfile)
 {
    border = -2;
    category = "Editor";
-   bitmap = "./inspector-style-rollout_inner";
+   bitmaAsset = "ToolsModule:inspector_style_rollout_inner_image";
    category = "Editor";
 };
 singleton GuiControlProfile (inspectorStyleRolloutNoHeaderProfile)
 {
    border = -2;
    category = "Editor";
-   bitmap = "./inspector-style-rollout-noheader";
+   bitmaAsset = "ToolsModule:inspector_style_rollout_noheader_image";
    category = "Editor";
 };
 singleton GuiControlProfile (IconDropdownProfile) 
@@ -1502,7 +1502,6 @@ singleton GuiControlProfile (IconDropdownProfile)
    opaque = true;
    border = true;
    category = "Editor";
-   //bitmap = "./icon-dropdownbar";
    
    fillColor = EditorSettings.value("Theme/headerColor");
 };

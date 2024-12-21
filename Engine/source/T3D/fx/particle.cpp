@@ -122,9 +122,6 @@ ParticleData::ParticleData()
    animTexFramesString = NULL;  // string of animation frame indices
    animTexUVs = NULL;           // array of tile vertex UVs
 
-   INIT_ASSET(Texture);
-   INIT_ASSET(TextureExt);
-
    constrain_pos = false;
    start_angle = 0.0f;
    angle_variance = 0.0f;
@@ -149,12 +146,7 @@ void ParticleData::initPersistFields()
 {
    docsURL;
    addGroup("Basic");
-      addProtectedField("textureName", TYPEID< StringTableEntry >(), Offset(mTextureName, ParticleData), _setTextureData, defaultProtectedGetFn,
-         "Texture file to use for this particle.", AbstractClassRep::FIELD_HideInInspectors);
-      addField("animTexName", TYPEID< StringTableEntry >(), Offset(mTextureName, ParticleData),
-         "@brief Texture file to use for this particle if animateTexture is true.\n\n"
-         "Deprecated. Use textureName instead.", AbstractClassRep::FIELD_HideInInspectors);
-      INITPERSISTFIELD_IMAGEASSET(Texture, ParticleData, "Texture to use for this particle.");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(Texture, ParticleData, "Texture to use for this particle.");
       addField("useInvAlpha", TYPEID< bool >(), Offset(useInvAlpha, ParticleData),
          "@brief Controls how particles blend with the scene.\n\n"
          "If true, particles blend like ParticleBlendStyle NORMAL, if false, "
@@ -239,8 +231,7 @@ void ParticleData::initPersistFields()
    endGroup("Over Time");
 
    addGroup("AFX");
-      addProtectedField("textureExtName", TypeFilename, Offset(mTextureExtName,     ParticleData), _setTextureExtData, &defaultProtectedGetFn, "", AbstractClassRep::FIELD_HideInInspectors);
-      INITPERSISTFIELD_IMAGEASSET(TextureExt, ParticleData, "");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(TextureExt, ParticleData, "");
       addField("constrainPos",         TypeBool,     Offset(constrain_pos,      ParticleData));
       addField("angle",                TypeF32,      Offset(start_angle,        ParticleData));
       addField("angleVariance",        TypeF32,      Offset(angle_variance,     ParticleData));
@@ -305,7 +296,7 @@ void ParticleData::packData(BitStream* stream)
       stream->writeFloat( times[i], 8);
    }
 
-   PACKDATA_ASSET(Texture);
+   PACKDATA_ASSET_REFACTOR(Texture);
 
    for (i = 0; i < 4; i++)
       mathWrite(*stream, texCoords[i]);
@@ -319,7 +310,7 @@ void ParticleData::packData(BitStream* stream)
       stream->writeInt(framesPerSec, 8);
    }
 
-   PACKDATA_ASSET(TextureExt);
+   PACKDATA_ASSET_REFACTOR(TextureExt);
 
    stream->writeFlag(constrain_pos);
    stream->writeFloat(start_angle/360.0f, 11);
@@ -390,7 +381,7 @@ void ParticleData::unpackData(BitStream* stream)
       times[i] = stream->readFloat(8);
    }
 
-   UNPACKDATA_ASSET(Texture);
+   UNPACKDATA_ASSET_REFACTOR(Texture);
 
    for (i = 0; i < 4; i++)
       mathRead(*stream, &texCoords[i]);
@@ -403,7 +394,7 @@ void ParticleData::unpackData(BitStream* stream)
      framesPerSec = stream->readInt(8);
    }
 
-   UNPACKDATA_ASSET(TextureExt);
+   UNPACKDATA_ASSET_REFACTOR(TextureExt);
 
    constrain_pos = stream->readFlag();
    start_angle = 360.0f*stream->readFloat(11);
@@ -698,13 +689,6 @@ bool ParticleData::reload(char errorBuffer[256])
 {
    bool error = false;
 
-   StringTableEntry particleTex = getTexture();
-
-   if (!_setTexture(particleTex))
-   {
-      dSprintf(errorBuffer, 256, "Missing particle texture: %s", particleTex);
-   }
-
    /*
    numFrames = 0;
    for( S32 i=0; i<PDC_MAX_TEX; i++ )
@@ -775,12 +759,12 @@ ParticleData::ParticleData(const ParticleData& other, bool temp_clone) : SimData
   animTexFramesString = other.animTexFramesString;
   animTexFrames = other.animTexFrames; // -- parsed from animTexFramesString
 
-  CLONE_ASSET(Texture);
+  CLONE_ASSET_REFACTOR(Texture);
   
   spinBias = other.spinBias;
   randomizeSpinDir = other.randomizeSpinDir;
 
-  CLONE_ASSET(TextureExt);
+  CLONE_ASSET_REFACTOR(TextureExt);
 
   constrain_pos = other.constrain_pos;
   start_angle = other.start_angle;
@@ -816,4 +800,4 @@ void ParticleData::onPerformSubstitutions()
   reload(errorBuffer);
 }
 
-DEF_ASSET_BINDS(ParticleData, Texture);
+DEF_ASSET_BINDS_REFACTOR(ParticleData, Texture);

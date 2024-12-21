@@ -87,7 +87,7 @@ void afxBillboard::_renderBillboard(ObjectRenderInst *ri, SceneRenderState* stat
   GFXTransformSaver saver;
   GFX->multWorld(getRenderTransform());
 
-  GFX->setTexture(0, mDataBlock->mTexture);
+  GFX->setTexture(0, mDataBlock->getTexture());
 
 	MatrixF worldmod = GFX->getWorldMatrix();
 	MatrixF viewmod = GFX->getViewMatrix();

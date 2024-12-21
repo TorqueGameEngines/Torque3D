@@ -591,7 +591,7 @@ const char* ImageAsset::getImageInfo()
    return "";
 }
 
-DefineEngineMethod(ImageAsset, getImageFile, const char*, (), ,
+DefineEngineMethod(ImageAsset, getImagePath, const char*, (), ,
    "Gets the image filepath of this asset.\n"
    "@return File path of the image file.")
 {

@@ -78,8 +78,6 @@ bool afxZodiacData::sPreferDestinationGradients = false;
 
 afxZodiacData::afxZodiacData()
 {
-   INIT_ASSET(Texture);
-
   radius_xy = 1;
   vert_range.set(0.0f, 0.0f);
   start_ang = 0;
@@ -120,7 +118,7 @@ afxZodiacData::afxZodiacData()
 
 afxZodiacData::afxZodiacData(const afxZodiacData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-   CLONE_ASSET(Texture);
+   CLONE_ASSET_REFACTOR(Texture);
 
   radius_xy = other.radius_xy;
   vert_range = other.vert_range;
@@ -157,7 +155,7 @@ EndImplementEnumType;
 void afxZodiacData::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET(Texture, afxZodiacData, "An image to use as the zodiac's texture.");
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(Texture, afxZodiacData, "An image to use as the zodiac's texture.");
   addField("radius",                TypeF32,        Offset(radius_xy,         afxZodiacData),
     "The zodiac's radius in scene units.");
   addField("verticalRange",         TypePoint2F,    Offset(vert_range,        afxZodiacData),
@@ -270,7 +268,7 @@ void afxZodiacData::packData(BitStream* stream)
 
   merge_zflags();
 
-  PACKDATA_ASSET(Texture);
+  PACKDATA_ASSET_REFACTOR(Texture);
   stream->write(radius_xy);
   stream->write(vert_range.x);
   stream->write(vert_range.y);
@@ -295,7 +293,7 @@ void afxZodiacData::unpackData(BitStream* stream)
 {
   Parent::unpackData(stream);
 
-  UNPACKDATA_ASSET(Texture);
+  UNPACKDATA_ASSET_REFACTOR(Texture);
   stream->read(&radius_xy);
   stream->read(&vert_range.x);
   stream->read(&vert_range.y);
@@ -342,16 +340,9 @@ void afxZodiacData::onStaticModified(const char* slot, const char* newValue)
 
 void afxZodiacData::onPerformSubstitutions() 
 {
-   if (mTextureAssetId != StringTable->EmptyString())
+   if (mTextureAsset.notNull())
    {
-      mTextureAsset = mTextureAssetId;
-      if (mTextureAsset.notNull())
-      {
-         if (getTexture() != StringTable->EmptyString() && mTextureName != StringTable->insert("texhandle"))
-         {
-            mTexture.set(getTexture(), mTextureProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
-         }
-      }
+      getTexture();
    }
 }
 

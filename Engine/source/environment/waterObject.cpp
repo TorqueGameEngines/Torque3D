@@ -260,10 +260,6 @@ WaterObject::WaterObject()
    mMatrixSet = reinterpret_cast<MatrixSet *>(dMalloc_aligned(sizeof(MatrixSet), 16));
    constructInPlace(mMatrixSet);
 
-   INIT_ASSET(RippleTex);
-   INIT_ASSET(FoamTex);
-   INIT_ASSET(DepthGradientTex);
-
    mCubemapName = StringTable->EmptyString();
 }
 
@@ -300,7 +296,7 @@ void WaterObject::initPersistFields()
       addField( "overallWaveMagnitude", TypeF32, Offset( mOverallWaveMagnitude, WaterObject ), "Master variable affecting entire body" 
 		  " of water's undulation" );  
 
-      INITPERSISTFIELD_IMAGEASSET(RippleTex, WaterObject, "Normal map used to simulate small surface ripples");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(RippleTex, WaterObject, "Normal map used to simulate small surface ripples");
 
       addArray( "Ripples (texture animation)", MAX_WAVES );
 
@@ -314,7 +310,7 @@ void WaterObject::initPersistFields()
 
       addField( "overallRippleMagnitude", TypeF32, Offset( mOverallRippleMagnitude, WaterObject ), "Master variable affecting entire surface");
 
-      INITPERSISTFIELD_IMAGEASSET(FoamTex, WaterObject, "Diffuse texture for foam in shallow water (advanced lighting only)");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(FoamTex, WaterObject, "Diffuse texture for foam in shallow water (advanced lighting only)");
 
       addArray( "Foam", MAX_FOAM );
 
@@ -366,7 +362,7 @@ void WaterObject::initPersistFields()
 
    addGroup( "Misc" );
 
-      INITPERSISTFIELD_IMAGEASSET(DepthGradientTex, WaterObject, "1D texture defining the base water color by depth");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(DepthGradientTex, WaterObject, "1D texture defining the base water color by depth");
 
       addField( "depthGradientMax", TypeF32, Offset( mDepthGradientMax, WaterObject ), "Depth in world units, the max range of the color gradient texture." );      
 
@@ -547,9 +543,9 @@ U32 WaterObject::packUpdate( NetConnection * conn, U32 mask, BitStream *stream )
 
    if ( stream->writeFlag( mask & TextureMask ) )
    {
-      PACK_ASSET(conn, RippleTex);
-      PACK_ASSET(conn, DepthGradientTex);
-      PACK_ASSET(conn, FoamTex);
+      PACK_ASSET_REFACTOR(conn, RippleTex);
+      PACK_ASSET_REFACTOR(conn, DepthGradientTex);
+      PACK_ASSET_REFACTOR(conn, FoamTex);
 
       stream->writeString( mCubemapName );      
    }
@@ -669,9 +665,9 @@ void WaterObject::unpackUpdate( NetConnection * conn, BitStream *stream )
    // TextureMask
    if ( stream->readFlag() )
    {
-      UNPACK_ASSET(conn, RippleTex);
-      UNPACK_ASSET(conn, DepthGradientTex);
-      UNPACK_ASSET(conn, FoamTex);
+      UNPACK_ASSET_REFACTOR(conn, RippleTex);
+      UNPACK_ASSET_REFACTOR(conn, DepthGradientTex);
+      UNPACK_ASSET_REFACTOR(conn, FoamTex);
 
       mCubemapName = stream->readSTString();
 
@@ -767,13 +763,13 @@ void WaterObject::renderObject( ObjectRenderInst *ri, SceneRenderState *state, B
 void WaterObject::setCustomTextures( S32 matIdx, U32 pass, const WaterMatParams &paramHandles )
 {
    // Always use the ripple texture.
-   GFX->setTexture( paramHandles.mRippleSamplerSC->getSamplerRegister(pass), mRippleTex );
+   GFX->setTexture( paramHandles.mRippleSamplerSC->getSamplerRegister(pass), getRippleTex() );
 
    // Only above-water in advanced-lighting uses the foam texture.
    if ( matIdx == WaterMat )
    {
-      GFX->setTexture( paramHandles.mFoamSamplerSC->getSamplerRegister(pass), mFoamTex );
-      GFX->setTexture( paramHandles.mDepthGradSamplerSC->getSamplerRegister(pass), mDepthGradientTex );
+      GFX->setTexture( paramHandles.mFoamSamplerSC->getSamplerRegister(pass), getFoamTex() );
+      GFX->setTexture( paramHandles.mDepthGradSamplerSC->getSamplerRegister(pass), getDepthGradientTex() );
    }
 
    if ( ( matIdx == WaterMat || matIdx == BasicWaterMat ) && mCubemap )   
@@ -1118,7 +1114,7 @@ void WaterObject::updateUnderwaterEffect( SceneRenderState *state )
          // be fetched by the effect when it renders.
          if ( !mNamedDepthGradTex.isRegistered() )
             mNamedDepthGradTex.registerWithName( "waterDepthGradMap" );
-         mNamedDepthGradTex.setTexture( mDepthGradientTex );         
+         mNamedDepthGradTex.setTexture( getDepthGradientTex() );         
       }
       else
          effect->disable();
@@ -1172,7 +1168,7 @@ bool WaterObject::initMaterial( S32 idx )
 void WaterObject::initTextures()
 {
    if ( mNamedDepthGradTex.isRegistered() )
-      mNamedDepthGradTex.setTexture( mDepthGradientTex );
+      mNamedDepthGradTex.setTexture( getDepthGradientTex() );
 
    if ( mCubemapName != StringTable->EmptyString() )
       Sim::findObject( mCubemapName, mCubemap );   

@@ -264,7 +264,7 @@ void afxZodiacGroundPlaneRenderer::render(SceneRenderState* state)
       GFX->setShaderConstBuffer(shader_consts);
 
       // set the texture
-      GFX->setTexture(0, *zode->txr);
+      GFX->setTexture(0, zode->txr);
       LinearColorF zode_color = (LinearColorF)zode->color;
       zode_color.alpha *= fadebias;
       shader_consts->set(color_sc, zode_color);

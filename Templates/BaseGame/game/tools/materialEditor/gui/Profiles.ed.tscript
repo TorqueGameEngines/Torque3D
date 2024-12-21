@@ -24,7 +24,7 @@
 
 singleton GuiControlProfile (GuiMatEdSliderProfile)
 {
-   bitmap = "./matEdSlider";
+   bitmapAsset = "ToolsModule:slider_image";
    category = "Editor";
 };
 
@@ -47,9 +47,7 @@ singleton GuiControlProfile(GuiMatEdPopUpMenuProfile)
    mouseOverSelected = true;
    textOffset = "3 3";
    border = 1;
-   /*borderThickness = 1;*/
    fixedExtent = true;
-   //bitmap = "./images/scrollbar";
    bitmapAsset = "ToolsModule:scroll_image";
    hasBitmapArray = true;
    profileForChildren = GuiControlListPopupProfile;

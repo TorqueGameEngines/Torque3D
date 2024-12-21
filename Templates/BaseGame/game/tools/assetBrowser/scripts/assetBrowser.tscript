@@ -2565,7 +2565,7 @@ function GuiEditor::onControlDropped(%this, %payload, %position)
         {
             %cmd = "return new guiBitmapCtrl();";
             %ctrl = eval( %cmd ); 
-            %ctrl.bitmap = %assetId;
+            %ctrl.bitmapAsset = %assetId;
         }
       }
    }

@@ -348,8 +348,7 @@ class GuiCursor : public SimObject
 private:
    typedef SimObject Parent;
 
-   DECLARE_IMAGEASSET(GuiCursor, Bitmap, onImageChanged, GFXGuiCursorProfile);
-   DECLARE_ASSET_SETGET(GuiCursor, Bitmap);
+   DECLARE_IMAGEASSET_REFACTOR(GuiCursor, Bitmap, GFXGuiCursorProfile)
 
    Point2I mHotSpot;
    Point2F mRenderOffset;
@@ -367,8 +366,6 @@ public:
    bool onAdd(void) override;
    void onRemove() override;
    void render(const Point2I &pos);
-
-   void onImageChanged() {}
 };
 
 /// A GuiControlProfile is used by every GuiObject and is akin to a

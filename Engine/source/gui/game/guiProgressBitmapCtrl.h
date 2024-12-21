@@ -47,21 +47,12 @@ class GuiProgressBitmapCtrl : public GuiTextCtrl
 
       F32 mProgress;
 
-      DECLARE_IMAGEASSET(GuiProgressBitmapCtrl, Bitmap, onImageChanged, GFXDefaultGUIProfile);
-      DECLARE_ASSET_SETGET(GuiProgressBitmapCtrl, Bitmap);
+      DECLARE_IMAGEASSET_REFACTOR(GuiProgressBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
 
       bool mUseVariable;
       bool mTile;
       S32 mNumberOfBitmaps;
       S32 mDim;
-      
-      static bool _setBitmap( void* object, const char* index, const char* data )
-      {
-         static_cast< GuiProgressBitmapCtrl* >( object )->setBitmap( data );
-         return false;
-      }
-
-      void onImageChanged() {}
 
    public:
          

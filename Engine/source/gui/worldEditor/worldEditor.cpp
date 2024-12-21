@@ -1817,9 +1817,9 @@ WorldEditor::WorldEditor()
    mPopupBackgroundColor.set(100,100,100);
    mPopupTextColor.set(255,255,0);
 
-   mSelectHandleAssetId = StringTable->insert("ToolsModule:SelectHandle");
-   mDefaultHandleAssetId = StringTable->insert("ToolsModule:DefaultHandle");
-   mLockedHandleAssetId = StringTable->insert("ToolsModule:LockedHandle");
+   mSelectHandleAsset = StringTable->insert("ToolsModule:SelectHandle_image");
+   mDefaultHandleAsset = StringTable->insert("ToolsModule:DefaultHandle_image");
+   mLockedHandleAsset = StringTable->insert("ToolsModule:LockedHandle_image");
 
    mObjectTextColor.set(255,255,255);
    mObjectsUseBoxCenter = true;
@@ -1905,9 +1905,9 @@ bool WorldEditor::onAdd()
    // create the default class entry
    mDefaultClassEntry.mName = 0;
    mDefaultClassEntry.mIgnoreCollision = false;
-   mDefaultClassEntry.mDefaultHandle = mDefaultHandle;
-   mDefaultClassEntry.mSelectHandle = mSelectHandle;
-   mDefaultClassEntry.mLockedHandle = mLockedHandle;
+   mDefaultClassEntry.mDefaultHandle = getDefaultHandle();
+   mDefaultClassEntry.mSelectHandle = getSelectHandle();
+   mDefaultClassEntry.mLockedHandle = getLockedHandle();
 
    if(!(mDefaultClassEntry.mDefaultHandle && mDefaultClassEntry.mSelectHandle && mDefaultClassEntry.mLockedHandle))
       return false;
@@ -2839,9 +2839,9 @@ void WorldEditor::initPersistFields()
       addField( "renderObjHandle",        TypeBool,   Offset(mRenderObjHandle, WorldEditor) );
       addField( "renderSelectionBox",     TypeBool,   Offset(mRenderSelectionBox, WorldEditor) );
 
-      INITPERSISTFIELD_IMAGEASSET(SelectHandle, WorldEditor, "");
-      INITPERSISTFIELD_IMAGEASSET(DefaultHandle, WorldEditor, "");
-      INITPERSISTFIELD_IMAGEASSET(LockedHandle, WorldEditor, "");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(SelectHandle, WorldEditor, "");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(DefaultHandle, WorldEditor, "");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(LockedHandle, WorldEditor, "");
    
    endGroup( "Rendering" );
    

@@ -59,8 +59,6 @@ ConsoleDocClass( GuiMissionAreaCtrl,
 
 GuiMissionAreaCtrl::GuiMissionAreaCtrl()
 {
-   INIT_ASSET(HandleBitmap);
-
    mHandleTextureSize = Point2I::Zero;
    mHandleTextureHalfSize = Point2F::Zero;
 
@@ -90,7 +88,7 @@ void GuiMissionAreaCtrl::initPersistFields()
    docsURL;
    addField( "squareBitmap",        TypeBool,      Offset(mSquareBitmap, GuiMissionAreaCtrl));
 
-   INITPERSISTFIELD_IMAGEASSET(HandleBitmap, GuiMissionAreaCtrl, "Bitmap for the mission area handles.\n");
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(HandleBitmap, GuiMissionAreaCtrl, "Bitmap for the mission area handles.\n");
 
    addField( "missionBoundsColor",  TypeColorI,    Offset(mMissionBoundsColor, GuiMissionAreaCtrl));
    addField( "cameraColor",         TypeColorI,    Offset(mCameraColor, GuiMissionAreaCtrl));
@@ -114,9 +112,9 @@ bool GuiMissionAreaCtrl::onAdd()
    desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha);
    mBlendStateBlock = GFX->createStateBlock( desc );
 
-   if (!mHandleBitmap.isNull())
+   if (!mHandleBitmapAsset.isNull())
    {
-      mHandleTextureSize = Point2I(mHandleBitmap->getWidth(), mHandleBitmap->getHeight() );
+      mHandleTextureSize = Point2I(getHandleBitmap()->getWidth(), getHandleBitmap()->getHeight());
       mHandleTextureHalfSize = Point2F(mHandleTextureSize.x, mHandleTextureSize.y) * 0.5f;
    }
    else
@@ -418,7 +416,7 @@ void GuiMissionAreaCtrl::setArea(const RectI & area)
 void GuiMissionAreaCtrl::drawHandle(const Point2F & pos)
 {
    Point2F pnt(pos.x-mHandleTextureHalfSize.x, pos.y-mHandleTextureHalfSize.y);
-   GFX->getDrawUtil()->drawBitmap(mHandleBitmap, pnt);
+   GFX->getDrawUtil()->drawBitmap(getHandleBitmap(), pnt);
 }
 
 void GuiMissionAreaCtrl::drawHandles(RectI & box)

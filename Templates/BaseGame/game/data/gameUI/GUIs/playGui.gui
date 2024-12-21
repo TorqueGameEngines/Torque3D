@@ -28,7 +28,7 @@ $guiContent = new GameTSCtrl(PlayGui) {
          noCursor = "1";
 
    new GuiBitmapCtrl(LagIcon) {
-      bitmap = "data/ui/art/lagIcon.png";
+      bitmapAsset = "UI:lagIcon_image";
       color = "255 255 255 255";
       wrap = "0";
       position = "572 3";

@@ -40,7 +40,7 @@ $guiContent = new GuiControl(NavEditorToolbar,EditorGuiGroup) {
       canSaveDynamicFields = "0";
    };
    new GuiBitmapCtrl() {
-      bitmap = "core/gui/images/separator-h.png";
+      bitmapAsset = "ToolsModule:separator_h_image";
       wrap = "0";
       position = "90 3";
       extent = "2 26";

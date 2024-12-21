@@ -67,7 +67,7 @@ void GuiChunkedBitmapCtrl::initPersistFields()
 {
    docsURL;
    addGroup("GuiChunkedBitmapCtrl");
-      INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiChunkedBitmapCtrl, "This is the bitmap to render to the control.");
+      INITPERSISTFIELD_IMAGEASSET_REFACTOR(Bitmap, GuiChunkedBitmapCtrl, "This is the bitmap to render to the control.");
 
       addField( "useVariable",   TypeBool,      Offset( mUseVariable, GuiChunkedBitmapCtrl ), "This decides whether to use the \"bitmap\" file "
                                                                                             "or a bitmap stored in \"variable\"");
@@ -88,8 +88,6 @@ DefineEngineMethod( GuiChunkedBitmapCtrl, setBitmap, void, (const char* filename
 
 GuiChunkedBitmapCtrl::GuiChunkedBitmapCtrl()
 {
-   INIT_ASSET(Bitmap);
-
    mUseVariable = false;
    mTile = false;
 }
@@ -111,16 +109,6 @@ bool GuiChunkedBitmapCtrl::onWake()
 {
    if(!Parent::onWake())
       return false;
-
-   if( !mBitmap
-       && ( ( mBitmapName && mBitmapName[ 0 ] )
-            || ( mUseVariable && mConsoleVariable && mConsoleVariable[ 0 ] ) ) )
-   {
-      if ( mUseVariable )
-         mBitmap.set( Con::getVariable( mConsoleVariable ), &GFXDefaultGUIProfile, avar("%s() - mTexHandle (line %d)", __FUNCTION__, __LINE__) );
-      else
-         mBitmap.set( mBitmapName, &GFXDefaultGUIProfile, avar("%s() - mTexHandle (line %d)", __FUNCTION__, __LINE__) );
-   }
 
    return true;
 }
@@ -167,10 +155,10 @@ void GuiChunkedBitmapCtrl::renderRegion(const Point2I &offset, const Point2I &ex
 void GuiChunkedBitmapCtrl::onRender(Point2I offset, const RectI &updateRect)
 {
 
-   if( mBitmap )
+   if( mBitmapAsset.notNull() )
    {
       RectI boundsRect( offset, getExtent());
-      GFX->getDrawUtil()->drawBitmapStretch(mBitmap, boundsRect, GFXBitmapFlip_None, GFXTextureFilterLinear );
+      GFX->getDrawUtil()->drawBitmapStretch(getBitmap(), boundsRect, GFXBitmapFlip_None, GFXTextureFilterLinear);
    }
 
    renderChildControls(offset, updateRect);

@@ -61,7 +61,6 @@ class CloudLayer : public SceneObject
    };  
 
    #define TEX_COUNT 3
-
 public:
 
    CloudLayer();
@@ -97,8 +96,9 @@ protected:
    static U32 smVertCount;
    static U32 smTriangleCount;
 
-   DECLARE_IMAGEASSET(CloudLayer, Texture, onImageChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_ASSET_NET_SETGET(CloudLayer, Texture, CloudLayerMask);
+public:
+
+   DECLARE_IMAGEASSET_REFACTOR(CloudLayer,Texture, GFXStaticTextureSRGBProfile)
 
    GFXShaderRef mShader;
 

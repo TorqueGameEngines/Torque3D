@@ -181,6 +181,17 @@ const String ImageAsset::mErrCodeStrings[] =
    "UnKnown"
 };
 //-----------------------------------------------------------------------------
+
+ImageAsset::ImageAsset() :
+	mImageFile(StringTable->EmptyString()),
+	mUseMips(true),
+	mIsHDRImage(false),
+	mImageType(Albedo),
+	mTextureHandle(NULL)
+{
+	mLoadedState = AssetErrCode::NotLoaded;
+}
+
 //-----------------------------------------------------------------------------
 
 ImageAsset::~ImageAsset()
@@ -618,7 +629,7 @@ void GuiInspectorTypeImageAssetPtr::consoleInit()
 {
    Parent::consoleInit();
 
-   ConsoleBaseType::getType(TypeImageAssetPtr)->setInspectorFieldType("GuiInspectorTypeImageAssetPtr");
+   ConsoleBaseType::getType(TypeImageAssetPtrRefactor)->setInspectorFieldType("GuiInspectorTypeImageAssetPtr");
 }
 
 GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()

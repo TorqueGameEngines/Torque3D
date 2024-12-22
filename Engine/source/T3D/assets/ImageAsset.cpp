@@ -860,11 +860,7 @@ void GuiInspectorTypeImageAssetPtr::updatePreviewImage()
    {
       if (AssetDatabase.isDeclaredAsset(previewImage))
       {
-         ImageAsset* imgAsset = AssetDatabase.acquireAsset<ImageAsset>(previewImage);
-         if (imgAsset && imgAsset->isAssetValid())
-         {
-            mPreviewImage->_setBitmap(imgAsset->getAssetId());
-         }
+         mPreviewImage->_setBitmap(previewImage);
       }
    }
 
@@ -892,11 +888,7 @@ void GuiInspectorTypeImageAssetPtr::setPreviewImage(StringTableEntry assetId)
    {
       if (AssetDatabase.isDeclaredAsset(assetId))
       {
-         ImageAsset* imgAsset = AssetDatabase.acquireAsset<ImageAsset>(assetId);
-         if (imgAsset && imgAsset->isAssetValid())
-         {
-            mPreviewImage->_setBitmap(imgAsset->getAssetId());
-         }
+         mPreviewImage->_setBitmap(assetId);
       }
    }
 

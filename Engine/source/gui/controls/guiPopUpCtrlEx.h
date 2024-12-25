@@ -143,6 +143,8 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
    virtual void removeChildren();
    virtual void repositionPopup();
 
+   static bool _setBitmaps(void* obj, const char* index, const char* data);
+
   public:
    GuiPopUpMenuCtrlEx(void);
    ~GuiPopUpMenuCtrlEx();   

@@ -86,6 +86,26 @@ if (m##name##AssetId != StringTable->EmptyString())\
       _set##name(netconn->unpackNetStringHandleU(stream).getString());\
    }
 
+//network send - datablock
+#define PACKDATA_ASSET_ARRAY_REFACTOR(name, max)\
+for (i = 0; i < max; i++)\
+{\
+   if (stream->writeFlag(m##name##Asset[i].notNull()))\
+   {\
+      stream->writeString(m##name##Asset[i].getAssetId()); \
+   }\
+}
+
+//network recieve - datablock
+#define UNPACKDATA_ASSET_ARRAY_REFACTOR(name, max)\
+for (i = 0; i < max; i++)\
+{\
+   if (stream->readFlag())\
+   {\
+      m##name##Asset[i] = stream->readSTString();\
+   }\
+}
+
 #define DEF_ASSET_BINDS_REFACTOR(className,name)\
 DefineEngineMethod(className, get##name, StringTableEntry, (), , "get name")\
 {\

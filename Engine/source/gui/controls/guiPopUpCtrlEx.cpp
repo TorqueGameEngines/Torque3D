@@ -353,7 +353,7 @@ void GuiPopUpMenuCtrlEx::initPersistFields(void)
    addField("sbUsesNAColor",            TypeBool,         Offset(mRenderScrollInNA, GuiPopUpMenuCtrlEx), "Deprecated" "@internal");
    addField("reverseTextList",          TypeBool,         Offset(mReverseTextList, GuiPopUpMenuCtrlEx), "Reverses text list if popup extends up, instead of down");
 
-   INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(Bitmap, NumBitmapModes, GuiPopUpMenuCtrlEx, "Name of bitmap asset to use")
+   addProtectedField("BitmapAsset", TypeImageAssetPtrRefactor, Offset(mBitmapAsset, GuiPopUpMenuCtrlEx), _setBitmaps, &defaultProtectedGetFn, "@brief ""Bitmap"" ""asset \"Name of bitmap asset to use\".");
 
    addField("bitmapBounds",             TypePoint2I,      Offset(mBitmapBounds, GuiPopUpMenuCtrlEx), "Boundaries of bitmap displayed");
    addField("hotTrackCallback",         TypeBool,         Offset(mHotTrackItems, GuiPopUpMenuCtrlEx),
@@ -780,7 +780,15 @@ static S32 QSORT_CALLBACK idCompare(const void *a,const void *b)
    GuiPopUpMenuCtrlEx::Entry *ea = (GuiPopUpMenuCtrlEx::Entry *) (a);
    GuiPopUpMenuCtrlEx::Entry *eb = (GuiPopUpMenuCtrlEx::Entry *) (b);
    return ( (ea->id < eb->id) ? -1 : ((ea->id > eb->id) ? 1 : 0) );
-} 
+}
+
+bool GuiPopUpMenuCtrlEx::_setBitmaps(void* obj, const char* index, const char* data)
+{
+   GuiPopUpMenuCtrlEx* object = static_cast<GuiPopUpMenuCtrlEx*>(obj);
+
+   object->setBitmap(data);
+   return true;
+}
 
 //------------------------------------------------------------------------------
 //  Added

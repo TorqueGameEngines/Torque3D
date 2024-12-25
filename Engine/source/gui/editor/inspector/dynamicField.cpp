@@ -257,7 +257,7 @@ bool GuiInspectorDynamicField::onAdd()
       mParent->getId() );
 
    // FIXME Hardcoded image
-   mDeleteButton->setField( "Bitmap", "ToolsModule:iconDelete_image" );
+   mDeleteButton->_setBitmap("ToolsModule:iconDelete_image");
    mDeleteButton->setField( "Text", "X" );
    mDeleteButton->setField( "Command", szBuffer );
    mDeleteButton->setSizing( horizResizeLeft, vertResizeCenter );

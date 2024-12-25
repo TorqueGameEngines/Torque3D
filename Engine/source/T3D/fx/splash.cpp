@@ -96,11 +96,6 @@ SplashData::SplashData()
    explosionId = 0;
 
    U32 i;
-   for (i = 0; i < NUM_TEX; i++)
-   {
-      INIT_IMAGEASSET_ARRAY(Texture, GFXStaticTextureSRGBProfile, i);
-   }
-
    for( i=0; i<NUM_TIME_KEYS; i++ )
       times[i] = 1.0;
 
@@ -133,7 +128,7 @@ void SplashData::initPersistFields()
    addField("times",             TypeF32,                      Offset(times,              SplashData), NUM_TIME_KEYS, "Times to transition through the splash effect. Up to 4 allowed. Values are 0.0 - 1.0, and corrispond to the life of the particle where 0 is first created and 1 is end of lifespace.\n" );
    addField("colors",            TypeColorF,                   Offset(colors,             SplashData), NUM_TIME_KEYS, "Color values to set the splash effect, rgba. Up to 4 allowed. Will transition through colors based on values set in the times value. Example: colors[0] = \"0.6 1.0 1.0 0.5\".\n" );
 
-   INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, NUM_TEX, SplashData, "Image to use as the texture for the splash effect.\n");
+   INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(Texture, NUM_TEX, SplashData, "Image to use as the texture for the splash effect.\n");
 
    addField("texWrap",           TypeF32,                      Offset(texWrap,            SplashData), "Amount to wrap the texture around the splash ring, 0.0f - 1.0f.\n");
    addField("texFactor",         TypeF32,                      Offset(texFactor,          SplashData), "Factor in which to apply the texture to the splash ring, 0.0f - 1.0f.\n");
@@ -207,10 +202,7 @@ void SplashData::packData(BitStream* stream)
       stream->write( times[i] );
    }
 
-   for( i=0; i<NUM_TEX; i++ )
-   {
-      PACKDATA_ASSET_ARRAY(Texture, i);
-   }
+   PACKDATA_ASSET_ARRAY_REFACTOR(Texture, NUM_TEX);
 }
 
 //--------------------------------------------------------------------------
@@ -263,10 +255,7 @@ void SplashData::unpackData(BitStream* stream)
       stream->read( &times[i] );
    }
 
-   for( i=0; i<NUM_TEX; i++ )
-   {
-      UNPACKDATA_ASSET_ARRAY(Texture, i);
-   }
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(Texture, NUM_TEX);
 }
 
 //--------------------------------------------------------------------------
@@ -299,9 +288,9 @@ bool SplashData::preload(bool server, String &errorStr)
 
       for( i=0; i<NUM_TEX; i++ )
       {
-         if (mTexture[i].isNull())
+         if (mTextureAsset[i].isNull())
          {
-            _setTexture(getTexture(i), i);
+            _setTexture(_getTexture(i), i);
          }
       }
    }

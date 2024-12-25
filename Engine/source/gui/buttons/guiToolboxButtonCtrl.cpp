@@ -43,10 +43,6 @@ ConsoleDocClass( GuiToolboxButtonCtrl,
 //-------------------------------------
 GuiToolboxButtonCtrl::GuiToolboxButtonCtrl()
 {
-   INIT_ASSET(NormalBitmap);
-   INIT_ASSET(LoweredBitmap);
-   INIT_ASSET(HoverBitmap);
-
    setMinExtent(Point2I(16,16));
    setExtent(48, 48);
    mButtonType = ButtonTypeRadio;
@@ -59,9 +55,9 @@ GuiToolboxButtonCtrl::GuiToolboxButtonCtrl()
 void GuiToolboxButtonCtrl::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET(NormalBitmap, GuiToolboxButtonCtrl, "");
-   INITPERSISTFIELD_IMAGEASSET(LoweredBitmap, GuiToolboxButtonCtrl, "");
-   INITPERSISTFIELD_IMAGEASSET(HoverBitmap, GuiToolboxButtonCtrl, "");
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(NormalBitmap, GuiToolboxButtonCtrl, "");
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(LoweredBitmap, GuiToolboxButtonCtrl, "");
+   INITPERSISTFIELD_IMAGEASSET_REFACTOR(HoverBitmap, GuiToolboxButtonCtrl, "");
 
    Parent::initPersistFields();
 }
@@ -75,10 +71,6 @@ bool GuiToolboxButtonCtrl::onWake()
 
    setActive( true );
    
-   setNormalBitmap( getNormalBitmap() );
-   setLoweredBitmap( getLoweredBitmap() );
-   setHoverBitmap( getHoverBitmap() );
-
    return true;
 }
 
@@ -96,9 +88,9 @@ void GuiToolboxButtonCtrl::inspectPostApply()
    // set it's extent to be exactly the size of the normal bitmap (if present)
    Parent::inspectPostApply();
 
-   if ((getWidth() == 0) && (getHeight() == 0) && mNormalBitmap)
+   if ((getWidth() == 0) && (getHeight() == 0) && mNormalBitmapAsset.notNull())
    {
-      setExtent(mNormalBitmap->getWidth(), mNormalBitmap->getHeight());
+      setExtent(getNormalBitmap()->getWidth(), getNormalBitmap()->getHeight());
    }
 }
 
@@ -144,15 +136,15 @@ void GuiToolboxButtonCtrl::onRender(Point2I offset, const RectI& updateRect)
    {
       RectI r(offset, getExtent());
       if ( mDepressed  || mStateOn )
-         renderStateRect( mLoweredBitmap , r );
+         renderStateRect( getLoweredBitmap(), r);
       else if ( mHighlighted )
-         renderStateRect( mHoverBitmap , r );
+         renderStateRect( getHoverBitmap(), r);
    }
 
    // Now render the image
-   if( mNormalBitmap )
+   if( mNormalBitmapAsset.notNull() )
    {
-      renderButton(mNormalBitmap, offset, updateRect );
+      renderButton(getNormalBitmap(), offset, updateRect );
       return;
    }
 
@@ -168,7 +160,7 @@ void GuiToolboxButtonCtrl::onRender(Point2I offset, const RectI& updateRect)
 
 }
 
-void GuiToolboxButtonCtrl::renderStateRect( GFXTexHandle &texture, const RectI& rect )
+void GuiToolboxButtonCtrl::renderStateRect( GFXTexHandle texture, const RectI& rect )
 {
    if (texture)
    {
@@ -179,7 +171,7 @@ void GuiToolboxButtonCtrl::renderStateRect( GFXTexHandle &texture, const RectI& 
 
 //------------------------------------------------------------------------------
 
-void GuiToolboxButtonCtrl::renderButton(GFXTexHandle &texture, Point2I &offset, const RectI& updateRect)
+void GuiToolboxButtonCtrl::renderButton(GFXTexHandle texture, Point2I &offset, const RectI& updateRect)
 {
    if (texture)
    {
@@ -194,6 +186,6 @@ void GuiToolboxButtonCtrl::renderButton(GFXTexHandle &texture, Point2I &offset, 
    }
 }
 
-DEF_ASSET_BINDS(GuiToolboxButtonCtrl, NormalBitmap);
-DEF_ASSET_BINDS(GuiToolboxButtonCtrl, LoweredBitmap);
-DEF_ASSET_BINDS(GuiToolboxButtonCtrl, HoverBitmap);
+DEF_ASSET_BINDS_REFACTOR(GuiToolboxButtonCtrl, NormalBitmap)
+DEF_ASSET_BINDS_REFACTOR(GuiToolboxButtonCtrl, LoweredBitmap)
+DEF_ASSET_BINDS_REFACTOR(GuiToolboxButtonCtrl, HoverBitmap)

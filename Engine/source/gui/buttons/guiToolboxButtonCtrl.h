@@ -39,19 +39,12 @@ private:
 
 protected:
 
-   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, NormalBitmap, onNormalImageChanged, GFXDefaultGUIProfile);
-   DECLARE_ASSET_SETGET(GuiToolboxButtonCtrl, NormalBitmap);
-   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, LoweredBitmap, onLoweredImageChanged, GFXDefaultGUIProfile);
-   DECLARE_ASSET_SETGET(GuiToolboxButtonCtrl, LoweredBitmap);
-   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, HoverBitmap, onHoverImageChanged, GFXDefaultGUIProfile);
-   DECLARE_ASSET_SETGET(GuiToolboxButtonCtrl, HoverBitmap);
+   DECLARE_IMAGEASSET_REFACTOR(GuiToolboxButtonCtrl, NormalBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET_REFACTOR(GuiToolboxButtonCtrl, LoweredBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET_REFACTOR(GuiToolboxButtonCtrl, HoverBitmap, GFXDefaultGUIProfile)
 
-   void renderButton(GFXTexHandle &texture, Point2I &offset, const RectI& updateRect);
-   void renderStateRect( GFXTexHandle &texture, const RectI& rect );
-
-   void onNormalImageChanged() {}
-   void onLoweredImageChanged() {}
-   void onHoverImageChanged() {}
+   void renderButton(GFXTexHandle texture, Point2I &offset, const RectI& updateRect);
+   void renderStateRect( GFXTexHandle texture, const RectI& rect );
 
 public:   
    DECLARE_CONOBJECT(GuiToolboxButtonCtrl);

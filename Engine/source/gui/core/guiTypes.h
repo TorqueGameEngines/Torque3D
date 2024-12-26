@@ -457,105 +457,11 @@ public:
    ///< Bitmap for the bitmap of the control
    /// 
 public: 
-   GFXTexHandle mBitmap = NULL; 
-   StringTableEntry mBitmapName; 
-   StringTableEntry mBitmapAssetId; 
-   AssetPtr<ImageAsset>  mBitmapAsset; 
-   GFXTextureProfile* mBitmapProfile = &GFXDefaultGUIProfile;
-public: 
-   const StringTableEntry getBitmapFile() const { return mBitmapName; }
-   void setBitmapFile(const FileName& _in) { mBitmapName = StringTable->insert(_in.c_str()); }
-   const AssetPtr<ImageAsset>& getBitmapAsset() const { return mBitmapAsset; }
-   void setBitmapAsset(const AssetPtr<ImageAsset>& _in) { mBitmapAsset = _in; }
-   
-   bool _setBitmap(StringTableEntry _in)
-   {
-      if (mBitmapAssetId != _in || mBitmapName != _in)
-      {
-         if (_in == StringTable->EmptyString())
-         {
-            mBitmapName = StringTable->EmptyString(); 
-            mBitmapAssetId = StringTable->EmptyString(); 
-            mBitmapAsset = NULL; 
-            mBitmap.free(); 
-            mBitmap = NULL; 
-            return true; 
-         }
-         else if (_in[0] == '$' || _in[0] == '#')
-         {
-            mBitmapName = _in; 
-            mBitmapAssetId = StringTable->EmptyString(); 
-            mBitmapAsset = NULL; 
-            mBitmap.free(); 
-            mBitmap = NULL; 
-            return true; 
-         }
-         
-         if (AssetDatabase.isDeclaredAsset(_in))
-         {
-            mBitmapAssetId = _in; 
-            
-            U32 assetState = ImageAsset::getAssetById(mBitmapAssetId, &mBitmapAsset); 
-            
-            if (ImageAsset::Ok == assetState)
-            {
-               mBitmapName = StringTable->EmptyString(); 
-            }
-         }
-         else
-         {
-            StringTableEntry assetId = ImageAsset::getAssetIdByFilename(_in); 
-            if (assetId != StringTable->EmptyString())
-            {
-               mBitmapAssetId = assetId; 
-               if (ImageAsset::getAssetById(mBitmapAssetId, &mBitmapAsset) == ImageAsset::Ok)
-               {
-                  mBitmapName = StringTable->EmptyString(); 
-               }
-            }
-            else
-            {
-               mBitmapName = _in; 
-               mBitmapAssetId = StringTable->EmptyString(); 
-               mBitmapAsset = NULL; 
-            }
-         }
-      }
-      if (getBitmap() != StringTable->EmptyString() && mBitmapName != StringTable->insert("texhandle"))
-      {
-      }
-      else
-      {
-         mBitmap.free();
-         mBitmap = NULL;
-      }
-      
-      if (getBitmap() != StringTable->EmptyString() && mBitmapAsset.notNull() && mBitmapAsset->getStatus() != ImageAsset::Ok)
-      {
-         Con::errorf("%s(%s)::_set%s() - image asset failure \"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, ImageAsset::getAssetErrstrn(mBitmapAsset->getStatus()).c_str());
-         return false; 
-      }
-      return true;
-   }
-   
-   const StringTableEntry getBitmap() const
-   {
-      if (mBitmapAsset && (mBitmapAsset->getImageFile() != StringTable->EmptyString()))
-         return  Platform::makeRelativePathName(mBitmapAsset->getImageFile(), Platform::getMainDotCsDir());
-      else if (mBitmapAssetId != StringTable->EmptyString())
-         return mBitmapAssetId;
-      else if (mBitmapName != StringTable->EmptyString())
-         return StringTable->insert(Platform::makeRelativePathName(mBitmapName, Platform::getMainDotCsDir()));
-      else
-         return StringTable->EmptyString();
-   }
-   GFXTexHandle getBitmapResource() 
-   {
-      return mBitmap;
-   }
-   DECLARE_ASSET_SETGET(GuiControlProfile, Bitmap);
 
-   void onBitmapChanged() {}
+   DECLARE_IMAGEASSET_REFACTOR(GuiControlProfile, Bitmap, GFXDefaultGUIProfile)
+
+   GFXTexHandle mBitmap;
+   StringTableEntry mBitmapName;
 
    bool mUseBitmapArray;                           ///< Flag to use the bitmap array or to fallback to non-array rendering
    Vector<RectI> mBitmapArrayRects;                ///< Used for controls which use an array of bitmaps such as checkboxes

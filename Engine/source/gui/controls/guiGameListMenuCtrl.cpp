@@ -205,7 +205,7 @@ void GuiGameListMenuCtrl::onRenderListOption(Row* row, Point2I currentOffset)
          arrowOffset.y = currentOffset.y + arrowOffsetY;
 
          drawer->clearBitmapModulation();
-         drawer->drawBitmapStretchSR(profile->getBitmapResource(), RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
+         drawer->drawBitmapStretchSR(profile->getBitmap(), RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
 
          // render the right arrow
          bool arrowOnR = (isRowSelected || isRowHighlighted) && (row->mWrapOptions || (row->mSelectedOption < row->mOptions.size() - 1));
@@ -214,7 +214,7 @@ void GuiGameListMenuCtrl::onRenderListOption(Row* row, Point2I currentOffset)
          arrowOffset.y = currentOffset.y + arrowOffsetY;
 
          drawer->clearBitmapModulation();
-         drawer->drawBitmapStretchSR(profile->getBitmapResource(), RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
+         drawer->drawBitmapStretchSR(profile->getBitmap(), RectI(arrowOffset, arrowExtent), profile->getBitmapArrayRect((U32)iconIndex));
       }
 
       // get the appropriate font color
@@ -1758,7 +1758,7 @@ bool GuiGameListMenuProfile::onAdd()
 
    // We can't call enforceConstraints() here because incRefCount initializes
    // some of the things to enforce. Do a basic sanity check here instead.
-   U32 assetStatus = ImageAsset::getAssetErrCode(mBitmapAsset);
+   U32 assetStatus = ImageAsset::getAssetErrCode(getBitmapAsset());
    if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
    {
       Con::errorf( "GuiGameListMenuProfile: %s can't be created without a bitmap. Please add a 'Bitmap' property to the object definition.", getName() );

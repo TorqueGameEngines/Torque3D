@@ -88,7 +88,7 @@ if (m##name##AssetId != StringTable->EmptyString())\
 
 //network send - datablock
 #define PACKDATA_ASSET_ARRAY_REFACTOR(name, max)\
-for (i = 0; i < max; i++)\
+for (U32 i = 0; i < max; i++)\
 {\
    if (stream->writeFlag(m##name##Asset[i].notNull()))\
    {\
@@ -98,11 +98,32 @@ for (i = 0; i < max; i++)\
 
 //network recieve - datablock
 #define UNPACKDATA_ASSET_ARRAY_REFACTOR(name, max)\
-for (i = 0; i < max; i++)\
+for (U32 i = 0; i < max; i++)\
 {\
    if (stream->readFlag())\
    {\
       m##name##Asset[i] = stream->readSTString();\
+   }\
+}
+
+//network send - object-instance
+#define PACK_ASSET_ARRAY_REFACTOR(netconn, name, max)\
+for (U32 i = 0; i < max; i++)\
+{\
+   if (stream->writeFlag(m##name##Asset[i].notNull()))\
+   {\
+      NetStringHandle assetIdStr = m##name##Asset[i].getAssetId();\
+      netconn->packNetStringHandleU(stream, assetIdStr);\
+   }\
+}
+
+//network recieve - object-instance
+#define UNPACK_ASSET_ARRAY_REFACTOR(netconn, name, max)\
+for (U32 i = 0; i < max; i++)\
+{\
+   if (stream->readFlag())\
+   {\
+      m##name##Asset[i] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
    }\
 }
 

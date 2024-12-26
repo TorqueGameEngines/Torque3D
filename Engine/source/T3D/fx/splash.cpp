@@ -183,6 +183,8 @@ void SplashData::packData(BitStream* stream)
       stream->writeRangedU32(explosion->getId(), DataBlockObjectIdFirst, DataBlockObjectIdLast);
    }
 
+   PACKDATA_ASSET_ARRAY_REFACTOR(Texture, NUM_TEX);
+
    S32 i;
    for( i=0; i<NUM_EMITTERS; i++ )
    {
@@ -201,8 +203,6 @@ void SplashData::packData(BitStream* stream)
    {
       stream->write( times[i] );
    }
-
-   PACKDATA_ASSET_ARRAY_REFACTOR(Texture, NUM_TEX);
 }
 
 //--------------------------------------------------------------------------
@@ -236,6 +236,8 @@ void SplashData::unpackData(BitStream* stream)
       explosionId = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );
    }
 
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(Texture, NUM_TEX);
+
    U32 i;
    for( i=0; i<NUM_EMITTERS; i++ )
    {
@@ -254,8 +256,6 @@ void SplashData::unpackData(BitStream* stream)
    {
       stream->read( &times[i] );
    }
-
-   UNPACKDATA_ASSET_ARRAY_REFACTOR(Texture, NUM_TEX);
 }
 
 //--------------------------------------------------------------------------

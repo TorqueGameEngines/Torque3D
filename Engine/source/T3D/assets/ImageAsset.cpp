@@ -116,7 +116,7 @@ ConsoleSetType(TypeImageAssetId)
 IMPLEMENT_STRUCT(AssetPtr<ImageAsset>, AssetPtrImageAsset,, "")
 END_IMPLEMENT_STRUCT
 
-ConsoleType(ImageAssetPtr, TypeImageAssetPtrRefactor, AssetPtr<ImageAsset>, "")
+ConsoleType(ImageAssetPtr, TypeImageAssetPtrRefactor, AssetPtr<ImageAsset>, ASSET_ID_FIELD_PREFIX)
 
 
 ConsoleGetType(TypeImageAssetPtrRefactor)

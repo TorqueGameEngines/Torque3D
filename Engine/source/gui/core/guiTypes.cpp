@@ -643,13 +643,13 @@ void GuiControlProfile::incLoadCount()
       if (mBitmapAsset.notNull() && mBitmapName != StringTable->insert("texHandle"))
       {
          mBitmap = getBitmap();
+
+         //verify the bitmap
+         if (!mBitmap)
+            Con::errorf("(%s) - Failed to load profile bitmap (%s)", getName(), getBitmapAsset().getAssetId());
+
+         constructBitmapArray();
       }
-
-      //verify the bitmap
-      if (!mBitmap)
-         Con::errorf("(%s) - Failed to load profile bitmap (%s)", getName(), getBitmapAsset().getAssetId());
-
-      constructBitmapArray();
    }
    
    mLoadCount ++;

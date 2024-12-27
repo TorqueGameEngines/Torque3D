@@ -142,11 +142,6 @@ Material::Material()
       mAccuCoverage[i] = 0.9f;
       mAccuSpecular[i] = 16.0f;
 
-      INIT_IMAGEASSET_ARRAY(OverlayMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(LightMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(ToneMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(DetailMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(ORMConfigMap, GFXStaticTextureProfile, i);
       INIT_IMAGEASSET_ARRAY(RoughMap, GFXStaticTextureProfile, i);
       INIT_IMAGEASSET_ARRAY(AOMap, GFXStaticTextureProfile, i);
       INIT_IMAGEASSET_ARRAY(MetalMap, GFXStaticTextureProfile, i);
@@ -282,7 +277,7 @@ void Material::initPersistFields()
       addField("metalChan", TypeF32, Offset(mMetalChan, Material), MAX_STAGES,
          "The input channel metalness maps use.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(ORMConfigMap, MAX_STAGES, Material, "AO|Roughness|metalness map");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(ORMConfigMap, MAX_STAGES, Material, "AO|Roughness|metalness map");
       addField("isSRGb", TypeBool, Offset(mIsSRGb, Material), MAX_STAGES,
          "Substance Designer Workaround.");
 
@@ -296,7 +291,7 @@ void Material::initPersistFields()
    endGroup("Light Influence Maps");
 
    addGroup("Advanced Texture Maps");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(DetailMap, MAX_STAGES, Material, "DetailMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(DetailMap, MAX_STAGES, Material, "DetailMap");
       addField("detailScale", TypePoint2F, Offset(mDetailScale, Material), MAX_STAGES,
          "The scale factor for the detail map.");
 
@@ -304,9 +299,9 @@ void Material::initPersistFields()
       addField("detailNormalMapStrength", TypeF32, Offset(mDetailNormalMapStrength, Material), MAX_STAGES,
          "Used to scale the strength of the detail normal map when blended with the base normal map.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(OverlayMap, MAX_STAGES, Material, "Overlay");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(LightMap, MAX_STAGES, Material, "LightMap");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(ToneMap, MAX_STAGES, Material, "ToneMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(OverlayMap, MAX_STAGES, Material, "Overlay");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(LightMap, MAX_STAGES, Material, "LightMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(ToneMap, MAX_STAGES, Material, "ToneMap");
    endGroup("Advanced Texture Maps");
    
    addGroup("Accumulation Properties");
@@ -503,12 +498,6 @@ void Material::initPersistFields()
    // They point at the new 'map' fields, but reads always return
    // an empty string and writes only apply if the value is not empty.
    //
-   addProtectedField("detailTex", TypeImageFilename, Offset(mDetailMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see detailMap\n", AbstractClassRep::FIELD_HideInInspectors);
-   addProtectedField("overlayTex", TypeImageFilename, Offset(mOverlayMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see overlayMap\n", AbstractClassRep::FIELD_HideInInspectors);
    addProtectedField("colorMultiply", TypeColorF, Offset(mDiffuse, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
       "For backwards compatibility.\n@see diffuseColor\n", AbstractClassRep::FIELD_HideInInspectors);
@@ -614,7 +603,7 @@ bool Material::isLightmapped() const
 {
    bool ret = false;
    for (U32 i = 0; i < MAX_STAGES; i++)
-      ret |= mLightMapName[i] != StringTable->EmptyString() || mToneMapName[i] != StringTable->EmptyString() || mVertLit[i];
+      ret |= mLightMapAsset[i].notNull() || mToneMapAsset[i].notNull() || mVertLit[i];
    return ret;
 }
 
@@ -829,11 +818,11 @@ bool Material::_setAccuEnabled(void* object, const char* index, const char* data
 DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, DiffuseMap, Material::Constants::MAX_STAGES)
 DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, NormalMap, Material::Constants::MAX_STAGES)
 DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, DetailNormalMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, OverlayMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, LightMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, ToneMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, ORMConfigMap);
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, OverlayMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, LightMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, ToneMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, DetailMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, ORMConfigMap, Material::Constants::MAX_STAGES)
 DEF_IMAGEASSET_ARRAY_BINDS(Material, RoughMap);
 DEF_IMAGEASSET_ARRAY_BINDS(Material, AOMap);
 DEF_IMAGEASSET_ARRAY_BINDS(Material, MetalMap);

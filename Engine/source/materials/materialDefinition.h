@@ -213,21 +213,11 @@ public:
    DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, DetailNormalMap, GFXNormalMapProfile, MAX_STAGES)
 
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
-   DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, OverlayMap);
-
-   DECLARE_IMAGEASSET_ARRAY(Material, LightMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, LightMap);
-
-   DECLARE_IMAGEASSET_ARRAY(Material, ToneMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, ToneMap);
-
-   DECLARE_IMAGEASSET_ARRAY(Material, DetailMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DetailMap);
-
-
-   DECLARE_IMAGEASSET_ARRAY(Material, ORMConfigMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, ORMConfigMap);
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, OverlayMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, LightMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, ToneMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, DetailMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, ORMConfigMap, GFXStaticTextureProfile, MAX_STAGES)
 
    bool     mIsSRGb[MAX_STAGES];
    DECLARE_IMAGEASSET_ARRAY(Material, AOMap, MAX_STAGES, onImageAssetChanged);

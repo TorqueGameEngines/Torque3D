@@ -2996,7 +2996,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
          }
          else if (imageType == ImageAsset::ImageTypes::ORMConfig)
          {
-            newMat->mORMConfigMapAssetId[0] = assetMapFillInStr;
+            newMat->_setORMConfigMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::Metalness)
          {

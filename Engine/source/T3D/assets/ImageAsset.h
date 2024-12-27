@@ -598,7 +598,7 @@ public:                                                                         
                                                                                                                                                                               \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
-         StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                  \
+         StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
          AssetQuery query;                                                                                                                                                    \
          S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
          if (foundAssetcount != 0)                                                                                                                                            \
@@ -629,7 +629,7 @@ public:                                                                         
                                                                                                                                                                               \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
-         StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                  \
+         StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
          AssetQuery query;                                                                                                                                                    \
          S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
          if (foundAssetcount != 0)                                                                                                                                            \
@@ -665,7 +665,7 @@ public:                                                                         
                                                                                                                                                                               \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
-         StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                  \
+         StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
          AssetQuery query;                                                                                                                                                    \
          S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
          if (foundAssetcount != 0)                                                                                                                                            \
@@ -682,6 +682,7 @@ public:                                                                         
                                                                                                                                                                               \
    inline StringTableEntry _get##name(const U32& index) const { return m##name##Asset[index].getAssetId(); }                                                                  \
    GFXTexHandle get##name(const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getTexture(&profile) : NULL; }                                  \
+   GFXTexHandle get##name(GFXTextureProfile* requestedProfile, const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getTexture(requestedProfile) : NULL; }\
    AssetPtr<ImageAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}
 
@@ -696,7 +697,7 @@ public:                                                                         
                                                                                                                                                                               \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
-         StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                  \
+         StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
          AssetQuery query;                                                                                                                                                    \
          S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
          if (foundAssetcount != 0)                                                                                                                                            \
@@ -714,6 +715,7 @@ public:                                                                         
                                                                                                                                                                               \
    inline StringTableEntry _get##name(const U32& index) const { return m##name##Asset[index].getAssetId(); }                                                                  \
    GFXTexHandle get##name(const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getTexture(&profile) : NULL; }                                  \
+   GFXTexHandle get##name(GFXTextureProfile* requestedProfile, const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getTexture(requestedProfile) : NULL; }\
    AssetPtr<ImageAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}
 

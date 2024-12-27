@@ -644,7 +644,7 @@ void GuiInspectorTypeMaterialAssetPtr::updatePreviewImage()
          MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(previewImage);
          if (matAsset && matAsset->getMaterialDefinition())
          {
-            mPreviewImage->_setBitmap(matAsset->getMaterialDefinition()->mDiffuseMapAssetId[0]);
+            mPreviewImage->_setBitmap(matAsset->getMaterialDefinition()->_getDiffuseMap(0));
          }
       }
    }
@@ -676,7 +676,7 @@ void GuiInspectorTypeMaterialAssetPtr::setPreviewImage(StringTableEntry assetId)
          MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(assetId);
          if (matAsset && matAsset->getMaterialDefinition())
          {
-            mPreviewImage->_setBitmap(matAsset->getMaterialDefinition()->mDiffuseMapAssetId[0]);
+            mPreviewImage->_setBitmap(matAsset->getMaterialDefinition()->_getDiffuseMap(0));
          }
       }
    }

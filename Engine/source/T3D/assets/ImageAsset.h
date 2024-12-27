@@ -721,5 +721,20 @@ public:                                                                         
 #define INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(name, arraySize, consoleClass, docs)                                                                                       \
    addProtectedField(assetText(name, Asset), TypeImageAssetPtrRefactor, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));
 
+#define DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(className,name, max)\
+DefineEngineMethod(className, get##name, const char*, (S32 index), , "get name")\
+{\
+   return object->get##name##Asset(index).notNull() ? object->get##name##Asset(index)->getImageFile() : ""; \
+}\
+DefineEngineMethod(className, get##name##Asset, const char*, (S32 index), , assetText(name, asset reference))\
+{\
+   if(index >= max || index < 0)\
+      return "";\
+   return object->_get##name(index); \
+}\
+DefineEngineMethod(className, set##name, void, (const char* map, S32 index), , assetText(name,assignment. first tries asset then flat file.))\
+{\
+    object->_set##name(StringTable->insert(map), index);\
+}
 
 #pragma endregion

@@ -1030,8 +1030,8 @@ void ColladaUtils::exportColladaMaterials(tinyxml2::XMLElement* rootNode, const 
       {
          Torque::Path diffusePath;
 
-         if (mat->mDiffuseMapName[0] != StringTable->EmptyString())
-            diffusePath = Torque::Path(mat->mDiffuseMapName[0]);
+         if (mat->getDiffuseMapAsset(0).notNull())
+            diffusePath = Torque::Path(mat->getDiffuseMapAsset(0)->getImageFile());
          else
             diffusePath = String("warningMat");
 
@@ -1040,8 +1040,8 @@ void ColladaUtils::exportColladaMaterials(tinyxml2::XMLElement* rootNode, const 
       }
       else
       {
-         if (mat->mDiffuseMapName[0] != StringTable->EmptyString())
-            diffuseMap += Torque::Path(mat->mDiffuseMapName[0]);
+         if (mat->getDiffuseMapAsset(0).notNull())
+            diffuseMap += Torque::Path(mat->getDiffuseMapAsset(0)->getImageFile());
          else
             diffuseMap += "warningMat";
       }
@@ -1316,8 +1316,8 @@ void ColladaUtils::exportColladaMaterials(tinyxml2::XMLElement* rootNode, const 
       {
          Torque::Path diffusePath;
 
-         if (mat->mDiffuseMapName[0] != StringTable->EmptyString())
-            diffusePath = Torque::Path(mat->mDiffuseMapName[0]);
+         if (mat->getDiffuseMapAsset(0).notNull())
+            diffusePath = Torque::Path(mat->getDiffuseMapAsset(0)->getImageFile());
          else
             diffusePath = String("warningMat");
 
@@ -1326,8 +1326,8 @@ void ColladaUtils::exportColladaMaterials(tinyxml2::XMLElement* rootNode, const 
       }
       else
       {
-         if (mat->mDiffuseMapName[0] != StringTable->EmptyString())
-            diffuseMap += Torque::Path(mat->mDiffuseMapName[0]);
+         if (mat->getDiffuseMapAsset(0).notNull())
+            diffuseMap += Torque::Path(mat->getDiffuseMapAsset(0)->getImageFile());
          else
             diffuseMap += "warningMat";
       }

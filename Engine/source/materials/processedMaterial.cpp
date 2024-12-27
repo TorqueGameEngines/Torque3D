@@ -392,29 +392,15 @@ void ProcessedMaterial::_setStageData()
    for (i = 0; i < Material::MAX_STAGES; i++)
    {
       // DiffuseMap
-      if (mMaterial->mDiffuseMapAsset[i] && !mMaterial->mDiffuseMapAsset[i].isNull())
+      if (mMaterial->getDiffuseMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_DiffuseMap, mMaterial->getDiffuseMapResource(i));
+         mStages[i].setTex(MFT_DiffuseMap, mMaterial->getDiffuseMap(i));
          if (!mStages[i].getTex(MFT_DiffuseMap))
          {
             // If we start with a #, we're probably actually attempting to hit a named target and it may not get a hit on the first pass.
             if (!String(mMaterial->mDiffuseMapAsset[i]->getImageFileName()).startsWith("#") && !String(mMaterial->mDiffuseMapAsset[i]->getImageFileName()).startsWith("$"))
                mMaterial->logError("Failed to load diffuse map %s for stage %i", mMaterial->mDiffuseMapAsset[i]->getImageFileName(), i);
 
-            mStages[i].setTex(MFT_DiffuseMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXStaticTextureSRGBProfile));
-         }
-      }
-      else if (mMaterial->mDiffuseMapName[i] != StringTable->EmptyString())
-      {
-         mStages[i].setTex(MFT_DiffuseMap, _createTexture(mMaterial->mDiffuseMapName[i], &GFXStaticTextureSRGBProfile));
-         if (!mStages[i].getTex(MFT_DiffuseMap))
-         {
-            //If we start with a #, we're probably actually attempting to hit a named target and it may not get a hit on the first pass.
-            if (!String(mMaterial->mDiffuseMapName[i]).startsWith("#") && !String(mMaterial->mDiffuseMapName[i]).startsWith("$"))
-               mMaterial->logError("Failed to load diffuse map %s for stage %i", mMaterial->mDiffuseMapName[i], i);
-
-            // Load a debug texture to make it clear to the user 
-            // that the texture for this stage was missing.
             mStages[i].setTex(MFT_DiffuseMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXStaticTextureSRGBProfile));
          }
       }
@@ -451,10 +437,9 @@ void ProcessedMaterial::_setStageData()
       }
 
       // NormalMap
-      if (mMaterial->mNormalMapAsset[i] && !mMaterial->mNormalMapAsset[i].isNull())
+      if (mMaterial->getNormalMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_NormalMap, mMaterial->getNormalMapResource(i));
-         //mStages[i].setTex(MFT_DiffuseMap, _createTexture(mMaterial->getDiffuseMap(i), &GFXStaticTextureSRGBProfile));
+         mStages[i].setTex(MFT_NormalMap, mMaterial->getNormalMap(i));
          if (!mStages[i].getTex(MFT_NormalMap))
          {
             // Load a debug texture to make it clear to the user 
@@ -462,24 +447,13 @@ void ProcessedMaterial::_setStageData()
             mStages[i].setTex(MFT_NormalMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXNormalMapProfile));
          }
       }
-      else if (mMaterial->mNormalMapName[i] != StringTable->EmptyString())
-      {
-         mStages[i].setTex(MFT_NormalMap, _createTexture(mMaterial->mNormalMapName[i], &GFXNormalMapProfile));
-         if (!mStages[i].getTex(MFT_NormalMap))
-         {
-            //If we start with a #, we're probably actually attempting to hit a named target and it may not get a hit on the first pass. So we'll
-            //pass on the error rather than spamming the console
-            if (!String(mMaterial->mNormalMapName[i]).startsWith("#"))
-               mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->mNormalMapName[i], i);
-         }
-      }
 
       // Detail Normal Map
-      if (mMaterial->getDetailNormalMap(i) != StringTable->EmptyString())
+      if (mMaterial->getDetailNormalMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_DetailNormalMap, mMaterial->getDetailNormalMapResource(i));
+         mStages[i].setTex(MFT_DetailNormalMap, mMaterial->getDetailNormalMap(i));
          if (!mStages[i].getTex(MFT_DetailNormalMap))
-            mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->getDetailNormalMap(i), i);
+            mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->getDetailNormalMapAsset(i), i);
       }
 
       //depending on creation method this may or may not have been shoved into srgb space eroneously

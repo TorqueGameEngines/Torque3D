@@ -170,14 +170,14 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
    {
       torquePath = texName.C_Str();
       if (!torquePath.isEmpty())
-         mat->mDiffuseMapName[0] = cleanTextureName(torquePath, cleanFile, path, false);
+         mat->_setDiffuseMap(cleanTextureName(torquePath, cleanFile, path, false), 0);
    }
 
    if (AI_SUCCESS == mAIMat->Get(AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0), texName))
    {
       torquePath = texName.C_Str();
       if (!torquePath.isEmpty())
-         mat->mNormalMapName[0] = cleanTextureName(torquePath, cleanFile, path, false);
+         mat->_setNormalMap(cleanTextureName(torquePath, cleanFile, path, false), 0);
    }
 
 #ifdef TORQUE_PBR_MATERIALS

@@ -208,10 +208,9 @@ public:
    //-----------------------------------------------------------------------
    // Data
    //-----------------------------------------------------------------------
-   void onImageAssetChanged();
-
-   DECLARE_IMAGEASSET_ARRAY(Material, DiffuseMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DiffuseMap);
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, DiffuseMap, GFXStaticTextureSRGBProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, NormalMap, GFXNormalMapProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, DetailNormalMap, GFXNormalMapProfile, MAX_STAGES)
 
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
    DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, MAX_STAGES, onImageAssetChanged);
@@ -226,8 +225,6 @@ public:
    DECLARE_IMAGEASSET_ARRAY(Material, DetailMap, MAX_STAGES, onImageAssetChanged);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DetailMap);
 
-   DECLARE_IMAGEASSET_ARRAY(Material, NormalMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, NormalMap);
 
    DECLARE_IMAGEASSET_ARRAY(Material, ORMConfigMap, MAX_STAGES, onImageAssetChanged);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, ORMConfigMap);
@@ -250,10 +247,6 @@ public:
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, GlowMap);
 
    F32      mGlowMul[MAX_STAGES];
-   /// A second normal map which repeats at the detail map
-   /// scale and blended with the base normal map.
-   DECLARE_IMAGEASSET_ARRAY(Material, DetailNormalMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, DetailNormalMap);
 
    /// The strength scalar for the detail normal map.
    F32 mDetailNormalMapStrength[MAX_STAGES];

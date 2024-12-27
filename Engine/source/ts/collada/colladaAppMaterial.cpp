@@ -208,8 +208,8 @@ Material *ColladaAppMaterial::createMaterial(const Torque::Path& path) const
    Material *newMat = MATMGR->allocateAndRegister( cleanName, getName() );
    Con::setVariable("$Con::File", oldScriptFile);        // restore script path
 
-   newMat->mDiffuseMapName[0] = diffuseMap;
-   newMat->mNormalMapName[0] = normalMap;
+   newMat->_setDiffuseMap(diffuseMap, 0);
+   newMat->_setNormalMap(normalMap, 0);
 
    newMat->mDiffuse[0] = diffuseColor;
    newMat->mRoughness[0] = roughness;

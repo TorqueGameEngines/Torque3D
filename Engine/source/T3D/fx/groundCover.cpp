@@ -969,10 +969,10 @@ void GroundCover::_initialize( U32 cellCount, U32 cellPlacementCount )
       if(mat)
       {
          GFXTexHandle tex;
-         if (mat->getDiffuseMapResource(0))
-            tex = mat->getDiffuseMapResource(0);
-         else if (mat->getDiffuseMap(0) != StringTable->EmptyString())
-            tex = GFXTexHandle(mat->getDiffuseMap(0), &GFXStaticTextureSRGBProfile, "GroundCover texture aspect ratio check");
+         if (mat->getDiffuseMap(0))
+            tex = mat->getDiffuseMap(0);
+         else if (mat->getDiffuseMapAsset(0).notNull())
+            tex = mat->getDiffuseMap(0);
 
          if(tex.isValid())
          {

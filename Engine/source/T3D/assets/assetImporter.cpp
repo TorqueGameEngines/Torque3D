@@ -2988,11 +2988,11 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 
          if (imageType == ImageAsset::ImageTypes::Albedo || childItem->imageSuffixType.isEmpty())
          {
-            newMat->mDiffuseMapAssetId[0] = assetMapFillInStr;
+            newMat->_setDiffuseMap(assetMapFillInStr,0);
          }
          else if (imageType == ImageAsset::ImageTypes::Normal)
          {
-            newMat->mNormalMapAssetId[0] = assetMapFillInStr;
+            newMat->_setNormalMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::ORMConfig)
          {

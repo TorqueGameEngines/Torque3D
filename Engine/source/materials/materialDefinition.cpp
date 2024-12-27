@@ -142,18 +142,15 @@ Material::Material()
       mAccuCoverage[i] = 0.9f;
       mAccuSpecular[i] = 16.0f;
 
-      INIT_IMAGEASSET_ARRAY(DiffuseMap, GFXStaticTextureSRGBProfile, i);
       INIT_IMAGEASSET_ARRAY(OverlayMap, GFXStaticTextureProfile, i);
       INIT_IMAGEASSET_ARRAY(LightMap, GFXStaticTextureProfile, i);
       INIT_IMAGEASSET_ARRAY(ToneMap, GFXStaticTextureProfile, i);
       INIT_IMAGEASSET_ARRAY(DetailMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(NormalMap, GFXNormalMapProfile, i);
       INIT_IMAGEASSET_ARRAY(ORMConfigMap, GFXStaticTextureProfile, i);
       INIT_IMAGEASSET_ARRAY(RoughMap, GFXStaticTextureProfile, i);
       INIT_IMAGEASSET_ARRAY(AOMap, GFXStaticTextureProfile, i);
       INIT_IMAGEASSET_ARRAY(MetalMap, GFXStaticTextureProfile, i);
       INIT_IMAGEASSET_ARRAY(GlowMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(DetailNormalMap, GFXNormalMapProfile, i);
 
       mParallaxScale[i] = 0.0f;
 
@@ -258,14 +255,14 @@ void Material::initPersistFields()
    addArray("Stages", MAX_STAGES);
 
    addGroup("Basic Texture Maps");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(DiffuseMap, MAX_STAGES, Material, "Albedo");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(DiffuseMap, MAX_STAGES, Material, "Albedo");
       addField("diffuseColor", TypeColorF, Offset(mDiffuse, Material), MAX_STAGES,
          "This color is multiplied against the diffuse texture color.  If no diffuse texture "
          "is present this is the material color.");
       addField("diffuseMapSRGB", TypeBool, Offset(mDiffuseMapSRGB, Material), MAX_STAGES,
          "Enable sRGB for the diffuse color texture map.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(NormalMap, MAX_STAGES, Material, "NormalMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(NormalMap, MAX_STAGES, Material, "NormalMap");
    endGroup("Basic Texture Maps");
 
    addGroup("Light Influence Maps");
@@ -303,7 +300,7 @@ void Material::initPersistFields()
       addField("detailScale", TypePoint2F, Offset(mDetailScale, Material), MAX_STAGES,
          "The scale factor for the detail map.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(DetailNormalMap, MAX_STAGES, Material, "DetailNormalMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(DetailNormalMap, MAX_STAGES, Material, "DetailNormalMap");
       addField("detailNormalMapStrength", TypeF32, Offset(mDetailNormalMapStrength, Material), MAX_STAGES,
          "Used to scale the strength of the detail normal map when blended with the base normal map.");
 
@@ -506,18 +503,12 @@ void Material::initPersistFields()
    // They point at the new 'map' fields, but reads always return
    // an empty string and writes only apply if the value is not empty.
    //
-   addProtectedField("baseTex", TypeImageFilename, Offset(mDiffuseMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see diffuseMap\n", AbstractClassRep::FIELD_HideInInspectors);
    addProtectedField("detailTex", TypeImageFilename, Offset(mDetailMapName, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
       "For backwards compatibility.\n@see detailMap\n", AbstractClassRep::FIELD_HideInInspectors);
    addProtectedField("overlayTex", TypeImageFilename, Offset(mOverlayMapName, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
       "For backwards compatibility.\n@see overlayMap\n", AbstractClassRep::FIELD_HideInInspectors);
-   addProtectedField("bumpTex", TypeImageFilename, Offset(mNormalMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see normalMap\n", AbstractClassRep::FIELD_HideInInspectors);
    addProtectedField("colorMultiply", TypeColorF, Offset(mDiffuse, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
       "For backwards compatibility.\n@see diffuseColor\n", AbstractClassRep::FIELD_HideInInspectors);
@@ -656,26 +647,11 @@ void Material::_mapMaterial()
    // If mapTo not defined in script, try to use the base texture name instead
    if (mMapTo.isEmpty())
    {
-      if (mDiffuseMapName[0] == StringTable->EmptyString() && mDiffuseMapAsset->isNull())
+      if (mDiffuseMapAsset->isNull())
          return;
-
-      else
+      else if (mDiffuseMapAsset->notNull())
       {
-         // extract filename from base texture
-         if (mDiffuseMapName[0] != StringTable->EmptyString())
-         {
-            U32 slashPos = String(mDiffuseMapName[0]).find('/', 0, String::Right);
-            if (slashPos == String::NPos)
-               // no '/' character, must be no path, just the filename
-               mMapTo = mDiffuseMapName[0];
-            else
-               // use everything after the last slash
-               mMapTo = String(mDiffuseMapName[0]).substr(slashPos + 1, (U32)strlen(mDiffuseMapName[0]) - slashPos - 1);
-         }
-         else if (!mDiffuseMapAsset->isNull())
-         {
-            mMapTo = mDiffuseMapAsset[0]->getImageFile();
-         }
+         mMapTo = mDiffuseMapAsset[0]->getImageFile();
       }
    }
 
@@ -850,16 +826,15 @@ bool Material::_setAccuEnabled(void* object, const char* index, const char* data
 //material.getDiffuseMap(%layer); //returns the raw file referenced
 //material.getDiffuseMapAsset(%layer); //returns the asset id
 //material.setDiffuseMap(%texture, %layer); //tries to set the asset and failing that attempts a flat file reference
-DEF_IMAGEASSET_ARRAY_BINDS(Material, DiffuseMap)
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, DiffuseMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, NormalMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, DetailNormalMap, Material::Constants::MAX_STAGES)
 DEF_IMAGEASSET_ARRAY_BINDS(Material, OverlayMap);
 DEF_IMAGEASSET_ARRAY_BINDS(Material, LightMap);
 DEF_IMAGEASSET_ARRAY_BINDS(Material, ToneMap);
 DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, NormalMap);
 DEF_IMAGEASSET_ARRAY_BINDS(Material, ORMConfigMap);
 DEF_IMAGEASSET_ARRAY_BINDS(Material, RoughMap);
 DEF_IMAGEASSET_ARRAY_BINDS(Material, AOMap);
 DEF_IMAGEASSET_ARRAY_BINDS(Material, MetalMap);
 DEF_IMAGEASSET_ARRAY_BINDS(Material, GlowMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailNormalMap);
-

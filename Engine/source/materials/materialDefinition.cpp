@@ -230,12 +230,6 @@ Material::Material()
    mReverbSoundOcclusion = 1.0;
 }
 
-void Material::onImageAssetChanged()
-{
-   flush();
-   reload();
-}
-
 void Material::initPersistFields()
 {
    docsURL;

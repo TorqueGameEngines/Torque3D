@@ -398,8 +398,8 @@ void ProcessedMaterial::_setStageData()
          if (!mStages[i].getTex(MFT_DiffuseMap))
          {
             // If we start with a #, we're probably actually attempting to hit a named target and it may not get a hit on the first pass.
-            if (!String(mMaterial->mDiffuseMapAsset[i]->getImageFileName()).startsWith("#") && !String(mMaterial->mDiffuseMapAsset[i]->getImageFileName()).startsWith("$"))
-               mMaterial->logError("Failed to load diffuse map %s for stage %i", mMaterial->mDiffuseMapAsset[i]->getImageFileName(), i);
+            if (!String(mMaterial->getDiffuseMapAsset(i)->getImageFile()).startsWith("#") && !String(mMaterial->getDiffuseMapAsset(i)->getImageFile()).startsWith("$"))
+               mMaterial->logError("Failed to load diffuse map %s for stage %i", mMaterial->getDiffuseMapAsset(i)->getImageFile(), i);
 
             mStages[i].setTex(MFT_DiffuseMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXStaticTextureSRGBProfile));
          }

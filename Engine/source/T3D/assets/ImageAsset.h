@@ -336,7 +336,10 @@ public: \
    const StringTableEntry get##name() const\
    {\
       if (m##name##Asset && (m##name##Asset->getImageFile() != StringTable->EmptyString()))\
-         return  Platform::makeRelativePathName(m##name##Asset->getImageFile(), Platform::getMainDotCsDir());\
+         if (m##name##Asset->getImageFile()[0] == '#' || m##name##Asset->getImageFile()[0] == '$')\
+            return m##name##Asset->getImageFile();\
+         else\
+            return  Platform::makeRelativePathName(m##name##Asset->getImageFile(), Platform::getMainDotCsDir());\
       else if (m##name##AssetId != StringTable->EmptyString())\
          return m##name##AssetId;\
       else if (m##name##Name != StringTable->EmptyString())\
@@ -346,7 +349,7 @@ public: \
    }\
    GFXTexHandle get##name##Resource() \
    {\
-      if (m##name##Asset && (m##name##Asset->getImageFileName() != StringTable->EmptyString()))\
+      if (m##name##Asset && (m##name##Asset->getImageFile() != StringTable->EmptyString()))\
          return m##name##Asset->getTexture(m##name##Profile);\
       return m##name;\
    }\
@@ -453,7 +456,6 @@ public: \
       }\
       if (get##name(index) != StringTable->EmptyString() && m##name##Name[index] != StringTable->insert("texhandle"))\
       {\
-         m##name##Asset[index]->getChangedSignal().notify(this, &className::changeFunc);\
          if (get##name(index)[0] != '$' && get##name(index)[0] != '#')\
             m##name[index].set(get##name(index), m##name##Profile[index], avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));\
       }\
@@ -483,7 +485,10 @@ public: \
    const StringTableEntry get##name(const U32& index) const\
    {\
       if (m##name##Asset[index] && (m##name##Asset[index]->getImageFile() != StringTable->EmptyString()))\
-         return  Platform::makeRelativePathName(m##name##Asset[index]->getImageFile(), Platform::getMainDotCsDir());\
+         if (m##name##Asset[index]->getImageFile()[0] == '#' || m##name##Asset[index]->getImageFile()[0] == '$')\
+            return m##name##Asset[index]->getImageFile();\
+         else\
+            return  Platform::makeRelativePathName(m##name##Asset[index]->getImageFile(), Platform::getMainDotCsDir());\
       else if (m##name##AssetId[index] != StringTable->EmptyString())\
          return m##name##AssetId[index];\
       else if (m##name##Name[index] != StringTable->EmptyString())\
@@ -500,7 +505,7 @@ public: \
    {\
       if(index >= sm##name##Count || index < 0)\
          return nullptr;\
-      if (m##name##Asset[index] && (m##name##Asset[index]->getImageFileName() != StringTable->EmptyString()))\
+      if (m##name##Asset[index] && (m##name##Asset[index]->getImageFile() != StringTable->EmptyString()))\
          return m##name##Asset[index]->getTexture(m##name##Profile[index]);\
       return m##name[index];\
    }\

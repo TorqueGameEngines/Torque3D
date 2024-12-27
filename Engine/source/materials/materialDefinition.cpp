@@ -142,11 +142,6 @@ Material::Material()
       mAccuCoverage[i] = 0.9f;
       mAccuSpecular[i] = 16.0f;
 
-      INIT_IMAGEASSET_ARRAY(RoughMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(AOMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(MetalMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(GlowMap, GFXStaticTextureProfile, i);
-
       mParallaxScale[i] = 0.0f;
 
       mVertLit[i] = false;
@@ -281,10 +276,10 @@ void Material::initPersistFields()
       addField("isSRGb", TypeBool, Offset(mIsSRGb, Material), MAX_STAGES,
          "Substance Designer Workaround.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(AOMap, MAX_STAGES, Material, "AOMap");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(RoughMap, MAX_STAGES, Material, "RoughMap (also needs MetalMap)");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(MetalMap, MAX_STAGES, Material, "MetalMap (also needs RoughMap)");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(GlowMap, MAX_STAGES, Material, "GlowMap (needs Albedo)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(AOMap, MAX_STAGES, Material, "AOMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(RoughMap, MAX_STAGES, Material, "RoughMap (also needs MetalMap)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(MetalMap, MAX_STAGES, Material, "MetalMap (also needs RoughMap)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(GlowMap, MAX_STAGES, Material, "GlowMap (needs Albedo)");
 
       addField("glowMul", TypeF32, Offset(mGlowMul, Material), MAX_STAGES,
          "glow mask multiplier");
@@ -823,7 +818,7 @@ DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, LightMap, Material::Constants::MAX
 DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, ToneMap, Material::Constants::MAX_STAGES)
 DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, DetailMap, Material::Constants::MAX_STAGES)
 DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, ORMConfigMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, RoughMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, AOMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, MetalMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, GlowMap);
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, RoughMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, AOMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, MetalMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, GlowMap, Material::Constants::MAX_STAGES)

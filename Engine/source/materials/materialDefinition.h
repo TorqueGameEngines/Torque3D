@@ -211,36 +211,26 @@ public:
    DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, DiffuseMap, GFXStaticTextureSRGBProfile, MAX_STAGES)
    DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, NormalMap, GFXNormalMapProfile, MAX_STAGES)
    DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, DetailNormalMap, GFXNormalMapProfile, MAX_STAGES)
-
-   bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
    DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, OverlayMap, GFXStaticTextureProfile, MAX_STAGES)
    DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, LightMap, GFXStaticTextureProfile, MAX_STAGES)
    DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, ToneMap, GFXStaticTextureProfile, MAX_STAGES)
    DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, DetailMap, GFXStaticTextureProfile, MAX_STAGES)
    DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, ORMConfigMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, AOMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, RoughMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, MetalMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, GlowMap, GFXStaticTextureProfile, MAX_STAGES)
 
-   bool     mIsSRGb[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, AOMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, AOMap);
+   bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
+   bool     mIsSRGb[MAX_STAGES];           // SRGB ORM
    F32      mAOChan[MAX_STAGES];
-
-   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, RoughMap);
    bool     mInvertRoughness[MAX_STAGES];
    F32      mRoughnessChan[MAX_STAGES];
-
-   DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, MetalMap);
-
    F32      mMetalChan[MAX_STAGES];
-   DECLARE_IMAGEASSET_ARRAY(Material, GlowMap, MAX_STAGES, onImageAssetChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(Material, GlowMap);
-
    F32      mGlowMul[MAX_STAGES];
 
    /// The strength scalar for the detail normal map.
-   F32 mDetailNormalMapStrength[MAX_STAGES];
-
+   F32      mDetailNormalMapStrength[MAX_STAGES];
    bool     mAccuEnabled[MAX_STAGES];
    F32      mAccuScale[MAX_STAGES];
    F32      mAccuDirection[MAX_STAGES];

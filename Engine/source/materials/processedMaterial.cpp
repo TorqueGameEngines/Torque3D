@@ -470,25 +470,25 @@ void ProcessedMaterial::_setStageData()
       }
       else
       {
-         if ((mMaterial->getAOMap(i) != StringTable->EmptyString()) || (mMaterial->getRoughMap(i) != StringTable->EmptyString()) || (mMaterial->getMetalMap(i) != StringTable->EmptyString()))
+         if ((mMaterial->getAOMapAsset(i).notNull()) || (mMaterial->getRoughMapAsset(i).notNull()) || (mMaterial->getMetalMapAsset(i).notNull()))
          {
             U32 inputKey[4];
             inputKey[0] = mMaterial->mAOChan[i];
             inputKey[1] = mMaterial->mRoughnessChan[i];
             inputKey[2] = mMaterial->mMetalChan[i];
             inputKey[3] = 0;
-            mStages[i].setTex(MFT_OrmMap, _createCompositeTexture( mMaterial->getAOMap(i), mMaterial->getRoughMap(i),
-               mMaterial->getMetalMap(i), "",
+            mStages[i].setTex(MFT_OrmMap, _createCompositeTexture( mMaterial->getAOMapAsset(i)->getImageFile(), mMaterial->getRoughMapAsset(i)->getImageFile(),
+               mMaterial->getMetalMapAsset(i)->getImageFile(), "",
                inputKey, profile));
             if (!mStages[i].getTex(MFT_OrmMap))
                mMaterial->logError("Failed to dynamically create ORM Config map for stage %i", i);
          }
       }
-      if (mMaterial->getGlowMap(i) != StringTable->EmptyString())
+      if (mMaterial->getGlowMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_GlowMap, mMaterial->getGlowMapResource(i));
+         mStages[i].setTex(MFT_GlowMap, mMaterial->getGlowMap(i));
          if (!mStages[i].getTex(MFT_GlowMap))
-            mMaterial->logError("Failed to load glow map %s for stage %i", mMaterial->getGlowMap(i), i);
+            mMaterial->logError("Failed to load glow map %s for stage %i", mMaterial->_getGlowMap(i), i);
       }
    }
 

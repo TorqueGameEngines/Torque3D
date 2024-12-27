@@ -3000,15 +3000,15 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
          }
          else if (imageType == ImageAsset::ImageTypes::Metalness)
          {
-            newMat->mMetalMapAssetId[0] = assetMapFillInStr;
+            newMat->_setMetalMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::AO)
          {
-            newMat->mAOMapAssetId[0] = assetMapFillInStr;
+            newMat->_setAOMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::Roughness)
          {
-            newMat->mRoughMapAssetId[0] = assetMapFillInStr;
+            newMat->_setRoughMap(assetMapFillInStr, 0);
             hasRoughness = true;
          }
       }

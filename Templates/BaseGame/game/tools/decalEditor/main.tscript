@@ -119,6 +119,7 @@ function DecalEditorPlugin::onActivated( %this )
    //ShapeEdPropWindow.syncNodeDetails(-1);
    
    Parent::onActivated(%this);
+   EditorGui.SetStandardPalletBar();
 }
 
 function DecalEditorPlugin::onDeactivated( %this )

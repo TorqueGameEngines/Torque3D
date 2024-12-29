@@ -157,6 +157,7 @@ function NavEditorPlugin::onActivated(%this)
    NavEditorGui.onEditorActivated(); 
 
    Parent::onActivated(%this);
+   EditorGui.SetStandardPalletBar();
 }
 
 function NavEditorPlugin::onDeactivated(%this)

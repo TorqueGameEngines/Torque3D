@@ -135,6 +135,7 @@ function ConvexEditorPlugin::onActivated( %this )
    %this.setGridSnap( EWorldEditor.UseGridSnap );
    
    Parent::onActivated( %this );
+   EditorGui.SetStandardPalletBar();
 }
 
 function ConvexEditorPlugin::onDeactivated( %this )

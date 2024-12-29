@@ -1000,6 +1000,24 @@ function EditorGui::syncCameraGui( %this )
 /// @name EditorPlugin Methods 
 /// @{
  
+function EditorGui::SetStandardPalletBar()
+{   
+   //Clears the button pallete stack
+   EWToolsPaletteWindow.setStackCtrl(ToolsPaletteArray); //legacy ctrl adhereance
+   EWToolsPaletteWindow.clearButtons();
+   
+   EWToolsPaletteWindow.setActionMap(WorldEditorInspectorPlugin.map);
+   
+   //Adds a button to the pallete stack
+                          //Name     Icon                         Click Command                         Tooltip text    Keybind
+   EWToolsPaletteWindow.addButton("Select", "ToolsModule:arrow_n_image", "EWorldEditorNoneModeBtn::onClick();", "", "Select Arrow", "1");
+   EWToolsPaletteWindow.addButton("Move", "ToolsModule:translate_n_image", "EWorldEditorMoveModeBtn::onClick();", "", "Move Selection", "2");
+   EWToolsPaletteWindow.addButton("Rotate", "ToolsModule:rotate_n_image", "EWorldEditorRotateModeBtn::onClick();", "", "Rotate Selection", "3");
+   EWToolsPaletteWindow.addButton("Scale", "ToolsModule:Scale_n_image", "EWorldEditorScaleModeBtn::onClick();", "", "Scale Selection", "4");
+   
+   EWToolsPaletteWindow.refresh();
+}
+
 //------------------------------------------------------------------------------
 // WorldEditorPlugin
 //------------------------------------------------------------------------------
@@ -1038,6 +1056,8 @@ function WorldEditorPlugin::onActivated( %this )
    SnapToBar-->objectGridSnapBtn.setStateOn( EWorldEditor.UseGridSnap );
    
    Parent::onActivated(%this);
+
+   EditorGui.SetStandardPalletBar();
 }
 
 function WorldEditorPlugin::onDeactivated( %this )
@@ -1096,21 +1116,6 @@ function WorldEditorInspectorPlugin::onActivated( %this )
 {   
    Parent::onActivated( %this );
    
-   //Clears the button pallete stack
-   EWToolsPaletteWindow.setStackCtrl(ToolsPaletteArray); //legacy ctrl adhereance
-   EWToolsPaletteWindow.clearButtons();
-   
-   EWToolsPaletteWindow.setActionMap(WorldEditorInspectorPlugin.map);
-   
-   //Adds a button to the pallete stack
-                          //Name     Icon                         Click Command                         Tooltip text    Keybind
-   EWToolsPaletteWindow.addButton("Select", "ToolsModule:arrow_n_image", "EWorldEditorNoneModeBtn::onClick();", "", "Select Arrow", "1");
-   EWToolsPaletteWindow.addButton("Move", "ToolsModule:translate_n_image", "EWorldEditorMoveModeBtn::onClick();", "", "Move Selection", "2");
-   EWToolsPaletteWindow.addButton("Rotate", "ToolsModule:rotate_n_image", "EWorldEditorRotateModeBtn::onClick();", "", "Rotate Selection", "3");
-   EWToolsPaletteWindow.addButton("Scale", "ToolsModule:Scale_n_image", "EWorldEditorScaleModeBtn::onClick();", "", "Scale Selection", "4");
-   
-   EWToolsPaletteWindow.refresh();
-
    EditorGui-->InspectorWindow.setVisible( true );   
    EditorGui-->TreeWindow.setVisible( true );
    EditorGui-->WorldEditorToolbar.setVisible( true );
@@ -1231,6 +1236,7 @@ function TerrainEditorPlugin::onWorldEditorStartup( %this )
 function TerrainEditorPlugin::onActivated( %this )
 {
    Parent::onActivated( %this );
+   WorldEditorInspectorPlugin::onActivated( %this );
 
    EditorGui.readTerrainEditorSettings();
    
@@ -1372,6 +1378,7 @@ function TerrainPainterPlugin::onWorldEditorStartup( %this )
 function TerrainPainterPlugin::onActivated( %this )
 {
    Parent::onActivated( %this );
+   WorldEditorInspectorPlugin::onActivated( %this );
 
    EditorGui.readTerrainEditorSettings();
 

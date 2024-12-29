@@ -133,7 +133,8 @@ function ForestEditorPlugin::onActivated( %this )
    }
    
    %this.map.push();
-   Parent::onActivated(%this);   
+   Parent::onActivated(%this);
+   EditorGui.SetStandardPalletBar(); 
    
    ForestEditBrushTree.open( ForestBrushSet );   
    ForestEditMeshTree.open( ForestItemDataSet );

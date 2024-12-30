@@ -110,6 +110,55 @@ ConsoleSetType(TypeSoundAssetId)
    Con::warnf("(TypeAssetId) - Cannot set multiple args to a single asset.");
 }
 
+//-----------------------------------------------------------------------------
+// REFACTOR
+//-----------------------------------------------------------------------------
+
+IMPLEMENT_STRUCT(AssetPtr<SoundAsset>, AssetPtrSoundAsset, , "")
+END_IMPLEMENT_STRUCT
+
+ConsoleType(SoundAssetPtr, TypeSoundAssetPtrRefactor, AssetPtr<SoundAsset>, ASSET_ID_FIELD_PREFIX)
+
+
+ConsoleGetType(TypeSoundAssetPtrRefactor)
+{
+   // Fetch asset Id.
+   return (*((AssetPtr<SoundAsset>*)dptr)).getAssetId();
+}
+
+ConsoleSetType(TypeSoundAssetPtrRefactor)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset pointer.
+      AssetPtr<SoundAsset>* pAssetPtr = dynamic_cast<AssetPtr<SoundAsset>*>((AssetPtrBase*)(dptr));
+
+      // Is the asset pointer the correct type?
+      if (pAssetPtr == NULL)
+      {
+         // No, so fail.
+         Con::warnf("(TypeSoundAssetPtr) - Failed to set asset Id '%d'.", pFieldValue);
+         return;
+      }
+
+      // Set asset.
+      pAssetPtr->setAssetId(pFieldValue);
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeSoundAssetPtr) - Cannot set multiple args to a single asset.");
+}
+
+//-----------------------------------------------------------------------------
+// REFACTOR END
+//-----------------------------------------------------------------------------
+
 const String SoundAsset::mErrCodeStrings[] =
 {
    "BadProfile",

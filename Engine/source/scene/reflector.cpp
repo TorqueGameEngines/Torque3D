@@ -346,6 +346,8 @@ void CubeReflector::updateReflection( const ReflectParams &params, Point3F expli
    // this for objects like SkyBox which will use it during a reflect pass.
    getActiveClientScene()->setNonClipProjection(GFX->getProjectionMatrix());
 
+   GFX->pushActiveRenderTarget();
+
    for (S32 i = 5; i >= 0; i--) {
       updateFace(params, i, explicitPostion);
    }
@@ -436,7 +438,7 @@ void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx, Point3
 
    // We don't use a special clipping projection, but still need to initialize 
    // this for objects like SkyBox which will use it during a reflect pass.
-   gClientSceneGraph->setNonClipProjection(GFX->getProjectionMatrix());
+   getActiveClientScene()->setNonClipProjection(GFX->getProjectionMatrix());
 
    // render scene
    LIGHTMGR->registerGlobalLights( &reflectRenderState.getCullingFrustum(), false );

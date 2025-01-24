@@ -974,7 +974,7 @@ bool GuiParticleGraphCtrl::renderGraphTooltip(Point2I cursorPos, StringTableEntr
    offset.y -= root->getCursorExtent().y;
    //Create text bounds.
    textBounds.x = textWidth+8;
-   textBounds.y = font->getHeight() + 4;
+   textBounds.y = font->getScaledHeight(mProfile->mFontSize) + 4;
 
    // Check position/width to make sure all of the tooltip will be rendered
    // 5 is given as a buffer against the edge
@@ -999,8 +999,8 @@ bool GuiParticleGraphCtrl::renderGraphTooltip(Point2I cursorPos, StringTableEntr
    // Draw the text centered in the tool tip box
    pDrawUtil->setBitmapModulation( mTooltipProfile->mFontColor );
    Point2I start;
-   start.set( ( textBounds.x - textWidth) / 2, ( textBounds.y - font->getHeight() ) / 2 );
-   pDrawUtil->drawText( font, start + offset, tooltip, mProfile->mFontColors );
+   start.set( ( textBounds.x - textWidth) / 2, ( textBounds.y - font->getScaledHeight(mProfile->mFontSize) ) / 2 );
+   pDrawUtil->drawText( font, start + offset, tooltip, mProfile->mFontSize, mProfile->mFontColors );
    pDrawUtil->clearBitmapModulation();
 
    return true;

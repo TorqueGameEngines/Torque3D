@@ -76,15 +76,16 @@ static S32 QSORT_CALLBACK GlyphMapCompare(const void *a, const void *b)
 
 const U32 GFont::csm_fileVersion = 3;
 
-String GFont::getFontCacheFilename(const String &faceName, U32 size)
+String GFont::getFontCacheFilename(const String &faceName)
 {
-   return String::ToString("%s/%s %d (%s).uft",
-      Con::getVariable("$GUI::fontCacheDirectory"), faceName.c_str(), size, getCharSetName(0));
+   return String::ToString("%s/%s (%s).uft",
+      Con::getVariable("$GUI::fontCacheDirectory"), faceName.c_str(), getCharSetName(0));
 }
 
 GFont* GFont::load( const Torque::Path& path )
 {
    FileStream  stream;
+   U32 sdfSize = Con::getIntVariable("$GUI::Font::SDFSize", 64);
 
    stream.open( path.getFullPath(), Torque::FS::File::Read );
    if ( stream.getStatus() != Stream::Ok )
@@ -100,7 +101,7 @@ GFont* GFont::load( const Torque::Path& path )
    }
    else
    {
-      PlatformFont   *platFont = createPlatformFont(ret->getFontFaceName(), ret->getFontSize(), ret->getFontCharSet());
+      PlatformFont   *platFont = createPlatformFont(ret->getFontFaceName(), sdfSize, ret->getFontCharSet());
 
       if ( platFont == NULL )
       {
@@ -114,13 +115,15 @@ GFont* GFont::load( const Torque::Path& path )
    return ret;
 }
 
-Resource<GFont> GFont::create(const String &faceName, U32 size, const char *cacheDirectory, U32 charset /* = TGE_ANSI_CHARSET */)
+Resource<GFont> GFont::create(const String &faceName, const char *cacheDirectory, U32 charset /* = TGE_ANSI_CHARSET */)
 {
    if( !cacheDirectory )
       cacheDirectory = Con::getVariable( "$GUI::fontCacheDirectory" );
-      
-   const Torque::Path   path( String::ToString("%s/%s %d (%s).uft",
-      cacheDirectory, faceName.c_str(), size, getCharSetName(charset)) );
+
+   U32 sdfSize = Con::getIntVariable("$GUI::Font::SDFSize", 64);
+
+   const Torque::Path   path( String::ToString("%s/%s (%s).uft",
+      cacheDirectory, faceName.c_str(), getCharSetName(charset)) );
 
    Resource<GFont> ret;
 
@@ -137,7 +140,7 @@ Resource<GFont> GFont::create(const String &faceName, U32 size, const char *cach
    }
 
    // Otherwise attempt to have the platform generate a new font
-   PlatformFont *platFont = createPlatformFont(faceName, size*4, charset);
+   PlatformFont *platFont = createPlatformFont(faceName, sdfSize, charset);
    
    if (platFont == NULL)
    {
@@ -166,7 +169,7 @@ Resource<GFont> GFont::create(const String &faceName, U32 size, const char *cach
       else
          return ret;
 
-      return create(fontName, size, cacheDirectory, charset);
+      return create(fontName, cacheDirectory, charset);
    }
 
    // Create the actual GFont and set some initial properties
@@ -174,11 +177,11 @@ Resource<GFont> GFont::create(const String &faceName, U32 size, const char *cach
    font->mPlatformFont = platFont;
    font->mGFTFile = path;
    font->mFaceName = faceName;
-   font->mSize = size;
+   font->mSize = sdfSize;
    font->mCharSet = charset;
-   font->mHeight   = (platFont->getFontHeight() * 0.25);
-   font->mAscent   = (platFont->getFontBaseLine() * 0.25);
-   font->mBaseline = (platFont->getFontBaseLine() * 0.25);
+   font->mHeight   = platFont->getFontHeight();
+   font->mAscent   = platFont->getFontBaseLine();
+   font->mBaseline = platFont->getFontBaseLine();
    font->mDescent  = (font->mHeight - font->mBaseline);
 
    // Flag it to save when we exit
@@ -280,13 +283,6 @@ bool GFont::loadCharInfo(const UTF16 ch)
     {
        Mutex::lockMutex(mMutex); // the CharInfo returned by mPlatformFont is static data, must protect from changes.
        PlatformFont::CharInfo& ci = mPlatformFont->getCharInfo(ch);
-       if (ch == dT(' '))
-       {
-          ci.yOrigin *= 0.25;
-          ci.xOrigin *= 0.25;
-          ci.xIncrement = (ci.xIncrement * 0.25);
-       }
-
         if(ci.bitmapData)
             addBitmap(ci);
 
@@ -376,8 +372,8 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    FrameTemp<U8> paddedBitmap(paddedWidth * paddedHeight);
    padGlyphBitmap(charInfo.bitmapData, charInfo.width, charInfo.height, paddedBitmap, paddedWidth, paddedHeight, padding*4);
 
-   S32 sdfWidth = paddedWidth * 0.25;
-   S32 sdfHeight = paddedHeight * 0.25;
+   S32 sdfWidth = paddedWidth;
+   S32 sdfHeight = paddedHeight;
 
    // Allocate buffer for SDF bitmap
    FrameTemp<U8> sdfBitmap((sdfWidth * sdfHeight));
@@ -444,9 +440,9 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    // update our width and height.
    charInfo.width = sdfWidth;
    charInfo.height = sdfHeight;
-   charInfo.yOrigin = ((F32)(charInfo.yOrigin) * 0.25) + padding;
-   charInfo.xOrigin = ((F32)(charInfo.xOrigin)  * 0.25) - padding;
-   charInfo.xIncrement = ((F32)(charInfo.xIncrement) * 0.25) + 2;
+   charInfo.yOrigin = (F32)(charInfo.yOrigin) + padding;
+   charInfo.xOrigin = (F32)(charInfo.xOrigin) - padding;
+   charInfo.xIncrement = (F32)(charInfo.xIncrement) + 2;
 
    mMaxRowHeight = mMax(mMaxRowHeight, sdfHeight);
 
@@ -519,6 +515,28 @@ U32 GFont::getStrNWidth(const UTF8 *str, U32 n)
    FrameTemp<UTF16> str16(n + 1);
    convertUTF8toUTF16N(str, str16, n + 1);
    return getStrNWidth(str16, dStrlen(str16));
+}
+
+U32 GFont::getStringWidthScaled(const String& text, U32 renderSize)
+{
+   return getStringWidthScaled(text, renderSize, text.length());
+}
+
+U32 GFont::getStringWidthScaled(const String& text, U32 renderSize, U32 length)
+{
+   U32 totalWidth = 0;
+   const F32 renderScale = static_cast<F32>(renderSize) / mSize;
+   const UTF16* utfString = text.utf16();
+
+   for (U32 i = 0; i < length; i++) {
+      UTF16 c = utfString[i];
+      if (isValidChar(c)) {
+         const PlatformFont::CharInfo& charInfo = getCharInfo(c);
+         totalWidth += static_cast<U32>(charInfo.xIncrement * renderScale);
+      }
+   }
+
+   return totalWidth;
 }
 
 U32 GFont::getStrNWidth(const UTF16 *str, U32 n)
@@ -858,8 +876,8 @@ bool GFont::write(Stream& stream)
    for (U32 i = 0; i < mTextureSheets.size(); i++)
    {
        // Debugging write out to images.
-      String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-      mTextureSheets[i].getBitmap()->writeBitmap("png", path);
+      /*String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
+      mTextureSheets[i].getBitmap()->writeBitmap("png", path);*/
       
 
       mTextureSheets[i].getBitmap()->writeBitmapStream("png", stream);
@@ -1071,7 +1089,7 @@ DefineEngineFunction( populateFontCacheString, void, ( const char *faceName, S32
     "@param string The string to populate.\n"
     "@ingroup Font\n" )
 {
-   Resource<GFont> f = GFont::create(faceName, fontSize, Con::getVariable("$GUI::fontCacheDirectory"));
+   Resource<GFont> f = GFont::create(faceName, Con::getVariable("$GUI::fontCacheDirectory"));
 
    if(f == NULL)
    {
@@ -1098,7 +1116,7 @@ DefineEngineFunction( populateFontCacheRange, void, ( const char *faceName, S32 
    "@note We only support BMP-0, so code points range from 0 to 65535.\n"
    "@ingroup Font\n" )
 {
-   Resource<GFont> f = GFont::create(faceName, fontSize, Con::getVariable("$GUI::fontCacheDirectory"));
+   Resource<GFont> f = GFont::create(faceName, Con::getVariable("$GUI::fontCacheDirectory"));
 
    if(f == NULL)
    {
@@ -1260,7 +1278,7 @@ DefineEngineFunction( exportCachedFont, void,
    "@ingroup Font\n" )
 {
    // Tell the font to export itself.
-   Resource<GFont> f = GFont::create(faceName, fontSize, Con::getVariable("$GUI::fontCacheDirectory"));
+   Resource<GFont> f = GFont::create(faceName, Con::getVariable("$GUI::fontCacheDirectory"));
 
    if(f == NULL)
    {
@@ -1283,7 +1301,7 @@ DefineEngineFunction( importCachedFont, void,
    "@ingroup Font\n" )
 {
    // Tell the font to import itself.
-   Resource<GFont> f = GFont::create(faceName, fontSize, Con::getVariable("$GUI::fontCacheDirectory"));
+   Resource<GFont> f = GFont::create(faceName, Con::getVariable("$GUI::fontCacheDirectory"));
 
    if(f == NULL)
    {
@@ -1305,10 +1323,10 @@ DefineEngineFunction( duplicateCachedFont, void,
    "@param newFontName The name of the new font face.\n"
    "@ingroup Font\n" )
 {
-   String newFontFile = GFont::getFontCacheFilename(newFontName, oldFontSize);
+   String newFontFile = GFont::getFontCacheFilename(newFontName);
 
    // Load the original font.
-   Resource<GFont> font = GFont::create(oldFontName, oldFontSize, Con::getVariable("$GUI::fontCacheDirectory"));
+   Resource<GFont> font = GFont::create(oldFontName, Con::getVariable("$GUI::fontCacheDirectory"));
 
    // Deal with inexplicably missing or failed to load fonts.
    if (font == NULL)

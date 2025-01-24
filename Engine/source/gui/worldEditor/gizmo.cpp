@@ -228,7 +228,7 @@ bool GizmoProfile::onAdd()
       return false;
 
    const char* fontCacheDirectory = Con::getVariable("$GUI::fontCacheDirectory");
-   font = GFont::create( "Arial", 10, fontCacheDirectory, TGE_ANSI_CHARSET);
+   font = GFont::create( "Arial", fontCacheDirectory, TGE_ANSI_CHARSET);
    if ( !font )
    {
       Con::errorf( "GizmoProfile::onAdd - failed to load font!" );

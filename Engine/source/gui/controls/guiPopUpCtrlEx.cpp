@@ -1187,7 +1187,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
 
       S32 txt_w = mProfile->mFont->getStrWidth(mText);
       localStart.x = 0;
-      localStart.y = (getHeight() - (mProfile->mFont->getHeight())) / 2;
+      localStart.y = (getHeight() - (mProfile->mFont->getScaledHeight(mProfile->mFontSize))) / 2;
 
       // align the horizontal
       switch (mProfile->mAlignment)
@@ -1272,7 +1272,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
 
          // Draw the first column
          getColumn( mText, buff, 0, "\t" );
-         drawUtil->drawText( mProfile->mFont, globalStart, buff, mProfile->mFontColors );
+         drawUtil->drawText( mProfile->mFont, globalStart, buff, mProfile->mFontSize, mProfile->mFontColors );
 
          // Draw the second column to the right
          getColumn( mText, buff, 1, "\t" );
@@ -1283,17 +1283,17 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
             // right cap of the border.
             RectI* bitmapBounds = mProfile->mBitmapArrayRects.address();
             Point2I textpos = localToGlobalCoord( Point2I( getWidth() - colTxt_w - bitmapBounds[2].extent.x, localStart.y ) );
-            drawUtil->drawText( mProfile->mFont, textpos, buff, mProfile->mFontColors );
+            drawUtil->drawText( mProfile->mFont, textpos, buff, mProfile->mFontSize, mProfile->mFontColors );
 
          } else
          {
             Point2I textpos = localToGlobalCoord( Point2I( getWidth() - colTxt_w - 12, localStart.y ) );
-            drawUtil->drawText( mProfile->mFont, textpos, buff, mProfile->mFontColors );
+            drawUtil->drawText( mProfile->mFont, textpos, buff, mProfile->mFontSize, mProfile->mFontColors );
          }
 
       } else
       {
-         drawUtil->drawText( mProfile->mFont, globalStart, mText, mProfile->mFontColors );
+         drawUtil->drawText( mProfile->mFont, globalStart, mText, mProfile->mFontSize, mProfile->mFontColors );
       }
 
       // If we're rendering a bitmap border, then it will take care of the arrow.
@@ -1452,8 +1452,8 @@ void GuiPopUpMenuCtrlEx::onAction()
          width += textSpace;
    }
 
-   //mTl->setCellSize(Point2I(width, mFont->getHeight()+3));
-   mTl->setCellSize(Point2I(width, mProfile->mFont->getHeight() + textSpace)); //  Modified the above line to use textSpace rather than the '3' as this is what is used below.
+   //mTl->setCellSize(Point2I(width, mFont->getScaledHeight(mProfile->mFontSize)+3));
+   mTl->setCellSize(Point2I(width, mProfile->mFont->getScaledHeight(mProfile->mFontSize) + textSpace)); //  Modified the above line to use textSpace rather than the '3' as this is what is used below.
    mTl->clear();
 
    for (U32 j = 0; j < mEntries.size(); ++j)
@@ -1504,7 +1504,7 @@ void GuiPopUpMenuCtrlEx::onAction()
             //Calc for the width of the scroll bar 
             //            if(textWidth >=  width)
             //               width += 20;
-            //            mTl->setCellSize(Point2I(width,mFont->getHeight() + textSpace));
+            //            mTl->setCellSize(Point2I(width,mFont->getScaledHeight(mProfile->mFontSize) + textSpace));
 
             //Pop menu list above the button
             //            scrollPoint.set(pointInGC.x, menuSpace - 1); //  Removed as calculated outside the 'if', and was wrong to begin with
@@ -1529,7 +1529,7 @@ void GuiPopUpMenuCtrlEx::onAction()
          //Calc for the width of the scroll bar 
          //         if(textWidth >=  width)
          //            width += 20;
-         //         mTl->setCellSize(Point2I(width,mFont->getHeight() + textSpace));
+         //         mTl->setCellSize(Point2I(width,mFont->getScaledHeight(mProfile->mFontSize) + textSpace));
          setScroll = true;
       }
    }

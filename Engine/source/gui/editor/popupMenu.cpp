@@ -392,7 +392,7 @@ void PopupMenu::showPopup(GuiCanvas *owner, S32 x /* = -1 */, S32 y /* = -1 */)
 
    width = textWidth + acceleratorWidth + maxBitmapSize.x * 2 + 2 + 4;
 
-   mTextList->setCellSize(Point2I(width, font->getHeight() + 2));
+   mTextList->setCellSize(Point2I(width, font->getScaledHeight(profile->mFontSize) + 2));
    mTextList->clearColumnOffsets();
    mTextList->addColumnOffset(-1); // add an empty column in for the bitmap index.
    mTextList->addColumnOffset(maxBitmapSize.x + 1);

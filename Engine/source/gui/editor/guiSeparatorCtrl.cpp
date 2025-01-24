@@ -99,7 +99,7 @@ void GuiSeparatorCtrl::onRender(Point2I offset, const RectI &updateRect)
       // text, and then the rest of the separator.
       
       S32 posx = offset.x + mMargin;
-      S32 fontheight = mProfile->mFont->getHeight();
+      S32 fontheight = mProfile->mFont->getScaledHeight(mProfile->mFontSize);
       S32 seppos = (fontheight - 2) / 2 + offset.y;
       if( mTextLeftMargin > 0 )
       {
@@ -109,7 +109,7 @@ void GuiSeparatorCtrl::onRender(Point2I offset, const RectI &updateRect)
       }
 
       GFX->getDrawUtil()->setBitmapModulation( mProfile->mFontColor );
-      posx = GFX->getDrawUtil()->drawText(mProfile->mFont, Point2I(posx,offset.y), mText, mProfile->mFontColors);
+      posx = GFX->getDrawUtil()->drawText(mProfile->mFont, Point2I(posx,offset.y), mText, mProfile->mFontSize, mProfile->mFontColors);
 
       RectI rect( Point2I( posx, seppos ), Point2I( getWidth() - posx + offset.x, 2 ) );
       

@@ -402,19 +402,19 @@ void GuiMLTextCtrl::drawAtomText(bool sel, U32 start, U32 end, Atom *atom, Line 
          shadowColor.alpha = (S32)(mAlpha * shadowColor.alpha);
          drawer->setBitmapModulation(shadowColor);
          drawer->drawTextN(font, drawPoint + atom->style->shadowOffset, 
-            tmp, tmpLen, mAllowColorChars ? mProfile->mFontColors : NULL);
+            tmp, tmpLen, mProfile->mFontSize, mAllowColorChars ? mProfile->mFontColors : NULL);
       }
 
       color.alpha = (S32)(mAlpha * color.alpha);
       drawer->setBitmapModulation(color);
-      drawer->drawTextN(font, drawPoint, tmp, end-start, mAllowColorChars ? mProfile->mFontColors : NULL);
+      drawer->drawTextN(font, drawPoint, tmp, end-start, mProfile->mFontSize, mAllowColorChars ? mProfile->mFontColors : NULL);
 
       //if the atom was "clipped", see if we need to draw a "..." at the end
       if (atom->isClipped)
       {
          Point2I p2 = drawPoint;
          p2.x += font->getStrNWidthPrecise(tmp, tmpLen);
-         drawer->drawTextN(font, p2, "...", 3, mAllowColorChars ? mProfile->mFontColors : NULL);
+         drawer->drawTextN(font, p2, "...", 3, mProfile->mFontSize, mAllowColorChars ? mProfile->mFontColors : NULL);
       }
    }
    else
@@ -427,14 +427,14 @@ void GuiMLTextCtrl::drawAtomText(bool sel, U32 start, U32 end, Atom *atom, Line 
       
       drawer->drawRectFill(rect, mProfile->mFillColorHL);
       drawer->setBitmapModulation( mProfile->mFontColorHL );  // over-ride atom color:
-      drawer->drawTextN(font, drawPoint, tmp, tmpLen, mAllowColorChars ? mProfile->mFontColors : NULL);
+      drawer->drawTextN(font, drawPoint, tmp, tmpLen, mProfile->mFontSize, mAllowColorChars ? mProfile->mFontColors : NULL);
 
       //if the atom was "clipped", see if we need to draw a "..." at the end
       if (atom->isClipped)
       {
          Point2I p2 = drawPoint;
          p2.x += font->getStrNWidthPrecise(tmp, end - atom->textStart);
-         drawer->drawTextN(font, p2, "...", 3, mAllowColorChars ? mProfile->mFontColors : NULL);
+         drawer->drawTextN(font, p2, "...", 3, mProfile->mFontSize, mAllowColorChars ? mProfile->mFontColors : NULL);
       }
    }
 
@@ -715,7 +715,7 @@ void GuiMLTextCtrl::getCursorPositionAndColor(Point2I &cursorTop, Point2I &curso
 {
    S32 x = 0;
    S32 y = 0;
-   S32 height = (mProfile && mProfile->mFont) ? mProfile->mFont->getHeight() : 0;
+   S32 height = (mProfile && mProfile->mFont) ? mProfile->mFont->getScaledHeight(mProfile->mFontSize) : 0;
    color = mProfile->mCursorColor;
    for(Line *walk = mLineList; walk; walk = walk->next)
    {
@@ -1168,7 +1168,7 @@ GuiMLTextCtrl::Font *GuiMLTextCtrl::allocFont(const char *faceName, U32 faceName
    ret->faceNameLen = faceNameLen;
    ret->size = size;
    ret->next = mFontList;
-   ret->fontRes = GFont::create(ret->faceName, size, GuiControlProfile::sFontCacheDirectory);
+   ret->fontRes = GFont::create(ret->faceName, GuiControlProfile::sFontCacheDirectory);
    if(ret->fontRes != NULL)
    {
       ret->next = mFontList;

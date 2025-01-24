@@ -249,7 +249,7 @@ void GuiGameSettingsCtrl::onRenderListOption(Point2I currentOffset)
       // calculate text to be at the center between the arrows
       GFont* font = mProfile->mFont;
       StringTableEntry text = mOptions[mSelectedOption].mDisplayText;
-      S32 textWidth = font->getStrWidth(text);
+      S32 textWidth = font->getStringWidthScaled(String::ToString(text), mProfile->mFontSize);
       S32 columnWidth = xScale - mRightPad - mColumnSplit;
       S32 columnCenter = mColumnSplit + (columnWidth >> 1);
       S32 textStartX = columnCenter - (textWidth >> 1);
@@ -339,7 +339,7 @@ void GuiGameSettingsCtrl::onRenderSliderOption(Point2I currentOffset)
    char stringVal[32];
    dSprintf(stringVal, 32, "%.1f", mValue);
 
-   //S32 stringWidth = font->getStrWidth(stringVal); //adaptive width
+   //S32 stringWidth = font->getStringWidthScaled(String::ToString(stringVal), mProfile->mFontSize); //adaptive width
    Point2I textOffset(sliderRect.point.x + sliderRect.extent.x, 0);
 
    // render the option text itself

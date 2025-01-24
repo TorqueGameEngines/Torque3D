@@ -281,7 +281,7 @@ void GuiMessageVectorCtrl::lineInserted(const U32 arg)
    }
 
    Point2I newExtent = getExtent();
-   newExtent.y = (mProfile->mFont->getHeight() + mLineSpacingPixels) * getMax(numLines, U32(1));
+   newExtent.y = (mProfile->mFont->getScaledHeight(mProfile->mFontSize) + mLineSpacingPixels) * getMax(numLines, U32(1));
    setExtent(newExtent);
    if(fullyScrolled)
       pScroll->scrollTo(0, 0x7FFFFFFF);
@@ -327,7 +327,7 @@ void GuiMessageVectorCtrl::lineDeleted(const U32 arg)
       numLines += mLineWrappings[i].numLines;
    }
 
-   U32 newHeight = (mProfile->mFont->getHeight() + mLineSpacingPixels) * getMax(numLines, U32(1));
+   U32 newHeight = (mProfile->mFont->getScaledHeight(mProfile->mFontSize) + mLineSpacingPixels) * getMax(numLines, U32(1));
    resize(getPosition(), Point2I(getWidth(), newHeight));
 }
 
@@ -338,7 +338,7 @@ void GuiMessageVectorCtrl::vectorDeleted()
    AssertFatal(mLineWrappings.size() == 0, "Error, line wrappings not properly cleared out!");
 
    mMessageVector = NULL;
-   U32 newHeight = mProfile->mFont->getHeight() + mLineSpacingPixels;
+   U32 newHeight = mProfile->mFont->getScaledHeight(mProfile->mFontSize) + mLineSpacingPixels;
    resize(getPosition(), Point2I(getWidth(), newHeight));
 }
 
@@ -686,7 +686,7 @@ void GuiMessageVectorCtrl::onRender(Point2I      offset,
 
    Parent::onRender(offset, updateRect);
    if (isAttached()) {
-      U32 linePixels = mProfile->mFont->getHeight() + mLineSpacingPixels;
+      U32 linePixels = mProfile->mFont->getScaledHeight(mProfile->mFontSize) + mLineSpacingPixels;
       U32 currLine   = 0;
       ColorI lastColor = mProfile->mFontColor;
       for (U32 i = 0; i < mMessageVector->getNumLines(); i++) {
@@ -697,7 +697,7 @@ void GuiMessageVectorCtrl::onRender(Point2I      offset,
 
             Point2I globalCheck  = localToGlobalCoord(localStart);
             U32 globalRangeStart = globalCheck.y;
-            U32 globalRangeEnd   = globalCheck.y + mProfile->mFont->getHeight();
+            U32 globalRangeEnd   = globalCheck.y + mProfile->mFont->getScaledHeight(mProfile->mFontSize);
             if (globalRangeStart > updateRect.point.y + updateRect.extent.y ||
                 globalRangeEnd   < updateRect.point.y) {
                currLine++;
@@ -717,7 +717,7 @@ void GuiMessageVectorCtrl::onRender(Point2I      offset,
                   drawer->setBitmapModulation(lastColor);
                   drawer->setTextAnchorColor(mProfile->mFontColor);
                   strWidth = drawer->drawTextN(mProfile->mFont, globalStart, &mMessageVector->getLine(i).message[walkAcross->start],
-                                          walkAcross->end - walkAcross->start + 1, mProfile->mFontColors, mMaxColorIndex);
+                                          walkAcross->end - walkAcross->start + 1, mProfile->mFontSize, mProfile->mFontColors, mMaxColorIndex);
                   drawer->getBitmapModulation(&lastColor);	// in case an embedded color tag changed it
                } else {
                   drawer->getBitmapModulation( &lastColor );
@@ -789,7 +789,7 @@ void GuiMessageVectorCtrl::findSpecialFromCoord(const Point2I& point, S32* speci
       return;
    }
 
-   U32 linePixels = mProfile->mFont->getHeight() + mLineSpacingPixels;
+   U32 linePixels = mProfile->mFont->getScaledHeight(mProfile->mFontSize) + mLineSpacingPixels;
    
    if ((point.x < 0 || point.x >= getWidth()) ||
        (point.y < 0 || point.y >= getHeight())) {

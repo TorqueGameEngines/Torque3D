@@ -1278,7 +1278,7 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
    paddingRightBottom = paddingLeftTop;
 
    // Center vertically:
-   drawPoint.y += ( ( drawRect.extent.y - paddingLeftTop.y - paddingRightBottom.y - S32( mProfile->mFont->getHeight() ) ) / 2 ) + paddingLeftTop.y;
+   drawPoint.y += ( ( drawRect.extent.y - paddingLeftTop.y - paddingRightBottom.y - S32( mProfile->mFont->getScaledHeight(mProfile->mFontSize) ) ) / 2 ) + paddingLeftTop.y;
 
    // Align horizontally:
    
@@ -1378,7 +1378,7 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
       
       cursorEnd.x = cursorStart.x;
 
-      S32 cursorHeight = mProfile->mFont->getHeight();
+      S32 cursorHeight = mProfile->mFont->getScaledHeight(mProfile->mFontSize);
       if ( cursorHeight < drawRect.extent.y )
       {
          cursorStart.y = drawPoint.y;
@@ -1406,7 +1406,7 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
    {
       GFX->getDrawUtil()->setBitmapModulation( fontColor );
       const UTF16* preString2 = textBuffer.getPtr();
-      GFX->getDrawUtil()->drawText( mProfile->mFont, tempOffset, preString2, mProfile->mFontColors );
+      GFX->getDrawUtil()->drawText( mProfile->mFont, tempOffset, preString2, mProfile->mFontSize, mProfile->mFontColors );
       tempOffset.x += mProfile->mFont->getStrNWidth(preString2, mBlockStart);
    }
 
@@ -1423,7 +1423,7 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
          mProfile->mFontColorSEL );
 
       GFX->getDrawUtil()->setBitmapModulation( mProfile->mFontColorHL );
-      GFX->getDrawUtil()->drawTextN( mProfile->mFont, tempOffset, highlightBuff, highlightBuffLen, mProfile->mFontColors );
+      GFX->getDrawUtil()->drawTextN( mProfile->mFont, tempOffset, highlightBuff, highlightBuffLen, mProfile->mFontSize, mProfile->mFontColors );
       tempOffset.x += highlightWidth;
    }
 
@@ -1434,7 +1434,7 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
       U32 finalBuffLen = textBuffer.length() - mBlockEnd;
 
       GFX->getDrawUtil()->setBitmapModulation( fontColor );
-      GFX->getDrawUtil()->drawTextN( mProfile->mFont, tempOffset, finalBuff, finalBuffLen, mProfile->mFontColors );
+      GFX->getDrawUtil()->drawTextN( mProfile->mFont, tempOffset, finalBuff, finalBuffLen, mProfile->mFontSize, mProfile->mFontColors );
    }
 
    //draw the cursor

@@ -502,7 +502,7 @@ bool GuiControl::defaultTooltipRender( const Point2I &hoverPos, const Point2I &c
    }
 
    // The height is the number of lines times the height of the font.
-   U32 tipHeight = lineLengths.size() * font->getHeight(); 
+   U32 tipHeight = lineLengths.size() * font->getScaledHeight(mProfile->mFontSize); 
 
    // Vars used:
    // Screensize (for position check)
@@ -550,11 +550,11 @@ bool GuiControl::defaultTooltipRender( const Point2I &hoverPos, const Point2I &c
 
    for ( U32 i = 0; i < lineLengths.size(); i++ )
    {      
-      Point2I start( hMargin, vMargin + i * font->getHeight() );       
+      Point2I start( hMargin, vMargin + i * font->getScaledHeight(mProfile->mFontSize) );       
       const UTF8 *line = renderTip.c_str() + startLineOffsets[i];
       U32 lineLen = lineLengths[i];
 
-      drawUtil->drawTextN( font, start + offset, line, lineLen, mProfile->mFontColors );
+      drawUtil->drawTextN( font, start + offset, line, lineLen, mProfile->mFontSize, mProfile->mFontColors );
    }
 
    GFX->setClipRect( oldClip );
@@ -624,8 +624,8 @@ void GuiControl::renderJustifiedText(Point2I offset, Point2I extent, const char 
    GFont *font = mProfile->mFont;
    if(!font)
       return;
-   S32 textWidth = font->getStrWidthPrecise((const UTF8*)text);
-   U32 textHeight = font->getHeight();
+   S32 textWidth = font->getStringWidthScaled(String::ToString(text), mProfile->mFontSize, dStrlen(text));
+   U32 textHeight = font->getScaledHeight(mProfile->mFontSize);
 
    Point2I start( 0, 0 );
 
@@ -674,11 +674,11 @@ void GuiControl::renderJustifiedText(Point2I offset, Point2I extent, const char 
             
          default:
             // Center vertical.
-            start.y = ( extent.y - font->getHeight() ) / 2;
+            start.y = ( extent.y - textHeight) / 2;
             break;
       }
 
-   GFX->getDrawUtil()->drawText( font, start + offset, text, mProfile->mFontColors );
+   GFX->getDrawUtil()->drawText( font, start + offset, text, mProfile->mFontSize, mProfile->mFontColors);
 }
 
 //=============================================================================

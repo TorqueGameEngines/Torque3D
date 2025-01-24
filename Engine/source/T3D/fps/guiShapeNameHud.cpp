@@ -292,7 +292,7 @@ void GuiShapeNameHud::onRender( Point2I, const RectI &updateRect)
 void GuiShapeNameHud::drawName(Point2I offset, const char *name, F32 opacity)
 {
    F32 width = mProfile->mFont->getStrWidth((const UTF8 *)name) + mLabelPadding.x * 2;
-   F32 height = mProfile->mFont->getHeight() + mLabelPadding.y * 2;
+   F32 height = mProfile->mFont->getScaledHeight(mProfile->mFontSize) + mLabelPadding.y * 2;
    Point2I extent = Point2I(width, height);
 
    // Center the name

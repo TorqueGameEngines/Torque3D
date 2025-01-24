@@ -94,7 +94,7 @@ S32 GuiConsole::getMaxWidth(S32 startIndex, S32 endIndex)
 
    S32 result = 0;
    for(S32 i = startIndex; i <= endIndex; i++)
-      result = getMax(result, (S32)(mFont->getStrWidth((const UTF8 *)mFilteredLog[i].mString)));
+      result = getMax(result, (S32)(mFont->getStringWidthScaled(mFilteredLog[i].mString, mProfile->mFontSize)));
    
    return(result + 6);
 }
@@ -170,7 +170,7 @@ void GuiConsole::onPreRender()
    //find the max cell width for the new entries
    S32 newMax = getMaxWidth(prevSize, mFilteredLog.size() - 1);
    if(newMax > mCellSize.x)
-      mCellSize.set(newMax, mFont->getHeight());
+      mCellSize.set(newMax, mFont->getScaledHeight(mProfile->mFontSize));
 
    //set the array size
    mSize.set(1, mFilteredLog.size());
@@ -195,7 +195,7 @@ void GuiConsole::onRenderCell(Point2I offset, Point2I cell, bool /*selected*/, b
       case ConsoleLogEntry::Error:    GFX->getDrawUtil()->setBitmapModulation(mProfile->mFontColorNA); break;
       default: AssertFatal(false, "GuiConsole::onRenderCell - Unrecognized ConsoleLogEntry type, update this.");
    }
-   GFX->getDrawUtil()->drawText(mFont, Point2I(offset.x + 3, offset.y), entry.mString, mProfile->mFontColors);
+   GFX->getDrawUtil()->drawText(mFont, Point2I(offset.x + 3, offset.y), entry.mString, mProfile->mFontSize, mProfile->mFontColors);
 }
 
 //-----------------------------------------------------------------------------
@@ -219,7 +219,7 @@ void GuiConsole::setDisplayFilters(bool errors, bool warns, bool normal)
 
    //find the max cell width for the new entries
    S32 newMax = getMaxWidth(0, mFilteredLog.size() - 1);
-   mCellSize.set(newMax, mFont->getHeight());
+   mCellSize.set(newMax, mFont->getScaledHeight(mProfile->mFontSize));
 
    //set the array size
    mSize.set(1, mFilteredLog.size());

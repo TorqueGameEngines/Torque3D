@@ -98,14 +98,14 @@ void GuiConsoleTextCtrl::calcResize()
    U32 ctrlWidth = 0;
    for ( U32 i = 0; i < mLineLen.size(); i++ )
    {
-      U32 width = mFont->getStrNWidth( mResult.c_str() + mStartLineOffset[i], mLineLen[i] );
+      U32 width = mFont->getStringWidthScaled( String::ToString(mResult.c_str() + mStartLineOffset[i]), mProfile->mFontSize, mLineLen[i] );
 
       if ( width > ctrlWidth )
          ctrlWidth = width;
    }
 
    // The height is the number of lines times the height of the font.
-   U32 ctrlHeight = mLineLen.size() * mFont->getHeight();   
+   U32 ctrlHeight = mLineLen.size() * mFont->getScaledHeight(mProfile->mFontSize);   
 
    setExtent( Point2I( ctrlWidth, ctrlHeight ) + mProfile->mTextOffset * 2 );
 }
@@ -153,11 +153,11 @@ void GuiConsoleTextCtrl::onRender( Point2I offset, const RectI &updateRect )
       {      
          Point2I tempOffset = offset; 
          tempOffset += mProfile->mTextOffset;
-         tempOffset.y += i * font->getHeight();
+         tempOffset.y += i * font->getScaledHeight(mProfile->mFontSize);
          
          const UTF8 *line = mResult.c_str() + mStartLineOffset[i];
          U32 lineLen = mLineLen[i];
-         GFX->getDrawUtil()->drawTextN( font, tempOffset, line, lineLen, mProfile->mFontColors );
+         GFX->getDrawUtil()->drawTextN( font, tempOffset, line, lineLen, mProfile->mFontSize, mProfile->mFontColors );
       }
    }
 

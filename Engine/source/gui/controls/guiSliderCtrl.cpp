@@ -184,7 +184,7 @@ bool GuiSliderCtrl::onWake()
    // mouse scroll increment percentage is 5% of the range
    mIncAmount = ( ( mRange.y - mRange.x ) * 0.05 );
 
-   if( ( mThumbSize.y + mProfile->mFont->getHeight() - 4 ) <= getExtent().y )
+   if( ( mThumbSize.y + mProfile->mFont->getScaledHeight(mProfile->mFontSize) - 4 ) <= getExtent().y )
       mDisplayValue = true;
    else
       mDisplayValue = false;
@@ -524,7 +524,7 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
    		textStart.x -=((textStart.x + txt_w) - (offset.x+getWidth()));
 
     	drawUtil->setBitmapModulation(mProfile->mFontColor);
-    	drawUtil->drawText(mProfile->mFont, textStart, buf, mProfile->mFontColors);
+    	drawUtil->drawText(mProfile->mFont, textStart, buf, mProfile->mFontSize, mProfile->mFontColors);
    }
    renderChildControls(offset, updateRect);
 }

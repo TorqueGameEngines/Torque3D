@@ -381,7 +381,7 @@ void GuiMenuBar::onRender(Point2I offset, const RectI &updateRect)
       Point2I start;
 
       start.x = mMenuList[i].bounds.point.x + mHorizontalMargin;
-      start.y = mMenuList[i].bounds.point.y + (mMenuList[i].bounds.extent.y - mProfile->mFont->getHeight()) / 2;
+      start.y = mMenuList[i].bounds.point.y + (mMenuList[i].bounds.extent.y - mProfile->mFont->getScaledHeight(mProfile->mFontSize)) / 2;
 
       // Draw the border
       if (mMenuList[i].drawBorder)
@@ -416,13 +416,13 @@ void GuiMenuBar::onRender(Point2I offset, const RectI &updateRect)
          {
             start.x += mBitmapMargin;
             drawUtil->setBitmapModulation(fontColor);
-            drawUtil->drawText(mProfile->mFont, start + offset, mMenuList[i].text, mProfile->mFontColors);
+            drawUtil->drawText(mProfile->mFont, start + offset, mMenuList[i].text, mProfile->mFontSize, mProfile->mFontColors);
          }
       }
       else
       {
          drawUtil->setBitmapModulation(fontColor);
-         drawUtil->drawText(mProfile->mFont, start + offset, mMenuList[i].text, mProfile->mFontColors);
+         drawUtil->drawText(mProfile->mFont, start + offset, mMenuList[i].text, mProfile->mFontSize, mProfile->mFontColors);
       }
    }
 

@@ -632,7 +632,7 @@ S32 GuiTabBookCtrl::calculatePageTabWidth( GuiTabPageCtrl *page )
 
    GFont *font = mProfile->mFont;
 
-   return font->getStrNWidth( text, dStrlen(text) );
+   return font->getStringWidthScaled( String::ToString(text), mProfile->mFontSize, dStrlen(text) );
 
 }
 

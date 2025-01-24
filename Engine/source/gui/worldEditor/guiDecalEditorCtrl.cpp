@@ -480,7 +480,7 @@ void GuiDecalEditorCtrl::renderGui( Point2I offset, const RectI &updateRect )
          const U32 width = font->getStrWidth((const UTF8 *)buf);;
          const Point2I posi( (U32)screenPos.x, (U32)screenPos.y + 12 );   
          const Point2I minPt(posi.x - width / 2 - 2, posi.y - 1);
-         const Point2I maxPt(posi.x + width / 2 + 2, posi.y + font->getHeight() + 1);
+         const Point2I maxPt(posi.x + width / 2 + 2, posi.y + font->getScaledHeight(mProfile->mFontSize) + 1);
 
          GFXDrawUtil *drawer = GFX->getDrawUtil();
          drawer->drawRectFill( minPt, maxPt, bgColor );

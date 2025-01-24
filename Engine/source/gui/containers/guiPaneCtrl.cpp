@@ -117,8 +117,8 @@ bool GuiPaneControl::onWake()
       mThumbSize.set(   mProfile->mBitmapArrayRects[0].extent.x, mProfile->mBitmapArrayRects[0].extent.y );
       mThumbSize.setMax( mProfile->mBitmapArrayRects[1].extent );
 
-      if( mProfile->mFont->getHeight() > mThumbSize.y )
-         mThumbSize.y = mProfile->mFont->getHeight();
+      if( mProfile->mFont->getScaledHeight(mProfile->mFontSize) > mThumbSize.y )
+         mThumbSize.y = mProfile->mFont->getScaledHeight(mProfile->mFontSize);
    }
    else
    {
@@ -209,6 +209,7 @@ void GuiPaneControl::onRender(Point2I offset, const RectI &updateRect)
             mProfile->mFont,
             Point2I(mThumbSize.x, 0) + offset,
             mCaption,
+            mProfile->mFontSize,
             mProfile->mFontColors
          );
    }
@@ -266,6 +267,7 @@ void GuiPaneControl::onRender(Point2I offset, const RectI &updateRect)
             mProfile->mFont,
             Point2I(mThumbSize.x, 0) + offset,
             mCaption,
+            mProfile->mFontSize,
             mProfile->mFontColors
          );
    }

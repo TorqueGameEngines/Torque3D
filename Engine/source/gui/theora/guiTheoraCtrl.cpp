@@ -221,7 +221,7 @@ void GuiTheoraCtrl::onRender(Point2I offset, const RectI &updateRect)
                mTheoraTexture.getNumDroppedFrames() );
             
             drawUtil->setBitmapModulation( mProfile->mFontColors[ 0 ] );
-            drawUtil->drawText( mProfile->mFont, localToGlobalCoord( Point2I( 0, 0 ) ), info, mProfile->mFontColors );
+            drawUtil->drawText( mProfile->mFont, localToGlobalCoord( Point2I( 0, 0 ) ), info, mProfile->mFontSize, mProfile->mFontColors );
          }
       }
       else

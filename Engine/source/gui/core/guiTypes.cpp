@@ -484,7 +484,7 @@ void GuiControlProfile::onStaticModified(const char* slotName, const char* newVa
            !dStricmp(slotName, "fontSize" ) )
       {
          // Reload the font
-         mFont = GFont::create(mFontType, mFontSize, sFontCacheDirectory, mFontCharset);
+         mFont = GFont::create(mFontType, sFontCacheDirectory, mFontCharset);
          if ( mFont == NULL )
             Con::errorf("Failed to load/create profile font (%s/%d)", mFontType, mFontSize);
       }
@@ -687,7 +687,7 @@ void GuiControlProfile::decLoadCount()
 
 bool GuiControlProfile::loadFont()
 {
-   mFont = GFont::create( mFontType, mFontSize, sFontCacheDirectory, mFontCharset );
+   mFont = GFont::create( mFontType, sFontCacheDirectory, mFontCharset );
    if( mFont == NULL )
    {
       Con::errorf( "GuiControlProfile::loadFont - Failed to load/create profile font (%s/%d)", mFontType, mFontSize );
@@ -702,7 +702,7 @@ DefineEngineMethod( GuiControlProfile, getStringWidth, S32, (const char* string)
    "@param string String to get the width of."
    "@return width of the string in pixels." )
 {
-   return (object->mFont) ? object->mFont->getStrNWidth( string, dStrlen( string ) ) : -1;
+   return (object->mFont) ? object->mFont->getStringWidthScaled( String::ToString(string), object->mFontSize, dStrlen( string ) ) : -1;
 }
 
 DefineEngineMethod(GuiControlProfile, getBitmap, const char*, (), , "get name")

@@ -382,22 +382,22 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
 
       if ( mTextLocation == TextLocRight )
       {
-         Point2I start( mTextMargin, ( getHeight() - mProfile->mFont->getHeight() ) / 2 );
+         Point2I start( mTextMargin, ( getHeight() - mProfile->mFont->getScaledHeight(mProfile->mFontSize) ) / 2 );
          if (mBitmap && mIconLocation != IconLocNone )
          {
             start.x = iconRect.extent.x + mButtonMargin.x + mTextMargin;
          }
 
          drawer->setBitmapModulation(fontColor);
-         drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontColors );
+         drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontSize, mProfile->mFontColors );
       }
 
       if ( mTextLocation == TextLocLeft )
       {
-         Point2I start( mTextMargin, ( getHeight() - mProfile->mFont->getHeight() ) / 2 );
+         Point2I start( mTextMargin, ( getHeight() - mProfile->mFont->getScaledHeight(mProfile->mFontSize) ) / 2 );
 
          drawer->setBitmapModulation(fontColor);
-         drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontColors );
+         drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontSize, mProfile->mFontColors );
       }
 
       if ( mTextLocation == TextLocCenter )
@@ -406,19 +406,19 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
          if (mBitmap && mIconLocation == IconLocLeft )
          {
             start.set( ( getWidth() - textWidth - iconRect.extent.x ) / 2 + iconRect.extent.x, 
-                       ( getHeight() - mProfile->mFont->getHeight() ) / 2 );
+                       ( getHeight() - mProfile->mFont->getScaledHeight(mProfile->mFontSize) ) / 2 );
          }
          else
-            start.set( ( getWidth() - textWidth ) / 2, ( getHeight() - mProfile->mFont->getHeight() ) / 2 );
+            start.set( ( getWidth() - textWidth ) / 2, ( getHeight() - mProfile->mFont->getScaledHeight(mProfile->mFontSize) ) / 2 );
 
          drawer->setBitmapModulation( fontColor );
-         drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontColors );
+         drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontSize, mProfile->mFontColors );
       }
 
       if ( mTextLocation == TextLocBottom )
       {
          Point2I start;
-         start.set( ( getWidth() - textWidth ) / 2, getHeight() - mProfile->mFont->getHeight() - mTextMargin );
+         start.set( ( getWidth() - textWidth ) / 2, getHeight() - mProfile->mFont->getScaledHeight(mProfile->mFontSize) - mTextMargin );
 
          // If the text is longer then the box size
          // it will get clipped, force Left Justify
@@ -426,7 +426,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
             start.x = 0;
 
          drawer->setBitmapModulation( fontColor );
-         drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontColors );
+         drawer->drawText( mProfile->mFont, start + offset, text, mProfile->mFontSize, mProfile->mFontColors );
       }
    }
 

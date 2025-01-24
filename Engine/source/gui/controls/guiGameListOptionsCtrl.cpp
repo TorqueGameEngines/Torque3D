@@ -145,7 +145,7 @@ void GuiGameListOptionsCtrl::onRender(Point2I offset, const RectI &updateRect)
          // calculate text to be at the center between the arrows
          GFont * font = profile->mFont;
          StringTableEntry text = myRow->mOptions[myRow->mSelectedOption];
-         S32 textWidth = font->getStrWidth(text);
+         S32 textWidth = font->getStringWidthScaled(String::ToString(text), profile->mFontSize);
          S32 columnWidth = profile->mHitAreaLowerRight.x * xScale - profile->mRightPad - columnSplit;
          S32 columnCenter = columnSplit + (columnWidth >> 1);
          S32 textStartX = columnCenter - (textWidth >> 1);

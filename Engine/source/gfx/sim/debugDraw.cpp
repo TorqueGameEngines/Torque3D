@@ -222,7 +222,7 @@ void DebugDrawer::render(bool clear)
    {
       setupStateBlocks();
       String fontCacheDir = Con::getVariable("$GUI::fontCacheDirectory");
-      mFont = GFont::create("Arial", 12, fontCacheDir);
+      mFont = GFont::create("Arial", fontCacheDir);
    }
 
    SimTime curTime = Sim::getCurrentTime();

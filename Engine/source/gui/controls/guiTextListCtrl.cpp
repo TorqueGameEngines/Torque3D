@@ -225,7 +225,7 @@ void GuiTextListCtrl::onRenderCell(Point2I offset, Point2I cell, bool selected, 
             }
          }
 
-         GFX->getDrawUtil()->drawTextN(mFont, pos, text, slen, mProfile->mFontColors);
+         GFX->getDrawUtil()->drawTextN(mFont, pos, text, slen, mProfile->mFontSize, mProfile->mFontColors);
 
          if(clipped)
             GFX->setClipRect( saveClipRect );
@@ -371,7 +371,7 @@ void GuiTextListCtrl::setSize(Point2I newSize)
          mCellSize.x = maxWidth + 8;
       }
 
-      mCellSize.y = mFont->getHeight() + mRowHeightPadding;
+      mCellSize.y = mFont->getScaledHeight(mProfile->mFontSize) + mRowHeightPadding;
    }
 
    Point2I newExtent( newSize.x * mCellSize.x + mHeaderDim.x, newSize.y * mCellSize.y + mHeaderDim.y );

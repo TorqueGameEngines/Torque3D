@@ -1848,7 +1848,7 @@ bool GuiTreeViewCtrl::onWake()
    if(mProfile->mAutoSizeHeight)
    {
       // make sure it's big enough for both bitmap AND font...
-      mItemHeight = getMax((S32)mFont->getHeight(), (S32)mProfile->mBitmapArrayRects[0].extent.y);
+      mItemHeight = getMax((S32)mFont->getScaledHeight(mProfile->mFontSize), (S32)mProfile->mBitmapArrayRects[0].extent.y);
    }
    
    mFlags.set(RebuildVisible);
@@ -3941,7 +3941,7 @@ void GuiTreeViewCtrl::onRenderCell(Point2I offset, Point2I cell, bool, bool )
    drawer->setBitmapModulation( fontColor );
 
    // Center the text horizontally.
-   S32 height = (mItemHeight - mProfile->mFont->getHeight()) / 2;
+   S32 height = (mItemHeight - mProfile->mFont->getScaledHeight(mProfile->mFontSize)) / 2;
 
    if(height > 0)
       drawRect.point.y += height;
@@ -3949,7 +3949,7 @@ void GuiTreeViewCtrl::onRenderCell(Point2I offset, Point2I cell, bool, bool )
    // JDD - offset by two pixels or so to keep the text from rendering RIGHT ONTOP of the outline
    drawRect.point.x += 2;
 
-   drawer->drawText( mProfile->mFont, drawRect.point, displayText, mProfile->mFontColors );
+   drawer->drawText( mProfile->mFont, drawRect.point, displayText, mProfile->mFontSize, mProfile->mFontColors );
 
    if ( mRenamingItem == item && mRenameCtrl )
    {
@@ -4004,7 +4004,7 @@ bool GuiTreeViewCtrl::renderTooltip( const Point2I &hoverPos, const Point2I& cur
             char *buf = (char*)txtAlloc.alloc(bufLen);
             item->getDisplayText(bufLen, buf);
             textExt.x = mProfile->mFont->getStrWidth(buf);
-            textExt.y = mProfile->mFont->getHeight();
+            textExt.y = mProfile->mFont->getScaledHeight(mProfile->mFontSize);
 
             if( pScrollParent->isRectCompletelyVisible(RectI(textStart, textExt)) )
                render = false;

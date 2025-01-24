@@ -142,7 +142,7 @@ void DbgFileView::AdjustCellSize()
       maxWidth = getMax(maxWidth, cellWidth);
    }
 
-   mCellSize.set(maxWidth, mFont->getHeight() + 2);
+   mCellSize.set(maxWidth, mFont->getScaledHeight(mProfile->mFontSize) + 2);
    setSize(mSize);
 }
 

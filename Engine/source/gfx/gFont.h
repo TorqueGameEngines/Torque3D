@@ -53,14 +53,14 @@ public:
    enum Constants 
    {
       TabWidthInSpaces = 3,
-      TextureSheetSize = 512,
+      TextureSheetSize = 1024,
    };
 
 public:
    GFont();
    virtual ~GFont();
    
-   static Resource<GFont> create(const String &faceName, U32 size, const char *cacheDirectory = 0, U32 charset = TGE_ANSI_CHARSET);
+   static Resource<GFont> create(const String &faceName, const char *cacheDirectory = 0, U32 charset = TGE_ANSI_CHARSET);
 
    GFXTexHandle getTextureHandle(S32 index) const { return mTextureSheets[index]; }
 
@@ -73,6 +73,8 @@ public:
    
    bool isValidChar(const UTF16 in_charIndex) const;
 
+   U32 getScaledHeight(U32 renderSize) { return mHeight * ((F32)renderSize / mSize); }
+
    const U32 getHeight() const   { return mHeight; }
    const U32 getBaseline() const { return mBaseline; }
    const U32 getAscent() const   { return mAscent; }
@@ -81,12 +83,16 @@ public:
    U32 getBreakPos(const UTF16 *string, U32 strlen, U32 width, bool breakOnWhitespace);
 
    /// These are the preferred width functions.
+   U32 getStringWidthScaled(const String& text, U32 renderSize);
+   U32 getStringWidthScaled(const String& text, U32 renderSize, U32 length);
+
    U32 getStrNWidth(const UTF16*, U32 n);
    U32 getStrNWidthPrecise(const UTF16*, U32 n);
    
    /// These UTF8 versions of the width functions will be deprecated, please avoid them.
    U32 getStrWidth(const UTF8*);   // Note: ignores c/r
    U32 getStrNWidth(const UTF8*, U32 n);
+   
    U32 getStrWidthPrecise(const UTF8*);   // Note: ignores c/r
    U32 getStrNWidthPrecise(const UTF8*, U32 n);
    void wrapString(const UTF8 *string, U32 width, Vector<U32> &startLineOffset, Vector<U32> &lineLen);
@@ -117,7 +123,7 @@ public:
    }
 
    /// Get the filename for a cached font.
-   static String getFontCacheFilename(const String &faceName, U32 faceSize);
+   static String getFontCacheFilename(const String &faceName);
 
    /// Get the face name of the font.
    String   getFontFaceName() const { return mFaceName; };

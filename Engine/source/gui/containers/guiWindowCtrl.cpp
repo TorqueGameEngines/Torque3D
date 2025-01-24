@@ -1385,7 +1385,7 @@ void GuiWindowCtrl::onRender(Point2I offset, const RectI &updateRect)
    // different color usage here. NOTE: it currently CAN overdraw the controls
    // if mis-positioned or 'scrunched' in a small width.
    drawUtil->setBitmapModulation(mProfile->mFontColor);
-   S32 textWidth = mProfile->mFont->getStrWidth((const UTF8 *)mText);
+   S32 textWidth = mProfile->mFont->getStringWidthScaled(mText, mProfile->mFontSize);
    Point2I start(0,0);
 
    // Align the horizontal
@@ -1398,7 +1398,7 @@ void GuiWindowCtrl::onRender(Point2I offset, const RectI &updateRect)
    // If the text is longer then the box size, (it'll get clipped) so force Left Justify
    if( textWidth > winRect.extent.x ) start.set( 0, 0 );
    // center the vertical
-//   start.y = ( winRect.extent.y - ( font->getHeight() - 2 ) ) / 2;
+//   start.y = ( winRect.extent.y - ( font->getScaledHeight(mProfile->mFontSize) - 2 ) ) / 2;
    drawUtil->drawText( mProfile->mFont, start + offset + mProfile->mTextOffset, mText );
 
    // Deal with rendering the titlebar controls

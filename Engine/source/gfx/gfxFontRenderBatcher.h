@@ -50,6 +50,7 @@ class FontRenderBatcher
    Vector<SheetMarker *> mSheets;
    GFont *mFont;
    U32 mLength;
+   F32 mRenderScale;
    GFXStateBlockRef mFontSB;
 
    SheetMarker &getSheetMarker(U32 sheetID);
@@ -61,7 +62,7 @@ class FontRenderBatcher
 public:
    FontRenderBatcher();
 
-   void init(GFont *font, U32 n);
+   void init(GFont *font, U32 n, F32 renderScale);
 
    void queueChar(UTF16 c, S32 &currentX, GFXVertexColor &currentColor);
 

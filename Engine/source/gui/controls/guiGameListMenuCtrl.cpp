@@ -239,7 +239,7 @@ void GuiGameListMenuCtrl::onRenderListOption(Row* row, Point2I currentOffset)
       // calculate text to be at the center between the arrows
       GFont* font = profile->mFont;
       StringTableEntry text = row->mOptions[row->mSelectedOption].mDisplayText;
-      S32 textWidth = font->getStrWidth(text);
+      S32 textWidth = font->getStringWidthScaled(String::ToString(text), profile->mFontSize);
       S32 columnWidth = profile->mHitAreaLowerRight.x * xScale - profile->mRightPad - columnSplit;
       S32 columnCenter = columnSplit + (columnWidth >> 1);
       S32 textStartX = columnCenter - (textWidth >> 1);
@@ -363,7 +363,7 @@ void GuiGameListMenuCtrl::onRenderSliderOption(Row* row, Point2I currentOffset)
    char stringVal[32];
    dSprintf(stringVal, 32, "%f", row->mValue);
 
-   S32 textWidth = font->getStrWidth(stringVal);
+   S32 textWidth = font->getStringWidthScaled(String::ToString(stringVal), profile->mFontSize);
    S32 columnWidth = profile->mHitAreaLowerRight.x * xScale - profile->mRightPad - columnSplit;
    S32 columnCenter = columnSplit + (columnWidth >> 1);
    S32 textStartX = columnCenter - (textWidth >> 1);

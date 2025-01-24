@@ -140,8 +140,8 @@ bool GuiFormCtrl::onWake()
       mThumbSize.set(   mProfile->mBitmapArrayRects[0].extent.x, mProfile->mBitmapArrayRects[0].extent.y );
       mThumbSize.setMax( mProfile->mBitmapArrayRects[1].extent );
 
-      if(mFont->getHeight() > mThumbSize.y)
-         mThumbSize.y = mFont->getHeight();
+      if(mFont->getScaledHeight(mProfile->mFontSize) > mThumbSize.y)
+         mThumbSize.y = mFont->getScaledHeight(mProfile->mFontSize);
    }
    else
    {
@@ -208,7 +208,7 @@ bool GuiFormCtrl::resize(const Point2I &newPosition, const Point2I &newExtent)
       return false;
 
    // Should the caption be modified because the title bar is too small?
-   S32 textWidth = mProfile->mFont->getStrWidth(mCaption);
+   S32 textWidth = mProfile->mFont->getStringWidthScaled(mCaption, mProfile->mFontSize);
    S32 newTextArea = getWidth() - mThumbSize.x - mProfile->mBitmapArrayRects[4].extent.x;
    if(newTextArea < textWidth)
    {
@@ -224,7 +224,7 @@ bool GuiFormCtrl::resize(const Point2I &newPosition, const Point2I &newExtent)
          dStrcat(buf, (const char*)mCaption, i);
          dStrcat(buf, "...", i);
 
-         textWidth = mProfile->mFont->getStrWidth(buf);
+         textWidth = mProfile->mFont->getStringWidthScaled(String::ToString(buf), mProfile->mFontSize);
 
          if(textWidth < newTextArea)
          {

@@ -29,6 +29,7 @@ FontRenderBatcher::FontRenderBatcher() : mStorage(8096)
 {
    mFont = NULL;
    mLength = 0;
+   mRenderScale = 1.0f;
    if (!mFontSB)
    {
       GFXStateBlockDesc f;
@@ -101,8 +102,8 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
          const PlatformFont::CharInfo &ci = mFont->getCharInfo( m.c );
 
          // Where are we drawing it?
-         F32 drawY = offset.y + mFont->getBaseline() - ci.yOrigin * TEXT_MAG;
-         F32 drawX = offset.x + m.x + ci.xOrigin;
+         F32 drawY = offset.y + (mFont->getBaseline()) - ((ci.yOrigin)) * TEXT_MAG;
+         F32 drawX = offset.x + m.x + ((ci.xOrigin));
 
          // Figure some values.
          const F32 texWidth = (F32)tex->getWidth();
@@ -114,9 +115,9 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
 
          const F32 fillConventionOffset = GFX->getFillConventionOffset();
          const F32 screenLeft   = drawX - fillConventionOffset;
-         const F32 screenRight  = drawX - fillConventionOffset + ci.width * TEXT_MAG;
+         const F32 screenRight  = drawX - fillConventionOffset + (ci.width * mRenderScale) * TEXT_MAG;
          const F32 screenTop    = drawY - fillConventionOffset;
-         const F32 screenBottom = drawY - fillConventionOffset + ci.height * TEXT_MAG;
+         const F32 screenBottom = drawY - fillConventionOffset + (ci.height * mRenderScale) * TEXT_MAG;
 
          // Build our vertices. We NEVER read back from the buffer, that's
          // incredibly slow, so for rotation do it into tmp. This code is
@@ -213,20 +214,22 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
 
       if (!mSheets[i]->numChars)
          continue;
+
       for (S32 j = 0; j < mSheets[i]->numChars; j++)
       {
          // Get some general info to proceed with...
          const CharMarker& m = mSheets[i]->charIndex[j];
          const PlatformFont::CharInfo& ci = mFont->getCharInfo(m.c);
-         F32 yStart = offset.y + mFont->getBaseline() - ci.yOrigin * TEXT_MAG;
-         F32 xStart = offset.x + m.x + ci.xOrigin;
+         // Get some general info to proceed with...
+         F32 yStart = offset.y + (mFont->getBaseline()) - ((ci.yOrigin)) * TEXT_MAG;
+         F32 xStart = offset.x + m.x + ((ci.xOrigin));
 
          // draw baseline
-         GFX->getDrawUtil()->drawLine(xStart, yStart + ci.yOrigin, xStart + ci.width, yStart + ci.yOrigin, ColorI::GREEN);
+         GFX->getDrawUtil()->drawLine(xStart, yStart + ci.yOrigin, xStart + (ci.width * mRenderScale), yStart + ci.yOrigin, ColorI::GREEN);
          // draw origin line
-         GFX->getDrawUtil()->drawLine(xStart, yStart, xStart + ci.width, yStart, ColorI::RED);
+         GFX->getDrawUtil()->drawLine(xStart, yStart, xStart + (ci.width * mRenderScale), yStart, ColorI::RED);
          // draw bounds
-         GFX->getDrawUtil()->drawRect(Point2F(xStart, yStart), Point2F(xStart + ci.width, yStart + ci.height), ColorI::BLUE);
+         GFX->getDrawUtil()->drawRect(Point2F(xStart, yStart), Point2F(xStart + (ci.width * mRenderScale), yStart + (ci.height * mRenderScale)), ColorI::BLUE);
       }
    }
 #endif
@@ -249,7 +252,7 @@ void FontRenderBatcher::queueChar( UTF16 c, S32 &currentX, GFXVertexColor &curre
       m.color = currentColor;
    }
 
-   currentX += ci.xIncrement;
+   currentX += (ci.xIncrement * mRenderScale);
 }
 
 FontRenderBatcher::SheetMarker & FontRenderBatcher::getSheetMarker( U32 sheetID )
@@ -275,13 +278,13 @@ FontRenderBatcher::SheetMarker & FontRenderBatcher::getSheetMarker( U32 sheetID 
    return *mSheets[sheetID];
 }
 
-void FontRenderBatcher::init( GFont *font, U32 n )
+void FontRenderBatcher::init( GFont *font, U32 n, F32 renderScale )
 {
    // Clear out batched results
    dMemset(mSheets.address(), 0, mSheets.memSize());
    mSheets.clear();
    mStorage.freeBlocks(true);
-
+   mRenderScale = renderScale;
    mFont = font;
    mLength = n;
 }

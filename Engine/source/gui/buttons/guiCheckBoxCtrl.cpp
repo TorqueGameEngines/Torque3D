@@ -171,7 +171,7 @@ void GuiCheckBoxCtrl::autoSize()
    width = bmpWidth + strWidth + 2;
 
    U32 bmpHeight = mProfile->mBitmapArrayRects[0].extent.y;
-   U32 fontHeight = mProfile->mFont->getHeight();
+   U32 fontHeight = mProfile->mFont->getScaledHeight(mProfile->mFontSize);
 
    height = getMax( bmpHeight, fontHeight ) + 4;
 

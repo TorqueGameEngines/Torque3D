@@ -1420,7 +1420,7 @@ void WorldEditor::renderMousePopupInfo()
    if ( mRenderPopupBackground )
    {
       Point2I minPt(posi.x - width / 2 - 2, posi.y - 1);
-      Point2I maxPt(posi.x + width / 2 + 2, posi.y + mProfile->mFont->getHeight() + 1);
+      Point2I maxPt(posi.x + width / 2 + 2, posi.y + mProfile->mFont->getScaledHeight(mProfile->mFontSize) + 1);
 
       GFX->getDrawUtil()->drawRectFill(minPt, maxPt, mPopupBackgroundColor);
    }
@@ -1686,7 +1686,7 @@ void WorldEditor::renderScreenObj( SceneObject *obj, const Point3F& projPos, con
    {      
       const char * str = parseObjectFormat(obj, mObjTextFormat);
 
-      Point2I extent(mProfile->mFont->getStrWidth((const UTF8 *)str), mProfile->mFont->getHeight());
+      Point2I extent(mProfile->mFont->getStrWidth((const UTF8 *)str), mProfile->mFont->getScaledHeight(mProfile->mFontSize));
 
       Point2I pos(sPos);
 

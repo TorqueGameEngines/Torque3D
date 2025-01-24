@@ -295,8 +295,8 @@ void afxGuiTextHud::onRender( Point2I, const RectI &updateRect)
 void afxGuiTextHud::drawName(Point2I offset, const char *name, F32 opacity, LinearColorF* color)
 {
    // Center the name
-   offset.x -= mProfile->mFont->getStrWidth((const UTF8 *)name) / 2;
-   offset.y -= mProfile->mFont->getHeight();
+   offset.x -= mProfile->mFont->getStringWidthScaled(String::ToString(name), mProfile->mFontSize) / 2;
+   offset.y -= mProfile->mFont->getScaledHeight(mProfile->mFontSize);
 
    // Deal with opacity and draw.
    LinearColorF draw_color = (color) ? *color : mTextColor;

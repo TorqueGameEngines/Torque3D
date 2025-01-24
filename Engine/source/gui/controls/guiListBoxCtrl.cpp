@@ -1014,14 +1014,14 @@ void GuiListBoxCtrl::updateSize()
       S32 maxWidth = 1;
       for ( U32 i = 0; i < mItems.size(); i++ )
       {
-         S32 width = font->getStrWidth( mItems[i]->itemText );
+         S32 width = font->getStringWidthScaled( String::ToString(mItems[i]->itemText), mProfile->mFontSize);
          if( width > maxWidth )
             maxWidth = width;
       }
       mItemSize.x = maxWidth + 6;
    }
 
-   mItemSize.y = font->getHeight() + 2;
+   mItemSize.y = font->getScaledHeight(mProfile->mFontSize) + 2;
 
    Point2I newExtent( mItemSize.x, mItemSize.y * mItems.size() );
    setExtent( newExtent );

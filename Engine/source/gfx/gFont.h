@@ -64,6 +64,17 @@ public:
 
    GFXTexHandle getTextureHandle(S32 index) const { return mTextureSheets[index]; }
 
+   ///----------------------------------
+   /// SDF Functions
+   ///----------------------------------
+   U32 getScaledHeight(U32 renderSize) { return mHeight * ((F32)renderSize / mSize); }
+   U32 getScaledBaseline(U32 renderSize) { return mBaseline * ((F32)renderSize / mSize); }
+   U32 getScaledAscent(U32 renderSize) { return mAscent * ((F32)renderSize / mSize); }
+   U32 getScaledDescent(U32 renderSize) { return mDescent * ((F32)renderSize / mSize); }
+
+   U32 getStringWidthScaled(const String& text, U32 renderSize);
+   U32 getStringWidthScaled(const String& text, U32 renderSize, U32 length);
+
    const PlatformFont::CharInfo& getCharInfo(const UTF16 in_charIndex);
    static const PlatformFont::CharInfo& getDefaultCharInfo();
 
@@ -73,8 +84,6 @@ public:
    
    bool isValidChar(const UTF16 in_charIndex) const;
 
-   U32 getScaledHeight(U32 renderSize) { return mHeight * ((F32)renderSize / mSize); }
-
    const U32 getHeight() const   { return mHeight; }
    const U32 getBaseline() const { return mBaseline; }
    const U32 getAscent() const   { return mAscent; }
@@ -83,9 +92,6 @@ public:
    U32 getBreakPos(const UTF16 *string, U32 strlen, U32 width, bool breakOnWhitespace);
 
    /// These are the preferred width functions.
-   U32 getStringWidthScaled(const String& text, U32 renderSize);
-   U32 getStringWidthScaled(const String& text, U32 renderSize, U32 length);
-
    U32 getStrNWidth(const UTF16*, U32 n);
    U32 getStrNWidthPrecise(const UTF16*, U32 n);
    

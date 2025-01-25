@@ -365,12 +365,12 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    const S32 padding = 8;
 
    // Dimensions for the padded bitmap and SDF
-   S32 paddedWidth = charInfo.width + (2 * (padding * 4));
-   S32 paddedHeight = charInfo.height + (2 * (padding * 4));
+   S32 paddedWidth = charInfo.width + (2 * (padding));
+   S32 paddedHeight = charInfo.height + (2 * (padding));
 
    // Allocate buffers
    FrameTemp<U8> paddedBitmap(paddedWidth * paddedHeight);
-   padGlyphBitmap(charInfo.bitmapData, charInfo.width, charInfo.height, paddedBitmap, paddedWidth, paddedHeight, padding*4);
+   padGlyphBitmap(charInfo.bitmapData, charInfo.width, charInfo.height, paddedBitmap, paddedWidth, paddedHeight, padding);
 
    S32 sdfWidth = paddedWidth;
    S32 sdfHeight = paddedHeight;
@@ -440,8 +440,8 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    // update our width and height.
    charInfo.width = sdfWidth;
    charInfo.height = sdfHeight;
-   charInfo.yOrigin = (F32)(charInfo.yOrigin) + padding;
-   charInfo.xOrigin = (F32)(charInfo.xOrigin) - padding;
+   charInfo.yOrigin = (F32)(charInfo.yOrigin) - padding;
+   charInfo.xOrigin = (F32)(charInfo.xOrigin) + padding;
    charInfo.xIncrement = (F32)(charInfo.xIncrement) + 2;
 
    mMaxRowHeight = mMax(mMaxRowHeight, sdfHeight);

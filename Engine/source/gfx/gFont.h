@@ -83,9 +83,20 @@ public:
       return static_cast<U32>(mDescent * (static_cast<F32>(renderSize) / mSize) + 0.5f);
    }
 
-   U32 getCharHeightScaled(const UTF16 in_charIndex, U32 renderSize) { return getCharHeight(in_charIndex) * ((F32)renderSize / mSize); }
-   U32 getCharWidthScaled(const UTF16 in_charIndex, U32 renderSize) { return getCharWidth(in_charIndex) * ((F32)renderSize / mSize); }
-   U32 getCharXIncrementScaled(const UTF16 in_charIndex, U32 renderSize) { return getCharXIncrement(in_charIndex) * ((F32)renderSize / mSize); }
+   U32 GFont::getCharHeightScaled(const UTF16 in_charIndex, U32 renderSize) {
+      return static_cast<U32>(getCharHeight(in_charIndex) *
+         (static_cast<F32>(renderSize) / mSize) + 0.5f);
+   }
+
+   U32 GFont::getCharWidthScaled(const UTF16 in_charIndex, U32 renderSize) {
+      return static_cast<U32>(getCharWidth(in_charIndex) *
+         (static_cast<F32>(renderSize) / mSize) + 0.5f);
+   }
+
+   U32 GFont::getCharXIncrementScaled(const UTF16 in_charIndex, U32 renderSize) {
+      return static_cast<U32>(getCharXIncrement(in_charIndex) *
+         (static_cast<F32>(renderSize) / mSize) + 0.5f);
+   }
 
    U32 getStringWidthScaled(const String& text, U32 renderSize);
    U32 getStringWidthScaledPrecise(const String& text, U32 renderSize);

@@ -529,21 +529,15 @@ U32 GFont::getStringWidthScaledPrecise(const String& text, U32 renderSize)
 U32 GFont::getStringWidthScaled(const String& text, U32 renderSize, U32 length)
 {
    U32 totalWidth = 0;
-   const F32 renderScale = static_cast<F32>(renderSize) / mSize;
    const UTF16* utfString = text.utf16();
 
-   U32 charCount = 0;
-
-   for (charCount = 0; charCount < length; charCount++) {
+   for (U32 charCount = 0; charCount < length; charCount++) {
       UTF16 c = utfString[charCount];
       if (isValidChar(c)) {
-         const PlatformFont::CharInfo& charInfo = getCharInfo(c);
-         totalWidth += static_cast<U32>((F32(charInfo.xIncrement) * renderScale) + 0.5f);
+         totalWidth += getCharXIncrementScaled(c, renderSize);
       }
-      else if (c == dT('\t'))
-      {
-         const PlatformFont::CharInfo& charInfo = getCharInfo(dT(' '));
-         totalWidth += static_cast<U32>((F32(charInfo.xIncrement * TabWidthInSpaces) * renderScale) + 0.5f);
+      else if (c == dT('\t')) {
+         totalWidth += getCharXIncrementScaled(dT(' '), renderSize) * TabWidthInSpaces;
       }
    }
 
@@ -552,32 +546,16 @@ U32 GFont::getStringWidthScaled(const String& text, U32 renderSize, U32 length)
 
 U32 GFont::getStringWidthScaledPrecise(const String& text, U32 renderSize, U32 length)
 {
-   U32 totalWidth = 0;
-   const F32 renderScale = static_cast<F32>(renderSize) / mSize;
+   U32 totalWidth = getStringWidthScaled(text, renderSize, length);
+
    const UTF16* utfString = text.utf16();
+   UTF16 endChar = utfString[length - 1];
 
-   U32 charCount = 0;
-
-   for (charCount = 0; charCount < length; charCount++) {
-      UTF16 c = utfString[charCount];
-      if (isValidChar(c)) {
-         const PlatformFont::CharInfo& charInfo = getCharInfo(c);
-         totalWidth += static_cast<U32>((F32(charInfo.xIncrement) * renderScale) + 0.5f);
-      }
-      else if (c == dT('\t'))
-      {
-         const PlatformFont::CharInfo& charInfo = getCharInfo(dT(' '));
-         totalWidth += static_cast<U32>((F32(charInfo.xIncrement * TabWidthInSpaces) * renderScale) + 0.5f);
-      }
-   }
-
-   UTF16 endChar = utfString[getMin(charCount, length - 1)];
-
-   if (isValidChar(endChar))
-   {
+   if (isValidChar(endChar)) {
       const PlatformFont::CharInfo& rChar = getCharInfo(endChar);
-      if (rChar.width != rChar.xIncrement)
-         totalWidth += static_cast<U32>((F32(rChar.width - rChar.xIncrement) * renderScale) + 0.5);
+      if (rChar.width != rChar.xIncrement) {
+         totalWidth += static_cast<U32>((rChar.width - rChar.xIncrement) * ((F32)renderSize / mSize) + 0.5f);
+      }
    }
 
    return totalWidth;
@@ -585,11 +563,10 @@ U32 GFont::getStringWidthScaledPrecise(const String& text, U32 renderSize, U32 l
 
 void GFont::wrapStringScaled(const UTF8* txt, U32 lineWidth, U32 renderSize, Vector<U32>& startLineOffset, Vector<U32>& lineLen)
 {
-   const F32 renderScale = static_cast<F32>(renderSize) / mSize;
    startLineOffset.clear();
    lineLen.clear();
 
-   if (!txt || !txt[0] || lineWidth < ((getCharWidth('W')*renderScale) + 0.5)) //make sure the line width is greater then a single character
+   if (!txt || !txt[0] || lineWidth < getCharWidthScaled('W', renderSize)) //make sure the line width is greater then a single character
       return;
 
    U32 len = dStrlen(txt);
@@ -614,7 +591,7 @@ void GFont::wrapStringScaled(const UTF8* txt, U32 lineWidth, U32 renderSize, Vec
          }
          else if (isValidChar(txt[i]))
          {
-            lineStrWidth += ((F32)getCharInfo(txt[i]).xIncrement * renderScale) + 0.5;
+            lineStrWidth += getCharXIncrementScaled(txt[i], renderSize);
             if (txt[i] < 0) // symbols which code > 127
             {
                wide++; i++;
@@ -688,7 +665,6 @@ U32 GFont::getBreakPosScaled(const UTF16* str16, U32 slen, U32 width, U32 render
    if (slen == 0)
       return 0;
 
-   const F32 renderScale = static_cast<F32>(renderSize) / mSize;
    U32 ret = 0;
    U32 lastws = 0;
    UTF16 c;
@@ -712,15 +688,14 @@ U32 GFont::getBreakPosScaled(const UTF16* str16, U32 slen, U32 width, U32 render
       if (c == dT(' '))
          lastws = ret + 1;
 
-      const PlatformFont::CharInfo& rChar = getCharInfo(c);
-      if (static_cast<U32>((rChar.width * renderScale) + 0.5) > width || static_cast<U32>((rChar.xIncrement * renderScale) + 0.5) > width)
+      if (getCharWidthScaled(c, renderSize) > width || getCharXIncrementScaled(c, renderSize) > width)
       {
          if (lastws && breakOnWhitespace)
             return lastws;
          return ret;
       }
 
-      width -= static_cast<U32>((rChar.xIncrement * renderScale) + 0.5);
+      width -= getCharXIncrementScaled(c, renderSize);
 
       ret++;
    }
@@ -1064,8 +1039,8 @@ bool GFont::write(Stream& stream)
    for (U32 i = 0; i < mTextureSheets.size(); i++)
    {
        // Debugging write out to images.
-      /*String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-      mTextureSheets[i].getBitmap()->writeBitmap("png", path);*/
+      String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
+      mTextureSheets[i].getBitmap()->writeBitmap("png", path);
       
 
       mTextureSheets[i].getBitmap()->writeBitmapStream("png", stream);

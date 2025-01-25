@@ -660,12 +660,12 @@ void DbgFileView::onRenderCell(Point2I offset, Point2I cell, bool selected, bool
    if (mFileView[cell.y].breakOnLine)
    {
       GFX->getDrawUtil()->setBitmapModulation(mProfile->mFontColorHL);
-      GFX->getDrawUtil()->drawText(mFont, cellOffset, "#");
+      GFX->getDrawUtil()->drawText(mFont, cellOffset, "#", mProfile->mFontSize);
    }
    else if (mFileView[cell.y].breakPosition)
    {
       GFX->getDrawUtil()->setBitmapModulation(mProfile->mFontColor);
-      GFX->getDrawUtil()->drawText(mFont, cellOffset, "-");
+      GFX->getDrawUtil()->drawText(mFont, cellOffset, "-", mProfile->mFontSize);
    }
    cellOffset.x += 8;
 
@@ -673,7 +673,7 @@ void DbgFileView::onRenderCell(Point2I offset, Point2I cell, bool selected, bool
    if (mFileName == mPCFileName && (cell.y + 1 == mPCCurrentLine))
    {
       GFX->getDrawUtil()->setBitmapModulation(mProfile->mFontColorHL);
-      GFX->getDrawUtil()->drawText(mFont, cellOffset, "=>");
+      GFX->getDrawUtil()->drawText(mFont, cellOffset, "=>", mProfile->mFontSize);
    }
 
 	//by this time, the cellOffset has been incremented by 44 - the value of gFileXOffset
@@ -708,5 +708,5 @@ void DbgFileView::onRenderCell(Point2I offset, Point2I cell, bool selected, bool
 
    //draw the line of text
    GFX->getDrawUtil()->setBitmapModulation(mFileView[cell.y].breakOnLine ? mProfile->mFontColorHL : mProfile->mFontColor);
-   GFX->getDrawUtil()->drawText(mFont, cellOffset, mFileView[cell.y].text);
+   GFX->getDrawUtil()->drawText(mFont, cellOffset, mFileView[cell.y].text, mProfile->mFontSize);
 }

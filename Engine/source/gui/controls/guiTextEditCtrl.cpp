@@ -374,9 +374,9 @@ S32 GuiTextEditCtrl::calculateCursorPos( const Point2I &globalPos )
          continue;
          
       if(mPasswordText)
-         charLength += mProfile->mFont->getCharXIncrement( mPasswordMask[0] );
+         charLength += mProfile->mFont->getCharXIncrementScaled( mPasswordMask[0], mProfile->mFontSize);
       else
-         charLength += mProfile->mFont->getCharXIncrement( c );
+         charLength += mProfile->mFont->getCharXIncrementScaled( c, mProfile->mFontSize);
 
       if ( charLength > curX )
          break;      
@@ -1282,7 +1282,7 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
 
    // Align horizontally:
    
-   S32 textWidth = mProfile->mFont->getStrNWidth(textBuffer.getPtr(), textBuffer.length());
+   S32 textWidth = mProfile->mFont->getStringWidthScaled(String::ToString(textBuffer.getPtr()), mProfile->mFontSize, textBuffer.length());
 
    switch( mProfile->mAlignment )
    {
@@ -1331,13 +1331,13 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
       // Alright, we want to terminate things momentarily.
       if(mCursorPos > 0)
       {
-         cursorOffset = mProfile->mFont->getStrNWidth(textBuffer.getPtr(), mCursorPos);
+         cursorOffset = mProfile->mFont->getStringWidthScaled(String::ToString(textBuffer.getPtr()), mProfile->mFontSize, mCursorPos);
       }
       else
          cursorOffset = 0;
 
       if( tempChar && mProfile->mFont->isValidChar( tempChar ) )
-         charWidth = mProfile->mFont->getCharWidth( tempChar );
+         charWidth = mProfile->mFont->getCharWidthScaled( tempChar, mProfile->mFontSize);
       else
          charWidth = paddingRightBottom.x;
 
@@ -1407,7 +1407,7 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
       GFX->getDrawUtil()->setBitmapModulation( fontColor );
       const UTF16* preString2 = textBuffer.getPtr();
       GFX->getDrawUtil()->drawText( mProfile->mFont, tempOffset, preString2, mProfile->mFontSize, mProfile->mFontColors );
-      tempOffset.x += mProfile->mFont->getStrNWidth(preString2, mBlockStart);
+      tempOffset.x += mProfile->mFont->getStringWidthScaled(String::ToString(preString2), mProfile->mFontSize, mBlockStart);
    }
 
    //draw the highlighted portion
@@ -1416,7 +1416,7 @@ void GuiTextEditCtrl::drawText( const RectI &drawRect, bool isFocused )
       const UTF16* highlightBuff = textBuffer.getPtr() + mBlockStart;
       U32 highlightBuffLen = mBlockEnd-mBlockStart;
 
-      S32 highlightWidth = mProfile->mFont->getStrNWidth(highlightBuff, highlightBuffLen);
+      S32 highlightWidth = mProfile->mFont->getStringWidthScaled(String::ToString(highlightBuff), mProfile->mFontSize, highlightBuffLen);
 
       GFX->getDrawUtil()->drawRectFill( Point2I( tempOffset.x, drawRect.point.y ),
          Point2I( tempOffset.x + highlightWidth, drawRect.point.y + drawRect.extent.y - 1),

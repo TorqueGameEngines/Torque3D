@@ -122,7 +122,7 @@ void GuiConsoleTextCtrl::onPreRender()
       
       // Of the resulting string we will be printing,
       // Find the number of lines and length of each.      
-      mProfile->mFont->wrapString( mResult, U32_MAX, mStartLineOffset, mLineLen );
+      mProfile->mFont->wrapStringScaled( mResult, U32_MAX, mProfile->mFontSize, mStartLineOffset, mLineLen );
    }
    else
       mResult = String::EmptyString;         

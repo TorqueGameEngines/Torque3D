@@ -1111,22 +1111,22 @@ void GuiMeshRoadEditorCtrl::renderScene(const RectI & updateRect)
       GFX->getDrawUtil()->setBitmapModulation(ColorI(128, 128, 128));
       dStrcpy(buf, "Reset Profile: Double-click Start Node", 64);
       GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
-      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      posi.y -= mProfile->mFont->getCharHeightScaled((U8)buf[0], mProfile->mFontSize) + 4;
       dStrcpy(buf, "Move Node: Click and Drag Node", 64);
       GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
-      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      posi.y -= mProfile->mFont->getCharHeightScaled((U8)buf[0], mProfile->mFontSize) + 4;
       dStrcpy(buf, "Select Multiple Nodes: Ctrl-click Nodes", 64);
       GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
-      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      posi.y -= mProfile->mFont->getCharHeightScaled((U8)buf[0], mProfile->mFontSize) + 4;
       dStrcpy(buf, "Toggle Material: Shift-click Spline Segment", 64);
       GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
-      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      posi.y -= mProfile->mFont->getCharHeightScaled((U8)buf[0], mProfile->mFontSize) + 4;
       dStrcpy(buf, "Toggle Smoothing: Shift-click Node", 64);
       GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
-      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      posi.y -= mProfile->mFont->getCharHeightScaled((U8)buf[0], mProfile->mFontSize) + 4;
       dStrcpy(buf, "Delete Node: Alt-click Node", 64);
       GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
-      posi.y -= mProfile->mFont->getCharHeight((U8)buf[0]) + 4;
+      posi.y -= mProfile->mFont->getCharHeightScaled((U8)buf[0], mProfile->mFontSize) + 4;
       dStrcpy(buf, "Add Node: Ctrl-click Spline", 64);
       GFX->getDrawUtil()->drawTextN(mProfile->mFont, posi, buf, dStrlen(buf));
    }

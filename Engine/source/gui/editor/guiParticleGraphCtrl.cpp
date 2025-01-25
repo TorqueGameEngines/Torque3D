@@ -255,7 +255,7 @@ void GuiParticleGraphCtrl::onRender(Point2I offset, const RectI &updateRect)
                   } 
             
                  pDrawUtil->setBitmapModulation( profile->mFontColor );
-                 pDrawUtil->drawText( font, Point2I(posX, posY + 5) - Point2I(size >> 1, size), number );
+                 pDrawUtil->drawText( font, Point2I(posX, posY + 5) - Point2I(size >> 1, size), number, mProfile->mFontSize);
                  pDrawUtil->clearBitmapModulation();
                }
             }

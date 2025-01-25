@@ -485,7 +485,7 @@ void GuiDecalEditorCtrl::renderGui( Point2I offset, const RectI &updateRect )
          GFXDrawUtil *drawer = GFX->getDrawUtil();
          drawer->drawRectFill( minPt, maxPt, bgColor );
 	      GFX->getDrawUtil()->setBitmapModulation( textColor );
-         GFX->getDrawUtil()->drawText( mProfile->mFont, Point2I( posi.x - width / 2, posi.y ), buf );
+         GFX->getDrawUtil()->drawText( mProfile->mFont, Point2I( posi.x - width / 2, posi.y ), buf, mProfile->mFontSize );
       }      
    }
 }

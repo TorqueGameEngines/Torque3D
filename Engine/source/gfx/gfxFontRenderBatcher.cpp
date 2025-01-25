@@ -102,8 +102,8 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
          const PlatformFont::CharInfo &ci = mFont->getCharInfo( m.c );
 
          // Where are we drawing it?
-         F32 drawY = offset.y + (mFont->getBaseline() - (ci.yOrigin)) * mRenderScale;
-         F32 drawX = offset.x + (m.x + ci.xOrigin) * mRenderScale;
+         F32 drawY = offset.y + (F32(mFont->getBaseline() - ci.yOrigin) * mRenderScale);
+         F32 drawX = offset.x + ((m.x + (F32)ci.xOrigin) * mRenderScale);
 
          // Figure some values.
          const F32 texWidth = (F32)tex->getWidth();
@@ -205,7 +205,7 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
       GFX->drawPrimitive(GFXTriangleList, mSheets[i]->startVertex, mSheets[i]->numChars * 2);
    }
 
-#if 1
+#if 0
    for (S32 i = 0; i < mSheets.size(); i++)
    {
       // Do some early outs...
@@ -221,15 +221,15 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
          const CharMarker& m = mSheets[i]->charIndex[j];
          const PlatformFont::CharInfo& ci = mFont->getCharInfo(m.c);
          // Get some general info to proceed with...
-         F32 yStart = offset.y + (mFont->getBaseline() - (ci.yOrigin)) * mRenderScale;
-         F32 xStart = offset.x + (m.x + ci.xOrigin) * mRenderScale;
+         F32 drawY = offset.y + ((mFont->getBaseline() - ci.yOrigin) * mRenderScale);
+         F32 drawX = offset.x + ((m.x + (F32)ci.xOrigin) * mRenderScale);
 
          // draw baseline
-         GFX->getDrawUtil()->drawLine(xStart, yStart + (mFont->getBaseline() * mRenderScale), xStart + (ci.width * mRenderScale), yStart + (mFont->getBaseline() * mRenderScale), ColorI::GREEN);
+         GFX->getDrawUtil()->drawLine(drawX, drawY + (mFont->getBaseline() * mRenderScale), drawX + (ci.width * mRenderScale), drawY + (mFont->getBaseline() * mRenderScale), ColorI::GREEN);
          // draw origin line
-         GFX->getDrawUtil()->drawLine(xStart, yStart, xStart + (ci.width * mRenderScale), yStart, ColorI::RED);
+         GFX->getDrawUtil()->drawLine(drawX, drawY, drawX + (ci.width * mRenderScale), drawY, ColorI::RED);
          // draw bounds
-         GFX->getDrawUtil()->drawRect(Point2F(xStart, yStart), Point2F(xStart + (ci.width * mRenderScale), yStart + (ci.height * mRenderScale)), ColorI::BLUE);
+         GFX->getDrawUtil()->drawRect(Point2F(drawX, drawY), Point2F(drawX + (ci.width * mRenderScale), drawY + (ci.height * mRenderScale)), ColorI::BLUE);
       }
    }
 #endif

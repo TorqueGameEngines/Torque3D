@@ -513,7 +513,7 @@ void GuiSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
 
    	Point2I textStart = thumb.point;
 
-      S32 txt_w = mProfile->mFont->getStrWidth((const UTF8 *)buf);
+      S32 txt_w = mProfile->mFont->getStringWidthScaled(String::ToString(buf), mProfile->mFontSize);
 
    	textStart.x += (S32)((thumb.extent.x/2.0f));
    	textStart.y += thumb.extent.y - 2; //19

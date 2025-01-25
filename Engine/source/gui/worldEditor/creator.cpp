@@ -324,7 +324,7 @@ void CreatorTree::buildNode(Node * node, U32 tab)
          // grab width
          if(bool(mProfile->mFont) && child->mName)
          {
-            S32 width = (tab + 1) * mTabSize + mProfile->mFont->getStrWidth(child->mName) + mTxtOffset;
+            S32 width = (tab + 1) * mTabSize + mProfile->mFont->getStringWidthScaled(String::ToString(child->mName), mProfile->mFontSize) + mTxtOffset;
             if(width > mMaxWidth)
                mMaxWidth = width;
          }
@@ -475,5 +475,5 @@ void CreatorTree::onRenderCell(Point2I offset, Point2I cell, bool, bool)
    drawer->setBitmapModulation(fontColor); //node->isSelected() ? mProfile->mFontColorHL : mProfile->mFontColor);
    drawer->drawText( mProfile->mFont,
                 Point2I( offset.x + mTxtOffset + mTabSize * ( node->mTab + 1 ), offset.y ),
-                node->mName);
+                node->mName, mProfile->mFontSize);
 }

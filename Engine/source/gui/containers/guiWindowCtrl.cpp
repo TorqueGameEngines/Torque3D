@@ -1399,7 +1399,7 @@ void GuiWindowCtrl::onRender(Point2I offset, const RectI &updateRect)
    if( textWidth > winRect.extent.x ) start.set( 0, 0 );
    // center the vertical
 //   start.y = ( winRect.extent.y - ( font->getScaledHeight(mProfile->mFontSize) - 2 ) ) / 2;
-   drawUtil->drawText( mProfile->mFont, start + offset + mProfile->mTextOffset, mText );
+   drawUtil->drawText( mProfile->mFont, start + offset + mProfile->mTextOffset, mText, mProfile->mFontSize);
 
    // Deal with rendering the titlebar controls
    AssertFatal(root, "Unable to get the root GuiCanvas.");

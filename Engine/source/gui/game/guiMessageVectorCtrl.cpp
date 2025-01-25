@@ -469,13 +469,13 @@ void GuiMessageVectorCtrl::createLineWrapping(LineWrapping& rWrapping, const cha
       }
 
       // Ok, there's some actual text in this line.  How long is it?
-      U32 baseLength = mProfile->mFont->getStrNWidthPrecise((const UTF8 *)&string[rLine.start], rLine.end-rLine.start+1);
+      U32 baseLength = mProfile->mFont->getStringWidthScaledPrecise(String::ToString(string[rLine.start]), mProfile->mFontSize, rLine.end-rLine.start+1);
       if (baseLength > splitWidth) {
          // DMMNOTE: Replace with bin search eventually
          U32 currPos = 0;
          U32 breakPos = 0;
          for (currPos = 0; currPos < rLine.end-rLine.start+1; currPos++) {
-            U32 currLength = mProfile->mFont->getStrNWidthPrecise((const UTF8 *)&string[rLine.start], currPos+1);
+            U32 currLength = mProfile->mFont->getStringWidthScaledPrecise(String::ToString(string[rLine.start]), mProfile->mFontSize, currPos+1);
             if (currLength > splitWidth) 
             {
                // Make sure that the currPos has advanced, then set the breakPoint.
@@ -658,8 +658,8 @@ bool GuiMessageVectorCtrl::onWake()
 
    for (U32 i = 0; i < 256; i++) {
       if (mProfile->mFont->isValidChar(U8(i))) {
-         if (mProfile->mFont->getCharWidth(U8(i)) > mMinSensibleWidth)
-            mMinSensibleWidth = mProfile->mFont->getCharWidth(U8(i));
+         if (mProfile->mFont->getCharWidthScaled(U8(i), mProfile->mFontSize) > mMinSensibleWidth)
+            mMinSensibleWidth = mProfile->mFont->getCharWidthScaled(U8(i), mProfile->mFontSize);
       }
    }
 
@@ -851,8 +851,9 @@ void GuiMessageVectorCtrl::findSpecialFromCoord(const Point2I& point, S32* speci
    }
 
    while (line) {
-      U32 newX = currX + mProfile->mFont->getStrNWidth((const UTF8 *)mMessageVector->getLine(elemIndex).message,
-                                                       line->end - line->start + 1);
+      U32 newX = currX + mProfile->mFont->getStringWidthScaled( String::ToString(mMessageVector->getLine(elemIndex).message),
+                                                                mProfile->mFontSize,
+                                                                line->end - line->start + 1);
       if (point.x < newX) {
          // That's the one!
          *specialLine = elemIndex;

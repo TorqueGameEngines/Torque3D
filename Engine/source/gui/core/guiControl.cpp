@@ -489,13 +489,13 @@ bool GuiControl::defaultTooltipRender( const Point2I &hoverPos, const Point2I &c
 
    Vector<U32> startLineOffsets, lineLengths;
 
-   font->wrapString( renderTip, U32_MAX, startLineOffsets, lineLengths );
+   font->wrapStringScaled( renderTip, U32_MAX, mProfile->mFontSize, startLineOffsets, lineLengths );
 
    // The width is the longest line.
    U32 tipWidth = 0;
    for ( U32 i = 0; i < lineLengths.size(); i++ )
    {
-      U32 width = font->getStrNWidth( renderTip.c_str() + startLineOffsets[i], lineLengths[i] );
+      U32 width = font->getStringWidthScaled( String::ToString(renderTip.c_str() + startLineOffsets[i]), mProfile->mFontSize, lineLengths[i] );
 
       if ( width > tipWidth )
          tipWidth = width;
@@ -2421,7 +2421,7 @@ U32 GuiControl::clipText( String &text, U32 clipWidth ) const
 {
    PROFILE_SCOPE( GuiControl_clipText );
 
-   U32 textWidth = mProfile->mFont->getStrWidthPrecise( text );
+   U32 textWidth = mProfile->mFont->getStringWidthScaled( text, mProfile->mFontSize );
 
    if ( textWidth <= clipWidth )         
       return textWidth;   
@@ -2431,7 +2431,7 @@ U32 GuiControl::clipText( String &text, U32 clipWidth ) const
    // than clipWidth...
 
    // Note this would be more efficient without calling 
-   // getStrWidthPrecise each loop iteration. eg. get the 
+   // getStringWidthScaledPrecise each loop iteration. eg. get the 
    // length of each char, store in a temporary U32 array,
    // and then remove the number we need from the end all at once.
 
@@ -2442,7 +2442,7 @@ U32 GuiControl::clipText( String &text, U32 clipWidth ) const
       text.erase( text.length() - 1, 1 );
       temp = text;
       temp += "...";
-      textWidth = mProfile->mFont->getStrWidthPrecise( temp );
+      textWidth = mProfile->mFont->getStringWidthScaled( temp, mProfile->mFontSize);
 
       if ( textWidth <= clipWidth )
       {

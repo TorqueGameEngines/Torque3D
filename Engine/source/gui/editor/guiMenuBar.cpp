@@ -263,7 +263,7 @@ void GuiMenuBar::onPreRender()
          if (mMenuList[i].bitmapIndex == -1)
          {
             // Text only
-            mMenuList[i].bounds.set(curX, 0, mProfile->mFont->getStrWidth(mMenuList[i].text) + (mHorizontalMargin * 2), getHeight() - (mVerticalMargin * 2));
+            mMenuList[i].bounds.set(curX, 0, mProfile->mFont->getStringWidthScaled(String::ToString(mMenuList[i].text), mProfile->mFontSize) + (mHorizontalMargin * 2), getHeight() - (mVerticalMargin * 2));
 
          }
          else
@@ -273,7 +273,7 @@ void GuiMenuBar::onPreRender()
             {
                // Draw the bitmap and the text
                RectI *bitmapBounds = mProfile->mBitmapArrayRects.address();
-               mMenuList[i].bounds.set(curX, 0, bitmapBounds[mMenuList[i].bitmapIndex].extent.x + mProfile->mFont->getStrWidth(mMenuList[i].text) + (mHorizontalMargin * 2), getHeight() + (mVerticalMargin * 2));
+               mMenuList[i].bounds.set(curX, 0, bitmapBounds[mMenuList[i].bitmapIndex].extent.x + mProfile->mFont->getStringWidthScaled(String::ToString((mMenuList[i].text) + (mHorizontalMargin * 2)), mProfile->mFontSize), getHeight() + (mVerticalMargin * 2));
 
             }
             else

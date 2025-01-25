@@ -187,7 +187,7 @@ bool GuiIconButtonCtrl::resize(const Point2I &newPosition, const Point2I &newExt
 
    if ( mTextLocation != TextLocNone && mButtonText && mButtonText[0] )
    {
-      U32 strWidth = mProfile->mFont->getStrWidthPrecise( mButtonText );
+      U32 strWidth = mProfile->mFont->getStringWidthScaledPrecise(String::ToString(mButtonText), mProfile->mFontSize);
       
       if ( mTextLocation == TextLocLeft || mTextLocation == TextLocRight )
       {

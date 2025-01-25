@@ -308,7 +308,7 @@ void GuiShapeNameHud::drawName(Point2I offset, const char *name, F32 opacity)
    // Deal with opacity and draw.
    mTextColor.alpha = opacity;
    drawUtil->setBitmapModulation(mTextColor.toColorI());
-   drawUtil->drawText(mProfile->mFont, offset + mLabelPadding, name);
+   drawUtil->drawText(mProfile->mFont, offset + mLabelPadding, name, mProfile->mFontSize);
    drawUtil->clearBitmapModulation();
 
    // Border last

@@ -381,8 +381,8 @@ void PopupMenu::showPopup(GuiCanvas *owner, S32 x /* = -1 */, S32 y /* = -1 */)
       if (!mMenuItems[i].mVisible)
          continue;
 
-      S32 iTextWidth = font->getStrWidth(mMenuItems[i].mText.c_str());
-      S32 iAcceleratorWidth = mMenuItems[i].mAccelerator ? font->getStrWidth(mMenuItems[i].mAccelerator) : 0;
+      S32 iTextWidth = font->getStringWidthScaled(mMenuItems[i].mText, profile->mFontSize);
+      S32 iAcceleratorWidth = mMenuItems[i].mAccelerator ? font->getStringWidthScaled(String::ToString(mMenuItems[i].mAccelerator), profile->mFontSize) : 0;
 
       if (iTextWidth > textWidth)
          textWidth = iTextWidth;

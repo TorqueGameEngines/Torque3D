@@ -175,7 +175,7 @@ void GuiTextCtrl::autoResize()
          
       Point2I newExtents = getExtent();
       if ( mProfile->mAutoSizeWidth )
-         newExtents.x = mProfile->mFont->getStrWidth((const UTF8 *) mText );
+         newExtents.x = mProfile->mFont->getStringWidthScaled(String::ToString(mText), mProfile->mFontSize);
       if ( mProfile->mAutoSizeHeight )
          newExtents.y = mProfile->mFont->getScaledHeight(mProfile->mFontSize) + 4;
 

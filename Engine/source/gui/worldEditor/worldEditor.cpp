@@ -1426,7 +1426,7 @@ void WorldEditor::renderMousePopupInfo()
    }
 
 	GFX->getDrawUtil()->setBitmapModulation(mPopupTextColor);
-   GFX->getDrawUtil()->drawText(mProfile->mFont, Point2I(posi.x - width / 2, posi.y), buf);
+   GFX->getDrawUtil()->drawText(mProfile->mFont, Point2I(posi.x - width / 2, posi.y), buf, mProfile->mFontSize);
 }
 
 void WorldEditor::renderPaths(SimObject *obj)
@@ -1701,7 +1701,7 @@ void WorldEditor::renderScreenObj( SceneObject *obj, const Point3F& projPos, con
 		  
 		 drawer->drawBitmapStretch( classIcon, renderRect );
 		 drawer->setBitmapModulation( ColorI(255,255,255,255) ); 
-		 drawer->drawText(mProfile->mFont, pos, str); 
+		 drawer->drawText(mProfile->mFont, pos, str, mProfile->mFontSize);
 		 if ( obj->isLocked() )      
 			drawer->drawBitmap( mDefaultClassEntry.mLockedHandle, renderPos );      
 
@@ -1715,7 +1715,7 @@ void WorldEditor::renderScreenObj( SceneObject *obj, const Point3F& projPos, con
 		}
 	  }else{
 		  drawer->setBitmapModulation(mObjectTextColor);
-		  drawer->drawText(mProfile->mFont, pos, str);
+		  drawer->drawText(mProfile->mFont, pos, str, mProfile->mFontSize);
 	  };
    }
 
@@ -1747,7 +1747,7 @@ void WorldEditor::renderScreenObj( SceneObject *obj, const Point3F& projPos, con
       noteTextColor.alpha = 255 * fade;
 
       drawer->setBitmapModulation(noteTextColor);
-      drawer->drawText(mProfile->mFont, pos, noteObj->getNote().c_str());
+      drawer->drawText(mProfile->mFont, pos, noteObj->getNote().c_str(), mProfile->mFontSize);
    }
 }
 

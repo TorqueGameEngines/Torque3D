@@ -166,7 +166,7 @@ void GuiCheckBoxCtrl::autoSize()
    }
 
    U32 bmpWidth = bmpArrayRect0Width + 2 + mIndent;
-   U32 strWidth = mProfile->mFont->getStrWidthPrecise( mButtonText );
+   U32 strWidth = mProfile->mFont->getStringWidthScaledPrecise( String::ToString(mButtonText), mProfile->mFontSize);
 
    width = bmpWidth + strWidth + 2;
 

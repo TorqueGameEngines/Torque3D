@@ -133,7 +133,7 @@ void GuiClockHud::onRender(Point2I offset, const RectI &updateRect)
    offset.x += (getWidth() - mProfile->mFont->getStrWidth((const UTF8 *)buf)) / 2;
    offset.y += (getHeight() - mProfile->mFont->getScaledHeight(mProfile->mFontSize)) / 2;
    drawUtil->setBitmapModulation(mTextColor.toColorI());
-   drawUtil->drawText(mProfile->mFont, offset, buf);
+   drawUtil->drawText(mProfile->mFont, offset, buf, mProfile->mFontSize);
    drawUtil->clearBitmapModulation();
 
    // Border last

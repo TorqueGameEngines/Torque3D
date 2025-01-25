@@ -194,7 +194,7 @@ void GuiHealthTextHud::onRender(Point2I offset, const RectI &updateRect)
    }  
   
    drawUtil->setBitmapModulation(tColor.toColorI());
-   drawUtil->drawText(mProfile->mFont, offset, buf);    
+   drawUtil->drawText(mProfile->mFont, offset, buf, mProfile->mFontSize);
    drawUtil->clearBitmapModulation();    
   
    // If enabled draw the border last  

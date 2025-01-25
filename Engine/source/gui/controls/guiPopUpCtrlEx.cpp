@@ -288,20 +288,20 @@ void GuiPopupTextListCtrlEx::onRenderCell(Point2I offset, Point2I cell, bool sel
 
       // Draw the first column
       getColumn(mList[cell.y].text, buff, 0, "\t");
-      GFX->getDrawUtil()->drawText( mFont, Point2I( textXOffset, offset.y ), buff ); //  Used mTextOffset as a margin for the text list rather than the hard coded value of '4'.
+      GFX->getDrawUtil()->drawText( mFont, Point2I( textXOffset, offset.y ), buff, mProfile->mFontSize); //  Used mTextOffset as a margin for the text list rather than the hard coded value of '4'.
 
       // Draw the second column to the right
       getColumn(mList[cell.y].text, buff, 1, "\t");
-      S32 txt_w = mFont->getStrWidth(buff);
+      S32 txt_w = mFont->getStringWidthScaled(String::ToString(buff), mProfile->mFontSize);
 
-      GFX->getDrawUtil()->drawText( mFont, Point2I( offset.x+size.x-mProfile->mTextOffset.x-txt_w, offset.y ), buff ); //  Used mTextOffset as a margin for the text list rather than the hard coded value of '4'.
+      GFX->getDrawUtil()->drawText( mFont, Point2I( offset.x+size.x-mProfile->mTextOffset.x-txt_w, offset.y ), buff, mProfile->mFontSize); //  Used mTextOffset as a margin for the text list rather than the hard coded value of '4'.
 
    } else
    {
       if ((mList[cell.y].id == -2) || (!hasCategories()))
-         GFX->getDrawUtil()->drawText( mFont, Point2I( textXOffset, offset.y ), mList[cell.y].text ); //  Used mTextOffset as a margin for the text list rather than the hard coded value of '4'.
+         GFX->getDrawUtil()->drawText( mFont, Point2I( textXOffset, offset.y ), mList[cell.y].text, mProfile->mFontSize); //  Used mTextOffset as a margin for the text list rather than the hard coded value of '4'.
       else
-         GFX->getDrawUtil()->drawText( mFont, Point2I( textXOffset + 8, offset.y ), mList[cell.y].text ); //  Used mTextOffset as a margin for the text list rather than the hard coded value of '4'.
+         GFX->getDrawUtil()->drawText( mFont, Point2I( textXOffset + 8, offset.y ), mList[cell.y].text, mProfile->mFontSize); //  Used mTextOffset as a margin for the text list rather than the hard coded value of '4'.
    }
 }
 
@@ -1185,7 +1185,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
       }
       //      renderSlightlyRaisedBox(r, mProfile); //  Used to be the only 'else' condition to mInAction above.
 
-      S32 txt_w = mProfile->mFont->getStrWidth(mText);
+      S32 txt_w = mProfile->mFont->getStringWidthScaled(String::ToString(mText), mProfile->mFontSize);
       localStart.x = 0;
       localStart.y = (getHeight() - (mProfile->mFont->getScaledHeight(mProfile->mFontSize))) / 2;
 
@@ -1276,7 +1276,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
 
          // Draw the second column to the right
          getColumn( mText, buff, 1, "\t" );
-         S32 colTxt_w = mProfile->mFont->getStrWidth( buff );
+         S32 colTxt_w = mProfile->mFont->getStringWidthScaled(String::ToString(buff), mProfile->mFontSize);
          if ( mProfile->getChildrenProfile() && mProfile->mBitmapArrayRects.size() )
          {
             // We're making use of a bitmap border, so take into account the
@@ -1435,8 +1435,8 @@ void GuiPopUpMenuCtrlEx::onAction()
    bool setScroll = false;
 
    for ( U32 i = 0; i < mEntries.size(); ++i )
-      if ( S32(mProfile->mFont->getStrWidth( mEntries[i].buf )) > textWidth )
-         textWidth = mProfile->mFont->getStrWidth( mEntries[i].buf );
+      if ( S32(mProfile->mFont->getStringWidthScaled(String::ToString(mEntries[i].buf), mProfile->mFontSize)) > textWidth )
+         textWidth = mProfile->mFont->getStringWidthScaled(String::ToString(mEntries[i].buf), mProfile->mFontSize);
 
    //if(textWidth > getWidth())
    S32 sbWidth = mSc->getControlProfile()->mBorderThickness * 2 + mSc->scrollBarThickness(); //  Calculate the scroll bar width

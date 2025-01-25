@@ -67,13 +67,34 @@ public:
    ///----------------------------------
    /// SDF Functions
    ///----------------------------------
-   U32 getScaledHeight(U32 renderSize) { return mHeight * ((F32)renderSize / mSize); }
-   U32 getScaledBaseline(U32 renderSize) { return mBaseline * ((F32)renderSize / mSize); }
-   U32 getScaledAscent(U32 renderSize) { return mAscent * ((F32)renderSize / mSize); }
-   U32 getScaledDescent(U32 renderSize) { return mDescent * ((F32)renderSize / mSize); }
+   U32 GFont::getScaledHeight(U32 renderSize) const {
+      return static_cast<U32>(mHeight * (static_cast<F32>(renderSize) / mSize) + 0.5f);
+   }
+
+   U32 GFont::getScaledBaseline(U32 renderSize) const {
+      return static_cast<U32>(mBaseline * (static_cast<F32>(renderSize) / mSize) + 0.5f);
+   }
+
+   U32 GFont::getScaledAscent(U32 renderSize) const {
+      return static_cast<U32>(mAscent * (static_cast<F32>(renderSize) / mSize) + 0.5f);
+   }
+
+   U32 GFont::getScaledDescent(U32 renderSize) const {
+      return static_cast<U32>(mDescent * (static_cast<F32>(renderSize) / mSize) + 0.5f);
+   }
+
+   U32 getCharHeightScaled(const UTF16 in_charIndex, U32 renderSize) { return getCharHeight(in_charIndex) * ((F32)renderSize / mSize); }
+   U32 getCharWidthScaled(const UTF16 in_charIndex, U32 renderSize) { return getCharWidth(in_charIndex) * ((F32)renderSize / mSize); }
+   U32 getCharXIncrementScaled(const UTF16 in_charIndex, U32 renderSize) { return getCharXIncrement(in_charIndex) * ((F32)renderSize / mSize); }
 
    U32 getStringWidthScaled(const String& text, U32 renderSize);
+   U32 getStringWidthScaledPrecise(const String& text, U32 renderSize);
+
    U32 getStringWidthScaled(const String& text, U32 renderSize, U32 length);
+   U32 getStringWidthScaledPrecise(const String& text, U32 renderSize, U32 length);
+
+   void wrapStringScaled(const UTF8* txt, U32 lineWidth, U32 renderSize, Vector<U32>& startLineOffset, Vector<U32>& lineLen);
+   U32 getBreakPosScaled(const UTF16* str16, U32 slen, U32 width, U32 renderSize, bool breakOnWhitespace);
 
    const PlatformFont::CharInfo& getCharInfo(const UTF16 in_charIndex);
    static const PlatformFont::CharInfo& getDefaultCharInfo();

@@ -245,9 +245,9 @@ U32 GuiTextListCtrl::getRowWidth(Entry *row)
       const char *nextCol = dStrchr(text, '\t');
       U32 textWidth;
       if(nextCol)
-         textWidth = mFont->getStrNWidth((const UTF8*)text, nextCol - text);
+         textWidth = mFont->getStringWidthScaled(text, mProfile->mFontSize, nextCol - text);
       else
-         textWidth = mFont->getStrWidth((const UTF8*)text);
+         textWidth = mFont->getStringWidthScaled(text, mProfile->mFontSize);
       if(mColumnOffsets[index] >= 0)
          width = getMax(width, mColumnOffsets[index] + textWidth);
       if(!nextCol)

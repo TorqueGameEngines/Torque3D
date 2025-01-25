@@ -159,9 +159,11 @@ singleton ShaderData( SDFFontRenderingGUI )
    DXVertexShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/addColorTextureV.hlsl";
    DXPixelShaderFile    = $Core::CommonShaderPath @ "/fixedFunction/sdfFontRenderP.hlsl";
 
-   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/fixedFunction/gl/colorV.glsl";
-   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/gl/roundedRectangleP.glsl";
-      
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/fixedFunction/gl/addColorTextureV.glsl";
+   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/fixedFunction/gl/sdfFontRenderP.glsl";
+   
+   samplerNames[0] = "$diffuseMap";
+   
    pixVersion = 3.0;   
 };
 

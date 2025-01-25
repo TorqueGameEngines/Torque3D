@@ -25,8 +25,8 @@ new GuiControlProfile(GuiConsoleProfile)
 { 
    border = true;
    borderColor = "15 15 15";
-   fontType = ($platform $= "macos") ? "Monaco" : "Lucida Console";
-   fontSize = ($platform $= "macos") ? 14 : 14;
+   fontType = ($platform $= "macos") ? "Monaco" : "Arial";
+   fontSize = 14;
    fontColor = "225 225 225";
    fontColorHL = "165 214 255";
    fontColorNA = "255 65 65";

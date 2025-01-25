@@ -138,7 +138,7 @@ void DbgFileView::AdjustCellSize()
    S32 maxWidth = 1;
    for (U32 i = 0; i < mFileView.size(); i++)
    {
-      S32 cellWidth = gFileXOffset + mFont->getStrWidth((const UTF8 *)mFileView[i].text);
+      S32 cellWidth = gFileXOffset + mFont->getStringWidthScaled(String::ToString(mFileView[i].text), mProfile->mFontSize);
       maxWidth = getMax(maxWidth, cellWidth);
    }
 
@@ -393,7 +393,7 @@ S32 DbgFileView::findMouseOverChar(const char *text, S32 stringPosition)
       *bufPtr = '\0';
       // Is the resulting string long enough to include the current
       // mouse position?
-      if ((S32)mFont->getStrWidth((const UTF8 *)tempBuf) > stringPosition) {
+      if ((S32)mFont->getStringWidthScaled(String::ToString(tempBuf), mProfile->mFontSize) > stringPosition) {
          // Yep.
          // Restore the character.
          *bufPtr = c;
@@ -695,11 +695,11 @@ void DbgFileView::onRenderCell(Point2I offset, Point2I cell, bool selected, bool
 
          //get the end coord
          tempBuf[mBlockEnd] = '\0';
-         endPos = mFont->getStrWidth((const UTF8 *)tempBuf);
+         endPos = mFont->getStringWidthScaled(String::ToString(tempBuf), mProfile->mFontSize);
 
          //get the start coord
          tempBuf[mBlockStart] = '\0';
-         startPos = mFont->getStrWidth((const UTF8 *)tempBuf);
+         startPos = mFont->getStringWidthScaled(String::ToString(tempBuf), mProfile->mFontSize);
 
          //draw the hilite
          GFX->getDrawUtil()->drawRectFill(RectI(cellOffset.x + startPos, cellOffset.y - 3, endPos - startPos + 2, mCellSize.y + 6), mProfile->mFillColorHL);

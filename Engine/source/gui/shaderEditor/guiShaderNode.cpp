@@ -147,7 +147,7 @@ void GuiShaderNode::renderNode(Point2I offset, const RectI& updateRect, const S3
    drawer->drawRoundedRect(15.0f, headRect, header);
 
    // draw header text.
-   U32 strWidth = mProfile->mFont->getStrWidth(mTitle.c_str());
+   U32 strWidth = mProfile->mFont->getStringWidthScaled(mTitle, mProfile->mFontSize);
    Point2I headerPos = Point2I((getExtent().x / 2) - (strWidth / 2), (headerSize / 2) - (mProfile->mFont->getFontSize() / 2));
    drawer->setBitmapModulation(mProfile->mFontColor);
    drawer->drawText(mProfile->mFont, headerPos + offset, mTitle, mProfile->mFontSize);
@@ -173,7 +173,7 @@ void GuiShaderNode::renderNode(Point2I offset, const RectI& updateRect, const S3
       slotPos = Point2I(getExtent().x, headerSize + (nodeSize / 2));
       for (NodeOutput* output : mOutputNodes)
       {
-         strWidth = mProfile->mFont->getStrWidth(output->name.c_str());
+         strWidth = mProfile->mFont->getStringWidthScaled(output->name, mProfile->mFontSize);
          slotPos.x = getExtent().x - strWidth - textPadX;
 
          drawer->drawText(mProfile->mFont, slotPos + offset, output->name, mProfile->mFontSize);

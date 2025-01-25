@@ -489,20 +489,20 @@ bool GuiControl::defaultTooltipRender( const Point2I &hoverPos, const Point2I &c
 
    Vector<U32> startLineOffsets, lineLengths;
 
-   font->wrapStringScaled( renderTip, U32_MAX, mProfile->mFontSize, startLineOffsets, lineLengths );
+   font->wrapStringScaled( renderTip, U32_MAX, mTooltipProfile->mFontSize, startLineOffsets, lineLengths );
 
    // The width is the longest line.
    U32 tipWidth = 0;
    for ( U32 i = 0; i < lineLengths.size(); i++ )
    {
-      U32 width = font->getStringWidthScaled( String::ToString(renderTip.c_str() + startLineOffsets[i]), mProfile->mFontSize, lineLengths[i] );
+      U32 width = font->getStringWidthScaled( String::ToString(renderTip.c_str() + startLineOffsets[i]), mTooltipProfile->mFontSize, lineLengths[i] );
 
       if ( width > tipWidth )
          tipWidth = width;
    }
 
    // The height is the number of lines times the height of the font.
-   U32 tipHeight = lineLengths.size() * font->getScaledHeight(mProfile->mFontSize); 
+   U32 tipHeight = lineLengths.size() * font->getScaledHeight(mTooltipProfile->mFontSize);
 
    // Vars used:
    // Screensize (for position check)
@@ -550,11 +550,11 @@ bool GuiControl::defaultTooltipRender( const Point2I &hoverPos, const Point2I &c
 
    for ( U32 i = 0; i < lineLengths.size(); i++ )
    {      
-      Point2I start( hMargin, vMargin + i * font->getScaledHeight(mProfile->mFontSize) );       
+      Point2I start( hMargin, vMargin + i * font->getScaledHeight(mTooltipProfile->mFontSize) );
       const UTF8 *line = renderTip.c_str() + startLineOffsets[i];
       U32 lineLen = lineLengths[i];
 
-      drawUtil->drawTextN( font, start + offset, line, lineLen, mProfile->mFontSize, mProfile->mFontColors );
+      drawUtil->drawTextN( font, start + offset, line, lineLen, mTooltipProfile->mFontSize, mTooltipProfile->mFontColors );
    }
 
    GFX->setClipRect( oldClip );

@@ -1414,7 +1414,7 @@ void WorldEditor::renderMousePopupInfo()
          return;
    }
 
-   U32 width = mProfile->mFont->getStrWidth((const UTF8 *)buf);
+   U32 width = mProfile->mFont->getStringWidthScaled(String::ToString(buf), mProfile->mFontSize);
    Point2I posi( mLastMouseEvent.mousePoint.x, mLastMouseEvent.mousePoint.y + 12 );
 
    if ( mRenderPopupBackground )
@@ -1686,7 +1686,7 @@ void WorldEditor::renderScreenObj( SceneObject *obj, const Point3F& projPos, con
    {      
       const char * str = parseObjectFormat(obj, mObjTextFormat);
 
-      Point2I extent(mProfile->mFont->getStrWidth((const UTF8 *)str), mProfile->mFont->getScaledHeight(mProfile->mFontSize));
+      Point2I extent(mProfile->mFont->getStringWidthScaled(String::ToString(str), mProfile->mFontSize), mProfile->mFont->getScaledHeight(mProfile->mFontSize));
 
       Point2I pos(sPos);
 

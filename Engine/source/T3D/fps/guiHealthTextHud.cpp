@@ -174,7 +174,7 @@ void GuiHealthTextHud::onRender(Point2I offset, const RectI &updateRect)
    S32 val = (S32)mValue;    
    char buf[256];    
    dSprintf(buf, sizeof(buf), "%d", val);    
-   offset.x += (getBounds().extent.x - mProfile->mFont->getStrWidth((const UTF8 *)buf)) / 2;    
+   offset.x += (getBounds().extent.x - mProfile->mFont->getStringWidthScaled(String::ToString(buf), mProfile->mFontSize)) / 2;
    offset.y += (getBounds().extent.y - mProfile->mFont->getScaledHeight(mProfile->mFontSize)) / 2;    
   
    LinearColorF tColor = mTextColor;   

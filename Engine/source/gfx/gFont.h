@@ -122,20 +122,6 @@ public:
    const U32 getAscent() const   { return mAscent; }
    const U32 getDescent() const  { return mDescent; }
 
-   U32 getBreakPos(const UTF16 *string, U32 strlen, U32 width, bool breakOnWhitespace);
-
-   /// These are the preferred width functions.
-   U32 getStrNWidth(const UTF16*, U32 n);
-   U32 getStrNWidthPrecise(const UTF16*, U32 n);
-   
-   /// These UTF8 versions of the width functions will be deprecated, please avoid them.
-   U32 getStrWidth(const UTF8*);   // Note: ignores c/r
-   U32 getStrNWidth(const UTF8*, U32 n);
-   
-   U32 getStrWidthPrecise(const UTF8*);   // Note: ignores c/r
-   U32 getStrNWidthPrecise(const UTF8*, U32 n);
-   void wrapString(const UTF8 *string, U32 width, Vector<U32> &startLineOffset, Vector<U32> &lineLen);
-
    /// Dump information about this font to the console.
    void dumpInfo() const;
 

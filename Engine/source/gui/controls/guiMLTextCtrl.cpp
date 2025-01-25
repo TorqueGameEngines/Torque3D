@@ -748,7 +748,7 @@ void GuiMLTextCtrl::getCursorPositionAndColor(Point2I &cursorTop, Point2I &curso
             U32 fontSize = awalk->style->font->size;
 
             const UTF16* buff = mTextBuffer.getPtr() + awalk->textStart;
-            x += font->getStringWidthScaled(String::ToString(buff), awalk->style->font->size, mCursorPosition - awalk->textStart);// - 1);
+            x += font->getStringWidthScaled(String::ToString(buff), fontSize, mCursorPosition - awalk->textStart);// - 1);
 
             color = awalk->style->color;
             goto done;
@@ -1477,7 +1477,7 @@ GuiMLTextCtrl::Atom *GuiMLTextCtrl::splitAtomListEmit(Atom *list, U32 width)
       if (mCurClipX > 0)
       {
          //find out how many character's fit within the given width
-         breakPos = font->getBreakPos(tmp16, list->len, width - totalWidth, false);
+         breakPos = font->getBreakPosScaled(tmp16, list->len, width - totalWidth, fontSize, false);
 
          //if there isn't room for even the first character...
          if (breakPos == 0)

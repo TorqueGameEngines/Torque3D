@@ -477,7 +477,7 @@ void GuiDecalEditorCtrl::renderGui( Point2I offset, const RectI &updateRect )
          char buf[256];
          dSprintf( buf, 256, "%0.3f", pixelSize );
 
-         const U32 width = font->getStrWidth((const UTF8 *)buf);;
+         const U32 width = font->getStringWidthScaled(String::ToString(buf), mProfile->mFontSize);
          const Point2I posi( (U32)screenPos.x, (U32)screenPos.y + 12 );   
          const Point2I minPt(posi.x - width / 2 - 2, posi.y - 1);
          const Point2I maxPt(posi.x + width / 2 + 2, posi.y + font->getScaledHeight(mProfile->mFontSize) + 1);

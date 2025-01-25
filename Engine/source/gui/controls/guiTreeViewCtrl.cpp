@@ -4003,8 +4003,8 @@ bool GuiTreeViewCtrl::renderTooltip( const Point2I &hoverPos, const Point2I& cur
             U32 bufLen = item->getDisplayTextLength() + 1;
             char *buf = (char*)txtAlloc.alloc(bufLen);
             item->getDisplayText(bufLen, buf);
-            textExt.x = mProfile->mFont->getStringWidthScaled(String::ToString(buf), mProfile->mFontSize);
-            textExt.y = mProfile->mFont->getScaledHeight(mProfile->mFontSize);
+            textExt.x = mTooltipProfile->mFont->getStringWidthScaled(String::ToString(buf), mTooltipProfile->mFontSize);
+            textExt.y = mTooltipProfile->mFont->getScaledHeight(mTooltipProfile->mFontSize);
 
             if( pScrollParent->isRectCompletelyVisible(RectI(textStart, textExt)) )
                render = false;

@@ -238,7 +238,7 @@ void GuiParticleGraphCtrl::onRender(Point2I offset, const RectI &updateRect)
 
                   dSprintf(number, 32, "%4.3f %4.3f", plotPoint.x, plotPoint.y);
 
-                  S32 textWidth = (S32)font->getStrWidth((const UTF8*)number);;
+                  S32 textWidth = (S32)font->getStringWidthScaled(String::ToString(number), profile->mFontSize);
                   textWidth /= 2;
 
                   if((((S32)posX - (textWidth/2)) < comparePos.x) || (((S32)posX - textWidth) <= 0))
@@ -968,7 +968,7 @@ bool GuiParticleGraphCtrl::renderGraphTooltip(Point2I cursorPos, StringTableEntr
    Point2I screensize = pCanvas->getWindowSize();
    Point2I offset = cursorPos; 
    Point2I textBounds;
-   S32 textWidth = font->getStrWidth(tooltip);
+   S32 textWidth = font->getStringWidthScaled(String::ToString(tooltip), mTooltipProfile->mFontSize);
 
    //Offset below cursor image
    offset.y -= root->getCursorExtent().y;

@@ -391,43 +391,18 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
       addSheet();
    }
 
-   // Check if the current texture sheet is full and if we need to add a new one
-   if (nextCurY >= TextureSheetSize)
-   {
-      // When nextCurY exceeds sheet height, add a new sheet
+   if (nextCurY >= TextureSheetSize || nextCurX >= TextureSheetSize) {
       addSheet();
-      nextCurX = mCurX + sdfWidth;
-      nextCurY = mCurY + sdfHeight;
+      mCurX = 0;
+      mCurY = 0;
    }
 
-   // If the X position exceeds the sheet width, move to the next row
-   if (nextCurX >= TextureSheetSize)
-   {
-      // Move to the next row, reset mCurX and adjust mCurY
-      mCurX = 0;  // Reset to the start of the row
-
-      // Move down by the height of the tallest character in the current row
-      mCurY += mMaxRowHeight + padding;  // Add the row height and padding
-
-      // Ensure the Y position doesn't exceed the texture sheet height
-      if (mCurY >= TextureSheetSize)
-      {
-         // If we've exceeded the texture sheet height, add a new sheet
-         addSheet();
-         mCurX = 0;
-         mCurY = 0;  // Reset to the top of the new sheet
-      }
-
-      // Recalculate the position for the current character
-      nextCurX = mCurX + sdfWidth;
-      nextCurY = mCurY + sdfHeight;
-   }
-
-    charInfo.bitmapIndex = mCurSheet;
-    charInfo.xOffset = mCurX;
-    charInfo.yOffset = mCurY;
+   charInfo.bitmapIndex = mCurSheet;
+   charInfo.xOffset = mCurX;
+   charInfo.yOffset = mCurY;
 
    mCurX = nextCurX;
+   mCurY = nextCurY;
 
    GBitmap *bmp = mTextureSheets[mCurSheet].getBitmap();
 

@@ -495,7 +495,7 @@ bool GuiControl::defaultTooltipRender( const Point2I &hoverPos, const Point2I &c
    U32 tipWidth = 0;
    for ( U32 i = 0; i < lineLengths.size(); i++ )
    {
-      U32 width = font->getStringWidthScaled( String::ToString(renderTip.c_str() + startLineOffsets[i]), mTooltipProfile->mFontSize, lineLengths[i] );
+      U32 width = font->getStringWidthScaledPrecise( String::ToString(renderTip.c_str() + startLineOffsets[i]), mTooltipProfile->mFontSize, lineLengths[i] );
 
       if ( width > tipWidth )
          tipWidth = width;

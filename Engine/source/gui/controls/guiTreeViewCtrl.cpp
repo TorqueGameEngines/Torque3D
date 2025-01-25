@@ -612,7 +612,7 @@ S32 GuiTreeViewCtrl::Item::getDisplayTextWidth(GFont *font)
    char *buf = (char*)txtAlloc.alloc(bufLen);
    getDisplayText(bufLen, buf);
 
-   return font->getStringWidthScaled(String::ToString(buf), mProfile->mFontSize);
+   return font->getStringWidthScaledPrecise(String::ToString(buf), mProfile->mFontSize);
 }
 
 //-----------------------------------------------------------------------------
@@ -2013,7 +2013,7 @@ bool GuiTreeViewCtrl::_hitTest(const Point2I & pnt, Item* & item, BitSet32 & fla
    char *buf = (char*)txtAlloc.alloc(bufLen);
    item->getDisplayText(bufLen, buf);
 
-   min += mProfile->mFont->getStringWidthScaled(String::ToString(buf), mProfile->mFontSize);
+   min += mProfile->mFont->getStringWidthScaledPrecise(String::ToString(buf), mProfile->mFontSize);
    if(pos.x < min)
       flags.set(OnText);
 
@@ -3909,7 +3909,7 @@ void GuiTreeViewCtrl::onRenderCell(Point2I offset, Point2I cell, bool, bool )
    item->getDisplayText(bufLen, displayText);
 
    // Draw the rollover/selected bitmap, if one was specified.
-   drawRect.extent.x = mProfile->mFont->getStringWidthScaled(String::ToString(displayText), mProfile->mFontSize);
+   drawRect.extent.x = mProfile->mFont->getStringWidthScaledPrecise(String::ToString(displayText), mProfile->mFontSize);
    if ( item->mState.test( Item::Selected ) && mTexSelected )
       drawer->drawBitmapStretch( mTexSelected, drawRect );
    else if ( item->mState.test( Item::MouseOverText ) && mTexRollover )
@@ -4003,7 +4003,7 @@ bool GuiTreeViewCtrl::renderTooltip( const Point2I &hoverPos, const Point2I& cur
             U32 bufLen = item->getDisplayTextLength() + 1;
             char *buf = (char*)txtAlloc.alloc(bufLen);
             item->getDisplayText(bufLen, buf);
-            textExt.x = mTooltipProfile->mFont->getStringWidthScaled(String::ToString(buf), mTooltipProfile->mFontSize);
+            textExt.x = mTooltipProfile->mFont->getStringWidthScaledPrecise(String::ToString(buf), mTooltipProfile->mFontSize);
             textExt.y = mTooltipProfile->mFont->getScaledHeight(mTooltipProfile->mFontSize);
 
             if( pScrollParent->isRectCompletelyVisible(RectI(textStart, textExt)) )

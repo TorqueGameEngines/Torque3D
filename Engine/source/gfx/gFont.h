@@ -53,7 +53,7 @@ public:
    enum Constants 
    {
       TabWidthInSpaces = 3,
-      TextureSheetSize = 1024,
+      TextureSheetSize = 512,
    };
 
 public:

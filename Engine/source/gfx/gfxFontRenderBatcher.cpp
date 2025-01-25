@@ -103,7 +103,7 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
 
          // Where are we drawing it?
          F32 drawY = offset.y + (F32(mFont->getBaseline() - ci.yOrigin) * mRenderScale);
-         F32 drawX = offset.x + ((m.x + (F32)ci.xOrigin) * mRenderScale);
+         F32 drawX = offset.x + ((m.x + ci.xOrigin) * mRenderScale);
 
          // Figure some values.
          const F32 texWidth = (F32)tex->getWidth();

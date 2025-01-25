@@ -478,6 +478,31 @@ const PlatformFont::CharInfo &GFont::getCharInfo(const UTF16 in_charIndex)
     return mCharMap[in_charIndex];
 }
 
+PlatformFont::CharInfo GFont::getScaledCharInfo(const UTF16 in_charIndex, U32 renderSize) {
+   PROFILE_SCOPE(GFont_getScaledCharInfo);
+
+   AssertFatal(in_charIndex, "GFont::getScaledCharInfo - can't get info for char 0!");
+
+   // Retrieve the original character information.
+   auto it = mCharMap.find(in_charIndex);
+   if (it == mCharMap.end())
+      loadCharInfo(in_charIndex);
+
+   const PlatformFont::CharInfo& originalCharInfo = mCharMap[in_charIndex];
+
+   // Calculate the scaling factor.
+   const F32 renderScale = static_cast<F32>(renderSize) / mSize;
+
+   // Create a scaled version of the character info.
+   PlatformFont::CharInfo scaledCharInfo = originalCharInfo;
+
+   scaledCharInfo.xIncrement = getCharXIncrementScaled(in_charIndex, renderSize);
+   scaledCharInfo.xOrigin = static_cast<U32>((F32)originalCharInfo.xOrigin * renderScale);
+   scaledCharInfo.yOrigin = static_cast<U32>((F32)originalCharInfo.yOrigin * renderScale);
+
+   return scaledCharInfo;
+}
+
 const PlatformFont::CharInfo &GFont::getDefaultCharInfo()
 {
    static PlatformFont::CharInfo c;
@@ -546,10 +571,21 @@ U32 GFont::getStringWidthScaled(const String& text, U32 renderSize, U32 length)
 
 U32 GFont::getStringWidthScaledPrecise(const String& text, U32 renderSize, U32 length)
 {
-   U32 totalWidth = getStringWidthScaled(text, renderSize, length);
-
+   U32 totalWidth = 0;
    const UTF16* utfString = text.utf16();
-   UTF16 endChar = utfString[length - 1];
+   U32 charCount = 0;
+
+   for (charCount = 0; charCount < length; charCount++) {
+      UTF16 c = utfString[charCount];
+      if (isValidChar(c)) {
+         totalWidth += getCharXIncrementScaled(c, renderSize);
+      }
+      else if (c == dT('\t')) {
+         totalWidth += getCharXIncrementScaled(dT(' '), renderSize) * TabWidthInSpaces;
+      }
+   }
+
+   UTF16 endChar = utfString[getMin(charCount, length - 1)];
 
    if (isValidChar(endChar)) {
       const PlatformFont::CharInfo& rChar = getCharInfo(endChar);

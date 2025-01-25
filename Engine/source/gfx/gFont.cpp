@@ -386,15 +386,30 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    U32 nextCurX = U32(mCurX + sdfWidth); /*7) & ~0x3;*/
    U32 nextCurY = U32(mCurY + sdfHeight); // + 7) & ~0x3;
 
-   if (mCurSheet == -1)
+   if (mCurSheet == -1 || nextCurY > TextureSheetSize)
    {
       addSheet();
+      nextCurX = U32(mCurX + sdfWidth);
+      nextCurY = U32(mCurY + sdfHeight);
    }
 
-   if (nextCurY >= TextureSheetSize || nextCurX >= TextureSheetSize) {
+   // If the current row exceeds the texture width, move to the next row
+   if (nextCurX > TextureSheetSize) {
+      mCurX = 0; // Start at the beginning of the row
+      mCurY = nextCurY + padding;
+
+      // Recalculate 
+      nextCurX = U32(mCurX + sdfWidth);
+      nextCurY = U32(mCurY + sdfHeight);
+   }
+
+   if (nextCurY >= TextureSheetSize)
+   {
       addSheet();
-      mCurX = 0;
-      mCurY = 0;
+
+      // Recalc our nexts.
+      nextCurX = U32(mCurX + sdfWidth);
+      nextCurY = U32(mCurY + sdfHeight);
    }
 
    charInfo.bitmapIndex = mCurSheet;
@@ -402,7 +417,6 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    charInfo.yOffset = mCurY;
 
    mCurX = nextCurX;
-   mCurY = nextCurY;
 
    GBitmap *bmp = mTextureSheets[mCurSheet].getBitmap();
 
@@ -798,9 +812,9 @@ bool GFont::write(Stream& stream)
    stream.write(mTextureSheets.size());
    for (U32 i = 0; i < mTextureSheets.size(); i++)
    {
-      // // Debugging write out to images.
-      //String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-      //mTextureSheets[i].getBitmap()->writeBitmap("png", path);
+      // Debugging write out to images.
+      String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
+      mTextureSheets[i].getBitmap()->writeBitmap("png", path);
       
 
       mTextureSheets[i].getBitmap()->writeBitmapStream("png", stream);

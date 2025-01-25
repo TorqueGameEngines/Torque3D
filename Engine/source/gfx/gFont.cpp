@@ -74,7 +74,7 @@ static S32 QSORT_CALLBACK GlyphMapCompare(const void *a, const void *b)
 }
 
 
-const U32 GFont::csm_fileVersion = 3;
+const U32 GFont::csm_fileVersion = 4;
 
 String GFont::getFontCacheFilename(const String &faceName)
 {
@@ -970,8 +970,11 @@ bool GFont::read(Stream& io_rStream)
    // Handle versioning
    U32 version;
    io_rStream.read(&version);
-   if(version != csm_fileVersion)
-   return false;
+   if (version != csm_fileVersion)
+   {
+      Con::errorf("Font file generated before SDF fonts were implemented!");
+      return false;
+   }
 
    char buf[256];
    io_rStream.readString(buf);

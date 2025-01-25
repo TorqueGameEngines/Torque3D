@@ -440,9 +440,8 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    // update our width and height.
    charInfo.width = sdfWidth;
    charInfo.height = sdfHeight;
-   charInfo.yOrigin = (F32)(charInfo.yOrigin) - padding;
-   charInfo.xOrigin = (F32)(charInfo.xOrigin) + padding;
-   charInfo.xIncrement = (F32)(charInfo.xIncrement) + 2;
+   charInfo.yOrigin = charInfo.yOrigin - padding;
+   charInfo.xOrigin = charInfo.xOrigin + padding;
 
    mMaxRowHeight = mMax(mMaxRowHeight, sdfHeight);
 

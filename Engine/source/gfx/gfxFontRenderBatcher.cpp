@@ -103,7 +103,7 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
 
          // Where are we drawing it?
          F32 drawY = offset.y + (mFont->getBaseline() - (ci.yOrigin)) * mRenderScale;
-         F32 drawX = offset.x + m.x + ((ci.xOrigin));
+         F32 drawX = offset.x + (m.x + ci.xOrigin) * mRenderScale;
 
          // Figure some values.
          const F32 texWidth = (F32)tex->getWidth();
@@ -222,7 +222,7 @@ void FontRenderBatcher::render( F32 rot, const Point2F &offset )
          const PlatformFont::CharInfo& ci = mFont->getCharInfo(m.c);
          // Get some general info to proceed with...
          F32 yStart = offset.y + (mFont->getBaseline() - (ci.yOrigin)) * mRenderScale;
-         F32 xStart = offset.x + m.x + ((ci.xOrigin));
+         F32 xStart = offset.x + (m.x + ci.xOrigin) * mRenderScale;
 
          // draw baseline
          GFX->getDrawUtil()->drawLine(xStart, yStart + (mFont->getBaseline() * mRenderScale), xStart + (ci.width * mRenderScale), yStart + (mFont->getBaseline() * mRenderScale), ColorI::GREEN);
@@ -252,7 +252,7 @@ void FontRenderBatcher::queueChar( UTF16 c, S32 &currentX, GFXVertexColor &curre
       m.color = currentColor;
    }
 
-   currentX += (ci.xIncrement * mRenderScale);
+   currentX += ci.xIncrement;
 }
 
 FontRenderBatcher::SheetMarker & FontRenderBatcher::getSheetMarker( U32 sheetID )

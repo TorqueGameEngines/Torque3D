@@ -69,6 +69,10 @@ void Platform::shutdown()
    Cleanup();
 }
 
+F32 Platform::getDisplayScaleFactor() {
+   return 1.0f;
+}
+
 //------------------------------------------------------------------------------
 
 

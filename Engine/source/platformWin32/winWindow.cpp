@@ -152,6 +152,13 @@ void Platform::restartInstance()
    }
 }
 
+F32 Platform::getDisplayScaleFactor() {
+   HDC hdc = GetDC(NULL);
+   int dpi = GetDeviceCaps(hdc, LOGPIXELSX);
+
+   return (F32)dpi / 96.0f;
+}
+
 ///just check if the app's global mutex exists, and if so, 
 ///return true - otherwise, false. Should be called before ExcludeOther 
 /// at very start of app execution.

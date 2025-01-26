@@ -320,7 +320,7 @@ void GFont::generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, 
          {
             for (S32 bx = minX; bx <= maxX; ++bx)
             {
-               bool isInside = bitmap[by * width + bx] > 0;
+               bool isInside = bitmap[by * width + bx] > 128;
                F32 dx = scaledX - bx;
                F32 dy = scaledY - by;
                F32 distSquared = dx * dx + dy * dy;
@@ -345,7 +345,7 @@ void GFont::generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, 
          // Normalize and clamp the value
          F32 normalizedDist = 0.5f + ((signedDist + middleDist) / spreadFactor) * 0.5f;
          // Clamp and scale to [0, 255]
-         normalizedDist = mClampF(normalizedDist * 1.2, 0.0f, 1.0f);
+         normalizedDist = mClampF(normalizedDist * 1.1, 0.0f, 1.0f);
          sdfBitmap[y * sdfWidth + x] = (U8)(255 * normalizedDist);
       }
    }

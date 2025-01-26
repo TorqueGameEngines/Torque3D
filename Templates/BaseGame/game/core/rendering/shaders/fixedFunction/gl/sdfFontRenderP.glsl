@@ -29,19 +29,19 @@ uniform vec2 texDim;
 out vec4 OUT_col;
 
 // Customizable parameters   
-float sdfThreshold = 0.5;      // Center threshold for the edge of the glyph
+float sdfThreshold = 0.55;      // Center threshold for the edge of the glyph
                                // Min: 0.4 , Max: 0.6  
 float slopeMultiplier = 0.5;   // Multiplies the slope of the transition
                                // Min: 0.5 (softer edges), Max: 4.0 (sharper edges)
-float inBias = -0.01;          // Shifts the threshold inward 
+float inBias = 0.0;          // Shifts the threshold inward 
                                // Min: -0.05 (slightly thinner), Max: 0.0 (default, no inward shift)
-float outBias = 0.04;          // Shifts the threshold outward 
+float outBias = 0.01;          // Shifts the threshold outward 
                                // Min: 0.0 (default, no outward shift), Max: 0.05 (slightly thicker)
 float smoothness = 0.05;       // Controls the falloff region
                                // Min: 0.005 (very sharp edges), Max: 0.05 (soft, anti-aliased edges)
 int supersample = 4;           // Supersampling factor
                                // Min: 1 (no supersampling), Max: 8 (high-quality, computationally expensive)
-float alphaThreshold = 0.01;   // Sets the alpha threshold 
+float alphaThreshold = 0.1;   // Sets the alpha threshold 
 
 void main() 
 {

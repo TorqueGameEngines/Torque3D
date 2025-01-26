@@ -178,7 +178,7 @@ protected:
    Point2I        mHoverPosition;
    bool           mHoverPositionSet;
    U32            mHoverLeftControlTime;
-
+   F32            mDpiScalingFactor;
 public:
    /// Setting for how to handle 'enableKeyboardTranslation' and 'setNativeAcceleratorsEnabled' requests.
    enum KeyTranslationMode
@@ -485,6 +485,7 @@ private:
      void clearMouseButtonDown(void) { mMouseButtonDown = false; }
      void setConsumeLastInputEvent(bool flag) { mConsumeLastInputEvent = flag; }
      bool getLastCursorPoint(Point2I& pt) const { pt = mLastCursorPt; return mLastCursorEnabled; }
+     F32 getDpiScalingFactor() { return mDpiScalingFactor; }
 
      StringTableEntry getLastInputDeviceType();
 };

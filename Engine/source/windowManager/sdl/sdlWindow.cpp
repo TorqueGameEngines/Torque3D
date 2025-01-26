@@ -715,6 +715,20 @@ const UTF16 *PlatformWindowSDL::getCurtainWindowClassName()
    return str.utf16();
 }
 
+F32 PlatformWindowSDL::getDisplayDpiFactor() const
+{
+   int displayIdx = SDL_GetWindowDisplayIndex(mWindowHandle);
+
+   F32 ddpi, dpiX, dpiY;
+   if (SDL_GetDisplayDPI(displayIdx, &ddpi, &dpiX, &dpiY) != 0)
+   {
+      Con::errorf("SDL GetDisplayDPI: %s, returning 1.0f", SDL_GetError());
+      return 1.0f;
+   }
+
+   return ddpi / 96.0f;
+}
+
 void PlatformWindowSDL::setKeyboardTranslation(const bool enabled)
 {
    mEnableKeyboardTranslation = enabled;

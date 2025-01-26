@@ -22,7 +22,7 @@
 
 #include "platform/platform.h"
 #include "gfx/gfxDrawUtil.h"
-
+#include "gui/core/guiCanvas.h"
 #include "core/frameAllocator.h"
 #include "core/strings/stringFunctions.h"
 #include "core/strings/unicode.h"
@@ -204,8 +204,16 @@ U32 GFXDrawUtil::drawTextN( GFont *font, const Point2I &ptDraw, const UTF16 *in_
    const PlatformFont::CharInfo *tabci = NULL;
 
    S32 ptX = 0;
+   F32 dpiScaling = 1.0f;
+   GuiCanvas* cv = dynamic_cast<GuiCanvas*>(Sim::findObject("Canvas"));
+   if (cv)
+   {
+      dpiScaling = cv->getDpiScalingFactor();
+   }
 
-   F32 renderScale = (F32)((F32)renderSize / (F32)font->getFontSize());
+   F32 fontSize = (F32)renderSize * cv->getDpiScalingFactor();
+
+   F32 renderScale = (F32)(fontSize / (F32)font->getFontSize());
 
    // Queue everything for render.
    mFontRenderBatcher->init(font, n, renderScale);

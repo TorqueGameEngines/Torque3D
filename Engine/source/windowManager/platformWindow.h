@@ -509,6 +509,13 @@ public:
    /// Mac Carbon OpenGL typically needs a WindowRef
    ///
    virtual void* getPlatformDrawable() const = 0;
+
+   /// <summary>
+   /// Get the dpi scaling factor for this display.
+   /// </summary>
+   /// <returns>F32 value of the scaling factor, diagonal dpi / 96.0f</returns>
+   virtual F32 getDisplayDpiFactor() const = 0;
+
 protected:
    virtual void _setFullscreen(const bool fullScreen) {};
    virtual void _setVideoMode(const GFXVideoMode &mode) = 0;

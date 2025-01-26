@@ -164,7 +164,8 @@ GuiCanvas::GuiCanvas(): GuiControl(),
                         mDisplayWindow(true),
                         mMenuBarCtrl(nullptr),
                         mMenuBackground(nullptr),
-                        mConstrainMouse(false)
+                        mConstrainMouse(false),
+                        mDpiScalingFactor(1.0f)
 {
    setBounds(0, 0, 640, 480);
    mAwake = true;
@@ -286,6 +287,7 @@ bool GuiCanvas::onAdd()
       mPlatformWindow->appEvent    .notify(this, &GuiCanvas::handleAppEvent);
       mPlatformWindow->displayEvent.notify(this, &GuiCanvas::handlePaintEvent);
       mPlatformWindow->setInputController( dynamic_cast<IProcessInput*>(this) );
+      mDpiScalingFactor = mPlatformWindow->getDisplayDpiFactor();
    }
 
    // Need to get painted, too! :)

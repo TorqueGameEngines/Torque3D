@@ -822,8 +822,8 @@ bool GFont::write(Stream& stream)
    for (U32 i = 0; i < mTextureSheets.size(); i++)
    {
       // Debugging write out to images.
-      String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-      mTextureSheets[i].getBitmap()->writeBitmap("png", path);
+      // String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
+      // mTextureSheets[i].getBitmap()->writeBitmap("png", path);
       
 
       mTextureSheets[i].getBitmap()->writeBitmapStream("png", stream);

@@ -289,6 +289,8 @@ bool GuiCanvas::onAdd()
       mPlatformWindow->setInputController( dynamic_cast<IProcessInput*>(this) );
       mDpiScalingFactor = mPlatformWindow->getDisplayDpiFactor();
    }
+   
+   mDpiScalingFactor *= Platform::getDisplayScaleFactor();
 
    // Need to get painted, too! :)
    Process::notify(this, &GuiCanvas::paint, PROCESS_RENDER_ORDER);

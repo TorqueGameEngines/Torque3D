@@ -1162,6 +1162,13 @@ GuiMLTextCtrl::Font *GuiMLTextCtrl::allocFont(const char *faceName, U32 faceName
          !dStrncmp(walk->faceName, faceName, faceNameLen) &&
          size == walk->size)
          return walk;
+   
+   F32 dpiScaling = 1.0f;
+   GuiCanvas* cv = dynamic_cast<GuiCanvas*>(Sim::findObject("Canvas"));
+   if (cv)
+   {
+      dpiScaling = cv->getDpiScalingFactor();
+   }
 
    // Create!
    Font *ret;
@@ -1170,7 +1177,7 @@ GuiMLTextCtrl::Font *GuiMLTextCtrl::allocFont(const char *faceName, U32 faceName
    dStrncpy(ret->faceName, faceName, faceNameLen);
    ret->faceName[faceNameLen] = '\0';
    ret->faceNameLen = faceNameLen;
-   ret->size = size;
+   ret->size = size * dpiScaling;
    ret->next = mFontList;
    ret->fontRes = GFont::create(ret->faceName, GuiControlProfile::sFontCacheDirectory);
    if(ret->fontRes != NULL)
@@ -2202,6 +2209,7 @@ char* GuiMLTextCtrl::stripControlChars(const char *inString)
 {
    if (! bool(inString))
       return NULL;
+   
    U32 maxBufLength = 64;
    char *strippedBuffer = Con::getReturnBuffer(maxBufLength);
    char *stripBufPtr = &strippedBuffer[0];

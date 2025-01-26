@@ -34,6 +34,7 @@
 #include "sfx/sfxTrack.h"
 #include "sfx/sfxTypes.h"
 #include "console/engineAPI.h"
+#include "gui/core/guiCanvas.h"
 
 //#define DEBUG_SPEW
 
@@ -471,6 +472,14 @@ bool GuiControlProfile::onAdd()
    
    // Make sure we have an up-to-date children profile
    getChildrenProfile();
+   
+   F32 dpiScaling = 1.0f;
+   GuiCanvas* cv = dynamic_cast<GuiCanvas*>(Sim::findObject("Canvas"));
+   if (cv)
+   {
+      dpiScaling = cv->getDpiScalingFactor();
+   }
+   mFontSize *= dpiScaling;
 
    return true;
 }

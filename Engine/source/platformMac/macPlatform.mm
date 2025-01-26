@@ -77,6 +77,11 @@ void Platform::forceShutdown(S32 returnValue)
    [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
 }
 
+F32 Platform::getDisplayScaleFactor(){
+   CGFloat backingScaleFactor = [NSScreen mainScreen].backingScaleFactor;
+   return (float)backingScaleFactor;
+}
+
 //-----------------------------------------------------------------------------
 void Platform::debugBreak()
 {

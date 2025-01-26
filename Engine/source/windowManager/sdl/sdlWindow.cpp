@@ -725,8 +725,9 @@ F32 PlatformWindowSDL::getDisplayDpiFactor() const
       Con::errorf("SDL GetDisplayDPI: %s, returning 1.0f", SDL_GetError());
       return 1.0f;
    }
-
-   return ddpi / 96.0f;
+   
+   
+   return 1.0f / (ddpi / 96.0f);
 }
 
 void PlatformWindowSDL::setKeyboardTranslation(const bool enabled)

@@ -174,6 +174,7 @@ namespace Platform
    void restartInstance();
    void postQuitMessage(const S32 in_quitVal);
    void forceShutdown(S32 returnValue);
+   F32 getDisplayScaleFactor();
 
    // Debug
    void outputDebugString(const char *string, ...);

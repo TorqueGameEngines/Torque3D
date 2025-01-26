@@ -303,21 +303,19 @@ void GFont::generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, 
    {
       for (S32 x = 0; x < sdfWidth; ++x)
       {
-         // Map SDF coordinates to original bitmap space
          F32 scaledX = x * (F32)width / sdfWidth;
          F32 scaledY = y * (F32)height / sdfHeight;
 
-         F32 minDistInsideSquared = F32_MAX;  // Closest distance to an "inside" pixel
-         F32 minDistOutsideSquared = F32_MAX; // Closest distance to an "outside" pixel
+         F32 minDistInside = F32_MAX;
+         F32 minDistOutside = F32_MAX;
+         F32 minDistMiddle = F32_MAX;
 
-         // Define a local region around the target pixel
          S32 regionSize = mCeil(spreadFactor);
          S32 minX = mClamp((S32)scaledX - regionSize, 0, width - 1);
          S32 maxX = mClamp((S32)scaledX + regionSize, 0, width - 1);
          S32 minY = mClamp((S32)scaledY - regionSize, 0, height - 1);
          S32 maxY = mClamp((S32)scaledY + regionSize, 0, height - 1);
 
-         // Iterate over the region
          for (S32 by = minY; by <= maxY; ++by)
          {
             for (S32 bx = minX; bx <= maxX; ++bx)
@@ -327,26 +325,72 @@ void GFont::generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, 
                F32 dy = scaledY - by;
                F32 distSquared = dx * dx + dy * dy;
 
+               F32 dist = mSqrt(distSquared);
                if (isInside)
-                  minDistInsideSquared = mMin(minDistInsideSquared, distSquared);
+                  minDistInside = mMin(minDistInside, dist);
                else
-                  minDistOutsideSquared = mMin(minDistOutsideSquared, distSquared);
+                  minDistOutside = mMin(minDistOutside, dist);
+
+               // Apply smoothing to the middle distance for softer edges
+               F32 weight = 1.0f / (dist + 1.0f); // Weight decreases with distance
+               minDistMiddle = mMin(minDistMiddle, dist * weight);
             }
          }
 
-         // Compute the signed distance
-         F32 minDistInside = mSqrt(minDistInsideSquared);
-         F32 minDistOutside = mSqrt(minDistOutsideSquared);
+         // Normalize the values to combine inside, outside, and middle distances
          F32 signedDist = minDistOutside - minDistInside;
+         F32 middleDist = minDistMiddle / spreadFactor;
 
-         // Normalize the signed distance
-         F32 normalizedDist = 0.5f + (signedDist / spreadFactor) * 0.5f;
 
+         // Normalize and clamp the value
+         F32 normalizedDist = 0.5f + ((signedDist + middleDist) / spreadFactor) * 0.5f;
          // Clamp and scale to [0, 255]
-         normalizedDist = mClampF(normalizedDist, 0.0f, 1.0f);
+         normalizedDist = mClampF(normalizedDist * 1.2, 0.0f, 1.0f);
          sdfBitmap[y * sdfWidth + x] = (U8)(255 * normalizedDist);
       }
    }
+}
+
+void GFont::applyGaussianBlur(U8* sdfBitmap, S32 width, S32 height, F32 sigma)
+{
+   S32 kernelSize = 2 * (S32)(3 * sigma) + 1;
+   Vector<F32> kernel;
+
+   // Generate the Gaussian kernel
+   F32 sum = 0.0f;
+   for (S32 i = 0; i < kernelSize; ++i)
+   {
+      F32 x = (F32)(i - kernelSize / 2);
+      kernel.push_back(mExp(-x * x / (2 * sigma * sigma)));
+      sum += kernel[i];
+   }
+   for (S32 i = 0; i < kernelSize; ++i)
+   {
+      kernel[i] /= sum;  // Normalize the kernel
+   }
+
+   // Apply the Gaussian blur to each pixel
+   FrameTemp<U8> blurredBitmap((width * height));
+   for (S32 y = 0; y < height; ++y)
+   {
+      for (S32 x = 0; x < width; ++x)
+      {
+         F32 newValue = 0.0f;
+         for (S32 ky = -kernelSize / 2; ky <= kernelSize / 2; ++ky)
+         {
+            for (S32 kx = -kernelSize / 2; kx <= kernelSize / 2; ++kx)
+            {
+               S32 nx = mClamp(x + kx, 0, width - 1);
+               S32 ny = mClamp(y + ky, 0, height - 1);
+               F32 weight = kernel[(ky + kernelSize / 2)] * kernel[(kx + kernelSize / 2)];
+               newValue += weight * sdfBitmap[ny * width + nx];
+            }
+         }
+         blurredBitmap[y * width + x] = (U8)mClampF(newValue, 0.0f, 255.0f);
+      }
+   }
+
+   dMemcpy(sdfBitmap, blurredBitmap.address(), width * height);
 }
 
 void GFont::padGlyphBitmap(const U8* original, S32 origWidth, S32 origHeight, U8* padded, S32 padWidth, S32 padHeight, S32 padding)
@@ -368,7 +412,7 @@ void GFont::padGlyphBitmap(const U8* original, S32 origWidth, S32 origHeight, U8
 
 void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
 {
-   const S32 padding = 8;
+   const S32 padding = 24;
 
    // Dimensions for the padded bitmap and SDF
    S32 paddedWidth = charInfo.width + (2 * padding);
@@ -385,9 +429,10 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    FrameTemp<U8> sdfBitmap((sdfWidth * sdfHeight));
 
    // Generate the SDF
-   F32 sdfSpread = 1.0f / (4.0f + (static_cast<F32>(paddedWidth / paddedHeight)));
+   F32 sdfSpread = 1.0f / (6.0f + (static_cast<F32>(paddedWidth / paddedHeight)));
    sdfSpread = mMax(paddedWidth, paddedHeight) * sdfSpread;
    generateSDF(paddedBitmap, paddedWidth, paddedHeight, sdfBitmap, sdfWidth, sdfHeight, sdfSpread);
+   applyGaussianBlur(sdfBitmap, sdfWidth, sdfHeight, 1.5f);  // Apply blur: 1.5 - 2.5 for a moderate blur
 
    U32 nextCurX = U32(mCurX + sdfWidth);
    U32 nextCurY = U32(mCurY + sdfHeight);
@@ -822,8 +867,8 @@ bool GFont::write(Stream& stream)
    for (U32 i = 0; i < mTextureSheets.size(); i++)
    {
       // Debugging write out to images.
-      // String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-      // mTextureSheets[i].getBitmap()->writeBitmap("png", path);
+       String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
+       mTextureSheets[i].getBitmap()->writeBitmap("png", path);
       
 
       mTextureSheets[i].getBitmap()->writeBitmapStream("png", stream);

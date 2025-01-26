@@ -163,6 +163,7 @@ public:
 protected:
    bool loadCharInfo(const UTF16 ch);
    void generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, S32 sdfWidth, S32 sdfHeight, const F32 spreadFactor);
+   void applyGaussianBlur(U8* sdfBitmap, S32 width, S32 height, F32 sigma);
    void padGlyphBitmap(const U8* original, S32 origWidth, S32 origHeight, U8* padded, S32 padWidth, S32 padHeight, S32 padding);
    void addBitmap(PlatformFont::CharInfo &charInfo);
    void addSheet(void);

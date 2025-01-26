@@ -310,17 +310,23 @@ void GFont::generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, 
          F32 minDistInsideSquared = F32_MAX;  // Closest distance to an "inside" pixel
          F32 minDistOutsideSquared = F32_MAX; // Closest distance to an "outside" pixel
 
-         // Iterate over the entire bitmap (can optimize to a smaller region)
-         for (S32 by = 0; by < height; ++by)
+         // Define a local region around the target pixel
+         S32 regionSize = mCeil(spreadFactor);
+         S32 minX = mClamp((S32)scaledX - regionSize, 0, width - 1);
+         S32 maxX = mClamp((S32)scaledX + regionSize, 0, width - 1);
+         S32 minY = mClamp((S32)scaledY - regionSize, 0, height - 1);
+         S32 maxY = mClamp((S32)scaledY + regionSize, 0, height - 1);
+
+         // Iterate over the region
+         for (S32 by = minY; by <= maxY; ++by)
          {
-            for (S32 bx = 0; bx < width; ++bx)
+            for (S32 bx = minX; bx <= maxX; ++bx)
             {
                bool isInside = bitmap[by * width + bx] > 0;
                F32 dx = scaledX - bx;
                F32 dy = scaledY - by;
                F32 distSquared = dx * dx + dy * dy;
 
-               // Update the minimum distances for inside and outside
                if (isInside)
                   minDistInsideSquared = mMin(minDistInsideSquared, distSquared);
                else
@@ -383,8 +389,8 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    sdfSpread = mMax(paddedWidth, paddedHeight) * sdfSpread;
    generateSDF(paddedBitmap, paddedWidth, paddedHeight, sdfBitmap, sdfWidth, sdfHeight, sdfSpread);
 
-   U32 nextCurX = U32(mCurX + sdfWidth); /*7) & ~0x3;*/
-   U32 nextCurY = U32(mCurY + sdfHeight); // + 7) & ~0x3;
+   U32 nextCurX = U32(mCurX + sdfWidth);
+   U32 nextCurY = U32(mCurY + sdfHeight);
 
    if (mCurSheet == -1 || nextCurY > TextureSheetSize)
    {
@@ -396,7 +402,8 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    // If the current row exceeds the texture width, move to the next row
    if (nextCurX > TextureSheetSize) {
       mCurX = 0; // Start at the beginning of the row
-      mCurY = nextCurY + padding;
+      mCurY += mMaxRowHeight; // Move down by the tallest glyph in the current row
+      mMaxRowHeight = 0; // Reset for the next row
 
       // Recalculate 
       nextCurX = U32(mCurX + sdfWidth);
@@ -433,7 +440,6 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    charInfo.xOrigin = charInfo.xOrigin - padding;
 
    mMaxRowHeight = mMax(mMaxRowHeight, sdfHeight);
-
    mTextureSheets[mCurSheet].refresh();
 }
 
@@ -449,6 +455,9 @@ void GFont::addSheet()
     mTextureSheets.increment();
     mTextureSheets.last() = handle;
 
+    mCurX = 0;
+    mCurY = 0;
+    mMaxRowHeight = 0;
     mCurSheet = mTextureSheets.size() - 1;
 }
 

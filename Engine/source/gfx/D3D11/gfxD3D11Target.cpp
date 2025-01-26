@@ -332,7 +332,7 @@ GFXD3D11WindowTarget::GFXD3D11WindowTarget()
 GFXD3D11WindowTarget::~GFXD3D11WindowTarget()
 {
    SAFE_RELEASE(mDepthStencilView)
-      SAFE_RELEASE(mDepthStencil);
+   SAFE_RELEASE(mDepthStencil);
    SAFE_RELEASE(mBackBufferView);
    SAFE_RELEASE(mBackBuffer);
    SAFE_RELEASE(mSwapChain);
@@ -382,7 +382,8 @@ bool GFXD3D11WindowTarget::present()
       else if (result == DXGI_ERROR_INVALID_CALL)
          AssertFatal(false, "DXGI_ERROR_INVALID_CALL");
    }
-
+   // if swap chain flip this needs to be called right after present as it unbinds the backbuffer.
+   activate();
    return (hr == S_OK);
 }
 
@@ -553,8 +554,10 @@ void GFXD3D11WindowTarget::resurrect()
 
 void GFXD3D11WindowTarget::setBackBuffer()
 {
-   if (!mBackBuffer)
-      mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)& mBackBuffer);
+   SAFE_RELEASE(mBackBuffer);
+   HRESULT hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&mBackBuffer);
+   if (FAILED(hr))
+      AssertFatal(false, "GFXD3D11WindowTarget::setBackBuffer - Failed to retrieve backbuffer.");
 }
 
 void GFXD3D11WindowTarget::activate()

@@ -137,6 +137,7 @@ void GFXGLDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
    {
       return;
    }
+   Con::printf("OpenGL Version: %d.%d", major, minor);
 
    // Set our sdl attribute to use this version.
    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major);
@@ -169,7 +170,26 @@ void GFXGLDevice::enumerateAdapters( Vector<GFXAdapter*> &adapterList )
       dStrcpy(toAdd->mName, "OpenGL", GFXAdapter::MaxAdapterNameLen);
 
    toAdd->mType = OpenGL;
-   toAdd->mShaderModel = 0.f;
+   F32 shaderModel = 3.3;
+   if (major == 4)
+   {
+      if (minor == 0)
+         shaderModel = 4.00f;  // GLSL 4.00
+      else if (minor == 1)
+         shaderModel = 4.10f;  // GLSL 4.10
+      else if (minor == 2)
+         shaderModel = 4.20f;  // GLSL 4.20
+      else if (minor == 3)
+         shaderModel = 4.30f;  // GLSL 4.30
+      else if (minor == 4)
+         shaderModel = 4.40f;  // GLSL 4.40
+      else if (minor == 5)
+         shaderModel = 4.50f;  // GLSL 4.50
+      else if (minor == 6)
+         shaderModel = 4.60f;  // GLSL 4.60
+   }
+
+   toAdd->mShaderModel = shaderModel;
    toAdd->mCreateDeviceInstanceDelegate = mCreateDeviceInstance;
 
    // Enumerate all available resolutions:

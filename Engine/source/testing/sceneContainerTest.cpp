@@ -751,7 +751,7 @@ TEST_F(SceneContainerTest, findObjects)
    // Should find all 3 objects we put there in the setup
 
    SceneContainer::ObjectList outList;
-   gServerSceneGraph->getContainer()->findObjectList(MarkerObjectType, &outList);
+   getActiveServerScene()->getContainer()->findObjectList(MarkerObjectType, &outList);
 
    EXPECT_EQ(outList.size(), 3);
 
@@ -763,7 +763,7 @@ TEST_F(SceneContainerTest, findObjects)
 
    // Won't find other objects
 
-   gServerSceneGraph->getContainer()->findObjectList(PlayerObjectType, &outList);
+   getActiveServerScene()->getContainer()->findObjectList(PlayerObjectType, &outList);
 
    EXPECT_EQ(outList.size(), 0);
 
@@ -790,16 +790,16 @@ TEST_F(SceneContainerTest, polyhedronFindObjects)
    so1->setTypeMask(MarkerObjectType);
    so1->setTransform(m);
 
-   gClientSceneGraph->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so1);
 
    static Vector<SceneObject*> foundList;
    foundList.clear();
    RayInfo info;
-   gClientSceneGraph->getContainer()->polyhedronFindObjects(shape, MarkerObjectType, [](SceneObject* object, void* key) {
+   getActiveClientScene()->getContainer()->polyhedronFindObjects(shape, MarkerObjectType, [](SceneObject* object, void* key) {
 
       });
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so1);
 }
 
 TEST_F(SceneContainerTest, findObjectList)
@@ -814,23 +814,23 @@ TEST_F(SceneContainerTest, findObjectList)
    so1->setTypeMask(MarkerObjectType);
    so1->setTransform(m);
 
-   gClientSceneGraph->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so1);
 
    Vector<SceneObject*> foundList;
    PolyListContext ctx;
    Box3F box(Point3F(0, 0, 0), Point3F(0, 100, 0));
    RayInfo info;
-   gClientSceneGraph->getContainer()->findObjectList(box, MarkerObjectType, &foundList);
+   getActiveClientScene()->getContainer()->findObjectList(box, MarkerObjectType, &foundList);
 
    EXPECT_EQ(foundList.size(), 0);
 
    foundList.clear();
    box = Box3F(Point3F(0, 0, 0), Point3F(100, 100, 0));
-   gClientSceneGraph->getContainer()->findObjectList(box, MarkerObjectType, &foundList);
+   getActiveClientScene()->getContainer()->findObjectList(box, MarkerObjectType, &foundList);
 
    EXPECT_EQ(foundList.size(), 1);
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so1);
 }
 
 TEST_F(SceneContainerTest, castRay)
@@ -846,21 +846,21 @@ TEST_F(SceneContainerTest, castRay)
    so1->setTransform(m);
    so1->setWorldBox(Box3F(m.getPosition(), m.getPosition() + Point3F(SceneContainer::csmBinSize-2, SceneContainer::csmBinSize-2, 10)));
 
-   gClientSceneGraph->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so1);
 
    Point3F start(0, 0, 0);
    Point3F end(0, 100, 0);
    RayInfo info;
-   bool castCheck = gClientSceneGraph->getContainer()->castRay(start, end, MarkerObjectType, &info);
+   bool castCheck = getActiveClientScene()->getContainer()->castRay(start, end, MarkerObjectType, &info);
 
    EXPECT_EQ(so1->mNumCastRayCalls, 0);
 
    start = Point3F(SceneContainer::csmBinSize + 1, SceneContainer::csmBinSize + 1, 0);
-   castCheck = gClientSceneGraph->getContainer()->castRay(start, end, MarkerObjectType, &info);
+   castCheck = getActiveClientScene()->getContainer()->castRay(start, end, MarkerObjectType, &info);
 
    EXPECT_EQ(so1->mNumCastRayCalls, 1);
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so1);
 }
 
 
@@ -884,8 +884,8 @@ TEST_F(SceneContainerTest, castRay_order)
    so1->mReturnCastRay = true;
    so2->mReturnCastRay = true;
 
-   gClientSceneGraph->getContainer()->addObject(so1);
-   gClientSceneGraph->getContainer()->addObject(so2);
+   getActiveClientScene()->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so2);
 
    // Here we need to ensure that so1 or so2 will be picked based on shortest distance
    RayInfo closeInfo = {};
@@ -904,7 +904,7 @@ TEST_F(SceneContainerTest, castRay_order)
       Point3F start(0, 0, 0);
       Point3F end(0, 0, -100);
       RayInfo info;
-      bool castCheck = gClientSceneGraph->getContainer()->castRay(start, end, MarkerObjectType, &info);
+      bool castCheck = getActiveClientScene()->getContainer()->castRay(start, end, MarkerObjectType, &info);
 
       EXPECT_EQ(castCheck, true);
       EXPECT_EQ(so1->mNumCastRayCalls, 1);
@@ -924,7 +924,7 @@ TEST_F(SceneContainerTest, castRay_order)
       Point3F start(0, 0, 0);
       Point3F end(0, 0, -100);
       RayInfo info;
-      bool castCheck = gClientSceneGraph->getContainer()->castRay(start, end, MarkerObjectType, &info);
+      bool castCheck = getActiveClientScene()->getContainer()->castRay(start, end, MarkerObjectType, &info);
 
       EXPECT_EQ(castCheck, true);
       EXPECT_EQ(so1->mNumCastRayCalls, 2);
@@ -934,8 +934,8 @@ TEST_F(SceneContainerTest, castRay_order)
       EXPECT_EQ(info.object, so1);
    }
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
-   gClientSceneGraph->getContainer()->removeObject(so2);
+   getActiveClientScene()->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so2);
 }
 
 
@@ -952,21 +952,21 @@ TEST_F(SceneContainerTest, castRayRendered)
    so1->setTransform(m);
    so1->setWorldBox(Box3F(m.getPosition(), m.getPosition() + Point3F(SceneContainer::csmBinSize - 2, SceneContainer::csmBinSize - 2, 10)));
 
-   gClientSceneGraph->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so1);
 
    Point3F start(0, 0, 0);
    Point3F end(0, 100, 0);
    RayInfo info;
-   bool castCheck = gClientSceneGraph->getContainer()->castRayRendered(start, end, MarkerObjectType, &info);
+   bool castCheck = getActiveClientScene()->getContainer()->castRayRendered(start, end, MarkerObjectType, &info);
 
    EXPECT_EQ(so1->mNumCastRayRenderedCalls, 0);
 
    start = Point3F(SceneContainer::csmBinSize + 1, SceneContainer::csmBinSize + 1, 0);
-   castCheck = gClientSceneGraph->getContainer()->castRayRendered(start, end, MarkerObjectType, &info);
+   castCheck = getActiveClientScene()->getContainer()->castRayRendered(start, end, MarkerObjectType, &info);
 
    EXPECT_EQ(so1->mNumCastRayRenderedCalls, 1);
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so1);
 }
 
 TEST_F(SceneContainerTest, collideBox)
@@ -981,21 +981,21 @@ TEST_F(SceneContainerTest, collideBox)
    so1->setTypeMask(MarkerObjectType);
    so1->setTransform(m);
 
-   gClientSceneGraph->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so1);
 
    Point3F start(0, 0, 0);
    Point3F end(0, 100, 0);
    RayInfo info;
-   bool castCheck = gClientSceneGraph->getContainer()->collideBox(start, end, 0xFFFFFFFF, &info);
+   bool castCheck = getActiveClientScene()->getContainer()->collideBox(start, end, 0xFFFFFFFF, &info);
 
    EXPECT_EQ(so1->mNumCollideBoxCalls, 0);
 
    start = Point3F(SceneContainer::csmBinSize + 1, SceneContainer::csmBinSize + 1, 0);
-   castCheck = gClientSceneGraph->getContainer()->collideBox(start, end, 0xFFFFFFFF, &info);
+   castCheck = getActiveClientScene()->getContainer()->collideBox(start, end, 0xFFFFFFFF, &info);
 
    EXPECT_EQ(so1->mNumCollideBoxCalls, 1);
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so1);
 }
 
 TEST_F(SceneContainerTest, buildPolyList)
@@ -1010,21 +1010,21 @@ TEST_F(SceneContainerTest, buildPolyList)
    so1->setTypeMask(MarkerObjectType);
    so1->setTransform(m);
 
-   gClientSceneGraph->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so1);
 
    ClippedPolyList polyList;
    Box3F box(Point3F(0, 0, 0), Point3F(10, 10, 0));
    RayInfo info;
-   bool castCheck = gClientSceneGraph->getContainer()->buildPolyList(PLC_Collision, box, 0xFFFFFFFF, &polyList);
+   bool castCheck = getActiveClientScene()->getContainer()->buildPolyList(PLC_Collision, box, 0xFFFFFFFF, &polyList);
 
    EXPECT_EQ(so1->mNumBuildPolyListCalls, 0);
 
    box = Box3F(Point3F(0, 0, 0), Point3F(100, 100, 0));
-   castCheck = gClientSceneGraph->getContainer()->buildPolyList(PLC_Collision, box, 0xFFFFFFFF, &polyList);
+   castCheck = getActiveClientScene()->getContainer()->buildPolyList(PLC_Collision, box, 0xFFFFFFFF, &polyList);
 
    EXPECT_EQ(so1->mNumBuildPolyListCalls, 1);
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so1);
 }
 
 TEST_F(SceneContainerTest, addObject)
@@ -1059,17 +1059,17 @@ TEST_F(SceneContainerTest, addObject)
    m.setPosition(Point3F(SceneContainer::csmBinSize * 2, SceneContainer::csmBinSize * 2, 0));
    so4->setTransform(m);
 
-   gClientSceneGraph->getContainer()->addObject(so1);
-   gClientSceneGraph->getContainer()->addObject(so2);
-   gClientSceneGraph->getContainer()->addObject(so3);
-   gClientSceneGraph->getContainer()->addObject(so4);
-   gClientSceneGraph->getContainer()->addObject(so5);
+   getActiveClientScene()->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so2);
+   getActiveClientScene()->getContainer()->addObject(so3);
+   getActiveClientScene()->getContainer()->addObject(so4);
+   getActiveClientScene()->getContainer()->addObject(so5);
 
-   EXPECT_EQ(so1->getContainer(), gClientSceneGraph->getContainer());
-   EXPECT_EQ(so2->getContainer(), gClientSceneGraph->getContainer());
-   EXPECT_EQ(so3->getContainer(), gClientSceneGraph->getContainer());
-   EXPECT_EQ(so4->getContainer(), gClientSceneGraph->getContainer());
-   EXPECT_EQ(so5->getContainer(), gClientSceneGraph->getContainer());
+   EXPECT_EQ(so1->getContainer(), getActiveClientScene()->getContainer());
+   EXPECT_EQ(so2->getContainer(), getActiveClientScene()->getContainer());
+   EXPECT_EQ(so3->getContainer(), getActiveClientScene()->getContainer());
+   EXPECT_EQ(so4->getContainer(), getActiveClientScene()->getContainer());
+   EXPECT_EQ(so5->getContainer(), getActiveClientScene()->getContainer());
 
    // Should be put in correct bins
 
@@ -1109,15 +1109,15 @@ TEST_F(SceneContainerTest, addObject)
 
    // Check a bin
    Vector<SceneObject*> list;
-   gClientSceneGraph->getContainer()->dumpBin(1, 0, list);
+   getActiveClientScene()->getContainer()->dumpBin(1, 0, list);
    EXPECT_EQ(list.size(), 1);
    EXPECT_EQ(list[0], so1);
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
-   gClientSceneGraph->getContainer()->removeObject(so2);
-   gClientSceneGraph->getContainer()->removeObject(so3);
-   gClientSceneGraph->getContainer()->removeObject(so4);
-   gClientSceneGraph->getContainer()->removeObject(so5);
+   getActiveClientScene()->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so2);
+   getActiveClientScene()->getContainer()->removeObject(so3);
+   getActiveClientScene()->getContainer()->removeObject(so4);
+   getActiveClientScene()->getContainer()->removeObject(so5);
 }
 
 TEST_F(SceneContainerTest, removeObject)
@@ -1141,22 +1141,22 @@ TEST_F(SceneContainerTest, removeObject)
    m.setPosition(Point3F(SceneContainer::csmBinSize * 2, 0, 0));
    so3->setTransform(m);
 
-   gClientSceneGraph->getContainer()->addObject(so1);
-   gClientSceneGraph->getContainer()->addObject(so2);
-   gClientSceneGraph->getContainer()->addObject(so3);
+   getActiveClientScene()->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so2);
+   getActiveClientScene()->getContainer()->addObject(so3);
 
-   EXPECT_EQ(so1->getContainer(), gClientSceneGraph->getContainer());
-   EXPECT_EQ(so2->getContainer(), gClientSceneGraph->getContainer());
-   EXPECT_EQ(so3->getContainer(), gClientSceneGraph->getContainer());
+   EXPECT_EQ(so1->getContainer(), getActiveClientScene()->getContainer());
+   EXPECT_EQ(so2->getContainer(), getActiveClientScene()->getContainer());
+   EXPECT_EQ(so3->getContainer(), getActiveClientScene()->getContainer());
 
    // Should get removed correctly
-   gClientSceneGraph->getContainer()->removeObject(so2);
-   EXPECT_EQ(so1->getContainer(), gClientSceneGraph->getContainer());
+   getActiveClientScene()->getContainer()->removeObject(so2);
+   EXPECT_EQ(so1->getContainer(), getActiveClientScene()->getContainer());
    EXPECT_EQ(so2->getContainer(), (SceneContainer*)NULL);
-   EXPECT_EQ(so3->getContainer(), gClientSceneGraph->getContainer());
+   EXPECT_EQ(so3->getContainer(), getActiveClientScene()->getContainer());
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
-   gClientSceneGraph->getContainer()->removeObject(so3);
+   getActiveClientScene()->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so3);
 
    EXPECT_EQ(so1->getContainer(), (SceneContainer*)NULL);
    EXPECT_EQ(so2->getContainer(), (SceneContainer*)NULL);
@@ -1195,11 +1195,11 @@ TEST_F(SceneContainerTest, insertIntoBins)
    m.setPosition(Point3F(SceneContainer::csmBinSize*2, SceneContainer::csmBinSize*2, 0));
    so4->setTransform(m);
 
-   gClientSceneGraph->getContainer()->insertIntoBins(so1);
-   gClientSceneGraph->getContainer()->insertIntoBins(so2);
-   gClientSceneGraph->getContainer()->insertIntoBins(so3);
-   gClientSceneGraph->getContainer()->insertIntoBins(so4);
-   gClientSceneGraph->getContainer()->insertIntoBins(so5);
+   getActiveClientScene()->getContainer()->insertIntoBins(so1);
+   getActiveClientScene()->getContainer()->insertIntoBins(so2);
+   getActiveClientScene()->getContainer()->insertIntoBins(so3);
+   getActiveClientScene()->getContainer()->insertIntoBins(so4);
+   getActiveClientScene()->getContainer()->insertIntoBins(so5);
 
    EXPECT_EQ(so1->getContainer(), (SceneContainer*)NULL);
    EXPECT_EQ(so2->getContainer(), (SceneContainer*)NULL);
@@ -1238,15 +1238,15 @@ TEST_F(SceneContainerTest, insertIntoBins)
 
    // Check a bin
    Vector<SceneObject*> list;
-   gClientSceneGraph->getContainer()->dumpBin(1, 0, list);
+   getActiveClientScene()->getContainer()->dumpBin(1, 0, list);
    EXPECT_EQ(list.size(), 1);
    EXPECT_EQ(list[0], so1);
 
-   gClientSceneGraph->getContainer()->removeFromBins(so1);
-   gClientSceneGraph->getContainer()->removeFromBins(so2);
-   gClientSceneGraph->getContainer()->removeFromBins(so3);
-   gClientSceneGraph->getContainer()->removeFromBins(so4);
-   gClientSceneGraph->getContainer()->removeFromBins(so5);
+   getActiveClientScene()->getContainer()->removeFromBins(so1);
+   getActiveClientScene()->getContainer()->removeFromBins(so2);
+   getActiveClientScene()->getContainer()->removeFromBins(so3);
+   getActiveClientScene()->getContainer()->removeFromBins(so4);
+   getActiveClientScene()->getContainer()->removeFromBins(so5);
 
    EXPECT_EQ(so1->getContainer(), (SceneContainer*)NULL);
    EXPECT_EQ(so2->getContainer(), (SceneContainer*)NULL);
@@ -1287,17 +1287,17 @@ TEST_F(SceneContainerTest, removeFromBins)
    m.setPosition(Point3F(SceneContainer::csmBinSize * 2, SceneContainer::csmBinSize * 2, 0));
    so4->setTransform(m);
 
-   gClientSceneGraph->getContainer()->insertIntoBins(so1);
-   gClientSceneGraph->getContainer()->insertIntoBins(so2);
-   gClientSceneGraph->getContainer()->insertIntoBins(so3);
-   gClientSceneGraph->getContainer()->insertIntoBins(so4);
-   gClientSceneGraph->getContainer()->insertIntoBins(so5);
+   getActiveClientScene()->getContainer()->insertIntoBins(so1);
+   getActiveClientScene()->getContainer()->insertIntoBins(so2);
+   getActiveClientScene()->getContainer()->insertIntoBins(so3);
+   getActiveClientScene()->getContainer()->insertIntoBins(so4);
+   getActiveClientScene()->getContainer()->insertIntoBins(so5);
 
-   gClientSceneGraph->getContainer()->removeFromBins(so1);
-   gClientSceneGraph->getContainer()->removeFromBins(so2);
-   gClientSceneGraph->getContainer()->removeFromBins(so3);
-   gClientSceneGraph->getContainer()->removeFromBins(so4);
-   gClientSceneGraph->getContainer()->removeFromBins(so5);
+   getActiveClientScene()->getContainer()->removeFromBins(so1);
+   getActiveClientScene()->getContainer()->removeFromBins(so2);
+   getActiveClientScene()->getContainer()->removeFromBins(so3);
+   getActiveClientScene()->getContainer()->removeFromBins(so4);
+   getActiveClientScene()->getContainer()->removeFromBins(so5);
 
    EXPECT_EQ(so1->getContainer(), (SceneContainer*)NULL);
    EXPECT_EQ(so2->getContainer(), (SceneContainer*)NULL);
@@ -1317,9 +1317,9 @@ TEST_F(SceneContainerTest, checkBins)
    m.setPosition(Point3F(SceneContainer::csmBinSize, 0, 0));
    so1->setTransform(m);
 
-   gClientSceneGraph->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so1);
 
-   EXPECT_EQ(so1->getContainer(), gClientSceneGraph->getContainer());
+   EXPECT_EQ(so1->getContainer(), getActiveClientScene()->getContainer());
 
    // Should be put in correct bins
 
@@ -1332,7 +1332,7 @@ TEST_F(SceneContainerTest, checkBins)
 
    // Check a bin
    Vector<SceneObject*> list;
-   gClientSceneGraph->getContainer()->dumpBin(1, 0, list);
+   getActiveClientScene()->getContainer()->dumpBin(1, 0, list);
    EXPECT_EQ(list.size(), 1);
    EXPECT_EQ(list[0], so1);
 
@@ -1340,7 +1340,7 @@ TEST_F(SceneContainerTest, checkBins)
    m.setPosition(Point3F(SceneContainer::csmBinSize*2, 0, 0));
    so1->setTransform(m);
 
-   gClientSceneGraph->getContainer()->checkBins(so1);
+   getActiveClientScene()->getContainer()->checkBins(so1);
    lookup.mRange.minCoord[0] = 2;
    lookup.mRange.maxCoord[0] = 2;
    lookup.mRange.minCoord[1] = 0;
@@ -1348,11 +1348,11 @@ TEST_F(SceneContainerTest, checkBins)
    EXPECT_EQ(so1->getContainerLookupInfo().mRange, lookup.mRange);
 
 
-   gClientSceneGraph->getContainer()->dumpBin(2, 0, list);
+   getActiveClientScene()->getContainer()->dumpBin(2, 0, list);
    EXPECT_EQ(list.size(), 1);
    EXPECT_EQ(list[0], so1);
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so1);
 }
 
 TEST_F(SceneContainerTest, initRadiusSearch)
@@ -1367,7 +1367,7 @@ TEST_F(SceneContainerTest, initRadiusSearch)
    so1->setTransform(m);
    so1->setTypeMask(MarkerObjectType);
 
-   gClientSceneGraph->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so1);
 
    // Should be put in correct bins
 
@@ -1380,11 +1380,11 @@ TEST_F(SceneContainerTest, initRadiusSearch)
 
    // Check a bin
    Vector<SceneObject*> list;
-   gClientSceneGraph->getContainer()->initRadiusSearch(Point3F(0,0,0), 100.0f, MarkerObjectType);
-   EXPECT_EQ(gClientSceneGraph->getContainer()->getRadiusSearchList().size(), 1);
-   EXPECT_EQ(gClientSceneGraph->getContainer()->getRadiusSearchList()[0]->getPointer(), so1);
+   getActiveClientScene()->getContainer()->initRadiusSearch(Point3F(0,0,0), 100.0f, MarkerObjectType);
+   EXPECT_EQ(getActiveClientScene()->getContainer()->getRadiusSearchList().size(), 1);
+   EXPECT_EQ(getActiveClientScene()->getContainer()->getRadiusSearchList()[0]->getPointer(), so1);
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so1);
 }
 
 TEST_F(SceneContainerTest, initTypeSearch)
@@ -1399,15 +1399,15 @@ TEST_F(SceneContainerTest, initTypeSearch)
    so1->setTransform(m);
    so1->setTypeMask(MarkerObjectType);
 
-   gClientSceneGraph->getContainer()->addObject(so1);
+   getActiveClientScene()->getContainer()->addObject(so1);
 
    // Check
    Vector<SceneObject*> list;
-   gClientSceneGraph->getContainer()->initTypeSearch(MarkerObjectType);
-   EXPECT_EQ(gClientSceneGraph->getContainer()->getRadiusSearchList().size(), 1);
-   EXPECT_EQ(gClientSceneGraph->getContainer()->getRadiusSearchList()[0]->getPointer(), so1);
+   getActiveClientScene()->getContainer()->initTypeSearch(MarkerObjectType);
+   EXPECT_EQ(getActiveClientScene()->getContainer()->getRadiusSearchList().size(), 1);
+   EXPECT_EQ(getActiveClientScene()->getContainer()->getRadiusSearchList()[0]->getPointer(), so1);
 
-   gClientSceneGraph->getContainer()->removeObject(so1);
+   getActiveClientScene()->getContainer()->removeObject(so1);
 }
 
 TEST_F(SceneContainerTest, getBinRange)

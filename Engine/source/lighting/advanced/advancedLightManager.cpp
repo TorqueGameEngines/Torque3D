@@ -96,13 +96,13 @@ bool AdvancedLightManager::isCompatible() const
    return true;
 }
 
-void AdvancedLightManager::activate( SceneManager *sceneManager )
+void AdvancedLightManager::activate()
 {
-   Parent::activate( sceneManager );
+   Parent::activate(  );
 
    GFXShader::addGlobalMacro( "TORQUE_ADVANCED_LIGHTING" );
 
-   sceneManager->setPostEffectFog( true );
+   getActiveClientScene()->setPostEffectFog( true );
 
    SHADOWMGR->activate();
 
@@ -126,7 +126,7 @@ void AdvancedLightManager::activate( SceneManager *sceneManager )
       deferredBin = new RenderDeferredMgr(true, blendTargetFormat);
       deferredBin->assignName("AL_DeferredBin");
       deferredBin->registerObject();
-      getSceneManager()->getDefaultRenderPass()->addManager(deferredBin);
+      getActiveClientScene()->getDefaultRenderPass()->addManager(deferredBin);
       mDeferredRenderBin = deferredBin;
    }
 
@@ -138,7 +138,7 @@ void AdvancedLightManager::activate( SceneManager *sceneManager )
 
    // Insert our light bin manager.
    mLightBinManager->setRenderOrder( deferredBin->getRenderOrder() + 0.01f );
-   getSceneManager()->getDefaultRenderPass()->addManager( mLightBinManager );
+   getActiveClientScene()->getDefaultRenderPass()->addManager( mLightBinManager );
 
    AdvancedLightingFeatures::registerFeatures(mDeferredRenderBin->getTargetFormat(), blendTargetFormat);
 

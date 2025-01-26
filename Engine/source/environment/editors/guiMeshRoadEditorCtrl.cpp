@@ -461,7 +461,7 @@ void GuiMeshRoadEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
    Point3F endPnt = event.pos + event.vec * 2000.0f;
    RayInfo ri;   
 
-   if ( gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri) )
+   if ( getActiveServerContainer()->castRay(startPnt, endPnt, StaticShapeObjectType, &ri) )
       endPnt = ri.point;
 
    DebugDrawer *ddraw = DebugDrawer::get();
@@ -497,7 +497,7 @@ void GuiMeshRoadEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
    }
 
    /*
-   else if ( gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri) )
+   else if ( getActiveServerContainer()->castRay(startPnt, endPnt, StaticShapeObjectType, &ri) )
    {
       MeshRoad *pRoad = NULL;
       pRoad = dynamic_cast<MeshRoad*>(ri.object);
@@ -870,7 +870,7 @@ void GuiMeshRoadEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 
       RayInfo ri;   
 
-      if ( gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri) )
+      if ( getActiveServerContainer()->castRay(startPnt, endPnt, StaticShapeObjectType, &ri) )
       {         
          MeshRoad *pRoad = NULL;
          pRoad = dynamic_cast<MeshRoad*>(ri.object);         
@@ -1441,7 +1441,7 @@ bool GuiMeshRoadEditorCtrl::getStaticPos( const Gui3DMouseEvent & event, Point3F
    RayInfo ri;
    bool hit;         
          
-   hit = gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri);    
+   hit = getActiveServerContainer()->castRay(startPnt, endPnt, StaticShapeObjectType, &ri);    
    tpos = ri.point;
    
    return hit;

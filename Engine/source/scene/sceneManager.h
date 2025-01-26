@@ -125,6 +125,10 @@ class SceneManager
       //visibility of objects later.
       Vector< SceneObject* > mRenderedObjectsList;
 
+      SceneContainer* mSceneContainer;
+      SceneManager* mServerSide;
+      SceneManager* mClientSide;
+
    protected:
 
       /// Whether this is the client-side scene.
@@ -209,7 +213,7 @@ class SceneManager
       ~SceneManager();
 
       /// Return the SceneContainer for this scene.
-      SceneContainer* getContainer() const { return mIsClient ? &gClientContainer : &gServerContainer; }
+      SceneContainer* getContainer() const { return mSceneContainer; }
 
       /// Return the manager for the zones in this scene.
       /// @note Only client scenes have a zone manager as for the server, no zoning data is kept.
@@ -363,16 +367,10 @@ class SceneManager
       const MatrixF& getNonClipProjection() const { return mNonClipProj; }
 };
 
-//-----------------------------------------------------------------------------
+SceneManager* getActiveClientScene();
+void setActiveClientScene(SceneManager* scene);
 
-//TODO: these two need to go
-
-/// The client-side scene graph.  Not used if the engine is running
-/// as a dedicated server.
-extern SceneManager* gClientSceneGraph;
-
-/// The server-side scene graph.  Not used if the engine is running
-/// as a pure client.
-extern SceneManager* gServerSceneGraph;
+SceneManager* getActiveServerScene();
+void setActiveServerScene(SceneManager* scene);
 
 #endif //_SCENEMANAGER_H_

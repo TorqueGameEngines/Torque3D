@@ -61,12 +61,12 @@ MODULE_BEGIN( DecalManager )
    MODULE_INIT
    {
       gDecalManager = new DecalManager;
-      gClientSceneGraph->addObjectToScene( gDecalManager );
+      getActiveClientScene()->addObjectToScene( gDecalManager );
    }
    
    MODULE_SHUTDOWN
    {
-      gClientSceneGraph->removeObjectFromScene( gDecalManager );
+      getActiveClientScene()->removeObjectFromScene( gDecalManager );
       SAFE_DELETE( gDecalManager );
    }
 
@@ -660,7 +660,7 @@ DecalInstance* DecalManager::raycast( const Point3F &start, const Point3F &end, 
          
          RayInfo ri;
          bool containsPoint = false;
-         if ( gServerContainer.castRayRendered( start, end, STATIC_COLLISION_TYPEMASK, &ri ) )
+         if ( getActiveServerContainer()->castRayRendered( start, end, STATIC_COLLISION_TYPEMASK, &ri ) )
          {        
             Point2F poly[4];
             poly[0].set( inst->mPosition.x - (inst->mSize / 2), inst->mPosition.y + (inst->mSize / 2));

@@ -243,7 +243,7 @@ void afxCamera::validateEyePoint(F32 pos, MatrixF *mat)
       disableCollision();
       RayInfo collision;
 
-      SceneContainer* pContainer = isServerObject() ? &gServerContainer : &gClientContainer;
+      SceneContainer* pContainer = isServerObject() ? getActiveServerContainer() : getActiveClientContainer();
       if (!pContainer->castRay(startPos, startPos - dir * 2.5 * pos, afxCameraData::sCameraCollisionMask, &collision))
          endPos = startPos - dir * pos;
       else

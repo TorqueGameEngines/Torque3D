@@ -401,7 +401,7 @@ void GuiTSCtrl::_internalRender(RectI guiViewport, RectI renderViewport, Frustum
    // We're going to be displaying this render at size of this control in
    // pixels - let the scene know so that it can calculate e.g. reflections
    // correctly for that final display result.
-   gClientSceneGraph->setDisplayTargetResolution(renderSize);
+   getActiveClientScene()->setDisplayTargetResolution(renderSize);
 
    // Set the GFX world matrix to the world-to-camera transform, but don't 
    // change the cameraMatrix in mLastCameraQuery. This is because 
@@ -421,7 +421,7 @@ void GuiTSCtrl::_internalRender(RectI guiViewport, RectI renderViewport, Frustum
 
    // Set the default non-clip projection as some 
    // objects depend on this even in non-reflect cases.
-   gClientSceneGraph->setNonClipProjection(mSaveProjection);
+   getActiveClientScene()->setNonClipProjection(mSaveProjection);
 
    // Give the post effect manager the worldToCamera, and cameraToScreen matrices
    PFXMGR->setFrameMatrices(mSaveModelview, mSaveProjection);

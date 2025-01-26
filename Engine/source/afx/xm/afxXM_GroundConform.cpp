@@ -150,7 +150,7 @@ afxXM_GroundConform::afxXM_GroundConform(afxXM_GroundConformData* db, afxEffectW
 : afxXM_WeightedBase(db, fxw) 
 { 
   this->db = db;
-  this->container = (on_server) ? &gServerContainer : &gClientContainer;
+  this->container = (on_server) ? getActiveServerContainer() : getActiveClientContainer();
 }
 
 void afxXM_GroundConform::updateParams(F32 dt, F32 elapsed, afxXM_Params& params)

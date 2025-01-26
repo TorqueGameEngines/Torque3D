@@ -1015,7 +1015,7 @@ void afxParticleEmitter::afx_emitParticles(const Point3F& start, const Point3F& 
 
   if( n_parts > 0 && mSceneManager == NULL )
   {
-     gClientSceneGraph->addObjectToScene(this);
+     getActiveClientScene()->addObjectToScene(this);
      ClientProcessList::get()->addObject(this);
   }
 
@@ -1499,12 +1499,12 @@ void afxParticleEmitterPath::groundConformPoint(Point3F& point, const MatrixF& m
     
     Point3F above_pos(point); above_pos.z += 0.1f;
     Point3F below_pos(point); below_pos.z -= 10000;
-    hit = gClientContainer.castRay(above_pos, below_pos, mask, &rInfo);
+    hit = getActiveClientContainer()->castRay(above_pos, below_pos, mask, &rInfo);
     if (!hit)
     {
       above_pos.z = point.z + 10000;
       below_pos.z = point.z - 0.1f;
-      hit = gClientContainer.castRay(below_pos, above_pos, mask, &rInfo);
+      hit = getActiveClientContainer()->castRay(below_pos, above_pos, mask, &rInfo);
     }
   }
   else if (mDataBlock->ground_conform_terrain)
@@ -1512,7 +1512,7 @@ void afxParticleEmitterPath::groundConformPoint(Point3F& point, const MatrixF& m
     U32 mask = TerrainObjectType | TerrainLikeObjectType;
     Point3F above_pos(point); above_pos.z += 10000;
     Point3F below_pos(point); below_pos.z -= 10000;
-    hit = gClientContainer.castRay(above_pos, below_pos, mask, &rInfo);
+    hit = getActiveClientContainer()->castRay(above_pos, below_pos, mask, &rInfo);
   }
 
   if (hit)

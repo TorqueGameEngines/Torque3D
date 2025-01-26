@@ -328,8 +328,8 @@ void CubeReflector::updateReflection( const ReflectParams &params, Point3F expli
 
    mDepthBuff = LightShadowMap::_getDepthTarget(texDim, texDim);
    mRenderTarget->attachTexture(GFXTextureTarget::DepthStencil, mDepthBuff);
-   F32 oldVisibleDist = gClientSceneGraph->getVisibleDistance();
-   gClientSceneGraph->setVisibleDistance( mDesc->farDist );   
+   F32 oldVisibleDist = getActiveClientScene()->getVisibleDistance();
+   getActiveClientScene()->setVisibleDistance( mDesc->farDist );   
 
    F32 detailAdjustBackup = TSShapeInstance::smDetailAdjust;
    TSShapeInstance::smDetailAdjust *= mDesc->detailAdjust;
@@ -342,7 +342,12 @@ void CubeReflector::updateReflection( const ReflectParams &params, Point3F expli
    MathUtils::makeFrustum(&left, &right, &top, &bottom, M_HALFPI_F, 1.0f, mDesc->nearDist);
    GFX->setFrustum(left, right, bottom, top, mDesc->nearDist, mDesc->farDist);
 
+   // We don't use a special clipping projection, but still need to initialize 
+   // this for objects like SkyBox which will use it during a reflect pass.
+   getActiveClientScene()->setNonClipProjection(GFX->getProjectionMatrix());
+
    GFX->pushActiveRenderTarget();
+
    for (S32 i = 5; i >= 0; i--) {
       updateFace(params, i, explicitPostion);
    }
@@ -353,7 +358,7 @@ void CubeReflector::updateReflection( const ReflectParams &params, Point3F expli
    mCubemap->generateMipMaps();
 
 
-   gClientSceneGraph->setVisibleDistance(oldVisibleDist);
+   getActiveClientScene()->setVisibleDistance(oldVisibleDist);
 
    mIsRendering = false;
    mLastTexSize = texDim;
@@ -423,7 +428,7 @@ void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx, Point3
 
    SceneRenderState reflectRenderState
    (
-      gClientSceneGraph,
+      getActiveClientScene(),
       SPT_Reflect,
       SceneCameraState::fromGFX()
    );
@@ -433,11 +438,11 @@ void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx, Point3
 
    // We don't use a special clipping projection, but still need to initialize 
    // this for objects like SkyBox which will use it during a reflect pass.
-   gClientSceneGraph->setNonClipProjection(GFX->getProjectionMatrix());
+   getActiveClientScene()->setNonClipProjection(GFX->getProjectionMatrix());
 
    // render scene
    LIGHTMGR->registerGlobalLights( &reflectRenderState.getCullingFrustum(), false );
-   gClientSceneGraph->renderSceneNoLights( &reflectRenderState, mDesc->objectTypeMask );
+   getActiveClientScene()->renderSceneNoLights( &reflectRenderState, mDesc->objectTypeMask );
    LIGHTMGR->unregisterAllLights();
 
    // Clean up.
@@ -628,14 +633,14 @@ void PlaneReflector::updateReflection( const ReflectParams &params, Point3F expl
    // In the future we may want to fix this instead by having the scatterSky
    // render a skirt or something in its lower half.
    //
-   LinearColorF clearColor = gClientSceneGraph->getAmbientLightColor();
+   LinearColorF clearColor = getActiveClientScene()->getAmbientLightColor();
    GFX->clear( GFXClearZBuffer | GFXClearStencil | GFXClearTarget, clearColor, 0.0f, 0 );
 
    if(GFX->getCurrentRenderStyle() == GFXDevice::RS_StereoSideBySide)
    {
       // Store previous values
       RectI originalVP = GFX->getViewport();
-      MatrixF origNonClipProjection = gClientSceneGraph->getNonClipProjection();
+      MatrixF origNonClipProjection = getActiveClientScene()->getNonClipProjection();
       PFXFrameState origPFXState = PFXMGR->getFrameState();
 
      MatrixF inverseEyeTransforms[2];
@@ -670,7 +675,7 @@ void PlaneReflector::updateReflection( const ReflectParams &params, Point3F expl
 
      SceneRenderState renderStateLeft
       (
-        gClientSceneGraph,
+        getActiveClientScene(),
         SPT_Reflect,
         SceneCameraState::fromGFX()
       );
@@ -680,7 +685,7 @@ void PlaneReflector::updateReflection( const ReflectParams &params, Point3F expl
      renderStateLeft.setDiffuseCameraTransform(params.query->headMatrix);
      //renderStateLeft.disableAdvancedLightingBins(true);
 
-      gClientSceneGraph->renderSceneNoLights( &renderStateLeft, objTypeFlag );
+      getActiveClientScene()->renderSceneNoLights( &renderStateLeft, objTypeFlag );
 
      //
       // Render right half of display
@@ -696,7 +701,7 @@ void PlaneReflector::updateReflection( const ReflectParams &params, Point3F expl
 
      SceneRenderState renderStateRight
      (
-        gClientSceneGraph,
+        getActiveClientScene(),
         SPT_Reflect,
         SceneCameraState::fromGFX()
      );
@@ -706,12 +711,12 @@ void PlaneReflector::updateReflection( const ReflectParams &params, Point3F expl
       renderStateRight.setDiffuseCameraTransform( params.query->headMatrix );
       //renderStateRight.disableAdvancedLightingBins(true);
 
-      gClientSceneGraph->renderSceneNoLights( &renderStateRight, objTypeFlag );
+      getActiveClientScene()->renderSceneNoLights( &renderStateRight, objTypeFlag );
 
       // Restore previous values
       GFX->setFrustum(frustum);
       GFX->setViewport(originalVP);
-      gClientSceneGraph->setNonClipProjection(origNonClipProjection);
+      getActiveClientScene()->setNonClipProjection(origNonClipProjection);
       PFXMGR->setFrameState(origPFXState);
      GFX->setCurrentStereoTarget(-1);
    }
@@ -719,7 +724,7 @@ void PlaneReflector::updateReflection( const ReflectParams &params, Point3F expl
    {
       SceneRenderState reflectRenderState
       (
-         gClientSceneGraph,
+         getActiveClientScene(),
          SPT_Reflect,
          SceneCameraState::fromGFX()
       );
@@ -727,7 +732,7 @@ void PlaneReflector::updateReflection( const ReflectParams &params, Point3F expl
       reflectRenderState.getMaterialDelegate().bind( REFLECTMGR, &ReflectionManager::getReflectionMaterial );
       reflectRenderState.setDiffuseCameraTransform( params.query->headMatrix );
 
-      gClientSceneGraph->renderSceneNoLights( &reflectRenderState, objTypeFlag );
+      getActiveClientScene()->renderSceneNoLights( &reflectRenderState, objTypeFlag );
    }
 
    LIGHTMGR->unregisterAllLights();
@@ -770,7 +775,7 @@ void PlaneReflector::setGFXMatrices( const MatrixF &camTrans )
 	  objTrans.inverse();
 
       // set new projection matrix
-      gClientSceneGraph->setNonClipProjection( (MatrixF&) GFX->getProjectionMatrix() );
+      getActiveClientScene()->setNonClipProjection( (MatrixF&) GFX->getProjectionMatrix() );
       MatrixF clipProj = getFrustumClipProj(objTrans);
       GFX->setProjectionMatrix( clipProj );
    }    
@@ -782,7 +787,7 @@ void PlaneReflector::setGFXMatrices( const MatrixF &camTrans )
       GFX->setWorldMatrix( camReflectTrans );
 
       // set new projection matrix
-      gClientSceneGraph->setNonClipProjection( (MatrixF&) GFX->getProjectionMatrix() );
+      getActiveClientScene()->setNonClipProjection( (MatrixF&) GFX->getProjectionMatrix() );
       MatrixF clipProj = getFrustumClipProj( camReflectTrans );
       GFX->setProjectionMatrix( clipProj );
    }   

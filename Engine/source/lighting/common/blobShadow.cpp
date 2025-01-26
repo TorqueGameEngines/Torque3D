@@ -256,7 +256,7 @@ void BlobShadow::buildPartition(const Point3F & p, const Point3F & lightDir, F32
 
    // get polys
 
-   gClientContainer.findObjects(STATIC_COLLISION_TYPEMASK, BlobShadow::collisionCallback, this);
+   getActiveClientContainer()->findObjects(STATIC_COLLISION_TYPEMASK, BlobShadow::collisionCallback, this);
 
    // setup partition list
    gBlobShadowPoly[0].set(-radius,0,-radius);

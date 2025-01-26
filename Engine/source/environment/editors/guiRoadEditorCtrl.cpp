@@ -569,7 +569,7 @@ void GuiRoadEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
       Point3F startPnt = event.pos;
       Point3F endPnt = event.pos + event.vec * 1000.0f;
       RayInfo ri;   
-      if ( gServerContainer.castRay(startPnt, endPnt, TerrainObjectType, &ri) )
+      if ( getActiveServerContainer()->castRay(startPnt, endPnt, TerrainObjectType, &ri) )
       {
          mSelRoad->setNodePosition( mSelNode, ri.point );
          mIsDirty = true;
@@ -588,7 +588,7 @@ void GuiRoadEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 
       RayInfo ri;   
 
-      if ( gServerContainer.castRay(startPnt, endPnt, TerrainObjectType, &ri) )
+      if ( getActiveServerContainer()->castRay(startPnt, endPnt, TerrainObjectType, &ri) )
       {         
          DecalRoad *pRoad = NULL;
 
@@ -872,7 +872,7 @@ bool GuiRoadEditorCtrl::getTerrainPos( const Gui3DMouseEvent & event, Point3F &t
    RayInfo ri;
    bool hit;         
          
-   hit = gServerContainer.castRay(startPnt, endPnt, TerrainObjectType, &ri);    
+   hit = getActiveServerContainer()->castRay(startPnt, endPnt, TerrainObjectType, &ri);    
    tpos = ri.point;
    
    return hit;

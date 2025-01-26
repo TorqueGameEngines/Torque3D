@@ -75,7 +75,7 @@ public:
 
    // LightManager
    bool isCompatible() const override;
-   void activate( SceneManager *sceneManager ) override;
+   void activate() override;
    void deactivate() override;
    void registerGlobalLight(LightInfo *light, SimObject *obj) override;
    void unregisterAllLights() override;

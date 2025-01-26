@@ -1,0 +1,14 @@
+<MaterialAsset
+    AssetName="GreyPreview"
+    materialDefinitionName="GreyPreview"
+    VersionId="1">
+    <Material
+        Name="GreyPreview"
+        mapTo="GreyPreview"
+        originalAssetName="GreyPreview">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseColor="0.5 0.5 0.5 1"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

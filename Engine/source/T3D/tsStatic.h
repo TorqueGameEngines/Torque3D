@@ -135,6 +135,8 @@ public:
       VisibleMesh = 3      ///< Rendered mesh polygons
    };
 
+   bool _createShape();
+
 protected:
    bool mUseAlphaFade;
    F32  mAlphaFadeStart;
@@ -163,7 +165,7 @@ protected:
    bool buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F& box, const SphereF&) override;
    void buildConvex(const Box3F& box, Convex* convex) override;
 
-   bool _createShape();
+   
 
    void _updatePhysics();
 

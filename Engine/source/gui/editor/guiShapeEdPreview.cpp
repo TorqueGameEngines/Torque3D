@@ -1408,14 +1408,14 @@ void GuiShapeEdPreview::renderWorld(const RectI &updateRect)
    mSaveProjection = GFX->getProjectionMatrix();
    mSaveWorldToScreenScale = GFX->getWorldToScreenScale();
 
-   FogData savedFogData = gClientSceneGraph->getFogData();
-   gClientSceneGraph->setFogData( FogData() );  // no fog in preview window
+   FogData savedFogData = getActiveClientScene()->getFogData();
+   getActiveClientScene()->setFogData( FogData() );  // no fog in preview window
 
    if (Skylight::smSkylightProbe.isValid())
       PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
    SceneRenderState state
    (
-      gClientSceneGraph,
+      getActiveClientScene(),
       SPT_Diffuse,
       SceneCameraState( GFX->getViewport(), mSaveFrustum,
                         GFX->getWorldMatrix(), GFX->getProjectionMatrix() )
@@ -1554,7 +1554,7 @@ void GuiShapeEdPreview::renderWorld(const RectI &updateRect)
       }
    }
 
-   gClientSceneGraph->setFogData( savedFogData );         // restore fog setting
+   getActiveClientScene()->setFogData( savedFogData );         // restore fog setting
 }
 
 void GuiShapeEdPreview::renderGui(Point2I offset, const RectI& updateRect)

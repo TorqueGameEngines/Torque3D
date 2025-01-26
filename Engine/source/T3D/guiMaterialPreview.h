@@ -28,8 +28,33 @@
 #ifndef _GUIMATERIALPREVIEW_H_
 #define _GUIMATERIALPREVIEW_H_
 
+#ifndef _GUITSCONTROL_H_
 #include "gui/3d/guiTSControl.h"
+#endif
+
+#ifndef _TSSHAPEINSTANCE_H_
 #include "ts/tsShapeInstance.h"
+#endif
+
+#ifndef _SCENEMANAGER_H_
+#include "scene/sceneManager.h"
+#endif
+
+#ifndef _SCOPED_SCENE_MANAGER_H_
+#include "scene/scopedSceneManager.h"
+#endif // !1
+
+#ifndef _SKYSPHERE_H_
+#include "environment/skySphere.h"
+#endif
+
+#ifndef _TSSTATIC_H_
+#include "T3D/tsStatic.h"
+#endif
+
+#ifndef _SUN_H_
+#include "environment/sun.h"
+#endif
 
 class LightInfo;
 
@@ -50,8 +75,6 @@ protected:
 
    MouseState  mMouseState;
 
-   TSShapeInstance*  mModel;
-   TSShapeInstance*  mMountedModel;
    U32   mSkinTag;
 
    // For Camera Panning.
@@ -74,7 +97,11 @@ protected:
 
    Point2I     mLastMousePoint;
 
-   LightInfo*  mFakeSun;
+   SceneManager* mTempScene;
+
+   Sun* mRealSun;
+   TSStatic* mTSShape;
+
    void renderSunDirection() const;
 public:
    bool onWake() override;
@@ -89,13 +116,7 @@ public:
    void onRightMouseDragged(const GuiEvent &event) override;
    bool onMouseWheelUp(const GuiEvent &event) override;
    bool onMouseWheelDown(const GuiEvent &event) override;
-   void onMiddleMouseUp(const GuiEvent &event) override;
-   void onMiddleMouseDown(const GuiEvent &event) override;
-   void onMiddleMouseDragged(const GuiEvent &event) override;
-   
-   // For Camera Panning.
-   void setTranslate(S32 modifier, F32 xstep, F32 ystep);
-   
+
    // For Light Translation.
    void setLightTranslate(S32 modifier, F32 xstep, F32 ystep);
    

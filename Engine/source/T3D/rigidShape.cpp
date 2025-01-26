@@ -1457,7 +1457,7 @@ only be called on the server.
 void RigidShape::checkTriggers()
 {
    Box3F bbox = mConvex.getBoundingBox(getTransform(), getScale());
-   gServerContainer.findObjects(bbox,sTriggerMask,findCallback,this);
+   getActiveServerContainer()->findObjects(bbox,sTriggerMask,findCallback,this);
 }
 
 /** The callback used in by the checkTriggers() method.
@@ -1713,7 +1713,7 @@ bool RigidShape::collidingWithWater( Point3F &waterHeight )
    F32 height = mFabs( mObjBox.maxExtents.z - mObjBox.minExtents.z );
 
    RayInfo rInfo;
-   if( gClientContainer.castRay( curPos + Point3F(0.0, 0.0, height), curPos, WaterObjectType, &rInfo) )
+   if( getActiveClientContainer()->castRay( curPos + Point3F(0.0, 0.0, height), curPos, WaterObjectType, &rInfo) )
    {
       waterHeight = rInfo.point;
       return true;

@@ -24,7 +24,7 @@
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 
 #include "afx/arcaneFX.h"
-
+#include "scene/sceneManager.h"
 #include "gui/3d/guiTSControl.h"
 #include "gfx/gfxDrawUtil.h"
 #include "T3D/gameBase/gameConnection.h"
@@ -131,7 +131,7 @@ void afxGuiTextHud::onRender( Point2I, const RectI &updateRect)
    camFovCos = mCos(mDegToRad(camFovCos) / 2);
 
    // Visible distance info & name fading
-   F32 visDistance = gClientSceneGraph->getVisibleDistance();
+   F32 visDistance = getActiveClientScene()->getVisibleDistance();
    F32 visDistanceSqr = visDistance * visDistance;
    F32 fadeDistance = visDistance * mDistanceFade;
 
@@ -201,7 +201,7 @@ void afxGuiTextHud::onRender( Point2I, const RectI &updateRect)
            SceneObject *mount = shape->getObjectMount();
            if (mount)
              mount->disableCollision();
-           bool los = !gClientContainer.castRay(camPos, shapePos,losMask, &info);
+           bool los = !getActiveClientContainer()->castRay(camPos, shapePos,losMask, &info);
            shape->enableCollision();
            if (mount)
              mount->enableCollision();
@@ -253,7 +253,7 @@ void afxGuiTextHud::onRender( Point2I, const RectI &updateRect)
        RayInfo info;
        if (spec->obj)
          spec->obj->disableCollision();
-       bool los = !gClientContainer.castRay(camPos, spec->pos, losMask, &info);
+       bool los = !getActiveClientContainer()->castRay(camPos, spec->pos, losMask, &info);
        if (spec->obj)
          spec->obj->enableCollision();
        if (!los)

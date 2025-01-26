@@ -693,7 +693,7 @@ DefineEngineMethod( ShapeBaseData, checkDeployPos, bool, ( TransformF txfm ),,
       polyList.mPlaneList[i] = temp;
    }
 
-   if (gServerContainer.buildPolyList(PLC_Collision, wBox, StaticShapeObjectType, &polyList))
+   if (getActiveServerContainer()->buildPolyList(PLC_Collision, wBox, StaticShapeObjectType, &polyList))
       return false;
    return true;
 }
@@ -4514,7 +4514,7 @@ DefineEngineMethod( ShapeBase, getLookAtPoint, const char*, ( F32 distance, U32 
    VectorF end = eyePos + eyeVector;
    
    RayInfo ri;
-   if( !gServerContainer.castRay( start, end, typeMask, &ri ) || !ri.object )
+   if( !getActiveServerContainer()->castRay( start, end, typeMask, &ri ) || !ri.object )
       return ""; // No hit.
    
    // Gather hit info.

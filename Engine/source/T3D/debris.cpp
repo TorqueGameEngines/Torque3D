@@ -722,7 +722,7 @@ bool Debris::onAdd()
 
 
    // tell engine the debris exists
-   gClientSceneGraph->addObjectToScene(this);
+   getActiveClientScene()->addObjectToScene(this);
 
    removeFromProcessList();
    ClientProcessList::get()->addObject(this);

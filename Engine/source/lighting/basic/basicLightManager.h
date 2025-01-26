@@ -57,7 +57,7 @@ public:
 
    // LightManager
    bool isCompatible() const override;
-   void activate( SceneManager *sceneManager ) override;
+   void activate() override;
    void deactivate() override;
    void setLightInfo(ProcessedMaterial* pmat, const Material* mat, const SceneData& sgData, const SceneRenderState *state, U32 pass, GFXShaderConstBuffer* shaderConsts) override;
    bool setTextureStage(const SceneData& sgData, const U32 currTexFlag, const U32 textureSlot, GFXShaderConstBuffer* shaderConsts, ShaderConstHandles* handles) override { return false; }

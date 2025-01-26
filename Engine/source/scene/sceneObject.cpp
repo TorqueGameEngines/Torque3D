@@ -352,10 +352,13 @@ void SceneObject::addToScene()
    if( mSceneManager )
       return;
 
-   if( isClientObject() )
-      gClientSceneGraph->addObjectToScene( this );
+   if (isClientObject())
+      if (getServerObject())
+         static_cast<SceneObject*>(getServerObject())->mSceneManager->mClientSide->addObjectToScene(this);
+      else
+         getActiveClientScene()->addObjectToScene(this);
    else
-      gServerSceneGraph->addObjectToScene( this );
+      getActiveServerScene()->addObjectToScene( this );
 }
 
 //-----------------------------------------------------------------------------
@@ -807,7 +810,7 @@ void SceneObject::onCameraScopeQuery( NetConnection* connection, CameraScopeQuer
    if( getSceneManager() )
       getSceneManager()->scopeScene( query, connection );
    else
-      gServerContainer.findObjects( 0xFFFFFFFF, scopeCallback, connection );
+      getActiveServerContainer()->findObjects( 0xFFFFFFFF, scopeCallback, connection );
 }
 
 //-----------------------------------------------------------------------------

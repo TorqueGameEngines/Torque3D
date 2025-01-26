@@ -780,6 +780,10 @@ inline bool SceneBinRange::shouldOverflow() const
 //-----------------------------------------------------------------------------
 
 extern SceneContainer gServerContainer;
-extern SceneContainer gClientContainer;
+SceneContainer* getActiveClientContainer();
+void setActiveClientContainer(SceneContainer* sceneContainer);
+SceneContainer* getActiveServerContainer();
+void setActiveServerContainer(SceneContainer* sceneContainer);
+
 
 #endif // !_SCENECONTAINER_H_

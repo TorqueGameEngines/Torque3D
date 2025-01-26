@@ -476,7 +476,7 @@ S32 arcaneFX::rolloverRayCast(Point3F start, Point3F end, U32 mask)
   SceneObject* picked_obj = 0;
 
   RayInfo hit_info;
-  if (gClientContainer.castRay(start, end, mask, &hit_info))
+  if (getActiveClientContainer()->castRay(start, end, mask, &hit_info))
     picked_obj = dynamic_cast<SceneObject*>(hit_info.object);
 
   if (ctrl_obj)
@@ -503,7 +503,7 @@ bool arcaneFX::freeTargetingRayCast(Point3F start, Point3F end, U32 mask)
   sIsFreeTargeting = true;
 
   RayInfo hit_info;
-  if (!gClientContainer.castRay(start, end, mask, &hit_info))
+  if (!getActiveClientContainer()->castRay(start, end, mask, &hit_info))
   {
     sFreeTargetPosValid = false;
     return false;

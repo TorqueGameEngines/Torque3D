@@ -37,9 +37,28 @@
 //  - FindCallback should return a bool so it's possible to use the findObjectXXX methods to look
 //    for the first object matching a certain criteria
 
+static SceneContainer* activeClientContainer = NULL;
+static SceneContainer* activeServerContainer = NULL;
 
-SceneContainer gServerContainer;
-SceneContainer gClientContainer;
+SceneContainer* getActiveClientContainer()
+{
+   return activeClientContainer;
+}
+
+void setActiveClientContainer(SceneContainer* sceneContainer)
+{
+   activeClientContainer = sceneContainer;
+}
+
+SceneContainer* getActiveServerContainer()
+{
+   return activeServerContainer;
+}
+
+void setActiveServerContainer(SceneContainer* sceneContainer)
+{
+   activeServerContainer = sceneContainer;
+}
 
 const U32 SceneContainer::csmNumAxisBins = 16; // 16*16 = 256 possible bins
 const F32 SceneContainer::csmBinSize = 64;
@@ -1518,7 +1537,7 @@ DefineEngineFunction( containerBoxEmpty, bool,
    polyList.mPlaneList[4].set(B.minExtents, VectorF(0,0,-1));
    polyList.mPlaneList[5].set(B.maxExtents, VectorF(0,0,1));
 
-   SceneContainer* pContainer = useClientContainer ? &gClientContainer : &gServerContainer;
+   SceneContainer* pContainer = useClientContainer ? getActiveClientContainer() : getActiveServerContainer();
    if (ignoreObj)
       ignoreObj->disableCollision();
    bool ret = !pContainer->buildPolyList(PLC_Collision, B, mask, &polyList);
@@ -1541,7 +1560,7 @@ DefineEngineFunction( initContainerRadiusSearch, void, ( Point3F pos, F32 radius
    "@see containerSearchNext\n" 
    "@ingroup Game")
 {
-   SceneContainer* pContainer = useClientContainer ? &gClientContainer : &gServerContainer;
+   SceneContainer* pContainer = useClientContainer ? getActiveClientContainer() : getActiveServerContainer();
 
    pContainer->initRadiusSearch( pos, radius, mask );
 }
@@ -1558,7 +1577,7 @@ DefineEngineFunction( initContainerTypeSearch, void, ( U32 mask, bool useClientC
    "@see containerSearchNext\n" 
    "@ingroup Game")
 {
-   SceneContainer* pContainer = useClientContainer ? &gClientContainer : &gServerContainer;
+   SceneContainer* pContainer = useClientContainer ? getActiveClientContainer() : getActiveServerContainer();
 
    pContainer->initTypeSearch( mask );
 }
@@ -1589,7 +1608,7 @@ DefineEngineFunction( containerSearchNext, SceneObject*, ( bool useClientContain
    "@see initContainerTypeSearch()\n"
    "@ingroup Game")
 {
-   SceneContainer* pContainer = useClientContainer ? &gClientContainer : &gServerContainer;
+   SceneContainer* pContainer = useClientContainer ? getActiveClientContainer() : getActiveServerContainer();
 
    return pContainer->containerSearchNextObject();
 }
@@ -1608,7 +1627,7 @@ DefineEngineFunction( containerSearchCurrDist, F32, ( bool useClientContainer ),
    "@see containerSearchNext\n"
    "@ingroup Game")
 {
-   SceneContainer* pContainer = useClientContainer ? &gClientContainer : &gServerContainer;
+   SceneContainer* pContainer = useClientContainer ? getActiveClientContainer() : getActiveServerContainer();
 
    return pContainer->containerSearchCurrDist();
 }
@@ -1627,7 +1646,7 @@ DefineEngineFunction( containerSearchCurrRadiusDist, F32, ( bool useClientContai
    "@see containerSearchNext\n" 
    "@ingroup Game")
 {
-   SceneContainer* pContainer = useClientContainer ? &gClientContainer : &gServerContainer;
+   SceneContainer* pContainer = useClientContainer ? getActiveClientContainer() : getActiveServerContainer();
 
    return pContainer->containerSearchCurrRadiusDist();
 }
@@ -1660,7 +1679,7 @@ DefineEngineFunction( containerRayCast, const char*,
    if (pExempt)
       pExempt->disableCollision();
 
-   SceneContainer* pContainer = useClientContainer ? &gClientContainer : &gServerContainer;
+   SceneContainer* pContainer = useClientContainer ? getActiveClientContainer() : getActiveServerContainer();
 
    RayInfo rinfo;
    S32 ret = 0;
@@ -1713,7 +1732,7 @@ DefineEngineFunction(materialRayCast, const char*,
    if (pExempt)
       pExempt->disableCollision();
 
-   SceneContainer* pContainer = useClientContainer ? &gClientContainer : &gServerContainer;
+   SceneContainer* pContainer = useClientContainer ? getActiveClientContainer() : getActiveServerContainer();
 
    RayInfo rinfo;
    S32 ret = 0;

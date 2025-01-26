@@ -378,7 +378,7 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    fd.features.addFeature( MFT_Visibility );
 
    if (  lastStage && 
-         (  !gClientSceneGraph->usePostEffectFog() ||
+         (  !getActiveClientScene()->usePostEffectFog() ||
             fd.features.hasFeature( MFT_IsTranslucent ) ||
             fd.features.hasFeature( MFT_ForwardShading )) )
       fd.features.addFeature( MFT_Fog );

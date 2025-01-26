@@ -49,7 +49,7 @@ class Sun : public SceneObject, public ISceneLight
 protected:
 
    F32 mSunAzimuth;
-   
+
    F32 mSunElevation;
 
    LinearColorF mLightColor;
@@ -70,9 +70,9 @@ protected:
    S32 mStaticRefreshFreq;
    S32 mDynamicRefreshFreq;
 
-   LightInfo *mLight;
+   LightInfo* mLight;
 
-   LightFlareData *mFlareData;
+   LightFlareData* mFlareData;
    LightFlareState mFlareState;
    F32 mFlareScale;
 
@@ -81,8 +81,8 @@ protected:
    DECLARE_MATERIALASSET(Sun, CoronaMaterial);
    DECLARE_ASSET_NET_SETGET(Sun, CoronaMaterial, UpdateMask);
 
-   BaseMatInstance *mCoronaMatInst;
-   MatrixSet *mMatrixSet;   
+   BaseMatInstance* mCoronaMatInst;
+   MatrixSet* mMatrixSet;
    F32 mCoronaScale;
    LinearColorF mCoronaTint;
    bool mCoronaUseLightColor;
@@ -94,14 +94,14 @@ protected:
 
    void _conformLights();
    void _initCorona();
-   void _renderCorona( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
-   void _updateTimeOfDay( TimeOfDay *timeOfDay, F32 time );
+   void _renderCorona(ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat);
+   void _updateTimeOfDay(TimeOfDay* timeOfDay, F32 time);
 
    // SimObject.
    void _onSelected() override;
    void _onUnselected() override;
 
-   enum NetMaskBits 
+   enum NetMaskBits
    {
       UpdateMask = BIT(0)
    };
@@ -122,27 +122,35 @@ public:
    void inspectPostApply() override;
 
    // NetObject
-   U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
-   void unpackUpdate( NetConnection *conn, BitStream *stream ) override; 
+   U32 packUpdate(NetConnection* conn, U32 mask, BitStream* stream) override;
+   void unpackUpdate(NetConnection* conn, BitStream* stream) override;
 
    // ISceneLight
-   void submitLights( LightManager *lm, bool staticLighting ) override;
-   LightInfo* getLight() override { return mLight; }   
+   void submitLights(LightManager* lm, bool staticLighting) override;
+   LightInfo* getLight() override { return mLight; }
 
    // SceneObject   
-   void prepRenderImage( SceneRenderState* state ) override;
+   void prepRenderImage(SceneRenderState* state) override;
 
    // ProcessObject
-   void advanceTime( F32 dt ) override;
+   void advanceTime(F32 dt) override;
 
    ///
-   void setAzimuth( F32 azimuth );
+   void setAzimuth(F32 azimuth);
+   F32 getAzimuth() { return mSunAzimuth; }
 
    ///
-   void setElevation( F32 elevation );
+   void setElevation(F32 elevation);
+   F32 getElevation() { return mSunElevation; }
 
    ///
    void setColor( const LinearColorF &color );
+
+   ///
+   void setAmbientColor(const LinearColorF& color);
+
+   ///
+   void setDirection(F32 azimuth, F32 elevation);
 
    ///
    void animate( F32 duration, F32 startAzimuth, F32 endAzimuth, F32 startElevation, F32 endElevation );

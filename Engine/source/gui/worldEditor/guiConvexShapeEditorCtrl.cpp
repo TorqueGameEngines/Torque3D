@@ -1778,7 +1778,7 @@ bool GuiConvexEditorCtrl::_cursorCast( const Gui3DMouseEvent &event, ConvexShape
 {
    RayInfo ri;
    
-   if ( gServerContainer.castRay( event.pos, event.pos + event.vec * 10000.0f, StaticShapeObjectType, &ri, &GuiConvexEditorCtrl::_cursorCastCallback ) &&
+   if ( getActiveServerContainer()->castRay( event.pos, event.pos + event.vec * 10000.0f, StaticShapeObjectType, &ri, &GuiConvexEditorCtrl::_cursorCastCallback ) &&
         dynamic_cast< ConvexShape* >( ri.object ) )
    {
       // Do not select or edit ConvexShapes that are within a Prefab.
@@ -2233,7 +2233,7 @@ ConvexEditorTool::EventResult ConvexEditorCreateTool::on3DMouseDown( const Gui3D
       Point3F end( event.pos + event.vec * 10000.0f );      
       RayInfo ri;
       
-      bool hit = gServerContainer.castRay( event.pos, end, STATIC_COLLISION_TYPEMASK, &ri );
+      bool hit = getActiveServerContainer()->castRay( event.pos, end, STATIC_COLLISION_TYPEMASK, &ri );
 
       MatrixF objMat( true );
 

@@ -31,47 +31,66 @@
 #include "lighting/lightManager.h"
 #include "lighting/lightInfo.h"
 #include "core/resourceManager.h"
-#include "scene/sceneManager.h"
 #include "scene/sceneRenderState.h"
 #include "renderInstance/renderProbeMgr.h"
 #include "T3D/lighting/skylight.h"
 #include "gfx/gfxDrawUtil.h"
+#include "math/mathUtils.h"
+#include "T3D/groundPlane.h"
 
 // GuiMaterialPreview
 GuiMaterialPreview::GuiMaterialPreview()
 :  mMouseState(None),
-   mModel(NULL),
    runThread(0),
    lastRenderTime(0),
    mLastMousePoint(0, 0),
-   mFakeSun(NULL),
    mMaxOrbitDist(5.0f),
    mMinOrbitDist(0.0f),
    mOrbitDist(5.0f)
 {
    mActive = true;
    mCameraMatrix.identity();
-   mCameraRot.set( mDegToRad(30.0f), 0, mDegToRad(-30.0f) );
+   mCameraRot.set(mDegToRad(3.0f), 0, mDegToRad(-30.0f) );
    mCameraPos.set(0.0f, 1.75f, 1.25f);
    mCameraMatrix.setColumn(3, mCameraPos);
    mOrbitPos.set(0.0f, 0.0f, 0.0f);
    mTransStep = 0.01f;
    mTranMult = 4.0;
-   mLightTransStep = 0.01f;
+   mLightTransStep = 0.5f;
    mLightTranMult = 4.0;
    mOrbitRelPos = Point3F(0,0,0);
 
    // By default don't do dynamic reflection
    // updates for this viewport.
    mReflectPriority = 0.0f;
-   mMountedModel = NULL;
    mSkinTag = 0;
+
+   // setup our scene.
+   mTempScene = new SceneManager(true);
+   mTempScene->setFogData(FogData());
+
+   ScopedSceneManager scopeManager(mTempScene);
+   mRealSun = new Sun();
+   mRealSun->setField("brightness", "2.0");
+   mRealSun->setAzimuth(100.0f);
+   mRealSun->registerObject();
+
+   GroundPlane* plane = new GroundPlane();
+   plane->_setMaterial("ToolsModule:GreyPreview");
+   plane->registerObject();
+   
+   mTSShape = new TSStatic();
 }
 
 GuiMaterialPreview::~GuiMaterialPreview()
 {
-   SAFE_DELETE(mModel);
-   SAFE_DELETE(mFakeSun);
+   mRealSun->unregisterObject();
+   SAFE_DELETE(mRealSun);
+
+   if(mTSShape != NULL)
+      deleteModel();
+
+   SAFE_DELETE(mTempScene);
 }
 
 bool GuiMaterialPreview::onWake()
@@ -79,14 +98,8 @@ bool GuiMaterialPreview::onWake()
    if( !Parent::onWake() )
       return false;
 
-   if (!mFakeSun)
-      mFakeSun = LightManager::createLightInfo();
-
-   mFakeSun->setColor( LinearColorF( 1.0f, 1.0f, 1.0f ) );
-   mFakeSun->setAmbient( LinearColorF( 0.5f, 0.5f, 0.5f ) );
-   mFakeSun->setDirection( VectorF( 0.0f, 0.707f, -0.707f ) );
-	mFakeSun->setPosition( mFakeSun->getDirection() * -10000.0f );
-   mFakeSun->setRange( 2000000.0f );
+   mRealSun->setColor( LinearColorF( 1.0f, 1.0f, 1.0f ) );
+   mRealSun->setAmbientColor( LinearColorF( 0.5f, 0.5f, 0.5f ) );
 
    return true;
 }
@@ -96,7 +109,7 @@ void GuiMaterialPreview::setAmbientLightColor( F32 r, F32 g, F32 b )
 {
    LinearColorF temp(r, g, b);
    temp.clamp();
-	GuiMaterialPreview::mFakeSun->setAmbient( temp );
+	mRealSun->setAmbientColor( temp );
 }
 
 // This function allows the light's color to be changed. This is exposed to script below.
@@ -104,7 +117,7 @@ void GuiMaterialPreview::setLightColor( F32 r, F32 g, F32 b )
 {
    LinearColorF temp(r, g, b);
    temp.clamp();
-	GuiMaterialPreview::mFakeSun->setColor( temp );
+   mRealSun->setColor( temp );
 }
 
 // This function is for moving the light in the scene. This needs to be adjusted to keep the light
@@ -114,43 +127,16 @@ void GuiMaterialPreview::setLightTranslate(S32 modifier, F32 xstep, F32 ystep)
 {
 	F32 _lighttransstep = (modifier & SI_SHIFT ? mLightTransStep : (mLightTransStep*mLightTranMult));
 
-	Point3F relativeLightDirection = GuiMaterialPreview::mFakeSun->getDirection();
-
-   F32 azimuth = mAtan2(relativeLightDirection.y, relativeLightDirection.x);
-   F32 elevation = mAsin(relativeLightDirection.z);
+   // Convert current direction to spherical coordinates (azimuth and elevation in radians)
+   F32 azimuth = mRealSun->getAzimuth();
+   F32 elevation = mRealSun->getElevation();
 
    // Modify azimuth and elevation based on input
-   azimuth += xstep * _lighttransstep;
-   elevation = mClampF(elevation + ystep * _lighttransstep, -M_2PI_F, M_2PI_F);
+   azimuth -= xstep * _lighttransstep; // Horizontal movement affects azimuth
+   elevation = elevation - ystep * _lighttransstep;
 
-   // Convert back to Cartesian coordinates
-   relativeLightDirection.x = mCos(elevation) * mCos(azimuth);
-   relativeLightDirection.y = mCos(elevation) * mSin(azimuth);
-   relativeLightDirection.z = mSin(elevation);
-
-   GuiMaterialPreview::mFakeSun->setDirection(relativeLightDirection);
-}
-
-// This is for panning the viewport camera.
-void GuiMaterialPreview::setTranslate(S32 modifier, F32 xstep, F32 ystep)
-{
-	F32 transstep = (modifier & SI_SHIFT ? mTransStep : (mTransStep*mTranMult));
-
-	F32 nominalDistance = 20.0;
-	Point3F vec = mCameraPos;
-	vec -= mOrbitPos;
-	transstep *= vec.len() / nominalDistance;
-
-	if (modifier & SI_PRIMARY_CTRL)
-	{
-		mOrbitRelPos.x += ( xstep * transstep );
-		mOrbitRelPos.y += ( ystep * transstep );
-	}
-	else
-	{
-		mOrbitRelPos.x += ( xstep * transstep );
-		mOrbitRelPos.z += ( ystep * transstep );
-	}
+   // Update azimuth and elevation on the sun object
+   mRealSun->setDirection(azimuth, elevation);
 }
 
 // Left Click
@@ -178,9 +164,9 @@ void GuiMaterialPreview::onMouseDragged(const GuiEvent &event)
    // If we are MovingLight...
    else
    {
-   Point2I delta = event.mousePoint - mLastMousePoint;
-   mLastMousePoint = event.mousePoint;
-   setLightTranslate(event.modifier, delta.x, delta.y);
+      Point2I delta = event.mousePoint - mLastMousePoint;
+      mLastMousePoint = event.mousePoint;
+      setLightTranslate(event.modifier, delta.x, delta.y);
    }
 }
 
@@ -226,63 +212,30 @@ bool GuiMaterialPreview::onMouseWheelDown(const GuiEvent &event)
 	return true;
 }
 
-// Mouse Wheel Click
-void GuiMaterialPreview::onMiddleMouseDown(const GuiEvent &event)
-{
-   if (!mActive || !mVisible || !mAwake)
-   {
-      return;
-   }
-   mMouseState = Panning;
-   mLastMousePoint = event.mousePoint;
-   mouseLock();
-}
-
-// Mouse Wheel Click Release
-void GuiMaterialPreview::onMiddleMouseUp(const GuiEvent &event)
-{
-   mouseUnlock();
-   mMouseState = None;
-}
-
-// Mouse Wheel Click Drag
-void GuiMaterialPreview::onMiddleMouseDragged(const GuiEvent &event)
-{
-   if (mMouseState != Panning)
-   {
-      return;
-   }
-   Point2I delta = event.mousePoint - mLastMousePoint;
-   mLastMousePoint = event.mousePoint;
-   setTranslate(event.modifier, delta.x, delta.y);
-}
-
 // This is used to set the model we want to view in the control object.
 void GuiMaterialPreview::setObjectModel(const char* modelName)
 {
-   deleteModel();
-
-   Resource<TSShape> model = ResourceManager::get().load(modelName);
-   if (! bool(model))
+   
+   mTSShape->_setShapeData(mTSShape, "", modelName);
+   if (!mTSShape->isProperlyAdded())
    {
-      Con::warnf(avar("GuiMaterialPreview: Failed to load model %s. Please check your model name and load a valid model.", modelName));
-      return;
+      ScopedSceneManager scopeManager(mTempScene);
+      mTSShape->setPosition(Point3F(0, 0, 1.5));
+      mTSShape->registerObject();
    }
 
-   mModel = new TSShapeInstance(model, true);
-   AssertFatal(mModel, avar("GuiMaterialPreview: Failed to load model %s. Please check your model name and load a valid model.", modelName));
-
    // Initialize camera values:
-   mOrbitPos = mModel->getShape()->center;
-   mMinOrbitDist = mModel->getShape()->mRadius;
+   mTSShape->setPosition(Point3F(0, 0, mTSShape->mShapeInstance->getShape()->mBounds.len_z() * 0.5f));
+   mOrbitPos = mTSShape->getPosition();
+   mMinOrbitDist = mTSShape->mShapeInstance->getShape()->mRadius;
 
    lastRenderTime = Platform::getVirtualMilliseconds();
 }
 
 void GuiMaterialPreview::deleteModel()
 {
-   SAFE_DELETE(mModel);
-   runThread = 0;
+   mTSShape->unregisterObject();
+   SAFE_DELETE(mTSShape);
 }
 
 // This is called whenever there is a change in the camera.
@@ -357,15 +310,9 @@ void GuiMaterialPreview::onMouseLeave(const GuiEvent & event)
 
 void GuiMaterialPreview::renderWorld(const RectI &updateRect)
 {
-   // nothing to render, punt
-   if ( !mModel && !mMountedModel )
-      return;
-
    S32 time = Platform::getVirtualMilliseconds();
    //S32 dt = time - lastRenderTime;
    lastRenderTime = time;
-
-   
 
    F32 left, right, top, bottom, nearPlane, farPlane;
    bool isOrtho;
@@ -375,82 +322,44 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
    mSaveProjection = GFX->getProjectionMatrix();
    mSaveWorldToScreenScale = GFX->getWorldToScreenScale();
 
-   FogData savedFogData = gClientSceneGraph->getFogData();
-   gClientSceneGraph->setFogData( FogData() );  // no fog in preview window
+   ScopedSceneManager scopeManager(mTempScene);
 
-   if (Skylight::smSkylightProbe.isValid())
-      PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
-
-   RenderPassManager* renderPass = gClientSceneGraph->getDefaultRenderPass();
+   RenderPassManager* renderPass = mTempScene->getDefaultRenderPass();
    SceneRenderState state
    (
-      gClientSceneGraph,
+      mTempScene,
       SPT_Diffuse,
-      SceneCameraState( GFX->getViewport(), mSaveFrustum, GFX->getWorldMatrix(), GFX->getProjectionMatrix() ),
+      SceneCameraState::fromGFX(),
       renderPass,
       true
    );
 
-   // Set up our TS render state here.
-   TSRenderState rdata;
-   rdata.setSceneState( &state );
+   if (Skylight::smSkylightProbe.isValid())
+      PROBEMGR->submitProbe(Skylight::smSkylightProbe->getProbeInfo());
 
-   // We might have some forward lit materials
-   // so pass down a query to gather lights.
-   LightQuery query;
-   query.init( SphereF( Point3F::Zero, 1.0f ) );
-   rdata.setLightQuery( &query );
-
-   // Set up pass transforms
-   renderPass->assignSharedXform(RenderPassManager::View, MatrixF::Identity);
-   renderPass->assignSharedXform(RenderPassManager::Projection, GFX->getProjectionMatrix());
-
-   LIGHTMGR->unregisterAllLights();
-   LIGHTMGR->setSpecialLight( LightManager::slSunLightType, mFakeSun );
-
-   if ( mModel )
-      mModel->render( rdata );
-
-   if ( mMountedModel )
-   {
-      // render a weapon
-	   /*
-      MatrixF mat;
-
-      GFX->pushWorldMatrix();
-      GFX->multWorld( mat );
-
-      GFX->popWorldMatrix();
-	  */
-   }
-
-   renderPass->renderPass( &state );
+   mTempScene->renderScene(&state);
 
    if (mMouseState == MovingLight)
    {
       renderSunDirection();
    }
 
-   gClientSceneGraph->setFogData( savedFogData );         // restore fog setting
-
-   // Make sure to remove our fake sun
-   LIGHTMGR->unregisterAllLights();
 }
 
 void GuiMaterialPreview::renderSunDirection() const
 {
    // Render four arrows aiming in the direction of the sun's light
-   ColorI color = LinearColorF(mFakeSun->getColor()).toColorI();
-   F32 length = mModel->getShape()->mBounds.len() * 0.8f;
+   ColorI color = LinearColorF(mRealSun->getLight()->getColor()).toColorI();
+   F32 length = mTSShape->mShapeInstance->getShape()->mBounds.len() * 0.8f;
 
    // Get the sun's vectors
-   Point3F fwd = mFakeSun->getTransform().getForwardVector();
-   Point3F up = mFakeSun->getTransform().getUpVector() * length / 8;
-   Point3F right = mFakeSun->getTransform().getRightVector() * length / 8;
+   Point3F fwd = mRealSun->getLight()->getTransform().getForwardVector();
+   Point3F up = mRealSun->getLight()->getTransform().getUpVector() * length / 8;
+   Point3F right = mRealSun->getLight()->getTransform().getRightVector() * length / 8;
 
    // Calculate the start and end points of the first arrow (bottom left)
-   Point3F start = mModel->getShape()->center - fwd * length - up / 2 - right / 2;
-   Point3F end = mModel->getShape()->center - fwd * length / 3 - up / 2 - right / 2;
+   Point3F start = mTSShape->getPosition() - fwd * length - up / 2 - right / 2;
+   Point3F end = mTSShape->getPosition() - fwd * length / 3 - up / 2 - right / 2;
 
    GFXStateBlockDesc desc;
    desc.setZReadWrite(true, true);
@@ -473,15 +382,14 @@ void GuiMaterialPreview::setOrbitDistance(F32 distance)
 void GuiMaterialPreview::resetViewport()
 {
    // Reset the camera's orientation.
-   mCameraRot.set( mDegToRad(30.0f), 0, mDegToRad(-30.0f) );
+   mCameraRot.set(mDegToRad(3.0f), 0, mDegToRad(-30.0f) );
    mCameraPos.set(0.0f, 1.75f, 1.25f);
    mOrbitDist = 5.0f;
-   mOrbitPos = mModel->getShape()->center;
+   mOrbitPos = mTSShape->getPosition();
 
    // Reset the viewport's lighting.
-   GuiMaterialPreview::mFakeSun->setColor( LinearColorF( 1.0f, 1.0f, 1.0f ) );
-   GuiMaterialPreview::mFakeSun->setAmbient( LinearColorF( 0.5f, 0.5f, 0.5f ) );
-   GuiMaterialPreview::mFakeSun->setDirection( VectorF( 0.0f, 0.707f, -0.707f ) );
+   GuiMaterialPreview::mRealSun->setColor( LinearColorF( 1.0f, 1.0f, 1.0f ) );
+   GuiMaterialPreview::mRealSun->setAmbientColor( LinearColorF( 0.5f, 0.5f, 0.5f ) );
 }
 
 // Expose the class and functions to the console.
@@ -499,12 +407,6 @@ DefineEngineMethod(GuiMaterialPreview, setModel, void, ( const char* shapeName )
    "@param shapeName Name of the model to display.\n")
 {
    object->setObjectModel(shapeName);
-}
-
-DefineEngineMethod(GuiMaterialPreview, deleteModel, void, (),,
-   "Deletes the preview model.\n")
-{
-   object->deleteModel();
 }
 
 // Set orbit distance around the model.

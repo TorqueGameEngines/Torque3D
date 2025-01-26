@@ -112,9 +112,9 @@ void SceneTracker::init()
 
    SceneContainer* container;
    if( isClientTracker() )
-      container = &gClientContainer;
+      container = getActiveClientContainer();
    else
-      container = &gServerContainer;
+      container = getActiveServerContainer();
 
    container->findObjects( getObjectTypeMask(),
                            ( SceneContainer::FindCallback ) &_containerFindCallback,

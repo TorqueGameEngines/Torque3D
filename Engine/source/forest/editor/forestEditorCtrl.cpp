@@ -373,7 +373,7 @@ void FindDirtyForests( SceneObject *obj, void *key )
 bool ForestEditorCtrl::isDirty()
 {   
    bool foundDirty = false;
-   gServerContainer.findObjects( EnvironmentObjectType, FindDirtyForests, (void*)&foundDirty );
+   getActiveServerContainer()->findObjects( EnvironmentObjectType, FindDirtyForests, (void*)&foundDirty );
 
    return foundDirty;   
 }

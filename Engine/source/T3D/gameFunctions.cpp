@@ -132,7 +132,7 @@ DefineEngineFunction( containerFindFirst, const char*, (U32 typeMask, Point3F or
 
    //initialize the list, and do the query
    sgServerQueryList.mList.clear();
-   gServerContainer.findObjects(queryBox, typeMask, SimpleQueryList::insertionCallback, &sgServerQueryList);
+   getActiveServerContainer()->findObjects(queryBox, typeMask, SimpleQueryList::insertionCallback, &sgServerQueryList);
 
    //return the first element
    sgServerQueryIndex = 0;
@@ -342,12 +342,12 @@ bool GameProcessCameraQuery(CameraQuery *query)
    if (connection && connection->getControlCameraTransform(0.032f, &query->cameraMatrix))
    {
       query->object = dynamic_cast<GameBase*>(connection->getCameraObject());
-      query->nearPlane = gClientSceneGraph->getNearClip();
+      query->nearPlane = getActiveClientScene()->getNearClip();
 
       // Scale the normal visible distance by the performance 
       // tuning scale which we never let over 1.
       CameraAndFOV::sVisDistanceScale = mClampF( CameraAndFOV::sVisDistanceScale, 0.01f, 1.0f );
-      query->farPlane = gClientSceneGraph->getVisibleDistance() * CameraAndFOV::sVisDistanceScale;
+      query->farPlane = getActiveClientScene()->getVisibleDistance() * CameraAndFOV::sVisDistanceScale;
 
       // Provide some default values
       query->stereoTargets[0] = 0;
@@ -423,7 +423,7 @@ void GameRenderWorld()
    PROFILE_START(GameRenderWorld);
    FrameAllocator::setWaterMark(0);
 
-   gClientSceneGraph->renderScene( SPT_Diffuse );
+   getActiveClientScene()->renderScene( SPT_Diffuse );
 
    // renderScene leaves some states dirty, which causes problems if GameTSCtrl is the last Gui object rendered
    GFX->updateStates();
@@ -563,7 +563,7 @@ void renderFrame(GFXTextureTargetRef* target, MatrixF transform, Frustum frustum
       // We're going to be displaying this render at size of this control in
       // pixels - let the scene know so that it can calculate e.g. reflections
       // correctly for that final display result.
-      gClientSceneGraph->setDisplayTargetResolution(size);
+      getActiveClientScene()->setDisplayTargetResolution(size);
 
       // Set the GFX world matrix to the world-to-camera transform, but don't 
       // change the cameraMatrix in mLastCameraQuery. This is because 
@@ -590,7 +590,7 @@ void renderFrame(GFXTextureTargetRef* target, MatrixF transform, Frustum frustum
 
       // Set the default non-clip projection as some 
       // objects depend on this even in non-reflect cases.
-      gClientSceneGraph->setNonClipProjection(mSaveProjection);
+      getActiveClientScene()->setNonClipProjection(mSaveProjection);
 
       // Give the post effect manager the worldToCamera, and cameraToScreen matrices
       PFXMGR->setFrameMatrices(mSaveModelview, mSaveProjection);
@@ -599,7 +599,7 @@ void renderFrame(GFXTextureTargetRef* target, MatrixF transform, Frustum frustum
       PROFILE_START(GameFunctions_RenderFrame_RenderWorld);
       FrameAllocator::setWaterMark(0);
 
-      gClientSceneGraph->renderScene(SPT_Reflect, typeMask);
+      getActiveClientScene()->renderScene(SPT_Reflect, typeMask);
 
       // renderScene leaves some states dirty, which causes problems if GameTSCtrl is the last Gui object rendered
       GFX->updateStates();

@@ -281,7 +281,7 @@ bool GuiNavEditorCtrl::get3DCentre(Point3F &pos)
    unproject(screen, &end);
 
    RayInfo ri;
-   if(gServerContainer.castRay(start, end, StaticObjectType, &ri))
+   if(getActiveServerContainer()->castRay(start, end, StaticObjectType, &ri))
    {
       pos = ri.point;
       return true;
@@ -313,7 +313,7 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 
    if(mMode == mLinkMode && !mMesh.isNull())
    {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
+      if(getActiveServerContainer()->castRay(startPnt, endPnt, StaticObjectType, &ri))
       {
          U32 link = mMesh->getLink(ri.point);
          if(link != -1)
@@ -358,7 +358,7 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 
    if(mMode == mTileMode && !mMesh.isNull())
    {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri))
+      if(getActiveServerContainer()->castRay(startPnt, endPnt, StaticShapeObjectType, &ri))
       {
          mTile = mMesh->getTile(ri.point);
          dd.clear();
@@ -371,7 +371,7 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
       // Spawn new character
       if(ctrl)
       {
-         if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
+         if(getActiveServerContainer()->castRay(startPnt, endPnt, StaticObjectType, &ri))
             spawnPlayer(ri.point);
       }
       // Deselect character
@@ -383,7 +383,7 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
       // Select/move character
       else
       {
-         if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType, &ri))
+         if(getActiveServerContainer()->castRay(startPnt, endPnt, PlayerObjectType, &ri))
          {
             if(dynamic_cast<AIPlayer*>(ri.object))
             {
@@ -391,7 +391,7 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
                Con::executef(this, "onPlayerSelected", Con::getIntArg(mPlayer->mLinkTypes.getFlags()));
             }
          }
-         else if(!mPlayer.isNull() && gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
+         else if(!mPlayer.isNull() && getActiveServerContainer()->castRay(startPnt, endPnt, StaticObjectType, &ri))
             mPlayer->setPathDestination(ri.point);
       }
    }
@@ -417,7 +417,7 @@ void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 
    if(mMode == mLinkMode && !mMesh.isNull())
    {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
+      if(getActiveServerContainer()->castRay(startPnt, endPnt, StaticObjectType, &ri))
       {
          U32 link = mMesh->getLink(ri.point);
          if(link != -1)
@@ -447,7 +447,7 @@ void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
    // Select a tile from our current NavMesh.
    if(mMode == mTileMode && !mMesh.isNull())
    {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
+      if(getActiveServerContainer()->castRay(startPnt, endPnt, StaticObjectType, &ri))
          mCurTile = mMesh->getTile(ri.point);
       else
          mCurTile = -1;
@@ -455,7 +455,7 @@ void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 
    if(mMode == mTestMode)
    {
-      if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType, &ri))
+      if(getActiveServerContainer()->castRay(startPnt, endPnt, PlayerObjectType, &ri))
          mCurPlayer = dynamic_cast<AIPlayer*>(ri.object);
       else
          mCurPlayer = NULL;
@@ -584,7 +584,7 @@ bool GuiNavEditorCtrl::getStaticPos(const Gui3DMouseEvent & event, Point3F &tpos
    RayInfo ri;
    bool hit;
 
-   hit = gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri);
+   hit = getActiveServerContainer()->castRay(startPnt, endPnt, StaticShapeObjectType, &ri);
    tpos = ri.point;
 
    return hit;

@@ -134,7 +134,7 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
    // Extend the camera vector to create an endpoint for our ray
    Point3F endPos;
    cam.getColumn(1, &endPos);
-   endPos *= gClientSceneGraph->getVisibleDistance();
+   endPos *= getActiveClientScene()->getVisibleDistance();
    endPos += camPos;
 
    // Collision info. We're going to be running LOS tests and we
@@ -143,7 +143,7 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
    control->disableCollision();
 
    RayInfo info;
-   if (gClientContainer.castRay(camPos, endPos, losMask, &info)) {
+   if (getActiveClientContainer()->castRay(camPos, endPos, losMask, &info)) {
       // Hit something... but we'll only display health for named
       // ShapeBase objects.  Could mask against the object type here
       // and do a static cast if it's a ShapeBaseObjectType, but this

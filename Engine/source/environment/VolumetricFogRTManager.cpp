@@ -46,12 +46,12 @@ MODULE_SHUTDOWN_BEFORE(Scene)
 MODULE_INIT
 {
    gVolumetricFogRTManager = new VolumetricFogRTManager;
-   gClientSceneGraph->addObjectToScene(gVolumetricFogRTManager);
+   getActiveClientScene()->addObjectToScene(gVolumetricFogRTManager);
 }
    
 MODULE_SHUTDOWN
 {
-   gClientSceneGraph->removeObjectFromScene(gVolumetricFogRTManager);
+   getActiveClientScene()->removeObjectFromScene(gVolumetricFogRTManager);
    SAFE_DELETE(gVolumetricFogRTManager);
 }
    

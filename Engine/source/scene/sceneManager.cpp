@@ -45,6 +45,8 @@
 
 extern bool gEditingMission;
 
+static SceneManager* activeClientScene = NULL;
+static SceneManager* activeServerScene = NULL;
 
 MODULE_BEGIN( Scene )
 
@@ -54,11 +56,11 @@ MODULE_BEGIN( Scene )
    
    MODULE_INIT
    {
-      // Client scene.
-      gClientSceneGraph = new SceneManager( true );
+      setActiveClientScene(new SceneManager(true));
+      setActiveServerScene(activeClientScene->mServerSide);
 
-      // Server scene.
-      gServerSceneGraph = new SceneManager( false );
+      setActiveClientContainer(activeClientScene->mSceneContainer);
+      setActiveServerContainer(activeServerScene->mSceneContainer);
 
       Con::addVariable( "$Scene::lockCull", TypeBool, &SceneManager::smLockDiffuseFrustum,
          "Debug tool which locks the frustum culling to the current camera location.\n"
@@ -91,8 +93,7 @@ MODULE_BEGIN( Scene )
    
    MODULE_SHUTDOWN
    {
-      SAFE_DELETE( gClientSceneGraph );
-      SAFE_DELETE( gServerSceneGraph );
+      SAFE_DELETE(activeClientScene);
    }
 
 MODULE_END;
@@ -102,11 +103,29 @@ bool SceneManager::smRenderBoundingBoxes;
 bool SceneManager::smLockDiffuseFrustum = false;
 SceneCameraState SceneManager::smLockedDiffuseCamera = SceneCameraState( RectI(), Frustum(), MatrixF(), MatrixF() );
 
-SceneManager* gClientSceneGraph = NULL;
-SceneManager* gServerSceneGraph = NULL;
-
-
 //-----------------------------------------------------------------------------
+
+// Client Scene Accessors
+SceneManager* getActiveClientScene()
+{
+   return activeClientScene;
+}
+
+void setActiveClientScene(SceneManager* scene)
+{
+   activeClientScene = scene;
+}
+
+// Server Scene Accessors
+SceneManager* getActiveServerScene()
+{
+   return activeServerScene;
+}
+
+void setActiveServerScene(SceneManager* scene)
+{
+   activeServerScene = scene;
+}
 
 SceneManager::SceneManager( bool isClient )
    : mIsClient( isClient ),
@@ -118,6 +137,8 @@ SceneManager::SceneManager( bool isClient )
      mVisibleGhostDistance( 0 ),
      mNearClip( 0.1f ),
      mLightManager( NULL ),
+     mClientSide( NULL ),
+     mServerSide( NULL ),
      mAmbientLightColor( LinearColorF( 0.1f, 0.1f, 0.1f, 1.0f ) ),
      mDefaultRenderPass( NULL )
 {
@@ -127,22 +148,36 @@ SceneManager::SceneManager( bool isClient )
 
    if( isClient )
    {
-      mZoneManager = new SceneZoneSpaceManager( getContainer() );
+      mSceneContainer = new SceneContainer();
+      mZoneManager = new SceneZoneSpaceManager(mSceneContainer);
 
       // Add the root zone to the scene.
-
       addObjectToScene( mZoneManager->getRootZone() );
+
+      mServerSide = new SceneManager(false);
+      mServerSide->mClientSide = this;
+   }
+   else
+   {
+      mSceneContainer = new SceneContainer();
+      mServerSide = NULL;
    }
 }
 
 //-----------------------------------------------------------------------------
 
 SceneManager::~SceneManager()
-{   
-   SAFE_DELETE( mZoneManager );
+{
+   if (mIsClient) {
+      SAFE_DELETE(mZoneManager);
+      SAFE_DELETE(mServerSide);
+   }
+      
 
    if( mLightManager )
-      mLightManager->deactivate();   
+      mLightManager->deactivate();
+
+   SAFE_DELETE(mSceneContainer);
 }
 
 //-----------------------------------------------------------------------------
@@ -350,7 +385,7 @@ void SceneManager::renderSceneNoLights( SceneRenderState* renderState, U32 objec
 
 void SceneManager::_renderScene( SceneRenderState* state, U32 objectMask, SceneZoneSpace* baseObject, U32 baseZone )
 {
-   AssertFatal( this == gClientSceneGraph, "SceneManager::_buildSceneGraph - Only the client scenegraph can support this call!" );
+   AssertFatal( this == getActiveClientScene(), "SceneManager::_buildSceneGraph - Only the client scenegraph can support this call!");
 
    PROFILE_SCOPE( SceneGraph_batchRenderImages );
 
@@ -691,7 +726,7 @@ bool SceneManager::_setLightManager( LightManager* lm )
    mLightManager = lm;
 
    if ( mLightManager )
-      mLightManager->activate( this );
+      mLightManager->activate();
 
    return true;
 }
@@ -723,13 +758,13 @@ DefineEngineFunction( sceneDumpZoneStates, void, ( bool updateFirst ), ( true ),
    "@note Only valid on the client.\n"
    "@ingroup Game" )
 {
-   if( !gClientSceneGraph )
+   if( !getActiveClientScene() )
    {
       Con::errorf( "sceneDumpZoneStates - Only valid on client!" );
       return;
    }
 
-   SceneZoneSpaceManager* manager = gClientSceneGraph->getZoneManager();
+   SceneZoneSpaceManager* manager = getActiveClientScene()->getZoneManager();
    if( !manager )
    {
       Con::errorf( "sceneDumpZoneStates - Scene is not using zones!" );
@@ -748,13 +783,13 @@ DefineEngineFunction( sceneGetZoneOwner, SceneObject*, ( U32 zoneId ),,
    "@note Only valid on the client.\n"
    "@ingroup Game" )
 {
-   if( !gClientSceneGraph )
+   if( !getActiveClientScene() )
    {
       Con::errorf( "sceneGetZoneOwner - Only valid on client!" );
       return NULL;
    }
 
-   SceneZoneSpaceManager* manager = gClientSceneGraph->getZoneManager();
+   SceneZoneSpaceManager* manager = getActiveClientScene()->getZoneManager();
    if( !manager )
    {
       Con::errorf( "sceneGetZoneOwner - Scene is not using zones!" );

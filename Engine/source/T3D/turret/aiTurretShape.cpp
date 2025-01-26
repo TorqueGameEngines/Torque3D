@@ -730,7 +730,7 @@ void AITurretShape::_performScan()
       obj->disableCollision();
    }
 
-   gServerContainer.findObjects( mTransformedScanBox, sScanTypeMask, _scanCallback, (void*)this );
+   getActiveServerContainer()->findObjects( mTransformedScanBox, sScanTypeMask, _scanCallback, (void*)this );
 
    for ( SimSetIterator iter(&mIgnoreObjects); *iter; ++iter )
    {
@@ -968,7 +968,7 @@ bool AITurretShape::_testTargetLineOfSight(Point3F& aimPoint, ShapeBase* target,
    
    // First check for a clear line of sight to the target's center
    Point3F testPoint =  targetCenter;
-   hit = gServerContainer.castRay(aimPoint, testPoint, sAimTypeMask, &ri);
+   hit = getActiveServerContainer()->castRay(aimPoint, testPoint, sAimTypeMask, &ri);
    if (hit)
    {
       // No clear line of sight to center, so try to the target's right.  Players holding
@@ -984,14 +984,14 @@ bool AITurretShape::_testTargetLineOfSight(Point3F& aimPoint, ShapeBase* target,
 
       testPoint = targetCenter + toTurretRight * radius;
 
-      hit = gServerContainer.castRay(aimPoint, testPoint, sAimTypeMask, &ri);
+      hit = getActiveServerContainer()->castRay(aimPoint, testPoint, sAimTypeMask, &ri);
 
       if (hit)
       {
          // No clear line of sight to right, so try the target's left
          VectorF toTurretLeft = toTurretRight * -1.0f;
          testPoint = targetCenter + toTurretLeft * radius;
-         hit = gServerContainer.castRay(aimPoint, testPoint, sAimTypeMask, &ri);
+         hit = getActiveServerContainer()->castRay(aimPoint, testPoint, sAimTypeMask, &ri);
       }
 
       if (hit)
@@ -999,7 +999,7 @@ bool AITurretShape::_testTargetLineOfSight(Point3F& aimPoint, ShapeBase* target,
          // No clear line of sight to left, so try the target's top
          testPoint = targetCenter;
          testPoint.z += targetBounds.len_z() * 0.5f;
-         hit = gServerContainer.castRay(aimPoint, testPoint, sAimTypeMask, &ri);
+         hit = getActiveServerContainer()->castRay(aimPoint, testPoint, sAimTypeMask, &ri);
       }
 
       if (hit)
@@ -1007,7 +1007,7 @@ bool AITurretShape::_testTargetLineOfSight(Point3F& aimPoint, ShapeBase* target,
          // No clear line of sight to top, so try the target's bottom
          testPoint = targetCenter;
          testPoint.z -= targetBounds.len_z() * 0.5f;
-         hit = gServerContainer.castRay(aimPoint, testPoint, sAimTypeMask, &ri);
+         hit = getActiveServerContainer()->castRay(aimPoint, testPoint, sAimTypeMask, &ri);
       }
    }
    

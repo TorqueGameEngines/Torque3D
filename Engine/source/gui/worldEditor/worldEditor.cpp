@@ -777,7 +777,7 @@ void WorldEditor::dropBelowSelection(Selection*  sel, const Point3F & centroid, 
    sel->disableCollision(); // Make sure we don't hit ourselves.
 
    RayInfo ri;
-   bool hit = gServerContainer.castRay(start, end, STATIC_COLLISION_TYPEMASK, &ri);
+   bool hit = getActiveServerContainer()->castRay(start, end, STATIC_COLLISION_TYPEMASK, &ri);
       
    sel->enableCollision();
 
@@ -816,9 +816,9 @@ void WorldEditor::terrainSnapSelection(Selection* sel, U8 modifier, Point3F gizm
    RayInfo ri;
    bool hit;
    if(mBoundingBoxCollision)
-      hit = gServerContainer.collideBox(start, end, TerrainObjectType, &ri);
+      hit = getActiveServerContainer()->collideBox(start, end, TerrainObjectType, &ri);
    else
-      hit = gServerContainer.castRay(start, end, TerrainObjectType, &ri);
+      hit = getActiveServerContainer()->castRay(start, end, TerrainObjectType, &ri);
       
    sel->enableCollision();
 
@@ -925,7 +925,7 @@ void WorldEditor::softSnapSelection(Selection* sel, U8 modifier, Point3F gizmoPo
 
    SphereF sphere(gizmoPos, mSoftSnapPreBounds.len()*0.5f);
 
-   gServerContainer.findObjectList(mSoftSnapPreBounds, 0xFFFFFFFF, &foundobjs);
+   getActiveServerContainer()->findObjectList(mSoftSnapPreBounds, 0xFFFFFFFF, &foundobjs);
 
    sel->enableCollision();
 
@@ -1123,7 +1123,7 @@ bool WorldEditor::collide( const Gui3DMouseEvent &event, SceneObject **hitObj )
       Point3F endPnt = event.pos + event.vec * smProjectDistance;
       RayInfo ri;
 
-      bool hit = gServerContainer.collideBox(startPnt, endPnt, 0xFFFFFFFF, &ri);
+      bool hit = getActiveServerContainer()->collideBox(startPnt, endPnt, 0xFFFFFFFF, &ri);
 
       if ( controlObj )
          controlObj->enableCollision();
@@ -1154,7 +1154,7 @@ bool WorldEditor::collide( const Gui3DMouseEvent &event, SceneObject **hitObj )
       Point3F endPnt = event.pos + event.vec * smProjectDistance;
       RayInfo ri;
 
-      bool hit = gServerContainer.castRayRendered(startPnt, endPnt, 0xFFFFFFFF, &ri);
+      bool hit = getActiveServerContainer()->castRayRendered(startPnt, endPnt, 0xFFFFFFFF, &ri);
       if(hit && ri.object && ( ri.object->getTypeMask() & (TerrainObjectType) || dynamic_cast< GroundPlane* >( ri.object )))
       {
          // We don't want to mesh select terrain
@@ -2693,7 +2693,7 @@ void WorldEditor::renderScene( const RectI &updateRect )
          data.mPolyList.mPlaneList.push_back(planes[i]);
 
          // Invert the planes as the poly list routines require a different
-         // facing from gServerContainer.findObjects().
+         // facing from getActiveServerContainer()->findObjects().
          data.mPolyList.mPlaneList.last().invert();
       }
       
@@ -2706,7 +2706,7 @@ void WorldEditor::renderScene( const RectI &updateRect )
          
       // Find objects in the region.
 
-      gServerContainer.findObjects( gDragFrustum, 0xFFFFFFFF, findDragMeshCallback, &data);
+      getActiveServerContainer()->findObjects( gDragFrustum, 0xFFFFFFFF, findDragMeshCallback, &data);
       for ( U32 i = 0; i < data.mObjects.size(); i++ )
       {
          SceneObject *obj = data.mObjects[i];
@@ -2736,7 +2736,7 @@ void WorldEditor::renderScene( const RectI &updateRect )
 
    // Cull Objects and perform icon rendering
    Vector<SceneObject *> objects;
-   gServerContainer.findObjects( frustum, 0xFFFFFFFF, findObjectsCallback, &objects);
+   getActiveServerContainer()->findObjects( frustum, 0xFFFFFFFF, findObjectsCallback, &objects);
    for ( U32 i = 0; i < objects.size(); i++ )
    {
       SceneObject *obj = objects[i];

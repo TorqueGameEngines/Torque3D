@@ -408,6 +408,21 @@ void Sun::setColor( const LinearColorF &color )
    setMaskBits( UpdateMask ); // TODO: Break out the masks to save some space!
 }
 
+void Sun::setAmbientColor(const LinearColorF& color)
+{
+   mLightAmbient = color;
+   _conformLights();
+   setMaskBits(UpdateMask); // TODO: Break out the masks to save some space!
+}
+
+void Sun::setDirection(F32 azimuth, F32 elevation)
+{
+   mSunAzimuth = azimuth;
+   mSunElevation = elevation;
+   _conformLights();
+   setMaskBits(UpdateMask); // TODO: Break out the masks to save some space!
+}
+
 void Sun::animate( F32 duration, F32 startAzimuth, F32 endAzimuth, F32 startElevation, F32 endElevation )
 {
    mAnimateSun = true;
@@ -424,8 +439,8 @@ void Sun::animate( F32 duration, F32 startAzimuth, F32 endAzimuth, F32 startElev
 void Sun::_conformLights()
 {
    // Build the light direction from the azimuth and elevation.
-   F32 yaw = mDegToRad(mClampF(mSunAzimuth,0,359));
-   F32 pitch = mDegToRad(mClampF(mSunElevation,-360,+360));
+   F32 yaw = mDegToRad(mWrapF(mSunAzimuth,0,359));
+   F32 pitch = mDegToRad(mWrapF(mSunElevation,-180,+180));
    VectorF lightDirection;
    MathUtils::getVectorFromAngles(lightDirection, yaw, pitch);
    lightDirection.normalize();

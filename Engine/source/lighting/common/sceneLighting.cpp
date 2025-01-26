@@ -494,7 +494,7 @@ bool SceneLighting::light(BitSet32 flags)
 
    // get all the objects and create proxy's for them
    SimpleQueryList objects;	
-   gClientContainer.findObjects(mLightingInterfaces->mAvailableObjectTypes, &SimpleQueryList::insertionCallback, &objects);
+   getActiveClientContainer()->findObjects(mLightingInterfaces->mAvailableObjectTypes, &SimpleQueryList::insertionCallback, &objects);
 
    for(SceneObject ** itr = objects.mList.begin(); itr != objects.mList.end(); itr++)
    {
@@ -651,7 +651,7 @@ bool SceneLighting::lightScene(const char * callback, BitSet32 flags)
    gConnectionMissionCRC = con->getMissionCRC();
 
    // assumes we are in the world that needs lighting...
-   mSceneManager = gClientSceneGraph;
+   mSceneManager = getActiveClientScene();
 
    if(!light(flags))
    {

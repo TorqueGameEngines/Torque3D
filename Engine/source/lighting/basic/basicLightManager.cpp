@@ -154,9 +154,9 @@ bool BasicLightManager::isCompatible() const
    return GFX->getPixelShaderVersion() > 1.0;
 }
 
-void BasicLightManager::activate( SceneManager *sceneManager )
+void BasicLightManager::activate()
 {
-   Parent::activate( sceneManager );
+   Parent::activate();
 
    if( GFX->getAdapterType() == OpenGL )
    {
@@ -211,7 +211,7 @@ void BasicLightManager::activate( SceneManager *sceneManager )
 
    // If there is a deferred bin
    MATMGR->setDeferredEnabled( mDeferredRenderBin.isValid() );
-   sceneManager->setPostEffectFog( mDeferredRenderBin.isValid() && mDeferredRenderBin->getTargetChainLength() > 0  );
+   getActiveClientScene()->setPostEffectFog( mDeferredRenderBin.isValid() && mDeferredRenderBin->getTargetChainLength() > 0  );
 
    // Tell the material manager that we don't use deferred.
    MATMGR->setDeferredEnabled( false );
@@ -219,7 +219,7 @@ void BasicLightManager::activate( SceneManager *sceneManager )
    GFXShader::addGlobalMacro( "TORQUE_BASIC_LIGHTING" );
 
    // Hook into the SceneManager prerender signal.
-   sceneManager->getPreRenderSignal().notify( this, &BasicLightManager::_onPreRender );
+   getActiveClientScene()->getPreRenderSignal().notify( this, &BasicLightManager::_onPreRender );
 
    // Last thing... let everyone know we're active.
    smActivateSignal.trigger( getId(), true );
@@ -246,7 +246,7 @@ void BasicLightManager::deactivate()
    GFXShader::removeGlobalMacro( "TORQUE_BASIC_LIGHTING" );
 
    // Remove us from the prerender signal.
-   getSceneManager()->getPreRenderSignal().remove( this, &BasicLightManager::_onPreRender );
+   getActiveClientScene()->getPreRenderSignal().remove( this, &BasicLightManager::_onPreRender );
 
    // Now let everyone know we've deactivated.
    smActivateSignal.trigger( getId(), false );

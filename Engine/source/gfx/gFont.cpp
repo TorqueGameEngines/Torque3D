@@ -303,19 +303,21 @@ void GFont::generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, 
    {
       for (S32 x = 0; x < sdfWidth; ++x)
       {
+         // Map SDF coordinates to original bitmap space
          F32 scaledX = x * (F32)width / sdfWidth;
          F32 scaledY = y * (F32)height / sdfHeight;
 
          F32 minDistInside = F32_MAX;
          F32 minDistOutside = F32_MAX;
-         F32 minDistMiddle = F32_MAX;
 
+         // Define the region to sample
          S32 regionSize = mCeil(spreadFactor);
          S32 minX = mClamp((S32)scaledX - regionSize, 0, width - 1);
          S32 maxX = mClamp((S32)scaledX + regionSize, 0, width - 1);
          S32 minY = mClamp((S32)scaledY - regionSize, 0, height - 1);
          S32 maxY = mClamp((S32)scaledY + regionSize, 0, height - 1);
 
+         // Calculate distances to the closest "inside" and "outside" pixels
          for (S32 by = minY; by <= maxY; ++by)
          {
             for (S32 bx = minX; bx <= maxX; ++bx)
@@ -324,28 +326,31 @@ void GFont::generateSDF(const U8* bitmap, S32 width, S32 height, U8* sdfBitmap, 
                F32 dx = scaledX - bx;
                F32 dy = scaledY - by;
                F32 distSquared = dx * dx + dy * dy;
-
                F32 dist = mSqrt(distSquared);
+
                if (isInside)
                   minDistInside = mMin(minDistInside, dist);
                else
                   minDistOutside = mMin(minDistOutside, dist);
-
-               // Apply smoothing to the middle distance for softer edges
-               F32 weight = 1.0f / (dist + 1.0f); // Weight decreases with distance
-               minDistMiddle = mMin(minDistMiddle, dist * weight);
             }
          }
 
-         // Normalize the values to combine inside, outside, and middle distances
+         // Compute the signed distance
          F32 signedDist = minDistOutside - minDistInside;
-         F32 middleDist = minDistMiddle / spreadFactor;
 
-
-         // Normalize and clamp the value
-         F32 normalizedDist = 0.5f + ((signedDist + middleDist) / spreadFactor) * 0.5f;
-         // Clamp and scale to [0, 255]
-         normalizedDist = mClampF(normalizedDist * 1.1, 0.0f, 1.0f);
+         // Combine distances: inside values go from 0.5 to 1.0, outside values go from 0.5 to 0.0
+         F32 normalizedDist;
+         if (signedDist > 0.0f)
+         {
+            // Inside the glyph
+            normalizedDist = 0.5f + mClampF(signedDist / spreadFactor, 0.0f, 0.5f);
+         }
+         else
+         {
+            // Outside the glyph
+            normalizedDist = 0.5f + mClampF(signedDist / spreadFactor, -0.5f, 0.0f);
+         }
+         // Scale to [0, 255] and write to the output bitmap
          sdfBitmap[y * sdfWidth + x] = (U8)(255 * normalizedDist);
       }
    }
@@ -429,7 +434,7 @@ void GFont::addBitmap(PlatformFont::CharInfo &charInfo)
    FrameTemp<U8> sdfBitmap((sdfWidth * sdfHeight));
 
    // Generate the SDF
-   F32 sdfSpread = 1.0f / (6.0f + (static_cast<F32>(paddedWidth / paddedHeight)));
+   F32 sdfSpread = 1.0f / (2.0f + (static_cast<F32>(paddedWidth / paddedHeight)));
    sdfSpread = mMax(paddedWidth, paddedHeight) * sdfSpread;
    generateSDF(paddedBitmap, paddedWidth, paddedHeight, sdfBitmap, sdfWidth, sdfHeight, sdfSpread);
    applyGaussianBlur(sdfBitmap, sdfWidth, sdfHeight, 1.5f);  // Apply blur: 1.5 - 2.5 for a moderate blur
@@ -867,8 +872,8 @@ bool GFont::write(Stream& stream)
    for (U32 i = 0; i < mTextureSheets.size(); i++)
    {
       // Debugging write out to images.
-       String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
-       mTextureSheets[i].getBitmap()->writeBitmap("png", path);
+       /*String path = String::ToString("%s/%s %d %d (%s).png", Con::getVariable("$GUI::fontCacheDirectory"), mFaceName.c_str(), mSize, i, getCharSetName(mCharSet));
+       mTextureSheets[i].getBitmap()->writeBitmap("png", path);*/
       
 
       mTextureSheets[i].getBitmap()->writeBitmapStream("png", stream);

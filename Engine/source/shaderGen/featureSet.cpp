@@ -148,12 +148,15 @@ void FeatureSet::setFeature( const FeatureType &type, bool set, S32 index )
 
 void FeatureSet::addFeature( const FeatureType &type, S32 index, void* argStruct )
 {
-   for ( U32 i=0; i < mFeatures.size(); i++ )
+   if (!argStruct)
    {
-      const FeatureInfo &info = mFeatures[i];
-      if (  info.type == &type && 
-            info.index == index )
-         return;
+      for (U32 i = 0; i < mFeatures.size(); i++)
+      {
+         const FeatureInfo& info = mFeatures[i];
+         if (info.type == &type &&
+            info.index == index)
+            return;
+      }
    }
 
    FeatureInfo info;

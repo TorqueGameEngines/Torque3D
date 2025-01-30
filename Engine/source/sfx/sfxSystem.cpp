@@ -454,8 +454,8 @@ bool SFXSystem::createDevice( const String& providerName, const String& deviceNa
    mDevice->setRolloffFactor( mRolloffFactor );
    //OpenAL requires slots for effects, this creates an empty function 
    //that will run when a sfxdevice is created.
-   mDevice->openSlots();
-   mDevice->setReverb( mReverb );
+   //mDevice->openSlots();
+   //mDevice->setReverb( mReverb );
       
    // Signal system.
 

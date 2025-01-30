@@ -31,17 +31,11 @@
 #include "core/util/tVector.h"
 #endif
 
-#if defined(TORQUE_OS_MAC)
-#undef AL_ALEXT_PROTOTYPES
-#  include <OpenAL/al.h>
-#  include <OpenAL/alc.h>
-#else
 #  include <AL/al.h>
 #  include <AL/alc.h>
 #  include <AL/alext.h>
 #  include <AL/efx.h>
 #  include <AL/efx-presets.h>
-#endif
 
 #if defined(TORQUE_OS_WIN)
 #include <windows.h>

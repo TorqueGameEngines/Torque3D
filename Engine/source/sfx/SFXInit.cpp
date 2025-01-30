@@ -20,53 +20,22 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef ALDEVICELIST_H
-#define ALDEVICELIST_H
+#include "platform/platform.h"
+#include "sfx/SFXInit.h"
 
-#pragma warning(disable: 4786)  //disable warning "identifier was truncated to '255' characters in the browser information"
-#include "core/util/tVector.h"
-#include "core/stringTable.h"
-#include "sfx/openal/sfxALCaps.h"
+#include "console/console.h"
+#include "core/module.h"
 
-#ifndef _LOADOAL_H_
-#include "LoadOAL.h"
-#endif
+MODULE_BEGIN(SFXNEW)
 
-typedef struct
+MODULE_INIT
 {
-	char           strDeviceName[256];
-	S32				iMajorVersion;
-	S32				iMinorVersion;
-   U32	         uiSourceCount;
-	S32            iCapsFlags;
-	bool			   bSelected;
-} ALDEVICEINFO, *LPALDEVICEINFO;
 
-class ALDeviceList
+}
+
+MODULE_SHUTDOWN
 {
-private:
-	Vector<ALDEVICEINFO> vDeviceInfo;
-	S32 defaultDeviceIndex;
-	S32 filterIndex;
 
-public:
-	ALDeviceList ( );
-	~ALDeviceList ();
-	S32 GetNumDevices();
-	const char *GetDeviceName(S32 index);
-	void GetDeviceVersion(S32 index, S32 *major, S32 *minor);
-   U32 GetMaxNumSources(S32 index);
-	bool IsExtensionSupported(S32 index, SFXALCaps caps);
-	S32 GetDefaultDevice();
-	void FilterDevicesMinVer(S32 major, S32 minor);
-	void FilterDevicesMaxVer(S32 major, S32 minor);
-	void FilterDevicesExtension(SFXALCaps caps);
-	void ResetFilters();
-	S32 GetFirstFilteredDevice();
-	S32 GetNextFilteredDevice();
+}
 
-private:
-	U32 GetMaxNumSources();
-};
-
-#endif // ALDEVICELIST_H
+MODULE_END;

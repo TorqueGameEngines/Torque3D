@@ -14,10 +14,6 @@ else()
     advanced_option(AL_ALEXT_PROTOTYPES "Use Extended OpenAL options" ON)
 endif()
 
-if(AL_ALEXT_PROTOTYPES)
-	addDef( "AL_ALEXT_PROTOTYPES" )
-endif()
-
 #SDL
 set(SDL_SHARED ON CACHE BOOL "Build a shared version of the library" FORCE)
 set(SDL_STATIC OFF CACHE BOOL "Build a static version of the library" FORCE)

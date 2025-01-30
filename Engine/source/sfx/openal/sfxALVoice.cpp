@@ -64,7 +64,7 @@ SFXALVoice* SFXALVoice::create( SFXALDevice* device, SFXALBuffer *buffer )
    return voice;
 }
 
-SFXALVoice::SFXALVoice( const OPENALFNTABLE &oalft,
+SFXALVoice::SFXALVoice( const openAlInterface &oalft,
                         SFXALBuffer *buffer, 
                         ALuint sourceName )
 

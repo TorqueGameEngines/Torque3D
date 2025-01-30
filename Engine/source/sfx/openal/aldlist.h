@@ -43,13 +43,13 @@ typedef struct
 class ALDeviceList
 {
 private:
-	OPENALFNTABLE	ALFunction;
+	openAlInterface	ALFunction;
 	Vector<ALDEVICEINFO> vDeviceInfo;
 	S32 defaultDeviceIndex;
 	S32 filterIndex;
 
 public:
-	ALDeviceList ( const OPENALFNTABLE &oalft );
+	ALDeviceList ( const openAlInterface &oalft );
 	~ALDeviceList ();
 	S32 GetNumDevices();
 	const char *GetDeviceName(S32 index);

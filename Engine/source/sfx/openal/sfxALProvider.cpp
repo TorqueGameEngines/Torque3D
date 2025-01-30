@@ -36,11 +36,10 @@ class SFXALProvider : public SFXProvider
 public:
 
    SFXALProvider()
-      : SFXProvider( "OpenAL" ) { dMemset(&mOpenAL,0,sizeof(mOpenAL)); mALDL = NULL; }
+      : SFXProvider( "OpenAL" ) { mALDL = NULL; }
    virtual ~SFXALProvider();
 
 protected:
-   openAlInterface mOpenAL;
    ALDeviceList *mALDL;
 
    struct ALDeviceInfo : SFXDeviceInfo
@@ -78,12 +77,7 @@ void SFXALProvider::init()
 {
    LoadDriverList();
 
-   if( LoadOAL10Library( NULL, mOpenAL ) != AL_TRUE )
-   {
-      Con::printf( "SFXALProvider - OpenAL not available." );
-      return;
-   }
-   mALDL = new ALDeviceList( mOpenAL );
+   //mALDL = new ALDeviceList( mOpenAL );
 
    // Did we get any devices?
    if ( mALDL->GetNumDevices() < 1 )
@@ -120,7 +114,7 @@ SFXDevice *SFXALProvider::createDevice( const String& deviceName, bool useHardwa
 
    // Do we find one to create?
    if (info)
-      return new SFXALDevice(this, mOpenAL, info->name, useHardware, maxBuffers);
+      //return new SFXALDevice(this, mOpenAL, info->name, useHardware, maxBuffers);
 
    return NULL;
 }

@@ -253,4 +253,6 @@ struct openAlInterface
 
 ALboolean LoadOAL10Library(char *szOALFullPathName, openAlInterface& lpOALFnTable);
 
+void LoadDriverList();
+
 #endif // _LOADOAL_H_

@@ -22,10 +22,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <windows.h>
 #include "sfx/openal/LoadOAL.h"
 #include "console/console.h"
 
+#if defined(TORQUE_OS_WIN)
+#include <windows.h>
+#else
+#include <dirent.h>
+#include <sys/types.h>
+#endif
 
 ALboolean LoadOAL10Library(char *szOALFullPathName, openAlInterface& lpOALFnTable)
 {
@@ -176,5 +181,86 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, openAlInterface& lpOALFnTabl
    }
 
 	return AL_TRUE;
+}
+
+void LoadDriverList()
+{
+   Vector<String> driverPaths;
+
+   /// make sure our built dll is top of the list.
+#if defined(TORQUE_OS_WIN)
+
+#ifdef TORQUE_DEBUG
+   driverPaths.push_back("openal32d.dll");
+#else
+   driverPaths.push_back("openal32.dll");
+#endif
+
+   char sys_path[MAX_PATH];
+   if (GetSystemDirectoryA(sys_path, MAX_PATH))
+   {
+      String searchPath = String::ToString(sys_path) + "\\*oal.dll";
+
+      WIN32_FIND_DATAA fdata;
+      HANDLE srchHdl = FindFirstFileA(searchPath.c_str(), &fdata);
+      if (srchHdl == INVALID_HANDLE_VALUE) return;
+
+      do {
+         String fullPath = String::ToString(sys_path) + "\\" + fdata.cFileName;
+         driverPaths.push_back(fullPath);
+      } while (FindNextFileA(srchHdl, &fdata));
+
+      FindClose(srchHdl);
+   }
+
+#else  // Linux & macOS
+   const char* sys_path = "/usr/lib/";
+
+#ifdef __linux__
+
+#ifdef TORQUE_DEBUG
+   driverPaths.push_back("libopenald.so.1");
+   driverPaths.push_back("libopenald.so");
+#else
+   driverPaths.push_back("libopenal.so.1");
+   driverPaths.push_back("libopenal.so");
+#endif
+
+   const char* pattern = "*oal.so"
+
+#elif __APPLE__
+
+#ifdef TORQUE_DEBUG
+   driverPaths.push_back("@rpath/libopenald.1.dylib");
+   driverPaths.push_back("@rpath/libopenald.1.23.1.dylib");
+#else
+   driverPaths.push_back("@rpath/libopenal.1.dylib");
+   driverPaths.push_back("@rpath/libopenal.1.23.1.dylib");
+#endif
+
+   const char* pattern = "*oal.dylib"
+
+#endif
+
+   char search[1024];
+   dSprintf(search, sizeof(search), "%s", sys_path, pattern);
+
+   DIR* dir = opendir(search);
+   if (!dir) return;
+
+   struct dirent* fEntry;
+   while ((fEntry = readdir(dir)) != nullptr)
+   {
+      if ((fStat.st_mode & S_IFMT) == S_IFDIR)
+         continue;
+
+      char filename[BUFSIZ + 1];
+      dSprintf(filename, sizeof(filename), "%s/%s", search, fEntry->d_name); // "construct" the file name
+      String fullPath = String::ToString(filename);
+      driverPaths.push_back(fullPath);
+   }
+
+   closedir(dir);
+#endif
 }
 

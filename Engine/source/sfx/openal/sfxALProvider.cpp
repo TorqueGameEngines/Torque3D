@@ -76,6 +76,8 @@ MODULE_END;
 
 void SFXALProvider::init()
 {
+   LoadDriverList();
+
    if( LoadOAL10Library( NULL, mOpenAL ) != AL_TRUE )
    {
       Con::printf( "SFXALProvider - OpenAL not available." );
@@ -97,7 +99,6 @@ void SFXALProvider::init()
    {
       ALDeviceInfo* info = new ALDeviceInfo;
       
-      //info->internalName = String( mALDL->GetInternalDeviceName( i ) );
       info->name = String( mALDL->GetDeviceName( i ) );
 
       mDeviceInfo.push_back( info );

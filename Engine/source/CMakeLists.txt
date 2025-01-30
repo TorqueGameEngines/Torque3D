@@ -75,13 +75,6 @@ if(TORQUE_SFX_OPENAL AND NOT TORQUE_DEDICATED)
     addDef( "AL_ALEXT_PROTOTYPES" )
   endif()
     torqueAddSourceDirectories("sfx/openal")
-    if(WIN32)
-      torqueAddSourceDirectories("sfx/openal/win32")
-    elseif(UNIX AND NOT APPLE)
-        torqueAddSourceDirectories("sfx/openal/linux")
-    elseif(APPLE)
-        torqueAddSourceDirectories("sfx/openal/mac")
-    endif()
 endif()
 # Handle GFX
 torqueAddSourceDirectories("gfx" "gfx/Null" "gfx/test" "gfx/bitmap" "gfx/bitmap/loaders" "gfx/bitmap/loaders/ies"

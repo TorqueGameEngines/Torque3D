@@ -32,7 +32,6 @@
 typedef struct
 {
 	char           strDeviceName[256];
-	char           strInternalDeviceName[256];
 	S32				iMajorVersion;
 	S32				iMinorVersion;
    U32	         uiSourceCount;

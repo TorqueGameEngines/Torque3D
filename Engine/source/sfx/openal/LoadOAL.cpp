@@ -32,135 +32,155 @@
 #include <sys/types.h>
 #endif
 
-void AddDriver(const char* name, LIB_HANDLE dllHandle)
+ALboolean LoadOAL10Library(char *szOALFullPathName, openAlInterface& lpOALFnTable)
 {
-   openAlInterface* oal = new openAlInterface(name, dllHandle);
+	if (szOALFullPathName)
+      lpOALFnTable.openaAlDll = LoadLibraryA(szOALFullPathName);
+   else
+   {
+#ifdef TORQUE_DEBUG
+      lpOALFnTable.openaAlDll = LoadLibraryA("openal32d.dll");
+#else
+      lpOALFnTable.openaAlDll = LoadLibraryA("openal32.dll");
+#endif
+   }
+	if (!lpOALFnTable.openaAlDll)
+		return AL_FALSE;
 
    bool loadok = true;
 
-   LOAD_REQUIRED(oal, alcCreateContext);
-   LOAD_REQUIRED(oal, alcMakeContextCurrent);
-   LOAD_REQUIRED(oal, alcProcessContext);
-   LOAD_REQUIRED(oal, alcSuspendContext);
-   LOAD_REQUIRED(oal, alcDestroyContext);
-   LOAD_REQUIRED(oal, alcGetCurrentContext);
-   LOAD_REQUIRED(oal, alcGetContextsDevice);
-   LOAD_REQUIRED(oal, alcOpenDevice);
-   LOAD_REQUIRED(oal, alcCloseDevice);
-   LOAD_REQUIRED(oal, alcGetError);
-   LOAD_REQUIRED(oal, alcIsExtensionPresent);
-   LOAD_REQUIRED(oal, alcGetProcAddress);
-   LOAD_REQUIRED(oal, alcGetEnumValue);
-   LOAD_REQUIRED(oal, alcGetString);
-   LOAD_REQUIRED(oal, alcGetIntegerv);
-   LOAD_REQUIRED(oal, alcCaptureOpenDevice);
-   LOAD_REQUIRED(oal, alcCaptureCloseDevice);
-   LOAD_REQUIRED(oal, alcCaptureStart);
-   LOAD_REQUIRED(oal, alcCaptureStop);
-   LOAD_REQUIRED(oal, alcCaptureSamples);
+   LOAD_REQUIRED(lpOALFnTable, alcCreateContext);
+   LOAD_REQUIRED(lpOALFnTable, alcMakeContextCurrent);
+   LOAD_REQUIRED(lpOALFnTable, alcProcessContext);
+   LOAD_REQUIRED(lpOALFnTable, alcSuspendContext);
+   LOAD_REQUIRED(lpOALFnTable, alcDestroyContext);
+   LOAD_REQUIRED(lpOALFnTable, alcGetCurrentContext);
+   LOAD_REQUIRED(lpOALFnTable, alcGetContextsDevice);
+   LOAD_REQUIRED(lpOALFnTable, alcOpenDevice);
+   LOAD_REQUIRED(lpOALFnTable, alcCloseDevice);
+   LOAD_REQUIRED(lpOALFnTable, alcGetError);
+   LOAD_REQUIRED(lpOALFnTable, alcIsExtensionPresent);
+   LOAD_REQUIRED(lpOALFnTable, alcGetProcAddress);
+   LOAD_REQUIRED(lpOALFnTable, alcGetEnumValue);
+   LOAD_REQUIRED(lpOALFnTable, alcGetString);
+   LOAD_REQUIRED(lpOALFnTable, alcGetIntegerv);
+   LOAD_REQUIRED(lpOALFnTable, alcCaptureOpenDevice);
+   LOAD_REQUIRED(lpOALFnTable, alcCaptureCloseDevice);
+   LOAD_REQUIRED(lpOALFnTable, alcCaptureStart);
+   LOAD_REQUIRED(lpOALFnTable, alcCaptureStop);
+   LOAD_REQUIRED(lpOALFnTable, alcCaptureSamples);
 
-   LOAD_REQUIRED(oal, alEnable);
-   LOAD_REQUIRED(oal, alDisable);
-   LOAD_REQUIRED(oal, alIsEnabled);
-   LOAD_REQUIRED(oal, alGetString);
-   LOAD_REQUIRED(oal, alGetBooleanv);
-   LOAD_REQUIRED(oal, alGetIntegerv);
-   LOAD_REQUIRED(oal, alGetFloatv);
-   LOAD_REQUIRED(oal, alGetDoublev);
-   LOAD_REQUIRED(oal, alGetBoolean);
-   LOAD_REQUIRED(oal, alGetInteger);
-   LOAD_REQUIRED(oal, alGetFloat);
-   LOAD_REQUIRED(oal, alGetDouble);
-   LOAD_REQUIRED(oal, alGetError);
-   LOAD_REQUIRED(oal, alIsExtensionPresent);
-   LOAD_REQUIRED(oal, alGetProcAddress);
-   LOAD_REQUIRED(oal, alGetEnumValue);
-   LOAD_REQUIRED(oal, alListenerf);
-   LOAD_REQUIRED(oal, alListener3f);
-   LOAD_REQUIRED(oal, alListenerfv);
-   LOAD_REQUIRED(oal, alListeneri);
-   LOAD_REQUIRED(oal, alListener3i);
-   LOAD_REQUIRED(oal, alListeneriv);
-   LOAD_REQUIRED(oal, alGetListenerf);
-   LOAD_REQUIRED(oal, alGetListener3f);
-   LOAD_REQUIRED(oal, alGetListenerfv);
-   LOAD_REQUIRED(oal, alGetListeneri);
-   LOAD_REQUIRED(oal, alGetListener3i);
-   LOAD_REQUIRED(oal, alGetListeneriv);
-   LOAD_REQUIRED(oal, alGenSources);
-   LOAD_REQUIRED(oal, alDeleteSources);
-   LOAD_REQUIRED(oal, alIsSource);
-   LOAD_REQUIRED(oal, alSourcef);
-   LOAD_REQUIRED(oal, alSource3f);
-   LOAD_REQUIRED(oal, alSourcefv);
-   LOAD_REQUIRED(oal, alSourcei);
-   LOAD_REQUIRED(oal, alSource3i);
-   LOAD_REQUIRED(oal, alSourceiv);
-   LOAD_REQUIRED(oal, alGetSourcef);
-   LOAD_REQUIRED(oal, alGetSource3f);
-   LOAD_REQUIRED(oal, alGetSourcefv);
-   LOAD_REQUIRED(oal, alGetSourcei);
-   LOAD_REQUIRED(oal, alGetSource3i);
-   LOAD_REQUIRED(oal, alGetSourceiv);
-   LOAD_REQUIRED(oal, alSourcePlayv);
-   LOAD_REQUIRED(oal, alSourceStopv);
-   LOAD_REQUIRED(oal, alSourceRewindv);
-   LOAD_REQUIRED(oal, alSourcePausev);
-   LOAD_REQUIRED(oal, alSourcePlay);
-   LOAD_REQUIRED(oal, alSourceStop);
-   LOAD_REQUIRED(oal, alSourceRewind);
-   LOAD_REQUIRED(oal, alSourcePause);
-   LOAD_REQUIRED(oal, alSourceQueueBuffers);
-   LOAD_REQUIRED(oal, alSourceUnqueueBuffers);
-   LOAD_REQUIRED(oal, alGenBuffers);
-   LOAD_REQUIRED(oal, alDeleteBuffers);
-   LOAD_REQUIRED(oal, alIsBuffer);
-   LOAD_REQUIRED(oal, alBufferData);
-   LOAD_REQUIRED(oal, alDopplerFactor);
-   LOAD_REQUIRED(oal, alDopplerVelocity);
-   LOAD_REQUIRED(oal, alSpeedOfSound);
-   LOAD_REQUIRED(oal, alDistanceModel);
+   LOAD_REQUIRED(lpOALFnTable, alEnable);
+   LOAD_REQUIRED(lpOALFnTable, alDisable);
+   LOAD_REQUIRED(lpOALFnTable, alIsEnabled);
+   LOAD_REQUIRED(lpOALFnTable, alGetString);
+   LOAD_REQUIRED(lpOALFnTable, alGetBooleanv);
+   LOAD_REQUIRED(lpOALFnTable, alGetIntegerv);
+   LOAD_REQUIRED(lpOALFnTable, alGetFloatv);
+   LOAD_REQUIRED(lpOALFnTable, alGetDoublev);
+   LOAD_REQUIRED(lpOALFnTable, alGetBoolean);
+   LOAD_REQUIRED(lpOALFnTable, alGetInteger);
+   LOAD_REQUIRED(lpOALFnTable, alGetFloat);
+   LOAD_REQUIRED(lpOALFnTable, alGetDouble);
+   LOAD_REQUIRED(lpOALFnTable, alGetError);
+   LOAD_REQUIRED(lpOALFnTable, alIsExtensionPresent);
+   LOAD_REQUIRED(lpOALFnTable, alGetProcAddress);
+   LOAD_REQUIRED(lpOALFnTable, alGetEnumValue);
+   LOAD_REQUIRED(lpOALFnTable, alListenerf);
+   LOAD_REQUIRED(lpOALFnTable, alListener3f);
+   LOAD_REQUIRED(lpOALFnTable, alListenerfv);
+   LOAD_REQUIRED(lpOALFnTable, alListeneri);
+   LOAD_REQUIRED(lpOALFnTable, alListener3i);
+   LOAD_REQUIRED(lpOALFnTable, alListeneriv);
+   LOAD_REQUIRED(lpOALFnTable, alGetListenerf);
+   LOAD_REQUIRED(lpOALFnTable, alGetListener3f);
+   LOAD_REQUIRED(lpOALFnTable, alGetListenerfv);
+   LOAD_REQUIRED(lpOALFnTable, alGetListeneri);
+   LOAD_REQUIRED(lpOALFnTable, alGetListener3i);
+   LOAD_REQUIRED(lpOALFnTable, alGetListeneriv);
+   LOAD_REQUIRED(lpOALFnTable, alGenSources);
+   LOAD_REQUIRED(lpOALFnTable, alDeleteSources);
+   LOAD_REQUIRED(lpOALFnTable, alIsSource);
+   LOAD_REQUIRED(lpOALFnTable, alSourcef);
+   LOAD_REQUIRED(lpOALFnTable, alSource3f);
+   LOAD_REQUIRED(lpOALFnTable, alSourcefv);
+   LOAD_REQUIRED(lpOALFnTable, alSourcei);
+   LOAD_REQUIRED(lpOALFnTable, alSource3i);
+   LOAD_REQUIRED(lpOALFnTable, alSourceiv);
+   LOAD_REQUIRED(lpOALFnTable, alGetSourcef);
+   LOAD_REQUIRED(lpOALFnTable, alGetSource3f);
+   LOAD_REQUIRED(lpOALFnTable, alGetSourcefv);
+   LOAD_REQUIRED(lpOALFnTable, alGetSourcei);
+   LOAD_REQUIRED(lpOALFnTable, alGetSource3i);
+   LOAD_REQUIRED(lpOALFnTable, alGetSourceiv);
+   LOAD_REQUIRED(lpOALFnTable, alSourcePlayv);
+   LOAD_REQUIRED(lpOALFnTable, alSourceStopv);
+   LOAD_REQUIRED(lpOALFnTable, alSourceRewindv);
+   LOAD_REQUIRED(lpOALFnTable, alSourcePausev);
+   LOAD_REQUIRED(lpOALFnTable, alSourcePlay);
+   LOAD_REQUIRED(lpOALFnTable, alSourceStop);
+   LOAD_REQUIRED(lpOALFnTable, alSourceRewind);
+   LOAD_REQUIRED(lpOALFnTable, alSourcePause);
+   LOAD_REQUIRED(lpOALFnTable, alSourceQueueBuffers);
+   LOAD_REQUIRED(lpOALFnTable, alSourceUnqueueBuffers);
+   LOAD_REQUIRED(lpOALFnTable, alGenBuffers);
+   LOAD_REQUIRED(lpOALFnTable, alDeleteBuffers);
+   LOAD_REQUIRED(lpOALFnTable, alIsBuffer);
+   LOAD_REQUIRED(lpOALFnTable, alBufferData);
+   LOAD_REQUIRED(lpOALFnTable, alDopplerFactor);
+   LOAD_REQUIRED(lpOALFnTable, alDopplerVelocity);
+   LOAD_REQUIRED(lpOALFnTable, alSpeedOfSound);
+   LOAD_REQUIRED(lpOALFnTable, alDistanceModel);
 
    if (loadok)
    {
       ALCint maj, min;
-      oal->alcGetIntegerv(nullptr, ALC_MAJOR_VERSION, 1, &maj);
-      oal->alcGetIntegerv(nullptr, ALC_MINOR_VERSION, 1, &min);
-      if (oal->alcGetError(nullptr) == ALC_NO_ERROR)
+      lpOALFnTable.alcGetIntegerv(nullptr, ALC_MAJOR_VERSION, 1, &maj);
+      lpOALFnTable.alcGetIntegerv(nullptr, ALC_MINOR_VERSION, 1, &min);
+      if (lpOALFnTable.alcGetError(nullptr) == ALC_NO_ERROR)
       {
-         oal->ALCVer = MakeALCVer(maj, min);
+         lpOALFnTable.ALCVer = MakeALCVer(maj, min);
       }
       else
       {
          Con::warnf("Failed to query ALC version assuming 1.0");
-         oal->ALCVer = MakeALCVer(1, 0);
+         lpOALFnTable.ALCVer = MakeALCVer(1, 0);
       }
+   }
+   else
+   {
+      return AL_FALSE;
    }
 
    // these are optional.
-   LOAD_REQUIRED(oal, alBufferf);
-   LOAD_REQUIRED(oal, alBuffer3f);
-   LOAD_REQUIRED(oal, alBufferfv);
-   LOAD_REQUIRED(oal, alBufferi);
-   LOAD_REQUIRED(oal, alBuffer3i);
-   LOAD_REQUIRED(oal, alBufferiv);
-   LOAD_REQUIRED(oal, alGetBufferf);
-   LOAD_REQUIRED(oal, alGetBuffer3f);
-   LOAD_REQUIRED(oal, alGetBufferfv);
-   LOAD_REQUIRED(oal, alGetBufferi);
-   LOAD_REQUIRED(oal, alGetBuffer3i);
-   LOAD_REQUIRED(oal, alGetBufferiv);
+   LOAD_REQUIRED(lpOALFnTable, alBufferf);
+   LOAD_REQUIRED(lpOALFnTable, alBuffer3f);
+   LOAD_REQUIRED(lpOALFnTable, alBufferfv);
+   LOAD_REQUIRED(lpOALFnTable, alBufferi);
+   LOAD_REQUIRED(lpOALFnTable, alBuffer3i);
+   LOAD_REQUIRED(lpOALFnTable, alBufferiv);
+   LOAD_REQUIRED(lpOALFnTable, alGetBufferf);
+   LOAD_REQUIRED(lpOALFnTable, alGetBuffer3f);
+   LOAD_REQUIRED(lpOALFnTable, alGetBufferfv);
+   LOAD_REQUIRED(lpOALFnTable, alGetBufferi);
+   LOAD_REQUIRED(lpOALFnTable, alGetBuffer3i);
+   LOAD_REQUIRED(lpOALFnTable, alGetBufferiv);
 
    if (loadok)
    {
-      if (oal->alcIsExtensionPresent(nullptr, "ALC_EXT_thread_local_context"))
+      if (lpOALFnTable.alcIsExtensionPresent(nullptr, "ALC_EXT_thread_local_context"))
       {
-         LOAD_REQUIRED(oal, alcSetThreadContext);
-         LOAD_REQUIRED(oal, alcGetThreadContext);
+         LOAD_REQUIRED(lpOALFnTable, alcSetThreadContext);
+         LOAD_REQUIRED(lpOALFnTable, alcGetThreadContext);
       }
-
-      ALDriverList.push_back(oal);
    }
+
+   if (!loadok)
+   {
+      return AL_FALSE;
+   }
+
+	return AL_TRUE;
 }
 
 void LoadDriverList()
@@ -206,6 +226,8 @@ void LoadDriverList()
    driverPaths.push_back("libopenal.so");
 #endif
 
+   const char* pattern = "*oal.so"
+
 #elif __APPLE__
 
 #ifdef TORQUE_DEBUG
@@ -216,47 +238,29 @@ void LoadDriverList()
    driverPaths.push_back("@rpath/libopenal.1.23.1.dylib");
 #endif
 
-#endif
-   
-      const char* searchDirs[] = {
-           "/usr/lib/",
-           "/usr/local/lib/",
-           "/Library/Audio/Plug-Ins/HAL/"
-   };
+   const char* pattern = "*oal.dylib"
 
-   for (const char* sys_path : searchDirs)
+#endif
+
+   char search[1024];
+   dSprintf(search, sizeof(search), "%s", sys_path, pattern);
+
+   DIR* dir = opendir(search);
+   if (!dir) return;
+
+   struct dirent* fEntry;
+   while ((fEntry = readdir(dir)) != nullptr)
    {
-      DIR* dir = opendir(sys_path);
-      if (!dir) continue;
+      if ((fStat.st_mode & S_IFMT) == S_IFDIR)
+         continue;
 
-      struct dirent* entry;
-      while ((entry = readdir(dir)) != nullptr)
-      {
-         String fileName = String::ToString(entry->d_name);
-
-#ifdef __linux__
-         if (fileName.find("oal.so") != std::string::npos)
-#elif __APPLE__
-         if (fileName.find("openal.dylib") != String::NPos)  // Fix for macOS
-#endif
-         {
-            String fullPath = String::ToString(sys_path) + fileName;
-            driverPaths.push_back(fullPath);
-         }
-      }
-
-      closedir(dir);
-    }
-#endif
-
-   for(String driver : driverPaths)
-   {
-      LIB_HANDLE mod = LOAD_LIBRARY(driver);
-      if (mod)
-      {
-         AddDriver(driver, mod);
-      }
+      char filename[BUFSIZ + 1];
+      dSprintf(filename, sizeof(filename), "%s/%s", search, fEntry->d_name); // "construct" the file name
+      String fullPath = String::ToString(filename);
+      driverPaths.push_back(fullPath);
    }
 
+   closedir(dir);
+#endif
 }
 

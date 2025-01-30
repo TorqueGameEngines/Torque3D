@@ -31,32 +31,11 @@
 #include "core/util/tVector.h"
 #endif
 
-#if defined(TORQUE_OS_MAC)
-#undef AL_ALEXT_PROTOTYPES
-#  include <OpenAL/al.h>
-#  include <OpenAL/alc.h>
-#else
 #  include <AL/al.h>
 #  include <AL/alc.h>
 #  include <AL/alext.h>
 #  include <AL/efx.h>
 #  include <AL/efx-presets.h>
-#endif
-#endif
-
-#define LOAD_REQUIRED(table, x)                                                             \
-     table->x = reinterpret_cast<decltype(table->x)>(reinterpret_cast<void*>(               \
-        GET_PROC_ADDRESS(table->openaAlDll, #x)));                                          \
-    if(!table->x)                                                                           \
-    {                                                                                       \
-        Con::warnf("Failed to find entry point :%s\n", #x);                                 \
-        loadok = false;                                                                     \
-    }  
-
-
-constexpr auto MakeALCVer(int major, int minor) noexcept -> int {
-   return (major << 8) | minor;
-}
 
 #if defined(TORQUE_OS_WIN)
 #include <windows.h>

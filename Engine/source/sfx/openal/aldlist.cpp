@@ -37,7 +37,7 @@
 /* 
  * Init call
  */
-ALDeviceList::ALDeviceList()
+ALDeviceList::ALDeviceList( const openAlInterface &oalft )
 {
  //  VECTOR_SET_ASSOCIATION( vDeviceInfo );
 
@@ -47,7 +47,7 @@ ALDeviceList::ALDeviceList()
 	//const char *defaultDeviceName;
 	//const char *actualDeviceName;
 
- //  dMemcpy( &ALFunction, &oalft, sizeof( openAlInterface ) );
+   dMemcpy( &ALFunction, &oalft, sizeof( openAlInterface ) );
 
  //  // DeviceInfo vector stores, for each enumerated device, it's device name, selection status, spec version #, and extension support
  //  vDeviceInfo.clear();

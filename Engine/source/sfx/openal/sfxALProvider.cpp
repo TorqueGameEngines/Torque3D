@@ -40,6 +40,7 @@ public:
    virtual ~SFXALProvider();
 
 protected:
+   openAlInterface mOpenAL;
    ALDeviceList *mALDL;
 
    struct ALDeviceInfo : SFXDeviceInfo
@@ -75,9 +76,12 @@ MODULE_END;
 
 void SFXALProvider::init()
 {
-   LoadDriverList();
-
-   //mALDL = new ALDeviceList( mOpenAL );
+   if( LoadOAL10Library( NULL, mOpenAL ) != AL_TRUE )
+   {
+      Con::printf( "SFXALProvider - OpenAL not available." );
+      return;
+   }
+   mALDL = new ALDeviceList( mOpenAL );
 
    // Did we get any devices?
    if ( mALDL->GetNumDevices() < 1 )

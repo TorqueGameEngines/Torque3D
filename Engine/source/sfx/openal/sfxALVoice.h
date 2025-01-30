@@ -26,7 +26,7 @@
 #ifndef _SFXVOICE_H_
    #include "sfx/sfxVoice.h"
 #endif
-#ifndef _LOADOAL_H_
+#ifndef _openAlInterface
    #include "sfx/openal/LoadOAL.h"
 #endif
 #ifndef _PLATFORM_THREADS_MUTEX_H_

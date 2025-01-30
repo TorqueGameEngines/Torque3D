@@ -41,7 +41,7 @@ class SFXProvider;
 #  include "sfx/openal/sfxALVoice.h"
 #endif
 
-#ifndef _LOADOAL_H_
+#ifndef _openAlInterface
 #  include "sfx/openal/LoadOAL.h"
 #endif
 

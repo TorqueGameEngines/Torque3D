@@ -30,7 +30,7 @@
 //#define DEBUG_SPEW
 
 
-SFXALBuffer* SFXALBuffer::create(   const OPENALFNTABLE &oalft,
+SFXALBuffer* SFXALBuffer::create(   const openAlInterface &oalft,
                                     const ThreadSafeRef< SFXStream >& stream,
                                     SFXDescription* description,
                                     bool useHardware )
@@ -49,7 +49,7 @@ SFXALBuffer* SFXALBuffer::create(   const OPENALFNTABLE &oalft,
    return buffer;
 }
 
-SFXALBuffer::SFXALBuffer(  const OPENALFNTABLE &oalft, 
+SFXALBuffer::SFXALBuffer(  const openAlInterface &oalft, 
                            const ThreadSafeRef< SFXStream >& stream,
                            SFXDescription* description,
                            bool useHardware )

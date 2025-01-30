@@ -40,7 +40,7 @@ public:
    virtual ~SFXALProvider();
 
 protected:
-   OPENALFNTABLE mOpenAL;
+   openAlInterface mOpenAL;
    ALDeviceList *mALDL;
 
    struct ALDeviceInfo : SFXDeviceInfo
@@ -76,7 +76,7 @@ MODULE_END;
 
 void SFXALProvider::init()
 {
-   if( LoadOAL10Library( NULL, &mOpenAL ) != AL_TRUE )
+   if( LoadOAL10Library( NULL, mOpenAL ) != AL_TRUE )
    {
       Con::printf( "SFXALProvider - OpenAL not available." );
       return;
@@ -108,10 +108,8 @@ void SFXALProvider::init()
 
 SFXALProvider::~SFXALProvider()
 {
-   UnloadOAL10Library();
-
    if (mALDL)
-	delete mALDL;
+	   delete mALDL;
 }
 
 SFXDevice *SFXALProvider::createDevice( const String& deviceName, bool useHardware, S32 maxBuffers )

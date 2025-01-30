@@ -106,7 +106,7 @@ S32 SFXALDevice::getMaxSourcesOld()
 //-----------------------------------------------------------------------------
 
 SFXALDevice::SFXALDevice(  SFXProvider *provider, 
-                           const OPENALFNTABLE &openal, 
+                           const openAlInterface &openal,
                            String name, 
                            bool useHardware, 
                            S32 maxBuffers )
@@ -190,14 +190,15 @@ SFXALDevice::~SFXALDevice()
 {
    _releaseAllResources();
    ///cleanup our effects
-#if defined(AL_ALEXT_PROTOTYPES)
-   mOpenAL.alDeleteAuxiliaryEffectSlots(4, effectSlot);
-   mOpenAL.alDeleteEffects(2, effect);
-#endif
+//#if defined(AL_ALEXT_PROTOTYPES)
+//   mOpenAL.alDeleteAuxiliaryEffectSlots(4, effectSlot);
+//   mOpenAL.alDeleteEffects(2, effect);
+//#endif
    ///cleanup of effects ends
    mOpenAL.alcMakeContextCurrent( NULL );
 	mOpenAL.alcDestroyContext( mContext );
 	mOpenAL.alcCloseDevice( mDevice );
+
 }
 
 //-----------------------------------------------------------------------------

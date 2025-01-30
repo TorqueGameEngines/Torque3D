@@ -26,7 +26,7 @@
 #ifndef _SFXVOICE_H_
    #include "sfx/sfxVoice.h"
 #endif
-#ifndef _OPENALFNTABLE
+#ifndef _openAlInterface
    #include "sfx/openal/LoadOAL.h"
 #endif
 #ifndef _PLATFORM_THREADS_MUTEX_H_
@@ -47,7 +47,7 @@ class SFXALVoice : public SFXVoice
 
    protected:
 
-      SFXALVoice( const OPENALFNTABLE &oalft,
+      SFXALVoice( const openAlInterface &oalft,
                   SFXALBuffer *buffer, 
                   ALuint sourceName );
 
@@ -65,7 +65,7 @@ class SFXALVoice : public SFXVoice
 
       Mutex mMutex;
 
-      const OPENALFNTABLE &mOpenAL;
+      const openAlInterface &mOpenAL;
 
       ///
       SFXALBuffer* _getBuffer() const

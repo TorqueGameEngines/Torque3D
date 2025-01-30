@@ -76,6 +76,8 @@ MODULE_END;
 
 void SFXALProvider::init()
 {
+   LoadDriverList();
+
    if( LoadOAL10Library( NULL, mOpenAL ) != AL_TRUE )
    {
       Con::printf( "SFXALProvider - OpenAL not available." );
@@ -96,8 +98,7 @@ void SFXALProvider::init()
    for( S32 i = 0; i < mALDL->GetNumDevices(); i++ )
    {
       ALDeviceInfo* info = new ALDeviceInfo;
-      
-      info->internalName = String( mALDL->GetInternalDeviceName( i ) );
+    
       info->name = String( mALDL->GetDeviceName( i ) );
 
       mDeviceInfo.push_back( info );
@@ -119,7 +120,7 @@ SFXDevice *SFXALProvider::createDevice( const String& deviceName, bool useHardwa
 
    // Do we find one to create?
    if (info)
-      return new SFXALDevice(this, mOpenAL, info->internalName, useHardware, maxBuffers);
+      return new SFXALDevice(this, mOpenAL, info->name, useHardware, maxBuffers);
 
    return NULL;
 }

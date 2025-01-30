@@ -31,11 +31,32 @@
 #include "core/util/tVector.h"
 #endif
 
+#if defined(TORQUE_OS_MAC)
+#undef AL_ALEXT_PROTOTYPES
+#  include <OpenAL/al.h>
+#  include <OpenAL/alc.h>
+#else
 #  include <AL/al.h>
 #  include <AL/alc.h>
 #  include <AL/alext.h>
 #  include <AL/efx.h>
 #  include <AL/efx-presets.h>
+#endif
+#endif
+
+#define LOAD_REQUIRED(table, x)                                                             \
+     table->x = reinterpret_cast<decltype(table->x)>(reinterpret_cast<void*>(               \
+        GET_PROC_ADDRESS(table->openaAlDll, #x)));                                          \
+    if(!table->x)                                                                           \
+    {                                                                                       \
+        Con::warnf("Failed to find entry point :%s\n", #x);                                 \
+        loadok = false;                                                                     \
+    }  
+
+
+constexpr auto MakeALCVer(int major, int minor) noexcept -> int {
+   return (major << 8) | minor;
+}
 
 #if defined(TORQUE_OS_WIN)
 #include <windows.h>
@@ -71,40 +92,6 @@ constexpr auto MakeALCVer(int major, int minor) noexcept -> int {
    return (major << 8) | minor;
 }
 
-#if defined(TORQUE_OS_WIN)
-#include <windows.h>
-#define LIB_HANDLE HINSTANCE
-#define LOAD_LIBRARY(path) LoadLibraryW(path)
-#define GET_PROC_ADDRESS(lib, name) GetProcAddress(lib, name)
-#define CLOSE_LIBRARY(lib) FreeLibrary(lib)
-#define LIB_EXTENSION L".dll"
-#else
-#include <dlfcn.h>
-#define LIB_HANDLE void*
-#define LOAD_LIBRARY(path) dlopen(path, RTLD_NOW)
-#define GET_PROC_ADDRESS(lib, name) dlsym(lib, name)
-#define CLOSE_LIBRARY(lib) dlclose(lib)
-#ifdef __APPLE__
-#define LIB_EXTENSION ".dylib"
-#else
-#define LIB_EXTENSION ".so"
-#endif
-#endif
-
-#define LOAD_REQUIRED(table, x)                                                              \
-     table.x = reinterpret_cast<decltype(table.x)>(reinterpret_cast<void*>(                  \
-        GET_PROC_ADDRESS(table.openaAlDll, #x)));                                            \
-    if(!table.x)                                                                             \
-    {                                                                                        \
-        Con::warnf("Failed to find entry point :%s\n", #x);                                  \
-        loadok = false;                                                                      \
-    }  
-
-
-constexpr auto MakeALCVer(int major, int minor) noexcept -> int {
-   return (major << 8) | minor;
-}
-
 #ifndef ALAPIENTRY
 #define ALAPIENTRY
 #endif
@@ -112,11 +99,6 @@ constexpr auto MakeALCVer(int major, int minor) noexcept -> int {
 #ifndef ALCAPIENTRY
 #define ALCAPIENTRY
 #endif
-
-// Open AL Function table definition
-
-#ifndef _openAlInterface
-#define _openAlInterface
 
 // AL 1.0 did not define the ALchar and ALCchar types, so define them here
 // if they don't exist
@@ -268,6 +250,11 @@ struct openAlInterface
 
    int ALCVer{ 0 };
    LIB_HANDLE openaAlDll{ nullptr };
+   String name;
+
+   openAlInterface(const String& inName, LIB_HANDLE mod)
+      : name(inName), openaAlDll(mod)
+   {}
 
    virtual ~openAlInterface() {
       if (openaAlDll)
@@ -276,9 +263,10 @@ struct openAlInterface
 
 };
 
-#endif
+inline Vector<openAlInterface*> ALDriverList;
 
-ALboolean LoadOAL10Library(char *szOALFullPathName, openAlInterface& lpOALFnTable);
+
+void AddDriver(const char *name, LIB_HANDLE dllHandle);
 
 void LoadDriverList();
 

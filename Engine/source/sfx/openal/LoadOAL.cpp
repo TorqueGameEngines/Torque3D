@@ -232,18 +232,18 @@ void LoadDriverList()
       struct dirent* entry;
       while ((entry = readdir(dir)) != nullptr)
       {
-         std::string fileName(entry->d_name);
+         String fileName = String::ToString(entry->d_name);
 
 #ifdef __linux__
          if (fileName.find("oal.so") != std::string::npos)
 #elif __APPLE__
-         if (fileName.find("openal.dylib") != std::string::npos)  // Fix for macOS
+         if (fileName.find("openal.dylib") != String::NPos)  // Fix for macOS
 #endif
          {
-            std::string fullPath = std::string(sys_path) + fileName;
+            String fullPath = String::ToString(sys_path) + fileName;
             driverPaths.push_back(fullPath);
-}
-        }
+         }
+      }
 
       closedir(dir);
     }

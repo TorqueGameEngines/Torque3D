@@ -150,7 +150,8 @@ void AddDriver(const char* name, LIB_HANDLE dllHandle)
    LOAD_REQUIRED(oal, alGetBufferi);
    LOAD_REQUIRED(oal, alGetBuffer3i);
    LOAD_REQUIRED(oal, alGetBufferiv);
-
+   
+#if defined(AL_ALEXT_PROTOTYPES)
    if (loadok)
    {
       if (oal->alcIsExtensionPresent(nullptr, "ALC_EXT_thread_local_context"))
@@ -161,6 +162,12 @@ void AddDriver(const char* name, LIB_HANDLE dllHandle)
 
       ALDriverList.push_back(oal);
    }
+#else
+   if (loadok)
+   {
+      ALDriverList.push_back(oal);
+   }
+#endif
 }
 
 void LoadDriverList()
@@ -199,21 +206,17 @@ void LoadDriverList()
 #ifdef __linux__
 
 #ifdef TORQUE_DEBUG
-   driverPaths.push_back("libopenald.so.1");
    driverPaths.push_back("libopenald.so");
 #else
-   driverPaths.push_back("libopenal.so.1");
    driverPaths.push_back("libopenal.so");
 #endif
 
 #elif __APPLE__
 
 #ifdef TORQUE_DEBUG
-   driverPaths.push_back("@rpath/libopenald.1.dylib");
-   driverPaths.push_back("@rpath/libopenald.1.23.1.dylib");
+   driverPaths.push_back("@rpath/libopenald.dylib");
 #else
-   driverPaths.push_back("@rpath/libopenal.1.dylib");
-   driverPaths.push_back("@rpath/libopenal.1.23.1.dylib");
+   driverPaths.push_back("@rpath/libopenal.dylib");
 #endif
 
 #endif
@@ -235,9 +238,9 @@ void LoadDriverList()
          String fileName = String::ToString(entry->d_name);
 
 #ifdef __linux__
-         if (fileName.find("oal.so") != std::string::npos)
+         if (fileName.endsWith("oal.so"))
 #elif __APPLE__
-         if (fileName.find("openal.dylib") != String::NPos)  // Fix for macOS
+         if (fileName.endsWith("openal.dylib"))  // Fix for macOS
 #endif
          {
             String fullPath = String::ToString(sys_path) + fileName;

@@ -62,7 +62,7 @@ class SFXALDevice : public SFXDevice
       S32 getMaxSourcesOld();
 
       SFXALDevice(   SFXProvider *provider,
-                     const openAlInterface& openal, 
+                     openAlInterface* openal, 
                      String name, 
                      bool useHardware, 
                      S32 maxBuffers );
@@ -71,7 +71,7 @@ class SFXALDevice : public SFXDevice
 
    protected:
 
-      openAlInterface mOpenAL;
+      openAlInterface* mOpenAL;
 
       ALCcontext *mContext;
 

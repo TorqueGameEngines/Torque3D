@@ -30,7 +30,7 @@
 //#define DEBUG_SPEW
 
 
-SFXALBuffer* SFXALBuffer::create(   const openAlInterface &oalft,
+SFXALBuffer* SFXALBuffer::create(   openAlInterface* oalft,
                                     const ThreadSafeRef< SFXStream >& stream,
                                     SFXDescription* description,
                                     bool useHardware )
@@ -49,7 +49,7 @@ SFXALBuffer* SFXALBuffer::create(   const openAlInterface &oalft,
    return buffer;
 }
 
-SFXALBuffer::SFXALBuffer(  const openAlInterface &oalft, 
+SFXALBuffer::SFXALBuffer(  openAlInterface* oalft, 
                            const ThreadSafeRef< SFXStream >& stream,
                            SFXDescription* description,
                            bool useHardware )
@@ -61,7 +61,7 @@ SFXALBuffer::SFXALBuffer(  const openAlInterface &oalft,
    // Set up device buffers.
 
    if( !isStreaming() )
-      mOpenAL.alGenBuffers( 1, &mALBuffer );
+      mOpenAL->alGenBuffers( 1, &mALBuffer );
 }
 
 SFXALBuffer::~SFXALBuffer()
@@ -70,13 +70,13 @@ SFXALBuffer::~SFXALBuffer()
       _getUniqueVoice()->stop();
 
    // Release buffers.
-   if ( mOpenAL.alIsBuffer( mALBuffer ))
-      mOpenAL.alDeleteBuffers( 1, &mALBuffer );
+   if ( mOpenAL->alIsBuffer( mALBuffer ))
+      mOpenAL->alDeleteBuffers( 1, &mALBuffer );
 
    while( mFreeBuffers.size() )
    {
       ALuint buffer = mFreeBuffers.last();
-      mOpenAL.alDeleteBuffers( 1, &buffer );
+      mOpenAL->alDeleteBuffers( 1, &buffer );
       mFreeBuffers.pop_back();
    }
 }
@@ -98,7 +98,7 @@ void SFXALBuffer::write( SFXInternal::SFXStreamPacket* const* packets, U32 num )
       ALenum alFormat = _sfxFormatToALFormat( getFormat() );
       AssertFatal( alFormat != 0, "SFXALBuffer::write() - format unsupported" );
       
-      mOpenAL.alBufferData( mALBuffer, alFormat,
+      mOpenAL->alBufferData( mALBuffer, alFormat,
          packet->data, packet->mSizeActual, getFormat().getSamplesPerSecond() );
          
       destructSingle( packet );
@@ -112,19 +112,19 @@ void SFXALBuffer::write( SFXInternal::SFXStreamPacket* const* packets, U32 num )
 
    ALuint source = _getUniqueVoice()->mSourceName;
    ALint numProcessed;
-   mOpenAL.alGetSourcei( source, AL_BUFFERS_PROCESSED, &numProcessed );
+   mOpenAL->alGetSourcei( source, AL_BUFFERS_PROCESSED, &numProcessed );
    
    for( U32 i = 0; i < numProcessed; ++ i )
    {
       // Unqueue the buffer.
       
       ALuint buffer;
-      mOpenAL.alSourceUnqueueBuffers( source, 1, &buffer );
+      mOpenAL->alSourceUnqueueBuffers( source, 1, &buffer );
       
       // Update the sample offset on the voice.
       
       ALint size;
-      mOpenAL.alGetBufferi( buffer, AL_SIZE, &size );
+      mOpenAL->alGetBufferi( buffer, AL_SIZE, &size );
       _getUniqueVoice()->mSampleOffset += size / getFormat().getBytesPerSample();
       
       // Push the buffer onto the freelist.
@@ -147,22 +147,22 @@ void SFXALBuffer::write( SFXInternal::SFXStreamPacket* const* packets, U32 num )
          mFreeBuffers.pop_back();
       }
       else
-         mOpenAL.alGenBuffers( 1, &buffer );
+         mOpenAL->alGenBuffers( 1, &buffer );
          
       // Upload the data.
       
       ALenum alFormat = _sfxFormatToALFormat( getFormat() );
       AssertFatal( alFormat != 0, "SFXALBuffer::write() - format unsupported" );
-      AssertFatal( mOpenAL.alIsBuffer( buffer ), "SFXALBuffer::write() - buffer invalid" );
+      AssertFatal( mOpenAL->alIsBuffer( buffer ), "SFXALBuffer::write() - buffer invalid" );
       
-      mOpenAL.alBufferData( buffer, alFormat,
+      mOpenAL->alBufferData( buffer, alFormat,
          packet->data, packet->mSizeActual, getFormat().getSamplesPerSecond() );
       
       destructSingle( packet );
       
       // Queue the buffer.
       
-      mOpenAL.alSourceQueueBuffers( source, 1, &buffer );
+      mOpenAL->alSourceQueueBuffers( source, 1, &buffer );
    }
 }
 
@@ -183,12 +183,12 @@ void SFXALBuffer::_flush()
    ALuint source = _getUniqueVoice()->mSourceName;
 
    ALint numQueued;
-   mOpenAL.alGetSourcei( source, AL_BUFFERS_QUEUED, &numQueued );
+   mOpenAL->alGetSourcei( source, AL_BUFFERS_QUEUED, &numQueued );
 
    for( U32 i = 0; i < numQueued; ++ i )
    {
       ALuint buffer;
-      mOpenAL.alSourceUnqueueBuffers( source, 1, &buffer );
+      mOpenAL->alSourceUnqueueBuffers( source, 1, &buffer );
       mFreeBuffers.push_back( buffer );
    }
 
@@ -203,20 +203,20 @@ void SFXALBuffer::_flush()
    // issues any concurrent state changes on the voice resulting in us losing state here.
    
    ALuint newSource;
-   mOpenAL.alGenSources( 1, &newSource );
+   mOpenAL->alGenSources( 1, &newSource );
    
    #define COPY_F( name ) \
    { \
       F32 val; \
-      mOpenAL.alGetSourcef( source, name, &val ); \
-      mOpenAL.alSourcef( source, name, val ); \
+      mOpenAL->alGetSourcef( source, name, &val ); \
+      mOpenAL->alSourcef( source, name, val ); \
    }
    
    #define COPY_FV( name ) \
    { \
       VectorF val; \
-      mOpenAL.alGetSourcefv( source, name, val ); \
-      mOpenAL.alSourcefv( source, name, val ); \
+      mOpenAL->alGetSourcefv( source, name, val ); \
+      mOpenAL->alSourcefv( source, name, val ); \
    }
    
    COPY_F( AL_REFERENCE_DISTANCE );
@@ -232,7 +232,7 @@ void SFXALBuffer::_flush()
    COPY_FV( AL_DIRECTION );
    
    _getUniqueVoice()->mSourceName = newSource;
-   mOpenAL.alDeleteSources( 1, &source );
+   mOpenAL->alDeleteSources( 1, &source );
 
    #endif
 }

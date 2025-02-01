@@ -49,7 +49,7 @@
 #else
 #include <dlfcn.h>
 #define LIB_HANDLE void*
-#define LOAD_LIBRARY(path) dlopen(path, RTLD_NOW)
+#define LOAD_LIBRARY(path) dlopen(path, RTLD_LAZY)
 #define GET_PROC_ADDRESS(lib, name) dlsym(lib, name)
 #define CLOSE_LIBRARY(lib) dlclose(lib)
 #ifdef __APPLE__

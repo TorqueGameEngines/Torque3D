@@ -25,13 +25,6 @@
 #include "core/strings/stringFunctions.h"
 
 #include "aldlist.h"
-#if defined(TORQUE_OS_MAC)
-#include <OpenAL/alc.h>
-#elif defined(TORQUE_OS_LINUX)
-#include <AL/alc.h>
-#else
-#include <al/alc.h>
-#endif
 
 
 /* 
@@ -41,80 +34,82 @@ ALDeviceList::ALDeviceList()
 {
  //  VECTOR_SET_ASSOCIATION( vDeviceInfo );
 
-	//ALDEVICEINFO	ALDeviceInfo;
-	//char *devices;
-	//int index;
-	//const char *defaultDeviceName;
-	//const char *actualDeviceName;
+	ALDEVICEINFO	ALDeviceInfo;
+	char *devices;
+	int index;
+	const char *defaultDeviceName;
+	const char *actualDeviceName;
 
- //  dMemcpy( &ALFunction, &oalft, sizeof( openAlInterface ) );
+   // this needs to be executed from outside of this class, for now to maintain functionality
+   
+   openAlInterface* ALFunction = ALDriverList[0];
 
- //  // DeviceInfo vector stores, for each enumerated device, it's device name, selection status, spec version #, and extension support
- //  vDeviceInfo.clear();
- //  vDeviceInfo.reserve(10);
+  // DeviceInfo vector stores, for each enumerated device, it's device name, selection status, spec version #, and extension support
+  vDeviceInfo.clear();
+  vDeviceInfo.reserve(10);
 
- //  defaultDeviceIndex = 0;
+  defaultDeviceIndex = 0;
 
- //  // grab function pointers for 1.0-API functions, and if successful proceed to enumerate all devices
- //  if (ALFunction.alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT")) {
- //         devices = (char *)ALFunction.alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
- //         defaultDeviceName = (char *)ALFunction.alcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
- //  }
- //  else
- //  {
- //      devices = (char *)ALFunction.alcGetString(NULL, ALC_DEVICE_SPECIFIER);
- //      defaultDeviceName = (char *)ALFunction.alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
- //  }
+   // grab function pointers for 1.0-API functions, and if successful proceed to enumerate all devices
+   if (ALFunction->alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT")) {
+      devices = (char *)ALFunction->alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
+      defaultDeviceName = (char *)ALFunction->alcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
+   }
+   else
+   {
+      devices = (char *)ALFunction->alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+      defaultDeviceName = (char *)ALFunction->alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+   }
 
- //  index = 0;
- //     // go through device list (each device terminated with a single NULL, list terminated with double NULL)
- //  while (*devices != '\0') {
- //     if (String::compare(defaultDeviceName, devices) == 0) {
- //        defaultDeviceIndex = index;
- //     }
+   index = 0;
+      // go through device list (each device terminated with a single NULL, list terminated with double NULL)
+   while (*devices != '\0') {
+      if (String::compare(defaultDeviceName, devices) == 0) {
+         defaultDeviceIndex = index;
+      }
 
- //     ALCdevice* device = ALFunction.alcOpenDevice(devices);
- //     if (device)
- //     {
- //        ALCcontext* ctx = ALFunction.alcCreateContext(device, nullptr);
+      ALCdevice* device = ALFunction->alcOpenDevice(devices);
+      if (device)
+      {
+         ALCcontext* ctx = ALFunction->alcCreateContext(device, nullptr);
 
- //        if (ctx)
- //        {
- //           ALFunction.alcMakeContextCurrent(ctx);
- //           actualDeviceName = ALFunction.alcGetString(device, ALC_DEVICE_SPECIFIER);
- //           bool bNewName = true;
+         if (ctx)
+         {
+            ALFunction->alcMakeContextCurrent(ctx);
+            actualDeviceName = ALFunction->alcGetString(device, ALC_DEVICE_SPECIFIER);
+            bool bNewName = true;
 
- //           if (actualDeviceName)
- //           {
- //              for (int i = 0; i < GetNumDevices(); i++) {
- //                 if (String::compare(GetDeviceName(i), devices) == 0) {
- //                    bNewName = false;
- //                 }
- //              }
- //           }
+            if (actualDeviceName)
+            {
+               for (int i = 0; i < GetNumDevices(); i++) {
+                  if (String::compare(GetDeviceName(i), devices) == 0) {
+                     bNewName = false;
+                  }
+               }
+            }
 
- //           if ((bNewName) && (actualDeviceName != NULL) && (dStrlen(actualDeviceName) > 0))
- //           {
- //              dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
- //              ALDeviceInfo.bSelected = true;
- //              dStrncpy(ALDeviceInfo.strDeviceName, actualDeviceName, sizeof(ALDeviceInfo.strDeviceName));
- //              char deviceExternal[256];
- //              dStrcpy(deviceExternal, devices, 256);
+            if ((bNewName) && (actualDeviceName != NULL) && (dStrlen(actualDeviceName) > 0))
+            {
+               dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
+               ALDeviceInfo.bSelected = true;
+               dStrncpy(ALDeviceInfo.strDeviceName, actualDeviceName, sizeof(ALDeviceInfo.strDeviceName));
+               char deviceExternal[256];
+               dStrcpy(deviceExternal, devices, 256);
 
- //              vDeviceInfo.push_back(ALDeviceInfo);
- //           }
+               vDeviceInfo.push_back(ALDeviceInfo);
+            }
 
- //           ALFunction.alcMakeContextCurrent(nullptr);
- //           ALFunction.alcDestroyContext(ctx);
- //        }
- //        ALFunction.alcCloseDevice(device);
- //     }
- //    
- //     devices += dStrlen(devices) + 1;
- //     index += 1;
- //  }
+            ALFunction->alcMakeContextCurrent(nullptr);
+            ALFunction->alcDestroyContext(ctx);
+         }
+         ALFunction->alcCloseDevice(device);
+      }
+     
+      devices += dStrlen(devices) + 1;
+      index += 1;
+   }
 
-	//ResetFilters();
+   ResetFilters();
 }
 
 /* 
@@ -280,23 +275,23 @@ unsigned int ALDeviceList::GetMaxNumSources()
 	//U32 iSourceCount = 0;
 
 	//// Clear AL Error Code
-	//ALFunction.alGetError();
+	//ALFunction->alGetError();
 
 	//// Generate up to 256 Sources, checking for any errors
 	//for (iSourceCount = 0; iSourceCount < 256; iSourceCount++)
 	//{
-	//	ALFunction.alGenSources(1, &uiSources[iSourceCount]);
-	//	if (ALFunction.alGetError() != AL_NO_ERROR)
+	//	ALFunction->alGenSources(1, &uiSources[iSourceCount]);
+	//	if (ALFunction->alGetError() != AL_NO_ERROR)
 	//		break;
 	//}
 
 	//// Release the Sources
-	//ALFunction.alDeleteSources(iSourceCount, uiSources);
-	//if (ALFunction.alGetError() != AL_NO_ERROR)
+	//ALFunction->alDeleteSources(iSourceCount, uiSources);
+	//if (ALFunction->alGetError() != AL_NO_ERROR)
 	//{
 	//	for (U32 i = 0; i < 256; i++)
 	//	{
-	//		ALFunction.alDeleteSources(1, &uiSources[i]);
+	//		ALFunction->alDeleteSources(1, &uiSources[i]);
 	//	}
 	//}
 

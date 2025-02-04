@@ -47,7 +47,7 @@ class SFXALVoice : public SFXVoice
 
    protected:
 
-      SFXALVoice( const openAlInterface &oalft,
+      SFXALVoice( openAlInterface* oalft,
                   SFXALBuffer *buffer, 
                   ALuint sourceName );
 
@@ -65,7 +65,7 @@ class SFXALVoice : public SFXVoice
 
       Mutex mMutex;
 
-      const openAlInterface &mOpenAL;
+      openAlInterface* mOpenAL;
 
       ///
       SFXALBuffer* _getBuffer() const

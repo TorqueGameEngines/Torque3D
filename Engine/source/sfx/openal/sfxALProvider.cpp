@@ -78,7 +78,15 @@ void SFXALProvider::init()
    LoadDriverList();
 
    //mALDL = new ALDeviceList( mOpenAL );
+   
+   if(ALDriverList.size() < 1)
+   {
+      Con::printf("SFXALProvider - No valid openal drivers.");
+      return;
+   }
 
+   mALDL = new ALDeviceList();
+   
    // Did we get any devices?
    if ( mALDL->GetNumDevices() < 1 )
    {
@@ -92,7 +100,7 @@ void SFXALProvider::init()
    for( S32 i = 0; i < mALDL->GetNumDevices(); i++ )
    {
       ALDeviceInfo* info = new ALDeviceInfo;
-    
+      
       info->name = String( mALDL->GetDeviceName( i ) );
 
       mDeviceInfo.push_back( info );
@@ -107,14 +115,15 @@ SFXALProvider::~SFXALProvider()
 	   delete mALDL;
 }
 
-SFXDevice *SFXALProvider::createDevice( const String& deviceName, bool useHardware, S32 maxBuffers )
+SFXDevice* SFXALProvider::createDevice(const String& deviceName, bool useHardware, S32 maxBuffers)
 {
-   ALDeviceInfo *info = dynamic_cast< ALDeviceInfo* >
-      ( _findDeviceInfo( deviceName) );
+   ALDeviceInfo* info = dynamic_cast<ALDeviceInfo*>
+      (_findDeviceInfo(deviceName));
 
+   
    // Do we find one to create?
    if (info)
-      //return new SFXALDevice(this, mOpenAL, info->name, useHardware, maxBuffers);
+      return new SFXALDevice(this, ALDriverList[0], info->name, useHardware, maxBuffers);
 
    return NULL;
 }

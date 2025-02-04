@@ -31,11 +31,13 @@
 #include "core/util/tVector.h"
 #endif
 
-#  include <AL/al.h>
-#  include <AL/alc.h>
-#  include <AL/alext.h>
-#  include <AL/efx.h>
-#  include <AL/efx-presets.h>
+// Since openal is deprecated and we pack the lib into the sandbox on mac, all
+// platforms now support all of these.
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alext.h>
+#include <AL/efx.h>
+#include <AL/efx-presets.h>
 
 #if defined(TORQUE_OS_WIN)
 #include <windows.h>
@@ -47,7 +49,7 @@
 #else
 #include <dlfcn.h>
 #define LIB_HANDLE void*
-#define LOAD_LIBRARY(path) dlopen(path, RTLD_NOW)
+#define LOAD_LIBRARY(path) dlopen(path, RTLD_LAZY)
 #define GET_PROC_ADDRESS(lib, name) dlsym(lib, name)
 #define CLOSE_LIBRARY(lib) dlclose(lib)
 #ifdef __APPLE__
@@ -112,9 +114,6 @@ struct openAlInterface
    LPALCCAPTURESTART alcCaptureStart{ nullptr };
    LPALCCAPTURESTOP alcCaptureStop{ nullptr };
    LPALCCAPTURESAMPLES alcCaptureSamples{ nullptr };
-
-   PFNALCSETTHREADCONTEXTPROC alcSetThreadContext{ nullptr };
-   PFNALCGETTHREADCONTEXTPROC alcGetThreadContext{ nullptr };
 
    LPALENABLE alEnable{ nullptr };
    LPALDISABLE alDisable{ nullptr };
@@ -190,6 +189,10 @@ struct openAlInterface
    LPALSPEEDOFSOUND alSpeedOfSound{ nullptr };
    LPALDISTANCEMODEL alDistanceModel{ nullptr };
 
+#if defined(AL_ALEXT_PROTOTYPES)
+   PFNALCSETTHREADCONTEXTPROC alcSetThreadContext{ nullptr };
+   PFNALCGETTHREADCONTEXTPROC alcGetThreadContext{ nullptr };
+   
    /* Functions to load after first context creation. */
    LPALGENFILTERS alGenFilters{ nullptr };
    LPALDELETEFILTERS alDeleteFilters{ nullptr };
@@ -226,7 +229,9 @@ struct openAlInterface
    LPALGETAUXILIARYEFFECTSLOTIV alGetAuxiliaryEffectSlotiv{ nullptr };
    LPALCGETSTRINGISOFT alcGetStringiSOFT{ nullptr };
    LPALCRESETDEVICESOFT alcResetDeviceSOFT{ nullptr };
-
+#endif
+   
+   
    int ALCVer{ 0 };
    LIB_HANDLE openaAlDll{ nullptr };
    String name;

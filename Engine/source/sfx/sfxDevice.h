@@ -24,18 +24,26 @@
 #define _SFXDEVICE_H_
 
 #ifndef _PLATFORM_H_
-   #include "platform/platform.h"
+#include "platform/platform.h"
 #endif
 #ifndef _TVECTOR_H_
-   #include "core/util/tVector.h"
+#include "core/util/tVector.h"
 #endif
 #ifndef _SFXCOMMON_H_
-   #include "sfx/sfxCommon.h"
+#include "sfx/sfxCommon.h"
 #endif
 #ifndef _THREADSAFEREF_H_
-   #include "platform/threads/threadSafeRefCount.h"
+#include "platform/threads/threadSafeRefCount.h"
 #endif
-
+#ifndef _TDICTIONARY_H_
+#include "core/util/tDictionary.h"
+#endif
+#ifndef _TSIGNAL_H_
+#include "core/util/tSignal.h"
+#endif
+#ifndef _PLATFORM_PLATFORMTIMER_H_
+#include "platform/platformTimer.h"
+#endif
 
 class SFXProvider;
 class SFXListener;

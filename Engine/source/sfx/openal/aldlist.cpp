@@ -32,7 +32,7 @@
  */
 ALDeviceList::ALDeviceList()
 {
- //  VECTOR_SET_ASSOCIATION( vDeviceInfo );
+   VECTOR_SET_ASSOCIATION( vDeviceInfo );
 
 	ALDEVICEINFO	ALDeviceInfo;
 	char *devices;

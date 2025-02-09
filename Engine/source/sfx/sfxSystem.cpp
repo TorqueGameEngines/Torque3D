@@ -69,107 +69,6 @@ SFXSystem* SFXSystem::smSingleton = NULL;
 /// Default SFXAmbience used to reset the global soundscape.
 SFXAmbience *sDefaultAmbience;
 
-// Excludes Null and Blocked as these are not passed out to the control layer.
-ImplementEnumType( SFXStatus,
-   "Playback status of sound source.\n"
-   "@ingroup SFX" )
-   { SFXStatusPlaying, "Playing",
-      "The source is currently playing." },
-   { SFXStatusStopped, "Stopped",
-      "Playback of the source is stopped.  When transitioning to Playing state, playback will start at the beginning "
-         "of the source." },
-   { SFXStatusPaused, "Paused",
-      "Playback of the source is paused.  Resuming playback will play from the current playback position." },
-EndImplementEnumType;
-
-ImplementEnumType( SFXDistanceModel,
-   "Type of volume distance attenuation curve.\n"
-   "The distance model determines the falloff curve applied to the volume of 3D sounds over distance.\n\n"
-   "@ref SFXSource_volume\n\n"
-   "@ref SFX_3d\n\n"
-   "@ingroup SFX" )
-   { SFXDistanceModelLinear, "Linear",
-      "Volume attenuates linearly from the references distance onwards to max distance where it reaches zero." },
-   { SFXDistanceModelLogarithmic, "Logarithmic", 
-      "Volume attenuates logarithmically starting from the reference distance and halving every reference distance step from there on. "
-      "Attenuation stops at max distance but volume won't reach zero." },
-   { SFXDistanceModelExponent, "Exponential",
-   "Volume attenuates exponentially starting from the reference distance and attenuating every reference distance step by the rolloff factor. "
-   "Attenuation stops at max distance but volume won't reach zero." },
-EndImplementEnumType;
-
-ImplementEnumType( SFXChannel,
-   "Channels are individual properties of sound sources that may be animated over time.\n\n"
-   "@see SFXParameter\n\n"
-   "@ref SFX_interactive\n\n"
-   "@ingroup SFX" )
-   { SFXChannelVolume,             "Volume",
-      "Channel controls volume level of attached sound sources.\n"
-      "@see SFXDescription::volume" },
-   { SFXChannelPitch,              "Pitch",
-      "Channel controls pitch of attached sound sources.\n"
-      "@see SFXDescription::pitch" },
-   { SFXChannelPriority,           "Priority",
-      "Channel controls virtualizaton priority level of attached sound sources.\n"
-      "@see SFXDescription::priority" },
-   { SFXChannelPositionX,          "PositionX",
-      "Channel controls X coordinate of 3D sound position of attached sources." },
-   { SFXChannelPositionY,          "PositionY",
-      "Channel controls Y coordinate of 3D sound position of attached sources." },
-   { SFXChannelPositionZ,          "PositionZ",
-      "Channel controls Z coordinate of 3D sound position of attached sources." },
-   { SFXChannelRotationX,          "RotationX",
-      "Channel controls X rotation (in degrees) of 3D sound orientation of attached sources." },
-   { SFXChannelRotationY,          "RotationY",
-      "Channel controls Y rotation (in degrees) of 3D sound orientation of attached sources." },
-   { SFXChannelRotationZ,          "RotationZ",
-      "Channel controls Z rotation (in degrees) of 3D sound orientation of attached sources." },
-   { SFXChannelVelocityX,          "VelocityX",
-      "Channel controls X coordinate of 3D sound velocity vector of attached sources." },
-   { SFXChannelVelocityY,          "VelocityY",
-      "Channel controls Y coordinate of 3D sound velocity vector of attached sources." },
-   { SFXChannelVelocityZ,          "VelocityZ",
-      "Channel controls Z coordinate of 3D sound velocity vector of attached sources." },
-   { SFXChannelMinDistance,        "ReferenceDistance",
-      "Channel controls reference distance of 3D sound of attached sources.\n"
-      "@see SFXDescription::referenceDistance" },
-   { SFXChannelMaxDistance,        "MaxDistance",
-      "Channel controls max volume attenuation distance of 3D sound of attached sources.\n"
-      "@see SFXDescription::maxDistance" },
-   { SFXChannelConeInsideAngle,    "ConeInsideAngle",
-      "Channel controls angle (in degrees) of 3D sound inner volume cone of attached sources.\n"
-      "@see SFXDescription::coneInsideAngle" },
-   { SFXChannelConeOutsideAngle,   "ConeOutsideAngle",
-      "Channel controls angle (in degrees) of 3D sound outer volume cone of attached sources.\n"
-      "@see SFXDescription::coneOutsideAngle" },
-   { SFXChannelConeOutsideVolume,  "ConeOutsideVolume",
-      "Channel controls volume outside of 3D sound outer cone of attached sources.\n"
-      "@see SFXDescription::coneOutsideVolume" },
-   { SFXChannelCursor,             "Cursor",
-      "Channel controls playback cursor of attached sound sources.\n\n"
-      "@note Be aware that different types of sound sources interpret play cursor positions differently "
-         "or do not actually have play cursors (these sources will ignore the channel)." },
-   { SFXChannelStatus,             "Status",
-      "Channel controls playback status of attached sound sources.\n\n"
-      "The channel's value is rounded down to the nearest integer and interpreted in the following way:\n"
-      "- 1: Play\n"
-      "- 2: Stop\n"
-      "- 3: Pause\n\n" },
-   { SFXChannelUser0,              "User0",
-      "Channel available for custom use.  By default ignored by sources.\n\n"
-      "@see SFXSource::onParameterValueChange" },
-   { SFXChannelUser1,              "User1",
-      "Channel available for custom use.  By default ignored by sources.\n\n"
-      "@see SFXSource::onParameterValueChange" },
-   { SFXChannelUser2,              "User2",
-      "Channel available for custom use.  By default ignored by sources.\n\n"
-      "@see SFXSource::onParameterValueChange" },
-   { SFXChannelUser3,              "User3",
-      "Channel available for custom use.  By default ignored by sources.\n\n"
-      "@see SFXSource::onParameterValueChange" },
-EndImplementEnumType;
-
-
 // Constants.
 static const U32 sDeviceCapsReverb = SFXDevice::CAPS_Reverb;
 static const U32 sDeviceCapsVoiceManagement = SFXDevice::CAPS_VoiceManagement;
@@ -346,7 +245,7 @@ void SFXSystem::init()
 {
    AssertWarn( smSingleton == NULL, "SFX has already been initialized!" );
 
-   SFXProvider::initializeAllProviders();
+   //SFXProvider::initializeAllProviders();
    
    // Create the stream thread pool.
    
@@ -399,69 +298,69 @@ void SFXSystem::removePlugin( SFXSystemPlugin* plugin )
 
 //-----------------------------------------------------------------------------
 
-bool SFXSystem::createDevice( const String& providerName, const String& deviceName, bool useHardware, S32 maxBuffers, bool changeDevice )
+bool SFXSystem::createDevice( const String& providerName, const String& deviceName, bool useHardware, S32 maxSources, bool changeDevice )
 {
    // Make sure we don't have a device already.
    
-   if( mDevice && !changeDevice )
+   //if( mDevice && !changeDevice )
       return false;
 
    // Lookup the provider.
    
-   SFXProvider* provider = SFXProvider::findProvider( providerName );
-   if( !provider )
-      return false;
+   //SFXProvider* provider = SFXProvider::findProvider( providerName );
+   //if( !provider )
+   //   return false;
 
-   // If we have already created this device and are using it then no need to do anything.
-   
-   if( mDevice
-       && providerName.equal( mDevice->getProvider()->getName(), String::NoCase )
-       && deviceName.equal( mDevice->getName(), String::NoCase )
-       && useHardware == mDevice->getUseHardware() )
-      return true;
+   //// If we have already created this device and are using it then no need to do anything.
+   //
+   //if( mDevice
+   //    && providerName.equal( mDevice->getProvider()->getName(), String::NoCase )
+   //    && deviceName.equal( mDevice->getName(), String::NoCase )
+   //    && useHardware == mDevice->getUseHardware() )
+   //   return true;
 
-   // If we have an existing device remove it.
-   
-   if( mDevice )
-      deleteDevice();
+   //// If we have an existing device remove it.
+   //
+   //if( mDevice )
+   //   deleteDevice();
 
-   // Create the new device..
-   
-   mDevice = provider->createDevice( deviceName, useHardware, maxBuffers );
-   if( !mDevice )
-   {
-      Con::errorf( "SFXSystem::createDevice - failed creating %s device '%s'", providerName.c_str(), deviceName.c_str() );
-      return false;
-   }
-   
-   // Print capabilities.
+   //// Create the new device..
+   //
+   //mDevice = provider->createDevice( deviceName, useHardware, maxSources );
+   //if( !mDevice )
+   //{
+   //   Con::errorf( "SFXSystem::createDevice - failed creating %s device '%s'", providerName.c_str(), deviceName.c_str() );
+   //   return false;
+   //}
+   //
+   //// Print capabilities.
 
-   Con::printf( "SFXSystem::createDevice - created %s device '%s'", providerName.c_str(), deviceName.c_str() );
-   if( mDevice->getCaps() & SFXDevice::CAPS_Reverb )
-      Con::printf( "   CAPS_Reverb" );
-   if( mDevice->getCaps() & SFXDevice::CAPS_VoiceManagement )
-      Con::printf( "   CAPS_VoiceManagement" );
-   if( mDevice->getCaps() & SFXDevice::CAPS_Occlusion )
-      Con::printf( "\tCAPS_Occlusion" );
-   if( mDevice->getCaps() & SFXDevice::CAPS_MultiListener )
-      Con::printf( "\tCAPS_MultiListener" );
-      
-   // Set defaults.
-   
-   mDevice->setNumListeners( getNumListeners() );
-   mDevice->setDistanceModel( mDistanceModel );
-   mDevice->setDopplerFactor( mDopplerFactor );
-   mDevice->setRolloffFactor( mRolloffFactor );
-   //OpenAL requires slots for effects, this creates an empty function 
-   //that will run when a sfxdevice is created.
-   //mDevice->openSlots();
-   //mDevice->setReverb( mReverb );
-      
-   // Signal system.
+   //Con::printf( "SFXSystem::createDevice - created %s device '%s'", providerName.c_str(), deviceName.c_str() );
+   //if( mDevice->getCaps() & SFXDevice::CAPS_Reverb )
+   //   Con::printf( "   CAPS_Reverb" );
+   //if( mDevice->getCaps() & SFXDevice::CAPS_VoiceManagement )
+   //   Con::printf( "   CAPS_VoiceManagement" );
+   //if( mDevice->getCaps() & SFXDevice::CAPS_Occlusion )
+   //   Con::printf( "\tCAPS_Occlusion" );
+   //if( mDevice->getCaps() & SFXDevice::CAPS_MultiListener )
+   //   Con::printf( "\tCAPS_MultiListener" );
+   //   
+   //// Set defaults.
+   //
+   //mDevice->setNumListeners( getNumListeners() );
+   //mDevice->setDistanceModel( mDistanceModel );
+   //mDevice->setDopplerFactor( mDopplerFactor );
+   //mDevice->setRolloffFactor( mRolloffFactor );
+   ////OpenAL requires slots for effects, this creates an empty function 
+   ////that will run when a sfxdevice is created.
+   ////mDevice->openSlots();
+   ////mDevice->setReverb( mReverb );
+   //   
+   //// Signal system.
 
-   getEventSignal().trigger( SFXSystemEvent_CreateDevice );
-   
-   return true;
+   //getEventSignal().trigger( SFXSystemEvent_CreateDevice );
+   //
+   //return true;
 }
 
 //-----------------------------------------------------------------------------
@@ -1210,65 +1109,65 @@ void SFXSystem::dumpSources( StringBuilder* toString, bool excludeGroups )
 
 //-----------------------------------------------------------------------------
 
-DefineEngineFunction( sfxGetAvailableDevices, const char*, (),,
-   "Get a list of all available sound devices.\n"
-   "The return value will be a newline-separated list of entries where each line describes one available sound "
-   "device.  Each such line will have the following format:"
-   "@verbatim\n"
-      "provider TAB device TAB hasHardware TAB numMaxBuffers\n"
-   "@endverbatim\n"
-   "- provider: The name of the device provider (e.g. \"OpenAL\").\n"
-   "- device: The name of the device as returned by the device layer.\n"
-   "- hasHardware: Whether the device supports hardware mixing or not.\n"
-   "- numMaxBuffers: The maximum number of concurrent voices supported by the device's mixer.  If this limit "
-      "limit is exceeded, i.e. if there are more active sounds playing at any one time, then voice virtualization "
-      "will start culling voices and put them into virtualized playback mode.  Voice virtualization may or may not "
-      "be provided by the device itself; if not provided by the device, it will be provided by Torque's sound system.\n\n"
-   "@return A newline-separated list of information about all available sound devices.\n"
-   "@see sfxCreateDevice\n"
-   "@see sfxGetDeviceInfo\n\n"
-   "@see $SFX::DEVICE_INFO_PROVIDER\n\n"
-   "@see $SFX::DEVICE_INFO_NAME\n\n"
-   "@see $SFX::DEVICE_INFO_USEHARDWARE\n\n"
-   "@see $SFX::DEVICE_INFO_MAXBUFFERS\n\n"
-   "@ref SFX_devices\n"
-   "@ingroup SFX" )
-{
-   const S32 bufferSize = 2048;
-   char* deviceList = Con::getReturnBuffer( bufferSize );
-   S32 len = bufferSize;
-   char *ptr = deviceList;
-   *ptr = 0;
-
-   SFXProvider* provider = SFXProvider::getFirstProvider();
-   while ( provider )
-   {
-      // List the devices in this provider.
-      const SFXDeviceInfoVector& deviceInfo = provider->getDeviceInfo();
-      for ( S32 d=0; d < deviceInfo.size(); d++ )
-      {
-         const SFXDeviceInfo* info = deviceInfo[d];
-         const char *providerName = provider->getName().c_str();
-         char *infoName = (char*)info->name.c_str();
-         
-         dSprintf(ptr, len, "%s\t%s\t%s\t%i\n", providerName, infoName, info->hasHardware ? "1" : "0", info->maxBuffers);
-
-         ptr += dStrlen(ptr);
-         len = bufferSize - (ptr - deviceList);
-
-         if (len <= 0)
-            return deviceList;
-      }
-
-      provider = provider->getNextProvider();
-   }
-
-   return deviceList;
-}
+//DefineEngineFunction( sfxGetAvailableDevices, const char*, (),,
+//   "Get a list of all available sound devices.\n"
+//   "The return value will be a newline-separated list of entries where each line describes one available sound "
+//   "device.  Each such line will have the following format:"
+//   "@verbatim\n"
+//      "provider TAB device TAB hasHardware TAB numMaxBuffers\n"
+//   "@endverbatim\n"
+//   "- provider: The name of the device provider (e.g. \"OpenAL\").\n"
+//   "- device: The name of the device as returned by the device layer.\n"
+//   "- hasHardware: Whether the device supports hardware mixing or not.\n"
+//   "- numMaxBuffers: The maximum number of concurrent voices supported by the device's mixer.  If this limit "
+//      "limit is exceeded, i.e. if there are more active sounds playing at any one time, then voice virtualization "
+//      "will start culling voices and put them into virtualized playback mode.  Voice virtualization may or may not "
+//      "be provided by the device itself; if not provided by the device, it will be provided by Torque's sound system.\n\n"
+//   "@return A newline-separated list of information about all available sound devices.\n"
+//   "@see sfxCreateDevice\n"
+//   "@see sfxGetDeviceInfo\n\n"
+//   "@see $SFX::DEVICE_INFO_PROVIDER\n\n"
+//   "@see $SFX::DEVICE_INFO_NAME\n\n"
+//   "@see $SFX::DEVICE_INFO_USEHARDWARE\n\n"
+//   "@see $SFX::DEVICE_INFO_MAXBUFFERS\n\n"
+//   "@ref SFX_devices\n"
+//   "@ingroup SFX" )
+//{
+//   const S32 bufferSize = 2048;
+//   char* deviceList = Con::getReturnBuffer( bufferSize );
+//   S32 len = bufferSize;
+//   char *ptr = deviceList;
+//   *ptr = 0;
+//
+//   SFXProvider* provider = SFXProvider::getFirstProvider();
+//   while ( provider )
+//   {
+//      // List the devices in this provider.
+//      const SFXDeviceInfoVector& deviceInfo = provider->getDeviceInfo();
+//      for ( S32 d=0; d < deviceInfo.size(); d++ )
+//      {
+//         const SFXDeviceInfo* info = deviceInfo[d];
+//         const char *providerName = provider->getName().c_str();
+//         char *infoName = (char*)info->name.c_str();
+//         
+//         dSprintf(ptr, len, "%s\t%s\t%s\t%i\n", providerName, infoName, info->hasHardware ? "1" : "0", info->maxSources);
+//
+//         ptr += dStrlen(ptr);
+//         len = bufferSize - (ptr - deviceList);
+//
+//         if (len <= 0)
+//            return deviceList;
+//      }
+//
+//      provider = provider->getNextProvider();
+//   }
+//
+//   return deviceList;
+//}
 
 //-----------------------------------------------------------------------------
 
-DefineEngineFunction( sfxCreateDevice, bool, ( const char* provider, const char* device, bool useHardware, S32 maxBuffers ),,
+DefineEngineFunction( sfxCreateDevice, bool, ( const char* provider, const char* device, bool useHardware, S32 maxSources ),,
    "Try to create a new sound device using the given properties.\n"
    "If a sound device is currently initialized, it will be uninitialized first.  However, be aware that in this case, "
    "if this function fails, it will not restore the previously active device but rather leave the sound system in an "
@@ -1279,7 +1178,7 @@ DefineEngineFunction( sfxCreateDevice, bool, ( const char* provider, const char*
    "@param provider The name of the device provider as returned by sfxGetAvailableDevices().\n"
    "@param device The name of the device as returned by sfxGetAvailableDevices().\n"
    "@param useHardware Whether to enabled hardware mixing on the device or not.  Only relevant if supported by the given device.\n"
-   "@param maxBuffers The maximum number of concurrent voices for this device to use or -1 for the device to pick its own reasonable default."
+   "@param maxSources The maximum number of concurrent voices for this device to use or -1 for the device to pick its own reasonable default."
    "@return True if the initialization was successful, false if not.\n"
    "@note This function must be called before any of the sound playback functions can be used.\n"
    "@see sfxGetAvailableDevices\n"
@@ -1288,7 +1187,7 @@ DefineEngineFunction( sfxCreateDevice, bool, ( const char* provider, const char*
    "@ref SFX_devices\n"
    "@ingroup SFX" )
 {
-   return SFX->createDevice( provider, device, useHardware, maxBuffers, true );
+   return SFX->createDevice( provider, device, useHardware, maxSources, true );
 }
 
 //-----------------------------------------------------------------------------

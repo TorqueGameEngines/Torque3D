@@ -36,6 +36,9 @@
    #include "math/mPoint2.h"
 #endif
 
+#ifndef _SFXAPI_H_
+#include "sfx/sfxApi.h"
+#endif
 
 /// Enumeration of events triggered by SFXParameters.
 enum SFXParameterEvent

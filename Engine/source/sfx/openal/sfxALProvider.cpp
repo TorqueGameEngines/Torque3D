@@ -19,111 +19,151 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+
 #include "platform/platform.h"
 
 #include "sfx/sfxProvider.h"
 #include "sfx/openal/sfxALDevice.h"
-#include "sfx/openal/aldlist.h"
 #include "sfx/openal/LoadOAL.h"
 
 #include "core/strings/stringFunctions.h"
 #include "console/console.h"
 #include "core/module.h"
+#include "sfx/SFXInit.h"
 
-
-class SFXALProvider : public SFXProvider
+struct SFXALProvider : public SFXProvider
 {
-public:
-
-   SFXALProvider()
-      : SFXProvider( "OpenAL" ) { mALDL = NULL; }
-   virtual ~SFXALProvider();
-
-protected:
-   ALDeviceList *mALDL;
+   typedef Delegate<SFXDevice* (U32 driverIndex)> CreateALDevice;
+   static void enumerateDriversAndDevices(Vector<SFXProvider*>& providerList);
 
    struct ALDeviceInfo : SFXDeviceInfo
    {
-      
+      U32 driverIdx = 0;
    };
 
-   void init() override;
+   SFXDevice *createDevice( const String& deviceName, bool useHardware, S32 maxSources ) override;
 
-public:
-   SFXDevice *createDevice( const String& deviceName, bool useHardware, S32 maxBuffers ) override;
-
+   virtual ~SFXALProvider();
 };
 
-MODULE_BEGIN( OpenAL )
-
-   MODULE_INIT_BEFORE( SFX )
-   MODULE_SHUTDOWN_AFTER( SFX )
-   
-   SFXALProvider* mProvider = NULL;
-   
-   MODULE_INIT
+class SFXALRegisterProvider
+{
+public:
+   SFXALRegisterProvider()
    {
-      mProvider = new SFXALProvider;
+      SFXInit::getRegisterProviderSignal().notify(&SFXALProvider::enumerateDriversAndDevices);
    }
-   
-   MODULE_SHUTDOWN
-   {
-      delete mProvider;
-   }
+};
 
-MODULE_END;
+static SFXALRegisterProvider pSFXALRegisterProvider;
 
-void SFXALProvider::init()
+SFXALProvider::~SFXALProvider()
+{
+}
+
+void SFXALProvider::enumerateDriversAndDevices(Vector<SFXProvider*> &providerList)
 {
    LoadDriverList();
 
-   //mALDL = new ALDeviceList( mOpenAL );
-   
-   if(ALDriverList.size() < 1)
+   if (ALDriverList.size() < 1)
    {
       Con::printf("SFXALProvider - No valid openal drivers.");
       return;
    }
 
-   mALDL = new ALDeviceList();
-   
-   // Did we get any devices?
-   if ( mALDL->GetNumDevices() < 1 )
+   SFXALProvider* alProvider = new SFXALProvider();
+   alProvider->mType = SFXProviderType::OpenAL;
+   alProvider->mName = "OpenAL";
+
+   U32 driverIdx = 0;
+   U32 deviceIdx = 0;
+   for (openAlInterface* alDriver : ALDriverList)
    {
-      Con::printf( "SFXALProvider - No valid devices found!" );
-      return;
+      if (alDriver->alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT") == AL_TRUE)
+      {
+         char* devices, *defaultDeviceName;
+         if (alDriver->alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT") == AL_TRUE) {
+            devices = (char*)alDriver->alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
+            defaultDeviceName = (char*)alDriver->alcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
+         }
+         else {
+            devices = (char*)alDriver->alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+            defaultDeviceName = (char*)alDriver->alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+         }
+
+         // add default device first so it is top of the list.
+         if (defaultDeviceName != NULL)
+         {
+            // make sure we can create it
+            ALCdevice* device = alDriver->alcOpenDevice(defaultDeviceName);
+            if (device)
+            {
+               ALCcontext* ctx = alDriver->alcCreateContext(device, nullptr);
+               if (ctx)
+               {
+                  ALDeviceInfo* devInfo = new ALDeviceInfo;
+                  devInfo->driverIdx = driverIdx;
+                  devInfo->deviceIdx = deviceIdx;
+                  devInfo->name = String(defaultDeviceName);
+                  devInfo->type = SFXDeviceType::Output;
+
+                  alProvider->mDeviceInfo.push_back(devInfo);
+                  deviceIdx++;
+                  alDriver->alcMakeContextCurrent(nullptr);
+                  alDriver->alcDestroyContext(ctx);
+               }
+
+               alDriver->alcCloseDevice(device);
+            }
+         }
+
+         const char* ptr = devices;
+         while (*ptr != 0)
+         {
+            for (SFXDeviceInfo* dev : alProvider->mDeviceInfo)
+            {
+               if (String::compare(dev->name.c_str(), ptr) == 0)
+               {
+                  ptr += dev->name.length() + 1;
+                  continue;
+               }
+            }
+
+            ALCdevice* device = alDriver->alcOpenDevice(ptr);
+            if (device)
+            {
+               ALCcontext* ctx = alDriver->alcCreateContext(device, nullptr);
+               if (ctx)
+               {
+                  alDriver->alcMakeContextCurrent(ctx);
+
+                  ALDeviceInfo* devInfo = new ALDeviceInfo;
+                  devInfo->driverIdx = driverIdx;
+                  devInfo->deviceIdx = deviceIdx;
+                  devInfo->name = String(ptr);
+                  devInfo->type = SFXDeviceType::Output;
+
+                  alProvider->mDeviceInfo.push_back(devInfo);
+                  deviceIdx++;
+                  ptr += devInfo->name.length() + 1;
+
+                  alDriver->alcMakeContextCurrent(nullptr);
+                  alDriver->alcDestroyContext(ctx);
+               }
+
+               alDriver->alcCloseDevice(device);
+            }
+         }
+      }
+
+      driverIdx++;
    }
 
-   // Cool, loop through them, and caps em
-   //const char *deviceFormat = "OpenAL v%d.%d %s";
 
-   for( S32 i = 0; i < mALDL->GetNumDevices(); i++ )
-   {
-      ALDeviceInfo* info = new ALDeviceInfo;
-      
-      info->name = String( mALDL->GetDeviceName( i ) );
-
-      mDeviceInfo.push_back( info );
-   }
-
-   regProvider( this );
+   providerList.push_back(alProvider);
 }
 
-SFXALProvider::~SFXALProvider()
+SFXDevice* SFXALProvider::createDevice(const String& deviceName, bool useHardware, S32 maxSources)
 {
-   if (mALDL)
-	   delete mALDL;
-}
-
-SFXDevice* SFXALProvider::createDevice(const String& deviceName, bool useHardware, S32 maxBuffers)
-{
-   ALDeviceInfo* info = dynamic_cast<ALDeviceInfo*>
-      (_findDeviceInfo(deviceName));
-
-   
-   // Do we find one to create?
-   if (info)
-      return new SFXALDevice(this, ALDriverList[0], info->name, useHardware, maxBuffers);
-
    return NULL;
 }

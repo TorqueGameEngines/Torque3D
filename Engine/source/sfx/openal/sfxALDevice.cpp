@@ -109,8 +109,8 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
                            openAlInterface* openal,
                            String name, 
                            bool useHardware, 
-                           S32 maxBuffers )
-   :  Parent( name, provider, useHardware, maxBuffers ),
+                           S32 maxSources )
+   :  Parent( name, provider, useHardware, maxSources ),
       mOpenAL( openal ), 
       mContext( NULL ),
       mDevice( NULL ),
@@ -119,7 +119,7 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
       mRolloffFactor( 1.0f ),
       mUserRolloffFactor(1.0f)
 {
-   mMaxBuffers = getMax( maxBuffers, 8 );
+   mMaxBuffers = getMax( maxSources, 8 );
 
    // TODO: The OpenAL device doesn't set the primary buffer
    // $pref::SFX::frequency or $pref::SFX::bitrate!

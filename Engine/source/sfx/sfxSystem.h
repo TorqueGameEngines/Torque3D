@@ -36,6 +36,10 @@
    #include "platform/threads/threadSafeRefCount.h"
 #endif
 
+#ifndef _SFXAPI_H_
+#include "sfx/sfxApi.h"
+#endif // !_SFXAPI_H_
+
 
 class SFXTrack;
 class SFXDevice;
@@ -263,14 +267,14 @@ class SFXSystem
       /// @param providerName    The name of the provider.
       /// @param deviceName      The name of the provider device.
       /// @param useHardware     Toggles the use of hardware processing when available.
-      /// @param maxBuffers      The maximum buffers for this device to use or -1 
+      /// @param maxSources      The maximum sources for this device to use or -1 
       ///                        for the device to pick its own reasonable default.
       /// @param changeDevice    Allows this to change the current device to a new one
       /// @return Returns true if the device was created.
       bool createDevice(   const String& providerName, 
                            const String& deviceName, 
                            bool useHardware,
-                           S32 maxBuffers,
+                           S32 maxSources,
                            bool changeDevice = false);
 
       /// Returns the current device information or NULL if no

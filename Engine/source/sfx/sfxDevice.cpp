@@ -28,14 +28,24 @@
 #include "console/console.h"
 #include "console/consoleTypes.h"
 
+SFXDevice* SFXDevice::smSFXDevice = NULL;
 
 //-----------------------------------------------------------------------------
 
-SFXDevice::SFXDevice( const String& name, SFXProvider* provider, bool useHardware, S32 maxBuffers )
+void SFXDevice::initConsole()
+{
+}
+
+bool SFXDevice::destroy()
+{
+   return false;
+}
+
+SFXDevice::SFXDevice( const String& name, SFXProvider* provider, bool useHardware, S32 maxSources )
    :  mName( name ),
       mProvider( provider ),
       mUseHardware( useHardware ),
-      mMaxBuffers( maxBuffers ),
+      mMaxBuffers( maxSources ),
       mCaps( 0 ),
       mStatNumBuffers( 0 ),
       mStatNumVoices( 0 ),
@@ -69,16 +79,14 @@ SFXDevice::~SFXDevice()
 
 void SFXDevice::_releaseAllResources()
 {
-   using namespace SFXInternal;
-
    // Kill the update thread, if there is one.
    // Do this first so that further buffer processing
    // can be done synchronously by us.
 
-   ThreadSafeRef< SFXUpdateThread > sfxThread = UPDATE_THREAD();
+   ThreadSafeRef< SFXInternal::SFXUpdateThread > sfxThread = SFXInternal::UPDATE_THREAD();
    if( sfxThread != NULL )
    {
-      gUpdateThread = NULL; // Kill the global reference.
+      SFXInternal::gUpdateThread = NULL; // Kill the global reference.
 
       sfxThread->stop();
       sfxThread->triggerUpdate();
@@ -108,14 +116,14 @@ void SFXDevice::_releaseAllResources()
 
    // Flush all asynchronous requests.
 
-   THREAD_POOL().flushWorkItems();
+   SFXInternal::THREAD_POOL().flushWorkItems();
 
    // Clean out the buffer update list and kill
    // all buffers that surfaced on the dead list.
    // Now the sound buffers are really gone.
 
-   UPDATE_LIST().process();
-   PurgeDeadBuffers();
+   SFXInternal::UPDATE_LIST().process();
+   SFXInternal::PurgeDeadBuffers();
 
    // Clean out stats.
 
@@ -128,18 +136,16 @@ void SFXDevice::_releaseAllResources()
 
 void SFXDevice::update()
 {
-   using namespace SFXInternal;
-
    // If we don't have an update thread, do the
    // updates now on the main thread.
 
-   if( !UPDATE_THREAD() )
-      UPDATE_LIST().process( MAIN_THREAD_PROCESS_TIMEOUT );
+   if( !SFXInternal::UPDATE_THREAD() )
+      SFXInternal::UPDATE_LIST().process(SFXInternal::MAIN_THREAD_PROCESS_TIMEOUT );
       
    // Clean out buffers that have surfaced on the dead
    // buffer list.
 
-   PurgeDeadBuffers();
+   SFXInternal::PurgeDeadBuffers();
 }
 
 //-----------------------------------------------------------------------------
@@ -182,7 +188,6 @@ void SFXDevice::_removeBuffer( SFXBuffer* buffer )
 void SFXDevice::_addVoice( SFXVoice* voice )
 {
    AssertFatal( voice, "SFXDevice::_addVoice() - Got a null voice!" );
-   using namespace SFXInternal;
 
    // Bind the voice to its buffer.  This is deferred up to here in order
    // to only bind voices that have been successfully constructed.

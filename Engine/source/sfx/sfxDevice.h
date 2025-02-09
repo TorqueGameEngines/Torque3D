@@ -45,7 +45,10 @@
 #include "platform/platformTimer.h"
 #endif
 
-class SFXProvider;
+#ifndef _SFXPROVIDER_H_
+#include "sfx/sfxProvider.h"
+#endif
+
 class SFXListener;
 class SFXBuffer;
 class SFXVoice;
@@ -54,7 +57,8 @@ class SFXDevice;
 class SFXStream;
 class SFXDescription;
 
-
+// Global macro
+#define SFXNEW SFXDevice::get() 
 
 /// Abstract base class for back-end sound API implementations.
 class SFXDevice
@@ -72,7 +76,16 @@ class SFXDevice
          CAPS_DSPEffects      = BIT( 3 ),    ///< Device implements DSP effects (SFXDSPManager).
          CAPS_MultiListener   = BIT( 4 ),    ///< Device supports multiple listeners.
       };
-      
+
+      static SFXDevice* get() { return smSFXDevice; }
+      static void initConsole();
+      static bool destroy();
+private:
+   /// @name Device management variables
+   /// @{
+   static SFXDevice* smSFXDevice; ///< Global SFXDevice 
+   /// @}
+
    protected:
 
       typedef Vector< SFXBuffer* > BufferVector;
@@ -81,7 +94,7 @@ class SFXDevice
       typedef BufferVector::iterator BufferIterator;
       typedef VoiceVector::iterator VoiceIterator;
 
-      SFXDevice( const String& name, SFXProvider* provider, bool useHardware, S32 maxBuffers );
+      SFXDevice( const String& name, SFXProvider* provider, bool useHardware, S32 maxSources );
 
       /// The name of this device.
       String mName;

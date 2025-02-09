@@ -31,7 +31,11 @@
 #include "core/util/tVector.h"
 #endif
 
-// Since openal is deprecated and we pack the lib into the sandbox on mac, all
+#ifndef _PATH_H_
+#include "core/util/path.h"
+#endif
+
+// Since openal is deprecated and we pack the lib into the mac bundle, all
 // platforms now support all of these.
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -227,11 +231,8 @@ struct openAlInterface
    LPALGETAUXILIARYEFFECTSLOTFV alGetAuxiliaryEffectSlotfv{ nullptr };
    LPALGETAUXILIARYEFFECTSLOTI alGetAuxiliaryEffectSloti{ nullptr };
    LPALGETAUXILIARYEFFECTSLOTIV alGetAuxiliaryEffectSlotiv{ nullptr };
-   LPALCGETSTRINGISOFT alcGetStringiSOFT{ nullptr };
-   LPALCRESETDEVICESOFT alcResetDeviceSOFT{ nullptr };
 #endif
-   
-   
+
    int ALCVer{ 0 };
    LIB_HANDLE openaAlDll{ nullptr };
    String name;
@@ -250,7 +251,7 @@ struct openAlInterface
 inline Vector<openAlInterface*> ALDriverList;
 
 
-void AddDriver(const char *name, LIB_HANDLE dllHandle);
+void AddDriver(const Torque::Path& name, LIB_HANDLE dllHandle);
 
 void LoadDriverList();
 

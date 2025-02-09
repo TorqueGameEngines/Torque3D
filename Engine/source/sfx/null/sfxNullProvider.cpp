@@ -24,75 +24,48 @@
 #include "sfx/null/sfxNullDevice.h"
 #include "core/strings/stringFunctions.h"
 #include "core/module.h"
+#include "sfx/SFXInit.h"
 
-
-class SFXNullProvider : public SFXProvider
+struct SFXNullProvider : public SFXProvider
 {
-public:
-
-   SFXNullProvider()
-      : SFXProvider( "Null" ) {}
-   virtual ~SFXNullProvider();
-
-protected:
-   void addDeviceDesc( const String& name, const String& desc );
-   void init() override;
-
-public:
-
-   SFXDevice* createDevice( const String& deviceName, bool useHardware, S32 maxBuffers ) override;
-
+   SFXDevice* createDevice( const String& deviceName, bool useHardware, S32 maxSources ) override;
+   static void enumerateDriversAndDevices(Vector<SFXProvider*>& providerList);
 };
 
-MODULE_BEGIN( SFXNull )
-
-   MODULE_INIT_BEFORE( SFX )
-   MODULE_SHUTDOWN_AFTER( SFX )
-   
-   SFXNullProvider* mProvider;
-
-   MODULE_INIT
+class SFXNullRegisterProvider
+{
+public:
+   SFXNullRegisterProvider()
    {
-      mProvider = new SFXNullProvider;
+      SFXInit::getRegisterProviderSignal().notify(&SFXNullProvider::enumerateDriversAndDevices);
    }
-   
-   MODULE_SHUTDOWN
-   {
-      delete mProvider;
-   }
+};
 
-MODULE_END;
+static SFXNullRegisterProvider pSFXNULLRegisterProvider;
 
-void SFXNullProvider::init()
+void SFXNullProvider::enumerateDriversAndDevices(Vector<SFXProvider*>& providerList)
 {
-   regProvider( this );
-   addDeviceDesc( "Null", "SFX Null Device" );
-}
+   SFXNullProvider* nullPro = new SFXNullProvider();
+   nullPro->mType = SFXProviderType::NullProvider;
 
-SFXNullProvider::~SFXNullProvider()
-{
-}
-
-
-void SFXNullProvider::addDeviceDesc( const String& name, const String& desc )
-{
    SFXDeviceInfo* info = new SFXDeviceInfo;
-   info->internalName = desc;
-   info->name = "Null Device";
-   info->driver = name;
+   info->name = "SFX Null Device";
    info->hasHardware = false;
-   info->maxBuffers = 8;
+   info->maxSources = 8;
+   info->type = SFXDeviceType::Output;
 
-   mDeviceInfo.push_back( info );
+   nullPro->mDeviceInfo.push_back( info );
+
+   providerList.push_back(nullPro);
 }
 
-SFXDevice* SFXNullProvider::createDevice( const String& deviceName, bool useHardware, S32 maxBuffers )
+SFXDevice* SFXNullProvider::createDevice( const String& deviceName, bool useHardware, S32 maxSources )
 {
-   SFXDeviceInfo* info = _findDeviceInfo( deviceName );
+   SFXDeviceInfo* info = mDeviceInfo[0];
 
    // Do we find one to create?
    if ( info )
-      return new SFXNullDevice( this, info->internalName, useHardware, maxBuffers );
+      return new SFXNullDevice( this, info->name, useHardware, maxSources );
 
    return NULL;
 }

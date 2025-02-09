@@ -28,11 +28,11 @@
 SFXNullDevice::SFXNullDevice( SFXProvider* provider, 
                               String name, 
                               bool useHardware, 
-                              S32 maxBuffers )
+                              S32 maxSources )
 
-   :  SFXDevice( name, provider, useHardware, maxBuffers )
+   :  SFXDevice( name, provider, useHardware, maxSources )
 {
-   mMaxBuffers = getMax( maxBuffers, 8 );
+   mMaxBuffers = getMax( maxSources, 8 );
 }
 
 SFXNullDevice::~SFXNullDevice()

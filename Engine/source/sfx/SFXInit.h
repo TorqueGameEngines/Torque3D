@@ -27,6 +27,12 @@
 #ifndef _SFXDEVICE_H_
 #include "sfx/sfxDevice.h"
 #endif
+
+#ifndef _SFXAPI_H_
+#include "sfx/sfxApi.h"
+#endif // !_SFXAPI_H_
+
+
 #ifndef _ENGINEOBJECT_H_
 #include "console/engineObject.h"
 #endif
@@ -36,6 +42,25 @@ class SFXInit
    DECLARE_STATIC_CLASS(SFXInit)
 
 public:
+   typedef Signal<void(Vector<SFXProvider*>&)> RegisterProviderSignal;
+   static RegisterProviderSignal& getRegisterProviderSignal();
+   /// <summary>
+   /// Initializes the SFX system this will loop through providers and create devices linked to it.
+   /// </summary>
+   static void init();
+
+   /// <summary>
+   /// Cleanup all our providers.
+   /// </summary>
+   static void cleanup();
+
+   static void enumerateProviders();
+
+private:
+   /// List of known providers.
+   static Vector<SFXProvider*> smProviders;
+   static RegisterProviderSignal* smRegisterProviderSignal;
+
 
 };
 

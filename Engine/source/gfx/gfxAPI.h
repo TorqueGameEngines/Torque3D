@@ -48,14 +48,14 @@ DefineEnumType( GFXAdapterType );
 
 DECLARE_STRUCT( GFXVideoMode );
 
-DefineConsoleType( TypeGFXAdapterType, GFXAdapterType );
-DefineConsoleType( TypeGFXBlend, GFXBlend );
-DefineConsoleType( TypeGFXCmpFunc, GFXCmpFunc );
-DefineConsoleType( TypeGFXTextureAddressMode, GFXTextureAddressMode );
-DefineConsoleType( TypeGFXFormat, GFXFormat );
-DefineConsoleType( TypeGFXTextureFilterType, GFXTextureFilterType );
-DefineConsoleType( TypeGFXCullMode, GFXCullMode );
-DefineConsoleType( TypeGFXStencilOp, GFXStencilOp );
-DefineConsoleType( TypeGFXBlendOp, GFXBlendOp );
+DefineConsoleType( TypeGFXAdapterType, GFXAdapterType )
+DefineConsoleType( TypeGFXBlend, GFXBlend )
+DefineConsoleType( TypeGFXCmpFunc, GFXCmpFunc )
+DefineConsoleType( TypeGFXTextureAddressMode, GFXTextureAddressMode )
+DefineConsoleType( TypeGFXFormat, GFXFormat )
+DefineConsoleType( TypeGFXTextureFilterType, GFXTextureFilterType )
+DefineConsoleType( TypeGFXCullMode, GFXCullMode )
+DefineConsoleType( TypeGFXStencilOp, GFXStencilOp )
+DefineConsoleType( TypeGFXBlendOp, GFXBlendOp )
 
 #endif // !_GFXAPI_H_

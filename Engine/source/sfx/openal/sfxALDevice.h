@@ -23,8 +23,6 @@
 #ifndef _SFXALDEVICE_H_
 #define _SFXALDEVICE_H_
 
-class SFXProvider;
-
 #ifndef _SFXDEVICE_H_
 #  include "sfx/sfxDevice.h"
 #endif
@@ -65,7 +63,7 @@ class SFXALDevice : public SFXDevice
                      openAlInterface* openal, 
                      String name, 
                      bool useHardware, 
-                     S32 maxBuffers );
+                     S32 maxSources );
 
       virtual ~SFXALDevice();
 

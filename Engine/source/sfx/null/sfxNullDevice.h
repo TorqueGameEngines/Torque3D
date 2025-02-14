@@ -23,8 +23,6 @@
 #ifndef _SFXNULLDEVICE_H_
 #define _SFXNULLDEVICE_H_
 
-class SFXProvider;
-
 #ifndef _SFXDEVICE_H_
    #include "sfx/sfxDevice.h"
 #endif

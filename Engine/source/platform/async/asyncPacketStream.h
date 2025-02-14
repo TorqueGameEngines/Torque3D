@@ -255,7 +255,7 @@ AsyncPacketBufferedInputStream< Stream, Packet >::AsyncPacketBufferedInputStream
       
    IPositionable< U32 >* positionable = dynamic_cast< IPositionable< U32 >* >( &Deref( stream ) );
    if( positionable )
-      mNumTotalSourceElements += positionable->getPosition();
+      mNumTotalSourceElements += positionable->getTimeIndex();
    else
    {
       ISizeable< U32 >* sizeable = dynamic_cast< ISizeable< U32 >* >( &Deref( stream ) );
@@ -284,7 +284,7 @@ void AsyncPacketBufferedInputStream< Stream, Packet >::_requestNext()
          IPositionable< U32 >* positionable = dynamic_cast< IPositionable< U32 >* >( &Deref( stream ) );
          U32 pos = 0;
          if(positionable)
-            pos = positionable->getPosition();
+            pos = positionable->getTimeIndex();
          
          resettable->reset();
          isEOS = false;
@@ -292,7 +292,7 @@ void AsyncPacketBufferedInputStream< Stream, Packet >::_requestNext()
          
          if( positionable )
          {
-            positionable->setPosition(pos);
+            positionable->setTimeIndex(pos);
             U32 dur = stream->getDuration();
             if(dur != 0) //avoiding division by zero? not needed, probably
                this->mNumRemainingSourceElements -= (U32)(mNumTotalSourceElements*(F32)pos/dur);

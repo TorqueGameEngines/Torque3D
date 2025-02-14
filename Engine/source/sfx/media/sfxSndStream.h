@@ -85,8 +85,8 @@ public:
    }
 
    // IPositionable
-   U32 getPosition() const override;
-   void setPosition(U32 offset) override;
+   U32 getTimeIndex() const override;
+   void setTimeIndex(U32 offset) override;
 };
 
 #endif

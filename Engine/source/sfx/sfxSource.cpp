@@ -460,7 +460,7 @@ SFXSource* SFXSource::getSourceGroup() const
 
 F32 SFXSource::getElapsedPlayTime() const
 {
-   return F32( mPlayTimer.getPosition() ) / 1000.f;
+   return F32( mPlayTimer.getTimeIndex() ) / 1000.f;
 }
 
 //-----------------------------------------------------------------------------
@@ -471,7 +471,7 @@ F32 SFXSource::getElapsedPlayTimeCurrentCycle() const
    // and thus cannot clamp the playtimer into range for the current cycle.
    // This needs to be done by subclasses.
    
-   return F32( mPlayTimer.getPosition() ) / 1000.f;
+   return F32( mPlayTimer.getTimeIndex() ) / 1000.f;
 }
 
 //-----------------------------------------------------------------------------

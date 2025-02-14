@@ -191,7 +191,7 @@ class AsyncPacketQueue
                            TickType packetPos = TypeTraits< TickType >::MAX );
 
       /// Return the current playback position according to the time source.
-      TickType getCurrentTick() const { return Deref( mTimeSource ).getPosition(); }
+      TickType getCurrentTick() const { return Deref( mTimeSource ).getTimeIndex(); }
 
       /// Return the total number of ticks that have been queued so far.
       TickType getTotalQueuedTicks() const { return mTotalQueuedTicks; }

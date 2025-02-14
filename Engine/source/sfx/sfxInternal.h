@@ -195,7 +195,7 @@ class SFXVoiceTimeSource
       SFXVoiceTimeSource( SFXVoice* voice )
          : mVoice( voice ), mLastPos( 0 ) {}
 
-      U32 getPosition() const
+      U32 getTimeIndex() const
       {
          U32 samplePos = mVoice->_tell();
 
@@ -450,6 +450,12 @@ inline bool isSFXThread()
 
    return ThreadManager::compare( ThreadManager::getCurrentThreadId(), threadId );
 }
+
+class SFXManager {
+private:
+   ThreadSafeDeque<SFXStreamPacket*> mPacketQueue;
+
+};
 
 } // namespace SFXInternal
 

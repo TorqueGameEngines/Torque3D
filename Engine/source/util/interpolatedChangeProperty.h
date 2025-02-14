@@ -154,7 +154,7 @@ void InterpolatedChangeProperty< T, TimeSource >::setTargetValue( const T& value
 
       mSourceValue = getCurrentValue();
       mTargetValue = value;
-      mTransitionStartTime = mTimeSource.getPosition();
+      mTransitionStartTime = mTimeSource.getTimeIndex();
    }
 }
 
@@ -170,7 +170,7 @@ void InterpolatedChangeProperty< T, TimeSource >::_update() const
 
    // See if we have finished the transition.
 
-   TimeType deltaTime = mTimeSource.getPosition() - mTransitionStartTime;
+   TimeType deltaTime = mTimeSource.getTimeIndex() - mTransitionStartTime;
    if( deltaTime >= mBlendPhaseTime )
    {
       // We're done.

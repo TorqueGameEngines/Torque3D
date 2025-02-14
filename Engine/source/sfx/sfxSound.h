@@ -131,10 +131,10 @@ class SFXSound : public SFXSource,
 
       /// Return the current playback position in milliseconds.
       /// @note For looping sources, this returns the position in the current cycle.
-      U32 getPosition() const override;
+      U32 getTimeIndex() const override;
 
       /// Set the current playback position in milliseconds.
-      void setPosition( U32 ms ) override;
+      void setTimeIndex( U32 ms ) override;
 
       /// Returns the source's total playback time in milliseconds.
       U32 getDuration() const { return mDuration; }

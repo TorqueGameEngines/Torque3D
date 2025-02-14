@@ -33,41 +33,40 @@
 
 class SFXDevice;
 
-
-
-struct SFXDeviceInfo
-{
-   String   name;
-   bool     hasHardware = false;
-   S32      maxSources = 0;
-   U32      deviceIdx = 0;
-   SFXDeviceType type;
-};
-
-typedef Vector<SFXDeviceInfo*> SFXDeviceInfoVector;
-
 struct SFXProvider
 {
-      String mName;
-      SFXDeviceInfoVector  mDeviceInfo;
-      /// The case sensitive name of this provider.
-      const String& getName() const { return mName; }
-      SFXProviderType mType;
+   struct SFXDeviceInfo
+   {
+      String   name;
+      bool     hasHardware = false;
+      bool     defaultDevice = false;
+      S32      maxSources = 0;
+      U32      deviceIdx = 0;
+      SFXDeviceType type;
+   };
 
-      /// This is called from SFXSystem to create a new device.  Must be implemented
-      /// by all contrete provider classes.
-      ///
-      /// @param deviceName      The case sensitive name of the device or NULL to create the 
-      //                         default device.
-      /// @param useHardware     Toggles the use of hardware processing when available.
-      /// @param maxSources      The maximum buffers for this device to use or -1 
-      ///                        for the device to pick a reasonable default for that device.
-      ///
-      /// @return Returns the created device or NULL for failure.
-      ///
-      virtual SFXDevice* createDevice(const String& deviceName, bool useHardware, S32 maxSources) = 0;
+   typedef Vector<SFXDeviceInfo*> SFXDeviceInfoVector;
 
-      virtual ~SFXProvider();
+   String mName;
+   SFXDeviceInfoVector  mDeviceInfo;
+   /// The case sensitive name of this provider.
+   const String& getName() const { return mName; }
+   SFXProviderType mType;
+
+   /// This is called from SFXSystem to create a new device.  Must be implemented
+   /// by all contrete provider classes.
+   ///
+   /// @param deviceName      The case sensitive name of the device or NULL to create the 
+   //                         default device.
+   /// @param useHardware     Toggles the use of hardware processing when available.
+   /// @param maxSources      The maximum buffers for this device to use or -1 
+   ///                        for the device to pick a reasonable default for that device.
+   ///
+   /// @return Returns the created device or NULL for failure.
+   ///
+   virtual SFXDevice* createDevice(const String& deviceName, bool useHardware, S32 maxSources) = 0;
+
+   virtual ~SFXProvider();
 };
 
 

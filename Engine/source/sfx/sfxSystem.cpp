@@ -367,16 +367,16 @@ bool SFXSystem::createDevice( const String& providerName, const String& deviceNa
 
 String SFXSystem::getDeviceInfoString()
 {
-   // Make sure we have a valid device.
-   if( !mDevice )
+//   // Make sure we have a valid device.
+//   if( !mDevice )
       return String();
-
-   return String::ToString( "%s\t%s\t%s\t%d\t%d",
-      mDevice->getProvider()->getName().c_str(),
-      mDevice->getName().c_str(),
-      mDevice->getUseHardware() ? "1" : "0",
-      mDevice->getMaxBuffers(),
-      mDevice->getCaps() );
+//
+//   return String::ToString( "%s\t%s\t%s\t%d\t%d",
+//      mDevice->getProvider()->getName().c_str(),
+//      mDevice->getName().c_str(),
+//      mDevice->getUseHardware() ? "1" : "0",
+//      mDevice->getMaxBuffers(),
+//      mDevice->getCaps() );
 }
 
 //-----------------------------------------------------------------------------
@@ -849,7 +849,7 @@ void SFXSystem::_assignVoices()
             
             if( (    other->getAttenuatedVolume() < 0.1     // Very quiet or maybe not even audible.
                   || !other->isPlaying()                    // Not playing so not audible anyways.
-                  || other->getPosition() == 0 )            // Not yet started playing.
+                  || other->getTimeIndex() == 0 )            // Not yet started playing.
                 && other->_releaseVoice() )
                break;
          }

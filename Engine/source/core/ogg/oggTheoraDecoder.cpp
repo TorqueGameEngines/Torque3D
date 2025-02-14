@@ -232,7 +232,7 @@ bool OggTheoraDecoder::_packetin( ogg_packet* packet )
    TimeSourceRef timeSource = mTimeSource;
    if( timeSource )
    {
-      F32 currentTick = F32( timeSource->getPosition() ) / 1000.f;
+      F32 currentTick = F32( timeSource->getTimeIndex() ) / 1000.f;
 
       if( currentTick >= ( mCurrentFrameTime + mFrameDuration ) )
          dropThisFrame = true;

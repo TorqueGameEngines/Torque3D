@@ -64,7 +64,7 @@ class SFXNullVoice : public SFXVoice
       ///
       U32 _getPlayTime() const
       {
-         return mPlayTimer.getPosition();
+         return mPlayTimer.getTimeIndex();
       }
 
    public:
@@ -73,7 +73,7 @@ class SFXNullVoice : public SFXVoice
 
       /// SFXVoice
       SFXStatus getStatus() const override;
-      void setPosition( U32 sample ) override;
+      void setTimeIndex( U32 sample ) override;
       void play( bool looping ) override;
       void setMinMaxDistance( F32 min, F32 max ) override;
       void setVelocity( const VectorF& velocity ) override;

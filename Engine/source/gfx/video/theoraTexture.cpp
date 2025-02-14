@@ -635,7 +635,7 @@ void TheoraTexture::refresh()
    // lifetime of our time sources isn't bound to the
    // threaded state.
    
-   mAsyncState->syncTime( _getTimeSource()->getPosition() );
+   mAsyncState->syncTime( _getTimeSource()->getTimeIndex() );
             
    // Update the texture, if necessary.
    

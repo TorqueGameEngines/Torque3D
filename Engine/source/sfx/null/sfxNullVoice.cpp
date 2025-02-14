@@ -40,7 +40,7 @@ SFXStatus SFXNullVoice::_status() const
    if( !mIsLooping
        && mPlayTimer.isStarted()
        && !mPlayTimer.isPaused()
-       && mPlayTimer.getPosition() >= mBuffer->getDuration() )
+       && mPlayTimer.getTimeIndex() >= mBuffer->getDuration() )
       mPlayTimer.stop();
 
    if( mPlayTimer.isPaused() )
@@ -69,7 +69,7 @@ void SFXNullVoice::_stop()
 void SFXNullVoice::_seek( U32 sample )
 {
    const U32 sampleTime = mBuffer->getFormat().getDuration( sample );
-   mPlayTimer.setPosition( sampleTime );
+   mPlayTimer.setTimeIndex( sampleTime );
 }
 
 void SFXNullVoice::play( bool looping )
@@ -91,7 +91,7 @@ SFXStatus SFXNullVoice::getStatus() const
    return _status();
 }
 
-void SFXNullVoice::setPosition( U32 sample )
+void SFXNullVoice::setTimeIndex( U32 sample )
 {
    _seek( sample );
 }

@@ -29,10 +29,8 @@ SFXNullDevice::SFXNullDevice( SFXProvider* provider,
                               String name, 
                               bool useHardware, 
                               S32 maxSources )
-
-   :  SFXDevice( name, provider, useHardware, maxSources )
 {
-   mMaxBuffers = getMax( maxSources, 8 );
+   mMaxSources = getMax( maxSources, 8 );
 }
 
 SFXNullDevice::~SFXNullDevice()
@@ -51,7 +49,7 @@ SFXVoice* SFXNullDevice::createVoice( bool is3D, SFXBuffer *buffer )
 {
    // Don't bother going any further if we've 
    // exceeded the maximum voices.
-   if ( mVoices.size() >= mMaxBuffers )
+   if ( mVoices.size() >= mMaxSources )
       return NULL;
 
    AssertFatal( buffer, "SFXNullDevice::createVoice() - Got null buffer!" );

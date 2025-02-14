@@ -27,8 +27,8 @@
 #  include "sfx/sfxDevice.h"
 #endif
 
-#ifndef _SFXPROVIDER_H_
-#  include "sfx/sfxProvider.h"
+#ifndef _SFXALPROVIDER_H_
+#include "sfx/openal/sfxALProvider.h"
 #endif
 
 #ifndef _SFXALBUFFER_H_
@@ -43,12 +43,14 @@
 #  include "sfx/openal/LoadOAL.h"
 #endif
 
+#define SFXAL static_cast<SFXALDevice*>(SFXNEW)
+#define SFXALDEVICE SFXAL->getALDevice()
+#define SFXALCONTEXT SFXAL->getALDeviceContext()
+#define SFXALINTERFACE SFXAL->getALDriverIntrface()
 
 class SFXALDevice : public SFXDevice
 {
    public:
-
-      typedef SFXDevice Parent;
       friend class SFXALVoice; // mDistanceFactor, mRolloffFactor
 
       void printALInfo(ALCdevice* device);
@@ -59,22 +61,16 @@ class SFXALDevice : public SFXDevice
       // Compatibility with pre openal 1.2
       S32 getMaxSourcesOld();
 
-      SFXALDevice(   SFXProvider *provider,
-                     openAlInterface* openal, 
-                     String name, 
-                     bool useHardware, 
-                     S32 maxSources );
+      SFXALDevice(SFXALProvider::ALDeviceInfo* deviceInfo);
 
       virtual ~SFXALDevice();
 
    protected:
-
+      // OpenAL objects.
       openAlInterface* mOpenAL;
-
       ALCcontext *mContext;
-
       ALCdevice *mDevice;
-      
+      SFXALProvider::ALDeviceInfo* mDeviceInfo;
       SFXDistanceModel mDistanceModel;
       F32 mDistanceFactor;
       F32 mRolloffFactor;
@@ -83,6 +79,10 @@ class SFXALDevice : public SFXDevice
       void _setRolloffFactor( F32 factor );
 
    public:
+      // Accessors for the rest of the openal layer.
+      ALCdevice* getALDevice() { return mDevice; }
+      ALCcontext* getALDeviceContext() { return mContext; }
+      openAlInterface* getALDriverIntrface() { return mOpenAL; }
 
       // SFXDevice.
       SFXBuffer* createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description ) override;
@@ -91,6 +91,7 @@ class SFXALDevice : public SFXDevice
       void setDistanceModel( SFXDistanceModel model ) override;
       void setDopplerFactor( F32 factor ) override;
       void setRolloffFactor( F32 factor ) override;
+
 #if defined(AL_ALEXT_PROTOTYPES)
       //function for openAL to open slots
       virtual void openSlots();

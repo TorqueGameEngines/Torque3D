@@ -137,10 +137,10 @@ U32 SFXSndStream::read(U8* buffer, U32 length)
    }
 
    // (convert to frames) - number of frames available < MAX_BUFFER? reset
-   if (((getPosition() / mFormat.getBytesPerSample()) - sfinfo.frames) < MAX_BUFFER)
+   if (((getTimeIndex() / mFormat.getBytesPerSample()) - sfinfo.frames) < MAX_BUFFER)
    {
       // reset stream
-      setPosition(0);
+      setTimeIndex(0);
    }
    
 
@@ -152,12 +152,12 @@ bool SFXSndStream::isEOS() const
    return (Parent::isEOS() || (mStream && vio_data.length == vio_data.offset));
 }
 
-U32 SFXSndStream::getPosition() const
+U32 SFXSndStream::getTimeIndex() const
 {
    return vio_data.offset;
 }
 
-void SFXSndStream::setPosition(U32 offset)
+void SFXSndStream::setTimeIndex(U32 offset)
 {
    sf_seek(sndFile, offset / mFormat.getBytesPerSample(), SEEK_SET);
 }

@@ -260,7 +260,7 @@ void SFXVoice::stop()
 
 //-----------------------------------------------------------------------------
 
-U32 SFXVoice::getPosition() const
+U32 SFXVoice::getTimeIndex() const
 {
    // When stopped, always return 0.
 
@@ -290,7 +290,7 @@ U32 SFXVoice::getPosition() const
 
 //-----------------------------------------------------------------------------
 
-void SFXVoice::setPosition( U32 inSample )
+void SFXVoice::setTimeIndex( U32 inSample )
 {
    // Clamp to sample range.
    const U32 sample = inSample % ( mBuffer->getFormat().getSampleCount( mBuffer->getDuration() ) - 1 );
@@ -299,7 +299,7 @@ void SFXVoice::setPosition( U32 inSample )
    // given position.  Especially avoids a costly stream
    // clone when seeking on a streamed voice.
    
-   if( getPosition() == sample )
+   if(getTimeIndex() == sample )
       return;
 
    if( !mBuffer->isStreaming() )
@@ -386,7 +386,7 @@ void SFXVoice::_resetStream( U32 sampleStartPos, bool triggerUpdate )
       return;
    }
 
-   sfxPositionable->setPosition( sampleStartPos * sfxStream->getFormat().getBytesPerSample() );
+   sfxPositionable->setTimeIndex( sampleStartPos * sfxStream->getFormat().getBytesPerSample() );
    
    ThreadSafeRef< SFXInternal::SFXAsyncStream > newStream =
       new SFXInternal::SFXAsyncStream

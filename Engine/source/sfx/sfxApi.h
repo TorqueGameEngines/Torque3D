@@ -17,5 +17,9 @@ DefineEnumType(SFXDistanceModel);
 DefineEnumType(SFXStatus);
 DefineEnumType(SFXProviderType);
 
+DefineConsoleType(TypeSFXChannel, SFXChannel)
+DefineConsoleType(TypeSFXProviderType, SFXProviderType)
+DefineConsoleType(TypeSFXStatus, SFXStatus)
+DefineConsoleType(TypeSFXDistanceModel, SFXDistanceModel)
 
 #endif // !_SFXAPI_H_

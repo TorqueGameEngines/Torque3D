@@ -106,7 +106,7 @@ class GenericTimeSource : public IPositionable< Tick >,
 
       /// Return the number of ticks since the time source
       /// has been started.
-      TickType getPosition() const override
+      TickType getTimeIndex() const override
       {
          if( !isStarted() )
             return TypeTraits< TickType >::ZERO;
@@ -117,7 +117,7 @@ class GenericTimeSource : public IPositionable< Tick >,
       }
 
       ///
-      void setPosition( TickType pos ) override
+      void setTimeIndex( TickType pos ) override
       {
          if( !isStarted() )
             mStartTime = pos;

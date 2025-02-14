@@ -273,12 +273,12 @@ bool SFXSound::_allocVoice( SFXDevice* device )
    // If virtualized playback has been started, we transfer its position to the
    // voice and stop virtualization.
 
-   const U32 playTime = mPlayTimer.getPosition();
+   const U32 playTime = mPlayTimer.getTimeIndex();
    
    if( playTime > 0 )
    {
       const U32 pos = mBuffer->getFormat().getSampleCount( playTime );
-      mVoice->setPosition( pos);
+      mVoice->setTimeIndex( pos);
    }
 
    mVoice->play( isLooping() );
@@ -303,7 +303,7 @@ void SFXSound::_onParameterEvent( SFXParameter* parameter, SFXParameterEvent eve
          switch( parameter->getChannel() )
          {
             case SFXChannelCursor:
-               setPosition( parameter->getValue() * 1000.f );
+               setTimeIndex( parameter->getValue() * 1000.f );
                break;
                               
             default:
@@ -365,7 +365,7 @@ bool SFXSound::_releaseVoice()
       // Sync up the play timer with the voice's current position to make
       // sure we handle any lag that's cropped up.
       
-      mPlayTimer.setPosition( mVoice->getPosition() );
+      mPlayTimer.setTimeIndex( mVoice->getTimeIndex() );
 
       if( status == SFXStatusBlocked )
          status = SFXStatusPlaying;
@@ -412,8 +412,8 @@ void SFXSound::_play()
          Platform::outputDebugString( "[SFXSound] virtualizing playback of source '%i'", getId() );
       #endif
    }
-   if(getPosition() != mSetPositionValue)
-      setPosition(mSetPositionValue);
+   if(getTimeIndex() != mSetPositionValue)
+      setTimeIndex(mSetPositionValue);
    mSetPositionValue = 0; //Non looping sounds need this to reset.
 }
 
@@ -436,7 +436,7 @@ void SFXSound::_pause()
    
    if( mVoice )
       mVoice->pause();
-   mSetPositionValue = getPosition();
+   mSetPositionValue = getTimeIndex();
 }
 
 //-----------------------------------------------------------------------------
@@ -469,7 +469,7 @@ void SFXSound::_updateStatus()
    // need to decide if the sound is done playing
    // to ensure proper virtualization of the sound.
 
-   if( mPlayTimer.getPosition() > mDuration )
+   if( mPlayTimer.getTimeIndex() > mDuration )
    {
       _stop();
       _setStatus( SFXStatusStopped );
@@ -515,27 +515,27 @@ void SFXSound::_updatePriority()
 
 //-----------------------------------------------------------------------------
 
-U32 SFXSound::getPosition() const
+U32 SFXSound::getTimeIndex() const
 {
    if( getLastStatus() == SFXStatusStopped)
       return mSetPositionValue;
    if( mVoice )
-      return mVoice->getFormat().getDuration( mVoice->getPosition() );
+      return mVoice->getFormat().getDuration( mVoice->getTimeIndex() );
    else
-      return ( mPlayTimer.getPosition() % mDuration ); // Clamp for looped sounds.
+      return ( mPlayTimer.getTimeIndex() % mDuration ); // Clamp for looped sounds.
 }
 
 //-----------------------------------------------------------------------------
 
-void SFXSound::setPosition( U32 ms )
+void SFXSound::setTimeIndex( U32 ms )
 {
    AssertFatal( ms < getDuration(), "SFXSound::setPosition() - position out of range" );
    mSetPositionValue = ms;
 
    if( mVoice )
-      mVoice->setPosition( mVoice->getFormat().getSampleCount( ms ) );
+      mVoice->setTimeIndex( mVoice->getFormat().getSampleCount( ms ) );
    else
-      mPlayTimer.setPosition( ms );
+      mPlayTimer.setTimeIndex( ms );
 }
 
 //-----------------------------------------------------------------------------
@@ -608,7 +608,7 @@ SFXProfile* SFXSound::getProfile() const
 
 F32 SFXSound::getElapsedPlayTimeCurrentCycle() const
 {
-   return F32( getPosition() ) / 1000.f;
+   return F32(getTimeIndex() ) / 1000.f;
 }
 
 //-----------------------------------------------------------------------------
@@ -692,7 +692,7 @@ DefineEngineMethod( SFXSound, getPosition, F32, (),,
    "Get the current playback position in seconds.\n"
    "@return The current play cursor offset." )
 {
-   return F32( object->getPosition() ) * 0.001f;
+   return F32( object->getTimeIndex() ) * 0.001f;
 }
 
 //-----------------------------------------------------------------------------
@@ -705,7 +705,7 @@ DefineEngineMethod( SFXSound, setPosition, void, ( F32 position ),,
 {
    position *= 1000.0f;
    if( position >= 0 && position < object->getDuration() )
-      object->setPosition( position );
+      object->setTimeIndex( position );
 }
 
 //-----------------------------------------------------------------------------

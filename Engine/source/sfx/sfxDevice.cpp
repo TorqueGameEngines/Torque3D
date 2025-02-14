@@ -32,6 +32,7 @@ SFXDevice* SFXDevice::smSFXDevice = NULL;
 
 //-----------------------------------------------------------------------------
 
+
 void SFXDevice::initConsole()
 {
 }
@@ -41,18 +42,19 @@ bool SFXDevice::destroy()
    return false;
 }
 
-SFXDevice::SFXDevice( const String& name, SFXProvider* provider, bool useHardware, S32 maxSources )
-   :  mName( name ),
-      mProvider( provider ),
-      mUseHardware( useHardware ),
-      mMaxBuffers( maxSources ),
-      mCaps( 0 ),
+SFXDevice::DeviceEventSignal& SFXDevice::getDeviceEventSignal()
+{
+   static DeviceEventSignal theSignal;
+   return theSignal;
+}
+
+SFXDevice::SFXDevice()
+   :  mCaps( 0 ),
       mStatNumBuffers( 0 ),
       mStatNumVoices( 0 ),
-      mStatNumBufferBytes( 0 )
+      mStatNumBufferBytes( 0 ),
+      mMaxSources( 16 )
 {
-   AssertFatal( provider, "We must have a provider pointer on device creation!" );
-
    VECTOR_SET_ASSOCIATION( mBuffers );
    VECTOR_SET_ASSOCIATION( mVoices );
 
@@ -141,10 +143,12 @@ void SFXDevice::update()
 
    if( !SFXInternal::UPDATE_THREAD() )
       SFXInternal::UPDATE_LIST().process(SFXInternal::MAIN_THREAD_PROCESS_TIMEOUT );
+
+   // Here we want to loop through our list of active voices, sort them, and cull whatever
+   // is not playing. This list will be sorted based on priority.
       
    // Clean out buffers that have surfaced on the dead
    // buffer list.
-
    SFXInternal::PurgeDeadBuffers();
 }
 

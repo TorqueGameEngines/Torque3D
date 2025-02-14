@@ -106,7 +106,7 @@ class GuiTheoraCtrl : public GuiControl
       /// Return the current playback position.
       F32 getCurrentTime()
       {
-         return F32( mTheoraTexture.getPosition() ) / 1000.f;
+         return F32( mTheoraTexture.getTimeIndex() ) / 1000.f;
       }
 
       // GuiControl.

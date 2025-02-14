@@ -60,7 +60,7 @@ SFXAsyncStream::SFXAsyncStream(  const SFXStreamRef& stream,
                : stream->getDataLength(),                      // Non-streamed buffer; read entire stream in one packet.
                stream->getDataLength()                         // Read all remaining data in stream.
                - ( dynamic_cast< IPositionable< U32 >* >( stream.ptr() )
-                   ? dynamic_cast< IPositionable< U32 >* >( stream.ptr() )->getPosition()
+                   ? dynamic_cast< IPositionable< U32 >* >( stream.ptr() )->getTimeIndex()
                    : 0 ),
                numReadAhead,
                isLooping,

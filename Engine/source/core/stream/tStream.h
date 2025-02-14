@@ -70,11 +70,11 @@ class IPositionable
       typedef P PositionType;
 
       /// @return the current position.
-      virtual PositionType getPosition() const = 0;
+      virtual PositionType getTimeIndex() const = 0;
       
       /// Set the current position to be "pos".
       /// @param pos The new position.
-      virtual void setPosition( PositionType pos ) = 0;
+      virtual void setTimeIndex( PositionType pos ) = 0;
 };
 
 /// Interface for structures that allow their state to be reset.

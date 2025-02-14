@@ -24,6 +24,7 @@
 
 #include "sfx/sfxProvider.h"
 #include "sfx/openal/sfxALDevice.h"
+#include "sfx/openal/sfxALProvider.h"
 #include "sfx/openal/LoadOAL.h"
 
 #include "core/strings/stringFunctions.h"
@@ -31,20 +32,6 @@
 #include "core/module.h"
 #include "sfx/SFXInit.h"
 
-struct SFXALProvider : public SFXProvider
-{
-   typedef Delegate<SFXDevice* (U32 driverIndex)> CreateALDevice;
-   static void enumerateDriversAndDevices(Vector<SFXProvider*>& providerList);
-
-   struct ALDeviceInfo : SFXDeviceInfo
-   {
-      U32 driverIdx = 0;
-   };
-
-   SFXDevice *createDevice( const String& deviceName, bool useHardware, S32 maxSources ) override;
-
-   virtual ~SFXALProvider();
-};
 
 class SFXALRegisterProvider
 {
@@ -106,6 +93,8 @@ void SFXALProvider::enumerateDriversAndDevices(Vector<SFXProvider*> &providerLis
                   devInfo->deviceIdx = deviceIdx;
                   devInfo->name = String(defaultDeviceName);
                   devInfo->type = SFXDeviceType::Output;
+                  // only true for default driver
+                  devInfo->defaultDevice = driverIdx == 0 ? true : false;
 
                   alProvider->mDeviceInfo.push_back(devInfo);
                   deviceIdx++;
@@ -120,14 +109,19 @@ void SFXALProvider::enumerateDriversAndDevices(Vector<SFXProvider*> &providerLis
          const char* ptr = devices;
          while (*ptr != 0)
          {
+            bool found = false;
             for (SFXDeviceInfo* dev : alProvider->mDeviceInfo)
             {
                if (String::compare(dev->name.c_str(), ptr) == 0)
                {
                   ptr += dev->name.length() + 1;
-                  continue;
+                  found = true;
+                  break;
                }
             }
+
+            if (found)
+               continue;
 
             ALCdevice* device = alDriver->alcOpenDevice(ptr);
             if (device)
@@ -154,11 +148,56 @@ void SFXALProvider::enumerateDriversAndDevices(Vector<SFXProvider*> &providerLis
                alDriver->alcCloseDevice(device);
             }
          }
+
+         if (alDriver->alcIsExtensionPresent(NULL, "ALC_EXT_CAPTURE") == AL_FALSE)
+            continue;
+
+         devices = (char*)alcGetString(NULL, ALC_CAPTURE_DEVICE_SPECIFIER);
+         ptr = devices;
+         while (*ptr != 0)
+         {
+            bool found = false;
+            for (SFXDeviceInfo* dev : alProvider->mDeviceInfo)
+            {
+               if (String::compare(dev->name.c_str(), ptr) == 0)
+               {
+                  ptr += dev->name.length() + 1;
+                  found = true;
+                  break;
+               }
+            }
+
+            if (found)
+               continue;
+
+            ALCdevice* device = alDriver->alcCaptureOpenDevice(ptr, 22040, AL_FORMAT_MONO8, 22040 * 2);
+            if (device)
+            {
+               ALDeviceInfo* devInfo = new ALDeviceInfo;
+               devInfo->driverIdx = driverIdx;
+               devInfo->deviceIdx = deviceIdx;
+               devInfo->name = String(ptr);
+               devInfo->type = SFXDeviceType::Input;
+
+               alProvider->mDeviceInfo.push_back(devInfo);
+               deviceIdx++;
+               ptr += devInfo->name.length() + 1;
+
+               alDriver->alcCaptureCloseDevice(device);
+            }
+         }
       }
 
       driverIdx++;
    }
 
+   Con::printf("Devices Found for %s:", alProvider->mName.c_str());
+   for (SFXDeviceInfo* info : alProvider->mDeviceInfo)
+   {
+      Con::printf("[%s] %s %s", info->type == SFXDeviceType::Output ? "Output Device" : "Input Device",
+         info->name.c_str(),
+         info->defaultDevice ? "(Default Device)" : "");
+   }
 
    providerList.push_back(alProvider);
 }

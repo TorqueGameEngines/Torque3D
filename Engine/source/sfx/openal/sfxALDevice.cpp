@@ -105,13 +105,8 @@ S32 SFXALDevice::getMaxSourcesOld()
 
 //-----------------------------------------------------------------------------
 
-SFXALDevice::SFXALDevice(  SFXProvider *provider, 
-                           openAlInterface* openal,
-                           String name, 
-                           bool useHardware, 
-                           S32 maxSources )
-   :  Parent( name, provider, useHardware, maxSources ),
-      mOpenAL( openal ), 
+SFXALDevice::SFXALDevice(SFXALProvider::ALDeviceInfo* deviceInfo)
+   :  mDeviceInfo(deviceInfo),
       mContext( NULL ),
       mDevice( NULL ),
       mDistanceModel(SFXDistanceModelLinear),
@@ -119,7 +114,7 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
       mRolloffFactor( 1.0f ),
       mUserRolloffFactor(1.0f)
 {
-   mMaxBuffers = getMax( maxSources, 8 );
+   mOpenAL = ALDriverList[deviceInfo->driverIdx];
 
    // TODO: The OpenAL device doesn't set the primary buffer
    // $pref::SFX::frequency or $pref::SFX::bitrate!
@@ -133,7 +128,7 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
 
    printALInfo(NULL);
 
-   mDevice = mOpenAL->alcOpenDevice( name );
+   mDevice = mOpenAL->alcOpenDevice(deviceInfo->name);
    U32 err = mOpenAL->alcGetError(mDevice);
    if (err != ALC_NO_ERROR)
       Con::errorf("SFXALDevice - Device Initialization Error: %s", mOpenAL->alcGetString(mDevice, err));
@@ -177,10 +172,10 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
    printALInfo(mDevice);
    
 
-   mMaxBuffers = getMaxSources();
+   mMaxSources = getMaxSources();
 
    // this should be max sources.
-   Con::printf("| Max Sources: %d", mMaxBuffers);
+   Con::printf("| Max Sources: %d", mMaxSources);
 
 }
 
@@ -211,7 +206,7 @@ SFXBuffer* SFXALDevice::createBuffer( const ThreadSafeRef< SFXStream >& stream, 
    SFXALBuffer* buffer = SFXALBuffer::create(   mOpenAL, 
                                                 stream,
                                                 description, 
-                                                mUseHardware );
+                                                true );
    if ( !buffer )
       return NULL;
 
@@ -225,7 +220,7 @@ SFXVoice* SFXALDevice::createVoice( bool is3D, SFXBuffer *buffer )
 {
    // Don't bother going any further if we've 
    // exceeded the maximum voices.
-   if ( mVoices.size() >= mMaxBuffers )
+   if ( mVoices.size() >= mMaxSources )
       return NULL;
 
    AssertFatal( buffer, "SFXALDevice::createVoice() - Got null buffer!" );

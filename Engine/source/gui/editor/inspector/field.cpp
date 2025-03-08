@@ -233,7 +233,7 @@ void GuiInspectorField::setFirstResponder( GuiControl *firstResponder )
 {
    Parent::setFirstResponder( firstResponder );
 
-   if (( firstResponder == this || firstResponder == mEdit ) && firstResponder->isProperlyAdded())
+   if (( firstResponder == this || firstResponder == mEdit ) && (firstResponder && firstResponder->isProperlyAdded()))
    {
       mInspector->setHighlightField( this );      
    }   

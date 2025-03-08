@@ -115,11 +115,11 @@ public:
 
    enum AnimType
    {
-      Scroll = 1,
-      Rotate = 2,
-      Wave = 4,
-      Scale = 8,
-      Sequence = 16,
+      Scroll = BIT(0),
+      Rotate = BIT(1),
+      Wave = BIT(2),
+      Scale = BIT(3),
+      Sequence = BIT(4),
    };
 
    enum WaveType

@@ -211,7 +211,6 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onMouseMove, void, (const char* screenPosition, c
    "	// Code to call when a mouse event occurs.\n"
    "}\n"
    "@endtsexample\n\n"
-   "@see GuiTSCtrl\n\n"
 );
 
 GameTSCtrl::GameTSCtrl()

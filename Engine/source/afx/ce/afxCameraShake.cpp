@@ -71,9 +71,9 @@ void afxCameraShakeData::initPersistFields()
     "The camera shake frequencies for all three axes: X, Y, Z.");
   addField("amplitude", TypePoint3F,   Offset(camShakeAmp,        afxCameraShakeData),
     "The camera shake amplitudes for all three axes: X, Y, Z.");
-  addField("radius",    TypeF32,       Offset(camShakeRadius,     afxCameraShakeData),
+  addFieldV("radius", TypeRangedF32,       Offset(camShakeRadius,     afxCameraShakeData), &CommonValidators::PositiveFloat,
     "Radius about the effect position in which shaking will be applied.");
-  addField("falloff",   TypeF32,       Offset(camShakeFalloff,    afxCameraShakeData),
+  addFieldV("falloff", TypeRangedF32,       Offset(camShakeFalloff,    afxCameraShakeData), &CommonValidators::PositiveFloat,
     "Magnitude by which shaking decreases over distance to radius.");
 
   Parent::initPersistFields();

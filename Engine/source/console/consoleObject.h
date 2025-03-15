@@ -945,6 +945,13 @@ public:
       TypeValidator *v,
       const char *   in_pFieldDocs = NULL);
 
+   static void addFieldV(const char* in_pFieldname,
+      const U32      in_fieldType,
+      const dsize_t  in_fieldOffset,
+      TypeValidator* v,
+      const U32     in_elementCount,
+      const char* in_pFieldDocs = NULL);
+
    /// Register a complex protected field.
    ///
    /// @param  in_pFieldname     Name of the field.
@@ -995,6 +1002,37 @@ public:
       const dsize_t in_fieldOffset,
       AbstractClassRep::SetDataNotify in_setDataFn,
       AbstractClassRep::GetDataNotify in_getDataFn = &defaultProtectedGetFn,
+      const char* in_pFieldDocs = NULL,
+      U32 flags = 0);
+
+
+   static void addProtectedFieldV(const char* in_pFieldname,
+      const U32     in_fieldType,
+      const dsize_t in_fieldOffset,
+      AbstractClassRep::SetDataNotify in_setDataFn,
+      AbstractClassRep::GetDataNotify in_getDataFn = &defaultProtectedGetFn,
+      AbstractClassRep::WriteDataNotify in_writeDataFn = &defaultProtectedWriteFn,
+      TypeValidator* v  = NULL,
+      const U32     in_elementCount = 1,
+      const char* in_pFieldDocs = NULL,
+      U32 flags = 0);
+
+   static void addProtectedFieldV(const char* in_pFieldname,
+      const U32     in_fieldType,
+      const dsize_t in_fieldOffset,
+      AbstractClassRep::SetDataNotify in_setDataFn,
+      AbstractClassRep::GetDataNotify in_getDataFn = &defaultProtectedGetFn,
+      TypeValidator* v = NULL,
+      const U32     in_elementCount = 1,
+      const char* in_pFieldDocs = NULL,
+      U32 flags = 0);
+
+   static void addProtectedFieldV(const char* in_pFieldname,
+      const U32     in_fieldType,
+      const dsize_t in_fieldOffset,
+      AbstractClassRep::SetDataNotify in_setDataFn,
+      AbstractClassRep::GetDataNotify in_getDataFn = &defaultProtectedGetFn,
+      TypeValidator* v = NULL,
       const char* in_pFieldDocs = NULL,
       U32 flags = 0);
 

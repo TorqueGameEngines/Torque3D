@@ -24,6 +24,7 @@
 #include "sim/netConnection.h"
 #include "core/stream/bitStream.h"
 #include "core/module.h"
+#include "console/typeValidators.h"
 
 
 IMPLEMENT_CO_DATABLOCK_V1( SFXEnvironment );
@@ -145,51 +146,51 @@ void SFXEnvironment::initPersistFields()
    docsURL;
    addGroup( "Reverb" );
    
-   addField("reverbDensity", TypeF32, Offset(mReverb.flDensity, SFXEnvironment),
+   addFieldV("reverbDensity", TypeRangedF32, Offset(mReverb.flDensity, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Density of reverb environment.");
-   addField("reverbDiffusion", TypeF32, Offset(mReverb.flDiffusion, SFXEnvironment),
+   addFieldV("reverbDiffusion", TypeRangedF32, Offset(mReverb.flDiffusion, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Environment diffusion.");
-   addField("reverbGain", TypeF32, Offset(mReverb.flGain, SFXEnvironment),
+   addFieldV("reverbGain", TypeRangedF32, Offset(mReverb.flGain, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Reverb Gain Level.");
-   addField("reverbGainHF", TypeF32, Offset(mReverb.flGainHF, SFXEnvironment),
+   addFieldV("reverbGainHF", TypeRangedF32, Offset(mReverb.flGainHF, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Reverb Gain to high frequencies");
-   addField("reverbGainLF", TypeF32, Offset(mReverb.flGainLF, SFXEnvironment),
+   addFieldV("reverbGainLF", TypeRangedF32, Offset(mReverb.flGainLF, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Reverb Gain to high frequencies");
-   addField("reverbDecayTime", TypeF32, Offset(mReverb.flDecayTime, SFXEnvironment),
+   addFieldV("reverbDecayTime", TypeRangedF32, Offset(mReverb.flDecayTime, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Decay time for the reverb.");
-   addField("reverbDecayHFRatio", TypeF32, Offset(mReverb.flDecayHFRatio, SFXEnvironment),
+   addFieldV("reverbDecayHFRatio", TypeRangedF32, Offset(mReverb.flDecayHFRatio, SFXEnvironment), &CommonValidators::PositiveFloat,
       "High frequency decay time ratio.");
-   addField("reverbDecayLFRatio", TypeF32, Offset(mReverb.flDecayLFRatio, SFXEnvironment),
+   addFieldV("reverbDecayLFRatio", TypeRangedF32, Offset(mReverb.flDecayLFRatio, SFXEnvironment), &CommonValidators::PositiveFloat,
       "High frequency decay time ratio.");
-   addField("reflectionsGain", TypeF32, Offset(mReverb.flReflectionsGain, SFXEnvironment),
+   addFieldV("reflectionsGain", TypeRangedF32, Offset(mReverb.flReflectionsGain, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Reflection Gain.");
-   addField("reflectionDelay", TypeF32, Offset(mReverb.flReflectionsDelay, SFXEnvironment),
+   addFieldV("reflectionDelay", TypeRangedF32, Offset(mReverb.flReflectionsDelay, SFXEnvironment), &CommonValidators::PositiveFloat,
       "How long to delay reflections.");
-   addField("reflectionsPan", TypeF32, Offset(mReverb.flReflectionsPan, SFXEnvironment), 3,
+   addFieldV("reflectionsPan", TypeRangedF32, Offset(mReverb.flReflectionsPan, SFXEnvironment), &CommonValidators::F32Range, 3,
       "Reflection reverberation panning vector.");
-   addField("lateReverbGain", TypeF32, Offset(mReverb.flLateReverbGain, SFXEnvironment),
+   addFieldV("lateReverbGain", TypeRangedF32, Offset(mReverb.flLateReverbGain, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Late reverb gain amount.");
-   addField("lateReverbDelay", TypeF32, Offset(mReverb.flLateReverbDelay, SFXEnvironment),
+   addFieldV("lateReverbDelay", TypeRangedF32, Offset(mReverb.flLateReverbDelay, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Late reverb delay time.");
-   addField("lateReverbPan", TypeF32, Offset(mReverb.flLateReverbPan, SFXEnvironment), 3,
+   addFieldV("lateReverbPan", TypeRangedF32, Offset(mReverb.flLateReverbPan, SFXEnvironment), &CommonValidators::F32Range, 3,
       "Late reverberation panning vector.");
-   addField("reverbEchoTime", TypeF32, Offset(mReverb.flEchoTime, SFXEnvironment),
+   addFieldV("reverbEchoTime", TypeRangedF32, Offset(mReverb.flEchoTime, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Reverb echo time.");
-   addField("reverbEchoDepth", TypeF32, Offset(mReverb.flEchoDepth, SFXEnvironment),
+   addFieldV("reverbEchoDepth", TypeRangedF32, Offset(mReverb.flEchoDepth, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Reverb echo depth.");
-   addField("reverbModTime", TypeF32, Offset(mReverb.flModulationTime, SFXEnvironment),
+   addFieldV("reverbModTime", TypeRangedF32, Offset(mReverb.flModulationTime, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Reverb Modulation time.");
-   addField("reverbModDepth", TypeF32, Offset(mReverb.flModulationDepth, SFXEnvironment),
+   addFieldV("reverbModDepth", TypeRangedF32, Offset(mReverb.flModulationDepth, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Reverb Modulation time.");
-   addField("airAbsorbtionGainHF", TypeF32, Offset(mReverb.flAirAbsorptionGainHF, SFXEnvironment),
+   addFieldV("airAbsorbtionGainHF", TypeRangedF32, Offset(mReverb.flAirAbsorptionGainHF, SFXEnvironment), &CommonValidators::PositiveFloat,
       "High Frequency air absorbtion");
-   addField("reverbHFRef", TypeF32, Offset(mReverb.flHFReference, SFXEnvironment),
+   addFieldV("reverbHFRef", TypeRangedF32, Offset(mReverb.flHFReference, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Reverb High Frequency Reference.");
-   addField("reverbLFRef", TypeF32, Offset(mReverb.flLFReference, SFXEnvironment),
+   addFieldV("reverbLFRef", TypeRangedF32, Offset(mReverb.flLFReference, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Reverb Low Frequency Reference.");
-   addField("roomRolloffFactor", TypeF32, Offset(mReverb.flRoomRolloffFactor, SFXEnvironment),
+   addFieldV("roomRolloffFactor", TypeRangedF32, Offset(mReverb.flRoomRolloffFactor, SFXEnvironment), &CommonValidators::PositiveFloat,
       "Rolloff factor for reverb.");
-   addField("decayHFLimit", TypeS32, Offset(mReverb.iDecayHFLimit, SFXEnvironment),
+   addFieldV("decayHFLimit", TypeRangedS32, Offset(mReverb.iDecayHFLimit, SFXEnvironment), &CommonValidators::PositiveInt,
       "High Frequency decay limit.");
    endGroup("Reverb");
 

@@ -220,22 +220,22 @@ void afxMagicSpellData::initPersistFields()
   // for each effect list, dummy_fx_entry is set and then a validator adds it to the appropriate effects list
 
   addGroup("Casting Stage");
-  addField("castingDur",            TypeF32,        myOffset(mCasting_dur),
+  addFieldV("castingDur",            TypeRangedF32,        myOffset(mCasting_dur), &CommonValidators::PositiveFloat,
     "...");
-  addField("numCastingLoops",       TypeS32,        myOffset(mNum_casting_loops),
+  addFieldV("numCastingLoops",       TypeRangedS32,        myOffset(mNum_casting_loops), &CommonValidators::NaturalNumber,
     "...");
-  addField("extraCastingTime",      TypeF32,        myOffset(mExtra_casting_time),
+  addFieldV("extraCastingTime", TypeRangedF32,        myOffset(mExtra_casting_time), &CommonValidators::PositiveFloat,
     "...");
   addFieldV("addCastingEffect", TYPEID<afxEffectBaseData>(), Offset(mDummy_fx_entry, afxMagicSpellData), &_castingPhrase,
     "...");
   endGroup("Casting Stage");
 
   addGroup("Delivery Stage");
-  addField("deliveryDur",           TypeF32,        myOffset(mDelivery_dur),
+  addFieldV("deliveryDur", TypeRangedF32,        myOffset(mDelivery_dur), &CommonValidators::PositiveFloat,
     "...");
-  addField("numDeliveryLoops",      TypeS32,        myOffset(mNum_delivery_loops),
+  addFieldV("numDeliveryLoops", TypeRangedS32,        myOffset(mNum_delivery_loops), &CommonValidators::NaturalNumber,
     "...");
-  addField("extraDeliveryTime",     TypeF32,        myOffset(mExtra_delivery_time),
+  addFieldV("extraDeliveryTime", TypeRangedF32,        myOffset(mExtra_delivery_time), &CommonValidators::PositiveFloat,
     "...");
   addFieldV("addLaunchEffect", TYPEID<afxEffectBaseData>(), Offset(mDummy_fx_entry, afxMagicSpellData), &_launchPhrase,
     "...");
@@ -244,11 +244,11 @@ void afxMagicSpellData::initPersistFields()
   endGroup("Delivery Stage");
 
   addGroup("Linger Stage");
-  addField("lingerDur",             TypeF32,        myOffset(mLinger_dur),
+  addFieldV("lingerDur", TypeRangedF32,        myOffset(mLinger_dur), &CommonValidators::PositiveFloat,
     "...");
-  addField("numLingerLoops",        TypeS32,        myOffset(mNum_linger_loops),
+  addFieldV("numLingerLoops", TypeRangedS32,        myOffset(mNum_linger_loops), &CommonValidators::NaturalNumber,
     "...");
-  addField("extraLingerTime",       TypeF32,        myOffset(mExtra_linger_time),
+  addFieldV("extraLingerTime", TypeRangedF32,        myOffset(mExtra_linger_time), &CommonValidators::PositiveFloat,
     "...");
   addFieldV("addImpactEffect", TYPEID<afxEffectBaseData>(), Offset(mDummy_fx_entry, afxMagicSpellData), &_impactPhrase,
     "...");
@@ -259,7 +259,7 @@ void afxMagicSpellData::initPersistFields()
   // interrupt flags
   addField("allowMovementInterrupts", TypeBool,     myOffset(mDo_move_interrupts),
     "...");
-  addField("movementInterruptSpeed",  TypeF32,      myOffset(mMove_interrupt_speed),
+  addFieldV("movementInterruptSpeed", TypeRangedF32,      myOffset(mMove_interrupt_speed), &CommonValidators::PositiveFloat,
     "...");
 
   // delivers projectile spells

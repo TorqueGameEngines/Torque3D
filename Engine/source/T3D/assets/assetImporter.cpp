@@ -153,7 +153,7 @@ void AssetImportConfig::initPersistFields()
       addField("DoUpAxisOverride", TypeBool, Offset(DoUpAxisOverride, AssetImportConfig), "Indicates if the up axis in the model file should be overridden");
       addField("UpAxisOverride", TypeRealString, Offset(UpAxisOverride, AssetImportConfig), "If overriding, what axis should be used as up. Options are X_AXIS, Y_AXIS, Z_AXIS");
       addField("DoScaleOverride", TypeBool, Offset(DoScaleOverride, AssetImportConfig), "Indicates if the scale in the model file should be overridden");
-      addField("ScaleOverride", TypeF32, Offset(ScaleOverride, AssetImportConfig), "If overriding, what scale should be used");
+      addFieldV("ScaleOverride", TypeRangedF32, Offset(ScaleOverride, AssetImportConfig), &CommonValidators::PositiveFloat, "If overriding, what scale should be used");
       addField("IgnoreNodeScale", TypeBool, Offset(IgnoreNodeScale, AssetImportConfig), "Indicates if scale of nodes should be ignored");
       addField("AdjustCenter", TypeBool, Offset(AdjustCenter, AssetImportConfig), "Indicates if the center of the model file should be automatically recentered");
       addField("AdjustFloor", TypeBool, Offset(AdjustFloor, AssetImportConfig), "Indicates if the floor height of the model file should be automatically zero'd");
@@ -223,15 +223,15 @@ void AssetImportConfig::initPersistFields()
       addField("UseMips", TypeBool, Offset(UseMips, AssetImportConfig), "Indicates if images imported with this configuration utilize mipmaps");
 
       addField("IsHDR", TypeBool, Offset(IsHDR, AssetImportConfig), "Indicates if images imported with this configuration are in an HDR format");
-      addField("Scaling", TypeF32, Offset(Scaling, AssetImportConfig), "Indicates what amount of scaling images imported with this configuration use");
+      addFieldV("Scaling", TypeRangedF32, Offset(Scaling, AssetImportConfig), &CommonValidators::PositiveFloat, "Indicates what amount of scaling images imported with this configuration use");
       addField("ImagesCompressed", TypeBool, Offset(ImagesCompressed, AssetImportConfig), "Indicates if images imported with this configuration are compressed");
       addField("GenerateMaterialOnImport", TypeBool, Offset(GenerateMaterialOnImport, AssetImportConfig), "Indicates if images imported with this configuration generate a parent material for it as well");
    endGroup("Images");
 
    addGroup("Sounds");
       addField("importSounds", TypeBool, Offset(importSounds, AssetImportConfig), "Indicates if sounds are imported with this configuration");
-      addField("VolumeAdjust", TypeF32, Offset(VolumeAdjust, AssetImportConfig), "Indicates what amount the volume is adjusted on sounds imported with this configuration");
-      addField("PitchAdjust", TypeF32, Offset(PitchAdjust, AssetImportConfig), "Indicates what amount the pitch is adjusted on sounds imported with this configuration");
+      addFieldV("VolumeAdjust", TypeRangedF32, Offset(VolumeAdjust, AssetImportConfig), &CommonValidators::PositiveFloat, "Indicates what amount the volume is adjusted on sounds imported with this configuration");
+      addFieldV("PitchAdjust", TypeRangedF32, Offset(PitchAdjust, AssetImportConfig), &CommonValidators::PositiveFloat, "Indicates what amount the pitch is adjusted on sounds imported with this configuration");
       addField("SoundsCompressed", TypeBool, Offset(SoundsCompressed, AssetImportConfig), "Indicates if sounds imported with this configuration are compressed");
    endGroup("Sounds");
 }

@@ -100,15 +100,15 @@ GroundPlane::~GroundPlane()
    mConvexList->nukeList();
    SAFE_DELETE( mConvexList );
 }
-
+FRangeValidator squareSizeRange(sMIN_SQUARE_SIZE, FLT_MAX);
 void GroundPlane::initPersistFields()
 {
    docsURL;
    addGroup( "Plane" );
 
-      addField( "squareSize",    TypeF32,          Offset( mSquareSize, GroundPlane ), "Square size in meters to which %GroundPlane subdivides its geometry." );
-      addField( "scaleU",        TypeF32,          Offset( mScaleU, GroundPlane ), "Scale of texture repeat in the U direction." );
-      addField( "scaleV",        TypeF32,          Offset( mScaleV, GroundPlane ), "Scale of texture repeat in the V direction." );
+      addFieldV( "squareSize",    TypeRangedF32,          Offset( mSquareSize, GroundPlane ),&squareSizeRange, "Square size in meters to which %GroundPlane subdivides its geometry." );
+      addFieldV( "scaleU", TypeRangedF32,          Offset( mScaleU, GroundPlane ), &CommonValidators::PositiveFloat, "Scale of texture repeat in the U direction." );
+      addFieldV( "scaleV", TypeRangedF32,          Offset( mScaleV, GroundPlane ), &CommonValidators::PositiveFloat, "Scale of texture repeat in the V direction." );
 
       INITPERSISTFIELD_MATERIALASSET(Material, GroundPlane, "The material used to render the ground plane.");
 

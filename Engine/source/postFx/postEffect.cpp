@@ -568,7 +568,7 @@ void PostEffect::initPersistFields()
    addField( "renderBin", TypeRealString, Offset( mRenderBin, PostEffect ),
       "Name of a renderBin, used if renderTime is PFXBeforeBin or PFXAfterBin." );
 
-   addField( "renderPriority", TypeF32, Offset( mRenderPriority, PostEffect ), 
+   addFieldV( "renderPriority", TypeRangedF32, Offset( mRenderPriority, PostEffect ), &CommonValidators::PositiveFloat,
       "PostEffects are processed in DESCENDING order of renderPriority if more than one has the same renderBin/Time." );
 
    addField( "allowReflectPass", TypeBool, Offset( mAllowReflectPass, PostEffect ), 

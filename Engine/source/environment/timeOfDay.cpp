@@ -28,6 +28,7 @@
 #include "T3D/gameBase/gameConnection.h"
 #include "environment/sun.h"
 #include "console/engineAPI.h"
+#include "console/typeValidators.h"
 
 
 TimeOfDayUpdateSignal TimeOfDay::smTimeOfDayUpdateSignal;
@@ -127,24 +128,24 @@ void TimeOfDay::initPersistFields()
    docsURL;
 	  addGroup( "TimeOfDay" );
 
-      addField( "axisTilt", TypeF32, Offset( mAxisTilt, TimeOfDay ),
+      addFieldV( "axisTilt", TypeRangedF32, Offset( mAxisTilt, TimeOfDay ), &CommonValidators::DegreeRange,
             "The angle in degrees between global equator and tropic." );
 
-      addProtectedField( "dayLength", TypeF32, Offset( mDayLen, TimeOfDay ), &setDayLength, &defaultProtectedGetFn,
+      addProtectedFieldV( "dayLength", TypeRangedF32, Offset( mDayLen, TimeOfDay ), &setDayLength, &defaultProtectedGetFn, &CommonValidators::PositiveFloat,
             "The length of a virtual day in real world seconds." );
 
-      addField( "startTime", TypeF32, Offset( mStartTimeOfDay, TimeOfDay ),
+      addFieldV( "startTime", TypeRangedF32, Offset( mStartTimeOfDay, TimeOfDay ), &CommonValidators::NormalizedFloat,
          "" );
 
-      addProtectedField( "time", TypeF32, Offset( mTimeOfDay, TimeOfDay ), &setTimeOfDay, &defaultProtectedGetFn, "Current time of day." );
+      addProtectedFieldV( "time", TypeRangedF32, Offset( mTimeOfDay, TimeOfDay ), &setTimeOfDay, &defaultProtectedGetFn, &CommonValidators::NormalizedFloat, "Current time of day." );
 
       addProtectedField( "play", TypeBool, Offset( mPlay, TimeOfDay ), &setPlay, &defaultProtectedGetFn, "True when the TimeOfDay object is operating." );
 
-      addField( "azimuthOverride", TypeF32, Offset( mAzimuthOverride, TimeOfDay ), "" );
+      addFieldV( "azimuthOverride", TypeRangedF32, Offset( mAzimuthOverride, TimeOfDay ), &CommonValidators::PosDegreeRange, "" );
 
-      addField( "dayScale", TypeF32, Offset( mDayScale, TimeOfDay ), "Scalar applied to time that elapses while the sun is up." );
+      addFieldV( "dayScale", TypeRangedF32, Offset( mDayScale, TimeOfDay ), &CommonValidators::PositiveFloat, "Scalar applied to time that elapses while the sun is up." );
 
-      addField( "nightScale", TypeF32, Offset( mNightScale, TimeOfDay ), "Scalar applied to time that elapses while the sun is down." );
+      addFieldV( "nightScale", TypeRangedF32, Offset( mNightScale, TimeOfDay ), &CommonValidators::PositiveFloat, "Scalar applied to time that elapses while the sun is down." );
 
    endGroup( "TimeOfDay" );
 

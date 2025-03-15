@@ -219,9 +219,9 @@ void TSStatic::initPersistFields()
    addGroup("Animation");
    addField("playAmbient", TypeBool, Offset(mPlayAmbient, TSStatic),
       "Enables automatic playing of the animation sequence named \"ambient\" (if it exists) when the TSStatic is loaded.");
-   addFieldV("AnimOffset", TypeF32, Offset(mAnimOffset, TSStatic), &percentValidator,
+   addFieldV("AnimOffset", TypeRangedF32, Offset(mAnimOffset, TSStatic), &percentValidator,
       "Percent Animation Offset.");
-   addFieldV("AnimSpeed", TypeF32, Offset(mAnimSpeed, TSStatic), &speedValidator,
+   addFieldV("AnimSpeed", TypeRangedF32, Offset(mAnimSpeed, TSStatic), &speedValidator,
       "Percent Animation Speed.");
    endGroup("Animation");
 
@@ -253,16 +253,16 @@ void TSStatic::initPersistFields()
 
    addGroup("AlphaFade");
    addField("alphaFadeEnable", TypeBool, Offset(mUseAlphaFade, TSStatic), "Turn on/off Alpha Fade");
-   addField("alphaFadeStart", TypeF32, Offset(mAlphaFadeStart, TSStatic), "Distance of start Alpha Fade");
-   addField("alphaFadeEnd", TypeF32, Offset(mAlphaFadeEnd, TSStatic), "Distance of end Alpha Fade");
+   addFieldV("alphaFadeStart", TypeRangedF32, Offset(mAlphaFadeStart, TSStatic), &CommonValidators::PositiveFloat, "Distance of start Alpha Fade");
+   addFieldV("alphaFadeEnd", TypeRangedF32, Offset(mAlphaFadeEnd, TSStatic), &CommonValidators::PositiveFloat, "Distance of end Alpha Fade");
    addField("alphaFadeInverse", TypeBool, Offset(mInvertAlphaFade, TSStatic), "Invert Alpha Fade's Start & End Distance");
    endGroup("AlphaFade");
 
    addGroup("Debug");
 
-   addField("renderNormals", TypeF32, Offset(mRenderNormalScalar, TSStatic),
+   addFieldV("renderNormals", TypeRangedF32, Offset(mRenderNormalScalar, TSStatic), &CommonValidators::PositiveFloat,
       "Debug rendering mode shows the normals for each point in the TSStatic's mesh.");
-   addField("forceDetail", TypeS32, Offset(mForceDetail, TSStatic),
+   addFieldV("forceDetail", TypeRangedS32, Offset(mForceDetail, TSStatic), &CommonValidators::PositiveInt,
       "Forces rendering to a particular detail level.");
 
    endGroup("Debug");

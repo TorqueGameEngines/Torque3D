@@ -140,11 +140,11 @@ EndImplementEnumType;
 void afxPhraseEffectData::initPersistFields()
 {
    docsURL;
-  addField("duration",    TypeF32,      myOffset(duration),
+  addFieldV("duration",    TypeRangedF32,      myOffset(duration), &CommonValidators::NegDefaultF32,
     "Specifies a duration for the phrase-effect. If set to infinity, the phrase-effect "
     "needs to have a phraseType of continuous. Set infinite duration using "
     "$AFX::INFINITE_TIME.");
-  addField("numLoops",    TypeS32,      myOffset(n_loops),
+  addFieldV("numLoops", TypeRangedS32,      myOffset(n_loops), &CommonValidators::NegDefaultInt,
     "Specifies the number of times the phrase-effect should loop. If set to infinity, "
     "the phrase-effect needs to have a phraseType of continuous. Set infinite looping "
     "using $AFX::INFINITE_REPEATS.");

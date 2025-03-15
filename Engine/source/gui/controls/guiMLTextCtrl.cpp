@@ -32,6 +32,7 @@
 #include "sfx/sfxTrack.h"
 #include "sfx/sfxTypes.h"
 #include "console/engineAPI.h"
+#include "console/typeValidators.h"
 
 IMPLEMENT_CONOBJECT( GuiMLTextCtrl );
 
@@ -301,18 +302,18 @@ void GuiMLTextCtrl::initPersistFields()
    docsURL;
    addGroup( "Text" );
    
-      addField("lineSpacing",       TypeS32,    Offset(mLineSpacingPixels, GuiMLTextCtrl), "The number of blank pixels to place between each line.\n");
+      addFieldV("lineSpacing",       TypeRangedS32,    Offset(mLineSpacingPixels, GuiMLTextCtrl), &CommonValidators::PositiveInt, "The number of blank pixels to place between each line.\n");
       addField("allowColorChars",   TypeBool,   Offset(mAllowColorChars,   GuiMLTextCtrl), "If true, the control will allow characters to have unique colors.");
-      addField("maxChars",          TypeS32,    Offset(mMaxBufferSize,     GuiMLTextCtrl), "Maximum number of characters that the control will display.");
+      addFieldV("maxChars", TypeRangedS32,    Offset(mMaxBufferSize,     GuiMLTextCtrl), &CommonValidators::NegDefaultInt, "Maximum number of characters that the control will display.");
       INITPERSISTFIELD_SOUNDASSET(DeniedSound, GuiMLTextCtrl, "If the text will not fit in the control, the deniedSound is played.");
       addField("text",              TypeCaseString,  Offset( mInitialText, GuiMLTextCtrl ), "Text to display in this control.");
       addField("useURLMouseCursor", TypeBool,   Offset(mUseURLMouseCursor,   GuiMLTextCtrl), "If true, the mouse cursor will turn into a hand cursor while over a link in the text.\n"
                                                                       "This is dependant on the markup language used by the GuiMLTextCtrl\n");
 
       addField("useTypeOverTime", TypeBool, Offset(mUseTypeOverTime, GuiMLTextCtrl), "");
-      addField("typeOverTimeSpeedMS", TypeF32, Offset(mTypeOverTimeSpeedMS, GuiMLTextCtrl), "");
+      addFieldV("typeOverTimeSpeedMS", TypeRangedF32, Offset(mTypeOverTimeSpeedMS, GuiMLTextCtrl), &CommonValidators::PositiveFloat, "");
       addField("typeoutSound", TypeSFXTrackName, Offset(mTypeoutSound, GuiMLTextCtrl), "Played when the text is being typed out");
-      addField("typeoutSoundRate", TypeS32, Offset(mTypeoutSoundRate, GuiMLTextCtrl), "Dictates how many characters must be typed out before the sound is played again. -1 for the sound to only play once at the start.");
+      addFieldV("typeoutSoundRate", TypeRangedS32, Offset(mTypeoutSoundRate, GuiMLTextCtrl), &CommonValidators::NegDefaultInt, "Dictates how many characters must be typed out before the sound is played again. -1 for the sound to only play once at the start.");
    
    endGroup( "Text" );
    

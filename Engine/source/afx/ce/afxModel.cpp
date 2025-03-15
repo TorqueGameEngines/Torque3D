@@ -180,18 +180,18 @@ void afxModelData::initPersistFields()
    addGroup("Animation");
       addField("sequence",              TypeString, myOffset(sequence),
          "The name of an animation sequence to play in the model.");
-      addField("sequenceRate",          TypeF32,      myOffset(seq_rate),
+      addFieldV("sequenceRate", TypeRangedF32,      myOffset(seq_rate), &CommonValidators::F32Range,
          "The rate of playback for the sequence.");
-      addField("sequenceOffset",        TypeF32,      myOffset(seq_offset),
+      addFieldV("sequenceOffset", TypeRangedF32,      myOffset(seq_offset), &CommonValidators::F32Range,
          "An offset in seconds indicating a starting point for the animation sequence "
          "specified by the sequence field. A rate of 1.0 (rather than sequenceRate) is used "
          "to convert from seconds to the thread offset.");
    endGroup("Animation");
 
    addGroup("Rendering");
-      addField("alphaMult",             TypeF32,      myOffset(alpha_mult),
+      addFieldV("alphaMult", TypeRangedF32,      myOffset(alpha_mult), &CommonValidators::PositiveFloat,
          "An alpha multiplier used to set maximum opacity of the model.");
-      addField("fogMult",               TypeF32,      myOffset(fog_mult), "");
+      addFieldV("fogMult", TypeRangedF32,      myOffset(fog_mult), &CommonValidators::PositiveFloat, "");
       addField("remapTextureTags",      TypeString,   myOffset(remap_txr_tags),
          "Rename one or more texture tags in the model. Texture tags are what link a "
          "model's textures to materials.\n"

@@ -127,7 +127,7 @@ IMPLEMENT_CALLBACK( GameBase, setControl, void, ( bool controlled ), ( controlle
 
 GameBaseData::GameBaseData()
 {
-   mCategory = "";
+   mCategory = StringTable->EmptyString();
    mPacked = false;
 }
 GameBaseData::GameBaseData(const GameBaseData& other, bool temp_clone) : SimDataBlock(other, temp_clone)

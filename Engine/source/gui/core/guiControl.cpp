@@ -39,6 +39,7 @@
 #include "gui/core/guiDefaultControlRender.h"
 #include "gui/editor/guiEditCtrl.h"
 #include "gfx/gfxDrawUtil.h"
+#include "console/typeValidators.h"
 
 
 //#define DEBUG_SPEW
@@ -306,7 +307,7 @@ void GuiControl::initPersistFields()
          "Control profile to use when rendering tooltips for this control." );
       addField("tooltip",           TypeRealString,   Offset(mTooltip, GuiControl),
          "String to show in tooltip for this control." );
-      addField("hovertime",         TypeS32,          Offset(mTipHoverTime, GuiControl),
+      addFieldV("hovertime",         TypeRangedS32,          Offset(mTipHoverTime, GuiControl), &CommonValidators::PositiveInt,
          "Time for mouse to hover over control until tooltip is shown (in milliseconds)." );
    endGroup( "ToolTip" );
 

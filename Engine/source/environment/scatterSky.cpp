@@ -42,6 +42,7 @@
 #include "materials/sceneData.h"
 #include "environment/timeOfDay.h"
 #include "materials/materialFeatureTypes.h"
+#include "console/typeValidators.h"
 
 
 ConsoleDocClass( ScatterSky,
@@ -324,19 +325,19 @@ void ScatterSky::initPersistFields()
    addGroup( "ScatterSky",
       "Only azimuth and elevation are networked fields. To trigger a full update of all other fields use the applyChanges ConsoleMethod." );
 
-      addField( "skyBrightness",       TypeF32,    Offset( mSkyBrightness, ScatterSky ),
+      addFieldV( "skyBrightness", TypeRangedF32,    Offset( mSkyBrightness, ScatterSky ), &CommonValidators::PositiveFloat,
          "Global brightness and intensity applied to the sky and objects in the level." );
 
-      addField( "sunSize",             TypeF32,    Offset( mSunSize, ScatterSky ),
+      addFieldV( "sunSize", TypeRangedF32,    Offset( mSunSize, ScatterSky ), &CommonValidators::PositiveFloat,
          "Affects the size of the sun's disk." );
 
-      addField( "colorizeAmount",      TypeF32,    Offset( mColorizeAmt, ScatterSky ),
+      addFieldV( "colorizeAmount", TypeRangedF32,    Offset( mColorizeAmt, ScatterSky ), &CommonValidators::PositiveFloat,
          "Controls how much the alpha component of colorize brigthens the sky. Setting to 0 returns default behavior." );
 
       addField( "colorize",            TypeColorF, Offset( mColorize, ScatterSky ),
          "Tints the sky the color specified, the alpha controls the brigthness. The brightness is multipled by the value of colorizeAmt." );
 
-      addField( "rayleighScattering",  TypeF32,    Offset( mRayleighScattering, ScatterSky ),
+      addFieldV( "rayleighScattering", TypeRangedF32,    Offset( mRayleighScattering, ScatterSky ), &CommonValidators::PositiveFloat,
          "Controls how blue the atmosphere is during the day." );
 
       addField( "sunScale",            TypeColorF, Offset( mSunScale, ScatterSky ),
@@ -350,26 +351,26 @@ void ScatterSky::initPersistFields()
          "property, so you should not use LevelInfo.fogColor if the level contains "
          "a ScatterSky object." );
 
-      addField( "exposure",            TypeF32,    Offset( mExposure, ScatterSky ),
+      addFieldV( "exposure", TypeRangedF32,    Offset( mExposure, ScatterSky ), &CommonValidators::PositiveFloat,
          "Controls the contrast of the sky and sun during daytime." );
 
-      addField( "zOffset",             TypeF32,     Offset( mZOffset, ScatterSky ),  
+      addFieldV( "zOffset", TypeRangedF32,     Offset( mZOffset, ScatterSky ), &CommonValidators::F32Range,
          "Offsets the scatterSky to avoid canvas rendering. Use 5000 or greater for the initial adjustment" );  
 
    endGroup( "ScatterSky" );
 
    addGroup( "Orbit" );
 
-      addProtectedField( "azimuth", TypeF32, Offset( mSunAzimuth, ScatterSky ), &ScatterSky::ptSetAzimuth, &defaultProtectedGetFn,
+      addProtectedFieldV( "azimuth", TypeRangedF32, Offset( mSunAzimuth, ScatterSky ), &ScatterSky::ptSetAzimuth, &defaultProtectedGetFn, &CommonValidators::PosDegreeRange,
          "The horizontal angle of the sun measured clockwise from the positive Y world axis. This field is networked." );
 
-      addProtectedField( "elevation", TypeF32, Offset( mSunElevation, ScatterSky ), &ScatterSky::ptSetElevation, &defaultProtectedGetFn,
+      addProtectedFieldV( "elevation", TypeRangedF32, Offset( mSunElevation, ScatterSky ), &ScatterSky::ptSetElevation, &defaultProtectedGetFn, &CommonValidators::DegreeRange,
          "The elevation angle of the sun above or below the horizon. This field is networked." );
 
-      addField( "moonAzimuth", TypeF32, Offset( mMoonAzimuth, ScatterSky ),
+      addFieldV( "moonAzimuth", TypeRangedF32, Offset( mMoonAzimuth, ScatterSky ), &CommonValidators::PosDegreeRange,
          "The horizontal angle of the moon measured clockwise from the positive Y world axis. This is not animated by time or networked." );
 
-      addField( "moonElevation", TypeF32, Offset( mMoonElevation, ScatterSky ),
+      addFieldV( "moonElevation", TypeRangedF32, Offset( mMoonElevation, ScatterSky ), &CommonValidators::DegreeRange,
          "The elevation angle of the moon above or below the horizon. This is not animated by time or networked." );
 
    endGroup( "Orbit" );
@@ -382,11 +383,11 @@ void ScatterSky::initPersistFields()
 
       addField( "castShadows", TypeBool, Offset( mCastShadows, ScatterSky ),
          "Enables/disables shadows cast by objects due to ScatterSky light." );
-
+      /*
       addField("staticRefreshFreq", TypeS32, Offset(mStaticRefreshFreq, ScatterSky), "static shadow refresh rate (milliseconds)");
       addField("dynamicRefreshFreq", TypeS32, Offset(mDynamicRefreshFreq, ScatterSky), "dynamic shadow refresh rate (milliseconds)");
-
-      addField( "brightness", TypeF32, Offset( mBrightness, ScatterSky ),
+      */
+      addFieldV( "brightness", TypeRangedF32, Offset( mBrightness, ScatterSky ), &CommonValidators::PositiveFloat,
          "The brightness of the ScatterSky's light object." );
 
    endGroup( "Lighting" );
@@ -396,7 +397,7 @@ void ScatterSky::initPersistFields()
       addField( "flareType", TYPEID< LightFlareData >(), Offset( mFlareData, ScatterSky ),
          "Datablock for the flare produced by the ScatterSky." );
 
-      addField( "flareScale", TypeF32, Offset( mFlareScale, ScatterSky ),
+      addFieldV( "flareScale", TypeRangedF32, Offset( mFlareScale, ScatterSky ), &CommonValidators::PositiveFloat,
          "Changes the size and intensity of the flare." );
 
    endGroup( "Misc" );
@@ -414,7 +415,7 @@ void ScatterSky::initPersistFields()
 
       INITPERSISTFIELD_MATERIALASSET(MoonMat, ScatterSky, "Material for the moon sprite.");
 
-      addField( "moonScale", TypeF32, Offset( mMoonScale, ScatterSky ),
+      addFieldV( "moonScale", TypeRangedF32, Offset( mMoonScale, ScatterSky ), &CommonValidators::PositiveFloat,
          "Controls size the moon sprite renders, specified as a fractional amount of the screen height." );
 
       addField( "moonLightColor", TypeColorF, Offset( mMoonTint, ScatterSky ),

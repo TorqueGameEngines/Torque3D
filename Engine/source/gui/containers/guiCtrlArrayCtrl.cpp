@@ -56,15 +56,15 @@ void GuiControlArrayControl::initPersistFields()
    docsURL;
    addGroup( "Array" );
    
-      addField( "colCount",     TypeS32,       Offset(mCols,        GuiControlArrayControl),
+      addFieldV( "colCount", TypeRangedS32,       Offset(mCols,        GuiControlArrayControl), &CommonValidators::PositiveInt,
          "Number of colums in the array." );
       addField( "colSizes",     TypeS32Vector, Offset(mColumnSizes, GuiControlArrayControl),
          "Size of each individual column." );
-      addField( "rowSize",      TypeS32,       Offset(mRowSize,     GuiControlArrayControl),
+      addFieldV( "rowSize", TypeRangedS32,       Offset(mRowSize,     GuiControlArrayControl), &CommonValidators::PositiveInt,
          "Heigth of a row in the array." );
-      addField( "rowSpacing",   TypeS32,       Offset(mRowSpacing,  GuiControlArrayControl),
+      addFieldV( "rowSpacing", TypeRangedS32,       Offset(mRowSpacing,  GuiControlArrayControl), &CommonValidators::PositiveInt,
          "Padding to put between rows." );
-      addField( "colSpacing",   TypeS32,       Offset(mColSpacing,  GuiControlArrayControl),
+      addFieldV( "colSpacing", TypeRangedS32,       Offset(mColSpacing,  GuiControlArrayControl), &CommonValidators::PositiveInt,
          "Padding to put between columns." );
       
    endGroup( "Array" );

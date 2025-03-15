@@ -96,7 +96,7 @@ void GuiTextCtrl::initPersistFields()
    addField( "textID",     TypeString,      Offset( mInitialTextID, GuiTextCtrl ),
       "Maps the text of this control to a variable used in localization, rather than raw text.");   
 
-   addField( "maxLength",  TypeS32,         Offset( mMaxStrLen, GuiTextCtrl ),
+   addFieldV( "maxLength", TypeRangedS32,         Offset( mMaxStrLen, GuiTextCtrl ), &CommonValidators::PositiveInt,
       "Defines the maximum length of the text.  The default is 1024." );
 
    Parent::initPersistFields();    

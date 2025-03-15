@@ -39,6 +39,7 @@
 #include "math/mathTypes.h"
 #include "console/simBase.h"
 #include "console/engineAPI.h"
+#include "console/typeValidators.h"
 
 
 IMPLEMENT_CO_DATABLOCK_V1( SFXDescription );
@@ -225,13 +226,13 @@ void SFXDescription::initPersistFields()
          "For example, one use of groups is to segregate sounds so that volume levels of different sound "
          "groups such as interface audio and game audio can be controlled independently.\n\n"
          "@ref SFXSource_hierarchies" );
-      addField( "volume",              TypeF32, Offset( mVolume, SFXDescription ),
+      addFieldV( "volume", TypeRangedF32, Offset( mVolume, SFXDescription ), &CommonValidators::PositiveFloat,
          "Base volume level for the sound.\n\n"
          "This will be the starting point for volume attenuation on the sound.  The final effective volume of "
          "a sound will be dependent on a number of parameters.\n\n"
          "Must be between 0 (mute) and 1 (full volume).  Default is 1.\n\n"
          "@ref SFXSource_volume" );
-      addField( "pitch",               TypeF32, Offset( mPitch, SFXDescription ),
+      addFieldV( "pitch", TypeRangedF32, Offset( mPitch, SFXDescription ), &CommonValidators::PositiveFloat,
          "Pitch shift to apply to playback.\n\n"
          "The pitch assigned to a sound determines the speed at which it is played back.  A pitch shift of 1 plays the "
          "sound at its default speed.  A greater shift factor speeds up playback and a smaller shift factor slows it down.\n\n"
@@ -239,7 +240,7 @@ void SFXDescription::initPersistFields()
       addField( "isLooping",           TypeBool, Offset( mIsLooping, SFXDescription ),
          "If true, the sound will be played in an endless loop.\n\n"
          "Default is false." );
-      addField( "priority",            TypeF32, Offset( mPriority, SFXDescription ),
+      addFieldV( "priority", TypeRangedF32, Offset( mPriority, SFXDescription ), &CommonValidators::PositiveFloat,
          "Priority level for virtualization of sounds (1 = base level).\n"
          "When there are more concurrently active sounds than supported by the audio mixer, some of the sounds "
          "need to be culled.  Which sounds are culled first depends primarily on total audibility of individual sounds. "
@@ -260,11 +261,11 @@ void SFXDescription::initPersistFields()
    
    addGroup( "Fading" );
    
-      addField( "fadeInTime",          TypeF32,    Offset( mFadeInTime, SFXDescription ),
+      addFieldV( "fadeInTime", TypeRangedF32,    Offset( mFadeInTime, SFXDescription ), &CommonValidators::PositiveFloat,
          "Number of seconds to gradually fade in volume from zero when playback starts.\n"
          "Must be >= 0.\n\n"
          "@ref SFXSource_fades" );
-      addField( "fadeOutTime",         TypeF32,    Offset( mFadeOutTime, SFXDescription ),
+      addFieldV( "fadeOutTime", TypeRangedF32,    Offset( mFadeOutTime, SFXDescription ), &CommonValidators::PositiveFloat,
          "Number of seconds to gradually fade out volume down to zero when playback is stopped or paused.\n"
          "Must be >=0.\n\n"
          "@ref SFXSource_fades" );
@@ -300,7 +301,7 @@ void SFXDescription::initPersistFields()
             "determines up front which is the case for a given sound.\n\n"
          "@ref SFX_3d\n"
          "@ref SFXSource_volume" );
-      addField( "referenceDistance",   TypeF32,    Offset( mMinDistance, SFXDescription ),
+      addFieldV( "referenceDistance", TypeRangedF32,    Offset( mMinDistance, SFXDescription ), &CommonValidators::PositiveFloat,
          "Distance at which volume attenuation begins.\n"
          "Up to this distance, the sound retains its base volume.\n\n"
          "In the linear distance model, the volume will linearly from this distance onwards up to maxDistance where it "
@@ -313,7 +314,7 @@ void SFXDescription::initPersistFields()
          "@see LevelInfo::soundDistanceModel\n\n"
          "@ref SFX_3d\n"
          "@ref SFXSource_volume" );
-      addField( "maxDistance",         TypeF32,    Offset( mMaxDistance, SFXDescription ),
+      addFieldV( "maxDistance", TypeRangedF32,    Offset( mMaxDistance, SFXDescription ), &CommonValidators::PositiveFloat,
          "The distance at which attenuation stops.\n"
          "In the linear distance model, the attenuated volume will be zero at this distance.\n\n"
          "In the logarithmic model, attenuation will simply stop at this distance and the sound will keep its attenuated "
@@ -333,14 +334,14 @@ void SFXDescription::initPersistFields()
          "y += rand( - scatterDistance[ 1 ], scatterDistance[ 1 ] );\n"
          "z += rand( - scatterDistance[ 2 ], scatterDistance[ 2 ] );\n"
          "@endverbatim\n" );
-      addField( "coneInsideAngle",     TypeS32,    Offset( mConeInsideAngle, SFXDescription ),
+      addFieldV( "coneInsideAngle",     TypeRangedS32,    Offset( mConeInsideAngle, SFXDescription ), &CommonValidators::S32_PosDegreeRange,
          "Inner sound cone angle in degrees.\n"
          "This value determines the angle of the inner volume cone that protrudes out in the direction "
          "of a sound.  Within this cone, the sound source retains full volume that is unaffected by sound cone "
          "settings (though still affected by distance attenuation.)\n\n"
          "Valid values are from 0 to 360. Must be less than coneOutsideAngle. Default is 360. Only for 3D sounds.\n\n"
          "@ref SFXSource_cones" );
-      addField( "coneOutsideAngle",    TypeS32,    Offset( mConeOutsideAngle, SFXDescription ),
+      addFieldV( "coneOutsideAngle", TypeRangedS32,    Offset( mConeOutsideAngle, SFXDescription ), &CommonValidators::S32_PosDegreeRange,
          "Outer sound cone angle in degrees.\n"
          "This value determines the angle of the outer volume cone that protrudes out in the direction of a sound "
          "and surrounds the inner volume cone.  Within this cone, volume will linearly interpolate from the outer cone "
@@ -348,14 +349,14 @@ void SFXDescription::initPersistFields()
          "up/down to the full base volume.\n\n"
          "Valid values are from 0 to 360.  Must be >= coneInsideAngle.  Default is 360.  Only for 3D sounds.\n\n"
          "@ref SFXSource_cones" );
-      addField( "coneOutsideVolume",   TypeF32,    Offset( mConeOutsideVolume, SFXDescription ),
+      addFieldV( "coneOutsideVolume",   TypeRangedF32,    Offset( mConeOutsideVolume, SFXDescription ), &CommonValidators::NormalizedFloat,
          "Determines the volume scale factor applied the a source's base volume level outside of the outer cone.\n"
          "In the outer cone, starting from outside the inner cone, the scale factor smoothly interpolates from 1.0 (within the inner cone) "
          "to this value.  At the moment, the allowed range is 0.0 (silence) to 1.0 (no attenuation) as amplification is only supported on "
          "XAudio2 but not on the other devices.\n\n"
          "Only for 3D sound.\n\n"
          "@ref SFXSource_cones" );
-      addField( "rolloffFactor",       TypeF32,    Offset( mRolloffFactor, SFXDescription ),
+      addFieldV( "rolloffFactor", TypeRangedF32,    Offset( mRolloffFactor, SFXDescription ), &CommonValidators::NegDefaultF32,
          "Scale factor to apply to logarithmic distance attenuation curve.  If -1, the global rolloff setting is used.\n\n"
          "@note Per-sound rolloff is only supported on OpenAL at the moment.  With other divices, the global rolloff setting "
             "is used for all sounds.\n"
@@ -368,7 +369,7 @@ void SFXDescription::initPersistFields()
       addField( "isStreaming",         TypeBool,   Offset( mIsStreaming, SFXDescription ),
          "If true, incrementally stream sounds; otherwise sounds are loaded in full.\n\n"
          "@ref SFX_streaming" );
-      addField( "streamPacketSize",    TypeS32,    Offset( mStreamPacketSize, SFXDescription ),
+      addFieldV( "streamPacketSize",    TypeRangedS32,    Offset( mStreamPacketSize, SFXDescription ), &CommonValidators::S32_8BitCap,
          "Number of seconds of sample data per single streaming packet.\n"
          "This field allows to fine-tune streaming for individual sounds.  The streaming system "
          "processes streamed sounds in batches called packets.  Each packet will contain a set amount "
@@ -376,7 +377,7 @@ void SFXDescription::initPersistFields()
          "packet contains, the more work is done per packet.\n\n"
          "@note This field only takes effect when Torque's own sound system performs the streaming. "
          "@ref SFX_streaming" );
-      addField( "streamReadAhead",     TypeS32,    Offset( mStreamReadAhead, SFXDescription ),
+      addFieldV( "streamReadAhead",     TypeRangedS32,    Offset( mStreamReadAhead, SFXDescription ), &CommonValidators::S32_8BitCap,
          "Number of sample packets to read and buffer in advance.\n"
          "This field determines the number of packets that the streaming system will try to keep buffered "
          "in advance.  As such it determines the number of packets that can be consumed by the sound "
@@ -395,47 +396,47 @@ void SFXDescription::initPersistFields()
       "a custom reverb setup can be defined using the \"Reverb\" properties that will then be assigned "
       "to sounds playing with the description.\n\n"
       "@ref SFX_reverb");
-   addField("reverbDensity", TypeF32, Offset(mReverb.flDensity, SFXDescription),
+   addFieldV("reverbDensity", TypeRangedF32, Offset(mReverb.flDensity, SFXDescription), &CommonValidators::PositiveFloat,
       "Density of reverb environment.");
-   addField("reverbDiffusion", TypeF32, Offset(mReverb.flDiffusion, SFXDescription),
+   addFieldV("reverbDiffusion", TypeRangedF32, Offset(mReverb.flDiffusion, SFXDescription), &CommonValidators::PositiveFloat,
       "Environment diffusion.");
-   addField("reverbGain", TypeF32, Offset(mReverb.flGain, SFXDescription),
+   addFieldV("reverbGain", TypeRangedF32, Offset(mReverb.flGain, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb Gain Level.");
-   addField("reverbGainHF", TypeF32, Offset(mReverb.flGainHF, SFXDescription),
+   addFieldV("reverbGainHF", TypeRangedF32, Offset(mReverb.flGainHF, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb Gain to high frequencies");
-   addField("reverbGainLF", TypeF32, Offset(mReverb.flGainLF, SFXDescription),
+   addFieldV("reverbGainLF", TypeRangedF32, Offset(mReverb.flGainLF, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb Gain to high frequencies");
-   addField("reverbDecayTime", TypeF32, Offset(mReverb.flDecayTime, SFXDescription),
+   addFieldV("reverbDecayTime", TypeRangedF32, Offset(mReverb.flDecayTime, SFXDescription), &CommonValidators::PositiveFloat,
       "Decay time for the reverb.");
-   addField("reverbDecayHFRatio", TypeF32, Offset(mReverb.flDecayHFRatio, SFXDescription),
+   addFieldV("reverbDecayHFRatio", TypeRangedF32, Offset(mReverb.flDecayHFRatio, SFXDescription), &CommonValidators::PositiveFloat,
       "High frequency decay time ratio.");
-   addField("reverbDecayLFRatio", TypeF32, Offset(mReverb.flDecayLFRatio, SFXDescription),
+   addFieldV("reverbDecayLFRatio", TypeRangedF32, Offset(mReverb.flDecayLFRatio, SFXDescription), &CommonValidators::PositiveFloat,
       "High frequency decay time ratio.");
-   addField("reflectionsGain", TypeF32, Offset(mReverb.flReflectionsGain, SFXDescription),
+   addFieldV("reflectionsGain", TypeRangedF32, Offset(mReverb.flReflectionsGain, SFXDescription), &CommonValidators::PositiveFloat,
       "Reflection Gain.");
-   addField("reflectionDelay", TypeF32, Offset(mReverb.flReflectionsDelay, SFXDescription),
+   addFieldV("reflectionDelay", TypeRangedF32, Offset(mReverb.flReflectionsDelay, SFXDescription), &CommonValidators::PositiveFloat,
       "How long to delay reflections.");
-   addField("lateReverbGain", TypeF32, Offset(mReverb.flLateReverbGain, SFXDescription),
+   addFieldV("lateReverbGain", TypeRangedF32, Offset(mReverb.flLateReverbGain, SFXDescription), &CommonValidators::PositiveFloat,
       "Late reverb gain amount.");
-   addField("lateReverbDelay", TypeF32, Offset(mReverb.flLateReverbDelay, SFXDescription),
+   addFieldV("lateReverbDelay", TypeRangedF32, Offset(mReverb.flLateReverbDelay, SFXDescription), &CommonValidators::PositiveFloat,
       "Late reverb delay time.");
-   addField("reverbEchoTime", TypeF32, Offset(mReverb.flEchoTime, SFXDescription),
+   addFieldV("reverbEchoTime", TypeRangedF32, Offset(mReverb.flEchoTime, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb echo time.");
-   addField("reverbEchoDepth", TypeF32, Offset(mReverb.flEchoDepth, SFXDescription),
+   addFieldV("reverbEchoDepth", TypeRangedF32, Offset(mReverb.flEchoDepth, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb echo depth.");
-   addField("reverbModTime", TypeF32, Offset(mReverb.flModulationTime, SFXDescription),
+   addFieldV("reverbModTime", TypeRangedF32, Offset(mReverb.flModulationTime, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb Modulation time.");
-   addField("reverbModDepth", TypeF32, Offset(mReverb.flModulationDepth, SFXDescription),
+   addFieldV("reverbModDepth", TypeRangedF32, Offset(mReverb.flModulationDepth, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb Modulation Depth.");
-   addField("airAbsorbtionGainHF", TypeF32, Offset(mReverb.flAirAbsorptionGainHF, SFXDescription),
+   addFieldV("airAbsorbtionGainHF", TypeRangedF32, Offset(mReverb.flAirAbsorptionGainHF, SFXDescription), &CommonValidators::PositiveFloat,
       "High Frequency air absorbtion");
-   addField("reverbHFRef", TypeF32, Offset(mReverb.flHFReference, SFXDescription),
+   addFieldV("reverbHFRef", TypeRangedF32, Offset(mReverb.flHFReference, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb High Frequency Reference.");
-   addField("reverbLFRef", TypeF32, Offset(mReverb.flLFReference, SFXDescription),
+   addFieldV("reverbLFRef", TypeRangedF32, Offset(mReverb.flLFReference, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb Low Frequency Reference.");
-   addField("roomRolloffFactor", TypeF32, Offset(mReverb.flRoomRolloffFactor, SFXDescription),
+   addFieldV("roomRolloffFactor", TypeRangedF32, Offset(mReverb.flRoomRolloffFactor, SFXDescription), &CommonValidators::PositiveFloat,
       "Rolloff factor for reverb.");
-   addField("decayHFLimit", TypeS32, Offset(mReverb.iDecayHFLimit, SFXDescription),
+   addFieldV("decayHFLimit", TypeRangedS32, Offset(mReverb.iDecayHFLimit, SFXDescription), &CommonValidators::PositiveInt,
       "High Frequency decay limit.");
    endGroup("Reverb");
    

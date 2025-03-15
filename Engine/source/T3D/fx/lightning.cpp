@@ -410,12 +410,12 @@ void Lightning::initPersistFields()
 {
    docsURL;
    addGroup( "Strikes" );
-   addField( "strikesPerMinute", TypeS32, Offset(strikesPerMinute, Lightning),
+   addFieldV( "strikesPerMinute", TypeRangedS32, Offset(strikesPerMinute, Lightning), &CommonValidators::PositiveInt,
       "@brief Number of lightning strikes to perform per minute.\n\n"
       "Automatically invokes strikeRandomPoint() at regular intervals." );
-   addField( "strikeWidth", TypeF32, Offset(strikeWidth, Lightning),
+   addFieldV( "strikeWidth", TypeRangedF32, Offset(strikeWidth, Lightning), &CommonValidators::PositiveFloat,
       "Width of a lightning bolt." );
-   addField( "strikeRadius", TypeF32, Offset(strikeRadius, Lightning),
+   addFieldV( "strikeRadius", TypeRangedF32, Offset(strikeRadius, Lightning), &CommonValidators::PositiveFloat,
       "@brief Horizontal size (XY plane) of the search box used to find and "
       "damage Player or Vehicle objects within range of the strike.\n\n"
       "Only the object at highest altitude with a clear line of sight to the "
@@ -431,9 +431,9 @@ void Lightning::initPersistFields()
    endGroup( "Colors" );
 
    addGroup( "Bolts" );
-   addField( "chanceToHitTarget", TypeF32, Offset(chanceToHitTarget, Lightning),
+   addFieldV( "chanceToHitTarget", TypeRangedF32, Offset(chanceToHitTarget, Lightning), &CommonValidators::NormalizedFloat,
       "Percentage chance (0-1) that a given lightning bolt will hit something." );
-   addField( "boltStartRadius", TypeF32, Offset(boltStartRadius, Lightning),
+   addFieldV( "boltStartRadius", TypeRangedF32, Offset(boltStartRadius, Lightning), &CommonValidators::PositiveFloat,
       "@brief Radial distance from the center of the Lightning object for the "
       "start point of the bolt.\n\n"
       "The actual start point will be a random point within this radius." );

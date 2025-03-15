@@ -69,11 +69,11 @@ void afxT3DSpotLightData::initPersistFields()
    docsURL;
    addGroup( "Light" );
       
-      addField( "range", TypeF32, Offset( mRange, afxT3DSpotLightData ),
+      addFieldV( "range", TypeRangedF32, Offset( mRange, afxT3DSpotLightData ), &CommonValidators::PositiveFloat,
         "...");
-      addField( "innerAngle", TypeF32, Offset( mInnerConeAngle, afxT3DSpotLightData ),
+      addFieldV( "innerAngle", TypeRangedF32, Offset( mInnerConeAngle, afxT3DSpotLightData ), &CommonValidators::DegreeRangeQuarter,
         "...");
-      addField( "outerAngle", TypeF32, Offset( mOuterConeAngle, afxT3DSpotLightData ),
+      addFieldV( "outerAngle", TypeRangedF32, Offset( mOuterConeAngle, afxT3DSpotLightData ), &CommonValidators::DegreeRangeQuarter,
         "...");
 
    endGroup( "Light" );

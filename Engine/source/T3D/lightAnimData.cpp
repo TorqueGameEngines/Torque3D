@@ -65,77 +65,80 @@ void LightAnimData::initPersistFields()
    docsURL;
    addGroup( "Offset",
       "The XYZ translation animation state relative to the light position." );
-
-      addField( "offsetA", TypeF32, Offset( mOffset.value1, LightAnimData ), 3,
+      addArray("XYZ Pan", Axis);
+         addFieldV( "offsetA", TypeRangedF32, Offset( mOffset.value1, LightAnimData ), &CommonValidators::PositiveFloat, Axis,
          "The value of the A key in the keyframe sequence." );
 
-      addField( "offsetZ", TypeF32, Offset( mOffset.value2, LightAnimData ), 3,
+         addFieldV( "offsetZ", TypeRangedF32, Offset( mOffset.value2, LightAnimData ), &CommonValidators::PositiveFloat, Axis,
          "The value of the Z key in the keyframe sequence." );
 
-      addField( "offsetPeriod", TypeF32, Offset( mOffset.period, LightAnimData ), 3,
+         addFieldV( "offsetPeriod", TypeRangedF32, Offset( mOffset.period, LightAnimData ), &CommonValidators::PositiveFloat, Axis,
          "The animation time for keyframe sequence." );
 
-      addField( "offsetKeys", TypeString, Offset( mOffset.keys, LightAnimData ), 3,
+        addField( "offsetKeys", TypeString, Offset( mOffset.keys, LightAnimData ), Axis,
          "The keyframe sequence encoded into a string where characters from A to Z define "
          "a position between the two animation values." );
 
-      addField( "offsetSmooth", TypeBool, Offset( mOffset.smooth, LightAnimData ), 3,
+         addField( "offsetSmooth", TypeBool, Offset( mOffset.smooth, LightAnimData ), Axis,
          "If true the transition between keyframes will be smooth." );
-
+      endArray("XYZ Pan");
    endGroup( "Offset" );
 
    addGroup( "Rotation",
       "The XYZ rotation animation state relative to the light orientation." );
+      addArray("XYZ Rot", Axis);
 
-      addField( "rotA", TypeF32, Offset( mRot.value1, LightAnimData ), 3,
+         addFieldV( "rotA", TypeRangedF32, Offset( mRot.value1, LightAnimData ), &CommonValidators::DegreeRange, Axis,
          "The value of the A key in the keyframe sequence." );
 
-      addField( "rotZ", TypeF32, Offset( mRot.value2, LightAnimData ), 3,
+         addFieldV( "rotZ", TypeRangedF32, Offset( mRot.value2, LightAnimData ), &CommonValidators::DegreeRange, Axis,
          "The value of the Z key in the keyframe sequence." );
 
-      addField( "rotPeriod", TypeF32, Offset( mRot.period, LightAnimData ), 3,
+         addFieldV( "rotPeriod", TypeRangedF32, Offset( mRot.period, LightAnimData ), &CommonValidators::PositiveFloat, Axis,
          "The animation time for keyframe sequence." );
 
-      addField( "rotKeys", TypeString, Offset( mRot.keys, LightAnimData ), 3,
+         addField( "rotKeys", TypeString, Offset( mRot.keys, LightAnimData ), Axis,
          "The keyframe sequence encoded into a string where characters from A to Z define "
          "a position between the two animation values." );
 
-      addField( "rotSmooth", TypeBool, Offset( mRot.smooth, LightAnimData ), 3,
+         addField( "rotSmooth", TypeBool, Offset( mRot.smooth, LightAnimData ), Axis,
          "If true the transition between keyframes will be smooth." );
-
+      endArray("XYZ Rot");
    endGroup( "Rotation" );
 
    addGroup( "Color",
       "The RGB color animation state." );
+      addArray("RGB", Channel);
 
-      addField( "colorA", TypeF32, Offset( mColor.value1, LightAnimData ), 3,
+         addFieldV( "colorA", TypeRangedF32, Offset( mColor.value1, LightAnimData ), &CommonValidators::F32_8BitPercent, Channel,
          "The value of the A key in the keyframe sequence." );
 
-      addField( "colorZ", TypeF32, Offset( mColor.value2, LightAnimData ), 3,
+         addFieldV( "colorZ", TypeRangedF32, Offset( mColor.value2, LightAnimData ), &CommonValidators::F32_8BitPercent, Channel,
          "The value of the Z key in the keyframe sequence." );
 
-      addField( "colorPeriod", TypeF32, Offset( mColor.period, LightAnimData ), 3,
+         addFieldV( "colorPeriod", TypeRangedF32, Offset( mColor.period, LightAnimData ), &CommonValidators::PositiveFloat, Channel,
          "The animation time for keyframe sequence." );
 
-      addField( "colorKeys", TypeString, Offset( mColor.keys, LightAnimData ), 3,
+         addField( "colorKeys", TypeString, Offset( mColor.keys, LightAnimData ), Channel,
          "The keyframe sequence encoded into a string where characters from A to Z define "
          "a position between the two animation values." );
 
-      addField( "colorSmooth", TypeBool, Offset( mColor.smooth, LightAnimData ), 3,
+         addField( "colorSmooth", TypeBool, Offset( mColor.smooth, LightAnimData ), Channel,
          "If true the transition between keyframes will be smooth." );
+      endArray("RGB");
 
    endGroup( "Color" );
 
    addGroup( "Brightness",
       "The brightness animation state." );
 
-      addField( "brightnessA", TypeF32, Offset( mBrightness.value1, LightAnimData ),
+      addFieldV( "brightnessA", TypeRangedF32, Offset( mBrightness.value1, LightAnimData ), &CommonValidators::PositiveFloat,
          "The value of the A key in the keyframe sequence." );
 
-      addField( "brightnessZ", TypeF32, Offset( mBrightness.value2, LightAnimData ),
+      addFieldV( "brightnessZ", TypeRangedF32, Offset( mBrightness.value2, LightAnimData ), &CommonValidators::PositiveFloat,
          "The value of the Z key in the keyframe sequence." );
 
-      addField( "brightnessPeriod", TypeF32, Offset( mBrightness.period, LightAnimData ),
+      addFieldV( "brightnessPeriod", TypeRangedF32, Offset( mBrightness.period, LightAnimData ), &CommonValidators::PositiveFloat,
          "The animation time for keyframe sequence." );
 
       addField( "brightnessKeys", TypeString, Offset( mBrightness.keys, LightAnimData ),

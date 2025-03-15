@@ -46,31 +46,35 @@ class TypeValidator
 /// Floating point min/max range validator
 class FRangeValidator : public TypeValidator
 {
-   F32 minV, maxV;
+   F32 minV, maxV, mFidelity;
 public:
-   FRangeValidator(F32 minValue, F32 maxValue)
+   FRangeValidator(F32 minValue, F32 maxValue, F32 fidelity = 0.0f)
    {
       minV = minValue;
       maxV = maxValue;
+      mFidelity = fidelity;
    }
    void validateType(SimObject *object, void *typePtr) override;
    F32 getMin() { return minV; };
    F32 getMax() { return maxV; };
+   F32 getFidelity() { return mFidelity; };
 };
 
 /// Signed integer min/max range validator
 class IRangeValidator : public TypeValidator
 {
-   S32 minV, maxV;
+   S32 minV, maxV, mFidelity;
 public:
-   IRangeValidator(S32 minValue, S32 maxValue)
+   IRangeValidator(S32 minValue, S32 maxValue, S32 fidelity = 1)
    {
       minV = minValue;
       maxV = maxValue;
+      mFidelity = fidelity;
    }
    void validateType(SimObject *object, void *typePtr) override;
-   F32 getMin() { return minV; };
-   F32 getMax() { return maxV; };
+   S32 getMin() { return minV; };
+   S32 getMax() { return maxV; };
+   S32 getFidelity() { return mFidelity; };
 };
 
 /// Scaled integer field validator
@@ -89,6 +93,9 @@ public:
       factor = scaleFactor;
    }
    void validateType(SimObject *object, void *typePtr) override;
+   S32 getMin() { return minV; };
+   S32 getMax() { return maxV; };
+   S32 getScaleFactor() { return factor; };
 };
 
 /// Vector normalization validator
@@ -104,12 +111,42 @@ public:
 namespace CommonValidators
 {
    // Floats
+   extern FRangeValidator F32Range;
+   extern FRangeValidator DirFloat;
+   extern FRangeValidator NegDefaultF32;   
    extern FRangeValidator PositiveFloat;
    extern FRangeValidator PositiveNonZeroFloat;
    extern FRangeValidator NormalizedFloat;
+   extern FRangeValidator F32_8BitPercent;
+   extern FRangeValidator F32_16BitPercent;
+   extern FRangeValidator ValidSlopeAngle;
+   extern FRangeValidator CornerAngle;
 
+   extern IRangeValidator S32Range;
+   extern IRangeValidator DirInt;
+   extern IRangeValidator NegDefaultInt;
+   extern IRangeValidator PositiveInt;
+   extern IRangeValidator NaturalNumber;
+   extern IRangeValidator MSTickRange;
+   extern IRangeValidator S32_8BitCap;
+   extern IRangeValidator S32_16BitCap;
    // Other Math Types
    extern Point3NormalizeValidator NormalizedPoint3;
+
+   // orbital mechanics
+   extern FRangeValidator DegreeRange;
+   extern FRangeValidator PosDegreeRange;
+   extern FRangeValidator DegreeRangeHalf;
+   extern FRangeValidator PosDegreeRangeHalf;
+   extern FRangeValidator DegreeRangeQuarter;
+   extern FRangeValidator PosDegreeRangeQuarter;
+
+   extern IRangeValidator S32_DegreeRange;
+   extern IRangeValidator S32_PosDegreeRange;
+   extern IRangeValidator S32_DegreeRangeHalf;
+   extern IRangeValidator S32_PosDegreeRangeHalf;
+   extern IRangeValidator S32_DegreeRangeQuarter;
+   extern IRangeValidator S32_PosDegreeRangeQuarter;
 };
 
 #endif

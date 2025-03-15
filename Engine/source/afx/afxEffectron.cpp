@@ -111,9 +111,9 @@ void afxEffectronData::reloadReset()
 void afxEffectronData::initPersistFields()
 {
    docsURL;
-  addField("duration",    TypeF32,      myOffset(duration),
+  addFieldV("duration", TypeRangedF32,      myOffset(duration), &CommonValidators::PositiveFloat,
     "...");
-  addField("numLoops",    TypeS32,      myOffset(n_loops),
+  addFieldV("numLoops", TypeRangedS32,      myOffset(n_loops), &CommonValidators::NegDefaultInt,
     "...");
   // effect lists
   // for each of these, dummy_fx_entry is set and then a validator adds it to the appropriate effects list 

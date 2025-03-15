@@ -34,6 +34,7 @@
 #include "sfx/sfxTrack.h"
 #include "sfx/sfxTypes.h"
 #include "console/engineAPI.h"
+#include "console/typeValidators.h"
 
 //#define DEBUG_SPEW
 
@@ -370,9 +371,9 @@ void GuiControlProfile::initPersistFields()
       addField("fillColorNA",   TypeColorI,     Offset(mFillColorNA, GuiControlProfile));
       addField("fillColorERR",  TypeColorI,     Offset(mFillColorERR, GuiControlProfile));
       addField("fillColorSEL",  TypeColorI,     Offset(mFillColorSEL, GuiControlProfile));
-      addField("border",        TypeS32,        Offset(mBorder, GuiControlProfile),
+      addFieldV("border",        TypeRangedS32,        Offset(mBorder, GuiControlProfile), &CommonValidators::PositiveInt,
          "Border type (0=no border)." );
-      addField("borderThickness",TypeS32,       Offset(mBorderThickness, GuiControlProfile),
+      addFieldV("borderThickness", TypeRangedS32,       Offset(mBorderThickness, GuiControlProfile), &CommonValidators::PositiveInt,
          "Thickness of border in pixels." );
       addField("borderColor",   TypeColorI,     Offset(mBorderColor, GuiControlProfile),
          "Color to draw border with." );
@@ -394,7 +395,7 @@ void GuiControlProfile::initPersistFields()
 
       addField("fontType",             TypeString,     Offset(mFontType, GuiControlProfile),
          "Name of font family and typeface (e.g. \"Arial Bold\")." );
-      addField("fontSize",             TypeS32,        Offset(mFontSize, GuiControlProfile),
+      addFieldV("fontSize",             TypeRangedS32,        Offset(mFontSize, GuiControlProfile), &CommonValidators::PositiveInt,
          "Font size in points." );
       addField("fontCharset",          TYPEID< FontCharset >(),       Offset(mFontCharset, GuiControlProfile) );
       addField("fontColors",           TypeColorI,     Offset(mFontColors, GuiControlProfile), ColorMax,

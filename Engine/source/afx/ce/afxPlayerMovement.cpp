@@ -81,7 +81,7 @@ EndImplementEnumType;
 void afxPlayerMovementData::initPersistFields()
 {
    docsURL;
-  addField("speedBias",     TypeF32,        myOffset(speed_bias),
+  addFieldV("speedBias",     TypeRangedF32,        myOffset(speed_bias), &CommonValidators::F32Range,
     "A floating-point multiplier that scales the constraint Player's movement speed.");
   addField("movement",      TypePoint3F,    myOffset(movement),
     "");

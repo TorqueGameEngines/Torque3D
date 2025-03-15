@@ -112,14 +112,14 @@ void GuiAutoScrollCtrl::initPersistFields()
    
       addField( "scrollDirection", TYPEID< Direction >(), Offset( mDirection, GuiAutoScrollCtrl ),
          "Direction in which the child control is moved." );
-      addField( "startDelay", TypeF32, Offset( mStartDelay, GuiAutoScrollCtrl ),
+      addFieldV( "startDelay", TypeRangedF32, Offset( mStartDelay, GuiAutoScrollCtrl ), &CommonValidators::PositiveFloat,
          "Seconds to wait before starting to scroll." );
-      addField( "resetDelay", TypeF32, Offset( mResetDelay, GuiAutoScrollCtrl ),
+      addFieldV( "resetDelay", TypeRangedF32, Offset( mResetDelay, GuiAutoScrollCtrl ), &CommonValidators::PositiveFloat,
          "Seconds to wait after scrolling completes before resetting and starting over.\n\n"
          "@note Only takes effect if #isLooping is true." );
-      addField( "childBorder", TypeS32, Offset( mChildBorder, GuiAutoScrollCtrl ),
+      addFieldV( "childBorder", TypeRangedS32, Offset( mChildBorder, GuiAutoScrollCtrl ), &CommonValidators::PositiveInt,
          "Padding to put around child control (in pixels)." );
-      addField( "scrollSpeed", TypeF32, Offset( mScrollSpeed, GuiAutoScrollCtrl ),
+      addFieldV( "scrollSpeed", TypeRangedF32, Offset( mScrollSpeed, GuiAutoScrollCtrl ), &CommonValidators::PositiveFloat,
          "Scrolling speed in pixels per second." );
       addField( "isLooping", TypeBool, Offset( mIsLooping, GuiAutoScrollCtrl ),
          "If true, the scrolling will reset to the beginning once completing a cycle." );

@@ -153,17 +153,17 @@ void afxSelectronData::initPersistFields()
    static ewValidator _selectPhrase(SELECT_PHRASE);
    static ewValidator _deselectPhrase(DESELECT_PHRASE);
 
-  addField("mainDur",                   TypeF32,    myOffset(main_dur),
+  addFieldV("mainDur",                   TypeRangedF32,    myOffset(main_dur), &CommonValidators::PositiveFloat,
     "...");
-  addField("selectDur",                 TypeF32,    myOffset(select_dur),
+  addFieldV("selectDur",                 TypeRangedF32,    myOffset(select_dur), &CommonValidators::PositiveFloat,
     "...");
-  addField("deselectDur",               TypeF32,    myOffset(deselect_dur),
+  addFieldV("deselectDur",               TypeRangedF32,    myOffset(deselect_dur), &CommonValidators::PositiveFloat,
     "...");
-  addField("mainRepeats",               TypeS32,    myOffset(n_main_loops),
+  addFieldV("mainRepeats", TypeRangedS32,    myOffset(n_main_loops), &CommonValidators::NaturalNumber,
     "...");
-  addField("selectRepeats",             TypeS32,    myOffset(n_select_loops),
+  addFieldV("selectRepeats", TypeRangedS32,    myOffset(n_select_loops), &CommonValidators::NaturalNumber,
     "...");
-  addField("deselectRepeats",           TypeS32,    myOffset(n_deselect_loops),
+  addFieldV("deselectRepeats", TypeRangedS32,    myOffset(n_deselect_loops), &CommonValidators::NaturalNumber,
     "...");
   addField("selectionTypeMask",         TypeS32,    myOffset(obj_type_mask),
     "...");
@@ -180,11 +180,11 @@ void afxSelectronData::initPersistFields()
     "...");
 
   // deprecated
-  addField("numMainLoops",      TypeS32,      myOffset(n_main_loops),
+  addFieldV("numMainLoops", TypeRangedS32,      myOffset(n_main_loops), &CommonValidators::NaturalNumber,
     "...");
-  addField("numSelectLoops",    TypeS32,      myOffset(n_select_loops),
+  addFieldV("numSelectLoops", TypeRangedS32,      myOffset(n_select_loops), &CommonValidators::NaturalNumber,
     "...");
-  addField("numDeselectLoops",  TypeS32,      myOffset(n_deselect_loops),
+  addFieldV("numDeselectLoops", TypeRangedS32,      myOffset(n_deselect_loops), &CommonValidators::NaturalNumber,
     "...");
 
   Parent::initPersistFields();

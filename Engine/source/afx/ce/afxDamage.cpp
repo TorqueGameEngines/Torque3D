@@ -83,19 +83,19 @@ void afxDamageData::initPersistFields()
     "An arbitrary string which is passed as an argument to a spell's onDamage() script "
     "method. It is used to classify a type of damage such as 'melee', 'magical', or "
     "'fire'.");
-  addField("directDamage",        TypeF32,        myOffset(amount),
+  addFieldV("directDamage",        TypeRangedF32,        myOffset(amount), &CommonValidators::F32Range,
     "An amount of direct damage to inflict on a target.");
   addField("directDamageRepeats", TypeS8,         myOffset(repeats),
     "The number of times to inflict the damage specified by directDamage. Values "
     "greater than 1 inflict damage over time, with the amount of directDamage "
     "repeatedly dealt at evenly spaced intervals over the lifetime of the effect.");
-  addField("areaDamage",          TypeF32,        myOffset(ad_amount),
+  addFieldV("areaDamage", TypeRangedF32,        myOffset(ad_amount), &CommonValidators::F32Range,
     "An amount of area damage to inflict on a target. Objects within half the radius "
     "receive full damage which then diminishes out to the full distance of "
     "areaDamageRadius.");
-  addField("areaDamageRadius",    TypeF32,        myOffset(radius),
+  addFieldV("areaDamageRadius", TypeRangedF32,        myOffset(radius), &CommonValidators::PositiveFloat,
     "Radius centered at the effect position in which damage will be applied.");
-  addField("areaDamageImpulse",   TypeF32,        myOffset(impulse),
+  addFieldV("areaDamageImpulse", TypeRangedF32,        myOffset(impulse), &CommonValidators::F32Range,
     "Specifies an amount of force to apply to damaged objects. Objects within half the "
     "radius receive full impulse which then diminishes out to the full distance of "
     "areaDamageRadius.");

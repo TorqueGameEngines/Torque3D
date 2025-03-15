@@ -29,6 +29,7 @@
 #include "core/stream/bitStream.h"
 #include "lighting/lightInfo.h"
 #include "console/engineAPI.h"
+#include "console/typeValidators.h"
 
 
 LightDescription::LightDescription()
@@ -94,26 +95,27 @@ void LightDescription::initPersistFields()
    addGroup( "Light" );
 
       addField( "color", TypeColorF, Offset( color, LightDescription ), "Changes the base color hue of the light." );
-      addField( "brightness", TypeF32, Offset( brightness, LightDescription ), "Adjusts the lights power, 0 being off completely." );      
-      addField( "range", TypeF32, Offset( range, LightDescription ), "Controls the size (radius) of the light" );
+      addFieldV( "brightness", TypeRangedF32, Offset( brightness, LightDescription ), &CommonValidators::PositiveFloat, "Adjusts the lights power, 0 being off completely." );
+      addFieldV( "range", TypeRangedF32, Offset( range, LightDescription ), &CommonValidators::PositiveFloat, "Controls the size (radius) of the light" );
       addField( "castShadows", TypeBool, Offset( castShadows, LightDescription ), "Enables/disabled shadow casts by this light." );
+      /*
       addField( "staticRefreshFreq", TypeS32, Offset( mStaticRefreshFreq, LightDescription ), "static shadow refresh rate (milliseconds)" );
       addField( "dynamicRefreshFreq", TypeS32, Offset( mDynamicRefreshFreq, LightDescription ), "dynamic shadow refresh rate (milliseconds)");
-
+      */
    endGroup( "Light" );
 
    addGroup( "Light Animation" );
 
       addField( "animationType", TYPEID< LightAnimData >(), Offset( animationData, LightDescription ), "Datablock containing light animation information (LightAnimData)" );
-      addField( "animationPeriod", TypeF32, Offset( animationPeriod, LightDescription ), "The length of time in seconds for a single playback of the light animation" );
-      addField( "animationPhase", TypeF32, Offset( animationPhase, LightDescription ), "The phase used to offset the animation start time to vary the animation of nearby lights." );
+      addFieldV( "animationPeriod", TypeRangedF32, Offset( animationPeriod, LightDescription ), &CommonValidators::PositiveFloat, "The length of time in seconds for a single playback of the light animation" );
+      addFieldV( "animationPhase", TypeRangedF32, Offset( animationPhase, LightDescription ), &CommonValidators::PositiveFloat, "The phase used to offset the animation start time to vary the animation of nearby lights." );
 
    endGroup( "Light Animation" );
 
    addGroup( "Misc" );
 
       addField( "flareType", TYPEID< LightFlareData >(), Offset( flareData, LightDescription ), "Datablock containing light flare information (LightFlareData)" );
-      addField( "flareScale", TypeF32, Offset( flareScale, LightDescription ), "Globally scales all features of the light flare" );
+      addFieldV( "flareScale", TypeRangedF32, Offset( flareScale, LightDescription ), &CommonValidators::PositiveFloat, "Globally scales all features of the light flare" );
 
    endGroup( "Misc" );
 

@@ -79,13 +79,13 @@ void afxAreaDamageData::initPersistFields()
     "An arbitrary string which is passed as an argument to a spell's onDamage() script "
     "method. It is used to classify a type of damage such as 'melee', 'magical', or "
     "'fire'.");
-  addField("damage",                    TypeF32,        myOffset(amount),
+  addFieldV("damage", TypeRangedF32,        myOffset(amount), &CommonValidators::F32Range,
     "An amount of area damage to inflict on a target. Objects within half the radius "
     "receive full damage which then diminishes out to the full distance of the specified "
     "radius.");
-  addField("radius",                    TypeF32,        myOffset(radius),
+  addFieldV("radius", TypeRangedF32,        myOffset(radius), &CommonValidators::PositiveFloat,
     "Radius centered at the effect position in which damage will be applied.");
-  addField("impulse",                   TypeF32,        myOffset(impulse),
+  addFieldV("impulse", TypeRangedF32,        myOffset(impulse), &CommonValidators::F32Range,
     "Specifies an amount of force to apply to damaged objects. Objects within half the "
     "radius receive full impulse which then diminishes out to the full distance of the "
     "specified radius.");

@@ -1373,7 +1373,7 @@ U32 TerrainBlock::packUpdate(NetConnection* con, U32 mask, BitStream *stream)
    if ( stream->writeFlag( mask & MiscMask ) )
       stream->write( mScreenError );
 
-   stream->writeInt(mBaseTexFormat, 32);
+   stream->writeInt(mBaseTexFormat, 3);
 	
    stream->writeFlag(mUpdateBasetex);
    stream->writeFlag(mIgnoreZodiacs);
@@ -1445,7 +1445,7 @@ void TerrainBlock::unpackUpdate(NetConnection* con, BitStream *stream)
    if ( stream->readFlag() ) // MiscMask
       stream->read( &mScreenError );
 
-   mBaseTexFormat = (BaseTexFormat)stream->readInt(32);
+   mBaseTexFormat = (BaseTexFormat)stream->readInt(3);
 	
    mUpdateBasetex = stream->readFlag();
    mIgnoreZodiacs = stream->readFlag();

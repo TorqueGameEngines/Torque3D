@@ -199,8 +199,6 @@ IRangeValidator ejectPeriodIValidator(1, 2047);
 IRangeValidator periodVarianceIValidator(0, 2047);
 FRangeValidator ejectionFValidator(0.f, 655.35f);
 FRangeValidator velVarianceFValidator(0.f, 163.83f);
-FRangeValidator thetaFValidator(0.f, 180.f);
-FRangeValidator phiFValidator(0.f, 360.f);
 
 //-----------------------------------------------------------------------------
 // initPersistFields
@@ -210,45 +208,45 @@ void ParticleEmitterData::initPersistFields()
    docsURL;
    addGroup( "ParticleEmitterData" );
 
-      addFieldV("ejectionPeriodMS", TYPEID< S32 >(), Offset(ejectionPeriodMS,   ParticleEmitterData), &ejectPeriodIValidator,
+      addFieldV("ejectionPeriodMS", TypeRangedS32, Offset(ejectionPeriodMS,   ParticleEmitterData), &ejectPeriodIValidator,
          "Time (in milliseconds) between each particle ejection." );
 
-      addFieldV("periodVarianceMS", TYPEID< S32 >(), Offset(periodVarianceMS,   ParticleEmitterData), &periodVarianceIValidator,
+      addFieldV("periodVarianceMS", TypeRangedS32, Offset(periodVarianceMS,   ParticleEmitterData), &periodVarianceIValidator,
          "Variance in ejection period, from 1 - ejectionPeriodMS." );
 
-      addFieldV( "ejectionVelocity", TYPEID< F32 >(), Offset(ejectionVelocity, ParticleEmitterData), &ejectionFValidator,
+      addFieldV( "ejectionVelocity", TypeRangedF32, Offset(ejectionVelocity, ParticleEmitterData), &ejectionFValidator,
          "Particle ejection velocity." );
 
-      addFieldV( "velocityVariance", TYPEID< F32 >(), Offset(velocityVariance, ParticleEmitterData), &velVarianceFValidator,
+      addFieldV( "velocityVariance", TypeRangedF32, Offset(velocityVariance, ParticleEmitterData), &velVarianceFValidator,
          "Variance for ejection velocity, from 0 - ejectionVelocity." );
 
-      addFieldV( "ejectionOffset", TYPEID< F32 >(), Offset(ejectionOffset, ParticleEmitterData), &ejectionFValidator,
+      addFieldV( "ejectionOffset", TypeRangedF32, Offset(ejectionOffset, ParticleEmitterData), &ejectionFValidator,
          "Distance along ejection Z axis from which to eject particles." );
 		 
-      addFieldV( "ejectionOffsetVariance", TYPEID< F32 >(), Offset(ejectionOffsetVariance, ParticleEmitterData), &ejectionFValidator,
+      addFieldV( "ejectionOffsetVariance", TypeRangedF32, Offset(ejectionOffsetVariance, ParticleEmitterData), &ejectionFValidator,
          "Distance Padding along ejection Z axis from which to eject particles." );
 
-      addFieldV( "thetaMin", TYPEID< F32 >(), Offset(thetaMin, ParticleEmitterData), &thetaFValidator,
+      addFieldV( "thetaMin", TypeRangedF32, Offset(thetaMin, ParticleEmitterData), &CommonValidators::PosDegreeRangeHalf,
          "Minimum angle, from the horizontal plane, to eject from." );
 
-      addFieldV( "thetaMax", TYPEID< F32 >(), Offset(thetaMax, ParticleEmitterData), &thetaFValidator,
+      addFieldV( "thetaMax", TypeRangedF32, Offset(thetaMax, ParticleEmitterData), &CommonValidators::PosDegreeRangeHalf,
          "Maximum angle, from the horizontal plane, to eject particles from." );
 
-	  addFieldV( "thetaVariance", TYPEID< F32 >(), Offset(thetaVariance, ParticleEmitterData), &thetaFValidator,
+	  addFieldV( "thetaVariance", TypeRangedF32, Offset(thetaVariance, ParticleEmitterData), &CommonValidators::PosDegreeRangeHalf,
          "Angle variance from the previous particle, from 0 - 180." );
 
-      addFieldV( "phiReferenceVel", TYPEID< F32 >(), Offset(phiReferenceVel, ParticleEmitterData), &phiFValidator,
+      addFieldV( "phiReferenceVel", TypeRangedF32, Offset(phiReferenceVel, ParticleEmitterData), &CommonValidators::PosDegreeRange,
          "Reference angle, from the vertical plane, to eject particles from." );
 
-      addFieldV( "phiVariance", TYPEID< F32 >(), Offset(phiVariance, ParticleEmitterData), &phiFValidator,
+      addFieldV( "phiVariance", TypeRangedF32, Offset(phiVariance, ParticleEmitterData), &CommonValidators::PosDegreeRange,
          "Variance from the reference angle, from 0 - 360." );
 
-      addField( "softnessDistance", TYPEID< F32 >(), Offset(softnessDistance, ParticleEmitterData),
+      addFieldV( "softnessDistance", TypeRangedF32, Offset(softnessDistance, ParticleEmitterData), &CommonValidators::PositiveFloat,
          "For soft particles, the distance (in meters) where particles will be "
          "faded based on the difference in depth between the particle and the "
          "scene geometry." );
 
-      addField( "ambientFactor", TYPEID< F32 >(), Offset(ambientFactor, ParticleEmitterData),
+      addFieldV( "ambientFactor", TypeRangedF32, Offset(ambientFactor, ParticleEmitterData), &CommonValidators::NormalizedFloat,
          "Used to generate the final particle color by controlling interpolation "
          "between the particle color and the particle color multiplied by the "
          "ambient light color." );
@@ -272,10 +270,10 @@ void ParticleEmitterData::initPersistFields()
          "A random one of these datablocks is selected each time a particle is "
          "emitted." );
 
-      addField( "lifetimeMS", TYPEID< S32 >(), Offset(lifetimeMS, ParticleEmitterData),
+      addFieldV( "lifetimeMS", TypeRangedS32, Offset(lifetimeMS, ParticleEmitterData), &CommonValidators::PositiveInt,
          "Lifetime of emitted particles (in milliseconds)." );
 
-      addField("lifetimeVarianceMS", TYPEID< S32 >(), Offset(lifetimeVarianceMS, ParticleEmitterData),
+      addFieldV("lifetimeVarianceMS", TypeRangedS32, Offset(lifetimeVarianceMS, ParticleEmitterData), &CommonValidators::PositiveInt,
          "Variance in particle lifetime from 0 - lifetimeMS." );
 
       addField( "useEmitterSizes", TYPEID< bool >(), Offset(useEmitterSizes, ParticleEmitterData),
@@ -338,7 +336,7 @@ void ParticleEmitterData::initPersistFields()
 #if defined(AFX_CAP_PARTICLE_POOLS)
    addGroup("AFX Pooled Particles");
    addField("poolData", TYPEID<afxParticlePoolData>(), Offset(pool_datablock, ParticleEmitterData));
-   addField("poolIndex",            TypeS32,                      Offset(pool_index,        ParticleEmitterData));
+   addFieldV("poolIndex",            TypeRangedS32,                      Offset(pool_index,        ParticleEmitterData), &CommonValidators::PositiveInt);
    addField("poolDepthFade",        TypeBool,                     Offset(pool_depth_fade,   ParticleEmitterData));
    addField("poolRadialFade",       TypeBool,                     Offset(pool_radial_fade,  ParticleEmitterData));
    endGroup("AFX Pooled Particles");

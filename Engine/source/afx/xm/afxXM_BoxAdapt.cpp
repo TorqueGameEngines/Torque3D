@@ -99,7 +99,7 @@ afxXM_BoxAdaptData::afxXM_BoxAdaptData(const afxXM_BoxAdaptData& other, bool tem
 void afxXM_BoxAdaptData::initPersistFields()
 {
    docsURL;
-  addField("scaleFactor",     TypeF32,        Offset(scale_factor, afxXM_BoxAdaptData),
+  addFieldV("scaleFactor",     TypeRangedF32,        Offset(scale_factor, afxXM_BoxAdaptData), &CommonValidators::PositiveFloat,
     "...");
   addField("dimensionRange",  TypePoint2F,    Offset(dim_range, afxXM_BoxAdaptData),
     "...");

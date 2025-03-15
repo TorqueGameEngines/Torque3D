@@ -88,7 +88,7 @@ void GuiBitmapCtrl::initPersistFields()
       addField( "wrap",   TypeBool,     Offset( mWrap, GuiBitmapCtrl ),
          "If true, the bitmap is tiled inside the control rather than stretched to fit." );
 
-      addField("angle", TypeF32, Offset(mAngle, GuiBitmapCtrl), "rotation");
+      addFieldV("angle", TypeRangedF32, Offset(mAngle, GuiBitmapCtrl), &CommonValidators::DegreeRange, "rotation");
       
    endGroup( "Bitmap" );
 

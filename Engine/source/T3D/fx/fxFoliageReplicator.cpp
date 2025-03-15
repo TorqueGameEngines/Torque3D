@@ -349,35 +349,35 @@ void fxFoliageReplicator::initPersistFields()
    // Add out own persistent fields.
    addGroup( "Debugging" );	// MM: Added Group Header.
       addField( "UseDebugInfo",        TypeBool,      Offset( mFieldData.mUseDebugInfo,         fxFoliageReplicator ), "Culling bins are drawn when set to true." );
-      addField( "DebugBoxHeight",      TypeF32,       Offset( mFieldData.mDebugBoxHeight,       fxFoliageReplicator ), "Height multiplier for drawn culling bins.");
+      addFieldV( "DebugBoxHeight",      TypeRangedF32,       Offset( mFieldData.mDebugBoxHeight,       fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Height multiplier for drawn culling bins.");
       addField( "HideFoliage",         TypeBool,      Offset( mFieldData.mHideFoliage,          fxFoliageReplicator ), "Foliage is hidden when set to true." );
       addField( "ShowPlacementArea",   TypeBool,      Offset( mFieldData.mShowPlacementArea,    fxFoliageReplicator ), "Draw placement rings when set to true." );
-      addField( "PlacementAreaHeight", TypeS32,       Offset( mFieldData.mPlacementBandHeight,  fxFoliageReplicator ), "Height of the placement ring in world units." );
+      addFieldV( "PlacementAreaHeight", TypeRangedS32,       Offset( mFieldData.mPlacementBandHeight,  fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Height of the placement ring in world units." );
       addField( "PlacementColour",     TypeColorF,    Offset( mFieldData.mPlaceAreaColour,      fxFoliageReplicator ), "Color of the placement ring." );
    endGroup( "Debugging" );	// MM: Added Group Footer.
 
    addGroup( "Media" );	// MM: Added Group Header.
       addField( "Seed",                TypeS32,       Offset( mFieldData.mSeed,                 fxFoliageReplicator ), "Random seed for foliage placement." );
       addField( "FoliageFile",         TypeFilename,  Offset( mFieldData.mFoliageFile,          fxFoliageReplicator ), "Image file for the foliage texture." );
-      addField( "FoliageCount",        TypeS32,       Offset( mFieldData.mFoliageCount,         fxFoliageReplicator ), "Maximum foliage instance count." );
-      addField( "FoliageRetries",      TypeS32,       Offset( mFieldData.mFoliageRetries,       fxFoliageReplicator ), "Number of times to try placing a foliage instance before giving up." );
+      addFieldV( "FoliageCount", TypeRangedS32,       Offset( mFieldData.mFoliageCount,         fxFoliageReplicator ), &CommonValidators::NaturalNumber, "Maximum foliage instance count." );
+      addFieldV( "FoliageRetries", TypeRangedS32,       Offset( mFieldData.mFoliageRetries,       fxFoliageReplicator ), &CommonValidators::PositiveInt, "Number of times to try placing a foliage instance before giving up." );
    endGroup( "Media" );	// MM: Added Group Footer.
 
    addGroup( "Area" );	// MM: Added Group Header.
-      addField( "InnerRadiusX",        TypeS32,       Offset( mFieldData.mInnerRadiusX,         fxFoliageReplicator ), "Placement area inner radius on the X axis" );
-      addField( "InnerRadiusY",        TypeS32,       Offset( mFieldData.mInnerRadiusY,         fxFoliageReplicator ), "Placement area inner radius on the Y axis" );
-      addField( "OuterRadiusX",        TypeS32,       Offset( mFieldData.mOuterRadiusX,         fxFoliageReplicator ), "Placement area outer radius on the X axis" );
-      addField( "OuterRadiusY",        TypeS32,       Offset( mFieldData.mOuterRadiusY,         fxFoliageReplicator ), "Placement area outer radius on the Y axis" );
+      addFieldV( "InnerRadiusX",        TypeRangedS32,       Offset( mFieldData.mInnerRadiusX,         fxFoliageReplicator ), &CommonValidators::PositiveInt, "Placement area inner radius on the X axis" );
+      addFieldV( "InnerRadiusY", TypeRangedS32,       Offset( mFieldData.mInnerRadiusY,         fxFoliageReplicator ), &CommonValidators::PositiveInt, "Placement area inner radius on the Y axis" );
+      addFieldV( "OuterRadiusX", TypeRangedS32,       Offset( mFieldData.mOuterRadiusX,         fxFoliageReplicator ), &CommonValidators::PositiveInt, "Placement area outer radius on the X axis" );
+      addFieldV( "OuterRadiusY", TypeRangedS32,       Offset( mFieldData.mOuterRadiusY,         fxFoliageReplicator ), &CommonValidators::PositiveInt, "Placement area outer radius on the Y axis" );
    endGroup( "Area" );	// MM: Added Group Footer.
 
    addGroup( "Dimensions" );	// MM: Added Group Header.
-      addField( "MinWidth",            TypeF32,       Offset( mFieldData.mMinWidth,             fxFoliageReplicator ), "Minimum width of foliage billboards" );
-      addField( "MaxWidth",            TypeF32,       Offset( mFieldData.mMaxWidth,             fxFoliageReplicator ), "Maximum width of foliage billboards" );
-      addField( "MinHeight",           TypeF32,       Offset( mFieldData.mMinHeight,            fxFoliageReplicator ), "Minimum height of foliage billboards" );
-      addField( "MaxHeight",           TypeF32,       Offset( mFieldData.mMaxHeight,            fxFoliageReplicator ), "Maximum height of foliage billboards" );
+      addFieldV( "MinWidth", TypeRangedF32,       Offset( mFieldData.mMinWidth,             fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Minimum width of foliage billboards" );
+      addFieldV( "MaxWidth", TypeRangedF32,       Offset( mFieldData.mMaxWidth,             fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Maximum width of foliage billboards" );
+      addFieldV( "MinHeight", TypeRangedF32,       Offset( mFieldData.mMinHeight,            fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Minimum height of foliage billboards" );
+      addFieldV( "MaxHeight", TypeRangedF32,       Offset( mFieldData.mMaxHeight,            fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Maximum height of foliage billboards" );
       addField( "FixAspectRatio",      TypeBool,      Offset( mFieldData.mFixAspectRatio,       fxFoliageReplicator ), "Maintain aspect ratio of image if true. This option ignores MaxWidth." );
       addField( "FixSizeToMax",        TypeBool,      Offset( mFieldData.mFixSizeToMax,         fxFoliageReplicator ), "Use only MaxWidth and MaxHeight for billboard size. Ignores MinWidth and MinHeight." );
-      addField( "OffsetZ",             TypeF32,       Offset( mFieldData.mOffsetZ,              fxFoliageReplicator ), "Offset billboards by this amount vertically." );
+      addFieldV( "OffsetZ", TypeRangedF32,       Offset( mFieldData.mOffsetZ,              fxFoliageReplicator ), &CommonValidators::F32Range, "Offset billboards by this amount vertically." );
       addField( "RandomFlip",          TypeBool,      Offset( mFieldData.mRandomFlip,           fxFoliageReplicator ), "Randomly flip billboards left-to-right." );
       addField( "UseTrueBillboards",   TypeBool,      Offset( mFieldData.mUseTrueBillboards,    fxFoliageReplicator ), "Use camera facing billboards ( including the z axis )." );
    endGroup( "Dimensions" );	// MM: Added Group Footer.
@@ -385,29 +385,29 @@ void fxFoliageReplicator::initPersistFields()
    addGroup( "Culling" );	// MM: Added Group Header.
       addField( "UseCulling",          TypeBool,      Offset( mFieldData.mUseCulling,           fxFoliageReplicator ), "Use culling bins when enabled." );
       addField( "CullResolution",      TypeS32,       Offset( mFieldData.mCullResolution,       fxFoliageReplicator ), "Minimum size of culling bins.  Must be >= 8 and <= OuterRadius." );
-      addField( "ViewDistance",        TypeF32,       Offset( mFieldData.mViewDistance,         fxFoliageReplicator ), "Maximum distance from camera where foliage appears." );
-      addField( "ViewClosest",         TypeF32,       Offset( mFieldData.mViewClosest,          fxFoliageReplicator ), "Minimum distance from camera where foliage appears." );
-      addField( "FadeInRegion",        TypeF32,       Offset( mFieldData.mFadeInRegion,         fxFoliageReplicator ), "Region beyond ViewDistance where foliage fades in/out." );
-      addField( "FadeOutRegion",       TypeF32,       Offset( mFieldData.mFadeOutRegion,        fxFoliageReplicator ), "Region before ViewClosest where foliage fades in/out." );
-      addField( "AlphaCutoff",         TypeF32,       Offset( mFieldData.mAlphaCutoff,          fxFoliageReplicator ), "Minimum alpha value allowed on foliage instances." );
-      addField( "GroundAlpha",         TypeF32,       Offset( mFieldData.mGroundAlpha,          fxFoliageReplicator ), "Alpha of the foliage at ground level. 0 = transparent, 1 = opaque." );
+      addFieldV( "ViewDistance", TypeRangedF32,       Offset( mFieldData.mViewDistance,         fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Maximum distance from camera where foliage appears." );
+      addFieldV( "ViewClosest", TypeRangedF32,       Offset( mFieldData.mViewClosest,          fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Minimum distance from camera where foliage appears." );
+      addFieldV( "FadeInRegion", TypeRangedF32,       Offset( mFieldData.mFadeInRegion,         fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Region beyond ViewDistance where foliage fades in/out." );
+      addFieldV( "FadeOutRegion", TypeRangedF32,       Offset( mFieldData.mFadeOutRegion,        fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Region before ViewClosest where foliage fades in/out." );
+      addFieldV( "AlphaCutoff", TypeRangedF32,       Offset( mFieldData.mAlphaCutoff,          fxFoliageReplicator ),&CommonValidators::NormalizedFloat, "Minimum alpha value allowed on foliage instances.");
+      addFieldV( "GroundAlpha", TypeRangedF32,       Offset( mFieldData.mGroundAlpha,          fxFoliageReplicator ), &CommonValidators::NormalizedFloat, "Alpha of the foliage at ground level. 0 = transparent, 1 = opaque." );
    endGroup( "Culling" );	// MM: Added Group Footer.
 
    addGroup( "Animation" );	// MM: Added Group Header.
       addField( "SwayOn",              TypeBool,      Offset( mFieldData.mSwayOn,               fxFoliageReplicator ), "Foliage should sway randomly when true." );
       addField( "SwaySync",            TypeBool,      Offset( mFieldData.mSwaySync,             fxFoliageReplicator ), "Foliage instances should sway together when true and SwayOn is enabled." );
-      addField( "SwayMagSide",         TypeF32,       Offset( mFieldData.mSwayMagnitudeSide,    fxFoliageReplicator ), "Left-to-right sway magnitude." );
-      addField( "SwayMagFront",        TypeF32,       Offset( mFieldData.mSwayMagnitudeFront,   fxFoliageReplicator ), "Front-to-back sway magnitude." );
-      addField( "MinSwayTime",         TypeF32,       Offset( mFieldData.mMinSwayTime,          fxFoliageReplicator ), "Minumum sway cycle time in seconds." );
-      addField( "MaxSwayTime",         TypeF32,       Offset( mFieldData.mMaxSwayTime,          fxFoliageReplicator ), "Maximum sway cycle time in seconds." );
+      addFieldV( "SwayMagSide", TypeRangedF32,       Offset( mFieldData.mSwayMagnitudeSide,    fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Left-to-right sway magnitude." );
+      addFieldV( "SwayMagFront", TypeRangedF32,       Offset( mFieldData.mSwayMagnitudeFront,   fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Front-to-back sway magnitude." );
+      addFieldV( "MinSwayTime", TypeRangedF32,       Offset( mFieldData.mMinSwayTime,          fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Minumum sway cycle time in seconds." );
+      addFieldV( "MaxSwayTime", TypeRangedF32,       Offset( mFieldData.mMaxSwayTime,          fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Maximum sway cycle time in seconds." );
    endGroup( "Animation" );	// MM: Added Group Footer.
 
    addGroup( "Lighting" );	// MM: Added Group Header.
       addField( "LightOn",             TypeBool,      Offset( mFieldData.mLightOn,              fxFoliageReplicator ), "Foliage should be illuminated with changing lights when true." );
       addField( "LightSync",           TypeBool,      Offset( mFieldData.mLightSync,            fxFoliageReplicator ), "Foliage instances have the same lighting when set and LightOn is set." );
-      addField( "MinLuminance",        TypeF32,       Offset( mFieldData.mMinLuminance,         fxFoliageReplicator ), "Minimum luminance for foliage instances." );
-      addField( "MaxLuminance",        TypeF32,       Offset( mFieldData.mMaxLuminance,         fxFoliageReplicator ), "Maximum luminance for foliage instances." );
-      addField( "LightTime",           TypeF32,       Offset( mFieldData.mLightTime,            fxFoliageReplicator ), "Time before foliage illumination cycle repeats." );
+      addFieldV( "MinLuminance", TypeRangedF32,       Offset( mFieldData.mMinLuminance,         fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Minimum luminance for foliage instances." );
+      addFieldV( "MaxLuminance", TypeRangedF32,       Offset( mFieldData.mMaxLuminance,         fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Maximum luminance for foliage instances." );
+      addFieldV( "LightTime", TypeRangedF32,       Offset( mFieldData.mLightTime,            fxFoliageReplicator ), &CommonValidators::PositiveFloat, "Time before foliage illumination cycle repeats." );
    endGroup( "Lighting" );	// MM: Added Group Footer.
 
    addGroup( "Restrictions" );	// MM: Added Group Header.
@@ -415,11 +415,11 @@ void fxFoliageReplicator::initPersistFields()
       addField( "AllowOnStatics",      TypeBool,      Offset( mFieldData.mAllowStatics,         fxFoliageReplicator ), "Foliage will be placed on Static shapes when set." );
       addField( "AllowOnWater",        TypeBool,      Offset( mFieldData.mAllowOnWater,         fxFoliageReplicator ), "Foliage will be placed on/under water when set." );
       addField( "AllowWaterSurface",   TypeBool,      Offset( mFieldData.mAllowWaterSurface,    fxFoliageReplicator ), "Foliage will be placed on water when set. Requires AllowOnWater." );
-      addField( "AllowedTerrainSlope", TypeS32,       Offset( mFieldData.mAllowedTerrainSlope,  fxFoliageReplicator ), "Maximum surface angle allowed for foliage instances." );
+      addFieldV( "AllowedTerrainSlope", TypeRangedS32,       Offset( mFieldData.mAllowedTerrainSlope,  fxFoliageReplicator ), &CommonValidators::S32_PosDegreeRangeQuarter, "Maximum surface angle allowed for foliage instances." );
    endGroup( "Restrictions" );	// MM: Added Group Footer.
 
    addGroup( "AFX" );
-      addField( "AmbientModulationBias", TypeF32,     Offset( mFieldData.mAmbientModulationBias,fxFoliageReplicator ), "Multiplier controling amount foliage is modulated by sun's ambient." );
+      addFieldV( "AmbientModulationBias", TypeRangedF32,     Offset( mFieldData.mAmbientModulationBias,fxFoliageReplicator ), &CommonValidators::NormalizedFloat, "Multiplier controling amount foliage is modulated by sun's ambient." );
    endGroup( "AFX" );
    // Initialise parents' persistent fields.
    Parent::initPersistFields();

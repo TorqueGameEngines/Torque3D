@@ -28,6 +28,7 @@
 #include "console/engineAPI.h"
 #include "gfx/gfxDevice.h"
 #include "gfx/gfxDrawUtil.h"
+#include "console/typeValidators.h"
 
 
 
@@ -89,7 +90,7 @@ void guiAnimBitmapCtrl::initPersistFields()
    addField("reverse", TypeBool, Offset(mReverse, guiAnimBitmapCtrl), "play reversed?");
    addField("fps", TypeS32, Offset(mFramesPerSec, guiAnimBitmapCtrl), "Frame Rate");
 
-   addProtectedField("curFrame", TypeS32, Offset(mCurFrameIndex, guiAnimBitmapCtrl), &ptSetFrame, &defaultProtectedGetFn, "Index of currently Displaying Frame ");
+   addProtectedFieldV("curFrame", TypeRangedS32, Offset(mCurFrameIndex, guiAnimBitmapCtrl), &ptSetFrame, &defaultProtectedGetFn, &CommonValidators::S32Range, "Index of currently Displaying Frame ");
 
    Parent::initPersistFields();
    removeField("wrap");
@@ -126,16 +127,21 @@ bool guiAnimBitmapCtrl::ptSetFrame(void *object, const char *index, const char *
 
    S32 val = dAtoi(data);
 
-   if (val < 0)
+   if ((val < 0) || (val >pData->mNumFrames))
    {
-      pData->mCurFrameIndex = pData->mNumFrames;
+      if (pData->mLoop)
+      {
+         int len = pData->mNumFrames;
+         val = (val >= 0 ? val % len : -val % len ? len - (-val % len) : 0);
+      }
+      else
+      {
+         if (val < 0) val = 0;
+         if (val >pData->mNumFrames) val = pData->mNumFrames;
+      }
+      pData->mCurFrameIndex = val;
       return false;
    }
-   else if (val > pData->mNumFrames)
-   {
-      pData->mCurFrameIndex = 0;
-      return false;
-   };
 
    pData->mCurFrameIndex = val;
    return true;

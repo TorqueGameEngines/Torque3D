@@ -297,12 +297,12 @@ void VehicleData::initPersistFields()
       "damageEmitterOffset[1] = \"-0.5 3 1\";\n"
       "numDmgEmitterAreas = 2;\n"
       "@endtsexample\n" );
-   addField( "damageLevelTolerance", TypeF32, Offset(damageLevelTolerance, VehicleData), VC_NUM_DAMAGE_LEVELS,
+   addFieldV( "damageLevelTolerance", TypeRangedF32, Offset(damageLevelTolerance, VehicleData), &CommonValidators::PositiveFloat, VC_NUM_DAMAGE_LEVELS,
       "@brief Damage levels (as a percentage of maxDamage) above which to begin "
       "emitting particles from the associated damageEmitter.\n\n"
       "Levels should be in order of increasing damage.\n\n"
       "@see damageEmitterOffset" );
-   addField( "numDmgEmitterAreas", TypeF32, Offset(numDmgEmitterAreas, VehicleData),
+   addFieldV( "numDmgEmitterAreas", TypeRangedF32, Offset(numDmgEmitterAreas, VehicleData), &CommonValidators::PositiveFloat,
       "Number of damageEmitterOffset values to use for each damageEmitter.\n\n"
       "@see damageEmitterOffset" );
    endGroup("Particle Effects");
@@ -313,33 +313,33 @@ void VehicleData::initPersistFields()
    endGroup("Physics");
 
    addGroup("Collision");
-   addField( "collDamageThresholdVel", TypeF32, Offset(collDamageThresholdVel, VehicleData),
+   addFieldV( "collDamageThresholdVel", TypeRangedF32, Offset(collDamageThresholdVel, VehicleData), &CommonValidators::PositiveFloat,
       "Minimum collision velocity to cause damage to this vehicle.\nCurrently unused." );
-   addField( "collDamageMultiplier", TypeF32, Offset(collDamageMultiplier, VehicleData),
+   addFieldV( "collDamageMultiplier", TypeRangedF32, Offset(collDamageMultiplier, VehicleData), &CommonValidators::PositiveFloat,
       "@brief Damage to this vehicle after a collision (multiplied by collision "
       "velocity).\n\nCurrently unused." );
    endGroup("Collision");
 
    addGroup("Steering");
-      addField( "jetForce", TypeF32, Offset(jetForce, VehicleData),
+      addFieldV( "jetForce", TypeRangedF32, Offset(jetForce, VehicleData), &CommonValidators::PositiveFloat,
          "@brief Additional force applied to the vehicle when it is jetting.\n\n"
          "For WheeledVehicles, the force is applied in the forward direction. For "
          "FlyingVehicles, the force is applied in the thrust direction." );
-      addField( "jetEnergyDrain", TypeF32, Offset(jetEnergyDrain, VehicleData),
+      addFieldV( "jetEnergyDrain", TypeRangedF32, Offset(jetEnergyDrain, VehicleData), &CommonValidators::PositiveFloat,
       "@brief Energy amount to drain for each tick the vehicle is jetting.\n\n"
          "Once the vehicle's energy level reaches 0, it will no longer be able to jet." );
-      addField( "minJetEnergy", TypeF32, Offset(minJetEnergy, VehicleData),
+      addFieldV( "minJetEnergy", TypeRangedF32, Offset(minJetEnergy, VehicleData), &CommonValidators::PositiveFloat,
       "Minimum vehicle energy level to begin jetting." );
-      addField( "maxSteeringAngle", TypeF32, Offset(maxSteeringAngle, VehicleData),
+      addFieldV( "maxSteeringAngle", TypeRangedF32, Offset(maxSteeringAngle, VehicleData), &CommonValidators::PositiveFloat,
          "Maximum yaw (horizontal) and pitch (vertical) steering angle in radians." );
    endGroup("Steering");
 
    addGroup("AutoCorrection");
    addField( "powerSteering", TypeBool, Offset(powerSteering, VehicleData),
       "If true, steering does not auto-centre while the vehicle is being steered by its driver." );
-   addField( "steeringReturn", TypeF32, Offset(steeringReturn, VehicleData),
+   addFieldV( "steeringReturn", TypeRangedF32, Offset(steeringReturn, VehicleData), &CommonValidators::PositiveFloat,
       "Rate at which the vehicle's steering returns to forwards when it is moving." );
-   addField( "steeringReturnSpeedScale", TypeF32, Offset(steeringReturnSpeedScale, VehicleData),
+   addFieldV( "steeringReturnSpeedScale", TypeRangedF32, Offset(steeringReturnSpeedScale, VehicleData), &CommonValidators::PositiveFloat,
       "Amount of effect the vehicle's speed has on its rate of steering return." );
    endGroup("AutoCorrection");
 }
@@ -808,7 +808,7 @@ void Vehicle::updatePos(F32 dt)
       {
          F32 k = mRigid.getKineticEnergy();
          F32 G = mNetGravity* dt * TickMs / mDataBlock->integration;
-         F32 Kg = 0.5 * mRigid.mass * G * G;
+         F32 Kg = mRigid.mass * G * G;
          if (k < sRestTol * Kg && ++restCount > sRestCount)
             mRigid.setAtRest();
       }

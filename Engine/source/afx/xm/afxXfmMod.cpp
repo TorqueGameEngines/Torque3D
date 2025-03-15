@@ -215,19 +215,19 @@ F32 afxXM_WeightedBaseData::getWeightFactor() const
 void afxXM_WeightedBaseData::initPersistFields()
 {
    docsURL;
-  addField("delay",         TypeF32,      Offset(delay,         afxXM_WeightedBaseData),
+  addFieldV("delay", TypeRangedF32,      Offset(delay,         afxXM_WeightedBaseData), &CommonValidators::PositiveFloat,
     "...");
-  addField("lifetime",      TypeF32,      Offset(lifetime,      afxXM_WeightedBaseData),
+  addFieldV("lifetime",      TypeRangedF32,      Offset(lifetime,      afxXM_WeightedBaseData), &CommonValidators::PositiveFloat,
     "...");
-  addField("fadeInTime",    TypeF32,      Offset(fade_in_time,  afxXM_WeightedBaseData),
+  addFieldV("fadeInTime", TypeRangedF32,      Offset(fade_in_time,  afxXM_WeightedBaseData), &CommonValidators::PositiveFloat,
     "...");
-  addField("fadeOutTime",   TypeF32,      Offset(fade_out_time, afxXM_WeightedBaseData),
+  addFieldV("fadeOutTime", TypeRangedF32,      Offset(fade_out_time, afxXM_WeightedBaseData), &CommonValidators::PositiveFloat,
     "...");
   addField("fadeInEase",    TypePoint2F,  Offset(fadein_ease,   afxXM_WeightedBaseData),
     "...");
   addField("fadeOutEase",   TypePoint2F,  Offset(fadeout_ease,  afxXM_WeightedBaseData),
     "...");
-  addField("lifetimeBias",  TypeF32,      Offset(life_bias,     afxXM_WeightedBaseData),
+  addFieldV("lifetimeBias", TypeRangedF32,      Offset(life_bias,     afxXM_WeightedBaseData), &CommonValidators::F32Range,
     "...");
 
   Parent::initPersistFields();

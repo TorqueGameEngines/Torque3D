@@ -40,6 +40,7 @@
 #include "math/mRandomDeck.h"
 #include "math/mRandomSet.h"
 #include "scene/sceneContainer.h"
+#include "console/typeValidators.h"
 
 
 bool ForestBrushTool::protectedSetSize( void *object, const char *index, const char *data )
@@ -104,6 +105,7 @@ ConsoleDocClass( ForestBrushTool,
    "@internal"
 );
 
+FRangeValidator fBrushRange(0.0f, 150.0f);
 void ForestBrushTool::initPersistFields()
 {
    docsURL;
@@ -111,14 +113,14 @@ void ForestBrushTool::initPersistFields()
       
       addField( "mode", TYPEID< BrushMode >(), Offset( mMode, ForestBrushTool) );
       
-      addProtectedField( "size", TypeF32, Offset( mSize, ForestBrushTool ), 
-         &protectedSetSize, &defaultProtectedGetFn, "Brush Size" );
+      addProtectedFieldV( "size", TypeRangedF32, Offset( mSize, ForestBrushTool ), 
+         &protectedSetSize, &defaultProtectedGetFn, &fBrushRange, "Brush Size" );
 
-      addProtectedField( "pressure", TypeF32, Offset( mPressure, ForestBrushTool ), 
-         &protectedSetPressure, &defaultProtectedGetFn, "Brush Pressure" );
+      addProtectedFieldV( "pressure", TypeRangedF32, Offset( mPressure, ForestBrushTool ),
+         &protectedSetPressure, &defaultProtectedGetFn, &CommonValidators::NormalizedFloat, "Brush Pressure" );
 
-      addProtectedField( "hardness", TypeF32, Offset( mHardness, ForestBrushTool ), 
-         &protectedSetHardness, &defaultProtectedGetFn, "Brush Hardness" );
+      addProtectedFieldV( "hardness", TypeRangedF32, Offset( mHardness, ForestBrushTool ),
+         &protectedSetHardness, &defaultProtectedGetFn, &CommonValidators::NormalizedFloat, "Brush Hardness" );
 
    endGroup( "ForestBrushTool" );
 

@@ -174,22 +174,22 @@ void VolumetricFog::initPersistFields()
    addGroup("VolumetricFogData");
    addField("FogColor", TypeColorI, Offset(mFogColor, VolumetricFog),
       "Fog color RGBA (Alpha is ignored)");
-   addField("FogDensity", TypeF32, Offset(mFogDensity, VolumetricFog), 
+   addFieldV("FogDensity", TypeRangedF32, Offset(mFogDensity, VolumetricFog), &CommonValidators::PositiveFloat,
       "Overal fog density value (0 disables the fog).");
    addField("IgnoreWater", TypeBool, Offset(mIgnoreWater, VolumetricFog), 
       "Set to true if volumetric fog should continue while submerged.");
-   addField("MinSize", TypeF32, Offset(mMinDisplaySize, VolumetricFog), 
+   addFieldV("MinSize", TypeRangedF32, Offset(mMinDisplaySize, VolumetricFog), &CommonValidators::PositiveFloat,
       "Min size (in pixels) for fog to be rendered.");
-   addField("FadeSize", TypeF32, Offset(mFadeSize, VolumetricFog), 
+   addFieldV("FadeSize", TypeRangedF32, Offset(mFadeSize, VolumetricFog), &CommonValidators::PositiveFloat,
       "Object size in pixels at which the FX-fading kicks in (0 disables fading).");
    endGroup("VolumetricFogData");
 
    addGroup("VolumetricFogModulation");
    INITPERSISTFIELD_IMAGEASSET(Texture, VolumetricFog, "A texture which contains Fogdensity modulator in the red channel and color with 1-green channel. No texture disables modulation.");
 
-   addField("tiles", TypeF32, Offset(mTexTiles, VolumetricFog), 
+   addFieldV("tiles", TypeRangedF32, Offset(mTexTiles, VolumetricFog), &CommonValidators::PositiveFloat,
       "How many times the texture is mapped to the object.");
-   addField("modStrength", TypeF32, Offset(mStrength, VolumetricFog),
+   addFieldV("modStrength", TypeRangedF32, Offset(mStrength, VolumetricFog), &CommonValidators::PositiveFloat,
       "Overall strength of the density modulation (0 disables modulation).");
    addField("PrimSpeed", TypePoint2F, Offset(mSpeed1, VolumetricFog),
       "Overall primary speed of the density modulation (x-speed(u) y-speed(v))");
@@ -200,18 +200,18 @@ void VolumetricFog::initPersistFields()
    addGroup("Reflections");
    addField("Reflectable", TypeBool, Offset(mReflect, VolumetricFog), 
       "Set to true if volumetric fog should be reflected.");
-   addField("ReflectStrength", TypeF32, Offset(mFogReflStrength, VolumetricFog), 
+   addFieldV("ReflectStrength", TypeRangedF32, Offset(mFogReflStrength, VolumetricFog), &CommonValidators::NormalizedFloat,
       "Strength of the reflections (0 disables the fog).");
    endGroup("Reflections");
 
    addGroup("PostFX");
    addField("useGlow", TypeBool, Offset(mUseGlow, VolumetricFog), 
       "Set to true if volumetric fog should use glow PostFX.");
-   addField("glowStrength", TypeF32, Offset(mGlowStrength, VolumetricFog),
+   addFieldV("glowStrength", TypeRangedF32, Offset(mGlowStrength, VolumetricFog), &CommonValidators::PositiveFloat,
       "Overall strength of the glow PostFX.");
    addField("modLightRay", TypeBool, Offset(mModifLightRays, VolumetricFog), 
       "Set to true if volumetric fog should modify the brightness of the Lightrays.");
-   addField("lightRayMod", TypeF32, Offset(mLightRayMod, VolumetricFog),
+   addFieldV("lightRayMod", TypeRangedF32, Offset(mLightRayMod, VolumetricFog), &CommonValidators::PositiveFloat,
       "Modifier for LightRay PostFX when inside Fog.");
    endGroup("PostFX");
 }

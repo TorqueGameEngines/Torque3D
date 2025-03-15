@@ -75,9 +75,9 @@ void afxGuiTextHud::initPersistFields()
     "...");
    addField( "showFrame",  TypeBool, Offset( mShowFrame, afxGuiTextHud ),
     "...");
-   addField( "verticalOffset", TypeF32, Offset( mVerticalOffset, afxGuiTextHud  ),
+   addFieldV( "verticalOffset", TypeRangedF32, Offset( mVerticalOffset, afxGuiTextHud  ), &CommonValidators::F32Range,
     "...");
-   addField( "distanceFade", TypeF32, Offset( mDistanceFade, afxGuiTextHud ),
+   addFieldV( "distanceFade", TypeRangedF32, Offset( mDistanceFade, afxGuiTextHud ), &CommonValidators::PositiveFloat,
     "...");
    addField( "labelAllShapes",  TypeBool, Offset( mLabelAllShapes, afxGuiTextHud ),
     "...");

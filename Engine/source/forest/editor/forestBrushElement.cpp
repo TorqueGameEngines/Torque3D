@@ -67,43 +67,43 @@ void ForestBrushElement::initPersistFields()
       addField( "forestItemData", TYPEID< ForestItemData >(), Offset( mData, ForestBrushElement ), 
          "The type of ForestItem this element holds placement parameters for." );
 
-      addField( "probability",   TypeF32, Offset( mProbability, ForestBrushElement ),
+      addFieldV( "probability", TypeRangedF32, Offset( mProbability, ForestBrushElement ), &CommonValidators::PositiveFloat,
          "The probability that this element will be created during an editor brush stroke "
          "is the sum of all element probabilities in the brush divided by the probability "
          "of this element." );
 
-      addField( "rotationRange",   TypeF32, Offset( mRotationRange, ForestBrushElement ),
+      addFieldV( "rotationRange", TypeRangedF32, Offset( mRotationRange, ForestBrushElement ), &CommonValidators::PosDegreeRange,
          "The max rotation in degrees that items will be placed." );
 
-      addField( "scaleMin",   TypeF32, Offset( mScaleMin, ForestBrushElement ),
+      addFieldV( "scaleMin", TypeRangedF32, Offset( mScaleMin, ForestBrushElement ), &CommonValidators::PositiveFloat,
          "The minimum random size for each item." );
 
-      addField( "scaleMax",   TypeF32, Offset( mScaleMax, ForestBrushElement ),
+      addFieldV( "scaleMax", TypeRangedF32, Offset( mScaleMax, ForestBrushElement ), &CommonValidators::PositiveFloat,
          "The maximum random size of each item." );
 
-      addField( "scaleExponent",   TypeF32, Offset( mScaleExponent, ForestBrushElement ),
+      addFieldV( "scaleExponent", TypeRangedF32, Offset( mScaleExponent, ForestBrushElement ), &CommonValidators::PositiveFloat,
          "An exponent used to bias between the minimum and maximum random sizes." );
 
-      addField( "sinkMin",   TypeF32, Offset( mSinkMin, ForestBrushElement ),
+      addFieldV( "sinkMin", TypeRangedF32, Offset( mSinkMin, ForestBrushElement ), &CommonValidators::PositiveFloat,
          "Min variation in the sink radius." );
 
-      addField( "sinkMax",   TypeF32, Offset( mSinkMax, ForestBrushElement ),
+      addFieldV( "sinkMax", TypeRangedF32, Offset( mSinkMax, ForestBrushElement ), &CommonValidators::PositiveFloat,
          "Max variation in the sink radius." );
 
-      addField( "sinkRadius",   TypeF32, Offset( mSinkRadius, ForestBrushElement ),
+      addFieldV( "sinkRadius", TypeRangedF32, Offset( mSinkRadius, ForestBrushElement ), &CommonValidators::PositiveFloat,
          "This is the radius used to calculate how much to sink the trunk at "
          "its base and is used to sink the tree into the ground when its on a slope." );
 
-      addField( "slopeMin",   TypeF32, Offset( mSlopeMin, ForestBrushElement ),
+      addFieldV( "slopeMin", TypeRangedF32, Offset( mSlopeMin, ForestBrushElement ), &CommonValidators::PosDegreeRangeQuarter,
          "The min surface slope in degrees this item will be placed on." );
 
-      addField( "slopeMax",   TypeF32, Offset( mSlopeMax, ForestBrushElement ),
+      addFieldV( "slopeMax", TypeRangedF32, Offset( mSlopeMax, ForestBrushElement ), &CommonValidators::PosDegreeRangeQuarter,
          "The max surface slope in degrees this item will be placed on." );
 
-      addField( "elevationMin",   TypeF32, Offset( mElevationMin, ForestBrushElement ),
+      addFieldV( "elevationMin", TypeRangedF32, Offset( mElevationMin, ForestBrushElement ), &CommonValidators::F32Range,
          "The min world space elevation this item will be placed." );
 
-      addField( "elevationMax",   TypeF32, Offset( mElevationMax, ForestBrushElement ),
+      addFieldV( "elevationMax", TypeRangedF32, Offset( mElevationMax, ForestBrushElement ), &CommonValidators::F32Range,
          "The max world space elevation this item will be placed." );
 
    endGroup( "ForestBrushElement" );      

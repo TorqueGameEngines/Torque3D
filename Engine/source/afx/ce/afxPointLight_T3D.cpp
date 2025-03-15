@@ -65,7 +65,7 @@ void afxT3DPointLightData::initPersistFields()
    docsURL;
    addGroup( "Light" );
       
-      addField( "radius", TypeF32, Offset( mRadius, afxT3DPointLightData ),
+      addFieldV( "radius", TypeRangedF32, Offset( mRadius, afxT3DPointLightData ), &CommonValidators::PositiveFloat,
         "Controls the falloff of the light emission");
 
    endGroup( "Light" );

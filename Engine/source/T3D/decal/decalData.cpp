@@ -141,15 +141,15 @@ void DecalData::initPersistFields()
    docsURL;
    addGroup( "Decal" );
 
-      addField( "size", TypeF32, Offset( size, DecalData ), 
+      addFieldV( "size", TypeRangedF32, Offset( size, DecalData ), &CommonValidators::PositiveFloat,
          "Width and height of the decal in meters before scale is applied." );
 
       INITPERSISTFIELD_MATERIALASSET(Material, DecalData, "Material to use for this decal.");
 
-      addField( "lifeSpan", TypeS32, Offset( lifeSpan, DecalData ),
+      addFieldV( "lifeSpan", TypeRangedS32, Offset( lifeSpan, DecalData ), &CommonValidators::PositiveInt,
          "Time (in milliseconds) before this decal will be automatically deleted." );
 
-      addField( "fadeTime", TypeS32, Offset( fadeTime, DecalData ),
+      addFieldV( "fadeTime", TypeRangedS32, Offset( fadeTime, DecalData ), &CommonValidators::PositiveInt,
          "@brief Time (in milliseconds) over which to fade out the decal before "
          "deleting it at the end of its lifetime.\n\n"
          "@see lifeSpan" );
@@ -158,13 +158,13 @@ void DecalData::initPersistFields()
 
    addGroup( "Rendering" );
 
-      addField( "fadeStartPixelSize", TypeF32, Offset( fadeStartPixelSize, DecalData ), 
+      addFieldV( "fadeStartPixelSize", TypeRangedF32, Offset( fadeStartPixelSize, DecalData ), &CommonValidators::NegDefaultF32,
          "@brief LOD value - size in pixels at which decals of this type begin "
          "to fade out.\n\n"
          "This should be a larger value than #fadeEndPixelSize. However, you may "
          "also set this to a negative value to disable lod-based fading." );
 
-      addField( "fadeEndPixelSize", TypeF32, Offset( fadeEndPixelSize, DecalData ), 
+      addFieldV( "fadeEndPixelSize", TypeRangedF32, Offset( fadeEndPixelSize, DecalData ), &CommonValidators::PositiveFloat,
          "@brief LOD value - size in pixels at which decals of this type are "
          "fully faded out.\n\n"
          "This should be a smaller value than #fadeStartPixelSize." );
@@ -173,7 +173,7 @@ void DecalData::initPersistFields()
          "Default renderPriority for decals of this type (determines draw "
          "order when decals overlap)." );
 
-      addField( "clippingAngle", TypeF32, Offset( clippingAngle, DecalData ),
+      addFieldV( "clippingAngle", TypeRangedF32, Offset( clippingAngle, DecalData ), &CommonValidators::PosDegreeRangeQuarter,
          "The angle in degrees used to clip geometry that faces away from the "
          "decal projection direction." );
 
@@ -181,23 +181,23 @@ void DecalData::initPersistFields()
 
    addGroup( "Texturing" );
 
-      addField( "frame", TypeS32, Offset( frame, DecalData ),
+      addFieldV( "frame", TypeRangedS32, Offset( frame, DecalData ), &CommonValidators::PositiveInt,
          "Index of the texture rectangle within the imagemap to use for this decal." );
 
       addField( "randomize", TypeBool, Offset( randomize, DecalData ),
          "If true, a random frame from the imagemap is selected for each "
          "instance of the decal." );
 
-      addField( "textureCoordCount", TypeS32, Offset( texCoordCount, DecalData ),
+      addFieldV( "textureCoordCount", TypeRangedS32, Offset( texCoordCount, DecalData ), &CommonValidators::PositiveInt,
          "Number of individual frames in the imagemap (maximum 16)." );
 
-      addField( "texRows", TypeS32, Offset( texRows, DecalData ),
+      addFieldV( "texRows", TypeRangedS32, Offset( texRows, DecalData ), &CommonValidators::PositiveInt,
          "@brief Number of rows in the supplied imagemap.\n\n"
          "Use #texRows and #texCols if the imagemap frames are arranged in a "
          "grid; use #textureCoords to manually specify UV coordinates for "
          "irregular sized frames." );
 
-      addField( "texCols", TypeS32, Offset( texCols, DecalData ),
+      addFieldV( "texCols", TypeRangedS32, Offset( texCols, DecalData ), &CommonValidators::PositiveInt,
          "@brief Number of columns in the supplied imagemap.\n\n"
          "Use #texRows and #texCols if the imagemap frames are arranged in a "
          "grid; use #textureCoords to manually specify UV coordinates for "

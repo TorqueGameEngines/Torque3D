@@ -143,20 +143,20 @@ void afxEffectGroupData::initPersistFields()
    docsURL;
   addField("groupEnabled",   TypeBool,    myOffset(group_enabled),
     "...");
-  addField("count",          TypeS32,     myOffset(group_count),
+  addFieldV("count", TypeRangedS32,     myOffset(group_count), &CommonValidators::NaturalNumber,
     "...");
   addField("indexOffset",    TypeS8,      myOffset(idx_offset),
     "...");
   addField("assignIndices",  TypeBool,    myOffset(assign_idx),
     "...");
 
-  addField("delay",          TypeF32,     myOffset(timing.delay),
+  addFieldV("delay",          TypeRangedF32,     myOffset(timing.delay), &CommonValidators::PositiveFloat,
     "...");
-  addField("lifetime",       TypeF32,     myOffset(timing.lifetime),
+  addFieldV("lifetime", TypeRangedF32,     myOffset(timing.lifetime), &CommonValidators::PositiveFloat,
     "...");
-  addField("fadeInTime",     TypeF32,     myOffset(timing.fade_in_time),
+  addFieldV("fadeInTime", TypeRangedF32,     myOffset(timing.fade_in_time), &CommonValidators::PositiveFloat,
     "...");
-  addField("fadeOutTime",    TypeF32,     myOffset(timing.fade_out_time),
+  addFieldV("fadeOutTime", TypeRangedF32,     myOffset(timing.fade_out_time), &CommonValidators::PositiveFloat,
     "...");
 
   // effect lists

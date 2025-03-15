@@ -82,7 +82,7 @@ private:
    GFXPrimitiveBufferHandle mRadialPrimBuff;
 
    // misc
-   F32            mGridElementSize;
+   U32            mGridElementSize;
    U32            mWidth;
    U32            mHeight;
    F32            mElapsedTime;   

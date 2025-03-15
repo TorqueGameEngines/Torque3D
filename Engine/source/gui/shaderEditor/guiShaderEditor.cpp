@@ -88,7 +88,7 @@ void GuiShaderEditor::initPersistFields()
 {
    docsURL;
    addGroup("Node Settings");
-      addFieldV("nodeSize", TypeS32, Offset(mNodeSize, GuiShaderEditor),&nodeSizeRange,
+      addFieldV("nodeSize", TypeRangedS32, Offset(mNodeSize, GuiShaderEditor),&nodeSizeRange,
          "Size of nodes.");
    endGroup("Node Settings");
 

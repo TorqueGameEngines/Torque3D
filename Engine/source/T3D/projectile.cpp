@@ -273,42 +273,42 @@ void ProjectileData::initPersistFields()
    endGroup("Light Emitter");   
 
    addGroup("Physics");
-      addProtectedField("lifetime", TypeS32, Offset(lifetime, ProjectileData), &setLifetime, &getScaledValue,
+      addProtectedFieldV("lifetime", TypeRangedS32, Offset(lifetime, ProjectileData), &setLifetime, &getScaledValue, &CommonValidators::NaturalNumber,
          "@brief Amount of time, in milliseconds, before the projectile is removed from the simulation.\n\n"
          "Used with fadeDelay to determine the transparency of the projectile at a given time. "
          "A projectile may exist up to a maximum of 131040ms (or 4095 ticks) as defined by Projectile::MaxLivingTicks in the source code."
          "@see fadeDelay");
-      addProtectedField("armingDelay", TypeS32, Offset(armingDelay, ProjectileData), &setArmingDelay, &getScaledValue,
+      addProtectedFieldV("armingDelay", TypeRangedS32, Offset(armingDelay, ProjectileData), &setArmingDelay, &getScaledValue, &CommonValidators::PositiveInt,
          "@brief Amount of time, in milliseconds, before the projectile will cause damage or explode on impact.\n\n"
          "This value must be equal to or less than the projectile's lifetime.\n\n"
          "@see lifetime");
-      addProtectedField("fadeDelay", TypeS32, Offset(fadeDelay, ProjectileData), &setFadeDelay, &getScaledValue,
+      addProtectedFieldV("fadeDelay", TypeRangedS32, Offset(fadeDelay, ProjectileData), &setFadeDelay, &getScaledValue, &CommonValidators::NaturalNumber,
          "@brief Amount of time, in milliseconds, before the projectile begins to fade out.\n\n"
          "This value must be smaller than the projectile's lifetime to have an affect.");
       addField("isBallistic", TypeBool, Offset(isBallistic, ProjectileData),
          "@brief Detetmines if the projectile should be affected by gravity and whether or not "
          "it bounces before exploding.\n\n");
-      addField("velInheritFactor", TypeF32, Offset(velInheritFactor, ProjectileData),
+      addFieldV("velInheritFactor", TypeRangedF32, Offset(velInheritFactor, ProjectileData), &CommonValidators::F32Range,
          "@brief Amount of velocity the projectile recieves from the source that created it.\n\n"
          "Use an amount between 0 and 1 for the best effect. "
          "This value is never modified by the engine.\n"
          "@note This value by default is not transmitted between the server and the client.");
-      addField("muzzleVelocity", TypeF32, Offset(muzzleVelocity, ProjectileData),
+      addFieldV("muzzleVelocity", TypeRangedF32, Offset(muzzleVelocity, ProjectileData), &CommonValidators::PositiveFloat,
          "@brief Amount of velocity the projectile recieves from the \"muzzle\" of the gun.\n\n"
          "Used with velInheritFactor to determine the initial velocity of the projectile. "
          "This value is never modified by the engine.\n\n"
          "@note This value by default is not transmitted between the server and the client.\n\n"
          "@see velInheritFactor");
-      addField("impactForce", TypeF32, Offset(impactForce, ProjectileData));
-      addField("bounceElasticity", TypeF32, Offset(bounceElasticity, ProjectileData),
+      addFieldV("impactForce", TypeRangedF32, Offset(impactForce, ProjectileData), &CommonValidators::PositiveFloat);
+      addFieldV("bounceElasticity", TypeRangedF32, Offset(bounceElasticity, ProjectileData), &CommonValidators::PositiveFloat,
          "@brief Influences post-bounce velocity of a projectile that does not explode on contact.\n\n"
          "Scales the velocity from a bounce after friction is taken into account. "
          "A value of 1.0 will leave it's velocity unchanged while values greater than 1.0 will increase it.\n");
-      addField("bounceFriction", TypeF32, Offset(bounceFriction, ProjectileData),
+      addFieldV("bounceFriction", TypeRangedF32, Offset(bounceFriction, ProjectileData), &CommonValidators::PositiveFloat,
          "@brief Factor to reduce post-bounce velocity of a projectile that does not explode on contact.\n\n"
          "Reduces bounce velocity by this factor and a multiple of the tangent to impact. "
          "Used to simulate surface friction.\n");
-      addField("gravityMod", TypeF32, Offset(gravityMod, ProjectileData),
+      addFieldV("gravityMod", TypeRangedF32, Offset(gravityMod, ProjectileData), &CommonValidators::F32Range,
          "@brief Scales the influence of gravity on the projectile.\n\n"
          "The larger this value is, the more that gravity will affect the projectile. "
          "A value of 1.0 will assume \"normal\" influence upon it.\n"

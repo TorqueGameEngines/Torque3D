@@ -120,8 +120,8 @@ void GuiHealthBarHud::initPersistFields()
    endGroup("Colors");		
 
    addGroup("Pulse");		
-   addField( "pulseRate", TypeS32, Offset( mPulseRate, GuiHealthBarHud ), "Speed at which the control will pulse." );
-   addField( "pulseThreshold", TypeF32, Offset( mPulseThreshold, GuiHealthBarHud ), "Health level the control must be under before the control will pulse." );
+   addFieldV( "pulseRate", TypeRangedS32, Offset( mPulseRate, GuiHealthBarHud ), &CommonValidators::PositiveInt, "Speed at which the control will pulse." );
+   addFieldV( "pulseThreshold", TypeRangedF32, Offset( mPulseThreshold, GuiHealthBarHud ), &CommonValidators::PositiveFloat, "Health level the control must be under before the control will pulse." );
    endGroup("Pulse");		
 
    addGroup("Misc");		

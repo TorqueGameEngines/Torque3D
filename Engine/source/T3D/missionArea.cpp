@@ -22,6 +22,7 @@
 
 #include "T3D/missionArea.h"
 #include "console/consoleTypes.h"
+#include "console/typeValidators.h"
 #include "core/stream/bitStream.h"
 #include "math/mathIO.h"
 #include "console/engineAPI.h"
@@ -133,8 +134,8 @@ void MissionArea::initPersistFields()
    docsURL;
    addGroup("Dimensions");	
    addField("area", TypeRectI, Offset(mArea, MissionArea), "Four corners (X1, X2, Y1, Y2) that makes up the level's boundaries");
-   addField("flightCeiling", TypeF32, Offset(mFlightCeiling, MissionArea), "Represents the top of the mission area, used by FlyingVehicle. ");
-   addField("flightCeilingRange", TypeF32, Offset(mFlightCeilingRange, MissionArea), "Distance from ceiling before FlyingVehicle thrust is cut off. ");
+   addFieldV("flightCeiling", TypeRangedF32, Offset(mFlightCeiling, MissionArea),&CommonValidators::F32Range, "Represents the top of the mission area, used by FlyingVehicle. ");
+   addFieldV("flightCeilingRange", TypeRangedF32, Offset(mFlightCeilingRange, MissionArea), &CommonValidators::F32Range, "Distance from ceiling before FlyingVehicle thrust is cut off. ");
    endGroup("Dimensions");
 
    Parent::initPersistFields();

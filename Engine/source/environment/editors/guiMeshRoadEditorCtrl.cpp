@@ -215,8 +215,8 @@ bool GuiMeshRoadEditorCtrl::onAdd()
 void GuiMeshRoadEditorCtrl::initPersistFields()
 {
    docsURL;
-   addField( "DefaultWidth",        TypeF32,    Offset( mDefaultWidth, GuiMeshRoadEditorCtrl ) );
-	addField( "DefaultDepth",        TypeF32,    Offset( mDefaultDepth, GuiMeshRoadEditorCtrl ) );
+   addFieldV( "DefaultWidth",        TypeRangedF32,    Offset( mDefaultWidth, GuiMeshRoadEditorCtrl ), &CommonValidators::PositiveFloat);
+	addFieldV( "DefaultDepth", TypeRangedF32,    Offset( mDefaultDepth, GuiMeshRoadEditorCtrl ), &CommonValidators::PositiveFloat);
 	addField( "DefaultNormal",       TypePoint3F,Offset( mDefaultNormal, GuiMeshRoadEditorCtrl ) );
    addField( "HoverSplineColor",    TypeColorI, Offset( mHoverSplineColor, GuiMeshRoadEditorCtrl ) );
    addField( "SelectedSplineColor", TypeColorI, Offset( mSelectedSplineColor, GuiMeshRoadEditorCtrl ) );

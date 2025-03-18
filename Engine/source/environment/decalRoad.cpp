@@ -312,7 +312,7 @@ void DecalRoad::initPersistFields()
       addProtectedFieldV("textureLength", TypeRangedF32, Offset(mTextureLength, DecalRoad), &DecalRoad::ptSetTextureLength, &defaultProtectedGetFn, &drTextureLengthV,
          "The length in meters of textures mapped to the DecalRoad" );      
 
-      addProtectedFieldV( "breakAngle", TypeF32, Offset( mBreakAngle, DecalRoad ), &DecalRoad::ptSetBreakAngle, &defaultProtectedGetFn, &CommonValidators::PosDegreeRange,
+      addProtectedFieldV( "breakAngle", TypeRangedF32, Offset( mBreakAngle, DecalRoad ), &DecalRoad::ptSetBreakAngle, &defaultProtectedGetFn, &CommonValidators::PosDegreeRange,
          "Angle in degrees - DecalRoad will subdivided the spline if its curve is greater than this threshold." );      
 
       addField( "renderPriority", TypeS32, Offset( mRenderPriority, DecalRoad ), 

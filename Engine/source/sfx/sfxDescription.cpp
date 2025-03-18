@@ -426,7 +426,7 @@ void SFXDescription::initPersistFields()
       "Reverb echo depth.");
    addFieldV("reverbModTime", TypeRangedF32, Offset(mReverb.flModulationTime, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb Modulation time.");
-   addFieldV("reverbModDepth", TypeRangedF32, Offset(mReverb.flModulationDepth, SFXDescription), &CommonValidators::PositiveFloat,
+   addFieldV("reverbModDepth", TypeRangedF32, Offset(mReverb.flModulationDepth, SFXDescription), &CommonValidators::NormalizedFloat,
       "Reverb Modulation Depth.");
    addFieldV("airAbsorbtionGainHF", TypeRangedF32, Offset(mReverb.flAirAbsorptionGainHF, SFXDescription), &CommonValidators::PositiveFloat,
       "High Frequency air absorbtion");

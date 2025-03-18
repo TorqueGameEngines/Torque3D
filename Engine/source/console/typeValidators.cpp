@@ -100,15 +100,15 @@ void Point3NormalizeValidator::validateType(SimObject *object, void *typePtr)
 
 namespace CommonValidators
 {
-   FRangeValidator F32Range(F32_MIN, F32_MAX, F32_MAX);
-   FRangeValidator DirFloat(-1.0f, 1.0f);
-   FRangeValidator NegDefaultF32(-1.0f, F32_MAX, F32_MAX);
-   FRangeValidator PositiveFloat(0.0f, F32_MAX, F32_MAX);
-   FRangeValidator PositiveNonZeroFloat((F32)POINT_EPSILON, F32_MAX);
+   FRangeValidator F32Range(F32_MIN, F32_MAX, 1 / POINT_EPSILON);
+   FRangeValidator DirFloat(-1.0f, 1.0f, 1 / POINT_EPSILON);
+   FRangeValidator NegDefaultF32(-1.0f, F32_MAX, 1 / POINT_EPSILON);
+   FRangeValidator PositiveFloat(0.0f, F32_MAX, 1 / POINT_EPSILON);
+   FRangeValidator PositiveNonZeroFloat((F32)POINT_EPSILON, F32_MAX, 1 / POINT_EPSILON);
    FRangeValidator NormalizedFloat(0.0f, 1.0f);
 
-   FRangeValidator F32_8BitPercent(0.0f, 1.0f, 1 << 8);
-   FRangeValidator F32_16BitPercent(0.0f, 1.0f, 1 << 16);
+   FRangeValidator F32_8BitPercent(0.0f, 1.0f, BIT(8));
+   FRangeValidator F32_16BitPercent(0.0f, 1.0f, BIT(16));
    FRangeValidator ValidSlopeAngle(0.0f, 89.9f, 89.9f);
    FRangeValidator CornerAngle(0.0f, 90.0f, 90.0f);
 

@@ -30,8 +30,7 @@
 class TypeValidator
 {
    public:
-   S32 fieldIndex;
-   TypeValidator() : fieldIndex(0) {}
+   TypeValidator() {}
    ~TypeValidator() {}
    /// Prints a console error message for the validator.
    ///
@@ -39,11 +38,11 @@ class TypeValidator
    /// @code
    /// className objectName (objectId) - invalid value for fieldName: msg
    /// @endcode
-   void consoleError(SimObject *object, const char *format, ...);
+   void consoleError(SimObject *object, StringTableEntry varname, const char *format, ...);
 
    /// validateType is called for each assigned value on the field this
    /// validator is attached to.
-   virtual void validateType(SimObject *object, void *typePtr) = 0;
+   virtual void validateType(SimObject *object, StringTableEntry varname, void *typePtr) = 0;
 };
 
 
@@ -58,7 +57,7 @@ public:
       maxV = mFabs(maxValue) > F32_MIN ? maxValue : 0.0f;
       mFidelity = fidelity;
    }
-   void validateType(SimObject *object, void *typePtr) override;
+   void validateType(SimObject *object, StringTableEntry varname, void *typePtr) override;
    F32 getMin() { return minV; };
    F32 getMax() { return maxV; };
    F32 getFidelity() { return mFidelity; };
@@ -75,7 +74,7 @@ public:
       maxV = maxValue;
       mFidelity = fidelity;
    }
-   void validateType(SimObject *object, void *typePtr) override;
+   void validateType(SimObject *object, StringTableEntry varname, void *typePtr) override;
    S32 getMin() { return minV; };
    S32 getMax() { return maxV; };
    S32 getFidelity() { return mFidelity; };
@@ -96,7 +95,7 @@ public:
       maxV = maxValueScaled;
       factor = scaleFactor;
    }
-   void validateType(SimObject *object, void *typePtr) override;
+   void validateType(SimObject *object, StringTableEntry varname, void *typePtr) override;
    S32 getMin() { return minV; };
    S32 getMax() { return maxV; };
    S32 getScaleFactor() { return factor; };
@@ -108,7 +107,7 @@ class Point3NormalizeValidator : public TypeValidator
    F32 length;
 public:
    Point3NormalizeValidator(F32 normalizeLength = 1.0f) : length(normalizeLength) { }
-   void validateType(SimObject *object, void *typePtr) override;
+   void validateType(SimObject *object, StringTableEntry varname, void *typePtr) override;
    F32 getLength() { return length; };
 };
 

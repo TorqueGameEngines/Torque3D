@@ -646,14 +646,13 @@ void ConsoleObject::addProtectedFieldV(const char* in_pFieldname,
    f.offset = in_fieldOffset;
    f.elementCount = in_elementCount;
    f.validator = v;
+   f.validator->fieldIndex = sg_tempFieldList.size();
    f.flag = flags;
 
    f.setDataFn = in_setDataFn;
    f.getDataFn = in_getDataFn;
    f.writeDataFn = in_writeDataFn;
    f.networkMask = 0;
-
-   v->fieldIndex = sg_tempFieldList.size();
    sg_tempFieldList.push_back(f);
 }
 
@@ -723,8 +722,8 @@ void ConsoleObject::addFieldV(const char* in_pFieldname,
    f.writeDataFn = &defaultProtectedWriteFn;
    f.elementCount = in_elementCount;
    f.validator = v;
+   f.validator->fieldIndex = sg_tempFieldList.size();
    f.networkMask = 0;
-   v->fieldIndex = sg_tempFieldList.size();
 
    sg_tempFieldList.push_back(f);
 }

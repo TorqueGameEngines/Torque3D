@@ -28,7 +28,7 @@
 #include "math/mPoint3.h"
 #include <stdarg.h>
 
-void TypeValidator::consoleError(SimObject *object, const char *format, ...)
+void TypeValidator::consoleError(SimObject *object, StringTableEntry varname, const char *format, ...)
 {
    char buffer[1024];
    va_list argptr;
@@ -37,22 +37,21 @@ void TypeValidator::consoleError(SimObject *object, const char *format, ...)
    va_end(argptr);
 
    AbstractClassRep *rep = object->getClassRep();
-   AbstractClassRep::Field &fld = rep->mFieldList[fieldIndex];
    const char *objectName = object->getName();
    if(!objectName)
       objectName = "unnamed";
 
 
    Con::warnf("%s - %s(%d) - invalid value for %s: %s",
-      rep->getClassName(), objectName, object->getId(), fld.pFieldname, buffer);
+      rep->getClassName(), objectName, object->getId(), varname, buffer);
 }
 
-void FRangeValidator::validateType(SimObject *object, void *typePtr)
+void FRangeValidator::validateType(SimObject *object, StringTableEntry varname, void *typePtr)
 {
    F32 *v = (F32 *) typePtr;
    if(*v < minV || *v > maxV)
    {
-      consoleError(object, "=(%g). Must be between %g and %g", *v, minV, maxV);
+      consoleError(object, varname, "=(%g). Must be between %g and %g", *v, minV, maxV);
       if(*v < minV)
          *v = minV;
       else if(*v > maxV)
@@ -60,12 +59,12 @@ void FRangeValidator::validateType(SimObject *object, void *typePtr)
    }
 }
 
-void IRangeValidator::validateType(SimObject *object, void *typePtr)
+void IRangeValidator::validateType(SimObject *object, StringTableEntry varname, void *typePtr)
 {
    S32 *v = (S32 *) typePtr;
    if(*v < minV || *v > maxV)
    {
-      consoleError(object, "=(%d). Must be between %d and %d", *v, minV, maxV);
+      consoleError(object, varname, "=(%d). Must be between %d and %d", *v, minV, maxV);
       if(*v < minV)
          *v = minV;
       else if(*v > maxV)
@@ -73,13 +72,13 @@ void IRangeValidator::validateType(SimObject *object, void *typePtr)
    }
 }
 
-void IRangeValidatorScaled::validateType(SimObject *object, void *typePtr)
+void IRangeValidatorScaled::validateType(SimObject *object, StringTableEntry varname, void *typePtr)
 {
    S32 *v = (S32 *) typePtr;
    *v /= factor;
    if(*v < minV || *v > maxV)
    {
-      consoleError(object, "=(%d). Scaled value must be between %d and %d", *v, minV, maxV);
+      consoleError(object, varname, "=(%d). Scaled value must be between %d and %d", *v, minV, maxV);
       if(*v < minV)
          *v = minV;
       else if(*v > maxV)
@@ -87,28 +86,28 @@ void IRangeValidatorScaled::validateType(SimObject *object, void *typePtr)
    }
 }
 
-void Point3NormalizeValidator::validateType(SimObject *object, void *typePtr)
+void Point3NormalizeValidator::validateType(SimObject *object, StringTableEntry varname, void *typePtr)
 {
    Point3F *v = (Point3F *) typePtr;
    const F32 len = v->len();
    if(!mIsEqual(len, 1.0f))
    {
-      consoleError(object, "=(%g). Vector length must be %g", len, length);
+      consoleError(object, varname, "=(%g). Vector length must be %g", len, length);
       *v *= length / len;
    }
 }
 
 namespace CommonValidators
 {
-   FRangeValidator F32Range(F32_MIN, F32_MAX, F32_MAX);
-   FRangeValidator DirFloat(-1.0f, 1.0f);
-   FRangeValidator NegDefaultF32(-1.0f, F32_MAX, F32_MAX);
-   FRangeValidator PositiveFloat(0.0f, F32_MAX, F32_MAX);
-   FRangeValidator PositiveNonZeroFloat((F32)POINT_EPSILON, F32_MAX);
+   FRangeValidator F32Range(F32_MIN, F32_MAX, 1 / POINT_EPSILON);
+   FRangeValidator DirFloat(-1.0f, 1.0f, 1 / POINT_EPSILON);
+   FRangeValidator NegDefaultF32(-1.0f, F32_MAX, 1 / POINT_EPSILON);
+   FRangeValidator PositiveFloat(0.0f, F32_MAX, 1 / POINT_EPSILON);
+   FRangeValidator PositiveNonZeroFloat((F32)POINT_EPSILON, F32_MAX, 1 / POINT_EPSILON);
    FRangeValidator NormalizedFloat(0.0f, 1.0f);
 
-   FRangeValidator F32_8BitPercent(0.0f, 1.0f, 1 << 8);
-   FRangeValidator F32_16BitPercent(0.0f, 1.0f, 1 << 16);
+   FRangeValidator F32_8BitPercent(0.0f, 1.0f, BIT(8));
+   FRangeValidator F32_16BitPercent(0.0f, 1.0f, BIT(16));
    FRangeValidator ValidSlopeAngle(0.0f, 89.9f, 89.9f);
    FRangeValidator CornerAngle(0.0f, 90.0f, 90.0f);
 

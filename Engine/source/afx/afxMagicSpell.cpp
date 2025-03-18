@@ -43,7 +43,7 @@
 // created for each effect list and an id is used to identify which list to add the effect
 // to.
 //
-void afxMagicSpellData::ewValidator::validateType(SimObject* object, void* typePtr)
+void afxMagicSpellData::ewValidator::validateType(SimObject* object, StringTableEntry varname, void* typePtr)
 {
   afxMagicSpellData* spelldata = dynamic_cast<afxMagicSpellData*>(object);
   afxEffectBaseData** ew = (afxEffectBaseData**)(typePtr);

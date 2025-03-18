@@ -138,11 +138,11 @@ ParticleData::ParticleData()
 //-----------------------------------------------------------------------------
 
 
-FRangeValidator dragCoefFValidator(0.f, 5.f);
-FRangeValidator gravCoefFValidator(-10.f, 10.f);
-FRangeValidator spinRandFValidator(-1000.f, 1000.f);
-FRangeValidator particleTimeFValidator(0.0f, 1.0f, 1<<8);
-FRangeValidator particleSizeFValidator(0.0f, MaxParticleSize, 1<<16);
+FRangeValidator dragCoefFValidator(0.f, 5.f, BIT(10));
+FRangeValidator gravCoefFValidator(-10.f, 10.f, BIT(12));
+FRangeValidator spinRandFValidator(-1000.f, 1000.f, BIT(11));
+FRangeValidator particleTimeFValidator(0.0f, 1.0f, BIT(8));
+FRangeValidator particleSizeFValidator(0.0f, MaxParticleSize, BIT(16));
 
 //-----------------------------------------------------------------------------
 // initPersistFields

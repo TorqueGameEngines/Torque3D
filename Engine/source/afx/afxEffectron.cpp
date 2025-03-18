@@ -39,7 +39,7 @@
 // When an effect is added using "addEffect", this validator intercepts the value
 // and adds it to the dynamic effects list. 
 //
-void afxEffectronData::ewValidator::validateType(SimObject* object, void* typePtr)
+void afxEffectronData::ewValidator::validateType(SimObject* object, StringTableEntry varname, void* typePtr)
 {
   afxEffectronData* eff_data = dynamic_cast<afxEffectronData*>(object);
   afxEffectBaseData** ew = (afxEffectBaseData**)(typePtr);

@@ -66,10 +66,10 @@ void LightAnimData::initPersistFields()
    addGroup( "Offset",
       "The XYZ translation animation state relative to the light position." );
       addArray("XYZ Pan", Axis);
-         addFieldV( "offsetA", TypeRangedF32, Offset( mOffset.value1, LightAnimData ), &CommonValidators::PositiveFloat, Axis,
+         addFieldV( "offsetA", TypeRangedF32, Offset( mOffset.value1, LightAnimData ), &CommonValidators::F32Range, Axis,
          "The value of the A key in the keyframe sequence." );
 
-         addFieldV( "offsetZ", TypeRangedF32, Offset( mOffset.value2, LightAnimData ), &CommonValidators::PositiveFloat, Axis,
+         addFieldV( "offsetZ", TypeRangedF32, Offset( mOffset.value2, LightAnimData ), &CommonValidators::F32Range, Axis,
          "The value of the Z key in the keyframe sequence." );
 
          addFieldV( "offsetPeriod", TypeRangedF32, Offset( mOffset.period, LightAnimData ), &CommonValidators::PositiveFloat, Axis,

@@ -99,11 +99,11 @@ void Point3NormalizeValidator::validateType(SimObject *object, StringTableEntry 
 
 namespace CommonValidators
 {
-   FRangeValidator F32Range(F32_MIN, F32_MAX, 1 / POINT_EPSILON);
-   FRangeValidator DirFloat(-1.0f, 1.0f, 1 / POINT_EPSILON);
-   FRangeValidator NegDefaultF32(-1.0f, F32_MAX, 1 / POINT_EPSILON);
-   FRangeValidator PositiveFloat(0.0f, F32_MAX, 1 / POINT_EPSILON);
-   FRangeValidator PositiveNonZeroFloat((F32)POINT_EPSILON, F32_MAX, 1 / POINT_EPSILON);
+   FRangeValidator F32Range(F32_MIN_EX, F32_MAX);
+   FRangeValidator DirFloat(-1.0f, 1.0f);
+   FRangeValidator NegDefaultF32(-1.0f, F32_MAX);
+   FRangeValidator PositiveFloat(0.0f, F32_MAX);
+   FRangeValidator PositiveNonZeroFloat((F32)POINT_EPSILON, F32_MAX);
    FRangeValidator NormalizedFloat(0.0f, 1.0f);
 
    FRangeValidator F32_8BitPercent(0.0f, 1.0f, BIT(8));
@@ -119,8 +119,8 @@ namespace CommonValidators
    //see "T3D/gameBase/processList.h" for TickMs = 32
    IRangeValidator MSTickRange(32, S32_MAX);
 
-   IRangeValidator S32_8BitCap(0, 1 << 8);
-   IRangeValidator S32_16BitCap(0, 1 << 16);
+   IRangeValidator S32_8BitCap(0, BIT(8));
+   IRangeValidator S32_16BitCap(0, BIT(16));
    Point3NormalizeValidator NormalizedPoint3(1.0f);
 
    FRangeValidator DegreeRange(-360.0f, 360.0f, 720.0f);

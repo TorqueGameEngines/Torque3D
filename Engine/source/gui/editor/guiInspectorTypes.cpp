@@ -1388,7 +1388,7 @@ GuiControl* GuiInspectorTypeRangedF32::constructEditControl()
       if (validator->getFidelity()>0.0f)
          retCtrl->setField("increment", String::ToString("%g", (validator->getMax()-validator->getMin())/validator->getFidelity()));
       else
-         retCtrl->setField("increment", String::ToString("%g", POINT_EPSILON));
+         retCtrl->setField("increment", String::ToString("%g", 0.01));
    }
    return retCtrl;
 }

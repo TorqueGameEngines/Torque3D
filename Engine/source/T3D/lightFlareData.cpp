@@ -168,7 +168,7 @@ void LightFlareData::initPersistFields()
          addField( "elementRect", TypeRectF, Offset( mElementRect, LightFlareData ), MAX_ELEMENTS,
             "A rectangle specified in pixels of the flareTexture image." );
 
-         addFieldV( "elementDist", TypeRangedF32, Offset( mElementDist, LightFlareData ), &CommonValidators::PositiveFloat, MAX_ELEMENTS,
+         addFieldV( "elementDist", TypeRangedF32, Offset( mElementDist, LightFlareData ), &CommonValidators::F32Range, MAX_ELEMENTS,
             "Where this element appears along the flare beam." );
 
          addFieldV( "elementScale", TypeRangedF32, Offset( mElementScale, LightFlareData ), &CommonValidators::PositiveFloat, MAX_ELEMENTS,

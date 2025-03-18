@@ -434,7 +434,7 @@ void SFXDescription::initPersistFields()
       "Reverb High Frequency Reference.");
    addFieldV("reverbLFRef", TypeRangedF32, Offset(mReverb.flLFReference, SFXDescription), &CommonValidators::PositiveFloat,
       "Reverb Low Frequency Reference.");
-   addFieldV("roomRolloffFactor", TypeRangedF32, Offset(mReverb.flRoomRolloffFactor, SFXDescription), &CommonValidators::PositiveFloat,
+   addFieldV("roomRolloffFactor", TypeRangedF32, Offset(mReverb.flRoomRolloffFactor, SFXDescription), &CommonValidators::NegDefaultF32,
       "Rolloff factor for reverb.");
    addFieldV("decayHFLimit", TypeRangedS32, Offset(mReverb.iDecayHFLimit, SFXDescription), &CommonValidators::PositiveInt,
       "High Frequency decay limit.");

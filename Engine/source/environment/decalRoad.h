@@ -249,7 +249,7 @@ protected:
    DECLARE_MATERIALASSET(DecalRoad, Material);
    DECLARE_ASSET_NET_SETGET(DecalRoad, Material, DecalRoadMask);
 
-   U32 mRenderPriority;
+   S16 mRenderPriority;
 
    // Static ConsoleVars for editor
    static bool smEditorOpen;

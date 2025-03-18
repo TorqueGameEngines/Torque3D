@@ -91,7 +91,7 @@ DecalData::DecalData()
 
    matInst = NULL;
 
-   renderPriority = 10;
+   mRenderPriority = 10;
    clippingMasks = STATIC_COLLISION_TYPEMASK;
    clippingAngle = 89.0f;
 
@@ -169,7 +169,7 @@ void DecalData::initPersistFields()
          "fully faded out.\n\n"
          "This should be a smaller value than #fadeStartPixelSize." );
 
-      addField( "renderPriority", TypeS8, Offset( renderPriority, DecalData ), 
+      addField( "renderPriority", TypeS16, Offset( mRenderPriority, DecalData ),
          "Default renderPriority for decals of this type (determines draw "
          "order when decals overlap)." );
 
@@ -235,7 +235,7 @@ void DecalData::onStaticModified( const char *slotName, const char *newValue )
    }
    else if ( dStricmp( slotName, "renderPriority" ) == 0 )
    {
-      renderPriority = getMax( renderPriority, (U8)1 );
+      mRenderPriority = getMax(mRenderPriority, (S16)1 );
    }
 }
 
@@ -270,7 +270,7 @@ void DecalData::packData( BitStream *stream )
 
    stream->write( fadeStartPixelSize );
    stream->write( fadeEndPixelSize );
-   stream->write( renderPriority );
+   stream->write( mRenderPriority );
    stream->write( clippingMasks );
    stream->write( clippingAngle );
    
@@ -300,7 +300,7 @@ void DecalData::unpackData( BitStream *stream )
 
    stream->read( &fadeStartPixelSize );
    stream->read( &fadeEndPixelSize );
-   stream->read( &renderPriority );
+   stream->read( &mRenderPriority);
    stream->read( &clippingMasks );
    stream->read( &clippingAngle );
    

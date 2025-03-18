@@ -85,7 +85,7 @@ class DecalData : public SimDataBlock
 
       String lookupName;
 
-      U8 renderPriority;
+      S16 mRenderPriority;
       
       S32 clippingMasks;
 

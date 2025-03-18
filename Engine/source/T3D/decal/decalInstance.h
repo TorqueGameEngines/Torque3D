@@ -88,7 +88,7 @@ class DecalInstance
 
       U8 getRenderPriority() const
       {
-         return mRenderPriority == 0 ? mDataBlock->renderPriority : mRenderPriority;
+         return mRenderPriority == 0 ? mDataBlock->mRenderPriority : mRenderPriority;
       }
 
       /// Calculates the size of this decal onscreen in pixels, used for LOD.

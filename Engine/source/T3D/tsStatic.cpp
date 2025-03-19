@@ -262,7 +262,7 @@ void TSStatic::initPersistFields()
 
    addFieldV("renderNormals", TypeRangedF32, Offset(mRenderNormalScalar, TSStatic), &CommonValidators::PositiveFloat,
       "Debug rendering mode shows the normals for each point in the TSStatic's mesh.");
-   addFieldV("forceDetail", TypeRangedS32, Offset(mForceDetail, TSStatic), &CommonValidators::PositiveInt,
+   addFieldV("forceDetail", TypeRangedS32, Offset(mForceDetail, TSStatic), &CommonValidators::S32Range,
       "Forces rendering to a particular detail level.");
 
    endGroup("Debug");

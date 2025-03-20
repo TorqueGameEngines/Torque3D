@@ -257,6 +257,12 @@ void GFXD3D11CubemapArray::_init(U32 cubemapCount, U32 size, GFXFormat format) {
    desc.MiscFlags = miscFlags;
    desc.CPUAccessFlags = 0;
 
+   if (desc.ArraySize > D3D11_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION)
+   {
+      AssertFatal(false, avar("CubemapArray size exceeds maximum array size of %d", D3D11_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION));
+      return;
+   }
+
    HRESULT hr = D3D11DEVICE->CreateTexture2D(&desc, NULL, &mTexture);
    AssertFatal(SUCCEEDED(hr), "GFXD3D11CubemapArray::_init - CreateTexture2D failed");
 

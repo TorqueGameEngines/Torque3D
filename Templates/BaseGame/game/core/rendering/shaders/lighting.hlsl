@@ -224,17 +224,17 @@ float getDistanceAtt( float3 unormalizedLightVector , float invSqrAttRadius )
    return sqr(attenuation);
 }
 
-float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
-{
-   //diffuse term
-   float3 Fd = surface.baseColor.rgb * M_1OVER_PI_F * surface.ao;
-    
+float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight, float lightIntensity)
+{    
    //GGX specular
    float3 F = F_Schlick(surface.f0, surface.f90, surfaceToLight.HdotV);
    float Vis = V_SmithGGXCorrelated(surface.NdotV, surfaceToLight.NdotL, surface.linearRoughnessSq);
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughnessSq);
    float3 Fr = D * F * Vis;
 
+   //diffuse term
+   float3 Fd = surface.baseColor.rgb * M_1OVER_PI_F * surface.ao * sqrt(Vis / lightIntensity);
+   
    if(isCapturing == 1)
       return lerp(Fd + Fr,surface.baseColor.rgb,surface.metalness);
    else
@@ -248,7 +248,7 @@ float3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, float
       lightfloor = 0.0;
         
    float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity, lightfloor) ;
-   return evaluateStandardBRDF(surface,surfaceToLight) * factor;
+   return evaluateStandardBRDF(surface,surfaceToLight, lightIntensity + 1.0) * factor;
 }
 
 float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float shadow)
@@ -258,8 +258,8 @@ float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 l
       lightfloor = 0.0;
       
    float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor) ;
-   return evaluateStandardBRDF(surface,surfaceToLight) * factor;
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor);
+   return evaluateStandardBRDF(surface,surfaceToLight, lightIntensity + 1.0) * factor;
 }
 
 float3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float3 lightDir, float2 lightSpotParams, float shadow)
@@ -271,8 +271,8 @@ float3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, float3 light
    float attenuation = 1.0f;
    attenuation *= getDistanceAtt(surfaceToLight.Lu, radius);
    attenuation *= getSpotAngleAtt(-surfaceToLight.L, lightDir, lightSpotParams.xy);
-   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor) ;
-   return evaluateStandardBRDF(surface,surfaceToLight) * factor;
+   float3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor);
+   return evaluateStandardBRDF(surface,surfaceToLight, lightIntensity + 1.0) * factor;
 }
 
 float computeSpecOcclusion( float NdotV , float AO , float roughness )
@@ -282,7 +282,7 @@ float computeSpecOcclusion( float NdotV , float AO , float roughness )
 
 float roughnessToMipLevel(float roughness, float numMips)
 {	
-   return pow(abs(roughness),0.25) * numMips;
+   return roughness * (numMips+1);
 }
 
 float4 compute4Lights( Surface surface,

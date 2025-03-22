@@ -204,27 +204,18 @@ void main()
    return;
 #endif
 
-   
-   //energy conservation
-   vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
-   vec3 kD = 1.0f - F;
-   kD *= 1.0f - surface.metalness;
-
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
-   specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
-   irradiance *= kD * surface.baseColor.rgb;
+   vec3 diffuse = irradiance * surface.baseColor.rgb * (1.0 - surface.metalness);
 
-   //AO
-   irradiance *= surface.ao;
-   specular *= computeSpecOcclusion(surface.NdotV, surface.ao, surface.roughness);
-
-   //http://marmosetco.tumblr.com/post/81245981087
-   float horizonOcclusion = 1.3;
-   float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
-   horizon *= horizon;
-   
+   vec3 specularCol = specular * (F_Schlick(surface.f0, surface.NdotV) * envBRDF.x + envBRDF.y);
+   specularCol *= surface.metalness + (1.0 - surface.roughness);
+   // Final color output after environment lighting
+   vec3 finalColor = diffuse + specularCol;
+   finalColor *= surface.ao;
    if(isCapturing == 1)
-      OUT_col = vec4(mix((irradiance + specular* horizon),surface.baseColor.rgb, surface.metalness),0);
+      OUT_col = vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
    else
-      OUT_col = vec4((irradiance + specular* horizon)*ambientColor, 0);//alpha writes disabled
+   {
+      OUT_col = vec4(finalColor*ambientColor, 0);
+   }
 }

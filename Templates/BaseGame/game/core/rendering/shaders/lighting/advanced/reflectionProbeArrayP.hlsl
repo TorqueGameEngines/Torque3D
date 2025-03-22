@@ -192,16 +192,15 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    return float4(irradiance, 1);
 #endif   
 
-   float2 envBRDF = TORQUE_TEX2D(BRDFTexture, float2(surface.NdotV, surface.roughness)).rg;
+   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    float3 diffuse = irradiance * surface.baseColor.rgb * (1.0 - surface.metalness);
+   float3 specularCol = specular * lerp(envBRDF.y, envBRDF.x, surface.metalness * (1.0 - surface.roughness));
 
-   float3 specularCol = specular * (F_Schlick(surface.f0, surface.NdotV) * envBRDF.x + envBRDF.y);
-   specularCol *= surface.metalness + (1.0 - surface.roughness);
    // Final color output after environment lighting
    float3 finalColor = diffuse + specularCol;
-   finalColor *= surface.ao;
-   if(isCapturing == 1)
-      return float4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
+   finalColor *= surface.ao; 
+   if(isCapturing == 1) 
+      return float4(lerp(finalColor, surface.baseColor.rgb,surface.metalness),0);
    else
    {
       return float4((finalColor*ambientColor), 0);

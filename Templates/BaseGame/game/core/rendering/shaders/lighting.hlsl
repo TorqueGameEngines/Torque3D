@@ -588,11 +588,10 @@ float4 computeForwardProbes(Surface surface,
       specular = lerp(specular,TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
    }
 
-   float2 envBRDF = TORQUE_TEX2D(BRDFTexture, float2(surface.NdotV, surface.roughness)).rg;
+   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    float3 diffuse = irradiance * surface.baseColor.rgb * (1.0 - surface.metalness);
-
-   float3 specularCol = specular * (F_Schlick(surface.f0, surface.NdotV) * envBRDF.x + envBRDF.y);
-   specularCol *= surface.metalness + (1.0 - surface.roughness);
+   float3 specularCol = specular * lerp(envBRDF.y, envBRDF.x, surface.metalness * (1.0 - surface.roughness)); 
+   
    // Final color output after environment lighting
    float3 finalColor = diffuse + specularCol;
    finalColor *= surface.ao;
@@ -741,10 +740,10 @@ float4 debugVizForwardProbes(Surface surface,
       return float4(irradiance, 0);
    }
 
-   float2 envBRDF = TORQUE_TEX2D(BRDFTexture, float2(surface.NdotV, surface.roughness)).rg;
+   float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    float3 diffuse = irradiance * surface.baseColor.rgb * (1.0 - surface.metalness);
-
-   float3 specularCol = specular * (F_Schlick(surface.f0, surface.NdotV) * envBRDF.x + envBRDF.y);
+   float3 specularCol = specular * lerp(envBRDF.y, envBRDF.x, surface.metalness * (1.0 - surface.roughness)); 
+   
    specularCol *= surface.metalness + (1.0 - surface.roughness);
    // Final color output after environment lighting
    float3 finalColor = diffuse + specularCol;

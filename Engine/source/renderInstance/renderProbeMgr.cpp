@@ -238,7 +238,7 @@ bool RenderProbeMgr::onAdd()
    mCubeSlotCount = PROBE_ARRAY_SLOT_BUFFER_SIZE;
 
    String brdfTexturePath = GFXTextureManager::getBRDFTexturePath();
-   if (!mBRDFTexture.set(brdfTexturePath, &GFXTexturePersistentProfile, "BRDFTexture"))
+   if (!mBRDFTexture.set(brdfTexturePath, &GFXTexturePersistentSRGBProfile, "BRDFTexture"))
    {
       Con::errorf("RenderProbeMgr::onAdd: Failed to load BRDF Texture");
       return false;

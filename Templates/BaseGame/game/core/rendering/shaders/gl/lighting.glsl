@@ -584,9 +584,8 @@ vec4 computeForwardProbes(Surface surface,
 
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    vec3 diffuse = irradiance * surface.baseColor.rgb * (1.0 - surface.metalness);
-
-   vec3 specularCol = specular * (F_Schlick(surface.f0, surface.NdotV) * envBRDF.x + envBRDF.y);
-   specularCol *= surface.metalness + (1.0 - surface.roughness);
+   vec3 specularCol = specular * lerp(envBRDF.y, envBRDF.x, surface.metalness * (1.0 - surface.roughness));
+   
    // Final color output after environment lighting
    vec3 finalColor = diffuse + specularCol;
    finalColor *= surface.ao;
@@ -737,8 +736,8 @@ vec4 debugVizForwardProbes(Surface surface,
 
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    vec3 diffuse = irradiance * surface.baseColor.rgb * (1.0 - surface.metalness);
-
-   vec3 specularCol = specular * (F_Schlick(surface.f0, surface.NdotV) * envBRDF.x + envBRDF.y);
+   vec3 specularCol = specular * lerp(envBRDF.y, envBRDF.x, surface.metalness * (1.0 - surface.roughness));
+   
    specularCol *= surface.metalness + (1.0 - surface.roughness);
    // Final color output after environment lighting
    vec3 finalColor = diffuse + specularCol;

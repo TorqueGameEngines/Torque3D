@@ -567,10 +567,10 @@ Var* ShaderFeatureGLSL::getObjTrans(   Vector<ShaderComponent*> &componentList,
    else
    {
       objTrans = new Var;
-      objTrans->setType( "float4x4" );
-	objTrans->setName( "objTrans" );
-	objTrans->uniform = true;
-	objTrans->constSortPos = cspPrimitive;      
+      objTrans->setType( "mat4x4" );
+	   objTrans->setName( "objTrans" );
+	   objTrans->uniform = true;
+	   objTrans->constSortPos = cspPrimitive;      
    }
 	
 	return objTrans;

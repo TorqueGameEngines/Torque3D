@@ -49,4 +49,32 @@ public:
 
 DeclareFeatureType( MFT_WindEffect );
 
+class WindDeformation : public ShaderFeature
+{
+protected:
+
+   ShaderIncludeDependency mDep;
+
+public:
+
+   WindDeformation();
+
+   void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
+
+   String getName() override
+   {
+      return "Wind Effect";
+   }
+
+   void determineFeature(Material* material,
+      const GFXVertexFormat* vertexFormat,
+      U32 stageNum,
+      const FeatureType& type,
+      const FeatureSet& features,
+      MaterialFeatureData* outFeatureData) override;
+
+   ShaderFeatureConstHandles* createConstHandles(GFXShader* shader, SimObject* userObject) override;
+};
+
 #endif // _FOREST_SHADERGEN_WINDDEFORMATION_H_

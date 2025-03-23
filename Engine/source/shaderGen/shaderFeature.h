@@ -168,15 +168,19 @@ public:
    //-----------------------------------------------------------------------
    
    /// Get the incoming base texture coords - useful for bumpmap and detail maps
-   virtual Var* getVertTexCoord( const String &name ) = 0;
+   virtual Var* getVertTexCoord( const String &name ) { return NULL; };
 
    /// Set up a texture space matrix - to pass into pixel shader
    virtual LangElement * setupTexSpaceMat(  Vector<ShaderComponent*> &componentList, 
-      Var **texSpaceMat ) = 0;
+      Var **texSpaceMat ) {
+      return NULL;
+   };
 
    /// Expand and assign a normal map. This takes care of compressed normal maps as well.
    virtual LangElement * expandNormalMap( LangElement *sampleNormalOp, 
-      LangElement *normalDecl, LangElement *normalVar, const MaterialFeatureData &fd ) = 0;
+      LangElement *normalDecl, LangElement *normalVar, const MaterialFeatureData &fd ) {
+      return NULL;
+   };
 
    /// Helper function for applying the color to shader output.
    ///
@@ -190,7 +194,9 @@ public:
    virtual LangElement* assignColor(   LangElement *elem, 
                                        Material::BlendOp blend, 
                                        LangElement *lerpElem = NULL,
-                                       ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget ) = 0;
+                                       ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget ) {
+      return NULL;
+   };
 
 
    //-----------------------------------------------------------------------
@@ -303,6 +309,11 @@ public:
                                     MultiLine *multi );
    // Set the instancing format
    void setInstancingFormat(GFXVertexFormat *format);
+
+   ///
+   Var* getObjTrans(Vector<ShaderComponent*>& componentList,
+      bool useInstancing,
+      MultiLine* meta);
 };
 
 #endif // _SHADERFEATURE_H_

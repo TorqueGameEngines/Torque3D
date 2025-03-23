@@ -98,3 +98,49 @@ void ShaderFeature::setInstancingFormat(GFXVertexFormat *format)
 {
    mInstancingFormat = format;
 }
+
+Var* ShaderFeature::getObjTrans(Vector<ShaderComponent*>& componentList, bool useInstancing, MultiLine* meta)
+{
+   Var* objTrans = (Var*)LangElement::find("objTrans");
+   if (objTrans)
+      return objTrans;
+
+   if (useInstancing)
+   {
+      ShaderConnector* vertStruct = dynamic_cast<ShaderConnector*>(componentList[C_VERT_STRUCT]);
+      Var* instObjTrans = vertStruct->getElement(RT_TEXCOORD, 4, 4);
+      instObjTrans->setStructName("IN");
+      instObjTrans->setName("inst_objectTrans");
+
+      mInstancingFormat->addElement("objTrans", GFXDeclType_Float4, instObjTrans->constNum + 0);
+      mInstancingFormat->addElement("objTrans", GFXDeclType_Float4, instObjTrans->constNum + 1);
+      mInstancingFormat->addElement("objTrans", GFXDeclType_Float4, instObjTrans->constNum + 2);
+      mInstancingFormat->addElement("objTrans", GFXDeclType_Float4, instObjTrans->constNum + 3);
+
+      // Resolve API-specific type name
+      String matType;
+      if (GFX->getAdapterType() == OpenGL)
+         matType = "mat4";  // GLSL uses mat4
+      else
+         matType = "float4x4";  // HLSL uses float4x4
+
+      objTrans = new Var;
+      objTrans->setType(GFXSCT_Float4x4);
+      objTrans->setName("objTrans");
+      meta->addStatement(new GenOp("   @ = " + matType + "( // Instancing!\r\n", new DecOp(objTrans), instObjTrans));
+      meta->addStatement(new GenOp("      @[0],\r\n", instObjTrans));
+      meta->addStatement(new GenOp("      @[1],\r\n", instObjTrans));
+      meta->addStatement(new GenOp("      @[2],\r\n", instObjTrans));
+      meta->addStatement(new GenOp("      @[3] );\r\n", instObjTrans));
+   }
+   else
+   {
+      objTrans = new Var;
+      objTrans->setType(GFXSCT_Float4x4);
+      objTrans->setName("objTrans");
+      objTrans->uniform = true;
+      objTrans->constSortPos = cspPrimitive;
+   }
+
+   return objTrans;
+}

@@ -30,6 +30,10 @@
 #include "core/stream/stream.h"
 #endif
 
+#ifndef _GFXENUMS_H_
+#include "gfx/gfxEnums.h"
+#endif
+
 #define WRITESTR( a ){ stream.write( dStrlen(a), a ); }
 
 
@@ -55,7 +59,7 @@ struct LangElement
    static void deleteElements();
       
    U8    name[32];
-   
+   static const char* constTypeToString(GFXShaderConstType constType);
    LangElement();
    virtual ~LangElement() {};
    virtual void print( Stream &stream ){};
@@ -131,10 +135,12 @@ struct Var : public LangElement
    // Default
    Var();   
    Var( const char *name, const char *type );   
+   Var( const char *name, GFXShaderConstType type );
    
    void setStructName(const char *newName );
    void setConnectName(const char *newName );
    void setType(const char *newType );
+   void setType(GFXShaderConstType constType);
   
    void print( Stream &stream ) override;
 

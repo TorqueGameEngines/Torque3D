@@ -30,6 +30,69 @@
 //**************************************************************************
 Vector<LangElement*> LangElement::elementList( __FILE__, __LINE__ );
 
+const char* LangElement::constTypeToString(GFXShaderConstType constType)
+{
+   // Determine shader language based on GFXAdapterAPI
+   if (GFX->getAdapterType() == OpenGL)
+   {
+      switch (constType)
+      {
+      case GFXSCT_Float:       return "float"; break;
+      case GFXSCT_Float2:      return "vec2"; break;
+      case GFXSCT_Float3:      return "vec3"; break;
+      case GFXSCT_Float4:      return "vec4"; break;
+      case GFXSCT_Float2x2:    return "mat2"; break;
+      case GFXSCT_Float3x3:    return "mat3"; break;
+      case GFXSCT_Float3x4:    return "mat3x4"; break;
+      case GFXSCT_Float4x3:    return "mat4x3"; break;
+      case GFXSCT_Float4x4:    return "mat4"; break;
+      case GFXSCT_Int:         return "int"; break;
+      case GFXSCT_Int2:        return "ivec2"; break;
+      case GFXSCT_Int3:        return "ivec3"; break;
+      case GFXSCT_Int4:        return "ivec4"; break;
+      case GFXSCT_UInt:        return "uint"; break;
+      case GFXSCT_UInt2:       return "uvec2"; break;
+      case GFXSCT_UInt3:       return "uvec3"; break;
+      case GFXSCT_UInt4:       return "uvec4"; break;
+      case GFXSCT_Bool:        return "bool"; break;
+      case GFXSCT_Bool2:       return "bvec2"; break;
+      case GFXSCT_Bool3:       return "bvec3"; break;
+      case GFXSCT_Bool4:       return "bvec4"; break;
+      default:                 return "unknown"; break;
+      }
+   }
+   else // Assume DirectX/HLSL
+   {
+      switch (constType)
+      {
+      case GFXSCT_Float:       return "float"; break;
+      case GFXSCT_Float2:      return "float2"; break;
+      case GFXSCT_Float3:      return "float3"; break;
+      case GFXSCT_Float4:      return "float4"; break;
+      case GFXSCT_Float2x2:    return "float2x2"; break;
+      case GFXSCT_Float3x3:    return "float3x3"; break;
+      case GFXSCT_Float3x4:    return "float3x4"; break;
+      case GFXSCT_Float4x3:    return "float4x3"; break;
+      case GFXSCT_Float4x4:    return "float4x4"; break;
+      case GFXSCT_Int:         return "int"; break;
+      case GFXSCT_Int2:        return "int2"; break;
+      case GFXSCT_Int3:        return "int3"; break;
+      case GFXSCT_Int4:        return "int4"; break;
+      case GFXSCT_UInt:        return "uint"; break;
+      case GFXSCT_UInt2:       return "uint2"; break;
+      case GFXSCT_UInt3:       return "uint3"; break;
+      case GFXSCT_UInt4:       return "uint4"; break;
+      case GFXSCT_Bool:        return "bool"; break;
+      case GFXSCT_Bool2:       return "bool2"; break;
+      case GFXSCT_Bool3:       return "bool3"; break;
+      case GFXSCT_Bool4:       return "bool4"; break;
+      default:                 return "unknown"; break;
+      }
+   }
+
+   return "";
+}
+
 //--------------------------------------------------------------------------
 // Constructor
 //--------------------------------------------------------------------------
@@ -121,6 +184,25 @@ Var::Var( const char *inName, const char *inType )
    setType( inType );
 }
 
+Var::Var(const char* name, GFXShaderConstType type)
+{
+   structName[0] = '\0';
+   connectName[0] = '\0';
+   uniform = false;
+   vertData = false;
+   connector = false;
+   sampler = false;
+   texCoordNum = 0;
+   constSortPos = cspUninit;
+   constNum = 0;
+   arraySize = 1;
+   texture = false;
+   rank = 0;
+
+   setName(name);
+   setType(type);
+}
+
 void Var::setUniform(const String& constType, const String& constName, ConstantSortPosition sortPos)
 { 
    uniform = true;
@@ -156,6 +238,14 @@ void Var::setType(const char *newType )
    type[ sizeof( type ) - 1 ] = '\0';
 }
 
+void Var::setType(GFXShaderConstType constType)
+{
+   const char* typeStr = "unknown"; // Default unknown type
+   typeStr = constTypeToString(constType);
+   // Copy the string into type[]
+   dStrcpy((char*)type, typeStr, sizeof(type));
+   type[sizeof(type) - 1] = '\0';
+}
 //--------------------------------------------------------------------------
 // print
 //--------------------------------------------------------------------------

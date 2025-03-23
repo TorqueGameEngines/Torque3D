@@ -179,3 +179,19 @@ void GenOp::print( Stream &stream )
       mElemList[i]->print( stream );
    }
 }
+
+CastOp::CastOp(Var* in1, GFXShaderConstType type) : Parent(in1, NULL)
+{
+   mInput[0] = in1;
+   mConstType = constTypeToString(type);
+}
+
+void CastOp::print(Stream& stream)
+{
+   Var* var = dynamic_cast<Var*>(mInput[0]);
+
+   WRITESTR(mConstType);
+   WRITESTR("( ");
+   mInput[0]->print(stream);
+   WRITESTR(" )");
+}

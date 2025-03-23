@@ -59,7 +59,6 @@ public:
    ShaderOp( LangElement *in1, LangElement *in2 );
 };
 
-//----------------------------------------------------------------------------
 /*!
    DecOp - Declaration Operation - Used when declaring a variable in a shader
    feature.  It will automatically print the type of the variable and then
@@ -82,7 +81,6 @@ public:
    float foo = 8.0 * 5.0;
    @endcode
 */
-//----------------------------------------------------------------------------
 class DecOp : public ShaderOp
 {
    typedef ShaderOp Parent;
@@ -162,5 +160,15 @@ public:
    void print( Stream &stream ) override;
 
 };
+
+class CastOp : public ShaderOp
+{
+   typedef ShaderOp Parent;
+   const char* mConstType;
+public:
+   CastOp(Var* in1, GFXShaderConstType type);
+   void print(Stream& stream) override;
+};
+
 
 #endif // _SHADEROP_H_

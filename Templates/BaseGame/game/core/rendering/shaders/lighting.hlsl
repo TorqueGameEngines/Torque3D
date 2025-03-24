@@ -320,7 +320,7 @@ float computeSpecOcclusion( float NdotV , float AO , float roughness )
 
 float roughnessToMipLevel(float roughness, float numMips)
 {	
-   return saturate((roughness * numMips) - (pow(roughness, 6.0) * (numMips * 0.125)));
+   return roughness * (numMips+1.0);
 }
 
 float4 compute4Lights( Surface surface,
@@ -591,7 +591,7 @@ float4 computeForwardProbes(Surface surface,
 
    float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    float3 diffuse = irradiance * lerp(surface.baseColor.rgb, 0.04f, surface.metalness);
-   float3 specularCol = ((specular + surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness; 
+   float3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness; 
 
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
@@ -748,7 +748,7 @@ float4 debugVizForwardProbes(Surface surface,
 
    float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    float3 diffuse = irradiance * lerp(surface.baseColor.rgb, 0.04f, surface.metalness);
-   float3 specularCol = ((specular + surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness; 
+   float3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness; 
 
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));

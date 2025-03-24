@@ -180,9 +180,6 @@ protected:
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)
 DefineConsoleType(TypeSoundAssetId, String)
 
-DECLARE_STRUCT(AssetPtr<SoundAsset>)
-DefineConsoleType(TypeSoundAssetPtrRefactor, AssetPtr<SoundAsset>)
-
 #pragma region Singular Asset Macros
 
 //Singular assets
@@ -580,75 +577,6 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
          _set##name(m##name##Name[index], index); \
       }\
    }
-#pragma endregion
-
-
-#pragma region Refactor Asset Macros
-
-#define DECLARE_SOUNDASSET_REFACTOR(className, name)                                                                                                                          \
-private:                                                                                                                                                                      \
-   AssetPtr<SoundAsset> m##name##Asset;                                                                                                                                       \
-public:                                                                                                                                                                       \
-   void _set##name(StringTableEntry _in) {                                                                                                                                    \
-                                                                                                                                                                              \
-      if (m##name##Asset.getAssetId() == _in)                                                                                                                                 \
-         return;                                                                                                                                                              \
-                                                                                                                                                                              \
-         if (!AssetDatabase.isDeclaredAsset(_in))                                                                                                                             \
-         {                                                                                                                                                                    \
-            StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                       \
-            AssetQuery query;                                                                                                                                                 \
-            S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                              \
-            if (foundAssetcount != 0)                                                                                                                                         \
-            {                                                                                                                                                                 \
-               imageAssetId = query.mAssetList[0];                                                                                                                            \
-            }                                                                                                                                                                 \
-               m##name##Asset = imageAssetId;                                                                                                                                 \
-         }                                                                                                                                                                    \
-         else                                                                                                                                                                 \
-         {                                                                                                                                                                    \
-            m##name##Asset = _in;                                                                                                                                             \
-         }                                                                                                                                                                    \
-};                                                                                                                                                                            \
-                                                                                                                                                                              \
-inline StringTableEntry _get##name(void) const { return m##name##Asset.getAssetId(); }                                                                                        \
-AssetPtr<SoundAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                        \
-static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false; }
-
-#define DECLARE_SOUNDASSET_NET_REFACTOR(className, name, profile, mask)                                                                                                       \
-private:                                                                                                                                                                      \
-   AssetPtr<SoundAsset> m##name##Asset;                                                                                                                                       \
-public:                                                                                                                                                                       \
-   void _set##name(StringTableEntry _in){                                                                                                                                     \
-      if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
-         return;                                                                                                                                                              \
-                                                                                                                                                                              \
-      if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
-      {                                                                                                                                                                       \
-         StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
-         AssetQuery query;                                                                                                                                                    \
-         S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
-         if (foundAssetcount != 0)                                                                                                                                            \
-         {                                                                                                                                                                    \
-            imageAssetId = query.mAssetList[0];                                                                                                                               \
-         }                                                                                                                                                                    \
-         m##name##Asset = imageAssetId;                                                                                                                                       \
-      }                                                                                                                                                                       \
-      else                                                                                                                                                                    \
-      {                                                                                                                                                                       \
-         m##name##Asset = _in;                                                                                                                                                \
-      }                                                                                                                                                                       \
-      setMaskBits(mask);                                                                                                                                                      \
-   };                                                                                                                                                                         \
-                                                                                                                                                                              \
-   inline StringTableEntry _get##name(void) const { return m##name##Asset.getAssetId(); }                                                                                     \
-   AssetPtr<SoundAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
-   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}
-
-
-#define INITPERSISTFIELD_SSOUNDASSET_REFACTOR(name, consoleClass, docs)                                                                                                        \
-   addProtectedField(assetText(name, Asset), TypeSoundAssetPtrRefactor, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
-
 #pragma endregion
 
 #endif // _ASSET_BASE_H_

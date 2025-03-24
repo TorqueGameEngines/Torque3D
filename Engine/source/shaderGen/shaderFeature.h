@@ -31,6 +31,9 @@
 #ifndef _SHADER_DEPENDENCY_H_
 #include "shaderGen/shaderDependency.h"
 #endif
+#ifndef _MATERIALFEATUREDATA_H_
+#include "materials/materialFeatureData.h"
+#endif
 
 class MultiLine;
 struct LangElement;
@@ -177,10 +180,8 @@ public:
    };
 
    /// Expand and assign a normal map. This takes care of compressed normal maps as well.
-   virtual LangElement * expandNormalMap( LangElement *sampleNormalOp, 
-      LangElement *normalDecl, LangElement *normalVar, const MaterialFeatureData &fd ) {
-      return NULL;
-   };
+   LangElement* expandNormalMap(LangElement* sampleNormalOp,
+      LangElement* normalDecl, LangElement* normalVar, const MaterialFeatureData& fd);
 
    /// Helper function for applying the color to shader output.
    ///

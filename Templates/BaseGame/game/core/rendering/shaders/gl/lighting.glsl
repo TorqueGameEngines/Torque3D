@@ -227,6 +227,7 @@ vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 {
    // Compute Fresnel term
    vec3 F = F_Schlick(surface.f0, surfaceToLight.HdotV);
+   F += lerp(vec3(0.04f,0.04f,0.04f), surface.baseColor.rgb, surface.metalness);
     
    // GGX Normal Distribution Function
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughness);
@@ -583,12 +584,13 @@ vec4 computeForwardProbes(Surface surface,
    }
 
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
-   vec3 diffuse = irradiance * surface.baseColor.rgb * (1.0 - surface.metalness);
-   vec3 specularCol = specular * lerp(envBRDF.y, envBRDF.x, surface.metalness * (1.0 - surface.roughness));
+   vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
+   vec3 specularCol = ((specular + surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
    
    // Final color output after environment lighting
    vec3 finalColor = diffuse + specularCol;
    finalColor *= surface.ao;
+   
    if(isCapturing == 1)
       return vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
    else
@@ -735,13 +737,13 @@ vec4 debugVizForwardProbes(Surface surface,
    }
 
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
-   vec3 diffuse = irradiance * surface.baseColor.rgb * (1.0 - surface.metalness);
-   vec3 specularCol = specular * lerp(envBRDF.y, envBRDF.x, surface.metalness * (1.0 - surface.roughness));
+   vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
+   vec3 specularCol = ((specular + surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
    
-   specularCol *= surface.metalness + (1.0 - surface.roughness);
    // Final color output after environment lighting
    vec3 finalColor = diffuse + specularCol;
    finalColor *= surface.ao;
+   
    if(isCapturing == 1)
       return vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
    else

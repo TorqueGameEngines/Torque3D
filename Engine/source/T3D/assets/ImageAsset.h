@@ -171,7 +171,7 @@ public:
    void                    setTextureHDR(const bool pIsHDR);
    inline bool             getTextureHDR(void) const { return mIsHDRImage; };
 
-   inline GFXTexHandle& getTexture(void) { load(); generateTexture(); return mTextureHandle; }
+   inline GFXTexHandle&    getTexture(void) { load(); generateTexture(); return mTextureHandle; }
    GFXTexHandle            getTexture(GFXTextureProfile* requestedProfile);
 
    static StringTableEntry getImageTypeNameFromType(ImageTypes type);
@@ -610,6 +610,12 @@ public:                                                                         
          {                                                                                                                                                                    \
             imageAssetId = query.mAssetList[0];                                                                                                                               \
          }                                                                                                                                                                    \
+         else if(Torque::FS::IsFile(_in))                                                                                                                                     \
+         {                                                                                                                                                                    \
+            ImageAsset* privateImage = new ImageAsset();                                                                                                                      \
+            privateImage->setImageFile(_in);                                                                                                                                  \
+            imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                       \
+         }                                                                                                                                                                    \
          m##name##Asset = imageAssetId;                                                                                                                                       \
       }                                                                                                                                                                       \
       else                                                                                                                                                                    \
@@ -676,6 +682,12 @@ public:                                                                         
          if (foundAssetcount != 0)                                                                                                                                            \
          {                                                                                                                                                                    \
             imageAssetId = query.mAssetList[0];                                                                                                                               \
+         }                                                                                                                                                                    \
+         else if(Torque::FS::IsFile(_in))                                                                                                                                     \
+         {                                                                                                                                                                    \
+            ImageAsset* privateImage = new ImageAsset();                                                                                                                      \
+            privateImage->setImageFile(_in);                                                                                                                                  \
+            imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                       \
          }                                                                                                                                                                    \
          m##name##Asset[index] = imageAssetId;                                                                                                                                \
       }                                                                                                                                                                       \

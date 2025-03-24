@@ -232,11 +232,6 @@ FRangeValidator glowMulRange(0.0f, 20.0f);
 FRangeValidator parallaxScaleRange(0.0f, 4.0f);
 FRangeValidator scrollSpeedRange(0.0f, 10.0f);
 FRangeValidator waveFreqRange(0.0f, 10.0f);
-void Material::onImageAssetChanged()
-{
-   flush();
-   reload();
-}
 
 void Material::initPersistFields()
 {
@@ -495,18 +490,6 @@ void Material::initPersistFields()
   // They point at the new 'map' fields, but reads always return
   // an empty string and writes only apply if the value is not empty.
   //
-   addProtectedField("baseTex", TypeImageFilename, Offset(mDiffuseMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see diffuseMap\n", AbstractClassRep::FIELD_HideInInspectors);
-   addProtectedField("detailTex", TypeImageFilename, Offset(mDetailMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see detailMap\n", AbstractClassRep::FIELD_HideInInspectors);
-   addProtectedField("overlayTex", TypeImageFilename, Offset(mOverlayMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see overlayMap\n", AbstractClassRep::FIELD_HideInInspectors);
-   addProtectedField("bumpTex", TypeImageFilename, Offset(mNormalMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see normalMap\n", AbstractClassRep::FIELD_HideInInspectors);
    addProtectedField("colorMultiply", TypeColorF, Offset(mDiffuse, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
       "For backwards compatibility.\n@see diffuseColor\n", AbstractClassRep::FIELD_HideInInspectors);

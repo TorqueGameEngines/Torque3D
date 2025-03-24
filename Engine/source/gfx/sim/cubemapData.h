@@ -70,20 +70,16 @@ public:
 
    void setCubeFaceTexture(U32 index, GFXTexHandle newFaceTexture);
 
-   GFXTexHandle* getCubeFaceTexture(U32 faceIdx) { return &mCubeMapFace[faceIdx]; }
+   GFXTexHandle* getCubeFaceTexture(U32 faceIdx) { return &mCubeMapFaceTex[faceIdx]; }
 
 protected:
-   DECLARE_IMAGEASSET(CubemapData, CubeMap, onCubemapChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_ASSET_SETGET(CubemapData, CubeMap);
+   DECLARE_IMAGEASSET_REFACTOR(CubemapData, CubeMap, GFXStaticTextureSRGBProfile);
 
-   DECLARE_IMAGEASSET_ARRAY(CubemapData, CubeMapFace, 6, onCubeMapFaceChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(CubemapData, CubeMapFace);
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(CubemapData, CubeMapFace, GFXStaticTextureSRGBProfile, 6);
 
-   void onCubeMapFaceChanged() {}
+   GFXTexHandle mCubeMapFaceTex[6];
    GFXTexHandle mDepthBuff;
    GFXTextureTargetRef mRenderTarget;
-
-   void onCubemapChanged() {}
 };
 
 #endif // CUBEMAPDATA

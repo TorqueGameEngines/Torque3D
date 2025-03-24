@@ -324,22 +324,11 @@ bool afxZodiacData::preload(bool server, String &errorStr)
   if (vert_range.x == 0.0f && vert_range.y == 0.0f)
     vert_range.x = vert_range.y = radius_xy;
 
-  if (mTextureAssetId != StringTable->EmptyString())
+  if (mTextureAsset.notNull())
   {
-     mTextureAsset = mTextureAssetId;
-     if (mTextureAsset.notNull())
-     {
-        if (getTexture() != StringTable->EmptyString() && mTextureName != StringTable->insert("texhandle"))
-        {
-           if (mTextureAsset.notNull())
-           {
-              mTextureAsset->getChangedSignal().notify(this, &afxZodiacData::onImageChanged);
-           }
-
-           mTexture.set(getTexture(), mTextureProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
-        }
-     }
+     getTexture();
   }
+
   return true;
 }
 

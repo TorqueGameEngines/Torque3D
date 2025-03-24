@@ -112,6 +112,19 @@ void GFXD3D11Cubemap::_init(U32 size, GFXFormat format, U32 mipLevels, bool isDy
    delete[] pData;
    AssertFatal(SUCCEEDED(hr), "GFXD3D11Cubemap::_init - CreateTexture2D failed");
 
+   if (faces)
+   {
+      for (U32 i = 0; i < CubeFaces; i++)
+      {
+         GFXD3D11TextureObject* texObj = static_cast<GFXD3D11TextureObject*>((GFXTextureObject*)faces[i]);
+         for (U32 currentMip = 0; currentMip < mMipMapLevels; currentMip++)
+         {
+            U32 subResource = D3D11CalcSubresource(currentMip, i, mMipMapLevels);
+            D3D11DEVICECONTEXT->CopySubresourceRegion(mTexture, subResource, 0, 0, 0, texObj->get2DTex(), currentMip, NULL);
+         }
+      }
+   }
+
    D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
    viewDesc.Format = GFXD3D11TextureFormat[mFaceFormat];
    viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;

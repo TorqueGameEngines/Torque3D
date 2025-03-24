@@ -215,6 +215,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onMouseMove, void, (const char* screenPosition, c
 
 GameTSCtrl::GameTSCtrl()
 {
+   mFrameTime = PlatformTimer::create();
 }
 
 //---------------------------------------------------------------------------
@@ -358,21 +359,33 @@ void GameTSCtrl::onMouseDragged(const GuiEvent &evt)
 {
    Parent::onMouseDragged(evt);
 
-   sendMouseEvent("onMouseDragged", evt);
+   if (mFrameTime && mFrameTime->getElapsedMs() > 16)
+   {
+      sendMouseEvent("onMouseDragged", evt);
+      mFrameTime->reset();
+   }
 }
 
 void GameTSCtrl::onRightMouseDragged(const GuiEvent &evt)
 {
    Parent::onRightMouseDragged(evt);
 
-   sendMouseEvent("onRightMouseDragged", evt);
+   if (mFrameTime && mFrameTime->getElapsedMs() > 16)
+   {
+      sendMouseEvent("onRightMouseDragged", evt);
+      mFrameTime->reset();
+   }
 }
 
 void GameTSCtrl::onMiddleMouseDragged(const GuiEvent &evt)
 {
    Parent::onMiddleMouseDragged(evt);
 
-   sendMouseEvent("onMiddleMouseDragged", evt);
+   if (mFrameTime && mFrameTime->getElapsedMs() > 16)
+   {
+      sendMouseEvent("onMiddleMouseDragged", evt);
+      mFrameTime->reset();
+   }
 }
 
 bool GameTSCtrl::onMouseWheelUp(const GuiEvent &evt)
@@ -410,7 +423,11 @@ void GameTSCtrl::onMouseMove(const GuiEvent &evt)
       }
    }
 
-   sendMouseEvent("onMouseMove", evt);
+   if (mFrameTime->getElapsedMs() > 16)
+   {
+      sendMouseEvent("onMouseMove", evt);
+      mFrameTime->reset();
+   }
 }
 
 void GameTSCtrl::onRender(Point2I offset, const RectI &updateRect)

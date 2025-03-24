@@ -43,6 +43,9 @@ private:
 
    void sendMouseEvent(const char *name, const GuiEvent &evt);
 
+protected:
+   PlatformTimer *mFrameTime;
+
 public:
    GameTSCtrl();
 

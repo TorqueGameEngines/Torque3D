@@ -1,3 +1,4 @@
+$reportKeymapping = false;
 $optionsEntryPad = 10;
 
 $OptionsMenuCategories[0] = "Video";
@@ -672,8 +673,8 @@ function OptionsMenu::populateKeybinds(%this, %device, %controlsList)
          %keyMap = buildFullMapString( %i, $RemapActionMap[%i], %device );
 
          %description = $RemapDescription[%i];
-         
-         echo("Added ActionMap Entry: " @ %actionMapName @ " | " @ %device @ " | " @ %keymap @ " | " @ %description);
+         if ($reportKeymapping)
+            echo("Added ActionMap Entry: " @ %actionMapName @ " | " @ %device @ " | " @ %keymap @ " | " @ %description);
          
          %remapEntry = addActionMapEntry(%actionMapName, %device, %keyMap, %i, %description);
          %controlsList.add(%remapEntry);
@@ -1074,7 +1075,8 @@ function addActionMapEntry(%actionMap, %device, %keyMap, %index, %description)
    }; 
    
    %buttonContainer = %entry.findObjectByInternalName("valuesContainer");
-   echo("Keymap: " @ %keymap @ " | Keymap word count: " @ getWordCount(getField(%keyMap, 1)));
+   if ($reportKeymapping)
+      echo("Keymap: " @ %keymap @ " | Keymap word count: " @ getWordCount(getField(%keyMap, 1)));
    if(getWordCount(getField(%keyMap, 1)) == 2)
    {
       %modifierBtn = new GuiIconButtonCtrl() {

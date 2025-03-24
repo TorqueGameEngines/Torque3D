@@ -1205,10 +1205,12 @@ function TerrainEditorPlugin::onWorldEditorStartup( %this )
    %map.bindCmd( keyboard, "4", "ToolsPaletteArray->smoothHeight.performClick();", "" );    // Average Height
    %map.bindCmd( keyboard, "5", "ToolsPaletteArray->smoothSlope.performClick();", "" );    // Smooth Slope
    %map.bindCmd( keyboard, "6", "ToolsPaletteArray->paintNoise.performClick();", "" );      // Noise
-   %map.bindCmd( keyboard, "7", "ToolsPaletteArray->flattenHeight.performClick();", "" );   // Flatten
-   %map.bindCmd( keyboard, "8", "ToolsPaletteArray->setHeight.performClick();", "" );       // Set Height
-   %map.bindCmd( keyboard, "9", "ToolsPaletteArray->setEmpty.performClick();", "" );    // Clear Terrain
-   %map.bindCmd( keyboard, "0", "ToolsPaletteArray->clearEmpty.performClick();", "" );  // Restore Terrain
+   %map.bindCmd( keyboard, "6", "ToolsPaletteArray->thermalErode.performClick();", "" );      // Noise
+   %map.bindCmd( keyboard, "7", "ToolsPaletteArray->hydraulicErode.performClick();", "" );      // Noise
+   %map.bindCmd( keyboard, "8", "ToolsPaletteArray->flattenHeight.performClick();", "" );   // Flatten
+   %map.bindCmd( keyboard, "9", "ToolsPaletteArray->setHeight.performClick();", "" );       // Set Height
+   %map.bindCmd( keyboard, "0", "ToolsPaletteArray->setEmpty.performClick();", "" );    // Clear Terrain
+   %map.bindCmd( keyboard, "shift 0", "ToolsPaletteArray->clearEmpty.performClick();", "" );  // Restore Terrain
    %map.bindCmd( keyboard, "v", "EWTerrainEditToolbarBrushType->ellipse.performClick();", "" );// Circle Brush
    %map.bindCmd( keyboard, "b", "EWTerrainEditToolbarBrushType->box.performClick();", "" );// Box Brush
    %map.bindCmd( keyboard, "=", "TerrainEditorPlugin.keyboardModifyBrushSize(1);", "" );// +1 Brush Size
@@ -1248,11 +1250,17 @@ function EditorGui::SetTerrainPalletBar()
    EWToolsPaletteWindow.addButton("LowerHeight", "ToolsModule:lowerHeight_n_image", "ETerrainEditor.switchAction( lowerHeight );", "", "Lower Height", "3");  
    EWToolsPaletteWindow.addButton("SmoothHeight", "ToolsModule:smoothHeight_n_image", "ETerrainEditor.switchAction( smoothHeight );", "", "Smooth Height", "4");
    EWToolsPaletteWindow.addButton("SmoothSlope", "ToolsModule:softCurve_n_image", "ETerrainEditor.switchAction( smoothSlope );", "", "Smooth Slope", "5");    
-   EWToolsPaletteWindow.addButton("PaintNoise", "ToolsModule:brushPaintNoise_n_image", "ETerrainEditor.switchAction( paintNoise );", "", "Paint Noise", "6"); 
-   EWToolsPaletteWindow.addButton("FlattenHeight", "ToolsModule:flattenHeight_n_image", "ETerrainEditor.switchAction( flattenHeight );", "", "Flatten Height", "7");
-   EWToolsPaletteWindow.addButton("SetHeight", "ToolsModule:setHeight_n_image", "ETerrainEditor.switchAction( setHeight );", "", "Set Height", "8");    
-   EWToolsPaletteWindow.addButton("SetEmpty", "ToolsModule:setEmpty_n_image", "ETerrainEditor.switchAction( setEmpty );", "", "Set Empty", "9");     
-   EWToolsPaletteWindow.addButton("ClearEmpty", "ToolsModule:clearEmpty_n_image", "ETerrainEditor.switchAction( clearEmpty );", "", "Clear Empty", "0");  
+   EWToolsPaletteWindow.addButton("PaintNoise", "ToolsModule:brushPaintNoise_n_image", "ETerrainEditor.switchAction( paintNoise );", "", "Paint Noise", "6");     
+   EWToolsPaletteWindow.addButton("thermalErode", "ToolsModule:brushPaintNoise_n_image", "ETerrainEditor.switchAction( thermalErode );", "", "thermal Erode", "7");    
+   EWToolsPaletteWindow.addButton("hydraulicErode", "ToolsModule:brushPaintNoise_n_image", "ETerrainEditor.switchAction( hydraulicErode );", "", "hydraulic Erode", "8");
+   EWToolsPaletteWindow.addButton("FlattenHeight", "ToolsModule:flattenHeight_n_image", "ETerrainEditor.switchAction( flattenHeight );", "", "Flatten Height", "9");
+   EWToolsPaletteWindow.addButton("SetHeight", "ToolsModule:setHeight_n_image", "ETerrainEditor.switchAction( setHeight );", "", "Set Height", "0");    
+   EWToolsPaletteWindow.addButton("SetEmpty", "ToolsModule:setEmpty_n_image", "ETerrainEditor.switchAction( setEmpty );", "", "Set Empty", "0");     
+   EWToolsPaletteWindow.addButton("ClearEmpty", "ToolsModule:clearEmpty_n_image", "ETerrainEditor.switchAction( clearEmpty );", "", "Clear Empty", "shift 0"); 
+   EWToolsPaletteWindow.addButton("Copy", "ToolsModule:setHeight_n_image", "ETerrainEditor.switchAction( copy );", "", "copy", "ctrl C");
+   EWToolsPaletteWindow.addButton("Paste", "ToolsModule:setHeight_n_image", "ETerrainEditor.switchAction( paste );", "", "paste", "ctrl v"); 
+   EWToolsPaletteWindow.addButton("pasteUp", "ToolsModule:setHeight_n_image", "ETerrainEditor.switchAction( pasteUp );", "", "pasteUp", "ctrl b");
+   EWToolsPaletteWindow.addButton("PasteDown", "ToolsModule:setHeight_n_image", "ETerrainEditor.switchAction( pasteDown );", "", "pasteDown", "ctrl n");
    EWToolsPaletteWindow.refresh();
 }
 

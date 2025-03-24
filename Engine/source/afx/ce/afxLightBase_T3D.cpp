@@ -104,11 +104,11 @@ void afxT3DLightBaseData::initPersistFields()
         "Enables/Disables the object rendering and functionality in the scene.");
       addField( "color", TypeColorF, Offset( mColor, afxT3DLightBaseData ),
         "Changes the base color hue of the light.");
-      addField( "brightness", TypeF32, Offset( mBrightness, afxT3DLightBaseData ),
+      addFieldV( "brightness", TypeRangedF32, Offset( mBrightness, afxT3DLightBaseData ), &CommonValidators::PositiveFloat,
         "Adjusts the lights power, 0 being off completely.");
       addField( "castShadows", TypeBool, Offset( mCastShadows, afxT3DLightBaseData ),
         "Enables/disables shadow casts by this light.");
-      addField( "priority", TypeF32, Offset( mPriority, afxT3DLightBaseData ),
+      addFieldV( "priority", TypeRangedF32, Offset( mPriority, afxT3DLightBaseData ), &CommonValidators::PositiveFloat,
         "Used for sorting of lights by the light manager. Priority determines if a light "
         "has a stronger effect than, those with a lower value");
       addField( "localRenderViz", TypeBool, Offset( mLocalRenderViz, afxT3DLightBaseData ),
@@ -123,9 +123,9 @@ void afxT3DLightBaseData::initPersistFields()
         "Toggles animation for the light on and off");
       addField( "animationType", TYPEID<LightAnimData>(), Offset( mAnimationData, afxT3DLightBaseData ),
         "Datablock containing light animation information (LightAnimData)");
-      addField( "animationPeriod", TypeF32, Offset( mAnimState.animationPeriod, afxT3DLightBaseData ),
+      addFieldV( "animationPeriod", TypeRangedF32, Offset( mAnimState.animationPeriod, afxT3DLightBaseData ), &CommonValidators::PositiveFloat,
         "The length of time in seconds for a single playback of the light animation");
-      addField( "animationPhase", TypeF32, Offset( mAnimState.animationPhase, afxT3DLightBaseData ),
+      addFieldV( "animationPhase", TypeRangedF32, Offset( mAnimState.animationPhase, afxT3DLightBaseData ), &CommonValidators::PositiveFloat,
         "The phase used to offset the animation start time to vary the animation of "
         "nearby lights.");
 
@@ -135,7 +135,7 @@ void afxT3DLightBaseData::initPersistFields()
 
       addField( "flareType", TYPEID<LightFlareData>(), Offset( mFlareData, afxT3DLightBaseData ),
         "Datablock containing light flare information (LightFlareData)");
-      addField( "flareScale", TypeF32, Offset( mFlareScale, afxT3DLightBaseData ),
+      addFieldV( "flareScale", TypeRangedF32, Offset( mFlareScale, afxT3DLightBaseData ), &CommonValidators::PositiveFloat,
         "Globally scales all features of the light flare");
 
    endGroup( "Misc" );

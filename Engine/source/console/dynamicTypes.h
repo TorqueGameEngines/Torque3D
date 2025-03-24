@@ -214,17 +214,62 @@ class BitfieldConsoleBaseType : public ConsoleBaseType
          
    public:
 
-      const char* getData( void* dptr, const EnumTable*, BitSet32 ) override
+      const char* getData(void* dptr, const EnumTable* tbl, BitSet32) override
       {
-         static const U32 bufSize = 256;
-         char* returnBuffer = Con::getReturnBuffer(bufSize);
-         dSprintf(returnBuffer, bufSize, "%i", *((S32 *) dptr) );
-         return returnBuffer;
+         BitSet32 dptrVal = BitSet32(*(U32*)dptr);
+         String returnBuffer;
+         if (!tbl) tbl = getEnumTable();
+
+         const U32 numEnums = tbl->getNumValues();
+         bool first = true;
+
+         if (dptrVal.testStrict(-1)) //test for all
+         {
+            return Con::getReturnBuffer("-1");
+         }
+         else if (!dptrVal.test(-1)) //test for none
+         {
+            return Con::getReturnBuffer("0");
+         }
+
+         for (U32 i = 0; i < numEnums; i++)
+         {
+            if (dptrVal.test(BIT(i)))
+            {
+               if (first)
+               {
+                  returnBuffer = String::ToString("%s",(*tbl)[i].getName());
+               }
+               else
+               {
+                  returnBuffer += String::ToString(" | %s", (*tbl)[i].getName());
+               }
+               first = false;
+            }
+         }
+
+         return Con::getReturnBuffer(returnBuffer);
       }
-      void setData( void* dptr, S32 argc, const char** argv, const EnumTable*, BitSet32 ) override
+
+      void setData( void* dptr, S32 argc, const char** argv, const EnumTable* tbl, BitSet32 ) override
       {
-         if( argc != 1 ) return; \
-         *((S32 *) dptr) = dAtoui(argv[0]); \
+         if( argc != 1 ) return;
+         S32 retVal = dAtoui(argv[0]);
+         if (retVal == 0 && retVal != -1) //zero we need to double check. -1 we know is all on
+         {
+            BitSet32 mask;
+            if (!tbl) tbl = getEnumTable();
+            const U32 numEnums = tbl->getNumValues();
+            String inString(argv[0]);
+
+            for (U32 i = 0; i < numEnums; i++)
+            {
+               if (inString.find((*tbl)[i].getName()) != String::NPos)
+                  mask.set(BIT(i));
+            }
+            retVal = mask.getMask();
+         }
+         *((S32*)dptr) = retVal;
       }
 };
 

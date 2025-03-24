@@ -1104,7 +1104,21 @@ DefineEngineFunction(ColorRGBToHSB, const char*, (ColorI color), ,
    "@endtsexample\n"
    "@ingroup Strings")
 {
-   ColorI::Hsb hsb(color.getHSB()); 
+   Hsb hsb(color.getHSB()); 
+   String s(String::ToString(hsb.hue) + " " + String::ToString(hsb.sat) + " " + String::ToString(hsb.brightness));
+   return Con::getReturnBuffer(s);
+}
+
+DefineEngineFunction(ColorLinearRGBToHSB, const char*, (LinearColorF color), ,
+   "Convert from a integer RGB (red, green, blue) color to HSB (hue, saturation, brightness). HSB is also know as HSL or HSV as well, with the last letter standing for lightness or value.\n"
+   "@param color Integer color value to be converted in the form \"R G B A\", where R is red, G is green, B is blue, and A is alpha. It excepts an alpha, but keep in mind this will not be converted.\n"
+   "@return HSB color value, alpha isn't handled/converted so it is only the RGB value\n\n"
+   "@tsexample\n"
+   "ColorRBGToHSB( \"0 0 255 128\" ) // Returns \"240 100 100\".\n"
+   "@endtsexample\n"
+   "@ingroup Strings")
+{
+   Hsb hsb(color.getHSB());
    String s(String::ToString(hsb.hue) + " " + String::ToString(hsb.sat) + " " + String::ToString(hsb.brightness));
    return Con::getReturnBuffer(s);
 }
@@ -1133,7 +1147,7 @@ DefineEngineFunction(ColorHSBToRGB, ColorI, (Point3I hsb), ,
    "@ingroup Strings")
 {
    ColorI color;
-   color.set(ColorI::Hsb(hsb.x, hsb.y, hsb.z));
+   color.set(Hsb(hsb.x, hsb.y, hsb.z));
    return color;
 }
 

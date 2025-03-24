@@ -29,6 +29,9 @@
 #include "gui/controls/guiColorPicker.h"
 #include "gfx/primBuilder.h"
 #include "gfx/gfxDrawUtil.h"
+#include "console/typeValidators.h"
+#include "postFx/postEffectManager.h"
+#include "gfx/screenshot.h"
 
 IMPLEMENT_CONOBJECT(GuiColorPickerCtrl);
 
@@ -47,15 +50,23 @@ GuiColorPickerCtrl::GuiColorPickerCtrl()
    mActive = true;
    mSelectorGap = 1;
    mActionOnMove = false;
+   mDropperActive = false;
    mShowReticle = true;
    mSelectedHue = 0;
    mSelectedAlpha = 255;
    mSelectedSaturation = 100;
    mSelectedBrightness = 100;
+   eyeDropperPos = Point2I::Zero;
+   eyeDropperCap = NULL;
 }
 
 GuiColorPickerCtrl::~GuiColorPickerCtrl()
 {
+   if (eyeDropperCap != NULL)
+   {
+      delete eyeDropperCap;
+      eyeDropperCap = NULL;
+   }
 }
 
 ImplementEnumType( GuiColorPickMode,
@@ -81,7 +92,7 @@ void GuiColorPickerCtrl::initPersistFields()
 {
    docsURL;
    addGroup("ColorPicker");
-      addField("selectorGap", TypeS32,  Offset(mSelectorGap, GuiColorPickerCtrl)); 
+      addFieldV("selectorGap", TypeRangedS32,  Offset(mSelectorGap, GuiColorPickerCtrl),&CommonValidators::NaturalNumber);
       addField("displayMode", TYPEID< PickMode >(), Offset(mDisplayMode, GuiColorPickerCtrl) );
       addField("selectorMode", TYPEID< SelectorMode >(), Offset(mSelectorMode, GuiColorPickerCtrl) );
       addField("actionOnMove", TypeBool,Offset(mActionOnMove, GuiColorPickerCtrl));
@@ -94,7 +105,7 @@ void GuiColorPickerCtrl::initPersistFields()
 void GuiColorPickerCtrl::renderBlendRange(RectI& bounds)
 {
    ColorI currentColor;
-   currentColor.set(ColorI::Hsb(mSelectedHue, 100, 100));
+   currentColor.set(Hsb(mSelectedHue, 100, 100));
    GFX->getDrawUtil()->drawRectFill(bounds, currentColor, 0.0f, ColorI(0,0,0,0), true);
 }
 
@@ -114,7 +125,7 @@ void GuiColorPickerCtrl::renderBlendSelector(RectI& bounds)
    selectorRect.set(Point2I(selectorPos.x - mSelectorGap, selectorPos.y - mSelectorGap), Point2I(mSelectorGap * 2, mSelectorGap * 2));
 
    ColorI currentColor;
-   currentColor.set(ColorI::Hsb(mSelectedHue, mSelectedSaturation, mSelectedBrightness));
+   currentColor.set(Hsb(mSelectedHue, mSelectedSaturation, mSelectedBrightness));
    GFX->getDrawUtil()->drawRectFill(selectorRect, currentColor, 2.0f, ColorI::WHITE);
 }
 
@@ -136,8 +147,8 @@ void GuiColorPickerCtrl::renderHueGradient(RectI& bounds, U32 numColours)
       U32 nextHue = static_cast<U32>((F32(i + 1) / F32(numColours)) * 360.0f);
 
       ColorI currentColor, nextColor;
-      currentColor.set(ColorI::Hsb(currentHue, 100, 100));
-      nextColor.set(ColorI::Hsb(nextHue, 100, 100));
+      currentColor.set(Hsb(currentHue, 100, 100));
+      nextColor.set(Hsb(nextHue, 100, 100));
 
       switch (mSelectorMode)
       {
@@ -217,7 +228,7 @@ void GuiColorPickerCtrl::renderHueSelector(RectI& bounds)
    }
 
    ColorI currentColor;
-   currentColor.set(ColorI::Hsb(mSelectedHue, 100, 100));
+   currentColor.set(Hsb(mSelectedHue, 100, 100));
    GFX->getDrawUtil()->drawRectFill(selectorRect, currentColor, 2.0f, ColorI::WHITE);
 }
 
@@ -232,7 +243,7 @@ void GuiColorPickerCtrl::renderAlphaGradient(RectI& bounds)
    S32 b = bounds.point.y + bounds.extent.y;
 
    ColorI currentColor;
-   currentColor.set(ColorI::Hsb(mSelectedHue, 100, 100));
+   currentColor.set(Hsb(mSelectedHue, 100, 100));
 
    ColorI alphaCol = ColorI::BLACK;
    alphaCol.alpha = 0;
@@ -308,10 +319,36 @@ void GuiColorPickerCtrl::renderAlphaSelector(RectI& bounds)
    }
 
    ColorI currentColor;
-   currentColor.set(ColorI::Hsb(mSelectedHue, 100, 100));
+   currentColor.set(Hsb(mSelectedHue, 100, 100));
    currentColor.alpha = mSelectedAlpha;
 
    GFX->getDrawUtil()->drawRectFill(selectorRect, currentColor, 2.0f, ColorI::WHITE);
+}
+
+void GuiColorPickerCtrl::renderEyeDropper()
+{
+   if (eyeDropperCap != NULL)
+   {
+      GFX->getDrawUtil()->drawBitmap(eyeHandle, getRoot()->getPosition());
+
+      Point2I resolution = getRoot()->getExtent();
+      Point2I magnifierSize(100, 100);
+      Point2I magnifierPosition = eyeDropperPos + Point2I(20, 20);
+
+      // Adjust position to ensure magnifier stays on screen
+      if (magnifierPosition.x + magnifierSize.x > resolution.x)
+         magnifierPosition.x = eyeDropperPos.x - magnifierSize.x - 20;
+      if (magnifierPosition.y + magnifierSize.y > resolution.y)
+         magnifierPosition.y = eyeDropperPos.y - magnifierSize.y - 20;
+
+      RectI magnifierBounds(magnifierPosition, magnifierSize);
+
+      ColorI currentColor;
+      currentColor.set(Hsb(mSelectedHue, mSelectedSaturation, mSelectedBrightness));
+      currentColor.alpha = mSelectedAlpha;
+
+      GFX->getDrawUtil()->drawRectFill(magnifierBounds, currentColor, 2.0f, ColorI::BLACK);
+   }
 }
 
 void GuiColorPickerCtrl::onRender(Point2I offset, const RectI& updateRect)
@@ -333,7 +370,7 @@ void GuiColorPickerCtrl::onRender(Point2I offset, const RectI& updateRect)
    case GuiColorPickerCtrl::pPalette:
    {
       ColorI currentColor;
-      currentColor.set(ColorI::Hsb(mSelectedHue, mSelectedSaturation, mSelectedBrightness));
+      currentColor.set(Hsb(mSelectedHue, mSelectedSaturation, mSelectedBrightness));
       currentColor.alpha = mSelectedAlpha;
       GFX->getDrawUtil()->drawRectFill(boundsRect, currentColor);
       break;
@@ -356,6 +393,15 @@ void GuiColorPickerCtrl::onRender(Point2I offset, const RectI& updateRect)
       if (mShowReticle) renderAlphaSelector(boundsRect);
       break;
    }
+   case GuiColorPickerCtrl::pDropperBackground:
+   {
+      if (mDropperActive)
+      {
+         // Render the magnified view of our currently selected color.
+         renderEyeDropper();
+      }
+      break;
+   }
    default:
       break;
    }
@@ -364,72 +410,31 @@ void GuiColorPickerCtrl::onRender(Point2I offset, const RectI& updateRect)
    renderChildControls(offset, updateRect);
 }
 
-Point2I GuiColorPickerCtrl::findColor(const LinearColorF & color, const Point2I& offset, const Point2I& resolution, GBitmap& bmp)
-{
-   Point2I ext = getExtent();
-   Point2I closestPos(-1, -1);
-
-   /* Debugging
-   char filename[256];
-   dSprintf( filename, 256, "%s.%s", "colorPickerTest", "png" );
-
-   // Open up the file on disk.
-   FileStream fs;
-   if ( !fs.open( filename, Torque::FS::File::Write ) )
-   Con::errorf( "GuiObjectView::saveAsImage() - Failed to open output file '%s'!", filename );
-   else
-   {
-   // Write it and close.
-   bmp.writeBitmap( "png", fs );
-
-   fs.close();
-   }
-   */
-
-   ColorI tmp;
-   U32 buf_x;
-   U32 buf_y;
-   LinearColorF curColor;
-   F32 val(10000.0f);
-   F32 closestVal(10000.0f);
-   bool closestSet = false;
-
-   for (S32 x = 0; x < ext.x; x++)
-   {
-      for (S32 y = 0; y < ext.y; y++)
-      {
-         buf_x = offset.x + x;
-         buf_y = (resolution.y - (offset.y + y));
-         buf_y = resolution.y - buf_y;
-
-         //Get the color at that position
-         bmp.getColor(buf_x, buf_y, tmp);
-         curColor = (LinearColorF)tmp;
-
-         //Evaluate how close the color is to our desired color
-         val = mFabs(color.red - curColor.red) + mFabs(color.green - curColor.green) + mFabs(color.blue - curColor.blue);
-
-         if (!closestSet)
-         {
-            closestVal = val;
-            closestPos.set(x, y);
-            closestSet = true;
-         }
-         else if (val < closestVal)
-         {
-            closestVal = val;
-            closestPos.set(x, y);
-         }
-      }
-   }
-
-   return closestPos;
-}
-
 void GuiColorPickerCtrl::onMouseDown(const GuiEvent &event)
 {
    if (!mActive)
       return;
+
+   // we need to do this first.
+   if (mDisplayMode == GuiColorPickerCtrl::pDropperBackground) {
+      if (mDropperActive)
+      {
+         mDropperActive = false;
+
+         //getRoot()->pushObjectToBack(this);
+
+         onAction();
+         mouseUnlock();
+
+         if (eyeDropperCap != NULL)
+         {
+            delete eyeDropperCap;
+            eyeDropperCap = NULL;
+         }
+      }
+
+      return;
+   }
    
    mouseLock(this);
    
@@ -510,14 +515,15 @@ void GuiColorPickerCtrl::onMouseDragged(const GuiEvent &event)
       Point2I ext = getExtent();
       Point2I mousePoint = globalToLocalCoord(event.mousePoint);
 
+      F32 relX = mClampF(F32(mousePoint.x) / F32(ext.x), 0.0, 1.0);
+      F32 relY = mClampF(F32(mousePoint.y) / F32(ext.y), 0.0, 1.0);
       switch (mDisplayMode)
       {
       case GuiColorPickerCtrl::pPalette:
          return;
       case GuiColorPickerCtrl::pBlendRange:
       {
-         F32 relX = F32(mousePoint.x) / F32(ext.x);
-         F32 relY = 1.0f - F32(mousePoint.y) / F32(ext.y);
+         relY = 1.0f - relY;
          setSelectedSaturation(relX * 100.0);
          setSelectedBrightness(relY * 100.0);
          break;
@@ -528,13 +534,11 @@ void GuiColorPickerCtrl::onMouseDragged(const GuiEvent &event)
          {
          case GuiColorPickerCtrl::sHorizontal:
          {
-            F32 relX = F32(mousePoint.x) / F32(ext.x);
             setSelectedHue(relX * 360.0);
             break;
          }
          case GuiColorPickerCtrl::sVertical:
          {
-            F32 relY = F32(mousePoint.y) / F32(ext.y);
             setSelectedHue(relY * 360.0);
             break;
          }
@@ -549,13 +553,11 @@ void GuiColorPickerCtrl::onMouseDragged(const GuiEvent &event)
          {
          case GuiColorPickerCtrl::sHorizontal:
          {
-            F32 relX = F32(mousePoint.x) / F32(ext.x);
             setSelectedAlpha(relX * 255.0);
             break;
          }
          case GuiColorPickerCtrl::sVertical:
          {
-            F32 relY = F32(mousePoint.y) / F32(ext.y);
             setSelectedAlpha(relY * 255.0);
             break;
          }
@@ -574,6 +576,29 @@ void GuiColorPickerCtrl::onMouseDragged(const GuiEvent &event)
 
 void GuiColorPickerCtrl::onMouseMove(const GuiEvent &event)
 {
+   if (mDisplayMode != pDropperBackground)
+      return;
+
+   if (!mDropperActive)
+      return;
+
+   // should not need globalToLocal as we are capturing the whole screen.
+   eyeDropperPos = globalToLocalCoord(event.mousePoint);
+
+   if (eyeDropperCap != NULL)
+   {
+      // Sample the pixel color at the mouse position. Mouse position should translate directly.
+      ColorI sampledColor;
+      eyeDropperCap->getColor(eyeDropperPos.x, eyeDropperPos.y, sampledColor);
+
+      // Convert the sampled color to HSB
+      Hsb hsb = sampledColor.getHSB();
+      mSelectedHue = hsb.hue;
+      mSelectedSaturation = hsb.sat;
+      mSelectedBrightness = hsb.brightness;
+      mSelectedAlpha = sampledColor.alpha;
+   }
+
 }
 
 void GuiColorPickerCtrl::onMouseEnter(const GuiEvent &event)
@@ -587,7 +612,16 @@ void GuiColorPickerCtrl::onMouseLeave(const GuiEvent &)
    mMouseOver = false;
 }
 
-void GuiColorPickerCtrl::setSelectedHue(const F64& hueValue)
+void GuiColorPickerCtrl::onMouseUp(const GuiEvent&)
+{
+   //if we released the mouse within this control, perform the action
+   if (mActive && mMouseDown)
+      mMouseDown = false;
+
+   mouseUnlock();
+}
+
+void GuiColorPickerCtrl::setSelectedHue(const U32& hueValue)
 {
    if (hueValue < 0)
    {
@@ -605,7 +639,7 @@ void GuiColorPickerCtrl::setSelectedHue(const F64& hueValue)
    
 }
 
-void GuiColorPickerCtrl::setSelectedBrightness(const F64& brightValue)
+void GuiColorPickerCtrl::setSelectedBrightness(const U32& brightValue)
 {
    if (brightValue < 0)
    {
@@ -622,7 +656,7 @@ void GuiColorPickerCtrl::setSelectedBrightness(const F64& brightValue)
    mSelectedBrightness = brightValue;
 }
 
-void GuiColorPickerCtrl::setSelectedSaturation(const F64& satValue)
+void GuiColorPickerCtrl::setSelectedSaturation(const U32& satValue)
 {
    if (satValue < 0)
    {
@@ -639,7 +673,7 @@ void GuiColorPickerCtrl::setSelectedSaturation(const F64& satValue)
    mSelectedSaturation = satValue;
 }
 
-void GuiColorPickerCtrl::setSelectedAlpha(const F64& alphaValue)
+void GuiColorPickerCtrl::setSelectedAlpha(const U32& alphaValue)
 {
    if (alphaValue < 0)
    {
@@ -656,13 +690,27 @@ void GuiColorPickerCtrl::setSelectedAlpha(const F64& alphaValue)
    mSelectedAlpha = alphaValue;
 }
 
-void GuiColorPickerCtrl::onMouseUp(const GuiEvent &)
+void GuiColorPickerCtrl::activateEyeDropper()
 {
-   //if we released the mouse within this control, perform the action
-   if (mActive && mMouseDown)
-      mMouseDown = false;
+   // Make sure we are a pDropperBackground
+   if (mDisplayMode == GuiColorPickerCtrl::pDropperBackground)
+   {
+      mouseLock(this); // take over!
 
-   mouseUnlock();
+      setFirstResponder(); // we need this to be first responder regardless.
+
+      //getRoot()->bringObjectToFront(this);
+
+      mDropperActive = true;
+
+      // Set up our resolution.
+      Point2I resolution = getRoot()->getExtent();
+
+      eyeDropperCap = gScreenShot->_captureBackBuffer();
+
+      // Texture handle to resolve the target to.
+      eyeHandle.set(eyeDropperCap, &GFXStaticTextureSRGBProfile, false, avar("%s() - bb (line %d)", __FUNCTION__, __LINE__));
+   }
 }
 
 /// <summary>
@@ -673,49 +721,57 @@ DefineEngineMethod(GuiColorPickerCtrl, executeUpdate, void, (), , "Execute the o
    object->onAction();
 }
 
-DefineEngineMethod(GuiColorPickerCtrl, setSelectedHue, void, (F64 hueValue), , "Sets the selected hue value should be 0-360.")
+/// <summary>
+/// This command should only be used with guiColorPicker in pDropperBackground mode.
+/// </summary>
+DefineEngineMethod(GuiColorPickerCtrl, activateEyeDropper, void, (), , "Activate the dropper mode.")
+{
+   object->activateEyeDropper();
+}
+
+DefineEngineMethod(GuiColorPickerCtrl, setSelectedHue, void, (S32 hueValue), , "Sets the selected hue value should be 0-360.")
 {
    object->setSelectedHue(hueValue);
 }
 
-DefineEngineMethod(GuiColorPickerCtrl, getSelectedHue, F64, (), , "Gets the current selected hue value.")
+DefineEngineMethod(GuiColorPickerCtrl, getSelectedHue, S32, (), , "Gets the current selected hue value.")
 {
    return object->getSelectedHue();
 }
 
-DefineEngineMethod(GuiColorPickerCtrl, setSelectedBrightness, void, (F64 brightness), , "Sets the selected brightness value should be 0-100.")
+DefineEngineMethod(GuiColorPickerCtrl, setSelectedBrightness, void, (S32 brightness), , "Sets the selected brightness value should be 0-100.")
 {
    object->setSelectedBrightness(brightness);
 }
 
-DefineEngineMethod(GuiColorPickerCtrl, getSelectedBrightness, F64, (), , "Gets the current selected brightness.")
+DefineEngineMethod(GuiColorPickerCtrl, getSelectedBrightness, S32, (), , "Gets the current selected brightness.")
 {
    return object->getSelectedBrightness();
 }
 
-DefineEngineMethod(GuiColorPickerCtrl, setSelectedSaturation, void, (F64 saturation), , "Sets the selected saturation value should be 0-100.")
+DefineEngineMethod(GuiColorPickerCtrl, setSelectedSaturation, void, (S32 saturation), , "Sets the selected saturation value should be 0-100.")
 {
    object->setSelectedSaturation(saturation);
 }
 
-DefineEngineMethod(GuiColorPickerCtrl, getSelectedSaturation, F64, (), , "Gets the current selected saturation value.")
+DefineEngineMethod(GuiColorPickerCtrl, getSelectedSaturation, S32, (), , "Gets the current selected saturation value.")
 {
    return object->getSelectedSaturation();
 }
 
-DefineEngineMethod(GuiColorPickerCtrl, setSelectedAlpha, void, (F64 alpha), , "Sets the selected alpha value should be 0-255.")
+DefineEngineMethod(GuiColorPickerCtrl, setSelectedAlpha, void, (S32 alpha), , "Sets the selected alpha value should be 0-255.")
 {
    object->setSelectedAlpha(alpha);
 }
 
-DefineEngineMethod(GuiColorPickerCtrl, getSelectedAlpha, F64, (), , "Gets the current selected alpha value.")
+DefineEngineMethod(GuiColorPickerCtrl, getSelectedAlpha, S32, (), , "Gets the current selected alpha value.")
 {
    return object->getSelectedAlpha();
 }
 
 DefineEngineMethod(GuiColorPickerCtrl, setSelectedColorI, void, (ColorI col), , "Sets the current selected hsb from a colorI value.")
 {
-   ColorI::Hsb hsb(col.getHSB());
+   Hsb hsb(col.getHSB());
    object->setSelectedHue(hsb.hue);
    object->setSelectedSaturation(hsb.sat);
    object->setSelectedBrightness(hsb.brightness);
@@ -725,26 +781,25 @@ DefineEngineMethod(GuiColorPickerCtrl, setSelectedColorI, void, (ColorI col), , 
 DefineEngineMethod(GuiColorPickerCtrl, getSelectedColorI, ColorI, (), , "Gets the current selected hsb as a colorI value.")
 {
    ColorI col;
-   col.set(ColorI::Hsb(object->getSelectedHue(), object->getSelectedSaturation(), object->getSelectedBrightness()));
+   col.set(Hsb(object->getSelectedHue(), object->getSelectedSaturation(), object->getSelectedBrightness()));
    col.alpha = object->getSelectedAlpha();
    return col;
 }
 
 DefineEngineMethod(GuiColorPickerCtrl, setSelectedLinearColor, void, (LinearColorF colF), , "Sets the current selected hsb froma a LinearColorF value.")
 {
-   ColorI col = colF.toColorI();
-   ColorI::Hsb hsb(col.getHSB());
+   Hsb hsb = colF.getHSB();
    object->setSelectedHue(hsb.hue);
    object->setSelectedSaturation(hsb.sat);
    object->setSelectedBrightness(hsb.brightness);
-   object->setSelectedAlpha(col.alpha);
+   object->setSelectedAlpha(colF.alpha * 255.0);
 }
 
 
 DefineEngineMethod(GuiColorPickerCtrl, getSelectedLinearColor, LinearColorF, (), , "Gets the current selected hsb as a LinearColorF value.")
 {
-   ColorI col;
-   col.set(ColorI::Hsb(object->getSelectedHue(), object->getSelectedSaturation(), object->getSelectedBrightness()));
-   col.alpha = object->getSelectedAlpha();
-   return LinearColorF(col);
+   LinearColorF col;
+   col.set(Hsb(object->getSelectedHue(), object->getSelectedSaturation(), object->getSelectedBrightness()));
+   col.alpha = (F32)object->getSelectedAlpha() / 255.0f;
+   return col;
 }

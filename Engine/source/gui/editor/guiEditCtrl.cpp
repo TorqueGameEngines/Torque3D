@@ -152,7 +152,7 @@ void GuiEditCtrl::initPersistFields()
       "If true, selection edges will snap into alignment when moved or resized." );
    addField( "snapToCenters",       TypeBool,   Offset( mSnapToCenters, GuiEditCtrl ),
       "If true, selection centers will snap into alignment when moved or resized." );
-   addField( "snapSensitivity",     TypeS32,    Offset( mSnapSensitivity, GuiEditCtrl ),
+   addFieldV( "snapSensitivity", TypeRangedS32,    Offset( mSnapSensitivity, GuiEditCtrl ), &CommonValidators::PositiveInt,
       "Distance in pixels that edge and center snapping will work across." );
    endGroup( "Snapping" );
    

@@ -27,7 +27,7 @@
 #include "console/consoleTypes.h"
 
 #ifdef TORQUE_NET_CURL
-#include "app/net/httpObject.h"
+#include <httpObject.h>
 #endif
 
 // jamesu - debug DNS

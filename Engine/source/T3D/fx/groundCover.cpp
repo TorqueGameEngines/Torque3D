@@ -545,18 +545,18 @@ void GroundCover::initPersistFields()
 
       INITPERSISTFIELD_MATERIALASSET(Material, GroundCover, "Material used by all GroundCover segments.");
 
-      addField( "radius",        TypeF32,          Offset( mRadius, GroundCover ),              "Outer generation radius from the current camera position." );
-      addField( "dissolveRadius",TypeF32,          Offset( mFadeRadius, GroundCover ),          "This is less than or equal to radius and defines when fading of cover elements begins." );
-      addField( "reflectScale",  TypeF32,          Offset( mReflectRadiusScale, GroundCover ),  "Scales the various culling radii when rendering a reflection. Typically for water." );
+      addFieldV( "radius", TypeRangedF32,          Offset( mRadius, GroundCover ), &CommonValidators::PositiveFloat,              "Outer generation radius from the current camera position." );
+      addFieldV( "dissolveRadius", TypeRangedF32,          Offset( mFadeRadius, GroundCover ), &CommonValidators::PositiveFloat,          "This is less than or equal to radius and defines when fading of cover elements begins." );
+      addFieldV( "reflectScale", TypeRangedF32,          Offset( mReflectRadiusScale, GroundCover ), &CommonValidators::PositiveFloat,  "Scales the various culling radii when rendering a reflection. Typically for water." );
 
-      addField( "gridSize",      TypeS32,          Offset( mGridSize, GroundCover ),            "The number of cells per axis in the grid." );
-      addField( "zOffset",       TypeF32,          Offset( mZOffset, GroundCover ),             "Offset along the Z axis to render the ground cover." );
+      addFieldV( "gridSize",      TypeRangedS32,          Offset( mGridSize, GroundCover ), &CommonValidators::PositiveInt,            "The number of cells per axis in the grid." );
+      addFieldV( "zOffset", TypeRangedF32,          Offset( mZOffset, GroundCover ), &CommonValidators::F32Range,             "Offset along the Z axis to render the ground cover." );
 
       addField( "seed",          TypeS32,          Offset( mRandomSeed, GroundCover ),          "This RNG seed is saved and sent to clients for generating the same cover." );
-      addField( "maxElements",   TypeS32,          Offset( mMaxPlacement, GroundCover ),        "The maximum amount of cover elements to include in the grid at any one time." );
+      addFieldV( "maxElements",   TypeRangedS32,          Offset( mMaxPlacement, GroundCover ), &CommonValidators::PositiveInt,        "The maximum amount of cover elements to include in the grid at any one time." );
 
-      addField( "maxBillboardTiltAngle", TypeF32,  Offset( mMaxBillboardTiltAngle, GroundCover ),"The maximum amout of degrees the billboard will tilt down to match the camera." );
-      addField( "shapeCullRadius", TypeF32,        Offset( mShapeCullRadius, GroundCover ),     "This is the distance at which DTS elements are  completely culled out." );      
+      addFieldV( "maxBillboardTiltAngle", TypeRangedF32,  Offset( mMaxBillboardTiltAngle, GroundCover ), &CommonValidators::PosDegreeRangeHalf,"The maximum amout of degrees the billboard will tilt down to match the camera." );
+      addFieldV( "shapeCullRadius", TypeRangedF32,        Offset( mShapeCullRadius, GroundCover ), &CommonValidators::PositiveFloat,     "This is the distance at which DTS elements are  completely culled out." );
       addField( "shapesCastShadows", TypeBool,     Offset( mShapesCastShadows, GroundCover ),   "Whether DTS elements should cast shadows or not." );
 
       addArray( "Types", MAX_COVERTYPES );
@@ -570,37 +570,37 @@ void GroundCover::initPersistFields()
 
          addField( "invertLayer",   TypeBool,      Offset( mInvertLayer, GroundCover ), MAX_COVERTYPES,     "Indicates that the terrain material index given in 'layer' is an exclusion mask." );
 
-         addField( "probability",   TypeF32,       Offset( mProbability, GroundCover ), MAX_COVERTYPES,     "The probability of one cover type verses another (relative to all cover types)." );
+         addFieldV( "probability",   TypeRangedF32,       Offset( mProbability, GroundCover ), &CommonValidators::PositiveFloat, MAX_COVERTYPES,     "The probability of one cover type verses another (relative to all cover types)." );
 
-         addField( "sizeMin",       TypeF32,       Offset( mSizeMin, GroundCover ), MAX_COVERTYPES,         "The minimum random size for each cover type." );
+         addFieldV( "sizeMin", TypeRangedF32,       Offset( mSizeMin, GroundCover ), &CommonValidators::PositiveFloat, MAX_COVERTYPES,         "The minimum random size for each cover type." );
 
-         addField( "sizeMax",       TypeF32,       Offset( mSizeMax, GroundCover ), MAX_COVERTYPES,         "The maximum random size of this cover type." );
+         addFieldV( "sizeMax", TypeRangedF32,       Offset( mSizeMax, GroundCover ), &CommonValidators::PositiveFloat, MAX_COVERTYPES,         "The maximum random size of this cover type." );
 
-         addField( "sizeExponent",  TypeF32,       Offset( mSizeExponent, GroundCover ), MAX_COVERTYPES,    "An exponent used to bias between the minimum and maximum random sizes." );
+         addFieldV( "sizeExponent", TypeRangedF32,       Offset( mSizeExponent, GroundCover ), &CommonValidators::PositiveFloat, MAX_COVERTYPES,    "An exponent used to bias between the minimum and maximum random sizes." );
 
-         addField( "windScale",     TypeF32,       Offset( mWindScale, GroundCover ), MAX_COVERTYPES,       "The wind effect scale." );
+         addFieldV( "windScale", TypeRangedF32,       Offset( mWindScale, GroundCover ), &CommonValidators::PositiveFloat, MAX_COVERTYPES,       "The wind effect scale." );
 
-		 addField( "minSlope",      TypeF32,       Offset(mMinSlope, GroundCover), MAX_COVERTYPES,          "The minimum slope angle in degrees for placement.");
+         addFieldV( "minSlope", TypeRangedF32,       Offset(mMinSlope, GroundCover), &CommonValidators::PosDegreeRangeQuarter, MAX_COVERTYPES,          "The minimum slope angle in degrees for placement.");
 
-         addField( "maxSlope",      TypeF32,       Offset( mMaxSlope, GroundCover ), MAX_COVERTYPES,        "The maximum slope angle in degrees for placement." );
+         addFieldV( "maxSlope", TypeRangedF32,       Offset( mMaxSlope, GroundCover ), &CommonValidators::PosDegreeRangeQuarter, MAX_COVERTYPES,        "The maximum slope angle in degrees for placement." );
 
 		 addField("conformToNormal",TypeBool,      Offset(mConformToNormal, GroundCover), MAX_COVERTYPES,   "Use the terrain's slope for angle");
-		 addField("minRotX",        TypeF32,       Offset(mMinRotX, GroundCover), MAX_COVERTYPES,           "minumum amount of rotation along the X axis to add");
-		 addField("maxRotX",        TypeF32,       Offset(mMaxRotX, GroundCover), MAX_COVERTYPES,           "maximum amount of rotation along the X axis to add");
-		 addField("minRotY",        TypeF32,       Offset(mMinRotY, GroundCover), MAX_COVERTYPES,           "minumum amount of rotation along the Y axis to add");
-		 addField("maxRotY",        TypeF32,       Offset(mMaxRotY, GroundCover), MAX_COVERTYPES,           "maximum amount of rotation along the Y axis to add");
+		 addFieldV("minRotX", TypeRangedF32,       Offset(mMinRotX, GroundCover), &CommonValidators::DegreeRange, MAX_COVERTYPES,           "minumum amount of rotation along the X axis to add");
+		 addFieldV("maxRotX", TypeRangedF32,       Offset(mMaxRotX, GroundCover), &CommonValidators::DegreeRange, MAX_COVERTYPES,           "maximum amount of rotation along the X axis to add");
+		 addFieldV("minRotY", TypeRangedF32,       Offset(mMinRotY, GroundCover), &CommonValidators::DegreeRange, MAX_COVERTYPES,           "minumum amount of rotation along the Y axis to add");
+		 addFieldV("maxRotY", TypeRangedF32,       Offset(mMaxRotY, GroundCover), &CommonValidators::DegreeRange, MAX_COVERTYPES,           "maximum amount of rotation along the Y axis to add");
 
-         addField( "minElevation",  TypeF32,       Offset( mMinElevation, GroundCover ), MAX_COVERTYPES,    "The minimum world space elevation for placement." );
+         addFieldV( "minElevation", TypeRangedF32,       Offset( mMinElevation, GroundCover ), &CommonValidators::F32Range, MAX_COVERTYPES,    "The minimum world space elevation for placement." );
 
-         addField( "maxElevation",  TypeF32,       Offset( mMaxElevation, GroundCover ), MAX_COVERTYPES,    "The maximum world space elevation for placement." );
+         addFieldV( "maxElevation", TypeRangedF32,       Offset( mMaxElevation, GroundCover ), &CommonValidators::F32Range, MAX_COVERTYPES,    "The maximum world space elevation for placement." );
 
-         addField( "minClumpCount", TypeS32,       Offset( mMinClumpCount, GroundCover ), MAX_COVERTYPES,   "The minimum amount of elements in a clump." );
+         addFieldV( "minClumpCount", TypeRangedS32,       Offset( mMinClumpCount, GroundCover ), &CommonValidators::PositiveInt, MAX_COVERTYPES,   "The minimum amount of elements in a clump." );
       
-         addField( "maxClumpCount", TypeS32,       Offset( mMaxClumpCount, GroundCover ), MAX_COVERTYPES,   "The maximum amount of elements in a clump." );
+         addFieldV( "maxClumpCount", TypeRangedS32,       Offset( mMaxClumpCount, GroundCover ), &CommonValidators::PositiveInt, MAX_COVERTYPES,   "The maximum amount of elements in a clump." );
 
-         addField( "clumpExponent", TypeF32,       Offset( mClumpCountExponent, GroundCover ), MAX_COVERTYPES, "An exponent used to bias between the minimum and maximum clump counts for a particular clump." );
+         addFieldV( "clumpExponent", TypeRangedF32,       Offset( mClumpCountExponent, GroundCover ), &CommonValidators::PositiveFloat, MAX_COVERTYPES, "An exponent used to bias between the minimum and maximum clump counts for a particular clump." );
 
-         addField( "clumpRadius",   TypeF32,       Offset( mClumpRadius, GroundCover ), MAX_COVERTYPES,     "The maximum clump radius." );
+         addFieldV( "clumpRadius", TypeRangedF32,       Offset( mClumpRadius, GroundCover ), &CommonValidators::PositiveFloat, MAX_COVERTYPES,     "The maximum clump radius." );
 
       endArray( "Types" );
 
@@ -610,12 +610,12 @@ void GroundCover::initPersistFields()
 
       addField( "windDirection",    TypePoint2F,   Offset( mWindDirection, GroundCover ),             "The direction of the wind." );
 
-      addField( "windGustLength",   TypeF32,       Offset( mWindGustLength, GroundCover ),            "The length in meters between peaks in the wind gust." );
-      addField( "windGustFrequency",TypeF32,       Offset( mWindGustFrequency, GroundCover ),         "Controls how often the wind gust peaks per second." );
-      addField( "windGustStrength", TypeF32,       Offset( mWindGustStrength, GroundCover ),          "The maximum distance in meters that the peak wind  gust will displace an element." );
+      addFieldV( "windGustLength", TypeRangedF32,       Offset( mWindGustLength, GroundCover ), &CommonValidators::PositiveFloat,            "The length in meters between peaks in the wind gust." );
+      addFieldV( "windGustFrequency", TypeRangedF32,       Offset( mWindGustFrequency, GroundCover ), &CommonValidators::PositiveFloat,         "Controls how often the wind gust peaks per second." );
+      addFieldV( "windGustStrength", TypeRangedF32,       Offset( mWindGustStrength, GroundCover ), &CommonValidators::PositiveFloat,          "The maximum distance in meters that the peak wind  gust will displace an element." );
 
-      addField( "windTurbulenceFrequency",   TypeF32, Offset( mWindTurbulenceFrequency, GroundCover ),"Controls the overall rapidity of the wind turbulence." );
-      addField( "windTurbulenceStrength",    TypeF32, Offset( mWindTurbulenceStrength, GroundCover ), "The maximum distance in meters that the turbulence can displace a ground cover element." );
+      addFieldV( "windTurbulenceFrequency", TypeRangedF32, Offset( mWindTurbulenceFrequency, GroundCover ), &CommonValidators::PositiveFloat,"Controls the overall rapidity of the wind turbulence." );
+      addFieldV( "windTurbulenceStrength", TypeRangedF32, Offset( mWindTurbulenceStrength, GroundCover ), &CommonValidators::PositiveFloat, "The maximum distance in meters that the turbulence can displace a ground cover element." );
 
    endGroup( "GroundCover Wind" );
 

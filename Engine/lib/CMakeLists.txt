@@ -186,7 +186,7 @@ mark_as_advanced(PNG_DEBUG)
 mark_as_advanced(PNG_FRAMEWORK)
 mark_as_advanced(PNG_PREFIX)
 
-add_subdirectory(tinyxml ${TORQUE_LIB_TARG_DIRECTORY}/tinyxml EXCLUDE_FROM_ALL)
+add_subdirectory(tinyxml2 ${TORQUE_LIB_TARG_DIRECTORY}/tinyxml2 EXCLUDE_FROM_ALL)
 add_subdirectory(opcode ${TORQUE_LIB_TARG_DIRECTORY}/opcode EXCLUDE_FROM_ALL)
 add_subdirectory(pcre ${TORQUE_LIB_TARG_DIRECTORY}/pcre EXCLUDE_FROM_ALL)
 

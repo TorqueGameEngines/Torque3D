@@ -8,7 +8,7 @@
 // Copyright (C) Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 
-#include "../../common/gl/hlslCompat.glsl"
+#include "../../gl/hlslCompat.glsl"
 
 uniform mat4 modelview;
 

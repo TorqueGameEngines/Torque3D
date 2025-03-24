@@ -92,11 +92,11 @@ void GuiFadeinBitmapCtrl::initPersistFields()
    
       addField( "fadeColor", TypeColorF, Offset( mFadeColor, GuiFadeinBitmapCtrl ),
          "Color to fade in from and fade out to." );
-      addField( "fadeInTime", TypeS32, Offset( mFadeInTime, GuiFadeinBitmapCtrl ),
+      addFieldV( "fadeInTime", TypeRangedS32, Offset( mFadeInTime, GuiFadeinBitmapCtrl ), &CommonValidators::PositiveInt,
          "Milliseconds for the bitmap to fade in." );
-      addField( "waitTime", TypeS32, Offset( mWaitTime, GuiFadeinBitmapCtrl ),
+      addFieldV( "waitTime", TypeRangedS32, Offset( mWaitTime, GuiFadeinBitmapCtrl ), &CommonValidators::PositiveInt,
          "Milliseconds to wait after fading in before fading out the bitmap." );
-      addField( "fadeOutTime", TypeS32, Offset( mFadeOutTime, GuiFadeinBitmapCtrl ),
+      addFieldV( "fadeOutTime", TypeRangedS32, Offset( mFadeOutTime, GuiFadeinBitmapCtrl ), &CommonValidators::PositiveInt,
          "Milliseconds for the bitmap to fade out." );
       addField( "fadeInEase", TypeEaseF, Offset( mFadeInEase, GuiFadeinBitmapCtrl ),
          "Easing curve for fade-in." );

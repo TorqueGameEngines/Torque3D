@@ -811,11 +811,11 @@ bool TSShapeInstance::buildConvexOpcode( const MatrixF &objMat, const Point3F &o
    return emitted;
 }
 
-void TSShape::findColDetails( bool useVisibleMesh, Vector<S32> *outDetails, Vector<S32> *outLOSDetails ) const
+void TSShape::findColDetails( bool useVisibleMesh, Vector<S32> *outDetails, Vector<S32> *outLOSDetails, S32 specifiedLOD) const
 {
    PROFILE_SCOPE( TSShape_findColDetails );
 
-   if ( useVisibleMesh )
+   if ( useVisibleMesh || (specifiedLOD !=0))
    {
       // If we're using the visible mesh for collision then
       // find the highest detail and use that.
@@ -836,12 +836,23 @@ void TSShape::findColDetails( bool useVisibleMesh, Vector<S32> *outDetails, Vect
                dStrStartsWith( name, "LOS" ) )
             continue;
          */
-
-         // Otherwise test against the current highest size
-         if ( details[i].size > highestSize )
+         if (specifiedLOD != 0)
          {
-            highestDetail = i;
-            highestSize = details[i].size;
+            if (details[i].size == specifiedLOD)
+            {
+               highestDetail = i;
+               highestSize = details[i].size;
+
+            }
+         }
+         else
+         {
+            // Otherwise test against the current highest size
+            if (details[i].size > highestSize)
+            {
+               highestDetail = i;
+               highestSize = details[i].size;
+            }
          }
       }
 
@@ -852,7 +863,6 @@ void TSShape::findColDetails( bool useVisibleMesh, Vector<S32> *outDetails, Vect
          if ( outLOSDetails )
             outLOSDetails->push_back( highestDetail );
       }
-
       return;
    }
 

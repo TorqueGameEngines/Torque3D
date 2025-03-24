@@ -209,7 +209,7 @@ void NavPath::initPersistFields()
       "Does this path loop?");
    addField("isSliced", TypeBool, Offset(mIsSliced, NavPath),
       "Plan this path over multiple updates instead of all at once.");
-   addFieldV("maxIterations", TypeS32, Offset(mMaxIterations, NavPath), &ValidIterations,
+   addFieldV("maxIterations", TypeRangedS32, Offset(mMaxIterations, NavPath), &ValidIterations,
       "Maximum iterations of path planning this path does per tick.");
    addProtectedField("autoUpdate", TypeBool, Offset(mAutoUpdate, NavPath),
       &setProtectedAutoUpdate, &defaultProtectedGetFn,

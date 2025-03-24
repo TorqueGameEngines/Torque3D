@@ -2169,7 +2169,7 @@ void GuiCanvas::setFirstResponder( GuiControl* newResponder )
    if( oldResponder && ( oldResponder != newResponder ) )
       oldResponder->onLoseFirstResponder();
       
-   if( newResponder && ( newResponder != oldResponder ) )
+   if( newResponder && ( newResponder != oldResponder ) && newResponder->isProperlyAdded())
       newResponder->onGainFirstResponder();
 }
 

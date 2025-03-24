@@ -27,6 +27,7 @@
 #include "gui/controls/guiPopUpCtrl.h"
 #include "gui/core/guiDefaultControlRender.h"
 #include "gfx/gfxDrawUtil.h"
+#include "console/typeValidators.h"
 
 
 IMPLEMENT_CONOBJECT( GuiTabBookCtrl );
@@ -107,19 +108,19 @@ void GuiTabBookCtrl::initPersistFields()
    
       addField( "tabPosition",     TYPEID< TabPosition >(), Offset( mTabPosition,    GuiTabBookCtrl ),
          "Where to place the tab page headers." );
-      addField( "tabMargin",       TypeS32,  Offset( mTabMargin,      GuiTabBookCtrl ),
+      addFieldV( "tabMargin", TypeRangedS32,  Offset( mTabMargin,      GuiTabBookCtrl ), &CommonValidators::PositiveInt,
          "Spacing to put between individual tab page headers." );
-      addField( "minTabWidth",     TypeS32,  Offset( mMinTabWidth,    GuiTabBookCtrl ),
+      addFieldV( "minTabWidth", TypeRangedS32,  Offset( mMinTabWidth,    GuiTabBookCtrl ), &CommonValidators::PositiveInt,
          "Minimum width allocated to a tab page header." );
-      addField( "tabHeight",       TypeS32,  Offset( mTabHeight,      GuiTabBookCtrl ),
+      addFieldV( "tabHeight", TypeRangedS32,  Offset( mTabHeight,      GuiTabBookCtrl ), &CommonValidators::PositiveInt,
          "Height of tab page headers." );
       addField( "allowReorder",    TypeBool, Offset( mAllowReorder,   GuiTabBookCtrl ),
          "Whether reordering tabs with the mouse is allowed." );
-      addField( "defaultPage",     TypeS32,  Offset( mDefaultPageNum, GuiTabBookCtrl ),
+      addFieldV( "defaultPage", TypeRangedS32,  Offset( mDefaultPageNum, GuiTabBookCtrl ), &CommonValidators::NegDefaultInt,
          "Index of page to select on first onWake() call (-1 to disable)." );
 
-      addProtectedField( "selectedPage", TypeS32, Offset( mSelectedPageNum, GuiTabBookCtrl ),
-         &_setSelectedPage, &defaultProtectedGetFn,
+      addProtectedFieldV( "selectedPage", TypeRangedS32, Offset( mSelectedPageNum, GuiTabBookCtrl ),
+         &_setSelectedPage, &defaultProtectedGetFn, &CommonValidators::PositiveInt,
          "Index of currently selected page." );
 
       addField( "frontTabPadding", TypeS32, Offset( mFrontTabPadding, GuiTabBookCtrl ),
@@ -320,6 +321,15 @@ bool GuiTabBookCtrl::resize(const Point2I &newPosition, const Point2I &newExtent
    bool result = Parent::resize( newPosition, newExtent );
 
    calculatePageTabs();
+
+   for (S32 i = 0; i < mPages.size(); i++)
+   {
+      const TabHeaderInfo& info = mPages[i];
+      GuiTabPageCtrl* page = info.Page;
+
+      if(page->getFitBook())
+         fitPage(page);
+   }
    
    return result;
 }
@@ -430,6 +440,18 @@ void GuiTabBookCtrl::onMouseMove(const GuiEvent &event)
 void GuiTabBookCtrl::onMouseLeave( const GuiEvent &event )
 {
    Parent::onMouseLeave( event );
+
+   if(mDraggingTab)
+   {
+      //we dragged the tab out, so do something about that
+      GuiTabPageCtrl* selectedPage = NULL;
+      if (mSelectedPageNum != -1)
+         selectedPage = mPages[mSelectedPageNum].Page;
+
+      mDraggingTab = false;
+
+      Con::executef(this, "onTabDraggedOut", selectedPage->getIdString());
+   }
    
    mHoverTab = NULL;
 }

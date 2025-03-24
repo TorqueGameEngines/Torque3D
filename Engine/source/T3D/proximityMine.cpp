@@ -96,12 +96,12 @@ void ProximityMineData::initPersistFields()
    endGroup("Sounds");
 
    addGroup( "Arming" );
-   addField( "armingDelay", TypeF32, Offset(armingDelay, ProximityMineData), 
+   addFieldV( "armingDelay", TypeRangedF32, Offset(armingDelay, ProximityMineData), &CommonValidators::PositiveFloat,
       "Delay (in seconds) from when the mine is placed to when it becomes active." );
    endGroup( "Arming" );
 
    addGroup( "Triggering" );
-   addField( "autoTriggerDelay", TypeF32, Offset(autoTriggerDelay, ProximityMineData),
+   addFieldV( "autoTriggerDelay", TypeRangedF32, Offset(autoTriggerDelay, ProximityMineData), &CommonValidators::PositiveFloat,
       "@brief Delay (in seconds) from arming until the mine automatically "
       "triggers and explodes, even if no object has entered the trigger area.\n\n"
       "Set to 0 to disable." );
@@ -109,16 +109,16 @@ void ProximityMineData::initPersistFields()
       "@brief Controls whether the mine can be triggered by the object that owns it.\n\n"
       "For example, a player could deploy mines that are only dangerous to other "
       "players and not himself." );
-   addField( "triggerRadius", TypeF32, Offset(triggerRadius, ProximityMineData),
+   addFieldV( "triggerRadius", TypeRangedF32, Offset(triggerRadius, ProximityMineData), &CommonValidators::PositiveFloat,
       "Distance at which an activated mine will detect other objects and explode." );
-   addField( "triggerSpeed", TypeF32, Offset(triggerSpeed, ProximityMineData),
+   addFieldV( "triggerSpeed", TypeRangedF32, Offset(triggerSpeed, ProximityMineData), &CommonValidators::PositiveFloat,
       "Speed above which moving objects within the trigger radius will trigger the mine" );
-   addField( "triggerDelay", TypeF32, Offset(triggerDelay, ProximityMineData),
+   addFieldV( "triggerDelay", TypeRangedF32, Offset(triggerDelay, ProximityMineData), &CommonValidators::PositiveFloat,
       "Delay (in seconds) from when the mine is triggered until it explodes." );
    endGroup( "Triggering" );
 
    addGroup( "Explosion" );
-   addField( "explosionOffset", TypeF32, Offset(explosionOffset, ProximityMineData),
+   addFieldV( "explosionOffset", TypeRangedF32, Offset(explosionOffset, ProximityMineData), &CommonValidators::F32Range,
       "@brief Offset from the mine's origin where the explosion emanates from."
       "Sometimes a thrown mine may be slightly sunk into the ground.  This can be just "
       "enough to cause the explosion to occur under the ground, especially on flat "

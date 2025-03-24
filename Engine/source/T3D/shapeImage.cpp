@@ -623,7 +623,7 @@ S32 ShapeBaseImageData::lookupState(const char* name)
    Con::errorf(ConsoleLogEntry::General,"ShapeBaseImageData:: Could not resolve state \"%s\" for image \"%s\"",name,getName());
    return 0;
 }
-
+IRangeValidator mountRange(-1, SceneObject::NumMountPoints);
 void ShapeBaseImageData::initPersistFields()
 {
    docsURL;
@@ -636,10 +636,10 @@ void ShapeBaseImageData::initPersistFields()
       addField("shellExitDir", TypePoint3F, Offset(shellExitDir, ShapeBaseImageData),
          "@brief Vector direction to eject shell casings.\n\n"
          "@see casing");
-      addField("shellExitVariance", TypeF32, Offset(shellExitVariance, ShapeBaseImageData),
+      addFieldV("shellExitVariance", TypeRangedF32, Offset(shellExitVariance, ShapeBaseImageData), &CommonValidators::DegreeRange,
          "@brief Variance (in degrees) from the shellExitDir vector to eject casings.\n\n"
          "@see shellExitDir");
-      addField("shellVelocity", TypeF32, Offset(shellVelocity, ShapeBaseImageData),
+      addFieldV("shellVelocity", TypeRangedF32, Offset(shellVelocity, ShapeBaseImageData), &CommonValidators::PositiveFloat,
          "@brief Speed at which to eject casings.\n\n"
          "@see casing");
       addField("computeCRC", TypeBool, Offset(computeCRC, ShapeBaseImageData),
@@ -680,7 +680,7 @@ void ShapeBaseImageData::initPersistFields()
          "@note Setting this to true causes up to four animation threads to be advanced on the server "
          "for each instance in use, although for most images only one or two are actually defined.\n\n"
          "@see useEyeNode\n");
-      addField( "scriptAnimTransitionTime", TypeF32, Offset(scriptAnimTransitionTime, ShapeBaseImageData),
+      addFieldV( "scriptAnimTransitionTime", TypeRangedF32, Offset(scriptAnimTransitionTime, ShapeBaseImageData), &CommonValidators::PositiveFloat,
          "@brief The amount of time to transition between the previous sequence and new sequence when the script prefix has changed.\n\n"
          "When setImageScriptAnimPrefix() is used on a ShapeBase that has this image mounted, the image "
          "will attempt to switch to the new animation sequence based on the given script prefix.  This is "
@@ -697,12 +697,12 @@ void ShapeBaseImageData::initPersistFields()
    addField("usesEnergy", TypeBool, Offset(usesEnergy, ShapeBaseImageData),
       "@brief Flag indicating whether this Image uses energy instead of ammo.  The energy level comes from the ShapeBase object we're mounted to.\n\n"
       "@see ShapeBase::setEnergyLevel()");
-   addField("minEnergy", TypeF32, Offset(minEnergy, ShapeBaseImageData),
+   addFieldV("minEnergy", TypeRangedF32, Offset(minEnergy, ShapeBaseImageData), &CommonValidators::PositiveFloat,
       "@brief Minimum Image energy for it to be operable.\n\n"
       "@see usesEnergy");
 
    addGroup("Mounting");
-   addField( "mountPoint", TypeS32, Offset(mountPoint, ShapeBaseImageData),
+   addFieldV( "mountPoint", TypeRangedS32, Offset(mountPoint, ShapeBaseImageData), &mountRange,
       "@brief Mount node # to mount this Image to.\n\n"
       "This should correspond to a mount# node on the ShapeBase derived object we are mounting to." );
    addField( "offset", TypeMatrixPosition, Offset(mountOffset, ShapeBaseImageData),
@@ -753,12 +753,12 @@ void ShapeBaseImageData::initPersistFields()
       addField( "camShakeAmp", TypePoint3F, Offset(camShakeAmp, ShapeBaseImageData),
          "@brief Amplitude of the camera shaking effect.\n\n"
          "@see shakeCamera" );
-      addField( "camShakeDuration", TypeF32, Offset(camShakeDuration, ShapeBaseImageData),
+      addFieldV( "camShakeDuration", TypeRangedF32, Offset(camShakeDuration, ShapeBaseImageData), &CommonValidators::PositiveFloat,
          "Duration (in seconds) to shake the camera." );
-      addField( "camShakeRadius", TypeF32, Offset(camShakeRadius, ShapeBaseImageData),
+      addFieldV( "camShakeRadius", TypeRangedF32, Offset(camShakeRadius, ShapeBaseImageData), &CommonValidators::PositiveFloat,
          "Radial distance that a camera's position must be within relative to the "
          "center of the explosion to be shaken." );
-      addField( "camShakeFalloff", TypeF32, Offset(camShakeFalloff, ShapeBaseImageData),
+      addFieldV( "camShakeFalloff", TypeRangedF32, Offset(camShakeFalloff, ShapeBaseImageData), &CommonValidators::PositiveFloat,
          "Falloff value for the camera shake." );
    endGroup("Camera Shake");
 
@@ -769,7 +769,7 @@ void ShapeBaseImageData::initPersistFields()
    addField( "correctMuzzleVectorTP", TypeBool,  Offset(correctMuzzleVectorTP, ShapeBaseImageData),
       "@brief Flag to adjust the aiming vector to the camera's LOS point when in 3rd person view.\n\n"
       "@see ShapeBase::getMuzzleVector()" );
-   addField( "mass", TypeF32, Offset(mass, ShapeBaseImageData),
+   addFieldV( "mass", TypeRangedF32, Offset(mass, ShapeBaseImageData), &CommonValidators::PositiveFloat,
       "@brief Mass of this Image.\n\n"
       "This is added to the total mass of the ShapeBase object." );
    addField( "accuFire", TypeBool, Offset(accuFire, ShapeBaseImageData),
@@ -785,13 +785,13 @@ void ShapeBaseImageData::initPersistFields()
       addField( "lightColor", TypeColorF, Offset(lightColor, ShapeBaseImageData),
          "@brief The color of light this Image emits.\n\n"
          "@see lightType");
-      addField( "lightDuration", TypeS32, Offset(lightDuration, ShapeBaseImageData),
+      addFieldV( "lightDuration", TypeRangedS32, Offset(lightDuration, ShapeBaseImageData), &CommonValidators::PositiveInt,
          "@brief Duration in SimTime of Pulsing and WeaponFire type lights.\n\n"
          "@see lightType");
-      addField( "lightRadius", TypeF32, Offset(lightRadius, ShapeBaseImageData),
+      addFieldV( "lightRadius", TypeRangedF32, Offset(lightRadius, ShapeBaseImageData), &CommonValidators::PositiveFloat,
          "@brief Radius of the light this Image emits.\n\n"
          "@see lightType");
-      addField( "lightBrightness", TypeF32, Offset(lightBrightness, ShapeBaseImageData),
+      addFieldV( "lightBrightness", TypeRangedF32, Offset(lightBrightness, ShapeBaseImageData), &CommonValidators::PositiveFloat,
          "@brief Brightness of the light this Image emits.\n\n"
          "Only valid for WeaponFireLight."
          "@see lightType");
@@ -868,7 +868,7 @@ void ShapeBaseImageData::initPersistFields()
          "Name of the state to transition to when the generic trigger 3 state "
          "changes to false." );
 
-      addField( "stateTimeoutValue", TypeF32, Offset(stateTimeoutValue, ShapeBaseImageData), MaxStates,
+      addFieldV( "stateTimeoutValue", TypeRangedF32, Offset(stateTimeoutValue, ShapeBaseImageData), &CommonValidators::PositiveFloat, MaxStates,
          "Time in seconds to wait before transitioning to stateTransitionOnTimeout." );
       addField( "stateWaitForTimeout", TypeBool, Offset(stateWaitForTimeout, ShapeBaseImageData), MaxStates,
          "If false, this state ignores stateTimeoutValue and transitions "
@@ -884,7 +884,7 @@ void ShapeBaseImageData::initPersistFields()
          "client when it receives the 'reload' event." );
       addField( "stateEjectShell", TypeBool, Offset(stateEjectShell, ShapeBaseImageData), MaxStates,
          "If true, a shell casing will be ejected in this state." );
-      addField( "stateEnergyDrain", TypeF32, Offset(stateEnergyDrain, ShapeBaseImageData), MaxStates,
+      addFieldV( "stateEnergyDrain", TypeRangedF32, Offset(stateEnergyDrain, ShapeBaseImageData), &CommonValidators::PositiveFloat, MaxStates,
          "@brief Amount of energy to subtract from the Image in this state.\n\n"
          "Energy is drained at stateEnergyDrain units/tick as long as we are in "
          "this state.\n"
@@ -943,7 +943,7 @@ void ShapeBaseImageData::initPersistFields()
          "Do we transition to the new state's sequence when we leave the state?" );
       addField( "stateSequenceNeverTransition", TypeBool, Offset(stateSequenceNeverTransition, ShapeBaseImageData), MaxStates,
          "Never allow a transition to this sequence.  Often used for a fire sequence." );
-      addField( "stateSequenceTransitionTime", TypeF32, Offset(stateSequenceTransitionTime, ShapeBaseImageData), MaxStates,
+      addFieldV( "stateSequenceTransitionTime", TypeRangedF32, Offset(stateSequenceTransitionTime, ShapeBaseImageData), &CommonValidators::PositiveFloat, MaxStates,
          "The time to transition in or out of a sequence." );
 
       addField( "stateShapeSequence", TypeString, Offset(stateShapeSequence, ShapeBaseImageData), MaxStates,
@@ -963,7 +963,7 @@ void ShapeBaseImageData::initPersistFields()
          "@brief Emitter to generate particles in this state (from muzzle point or "
          "specified node).\n\n"
          "@see stateEmitterNode" );
-      addField( "stateEmitterTime", TypeF32, Offset(stateEmitterTime, ShapeBaseImageData), MaxStates,
+      addFieldV( "stateEmitterTime", TypeRangedF32, Offset(stateEmitterTime, ShapeBaseImageData), &CommonValidators::PositiveFloat, MaxStates,
          "How long (in seconds) to emit particles on entry to this state." );
       addField( "stateEmitterNode", TypeString, Offset(stateEmitterNode, ShapeBaseImageData), MaxStates,
          "@brief Name of the node to emit particles from.\n\n"
@@ -977,7 +977,7 @@ void ShapeBaseImageData::initPersistFields()
    endArray( "States" );
 
    addGroup("Sounds");
-      addField( "maxConcurrentSounds", TypeS32, Offset(maxConcurrentSounds, ShapeBaseImageData),
+      addFieldV( "maxConcurrentSounds", TypeRangedS32, Offset(maxConcurrentSounds, ShapeBaseImageData), &CommonValidators::PositiveInt,
          "@brief Maximum number of sounds this Image can play at a time.\n\n"
          "Any value <= 0 indicates that it can play an infinite number of sounds." );
    endGroup("Sounds");
@@ -1047,10 +1047,10 @@ void ShapeBaseImageData::packData(BitStream* stream)
    {
       stream->write(lightRadius);
       stream->write(lightDuration);
-      stream->writeFloat(lightColor.red, 7);
-      stream->writeFloat(lightColor.green, 7);
-      stream->writeFloat(lightColor.blue, 7);
-      stream->writeFloat(lightColor.alpha, 7);
+      stream->writeFloat(lightColor.red, 8);
+      stream->writeFloat(lightColor.green, 8);
+      stream->writeFloat(lightColor.blue, 8);
+      stream->writeFloat(lightColor.alpha, 8);
       stream->write(lightBrightness);
    }
 
@@ -1232,10 +1232,10 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
    {
       stream->read(&lightRadius);
       stream->read(&lightDuration);
-      lightColor.red = stream->readFloat(7);
-      lightColor.green = stream->readFloat(7);
-      lightColor.blue = stream->readFloat(7);
-      lightColor.alpha = stream->readFloat(7);
+      lightColor.red = stream->readFloat(8);
+      lightColor.green = stream->readFloat(8);
+      lightColor.blue = stream->readFloat(8);
+      lightColor.alpha = stream->readFloat(8);
       stream->read( &lightBrightness );
    }
 

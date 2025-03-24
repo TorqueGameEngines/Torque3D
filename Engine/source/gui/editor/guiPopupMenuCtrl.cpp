@@ -247,6 +247,10 @@ void GuiPopupMenuTextListCtrl::onMouseUp(const GuiEvent &event)
       {
          if (item->mEnabled)
          {
+            if(mMenuBar)
+            {
+               mMenuBar->closeMenu();
+            }
             Con::executef(mPopup, "onSelectItem", Con::getIntArg(getSelectedCell().y), item->mText.isNotEmpty() ? item->mText : String(""));
          }
       }

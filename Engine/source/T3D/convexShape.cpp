@@ -526,7 +526,7 @@ const char* ConvexShape::getSpecialFieldOut(StringTableEntry fieldName, const U3
       char buffer[1024];
       dMemset(buffer, 0, 1024);
 
-      dSprintf(buffer, 1024, "%g %g %g %g %g %g %g %i %g %g %g %g %g %i %i",
+      dSprintf(buffer, 1024, "surface = \"%g %g %g %g %g %g %g %i %g %g %g %g %g %i %i\";",
          quat.x, quat.y, quat.z, quat.w, pos.x, pos.y, pos.z, mSurfaceUVs[index].matID,
          mSurfaceUVs[index].offset.x, mSurfaceUVs[index].offset.y, mSurfaceUVs[index].scale.x,
          mSurfaceUVs[index].scale.y, mSurfaceUVs[index].zRot, mSurfaceUVs[index].horzFlip, mSurfaceUVs[index].vertFlip);
@@ -541,7 +541,7 @@ const char* ConvexShape::getSpecialFieldOut(StringTableEntry fieldName, const U3
       char buffer[1024];
       dMemset(buffer, 0, 1024);
 
-      dSprintf(buffer, 1024, "%s", mSurfaceTextures[index].getMaterial());
+      dSprintf(buffer, 1024, "surfaceTexture = \"%s\";", mSurfaceTextures[index].getMaterial());
 
       return StringTable->insert(buffer);
    }

@@ -475,7 +475,7 @@ class TSShape
    /// @param outDetails The output detail index vector.
    /// @param outLOSDetails The optional output LOS detail vector.
    ///
-   void findColDetails( bool useVisibleMesh, Vector<S32> *outDetails, Vector<S32> *outLOSDetails ) const;
+   void findColDetails(bool useVisibleMesh, Vector<S32>* outDetails, Vector<S32>* outLOSDetails, S32 specifiedLOD = 0 ) const;
 
    /// Builds a physics collision shape at the requested scale.
    ///

@@ -117,6 +117,7 @@ void Rigid::updateCenterOfMass()
 
 void Rigid::applyImpulse(const Point3F &r, const Point3F &impulse)
 {
+   if (impulse.lenSquared() < mass) return;
    atRest = false;
 
    // Linear momentum and velocity
@@ -363,4 +364,6 @@ void Rigid::setAtRest()
    linMomentum.set(0.0f,0.0f,0.0f);
    angVelocity.set(0.0f,0.0f,0.0f);
    angMomentum.set(0.0f,0.0f,0.0f);
+   force.set(0.0f, 0.0f, 0.0f);
+   torque.set(0.0f, 0.0f, 0.0f);
 }

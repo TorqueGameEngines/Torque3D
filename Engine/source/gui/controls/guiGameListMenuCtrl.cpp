@@ -29,6 +29,7 @@
 #include "gui/containers/guiScrollCtrl.h"
 #include "sim/actionMap.h"
 #include "core/strings/stringUnit.h"
+#include "console/typeValidators.h"
 
 //-----------------------------------------------------------------------------
 // GuiGameListMenuCtrl
@@ -1878,10 +1879,10 @@ void GuiGameListMenuProfile::initPersistFields()
    addField( "rowSize", TypePoint2I, Offset(mRowSize, GuiGameListMenuProfile),
       "The base size (\"width height\") of a row" );
 
-   addField("columnSplit", TypeS32, Offset(mColumnSplit, GuiGameListMenuProfile),
+   addFieldV("columnSplit", TypeRangedS32, Offset(mColumnSplit, GuiGameListMenuProfile), &CommonValidators::PositiveInt,
       "Padding between the leftmost edge of the control, and the row's left arrow.");
 
-   addField("rightPad", TypeS32, Offset(mRightPad, GuiGameListMenuProfile),
+   addFieldV("rightPad", TypeRangedS32, Offset(mRightPad, GuiGameListMenuProfile), &CommonValidators::PositiveInt,
       "Padding between the rightmost edge of the control and the row's right arrow.");
 
    Parent::initPersistFields();

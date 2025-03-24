@@ -33,10 +33,11 @@
 #include <al/alc.h>
 #endif
 
+
 /* 
  * Init call
  */
-ALDeviceList::ALDeviceList( const OPENALFNTABLE &oalft )
+ALDeviceList::ALDeviceList( const OPENALFNTABLE& oalft )
 {
    VECTOR_SET_ASSOCIATION( vDeviceInfo );
 
@@ -44,8 +45,9 @@ ALDeviceList::ALDeviceList( const OPENALFNTABLE &oalft )
 	char *devices;
 	int index;
 	const char *defaultDeviceName;
+	const char *actualDeviceName;
 
-   dMemcpy( &ALFunction, &oalft, sizeof( OPENALFNTABLE ) );
+   dMemcpy( &ALFunction, &oalft, sizeof(OPENALFNTABLE) );
 
    // DeviceInfo vector stores, for each enumerated device, it's device name, selection status, spec version #, and extension support
    vDeviceInfo.clear();
@@ -66,44 +68,48 @@ ALDeviceList::ALDeviceList( const OPENALFNTABLE &oalft )
 
    index = 0;
       // go through device list (each device terminated with a single NULL, list terminated with double NULL)
-   while (*devices != 0) {
+   while (*devices != '\0') {
       if (String::compare(defaultDeviceName, devices) == 0) {
          defaultDeviceIndex = index;
       }
 
-      bool bNewName = true;
-      for (int i = 0; i < GetNumDevices(); i++) {
-         if (String::compare(GetDeviceName(i), devices) == 0) {
-            bNewName = false;
-         }
-      }
-
-      if ((bNewName) && (devices != NULL) && (dStrlen(devices) > 0))
+      ALCdevice* device = ALFunction.alcOpenDevice(devices);
+      if (device)
       {
-         dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
-         ALDeviceInfo.bSelected = true;
-         dStrncpy(ALDeviceInfo.strInternalDeviceName, devices, sizeof(ALDeviceInfo.strInternalDeviceName));
-         char deviceExternal[256];
-         dStrcpy(deviceExternal, devices, 256);
-         char* openFind = dStrchr(deviceExternal, '(');
-         if (openFind)
+         ALCcontext* ctx = ALFunction.alcCreateContext(device, nullptr);
+
+         if (ctx)
          {
-            char* deviceName = openFind + 1;
-            char* closeFind = dStrchr(deviceName, ')');
-            if (closeFind)
-               (*closeFind) = '\0';
+            ALFunction.alcMakeContextCurrent(ctx);
+            actualDeviceName = ALFunction.alcGetString(device, ALC_DEVICE_SPECIFIER);
+            bool bNewName = true;
 
-            dStrncpy(ALDeviceInfo.strDeviceName, deviceName, sizeof(ALDeviceInfo.strDeviceName));
+            if (actualDeviceName)
+            {
+               for (int i = 0; i < GetNumDevices(); i++) {
+                  if (String::compare(GetDeviceName(i), devices) == 0) {
+                     bNewName = false;
+                  }
+               }
+            }
 
+            if ((bNewName) && (actualDeviceName != NULL) && (dStrlen(actualDeviceName) > 0))
+            {
+               dMemset(&ALDeviceInfo, 0, sizeof(ALDEVICEINFO));
+               ALDeviceInfo.bSelected = true;
+               dStrncpy(ALDeviceInfo.strDeviceName, actualDeviceName, sizeof(ALDeviceInfo.strDeviceName));
+               char deviceExternal[256];
+               dStrcpy(deviceExternal, devices, 256);
+
+               vDeviceInfo.push_back(ALDeviceInfo);
+            }
+
+            ALFunction.alcMakeContextCurrent(nullptr);
+            ALFunction.alcDestroyContext(ctx);
          }
-         else
-         {
-            dStrncpy(ALDeviceInfo.strDeviceName, devices, sizeof(ALDeviceInfo.strDeviceName));
-         }
-
-         vDeviceInfo.push_back(ALDeviceInfo);
+         ALFunction.alcCloseDevice(device);
       }
-
+     
       devices += dStrlen(devices) + 1;
       index += 1;
    }
@@ -129,14 +135,6 @@ int ALDeviceList::GetNumDevices()
 /* 
  * Returns the device name at an index in the complete device list
  */
-const char *ALDeviceList::GetInternalDeviceName(int index)
-{
-	if (index < GetNumDevices())
-		return vDeviceInfo[index].strInternalDeviceName;
-	else
-		return NULL;
-}
-
 const char* ALDeviceList::GetDeviceName(int index)
 {
    if (index < GetNumDevices())

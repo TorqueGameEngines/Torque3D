@@ -20,10 +20,10 @@ function CoreModule::onCreate(%this)
    ProjectSettings.read();
    
    ModuleDatabase.LoadExplicit( "Core_Rendering" );
+   ModuleDatabase.LoadExplicit( "Core_SFX" );
    ModuleDatabase.LoadExplicit( "Core_Utility" );
    ModuleDatabase.LoadExplicit( "Core_GUI" );
    ModuleDatabase.LoadExplicit( "Core_Lighting" );
-   ModuleDatabase.LoadExplicit( "Core_SFX" );
    ModuleDatabase.LoadExplicit( "Core_PostFX" );
    ModuleDatabase.LoadExplicit( "Core_GameObjects" );
    

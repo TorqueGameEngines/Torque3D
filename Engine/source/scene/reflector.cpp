@@ -98,28 +98,28 @@ void ReflectorDesc::initPersistFields()
    docsURL;
    addGroup( "ReflectorDesc" );
 
-      addField( "texSize", TypeS32, Offset( texSize, ReflectorDesc ), 
+      addFieldV( "texSize", TypeRangedS32, Offset( texSize, ReflectorDesc ), &CommonValidators::PositiveInt,
          "Size in pixels of the (square) reflection texture. For a cubemap "
          "this value is interpreted as size of each face." );
 
-      addField( "nearDist", TypeF32, Offset( nearDist, ReflectorDesc ),
+      addFieldV( "nearDist", TypeRangedF32, Offset( nearDist, ReflectorDesc ), &CommonValidators::PositiveFloat,
          "Near plane distance to use when rendering this reflection. Adjust "
          "this to limit self-occlusion artifacts." );
 
-      addField( "farDist", TypeF32, Offset( farDist, ReflectorDesc ),
+      addFieldV( "farDist", TypeRangedF32, Offset( farDist, ReflectorDesc ), &CommonValidators::PositiveFloat,
          "Far plane distance to use when rendering reflections." );
 
-      addField( "objectTypeMask", TypeS32, Offset( objectTypeMask, ReflectorDesc ),
+      addField( "objectTypeMask", TypeGameTypeMasksType, Offset( objectTypeMask, ReflectorDesc ),
          "Object types which render into this reflection." );
 
-      addField( "detailAdjust", TypeF32, Offset( detailAdjust, ReflectorDesc ),
+      addFieldV( "detailAdjust", TypeRangedF32, Offset( detailAdjust, ReflectorDesc ), &CommonValidators::PositiveFloat,
          "Scale applied to lod calculation of objects rendering into "
          "this reflection ( modulates $pref::TS::detailAdjust )." );
 
-      addField( "priority", TypeF32, Offset( priority, ReflectorDesc ),
+      addFieldV( "priority", TypeRangedF32, Offset( priority, ReflectorDesc ), &CommonValidators::PositiveFloat,
          "Priority for updating this reflection, relative to others." );
 
-      addField( "maxRateMs", TypeS32, Offset( maxRateMs, ReflectorDesc ),
+      addFieldV( "maxRateMs", TypeRangedS32, Offset( maxRateMs, ReflectorDesc ), &CommonValidators::PositiveInt,
          "If less than maxRateMs has elapsed since this relfection was last "
          "updated, then do not update it again. This 'skip' can be disabled by "
          "setting maxRateMs to zero." );         

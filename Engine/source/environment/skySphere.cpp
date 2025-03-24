@@ -118,7 +118,7 @@ void SkySphere::initPersistFields()
 
    INITPERSISTFIELD_MATERIALASSET(Material, SkySphere, "The name of a cubemap material for the sky box.");
 
-   addField("fogBandHeight", TypeF32, Offset(mFogBandHeight, SkySphere),
+   addFieldV("fogBandHeight", TypeRangedF32, Offset(mFogBandHeight, SkySphere), &CommonValidators::NormalizedFloat,
       "The height (0-1) of the fog band from the horizon to the top of the SkySphere.");
 
    endGroup("Sky Sphere");

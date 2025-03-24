@@ -186,7 +186,7 @@ public:
    static inline String ToString( U32 v ) { return ToString( "%u", v ); }
    static inline String ToString( S32 v ) { return ToString( "%d", v ); }
    static inline String ToString( F32 v ) { return ToString( "%g", v ); }
-   static inline String ToString( F64 v ) { return ToString( "%Lg", v ); }
+   static inline String ToString( F64 v ) { return ToString( "%g", v ); }
    inline operator const char* () { return c_str(); }
    static String SpanToString(const char* start, const char* end);
 

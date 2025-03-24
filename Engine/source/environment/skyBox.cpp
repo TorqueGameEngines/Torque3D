@@ -122,7 +122,7 @@ void SkyBox::initPersistFields()
    addField( "drawBottom", TypeBool, Offset( mDrawBottom, SkyBox ),
       "If false the bottom of the skybox is not rendered." );
 
-   addField( "fogBandHeight", TypeF32, Offset( mFogBandHeight, SkyBox ),
+   addFieldV( "fogBandHeight", TypeRangedF32, Offset( mFogBandHeight, SkyBox ), &CommonValidators::NormalizedFloat,
       "The height (0-1) of the fog band from the horizon to the top of the SkyBox." );
 
    endGroup( "Sky Box" );

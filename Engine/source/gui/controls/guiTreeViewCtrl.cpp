@@ -883,10 +883,10 @@ void GuiTreeViewCtrl::initPersistFields()
    docsURL;
    addGroup( "TreeView" );
 
-      addField( "tabSize",              TypeS32,    Offset(mTabSize,              GuiTreeViewCtrl));
+      addFieldV( "tabSize", TypeRangedS32,    Offset(mTabSize,              GuiTreeViewCtrl), &CommonValidators::PositiveInt);
       addField( "textOffset",           TypeS32,    Offset(mTextOffset,           GuiTreeViewCtrl));
       addField( "fullRowSelect",        TypeBool,   Offset(mFullRowSelect,        GuiTreeViewCtrl));
-      addField( "itemHeight",           TypeS32,    Offset(mItemHeight,           GuiTreeViewCtrl));
+      addFieldV( "itemHeight", TypeRangedS32,    Offset(mItemHeight,           GuiTreeViewCtrl), &CommonValidators::PositiveInt);
       addField( "destroyTreeOnSleep",   TypeBool,   Offset(mDestroyOnSleep,       GuiTreeViewCtrl),
          "If true, the entire tree item hierarchy is deleted when the control goes to sleep." );
       addField( "mouseDragging",        TypeBool,   Offset(mSupportMouseDragging, GuiTreeViewCtrl));

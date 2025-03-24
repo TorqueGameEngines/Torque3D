@@ -70,40 +70,40 @@ void ForestItemData::initPersistFields()
    addGroup("Physics");
       addField( "collidable",   TypeBool, Offset( mCollidable, ForestItemData ),
          "Can other objects or spacial queries hit items of this type." );
-      addField( "radius", TypeF32, Offset( mRadius, ForestItemData ),
+      addFieldV( "radius", TypeRangedF32, Offset( mRadius, ForestItemData ), &CommonValidators::PositiveFloat,
          "Radius used during placement to ensure items are not crowded." );
    endGroup("Physics");
 
    addGroup( "Wind" );
       
-      addField( "mass", TypeF32, Offset( mMass, ForestItemData ),
+      addFieldV( "mass", TypeRangedF32, Offset( mMass, ForestItemData ), &CommonValidators::PositiveFloat,
          "Mass used in calculating spring forces on the trunk. Generally how "
          "springy a plant is." );
 
-      addField( "rigidity", TypeF32, Offset( mRigidity, ForestItemData ),
+      addFieldV( "rigidity", TypeRangedF32, Offset( mRigidity, ForestItemData ), &CommonValidators::PositiveFloat,
          "Rigidity used in calculating spring forces on the trunk. How much the plant resists the wind force" );
 
-      addField( "tightnessCoefficient", TypeF32, Offset( mTightnessCoefficient, ForestItemData ),
+      addFieldV( "tightnessCoefficient", TypeRangedF32, Offset( mTightnessCoefficient, ForestItemData ), &CommonValidators::PositiveFloat,
          "Coefficient used in calculating spring forces on the trunk. "
          "How much the plant resists bending." );
 
-      addField( "dampingCoefficient", TypeF32, Offset( mDampingCoefficient, ForestItemData ),
+      addFieldV( "dampingCoefficient", TypeRangedF32, Offset( mDampingCoefficient, ForestItemData ), &CommonValidators::PositiveFloat,
          "Coefficient used in calculating spring forces on the trunk. "
          "Causes oscillation and forces to decay faster over time." );
 
-      addField( "windScale",   TypeF32, Offset( mWindScale, ForestItemData ),
+      addFieldV( "windScale", TypeRangedF32, Offset( mWindScale, ForestItemData ), &CommonValidators::PositiveFloat,
          "Overall scale to the effect of wind." );
       
-      addField( "trunkBendScale",   TypeF32, Offset( mTrunkBendScale, ForestItemData ),
+      addFieldV( "trunkBendScale", TypeRangedF32, Offset( mTrunkBendScale, ForestItemData ), &CommonValidators::PositiveFloat,
          "Overall bend amount of the tree trunk by wind and impacts." );
 
-      addField( "branchAmp", TypeF32, Offset( mWindBranchAmp, ForestItemData ),
+      addFieldV( "branchAmp", TypeRangedF32, Offset( mWindBranchAmp, ForestItemData ), &CommonValidators::PositiveFloat,
          "Amplitude of the effect on larger branches." );
 
-      addField( "detailAmp", TypeF32, Offset( mWindDetailAmp, ForestItemData ),
+      addFieldV( "detailAmp", TypeRangedF32, Offset( mWindDetailAmp, ForestItemData ), &CommonValidators::PositiveFloat,
          "Amplitude of the winds effect on leafs/fronds." );
 
-      addField( "detailFreq", TypeF32, Offset( mWindDetailFreq, ForestItemData ),
+      addFieldV( "detailFreq", TypeRangedF32, Offset( mWindDetailFreq, ForestItemData ), &CommonValidators::PositiveFloat,
          "Frequency (speed) of the effect on leafs/fronds." );
 
    endGroup( "Wind" );

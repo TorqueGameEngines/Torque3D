@@ -1224,13 +1224,13 @@ void PersistenceManager::removeField(const ParsedProperty& prop)
   removeTextBlock(prop.startLine, prop.endLine, prop.startPosition, endPosition, true);
 }
 
-U32 PersistenceManager::writeProperties(const Vector<const char*>& properties, const U32 insertLine, const char* objectIndent)
+U32 PersistenceManager::writeProperties(const Vector<String>& properties, const U32 insertLine, const char* objectIndent)
 {
    U32 currInsertLine = insertLine;
 
    for (U32 i = 0; i < properties.size(); i++)
    {
-      const char* prop = properties[i];
+      const char* prop = properties[i].c_str();
 
       if (!prop || dStrlen(prop) == 0)
          continue;
@@ -1248,7 +1248,7 @@ U32 PersistenceManager::writeProperties(const Vector<const char*>& properties, c
    return currInsertLine - insertLine;
 }
 
-PersistenceManager::ParsedObject* PersistenceManager::writeNewObject(SimObject* object, const Vector<const char*>& properties, const U32 insertLine, ParsedObject* parentObject)
+PersistenceManager::ParsedObject* PersistenceManager::writeNewObject(SimObject* object, const Vector<String>& properties, const U32 insertLine, ParsedObject* parentObject)
 {
    ParsedObject* parsedObject = new ParsedObject;
 
@@ -1353,7 +1353,7 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
    if (!defaultObject)
       return;
 
-   Vector<const char*> newLines;
+   Vector<String> newLines;
 
    ParsedObject* parsedObject = findParsedObject(object, parentObject);
 
@@ -1392,10 +1392,10 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
 
          for(U32 j = 0; j < fieldArraySize; j++)
          {
-            const char* value = object->getSpecialFieldOut(f->pFieldname, j);
+            String value = object->getSpecialFieldOut(f->pFieldname, j);
 
             // Make sure we got a value
-            if (!value)
+            if (value.isEmpty())
                continue;
 
             // Let's see if this field is already in the file
@@ -1409,13 +1409,12 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                if (findRemoveField(object, f->pFieldname, j))
                {
                   removeField(parsedObject->properties[propertyIndex]);
-                  dFree(value);
                   continue;
                }
 
                // Run the parsed value through the console system conditioners so
                // that it will better match the data we got back from the object.
-               const char* evalue = Con::getFormattedData(f->type, prop.value, f->table, f->flag);
+               String evalue = Con::getFormattedData(f->type, prop.value, f->table, f->flag);
 
                // If our data doesn't match then we get to update it.
                //
@@ -1423,17 +1422,17 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                // is there in the file, the user does not want it inherited from the copy-source
                // even in the case the actual values are identical.
 
-               if (dStricmp(value, evalue) != 0)
+               if (value != evalue)
                {
-                  if (value[0] == '\0' &&
-                     dStricmp(getFieldValue(defaultObject, f->pFieldname, j), value) == 0 &&
-                     (!object->getCopySource() || dStricmp(getFieldValue(object->getCopySource(), f->pFieldname, j), value) == 0))
+                  if (value.isEmpty() &&
+                     dStricmp(getFieldValue(defaultObject, f->pFieldname, j), value.c_str()) == 0 &&
+                     (!object->getCopySource() || dStricmp(getFieldValue(object->getCopySource(), f->pFieldname, j), value.c_str()) == 0))
                   {
                      removeField(prop);
                   }
                   else
                   {
-                     updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, value, true);
+                     updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, value.c_str(), true);
                   }
                }
             }
@@ -1442,7 +1441,6 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                // No need to process a removed field that doesn't exist in the file
                if (findRemoveField(object, f->pFieldname, j))
                {
-                  dFree(value);
                   continue;
                }
 
@@ -1452,20 +1450,17 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                // then we need to compare against the default value
                // for this property and save it out if it is different
 
-               const char* defaultValue = defaultObject->getSpecialFieldOut(f->pFieldname, j);
-               if (!defaultValue || dStricmp(value, defaultValue) != 0)
+               String defaultValue = defaultObject->getSpecialFieldOut(f->pFieldname, j);
+               if (defaultValue.isEmpty() || value != defaultValue)
                {
                   // Value differs.  Check whether it also differs from the
                   // value in the copy source if there is one.
 
                   if (object->getCopySource())
                   {
-                     const char* copySourceValue = getFieldValue(object->getCopySource(), f->pFieldname, j);
-                     if (!copySourceValue || dStricmp(copySourceValue, value) != 0)
+                     String copySourceValue = getFieldValue(object->getCopySource(), f->pFieldname, j);
+                     if (copySourceValue.isEmpty() || copySourceValue != value)
                         mustUpdate = true;
-
-                     if (copySourceValue)
-                        dFree(copySourceValue);
                   }
                   else
                      mustUpdate = true;
@@ -1478,12 +1473,9 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
 
                   if (object->getCopySource())
                   {
-                     const char* copySourceValue = getFieldValue(object->getCopySource(), f->pFieldname, j);
-                     if (copySourceValue && dStricmp(copySourceValue, value) != 0)
+                     String copySourceValue = getFieldValue(object->getCopySource(), f->pFieldname, j);
+                     if (!copySourceValue.isEmpty() && copySourceValue != value)
                         mustUpdate = true;
-
-                     if (copySourceValue)
-                        dFree(copySourceValue);
                   }
                }
 
@@ -1498,11 +1490,8 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                // value then add it to the ParsedObject's newLines                        
                if (mustUpdate)
                {
-                  newLines.push_back(String(value).c_str());
+                  newLines.push_back(value);
                }
-
-               if (defaultValue)
-                  dFree(defaultValue);
             }
 
             //dFree(value);
@@ -1512,10 +1501,10 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
       {
          for (U32 j = 0; S32(j) < f->elementCount; j++)
          {
-            const char* value = getFieldValue(object, f->pFieldname, j);
+            String value = getFieldValue(object, f->pFieldname, j);
 
             // Make sure we got a value
-            if (!value)
+            if (value.isEmpty())
                continue;
 
             // Let's see if this field is already in the file
@@ -1526,16 +1515,15 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                ParsedProperty& prop = parsedObject->properties[propertyIndex];
 
                // If this field is on the remove list then remove it and continue
-               if (findRemoveField(object, f->pFieldname, j) || !object->writeField(f->pFieldname, value))
+               if (findRemoveField(object, f->pFieldname, j) || !object->writeField(f->pFieldname, value.c_str()))
                {
                   removeField(parsedObject->properties[propertyIndex]);
-                  dFree(value);
                   continue;
                }
 
                // Run the parsed value through the console system conditioners so
                // that it will better match the data we got back from the object.
-               const char* evalue = Con::getFormattedData(f->type, prop.value, f->table, f->flag);
+               String evalue = Con::getFormattedData(f->type, prop.value, f->table, f->flag);
 
                // If our data doesn't match then we get to update it.
                //
@@ -1543,11 +1531,11 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                // is there in the file, the user does not want it inherited from the copy-source
                // even in the case the actual values are identical.
 
-               if (dStricmp(value, evalue) != 0)
+               if (value != evalue)
                {
-                  if (value[0] == '\0' &&
-                     dStricmp(getFieldValue(defaultObject, f->pFieldname, j), value) == 0 &&
-                     (!object->getCopySource() || dStricmp(getFieldValue(object->getCopySource(), f->pFieldname, j), value) == 0))
+                  if (value.isEmpty() &&
+                     dStricmp(getFieldValue(defaultObject, f->pFieldname, j), value.c_str()) == 0 &&
+                     (!object->getCopySource() || dStricmp(getFieldValue(object->getCopySource(), f->pFieldname, j), value.c_str()) == 0))
                   {
                      removeField(prop);
                   }
@@ -1563,14 +1551,14 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                         f->type == TypeSoundFilename)
                      {
                         char fnBuf[1024];
-                        Con::collapseScriptFilename(fnBuf, 1024, value);
+                        Con::collapseScriptFilename(fnBuf, 1024, value.c_str());
 
                         updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, fnBuf, true);
                      }
                      else if (f->type == TypeCommand || f->type == TypeString || f->type == TypeRealString)
                      {
                         char cmdBuf[1024];
-                        expandEscape(cmdBuf, value);
+                        expandEscape(cmdBuf, value.c_str());
 
                         updateToken(prop.valueLine, prop.valuePosition, prop.endPosition - prop.valuePosition, cmdBuf, true);
                      }
@@ -1582,9 +1570,8 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
             else
             {
                // No need to process a removed field that doesn't exist in the file
-               if (findRemoveField(object, f->pFieldname, j) || !object->writeField(f->pFieldname, value))
+               if (findRemoveField(object, f->pFieldname, j) || !object->writeField(f->pFieldname, value.c_str()))
                {
-                  dFree(value);
                   continue;
                }
 
@@ -1594,20 +1581,17 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                // then we need to compare against the default value
                // for this property and save it out if it is different
 
-               const char* defaultValue = getFieldValue(defaultObject, f->pFieldname, j);
-               if (!defaultValue || dStricmp(value, defaultValue) != 0)
+               String defaultValue = getFieldValue(defaultObject, f->pFieldname, j);
+               if (defaultValue.isEmpty() || value != defaultValue)
                {
                   // Value differs.  Check whether it also differs from the
                   // value in the copy source if there is one.
 
                   if (object->getCopySource())
                   {
-                     const char* copySourceValue = getFieldValue(object->getCopySource(), f->pFieldname, j);
-                     if (!copySourceValue || dStricmp(copySourceValue, value) != 0)
+                     String copySourceValue = getFieldValue(object->getCopySource(), f->pFieldname, j);
+                     if (copySourceValue.isEmpty() || copySourceValue != value)
                         mustUpdate = true;
-
-                     if (copySourceValue)
-                        dFree(copySourceValue);
                   }
                   else
                      mustUpdate = true;
@@ -1620,12 +1604,9 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
 
                   if (object->getCopySource())
                   {
-                     const char* copySourceValue = getFieldValue(object->getCopySource(), f->pFieldname, j);
-                     if (copySourceValue && dStricmp(copySourceValue, value) != 0)
+                     String copySourceValue = getFieldValue(object->getCopySource(), f->pFieldname, j);
+                     if (!copySourceValue.isEmpty() && copySourceValue != value)
                         mustUpdate = true;
-
-                     if (copySourceValue)
-                        dFree(copySourceValue);
                   }
                }
 
@@ -1650,26 +1631,21 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
                      f->type == TypeSoundFilename)
                   {
                      char fnBuf[1024];
-                     Con::collapseScriptFilename(fnBuf, 1024, value);
+                     Con::collapseScriptFilename(fnBuf, 1024, value.c_str());
 
                      newLines.push_back(createNewProperty(f->pFieldname, fnBuf, f->elementCount > 1, j));
                   }
                   else if (f->type == TypeCommand)
                   {
                      char cmdBuf[1024];
-                     expandEscape(cmdBuf, value);
+                     expandEscape(cmdBuf, value.c_str());
 
                      newLines.push_back(createNewProperty(f->pFieldname, cmdBuf, f->elementCount > 1, j));
                   }
                   else
                      newLines.push_back(createNewProperty(f->pFieldname, value, f->elementCount > 1, j));
                }
-
-               if (defaultValue)
-                  dFree(defaultValue);
             }
-
-            dFree(value);
          }
       }
    }
@@ -1812,15 +1788,6 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
    }
 
    // Clean up the newLines memory
-   for (U32 i = 0; i < newLines.size(); i++)
-   {
-      if (!isEmptyLine(newLines[i]) && !StringTable->lookup(newLines[i]))
-      {//don't try killing empty lines or lines that are in the string table
-         dFree(newLines[i]);
-      }
-      newLines[ i ] = NULL;
-   }
-
    newLines.clear();
 
    SimSet* set = dynamic_cast<SimSet*>(object);

@@ -4,9 +4,9 @@
 // http://www.garagegames.com/community/resources/view/17821
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 
-#include "../common/shaderModel.hlsl"
-#include "../common/shaderModelAutoGen.hlsl"
-#include "shaders/common/postFX/postFx.hlsl"  
+#include "../shaderModel.hlsl"
+#include "../shaderModelAutoGen.hlsl"
+#include "../postFX/postFx.hlsl"  
   
 TORQUE_UNIFORM_SAMPLER2D(highlightBuffer,0);
 TORQUE_UNIFORM_SAMPLER2D(backBuffer,1);

@@ -43,6 +43,7 @@
 // Debug Profiling.
 #include "platform/profiler.h"
 #include "gfx/gfxDrawUtil.h"
+#include "T3D/SubScene.h"
 
 
 //-----------------------------------------------------------------------------
@@ -479,8 +480,15 @@ GuiControl* GuiInspectorTypeLevelAssetPtr::constructEditControl()
    // Create "Open in Editor" button
    mEditButton = new GuiBitmapButtonCtrl();
 
-   dSprintf(szBuffer, sizeof(szBuffer), "$createAndAssignField = %s; AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule, \"createAndAssignLevelAsset\");",
-      getIdString());
+   String setSubSceneValue = "$createLevelAssetIsSubScene = \"\";";
+   if(dynamic_cast<SubScene*>(mInspector->getInspectObject()) != NULL)
+   {
+      setSubSceneValue = "$createLevelAssetIsSubScene = true;";
+   }
+
+   dSprintf(szBuffer, sizeof(szBuffer), "$createAndAssignField = %s; %s AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule, \"createAndAssignLevelAsset\");",
+      getIdString(),
+      setSubSceneValue.c_str());
    mEditButton->setField("Command", szBuffer);
 
    char bitmapName[512] = "ToolsModule:iconAdd_image";

@@ -3,6 +3,8 @@
 #include "gameMode.h"
 #include "console/persistenceManager.h"
 #include "console/script.h"
+#include "environment/meshRoad.h"
+#include "environment/river.h"
 #include "scene/sceneRenderState.h"
 #include "renderInstance/renderPassManager.h"
 #include "gfx/gfxDrawUtil.h"
@@ -29,7 +31,8 @@ SubScene::SubScene() :
    mFreezeLoading(false),
    mTickPeriodMS(1000),
    mCurrTick(0),
-   mGlobalLayer(false)
+   mGlobalLayer(false),
+   mSaving(false)
 {
    mNetFlags.set(Ghostable | ScopeAlways);
 
@@ -65,6 +68,7 @@ void SubScene::initPersistFields()
    addGroup("SubScene");
    addField("isGlobalLayer", TypeBool, Offset(mGlobalLayer, SubScene), "");
    INITPERSISTFIELD_LEVELASSET(Level, SubScene, "The level asset to load.");
+   addField("tickPeriodMS", TypeS32, Offset(mTickPeriodMS, SubScene), "evaluation rate (ms)");
    addField("gameModes", TypeGameModeList, Offset(mGameModesNames, SubScene), "The game modes that this subscene is associated with.");
    endGroup("SubScene");
 
@@ -210,10 +214,11 @@ bool SubScene::evaluateCondition()
 
 bool SubScene::testBox(const Box3F& testBox)
 {
-   if (mGlobalLayer)
-      return true;
+   bool passes = mGlobalLayer;
 
-   bool passes = getWorldBox().isOverlapped(testBox);
+   if (!passes)
+      passes = getWorldBox().isOverlapped(testBox);
+
    if (passes)
       passes = evaluateCondition();
    return passes;
@@ -261,6 +266,9 @@ void SubScene::processTick(const Move* move)
 void SubScene::_onFileChanged(const Torque::Path& path)
 {
    if(mLevelAsset.isNull() || Torque::Path(mLevelAsset->getLevelPath()) != path)
+      return;
+
+   if (mSaving)
       return;
 
    AssertFatal(path == mLevelAsset->getLevelPath(), "Prefab::_onFileChanged - path does not match filename.");
@@ -336,10 +344,18 @@ void SubScene::load()
    if (mFreezeLoading)
       return;
 
-   _loadFile(true);
-   mLoaded = true;
+   if (mSaving)
+      return;
 
    GameMode::findGameModes(mGameModesNames, &mGameModesList);
+   if (!isSelected() && (String(mGameModesNames).isNotEmpty() && mGameModesList.size() == 0) || !evaluateCondition())
+   {
+      mLoaded = false;
+      return;
+   }
+
+   _loadFile(true);
+   mLoaded = true;
 
    onLoaded_callback();
    for (U32 i = 0; i < mGameModesList.size(); i++)
@@ -347,11 +363,6 @@ void SubScene::load()
       mGameModesList[i]->onSubsceneLoaded_callback(this);
    }
 
-   if (!mOnLoadCommand.isEmpty())
-   {
-      String command = "%this = " + String(getIdString()) + "; " + mLoadIf + ";";
-      Con::evaluatef(command.c_str());
-   }
 }
 
 void SubScene::unload()
@@ -360,6 +371,9 @@ void SubScene::unload()
       return;
 
    if (mFreezeLoading)
+      return;
+
+   if (mSaving)
       return;
 
    if (isSelected())
@@ -421,9 +435,14 @@ bool SubScene::save()
    if (mLevelAsset.isNull())
       return false;
 
+   if (mSaving)
+      return false;
+
    //If we're flagged for unload, push back the unload timer so we can't accidentally trip be saving partway through an unload
    if (mStartUnloadTimerMS != -1)
       mStartUnloadTimerMS = Sim::getCurrentTime();
+
+   mSaving = true;
 
    PersistenceManager prMger;
 
@@ -449,6 +468,11 @@ bool SubScene::save()
             prMger.setDirty((*itr), levelPath);
          }
       }
+
+      if(dynamic_cast<MeshRoad*>(childObj) || dynamic_cast<River*>(childObj))
+      {
+         prMger.addRemoveField(childObj, "position");
+      }
    }
 
    prMger.saveDirty();
@@ -465,6 +489,8 @@ bool SubScene::save()
 
    //Finally, save
    saveSuccess = mLevelAsset->saveAsset();
+
+   mSaving = false;
 
    return saveSuccess;
 }

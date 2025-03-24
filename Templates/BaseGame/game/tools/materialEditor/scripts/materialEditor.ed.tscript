@@ -2733,6 +2733,11 @@ function matEdDragNDropMapAssignment(%type, %payload)
    MaterialEditorGui.guiSync( materialEd_previewMaterial );
    
    MaterialEditorGui.doUpdateTextureMap( %assetId );
+   Canvas.popDialog(EditorDragAndDropLayer);
+   if(EditorSettings.value("AssetManagement/Assets/closeBrowserOnDragAction", false))
+   {
+        AssetBrowser.hideDialog();  
+   }
 }
 
 function materialEditorDiffuseMapContainer::onControlDropped( %this, %payload, %position )

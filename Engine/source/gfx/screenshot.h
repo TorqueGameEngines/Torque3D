@@ -40,10 +40,6 @@ class Frustum;
 
 class ScreenShot
 {
-   /// This is overloaded to copy the current GFX 
-   /// backbuffer to a new bitmap.
-	virtual GBitmap* _captureBackBuffer() { return NULL; }
-
    /// This is set to toggle the capture.
    bool mPending;
 
@@ -76,6 +72,9 @@ public:
    ScreenShot();
    virtual ~ScreenShot() { }
 
+   /// This is overloaded to copy the current GFX 
+   /// backbuffer to a new bitmap.
+   virtual GBitmap* _captureBackBuffer() { return NULL; }
    /// Used to start the screenshot capture.
    void setPending( const char *filename, bool writeJPG, S32 tiles, F32 overlap );
 

@@ -56,10 +56,10 @@ void RenderBinManager::initPersistFields()
    addField( "binType", TypeRealString, Offset(mRenderInstType.mName, RenderBinManager),
       "Sets the render bin type which limits what render instances are added to this bin." );
 
-   addField("renderOrder", TypeF32, Offset(mRenderOrder, RenderBinManager),
+   addFieldV("renderOrder", TypeRangedF32, Offset(mRenderOrder, RenderBinManager), &CommonValidators::PositiveFloat,
       "Defines the order for rendering in relation to other bins." );
 
-   addField("processAddOrder", TypeF32, Offset(mProcessAddOrder, RenderBinManager),
+   addFieldV("processAddOrder", TypeRangedF32, Offset(mProcessAddOrder, RenderBinManager), &CommonValidators::PositiveFloat,
       "Defines the order for adding instances in relation to other bins." );
 
    addField( "basicOnly", TypeBool, Offset(mBasicOnly, RenderBinManager),

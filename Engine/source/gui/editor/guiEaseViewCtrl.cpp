@@ -54,7 +54,7 @@ void GuiEaseViewCtrl::initPersistFields()
 
    addField("ease", TypeEaseF, Offset( mEase, GuiEaseViewCtrl ) );
    addField("easeColor", TypeColorF, Offset( mEaseColor, GuiEaseViewCtrl ) );
-   addField("easeWidth", TypeF32, Offset(mEaseWidth, GuiEaseViewCtrl ) );
+   addFieldV("easeWidth", TypeRangedF32, Offset(mEaseWidth, GuiEaseViewCtrl ), &CommonValidators::PositiveNonZeroFloat);
    addField("axisColor", TypeColorF, Offset( mAxisColor, GuiEaseViewCtrl ) );
 }
 

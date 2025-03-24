@@ -20,7 +20,7 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#include "tinyxml/tinyxml2.h"
+#include "tinyxml2/tinyxml2.h"
 
 //-----------------------------------------------------------------------------
 // Console implementation of STL map.

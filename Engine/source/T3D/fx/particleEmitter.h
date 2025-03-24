@@ -98,7 +98,7 @@ class ParticleEmitterData : public GameBaseData
    F32 ambientFactor;
 
    S32   lifetimeMS;                         ///< Lifetime of particles
-   U32   lifetimeVarianceMS;                 ///< Varience in lifetime from 0 to n
+   S32   lifetimeVarianceMS;                 ///< Varience in lifetime from 0 to n
 
    bool  overrideAdvance;                    ///<
    bool  orientParticles;                    ///< Particles always face the screen

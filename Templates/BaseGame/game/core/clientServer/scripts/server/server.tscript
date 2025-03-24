@@ -251,7 +251,7 @@ function destroyServer()
    
    // Save any server settings
    %prefPath = getPrefpath();
-   echo( "Exporting server prefs..." );
+   echo( "Exporting server prefs to "@ getUserHomeDirectory() @ "/serverPrefs." @ $TorqueScriptFileExtension );
    export( "$Pref::Server::*", %prefPath@"/serverPrefs." @ $TorqueScriptFileExtension, false );
    
    BanList::Export(%prefPath@"/banlist." @ $TorqueScriptFileExtension);

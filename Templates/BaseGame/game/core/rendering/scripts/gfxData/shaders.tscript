@@ -140,11 +140,11 @@ singleton ShaderData( VolumetricFogReflectionShader )
 };
 singleton ShaderData( CubemapSaveShader )
 {
-   DXVertexShaderFile = "shaders/common/cubemapSaveV.hlsl";
-   DXPixelShaderFile = "shaders/common/cubemapSaveP.hlsl";
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/common/cubemapSaveV.hlsl";
+   DXPixelShaderFile = $Core::CommonShaderPath @ "/common/cubemapSaveP.hlsl";
 	
-   OGLVertexShaderFile  = "shaders/common/gl/cubemapSaveV.glsl";
-   OGLPixelShaderFile   = "shaders/common/gl/cubemapSaveP.glsl";
+   OGLVertexShaderFile  = $Core::CommonShaderPath @ "/common/gl/cubemapSaveV.glsl";
+   OGLPixelShaderFile   = $Core::CommonShaderPath @ "/common/gl/cubemapSaveP.glsl";
    
    samplerNames[0] = "$cubemapTex";
 	
@@ -188,3 +188,57 @@ singleton ShaderData( ThickLineGUI )
       
    pixVersion = 3.0;   
 };
+
+
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Arcane-FX - Shared AFX Shaders
+//
+// All of the non-zodiac shaders support alpha-fading.
+//
+// Copyright (C) Faust Logic, Inc.
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+
+
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+// Zodiac Shaders
+
+new ShaderData(afxZodiacTerrainShader)
+{
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/AFX/afxZodiac_Terrain_V.hlsl";
+   DXPixelShaderFile = $Core::CommonShaderPath @ "/AFX/afxZodiac_Terrain_P.hlsl";
+
+   OGLVertexShaderFile = $Core::CommonShaderPath @ "/AFX/gl/afxZodiac_Terrain_V.glsl";
+   OGLPixelShaderFile = $Core::CommonShaderPath @ "/AFX/gl/afxZodiac_Terrain_P.glsl";
+
+   samplerNames[0] = "$zodiacMap";
+   
+   pixVersion = 1.1;
+};
+
+new ShaderData(afxZodiacInteriorShader)
+{
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/AFX/afxZodiac_Interior_V.hlsl";
+   DXPixelShaderFile = $Core::CommonShaderPath @ "/AFX/afxZodiac_Interior_P.hlsl";
+
+   OGLVertexShaderFile = $Core::CommonShaderPath @ "/AFX/gl/afxZodiac_Interior_V.glsl";
+   OGLPixelShaderFile = $Core::CommonShaderPath @ "/AFX/gl/afxZodiac_Interior_P.glsl";
+
+   samplerNames[0] = "$zodiacMap";
+   
+   pixVersion = 1.1;
+};
+
+new ShaderData(afxZodiacPolysoupShader)
+{
+   DXVertexShaderFile = $Core::CommonShaderPath @ "/AFX/afxZodiac_Polysoup_V.hlsl";
+   DXPixelShaderFile = $Core::CommonShaderPath @ "/AFX/afxZodiac_Polysoup_P.hlsl";
+
+   OGLVertexShaderFile = $Core::CommonShaderPath @ "/AFX/gl/afxZodiac_Polysoup_V.glsl";
+   OGLPixelShaderFile = $Core::CommonShaderPath @ "/AFX/gl/afxZodiac_Polysoup_P.glsl";
+
+   samplerNames[0] = "$zodiacMap";
+   
+   pixVersion = 1.1;
+};
+
+//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//

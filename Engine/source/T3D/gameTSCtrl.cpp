@@ -158,6 +158,8 @@ void GameTSCtrl::onMouseMove(const GuiEvent &evt)
          lineTestEnd = pos + vec * 1000;
       }
    }
+   if (isMethod("onMouseMove"))
+      makeScriptCall("onMouseMove", evt);
 }
 
 void GameTSCtrl::onRender(Point2I offset, const RectI &updateRect)

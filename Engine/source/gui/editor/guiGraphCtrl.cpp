@@ -105,7 +105,7 @@ void GuiGraphCtrl::initPersistFields()
    docsURL;
    addGroup( "Graph" );
    
-      addField( "centerY", TypeF32, Offset( mCenterY, GuiGraphCtrl ),
+      addFieldV( "centerY", TypeRangedF32, Offset( mCenterY, GuiGraphCtrl ), &CommonValidators::NormalizedFloat,
          "Ratio of where to place the center coordinate of the graph on the Y axis. 0.5=middle height of control.\n\n"
          "This allows to account for graphs that have only positive or only negative data points, for example." );
       
@@ -119,7 +119,7 @@ void GuiGraphCtrl::initPersistFields()
          "Name of the variable to automatically plot on the curves.  If empty, auto-plotting "
          "is disabled for the respective curve." );
             
-      addField( "plotInterval", TypeS32, Offset( mAutoPlotDelay, GuiGraphCtrl ), MaxPlots,
+      addFieldV( "plotInterval", TypeRangedS32, Offset( mAutoPlotDelay, GuiGraphCtrl ), &CommonValidators::PositiveInt, MaxPlots,
          "Interval between auto-plots of #plotVariable for the respective curve (in milliseconds)." );
    
    endGroup( "Graph" );

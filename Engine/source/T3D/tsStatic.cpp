@@ -137,6 +137,7 @@ TSStatic::TSStatic()
    mAlphaFade = 1.0f;
    mPhysicsRep = NULL;
 
+   mCollisionLOD = 0;
    mCollisionType = CollisionMesh;
    mDecalType = CollisionMesh;
 
@@ -218,9 +219,9 @@ void TSStatic::initPersistFields()
    addGroup("Animation");
    addField("playAmbient", TypeBool, Offset(mPlayAmbient, TSStatic),
       "Enables automatic playing of the animation sequence named \"ambient\" (if it exists) when the TSStatic is loaded.");
-   addFieldV("AnimOffset", TypeF32, Offset(mAnimOffset, TSStatic), &percentValidator,
+   addFieldV("AnimOffset", TypeRangedF32, Offset(mAnimOffset, TSStatic), &percentValidator,
       "Percent Animation Offset.");
-   addFieldV("AnimSpeed", TypeF32, Offset(mAnimSpeed, TSStatic), &speedValidator,
+   addFieldV("AnimSpeed", TypeRangedF32, Offset(mAnimSpeed, TSStatic), &speedValidator,
       "Percent Animation Speed.");
    endGroup("Animation");
 
@@ -238,7 +239,8 @@ void TSStatic::initPersistFields()
    endGroup("Reflection");
 
    addGroup("Collision");
-
+   addField("collisionLOD", TypeS16, Offset(mCollisionLOD, TSStatic),
+      "The level of detail to use for 'Visible Mesh' collision queries.");
    addField("collisionType", TypeTSMeshType, Offset(mCollisionType, TSStatic),
       "The type of mesh data to use for collision queries.");
    addField("decalType", TypeTSMeshType, Offset(mDecalType, TSStatic),
@@ -251,16 +253,16 @@ void TSStatic::initPersistFields()
 
    addGroup("AlphaFade");
    addField("alphaFadeEnable", TypeBool, Offset(mUseAlphaFade, TSStatic), "Turn on/off Alpha Fade");
-   addField("alphaFadeStart", TypeF32, Offset(mAlphaFadeStart, TSStatic), "Distance of start Alpha Fade");
-   addField("alphaFadeEnd", TypeF32, Offset(mAlphaFadeEnd, TSStatic), "Distance of end Alpha Fade");
+   addFieldV("alphaFadeStart", TypeRangedF32, Offset(mAlphaFadeStart, TSStatic), &CommonValidators::PositiveFloat, "Distance of start Alpha Fade");
+   addFieldV("alphaFadeEnd", TypeRangedF32, Offset(mAlphaFadeEnd, TSStatic), &CommonValidators::PositiveFloat, "Distance of end Alpha Fade");
    addField("alphaFadeInverse", TypeBool, Offset(mInvertAlphaFade, TSStatic), "Invert Alpha Fade's Start & End Distance");
    endGroup("AlphaFade");
 
    addGroup("Debug");
 
-   addField("renderNormals", TypeF32, Offset(mRenderNormalScalar, TSStatic),
+   addFieldV("renderNormals", TypeRangedF32, Offset(mRenderNormalScalar, TSStatic), &CommonValidators::PositiveFloat,
       "Debug rendering mode shows the normals for each point in the TSStatic's mesh.");
-   addField("forceDetail", TypeS32, Offset(mForceDetail, TSStatic),
+   addFieldV("forceDetail", TypeRangedS32, Offset(mForceDetail, TSStatic), &CommonValidators::S32Range,
       "Forces rendering to a particular detail level.");
 
    endGroup("Debug");
@@ -531,20 +533,20 @@ void TSStatic::prepCollision()
 
    if (mCollisionType == CollisionMesh || mCollisionType == VisibleMesh)
    {
-      mShape->findColDetails(mCollisionType == VisibleMesh, &mCollisionDetails, &mLOSDetails);
+      mShape->findColDetails(mCollisionType == VisibleMesh, &mCollisionDetails, &mLOSDetails, mCollisionLOD);
       if (mDecalType == mCollisionType)
       {
          mDecalDetailsPtr = &mCollisionDetails;
       }
       else if (mDecalType == CollisionMesh || mDecalType == VisibleMesh)
       {
-         mShape->findColDetails(mDecalType == VisibleMesh, &mDecalDetails, 0);
+         mShape->findColDetails(mDecalType == VisibleMesh, &mDecalDetails, 0, mCollisionLOD);
          mDecalDetailsPtr = &mDecalDetails;
       }
    }
    else if (mDecalType == CollisionMesh || mDecalType == VisibleMesh)
    {
-      mShape->findColDetails(mDecalType == VisibleMesh, &mDecalDetails, 0);
+      mShape->findColDetails(mDecalType == VisibleMesh, &mDecalDetails, 0, mCollisionLOD);
       mDecalDetailsPtr = &mDecalDetails;
    }
 
@@ -947,8 +949,10 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
    }
 
    if (stream->writeFlag(mask & UpdateCollisionMask))
+   {
+      stream->write(mCollisionLOD);
       stream->write((U32)mCollisionType);
-
+   }
    if (stream->writeFlag(mask & SkinMask))
       con->packNetStringHandleU(stream, mSkinNameHandle);
 
@@ -1045,6 +1049,7 @@ void TSStatic::unpackUpdate(NetConnection* con, BitStream* stream)
    {
       U32 collisionType = CollisionMesh;
 
+      stream->read(&mCollisionLOD);
       stream->read(&collisionType);
 
       // Handle it if we have changed CollisionType's
@@ -1255,7 +1260,7 @@ bool TSStatic::buildPolyList(PolyListContext context, AbstractPolyList* polyList
       else if (meshType == Bounds)
          polyList->addBox(mObjBox);
       else if (meshType == VisibleMesh)
-         mShapeInstance->buildPolyList(polyList, 0);
+         mShapeInstance->buildPolyListOpcode(0, polyList, box);
       else if (context == PLC_Decal && mDecalDetailsPtr != 0)
       {
          for (U32 i = 0; i < mDecalDetailsPtr->size(); i++)

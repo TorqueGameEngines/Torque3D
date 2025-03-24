@@ -1,43 +1,32 @@
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
-   displayMode = "Dropper"; // this makes the background visible
-   actionOnMove = "1";
-   position = "0 0";
-   extent = "1024 768";
-   minExtent = "8 2";
-   horizSizing = "right";
-   vertSizing = "bottom";
-   profile = "ToolsGuiDefaultProfile";
-   visible = "1";
-   active = "1";
-   Clickable = "1";
-   AffectChildren = "1";
-   tooltipProfile = "GuiToolTipProfile";
-   hovertime = "1000";
-   isContainer = "1";
-   canSave = "1";
-   canSaveDynamicFields = "0";
+      displayMode = "Dropper";
+      extent = "1024 768";
+      profile = "GuiDefaultProfile";
+      command = "%selHue = ColorPickerDlg.getSelectedHue();\n%selSat = ColorPickerDlg.getSelectedSaturation();\n%selBright = ColorPickerDlg.getSelectedBrightness();\n%selAlpha = ColorPickerDlg.getSelectedAlpha();\n\nColorHueRange.setSelectedHue(%selHue);\nColorHueRange.executeUpdate();\n\nColorBlendRange.setSelectedBrightness(%selBright);\nColorBlendRange.setSelectedSaturation(%selSat);\nColorBlendRange.executeUpdate();\n\nColorAlphaRange.setSelectedAlpha(%selAlpha);\nColorAlphaRange.executeUpdate();\n\nColorEyeDropperButton.setStateOn(false);";
+      tooltipProfile = "GuiToolTipProfile";
+      isContainer = "1";
 
    new GuiWindowCtrl() {
-         text = "  ";
-         resizeWidth = "0";
-         resizeHeight = "0";
-         canMinimize = "0";
-         canMaximize = "0";
-         closeCommand = "DoColorPickerCancelCallback(); ColorPickerDlg.getRoot().popDialog(ColorPickerDlg);";
-         position = "33 33";
-         extent = "271 574";
-         horizSizing = "windowRelative";
-         vertSizing = "windowRelative";
-         profile = "ToolsGuiWindowProfile";
-         tooltipProfile = "ToolsGuiToolTipProfile";
+      text = "  ";
+      resizeWidth = "0";
+      resizeHeight = "0";
+      canMinimize = "0";
+      canMaximize = "0";
+      closeCommand = "DoColorPickerCancelCallback(); ColorPickerDlg.getRoot().popDialog(ColorPickerDlg);";
+      position = "33 33";
+      extent = "271 574";
+      horizSizing = "windowRelative";
+      vertSizing = "windowRelative";
+      profile = "ToolsGuiWindowProfile";
+      tooltipProfile = "ToolsGuiToolTipProfile";
 
       new GuiStackControl() {
          padding = "5";
          changeChildSizeToFit = "0";
          changeChildPosition = "0";
          position = "0 24";
-         extent = "271 481";
+         extent = "271 491";
          profile = "GuiDefaultProfile";
          tooltipProfile = "GuiToolTipProfile";
 
@@ -120,7 +109,7 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                      position = "213 3";
                      extent = "50 25";
                      profile = "GuiDefaultProfile";
-                     command = "%selHue = ColorNewSelected.getSelectedHue();\n%selSat = ColorNewSelected.getSelectedSaturation();\n%selBright = ColorNewSelected.getSelectedBrightness();\n\nHueTextEditor.setText(%selHue);\nSatTextEditor.setText(%selSat);\nBrightTextEditor.setText(%selBright);\n\n%color = ColorNewSelected.getSelectedColorI();\nRedTextEdit.setText(getWord(%color, 0));\nGreenTextEdit.setText(getWord(%color, 1));\nBlueTextEdit.setText(getWord(%color, 2));\nAlphaTextEdit.setText(getWord(%color, 3));\n\n%hex = ColorRGBToHEX(%color);\nHexTextEditor.setText(%hex);";
+                     command = "%selHue = ColorNewSelected.getSelectedHue();\n%selSat = ColorNewSelected.getSelectedSaturation();\n%selBright = ColorNewSelected.getSelectedBrightness();\n\nHueTextEditor.setText(%selHue);\nSatTextEditor.setText(%selSat);\nBrightTextEditor.setText(%selBright);\n\n%color = $ColorCallbackType == 1 ? ColorNewSelected.getSelectedColorI() : ColorNewSelected.getSelectedLinearColor();\nRedTextEdit.setText(getWord(%color, 0));\nGreenTextEdit.setText(getWord(%color, 1));\nBlueTextEdit.setText(getWord(%color, 2));\nAlphaTextEdit.setText(getWord(%color, 3));\n\n%hex = ColorRGBToHEX(ColorNewSelected.getSelectedColorI());\nHexTextEditor.setText(%hex);";
                      tooltipProfile = "GuiToolTipProfile";
                   };
                   new GuiColorPickerCtrl(ColorOld) {
@@ -268,16 +257,25 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
                      text = "Apply";
                      position = "211 1";
                      extent = "52 20";
-                     command = "DoColorPickerCallback();";
                      profile = "ToolsGuiButtonProfile";
+                     command = "DoColorPickerCallback();";
                      tooltipProfile = "GuiToolTipProfile";
                   };
                   new GuiButtonCtrl() {
                      text = "Cancel";
                      position = "211 24";
                      extent = "52 20";
-                     command = "DoColorPickerCancelCallback();";
                      profile = "ToolsGuiButtonProfile";
+                     command = "DoColorPickerCancelCallback();";
+                     tooltipProfile = "GuiToolTipProfile";
+                  };
+                  new GuiBitmapButtonCtrl(ColorEyeDropperButton) {
+                     BitmapAsset = "ToolsModule:eyedropper_n_image";
+                     buttonType = "ToggleButton";
+                     position = "223 56";
+                     extent = "25 25";
+                     profile = "ToolsGuiCheckBoxProfile";
+                     command = "ColorPickerDlg.activateEyeDropper();";
                      tooltipProfile = "GuiToolTipProfile";
                   };
                };
@@ -285,20 +283,26 @@ $guiContent = new GuiColorPickerCtrl(ColorPickerDlg,EditorGuiGroup) {
          };
          new GuiRolloutCtrl() {
             caption = ":: Color Palette";
+            margin = "5 5 5 5";
             position = "0 445";
-            extent = "271 36";
+            extent = "271 46";
             profile = "GuiRolloutProfile";
             tooltipProfile = "GuiToolTipProfile";
 
-            new GuiStackControl() {
-               stackingType = "Dynamic";
-               padding = "5";
-               changeChildSizeToFit = "0";
-               position = "0 17";
-               extent = "271 16";
-               profile = "GuiDefaultProfile";
-               tooltipProfile = "GuiToolTipProfile";
-            };
+            new GuiDynamicCtrlArrayControl(ColorPaletteStack) {
+                  colCount = "12";
+                  colSize = "12";
+                  rowSize = "12";
+                  rowCount = "3";
+                  rowSpacing = "1";
+                  colSpacing = "1";
+                  dynamicSize = "1";
+                  padding = "3 3 3 3";
+                  position = "0 17";
+                  extent = "271 47";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
          };
       };
    };
@@ -344,6 +348,87 @@ function GetColorF( %currentColor, %callback, %root, %updateCallback, %cancelCal
    %root.pushDialog(ColorPickerDlg);
 }
 
+function ColorPaletteStack::onWake(%this)
+{
+   if($Pref::ColorPicker::ColorPalette $= "")
+   {
+      $Pref::ColorPicker::ColorPalette = "#FFFFFF #FF0000 #00FF00 #0000FF";
+   }
+
+   %colorCount = getWordCount($Pref::ColorPicker::ColorPalette);
+   
+   if(%colorCount > 63)
+      %colorCount = 63;
+
+   for(%i=0; %i < %colorCount; %i++)
+   {
+      %hex = getWord($Pref::ColorPicker::ColorPalette, %i);
+      %rgb = ColorHEXToRGB(%hex);
+      %rgb = ColorIntToFloat(%rgb);
+
+      %colorBox = new GuiSwatchButtonCtrl() {
+                  extent = "16 16";
+                  color = %rgb;
+                  profile = "GuiDefaultProfile";
+                  colorHex = %hex;
+                  useMouseEvents = "1";
+                  class = "ColorPaletteSwatch";
+               };
+
+      ColorPaletteStack.Add(%colorBox);
+   }
+
+   %button = new GuiButtonCtrl() {
+               text = "+";
+               extent = "16 16";
+               profile = "ToolsGuiButtonProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               command = "ColorPaletteStack.addCurrentColorToStack();";
+            };
+
+   ColorPaletteStack.Add(%button);
+}
+
+function ColorPaletteStack::addCurrentColorToStack(%this)
+{
+   %hex = HexTextEditor.getValue();
+   //Make sure we have 6 characters
+   while(strlen(%hex) < 6)
+   {
+      %hex = "0" @ %hex;
+   }
+   %hex = strupr(%hex);
+
+   $Pref::ColorPicker::ColorPalette = "#" @ %hex SPC $Pref::ColorPicker::ColorPalette;
+   ColorPaletteStack.clear();
+   ColorPaletteStack.onWake();
+}
+
+function ColorPaletteStack::onSleep(%this)
+{
+   ColorPaletteStack.clear();
+}
+
+function ColorPaletteSwatch::onMouseDown(%this)
+{
+   //Update all the other color fields
+   %rgb = ColorHEXToRGB(%this.colorHex);
+   %hsb = ColorRGBToHSB(%rgb);
+   
+   // these automatically update our ColorNewSelected which
+   // updates all text fields including these.
+   ColorHueRange.setSelectedHue(getWord(%hsb, 0));
+   ColorHueRange.executeUpdate();
+
+   ColorBlendRange.setSelectedSaturation(getWord(%hsb, 1));
+   ColorBlendRange.setSelectedBrightness(getWord(%hsb, 2));
+   ColorBlendRange.executeUpdate();
+
+   // for now just set full alpha until we save out alpha as well
+   ColorAlphaRange.setSelectedAlpha(255);
+   ColorAlphaRange.executeUpdate();
+}
+
 function ColorPickerRGBClass::onValidate(%this)
 {
    %red = RedTextEdit.getValue();
@@ -352,8 +437,13 @@ function ColorPickerRGBClass::onValidate(%this)
    %alpha = AlphaTextEdit.getValue();
 
    //Update all the other color fields
-   %hsb = ColorRGBToHSB(%red SPC %green SPC %blue);
-
+   if( $ColorCallbackType == 1)
+      %hsb = ColorRGBToHSB(%red SPC %green SPC %blue);
+   else
+   {
+      %hsb = ColorLinearRGBToHSB(%red SPC %green SPC %blue);
+      %alpha *= 255.0;
+   }
    // these automatically update our ColorNewSelected which
    // updates all text fields including these.
    ColorHueRange.setSelectedHue(getWord(%hsb, 0));

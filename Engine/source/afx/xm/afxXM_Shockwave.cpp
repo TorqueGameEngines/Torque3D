@@ -103,7 +103,7 @@ afxXM_ShockwaveData::afxXM_ShockwaveData(const afxXM_ShockwaveData& other, bool 
 void afxXM_ShockwaveData::initPersistFields()
 {
    docsURL;
-  addField("rate",      TypeF32,      Offset(rate, afxXM_ShockwaveData),
+  addFieldV("rate",      TypeRangedF32,      Offset(rate, afxXM_ShockwaveData), &CommonValidators::PositiveFloat,
     "...");
   addField("aimZOnly",  TypeBool,     Offset(aim_z_only, afxXM_ShockwaveData),
     "...");

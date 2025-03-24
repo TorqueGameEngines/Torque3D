@@ -419,7 +419,7 @@ CodeMapping gVirtualMap[] =
    { "btn_b",         SI_BUTTON, XI_B           },
    { "btn_x",         SI_BUTTON, XI_X           },
    { "btn_y",         SI_BUTTON, XI_Y           },
-
+   { "btn_guide",     SI_BUTTON, XI_GUIDE }, //"guide",//yorks
    //-------------------------------------- MISCELLANEOUS EVENTS
    //
 

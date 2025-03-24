@@ -103,12 +103,12 @@ void SFXAmbience::initPersistFields()
          "@ref SFX_reverb" );
       INITPERSISTFIELD_SOUNDASSET(SoundTrack, SFXAmbience,
          "Sound track to play in the ambience zone." );
-      addField( "rolloffFactor",          TypeF32, Offset( mRolloffFactor, SFXAmbience ),
+      addFieldV( "rolloffFactor",          TypeRangedF32, Offset( mRolloffFactor, SFXAmbience ), &CommonValidators::PositiveFloat,
          "The rolloff factor to apply to distance-based volume attenuation in this space.\n"
          "Defaults to 1.0.\n\n"
          "@note This applies to the logarithmic distance model only.\n\n"
          "@ref SFXSource_volume" );
-      addField( "dopplerFactor",          TypeF32, Offset( mDopplerFactor, SFXAmbience ),
+      addFieldV( "dopplerFactor", TypeRangedF32, Offset( mDopplerFactor, SFXAmbience ), &CommonValidators::PositiveFloat,
          "The factor to apply to the doppler affect in this space.\n"
          "Defaults to 0.5.\n\n"
          "@ref SFXSource_doppler" );

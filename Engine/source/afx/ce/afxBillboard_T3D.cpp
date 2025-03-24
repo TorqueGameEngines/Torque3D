@@ -67,9 +67,8 @@ void afxBillboard::_renderBillboard(ObjectRenderInst *ri, SceneRenderState* stat
     desc.alphaTestRef = 1;
     desc.alphaTestFunc = GFXCmpGreaterEqual;
     
-    desc.setZReadWrite(true);
-    desc.zFunc = GFXCmpLessEqual;
-    desc.zWriteEnable = false;
+    desc.setZReadWrite(true, false);
+    desc.zFunc = GFXCmpGreaterEqual;
 
     desc.samplersDefined = true;
 

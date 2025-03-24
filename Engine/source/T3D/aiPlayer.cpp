@@ -136,27 +136,27 @@ void AIPlayer::initPersistFields()
    docsURL;
    addGroup( "AI" );
 
-      addField( "mMoveTolerance", TypeF32, Offset( mMoveTolerance, AIPlayer ), 
+      addFieldV( "mMoveTolerance", TypeRangedF32, Offset( mMoveTolerance, AIPlayer ), &CommonValidators::PositiveFloat,
          "@brief Distance from destination before stopping.\n\n"
          "When the AIPlayer is moving to a given destination it will move to within "
          "this distance of the destination and then stop.  By providing this tolerance "
          "it helps the AIPlayer from never reaching its destination due to minor obstacles, "
          "rounding errors on its position calculation, etc.  By default it is set to 0.25.\n");
 
-      addField( "moveStuckTolerance", TypeF32, Offset( mMoveStuckTolerance, AIPlayer ), 
+      addFieldV( "moveStuckTolerance", TypeRangedF32, Offset( mMoveStuckTolerance, AIPlayer ), &CommonValidators::PositiveFloat,
          "@brief Distance tolerance on stuck check.\n\n"
          "When the AIPlayer is moving to a given destination, if it ever moves less than "
          "this tolerance during a single tick, the AIPlayer is considered stuck.  At this point "
          "the onMoveStuck() callback is called on the datablock.\n");
 
-      addField( "moveStuckTestDelay", TypeS32, Offset( mMoveStuckTestDelay, AIPlayer ), 
+      addFieldV( "moveStuckTestDelay", TypeRangedS32, Offset( mMoveStuckTestDelay, AIPlayer ), &CommonValidators::PositiveInt,
          "@brief The number of ticks to wait before testing if the AIPlayer is stuck.\n\n"
          "When the AIPlayer is asked to move, this property is the number of ticks to wait "
          "before the AIPlayer starts to check if it is stuck.  This delay allows the AIPlayer "
          "to accelerate to full speed without its initial slow start being considered as stuck.\n"
          "@note Set to zero to have the stuck test start immediately.\n");
 
-      addField( "AttackRadius", TypeF32, Offset( mAttackRadius, AIPlayer ), 
+      addFieldV( "AttackRadius", TypeRangedF32, Offset( mAttackRadius, AIPlayer ), &CommonValidators::PositiveFloat,
          "@brief Distance considered in firing range for callback purposes.");
            
    endGroup( "AI" );

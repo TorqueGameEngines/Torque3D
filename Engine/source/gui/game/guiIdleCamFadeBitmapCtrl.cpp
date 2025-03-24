@@ -22,6 +22,7 @@
 
 #include "platform/platform.h"
 #include "gui/controls/guiBitmapCtrl.h"
+#include "console/typeValidators.h"
 
 #include "console/console.h"
 #include "console/consoleTypes.h"
@@ -161,8 +162,8 @@ public:
 
    static void initPersistFields()
    {
-      addField("fadeinTime", TypeS32, Offset(fadeinTime, GuiIdleCamFadeBitmapCtrl));
-      addField("fadeoutTime", TypeS32, Offset(fadeoutTime, GuiIdleCamFadeBitmapCtrl));
+      addFieldV("fadeinTime", TypeRangedS32, Offset(fadeinTime, GuiIdleCamFadeBitmapCtrl), &CommonValidators::PositiveInt);
+      addFieldV("fadeoutTime", TypeRangedS32, Offset(fadeoutTime, GuiIdleCamFadeBitmapCtrl), &CommonValidators::PositiveInt);
       addField("done", TypeBool, Offset(done, GuiIdleCamFadeBitmapCtrl));
       Parent::initPersistFields();
    }

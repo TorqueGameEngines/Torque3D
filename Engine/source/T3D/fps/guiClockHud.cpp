@@ -47,6 +47,10 @@ class GuiClockHud : public GuiControl
    LinearColorF   mTextColor;
 
    S32      mTimeOffset;
+   bool     mIsPaused;
+   S32      mPausedTime;
+   S32      mSignificantTime;
+   bool     mSignificantTimeReached;
 
 public:
    GuiClockHud();
@@ -54,14 +58,19 @@ public:
    void setTime(F32 newTime);
    void setReverseTime(F32 reverseTime);
    F32  getTime();
+   static bool pauseTime(void* object, const char* index, const char* data);
+   static bool reverseTime(void* object, const char* index, const char* data);
+   static bool setSignificantTime(void* object, const char* index, const char* data);
 
    void onRender( Point2I, const RectI &) override;
    static void initPersistFields();
    DECLARE_CONOBJECT( GuiClockHud );
    DECLARE_CATEGORY( "Gui Game" );
    DECLARE_DESCRIPTION( "Basic HUD clock. Displays the current simulation time offset from some base." );
+   DECLARE_CALLBACK(void, onSignificantTimeReached, (GuiClockHud* obj));
 };
 
+IMPLEMENT_CALLBACK(GuiClockHud, onSignificantTimeReached, void, (GuiClockHud* obj), (obj), "Called when the significant time is reached.");
 
 //-----------------------------------------------------------------------------
 
@@ -93,6 +102,10 @@ GuiClockHud::GuiClockHud()
    mTextColor.set( 0, 1, 0, 1 );
 
    mTimeOffset = 0;
+   mIsPaused = false;
+   mPausedTime = 0;
+   mSignificantTime = 0;
+   mSignificantTimeReached = false;
 }
 
 void GuiClockHud::initPersistFields()
@@ -104,6 +117,9 @@ void GuiClockHud::initPersistFields()
    addField( "fillColor", TypeColorF, Offset( mFillColor, GuiClockHud ), "Standard color for the background of the control." );
    addField( "frameColor", TypeColorF, Offset( mFrameColor, GuiClockHud ), "Color for the control's frame." );
    addField( "textColor", TypeColorF, Offset( mTextColor, GuiClockHud ), "Color for the text on this control." );
+   addProtectedField("pause", TypeBool, Offset(mIsPaused, GuiClockHud), &GuiClockHud::pauseTime, &defaultProtectedGetFn, "Pause");
+   addProtectedField("reversed", TypeBool, Offset(mTimeReversed, GuiClockHud), &GuiClockHud::reverseTime, &defaultProtectedGetFn, "reversed");
+   addProtectedField("significantTime", TypeS32, Offset(mSignificantTime, GuiClockHud), &GuiClockHud::setSignificantTime, &defaultProtectedGetFn, "set significant timestamp");
    endGroup("Misc");
 
    Parent::initPersistFields();
@@ -121,7 +137,7 @@ void GuiClockHud::onRender(Point2I offset, const RectI &updateRect)
       drawUtil->drawRectFill(updateRect, mFillColor.toColorI());
 
    // Convert ms time into hours, minutes and seconds.
-   S32 time = S32(getTime());
+   S32 time = mIsPaused ? mPausedTime : S32(getTime());
    S32 secs = time % 60;
    S32 mins = (time % 3600) / 60;
 
@@ -139,6 +155,20 @@ void GuiClockHud::onRender(Point2I offset, const RectI &updateRect)
    // Border last
    if (mShowFrame)
       drawUtil->drawRect(updateRect, mFrameColor.toColorI());
+
+   if (!mIsPaused && !mSignificantTimeReached)
+   {
+      if (mTimeReversed && time < mSignificantTime)
+      {
+         onSignificantTimeReached_callback(this);
+         mSignificantTimeReached = true;
+      }
+      else if (time > mSignificantTime)
+      {
+         onSignificantTimeReached_callback(this);
+         mSignificantTimeReached = true;
+      }
+   }
 }
 
 
@@ -148,7 +178,9 @@ void GuiClockHud::setReverseTime(F32 time)
 {  
    // Set the current time in seconds.  
    mTimeReversed = true;  
-   mTimeOffset = S32(time * 1000) + Platform::getVirtualMilliseconds();  
+   mTimeOffset = S32(time * 1000) + Platform::getVirtualMilliseconds();
+   mSignificantTimeReached = false;
+   mPausedTime = getTime();
 }
 
 void GuiClockHud::setTime(F32 time)
@@ -156,6 +188,8 @@ void GuiClockHud::setTime(F32 time)
    // Set the current time in seconds.
    mTimeReversed = false;
    mTimeOffset = S32(time * 1000) - Platform::getVirtualMilliseconds();
+   mSignificantTimeReached = false;
+   mPausedTime = getTime();
 }
 
 F32 GuiClockHud::getTime()
@@ -165,6 +199,41 @@ F32 GuiClockHud::getTime()
       return F32(mTimeOffset - Platform::getVirtualMilliseconds()) / 1000;  
    else
       return F32(mTimeOffset + Platform::getVirtualMilliseconds()) / 1000;
+}
+
+bool GuiClockHud::pauseTime(void* object, const char* index, const char* data)
+{
+   GuiClockHud* obj = reinterpret_cast<GuiClockHud*>(object);
+   obj->mIsPaused = dAtob(data);
+
+   if (obj->mIsPaused)
+      obj->mPausedTime = S32(obj->getTime());
+   else
+      obj->setTime(obj->mPausedTime);
+
+   return true;
+}
+
+bool GuiClockHud::reverseTime(void* object, const char* index, const char* data)
+{
+   GuiClockHud* obj = reinterpret_cast<GuiClockHud*>(object);
+   F32 curTime = obj->getTime();
+
+   bool setReverse = dAtob(data);
+   if (setReverse)
+      obj->setReverseTime(curTime);
+   else
+      obj->setTime(curTime);
+
+   return true;
+}
+
+bool GuiClockHud::setSignificantTime(void* object, const char* index, const char* data)
+{
+   GuiClockHud* obj = reinterpret_cast<GuiClockHud*>(object);
+   obj->mSignificantTime = dAtoi(data);
+   obj->mSignificantTimeReached = false;
+   return true;
 }
 
 DefineEngineMethod(GuiClockHud, setTime, void, (F32 timeInSeconds),(60), "Sets the current base time for the clock.\n"

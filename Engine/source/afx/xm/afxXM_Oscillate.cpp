@@ -166,7 +166,7 @@ void afxXM_OscillateData::initPersistFields()
     "...");
   addField("max",                 TypePoint3F,  Offset(max,   afxXM_OscillateData),
     "...");
-  addField("speed",               TypeF32,      Offset(speed, afxXM_OscillateData),
+  addFieldV("speed",               TypeRangedF32,      Offset(speed, afxXM_OscillateData), &CommonValidators::PositiveFloat,
     "...");
   addField("axis",                TypePoint3F,  Offset(axis,  afxXM_OscillateData),
     "...");

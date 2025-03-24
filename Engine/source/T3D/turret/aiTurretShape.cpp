@@ -127,28 +127,28 @@ void AITurretShapeData::initPersistFields()
    docsURL;
    Parent::initPersistFields();
    addGroup("AI Steering");
-      addField("maxScanHeading",       TypeF32,       Offset(maxScanHeading,        AITurretShapeData),
+      addFieldV("maxScanHeading",       TypeRangedF32,       Offset(maxScanHeading,        AITurretShapeData), &CommonValidators::PosDegreeRangeQuarter,
          "@brief Maximum number of degrees to scan left and right.\n\n"
          "@note Maximum scan heading is 90 degrees.\n");
-      addField("maxScanPitch",         TypeF32,       Offset(maxScanPitch,          AITurretShapeData),
+      addFieldV("maxScanPitch", TypeRangedF32,       Offset(maxScanPitch,          AITurretShapeData), &CommonValidators::PosDegreeRangeQuarter,
          "@brief Maximum number of degrees to scan up and down.\n\n"
          "@note Maximum scan pitch is 90 degrees.\n");
-      addField("maxScanDistance",      TypeF32,       Offset(maxScanDistance,       AITurretShapeData),
+      addFieldV("maxScanDistance", TypeRangedF32,       Offset(maxScanDistance,       AITurretShapeData), &CommonValidators::PositiveFloat,
          "@brief Maximum distance to scan.\n\n"
          "When combined with maxScanHeading and maxScanPitch this forms a 3D scanning wedge used to initially "
          "locate a target.\n");
-      addField("scanTickFrequency",          TypeS32,       Offset(scanTickFrequency,       AITurretShapeData),
+      addFieldV("scanTickFrequency",          TypeRangedS32,       Offset(scanTickFrequency,       AITurretShapeData), &CommonValidators::NaturalNumber,
          "@brief How often should we perform a full scan when looking for a target.\n\n"
          "Expressed as the number of ticks between full scans, but no less than 1.\n");
-      addField("scanTickFrequencyVariance",  TypeS32,       Offset(scanTickFrequencyVariance,       AITurretShapeData),
+      addFieldV("scanTickFrequencyVariance", TypeRangedS32,       Offset(scanTickFrequencyVariance,       AITurretShapeData), &CommonValidators::PositiveInt,
          "@brief Random amount that should be added to the scan tick frequency each scan period.\n\n"
          "Expressed as the number of ticks to randomly add, but no less than zero.\n");
-      addField("trackLostTargetTime",  TypeF32,       Offset(trackLostTargetTime,       AITurretShapeData),
+      addFieldV("trackLostTargetTime", TypeRangedF32,       Offset(trackLostTargetTime,       AITurretShapeData), &CommonValidators::PositiveFloat,
          "@brief How long after the turret has lost the target should it still track it.\n\n"
          "Expressed in seconds.\n");
-   addField("maxWeaponRange",       TypeF32,       Offset(maxWeaponRange,       AITurretShapeData),
+   addFieldV("maxWeaponRange", TypeRangedF32,       Offset(maxWeaponRange,       AITurretShapeData), &CommonValidators::PositiveFloat,
       "@brief Maximum distance that the weapon will fire upon a target.\n\n");
-   addField("weaponLeadVelocity",   TypeF32,       Offset(weaponLeadVelocity,   AITurretShapeData),
+   addFieldV("weaponLeadVelocity", TypeRangedF32,       Offset(weaponLeadVelocity,   AITurretShapeData), &CommonValidators::PositiveFloat,
       "@brief Velocity used to lead target.\n\n"
       "If value <= 0, don't lead target.\n");
    endGroup("AI Steering");
@@ -173,7 +173,7 @@ void AITurretShapeData::initPersistFields()
       addField( "stateTransitionOnTimeout", TypeString, Offset(stateTransitionTimeout, AITurretShapeData), MaxStates,
          "Name of the state to transition to when we have been in this state "
          "for stateTimeoutValue seconds." );
-      addField( "stateTimeoutValue", TypeF32, Offset(stateTimeoutValue, AITurretShapeData), MaxStates,
+      addFieldV( "stateTimeoutValue", TypeRangedF32, Offset(stateTimeoutValue, AITurretShapeData), &CommonValidators::PositiveFloat, MaxStates,
          "Time in seconds to wait before transitioning to stateTransitionOnTimeout." );
       addField( "stateWaitForTimeout", TypeBool, Offset(stateWaitForTimeout, AITurretShapeData), MaxStates,
          "If false, this state ignores stateTimeoutValue and transitions "

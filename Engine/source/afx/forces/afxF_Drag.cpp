@@ -103,9 +103,9 @@ afxF_DragData::afxF_DragData(const afxF_DragData& other, bool temp_clone) : afxF
 void afxF_DragData::initPersistFields()
 {
    docsURL;
-  addField("drag",                TypeF32,      myOffset(drag_coefficient),
+  addFieldV("drag",                TypeRangedF32,      myOffset(drag_coefficient), &CommonValidators::PositiveNonZeroFloat,
     "...");
-  addField("airDensity",          TypeF32,      myOffset(air_density),
+  addFieldV("airDensity", TypeRangedF32,      myOffset(air_density), &CommonValidators::PositiveNonZeroFloat,
     "...");
   addField("crossSectionalArea",  TypeF32,      myOffset(cross_sectional_area),
     "...");

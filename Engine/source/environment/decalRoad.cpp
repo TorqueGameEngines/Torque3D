@@ -40,6 +40,7 @@
 #include "materials/baseMatInstance.h"
 #include "environment/nodeListManager.h"
 #include "lighting/lightQuery.h"
+#include "console/typeValidators.h"
 
 
 extern F32 gDecalBias;
@@ -300,7 +301,7 @@ IMPLEMENT_CO_NETOBJECT_V1(DecalRoad);
 
 
 // ConsoleObject
-
+FRangeValidator drTextureLengthV(0.1f,FLT_MAX);
 void DecalRoad::initPersistFields()
 {
    docsURL;
@@ -308,13 +309,13 @@ void DecalRoad::initPersistFields()
 
       INITPERSISTFIELD_MATERIALASSET(Material, DecalRoad, "Material used for rendering.");
 
-      addProtectedField( "textureLength", TypeF32, Offset( mTextureLength, DecalRoad ), &DecalRoad::ptSetTextureLength, &defaultProtectedGetFn, 
+      addProtectedFieldV("textureLength", TypeRangedF32, Offset(mTextureLength, DecalRoad), &DecalRoad::ptSetTextureLength, &defaultProtectedGetFn, &drTextureLengthV,
          "The length in meters of textures mapped to the DecalRoad" );      
 
-      addProtectedField( "breakAngle", TypeF32, Offset( mBreakAngle, DecalRoad ), &DecalRoad::ptSetBreakAngle, &defaultProtectedGetFn, 
+      addProtectedFieldV( "breakAngle", TypeRangedF32, Offset( mBreakAngle, DecalRoad ), &DecalRoad::ptSetBreakAngle, &defaultProtectedGetFn, &CommonValidators::PosDegreeRange,
          "Angle in degrees - DecalRoad will subdivided the spline if its curve is greater than this threshold." );      
 
-      addField( "renderPriority", TypeS32, Offset( mRenderPriority, DecalRoad ), 
+      addField( "renderPriority", TypeS16, Offset( mRenderPriority, DecalRoad ),
          "DecalRoad(s) are rendered in descending renderPriority order." );
 
    endGroup( "DecalRoad" );
@@ -428,7 +429,7 @@ void DecalRoad::onStaticModified( const char* slotName, const char*newValue )
 
    if ( dStricmp( slotName, "renderPriority" ) == 0 )
    {
-      mRenderPriority = getMax( dAtoi(newValue), (S32)1 );
+      mRenderPriority = getMax((S16)dAtoi(newValue), (S16)1 );
    }
 }
 
@@ -494,7 +495,7 @@ const char* DecalRoad::getSpecialFieldOut(StringTableEntry fieldName, const U32&
 
       char buffer[1024];
       dMemset(buffer, 0, 1024);
-      dSprintf(buffer, 1024, "%f %f %f %f", node.point.x, node.point.y, node.point.z, node.width);
+      dSprintf(buffer, 1024, "node = \"%f %f %f %f\";", node.point.x, node.point.y, node.point.z, node.width);
 
       return StringTable->insert(buffer);
    }

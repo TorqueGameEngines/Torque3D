@@ -11,8 +11,8 @@ function JoinServerMenu::onWake(%this)
 
 function JoinServerMenu::onSleep(%this)
 {
-   echo("Exporting client prefs");
    %prefPath = getPrefpath();
+   echo("Exporting client prefs to "@ getUserHomeDirectory() @ "/clientPrefs." @ $TorqueScriptFileExtension);
    export("$pref::*", %prefPath @ "/clientPrefs." @ $TorqueScriptFileExtension, false);  
 }
 

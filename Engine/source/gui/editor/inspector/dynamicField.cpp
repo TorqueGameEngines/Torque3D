@@ -86,6 +86,7 @@ void GuiInspectorDynamicField::setData( const char* data, bool callbacks )
 
          // give the target a chance to validate
          target->inspectPostApply();
+         Con::executef(mInspector, "onPostInspectorFieldModified", mInspector->getIdString(), target->getIdString());
       }
    }
    

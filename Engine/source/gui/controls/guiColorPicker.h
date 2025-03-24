@@ -108,23 +108,27 @@ class GuiColorPickerCtrl : public GuiControl
    /// <param name="bounds">The bounds of the ctrl.</param>
    void renderAlphaSelector(RectI& bounds);
 
+   void renderEyeDropper();
+
    /// @name Core Variables
    /// @{
-   PickMode mDisplayMode;	///< Current color display mode of the selector
+   PickMode mDisplayMode;	      ///< Current color display mode of the selector
    SelectorMode mSelectorMode;	///< Current color display mode of the selector
-   F64 mSelectedHue;
-   F64 mSelectedSaturation;
-   F64 mSelectedBrightness;
-   F64 mSelectedAlpha;
+   U32 mSelectedHue;
+   U32 mSelectedSaturation;
+   U32 mSelectedBrightness;
+   U32 mSelectedAlpha;
+   Point2I eyeDropperPos;
+   GBitmap* eyeDropperCap;
+   GFXTexHandle eyeHandle;
 
-   bool mMouseOver;		///< Mouse is over?
-   bool mMouseDown;		///< Mouse button down?
-   bool mActionOnMove;		///< Perform onAction() when position has changed?
-   bool mShowReticle;       ///< Show reticle on render
+   bool mDropperActive;       ///< Is the eye dropper active?
+   bool mMouseOver;		      ///< Mouse is over?
+   bool mMouseDown;		      ///< Mouse button down?
+   bool mActionOnMove;		   ///< Perform onAction() when position has changed?
+   bool mShowReticle;         ///< Show reticle on render
 
-   Point2I findColor(const LinearColorF & color, const Point2I& offset, const Point2I& resolution, GBitmap& bmp);
-   
-   S32   mSelectorGap;		///< The half-way "gap" between the selector pos and where the selector is allowed to draw. 
+   S32   mSelectorGap;		   ///< The half-way "gap" between the selector pos and where the selector is allowed to draw. 
 
    GFXStateBlockRef mStateBlock;
    /// @}
@@ -158,29 +162,32 @@ class GuiColorPickerCtrl : public GuiControl
    /// Set the selected hue.
    /// </summary>
    /// <param name="hueValue">Hue value, 0 - 360.</param>
-   void setSelectedHue(const F64& hueValue);
-   F64 getSelectedHue() { return mSelectedHue; }
+   void setSelectedHue(const U32& hueValue);
+   U32 getSelectedHue() { return mSelectedHue; }
 
    /// <summary>
    /// Set the selected brightness.
    /// </summary>
    /// <param name="brightValue">Brightness value, 0 - 100.</param>
-   void setSelectedBrightness(const F64& brightValue);
-   F64 getSelectedBrightness() { return mSelectedBrightness; }
+   void setSelectedBrightness(const U32& brightValue);
+   U32 getSelectedBrightness() { return mSelectedBrightness; }
 
    /// <summary>
    /// Set the selected saturation.
    /// </summary>
    /// <param name="satValue">Saturation value, 0 - 100.</param>
-   void setSelectedSaturation(const F64& satValue);
-   F64 getSelectedSaturation() { return mSelectedSaturation; }
+   void setSelectedSaturation(const U32& satValue);
+   U32 getSelectedSaturation() { return mSelectedSaturation; }
 
    /// <summary>
    /// Set the selected alpha.
    /// </summary>
    /// <param name="alphaValue">Alpha value, 0 - 255.</param>
-   void setSelectedAlpha(const F64& alphaValue);
-   F64 getSelectedAlpha() { return mSelectedAlpha; }
+   void setSelectedAlpha(const U32& alphaValue);
+   U32 getSelectedAlpha() { return mSelectedAlpha; }
+
+   void activateEyeDropper();
+
 };
 
 typedef GuiColorPickerCtrl::PickMode GuiColorPickMode;

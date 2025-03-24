@@ -76,12 +76,14 @@ class Path : public GameBase
    ~Path();
 
    void addObject(SimObject*) override;
+   void onPostAdd() override;
    void removeObject(SimObject*) override;
 
    void sortMarkers();
    void updatePath();
    bool isLooping() { return mIsLooping; }
    U32 getPathIndex() const;
+   void setTransform(const MatrixF& mat) override;
 
    DECLARE_CONOBJECT(Path);
    DECLARE_CATEGORY("Cinematic");

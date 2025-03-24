@@ -624,23 +624,26 @@ River::~River()
 {      
 }
 
+
+FRangeValidator riverSegRange(MIN_METERS_PER_SEGMENT, FLT_MAX);
+
 void River::initPersistFields()
 {
    docsURL;
    addGroup( "River" );
 
-      addField( "SegmentLength",       TypeF32,    Offset( mMetersPerSegment, River ),
+      addFieldV( "SegmentLength",       TypeRangedF32,    Offset( mMetersPerSegment, River ), &riverSegRange,
          "Divide the River lengthwise into segments of this length in meters. "
          "These geometric volumes are used for spacial queries like determining containment." );      
 
-      addField( "SubdivideLength",     TypeF32,    Offset( mMaxDivisionSize, River ),
+      addFieldV( "SubdivideLength", TypeRangedF32,    Offset( mMaxDivisionSize, River ), &CommonValidators::PositiveFloat,
          "For purposes of generating the renderable geometry River segments are further subdivided "
          "such that no quad is of greater width or length than this distance in meters." );
 
-      addField( "FlowMagnitude",       TypeF32,    Offset( mFlowMagnitude, River ),
+      addFieldV( "FlowMagnitude", TypeRangedF32,    Offset( mFlowMagnitude, River ), &CommonValidators::PositiveFloat,
          "Magnitude of the force vector applied to dynamic objects within the River." );
 
-      addField( "LowLODDistance",      TypeF32,    Offset( mLodDistance, River ),
+      addFieldV( "LowLODDistance", TypeRangedF32,    Offset( mLodDistance, River ), &CommonValidators::PositiveFloat,
          "Segments of the river at this distance in meters or greater will "
          "render as a single unsubdivided without undulation effects." );      
 

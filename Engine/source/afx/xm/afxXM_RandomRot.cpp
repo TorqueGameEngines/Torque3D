@@ -109,13 +109,13 @@ void afxXM_RandomRotData::initPersistFields()
    docsURL;
   addField("axis",      TypePoint3F,  Offset(axis, afxXM_RandomRotData),
     "...");
-  addField("thetaMin",  TypeF32,      Offset(theta_min, afxXM_RandomRotData),
+  addFieldV("thetaMin", TypeRangedF32,      Offset(theta_min, afxXM_RandomRotData), &CommonValidators::PosDegreeRangeHalf,
     "...");
-  addField("thetaMax",  TypeF32,      Offset(theta_max, afxXM_RandomRotData),
+  addFieldV("thetaMax", TypeRangedF32,      Offset(theta_max, afxXM_RandomRotData), &CommonValidators::PosDegreeRangeHalf,
     "...");
-  addField("phiMin",    TypeF32,      Offset(phi_min, afxXM_RandomRotData),
+  addFieldV("phiMin", TypeRangedF32,      Offset(phi_min, afxXM_RandomRotData), &CommonValidators::PosDegreeRange,
     "...");
-  addField("phiMax",    TypeF32,      Offset(phi_max, afxXM_RandomRotData),
+  addFieldV("phiMax", TypeRangedF32,      Offset(phi_max, afxXM_RandomRotData), &CommonValidators::PosDegreeRange,
     "...");
 
   Parent::initPersistFields();

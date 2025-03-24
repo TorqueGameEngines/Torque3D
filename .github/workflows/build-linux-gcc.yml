@@ -61,6 +61,13 @@ jobs:
                     libx11-dev \
                     libxxf86vm-dev \
                     libopenal-dev \
+                    libasound2-dev \
+                    libpipewire-0.3-dev \
+                    portaudio19-dev \
+                    oss4-dev \
+                    libjack-dev \
+                    libpulse-dev \
+                    libdbus-1-dev \
                     libfreetype6-dev \
                     libxcursor-dev \
                     libxinerama-dev \

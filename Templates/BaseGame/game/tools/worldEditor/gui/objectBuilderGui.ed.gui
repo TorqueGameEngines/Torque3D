@@ -1502,6 +1502,22 @@ function ObjectBuilderGui::buildFlyingVehicle(%this)
    %this.process();
 }
 
+function ObjectBuilderGui::buildSpawnSphere(%this)
+{
+   %this.objectClassName = "SpawnSphere";
+   %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "MissionMarkerData SpawnSphereMarker");
+   %this.addField("radius",       "TypeFloat",     "Radius",        1);
+   %this.addField("sphereWeight", "TypeFloat",     "Sphere Weight", 1);
+
+   %this.addField("spawnClass",     "TypeString",    "Spawn Class", "");
+   %this.addField("spawnDatablock", "TypeString", "Spawn Data", "");
+   %this.addField("spawnTransform", "TypeBool", "Spawn Here", "true");
+   %this.addField("autoSpawn", "TypeBool", "Auto Spawn Objects", "false");
+   %this.addField("spawnScript", "TypeString", "spawnScript", "%this.spawned = $SpawnObject;");
+   %this.addField("canSaveDynamicFields", "TypeBool", "Save metadata", "false");
+   %this.process();
+}
+
 function ObjectBuilderGui::buildObserverDropPoint(%this)
 {
    %this.objectClassName = "SpawnSphere";

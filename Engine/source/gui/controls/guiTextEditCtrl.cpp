@@ -36,6 +36,7 @@
 #include "sfx/sfxSystem.h"
 #include "core/strings/unicode.h"
 #include "console/engineAPI.h"
+#include "console/typeValidators.h"
 
 IMPLEMENT_CONOBJECT(GuiTextEditCtrl);
 
@@ -177,7 +178,7 @@ void GuiTextEditCtrl::initPersistFields()
    
       addField("validate",          TypeRealString,Offset(mValidateCommand,   GuiTextEditCtrl), "Script command to be called when the first validater is lost.\n");
       addField("escapeCommand",     TypeRealString,Offset(mEscapeCommand,     GuiTextEditCtrl), "Script command to be called when the Escape key is pressed.\n");
-      addField("historySize",       TypeS32,       Offset(mHistorySize,       GuiTextEditCtrl), "How large of a history buffer to maintain.\n");
+      addFieldV("historySize",       TypeRangedS32,       Offset(mHistorySize,       GuiTextEditCtrl), &CommonValidators::PositiveInt, "How large of a history buffer to maintain.\n");
       addField("tabComplete",       TypeBool,      Offset(mTabComplete,       GuiTextEditCtrl), "If true, when the 'tab' key is pressed, it will act as if the Enter key was pressed on the control.\n");
       addField("deniedSound",       TypeSFXTrackName, Offset(mDeniedSound, GuiTextEditCtrl), "If the attempted text cannot be entered, this sound effect will be played.\n");
       addField("sinkAllKeyEvents",  TypeBool,      Offset(mSinkAllKeyEvents,  GuiTextEditCtrl), "If true, every key event will act as if the Enter key was pressed.\n");

@@ -8,7 +8,7 @@
 // Copyright (C) Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 
-#include "../common/shaderModel.hlsl"
+#include "../shaderModel.hlsl"
 
 struct ConnectData
 {

@@ -75,7 +75,7 @@ void afxParticlePoolData::initPersistFields()
     "...");
   addField("baseColor",   TypeColorF,  Offset(base_color,   afxParticlePoolData),
     "...");
-  addField("blendWeight", TypeF32,     Offset(blend_weight, afxParticlePoolData),
+  addFieldV("blendWeight", TypeRangedF32,     Offset(blend_weight, afxParticlePoolData), &CommonValidators::PositiveFloat,
     "...");
 
   Parent::initPersistFields();

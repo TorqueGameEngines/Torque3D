@@ -143,7 +143,7 @@ void GuiWindowCtrl::initPersistFields()
          "Whether the window can be resized horizontally." );
       addField( "resizeHeight",      TypeBool,         Offset( mResizeHeight, GuiWindowCtrl ),
          "Whether the window can be resized vertically." );
-      addField("resizeMargin", TypeF32, Offset(mResizeMargin, GuiWindowCtrl),
+      addFieldV("resizeMargin", TypeRangedF32, Offset(mResizeMargin, GuiWindowCtrl), &CommonValidators::PositiveFloat,
          "Margin along the window edge to allow grabbing.");
       addField( "canMove",           TypeBool,         Offset( mCanMove, GuiWindowCtrl ),
          "Whether the window can be moved by dragging its titlebar." );

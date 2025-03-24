@@ -278,9 +278,9 @@ protected:
 
    // Write out properties
    // Returns the number of new lines added
-   U32 writeProperties(const Vector<const char*>& properties, const U32 insertLine, const char* objectIndent);
+   U32 writeProperties(const Vector<String>& properties, const U32 insertLine, const char* objectIndent);
    // Write out a new object
-   ParsedObject* writeNewObject(SimObject* object, const Vector<const char*>& properties, const U32 insertLine, ParsedObject* parentObject = NULL);
+   ParsedObject* writeNewObject(SimObject* object, const Vector<String>& properties, const U32 insertLine, ParsedObject* parentObject = NULL);
 
 public:
    PersistenceManager();

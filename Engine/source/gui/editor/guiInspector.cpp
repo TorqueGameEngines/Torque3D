@@ -28,6 +28,7 @@
 #include "gui/editor/inspector/dynamicGroup.h"
 #include "gui/containers/guiScrollCtrl.h"
 #include "gui/editor/inspector/customField.h"
+#include "console/typeValidators.h"
 
 IMPLEMENT_CONOBJECT(GuiInspector);
 
@@ -37,6 +38,12 @@ ConsoleDocClass( GuiInspector,
    "@internal"
 );
 
+
+IMPLEMENT_CALLBACK(GuiInspector, onPreInspectObject, void, (SimObject* object), (object),
+   "Called prior to inspecting a new object.\n");
+
+IMPLEMENT_CALLBACK(GuiInspector, onPostInspectObject, void, (SimObject* object), (object),
+   "Called after inspecting a new object.\n");
 
 //#define DEBUG_SPEW
 
@@ -71,7 +78,7 @@ void GuiInspector::initPersistFields()
    docsURL;
    addGroup( "Inspector" );
    
-      addField( "dividerMargin", TypeS32, Offset( mDividerMargin, GuiInspector ) );
+      addFieldV( "dividerMargin", TypeRangedS32, Offset( mDividerMargin, GuiInspector ), &CommonValidators::PositiveInt);
 
       addField( "groupFilters", TypeRealString, Offset( mGroupFilters, GuiInspector ), 
          "Specify groups that should be shown or not. Specifying 'shown' implicitly does 'not show' all other groups. Example string: +name -otherName" );
@@ -79,7 +86,7 @@ void GuiInspector::initPersistFields()
       addField( "showCustomFields", TypeBool, Offset( mShowCustomFields, GuiInspector ),
          "If false the custom fields Name, Id, and Source Class will not be shown." );
 
-      addField("forcedArrayIndex", TypeS32, Offset(mForcedArrayIndex, GuiInspector));
+      addFieldV("forcedArrayIndex", TypeRangedS32, Offset(mForcedArrayIndex, GuiInspector), &CommonValidators::NegDefaultInt);
 
       addField("searchText", TypeString, Offset(mSearchText, GuiInspector), "A string that, if not blank, is used to filter shown fields");
    endGroup( "Inspector" );
@@ -325,11 +332,14 @@ bool GuiInspector::isInspectingObject( SimObject* object )
 //-----------------------------------------------------------------------------
 
 void GuiInspector::inspectObject( SimObject *object )
-{  
+{
+   onPreInspectObject_callback((mTargets.size() > 1)? mTargets[0] : NULL);
+
    if( mTargets.size() > 1 || !isInspectingObject( object ) )
       clearInspectObjects();
          
    addInspectObject( object );
+   onPostInspectObject_callback(object);
 }
 
 //-----------------------------------------------------------------------------
@@ -349,7 +359,8 @@ void GuiInspector::clearInspectObjects()
 void GuiInspector::addInspectObject( SimObject* object, bool autoSync )
 {   
    // If we are already inspecting the object, just update the groups.
-   
+
+   onPreInspectObject_callback((mTargets.size() > 1) ? mTargets[0] : NULL);
    if( isInspectingObject( object ) )
    {
       #ifdef DEBUG_SPEW
@@ -379,6 +390,7 @@ void GuiInspector::addInspectObject( SimObject* object, bool autoSync )
    
 	if( autoSync )
 		refresh();
+   onPostInspectObject_callback(object);
 }
 
 //-----------------------------------------------------------------------------
@@ -629,7 +641,7 @@ void GuiInspector::refresh()
                GuiInspectorGroup *newGroup = new GuiInspectorGroup( itr->pGroupname, this );
                newGroup->setForcedArrayIndex(mForcedArrayIndex);
 
-			   newGroup->registerObject();
+			      newGroup->registerObject();
                if( !newGroup->getNumFields() )
                {
                   #ifdef DEBUG_SPEW
@@ -993,6 +1005,21 @@ DefineEngineMethod(GuiInspector, findExistentGroup, S32, (const char* groupName)
 {
    GuiInspectorGroup* group = object->findExistentGroup(StringTable->insert(groupName));
    return group ? group->getId() : 0;
+}
+
+DefineEngineMethod(GuiInspector, getInspectedGroupCount, S32, (), ,
+   "How many inspected groups there are.\n"
+   "@return how many inspected groups there are")
+{
+   return object->getGroups().size();
+}
+
+DefineEngineMethod(GuiInspector, getInspectedGroup, GuiInspectorGroup*, (S32 key), ,
+   "Finds an existing GuiInspectorGroup if it exists and returns it's Id.\n"
+   "@param key nth group out of the list of groups."
+   "@return id of the GuiInspectorGroup")
+{
+   return object->getGroups()[key];
 }
 
 DefineEngineMethod(GuiInspector, removeGroup, void, (const char* groupName), ,

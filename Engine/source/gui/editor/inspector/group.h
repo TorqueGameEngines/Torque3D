@@ -86,6 +86,7 @@ public:
    void addInspectorField(StringTableEntry name, StringTableEntry typeName, const char* description, const char* callbackName);
    void addInspectorField(GuiInspectorField* field);
    void removeInspectorField(StringTableEntry name);
+   void hideInspectorField(StringTableEntry fieldName, bool setHidden);
 
    void setForcedArrayIndex(const S32& arrayIndex = -1)
    {

@@ -205,6 +205,7 @@ protected:
    TSThread*         mAmbientThread;
    F32               mAnimOffset;
    F32               mAnimSpeed;
+   S16      mCollisionLOD;
    /// The type of mesh data to return for collision queries.
    MeshType mCollisionType;
 

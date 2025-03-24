@@ -544,10 +544,10 @@ ConsoleDocClass( GuiGameListOptionsProfile,
 void GuiGameListOptionsProfile::initPersistFields()
 {
    docsURL;
-   addField( "columnSplit", TypeS32, Offset(mColumnSplit, GuiGameListOptionsProfile),
+   addFieldV( "columnSplit", TypeRangedS32, Offset(mColumnSplit, GuiGameListOptionsProfile), &CommonValidators::PositiveInt,
       "Padding between the leftmost edge of the control, and the row's left arrow." );
 
-   addField( "rightPad", TypeS32, Offset(mRightPad, GuiGameListOptionsProfile),
+   addFieldV( "rightPad", TypeRangedS32, Offset(mRightPad, GuiGameListOptionsProfile), &CommonValidators::PositiveInt,
       "Padding between the rightmost edge of the control and the row's right arrow." );
 
    Parent::initPersistFields();

@@ -105,10 +105,8 @@ void afxZodiacPolysoupRenderer::initShader()
    d.cullDefined = true;
    d.blendDefined = true;
    d.blendEnable = true;
-   d.zDefined = false;
-   d.zEnable = true;
-   d.zWriteEnable = false;
-   d.zFunc = GFXCmpLessEqual;
+   d.setZReadWrite(true, false);
+   d.zFunc = GFXCmpGreaterEqual;
    d.zSlopeBias = 0;
    d.alphaDefined = true;
    d.alphaTestEnable = true; 

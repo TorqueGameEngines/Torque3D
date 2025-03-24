@@ -30,6 +30,10 @@
 #include "core/stream/stream.h"
 #endif
 
+#ifndef _GFXDEVICE_H_
+#include "gfx/gfxDevice.h"
+#endif
+
 #ifndef _GFXENUMS_H_
 #include "gfx/gfxEnums.h"
 #endif
@@ -56,15 +60,15 @@ struct LangElement
 {
    static Vector<LangElement*> elementList;
    static LangElement * find( const char *name );
+   static const char* constTypeToString(GFXShaderConstType constType);
    static void deleteElements();
       
    U8    name[32];
-   static const char* constTypeToString(GFXShaderConstType constType);
+   
    LangElement();
    virtual ~LangElement() {};
    virtual void print( Stream &stream ){};
    void setName(const char *newName );
-
 };
 
 enum ConstantSortPosition

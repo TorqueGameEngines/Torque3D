@@ -180,12 +180,18 @@ void GenOp::print( Stream &stream )
    }
 }
 
+//--------------------------------------------------------------------------
+// Casting operation
+//--------------------------------------------------------------------------
 CastOp::CastOp(Var* in1, GFXShaderConstType type) : Parent(in1, NULL)
 {
    mInput[0] = in1;
    mConstType = constTypeToString(type);
 }
 
+//--------------------------------------------------------------------------
+// Print
+//--------------------------------------------------------------------------
 void CastOp::print(Stream& stream)
 {
    Var* var = dynamic_cast<Var*>(mInput[0]);
@@ -194,4 +200,42 @@ void CastOp::print(Stream& stream)
    WRITESTR("( ");
    mInput[0]->print(stream);
    WRITESTR(" )");
+}
+
+AttrbuteOp::AttrbuteOp(AttributeType attribute, int unrollCount) : Parent(NULL, NULL)
+{
+   mAttrType = attr_None;
+   mUnrollCount = unrollCount;
+
+   if(GFX->getAdapterType() != OpenGL)
+   {
+      mAttrType = attribute;
+   }
+}
+
+void AttrbuteOp::print(Stream& stream)
+{
+   if (mAttrType == attr_None)
+      return;
+
+   switch (mAttrType)
+   {
+   case attr_Branch:
+      WRITESTR("[branch]");
+      break;
+   case attr_Flatten:
+      WRITESTR("[flatten]");
+      break;
+   case attr_Unroll:
+      WRITESTR("[unroll("+ String::ToString(mUnrollCount) +"]");
+      break;
+   case attr_Loop:
+      WRITESTR("[loop]");
+      break;
+   case attr_Fastopt:
+      WRITESTR("[fastopt]");
+      break;
+   default:
+      break;
+   }
 }

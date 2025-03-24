@@ -141,7 +141,6 @@ public:
    Var* getInWorldNormal(Vector<ShaderComponent*>& componentList);
 
    // ShaderFeature
-   Var* getVertTexCoord( const String &name ) override;
    LangElement* setupTexSpaceMat(  Vector<ShaderComponent*> &componentList, Var **texSpaceMat ) override;
    LangElement* assignColor( LangElement *elem, Material::BlendOp blend, LangElement *lerpElem = NULL, ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget ) override;
    LangElement* expandNormalMap( LangElement *sampleNormalOp, LangElement *normalDecl, LangElement *normalVar, const MaterialFeatureData &fd ) override;

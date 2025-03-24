@@ -171,4 +171,28 @@ public:
 };
 
 
+//----------------------------------------------------------------------------
+/*!
+* Prints out an attribute, only for hlsl atm.
+*/
+//----------------------------------------------------------------------------
+enum AttributeType {
+   attr_None,
+   attr_Branch,
+   attr_Flatten,
+   attr_Unroll,
+   attr_Loop,
+   attr_Fastopt
+};
+
+class AttrbuteOp : public ShaderOp
+{
+   typedef ShaderOp Parent;
+   AttributeType mAttrType;
+   int mUnrollCount;
+public:
+   AttrbuteOp(AttributeType attribute = attr_None, int unrollCount = 0);
+   void print(Stream& stream) override;
+};
+
 #endif // _SHADEROP_H_

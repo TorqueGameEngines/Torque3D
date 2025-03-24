@@ -22,7 +22,6 @@
 
 #include "core/strings/stringFunctions.h"
 #include "core/util/str.h"
-#include "gfx/gfxDevice.h"
 #include "langElement.h"
 
 //**************************************************************************

@@ -218,6 +218,10 @@ void WindDeformation::processVert(Vector<ShaderComponent*>& componentList, const
    if (!inPosition)
       inPosition = (Var*)LangElement::find("position");
 
+   Var* inNormal = (Var*)LangElement::find("inNormal");
+   if (!inNormal)
+      inNormal = (Var*)LangElement::find("normal");
+
    // Copy the input position to the output first as 
    // the wind effects are conditional.
    Var* outPosition = (Var*)LangElement::find("inPosition");
@@ -234,46 +238,37 @@ void WindDeformation::processVert(Vector<ShaderComponent*>& componentList, const
 
    // Do a dynamic branch based on wind force.
    if (GFX->getPixelShaderVersion() >= 3.0f)
-      meta->addStatement(new GenOp("  @ if ( any( @ ) ) {\r\n",
-         (GFX->getAdapterType() == OpenGL ? "" : "[branch]"),
+      meta->addStatement(new GenOp(" @ if ( any( @ ) ) {\r\n",
+         new AttrbuteOp(attr_Branch),
          new CastOp(windDirAndSpeed, GFXSCT_Bool3)));
 
    // Do the branch and detail bending first so that 
    // it can work in pure object space of the tree.
    LangElement* effect =
       new GenOp("windBranchBending( "
+         "@, "             // vPos
+         "normalize( @ ), " // vNormal
+         "@, "             // fTime
+         "@.z, "           // fWindSpeed
+         "@.g, "           // fBranchPhase
+         "@.y, "           // fBranchAmp
+         "@.r, "           // fBranchAtten
+         "dot( @[3], " + String(LangElement::constTypeToString(GFXSCT_Float4)) + "(1)), " // fDetailPhase
+         "@.z, "           // fDetailAmp
+         "@.w, "           // fDetailFreq
+         "@.b )",          // fEdgeAtten
 
-         "@, "                  // vPos
-         "normalize( IN_normal ), " // vNormal
-
-         "@, " // fTime
-         "@.z, " // fWindSpeed
-
-         "@.g, "  // fBranchPhase
-         "@.y, "    // fBranchAmp
-         "@.r, "  // fBranchAtten
-
-         "dot( @[3], @(1) ), " // fDetailPhase
-         "@.z, "  // fDetailAmp
-         "@.w, "  // fDetailFreq
-
-         "@.b )", // fEdgeAtten
-
-         outPosition,    // vPos
-         // vNormal
-
-         accumTime,  // fTime
+         outPosition,      // vPos
+         inNormal,         // vNormal
+         accumTime,        // fTime
          windDirAndSpeed,  // fWindSpeed
-
-         inColor,    // fBranchPhase
-         windParams,  // fBranchAmp
-         inColor,    // fBranchAtten
-
-         objTrans, (GFX->getAdapterType() == OpenGL ? "vec4" : "float4"),     // fDetailPhase
-         windParams, // fDetailAmp
-         windParams, // fDetailFreq
-
-         inColor); // fEdgeAtten
+         inColor,          // fBranchPhase
+         windParams,       // fBranchAmp
+         inColor,          // fBranchAtten
+         objTrans,         // fDetailPhase
+         windParams,       // fDetailAmp
+         windParams,       // fDetailFreq
+         inColor);         // fEdgeAtten
 
    meta->addStatement(new GenOp("   @ = @;\r\n", outPosition, effect));
 

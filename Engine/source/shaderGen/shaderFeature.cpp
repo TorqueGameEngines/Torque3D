@@ -38,6 +38,38 @@ void ShaderFeature::addDependency( const ShaderDependency *dependsOn )
    mDependencies.push_back( dependsOn );
 }
 
+Var* ShaderFeature::getVertTexCoord(const String& name)
+{
+   Var* inTex = NULL;
+
+   for (U32 i = 0; i < LangElement::elementList.size(); i++)
+   {
+      if (!String::compare((char*)LangElement::elementList[i]->name, name.c_str()))
+      {
+         inTex = dynamic_cast<Var*>(LangElement::elementList[i]);
+         if (inTex)
+         {
+            // NOTE: This used to do this check...
+            //
+            // String::compare( (char*)inTex->structName, "IN" )
+            //
+            // ... to ensure that the var was from the input
+            // vertex structure, but this kept some features
+            // ( ie. imposter vert ) from decoding their own
+            // coords for other features to use.
+            //
+            // If we run into issues with collisions between
+            // IN vars and local vars we may need to revise.
+
+            break;
+         }
+      }
+   }
+
+   return inTex;
+}
+
+
 ShaderFeature::Resources ShaderFeature::getResources( const MaterialFeatureData &fd )
 {
    Resources temp; 

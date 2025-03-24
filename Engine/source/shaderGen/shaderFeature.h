@@ -168,7 +168,7 @@ public:
    //-----------------------------------------------------------------------
    
    /// Get the incoming base texture coords - useful for bumpmap and detail maps
-   virtual Var* getVertTexCoord( const String &name ) { return NULL; };
+   Var* getVertTexCoord(const String& name);
 
    /// Set up a texture space matrix - to pass into pixel shader
    virtual LangElement * setupTexSpaceMat(  Vector<ShaderComponent*> &componentList, 

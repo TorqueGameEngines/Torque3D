@@ -60,7 +60,6 @@ public:
    virtual bool setBufferFormat(const GFXFormat bufferFormat) { bool ret = mBufferFormat == bufferFormat; mBufferFormat = bufferFormat; return ret; }
 
    // zero-out these methods
-   Var* getVertTexCoord( const String &name ) override { AssertFatal( false, "don't use this." ); return NULL; }
    LangElement *setupTexSpaceMat(  Vector<ShaderComponent*> &componentList, Var **texSpaceMat ) override { AssertFatal( false, "don't use this." );  return NULL; }
    LangElement *expandNormalMap( LangElement *sampleNormalOp, LangElement *normalDecl, LangElement *normalVar, const MaterialFeatureData &fd ) override { AssertFatal( false, "don't use this." );  return NULL; }
    LangElement *assignColor( LangElement *elem, Material::BlendOp blend, LangElement *lerpElem = NULL, ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget ) override { AssertFatal( false, "don't use this." ); return NULL; }

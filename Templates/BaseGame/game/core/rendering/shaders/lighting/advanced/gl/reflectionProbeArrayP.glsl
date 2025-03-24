@@ -205,12 +205,13 @@ void main()
 #endif
 
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
-   vec3 diffuse = irradiance * surface.baseColor.rgb * (1.0 - surface.metalness);
-   vec3 specularCol = specular * lerp(envBRDF.y, envBRDF.x, surface.metalness * (1.0 - surface.roughness)); 
+   vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
+   vec3 specularCol = ((specular + surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
    
    // Final color output after environment lighting
    vec3 finalColor = diffuse + specularCol;
    finalColor *= surface.ao;
+   
    if(isCapturing == 1)
       OUT_col = vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
    else

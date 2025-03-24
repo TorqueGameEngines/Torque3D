@@ -187,18 +187,23 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    }
 
 #if DEBUGVIZ_SPECCUBEMAP == 1 && DEBUGVIZ_DIFFCUBEMAP == 0
-   return float4(specular, 1);
+   return float4(specular, 1);  
 #elif DEBUGVIZ_DIFFCUBEMAP == 1
    return float4(irradiance, 1);
 #endif   
 
    float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
-   float3 diffuse = irradiance * surface.baseColor.rgb * (1.0 - surface.metalness);
-   float3 specularCol = specular * lerp(envBRDF.y, envBRDF.x, surface.metalness * (1.0 - surface.roughness));
+   float3 diffuse = irradiance * lerp(surface.baseColor.rgb, 0.04f, surface.metalness);
+   float3 specularCol = ((specular + surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness; 
 
+   float horizonOcclusion = 1.3;
+   float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
+   horizon *= horizon;
+   
    // Final color output after environment lighting
    float3 finalColor = diffuse + specularCol;
-   finalColor *= surface.ao; 
+   finalColor *= surface.ao;
+   
    if(isCapturing == 1) 
       return float4(lerp(finalColor, surface.baseColor.rgb,surface.metalness),0);
    else

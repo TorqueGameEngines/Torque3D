@@ -112,7 +112,7 @@ void CubemapData::createMap()
              {
                 if (!getCubeMapFace(i))
                 {
-                   Con::errorf("CubemapData::createMap - Failed to load texture '%s'", getCubeMapFace(i));
+                   Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeMapFaceAsset[i]->getImageFile());
                    initSuccess = false;
                 }
                 else
@@ -148,14 +148,17 @@ void CubemapData::updateFaces()
       }
       else
       {
-         if (!getCubeMapFace(i))
+         if (mCubeMapFaceAsset[i].notNull())
          {
-            Con::errorf("CubemapData::createMap - Failed to load texture '%s'", getCubeMapFace(i));
-            initSuccess = false;
-         }
-         else
-         {
-            mCubeMapFaceTex[i] = getCubeMapFace(i);
+            if (!getCubeMapFace(i))
+            {
+               Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeMapFaceAsset[i]->getImageFile());
+               initSuccess = false;
+            }
+            else
+            {
+               mCubeMapFaceTex[i] = getCubeMapFace(i);
+            }
          }
       }
    }

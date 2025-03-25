@@ -231,8 +231,7 @@ bool ProcessedShaderMaterial::init( const FeatureSet &features,
    }
    if (mMaterial && mMaterial->getDiffuseMapAsset(0).notNull() && String(mMaterial->getDiffuseMapAsset(0)->getImageFile()).startsWith("#"))
    {
-      String texTargetBufferName = String(mMaterial->getDiffuseMapAsset(0)->getImageFile()).substr(1, (U32)strlen(mMaterial->getDiffuseMapAsset(0)->getImageFile()) - 1);
-      NamedTexTarget *texTarget = NamedTexTarget::find(texTargetBufferName);
+      NamedTexTarget *texTarget = mMaterial->getDiffuseMapAsset(0)->getNamedTarget();
       RenderPassData* rpd = getPass(0);
 
       if (rpd)
@@ -878,8 +877,17 @@ void ProcessedShaderMaterial::setTextureStages( SceneRenderState *state, const S
                texTarget = rpd->mTexSlot[i].texTarget;
                if ( !texTarget )
                {
-                  GFX->setTexture( i, NULL );
-                  break;
+                  // try again.
+                  texTarget = mMaterial->getDiffuseMapAsset(0)->getNamedTarget();
+                  if (!texTarget)
+                  {
+                     GFX->setTexture(i, NULL);
+                     break;
+                  }
+                  else
+                  {
+                     rpd->mTexSlot[i].texTarget = texTarget;
+                  }
                }
             
                texObject = texTarget->getTexture();

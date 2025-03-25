@@ -332,6 +332,9 @@ void ImageAsset::initializeAsset(void)
    Parent::initializeAsset();
 
    // Ensure the image-file is expanded.
+   if (isNamedTarget())
+      return;
+
    mImageFile = expandAssetFilePath(mImageFile);
 }
 
@@ -378,6 +381,13 @@ void ImageAsset::setImageFile(StringTableEntry pImageFile)
    if (mLoadedState == Ok)
       Torque::FS::RemoveChangeNotification(mImageFile, this, &ImageAsset::_onFileChanged);
 
+   if (String(pImageFile).startsWith("#"))
+   {
+      mImageFile = StringTable->insert(pImageFile);
+      refreshAsset();
+      return;
+   }
+
    mImageFile = getOwned() ? expandAssetFilePath(pImageFile) : StringTable->insert(pImageFile);
 
    refreshAsset();
@@ -411,6 +421,12 @@ U32 ImageAsset::load()
 
    if (!Torque::FS::IsFile(mImageFile))
    {
+      if (isNamedTarget())
+      {
+         mLoadedState = Ok;
+         return mLoadedState;
+      }
+
       Con::errorf("ImageAsset::initializeAsset: Attempted to load file %s but it was not valid!", mImageFile);
       mLoadedState = BadFileReference;
       return mLoadedState;
@@ -427,6 +443,9 @@ U32 ImageAsset::load()
 GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
 {
    load();
+
+   if (isNamedTarget())
+      return getNamedTarget()->getTexture();
 
    if (mLoadedState == Ok)
    {
@@ -554,6 +573,9 @@ void ImageAsset::onTamlPreWrite(void)
    // Call parent.
    Parent::onTamlPreWrite();
 
+   if (isNamedTarget())
+      return;
+
    // Ensure the image-file is collapsed.
    mImageFile = getOwned() ? collapseAssetFilePath(mImageFile) : mImageFile;
 }
@@ -562,6 +584,9 @@ void ImageAsset::onTamlPostWrite(void)
 {
    // Call parent.
    Parent::onTamlPostWrite();
+
+   if (isNamedTarget())
+      return;
 
    // Ensure the image-file is expanded.
    mImageFile = getOwned() ? expandAssetFilePath(mImageFile) : mImageFile;

@@ -137,7 +137,6 @@ private:
    GFXTexHandle      mTextureHandle;
    ImageTypes        mImageType;
    HashMap<GFXTextureProfile*, GFXTexHandle> mResourceMap;
-
    void generateTexture(void);
 public:
    ImageAsset();
@@ -188,6 +187,9 @@ public:
    inline U32              getTextureBitmapHeight(void) const { return mTextureHandle->getBitmapHeight(); }
    inline U32              getTextureBitmapDepth(void) const { return mTextureHandle->getBitmapDepth(); }
    bool                    isAssetValid(void) const override { return !mTextureHandle.isNull(); }
+
+   bool                    isNamedTarget(void) const { return String(getImageFile()).startsWith("#"); }
+   NamedTexTargetRef       getNamedTarget(void) const { return NamedTexTarget::find(mImageFile + 1); }
 
    static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset);
    static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);

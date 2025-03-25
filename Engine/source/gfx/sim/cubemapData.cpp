@@ -138,15 +138,15 @@ void CubemapData::updateFaces()
 {
 	bool initSuccess = true;
 
-	for( U32 i=0; i<6; i++ )
+   //check mCubeMapFile first
+   if (mCubeMapAsset.notNull())
    {
-      //check mCubeMapFile first
-      if (mCubeMapAsset.notNull())
-      {
-         mCubemap = TEXMGR->createCubemap(mCubeMapAsset->getImageFile());
-         return;
-      }
-      else
+      mCubemap = TEXMGR->createCubemap(mCubeMapAsset->getImageFile());
+      return;
+   }
+   else
+   {
+      for (U32 i = 0; i < 6; i++)
       {
          if (mCubeMapFaceAsset[i].notNull())
          {
@@ -167,6 +167,8 @@ void CubemapData::updateFaces()
 	{
 		mCubemap = NULL;
 		mCubemap = GFX->createCubemap();
+      if (mCubeMapFaceAsset->isNull())
+         return;
 
 		mCubemap->initStatic(mCubeMapFaceTex);
 	}

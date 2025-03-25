@@ -45,7 +45,7 @@ ConsoleDocClass( GameTSCtrl,
 	"@brief The main 3D viewport for a Torque 3D game.\n\n"
 	"@ingroup Gui3D\n");
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onMouseDown, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseDown, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the left mouse button is pressed while in this control.\n\n"
    "@param screenPosition Position of screen when mouse was pressed during this callback.\n\n"
    "@param worldPosition Position of world when mouse was pressed during this callback.\n\n"
@@ -59,7 +59,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onMouseDown, void, (const char* screenPosition, c
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseDown, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseDown, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the right mouse button is pressed while in this control.\n\n"
    "@param screenPosition Position of screen when mouse was pressed during this callback.\n\n"
    "@param worldPosition Position of world when mouse was pressed during this callback.\n\n"
@@ -73,7 +73,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseDown, void, (const char* screenPositi
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseDown, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseDown, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the middle mouse button is pressed while in this control.\n\n"
    "@param screenPosition Position of screen when mouse was pressed during this callback.\n\n"
    "@param worldPosition Position of world when mouse was pressed during this callback.\n\n"
@@ -87,7 +87,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseDown, void, (const char* screenPosit
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onMouseUp, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseUp, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the left mouse button is released while in this control.\n\n"
    "@param screenPosition Position of screen when mouse was released during this callback.\n\n"
    "@param worldPosition Position of world when mouse was released during this callback.\n\n"
@@ -101,7 +101,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onMouseUp, void, (const char* screenPosition, con
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseUp, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseUp, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the right mouse button is released while in this control.\n\n"
    "@param screenPosition Position of screen when mouse was released during this callback.\n\n"
    "@param worldPosition Position of world when mouse was released during this callback.\n\n"
@@ -115,7 +115,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseUp, void, (const char* screenPosition
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseUp, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseUp, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the middle mouse button is released while in this control.\n\n"
    "@param screenPosition Position of screen when mouse was released during this callback.\n\n"
    "@param worldPosition Position of world when mouse was released during this callback.\n\n"
@@ -129,7 +129,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseUp, void, (const char* screenPositio
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onMouseDragged, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseDragged, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the left mouse button is dragged while in this control.\n\n"
    "@param screenPosition Position of screen when mouse was dragged during this callback.\n\n"
    "@param worldPosition Position of world when mouse was dragged during this callback.\n\n"
@@ -143,7 +143,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onMouseDragged, void, (const char* screenPosition
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseDragged, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseDragged, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the right mouse button is dragged while in this control.\n\n"
    "@param screenPosition Position of screen when mouse was dragged during this callback.\n\n"
    "@param worldPosition Position of world when mouse was dragged during this callback.\n\n"
@@ -157,7 +157,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseDragged, void, (const char* screenPos
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseDragged, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseDragged, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the middle mouse button is dragged while in this control.\n\n"
    "@param screenPosition Position of screen when mouse was dragged during this callback.\n\n"
    "@param worldPosition Position of world when mouse was dragged during this callback.\n\n"
@@ -171,7 +171,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseDragged, void, (const char* screenPo
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onMouseWheelUp, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseWheelUp, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the mouse wheel up is pressed while in this control.\n\n"
    "@param screenPosition Position of screen when mouse wheel up was pressed during this callback.\n\n"
    "@param worldPosition Position of world when mouse wheel up was pressed during this callback.\n\n"
@@ -185,7 +185,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onMouseWheelUp, void, (const char* screenPosition
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onMouseWheelDown, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseWheelDown, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the mouse wheel down is pressed while in this control.\n\n"
    "@param screenPosition Position of screen when mouse wheel down was pressed during this callback.\n\n"
    "@param worldPosition Position of world when mouse wheel down was pressed during this callback.\n\n"
@@ -199,7 +199,7 @@ IMPLEMENT_CALLBACK(GameTSCtrl, onMouseWheelDown, void, (const char* screenPositi
    "@endtsexample\n\n"
 );
 
-IMPLEMENT_CALLBACK(GameTSCtrl, onMouseMove, void, (const char* screenPosition, const char* worldPosition, const char* clickVector), (screenPosition, worldPosition, clickVector),
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseMove, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
    "@brief Callback that occurs whenever the mouse is moved (without dragging) while in this control.\n\n"
    "@param screenPosition Position of screen when mouse was moved during this callback.\n\n"
    "@param worldPosition Position of world when mouse was moved during this callback.\n\n"
@@ -244,48 +244,43 @@ void GameTSCtrl::renderWorld(const RectI &updateRect)
 void GameTSCtrl::sendMouseEvent(const char *name, const GuiEvent &event)
 {
    // write screen position
-   char* sp = Con::getArgBuffer(32);
-   dSprintf(sp, 32, "%d %d", event.mousePoint.x, event.mousePoint.y);
+   Point2I screenPosition = event.mousePoint;
 
    // write world position
-   char* wp = Con::getArgBuffer(32);
-   Point3F camPos;
-   mLastCameraQuery.cameraMatrix.getColumn(3, &camPos);
-   dSprintf(wp, 32, "%g %g %g", camPos.x, camPos.y, camPos.z);
+   Point3F worldPosition;
+   mLastCameraQuery.cameraMatrix.getColumn(3, &worldPosition);
 
    // write click vector
-   char* vec = Con::getArgBuffer(32);
    Point3F fp(event.mousePoint.x, event.mousePoint.y, 1.0);
-   Point3F ray;
-   unproject(fp, &ray);
-   ray -= camPos;
-   ray.normalizeSafe();
-   dSprintf(vec, 32, "%g %g %g", ray.x, ray.y, ray.z);
+   Point3F clickVector;
+   unproject(fp, &clickVector);
+   clickVector -= worldPosition;
+   clickVector.normalizeSafe();
 
    if (dStricmp(name, "onMouseDown") == 0)
-      onMouseDown_callback(sp, wp, vec);
+      onMouseDown_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onRightMouseDown") == 0)
-      onRightMouseDown_callback(sp, wp, vec);
+      onRightMouseDown_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onMiddleMouseDown") == 0)
-      onMiddleMouseDown_callback(sp, wp, vec);
+      onMiddleMouseDown_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onMouseUp") == 0)
-      onMouseUp_callback(sp, wp, vec);
+      onMouseUp_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onRightMouseUp") == 0)
-      onRightMouseUp_callback(sp, wp, vec);
+      onRightMouseUp_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onMiddleMouseUp") == 0)
-      onMiddleMouseUp_callback(sp, wp, vec);
+      onMiddleMouseUp_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onMouseDragged") == 0)
-      onMouseDragged_callback(sp, wp, vec);
+      onMouseDragged_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onRightMouseDragged") == 0)
-      onRightMouseDragged_callback(sp, wp, vec);
+      onRightMouseDragged_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onMiddleMouseDragged") == 0)
-      onMiddleMouseDragged_callback(sp, wp, vec);
+      onMiddleMouseDragged_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onMouseWheelUp") == 0)
-      onMouseWheelUp_callback(sp, wp, vec);
+      onMouseWheelUp_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onMouseWheelDown") == 0)
-      onMouseWheelDown_callback(sp, wp, vec);
+      onMouseWheelDown_callback(screenPosition, worldPosition, clickVector);
    else if (dStricmp(name, "onMouseMove") == 0)
-      onMouseMove_callback(sp, wp, vec);
+      onMouseMove_callback(screenPosition, worldPosition, clickVector);
 }
 
 void GameTSCtrl::onMouseDown(const GuiEvent &evt)

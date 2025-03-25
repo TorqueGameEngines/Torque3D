@@ -50,18 +50,18 @@ public:
    /// @name Callbacks
    /// @{
 
-   DECLARE_CALLBACK(void, onMouseDown, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onRightMouseDown, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onMiddleMouseDown, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onMouseUp, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onRightMouseUp, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onMiddleMouseUp, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onMouseDragged, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onRightMouseDragged, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onMiddleMouseDragged, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onMouseWheelUp, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onMouseWheelDown, (const char* screenPosition, const char* worldPosition, const char* clickVector));
-   DECLARE_CALLBACK(void, onMouseMove, (const char* screenPosition, const char* worldPosition, const char* clickVector));
+   DECLARE_CALLBACK(void, onMouseDown, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onRightMouseDown, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onMiddleMouseDown, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onMouseUp, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onRightMouseUp, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onMiddleMouseUp, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onMouseDragged, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onRightMouseDragged, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onMiddleMouseDragged, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onMouseWheelUp, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onMouseWheelDown, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
+   DECLARE_CALLBACK(void, onMouseMove, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector));
    /// }
 
    DECLARE_CONOBJECT(GameTSCtrl);

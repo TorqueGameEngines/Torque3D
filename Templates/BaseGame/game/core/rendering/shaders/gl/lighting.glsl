@@ -319,7 +319,7 @@ float computeSpecOcclusion( float NdotV , float AO , float roughness )
 
 float roughnessToMipLevel(float roughness, float numMips)
 {	
-   return saturate((roughness * numMips) - (pow(roughness, 6.0) * (numMips * 0.125)));
+   return roughness * (numMips+1.0);
 }
 
 vec4 compute4Lights( Surface surface,
@@ -585,10 +585,14 @@ vec4 computeForwardProbes(Surface surface,
 
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
-   vec3 specularCol = ((specular + surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
+   vec3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
+   
+   float horizonOcclusion = 1.3;
+   float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
+   horizon *= horizon;
    
    // Final color output after environment lighting
-   vec3 finalColor = diffuse + specularCol;
+   vec3 finalColor = diffuse + specularCol * horizon;
    finalColor *= surface.ao;
    
    if(isCapturing == 1)
@@ -738,10 +742,14 @@ vec4 debugVizForwardProbes(Surface surface,
 
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
-   vec3 specularCol = ((specular + surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
+   vec3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
+   
+   float horizonOcclusion = 1.3;
+   float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
+   horizon *= horizon;
    
    // Final color output after environment lighting
-   vec3 finalColor = diffuse + specularCol;
+   vec3 finalColor = diffuse + specularCol * horizon;
    finalColor *= surface.ao;
    
    if(isCapturing == 1)

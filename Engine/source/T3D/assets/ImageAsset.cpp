@@ -187,7 +187,8 @@ ImageAsset::ImageAsset() :
 	mUseMips(true),
 	mIsHDRImage(false),
 	mImageType(Albedo),
-	mTextureHandle(NULL)
+	mTextureHandle(NULL),
+   mIsNamedTarget(false)
 {
 	mLoadedState = AssetErrCode::NotLoaded;
 }
@@ -384,6 +385,7 @@ void ImageAsset::setImageFile(StringTableEntry pImageFile)
    if (String(pImageFile).startsWith("#"))
    {
       mImageFile = StringTable->insert(pImageFile);
+      mIsNamedTarget = true;
       refreshAsset();
       return;
    }

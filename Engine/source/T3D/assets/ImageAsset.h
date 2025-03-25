@@ -137,6 +137,7 @@ private:
    GFXTexHandle      mTextureHandle;
    ImageTypes        mImageType;
    HashMap<GFXTextureProfile*, GFXTexHandle> mResourceMap;
+   bool              mIsNamedTarget;
    void generateTexture(void);
 public:
    ImageAsset();
@@ -188,7 +189,7 @@ public:
    inline U32              getTextureBitmapDepth(void) const { return mTextureHandle->getBitmapDepth(); }
    bool                    isAssetValid(void) const override { return !mTextureHandle.isNull(); }
 
-   bool                    isNamedTarget(void) const { return String(getImageFile()).startsWith("#"); }
+   bool                    isNamedTarget(void) const { return mIsNamedTarget; }
    NamedTexTargetRef       getNamedTarget(void) const { return NamedTexTarget::find(mImageFile + 1); }
 
    static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset);
@@ -700,7 +701,7 @@ public:                                                                         
    };                                                                                                                                                                         \
                                                                                                                                                                               \
    inline StringTableEntry _get##name(const U32& index) const { return m##name##Asset[index].getAssetId(); }                                                                  \
-   GFXTexHandle get##name(const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getTexture(&profile) : NULL; }                                  \
+   GFXTexHandle get##name(const U32& index) { return get##name(&profile, index); }                                                                                            \
    GFXTexHandle get##name(GFXTextureProfile* requestedProfile, const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getTexture(requestedProfile) : NULL; }\
    AssetPtr<ImageAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}

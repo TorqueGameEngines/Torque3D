@@ -39,8 +39,6 @@ class GameTSCtrl : public GuiTSCtrl
 private:
    typedef GuiTSCtrl Parent;
 
-   void makeScriptCall(const char *func, const GuiEvent &evt) const;
-
    void sendMouseEvent(const char *name, const GuiEvent &evt);
 
 protected:

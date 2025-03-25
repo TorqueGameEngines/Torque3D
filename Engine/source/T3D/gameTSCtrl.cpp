@@ -240,31 +240,6 @@ void GameTSCtrl::renderWorld(const RectI &updateRect)
    GameRenderWorld();
 }
 
-//---------------------------------------------------------------------------
-void GameTSCtrl::makeScriptCall(const char *func, const GuiEvent &evt) const
-{
-   // write screen position
-   char *sp = Con::getArgBuffer(32);
-   dSprintf(sp, 32, "%d %d", evt.mousePoint.x, evt.mousePoint.y);
-
-   // write world position
-   char *wp = Con::getArgBuffer(32);
-   Point3F camPos;
-   mLastCameraQuery.cameraMatrix.getColumn(3, &camPos);
-   dSprintf(wp, 32, "%g %g %g", camPos.x, camPos.y, camPos.z);
-
-   // write click vector
-   char *vec = Con::getArgBuffer(32);
-   Point3F fp(evt.mousePoint.x, evt.mousePoint.y, 1.0);
-   Point3F ray;
-   unproject(fp, &ray);
-   ray -= camPos;
-   ray.normalizeSafe();
-   dSprintf(vec, 32, "%g %g %g", ray.x, ray.y, ray.z);
-
-   Con::executef( (SimObject*)this, func, sp, wp, vec );
-}
-
 //------------------------------------------------------------------------------
 void GameTSCtrl::sendMouseEvent(const char *name, const GuiEvent &event)
 {

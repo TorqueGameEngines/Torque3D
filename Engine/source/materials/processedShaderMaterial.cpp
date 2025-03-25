@@ -1324,7 +1324,7 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
    if (sgData.cubemap)
       shaderConsts->setSafe(handles->mCubeMipsSC, (F32)sgData.cubemap->getMipMapLevels());
    else
-      shaderConsts->setSafe(handles->mCubeMipsSC, 1.0f);
+      shaderConsts->setSafe(handles->mCubeMipsSC, (F32)getBinLog2(PROBEMGR->getProbeTexSize()));
 
    shaderConsts->setSafe(handles->mVisiblitySC, sgData.visibility);
 

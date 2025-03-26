@@ -59,56 +59,6 @@ StringTableEntry ImageAsset::smNamedTargetAssetFallback = NULL;
 
 IMPLEMENT_CONOBJECT(ImageAsset);
 
-ConsoleType(ImageAssetPtr, TypeImageAssetPtr, const char*, "")
-
-//-----------------------------------------------------------------------------
-
-ConsoleGetType(TypeImageAssetPtr)
-{
-   // Fetch asset Id.
-   return *((const char**)(dptr));
-}
-
-//-----------------------------------------------------------------------------
-
-ConsoleSetType(TypeImageAssetPtr)
-{
-   // Was a single argument specified?
-   if (argc == 1)
-   {
-      // Yes, so fetch field value.
-      *((const char**)dptr) = StringTable->insert(argv[0]);
-
-      return;
-   }
-
-   // Warn.
-   Con::warnf("(TypeImageAssetPtr) - Cannot set multiple args to a single asset.");
-}
-
-ConsoleType(assetIdString, TypeImageAssetId, const char*, "")
-
-ConsoleGetType(TypeImageAssetId)
-{
-   // Fetch asset Id.
-   return *((const char**)(dptr));
-}
-
-ConsoleSetType(TypeImageAssetId)
-{
-   // Was a single argument specified?
-   if (argc == 1)
-   {
-      *((const char**)dptr) = StringTable->insert(argv[0]);
-
-      return;
-   }
-
-   // Warn.
-   Con::warnf("(TypeImageAssetId) - Cannot set multiple args to a single asset.");
-}
-
-//-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // REFACTOR
@@ -977,19 +927,4 @@ void GuiInspectorTypeImageAssetPtr::setPreviewImage(StringTableEntry assetId)
 
    if (mPreviewImage->getBitmapAsset().isNull())
       mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
-}
-
-IMPLEMENT_CONOBJECT(GuiInspectorTypeImageAssetId);
-
-ConsoleDocClass(GuiInspectorTypeImageAssetId,
-   "@brief Inspector field type for Images\n\n"
-   "Editor use only.\n\n"
-   "@internal"
-);
-
-void GuiInspectorTypeImageAssetId::consoleInit()
-{
-   Parent::consoleInit();
-
-   ConsoleBaseType::getType(TypeImageAssetId)->setInspectorFieldType("GuiInspectorTypeImageAssetId");
 }

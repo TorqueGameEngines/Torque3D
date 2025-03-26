@@ -433,16 +433,24 @@ void dampen(inout Surface surface, sampler2D WetnessTexture, float accumTime, fl
    vec3 n = abs(surface.N);
    float ang = clamp(n.z, 0.04, 0.96);
    
-   float speed = accumTime*(1.0-surface.roughness)*ang;
-   vec2 wetoffset = vec2(speed,speed/2); 
-      
+   float speed = -accumTime*(1.0-surface.linearRoughnessSq)*clamp((2.0-ang), 0.04, 0.96);
+   if ((n.x > 0.0) || (n.y > 0.0))
+      speed *= -1.0;
+   vec2 wetoffset = vec2(speed,speed)*0.1;
+   
+   vec3 wetNormal = texture(WetnessTexture, float2(surface.P.xy*0.1+wetoffset)).xyz;
+   wetNormal = lerp(wetNormal,texture(WetnessTexture,float2(surface.P.zx*0.1+wetoffset)).rgb ,n.y);
+   wetNormal = lerp(wetNormal,texture(WetnessTexture,float2(surface.P.zy*0.1+wetoffset)).rgb ,n.x);   
+   surface.N = lerp(surface.N, wetNormal, degree); 
+   
    float wetness = texture(WetnessTexture, vec2(surface.P.xy*0.1+wetoffset)).b;
    wetness = lerp(wetness,texture(WetnessTexture,vec2(surface.P.zx*0.1+wetoffset)).b,n.y);
    wetness = lerp(wetness,texture(WetnessTexture,vec2(surface.P.zy*0.1+wetoffset)).b,n.x);
    wetness = pow(wetness*ang*degree,3);
    
    surface.roughness = lerp(surface.roughness, 0.04f, wetness);
-   surface.baseColor.rgb = lerp(surface.baseColor.rgb, surface.baseColor.rgb*0.96+vec3(0.04,0.04,0.04), pow(wetness,5));
+   surface.baseColor.rgb = lerp(surface.baseColor.rgb, surface.baseColor.rgb*0.6+float3(0.4,0.4,0.4)*wetness, wetness);
+   surface.metalness = lerp(surface.metalness, 0.96, wetness); 
    updateSurface(surface);
 }
 

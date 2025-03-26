@@ -156,6 +156,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
    if (SkylightDamp>0)
       wetAmmout += alpha;
+
    dampen(surface, TORQUE_SAMPLER2D_MAKEARG(WetnessTexture), accumTime, wetAmmout*dampness);
    
    // Radiance (Specular)
@@ -179,9 +180,9 @@ float4 main(PFXVertToPix IN) : SV_TARGET
          specular += TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, dir, cubemapIdx, lod).xyz * contrib;
       }
    }
-#endif
+#endif 
    if(skylightCubemapIdx != -1 && alpha >= 0.001)
-   {
+   { 
       irradiance = lerp(irradiance,TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.N, skylightCubemapIdx, 0).xyz,alpha);
       specular = lerp(specular,TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
    }
@@ -193,8 +194,8 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 #endif   
 
    float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
-   float3 diffuse = irradiance * lerp(surface.baseColor.rgb, 0.04f, surface.metalness);
-   float3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness; 
+   float3 diffuse = irradiance * lerp(surface.baseColor.rgb, float3(0.04f,0.04f,0.04f), surface.metalness); 
+   float3 specularCol = (specular * surface.f0 * envBRDF.x + envBRDF.y)*surface.metalness; 
 
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));

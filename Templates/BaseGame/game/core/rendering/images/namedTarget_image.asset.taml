@@ -1,0 +1,3 @@
+<ImageAsset
+    AssetName="namedTarget_image"
+    imageFile="@assetFile=namedTarget.png"/>

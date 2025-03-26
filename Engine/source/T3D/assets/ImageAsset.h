@@ -113,6 +113,7 @@ public:
    };
 
    static StringTableEntry smNoImageAssetFallback;
+   static StringTableEntry smNamedTargetAssetFallback;
 
    enum ImageAssetErrCode
    {

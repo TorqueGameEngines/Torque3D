@@ -53,6 +53,7 @@
 //-----------------------------------------------------------------------------
 
 StringTableEntry ImageAsset::smNoImageAssetFallback = NULL;
+StringTableEntry ImageAsset::smNamedTargetAssetFallback = NULL;
 
 //-----------------------------------------------------------------------------
 
@@ -139,7 +140,6 @@ ConsoleSetType(TypeImageAssetPtrRefactor)
       // Is the asset pointer the correct type?
       if (pAssetPtr == NULL)
       {
-         // No, so fail.
          Con::warnf("(TypeImageAssetPtr) - Failed to set asset Id '%d'.", pFieldValue);
          return;
       }
@@ -207,7 +207,12 @@ void ImageAsset::consoleInit()
       "The assetId of the texture to display when the requested image asset is missing.\n"
       "@ingroup GFX\n");
 
+   Con::addVariable("$Core::NamedTargetFallback", TypeString, &smNamedTargetAssetFallback,
+      "The assetId of the texture to display when the requested image asset is named target.\n"
+      "@ingroup GFX\n");
+
    smNoImageAssetFallback = StringTable->insert(Con::getVariable("$Core::NoImageAssetFallback"));
+   smNamedTargetAssetFallback = StringTable->insert(Con::getVariable("$Core::NamedTargetFallback"));
 }
 
 //-----------------------------------------------------------------------------
@@ -447,7 +452,19 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
    load();
 
    if (isNamedTarget())
-      return getNamedTarget()->getTexture();
+   {
+      GFXTexHandle tex = getNamedTarget()->getTexture();
+      if(tex.isNull())
+      {
+         AssetPtr<ImageAsset> fallbackAsset;
+         ImageAsset::getAssetById(smNamedTargetAssetFallback, &fallbackAsset);
+         return fallbackAsset->getTexture();
+      }
+      else
+      {
+         return tex;
+      }
+   }
 
    if (mLoadedState == Ok)
    {
@@ -460,7 +477,7 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
 
          //If we don't have an existing map case to the requested format, we'll just create it and insert it in
          GFXTexHandle newTex;
-         newTex.set(mImageFile, requestedProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
+         newTex.set(mImageFile, requestedProfile, avar("%s %s() - mTextureObject (line %d)", mImageFile, __FUNCTION__, __LINE__));
          if (newTex)
          {
             mLoadedState = AssetErrCode::Ok;

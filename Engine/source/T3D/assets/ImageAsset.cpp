@@ -297,7 +297,38 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
    }
    else
    {
-      AssetPtr<ImageAsset> imageAsset = imageAssetId; //ensures the fallback is loaded
+      foundAssetcount = AssetDatabase.findAssetType(&query, "ImageAsset");
+      if (foundAssetcount != 0)
+      {
+         // loop all image assets and see if we can find one
+         // using the same image file/named target.
+         for (auto imgAsset : query.mAssetList)
+         {
+            AssetPtr<ImageAsset> temp = imgAsset;
+            if (temp.notNull())
+            {
+               if (temp->getImageFile() == fileName)
+               {
+                  return imgAsset;
+               }
+               else
+               {
+                  Torque::Path temp1 = temp->getImageFile();
+                  Torque::Path temp2 = fileName;
+
+                  if (temp1.getFileName() == temp2.getFileName())
+                  {
+                     return imgAsset;
+                  }
+               }
+               
+            }
+         }
+      }
+      else
+      {
+         AssetPtr<ImageAsset> imageAsset = imageAssetId; //ensures the fallback is loaded
+      }
    }
 
    return imageAssetId;

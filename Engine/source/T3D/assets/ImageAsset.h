@@ -660,7 +660,6 @@ public:                                                                         
             if (imageAssetId == ImageAsset::smNoImageAssetFallback)                                                                                                           \
             {                                                                                                                                                                 \
                ImageAsset* privateImage = new ImageAsset();                                                                                                                   \
-               privateImage->mpModuleDefinition = ModuleDatabase->findLoadedModule("Core");                                                                                   \
                privateImage->setImageFile(_in);                                                                                                                               \
                imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                    \
             }                                                                                                                                                                 \

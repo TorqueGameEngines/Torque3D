@@ -747,8 +747,8 @@ function MaterialEditorGui::setActiveMaterial( %this, %material )
    
    // we create or recreate a material to hold in a pristine state
    // or, this crashes the ap. fix properly - BJR
-//   if(isObject(notDirtyMaterial))
-//      notDirtyMaterial.delete();
+   //if(isObject(notDirtyMaterial))
+   //   notDirtyMaterial.delete();
       
    singleton Material(notDirtyMaterial)
    {
@@ -860,16 +860,27 @@ function MaterialEditorGui::convertTextureFields(%this)
    }
    
 function MaterialEditorGui::convertMaterialTextureField(%this, %material, %mapName)
-   {
+{
    for(%index = 0; %index < 4; %index++)
    {
       %mapFile = %material.call("get" @ %mapName, %index);
       if(%mapFile !$= "" && !isFile(%mapFile))
-   {
-         //see if we can't go finding it 
-         %mapFile = MaterialEditorGui.searchForTexture(MaterialEditorGui.currentMaterial, %mapFile);      
-         MaterialEditorGui.currentMaterial.call("set" @ %mapName, %mapFile, %index);
-   }
+      {
+         if(isFile(%mapFile))
+         {
+            //see if we can't go finding it 
+            %mapFile = MaterialEditorGui.searchForTexture(MaterialEditorGui.currentMaterial, %mapFile);      
+            MaterialEditorGui.currentMaterial.call("set" @ %mapName, %mapFile, %index);
+         }
+         else
+         {
+            %assetPtr = %material.call("get" @ %mapName @ "Asset", %index);
+            if(%assetPtr.isNamedTarget())
+            {
+               MaterialEditorGui.currentMaterial.call("set" @ %mapName, %assetPtr, %index);
+            }
+         }
+      }
    }
 }
 
@@ -1088,8 +1099,9 @@ function MaterialEditorGui::guiSync( %this, %material )
    //Diffuse
    %diffuseMap = (%material).getDiffuseMap(%layer);
    %diffuseMapText = %diffuseMap !$= "" && %diffuseMap !$=$MaterialEditor::emptyMaterialImage ? (%material).getDiffuseMapAsset(%layer) : "None";
+
    MaterialEditorPropertiesWindow-->diffuseMapNameText.setText( %diffuseMapText );      
-   MaterialEditorPropertiesWindow-->diffuseMapDisplayBitmap.setBitmap( getAssetPreviewImage(%diffuseMap) );
+   MaterialEditorPropertiesWindow-->diffuseMapDisplayBitmap.setBitmap( getAssetPreviewImage(%diffuseMapText) );
  
    //Normal
    %normalMap = (%material).getNormalMap(%layer);

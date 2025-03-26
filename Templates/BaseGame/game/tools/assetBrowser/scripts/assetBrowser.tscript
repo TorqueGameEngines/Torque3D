@@ -2772,6 +2772,7 @@ function AssetBrowser::importLooseFiles(%this)
 
 function getAssetPreviewImage(%asset)
 {
+   echo(%asset);
    if(isFile(%asset))
    {
       %aq = new AssetQuery();
@@ -2793,7 +2794,7 @@ function getAssetPreviewImage(%asset)
       %moduleName = AssetDatabase.getAssetModule(%asset).ModuleId;
       %assetName = AssetDatabase.getAssetName(%asset);
       %previewAssetName = "ToolsModule:" @ %moduleName @ "_" @ %assetName @ "_PreviewImage";
-      
+      echo(%previewAssetName);
       if(AssetDatabase.isDeclaredAsset(%previewAssetName))
       {
          %previewDef = AssetDatabase.acquireAsset(%previewAssetName);  

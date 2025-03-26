@@ -614,11 +614,15 @@ public:                                                                         
          {                                                                                                                                                                    \
             imageAssetId = query.mAssetList[0];                                                                                                                               \
          }                                                                                                                                                                    \
-         else if(Torque::FS::IsFile(_in))                                                                                                                                     \
+         else if(Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                 \
          {                                                                                                                                                                    \
-            ImageAsset* privateImage = new ImageAsset();                                                                                                                      \
-            privateImage->setImageFile(_in);                                                                                                                                  \
-            imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                       \
+            imageAssetId = ImageAsset::getAssetIdByFilename(_in);                                                                                                             \
+            if (imageAssetId == ImageAsset::smNoImageAssetFallback)                                                                                                           \
+            {                                                                                                                                                                 \
+               ImageAsset* privateImage = new ImageAsset();                                                                                                                   \
+               privateImage->setImageFile(_in);                                                                                                                               \
+               imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                    \
+            }                                                                                                                                                                 \
          }                                                                                                                                                                    \
          m##name##Asset = imageAssetId;                                                                                                                                       \
       }                                                                                                                                                                       \
@@ -641,7 +645,6 @@ public:                                                                         
    void _set##name(StringTableEntry _in){                                                                                                                                     \
       if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
          return;                                                                                                                                                              \
-                                                                                                                                                                              \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
          StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
@@ -651,11 +654,21 @@ public:                                                                         
          {                                                                                                                                                                    \
             imageAssetId = query.mAssetList[0];                                                                                                                               \
          }                                                                                                                                                                    \
-         m##name##Asset = imageAssetId;                                                                                                                                       \
+         else if(Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                 \
+         {                                                                                                                                                                    \
+            imageAssetId = ImageAsset::getAssetIdByFilename(_in);                                                                                                             \
+            if (imageAssetId == ImageAsset::smNoImageAssetFallback)                                                                                                           \
+            {                                                                                                                                                                 \
+               ImageAsset* privateImage = new ImageAsset();                                                                                                                   \
+               privateImage->setImageFile(_in);                                                                                                                               \
+               imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                    \
+            }                                                                                                                                                                 \
+         }                                                                                                                                                                    \
+         m##name##Asset[index] = imageAssetId;                                                                                                                                \
       }                                                                                                                                                                       \
       else                                                                                                                                                                    \
       {                                                                                                                                                                       \
-         m##name##Asset = _in;                                                                                                                                                \
+         m##name##Asset[index] = _in;                                                                                                                                         \
       }                                                                                                                                                                       \
       setMaskBits(mask);                                                                                                                                                      \
    };                                                                                                                                                                         \
@@ -688,9 +701,13 @@ public:                                                                         
          }                                                                                                                                                                    \
          else if(Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                 \
          {                                                                                                                                                                    \
-            ImageAsset* privateImage = new ImageAsset();                                                                                                                      \
-            privateImage->setImageFile(_in);                                                                                                                                  \
-            imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                       \
+            imageAssetId = ImageAsset::getAssetIdByFilename(_in);                                                                                                             \
+            if (imageAssetId == ImageAsset::smNoImageAssetFallback)                                                                                                           \
+            {                                                                                                                                                                 \
+               ImageAsset* privateImage = new ImageAsset();                                                                                                                   \
+               privateImage->setImageFile(_in);                                                                                                                               \
+               imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                    \
+            }                                                                                                                                                                 \
          }                                                                                                                                                                    \
          m##name##Asset[index] = imageAssetId;                                                                                                                                \
       }                                                                                                                                                                       \
@@ -714,7 +731,6 @@ public:                                                                         
    void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
       if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \
          return;                                                                                                                                                              \
-                                                                                                                                                                              \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
          StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
@@ -723,6 +739,16 @@ public:                                                                         
          if (foundAssetcount != 0)                                                                                                                                            \
          {                                                                                                                                                                    \
             imageAssetId = query.mAssetList[0];                                                                                                                               \
+         }                                                                                                                                                                    \
+         else if(Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                 \
+         {                                                                                                                                                                    \
+            imageAssetId = ImageAsset::getAssetIdByFilename(_in);                                                                                                             \
+            if (imageAssetId == ImageAsset::smNoImageAssetFallback)                                                                                                           \
+            {                                                                                                                                                                 \
+               ImageAsset* privateImage = new ImageAsset();                                                                                                                   \
+               privateImage->setImageFile(_in);                                                                                                                               \
+               imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                    \
+            }                                                                                                                                                                 \
          }                                                                                                                                                                    \
          m##name##Asset[index] = imageAssetId;                                                                                                                                \
       }                                                                                                                                                                       \

@@ -649,6 +649,14 @@ DefineEngineMethod(ImageAsset, getImageInfo, const char*, (), ,
    return object->getImageInfo();
 }
 
+DefineEngineMethod(ImageAsset, isNamedTarget, bool, (), ,
+   "Gets whether this image is a named target.\n"
+   "@return bool for isNamedTarget.")
+{
+   return object->isNamedTarget();
+}
+
+
 #ifdef TORQUE_TOOLS
 DefineEngineStaticMethod(ImageAsset, getAssetIdByFilename, const char*, (const char* filePath), (""),
    "Queries the Asset Database to see if any asset exists that is associated with the provided file path.\n"

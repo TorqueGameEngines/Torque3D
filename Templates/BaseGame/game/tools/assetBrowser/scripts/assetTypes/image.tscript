@@ -179,8 +179,8 @@ function AssetBrowser::buildImageAssetPreview(%this, %assetDef, %previewData)
 {
    //%module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getImagePath())));
       
-   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
-   %previewData.previewLoaded = false; //this marks it for loading progressively later
+   %previewData.previewImage = %assetDef.isNamedTarget() ? "Core_Rendering:namedTarget_image" : "ToolsModule:genericAssetIcon_image";
+   %previewData.previewLoaded = %assetDef.isNamedTarget() ? true : false; //if image target we are loaded, else mark for loading later.
    
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.scriptFile;

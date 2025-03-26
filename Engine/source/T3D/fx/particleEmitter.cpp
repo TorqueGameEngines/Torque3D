@@ -740,16 +740,19 @@ bool ParticleEmitterData::preload(bool server, String &errorStr)
      // otherwise, check that all particles refer to the same texture
      else if (particleDataBlocks.size() > 1)
      {
-       StringTableEntry txr_name = particleDataBlocks[0]->getTextureAsset()->getImageFile();
-       for (S32 i = 1; i < particleDataBlocks.size(); i++)
-       {
-         // warn if particle textures are inconsistent
-         if (particleDataBlocks[i]->getTextureAsset()->getImageFile() != txr_name)
-         {
-           Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) particles reference different textures.", getName());
-           break;
-         }
-       }
+        if (particleDataBlocks[0]->getTextureAsset().notNull())
+        {
+           StringTableEntry txr_name = particleDataBlocks[0]->getTextureAsset()->getImageFile();
+           for (S32 i = 1; i < particleDataBlocks.size(); i++)
+           {
+              // warn if particle textures are inconsistent
+              if (particleDataBlocks[i]->getTextureAsset()->getImageFile() != txr_name)
+              {
+                 Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) particles reference different textures.", getName());
+                 break;
+              }
+           }
+        }
      }
    }
 

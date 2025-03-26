@@ -206,7 +206,7 @@ void main()
 
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
-   vec3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
+   vec3 specularCol = (specular * surface.f0 * envBRDF.x + envBRDF.y)*surface.metalness;
    
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));

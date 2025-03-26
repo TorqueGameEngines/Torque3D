@@ -660,15 +660,16 @@ public:                                                                         
             if (imageAssetId == ImageAsset::smNoImageAssetFallback)                                                                                                           \
             {                                                                                                                                                                 \
                ImageAsset* privateImage = new ImageAsset();                                                                                                                   \
+               privateImage->mpModuleDefinition = ModuleDatabase->findLoadedModule("Core");                                                                                   \
                privateImage->setImageFile(_in);                                                                                                                               \
                imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                    \
             }                                                                                                                                                                 \
          }                                                                                                                                                                    \
-         m##name##Asset[index] = imageAssetId;                                                                                                                                \
+         m##name##Asset = imageAssetId;                                                                                                                                       \
       }                                                                                                                                                                       \
       else                                                                                                                                                                    \
       {                                                                                                                                                                       \
-         m##name##Asset[index] = _in;                                                                                                                                         \
+         m##name##Asset = _in;                                                                                                                                                \
       }                                                                                                                                                                       \
       setMaskBits(mask);                                                                                                                                                      \
    };                                                                                                                                                                         \

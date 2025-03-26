@@ -677,7 +677,6 @@ public:                                                                         
    void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
       if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \
          return;                                                                                                                                                              \
-                                                                                                                                                                              \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
          StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
@@ -687,7 +686,7 @@ public:                                                                         
          {                                                                                                                                                                    \
             imageAssetId = query.mAssetList[0];                                                                                                                               \
          }                                                                                                                                                                    \
-         else if(Torque::FS::IsFile(_in))                                                                                                                                     \
+         else if(Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                 \
          {                                                                                                                                                                    \
             ImageAsset* privateImage = new ImageAsset();                                                                                                                      \
             privateImage->setImageFile(_in);                                                                                                                                  \

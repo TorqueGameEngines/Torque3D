@@ -90,9 +90,9 @@ public:
 
 protected:
 
-   DECLARE_IMAGEASSET_ARRAY(PostEffect, Texture, NumTextures, onTextureChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(PostEffect, Texture);
-   void onTextureChanged() {}
+   DECLARE_IMAGEASSET_ARRAY_REFACTOR(PostEffect, Texture, GFXStaticTextureSRGBProfile, NumTextures);
+   GFXTextureProfile* mTextureProfile[NumTextures];
+   GFXTexHandle mTexture[NumTextures];
 
    bool mTexSRGB[NumTextures];
 

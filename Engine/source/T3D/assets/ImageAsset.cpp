@@ -387,7 +387,7 @@ void ImageAsset::setImageFile(StringTableEntry pImageFile)
    if (mLoadedState == Ok)
       Torque::FS::RemoveChangeNotification(mImageFile, this, &ImageAsset::_onFileChanged);
 
-   if (String(pImageFile).startsWith("#"))
+   if (String(pImageFile).startsWith("#") || String(pImageFile).startsWith("$"))
    {
       mImageFile = StringTable->insert(pImageFile);
       mIsNamedTarget = true;

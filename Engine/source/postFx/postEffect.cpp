@@ -508,10 +508,6 @@ PostEffect::PostEffect()
    dMemset( mTexSizeSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
    dMemset( mRenderTargetParamsSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
 
-   for (U32 i = 0; i < NumTextures; i++)
-   {
-      INIT_IMAGEASSET_ARRAY(Texture, PostFxTextureProfile, i);
-   }
 }
 
 PostEffect::~PostEffect()
@@ -556,7 +552,8 @@ void PostEffect::initPersistFields()
    addField( "targetViewport", TYPEID< PFXTargetViewport >(), Offset( mTargetViewport, PostEffect ),
       "Specifies how the viewport should be set up for a target texture." );
 
-   INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, NumTextures, PostEffect, "Input textures to this effect ( samplers ).\n"
+   addProtectedField("Texture", TypeImageFilename, Offset(mTextureAsset, PostEffect), _setTextureData, &defaultProtectedGetFn, NumTextures, "Input textures to this effect(samplers).\n", AbstractClassRep::FIELD_HideInInspectors);
+   INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(Texture, NumTextures, PostEffect, "Input textures to this effect ( samplers ).\n"
       "@see PFXTextureIdentifiers");
 
    addField("textureSRGB", TypeBool, Offset(mTexSRGB, PostEffect), NumTextures,
@@ -608,22 +605,24 @@ bool PostEffect::onAdd()
    for (S32 i = 0; i < NumTextures; i++)
    {
       mTextureType[i] = NormalTextureType;
-      String texFilename = getTexture(i);
+      if (mTextureAsset[i].notNull()) {
+         String texFilename = mTextureAsset[i]->getImageFile();
 
-      // Skip empty stages or ones with variable or target names.
-      if (texFilename.isEmpty() ||
-         texFilename[0] == '$' ||
-         texFilename[0] == '#')
-         continue;
+         // Skip empty stages or ones with variable or target names.
+         if (texFilename.isEmpty() ||
+            texFilename[0] == '$' ||
+            texFilename[0] == '#')
+            continue;
 
-      mTextureProfile[i] = (mTexSRGB[i]) ? &PostFxTextureSRGBProfile : &PostFxTextureProfile;
-      _setTexture(texFilename, i);
+         mTextureProfile[i] = (mTexSRGB[i]) ? &PostFxTextureSRGBProfile : &PostFxTextureProfile;
+         _setTexture(texFilename, i);
+      }
    }
 
    // Is the target a named target?
    if ( mTargetName.isNotEmpty() && mTargetName[0] == '#' )
    {
-      mNamedTarget.registerWithName( mTargetName.substr( 1 ) );
+      mNamedTarget.registerWithName(mTargetName.substr(1));
       mNamedTarget.getTextureDelegate().bind( this, &PostEffect::_getTargetTexture );
    }
    if ( mTargetDepthStencilName.isNotEmpty() && mTargetDepthStencilName[0] == '#' )
@@ -1136,7 +1135,7 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
 
 void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *inTexViewport )
 {
-   const String &texFilename = getTexture( stage );
+   const String &texFilename = mTextureAsset[stage].notNull() ? mTextureAsset[stage]->getImageFile() : "";
 
    GFXTexHandle theTex;
    NamedTexTarget *namedTarget = NULL;
@@ -1173,7 +1172,11 @@ void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *
    }
    else
    {
-      theTex = mTexture[ stage ];
+      theTex = mTexture[stage];
+
+      if (!theTex && mTextureAsset[stage].notNull())
+         theTex = mTextureAsset[stage]->getTexture(mTextureProfile[stage]);
+
       if ( theTex )
          viewport.set( 0, 0, theTex->getWidth(), theTex->getHeight() );
    }
@@ -1640,7 +1643,6 @@ void PostEffect::reload()
 void PostEffect::setTexture( U32 index, const String &texFilePath )
 {
 	// Set the new texture name.
-	mTextureName[index] = texFilePath;
 	mTexture[index].free();
 
     // Skip empty stages or ones with variable or target names.
@@ -1651,14 +1653,13 @@ void PostEffect::setTexture( U32 index, const String &texFilePath )
 
     mTextureProfile[index] = (mTexSRGB[index])? &PostFxTextureSRGBProfile : &PostFxTextureProfile;
     _setTexture(texFilePath, index);
-
+    mTexture[index] = mTextureAsset[index]->getTexture(mTextureProfile[index]);
     mTextureType[index] = NormalTextureType;
 }
 
 void PostEffect::setTexture(U32 index, const GFXTexHandle& texHandle)
 {
    // Set the new texture name.
-   mTextureName[index] = StringTable->EmptyString();
    mTexture[index].free();
 
    // Skip empty stages or ones with variable or target names.
@@ -1847,18 +1848,21 @@ void PostEffect::_checkRequirements()
    {
       if (mTextureType[i] == NormalTextureType)
       {
-         const String &texFilename = mTextureName[i];
-
-         if (texFilename.isNotEmpty() && texFilename[0] == '#')
+         if (mTextureAsset[i].notNull())
          {
-            NamedTexTarget *namedTarget = NamedTexTarget::find(texFilename.c_str() + 1);
-            if (!namedTarget)
-            {
-               return;
-            }
+            const String& texFilename = mTextureAsset[i]->getImageFile();
 
-            // Grab the macros for shader initialization.
-            namedTarget->getShaderMacros(&macros);
+            if (texFilename.isNotEmpty() && texFilename[0] == '#')
+            {
+               NamedTexTarget* namedTarget = NamedTexTarget::find(texFilename.c_str() + 1);
+               if (!namedTarget)
+               {
+                  return;
+               }
+
+               // Grab the macros for shader initialization.
+               namedTarget->getShaderMacros(&macros);
+            }
          }
       }
    }

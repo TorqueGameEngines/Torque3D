@@ -67,16 +67,16 @@ IMPLEMENT_CONOBJECT(ImageAsset);
 IMPLEMENT_STRUCT(AssetPtr<ImageAsset>, AssetPtrImageAsset,, "")
 END_IMPLEMENT_STRUCT
 
-ConsoleType(ImageAssetPtr, TypeImageAssetPtrRefactor, AssetPtr<ImageAsset>, ASSET_ID_FIELD_PREFIX)
+ConsoleType(ImageAssetPtr, TypeImageAssetPtr, AssetPtr<ImageAsset>, ASSET_ID_FIELD_PREFIX)
 
 
-ConsoleGetType(TypeImageAssetPtrRefactor)
+ConsoleGetType(TypeImageAssetPtr)
 {
    // Fetch asset Id.
    return (*((AssetPtr<ImageAsset>*)dptr)).getAssetId();
 }
 
-ConsoleSetType(TypeImageAssetPtrRefactor)
+ConsoleSetType(TypeImageAssetPtr)
 {
    // Was a single argument specified?
    if (argc == 1)
@@ -662,7 +662,7 @@ void GuiInspectorTypeImageAssetPtr::consoleInit()
 {
    Parent::consoleInit();
 
-   ConsoleBaseType::getType(TypeImageAssetPtrRefactor)->setInspectorFieldType("GuiInspectorTypeImageAssetPtr");
+   ConsoleBaseType::getType(TypeImageAssetPtr)->setInspectorFieldType("GuiInspectorTypeImageAssetPtr");
 }
 
 GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()

@@ -299,7 +299,7 @@ void GuiPopUpMenuCtrl::initPersistFields(void)
    addField("sbUsesNAColor",            TypeBool,         Offset(mRenderScrollInNA, GuiPopUpMenuCtrl));
    addField("reverseTextList",          TypeBool,         Offset(mReverseTextList, GuiPopUpMenuCtrl));
 
-   addProtectedField("BitmapAsset", TypeImageAssetPtrRefactor, Offset(mBitmapAsset, GuiPopUpMenuCtrl), _setBitmaps, &defaultProtectedGetFn, "@brief ""Bitmap"" ""asset \"\".");
+   addProtectedField("BitmapAsset", TypeImageAssetPtr, Offset(mBitmapAsset, GuiPopUpMenuCtrl), _setBitmaps, &defaultProtectedGetFn, "@brief ""Bitmap"" ""asset \"\".");
 
    addField("bitmapBounds",             TypePoint2I,      Offset(mBitmapBounds, GuiPopUpMenuCtrl));
 

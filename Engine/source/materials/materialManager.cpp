@@ -358,7 +358,7 @@ void MaterialManager::flushAndReInitInstances()
       (*iter)->reInit();
 }
 
-void MaterialManager::_flushInstance( BaseMaterialDefinition *target )
+void MaterialManager::flushInstance( BaseMaterialDefinition *target )
 {
    Vector<BaseMatInstance*>::iterator iter = mMatInstanceList.begin();
    while ( iter != mMatInstanceList.end() )
@@ -372,7 +372,7 @@ void MaterialManager::_flushInstance( BaseMaterialDefinition *target )
    }
 }
 
-void MaterialManager::_reInitInstance( BaseMaterialDefinition *target )
+void MaterialManager::reInitInstance( BaseMaterialDefinition *target )
 {
    Vector<BaseMatInstance*>::iterator iter = mMatInstanceList.begin();
    for ( ; iter != mMatInstanceList.end(); iter++ )

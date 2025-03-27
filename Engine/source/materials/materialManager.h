@@ -117,20 +117,19 @@ public:
    /// the active materials instances immediately.
    void flushAndReInitInstances();
 
+   // Flush the instance
+   void flushInstance(BaseMaterialDefinition* target);
+
+   /// Re-initializes the material instances for a specific target material.   
+   void reInitInstance(BaseMaterialDefinition* target);
+
 protected:
 
    // MatInstance tracks it's instances here
    friend class MatInstance;
    void _track(MatInstance*);
    void _untrack(MatInstance*);
-   /// Flushes all the procedural shaders and re-initializes all
-   /// the active materials instances immediately.
-   void _flushAndReInitInstances();
-   // Flush the instance
-   void _flushInstance(BaseMaterialDefinition* target);
 
-   /// Re-initializes the material instances for a specific target material.   
-   void _reInitInstance(BaseMaterialDefinition* target);
    /// @see LightManager::smActivateSignal
    void _onLMActivate( const char *lm, bool activate );
 

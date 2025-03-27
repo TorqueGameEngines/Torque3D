@@ -227,7 +227,7 @@ protected:
 };
 
 DECLARE_STRUCT(AssetPtr<ImageAsset>)
-DefineConsoleType(TypeImageAssetPtrRefactor, AssetPtr<ImageAsset> )
+DefineConsoleType(TypeImageAssetPtr, AssetPtr<ImageAsset> )
 
 typedef ImageAsset::ImageTypes ImageAssetType;
 DefineEnumType(ImageAssetType);
@@ -317,7 +317,7 @@ public:                                                                         
 
 
 #define INITPERSISTFIELD_IMAGEASSET_REFACTOR(name, consoleClass, docs)                                                                                                        \
-   addProtectedField(assetText(name, Asset), TypeImageAssetPtrRefactor, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
+   addProtectedField(assetText(name, Asset), TypeImageAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
 
 
 #define DECLARE_IMAGEASSET_ARRAY_REFACTOR(className, name, profile, max)                                                                                                      \
@@ -404,7 +404,7 @@ public:                                                                         
 
 
 #define INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(name, arraySize, consoleClass, docs)                                                                                       \
-   addProtectedField(assetText(name, Asset), TypeImageAssetPtrRefactor, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));
+   addProtectedField(assetText(name, Asset), TypeImageAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));
 
 #define DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(className,name, max)\
 DefineEngineMethod(className, get##name, const char*, (S32 index), , "get name")\

@@ -442,7 +442,7 @@ void GuiControlProfile::initPersistFields()
       "Texture to use for rendering control.", AbstractClassRep::FIELD_HideInInspectors);
 #endif
 
-      addProtectedField("bitmapAsset", TypeImageAssetPtrRefactor, Offset(mBitmapAsset, GuiControlProfile),
+      addProtectedField("bitmapAsset", TypeImageAssetPtr, Offset(mBitmapAsset, GuiControlProfile),
          &GuiControlProfile::protectedSetBitmap, &defaultProtectedGetFn,
          "Texture to use for rendering control.");
 

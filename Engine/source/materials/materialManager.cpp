@@ -498,7 +498,7 @@ bool MaterialManager::_handleGFXEvent( GFXDevice::GFXDeviceEventType event_ )
 
       case GFXDevice::deStartOfFrame:
          if ( mFlushAndReInit )
-            _flushAndReInitInstances();
+            flushAndReInitInstances();
          break;
 
       default:

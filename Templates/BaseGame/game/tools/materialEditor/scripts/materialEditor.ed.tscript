@@ -864,7 +864,7 @@ function MaterialEditorGui::convertMaterialTextureField(%this, %material, %mapNa
    for(%index = 0; %index < 4; %index++)
    {
       %mapFile = %material.call("get" @ %mapName, %index);
-      if(%mapFile !$= "" && !isFile(%mapFile))
+      if(%mapFile !$= "")
       {
          if(isFile(%mapFile))
          {
@@ -874,9 +874,10 @@ function MaterialEditorGui::convertMaterialTextureField(%this, %material, %mapNa
          }
          else
          {
-            %assetPtr = %material.call("get" @ %mapName @ "Asset", %index);
-            if(%assetPtr.isNamedTarget())
+            %firstChar = getSubStr( %mapFile, 0, 1 );
+            if(%firstChar $= "#" || %firstChar $= "$" ) // we are a named target
             {
+               %assetPtr = %material.call("get" @ %mapName @ "Asset", %index);
                MaterialEditorGui.currentMaterial.call("set" @ %mapName, %assetPtr, %index);
             }
          }
@@ -1099,7 +1100,6 @@ function MaterialEditorGui::guiSync( %this, %material )
    //Diffuse
    %diffuseMap = (%material).getDiffuseMap(%layer);
    %diffuseMapText = %diffuseMap !$= "" && %diffuseMap !$=$MaterialEditor::emptyMaterialImage ? (%material).getDiffuseMapAsset(%layer) : "None";
-
    MaterialEditorPropertiesWindow-->diffuseMapNameText.setText( %diffuseMapText );      
    MaterialEditorPropertiesWindow-->diffuseMapDisplayBitmap.setBitmap( getAssetPreviewImage(%diffuseMapText) );
  

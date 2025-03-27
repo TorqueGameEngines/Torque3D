@@ -113,6 +113,10 @@ public:
    /// procedural shaders have been flushed.
    typedef Signal<void()> FlushSignal;
 
+   /// Returns the signal used to notify systems that the 
+   /// procedural shaders have been flushed.
+   FlushSignal& getFlushSignal() { return mFlushSignal; }
+
    /// Flushes all the procedural shaders and re-initializes all
    /// the active materials instances immediately.
    void flushAndReInitInstances();

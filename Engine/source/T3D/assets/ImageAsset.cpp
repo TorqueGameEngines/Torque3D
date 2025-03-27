@@ -363,10 +363,6 @@ void ImageAsset::setImageFile(StringTableEntry pImageFile)
    if (pImageFile == mImageFile)
       return;
 
-   // if we previously loaded, remove the listener for the file.
-   if (mLoadedState == Ok)
-      Torque::FS::RemoveChangeNotification(mImageFile, this, &ImageAsset::_onFileChanged);
-
    if (String(pImageFile).startsWith("#") || String(pImageFile).startsWith("$"))
    {
       mImageFile = StringTable->insert(pImageFile);
@@ -420,7 +416,6 @@ U32 ImageAsset::load()
    }
    else
    {
-      Torque::FS::AddChangeNotification(mImageFile, this, &ImageAsset::_onFileChanged);
       mLoadedState = Ok;
    }
 
@@ -549,14 +544,6 @@ ImageAsset::ImageTypes ImageAsset::getImageTypeFromName(StringTableEntry name)
    }
 
    return (ImageTypes)ret;
-}
-
-void ImageAsset::_onFileChanged(const Torque::Path& path)
-{
-   if (path != Torque::Path(mImageFile))
-      return;
-
-   refreshAsset();
 }
 
 void ImageAsset::_onResourceChanged(const Torque::Path& path)

@@ -206,7 +206,6 @@ protected:
    // Asset Base callback
    void initializeAsset(void) override;
    void onAssetRefresh(void) override;
-   void _onFileChanged(const Torque::Path& path);
 
    /// Taml callbacks.
    void onTamlPreWrite(void) override;

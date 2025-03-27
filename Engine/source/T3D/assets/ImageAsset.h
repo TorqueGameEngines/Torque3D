@@ -165,6 +165,7 @@ public:
 
    void                    setImageFile(StringTableEntry pImageFile);
    inline StringTableEntry getImageFile(void) const { return mImageFile; };
+   inline StringTableEntry getRelativeImageFile(void) const { return collapseAssetFilePath(mImageFile); };
 
    void                    setGenMips(const bool pGenMips);
    inline bool             getGenMips(void) const { return mUseMips; };

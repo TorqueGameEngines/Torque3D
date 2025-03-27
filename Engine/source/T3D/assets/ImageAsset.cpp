@@ -334,7 +334,6 @@ void ImageAsset::onAssetRefresh(void)
    // Call parent.
    Parent::onAssetRefresh();
 
-   //mLoadedState = NotLoaded;
 }
 
 //------------------------------------------------------------------------------
@@ -577,7 +576,7 @@ void ImageAsset::onTamlPreWrite(void)
       return;
 
    // Ensure the image-file is collapsed.
-   mImageFile = getOwned() ? collapseAssetFilePath(mImageFile) : mImageFile;
+   mImageFile = collapseAssetFilePath(mImageFile);
 }
 
 void ImageAsset::onTamlPostWrite(void)
@@ -589,7 +588,7 @@ void ImageAsset::onTamlPostWrite(void)
       return;
 
    // Ensure the image-file is expanded.
-   mImageFile = getOwned() ? expandAssetFilePath(mImageFile) : mImageFile;
+   mImageFile = expandAssetFilePath(mImageFile);
 }
 
 const char* ImageAsset::getImageInfo()

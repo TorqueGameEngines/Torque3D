@@ -25,35 +25,35 @@
 #ifndef _ASSET_BASE_H_
 #include "assets/assetBase.h"
 #endif
-
 #ifndef _ASSET_DEFINITION_H_
 #include "assets/assetDefinition.h"
 #endif
-
 #ifndef _STRINGUNIT_H_
 #include "string/stringUnit.h"
 #endif
-
 #ifndef _ASSET_FIELD_TYPES_H_
 #include "assets/assetFieldTypes.h"
 #endif
 #ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
 #endif 
-
+#ifndef _GBITMAP_H_
 #include "gfx/bitmap/gBitmap.h"
+#endif
+#ifndef _GFXTEXTUREHANDLE_H_
 #include "gfx/gfxTextureHandle.h"
-
+#endif
+#ifndef _NETCONNECTION_H_
 #include "sim/netConnection.h"
-
-#include <string>
-#include "assetMacroHelpers.h"
-
+#endif
+#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-
+#endif
 #ifndef _MATTEXTURETARGET_H_
 #include "materials/matTextureTarget.h"
 #endif
+
+#include "assetMacroHelpers.h"
 
 //-----------------------------------------------------------------------------
 class ImageAsset : public AssetBase
@@ -139,6 +139,10 @@ private:
    ImageTypes        mImageType;
    HashMap<GFXTextureProfile*, GFXTexHandle> mResourceMap;
    bool              mIsNamedTarget;
+   S32               mImageWidth;
+   S32               mImageHeight;
+   S32               mImageChannels;
+
    void generateTexture(void);
 public:
    ImageAsset();
@@ -210,6 +214,8 @@ protected:
    /// Taml callbacks.
    void onTamlPreWrite(void) override;
    void onTamlPostWrite(void) override;
+   void onTamlCustomWrite(TamlCustomNodes& customNodes) override;
+   void onTamlCustomRead(const TamlCustomNodes& customNodes) override;
 
 protected:
    // Texture file 

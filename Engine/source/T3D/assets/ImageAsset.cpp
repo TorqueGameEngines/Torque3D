@@ -49,6 +49,18 @@
 
 #include "T3D/assets/assetImporter.h"
 #include "gfx/gfxDrawUtil.h"
+#include "gfx/bitmap/ddsFile.h"
+#ifdef __clang__
+#define STBIWDEF static inline
+#endif
+#pragma warning( push )
+#pragma warning( disable : 4505 ) // unreferenced function removed.
+#ifndef STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_STATIC
+#include "stb_image.h"
+#endif
+#pragma warning(pop)
 
 //-----------------------------------------------------------------------------
 
@@ -133,14 +145,17 @@ const String ImageAsset::mErrCodeStrings[] =
 //-----------------------------------------------------------------------------
 
 ImageAsset::ImageAsset() :
-	mImageFile(StringTable->EmptyString()),
-	mUseMips(true),
-	mIsHDRImage(false),
-	mImageType(Albedo),
-	mTextureHandle(NULL),
-   mIsNamedTarget(false)
+   mImageFile(StringTable->EmptyString()),
+   mUseMips(true),
+   mIsHDRImage(false),
+   mImageType(Albedo),
+   mTextureHandle(NULL),
+   mIsNamedTarget(false),
+   mImageWidth(-1),
+   mImageHeight(-1),
+   mImageChannels(-1)
 {
-	mLoadedState = AssetErrCode::NotLoaded;
+   mLoadedState = AssetErrCode::NotLoaded;
 }
 
 //-----------------------------------------------------------------------------
@@ -373,6 +388,43 @@ void ImageAsset::setImageFile(StringTableEntry pImageFile)
 
    mImageFile = getOwned() ? expandAssetFilePath(pImageFile) : StringTable->insert(pImageFile);
 
+   if (Torque::FS::IsFile(mImageFile))
+   {
+      if (dStrEndsWith(mImageFile, ".dds"))
+      {
+         DDSFile* tempFile = new DDSFile();
+         FileStream* ddsFs;
+         if ((ddsFs = FileStream::createAndOpen(mImageFile, Torque::FS::File::Read)) == NULL)
+         {
+            Con::errorf("ImageAsset::setImageFile Failed to open ddsfile: %s", mImageFile);
+         }
+
+         if (!tempFile->readHeader(*ddsFs))
+         {
+            Con::errorf("ImageAsset::setImageFile Failed to read header of ddsfile: %s", mImageFile);
+         }
+         else
+         {
+            mImageWidth = tempFile->mWidth;
+            mImageHeight = tempFile->mHeight;
+         }
+
+         ddsFs->close();
+         delete tempFile;
+      }
+      else
+      {
+         if (!stbi_info(mImageFile, &mImageWidth, &mImageHeight, &mImageChannels))
+         {
+            StringTableEntry stbErr = stbi_failure_reason();
+            if (stbErr == StringTable->EmptyString())
+               stbErr = "ImageAsset::Unkown Error!";
+
+            Con::errorf("ImageAsset::setImageFile STB Get file info failed: %s", stbErr);
+         }
+      }
+   }
+
    refreshAsset();
 }
 
@@ -576,6 +628,62 @@ void ImageAsset::onTamlPostWrite(void)
 
    // Ensure the image-file is expanded.
    mImageFile = expandAssetFilePath(mImageFile);
+}
+
+void ImageAsset::onTamlCustomWrite(TamlCustomNodes& customNodes)
+{
+   // Debug Profiling.
+   PROFILE_SCOPE(ImageAsset_OnTamlCustomWrite);
+
+   // Call parent.
+   Parent::onTamlCustomWrite(customNodes);
+
+   TamlCustomNode* pImageMetaData = customNodes.addNode(StringTable->insert("ImageMetadata"));
+   TamlCustomNode* pImageInfoNode = pImageMetaData->addNode(StringTable->insert("ImageInfo"));
+
+   pImageInfoNode->addField(StringTable->insert("ImageWidth"), mImageWidth);
+   pImageInfoNode->addField(StringTable->insert("ImageHeight"), mImageHeight);
+
+}
+
+void ImageAsset::onTamlCustomRead(const TamlCustomNodes& customNodes)
+{
+   // Debug Profiling.
+   PROFILE_SCOPE(ImageAsset_OnTamlCustomRead);
+
+   // Call parent.
+   Parent::onTamlCustomRead(customNodes);
+
+   const TamlCustomNode* pImageMetaDataNode = customNodes.findNode(StringTable->insert("ImageMetadata"));
+
+   if (pImageMetaDataNode != NULL)
+   {
+      const TamlCustomNode* pImageInfoNode = pImageMetaDataNode->findNode(StringTable->insert("ImageInfo"));
+      // Fetch fields.
+      const TamlCustomFieldVector& fields = pImageInfoNode->getFields();
+      // Iterate property fields.
+      for (TamlCustomFieldVector::const_iterator fieldItr = fields.begin(); fieldItr != fields.end(); ++fieldItr)
+      {
+         // Fetch field.
+         const TamlCustomField* pField = *fieldItr;
+         // Fetch field name.
+         StringTableEntry fieldName = pField->getFieldName();
+         if (fieldName == StringTable->insert("ImageWidth"))
+         {
+            pField->getFieldValue(mImageWidth);
+         }
+         else if (fieldName == StringTable->insert("ImageHeight"))
+         {
+            pField->getFieldValue(mImageHeight);
+         }
+         else
+         {
+            // Unknown name so warn.
+            Con::warnf("ImageAsset::onTamlCustomRead() - Encountered an unknown custom field name of '%s'.", fieldName);
+            continue;
+         }
+      }
+   }
 }
 
 const char* ImageAsset::getImageInfo()

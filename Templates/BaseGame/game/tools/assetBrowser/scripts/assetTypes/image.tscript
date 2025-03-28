@@ -151,12 +151,6 @@ function AssetBrowser::importImageAsset(%this, %assetItem)
       imageType = %assetItem.imageType;
    };
    
-   //No point in indicating the original path data if it was imported in-place
-   if(!startsWith(makeFullPath(%filePath), getMainDotCsDir()))
-   {
-      %newAsset.originalFilePath = %filePath;
-   }
-   
    %assetImportSuccessful = TAMLWrite(%newAsset, %assetPath @ "/" @ %assetName @ ".asset.taml"); 
    
    //and copy the file into the relevent directory

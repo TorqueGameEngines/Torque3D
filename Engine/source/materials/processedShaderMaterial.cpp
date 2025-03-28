@@ -229,7 +229,7 @@ bool ProcessedShaderMaterial::init( const FeatureSet &features,
       mInstancingState = new InstancingState();
       mInstancingState->setFormat( _getRPD( 0 )->shader->getInstancingFormat(), mVertexFormat );
    }
-   if (mMaterial && mMaterial->getDiffuseMapAsset(0).notNull() && String(mMaterial->getDiffuseMapAsset(0)->getImageFile()).startsWith("#"))
+   if (mMaterial && mMaterial->getDiffuseMapAsset(0).notNull() && mMaterial->getDiffuseMapAsset(0)->isNamedTarget())
    {
       NamedTexTarget *texTarget = mMaterial->getDiffuseMapAsset(0)->getNamedTarget();
       RenderPassData* rpd = getPass(0);

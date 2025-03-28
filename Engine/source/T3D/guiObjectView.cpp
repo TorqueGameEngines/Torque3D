@@ -171,13 +171,13 @@ void GuiObjectView::initPersistFields()
    
    addGroup( "Camera" );
    
-      addField( "orbitDiststance", TypeF32, Offset( mOrbitDist, GuiObjectView ),
+      addFieldV( "orbitDiststance", TypeRangedF32, Offset( mOrbitDist, GuiObjectView ), &CommonValidators::PositiveFloat,
          "Distance from which to render the model." );
-      addField( "minOrbitDiststance", TypeF32, Offset( mMinOrbitDist, GuiObjectView ),
+      addFieldV( "minOrbitDiststance", TypeRangedF32, Offset( mMinOrbitDist, GuiObjectView ), &CommonValidators::PositiveFloat,
          "Maxiumum distance to which the camera can be zoomed out." );
-      addField( "maxOrbitDiststance", TypeF32, Offset( mMaxOrbitDist, GuiObjectView ),
+      addFieldV( "maxOrbitDiststance", TypeRangedF32, Offset( mMaxOrbitDist, GuiObjectView ), &CommonValidators::PositiveFloat,
          "Minimum distance below which the camera will not zoom in further." );
-      addField( "cameraSpeed", TypeF32, Offset( mCameraSpeed, GuiObjectView ),
+      addFieldV( "cameraSpeed", TypeRangedF32, Offset( mCameraSpeed, GuiObjectView ), &CommonValidators::PositiveFloat,
          "Multiplier for mouse camera operations." );
       addField( "cameraRotation", TypePoint3F, Offset( mCameraRotation, GuiObjectView ),
          "Set the camera rotation." );

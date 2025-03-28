@@ -30,6 +30,10 @@
    #include "sfx/sfxTrack.h"
 #endif
 
+#ifndef _TYPEVALIDATORS_H_
+#include "console/typeValidators.h"
+#endif
+
 class SFXState;
 class SFXDescription;
 
@@ -361,4 +365,5 @@ DefineEnumType( SFXPlayListStateMode );
 DefineEnumType( SFXPlayListRandomMode );
 DefineEnumType( SFXPlayListReplayMode );
 
+extern IRangeValidator playlistSlotRange;
 #endif // _SFXPLAYLIST_H_

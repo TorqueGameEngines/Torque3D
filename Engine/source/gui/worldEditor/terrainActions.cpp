@@ -26,6 +26,7 @@
 
 #include "gui/core/guiCanvas.h"
 
+TerrainScratchPad gTerrainScratchPad;
 //------------------------------------------------------------------------------
 bool TerrainAction::isValid(GridInfo tile)
 {
@@ -746,60 +747,212 @@ void PaintNoiseAction::process(Selection * sel, const Gui3DMouseEvent &, bool se
       mTerrainEditor->scheduleGridUpdate();
    }
 }
-/*
-void ThermalErosionAction::process(Selection * sel, const Gui3DMouseEvent &, bool selChanged, Type)
+
+void ThermalErosionAction::process(Selection * sel, const Gui3DMouseEvent &, bool selChanged, Type type)
 {
-   if( selChanged )
+   // If this is the ending
+   // mouse down event, then
+   // update the noise values.
+
+   TerrainBlock* tblock = mTerrainEditor->getActiveTerrain();
+   if (!tblock)
+      return;
+
+   F32 selRange = sel->getMaxHeight()-sel->getMinHeight();
+   F32 avg = sel->getAvgHeight();
+   if (selChanged)
    {
-      TerrainBlock *tblock = mTerrainEditor->getActiveTerrain();
-      if ( !tblock )
-         return;
-      
-      F32 height = 0;
-      F32 maxHeight = 0;
-      U32 shift = getBinLog2( TerrainBlock::BlockSize );
-
-      for ( U32 x = 0; x < TerrainBlock::BlockSize; x++ )
-      {
-         for ( U32 y = 0; y < TerrainBlock::BlockSize; y++ )
-         {
-            height = fixedToFloat( tblock->getHeight( x, y ) );
-            mTerrainHeights[ x + (y << 8)] = height;
-
-            if ( height > maxHeight )
-               maxHeight = height;
-         }
-      }
-
-      //mNoise.erodeThermal( &mTerrainHeights, &mNoiseData, 30.0f, 5.0f, 5, TerrainBlock::BlockSize, tblock->getSquareSize(), maxHeight );
-         
-      mNoise.erodeHydraulic( &mTerrainHeights, &mNoiseData, 1, TerrainBlock::BlockSize );
-
       F32 heightDiff = 0;
 
-      for( U32 i = 0; i < sel->size(); i++ )
+      for (U32 i = 0; i < sel->size(); i++)
       {
+         if (!isValid((*sel)[i]))
+            continue;
+
          mTerrainEditor->getUndoSel()->add((*sel)[i]);
 
-         const Point2I &gridPos = (*sel)[i].mGridPoint.gridPos;
-         
-         // Need to get the height difference
-         // between the current height and the
-         // erosion height to properly apply the
-         // softness and pressure settings of the brush
-         // for this selection.
-         heightDiff = (*sel)[i].mHeight - mNoiseData[ gridPos.x + (gridPos.y << shift)];
+         F32 bias = ((*sel)[i].mHeight - avg) / selRange;
+         F32 nudge = mRandF(-mTerrainEditor->getBrushPressure(), mTerrainEditor->getBrushPressure());
+         F32 heightTarg = mRoundF((*sel)[i].mHeight - bias * nudge, mTerrainEditor->getBrushPressure() * 2.0f) ;
+         heightDiff = heightTarg - (*sel)[i].mHeight;
+         (*sel)[i].mHeight += heightDiff * (*sel)[i].mWeight;
 
-         (*sel)[i].mHeight -= (heightDiff * (*sel)[i].mWeight);
+         if ((*sel)[i].mHeight > mTerrainEditor->mTileMaxHeight)
+            (*sel)[i].mHeight = mTerrainEditor->mTileMaxHeight;
 
+         if ((*sel)[i].mHeight < mTerrainEditor->mTileMinHeight)
+            (*sel)[i].mHeight = mTerrainEditor->mTileMinHeight;
          mTerrainEditor->setGridInfo((*sel)[i]);
       }
 
-      mTerrainEditor->gridUpdateComplete();
+      mTerrainEditor->scheduleGridUpdate();
    }
 }
-*/
 
+void HydraulicErosionAction::process(Selection* sel, const Gui3DMouseEvent&, bool selChanged, Type type)
+{
+   // If this is the ending
+   // mouse down event, then
+   // update the noise values.
+
+   TerrainBlock* tblock = mTerrainEditor->getActiveTerrain();
+   if (!tblock)
+      return;
+
+   F32 selRange = sel->getMaxHeight() - sel->getMinHeight();
+   F32 avg = sel->getAvgHeight();
+   if (selChanged)
+   {
+      F32 heightDiff = 0;
+      const F32 squareSize = tblock->getSquareSize();
+
+      for (U32 i = 0; i < sel->size(); i++)
+      {
+         if (!isValid((*sel)[i]))
+            continue;
+
+         mTerrainEditor->getUndoSel()->add((*sel)[i]);
+
+         Point2F p;
+         Point3F norm;
+
+         p.x = (*sel)[i].mGridPoint.gridPos.x * squareSize;
+         p.y = (*sel)[i].mGridPoint.gridPos.y * squareSize;
+         tblock->getNormal(p, &norm, true);
+
+         F32 bias = mPow(norm.z,3.0f) * ((*sel)[i].mHeight - avg) / selRange;
+         F32 nudge = mRandF(-mTerrainEditor->getBrushPressure(), mTerrainEditor->getBrushPressure());
+
+         heightDiff = bias * (-(*sel)[i].mHeight + bias * nudge) / tblock->getObjBox().len_z() * 2.0;
+
+         (*sel)[i].mHeight += heightDiff * (*sel)[i].mWeight;
+
+         if ((*sel)[i].mHeight > mTerrainEditor->mTileMaxHeight)
+            (*sel)[i].mHeight = mTerrainEditor->mTileMaxHeight;
+
+         if ((*sel)[i].mHeight < mTerrainEditor->mTileMinHeight)
+            (*sel)[i].mHeight = mTerrainEditor->mTileMinHeight;
+         mTerrainEditor->setGridInfo((*sel)[i]);
+      }
+
+      mTerrainEditor->scheduleGridUpdate();
+   }
+
+}
+
+void TerrainScratchPad::addTile(F32 height, U8 material)
+{
+   mContents.push_back(new gridStub(height, material));
+
+   mBottom = mMin(height, mBottom);
+   mTop = mMax(height, mTop);
+};
+
+void TerrainScratchPad::clear()
+{
+   for (U32 i = 0; i < mContents.size(); i++)
+      delete(mContents[i]);
+   mContents.clear();
+   mBottom = F32_MAX;
+   mTop = F32_MIN_EX;
+}
+
+void copyAction::process(Selection* sel, const Gui3DMouseEvent&, bool selChanged, Type type)
+{
+   gTerrainScratchPad.clear();
+   for (U32 i=0;i<sel->size();i++)
+   {
+      if (isValid((*sel)[i]))
+         gTerrainScratchPad.addTile((*sel)[i].mHeight, (*sel)[i].mMaterial);
+      else
+         gTerrainScratchPad.addTile(0, 0);
+   }
+}
+
+void pasteAction::process(Selection* sel, const Gui3DMouseEvent&, bool selChanged, Type type)
+{
+   if (gTerrainScratchPad.size() == 0)
+      return;
+
+   if (gTerrainScratchPad.size() != sel->size())
+      return;
+
+   if (type != Begin)
+      return;
+
+   for (U32 i = 0; i < sel->size(); i++)
+   {
+      if (isValid((*sel)[i]))
+      {
+         mTerrainEditor->getUndoSel()->add((*sel)[i]);
+         (*sel)[i].mHeight = gTerrainScratchPad[i]->mHeight;
+         (*sel)[i].mMaterial = gTerrainScratchPad[i]->mMaterial;
+         mTerrainEditor->setGridInfo((*sel)[i]);
+      }
+   }
+   mTerrainEditor->scheduleGridUpdate();
+   mTerrainEditor->scheduleMaterialUpdate();
+}
+
+void pasteUpAction::process(Selection* sel, const Gui3DMouseEvent&, bool selChanged, Type type)
+{
+   if (gTerrainScratchPad.size() == 0)
+      return;
+
+   if (gTerrainScratchPad.size() != sel->size())
+      return;
+
+   if (type != Begin)
+      return;
+   F32 floor = F32_MAX;
+   for (U32 i = 0; i < sel->size(); i++)
+   {
+      floor = mMin((*sel)[i].mHeight, floor);
+   }
+   for (U32 i = 0; i < sel->size(); i++)
+   {
+      if (isValid((*sel)[i]))
+      {
+         mTerrainEditor->getUndoSel()->add((*sel)[i]);
+         (*sel)[i].mHeight = gTerrainScratchPad[i]->mHeight - gTerrainScratchPad.mBottom + floor;
+         (*sel)[i].mMaterial = gTerrainScratchPad[i]->mMaterial;
+         mTerrainEditor->setGridInfo((*sel)[i]);
+      }
+   }
+   mTerrainEditor->scheduleGridUpdate();
+   mTerrainEditor->scheduleMaterialUpdate();
+}
+
+void pasteDownAction::process(Selection* sel, const Gui3DMouseEvent&, bool selChanged, Type type)
+{
+   if (gTerrainScratchPad.size() == 0)
+      return;
+
+   if (gTerrainScratchPad.size() != sel->size())
+      return;
+
+   if (type != Begin)
+      return;
+
+   F32 ceiling = F32_MIN_EX;
+   for (U32 i = 0; i < sel->size(); i++)
+   {
+      ceiling = mMax((*sel)[i].mHeight, ceiling);
+   }
+
+   for (U32 i = 0; i < sel->size(); i++)
+   {
+      if (isValid((*sel)[i]))
+      {
+         mTerrainEditor->getUndoSel()->add((*sel)[i]);
+         (*sel)[i].mHeight = gTerrainScratchPad[i]->mHeight - gTerrainScratchPad.mTop + ceiling;
+         (*sel)[i].mMaterial = gTerrainScratchPad[i]->mMaterial;
+         mTerrainEditor->setGridInfo((*sel)[i]);
+      }
+   }
+   mTerrainEditor->scheduleGridUpdate();
+   mTerrainEditor->scheduleMaterialUpdate();
+}
 
 IMPLEMENT_CONOBJECT( TerrainSmoothAction );
 

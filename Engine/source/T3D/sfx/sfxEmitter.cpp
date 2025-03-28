@@ -327,19 +327,19 @@ void SFXEmitter::initPersistFields()
          "The SFXSource to which to assign the sound of this emitter as a child.\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::sourceGroup" );
-      addField( "volume",              TypeF32,       Offset( mDescription.mVolume, SFXEmitter ),
+      addFieldV( "volume", TypeRangedF32,       Offset( mDescription.mVolume, SFXEmitter ), &CommonValidators::PositiveFloat,
          "Volume level to apply to the sound.\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::volume" );
-      addField( "pitch",               TypeF32,       Offset( mDescription.mPitch, SFXEmitter ),
+      addFieldV( "pitch", TypeRangedF32,       Offset( mDescription.mPitch, SFXEmitter ), &CommonValidators::PositiveFloat,
          "Pitch shift to apply to the sound.  Default is 1 = play at normal speed.\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::pitch" );
-      addField( "fadeInTime",          TypeF32,       Offset( mDescription.mFadeInTime, SFXEmitter ),
+      addFieldV( "fadeInTime", TypeRangedF32,       Offset( mDescription.mFadeInTime, SFXEmitter ), &CommonValidators::PositiveFloat,
          "Number of seconds to gradually fade in volume from zero when playback starts.\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::fadeInTime" );
-      addField( "fadeOutTime",         TypeF32,       Offset( mDescription.mFadeOutTime, SFXEmitter ),
+      addFieldV( "fadeOutTime", TypeRangedF32,       Offset( mDescription.mFadeOutTime, SFXEmitter ), &CommonValidators::PositiveFloat,
          "Number of seconds to gradually fade out volume down to zero when playback is stopped or paused.\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::fadeOutTime" );
@@ -352,11 +352,11 @@ void SFXEmitter::initPersistFields()
          "Whether to play #fileName as a positional (3D) sound or not.\n"
          "If a #track is assigned, the value of this field is ignored.\n\n"
          "@see SFXDescription::is3D" );
-      addField( "referenceDistance",   TypeF32,       Offset( mDescription.mMinDistance, SFXEmitter ),
+      addFieldV( "referenceDistance", TypeRangedF32,       Offset( mDescription.mMinDistance, SFXEmitter ), &CommonValidators::PositiveFloat,
          "Distance at which to start volume attenuation of the 3D sound.\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::referenceDistance" );
-      addField( "maxDistance",         TypeF32,       Offset( mDescription.mMaxDistance, SFXEmitter ),
+      addFieldV( "maxDistance", TypeRangedF32,       Offset( mDescription.mMaxDistance, SFXEmitter ), &CommonValidators::PositiveFloat,
          "Distance at which to stop volume attenuation of the 3D sound.\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::maxDistance" );
@@ -364,15 +364,15 @@ void SFXEmitter::initPersistFields()
          "Bounds on random offset to apply to initial 3D sound position.\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::scatterDistance" );
-      addField( "coneInsideAngle",     TypeS32,       Offset( mDescription.mConeInsideAngle, SFXEmitter ),
+      addFieldV( "coneInsideAngle",     TypeRangedS32,       Offset( mDescription.mConeInsideAngle, SFXEmitter ), &CommonValidators::S32_PosDegreeRange,
          "Angle of inner volume cone of 3D sound in degrees.\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::coneInsideAngle" );
-      addField( "coneOutsideAngle",    TypeS32,       Offset( mDescription.mConeOutsideAngle, SFXEmitter ),
+      addFieldV( "coneOutsideAngle", TypeRangedS32,       Offset( mDescription.mConeOutsideAngle, SFXEmitter ), &CommonValidators::S32_PosDegreeRange,
          "Angle of outer volume cone of 3D sound in degrees\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::coneOutsideAngle" );
-      addField( "coneOutsideVolume",   TypeF32,       Offset( mDescription.mConeOutsideVolume, SFXEmitter ),
+      addFieldV( "coneOutsideVolume", TypeRangedF32,       Offset( mDescription.mConeOutsideVolume, SFXEmitter ), &CommonValidators::NormalizedFloat,
          "Volume scale factor of outside of outer volume 3D sound cone.\n"
          "@note This field is ignored if #useTrackDescriptionOnly is true.\n\n"
          "@see SFXDescription::coneOutsideVolume" );

@@ -45,8 +45,177 @@ ConsoleDocClass( GameTSCtrl,
 	"@brief The main 3D viewport for a Torque 3D game.\n\n"
 	"@ingroup Gui3D\n");
 
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseDown, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the left mouse button is pressed while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse was pressed during this callback.\n\n"
+   "@param worldPosition Position of world when mouse was pressed during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse was pressed during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse was pressed down in this control, causing the callback\n"
+   "GameTSCtrl::onMouseDown(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseDown, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the right mouse button is pressed while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse was pressed during this callback.\n\n"
+   "@param worldPosition Position of world when mouse was pressed during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse was pressed during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse was pressed down in this control, causing the callback\n"
+   "GameTSCtrl::onRightMouseDown(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseDown, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the middle mouse button is pressed while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse was pressed during this callback.\n\n"
+   "@param worldPosition Position of world when mouse was pressed during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse was pressed during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse was pressed down in this control, causing the callback\n"
+   "GameTSCtrl::onMiddleMouseDown(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseUp, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the left mouse button is released while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse was released during this callback.\n\n"
+   "@param worldPosition Position of world when mouse was released during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse was released during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse was released down in this control, causing the callback\n"
+   "GameTSCtrl::onMouseUp(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseUp, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the right mouse button is released while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse was released during this callback.\n\n"
+   "@param worldPosition Position of world when mouse was released during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse was released during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse was released down in this control, causing the callback\n"
+   "GameTSCtrl::onRightMouseUp(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseUp, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the middle mouse button is released while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse was released during this callback.\n\n"
+   "@param worldPosition Position of world when mouse was released during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse was released during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse was released down in this control, causing the callback\n"
+   "GameTSCtrl::onMiddleMouseUp(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseDragged, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the left mouse button is dragged while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse was dragged during this callback.\n\n"
+   "@param worldPosition Position of world when mouse was dragged during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse was dragged during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse was dragged down in this control, causing the callback\n"
+   "GameTSCtrl::onMouseDragged(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onRightMouseDragged, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the right mouse button is dragged while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse was dragged during this callback.\n\n"
+   "@param worldPosition Position of world when mouse was dragged during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse was dragged during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse was dragged down in this control, causing the callback\n"
+   "GameTSCtrl::onRightMouseDragged(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onMiddleMouseDragged, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the middle mouse button is dragged while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse was dragged during this callback.\n\n"
+   "@param worldPosition Position of world when mouse was dragged during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse was dragged during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse was dragged down in this control, causing the callback\n"
+   "GameTSCtrl::onMiddleMouseDragged(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseWheelUp, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the mouse wheel up is pressed while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse wheel up was pressed during this callback.\n\n"
+   "@param worldPosition Position of world when mouse wheel up was pressed during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse wheel up was pressed during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse wheel up was pressed in this control, causing the callback\n"
+   "GameTSCtrl::onMouseWheelUp(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseWheelDown, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the mouse wheel down is pressed while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse wheel down was pressed during this callback.\n\n"
+   "@param worldPosition Position of world when mouse wheel down was pressed during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse wheel down was pressed during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse wheel down was pressed in this control, causing the callback\n"
+   "GameTSCtrl::onMouseWheelDown(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
+IMPLEMENT_CALLBACK(GameTSCtrl, onMouseMove, void, (const Point2I& screenPosition, const Point3F& worldPosition, const Point3F& clickVector), (screenPosition, worldPosition, clickVector),
+   "@brief Callback that occurs whenever the mouse is moved (without dragging) while in this control.\n\n"
+   "@param screenPosition Position of screen when mouse was moved during this callback.\n\n"
+   "@param worldPosition Position of world when mouse was moved during this callback.\n\n"
+   "@param clickVector Vector for the click when mouse was moved during this callback.\n\n"
+   "@tsexample\n"
+   "// Mouse was moved down in this control, causing the callback\n"
+   "GameTSCtrl::onMouseMove(%this,%screenPosition,%worldPosition,%clickVector)\n"
+   "{\n"
+   "	// Code to call when a mouse event occurs.\n"
+   "}\n"
+   "@endtsexample\n\n"
+);
+
 GameTSCtrl::GameTSCtrl()
 {
+   mFrameTime = PlatformTimer::create();
 }
 
 //---------------------------------------------------------------------------
@@ -71,71 +240,136 @@ void GameTSCtrl::renderWorld(const RectI &updateRect)
    GameRenderWorld();
 }
 
-//---------------------------------------------------------------------------
-void GameTSCtrl::makeScriptCall(const char *func, const GuiEvent &evt) const
+//------------------------------------------------------------------------------
+void GameTSCtrl::sendMouseEvent(const char *name, const GuiEvent &event)
 {
    // write screen position
-   char *sp = Con::getArgBuffer(32);
-   dSprintf(sp, 32, "%d %d", evt.mousePoint.x, evt.mousePoint.y);
+   Point2I screenPosition = event.mousePoint;
 
    // write world position
-   char *wp = Con::getArgBuffer(32);
-   Point3F camPos;
-   mLastCameraQuery.cameraMatrix.getColumn(3, &camPos);
-   dSprintf(wp, 32, "%g %g %g", camPos.x, camPos.y, camPos.z);
+   Point3F worldPosition;
+   mLastCameraQuery.cameraMatrix.getColumn(3, &worldPosition);
 
    // write click vector
-   char *vec = Con::getArgBuffer(32);
-   Point3F fp(evt.mousePoint.x, evt.mousePoint.y, 1.0);
-   Point3F ray;
-   unproject(fp, &ray);
-   ray -= camPos;
-   ray.normalizeSafe();
-   dSprintf(vec, 32, "%g %g %g", ray.x, ray.y, ray.z);
+   Point3F fp(event.mousePoint.x, event.mousePoint.y, 1.0);
+   Point3F clickVector;
+   unproject(fp, &clickVector);
+   clickVector -= worldPosition;
+   clickVector.normalizeSafe();
 
-   Con::executef( (SimObject*)this, func, sp, wp, vec );
+   if (dStricmp(name, "onMouseDown") == 0)
+      onMouseDown_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onRightMouseDown") == 0)
+      onRightMouseDown_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onMiddleMouseDown") == 0)
+      onMiddleMouseDown_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onMouseUp") == 0)
+      onMouseUp_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onRightMouseUp") == 0)
+      onRightMouseUp_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onMiddleMouseUp") == 0)
+      onMiddleMouseUp_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onMouseDragged") == 0)
+      onMouseDragged_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onRightMouseDragged") == 0)
+      onRightMouseDragged_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onMiddleMouseDragged") == 0)
+      onMiddleMouseDragged_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onMouseWheelUp") == 0)
+      onMouseWheelUp_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onMouseWheelDown") == 0)
+      onMouseWheelDown_callback(screenPosition, worldPosition, clickVector);
+   else if (dStricmp(name, "onMouseMove") == 0)
+      onMouseMove_callback(screenPosition, worldPosition, clickVector);
 }
 
 void GameTSCtrl::onMouseDown(const GuiEvent &evt)
 {
    Parent::onMouseDown(evt);
-   if( isMethod( "onMouseDown" ) )
-      makeScriptCall( "onMouseDown", evt );
+
+   sendMouseEvent("onMouseDown", evt);
 }
 
 void GameTSCtrl::onRightMouseDown(const GuiEvent &evt)
 {
    Parent::onRightMouseDown(evt);
-   if( isMethod( "onRightMouseDown" ) )
-      makeScriptCall( "onRightMouseDown", evt );
+
+   sendMouseEvent("onRightMouseDown", evt);
 }
 
 void GameTSCtrl::onMiddleMouseDown(const GuiEvent &evt)
 {
    Parent::onMiddleMouseDown(evt);
-   if( isMethod( "onMiddleMouseDown" ) )
-      makeScriptCall( "onMiddleMouseDown", evt );
+
+   sendMouseEvent("onMiddleMouseDown", evt);
 }
 
 void GameTSCtrl::onMouseUp(const GuiEvent &evt)
 {
    Parent::onMouseUp(evt);
-   if( isMethod( "onMouseUp" ) )
-      makeScriptCall( "onMouseUp", evt );
+
+   sendMouseEvent("onMouseUp", evt);
 }
 
 void GameTSCtrl::onRightMouseUp(const GuiEvent &evt)
 {
    Parent::onRightMouseUp(evt);
-   if( isMethod( "onRightMouseUp" ) )
-      makeScriptCall( "onRightMouseUp", evt );
+
+   sendMouseEvent("onRightMouseUp", evt);
 }
 
 void GameTSCtrl::onMiddleMouseUp(const GuiEvent &evt)
 {
    Parent::onMiddleMouseUp(evt);
-   if( isMethod( "onMiddleMouseUp" ) )
-      makeScriptCall( "onMiddleMouseUp", evt );
+
+   sendMouseEvent("onMiddleMouseUp", evt);
+}
+
+void GameTSCtrl::onMouseDragged(const GuiEvent &evt)
+{
+   Parent::onMouseDragged(evt);
+
+   if (mFrameTime && mFrameTime->getElapsedMs() > 16)
+   {
+      sendMouseEvent("onMouseDragged", evt);
+      mFrameTime->reset();
+   }
+}
+
+void GameTSCtrl::onRightMouseDragged(const GuiEvent &evt)
+{
+   Parent::onRightMouseDragged(evt);
+
+   if (mFrameTime && mFrameTime->getElapsedMs() > 16)
+   {
+      sendMouseEvent("onRightMouseDragged", evt);
+      mFrameTime->reset();
+   }
+}
+
+void GameTSCtrl::onMiddleMouseDragged(const GuiEvent &evt)
+{
+   Parent::onMiddleMouseDragged(evt);
+
+   if (mFrameTime && mFrameTime->getElapsedMs() > 16)
+   {
+      sendMouseEvent("onMiddleMouseDragged", evt);
+      mFrameTime->reset();
+   }
+}
+
+bool GameTSCtrl::onMouseWheelUp(const GuiEvent &evt)
+{
+   sendMouseEvent("onMouseWheelUp", evt);
+
+   return Parent::onMouseWheelUp(evt);
+}
+
+bool GameTSCtrl::onMouseWheelDown(const GuiEvent &evt)
+{
+   sendMouseEvent("onMouseWheelDown", evt);
+
+   return Parent::onMouseWheelDown(evt);
 }
 
 void GameTSCtrl::onMouseMove(const GuiEvent &evt)
@@ -157,6 +391,12 @@ void GameTSCtrl::onMouseMove(const GuiEvent &evt)
          vec.normalizeSafe();
          lineTestEnd = pos + vec * 1000;
       }
+   }
+
+   if (mFrameTime->getElapsedMs() > 16)
+   {
+      sendMouseEvent("onMouseMove", evt);
+      mFrameTime->reset();
    }
 }
 

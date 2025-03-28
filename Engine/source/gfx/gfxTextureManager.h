@@ -193,6 +193,7 @@ public:
    /// Used to remove a cubemap from the cache.
    void releaseCubemap( GFXCubemap *cubemap );
 
+   void splitTerrainMaps(const Torque::Path& path);
 public:
    /// The amount of texture mipmaps to skip when loading a
    /// texture that allows downscaling.

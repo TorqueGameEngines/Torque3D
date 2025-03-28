@@ -39,7 +39,7 @@
 // When an effect is added using "addEffect", this validator intercepts the value
 // and adds it to the dynamic effects list. 
 //
-void afxEffectronData::ewValidator::validateType(SimObject* object, void* typePtr)
+void afxEffectronData::ewValidator::validateType(SimObject* object, StringTableEntry varname, void* typePtr)
 {
   afxEffectronData* eff_data = dynamic_cast<afxEffectronData*>(object);
   afxEffectBaseData** ew = (afxEffectBaseData**)(typePtr);
@@ -111,9 +111,9 @@ void afxEffectronData::reloadReset()
 void afxEffectronData::initPersistFields()
 {
    docsURL;
-  addField("duration",    TypeF32,      myOffset(duration),
+  addFieldV("duration", TypeRangedF32,      myOffset(duration), &CommonValidators::PositiveFloat,
     "...");
-  addField("numLoops",    TypeS32,      myOffset(n_loops),
+  addFieldV("numLoops", TypeRangedS32,      myOffset(n_loops), &CommonValidators::NegDefaultInt,
     "...");
   // effect lists
   // for each of these, dummy_fx_entry is set and then a validator adds it to the appropriate effects list 

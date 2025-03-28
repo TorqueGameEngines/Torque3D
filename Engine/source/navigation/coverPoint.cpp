@@ -77,7 +77,7 @@ void CoverPoint::initPersistFields()
    addField("size", TYPEID<CoverPointSize>(), Offset(mSize, CoverPoint),
       "The size of this cover point.");
 
-   addField("quality", TypeF32, Offset(mQuality, CoverPoint),
+   addFieldV("quality", TypeRangedF32, Offset(mQuality, CoverPoint), &CommonValidators::NormalizedFloat,
       "Reliability of this point as solid cover. (0...1)");
 
    addField("peekLeft", TypeBool, Offset(mPeekLeft, CoverPoint),

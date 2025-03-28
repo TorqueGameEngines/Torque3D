@@ -287,3 +287,10 @@ function EditorInspectorBase::getFullFilePath( %field )
    else
       return makeFullPath( %fileName, getMainDotCsDir() );
 }
+
+function GameBase::onInspect(%this, %inspector)
+{
+    Parent::onInspect(%this, %inspector);
+    if (%this.getDatablock().isMethod("onInspect"))
+        %this.getDatablock().onInspect(%this, %inspector);
+}

@@ -146,12 +146,14 @@ void PhysicalZone::consoleInit()
 	   "@ingroup EnviroMisc\n");
 }
 
+FRangeValidator velocityModRange(-40.0f, 40.0f);
+FRangeValidator gravityModRange(-40.0f, 40.0f);
 void PhysicalZone::initPersistFields()
 {
    docsURL;
    addGroup("Misc");
-   addField("velocityMod",  TypeF32,               Offset(mVelocityMod,  PhysicalZone), "Multiply velocity of objects entering zone by this value every tick.");
-   addField("gravityMod",   TypeF32,               Offset(mGravityMod,   PhysicalZone), "Gravity in PhysicalZone. Multiplies against standard gravity.");
+   addFieldV("velocityMod",  TypeRangedF32,               Offset(mVelocityMod,  PhysicalZone), &velocityModRange, "Multiply velocity of objects entering zone by this value every tick.");
+   addFieldV("gravityMod", TypeRangedF32,               Offset(mGravityMod,   PhysicalZone), &gravityModRange, "Gravity in PhysicalZone. Multiplies against standard gravity.");
    addField("appliedForce", TypePoint3F,           Offset(mAppliedForce, PhysicalZone), "Three-element floating point value representing forces in three axes to apply to objects entering PhysicalZone.");
    addField("polyhedron",   TypeTriggerPolyhedron, Offset(mPolyhedron,   PhysicalZone),
       "The polyhedron type is really a quadrilateral and consists of a corner"

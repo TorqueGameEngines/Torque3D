@@ -14,7 +14,7 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 							   TORQUE_UNICODE UNICODE _UNICODE)
 
 # All link libraries. Modules should append to this the path to specify additional link libraries (.a, .lib, .dylib, .so)
-set(TORQUE_LINK_LIBRARIES tinyxml collada squish opcode assimp FLAC FLAC++ ogg vorbis  
+set(TORQUE_LINK_LIBRARIES tinyxml2 collada squish opcode assimp FLAC FLAC++ ogg vorbis  
 			vorbisfile vorbisenc opus sndfile SDL2 glad pcre convexMath zlib)
 
 if(TORQUE_TESTING)

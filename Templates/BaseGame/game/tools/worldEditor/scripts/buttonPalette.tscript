@@ -148,7 +148,7 @@ function ButtonPalette::refresh(%this)
          variable = getField(%buttonInfo, 3);
       };
       
-      %extents.y += 23;
+      %extents.y += 25;
       
       if(isObject(%this.actionMap))
          %this.actionMap.bindCmd( keyboard, getField(%buttonInfo, 5), %paletteButton @ ".performClick();", "" ); 

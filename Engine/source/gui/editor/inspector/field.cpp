@@ -233,7 +233,7 @@ void GuiInspectorField::setFirstResponder( GuiControl *firstResponder )
 {
    Parent::setFirstResponder( firstResponder );
 
-   if ( firstResponder == this || firstResponder == mEdit )
+   if (( firstResponder == this || firstResponder == mEdit ) && (firstResponder && firstResponder->isProperlyAdded()))
    {
       mInspector->setHighlightField( this );      
    }   
@@ -275,7 +275,7 @@ void GuiInspectorField::setWordData(const S32& wordIndex, const char* data, bool
          const char* wordData = StringUnit::getUnit(fieldData, wordIndex, " \t\n");
 
          S32 type = mField->type;
-         if (type == TypeS8 || type == TypeS32 || type == TypeF32 || type == TypeS32Vector
+         if (type == TypeS8 || type == TypeS16 || type == TypeS32 || type == TypeF32 || type == TypeS32Vector
             || type == TypeF32Vector
             || type == TypeColorI
             || type == TypeColorF
@@ -323,7 +323,7 @@ void GuiInspectorField::setWordData(const S32& wordIndex, const char* data, bool
          const char* wordData = StringUnit::getUnit(fieldData, wordIndex, " \t\n");
 
          S32 type = mField->type;
-         if (type == TypeS8 || type == TypeS32 || type == TypeF32 || type == TypeS32Vector
+         if (type == TypeS8 || type == TypeS16 || type == TypeS32 || type == TypeF32 || type == TypeS32Vector
             || type == TypeF32Vector
             || type == TypeColorI
             || type == TypeColorF
@@ -396,7 +396,7 @@ void GuiInspectorField::setWordData(const S32& wordIndex, const char* data, bool
          const char* wordData = StringUnit::getUnit(fieldData, wordIndex, " \t\n");
 
          S32 type = mField->type;
-         if (type == TypeS8 || type == TypeS32 || type == TypeF32 || type == TypeS32Vector
+         if (type == TypeS8 || type == TypeS16 || type == TypeS32 || type == TypeF32 || type == TypeS32Vector
             || type == TypeF32Vector
             || type == TypeColorI
             || type == TypeColorF
@@ -544,7 +544,7 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
          String newValue = strData;
          S32 type= mField->type;
          ConsoleValue evaluationResult;
-         if( type == TypeS8 || type == TypeS32 || type == TypeF32 )
+         if( type == TypeS8 || type == TypeS16 || type == TypeS32 || type == TypeF32 )
          {
             char buffer[ 2048 ];
             expandEscape( buffer, newValue );
@@ -615,6 +615,8 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
          
          // Give the target a chance to validate.
          target->inspectPostApply();
+         if (String::compare(oldValue.c_str(), newValue.c_str()) != 0)
+            Con::executef(mInspector, "onPostInspectorFieldModified", mInspector->getIdString(), target->getIdString());
       }
       
       if( callbacks && numTargets > 1 )
@@ -851,7 +853,8 @@ void GuiInspectorField::setHLEnabled( bool enabled )
             edit->setCursorPos(0);
          }
       }
-      _executeSelectedCallback();
+      if (isProperlyAdded())
+         _executeSelectedCallback();
    }
 }
 
@@ -930,6 +933,34 @@ void GuiInspectorField::_setFieldDocs( StringTableEntry docs )
       else
          mFieldDocs = docs;
    }
+
+   String inDocs(docs);
+   String outDocs("");
+   String outLine("");
+   S32 newline = inDocs.find('\n');
+   if (newline == -1)
+      outDocs = docs;
+   else
+   {
+      U32 uCount = StringUnit::getUnitCount(inDocs, " ");
+      for (U32 i = 0; i < uCount; i++)
+      {
+         String docWord = StringUnit::getUnit(inDocs, i, " ");
+         if (!docWord.isEmpty())
+            outLine += docWord;
+
+         if (outLine.length() > 80)
+         {
+            outLine += "\n";
+            outDocs += outLine;
+            outLine.clear();
+         }
+         else
+            outLine += " ";
+      }
+   }
+   outDocs += String("\n") + outLine;
+   mTooltip = outDocs;
 }
 
 void GuiInspectorField::setHeightOverride(bool useOverride, U32 heightOverride)

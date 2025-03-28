@@ -124,6 +124,8 @@ function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %call
       %command = %this @ ".setupCreateNew"@%assetType @"();";
       eval(%command);
    }
+   
+   NewAssetPropertiesInspector.refresh();
 }
 
 function NewAssetPropertiesInspector::updateNewAssetField(%this)

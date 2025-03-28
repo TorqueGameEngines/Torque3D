@@ -157,11 +157,11 @@ void ReflectionProbe::initPersistFields()
       addProtectedField("enabled", TypeBool, Offset(mEnabled, ReflectionProbe),
          &_setEnabled, &defaultProtectedGetFn, "Is the probe enabled or not");
       addField("canDamp", TypeBool, Offset(mCanDamp, ReflectionProbe),"wetness allowed");
-      addField("attenuation", TypeF32, Offset(mAtten, ReflectionProbe), "falloff percent");
+      addFieldV("attenuation", TypeRangedF32, Offset(mAtten, ReflectionProbe), &CommonValidators::NormalizedFloat, "falloff percent");
    endGroup("Rendering");
 
    addGroup("Reflection");
-      addProtectedField("radius", TypeF32, Offset(mRadius, ReflectionProbe), &_setRadius, &defaultProtectedGetFn, 
+      addProtectedFieldV("radius", TypeRangedF32, Offset(mRadius, ReflectionProbe), &_setRadius, &defaultProtectedGetFn, &CommonValidators::PositiveFloat,
          "The name of the material used to render the mesh.");
 
       addProtectedField("EditPosOffset", TypeBool, Offset(mEditPosOffset, ReflectionProbe),

@@ -65,7 +65,7 @@ class afxMagicSpellData : public afxChoreographerData, public afxMagicSpellDefs
     U32 id;
   public:
     ewValidator(U32 id) { this->id = id; }
-    void validateType(SimObject *object, void *typePtr) override;
+    void validateType(SimObject *object, StringTableEntry varname, void *typePtr) override;
   };
 
   bool                  mDo_id_convert;

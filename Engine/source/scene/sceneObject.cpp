@@ -639,7 +639,7 @@ void SceneObject::setHidden( bool hidden )
 }
 
 //-----------------------------------------------------------------------------
-
+IRangeValidator soMountRange(-1, SceneObject::NumMountPoints);
 void SceneObject::initPersistFields()
 {
    docsURL;
@@ -685,7 +685,7 @@ void SceneObject::initPersistFields()
          "@brief PersistentID of object we are mounted to.\n\n"
          "Unlike the SimObjectID that is determined at run time, the PersistentID of an object is saved with the level/mission and "
          "may be used to form a link between objects." );
-      addField( "mountNode", TypeS32, Offset( mMount.node, SceneObject ), "Node we are mounted to." );
+      addFieldV( "mountNode", TypeRangedS32, Offset( mMount.node, SceneObject ),&soMountRange, "Node we are mounted to." );
       addField( "mountPos", TypeMatrixPosition, Offset( mMount.xfm, SceneObject ), "Position we are mounted at ( object space of our mount object )." );
       addField( "mountRot", TypeMatrixRotation, Offset( mMount.xfm, SceneObject ), "Rotation we are mounted at ( object space of our mount object )." );
 
@@ -1236,10 +1236,10 @@ bool SceneObject::_setMountPID( void* object, const char* index, const char* dat
 
 void SceneObject::resolveMountPID()
 {
-   if ( mMountPID && !mMount.object )
+   if ( mMountPID  )
    {
       SceneObject *obj = dynamic_cast< SceneObject* >( mMountPID->getObject() );
-      if ( obj )
+      if ( obj != mMount.object)
          obj->mountObject( this, mMount.node, mMount.xfm );
    }
 }

@@ -22,6 +22,7 @@
 
 #include "platform/platform.h"
 #include "gui/game/guiMessageVectorCtrl.h"
+#include "console/typeValidators.h"
 
 #include "gui/utility/messageVector.h"
 #include "console/consoleTypes.h"
@@ -193,11 +194,11 @@ GuiMessageVectorCtrl::~GuiMessageVectorCtrl()
 void GuiMessageVectorCtrl::initPersistFields()
 {
    docsURL;
-   addField("lineSpacing",        TypeS32,    Offset(mLineSpacingPixels,      GuiMessageVectorCtrl));
-   addField("lineContinuedIndex", TypeS32,    Offset(mLineContinuationIndent, GuiMessageVectorCtrl));
+   addFieldV("lineSpacing",        TypeRangedS32,    Offset(mLineSpacingPixels,      GuiMessageVectorCtrl), &CommonValidators::PositiveInt);
+   addFieldV("lineContinuedIndex", TypeRangedS32,    Offset(mLineContinuationIndent, GuiMessageVectorCtrl), &CommonValidators::PositiveInt);
    addField("allowedMatches",     TypeString, Offset(mAllowedMatches,         GuiMessageVectorCtrl), 16);
    addField("matchColor",         TypeColorI, Offset(mSpecialColor,           GuiMessageVectorCtrl));
-   addField("maxColorIndex",      TypeS32,    Offset(mMaxColorIndex,          GuiMessageVectorCtrl));
+   addFieldV("maxColorIndex", TypeRangedS32,    Offset(mMaxColorIndex,          GuiMessageVectorCtrl), &CommonValidators::S32_8BitCap);
    Parent::initPersistFields();
 }
 

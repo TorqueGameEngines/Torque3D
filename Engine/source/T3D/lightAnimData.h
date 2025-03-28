@@ -164,14 +164,19 @@ public:
       void read( BitStream *stream );
    };
 
+   enum animEnums
+   {
+      Axis = 3,
+      Channel = 3
+   };
    /// The positional animation parameters for x, y, and z.
-   AnimValue<3> mOffset;
+   AnimValue<Axis> mOffset;
 
    /// The rotational animation parameters for x, y, and z.
-   AnimValue<3> mRot;
+   AnimValue<Axis> mRot;
 
    /// The color animation parameters for r, g, and b.
-   AnimValue<3> mColor;
+   AnimValue<Channel> mColor;
 
    /// The brightness animation parameter.
    AnimValue<1> mBrightness;

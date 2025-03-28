@@ -174,7 +174,9 @@ public:
    StringTableEntry getSearchText() { return mSearchText; }
 
    void setSearchText(StringTableEntry searchText);
-
+   Vector<GuiInspectorGroup*> getGroups() { return mGroups; };
+   DECLARE_CALLBACK(void, onPreInspectObject, (SimObject* object) );
+   DECLARE_CALLBACK(void, onPostInspectObject, (SimObject* object) );
 protected:
       
    typedef Vector< SimObjectPtr< SimObject > > TargetVector;

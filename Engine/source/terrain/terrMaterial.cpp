@@ -98,38 +98,38 @@ void TerrainMaterial::initPersistFields()
 {
    docsURL;
    INITPERSISTFIELD_IMAGEASSET(DiffuseMap, TerrainMaterial,"Base Albedo stretched over the whole map");
-   addField( "diffuseSize", TypeF32, Offset( mDiffuseSize, TerrainMaterial ), "Used to scale the diffuse map to the material square" );
+   addFieldV( "diffuseSize", TypeRangedF32, Offset( mDiffuseSize, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the diffuse map to the material square" );
 
    INITPERSISTFIELD_IMAGEASSET(NormalMap, TerrainMaterial,"NormalMap");
-   addField( "parallaxScale", TypeF32, Offset( mParallaxScale, TerrainMaterial ), "Used to scale the height from the normal map to give some self "
+   addFieldV( "parallaxScale", TypeRangedF32, Offset( mParallaxScale, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the height from the normal map to give some self "
 	   "occlusion effect (aka parallax) to the terrain material" );
 
-   addField("blendHeightBase", TypeF32, Offset(mBlendDepth, TerrainMaterial), "A fixed value to add while blending using heightmap-based blending."
+   addFieldV("blendHeightBase", TypeRangedF32, Offset(mBlendDepth, TerrainMaterial), &CommonValidators::PositiveFloat, "A fixed value to add while blending using heightmap-based blending."
       "Higher numbers = larger blend radius.");
 
-   addField("blendHeightContrast", TypeF32, Offset(mBlendContrast, TerrainMaterial), "A fixed value to add while blending using heightmap-based blending."
+   addFieldV("blendHeightContrast", TypeRangedF32, Offset(mBlendContrast, TerrainMaterial), &CommonValidators::PositiveFloat, "A fixed value to add while blending using heightmap-based blending."
       "Higher numbers = larger blend radius.");
 
-   addFieldV("blendHeightHardness", TypeF32, Offset(mBlendHardness, TerrainMaterial), &hardnessValidator, "How sharply this layer blends with other textures."
+   addFieldV("blendHeightHardness", TypeRangedF32, Offset(mBlendHardness, TerrainMaterial), &hardnessValidator, "How sharply this layer blends with other textures."
       "0->1, soft->hard.");
 
    INITPERSISTFIELD_IMAGEASSET(DetailMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo up close.");
-   addField( "detailSize", TypeF32, Offset( mDetailSize, TerrainMaterial ), "Used to scale the detail map to the material square" );
-   addField( "detailStrength", TypeF32, Offset( mDetailStrength, TerrainMaterial ), "Exponentially sharpens or lightens the detail map rendering on the material" );
-   addField( "detailDistance", TypeF32, Offset( mDetailDistance, TerrainMaterial ), "Changes how far camera can see the detail map rendering on the material" );
-
+   addFieldV( "detailSize", TypeRangedF32, Offset( mDetailSize, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the detail map to the material square" );
+   addFieldV( "detailStrength", TypeRangedF32, Offset( mDetailStrength, TerrainMaterial ), &CommonValidators::PositiveFloat, "Exponentially sharpens or lightens the detail map rendering on the material" );
+   addFieldV( "detailDistance", TypeRangedF32, Offset( mDetailDistance, TerrainMaterial ), &CommonValidators::PositiveFloat, "Changes how far camera can see the detail map rendering on the material" );
+   /*
    addField( "useSideProjection", TypeBool, Offset( mSideProjection, TerrainMaterial ),"Makes that terrain material project along the sides of steep "
 	   "slopes instead of projected downwards");
-
+   */
    INITPERSISTFIELD_IMAGEASSET(ORMConfigMap, TerrainMaterial, "AO|Roughness|metalness map (uses DetailMap UV Coords)");
    addField("isSRGB", TypeBool, Offset(mIsSRGB, TerrainMaterial), "Is the PBR Config map's image in sRGB format?");
    addField("invertRoughness", TypeBool, Offset(mInvertRoughness, TerrainMaterial), "Should the roughness channel of the PBR Config map be inverted?");
 
    //Macro maps additions
    INITPERSISTFIELD_IMAGEASSET(MacroMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo at a distance.");
-   addField( "macroSize", TypeF32, Offset( mMacroSize, TerrainMaterial ), "Used to scale the Macro map to the material square" );
-   addField( "macroStrength", TypeF32, Offset( mMacroStrength, TerrainMaterial ), "Exponentially sharpens or lightens the Macro map rendering on the material" );
-   addField( "macroDistance", TypeF32, Offset( mMacroDistance, TerrainMaterial ), "Changes how far camera can see the Macro map rendering on the material" );
+   addFieldV( "macroSize", TypeRangedF32, Offset( mMacroSize, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the Macro map to the material square" );
+   addFieldV( "macroStrength", TypeRangedF32, Offset( mMacroStrength, TerrainMaterial ), &CommonValidators::PositiveFloat, "Exponentially sharpens or lightens the Macro map rendering on the material" );
+   addFieldV( "macroDistance", TypeRangedF32, Offset( mMacroDistance, TerrainMaterial ), &CommonValidators::PositiveFloat, "Changes how far camera can see the Macro map rendering on the material" );
 
    Parent::initPersistFields();
 

@@ -4,7 +4,13 @@ function AssetBrowser::setupCreateNewLevelAsset(%this)
    NewAssetPropertiesInspector.addField("LevelName", "Level Name", "String",  "Human-readable name of new level", "", "", %this.newAssetSettings);
    NewAssetPropertiesInspector.addField("levelPreviewImage", "Level Preview Image", "Image",  "Preview Image for the level", "", "", %this.newAssetSettings);
    
-   NewAssetPropertiesInspector.addField("isSubScene", "Is SubScene", "bool",  "Is this levelAsset intended as a subScene", "", "", %this.newAssetSettings);
+   //If we forcefully set it elsewhere, adhere
+   if($createLevelAssetIsSubScene == true)
+      %this.newAssetSettings.isSubScene = true;
+   else
+      %this.newAssetSettings.isSubScene = false;
+   
+   NewAssetPropertiesInspector.addField("isSubScene", "Is SubScene", "bool", "Is this levelAsset intended as a subScene", %this.newAssetSettings.isSubScene, "", %this.newAssetSettings);
 
    NewAssetPropertiesInspector.endGroup();
 }
@@ -27,6 +33,7 @@ function AssetBrowser::createLevelAsset(%this)
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
    %levelPath = %assetPath @ %assetName @ %misExtension;
    
+
    %asset = new LevelAsset()
    {
       AssetName = %assetName;
@@ -55,7 +62,24 @@ function AssetBrowser::createLevelAsset(%this)
       echo("Unable to copy template level file!");
    }
    
-   replaceInFile(%levelPath, "EditorTemplateLevel", %assetName);
+   if(%asset.isSubScene)
+   {
+      %fileObj = new FileObject();
+      if (!%fileObj.openForWrite(%levelPath)) 
+      {
+         echo("Unable to write subScene file!");
+      }
+      else
+      {
+         %fileObj.writeLine("");
+         %fileObj.close();
+         %fileObj.delete();  
+      }
+   }
+   else
+   {
+      replaceInFile(%levelPath, "EditorTemplateLevel", %assetName);
+   }
    
    //Generate the associated files
    DecalManagerSave( %assetPath @ %asset.DecalsFile );
@@ -87,6 +111,8 @@ function AssetBrowser::setupCreateNewSubScene(%this)
 
 function AssetBrowser::editLevelAsset(%this, %assetDef)
 {
+   echo("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+   echo(%assetDef @ ".isSubScene = " @ %assetDef.isSubScene);
    if(!%assetDef.isSubScene)
       schedule( 1, 0, "EditorOpenMission", %assetDef);
 }
@@ -157,7 +183,15 @@ function AssetBrowser::buildLevelAssetPreview(%this, %assetDef, %previewData)
 {
    %previewData.assetName = %assetDef.assetName;
    %previewData.assetPath = %assetDef.getLevelPath();
-   %previewData.doubleClickCommand = "schedule( 1, 0, \"EditorOpenMission\", "@%assetDef@");";
+
+   if(%this.selectMode || %assetDef.isSubScene)
+   {
+      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+   }
+   else
+   {
+      %previewData.doubleClickCommand = "schedule( 1, 0, \"EditorOpenMission\", "@%assetDef@");";
+   }
    
    %levelPreviewImage = %assetDef.PreviewImage;
          
@@ -176,7 +210,10 @@ function AssetBrowser::buildLevelAssetPreview(%this, %assetDef, %previewData)
 
 function createAndAssignLevelAsset(%moduleName, %assetName)
 {
-   $createAndAssignField.apply(%moduleName @ ":" @ %assetName);
+   if(AssetDatabase.isDeclaredAsset(%moduleName))
+      $createAndAssignField.apply(%moduleName);
+   else
+      $createAndAssignField.apply(%moduleName @ ":" @ %assetName);
 }
 
 function EWorldEditor::createSelectedAsSubScene( %this, %object )

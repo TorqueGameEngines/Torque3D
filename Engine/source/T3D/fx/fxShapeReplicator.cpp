@@ -680,30 +680,30 @@ U32 fxShapeReplicator::packUpdate(NetConnection * con, U32 mask, BitStream * str
    {
       stream->writeAffineTransform(mObjToWorld);						// Replicator Position.
 
-      stream->writeInt(mFieldData.mSeed, 32);							// Replicator Seed.
-      stream->writeInt(mFieldData.mShapeCount, 32);					// Shapes Count.
-      stream->writeInt(mFieldData.mShapeRetries, 32);					// Shapes Retries.
+      stream->write(mFieldData.mSeed);							// Replicator Seed.
+      stream->write(mFieldData.mShapeCount);					// Shapes Count.
+      stream->write(mFieldData.mShapeRetries);					// Shapes Retries.
       stream->writeString(mFieldData.mShapeFile);
-      stream->writeInt(mFieldData.mInnerRadiusX, 32);					// Shapes Inner Radius X.
-      stream->writeInt(mFieldData.mInnerRadiusY, 32);					// Shapes Inner Radius Y.
-      stream->writeInt(mFieldData.mOuterRadiusX, 32);					// Shapes Outer Radius X.
-      stream->writeInt(mFieldData.mOuterRadiusY, 32);					// Shapes Outer Radius Y.
+      stream->write(mFieldData.mInnerRadiusX);					// Shapes Inner Radius X.
+      stream->write(mFieldData.mInnerRadiusY);					// Shapes Inner Radius Y.
+      stream->write(mFieldData.mOuterRadiusX);					// Shapes Outer Radius X.
+      stream->write(mFieldData.mOuterRadiusY);					// Shapes Outer Radius Y.
       mathWrite(*stream, mFieldData.mShapeScaleMin);					// Shapes Scale Min.
       mathWrite(*stream, mFieldData.mShapeScaleMax);					// Shapes Scale Max.
       mathWrite(*stream, mFieldData.mShapeRotateMin);					// Shapes Rotate Min.
       mathWrite(*stream, mFieldData.mShapeRotateMax);					// Shapes Rotate Max.
-      stream->writeSignedInt(mFieldData.mOffsetZ, 32);				// Shapes Offset Z.
+      stream->write(mFieldData.mOffsetZ);				// Shapes Offset Z.
       stream->writeFlag(mFieldData.mAllowOnTerrain);					// Allow on Terrain.
       stream->writeFlag(mFieldData.mAllowStatics);					// Allow on Statics.
       stream->writeFlag(mFieldData.mAllowOnWater);					// Allow on Water.
       stream->writeFlag(mFieldData.mAllowWaterSurface);				// Allow on Water Surface.
-      stream->writeSignedInt(mFieldData.mAllowedTerrainSlope, 32);	// Shapes Offset Z.
+      stream->write(mFieldData.mAllowedTerrainSlope);	// Shapes Offset Z.
       stream->writeFlag(mFieldData.mAlignToTerrain);					// Shapes AlignToTerrain.
       mathWrite(*stream, mFieldData.mTerrainAlignment);				// Write Terrain Alignment.
       stream->writeFlag(mFieldData.mHideReplications);				// Hide Replications.
       stream->writeFlag(mFieldData.mInteractions);					// Shape Interactions.
       stream->writeFlag(mFieldData.mShowPlacementArea);				// Show Placement Area Flag.
-      stream->writeInt(mFieldData.mPlacementBandHeight, 32);			// Placement Area Height.
+      stream->write(mFieldData.mPlacementBandHeight);			// Placement Area Height.
       stream->write(mFieldData.mPlaceAreaColour);
    }
 
@@ -725,30 +725,30 @@ void fxShapeReplicator::unpackUpdate(NetConnection * con, BitStream * stream)
 
       stream->readAffineTransform(&ReplicatorObjectMatrix);				// Replication Position.
 
-      mFieldData.mSeed					= stream->readInt(32);			// Replicator Seed.
-      mFieldData.mShapeCount				= stream->readInt(32);			// Shapes Count.
-      mFieldData.mShapeRetries			= stream->readInt(32);			// Shapes Retries.
+      stream->read(&mFieldData.mSeed);			               // Replicator Seed.
+      stream->read(&mFieldData.mShapeCount);			         // Shapes Count.
+      stream->read(&mFieldData.mShapeRetries);			         // Shapes Retries.
       mFieldData.mShapeFile				= stream->readSTString();		// Shape File.
-      mFieldData.mInnerRadiusX			= stream->readInt(32);			// Shapes Inner Radius X.
-      mFieldData.mInnerRadiusY			= stream->readInt(32);			// Shapes Inner Radius Y.
-      mFieldData.mOuterRadiusX			= stream->readInt(32);			// Shapes Outer Radius X.
-      mFieldData.mOuterRadiusY			= stream->readInt(32);			// Shapes Outer Radius Y.
-      mathRead(*stream, &mFieldData.mShapeScaleMin);						// Shapes Scale Min.
-      mathRead(*stream, &mFieldData.mShapeScaleMax);						// Shapes Scale Max.
-      mathRead(*stream, &mFieldData.mShapeRotateMin);						// Shapes Rotate Min.
-      mathRead(*stream, &mFieldData.mShapeRotateMax);						// Shapes Rotate Max.
-      mFieldData.mOffsetZ					= stream->readSignedInt(32);	// Shapes Offset Z.
+      stream->read(&mFieldData.mInnerRadiusX);			         // Shapes Inner Radius X.
+      stream->read(&mFieldData.mInnerRadiusY);			         // Shapes Inner Radius Y.
+      stream->read(&mFieldData.mOuterRadiusX);			         // Shapes Outer Radius X.
+      stream->read(&mFieldData.mOuterRadiusY);			         // Shapes Outer Radius Y.
+      mathRead(*stream, &mFieldData.mShapeScaleMin);				   // Shapes Scale Min.
+      mathRead(*stream, &mFieldData.mShapeScaleMax);				   // Shapes Scale Max.
+      mathRead(*stream, &mFieldData.mShapeRotateMin);					// Shapes Rotate Min.
+      mathRead(*stream, &mFieldData.mShapeRotateMax);					// Shapes Rotate Max.
+      stream->read(&mFieldData.mOffsetZ);	// Shapes Offset Z.
       mFieldData.mAllowOnTerrain			= stream->readFlag();			// Allow on Terrain.
       mFieldData.mAllowStatics			= stream->readFlag();			// Allow on Statics.
       mFieldData.mAllowOnWater			= stream->readFlag();			// Allow on Water.
       mFieldData.mAllowWaterSurface		= stream->readFlag();			// Allow on Water Surface.
-      mFieldData.mAllowedTerrainSlope		= stream->readSignedInt(32);	// Allowed Terrain Slope.
+      stream->read(&mFieldData.mAllowedTerrainSlope);	      // Allowed Terrain Slope.
       mFieldData.mAlignToTerrain			= stream->readFlag();			// Read AlignToTerrain.
-      mathRead(*stream, &mFieldData.mTerrainAlignment);					// Read Terrain Alignment.
+      mathRead(*stream, &mFieldData.mTerrainAlignment);			// Read Terrain Alignment.
       mFieldData.mHideReplications		= stream->readFlag();			// Hide Replications.
       mFieldData.mInteractions			= stream->readFlag();			// Read Interactions.
       mFieldData.mShowPlacementArea	= stream->readFlag();				// Show Placement Area Flag.
-      mFieldData.mPlacementBandHeight	= stream->readInt(32);				// Placement Area Height.
+      stream->read(&mFieldData.mPlacementBandHeight);	// Placement Area Height.
       stream->read(&mFieldData.mPlaceAreaColour);
 
       // Set Transform.

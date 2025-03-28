@@ -124,7 +124,7 @@ void foliageProcessVert( inout vec3 position,
                          in vec3 eyePos )
 {  
    // Assign the normal and tagent values.
-   //normal = vec3( 0, 0, 1 );//cross( gc_camUp, gc_camRight );
+   normal = vec3( 0, 0, 1 );
    T = gc_camRight;
    
    // Pull out local vars we need for work.
@@ -165,15 +165,6 @@ void foliageProcessVert( inout vec3 position,
    vec4 uvSet = gc_typeRects[type]; 
    texCoord.x = uvSet.x + ( uvSet.z * sUVCornerExtent[corner].x );
    texCoord.y = uvSet.y + ( uvSet.w * sUVCornerExtent[corner].y );
-
-   // Animate the normal to get lighting changes
-   // across the the wind swept foliage.
-   // 
-   // TODO: Expose the 10x as a factor to control
-   // how much the wind effects the lighting on the grass.
-   //
-   normal.xy += wind.xy * ( 10.0 * texCoord.w );
-   normal = normalize( normal );
 
    // Get the alpha fade value.
    

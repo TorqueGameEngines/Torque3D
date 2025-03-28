@@ -115,11 +115,11 @@ public:
 
    enum AnimType
    {
-      Scroll = 1,
-      Rotate = 2,
-      Wave = 4,
-      Scale = 8,
-      Sequence = 16,
+      Scroll = BIT(0),
+      Rotate = BIT(1),
+      Wave = BIT(2),
+      Scale = BIT(3),
+      Sequence = BIT(4),
    };
 
    enum WaveType
@@ -235,17 +235,17 @@ public:
    bool     mIsSRGb[MAX_STAGES];
    DECLARE_IMAGEASSET_ARRAY(Material, AOMap, MAX_STAGES, onImageAssetChanged);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, AOMap);
-   F32      mAOChan[MAX_STAGES];
+   S32      mAOChan[MAX_STAGES];
 
    DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, MAX_STAGES, onImageAssetChanged);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, RoughMap);
    bool     mInvertRoughness[MAX_STAGES];
-   F32      mRoughnessChan[MAX_STAGES];
+   S32      mRoughnessChan[MAX_STAGES];
 
    DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, MAX_STAGES, onImageAssetChanged);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, MetalMap);
 
-   F32      mMetalChan[MAX_STAGES];
+   S32      mMetalChan[MAX_STAGES];
    DECLARE_IMAGEASSET_ARRAY(Material, GlowMap, MAX_STAGES, onImageAssetChanged);
    DECLARE_IMAGEASSET_ARRAY_SETGET(Material, GlowMap);
 

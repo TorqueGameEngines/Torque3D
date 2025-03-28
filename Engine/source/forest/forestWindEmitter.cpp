@@ -245,15 +245,15 @@ void ForestWindEmitter::initPersistFields()
    addGroup( "ForestWind" );
       addField( "windEnabled",         TypeBool,      Offset( mEnabled, ForestWindEmitter ), "Determines if the emitter will be counted in wind calculations." );
       addField( "radialEmitter",       TypeBool,      Offset( mRadialEmitter, ForestWindEmitter ), "Determines if the emitter is a global direction or local radial emitter." );
-      addField( "strength",            TypeF32,       Offset( mWindStrength, ForestWindEmitter ), "The strength of the wind force." );
-      addField( "radius",              TypeF32,       Offset( mWindRadius, ForestWindEmitter ), "The radius of the emitter for local radial emitters." );
-      addField( "gustStrength",        TypeF32,       Offset( mWindGustStrength, ForestWindEmitter ), "The maximum strength of a gust." );
-      addField( "gustFrequency",       TypeF32,       Offset( mWindGustFrequency, ForestWindEmitter ), "The frequency of gusting in seconds." );
-      addField( "gustYawAngle",        TypeF32,       Offset( mWindGustYawAngle, ForestWindEmitter ), "The amount of degrees the wind direction can drift (both positive and negative)." );
-      addField( "gustYawFrequency",    TypeF32,       Offset( mWindGustYawFrequency, ForestWindEmitter ), "The frequency of wind yaw drift, in seconds." );
-      addField( "gustWobbleStrength",  TypeF32,       Offset( mWindGustWobbleStrength, ForestWindEmitter ), "The amount of random wobble added to gust and turbulence vectors." );
-      addField( "turbulenceStrength",  TypeF32,       Offset( mWindTurbulenceStrength, ForestWindEmitter ), "The strength of gust turbulence." ); 
-      addField( "turbulenceFrequency", TypeF32,       Offset( mWindTurbulenceFrequency, ForestWindEmitter ), "The frequency of gust turbulence, in seconds." ); 
+      addFieldV( "strength", TypeRangedF32,       Offset( mWindStrength, ForestWindEmitter ), &CommonValidators::PositiveFloat, "The strength of the wind force." );
+      addFieldV( "radius",              TypeRangedF32,       Offset( mWindRadius, ForestWindEmitter ), &CommonValidators::PositiveFloat, "The radius of the emitter for local radial emitters." );
+      addFieldV( "gustStrength", TypeRangedF32,       Offset( mWindGustStrength, ForestWindEmitter ), &CommonValidators::PositiveFloat, "The maximum strength of a gust." );
+      addFieldV( "gustFrequency", TypeRangedF32,       Offset( mWindGustFrequency, ForestWindEmitter ), &CommonValidators::PositiveFloat, "The frequency of gusting in seconds." );
+      addFieldV( "gustYawAngle", TypeRangedF32,       Offset( mWindGustYawAngle, ForestWindEmitter ), &CommonValidators::PosDegreeRange, "The amount of degrees the wind direction can drift (both positive and negative)." );
+      addFieldV( "gustYawFrequency", TypeRangedF32,       Offset( mWindGustYawFrequency, ForestWindEmitter ), &CommonValidators::PositiveFloat, "The frequency of wind yaw drift, in seconds." );
+      addFieldV( "gustWobbleStrength", TypeRangedF32,       Offset( mWindGustWobbleStrength, ForestWindEmitter ), &CommonValidators::PositiveFloat, "The amount of random wobble added to gust and turbulence vectors." );
+      addFieldV( "turbulenceStrength", TypeRangedF32,       Offset( mWindTurbulenceStrength, ForestWindEmitter ), &CommonValidators::PositiveFloat, "The strength of gust turbulence." );
+      addFieldV( "turbulenceFrequency", TypeRangedF32,       Offset( mWindTurbulenceFrequency, ForestWindEmitter ), &CommonValidators::PositiveFloat, "The frequency of gust turbulence, in seconds." );
       addField( "hasMount", TypeBool, Offset( mHasMount, ForestWindEmitter ), "Determines if the emitter is mounted to another object." );
    endGroup( "ForestWind" );
 }

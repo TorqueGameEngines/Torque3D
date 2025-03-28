@@ -712,8 +712,13 @@ TerrainEditor::TerrainEditor() :
    mActions.push_back(new SmoothHeightAction(this));
    mActions.push_back(new SmoothSlopeAction(this));
    mActions.push_back(new PaintNoiseAction(this));
-   //mActions.push_back(new ThermalErosionAction(this));
-
+   mActions.push_back(new ThermalErosionAction(this));
+   mActions.push_back(new HydraulicErosionAction(this));
+   mActions.push_back(new copyAction(this));
+   mActions.push_back(new pasteAction(this));
+   mActions.push_back(new pasteUpAction(this));
+   mActions.push_back(new pasteDownAction(this));
+   
 
    // set the default action
    mCurrentAction = mActions[0];

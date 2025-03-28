@@ -92,7 +92,7 @@ void GuiFrameSetCtrl::initPersistFields()
    addField( "rows", TypeS32Vector, Offset(mRowOffsets, GuiFrameSetCtrl),
       "A vector of row offsets (determines the height of each row)." );
 
-   addField( "borderWidth", TypeS32, Offset(mFramesetDetails.mBorderWidth, GuiFrameSetCtrl),
+   addFieldV( "borderWidth", TypeRangedS32, Offset(mFramesetDetails.mBorderWidth, GuiFrameSetCtrl), &CommonValidators::PositiveInt,
       "Width of interior borders between cells in pixels." );
 
    addField( "borderColor", TypeColorI, Offset(mFramesetDetails.mBorderColor, GuiFrameSetCtrl),
@@ -111,7 +111,7 @@ void GuiFrameSetCtrl::initPersistFields()
       "If true, row and column offsets are automatically scaled to match the "
       "new extents when the control is resized." );
 
-   addField( "fudgeFactor", TypeS32, Offset(mFudgeFactor, GuiFrameSetCtrl),
+   addFieldV( "fudgeFactor", TypeRangedS32, Offset(mFudgeFactor, GuiFrameSetCtrl), &CommonValidators::PositiveInt,
       "Offset for row and column dividers in pixels" );
 
    Parent::initPersistFields();

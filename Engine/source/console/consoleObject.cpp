@@ -507,6 +507,8 @@ void ConsoleObject::addField(const char*  in_pFieldname,
 {
    AbstractClassRep::Field f;
    f.pFieldname = StringTable->insert(in_pFieldname);
+   ConsoleBaseType* conType = ConsoleBaseType::getType(in_fieldType);
+   AssertFatal(conType, avar("ConsoleObject::addProtectedField[%s] - invalid console type", in_pFieldname));
 
    if (in_pFieldDocs)
       f.pFieldDocs = in_pFieldDocs;
@@ -522,8 +524,6 @@ void ConsoleObject::addField(const char*  in_pFieldname,
    f.writeDataFn = in_writeDataFn;
    f.networkMask = 0;
 
-   ConsoleBaseType* conType = ConsoleBaseType::getType(in_fieldType);
-   AssertFatal(conType, "ConsoleObject::addField - invalid console type");
    f.table = conType->getEnumTable();
 
    sg_tempFieldList.push_back(f);
@@ -602,6 +602,8 @@ void ConsoleObject::addProtectedField(const char*  in_pFieldname,
 {
    AbstractClassRep::Field f;
    f.pFieldname = StringTable->insert(in_pFieldname);
+   ConsoleBaseType* conType = ConsoleBaseType::getType(in_fieldType);
+   AssertFatal(conType, avar("ConsoleObject::addProtectedField[%s] - invalid console type", in_pFieldname));
 
    if (in_pFieldDocs)
       f.pFieldDocs = in_pFieldDocs;
@@ -616,38 +618,127 @@ void ConsoleObject::addProtectedField(const char*  in_pFieldname,
    f.getDataFn = in_getDataFn;
    f.writeDataFn = in_writeDataFn;
    f.networkMask = 0;
-
-   ConsoleBaseType* conType = ConsoleBaseType::getType(in_fieldType);
-   AssertFatal(conType, "ConsoleObject::addProtectedField - invalid console type");
    f.table = conType->getEnumTable();
 
    sg_tempFieldList.push_back(f);
 }
 
-void ConsoleObject::addFieldV(const char*  in_pFieldname,
-                       const U32 in_fieldType,
-                       const dsize_t in_fieldOffset,
-                       TypeValidator *v,
-                       const char* in_pFieldDocs)
+void ConsoleObject::addProtectedFieldV(const char* in_pFieldname,
+   const U32 in_fieldType,
+   const dsize_t in_fieldOffset,
+   AbstractClassRep::SetDataNotify in_setDataFn,
+   AbstractClassRep::GetDataNotify in_getDataFn,
+   AbstractClassRep::WriteDataNotify in_writeDataFn,
+   TypeValidator* v,
+   const U32 in_elementCount,
+   const char* in_pFieldDocs,
+   U32 flags)
 {
    AbstractClassRep::Field f;
-   f.pFieldname   = StringTable->insert(in_pFieldname);
-   if(in_pFieldDocs)
-      f.pFieldDocs   = in_pFieldDocs;
-   f.type         = in_fieldType;
-   f.offset       = in_fieldOffset;
-   f.elementCount = 1;
-   f.table        = NULL;
-   f.setDataFn    = &defaultProtectedSetFn;
-   f.getDataFn    = &defaultProtectedGetFn;
-   f.writeDataFn = &defaultProtectedWriteFn;
-   f.validator    = v;
+   f.pFieldname = StringTable->insert(in_pFieldname);
+   ConsoleBaseType* conType = ConsoleBaseType::getType(in_fieldType);
+   AssertFatal(conType, avar("ConsoleObject::addProtectedField[%s] - invalid console type", in_pFieldname));
+
+   if (in_pFieldDocs)
+      f.pFieldDocs = in_pFieldDocs;
+
+   f.type = in_fieldType;
+   f.offset = in_fieldOffset;
+   f.elementCount = in_elementCount;
+   f.validator = v;
+   f.flag = flags;
+
+   f.setDataFn = in_setDataFn;
+   f.getDataFn = in_getDataFn;
+   f.writeDataFn = in_writeDataFn;
    f.networkMask = 0;
-   v->fieldIndex  = sg_tempFieldList.size();
+   sg_tempFieldList.push_back(f);
+}
+
+void ConsoleObject::addProtectedFieldV(const char* in_pFieldname,
+   const U32     in_fieldType,
+   const dsize_t in_fieldOffset,
+   AbstractClassRep::SetDataNotify in_setDataFn,
+   AbstractClassRep::GetDataNotify in_getDataFn,
+   TypeValidator* v,
+   const U32 in_elementCount,
+   const char* in_pFieldDocs,
+   U32 flags)
+{
+   addProtectedFieldV(
+      in_pFieldname,
+      in_fieldType,
+      in_fieldOffset,
+      in_setDataFn,
+      in_getDataFn,
+      &defaultProtectedWriteFn,
+      v,
+      in_elementCount,
+      in_pFieldDocs,
+      flags);
+}
+
+void ConsoleObject::addProtectedFieldV(const char* in_pFieldname,
+   const U32     in_fieldType,
+   const dsize_t in_fieldOffset,
+   AbstractClassRep::SetDataNotify in_setDataFn,
+   AbstractClassRep::GetDataNotify in_getDataFn,
+   TypeValidator* v,
+   const char* in_pFieldDocs,
+   U32 flags)
+{
+   addProtectedFieldV(
+      in_pFieldname,
+      in_fieldType,
+      in_fieldOffset,
+      in_setDataFn,
+      in_getDataFn,
+      &defaultProtectedWriteFn,
+      v,
+      1,
+      in_pFieldDocs,
+      flags);
+}
+
+void ConsoleObject::addFieldV(const char* in_pFieldname,
+   const U32 in_fieldType,
+   const dsize_t in_fieldOffset,
+   TypeValidator* v,
+   const U32 in_elementCount,
+   const char* in_pFieldDocs)
+{
+   AbstractClassRep::Field f;
+   f.pFieldname = StringTable->insert(in_pFieldname);
+   ConsoleBaseType* conType = ConsoleBaseType::getType(in_fieldType);
+   AssertFatal(conType, avar("ConsoleObject::addProtectedField[%s] - invalid console type", in_pFieldname));
+   if (in_pFieldDocs)
+      f.pFieldDocs = in_pFieldDocs;
+   f.type = in_fieldType;
+   f.offset = in_fieldOffset;
+   f.table = NULL;
+   f.setDataFn = &defaultProtectedSetFn;
+   f.getDataFn = &defaultProtectedGetFn;
+   f.writeDataFn = &defaultProtectedWriteFn;
+   f.elementCount = in_elementCount;
+   f.validator = v;
+   f.networkMask = 0;
 
    sg_tempFieldList.push_back(f);
 }
 
+void ConsoleObject::addFieldV(const char* in_pFieldname,
+   const U32 in_fieldType,
+   const dsize_t in_fieldOffset,
+   TypeValidator* v,
+   const char* in_pFieldDocs)
+{
+   addFieldV(in_pFieldname,
+      in_fieldType,
+      in_fieldOffset,
+      v,
+      1,
+      in_pFieldDocs);
+}
 void ConsoleObject::addDeprecatedField(const char *fieldName)
 {
    AbstractClassRep::Field f;

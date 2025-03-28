@@ -101,7 +101,8 @@ void GameMode::findGameModes(const char* gameModeList, Vector<GameMode*> *outGam
       GameMode* gm;
       if (Sim::findObject(gameModeNames[i].c_str(), gm))
       {
-         outGameModes->push_back(gm);
+         if (gm->isActive() || gm->isAlwaysActive())
+            outGameModes->push_back(gm);
       }
    }
 }

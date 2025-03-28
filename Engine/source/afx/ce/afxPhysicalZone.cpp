@@ -73,13 +73,15 @@ afxPhysicalZoneData::afxPhysicalZoneData(const afxPhysicalZoneData& other, bool 
 
 #define myOffset(field) Offset(field, afxPhysicalZoneData)
 
+FRangeValidator afxVelocityModRange(-40.0f, 40.0f);
+FRangeValidator afxGravityModRange(-40.0f, 40.0f);
 void afxPhysicalZoneData::initPersistFields()
 {
    docsURL;
-  addField("velocityMod",               TypeF32,         myOffset(mVelocityMod),
+  addFieldV("velocityMod", TypeRangedF32,         myOffset(mVelocityMod), &afxVelocityModRange,
     "A multiplier that biases the velocity of an object every tick it is within the "
     "zone.");
-  addField("gravityMod",                TypeF32,         myOffset(mGravityMod),
+  addFieldV("gravityMod", TypeRangedF32,         myOffset(mGravityMod), &afxGravityModRange,
     "A multiplier that biases the influence of gravity on objects within the zone.");
   addField("appliedForce",              TypePoint3F,     myOffset(mAppliedForce),
     "A three-valued vector representing a directional force applied to objects withing "

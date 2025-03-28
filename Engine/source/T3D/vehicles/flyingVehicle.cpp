@@ -179,52 +179,52 @@ void FlyingVehicleData::initPersistFields()
    Parent::initPersistFields();
 
    addGroup("Physics");
-   addField( "rollForce", TypeF32, Offset(rollForce, FlyingVehicleData),
+   addFieldV( "rollForce", TypeRangedF32, Offset(rollForce, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "@brief Damping torque against rolling maneuvers (rotation about the y-axis), "
       "proportional to linear velocity.\n\n"
       "Acts to adjust roll to a stable position over time as the vehicle moves." );
-   addField( "rotationalDrag", TypeF32, Offset(rotationalDrag, FlyingVehicleData),
+   addFieldV( "rotationalDrag", TypeRangedF32, Offset(rotationalDrag, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "Rotational drag factor (slows vehicle rotation speed in all axes)." );
-   addField( "horizontalSurfaceForce", TypeF32, Offset(horizontalSurfaceForce, FlyingVehicleData),
+   addFieldV( "horizontalSurfaceForce", TypeRangedF32, Offset(horizontalSurfaceForce, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "@brief Damping force in the opposite direction to sideways velocity.\n\n"
       "Provides \"bite\" into the wind for climbing/diving and turning)." );
-   addField( "hoverHeight", TypeF32, Offset(hoverHeight, FlyingVehicleData),
+   addFieldV( "hoverHeight", TypeRangedF32, Offset(hoverHeight, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "The vehicle's height off the ground when at rest." );
-   addField( "createHoverHeight", TypeF32, Offset(createHoverHeight, FlyingVehicleData),
+   addFieldV( "createHoverHeight", TypeRangedF32, Offset(createHoverHeight, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "@brief The vehicle's height off the ground when useCreateHeight is active.\n\n"
       "This can help avoid problems with spawning the vehicle." );
    endGroup("Physics");
 
    addGroup("Steering");
-   addField( "maneuveringForce", TypeF32, Offset(maneuveringForce, FlyingVehicleData),
+   addFieldV( "maneuveringForce", TypeRangedF32, Offset(maneuveringForce, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "@brief Maximum X and Y (horizontal plane) maneuvering force.\n\n"
       "The actual force applied depends on the current thrust." );
-   addField( "verticalSurfaceForce", TypeF32, Offset(verticalSurfaceForce, FlyingVehicleData),
+   addFieldV( "verticalSurfaceForce", TypeRangedF32, Offset(verticalSurfaceForce, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "@brief Damping force in the opposite direction to vertical velocity.\n\n"
       "Controls side slip; lower numbers give more slide." );
-   addField( "vertThrustMultiple", TypeF32, Offset(vertThrustMultiple, FlyingVehicleData),
+   addFieldV( "vertThrustMultiple", TypeRangedF32, Offset(vertThrustMultiple, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "Multiplier applied to the jetForce (defined in VehicleData) when thrusting vertically." );
-   addField( "steeringForce", TypeF32, Offset(steeringForce, FlyingVehicleData),
+   addFieldV( "steeringForce", TypeRangedF32, Offset(steeringForce, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "@brief Maximum X and Z (sideways and vertical) steering force.\n\n"
       "The actual force applied depends on the current steering input." );
-   addField( "steeringRollForce", TypeF32, Offset(steeringRollForce, FlyingVehicleData),
+   addFieldV( "steeringRollForce", TypeRangedF32, Offset(steeringRollForce, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "Roll force induced by sideways steering input value (controls how much "
       "the vehicle rolls when turning)." );
    endGroup("Steering");
 
    addGroup("AutoCorrection");
-   addField( "maxAutoSpeed", TypeF32, Offset(maxAutoSpeed, FlyingVehicleData),
+   addFieldV( "maxAutoSpeed", TypeRangedF32, Offset(maxAutoSpeed, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "Maximum speed for automatic vehicle control assistance - vehicles "
       "travelling at speeds above this value do not get control assitance." );
-   addField( "autoInputDamping", TypeF32, Offset(autoInputDamping, FlyingVehicleData),
+   addFieldV( "autoInputDamping", TypeRangedF32, Offset(autoInputDamping, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "@brief Scale factor applied to steering input if speed is less than "
       "maxAutoSpeed to.improve handling at very low speeds.\n\n"
       "Smaller values make steering less sensitive." );
-   addField( "autoLinearForce", TypeF32, Offset(autoLinearForce, FlyingVehicleData),
+   addFieldV( "autoLinearForce", TypeRangedF32, Offset(autoLinearForce, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "@brief Corrective force applied to slow the vehicle when moving at less than "
       "maxAutoSpeed.\n\n"
       "The force is inversely proportional to vehicle speed." );
-   addField( "autoAngularForce", TypeF32, Offset(autoAngularForce, FlyingVehicleData),
+   addFieldV( "autoAngularForce", TypeRangedF32, Offset(autoAngularForce, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "@brief Corrective torque applied to level out the vehicle when moving at less "
       "than maxAutoSpeed.\n\n"
       "The torque is inversely proportional to vehicle speed." );
@@ -245,7 +245,7 @@ void FlyingVehicleData::initPersistFields()
       "and JetNozzle3." );
    addField( "trailEmitter",TYPEID< ParticleEmitterData >(), Offset(jetEmitter[TrailEmitter], FlyingVehicleData),
       "Emitter to generate contrail particles from model nodes contrail0 - contrail3." );
-   addField( "minTrailSpeed", TypeF32, Offset(minTrailSpeed, FlyingVehicleData),
+   addFieldV( "minTrailSpeed", TypeRangedF32, Offset(minTrailSpeed, FlyingVehicleData), &CommonValidators::PositiveFloat,
       "Minimum speed at which to start generating contrail particles." );
    endGroup("Particle Effects");
 

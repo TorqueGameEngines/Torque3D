@@ -111,15 +111,15 @@ void GuiSpeedometerHud::initPersistFields()
    docsURL;
    addGroup("Needle");
 
-   addField("maxSpeed", TypeF32, Offset( mMaxSpeed, GuiSpeedometerHud ),
+   addFieldV("maxSpeed", TypeRangedF32, Offset( mMaxSpeed, GuiSpeedometerHud ), &CommonValidators::PositiveFloat,
       "Maximum Vehicle speed (in Torque units per second) to represent on the "
       "speedo (Vehicle speeds greater than this are clamped to maxSpeed)." );
 
-   addField("minAngle", TypeF32, Offset( mMinAngle, GuiSpeedometerHud ),
+   addFieldV("minAngle", TypeRangedF32, Offset( mMinAngle, GuiSpeedometerHud ), &CommonValidators::DegreeRange,
       "Angle (in radians) of the needle when the Vehicle speed is 0. An angle "
       "of 0 points right, 90 points up etc)." );
 
-   addField("maxAngle", TypeF32, Offset( mMaxAngle, GuiSpeedometerHud ),
+   addFieldV("maxAngle", TypeRangedF32, Offset( mMaxAngle, GuiSpeedometerHud ), &CommonValidators::DegreeRange,
       "Angle (in radians) of the needle when the Vehicle speed is >= maxSpeed. "
       "An angle of 0 points right, 90 points up etc)." );
 
@@ -130,13 +130,13 @@ void GuiSpeedometerHud::initPersistFields()
       "Center of the needle, offset from the GuiSpeedometerHud control top "
       "left corner" );
 
-   addField("length", TypeF32, Offset( mNeedleLength, GuiSpeedometerHud ),
+   addFieldV("length", TypeRangedF32, Offset( mNeedleLength, GuiSpeedometerHud ), &CommonValidators::PositiveFloat,
       "Length of the needle from center to end" );
 
-   addField("width", TypeF32, Offset( mNeedleWidth, GuiSpeedometerHud ),
+   addFieldV("width", TypeRangedF32, Offset( mNeedleWidth, GuiSpeedometerHud ), &CommonValidators::PositiveFloat,
       "Width of the needle" );
 
-   addField("tail", TypeF32, Offset( mTailLength, GuiSpeedometerHud ),
+   addFieldV("tail", TypeRangedF32, Offset( mTailLength, GuiSpeedometerHud ), &CommonValidators::PositiveFloat,
       "Length of the needle from center to tail" );
 
    endGroup("Needle");

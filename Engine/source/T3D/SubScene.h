@@ -40,6 +40,7 @@ private:
    S32 mStartUnloadTimerMS;
 
    bool mLoaded;
+   bool mSaving;
    bool mFreezeLoading;
 
    String mLoadIf;

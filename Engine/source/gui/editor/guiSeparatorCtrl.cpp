@@ -29,6 +29,7 @@
 #include "console/consoleTypes.h"
 #include "gui/core/guiCanvas.h"
 #include "gui/core/guiDefaultControlRender.h"
+#include "console/typeValidators.h"
 
 IMPLEMENT_CONOBJECT(GuiSeparatorCtrl);
 
@@ -77,9 +78,9 @@ void GuiSeparatorCtrl::initPersistFields()
       "Optional text label to display." );
    addField("type",           TYPEID< separatorTypeOptions >(), Offset(mSeparatorType,  GuiSeparatorCtrl),
       "Orientation of separator." );
-   addField("borderMargin",   TypeS32,    Offset(mMargin,         GuiSeparatorCtrl));
+   addFieldV("borderMargin",   TypeRangedS32,    Offset(mMargin,         GuiSeparatorCtrl), &CommonValidators::PositiveInt);
    addField("invisible",      TypeBool,   Offset(mInvisible,      GuiSeparatorCtrl));// Nonsense.  Should use GuiControl's visibility.
-   addField("leftMargin",     TypeS32,    Offset(mTextLeftMargin, GuiSeparatorCtrl),
+   addFieldV("leftMargin", TypeRangedS32,    Offset(mTextLeftMargin, GuiSeparatorCtrl), &CommonValidators::PositiveInt,
       "Left margin of text label." );
 
    Parent::initPersistFields();

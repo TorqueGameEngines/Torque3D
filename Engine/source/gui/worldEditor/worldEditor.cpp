@@ -2464,7 +2464,7 @@ static void findDragMeshCallback( SceneObject *obj, void *data )
    if ( dragData->mWorldEditor->objClassIgnored( obj ) ||
         !obj->isSelectionEnabled() ||
         obj->getTypeMask() & ( TerrainObjectType | ProjectileObjectType ) ||
-        dynamic_cast< GroundPlane* >( obj ) ||
+        dynamic_cast< GroundPlane* >( obj ) || dynamic_cast<SubScene*>(obj) ||
         Prefab::getPrefabByChild( obj ) )
    {
       return;

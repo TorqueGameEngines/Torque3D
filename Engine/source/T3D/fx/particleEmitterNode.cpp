@@ -87,10 +87,11 @@ ParticleEmitterNodeData::~ParticleEmitterNodeData()
 //-----------------------------------------------------------------------------
 // initPersistFields
 //-----------------------------------------------------------------------------
+FRangeValidator emTimeMultipleRange(0.01f,100.0f);
 void ParticleEmitterNodeData::initPersistFields()
 {
    docsURL;
-   addField( "timeMultiple", TYPEID< F32 >(), Offset(timeMultiple, ParticleEmitterNodeData),
+   addFieldV( "timeMultiple", TypeRangedF32, Offset(timeMultiple, ParticleEmitterNodeData), &emTimeMultipleRange,
       "@brief Time multiplier for particle emitter nodes.\n\n"
       "Increasing timeMultiple is like running the emitter at a faster rate - single-shot "
       "emitters will complete in a shorter time, and continuous emitters will generate "
@@ -187,7 +188,7 @@ void ParticleEmitterNode::initPersistFields()
       "Controls whether particles are emitted from this node." );
    addField( "emitter",  TYPEID< ParticleEmitterData >(), Offset(mEmitterDatablock, ParticleEmitterNode),
       "Datablock to use when emitting particles." );
-   addField( "velocity", TYPEID< F32 >(), Offset(mVelocity, ParticleEmitterNode),
+   addFieldV( "velocity", TypeRangedF32, Offset(mVelocity, ParticleEmitterNode), &CommonValidators::F32Range,
       "Velocity to use when emitting particles (in the direction of the "
       "ParticleEmitterNode object's up (Z) axis)." );
 

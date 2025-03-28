@@ -37,12 +37,18 @@ function PlayGui::onWake(%this)
    if(isObject(moveMap))
       moveMap.push();
       
-   callOnModules("Playgui_onWake");
+    %modulesIDList = getModulesAndGameModesList(true, "Game");    
+    %numModsNeedingLoaded = getNumCanCallOnObjectList("Playgui_onWake", %modulesIDList);    
+    if (%numModsNeedingLoaded)
+        callOnObjectList("Playgui_onWake", %modulesIdList);
 }
 
 function PlayGui::onSleep(%this)
 {
-   callOnModules("Playgui_onSleep");
+    %modulesIDList = getModulesAndGameModesList(true, "Game");    
+    %numModsNeedingLoaded = getNumCanCallOnObjectList("Playgui_onSleep", %modulesIDList);    
+    if (%numModsNeedingLoaded)
+        callOnObjectList("Playgui_onSleep", %modulesIdList);
    
    // pop the keymaps
    if(isObject(moveMap))
@@ -51,7 +57,11 @@ function PlayGui::onSleep(%this)
 
 function PlayGui::clearHud( %this )
 {
-   callOnModules("Playgui_clearHud");
+    %modulesIDList = getModulesAndGameModesList(true, "Game");    
+    %numModsNeedingLoaded = getNumCanCallOnObjectList("Playgui_clearHud", %modulesIDList);    
+    if (%numModsNeedingLoaded)
+        callOnObjectList("Playgui_clearHud", %modulesIdList);
+        
    Canvas.popDialog( MainChatHud );
 
    while ( %this.getCount() > 0 )

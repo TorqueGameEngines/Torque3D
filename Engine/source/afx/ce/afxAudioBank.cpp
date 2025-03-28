@@ -30,6 +30,7 @@
 #include "sfx/sfxDescription.h"
 
 #include "afx/ce/afxAudioBank.h"
+#include "console/typeValidators.h"
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 
@@ -133,7 +134,7 @@ void afxAudioBank::initPersistFields()
     "SFXDescription datablock to use with this set of sounds.");
   addField("preload",     TypeBool,                 Offset(mPreload, afxAudioBank),
     "If set to true, file is pre-loaded, otherwise it is loaded on-demand.");
-  addField("playIndex",   TypeS32,                  Offset(play_index, afxAudioBank),
+  addFieldV("playIndex", TypeRangedS32,                  Offset(play_index, afxAudioBank), &CommonValidators::NegDefaultInt,
     "An array index that selects a sound to play from the filenames[] field. Values "
     "outside of the range of assigned filename[] entries will not play any sound.");
 

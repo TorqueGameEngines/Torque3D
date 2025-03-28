@@ -94,7 +94,7 @@ void afxXM_OscillateZodiacColorData::initPersistFields()
     "...");
   addField("colorB",              TypeColorF,   Offset(color_b,   afxXM_OscillateZodiacColorData),
     "...");
-  addField("speed",               TypeF32,      Offset(speed, afxXM_OscillateZodiacColorData),
+  addFieldV("speed",               TypeRangedF32,      Offset(speed, afxXM_OscillateZodiacColorData), &CommonValidators::PositiveFloat,
     "...");
 
   Parent::initPersistFields();

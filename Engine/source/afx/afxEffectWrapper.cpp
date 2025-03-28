@@ -35,6 +35,7 @@
 #include "afx/afxEffectWrapper.h"
 #include "afx/util/afxAnimCurve.h"
 #include "afx/util/afxEase.h"
+#include "console/typeValidators.h"
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 // afxEffectWrapperData
@@ -237,33 +238,33 @@ void afxEffectWrapperData::initPersistFields()
   addField("ghostIsConstraintSrc",    TypeBool,     myOffset(use_ghost_as_cons_obj),
     "...");
 
-  addField("delay",             TypeF32,          myOffset(ewd_timing.delay),
+  addFieldV("delay", TypeRangedF32,          myOffset(ewd_timing.delay), &CommonValidators::PositiveFloat,
     "...");
-  addField("lifetime",          TypeF32,          myOffset(ewd_timing.lifetime),
+  addFieldV("lifetime", TypeRangedF32,          myOffset(ewd_timing.lifetime), &CommonValidators::PositiveFloat,
     "...");
-  addField("fadeInTime",        TypeF32,          myOffset(ewd_timing.fade_in_time),
+  addFieldV("fadeInTime", TypeRangedF32,          myOffset(ewd_timing.fade_in_time), &CommonValidators::PositiveFloat,
     "...");
-  addField("residueLifetime",   TypeF32,          myOffset(ewd_timing.residue_lifetime),
+  addFieldV("residueLifetime", TypeRangedF32,          myOffset(ewd_timing.residue_lifetime), &CommonValidators::PositiveFloat,
     "...");
   addField("fadeInEase",        TypePoint2F,      myOffset(ewd_timing.fadein_ease),
     "...");
   addField("fadeOutEase",       TypePoint2F,      myOffset(ewd_timing.fadeout_ease),
     "...");
-  addField("lifetimeBias",      TypeF32,          myOffset(ewd_timing.life_bias),
+  addFieldV("lifetimeBias", TypeRangedF32,          myOffset(ewd_timing.life_bias), &CommonValidators::PositiveFloat,
     "...");
-  addField("fadeOutTime",       TypeF32,          myOffset(user_fade_out_time),
+  addFieldV("fadeOutTime", TypeRangedF32,          myOffset(user_fade_out_time), &CommonValidators::PositiveFloat,
     "...");
 
-  addField("rateFactor",        TypeF32,          myOffset(rate_factor),
+  addFieldV("rateFactor", TypeRangedF32,          myOffset(rate_factor), &CommonValidators::PositiveFloat,
     "...");
-  addField("scaleFactor",       TypeF32,          myOffset(scale_factor),
+  addFieldV("scaleFactor", TypeRangedF32,          myOffset(scale_factor), &CommonValidators::PositiveFloat,
     "...");
 
   addField("isLooping",         TypeBool,         myOffset(is_looping),
     "...");
-  addField("loopCount",         TypeS32,          myOffset(n_loops),
+  addFieldV("loopCount",         TypeRangedS32,          myOffset(n_loops), &CommonValidators::PositiveInt,
     "...");
-  addField("loopGapTime",       TypeF32,          myOffset(loop_gap_time),
+  addFieldV("loopGapTime", TypeRangedF32,          myOffset(loop_gap_time), &CommonValidators::PositiveFloat,
     "...");
 
   addField("ignoreTimeFactor",    TypeBool,       myOffset(ignore_time_factor),
@@ -296,9 +297,9 @@ void afxEffectWrapperData::initPersistFields()
     "...");
   addField("direction",         TypePoint3F,      myOffset(direction),
     "...");
-  addField("speed",             TypeF32,          myOffset(speed),
+  addFieldV("speed", TypeRangedF32,          myOffset(speed), &CommonValidators::PositiveFloat,
     "...");
-  addField("mass",              TypeF32,          myOffset(mass),
+  addFieldV("mass", TypeRangedF32,          myOffset(mass), &CommonValidators::PositiveFloat,
     "...");
 
   addField("borrowAltitudes",   TypeBool,         myOffset(borrow_altitudes),
@@ -739,9 +740,9 @@ afxEffectWrapper::~afxEffectWrapper()
 void afxEffectWrapper::initPersistFields()
 {
    docsURL;
-  addField("liveScaleFactor",     TypeF32,    myOffset(mLive_scale_factor),
+  addFieldV("liveScaleFactor", TypeRangedF32,    myOffset(mLive_scale_factor), &CommonValidators::PositiveFloat,
     "...");
-  addField("liveFadeFactor",      TypeF32,    myOffset(mLive_fade_factor),
+  addFieldV("liveFadeFactor", TypeRangedF32,    myOffset(mLive_fade_factor), &CommonValidators::PositiveFloat,
     "...");
 
   Parent::initPersistFields();

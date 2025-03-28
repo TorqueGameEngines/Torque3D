@@ -36,41 +36,76 @@
 // Charles de Rousiers - Electronic Arts Frostbite
 // SIGGRAPH 2014
 
-float3 F_Schlick(float3 f0, float f90, float u)
+float3 F_Schlick(float3 F0, float cosTheta)
 {
-	return f0 + (f90 - f0) * pow(1.f - u, 5.f);
+	return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
 float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
 {
-	float3 ret = float3(0.0, 0.0, 0.0);
-	float powTheta = pow(1.0 - cosTheta, 5.0);
-	float invRough = float(1.0 - roughness);
+	// Compute the Fresnel-Schlick term for the given cosine of the angle
+    float powTheta = pow(1.0 - cosTheta, 5.0);
+    
+    // Adjust the reflectance based on roughness: The roughness scales the contrast of the Fresnel term.
+    float3 fresnel = F0 + (float3(1.0, 1.0, 1.0) - F0) * powTheta;
+    
+    // Modulate the fresnel term by roughness, reducing the effect at higher roughness
+    fresnel *= (1.0 - roughness); // Adjust based on roughness
 
-	ret.x = F0.x + (max(invRough, F0.x) - F0.x) * powTheta;
-	ret.y = F0.y + (max(invRough, F0.y) - F0.y) * powTheta;
-	ret.z = F0.z + (max(invRough, F0.z) - F0.z) * powTheta;
-
-	return ret;
+    return fresnel;
 }
 
-float V_SmithGGXCorrelated(float NdotL, float NdotV, float alphaRoughnessSq)
-{
-	float GGXV = NdotL * sqrt(NdotV * NdotV * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
-	float GGXL = NdotV * sqrt(NdotL * NdotL * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
-
-	float GGX = GGXV + GGXL;
-	if (GGX > 0.0f)
-	{
-		return 0.5f / GGX;
-	}
-	return 0.f;
+float GeometrySchlickGGX(float NdotV, float roughness) { 
+    float r = (roughness + 1.0); 
+    float k = (r * r) / 8.0;
+    return NdotV / (NdotV * (1.0 - k) + k);
 }
 
-float D_GGX(float NdotH, float alphaRoughnessSq)
+float V_SmithGGXCorrelated(float NdotL, float NdotV, float roughness) {
+    float r = roughness * roughness;
+    float ggx1 = NdotV / (NdotV * (1.0 - r) + r);
+    float ggx2 = NdotL / (NdotL * (1.0 - r) + r);
+    return ggx1 * ggx2;
+}
+
+float D_GGX(float NdotH, float roughnessSq)
 {
-	float f = (NdotH * alphaRoughnessSq - NdotH) * NdotH + 1;
-	return alphaRoughnessSq / (M_PI_F * f * f);
+	float f = (NdotH * NdotH * (roughnessSq - 1.0) + 1.0);
+	return roughnessSq / (M_PI_F * f * f);
+}
+
+// The Cook-Torrance BRDF for specular reflection
+float3 CookTorrance(float3 normal, float3 viewDir, float roughness, float3 F)
+{
+    float3 H = normalize(viewDir + reflect(-viewDir, normal)); 
+    float NdotH = max(dot(normal, H), 0.0001);
+    float VdotH = max(dot(viewDir, H), 0.0001);
+    float NdotV = clamp( dot(normal, viewDir), 0.0009765625f,0.9990234375f);
+    float NdotL = NdotH; // Approximate light angle
+
+    // Normal Distribution Function (GGX)
+    float D = D_GGX(NdotH, roughness);
+
+    // Geometry Term (Smith GGX)
+    float G = V_SmithGGXCorrelated(NdotL, NdotV, roughness);
+
+    // Final BRDF (Rebalanced Energy)
+    return (F * D * G) / max(4.0 * NdotV * NdotL, 0.0001);
+}
+
+
+float3 OrenNayarDiffuse(float3 albedo, float3 N, float3 V, float3 L, float roughnessSq) {
+    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = max(dot(N, V), 0.0);
+
+    float alpha2 = roughnessSq * roughnessSq;
+    float A = 1.0 + (alpha2 / (alpha2 + 0.33));
+    float B = 0.45 * (alpha2 / (alpha2 + 0.09));
+
+    float alpha = max(NdotL, NdotV);
+    float beta = min(NdotL, NdotV);
+
+    return albedo * (A + B * max(0.0, dot(V - N * NdotV, L - N * NdotL)) * alpha * beta) * M_1OVER_PI_F;
 }
 
 float3 Fr_DisneyDiffuse(float3 F0, float NdotV, float NdotL, float LdotH, float linearRoughness)
@@ -78,8 +113,8 @@ float3 Fr_DisneyDiffuse(float3 F0, float NdotV, float NdotL, float LdotH, float 
 	float energyBias = lerp (0 , 0.5 , linearRoughness );
 	float energyFactor = lerp (1.0 , 1.0 / 1.51 , linearRoughness );
 	float fd90 = energyBias + 2.0 * LdotH * LdotH * linearRoughness ;
-	float3 lightScatter = F_Schlick( F0 , fd90 , NdotL );
-	float3 viewScatter = F_Schlick(F0 , fd90 , NdotV ); 
+	float3 lightScatter = F_Schlick( F0 , fd90 );
+	float3 viewScatter = F_Schlick(F0 , fd90); 
 
 	return lightScatter * viewScatter * energyFactor ;
 }

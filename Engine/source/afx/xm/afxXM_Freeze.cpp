@@ -163,7 +163,7 @@ void afxXM_FreezeData::initPersistFields()
    docsURL;
   addField("mask",  TypeS32,    Offset(mask, afxXM_FreezeData),
     "...");
-  addField("delay", TypeF32,    Offset(delay, afxXM_FreezeData),
+  addFieldV("delay", TypeRangedF32,    Offset(delay, afxXM_FreezeData), &CommonValidators::PositiveFloat,
     "...");
 
   Parent::initPersistFields();

@@ -135,20 +135,23 @@ ImplementEnumType( ItemLightType,
    { Item::PulsingLight,      "PulsingLight",   "The item has a pulsing light attached.\n" }
 EndImplementEnumType;
 
+FRangeValidator itemFrictionRange(0.0f, FLT_MAX, 1<<10);
+FRangeValidator itemElasticityRange(0.0f, FLT_MAX, 1<<10);
+FRangeValidator itemGravityModRange(FLT_MIN, FLT_MAX, 1<<10);
 void ItemData::initPersistFields()
 {
    docsURL;
    Parent::initPersistFields();
    addGroup("Physics");
-      addField("friction",          TypeF32,       Offset(friction,           ItemData), "A floating-point value specifying how much velocity is lost to impact and sliding friction.");
-      addField("elasticity",        TypeF32,       Offset(elasticity,         ItemData), "A floating-point value specifying how 'bouncy' this ItemData is.");
+      addFieldV("friction",          TypeRangedF32,       Offset(friction,           ItemData), &itemFrictionRange, "A floating-point value specifying how much velocity is lost to impact and sliding friction.");
+      addFieldV("elasticity", TypeRangedF32,       Offset(elasticity,         ItemData) ,&itemElasticityRange, "A floating-point value specifying how 'bouncy' this ItemData is.");
       addField("sticky",            TypeBool,      Offset(sticky,             ItemData),
          "@brief If true, ItemData will 'stick' to any surface it collides with.\n\n"
          "When an item does stick to a surface, the Item::onStickyCollision() callback is called.  The Item has methods to retrieve "
          "the world position and normal the Item is stuck to.\n"
          "@note Valid objects to stick to must be of StaticShapeObjectType.\n");
-      addField("gravityMod",        TypeF32,       Offset(gravityMod,         ItemData), "Floating point value to multiply the existing gravity with, just for this ItemData.");
-      addField("maxVelocity",       TypeF32,       Offset(maxVelocity,        ItemData), "Maximum velocity that this ItemData is able to move.");
+      addFieldV("gravityMod", TypeRangedF32,       Offset(gravityMod,         ItemData),&itemGravityModRange, "Floating point value to multiply the existing gravity with, just for this ItemData.");
+      addFieldV("maxVelocity", TypeRangedF32,       Offset(maxVelocity,        ItemData), &CommonValidators::PositiveFloat, "Maximum velocity that this ItemData is able to move.");
       addField("simpleServerCollision",   TypeBool,  Offset(simpleServerCollision,    ItemData),
          "@brief Determines if only simple server-side collision will be used (for pick ups).\n\n"
          "If set to true then only simple, server-side collision detection will be used.  This is often the case "
@@ -164,10 +167,10 @@ void ItemData::initPersistFields()
       addField("lightColor",        TypeColorF,    Offset(lightColor,         ItemData),
          "@brief Color value to make this light. Example: \"1.0,1.0,1.0\"\n\n"
          "@see lightType\n");
-      addField("lightTime",         TypeS32,       Offset(lightTime,          ItemData), 
+      addFieldV("lightTime",         TypeRangedS32,       Offset(lightTime,          ItemData), &CommonValidators::NaturalNumber,
          "@brief Time value for the light of this ItemData, used to control the pulse speed of the PulsingLight LightType.\n\n"
          "@see lightType\n");
-      addField("lightRadius",       TypeF32,       Offset(lightRadius,        ItemData), 
+      addFieldV("lightRadius",       TypeRangedF32,       Offset(lightRadius,        ItemData), &CommonValidators::PositiveFloat,
          "@brief Distance from the center point of this ItemData for the light to affect\n\n"
          "@see lightType\n");
       addField("lightOnlyStatic",   TypeBool,      Offset(lightOnlyStatic,    ItemData), 
@@ -191,10 +194,10 @@ void ItemData::packData(BitStream* stream)
    {
       AssertFatal(Item::NumLightTypes < (1 << 2), "ItemData: light type needs more bits");
       stream->writeInt(lightType, 2);
-      stream->writeFloat(lightColor.red, 7);
-      stream->writeFloat(lightColor.green, 7);
-      stream->writeFloat(lightColor.blue, 7);
-      stream->writeFloat(lightColor.alpha, 7);
+      stream->writeFloat(lightColor.red, 8);
+      stream->writeFloat(lightColor.green, 8);
+      stream->writeFloat(lightColor.blue, 8);
+      stream->writeFloat(lightColor.alpha, 8);
       stream->write(lightTime);
       stream->write(lightRadius);
       stream->writeFlag(lightOnlyStatic);
@@ -222,10 +225,10 @@ void ItemData::unpackData(BitStream* stream)
    if(stream->readFlag())
    {
       lightType = stream->readInt(2);
-      lightColor.red = stream->readFloat(7);
-      lightColor.green = stream->readFloat(7);
-      lightColor.blue = stream->readFloat(7);
-      lightColor.alpha = stream->readFloat(7);
+      lightColor.red = stream->readFloat(8);
+      lightColor.green = stream->readFloat(8);
+      lightColor.blue = stream->readFloat(8);
+      lightColor.alpha = stream->readFloat(8);
       stream->read(&lightTime);
       stream->read(&lightRadius);
       lightOnlyStatic = stream->readFlag();

@@ -159,7 +159,7 @@ bool GuiRoadEditorCtrl::onAdd()
 void GuiRoadEditorCtrl::initPersistFields()
 {
    docsURL;
-   addField( "DefaultWidth",        TypeF32,    Offset( mDefaultWidth, GuiRoadEditorCtrl ) );
+   addFieldV( "DefaultWidth", TypeRangedF32,    Offset( mDefaultWidth, GuiRoadEditorCtrl ), &CommonValidators::PositiveFloat);
    addField( "HoverSplineColor",    TypeColorI, Offset( mHoverSplineColor, GuiRoadEditorCtrl ) );
    addField( "SelectedSplineColor", TypeColorI, Offset( mSelectedSplineColor, GuiRoadEditorCtrl ) );
    addField( "HoverNodeColor",      TypeColorI, Offset( mHoverNodeColor, GuiRoadEditorCtrl ) );

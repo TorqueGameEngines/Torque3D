@@ -99,7 +99,7 @@ void GuiRolloutCtrl::initPersistFields()
          "Text label to display on the rollout header." );
       addField( "margin", TypeRectI, Offset( mMargin, GuiRolloutCtrl ),
          "Margin to put around child control." );
-      addField( "defaultHeight", TypeS32, Offset( mDefaultHeight, GuiRolloutCtrl ),
+      addFieldV( "defaultHeight", TypeRangedS32, Offset( mDefaultHeight, GuiRolloutCtrl ), &CommonValidators::PositiveInt,
          "Default height of the client area.  This is used when no child control has been added to the rollout." );
       addProtectedField( "expanded", TypeBool, Offset( mIsExpanded, GuiRolloutCtrl), &setExpanded, &defaultProtectedGetFn,
          "The current rollout expansion state." );

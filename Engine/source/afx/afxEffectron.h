@@ -46,7 +46,7 @@ class afxEffectronData : public afxChoreographerData
     U32 id;
   public:
     ewValidator(U32 id) { this->id = id; }
-    void validateType(SimObject *object, void *typePtr) override;
+    void validateType(SimObject *object, StringTableEntry varname, void *typePtr) override;
   };
 
   bool          do_id_convert;

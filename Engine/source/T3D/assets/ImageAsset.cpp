@@ -153,6 +153,7 @@ ImageAsset::ImageAsset() :
    mIsNamedTarget(false),
    mImageWidth(-1),
    mImageHeight(-1),
+   mImageDepth(-1),
    mImageChannels(-1)
 {
    mLoadedState = AssetErrCode::NotLoaded;
@@ -423,6 +424,9 @@ void ImageAsset::setImageFile(StringTableEntry pImageFile)
             Con::errorf("ImageAsset::setImageFile STB Get file info failed: %s", stbErr);
          }
       }
+
+      // we only support 2d textures..... for no ;)
+      mImageDepth = 1;
    }
 
    refreshAsset();
@@ -643,6 +647,7 @@ void ImageAsset::onTamlCustomWrite(TamlCustomNodes& customNodes)
 
    pImageInfoNode->addField(StringTable->insert("ImageWidth"), mImageWidth);
    pImageInfoNode->addField(StringTable->insert("ImageHeight"), mImageHeight);
+   pImageInfoNode->addField(StringTable->insert("ImageDepth"), mImageDepth);
 
 }
 
@@ -675,6 +680,10 @@ void ImageAsset::onTamlCustomRead(const TamlCustomNodes& customNodes)
          else if (fieldName == StringTable->insert("ImageHeight"))
          {
             pField->getFieldValue(mImageHeight);
+         }
+         else if (fieldName == StringTable->insert("ImageDepth"))
+         {
+            pField->getFieldValue(mImageDepth);
          }
          else
          {

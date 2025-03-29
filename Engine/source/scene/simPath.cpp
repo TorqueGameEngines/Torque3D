@@ -31,10 +31,12 @@
 #include "scene/pathManager.h"
 #include "scene/sceneRenderState.h"
 #include "math/mathIO.h"
+#include "console/typeValidators.h"
 #include "core/stream/bitStream.h"
 #include "renderInstance/renderPassManager.h"
 #include "console/engineAPI.h"
 #include "T3D/pathShape.h"
+#include "T3D/physics/physicsShape.h"
 
 #include "T3D/Scene.h"
 
@@ -173,13 +175,13 @@ void Path::initPersistFields()
 {
    docsURL;
    addField("isLooping",   TypeBool, Offset(mIsLooping, Path), "If this is true, the loop is closed, otherwise it is open.\n");
-   addField("Speed",   TypeF32, Offset(mPathSpeed, Path), "Speed.\n");
+   addFieldV("Speed",   TypeRangedF32, Offset(mPathSpeed, Path), &CommonValidators::PositiveFloat, "Speed.\n");
    addProtectedField("mPathShape", TYPEID< PathShapeData >(), Offset(mDataBlock, Path),
 	   &setDataBlockProperty, &defaultProtectedGetFn,
 	   "@brief Spawned PathShape.\n\n");
-   addField("spawnCount", TypeS32, Offset(mSpawnCount, Path), "Spawn Count.\n");
-   addField("minDelay", TypeS32, Offset(mMinDelay, Path), "Spawn Delay (min).\n");
-   addField("maxDelay", TypeS32, Offset(mMaxDelay, Path), "Spawn Delay (max).\n");
+   addFieldV("spawnCount", TypeRangedS32, Offset(mSpawnCount, Path), &CommonValidators::PositiveInt, "Spawn Count.\n");
+   addFieldV("minDelay", TypeRangedS32, Offset(mMinDelay, Path), &CommonValidators::PositiveInt, "Spawn Delay (min).\n");
+   addFieldV("maxDelay", TypeRangedS32, Offset(mMaxDelay, Path), &CommonValidators::PositiveInt, "Spawn Delay (max).\n");
 
    Parent::initPersistFields();
    //
@@ -197,6 +199,12 @@ bool Path::onAdd()
    return true;
 }
 
+void Path::onPostAdd()
+{
+   Parent::onPostAdd();
+   if (isServerObject())
+      updatePath();
+}
 IMPLEMENT_CALLBACK(Path, onAdd, void, (SimObjectId ID), (ID),
 	"Called when this ScriptGroup is added to the system.\n"
 	"@param ID Unique object ID assigned when created (%this in script).\n"
@@ -250,6 +258,42 @@ void Path::updatePath()
    }
 
    gServerPathManager->updatePath(mPathIndex, positions, rotations, times, smoothingTypes, mIsLooping);
+}
+
+void Path::setTransform(const MatrixF& mat)
+{
+   if (isServerObject())
+   {
+      MatrixF newXform = mat;
+      MatrixF oldXform = getTransform();
+      oldXform.affineInverse();
+
+      MatrixF offset;
+      offset.mul(newXform, oldXform);
+
+      // Update all child transforms
+      for (SimSetIterator itr(this); *itr; ++itr)
+      {
+         SceneObject* child = dynamic_cast<SceneObject*>(*itr);
+         if (child)
+         {
+            MatrixF childMat;
+
+            //add the "offset" caused by the parents change, and add it to it's own
+            // This is needed by objects that update their own render transform thru interpolate tick
+            // Mostly for stationary objects.
+            childMat.mul(offset, child->getTransform());
+            child->setTransform(childMat);
+
+            PhysicsShape* childPS = dynamic_cast<PhysicsShape*>(child);
+            if (childPS)
+               childPS->storeRestorePos();
+         }
+      }
+      updatePath();
+   }
+
+   Parent::setTransform(mat);
 }
 
 void Path::addObject(SimObject* obj)
@@ -424,10 +468,10 @@ void Marker::initPersistFields()
 {
    docsURL;
    addGroup( "Misc" );
-   addField("seqNum",   TypeS32, Offset(mSeqNum,   Marker), "Marker position in sequence of markers on this path.\n");
+   addFieldV("seqNum", TypeRangedS32, Offset(mSeqNum,   Marker), &CommonValidators::PositiveInt, "Marker position in sequence of markers on this path.\n");
    addField("hitCommand", TypeCommand, Offset(mHitCommand, Marker), "The command to execute when a path follower reaches this marker.");
    addField("type", TYPEID< KnotType >(), Offset(mKnotType, Marker), "Type of this marker/knot. A \"normal\" knot will have a smooth camera translation/rotation effect.\n\"Position Only\" will do the same for translations, leaving rotation un-touched.\nLastly, a \"Kink\" means the rotation will take effect immediately for an abrupt rotation change.\n");
-   addField("msToNext", TypeS32, Offset(mMSToNext, Marker), "Milliseconds to next marker in sequence.\n");
+   addFieldV("msToNext", TypeRangedS32, Offset(mMSToNext, Marker), &CommonValidators::NaturalNumber, "Milliseconds to next marker in sequence.\n");
    addField("smoothingType", TYPEID< SmoothingType >(), Offset(mSmoothingType, Marker), "Path smoothing at this marker/knot. \"Linear\" means no smoothing, while \"Spline\" means to smooth.\n");
    endGroup("Misc");
 

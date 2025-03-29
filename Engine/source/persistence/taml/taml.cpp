@@ -1118,7 +1118,7 @@ ImplementEnumType(_TamlFormatMode,
       {
          pFieldTypeDescription = "xs:float";
       }
-      else if (fieldType == TypeS8 || fieldType == TypeS32)
+      else if (fieldType == TypeS8 || fieldType == TypeS16 || fieldType == TypeS32)
       {
          pFieldTypeDescription = "xs:int";
       }

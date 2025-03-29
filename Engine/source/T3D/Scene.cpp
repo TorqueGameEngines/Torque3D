@@ -202,15 +202,12 @@ void Scene::processTick()
                controlObj = gc->getCameraObject();
             }
 
-            if (controlObj != nullptr)
-            {
-               if (mSubScenes[i]->testBox(controlObj->getWorldBox()))
+            if (mSubScenes[i]->testBox(controlObj != nullptr ? controlObj->getWorldBox() : Box3F::Zero))
                {
                   //we have a client controlling object in the bounds, so we ensure the contents are loaded
                   hasClients = true;
                   break;
                }
-            }
          }
       }
 

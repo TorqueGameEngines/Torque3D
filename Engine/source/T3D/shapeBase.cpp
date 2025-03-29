@@ -557,26 +557,26 @@ void ShapeBaseData::initPersistFields()
    endGroup("Particle Effects");
 
    addGroup( "Physics" );   
-      addProtectedField("mass", TypeF32, Offset(mass, ShapeBaseData), &_setMass, &defaultProtectedGetFn, "Shape mass.\nUsed in simulation of moving objects.\n"  );
-      addField( "drag", TypeF32, Offset(drag, ShapeBaseData),
+      addProtectedFieldV("mass", TypeRangedF32, Offset(mass, ShapeBaseData), &_setMass, &defaultProtectedGetFn, &CommonValidators::PositiveFloat, "Shape mass.\nUsed in simulation of moving objects.\n"  );
+      addFieldV( "drag", TypeRangedF32, Offset(drag, ShapeBaseData), &CommonValidators::PositiveNonZeroFloat,
          "Drag factor.\nReduces velocity of moving objects." );
-      addField( "density", TypeF32, Offset(density, ShapeBaseData),
+      addFieldV( "density", TypeRangedF32, Offset(density, ShapeBaseData), &CommonValidators::PositiveNonZeroFloat,
          "Shape density.\nUsed when computing buoyancy when in water.\n" );
    endGroup( "Physics" );
 
    addGroup( "Damage/Energy" );
-      addField( "maxEnergy", TypeF32, Offset(maxEnergy, ShapeBaseData),
+      addFieldV( "maxEnergy", TypeRangedF32, Offset(maxEnergy, ShapeBaseData), &CommonValidators::PositiveFloat,
          "Maximum energy level for this object." );
-      addField( "maxDamage", TypeF32, Offset(maxDamage, ShapeBaseData),
+      addFieldV( "maxDamage", TypeRangedF32, Offset(maxDamage, ShapeBaseData), &CommonValidators::PositiveFloat,
          "Maximum damage level for this object." );
-      addField( "disabledLevel", TypeF32, Offset(disabledLevel, ShapeBaseData),
+      addFieldV( "disabledLevel", TypeRangedF32, Offset(disabledLevel, ShapeBaseData), &CommonValidators::PositiveFloat,
          "Damage level above which the object is disabled.\n"
          "Currently unused." );
-      addField( "destroyedLevel", TypeF32, Offset(destroyedLevel, ShapeBaseData),
+      addFieldV( "destroyedLevel", TypeRangedF32, Offset(destroyedLevel, ShapeBaseData), &CommonValidators::PositiveFloat,
          "Damage level above which the object is destroyed.\n"
          "When the damage level increases above this value, the object damage "
          "state is set to \"Destroyed\"." );
-      addField( "repairRate", TypeF32, Offset(repairRate, ShapeBaseData),
+      addFieldV( "repairRate", TypeRangedF32, Offset(repairRate, ShapeBaseData), &CommonValidators::PositiveFloat,
          "Rate at which damage is repaired in damage units/tick.\n"
          "This value is subtracted from the damage level until it reaches 0." );
       addField( "inheritEnergyFromMount", TypeBool, Offset(inheritEnergyFromMount, ShapeBaseData),
@@ -588,19 +588,19 @@ void ShapeBaseData::initPersistFields()
    endGroup( "Damage/Energy" );
 
    addGroup( "Camera", "The settings used by the shape when it is the camera." );
-      addField( "cameraMaxDist", TypeF32, Offset(cameraMaxDist, ShapeBaseData),
+      addFieldV( "cameraMaxDist", TypeRangedF32, Offset(cameraMaxDist, ShapeBaseData), &CommonValidators::PositiveFloat,
          "The maximum distance from the camera to the object.\n"
          "Used when computing a custom camera transform for this object.\n\n"
          "@see observeThroughObject" );
-      addField( "cameraMinDist", TypeF32, Offset(cameraMinDist, ShapeBaseData),
+      addFieldV( "cameraMinDist", TypeRangedF32, Offset(cameraMinDist, ShapeBaseData), &CommonValidators::PositiveFloat,
          "The minimum distance from the camera to the object.\n"
          "Used when computing a custom camera transform for this object.\n\n"
          "@see observeThroughObject" );
-      addField( "cameraDefaultFov", TypeF32, Offset(cameraDefaultFov, ShapeBaseData),
+      addFieldV( "cameraDefaultFov", TypeRangedF32, Offset(cameraDefaultFov, ShapeBaseData), &CommonValidators::PosDegreeRange,
          "The default camera vertical FOV in degrees." );
-      addField( "cameraMinFov", TypeF32, Offset(cameraMinFov, ShapeBaseData),
+      addFieldV( "cameraMinFov", TypeRangedF32, Offset(cameraMinFov, ShapeBaseData), &CommonValidators::PosDegreeRange,
          "The minimum camera vertical FOV allowed in degrees." );
-      addField( "cameraMaxFov", TypeF32, Offset(cameraMaxFov, ShapeBaseData),
+      addFieldV( "cameraMaxFov", TypeRangedF32, Offset(cameraMaxFov, ShapeBaseData), &CommonValidators::PosDegreeRange,
          "The maximum camera vertical FOV allowed in degrees." );
       addField( "cameraCanBank", TypeBool, Offset(cameraCanBank, ShapeBaseData),
          "If the derrived class supports it, allow the camera to bank." );
@@ -634,7 +634,7 @@ void ShapeBaseData::initPersistFields()
    onlyKeepClearSubstitutions("explosion");
    onlyKeepClearSubstitutions("underwaterExplosion");
    Parent::initPersistFields();
-
+   /*
    addGroup("BL Projected Shadows");
       addField("shadowSize", TypeS32, Offset(shadowSize, ShapeBaseData),
          "Size of the projected shadow texture (must be power of 2).");
@@ -647,6 +647,7 @@ void ShapeBaseData::initPersistFields()
          "Scalar applied to the radius of spot shadows (initial radius is based "
          "on the shape bounds but can be adjusted with this field).");
    endGroup("BL Projected Shadows");
+   */
 
 }
 

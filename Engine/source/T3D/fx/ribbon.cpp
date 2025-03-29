@@ -73,27 +73,27 @@ void RibbonData::initPersistFields()
 
    addGroup("Ribbon");
 
-   addField("size", TypeF32, Offset(mSizes, RibbonData), NumFields,
+   addFieldV("size", TypeRangedF32, Offset(mSizes, RibbonData), &CommonValidators::PositiveFloat, NumFields,
       "The size of the ribbon at the specified keyframe.");
    addField("color", TypeColorF, Offset(mColours, RibbonData), NumFields,
       "The colour of the ribbon at the specified keyframe.");
-   addField("position", TypeF32, Offset(mTimes, RibbonData), NumFields,
+   addFieldV("position", TypeRangedF32, Offset(mTimes, RibbonData), &CommonValidators::PositiveFloat, NumFields,
       "The position of the keyframe along the lifetime of the ribbon.");
 
-   addField("ribbonLength", TypeS32, Offset(mRibbonLength, RibbonData),
+   addFieldV("ribbonLength", TypeRangedS32, Offset(mRibbonLength, RibbonData), &CommonValidators::NaturalNumber,
       "The amount of segments the Ribbon can maximally have in length.");
-   addField("segmentsPerUpdate", TypeS32, Offset(segmentsPerUpdate, RibbonData),
+   addFieldV("segmentsPerUpdate", TypeRangedS32, Offset(segmentsPerUpdate, RibbonData), &CommonValidators::NaturalNumber,
       "How many segments to add each update.");
-   addField("skipAmount", TypeS32, Offset(mSegmentSkipAmount, RibbonData),
+   addFieldV("skipAmount", TypeRangedS32, Offset(mSegmentSkipAmount, RibbonData), &CommonValidators::PositiveInt,
       "The amount of segments to skip each update.");
 
    addField("useFadeOut", TypeBool, Offset(mUseFadeOut, RibbonData),
       "If true, the ribbon will fade away after deletion.");
-   addField("fadeAwayStep", TypeF32, Offset(mFadeAwayStep, RibbonData),
+   addFieldV("fadeAwayStep", TypeRangedF32, Offset(mFadeAwayStep, RibbonData), &CommonValidators::PositiveFloat,
       "How much to fade the ribbon with each update, after deletion.");
    addField("ribbonMaterial", TypeString, Offset(mMatName, RibbonData),
       "The material the ribbon uses for rendering.");
-   addField("tileScale", TypeF32, Offset(mTileScale, RibbonData),
+   addFieldV("tileScale", TypeRangedF32, Offset(mTileScale, RibbonData), &CommonValidators::NormalizedFloat,
       "How much to scale each 'tile' with, where 1 means the material is stretched"
       "across the whole ribbon. (If TexcoordsRelativeToDistance is true, this is in meters.)");
    addField("fixedTexcoords", TypeBool, Offset(mFixedTexcoords, RibbonData),

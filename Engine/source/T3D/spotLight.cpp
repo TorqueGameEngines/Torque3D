@@ -98,9 +98,9 @@ void SpotLight::initPersistFields()
    docsURL;
    addGroup( "Light" );
       
-      addField( "range", TypeF32, Offset( mRange, SpotLight ) );
-      addField( "innerAngle", TypeF32, Offset( mInnerConeAngle, SpotLight ) );
-      addField( "outerAngle", TypeF32, Offset( mOuterConeAngle, SpotLight ) );
+      addFieldV( "range", TypeRangedF32, Offset( mRange, SpotLight ), &CommonValidators::PositiveFloat);
+      addFieldV( "innerAngle", TypeRangedF32, Offset( mInnerConeAngle, SpotLight ), &CommonValidators::DegreeRangeQuarter);
+      addFieldV( "outerAngle", TypeRangedF32, Offset( mOuterConeAngle, SpotLight ), &CommonValidators::DegreeRangeQuarter);
 
    endGroup( "Light" );
 

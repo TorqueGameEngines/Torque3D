@@ -135,9 +135,9 @@ void GuiIconButtonCtrl::initPersistFields()
    addField( "makeIconSquare",   TypeBool,      Offset( mMakeIconSquare, GuiIconButtonCtrl ),"If true, will make sure the icon is square.\n");
    addField( "textLocation",     TYPEID< TextLocation >(),      Offset( mTextLocation, GuiIconButtonCtrl ),"Where to place the text on the control.\n"
                                                                                  "Options are 0 (None), 1 (Bottom), 2 (Right), 3 (Top), 4 (Left), 5 (Center).\n");
-   addField( "textMargin",       TypeS32,       Offset( mTextMargin, GuiIconButtonCtrl ),"Margin between the icon and the text.\n");
+   addFieldV( "textMargin",       TypeRangedS32,       Offset( mTextMargin, GuiIconButtonCtrl ),&CommonValidators::PositiveInt,"Margin between the icon and the text.\n");
    addField( "autoSize",         TypeBool,      Offset( mAutoSize, GuiIconButtonCtrl ),"If true, the text and icon will be automatically sized to the size of the control.\n");
-   addField( "bitmapMargin",     TypeS32,       Offset( mBitmapMargin, GuiIconButtonCtrl), "Margin between the icon and the border.\n");
+   addFieldV( "bitmapMargin", TypeRangedS32,       Offset( mBitmapMargin, GuiIconButtonCtrl), &CommonValidators::PositiveInt, "Margin between the icon and the border.\n");
 
    Parent::initPersistFields();
 }

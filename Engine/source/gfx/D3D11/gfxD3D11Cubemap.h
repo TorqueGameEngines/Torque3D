@@ -77,6 +77,7 @@ private:
    /// The callback used to get texture events.
    /// @see GFXTextureManager::addEventDelegate
    void _onTextureEvent(GFXTexCallbackCode code);
+   void _init(U32 size, GFXFormat format, U32 mipLevels, bool isDynamic, DDSFile* dds = nullptr, GFXTexHandle* faces = nullptr);
 };
 
 class GFXD3D11CubemapArray : public GFXCubemapArray
@@ -84,6 +85,7 @@ class GFXD3D11CubemapArray : public GFXCubemapArray
 public:
    GFXD3D11CubemapArray();
    virtual ~GFXD3D11CubemapArray();
+   
    void init(GFXCubemapHandle *cubemaps, const U32 cubemapCount) override;
    void init(const U32 cubemapCount, const U32 cubemapFaceSize, const GFXFormat format) override;
    void updateTexture(const GFXCubemapHandle &cubemap, const U32 slot) override;
@@ -100,6 +102,7 @@ public:
 private:
    friend class GFXD3D11TextureTarget;
    friend class GFXD3D11Device;
+   void _init(U32 cubemapCount, U32 size, GFXFormat format);
 
    ID3D11Texture2D *mTexture;
    ID3D11ShaderResourceView* mSRView; // for shader resource input

@@ -179,19 +179,19 @@ void BasicClouds::initPersistFields()
 
          INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, TEX_COUNT, BasicClouds, "Texture for this layer.");
 
-         addField( "texScale", TypeF32, Offset( mTexScale, BasicClouds ), TEX_COUNT,
+         addFieldV( "texScale", TypeRangedF32, Offset( mTexScale, BasicClouds ), &CommonValidators::PositiveFloat, TEX_COUNT,
             "Texture repeat for this layer." );
 
          addField( "texDirection", TypePoint2F, Offset( mTexDirection, BasicClouds ), TEX_COUNT,
             "Texture scroll direction for this layer, relative to the world axis." );
 
-         addField( "texSpeed", TypeF32, Offset( mTexSpeed, BasicClouds ), TEX_COUNT,
+         addFieldV( "texSpeed", TypeRangedF32, Offset( mTexSpeed, BasicClouds ), &CommonValidators::PositiveFloat, TEX_COUNT,
             "Texture scroll speed for this layer." );   
 
          addField( "texOffset", TypePoint2F, Offset( mTexOffset, BasicClouds ), TEX_COUNT,
             "UV offset for this layer." );
 
-         addField( "height", TypeF32, Offset( mHeight, BasicClouds ), TEX_COUNT,
+         addFieldV( "height", TypeRangedF32, Offset( mHeight, BasicClouds ), &CommonValidators::F32Range, TEX_COUNT,
             "Abstract number which controls the curvature and height of the dome mesh" );
 
       endArray( "Layers" );      

@@ -28,6 +28,7 @@
 #include "gfx/primBuilder.h"
 #include "gfx/gfxDrawUtil.h"
 #include "console/engineAPI.h"
+#include "console/typeValidators.h"
 
 ConsoleDocClass( GuiPopUpMenuCtrlEx,
    "@brief A control that allows to select a value from a drop-down list.\n\n"
@@ -352,7 +353,7 @@ GuiPopUpMenuCtrlEx::~GuiPopUpMenuCtrlEx()
 void GuiPopUpMenuCtrlEx::initPersistFields(void)
 {
    docsURL;
-   addField("maxPopupHeight",           TypeS32,          Offset(mMaxPopupHeight, GuiPopUpMenuCtrlEx), "Length of menu when it extends");
+   addFieldV("maxPopupHeight",           TypeRangedS32,          Offset(mMaxPopupHeight, GuiPopUpMenuCtrlEx), &CommonValidators::PositiveInt, "Length of menu when it extends");
    addField("sbUsesNAColor",            TypeBool,         Offset(mRenderScrollInNA, GuiPopUpMenuCtrlEx), "Deprecated" "@internal");
    addField("reverseTextList",          TypeBool,         Offset(mReverseTextList, GuiPopUpMenuCtrlEx), "Reverses text list if popup extends up, instead of down");
 
@@ -1236,7 +1237,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
             {
                localStart.x = getWidth() - txt_w - 12;
             }
-         } 
+         }
          else
          {
             localStart.x = mProfile->mTextOffset.x; //  Use mProfile->mTextOffset as a controlable margin for the control's text.

@@ -82,7 +82,7 @@ CustomMaterial::CustomMaterial()
 void CustomMaterial::initPersistFields()
 {
    docsURL;
-   addField("version",     TypeF32,             Offset(mVersion, CustomMaterial), 
+   addFieldV("version",     TypeRangedF32,             Offset(mVersion, CustomMaterial), &CommonValidators::PositiveFloat,
       "@brief Specifies pixel shader version for hardware.\n\n"
       "Valid pixel shader versions include 2.0, 3.0, etc. "
       "@note All features aren't compatible with all pixel shader versions.");

@@ -29,6 +29,7 @@
 #include "guiFilterCtrl.h"
 #include "math/mMath.h"
 #include "gfx/gfxDrawUtil.h"
+#include "console/typeValidators.h"
 
 
 IMPLEMENT_CONOBJECT(GuiFilterCtrl);
@@ -51,7 +52,7 @@ GuiFilterCtrl::GuiFilterCtrl()
 void GuiFilterCtrl::initPersistFields()
 {
    docsURL;
-   addField("controlPoints", TypeS32, Offset(mControlPointRequest, GuiFilterCtrl),
+   addFieldV("controlPoints", TypeRangedS32, Offset(mControlPointRequest, GuiFilterCtrl), &CommonValidators::NaturalNumber,
       "Total number of control points in the spline curve." );
    addField("filter", TypeF32Vector, Offset(mFilter, GuiFilterCtrl),
       "Vector of control points." );

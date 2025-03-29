@@ -31,6 +31,7 @@
 #include "T3D/projectile.h"
 
 #include "afx/ce/afxMachineGun.h"
+#include "console/typeValidators.h"
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 // afxMachineGunData
@@ -68,7 +69,7 @@ void afxMachineGunData::initPersistFields()
    docsURL;
   addField("projectile", TYPEID<ProjectileData>(), myOffset(projectile_data),
     "A ProjectileData datablock describing the projectile to be launched.");
-  addField("roundsPerMinute", TypeS32, myOffset(rounds_per_minute),
+  addFieldV("roundsPerMinute", TypeRangedS32, myOffset(rounds_per_minute), &CommonValidators::PositiveInt,
     "Specifies the number of projectiles fired over a minute of time. A value of 1200 "
     "will create 20 projectiles per second.\n"
     "Sample values for real machine guns:\n"

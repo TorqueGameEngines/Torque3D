@@ -118,14 +118,14 @@ void GuiSplitContainer::initPersistFields()
    
       addField( "orientation",   TYPEID< Orientation >(),   Offset( mOrientation, GuiSplitContainer),
          "Whether to split between top and bottom (horizontal) or between left and right (vertical)." );
-      addField( "splitterSize",  TypeS32,    Offset( mSplitterSize, GuiSplitContainer),
+      addFieldV( "splitterSize", TypeRangedS32,    Offset( mSplitterSize, GuiSplitContainer), &CommonValidators::PositiveInt,
          "Width of the splitter bar between the two sides.  Default is 2." );
       addField( "splitPoint",    TypePoint2I, Offset( mSplitPoint, GuiSplitContainer),
          "Point on control through which the splitter goes.\n\n"
          "Changed relatively if size of control changes." );
       addField( "fixedPanel",    TYPEID< FixedPanel >(),   Offset( mFixedPanel, GuiSplitContainer),
          "Which (if any) side of the splitter to keep at a fixed size." );
-      addField( "fixedSize",     TypeS32,    Offset( mFixedPanelSize, GuiSplitContainer),
+      addFieldV( "fixedSize", TypeRangedS32,    Offset( mFixedPanelSize, GuiSplitContainer), &CommonValidators::PositiveInt,
          "Width of the fixed panel specified by #fixedPanel (if any)." );
       
    endGroup( "Splitter" );

@@ -341,6 +341,8 @@ void GuiTextEditSliderCtrl::onRender(Point2I offset, const RectI &updateRect)
             mIncCounter = (mIncCounter > 0.0f) ? mIncCounter-1 : mIncCounter+1;
             checkRange();
             setValue();
+            execConsoleCallback();
+            execAltConsoleCallback();
             mCursorPos = 0;
          }
       }

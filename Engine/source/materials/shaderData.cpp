@@ -28,6 +28,7 @@
 #include "core/strings/stringUnit.h"
 #include "lighting/lightManager.h"
 #include "console/engineAPI.h"
+#include "console/typeValidators.h"
 
 using namespace Torque;
 
@@ -115,7 +116,7 @@ void ShaderData::initPersistFields()
       "@brief If true, the maximum pixel shader version offered by the graphics card will be used.\n\n"
       "Otherwise, the script-defined pixel shader version will be used.\n\n");
 
-   addField("pixVersion", TypeF32, Offset(mPixVersion, ShaderData),
+   addFieldV("pixVersion", TypeRangedF32, Offset(mPixVersion, ShaderData), &CommonValidators::PositiveFloat,
       "@brief Indicates target level the shader should be compiled.\n\n"
       "Valid numbers at the time of this writing are 1.1, 1.4, 2.0, and 3.0. "
       "The shader will not run properly if the hardware does not support the "

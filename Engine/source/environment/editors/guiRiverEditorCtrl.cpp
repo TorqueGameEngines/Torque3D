@@ -169,8 +169,8 @@ bool GuiRiverEditorCtrl::onAdd()
 void GuiRiverEditorCtrl::initPersistFields()
 {
    docsURL;
-   addField( "DefaultWidth",        TypeF32,    Offset( mDefaultWidth, GuiRiverEditorCtrl ) );
-	addField( "DefaultDepth",        TypeF32,    Offset( mDefaultDepth, GuiRiverEditorCtrl ) );
+   addFieldV( "DefaultWidth", TypeRangedF32,    Offset( mDefaultWidth, GuiRiverEditorCtrl ), &CommonValidators::PositiveFloat);
+	addFieldV( "DefaultDepth", TypeRangedF32,    Offset( mDefaultDepth, GuiRiverEditorCtrl ), &CommonValidators::PositiveFloat);
 	addField( "DefaultNormal",       TypePoint3F,Offset( mDefaultNormal, GuiRiverEditorCtrl ) );
    addField( "HoverSplineColor",    TypeColorI, Offset( mHoverSplineColor, GuiRiverEditorCtrl ) );
    addField( "SelectedSplineColor", TypeColorI, Offset( mSelectedSplineColor, GuiRiverEditorCtrl ) );

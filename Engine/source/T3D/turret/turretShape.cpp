@@ -138,17 +138,17 @@ void TurretShapeData::initPersistFields()
          "@brief Should the turret allow only z rotations.\n\n"
          "True indicates that the turret may only be rotated on its z axis, just like the Item class.  "
          "This keeps the turret always upright regardless of the surface it lands on.\n");
-      addField("maxHeading",        TypeF32,       Offset(maxHeading,         TurretShapeData),
+      addFieldV("maxHeading", TypeRangedF32,       Offset(maxHeading,         TurretShapeData), &CommonValidators::PosDegreeRangeQuarter,
          "@brief Maximum number of degrees to rotate from center.\n\n"
          "A value of 180 or more degrees indicates the turret may rotate completely around.\n");
-      addField("minPitch",          TypeF32,       Offset(minPitch,           TurretShapeData),
+      addFieldV("minPitch", TypeRangedF32,       Offset(minPitch,           TurretShapeData), &CommonValidators::PosDegreeRangeQuarter,
          "@brief Minimum number of degrees to rotate down from straight ahead.\n\n");
-      addField("maxPitch",          TypeF32,       Offset(maxPitch,           TurretShapeData),
+      addFieldV("maxPitch", TypeRangedF32,       Offset(maxPitch,           TurretShapeData), &CommonValidators::PosDegreeRangeQuarter,
          "@brief Maximum number of degrees to rotate up from straight ahead.\n\n");
-      addField("headingRate",       TypeF32,       Offset(headingRate,        TurretShapeData),
+      addFieldV("headingRate", TypeRangedF32,       Offset(headingRate,        TurretShapeData), &CommonValidators::DegreeRange,
          "@brief Degrees per second rotation.\n\n"
          "A value of 0 means no rotation is allowed.  A value less than 0 means the rotation is instantaneous.\n");
-      addField("pitchRate",         TypeF32,       Offset(pitchRate,          TurretShapeData),
+      addFieldV("pitchRate", TypeRangedF32,       Offset(pitchRate,          TurretShapeData), &CommonValidators::DegreeRange,
          "@brief Degrees per second rotation.\n\n"
          "A value of 0 means no rotation is allowed.  A value less than 0 means the rotation is instantaneous.\n");
    endGroup("Steering");
@@ -167,7 +167,7 @@ void TurretShapeData::initPersistFields()
    endGroup("Weapon State");
 
    addGroup("Camera", "The settings used by the shape when it is the camera.");
-   addField("cameraOffset",      TypeF32,       Offset(cameraOffset,       TurretShapeData),
+   addFieldV("cameraOffset",      TypeRangedF32,       Offset(cameraOffset,       TurretShapeData), &CommonValidators::F32Range,
       "Vertical (Z axis) height of the camera above the turret." );
    endGroup("Camera");
 }

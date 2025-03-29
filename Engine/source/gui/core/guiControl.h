@@ -741,7 +741,7 @@ class GuiControl : public SimGroup
       GuiControl *getFirstResponder() { return mFirstResponder; }
       
       /// Occurs when the control gains first-responder status.
-      virtual void onGainFirstResponder();
+      void onGainFirstResponder();
       
       /// Occurs when the control loses first-responder status.
       virtual void onLoseFirstResponder();

@@ -171,11 +171,11 @@ class RenderProbeMgr : public RenderBinManager
 
 public:
    //maximum number of allowed probes
-   static const U32 PROBE_MAX_COUNT = 250;
+   static const U32 PROBE_MAX_COUNT = 340;
    //maximum number of rendered probes per frame adjust as needed
    static const U32 PROBE_MAX_FRAME = 8;
    //number of slots to allocate at once in the cubemap array
-   static const U32 PROBE_ARRAY_SLOT_BUFFER_SIZE = 10;
+   static const U32 PROBE_ARRAY_SLOT_BUFFER_SIZE = 5;
 
    //These dictate the default resolution size for the probe arrays
    static const GFXFormat PROBE_FORMAT = GFXFormatR16G16B16A16F;// GFXFormatR8G8B8A8;// when hdr fixed GFXFormatR16G16B16A16F; look into bc6h compression

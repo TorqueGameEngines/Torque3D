@@ -480,7 +480,7 @@ public:
    /// @param stream Stream to close
    /// @see ZipArchive::openFile(const char *, AccessMode)
    //-----------------------------------------------------------------------------
-   virtual void closeFile(Stream *stream);
+   virtual void closeFile(Stream *stream, bool deleteRootStream = false);
 
    //-----------------------------------------------------------------------------
    /// @brief Open a file within the zip file for read

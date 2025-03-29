@@ -141,8 +141,8 @@ void GuiShapeNameHud::initPersistFields()
    addField( "showLabelFill",  TypeBool, Offset( mShowLabelFill, GuiShapeNameHud ), "If true, we draw a background for each shape name label." );
    addField( "showLabelFrame", TypeBool, Offset( mShowLabelFrame, GuiShapeNameHud ), "If true, we draw a frame around each shape name label."  );
    addField( "labelPadding", TypePoint2I, Offset( mLabelPadding, GuiShapeNameHud ), "The padding (in pixels) between the label text and the frame." );
-   addField( "verticalOffset", TypeF32, Offset( mVerticalOffset, GuiShapeNameHud ), "Amount to vertically offset the control in relation to the ShapeBase object in focus." );
-   addField( "distanceFade", TypeF32, Offset( mDistanceFade, GuiShapeNameHud ), "Visibility distance (how far the player must be from the ShapeBase object in focus) for this control to render." );
+   addFieldV( "verticalOffset", TypeRangedF32, Offset( mVerticalOffset, GuiShapeNameHud ), &CommonValidators::F32Range, "Amount to vertically offset the control in relation to the ShapeBase object in focus." );
+   addFieldV( "distanceFade", TypeRangedF32, Offset( mDistanceFade, GuiShapeNameHud ), &CommonValidators::PositiveFloat, "Visibility distance (how far the player must be from the ShapeBase object in focus) for this control to render." );
    endGroup("Misc");
    Parent::initPersistFields();
 }

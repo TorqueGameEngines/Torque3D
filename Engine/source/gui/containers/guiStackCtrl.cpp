@@ -110,7 +110,7 @@ void GuiStackControl::initPersistFields()
       "Controls the type of vertical stacking to use (<i>Top to Bottom</i> or "
       "<i>Bottom to Top</i>)" );
 
-   addField( "padding", TypeS32, Offset(mPadding, GuiStackControl),
+   addFieldV( "padding", TypeRangedS32, Offset(mPadding, GuiStackControl), &CommonValidators::PositiveInt,
       "Distance (in pixels) between stacked child controls." );
 
    addField( "dynamicSize", TypeBool, Offset(mDynamicSize, GuiStackControl),

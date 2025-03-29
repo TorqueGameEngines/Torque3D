@@ -198,13 +198,13 @@ void CloudLayer::initPersistFields()
       
       addArray( "Textures", TEX_COUNT );
 
-         addField( "texScale", TypeF32, Offset( mTexScale, CloudLayer ), TEX_COUNT,
+         addFieldV( "texScale", TypeRangedF32, Offset( mTexScale, CloudLayer ), &CommonValidators::PositiveFloat, TEX_COUNT,
             "Controls the texture repeat of this slot." );
 
          addField( "texDirection", TypePoint2F, Offset( mTexDirection, CloudLayer ), TEX_COUNT,
             "Controls the direction this slot scrolls." );
 
-         addField( "texSpeed", TypeF32, Offset( mTexSpeed, CloudLayer ), TEX_COUNT,
+         addFieldV( "texSpeed", TypeRangedF32, Offset( mTexSpeed, CloudLayer ), &CommonValidators::PositiveFloat, TEX_COUNT,
             "Controls the speed this slot scrolls." );
 
       endArray( "Textures" );
@@ -212,16 +212,16 @@ void CloudLayer::initPersistFields()
       addField( "baseColor", TypeColorF, Offset( mBaseColor, CloudLayer ),
          "Base cloud color before lighting." );
 
-      addField( "exposure", TypeF32, Offset( mExposure, CloudLayer ),
+      addFieldV( "exposure", TypeRangedF32, Offset( mExposure, CloudLayer ), &CommonValidators::PositiveFloat,
          "Brightness scale so CloudLayer can be overblown if desired." );
       
-      addField( "coverage", TypeF32, Offset( mCoverage, CloudLayer ),
+      addFieldV( "coverage", TypeRangedF32, Offset( mCoverage, CloudLayer ), &CommonValidators::NormalizedFloat,
          "Fraction of sky covered by clouds 0-1." );
 
-      addField( "windSpeed", TypeF32, Offset( mWindSpeed, CloudLayer ),
+      addFieldV( "windSpeed", TypeRangedF32, Offset( mWindSpeed, CloudLayer ), &CommonValidators::NormalizedFloat,
          "Overall scalar to texture scroll speed." );
 
-      addField( "height", TypeF32, Offset( mHeight, CloudLayer ),
+      addFieldV( "height", TypeRangedF32, Offset( mHeight, CloudLayer ), &CommonValidators::F32Range,
          "Abstract number which controls the curvature and height of the dome mesh." );
 
    endGroup( "CloudLayer" );

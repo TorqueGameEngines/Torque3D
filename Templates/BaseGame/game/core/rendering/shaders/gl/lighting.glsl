@@ -114,12 +114,12 @@ void updateSurface(inout Surface surface)
     surface.linearRoughness = surface.roughness * surface.roughness;
     surface.linearRoughnessSq = surface.linearRoughness * surface.linearRoughness;
 
-	surface.albedo = surface.baseColor.rgb * (1.0f - surface.metalness);
+	surface.albedo = max(toLinear(surface.baseColor.rgb),0.04f);
 	surface.f0 = mix(vec3(0.04f,0.04f,0.04f), surface.baseColor.rgb, surface.metalness);
 
 	surface.R = -reflect(surface.V, surface.N);
 	surface.f90 = saturate(50.0 * dot(surface.f0, vec3(0.33,0.33,0.33)));
-	surface.F = F_Schlick(surface.f0, surface.f90, surface.NdotV);
+	surface.F = F_Schlick(surface.f0, surface.NdotV);
 }
 
 Surface createSurface(vec4 gbuffer0, sampler2D gbufferTex1, sampler2D gbufferTex2, in vec2 uv, in vec3 wsEyePos, in vec3 wsEyeRay, in mat4 invView)
@@ -186,7 +186,7 @@ SurfaceToLight createSurfaceToLight(in Surface surface, in vec3 L)
 vec3 BRDF_GetDebugSpecular(in Surface surface, in SurfaceToLight surfaceToLight)
 {
    //GGX specular
-   vec3 F = F_Schlick(surface.f0, surface.f90, surfaceToLight.HdotV);
+   vec3 F = F_Schlick(surface.f0, surface.NdotV);
    float Vis = V_SmithGGXCorrelated(surface.NdotV, surfaceToLight.NdotL, surface.linearRoughnessSq);
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughnessSq);
    vec3 Fr = D * F * Vis * M_1OVER_PI_F;
@@ -225,19 +225,32 @@ float getDistanceAtt( vec3 unormalizedLightVector , float invSqrAttRadius )
 
 vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 {
-   //diffuse term
-   vec3 Fd = surface.albedo.rgb * surface.ao * M_1OVER_PI_F;
+   // Compute Fresnel term
+   vec3 F = F_Schlick(surface.f0, surfaceToLight.HdotV);
+   F += lerp(vec3(0.04f,0.04f,0.04f), surface.baseColor.rgb, surface.metalness);
     
-   //GGX specular
-   vec3 F = F_Schlick(surface.f0, surface.f90, surfaceToLight.HdotV);
-   float Vis = V_SmithGGXCorrelated(surface.NdotV, surfaceToLight.NdotL, surface.linearRoughnessSq);
-   float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughnessSq);
-   vec3 Fr = D * F * Vis;
+   // GGX Normal Distribution Function
+   float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughness);
+   
+   // Smith GGX Geometry Function
+   float G = V_SmithGGXCorrelated(surface.NdotV, surfaceToLight.NdotL, surface.linearRoughness);
+   
+   // Specular BRDF
+   vec3 numerator = D * G * F;
+   float denominator = 4.0 * max(surface.NdotV, 0.0) * max(surfaceToLight.NdotL, 0.0) + 0.0001;
+   vec3 specularBRDF = numerator / denominator;
+
+   vec3 diffuseBRDF = surface.baseColor.rgb * M_1OVER_PI_F * surface.ao;
+   
+   // Final output combining all terms
+   vec3 kS = F; // Specular reflectance
+   vec3 kD = (1.0 - kS) * (1.0 - surface.metalness); // Diffuse reflectance
+   vec3 returnBRDF = kD * (diffuseBRDF) + specularBRDF;
 
    if(isCapturing == 1)
-      return mix(Fd + Fr, surface.baseColor.rgb, surface.metalness);
+      return lerp(returnBRDF ,surface.albedo.rgb,surface.metalness);
    else
-      return Fd + Fr;
+      return returnBRDF;
 }
 
 vec3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float shadow)
@@ -246,8 +259,13 @@ vec3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, vec3 li
    if(isCapturing != 1)
       lightfloor = 0.0;
       
-   vec3 factor = lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity, lightfloor);
-   return evaluateStandardBRDF(surface,surfaceToLight) * factor;
+   // Calculate both specular and diffuse lighting in one BRDF evaluation
+   vec3 directLighting = evaluateStandardBRDF(surface, surfaceToLight);
+
+   // Direct Diffuse Light Contribution (using Lambertian diffuse in BRDF)
+   vec3 diffuseLight = directLighting * (lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity, lightfloor));
+
+   return diffuseLight;
 }
 
 vec3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float radius, float shadow)
@@ -257,8 +275,14 @@ vec3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, vec3 light
       lightfloor = 0.0;
       
    float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-   vec3 factor = lightColor * max(surfaceToLight.NdotL * shadow * lightIntensity * attenuation, lightfloor);
-   return evaluateStandardBRDF(surface,surfaceToLight) * factor;
+   
+   // Calculate both specular and diffuse lighting in one BRDF evaluation
+   vec3 directLighting = evaluateStandardBRDF(surface, surfaceToLight);
+   
+   // Direct Diffuse Light Contribution (using Lambertian diffuse in BRDF)
+   vec3 diffuseLight = directLighting * lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor);
+   
+   return diffuseLight;
 }
 
 vec3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float radius, vec3 lightDir, vec2 lightSpotParams, float shadow)
@@ -270,18 +294,32 @@ vec3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColo
    float attenuation = 1.0f;
    attenuation *= getDistanceAtt(surfaceToLight.Lu, radius);
    attenuation *= getSpotAngleAtt(-surfaceToLight.L, lightDir, lightSpotParams.xy);
-   vec3 factor = lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor);
-   return evaluateStandardBRDF(surface,surfaceToLight) * factor;
+   
+   // Calculate both specular and diffuse lighting in one BRDF evaluation
+   vec3 directLighting = evaluateStandardBRDF(surface, surfaceToLight);
+   
+   // Direct Diffuse Light Contribution (using Lambertian diffuse in BRDF)
+   vec3 diffuseLight = directLighting * lightColor * max(surfaceToLight.NdotL* shadow * lightIntensity * attenuation, lightfloor);
+   
+   return diffuseLight;
 }
 
 float computeSpecOcclusion( float NdotV , float AO , float roughness )
 {
-   return saturate (pow( abs(NdotV + AO) , exp2 ( -16.0f * roughness - 1.0f )) - 1.0f + AO );
+   // Compute the geometry term using Smith's GGX for occlusion
+    float r = roughness * roughness;  // Roughness squared
+    float ggx = (NdotV) / (NdotV * (1.0 - r) + r);  // Smith GGX Geometry Function for occlusion
+
+    // Optionally modify by AO (ambient occlusion) and roughness
+    float specOcclusion = pow(ggx + AO, 2.0);
+
+    // Return the final occlusion factor (clamped between 0 and 1)
+    return saturate(specOcclusion);
 }
 
 float roughnessToMipLevel(float roughness, float numMips)
 {	
-   return pow(abs(roughness),0.25) * numMips;
+   return roughness * (numMips+1.0);
 }
 
 vec4 compute4Lights( Surface surface,
@@ -393,21 +431,26 @@ void dampen(inout Surface surface, sampler2D WetnessTexture, float accumTime, fl
 {   
    if (degree<=0.0) return;
    vec3 n = abs(surface.N);
-
-   float ang = dot(float3(0,0,-1),surface.N);
-   float grav = 2.0-pow(ang,3);
-   if (grav<0) grav*=-1.0;
+   float ang = clamp(n.z, 0.04, 0.96);
    
-   float speed = accumTime*(1.0-surface.roughness)*grav;
-   vec2 wetoffset = vec2(speed,speed/2)*0.1; 
-      
-   float wetness = texture(WetnessTexture, vec2(surface.P.xy*0.2+wetoffset)).b;
-   wetness = lerp(wetness,texture(WetnessTexture,vec2(surface.P.zx*0.2+wetoffset)).b,n.y);
-   wetness = lerp(wetness,texture(WetnessTexture,vec2(surface.P.zy*0.2+wetoffset)).b,n.x);
-   wetness = pow(wetness,3)*degree;
+   float speed = -accumTime*(1.0-surface.linearRoughnessSq)*clamp((2.0-ang), 0.04, 0.96);
+   if ((n.x > 0.0) || (n.y > 0.0))
+      speed *= -1.0;
+   vec2 wetoffset = vec2(speed,speed)*0.1;
    
-   surface.roughness = lerp(surface.roughness,(1.0-wetness*surface.roughness)*0.92f+0.04f,ang);
-   surface.baseColor.rgb = lerp(surface.baseColor.rgb*(2.0-wetness),surface.baseColor.rgb,ang*surface.roughness);
+   vec3 wetNormal = texture(WetnessTexture, float2(surface.P.xy*0.1+wetoffset)).xyz;
+   wetNormal = lerp(wetNormal,texture(WetnessTexture,float2(surface.P.zx*0.1+wetoffset)).rgb ,n.y);
+   wetNormal = lerp(wetNormal,texture(WetnessTexture,float2(surface.P.zy*0.1+wetoffset)).rgb ,n.x);   
+   surface.N = lerp(surface.N, wetNormal, degree); 
+   
+   float wetness = texture(WetnessTexture, vec2(surface.P.xy*0.1+wetoffset)).b;
+   wetness = lerp(wetness,texture(WetnessTexture,vec2(surface.P.zx*0.1+wetoffset)).b,n.y);
+   wetness = lerp(wetness,texture(WetnessTexture,vec2(surface.P.zy*0.1+wetoffset)).b,n.x);
+   wetness = pow(wetness*ang*degree,3);
+   
+   surface.roughness = lerp(surface.roughness, 0.04f, wetness);
+   surface.baseColor.rgb = lerp(surface.baseColor.rgb, surface.baseColor.rgb*0.6+float3(0.4,0.4,0.4)*wetness, wetness);
+   surface.metalness = lerp(surface.metalness, 0.96, wetness); 
    updateSurface(surface);
 }
 
@@ -544,33 +587,28 @@ vec4 computeForwardProbes(Surface surface,
       
    if(skylightCubemapIdx != -1 && alpha >= 0.001)
    {
-      irradiance = mix(irradiance,textureLod(irradianceCubemapAR, vec4(surface.R, skylightCubemapIdx), 0).xyz, alpha);
+      irradiance = mix(irradiance,textureLod(irradianceCubemapAR, vec4(surface.N, skylightCubemapIdx), 0).xyz, alpha);
       specular = mix(specular,textureLod(specularCubemapAR, vec4(surface.R, skylightCubemapIdx), lod).xyz, alpha);
    }
-   
-   //energy conservation
-   vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
-   vec3 kD = 1.0f - F;
-   kD *= 1.0f - surface.metalness;
 
-   //float dfgNdotV = max( surface.NdotV , 0.0009765625f ); //0.5f/512.0f (512 is size of dfg/brdf lookup tex)
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
-   specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
-   irradiance *= kD * surface.baseColor.rgb;
-
-   //AO
-   irradiance *= surface.ao;
-   specular *= computeSpecOcclusion(surface.NdotV, surface.ao, surface.roughness);
-
-   //http://marmosetco.tumblr.com/post/81245981087
+   vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
+   vec3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
+   
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
    
+   // Final color output after environment lighting
+   vec3 finalColor = diffuse + specularCol * horizon;
+   finalColor *= surface.ao;
+   
    if(isCapturing == 1)
-      return vec4(mix((irradiance + specular* horizon),surface.baseColor.rgb,surface.metalness),0);
+      return vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
    else
-      return vec4((irradiance + specular* horizon) , 0);//alpha writes disabled
+   {
+      return vec4(finalColor, 0);
+   }
 }
 
 vec4 debugVizForwardProbes(Surface surface,
@@ -696,7 +734,7 @@ vec4 debugVizForwardProbes(Surface surface,
 
    if(skylightCubemapIdx != -1 && alpha >= 0.001)
    {
-      irradiance = mix(irradiance,textureLod(irradianceCubemapAR, vec4(surface.R, skylightCubemapIdx), 0).xyz,alpha);
+      irradiance = mix(irradiance,textureLod(irradianceCubemapAR, vec4(surface.N, skylightCubemapIdx), 0).xyz,alpha);
       specular = mix(specular,textureLod(specularCubemapAR, vec4(surface.R, skylightCubemapIdx), lod).xyz,alpha);
    }
 
@@ -710,23 +748,22 @@ vec4 debugVizForwardProbes(Surface surface,
       return vec4(irradiance, 0);
    }
 
-   //energy conservation
-   vec3 F = FresnelSchlickRoughness(surface.NdotV, surface.f0, surface.roughness);
-   vec3 kD = 1.0f - F;
-   kD *= 1.0f - surface.metalness;
-
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
-   specular *= F * envBRDF.x + surface.f90 * envBRDF.y;
-   irradiance *= kD * surface.baseColor.rgb;
-
-   //AO
-   irradiance *= surface.ao;
-   specular *= computeSpecOcclusion(surface.NdotV, surface.ao, surface.roughness);
-
-   //http://marmosetco.tumblr.com/post/81245981087
+   vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
+   vec3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
+   
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
-
-   return vec4((irradiance + specular* horizon) , 0);//alpha writes disabled
+   
+   // Final color output after environment lighting
+   vec3 finalColor = diffuse + specularCol * horizon;
+   finalColor *= surface.ao;
+   
+   if(isCapturing == 1)
+      return vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
+   else
+   {
+      return vec4(finalColor, 0);
+   }
 }

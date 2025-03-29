@@ -102,7 +102,7 @@ void PointLight::initPersistFields()
    docsURL;
    addGroup( "Light" );
 
-      addField( "radius", TypeF32, Offset( mRadius, PointLight ), "Controls the falloff of the light emission" );
+      addFieldV( "radius", TypeRangedF32, Offset( mRadius, PointLight ), &CommonValidators::PositiveFloat, "Controls the falloff of the light emission" );
 
    endGroup( "Light" );
 

@@ -45,6 +45,7 @@
 // Debug Profiling.
 #include "platform/profiler.h"
 
+#include "console/typeValidators.h"
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(ShapeAnimationAsset);
@@ -133,10 +134,10 @@ void ShapeAnimationAsset::initPersistFields()
 
    addField("isBlend", TypeBool, Offset(mIsBlend, ShapeAnimationAsset), "Is this animation blended with another?");
    addField("blendRefAnimation", TypeString, Offset(mBlendAnimAssetName, ShapeAnimationAsset), "AssetID of the animation to reference for our blending");
-   addField("blendFrame", TypeS32, Offset(mBlendFrame, ShapeAnimationAsset), "Which frame of the reference animation do we use for our blending");
+   addFieldV("blendFrame", TypeRangedS32, Offset(mBlendFrame, ShapeAnimationAsset), &CommonValidators::PositiveInt, "Which frame of the reference animation do we use for our blending");
 
-   addField("startFrame", TypeS32, Offset(mStartFrame, ShapeAnimationAsset), "What frame does this animation clip start on");
-   addField("endFrame", TypeS32, Offset(mEndFrame, ShapeAnimationAsset), "What fram does this animation clip end on");
+   addFieldV("startFrame", TypeRangedS32, Offset(mStartFrame, ShapeAnimationAsset), &CommonValidators::PositiveInt, "What frame does this animation clip start on");
+   addFieldV("endFrame", TypeRangedS32, Offset(mEndFrame, ShapeAnimationAsset), &CommonValidators::PositiveInt, "What fram does this animation clip end on");
    addField("padRotation", TypeBool, Offset(mPadRotation, ShapeAnimationAsset), "Are the rotation values padded");
    addField("padTransforms", TypeBool, Offset(mPadTransforms, ShapeAnimationAsset), "Are the transform values padded");
 }

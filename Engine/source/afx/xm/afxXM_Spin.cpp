@@ -122,13 +122,13 @@ void afxXM_SpinData::initPersistFields()
    docsURL;
   addField("spinAxis",            TypePoint3F,  Offset(spin_axis, afxXM_SpinData),
     "...");
-  addField("spinAngle",           TypeF32,      Offset(spin_angle, afxXM_SpinData),
+  addFieldV("spinAngle",           TypeRangedF32,      Offset(spin_angle, afxXM_SpinData), &CommonValidators::DegreeRange,
     "...");
-  addField("spinAngleVariance",   TypeF32,      Offset(spin_angle_var, afxXM_SpinData),
+  addFieldV("spinAngleVariance", TypeRangedF32,      Offset(spin_angle_var, afxXM_SpinData), &CommonValidators::DegreeRange,
     "...");
-  addField("spinRate",            TypeF32,      Offset(spin_rate, afxXM_SpinData),
+  addFieldV("spinRate", TypeRangedF32,      Offset(spin_rate, afxXM_SpinData), &CommonValidators::DegreeRange,
     "...");
-  addField("spinRateVariance",    TypeF32,      Offset(spin_rate_var, afxXM_SpinData),
+  addFieldV("spinRateVariance", TypeRangedF32,      Offset(spin_rate_var, afxXM_SpinData), &CommonValidators::DegreeRange,
     "...");
 
   Parent::initPersistFields();

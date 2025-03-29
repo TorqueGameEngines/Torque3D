@@ -29,6 +29,7 @@
 #include "gui/controls/guiColorPicker.h"
 #include "gfx/primBuilder.h"
 #include "gfx/gfxDrawUtil.h"
+#include "console/typeValidators.h"
 #include "postFx/postEffectManager.h"
 #include "gfx/screenshot.h"
 
@@ -91,7 +92,7 @@ void GuiColorPickerCtrl::initPersistFields()
 {
    docsURL;
    addGroup("ColorPicker");
-      addField("selectorGap", TypeS32,  Offset(mSelectorGap, GuiColorPickerCtrl)); 
+      addFieldV("selectorGap", TypeRangedS32,  Offset(mSelectorGap, GuiColorPickerCtrl),&CommonValidators::NaturalNumber);
       addField("displayMode", TYPEID< PickMode >(), Offset(mDisplayMode, GuiColorPickerCtrl) );
       addField("selectorMode", TYPEID< SelectorMode >(), Offset(mSelectorMode, GuiColorPickerCtrl) );
       addField("actionOnMove", TypeBool,Offset(mActionOnMove, GuiColorPickerCtrl));

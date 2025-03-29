@@ -106,11 +106,11 @@ void afxAnimClipData::initPersistFields()
     "The name of an animation sequence to be played by a ShapeBase-derived object to which this effect is "
     "constrained. Also works on afxModel effects.\n"
     "default: \"\"\n");
-  addField("rate",              TYPEID< F32 >(),               myOffset(rate),                  
+  addFieldV("rate", TypeRangedF32,               myOffset(rate), &CommonValidators::F32Range,
     "The desired playback speed for the sequence. A value of 1.0 indicates forward playback at a normal rate. Negative "
     "values cause the sequence to play backwards.\n"
     "default: 1.0\n");
-  addField("posOffset",         TYPEID< F32 >(),               myOffset(pos_offset),
+  addFieldV("posOffset", TypeRangedF32,               myOffset(pos_offset), &CommonValidators::NormalizedFloat,
     "Sets a starting offset for the selected animation clip. It directly specifies an animation thread position in the 0.0 to "
     "1.0 range as a fraction of the clip's duration.\n"
     "default: 1.0\n");

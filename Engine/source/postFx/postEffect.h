@@ -202,7 +202,7 @@ protected:
 
    String mRenderBin;
 
-   F32 mRenderPriority;
+   S16 mRenderPriority;
 
    /// This is true if the effect has been succesfully
    /// initialized and all requirements are met for use.

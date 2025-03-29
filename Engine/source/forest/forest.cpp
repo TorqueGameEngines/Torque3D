@@ -108,7 +108,7 @@ void Forest::initPersistFields()
 
    addGroup( "Lod" );
       
-      addField( "lodReflectScalar",      TypeF32,       Offset( mReflectionLodScalar, Forest ),
+      addFieldV( "lodReflectScalar",      TypeRangedF32,       Offset( mReflectionLodScalar, Forest ), &CommonValidators::PositiveFloat,
          "Scalar applied to the farclip distance when Forest renders into a reflection." );
 
    endGroup( "Lod" );

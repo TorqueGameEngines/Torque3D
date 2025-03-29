@@ -151,13 +151,13 @@ void afxPathData::initPersistFields()
     "...");
   addField("loop",       TypeString,  Offset(loop_string,   afxPathData),
     "...");
-  addField("mult",       TypeF32,     Offset(mult,          afxPathData),
+  addFieldV("mult", TypeRangedF32,     Offset(mult,          afxPathData), &CommonValidators::F32Range,
     "...");
-  addField("delay",      TypeF32,     Offset(delay,         afxPathData),
+  addFieldV("delay", TypeRangedF32,     Offset(delay,         afxPathData), &CommonValidators::PositiveFloat,
     "...");
-  addField("lifetime",   TypeF32,     Offset(lifetime,      afxPathData),
+  addFieldV("lifetime",   TypeRangedF32,     Offset(lifetime,      afxPathData), &CommonValidators::PositiveFloat,
     "...");
-  addField("timeOffset", TypeF32,     Offset(time_offset,   afxPathData),
+  addFieldV("timeOffset", TypeRangedF32,     Offset(time_offset,   afxPathData), &CommonValidators::F32Range,
     "...");
   addField("reverse",    TypeBool,    Offset(reverse,       afxPathData),
     "...");

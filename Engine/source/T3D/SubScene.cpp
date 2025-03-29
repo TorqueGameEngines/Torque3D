@@ -214,10 +214,11 @@ bool SubScene::evaluateCondition()
 
 bool SubScene::testBox(const Box3F& testBox)
 {
-   if (mGlobalLayer)
-      return true;
+   bool passes = mGlobalLayer;
 
-   bool passes = getWorldBox().isOverlapped(testBox);
+   if (!passes)
+      passes = getWorldBox().isOverlapped(testBox);
+
    if (passes)
       passes = evaluateCondition();
    return passes;
@@ -346,10 +347,15 @@ void SubScene::load()
    if (mSaving)
       return;
 
+   GameMode::findGameModes(mGameModesNames, &mGameModesList);
+   if (!isSelected() && (String(mGameModesNames).isNotEmpty() && mGameModesList.size() == 0) || !evaluateCondition())
+   {
+      mLoaded = false;
+      return;
+   }
+
    _loadFile(true);
    mLoaded = true;
-
-   GameMode::findGameModes(mGameModesNames, &mGameModesList);
 
    onLoaded_callback();
    for (U32 i = 0; i < mGameModesList.size(); i++)
@@ -357,11 +363,6 @@ void SubScene::load()
       mGameModesList[i]->onSubsceneLoaded_callback(this);
    }
 
-   if (!mOnLoadCommand.isEmpty())
-   {
-      String command = "%this = " + String(getIdString()) + "; " + mLoadIf + ";";
-      Con::evaluatef(command.c_str());
-   }
 }
 
 void SubScene::unload()

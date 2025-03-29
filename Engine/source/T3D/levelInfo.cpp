@@ -123,20 +123,18 @@ LevelInfo::~LevelInfo()
 
 //-----------------------------------------------------------------------------
 
-FRangeValidator ValiDampnessRange(0.0f, 1.0f);
-
 void LevelInfo::initPersistFields()
 {
    docsURL;
    addGroup( "Visibility" );
 
-      addField( "nearClip", TypeF32, Offset( mNearClip, LevelInfo ), "Closest distance from the camera's position to render the world." );
-      addField( "visibleDistance", TypeF32, Offset( mVisibleDistance, LevelInfo ), "Furthest distance from the camera's position to render the world." );
-      addField( "visibleGhostDistance", TypeF32, Offset( mVisibleGhostDistance, LevelInfo ), "Furthest distance from the camera's position to render players. Defaults to visibleDistance." );
-      addField( "decalBias", TypeF32, Offset( mDecalBias, LevelInfo ),
+      addFieldV( "nearClip", TypeRangedF32, Offset( mNearClip, LevelInfo ), &CommonValidators::PositiveFloat, "Closest distance from the camera's position to render the world." );
+      addFieldV( "visibleDistance", TypeRangedF32, Offset( mVisibleDistance, LevelInfo ), &CommonValidators::PositiveFloat, "Furthest distance from the camera's position to render the world." );
+      addFieldV( "visibleGhostDistance", TypeRangedF32, Offset( mVisibleGhostDistance, LevelInfo ), &CommonValidators::PositiveFloat, "Furthest distance from the camera's position to render players. Defaults to visibleDistance." );
+      addFieldV( "decalBias", TypeRangedF32, Offset( mDecalBias, LevelInfo ), &CommonValidators::PositiveFloat,
          "NearPlane bias used when rendering Decal and DecalRoad. This should be tuned to the visibleDistance in your level." );
 
-      addFieldV("dampness", TypeF32, Offset(mDampness, LevelInfo), &ValiDampnessRange,
+      addFieldV("dampness", TypeRangedF32, Offset(mDampness, LevelInfo), &CommonValidators::NormalizedFloat,
          "@brief dampness influence");
    endGroup( "Visibility" );
 
@@ -145,13 +143,13 @@ void LevelInfo::initPersistFields()
       addField( "fogColor", TypeColorF, Offset( mFogData.color, LevelInfo ),
          "The default color for the scene fog." );
 
-      addField( "fogDensity", TypeF32, Offset( mFogData.density, LevelInfo ),
+      addFieldV( "fogDensity", TypeRangedF32, Offset( mFogData.density, LevelInfo ), &CommonValidators::NormalizedFloat,
          "The 0 to 1 density value for the exponential fog falloff." );
 
-      addField( "fogDensityOffset", TypeF32, Offset( mFogData.densityOffset, LevelInfo ),
+      addFieldV( "fogDensityOffset", TypeRangedF32, Offset( mFogData.densityOffset, LevelInfo ), &CommonValidators::PositiveFloat,
          "An offset from the camera in meters for moving the start of the fog effect." );
 
-      addField( "fogAtmosphereHeight", TypeF32, Offset( mFogData.atmosphereHeight, LevelInfo ),
+      addFieldV( "fogAtmosphereHeight", TypeRangedF32, Offset( mFogData.atmosphereHeight, LevelInfo ), &CommonValidators::PositiveFloat,
          "A height in meters for altitude fog falloff." );
 
    endGroup( "Fog" );
@@ -165,7 +163,7 @@ void LevelInfo::initPersistFields()
 
    addGroup( "Lighting" );
 
-      addField( "ambientLightBlendPhase", TypeF32, Offset( mAmbientLightBlendPhase, LevelInfo ),
+      addFieldV( "ambientLightBlendPhase", TypeRangedF32, Offset( mAmbientLightBlendPhase, LevelInfo ), &CommonValidators::PositiveFloat,
          "Number of seconds it takes to blend from one ambient light color to a different one." );
 
       addField( "ambientLightBlendCurve", TypeEaseF, Offset( mAmbientLightBlendCurve, LevelInfo ),

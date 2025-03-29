@@ -174,7 +174,7 @@ void GuiShapeEdPreview::initPersistFields()
    addGroup( "Detail Stats" );
    addField( "fixedDetail",            TypeBool, Offset( mFixedDetail, GuiShapeEdPreview ),
       "If false, the current detail is selected based on camera distance" );
-   addField( "orbitDist",              TypeF32, Offset( mOrbitDist, GuiShapeEdPreview ),
+   addFieldV( "orbitDist",              TypeRangedF32, Offset( mOrbitDist, GuiShapeEdPreview ), &CommonValidators::PositiveFloat,
       "The current distance from the camera to the model" );
    addProtectedField( "currentDL",     TypeS32, Offset( mCurrentDL, GuiShapeEdPreview ),     &setFieldCurrentDL,     &defaultProtectedGetFn,
       "The current detail level" );

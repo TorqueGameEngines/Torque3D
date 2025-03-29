@@ -933,6 +933,7 @@ MeshRoad::~MeshRoad()
    mConvexList = NULL;
 }
 
+FRangeValidator mrTextureLengthV(0.1f, FLT_MAX);
 void MeshRoad::initPersistFields()
 {
    docsURL;
@@ -942,13 +943,13 @@ void MeshRoad::initPersistFields()
       INITPERSISTFIELD_MATERIALASSET(BottomMaterial, MeshRoad, "Material for the bottom surface of the road.");
       INITPERSISTFIELD_MATERIALASSET(SideMaterial, MeshRoad, "Material for the side surface of the road.");
 
-      addField( "textureLength", TypeF32, Offset( mTextureLength, MeshRoad ), 
+      addFieldV( "textureLength", TypeRangedF32, Offset( mTextureLength, MeshRoad ), &mrTextureLengthV,
          "The length in meters of textures mapped to the MeshRoad." );      
 
-      addField( "breakAngle", TypeF32, Offset( mBreakAngle, MeshRoad ), 
+      addFieldV( "breakAngle", TypeRangedF32, Offset( mBreakAngle, MeshRoad ), &CommonValidators::PosDegreeRange,
          "Angle in degrees - MeshRoad will subdivide the spline if its curve is greater than this threshold." ); 
 
-      addField( "widthSubdivisions", TypeS32, Offset( mWidthSubdivisions, MeshRoad ), 
+      addFieldV( "widthSubdivisions", TypeRangedS32, Offset( mWidthSubdivisions, MeshRoad ), &CommonValidators::PositiveInt,
          "Subdivide segments widthwise this many times when generating vertices." );
 
    endGroup( "MeshRoad" );

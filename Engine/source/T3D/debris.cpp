@@ -293,6 +293,11 @@ bool DebrisData::preload(bool server, String &errorStr)
    return true;
 }
 
+FRangeValidator debElasticityRange(-10.0f, 10.0f);
+FRangeValidator debFrictionRange(-10.0f, 10.0f);
+IRangeValidator debBounceRange(0, 10000);
+FRangeValidator debSpinSpeedRange(-10000.0f, 10000.0f);
+FRangeValidator debLifetimeRange(0.0f, 1000.0f);
 void DebrisData::initPersistFields()
 {
    docsURL;
@@ -312,33 +317,33 @@ void DebrisData::initPersistFields()
    endGroup("Datablocks");
 
    addGroup("Physics");
-   addField("elasticity",           TypeF32,                     Offset(elasticity,          DebrisData), 
+   addFieldV("elasticity",           TypeRangedF32,                     Offset(elasticity,          DebrisData), &debElasticityRange,
       "@brief A floating-point value specifying how 'bouncy' this object is.\n\nMust be in the range of -10 to 10.\n");
-   addField("friction",             TypeF32,                     Offset(friction,            DebrisData), 
+   addFieldV("friction", TypeRangedF32,                     Offset(friction,            DebrisData), &debFrictionRange,
       "@brief A floating-point value specifying how much velocity is lost to impact and sliding friction.\n\nMust be in the range of -10 to 10.\n");
-   addField("numBounces",           TypeS32,                     Offset(numBounces,          DebrisData), 
+   addFieldV("numBounces",           TypeRangedS32,                     Offset(numBounces,          DebrisData), &debBounceRange,
       "@brief How many times to allow this debris object to bounce until it either explodes, becomes static or snaps (defined in explodeOnMaxBounce, staticOnMaxBounce, snapOnMaxBounce).\n\n"
       "Must be within the range of 0 to 10000.\n"
       "@see bounceVariance\n");
-   addField("bounceVariance",       TypeS32,                     Offset(bounceVariance,      DebrisData), 
+   addFieldV("bounceVariance", TypeRangedS32,                     Offset(bounceVariance,      DebrisData), &debBounceRange,
       "@brief Allowed variance in the value of numBounces.\n\nMust be less than numBounces.\n@see numBounces\n");
-   addField("minSpinSpeed",         TypeF32,                     Offset(minSpinSpeed,        DebrisData), 
+   addFieldV("minSpinSpeed", TypeRangedF32,                     Offset(minSpinSpeed,        DebrisData),&debSpinSpeedRange,
       "@brief Minimum speed that this debris object will rotate.\n\nMust be in the range of -10000 to 1000, and must be less than maxSpinSpeed.\n@see maxSpinSpeed\n");
-   addField("maxSpinSpeed",         TypeF32,                     Offset(maxSpinSpeed,        DebrisData), 
+   addFieldV("maxSpinSpeed", TypeRangedF32,                     Offset(maxSpinSpeed,        DebrisData), &debSpinSpeedRange,
       "@brief Maximum speed that this debris object will rotate.\n\nMust be in the range of -10000 to 10000.\n@see minSpinSpeed\n");
-   addField("gravModifier",         TypeF32,                     Offset(gravModifier,        DebrisData), "How much gravity affects debris.");
-   addField("terminalVelocity",     TypeF32,                     Offset(terminalVelocity,    DebrisData), "Max velocity magnitude.");
-   addField("velocity",             TypeF32,                     Offset(velocity,            DebrisData), 
+   addFieldV("gravModifier", TypeRangedF32,                     Offset(gravModifier,        DebrisData), &CommonValidators::F32Range, "How much gravity affects debris.");
+   addFieldV("terminalVelocity", TypeRangedF32,                     Offset(terminalVelocity,    DebrisData), &CommonValidators::PositiveFloat, "Max velocity magnitude.");
+   addFieldV("velocity", TypeRangedF32,                     Offset(velocity,            DebrisData), &CommonValidators::PositiveFloat,
       "@brief Speed at which this debris object will move.\n\n@see velocityVariance\n");
-   addField("velocityVariance",     TypeF32,                     Offset(velocityVariance,    DebrisData), 
+   addFieldV("velocityVariance", TypeRangedF32,                     Offset(velocityVariance,    DebrisData), &CommonValidators::PositiveFloat,
       "@brief Allowed variance in the value of velocity\n\nMust be less than velocity.\n@see velocity\n");
-   addField("lifetime",             TypeF32,                     Offset(lifetime,            DebrisData), 
+   addFieldV("lifetime",             TypeRangedF32,                     Offset(lifetime,            DebrisData), &debLifetimeRange,
       "@brief Amount of time until this debris object is destroyed.\n\nMust be in the range of 0 to 1000.\n@see lifetimeVariance");
-   addField("lifetimeVariance",     TypeF32,                     Offset(lifetimeVariance,    DebrisData), 
+   addFieldV("lifetimeVariance", TypeRangedF32,                     Offset(lifetimeVariance,    DebrisData), &debLifetimeRange,
       "@brief Allowed variance in the value of lifetime.\n\nMust be less than lifetime.\n@see lifetime\n");
    addField("useRadiusMass",        TypeBool,                    Offset(useRadiusMass,       DebrisData), 
       "@brief Use mass calculations based on radius.\n\nAllows for the adjustment of elasticity and friction based on the Debris size.\n@see baseRadius\n");
-   addField("baseRadius",           TypeF32,                     Offset(baseRadius,          DebrisData), 
+   addFieldV("baseRadius", TypeRangedF32,                     Offset(baseRadius,          DebrisData), &CommonValidators::PositiveFloat,
       "@brief Radius at which the standard elasticity and friction apply.\n\nOnly used when useRaduisMass is true.\n@see useRadiusMass.\n");
    endGroup("Physics");
 
@@ -571,7 +576,7 @@ void Debris::initPersistFields()
    docsURL;
    addGroup( "Debris" );	
    
-      addField( "lifetime", TypeF32, Offset(mLifetime, Debris), 
+      addFieldV( "lifetime", TypeRangedF32, Offset(mLifetime, Debris), &CommonValidators::PositiveFloat,
          "@brief Length of time for this debris object to exist. When expired, the object will be deleted.\n\n"
          "The initial lifetime value comes from the DebrisData datablock.\n"
          "@see DebrisData::lifetime\n"

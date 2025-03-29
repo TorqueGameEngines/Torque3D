@@ -179,8 +179,8 @@ void GuiClockHud::setReverseTime(F32 time)
    // Set the current time in seconds.  
    mTimeReversed = true;  
    mTimeOffset = S32(time * 1000) + Platform::getVirtualMilliseconds();
-   mPausedTime = S32(F32(mTimeOffset + Platform::getVirtualMilliseconds()) / 1000);
    mSignificantTimeReached = false;
+   mPausedTime = getTime();
 }
 
 void GuiClockHud::setTime(F32 time)
@@ -188,8 +188,8 @@ void GuiClockHud::setTime(F32 time)
    // Set the current time in seconds.
    mTimeReversed = false;
    mTimeOffset = S32(time * 1000) - Platform::getVirtualMilliseconds();
-   mPausedTime = S32(F32(mTimeOffset - Platform::getVirtualMilliseconds()) / 1000);
    mSignificantTimeReached = false;
+   mPausedTime = getTime();
 }
 
 F32 GuiClockHud::getTime()

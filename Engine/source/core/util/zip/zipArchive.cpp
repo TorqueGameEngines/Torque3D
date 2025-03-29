@@ -700,7 +700,7 @@ Stream * ZipArchive::openFile(const char *filename, ZipEntry* ze, AccessMode mod
    return NULL;
 }
 
-void ZipArchive::closeFile(Stream *stream)
+void ZipArchive::closeFile(Stream *stream, bool deleteRootStream /*= false*/)
 {
    FilterStream *currentStream, *nextStream;
 
@@ -724,6 +724,11 @@ void ZipArchive::closeFile(Stream *stream)
       // so we need to update the relevant information in the header.
       updateFile(tempStream);
    }
+
+   // [bank / Feb-2025] If the stream was cloned (via openFileForRead method)
+   // we should clean it up and delete, otherwise it will rest in memory forever.
+   if (deleteRootStream && stream != mStream)
+      delete stream;
 }
 
 //-----------------------------------------------------------------------------
@@ -888,7 +893,8 @@ bool ZipArchive::extractFile(const char *pathInZip, const char *filename, bool *
       ret = false;
    }
    
-   closeFile(source);
+   // Pass deleteRootStream flag to drop cloned FileStream
+   closeFile(source, true);
    dest.close();
 
    return ret;

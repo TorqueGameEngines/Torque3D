@@ -302,27 +302,94 @@ class PaintNoiseAction : public TerrainAction
       F32 mScale;
 };
 
-/*
+
 class ThermalErosionAction : public TerrainAction
 {
    public:
       ThermalErosionAction(TerrainEditor * editor) 
       : TerrainAction(editor)
       {
-         mNoise.setSeed( 1 );//Sim::getCurrentTime() );
-         mNoiseData.setSize( TerrainBlock::BlockSize * TerrainBlock::BlockSize );
-         mTerrainHeights.setSize( TerrainBlock::BlockSize * TerrainBlock::BlockSize );
-      }
-      
+      }      
       StringTableEntry getName(){return("thermalErode");}
-
       void process(Selection * sel, const Gui3DMouseEvent & event, bool selChanged, Type type);
-
-      Noise2D mNoise;
-      Vector<F32> mNoiseData;
-      Vector<F32> mTerrainHeights;
 };
-*/
+
+class HydraulicErosionAction : public TerrainAction
+{
+public:
+   HydraulicErosionAction(TerrainEditor* editor)
+      : TerrainAction(editor)
+   {
+   }
+
+   StringTableEntry getName() { return("hydraulicErode"); }
+   void process(Selection* sel, const Gui3DMouseEvent& event, bool selChanged, Type type);
+};
+
+class TerrainScratchPad
+{
+public:
+   F32 mBottom, mTop;
+   TerrainScratchPad(): mBottom(F32_MAX), mTop(F32_MIN_EX){};
+   ~TerrainScratchPad() { mContents.clear(); };
+   void clear();
+   class gridStub
+   {
+   public:
+      gridStub(F32 height, U8 material) : mHeight(height), mMaterial(material) {};
+      F32 mHeight;
+      U8 mMaterial;
+   };
+   void addTile(F32 height, U8 material);
+   U32 size() { return(mContents.size()); };
+   gridStub* operator [](U32 index) { return mContents[index]; };
+private:
+   Vector<gridStub*> mContents;
+};
+
+class copyAction : public TerrainAction
+{
+public:
+   copyAction(TerrainEditor* editor)
+      : TerrainAction(editor)
+   {
+   }
+   StringTableEntry getName() { return("copy"); }
+   void process(Selection* sel, const Gui3DMouseEvent& event, bool selChanged, Type type);
+};
+
+class pasteAction : public TerrainAction
+{
+public:
+   pasteAction(TerrainEditor* editor)
+      : TerrainAction(editor)
+   {
+   }
+   StringTableEntry getName() { return("paste"); }
+   void process(Selection* sel, const Gui3DMouseEvent& event, bool selChanged, Type type);
+};
+
+class pasteUpAction : public TerrainAction
+{
+public:
+   pasteUpAction(TerrainEditor* editor)
+      : TerrainAction(editor)
+   {
+   }
+   StringTableEntry getName() { return("pasteUp"); }
+   void process(Selection* sel, const Gui3DMouseEvent& event, bool selChanged, Type type);
+};
+
+class pasteDownAction : public TerrainAction
+{
+public:
+   pasteDownAction(TerrainEditor* editor)
+      : TerrainAction(editor)
+   {
+   }
+   StringTableEntry getName() { return("pasteDown"); }
+   void process(Selection* sel, const Gui3DMouseEvent& event, bool selChanged, Type type);
+};
 
 /// An undo action used to perform terrain wide smoothing.
 class TerrainSmoothAction : public UndoAction

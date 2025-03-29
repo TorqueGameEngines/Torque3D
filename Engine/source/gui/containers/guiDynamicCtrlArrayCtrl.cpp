@@ -98,28 +98,28 @@ ConsoleDocClass( GuiDynamicCtrlArrayControl,
 void GuiDynamicCtrlArrayControl::initPersistFields()
 {
    docsURL;
-   addField( "colCount", TypeS32, Offset( mCols, GuiDynamicCtrlArrayControl ),
+   addFieldV( "colCount", TypeRangedS32, Offset( mCols, GuiDynamicCtrlArrayControl ), &CommonValidators::PositiveInt,
       "Number of columns the child controls have been arranged into. This "
       "value is calculated automatically when children are added, removed or "
       "resized; writing it directly has no effect." );
 
-   addField( "colSize", TypeS32, Offset( mColSize, GuiDynamicCtrlArrayControl ),
+   addFieldV( "colSize", TypeRangedS32, Offset( mColSize, GuiDynamicCtrlArrayControl ), &CommonValidators::PositiveInt,
       "Width of each column. If <i>autoCellSize</i> is set, this will be "
       "calculated automatically from the widest child control" );
 
-   addField( "rowCount", TypeS32, Offset( mRows, GuiDynamicCtrlArrayControl ),
+   addFieldV( "rowCount", TypeRangedS32, Offset( mRows, GuiDynamicCtrlArrayControl ), &CommonValidators::PositiveInt,
       "Number of rows the child controls have been arranged into. This value "
       "is calculated automatically when children are added, removed or resized; "
       "writing it directly has no effect." );
 
-   addField( "rowSize", TypeS32, Offset( mRowSize, GuiDynamicCtrlArrayControl ),
+   addFieldV( "rowSize", TypeRangedS32, Offset( mRowSize, GuiDynamicCtrlArrayControl ), &CommonValidators::PositiveInt,
       "Height of each row. If <i>autoCellSize</i> is set, this will be "
       "calculated automatically from the tallest child control" );
 
-   addField( "rowSpacing", TypeS32, Offset( mRowSpacing, GuiDynamicCtrlArrayControl ),
+   addFieldV( "rowSpacing", TypeRangedS32, Offset( mRowSpacing, GuiDynamicCtrlArrayControl ), &CommonValidators::PositiveInt,
       "Spacing between rows" );
 
-   addField( "colSpacing", TypeS32, Offset( mColSpacing, GuiDynamicCtrlArrayControl ),
+   addFieldV( "colSpacing", TypeRangedS32, Offset( mColSpacing, GuiDynamicCtrlArrayControl ), &CommonValidators::PositiveInt,
       "Spacing between columns" );
 
    addField( "frozen", TypeBool, Offset( mFrozen, GuiDynamicCtrlArrayControl ),

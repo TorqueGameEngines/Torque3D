@@ -141,6 +141,7 @@ struct WheeledVehicleData: public VehicleData
    ClippedPolyList rigidBody;    // Extracted from shape
    S32 brakeLightSequence;       // Brakes
    S32 steeringSequence;         // Steering animation
+   F32 mDownForce;
 
    //
    WheeledVehicleData();

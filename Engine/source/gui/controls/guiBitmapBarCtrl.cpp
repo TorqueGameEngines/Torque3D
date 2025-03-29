@@ -44,7 +44,7 @@ GuiBitmapBarCtrl::GuiBitmapBarCtrl(void)
 void GuiBitmapBarCtrl::initPersistFields()
 {
    docsURL;
-   addField("percent", TypeF32, Offset(mPercent, GuiBitmapBarCtrl),
+   addFieldV("percent", TypeRangedF32, Offset(mPercent, GuiBitmapBarCtrl), &CommonValidators::NormalizedFloat,
       "% shown");
    addField("vertical", TypeBool, Offset(mVertical, GuiBitmapBarCtrl),
       "If true, the bitmap is clipped vertically.");

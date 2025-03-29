@@ -1322,7 +1322,7 @@ void Camera::initPersistFields()
          "Apply smoothing (acceleration and damping) to camera rotations." );
       addProtectedField( "mass",            TypeF32,    Offset(mMass, Camera),            &_setNewtonField, &defaultProtectedGetFn,
          "The camera's mass (Newton mode only).  Default value is 10." );
-      addProtectedField( "drag",            TypeF32,    Offset(mDrag, Camera),            &_setNewtonField, &defaultProtectedGetFn,
+      addProtectedFieldV( "drag",            TypeRangedF32,    Offset(mDrag, Camera),            &_setNewtonField, &defaultProtectedGetFn, &CommonValidators::PositiveNonZeroFloat,
          "Drag on camera when moving (Newton mode only).  Default value is 2." );
       addProtectedField( "force",           TypeF32,    Offset(mFlyForce, Camera),        &_setNewtonField, &defaultProtectedGetFn,
          "Force applied on camera when asked to move (Newton mode only).  Default value is 500." );

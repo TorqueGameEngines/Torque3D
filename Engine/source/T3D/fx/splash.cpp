@@ -121,26 +121,26 @@ void SplashData::initPersistFields()
 
    addField("scale",             TypePoint3F,                  Offset(scale,              SplashData), "The scale of this splashing effect, defined as the F32 points X, Y, Z.\n");
    addField("emitter",           TYPEID< ParticleEmitterData >(),   Offset(emitterList,        SplashData), NUM_EMITTERS, "List of particle emitters to create at the point of this Splash effect.\n");
-   addField("delayMS",           TypeS32,                      Offset(delayMS,            SplashData), "Time to delay, in milliseconds, before actually starting this effect.\n");
-   addField("delayVariance",     TypeS32,                      Offset(delayVariance,      SplashData), "Time variance for delayMS.\n");
-   addField("lifetimeMS",        TypeS32,                      Offset(lifetimeMS,         SplashData), "Lifetime for this effect, in milliseconds.\n");
-   addField("lifetimeVariance",  TypeS32,                      Offset(lifetimeVariance,   SplashData), "Time variance for lifetimeMS.\n");
-   addField("width",             TypeF32,                      Offset(width,              SplashData), "Width for the X and Y coordinates to create this effect within.");
-   addField("numSegments",       TypeS32,                      Offset(numSegments,        SplashData), "Number of ejection points in the splash ring.\n");
-   addField("velocity",          TypeF32,                      Offset(velocity,           SplashData), "Velocity for the splash effect to travel.\n");
-   addField("height",            TypeF32,                      Offset(height,             SplashData), "Height for the splash to reach.\n");
-   addField("acceleration",      TypeF32,                      Offset(acceleration,       SplashData), "Constant acceleration value to place upon the splash effect.\n");
-   addField("times",             TypeF32,                      Offset(times,              SplashData), NUM_TIME_KEYS, "Times to transition through the splash effect. Up to 4 allowed. Values are 0.0 - 1.0, and corrispond to the life of the particle where 0 is first created and 1 is end of lifespace.\n" );
+   addFieldV("delayMS", TypeRangedS32,                      Offset(delayMS,            SplashData), &CommonValidators::PositiveInt, "Time to delay, in milliseconds, before actually starting this effect.\n");
+   addFieldV("delayVariance", TypeRangedS32,                      Offset(delayVariance,      SplashData), &CommonValidators::PositiveInt, "Time variance for delayMS.\n");
+   addFieldV("lifetimeMS", TypeRangedS32,                      Offset(lifetimeMS,         SplashData), &CommonValidators::PositiveInt, "Lifetime for this effect, in milliseconds.\n");
+   addFieldV("lifetimeVariance", TypeRangedS32,                      Offset(lifetimeVariance,   SplashData), &CommonValidators::PositiveInt, "Time variance for lifetimeMS.\n");
+   addFieldV("width", TypeRangedF32,                      Offset(width,              SplashData), &CommonValidators::PositiveFloat, "Width for the X and Y coordinates to create this effect within.");
+   addFieldV("numSegments", TypeRangedS32,                      Offset(numSegments,        SplashData), &CommonValidators::NaturalNumber, "Number of ejection points in the splash ring.\n");
+   addFieldV("velocity", TypeRangedF32,                      Offset(velocity,           SplashData), &CommonValidators::PositiveFloat, "Velocity for the splash effect to travel.\n");
+   addFieldV("height", TypeRangedF32,                      Offset(height,             SplashData), &CommonValidators::PositiveFloat, "Height for the splash to reach.\n");
+   addFieldV("acceleration", TypeRangedF32,                      Offset(acceleration,       SplashData), &CommonValidators::PositiveFloat, "Constant acceleration value to place upon the splash effect.\n");
+   addFieldV("times", TypeRangedF32,                      Offset(times,              SplashData), &CommonValidators::NormalizedFloat, NUM_TIME_KEYS, "Times to transition through the splash effect. Up to 4 allowed. Values are 0.0 - 1.0, and corrispond to the life of the particle where 0 is first created and 1 is end of lifespace.\n" );
    addField("colors",            TypeColorF,                   Offset(colors,             SplashData), NUM_TIME_KEYS, "Color values to set the splash effect, rgba. Up to 4 allowed. Will transition through colors based on values set in the times value. Example: colors[0] = \"0.6 1.0 1.0 0.5\".\n" );
 
    INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, NUM_TEX, SplashData, "Image to use as the texture for the splash effect.\n");
 
-   addField("texWrap",           TypeF32,                      Offset(texWrap,            SplashData), "Amount to wrap the texture around the splash ring, 0.0f - 1.0f.\n");
-   addField("texFactor",         TypeF32,                      Offset(texFactor,          SplashData), "Factor in which to apply the texture to the splash ring, 0.0f - 1.0f.\n");
-   addField("ejectionFreq",      TypeF32,                      Offset(ejectionFreq,       SplashData), "Frequency in which to emit splash rings.\n");
-   addField("ejectionAngle",     TypeF32,                      Offset(ejectionAngle,      SplashData), "Rotational angle to create a splash ring.\n");
-   addField("ringLifetime",      TypeF32,                      Offset(ringLifetime,       SplashData), "Lifetime, in milliseconds, for a splash ring.\n");
-   addField("startRadius",       TypeF32,                      Offset(startRadius,        SplashData), "Starting radius size of a splash ring.\n");
+   addFieldV("texWrap", TypeRangedF32,                      Offset(texWrap,            SplashData), &CommonValidators::NormalizedFloat, "Amount to wrap the texture around the splash ring, 0.0f - 1.0f.\n");
+   addFieldV("texFactor", TypeRangedF32,                      Offset(texFactor,          SplashData), &CommonValidators::NormalizedFloat, "Factor in which to apply the texture to the splash ring, 0.0f - 1.0f.\n");
+   addFieldV("ejectionFreq", TypeRangedF32,                      Offset(ejectionFreq,       SplashData), &CommonValidators::PositiveFloat, "Frequency in which to emit splash rings.\n");
+   addFieldV("ejectionAngle", TypeRangedF32,                      Offset(ejectionAngle,      SplashData), &CommonValidators::DegreeRange, "Rotational angle to create a splash ring.\n");
+   addFieldV("ringLifetime",      TypeRangedF32,                      Offset(ringLifetime,       SplashData), &CommonValidators::PositiveFloat, "Lifetime, in milliseconds, for a splash ring.\n");
+   addFieldV("startRadius", TypeRangedF32,                      Offset(startRadius,        SplashData), &CommonValidators::PositiveFloat, "Starting radius size of a splash ring.\n");
    addField("explosion",         TYPEID< ExplosionData >(),    Offset(explosion,          SplashData), "ExplosionData object to create at the creation position of this splash effect.\n");
 
    Parent::initPersistFields();

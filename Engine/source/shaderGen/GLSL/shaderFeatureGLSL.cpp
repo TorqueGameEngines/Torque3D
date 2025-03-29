@@ -2212,9 +2212,13 @@ void RTLightingFeatGLSL::processPix(   Vector<ShaderComponent*> &componentList,
 
    Var *curColor = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
 
-   Var *ambient  = new Var( "ambient", "vec4" );
-   ambient->uniform = true;
-   ambient->constSortPos = cspPass;
+   Var* ambient = (Var*)LangElement::find("ambient");
+   if (!ambient)
+   {
+      ambient = new Var("ambient", "vec4");
+      ambient->uniform = true;
+      ambient->constSortPos = cspPass;
+   }
    
    Var* lighting = new Var("lighting", "vec4");
    meta->addStatement(new GenOp("   @ = compute4Lights( @, @, @, @,\r\n"
@@ -3091,9 +3095,9 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    Var *ambient = (Var *)LangElement::find("ambient");
    if (!ambient)
    {
-      ambient = new Var("ambient", "vec3");
-      eyePos->uniform = true;
-      eyePos->constSortPos = cspPass;
+      ambient = new Var("ambient", "vec4");
+      ambient->uniform = true;
+      ambient->constSortPos = cspPass;
    }
    meta->addStatement(new GenOp("   @.rgb *= @.rgb;\r\n", ibl, ambient));
    meta->addStatement(new GenOp("   @.rgb = @.rgb;\r\n", curColor, ibl));

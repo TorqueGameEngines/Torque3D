@@ -75,6 +75,7 @@ function initializeAssetBrowser()
    exec("./scripts/assetTypes/gui." @ $TorqueScriptFileExtension);
    exec("./scripts/assetTypes/image." @ $TorqueScriptFileExtension);  
    exec("./scripts/assetTypes/level." @ $TorqueScriptFileExtension); 
+   exec("./scripts/assetTypes/subScene." @ $TorqueScriptFileExtension);
    exec("./scripts/assetTypes/material." @ $TorqueScriptFileExtension);   
    exec("./scripts/assetTypes/postFX." @ $TorqueScriptFileExtension);
    exec("./scripts/assetTypes/script." @ $TorqueScriptFileExtension);

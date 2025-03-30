@@ -3,17 +3,9 @@ AssetBrowser::registerAssetType("LevelAsset", "Levels");
 function LevelAsset::setupCreateNew()
 {
    NewAssetPropertiesInspector.startGroup("Level");
-   NewAssetPropertiesInspector.addField("LevelName", "Level Name", "String",  "Human-readable name of new level", "", "", $CurrentAssetBrowser.callAssetTypeFunc(%assetType, "setupCreateNew");.newAssetSettings);
+   NewAssetPropertiesInspector.addField("LevelName", "Level Name", "String",  "Human-readable name of new level", "", "", $CurrentAssetBrowser.newAssetSettings);
    NewAssetPropertiesInspector.addField("levelPreviewImage", "Level Preview Image", "Image",  "Preview Image for the level", "", "", $CurrentAssetBrowser.newAssetSettings);
    
-   //If we forcefully set it elsewhere, adhere
-   if($createLevelAssetIsSubScene == true)
-      %this.newAssetSettings.isSubScene = true;
-   else
-      %this.newAssetSettings.isSubScene = false;
-   
-   NewAssetPropertiesInspector.addField("isSubScene", "Is SubScene", "bool", "Is this levelAsset intended as a subScene", %this.newAssetSettings.isSubScene, "", %this.newAssetSettings);
-
    NewAssetPropertiesInspector.endGroup();
 }
 
@@ -88,10 +80,16 @@ function LevelAsset::onCreateNew(%this)
 	
 	if(!%addSuccess)
 	{
-	   error("AssetBrowser::createLevelAsset() - failed to add declared asset: " @ %tamlpath @ " for module: " @ %moduleDef);
+	   error("LevelAsset::onCreateNew() - failed to add declared asset: " @ %tamlpath @ " for module: " @ %moduleDef);
 	}
 
 	$CurrentAssetBrowser.refresh();
+	
+	if(%addSuccess && isObject($createAndAssignField))
+	{
+      $createAndAssignField.apply(%moduleName @ ":" @ %assetName);
+      $createAndAssignField = "";
+	}
 	
 	return %tamlpath;  
 }

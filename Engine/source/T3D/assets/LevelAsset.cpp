@@ -101,7 +101,7 @@ ConsoleSetType(TypeLevelAssetId)
 }
 //-----------------------------------------------------------------------------
 
-LevelAsset::LevelAsset() : AssetBase(), mIsSubLevel(false)
+LevelAsset::LevelAsset() : AssetBase()
 {
    mLevelName = StringTable->EmptyString();
    mLevelFile = StringTable->EmptyString();
@@ -117,7 +117,6 @@ LevelAsset::LevelAsset() : AssetBase(), mIsSubLevel(false)
    mNavmeshPath = StringTable->EmptyString();
 
    mGameModesNames = StringTable->EmptyString();
-   mMainLevelAsset = StringTable->EmptyString();
 
    mEditorFile = StringTable->EmptyString();
    mBakedSceneFile = StringTable->EmptyString();
@@ -158,7 +157,6 @@ void LevelAsset::initPersistFields()
    addProtectedField("BakedSceneFile", TypeAssetLooseFilePath, Offset(mBakedSceneFile, LevelAsset),
       &setBakedSceneFile, &getBakedSceneFile, "Path to the level file with the objects generated as part of the baking process");
 
-   addField("isSubScene", TypeBool, Offset(mIsSubLevel, LevelAsset), "Is this a sublevel to another Scene");
    addField("gameModesNames", TypeString, Offset(mGameModesNames, LevelAsset), "Name of the Game Mode to be used with this level");
 }
 
@@ -480,15 +478,8 @@ GuiControl* GuiInspectorTypeLevelAssetPtr::constructEditControl()
    // Create "Open in Editor" button
    mEditButton = new GuiBitmapButtonCtrl();
 
-   String setSubSceneValue = "$createLevelAssetIsSubScene = \"\";";
-   if(dynamic_cast<SubScene*>(mInspector->getInspectObject()) != NULL)
-   {
-      setSubSceneValue = "$createLevelAssetIsSubScene = true;";
-   }
-
-   dSprintf(szBuffer, sizeof(szBuffer), "$createAndAssignField = %s; %s AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule, \"createAndAssignLevelAsset\");",
-      getIdString(),
-      setSubSceneValue.c_str());
+   dSprintf(szBuffer, sizeof(szBuffer), "$createAndAssignField = %s; AssetBrowser.setupCreateNewAsset(\"LevelAsset\", AssetBrowser.selectedModule, \"createAndAssignLevelAsset\");",
+      getIdString());
    mEditButton->setField("Command", szBuffer);
 
    char bitmapName[512] = "ToolsModule:iconAdd_image";

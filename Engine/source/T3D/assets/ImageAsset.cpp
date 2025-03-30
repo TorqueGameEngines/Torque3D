@@ -531,6 +531,10 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
 
 void ImageAsset::generateTexture(void)
 {
+   // already have a generated texture, get out.
+   if (mTextureHandle.isValid())
+      return;
+
    // implement some defaults, eventually SRGB should be optional.
    U32 flags = GFXTextureProfile::Static | GFXTextureProfile::SRGB;
 

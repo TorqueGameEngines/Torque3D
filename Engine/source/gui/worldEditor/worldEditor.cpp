@@ -2839,9 +2839,9 @@ void WorldEditor::initPersistFields()
       addField( "renderObjHandle",        TypeBool,   Offset(mRenderObjHandle, WorldEditor) );
       addField( "renderSelectionBox",     TypeBool,   Offset(mRenderSelectionBox, WorldEditor) );
 
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(SelectHandle, WorldEditor, "");
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(DefaultHandle, WorldEditor, "");
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(LockedHandle, WorldEditor, "");
+      INITPERSISTFIELD_IMAGEASSET(SelectHandle, WorldEditor, "");
+      INITPERSISTFIELD_IMAGEASSET(DefaultHandle, WorldEditor, "");
+      INITPERSISTFIELD_IMAGEASSET(LockedHandle, WorldEditor, "");
    
    endGroup( "Rendering" );
    

@@ -42,7 +42,7 @@ private:
 
 protected:
 
-   DECLARE_IMAGEASSET_REFACTOR(GuiIconButtonCtrl, Bitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiIconButtonCtrl, Bitmap, GFXDefaultGUIProfile)
 
    S32               mIconLocation;
    S32               mTextLocation;

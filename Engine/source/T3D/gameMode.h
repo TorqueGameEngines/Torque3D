@@ -21,7 +21,7 @@ private:
    StringTableEntry mGameModeName;
    StringTableEntry mGameModeDesc;
 
-   DECLARE_IMAGEASSET_REFACTOR(GameMode, PreviewImage, GFXStaticTextureSRGBProfile)
+   DECLARE_IMAGEASSET(GameMode, PreviewImage, GFXStaticTextureSRGBProfile)
 
    bool mIsActive;
    bool mIsAlwaysActive;

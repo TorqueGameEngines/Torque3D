@@ -181,7 +181,7 @@ void VolumetricFog::initPersistFields()
    endGroup("VolumetricFogData");
 
    addGroup("VolumetricFogModulation");
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(Texture, VolumetricFog, "A texture which contains Fogdensity modulator in the red channel and color with 1-green channel. No texture disables modulation.");
+   INITPERSISTFIELD_IMAGEASSET(Texture, VolumetricFog, "A texture which contains Fogdensity modulator in the red channel and color with 1-green channel. No texture disables modulation.");
 
    addFieldV("tiles", TypeRangedF32, Offset(mTexTiles, VolumetricFog), &CommonValidators::PositiveFloat,
       "How many times the texture is mapped to the object.");

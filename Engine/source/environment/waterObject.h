@@ -269,9 +269,9 @@ protected:
    F32 mDepthGradientMax;
 
    // Other textures
-   DECLARE_IMAGEASSET_NET_REFACTOR(WaterObject, RippleTex, GFXStaticTextureProfile, TextureMask)
-   DECLARE_IMAGEASSET_NET_REFACTOR(WaterObject, FoamTex, GFXStaticTextureSRGBProfile, TextureMask)
-   DECLARE_IMAGEASSET_NET_REFACTOR(WaterObject, DepthGradientTex, GFXStaticTextureSRGBProfile, TextureMask)
+   DECLARE_IMAGEASSET_NET(WaterObject, RippleTex, GFXStaticTextureProfile, TextureMask)
+   DECLARE_IMAGEASSET_NET(WaterObject, FoamTex, GFXStaticTextureSRGBProfile, TextureMask)
+   DECLARE_IMAGEASSET_NET(WaterObject, DepthGradientTex, GFXStaticTextureSRGBProfile, TextureMask)
 
    StringTableEntry mCubemapName;
 

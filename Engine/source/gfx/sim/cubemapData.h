@@ -73,9 +73,9 @@ public:
    GFXTexHandle* getCubeFaceTexture(U32 faceIdx) { return &mCubeMapFaceTex[faceIdx]; }
 
 protected:
-   DECLARE_IMAGEASSET_REFACTOR(CubemapData, CubeMap, GFXStaticTextureSRGBProfile);
+   DECLARE_IMAGEASSET(CubemapData, CubeMap, GFXStaticTextureSRGBProfile);
 
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(CubemapData, CubeMapFace, GFXStaticTextureSRGBProfile, 6);
+   DECLARE_IMAGEASSET_ARRAY(CubemapData, CubeMapFace, GFXStaticTextureSRGBProfile, 6);
 
    GFXTexHandle mCubeMapFaceTex[6];
    GFXTexHandle mDepthBuff;

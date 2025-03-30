@@ -348,7 +348,7 @@ class GuiCursor : public SimObject
 private:
    typedef SimObject Parent;
 
-   DECLARE_IMAGEASSET_REFACTOR(GuiCursor, Bitmap, GFXGuiCursorProfile)
+   DECLARE_IMAGEASSET(GuiCursor, Bitmap, GFXGuiCursorProfile)
 
    Point2I mHotSpot;
    Point2F mRenderOffset;
@@ -458,7 +458,7 @@ public:
    /// 
 public: 
 
-   DECLARE_IMAGEASSET_REFACTOR(GuiControlProfile, Bitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiControlProfile, Bitmap, GFXDefaultGUIProfile)
 
    GFXTexHandle mBitmap;
    StringTableEntry mBitmapName;

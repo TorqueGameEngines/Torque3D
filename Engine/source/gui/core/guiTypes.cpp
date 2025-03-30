@@ -91,7 +91,7 @@ void GuiCursor::initPersistFields()
    addField("hotSpot",     TypePoint2I,   Offset(mHotSpot, GuiCursor), "The location of the cursor's hot spot (which pixel carries the click).");
    addField("renderOffset",TypePoint2F,   Offset(mRenderOffset, GuiCursor), "Offset of the bitmap, where 0 signifies left edge of the bitmap, 1, the right. Similarly for the Y-component.");
 
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(Bitmap, GuiCursor, "name of the bitmap for the cursor.");
+   INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiCursor, "name of the bitmap for the cursor.");
    Parent::initPersistFields();
 }
 

@@ -484,16 +484,22 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
 
    if (isNamedTarget())
    {
-      GFXTexHandle tex = getNamedTarget()->getTexture();
-      if(tex.isNull())
+      GFXTexHandle tex;
+      AssetPtr<ImageAsset> fallbackAsset;
+      ImageAsset::getAssetById(smNamedTargetAssetFallback, &fallbackAsset);
+      if (getNamedTarget().isValid())
       {
-         AssetPtr<ImageAsset> fallbackAsset;
-         ImageAsset::getAssetById(smNamedTargetAssetFallback, &fallbackAsset);
-         return fallbackAsset->getTexture();
+         tex = getNamedTarget()->getTexture();
+         if (tex.isNull())
+         {
+            return fallbackAsset->getTexture();
+         }
+
+         return tex;
       }
       else
       {
-         return tex;
+         return fallbackAsset->getTexture();
       }
    }
 

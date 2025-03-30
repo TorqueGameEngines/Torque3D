@@ -95,7 +95,7 @@ void afxBillboardData::initPersistFields()
     "The color assigned to the quadrangle geometry. The way it combines with the given "
     "texture varies according to the setting of the textureFunction field.");
 
-  INITPERSISTFIELD_IMAGEASSET_REFACTOR(Texture, afxBillboardData, "An image to use as the billboard's texture.");
+  INITPERSISTFIELD_IMAGEASSET(Texture, afxBillboardData, "An image to use as the billboard's texture.");
 
   addField("dimensions",      TypePoint2F,    myOffset(dimensions),
     "A value-pair that specifies the horizontal and vertical dimensions of the billboard "

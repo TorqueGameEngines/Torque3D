@@ -174,7 +174,7 @@ void BasicClouds::initPersistFields()
          addField( "layerEnabled", TypeBool, Offset( mLayerEnabled, BasicClouds ), TEX_COUNT,
             "Enable or disable rendering of this layer." );
 
-         INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(Texture, TEX_COUNT, BasicClouds, "Texture for this layer.");
+         INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, TEX_COUNT, BasicClouds, "Texture for this layer.");
 
          addFieldV( "texScale", TypeRangedF32, Offset( mTexScale, BasicClouds ), &CommonValidators::PositiveFloat, TEX_COUNT,
             "Texture repeat for this layer." );

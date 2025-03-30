@@ -62,7 +62,7 @@ void GameMode::initPersistFields()
      addField("gameModeName", TypeString, Offset(mGameModeName, GameMode), "Human-readable name of the gamemode");
      addField("description", TypeString, Offset(mGameModeDesc, GameMode), "Description of the gamemode");
 
-     INITPERSISTFIELD_IMAGEASSET_REFACTOR(PreviewImage, GameMode, "Preview Image");
+     INITPERSISTFIELD_IMAGEASSET(PreviewImage, GameMode, "Preview Image");
 
      addField("active", TypeBool, Offset(mIsActive, GameMode), "Is the gamemode active");
      addField("alwaysActive", TypeBool, Offset(mIsAlwaysActive, GameMode), "Is the gamemode always active");

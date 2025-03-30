@@ -131,7 +131,7 @@ GuiProgressBitmapCtrl::GuiProgressBitmapCtrl()
 void GuiProgressBitmapCtrl::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(Bitmap, GuiProgressBitmapCtrl, "Bitmap file to use for rendering the progress bar.\n\n"
+   INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiProgressBitmapCtrl, "Bitmap file to use for rendering the progress bar.\n\n"
       "If the profile assigned to the control already has a bitmap assigned, this property need not be "
       "set in which case the bitmap from the profile is used.");
    

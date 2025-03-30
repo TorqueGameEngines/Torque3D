@@ -61,7 +61,7 @@ class AccumulationVolume : public ScenePolyhedralSpace
       // SceneSpace.
       void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat ) override;
 
-      DECLARE_IMAGEASSET_NET_REFACTOR(AccumulationVolume, Texture, GFXStaticTextureSRGBProfile, -1)
+      DECLARE_IMAGEASSET_NET(AccumulationVolume, Texture, GFXStaticTextureSRGBProfile, -1)
 
    public:
 

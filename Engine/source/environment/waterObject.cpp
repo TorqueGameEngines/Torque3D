@@ -296,7 +296,7 @@ void WaterObject::initPersistFields()
       addFieldV( "overallWaveMagnitude", TypeRangedF32, Offset( mOverallWaveMagnitude, WaterObject ), &CommonValidators::PositiveFloat, "Master variable affecting entire body"
 		  " of water's undulation" );  
 
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(RippleTex, WaterObject, "Normal map used to simulate small surface ripples");
+      INITPERSISTFIELD_IMAGEASSET(RippleTex, WaterObject, "Normal map used to simulate small surface ripples");
 
       addArray( "Ripples (texture animation)", MAX_WAVES );
 
@@ -310,7 +310,7 @@ void WaterObject::initPersistFields()
 
       addFieldV( "overallRippleMagnitude", TypeRangedF32, Offset( mOverallRippleMagnitude, WaterObject ), &CommonValidators::PositiveFloat, "Master variable affecting entire surface");
 
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(FoamTex, WaterObject, "Diffuse texture for foam in shallow water (advanced lighting only)");
+      INITPERSISTFIELD_IMAGEASSET(FoamTex, WaterObject, "Diffuse texture for foam in shallow water (advanced lighting only)");
 
       addArray( "Foam", MAX_FOAM );
 
@@ -362,7 +362,7 @@ void WaterObject::initPersistFields()
 
    addGroup( "Misc" );
 
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(DepthGradientTex, WaterObject, "1D texture defining the base water color by depth");
+      INITPERSISTFIELD_IMAGEASSET(DepthGradientTex, WaterObject, "1D texture defining the base water color by depth");
 
       addFieldV( "depthGradientMax", TypeRangedF32, Offset( mDepthGradientMax, WaterObject ), &CommonValidators::PositiveFloat, "Depth in world units, the max range of the color gradient texture." );
 

@@ -72,9 +72,9 @@ protected:
    Point2F                    mRange;           ///< When working as a slider, this sets our min/max range
 
    //Keybind option
-   DECLARE_IMAGEASSET_REFACTOR(GuiGameSettingsCtrl, KeybindBitmap, GFXDefaultGUIProfile)
-   DECLARE_IMAGEASSET_REFACTOR(GuiGameSettingsCtrl, PreviousBitmap, GFXDefaultGUIProfile)
-   DECLARE_IMAGEASSET_REFACTOR(GuiGameSettingsCtrl, NextBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, KeybindBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, PreviousBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, NextBitmap, GFXDefaultGUIProfile)
 
    S32 mArrowSize;
    S32 mColumnSplit; //Padding between the leftmost edge of the control, and the left side of the 'option'.

@@ -47,7 +47,7 @@ class GuiProgressBitmapCtrl : public GuiTextCtrl
 
       F32 mProgress;
 
-      DECLARE_IMAGEASSET_REFACTOR(GuiProgressBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
+      DECLARE_IMAGEASSET(GuiProgressBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
 
       bool mUseVariable;
       bool mTile;

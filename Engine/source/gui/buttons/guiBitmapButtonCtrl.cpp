@@ -141,7 +141,7 @@ void GuiBitmapButtonCtrl::initPersistFields()
    docsURL;
    addGroup( "Bitmap" );
 
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(Bitmap, GuiBitmapButtonCtrl,"Texture file to display on this button.\n"
+      INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiBitmapButtonCtrl,"Texture file to display on this button.\n"
          "If useStates is false, this will be the file that renders on the control.  Otherwise, this will "
          "specify the default texture name to which the various state and modifier suffixes are appended "
          "to find the per-state and per-modifier (if enabled) textures.")

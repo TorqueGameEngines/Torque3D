@@ -88,7 +88,7 @@ void GuiMissionAreaCtrl::initPersistFields()
    docsURL;
    addField( "squareBitmap",        TypeBool,      Offset(mSquareBitmap, GuiMissionAreaCtrl));
 
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(HandleBitmap, GuiMissionAreaCtrl, "Bitmap for the mission area handles.\n");
+   INITPERSISTFIELD_IMAGEASSET(HandleBitmap, GuiMissionAreaCtrl, "Bitmap for the mission area handles.\n");
 
    addField( "missionBoundsColor",  TypeColorI,    Offset(mMissionBoundsColor, GuiMissionAreaCtrl));
    addField( "cameraColor",         TypeColorI,    Offset(mCameraColor, GuiMissionAreaCtrl));

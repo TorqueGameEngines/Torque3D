@@ -17,7 +17,7 @@ private:
 
 protected:
 
-   DECLARE_IMAGEASSET_REFACTOR(GuiChunkedBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiChunkedBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
 
    bool  mUseVariable;
    bool  mTile;

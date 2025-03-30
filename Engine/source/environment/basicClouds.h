@@ -94,7 +94,7 @@ protected:
    static U32 smVertCount;
    static U32 smTriangleCount;
 
-   DECLARE_IMAGEASSET_ARRAY_NET_REFACTOR(BasicClouds, Texture, GFXStaticTextureSRGBProfile, TEX_COUNT, -1)
+   DECLARE_IMAGEASSET_ARRAY_NET(BasicClouds, Texture, GFXStaticTextureSRGBProfile, TEX_COUNT, -1)
 
    GFXStateBlockRef mStateblock;
 

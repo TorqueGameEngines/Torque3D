@@ -93,7 +93,7 @@ AccumulationVolume::~AccumulationVolume()
 void AccumulationVolume::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(Texture, AccumulationVolume, "Accumulation texture.")
+   INITPERSISTFIELD_IMAGEASSET(Texture, AccumulationVolume, "Accumulation texture.")
 
    Parent::initPersistFields();
 }

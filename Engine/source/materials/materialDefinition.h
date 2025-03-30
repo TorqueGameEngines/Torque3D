@@ -208,18 +208,18 @@ public:
    //-----------------------------------------------------------------------
    // Data
    //-----------------------------------------------------------------------
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, DiffuseMap, GFXStaticTextureSRGBProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, NormalMap, GFXNormalMapProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, DetailNormalMap, GFXNormalMapProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, OverlayMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, LightMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, ToneMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, DetailMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, ORMConfigMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, AOMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, RoughMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, MetalMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(Material, GlowMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, DiffuseMap, GFXStaticTextureSRGBProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, NormalMap, GFXNormalMapProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, DetailNormalMap, GFXNormalMapProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, LightMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, ToneMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, DetailMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, ORMConfigMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, AOMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, GFXStaticTextureProfile, MAX_STAGES)
+   DECLARE_IMAGEASSET_ARRAY(Material, GlowMap, GFXStaticTextureProfile, MAX_STAGES)
 
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
    bool     mIsSRGb[MAX_STAGES];           // SRGB ORM

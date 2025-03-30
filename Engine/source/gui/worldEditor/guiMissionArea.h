@@ -63,7 +63,7 @@ protected:
    GFXStateBlockRef  mBlendStateBlock;
    GFXStateBlockRef  mSolidStateBlock;
 
-   DECLARE_IMAGEASSET_REFACTOR(GuiMissionAreaCtrl, HandleBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiMissionAreaCtrl, HandleBitmap, GFXDefaultGUIProfile)
 
    Point2I           mHandleTextureSize;
    Point2F           mHandleTextureHalfSize;

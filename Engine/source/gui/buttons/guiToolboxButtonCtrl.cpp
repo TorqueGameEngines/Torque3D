@@ -55,9 +55,9 @@ GuiToolboxButtonCtrl::GuiToolboxButtonCtrl()
 void GuiToolboxButtonCtrl::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(NormalBitmap, GuiToolboxButtonCtrl, "");
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(LoweredBitmap, GuiToolboxButtonCtrl, "");
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(HoverBitmap, GuiToolboxButtonCtrl, "");
+   INITPERSISTFIELD_IMAGEASSET(NormalBitmap, GuiToolboxButtonCtrl, "");
+   INITPERSISTFIELD_IMAGEASSET(LoweredBitmap, GuiToolboxButtonCtrl, "");
+   INITPERSISTFIELD_IMAGEASSET(HoverBitmap, GuiToolboxButtonCtrl, "");
 
    Parent::initPersistFields();
 }

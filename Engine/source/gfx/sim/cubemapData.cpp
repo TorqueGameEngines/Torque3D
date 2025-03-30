@@ -70,7 +70,7 @@ ConsoleDocClass( CubemapData,
 void CubemapData::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(CubeMapFace, 6, CubemapData, "@brief The 6 cubemap face textures for a static cubemap.\n\n"
+   INITPERSISTFIELD_IMAGEASSET_ARRAY(CubeMapFace, 6, CubemapData, "@brief The 6 cubemap face textures for a static cubemap.\n\n"
       "They are in the following order:\n"
       "  - cubeFace[0] is -X\n"
       "  - cubeFace[1] is +X\n"
@@ -79,7 +79,7 @@ void CubemapData::initPersistFields()
       "  - cubeFace[4] is -Y\n"
       "  - cubeFace[5] is +Y\n");
 
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(CubeMap, CubemapData, "@brief Cubemap dds Image Asset.\n\n");
+   INITPERSISTFIELD_IMAGEASSET(CubeMap, CubemapData, "@brief Cubemap dds Image Asset.\n\n");
 }
 
 bool CubemapData::onAdd()

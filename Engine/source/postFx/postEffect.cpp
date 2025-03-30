@@ -553,7 +553,7 @@ void PostEffect::initPersistFields()
       "Specifies how the viewport should be set up for a target texture." );
 
    addProtectedField("Texture", TypeImageFilename, Offset(mTextureAsset, PostEffect), _setTextureData, &defaultProtectedGetFn, NumTextures, "Input textures to this effect(samplers).\n", AbstractClassRep::FIELD_HideInInspectors);
-   INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(Texture, NumTextures, PostEffect, "Input textures to this effect ( samplers ).\n"
+   INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, NumTextures, PostEffect, "Input textures to this effect ( samplers ).\n"
       "@see PFXTextureIdentifiers");
 
    addField("textureSRGB", TypeBool, Offset(mTexSRGB, PostEffect), NumTextures,

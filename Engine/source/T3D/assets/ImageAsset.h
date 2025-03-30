@@ -241,7 +241,7 @@ DefineEnumType(ImageAssetType);
 
 #pragma region Refactor Asset Macros
 
-#define DECLARE_IMAGEASSET_REFACTOR(className, name, profile)                                                                                                                 \
+#define DECLARE_IMAGEASSET(className, name, profile)                                                                                                                 \
 private:                                                                                                                                                                      \
    AssetPtr<ImageAsset> m##name##Asset;                                                                                                                                       \
 public:                                                                                                                                                                       \
@@ -267,6 +267,11 @@ public:                                                                         
                privateImage->setImageFile(_in);                                                                                                                               \
                imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                    \
             }                                                                                                                                                                 \
+         }                                                                                                                                                                    \
+         else                                                                                                                                                                 \
+         {                                                                                                                                                                    \
+            Con::warnf("%s::%s: Could not find asset for: %s using fallback", #className, #name, _in);                                                                        \
+            imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                                \
          }                                                                                                                                                                    \
          m##name##Asset = imageAssetId;                                                                                                                                       \
       }                                                                                                                                                                       \
@@ -282,7 +287,7 @@ public:                                                                         
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}
 
 
-#define DECLARE_IMAGEASSET_NET_REFACTOR(className, name, profile, mask)                                                                                                       \
+#define DECLARE_IMAGEASSET_NET(className, name, profile, mask)                                                                                                       \
 private:                                                                                                                                                                      \
    AssetPtr<ImageAsset> m##name##Asset;                                                                                                                                       \
 public:                                                                                                                                                                       \
@@ -307,6 +312,11 @@ public:                                                                         
                privateImage->setImageFile(_in);                                                                                                                               \
                imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                    \
             }                                                                                                                                                                 \
+         }                                                                                                                                                                    \
+         else                                                                                                                                                                 \
+         {                                                                                                                                                                    \
+            Con::warnf("%s::%s: Could not find asset for: %s using fallback", #className, #name, _in);                                                                        \
+            imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                                \
          }                                                                                                                                                                    \
          m##name##Asset = imageAssetId;                                                                                                                                       \
       }                                                                                                                                                                       \
@@ -323,11 +333,11 @@ public:                                                                         
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}
 
 
-#define INITPERSISTFIELD_IMAGEASSET_REFACTOR(name, consoleClass, docs)                                                                                                        \
+#define INITPERSISTFIELD_IMAGEASSET(name, consoleClass, docs)                                                                                                        \
    addProtectedField(assetText(name, Asset), TypeImageAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
 
 
-#define DECLARE_IMAGEASSET_ARRAY_REFACTOR(className, name, profile, max)                                                                                                      \
+#define DECLARE_IMAGEASSET_ARRAY(className, name, profile, max)                                                                                                      \
 private:                                                                                                                                                                      \
    AssetPtr<ImageAsset> m##name##Asset[max];                                                                                                                                  \
 public:                                                                                                                                                                       \
@@ -352,6 +362,11 @@ public:                                                                         
                privateImage->setImageFile(_in);                                                                                                                               \
                imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                    \
             }                                                                                                                                                                 \
+         }                                                                                                                                                                    \
+         else                                                                                                                                                                 \
+         {                                                                                                                                                                    \
+            Con::warnf("%s::%s: Could not find asset for: %s using fallback", #className, #name, _in);                                                                        \
+            imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                                \
          }                                                                                                                                                                    \
          m##name##Asset[index] = imageAssetId;                                                                                                                                \
       }                                                                                                                                                                       \
@@ -368,7 +383,7 @@ public:                                                                         
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}
 
 
-#define DECLARE_IMAGEASSET_ARRAY_NET_REFACTOR(className, name, profile, max, mask)                                                                                            \
+#define DECLARE_IMAGEASSET_ARRAY_NET(className, name, profile, max, mask)                                                                                            \
 private:                                                                                                                                                                      \
    AssetPtr<ImageAsset> m##name##Asset[max];                                                                                                                                  \
 public:                                                                                                                                                                       \
@@ -393,6 +408,11 @@ public:                                                                         
                privateImage->setImageFile(_in);                                                                                                                               \
                imageAssetId = AssetDatabase.addPrivateAsset(privateImage);                                                                                                    \
             }                                                                                                                                                                 \
+         }                                                                                                                                                                    \
+         else                                                                                                                                                                 \
+         {                                                                                                                                                                    \
+            Con::warnf("%s::%s: Could not find asset for: %s using fallback", #className, #name, _in);                                                                        \
+            imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                                \
          }                                                                                                                                                                    \
          m##name##Asset[index] = imageAssetId;                                                                                                                                \
       }                                                                                                                                                                       \
@@ -410,10 +430,10 @@ public:                                                                         
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}
 
 
-#define INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(name, arraySize, consoleClass, docs)                                                                                       \
+#define INITPERSISTFIELD_IMAGEASSET_ARRAY(name, arraySize, consoleClass, docs)                                                                                       \
    addProtectedField(assetText(name, Asset), TypeImageAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));
 
-#define DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(className,name, max)\
+#define DEF_IMAGEASSET_ARRAY_BINDS(className,name, max)\
 DefineEngineMethod(className, get##name, const char*, (S32 index), , "get name")\
 {\
    return object->get##name##Asset(index).notNull() ? object->get##name##Asset(index)->getImageFile() : ""; \

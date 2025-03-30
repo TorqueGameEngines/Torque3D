@@ -826,9 +826,9 @@ IMPLEMENT_CALLBACK(GuiGameSettingsCtrl, onAxisEvent, void, (const char* device, 
 void GuiGameSettingsCtrl::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(KeybindBitmap, GuiGameSettingsCtrl, "Bitmap used to display the bound key for this keybind option.");
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(PreviousBitmap, GuiGameSettingsCtrl, "Bitmap used for the previous button when in list mode.");
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(NextBitmap, GuiGameSettingsCtrl, "Bitmap used for the next button when in list mode.");
+   INITPERSISTFIELD_IMAGEASSET(KeybindBitmap, GuiGameSettingsCtrl, "Bitmap used to display the bound key for this keybind option.");
+   INITPERSISTFIELD_IMAGEASSET(PreviousBitmap, GuiGameSettingsCtrl, "Bitmap used for the previous button when in list mode.");
+   INITPERSISTFIELD_IMAGEASSET(NextBitmap, GuiGameSettingsCtrl, "Bitmap used for the next button when in list mode.");
 
    addFieldV("arrowSize", TypeRangedS32, Offset(mArrowSize, GuiGameSettingsCtrl), &CommonValidators::PositiveInt,
       "Size of the arrow buttons' extents");

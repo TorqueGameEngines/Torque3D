@@ -190,7 +190,7 @@ void CloudLayer::initPersistFields()
    docsURL;
    addGroup( "CloudLayer" );
 
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(Texture, CloudLayer, "An RGBA texture which should contain normals and opacity (density).")
+   INITPERSISTFIELD_IMAGEASSET(Texture, CloudLayer, "An RGBA texture which should contain normals and opacity (density).")
 
       addArray( "Textures", TEX_COUNT );
 

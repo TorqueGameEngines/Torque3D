@@ -118,7 +118,7 @@ protected:
    F32 mScale;
    bool mFlareEnabled;
 
-   DECLARE_IMAGEASSET_REFACTOR(LightFlareData, FlareTexture, GFXStaticTextureSRGBProfile)
+   DECLARE_IMAGEASSET(LightFlareData, FlareTexture, GFXStaticTextureSRGBProfile)
 
    F32 mOcclusionRadius;
    bool mRenderReflectPass;

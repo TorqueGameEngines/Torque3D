@@ -875,13 +875,14 @@ void ProcessedShaderMaterial::setTextureStages( SceneRenderState *state, const S
          case Material::TexTarget:
             {
                texTarget = rpd->mTexSlot[i].texTarget;
+               texObject = mMaterial->getDiffuseMapAsset(0)->getTexture(&GFXStaticTextureSRGBProfile);
                if ( !texTarget )
                {
                   // try again.
                   texTarget = mMaterial->getDiffuseMapAsset(0)->getNamedTarget();
                   if (!texTarget)
                   {
-                     GFX->setTexture(i, NULL);
+                     GFX->setTexture(i, texObject);
                      break;
                   }
                   else
@@ -889,8 +890,6 @@ void ProcessedShaderMaterial::setTextureStages( SceneRenderState *state, const S
                      rpd->mTexSlot[i].texTarget = texTarget;
                   }
                }
-            
-               texObject = texTarget->getTexture();
 
                // If no texture is available then map the default 2x2
                // black texture to it.  This at least will ensure that
@@ -1281,35 +1280,35 @@ void ProcessedShaderMaterial::setNodeTransforms(const MatrixF *transforms, const
 
 void ProcessedShaderMaterial::setCustomShaderData(Vector<CustomShaderBindingData> &shaderData, const U32 pass)
 {
-	PROFILE_SCOPE(ProcessedShaderMaterial_setCustomShaderData);
+   PROFILE_SCOPE(ProcessedShaderMaterial_setCustomShaderData);
 
-	GFXShaderConstBuffer* shaderConsts = _getShaderConstBuffer(pass);
-	ShaderConstHandles* handles = _getShaderConstHandles(pass);
+   GFXShaderConstBuffer* shaderConsts = _getShaderConstBuffer(pass);
+   ShaderConstHandles* handles = _getShaderConstHandles(pass);
 
-	for (U32 i = 0; i < shaderData.size(); i++)
-	{
-		//roll through and try setting our data!
-		for (U32 h = 0; h < handles->mCustomHandles.size(); ++h)
-		{
-			if (handles->mCustomHandles[h].handleName == shaderData[i].getHandleName())
-			{
-				if (handles->mCustomHandles[h].handle->isValid())
-				{
-					CustomShaderBindingData::UniformType type = shaderData[i].getType();
+   for (U32 i = 0; i < shaderData.size(); i++)
+   {
+      //roll through and try setting our data!
+      for (U32 h = 0; h < handles->mCustomHandles.size(); ++h)
+      {
+         if (handles->mCustomHandles[h].handleName == shaderData[i].getHandleName())
+         {
+            if (handles->mCustomHandles[h].handle->isValid())
+            {
+               CustomShaderBindingData::UniformType type = shaderData[i].getType();
 
-					if (type == CustomShaderBindingData::Float)
-						shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat());
-					else if (type == CustomShaderBindingData::Float2)
-						shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat2());
-					else if (type == CustomShaderBindingData::Float3)
-						shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat3());
-					else if (type == CustomShaderBindingData::Float4)
-						shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat4());
-					break;
-				}
-			}
-		}
-	}
+               if (type == CustomShaderBindingData::Float)
+                  shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat());
+               else if (type == CustomShaderBindingData::Float2)
+                  shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat2());
+               else if (type == CustomShaderBindingData::Float3)
+                  shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat3());
+               else if (type == CustomShaderBindingData::Float4)
+                  shaderConsts->setSafe(handles->mCustomHandles[h].handle, shaderData[i].getFloat4());
+               break;
+            }
+         }
+      }
+   }
 }
 
 void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const SceneData& sgData, U32 pass)

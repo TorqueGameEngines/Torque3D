@@ -98,7 +98,7 @@ protected:
 
 public:
 
-   DECLARE_IMAGEASSET_NET_REFACTOR(CloudLayer,Texture, GFXStaticTextureSRGBProfile, CloudLayerMask)
+   DECLARE_IMAGEASSET_NET(CloudLayer,Texture, GFXStaticTextureSRGBProfile, CloudLayerMask)
 
    GFXShaderRef mShader;
 

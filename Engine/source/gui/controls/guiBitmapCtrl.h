@@ -39,7 +39,7 @@ protected:
 
    /// Name of the bitmap file.  If this is 'texhandle' the bitmap is not loaded
    /// from a file but rather set explicitly on the control.
-   DECLARE_IMAGEASSET_REFACTOR(GuiBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
 
    Point2I mStartPoint;
    ColorI   mColor;

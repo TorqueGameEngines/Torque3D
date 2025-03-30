@@ -328,9 +328,9 @@ class WorldEditor : public EditTSCtrl
       ColorI            mPopupBackgroundColor;
       ColorI            mPopupTextColor;
 
-      DECLARE_IMAGEASSET_REFACTOR(WorldEditor, SelectHandle, GFXStaticTextureSRGBProfile)
-      DECLARE_IMAGEASSET_REFACTOR(WorldEditor, DefaultHandle, GFXStaticTextureSRGBProfile)
-      DECLARE_IMAGEASSET_REFACTOR(WorldEditor, LockedHandle, GFXStaticTextureSRGBProfile)
+      DECLARE_IMAGEASSET(WorldEditor, SelectHandle, GFXStaticTextureSRGBProfile)
+      DECLARE_IMAGEASSET(WorldEditor, DefaultHandle, GFXStaticTextureSRGBProfile)
+      DECLARE_IMAGEASSET(WorldEditor, LockedHandle, GFXStaticTextureSRGBProfile)
 
       ColorI            mObjectTextColor;
       bool              mObjectsUseBoxCenter;

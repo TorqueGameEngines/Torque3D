@@ -70,7 +70,7 @@ void GuiBitmapCtrl::initPersistFields()
    docsURL;
    addGroup("Bitmap");
 
-   INITPERSISTFIELD_IMAGEASSET_REFACTOR(Bitmap, GuiBitmapCtrl, "The bitmap to render in this BitmapCtrl.")
+   INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiBitmapCtrl, "The bitmap to render in this BitmapCtrl.")
 
    addField("color", TypeColorI, Offset(mColor, GuiBitmapCtrl), "color mul");
    addField("wrap", TypeBool, Offset(mWrap, GuiBitmapCtrl), "If true, the bitmap is tiled inside the control rather than stretched to fit.");

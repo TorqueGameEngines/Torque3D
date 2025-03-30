@@ -128,7 +128,7 @@ void SplashData::initPersistFields()
    addFieldV("times", TypeRangedF32,                      Offset(times,              SplashData), &CommonValidators::NormalizedFloat, NUM_TIME_KEYS, "Times to transition through the splash effect. Up to 4 allowed. Values are 0.0 - 1.0, and corrispond to the life of the particle where 0 is first created and 1 is end of lifespace.\n" );
    addField("colors",            TypeColorF,                   Offset(colors,             SplashData), NUM_TIME_KEYS, "Color values to set the splash effect, rgba. Up to 4 allowed. Will transition through colors based on values set in the times value. Example: colors[0] = \"0.6 1.0 1.0 0.5\".\n" );
 
-   INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(Texture, NUM_TEX, SplashData, "Image to use as the texture for the splash effect.\n");
+   INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, NUM_TEX, SplashData, "Image to use as the texture for the splash effect.\n");
 
    addFieldV("texWrap", TypeRangedF32,                      Offset(texWrap,            SplashData), &CommonValidators::NormalizedFloat, "Amount to wrap the texture around the splash ring, 0.0f - 1.0f.\n");
    addFieldV("texFactor", TypeRangedF32,                      Offset(texFactor,          SplashData), &CommonValidators::NormalizedFloat, "Factor in which to apply the texture to the splash ring, 0.0f - 1.0f.\n");

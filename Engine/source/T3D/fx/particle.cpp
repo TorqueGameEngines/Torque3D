@@ -148,7 +148,7 @@ void ParticleData::initPersistFields()
 {
    docsURL;
    addGroup("Basic");
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(Texture, ParticleData, "Texture to use for this particle.");
+      INITPERSISTFIELD_IMAGEASSET(Texture, ParticleData, "Texture to use for this particle.");
       addField("useInvAlpha", TYPEID< bool >(), Offset(useInvAlpha, ParticleData),
          "@brief Controls how particles blend with the scene.\n\n"
          "If true, particles blend like ParticleBlendStyle NORMAL, if false, "
@@ -233,7 +233,7 @@ void ParticleData::initPersistFields()
    endGroup("Over Time");
 
    addGroup("AFX");
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(TextureExt, ParticleData, "");
+      INITPERSISTFIELD_IMAGEASSET(TextureExt, ParticleData, "");
       addField("constrainPos",         TypeBool,     Offset(constrain_pos,      ParticleData));
       addFieldV("angle", TypeRangedF32,      Offset(start_angle,        ParticleData), &CommonValidators::DegreeRange);
       addFieldV("angleVariance", TypeRangedF32,      Offset(angle_variance,     ParticleData), &CommonValidators::DegreeRange);

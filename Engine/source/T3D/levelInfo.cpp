@@ -169,7 +169,7 @@ void LevelInfo::initPersistFields()
       //addField( "advancedLightmapSupport", TypeBool, Offset( mAdvancedLightmapSupport, LevelInfo ),
       //   "Enable expanded support for mixing static and dynamic lighting (more costly)" );
 
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(AccuTexture, LevelInfo, "Accumulation texture.");
+      INITPERSISTFIELD_IMAGEASSET(AccuTexture, LevelInfo, "Accumulation texture.");
 
    endGroup( "Lighting" );
    

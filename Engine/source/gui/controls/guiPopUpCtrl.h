@@ -126,7 +126,7 @@ protected:
       NumBitmapModes = 2
    };
 
-   DECLARE_IMAGEASSET_ARRAY_REFACTOR(GuiPopUpMenuCtrl, Bitmap, GFXDefaultGUIProfile, NumBitmapModes)
+   DECLARE_IMAGEASSET_ARRAY(GuiPopUpMenuCtrl, Bitmap, GFXDefaultGUIProfile, NumBitmapModes)
 
    Point2I mBitmapBounds; //  Added
 	S32 mIdMax;

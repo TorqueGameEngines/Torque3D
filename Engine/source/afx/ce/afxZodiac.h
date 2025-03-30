@@ -57,7 +57,7 @@ public:
   static void convertGradientRangeFromDegrees(Point2F& gradrange, const Point2F& gradrange_deg);
 
 public:
-   DECLARE_IMAGEASSET_REFACTOR(afxZodiacData, Texture, AFX_GFXZodiacTextureProfile)
+   DECLARE_IMAGEASSET(afxZodiacData, Texture, AFX_GFXZodiacTextureProfile)
 
   F32               radius_xy;
   Point2F           vert_range;

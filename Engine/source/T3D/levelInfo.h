@@ -106,7 +106,7 @@ class LevelInfo : public NetObject
       void _onLMActivate(const char *lm, bool enable);
    protected:
 
-      DECLARE_IMAGEASSET_REFACTOR(LevelInfo, AccuTexture, GFXStaticTextureSRGBProfile)
+      DECLARE_IMAGEASSET(LevelInfo, AccuTexture, GFXStaticTextureSRGBProfile)
 
    public:
 

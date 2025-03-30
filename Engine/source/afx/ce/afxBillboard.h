@@ -47,7 +47,7 @@ public:
    };
 
 public:
-   DECLARE_IMAGEASSET_REFACTOR(afxBillboardData, Texture, GFXStaticTextureSRGBProfile)
+   DECLARE_IMAGEASSET(afxBillboardData, Texture, GFXStaticTextureSRGBProfile)
 
 
   LinearColorF            color;

@@ -67,7 +67,7 @@ void GuiChunkedBitmapCtrl::initPersistFields()
 {
    docsURL;
    addGroup("GuiChunkedBitmapCtrl");
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(Bitmap, GuiChunkedBitmapCtrl, "This is the bitmap to render to the control.");
+      INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiChunkedBitmapCtrl, "This is the bitmap to render to the control.");
 
       addField( "useVariable",   TypeBool,      Offset( mUseVariable, GuiChunkedBitmapCtrl ), "This decides whether to use the \"bitmap\" file "
                                                                                             "or a bitmap stored in \"variable\"");

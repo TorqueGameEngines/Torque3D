@@ -162,7 +162,7 @@ class VolumetricFog : public SceneObject
       F32 mInvScale;
    
       // Fog Modulation data
-      DECLARE_IMAGEASSET_NET_REFACTOR(VolumetricFog, Texture, GFXStaticTextureSRGBProfile, FogModulationMask)
+      DECLARE_IMAGEASSET_NET(VolumetricFog, Texture, GFXStaticTextureSRGBProfile, FogModulationMask)
 
       bool mIsTextured;
       F32 mTexTiles;

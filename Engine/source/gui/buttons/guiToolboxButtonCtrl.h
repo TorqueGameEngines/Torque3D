@@ -39,9 +39,9 @@ private:
 
 protected:
 
-   DECLARE_IMAGEASSET_REFACTOR(GuiToolboxButtonCtrl, NormalBitmap, GFXDefaultGUIProfile)
-   DECLARE_IMAGEASSET_REFACTOR(GuiToolboxButtonCtrl, LoweredBitmap, GFXDefaultGUIProfile)
-   DECLARE_IMAGEASSET_REFACTOR(GuiToolboxButtonCtrl, HoverBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, NormalBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, LoweredBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, HoverBitmap, GFXDefaultGUIProfile)
 
    void renderButton(GFXTexHandle texture, Point2I &offset, const RectI& updateRect);
    void renderStateRect( GFXTexHandle texture, const RectI& rect );

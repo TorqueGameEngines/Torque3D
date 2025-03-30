@@ -57,7 +57,7 @@ public:
   };
 
 public:
-   DECLARE_IMAGEASSET_REFACTOR(afxZodiacPlaneData, Texture, AFX_GFXZodiacTextureProfile)
+   DECLARE_IMAGEASSET(afxZodiacPlaneData, Texture, AFX_GFXZodiacTextureProfile)
 
   F32               radius_xy;
   F32               start_ang;

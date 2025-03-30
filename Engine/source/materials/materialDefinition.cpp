@@ -242,28 +242,28 @@ void Material::initPersistFields()
    addArray("Stages", MAX_STAGES);
 
    addGroup("Basic Texture Maps");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(DiffuseMap, MAX_STAGES, Material, "Albedo");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(DiffuseMap, MAX_STAGES, Material, "Albedo");
       addField("diffuseColor", TypeColorF, Offset(mDiffuse, Material), MAX_STAGES,
          "This color is multiplied against the diffuse texture color.  If no diffuse texture "
          "is present this is the material color.");
       addField("diffuseMapSRGB", TypeBool, Offset(mDiffuseMapSRGB, Material), MAX_STAGES,
          "Enable sRGB for the diffuse color texture map.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(NormalMap, MAX_STAGES, Material, "NormalMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(NormalMap, MAX_STAGES, Material, "NormalMap");
    endGroup("Basic Texture Maps");
 
    addGroup("Light Influence Maps");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(ORMConfigMap, MAX_STAGES, Material, "AO|Roughness|metalness map");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(ORMConfigMap, MAX_STAGES, Material, "AO|Roughness|metalness map");
       addField("isSRGb", TypeBool, Offset(mIsSRGb, Material), MAX_STAGES,
          "Substance Designer Workaround.");
       addField("invertRoughness", TypeBool, Offset(mInvertRoughness, Material), MAX_STAGES,
          "Treat Roughness as Roughness");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(AOMap, MAX_STAGES, Material, "AOMap");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(RoughMap, MAX_STAGES, Material, "RoughMap (also needs MetalMap)");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(MetalMap, MAX_STAGES, Material, "MetalMap (also needs RoughMap)");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(GlowMap, MAX_STAGES, Material, "GlowMap (needs Albedo)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(AOMap, MAX_STAGES, Material, "AOMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(RoughMap, MAX_STAGES, Material, "RoughMap (also needs MetalMap)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(MetalMap, MAX_STAGES, Material, "MetalMap (also needs RoughMap)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(GlowMap, MAX_STAGES, Material, "GlowMap (needs Albedo)");
   
       addFieldV("AOChan", TypeRangedS32, Offset(mAOChan, Material), &bmpChanRange, MAX_STAGES,
          "The input channel AO maps use.");
@@ -281,18 +281,18 @@ void Material::initPersistFields()
    endGroup("Light Influence Maps");
 
    addGroup("Advanced Texture Maps");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(DetailMap, MAX_STAGES, Material, "DetailMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(DetailMap, MAX_STAGES, Material, "DetailMap");
       addField("detailScale", TypePoint2F, Offset(mDetailScale, Material), MAX_STAGES,
          "The scale factor for the detail map.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(DetailNormalMap, MAX_STAGES, Material, "DetailNormalMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(DetailNormalMap, MAX_STAGES, Material, "DetailNormalMap");
       addFieldV("detailNormalMapStrength", TypeRangedF32, Offset(mDetailNormalMapStrength, Material), &CommonValidators::PositiveFloat, MAX_STAGES,
 
          "Used to scale the strength of the detail normal map when blended with the base normal map.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(OverlayMap, MAX_STAGES, Material, "Overlay");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(LightMap, MAX_STAGES, Material, "LightMap");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY_REFACTOR(ToneMap, MAX_STAGES, Material, "ToneMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(OverlayMap, MAX_STAGES, Material, "Overlay");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(LightMap, MAX_STAGES, Material, "LightMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(ToneMap, MAX_STAGES, Material, "ToneMap");
    endGroup("Advanced Texture Maps");
    
    addGroup("Accumulation Properties");
@@ -807,15 +807,15 @@ bool Material::_setAccuEnabled(void* object, const char* index, const char* data
 //material.getDiffuseMap(%layer); //returns the raw file referenced
 //material.getDiffuseMapAsset(%layer); //returns the asset id
 //material.setDiffuseMap(%texture, %layer); //tries to set the asset and failing that attempts a flat file reference
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, DiffuseMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, NormalMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, DetailNormalMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, OverlayMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, LightMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, ToneMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, DetailMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, ORMConfigMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, RoughMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, AOMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, MetalMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS_REFACTOR(Material, GlowMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, DiffuseMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, NormalMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailNormalMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, OverlayMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, LightMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, ToneMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, ORMConfigMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, RoughMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, AOMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, MetalMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, GlowMap, Material::Constants::MAX_STAGES)

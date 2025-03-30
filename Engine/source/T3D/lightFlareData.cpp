@@ -159,7 +159,7 @@ void LightFlareData::initPersistFields()
       addField( "flareEnabled", TypeBool, Offset( mFlareEnabled, LightFlareData ),
          "Allows the user to disable this flare globally for any lights referencing it." );
 
-      INITPERSISTFIELD_IMAGEASSET_REFACTOR(FlareTexture, LightFlareData, "The texture / sprite sheet for this flare.");
+      INITPERSISTFIELD_IMAGEASSET(FlareTexture, LightFlareData, "The texture / sprite sheet for this flare.");
 
       addArray( "Elements", MAX_ELEMENTS );
 

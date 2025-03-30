@@ -178,3 +178,17 @@ void CppAsset::onAssetRefresh(void)
 
    mHeaderPath = getOwned() ? expandAssetFilePath(mHeaderFile) : mHeaderPath;
 }
+
+DefineEngineMethod(CppAsset, getCodePath, const char*, (), ,
+   "Gets the code file filepath of this asset.\n"
+   "@return File path of the code file.")
+{
+   return object->getCppFilePath();
+}
+
+DefineEngineMethod(CppAsset, getHeaderPath, const char*, (), ,
+   "Gets the header file filepath of this asset.\n"
+   "@return File path of the header file.")
+{
+   return object->getHeaderFilePath();
+}

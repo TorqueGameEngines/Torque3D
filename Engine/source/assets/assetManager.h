@@ -341,6 +341,9 @@ public:
     bool restoreAssetTags( void );
     inline AssetTagsManifest* getAssetTags( void ) const { return mAssetTagsManifest; }
 
+    /// Loose File management
+    const char* getAssetLooseFiles(const char* pAssetId);
+
     /// Info.
     inline U32 getDeclaredAssetCount( void ) const { return (U32)mDeclaredAssets.size(); }
     inline U32 getReferencedAssetCount( void ) const { return (U32)mReferencedAssets.size(); }

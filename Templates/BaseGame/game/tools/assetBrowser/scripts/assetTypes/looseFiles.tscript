@@ -1,14 +1,17 @@
-function AssetBrowser::buildLooseFilePreview(%this, %assetDef, %previewData)
+AssetBrowser::registerFileType("NonAssetLooseFile", "Loose Files", "-");
+
+function NonAssetLooseFile::buildBrowserElement(%filePath, %previewData)
 {
-   %fullPath = %assetDef.dirPath @ "/" @ %assetDef.assetName;
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %fullPath;
+   %fileName = fileName(%filePath);
+   
+   %previewData.assetName = %fileName;
+   %previewData.assetPath = %filePath;
    
    %previewData.previewImage = "ToolsModule:looseFileIcon_image";
    
    //%previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %fullPath;
+   %previewData.assetDesc = %filePath;
+   %previewData.tooltip = %filePath;
    //%previewData.doubleClickCommand = "AssetBrowser.schedule(10, \"navigateTo\",\""@ %assetDef.dirPath @ "/" @ %assetDef.assetName @"\");";//browseTo %assetDef.dirPath / %assetDef.assetName
-   %previewData.doubleClickCommand = "AssetBrowser.autoImportFile(\"" @ %fullPath @ "\");";
+   //%previewData.doubleClickCommand = "AssetBrowser.autoImportFile(\"" @ %fullPath @ "\");";
 }

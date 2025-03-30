@@ -183,8 +183,6 @@ function AssetBrowser::buildPopupMenus(%this)
          item[12] = "View Loose Files" TAB "" TAB "AssetBrowser.importLooseFiles();";
          Item[ 13 ] = "-";
          item[ 14 ] = "Open Folder Location" TAB "" TAB "AssetBrowser.openFolderLocation();";
-         
-      
       };
    }
    
@@ -266,13 +264,18 @@ function AssetBrowser::buildPopupMenus(%this)
          radioSelection = false;
       };
       
-      AssetTypeListPopup.addItem(0, AssetFilterTypeList.getKey(0) TAB "" TAB "AssetBrowser.toggleAssetTypeFilter(" @ 0 @ ");");
+      AssetTypeListPopup.addItem(0, "All" TAB "" TAB %this @ ".toggleAssetTypeFilter(0);");
       AssetTypeListPopup.addItem(1, "-");
       
-      for(%i=1; %i < AssetFilterTypeList.Count(); %i++)
+      %listIndex = 1;
+      for(%i=0; %i < ABAssetTypesList.Count(); %i++)
       {
-         %assetTypeName = AssetFilterTypeList.getKey(%i);
-         AssetTypeListPopup.addItem(%i+1, %assetTypeName TAB "" TAB "AssetBrowser.toggleAssetTypeFilter(" @ %i + 1 @ ");");
+         %assetTypeData = ABAssetTypesList.getValue(%i);
+         if(getField(%assetTypeData, 3) != true)
+            continue;
+            
+         AssetTypeListPopup.addItem(%listIndex, getField(%assetTypeData,1) TAB "" TAB %this @ ".toggleAssetTypeFilter(" @ %listIndex @ ");");
+         %listIndex++;
       }
    }
    
@@ -315,44 +318,6 @@ function AssetBrowser::buildPopupMenus(%this)
       };
    }
    
-   if( !isObject( EditGameObjectAssetPopup ) )
-   {
-      new PopupMenu( EditGameObjectAssetPopup )
-      {
-         superClass = "MenuBuilder";
-         class = "EditorWorldMenu";
-         //isPopup = true;
-         
-         item[ 0 ] = "Open GameObject Editor" TAB "" TAB "echo(\"Not yet implemented.\");";
-         item[ 1 ] = "Edit GameObject Script" TAB "" TAB "AssetBrowser.editGameObjectAssetScript(AssetDatabase.acquireAsset(EditGameObjectAssetPopup.assetId));";
-         item[ 2 ] = "-";
-         item[ 3 ] = "Apply Instance to GameObject" TAB "" TAB "AssetBrowser.applyInstanceToGameObject(AssetDatabase.acquireAsset(EditGameObjectAssetPopup.assetId));";
-         item[ 4 ] = "Reset Instance to GameObject" TAB "" TAB "echo(\"Not yet implemented.\");";
-         item[ 5 ] = "-";
-         item[ 6 ] = "Create Child GameObject" TAB "" TAB "echo(\"Not yet implemented.\");";
-      };
-   }
-   
-   //Asset Import Resolution menus
-   if( !isObject( ImportAssetResolutionsPopup ) )
-   {
-      %this.ImportAssetResolutionsPopup = new PopupMenu( ImportAssetResolutionsPopup )
-      {
-         superClass = "MenuBuilder";
-         class = "EditorWorldMenu";
-         
-         item[0] = "Use original Asset for duplicates" TAB "" TAB "";
-         item[1] = "Override duplicate with new Asset" TAB "" TAB "";
-         item[2] = "-";
-         item[3] = "Rename Asset" TAB "" TAB "";
-         item[4] = "-";
-         item[5] = "Find missing file" TAB "" TAB "ImportAssetWindow.findMissingFile(ImportAssetResolutionsPopup.assetItem);";
-         item[6] = "-";
-         item[7] = "Edit Asset properties" TAB "" TAB "";
-      
-      };
-   }
-
    //
    // Import Asset Actions
    //

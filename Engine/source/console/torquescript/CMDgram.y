@@ -461,8 +461,8 @@ expr
       { $$ = (ExprNode*)VarNode::alloc( $1.lineNumber, $1.value, NULL); }
    | VAR '[' aidx_expr ']'
       { $$ = (ExprNode*)VarNode::alloc( $1.lineNumber, $1.value, $3 ); }
-   | expr opINTNAMER IDENT '[' expr ']'
-      { $$ = StrcatExprNode::alloc($1->dbgLineNumber, ConstantNode::alloc($3.lineNumber, $3.value), $5, 0); }
+   | class_name_expr '[' aidx_expr ']'
+      { }
    ;
 /*
    | rwDEFINE '(' var_list_decl ')' '{' statement_list '}'

@@ -705,12 +705,12 @@ static const yytype_int16 yyrline[] =
      394,   396,   398,   400,   402,   404,   406,   408,   410,   412,
      414,   416,   418,   420,   422,   424,   426,   428,   430,   432,
      434,   436,   438,   440,   442,   444,   446,   448,   450,   452,
-     454,   456,   458,   460,   462,   464,   486,   488,   493,   495,
-     500,   502,   507,   509,   511,   513,   515,   517,   519,   521,
-     523,   525,   527,   529,   534,   536,   538,   540,   542,   544,
-     546,   548,   550,   552,   557,   559,   561,   571,   573,   579,
-     580,   585,   587,   593,   594,   599,   601,   606,   608,   610,
-     612,   614,   619,   621
+     454,   456,   458,   460,   462,   464,   488,   490,   495,   497,
+     502,   504,   509,   511,   513,   515,   517,   519,   521,   523,
+     525,   527,   529,   531,   536,   538,   540,   542,   544,   546,
+     548,   550,   552,   554,   559,   561,   563,   573,   575,   581,
+     582,   587,   589,   595,   596,   601,   603,   608,   610,   612,
+     614,   616,   621,   623
 };
 #endif
 
@@ -2838,300 +2838,302 @@ yyreduce:
 
   case 115: /* expr: class_name_expr '[' aidx_expr ']'  */
 #line 465 "CMDgram.y"
-      { }
-#line 2843 "CMDgram.c"
+      { 
+         (yyval.expr) = StrcatExprNode::alloc( (yyvsp[-3].expr)->dbgLineNumber, (yyvsp[-3].expr), (yyvsp[-1].expr), 0);
+      }
+#line 2845 "CMDgram.c"
     break;
 
   case 116: /* slot_acc: expr '.' IDENT  */
-#line 487 "CMDgram.y"
+#line 489 "CMDgram.y"
       { (yyval.slot).lineNumber = (yyvsp[-2].expr)->dbgLineNumber; (yyval.slot).object = (yyvsp[-2].expr); (yyval.slot).slotName = (yyvsp[0].s).value; (yyval.slot).array = NULL; }
-#line 2849 "CMDgram.c"
+#line 2851 "CMDgram.c"
     break;
 
   case 117: /* slot_acc: expr '.' IDENT '[' aidx_expr ']'  */
-#line 489 "CMDgram.y"
+#line 491 "CMDgram.y"
       { (yyval.slot).lineNumber = (yyvsp[-5].expr)->dbgLineNumber; (yyval.slot).object = (yyvsp[-5].expr); (yyval.slot).slotName = (yyvsp[-3].s).value; (yyval.slot).array = (yyvsp[-1].expr); }
-#line 2855 "CMDgram.c"
+#line 2857 "CMDgram.c"
     break;
 
   case 118: /* intslot_acc: expr opINTNAME class_name_expr  */
-#line 494 "CMDgram.y"
+#line 496 "CMDgram.y"
      { (yyval.intslot).lineNumber = (yyvsp[-2].expr)->dbgLineNumber; (yyval.intslot).object = (yyvsp[-2].expr); (yyval.intslot).slotExpr = (yyvsp[0].expr); (yyval.intslot).recurse = false; }
-#line 2861 "CMDgram.c"
+#line 2863 "CMDgram.c"
     break;
 
   case 119: /* intslot_acc: expr opINTNAMER class_name_expr  */
-#line 496 "CMDgram.y"
+#line 498 "CMDgram.y"
      { (yyval.intslot).lineNumber = (yyvsp[-2].expr)->dbgLineNumber; (yyval.intslot).object = (yyvsp[-2].expr); (yyval.intslot).slotExpr = (yyvsp[0].expr); (yyval.intslot).recurse = true; }
-#line 2867 "CMDgram.c"
+#line 2869 "CMDgram.c"
     break;
 
   case 120: /* class_name_expr: IDENT  */
-#line 501 "CMDgram.y"
+#line 503 "CMDgram.y"
       { (yyval.expr) = ConstantNode::alloc( (yyvsp[0].s).lineNumber, (yyvsp[0].s).value ); }
-#line 2873 "CMDgram.c"
+#line 2875 "CMDgram.c"
     break;
 
   case 121: /* class_name_expr: '(' expr ')'  */
-#line 503 "CMDgram.y"
+#line 505 "CMDgram.y"
       { (yyval.expr) = (yyvsp[-1].expr); }
-#line 2879 "CMDgram.c"
+#line 2881 "CMDgram.c"
     break;
 
   case 122: /* assign_op_struct: opPLUSPLUS  */
-#line 508 "CMDgram.y"
+#line 510 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[0].i).lineNumber; (yyval.asn).token = opPLUSPLUS; (yyval.asn).expr = FloatNode::alloc( (yyvsp[0].i).lineNumber, 1 ); }
-#line 2885 "CMDgram.c"
+#line 2887 "CMDgram.c"
     break;
 
   case 123: /* assign_op_struct: opMINUSMINUS  */
-#line 510 "CMDgram.y"
+#line 512 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[0].i).lineNumber; (yyval.asn).token = opMINUSMINUS; (yyval.asn).expr = FloatNode::alloc( (yyvsp[0].i).lineNumber, 1 ); }
-#line 2891 "CMDgram.c"
+#line 2893 "CMDgram.c"
     break;
 
   case 124: /* assign_op_struct: opPLASN expr  */
-#line 512 "CMDgram.y"
+#line 514 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[-1].i).lineNumber; (yyval.asn).token = '+'; (yyval.asn).expr = (yyvsp[0].expr); }
-#line 2897 "CMDgram.c"
+#line 2899 "CMDgram.c"
     break;
 
   case 125: /* assign_op_struct: opMIASN expr  */
-#line 514 "CMDgram.y"
+#line 516 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[-1].i).lineNumber; (yyval.asn).token = '-'; (yyval.asn).expr = (yyvsp[0].expr); }
-#line 2903 "CMDgram.c"
+#line 2905 "CMDgram.c"
     break;
 
   case 126: /* assign_op_struct: opMLASN expr  */
-#line 516 "CMDgram.y"
+#line 518 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[-1].i).lineNumber; (yyval.asn).token = '*'; (yyval.asn).expr = (yyvsp[0].expr); }
-#line 2909 "CMDgram.c"
+#line 2911 "CMDgram.c"
     break;
 
   case 127: /* assign_op_struct: opDVASN expr  */
-#line 518 "CMDgram.y"
+#line 520 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[-1].i).lineNumber; (yyval.asn).token = '/'; (yyval.asn).expr = (yyvsp[0].expr); }
-#line 2915 "CMDgram.c"
+#line 2917 "CMDgram.c"
     break;
 
   case 128: /* assign_op_struct: opMODASN expr  */
-#line 520 "CMDgram.y"
+#line 522 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[-1].i).lineNumber; (yyval.asn).token = '%'; (yyval.asn).expr = (yyvsp[0].expr); }
-#line 2921 "CMDgram.c"
+#line 2923 "CMDgram.c"
     break;
 
   case 129: /* assign_op_struct: opANDASN expr  */
-#line 522 "CMDgram.y"
+#line 524 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[-1].i).lineNumber; (yyval.asn).token = '&'; (yyval.asn).expr = (yyvsp[0].expr); }
-#line 2927 "CMDgram.c"
+#line 2929 "CMDgram.c"
     break;
 
   case 130: /* assign_op_struct: opXORASN expr  */
-#line 524 "CMDgram.y"
+#line 526 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[-1].i).lineNumber; (yyval.asn).token = '^'; (yyval.asn).expr = (yyvsp[0].expr); }
-#line 2933 "CMDgram.c"
+#line 2935 "CMDgram.c"
     break;
 
   case 131: /* assign_op_struct: opORASN expr  */
-#line 526 "CMDgram.y"
+#line 528 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[-1].i).lineNumber; (yyval.asn).token = '|'; (yyval.asn).expr = (yyvsp[0].expr); }
-#line 2939 "CMDgram.c"
+#line 2941 "CMDgram.c"
     break;
 
   case 132: /* assign_op_struct: opSLASN expr  */
-#line 528 "CMDgram.y"
+#line 530 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[-1].i).lineNumber; (yyval.asn).token = opSHL; (yyval.asn).expr = (yyvsp[0].expr); }
-#line 2945 "CMDgram.c"
+#line 2947 "CMDgram.c"
     break;
 
   case 133: /* assign_op_struct: opSRASN expr  */
-#line 530 "CMDgram.y"
+#line 532 "CMDgram.y"
       { (yyval.asn).lineNumber = (yyvsp[-1].i).lineNumber; (yyval.asn).token = opSHR; (yyval.asn).expr = (yyvsp[0].expr); }
-#line 2951 "CMDgram.c"
+#line 2953 "CMDgram.c"
     break;
 
   case 134: /* stmt_expr: funcall_expr  */
-#line 535 "CMDgram.y"
+#line 537 "CMDgram.y"
       { (yyval.expr) = (yyvsp[0].expr); }
-#line 2957 "CMDgram.c"
+#line 2959 "CMDgram.c"
     break;
 
   case 135: /* stmt_expr: assert_expr  */
-#line 537 "CMDgram.y"
+#line 539 "CMDgram.y"
       { (yyval.expr) = (yyvsp[0].expr); }
-#line 2963 "CMDgram.c"
+#line 2965 "CMDgram.c"
     break;
 
   case 136: /* stmt_expr: object_decl  */
-#line 539 "CMDgram.y"
+#line 541 "CMDgram.y"
       { (yyval.expr) = (yyvsp[0].od); }
-#line 2969 "CMDgram.c"
+#line 2971 "CMDgram.c"
     break;
 
   case 137: /* stmt_expr: VAR '=' expr  */
-#line 541 "CMDgram.y"
+#line 543 "CMDgram.y"
       { (yyval.expr) = AssignExprNode::alloc( (yyvsp[-2].s).lineNumber, (yyvsp[-2].s).value, NULL, (yyvsp[0].expr)); }
-#line 2975 "CMDgram.c"
+#line 2977 "CMDgram.c"
     break;
 
   case 138: /* stmt_expr: VAR '[' aidx_expr ']' '=' expr  */
-#line 543 "CMDgram.y"
+#line 545 "CMDgram.y"
       { (yyval.expr) = AssignExprNode::alloc( (yyvsp[-5].s).lineNumber, (yyvsp[-5].s).value, (yyvsp[-3].expr), (yyvsp[0].expr)); }
-#line 2981 "CMDgram.c"
+#line 2983 "CMDgram.c"
     break;
 
   case 139: /* stmt_expr: VAR assign_op_struct  */
-#line 545 "CMDgram.y"
+#line 547 "CMDgram.y"
       { (yyval.expr) = AssignOpExprNode::alloc( (yyvsp[-1].s).lineNumber, (yyvsp[-1].s).value, NULL, (yyvsp[0].asn).expr, (yyvsp[0].asn).token); }
-#line 2987 "CMDgram.c"
+#line 2989 "CMDgram.c"
     break;
 
   case 140: /* stmt_expr: VAR '[' aidx_expr ']' assign_op_struct  */
-#line 547 "CMDgram.y"
+#line 549 "CMDgram.y"
       { (yyval.expr) = AssignOpExprNode::alloc( (yyvsp[-4].s).lineNumber, (yyvsp[-4].s).value, (yyvsp[-2].expr), (yyvsp[0].asn).expr, (yyvsp[0].asn).token); }
-#line 2993 "CMDgram.c"
+#line 2995 "CMDgram.c"
     break;
 
   case 141: /* stmt_expr: slot_acc assign_op_struct  */
-#line 549 "CMDgram.y"
+#line 551 "CMDgram.y"
       { (yyval.expr) = SlotAssignOpNode::alloc( (yyvsp[-1].slot).lineNumber, (yyvsp[-1].slot).object, (yyvsp[-1].slot).slotName, (yyvsp[-1].slot).array, (yyvsp[0].asn).token, (yyvsp[0].asn).expr); }
-#line 2999 "CMDgram.c"
+#line 3001 "CMDgram.c"
     break;
 
   case 142: /* stmt_expr: slot_acc '=' expr  */
-#line 551 "CMDgram.y"
+#line 553 "CMDgram.y"
       { (yyval.expr) = SlotAssignNode::alloc( (yyvsp[-2].slot).lineNumber, (yyvsp[-2].slot).object, (yyvsp[-2].slot).array, (yyvsp[-2].slot).slotName, (yyvsp[0].expr)); }
-#line 3005 "CMDgram.c"
+#line 3007 "CMDgram.c"
     break;
 
   case 143: /* stmt_expr: slot_acc '=' '{' expr_list '}'  */
-#line 553 "CMDgram.y"
+#line 555 "CMDgram.y"
       { (yyval.expr) = SlotAssignNode::alloc( (yyvsp[-4].slot).lineNumber, (yyvsp[-4].slot).object, (yyvsp[-4].slot).array, (yyvsp[-4].slot).slotName, (yyvsp[-1].expr)); }
-#line 3011 "CMDgram.c"
+#line 3013 "CMDgram.c"
     break;
 
   case 144: /* funcall_expr: IDENT '(' expr_list_decl ')'  */
-#line 558 "CMDgram.y"
+#line 560 "CMDgram.y"
      { (yyval.expr) = FuncCallExprNode::alloc( (yyvsp[-3].s).lineNumber, (yyvsp[-3].s).value, NULL, (yyvsp[-1].expr), false); }
-#line 3017 "CMDgram.c"
+#line 3019 "CMDgram.c"
     break;
 
   case 145: /* funcall_expr: IDENT opCOLONCOLON IDENT '(' expr_list_decl ')'  */
-#line 560 "CMDgram.y"
+#line 562 "CMDgram.y"
      { (yyval.expr) = FuncCallExprNode::alloc( (yyvsp[-5].s).lineNumber, (yyvsp[-3].s).value, (yyvsp[-5].s).value, (yyvsp[-1].expr), false); }
-#line 3023 "CMDgram.c"
+#line 3025 "CMDgram.c"
     break;
 
   case 146: /* funcall_expr: expr '.' IDENT '(' expr_list_decl ')'  */
-#line 562 "CMDgram.y"
+#line 564 "CMDgram.y"
       { (yyvsp[-5].expr)->append((yyvsp[-1].expr)); (yyval.expr) = FuncCallExprNode::alloc( (yyvsp[-5].expr)->dbgLineNumber, (yyvsp[-3].s).value, NULL, (yyvsp[-5].expr), true); }
-#line 3029 "CMDgram.c"
+#line 3031 "CMDgram.c"
     break;
 
   case 147: /* assert_expr: rwASSERT '(' expr ')'  */
-#line 572 "CMDgram.y"
+#line 574 "CMDgram.y"
       { (yyval.expr) = AssertCallExprNode::alloc( (yyvsp[-3].i).lineNumber, (yyvsp[-1].expr), NULL ); }
-#line 3035 "CMDgram.c"
+#line 3037 "CMDgram.c"
     break;
 
   case 148: /* assert_expr: rwASSERT '(' expr ',' STRATOM ')'  */
-#line 574 "CMDgram.y"
+#line 576 "CMDgram.y"
       { (yyval.expr) = AssertCallExprNode::alloc( (yyvsp[-5].i).lineNumber, (yyvsp[-3].expr), (yyvsp[-1].str).value ); }
-#line 3041 "CMDgram.c"
+#line 3043 "CMDgram.c"
     break;
 
   case 149: /* expr_list_decl: %empty  */
-#line 579 "CMDgram.y"
+#line 581 "CMDgram.y"
       { (yyval.expr) = NULL; }
-#line 3047 "CMDgram.c"
+#line 3049 "CMDgram.c"
     break;
 
   case 150: /* expr_list_decl: expr_list  */
-#line 581 "CMDgram.y"
+#line 583 "CMDgram.y"
       { (yyval.expr) = (yyvsp[0].expr); }
-#line 3053 "CMDgram.c"
+#line 3055 "CMDgram.c"
     break;
 
   case 151: /* expr_list: expr  */
-#line 586 "CMDgram.y"
+#line 588 "CMDgram.y"
       { (yyval.expr) = (yyvsp[0].expr); }
-#line 3059 "CMDgram.c"
+#line 3061 "CMDgram.c"
     break;
 
   case 152: /* expr_list: expr_list ',' expr  */
-#line 588 "CMDgram.y"
+#line 590 "CMDgram.y"
       { ((yyvsp[-2].expr))->append((yyvsp[0].expr)); (yyval.expr) = (yyvsp[-2].expr); }
-#line 3065 "CMDgram.c"
+#line 3067 "CMDgram.c"
     break;
 
   case 153: /* slot_assign_list_opt: %empty  */
-#line 593 "CMDgram.y"
+#line 595 "CMDgram.y"
       { (yyval.slist) = NULL; }
-#line 3071 "CMDgram.c"
+#line 3073 "CMDgram.c"
     break;
 
   case 154: /* slot_assign_list_opt: slot_assign_list  */
-#line 595 "CMDgram.y"
+#line 597 "CMDgram.y"
       { (yyval.slist) = (yyvsp[0].slist); }
-#line 3077 "CMDgram.c"
+#line 3079 "CMDgram.c"
     break;
 
   case 155: /* slot_assign_list: slot_assign  */
-#line 600 "CMDgram.y"
+#line 602 "CMDgram.y"
       { (yyval.slist) = (yyvsp[0].slist); }
-#line 3083 "CMDgram.c"
+#line 3085 "CMDgram.c"
     break;
 
   case 156: /* slot_assign_list: slot_assign_list slot_assign  */
-#line 602 "CMDgram.y"
+#line 604 "CMDgram.y"
       { (yyvsp[-1].slist)->append((yyvsp[0].slist)); (yyval.slist) = (yyvsp[-1].slist); }
-#line 3089 "CMDgram.c"
+#line 3091 "CMDgram.c"
     break;
 
   case 157: /* slot_assign: IDENT '=' expr ';'  */
-#line 607 "CMDgram.y"
+#line 609 "CMDgram.y"
       { (yyval.slist) = SlotAssignNode::alloc( (yyvsp[-3].s).lineNumber, NULL, NULL, (yyvsp[-3].s).value, (yyvsp[-1].expr)); }
-#line 3095 "CMDgram.c"
+#line 3097 "CMDgram.c"
     break;
 
   case 158: /* slot_assign: TYPEIDENT IDENT '=' expr ';'  */
-#line 609 "CMDgram.y"
+#line 611 "CMDgram.y"
       { (yyval.slist) = SlotAssignNode::alloc( (yyvsp[-4].i).lineNumber, NULL, NULL, (yyvsp[-3].s).value, (yyvsp[-1].expr), (yyvsp[-4].i).value); }
-#line 3101 "CMDgram.c"
+#line 3103 "CMDgram.c"
     break;
 
   case 159: /* slot_assign: rwDATABLOCK '=' expr ';'  */
-#line 611 "CMDgram.y"
+#line 613 "CMDgram.y"
       { (yyval.slist) = SlotAssignNode::alloc( (yyvsp[-3].i).lineNumber, NULL, NULL, StringTable->insert("datablock"), (yyvsp[-1].expr)); }
-#line 3107 "CMDgram.c"
+#line 3109 "CMDgram.c"
     break;
 
   case 160: /* slot_assign: IDENT '[' aidx_expr ']' '=' expr ';'  */
-#line 613 "CMDgram.y"
+#line 615 "CMDgram.y"
       { (yyval.slist) = SlotAssignNode::alloc( (yyvsp[-6].s).lineNumber, NULL, (yyvsp[-4].expr), (yyvsp[-6].s).value, (yyvsp[-1].expr)); }
-#line 3113 "CMDgram.c"
+#line 3115 "CMDgram.c"
     break;
 
   case 161: /* slot_assign: TYPEIDENT IDENT '[' aidx_expr ']' '=' expr ';'  */
-#line 615 "CMDgram.y"
+#line 617 "CMDgram.y"
       { (yyval.slist) = SlotAssignNode::alloc( (yyvsp[-7].i).lineNumber, NULL, (yyvsp[-4].expr), (yyvsp[-6].s).value, (yyvsp[-1].expr), (yyvsp[-7].i).value); }
-#line 3119 "CMDgram.c"
+#line 3121 "CMDgram.c"
     break;
 
   case 162: /* aidx_expr: expr  */
-#line 620 "CMDgram.y"
+#line 622 "CMDgram.y"
       { (yyval.expr) = (yyvsp[0].expr); }
-#line 3125 "CMDgram.c"
+#line 3127 "CMDgram.c"
     break;
 
   case 163: /* aidx_expr: aidx_expr ',' expr  */
-#line 622 "CMDgram.y"
+#line 624 "CMDgram.y"
       { (yyval.expr) = CommaCatExprNode::alloc( (yyvsp[-2].expr)->dbgLineNumber, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 3131 "CMDgram.c"
+#line 3133 "CMDgram.c"
     break;
 
 
-#line 3135 "CMDgram.c"
+#line 3137 "CMDgram.c"
 
       default: break;
     }
@@ -3334,7 +3336,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 624 "CMDgram.y"
+#line 626 "CMDgram.y"
 
 
 int

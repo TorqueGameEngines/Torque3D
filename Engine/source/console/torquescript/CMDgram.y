@@ -462,7 +462,9 @@ expr
    | VAR '[' aidx_expr ']'
       { $$ = (ExprNode*)VarNode::alloc( $1.lineNumber, $1.value, $3 ); }
    | class_name_expr '[' aidx_expr ']'
-      { }
+      { 
+         $$ = StrcatExprNode::alloc( $1->dbgLineNumber, $1, $3, 0);
+      }
    ;
 /*
    | rwDEFINE '(' var_list_decl ')' '{' statement_list '}'

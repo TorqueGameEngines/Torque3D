@@ -2852,7 +2852,7 @@ yyreduce:
 
   case 115: /* expr: expr opINTNAMER IDENT '[' expr ']'  */
 #line 465 "CMDgram.y"
-      { (yyval.expr) = StrcatExprNode::alloc((yyvsp[-5].expr)->dbgLineNumber, (yyvsp[-3].s).value, (yyvsp[-1].expr), 0); }
+      { (yyval.expr) = StrcatExprNode::alloc((yyvsp[-5].expr)->dbgLineNumber, ConstantNode::alloc((yyvsp[-3].s).lineNumber, (yyvsp[-3].s).value), (yyvsp[-1].expr), 0); }
 #line 2857 "CMDgram.c"
     break;
 

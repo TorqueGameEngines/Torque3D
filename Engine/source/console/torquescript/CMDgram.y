@@ -494,6 +494,17 @@ slot_acc
 intslot_acc
    : expr opINTNAME class_name_expr
      { $$.lineNumber = $1->dbgLineNumber; $$.object = $1; $$.slotExpr = $3; $$.recurse = false; }
+   | expr opINTNAMER IDENT '[' aidx_expr ']'
+     {  
+       ExprNode* concatenated = StrcatExprNode::alloc($1->dbgLineNumber, 
+                                                      ConstantNode::alloc($3.lineNumber, $3.value), 
+                                                      $5, 
+                                                      0);
+       $$.lineNumber = $1->dbgLineNumber; 
+       $$.object = $1; 
+       $$.slotExpr = concatenated; 
+       $$.recurse = true;
+     }
    | expr opINTNAMER class_name_expr
      { $$.lineNumber = $1->dbgLineNumber; $$.object = $1; $$.slotExpr = $3; $$.recurse = true; }
    ;

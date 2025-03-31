@@ -705,7 +705,7 @@ static const yytype_int16 yyrline[] =
      394,   396,   398,   400,   402,   404,   406,   408,   410,   412,
      414,   416,   418,   420,   422,   424,   426,   428,   430,   432,
      434,   436,   438,   440,   442,   444,   446,   448,   450,   452,
-     454,   456,   458,   460,   462,   464,   488,   490,   495,   497,
+     454,   458,   460,   462,   464,   466,   488,   490,   495,   497,
      502,   504,   509,   511,   513,   515,   517,   519,   521,   523,
      525,   527,   529,   531,   536,   538,   540,   542,   544,   546,
      548,   550,   552,   554,   559,   561,   563,   573,   575,   581,
@@ -819,9 +819,9 @@ static const yytype_uint8 yydefact[] =
 {
        3,     0,     2,     1,     0,     0,     0,   108,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,   107,    88,   113,   111,    26,   112,   105,   106,     0,
+       0,   107,    88,   114,   112,    26,   113,   105,   106,     0,
        0,     0,     0,     0,     4,     7,     5,     6,    17,   136,
-      18,    13,    14,    15,    16,     0,     0,   109,   110,    76,
+      18,    13,    14,    15,    16,     0,     0,   109,   111,    76,
      134,   135,     0,   120,     0,     0,     0,    19,    20,     0,
      108,    88,    21,     0,    76,     0,    11,    53,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,   123,
@@ -839,7 +839,7 @@ static const yytype_uint8 yydefact[] =
      100,     0,   101,     0,   142,    31,     0,    30,     0,   121,
       42,    40,    43,    40,     0,     0,    52,    12,     0,     0,
        0,     0,     0,     0,    40,     0,     0,     0,     9,   147,
-       0,     0,    24,     0,   114,   144,     0,   149,   115,   149,
+       0,     0,    24,     0,   115,   144,     0,   149,   110,   149,
        0,     0,     0,     0,     0,    29,     0,     0,    44,    44,
       61,    63,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,    10,     0,     0,   163,     0,   140,
@@ -1546,7 +1546,7 @@ static const yytype_int8 yyr2[] =
        3,     3,     3,     3,     3,     3,     2,     2,     1,     5,
        3,     3,     3,     3,     3,     3,     3,     3,     3,     3,
        3,     3,     3,     2,     2,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     4,     4,     3,     6,     3,     3,
+       4,     1,     1,     1,     1,     4,     3,     6,     3,     3,
        1,     3,     1,     1,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     1,     1,     1,     3,     6,     2,
        5,     2,     3,     5,     4,     6,     6,     4,     6,     0,
@@ -2810,41 +2810,41 @@ yyreduce:
 #line 2811 "CMDgram.c"
     break;
 
-  case 110: /* expr: intslot_acc  */
+  case 110: /* expr: IDENT '[' aidx_expr ']'  */
 #line 455 "CMDgram.y"
-      { (yyval.expr) = InternalSlotAccessNode::alloc( (yyvsp[0].intslot).lineNumber, (yyvsp[0].intslot).object, (yyvsp[0].intslot).slotExpr, (yyvsp[0].intslot).recurse); }
-#line 2817 "CMDgram.c"
-    break;
-
-  case 111: /* expr: IDENT  */
-#line 457 "CMDgram.y"
-      { (yyval.expr) = ConstantNode::alloc( (yyvsp[0].s).lineNumber, (yyvsp[0].s).value ); }
-#line 2823 "CMDgram.c"
-    break;
-
-  case 112: /* expr: STRATOM  */
-#line 459 "CMDgram.y"
-      { (yyval.expr) = StrConstNode::alloc( (yyvsp[0].str).lineNumber, (yyvsp[0].str).value, false); }
-#line 2829 "CMDgram.c"
-    break;
-
-  case 113: /* expr: VAR  */
-#line 461 "CMDgram.y"
-      { (yyval.expr) = (ExprNode*)VarNode::alloc( (yyvsp[0].s).lineNumber, (yyvsp[0].s).value, NULL); }
-#line 2835 "CMDgram.c"
-    break;
-
-  case 114: /* expr: VAR '[' aidx_expr ']'  */
-#line 463 "CMDgram.y"
-      { (yyval.expr) = (ExprNode*)VarNode::alloc( (yyvsp[-3].s).lineNumber, (yyvsp[-3].s).value, (yyvsp[-1].expr) ); }
-#line 2841 "CMDgram.c"
-    break;
-
-  case 115: /* expr: IDENT '[' aidx_expr ']'  */
-#line 465 "CMDgram.y"
       { 
          (yyval.expr) = StrcatExprNode::alloc( (yyvsp[-3].s).lineNumber, ConstantNode::alloc( (yyvsp[-3].s).lineNumber, (yyvsp[-3].s).value ), (yyvsp[-1].expr), 0);
       }
+#line 2819 "CMDgram.c"
+    break;
+
+  case 111: /* expr: intslot_acc  */
+#line 459 "CMDgram.y"
+      { (yyval.expr) = InternalSlotAccessNode::alloc( (yyvsp[0].intslot).lineNumber, (yyvsp[0].intslot).object, (yyvsp[0].intslot).slotExpr, (yyvsp[0].intslot).recurse); }
+#line 2825 "CMDgram.c"
+    break;
+
+  case 112: /* expr: IDENT  */
+#line 461 "CMDgram.y"
+      { (yyval.expr) = ConstantNode::alloc( (yyvsp[0].s).lineNumber, (yyvsp[0].s).value ); }
+#line 2831 "CMDgram.c"
+    break;
+
+  case 113: /* expr: STRATOM  */
+#line 463 "CMDgram.y"
+      { (yyval.expr) = StrConstNode::alloc( (yyvsp[0].str).lineNumber, (yyvsp[0].str).value, false); }
+#line 2837 "CMDgram.c"
+    break;
+
+  case 114: /* expr: VAR  */
+#line 465 "CMDgram.y"
+      { (yyval.expr) = (ExprNode*)VarNode::alloc( (yyvsp[0].s).lineNumber, (yyvsp[0].s).value, NULL); }
+#line 2843 "CMDgram.c"
+    break;
+
+  case 115: /* expr: VAR '[' aidx_expr ']'  */
+#line 467 "CMDgram.y"
+      { (yyval.expr) = (ExprNode*)VarNode::alloc( (yyvsp[-3].s).lineNumber, (yyvsp[-3].s).value, (yyvsp[-1].expr) ); }
 #line 2849 "CMDgram.c"
     break;
 

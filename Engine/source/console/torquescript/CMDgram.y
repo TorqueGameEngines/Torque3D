@@ -451,6 +451,10 @@ expr
       { $$ = ConstantNode::alloc( $1.lineNumber, StringTable->insert("break")); }
    | slot_acc
       { $$ = SlotAccessNode::alloc( $1.lineNumber, $1.object, $1.array, $1.slotName ); }
+   | IDENT '[' aidx_expr ']'
+      { 
+         $$ = StrcatExprNode::alloc( $1.lineNumber, ConstantNode::alloc( $1.lineNumber, $1.value ), $3, 0);
+      }
    | intslot_acc
       { $$ = InternalSlotAccessNode::alloc( $1.lineNumber, $1.object, $1.slotExpr, $1.recurse); }
    | IDENT
@@ -461,10 +465,6 @@ expr
       { $$ = (ExprNode*)VarNode::alloc( $1.lineNumber, $1.value, NULL); }
    | VAR '[' aidx_expr ']'
       { $$ = (ExprNode*)VarNode::alloc( $1.lineNumber, $1.value, $3 ); }
-   | IDENT '[' aidx_expr ']'
-      { 
-         $$ = StrcatExprNode::alloc( $1.lineNumber, ConstantNode::alloc( $1.lineNumber, $1.value ), $3, 0);
-      }
    ;
 /*
    | rwDEFINE '(' var_list_decl ')' '{' statement_list '}'

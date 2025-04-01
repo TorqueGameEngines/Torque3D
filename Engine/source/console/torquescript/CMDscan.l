@@ -398,6 +398,38 @@ static int Sc_ScanIdent()
       return TYPEIDENT;
    }
 
+   // Find the first '[' using dStrchr
+   char *openBracket = dStrchr(CMDtext, '[');
+   if (openBracket)
+   {
+      char *closeBracket = dStrchr(openBracket, ']');
+      if (closeBracket)
+      {
+         // Extract base name (before '[')
+         size_t baseLen = openBracket - CMDtext;
+         char baseName[256];
+         dStrncpy(baseName, CMDtext, baseLen);
+         baseName[baseLen] = '\0';
+
+         // Extract content inside brackets
+         char indexContent[256];
+         size_t contentLen = closeBracket - openBracket - 1;
+         dStrncpy(indexContent, openBracket + 1, contentLen);
+         indexContent[contentLen] = '\0';
+
+         // Replace commas with underscores
+         for (char *p = indexContent; *p; ++p)
+         {
+            if (*p == ',')
+               *p = '_';
+         }
+
+         // Concatenate baseName + modified indexContent
+         dStrcpy(CMDtext, baseName, sizeof(CMDtext));
+         dStrcat(CMDtext, indexContent, sizeof(CMDtext));
+      }
+   }
+
    /* It's an identifier */
    CMDlval.s = MakeToken< StringTableEntry >( StringTable->insert(CMDtext), yylineno );
    return IDENT;

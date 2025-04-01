@@ -29,30 +29,10 @@ GFXImplementVertexFormat( GFXVertexP )
    addElement( "POSITION", GFXDeclType_Float3 );
 }
 
-GFXImplementVertexFormat( GFXVertexPad )
-{
-   addElement("PADDING", GFXDeclType_UByte4);
-}
-
 GFXImplementVertexFormat( GFXVertexPT )
 {
    addElement( "POSITION", GFXDeclType_Float3 );
    addElement( "TEXCOORD", GFXDeclType_Float2, 0 );
-}
-
-GFXImplementVertexFormat( GFXVertexPTT )
-{
-   addElement( "POSITION", GFXDeclType_Float3 );
-   addElement( "TEXCOORD", GFXDeclType_Float2, 0 );
-   addElement( "TEXCOORD", GFXDeclType_Float2, 1 );
-}
-
-GFXImplementVertexFormat( GFXVertexPTTT )
-{
-   addElement( "POSITION", GFXDeclType_Float3 );
-   addElement( "TEXCOORD", GFXDeclType_Float2, 0 );
-   addElement( "TEXCOORD", GFXDeclType_Float2, 1 );
-   addElement( "TEXCOORD", GFXDeclType_Float2, 2 );
 }
 
 GFXImplementVertexFormat( GFXVertexPC )
@@ -73,20 +53,6 @@ GFXImplementVertexFormat( GFXVertexPCT )
    addElement( "POSITION", GFXDeclType_Float3 );
    addElement( "COLOR", GFXDeclType_Color );
    addElement( "TEXCOORD", GFXDeclType_Float2, 0 );
-}
-
-GFXImplementVertexFormat( GFXVertexPCTT )
-{
-   addElement( "POSITION", GFXDeclType_Float3 );
-   addElement( "COLOR", GFXDeclType_Color );
-   addElement( "TEXCOORD", GFXDeclType_Float2, 0 );
-   addElement( "TEXCOORD", GFXDeclType_Float2, 1 );
-}
-
-GFXImplementVertexFormat( GFXVertexPN )
-{
-   addElement( "POSITION", GFXDeclType_Float3 );
-   addElement( "NORMAL", GFXDeclType_Float3 );
 }
 
 GFXImplementVertexFormat( GFXVertexPNT )

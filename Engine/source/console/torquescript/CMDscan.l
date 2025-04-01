@@ -10,6 +10,7 @@
 #include "platform/platform.h"
 #include "core/stringTable.h"
 #include "console/console.h"
+#include "console/script.h"
 #include "console/torquescript/compiler.h"
 #include "console/dynamicTypes.h"
 #include "core/strings/stringFunctions.h"
@@ -398,35 +399,58 @@ static int Sc_ScanIdent()
       return TYPEIDENT;
    }
 
-   // Find the first '[' using dStrchr
    char *openBracket = dStrchr(CMDtext, '[');
    if (openBracket)
    {
       char *closeBracket = dStrchr(openBracket, ']');
       if (closeBracket)
       {
-         // Extract base name (before '[')
          size_t baseLen = openBracket - CMDtext;
          char baseName[256];
          dStrncpy(baseName, CMDtext, baseLen);
          baseName[baseLen] = '\0';
 
-         // Extract content inside brackets
          char indexContent[256];
          size_t contentLen = closeBracket - openBracket - 1;
          dStrncpy(indexContent, openBracket + 1, contentLen);
          indexContent[contentLen] = '\0';
 
-         // Replace commas with underscores
-         for (char *p = indexContent; *p; ++p)
-         {
-            if (*p == ',')
-               *p = '_';
-         }
+         char processedContent[256] = {0}; 
+         char tempBuffer[256];
+         dStrcpy(tempBuffer, indexContent, sizeof(tempBuffer));
 
-         // Concatenate baseName + modified indexContent
+         char *token = dStrtok(tempBuffer, ",");
+         bool firstToken = true;
+
+         while (token)
+         {
+            while (*token == ' ') token++;
+
+            char evalResult[256] = {0};
+
+            if (token[0] == '%')
+            {
+               Con::EvalResult result = Con::evaluate(token);
+               if (!dStrIsEmpty(result.value.getString()))
+                  dStrcpy(evalResult, result.value, sizeof(evalResult));
+            }
+            else
+            {
+               dStrcpy(evalResult, token, sizeof(evalResult));
+            }
+
+            if (!dStrIsEmpty(evalResult))
+            {
+               if (!firstToken)
+                  dStrcat(processedContent, "_", sizeof(processedContent));
+               dStrcat(processedContent, evalResult, sizeof(processedContent));
+            }
+
+            firstToken = false;
+            token = dStrtok(NULL, ",");
+         }
          dStrcpy(CMDtext, baseName, sizeof(CMDtext));
-         dStrcat(CMDtext, indexContent, sizeof(CMDtext));
+         dStrcat(CMDtext, processedContent, sizeof(CMDtext));
       }
    }
 

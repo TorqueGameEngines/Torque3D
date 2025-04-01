@@ -906,6 +906,7 @@ char *yytext;
 #include "platform/platform.h"
 #include "core/stringTable.h"
 #include "console/console.h"
+#include "console/script.h"
 #include "console/torquescript/compiler.h"
 #include "console/dynamicTypes.h"
 #include "core/strings/stringFunctions.h"
@@ -989,8 +990,8 @@ void CMDerror(const char * s, ...);
 // Reset the parser.
 void CMDrestart(FILE *in);
 
-#line 992 "CMDscan.cpp"
 #line 993 "CMDscan.cpp"
+#line 994 "CMDscan.cpp"
 
 #define INITIAL 0
 
@@ -1205,11 +1206,11 @@ YY_DECL
 		}
 
 	{
-#line 113 "CMDscan.l"
+#line 114 "CMDscan.l"
 
-#line 115 "CMDscan.l"
+#line 116 "CMDscan.l"
          ;
-#line 1212 "CMDscan.cpp"
+#line 1213 "CMDscan.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1278,29 +1279,29 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 116 "CMDscan.l"
+#line 117 "CMDscan.l"
 { }
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 117 "CMDscan.l"
+#line 118 "CMDscan.l"
 { return(Sc_ScanDocBlock()); }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 118 "CMDscan.l"
+#line 119 "CMDscan.l"
 ;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 119 "CMDscan.l"
+#line 120 "CMDscan.l"
 ;
 	YY_BREAK
 case 5:
 /* rule 5 can match eol */
 YY_RULE_SETUP
-#line 120 "CMDscan.l"
+#line 121 "CMDscan.l"
 { 
    yycolumn = 1;
    lines.push_back(String::ToString("%s", yytext+1));
@@ -1312,162 +1313,162 @@ YY_RULE_SETUP
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 128 "CMDscan.l"
+#line 129 "CMDscan.l"
 { return(Sc_ScanString(STRATOM)); }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 129 "CMDscan.l"
+#line 130 "CMDscan.l"
 { return(Sc_ScanString(TAGATOM)); }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 130 "CMDscan.l"
+#line 131 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opEQ, yylineno ); return opEQ; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 131 "CMDscan.l"
+#line 132 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opNE, yylineno ); return opNE; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 132 "CMDscan.l"
+#line 133 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opGE, yylineno ); return opGE; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 133 "CMDscan.l"
+#line 134 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opLE, yylineno ); return opLE; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 134 "CMDscan.l"
+#line 135 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opAND, yylineno ); return opAND; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 135 "CMDscan.l"
+#line 136 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opOR, yylineno ); return opOR; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 136 "CMDscan.l"
+#line 137 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opCOLONCOLON, yylineno ); return opCOLONCOLON; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 137 "CMDscan.l"
+#line 138 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opMINUSMINUS, yylineno ); return opMINUSMINUS; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 138 "CMDscan.l"
+#line 139 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opPLUSPLUS, yylineno ); return opPLUSPLUS; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 139 "CMDscan.l"
+#line 140 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opSTREQ, yylineno ); return opSTREQ; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 140 "CMDscan.l"
+#line 141 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opSTRNE, yylineno ); return opSTRNE; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 141 "CMDscan.l"
+#line 142 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opSHL, yylineno ); return opSHL; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 142 "CMDscan.l"
+#line 143 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opSHR, yylineno ); return opSHR; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 143 "CMDscan.l"
+#line 144 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opPLASN, yylineno ); return opPLASN; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 144 "CMDscan.l"
+#line 145 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opMIASN, yylineno ); return opMIASN; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 145 "CMDscan.l"
+#line 146 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opMLASN, yylineno ); return opMLASN; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 146 "CMDscan.l"
+#line 147 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opDVASN, yylineno ); return opDVASN; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 147 "CMDscan.l"
+#line 148 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opMODASN, yylineno ); return opMODASN; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 148 "CMDscan.l"
+#line 149 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opANDASN, yylineno ); return opANDASN; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 149 "CMDscan.l"
+#line 150 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opXORASN, yylineno ); return opXORASN; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 150 "CMDscan.l"
+#line 151 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opORASN, yylineno ); return opORASN; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 151 "CMDscan.l"
+#line 152 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opSLASN, yylineno ); return opSLASN; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 152 "CMDscan.l"
+#line 153 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opSRASN, yylineno ); return opSRASN; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 153 "CMDscan.l"
+#line 154 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opINTNAME, yylineno ); return opINTNAME; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 154 "CMDscan.l"
+#line 155 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( opINTNAMER, yylineno ); return opINTNAMER; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 155 "CMDscan.l"
+#line 156 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( '\n', yylineno ); return '@'; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 156 "CMDscan.l"
+#line 157 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( '\t', yylineno ); return '@'; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 157 "CMDscan.l"
+#line 158 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( ' ', yylineno ); return '@'; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 158 "CMDscan.l"
+#line 159 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( 0, yylineno ); return '@'; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 159 "CMDscan.l"
+#line 160 "CMDscan.l"
 { /* this comment stops syntax highlighting from getting messed up when editing the lexer in TextPad */
          int c = 0, l;
          for ( ; ; )
@@ -1489,222 +1490,222 @@ YY_RULE_SETUP
       }
 	YY_BREAK
 case 38:
-#line 179 "CMDscan.l"
-case 39:
 #line 180 "CMDscan.l"
-case 40:
+case 39:
 #line 181 "CMDscan.l"
-case 41:
+case 40:
 #line 182 "CMDscan.l"
-case 42:
+case 41:
 #line 183 "CMDscan.l"
-case 43:
+case 42:
 #line 184 "CMDscan.l"
-case 44:
+case 43:
 #line 185 "CMDscan.l"
-case 45:
+case 44:
 #line 186 "CMDscan.l"
-case 46:
+case 45:
 #line 187 "CMDscan.l"
-case 47:
+case 46:
 #line 188 "CMDscan.l"
-case 48:
+case 47:
 #line 189 "CMDscan.l"
-case 49:
+case 48:
 #line 190 "CMDscan.l"
-case 50:
+case 49:
 #line 191 "CMDscan.l"
-case 51:
+case 50:
 #line 192 "CMDscan.l"
-case 52:
+case 51:
 #line 193 "CMDscan.l"
-case 53:
+case 52:
 #line 194 "CMDscan.l"
-case 54:
+case 53:
 #line 195 "CMDscan.l"
-case 55:
+case 54:
 #line 196 "CMDscan.l"
-case 56:
+case 55:
 #line 197 "CMDscan.l"
-case 57:
+case 56:
 #line 198 "CMDscan.l"
-case 58:
+case 57:
 #line 199 "CMDscan.l"
-case 59:
+case 58:
 #line 200 "CMDscan.l"
-case 60:
+case 59:
 #line 201 "CMDscan.l"
+case 60:
+#line 202 "CMDscan.l"
 case 61:
 YY_RULE_SETUP
-#line 201 "CMDscan.l"
+#line 202 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( CMDtext[ 0 ], yylineno ); return CMDtext[ 0 ]; }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 202 "CMDscan.l"
+#line 203 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwIN, yylineno ); return(rwIN); }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 203 "CMDscan.l"
+#line 204 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwCASEOR, yylineno ); return(rwCASEOR); }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 204 "CMDscan.l"
+#line 205 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwBREAK, yylineno ); return(rwBREAK); }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 205 "CMDscan.l"
+#line 206 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwRETURN, yylineno ); return(rwRETURN); }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 206 "CMDscan.l"
+#line 207 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwELSE, yylineno ); return(rwELSE); }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 207 "CMDscan.l"
+#line 208 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwASSERT, yylineno ); return(rwASSERT); }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 208 "CMDscan.l"
+#line 209 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwWHILE, yylineno ); return(rwWHILE); }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 209 "CMDscan.l"
+#line 210 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwDO, yylineno ); return(rwDO); }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 210 "CMDscan.l"
+#line 211 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwIF, yylineno ); return(rwIF); }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 211 "CMDscan.l"
+#line 212 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwFOREACHSTR, yylineno ); return(rwFOREACHSTR); }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 212 "CMDscan.l"
+#line 213 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwFOREACH, yylineno ); return(rwFOREACH); }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 213 "CMDscan.l"
+#line 214 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwFOR, yylineno ); return(rwFOR); }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 214 "CMDscan.l"
+#line 215 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwCONTINUE, yylineno ); return(rwCONTINUE); }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 215 "CMDscan.l"
+#line 216 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwDEFINE, yylineno ); return(rwDEFINE); }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 216 "CMDscan.l"
+#line 217 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwDECLARE, yylineno ); return(rwDECLARE); }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 217 "CMDscan.l"
+#line 218 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwDECLARESINGLETON, yylineno ); return(rwDECLARESINGLETON); }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 218 "CMDscan.l"
+#line 219 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwDATABLOCK, yylineno ); return(rwDATABLOCK); }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 219 "CMDscan.l"
+#line 220 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwCASE, yylineno ); return(rwCASE); }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 220 "CMDscan.l"
+#line 221 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwSWITCHSTR, yylineno ); return(rwSWITCHSTR); }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 221 "CMDscan.l"
+#line 222 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwSWITCH, yylineno ); return(rwSWITCH); }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 222 "CMDscan.l"
+#line 223 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwDEFAULT, yylineno ); return(rwDEFAULT); }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 223 "CMDscan.l"
+#line 224 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwPACKAGE, yylineno ); return(rwPACKAGE); }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 224 "CMDscan.l"
+#line 225 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( rwNAMESPACE, yylineno ); return(rwNAMESPACE); }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 225 "CMDscan.l"
+#line 226 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( 1, yylineno ); return INTCONST; }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 226 "CMDscan.l"
+#line 227 "CMDscan.l"
 { CMDlval.i = MakeToken< int >( 0, yylineno ); return INTCONST; }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 227 "CMDscan.l"
+#line 228 "CMDscan.l"
 { return(Sc_ScanVar()); }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 229 "CMDscan.l"
+#line 230 "CMDscan.l"
 { return Sc_ScanIdent(); }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 230 "CMDscan.l"
+#line 231 "CMDscan.l"
 return(Sc_ScanHex());
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 231 "CMDscan.l"
+#line 232 "CMDscan.l"
 { CMDtext[CMDleng] = 0; CMDlval.i = MakeToken< int >( dAtoi(CMDtext), yylineno ); return INTCONST; }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 232 "CMDscan.l"
+#line 233 "CMDscan.l"
 return Sc_ScanNum();
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 233 "CMDscan.l"
+#line 234 "CMDscan.l"
 return(ILLEGAL_TOKEN);
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 234 "CMDscan.l"
+#line 235 "CMDscan.l"
 return(ILLEGAL_TOKEN);
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 235 "CMDscan.l"
+#line 236 "CMDscan.l"
 ECHO;
 	YY_BREAK
-#line 1707 "CMDscan.cpp"
+#line 1708 "CMDscan.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2680,7 +2681,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 235 "CMDscan.l"
+#line 236 "CMDscan.l"
 
 
 static const char *scanBuffer;
@@ -2848,35 +2849,58 @@ static int Sc_ScanIdent()
       return TYPEIDENT;
    }
 
-   // Find the first '[' using dStrchr
    char *openBracket = dStrchr(CMDtext, '[');
    if (openBracket)
    {
       char *closeBracket = dStrchr(openBracket, ']');
       if (closeBracket)
       {
-         // Extract base name (before '[')
          size_t baseLen = openBracket - CMDtext;
          char baseName[256];
          dStrncpy(baseName, CMDtext, baseLen);
          baseName[baseLen] = '\0';
 
-         // Extract content inside brackets
          char indexContent[256];
          size_t contentLen = closeBracket - openBracket - 1;
          dStrncpy(indexContent, openBracket + 1, contentLen);
          indexContent[contentLen] = '\0';
 
-         // Replace commas with underscores
-         for (char *p = indexContent; *p; ++p)
-         {
-            if (*p == ',')
-               *p = '_';
-         }
+         char processedContent[256] = {0}; 
+         char tempBuffer[256];
+         dStrcpy(tempBuffer, indexContent, sizeof(tempBuffer));
 
-         // Concatenate baseName + modified indexContent
+         char *token = dStrtok(tempBuffer, ",");
+         bool firstToken = true;
+
+         while (token)
+         {
+            while (*token == ' ') token++;
+
+            char evalResult[256] = {0};
+
+            if (token[0] == '%')
+            {
+               Con::EvalResult result = Con::evaluate(token);
+               if (!dStrIsEmpty(result.value.getString()))
+                  dStrcpy(evalResult, result.value, sizeof(evalResult));
+            }
+            else
+            {
+               dStrcpy(evalResult, token, sizeof(evalResult));
+            }
+
+            if (!dStrIsEmpty(evalResult))
+            {
+               if (!firstToken)
+                  dStrcat(processedContent, "_", sizeof(processedContent));
+               dStrcat(processedContent, evalResult, sizeof(processedContent));
+            }
+
+            firstToken = false;
+            token = dStrtok(NULL, ",");
+         }
          dStrcpy(CMDtext, baseName, sizeof(CMDtext));
-         dStrcat(CMDtext, indexContent, sizeof(CMDtext));
+         dStrcat(CMDtext, processedContent, sizeof(CMDtext));
       }
    }
 

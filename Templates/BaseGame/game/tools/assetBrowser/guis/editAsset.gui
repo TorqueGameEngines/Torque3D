@@ -75,7 +75,7 @@ $guiContent = new GuiControl(AssetBrowser_editAsset) {
          canSave = "1";
          canSaveDynamicFields = "0";
 
-         new GuiVariableInspector(AssetEditInspector) {
+         new GuiInspector(AssetEditInspector) {
             dividerMargin = "5";
             showCustomFields = "1";
             stackingType = "Vertical";

@@ -95,38 +95,20 @@ function ImageAsset::generatePreviewImage(%this, %previewButton, %forceRegenerat
 
 function ImageAsset::onShowActionMenu(%this)
 {
-   if( !isObject( EditImageAssetTypePopup ) )
-   {
-      new PopupMenu( EditImageAssetTypePopup )
-      {
-         superClass = "MenuBuilder";
-         class = "EditorWorldMenu";
-
-         jumpFileName = "";
-         jumpLineNumber = "";
-      };
-   }
-   
-   EditImageAssetTypePopup.objectData = %this;
-   EditImageAssetTypePopup.objectType = "ImageAsset";
-   
-   //Regen the menu so we're fully up and current with options and references
-   EditImageAssetTypePopup.clearItems();
-   
-   EditImageAssetTypePopup.item[ 0 ] = "Rename Folder" TAB "" TAB $CurrentAssetBrowser @ ".renameAsset();";
-   EditImageAssetTypePopup.item[ 1 ] = "Duplicate Folder" TAB "" TAB $CurrentAssetBrowser @ ".duplicateAsset();";
-   EditImageAssetTypePopup.item[ 2 ] = "-";
-   EditImageAssetTypePopup.item[ 3 ] = "Open File Location" TAB "" TAB $CurrentAssetBrowser @ ".openFolderLocation(" @ filePath(%this.getFilename()) @ ");";
-   EditImageAssetTypePopup.item[ 4 ] = "-";
-   EditImageAssetTypePopup.item[ 5 ] = "Delete Folder" TAB "" TAB $CurrentAssetBrowser @ ".deleteAsset();";
-
-   EditImageAssetTypePopup.reloadItems();
-   
-   EditImageAssetTypePopup.showPopup(Canvas); 
-   
-   $CurrentAssetBrowser.popupMenu = EditImageAssetTypePopup;
+   GenericAsset::onShowActionMenu(%this);
 }
 
+function ImageAsset::onEditProperties(%this)
+{
+   GenericAsset::onEditProperties(%this);
+}
+
+//Called when the AssetType has it's properties saved from the onEditProperties process
+function ImageAsset::onSaveProperties(%this)
+{
+   GenericAsset::onSaveProperties(%this);
+}
+   
 function GuiInspectorTypeImageAssetPtr::onControlDropped( %this, %payload, %position )
 {
    Canvas.popDialog(EditorDragAndDropLayer);

@@ -131,7 +131,7 @@ namespace CommonValidators
    extern IRangeValidator NegDefaultInt;
    extern IRangeValidator PositiveInt;
    extern IRangeValidator NaturalNumber;
-   extern FRangeValidator S32Percent;
+   extern IRangeValidator S32Percent;
    extern IRangeValidator MSTickRange;
    extern IRangeValidator S32_8BitCap;
    extern IRangeValidator S32_16BitCap;

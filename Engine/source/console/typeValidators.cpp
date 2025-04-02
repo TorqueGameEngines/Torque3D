@@ -117,7 +117,7 @@ namespace CommonValidators
    IRangeValidator NegDefaultInt(-1, S32_MAX);
    IRangeValidator PositiveInt(0, S32_MAX);
    IRangeValidator NaturalNumber(1, S32_MAX);
-   IRangeValidator S32Percent(0.0f, 100);
+   IRangeValidator S32Percent(0, 100);
    //see "T3D/gameBase/processList.h" for TickMs = 32
    IRangeValidator MSTickRange(32, S32_MAX);
 

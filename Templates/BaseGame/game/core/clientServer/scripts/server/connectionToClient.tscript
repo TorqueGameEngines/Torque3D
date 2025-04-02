@@ -144,7 +144,7 @@ function GameConnectionListener::onSetSpawnObjectTypeComplete( %this, %client )
         // a new one could result in an uncontrolled player object.
         error("Attempting to create a player for a client that already has one!");
     }
-    if ((!isClass(%client.spawnClass)) || (!isClass(%client.spawnDBType)) || (!isObject(%client.spawnDBType)))
+    if ((!isClass(%client.spawnClass)) || (!isClass(%client.spawnDBType)) || (!isObject(%client.spawnDataBlock)))
         %this.onSetSpawnObjectTypeFailed(%client, false );
     
     %client.setSpawnPoint();

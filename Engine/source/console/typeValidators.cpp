@@ -105,6 +105,7 @@ namespace CommonValidators
    FRangeValidator PositiveFloat(0.0f, F32_MAX);
    FRangeValidator PositiveNonZeroFloat((F32)POINT_EPSILON, F32_MAX);
    FRangeValidator NormalizedFloat(0.0f, 1.0f);
+   FRangeValidator F32Percent(0.0f, 100.0f);
 
    FRangeValidator F32_8BitPercent(0.0f, 1.0f, BIT(8));
    FRangeValidator F32_16BitPercent(0.0f, 1.0f, BIT(16));
@@ -116,6 +117,7 @@ namespace CommonValidators
    IRangeValidator NegDefaultInt(-1, S32_MAX);
    IRangeValidator PositiveInt(0, S32_MAX);
    IRangeValidator NaturalNumber(1, S32_MAX);
+   IRangeValidator S32Percent(0, 100);
    //see "T3D/gameBase/processList.h" for TickMs = 32
    IRangeValidator MSTickRange(32, S32_MAX);
 

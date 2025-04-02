@@ -144,13 +144,20 @@ function GameConnectionListener::onSetSpawnObjectTypeComplete( %this, %client )
         // a new one could result in an uncontrolled player object.
         error("Attempting to create a player for a client that already has one!");
     }
-
+    if ((!isClass(%client.spawnClass)) || (!isClass(%client.spawnDBType)) || (!isObject(%client.spawnDBType)))
+        %this.onSetSpawnObjectTypeFailed(%client, false );
+    
     %client.setSpawnPoint();
 }
 
 function GameConnectionListener::onSetSpawnObjectTypeFailed( %this, %client, %canContinueOnFail )
 {
-   errorf("Failed to properly set Spawn Object Type for client: " @ %client);
+   error("Failed to properly set Spawn Object Type for client: " @ %client);
+   //baseline controlObject spawn type with extention points
+   %client.spawnClass = "Camera";
+   %client.spawnDBType = "CameraData";
+   %client.spawnDataBlock = "Observer";
+   %client.onSetSpawnObjectTypeComplete(%client);
 }
 
 function GameConnection::setSpawnPoint( %this )
@@ -246,7 +253,15 @@ function GameConnectionListener::onSetSpawnPointComplete( %this, %client )
 
 function GameConnectionListener::onSetSpawnPointFailed( %this, %client, %canContinueOnFail )
 {
-   errorf("Failed to properly set Spawn Object Type for client: " @ %client);
+   error("Failed to properly set Spawn Location for client: " @ %client);
+
+    //baseline spawn point config rules with extention points
+    %this.playerSpawnGroups = "PlayerSpawnPoints PlayerDropPoints";
+    %this.spawnPoint = "";
+    %this.spawnLocation = "0 0 0";
+    %this.spawnProperties = "";
+    %this.spawnScript = "";
+    %this.onSetSpawnPointComplete(%client);
 }
 
 function GameConnection::onPostSpawn( %this )

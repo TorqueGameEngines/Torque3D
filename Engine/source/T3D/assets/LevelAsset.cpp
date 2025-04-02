@@ -443,6 +443,7 @@ DefineEngineMethod(LevelAsset, unloadDependencies, void, (), ,
    return object->unloadDependencies();
 }
 
+#ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -545,3 +546,5 @@ void GuiInspectorTypeLevelAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeLevelAssetId)->setInspectorFieldType("GuiInspectorTypeLevelAssetId");
 }
+
+#endif

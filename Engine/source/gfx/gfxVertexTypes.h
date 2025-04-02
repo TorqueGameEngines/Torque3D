@@ -36,11 +36,6 @@
 #include "math/mPoint3.h"
 #endif
 
-GFXDeclareVertexFormat( GFXVertexPad )
-{
-   U32 data;
-};
-
 GFXDeclareVertexFormat( GFXVertexP )
 {
    Point3F point;
@@ -50,21 +45,6 @@ GFXDeclareVertexFormat( GFXVertexPT )
 {
    Point3F point;
    Point2F texCoord;
-};
-
-GFXDeclareVertexFormat( GFXVertexPTT )
-{
-   Point3F point;
-   Point2F texCoord1;
-   Point2F texCoord2;
-};
-
-GFXDeclareVertexFormat( GFXVertexPTTT )
-{
-   Point3F point;
-   Point2F texCoord1;
-   Point2F texCoord2;
-   Point2F texCoord3;
 };
 
 GFXDeclareVertexFormat( GFXVertexPC )
@@ -85,20 +65,6 @@ GFXDeclareVertexFormat( GFXVertexPCT )
    Point3F point;
    GFXVertexColor color;
    Point2F texCoord;
-};
-
-GFXDeclareVertexFormat( GFXVertexPCTT )
-{
-   Point3F point;
-   GFXVertexColor color;
-   Point2F texCoord;
-   Point2F texCoord2;
-};
-
-GFXDeclareVertexFormat( GFXVertexPN )
-{
-   Point3F point;
-   Point3F normal;
 };
 
 GFXDeclareVertexFormat( GFXVertexPNT )
@@ -133,27 +99,6 @@ GFXDeclareVertexFormat( GFXVertexPNTBT )
    Point2F texCoord;
 };
 
-/*
-
-DEFINE_VERT( GFXVertexPCNT, 
-            GFXVertexFlagXYZ | GFXVertexFlagNormal | GFXVertexFlagDiffuse | GFXVertexFlagTextureCount1 | GFXVertexFlagUV0)
-{
-   Point3F point;
-   Point3F normal;
-   GFXVertexColor color;
-   Point2F texCoord;
-};
-
-DEFINE_VERT( GFXVertexPCNTT, 
-            GFXVertexFlagXYZ | GFXVertexFlagNormal | GFXVertexFlagDiffuse | GFXVertexFlagTextureCount2 | GFXVertexFlagUV0 | GFXVertexFlagUV1)
-{
-   Point3F point;
-   Point3F normal;
-   GFXVertexColor color;
-   Point2F texCoord[2];
-};
-*/
-
 GFXDeclareVertexFormat( GFXVertexPNTTB )
 {
    Point3F point;
@@ -163,17 +108,5 @@ GFXDeclareVertexFormat( GFXVertexPNTTB )
    Point2F texCoord;
    Point2F texCoord2;
 };
-
-/*
-DEFINE_VERT( GFXVertexPNTB,
-            GFXVertexFlagXYZ | GFXVertexFlagNormal | GFXVertexFlagTextureCount2 | 
-            GFXVertexFlagUV0 | GFXVertexFlagUVW1 )
-{
-   Point3F point;
-   Point3F normal;
-   Point2F texCoord;
-   Point3F binormal;
-};
-*/
 
 #endif // _GFXVERTEXTYPES_H_

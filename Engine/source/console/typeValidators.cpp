@@ -101,6 +101,7 @@ namespace CommonValidators
 {
    FRangeValidator F32Range(F32_MIN_EX, F32_MAX);
    FRangeValidator DirFloat(-1.0f, 1.0f);
+   FRangeValidator DirFloatPi(-M_PI_F, M_PI_F);
    FRangeValidator NegDefaultF32(-1.0f, F32_MAX);
    FRangeValidator PositiveFloat(0.0f, F32_MAX);
    FRangeValidator PositiveNonZeroFloat((F32)POINT_EPSILON, F32_MAX);

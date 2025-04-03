@@ -726,10 +726,10 @@ void PlayerData::initPersistFields()
       addField( "firstPersonShadows", TypeBool, Offset(firstPersonShadows, PlayerData),
          "@brief Forces shadows to be rendered in first person when renderFirstPerson is disabled.  Defaults to false.\n\n" );
 
-      addFieldV( "minLookAngle", TypeRangedF32, Offset(minLookAngle, PlayerData), &CommonValidators::PositiveFloat,
+      addFieldV( "minLookAngle", TypeRangedF32, Offset(minLookAngle, PlayerData), &CommonValidators::DirFloatPi,
          "@brief Lowest angle (in radians) the player can look.\n\n"
          "@note An angle of zero is straight ahead, with positive up and negative down." );
-      addFieldV( "maxLookAngle", TypeRangedF32, Offset(maxLookAngle, PlayerData), &CommonValidators::PositiveFloat,
+      addFieldV( "maxLookAngle", TypeRangedF32, Offset(maxLookAngle, PlayerData), &CommonValidators::DirFloatPi,
          "@brief Highest angle (in radians) the player can look.\n\n"
          "@note An angle of zero is straight ahead, with positive up and negative down." );
       addFieldV( "maxFreelookAngle", TypeRangedF32, Offset(maxFreelookAngle, PlayerData), &CommonValidators::PositiveFloat,
@@ -948,7 +948,7 @@ void PlayerData::initPersistFields()
 
    addGroup( "Falling" );
 
-      addFieldV( "fallingSpeedThreshold", TypeRangedF32, Offset(fallingSpeedThreshold, PlayerData), &CommonValidators::PositiveFloat,
+      addFieldV( "fallingSpeedThreshold", TypeRangedF32, Offset(fallingSpeedThreshold, PlayerData), &CommonValidators::F32Range,
          "@brief Downward speed at which we consider the player falling.\n\n" );
 
       addFieldV( "recoverDelay", TypeRangedS32, Offset(recoverDelay, PlayerData), &CommonValidators::PositiveInt,

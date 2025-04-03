@@ -116,6 +116,7 @@ namespace CommonValidators
    // Floats
    extern FRangeValidator F32Range;
    extern FRangeValidator DirFloat;
+   extern FRangeValidator DirFloatPi;
    extern FRangeValidator NegDefaultF32;   
    extern FRangeValidator PositiveFloat;
    extern FRangeValidator PositiveNonZeroFloat;

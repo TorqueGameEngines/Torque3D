@@ -301,7 +301,7 @@ void WaterObject::initPersistFields()
       addArray( "Ripples (texture animation)", MAX_WAVES );
 
          addField( "rippleDir",       TypePoint2F, Offset( mRippleDir, WaterObject ), MAX_WAVES, "Modifies the direction of ripples on the surface." );
-         addFieldV( "rippleSpeed", TypeRangedF32, Offset( mRippleSpeed, WaterObject ), &CommonValidators::PositiveFloat, MAX_WAVES, "Modifies speed of surface ripples.");
+         addFieldV( "rippleSpeed", TypeRangedF32, Offset( mRippleSpeed, WaterObject ), &CommonValidators::F32Range, MAX_WAVES, "Modifies speed of surface ripples.");
          addField( "rippleTexScale",  TypePoint2F, Offset( mRippleTexScale, WaterObject ), MAX_WAVES, "Intensifies the affect of the normal map "
 			 "applied to the surface.");
          addFieldV( "rippleMagnitude", TypeRangedF32, Offset( mRippleMagnitude, WaterObject ), &CommonValidators::PositiveFloat, MAX_WAVES, "Intensifies the vertext modification of the surface." );

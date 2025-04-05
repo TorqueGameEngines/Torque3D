@@ -640,7 +640,7 @@ void River::initPersistFields()
          "For purposes of generating the renderable geometry River segments are further subdivided "
          "such that no quad is of greater width or length than this distance in meters." );
 
-      addFieldV( "FlowMagnitude", TypeRangedF32,    Offset( mFlowMagnitude, River ), &CommonValidators::PositiveFloat,
+      addFieldV( "FlowMagnitude", TypeRangedF32,    Offset( mFlowMagnitude, River ), &CommonValidators::F32Range,
          "Magnitude of the force vector applied to dynamic objects within the River." );
 
       addFieldV( "LowLODDistance", TypeRangedF32,    Offset( mLodDistance, River ), &CommonValidators::PositiveFloat,

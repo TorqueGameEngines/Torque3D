@@ -197,7 +197,7 @@ EndImplementEnumType;
 
 IRangeValidator ejectPeriodIValidator(1, 2047);
 IRangeValidator periodVarianceIValidator(0, 2047);
-FRangeValidator ejectionFValidator(0.f, 655.35f);
+FRangeValidator ejectionFValidator(-655.35f, 655.35f);
 FRangeValidator velVarianceFValidator(0.f, 163.83f);
 
 //-----------------------------------------------------------------------------

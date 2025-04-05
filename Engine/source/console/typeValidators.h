@@ -116,10 +116,12 @@ namespace CommonValidators
    // Floats
    extern FRangeValidator F32Range;
    extern FRangeValidator DirFloat;
+   extern FRangeValidator DirFloatPi;
    extern FRangeValidator NegDefaultF32;   
    extern FRangeValidator PositiveFloat;
    extern FRangeValidator PositiveNonZeroFloat;
    extern FRangeValidator NormalizedFloat;
+   extern FRangeValidator F32Percent;
    extern FRangeValidator F32_8BitPercent;
    extern FRangeValidator F32_16BitPercent;
    extern FRangeValidator ValidSlopeAngle;
@@ -130,6 +132,7 @@ namespace CommonValidators
    extern IRangeValidator NegDefaultInt;
    extern IRangeValidator PositiveInt;
    extern IRangeValidator NaturalNumber;
+   extern IRangeValidator S32Percent;
    extern IRangeValidator MSTickRange;
    extern IRangeValidator S32_8BitCap;
    extern IRangeValidator S32_16BitCap;

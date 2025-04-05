@@ -955,20 +955,18 @@ void ProcessedShaderMaterial::_setTextureTransforms(const U32 pass)
          ? waveOffset * M_2PI
          : mMaterial->mRotPos[pass];
 
-      MatrixF rotationMat(EulerF(0.0f, 0.0f, rotationAngle));
-
       Point3F pivotPoint(
          mMaterial->mRotPivotOffset[pass].x,
          mMaterial->mRotPivotOffset[pass].y,
          0.0f);
-
-      MatrixF finalRotationMat(true);
-      finalRotationMat.setColumn(3, pivotPoint);
-      finalRotationMat.mul(rotationMat);
-      finalRotationMat.setColumn(3, -pivotPoint);
-
+      
+      MatrixF rotationMat = MatrixF(EulerF(0.0, 0.0, rotationAngle), Point3F(0.5, 0.5, 0.0));
+      MatrixF test(true);
+      test.setColumn(3, pivotPoint);
+      rotationMat.mul(test);
+      rotationMat.displace(texMat.getPosition());
       // Apply final rotation matrix
-      texMat.mul(finalRotationMat);
+      texMat = rotationMat;
    }
 
    // --- Scale Animation ---

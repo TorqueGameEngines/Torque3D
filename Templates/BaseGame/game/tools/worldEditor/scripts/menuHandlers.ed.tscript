@@ -721,32 +721,7 @@ function EditorExplodePrefab()
 }
 
 function makeSelectedAMesh(%assetId)
-{
-   
-   /*%dlg = new SaveFileDialog()
-   {
-      Filters        = "Collada file (*.dae)|*.dae|";
-      DefaultPath    = $Pref::WorldEditor::LastPath;
-      DefaultFile    = "";
-      ChangePath     = false;
-      OverwritePrompt   = true;
-   };
-         
-   %ret = %dlg.Execute();
-   if ( %ret )
-   {
-      $Pref::WorldEditor::LastPath = filePath( %dlg.FileName );
-      %saveFile = %dlg.FileName;
-   }
-   
-   if( fileExt( %saveFile ) !$= ".dae" )
-      %saveFile = %saveFile @ ".dae";
-   
-   %dlg.delete();
-   
-   if ( !%ret )
-      return;*/
-      
+{      
    %assetDef = AssetDatabase.acquireAsset(%assetId);
    
    %assetPath = AssetDatabase.getAssetPath(%assetId);
@@ -762,16 +737,12 @@ function makeSelectedAMesh(%assetId)
    AssetDatabase.refreshAsset(%assetId);  
    
    if(%success)
-   {
-      //ok, cool it worked, so clear out the old 
-      //First, get our center of the currently selected objects
-      %selectionCenter = EWorldEditor.getSelectionCentroid();
-      
+   {      
       //Next, for safety purposes(and convenience!) we'll make them a prefab aping off the filepath/name provided
       //TODO: Make this an editor option
       %prefabPath = %assetPath @ "/" @ %assetDef.AssetName @ ".prefab";
-      EWorldEditor.makeSelectionPrefab(%prefabPath, true);
-      
+      EWorldEditor.makeSelectionPrefab(%prefabPath, false);
+      %selectionPos = EWorldEditor.getSelectedObject(0).getPosition();
       //Next, nuke 'em
       EditorMenuEditDelete();
       
@@ -779,7 +750,7 @@ function makeSelectedAMesh(%assetId)
       %newStatic = new TSStatic()
       {
          shapeAsset = %assetId;
-         position = %selectionCenter;
+         position = %selectionPos;
       };
       
       getRootScene().add(%newStatic);

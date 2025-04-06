@@ -1,0 +1,47 @@
+function DamageModel::onCreate(%this)
+{
+}
+
+function DamageModel::onDestroy(%this)
+{
+}
+
+//This is called when the server is initially set up by the game application
+function DamageModel::initServer(%this)
+{
+}
+
+//This is called when the server is created for an actual game/map to be played
+function DamageModel::onCreateGameServer(%this)
+{
+   %this.registerDatablock("./scripts/managedData/managedParticleData");
+   %this.registerDatablock("./scripts/managedData/managedParticleEmitterData");
+   %this.queueExec("./scripts/server/utility");
+   %this.queueExec("./scripts/server/radiusDamage");
+   %this.queueExec("./scripts/server/projectile");
+   %this.queueExec("./scripts/server/weapon");
+   %this.queueExec("./scripts/server/shapeBase");
+   %this.queueExec("./scripts/server/player");
+}
+
+//This is called when the server is shut down due to the game/map being exited
+function DamageModel::onDestroyGameServer(%this)
+{
+}
+
+//This is called when the client is initially set up by the game application
+function DamageModel::initClient(%this)
+{
+   %this.queueExec("./guis/damageGuiOverlay.gui");
+   %this.queueExec("./scripts/client/playGui");
+}
+
+//This is called when a client connects to a server
+function DamageModel::onCreateClientConnection(%this)
+{
+}
+
+//This is called when a client disconnects from a server
+function DamageModel::onDestroyClientConnection(%this)
+{
+}

@@ -726,6 +726,8 @@ void Vehicle::updateMove(const Move* move)
    if (mDamageState == Enabled) {
       setImageTriggerState(0,move->trigger[0]);
       setImageTriggerState(1,move->trigger[1]);
+      setImageTriggerState(2, move->trigger[4]);
+      setImageTriggerState(3, move->trigger[5]);
    }
 
    // Throttle

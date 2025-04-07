@@ -2918,8 +2918,19 @@ DefineEngineMethod( GuiControl, setExtent, void, ( const char* extOrX, const cha
    "@hide" )
 {
    Point2I extent;
-   if(!String::isEmpty(extOrX) && String::isEmpty(y))
-      dSscanf(extOrX, "%d %d", &extent.x, &extent.y);
+   if (!String::isEmpty(extOrX) && String::isEmpty(y))
+   {
+      // Handle passed as floating point from script
+      if(String(extOrX).find('.') != String::NPos)
+      {
+         Point2F tempResult;
+         dSscanf(extOrX, "%f %f", &tempResult.x, &tempResult.y);
+         extent.x = mRound(tempResult.x);
+         extent.y = mRound(tempResult.y);
+      }
+      else
+         dSscanf(extOrX,"%d %d",&extent.x,&extent.y);
+   }
    else if(!String::isEmpty(extOrX) && !String::isEmpty(y))
    {
       extent.x = dAtoi(extOrX);

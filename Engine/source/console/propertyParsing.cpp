@@ -176,8 +176,8 @@ namespace PropertyInfo
       {
          Point2F tempResult;
          dSscanf(data.c_str(),"%f %f",&tempResult.x,&tempResult.y);
-         result.x = mFloor(tempResult.x);
-         result.y = mFloor(tempResult.y);
+         result.x = mRound(tempResult.x);
+         result.y = mRound(tempResult.y);
       }
       else
          dSscanf(data.c_str(),"%d %d",&result.x,&result.y);
@@ -209,9 +209,9 @@ namespace PropertyInfo
       {
          Point3F tempResult;
          dSscanf(data.c_str(),"%f %f %f",&tempResult.x,&tempResult.y,&tempResult.z);
-         result.x = mFloor(tempResult.x);
-         result.y = mFloor(tempResult.y);
-         result.z = mFloor(tempResult.z);
+         result.x = mRound(tempResult.x);
+         result.y = mRound(tempResult.y);
+         result.z = mRound(tempResult.z);
       }
       else
          dSscanf(data.c_str(),"%d %d %d",&result.x,&result.y,&result.z);
@@ -243,10 +243,10 @@ namespace PropertyInfo
       {
          Point4F tempResult;
          dSscanf(data.c_str(),"%f %f %f %f",&tempResult.x,&tempResult.y,&tempResult.z,&tempResult.w);
-         result.x = mFloor(tempResult.x);
-         result.y = mFloor(tempResult.y);
-         result.z = mFloor(tempResult.z);
-         result.w = mFloor(tempResult.w);
+         result.x = mRound(tempResult.x);
+         result.y = mRound(tempResult.y);
+         result.z = mRound(tempResult.z);
+         result.w = mRound(tempResult.w);
       }
       else
          dSscanf(data.c_str(),"%d %d %d %d",&result.x,&result.y,&result.z,&result.w);
@@ -269,10 +269,10 @@ namespace PropertyInfo
       {
          RectF tempResult;
          dSscanf(data.c_str(),"%f %f %f %f",&tempResult.point.x,&tempResult.point.y,&tempResult.extent.x,&tempResult.extent.y);
-         result.point.x = mFloor(tempResult.point.x);
-         result.point.y = mFloor(tempResult.point.y);
-         result.extent.x = mFloor(tempResult.extent.x);
-         result.extent.y = mFloor(tempResult.extent.y);
+         result.point.x = mRound(tempResult.point.x);
+         result.point.y = mRound(tempResult.point.y);
+         result.extent.x = mRound(tempResult.extent.x);
+         result.extent.y = mRound(tempResult.extent.y);
       }
       else
          dSscanf(data.c_str(),"%d %d %d %d",&result.point.x,&result.point.y,&result.extent.x,&result.extent.y);

@@ -748,9 +748,15 @@ ConsoleGetType( TypeRectSpacingI )
 
 ConsoleSetType( TypeRectSpacingI )
 {
-   if(argc == 1)
-      dSscanf(argv[0], "%d %d %d %d", &((RectSpacingI *) dptr)->top, &((RectSpacingI *) dptr)->bottom,
-      &((RectSpacingI *) dptr)->left, &((RectSpacingI *) dptr)->right);
+   if (argc == 1)
+   {
+      Point4F val;
+      dSscanf(argv[0], "%f %f %f", &(val.x), &(val.y), &(val.z), &(val.w));
+      ((RectI*)dptr)->point.x = mRound(val.x);
+      ((RectI*)dptr)->point.y = mRound(val.y);
+      ((RectI*)dptr)->extent.x = mRound(val.z);
+      ((RectI*)dptr)->extent.y = mRound(val.w);
+   }
    else if(argc == 4)
       *((RectSpacingI *) dptr) = RectSpacingI(dAtoi(argv[0]), dAtoi(argv[1]), dAtoi(argv[2]), dAtoi(argv[3]));
    else

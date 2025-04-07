@@ -178,10 +178,17 @@ ConsoleGetType( TypePoint2I )
 
 ConsoleSetType( TypePoint2I )
 {
-   if(argc == 1)
-      dSscanf(argv[0], "%d %d", &((Point2I *) dptr)->x, &((Point2I *) dptr)->y);
-   else if(argc == 2)
-      *((Point2I *) dptr) = Point2I(dAtoi(argv[0]), dAtoi(argv[1]));
+   if (argc == 1)
+   {
+      Point2F val;
+      dSscanf(argv[0], "%f %f", &(val.x), &(val.y));
+      ((Point2I*)dptr)->x = mRound(val.x);
+      ((Point2I*)dptr)->y = mRound(val.y);
+   }
+   else if (argc == 2)
+   {
+      *((Point2I*)dptr) = Point2I(dAtoi(argv[0]), dAtoi(argv[1]));
+   }
    else
       Con::printf("Point2I must be set as { x, y } or \"x y\"");
 }
@@ -228,8 +235,14 @@ ConsoleGetType( TypePoint3I )
 
 ConsoleSetType( TypePoint3I )
 {
-   if(argc == 1)
-      dSscanf(argv[0], "%d %d %d", &((Point3I *) dptr)->x, &((Point3I *) dptr)->y, &((Point3I *) dptr)->z);
+   if (argc == 1)
+   {
+      Point3F val;
+      dSscanf(argv[0], "%f %f %f", &(val.x), &(val.y), &(val.z));
+      ((Point3I*)dptr)->x = mRound(val.x);
+      ((Point3I*)dptr)->y = mRound(val.y);
+      ((Point3I*)dptr)->z = mRound(val.z);
+   }
    else if(argc == 3)
       *((Point3I *) dptr) = Point3I(dAtoi(argv[0]), dAtoi(argv[1]), dAtoi(argv[2]));
    else
@@ -305,8 +318,14 @@ ConsoleGetType( TypeRectI )
 ConsoleSetType( TypeRectI )
 {
    if(argc == 1)
-      dSscanf(argv[0], "%d %d %d %d", &((RectI *) dptr)->point.x, &((RectI *) dptr)->point.y,
-              &((RectI *) dptr)->extent.x, &((RectI *) dptr)->extent.y);
+   {
+      Point4F val;
+      dSscanf(argv[0], "%f %f %f", &(val.x), &(val.y), &(val.z), &(val.w));
+      ((RectI*)dptr)->point.x = mRound(val.x);
+      ((RectI*)dptr)->point.y = mRound(val.y);
+      ((RectI*)dptr)->extent.x = mRound(val.z);
+      ((RectI*)dptr)->extent.y = mRound(val.w);
+   }
    else if(argc == 4)
       *((RectI *) dptr) = RectI(dAtoi(argv[0]), dAtoi(argv[1]), dAtoi(argv[2]), dAtoi(argv[3]));
    else
@@ -1295,5 +1314,15 @@ DefineEngineFunction(mDivS32, const char *, (S32 v1, S32 v2), , "Divide 2 large 
    dSprintf(ret, 64, "%i", res);
 
    return ret;
+}
+
+DefineEngineFunction(verifyPoint2I, Point2I, (Point2I in), , "")
+{
+   return in;
+}
+
+DefineEngineFunction(verifyPoint3I, Point3I,(Point3I in),,"")
+{
+   return in;
 }
 //------------------------------------------------------------------------------

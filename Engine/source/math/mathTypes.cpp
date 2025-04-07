@@ -1315,14 +1315,4 @@ DefineEngineFunction(mDivS32, const char *, (S32 v1, S32 v2), , "Divide 2 large 
 
    return ret;
 }
-
-DefineEngineFunction(verifyPoint2I, Point2I, (Point2I in), , "")
-{
-   return in;
-}
-
-DefineEngineFunction(verifyPoint3I, Point3I,(Point3I in),,"")
-{
-   return in;
-}
 //------------------------------------------------------------------------------

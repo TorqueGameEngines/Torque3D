@@ -162,6 +162,35 @@ namespace PropertyInfo
    bool hex_print(String & string, const S8 & hex);
 
    bool default_print(String & result, SimObjectType * const & data);
+
+   template<typename T, size_t count>
+   inline bool ParseProperty(char* str, T(&out)[count])
+   {
+
+      size_t index = 0;
+      char* tok = dStrtok(str, " \t");
+
+      while (tok && index < count)
+      {
+         if constexpr (std::is_same_v<T, int> || std::is_same_v<T, S32>)
+         {
+            out[index++] = dAtoi(tok);
+         }
+         else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, F32>)
+         {
+            out[index++] = dAtof(tok);
+         }
+         else
+         {
+            AssertFatal(sizeof(T) == 0, "Unsupported type in PropertyInfo::ParseProperty");
+         }
+
+         tok = dStrtok(nullptr, " \t");
+      }
+
+      return index == count;
+   }
+
 }
 
 // Default Scan/print definition

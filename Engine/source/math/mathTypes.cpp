@@ -24,6 +24,7 @@
 #include "console/consoleTypes.h"
 #include "console/console.h"
 #include "console/engineAPI.h"
+#include "console/propertyParsing.h"
 #include "math/mPoint2.h"
 #include "math/mPoint3.h"
 #include "math/mMatrix.h"
@@ -178,12 +179,20 @@ ConsoleGetType( TypePoint2I )
 
 ConsoleSetType( TypePoint2I )
 {
-   if(argc == 1)
-      dSscanf(argv[0], "%d %d", &((Point2I *) dptr)->x, &((Point2I *) dptr)->y);
-   else if(argc == 2)
-      *((Point2I *) dptr) = Point2I(dAtoi(argv[0]), dAtoi(argv[1]));
-   else
-      Con::printf("Point2I must be set as { x, y } or \"x y\"");
+   if (argc >= 1) {
+      S32 parsed[2];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+
+      dStrncpy(buffer, *argv, sizeof(buffer));
+
+      if (PropertyInfo::ParseProperty<S32, 2>(buffer, parsed)) {
+         *((Point2I*)dptr) = Point2I(parsed[0], parsed[1]);
+         return;
+      }
+   }
+
+   Con::printf("Point2I must be set as { x, y } or \"x y\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -203,12 +212,20 @@ ConsoleGetType( TypePoint2F )
 
 ConsoleSetType( TypePoint2F )
 {
-   if(argc == 1)
-      dSscanf(argv[0], "%g %g", &((Point2F *) dptr)->x, &((Point2F *) dptr)->y);
-   else if(argc == 2)
-      *((Point2F *) dptr) = Point2F(dAtof(argv[0]), dAtof(argv[1]));
-   else
-      Con::printf("Point2F must be set as { x, y } or \"x y\"");
+   if (argc >= 1) {
+      F32 parsed[2];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+
+      dStrncpy(buffer, *argv, sizeof(buffer));
+
+      if (PropertyInfo::ParseProperty<F32, 2>(buffer, parsed)) {
+         *((Point2F*)dptr) = Point2F(parsed[0], parsed[1]);
+         return;
+      }
+   }
+
+   Con::printf("Point2F must be set as { x, y } or \"x y\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -228,12 +245,20 @@ ConsoleGetType( TypePoint3I )
 
 ConsoleSetType( TypePoint3I )
 {
-   if(argc == 1)
-      dSscanf(argv[0], "%d %d %d", &((Point3I *) dptr)->x, &((Point3I *) dptr)->y, &((Point3I *) dptr)->z);
-   else if(argc == 3)
-      *((Point3I *) dptr) = Point3I(dAtoi(argv[0]), dAtoi(argv[1]), dAtoi(argv[2]));
-   else
-      Con::printf("Point3I must be set as { x, y, z } or \"x y z\"");
+   if (argc >= 1) {
+      S32 parsed[3];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+
+      dStrncpy(buffer, *argv, sizeof(buffer));
+
+      if (PropertyInfo::ParseProperty<S32, 3>(buffer, parsed)) {
+         *((Point3I*)dptr) = Point3I(parsed[0], parsed[1], parsed[2]);
+         return;
+      }
+   }
+
+   Con::printf("Point3I must be set as { x, y, z } or \"x y z\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -253,12 +278,20 @@ ConsoleGetType( TypePoint3F )
 
 ConsoleSetType( TypePoint3F )
 {
-   if(argc == 1)
-      dSscanf(argv[0], "%g %g %g", &((Point3F *) dptr)->x, &((Point3F *) dptr)->y, &((Point3F *) dptr)->z);
-   else if(argc == 3)
-      *((Point3F *) dptr) = Point3F(dAtof(argv[0]), dAtof(argv[1]), dAtof(argv[2]));
-   else
-      Con::printf("Point3F must be set as { x, y, z } or \"x y z\"");
+   if (argc >= 1) {
+      F32 parsed[3];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+
+      dStrncpy(buffer, *argv, sizeof(buffer));
+
+      if (PropertyInfo::ParseProperty<F32, 3>(buffer, parsed)) {
+         *((Point3F*)dptr) = Point3F(parsed[0], parsed[1], parsed[2]);
+         return;
+      }
+   }
+
+   Con::printf("Point3F must be set as { x, y, z } or \"x y z\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -278,12 +311,20 @@ ConsoleGetType( TypePoint4F )
 
 ConsoleSetType( TypePoint4F )
 {
-   if(argc == 1)
-      dSscanf(argv[0], "%g %g %g %g", &((Point4F *) dptr)->x, &((Point4F *) dptr)->y, &((Point4F *) dptr)->z, &((Point4F *) dptr)->w);
-   else if(argc == 4)
-      *((Point4F *) dptr) = Point4F(dAtof(argv[0]), dAtof(argv[1]), dAtof(argv[2]), dAtof(argv[3]));
-   else
-      Con::printf("Point4F must be set as { x, y, z, w } or \"x y z w\"");
+   if (argc >= 1) {
+      F32 parsed[4];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+
+      dStrncpy(buffer, *argv, sizeof(buffer));
+
+      if (PropertyInfo::ParseProperty<F32, 4>(buffer, parsed)) {
+         *((Point4F*)dptr) = Point4F(parsed[0], parsed[1], parsed[2], parsed[3]);
+         return;
+      }
+   }
+
+   Con::printf("Point4F must be set as { x, y, z, w } or \"x y z w\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -304,13 +345,20 @@ ConsoleGetType( TypeRectI )
 
 ConsoleSetType( TypeRectI )
 {
-   if(argc == 1)
-      dSscanf(argv[0], "%d %d %d %d", &((RectI *) dptr)->point.x, &((RectI *) dptr)->point.y,
-              &((RectI *) dptr)->extent.x, &((RectI *) dptr)->extent.y);
-   else if(argc == 4)
-      *((RectI *) dptr) = RectI(dAtoi(argv[0]), dAtoi(argv[1]), dAtoi(argv[2]), dAtoi(argv[3]));
-   else
-      Con::printf("RectI must be set as { x, y, w, h } or \"x y w h\"");
+   if (argc >= 1) {
+      S32 parsed[4];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+
+      dStrncpy(buffer, *argv, sizeof(buffer));
+
+      if (PropertyInfo::ParseProperty<S32, 4>(buffer, parsed)) {
+         *((RectI*)dptr) = RectI(parsed[0], parsed[1], parsed[2], parsed[3]);
+         return;
+      }
+   }
+
+   Con::printf("RectI must be set as { x, y, w, h } or \"x y w h\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -331,13 +379,20 @@ ConsoleGetType( TypeRectF )
 
 ConsoleSetType( TypeRectF )
 {
-   if(argc == 1)
-      dSscanf(argv[0], "%g %g %g %g", &((RectF *) dptr)->point.x, &((RectF *) dptr)->point.y,
-              &((RectF *) dptr)->extent.x, &((RectF *) dptr)->extent.y);
-   else if(argc == 4)
-      *((RectF *) dptr) = RectF(dAtof(argv[0]), dAtof(argv[1]), dAtof(argv[2]), dAtof(argv[3]));
-   else
-      Con::printf("RectF must be set as { x, y, w, h } or \"x y w h\"");
+   if (argc >= 1) {
+      F32 parsed[4];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+
+      dStrncpy(buffer, *argv, sizeof(buffer));
+
+      if (PropertyInfo::ParseProperty<F32, 4>(buffer, parsed)) {
+         *((RectF*)dptr) = RectF(parsed[0], parsed[1], parsed[2], parsed[3]);
+         return;
+      }
+   }
+
+   Con::printf("RectF must be set as { x, y, w, h } or \"x y w h\"");
 }
 
 //-----------------------------------------------------------------------------

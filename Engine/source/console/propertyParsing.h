@@ -174,7 +174,7 @@ namespace PropertyInfo
       {
          if constexpr (std::is_same_v<T, int> || std::is_same_v<T, S32>)
          {
-            out[index++] = dAtoi(tok);
+            out[index++] = mRound(dAtof(tok));
          }
          else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, F32>)
          {

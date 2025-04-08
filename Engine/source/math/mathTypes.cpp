@@ -179,7 +179,8 @@ ConsoleGetType( TypePoint2I )
 
 ConsoleSetType( TypePoint2I )
 {
-   if (argc >= 1) {
+   if (argc >= 1)
+   {
       S32 parsed[2];
       // Combine argv into a single space-separated string if argc > 1
       char buffer[256] = { 0 };
@@ -192,7 +193,7 @@ ConsoleSetType( TypePoint2I )
       }
    }
 
-   Con::printf("Point2I must be set as { x, y } or \"x y\"");
+   Con::warnf("Point2I must be set as { x, y } or \"x y\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -212,7 +213,8 @@ ConsoleGetType( TypePoint2F )
 
 ConsoleSetType( TypePoint2F )
 {
-   if (argc >= 1) {
+   if (argc >= 1)
+   {
       F32 parsed[2];
       // Combine argv into a single space-separated string if argc > 1
       char buffer[256] = { 0 };
@@ -225,7 +227,7 @@ ConsoleSetType( TypePoint2F )
       }
    }
 
-   Con::printf("Point2F must be set as { x, y } or \"x y\"");
+   Con::warnf("Point2F must be set as { x, y } or \"x y\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -245,7 +247,8 @@ ConsoleGetType( TypePoint3I )
 
 ConsoleSetType( TypePoint3I )
 {
-   if (argc >= 1) {
+   if (argc >= 1)
+   {
       S32 parsed[3];
       // Combine argv into a single space-separated string if argc > 1
       char buffer[256] = { 0 };
@@ -258,7 +261,7 @@ ConsoleSetType( TypePoint3I )
       }
    }
 
-   Con::printf("Point3I must be set as { x, y, z } or \"x y z\"");
+   Con::warnf("Point3I must be set as { x, y, z } or \"x y z\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -278,7 +281,8 @@ ConsoleGetType( TypePoint3F )
 
 ConsoleSetType( TypePoint3F )
 {
-   if (argc >= 1) {
+   if (argc >= 1)
+   {
       F32 parsed[3];
       // Combine argv into a single space-separated string if argc > 1
       char buffer[256] = { 0 };
@@ -291,7 +295,7 @@ ConsoleSetType( TypePoint3F )
       }
    }
 
-   Con::printf("Point3F must be set as { x, y, z } or \"x y z\"");
+   Con::warnf("Point3F must be set as { x, y, z } or \"x y z\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -311,7 +315,8 @@ ConsoleGetType( TypePoint4F )
 
 ConsoleSetType( TypePoint4F )
 {
-   if (argc >= 1) {
+   if (argc >= 1)
+   {
       F32 parsed[4];
       // Combine argv into a single space-separated string if argc > 1
       char buffer[256] = { 0 };
@@ -324,7 +329,7 @@ ConsoleSetType( TypePoint4F )
       }
    }
 
-   Con::printf("Point4F must be set as { x, y, z, w } or \"x y z w\"");
+   Con::warnf("Point4F must be set as { x, y, z, w } or \"x y z w\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -345,7 +350,8 @@ ConsoleGetType( TypeRectI )
 
 ConsoleSetType( TypeRectI )
 {
-   if (argc >= 1) {
+   if (argc >= 1)
+   {
       S32 parsed[4];
       // Combine argv into a single space-separated string if argc > 1
       char buffer[256] = { 0 };
@@ -358,7 +364,7 @@ ConsoleSetType( TypeRectI )
       }
    }
 
-   Con::printf("RectI must be set as { x, y, w, h } or \"x y w h\"");
+   Con::warnf("RectI must be set as { x, y, w, h } or \"x y w h\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -379,7 +385,8 @@ ConsoleGetType( TypeRectF )
 
 ConsoleSetType( TypeRectF )
 {
-   if (argc >= 1) {
+   if (argc >= 1)
+   {
       F32 parsed[4];
       // Combine argv into a single space-separated string if argc > 1
       char buffer[256] = { 0 };
@@ -392,7 +399,7 @@ ConsoleSetType( TypeRectF )
       }
    }
 
-   Con::printf("RectF must be set as { x, y, w, h } or \"x y w h\"");
+   Con::warnf("RectF must be set as { x, y, w, h } or \"x y w h\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -421,21 +428,24 @@ ConsoleGetType( TypeMatrixF )
 
 ConsoleSetType( TypeMatrixF )
 {
-   if( argc != 1 )
+   if (argc == 1)
    {
-      Con::errorf( "MatrixF must be set as \"c0x c0y c0z c1x c1y c1z c2x c2y c2z\"" );
-      return;
-   }
-   
-   Point3F col0, col1, col2;
-   dSscanf( argv[ 0 ], "%g %g %g %g %g %g %g %g %g",
-            &col0.x, &col0.y, &col0.z, &col1.x, &col1.y, &col1.z, &col2.x, &col2.y, &col2.z );
+      F32 parsed[9];
 
-   MatrixF* mat = ( MatrixF* ) dptr;
-   
-   mat->setColumn( 0, col0 );
-   mat->setColumn( 1, col1 );
-   mat->setColumn( 2, col2 );
+      char* buffer = new char[dStrlen(argv[0])];
+      dStrcpy(buffer, argv[0], sizeof(buffer));
+
+      if (PropertyInfo::ParseProperty<F32, 9>(buffer, parsed)) {
+         MatrixF* mat = (MatrixF*)dptr;
+
+         mat->setColumn(0, Point3F(parsed[0], parsed[1], parsed[2]));
+         mat->setColumn(1, Point3F(parsed[3], parsed[4], parsed[5]));
+         mat->setColumn(2, Point3F(parsed[6], parsed[7], parsed[8]));
+         return;
+      }
+   }
+
+   Con::warnf("MatrixF must be set as \"c0x c0y c0z c1x c1y c1z c2x c2y c2z\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -457,20 +467,25 @@ ConsoleGetType( TypeMatrixPosition )
 
 ConsoleSetType( TypeMatrixPosition )
 {
-   F32 *col = ((F32 *) dptr) + 3;
-   if (argc == 1)
+   if (argc >= 1)
    {
-      col[0] = col[4] = col[8] = 0.f;
-      col[12] = 1.f;
-      dSscanf(argv[0], "%g %g %g %g", &col[0], &col[4], &col[8], &col[12]);
+      F32 parsed[4] = { 1.0f }; // default all to 1.0f
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+      dStrncpy(buffer, *argv, sizeof(buffer));
+      // we dont want to hard fail based on the count.
+      // this will allow any number of properties to be set.
+      PropertyInfo::ParseProperty<F32, 4>(buffer, parsed);
+      {
+         Point4F temp(parsed[0], parsed[1], parsed[2], parsed[3]);
+         MatrixF* mat = (MatrixF*)dptr;
+         mat->setColumn(3, temp);
+         return;
+      }
    }
-   else if (argc <= 4) 
-   {
-      for (S32 i = 0; i < argc; i++)
-         col[i << 2] = dAtof(argv[i]);
-   }
-   else
-      Con::printf("Matrix position must be set as { x, y, z, w } or \"x y z w\"");
+
+   Con::warnf("Matrix position must be set as { x, y, z, w } or \"x y z w\"");
+
 }
 
 //-----------------------------------------------------------------------------
@@ -490,32 +505,29 @@ ConsoleGetType( TypeMatrixRotation )
 
 ConsoleSetType( TypeMatrixRotation )
 {
-   // DMM: Note that this will ONLY SET the ULeft 3x3 submatrix.
-   //
-   AngAxisF aa(Point3F(0,0,0),0);
-   if (argc == 1)
+   if (argc >= 1)
    {
-      dSscanf(argv[0], "%g %g %g %g", &aa.axis.x, &aa.axis.y, &aa.axis.z, &aa.angle);
-      aa.angle = mDegToRad(aa.angle);
-   }
-   else if (argc == 4) 
-   {
-         for (S32 i = 0; i < argc; i++)
-            ((F32*)&aa)[i] = dAtof(argv[i]);
-         aa.angle = mDegToRad(aa.angle);
-   }
-   else
-      Con::printf("Matrix rotation must be set as { x, y, z, angle } or \"x y z angle\"");
+      F32 parsed[4];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+      dStrncpy(buffer, *argv, sizeof(buffer));
 
-   //
-   MatrixF temp;
-   aa.setMatrix(&temp);
+      if (PropertyInfo::ParseProperty<F32, 4>(buffer, parsed))
+      {
+         AngAxisF aa(Point3F(parsed[0], parsed[1], parsed[2]), mDegToRad(parsed[3]));
+         MatrixF temp;
+         aa.setMatrix(&temp);
 
-   F32* pDst = *(MatrixF *)dptr;
-   const F32* pSrc = temp;
-   for (U32 i = 0; i < 3; i++)
-      for (U32 j = 0; j < 3; j++)
-         pDst[i*4 + j] = pSrc[i*4 + j];
+         F32* pDst = *(MatrixF*)dptr;
+         const F32* pSrc = temp;
+         for (U32 i = 0; i < 3; i++)
+            for (U32 j = 0; j < 3; j++)
+               pDst[i * 4 + j] = pSrc[i * 4 + j];
+         return;
+      }
+   }
+
+   Con::warnf("Matrix rotation must be set as { x, y, z, angle } or \"x y z angle\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -535,22 +547,22 @@ ConsoleGetType( TypeAngAxisF )
 
 ConsoleSetType( TypeAngAxisF )
 {
-   // DMM: Note that this will ONLY SET the ULeft 3x3 submatrix.
-   //
-   AngAxisF* aa = ( AngAxisF* ) dptr;
-   if (argc == 1)
+   if (argc >= 1)
    {
-      dSscanf(argv[0], "%g %g %g %g", &aa->axis.x, &aa->axis.y, &aa->axis.z, &aa->angle);
-      aa->angle = mDegToRad(aa->angle);
+      F32 parsed[4];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+      dStrncpy(buffer, *argv, sizeof(buffer));
+
+      if(PropertyInfo::ParseProperty<F32, 4>(buffer, parsed))
+      {
+         AngAxisF* aa = (AngAxisF*)dptr;
+         aa->set(Point3F(parsed[0], parsed[1], parsed[2]), mDegToRad(parsed[3]));
+         return;
+      }
    }
-   else if (argc == 4) 
-   {
-      for (S32 i = 0; i < argc; i++)
-         ((F32*)&aa)[i] = dAtof(argv[i]);
-      aa->angle = mDegToRad(aa->angle);
-   }
-   else
-      Con::printf("AngAxisF must be set as { x, y, z, angle } or \"x y z angle\"");
+
+   Con::warnf("AngAxisF must be set as { x, y, z, angle } or \"x y z angle\"");
 }
 
 
@@ -576,27 +588,29 @@ ConsoleGetType( TypeTransformF )
 
 ConsoleSetType( TypeTransformF )
 {
-   TransformF* aa = ( TransformF* ) dptr;
-   if( argc == 1 )
+   if(argc >= 1)
    {
-      U32 count = dSscanf( argv[ 0 ], "%g %g %g %g %g %g %g",
-               &aa->mPosition.x, &aa->mPosition.y, &aa->mPosition.z,
-               &aa->mOrientation.axis.x, &aa->mOrientation.axis.y, &aa->mOrientation.axis.z, &aa->mOrientation.angle );
+      F32 parsed[7];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+      dStrncpy(buffer, *argv, sizeof(buffer));
 
-      aa->mHasRotation = ( count == 7 );
+      if (PropertyInfo::ParseProperty<F32, 7>(buffer, parsed))
+      {
+         TransformF* aa = (TransformF*)dptr;
+         aa->mPosition.x = parsed[0];
+         aa->mPosition.y = parsed[1];
+         aa->mPosition.z = parsed[2];
+         aa->mOrientation.axis.x = parsed[3];
+         aa->mOrientation.axis.y = parsed[4];
+         aa->mOrientation.axis.z = parsed[5];
+         aa->mOrientation.angle = parsed[6];
+         aa->mHasRotation = true;
+         return;
+      }
    }
-   else if( argc == 7 )
-   {
-      aa->mPosition.x = dAtof( argv[ 0 ] );
-      aa->mPosition.y = dAtof( argv[ 1 ] );
-      aa->mPosition.z = dAtof( argv[ 2 ] );
-      aa->mOrientation.axis.x = dAtof( argv[ 3 ] );
-      aa->mOrientation.axis.y = dAtof( argv[ 4 ] );
-      aa->mOrientation.axis.z = dAtof( argv[ 5 ] );
-      aa->mOrientation.angle = dAtof( argv[ 6 ] );
-   }
-   else
-      Con::errorf( "TransformF must be set as { px, py, pz, x, y, z, angle } or \"px py pz x y z angle\"");
+
+   Con::warnf("TransformF must be set as { px, py, pz, x, y, z, angle } or \"px py pz x y z angle\"");
 }
 
 

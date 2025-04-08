@@ -636,19 +636,27 @@ ConsoleGetType( TypeBox3F )
 
 ConsoleSetType( TypeBox3F )
 {
-   Box3F* pDst = (Box3F*)dptr;
+   if (argc >= 1)
+   {
+      F32 parsed[6];
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+      dStrncpy(buffer, *argv, sizeof(buffer));
 
-   if (argc == 1) 
-   {
-      U32 args = dSscanf(argv[0], "%g %g %g %g %g %g",
-                         &pDst->minExtents.x, &pDst->minExtents.y, &pDst->minExtents.z,
-                         &pDst->maxExtents.x, &pDst->maxExtents.y, &pDst->maxExtents.z);
-      AssertWarn(args == 6, "Warning, box probably not read properly");
-   } 
-   else 
-   {
-      Con::printf("Box3F must be set as \"xMin yMin zMin xMax yMax zMax\"");
+      if (PropertyInfo::ParseProperty<F32, 6>(buffer, parsed))
+      {
+         Box3F* pDst = (Box3F*)dptr;
+         pDst->minExtents.x = parsed[0];
+         pDst->minExtents.y = parsed[1];
+         pDst->minExtents.z = parsed[2];
+         pDst->maxExtents.x = parsed[3];
+         pDst->maxExtents.y = parsed[4];
+         pDst->maxExtents.z = parsed[5];
+         return;
+      }
    }
+
+   Con::warnf("Box3F must be set as \"xMin yMin zMin xMax yMax zMax\"");
 }
 
 
@@ -672,19 +680,26 @@ ConsoleGetType( TypeEaseF )
 
 ConsoleSetType( TypeEaseF )
 {
-   EaseF* pDst = (EaseF*)dptr;
+   if (argc >= 1)
+   {
+      F32 parsed[4];
+      parsed[2] = -1.0f;
+      parsed[3] = -1.0f;
 
-   // defaults...
-   pDst->mParam[0] = -1.0f;
-   pDst->mParam[1] = -1.0f;
-   if (argc == 1) {
-      U32 args = dSscanf(argv[0], "%d %d %f %f", // the two params are optional and assumed -1 if not present...
-                         &pDst->mDir, &pDst->mType, &pDst->mParam[0],&pDst->mParam[1]);
-      if( args < 2 )
-         Con::warnf( "Warning, EaseF probably not read properly" );
-   } else {
-      Con::printf("EaseF must be set as \"dir type [param0 param1]\"");
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+
+      dStrncpy(buffer, *argv, sizeof(buffer));
+
+      // same as matrix do not hard fail based on count!
+      PropertyInfo::ParseProperty<F32, 4>(buffer, parsed);
+      {
+         ((EaseF*)dptr)->set(mRound(parsed[0]), mRound(parsed[1]), parsed[2], parsed[3]);
+         return;
+      }
    }
+
+   Con::warnf("EaseF must be set as \"dir type [param0 param1]\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -715,34 +730,36 @@ ConsoleGetType(TypeRotationF)
 
 ConsoleSetType(TypeRotationF)
 {
-   if (argc == 1)
+   if (argc >= 1)
    {
-      U32 elements = StringUnit::getUnitCount(argv[0], " \t\n");
+      // Combine argv into a single space-separated string if argc > 1
+      char buffer[256] = { 0 };
+      dStrncpy(buffer, *argv, sizeof(buffer));
+
+      U32 elements = StringUnit::getUnitCount(buffer, " \t\n");
       if (elements == 3)
       {
-         EulerF in;
-         dSscanf(argv[0], "%g %g %g", &in.x, &in.y, &in.z);
-         ((RotationF *)dptr)->set(in, RotationF::Degrees);
+         F32 parsed[3];
+         if(PropertyInfo::ParseProperty<F32, 3>(buffer, parsed))
+         {
+            EulerF in(parsed[0], parsed[1], parsed[2]);
+            ((RotationF*)dptr)->set(in, RotationF::Degrees);
+            return;
+         }
       }
-      else
+      else if (elements == 4)
       {
-         AngAxisF in;
-         dSscanf(argv[0], "%g %g %g %g", &in.axis.x, &in.axis.y, &in.axis.z, &in.angle);
-         ((RotationF *)dptr)->set(in, RotationF::Degrees);
+         F32 parsed[4];
+         if (PropertyInfo::ParseProperty<F32, 4>(buffer, parsed))
+         {
+            AngAxisF in(Point3F(parsed[0], parsed[1], parsed[2]), parsed[3]);
+            ((RotationF*)dptr)->set(in, RotationF::Degrees);
+            return;
+         }
       }
    }
-   else if (argc == 3)
-   {
-      EulerF in(dAtof(argv[0]), dAtof(argv[1]), dAtof(argv[2]));
-      ((RotationF *)dptr)->set(in, RotationF::Degrees);
-   }
-   else if (argc == 4)
-   {
-      AngAxisF in(Point3F(dAtof(argv[0]), dAtof(argv[1]), dAtof(argv[2])), dAtof(argv[3]));
-      ((RotationF *)dptr)->set(in, RotationF::Degrees);
-   }
-   else
-      Con::printf("RotationF must be set as { x, y, z, w } or \"x y z w\"");
+
+   Con::warnf("RotationF must be set as { x, y, z, w } or \"x y z w\"");
 }
 
 //-----------------------------------------------------------------------------

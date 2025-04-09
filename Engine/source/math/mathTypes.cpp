@@ -170,11 +170,8 @@ ImplementConsoleTypeCasters( TypePoint2I, Point2I )
 
 ConsoleGetType( TypePoint2I )
 {
-   Point2I *pt = (Point2I *) dptr;
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer, bufSize, "%d %d", pt->x, pt->y);
-   return returnBuffer;
+   const char* buff = PropertyInfo::FormatProperty<S32, 2>(dptr);
+   return buff;
 }
 
 ConsoleSetType( TypePoint2I )
@@ -204,11 +201,8 @@ ImplementConsoleTypeCasters( TypePoint2F, Point2F )
 
 ConsoleGetType( TypePoint2F )
 {
-   Point2F *pt = (Point2F *) dptr;
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer, bufSize, "%g %g", pt->x, pt->y);
-   return returnBuffer;
+   const char* buff = PropertyInfo::FormatProperty<F32, 2>(dptr);
+   return buff;
 }
 
 ConsoleSetType( TypePoint2F )
@@ -238,11 +232,8 @@ ImplementConsoleTypeCasters(TypePoint3I, Point3I)
 
 ConsoleGetType( TypePoint3I )
 {
-   Point3I *pt = (Point3I *) dptr;
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer, bufSize, "%d %d %d", pt->x, pt->y, pt->z);
-   return returnBuffer;
+   const char* buff = PropertyInfo::FormatProperty<S32, 3>(dptr);
+   return buff;
 }
 
 ConsoleSetType( TypePoint3I )
@@ -272,11 +263,8 @@ ImplementConsoleTypeCasters(TypePoint3F, Point3F)
 
 ConsoleGetType( TypePoint3F )
 {
-   Point3F *pt = (Point3F *) dptr;
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer, bufSize, "%g %g %g", pt->x, pt->y, pt->z);
-   return returnBuffer;
+   const char* buff = PropertyInfo::FormatProperty<F32, 3>(dptr);
+   return buff;
 }
 
 ConsoleSetType( TypePoint3F )
@@ -306,11 +294,8 @@ ImplementConsoleTypeCasters( TypePoint4F, Point4F )
 
 ConsoleGetType( TypePoint4F )
 {
-   Point4F *pt = (Point4F *) dptr;
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer, bufSize, "%g %g %g %g", pt->x, pt->y, pt->z, pt->w);
-   return returnBuffer;
+   const char* buff = PropertyInfo::FormatProperty<F32, 4>(dptr);
+   return buff;
 }
 
 ConsoleSetType( TypePoint4F )
@@ -340,12 +325,8 @@ ImplementConsoleTypeCasters( TypeRectI, RectI )
 
 ConsoleGetType( TypeRectI )
 {
-   RectI *rect = (RectI *) dptr;
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer, bufSize, "%d %d %d %d", rect->point.x, rect->point.y,
-            rect->extent.x, rect->extent.y);
-   return returnBuffer;
+   const char* buff = PropertyInfo::FormatProperty<S32, 4>(dptr);
+   return buff;
 }
 
 ConsoleSetType( TypeRectI )
@@ -375,12 +356,8 @@ ImplementConsoleTypeCasters( TypeRectF, RectF )
 
 ConsoleGetType( TypeRectF )
 {
-   RectF *rect = (RectF *) dptr;
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer, bufSize, "%g %g %g %g", rect->point.x, rect->point.y,
-            rect->extent.x, rect->extent.y);
-   return returnBuffer;
+   const char* buff = PropertyInfo::FormatProperty<F32, 4>(dptr);
+   return buff;
 }
 
 ConsoleSetType( TypeRectF )
@@ -413,17 +390,18 @@ ImplementConsoleTypeCasters( TypeMatrixF, MatrixF )
 
 ConsoleGetType( TypeMatrixF )
 {
-   MatrixF* mat = ( MatrixF* ) dptr;
-
-   Point3F col0, col1, col2;
-   mat->getColumn(0, &col0);
-   mat->getColumn(1, &col1);
-   mat->getColumn(2, &col2);
    static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer,bufSize,"%g %g %g %g %g %g %g %g %g",
-            col0.x, col0.y, col0.z, col1.x, col1.y, col1.z, col2.x, col2.y, col2.z);
-   return returnBuffer;
+   char* buffer = Con::getReturnBuffer(bufSize);
+
+   F32* mat = (F32*)dptr;
+   buffer = PropertyInfo::FormatProperty<F32, 3>(mat + 0, buffer, bufSize);
+   *buffer++ = ' ';
+   buffer = PropertyInfo::FormatProperty<F32, 3>(mat + 4, buffer, bufSize);
+   *buffer++ = ' ';
+   buffer = PropertyInfo::FormatProperty<F32, 3>(mat + 8, buffer, bufSize);
+   *buffer = '\0'; // null-terminate just in case
+
+   return buffer;
 }
 
 ConsoleSetType( TypeMatrixF )
@@ -455,14 +433,9 @@ ConsoleMappedType(MatrixPosition, TypeMatrixPosition, Point3F, MatrixF, "")
 
 ConsoleGetType( TypeMatrixPosition )
 {
-   F32 *col = (F32 *) dptr + 3;
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   if(col[12] == 1.f)
-      dSprintf(returnBuffer, bufSize, "%g %g %g", col[0], col[4], col[8]);
-   else
-      dSprintf(returnBuffer, bufSize, "%g %g %g %g", col[0], col[4], col[8], col[12]);
-   return returnBuffer;
+   F32* mat = (F32*)dptr;
+   const char* buff = PropertyInfo::FormatProperty<F32, 4>(mat + 8);
+   return buff;
 }
 
 ConsoleSetType( TypeMatrixPosition )
@@ -495,12 +468,11 @@ ConsoleMappedType(MatrixRotation, TypeMatrixRotation, AngAxisF, MatrixF, "")
 
 ConsoleGetType( TypeMatrixRotation )
 {
-   AngAxisF aa(*(MatrixF *) dptr);
+   AngAxisF aa(*(MatrixF*)dptr);
    aa.axis.normalize();
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer,bufSize,"%g %g %g %g",aa.axis.x,aa.axis.y,aa.axis.z,mRadToDeg(aa.angle));
-   return returnBuffer;
+   aa.angle = mRadToDeg(aa.angle);
+   const char* buff = PropertyInfo::FormatProperty<F32, 4>(&aa);
+   return buff;
 }
 
 ConsoleSetType( TypeMatrixRotation )
@@ -539,10 +511,9 @@ ImplementConsoleTypeCasters( TypeAngAxisF, AngAxisF )
 ConsoleGetType( TypeAngAxisF )
 {
    AngAxisF* aa = ( AngAxisF* ) dptr;
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer,bufSize,"%g %g %g %g",aa->axis.x,aa->axis.y,aa->axis.z,mRadToDeg(aa->angle));
-   return returnBuffer;
+   aa->angle = mRadToDeg(aa->angle);
+   const char* buff = PropertyInfo::FormatProperty<F32, 4>(aa);
+   return buff;
 }
 
 ConsoleSetType( TypeAngAxisF )
@@ -577,13 +548,8 @@ ImplementConsoleTypeCasters( TypeTransformF, TransformF )
 
 ConsoleGetType( TypeTransformF )
 {
-   TransformF* aa = ( TransformF* ) dptr;
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf( returnBuffer, bufSize, "%g %g %g %g %g %g %g",
-             aa->mPosition.x, aa->mPosition.y, aa->mPosition.z,
-             aa->mOrientation.axis.x, aa->mOrientation.axis.y, aa->mOrientation.axis.z, aa->mOrientation.angle );
-   return returnBuffer;
+   const char* buff = PropertyInfo::FormatProperty<F32, 7>(dptr);
+   return buff;
 }
 
 ConsoleSetType( TypeTransformF )
@@ -623,15 +589,8 @@ ImplementConsoleTypeCasters( TypeBox3F, Box3F )
 
 ConsoleGetType( TypeBox3F )
 {
-   const Box3F* pBox = (const Box3F*)dptr;
-
-   static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer, bufSize, "%g %g %g %g %g %g",
-            pBox->minExtents.x, pBox->minExtents.y, pBox->minExtents.z,
-            pBox->maxExtents.x, pBox->maxExtents.y, pBox->maxExtents.z);
-
-   return returnBuffer;
+   const char* buff = PropertyInfo::FormatProperty<F32, 6>(dptr);
+   return buff;
 }
 
 ConsoleSetType( TypeBox3F )
@@ -668,14 +627,16 @@ ImplementConsoleTypeCasters( TypeEaseF, EaseF )
 
 ConsoleGetType( TypeEaseF )
 {
-   const EaseF* pEase = (const EaseF*)dptr;
-
    static const U32 bufSize = 256;
-   char* returnBuffer = Con::getReturnBuffer(bufSize);
-   dSprintf(returnBuffer, bufSize, "%d %d %g %g",
-            pEase->mDir, pEase->mType, pEase->mParam[0], pEase->mParam[1]);
+   char* buffer = Con::getReturnBuffer(bufSize);
 
-   return returnBuffer;
+   EaseF* pEase = (EaseF*)dptr;
+   buffer = PropertyInfo::FormatProperty<S32, 2>(pEase + 0, buffer, bufSize);
+   *buffer++ = ' ';
+   buffer = PropertyInfo::FormatProperty<F32, 2>(pEase + 2, buffer, bufSize);
+   *buffer = '\0'; // null-terminate just in case
+
+   return buffer;
 }
 
 ConsoleSetType( TypeEaseF )
@@ -717,13 +678,14 @@ ConsoleGetType(TypeRotationF)
    if (pt->mRotationType == RotationF::Euler)
    {
       EulerF out = pt->asEulerF(RotationF::Degrees);
-      dSprintf(returnBuffer, bufSize, "%g %g %g", out.x, out.y, out.z);
+      returnBuffer = PropertyInfo::FormatProperty<F32, 3>(out, returnBuffer, bufSize);
    }
    else if (pt->mRotationType == RotationF::AxisAngle)
    {
       AngAxisF out = pt->asAxisAngle(RotationF::Degrees);
-      dSprintf(returnBuffer, bufSize, "%g %g %g %g", out.axis.x, out.axis.y, out.axis.z, out.angle);
+      returnBuffer = PropertyInfo::FormatProperty<F32, 4>(&out, returnBuffer, bufSize);
    }
+   *returnBuffer = '\0'; // null-terminate just in case
 
    return returnBuffer;
 }

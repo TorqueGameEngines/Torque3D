@@ -164,6 +164,41 @@ namespace PropertyInfo
    bool default_print(String & result, SimObjectType * const & data);
 
    template<typename T, size_t count>
+   const char* FormatProperty(const void* dataPtr)
+   {
+      static const U32 bufSize = 256;
+      char* buffer = Con::getReturnBuffer(bufSize);
+      FormatProperty<T,count>(dataPtr, buffer, bufSize);
+      return buffer;
+   }
+
+   template<typename T, size_t count>
+   char* FormatProperty(const void* dataPtr, char* buffer, U32 bufSize)
+   {
+      const T* values = reinterpret_cast<const T*>(dataPtr);
+      char* ptr = buffer;
+
+      for (size_t i = 0; i < count; ++i)
+      {
+         S32 written = 0;
+
+         if constexpr (std::is_same_v<T, int> || std::is_same_v<T, S32>)
+            written = dSprintf(ptr, bufSize - (ptr - buffer), "%d", values[i]);
+         else if constexpr (std::is_same_v<T, float> || std::is_same_v<T, F32>)
+            written = dSprintf(ptr, bufSize - (ptr - buffer), "%g", values[i]);
+         else
+            AssertFatal(sizeof(T) == 0, "Unsupported type in FormatProperty");
+
+         ptr += written;
+         if (i < count - 1)
+            *ptr++ = ' ';
+      }
+
+      *ptr = '\0';
+      return ptr; // return end of written string for chaining
+   }
+
+   template<typename T, size_t count>
    inline bool ParseProperty(char* str, T(&out)[count])
    {
 

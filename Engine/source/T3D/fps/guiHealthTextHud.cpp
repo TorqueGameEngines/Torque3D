@@ -148,7 +148,12 @@ void GuiHealthTextHud::onRender(Point2I offset, const RectI &updateRect)
    GameConnection* conn = GameConnection::getConnectionToServer();  
    if (!conn)  
       return;  
-   ShapeBase* control = dynamic_cast<ShapeBase*>(conn->getControlObject());  
+   ShapeBase* control = dynamic_cast<ShapeBase*>(conn->getControlObject());
+
+   //cover the case of a connection controling an object in turn controlling another
+   if (control && control->getControlObject())
+      control = control->getControlObject();
+
    if (!control || !(control->getTypeMask() & (PlayerObjectType | VehicleObjectType)))
       return;  
   

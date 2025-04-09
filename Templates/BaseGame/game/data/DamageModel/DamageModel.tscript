@@ -21,6 +21,7 @@ function DamageModel::onCreateGameServer(%this)
    %this.queueExec("./scripts/server/projectile");
    %this.queueExec("./scripts/server/weapon");
    %this.queueExec("./scripts/server/shapeBase");
+   %this.queueExec("./scripts/server/vehicle");
    %this.queueExec("./scripts/server/player");
 }
 

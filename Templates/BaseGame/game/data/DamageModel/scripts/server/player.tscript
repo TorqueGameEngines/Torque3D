@@ -10,7 +10,7 @@ function PlayerData::damage(%this, %obj, %sourceObject, %position, %damage, %dam
    %rootObj.applyDamage(%damage);
    %this.onDamage(%rootObj, %damage);
    
-   %this.setDamageDirection(%obj, %sourceObject, %position);
+   %this.setDamageDirection(%rootObj, %sourceObject, %position);
    
    // Deal with client callbacks here because we don't have this
    // information in the onDamage or onDisable methods

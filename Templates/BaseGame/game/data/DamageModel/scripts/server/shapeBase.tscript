@@ -128,7 +128,9 @@ function ShapeBaseData::onAdd(%this, %obj)
 
 function ShapeBaseData::setDamageDirection(%this, %obj, %sourceObject, %damagePos)
 {
-   if (!%obj.client) return;
+   %client = (%obj.client) ? %obj.client : %obj.getControllingClient();
+   if (!%client)  return;
+   
    if (%damagePos $= "" && isObject(%sourceObject))
    {
       if (%sourceObject.isField(initialPosition))
@@ -153,7 +155,7 @@ function ShapeBaseData::setDamageDirection(%this, %obj, %sourceObject, %damagePo
    // Rotate damage vector into object space
    %damageVec = VectorSub(%damagePos, %obj.getWorldBoxCenter());
    %damageVec = VectorNormalize(%damageVec);
-   %damageVec = MatrixMulVector(%obj.client.getCameraObject().getInverseTransform(), %damageVec);
+   %damageVec = MatrixMulVector(%client.getCameraObject().getInverseTransform(), %damageVec);
 
    // Determine largest component of damage vector to get direction
    %vecComponents = -%damageVec.x SPC %damageVec.x SPC -%damageVec.y SPC %damageVec.y SPC -%damageVec.z SPC %damageVec.z;
@@ -169,7 +171,7 @@ function ShapeBaseData::setDamageDirection(%this, %obj, %sourceObject, %damagePo
          %damageDir = getWord(%vecDirections, %i);
       }
    }
-   commandToClient(%obj.client, 'setDamageDirection', %damageDir);
+   commandToClient(%client, 'setDamageDirection', %damageDir);
 }
 
 
@@ -280,6 +282,8 @@ function ShapeBaseData::onDestroyed(%this, %obj, %state)
 
 function ShapeBaseData::onRemove(%this, %obj)
 {
-   Parent::onRemove(%this, %obj);
+   if (isMethod(Parent, "onRemove"))
+      Parent::onRemove(%this, %obj);
+      
    deleteMountchain(%obj);
 }

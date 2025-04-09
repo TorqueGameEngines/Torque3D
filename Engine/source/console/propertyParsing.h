@@ -168,12 +168,12 @@ namespace PropertyInfo
    {
       static const U32 bufSize = 256;
       char* buffer = Con::getReturnBuffer(bufSize);
-      FormatProperty<T,count>(dataPtr, buffer, bufSize);
+      FormatPropertyBuffer<T,count>(dataPtr, buffer, bufSize);
       return buffer;
    }
 
    template<typename T, size_t count>
-   char* FormatProperty(const void* dataPtr, char* buffer, U32 bufSize)
+   char* FormatPropertyBuffer(const void* dataPtr, char* buffer, U32 bufSize)
    {
       const T* values = reinterpret_cast<const T*>(dataPtr);
       char* ptr = buffer;

@@ -394,11 +394,11 @@ ConsoleGetType( TypeMatrixF )
    char* buffer = Con::getReturnBuffer(bufSize);
 
    F32* mat = (F32*)dptr;
-   buffer = PropertyInfo::FormatProperty<F32, 3>(mat + 0, buffer, bufSize);
+   buffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(mat + 0, buffer, bufSize);
    *buffer++ = ' ';
-   buffer = PropertyInfo::FormatProperty<F32, 3>(mat + 4, buffer, bufSize);
+   buffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(mat + 4, buffer, bufSize);
    *buffer++ = ' ';
-   buffer = PropertyInfo::FormatProperty<F32, 3>(mat + 8, buffer, bufSize);
+   buffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(mat + 8, buffer, bufSize);
    *buffer = '\0'; // null-terminate just in case
 
    return buffer;
@@ -631,9 +631,9 @@ ConsoleGetType( TypeEaseF )
    char* buffer = Con::getReturnBuffer(bufSize);
 
    EaseF* pEase = (EaseF*)dptr;
-   buffer = PropertyInfo::FormatProperty<S32, 2>(pEase + 0, buffer, bufSize);
+   buffer = PropertyInfo::FormatPropertyBuffer<S32, 2>(pEase + 0, buffer, bufSize);
    *buffer++ = ' ';
-   buffer = PropertyInfo::FormatProperty<F32, 2>(pEase + 2, buffer, bufSize);
+   buffer = PropertyInfo::FormatPropertyBuffer<F32, 2>(pEase + 2, buffer, bufSize);
    *buffer = '\0'; // null-terminate just in case
 
    return buffer;
@@ -678,12 +678,12 @@ ConsoleGetType(TypeRotationF)
    if (pt->mRotationType == RotationF::Euler)
    {
       EulerF out = pt->asEulerF(RotationF::Degrees);
-      returnBuffer = PropertyInfo::FormatProperty<F32, 3>(out, returnBuffer, bufSize);
+      returnBuffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(out, returnBuffer, bufSize);
    }
    else if (pt->mRotationType == RotationF::AxisAngle)
    {
       AngAxisF out = pt->asAxisAngle(RotationF::Degrees);
-      returnBuffer = PropertyInfo::FormatProperty<F32, 4>(&out, returnBuffer, bufSize);
+      returnBuffer = PropertyInfo::FormatPropertyBuffer<F32, 4>(&out, returnBuffer, bufSize);
    }
    *returnBuffer = '\0'; // null-terminate just in case
 

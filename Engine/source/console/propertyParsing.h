@@ -164,15 +164,6 @@ namespace PropertyInfo
    bool default_print(String & result, SimObjectType * const & data);
 
    template<typename T, size_t count>
-   const char* FormatProperty(const void* dataPtr)
-   {
-      static const U32 bufSize = 256;
-      char* buffer = Con::getReturnBuffer(bufSize);
-      FormatPropertyBuffer<T,count>(dataPtr, buffer, bufSize);
-      return buffer;
-   }
-
-   template<typename T, size_t count>
    char* FormatPropertyBuffer(const void* dataPtr, char* buffer, U32 bufSize)
    {
       const T* values = reinterpret_cast<const T*>(dataPtr);
@@ -196,6 +187,15 @@ namespace PropertyInfo
 
       *ptr = '\0';
       return ptr; // return end of written string for chaining
+   }
+
+   template<typename T, size_t count>
+   const char* FormatProperty(const void* dataPtr)
+   {
+      static const U32 bufSize = 256;
+      char* buffer = Con::getReturnBuffer(bufSize);
+      FormatPropertyBuffer<T,count>(dataPtr, buffer, bufSize);
+      return buffer;
    }
 
    template<typename T, size_t count>

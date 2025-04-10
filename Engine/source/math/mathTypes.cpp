@@ -696,7 +696,6 @@ ConsoleGetType(TypeRotationF)
       AngAxisF out = pt->asAxisAngle(RotationF::Degrees);
       PropertyInfo::FormatPropertyBuffer<F32, 4>(&out, returnBuffer, bufSize);
    }
-   *returnBuffer = '\0'; // null-terminate just in case
 
    return returnBuffer;
 }

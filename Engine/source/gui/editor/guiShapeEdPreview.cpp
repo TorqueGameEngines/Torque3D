@@ -1433,6 +1433,7 @@ void GuiShapeEdPreview::renderWorld(const RectI &updateRect)
    LIGHTMGR->unregisterAllLights();
    LIGHTMGR->setSpecialLight( LightManager::slSunLightType, mFakeSun );
 
+   state.setAmbientLightColor(mSunAmbientColor);
    // We might have some forward lit materials
    // so pass down a query to gather lights.
    LightQuery query;

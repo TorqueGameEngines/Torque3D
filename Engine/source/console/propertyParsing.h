@@ -185,7 +185,6 @@ namespace PropertyInfo
             *ptr++ = ' ';
       }
 
-      *ptr = '\0';
       return ptr; // return end of written string for chaining
    }
 

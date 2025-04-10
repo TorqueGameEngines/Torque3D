@@ -646,7 +646,6 @@ ConsoleGetType( TypeEaseF )
    PropertyInfo::FormatPropertyBuffer<S32, 2>(pEase + 0, buffer, bufSize);
    *buffer++ = ' ';
    PropertyInfo::FormatPropertyBuffer<F32, 2>(pEase + 2, buffer, bufSize);
-   *buffer = '\0'; // null-terminate just in case
 
    return buffer;
 }

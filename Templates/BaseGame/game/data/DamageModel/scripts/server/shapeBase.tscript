@@ -177,7 +177,7 @@ function ShapeBaseData::setDamageDirection(%this, %obj, %sourceObject, %damagePo
 
 function ShapeBaseData::onCollision(%this, %obj, %collObj, %vec, %len )
 {
-   if ((!isObject(%obj) || %obj.getDamageState() !$= "Enabled"))
+   if (!isObject(%obj) || %obj.getDamageState() $= "Destroyed")
       return;
       
     //echo(%this SPC %obj SPC %collObj SPC %vec SPC %len );
@@ -189,7 +189,7 @@ function ShapeBaseData::onCollision(%this, %obj, %collObj, %vec, %len )
 
 function ShapeBaseData::onImpact(%this, %obj, %collObj, %vec, %len )
 {
-   if ((!isObject(%obj) || %obj.getDamageState() !$= "Enabled"))
+   if (!isObject(%obj) || %obj.getDamageState() $= "Destroyed")
       return;
       
     //echo(%this SPC %obj SPC %collObj SPC %vec SPC %len );
@@ -203,7 +203,7 @@ function ShapeBaseData::onImpact(%this, %obj, %collObj, %vec, %len )
 
 function ShapeBaseData::damage(%this, %obj, %sourceObject, %position, %damage, %damageType)
 {
-   if (!isObject(%obj) || %obj.getDamageState() !$= "Enabled" || !%damage)
+   if (!isObject(%obj) || %obj.getDamageState() $= "Destroyed" || !%damage)
       return;
       
    %rootObj = %obj;
@@ -222,7 +222,7 @@ function ShapeBaseData::damage(%this, %obj, %sourceObject, %position, %damage, %
 
    if (isObject(%client))
    {
-      if (%rootObj.getDamageState() !$= "Enabled")
+      if (%obj.getDamageState() $= "Destroyed")
       {
          callGamemodeFunction("onDeath", %client, %sourceObject, %sourceClient, %damageType, "");
       }
@@ -233,7 +233,7 @@ function ShapeBaseData::onDamage(%this, %obj, %delta)
 {
    // This method is invoked by the ShapeBase code whenever the
    // object's damage level changes.
-   if (%delta > 0 && %obj.getDamageState() $= "Enabled")
+   if (%delta > 0 && %obj.getDamageState() !$= "Destroyed")
    {
       // Apply a damage flash
       %obj.setDamageFlash(1);

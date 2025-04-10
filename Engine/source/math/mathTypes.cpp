@@ -390,15 +390,20 @@ ImplementConsoleTypeCasters( TypeMatrixF, MatrixF )
 
 ConsoleGetType( TypeMatrixF )
 {
+   MatrixF* mat = (MatrixF*)dptr;
+
+   Point3F col0, col1, col2;
+   mat->getColumn(0, &col0);
+   mat->getColumn(1, &col1);
+   mat->getColumn(2, &col2);
    static const U32 bufSize = 256;
    char* buffer = Con::getReturnBuffer(bufSize);
 
-   F32* mat = (F32*)dptr;
-   buffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(mat + 0, buffer, bufSize);
+   buffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(col0, buffer, bufSize);
    *buffer++ = ' ';
-   buffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(mat + 4, buffer, bufSize);
+   buffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(col1, buffer, bufSize);
    *buffer++ = ' ';
-   buffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(mat + 8, buffer, bufSize);
+   buffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(col2, buffer, bufSize);
    *buffer = '\0'; // null-terminate just in case
 
    return buffer;
@@ -433,16 +438,24 @@ ConsoleMappedType(MatrixPosition, TypeMatrixPosition, Point3F, MatrixF, "")
 
 ConsoleGetType( TypeMatrixPosition )
 {
-   F32* mat = (F32*)dptr;
-   const char* buff = PropertyInfo::FormatProperty<F32, 4>(mat + 8);
-   return buff;
+   F32* col = (F32*)dptr + 3;
+   static const U32 bufSize = 256;
+   char* returnBuffer = Con::getReturnBuffer(bufSize);
+   Point4F pos(col[0], col[4], col[8], col[12]);
+
+   if (col[12] == 1.0f)
+      returnBuffer = PropertyInfo::FormatPropertyBuffer<F32, 3>(&pos, returnBuffer, bufSize);
+   else
+      returnBuffer = PropertyInfo::FormatPropertyBuffer<F32, 4>(&pos, returnBuffer, bufSize);
+
+   return returnBuffer;
 }
 
 ConsoleSetType( TypeMatrixPosition )
 {
    if (argc >= 1)
    {
-      F32 parsed[4] = { 1.0f }; // default all to 1.0f
+      F32 parsed[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
       // Combine argv into a single space-separated string if argc > 1
       char buffer[256] = { 0 };
       dStrncpy(buffer, *argv, sizeof(buffer));

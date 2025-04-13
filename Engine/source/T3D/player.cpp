@@ -460,6 +460,7 @@ PlayerData::PlayerData()
    jumpTowardsNormal = true;
 
    physicsPlayerType = StringTable->EmptyString();
+   mControlMap = StringTable->EmptyString();
 
    dMemset( actionList, 0, sizeof(actionList) );
 }
@@ -739,7 +740,9 @@ void PlayerData::initPersistFields()
    endGroup( "Camera" );
 
    addGroup( "Movement" );
-
+   addField("controlMap", TypeString, Offset(mControlMap, PlayerData),
+      "@brief movemap used by these types of objects.\n\n");
+   
       addFieldV( "maxStepHeight", TypeRangedF32, Offset(maxStepHeight, PlayerData), &CommonValidators::PositiveFloat,
          "@brief Maximum height the player can step up.\n\n"
          "The player will automatically step onto changes in ground height less "

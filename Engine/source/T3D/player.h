@@ -346,7 +346,7 @@ struct PlayerData: public ShapeBaseData {
 
    // Jump off surfaces at their normal rather than straight up
    bool jumpTowardsNormal;
-
+   StringTableEntry mControlMap;
    // For use if/when mPhysicsPlayer is created
    StringTableEntry physicsPlayerType;
 

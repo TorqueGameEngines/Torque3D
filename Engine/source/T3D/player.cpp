@@ -2259,7 +2259,7 @@ void Player::advanceTime(F32 dt)
    }
 }
 
-bool Player::setAIController(const char* controller)
+bool Player::setAIController(S32 controller)
 {
    if (Sim::findObject(controller, mAIController))
    {
@@ -2271,7 +2271,7 @@ bool Player::setAIController(const char* controller)
    return false;
 }
 
-DefineEngineMethod(Player, setAIController, bool, (const char* controller), , "")
+DefineEngineMethod(Player, setAIController, bool, (S32 controller), , "")
 {
    return object->setAIController(controller);
 }

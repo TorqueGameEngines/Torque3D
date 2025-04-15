@@ -117,7 +117,7 @@ bool AIController::getAIMove(Move* movePtr)
       if (getAim()->mObj || getAim()->mPosSet)
          mMovement.mAimLocation = getAim()->getPosition();
       else
-         mMovement.mAimLocation = mMovement.mMoveDestination;
+         mMovement.mAimLocation = getNav()->mMoveDestination;
 
       mControllerData->resolveYaw(this, location, movePtr);
       mControllerData->resolvePitch(this, location, movePtr);
@@ -232,8 +232,8 @@ void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* m
    // Move towards the destination
    if (obj->mMovement.mMoveState != AIController::ModeStop)
    {
-      F32 xDiff = obj->mMovement.mMoveDestination.x - location.x;
-      F32 yDiff = obj->mMovement.mMoveDestination.y - location.y;
+      F32 xDiff = obj->getNav()->mMoveDestination.x - location.x;
+      F32 yDiff = obj->getNav()->mMoveDestination.y - location.y;
       Point3F rotation = obj->getAIInfo()->mObj->getTransform().getForwardVector();
 
       // Check if we should mMove, or if we are 'close enough'
@@ -246,22 +246,22 @@ void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* m
       {
          // Build move direction in world space
          if (mIsZero(xDiff))
-            movePtr->y = (location.y > obj->mMovement.mMoveDestination.y) ? -1.0f : 1.0f;
+            movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -1.0f : 1.0f;
          else
             if (mIsZero(yDiff))
-               movePtr->x = (location.x > obj->mMovement.mMoveDestination.x) ? -1.0f : 1.0f;
+               movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -1.0f : 1.0f;
             else
                if (mFabs(xDiff) > mFabs(yDiff))
                {
                   F32 value = mFabs(yDiff / xDiff);
-                  movePtr->y = (location.y > obj->mMovement.mMoveDestination.y) ? -value : value;
-                  movePtr->x = (location.x > obj->mMovement.mMoveDestination.x) ? -1.0f : 1.0f;
+                  movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -value : value;
+                  movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -1.0f : 1.0f;
                }
                else
                {
                   F32 value = mFabs(xDiff / yDiff);
-                  movePtr->x = (location.x > obj->mMovement.mMoveDestination.x) ? -value : value;
-                  movePtr->y = (location.y > obj->mMovement.mMoveDestination.y) ? -1.0f : 1.0f;
+                  movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -value : value;
+                  movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -1.0f : 1.0f;
                }
 
          // Rotate the move into object space (this really only needs

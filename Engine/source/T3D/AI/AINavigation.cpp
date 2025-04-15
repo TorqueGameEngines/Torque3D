@@ -25,6 +25,7 @@
 AINavigation::AINavigation(AIController* controller)
 {
    mControllerRef = controller;
+   mJump = None;
 }
 
 NavMesh* AINavigation::findNavMesh() const

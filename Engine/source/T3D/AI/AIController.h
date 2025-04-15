@@ -89,7 +89,6 @@ public:
       Point3F mLastLocation;              // For stuck check
       S32 mMoveStuckTestCountdown;        // The current countdown until at AI starts to check if it is stuck
       Point3F mAimLocation;
-      Point3F mMoveDestination;
       // move triggers
       bool mMoveTriggers[MaxTriggerKeys];
       void stopMove();

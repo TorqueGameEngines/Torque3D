@@ -257,3 +257,19 @@ void AINavigation::clearPath()
    // Reset path data.
    mPathData = PathData();
 }
+
+DefineEngineMethod(AIController, setMoveDestination, void, (Point3F goal, bool slowDown), (true),
+   "@brief Tells the AI to move to the location provided\n\n"
+
+   "@param goal Coordinates in world space representing location to move to.\n"
+   "@param slowDown A boolean value. If set to true, the bot will slow down "
+   "when it gets within 5-meters of its move destination. If false, the bot "
+   "will stop abruptly when it reaches the move destination. By default, this is true.\n\n"
+
+   "@note Upon reaching a move destination, the bot will clear its move destination and "
+   "calls to getMoveDestination will return \"0 0 0\"."
+
+   "@see getMoveDestination()\n")
+{
+   object->getNav()->setMoveDestination(goal, slowDown);
+}

@@ -126,7 +126,7 @@ class AIControllerData : public SimDataBlock {
 
 public:
 
-   AIControllerData() {};
+   AIControllerData() { mMoveTolerance = 0.25; mFollowTolerance = 1.0; mAttackRadius = 2.0; mMoveStuckTolerance = 0.01f; mMoveStuckTestDelay = 30;};
    ~AIControllerData() {};
 
    static void initPersistFields();

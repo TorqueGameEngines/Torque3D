@@ -2287,6 +2287,7 @@ bool Player::getAIMove(Move* move)
    if (mAIController)
    {
       mAIController->getAIMove(move); //actual result
+      return true;
    }
 
    return false;

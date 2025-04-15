@@ -75,7 +75,7 @@ bool AIController::getAIMove(Move* movePtr)
    MatrixF eye;
    sbo->getEyeTransform(&eye);
    Point3F location = eye.getPosition();
-   Point3F rotation = sbo->getTransform().getForwardVector();
+   Point3F rotation = sbo->getTransform().toEuler();
 
 #ifdef TORQUE_NAVIGATION_ENABLED
    if (sbo->getDamageState() == ShapeBase::Enabled)
@@ -190,7 +190,7 @@ void AIControllerData::resolveYaw(AIController* obj, Point3F location, Move* mov
 {
    F32 xDiff = obj->mMovement.mAimLocation.x - location.x;
    F32 yDiff = obj->mMovement.mAimLocation.y - location.y;
-   Point3F rotation = obj->getAIInfo()->mObj->getTransform().getForwardVector();
+   Point3F rotation = obj->getAIInfo()->mObj->getTransform().toEuler();
 
    if (!mIsZero(xDiff) || !mIsZero(yDiff))
    {
@@ -234,7 +234,7 @@ void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* m
    {
       F32 xDiff = obj->getNav()->mMoveDestination.x - location.x;
       F32 yDiff = obj->getNav()->mMoveDestination.y - location.y;
-      Point3F rotation = obj->getAIInfo()->mObj->getTransform().getForwardVector();
+      Point3F rotation = obj->getAIInfo()->mObj->getTransform().toEuler();
 
       // Check if we should mMove, or if we are 'close enough'
       if (mFabs(xDiff) < mMoveTolerance && mFabs(yDiff) < mMoveTolerance)

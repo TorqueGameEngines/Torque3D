@@ -147,9 +147,13 @@ public:
    void resolveStuck(AIController* obj);
 };
 
-class AIPlayerControllerData : AIControllerData
+class AIPlayerControllerData : public AIControllerData
 {
+   typedef AIControllerData Parent;
+
+public:
    void resolvePitch(AIController* obj, Point3F location, Move* movePtr);
+   DECLARE_CONOBJECT(AIPlayerControllerData);
 };
 #endif // TORQUE_NAVIGATION_ENABLED
 #endif //_AICONTROLLER_H_

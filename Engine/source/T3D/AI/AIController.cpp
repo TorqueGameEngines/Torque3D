@@ -389,6 +389,7 @@ void AIControllerData::initPersistFields()
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+IMPLEMENT_CO_DATABLOCK_V1(AIPlayerControllerData);
 void AIPlayerControllerData::resolvePitch(AIController* obj, Point3F location, Move* movePtr)
 {
    Player* po = dynamic_cast<Player*>(obj->getAIInfo()->mObj.getPointer());

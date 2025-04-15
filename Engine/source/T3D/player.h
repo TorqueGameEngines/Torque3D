@@ -50,6 +50,13 @@ class Player;
 class OpenVRTrackedObject;
 #endif
 
+#ifdef TORQUE_NAVIGATION_ENABLED
+#include "navigation/navPath.h"
+#include "navigation/navMesh.h"
+#include "navigation/coverPoint.h"
+#endif // TORQUE_NAVIGATION_ENABLED
+#include "AI/AIController.h"
+
 //----------------------------------------------------------------------------
 
 struct PlayerData: public ShapeBaseData {
@@ -346,7 +353,8 @@ struct PlayerData: public ShapeBaseData {
 
    // Jump off surfaces at their normal rather than straight up
    bool jumpTowardsNormal;
-
+   StringTableEntry mControlMap;
+   AIControllerData* mAIControllData;
    // For use if/when mPhysicsPlayer is created
    StringTableEntry physicsPlayerType;
 
@@ -488,6 +496,7 @@ protected:
 
    SimObjectPtr<ShapeBase> mControlObject; ///< Controlling object
 
+   AIController* mAIController;
    /// @name Animation threads & data
    /// @{
 
@@ -754,6 +763,8 @@ public:
    void    setMomentum(const Point3F &momentum) override;
    bool    displaceObject(const Point3F& displaceVector) override;
    virtual bool    getAIMove(Move*);
+   bool setAIController(const char* controller);
+   AIController* getAIController() { return mAIController; };
 
    bool checkDismountPosition(const MatrixF& oldPos, const MatrixF& newPos);  ///< Is it safe to dismount here?
 

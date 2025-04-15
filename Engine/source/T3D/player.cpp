@@ -460,6 +460,7 @@ PlayerData::PlayerData()
    jumpTowardsNormal = true;
 
    physicsPlayerType = StringTable->EmptyString();
+   mControlMap = StringTable->EmptyString();
 
    dMemset( actionList, 0, sizeof(actionList) );
 }
@@ -739,7 +740,9 @@ void PlayerData::initPersistFields()
    endGroup( "Camera" );
 
    addGroup( "Movement" );
-
+   addField("controlMap", TypeString, Offset(mControlMap, PlayerData),
+      "@brief movemap used by these types of objects.\n\n");
+   
       addFieldV( "maxStepHeight", TypeRangedF32, Offset(maxStepHeight, PlayerData), &CommonValidators::PositiveFloat,
          "@brief Maximum height the player can step up.\n\n"
          "The player will automatically step onto changes in ground height less "
@@ -1738,7 +1741,7 @@ bool Player::onAdd()
                            world );
       mPhysicsRep->setTransform( getTransform() );
    }
-
+   mAIController = NULL;
    return true;
 }
 
@@ -2256,8 +2259,36 @@ void Player::advanceTime(F32 dt)
    }
 }
 
+bool Player::setAIController(const char* controller)
+{
+   if (Sim::findObject(controller, mAIController))
+   {
+      mAIController->setAIInfo(this);
+      return true;
+   }
+
+   mAIController = NULL;
+   return false;
+}
+
+DefineEngineMethod(Player, setAIController, bool, (const char* controller), , "")
+{
+   return object->setAIController(controller);
+}
+
+DefineEngineMethod(Player, getAIController, AIController*, (), , "")
+{
+   return object->getAIController();
+}
+
+
 bool Player::getAIMove(Move* move)
 {
+   if (mAIController)
+   {
+      mAIController->getAIMove(move); //actual result
+   }
+
    return false;
 }
 

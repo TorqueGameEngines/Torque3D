@@ -111,10 +111,10 @@ bool AIController::getAIMove(Move* movePtr)
 
    // Orient towards the aim point, aim object, or towards
    // our destination.
-   if (getAim()->mObj || getAim()->mPosSet || mMovement.mMoveState != ModeStop)
+   if (getAim() || mMovement.mMoveState != ModeStop)
    {
       // Update the aim position if we're aiming for an object or explicit position
-      if (getAim()->mObj || getAim()->mPosSet)
+      if (getAim())
          mMovement.mAimLocation = getAim()->getPosition();
       else
          mMovement.mAimLocation = getNav()->mMoveDestination;
@@ -129,7 +129,7 @@ bool AIController::getAIMove(Move* movePtr)
    // Test for target location in sight if it's an object. The LOS is
    // run from the eye position to the center of the object's bounding,
    // which is not very accurate.
-   if (getAim()->mObj)
+   if (getAim() && getAim()->mObj)
    {
       GameBase* gbo = dynamic_cast<GameBase*>(getAIInfo()->mObj.getPointer());
       if (getAim()->checkInLos(gbo))

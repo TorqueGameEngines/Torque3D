@@ -181,6 +181,11 @@ DefineEngineMethod(AIController, setAimObject, void, (const char* objName, Point
       object->setAim(0, 0.0f, offset);
 }
 
+DefineEngineMethod(AIController, clearAim, void, (), , "clears the bot's target.")
+{
+      object->clearAim();
+}
+
 DefineEngineMethod(AIController, getAimObject, S32, (), ,
    "@brief Gets the object the AIPlayer is targeting.\n\n"
 

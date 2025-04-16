@@ -61,6 +61,7 @@ struct AINavigation
 
    Point3F mMoveDestination;
    void setMoveDestination(const Point3F& location, bool slowdown);
+   Point3F getMoveDestination() { return mMoveDestination; };
    void onReachDestination();
 
    /// NavMesh we pathfind on.

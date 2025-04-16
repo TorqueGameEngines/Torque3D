@@ -274,3 +274,17 @@ DefineEngineMethod(AIController, setMoveDestination, void, (Point3F goal, bool s
 {
    object->getNav()->setMoveDestination(goal, slowDown);
 }
+
+
+DefineEngineMethod(AIController, getMoveDestination, Point3F, (), ,
+   "@brief Get the AIPlayer's current destination.\n\n"
+
+   "@return Returns a point containing the \"x y z\" position "
+   "of the AIPlayer's current move destination. If no move destination "
+   "has yet been set, this returns \"0 0 0\"."
+
+   "@see setMoveDestination()\n")
+{
+   return object->getNav()->getMoveDestination();
+}
+

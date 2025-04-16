@@ -183,6 +183,28 @@ void AIController::clearCover()
    SAFE_DELETE(mCover);
 }
 
+DefineEngineMethod(AIController, setMoveSpeed, void, (F32 speed), ,
+   "@brief Sets the move speed for an AI object.\n\n"
+
+   "@param speed A speed multiplier between 0.0 and 1.0.  "
+   "This is multiplied by the AIPlayer's base movement rates (as defined in "
+   "its PlayerData datablock)\n\n"
+
+   "@see getMoveDestination()\n")
+{
+   object->mMovement.setMoveSpeed(speed);
+}
+
+DefineEngineMethod(AIController, getMoveSpeed, F32, (), ,
+   "@brief Gets the move speed of an AI object.\n\n"
+
+   "@return A speed multiplier between 0.0 and 1.0.\n\n"
+
+   "@see setMoveSpeed()\n")
+{
+   return object->mMovement.getMoveSpeed();
+}
+
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CO_DATABLOCK_V1(AIControllerData);

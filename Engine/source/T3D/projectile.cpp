@@ -56,6 +56,7 @@
 #include "T3D/decal/decalData.h"
 #include "T3D/lightDescription.h"
 #include "console/engineAPI.h"
+#include "T3D/rigidShape.h"
 
 
 IMPLEMENT_CO_DATABLOCK_V1(ProjectileData);
@@ -163,6 +164,7 @@ ProjectileData::ProjectileData()
    scale.set( 1.0f, 1.0f, 1.0f );
 
    isBallistic = false;
+   mExplodeOnTmeout = false;
 
 	velInheritFactor = 1.0f;
 	muzzleVelocity = 50;
@@ -203,6 +205,7 @@ ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : G
    muzzleVelocity = other.muzzleVelocity;
    impactForce = other.impactForce;
    isBallistic = other.isBallistic;
+   mExplodeOnTmeout = other.mExplodeOnTmeout;
    bounceElasticity = other.bounceElasticity;
    bounceFriction = other.bounceFriction;
    gravityMod = other.gravityMod;
@@ -285,6 +288,8 @@ void ProjectileData::initPersistFields()
       addProtectedFieldV("fadeDelay", TypeRangedS32, Offset(fadeDelay, ProjectileData), &setFadeDelay, &getScaledValue, &CommonValidators::NaturalNumber,
          "@brief Amount of time, in milliseconds, before the projectile begins to fade out.\n\n"
          "This value must be smaller than the projectile's lifetime to have an affect.");
+      addField("explodeOnTmeout", TypeBool, Offset(mExplodeOnTmeout, ProjectileData),
+         "@brief Detetmines if the projectile should explode on timeout");      
       addField("isBallistic", TypeBool, Offset(isBallistic, ProjectileData),
          "@brief Detetmines if the projectile should be affected by gravity and whether or not "
          "it bounces before exploding.\n\n");
@@ -455,13 +460,14 @@ void ProjectileData::packData(BitStream* stream)
    stream->write(armingDelay);
    stream->write(fadeDelay);
 
+   stream->writeFlag(mExplodeOnTmeout);
    if(stream->writeFlag(isBallistic))
    {
       stream->write(gravityMod);
       stream->write(bounceElasticity);
       stream->write(bounceFriction);
    }
-
+   
 }
 
 void ProjectileData::unpackData(BitStream* stream)
@@ -514,6 +520,7 @@ void ProjectileData::unpackData(BitStream* stream)
    stream->read(&armingDelay);
    stream->read(&fadeDelay);
 
+   mExplodeOnTmeout = stream->readFlag();
    isBallistic = stream->readFlag();
    if(isBallistic)
    {
@@ -611,6 +618,7 @@ Projectile::Projectile()
    mProjectileShape( NULL ),
    mActivateThread( NULL ),
    mMaintainThread( NULL ),
+   mHasHit(false),
    mHasExploded( false ),
    mFadeValue( 1.0f )
 {
@@ -1128,10 +1136,18 @@ void Projectile::processTick( const Move *move )
 
 void Projectile::simulate( F32 dt )
 {         
-   if ( isServerObject() && mCurrTick >= mDataBlock->lifetime )
+   if ( isServerObject()  )
    {
-      deleteObject();
-      return;
+      if (mCurrTick >= (mDataBlock->lifetime - TickMs))
+      {
+         if (mDataBlock->mExplodeOnTmeout)
+            explode(mCurrPosition, Point3F::UnitZ, VehicleObjectType);
+      }
+      if (mCurrTick >= mDataBlock->lifetime || (mHasHit && mCurrTick < mDataBlock->armingDelay))
+      {
+         deleteObject();
+         return;
+      }
    }
    
    if ( mHasExploded )
@@ -1167,9 +1183,16 @@ void Projectile::simulate( F32 dt )
 
    if ( mPhysicsWorld )
       hit = mPhysicsWorld->castRay( oldPosition, newPosition, &rInfo, Point3F( newPosition - oldPosition) * mDataBlock->impactForce );            
-   else 
+   else
+   {
       hit = getContainer()->castRay(oldPosition, newPosition, dynamicCollisionMask | staticCollisionMask, &rInfo);
-
+      if (hit && rInfo.object->getTypeMask() & VehicleObjectType)
+      {
+         RigidShape* aRigid = dynamic_cast<RigidShape*>(rInfo.object);
+         if (aRigid)
+            aRigid->applyImpulse(rInfo.point, Point3F(newPosition - oldPosition) * mDataBlock->impactForce);
+      }
+   }
    if ( hit )
    {
       // make sure the client knows to bounce
@@ -1237,6 +1260,8 @@ void Projectile::simulate( F32 dt )
       else
       {
          mCurrVelocity    = Point3F::Zero;
+         newPosition = oldPosition = rInfo.point + rInfo.normal * 0.05f;
+         mHasHit = true;
       }
    }
 

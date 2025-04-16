@@ -322,6 +322,7 @@ void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* m
 
 void AIControllerData::resolveStuck(AIController* obj)
 {
+   if (obj->mMovement.mMoveState == AIController::ModeStop) return;
    ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj->getAIInfo()->mObj.getPointer());
    // Don't check for ai stuckness if animation during
    // an anim-clip effect override.

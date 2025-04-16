@@ -155,6 +155,7 @@ void AINavigation::onReachDestination()
    else
 #endif
       getCtrl()->throwCallback("onReachDestination");
+   getCtrl()->mMovement.mMoveState = AIController::ModeStop;
 }
 
 bool AINavigation::setPathDestination(const Point3F& pos)

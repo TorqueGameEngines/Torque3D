@@ -122,8 +122,22 @@ bool AIController::getAIMove(Move* movePtr)
       mControllerData->resolveYaw(this, location, movePtr);
       mControllerData->resolvePitch(this, location, movePtr);
       mControllerData->resolveRoll(this, location, movePtr);
-      mControllerData->resolveSpeed(this, location, movePtr);
-      mControllerData->resolveStuck(this);
+
+      if (mMovement.mMoveState != AIController::ModeStop)
+      {
+         F32 xDiff = getNav()->mMoveDestination.x - location.x;
+         F32 yDiff = getNav()->mMoveDestination.y - location.y;
+         if (mFabs(xDiff) < mControllerData->mMoveTolerance && mFabs(yDiff) < mControllerData->mMoveTolerance)
+         {
+            mMovement.mMoveState = AIController::ModeStop;
+            getNav()->onReachDestination();
+         }
+         else
+         {
+            mControllerData->resolveSpeed(this, location, movePtr);
+            mControllerData->resolveStuck(this);
+         }
+      }
    }
 
    // Test for target location in sight if it's an object. The LOS is
@@ -323,72 +337,59 @@ void AIControllerData::resolveRoll(AIController* obj, Point3F location, Move* mo
 
 void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* movePtr)
 {
-   // Move towards the destination
-   if (obj->mMovement.mMoveState != AIController::ModeStop)
-   {
-      F32 xDiff = obj->getNav()->mMoveDestination.x - location.x;
-      F32 yDiff = obj->getNav()->mMoveDestination.y - location.y;
-      Point3F rotation = obj->getAIInfo()->mObj->getTransform().toEuler();
+   F32 xDiff = obj->getNav()->mMoveDestination.x - location.x;
+   F32 yDiff = obj->getNav()->mMoveDestination.y - location.y;
+   Point3F rotation = obj->getAIInfo()->mObj->getTransform().toEuler();
 
-      // Check if we should mMove, or if we are 'close enough'
-      if (mFabs(xDiff) < mMoveTolerance && mFabs(yDiff) < mMoveTolerance)
-      {
-         obj->mMovement.mMoveState = AIController::ModeStop;
-         obj->getNav()->onReachDestination();
-      }
+   // Build move direction in world space
+   if (mIsZero(xDiff))
+      movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -1.0f : 1.0f;
+   else
+      if (mIsZero(yDiff))
+         movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -1.0f : 1.0f;
       else
-      {
-         // Build move direction in world space
-         if (mIsZero(xDiff))
+         if (mFabs(xDiff) > mFabs(yDiff))
+         {
+            F32 value = mFabs(yDiff / xDiff);
+            movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -value : value;
+            movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -1.0f : 1.0f;
+         }
+         else
+         {
+            F32 value = mFabs(xDiff / yDiff);
+            movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -value : value;
             movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -1.0f : 1.0f;
-         else
-            if (mIsZero(yDiff))
-               movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -1.0f : 1.0f;
-            else
-               if (mFabs(xDiff) > mFabs(yDiff))
-               {
-                  F32 value = mFabs(yDiff / xDiff);
-                  movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -value : value;
-                  movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -1.0f : 1.0f;
-               }
-               else
-               {
-                  F32 value = mFabs(xDiff / yDiff);
-                  movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -value : value;
-                  movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -1.0f : 1.0f;
-               }
-
-         // Rotate the move into object space (this really only needs
-         // a 2D matrix)
-         Point3F newMove;
-         MatrixF moveMatrix;
-         moveMatrix.set(EulerF(0.0f, 0.0f, -(rotation.z + movePtr->yaw)));
-         moveMatrix.mulV(Point3F(movePtr->x, movePtr->y, 0.0f), &newMove);
-         movePtr->x = newMove.x;
-         movePtr->y = newMove.y;
-
-         // Set movement speed.  We'll slow down once we get close
-         // to try and stop on the spot...
-         if (obj->mMovement.mMoveSlowdown)
-         {
-            F32 speed = obj->mMovement.mMoveSpeed;
-            F32 dist = mSqrt(xDiff * xDiff + yDiff * yDiff);
-            F32 maxDist = mMoveTolerance * 2;
-            if (dist < maxDist)
-               speed *= dist / maxDist;
-            movePtr->x *= speed;
-            movePtr->y *= speed;
-
-            obj->mMovement.mMoveState = AIController::ModeSlowing;
          }
-         else
-         {
-            movePtr->x *= obj->mMovement.mMoveSpeed;
-            movePtr->y *= obj->mMovement.mMoveSpeed;
 
-            obj->mMovement.mMoveState = AIController::ModeMove;
-         }
-      }
+   // Rotate the move into object space (this really only needs
+   // a 2D matrix)
+   Point3F newMove;
+   MatrixF moveMatrix;
+   moveMatrix.set(EulerF(0.0f, 0.0f, -(rotation.z + movePtr->yaw)));
+   moveMatrix.mulV(Point3F(movePtr->x, movePtr->y, 0.0f), &newMove);
+   movePtr->x = newMove.x;
+   movePtr->y = newMove.y;
+
+   // Set movement speed.  We'll slow down once we get close
+   // to try and stop on the spot...
+   if (obj->mMovement.mMoveSlowdown)
+   {
+      F32 speed = obj->mMovement.mMoveSpeed;
+      F32 dist = mSqrt(xDiff * xDiff + yDiff * yDiff);
+      F32 maxDist = mMoveTolerance * 2;
+      if (dist < maxDist)
+         speed *= dist / maxDist;
+      movePtr->x *= speed;
+      movePtr->y *= speed;
+
+      obj->mMovement.mMoveState = AIController::ModeSlowing;
+   }
+   else
+   {
+      movePtr->x *= obj->mMovement.mMoveSpeed;
+      movePtr->y *= obj->mMovement.mMoveSpeed;
+
+      obj->mMovement.mMoveState = AIController::ModeMove;
    }
 }
 

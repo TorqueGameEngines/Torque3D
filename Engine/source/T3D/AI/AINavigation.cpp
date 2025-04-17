@@ -115,12 +115,12 @@ void AINavigation::repath()
    if (mPathData.path.isNull() || !mPathData.owned)
       return;
 
-   if (!mControllerRef->getGoal()) return;
+   if (!getCtrl()->getGoal()) return;
 
    // If we're following, get their position.
-   mPathData.path->mTo = mControllerRef->getGoal()->getPosition();
+   mPathData.path->mTo = getCtrl()->getGoal()->getPosition();
    // Update from position and replan.
-   mPathData.path->mFrom = mControllerRef->getAIInfo()->getPosition();
+   mPathData.path->mFrom = getCtrl()->getAIInfo()->getPosition();
    mPathData.path->plan();
    // Move to first node (skip start pos).
    moveToNode(1);
@@ -137,9 +137,9 @@ Point3F AINavigation::getPathDestination() const
 void AINavigation::setMoveDestination(const Point3F& location, bool slowdown)
 {
    mMoveDestination = location;
-   mControllerRef->mMovement.mMoveState = AIController::ModeMove;
-   mControllerRef->mMovement.mMoveSlowdown = slowdown;
-   mControllerRef->mMovement.mMoveStuckTestCountdown = mControllerRef->mControllerData->mMoveStuckTestDelay;
+   getCtrl()->mMovement.mMoveState = AIController::ModeMove;
+   getCtrl()->mMovement.mMoveSlowdown = slowdown;
+   getCtrl()->mMovement.mMoveStuckTestCountdown = getCtrl()->mControllerData->mMoveStuckTestDelay;
 }
 
 void AINavigation::onReachDestination()
@@ -184,7 +184,7 @@ bool AINavigation::setPathDestination(const Point3F& pos)
    if (!mNavMesh)
    {
       //setMoveDestination(pos);
-      mControllerRef->throwCallback("onPathFailed");
+      getCtrl()->throwCallback("onPathFailed");
       return false;
    }
 
@@ -192,11 +192,11 @@ bool AINavigation::setPathDestination(const Point3F& pos)
    NavPath* path = new NavPath();
 
    path->mMesh = mNavMesh;
-   path->mFrom = mControllerRef->getAIInfo()->getPosition();
+   path->mFrom = getCtrl()->getAIInfo()->getPosition();
    path->mTo = pos;
    path->mFromSet = path->mToSet = true;
    path->mAlwaysRender = true;
-   path->mLinkTypes = mControllerRef->mControllerData->mLinkTypes;
+   path->mLinkTypes = getCtrl()->mControllerData->mLinkTypes;
    path->mXray = true;
    // Paths plan automatically upon being registered.
    if (!path->registerObject())
@@ -209,14 +209,14 @@ bool AINavigation::setPathDestination(const Point3F& pos)
    {
       // Clear any current path we might have.
       clearPath();
-      mControllerRef->clearCover();
+      getCtrl()->clearCover();
       clearFollow();
       // Store new path.
       mPathData.path = path;
       mPathData.owned = true;
       // Skip node 0, which we are currently standing on.
       moveToNode(1);
-      mControllerRef->throwCallback("onPathSuccess");
+      getCtrl()->throwCallback("onPathSuccess");
       return true;
    }
    else
@@ -224,7 +224,7 @@ bool AINavigation::setPathDestination(const Point3F& pos)
       // Just move normally if we can't path.
       //setMoveDestination(pos, true);
       //return;
-      mControllerRef->throwCallback("onPathFailed");
+      getCtrl()->throwCallback("onPathFailed");
       path->deleteObject();
       return false;
    }
@@ -232,31 +232,31 @@ bool AINavigation::setPathDestination(const Point3F& pos)
 
 void AINavigation::followObject()
 {
-   if ((mControllerRef->getGoal()->mLastPos - mControllerRef->getAIInfo()->getPosition()).len() < mControllerRef->mControllerData->mMoveTolerance)
+   if (getCtrl()->getGoal()->getDist() < getCtrl()->mControllerData->mMoveTolerance)
       return;
 
-   if (setPathDestination(mControllerRef->getGoal()->getPosition()))
+   if (setPathDestination(getCtrl()->getGoal()->getPosition()))
    {
-      mControllerRef->clearCover();
+      getCtrl()->clearCover();
    }
 }
 
 void AINavigation::followObject(SceneObject* obj, F32 radius)
 {
-   mControllerRef->setGoal(obj, radius);
+   getCtrl()->setGoal(obj, radius);
    followObject();
 }
 
 void AINavigation::clearFollow()
 {
-   mControllerRef->clearGoal();
+   getCtrl()->clearGoal();
 }
 
 void AINavigation::followNavPath(NavPath* path)
 {
    // Get rid of our current path.
    clearPath();
-   mControllerRef->clearCover();
+   getCtrl()->clearCover();
    clearFollow();
 
    // Follow new path.

@@ -398,14 +398,15 @@ void AIControllerData::resolveStuck(AIController* obj)
    ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj->getAIInfo()->mObj.getPointer());
    // Don't check for ai stuckness if animation during
    // an anim-clip effect override.
-   if (sbo->getDamageState() == ShapeBase::Enabled && !(sbo->anim_clip_flags & ShapeBase::ANIM_OVERRIDDEN) && !sbo->isAnimationLocked()) {
+   if (sbo->getDamageState() == ShapeBase::Enabled && !(sbo->anim_clip_flags & ShapeBase::ANIM_OVERRIDDEN) && !sbo->isAnimationLocked())
+   {
       if (obj->mMovement.mMoveStuckTestCountdown > 0)
          --obj->mMovement.mMoveStuckTestCountdown;
       else
       {
          // We should check to see if we are stuck...
          F32 locationDelta = (obj->getAIInfo()->getPosition() - obj->getAIInfo()->mLastPos).len();
-         if (locationDelta < mMoveStuckTolerance && (sbo->getDamageState() == ShapeBase::Enabled))
+         if (locationDelta < mMoveStuckTolerance)
          {
             // If we are slowing down, then it's likely that our location delta will be less than
             // our move stuck tolerance. Because we can be both slowing and stuck

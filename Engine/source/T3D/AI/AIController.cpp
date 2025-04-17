@@ -138,17 +138,33 @@ bool AIController::getAIMove(Move* movePtr)
       else
       {
          if (getGoal()->getDist() > mControllerData->mFollowTolerance)
-            getNav()->repath();
-
-         if (getGoal()->getDist() < mControllerData->mFollowTolerance)
+         {
+            RayInfo info;
+            if (getAIInfo()->mObj->getContainer()->castRay(getAIInfo()->getPosition(), getAIInfo()->getPosition() - Point3F(0, 0, 0.001f), StaticShapeObjectType, &info))
+            {
+               getNav()->repath();
+            }
+            getGoal()->mInRange = false;
+         }
+         if (getGoal()->getDist() < mControllerData->mFollowTolerance && !getGoal()->mInRange)
          {
             getNav()->clearPath();
             mMovement.mMoveState = ModeStop;
+            getGoal()->mInRange = true;
             throwCallback("onTargetInRange");
          }
-         else if (getGoal()->getDist() < mControllerData->mAttackRadius)
+         else
          {
-            throwCallback("onTargetInFiringRange");
+            if (getGoal()->getDist() < mControllerData->mAttackRadius )
+            {
+               if (!getGoal()->mInFiringRange)
+               {
+                  getGoal()->mInFiringRange = true;
+                  throwCallback("onTargetInFiringRange");
+               }
+            }
+            else
+               getGoal()->mInFiringRange = false;
          }
       }
    }
@@ -164,9 +180,9 @@ bool AIController::getAIMove(Move* movePtr)
       else
          mMovement.mAimLocation = getNav()->mMoveDestination;
 
-      mControllerData->resolveYaw(this, location, movePtr);
-      mControllerData->resolvePitch(this, location, movePtr);
-      mControllerData->resolveRoll(this, location, movePtr);
+      mControllerData->resolveYawPtr(this, location, movePtr);
+      mControllerData->resolvePitchPtr(this, location, movePtr);
+      mControllerData->resolveRollPtr(this, location, movePtr);
 
       if (mMovement.mMoveState != AIController::ModeStop)
       {
@@ -179,11 +195,13 @@ bool AIController::getAIMove(Move* movePtr)
          }
          else
          {
-            mControllerData->resolveSpeed(this, location, movePtr);
-            mControllerData->resolveStuck(this);
+            mControllerData->resolveSpeedPtr(this, location, movePtr);
+            mControllerData->resolveStuckPtr(this);
          }
       }
    }
+
+   mControllerData->resolveTriggerStatePtr(this, movePtr);
 
    // Test for target location in sight if it's an object. The LOS is
    // run from the eye position to the center of the object's bounding,
@@ -205,31 +223,6 @@ bool AIController::getAIMove(Move* movePtr)
          getAim()->mTargetInLOS = false;
       }
    }
-
-   /*
-   // Replicate the trigger state into the move so that
-   // triggers can be controlled from scripts.
-   for (U32 i = 0; i < MaxTriggerKeys; i++)
-      movePtr->trigger[i] = getImageTriggerState(i);
-   */
-
-#ifdef TORQUE_NAVIGATION_ENABLED
-   if (getNav()->mJump == AINavigation::Now)
-   {
-      movePtr->trigger[2] = true;
-      getNav()->mJump = AINavigation::None;
-   }
-   else if (getNav()->mJump == AINavigation::Ledge)
-   {
-      // If we're not touching the ground, jump!
-      RayInfo info;
-      if (!getAIInfo()->mObj->getContainer()->castRay(getAIInfo()->getPosition(), getAIInfo()->getPosition() - Point3F(0, 0, 0.4f), StaticShapeObjectType, &info))
-      {
-         movePtr->trigger[2] = true;
-         getNav()->mJump = AINavigation::None;
-      }
-   }
-#endif // TORQUE_NAVIGATION_ENABLED
 
    return true;
 }
@@ -438,6 +431,15 @@ void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* m
    }
 }
 
+void AIControllerData::resolveTriggerState(AIController* obj, Move* movePtr)
+{
+   //check for scripted overides
+   for (U32 slot = 0; slot < MaxTriggerKeys; slot++)
+   {      
+      movePtr->trigger[slot] = obj->mTriggerState.mMoveTriggers[slot];
+   }
+}
+
 void AIControllerData::resolveStuck(AIController* obj)
 {
    if (obj->mMovement.mMoveState == AIController::ModeStop) return;
@@ -539,10 +541,10 @@ void AIPlayerControllerData::resolvePitch(AIController* obj, Point3F location, M
    Player* po = dynamic_cast<Player*>(obj->getAIInfo()->mObj.getPointer());
    if (!po) return;//not a player
 
-   if (obj->getAim()->mObj || obj->getAim()->mPosSet || obj->mMovement.mMoveState != AIController::ModeStop)
+   if (obj->getAim() || obj->mMovement.mMoveState != AIController::ModeStop)
    {
       // Next do pitch.
-      if (!obj->getAim()->mObj && !obj->getAim()->mPosSet)
+      if (!obj->getAim())
       {
          // Level out if were just looking at our next way point.
          Point3F headRotation = po->getHeadRotation();
@@ -571,5 +573,27 @@ void AIPlayerControllerData::resolvePitch(AIController* obj, Point3F location, M
       Point3F headRotation = po->getHeadRotation();
       movePtr->pitch = -headRotation.x;
    }
+}
+
+void AIPlayerControllerData::resolveTriggerState(AIController* obj, Move* movePtr)
+{
+   Parent::resolveTriggerState(obj, movePtr);
+#ifdef TORQUE_NAVIGATION_ENABLED
+   if (obj->getNav()->mJump == AINavigation::Now)
+   {
+      movePtr->trigger[2] = true;
+      obj->getNav()->mJump = AINavigation::None;
+   }
+   else if (obj->getNav()->mJump == AINavigation::Ledge)
+   {
+      // If we're not touching the ground, jump!
+      RayInfo info;
+      if (!obj->getAIInfo()->mObj->getContainer()->castRay(obj->getAIInfo()->getPosition(), obj->getAIInfo()->getPosition() - Point3F(0, 0, 0.4f), StaticShapeObjectType, &info))
+      {
+         movePtr->trigger[2] = true;
+         obj->getNav()->mJump = AINavigation::None;
+      }
+   }
+#endif // TORQUE_NAVIGATION_ENABLED
 }
 #endif //_AICONTROLLER_H_

@@ -27,9 +27,10 @@
 struct AIGoal : public AIInfo
 {
    typedef AIInfo Parent;
+   bool mInRange, mInFiringRange;
    AIGoal() = delete;
-   AIGoal(AIController* controller): Parent(controller) {};
-   AIGoal(AIController* controller, SimObjectPtr<SceneObject> objIn, F32 radIn) : Parent(controller, objIn, radIn) {};
-   AIGoal(AIController* controller, Point3F pointIn, F32 radIn) : Parent(controller, pointIn, radIn) {};
+   AIGoal(AIController* controller) : Parent(controller) { mInRange = mInFiringRange = false; };
+   AIGoal(AIController* controller, SimObjectPtr<SceneObject> objIn, F32 radIn) : Parent(controller, objIn, radIn) { mInRange = mInFiringRange = false; };
+   AIGoal(AIController* controller, Point3F pointIn, F32 radIn) : Parent(controller, pointIn, radIn) { mInRange = mInFiringRange = false; };
 };
 #endif

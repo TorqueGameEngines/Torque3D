@@ -124,7 +124,7 @@ public:
       mCover = NULL;
       mMovement.mMoveState = ModeStop;
    };
-
+   
    DECLARE_CONOBJECT(AIController);
 };
 
@@ -144,6 +144,13 @@ public:
       mMoveStuckTestDelay = 30;
       mLinkTypes = LinkData(AllFlags);
       mNavSize = AINavigation::Regular;
+
+      resolveYawPtr.bind(this, &AIControllerData::resolveYaw);
+      resolvePitchPtr.bind(this, &AIControllerData::resolvePitch);
+      resolveRollPtr.bind(this, &AIControllerData::resolveRoll);
+      resolveSpeedPtr.bind(this, &AIControllerData::resolveSpeed);
+      resolveTriggerStatePtr.bind(this, &AIControllerData::resolveTriggerState);
+      resolveStuckPtr.bind(this, &AIControllerData::resolveStuck);
    };
    ~AIControllerData() {};
 
@@ -158,10 +165,22 @@ public:
    /// Types of link we can use.
    LinkData mLinkTypes;
    AINavigation::NavSize mNavSize;
+   Delegate<void(AIController* obj, Point3F location, Move* movePtr)> resolveYawPtr;
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
+
+   Delegate<void(AIController* obj, Point3F location, Move* movePtr)> resolvePitchPtr;
    void resolvePitch(AIController* obj, Point3F location, Move* movePtr) {};
+
+   Delegate<void(AIController* obj, Point3F location, Move* movePtr)> resolveRollPtr;
    void resolveRoll(AIController* obj, Point3F location, Move* movePtr);
+
+   Delegate<void(AIController* obj, Point3F location, Move* movePtr)> resolveSpeedPtr;
    void resolveSpeed(AIController* obj, Point3F location, Move* movePtr);
+
+   Delegate<void(AIController* obj, Move* movePtr)> resolveTriggerStatePtr;
+   void resolveTriggerState(AIController* obj, Move* movePtr);
+
+   Delegate<void(AIController* obj)> resolveStuckPtr;
    void resolveStuck(AIController* obj);
 };
 
@@ -170,7 +189,13 @@ class AIPlayerControllerData : public AIControllerData
    typedef AIControllerData Parent;
 
 public:
+   AIPlayerControllerData()
+   {
+      resolvePitchPtr.bind(this, &AIPlayerControllerData::resolvePitch);
+      resolveTriggerStatePtr.bind(this, &AIPlayerControllerData::resolveTriggerState);
+   }
    void resolvePitch(AIController* obj, Point3F location, Move* movePtr);
+   void resolveTriggerState(AIController* obj, Move* movePtr);
    DECLARE_CONOBJECT(AIPlayerControllerData);
 };
 #endif // TORQUE_NAVIGATION_ENABLED

@@ -2261,9 +2261,9 @@ void Player::advanceTime(F32 dt)
 
 bool Player::setAIController(SimObjectId controller)
 {
-   if (Sim::findObject(controller, mAIController))
+   if (Sim::findObject(controller, mAIController) && mAIController->mControllerData)
    {
-      mAIController->setAIInfo(this);
+      mAIController->setAIInfo(this, mAIController->mControllerData->mMoveTolerance);
       return true;
    }
    Con::errorf("unable to find AIController : %i", controller);

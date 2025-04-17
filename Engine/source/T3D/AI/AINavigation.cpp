@@ -114,8 +114,6 @@ void AINavigation::repath()
    if (mPathData.path.isNull() || !mPathData.owned)
       return;
 
-   if (!getCtrl()->getGoal()) return;
-
    // If we're following, get their position.
    mPathData.path->mTo = getCtrl()->getGoal()->getPosition();
    // Update from position and replan.

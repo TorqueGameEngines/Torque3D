@@ -32,9 +32,9 @@ struct AIAimTarget : AIInfo
    bool checkInLos(SceneObject* target = NULL, bool _useMuzzle = false, bool _checkEnabled = false);
    bool checkInFoV(SceneObject* target = NULL, F32 camFov = 45.0f, bool _checkEnabled = false);
    F32 getTargetDistance(SceneObject* target, bool _checkEnabled);
-   AIAimTarget(AIController* controller) : Parent(controller) {};
-   AIAimTarget(AIController* controller, SimObjectPtr<SceneObject> objIn, F32 radIn) : Parent(controller, objIn, radIn) {};
-   AIAimTarget(AIController* controller, Point3F pointIn, F32 radIn) : Parent(controller, pointIn, radIn) {};
+   AIAimTarget(AIController* controller) : Parent(controller) { mTargetInLOS = false; };
+   AIAimTarget(AIController* controller, SimObjectPtr<SceneObject> objIn, F32 radIn) : Parent(controller, objIn, radIn) { mTargetInLOS = false; };
+   AIAimTarget(AIController* controller, Point3F pointIn, F32 radIn) : Parent(controller, pointIn, radIn) { mTargetInLOS = false; };
 };
 
 #endif

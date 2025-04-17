@@ -82,28 +82,31 @@ bool AIController::getAIMove(Move* movePtr)
    {
       if (mMovement.mMoveState != ModeStop)
          getNav()->updateNavMesh();
-      if (getGoal()->mObj.isValid())
-      {
-         if (getNav()->mPathData.path.isNull())
-         {
-            if (getGoal()->getDist() > mControllerData->mFollowTolerance)
-               getNav()->followObject(getGoal()->mObj, mControllerData->mFollowTolerance);
-         }
-         else
-         {
-            if (getGoal()->getDist() > mControllerData->mFollowTolerance)
-               getNav()->repath();
 
-            if (getGoal()->getDist() < mControllerData->mFollowTolerance)
-            {
-               getNav()->clearPath();
-               mMovement.mMoveState = ModeStop;
-               throwCallback("onTargetInRange");
-            }
-            else if (getGoal()->getDist() < mControllerData->mAttackRadius)
-            {
-               throwCallback("onTargetInFiringRange");
-            }
+      if (getNav()->mPathData.path.isNull())
+      {
+         if (getGoal()->getDist() > mControllerData->mFollowTolerance)
+         {
+            if (getGoal()->mObj.isValid())
+               getNav()->followObject(getGoal()->mObj, mControllerData->mFollowTolerance);
+            else
+               getNav()->setPathDestination(getGoal()->getPosition());
+         }
+      }
+      else
+      {
+         if (getGoal()->getDist() > mControllerData->mFollowTolerance)
+            getNav()->repath();
+
+         if (getGoal()->getDist() < mControllerData->mFollowTolerance)
+         {
+            getNav()->clearPath();
+            mMovement.mMoveState = ModeStop;
+            throwCallback("onTargetInRange");
+         }
+         else if (getGoal()->getDist() < mControllerData->mAttackRadius)
+         {
+            throwCallback("onTargetInFiringRange");
          }
       }
    }
@@ -396,6 +399,7 @@ void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* m
 void AIControllerData::resolveStuck(AIController* obj)
 {
    if (obj->mMovement.mMoveState == AIController::ModeStop) return;
+   if (!obj->getGoal()) return;
    ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj->getAIInfo()->mObj.getPointer());
    // Don't check for ai stuckness if animation during
    // an anim-clip effect override.

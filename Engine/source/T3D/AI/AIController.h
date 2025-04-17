@@ -118,10 +118,10 @@ public:
       mTriggerState.mControllerRef = this;
       mControllerData = NULL;
       mAIInfo = new AIInfo(this);
-      mGoal = new AIGoal(this);
-      mAimTarget = new AIAimTarget(this);
-      mCover = new AICover(this);
       mNav = new AINavigation(this);
+      mGoal = NULL;
+      mAimTarget = NULL;
+      mCover = NULL;
       mMovement.mMoveState = ModeStop;
    };
 

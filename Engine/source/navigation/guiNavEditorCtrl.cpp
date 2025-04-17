@@ -418,7 +418,7 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
             if (po->getAIController())
             {
                if (po->getAIController()->mControllerData)
-                  po->getAIController()->getNav()->setPathDestination(ri.point);
+                  po->getAIController()->getNav()->setPathDestination(ri.point,true);
             }
          }
       }

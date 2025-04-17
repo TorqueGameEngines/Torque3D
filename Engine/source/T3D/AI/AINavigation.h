@@ -82,7 +82,7 @@ struct AINavigation
 
    /// Clear out the current path.
    void clearPath();
-   bool setPathDestination(const Point3F& pos);
+   bool setPathDestination(const Point3F& pos, bool replace = false);
    Point3F getPathDestination() const;
    void repath();
 

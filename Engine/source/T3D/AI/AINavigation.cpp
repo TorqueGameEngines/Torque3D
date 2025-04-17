@@ -174,15 +174,14 @@ void AINavigation::onReachDestination()
    }
 }
 
-bool AINavigation::setPathDestination(const Point3F& pos)
+bool AINavigation::setPathDestination(const Point3F& pos, bool replace)
 {
-   AIGoal* curgoal = getCtrl()->getGoal();
-
-   if (!curgoal || !curgoal->mObj.isValid())
+   if (replace)
       getCtrl()->setGoal(pos, getCtrl()->mControllerData->mMoveTolerance);
 
    if (!mNavMesh)
       updateNavMesh();
+
    // If we can't find a mesh, just move regularly.
    if (!mNavMesh)
    {
@@ -213,7 +212,6 @@ bool AINavigation::setPathDestination(const Point3F& pos)
       // Clear any current path we might have.
       clearPath();
       getCtrl()->clearCover();
-      clearFollow();
       // Store new path.
       mPathData.path = path;
       mPathData.owned = true;
@@ -260,7 +258,6 @@ void AINavigation::followNavPath(NavPath* path)
    // Get rid of our current path.
    clearPath();
    getCtrl()->clearCover();
-   clearFollow();
 
    // Follow new path.
    mPathData.path = path;
@@ -316,7 +313,7 @@ DefineEngineMethod(AIController, setPathDestination, bool, (Point3F goal), ,
    "@see getPathDestination()\n"
    "@see setMoveDestination()\n")
 {
-   return object->getNav()->setPathDestination(goal);
+   return object->getNav()->setPathDestination(goal,true);
 }
 
 

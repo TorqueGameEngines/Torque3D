@@ -463,8 +463,10 @@ function NavEditorGui::onPlayerSelected(%this, %flags)
    {
       %this.getPlayer().aiController = new AIController(){ ControllerData = aiPlayerControl; };
       %this.getPlayer().setAIController(%this.getPlayer().aiController);
+      NavMeshIgnore(%this.getPlayer(), true);
+      %this.getPlayer().setDamageState("Enabled");
    }
-   NavMeshIgnore(%this.getPlayer(), true);
+   
    updateLinkData(NavEditorOptionsWindow-->TestProperties, %flags);
 }
 

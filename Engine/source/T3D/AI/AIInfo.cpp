@@ -53,7 +53,7 @@ AIInfo::AIInfo(AIController* controller, Point3F pointIn, F32 radIn)
 F32 AIInfo::getDist()
 {
    AIInfo* controlObj = getCtrl()->getAIInfo();
-   F32 ret = VectorF(controlObj->mObj->getPosition() - getPosition()).len();
+   F32 ret = VectorF(controlObj->getPosition() - getPosition()).len();
    ret -= controlObj->mRadius + mRadius;
    return ret;
 }

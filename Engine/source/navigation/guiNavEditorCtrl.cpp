@@ -225,8 +225,18 @@ void GuiNavEditorCtrl::spawnPlayer(const Point3F &pos)
          SimGroup* missionCleanup = dynamic_cast<SimGroup*>(cleanup);
          missionCleanup->addObject(obj);
       }
-      mPlayer = static_cast<AIPlayer*>(obj);
-      Con::executef(this, "onPlayerSelected", Con::getIntArg(mPlayer->mLinkTypes.getFlags()));
+      mPlayer = obj;
+      Player* po = dynamic_cast<Player*>(obj);
+      if (!po) return; //todo, more types
+      if (po->getAIController())
+      {
+         if (po->getAIController()->mControllerData)
+            Con::executef(this, "onPlayerSelected", Con::getIntArg(po->getAIController()->mControllerData->mLinkTypes.getFlags()));
+      }
+      else
+      {
+         Con::executef(this, "onPlayerSelected");
+      }
    }
 }
 
@@ -383,16 +393,34 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
       // Select/move character
       else
       {
-         if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType, &ri))
+         if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType | VehicleObjectType, &ri))
          {
-            if(dynamic_cast<AIPlayer*>(ri.object))
+            if(ri.object)
             {
-               mPlayer = dynamic_cast<AIPlayer*>(ri.object);
-               Con::executef(this, "onPlayerSelected", Con::getIntArg(mPlayer->mLinkTypes.getFlags()));
+               mPlayer = ri.object;
+               Player* po = dynamic_cast<Player*>(ri.object);
+               if (!po) return; //todo, more types
+               if (po->getAIController())
+               {
+                  if (po->getAIController()->mControllerData)
+                     Con::executef(this, "onPlayerSelected", Con::getIntArg(po->getAIController()->mControllerData->mLinkTypes.getFlags()));
+               }
+               else
+               {
+                  Con::executef(this, "onPlayerSelected");
+               }
             }
          }
-         else if(!mPlayer.isNull() && gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-            mPlayer->setPathDestination(ri.point);
+         else if (!mPlayer.isNull() && gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
+         {
+            Player* po = dynamic_cast<Player*>(mPlayer.getPointer());
+            if (!po) return; //todo, more types
+            if (po->getAIController())
+            {
+               if (po->getAIController()->mControllerData)
+                  po->getAIController()->getNav()->setPathDestination(ri.point);
+            }
+         }
       }
    }
 }
@@ -455,8 +483,8 @@ void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 
    if(mMode == mTestMode)
    {
-      if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType, &ri))
-         mCurPlayer = dynamic_cast<AIPlayer*>(ri.object);
+      if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType | VehicleObjectType, &ri))
+         mCurPlayer = ri.object;
       else
          mCurPlayer = NULL;
    }

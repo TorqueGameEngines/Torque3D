@@ -155,8 +155,8 @@ protected:
    /// @name Test mode
    /// @{
 
-   SimObjectPtr<AIPlayer> mPlayer;
-   SimObjectPtr<AIPlayer> mCurPlayer;
+   SimObjectPtr<SceneObject> mPlayer;
+   SimObjectPtr<SceneObject> mCurPlayer;
 
    /// @}
 

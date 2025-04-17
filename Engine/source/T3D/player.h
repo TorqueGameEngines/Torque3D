@@ -763,7 +763,7 @@ public:
    void    setMomentum(const Point3F &momentum) override;
    bool    displaceObject(const Point3F& displaceVector) override;
    virtual bool    getAIMove(Move*);
-   bool setAIController(S32 controller);
+   bool setAIController(SimObjectId controller);
    AIController* getAIController() { return mAIController; };
 
    bool checkDismountPosition(const MatrixF& oldPos, const MatrixF& newPos);  ///< Is it safe to dismount here?

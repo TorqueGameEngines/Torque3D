@@ -59,6 +59,14 @@ struct AINavigation
       Ledge, ///< Jump when we walk off a ledge.
    };
 
+   enum NavSize {
+      Small,
+      Regular,
+      Large
+   } mNavSize;
+   void setNavSize(NavSize size) { mNavSize = size; updateNavMesh(); }
+   NavSize getNavSize() const { return mNavSize; }
+
    Point3F mMoveDestination;
    void setMoveDestination(const Point3F& location, bool slowdown);
    Point3F getMoveDestination() { return mMoveDestination; };
@@ -68,6 +76,7 @@ struct AINavigation
    SimObjectPtr<NavMesh> mNavMesh;
    NavMesh* findNavMesh() const;
    void updateNavMesh();
+   NavMesh* getNavMesh() const { return mNavMesh; }
    PathData mPathData;
    JumpStates mJump;
 
@@ -81,7 +90,7 @@ struct AINavigation
    SimObjectPtr<NavPath> getPath() { return mPathData.path; };
    void followNavPath(NavPath* path);
 
-   void followObject(AIInfo* targ);
+   void followObject();
    void followObject(SceneObject* obj, F32 radius);
    void clearFollow();
    /// Move to the specified node in the current path.

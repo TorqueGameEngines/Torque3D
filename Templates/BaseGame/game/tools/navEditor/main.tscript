@@ -104,6 +104,7 @@ function ENavEditorSettingsPage::init(%this)
 {
    // Initialises the settings controls in the settings dialog box.
    %this-->SpawnClassOptions.clear();
+   %this-->SpawnClassOptions.add("Player");
    %this-->SpawnClassOptions.add("AIPlayer");
    %this-->SpawnClassOptions.setFirstSelected();
 }
@@ -240,7 +241,7 @@ function NavEditorPlugin::initSettings(%this)
 {
    EditorSettings.beginGroup("NavEditor", true);
 
-   EditorSettings.setDefaultValue("SpawnClass",     "AIPlayer");
+   EditorSettings.setDefaultValue("SpawnClass",     "Player");
    EditorSettings.setDefaultValue("SpawnDatablock", "DefaultPlayerData");
 
    EditorSettings.endGroup();

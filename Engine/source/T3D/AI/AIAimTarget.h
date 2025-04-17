@@ -28,7 +28,7 @@ struct AIAimTarget : AIInfo
    typedef AIInfo Parent;
    Point3F mAimOffset;
    bool mTargetInLOS;                  // Is target object visible?
-   Point3F getPosition() { return ((mObj) ? mObj->getPosition() : mPosition) + mAimOffset; }
+   Point3F getPosition() { return ((mObj.isValid()) ? mObj->getPosition() : mPosition) + mAimOffset; }
    bool checkInLos(SceneObject* target = NULL, bool _useMuzzle = false, bool _checkEnabled = false);
    bool checkInFoV(SceneObject* target = NULL, F32 camFov = 45.0f, bool _checkEnabled = false);
    F32 getTargetDistance(SceneObject* target, bool _checkEnabled);

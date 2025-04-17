@@ -23,6 +23,9 @@
 #define _AICOVER_H_
 
 #include "AIInfo.h"
+#include "navigation/coverPoint.h"
+
+
 
 struct AICover : AIInfo
 {
@@ -30,7 +33,7 @@ struct AICover : AIInfo
    /// Pointer to a cover point.
    SimObjectPtr<CoverPoint> mCoverPoint;
    AICover(AIController* controller) : Parent(controller) {};
-   AICover(AIController* controller, SimObjectPtr<SceneObject> objIn, F32 radIn) : Parent(controller, objIn, radIn) {};
+   AICover(AIController* controller, SimObjectPtr<SceneObject> objIn, F32 radIn) : Parent(controller, objIn, radIn) { mCoverPoint = dynamic_cast<CoverPoint*>(objIn.getPointer());};
    AICover(AIController* controller, Point3F pointIn, F32 radIn) : Parent(controller, pointIn, radIn) {};
 };
 

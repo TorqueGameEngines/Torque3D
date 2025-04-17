@@ -29,7 +29,6 @@
 #include "AICover.h"
 #include "AINavigation.h"
 class AIControllerData;
-class AIController;
 
 //-----------------------------------------------------------------------------
 class AIController : public SimObject {
@@ -83,6 +82,7 @@ public:
    AINavigation* getNav() { return mNav; };
    struct Movement
    {
+      AIController* mControllerRef;
       MoveState mMoveState;
       F32 mMoveSpeed = 1.0;
       void setMoveSpeed(F32 speed) { mMoveSpeed = speed; };
@@ -99,6 +99,8 @@ public:
 
    struct TriggerState
    {
+      AIController* mControllerRef;
+      bool mMoveTriggers[MaxTriggerKeys];
       // Trigger sets/gets
       void setMoveTrigger(U32 slot, const bool isSet = true);
       bool getMoveTrigger(U32 slot) const;
@@ -109,12 +111,18 @@ public:
    static void initPersistFields();
    AIController()
    {
+      for (S32 i = 0; i < MaxTriggerKeys; i++)
+         mTriggerState.mMoveTriggers[i] = false;
+
+      mMovement.mControllerRef = this;
+      mTriggerState.mControllerRef = this;
       mControllerData = NULL;
       mAIInfo = new AIInfo(this);
       mGoal = new AIGoal(this);
       mAimTarget = new AIAimTarget(this);
       mCover = new AICover(this);
       mNav = new AINavigation(this);
+      mMovement.mMoveState = ModeStop;
    };
 
    DECLARE_CONOBJECT(AIController);
@@ -127,7 +135,16 @@ class AIControllerData : public SimDataBlock {
 
 public:
 
-   AIControllerData() { mMoveTolerance = 0.25; mFollowTolerance = 1.0; mAttackRadius = 2.0; mMoveStuckTolerance = 0.01f; mMoveStuckTestDelay = 30;};
+   AIControllerData()
+   {
+      mMoveTolerance = 0.25;
+      mFollowTolerance = 1.0;
+      mAttackRadius = 2.0;
+      mMoveStuckTolerance = 0.01f;
+      mMoveStuckTestDelay = 30;
+      mLinkTypes = LinkData(AllFlags);
+      mNavSize = AINavigation::Regular;
+   };
    ~AIControllerData() {};
 
    static void initPersistFields();
@@ -140,7 +157,7 @@ public:
    S32 mMoveStuckTestDelay;            // The number of ticks to wait before checking if the AI is stuck
    /// Types of link we can use.
    LinkData mLinkTypes;
-
+   AINavigation::NavSize mNavSize;
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
    void resolvePitch(AIController* obj, Point3F location, Move* movePtr) {};
    void resolveRoll(AIController* obj, Point3F location, Move* movePtr);

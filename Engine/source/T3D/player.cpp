@@ -2259,14 +2259,14 @@ void Player::advanceTime(F32 dt)
    }
 }
 
-bool Player::setAIController(S32 controller)
+bool Player::setAIController(SimObjectId controller)
 {
    if (Sim::findObject(controller, mAIController))
    {
       mAIController->setAIInfo(this);
       return true;
    }
-
+   Con::errorf("unable to find AIController : %i", controller);
    mAIController = NULL;
    return false;
 }

@@ -26,6 +26,7 @@ AINavigation::AINavigation(AIController* controller)
 {
    mControllerRef = controller;
    mJump = None;
+   mNavSize = Regular;
 }
 
 NavMesh* AINavigation::findNavMesh() const
@@ -40,6 +41,19 @@ NavMesh* AINavigation::findNavMesh() const
       NavMesh* m = static_cast<NavMesh*>(set->at(i));
       if (m->getWorldBox().isContained(gbo->getWorldBox()))
       {
+         // Check that mesh size is appropriate.
+         if (gbo->isMounted())
+         {
+            if (!m->mVehicles)
+               continue;
+         }
+         else
+         {
+            if ((getNavSize() == Small && !m->mSmallCharacters) ||
+               (getNavSize() == Regular && !m->mRegularCharacters) ||
+               (getNavSize() == Large && !m->mLargeCharacters))
+               continue;
+         }
          if (!mesh || m->getWorldBox().getVolume() < mesh->getWorldBox().getVolume())
             mesh = m;
       }
@@ -100,6 +114,8 @@ void AINavigation::repath()
    // Ineffectual if we don't have a path, or are using someone else's.
    if (mPathData.path.isNull() || !mPathData.owned)
       return;
+
+   if (!mControllerRef->getGoal()) return;
 
    // If we're following, get their position.
    mPathData.path->mTo = mControllerRef->getGoal()->getPosition();
@@ -212,24 +228,21 @@ bool AINavigation::setPathDestination(const Point3F& pos)
    }
 }
 
-void AINavigation::followObject(AIInfo* targ)
+void AINavigation::followObject()
 {
-   if (!targ) return;
-
-   if (targ->getDist() < mControllerRef->mControllerData->mMoveTolerance)
+   if ((mControllerRef->getGoal()->mLastPos - mControllerRef->getAIInfo()->getPosition()).len() < mControllerRef->mControllerData->mMoveTolerance)
       return;
 
-   if (setPathDestination(targ->getPosition()))
+   if (setPathDestination(mControllerRef->getGoal()->getPosition()))
    {
       mControllerRef->clearCover();
-      mControllerRef->setGoal(targ);
    }
 }
 
 void AINavigation::followObject(SceneObject* obj, F32 radius)
 {
    mControllerRef->setGoal(obj, radius);
-   followObject(mControllerRef->getGoal());
+   followObject();
 }
 
 void AINavigation::clearFollow()
@@ -289,3 +302,107 @@ DefineEngineMethod(AIController, getMoveDestination, Point3F, (), ,
    return object->getNav()->getMoveDestination();
 }
 
+DefineEngineMethod(AIController, setPathDestination, bool, (Point3F goal), ,
+   "@brief Tells the AI to find a path to the location provided\n\n"
+
+   "@param goal Coordinates in world space representing location to move to.\n"
+   "@return True if a path was found.\n\n"
+
+   "@see getPathDestination()\n"
+   "@see setMoveDestination()\n")
+{
+   return object->getNav()->setPathDestination(goal);
+}
+
+
+DefineEngineMethod(AIController, getPathDestination, Point3F, (), ,
+   "@brief Get the AIPlayer's current pathfinding destination.\n\n"
+
+   "@return Returns a point containing the \"x y z\" position "
+   "of the AIPlayer's current path destination. If no path destination "
+   "has yet been set, this returns \"0 0 0\"."
+
+   "@see setPathDestination()\n")
+{
+   return object->getNav()->getPathDestination();
+}
+
+DefineEngineMethod(AIController, followNavPath, void, (SimObjectId obj), ,
+   "@brief Tell the AIPlayer to follow a path.\n\n"
+
+   "@param obj ID of a NavPath object for the character to follow.")
+{
+   NavPath* path;
+   if (Sim::findObject(obj, path))
+      object->getNav()->followNavPath(path);
+}
+
+DefineEngineMethod(AIController, followObject, void, (SimObjectId obj, F32 radius), ,
+   "@brief Tell the AIPlayer to follow another object.\n\n"
+
+   "@param obj ID of the object to follow.\n"
+   "@param radius Maximum distance we let the target escape to.")
+{
+   SceneObject* follow;
+   object->getNav()->clearPath();
+   object->clearCover();
+   object->getNav()->clearFollow();
+
+   if (Sim::findObject(obj, follow))
+      object->getNav()->followObject(follow, radius);
+}
+
+
+DefineEngineMethod(AIController, repath, void, (), ,
+   "@brief Tells the AI to re-plan its path. Does nothing if the character "
+   "has no path, or if it is following a mission path.\n\n")
+{
+   object->getNav()->repath();
+}
+
+DefineEngineMethod(AIController, findNavMesh, S32, (), ,
+   "@brief Get the NavMesh object this AIPlayer is currently using.\n\n"
+
+   "@return The ID of the NavPath object this character is using for "
+   "pathfinding. This is determined by the character's location, "
+   "navigation type and other factors. Returns -1 if no NavMesh is "
+   "found.")
+{
+   NavMesh* mesh = object->getNav()->getNavMesh();
+   return mesh ? mesh->getId() : -1;
+}
+
+DefineEngineMethod(AIController, getNavMesh, S32, (), ,
+   "@brief Return the NavMesh this AIPlayer is using to navigate.\n\n")
+{
+   NavMesh* m = object->getNav()->getNavMesh();
+   return m ? m->getId() : 0;
+}
+
+DefineEngineMethod(AIController, setNavSize, void, (const char* size), ,
+   "@brief Set the size of NavMesh this character uses. One of \"Small\", \"Regular\" or \"Large\".")
+{
+   if (!String::compare(size, "Small"))
+      object->getNav()->setNavSize(AINavigation::Small);
+   else if (!String::compare(size, "Regular"))
+      object->getNav()->setNavSize(AINavigation::Regular);
+   else if (!String::compare(size, "Large"))
+      object->getNav()->setNavSize(AINavigation::Large);
+   else
+      Con::errorf("AIPlayer::setNavSize: no such size '%s'.", size);
+}
+
+DefineEngineMethod(AIController, getNavSize, const char*, (), ,
+   "@brief Return the size of NavMesh this character uses for pathfinding.")
+{
+   switch (object->getNav()->getNavSize())
+   {
+   case AINavigation::Small:
+      return "Small";
+   case AINavigation::Regular:
+      return "Regular";
+   case AINavigation::Large:
+      return "Large";
+   }
+   return "";
+}

@@ -36,7 +36,7 @@ struct AIInfo
    Point3F mPosition, mLastPos;
    bool mPosSet;
    F32 mRadius;
-   Point3F getPosition() { return (mObj) ? mObj->getPosition() : mPosition; }
+   Point3F getPosition() { return (mObj.isValid()) ? mObj->getPosition() : mPosition; }
    F32 getDist();
    AIInfo() = delete;
    AIInfo(AIController* controller);

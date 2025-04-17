@@ -82,25 +82,25 @@ bool AIController::getAIMove(Move* movePtr)
    {
       if (mMovement.mMoveState != ModeStop)
          getNav()->updateNavMesh();
-      if (!getGoal()->mObj.isNull())
+      if (getGoal() && !getGoal()->mObj.isNull())
       {
          if (getNav()->mPathData.path.isNull())
          {
-            if (getGoal()->getDist() > mControllerData->mMoveTolerance)
-               getNav()->followObject(getGoal());
+            if (getGoal()->getDist() > mControllerData->mFollowTolerance)
+               getNav()->followObject(getGoal()->mObj, mControllerData->mFollowTolerance);
          }
          else
          {
-            if (getGoal()->getDist() > mControllerData->mMoveTolerance)
+            if (getGoal()->getDist() > mControllerData->mFollowTolerance)
                getNav()->repath();
 
-            if (getAim()->getDist() < mControllerData->mMoveTolerance)
+            if (getGoal()->getDist() < mControllerData->mFollowTolerance)
             {
                getNav()->clearPath();
                mMovement.mMoveState = ModeStop;
                throwCallback("onTargetInRange");
             }
-            else if (getAim()->getDist() < mControllerData->mAttackRadius)
+            else if (getGoal()->getDist() < mControllerData->mAttackRadius)
             {
                throwCallback("onTargetInFiringRange");
             }
@@ -178,9 +178,27 @@ bool AIController::getAIMove(Move* movePtr)
 void AIController::clearCover()
 {
    // Notify cover that we are no longer on our way.
-   if (!getCover()->mCoverPoint.isNull())
+   if (getCover() && !getCover()->mCoverPoint.isNull())
       getCover()->mCoverPoint->setOccupied(false);
    SAFE_DELETE(mCover);
+}
+
+void AIController::Movement::stopMove()
+{
+   mMoveState = ModeStop;
+#ifdef TORQUE_NAVIGATION_ENABLED
+   mControllerRef->getNav()->clearPath();
+   mControllerRef->clearCover();
+   mControllerRef->getNav()->clearFollow();
+#endif
+}
+void AIController::Movement::onStuck()
+{
+   mControllerRef->throwCallback("onMoveStuck");
+#ifdef TORQUE_NAVIGATION_ENABLED
+   if (!mControllerRef->getNav()->getPath().isNull())
+      mControllerRef->getNav()->repath();
+#endif
 }
 
 DefineEngineMethod(AIController, setMoveSpeed, void, (F32 speed), ,
@@ -203,6 +221,60 @@ DefineEngineMethod(AIController, getMoveSpeed, F32, (), ,
    "@see setMoveSpeed()\n")
 {
    return object->mMovement.getMoveSpeed();
+}
+
+DefineEngineMethod(AIController, stop, void, (), ,
+   "@brief Tells the AIPlayer to stop moving.\n\n")
+{
+   object->mMovement.stopMove();
+}
+
+
+/**
+ * Set the state of a movement trigger.
+ *
+ * @param slot The trigger slot to set
+ * @param isSet set/unset the trigger
+ */
+void AIController::TriggerState::setMoveTrigger(U32 slot, const bool isSet)
+{
+   if (slot >= MaxTriggerKeys)
+   {
+      Con::errorf("Attempting to set an invalid trigger slot (%i)", slot);
+   }
+   else
+   {
+      mMoveTriggers[slot] = isSet;   // set the trigger
+      mControllerRef->getAIInfo()->mObj->setMaskBits(ShapeBase::NoWarpMask);         // force the client to updateMove
+   }
+}
+
+/**
+ * Get the state of a movement trigger.
+ *
+ * @param slot The trigger slot to query
+ * @return True if the trigger is set, false if it is not set
+ */
+bool AIController::TriggerState::getMoveTrigger(U32 slot) const
+{
+   if (slot >= MaxTriggerKeys)
+   {
+      Con::errorf("Attempting to get an invalid trigger slot (%i)", slot);
+      return false;
+   }
+   else
+   {
+      return mMoveTriggers[slot];
+   }
+}
+
+/**
+ * Clear the trigger state for all movement triggers.
+ */
+void AIController::TriggerState::clearMoveTriggers()
+{
+   for (U32 i = 0; i < MaxTriggerKeys; i++)
+      setMoveTrigger(i, false);
 }
 
 //-----------------------------------------------------------------------------
@@ -341,6 +413,7 @@ void AIControllerData::resolveStuck(AIController* obj)
             if (obj->mMovement.mMoveState != AIController::ModeSlowing || locationDelta == 0)
             {
                obj->mMovement.mMoveState = AIController::ModeStuck;
+               obj->mMovement.onStuck();
                obj->throwCallback("onStuck");
             }
          }

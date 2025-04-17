@@ -24,9 +24,10 @@
 
 #include "AIInfo.h"
 
-struct AIGoal : AIInfo
+struct AIGoal : public AIInfo
 {
    typedef AIInfo Parent;
+   AIGoal() = delete;
    AIGoal(AIController* controller): Parent(controller) {};
    AIGoal(AIController* controller, SimObjectPtr<SceneObject> objIn, F32 radIn) : Parent(controller, objIn, radIn) {};
    AIGoal(AIController* controller, Point3F pointIn, F32 radIn) : Parent(controller, pointIn, radIn) {};

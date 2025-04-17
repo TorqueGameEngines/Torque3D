@@ -64,6 +64,7 @@ NavMesh* AINavigation::findNavMesh() const
 void AINavigation::updateNavMesh()
 {
    GameBase* gbo = dynamic_cast<GameBase*>(mControllerRef->getAIInfo()->mObj.getPointer());
+   NavMesh* old = mNavMesh;
    if (mNavMesh.isNull())
       mNavMesh = findNavMesh();
    else
@@ -72,9 +73,9 @@ void AINavigation::updateNavMesh()
          mNavMesh = findNavMesh();
    }
    // See if we need to update our path.
-   if (mNavMesh)
+   if (mNavMesh != old && !mPathData.path.isNull())
    {
-      setPathDestination(getCtrl()->getGoal()->getPosition());
+      setPathDestination(mPathData.path->mTo);
    }
 }
 
@@ -175,7 +176,11 @@ void AINavigation::onReachDestination()
 
 bool AINavigation::setPathDestination(const Point3F& pos)
 {
-   if (!getCtrl()->getGoal()) getCtrl()->setGoal(pos, getCtrl()->mControllerData->mMoveTolerance);
+   AIGoal* curgoal = getCtrl()->getGoal();
+
+   if (!curgoal || !curgoal->mObj.isValid())
+      getCtrl()->setGoal(pos, getCtrl()->mControllerData->mMoveTolerance);
+
    if (!mNavMesh)
       updateNavMesh();
    // If we can't find a mesh, just move regularly.
@@ -191,7 +196,7 @@ bool AINavigation::setPathDestination(const Point3F& pos)
 
    path->mMesh = mNavMesh;
    path->mFrom = getCtrl()->getAIInfo()->getPosition();
-   path->mTo = pos;
+   path->mTo = getCtrl()->getGoal()->getPosition();
    path->mFromSet = path->mToSet = true;
    path->mAlwaysRender = true;
    path->mLinkTypes = getCtrl()->mControllerData->mLinkTypes;

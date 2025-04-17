@@ -64,6 +64,48 @@ bool AIController::setControllerDataProperty(void* obj, const char* index, const
    return false;
 }
 
+void AIController::setGoal(AIInfo* targ)
+{
+   if (mGoal) { delete(mGoal); mGoal = NULL; }
+
+   if (targ->mObj.isValid())
+   {
+      delete(mGoal);
+      mGoal = new AIGoal(this, targ->mObj, targ->mRadius);
+   }
+   else if (targ->mPosSet)
+   {
+      delete(mGoal);
+      mGoal = new AIGoal(this, targ->mPosition, targ->mRadius);
+   }
+}
+
+void AIController::setGoal(Point3F loc, F32 rad)
+{
+   if (mGoal) delete(mGoal);
+   mGoal = new AIGoal(this, loc, rad);
+}
+
+void AIController::setGoal(SimObjectPtr<SceneObject> objIn, F32 rad)
+{
+   if (mGoal) delete(mGoal);
+   mGoal = new AIGoal(this, objIn, rad);
+}
+
+void AIController::setAim(Point3F loc, F32 rad, Point3F offset)
+{
+   if (mAimTarget) delete(mAimTarget);
+   mAimTarget = new AIAimTarget(this, loc, rad);
+   mAimTarget->mAimOffset = offset;
+}
+
+void AIController::setAim(SimObjectPtr<SceneObject> objIn, F32 rad, Point3F offset)
+{
+   if (mAimTarget) delete(mAimTarget);
+   mAimTarget = new AIAimTarget(this, objIn, rad);
+   mAimTarget->mAimOffset = offset;
+}
+
 #ifdef TORQUE_NAVIGATION_ENABLED
 bool AIController::getAIMove(Move* movePtr)
 {
@@ -89,7 +131,7 @@ bool AIController::getAIMove(Move* movePtr)
          {
             if (getGoal()->mObj.isValid())
                getNav()->followObject(getGoal()->mObj, mControllerData->mFollowTolerance);
-            else
+            else if (getGoal()->mPosSet)
                getNav()->setPathDestination(getGoal()->getPosition());
          }
       }

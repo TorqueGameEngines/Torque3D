@@ -27,11 +27,12 @@
 
 
 
-struct AICover : AIInfo
+struct AICover : public AIInfo
 {
    typedef AIInfo Parent;
    /// Pointer to a cover point.
    SimObjectPtr<CoverPoint> mCoverPoint;
+   AICover() = delete;
    AICover(AIController* controller) : Parent(controller) {};
    AICover(AIController* controller, SimObjectPtr<SceneObject> objIn, F32 radIn) : Parent(controller, objIn, radIn) { mCoverPoint = dynamic_cast<CoverPoint*>(objIn.getPointer());};
    AICover(AIController* controller, Point3F pointIn, F32 radIn) : Parent(controller, pointIn, radIn) {};

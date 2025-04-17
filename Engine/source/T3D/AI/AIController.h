@@ -55,16 +55,16 @@ public:
 private:
    AIGoal* mGoal;
 public:
-   void setGoal(AIInfo* targ) { mGoal = (targ) ? new AIGoal(this, targ->getPosition(), targ->mRadius) : NULL; }
-   void setGoal(Point3F loc, F32 rad = 0.0f) { delete(mGoal); mGoal = new AIGoal(this, loc, rad); }
-   void setGoal(SimObjectPtr<SceneObject> objIn, F32 rad = 0.0f) { delete(mGoal); mGoal = new AIGoal(this, objIn, rad); }
+   void setGoal(AIInfo* targ);
+   void setGoal(Point3F loc, F32 rad = 0.0f);
+   void setGoal(SimObjectPtr<SceneObject> objIn, F32 rad = 0.0f);
    AIGoal* getGoal() { return mGoal; }
    void clearGoal() { SAFE_DELETE(mGoal); }
 private:
    AIAimTarget* mAimTarget;
 public:
-   void setAim(Point3F loc, F32 rad = 0.0f, Point3F offset = Point3F(0.0f,0.0f,0.0f)) { delete(mAimTarget);  mAimTarget = new AIAimTarget(this, loc, rad); mAimTarget->mAimOffset = offset; }
-   void setAim(SimObjectPtr<SceneObject> objIn, F32 rad = 0.0f, Point3F offset = Point3F(0.0f, 0.0f, 0.0f)) { delete(mAimTarget); mAimTarget = new AIAimTarget(this, objIn, rad); mAimTarget->mAimOffset = offset; }
+   void setAim(Point3F loc, F32 rad = 0.0f, Point3F offset = Point3F(0.0f, 0.0f, 0.0f));
+   void setAim(SimObjectPtr<SceneObject> objIn, F32 rad = 0.0f, Point3F offset = Point3F(0.0f, 0.0f, 0.0f));
    AIAimTarget* getAim() { return mAimTarget; }
    void clearAim() { SAFE_DELETE(mAimTarget); }
 private:

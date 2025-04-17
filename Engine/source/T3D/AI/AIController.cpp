@@ -78,11 +78,11 @@ bool AIController::getAIMove(Move* movePtr)
    Point3F rotation = sbo->getTransform().toEuler();
 
 #ifdef TORQUE_NAVIGATION_ENABLED
-   if (sbo->getDamageState() == ShapeBase::Enabled)
+   if (sbo->getDamageState() == ShapeBase::Enabled && getGoal())
    {
       if (mMovement.mMoveState != ModeStop)
          getNav()->updateNavMesh();
-      if (getGoal() && !getGoal()->mObj.isNull())
+      if (getGoal()->mObj.isValid())
       {
          if (getNav()->mPathData.path.isNull())
          {

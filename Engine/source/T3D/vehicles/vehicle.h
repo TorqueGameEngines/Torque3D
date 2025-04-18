@@ -27,6 +27,8 @@
 #include "T3D/rigidShape.h"
 #endif
 
+#include "T3D/AI/AIController.h"
+
 class ParticleEmitter;
 class ParticleEmitterData;
 class ClippedPolyList;
@@ -98,7 +100,7 @@ class Vehicle : public RigidShape
    Point2F mSteering;
    F32 mThrottle;
    bool mJetting;
-
+   AIController* mAIController;
    GFXStateBlockRef  mSolidSB;
 
    SimObjectPtr<ParticleEmitter> mDamageEmitterList[VehicleData::VC_NUM_DAMAGE_EMITTERS];
@@ -148,6 +150,8 @@ public:
 
    Point2F getSteering() { return mSteering; };
    F32 getThrottle() { return mThrottle;};
+   bool setAIController(SimObjectId controller);
+   AIController* getAIController() { return mAIController; };
    /// Interpolates between move ticks @see processTick
    /// @param   dt   Change in time between the last call and this call to the function
    void advanceTime(F32 dt) override;

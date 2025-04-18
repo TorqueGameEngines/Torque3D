@@ -39,6 +39,8 @@ AIInfo::AIInfo(AIController* controller, SimObjectPtr<SceneObject> objIn, F32 ra
    mPosition = mLastPos = objIn->getPosition();
    mRadius = radIn;
    mPosSet = false;
+   if (radIn == 0.0f)
+      mRadius = mMax(objIn->getObjBox().len_x(), objIn->getObjBox().len_y()) * 0.5;
 };
 
 AIInfo::AIInfo(AIController* controller, Point3F pointIn, F32 radIn)

@@ -208,18 +208,16 @@ class AIWheeledVehicleControllerData : public AIControllerData
       SteerNull,
       Left,
       Right,
-      Straight,
-      TurnAround
-   } mSteerState;
+      Straight
+   };
 
 public:
    AIWheeledVehicleControllerData()
    {
-      mSteerState = SteerNull;
       resolveYawPtr.bind(this, &AIWheeledVehicleControllerData::resolveYaw);
       resolveTriggerStatePtr.bind(this, &AIWheeledVehicleControllerData::resolveTriggerState);
    }
-   F32 getSteeringAngle(AIController* obj);
+   F32 getSteeringAngle(AIController* obj, Point3F location);
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
    void resolveTriggerState(AIController* obj, Move* movePtr);
    DECLARE_CONOBJECT(AIWheeledVehicleControllerData);

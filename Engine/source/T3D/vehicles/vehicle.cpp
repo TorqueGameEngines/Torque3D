@@ -147,6 +147,7 @@ VehicleData::VehicleData()
    collDamageThresholdVel = 20;
    collDamageMultiplier = 0.05f;
    enablePhysicsRep = true;
+   mAIControllData = NULL;
 }
 
 
@@ -318,6 +319,13 @@ void VehicleData::initPersistFields()
    addFieldV( "collDamageMultiplier", TypeRangedF32, Offset(collDamageMultiplier, VehicleData), &CommonValidators::PositiveFloat,
       "@brief Damage to this vehicle after a collision (multiplied by collision "
       "velocity).\n\nCurrently unused." );
+   endGroup("Collision");
+
+   addGroup("Movement");
+   addField("controlMap", TypeString, Offset(mControlMap, VehicleData),
+      "@brief movemap used by these types of objects.\n\n");
+   addField("aiControllerData", TYPEID< AIControllerData >(), Offset(mAIControllData, VehicleData),
+      "@brief ai controller used by these types of objects.\n\n");
    endGroup("Collision");
 
    addGroup("Steering");
@@ -500,6 +508,12 @@ void Vehicle::processTick(const Move* move)
    ShapeBase::processTick(move);
    if ( isMounted() )
       return;
+
+   // If we're not being controlled by a client, let the
+   // AI sub-module get a chance at producing a move.
+   Move aiMove;
+   if (!move && isServerObject() && getAIMove(&aiMove))
+      move = &aiMove;
 
    // Warp to catch up to server
    if (mDelta.warpCount < mDelta.warpTicks)
@@ -1230,6 +1244,17 @@ bool Vehicle::setAIController(SimObjectId controller)
    }
    Con::errorf("unable to find AIController : %i", controller);
    mAIController = NULL;
+   return false;
+}
+
+bool Vehicle::getAIMove(Move* move)
+{
+   if (mAIController)
+   {
+      mAIController->getAIMove(move); //actual result
+      return true;
+   }
+
    return false;
 }
 

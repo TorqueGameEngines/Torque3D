@@ -72,6 +72,8 @@ struct VehicleData : public RigidShapeData
    F32 numDmgEmitterAreas;
 
    bool enablePhysicsRep;
+   StringTableEntry mControlMap;
+   AIControllerData* mAIControllData;
 
    //
    VehicleData();
@@ -152,6 +154,8 @@ public:
    F32 getThrottle() { return mThrottle;};
    bool setAIController(SimObjectId controller);
    AIController* getAIController() { return mAIController; };
+   virtual bool    getAIMove(Move*);
+
    /// Interpolates between move ticks @see processTick
    /// @param   dt   Change in time between the last call and this call to the function
    void advanceTime(F32 dt) override;

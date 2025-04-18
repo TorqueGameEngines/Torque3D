@@ -461,7 +461,7 @@ PlayerData::PlayerData()
 
    physicsPlayerType = StringTable->EmptyString();
    mControlMap = StringTable->EmptyString();
-
+   mAIControllData = NULL;
    dMemset( actionList, 0, sizeof(actionList) );
 }
 
@@ -740,8 +740,10 @@ void PlayerData::initPersistFields()
    endGroup( "Camera" );
 
    addGroup( "Movement" );
-   addField("controlMap", TypeString, Offset(mControlMap, PlayerData),
+      addField("controlMap", TypeString, Offset(mControlMap, PlayerData),
       "@brief movemap used by these types of objects.\n\n");
+      addField("aiControllerData", TYPEID< AIControllerData >(), Offset(mAIControllData, PlayerData),
+         "@brief ai controller used by these types of objects.\n\n");
    
       addFieldV( "maxStepHeight", TypeRangedF32, Offset(maxStepHeight, PlayerData), &CommonValidators::PositiveFloat,
          "@brief Maximum height the player can step up.\n\n"

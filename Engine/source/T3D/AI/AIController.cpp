@@ -31,6 +31,7 @@ IMPLEMENT_CONOBJECT(AIController);
 //-----------------------------------------------------------------------------
 void AIController::throwCallback(const char* name)
 {
+   Con::warnf("throwCallback: %s", name);
    Con::executef(mControllerData, name, getIdString()); //controller data callbacks
 
    GameBase* gbo = dynamic_cast<GameBase*>(getAIInfo()->mObj.getPointer());
@@ -676,7 +677,6 @@ F32 AIWheeledVehicleControllerData::getSteeringAngle(AIController* obj, Point3F 
    maxSteeringAngle = vd->maxSteeringAngle;
 
    Point2F steering = wvo->getSteering();
-
    if (finalYaw < 5 && steering.x != 0.0f)
       steerState = Straight;
    else if (finalYaw < 5)

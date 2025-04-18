@@ -609,7 +609,6 @@ void AIPlayerControllerData::resolveTriggerState(AIController* obj, Move* movePt
 }
 
 IMPLEMENT_CO_DATABLOCK_V1(AIWheeledVehicleControllerData);
-
 // Build a Triangle .. calculate angle of rotation required to meet target..
 // man there has to be a better way! >:)
 F32 AIWheeledVehicleControllerData::getSteeringAngle(AIController* obj, Point3F location)
@@ -695,19 +694,13 @@ F32 AIWheeledVehicleControllerData::getSteeringAngle(AIController* obj, Point3F 
          steerState = Left;
    }
 
-   F32 turnAdjust = myAngle - steering.x;
-
    F32 throttle = wvo->getThrottle();
-   if (throttle < 0.0f)
+   if (throttle < 0.0f && steerState != Straight)
    {
-      F32 reverseReduction = 0.25f;
-      if (steerState == Left)
-         steerState = Right;
-      else if (steerState == Right)
-         steerState = Left;
-      turnAdjust *= reverseReduction;
-      myAngle *= reverseReduction;
+      F32 reverseReduction = 0.25;
+      steering.x = steering.x * reverseReduction * throttle;
    }
+   F32 turnAdjust = myAngle - steering.x;
 
    F32 steer = 0;
    switch (steerState)
@@ -746,5 +739,4 @@ void AIWheeledVehicleControllerData::resolveYaw(AIController* obj, Point3F locat
       movePtr->yaw = getSteeringAngle(obj, location);
    }
 };
-void AIWheeledVehicleControllerData::resolveTriggerState(AIController* obj, Move* movePtr) {};
 #endif //_AICONTROLLER_H_

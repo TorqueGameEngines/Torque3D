@@ -161,7 +161,8 @@ public:
       resolveStuckPtr.bind(this, &AIControllerData::resolveStuck);
    };
    ~AIControllerData() {};
-
+   void packData(BitStream* stream) override {};
+   void unpackData(BitStream* stream) override {};
    static void initPersistFields();
    DECLARE_CONOBJECT(AIControllerData);
 
@@ -222,11 +223,9 @@ public:
    AIWheeledVehicleControllerData()
    {
       resolveYawPtr.bind(this, &AIWheeledVehicleControllerData::resolveYaw);
-      resolveTriggerStatePtr.bind(this, &AIWheeledVehicleControllerData::resolveTriggerState);
    }
    F32 getSteeringAngle(AIController* obj, Point3F location);
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
-   void resolveTriggerState(AIController* obj, Move* movePtr);
    DECLARE_CONOBJECT(AIWheeledVehicleControllerData);
 };
 #endif // TORQUE_NAVIGATION_ENABLED

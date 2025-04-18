@@ -1744,7 +1744,6 @@ bool Player::onAdd()
                            world );
       mPhysicsRep->setTransform( getTransform() );
    }
-   mAIController = NULL;
    return true;
 }
 
@@ -2287,6 +2286,7 @@ DefineEngineMethod(Player, getAIController, AIController*, (), , "")
 
 bool Player::getAIMove(Move* move)
 {
+   if (!isServerObject()) return false;
    if (mAIController)
    {
       mAIController->getAIMove(move); //actual result

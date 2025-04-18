@@ -147,6 +147,7 @@ VehicleData::VehicleData()
    collDamageThresholdVel = 20;
    collDamageMultiplier = 0.05f;
    enablePhysicsRep = true;
+   mControlMap = StringTable->EmptyString();
    mAIControllData = NULL;
 }
 
@@ -505,15 +506,16 @@ void Vehicle::processTick(const Move* move)
 {
    PROFILE_SCOPE( Vehicle_ProcessTick );
 
-   ShapeBase::processTick(move);
-   if ( isMounted() )
-      return;
-
    // If we're not being controlled by a client, let the
    // AI sub-module get a chance at producing a move.
    Move aiMove;
    if (!move && isServerObject() && getAIMove(&aiMove))
       move = &aiMove;
+
+   ShapeBase::processTick(move);
+   if ( isMounted() )
+      return;
+
 
    // Warp to catch up to server
    if (mDelta.warpCount < mDelta.warpTicks)
@@ -1249,6 +1251,7 @@ bool Vehicle::setAIController(SimObjectId controller)
 
 bool Vehicle::getAIMove(Move* move)
 {
+   if (!isServerObject()) return false;
    if (mAIController)
    {
       mAIController->getAIMove(move); //actual result

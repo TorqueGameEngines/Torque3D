@@ -22,6 +22,8 @@
 
 #include "AIController.h"
 #include "T3D/player.h"
+#include "T3D/rigidShape.h"
+#include "T3D/vehicles/wheeledVehicle.h"
 
 
 IMPLEMENT_CONOBJECT(AIController);
@@ -139,8 +141,12 @@ bool AIController::getAIMove(Move* movePtr)
       {
          if (getGoal()->getDist() > mControllerData->mFollowTolerance)
          {
+            SceneObject* obj = getAIInfo()->mObj->getObjectMount();
+            if (!obj)
+               obj = getAIInfo()->mObj;
+
             RayInfo info;
-            if (getAIInfo()->mObj->getContainer()->castRay(getAIInfo()->getPosition(), getAIInfo()->getPosition() - Point3F(0, 0, 0.001f), StaticShapeObjectType, &info))
+            if (obj->getContainer()->castRay(obj->getPosition(), obj->getPosition() - Point3F(0, 0, 0.001f), StaticShapeObjectType, &info))
             {
                getNav()->repath();
             }
@@ -596,4 +602,136 @@ void AIPlayerControllerData::resolveTriggerState(AIController* obj, Move* movePt
    }
 #endif // TORQUE_NAVIGATION_ENABLED
 }
+
+IMPLEMENT_CO_DATABLOCK_V1(AIWheeledVehicleControllerData);
+
+// Build a Triangle .. calculate angle of rotation required to meet target..
+// man there has to be a better way! >:)
+F32 AIWheeledVehicleControllerData::getSteeringAngle(AIController* obj)
+{
+   WheeledVehicle* wvo = dynamic_cast<WheeledVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!wvo)
+   {
+      //cover the case of a connection controling an object in turn controlling another
+      if (obj->getAIInfo()->mObj->getObjectMount())
+         wvo = dynamic_cast<WheeledVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
+   }
+   if (!wvo) return 0;//not a WheeledVehicle
+
+   // What is our target
+   Point3F desired;
+   desired = obj->getNav()->mMoveDestination;
+
+   MatrixF mat = wvo->getTransform();
+   Point3F center, front;
+   Point3F wFront;
+   Box3F box = wvo->getObjBox();
+
+   box.getCenter(&center);
+   front = center;
+   front.y = box.maxExtents.y; // should be true for all these objects
+
+   obj->getAIInfo()->mObj->getWorldBox().getCenter(&center);
+   front = center + front;
+
+   Point3F objFront = front;
+   Point3F offset = front - center;
+   EulerF rot;
+   rot = mat.toEuler();
+   MatrixF transform(rot);
+   transform.mulV(offset, &wFront);
+   front = wFront + center;
+
+   Point3F ftoc;
+   ftoc.x = mFabs(front.x - center.x);
+   ftoc.y = mFabs(front.y - center.y);
+   ftoc.z = mFabs(front.z - center.z);
+   F32 fToc = mSqrt((ftoc.x * ftoc.x) + (ftoc.y * ftoc.y));
+
+   Point3F ltoc;
+   ltoc.x = mFabs(desired.x - center.x);
+   ltoc.y = mFabs(desired.y - center.y);
+   ltoc.z = mFabs(desired.z - center.z);
+   F32 lToc = mSqrt((ltoc.x * ltoc.x) + (ltoc.y * ltoc.y));
+
+   Point3F ftol;
+   ftol.x = mFabs(front.x - desired.x);
+   ftol.y = mFabs(front.y - desired.y);
+   ftol.z = mFabs(front.z - desired.z);
+   F32 fTol = mSqrt((ftol.x * ftol.x) + (ftol.y * ftol.y));
+
+   F32 myAngle = mAcos(((lToc * lToc) + (fToc * fToc) - (fTol * fTol)) / (2 * lToc * fToc));
+   Point3F location = obj->getAIInfo()->getPosition();
+
+   F32 xDiff = desired.x - location.x;
+   F32 yDiff = desired.y - location.y;
+
+   F32 finalYaw = mRadToDeg(myAngle);
+
+   F32 maxSteeringAngle = 0;
+
+   VehicleData* vd = (VehicleData*)(wvo->getDataBlock());
+   maxSteeringAngle = vd->maxSteeringAngle;
+
+   //   if(finalYaw > 150)
+   //      steerState = TurnAround;
+   if (finalYaw < 5)
+      mSteerState = Straight;
+   else
+   {// Quickly Hack out left or right turn info
+      Point3F rotData = objFront - desired;
+      MatrixF leftM(-rot);
+      Point3F leftP;
+      leftM.mulV(rotData, &leftP);
+      leftP = leftP + desired;
+
+      if (leftP.x < desired.x)
+         mSteerState = Right;
+      else
+         mSteerState = Left;
+   }
+
+   Point2F steering = wvo->getSteering();
+
+   F32 steer = 0;
+   switch (mSteerState)
+   {
+   case SteerNull:
+      break;
+   case Left:
+      steer = myAngle < maxSteeringAngle ? -myAngle - steering.x : -maxSteeringAngle - steering.x;
+      break;
+   case Right:
+      steer = myAngle < maxSteeringAngle ? myAngle - steering.x : maxSteeringAngle - steering.x;
+      break;
+   case Straight:
+      steer = -steering.x;
+      break;
+   case TurnAround:
+      steer = maxSteeringAngle - steering.x;
+      break;
+   };
+
+   //   Con::printf("AI Steering : %f", steer);
+   return steer;
+}
+
+
+void AIWheeledVehicleControllerData::resolveYaw(AIController* obj, Point3F location, Move* movePtr)
+{
+   WheeledVehicle* wvo = dynamic_cast<WheeledVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!wvo)
+   {
+      //cover the case of a connection controling an object in turn controlling another
+      if (obj->getAIInfo()->mObj->getObjectMount())
+         wvo = dynamic_cast<WheeledVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
+   }
+   if (!wvo) return;//not a WheeledVehicle
+
+   // Orient towards our destination.
+   if (obj->mMovement.mMoveState == AIController::ModeMove || obj->mMovement.mMoveState == AIController::ModeReverse) {
+      movePtr->yaw = getSteeringAngle(obj);
+   }
+};
+void AIWheeledVehicleControllerData::resolveTriggerState(AIController* obj, Move* movePtr) {};
 #endif //_AICONTROLLER_H_

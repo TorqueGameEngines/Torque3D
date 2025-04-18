@@ -146,6 +146,7 @@ public:
    bool onAdd() override;
    void onRemove() override;
 
+   Point2F getSteering() { return mSteering; };
    /// Interpolates between move ticks @see processTick
    /// @param   dt   Change in time between the last call and this call to the function
    void advanceTime(F32 dt) override;

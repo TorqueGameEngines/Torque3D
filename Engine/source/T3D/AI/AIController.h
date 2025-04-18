@@ -45,6 +45,7 @@ public:
       ModeMove,                       // AI is currently moving.
       ModeStuck,                      // AI is stuck, but wants to move.
       ModeSlowing,                    // AI is slowing down as it reaches it's destination.
+      ModeReverse                     // AI is reversing
    };
 
 private:
@@ -197,6 +198,31 @@ public:
    void resolvePitch(AIController* obj, Point3F location, Move* movePtr);
    void resolveTriggerState(AIController* obj, Move* movePtr);
    DECLARE_CONOBJECT(AIPlayerControllerData);
+};
+
+class AIWheeledVehicleControllerData : public AIControllerData
+{
+   typedef AIControllerData Parent;
+
+   enum DrivingState {
+      SteerNull,
+      Left,
+      Right,
+      Straight,
+      TurnAround
+   } mSteerState;
+
+public:
+   AIWheeledVehicleControllerData()
+   {
+      mSteerState = SteerNull;
+      resolveYawPtr.bind(this, &AIWheeledVehicleControllerData::resolveYaw);
+      resolveTriggerStatePtr.bind(this, &AIWheeledVehicleControllerData::resolveTriggerState);
+   }
+   F32 getSteeringAngle(AIController* obj);
+   void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
+   void resolveTriggerState(AIController* obj, Move* movePtr);
+   DECLARE_CONOBJECT(AIWheeledVehicleControllerData);
 };
 #endif // TORQUE_NAVIGATION_ENABLED
 #endif //_AICONTROLLER_H_

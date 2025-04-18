@@ -174,3 +174,8 @@ datablock AIPlayerControllerData( aiPlayerControl )
 {
 
 };
+
+datablock AIWheeledVehicleControllerData( aiCarControl )
+{
+
+};

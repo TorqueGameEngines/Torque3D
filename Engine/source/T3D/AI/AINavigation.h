@@ -35,7 +35,7 @@ struct AINavigation
 
    AINavigation() = delete;
    AINavigation(AIController* controller);
-
+   ~AINavigation();
    /// Stores information about a path.
    struct PathData {
       /// Pointer to path object.

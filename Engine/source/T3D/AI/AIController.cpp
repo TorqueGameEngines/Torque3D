@@ -695,42 +695,10 @@ F32 AIWheeledVehicleControllerData::getSteeringAngle(AIController* obj, Point3F 
          steerState = Left;
    }
 
-
-   F32 xDiff = obj->getNav()->mMoveDestination.x - location.x;
-   F32 yDiff = obj->getNav()->mMoveDestination.y - location.y;
-   Point3F rotation = wvo->getTransform().toEuler();
-   Point2F mov;
-   // Build move direction in world space
-   if (mIsZero(xDiff))
-      mov.y = (location.y > obj->getNav()->mMoveDestination.y) ? -1.0f : 1.0f;
-   else
-   {
-      if (mIsZero(yDiff))
-         mov.x = (location.x > obj->getNav()->mMoveDestination.x) ? -1.0f : 1.0f;
-      else
-         if (mFabs(xDiff) > mFabs(yDiff))
-         {
-            F32 value = mFabs(yDiff / xDiff);
-            mov.y = (location.y > obj->getNav()->mMoveDestination.y) ? -value : value;
-            mov.x = (location.x > obj->getNav()->mMoveDestination.x) ? -1.0f : 1.0f;
-         }
-         else
-         {
-            F32 value = mFabs(xDiff / yDiff);
-            mov.x = (location.x > obj->getNav()->mMoveDestination.x) ? -value : value;
-            mov.y = (location.y > obj->getNav()->mMoveDestination.y) ? -1.0f : 1.0f;
-         }
-   }
-   // Rotate the move into object space (this really only needs
-   // a 2D matrix)
-   Point3F throttle;
-   MatrixF moveMatrix;
-   moveMatrix.set(EulerF(0.0f, 0.0f, -(rotation.z + steering.x)));
-   moveMatrix.mulV(Point3F(mov.x, mov.y, 0.0f), &throttle);
-
    F32 turnAdjust = myAngle - steering.x;
 
-   if (throttle.y < 0.0f)
+   F32 throttle = wvo->getThrottle();
+   if (throttle < 0.0f)
    {
       F32 reverseReduction = 0.25f;
       if (steerState == Left)
@@ -756,7 +724,6 @@ F32 AIWheeledVehicleControllerData::getSteeringAngle(AIController* obj, Point3F 
    default:
       break;
    };
-
 
    //   Con::printf("AI Steering : %f", steer);
    return steer;

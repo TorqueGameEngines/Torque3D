@@ -1643,7 +1643,7 @@ Player::Player()
    mLastAbsoluteYaw = 0.0f;
    mLastAbsolutePitch = 0.0f;
    mLastAbsoluteRoll = 0.0f;
-   
+   mAIController = NULL;
    afx_init();
 }
 
@@ -1654,6 +1654,7 @@ Player::~Player()
       delete mShapeFPInstance[i];
       mShapeFPInstance[i] = 0;
    }
+   if (mAIController) mAIController->deleteObject();
 }
 
 

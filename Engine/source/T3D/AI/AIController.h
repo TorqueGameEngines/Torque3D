@@ -125,7 +125,14 @@ public:
       mCover = NULL;
       mMovement.mMoveState = ModeStop;
    };
-   
+   ~AIController()
+   {
+      SAFE_DELETE(mAIInfo);
+      SAFE_DELETE(mNav);
+      clearGoal();
+      clearAim();
+      clearCover();
+   }
    DECLARE_CONOBJECT(AIController);
 };
 

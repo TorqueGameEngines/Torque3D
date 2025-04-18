@@ -29,6 +29,14 @@ AINavigation::AINavigation(AIController* controller)
    mNavSize = Regular;
 }
 
+AINavigation::~AINavigation()
+{
+#ifdef TORQUE_NAVIGATION_ENABLED
+   clearPath();
+   clearFollow();
+#endif
+}
+
 NavMesh* AINavigation::findNavMesh() const
 {
    GameBase* gbo = dynamic_cast<GameBase*>(mControllerRef->getAIInfo()->mObj.getPointer());

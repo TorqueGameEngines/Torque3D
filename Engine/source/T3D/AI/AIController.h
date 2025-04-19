@@ -84,6 +84,7 @@ public:
    struct Movement
    {
       AIController* mControllerRef;
+      AIController* getCtrl() { return mControllerRef; };
       MoveState mMoveState;
       F32 mMoveSpeed = 1.0;
       void setMoveSpeed(F32 speed) { mMoveSpeed = speed; };
@@ -101,6 +102,7 @@ public:
    struct TriggerState
    {
       AIController* mControllerRef;
+      AIController* getCtrl() { return mControllerRef; };
       bool mMoveTriggers[MaxTriggerKeys];
       // Trigger sets/gets
       void setMoveTrigger(U32 slot, const bool isSet = true);
@@ -143,23 +145,7 @@ class AIControllerData : public SimDataBlock {
 
 public:
 
-   AIControllerData()
-   {
-      mMoveTolerance = 0.25;
-      mFollowTolerance = 1.0;
-      mAttackRadius = 2.0;
-      mMoveStuckTolerance = 0.01f;
-      mMoveStuckTestDelay = 30;
-      mLinkTypes = LinkData(AllFlags);
-      mNavSize = AINavigation::Regular;
-
-      resolveYawPtr.bind(this, &AIControllerData::resolveYaw);
-      resolvePitchPtr.bind(this, &AIControllerData::resolvePitch);
-      resolveRollPtr.bind(this, &AIControllerData::resolveRoll);
-      resolveSpeedPtr.bind(this, &AIControllerData::resolveSpeed);
-      resolveTriggerStatePtr.bind(this, &AIControllerData::resolveTriggerState);
-      resolveStuckPtr.bind(this, &AIControllerData::resolveStuck);
-   };
+   AIControllerData();
    ~AIControllerData() {};
    void packData(BitStream* stream) override {};
    void unpackData(BitStream* stream) override {};
@@ -171,6 +157,14 @@ public:
    F32 mAttackRadius;                  // Distance to trigger weaponry calcs
    F32 mMoveStuckTolerance;            // Distance tolerance on stuck check
    S32 mMoveStuckTestDelay;            // The number of ticks to wait before checking if the AI is stuck
+
+   struct Flocking {
+      U32 mChance;                     // chance of flocking
+      F32 mMin;                        // min flocking separation distance
+      F32 mMax;                        // max flocking clustering distance
+      F32 mSideStep;                   // Distance from destination before we stop moving out of the way
+   } mFlocking;
+
    /// Types of link we can use.
    LinkData mLinkTypes;
    AINavigation::NavSize mNavSize;
@@ -223,9 +217,11 @@ public:
    AIWheeledVehicleControllerData()
    {
       resolveYawPtr.bind(this, &AIWheeledVehicleControllerData::resolveYaw);
+      resolveSpeedPtr.bind(this, &AIControllerData::resolveSpeed);
    }
    F32 getSteeringAngle(AIController* obj, Point3F location);
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
+   void resolveSpeed(AIController* obj, Point3F location, Move* movePtr);
    DECLARE_CONOBJECT(AIWheeledVehicleControllerData);
 };
 #endif // TORQUE_NAVIGATION_ENABLED

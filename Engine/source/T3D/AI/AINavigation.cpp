@@ -21,6 +21,9 @@
 //-----------------------------------------------------------------------------
 #include "AINavigation.h"
 #include "AIController.h"
+#include "T3D/shapeBase.h"
+
+static U32 sAILoSMask = TerrainObjectType | StaticShapeObjectType | StaticObjectType | AIObjectType;
 
 AINavigation::AINavigation(AIController* controller)
 {
@@ -281,6 +284,127 @@ void AINavigation::clearPath()
       mPathData.path->deleteObject();
    // Reset path data.
    mPathData = PathData();
+}
+
+void AINavigation::flock()
+{
+   AIControllerData::Flocking flockingData = getCtrl()->mControllerData->mFlocking;
+   SimObjectPtr<SceneObject> obj = getCtrl()->getAIInfo()->mObj;
+
+   if (mRandI(0,100) > flockingData.mChance)
+      return;
+
+   obj->disableCollision();
+   Point3F pos = obj->getBoxCenter();
+   Point3F searchArea = Point3F(flockingData.mMin / 2, flockingData.mMax / 2, getCtrl()->getAIInfo()->mObj->getObjBox().maxExtents.z / 2);
+
+   F32 maxFlocksq = flockingData.mMax * flockingData.mMax;
+
+   if (getCtrl()->getGoal())
+   {
+      Point3F dest = mMoveDestination;
+
+      if (getCtrl()->mMovement.mMoveState == AIController::ModeStuck)
+      {
+         Point3F shuffle = Point3F(mRandF() - 0.5, mRandF() - 0.5, 0);
+         shuffle.normalize();
+         dest += shuffle * flockingData.mMin;
+      }
+
+      dest.z = pos.z;
+      if ((pos - dest).len() > flockingData.mSideStep)
+      {
+         //find closest object
+         SimpleQueryList sql;
+         Box3F queryBox = Box3F(pos - searchArea, pos + searchArea);
+         obj->getContainer()->findObjects(queryBox, AIObjectType, SimpleQueryList::insertionCallback, &sql);
+         sql.mList.remove(obj);
+
+         Point3F avoidanceOffset = Point3F::Zero;
+         U32 found = 0;
+
+         //avoid objects in the way
+         RayInfo info;
+         if (obj->getContainer()->castRay(pos, dest + Point3F(0, 0, obj->getObjBox().len_z() / 2), sAILoSMask, &info))
+         {
+            Point3F blockerOffset = (info.point - dest);
+            blockerOffset.z = 0;
+            avoidanceOffset += blockerOffset;
+         }
+
+         //avoid bots that are too close
+         for (U32 i = 0; i < sql.mList.size(); i++)
+         {
+            ShapeBase* other = dynamic_cast<ShapeBase*>(sql.mList[i]);
+            Point3F objectCenter = other->getBoxCenter();
+
+            F32 sumRad = flockingData.mMin + other->getAIController()->mControllerData->mFlocking.mMin;
+            sumRad += getCtrl()->getAIInfo()->mRadius + other->getAIController()->getAIInfo()->mRadius;
+
+            Point3F offset = (pos - objectCenter);
+            F32 offsetLensq = offset.lenSquared(); //square roots are expensive, so use squared val compares
+            if ((flockingData.mMin > 0) && (offsetLensq < (sumRad * sumRad)))
+            {
+               other->disableCollision();
+               if (!obj->getContainer()->castRay(pos, other->getBoxCenter(), sAILoSMask, &info))
+               {
+                  found++;
+                  offset.normalizeSafe();
+                  offset *= sumRad;
+                  avoidanceOffset += offset; //accumulate total group, move away from that
+               }
+               other->enableCollision();
+            }
+         }
+         //if we don't have to worry about bumping into one another (nothing found lower than minFLock), see about grouping up
+         if (found == 0)
+         {
+            for (U32 i = 0; i < sql.mList.size(); i++)
+            {
+               ShapeBase* other = static_cast<ShapeBase*>(sql.mList[i]);
+               Point3F objectCenter = other->getBoxCenter();
+
+               F32 sumRad = flockingData.mMin + other->getAIController()->mControllerData->mFlocking.mMin;
+               sumRad += getCtrl()->getAIInfo()->mRadius + other->getAIController()->getAIInfo()->mRadius;
+
+               Point3F offset = (pos - objectCenter);
+               if ((flockingData.mMin > 0) && ((sumRad * sumRad) < (maxFlocksq)))
+               {
+                  other->disableCollision();
+                  if (!obj->getContainer()->castRay(pos, other->getBoxCenter(), sAILoSMask, &info))
+                  {
+                     found++;
+                     offset.normalizeSafe();
+                     offset *= sumRad;
+                     avoidanceOffset -= offset; // subtract total group, move toward it
+                  }
+                  other->enableCollision();
+               }
+            }
+         }
+
+         avoidanceOffset.z = 0;
+         avoidanceOffset.x = (mRandF() * avoidanceOffset.x) * 0.5 + avoidanceOffset.x * 0.75;
+         avoidanceOffset.y = (mRandF() * avoidanceOffset.y) * 0.5 + avoidanceOffset.y * 0.75;
+         if (avoidanceOffset.lenSquared() < (maxFlocksq))
+         {
+            avoidanceOffset.normalizeSafe();
+            dest += avoidanceOffset;
+         }
+
+         //if we're not jumping...
+         if ((mPathData.path) && !(mPathData.path->getFlags(mPathData.index) & JumpFlag))
+         {
+            //make sure we don't run off a cliff
+            Point3F zlen(0, 0, getCtrl()->getAIInfo()->mRadius);
+            if (obj->getContainer()->castRay(dest + zlen, dest - zlen, TerrainObjectType | StaticShapeObjectType | StaticObjectType, &info))
+            {
+               mMoveDestination = dest;
+            }
+         }
+      }
+   }
+   obj->enableCollision();
 }
 
 DefineEngineMethod(AIController, setMoveDestination, void, (Point3F goal, bool slowDown), (true),

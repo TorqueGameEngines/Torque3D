@@ -22,8 +22,8 @@
 #ifndef _AIINFO_H_
 #define _AIINFO_H_
 
-#ifndef _SHAPEBASE_H_
-#include "T3D/shapeBase.h"
+#ifndef _SCENEOBJECT_H_
+#include "scene/sceneObject.h"
 #endif
 
 class AIController;

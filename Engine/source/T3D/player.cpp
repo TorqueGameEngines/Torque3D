@@ -461,7 +461,6 @@ PlayerData::PlayerData()
 
    physicsPlayerType = StringTable->EmptyString();
    mControlMap = StringTable->EmptyString();
-   mAIControllData = NULL;
    dMemset( actionList, 0, sizeof(actionList) );
 }
 
@@ -742,8 +741,6 @@ void PlayerData::initPersistFields()
    addGroup( "Movement" );
       addField("controlMap", TypeString, Offset(mControlMap, PlayerData),
       "@brief movemap used by these types of objects.\n\n");
-      addField("aiControllerData", TYPEID< AIControllerData >(), Offset(mAIControllData, PlayerData),
-         "@brief ai controller used by these types of objects.\n\n");
    
       addFieldV( "maxStepHeight", TypeRangedF32, Offset(maxStepHeight, PlayerData), &CommonValidators::PositiveFloat,
          "@brief Maximum height the player can step up.\n\n"
@@ -1645,7 +1642,6 @@ Player::Player()
    mLastAbsoluteYaw = 0.0f;
    mLastAbsolutePitch = 0.0f;
    mLastAbsoluteRoll = 0.0f;
-   mAIController = NULL;
    afx_init();
 }
 
@@ -1656,7 +1652,6 @@ Player::~Player()
       delete mShapeFPInstance[i];
       mShapeFPInstance[i] = 0;
    }
-   if (mAIController) mAIController->deleteObject();
 }
 
 
@@ -2260,42 +2255,6 @@ void Player::advanceTime(F32 dt)
       }
    }
 }
-
-bool Player::setAIController(SimObjectId controller)
-{
-   if (Sim::findObject(controller, mAIController) && mAIController->mControllerData)
-   {
-      mAIController->setAIInfo(this);
-      return true;
-   }
-   Con::errorf("unable to find AIController : %i", controller);
-   mAIController = NULL;
-   return false;
-}
-
-DefineEngineMethod(Player, setAIController, bool, (S32 controller), , "")
-{
-   return object->setAIController(controller);
-}
-
-DefineEngineMethod(Player, getAIController, AIController*, (), , "")
-{
-   return object->getAIController();
-}
-
-
-bool Player::getAIMove(Move* move)
-{
-   if (!isServerObject()) return false;
-   if (mAIController)
-   {
-      mAIController->getAIMove(move); //actual result
-      return true;
-   }
-
-   return false;
-}
-
 void Player::setState(ActionState state, U32 recoverTicks)
 {
    if (state != mState) {

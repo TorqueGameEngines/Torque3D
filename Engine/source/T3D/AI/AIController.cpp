@@ -122,6 +122,27 @@ bool AIController::getAIMove(Move* movePtr)
    Point3F location = eye.getPosition();
    Point3F rotation = sbo->getTransform().toEuler();
 
+   // Test for target location in sight if it's an object. The LOS is
+   // run from the eye position to the center of the object's bounding,
+   // which is not very accurate.
+   if (getAim() && getAim()->mObj)
+   {
+      GameBase* gbo = dynamic_cast<GameBase*>(getAIInfo()->mObj.getPointer());
+      if (getAim()->checkInLos(gbo))
+      {
+         if (!getAim()->mTargetInLOS)
+         {
+            throwCallback("onTargetEnterLOS");
+            getAim()->mTargetInLOS = true;
+         }
+      }
+      else if (getAim()->mTargetInLOS)
+      {
+         throwCallback("onTargetExitLOS");
+         getAim()->mTargetInLOS = false;
+      }
+   }
+
 #ifdef TORQUE_NAVIGATION_ENABLED
    if (sbo->getDamageState() == ShapeBase::Enabled && getGoal())
    {
@@ -181,6 +202,7 @@ bool AIController::getAIMove(Move* movePtr)
    }
 #endif // TORQUE_NAVIGATION_ENABLED
 
+   getNav()->flock();
    // Orient towards the aim point, aim object, or towards
    // our destination.
    if (getAim() || mMovement.mMoveState != ModeStop)
@@ -189,7 +211,7 @@ bool AIController::getAIMove(Move* movePtr)
       if (getAim())
          mMovement.mAimLocation = getAim()->getPosition();
       else
-         mMovement.mAimLocation = getNav()->mMoveDestination;
+         mMovement.mAimLocation = getNav()->getMoveDestination();
 
       mControllerData->resolveYawPtr(this, location, movePtr);
       mControllerData->resolvePitchPtr(this, location, movePtr);
@@ -197,11 +219,10 @@ bool AIController::getAIMove(Move* movePtr)
 
       if (mMovement.mMoveState != AIController::ModeStop)
       {
-         F32 xDiff = getNav()->mMoveDestination.x - location.x;
-         F32 yDiff = getNav()->mMoveDestination.y - location.y;
+         F32 xDiff = getNav()->getMoveDestination().x - location.x;
+         F32 yDiff = getNav()->getMoveDestination().y - location.y;
          if (mFabs(xDiff) < mControllerData->mMoveTolerance && mFabs(yDiff) < mControllerData->mMoveTolerance)
          {
-            mMovement.mMoveState = AIController::ModeStop;
             getNav()->onReachDestination();
          }
          else
@@ -214,27 +235,7 @@ bool AIController::getAIMove(Move* movePtr)
 
    mControllerData->resolveTriggerStatePtr(this, movePtr);
 
-   // Test for target location in sight if it's an object. The LOS is
-   // run from the eye position to the center of the object's bounding,
-   // which is not very accurate.
-   if (getAim() && getAim()->mObj)
-   {
-      GameBase* gbo = dynamic_cast<GameBase*>(getAIInfo()->mObj.getPointer());
-      if (getAim()->checkInLos(gbo))
-      {
-         if (!getAim()->mTargetInLOS)
-         {
-            throwCallback("onTargetEnterLOS");
-            getAim()->mTargetInLOS = true;
-         }
-      }
-      else if (getAim()->mTargetInLOS)
-      {
-         throwCallback("onTargetExitLOS");
-         getAim()->mTargetInLOS = false;
-      }
-   }
-
+   getAIInfo()->mLastPos = getAIInfo()->getPosition();
    return true;
 }
 
@@ -250,17 +251,18 @@ void AIController::Movement::stopMove()
 {
    mMoveState = ModeStop;
 #ifdef TORQUE_NAVIGATION_ENABLED
-   mControllerRef->getNav()->clearPath();
-   mControllerRef->clearCover();
-   mControllerRef->getNav()->clearFollow();
+   getCtrl()->getNav()->clearPath();
+   getCtrl()->clearCover();
+   getCtrl()->getNav()->clearFollow();
 #endif
 }
 void AIController::Movement::onStuck()
 {
-   mControllerRef->throwCallback("onMoveStuck");
+   mMoveState = AIController::ModeStuck;
+   getCtrl()->throwCallback("onMoveStuck");
 #ifdef TORQUE_NAVIGATION_ENABLED
-   if (!mControllerRef->getNav()->getPath().isNull())
-      mControllerRef->getNav()->repath();
+   if (!getCtrl()->getNav()->getPath().isNull())
+      getCtrl()->getNav()->repath();
 #endif
 }
 
@@ -386,28 +388,28 @@ void AIControllerData::resolveRoll(AIController* obj, Point3F location, Move* mo
 
 void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* movePtr)
 {
-   F32 xDiff = obj->getNav()->mMoveDestination.x - location.x;
-   F32 yDiff = obj->getNav()->mMoveDestination.y - location.y;
+   F32 xDiff = obj->getNav()->getMoveDestination().x - location.x;
+   F32 yDiff = obj->getNav()->getMoveDestination().y - location.y;
    Point3F rotation = obj->getAIInfo()->mObj->getTransform().toEuler();
 
    // Build move direction in world space
    if (mIsZero(xDiff))
-      movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -1.0f : 1.0f;
+      movePtr->y = (location.y > obj->getNav()->getMoveDestination().y) ? -1.0f : 1.0f;
    else
       if (mIsZero(yDiff))
-         movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -1.0f : 1.0f;
+         movePtr->x = (location.x > obj->getNav()->getMoveDestination().x) ? -1.0f : 1.0f;
       else
          if (mFabs(xDiff) > mFabs(yDiff))
          {
             F32 value = mFabs(yDiff / xDiff);
-            movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -value : value;
-            movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -1.0f : 1.0f;
+            movePtr->y = (location.y > obj->getNav()->getMoveDestination().y) ? -value : value;
+            movePtr->x = (location.x > obj->getNav()->getMoveDestination().x) ? -1.0f : 1.0f;
          }
          else
          {
             F32 value = mFabs(xDiff / yDiff);
-            movePtr->x = (location.x > obj->getNav()->mMoveDestination.x) ? -value : value;
-            movePtr->y = (location.y > obj->getNav()->mMoveDestination.y) ? -1.0f : 1.0f;
+            movePtr->x = (location.x > obj->getNav()->getMoveDestination().x) ? -value : value;
+            movePtr->y = (location.y > obj->getNav()->getMoveDestination().y) ? -1.0f : 1.0f;
          }
 
    // Rotate the move into object space (this really only needs
@@ -430,15 +432,11 @@ void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* m
          speed *= dist / maxDist;
       movePtr->x *= speed;
       movePtr->y *= speed;
-
-      obj->mMovement.mMoveState = AIController::ModeSlowing;
    }
    else
    {
       movePtr->x *= obj->mMovement.mMoveSpeed;
       movePtr->y *= obj->mMovement.mMoveSpeed;
-
-      obj->mMovement.mMoveState = AIController::ModeMove;
    }
 }
 
@@ -453,34 +451,55 @@ void AIControllerData::resolveTriggerState(AIController* obj, Move* movePtr)
 
 void AIControllerData::resolveStuck(AIController* obj)
 {
-   if (obj->mMovement.mMoveState == AIController::ModeStop) return;
+   if (obj->mMovement.mMoveState == AIController::ModeStuck) return;
    if (!obj->getGoal()) return;
    ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj->getAIInfo()->mObj.getPointer());
    // Don't check for ai stuckness if animation during
    // an anim-clip effect override.
    if (sbo->getDamageState() == ShapeBase::Enabled && !(sbo->anim_clip_flags & ShapeBase::ANIM_OVERRIDDEN) && !sbo->isAnimationLocked())
    {
-      if (obj->mMovement.mMoveStuckTestCountdown > 0)
-         --obj->mMovement.mMoveStuckTestCountdown;
-      else
+      // We should check to see if we are stuck...
+      F32 locationDelta = (obj->getAIInfo()->getPosition() - obj->getAIInfo()->mLastPos).len();
+      if (locationDelta < mMoveStuckTolerance)
       {
-         // We should check to see if we are stuck...
-         F32 locationDelta = (obj->getAIInfo()->getPosition() - obj->getAIInfo()->mLastPos).len();
-         if (locationDelta < mMoveStuckTolerance)
+         if (obj->mMovement.mMoveStuckTestCountdown > 0)
+            --obj->mMovement.mMoveStuckTestCountdown;
+         else
          {
             // If we are slowing down, then it's likely that our location delta will be less than
             // our move stuck tolerance. Because we can be both slowing and stuck
             // we should TRY to check if we've moved. This could use better detection.
             if (obj->mMovement.mMoveState != AIController::ModeSlowing || locationDelta == 0)
             {
-               obj->mMovement.mMoveState = AIController::ModeStuck;
                obj->mMovement.onStuck();
-               obj->throwCallback("onStuck");
             }
+            obj->mMovement.mMoveStuckTestCountdown = obj->mControllerData->mMoveStuckTestDelay;
          }
       }
-      obj->getAIInfo()->mLastPos = obj->getAIInfo()->getPosition();
    }
+}
+
+AIControllerData::AIControllerData()
+{
+   mMoveTolerance = 0.25;
+   mFollowTolerance = 1.0;
+   mAttackRadius = 2.0;
+   mMoveStuckTolerance = 0.01f;
+   mMoveStuckTestDelay = 30;
+   mLinkTypes = LinkData(AllFlags);
+   mNavSize = AINavigation::Regular;
+
+   mFlocking.mChance = 100;
+   mFlocking.mMin = 1.0f;
+   mFlocking.mMax = 3.0f;
+   mFlocking.mSideStep = 0.125f;
+
+   resolveYawPtr.bind(this, &AIControllerData::resolveYaw);
+   resolvePitchPtr.bind(this, &AIControllerData::resolvePitch);
+   resolveRollPtr.bind(this, &AIControllerData::resolveRoll);
+   resolveSpeedPtr.bind(this, &AIControllerData::resolveSpeed);
+   resolveTriggerStatePtr.bind(this, &AIControllerData::resolveTriggerState);
+   resolveStuckPtr.bind(this, &AIControllerData::resolveStuck);
 }
 
 void AIControllerData::initPersistFields()
@@ -518,6 +537,14 @@ void AIControllerData::initPersistFields()
    addFieldV("AttackRadius", TypeRangedF32, Offset(mAttackRadius, AIControllerData), &CommonValidators::PositiveFloat,
       "@brief Distance considered in firing range for callback purposes.");
 
+   addFieldV("FlockChance", TypeRangedS32, Offset(mFlocking.mChance, AIControllerData), &CommonValidators::S32Percent,
+      "@brief chance of flocking.");
+   addFieldV("FlockMin", TypeRangedF32, Offset(mFlocking.mMin, AIControllerData), &CommonValidators::PositiveFloat,
+      "@brief min flocking separation distance.");
+   addFieldV("FlockMax", TypeRangedF32, Offset(mFlocking.mMax, AIControllerData), &CommonValidators::PositiveFloat,
+      "@brief max flocking clustering distance.");
+   addFieldV("FlockSideStep", TypeRangedF32, Offset(mFlocking.mSideStep, AIControllerData), &CommonValidators::PositiveFloat,
+      "@brief Distance from destination before we stop moving out of the way.");
    endGroup("AI");
 
 #ifdef TORQUE_NAVIGATION_ENABLED
@@ -626,7 +653,7 @@ F32 AIWheeledVehicleControllerData::getSteeringAngle(AIController* obj, Point3F 
 
    // What is our target
    Point3F desired;
-   desired = obj->getNav()->mMoveDestination;
+   desired = obj->getNav()->getMoveDestination();
 
    MatrixF mat = wvo->getTransform();
    Point3F center, front;
@@ -739,4 +766,60 @@ void AIWheeledVehicleControllerData::resolveYaw(AIController* obj, Point3F locat
       movePtr->yaw = getSteeringAngle(obj, location);
    }
 };
+
+void AIWheeledVehicleControllerData::resolveSpeed(AIController* obj, Point3F location, Move* movePtr)
+{
+   F32 xDiff = obj->getNav()->getMoveDestination().x - location.x;
+   F32 yDiff = obj->getNav()->getMoveDestination().y - location.y;
+   Point3F rotation = obj->getAIInfo()->mObj->getTransform().toEuler();
+
+   Point2F movTarg;
+
+   // Build move direction in world space
+   if (mIsZero(xDiff))
+      movTarg.y = (location.y > obj->getNav()->getMoveDestination().y) ? -1.0f : 1.0f;
+   else
+   {
+      if (mIsZero(yDiff))
+         movTarg.x = (location.x > obj->getNav()->getMoveDestination().x) ? -1.0f : 1.0f;
+      else
+      {
+         if (mFabs(xDiff) > mFabs(yDiff))
+         {
+            F32 value = mFabs(yDiff / xDiff);
+            movTarg.y = (location.y > obj->getNav()->getMoveDestination().y) ? -value : value;
+            movTarg.x = (location.x > obj->getNav()->getMoveDestination().x) ? -1.0f : 1.0f;
+         }
+         else
+         {
+            F32 value = mFabs(xDiff / yDiff);
+            movTarg.x = (location.x > obj->getNav()->getMoveDestination().x) ? -value : value;
+            movTarg.y = (location.y > obj->getNav()->getMoveDestination().y) ? -1.0f : 1.0f;
+         }
+      }
+   }
+   // Rotate the move into object space (this really only needs
+   // a 2D matrix)
+   Point3F newMove;
+   MatrixF moveMatrix;
+   moveMatrix.set(EulerF(0.0f, 0.0f, -(rotation.z + movePtr->yaw)));
+   moveMatrix.mulV(Point3F(movTarg.x, movTarg.y, 0.0f), &newMove);
+   movTarg.y = newMove.y;
+
+   // Set Throttle.  We'll slow down once we get close
+   // to try and stop on the spot...
+   if (obj->mMovement.mMoveSlowdown)
+   {
+      F32 throttle = obj->mMovement.mMoveSpeed;
+      F32 dist = mSqrt(xDiff * xDiff + yDiff * yDiff);
+      F32 maxDist = mMoveTolerance * 2;
+      if (dist < maxDist)
+         throttle *= dist / maxDist;
+      movePtr->y *= throttle;
+   }
+   else
+   {
+      movePtr->y *= obj->mMovement.mMoveSpeed;
+   }
+}
 #endif //_AICONTROLLER_H_

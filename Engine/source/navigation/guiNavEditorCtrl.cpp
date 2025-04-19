@@ -37,6 +37,7 @@
 #include "gui/buttons/guiButtonCtrl.h"
 #include "gui/worldEditor/undoActions.h"
 #include "T3D/gameBase/gameConnection.h"
+#include "T3D/AI/AIController.h"
 
 IMPLEMENT_CONOBJECT(GuiNavEditorCtrl);
 
@@ -226,12 +227,11 @@ void GuiNavEditorCtrl::spawnPlayer(const Point3F &pos)
          missionCleanup->addObject(obj);
       }
       mPlayer = obj;
-      Player* po = dynamic_cast<Player*>(obj);
-      if (!po) return; //todo, more types
-      if (po->getAIController())
+      ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj);
+      if (sbo->getAIController())
       {
-         if (po->getAIController()->mControllerData)
-            Con::executef(this, "onPlayerSelected", Con::getIntArg(po->getAIController()->mControllerData->mLinkTypes.getFlags()));
+         if (sbo->getAIController()->mControllerData)
+            Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
       }
       else
       {
@@ -398,12 +398,11 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
             if(ri.object)
             {
                mPlayer = ri.object;
-               Player* po = dynamic_cast<Player*>(ri.object);
-               if (!po) return; //todo, more types
-               if (po->getAIController())
+               ShapeBase* sbo = dynamic_cast<ShapeBase*>(ri.object);
+               if (sbo->getAIController())
                {
-                  if (po->getAIController()->mControllerData)
-                     Con::executef(this, "onPlayerSelected", Con::getIntArg(po->getAIController()->mControllerData->mLinkTypes.getFlags()));
+                  if (sbo->getAIController()->mControllerData)
+                     Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
                }
                else
                {
@@ -413,12 +412,11 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
          }
          else if (!mPlayer.isNull() && gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
          {
-            Player* po = dynamic_cast<Player*>(mPlayer.getPointer());
-            if (!po) return; //todo, more types
-            if (po->getAIController())
+            ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
+            if (sbo->getAIController())
             {
-               if (po->getAIController()->mControllerData)
-                  po->getAIController()->getNav()->setPathDestination(ri.point,true);
+               if (sbo->getAIController()->mControllerData)
+                  sbo->getAIController()->getNav()->setPathDestination(ri.point,true);
             }
          }
       }

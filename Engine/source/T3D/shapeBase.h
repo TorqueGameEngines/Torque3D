@@ -88,6 +88,8 @@ class ShapeBase;
 class SFXSource;
 class SFXTrack;
 class SFXProfile;
+struct AIController;
+struct AIControllerData;
 
 typedef void* Light;
 
@@ -555,6 +557,7 @@ public:
    U32 cubeDescId;
    ReflectorDesc *reflectorDesc;
 
+   AIControllerData* mAIControllData;
    /// @name Destruction
    ///
    /// Everyone likes to blow things up!
@@ -1753,6 +1756,11 @@ public:
 
    /// Returns true if this object is controlling by something
    bool isControlled() { return(mIsControlled); }
+
+   AIController* mAIController;
+   bool setAIController(SimObjectId controller);
+   AIController* getAIController() { return mAIController; };
+   virtual bool getAIMove(Move* move);
 
    /// Returns true if this object is being used as a camera in first person
    bool isFirstPerson() const;

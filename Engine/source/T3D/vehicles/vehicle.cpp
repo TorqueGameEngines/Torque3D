@@ -148,7 +148,6 @@ VehicleData::VehicleData()
    collDamageMultiplier = 0.05f;
    enablePhysicsRep = true;
    mControlMap = StringTable->EmptyString();
-   mAIControllData = NULL;
 }
 
 
@@ -325,9 +324,7 @@ void VehicleData::initPersistFields()
    addGroup("Movement");
    addField("controlMap", TypeString, Offset(mControlMap, VehicleData),
       "@brief movemap used by these types of objects.\n\n");
-   addField("aiControllerData", TYPEID< AIControllerData >(), Offset(mAIControllData, VehicleData),
-      "@brief ai controller used by these types of objects.\n\n");
-   endGroup("Collision");
+   endGroup("Movement");
 
    addGroup("Steering");
       addFieldV( "jetForce", TypeRangedF32, Offset(jetForce, VehicleData), &CommonValidators::PositiveFloat,
@@ -414,7 +411,6 @@ Vehicle::Vehicle()
    mWorkingQueryBoxCountDown = sWorkingQueryBoxStaleThreshold;
 
    mPhysicsRep = NULL;
-   mAIController = NULL;
 }
 
 U32 Vehicle::getCollisionMask()
@@ -481,7 +477,6 @@ bool Vehicle::onAdd()
 void Vehicle::onRemove()
 {
    SAFE_DELETE(mPhysicsRep);
-   if (mAIController) mAIController->deleteObject();
    U32 i=0;
 
    for( i=0; i<VehicleData::VC_NUM_DAMAGE_EMITTERS; i++ )
@@ -1235,38 +1230,4 @@ void Vehicle::_renderMuzzleVector( ObjectRenderInst *ri, SceneRenderState *state
 	PrimBuild::vertex3fv(endpoint);
 
    PrimBuild::end();
-}
-
-bool Vehicle::setAIController(SimObjectId controller)
-{
-   if (Sim::findObject(controller, mAIController) && mAIController->mControllerData)
-   {
-      mAIController->setAIInfo(this);
-      return true;
-   }
-   Con::errorf("unable to find AIController : %i", controller);
-   mAIController = NULL;
-   return false;
-}
-
-bool Vehicle::getAIMove(Move* move)
-{
-   if (!isServerObject()) return false;
-   if (mAIController)
-   {
-      mAIController->getAIMove(move); //actual result
-      return true;
-   }
-
-   return false;
-}
-
-DefineEngineMethod(Vehicle, setAIController, bool, (S32 controller), , "")
-{
-   return object->setAIController(controller);
-}
-
-DefineEngineMethod(Vehicle, getAIController, AIController*, (), , "")
-{
-   return object->getAIController();
 }

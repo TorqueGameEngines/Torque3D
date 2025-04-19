@@ -301,9 +301,6 @@ void AINavigation::flock()
    AIControllerData::Flocking flockingData = getCtrl()->mControllerData->mFlocking;
    SimObjectPtr<SceneObject> obj = getCtrl()->getAIInfo()->mObj;
 
-   if (mRandI(0,100) > flockingData.mChance)
-      return;
-
    obj->disableCollision();
    Point3F pos = obj->getBoxCenter();
    Point3F searchArea = Point3F(flockingData.mMin / 2, flockingData.mMax / 2, getCtrl()->getAIInfo()->mObj->getObjBox().maxExtents.z / 2);
@@ -349,7 +346,8 @@ void AINavigation::flock()
             Point3F objectCenter = other->getBoxCenter();
 
             F32 sumRad = flockingData.mMin + other->getAIController()->mControllerData->mFlocking.mMin;
-            sumRad += getCtrl()->getAIInfo()->mRadius + other->getAIController()->getAIInfo()->mRadius;
+            F32 separation = getCtrl()->getAIInfo()->mRadius + other->getAIController()->getAIInfo()->mRadius;
+            sumRad += separation;
 
             Point3F offset = (pos - objectCenter);
             F32 offsetLensq = offset.lenSquared(); //square roots are expensive, so use squared val compares
@@ -360,7 +358,7 @@ void AINavigation::flock()
                {
                   found++;
                   offset.normalizeSafe();
-                  offset *= sumRad;
+                  offset *= sumRad + separation;
                   avoidanceOffset += offset; //accumulate total group, move away from that
                }
                other->enableCollision();
@@ -375,7 +373,8 @@ void AINavigation::flock()
                Point3F objectCenter = other->getBoxCenter();
 
                F32 sumRad = flockingData.mMin + other->getAIController()->mControllerData->mFlocking.mMin;
-               sumRad += getCtrl()->getAIInfo()->mRadius + other->getAIController()->getAIInfo()->mRadius;
+               F32 separation = getCtrl()->getAIInfo()->mRadius + other->getAIController()->getAIInfo()->mRadius;
+               sumRad += separation;
 
                Point3F offset = (pos - objectCenter);
                if ((flockingData.mMin > 0) && ((sumRad * sumRad) < (maxFlocksq)))
@@ -385,7 +384,7 @@ void AINavigation::flock()
                   {
                      found++;
                      offset.normalizeSafe();
-                     offset *= sumRad;
+                     offset *= sumRad + separation;
                      avoidanceOffset -= offset; // subtract total group, move toward it
                   }
                   other->enableCollision();
@@ -398,7 +397,6 @@ void AINavigation::flock()
          avoidanceOffset.y = (mRandF() * avoidanceOffset.y) * 0.5 + avoidanceOffset.y * 0.75;
          if (avoidanceOffset.lenSquared() < (maxFlocksq))
          {
-            avoidanceOffset.normalizeSafe();
             dest += avoidanceOffset;
          }
 

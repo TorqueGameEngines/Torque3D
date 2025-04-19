@@ -126,11 +126,21 @@ void AINavigation::repath()
    if (mPathData.path.isNull() || !mPathData.owned)
       return;
 
-   // If we're following, get their position.
-   mPathData.path->mTo = getCtrl()->getGoal()->getPosition();
+   if (mRandI(0, 100) < getCtrl()->mControllerData->mFlocking.mChance)
+   {
+      flock();
+      mPathData.path->mTo = mMoveDestination;
+   }
+   else
+   {
+      // If we're following, get their position.
+      mPathData.path->mTo = getCtrl()->getGoal()->getPosition();
+   }
+
    // Update from position and replan.
    mPathData.path->mFrom = getCtrl()->getAIInfo()->getPosition();
    mPathData.path->plan();
+
    // Move to first node (skip start pos).
    moveToNode(1);
 }
@@ -393,8 +403,9 @@ void AINavigation::flock()
          }
 
          //if we're not jumping...
-         if ((mPathData.path) && !(mPathData.path->getFlags(mPathData.index) & JumpFlag))
+         if (mJump == None)
          {
+            dest.z -= obj->getObjBox().len_z()*0.5;
             //make sure we don't run off a cliff
             Point3F zlen(0, 0, getCtrl()->getAIInfo()->mRadius);
             if (obj->getContainer()->castRay(dest + zlen, dest - zlen, TerrainObjectType | StaticShapeObjectType | StaticObjectType, &info))

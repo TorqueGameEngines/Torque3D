@@ -110,6 +110,7 @@ void AIController::setAim(SimObjectPtr<SceneObject> objIn, F32 rad, Point3F offs
 }
 
 #ifdef TORQUE_NAVIGATION_ENABLED
+
 bool AIController::getAIMove(Move* movePtr)
 {
    *movePtr = NullMove;
@@ -178,12 +179,17 @@ bool AIController::getAIMove(Move* movePtr)
             }
             getGoal()->mInRange = false;
          }
-         if (getGoal()->getDist() < mControllerData->mFollowTolerance && !getGoal()->mInRange)
+         if (getGoal()->getDist() < mControllerData->mFollowTolerance )
          {
             getNav()->clearPath();
             mMovement.mMoveState = ModeStop;
-            getGoal()->mInRange = true;
-            throwCallback("onTargetInRange");
+
+            if (!getGoal()->mInRange)
+            {
+               getGoal()->mInRange = true;
+               throwCallback("onTargetInRange");
+            }
+            else getGoal()->mInRange = false;
          }
          else
          {
@@ -195,14 +201,11 @@ bool AIController::getAIMove(Move* movePtr)
                   throwCallback("onTargetInFiringRange");
                }
             }
-            else
-               getGoal()->mInFiringRange = false;
+            else getGoal()->mInFiringRange = false;
          }
       }
    }
 #endif // TORQUE_NAVIGATION_ENABLED
-
-   getNav()->flock();
    // Orient towards the aim point, aim object, or towards
    // our destination.
    if (getAim() || mMovement.mMoveState != ModeStop)
@@ -472,8 +475,8 @@ void AIControllerData::resolveStuck(AIController* obj)
             if (obj->mMovement.mMoveState != AIController::ModeSlowing || locationDelta == 0)
             {
                obj->mMovement.onStuck();
+               obj->mMovement.mMoveStuckTestCountdown = obj->mControllerData->mMoveStuckTestDelay;
             }
-            obj->mMovement.mMoveStuckTestCountdown = obj->mControllerData->mMoveStuckTestDelay;
          }
       }
    }
@@ -489,10 +492,10 @@ AIControllerData::AIControllerData()
    mLinkTypes = LinkData(AllFlags);
    mNavSize = AINavigation::Regular;
 
-   mFlocking.mChance = 100;
+   mFlocking.mChance = 90;
    mFlocking.mMin = 1.0f;
    mFlocking.mMax = 3.0f;
-   mFlocking.mSideStep = 0.125f;
+   mFlocking.mSideStep = 0.01f;
 
    resolveYawPtr.bind(this, &AIControllerData::resolveYaw);
    resolvePitchPtr.bind(this, &AIControllerData::resolvePitch);

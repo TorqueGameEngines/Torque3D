@@ -5475,6 +5475,7 @@ bool ShapeBase::setAIController(SimObjectId controller)
 bool ShapeBase::getAIMove(Move* move)
 {
    if (!isServerObject()) return false;
+   if (isControlled()) return false; //something else is steering us, so use that one's controller
    if (!(mTypeMask & VehicleObjectType || mTypeMask & PlayerObjectType)) return false; //only support players and vehicles for now
    if (mAIController)
    {

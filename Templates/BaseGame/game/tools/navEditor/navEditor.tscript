@@ -459,13 +459,13 @@ function NavEditorGui::onLinkSelected(%this, %flags)
 
 function NavEditorGui::onPlayerSelected(%this, %flags)
 {
-   if (!isObject(%this.getPlayer().aiController))
+   if (!isObject(%this.getPlayer().aiController) && (!(%this.getPlayer().isMemberOfClass("AIPlayer"))))
    {
       %this.getPlayer().aiController = new AIController(){ ControllerData = aiPlayerControl; };
       %this.getPlayer().setAIController(%this.getPlayer().aiController);
-      NavMeshIgnore(%this.getPlayer(), true);
-      %this.getPlayer().setDamageState("Enabled");
    }
+   NavMeshIgnore(%this.getPlayer(), true);
+   %this.getPlayer().setDamageState("Enabled");
    
    updateLinkData(NavEditorOptionsWindow-->TestProperties, %flags);
 }
@@ -559,6 +559,15 @@ function NavEditorGui::followObject(%this)
    }
 }
 
+function NavEditorGui::stop(%this)
+{
+    if (isObject(%this.getPlayer().aiController))
+        %this.getPlayer().aiController.stop();
+    else
+    {
+        NavEditorGui.getPlayer().stop();
+    }
+}
 function NavInspector::inspect(%this, %obj)
 {
    %name = "";

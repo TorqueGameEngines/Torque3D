@@ -87,7 +87,7 @@ function NavEditorPlugin::onWorldEditorStartup(%this)
 
    // Add ourselves to the Editor Settings window.
    exec("./NavEditorSettingsTab.gui");
-   //ESettingsWindow.addTabPage(ENavEditorSettingsPage);
+   ESettingsWindow.addTabPage(ENavEditorSettingsPage);
    ENavEditorSettingsPage.init();
 
    // Add items to World Editor Creator
@@ -241,7 +241,7 @@ function NavEditorPlugin::initSettings(%this)
 {
    EditorSettings.beginGroup("NavEditor", true);
 
-   EditorSettings.setDefaultValue("SpawnClass",     "Player");
+   EditorSettings.setDefaultValue("SpawnClass",     "AIPlayer");
    EditorSettings.setDefaultValue("SpawnDatablock", "DefaultPlayerData");
 
    EditorSettings.endGroup();

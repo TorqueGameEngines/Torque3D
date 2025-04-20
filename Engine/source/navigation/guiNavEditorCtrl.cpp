@@ -227,15 +227,23 @@ void GuiNavEditorCtrl::spawnPlayer(const Point3F &pos)
          missionCleanup->addObject(obj);
       }
       mPlayer = obj;
-      ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj);
-      if (sbo->getAIController())
+      AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(obj);
+      if (asAIPlayer) //try direct
       {
-         if (sbo->getAIController()->mControllerData)
-            Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
+         Con::executef(this, "onPlayerSelected", Con::getIntArg(asAIPlayer->mLinkTypes.getFlags()));
       }
       else
       {
-         Con::executef(this, "onPlayerSelected");
+         ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj);
+         if (sbo->getAIController())
+         {
+            if (sbo->getAIController()->mControllerData)
+               Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
+         }
+         else
+         {
+            Con::executef(this, "onPlayerSelected");
+         }
       }
    }
 }
@@ -398,25 +406,41 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
             if(ri.object)
             {
                mPlayer = ri.object;
-               ShapeBase* sbo = dynamic_cast<ShapeBase*>(ri.object);
-               if (sbo->getAIController())
+               AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
+               if (asAIPlayer) //try direct
                {
-                  if (sbo->getAIController()->mControllerData)
-                     Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
+                  Con::executef(this, "onPlayerSelected", Con::getIntArg(asAIPlayer->mLinkTypes.getFlags()));
                }
                else
                {
-                  Con::executef(this, "onPlayerSelected");
+                  ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
+                  if (sbo->getAIController())
+                  {
+                     if (sbo->getAIController()->mControllerData)
+                        Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
+                  }
+                  else
+                  {
+                     Con::executef(this, "onPlayerSelected");
+                  }
                }
             }
          }
          else if (!mPlayer.isNull() && gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
          {
-            ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
-            if (sbo->getAIController())
+            AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
+            if (asAIPlayer) //try direct
             {
-               if (sbo->getAIController()->mControllerData)
-                  sbo->getAIController()->getNav()->setPathDestination(ri.point,true);
+               asAIPlayer->setPathDestination(ri.point);
+            }
+            else
+            {
+               ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
+               if (sbo->getAIController())
+               {
+                  if (sbo->getAIController()->mControllerData)
+                     sbo->getAIController()->getNav()->setPathDestination(ri.point, true);
+               }
             }
          }
       }

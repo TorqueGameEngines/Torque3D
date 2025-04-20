@@ -172,10 +172,10 @@ datablock LightAnimData( SpinLightAnim )
 
 datablock AIPlayerControllerData( aiPlayerControl )
 {
-
+    moveTolerance = 0.25; followTolerance = 1.0; mAttackRadius = 2;
 };
 
 datablock AIWheeledVehicleControllerData( aiCarControl )
 {
-
+    moveTolerance = 1.0; followTolerance = 2.0; mAttackRadius = 5.0;
 };

@@ -31,7 +31,7 @@ IMPLEMENT_CONOBJECT(AIController);
 //-----------------------------------------------------------------------------
 void AIController::throwCallback(const char* name)
 {
-   Con::warnf("throwCallback: %s", name);
+   //Con::warnf("throwCallback: %s", name);
    Con::executef(mControllerData, name, getIdString()); //controller data callbacks
 
    GameBase* gbo = dynamic_cast<GameBase*>(getAIInfo()->mObj.getPointer());

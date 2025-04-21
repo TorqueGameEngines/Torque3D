@@ -157,7 +157,7 @@ public:
    F32 mAttackRadius;                  // Distance to trigger weaponry calcs
    F32 mMoveStuckTolerance;            // Distance tolerance on stuck check
    S32 mMoveStuckTestDelay;            // The number of ticks to wait before checking if the AI is stuck
-
+   F32 mHeightTolerance;               // how high above the navmesh are we before we stop trying to repath
    struct Flocking {
       U32 mChance;                     // chance of flocking
       F32 mMin;                        // min flocking separation distance
@@ -217,12 +217,37 @@ public:
    AIWheeledVehicleControllerData()
    {
       resolveYawPtr.bind(this, &AIWheeledVehicleControllerData::resolveYaw);
-      resolveSpeedPtr.bind(this, &AIControllerData::resolveSpeed);
+      resolveSpeedPtr.bind(this, &AIWheeledVehicleControllerData::resolveSpeed);
+      mHeightTolerance = 2.0f;
    }
    F32 getSteeringAngle(AIController* obj, Point3F location);
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
    void resolveSpeed(AIController* obj, Point3F location, Move* movePtr);
    DECLARE_CONOBJECT(AIWheeledVehicleControllerData);
+};
+
+class AIFlyingVehicleControllerData : public AIControllerData
+{
+   typedef AIControllerData Parent;
+
+   enum DrivingState {
+      SteerNull,
+      Left,
+      Right,
+      Straight
+   };
+
+public:
+   AIFlyingVehicleControllerData()
+   {
+      resolveYawPtr.bind(this, &AIFlyingVehicleControllerData::resolveYaw);
+      resolveSpeedPtr.bind(this, &AIFlyingVehicleControllerData::resolveSpeed);
+      mHeightTolerance = 200.0f;
+   }
+   F32 getSteeringAngle(AIController* obj, Point3F location);
+   void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
+   void resolveSpeed(AIController* obj, Point3F location, Move* movePtr);
+   DECLARE_CONOBJECT(AIFlyingVehicleControllerData);
 };
 #endif // TORQUE_NAVIGATION_ENABLED
 #endif //_AICONTROLLER_H_

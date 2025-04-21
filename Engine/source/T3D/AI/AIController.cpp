@@ -24,6 +24,7 @@
 #include "T3D/player.h"
 #include "T3D/rigidShape.h"
 #include "T3D/vehicles/wheeledVehicle.h"
+#include "T3D/vehicles/flyingVehicle.h"
 
 
 IMPLEMENT_CONOBJECT(AIController);
@@ -164,16 +165,13 @@ bool AIController::getAIMove(Move* movePtr)
       {
          if (getGoal()->getDist() > mControllerData->mFollowTolerance)
          {
-            F32 raylength = 2.0; //for vehicles
             SceneObject* obj = getAIInfo()->mObj->getObjectMount();
             if (!obj)
             {
                obj = getAIInfo()->mObj;
-               raylength = 0.001f; //for jumping
             }
-
             RayInfo info;
-            if (obj->getContainer()->castRay(obj->getPosition(), obj->getPosition() - Point3F(0, 0, raylength), StaticShapeObjectType, &info))
+            if (obj->getContainer()->castRay(obj->getPosition(), obj->getPosition() - Point3F(0, 0, mControllerData->mHeightTolerance), StaticShapeObjectType, &info))
             {
                getNav()->repath();
             }
@@ -399,9 +397,11 @@ void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* m
    if (mIsZero(xDiff))
       movePtr->y = (location.y > obj->getNav()->getMoveDestination().y) ? -1.0f : 1.0f;
    else
+   {
       if (mIsZero(yDiff))
          movePtr->x = (location.x > obj->getNav()->getMoveDestination().x) ? -1.0f : 1.0f;
       else
+      {
          if (mFabs(xDiff) > mFabs(yDiff))
          {
             F32 value = mFabs(yDiff / xDiff);
@@ -414,7 +414,8 @@ void AIControllerData::resolveSpeed(AIController* obj, Point3F location, Move* m
             movePtr->x = (location.x > obj->getNav()->getMoveDestination().x) ? -value : value;
             movePtr->y = (location.y > obj->getNav()->getMoveDestination().y) ? -1.0f : 1.0f;
          }
-
+      }
+   }
    // Rotate the move into object space (this really only needs
    // a 2D matrix)
    Point3F newMove;
@@ -484,13 +485,14 @@ void AIControllerData::resolveStuck(AIController* obj)
 
 AIControllerData::AIControllerData()
 {
-   mMoveTolerance = 0.25;
-   mFollowTolerance = 1.0;
-   mAttackRadius = 2.0;
+   mMoveTolerance = 0.25f;
+   mFollowTolerance = 1.0f;
+   mAttackRadius = 2.0f;
    mMoveStuckTolerance = 0.01f;
    mMoveStuckTestDelay = 30;
    mLinkTypes = LinkData(AllFlags);
    mNavSize = AINavigation::Regular;
+   mHeightTolerance = 0.001f;
 
    mFlocking.mChance = 90;
    mFlocking.mMin = 1.0f;
@@ -638,6 +640,8 @@ void AIPlayerControllerData::resolveTriggerState(AIController* obj, Move* movePt
 #endif // TORQUE_NAVIGATION_ENABLED
 }
 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 IMPLEMENT_CO_DATABLOCK_V1(AIWheeledVehicleControllerData);
 // Build a Triangle .. calculate angle of rotation required to meet target..
 // man there has to be a better way! >:)
@@ -772,57 +776,172 @@ void AIWheeledVehicleControllerData::resolveYaw(AIController* obj, Point3F locat
 
 void AIWheeledVehicleControllerData::resolveSpeed(AIController* obj, Point3F location, Move* movePtr)
 {
-   F32 xDiff = obj->getNav()->getMoveDestination().x - location.x;
-   F32 yDiff = obj->getNav()->getMoveDestination().y - location.y;
-   Point3F rotation = obj->getAIInfo()->mObj->getTransform().toEuler();
-
-   Point2F movTarg;
-
-   // Build move direction in world space
-   if (mIsZero(xDiff))
-      movTarg.y = (location.y > obj->getNav()->getMoveDestination().y) ? -1.0f : 1.0f;
-   else
+   WheeledVehicle* wvo = dynamic_cast<WheeledVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!wvo)
    {
-      if (mIsZero(yDiff))
-         movTarg.x = (location.x > obj->getNav()->getMoveDestination().x) ? -1.0f : 1.0f;
+      //cover the case of a connection controling an object in turn controlling another
+      if (obj->getAIInfo()->mObj->getObjectMount())
+         wvo = dynamic_cast<WheeledVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
+   }
+   if (!wvo) return;//not a WheeledVehicle
+
+   Parent::resolveSpeed(obj, location, movePtr);
+
+   VehicleData* db =  static_cast<VehicleData *>(wvo->getDataBlock());
+   movePtr->x = 0;// 1.1 - wvo->getSteering().x / db->maxSteeringAngle;
+   movePtr->y *= 1.1 - wvo->getSteering().y / db->maxSteeringAngle;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+IMPLEMENT_CO_DATABLOCK_V1(AIFlyingVehicleControllerData);
+// Build a Triangle .. calculate angle of rotation required to meet target..
+// man there has to be a better way! >:)
+F32 AIFlyingVehicleControllerData::getSteeringAngle(AIController* obj, Point3F location)
+{
+   FlyingVehicle* wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!wvo)
+   {
+      //cover the case of a connection controling an object in turn controlling another
+      if (obj->getAIInfo()->mObj->getObjectMount())
+         wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
+   }
+   if (!wvo) return 0;//not a FlyingVehicle
+
+   DrivingState steerState = SteerNull;
+
+   // What is our target
+   Point3F desired;
+   desired = obj->getNav()->getMoveDestination();
+
+   MatrixF mat = wvo->getTransform();
+   Point3F center, front;
+   Point3F wFront;
+   Box3F box = wvo->getObjBox();
+
+   box.getCenter(&center);
+   front = center;
+   front.y = box.maxExtents.y; // should be true for all these objects
+
+   obj->getAIInfo()->mObj->getWorldBox().getCenter(&center);
+   front = center + front;
+
+   Point3F objFront = front;
+   Point3F offset = front - center;
+   EulerF rot;
+   rot = mat.toEuler();
+   MatrixF transform(rot);
+   transform.mulV(offset, &wFront);
+   front = wFront + center;
+
+   Point3F ftoc;
+   ftoc.x = mFabs(front.x - center.x);
+   ftoc.y = mFabs(front.y - center.y);
+   ftoc.z = mFabs(front.z - center.z);
+   F32 fToc = mSqrt((ftoc.x * ftoc.x) + (ftoc.y * ftoc.y));
+
+   Point3F ltoc;
+   ltoc.x = mFabs(desired.x - center.x);
+   ltoc.y = mFabs(desired.y - center.y);
+   ltoc.z = mFabs(desired.z - center.z);
+   F32 lToc = mSqrt((ltoc.x * ltoc.x) + (ltoc.y * ltoc.y));
+
+   Point3F ftol;
+   ftol.x = mFabs(front.x - desired.x);
+   ftol.y = mFabs(front.y - desired.y);
+   ftol.z = mFabs(front.z - desired.z);
+   F32 fTol = mSqrt((ftol.x * ftol.x) + (ftol.y * ftol.y));
+
+   F32 myAngle = mAcos(((lToc * lToc) + (fToc * fToc) - (fTol * fTol)) / (2 * lToc * fToc));
+
+   F32 finalYaw = mRadToDeg(myAngle);
+
+   F32 maxSteeringAngle = 0;
+
+   VehicleData* vd = (VehicleData*)(wvo->getDataBlock());
+   maxSteeringAngle = vd->maxSteeringAngle;
+
+   Point2F steering = wvo->getSteering();
+   if (finalYaw < 5 && steering.x != 0.0f)
+      steerState = Straight;
+   else if (finalYaw < 5)
+      steerState = SteerNull;
+   else
+   {// Quickly Hack out left or right turn info
+      Point3F rotData = objFront - desired;
+      MatrixF leftM(-rot);
+      Point3F leftP;
+      leftM.mulV(rotData, &leftP);
+      leftP = leftP + desired;
+
+      if (leftP.x < desired.x)
+         steerState = Right;
       else
-      {
-         if (mFabs(xDiff) > mFabs(yDiff))
-         {
-            F32 value = mFabs(yDiff / xDiff);
-            movTarg.y = (location.y > obj->getNav()->getMoveDestination().y) ? -value : value;
-            movTarg.x = (location.x > obj->getNav()->getMoveDestination().x) ? -1.0f : 1.0f;
-         }
-         else
-         {
-            F32 value = mFabs(xDiff / yDiff);
-            movTarg.x = (location.x > obj->getNav()->getMoveDestination().x) ? -value : value;
-            movTarg.y = (location.y > obj->getNav()->getMoveDestination().y) ? -1.0f : 1.0f;
-         }
-      }
+         steerState = Left;
    }
-   // Rotate the move into object space (this really only needs
-   // a 2D matrix)
-   Point3F newMove;
-   MatrixF moveMatrix;
-   moveMatrix.set(EulerF(0.0f, 0.0f, -(rotation.z + movePtr->yaw)));
-   moveMatrix.mulV(Point3F(movTarg.x, movTarg.y, 0.0f), &newMove);
-   movTarg.y = newMove.y;
 
-   // Set Throttle.  We'll slow down once we get close
-   // to try and stop on the spot...
-   if (obj->mMovement.mMoveSlowdown)
+   F32 throttle = wvo->getThrottle();
+   if (throttle < 0.0f && steerState != Straight)
    {
-      F32 throttle = obj->mMovement.mMoveSpeed;
-      F32 dist = mSqrt(xDiff * xDiff + yDiff * yDiff);
-      F32 maxDist = mMoveTolerance * 2;
-      if (dist < maxDist)
-         throttle *= dist / maxDist;
-      movePtr->y *= throttle;
+      F32 reverseReduction = 0.25;
+      steering.x = steering.x * reverseReduction * throttle;
    }
-   else
+   F32 turnAdjust = myAngle - steering.x;
+
+   F32 steer = 0;
+   switch (steerState)
    {
-      movePtr->y *= obj->mMovement.mMoveSpeed;
+   case Left:
+      steer = myAngle < maxSteeringAngle ? -turnAdjust : -maxSteeringAngle - steering.x;
+      break;
+   case Right:
+      steer = myAngle < maxSteeringAngle ? turnAdjust : maxSteeringAngle - steering.x;
+      break;
+   case Straight:
+      steer = -steering.x;
+      break;
+   default:
+      break;
+   };
+
+   //   Con::printf("AI Steering : %f", steer);
+   return steer;
+}
+
+
+void AIFlyingVehicleControllerData::resolveYaw(AIController* obj, Point3F location, Move* movePtr)
+{
+   FlyingVehicle* wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!wvo)
+   {
+      //cover the case of a connection controling an object in turn controlling another
+      if (obj->getAIInfo()->mObj->getObjectMount())
+         wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
    }
+   if (!wvo) return;//not a FlyingVehicle
+
+   // Orient towards our destination.
+   if (obj->mMovement.mMoveState == AIController::ModeMove || obj->mMovement.mMoveState == AIController::ModeReverse) {
+      movePtr->yaw = getSteeringAngle(obj, location);
+   }
+};
+
+void AIFlyingVehicleControllerData::resolveSpeed(AIController* obj, Point3F location, Move* movePtr)
+{
+   FlyingVehicle* wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!wvo)
+   {
+      //cover the case of a connection controling an object in turn controlling another
+      if (obj->getAIInfo()->mObj->getObjectMount())
+         wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
+   }
+   if (!wvo) return;//not a FlyingVehicle
+
+   Parent::resolveSpeed(obj, location, movePtr);
+
+   VehicleData* db = static_cast<VehicleData*>(wvo->getDataBlock());
+   movePtr->x = 0;// 1.1 - wvo->getSteering().x / db->maxSteeringAngle;
+   movePtr->y *= 1.1 - wvo->getSteering().y / db->maxSteeringAngle;
 }
 #endif //_AICONTROLLER_H_

@@ -179,3 +179,9 @@ datablock AIWheeledVehicleControllerData( aiCarControl )
 {
     moveTolerance = 1.0; followTolerance = 2.0; mAttackRadius = 5.0;
 };
+
+datablock AIFlyingVehicleControllerData( aiPlaneControl )
+{
+    moveTolerance = 2.0; followTolerance = 5.0; mAttackRadius = 10.0;
+};
+

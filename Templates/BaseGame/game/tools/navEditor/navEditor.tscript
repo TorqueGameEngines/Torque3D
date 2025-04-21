@@ -461,7 +461,7 @@ function NavEditorGui::onPlayerSelected(%this, %flags)
 {
    if (!isObject(%this.getPlayer().aiController) && (!(%this.getPlayer().isMemberOfClass("AIPlayer"))))
    {
-      %this.getPlayer().aiController = new AIController(){ ControllerData = aiPlayerControl; };
+      %this.getPlayer().aiController = new AIController(){ ControllerData = %this.getPlayer().getDatablock().aiControllerData; };
       %this.getPlayer().setAIController(%this.getPlayer().aiController);
    }
    NavMeshIgnore(%this.getPlayer(), true);

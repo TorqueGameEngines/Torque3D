@@ -52,10 +52,30 @@ AIInfo::AIInfo(AIController* controller, Point3F pointIn, F32 radIn)
    mPosSet = true;
 };
 
+Point3F AIInfo::getPosition(bool doCastray)
+{
+   Point3F pos = (mObj.isValid()) ? mObj->getPosition() : mPosition;
+   if (doCastray)
+   {
+      RayInfo info;
+      if (gServerContainer.castRay(pos, pos - Point3F(0, 0, getCtrl()->mControllerData->mHeightTolerance), StaticShapeObjectType, &info))
+      {
+         pos = info.point;
+      }
+   }
+
+   return pos;
+}
+
 F32 AIInfo::getDist()
 {
    AIInfo* controlObj = getCtrl()->getAIInfo();
-   F32 ret = VectorF(controlObj->getPosition() - getPosition()).len();
+   Point3F targPos = getPosition();
+
+   if (mFabs(targPos.z - controlObj->getPosition().z) < getCtrl()->mControllerData->mHeightTolerance)
+      targPos.z = controlObj->getPosition().z;
+
+   F32 ret = VectorF(controlObj->getPosition() - targPos).len();
    ret -= controlObj->mRadius + mRadius;
    return ret;
 }

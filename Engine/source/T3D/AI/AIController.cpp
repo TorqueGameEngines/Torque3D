@@ -158,7 +158,7 @@ bool AIController::getAIMove(Move* movePtr)
             if (getGoal()->mObj.isValid())
                getNav()->followObject(getGoal()->mObj, mControllerData->mFollowTolerance);
             else if (getGoal()->mPosSet)
-               getNav()->setPathDestination(getGoal()->getPosition());
+               getNav()->setPathDestination(getGoal()->getPosition(true));
          }
       }
       else
@@ -271,7 +271,7 @@ DefineEngineMethod(AIController, setMoveSpeed, void, (F32 speed), ,
    "@brief Sets the move speed for an AI object.\n\n"
 
    "@param speed A speed multiplier between 0.0 and 1.0.  "
-   "This is multiplied by the AIPlayer's base movement rates (as defined in "
+   "This is multiplied by the AIController controlled object's base movement rates (as defined in "
    "its PlayerData datablock)\n\n"
 
    "@see getMoveDestination()\n")
@@ -290,7 +290,7 @@ DefineEngineMethod(AIController, getMoveSpeed, F32, (), ,
 }
 
 DefineEngineMethod(AIController, stop, void, (), ,
-   "@brief Tells the AIPlayer to stop moving.\n\n")
+   "@brief Tells the AIController controlled object to stop moving.\n\n")
 {
    object->mMovement.stopMove();
 }
@@ -514,28 +514,35 @@ void AIControllerData::initPersistFields()
 
    addFieldV("moveTolerance", TypeRangedF32, Offset(mMoveTolerance, AIControllerData), &CommonValidators::PositiveFloat,
       "@brief Distance from destination before stopping.\n\n"
-      "When the AIPlayer is moving to a given destination it will move to within "
+      "When the AIController controlled object is moving to a given destination it will move to within "
       "this distance of the destination and then stop.  By providing this tolerance "
-      "it helps the AIPlayer from never reaching its destination due to minor obstacles, "
+      "it helps the AIController controlled object from never reaching its destination due to minor obstacles, "
       "rounding errors on its position calculation, etc.  By default it is set to 0.25.\n");
 
    addFieldV("followTolerance", TypeRangedF32, Offset(mFollowTolerance, AIControllerData), &CommonValidators::PositiveFloat,
       "@brief Distance from destination before stopping.\n\n"
-      "When the AIPlayer is moving to a given destination it will move to within "
+      "When the AIController controlled object is moving to a given destination it will move to within "
       "this distance of the destination and then stop.  By providing this tolerance "
-      "it helps the AIPlayer from never reaching its destination due to minor obstacles, "
+      "it helps the AIController controlled object from never reaching its destination due to minor obstacles, "
       "rounding errors on its position calculation, etc.  By default it is set to 0.25.\n");
 
    addFieldV("moveStuckTolerance", TypeRangedF32, Offset(mMoveStuckTolerance, AIControllerData), &CommonValidators::PositiveFloat,
       "@brief Distance tolerance on stuck check.\n\n"
-      "When the AIPlayer is moving to a given destination, if it ever moves less than "
-      "this tolerance during a single tick, the AIPlayer is considered stuck.  At this point "
+      "When the AIController controlled object controlled object is moving to a given destination, if it ever moves less than "
+      "this tolerance during a single tick, the AIController controlled object is considered stuck.  At this point "
       "the onMoveStuck() callback is called on the datablock.\n");
 
+   addFieldV("HeightTolerance", TypeRangedF32, Offset(mHeightTolerance, AIControllerData), &CommonValidators::PositiveFloat,
+      "@brief Distance from destination before stopping.\n\n"
+      "When the AIController controlled object is moving to a given destination it will move to within "
+      "this distance of the destination and then stop.  By providing this tolerance "
+      "it helps the AIController controlled object from never reaching its destination due to minor obstacles, "
+      "rounding errors on its position calculation, etc.  By default it is set to 0.25.\n");
+   
    addFieldV("moveStuckTestDelay", TypeRangedS32, Offset(mMoveStuckTestDelay, AIControllerData), &CommonValidators::PositiveInt,
-      "@brief The number of ticks to wait before testing if the AIPlayer is stuck.\n\n"
-      "When the AIPlayer is asked to move, this property is the number of ticks to wait "
-      "before the AIPlayer starts to check if it is stuck.  This delay allows the AIPlayer "
+      "@brief The number of ticks to wait before testing if the AIController controlled object is stuck.\n\n"
+      "When the AIController controlled object is asked to move, this property is the number of ticks to wait "
+      "before the AIController controlled object starts to check if it is stuck.  This delay allows the AIController controlled object "
       "to accelerate to full speed without its initial slow start being considered as stuck.\n"
       "@note Set to zero to have the stuck test start immediately.\n");
 
@@ -796,6 +803,22 @@ void AIWheeledVehicleControllerData::resolveSpeed(AIController* obj, Point3F loc
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CO_DATABLOCK_V1(AIFlyingVehicleControllerData);
+
+void AIFlyingVehicleControllerData::initPersistFields()
+{
+   docsURL;
+   addGroup("AI");
+
+   addFieldV("FlightFloor", TypeRangedF32, Offset(mFlightFloor, AIFlyingVehicleControllerData), &CommonValidators::PositiveFloat,
+      "@brief Max height we can target.");
+
+   addFieldV("FlightCeiling", TypeRangedF32, Offset(mFlightCeiling, AIFlyingVehicleControllerData), &CommonValidators::PositiveFloat,
+      "@brief Max height we can target.");
+
+   endGroup("AI");
+
+   Parent::initPersistFields();
+}
 // Build a Triangle .. calculate angle of rotation required to meet target..
 // man there has to be a better way! >:)
 F32 AIFlyingVehicleControllerData::getSteeringAngle(AIController* obj, Point3F location)
@@ -927,6 +950,31 @@ void AIFlyingVehicleControllerData::resolveYaw(AIController* obj, Point3F locati
    }
 };
 
+void AIFlyingVehicleControllerData::resolvePitch(AIController* obj, Point3F location, Move* movePtr)
+{
+   FlyingVehicle* wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!wvo)
+   {
+      //cover the case of a connection controling an object in turn controlling another
+      if (obj->getAIInfo()->mObj->getObjectMount())
+         wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
+   }
+   if (!wvo) return;//not a FlyingVehicle
+
+   Point3F up = wvo->getTransform().getUpVector();
+   up.normalize();
+   Point3F aimLoc = obj->mMovement.mAimLocation;
+   aimLoc.z = mClampF(aimLoc.z, mFlightFloor, mFlightCeiling);
+
+   // Get the Target to AI vector and normalize it.
+   Point3F toTarg = aimLoc - location;
+   toTarg.normalize();
+
+   F32 dotPitch = mDot(up, toTarg);
+   if (mFabs(dotPitch) > 0.05f)
+      movePtr->pitch = -dotPitch;
+}
+
 void AIFlyingVehicleControllerData::resolveSpeed(AIController* obj, Point3F location, Move* movePtr)
 {
    FlyingVehicle* wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
@@ -942,6 +990,6 @@ void AIFlyingVehicleControllerData::resolveSpeed(AIController* obj, Point3F loca
 
    VehicleData* db = static_cast<VehicleData*>(wvo->getDataBlock());
    movePtr->x = 0;// 1.1 - wvo->getSteering().x / db->maxSteeringAngle;
-   movePtr->y *= 1.1 - wvo->getSteering().y / db->maxSteeringAngle;
+   movePtr->y = mMax(movePtr->y*1.1 - wvo->getSteering().y / db->maxSteeringAngle, 0.0f);
 }
 #endif //_AICONTROLLER_H_

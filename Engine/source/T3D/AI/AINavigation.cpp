@@ -134,11 +134,11 @@ void AINavigation::repath()
    else
    {
       // If we're following, get their position.
-      mPathData.path->mTo = getCtrl()->getGoal()->getPosition();
+      mPathData.path->mTo = getCtrl()->getGoal()->getPosition(true);
    }
 
    // Update from position and replan.
-   mPathData.path->mFrom = getCtrl()->getAIInfo()->getPosition();
+   mPathData.path->mFrom = getCtrl()->getAIInfo()->getPosition(true);
    mPathData.path->plan();
 
    // Move to first node (skip start pos).
@@ -215,8 +215,8 @@ bool AINavigation::setPathDestination(const Point3F& pos, bool replace)
    NavPath* path = new NavPath();
 
    path->mMesh = mNavMesh;
-   path->mFrom = getCtrl()->getAIInfo()->getPosition();
-   path->mTo = getCtrl()->getGoal()->getPosition();
+   path->mFrom = getCtrl()->getAIInfo()->getPosition(true);
+   path->mTo = getCtrl()->getGoal()->getPosition(true);
    path->mFromSet = path->mToSet = true;
    path->mAlwaysRender = true;
    path->mLinkTypes = getCtrl()->mControllerData->mLinkTypes;
@@ -257,7 +257,7 @@ void AINavigation::followObject()
    if (getCtrl()->getGoal()->getDist() < getCtrl()->mControllerData->mMoveTolerance)
       return;
 
-   if (setPathDestination(getCtrl()->getGoal()->getPosition()))
+   if (setPathDestination(getCtrl()->getGoal()->getPosition(true)))
    {
       getCtrl()->clearCover();
    }

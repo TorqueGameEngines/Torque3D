@@ -236,17 +236,24 @@ class AIFlyingVehicleControllerData : public AIControllerData
       Right,
       Straight
    };
-
+   F32 mFlightFloor;
+   F32 mFlightCeiling;
 public:
    AIFlyingVehicleControllerData()
    {
       resolveYawPtr.bind(this, &AIFlyingVehicleControllerData::resolveYaw);
+      resolvePitchPtr.bind(this, &AIFlyingVehicleControllerData::resolvePitch);
       resolveSpeedPtr.bind(this, &AIFlyingVehicleControllerData::resolveSpeed);
       mHeightTolerance = 200.0f;
+      mFlightCeiling = 200.0f;
+      mFlightFloor = 1.0;
    }
+   static void initPersistFields();
    F32 getSteeringAngle(AIController* obj, Point3F location);
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
    void resolveSpeed(AIController* obj, Point3F location, Move* movePtr);
+   void resolvePitch(AIController* obj, Point3F location, Move* movePtr);
+
    DECLARE_CONOBJECT(AIFlyingVehicleControllerData);
 };
 #endif // TORQUE_NAVIGATION_ENABLED

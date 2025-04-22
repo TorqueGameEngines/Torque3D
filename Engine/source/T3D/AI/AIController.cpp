@@ -455,7 +455,7 @@ void AIControllerData::resolveTriggerState(AIController* obj, Move* movePtr)
 
 void AIControllerData::resolveStuck(AIController* obj)
 {
-   if (obj->mMovement.mMoveState == AIController::ModeStuck) return;
+   if (obj->mMovement.mMoveState < AIController::ModeSlowing) return;
    if (!obj->getGoal()) return;
    ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj->getAIInfo()->mObj.getPointer());
    // Don't check for ai stuckness if animation during
@@ -766,6 +766,7 @@ F32 AIWheeledVehicleControllerData::getSteeringAngle(AIController* obj, Point3F 
 
 void AIWheeledVehicleControllerData::resolveYaw(AIController* obj, Point3F location, Move* movePtr)
 {
+   if (obj->mMovement.mMoveState < AIController::ModeSlowing) return;
    WheeledVehicle* wvo = dynamic_cast<WheeledVehicle*>(obj->getAIInfo()->mObj.getPointer());
    if (!wvo)
    {
@@ -783,6 +784,7 @@ void AIWheeledVehicleControllerData::resolveYaw(AIController* obj, Point3F locat
 
 void AIWheeledVehicleControllerData::resolveSpeed(AIController* obj, Point3F location, Move* movePtr)
 {
+   if (obj->mMovement.mMoveState < AIController::ModeSlowing) return;
    WheeledVehicle* wvo = dynamic_cast<WheeledVehicle*>(obj->getAIInfo()->mObj.getPointer());
    if (!wvo)
    {
@@ -795,7 +797,7 @@ void AIWheeledVehicleControllerData::resolveSpeed(AIController* obj, Point3F loc
    Parent::resolveSpeed(obj, location, movePtr);
 
    VehicleData* db =  static_cast<VehicleData *>(wvo->getDataBlock());
-   movePtr->x = 0;// 1.1 - wvo->getSteering().x / db->maxSteeringAngle;
+   movePtr->x = 0;
    movePtr->y *= 1.1 - wvo->getSteering().y / db->maxSteeringAngle;
 }
 
@@ -823,14 +825,14 @@ void AIFlyingVehicleControllerData::initPersistFields()
 // man there has to be a better way! >:)
 F32 AIFlyingVehicleControllerData::getSteeringAngle(AIController* obj, Point3F location)
 {
-   FlyingVehicle* wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
-   if (!wvo)
+   FlyingVehicle* fvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!fvo)
    {
       //cover the case of a connection controling an object in turn controlling another
       if (obj->getAIInfo()->mObj->getObjectMount())
-         wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
+         fvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
    }
-   if (!wvo) return 0;//not a FlyingVehicle
+   if (!fvo) return 0;//not a FlyingVehicle
 
    DrivingState steerState = SteerNull;
 
@@ -838,10 +840,10 @@ F32 AIFlyingVehicleControllerData::getSteeringAngle(AIController* obj, Point3F l
    Point3F desired;
    desired = obj->getNav()->getMoveDestination();
 
-   MatrixF mat = wvo->getTransform();
+   MatrixF mat = fvo->getTransform();
    Point3F center, front;
    Point3F wFront;
-   Box3F box = wvo->getObjBox();
+   Box3F box = fvo->getObjBox();
 
    box.getCenter(&center);
    front = center;
@@ -882,10 +884,10 @@ F32 AIFlyingVehicleControllerData::getSteeringAngle(AIController* obj, Point3F l
 
    F32 maxSteeringAngle = 0;
 
-   VehicleData* vd = (VehicleData*)(wvo->getDataBlock());
+   VehicleData* vd = (VehicleData*)(fvo->getDataBlock());
    maxSteeringAngle = vd->maxSteeringAngle;
 
-   Point2F steering = wvo->getSteering();
+   Point2F steering = fvo->getSteering();
    if (finalYaw < 5 && steering.x != 0.0f)
       steerState = Straight;
    else if (finalYaw < 5)
@@ -904,7 +906,7 @@ F32 AIFlyingVehicleControllerData::getSteeringAngle(AIController* obj, Point3F l
          steerState = Left;
    }
 
-   F32 throttle = wvo->getThrottle();
+   F32 throttle = fvo->getThrottle();
    if (throttle < 0.0f && steerState != Straight)
    {
       F32 reverseReduction = 0.25;
@@ -935,61 +937,66 @@ F32 AIFlyingVehicleControllerData::getSteeringAngle(AIController* obj, Point3F l
 
 void AIFlyingVehicleControllerData::resolveYaw(AIController* obj, Point3F location, Move* movePtr)
 {
-   FlyingVehicle* wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
-   if (!wvo)
+   if (obj->mMovement.mMoveState < AIController::ModeSlowing) return;
+   FlyingVehicle* fvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!fvo)
    {
       //cover the case of a connection controling an object in turn controlling another
       if (obj->getAIInfo()->mObj->getObjectMount())
-         wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
+         fvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
    }
-   if (!wvo) return;//not a FlyingVehicle
+   if (!fvo) return;//not a FlyingVehicle
 
    // Orient towards our destination.
-   if (obj->mMovement.mMoveState == AIController::ModeMove || obj->mMovement.mMoveState == AIController::ModeReverse) {
-      movePtr->yaw = getSteeringAngle(obj, location);
-   }
+   movePtr->yaw = getSteeringAngle(obj, location);
 };
 
 void AIFlyingVehicleControllerData::resolvePitch(AIController* obj, Point3F location, Move* movePtr)
 {
-   FlyingVehicle* wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
-   if (!wvo)
+   if (obj->mMovement.mMoveState < AIController::ModeSlowing) return;
+   FlyingVehicle* fvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!fvo)
    {
       //cover the case of a connection controling an object in turn controlling another
       if (obj->getAIInfo()->mObj->getObjectMount())
-         wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
+         fvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
    }
-   if (!wvo) return;//not a FlyingVehicle
+   if (!fvo) return;//not a FlyingVehicle
 
-   Point3F up = wvo->getTransform().getUpVector();
+   F32 lastPitch = fvo->getSteering().y* (1.0f - fvo->getThrottle());
+
+   Point3F up = fvo->getTransform().getUpVector();
    up.normalize();
    Point3F aimLoc = obj->mMovement.mAimLocation;
    aimLoc.z = mClampF(aimLoc.z, mFlightFloor, mFlightCeiling);
 
-   // Get the Target to AI vector and normalize it.
-   Point3F toTarg = aimLoc - location;
+   // Get the AI  to Target vector and normalize it.
+   Point3F toTarg = location-aimLoc;
    toTarg.normalize();
 
    F32 dotPitch = mDot(up, toTarg);
+
    if (mFabs(dotPitch) > 0.05f)
-      movePtr->pitch = -dotPitch;
+      movePtr->pitch = dotPitch - lastPitch;
+   else
+      movePtr->pitch = -lastPitch;
 }
 
 void AIFlyingVehicleControllerData::resolveSpeed(AIController* obj, Point3F location, Move* movePtr)
 {
-   FlyingVehicle* wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
-   if (!wvo)
+   if (obj->mMovement.mMoveState < AIController::ModeSlowing) return;
+   FlyingVehicle* fvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
+   if (!fvo)
    {
       //cover the case of a connection controling an object in turn controlling another
       if (obj->getAIInfo()->mObj->getObjectMount())
-         wvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
+         fvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
    }
-   if (!wvo) return;//not a FlyingVehicle
+   if (!fvo) return;//not a FlyingVehicle
 
    Parent::resolveSpeed(obj, location, movePtr);
 
-   VehicleData* db = static_cast<VehicleData*>(wvo->getDataBlock());
-   movePtr->x = 0;// 1.1 - wvo->getSteering().x / db->maxSteeringAngle;
-   movePtr->y = mMax(movePtr->y*1.1 - wvo->getSteering().y / db->maxSteeringAngle, 0.0f);
+   movePtr->x = 0;
+   movePtr->y = mMax(movePtr->y, 0.0f);
 }
 #endif //_AICONTROLLER_H_

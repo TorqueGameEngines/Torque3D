@@ -42,9 +42,9 @@ protected:
 public:
    enum MoveState {
       ModeStop,                       // AI has stopped moving.
-      ModeMove,                       // AI is currently moving.
       ModeStuck,                      // AI is stuck, but wants to move.
       ModeSlowing,                    // AI is slowing down as it reaches it's destination.
+      ModeMove,                       // AI is currently moving.
       ModeReverse                     // AI is reversing
    };
 

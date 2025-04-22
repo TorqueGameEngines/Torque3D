@@ -111,8 +111,12 @@ function handleConnectionErrorMessage(%msgType, %msgString, %msgError)
 //-----------------------------------------------------------------------------
 // Disconnect
 //-----------------------------------------------------------------------------
-
 function disconnect()
+{
+	callOnModules("disconnect");
+}
+
+function Core_ClientServer::disconnect(%this)
 {
    // We need to stop the client side simulation
    // else physics resources will not cleanup properly.

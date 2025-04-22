@@ -24,3 +24,12 @@ function ToolsModule::onDestroy(%this)
 {
 
 }
+
+function ToolsModule::disconnect(%this)
+{
+   if ( isObject( Editor ) && Editor.isEditorEnabled() )
+   {
+      EditorGui.saveAs = false; //whatever edits we were doing are irrelevent now
+      Editor.close(MainMenuGui);
+   }
+}

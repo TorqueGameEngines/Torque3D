@@ -206,13 +206,6 @@ class AIWheeledVehicleControllerData : public AIControllerData
 {
    typedef AIControllerData Parent;
 
-   enum DrivingState {
-      SteerNull,
-      Left,
-      Right,
-      Straight
-   };
-
 public:
    AIWheeledVehicleControllerData()
    {
@@ -220,7 +213,6 @@ public:
       resolveSpeedPtr.bind(this, &AIWheeledVehicleControllerData::resolveSpeed);
       mHeightTolerance = 2.0f;
    }
-   F32 getSteeringAngle(AIController* obj, Point3F location);
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
    void resolveSpeed(AIController* obj, Point3F location, Move* movePtr);
    DECLARE_CONOBJECT(AIWheeledVehicleControllerData);
@@ -230,12 +222,6 @@ class AIFlyingVehicleControllerData : public AIControllerData
 {
    typedef AIControllerData Parent;
 
-   enum DrivingState {
-      SteerNull,
-      Left,
-      Right,
-      Straight
-   };
    F32 mFlightFloor;
    F32 mFlightCeiling;
 public:
@@ -249,7 +235,6 @@ public:
       mFlightFloor = 1.0;
    }
    static void initPersistFields();
-   F32 getSteeringAngle(AIController* obj, Point3F location);
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
    void resolveSpeed(AIController* obj, Point3F location, Move* movePtr);
    void resolvePitch(AIController* obj, Point3F location, Move* movePtr);

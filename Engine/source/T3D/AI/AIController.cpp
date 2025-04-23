@@ -650,119 +650,6 @@ void AIPlayerControllerData::resolveTriggerState(AIController* obj, Move* movePt
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 IMPLEMENT_CO_DATABLOCK_V1(AIWheeledVehicleControllerData);
-// Build a Triangle .. calculate angle of rotation required to meet target..
-// man there has to be a better way! >:)
-F32 AIWheeledVehicleControllerData::getSteeringAngle(AIController* obj, Point3F location)
-{
-   WheeledVehicle* wvo = dynamic_cast<WheeledVehicle*>(obj->getAIInfo()->mObj.getPointer());
-   if (!wvo)
-   {
-      //cover the case of a connection controling an object in turn controlling another
-      if (obj->getAIInfo()->mObj->getObjectMount())
-         wvo = dynamic_cast<WheeledVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
-   }
-   if (!wvo) return 0;//not a WheeledVehicle
-
-   DrivingState steerState = SteerNull;
-
-   // What is our target
-   Point3F desired;
-   desired = obj->getNav()->getMoveDestination();
-
-   MatrixF mat = wvo->getTransform();
-   Point3F center, front;
-   Point3F wFront;
-   Box3F box = wvo->getObjBox();
-
-   box.getCenter(&center);
-   front = center;
-   front.y = box.maxExtents.y; // should be true for all these objects
-
-   obj->getAIInfo()->mObj->getWorldBox().getCenter(&center);
-   front = center + front;
-
-   Point3F objFront = front;
-   Point3F offset = front - center;
-   EulerF rot;
-   rot = mat.toEuler();
-   MatrixF transform(rot);
-   transform.mulV(offset, &wFront);
-   front = wFront + center;
-
-   Point3F ftoc;
-   ftoc.x = mFabs(front.x - center.x);
-   ftoc.y = mFabs(front.y - center.y);
-   ftoc.z = mFabs(front.z - center.z);
-   F32 fToc = mSqrt((ftoc.x * ftoc.x) + (ftoc.y * ftoc.y));
-
-   Point3F ltoc;
-   ltoc.x = mFabs(desired.x - center.x);
-   ltoc.y = mFabs(desired.y - center.y);
-   ltoc.z = mFabs(desired.z - center.z);
-   F32 lToc = mSqrt((ltoc.x * ltoc.x) + (ltoc.y * ltoc.y));
-
-   Point3F ftol;
-   ftol.x = mFabs(front.x - desired.x);
-   ftol.y = mFabs(front.y - desired.y);
-   ftol.z = mFabs(front.z - desired.z);
-   F32 fTol = mSqrt((ftol.x * ftol.x) + (ftol.y * ftol.y));
-
-   F32 myAngle = mAcos(((lToc * lToc) + (fToc * fToc) - (fTol * fTol)) / (2 * lToc * fToc));
-
-   F32 finalYaw = mRadToDeg(myAngle);
-
-   F32 maxSteeringAngle = 0;
-
-   VehicleData* vd = (VehicleData*)(wvo->getDataBlock());
-   maxSteeringAngle = vd->maxSteeringAngle;
-
-   Point2F steering = wvo->getSteering();
-   if (finalYaw < 5 && steering.x != 0.0f)
-      steerState = Straight;
-   else if (finalYaw < 5)
-      steerState = SteerNull;
-   else
-   {// Quickly Hack out left or right turn info
-      Point3F rotData = objFront - desired;
-      MatrixF leftM(-rot);
-      Point3F leftP;
-      leftM.mulV(rotData, &leftP);
-      leftP = leftP + desired;
-
-      if (leftP.x < desired.x)
-         steerState = Right;
-      else
-         steerState = Left;
-   }
-
-   F32 throttle = wvo->getThrottle();
-   if (throttle < 0.0f && steerState != Straight)
-   {
-      F32 reverseReduction = 0.25;
-      steering.x = steering.x * reverseReduction * throttle;
-   }
-   F32 turnAdjust = myAngle - steering.x;
-
-   F32 steer = 0;
-   switch (steerState)
-   {
-   case Left:
-      steer = myAngle < maxSteeringAngle ? -turnAdjust : -maxSteeringAngle - steering.x;
-      break;
-   case Right:
-      steer = myAngle < maxSteeringAngle ? turnAdjust : maxSteeringAngle - steering.x;
-      break;
-   case Straight:
-      steer = -steering.x;
-      break;
-   default:
-      break;
-   };
-
-   //   Con::printf("AI Steering : %f", steer);
-   return steer;
-}
-
 
 void AIWheeledVehicleControllerData::resolveYaw(AIController* obj, Point3F location, Move* movePtr)
 {
@@ -776,10 +663,29 @@ void AIWheeledVehicleControllerData::resolveYaw(AIController* obj, Point3F locat
    }
    if (!wvo) return;//not a WheeledVehicle
 
-   // Orient towards our destination.
-   if (obj->mMovement.mMoveState == AIController::ModeMove || obj->mMovement.mMoveState == AIController::ModeReverse) {
-      movePtr->yaw = getSteeringAngle(obj, location);
-   }
+   F32 lastYaw = wvo->getSteering().x;
+
+   Point3F right = wvo->getTransform().getRightVector();
+   right.normalize();
+   Point3F aimLoc = obj->mMovement.mAimLocation;
+
+   // Get the Target to AI vector and normalize it.
+   Point3F toTarg = aimLoc - location;
+   toTarg.normalize();
+
+   F32 dotYaw = mDot(right, toTarg);
+   movePtr->yaw = -lastYaw;
+
+   VehicleData* vd = (VehicleData*)(wvo->getDataBlock());
+   F32 maxSteeringAngle = vd->maxSteeringAngle;
+   if (mFabs(dotYaw) > maxSteeringAngle * 1.5 && wvo->getThrottle() < 0.0f)
+      dotYaw *= -1.0f;
+
+   if (dotYaw > maxSteeringAngle) dotYaw = maxSteeringAngle;
+   if (dotYaw < -maxSteeringAngle) dotYaw = -maxSteeringAngle;
+
+   if (mFabs(dotYaw) > 0.05f)
+      movePtr->yaw = dotYaw - lastYaw;
 };
 
 void AIWheeledVehicleControllerData::resolveSpeed(AIController* obj, Point3F location, Move* movePtr)
@@ -798,7 +704,7 @@ void AIWheeledVehicleControllerData::resolveSpeed(AIController* obj, Point3F loc
 
    VehicleData* db =  static_cast<VehicleData *>(wvo->getDataBlock());
    movePtr->x = 0;
-   movePtr->y *= 1.1 - wvo->getSteering().y / db->maxSteeringAngle;
+   movePtr->y *= mMax((db->maxSteeringAngle-mFabs(movePtr->yaw) / db->maxSteeringAngle),0.75f);
 }
 
 //-----------------------------------------------------------------------------
@@ -821,119 +727,6 @@ void AIFlyingVehicleControllerData::initPersistFields()
 
    Parent::initPersistFields();
 }
-// Build a Triangle .. calculate angle of rotation required to meet target..
-// man there has to be a better way! >:)
-F32 AIFlyingVehicleControllerData::getSteeringAngle(AIController* obj, Point3F location)
-{
-   FlyingVehicle* fvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj.getPointer());
-   if (!fvo)
-   {
-      //cover the case of a connection controling an object in turn controlling another
-      if (obj->getAIInfo()->mObj->getObjectMount())
-         fvo = dynamic_cast<FlyingVehicle*>(obj->getAIInfo()->mObj->getObjectMount());
-   }
-   if (!fvo) return 0;//not a FlyingVehicle
-
-   DrivingState steerState = SteerNull;
-
-   // What is our target
-   Point3F desired;
-   desired = obj->getNav()->getMoveDestination();
-
-   MatrixF mat = fvo->getTransform();
-   Point3F center, front;
-   Point3F wFront;
-   Box3F box = fvo->getObjBox();
-
-   box.getCenter(&center);
-   front = center;
-   front.y = box.maxExtents.y; // should be true for all these objects
-
-   obj->getAIInfo()->mObj->getWorldBox().getCenter(&center);
-   front = center + front;
-
-   Point3F objFront = front;
-   Point3F offset = front - center;
-   EulerF rot;
-   rot = mat.toEuler();
-   MatrixF transform(rot);
-   transform.mulV(offset, &wFront);
-   front = wFront + center;
-
-   Point3F ftoc;
-   ftoc.x = mFabs(front.x - center.x);
-   ftoc.y = mFabs(front.y - center.y);
-   ftoc.z = mFabs(front.z - center.z);
-   F32 fToc = mSqrt((ftoc.x * ftoc.x) + (ftoc.y * ftoc.y));
-
-   Point3F ltoc;
-   ltoc.x = mFabs(desired.x - center.x);
-   ltoc.y = mFabs(desired.y - center.y);
-   ltoc.z = mFabs(desired.z - center.z);
-   F32 lToc = mSqrt((ltoc.x * ltoc.x) + (ltoc.y * ltoc.y));
-
-   Point3F ftol;
-   ftol.x = mFabs(front.x - desired.x);
-   ftol.y = mFabs(front.y - desired.y);
-   ftol.z = mFabs(front.z - desired.z);
-   F32 fTol = mSqrt((ftol.x * ftol.x) + (ftol.y * ftol.y));
-
-   F32 myAngle = mAcos(((lToc * lToc) + (fToc * fToc) - (fTol * fTol)) / (2 * lToc * fToc));
-
-   F32 finalYaw = mRadToDeg(myAngle);
-
-   F32 maxSteeringAngle = 0;
-
-   VehicleData* vd = (VehicleData*)(fvo->getDataBlock());
-   maxSteeringAngle = vd->maxSteeringAngle;
-
-   Point2F steering = fvo->getSteering();
-   if (finalYaw < 5 && steering.x != 0.0f)
-      steerState = Straight;
-   else if (finalYaw < 5)
-      steerState = SteerNull;
-   else
-   {// Quickly Hack out left or right turn info
-      Point3F rotData = objFront - desired;
-      MatrixF leftM(-rot);
-      Point3F leftP;
-      leftM.mulV(rotData, &leftP);
-      leftP = leftP + desired;
-
-      if (leftP.x < desired.x)
-         steerState = Right;
-      else
-         steerState = Left;
-   }
-
-   F32 throttle = fvo->getThrottle();
-   if (throttle < 0.0f && steerState != Straight)
-   {
-      F32 reverseReduction = 0.25;
-      steering.x = steering.x * reverseReduction * throttle;
-   }
-   F32 turnAdjust = myAngle - steering.x;
-
-   F32 steer = 0;
-   switch (steerState)
-   {
-   case Left:
-      steer = myAngle < maxSteeringAngle ? -turnAdjust : -maxSteeringAngle - steering.x;
-      break;
-   case Right:
-      steer = myAngle < maxSteeringAngle ? turnAdjust : maxSteeringAngle - steering.x;
-      break;
-   case Straight:
-      steer = -steering.x;
-      break;
-   default:
-      break;
-   };
-
-   //   Con::printf("AI Steering : %f", steer);
-   return steer;
-}
-
 
 void AIFlyingVehicleControllerData::resolveYaw(AIController* obj, Point3F location, Move* movePtr)
 {
@@ -947,8 +740,19 @@ void AIFlyingVehicleControllerData::resolveYaw(AIController* obj, Point3F locati
    }
    if (!fvo) return;//not a FlyingVehicle
 
-   // Orient towards our destination.
-   movePtr->yaw = getSteeringAngle(obj, location);
+   Point3F right = fvo->getTransform().getRightVector();
+   right.normalize();
+   Point3F aimLoc = obj->mMovement.mAimLocation;
+
+   // Get the Target to AI vector and normalize it.
+   Point3F toTarg = aimLoc - location;
+   toTarg.normalize();
+
+   F32 dotYaw = mDot(right, toTarg);
+   movePtr->yaw = 0;
+
+   if (mFabs(dotYaw) > 0.05f)
+      movePtr->yaw = dotYaw;
 };
 
 void AIFlyingVehicleControllerData::resolvePitch(AIController* obj, Point3F location, Move* movePtr)
@@ -963,8 +767,6 @@ void AIFlyingVehicleControllerData::resolvePitch(AIController* obj, Point3F loca
    }
    if (!fvo) return;//not a FlyingVehicle
 
-   F32 lastPitch = fvo->getSteering().y* (1.0f - fvo->getThrottle());
-
    Point3F up = fvo->getTransform().getUpVector();
    up.normalize();
    Point3F aimLoc = obj->mMovement.mAimLocation;
@@ -974,12 +776,16 @@ void AIFlyingVehicleControllerData::resolvePitch(AIController* obj, Point3F loca
    Point3F toTarg = location-aimLoc;
    toTarg.normalize();
 
-   F32 dotPitch = mDot(up, toTarg);
+   movePtr->pitch = 0.0f;
+   Point3F forward = fvo->getTransform().getForwardVector();
+   if (mDot(forward, toTarg)>0.0f)
+   {
+      F32 dotPitch = mDot(up, toTarg);
 
-   if (mFabs(dotPitch) > 0.05f)
-      movePtr->pitch = dotPitch - lastPitch;
-   else
-      movePtr->pitch = -lastPitch;
+      if (mFabs(dotPitch) > 0.05f)
+         movePtr->pitch = dotPitch;
+   }
+         
 }
 
 void AIFlyingVehicleControllerData::resolveSpeed(AIController* obj, Point3F location, Move* movePtr)

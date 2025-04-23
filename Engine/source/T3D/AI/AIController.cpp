@@ -779,6 +779,13 @@ void AIFlyingVehicleControllerData::resolvePitch(AIController* obj, Point3F loca
    F32 lastPitch = fvo->getSteering().y;
    movePtr->pitch = 0.0f;
    F32 dotPitch = -mDot(up, toTarg);
+
+   FlyingVehicleData* db = static_cast<FlyingVehicleData*>(fvo->getDataBlock());
+
+   F32 rollAmt = mFabs(fvo->getThrottle()* movePtr->yaw * db->steeringRollForce);
+   dotPitch *= 1.0-(mClampF(rollAmt, 0.0,1.0)); // reduce pitch by how much we're rolling
+   dotPitch *= M_PI_F;
+
    if (mFabs(dotPitch) > 0.05f)
          movePtr->pitch = dotPitch - lastPitch;
          

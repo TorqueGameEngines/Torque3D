@@ -669,16 +669,17 @@ void AIWheeledVehicleControllerData::resolveYaw(AIController* obj, Point3F locat
    right.normalize();
    Point3F aimLoc = obj->mMovement.mAimLocation;
 
-   // Get the Target to AI vector and normalize it.
-   Point3F toTarg = aimLoc - location;
+   // Get the AI to Target vector and normalize it.
+   Point3F toTarg = location - aimLoc;
    toTarg.normalize();
 
-   F32 dotYaw = mDot(right, toTarg);
+   F32 dotYaw = -mDot(right, toTarg);
    movePtr->yaw = -lastYaw;
 
    VehicleData* vd = (VehicleData*)(wvo->getDataBlock());
    F32 maxSteeringAngle = vd->maxSteeringAngle;
-   if (mFabs(dotYaw) > maxSteeringAngle * 1.5 && wvo->getThrottle() < 0.0f)
+
+   if (mFabs(dotYaw) > maxSteeringAngle*1.5f)
       dotYaw *= -1.0f;
 
    if (dotYaw > maxSteeringAngle) dotYaw = maxSteeringAngle;
@@ -745,10 +746,10 @@ void AIFlyingVehicleControllerData::resolveYaw(AIController* obj, Point3F locati
    Point3F aimLoc = obj->mMovement.mAimLocation;
 
    // Get the Target to AI vector and normalize it.
-   Point3F toTarg = aimLoc - location;
+   Point3F toTarg = location - aimLoc;
    toTarg.normalize();
 
-   F32 dotYaw = mDot(right, toTarg);
+   F32 dotYaw = -mDot(right, toTarg);
    movePtr->yaw = 0;
 
    if (mFabs(dotYaw) > 0.05f)
@@ -772,19 +773,14 @@ void AIFlyingVehicleControllerData::resolvePitch(AIController* obj, Point3F loca
    Point3F aimLoc = obj->mMovement.mAimLocation;
    aimLoc.z = mClampF(aimLoc.z, mFlightFloor, mFlightCeiling);
 
-   // Get the AI  to Target vector and normalize it.
-   Point3F toTarg = location-aimLoc;
+   // Get the Target to AI vector and normalize it.
+   Point3F toTarg = location - aimLoc;
    toTarg.normalize();
-
+   F32 lastPitch = fvo->getSteering().y;
    movePtr->pitch = 0.0f;
-   Point3F forward = fvo->getTransform().getForwardVector();
-   if (mDot(forward, toTarg)>0.0f)
-   {
-      F32 dotPitch = mDot(up, toTarg);
-
-      if (mFabs(dotPitch) > 0.05f)
-         movePtr->pitch = dotPitch;
-   }
+   F32 dotPitch = -mDot(up, toTarg);
+   if (mFabs(dotPitch) > 0.05f)
+         movePtr->pitch = dotPitch - lastPitch;
          
 }
 

@@ -378,7 +378,7 @@ struct ShapeBaseImageData: public GameBaseData {
    F32 scriptAnimTransitionTime;    ///< The amount of time to transition between the previous sequence and new sequence
                                     ///< when the script prefix has changed.
 
-   DECLARE_SHAPEASSET_ARRAY(ShapeBaseImageData, Shape, MaxShapes);  ///< Name of shape to render.
+   DECLARE_SHAPEASSET_ARRAY(ShapeBaseImageData, Shape, MaxShapes, onShapeChanged);  ///< Name of shape to render.
    DECLARE_ASSET_ARRAY_SETGET(ShapeBaseImageData, Shape);
 
    //DECLARE_SHAPEASSET(ShapeBaseImageData, ShapeFP);  ///< Name of shape to render in first person (optional).
@@ -504,6 +504,11 @@ struct ShapeBaseImageData: public GameBaseData {
    void inspectPostApply() override;
 
    void handleStateSoundTrack(const U32& stateId);
+
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
 
    /// @}
 
@@ -681,8 +686,8 @@ public:
    Vector<TextureTagRemapping> txr_tag_remappings;
    bool silent_bbox_check;
 
-   void onShapeChanged() {}
-   void onDebrisChanged() {}
+   void onShapeChanged();
+   void onDebrisChanged();
 public:
    ShapeBaseData(const ShapeBaseData&, bool = false);
 };

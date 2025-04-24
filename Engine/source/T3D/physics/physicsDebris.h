@@ -97,7 +97,10 @@ public:
    void        packData( BitStream *stream ) override;
    void        unpackData( BitStream *stream ) override;
 
-   void onShapeChanged() {}
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
 
    DECLARE_CONOBJECT( PhysicsDebrisData );
 

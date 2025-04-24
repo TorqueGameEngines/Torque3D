@@ -176,6 +176,8 @@ public:
    /// Used by the console system to automatically tell datablock classes apart
    /// from non-datablock classes.
    static const bool __smIsDatablock = true;
+
+   void reloadOnLocalClient();
 protected:
    struct SubstitutionStatement
    {

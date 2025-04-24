@@ -143,7 +143,10 @@ public:
    ExplosionData* cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
    bool   allowSubstitutions() const override { return true; }
 
-   void onShapeChanged() {}
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
 };
 
 

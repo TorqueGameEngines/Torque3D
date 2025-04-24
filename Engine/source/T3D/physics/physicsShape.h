@@ -135,7 +135,10 @@ public:
    SimObjectRef< ExplosionData > explosion;   
    SimObjectRef< PhysicsShapeData > destroyedShape;
 
-   void onShapeChanged() {}
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
 };
 
 typedef PhysicsShapeData::SimType PhysicsSimType;

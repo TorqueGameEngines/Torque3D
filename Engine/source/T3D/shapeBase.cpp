@@ -345,7 +345,7 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
 
    S32 i;
    U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
-   if (assetStatus == AssetBase::Ok|| assetStatus == AssetBase::UsingFallback)
+   if (assetStatus == AssetBase::Ok || assetStatus == AssetBase::UsingFallback)
    {
       if (!server && !mShape->preloadMaterialList(mShape.getPath()) && NetConnection::filesWereDownloaded())
          shapeError = true;
@@ -904,7 +904,17 @@ void ShapeBaseData::unpackData(BitStream* stream)
    silent_bbox_check = stream->readFlag();
 }
 
+//
+//
+void ShapeBaseData::onShapeChanged()
+{
+   reloadOnLocalClient();
+}
 
+void ShapeBaseData::onDebrisChanged()
+{
+   reloadOnLocalClient();
+}
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 

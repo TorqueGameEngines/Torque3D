@@ -410,7 +410,11 @@ protected:
 
    void _debugRender( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
 
-   void onShapeChanged(){}
+   void onShapeChanged()
+   {
+      _initShapes();
+      setMaskBits(U32(-1));
+   }
 };
 
 #endif // _GROUNDCOVER_H_

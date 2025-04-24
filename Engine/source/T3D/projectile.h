@@ -154,7 +154,10 @@ public:
    ProjectileData(const ProjectileData&, bool = false);
    bool allowSubstitutions() const override { return true; }
 
-   void onShapeChanged() {}
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
 };
 
 

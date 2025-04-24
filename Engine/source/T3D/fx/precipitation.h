@@ -69,8 +69,14 @@ class PrecipitationData : public GameBaseData
       void packData(BitStream* stream) override;
       void unpackData(BitStream* stream) override;
 
-      void onDropChanged() {}
-      void onSplashChanged() {}
+      void onDropChanged()
+      {
+         reloadOnLocalClient();
+      }
+      void onSplashChanged()
+      {
+         reloadOnLocalClient();
+      }
 };
 
 struct Raindrop

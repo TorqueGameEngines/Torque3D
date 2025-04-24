@@ -76,7 +76,7 @@ struct PlayerData: public ShapeBaseData {
                                                                   ///  that we don't create a TSThread on the player if we don't
                                                                   ///  need to.
 
-   DECLARE_SHAPEASSET_ARRAY(PlayerData, ShapeFP, ShapeBase::MaxMountedImages); ///< Used to render with mounted images in first person [optional]
+   DECLARE_SHAPEASSET_ARRAY(PlayerData, ShapeFP, ShapeBase::MaxMountedImages, onShapeChanged); ///< Used to render with mounted images in first person [optional]
    DECLARE_ASSET_ARRAY_SETGET(PlayerData, ShapeFP);
 
    StringTableEntry  imageAnimPrefixFP;                           ///< Passed along to mounted images to modify
@@ -365,6 +365,11 @@ struct PlayerData: public ShapeBaseData {
    static void initPersistFields();
    void packData(BitStream* stream) override;
    void unpackData(BitStream* stream) override;
+
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
 
    /// @name Callbacks
    /// @{

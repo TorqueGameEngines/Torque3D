@@ -370,7 +370,7 @@ public: \
 
 #pragma region Arrayed Asset Macros
 
-#define DECLARE_SHAPEASSET_ARRAY(className,name,max) public: \
+#define DECLARE_SHAPEASSET_ARRAY(className,name,max,changeFunc) public: \
    static const U32 sm##name##Count = max;\
    Resource<TSShape>m##name[max];\
    StringTableEntry m##name##Name[max]; \
@@ -384,6 +384,10 @@ public: \
    \
    bool _set##name(StringTableEntry _in, const U32& index)\
    {\
+      if (m##name##Asset[index].notNull())\
+      {\
+            m##name##Asset[index]->getChangedSignal().remove(this, &className::changeFunc);\
+      }\
       if(m##name##AssetId[index] != _in || m##name##Name[index] != _in)\
       {\
          if(index >= sm##name##Count || index < 0)\
@@ -430,6 +434,8 @@ public: \
       if (get##name(index) != StringTable->EmptyString() && m##name##Asset[index].notNull())\
       {\
          m##name[index] = m##name##Asset[index]->getShapeResource();\
+         \
+         m##name##Asset[index]->getChangedSignal().notify(this, &className::changeFunc);\
       }\
       else\
       {\

@@ -124,7 +124,10 @@ public:
 
    DECLARE_IMAGEASSET_ARRAY(SplashData, Texture, NUM_TEX, onTextureChanged);
    DECLARE_IMAGEASSET_ARRAY_SETGET(SplashData, Texture)
-   void onTextureChanged() {}
+   void onTextureChanged()
+   {
+      reloadOnLocalClient();
+   }
 
    ExplosionData*    explosion;
    S32               explosionId;

@@ -777,17 +777,18 @@ void AIFlyingVehicleControllerData::resolvePitch(AIController* obj, Point3F loca
    Point3F toTarg = location - aimLoc;
    toTarg.normalize();
    F32 lastPitch = fvo->getSteering().y;
+
    movePtr->pitch = 0.0f;
-   F32 dotPitch = -mDot(up, toTarg);
+   F32 dotPitch = mDot(up, toTarg);
 
    FlyingVehicleData* db = static_cast<FlyingVehicleData*>(fvo->getDataBlock());
 
-   F32 rollAmt = mFabs(fvo->getThrottle()* movePtr->yaw * db->steeringRollForce);
+   F32 rollAmt = mFabs(fvo->getThrottle()* movePtr->yaw / (db->steeringRollForce+1.0));
    dotPitch *= 1.0-(mClampF(rollAmt, 0.0,1.0)); // reduce pitch by how much we're rolling
-   dotPitch *= M_PI_F;
+   dotPitch *= M_2PI_F;
 
    if (mFabs(dotPitch) > 0.05f)
-         movePtr->pitch = dotPitch - lastPitch;
+         movePtr->pitch = dotPitch;
          
 }
 
@@ -803,9 +804,7 @@ void AIFlyingVehicleControllerData::resolveSpeed(AIController* obj, Point3F loca
    }
    if (!fvo) return;//not a FlyingVehicle
 
-   Parent::resolveSpeed(obj, location, movePtr);
-
    movePtr->x = 0;
-   movePtr->y = mMax(movePtr->y, 0.0f);
+   movePtr->y = obj->mMovement.mMoveSpeed;
 }
 #endif //_AICONTROLLER_H_

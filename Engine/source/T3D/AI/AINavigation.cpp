@@ -126,9 +126,8 @@ void AINavigation::repath()
    if (mPathData.path.isNull() || !mPathData.owned)
       return;
 
-   if (mRandI(0, 100) < getCtrl()->mControllerData->mFlocking.mChance)
+   if (mRandI(0, 100) < getCtrl()->mControllerData->mFlocking.mChance && flock())
    {
-      flock();
       mPathData.path->mTo = mMoveDestination;
    }
    else
@@ -296,7 +295,7 @@ void AINavigation::clearPath()
    mPathData = PathData();
 }
 
-void AINavigation::flock()
+bool AINavigation::flock()
 {
    AIControllerData::Flocking flockingData = getCtrl()->mControllerData->mFlocking;
    SimObjectPtr<SceneObject> obj = getCtrl()->getAIInfo()->mObj;
@@ -306,7 +305,7 @@ void AINavigation::flock()
    Point3F searchArea = Point3F(flockingData.mMin / 2, flockingData.mMax / 2, getCtrl()->getAIInfo()->mObj->getObjBox().maxExtents.z / 2);
 
    F32 maxFlocksq = flockingData.mMax * flockingData.mMax;
-
+   bool flocking = false;
    if (getCtrl()->getGoal())
    {
       Point3F dest = mMoveDestination;
@@ -403,17 +402,22 @@ void AINavigation::flock()
          //if we're not jumping...
          if (mJump == None)
          {
-            dest.z -= obj->getObjBox().len_z()*0.5;
+            dest.z = obj->getPosition().z;
             //make sure we don't run off a cliff
-            Point3F zlen(0, 0, getCtrl()->getAIInfo()->mRadius);
+            Point3F zlen(0, 0, getCtrl()->mControllerData->mHeightTolerance);
             if (obj->getContainer()->castRay(dest + zlen, dest - zlen, TerrainObjectType | StaticShapeObjectType | StaticObjectType, &info))
             {
-               mMoveDestination = dest;
+               if ((mMoveDestination - dest).len() > getCtrl()->mControllerData->mMoveTolerance)
+               {
+                  mMoveDestination = dest;
+                  flocking = true;
+               }
             }
          }
       }
    }
    obj->enableCollision();
+   return flocking;
 }
 
 DefineEngineMethod(AIController, setMoveDestination, void, (Point3F goal, bool slowDown), (true),

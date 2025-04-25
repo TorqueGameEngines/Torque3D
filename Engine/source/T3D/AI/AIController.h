@@ -147,8 +147,8 @@ public:
 
    AIControllerData();
    ~AIControllerData() {};
-   void packData(BitStream* stream) override {};
-   void unpackData(BitStream* stream) override {};
+   void packData(BitStream* stream) override { Parent::packData(stream); };
+   void unpackData(BitStream* stream) override { Parent::unpackData(stream); };
    static void initPersistFields();
    DECLARE_CONOBJECT(AIControllerData);
 

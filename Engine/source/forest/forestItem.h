@@ -143,7 +143,10 @@ public:
       return theSignal;
    }
 
-   void onShapeChanged() {}
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
 };
 
 typedef Vector<ForestItemData*> ForestItemDataVector;

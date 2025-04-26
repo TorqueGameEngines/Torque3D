@@ -66,7 +66,10 @@ protected:
 public:
   enum { MaxLifetimeTicks = 4095 };
 
-  void onShapeChanged() {}
+  void onShapeChanged()
+  {
+     reloadOnLocalClient();
+  }
   
 public:
    // variables set in datablock definition:

@@ -106,7 +106,10 @@ protected:
    void _makePrimBuffer( GFXPrimitiveBufferHandle *pb, U32 count );
    void _renderCorona( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
 
-   void onImageChanged() {}
+   void onImageChanged()
+   {
+      reloadOnLocalClient();
+   }
 
 protected:
    

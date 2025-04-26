@@ -56,7 +56,10 @@ public:
 
   static void convertGradientRangeFromDegrees(Point2F& gradrange, const Point2F& gradrange_deg);
 
-  void onImageChanged() {}
+  void onImageChanged()
+  {
+     reloadOnLocalClient();
+  }
 
 public:
    DECLARE_IMAGEASSET(afxZodiacData, Texture, onImageChanged, AFX_GFXZodiacTextureProfile);

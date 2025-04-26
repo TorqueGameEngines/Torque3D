@@ -341,7 +341,7 @@ protected:
    RectF mBillboardRects[MAX_COVERTYPES];
 
    /// The cover shape filenames.
-   DECLARE_SHAPEASSET_ARRAY(GroundCover, Shape, MAX_COVERTYPES);
+   DECLARE_SHAPEASSET_ARRAY(GroundCover, Shape, MAX_COVERTYPES, onShapeChanged);
    DECLARE_ASSET_ARRAY_NET_SETGET(GroundCover, Shape, -1);
 
    /// The cover shape instances.
@@ -409,6 +409,12 @@ protected:
                                     S32 randSeed );
 
    void _debugRender( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
+
+   void onShapeChanged()
+   {
+      _initShapes();
+      setMaskBits(U32(-1));
+   }
 };
 
 #endif // _GROUNDCOVER_H_

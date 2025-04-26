@@ -485,7 +485,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
                   VertSizing = "bottom";
                   Extent = "90 18";
                   text = "Stop";
-                  command = "NavEditorGui.stop();";
+                  command = "NavEditorGui.getPlayer().stop();";
                };
             };
          };

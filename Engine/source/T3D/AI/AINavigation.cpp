@@ -306,6 +306,7 @@ bool AINavigation::flock()
 
    F32 maxFlocksq = flockingData.mMax * flockingData.mMax;
    bool flocking = false;
+   U32 found = 0;
    if (getCtrl()->getGoal())
    {
       Point3F dest = mMoveDestination;
@@ -327,7 +328,6 @@ bool AINavigation::flock()
          sql.mList.remove(obj);
 
          Point3F avoidanceOffset = Point3F::Zero;
-         U32 found = 0;
 
          //avoid objects in the way
          RayInfo info;
@@ -390,27 +390,29 @@ bool AINavigation::flock()
                }
             }
          }
-
-         avoidanceOffset.z = 0;
-         avoidanceOffset.x = (mRandF() * avoidanceOffset.x) * 0.5 + avoidanceOffset.x * 0.75;
-         avoidanceOffset.y = (mRandF() * avoidanceOffset.y) * 0.5 + avoidanceOffset.y * 0.75;
-         if (avoidanceOffset.lenSquared() < (maxFlocksq))
+         if (found > 0)
          {
-            dest += avoidanceOffset;
-         }
-
-         //if we're not jumping...
-         if (mJump == None)
-         {
-            dest.z = obj->getPosition().z;
-            //make sure we don't run off a cliff
-            Point3F zlen(0, 0, getCtrl()->mControllerData->mHeightTolerance);
-            if (obj->getContainer()->castRay(dest + zlen, dest - zlen, TerrainObjectType | StaticShapeObjectType | StaticObjectType, &info))
+            avoidanceOffset.z = 0;
+            avoidanceOffset.x = (mRandF() * avoidanceOffset.x) * 0.5 + avoidanceOffset.x * 0.75;
+            avoidanceOffset.y = (mRandF() * avoidanceOffset.y) * 0.5 + avoidanceOffset.y * 0.75;
+            if (avoidanceOffset.lenSquared() < (maxFlocksq))
             {
-               if ((mMoveDestination - dest).len() > getCtrl()->mControllerData->mMoveTolerance)
+               dest += avoidanceOffset;
+            }
+
+            //if we're not jumping...
+            if (mJump == None)
+            {
+               dest.z = obj->getPosition().z;
+               //make sure we don't run off a cliff
+               Point3F zlen(0, 0, getCtrl()->mControllerData->mHeightTolerance);
+               if (obj->getContainer()->castRay(dest + zlen, dest - zlen, TerrainObjectType | StaticShapeObjectType | StaticObjectType, &info))
                {
-                  mMoveDestination = dest;
-                  flocking = true;
+                  if ((mMoveDestination - dest).len() > getCtrl()->mControllerData->mMoveTolerance)
+                  {
+                     mMoveDestination = dest;
+                     flocking = true;
+                  }
                }
             }
          }

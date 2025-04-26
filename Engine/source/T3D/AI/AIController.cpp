@@ -670,7 +670,7 @@ void AIWheeledVehicleControllerData::resolveYaw(AIController* obj, Point3F locat
    Point3F aimLoc = obj->mMovement.mAimLocation;
 
    // Get the AI to Target vector and normalize it.
-   Point3F toTarg = location - aimLoc;
+   Point3F toTarg = (location + wvo->getVelocity() * TickSec) - aimLoc;
    toTarg.normalize();
 
    F32 dotYaw = -mDot(right, toTarg);
@@ -746,7 +746,7 @@ void AIFlyingVehicleControllerData::resolveYaw(AIController* obj, Point3F locati
    Point3F aimLoc = obj->mMovement.mAimLocation;
 
    // Get the Target to AI vector and normalize it.
-   Point3F toTarg = location - aimLoc;
+   Point3F toTarg = (location + fvo->getVelocity() * TickSec) - aimLoc;
    toTarg.normalize();
 
    F32 dotYaw = -mDot(right, toTarg);
@@ -774,7 +774,7 @@ void AIFlyingVehicleControllerData::resolvePitch(AIController* obj, Point3F loca
    aimLoc.z = mClampF(aimLoc.z, mFlightFloor, mFlightCeiling);
 
    // Get the Target to AI vector and normalize it.
-   Point3F toTarg = location - aimLoc;
+   Point3F toTarg = (location + fvo->getVelocity() * TickSec) - aimLoc;
    toTarg.normalize();
    F32 lastPitch = fvo->getSteering().y;
 

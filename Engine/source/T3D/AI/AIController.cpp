@@ -718,10 +718,10 @@ void AIFlyingVehicleControllerData::initPersistFields()
    docsURL;
    addGroup("AI");
 
-   addFieldV("FlightFloor", TypeRangedF32, Offset(mFlightFloor, AIFlyingVehicleControllerData), &CommonValidators::PositiveFloat,
-      "@brief Max height we can target.");
+   addFieldV("FlightFloor", TypeRangedF32, Offset(mFlightFloor, AIFlyingVehicleControllerData), &CommonValidators::F32Range,
+      "@brief Min height we can target.");
 
-   addFieldV("FlightCeiling", TypeRangedF32, Offset(mFlightCeiling, AIFlyingVehicleControllerData), &CommonValidators::PositiveFloat,
+   addFieldV("FlightCeiling", TypeRangedF32, Offset(mFlightCeiling, AIFlyingVehicleControllerData), &CommonValidators::F32Range,
       "@brief Max height we can target.");
 
    endGroup("AI");
@@ -743,15 +743,15 @@ void AIFlyingVehicleControllerData::resolveYaw(AIController* obj, Point3F locati
 
    Point3F right = fvo->getTransform().getRightVector();
    right.normalize();
-   Point3F aimLoc = obj->mMovement.mAimLocation;
 
    // Get the Target to AI vector and normalize it.
+   Point3F aimLoc = obj->mMovement.mAimLocation;
+   aimLoc.z = mClampF(aimLoc.z, mFlightFloor, mFlightCeiling);
    Point3F toTarg = (location + fvo->getVelocity() * TickSec) - aimLoc;
    toTarg.normalize();
 
-   F32 dotYaw = -mDot(right, toTarg);
    movePtr->yaw = 0;
-
+   F32 dotYaw = -mDot(right, toTarg);
    if (mFabs(dotYaw) > 0.05f)
       movePtr->yaw = dotYaw;
 };
@@ -770,25 +770,18 @@ void AIFlyingVehicleControllerData::resolvePitch(AIController* obj, Point3F loca
 
    Point3F up = fvo->getTransform().getUpVector();
    up.normalize();
-   Point3F aimLoc = obj->mMovement.mAimLocation;
-   aimLoc.z = mClampF(aimLoc.z, mFlightFloor, mFlightCeiling);
+
 
    // Get the Target to AI vector and normalize it.
+   Point3F aimLoc = obj->mMovement.mAimLocation;
+   aimLoc.z = mClampF(aimLoc.z, mFlightFloor, mFlightCeiling);
    Point3F toTarg = (location + fvo->getVelocity() * TickSec) - aimLoc;
    toTarg.normalize();
-   F32 lastPitch = fvo->getSteering().y;
 
    movePtr->pitch = 0.0f;
    F32 dotPitch = mDot(up, toTarg);
-
-   FlyingVehicleData* db = static_cast<FlyingVehicleData*>(fvo->getDataBlock());
-
-   F32 rollAmt = mFabs(fvo->getThrottle()* movePtr->yaw / (db->steeringRollForce+1.0));
-   dotPitch *= 1.0-(mClampF(rollAmt, 0.0,1.0)); // reduce pitch by how much we're rolling
-   dotPitch *= M_2PI_F;
-
    if (mFabs(dotPitch) > 0.05f)
-         movePtr->pitch = dotPitch;
+         movePtr->pitch = dotPitch * M_2PI_F;
          
 }
 

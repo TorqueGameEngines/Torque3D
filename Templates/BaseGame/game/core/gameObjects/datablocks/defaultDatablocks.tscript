@@ -183,5 +183,6 @@ datablock AIWheeledVehicleControllerData( aiCarControl )
 datablock AIFlyingVehicleControllerData( aiPlaneControl )
 {
     moveTolerance = 2.0; followTolerance = 5.0; mAttackRadius = 10.0;
+    FlightFloor = 15; FlightCeiling = 150;
 };
 

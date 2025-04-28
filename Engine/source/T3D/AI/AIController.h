@@ -146,9 +146,10 @@ class AIControllerData : public SimDataBlock {
 public:
 
    AIControllerData();
+   AIControllerData(const AIControllerData&, bool = false);
    ~AIControllerData() {};
-   void packData(BitStream* stream) override { Parent::packData(stream); };
-   void unpackData(BitStream* stream) override { Parent::unpackData(stream); };
+   void packData(BitStream* stream) override;
+   void unpackData(BitStream* stream) override;
    static void initPersistFields();
    DECLARE_CONOBJECT(AIControllerData);
 
@@ -234,6 +235,7 @@ public:
       mFlightCeiling = 200.0f;
       mFlightFloor = 1.0;
    }
+   AIFlyingVehicleControllerData(const AIFlyingVehicleControllerData&, bool = false);
    static void initPersistFields();
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
    void resolveSpeed(AIController* obj, Point3F location, Move* movePtr);

@@ -507,6 +507,30 @@ AIControllerData::AIControllerData()
    resolveStuckPtr.bind(this, &AIControllerData::resolveStuck);
 }
 
+AIControllerData::AIControllerData(const AIControllerData& other, bool temp_clone) : SimDataBlock(other, temp_clone)
+{
+   mMoveTolerance = other.mMoveTolerance;
+   mFollowTolerance = other.mFollowTolerance;
+   mAttackRadius = other.mAttackRadius;
+   mMoveStuckTolerance = other.mMoveStuckTolerance;
+   mMoveStuckTestDelay = other.mMoveStuckTestDelay;
+   mLinkTypes = other.mLinkTypes;
+   mNavSize = other.mNavSize;
+   mHeightTolerance = other.mHeightTolerance;
+
+   mFlocking.mChance = other.mFlocking.mChance;
+   mFlocking.mMin = other.mFlocking.mMin;
+   mFlocking.mMax = other.mFlocking.mMax;
+   mFlocking.mSideStep = other.mFlocking.mSideStep;
+
+   resolveYawPtr.bind(this, &AIControllerData::resolveYaw);
+   resolvePitchPtr.bind(this, &AIControllerData::resolvePitch);
+   resolveRollPtr.bind(this, &AIControllerData::resolveRoll);
+   resolveSpeedPtr.bind(this, &AIControllerData::resolveSpeed);
+   resolveTriggerStatePtr.bind(this, &AIControllerData::resolveTriggerState);
+   resolveStuckPtr.bind(this, &AIControllerData::resolveStuck);
+}
+
 void AIControllerData::initPersistFields()
 {
    docsURL;
@@ -583,6 +607,48 @@ void AIControllerData::initPersistFields()
    Parent::initPersistFields();
 }
 
+void AIControllerData::packData(BitStream* stream)
+{
+   Parent::packData(stream);
+   stream->write(mMoveTolerance);
+   stream->write(mFollowTolerance);
+   stream->write(mAttackRadius);
+   stream->write(mMoveStuckTolerance);
+   stream->write(mMoveStuckTestDelay);
+   //enums
+   stream->write(mLinkTypes.getFlags());
+   stream->write((U32)mNavSize);
+   // end enums
+   stream->write(mHeightTolerance);
+   stream->write(mFlocking.mChance);
+   stream->write(mFlocking.mMin);
+   stream->write(mFlocking.mMax);
+   stream->write(mFlocking.mSideStep);
+};
+
+void AIControllerData::unpackData(BitStream* stream)
+{
+   Parent::unpackData(stream);
+
+   stream->read(&mMoveTolerance);
+   stream->read(&mFollowTolerance);
+   stream->read(&mAttackRadius);
+   stream->read(&mMoveStuckTolerance);
+   stream->read(&mMoveStuckTestDelay);
+   //enums
+   U16 linkFlags;
+   stream->read(&linkFlags);
+   mLinkTypes = LinkData(linkFlags);
+   U32 navSize;
+   stream->read(&navSize);
+   mNavSize = (AINavigation::NavSize)(navSize);   
+   // end enums
+   stream->read(&mHeightTolerance);
+   stream->read(&(mFlocking.mChance));
+   stream->read(&(mFlocking.mMin));
+   stream->read(&(mFlocking.mMax));
+   stream->read(&(mFlocking.mSideStep));
+};
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 IMPLEMENT_CO_DATABLOCK_V1(AIPlayerControllerData);
@@ -727,6 +793,15 @@ void AIFlyingVehicleControllerData::initPersistFields()
    endGroup("AI");
 
    Parent::initPersistFields();
+}
+
+AIFlyingVehicleControllerData::AIFlyingVehicleControllerData(const AIFlyingVehicleControllerData& other, bool temp_clone) : AIControllerData(other, temp_clone)
+{
+   mFlightCeiling = other.mFlightCeiling;
+   mFlightFloor = other.mFlightFloor;
+   resolveYawPtr.bind(this, &AIFlyingVehicleControllerData::resolveYaw);
+   resolvePitchPtr.bind(this, &AIFlyingVehicleControllerData::resolvePitch);
+   resolveSpeedPtr.bind(this, &AIFlyingVehicleControllerData::resolveSpeed);
 }
 
 void AIFlyingVehicleControllerData::resolveYaw(AIController* obj, Point3F location, Move* movePtr)

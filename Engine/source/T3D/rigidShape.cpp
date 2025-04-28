@@ -906,7 +906,7 @@ bool RigidShape::onNewDataBlock(GameBaseData* dptr, bool reload)
    else
       mRigid.setObjectInertia(mObjBox.maxExtents - mObjBox.minExtents);
 
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
 
    return true;
 }

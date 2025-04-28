@@ -1064,7 +1064,7 @@ bool afxParticleEmitter::onNewDataBlock(GameBaseData* dptr, bool reload)
   if (mDataBlock->isTempClone())
     return true;
 
-  scriptOnNewDataBlock();
+  scriptOnNewDataBlock(reload);
   return true;
 }
 
@@ -1108,7 +1108,7 @@ bool afxParticleEmitterVector::onNewDataBlock(GameBaseData* dptr, bool reload)
   if (mDataBlock->isTempClone())
     return true;
 
-  scriptOnNewDataBlock();
+  scriptOnNewDataBlock(reload);
   return true;
 }
 
@@ -1177,7 +1177,7 @@ bool afxParticleEmitterCone::onNewDataBlock(GameBaseData* dptr, bool reload)
   if (mDataBlock->isTempClone())
     return true;
 
-  scriptOnNewDataBlock();
+  scriptOnNewDataBlock(reload);
   return true;
 }
 
@@ -1294,7 +1294,7 @@ bool afxParticleEmitterPath::onNewDataBlock(GameBaseData* dptr, bool reload)
   if (mDataBlock->isTempClone())
     return true;
 
-  scriptOnNewDataBlock();
+  scriptOnNewDataBlock(reload);
   return true;
 }
 

@@ -159,7 +159,7 @@ bool RibbonNode::onNewDataBlock( GameBaseData *dptr, bool reload )
       return false;
 
    // Todo: Uncomment if this is a "leaf" class
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return true;
 }
 

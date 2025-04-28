@@ -614,7 +614,7 @@ bool Precipitation::onNewDataBlock( GameBaseData *dptr, bool reload )
       initMaterials();
    }
 
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return true;
 }
 

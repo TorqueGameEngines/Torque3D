@@ -601,7 +601,7 @@ bool Debris::onNewDataBlock( GameBaseData *dptr, bool reload )
 
    if (mDataBlock->isTempClone())
       return true;
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return true;
 
 }

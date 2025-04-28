@@ -422,7 +422,7 @@ bool Item::onNewDataBlock( GameBaseData *dptr, bool reload )
       return false;
 
    if (!mSubclassItemHandlesScene)
-      scriptOnNewDataBlock();
+      scriptOnNewDataBlock(reload);
 
    if ( isProperlyAdded() )
       _updatePhysics();

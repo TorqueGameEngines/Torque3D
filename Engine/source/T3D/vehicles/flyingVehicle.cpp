@@ -407,7 +407,7 @@ bool FlyingVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
          mJetThread[i] = 0;
    }
 
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return true;
 }
 

@@ -587,6 +587,8 @@ public:
    F32 density;
    F32 maxEnergy;
    F32 maxDamage;
+   F32 mCollisionMul;
+   F32 mImpactMul;
    F32 repairRate;                  ///< Rate per tick.
 
    F32 disabledLevel;

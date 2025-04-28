@@ -162,3 +162,16 @@ function disconnectedCleanup()
    
    moduleExec("onDestroyClientConnection", "Game");
 }
+
+function clientCmdsetMoveMap(%movemap)
+{
+   if (!isObject(%movemap)) return;
+   if(isObject(ServerConnection) && isObject(ServerConnection.curMoveMap))
+      ServerConnection.curMoveMap.pop();
+        
+   // clear movement
+   $mvForwardAction = 0;
+   $mvBackwardAction = 0;
+   %movemap.push();
+   ServerConnection.curMoveMap = %movemap;
+}

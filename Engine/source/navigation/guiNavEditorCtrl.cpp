@@ -227,6 +227,7 @@ void GuiNavEditorCtrl::spawnPlayer(const Point3F &pos)
          missionCleanup->addObject(obj);
       }
       mPlayer = obj;
+#ifdef TORQUE_NAVIGATION_ENABLED
       AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(obj);
       if (asAIPlayer) //try direct
       {
@@ -242,9 +243,12 @@ void GuiNavEditorCtrl::spawnPlayer(const Point3F &pos)
          }
          else
          {
+#endif
             Con::executef(this, "onPlayerSelected");
+#ifdef TORQUE_NAVIGATION_ENABLED
          }
       }
+#endif
    }
 }
 
@@ -406,6 +410,7 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
             if(ri.object)
             {
                mPlayer = ri.object;
+#ifdef TORQUE_NAVIGATION_ENABLED
                AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
                if (asAIPlayer) //try direct
                {
@@ -421,17 +426,24 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
                   }
                   else
                   {
+#endif
                      Con::executef(this, "onPlayerSelected");
                   }
+#ifdef TORQUE_NAVIGATION_ENABLED
                }
             }
+#endif
          }
          else if (!mPlayer.isNull() && gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
          {
             AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
             if (asAIPlayer) //try direct
             {
+#ifdef TORQUE_NAVIGATION_ENABLED
                asAIPlayer->setPathDestination(ri.point);
+#else
+                asAIPlayer->setMoveDestination(ri.point,false);
+#endif
             }
             else
             {

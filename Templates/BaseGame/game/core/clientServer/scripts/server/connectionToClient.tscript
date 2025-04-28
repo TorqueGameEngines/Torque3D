@@ -275,7 +275,9 @@ function GameConnection::onPostSpawn( %this )
     if (%this.numModsNeedingLoaded)
         callOnObjectList("onPostSpawn", %modulesIdList, %this);
     else
-        %this.listener.onPostSpawnComplete(%this);    
+        %this.listener.onPostSpawnComplete(%this);
+    if (isObject(%this.player.getDatablock().controlMap))
+        commandToClient(%this, 'setMoveMap', %this.player.getDatablock().controlMap);
 }
 
 function GameConnectionListener::onPostSpawnComplete(%this, %client)

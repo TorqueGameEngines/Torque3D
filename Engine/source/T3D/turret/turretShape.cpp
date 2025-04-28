@@ -127,6 +127,7 @@ TurretShapeData::TurretShapeData()
       recoilSequence[i] = -1;
    pitchSequence = -1;
    headingSequence = -1;
+   mControlMap = StringTable->EmptyString();
 }
 
 void TurretShapeData::initPersistFields()
@@ -134,6 +135,8 @@ void TurretShapeData::initPersistFields()
    docsURL;
    Parent::initPersistFields();
    addGroup("Steering");
+   addField("controlMap", TypeString, Offset(mControlMap, TurretShapeData),
+      "@brief movemap used by these types of objects.\n\n");
       addField("zRotOnly",       TypeBool,         Offset(zRotOnly,       TurretShapeData),
          "@brief Should the turret allow only z rotations.\n\n"
          "True indicates that the turret may only be rotated on its z axis, just like the Item class.  "

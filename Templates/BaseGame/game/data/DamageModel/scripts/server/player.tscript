@@ -1,0 +1,42 @@
+function PlayerData::damage(%this, %obj, %sourceObject, %position, %damage, %damageType)
+{
+   if (!isObject(%obj) || %obj.getDamageState() !$= "Enabled" || !%damage)
+      return;
+      
+   %rootObj = %obj;
+   if (%obj.healthFromMount)
+      %rootObj = findRootObject(%obj);
+      
+   %rootObj.applyDamage(%damage);
+   %this.onDamage(%rootObj, %damage);
+   
+   %this.setDamageDirection(%rootObj, %sourceObject, %position);
+   
+   // Deal with client callbacks here because we don't have this
+   // information in the onDamage or onDisable methods
+   %client = %rootObj.client;
+   %sourceClient = %sourceObject ? %sourceObject.client : 0;
+
+   %location = "Body";
+   if (isObject(%client))
+   {
+      if (%rootObj.getDamageState() !$= "Enabled")
+      {
+         callGamemodeFunction("onDeath", %client, %sourceObject, %sourceClient, %damageType, %location);
+      }
+   }
+}
+
+function PlayerData::onDamage(%this, %obj, %delta)
+{
+   Parent::onDamage(%this, %obj, %delta);
+   
+   // This method is invoked by the ShapeBase code whenever the
+   // object's damage level changes.
+   if (%delta > 0 && %obj.getDamageState() !$= "Destroyed")
+   {
+      // If the pain is excessive, let's hear about it.
+      if (%delta > 10)
+         %obj.playPain();
+   }
+}

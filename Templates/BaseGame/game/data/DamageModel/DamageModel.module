@@ -1,0 +1,11 @@
+<ModuleDefinition
+    ModuleId="DamageModel"
+    VersionId="1"
+    Group="Game"
+    scriptFile="DamageModel.tscript"
+    CreateFunction="onCreate"
+    DestroyFunction="onDestroy">
+    <DeclaredAssets
+        Extension="asset.taml"
+        Recurse="true"/>
+</ModuleDefinition>

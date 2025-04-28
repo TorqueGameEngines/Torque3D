@@ -549,7 +549,7 @@ bool HoverVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
    }
 
    // Todo: Uncomment if this is a "leaf" class
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
 
    return true;
 }

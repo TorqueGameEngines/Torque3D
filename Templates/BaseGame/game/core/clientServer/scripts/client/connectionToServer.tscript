@@ -111,8 +111,12 @@ function handleConnectionErrorMessage(%msgType, %msgString, %msgError)
 //-----------------------------------------------------------------------------
 // Disconnect
 //-----------------------------------------------------------------------------
-
 function disconnect()
+{
+	callOnModules("disconnect");
+}
+
+function Core_ClientServer::disconnect(%this)
 {
    // We need to stop the client side simulation
    // else physics resources will not cleanup properly.
@@ -157,4 +161,17 @@ function disconnectedCleanup()
    physicsDestroyWorld( "client" );    
    
    moduleExec("onDestroyClientConnection", "Game");
+}
+
+function clientCmdsetMoveMap(%movemap)
+{
+   if (!isObject(%movemap)) return;
+   if(isObject(ServerConnection) && isObject(ServerConnection.curMoveMap))
+      ServerConnection.curMoveMap.pop();
+        
+   // clear movement
+   $mvForwardAction = 0;
+   $mvBackwardAction = 0;
+   %movemap.push();
+   ServerConnection.curMoveMap = %movemap;
 }

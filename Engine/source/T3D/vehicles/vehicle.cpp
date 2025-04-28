@@ -141,6 +141,7 @@ VehicleData::VehicleData()
    dMemset( damageEmitterOffset, 0, sizeof( damageEmitterOffset ) );
    dMemset( damageEmitterIDList, 0, sizeof( damageEmitterIDList ) );
    dMemset( damageLevelTolerance, 0, sizeof( damageLevelTolerance ) );
+   mControlMap = StringTable->EmptyString();
 
    numDmgEmitterAreas = 0;
 
@@ -321,6 +322,8 @@ void VehicleData::initPersistFields()
    endGroup("Collision");
 
    addGroup("Steering");
+   addField("controlMap", TypeString, Offset(mControlMap, VehicleData),
+      "@brief movemap used by these types of objects.\n\n");
       addFieldV( "jetForce", TypeRangedF32, Offset(jetForce, VehicleData), &CommonValidators::PositiveFloat,
          "@brief Additional force applied to the vehicle when it is jetting.\n\n"
          "For WheeledVehicles, the force is applied in the forward direction. For "
@@ -726,6 +729,7 @@ void Vehicle::updateMove(const Move* move)
    if (mDamageState == Enabled) {
       setImageTriggerState(0,move->trigger[0]);
       setImageTriggerState(1,move->trigger[1]);
+      //legacy code has trigger 2 and 3 reserved
       setImageTriggerState(2, move->trigger[4]);
       setImageTriggerState(3, move->trigger[5]);
    }

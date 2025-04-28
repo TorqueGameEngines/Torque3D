@@ -711,7 +711,7 @@ bool WheeledVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
          mJetSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::JetSound), &getTransform() );
    }
 
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return true;
 }
 

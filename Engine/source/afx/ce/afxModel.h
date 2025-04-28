@@ -94,7 +94,10 @@ public:
 
   static void           initPersistFields();
 
-  void onShapeChanged() {}
+  void onShapeChanged()
+  {
+     reloadOnLocalClient();
+  }
   void onSequenceChanged() {}
 
   DECLARE_CONOBJECT(afxModelData);

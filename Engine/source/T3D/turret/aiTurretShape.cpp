@@ -545,7 +545,7 @@ bool AITurretShape::onNewDataBlock(GameBaseData* dptr, bool reload)
       mShapeInstance->setTimeScale(mStateAnimThread,0);
    }
 
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return true;
 }
 

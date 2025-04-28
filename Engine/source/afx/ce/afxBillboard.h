@@ -71,7 +71,10 @@ public:
 
   static void       initPersistFields();
 
-  void onChangeTexture() {}
+  void onChangeTexture()
+  {
+     reloadOnLocalClient();
+  }
 
   DECLARE_CONOBJECT(afxBillboardData);
 };

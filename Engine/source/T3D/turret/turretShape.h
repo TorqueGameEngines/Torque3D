@@ -80,6 +80,7 @@ public:
    bool startLoaded;          ///< Should the turret's mounted weapon(s) start in a loaded state?
 
    bool zRotOnly;             ///< Should the turret allow only z rotations (like an item)?
+   StringTableEntry mControlMap;
 
 public:
    TurretShapeData();

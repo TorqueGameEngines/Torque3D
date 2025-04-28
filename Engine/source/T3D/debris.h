@@ -111,7 +111,10 @@ public:
    void onPerformSubstitutions() override;
    bool allowSubstitutions() const override { return true; }
 
-   void onShapeChanged() {}
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
 };
 
 //**************************************************************************

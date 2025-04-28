@@ -71,7 +71,6 @@ struct VehicleData : public RigidShapeData
    F32 damageLevelTolerance[ VC_NUM_DAMAGE_LEVELS ];
    F32 numDmgEmitterAreas;
 
-   StringTableEntry mControlMap;
    bool enablePhysicsRep;
    StringTableEntry mControlMap;
 

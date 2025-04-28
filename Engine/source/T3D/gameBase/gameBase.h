@@ -115,7 +115,7 @@ public:
    /// @{
    DECLARE_CALLBACK( void, onAdd, ( GameBase* obj ) );
    DECLARE_CALLBACK( void, onRemove, ( GameBase* obj ) );
-   DECLARE_CALLBACK( void, onNewDataBlock, ( GameBase* obj ) );
+   DECLARE_CALLBACK( void, onNewDataBlock, ( GameBase* obj, bool reload) );
    DECLARE_CALLBACK( void, onMount, ( SceneObject* obj, SceneObject* mountObj, S32 node ) );
    DECLARE_CALLBACK( void, onUnmount, ( SceneObject* obj, SceneObject* mountObj, S32 node ) );
    /// @}
@@ -299,7 +299,7 @@ public:
    /// Executes the 'onNewDataBlock' script function for this object.
    ///
    /// @note This must be called after everything is loaded.
-   void scriptOnNewDataBlock();
+   void scriptOnNewDataBlock(bool reload = false);
 
    /// Executes the 'onRemove' script function for this object.
    /// @note This must be called while the object is still valid

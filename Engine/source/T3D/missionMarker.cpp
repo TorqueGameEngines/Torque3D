@@ -142,7 +142,7 @@ bool MissionMarker::onNewDataBlock( GameBaseData *dptr, bool reload )
    mDataBlock = dynamic_cast<MissionMarkerData*>( dptr );
    if ( !mDataBlock || !Parent::onNewDataBlock( dptr, reload ) )
       return(false);
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return(true);
 }
 

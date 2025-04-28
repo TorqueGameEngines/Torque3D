@@ -1923,7 +1923,7 @@ bool Player::onNewDataBlock( GameBaseData *dptr, bool reload )
    onScaleChanged();
    resetWorldBox();
 
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return true;
 }
 

@@ -440,7 +440,7 @@ bool TurretShape::onNewDataBlock(GameBaseData* dptr, bool reload)
 
    if (!mSubclassTurretShapeHandlesScene)
    {
-      scriptOnNewDataBlock();
+      scriptOnNewDataBlock(reload);
    }
 
    return true;

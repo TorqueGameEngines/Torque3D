@@ -181,7 +181,7 @@ bool PathCamera::onNewDataBlock( GameBaseData *dptr, bool reload )
    if ( !mDataBlock || !Parent::onNewDataBlock( dptr, reload ) )
       return false;
 
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return true;
 }
 

@@ -36,6 +36,15 @@ struct AINavigation
    AINavigation() = delete;
    AINavigation(AIController* controller);
    ~AINavigation();
+   Point3F mMoveDestination;
+   void setMoveDestination(const Point3F& location, bool slowdown);
+   Point3F getMoveDestination() const { return mMoveDestination; };
+   bool setPathDestination(const Point3F& pos, bool replace = false);
+   Point3F getPathDestination() const;
+
+   void onReachDestination();
+
+#ifdef TORQUE_NAVIGATION_ENABLED
    /// Stores information about a path.
    struct PathData {
       /// Pointer to path object.
@@ -67,12 +76,6 @@ struct AINavigation
    void setNavSize(NavSize size) { mNavSize = size; updateNavMesh(); }
    NavSize getNavSize() const { return mNavSize; }
 
-   Point3F mMoveDestination;
-   void setMoveDestination(const Point3F& location, bool slowdown);
-   Point3F getMoveDestination() { return mMoveDestination; };
-
-   void onReachDestination();
-
    /// NavMesh we pathfind on.
    SimObjectPtr<NavMesh> mNavMesh;
    NavMesh* findNavMesh() const;
@@ -83,8 +86,6 @@ struct AINavigation
 
    /// Clear out the current path.
    void clearPath();
-   bool setPathDestination(const Point3F& pos, bool replace = false);
-   Point3F getPathDestination() const;
    void repath();
 
    /// Get the current path we're following.
@@ -96,8 +97,8 @@ struct AINavigation
    void clearFollow();
    /// Move to the specified node in the current path.
    void moveToNode(S32 node);
-
    bool flock();
+#endif
 };
 
 #endif

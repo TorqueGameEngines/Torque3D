@@ -21,7 +21,6 @@
 //-----------------------------------------------------------------------------
 #ifndef _AICONTROLLER_H_
 #define _AICONTROLLER_H_
-#ifdef TORQUE_NAVIGATION_ENABLED
 #include "navigation/coverPoint.h"
 #include "AIInfo.h"
 #include "AIGoal.h"
@@ -154,11 +153,12 @@ public:
    DECLARE_CONOBJECT(AIControllerData);
 
    F32 mMoveTolerance;                 // Distance from destination point before we stop
-   F32 mFollowTolerance;               // Distance from destination object before we stop
    F32 mAttackRadius;                  // Distance to trigger weaponry calcs
-   F32 mMoveStuckTolerance;            // Distance tolerance on stuck check
    S32 mMoveStuckTestDelay;            // The number of ticks to wait before checking if the AI is stuck
+   F32 mMoveStuckTolerance;            // Distance tolerance on stuck check
    F32 mHeightTolerance;               // how high above the navmesh are we before we stop trying to repath
+#ifdef TORQUE_NAVIGATION_ENABLED
+   F32 mFollowTolerance;               // Distance from destination object before we stop
    struct Flocking {
       U32 mChance;                     // chance of flocking
       F32 mMin;                        // min flocking separation distance
@@ -169,6 +169,7 @@ public:
    /// Types of link we can use.
    LinkData mLinkTypes;
    AINavigation::NavSize mNavSize;
+#endif
    Delegate<void(AIController* obj, Point3F location, Move* movePtr)> resolveYawPtr;
    void resolveYaw(AIController* obj, Point3F location, Move* movePtr);
 
@@ -243,5 +244,4 @@ public:
 
    DECLARE_CONOBJECT(AIFlyingVehicleControllerData);
 };
-#endif // TORQUE_NAVIGATION_ENABLED
 #endif //_AICONTROLLER_H_

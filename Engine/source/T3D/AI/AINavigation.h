@@ -44,6 +44,10 @@ struct AINavigation
 
    void onReachDestination();
 
+   void followObject();
+   void followObject(SceneObject* obj, F32 radius);
+   void clearFollow();
+
 #ifdef TORQUE_NAVIGATION_ENABLED
    /// Stores information about a path.
    struct PathData {
@@ -92,9 +96,6 @@ struct AINavigation
    SimObjectPtr<NavPath> getPath() { return mPathData.path; };
    void followNavPath(NavPath* path);
 
-   void followObject();
-   void followObject(SceneObject* obj, F32 radius);
-   void clearFollow();
    /// Move to the specified node in the current path.
    void moveToNode(S32 node);
    bool flock();

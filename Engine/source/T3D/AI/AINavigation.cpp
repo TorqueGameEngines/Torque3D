@@ -156,6 +156,30 @@ void AINavigation::onReachDestination()
    }
 }
 
+void AINavigation::followObject()
+{
+   if (getCtrl()->getGoal()->getDist() < getCtrl()->mControllerData->mMoveTolerance)
+      return;
+
+   if (setPathDestination(getCtrl()->getGoal()->getPosition(true)))
+   {
+#ifdef TORQUE_NAVIGATION_ENABLED
+      getCtrl()->clearCover();
+#endif
+   }
+}
+
+void AINavigation::followObject(SceneObject* obj, F32 radius)
+{
+   getCtrl()->setGoal(obj, radius);
+   followObject();
+}
+
+void AINavigation::clearFollow()
+{
+   getCtrl()->clearGoal();
+}
+
 DefineEngineMethod(AIController, setMoveDestination, void, (Point3F goal, bool slowDown), (true),
    "@brief Tells the AI to move to the location provided\n\n"
 
@@ -208,6 +232,23 @@ DefineEngineMethod(AIController, getPathDestination, Point3F, (), ,
    "@see setPathDestination()\n")
 {
    return object->getNav()->getPathDestination();
+}
+
+DefineEngineMethod(AIController, followObject, void, (SimObjectId obj, F32 radius), ,
+   "@brief Tell the AIPlayer to follow another object.\n\n"
+
+   "@param obj ID of the object to follow.\n"
+   "@param radius Maximum distance we let the target escape to.")
+{
+   SceneObject* follow;
+#ifdef TORQUE_NAVIGATION_ENABLED
+   object->getNav()->clearPath();
+   object->clearCover();
+#endif
+   object->getNav()->clearFollow();
+
+   if (Sim::findObject(obj, follow))
+      object->getNav()->followObject(follow, radius);
 }
 
 #ifdef TORQUE_NAVIGATION_ENABLED
@@ -315,27 +356,6 @@ void AINavigation::repath()
    moveToNode(1);
 }
 
-void AINavigation::followObject()
-{
-   if (getCtrl()->getGoal()->getDist() < getCtrl()->mControllerData->mMoveTolerance)
-      return;
-
-   if (setPathDestination(getCtrl()->getGoal()->getPosition(true)))
-   {
-      getCtrl()->clearCover();
-   }
-}
-
-void AINavigation::followObject(SceneObject* obj, F32 radius)
-{
-   getCtrl()->setGoal(obj, radius);
-   followObject();
-}
-
-void AINavigation::clearFollow()
-{
-   getCtrl()->clearGoal();
-}
 
 void AINavigation::followNavPath(NavPath* path)
 {
@@ -495,21 +515,6 @@ DefineEngineMethod(AIController, followNavPath, void, (SimObjectId obj), ,
    NavPath* path;
    if (Sim::findObject(obj, path))
       object->getNav()->followNavPath(path);
-}
-
-DefineEngineMethod(AIController, followObject, void, (SimObjectId obj, F32 radius), ,
-   "@brief Tell the AIPlayer to follow another object.\n\n"
-
-   "@param obj ID of the object to follow.\n"
-   "@param radius Maximum distance we let the target escape to.")
-{
-   SceneObject* follow;
-   object->getNav()->clearPath();
-   object->clearCover();
-   object->getNav()->clearFollow();
-
-   if (Sim::findObject(obj, follow))
-      object->getNav()->followObject(follow, radius);
 }
 
 

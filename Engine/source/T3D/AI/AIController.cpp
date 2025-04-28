@@ -201,14 +201,16 @@ bool AIController::getAIMove(Move* movePtr)
          }
       }
 #else
-      if (getGoal()->getDist() > mControllerData->mMoveTolerance)
+      if (getGoal()->getDist() > mControllerData->mFollowTolerance)
       {
-         if (getGoal()->mPosSet)
+         if (getGoal()->mObj.isValid())
+            getNav()->followObject(getGoal()->mObj, mControllerData->mFollowTolerance);
+         else if (getGoal()->mPosSet)
             getNav()->setPathDestination(getGoal()->getPosition(true));
 
          getGoal()->mInRange = false;
       }
-      if (getGoal()->getDist() < mControllerData->mMoveTolerance)
+      if (getGoal()->getDist() < mControllerData->mFollowTolerance)
       {
          mMovement.mMoveState = ModeStop;
 
@@ -519,9 +521,9 @@ AIControllerData::AIControllerData()
    mMoveStuckTolerance = 0.01f;
    mMoveStuckTestDelay = 30;
    mHeightTolerance = 0.001f;
+   mFollowTolerance = 1.0f;
 
 #ifdef TORQUE_NAVIGATION_ENABLED
-   mFollowTolerance = 1.0f;
    mLinkTypes = LinkData(AllFlags);
    mNavSize = AINavigation::Regular;
    mFlocking.mChance = 90;
@@ -544,9 +546,9 @@ AIControllerData::AIControllerData(const AIControllerData& other, bool temp_clon
    mMoveStuckTolerance = other.mMoveStuckTolerance;
    mMoveStuckTestDelay = other.mMoveStuckTestDelay;
    mHeightTolerance = other.mHeightTolerance;
+   mFollowTolerance = other.mFollowTolerance;
 
 #ifdef TORQUE_NAVIGATION_ENABLED
-   mFollowTolerance = other.mFollowTolerance;
    mLinkTypes = other.mLinkTypes;
    mNavSize = other.mNavSize;
    mFlocking.mChance = other.mFlocking.mChance;
@@ -569,6 +571,13 @@ void AIControllerData::initPersistFields()
    addGroup("AI");
 
    addFieldV("moveTolerance", TypeRangedF32, Offset(mMoveTolerance, AIControllerData), &CommonValidators::PositiveFloat,
+      "@brief Distance from destination before stopping.\n\n"
+      "When the AIController controlled object is moving to a given destination it will move to within "
+      "this distance of the destination and then stop.  By providing this tolerance "
+      "it helps the AIController controlled object from never reaching its destination due to minor obstacles, "
+      "rounding errors on its position calculation, etc.  By default it is set to 0.25.\n");
+
+   addFieldV("followTolerance", TypeRangedF32, Offset(mFollowTolerance, AIControllerData), &CommonValidators::PositiveFloat,
       "@brief Distance from destination before stopping.\n\n"
       "When the AIController controlled object is moving to a given destination it will move to within "
       "this distance of the destination and then stop.  By providing this tolerance "
@@ -601,12 +610,6 @@ void AIControllerData::initPersistFields()
 
 #ifdef TORQUE_NAVIGATION_ENABLED
    addGroup("Pathfinding");
-   addFieldV("followTolerance", TypeRangedF32, Offset(mFollowTolerance, AIControllerData), &CommonValidators::PositiveFloat,
-      "@brief Distance from destination before stopping.\n\n"
-      "When the AIController controlled object is moving to a given destination it will move to within "
-      "this distance of the destination and then stop.  By providing this tolerance "
-      "it helps the AIController controlled object from never reaching its destination due to minor obstacles, "
-      "rounding errors on its position calculation, etc.  By default it is set to 0.25.\n");
    addFieldV("FlockChance", TypeRangedS32, Offset(mFlocking.mChance, AIControllerData), &CommonValidators::S32Percent,
       "@brief chance of flocking.");
    addFieldV("FlockMin", TypeRangedF32, Offset(mFlocking.mMin, AIControllerData), &CommonValidators::PositiveFloat,
@@ -645,8 +648,9 @@ void AIControllerData::packData(BitStream* stream)
    stream->write(mMoveStuckTolerance);
    stream->write(mMoveStuckTestDelay);
    stream->write(mHeightTolerance);
-#ifdef TORQUE_NAVIGATION_ENABLED
    stream->write(mFollowTolerance);
+
+#ifdef TORQUE_NAVIGATION_ENABLED
    //enums
    stream->write(mLinkTypes.getFlags());
    stream->write((U32)mNavSize);
@@ -667,9 +671,9 @@ void AIControllerData::unpackData(BitStream* stream)
    stream->read(&mMoveStuckTolerance);
    stream->read(&mMoveStuckTestDelay);
    stream->read(&mHeightTolerance);
+   stream->read(&mFollowTolerance);
 
 #ifdef TORQUE_NAVIGATION_ENABLED
-   stream->read(&mFollowTolerance);
    //enums
    U16 linkFlags;
    stream->read(&linkFlags);

@@ -153,12 +153,12 @@ public:
    DECLARE_CONOBJECT(AIControllerData);
 
    F32 mMoveTolerance;                 // Distance from destination point before we stop
+   F32 mFollowTolerance;               // Distance from destination object before we stop
    F32 mAttackRadius;                  // Distance to trigger weaponry calcs
    S32 mMoveStuckTestDelay;            // The number of ticks to wait before checking if the AI is stuck
    F32 mMoveStuckTolerance;            // Distance tolerance on stuck check
    F32 mHeightTolerance;               // how high above the navmesh are we before we stop trying to repath
 #ifdef TORQUE_NAVIGATION_ENABLED
-   F32 mFollowTolerance;               // Distance from destination object before we stop
    struct Flocking {
       U32 mChance;                     // chance of flocking
       F32 mMin;                        // min flocking separation distance

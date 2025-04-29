@@ -470,8 +470,8 @@ inline void destructInPlace(T* p)
 #  define TORQUE_TMM_LOC
 #endif
 
-#define dMalloc(x) dMalloc_r(x, __FILE__, __LINE__)
-#define dRealloc(x, y) dRealloc_r(x, y, __FILE__, __LINE__)
+#define dMalloc(x) /*dMalloc_r(x, __FILE__, __LINE__)*/ malloc(x)
+#define dRealloc(x, y) /*dRealloc_r(x, y, __FILE__, __LINE__)*/ realloc(x,y)
 
 extern void  setBreakAlloc(dsize_t);
 extern void  setMinimumAllocUnit(U32);

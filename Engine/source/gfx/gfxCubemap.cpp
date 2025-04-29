@@ -113,7 +113,7 @@ bool GFXCubemapHandle::set( const String &cubemapDDS )
 {
    /// Free the previous handle to give us
    /// back any texture memory when it can.
-   free();
+   dFree();
 
    // Let the texture manager find this for us.
    StrongRefPtr<GFXCubemap>::set( TEXMGR->createCubemap( cubemapDDS ) );

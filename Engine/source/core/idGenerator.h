@@ -72,7 +72,7 @@ public:
       return mNextId++;
    }
 
-   void free(U32 id)
+   void dFree(U32 id)
    {
       AssertFatal(id >= mIdBlockBase, "IdGenerator::alloc: invalid id, id does not belong to this IdGenerator.");
       if(id == mNextId - 1)

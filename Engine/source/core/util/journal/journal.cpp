@@ -73,7 +73,7 @@ void Journal::_removeFunctionId(VoidPtr ptr,VoidMethod method)
       {
          // Unlink and break.
          FuncDecl* decl = *itr;
-         idPool().free( decl->id );
+         idPool().dFree( decl->id );
          *itr = (*itr)->next;
          delete decl;
          return;

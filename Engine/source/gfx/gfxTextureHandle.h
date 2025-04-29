@@ -75,7 +75,7 @@ public:
    void refresh();
 
    /// Releases the texture handle.
-   void free() { StrongObjectRef::set( NULL ); }
+   void dFree() { StrongObjectRef::set( NULL ); }
    
    GFXLockedRect *lock( U32 mipLevel = 0, RectI *inRect = NULL )
    {

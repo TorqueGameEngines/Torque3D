@@ -58,7 +58,7 @@ void NetConnection::eventOnRemove()
 
       temp->mEvent->notifyDelivered(this, true);
       temp->mEvent->decRef();
-      mEventNoteChunker.free(temp);
+      mEventNoteChunker.dFree(temp);
    }
 
    while(mUnorderedSendEventQueueHead)
@@ -68,7 +68,7 @@ void NetConnection::eventOnRemove()
 
       temp->mEvent->notifyDelivered(this, true);
       temp->mEvent->decRef();
-      mEventNoteChunker.free(temp);
+      mEventNoteChunker.dFree(temp);
    }
 
    while(mSendEventQueueHead)
@@ -78,7 +78,7 @@ void NetConnection::eventOnRemove()
 
       temp->mEvent->notifyDelivered(this, true);
       temp->mEvent->decRef();
-      mEventNoteChunker.free(temp);
+      mEventNoteChunker.dFree(temp);
    }
 }
 
@@ -127,7 +127,7 @@ void NetConnection::eventPacketDropped(PacketNotify *notify)
             walk->mEvent->notifyDelivered(this, false);
             walk->mEvent->decRef();
             temp = walk->mNextEvent;
-            mEventNoteChunker.free(walk);
+            mEventNoteChunker.dFree(walk);
             walk = temp;
       }
    }
@@ -145,7 +145,7 @@ void NetConnection::eventPacketReceived(PacketNotify *notify)
       {
          walk->mEvent->notifyDelivered(this, true);
          walk->mEvent->decRef();
-         mEventNoteChunker.free(walk);
+         mEventNoteChunker.dFree(walk);
          walk = next;
       }
       else
@@ -166,7 +166,7 @@ void NetConnection::eventPacketReceived(PacketNotify *notify)
       //Con::printf("EVT  %d: ACK - %d", getId(), mNotifyEventList->mSeqCount);
       mNotifyEventList->mEvent->notifyDelivered(this, true);
       mNotifyEventList->mEvent->decRef();
-      mEventNoteChunker.free(mNotifyEventList);
+      mEventNoteChunker.dFree(mNotifyEventList);
       mNotifyEventList = next;
    }
 }
@@ -375,7 +375,7 @@ void NetConnection::eventReadPacket(BitStream *bstream)
       //Con::printf("EVT  %d: PROCESS - %d", getId(), temp->mSeqCount);
       temp->mEvent->process(this);
       temp->mEvent->decRef();
-      mEventNoteChunker.free(temp);
+      mEventNoteChunker.dFree(temp);
       if(mErrorBuffer.isNotEmpty())
          return;
    }

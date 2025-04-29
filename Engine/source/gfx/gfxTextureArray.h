@@ -82,7 +82,7 @@ public:
    GFXTextureArrayHandle(GFXTextureArray* textureArray) { StrongRefPtr<GFXTextureArray>::set(textureArray); }
 
    /// Releases the texture handle.
-   void free() { StrongObjectRef::set(NULL); }
+   void dFree() { StrongObjectRef::set(NULL); }
 };
 
 #endif // _GFXTEXTUREARRAY_H_

@@ -61,7 +61,7 @@ bool GFXTexHandle::set( const String &texName, GFXTextureProfile *profile, const
 {
    // Clear the existing texture first, so that
    // its memory is free for the new allocation.
-   free();
+   dFree();
    
    // Create and set the new texture.
    AssertFatal( texName.isNotEmpty(), "Texture name is empty" );
@@ -79,7 +79,7 @@ bool GFXTexHandle::set(const String &texNameR, const String &texNameG, const Str
 {
    // Clear the existing texture first, so that
    // its memory is free for the new allocation.
-   free();
+   dFree();
    
    // Create and set the new texture.
    AssertFatal( texNameR.isNotEmpty(), "Texture name is empty" );
@@ -102,7 +102,7 @@ bool GFXTexHandle::set( GBitmap *bmp, GFXTextureProfile *profile, bool deleteBmp
 {
    // Clear the existing texture first, so that
    // its memory is free for the new allocation.
-   free();
+   dFree();
    
    // Create and set the new texture.
    AssertFatal( bmp, "Bitmap is NULL" );
@@ -125,7 +125,7 @@ bool GFXTexHandle::set( DDSFile *dds, GFXTextureProfile *profile, bool deleteDDS
 {
    // Clear the existing texture first, so that
    // its memory is free for the new allocation.
-   free();
+   dFree();
 
    // Create and set the new texture.
    AssertFatal( dds, "Bitmap is NULL" );
@@ -148,7 +148,7 @@ bool GFXTexHandle::set( U32 width, U32 height, GFXFormat format, GFXTextureProfi
 {
    // Clear the existing texture first, so that
    // its memory is free for the new allocation.
-   free();
+   dFree();
 
    // Create and set the new texture.
    StrongObjectRef::set( TEXMGR->createTexture( width, height, format, profile, numMipLevels, antialiasLevel ) );
@@ -165,7 +165,7 @@ bool GFXTexHandle::set(U32 width, U32 height, U32 depth, GFXFormat format, GFXTe
 {
    // Clear the existing texture first, so that
    // its memory is free for the new allocation.
-   free();
+   dFree();
 
    // Create and set the new texture.
    StrongObjectRef::set(TEXMGR->createTexture(width, height, depth, format, profile, numMipLevels));

@@ -87,7 +87,7 @@ MaterialList::MaterialList(U32 materialCount, const char **materialNames)
 //--------------------------------------
 void MaterialList::set(U32 materialCount, const char **materialNames)
 {
-   free();
+   dFree();
    mMaterialNames.setSize(materialCount);
    clearMatInstList();
    mMatInstList.setSize(materialCount);
@@ -102,7 +102,7 @@ void MaterialList::set(U32 materialCount, const char **materialNames)
 //--------------------------------------
 MaterialList::~MaterialList()
 {
-   free();
+   dFree();
 }
 
 //--------------------------------------
@@ -125,7 +125,7 @@ GFXTextureObject *MaterialList::getDiffuseTexture(U32 index)
 }
 
 //--------------------------------------
-void MaterialList::free()
+void MaterialList::dFree()
 {
    clearMatInstList();
    mMatInstList.clear();
@@ -157,7 +157,7 @@ U32 MaterialList::push_back(const String &filename, Material* material)
 //--------------------------------------
 bool MaterialList::read(Stream &stream)
 {
-   free();
+   dFree();
 
    // check the stream version
    U8 version;
@@ -213,7 +213,7 @@ bool MaterialList::write(Stream &stream)
 //--------------------------------------
 bool MaterialList::readText(Stream &stream, U8 firstByte)
 {
-   free();
+   dFree();
 
    if (!firstByte)
       return (stream.getStatus() == Stream::Ok || stream.getStatus() == Stream::EOS);

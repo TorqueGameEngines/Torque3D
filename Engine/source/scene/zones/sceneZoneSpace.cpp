@@ -248,7 +248,7 @@ void SceneZoneSpace::disconnectZoneSpace( SceneZoneSpace* zoneSpace )
          );
          #endif
 
-         smZoneSpaceRefChunker.free( ref );
+         smZoneSpaceRefChunker.dFree( ref );
          break;
       }
 }
@@ -267,7 +267,7 @@ void SceneZoneSpace::_disconnectAllZoneSpaces()
    for( ZoneSpaceRef* ref = mConnectedZoneSpaces; ref != NULL; )
    {
       ZoneSpaceRef* next = ref->mNext;
-      smZoneSpaceRefChunker.free( ref );
+      smZoneSpaceRefChunker.dFree( ref );
       ref = next;
    }
    mConnectedZoneSpaces = NULL;

@@ -111,7 +111,7 @@ public:
       return mSize;
    }
 
-   void realloc(U32 requiredItems, bool force)
+   void d_Realloc(U32 requiredItems, bool force)
    {
       U32 requiredSize = dCalcBlocks(requiredItems, mBlockSize);
       if (mSize < requiredSize || (force && (mSize != requiredSize)))
@@ -405,7 +405,7 @@ public:
 
       // Manage lists
       mBinLists.reserve(dCalcBlocks(mBinLists.size(), mListChunkSize));
-      mBinValues.realloc(mLastValueIdx, false);
+      mBinValues.d_Realloc(mLastValueIdx, false);
 
       // Copy data
       dCopyArray(mBinValues.getPtr() + list.startValue, values, numValues);
@@ -434,7 +434,7 @@ public:
          list.startValue = mLastValueIdx;
 
          mLastValueIdx += numValues;
-         mBinValues.realloc(mLastValueIdx, false);
+         mBinValues.d_Realloc(mLastValueIdx, false);
       }
 
       dCopyArray(mBinValues.getPtr() + list.startValue, values, numValues);
@@ -514,7 +514,7 @@ public:
       if (mBinValues.isNull())
          return;
 
-      mCompactData.realloc(mUsedValues, false);
+      mCompactData.d_Realloc(mUsedValues, false);
       BinValue* outPtr = mCompactData.getPtr();
       U32 newOutStart = 0;
 
@@ -536,7 +536,7 @@ public:
       AssertFatal(newOutStart == mUsedValues, "value count mismatch");
 
       mLastValueIdx = mUsedValues;
-      mBinValues.realloc(mLastValueIdx, true);
+      mBinValues.d_Realloc(mLastValueIdx, true);
 
       const U32 copySize = newOutStart * sizeof(BinValue);
       memcpy(mBinValues.getPtr(), mCompactData.getPtr(), copySize);

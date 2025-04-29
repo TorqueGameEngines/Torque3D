@@ -254,7 +254,7 @@ public:
       }
    }
 
-   void free(T* item)
+   void dFree(T* item)
    {
       destructInPlace(item);
       mFreeListHead.push(reinterpret_cast<ChunkerFreeClassList<T>*>(item));
@@ -313,7 +313,7 @@ public:
       }
    }
 
-   void free(T* item)
+   void dFree(T* item)
    {
       destructInPlace(item);
       mFreeListHead.push(reinterpret_cast<ChunkerFreeClassList<T>*>(item));
@@ -391,7 +391,7 @@ public:
       return outH;
    }
 
-   void free(Handle& item)
+   void dFree(Handle& item)
    {
       if (item.ptr == NULL)
          return;
@@ -402,13 +402,13 @@ public:
          delete[] ((U32*)item.ptr);
          break;
       case 1:
-         mT1.free((K1*)item.ptr);
+         mT1.dFree((K1*)item.ptr);
          break;
       case 2:
-         mT2.free((K2*)item.ptr);
+         mT2.dFree((K2*)item.ptr);
          break;
       case 3:
-         mT3.free((K3*)item.ptr);
+         mT3.dFree((K3*)item.ptr);
          break;
       default:
          break;

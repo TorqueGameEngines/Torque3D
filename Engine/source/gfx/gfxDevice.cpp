@@ -205,9 +205,9 @@ void GFXDevice::deviceInited()
 bool GFXDevice::destroy()
 {
    // Cleanup the static helper textures.
-   GFXTexHandle::ONE.free();
-   GFXTexHandle::ZERO.free();
-   GFXTexHandle::ZUP.free();
+   GFXTexHandle::ONE.dFree();
+   GFXTexHandle::ZERO.dFree();
+   GFXTexHandle::ZUP.dFree();
 
    // Make this release its buffer.
    PrimBuild::shutdown();

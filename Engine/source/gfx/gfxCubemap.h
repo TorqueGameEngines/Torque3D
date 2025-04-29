@@ -104,7 +104,7 @@ public:
    bool set( const String &cubemapDDS );
 
    /// Releases the texture handle.
-   void free() { StrongObjectRef::set( NULL ); }
+   void dFree() { StrongObjectRef::set( NULL ); }
 };
 
 /// Cubemap array - data lives on the GPU only with this class, but the data is not immutable so it can be updated
@@ -159,7 +159,7 @@ public:
    GFXCubemapArrayHandle(GFXCubemapArray *cubemapArray) { StrongRefPtr<GFXCubemapArray>::set(cubemapArray); }
 
    /// Releases the texture handle.
-   void free() { StrongObjectRef::set(NULL); }
+   void dFree() { StrongObjectRef::set(NULL); }
 };
 
 

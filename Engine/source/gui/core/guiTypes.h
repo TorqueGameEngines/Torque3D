@@ -484,7 +484,7 @@ public:
             mBitmapName = StringTable->EmptyString(); 
             mBitmapAssetId = StringTable->EmptyString(); 
             mBitmapAsset = NULL; 
-            mBitmap.free(); 
+            mBitmap.dFree();
             mBitmap = NULL; 
             return true; 
          }
@@ -493,7 +493,7 @@ public:
             mBitmapName = _in; 
             mBitmapAssetId = StringTable->EmptyString(); 
             mBitmapAsset = NULL; 
-            mBitmap.free(); 
+            mBitmap.dFree();
             mBitmap = NULL; 
             return true; 
          }
@@ -537,7 +537,7 @@ public:
       }
       else
       {
-         mBitmap.free();
+         mBitmap.dFree();
          mBitmap = NULL;
       }
       

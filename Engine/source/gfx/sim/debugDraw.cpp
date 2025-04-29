@@ -348,7 +348,7 @@ void DebugDrawer::render(bool clear)
       if(clear && p->dieTime <= curTime && !isFrozen && p->dieTime != U32_MAX)
       {
          *walk = p->next;
-         mPrimChunker.free(p);
+         mPrimChunker.dFree(p);
       }
       else
          walk = &((*walk)->next);

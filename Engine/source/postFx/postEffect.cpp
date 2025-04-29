@@ -1641,7 +1641,7 @@ void PostEffect::setTexture( U32 index, const String &texFilePath )
 {
 	// Set the new texture name.
 	mTextureName[index] = texFilePath;
-	mTexture[index].free();
+	mTexture[index].dFree();
 
     // Skip empty stages or ones with variable or target names.
     if (	texFilePath.isEmpty() ||
@@ -1659,7 +1659,7 @@ void PostEffect::setTexture(U32 index, const GFXTexHandle& texHandle)
 {
    // Set the new texture name.
    mTextureName[index] = StringTable->EmptyString();
-   mTexture[index].free();
+   mTexture[index].dFree();
 
    // Skip empty stages or ones with variable or target names.
    if (!texHandle.isValid())
@@ -1674,7 +1674,7 @@ void PostEffect::setTexture(U32 index, const GFXTexHandle& texHandle)
 void PostEffect::setCubemapTexture(U32 index, const GFXCubemapHandle &cubemapHandle)
 {
    // Set the new texture name.
-   mCubemapTextures[index].free();
+   mCubemapTextures[index].dFree();
 
    // Skip empty stages or ones with variable or target names.
    if (cubemapHandle.isNull())
@@ -1689,7 +1689,7 @@ void PostEffect::setCubemapTexture(U32 index, const GFXCubemapHandle &cubemapHan
 void PostEffect::setCubemapArrayTexture(U32 index, const GFXCubemapArrayHandle &cubemapArrayHandle)
 {
    // Set the new texture name.
-   mCubemapArrayTextures[index].free();
+   mCubemapArrayTextures[index].dFree();
 
    // Skip empty stages or ones with variable or target names.
    if (cubemapArrayHandle.isNull())

@@ -88,10 +88,10 @@ TSMaterialList::TSMaterialList(const TSMaterialList* pCopy)
 
 TSMaterialList::~TSMaterialList()
 {
-   free();
+   dFree();
 }
 
-void TSMaterialList::free()
+void TSMaterialList::dFree()
 {
    // these aren't found on our parent, clear them out here to keep in synch
    mFlags.clear();
@@ -101,7 +101,7 @@ void TSMaterialList::free()
    mDetailScales.clear();
    mReflectionAmounts.clear();
 
-   Parent::free();
+   Parent::dFree();
 }
 
 void TSMaterialList::push_back(const String &name, U32 flags, U32 rMap, U32 bMap, U32 dMap, F32 dScale, F32 emapAmount)

@@ -489,9 +489,9 @@ void ImposterCapture::end()
 {
    GFX->popActiveRenderTarget();
 
-   mBlackTex.free();
-   mWhiteTex.free(); 
-   mNormalTex.free();
+   mBlackTex.dFree();
+   mWhiteTex.dFree();
+   mNormalTex.dFree();
 
    mShapeInstance = NULL;
    

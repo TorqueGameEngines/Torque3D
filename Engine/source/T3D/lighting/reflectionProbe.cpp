@@ -635,8 +635,8 @@ void ReflectionProbe::processBakedCubemap()
       PROBEMGR->updateProbeTexture(&mProbeInfo);
 
       //now, cleanup
-      mProbeInfo.mPrefilterCubemap.free();
-      mProbeInfo.mIrradianceCubemap.free();
+      mProbeInfo.mPrefilterCubemap.dFree();
+      mProbeInfo.mIrradianceCubemap.dFree();
    }
    else
    {

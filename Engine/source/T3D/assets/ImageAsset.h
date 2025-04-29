@@ -205,7 +205,7 @@ public: \
             m##name##Name = StringTable->EmptyString();\
             m##name##AssetId = StringTable->EmptyString();\
             m##name##Asset = NULL;\
-            m##name.free();\
+            m##name.dFree();\
             m##name = NULL;\
             return true;\
          }\
@@ -214,7 +214,7 @@ public: \
             m##name##Name =  _in;\
             m##name##AssetId = StringTable->EmptyString();\
             m##name##Asset = NULL;\
-            m##name.free();\
+            m##name.dFree();\
             m##name = NULL;\
             return true;\
          }\
@@ -262,7 +262,7 @@ public: \
       }\
       else\
       {\
-         m##name.free();\
+         m##name.dFree();\
          m##name = NULL;\
       }\
       \
@@ -360,7 +360,7 @@ public: \
             m##name##Name[index] = StringTable->EmptyString();\
             m##name##AssetId[index] = StringTable->EmptyString();\
             m##name##Asset[index] = NULL;\
-            m##name[index].free();\
+            m##name[index].dFree();\
             m##name[index] = NULL;\
             return true;\
          }\
@@ -369,7 +369,7 @@ public: \
             m##name##Name[index] =  _in;\
             m##name##AssetId[index] = StringTable->EmptyString();\
             m##name##Asset[index] = NULL;\
-            m##name[index].free();\
+            m##name[index].dFree();\
             m##name[index] = NULL;\
             return true;\
          }\
@@ -412,7 +412,7 @@ public: \
       }\
       else\
       {\
-         m##name[index].free();\
+         m##name[index].dFree();\
          m##name[index] = NULL;\
       }\
       \

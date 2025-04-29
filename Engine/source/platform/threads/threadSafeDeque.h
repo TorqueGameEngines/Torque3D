@@ -108,7 +108,7 @@ class ThreadSafeDeque
                AssertFatal( ptr->mIsClaimed,
                   "ThreadSafeDeque::DeleteNode::destroy() - deleting unclaimed node" );
                destructInPlace( ptr );
-               ptr->mFreeList.free( ptr );
+               ptr->mFreeList.dFree( ptr );
             }
       };
 

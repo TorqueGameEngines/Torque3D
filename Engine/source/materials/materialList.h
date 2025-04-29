@@ -61,7 +61,7 @@ public:
    void set(U32 materialCount, const char **materialNames);
    U32  push_back(const String &filename, Material* = 0);
 
-   virtual void free();
+   virtual void dFree();
    void clearMatInstList();
 
    bool empty() const { return mMaterialNames.empty();   }

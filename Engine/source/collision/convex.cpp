@@ -61,9 +61,9 @@ CollisionState::CollisionState()
 CollisionState::~CollisionState()
 {
    if (mLista)
-      mLista->free();
+      mLista->dFree();
    if (mListb)
-      mListb->free();
+      mListb->dFree();
 }
 
 void CollisionState::swap()
@@ -272,7 +272,7 @@ CollisionStateList* CollisionStateList::alloc()
    return constructInPlace((CollisionStateList*)sChunker.alloc(sizeof(CollisionStateList)));
 }
 
-void CollisionStateList::free()
+void CollisionStateList::dFree()
 {
    unlink();
    linkAfter(&sFreeList);
@@ -325,7 +325,7 @@ CollisionWorkingList* CollisionWorkingList::alloc()
    return constructInPlace((CollisionWorkingList*)sChunker.alloc(sizeof(CollisionWorkingList)));
 }
 
-void CollisionWorkingList::free()
+void CollisionWorkingList::dFree()
 {
    unlink();
    wLinkAfter(&sFreeList);
@@ -359,11 +359,11 @@ Convex::~Convex()
 
    // Free up working list
    while (mWorking.wLink.mNext != &mWorking)
-      mWorking.wLink.mNext->free();
+      mWorking.wLink.mNext->dFree();
 
    // Free up references
    while (mReference.rLink.mNext != &mReference)
-      mReference.rLink.mNext->free();
+      mReference.rLink.mNext->dFree();
 }
 
 
@@ -476,7 +476,7 @@ void Convex::updateWorkingList(const Box3F& box, const U32 colMask)
       if ((!box.isOverlapped(itr->mConvex->getBoundingBox())) || (!itr->mConvex->getObject()->isCollisionEnabled())) {
          CollisionWorkingList* cl = itr;
          itr = itr->wLink.mPrev;
-         cl->free();
+         cl->dFree();
       }
    }
 
@@ -500,7 +500,7 @@ void Convex::clearWorkingList()
       itr->mConvex->mTag = sTag;
       CollisionWorkingList* cl = itr;
       itr = itr->wLink.mPrev;
-      cl->free();
+      cl->dFree();
    }
 }
 

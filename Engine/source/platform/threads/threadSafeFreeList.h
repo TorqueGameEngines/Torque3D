@@ -135,9 +135,9 @@ class ThreadSafeFreeList
       }
 
       /// Return the memory allocated to the given instance to the freelist.
-      void free( void* ptr )
+      void dFree( void* ptr )
       {
-         AssertFatal( ptr, "ThreadSafeFreeList::free() - got a NULL pointer" );
+         AssertFatal( ptr, "ThreadSafeFreeList::dFree() - got a NULL pointer" );
          T* node = ( T* ) ptr;
 
          while( 1 )
@@ -182,7 +182,7 @@ class ThreadSafeFreeListNode : public ThreadSafeRefCount< T, DeletePolicy >
       }
       static void operator delete( void* ptr, ThreadSafeFreeList< T >& freeList )
       {
-         freeList.free( ptr );
+         freeList.dFree( ptr );
       }
 };
 

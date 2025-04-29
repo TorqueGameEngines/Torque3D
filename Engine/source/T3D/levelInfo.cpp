@@ -116,8 +116,8 @@ LevelInfo::~LevelInfo()
    LightManager::smActivateSignal.remove(this, &LevelInfo::_onLMActivate);
    if (!mAccuTexture.isNull())
    {
-      mAccuTexture.free();
-      gLevelAccuMap.free();
+      mAccuTexture.dFree();
+      gLevelAccuMap.dFree();
    }
 }
 

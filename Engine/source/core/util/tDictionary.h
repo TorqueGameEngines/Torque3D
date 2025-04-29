@@ -518,7 +518,7 @@ void HashTable<Key,Value>::erase(const Key& key)
          do {
             Node* tmp = itr;
             itr = itr->mNext;
-            mNodeAllocator.free(tmp);
+            mNodeAllocator.dFree(tmp);
             mSize--;
          } while (itr && KeyCmp::equals<Key>( itr->mPair.key, key ) );
          *prev = itr;
@@ -537,7 +537,7 @@ void HashTable<Key,Value>::erase(Iterator node)
       if (itr == node.mLink) 
       {
          *prev = itr->mNext;
-         mNodeAllocator.free(itr);
+         mNodeAllocator.dFree(itr);
          mSize--;
          return;
       }
@@ -555,7 +555,7 @@ void HashTable<Key,Value>::erase(const Key & key, const Value & value)
       if ( KeyCmp::equals<Key>( itr->mPair.key, key ) && itr->mPair.value == value)
       {
          *prev = itr->mNext;
-         mNodeAllocator.free(itr);
+         mNodeAllocator.dFree(itr);
          mSize--;
          return;
       }

@@ -216,7 +216,7 @@ void SFXSoundscapeManager::update()
          // Free the soundscape.
          
          destructInPlace( soundscape );
-         mChunker.free( soundscape );
+         mChunker.dFree( soundscape );
       }
       else
          ++ i;
@@ -406,7 +406,7 @@ void SFXSoundscapeManager::removeSoundscape( SFXSoundscape* soundscape )
       // Free the soundscape.
          
       destructInPlace( soundscape );
-      mChunker.free( soundscape );
+      mChunker.dFree( soundscape );
    }
 }
 

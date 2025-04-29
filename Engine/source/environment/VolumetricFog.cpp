@@ -160,7 +160,7 @@ VolumetricFog::~VolumetricFog()
    z_buf = NULL;
 
    if (!mTexture.isNull())
-      mTexture.free();
+      mTexture.dFree();
 }
 
 void VolumetricFog::initPersistFields()
@@ -630,7 +630,7 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
          if (oldTextureName != StringTable->EmptyString() && mTextureAssetId == StringTable->EmptyString())
          {
             mIsTextured = false;
-            mTexture.free();
+            mTexture.dFree();
          }
       }
    }

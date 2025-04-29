@@ -261,7 +261,7 @@ void SFX3DWorld::unregisterObject( SceneObject* object )
    // Destroy the scene object link.
    
    destructInPlace( sfxObject );
-   mChunker.free( sfxObject );
+   mChunker.dFree( sfxObject );
 }
 
 //-----------------------------------------------------------------------------
@@ -340,7 +340,7 @@ void SFX3DWorld::setListener( SceneObject* object )
    if( oldListener )
    {
       destructInPlace( oldListener );
-      mChunker.free( oldListener );
+      mChunker.dFree( oldListener );
    }
 }
 

@@ -46,13 +46,13 @@ namespace
    FreeListChunker<Move>           sgMoveStore;
 
    static TickCacheHead * allocHead() { return sgTickCacheHeadStore.alloc(); }
-   static void freeHead(TickCacheHead * head) { sgTickCacheHeadStore.free(head); }
+   static void freeHead(TickCacheHead * head) { sgTickCacheHeadStore.dFree(head); }
 
    static TickCacheEntry * allocEntry() { return sgTickCacheEntryStore.alloc(); }
-   static void freeEntry(TickCacheEntry * entry) { sgTickCacheEntryStore.free(entry); }
+   static void freeEntry(TickCacheEntry * entry) { sgTickCacheEntryStore.dFree(entry); }
 
    static Move * allocMove() { return sgMoveStore.alloc(); }
-   static void freeMove(Move * move) { sgMoveStore.free(move); }
+   static void freeMove(Move * move) { sgMoveStore.dFree(move); }
 }
 
 //----------------------------------------------------------------------------

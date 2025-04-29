@@ -64,7 +64,7 @@ class DecalDataFile
       DecalInstance* _allocateInstance() { return mChunker.alloc(); }
 
       /// Free the memory of the given DecalInstance.
-      void _freeInstance( DecalInstance *decal ) { mChunker.free( decal ); }
+      void _freeInstance( DecalInstance *decal ) { mChunker.dFree( decal ); }
 
       /// @}
       

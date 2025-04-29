@@ -907,7 +907,7 @@ void DecalManager::_freeBuffers( DecalInstance *inst )
 {
    if ( inst->mVerts != NULL )
    {
-      mChunkers.free(inst->mAllocHandle);
+      mChunkers.dFree(inst->mAllocHandle);
 
       inst->mVerts = NULL;
       inst->mVertCount = 0;

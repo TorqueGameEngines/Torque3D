@@ -133,7 +133,7 @@ struct CollisionStateList
    bool isEmpty() { return mNext == this; }
 
    static CollisionStateList* alloc();
-   void free();
+   void dFree();
 };
 
 
@@ -158,7 +158,7 @@ struct CollisionWorkingList
    CollisionWorkingList();
 
    static CollisionWorkingList* alloc();
-   void free();
+   void dFree();
 };
 
 

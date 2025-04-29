@@ -69,7 +69,7 @@ class TSMaterialList : public MaterialList
    TSMaterialList();
    TSMaterialList(const TSMaterialList*);
    ~TSMaterialList();
-   void free() override;
+   void dFree() override;
 
    U32 getFlags(U32 index);
    void setFlags(U32 index, U32 value);

@@ -55,7 +55,7 @@ void ResourceBase::Header::destroySelf()
    if ( mResource != NULL )
    {
       mResource->~ResourceHolderBase();
-      ResourceHolderBase::smHolderFactory.free( mResource );
+      ResourceHolderBase::smHolderFactory.dFree( mResource );
    }
 
    ResourceManager::get().remove( this );

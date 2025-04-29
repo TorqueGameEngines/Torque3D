@@ -167,7 +167,7 @@ bool EditorIconRegistry::hasIconNoRecurse( const SimObject *object )
 void EditorIconRegistry::clear()
 {
    mIcons.clear();
-   mDefaultIcon.free();
+   mDefaultIcon.dFree();
 }
 
 DefineEngineStaticMethod( EditorIconRegistry, add, void, (String className, String imageFile, bool overwrite), (true),

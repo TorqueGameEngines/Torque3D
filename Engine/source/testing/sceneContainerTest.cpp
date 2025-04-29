@@ -40,7 +40,7 @@ TEST_F(LazyItemAllocatorTest, realloc)
    EXPECT_EQ(testAllocator.canFit(1), false);
 
    // Should alloc memory
-   testAllocator.realloc(1, false);
+   testAllocator.d_Realloc(1, false);
    void* oldPtr = testAllocator.getPtr();
 
    EXPECT_EQ(testAllocator.isNull(), false);
@@ -51,14 +51,14 @@ TEST_F(LazyItemAllocatorTest, realloc)
    EXPECT_EQ(testAllocator.canFit(1025), false);
 
    // Should be the same
-   testAllocator.realloc(2, false);
+   testAllocator.d_Realloc(2, false);
    EXPECT_EQ(testAllocator.canFit(3), true);
    EXPECT_EQ(testAllocator.getPtr(), oldPtr);
 
    // Alloc more and then return to normal
-   testAllocator.realloc(1025, false);
+   testAllocator.d_Realloc(1025, false);
    EXPECT_EQ(testAllocator.canFit(1025), true);
-   testAllocator.realloc(1022, true);
+   testAllocator.d_Realloc(1022, true);
    EXPECT_EQ(testAllocator.canFit(1025), false);
 }
 

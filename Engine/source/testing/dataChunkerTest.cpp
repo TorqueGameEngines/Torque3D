@@ -205,7 +205,7 @@ TEST(FreeListChunkerTest, FreeListChunkerTest_Should_Function_Correctly)
    EXPECT_TRUE(s2 > s1);
    EXPECT_TRUE(((s2 - s1) == 1));
    
-   testFreeList.free(s1);
+   testFreeList.dFree(s1);
    
    // But previous reallocations are reused
    TestClassChunkerStruct* s3 = testFreeList.alloc();
@@ -233,7 +233,7 @@ TEST(ClassChunkerTest, ClassChunker_Should_Function_Correctly)
    EXPECT_TRUE(s2 > s1);
    EXPECT_TRUE(((s2 - s1) == 1));
    
-   testClassList.free(s1);
+   testClassList.dFree(s1);
    EXPECT_TRUE(s1->value == 0);
    EXPECT_TRUE(s1->value2 == 0);
    
@@ -320,10 +320,10 @@ TEST(ThreeTieredChunkerTest,ThreeTieredChunker_Should_Function_Correctly)
    EXPECT_TRUE(threeChunker.getT3Chunker().isManagedByChunker(h4.ptr) == false);
    EXPECT_TRUE(h4.tier == 0);
 
-   threeChunker.free(h1);
-   threeChunker.free(h2);
-   threeChunker.free(h3);
-   threeChunker.free(h4);
+   threeChunker.dFree(h1);
+   threeChunker.dFree(h2);
+   threeChunker.dFree(h3);
+   threeChunker.dFree(h4);
 
    EXPECT_TRUE(h1.ptr == NULL);
    EXPECT_TRUE(h2.ptr == NULL);

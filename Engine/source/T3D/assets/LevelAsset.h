@@ -66,9 +66,6 @@ class LevelAsset : public AssetBase
    StringTableEntry        mEditorFile;
    StringTableEntry        mBakedSceneFile;
 
-   bool                    mIsSubLevel;
-   StringTableEntry        mMainLevelAsset;
-
    StringTableEntry        mGameModesNames;
 
    Vector<AssetBase*>      mAssetDependencies;

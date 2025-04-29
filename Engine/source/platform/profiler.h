@@ -159,6 +159,30 @@ struct ProfilerData
 #ifdef TORQUE_ENABLE_PROFILE_PATH
    const char * mPath;
 #endif
+   ProfilerData()
+   {
+      mRoot = NULL;
+      mNextForRoot = NULL;
+      mNextProfilerData = NULL;
+      mNextHash = NULL;
+      mParent = NULL;
+      mNextSibling = NULL;
+      mFirstChild = NULL;
+
+      for (U32 i =0; i< HashTableSize; i++)
+         mChildHash[i] = NULL;
+      mLastSeenProfiler = NULL;
+
+      mHash = 0;
+      mSubDepth = 0;
+      mInvokeCount = 0;
+      mStartTime = 0;
+      mTotalTime = 0;
+      mSubTime = 0;
+#ifdef TORQUE_ENABLE_PROFILE_PATH
+      mPath = NULL;
+#endif
+   }
 };
 
 

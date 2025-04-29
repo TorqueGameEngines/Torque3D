@@ -125,7 +125,7 @@ Profiler::Profiler()
    mMaxStackDepth = MaxStackDepth;
    mCurrentHash = 0;
 
-   mCurrentProfilerData = (ProfilerData *) malloc(sizeof(ProfilerData));
+   mCurrentProfilerData = new ProfilerData();
    mCurrentProfilerData->mRoot = NULL;
    mCurrentProfilerData->mNextForRoot = NULL;
    mCurrentProfilerData->mNextProfilerData = NULL;
@@ -161,7 +161,7 @@ Profiler::Profiler()
 Profiler::~Profiler()
 {
    reset();
-   free(mRootProfilerData);
+   SAFE_DELETE(mRootProfilerData);
    gProfiler = NULL;
 }
 
@@ -328,7 +328,7 @@ void Profiler::hashPush(ProfilerRootData *root)
       }
       if(!nextProfiler)
       {
-         nextProfiler = (ProfilerData *) malloc(sizeof(ProfilerData));
+         nextProfiler = new ProfilerData();
          for(U32 i = 0; i < ProfilerData::HashTableSize; i++)
             nextProfiler->mChildHash[i] = 0;
 

@@ -287,8 +287,8 @@ public:
    void clear()
    {
       mBinLists.clear();
-      mBinValues.realloc(0, true);
-      mCompactData.realloc(0, true);
+      mBinValues.d_Realloc(0, true);
+      mCompactData.d_Realloc(0, true);
 
       mFreeListStart = 0;
       mUsedValues = 0;

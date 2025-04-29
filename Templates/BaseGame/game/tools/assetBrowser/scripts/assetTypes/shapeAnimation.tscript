@@ -1,57 +1,16 @@
-function AssetBrowser::createShapeAnimationAsset(%this)
-{
-   %dlg = new OpenFileDialog()
-   {
-      Filters        = "Animation Files(*.dae, *.cached.dts)|*.dae;*.cached.dts";
-      DefaultPath    = $Pref::WorldEditor::LastPath;
-      DefaultFile    = "";
-      ChangePath     = false;
-      OverwritePrompt = true;
-      forceRelativePath = false;
-      //MultipleFiles = true;
-   };
+AssetBrowser::registerAssetType("ShapeAnimationAsset", "Shape Anims"); 
 
-   %ret = %dlg.Execute();
-   
-   if ( %ret )
-   {
-      $Pref::WorldEditor::LastPath = filePath( %dlg.FileName );
-      %fullPath = %dlg.FileName;
-   }   
-   
-   %dlg.delete();
-   
-   if ( !%ret )
-      return;  
-}
-
-function AssetBrowser::editShapeAnimationAsset(%this, %assetDef)
+function ShapeAnimationAsset::onEdit(%this)
 {
-   %this.hideDialog();
+   $CurrentAssetBrowser.hideDialog();
    EditorGui.setEditor( ShapeEditorPlugin );
-   ShapeEditorPlugin.openShapeAsset(%assetDef);   
+   ShapeEditorPlugin.openShapeAsset(%this);   
 }
 
-function AssetBrowser::moveShapeAnimationAsset(%this, %assetDef, %destination)
+function ShapeAnimationAsset::buildBrowserElement(%this, %previewData)
 {
-   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
-   
-   %newAssetPath = moveAssetFile(%assetDef, %destination);
-   
-   if(%newAssetPath $= "")
-      return false;
-
-   moveAssetLooseFile(%assetDef.getAnimationPath(), %destination);
-   
-   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
-   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
-}
-
-function AssetBrowser::buildShapeAnimationAssetPreview(%this, %assetDef, %previewData)
-{
-   %previewData.assetName = %assetDef.animationName;
-   %previewData.assetPath = %assetDef.scriptFile;
+   %previewData.assetName = %this.animationName;
+   %previewData.assetPath = %this.scriptFile;
 
    //Lotta prepwork
    /*%previewData.doubleClickCommand = %assetDef@".materialDefinitionName.reload(); "
@@ -66,7 +25,9 @@ function AssetBrowser::buildShapeAnimationAssetPreview(%this, %assetDef, %previe
    
    %previewData.previewImage = "ToolsModule:animationIcon_image";
    
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = %assetDef.friendlyName @ "\n" @ %assetDef @ "\nShape File path: " @ %assetDef.getShapePath();
+   %previewData.assetFriendlyName = %this.assetName;
+   %previewData.assetDesc = %this.description;
+   %previewData.tooltip = %this.friendlyName @ "\n" 
+                          @ %this @ "\nShape File path: " 
+                          @ %this.getShapePath();
 }

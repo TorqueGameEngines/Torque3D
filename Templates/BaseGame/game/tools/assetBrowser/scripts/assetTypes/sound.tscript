@@ -1,61 +1,50 @@
-function AssetBrowser::editSoundAsset(%this, %assetDef)
+AssetBrowser::registerAssetType("SoundAsset", "Sounds"); 
+
+function SoundAsset::onEdit(%this)
 {
    if (isObject($PreviewSoundSource))
         sfxStop($PreviewSoundSource);
-   $PreviewSoundSource = %assetDef.playSound();
+   $PreviewSoundSource = %this.playSound();
 }
 
-function AssetBrowser::onSoundAssetChanged(%this, %assetDef)
+function SoundAsset::onChanged(%this)
 {
    if (isObject($PreviewSoundSource))
         sfxStop($PreviewSoundSource);
 }
 
-function AssetBrowser::moveSoundAsset(%this, %assetDef, %destination)
+function SoundAsset::buildBrowserElement(%this, %previewData)
 {
-   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
-   
-   %newAssetPath = moveAssetFile(%assetDef, %destination);
-   
-   if(%newAssetPath $= "")
-      return false;
-
-   moveAssetLooseFile(%assetDef.getSoundPath(), %destination);
-   
-   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
-   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
-}
-
-function AssetBrowser::buildSoundAssetPreview(%this, %assetDef, %previewData)
-{
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.soundFilePath;
+   %previewData.assetName = %this.assetName;
+   %previewData.assetPath = %this.soundFilePath;
    
    if(%this.selectMode)
    {
-      %previewData.doubleClickCommand = "AssetBrowser.selectAsset( AssetBrowser.selectedAsset );";
+      %previewData.doubleClickCommand = $CurrentAssetBrowser @ ".selectAsset( " @ $CurrentAssetBrowser @ ".selectedAsset );";
    }
    else
    {
-      if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
+      %previewData.doubleClickCommand = $CurrentAssetBrowser @ ".editAsset( "@ %this @" );";
+      
+      /*if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")
       {
-      %previewData.doubleClickCommand = "AssetBrowser.editAsset( "@%assetDef@" );";
+         %previewData.doubleClickCommand = $CurrentAssetBrowser @ ".editAsset( "@ %this @" );";
       }
       else
       {
-         %previewData.doubleClickCommand = "AssetBrowser.onSoundAssetEditorDropped( "@%assetDef@" );";
-      }
+         %previewData.doubleClickCommand = $CurrentAssetBrowser @ ".onSoundAssetEditorDropped( "@ %this @" );";
+      }*/
    }
    
    %previewData.previewImage = "ToolsModule:soundIcon_image";   
    
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\nDefinition Path: " @ %assetDef.getFilename();
+   %previewData.assetFriendlyName = %this.assetName;
+   %previewData.assetDesc = %this.description;
+   %previewData.tooltip = "Asset Name: " @ %this.assetName @ 
+                          "\nDefinition Path: " @ %this.getFilename();
 }
 
-function AssetBrowser::onSoundAssetEditorDropped(%this, %assetDef, %position)
+function SoundAsset::onWorldEditorDropped(%this, %position)
 {
    %targetPosition = EWorldEditor.unproject(%position SPC 1);
    %camPos = LocalClientConnection.camera.getPosition();
@@ -72,14 +61,12 @@ function AssetBrowser::onSoundAssetEditorDropped(%this, %assetDef, %position)
       %pos = "0 0 0";  
    }
    
-   %assetId = %assetDef.getAssetId();
-   
    %newSFXEmitter = new SFXEmitter()
    {
       position = %pos;
-      soundAsset = %assetDef.getAssetId();
-      pitch = %assetDef.pitchAdjust;
-      volume = %assetDef.volumeAdjust;
+      soundAsset = %this.getAssetId();
+      pitch = %this.pitchAdjust;
+      volume = %this.volumeAdjust;
    };
    
    getScene(0).add(%newSFXEmitter);
@@ -91,15 +78,15 @@ function AssetBrowser::onSoundAssetEditorDropped(%this, %assetDef, %position)
    
 }
 
-function AssetBrowser::onSoundAssetGUIEditorDropped(%this, %assetDef, %position)
+function SoundAsset::onGUIEditorDropped(%this, %position)
 {    
-   %assetId = %assetDef.getAssetId();
+   %assetId = %this.getAssetId();
    %cmd = "new GuiAudioCtrl(){";
    %cmd = %cmd @ "SoundAsset =\""@ %assetId @"\";";
    %cmd = %cmd @ "position =\""@ %position @"\";";
    %cmd = %cmd @ "};";
    %ctrl = GuiEditCanvas.createObject(%cmd);
-   echo(%ctrl SPC "created");
+   //echo(%ctrl SPC "created");
 }
 
 function GuiInspectorTypeSoundAssetPtr::onControlDropped( %this, %payload, %position )

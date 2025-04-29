@@ -24,7 +24,7 @@ IMPLEMENT_CALLBACK(SubScene, onUnloaded, void, (), (),
    "@brief Called when a subScene has been unloaded and has game mode implications.\n\n");
 
 SubScene::SubScene() :
-   mLevelAssetId(StringTable->EmptyString()),
+   mSubSceneAssetId(StringTable->EmptyString()),
    mGameModesNames(StringTable->EmptyString()),
    mScopeDistance(-1),
    mLoaded(false),
@@ -67,7 +67,7 @@ void SubScene::initPersistFields()
 {
    addGroup("SubScene");
    addField("isGlobalLayer", TypeBool, Offset(mGlobalLayer, SubScene), "");
-   INITPERSISTFIELD_LEVELASSET(Level, SubScene, "The level asset to load.");
+   INITPERSISTFIELD_SUBSCENEASSET(SubScene, SubScene, "The subscene asset to load.");
    addField("tickPeriodMS", TypeS32, Offset(mTickPeriodMS, SubScene), "evaluation rate (ms)");
    addField("gameModes", TypeGameModeList, Offset(mGameModesNames, SubScene), "The game modes that this subscene is associated with.");
    endGroup("SubScene");
@@ -265,13 +265,13 @@ void SubScene::processTick(const Move* move)
 
 void SubScene::_onFileChanged(const Torque::Path& path)
 {
-   if(mLevelAsset.isNull() || Torque::Path(mLevelAsset->getLevelPath()) != path)
+   if(mSubSceneAsset.isNull() || Torque::Path(mSubSceneAsset->getLevelPath()) != path)
       return;
 
    if (mSaving)
       return;
 
-   AssertFatal(path == mLevelAsset->getLevelPath(), "Prefab::_onFileChanged - path does not match filename.");
+   AssertFatal(path == mSubSceneAsset->getLevelPath(), "SubScene::_onFileChanged - path does not match filename.");
 
    _closeFile(false);
    _loadFile(false);
@@ -307,9 +307,9 @@ void SubScene::_closeFile(bool removeFileNotify)
 
    _removeContents(SimGroupIterator(this));
 
-   if (removeFileNotify && mLevelAsset.notNull() && mLevelAsset->getLevelPath() != StringTable->EmptyString())
+   if (removeFileNotify && mSubSceneAsset.notNull() && mSubSceneAsset->getLevelPath() != StringTable->EmptyString())
    {
-      Torque::FS::RemoveChangeNotification(mLevelAsset->getLevelPath(), this, &SubScene::_onFileChanged);
+      Torque::FS::RemoveChangeNotification(mSubSceneAsset->getLevelPath(), this, &SubScene::_onFileChanged);
    }
 
    mGameModesList.clear();
@@ -319,18 +319,18 @@ void SubScene::_loadFile(bool addFileNotify)
 {
    AssertFatal(isServerObject(), "Trying to load a SubScene file on the client is bad!");
 
-   if(mLevelAsset.isNull() || mLevelAsset->getLevelPath() == StringTable->EmptyString())
+   if(mSubSceneAsset.isNull() || mSubSceneAsset->getLevelPath() == StringTable->EmptyString())
       return;
 
-   String evalCmd = String::ToString("exec(\"%s\");", mLevelAsset->getLevelPath());
+   String evalCmd = String::ToString("exec(\"%s\");", mSubSceneAsset->getLevelPath());
 
    String instantGroup = Con::getVariable("InstantGroup");
    Con::setIntVariable("InstantGroup", this->getId());
-   Con::evaluate((const char*)evalCmd.c_str(), false, mLevelAsset->getLevelPath());
+   Con::evaluate((const char*)evalCmd.c_str(), false, mSubSceneAsset->getLevelPath());
    Con::setVariable("InstantGroup", instantGroup.c_str());
 
    if (addFileNotify)
-      Torque::FS::AddChangeNotification(mLevelAsset->getLevelPath(), this, &SubScene::_onFileChanged);
+      Torque::FS::AddChangeNotification(mSubSceneAsset->getLevelPath(), this, &SubScene::_onFileChanged);
 }
 
 void SubScene::load()
@@ -432,7 +432,7 @@ bool SubScene::save()
    if (size() == 0 || !isLoaded())
       return false;
 
-   if (mLevelAsset.isNull())
+   if (mSubSceneAsset.isNull())
       return false;
 
    if (mSaving)
@@ -446,7 +446,7 @@ bool SubScene::save()
 
    PersistenceManager prMger;
 
-   StringTableEntry levelPath = mLevelAsset->getLevelPath();
+   StringTableEntry levelPath = mSubSceneAsset->getLevelPath();
 
    FileStream fs;
    fs.open(levelPath, Torque::FS::File::Write);
@@ -460,7 +460,7 @@ bool SubScene::save()
       {
          if ((*itr)->isMethod("onSaving"))
          {
-            Con::executef((*itr), "onSaving", mLevelAssetId);
+            Con::executef((*itr), "onSaving", mSubSceneAssetId);
          }
 
          if (childObj->getGroup() == this)
@@ -481,14 +481,14 @@ bool SubScene::save()
    bool saveSuccess = false;
 
    //Get the level asset
-   if (mLevelAsset.isNull())
+   if (mSubSceneAsset.isNull())
       return saveSuccess;
 
    //update the gamemode list as well
-   mLevelAsset->setDataField(StringTable->insert("gameModesNames"), NULL, StringTable->insert(mGameModesNames));
+   mSubSceneAsset->setDataField(StringTable->insert("gameModesNames"), NULL, StringTable->insert(mGameModesNames));
 
    //Finally, save
-   saveSuccess = mLevelAsset->saveAsset();
+   saveSuccess = mSubSceneAsset->saveAsset();
 
    mSaving = false;
 

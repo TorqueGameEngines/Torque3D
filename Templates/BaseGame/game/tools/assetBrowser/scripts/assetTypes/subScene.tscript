@@ -1,0 +1,156 @@
+AssetBrowser::registerAssetType("SubSceneAsset", "SubScenes"); 
+
+function SubSceneAsset::setupCreateNew()
+{
+   NewAssetPropertiesInspector.startGroup("SubScene");
+   NewAssetPropertiesInspector.addField("LevelName", "SubScene Name", "String",  "Human-readable name of new subScene", "", "", $CurrentAssetBrowser.newAssetSettings);
+   
+   NewAssetPropertiesInspector.endGroup();
+}
+
+function SubSceneAsset::onCreateNew(%this)
+{
+   %moduleName = $CurrentAssetBrowser.newAssetSettings.moduleName;
+   %modulePath = "data/" @ %moduleName;
+   
+   %assetName = $CurrentAssetBrowser.newAssetSettings.assetName;
+   
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
+   
+   %misExtension = ".subMis";
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %levelPath = %assetPath @ %assetName @ %misExtension;
+   
+   %asset = new SubSceneAsset()
+   {
+      AssetName = %assetName;
+      versionId = 1;
+      LevelFile = %assetName @ %misExtension;
+      LevelName = $CurrentAssetBrowser.newAssetSettings.levelName;
+      AssetDescription = $CurrentAssetBrowser.newAssetSettings.description;
+   };
+   
+   TamlWrite(%asset, %tamlpath);
+   
+   %fileObj = new FileObject();
+   if (!%fileObj.openForWrite(%levelPath)) 
+   {
+      echo("Unable to write subScene file!");
+   }
+   else
+   {
+      %fileObj.writeLine("");
+      %fileObj.close();
+      %fileObj.delete();  
+   }
+
+	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+	%addSuccess = AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+	
+	if(!%addSuccess)
+	{
+	   error("SubSceneAsset::onCreateNew() - failed to add declared asset: " @ %tamlpath @ " for module: " @ %moduleDef);
+	}
+
+	$CurrentAssetBrowser.refresh();
+	
+	if(%addSuccess && isObject($createAndAssignField))
+	{
+      $createAndAssignField.apply(%moduleName @ ":" @ %assetName);
+      $createAndAssignField = "";
+	}
+	
+	return %tamlpath;  
+}
+
+function SubSceneAsset::buildBrowserElement(%this, %previewData)
+{
+   %previewData.assetName = %this.assetName;
+   %previewData.assetPath = %this.getLevelPath();
+   %previewData.doubleClickCommand = "AssetBrowser.selectAsset(" @ %this @ ");";
+   
+   %levelPreviewImage = %this.PreviewImage;
+         
+   if(isFile(%levelPreviewImage))
+      %previewData.previewImage = %levelPreviewImage;
+   else
+      %previewData.previewImage = "ToolsModule:levelIcon_image";
+   
+   %previewData.assetFriendlyName = %this.assetName;
+   %previewData.assetDesc = %this.description;
+   %previewData.tooltip = "Asset Name: " @ %this.assetName @ "\n" @
+      "Asset Type: SubScene Asset\n" @ 
+      "Asset Definition ID: " @ %this @ "\n" @ 
+      "SubScene File path: " @ %this.getLevelPath(); 
+}
+
+function EWorldEditor::createSelectedAsSubScene( %this, %object )
+{
+   //create new level asset here
+   AssetBrowser.setupCreateNewAsset("SubSceneAsset", AssetBrowser.selectedModule, "finishCreateSelectedAsSubScene");
+   %this.contextActionObject = %object;
+}
+
+function finishCreateSelectedAsSubScene(%assetId)
+{
+   //echo("finishCreateSelectedAsSubScene");
+   
+   %subScene = new SubScene() {
+      levelAsset = %assetId;
+   };
+   
+   %levelAssetDef = AssetDatabase.acquireAsset(%assetId);
+   %levelFilePath = %levelAssetDef.getLevelPath();
+   
+   //write out to file
+   EWorldEditor.contextActionObject.save(%levelFilePath);
+   
+   AssetDatabase.releaseAsset(%assetId);
+   
+   getRootScene().add(%subScene);
+   
+   EWorldEditor.contextActionObject.delete();
+   
+   %subScene.load();
+   
+   %subScene.recalculateBounds();
+   
+   %scalar = $SubScene::createScalar;
+   if(%scalar $= "")
+      %scalar = 1.5;
+   
+   //pad for loading boundary
+   %subScene.scale = VectorScale(%subScene.scale, %scalar);
+}
+
+function SubSceneAsset::onWorldEditorDropped(%assetDef, %position)
+{
+   %assetId = %assetDef.getAssetId();
+   
+   if(!%assetDef.isSubScene)
+   {
+      errorf("Cannot drag-and-drop LevelAsset into WorldEditor");
+      return;  
+   }
+   
+   %newSubScene = new SubScene()
+   {
+      position = %position;
+      levelAsset = %assetId;
+   };
+   
+   getScene(0).add(%newSubScene);
+   
+   %newSubScene.load();
+   %newSubScene.recalculateBounds();
+   
+   EWorldEditor.clearSelection();
+   EWorldEditor.selectObject(%newSubScene);
+   
+   EWorldEditor.dropSelection();
+      
+   EWorldEditor.isDirty = true;
+   
+   MECreateUndoAction::submit(%newSubScene );
+}

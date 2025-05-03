@@ -1,9 +1,11 @@
-function AssetBrowser::createCubemapAsset(%this)
+AssetBrowser::registerAssetType("CubemapAsset", "Cubemaps");
+
+function CubemapAsset::onCreateNew()
 {
    Canvas.pushDialog(CubemapEditor);
    return;
    
-   %moduleName = AssetBrowser.newAssetSettings.moduleName;
+   /*%moduleName = AssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
       
    %assetName = AssetBrowser.newAssetSettings.assetName;
@@ -30,57 +32,13 @@ function AssetBrowser::createCubemapAsset(%this)
 
 	AssetBrowser.refresh();
 	
-	return %tamlpath;
+	return %tamlpath;*/
 }
 
-function AssetBrowser::editCubemapAsset(%this, %assetDef)
+function CubemapAsset::onEdit(%this)
 {
    %this.hideDialog();
-   CubemapEditor.openCubemapAsset(%assetDef);    
-}
-
-//Renames the asset
-function AssetBrowser::renameCubemapAsset(%this, %assetDef, %newAssetName)
-{
-   /*%newCodeLooseFilename = renameAssetLooseFile(%assetDef.codefile, %newAssetName);
-   
-   if(!%newCodeLooseFilename $= "")
-      return;
-      
-   %newHeaderLooseFilename = renameAssetLooseFile(%assetDef.headerFile, %newAssetName);
-   
-   if(!%newHeaderLooseFilename $= "")
-      return;
-      
-   %assetDef.codefile = %newCodeLooseFilename;
-   %assetDef.headerFile = %newHeaderLooseFilename;
-   %assetDef.saveAsset();
-   
-   renameAssetFile(%assetDef, %newAssetName);*/
-}
-
-//Deletes the asset
-function AssetBrowser::deleteCubemapAsset(%this, %assetDef)
-{
-   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
-}
-
-//Moves the asset to a new path/module
-function AssetBrowser::moveCubemapAsset(%this, %assetDef, %destination)
-{
-   /*%currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
-   
-   %newAssetPath = moveAssetFile(%assetDef, %destination);
-   
-   if(%newAssetPath $= "")
-      return false;
-
-   moveAssetLooseFile(%assetDef.codeFile, %destination);
-   moveAssetLooseFile(%assetDef.headerFile, %destination);
-   
-   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
-   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);*/
+   CubemapEditor.openCubemapAsset(%this);    
 }
 
 function GuiInspectorTypeCubemapAssetPtr::onControlDropped( %this, %payload, %position )

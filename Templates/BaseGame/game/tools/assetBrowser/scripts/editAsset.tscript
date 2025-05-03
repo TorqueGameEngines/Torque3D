@@ -1,67 +1,30 @@
 function AssetBrowser_editAsset::saveAsset(%this)
 {
-   %file = AssetDatabase.getAssetFilePath(%this.editedAssetId);
-   %success = TamlWrite(AssetBrowser_editAsset.editedAsset, %file);
+   AssetBrowser_editAssetWindow.text = "Asset Properties";
    
-   AssetBrowser.reloadAsset(%this.editedAssetId);
-
-   AssetBrowser.refresh();
-   
-   %assetType = AssetDatabase.getAssetType(%this.editedAssetId);
-   %assetDef = AssetDatabase.acquireAsset(%this.editedAssetId);
-   %assetDef.refreshAsset();
-   
-   AssetBrowser.call("on" @ %assetType @ "Changed", %assetDef);
-   AssetDatabase.releaseAsset(%this.editedAssetId);
+   AssetBrowser.callAssetTypeFunc(%this.editedObjectType, "onSaveProperties", %this.editedObjectData);
+   AssetBrowser.callAssetTypeFunc(%this.editedObjectType, "onChanged", %this.editedObjectData);
 
    Canvas.popDialog(AssetBrowser_editAsset);
 }
 
 function AssetBrowser::editAsset(%this, %assetDef)
 {
-   //Find out what type it is
-   //If the passed-in definition param is blank, then we're likely called via a popup
-   if(%assetDef $= "")
+   if(%this.selectMode)
    {
-      if(AssetDatabase.isDeclaredAsset(EditAssetPopup.assetId))
-      {
-         %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-      }
-      else
-      {
-         //if it's not a valid asset at all, then it's probably a folder
-         %folder = strreplace(EditAssetPopup.assetId, ":", "/");
-         if(isDirectory(%folder))
-         {
-            AssetBrowser.navigateTo(%folder);
-         }
-         else
-         {
-            %object = getToken(EditAssetPopup.assetId, ":", 1);
-            if(isObject(%object))
-            {
-               if(%object.isMemberOfClass("SimDatablock"))
-               {
-                  DatablockEditorPlugin.openDatablock( %object );
-               }
-            }
-         }
-      }
+      %this.selectAsset(%this.selectedAsset);
    }
-   else if(AssetDatabase.isDeclaredAsset(%assetDef))
+   else
    {
-      //Turns out we were passed an assetid, not an asset definition. 
-      //Grab the asset def from that  
-      %assetDef = AssetDatabase.acquireAsset(%assetDef);
-   }
-      
-   if(%assetDef !$= "")
-   {
-      %assetType = %assetDef.getClassName();
-      
-      //Build out the edit command
-      %buildCommand = %this @ ".edit" @ %assetType @ "(" @ %assetDef @ ");";
-      eval(%buildCommand);
+      if(isObject(%assetDef))
+      {
+         %assetType = AssetDatabase.getAssetType(%assetDef.getAssetId());
+         %this.callAssetTypeFunc(%assetType, "onEdit", %assetDef);
+      }
+      else if(%this.popupMenu.objectType !$= "" && %this.popupMenu.objectData !$= "")
+      {
+         %this.callAssetTypeFunc(%this.popupMenu.objectType, "onEdit", %this.popupMenu.objectData);
+      }
    }
 }
 
@@ -75,27 +38,9 @@ function AssetBrowser::appendSubLevel(%this)
 
 function AssetBrowser::editAssetInfo(%this)
 {
-   Canvas.pushDialog(AssetBrowser_editAsset); 
-   
-   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-   
-   AssetBrowser.tempAsset = %assetDef.deepClone();
-   
-   AssetEditInspector.inspect(AssetBrowser.tempAsset);  
-   AssetBrowser_editAsset.editedAssetId = EditAssetPopup.assetId;
-   AssetBrowser_editAsset.editedAsset = AssetBrowser.tempAsset;
-   
-   //remove some of the groups we don't need:
-   for(%i=0; %i < AssetEditInspector.getCount(); %i++)
+   if(%this.popupMenu.objectType !$= "" && %this.popupMenu.objectData !$= "")
    {
-      %caption = AssetEditInspector.getObject(%i).caption;
-      
-      if(%caption $= "Ungrouped" || %caption $= "Object" || %caption $= "Editing" 
-         || %caption $= "Persistence" || %caption $= "Dynamic Fields")
-      {
-         AssetEditInspector.remove(AssetEditInspector.getObject(%i));
-         %i--;
-      }
+      %this.callAssetTypeFunc(%this.popupMenu.objectType, "onEditProperties", %this.popupMenu.objectData);
    }
 }
 
@@ -127,17 +72,17 @@ function AssetBrowser::refreshAsset(%this, %assetId)
 //------------------------------------------------------------
 function AssetBrowser::regeneratePreviewImage(%this)
 {
-   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
+   %assetDef = AssetDatabase.acquireAsset(AssetBrowser.popupMenu.objectData);
    %dummyObj = new ScriptObject();
-   %dummyObj.moduleName = AssetDatabase.getAssetModule(EditAssetPopup.assetId).moduleId;
-   %dummyObj.assetName = AssetDatabase.getAssetName(EditAssetPopup.assetId);
-
-   %regenCommand = "AssetBrowser.generate" @ EditAssetPopup.assetType @ 
-                     "PreviewImage(" @ %dummyObj @ ", true);";
-   eval(%regenCommand);
+   %dummyObj.moduleName = AssetDatabase.getAssetModule(AssetBrowser.popupMenu.objectData).moduleId;
+   %dummyObj.assetName = AssetDatabase.getAssetName(AssetBrowser.popupMenu.objectData);
+   
+   %assetType = AssetBrowser.popupMenu.objectType;
+   
+   AssetBrowser.callAssetTypeFunc(%assetType, "generatePreviewImage", %dummyObj, true);
 
    %dummyObj.delete();
-   AssetDatabase.releaseAsset(EditAssetPopup.assetId);
+   AssetDatabase.releaseAsset(AssetBrowser.popupMenu.objectData);
 }
 
 //------------------------------------------------------------
@@ -344,8 +289,8 @@ function moveAssetLooseFile(%file, %destinationPath)
 
 function AssetBrowser::duplicateAsset(%this)
 {
-   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-   %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetId);
+   %assetDef = AssetDatabase.acquireAsset(%this.popupMenu.objectData);
+   %assetType = %this.popupMenu.objectType;
    
    %trailingNum = getTrailingNumber(%assetDef.assetName);
    if(%trailingNum != -1)
@@ -370,18 +315,16 @@ function AssetBrowser::duplicateAsset(%this)
 
 function AssetBrowser::doDuplicateAsset(%this)
 {
-   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-   %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetId);
+   %assetType = %this.popupMenu.objectType;
+   %assetDef = AssetDatabase.acquireAsset(%this.popupMenu.objectData);
    
    if(AssetBrowser_assetNameEditTxt.text !$= "" && AssetBrowser_assetNameEditTxt.text !$= %assetDef.assetName)
    {
-      //this acts as a redirect based on asset type and will enact the appropriate function
-      //so for a GameObjectAsset, it'll become %this.duplicateGameObjectAsset(%assetDef, %targetModule);
-      //and call to the tools/assetBrowser/scripts/assetTypes/gameObject.tscript file for implementation
-      if(%this.isMethod("duplicate"@%assetType))
-         eval(%this @ ".duplicate"@%assetType@"("@%assetDef@","@AssetBrowser_assetNameEditTxt.text@");");
-         
-      AssetBrowser.refresh();
+      AssetDatabase.releaseAsset(%this.popupMenu.objectData);
+      
+      %this.callAssetTypeFunc(%assetType, "onDuplicate", %this.popupMenu.objectData, AssetBrowser_assetNameEditTxt.text);
+   
+      %this.refresh();
    }
 }
 
@@ -440,31 +383,8 @@ function AssetBrowser::confirmDeleteAsset(%this)
    %currentSelectedItem = AssetBrowserFilterTree.getSelectedItem();
    %currentItemParent = AssetBrowserFilterTree.getParentItem(%currentSelectedItem);
    
-   if(EditFolderPopup.visible)
-   {
-      if(EditFolderPopup.dirPath !$= "")
-         %folderPath = EditFolderPopup.dirPath;
-      else
-         %folderPath = AssetBrowserFilterTree.getItemValue(%currentSelectedItem) @ "/" @ AssetBrowserFilterTree.getItemText(%currentSelectedItem);
-         
-      if(%this.isMethod("deleteFolder"))
-         eval(%this @ ".deleteFolder(\""@%folderPath@"\");");
-   }   
-   else
-   {
-      %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-      %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetType);
-      
-      if(!isObject(%assetDef))
-         return;
-      
-      //Do any cleanup required given the type
-      if(%this.isMethod("delete"@%assetType))
-         eval(%this @ ".delete"@%assetType@"("@%assetDef@");");
-      
-      AssetDatabase.deleteAsset(EditAssetPopup.assetId, true, false);
-   }
-
+   %this.callAssetTypeFunc(%this.popupMenu.objectType, "onDelete", %this.popupMenu.objectData);
+   
    %this.refresh();
 }
 
@@ -522,21 +442,27 @@ function AssetBrowser::updateAssetReference(%this, %targetPath, %oldAssetId, %ne
 
 function AssetBrowser::openFileLocation(%this)
 {
-   %filePath = "";
-   if(EditAssetPopup.assetId !$= "")
+   if(isFunction("systemCommand"))
    {
-      if(AssetDatabase.isDeclaredAsset(EditAssetPopup.assetId))
+      warnf("AssetBrowser::openFileLocation() - systemCommand function disabled in this build. Unable to launch application to edit file.");
+      return;  
+   }
+   
+   %filePath = "";
+   if(%this.popuMenu.assetId !$= "")
+   {
+      if(AssetDatabase.isDeclaredAsset(%this.popuMenu.objectData))
       {
-         %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
+         %filePath = AssetDatabase.getAssetPath(%this.popuMenu.objectData);
       }
       else
       {
          //probably a file path
-         %pathSplit = strpos(EditAssetPopup.assetId, ":");
+         %pathSplit = strpos(%this.popuMenu.objectData, ":");
          if(%pathSplit != -1)
          {
-            %path = getSubStr(EditAssetPopup.assetId, 0, %pathSplit);
-            %file = getSubStr(EditAssetPopup.assetId, %pathSplit + 1);
+            %path = getSubStr(%this.popuMenu.objectData, 0, %pathSplit);
+            %file = getSubStr(%this.popuMenu.objectData, %pathSplit + 1);
             
             //datablocks pack the originator file in the parent path as-is, so check that
             if(fileExt(%path) !$= "")
@@ -549,14 +475,6 @@ function AssetBrowser::openFileLocation(%this)
             }
          }
       }
-   }
-   else if(EditLevelAssetPopup.assetId !$= "")
-   {
-      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
-   }
-   else if(EditTerrainAssetPopup.assetId !$= "")
-   {
-      %filePath = AssetDatabase.getAssetPath(EditAssetPopup.assetId);
    }
    
    if(isFile(%filePath) || isDirectory(%filePath))
@@ -578,20 +496,27 @@ function AssetBrowser::openFileLocation(%this)
    }
 }
 
-function AssetBrowser::openFolderLocation(%this)
+function AssetBrowser::openFolderLocation(%this, %folderPath)
 {
-   %filePath = AssetBrowser.dirHandler.currentAddress;
+   if(!isFunction("systemCommand"))
+   {
+      warn("AssetBrowser::openFolderLocation() - systemCommand function disabled in this build. Unable to launch application to open this folder.");
+      return;
+   }
    
-   if(%filePath !$= "")
+   if(%folderPath $= "")
+      %folderPath = filePath(%this.dirHandler.currentAddress);
+   
+   if(%folderPath !$= "")
    {
       if($platform $= "windows")
       {
-         %cmd = "cd \"" @ makeFullPath(%filePath) @ "\" && start .";
+         %cmd = "cd \"" @ makeFullPath(%folderPath) @ "\" && start .";
          systemCommand(%cmd);
       }
       else
       {
-         %cmd = "open \"" @ makeFullPath(%filePath) @ "\"";
+         %cmd = "open \"" @ makeFullPath(%folderPath) @ "\"";
          systemCommand(%cmd);
       }
    }

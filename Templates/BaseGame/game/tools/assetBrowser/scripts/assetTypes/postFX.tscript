@@ -1,8 +1,10 @@
-function AssetBrowser::createPostEffectAsset(%this)
+AssetBrowser::registerAssetType("PostEffectAsset", "Post Effects");
+
+function PostEffectAsset::onCreateNew()
 {
-   %moduleName = AssetBrowser.newAssetSettings.moduleName;
+   %moduleName = $CurrentAssetBrowser.newAssetSettings.moduleName;
       
-   %assetName = AssetBrowser.newAssetSettings.assetName;   
+   %assetName = $CurrentAssetBrowser.newAssetSettings.assetName;   
    %assetPath = NewAssetTargetAddress.getText() @ "/";
    
    %tamlpath = %assetPath @ %assetName @ ".asset.taml";
@@ -27,7 +29,7 @@ function AssetBrowser::createPostEffectAsset(%this)
    %file = new FileObject();
 	%templateFile = new FileObject();
 	
-   %postFXTemplateCodeFilePath = %this.templateFilesPath @ "postFXFile." @ $TorqueScriptFileExtension @ ".template";
+   %postFXTemplateCodeFilePath = $CurrentAssetBrowser.templateFilesPath @ "postFXFile." @ $TorqueScriptFileExtension @ ".template";
    
    if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%postFXTemplateCodeFilePath))
    {
@@ -37,7 +39,7 @@ function AssetBrowser::createPostEffectAsset(%this)
          %line = strreplace( %line, "@@", %assetName );
          
          %file.writeline(%line);
-         echo(%line);
+         //echo(%line);
       }
       
       %file.close();
@@ -48,11 +50,11 @@ function AssetBrowser::createPostEffectAsset(%this)
       %file.close();
       %templateFile.close();
       
-      warnf("CreatePostFXAsset - Something went wrong and we couldn't write the PostFX script file!");
+      warn("PostEffectAsset::onCreateNew() - Something went wrong and we couldn't write the PostFX script file!");
    }
    
    //hlsl shader
-   %postFXTemplateCodeFilePath = %this.templateFilesPath @ "postFXFileP.hlsl.template";
+   %postFXTemplateCodeFilePath = $CurrentAssetBrowser.templateFilesPath @ "postFXFileP.hlsl.template";
    
    if(%file.openForWrite(%hlslPath) && %templateFile.openForRead(%postFXTemplateCodeFilePath))
    {
@@ -62,7 +64,7 @@ function AssetBrowser::createPostEffectAsset(%this)
          %line = strreplace( %line, "@@", %assetName );
          
          %file.writeline(%line);
-         echo(%line);
+         //echo(%line);
       }
       
       %file.close();
@@ -73,11 +75,11 @@ function AssetBrowser::createPostEffectAsset(%this)
       %file.close();
       %templateFile.close();
       
-      warnf("CreatePostFXAsset - Something went wrong and we couldn't write the PostFX hlsl file!");
+      warn("PostEffectAsset::onCreateNew() - Something went wrong and we couldn't write the PostFX hlsl file!");
    }
    
    //glsl shader
-   %postFXTemplateCodeFilePath = %this.templateFilesPath @ "postFXFileP.glsl.template";
+   %postFXTemplateCodeFilePath = $CurrentAssetBrowser.templateFilesPath @ "postFXFileP.glsl.template";
    
    if(%file.openForWrite(%glslPath) && %templateFile.openForRead(%postFXTemplateCodeFilePath))
    {
@@ -87,7 +89,7 @@ function AssetBrowser::createPostEffectAsset(%this)
          %line = strreplace( %line, "@@", %assetName );
          
          %file.writeline(%line);
-         echo(%line);
+         //echo(%line);
       }
       
       %file.close();
@@ -98,72 +100,80 @@ function AssetBrowser::createPostEffectAsset(%this)
       %file.close();
       %templateFile.close();
       
-      warnf("CreatePostFXAsset - Something went wrong and we couldn't write the PostFX glsl file!");
+      warn("PostEffectAsset::onCreateNew() - Something went wrong and we couldn't write the PostFX glsl file!");
    }
    
 	return %tamlpath;
 }
 
-//Renames the asset
-function AssetBrowser::renamePostEffectAsset(%this, %assetDef, %newAssetName)
+function PostEffectAsset::buildBrowserElement(%this, %previewData)
 {
-   %newScriptFilename = renameAssetLooseFile(%assetDef.scriptPath, %newAssetName);
-   
-   if(!%newScriptFilename $= "")
-      return;
-      
-   %newHLSLFilename = renameAssetLooseFile(%assetDef.hlslShader, %newAssetName);
-   
-   if(!%newHLSLFilename $= "")
-      return;
-      
-   %newGLSLFilename = renameAssetLooseFile(%assetDef.glslShader, %newAssetName);
-   
-   if(!%newGLSLFilename $= "")
-      return;
-      
-   %assetDef.scriptPath = %newScriptFilename;
-   %assetDef.hlslShader = %newHLSLFilename;
-   %assetDef.glslShader = %newGLSLFilename;
-   %assetDef.saveAsset();
-   
-   renameAssetFile(%assetDef, %newAssetName);
-}
-
-//Deletes the asset
-function AssetBrowser::deletePostEffectAsset(%this, %assetDef)
-{
-   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
-}
-
-//Moves the asset to a new path/module
-function AssetBrowser::movePostEffectAsset(%this, %assetDef, %destination)
-{
-   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
-   
-   %newAssetPath = moveAssetFile(%assetDef, %destination);
-   
-   if(%newAssetPath $= "")
-      return false;
-
-   moveAssetLooseFile(%assetDef.getScriptPath(), %destination);
-   moveAssetLooseFile(%assetDef.getHLSLShaderPath(), %destination);
-   moveAssetLooseFile(%assetDef.getGLSLShaderPath(), %destination);
-   
-   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
-   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
-}
-
-function AssetBrowser::buildPostEffectAssetPreview(%this, %assetDef, %previewData)
-{
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.scriptFilePath;
+   %previewData.assetName = %this.assetName;
+   %previewData.assetPath = %this.scriptFilePath;
    %previewData.doubleClickCommand = "";
    
    %previewData.previewImage = "ToolsModule:postEffectIcon_image";
    
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\nDefinition Path: " @ %assetDef.getFilename();
+   %previewData.assetFriendlyName = %this.assetName;
+   %previewData.assetDesc = %this.description;
+   %previewData.tooltip = "Asset Name: " @ %this.assetName @ 
+                          "\nDefinition Path: " @ %this.getFilename();
+}
+
+function PostEffectAsset::onShowActionMenu(%this)
+{
+   GenericAsset::onShowActionMenu(%this);
+   
+   if( !isObject( EditPostFXAssetSubmenuPopup ) )
+   {
+      new PopupMenu( EditPostFXAssetSubmenuPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+
+         jumpFileName = "";
+         jumpLineNumber = "";
+      };
+   }
+   
+   //Regen the menu so we're fully up and current with options and references
+   EditPostFXAssetSubmenuPopup.clearItems();
+   
+   EditPostFXAssetSubmenuPopup.item[ 0 ] = "Script file" TAB "" TAB %this @ ".onEditScriptFile();";
+   EditPostFXAssetSubmenuPopup.item[ 1 ] = "HLSL file" TAB "" TAB %this @ ".onEditHLSLFile();";
+   EditPostFXAssetSubmenuPopup.item[ 2 ] = "GLSL file" TAB "" TAB %this @ ".onEditHLSLFile();";
+
+   EditPostFXAssetSubmenuPopup.reloadItems();
+   
+   EditAssetPopup.item[ 0 ] = "Edit PostFX Asset Files" TAB EditPostFXAssetSubmenuPopup;
+   
+   EditAssetPopup.reloadItems();
+   
+   EditAssetPopup.showPopup(Canvas); 
+   
+   $CurrentAssetBrowser.popupMenu = EditAssetPopup;
+}
+
+function PostEffectAsset::onEditScriptFile(%this)
+{
+   if(isFunction("systemCommand"))
+      eval("systemCommand(\"start \\\"\\\" \\\"" @ %this.getScriptPath() @ "\\\"\");");
+   else  
+      warn("PostEffectAsset::onEditScriptFile() - systemCommand function disabled in this build. Unable to launch application to edit file.");
+}
+
+function PostEffectAsset::onEditHLSLFile(%this)
+{
+   if(isFunction("systemCommand"))
+      eval("systemCommand(\"start \\\"\\\" \\\"" @ %this.getHLSLShaderPath() @ "\\\"\");");
+   else  
+      warn("PostEffectAsset::onEditHLSLFile() - systemCommand function disabled in this build. Unable to launch application to edit file.");
+}
+
+function PostEffectAsset::onEditGLSLFile(%this)
+{
+   if(isFunction("systemCommand"))
+      eval("systemCommand(\"start \\\"\\\" \\\"" @ %this.getGLSLShaderPath() @ "\\\"\");");
+   else  
+      warn("PostEffectAsset::onEditGLSLFile() - systemCommand function disabled in this build. Unable to launch application to edit file.");
 }

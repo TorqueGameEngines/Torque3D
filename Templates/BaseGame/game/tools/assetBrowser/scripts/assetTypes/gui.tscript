@@ -1,9 +1,12 @@
-function AssetBrowser::createGUIAsset(%this)
+AssetBrowser::registerFileType("GUIFileType", "GUI Files", ".gui;.gui.dso", false);
+AssetBrowser::registerAssetType("GUIAsset", "GUIs");
+
+function GUIAsset::onCreateNew()
 {
-   %moduleName = AssetBrowser.newAssetSettings.moduleName;
+   %moduleName = $CurrentAssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
       
-   %assetName = AssetBrowser.newAssetSettings.assetName;
+   %assetName = $CurrentAssetBrowser.newAssetSettings.assetName;
    
    %assetPath = NewAssetTargetAddress.getText() @ "/";
    
@@ -24,7 +27,7 @@ function AssetBrowser::createGUIAsset(%this)
    %file = new FileObject();
    %templateFile = new FileObject();
    
-   %guiTemplateCodeFilePath = %this.templateFilesPath @ "guiFile.gui.template";
+   %guiTemplateCodeFilePath = $CurrentAssetBrowser.templateFilesPath @ "guiFile.gui.template";
    
    if(%file.openForWrite(%guipath) && %templateFile.openForRead(%guiTemplateCodeFilePath))
    {
@@ -45,10 +48,10 @@ function AssetBrowser::createGUIAsset(%this)
       %file.close();
       %templateFile.close();
       
-      warnf("CreateGUIAsset - Something went wrong and we couldn't write the GUI file!");
+      warn("GUIAsset::onCreateNew() - Something went wrong and we couldn't write the GUI file!");
    }
    
-   %scriptTemplateCodeFilePath = %this.templateFilesPath @ "guiFile." @ $TorqueScriptFileExtension @ ".template";
+   %scriptTemplateCodeFilePath = $CurrentAssetBrowser.templateFilesPath @ "guiFile." @ $TorqueScriptFileExtension @ ".template";
    
    if(%file.openForWrite(%scriptPath) && %templateFile.openForRead(%scriptTemplateCodeFilePath))
    {
@@ -69,7 +72,7 @@ function AssetBrowser::createGUIAsset(%this)
       %file.close();
       %templateFile.close();
       
-      warnf("CreateGUIAsset - Something went wrong and we couldn't write the GUI script file!");
+      warn("GUIAsset::onCreateNew() - Something went wrong and we couldn't write the GUI script file!");
    }
    
 	//load the gui
@@ -79,31 +82,17 @@ function AssetBrowser::createGUIAsset(%this)
 	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
 	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
 
-	AssetBrowser.refresh();
+	$CurrentAssetBrowser.refresh();
 	
 	return %tamlpath;  
 }
 
-function AssetBrowser::inspectImportingGUIAsset(%this, %assetItem)
+function GUIAsset::onEdit(%this)
 {
-   AssetImportCtrl-->NewAssetsInspector.startGroup("GUI");
-   
-   AssetImportCtrl-->NewAssetsInspector.addField("GUIFile", "GUI File Path", "filename", "Intended usage case of this image. Used to map to material slots and set up texture profiles.", "", 
-                                                      "", %assetItem);
-                                                      
-   //Make this a callback so that if it's set we can callback to a validator function
-   //This function(and others for other asset types) would check if the loosefile audit window is open, and if it is, remove the file from the list
-   AssetImportCtrl-->NewAssetsInspector.addField("ScriptFile", "Script File Path", "filename", "Intended usage case of this image. Used to map to material slots and set up texture profiles.", "", 
-                                                      "", %assetItem);                                                  
-   AssetImportCtrl-->NewAssetsInspector.endGroup();                                                
-}
-
-function AssetBrowser::editGUIAsset(%this, %assetDef)
-{
-   if(!isObject(%assetDef.assetName))
+   if(!isObject(%this.assetName))
    {
-      exec(%assetDef.GUIFilePath);
-      exec(%assetDef.mScriptFilePath);
+      exec(%this.GUIFilePath);
+      exec(%this.mScriptFilePath);
    }
    
    if( EditorIsActive() && !GuiEditor.toggleIntoEditorGui )
@@ -112,63 +101,20 @@ function AssetBrowser::editGUIAsset(%this, %assetDef)
    if( !$InGuiEditor && !GuiEditorIsActive() )
       GuiEditor.open();
       
-   GuiEditContent(%assetDef.assetName);  
+   GuiEditContent(%this.assetName);  
 }
 
-//Renames the asset
-function AssetBrowser::renameGUIAsset(%this, %assetDef, %newAssetName)
+function GUIAsset::buildBrowserElement(%this, %previewData)
 {
-   %newScriptLooseFilename = renameAssetLooseFile(%assetDef.scriptFile, %newAssetName);
-   
-   if(!%newScriptLooseFilename $= "")
-      return;
-      
-   %newGUILooseFilename = renameAssetLooseFile(%assetDef.guiFile, %newAssetName);
-   
-   if(!%newGUILooseFilename $= "")
-      return;
-      
-   %assetDef.scriptFile = %newScriptLooseFilename;
-   %assetDef.guiFile = %newGUILooseFilename;
-   %assetDef.saveAsset();
-   
-   renameAssetFile(%assetDef, %newAssetName);
-}
-
-//Deletes the asset
-function AssetBrowser::deleteGUIAsset(%this, %assetDef)
-{
-   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
-}
-
-//Moves the asset to a new path/module
-function AssetBrowser::moveGUIAsset(%this, %assetDef, %destination)
-{
-   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
-   
-   %newAssetPath = moveAssetFile(%assetDef, %destination);
-   
-   if(%newAssetPath $= "")
-      return false;
-
-   moveAssetLooseFile(%assetDef.getGUIPath(), %destination);
-   moveAssetLooseFile(%assetDef.getScriptPath(), %destination);
-   
-   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
-   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
-}
-
-
-function AssetBrowser::buildGUIAssetPreview(%this, %assetDef, %previewData)
-{
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.GUIFilePath;
+   %previewData.assetName = %this.assetName;
+   %previewData.assetPath = %this.getGUIPath();
    %previewData.doubleClickCommand = "";
    
    %previewData.previewImage = "ToolsModule:guiIcon_image";
    
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\nDefinition Path: " @ %assetDef.getScriptPath();
+   %previewData.assetFriendlyName = %this.assetName;
+   %previewData.assetDesc = %this.description;
+   %previewData.tooltip = "Asset Name: " @ %this.assetName @ 
+                          "\nGUI Path: " @ %this.getGUIPath() @ 
+                          "\nScript Path: " @ %this.getScriptPath();
 }

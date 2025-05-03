@@ -87,11 +87,11 @@ function GuiInspectorVariableGroup::buildListField(%this, %fieldName, %fieldLabe
       eval(%setCommand);
    }
    
-   %listCount = getTokenCount(%fieldDataVals, ",");
+   %listCount = getTokenCount(%fieldDataVals, ",;");
    
    for(%i=0; %i < %listCount; %i++)
    {
-      %entryText = getToken(%fieldDataVals, ",", %i);
+      %entryText = getToken(%fieldDataVals, ",;", %i);
       %editControl.add(%entryText); 
    }
 

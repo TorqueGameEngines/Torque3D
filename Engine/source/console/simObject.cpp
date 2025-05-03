@@ -3296,6 +3296,9 @@ DefineEngineMethod( SimObject, getGroup, SimGroup*, (),,
 DefineEngineMethod( SimObject, delete, void, (),,
    "Delete and remove the object." )
 {
+   if (!object->isProperlyAdded() || object->isRemoved())
+      return;
+
    object->deleteObject();
 }
 

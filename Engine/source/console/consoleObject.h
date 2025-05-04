@@ -705,7 +705,9 @@ public:
       smPropertyTable = _smPropertyTable;
 
       const_cast<EngineTypeInfo*>(mTypeInfo)->mPropertyTable = &_smPropertyTable;
- 
+
+      // After we hand it off, immediately delete if safe:
+      delete[] props;
       // Let the base finish up.
       AbstractClassRep::init();
    }

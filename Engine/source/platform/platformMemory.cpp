@@ -204,6 +204,21 @@ namespace Memory
       std::free(ptr);
    }
 
+   void getMemoryInfo(void* ptr, MemInfo& info)
+   {
+      if (!ptr || !initialized)
+         return;
+
+      for (U32 i = 0; i < allocCount; ++i)
+      {
+         if (allocList[i].ptr == ptr)
+         {
+            info = allocList[i];
+            return;
+         }
+      }
+   }
+
    static void* realloc(void* oldPtr, dsize_t newSize, const char* fileName, U32 line)
    {
       if (!initialized)

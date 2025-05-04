@@ -42,6 +42,7 @@ namespace Memory
 
    void init();
    void shutdown();
+   void getMemoryInfo(void* ptr, MemInfo& info);
    void checkPtr(void* ptr);
 }
 

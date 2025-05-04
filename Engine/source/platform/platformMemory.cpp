@@ -37,6 +37,7 @@
 #else
 #include <execinfo.h>
 #endif
+#include <ctime>
 
 // If profile paths are enabled, disable profiling of the
 // memory manager as that would cause a cyclic dependency
@@ -73,7 +74,7 @@ namespace Memory
    static U32 allocCount = 0;
    static U32 currentAllocId = 0;
    static bool initialized = false;
-   char gLogFilename[256] = "memlog.txt";
+   char gLogFilename[256] = { 0 };
    bool gStackTrace = false;
 
    void init()
@@ -84,6 +85,10 @@ namespace Memory
       currentAllocId = 0;
       initialized = true;
 
+      // Generate timestamped log filename
+      std::time_t now = std::time(nullptr);
+      std::tm* localTime = std::localtime(&now);
+      std::strftime(gLogFilename, sizeof(gLogFilename), "memlog_%Y-%m-%d_%H-%M-%S.txt", localTime);
    }
 
    void shutdown()

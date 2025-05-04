@@ -205,6 +205,7 @@ int main(int argc, const char **argv)
 #include "platform/platform.h"
 #include "app/mainLoop.h"
 #include "T3D/gameFunctions.h"
+#include "platform/platformMemory.h"
 
 #if defined(WIN32) || defined(_WIN32)
 //tell switchable graphics supported systems that they need to use the beefier GPU
@@ -230,8 +231,9 @@ S32 TorqueMain(S32 argc, const char **argv)
    //      argv = argvFake;
    //   }
 
-   //   Memory::enableLogging("testMem.log");
-   //   Memory::setBreakAlloc(104717);
+#if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
+   Memory::init();
+#endif
 
    // Initialize the subsystems.
    StandardMainLoop::init();
@@ -253,6 +255,11 @@ S32 TorqueMain(S32 argc, const char **argv)
    // Do we need to restart?
    if( StandardMainLoop::requiresRestart() )
       Platform::restartInstance();
+
+
+#if defined( TORQUE_DEBUG ) && !defined( TORQUE_DISABLE_MEMORY_MANAGER )
+   Memory::shutdown();
+#endif
 
    // Return.
    return StandardMainLoop::getReturnStatus();

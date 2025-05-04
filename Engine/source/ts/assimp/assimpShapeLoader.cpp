@@ -51,6 +51,11 @@
 #include "gfx/bitmap/gBitmap.h"
 #include "gui/controls/guiTreeViewCtrl.h"
 
+#if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
+#ifdef new
+#undef new
+#endif
+#endif
 // assimp include files. 
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
@@ -58,6 +63,12 @@
 #include <assimp/types.h>
 #include <assimp/config.h>
 #include <exception>
+
+#if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
+#  define _new new(__FILE__, __LINE__)
+#  define new  _new
+#endif
+
 
 MODULE_BEGIN( AssimpShapeLoader )
    MODULE_INIT_AFTER( ShapeLoader )

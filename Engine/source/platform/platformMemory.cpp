@@ -38,6 +38,7 @@
 #include <execinfo.h>
 #endif
 #include <ctime>
+#include <string>
 
 // If profile paths are enabled, disable profiling of the
 // memory manager as that would cause a cyclic dependency
@@ -75,7 +76,16 @@ namespace Memory
    static U32 currentAllocId = 0;
    static bool initialized = false;
    char gLogFilename[256] = { 0 };
-   bool gStackTrace = false;
+   bool gStackTrace = true;
+   bool gFromScript = false;
+
+   struct memReport
+   {
+      std::string report;
+      bool skip;
+      U32 count = 1;
+      U32 total = 0;
+   } memLog[MaxAllocs];
 
    void init()
    {
@@ -100,16 +110,27 @@ namespace Memory
          return;
 
       std::fprintf(log, "\n--- Memory Leak Report ---\n");
-      for (U32 i = 0; i < allocCount; ++i)
+
+      U32 start = 0;
+      U32 stop = allocCount;
+      if (gFromScript) //filter out the bits from console
       {
-         if (allocList[i].ptr != nullptr)
+         start = 6;
+         stop = allocCount - 8;
+      }
+      for (U32 curRep = start; curRep < stop; ++curRep)
+      {
+         if (allocList[curRep].ptr != nullptr)
          {
-            std::fprintf(log, "Leak: %p (%zu bytes) from %s:%u [id=%u]\n",
-               allocList[i].ptr, allocList[i].size,
-               allocList[i].file ? allocList[i].file : "(null)", allocList[i].line,
-               allocList[i].allocId);
+            char entry[512] = "";
+            std::sprintf(entry, "from %s:%u\n", allocList[curRep].file ? allocList[curRep].file : "(null)", allocList[curRep].line);
+
+            memLog[curRep].skip = false;
+            std::string report = entry;
+
             if (gStackTrace)
             {
+               char stack[512] = "";
 #ifdef _WIN32
                SYMBOL_INFO* symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + 256);
                symbol->MaxNameLen = 255;
@@ -118,31 +139,67 @@ namespace Memory
                HANDLE process = GetCurrentProcess();
                SymInitialize(process, NULL, TRUE);
 
-               for (int j = 0; j < allocList[i].backtraceSize; ++j)
+               for (int curStack = 0; curStack < allocList[curRep].backtraceSize; ++curStack)
                {
-                  DWORD64 addr = (DWORD64)(allocList[i].backtracePtrs[j]);
+                  DWORD64 addr = (DWORD64)(allocList[curRep].backtracePtrs[curStack]);
                   if (SymFromAddr(process, addr, 0, symbol))
                   {
-                     std::fprintf(log, "  [%d] %s - 0x%0llX\n", j, symbol->Name, symbol->Address);
+                     std::sprintf(stack, "  [%d] %s - 0x%0llX\n", curStack, symbol->Name, symbol->Address);
                   }
                   else
                   {
-                     std::fprintf(log, "  [%d] ??? - 0x%0llX\n", j, addr);
+                     std::sprintf(stack, "  [%d] ??? - 0x%0llX\n", curStack, addr);
                   }
+                  report += stack;
                }
 
                std::free(symbol);
 #else
-               char** symbols = backtrace_symbols(allocList[i].backtracePtrs, allocList[i].backtraceSize);
-               for (int j = 0; j < allocList[i].backtraceSize; ++j)
+               char** symbols = backtrace_symbols(allocList[curRep].backtracePtrs, allocList[i].backtraceSize);
+               for (int curStack = 0; curStack < allocList[curRep].backtraceSize; ++curStack)
                {
-                  std::fprintf(log, "  [%d] %s\n", j, symbols[j]);
+                  std::sprintf(stack, "  [%d] %s\n", curStack, symbols[curStack]);
+                  report += stack;
                }
                std::free(symbols);
 #endif
             }
+
+            if (report.find("getDocsLink") != std::string::npos)
+            {
+               //known issue. one off allocation
+               memLog[curRep].skip = true;
+            }
+
+            for (U32 oldRep = start; oldRep < curRep; ++oldRep)
+            {
+               if (!memLog[oldRep].skip && (memLog[oldRep].report.find(report) != std::string::npos))
+               {
+                  //inc origional
+                  memLog[oldRep].count++;
+                  memLog[oldRep].total += allocList[curRep].size;
+                  //skip dupe report
+                  memLog[curRep].skip = true;
+               }
+            }
+            if (!memLog[curRep].skip)
+            {
+               memLog[curRep].report = report;
+               memLog[curRep].count = 1;
+               memLog[curRep].total = allocList[curRep].size;
+            }
          }
       }
+
+      for (U32 ntry = start; ntry < stop; ++ntry)
+      {
+         if (!memLog[ntry].skip)
+         {
+            std::fprintf(log, "Leak-count[%i]total[%i]:%s", memLog[ntry].count, memLog[ntry].total, memLog[ntry].report.c_str());
+            memLog[ntry].report.clear();
+         }
+      }
+
       std::fclose(log);
       initialized = false;
    }
@@ -339,6 +396,14 @@ void dFree(void* in_pFree)
 void* dRealloc_r(void* in_pResize, dsize_t in_size, const char* fileName, const dsize_t line)
 {
    return Memory::realloc(in_pResize, in_size, fileName, line);
+}
+
+DefineEngineFunction(LeakTrace, void, (bool start, bool stackTrace), (true, true), "start/stop tracing leaks")
+{
+   if (Memory::initialized) Memory::shutdown();
+   if (start) Memory::init();
+   Memory::gFromScript = true;
+   Memory::gStackTrace = stackTrace;
 }
 
 #else

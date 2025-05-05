@@ -231,7 +231,7 @@ S32 TorqueMain(S32 argc, const char **argv)
    //      argv = argvFake;
    //   }
 
-#if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
+#if defined( TORQUE_DEBUG ) && !defined(TORQUE_DISABLE_MEMORY_MANAGER)
    Memory::init();
 #endif
 
@@ -255,6 +255,7 @@ S32 TorqueMain(S32 argc, const char **argv)
    // Do we need to restart?
    if( StandardMainLoop::requiresRestart() )
       Platform::restartInstance();
+
 
 
 #if defined( TORQUE_DEBUG ) && !defined( TORQUE_DISABLE_MEMORY_MANAGER )

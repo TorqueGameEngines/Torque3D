@@ -66,6 +66,8 @@ UTF16* createUTF16string( const UTF8 *unistring);
 
 UTF8*  createUTF8string( const UTF16 *unistring);
 
+void UTF16ClearCache();
+
 //-----------------------------------------------------------------------------
 /// Functions that convert buffers of unicode code points, into a provided buffer.
 /// - These functions are useful for working on existing buffers.

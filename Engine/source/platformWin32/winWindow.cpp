@@ -317,6 +317,8 @@ void Platform::shutdown()
    GFXDevice::destroy();
 
    WinConsole::destroy();
+
+   UTF16ClearCache();
 }
 
 extern bool LinkConsoleFunctions;

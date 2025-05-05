@@ -119,6 +119,8 @@ void AssetManager::onRemove()
         mAssetTagsManifest->deleteObject();
     }
 
+    purgeAssets();
+
     for (auto itr = mDeclaredAssets.begin(); itr != mDeclaredAssets.end(); ++itr)
     {
        delete itr->value;

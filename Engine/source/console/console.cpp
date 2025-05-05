@@ -427,21 +427,6 @@ void init()
    smConsoleInput.notify(postConsoleInput);
 }
 
-//--------------------------------------
-
-void shutdown()
-{
-   AssertFatal(active == true, "Con::shutdown should only be called once.");
-   active = false;
-
-   smConsoleInput.remove(postConsoleInput);
-
-   consoleLogFile.close();
-   Namespace::shutdown();
-   AbstractClassRep::shutdown();
-   Compiler::freeConsoleParserList();
-   gGlobalVars.reset();
-}
 
 bool isActive()
 {
@@ -2109,6 +2094,23 @@ void ensureTrailingSlash(char* pDstPath, const char* pSrcPath, S32 dstSize)
    // Add trailing slash.
    pDstPath[trailIndex++] = '/';
    pDstPath[trailIndex] = 0;
+}
+
+//--------------------------------------
+
+void shutdown()
+{
+   AssertFatal(active == true, "Con::shutdown should only be called once.");
+   active = false;
+
+   smConsoleInput.remove(postConsoleInput);
+
+   consoleLogFile.close();
+   Namespace::shutdown();
+   AbstractClassRep::shutdown();
+   Compiler::freeConsoleParserList();
+   gGlobalVars.reset();
+   PathExpandos.clear();
 }
 
 //-----------------------------------------------------------------------------

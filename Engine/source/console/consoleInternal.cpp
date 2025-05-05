@@ -924,6 +924,12 @@ void Namespace::shutdown()
 
    for (Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
       walk->~Namespace();
+
+   gNamespaceCache.clear();
+
+   mNamespaceList = nullptr;
+   mGlobalNamespace = nullptr;
+   mAllocator.freeBlocks();
 }
 
 void Namespace::trashCache()

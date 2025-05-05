@@ -440,6 +440,7 @@ void shutdown()
    Namespace::shutdown();
    AbstractClassRep::shutdown();
    Compiler::freeConsoleParserList();
+   gGlobalVars.reset();
 }
 
 bool isActive()

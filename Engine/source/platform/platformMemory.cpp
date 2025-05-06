@@ -99,6 +99,8 @@ namespace Memory
       std::time_t now = std::time(nullptr);
       std::tm* localTime = std::localtime(&now);
       std::strftime(gLogFilename, sizeof(gLogFilename), "memlog_%Y-%m-%d_%H-%M-%S.txt", localTime);
+
+      //std::atexit(shutdown);
    }
 
    void shutdown()
@@ -142,12 +144,22 @@ namespace Memory
                for (int curStack = 0; curStack < allocList[curRep].backtraceSize; ++curStack)
                {
                   DWORD64 addr = (DWORD64)(allocList[curRep].backtracePtrs[curStack]);
-                  if (SymFromAddr(process, addr, 0, symbol))
-                  {
-                     std::sprintf(stack, "  [%d] %s - 0x%0llX\n", curStack, symbol->Name, symbol->Address);
+                  DWORD displacement = 0;
+                  IMAGEHLP_LINE64 line;
+                  std::memset(&line, 0, sizeof(IMAGEHLP_LINE64));
+                  line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+
+                  if (SymFromAddr(process, addr, 0, symbol)) {
+                     if (SymGetLineFromAddr64(process, addr, &displacement, &line)) {
+                        std::sprintf(stack, "  [%d] %s - %s:%lu (0x%0llX)\n",
+                           curStack, symbol->Name, line.FileName, line.LineNumber, symbol->Address);
+                     }
+                     else {
+                        std::sprintf(stack, "  [%d] %s - ???:??? (0x%0llX)\n",
+                           curStack, symbol->Name, symbol->Address);
+                     }
                   }
-                  else
-                  {
+                  else {
                      std::sprintf(stack, "  [%d] ??? - 0x%0llX\n", curStack, addr);
                   }
                   report += stack;
@@ -165,11 +177,11 @@ namespace Memory
 #endif
             }
 
-            if (report.find("getDocsLink") != std::string::npos)
-            {
-               //known issue. one off allocation
-               memLog[curRep].skip = true;
-            }
+            //if (report.find("getDocsLink") != std::string::npos)
+            //{
+            //   //known issue. one off allocation
+            //   memLog[curRep].skip = true;
+            //}
 
             for (U32 oldRep = start; oldRep < curRep; ++oldRep)
             {
@@ -201,6 +213,10 @@ namespace Memory
       }
 
       std::fclose(log);
+
+      std::memset(allocList, 0, sizeof(allocList));
+      allocCount = 0;
+      currentAllocId = 0;
       initialized = false;
    }
 
@@ -247,9 +263,14 @@ namespace Memory
 
    static void free(void* ptr, bool array)
    {
-      if (!ptr || !initialized)
+      if (!ptr)
          return;
 
+      if (!initialized)
+      {
+         std::free(ptr);
+         return;
+      }
 
       for (U32 i = 0; i < allocCount; ++i)
       {

@@ -17,7 +17,7 @@ namespace Con
       EvalResult(ConsoleValue&& pValue)
       {
          valid = true;
-         value = (ConsoleValue&&)pValue;
+         value = std::move(pValue);
       }
 
       EvalResult(String errorMessage)

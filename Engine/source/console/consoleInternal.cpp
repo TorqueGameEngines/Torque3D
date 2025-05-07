@@ -1163,7 +1163,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, SimObject *
       }
       else
       {
-         return std::move(ConsoleValue());
+         return (ConsoleValue());
       }
    }
 
@@ -1181,7 +1181,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, SimObject *
    {
       Con::warnf(ConsoleLogEntry::Script, "%s::%s - wrong number of arguments. got %d, expected %d to %d", mNamespace->mName, mFunctionName, argc, mMinArgs, mMaxArgs);
       Con::warnf(ConsoleLogEntry::Script, "usage: %s", mUsage);
-      return std::move(ConsoleValue());
+      return (ConsoleValue());
    }
 
    ConsoleValue result;

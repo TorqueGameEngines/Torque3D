@@ -39,7 +39,7 @@ namespace TorqueScript
          fileName = StringTable->insert(fileName);
 
       CodeBlock* newCodeBlock = new CodeBlock();
-      return std::move(newCodeBlock->compileExec(fileName, string, false, fileName ? -1 : 0));
+      return (newCodeBlock->compileExec(fileName, string, false, fileName ? -1 : 0));
    }
 
    Con::EvalResult TorqueScriptRuntime::evaluate(const char* script, S32 frame, bool echo, const char* fileName)

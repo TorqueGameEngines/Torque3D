@@ -668,7 +668,7 @@ Con::EvalResult CodeBlock::compileExec(StringTableEntry fileName, const char *in
       Con::warnf(ConsoleLogEntry::General, "precompile size mismatch, precompile: %d compile: %d", codeSize, lastIp);
 
    // repurpose argc as local register counter for global state
-   return std::move(exec(0, fileName, NULL, localRegisterCount, 0, noCalls, NULL, setFrame));
+   return (exec(0, fileName, NULL, localRegisterCount, 0, noCalls, NULL, setFrame));
 }
 
 //-------------------------------------------------------------------------

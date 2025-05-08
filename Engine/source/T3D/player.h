@@ -50,6 +50,12 @@ class Player;
 class OpenVRTrackedObject;
 #endif
 
+#ifdef TORQUE_NAVIGATION_ENABLED
+#include "navigation/navPath.h"
+#include "navigation/navMesh.h"
+#include "navigation/coverPoint.h"
+#endif // TORQUE_NAVIGATION_ENABLED
+
 //----------------------------------------------------------------------------
 
 struct PlayerData: public ShapeBaseData {
@@ -758,8 +764,6 @@ public:
    Point3F getMomentum() const override;
    void    setMomentum(const Point3F &momentum) override;
    bool    displaceObject(const Point3F& displaceVector) override;
-   virtual bool    getAIMove(Move*);
-
    bool checkDismountPosition(const MatrixF& oldPos, const MatrixF& newPos);  ///< Is it safe to dismount here?
 
    //

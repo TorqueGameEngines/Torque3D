@@ -169,3 +169,20 @@ datablock LightAnimData( SpinLightAnim )
    rotKeys[2] = "az";
    rotSmooth[2] = true;
 };
+
+datablock AIPlayerControllerData( aiPlayerControl )
+{
+    moveTolerance = 0.25; followTolerance = 1.0; mAttackRadius = 2;
+};
+
+datablock AIWheeledVehicleControllerData( aiCarControl )
+{
+    moveTolerance = 1.0; followTolerance = 2.0; mAttackRadius = 5.0;
+};
+
+datablock AIFlyingVehicleControllerData( aiPlaneControl )
+{
+    moveTolerance = 2.0; followTolerance = 5.0; mAttackRadius = 10.0;
+    FlightFloor = 15; FlightCeiling = 150;
+};
+

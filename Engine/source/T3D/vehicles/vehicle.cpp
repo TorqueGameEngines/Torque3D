@@ -148,6 +148,7 @@ VehicleData::VehicleData()
    collDamageThresholdVel = 20;
    collDamageMultiplier = 0.05f;
    enablePhysicsRep = true;
+   mControlMap = StringTable->EmptyString();
 }
 
 
@@ -321,6 +322,11 @@ void VehicleData::initPersistFields()
       "velocity).\n\nCurrently unused." );
    endGroup("Collision");
 
+   addGroup("Movement");
+   addField("controlMap", TypeString, Offset(mControlMap, VehicleData),
+      "@brief movemap used by these types of objects.\n\n");
+   endGroup("Movement");
+
    addGroup("Steering");
    addField("controlMap", TypeString, Offset(mControlMap, VehicleData),
       "@brief movemap used by these types of objects.\n\n");
@@ -474,7 +480,6 @@ bool Vehicle::onAdd()
 void Vehicle::onRemove()
 {
    SAFE_DELETE(mPhysicsRep);
-
    U32 i=0;
 
    for( i=0; i<VehicleData::VC_NUM_DAMAGE_EMITTERS; i++ )
@@ -499,9 +504,16 @@ void Vehicle::processTick(const Move* move)
 {
    PROFILE_SCOPE( Vehicle_ProcessTick );
 
+   // If we're not being controlled by a client, let the
+   // AI sub-module get a chance at producing a move.
+   Move aiMove;
+   if (!move && isServerObject() && getAIMove(&aiMove))
+      move = &aiMove;
+
    ShapeBase::processTick(move);
    if ( isMounted() )
       return;
+
 
    // Warp to catch up to server
    if (mDelta.warpCount < mDelta.warpTicks)

@@ -459,6 +459,14 @@ function NavEditorGui::onLinkSelected(%this, %flags)
 
 function NavEditorGui::onPlayerSelected(%this, %flags)
 {
+   if (!isObject(%this.getPlayer().aiController) && (!(%this.getPlayer().isMemberOfClass("AIPlayer"))))
+   {
+      %this.getPlayer().aiController = new AIController(){ ControllerData = %this.getPlayer().getDatablock().aiControllerData; };
+      %this.getPlayer().setAIController(%this.getPlayer().aiController);
+   }
+   NavMeshIgnore(%this.getPlayer(), true);
+   %this.getPlayer().setDamageState("Enabled");
+   
    updateLinkData(NavEditorOptionsWindow-->TestProperties, %flags);
 }
 
@@ -526,7 +534,7 @@ function NavEditorGui::findCover(%this)
       %text = NavEditorOptionsWindow-->TestProperties->CoverPosition.getText();
       if(%text !$= "")
          %pos = eval("return " @ %text);
-      %this.getPlayer().findCover(%pos, NavEditorOptionsWindow-->TestProperties->CoverRadius.getText());
+      %this.getPlayer().getAIController().findCover(%pos, NavEditorOptionsWindow-->TestProperties->CoverRadius.getText());
    }
 }
 
@@ -547,10 +555,19 @@ function NavEditorGui::followObject(%this)
             toolsMessageBoxOk("Error", "Cannot find object" SPC %text);
       }
       if(isObject(%obj))
-         %this.getPlayer().followObject(%obj, NavEditorOptionsWindow-->TestProperties->FollowRadius.getText());
+         %this.getPlayer().getAIController().followObject(%obj, NavEditorOptionsWindow-->TestProperties->FollowRadius.getText());
    }
 }
 
+function NavEditorGui::stop(%this)
+{
+    if (isObject(%this.getPlayer().aiController))
+        %this.getPlayer().aiController.stop();
+    else
+    {
+        NavEditorGui.getPlayer().stop();
+    }
+}
 function NavInspector::inspect(%this, %obj)
 {
    %name = "";

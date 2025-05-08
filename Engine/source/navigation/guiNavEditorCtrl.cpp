@@ -37,6 +37,7 @@
 #include "gui/buttons/guiButtonCtrl.h"
 #include "gui/worldEditor/undoActions.h"
 #include "T3D/gameBase/gameConnection.h"
+#include "T3D/AI/AIController.h"
 
 IMPLEMENT_CONOBJECT(GuiNavEditorCtrl);
 
@@ -225,8 +226,29 @@ void GuiNavEditorCtrl::spawnPlayer(const Point3F &pos)
          SimGroup* missionCleanup = dynamic_cast<SimGroup*>(cleanup);
          missionCleanup->addObject(obj);
       }
-      mPlayer = static_cast<AIPlayer*>(obj);
-      Con::executef(this, "onPlayerSelected", Con::getIntArg(mPlayer->mLinkTypes.getFlags()));
+      mPlayer = obj;
+#ifdef TORQUE_NAVIGATION_ENABLED
+      AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(obj);
+      if (asAIPlayer) //try direct
+      {
+         Con::executef(this, "onPlayerSelected", Con::getIntArg(asAIPlayer->mLinkTypes.getFlags()));
+      }
+      else
+      {
+         ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj);
+         if (sbo->getAIController())
+         {
+            if (sbo->getAIController()->mControllerData)
+               Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
+         }
+         else
+         {
+#endif
+            Con::executef(this, "onPlayerSelected");
+#ifdef TORQUE_NAVIGATION_ENABLED
+         }
+      }
+#endif
    }
 }
 
@@ -383,16 +405,56 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
       // Select/move character
       else
       {
-         if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType, &ri))
+         if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType | VehicleObjectType, &ri))
          {
-            if(dynamic_cast<AIPlayer*>(ri.object))
+            if(ri.object)
             {
-               mPlayer = dynamic_cast<AIPlayer*>(ri.object);
-               Con::executef(this, "onPlayerSelected", Con::getIntArg(mPlayer->mLinkTypes.getFlags()));
+               mPlayer = ri.object;
+#ifdef TORQUE_NAVIGATION_ENABLED
+               AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
+               if (asAIPlayer) //try direct
+               {
+                  Con::executef(this, "onPlayerSelected", Con::getIntArg(asAIPlayer->mLinkTypes.getFlags()));
+               }
+               else
+               {
+                  ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
+                  if (sbo->getAIController())
+                  {
+                     if (sbo->getAIController()->mControllerData)
+                        Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
+                  }
+                  else
+                  {
+#endif
+                     Con::executef(this, "onPlayerSelected");
+                  }
+#ifdef TORQUE_NAVIGATION_ENABLED
+               }
+            }
+#endif
+         }
+         else if (!mPlayer.isNull() && gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
+         {
+            AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
+            if (asAIPlayer) //try direct
+            {
+#ifdef TORQUE_NAVIGATION_ENABLED
+               asAIPlayer->setPathDestination(ri.point);
+#else
+                asAIPlayer->setMoveDestination(ri.point,false);
+#endif
+            }
+            else
+            {
+               ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
+               if (sbo->getAIController())
+               {
+                  if (sbo->getAIController()->mControllerData)
+                     sbo->getAIController()->getNav()->setPathDestination(ri.point, true);
+               }
             }
          }
-         else if(!mPlayer.isNull() && gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-            mPlayer->setPathDestination(ri.point);
       }
    }
 }
@@ -455,8 +517,8 @@ void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 
    if(mMode == mTestMode)
    {
-      if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType, &ri))
-         mCurPlayer = dynamic_cast<AIPlayer*>(ri.object);
+      if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType | VehicleObjectType, &ri))
+         mCurPlayer = ri.object;
       else
          mCurPlayer = NULL;
    }

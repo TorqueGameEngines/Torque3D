@@ -69,6 +69,7 @@
 #include "core/stream/fileStream.h"
 #include "T3D/accumulationVolume.h"
 #include "console/persistenceManager.h"
+#include "AI/AIController.h"
 
 IMPLEMENT_CO_DATABLOCK_V1(ShapeBaseData);
 
@@ -197,7 +198,8 @@ ShapeBaseData::ShapeBaseData()
    useEyePoint( false ),
    isInvincible( false ),
    renderWhenDestroyed( true ),
-   inheritEnergyFromMount( false )
+   inheritEnergyFromMount( false ),
+   mAIControllData(NULL)
 {
    INIT_ASSET(Shape);
    INIT_ASSET(DebrisShape);
@@ -548,6 +550,10 @@ void ShapeBaseData::initPersistFields()
       addField("silentBBoxValidation", TypeBool, Offset(silent_bbox_check, ShapeBaseData));
       INITPERSISTFIELD_SHAPEASSET(DebrisShape, ShapeBaseData, "The shape asset to use for auto-generated breakups via blowup(). @note may not be functional.");
    endGroup( "Shapes" );
+   addGroup("Movement");
+      addField("aiControllerData", TYPEID< AIControllerData >(), Offset(mAIControllData, ShapeBaseData),
+      "@brief ai controller used by these types of objects.\n\n");
+   endGroup("Movement");
 
    addGroup("Particle Effects");
       addField( "explosion", TYPEID< ExplosionData >(), Offset(explosion, ShapeBaseData),
@@ -999,7 +1005,8 @@ ShapeBase::ShapeBase()
    mCameraFov( 90.0f ),
    mIsControlled( false ),
    mLastRenderFrame( 0 ),
-   mLastRenderDistance( 0.0f )
+   mLastRenderDistance( 0.0f ),
+   mAIController(NULL)
 {
    mTypeMask |= ShapeBaseObjectType | LightObjectType;   
 
@@ -1050,6 +1057,7 @@ ShapeBase::~ShapeBase()
       cur->next = sFreeTimeoutList;
       sFreeTimeoutList = cur;
    }
+   if (mAIController) mAIController->deleteObject();
 }
 
 void ShapeBase::initPersistFields()
@@ -5466,4 +5474,45 @@ DefineEngineMethod(ShapeBase, getNodePoint, Point3F, (const char* nodeName), ,
    object->getNodePoint(nodeName, &pos);
 
    return pos;
+}
+
+bool ShapeBase::setAIController(SimObjectId controller)
+{
+   if (Sim::findObject(controller, mAIController) && mAIController->mControllerData)
+   {
+      mAIController->setAIInfo(this);
+      mTypeMask |= AIObjectType;
+      return true;
+   }
+   Con::errorf("unable to find AIController : %i", controller);
+   mAIController = NULL;
+   mTypeMask |= ~AIObjectType;
+   return false;
+}
+
+bool ShapeBase::getAIMove(Move* move)
+{
+   if (!isServerObject()) return false;
+   if (isControlled()) return false; //something else is steering us, so use that one's controller
+   if (!(mTypeMask & VehicleObjectType || mTypeMask & PlayerObjectType)) return false; //only support players and vehicles for now
+   if (mAIController)
+   {
+      mAIController->getAIMove(move); //actual result
+      mTypeMask |= AIObjectType;
+      return true;
+   }
+   mAIController = NULL;
+   mTypeMask &= ~AIObjectType;
+   return false;
+}
+
+
+DefineEngineMethod(ShapeBase, setAIController, bool, (S32 controller), , "")
+{
+   return object->setAIController(controller);
+}
+
+DefineEngineMethod(ShapeBase, getAIController, AIController*, (), , "")
+{
+   return object->getAIController();
 }

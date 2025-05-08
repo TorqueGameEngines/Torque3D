@@ -88,6 +88,8 @@ class ShapeBase;
 class SFXSource;
 class SFXTrack;
 class SFXProfile;
+struct AIController;
+struct AIControllerData;
 
 typedef void* Light;
 
@@ -560,6 +562,7 @@ public:
    U32 cubeDescId;
    ReflectorDesc *reflectorDesc;
 
+   AIControllerData* mAIControllData;
    /// @name Destruction
    ///
    /// Everyone likes to blow things up!
@@ -1761,6 +1764,11 @@ public:
    /// Returns true if this object is controlling by something
    bool isControlled() { return(mIsControlled); }
 
+   AIController* mAIController;
+   bool setAIController(SimObjectId controller);
+   AIController* getAIController() { return mAIController; };
+   virtual bool getAIMove(Move* move);
+
    /// Returns true if this object is being used as a camera in first person
    bool isFirstPerson() const;
 
@@ -1902,7 +1910,6 @@ public:
    void   registerCollisionCallback(CollisionEventCallback*);
    void   unregisterCollisionCallback(CollisionEventCallback*);
 
-protected:
    enum { 
       ANIM_OVERRIDDEN     = BIT(0),
       BLOCK_USER_CONTROL  = BIT(1),
@@ -1910,6 +1917,8 @@ protected:
       BAD_ANIM_ID         = 999999999,
       BLENDED_CLIP        = 0x80000000,
    };
+   U8 anim_clip_flags;
+protected:
    struct BlendThread
    {
       TSThread* thread;
@@ -1917,7 +1926,6 @@ protected:
    };
    Vector<BlendThread> blend_clips;
    static U32 unique_anim_tag_counter;
-   U8 anim_clip_flags;
    S32 last_anim_id;
    U32 last_anim_tag;
    U32 last_anim_lock_tag;

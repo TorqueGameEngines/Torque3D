@@ -152,7 +152,7 @@ class ConsoleValue
 
    TORQUE_FORCEINLINE bool hasAllocatedData() const
    {
-      return (type == ConsoleValueType::cvString || isConsoleType()) && data != NULL;
+      return  (type == ConsoleValueType::cvString || isConsoleType()) && data != NULL;
    }
 
    const char* getConsoleData() const;
@@ -182,14 +182,16 @@ class ConsoleValue
          TORQUE_CASE_FALLTHROUGH;
       case cvString:
          s = ref.s;
+         ref.s = const_cast<char*>(StringTable->EmptyString());
          break;
       default:
          data = ref.data;
+         
          break;
       }
-
+      ref.type = ConsoleValueType::cvSTEntry;
       ref.data = NULL;
-      ref.setEmptyString();
+      //ref.reset();
    }
 
 public:
@@ -305,9 +307,7 @@ public:
       }
 
       cleanupData();
-
       type = ConsoleValueType::cvString;
-
       s = (char*)dMalloc(static_cast<dsize_t>(len) + 1);
       s[len] = '\0';
       dStrcpy(s, val, static_cast<dsize_t>(len) + 1);

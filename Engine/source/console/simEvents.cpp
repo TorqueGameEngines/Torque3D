@@ -116,7 +116,7 @@ ConsoleValue SimConsoleThreadExecCallback::waitForResult()
 {
    if(sem->acquire(true))
    {
-      return std::move(retVal);
+      return (retVal);
    }
 
    return ConsoleValue();

@@ -321,7 +321,7 @@ public:
 
       void reset();
 
-      inline ConsoleValue getValue() { return std::move(value); }
+      inline ConsoleValue getValue() { return (value); }
 
       inline U32 getIntValue()
       {

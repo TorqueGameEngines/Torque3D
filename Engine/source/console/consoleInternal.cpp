@@ -1159,7 +1159,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, SimObject *
    {
       if (mFunctionOffset)
       {
-         return std::move(mModule->exec(mFunctionOffset, argv[0].getString(), mNamespace, argc, argv, false, mPackage).value);
+         return (mModule->exec(mFunctionOffset, argv[0].getString(), mNamespace, argc, argv, false, mPackage).value);
       }
       else
       {
@@ -1173,7 +1173,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, SimObject *
    if (mToolOnly && !Con::isCurrentScriptToolScript())
    {
       Con::errorf(ConsoleLogEntry::Script, "%s::%s - attempting to call tools only function from outside of tools", mNamespace->mName, mFunctionName);
-      return std::move(ConsoleValue());
+      return (ConsoleValue());
    }
 #endif
 

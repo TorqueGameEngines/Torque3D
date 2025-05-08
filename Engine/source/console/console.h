@@ -203,17 +203,108 @@ public:
 
    ConsoleValue(ConsoleValue&& ref) noexcept
    {
-      _move(std::move(ref));
+      type = ref.type;
+
+      switch (ref.type)
+      {
+      case cvInteger:
+         i = ref.i;
+         break;
+      case cvFloat:
+         f = ref.f;
+         break;
+      case cvSTEntry:
+         TORQUE_CASE_FALLTHROUGH;
+      case cvString:
+         s = ref.s;
+         ref.s = const_cast<char*>(StringTable->EmptyString());
+         break;
+      default:
+         data = ref.data;
+
+         break;
+      }
+      ref.type = ConsoleValueType::cvSTEntry;
+      ref.data = NULL;
    }
 
    TORQUE_FORCEINLINE ConsoleValue& operator=(ConsoleValue&& ref) noexcept
    {
-      _move(std::move(ref));
+      type = ref.type;
+
+      switch (ref.type)
+      {
+      case cvInteger:
+         i = ref.i;
+         break;
+      case cvFloat:
+         f = ref.f;
+         break;
+      case cvSTEntry:
+         TORQUE_CASE_FALLTHROUGH;
+      case cvString:
+         s = ref.s;
+         ref.s = const_cast<char*>(StringTable->EmptyString());
+         break;
+      default:
+         data = ref.data;
+
+         break;
+      }
+      ref.type = ConsoleValueType::cvSTEntry;
+      ref.data = NULL;
       return *this;
    }
 
-   ConsoleValue(const ConsoleValue&) = delete;
-   ConsoleValue& operator=(const ConsoleValue&) = delete;
+   ConsoleValue(const ConsoleValue& ref)
+   {
+      type = ref.type;
+
+      switch (ref.type)
+      {
+      case cvInteger:
+         i = ref.i;
+         break;
+      case cvFloat:
+         f = ref.f;
+         break;
+      case cvSTEntry:
+         TORQUE_CASE_FALLTHROUGH;
+      case cvString:
+         s = ref.s;
+         break;
+      default:
+         data = ref.data;
+
+         break;
+      }
+   }
+
+   ConsoleValue& operator=(const ConsoleValue& ref)
+   {
+      type = ref.type;
+
+      switch (ref.type)
+      {
+      case cvInteger:
+         i = ref.i;
+         break;
+      case cvFloat:
+         f = ref.f;
+         break;
+      case cvSTEntry:
+         TORQUE_CASE_FALLTHROUGH;
+      case cvString:
+         s = ref.s;
+         break;
+      default:
+         data = ref.data;
+
+         break;
+      }
+
+      return *this;
+   }
 
    TORQUE_FORCEINLINE ~ConsoleValue()
    {
@@ -1022,7 +1113,7 @@ namespace Con
    ConsoleValue executef(R r, ArgTs ...argTs)
    {
       _EngineConsoleExecCallbackHelper<R> callback(r);
-      return std::move(callback.template call<ConsoleValue>(argTs...));
+      return (callback.template call<ConsoleValue>(argTs...));
    }
    /// }
 };

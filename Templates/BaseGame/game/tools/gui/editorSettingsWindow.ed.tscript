@@ -408,6 +408,14 @@ function ESettingsWindow::getShapeEditorSettings(%this)
 
 function ESettingsWindow::getThemeSettings(%this)
 {
+   SettingsInspector.startGroup("Font");
+   SettingsInspector.addSettingsField("Theme/editorFont", "Editor font    ( if installed  |  restart required )", "list", "Font used for most of the text used in the editor.", 
+                                                                              "Open Sans,Arial,Segoe UI");
+   SettingsInspector.addSettingsField("Theme/codeFont", "Code font    ( if installed  |  restart required )", "list", "Font used for diplaying code.", 
+                                                                              "Lucida Console,Cascadia Code,Consolas");
+   SettingsInspector   
+   SettingsInspector.endGroup();
+   
    SettingsInspector.startGroup("Colors");
    SettingsInspector.addSettingsField("Theme/headerColor", "Headerbar Color", "ColorI", "");
    SettingsInspector.addSettingsField("Theme/windowBackgroundColor", "Window Background Color", "ColorI", "");

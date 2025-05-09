@@ -2817,6 +2817,21 @@ DefineEngineFunction(getTimestamp, const char*, (), ,
    return returnBuffer;
 }
 
+//-----------------------------------------------------------------------------
+
+// Define the console function to get environment variable value
+// like: USERNAME, SystemDrive, LOCALAPPDATA etc.
+DefineEngineFunction(getEnvironment, const char*, (const char* variableName), ,
+   "Get the value of an environment variable.\n"
+   "@param variableName The name of the environment variable.\n"
+   "@return The value of the environment variable or an empty string if not set.")
+{
+   const char* value = std::getenv(variableName); // Retrieve the environment variable
+   return value ? value : ""; // Return the value or an empty string if not found
+}
+
+//-----------------------------------------------------------------------------
+
 #ifdef TORQUE_TOOLS_EXT_COMMANDS
 DefineEngineFunction(systemCommand, S32, (const char* commandLineAction, const char* callBackFunction), (""), "")
 {

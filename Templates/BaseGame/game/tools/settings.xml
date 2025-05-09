@@ -317,6 +317,10 @@
     <Group
         name="Theme">
         <Setting
+            name="editorFont">Arial</Setting>
+        <Setting
+            name="codeFont">Lucida Console</Setting>
+        <Setting
             name="dividerDarkColor">30 30 30 255</Setting>
         <Setting
             name="dividerLightColor">150 150 150 255</Setting>

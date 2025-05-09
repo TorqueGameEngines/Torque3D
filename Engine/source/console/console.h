@@ -37,6 +37,7 @@
 #include "core/util/str.h"
 #include "core/util/journal/journaledSignal.h"
 #include "core/stringTable.h"
+#include <iostream>
 
 class SimObject;
 class Namespace;
@@ -119,6 +120,7 @@ typedef const char *StringTableEntry;
 
 enum ConsoleValueType
 {
+   cvNULL = -5,
    cvInteger = -4,
    cvFloat = -3,
    cvString = -2,
@@ -152,7 +154,7 @@ class ConsoleValue
 
    TORQUE_FORCEINLINE bool hasAllocatedData() const
    {
-      return  (type == ConsoleValueType::cvString || isConsoleType()) && data != NULL;
+      return  (isConsoleType() && data != NULL);
    }
 
    const char* getConsoleData() const;
@@ -164,34 +166,40 @@ class ConsoleValue
          dFree(data);
          data = NULL;
       }
+      else if (type == ConsoleValueType::cvString)
+      {
+         if (s && s[0])
+            dFree(s);
+      }
+      type = ConsoleValueType::cvNULL;
    }
 
    TORQUE_FORCEINLINE void _move(ConsoleValue&& ref) noexcept
    {
-      type = ref.type;
-
+      if (ref.type == ConsoleValueType::cvNULL)
+      {
+         std::cout << "Cannot Move a variable twice!";
+         return;
+      }
       switch (ref.type)
       {
       case cvInteger:
-         i = ref.i;
+         setInt(ref.i);
          break;
       case cvFloat:
-         f = ref.f;
+         setFloat(ref.f);
          break;
       case cvSTEntry:
-         TORQUE_CASE_FALLTHROUGH;
+         setStringTableEntry(ref.s);
+         break;
       case cvString:
-         s = ref.s;
-         ref.s = const_cast<char*>(StringTable->EmptyString());
+         setString(ref.s);
          break;
       default:
-         data = ref.data;
-         
+         setConsoleData(ref.ct->consoleType, ref.ct->dataPtr, ref.ct->enumTable);
          break;
       }
-      ref.type = ConsoleValueType::cvSTEntry;
-      ref.data = NULL;
-      //ref.reset();
+      ref.cleanupData();
    }
 
 public:
@@ -203,106 +211,109 @@ public:
 
    ConsoleValue(ConsoleValue&& ref) noexcept
    {
-      type = ref.type;
-
+      if (ref.type == ConsoleValueType::cvNULL)
+      {
+         std::cout << "Cannot Move a variable twice!";
+         return;
+      }
       switch (ref.type)
       {
       case cvInteger:
-         i = ref.i;
+         setInt(ref.i);
          break;
       case cvFloat:
-         f = ref.f;
+         setFloat(ref.f);
          break;
       case cvSTEntry:
-         TORQUE_CASE_FALLTHROUGH;
+         setStringTableEntry(ref.s);
+         break;
       case cvString:
-         s = ref.s;
-         ref.s = const_cast<char*>(StringTable->EmptyString());
+         setString(ref.s);
          break;
       default:
-         data = ref.data;
-
+         setConsoleData(ref.ct->consoleType, ref.ct->dataPtr, ref.ct->enumTable);
          break;
       }
-      ref.type = ConsoleValueType::cvSTEntry;
-      ref.data = NULL;
+      ref.cleanupData();
    }
 
    TORQUE_FORCEINLINE ConsoleValue& operator=(ConsoleValue&& ref) noexcept
    {
-      type = ref.type;
-
+      if (ref.type == ConsoleValueType::cvNULL)
+      {
+         std::cout << "Cannot Move a variable twice!";
+         return *this;
+      }
       switch (ref.type)
       {
       case cvInteger:
-         i = ref.i;
+         setInt(ref.i);
          break;
       case cvFloat:
-         f = ref.f;
+         setFloat(ref.f);
          break;
       case cvSTEntry:
-         TORQUE_CASE_FALLTHROUGH;
+         setStringTableEntry(ref.s);
+         break;
       case cvString:
-         s = ref.s;
-         ref.s = const_cast<char*>(StringTable->EmptyString());
+         setString(ref.s);
          break;
       default:
-         data = ref.data;
-
+         setConsoleData(ref.ct->consoleType, ref.ct->dataPtr, ref.ct->enumTable);
          break;
       }
-      ref.type = ConsoleValueType::cvSTEntry;
-      ref.data = NULL;
+      ref.cleanupData();
       return *this;
    }
 
    ConsoleValue(const ConsoleValue& ref)
    {
-      type = ref.type;
-
       switch (ref.type)
       {
+      case cvNULL:
+         std::cout << "Ref already cleared!";
+         break;
       case cvInteger:
-         i = ref.i;
+         setInt(ref.i);
          break;
       case cvFloat:
-         f = ref.f;
+         setFloat(ref.f);
          break;
       case cvSTEntry:
-         TORQUE_CASE_FALLTHROUGH;
+         setStringTableEntry(ref.s);
+         break;
       case cvString:
-         s = ref.s;
+         setString(ref.s);
          break;
       default:
-         data = ref.data;
-
+         setConsoleData(ref.ct->consoleType, ref.ct->dataPtr, ref.ct->enumTable);
          break;
       }
    }
 
    ConsoleValue& operator=(const ConsoleValue& ref)
    {
-      type = ref.type;
-
       switch (ref.type)
       {
+      case cvNULL:
+         std::cout << "Ref already cleared!";
+         break;
       case cvInteger:
-         i = ref.i;
+         setInt(ref.i);
          break;
       case cvFloat:
-         f = ref.f;
+         setFloat(ref.f);
          break;
       case cvSTEntry:
-         TORQUE_CASE_FALLTHROUGH;
+         setStringTableEntry(ref.s);
+         break;
       case cvString:
-         s = ref.s;
+         setString(ref.s);
          break;
       default:
-         data = ref.data;
-
+         setConsoleData(ref.ct->consoleType, ref.ct->dataPtr, ref.ct->enumTable);
          break;
       }
-
       return *this;
    }
 
@@ -396,12 +407,11 @@ public:
          setEmptyString();
          return;
       }
-
       cleanupData();
       type = ConsoleValueType::cvString;
-      s = (char*)dMalloc(static_cast<dsize_t>(len) + 1);
+      s = (char*)dMalloc(len + 1);
       s[len] = '\0';
-      dStrcpy(s, val, static_cast<dsize_t>(len) + 1);
+      dStrcpy(s, val, len + 1);
    }
 
    TORQUE_FORCEINLINE void setStringRef(const char* ref, S32 len)
@@ -420,7 +430,7 @@ public:
 
    TORQUE_FORCEINLINE void setStringTableEntry(StringTableEntry val)
    {
-      cleanupData();
+      //cleanupData();
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(val);
    }

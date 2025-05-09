@@ -81,9 +81,9 @@ public:
       currentRegisterArray->values[reg].setStringTableEntry(val);
    }
 
-   TORQUE_FORCEINLINE void moveConsoleValue(S32 reg, ConsoleValue&& val)
+   TORQUE_FORCEINLINE void moveConsoleValue(S32 reg, ConsoleValue val)
    {
-      currentRegisterArray->values[reg] = std::move(val);
+      currentRegisterArray->values[reg] = (val);
    }
 
    void pushFrame(StringTableEntry frameName, Namespace *ns, S32 regCount);

@@ -174,34 +174,6 @@ class ConsoleValue
       type = ConsoleValueType::cvNULL;
    }
 
-   TORQUE_FORCEINLINE void _move(ConsoleValue&& ref) noexcept
-   {
-      if (ref.type == ConsoleValueType::cvNULL)
-      {
-         std::cout << "Cannot Move a variable twice!";
-         return;
-      }
-      switch (ref.type)
-      {
-      case cvInteger:
-         setInt(ref.i);
-         break;
-      case cvFloat:
-         setFloat(ref.f);
-         break;
-      case cvSTEntry:
-         setStringTableEntry(ref.s);
-         break;
-      case cvString:
-         setString(ref.s);
-         break;
-      default:
-         setConsoleData(ref.ct->consoleType, ref.ct->dataPtr, ref.ct->enumTable);
-         break;
-      }
-      ref.cleanupData();
-   }
-
 public:
    ConsoleValue()
    {

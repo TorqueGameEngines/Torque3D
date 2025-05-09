@@ -168,7 +168,7 @@ class ConsoleValue
       }
       else if (type == ConsoleValueType::cvString)
       {
-         if (s && s[0])
+         if (s != StringTable->EmptyString())
             dFree(s);
       }
       type = ConsoleValueType::cvNULL;
@@ -179,63 +179,6 @@ public:
    {
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
-   }
-
-   ConsoleValue(ConsoleValue&& ref) noexcept
-   {
-      if (ref.type == ConsoleValueType::cvNULL)
-      {
-         std::cout << "Cannot Move a variable twice!";
-         return;
-      }
-      switch (ref.type)
-      {
-      case cvInteger:
-         setInt(ref.i);
-         break;
-      case cvFloat:
-         setFloat(ref.f);
-         break;
-      case cvSTEntry:
-         setStringTableEntry(ref.s);
-         break;
-      case cvString:
-         setString(ref.s);
-         break;
-      default:
-         setConsoleData(ref.ct->consoleType, ref.ct->dataPtr, ref.ct->enumTable);
-         break;
-      }
-      ref.cleanupData();
-   }
-
-   TORQUE_FORCEINLINE ConsoleValue& operator=(ConsoleValue&& ref) noexcept
-   {
-      if (ref.type == ConsoleValueType::cvNULL)
-      {
-         std::cout << "Cannot Move a variable twice!";
-         return *this;
-      }
-      switch (ref.type)
-      {
-      case cvInteger:
-         setInt(ref.i);
-         break;
-      case cvFloat:
-         setFloat(ref.f);
-         break;
-      case cvSTEntry:
-         setStringTableEntry(ref.s);
-         break;
-      case cvString:
-         setString(ref.s);
-         break;
-      default:
-         setConsoleData(ref.ct->consoleType, ref.ct->dataPtr, ref.ct->enumTable);
-         break;
-      }
-      ref.cleanupData();
-      return *this;
    }
 
    ConsoleValue(const ConsoleValue& ref)

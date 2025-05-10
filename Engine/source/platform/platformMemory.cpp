@@ -30,6 +30,8 @@
 #include "platform/threads/mutex.h"
 #include "core/module.h"
 
+#if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
+
 #ifdef _WIN32
 #include <windows.h>
 #include <dbghelp.h>
@@ -39,6 +41,8 @@
 #endif
 #include <ctime>
 #include <string>
+
+#endif
 
 // If profile paths are enabled, disable profiling of the
 // memory manager as that would cause a cyclic dependency
@@ -177,11 +181,11 @@ namespace Memory
 #endif
             }
 
-            //if (report.find("getDocsLink") != std::string::npos)
-            //{
-            //   //known issue. one off allocation
-            //   memLog[curRep].skip = true;
-            //}
+            if (report.find("getDocsLink") != std::string::npos)
+            {
+               //known issue. one off allocation
+               memLog[curRep].skip = true;
+            }
 
             for (U32 oldRep = start; oldRep < curRep; ++oldRep)
             {

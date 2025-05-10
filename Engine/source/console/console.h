@@ -154,7 +154,7 @@ class ConsoleValue
 
    TORQUE_FORCEINLINE bool hasAllocatedData() const
    {
-      return (type == ConsoleValueType::cvString || isConsoleType()) && data != NULL;
+      return  (isConsoleType() && data != NULL);
    }
 
    const char* getConsoleData() const;
@@ -166,6 +166,12 @@ class ConsoleValue
          dFree(data);
          data = NULL;
       }
+      else if (type == ConsoleValueType::cvString)
+      {
+         if (s != StringTable->EmptyString())
+            dFree(s);
+      }
+      type = ConsoleValueType::cvNULL;
    }
 
 public:

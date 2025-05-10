@@ -32,7 +32,8 @@
 
 inline ConsoleValue RunScript(const char* str)
 {
-   return std::move(Con::evaluate(str, false, NULL).value);
+   auto result = Con::evaluate(str, false, NULL);
+   return result.value;  // ensure lifetime is safe
 }
 
 using ::testing::Matcher;

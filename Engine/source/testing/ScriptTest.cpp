@@ -32,7 +32,8 @@
 
 inline ConsoleValue RunScript(const char* str)
 {
-   return std::move(Con::evaluate(str, false, NULL).value);
+   auto conRes = Con::evaluate(str, false, NULL);
+   return conRes.value;
 }
 
 using ::testing::Matcher;

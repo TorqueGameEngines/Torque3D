@@ -161,29 +161,16 @@ class ConsoleValue
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      switch (type)
-      {
-      case ConsoleValueType::cvConsoleValueType:
-         if (ct)
-         {
-            delete ct;
-            ct = nullptr;
-         }
-         break;
-      case ConsoleValueType::cvString:
-         if (s && s != StringTable->EmptyString())
-            dFree(s);
-         break;
-      default:
-         break;
-      }
-
-      if (data != NULL)
+      if (hasAllocatedData())
       {
          dFree(data);
          data = NULL;
       }
-
+      else if (type == ConsoleValueType::cvString)
+      {
+         if (s != StringTable->EmptyString())
+            dFree(s);
+      }
       type = ConsoleValueType::cvNULL;
    }
 

@@ -27,6 +27,7 @@
 
 namespace Memory
 {
+#if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
    struct MemInfo
    {
       void* ptr;
@@ -44,6 +45,7 @@ namespace Memory
    void shutdown();
    void getMemoryInfo(void* ptr, MemInfo& info);
    void checkPtr(void* ptr);
+#endif
 }
 
 #endif // _TORQUE_PLATFORM_PLATFORMMEMORY_H_

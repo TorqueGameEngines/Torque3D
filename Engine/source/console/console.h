@@ -128,15 +128,9 @@ enum ConsoleValueType
    cvConsoleValueType = 0
 };
 
-struct ConsoleValueConsoleType
-{
-   S32 consoleType;
-   void* dataPtr;
-   EnumTable* enumTable;
-};
-
 class ConsoleValue
 {
+public:
 #pragma warning( push )
 #pragma warning( disable : 4201 ) // warning C4201: nonstandard extension used : nameless struct/union
    union
@@ -150,7 +144,8 @@ class ConsoleValue
 
       struct
       {
-         ConsoleValueConsoleType* ct;
+         void* dataPtr;
+         EnumTable* enumTable;
       };
    };
 
@@ -164,15 +159,14 @@ class ConsoleValue
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      if (type == ConsoleValueType::cvString)
+      if (type == cvString)
       {
          if (s != StringTable->EmptyString())
             dFree(s);
       }
+
       type = ConsoleValueType::cvNULL;
    }
-
-public:
    ConsoleValue()
    {
       type = ConsoleValueType::cvSTEntry;
@@ -199,7 +193,7 @@ public:
          setString(ref.s);
          break;
       default:
-         setConsoleData(ref.ct->consoleType, ref.ct->dataPtr, ref.ct->enumTable);
+         setConsoleData(ref.type, ref.dataPtr, ref.enumTable);
          break;
       }
    }
@@ -224,7 +218,7 @@ public:
          setString(ref.s);
          break;
       default:
-         setConsoleData(ref.ct->consoleType, ref.ct->dataPtr, ref.ct->enumTable);
+         setConsoleData(ref.type, ref.dataPtr, ref.enumTable);
          break;
       }
       return *this;
@@ -322,8 +316,6 @@ public:
       }
       cleanupData();
 
-      U32 oldLen = dStrlen(s);
-
       type = ConsoleValueType::cvString;
       s = (char*)dMalloc(len + 1);
 
@@ -357,12 +349,13 @@ public:
       setStringTableEntry(StringTable->EmptyString());
    }
 
-   TORQUE_FORCEINLINE void setConsoleData(S32 consoleType, void* dataPtr, const EnumTable* enumTable)
+   TORQUE_FORCEINLINE void setConsoleData(S32 inConsoleType, void* inDataPtr, const EnumTable* inEnumTable)
    {
       cleanupData();
-      type = ConsoleValueType::cvConsoleValueType;
-      ct = new ConsoleValueConsoleType{ consoleType, dataPtr, const_cast<EnumTable*>(enumTable) };
-   }
+      type = inConsoleType;
+      dataPtr = inDataPtr;
+      enumTable = const_cast<EnumTable*>(inEnumTable);
+   };
 
    TORQUE_FORCEINLINE S32 getType() const
    {
@@ -384,11 +377,11 @@ public:
       return type >= ConsoleValueType::cvConsoleValueType;
    }
 
-   TORQUE_FORCEINLINE ConsoleValueConsoleType* getConsoleType() const
+   TORQUE_FORCEINLINE S32 getConsoleType() const
    {
       if(type >= ConsoleValueType::cvConsoleValueType)
       {
-         return ct;
+         return type;
       }
       else
       {

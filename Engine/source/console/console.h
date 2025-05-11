@@ -347,7 +347,7 @@ public:
    {
       //cleanupData();
       type = ConsoleValueType::cvSTEntry;
-      s = const_cast<char*>(StringTable->insert(val));
+      s = const_cast<char*>(val);
    }
 
    TORQUE_FORCEINLINE void setEmptyString()

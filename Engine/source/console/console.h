@@ -154,18 +154,37 @@ class ConsoleValue
 
    TORQUE_FORCEINLINE bool hasAllocatedData() const
    {
-      return (type == ConsoleValueType::cvString || isConsoleType()) && data != NULL;
+      return  (isConsoleType() && data != NULL);
    }
 
    const char* getConsoleData() const;
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      if (hasAllocatedData())
+      switch (type)
+      {
+      case ConsoleValueType::cvConsoleValueType:
+         if (ct)
+         {
+            delete ct;
+            ct = nullptr;
+         }
+         break;
+      case ConsoleValueType::cvString:
+         if (s && s != StringTable->EmptyString())
+            dFree(s);
+         break;
+      default:
+         break;
+      }
+
+      if (data != NULL)
       {
          dFree(data);
          data = NULL;
       }
+
+      type = ConsoleValueType::cvNULL;
    }
 
 public:

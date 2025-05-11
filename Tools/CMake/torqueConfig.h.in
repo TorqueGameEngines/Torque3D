@@ -53,12 +53,9 @@
 /// Define me if you want to enable multithreading support.
 #cmakedefine TORQUE_MULTITHREAD
 
-#cmakedefine TORQUE_DISABLE_MEMORY_MANAGER
 /// Define me if you want to disable Torque memory manager.
 #ifndef TORQUE_ENABLE_ASSERTS
-#ifdef TORQUE_DISABLE_MEMORY_MANAGER
-#undef TORQUE_DISABLE_MEMORY_MANAGER
-#endif
+#cmakedefine TORQUE_DISABLE_MEMORY_MANAGER
 #endif
 
 /// Define me if you want to disable the virtual mount system.

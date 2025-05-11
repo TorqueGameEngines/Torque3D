@@ -137,13 +137,21 @@ struct ConsoleValueConsoleType
 
 class ConsoleValue
 {
+#pragma warning( push )
+#pragma warning( disable : 4201 ) // warning C4201: nonstandard extension used : nameless struct/union
    union
    {
-      F64   f;
-      S64   i;
-      char* s;
-      void* data;
-      ConsoleValueConsoleType* ct;
+      struct
+      {
+         F64   f;
+         S64   i;
+         char* s;
+      };
+
+      struct
+      {
+         ConsoleValueConsoleType* ct;
+      };
    };
 
    S32 type;
@@ -152,21 +160,11 @@ class ConsoleValue
 
    char* convertToBuffer() const;
 
-   TORQUE_FORCEINLINE bool hasAllocatedData() const
-   {
-      return  (isConsoleType() && data != NULL);
-   }
-
    const char* getConsoleData() const;
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      if (hasAllocatedData())
-      {
-         dFree(data);
-         data = NULL;
-      }
-      else if (type == ConsoleValueType::cvString)
+      if (type == ConsoleValueType::cvString)
       {
          if (s != StringTable->EmptyString())
             dFree(s);
@@ -323,8 +321,12 @@ public:
          return;
       }
       cleanupData();
+
+      U32 oldLen = dStrlen(s);
+
       type = ConsoleValueType::cvString;
       s = (char*)dMalloc(len + 1);
+
       s[len] = '\0';
       dStrcpy(s, val, len + 1);
    }

@@ -317,8 +317,11 @@ function EditorGui::shutdown( %this )
    %this.setEditor( "" );
 
    // Call the shutdown callback on the editor plugins.   
-   foreach( %plugin in EditorPluginSet )
-      %plugin.onWorldEditorShutdown();
+   for ( %i = 0; %i < EditorPluginSet.getCount(); %i++ )
+   {
+      %obj = EditorPluginSet.getObject(%i);
+      %obj.onWorldEditorShutdown();    
+   }
 }
 
 /// This is used to add an editor to the Editors menu which
@@ -575,9 +578,11 @@ function EditorGui::onWake( %this )
    EHWorldEditor.setStateOn( 1 );
    
    // Notify the editor plugins that the editor has started.
-   
-   foreach( %plugin in EditorPluginSet )
-      %plugin.onEditorWake();
+   for ( %i = 0; %i < EditorPluginSet.getCount(); %i++ )
+   {
+      %obj = EditorPluginSet.getObject( %i );
+      %obj.onEditorWake();      
+   }
    
    // Push the ActionMaps in the order that we want to have them
    // before activating an editor plugin, so that if the plugin
@@ -616,9 +621,11 @@ function EditorGui::onSleep( %this )
       MoveMap.pop();
 
    // Notify the editor plugins that the editor will be closing.
-   
-   foreach( %plugin in EditorPluginSet )
-      %plugin.onEditorSleep();
+   for ( %i = 0; %i < EditorPluginSet.getCount(); %i++ )
+   {
+      %obj = EditorPluginSet.getObject(%i);
+      %obj.onEditorSleep();
+   }
             
    if(isObject($Server::CurrentScene))
       $Server::CurrentScene.open();
@@ -715,8 +722,12 @@ function EditorGui::onNewLevelLoaded( %this, %levelName )
 function EditorMissionCleanup::onRemove( %this )
 {
    EditorGui.levelName = "";
-   foreach( %plugin in EditorPluginSet )
-      %plugin.onExitMission();
+   
+   for ( %i = 0; %i < EditorPluginSet.getCount(); %i++ )
+   {
+      %obj = EditorPluginSet.getObject(%i);
+      %obj.onExitMission();
+   }
 }
 
 //-----------------------------------------------------------------------------

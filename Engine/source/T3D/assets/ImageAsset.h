@@ -62,6 +62,7 @@ class ImageAsset : public AssetBase
    typedef AssetPtr<ImageAsset> ConcreteAssetPtr;
 
 public:
+   typedef HashMap<GFXTextureProfile*, GFXTexHandle> ImageTextureMap;
    /// The different types of image use cases
    enum ImageTypes
    {
@@ -137,7 +138,7 @@ private:
    bool              mIsHDRImage;
    GFXTexHandle      mTextureHandle;
    ImageTypes        mImageType;
-   HashMap<GFXTextureProfile*, GFXTexHandle> mResourceMap;
+   ImageTextureMap   mResourceMap;
    bool              mIsNamedTarget;
    S32               mImageWidth;
    S32               mImageHeight;

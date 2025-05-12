@@ -1563,6 +1563,53 @@ bool AssetManager::restoreAssetTags( void )
 
 //-----------------------------------------------------------------------------
 
+const char* AssetManager::getAssetLooseFiles(const char* pAssetId)
+{
+   // Debug Profiling.
+   PROFILE_SCOPE(AssetManager_getAssetLooseFIles);
+
+   // Sanity!
+   AssertFatal(pAssetId != NULL, "Cannot look up NULL asset Id.");
+
+   // Find asset.
+   AssetDefinition* pAssetDefinition = findAsset(pAssetId);
+
+   // Did we find the asset?
+   if (pAssetDefinition == NULL)
+   {
+      // No, so warn.
+      Con::warnf("Asset Manager: Failed to find asset Id '%s' as it does not exist.", pAssetId);
+      return String::EmptyString;
+   }
+
+   // Info.
+   if (mEchoInfo)
+   {
+      Con::printSeparator();
+      Con::printf("Asset Manager: Started getting loose files of Asset Id '%s'...", pAssetId);
+   }
+
+   String looseFileList = "";
+   Vector<StringTableEntry>& assetLooseFiles = pAssetDefinition->mAssetLooseFiles;
+   for (Vector<StringTableEntry>::iterator looseFileItr = assetLooseFiles.begin(); looseFileItr != assetLooseFiles.end(); ++looseFileItr)
+   {
+      // Fetch loose file.
+      StringTableEntry looseFile = *looseFileItr;
+
+      looseFileList += looseFile;
+
+      if (looseFileItr != assetLooseFiles.end())
+         looseFileList += "\t";
+   }
+
+   char* ret = Con::getReturnBuffer(1024);
+   dSprintf(ret, 1024, "%s", looseFileList.c_str());
+
+   return ret;
+}
+
+//-----------------------------------------------------------------------------
+
 S32 QSORT_CALLBACK descendingAssetDefinitionLoadCount(const void* a, const void* b)
 {
     // Debug Profiling.

@@ -1,9 +1,12 @@
-function AssetBrowser::createScriptAsset(%this)
+AssetBrowser::registerFileType("ScriptFileType", "Script Files", ".tscript;.cs;.dso;.tscript.dso;.cs.dso", false);
+AssetBrowser::registerAssetType("ScriptAsset", "Scripts");
+
+function ScriptAsset::onCreateNew()
 {
-   %moduleName = AssetBrowser.newAssetSettings.moduleName;
+   %moduleName = $CurrentAssetBrowser.newAssetSettings.moduleName;
    %modulePath = "data/" @ %moduleName;
       
-   %assetName = AssetBrowser.newAssetSettings.assetName;  
+   %assetName = $CurrentAssetBrowser.newAssetSettings.assetName;  
    
    %assetPath = NewAssetTargetAddress.getText() @ "/";    
    
@@ -32,97 +35,122 @@ function AssetBrowser::createScriptAsset(%this)
 	return %tamlpath;
 }
 
-function AssetBrowser::editScriptAsset(%this, %assetDef)
+function ScriptAsset::onEdit(%this)
 {
-   %scriptFile = %assetDef.scriptFile;
+   %scriptFile = %this.scriptFile;
    
-   //EditorOpenFileInTorsion(makeFullPath(%scriptFile), 0);
+   if(isFunction("systemCommand"))
+      eval("systemCommand(\"start \\\"\\\" \\\"" @ %this.fileName @ "\\\"\");");
+   else  
+      warn("ScriptAsset::onEdit() - systemCommand function disabled in this build. Unable to launch application to edit file.");
 }
 
-function AssetBrowser::duplicateScriptAsset(%this, %assetDef, %targetModule)
+function ScriptAsset::buildBrowserElement(%this, %previewData)
 {
-}
-
-function AssetBrowser::importScriptAsset(%this, %assetId)
-{
-}
-
-function AssetBrowser::onScriptAssetEditorDropped(%this, %assetDef, %position)
-{
-
-}
-
-//Renames the asset
-function AssetBrowser::renameScriptAsset(%this, %assetDef, %newAssetName)
-{
-   %newFilename = renameAssetLooseFile(%assetDef.scriptFile, %newAssetName);
+   %previewData.assetName = %this.assetName;
+   %previewData.assetPath = %this.fileName;
    
-   if(!%newFilename $= "")
-      return;
-
-   %assetDef.scriptFile = %newFilename;
-   %assetDef.saveAsset();
-   
-   renameAssetFile(%assetDef, %newAssetName);
-}
-
-//Deletes the asset
-function AssetBrowser::deleteScriptAsset(%this, %assetDef)
-{
-   AssetDatabase.deleteAsset(%assetDef.getAssetId(), true);
-}
-
-//Moves the asset to a new path/module
-function AssetBrowser::moveScriptAsset(%this, %assetDef, %destination)
-{
-   %currentModule = AssetDatabase.getAssetModule(%assetDef.getAssetId());
-   %targetModule = AssetBrowser.dirHandler.getModuleFromAddress(%destination);
-   
-   %newAssetPath = moveAssetFile(%assetDef, %destination);
-   
-   if(%newAssetPath $= "")
-      return false;
-
-   moveAssetLooseFile(%assetDef.getScriptPath(), %destination);
-   
-   AssetDatabase.removeDeclaredAsset(%assetDef.getAssetId());
-   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
-}
-
-function AssetBrowser::buildScriptAssetPreview(%this, %assetDef, %previewData)
-{
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.scriptFile;
-   //%previewData.doubleClickCommand = "EditorOpenFileInTorsion( \""@%previewData.assetPath@"\", 0 );";
-   
-   if(%assetDef.isServerSide)
+   if(%this.isServerSide)
       %previewData.previewImage = "ToolsModule:serverScriptIcon_image";
    else
       %previewData.previewImage = "ToolsModule:clientScriptIcon_image";
    
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\nDefinition Path: " @ %assetDef.getFilename();
-}
-
-function AssetBrowser::buildTScriptPreview(%this, %assetDef, %previewData)
-{
-   %previewData.assetName = %assetDef.assetName;
-   %previewData.assetPath = %assetDef.scriptFile;
-   //%previewData.doubleClickCommand = "EditorOpenFileInTorsion( \""@%previewData.assetPath@"\", 0 );";
-   
-   if(%assetDef.isServerSide)
-      %previewData.previewImage = "ToolsModule:serverScriptIcon_image";
-   else
-      %previewData.previewImage = "ToolsModule:clientScriptIcon_image";
-   
-   %previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef.description;
-   %previewData.tooltip = "Asset Name: " @ %assetDef.assetName @ "\nDefinition Path: " @ %assetDef.getFilename();
+   %previewData.assetFriendlyName = %this.assetName;
+   %previewData.assetDesc = %this.fileName;
+   %previewData.tooltip = "Script Asset: " @ %this.getAssetId() @ "\n" @ 
+                          "File path: " @ %this.fileName;
 }
 
 function GuiInspectorTypeScriptAssetPtr::onClick( %this, %fieldName )
 {
    //Get our data
    %obj = %this.getInspector().getInspectObject(0);
+}
+
+//==============================================================================
+// Handling for random script files in the browser
+//==============================================================================
+function ScriptFileType::buildBrowserElement(%filePath, %previewData)
+{
+   %previewData.assetName = fileName(%filePath);
+   %previewData.assetPath = %filePath;
+   %previewData.doubleClickCommand = "systemCommand(\"start \\\"\\\" \\\"" @ %filePath @ "\\\"\");";
+   
+   /*if(%assetDef.isServerSide)
+      %previewData.previewImage = "ToolsModule:serverScriptIcon_image";
+   else
+      %previewData.previewImage = "ToolsModule:clientScriptIcon_image";*/
+   %previewData.previewImage = "ToolsModule:clientScriptIcon_image";
+   
+   %previewData.assetFriendlyName = %previewData.assetName;
+   %previewData.assetDesc = %filePath;
+   %previewData.tooltip = "Script File: " @ %filePath;
+}
+
+function ScriptAssetType::onEdit(%filePath)
+{
+   if(isFunction("systemCommand"))
+      eval("systemCommand(\"start \\\"\\\" \\\"" @ %filePath @ "\\\"\");");
+   else  
+      warn("ScriptAssetType::onEdit() - systemCommand function disabled in this build. Unable to launch application to edit file.");
+}
+
+function ScriptFileType::onShowActionMenu(%filePath)
+{
+   if( !isObject( EditScriptFileTypePopup ) )
+   {
+      new PopupMenu( EditScriptFileTypePopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+
+         jumpFileName = "";
+         jumpLineNumber = "";
+      };
+   }
+   
+   //Regen the menu so we're fully up and current with options and references
+   EditScriptFileTypePopup.clearItems();
+   
+   EditScriptFileTypePopup.item[ 0 ] = "Edit File" TAB "" TAB $CurrentAssetBrowser @ ".editAsset();";
+   EditScriptFileTypePopup.item[ 1 ] = "Rename File" TAB "" TAB $CurrentAssetBrowser @ ".renameAsset();";
+   EditScriptFileTypePopup.item[ 2 ] = "-";
+   EditScriptFileTypePopup.item[ 3 ] = "Duplicate File" TAB "" TAB $CurrentAssetBrowser @ ".duplicateAsset();";
+   EditScriptFileTypePopup.item[ 4 ] = "-";
+   EditScriptFileTypePopup.item[ 5 ] = "Open File Location" TAB "" TAB $CurrentAssetBrowser @ ".openFileLocation();";
+   EditScriptFileTypePopup.item[ 6 ] = "-";
+   EditScriptFileTypePopup.item[ 7 ] = "Delete File" TAB "" TAB $CurrentAssetBrowser @ ".deleteAsset();";
+   EditScriptFileTypePopup.item[ 8 ] = "-";
+   EditScriptFileTypePopup.item[ 9 ] = "File Properties" TAB "" TAB $CurrentAssetBrowser @ ".editAssetInfo();";
+
+   EditScriptFileTypePopup.objectData = %filePath;
+   EditScriptFileTypePopup.objectType = "ScriptFileType";
+   
+   EditScriptFileTypePopup.reloadItems();
+   
+   EditScriptFileTypePopup.showPopup(Canvas); 
+   
+   $CurrentAssetBrowser.popupMenu = EditScriptFileTypePopup;
+}
+
+function ScriptFileType::onEditProperties(%filePath)
+{
+   Canvas.pushDialog(AssetBrowser_editAsset);
+   
+   AssetBrowser_editAssetWindow.text = "Script File Properties - " @ %filePath;
+   
+   AssetBrowser_editAsset.editedObjectData = %filePath;
+   //AssetBrowser_editAsset.editedObject = SpecialAssetEditInspector.tempAsset;
+   AssetBrowser_editAsset.editedObjectType = "ScriptFileType";
+   
+   AssetEditInspector.startGroup("Script File Properties");
+   AssetEditInspector.addField("$ScriptFileType::ExecutionMode", "Execution Mode", "list", "How should this script file be executed by the module", "Server", "Client;Server;Shared;None");
+   AssetEditInspector.addField("$ScriptFileType::ExecutionOverride", "Do Execution Override", "bool", "Should this execution override files that share the same name?", "false");
+   AssetEditInspector.addField("$ScriptFileType::ExecutionConditions", "Execution Conditional", "command", "Does the execution of this script file have special conditionals?", "");
+   AssetEditInspector.endGroup("Script File Properties");
+}
+
+function ScriptFileType::onSaveProperties(%filePath)
+{
+   //Do voodoo here
 }

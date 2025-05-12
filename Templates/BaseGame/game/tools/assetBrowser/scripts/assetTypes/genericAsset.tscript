@@ -1,0 +1,351 @@
+//This function registers the asset type, associated file extensions and human-readable name with the Asset Browser
+//This is primarily so there's an easy hook-in point for the 'type' namespace, as well as registration for AB
+//filter modes and file scanning
+AssetBrowser::registerAssetType("GenericAsset", "", "", false);
+
+//This function is called when we want to have adjustable field information for a new asset
+//This could be a secondary name or description, a 'preview image' or anything else beyond
+//just the basic AssetName and AssetDescription files
+function GenericAsset::setupCreateNew()
+{
+   echo("GenericAsset::setupCreateNew()");
+}
+
+//This is called when we actually finally decide to create the new asset itself
+//We create the asset definition, supplemental files, save everything to disk and
+//then register with the AssetDatabase so it's available for use
+function GenericAsset::onCreateNew()
+{
+   echo("GenericAsset::onCreateNew()");
+}
+
+//This us called when we are creating a 'card' in the AssetBrowser for viewing
+//when navigating. It packs whatever relevent information such as the preview image
+//into the %previewData object that the AssetBrowser then uses to actually display
+function GenericAsset::buildBrowserElement(%this, %previewData)
+{
+   %previewData.assetName = %this.assetName;
+   %previewData.assetPath = %this.getFileName();
+   %previewData.doubleClickCommand = "";
+
+   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+
+   %previewData.assetFriendlyName = %this.assetName;
+   %previewData.assetDesc = %this.description;
+   %previewData.tooltip = "Asset Name: " @ %this.assetName @ "\nDefinition Path: " @ %previewData.assetPath;
+}
+
+//This is called when we specifically need to special-handle generation of a preview image
+//Such as rendering a shape or material to a cached image file, rather than simply using a 
+//basic image to represent the type in the AssetBrowser
+function GenericAsset::generatePreviewImage(%this, %previewButton, %forceRegenerate)
+{
+}
+
+//Called when we rename the asset. The place we would change the asset definition name
+//as well as update the name for any associated files
+function GenericAsset::onRename(%this, %newAssetName)
+{
+   %assetPath = makeFullPath($CurrentAssetBrowser.getAssetFilePath(%this.getAssetId()));
+   %assetFilepath = filePath(%assetPath);
+   %assetFileExt = fileExt(%assetPath);
+   
+   %newAssetPath = %assetFilepath @ "/" @ %newAssetName @ ".asset.taml";
+   
+   %copiedSuccess = pathCopy(%assetPath, %newAssetPath);
+   
+   if(!%copiedSuccess)
+      return "";
+      
+   replaceInFile(%newAssetPath, %this.assetName, %newAssetName);
+   
+   %looseFilesList = AssetDatabase.getAssetLooseFiles(%this.getAssetId());
+   
+   for(%i=0; %i < getFieldCount(%looseFilesList); %i++)
+   {
+      %looseFile = getField(%looseFilesList, %i);
+      
+      if(!isFile(%looseFile))
+      {
+         errorf("GenericAsset::onMovePath() - could not find loose file: " @ %looseFile);
+         continue;
+      }
+      
+      %newLooseFileName = strReplace(fileName(%looseFile), %this.assetName, %newAssetName);
+      %looseFileExt = fileExt(%looseFile);
+      
+      echo("GenericAsset::onRename() - renamed loose file from: " @ %looseFile @ " to: " @ %assetPath @ "/" @ %newLooseFileName @ %looseFileExt);
+      
+      %looseFileNewPath = %assetPath @ "/" @ %newLooseFileName @ %looseFileExt;
+      %copiedSuccess = pathCopy(%looseFile, %looseFileNewPath);
+      if(!%copiedSuccess)
+      {
+         errorf("GenericAsset::onDuplicate() - failed to duplicate loose file: " @ %looseFile);
+      }
+      else
+      {
+         fileDelete(%looseFile);
+         replaceInFile(%looseFileNewPath, %this.assetName, %newAssetName);
+      }
+   }
+   
+   %module = getModuleFromAddress(%newAssetPath);
+      
+   //Add with the new file
+   $CurrentAssetBrowser.addDeclaredAsset(%module, %newAssetPath);
+   
+   GenericAsset::onDelete(%this);
+      
+   return %newAssetPath;
+}
+
+//Called when duplicating the asset. A copy is made, and then we perform a rename action
+//on the copy to ensure there's no name conflicts
+function GenericAsset::onDuplicate(%this, %newAssetName)
+{
+   %assetPath = makeFullPath($CurrentAssetBrowser.getAssetFilePath(%this.getAssetId()));
+   %assetFilepath = filePath(%assetPath);
+   %assetFileExt = fileExt(%assetPath);
+   
+   %newAssetPath = %assetFilepath @ "/" @ %newAssetName @ ".asset.taml";
+   
+   %copiedSuccess = pathCopy(%assetPath, %newAssetPath);
+   
+   if(!%copiedSuccess)
+      return "";
+      
+   replaceInFile(%newAssetPath, %this.assetName, %newAssetName);
+   
+   %looseFilesList = AssetDatabase.getAssetLooseFiles(%this.getAssetId());
+   
+   for(%i=0; %i < getFieldCount(%looseFilesList); %i++)
+   {
+      %looseFile = getField(%looseFilesList, %i);
+      
+      if(!isFile(%looseFile))
+      {
+         errorf("GenericAsset::onMovePath() - could not find loose file: " @ %looseFile);
+         continue;
+      }
+      
+      %newLooseFileName = strReplace(fileName(%looseFile), %this.assetName, %newAssetName);
+      %looseFileExt = fileExt(%looseFile);
+      
+      echo("GenericAsset::onDuplicate() - renamed loose file from: " @ %looseFile @ " to: " @ %assetPath @ "/" @ %newLooseFileName @ %looseFileExt);
+      
+      %looseFileNewPath = %assetPath @ "/" @ %newLooseFileName @ %looseFileExt;
+      %copiedSuccess = pathCopy(%looseFile, %looseFileNewPath);
+      if(!%copiedSuccess)
+      {
+         errorf("GenericAsset::onDuplicate() - failed to duplicate loose file: " @ %looseFile);
+      }
+      else
+      {
+         replaceInFile(%looseFileNewPath, %this.assetName, %newAssetName);
+      }
+   }
+   
+   %module = getModuleFromAddress(%newAssetPath);
+      
+   //Add with the new file
+   $CurrentAssetBrowser.addDeclaredAsset(%module, %newAssetPath);
+      
+   $CurrentAssetBrowser.refresh();
+   
+   return %newAssetPath;
+}
+
+//Called when the asset is deleted. This would be where and associated files 
+//are also removed from the system
+function GenericAsset::onDelete(%this)
+{
+   AssetDatabase.deleteAsset(%this.getAssetId(), true);
+   
+   $CurrentAssetBrowser.refresh();
+}
+
+//Called when the asset is moved from one file path to another. Associated files would be
+//likewise moved
+function GenericAsset::onMovePath(%this, %destinationPath)
+{
+   %assetPath = makeFullPath($CurrentAssetBrowser.getAssetFilePath(%this.getAssetId()));
+   
+   moveAssetFile(%this, %destinationPath);
+      
+   %looseFilesList = AssetDatabase.getAssetLooseFiles(%this.getAssetId());
+   for(%i=0; %i < getFieldCount(%looseFilesList); %i++)
+   {
+      %looseFile = getField(%looseFilesList, %i);
+      
+      moveAssetLooseFile(%looseFile, %destinationPath);
+   }
+   
+   AssetDatabase.refreshAsset(%this.getAssetId());
+
+   $CurrentAssetBrowser.refresh();
+}
+
+function GenericAsset::onMoveModule(%this, %destinationPath)
+{
+   %assetPath = makeFullPath($CurrentAssetBrowser.getAssetFilePath(%this.getAssetId()));
+   
+   %newAssetPath = moveAssetFile(%this, %destinationPath);
+   
+   %looseFilesList = AssetDatabase.getAssetLooseFiles(%this.getAssetId());
+   for(%i=0; %i < getFieldCount(%looseFilesList); %i++)
+   {
+      %looseFile = getField(%looseFilesList, %i);
+      
+      moveAssetLooseFile(%looseFile, %destinationPath);
+   }
+   
+   %targetModule = $CurrentAssetBrowser.dirHandler.getModuleFromAddress(%destinationPath);
+
+   AssetDatabase.removeDeclaredAsset(%this.getAssetId());
+   AssetDatabase.addDeclaredAsset(%targetModule, %newAssetPath);
+      
+   $CurrentAssetBrowser.refresh();
+}
+
+//Called when there is an InspectorType field for this AssetType and a Asset preview
+//has been dragged and dropped from the AssetBrowser onto this field in the inspector
+//Generally this would see the field assigned with the dropped asset's ID
+/*function GuiInspectorType<AssetType>Ptr::onControlDropped(%this, %payload, %position)
+{
+}*/
+
+//Called when the asset is edited. This can either open the asset in the respective 
+//editor(MaterialAsset opens MaterialEd, etc) or performs some other action, such as loading
+//a LevelAsset in the editor or possibly opening an associated file in a system program for editing
+function GenericAsset::onEdit(%this)
+{
+   echo("GenericAsset::onEdit() - " @ %this);
+}
+
+//Called when the asset's Preview has been right-clicked to do a context popup menu
+//Allows for special-menu population per-type if desired, as not all assets will or should
+//offer the same 'actions' for editing and management
+function GenericAsset::onShowActionMenu(%this)
+{
+   if( !isObject( EditAssetPopup ) )
+   {
+      new PopupMenu( EditAssetPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+
+         jumpFileName = "";
+         jumpLineNumber = "";
+      };
+   }
+   
+   //Regen the menu so we're fully up and current with options and references
+   EditAssetPopup.clearItems();
+   
+   EditAssetPopup.item[ 0 ] = "Edit Asset" TAB "" TAB $CurrentAssetBrowser @ ".editAsset();";
+   EditAssetPopup.item[ 1 ] = "Rename Asset" TAB "" TAB $CurrentAssetBrowser @ ".renameAsset();";
+   EditAssetPopup.item[ 2 ] = "Reload Asset" TAB "" TAB $CurrentAssetBrowser @ ".refreshAsset();";
+   EditAssetPopup.item[ 3 ] = "Asset Properties" TAB "" TAB $CurrentAssetBrowser @ ".editAssetInfo();";
+   EditAssetPopup.item[ 4 ] = "-";
+   EditAssetPopup.item[ 5 ] = "Duplicate Asset" TAB "" TAB $CurrentAssetBrowser @ ".duplicateAsset();";
+   EditAssetPopup.item[ 6 ] = "-";
+   EditAssetPopup.item[ 7 ] = "Regenerate Preview Image" TAB "" TAB $CurrentAssetBrowser @ ".regeneratePreviewImage();";
+   EditAssetPopup.item[ 8 ] = "-";
+   EditAssetPopup.item[ 9 ] = "Re-Import Asset" TAB "" TAB $CurrentAssetBrowser @ ".reImportAsset();";
+   EditAssetPopup.item[ 10 ] = "-";
+   EditAssetPopup.item[ 11 ] = "Open File Location" TAB "" TAB $CurrentAssetBrowser @ ".openFileLocation();";
+   EditAssetPopup.item[ 12 ] = "-";
+   EditAssetPopup.item[ 13 ] = "Delete Asset" TAB "" TAB $CurrentAssetBrowser @ ".deleteAsset();";
+   
+   %assetId = %this.getAssetId();
+   %assetType = AssetDatabase.getAssetType(%assetId);
+   
+   EditAssetPopup.objectData = %assetId;
+   EditAssetPopup.objectType = %assetType;
+   
+   EditAssetPopup.reloadItems();
+   
+   EditAssetPopup.showPopup(Canvas); 
+   
+   $CurrentAssetBrowser.popupMenu = EditAssetPopup;
+}
+
+//Called when editing the asset's properties, generally presented via an inspector
+//This function allows for special type handling if just inspecting the Type's object 
+//is insufficient
+function GenericAsset::onEditProperties(%this)
+{
+   Canvas.pushDialog(AssetBrowser_editAsset);
+   
+   AssetBrowser_editAssetWindow.text = "Asset Properties - " @ %this.getAssetId();
+   
+   AssetEditInspector.tempAsset = %this.deepClone();
+   
+   AssetEditInspector.inspect(AssetEditInspector.tempAsset);  
+   AssetBrowser_editAsset.editedObjectData = %this.getAssetId();
+   AssetBrowser_editAsset.editedObject = AssetEditInspector.tempAsset;
+   AssetBrowser_editAsset.editedObjectType = AssetDatabase.getAssetType(%this.getAssetId());
+   
+   //remove some of the groups we don't need:
+   for(%i=0; %i < AssetEditInspector.getCount(); %i++)
+   {
+      %caption = AssetEditInspector.getObject(%i).caption;
+      
+      if(%caption $= "Ungrouped" || %caption $= "Object" || %caption $= "Editing" 
+         || %caption $= "Persistence" || %caption $= "Dynamic Fields")
+      {
+         AssetEditInspector.remove(AssetEditInspector.getObject(%i));
+         %i--;
+      }
+   }
+}
+
+//Called when the AssetType has it's properties saved from the onEditProperties process
+function GenericAsset::onSaveProperties(%this)
+{
+   %assetId = %this.getAssetId();
+   %file = AssetDatabase.getAssetFilePath(%assetId);
+   %success = TamlWrite(AssetBrowser_editAsset.editedObject, %file);
+   
+   AssetDatabase.releaseAsset(%assetId);
+   
+   $CurrentAssetBrowser.reloadAsset(%assetId);
+
+   $CurrentAssetBrowser.refresh();
+
+   %this.refreshAsset();
+}
+
+//Called when the asset's Preview has been dragged and dropped into the world editor
+//This would usually spawn an associated instance, or a scene object that can utilize the
+//asset in question(ie, Dropping a SoundAsset spawns a SoundEmitter)
+function GenericAsset::onWorldEditorDropped(%this, %position)
+{
+   echo("GenericAsset::onWorldEditorDropped() - " @ %this @ ", " @ %position);
+}
+
+//Called when the asset's Preview has been dragged and dropped into the GUI editor
+//This would usually spawn an associated instance, or a gui object that can utilize the
+//asset in question(ie, Dropping a SoundAsset spawns a guiAudioCtrl)
+function GenericAsset::onGuiEditorDropped(%this, %position)
+{
+   echo("GenericAsset::onGuiEditorDropped() - " @ %this @ ", " @ %position);
+}
+
+//An example case of handling other specialized editors, such as dropping a Datablock
+//Preview into the DatablockEditor. This would be very case-by-case
+/*function GenericAsset::on<Editor>EditorDropped()
+{
+}*/
+
+//Called when the asset has been detected as having had files on the system changed. Allows
+//for automatically responding to those changes, such as re-execing script files
+function GenericAsset::onChanged(%this)
+{
+   echo("GenericAsset::onChanged() - " @ %this);
+}
+
+function GenericAsset::onStatusChanged(%this, %newStstus)
+{
+   echo("GenericAsset::onStatusChanged() - " @ %this @ ", " @ %newStstus);
+}

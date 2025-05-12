@@ -95,7 +95,7 @@ IMPLEMENT_CALLBACK( GameBaseData, onAdd, void, ( GameBase* obj ), ( obj ),
       "}\n\n"
    "@endtsexample\n" );
 
-IMPLEMENT_CALLBACK( GameBaseData, onNewDataBlock, void, ( GameBase* obj ), ( obj ),
+IMPLEMENT_CALLBACK( GameBaseData, onNewDataBlock, void, ( GameBase* obj, bool reload), ( obj, reload),
    "@brief Called when the object has a new datablock assigned.\n\n"
    "@param obj the GameBase object\n\n"
    "@see onAdd for an example\n" );
@@ -512,12 +512,12 @@ void GameBase::scriptOnAdd()
       mDataBlock->onAdd_callback( this );
 }
 
-void GameBase::scriptOnNewDataBlock()
+void GameBase::scriptOnNewDataBlock(bool reload)
 {
    // Script onNewDataBlock() must be called by the leaf class
    // after everything is loaded.
    if (mDataBlock && !isGhost())
-      mDataBlock->onNewDataBlock_callback( this );
+      mDataBlock->onNewDataBlock_callback( this, reload);
 }
 
 void GameBase::scriptOnRemove()

@@ -87,9 +87,9 @@ public:
    /// Force imparted on a hit object.
    F32 impactForce;
 
+   bool mExplodeOnTmeout;
    /// Should it arc?
    bool isBallistic;
-
    /// How HIGH should it bounce (parallel to normal), [0,1]
    F32 bounceElasticity;
    /// How much momentum should be lost when it bounces (perpendicular to normal), [0,1]
@@ -154,7 +154,10 @@ public:
    ProjectileData(const ProjectileData&, bool = false);
    bool allowSubstitutions() const override { return true; }
 
-   void onShapeChanged() {}
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
 };
 
 
@@ -274,7 +277,7 @@ protected:
    
    LightInfo *mLight;
    LightState mLightState;   
-
+   bool             mHasHit;
    bool             mHasExploded;   ///< Prevent rendering, lighting, and duplicate explosions.
    F32              mFadeValue;     ///< set in processTick, interpolation between fadeDelay and lifetime
                                     ///< in data block

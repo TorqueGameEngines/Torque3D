@@ -460,7 +460,7 @@ PlayerData::PlayerData()
    jumpTowardsNormal = true;
 
    physicsPlayerType = StringTable->EmptyString();
-
+   mControlMap = StringTable->EmptyString();
    dMemset( actionList, 0, sizeof(actionList) );
 }
 
@@ -739,7 +739,9 @@ void PlayerData::initPersistFields()
    endGroup( "Camera" );
 
    addGroup( "Movement" );
-
+      addField("controlMap", TypeString, Offset(mControlMap, PlayerData),
+      "@brief movemap used by these types of objects.\n\n");
+   
       addFieldV( "maxStepHeight", TypeRangedF32, Offset(maxStepHeight, PlayerData), &CommonValidators::PositiveFloat,
          "@brief Maximum height the player can step up.\n\n"
          "The player will automatically step onto changes in ground height less "
@@ -1640,7 +1642,6 @@ Player::Player()
    mLastAbsoluteYaw = 0.0f;
    mLastAbsolutePitch = 0.0f;
    mLastAbsoluteRoll = 0.0f;
-   
    afx_init();
 }
 
@@ -1738,7 +1739,6 @@ bool Player::onAdd()
                            world );
       mPhysicsRep->setTransform( getTransform() );
    }
-
    return true;
 }
 
@@ -1923,7 +1923,7 @@ bool Player::onNewDataBlock( GameBaseData *dptr, bool reload )
    onScaleChanged();
    resetWorldBox();
 
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return true;
 }
 
@@ -2255,12 +2255,6 @@ void Player::advanceTime(F32 dt)
       }
    }
 }
-
-bool Player::getAIMove(Move* move)
-{
-   return false;
-}
-
 void Player::setState(ActionState state, U32 recoverTicks)
 {
    if (state != mState) {

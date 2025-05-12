@@ -852,8 +852,11 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
       // It's sloppy, but it works for now.
       _freeCells();
 
-      if ( isProperlyAdded() )
+      if (isProperlyAdded())
+      {
          _initMaterial();
+         _initShapes();
+      }
    }
 }
 

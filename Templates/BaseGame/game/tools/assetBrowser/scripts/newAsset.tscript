@@ -119,11 +119,7 @@ function AssetBrowser::setupCreateNewAsset(%this, %assetType, %moduleName, %call
    NewAssetPropertiesInspector.addCallbackField("description", "Description", "Command",  "Description of the new asset", "", "", "updateNewAssetField", %this.newAssetSettings);   
    NewAssetPropertiesInspector.endGroup();
    
-   if(%this.isMethod("setupCreateNew"@%assetType))
-   {
-      %command = %this @ ".setupCreateNew"@%assetType @"();";
-      eval(%command);
-   }
+   %this.callAssetTypeFunc(%assetType, "setupCreateNew");
    
    NewAssetPropertiesInspector.refresh();
 }
@@ -255,7 +251,7 @@ function CreateNewAsset()
 		return;
 	}
 	
-	%assetFilePath = eval(AssetBrowser @ ".create"@%assetType@"();");
+	%assetFilePath = AssetBrowser.callAssetTypeFunc(%assetType, "onCreateNew");
 	
 	Canvas.popDialog(AssetBrowser_newAsset);
 	

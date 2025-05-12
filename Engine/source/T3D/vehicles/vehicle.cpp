@@ -141,12 +141,14 @@ VehicleData::VehicleData()
    dMemset( damageEmitterOffset, 0, sizeof( damageEmitterOffset ) );
    dMemset( damageEmitterIDList, 0, sizeof( damageEmitterIDList ) );
    dMemset( damageLevelTolerance, 0, sizeof( damageLevelTolerance ) );
+   mControlMap = StringTable->EmptyString();
 
    numDmgEmitterAreas = 0;
 
    collDamageThresholdVel = 20;
    collDamageMultiplier = 0.05f;
    enablePhysicsRep = true;
+   mControlMap = StringTable->EmptyString();
 }
 
 
@@ -320,7 +322,14 @@ void VehicleData::initPersistFields()
       "velocity).\n\nCurrently unused." );
    endGroup("Collision");
 
+   addGroup("Movement");
+   addField("controlMap", TypeString, Offset(mControlMap, VehicleData),
+      "@brief movemap used by these types of objects.\n\n");
+   endGroup("Movement");
+
    addGroup("Steering");
+   addField("controlMap", TypeString, Offset(mControlMap, VehicleData),
+      "@brief movemap used by these types of objects.\n\n");
       addFieldV( "jetForce", TypeRangedF32, Offset(jetForce, VehicleData), &CommonValidators::PositiveFloat,
          "@brief Additional force applied to the vehicle when it is jetting.\n\n"
          "For WheeledVehicles, the force is applied in the forward direction. For "
@@ -471,7 +480,6 @@ bool Vehicle::onAdd()
 void Vehicle::onRemove()
 {
    SAFE_DELETE(mPhysicsRep);
-
    U32 i=0;
 
    for( i=0; i<VehicleData::VC_NUM_DAMAGE_EMITTERS; i++ )
@@ -496,9 +504,16 @@ void Vehicle::processTick(const Move* move)
 {
    PROFILE_SCOPE( Vehicle_ProcessTick );
 
+   // If we're not being controlled by a client, let the
+   // AI sub-module get a chance at producing a move.
+   Move aiMove;
+   if (!move && isServerObject() && getAIMove(&aiMove))
+      move = &aiMove;
+
    ShapeBase::processTick(move);
    if ( isMounted() )
       return;
+
 
    // Warp to catch up to server
    if (mDelta.warpCount < mDelta.warpTicks)
@@ -726,6 +741,9 @@ void Vehicle::updateMove(const Move* move)
    if (mDamageState == Enabled) {
       setImageTriggerState(0,move->trigger[0]);
       setImageTriggerState(1,move->trigger[1]);
+      //legacy code has trigger 2 and 3 reserved
+      setImageTriggerState(2, move->trigger[4]);
+      setImageTriggerState(3, move->trigger[5]);
    }
 
    // Throttle

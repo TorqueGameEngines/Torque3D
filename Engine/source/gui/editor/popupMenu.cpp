@@ -230,7 +230,7 @@ void PopupMenu::enableItem(S32 pos, bool enable)
 
 void PopupMenu::checkItem(S32 pos, bool checked)
 {
-   if (mMenuItems.empty() || mMenuItems.size() < pos || pos < 0)
+   if (mMenuItems.empty() || mMenuItems.size() <= pos || pos < 0)
       return;
 
    if (checked && mMenuItems[pos].mCheckGroup != -1 && mRadioSelection)

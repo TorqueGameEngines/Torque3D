@@ -1134,7 +1134,7 @@ bool ParticleEmitter::onNewDataBlock( GameBaseData *dptr, bool reload )
      return true;
    }
 
-   scriptOnNewDataBlock();
+   scriptOnNewDataBlock(reload);
    return true;
 }
 

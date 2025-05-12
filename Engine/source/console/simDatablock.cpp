@@ -425,39 +425,42 @@ void SimDataBlock::write(Stream &stream, U32 tabStop, U32 flags)
 // MARK: ---- API ----
 
 //-----------------------------------------------------------------------------
-
-DefineEngineMethod( SimDataBlock, reloadOnLocalClient, void, (),,
-   "Reload the datablock.  This can only be used with a local client configuration." )
+void SimDataBlock::reloadOnLocalClient()
 {
    // Make sure we're running a local client.
 
    GameConnection* localClient = GameConnection::getLocalClientConnection();
-   if( !localClient )
+   if (!localClient)
       return;
 
    // Do an in-place pack/unpack/preload.
 
-   if( !object->preload( true, NetConnection::getErrorBuffer() ) )
+   if (!preload(true, NetConnection::getErrorBuffer()))
    {
-      Con::errorf( NetConnection::getErrorBuffer() );
+      Con::errorf(NetConnection::getErrorBuffer());
       return;
    }
 
-   U8 buffer[ 16384 ];
-   BitStream stream( buffer, 16384 );
+   U8 buffer[16384];
+   BitStream stream(buffer, 16384);
 
-   object->packData( &stream );
+   packData(&stream);
    stream.setPosition(0);
-   object->unpackData( &stream );
+   unpackData(&stream);
 
-   if( !object->preload( false, NetConnection::getErrorBuffer() ) )
+   if (!preload(false, NetConnection::getErrorBuffer()))
    {
-      Con::errorf( NetConnection::getErrorBuffer() );
+      Con::errorf(NetConnection::getErrorBuffer());
       return;
    }
 
    // Trigger a post-apply so that change notifications respond.
-   object->inspectPostApply();
+   inspectPostApply();
+}
+DefineEngineMethod( SimDataBlock, reloadOnLocalClient, void, (),,
+   "Reload the datablock.  This can only be used with a local client configuration." )
+{
+   object->reloadOnLocalClient();
 }
 
 //-----------------------------------------------------------------------------

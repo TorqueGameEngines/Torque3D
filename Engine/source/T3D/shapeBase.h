@@ -88,6 +88,8 @@ class ShapeBase;
 class SFXSource;
 class SFXTrack;
 class SFXProfile;
+struct AIController;
+struct AIControllerData;
 
 typedef void* Light;
 
@@ -378,7 +380,7 @@ struct ShapeBaseImageData: public GameBaseData {
    F32 scriptAnimTransitionTime;    ///< The amount of time to transition between the previous sequence and new sequence
                                     ///< when the script prefix has changed.
 
-   DECLARE_SHAPEASSET_ARRAY(ShapeBaseImageData, Shape, MaxShapes);  ///< Name of shape to render.
+   DECLARE_SHAPEASSET_ARRAY(ShapeBaseImageData, Shape, MaxShapes, onShapeChanged);  ///< Name of shape to render.
    DECLARE_ASSET_ARRAY_SETGET(ShapeBaseImageData, Shape);
 
    //DECLARE_SHAPEASSET(ShapeBaseImageData, ShapeFP);  ///< Name of shape to render in first person (optional).
@@ -505,6 +507,11 @@ struct ShapeBaseImageData: public GameBaseData {
 
    void handleStateSoundTrack(const U32& stateId);
 
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
+
    /// @}
 
    /// @name Callbacks
@@ -555,6 +562,7 @@ public:
    U32 cubeDescId;
    ReflectorDesc *reflectorDesc;
 
+   AIControllerData* mAIControllData;
    /// @name Destruction
    ///
    /// Everyone likes to blow things up!
@@ -579,6 +587,8 @@ public:
    F32 density;
    F32 maxEnergy;
    F32 maxDamage;
+   F32 mCollisionMul;
+   F32 mImpactMul;
    F32 repairRate;                  ///< Rate per tick.
 
    F32 disabledLevel;
@@ -681,8 +691,8 @@ public:
    Vector<TextureTagRemapping> txr_tag_remappings;
    bool silent_bbox_check;
 
-   void onShapeChanged() {}
-   void onDebrisChanged() {}
+   void onShapeChanged();
+   void onDebrisChanged();
 public:
    ShapeBaseData(const ShapeBaseData&, bool = false);
 };
@@ -1754,6 +1764,11 @@ public:
    /// Returns true if this object is controlling by something
    bool isControlled() { return(mIsControlled); }
 
+   AIController* mAIController;
+   bool setAIController(SimObjectId controller);
+   AIController* getAIController() { return mAIController; };
+   virtual bool getAIMove(Move* move);
+
    /// Returns true if this object is being used as a camera in first person
    bool isFirstPerson() const;
 
@@ -1895,7 +1910,6 @@ public:
    void   registerCollisionCallback(CollisionEventCallback*);
    void   unregisterCollisionCallback(CollisionEventCallback*);
 
-protected:
    enum { 
       ANIM_OVERRIDDEN     = BIT(0),
       BLOCK_USER_CONTROL  = BIT(1),
@@ -1903,6 +1917,8 @@ protected:
       BAD_ANIM_ID         = 999999999,
       BLENDED_CLIP        = 0x80000000,
    };
+   U8 anim_clip_flags;
+protected:
    struct BlendThread
    {
       TSThread* thread;
@@ -1910,7 +1926,6 @@ protected:
    };
    Vector<BlendThread> blend_clips;
    static U32 unique_anim_tag_counter;
-   U8 anim_clip_flags;
    S32 last_anim_id;
    U32 last_anim_tag;
    U32 last_anim_lock_tag;

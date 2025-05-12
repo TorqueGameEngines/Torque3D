@@ -74,7 +74,10 @@ struct WheeledVehicleTire: public SimDataBlock
    void packData(BitStream* stream) override;
    void unpackData(BitStream* stream) override;
 
-   void onShapeChanged() {}
+   void onShapeChanged()
+   {
+      reloadOnLocalClient();
+   }
 };
 
 

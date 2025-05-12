@@ -27,6 +27,8 @@
 #include "T3D/rigidShape.h"
 #endif
 
+#include "T3D/AI/AIController.h"
+
 class ParticleEmitter;
 class ParticleEmitterData;
 class ClippedPolyList;
@@ -70,6 +72,7 @@ struct VehicleData : public RigidShapeData
    F32 numDmgEmitterAreas;
 
    bool enablePhysicsRep;
+   StringTableEntry mControlMap;
 
    //
    VehicleData();
@@ -98,7 +101,6 @@ class Vehicle : public RigidShape
    Point2F mSteering;
    F32 mThrottle;
    bool mJetting;
-
    GFXStateBlockRef  mSolidSB;
 
    SimObjectPtr<ParticleEmitter> mDamageEmitterList[VehicleData::VC_NUM_DAMAGE_EMITTERS];
@@ -145,6 +147,9 @@ public:
    void processTick(const Move *move) override;
    bool onAdd() override;
    void onRemove() override;
+
+   Point2F getSteering() { return mSteering; };
+   F32 getThrottle() { return mThrottle;};
 
    /// Interpolates between move ticks @see processTick
    /// @param   dt   Change in time between the last call and this call to the function

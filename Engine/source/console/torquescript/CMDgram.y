@@ -102,10 +102,6 @@ struct Token
    IfStmtNode*             ifnode;
 }
 
-
-%destructor { dFree($$.value); } <s>
-%destructor { dFree($$.value); } <str>
-
 %type <s>      parent_block
 %type <ifnode> case_block
 %type <stmt>   switch_stmt

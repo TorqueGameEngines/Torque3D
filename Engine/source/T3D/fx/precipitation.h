@@ -49,13 +49,11 @@ class PrecipitationData : public GameBaseData
      DECLARE_SOUNDASSET(PrecipitationData, Sound);
      DECLARE_ASSET_SETGET(PrecipitationData, Sound);
 
-      DECLARE_IMAGEASSET(PrecipitationData, Drop, onDropChanged, GFXStaticTextureSRGBProfile); ///< Texture for drop particles
-      DECLARE_ASSET_SETGET(PrecipitationData, Drop);
+      DECLARE_IMAGEASSET(PrecipitationData, Drop, GFXStaticTextureSRGBProfile) ///< Texture for drop particles
 
       StringTableEntry mDropShaderName;   ///< The name of the shader used for raindrops
 
-      DECLARE_IMAGEASSET(PrecipitationData, Splash, onSplashChanged, GFXStaticTextureSRGBProfile); ///< Texture for splash particles
-      DECLARE_ASSET_SETGET(PrecipitationData, Splash);
+      DECLARE_IMAGEASSET(PrecipitationData, Splash, GFXStaticTextureSRGBProfile) ///< Texture for splash particles
 
       StringTableEntry mSplashShaderName; ///< The name of the shader used for raindrops
 
@@ -68,15 +66,6 @@ class PrecipitationData : public GameBaseData
       static void  initPersistFields();
       void packData(BitStream* stream) override;
       void unpackData(BitStream* stream) override;
-
-      void onDropChanged()
-      {
-         reloadOnLocalClient();
-      }
-      void onSplashChanged()
-      {
-         reloadOnLocalClient();
-      }
 };
 
 struct Raindrop

@@ -696,7 +696,7 @@ bool GuiWindowCtrl::onWake()
       return false;
    }
 
-   mTextureObject = mProfile->getBitmapResource();
+   mTextureObject = mProfile->getBitmap();
 
    mBitmapBounds = mProfile->mBitmapArrayRects.address();
    S32 buttonHeight = mBitmapBounds[(U32)BmpStates * (U32)BmpClose].extent.y;

@@ -17,8 +17,7 @@ private:
 
 protected:
 
-   DECLARE_IMAGEASSET(GuiChunkedBitmapCtrl, Bitmap, onImageChanged, GFXDefaultGUIProfile);
-   DECLARE_ASSET_SETGET(GuiChunkedBitmapCtrl, Bitmap);
+   DECLARE_IMAGEASSET(GuiChunkedBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
 
    bool  mUseVariable;
    bool  mTile;
@@ -38,6 +37,4 @@ public:
    void setBitmap(const char *name);
 
    void onRender(Point2I offset, const RectI &updateRect) override;
-
-   void onImageChanged() {}
 };

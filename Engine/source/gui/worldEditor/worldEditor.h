@@ -328,12 +328,9 @@ class WorldEditor : public EditTSCtrl
       ColorI            mPopupBackgroundColor;
       ColorI            mPopupTextColor;
 
-      DECLARE_IMAGEASSET(WorldEditor, SelectHandle, onSelectHandleChanged, GFXStaticTextureSRGBProfile);
-      DECLARE_ASSET_SETGET(WorldEditor, SelectHandle);
-      DECLARE_IMAGEASSET(WorldEditor, DefaultHandle, onDefaultHandleChanged, GFXStaticTextureSRGBProfile);
-      DECLARE_ASSET_SETGET(WorldEditor, DefaultHandle);
-      DECLARE_IMAGEASSET(WorldEditor, LockedHandle, onLockedHandleChanged, GFXStaticTextureSRGBProfile);
-      DECLARE_ASSET_SETGET(WorldEditor, LockedHandle);
+      DECLARE_IMAGEASSET(WorldEditor, SelectHandle, GFXStaticTextureSRGBProfile)
+      DECLARE_IMAGEASSET(WorldEditor, DefaultHandle, GFXStaticTextureSRGBProfile)
+      DECLARE_IMAGEASSET(WorldEditor, LockedHandle, GFXStaticTextureSRGBProfile)
 
       ColorI            mObjectTextColor;
       bool              mObjectsUseBoxCenter;
@@ -425,10 +422,6 @@ class WorldEditor : public EditTSCtrl
 
       void setEditorTool(EditorTool*);
       EditorTool* getActiveEditorTool() { return mActiveEditorTool; }
-
-      void onSelectHandleChanged() {}
-      void onDefaultHandleChanged() {}
-      void onLockedHandleChanged() {}
 };
 
 typedef WorldEditor::DropType WorldEditorDropType;

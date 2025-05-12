@@ -392,69 +392,54 @@ void ProcessedMaterial::_setStageData()
    for (i = 0; i < Material::MAX_STAGES; i++)
    {
       // DiffuseMap
-      if (mMaterial->mDiffuseMapAsset[i] && !mMaterial->mDiffuseMapAsset[i].isNull())
+      if (mMaterial->getDiffuseMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_DiffuseMap, mMaterial->getDiffuseMapResource(i));
+         mStages[i].setTex(MFT_DiffuseMap, mMaterial->getDiffuseMap(i));
          if (!mStages[i].getTex(MFT_DiffuseMap))
          {
             // If we start with a #, we're probably actually attempting to hit a named target and it may not get a hit on the first pass.
-            if (!String(mMaterial->mDiffuseMapAsset[i]->getImageFileName()).startsWith("#") && !String(mMaterial->mDiffuseMapAsset[i]->getImageFileName()).startsWith("$"))
-               mMaterial->logError("Failed to load diffuse map %s for stage %i", mMaterial->mDiffuseMapAsset[i]->getImageFileName(), i);
+            if (!mMaterial->getDiffuseMapAsset(i)->isNamedTarget())
+               mMaterial->logError("Failed to load diffuse map %s for stage %i", mMaterial->getDiffuseMapAsset(i)->getImageFile(), i);
 
-            mStages[i].setTex(MFT_DiffuseMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXStaticTextureSRGBProfile));
-         }
-      }
-      else if (mMaterial->mDiffuseMapName[i] != StringTable->EmptyString())
-      {
-         mStages[i].setTex(MFT_DiffuseMap, _createTexture(mMaterial->mDiffuseMapName[i], &GFXStaticTextureSRGBProfile));
-         if (!mStages[i].getTex(MFT_DiffuseMap))
-         {
-            //If we start with a #, we're probably actually attempting to hit a named target and it may not get a hit on the first pass.
-            if (!String(mMaterial->mDiffuseMapName[i]).startsWith("#") && !String(mMaterial->mDiffuseMapName[i]).startsWith("$"))
-               mMaterial->logError("Failed to load diffuse map %s for stage %i", mMaterial->mDiffuseMapName[i], i);
-
-            // Load a debug texture to make it clear to the user 
-            // that the texture for this stage was missing.
             mStages[i].setTex(MFT_DiffuseMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXStaticTextureSRGBProfile));
          }
       }
       // OverlayMap
-      if (mMaterial->getOverlayMap(i) != StringTable->EmptyString())
+      if (mMaterial->getOverlayMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_OverlayMap, mMaterial->getOverlayMapResource(i));
+         mStages[i].setTex(MFT_OverlayMap, mMaterial->getOverlayMap(i));
          if (!mStages[i].getTex(MFT_OverlayMap))
-            mMaterial->logError("Failed to load overlay map %s for stage %i", mMaterial->getOverlayMap(i), i);
+            mMaterial->logError("Failed to load overlay map %s for stage %i", mMaterial->_getOverlayMap(i), i);
       }
 
       // LightMap
-      if (mMaterial->getLightMap(i) != StringTable->EmptyString())
+      if (mMaterial->getLightMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_LightMap, mMaterial->getLightMapResource(i));
+         mStages[i].setTex(MFT_LightMap, mMaterial->getLightMap(i));
          if (!mStages[i].getTex(MFT_LightMap))
-            mMaterial->logError("Failed to load light map %s for stage %i", mMaterial->getLightMap(i), i);
+            mMaterial->logError("Failed to load light map %s for stage %i", mMaterial->_getLightMap(i), i);
       }
 
       // ToneMap
-      if (mMaterial->getToneMap(i) != StringTable->EmptyString())
+      if (mMaterial->getToneMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_ToneMap, mMaterial->getToneMapResource(i));
+         mStages[i].setTex(MFT_ToneMap, mMaterial->getToneMap(i));
          if (!mStages[i].getTex(MFT_ToneMap))
-            mMaterial->logError("Failed to load tone map %s for stage %i", mMaterial->getToneMap(i), i);
+            mMaterial->logError("Failed to load tone map %s for stage %i", mMaterial->_getToneMap(i), i);
       }
 
       // DetailMap
-      if (mMaterial->getDetailMap(i) != StringTable->EmptyString())
+      if (mMaterial->getDetailMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_DetailMap, mMaterial->getDetailMapResource(i));
+         mStages[i].setTex(MFT_DetailMap, mMaterial->getDetailMap(i));
          if (!mStages[i].getTex(MFT_DetailMap))
-            mMaterial->logError("Failed to load detail map %s for stage %i", mMaterial->getDetailMap(i), i);
+            mMaterial->logError("Failed to load detail map %s for stage %i", mMaterial->_getDetailMap(i), i);
       }
 
       // NormalMap
-      if (mMaterial->mNormalMapAsset[i] && !mMaterial->mNormalMapAsset[i].isNull())
+      if (mMaterial->getNormalMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_NormalMap, mMaterial->getNormalMapResource(i));
-         //mStages[i].setTex(MFT_DiffuseMap, _createTexture(mMaterial->getDiffuseMap(i), &GFXStaticTextureSRGBProfile));
+         mStages[i].setTex(MFT_NormalMap, mMaterial->getNormalMap(i));
          if (!mStages[i].getTex(MFT_NormalMap))
          {
             // Load a debug texture to make it clear to the user 
@@ -462,24 +447,13 @@ void ProcessedMaterial::_setStageData()
             mStages[i].setTex(MFT_NormalMap, _createTexture(GFXTextureManager::getMissingTexturePath().c_str(), &GFXNormalMapProfile));
          }
       }
-      else if (mMaterial->mNormalMapName[i] != StringTable->EmptyString())
-      {
-         mStages[i].setTex(MFT_NormalMap, _createTexture(mMaterial->mNormalMapName[i], &GFXNormalMapProfile));
-         if (!mStages[i].getTex(MFT_NormalMap))
-         {
-            //If we start with a #, we're probably actually attempting to hit a named target and it may not get a hit on the first pass. So we'll
-            //pass on the error rather than spamming the console
-            if (!String(mMaterial->mNormalMapName[i]).startsWith("#"))
-               mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->mNormalMapName[i], i);
-         }
-      }
 
       // Detail Normal Map
-      if (mMaterial->getDetailNormalMap(i) != StringTable->EmptyString())
+      if (mMaterial->getDetailNormalMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_DetailNormalMap, mMaterial->getDetailNormalMapResource(i));
+         mStages[i].setTex(MFT_DetailNormalMap, mMaterial->getDetailNormalMap(i));
          if (!mStages[i].getTex(MFT_DetailNormalMap))
-            mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->getDetailNormalMap(i), i);
+            mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->_getDetailNormalMap(i), i);
       }
 
       //depending on creation method this may or may not have been shoved into srgb space eroneously
@@ -488,33 +462,33 @@ void ProcessedMaterial::_setStageData()
          profile = &GFXStaticTextureSRGBProfile;
 
       // ORMConfig
-      if (mMaterial->getORMConfigMap(i) != StringTable->EmptyString())
+      if (mMaterial->getORMConfigMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_OrmMap, _createTexture(mMaterial->getORMConfigMap(i), profile));
+         mStages[i].setTex(MFT_OrmMap, mMaterial->getORMConfigMap(profile, i));
          if (!mStages[i].getTex(MFT_OrmMap))
-            mMaterial->logError("Failed to load PBR Config map %s for stage %i", mMaterial->getORMConfigMap(i), i);
+            mMaterial->logError("Failed to load PBR Config map %s for stage %i", mMaterial->_getORMConfigMap(i), i);
       }
       else
       {
-         if ((mMaterial->getAOMap(i) != StringTable->EmptyString()) || (mMaterial->getRoughMap(i) != StringTable->EmptyString()) || (mMaterial->getMetalMap(i) != StringTable->EmptyString()))
+         if ((mMaterial->getAOMapAsset(i).notNull()) || (mMaterial->getRoughMapAsset(i).notNull()) || (mMaterial->getMetalMapAsset(i).notNull()))
          {
             U32 inputKey[4];
             inputKey[0] = mMaterial->mAOChan[i];
             inputKey[1] = mMaterial->mRoughnessChan[i];
             inputKey[2] = mMaterial->mMetalChan[i];
             inputKey[3] = 0;
-            mStages[i].setTex(MFT_OrmMap, _createCompositeTexture( mMaterial->getAOMap(i), mMaterial->getRoughMap(i),
-               mMaterial->getMetalMap(i), "",
+            mStages[i].setTex(MFT_OrmMap, _createCompositeTexture( mMaterial->getAOMapAsset(i)->getImageFile(), mMaterial->getRoughMapAsset(i)->getImageFile(),
+               mMaterial->getMetalMapAsset(i)->getImageFile(), "",
                inputKey, profile));
             if (!mStages[i].getTex(MFT_OrmMap))
                mMaterial->logError("Failed to dynamically create ORM Config map for stage %i", i);
          }
       }
-      if (mMaterial->getGlowMap(i) != StringTable->EmptyString())
+      if (mMaterial->getGlowMapAsset(i).notNull())
       {
-         mStages[i].setTex(MFT_GlowMap, mMaterial->getGlowMapResource(i));
+         mStages[i].setTex(MFT_GlowMap, mMaterial->getGlowMap(i));
          if (!mStages[i].getTex(MFT_GlowMap))
-            mMaterial->logError("Failed to load glow map %s for stage %i", mMaterial->getGlowMap(i), i);
+            mMaterial->logError("Failed to load glow map %s for stage %i", mMaterial->_getGlowMap(i), i);
       }
    }
 

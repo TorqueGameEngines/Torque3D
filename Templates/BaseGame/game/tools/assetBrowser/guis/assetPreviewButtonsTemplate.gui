@@ -68,7 +68,7 @@ $guiContent = new GuiControl(AssetPreviewButtonsTemplate) {
          canSaveDynamicFields = "0";
 
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+            bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
             bitmapMode = "Stretched";
             autoFitExtents = "0";
             useModifiers = "0";
@@ -163,7 +163,7 @@ $guiContent = new GuiControl(AssetPreviewButtonsTemplate) {
       canSaveDynamicFields = "0";
 
       new GuiBitmapButtonCtrl() {
-         bitmap = "Data/Blockout_Basics/Walls/WallGrid2x2_Albedo.png";
+         bitmapAsset = "Data/Blockout_Basics/Walls/WallGrid2x2_Albedo.png";
          bitmapMode = "Stretched";
          autoFitExtents = "0";
          useModifiers = "0";
@@ -188,7 +188,7 @@ $guiContent = new GuiControl(AssetPreviewButtonsTemplate) {
          canSaveDynamicFields = "0";
 
          new GuiBitmapButtonCtrl() {
-            bitmap = "tools/materialEditor/gui/cubemapBtnBorder";
+            bitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
             bitmapMode = "Stretched";
             autoFitExtents = "0";
             useModifiers = "0";

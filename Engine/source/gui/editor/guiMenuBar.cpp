@@ -410,7 +410,7 @@ void GuiMenuBar::onRender(Point2I offset, const RectI &updateRect)
          bitmapstart.y = mMenuList[i].bounds.point.y + (mMenuList[i].bounds.extent.y - rect.extent.y) / 2;
 
          drawUtil->clearBitmapModulation();
-         drawUtil->drawBitmapSR(mProfile->getBitmapResource(), offset + bitmapstart, rect);
+         drawUtil->drawBitmapSR(mProfile->getBitmap(), offset + bitmapstart, rect);
 
          // Should we also draw the text?
          if (!mMenuList[i].drawBitmapOnly)
@@ -526,10 +526,22 @@ void GuiMenuBar::processTick()
 
 void GuiMenuBar::insert(SimObject* pObject, S32 pos)
 {
-   PopupMenu* menu = dynamic_cast<PopupMenu*>(pObject);
+   PopupMenu* menu = nullptr;
+   if (pObject != nullptr)
+   {
+      menu = dynamic_cast<PopupMenu*>(pObject);
+   }
+
    if (menu == nullptr)
    {
-      Con::errorf("GuiMenuBar::insert() - attempted to insert non-popupMenu object: %d", pObject->getId());
+      if (pObject != nullptr)
+      {
+         Con::errorf("GuiMenuBar::insert() - attempted to insert non-popupMenu object: %d", pObject->getId());
+      }
+      else
+      {
+         Con::errorf("GuiMenuBar::insert() - attempted to insert a nullptr object.");
+      }
       return;
    }
 
@@ -552,10 +564,22 @@ void GuiMenuBar::insert(SimObject* pObject, S32 pos)
 
 void GuiMenuBar::remove(SimObject* pObject)
 {
-   PopupMenu* menu = dynamic_cast<PopupMenu*>(pObject);
+   PopupMenu* menu = nullptr;
+   if (pObject != nullptr)
+   {
+      menu = dynamic_cast<PopupMenu*>(pObject);
+   }
+
    if (menu == nullptr)
    {
-      Con::errorf("GuiMenuBar::remove() - attempted to remove non-popupMenu object: %d", pObject->getId());
+      if (pObject != nullptr)
+      {
+         Con::errorf("GuiMenuBar::insert() - attempted to insert non-popupMenu object: %d", pObject->getId());
+      }
+      else
+      {
+         Con::errorf("GuiMenuBar::insert() - attempted to insert a nullptr object.");
+      }
       return;
    }
 

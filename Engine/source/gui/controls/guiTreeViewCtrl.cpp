@@ -3781,7 +3781,7 @@ void GuiTreeViewCtrl::onRenderCell(Point2I offset, Point2I cell, bool, bool )
    if( ( bitmap >= 0 ) && ( bitmap < mProfile->mBitmapArrayRects.size() ) )
    {
       if( drawBitmap )
-         drawer->drawBitmapSR( mProfile->getBitmapResource(), drawRect.point, mProfile->mBitmapArrayRects[bitmap] );
+         drawer->drawBitmapSR( mProfile->getBitmap(), drawRect.point, mProfile->mBitmapArrayRects[bitmap] );
       newOffset = mProfile->mBitmapArrayRects[bitmap].extent.x;
    }
 

@@ -78,8 +78,6 @@ bool afxZodiacData::sPreferDestinationGradients = false;
 
 afxZodiacData::afxZodiacData()
 {
-   INIT_ASSET(Texture);
-
   radius_xy = 1;
   vert_range.set(0.0f, 0.0f);
   start_ang = 0;
@@ -120,7 +118,7 @@ afxZodiacData::afxZodiacData()
 
 afxZodiacData::afxZodiacData(const afxZodiacData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-   CLONE_ASSET(Texture);
+   CLONE_ASSET_REFACTOR(Texture);
 
   radius_xy = other.radius_xy;
   vert_range = other.vert_range;
@@ -158,7 +156,7 @@ void afxZodiacData::initPersistFields()
 {
    docsURL;
    INITPERSISTFIELD_IMAGEASSET(Texture, afxZodiacData, "An image to use as the zodiac's texture.");
-  addFieldV("radius",                TypeRangedF32,        Offset(radius_xy,         afxZodiacData), &CommonValidators::PositiveFloat,
+  addField("radius",                TypeF32,        Offset(radius_xy,         afxZodiacData),
     "The zodiac's radius in scene units.");
   addField("verticalRange",         TypePoint2F,    Offset(vert_range,        afxZodiacData),
     "For interior zodiacs only, verticalRange specifies distances above and below the "
@@ -270,7 +268,7 @@ void afxZodiacData::packData(BitStream* stream)
 
   merge_zflags();
 
-  PACKDATA_ASSET(Texture);
+  PACKDATA_ASSET_REFACTOR(Texture);
   stream->write(radius_xy);
   stream->write(vert_range.x);
   stream->write(vert_range.y);
@@ -295,7 +293,7 @@ void afxZodiacData::unpackData(BitStream* stream)
 {
   Parent::unpackData(stream);
 
-  UNPACKDATA_ASSET(Texture);
+  UNPACKDATA_ASSET_REFACTOR(Texture);
   stream->read(&radius_xy);
   stream->read(&vert_range.x);
   stream->read(&vert_range.y);
@@ -326,22 +324,11 @@ bool afxZodiacData::preload(bool server, String &errorStr)
   if (vert_range.x == 0.0f && vert_range.y == 0.0f)
     vert_range.x = vert_range.y = radius_xy;
 
-  if (mTextureAssetId != StringTable->EmptyString())
+  if (mTextureAsset.notNull())
   {
-     mTextureAsset = mTextureAssetId;
-     if (mTextureAsset.notNull())
-     {
-        if (getTexture() != StringTable->EmptyString() && mTextureName != StringTable->insert("texhandle"))
-        {
-           if (mTextureAsset.notNull())
-           {
-              mTextureAsset->getChangedSignal().notify(this, &afxZodiacData::onImageChanged);
-           }
-
-           mTexture.set(getTexture(), mTextureProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
-        }
-     }
+     getTexture();
   }
+
   return true;
 }
 
@@ -358,21 +345,9 @@ void afxZodiacData::onStaticModified(const char* slot, const char* newValue)
 
 void afxZodiacData::onPerformSubstitutions() 
 {
-   if (mTextureAssetId != StringTable->EmptyString())
+   if (mTextureAsset.notNull())
    {
-      mTextureAsset = mTextureAssetId;
-      if (mTextureAsset.notNull())
-      {
-         if (getTexture() != StringTable->EmptyString() && mTextureName != StringTable->insert("texhandle"))
-         {
-            if (mTextureAsset.notNull())
-            {
-               mTextureAsset->getChangedSignal().notify(this, &afxZodiacData::onImageChanged);
-            }
-               
-            mTexture.set(getTexture(), mTextureProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
-         }
-      }
+      getTexture();
    }
 }
 

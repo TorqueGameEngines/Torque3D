@@ -106,10 +106,7 @@ class LevelInfo : public NetObject
       void _onLMActivate(const char *lm, bool enable);
    protected:
 
-      DECLARE_IMAGEASSET(LevelInfo, AccuTexture, onAccuTextureChanged, GFXStaticTextureSRGBProfile);
-      DECLARE_ASSET_SETGET(LevelInfo, AccuTexture);
-
-      void onAccuTextureChanged() {}
+      DECLARE_IMAGEASSET(LevelInfo, AccuTexture, GFXStaticTextureSRGBProfile)
 
    public:
 
@@ -146,8 +143,7 @@ class LevelInfo : public NetObject
 
       U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
       void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
-      static bool _setLevelAccuTexture(void *object, const char *index, const char *data);
-      void setLevelAccuTexture(StringTableEntry name);
+      void setLevelAccuTexture();
       /// @}
 };
 

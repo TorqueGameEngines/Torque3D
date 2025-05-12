@@ -4846,7 +4846,7 @@ $guiContent = new GuiControl(MaterialEditorGui,EditorGuiGroup) {
             tooltipprofile = "ToolsGuiToolTipProfile";
             buttonType = "PushButton";
             useMouseEvents = "0";
-            bitmap = "ToolsModule:new_n_image";
+            bitmapAsset = "ToolsModule:new_n_image";
          };
          // Save Button
          new GuiBitmapButtonCtrl() {

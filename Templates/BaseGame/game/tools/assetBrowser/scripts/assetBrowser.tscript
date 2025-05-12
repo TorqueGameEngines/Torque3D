@@ -2765,7 +2765,6 @@ function getAssetPreviewImage(%asset)
       %moduleName = AssetDatabase.getAssetModule(%asset).ModuleId;
       %assetName = AssetDatabase.getAssetName(%asset);
       %previewAssetName = "ToolsModule:" @ %moduleName @ "_" @ %assetName @ "_PreviewImage";
-      
       if(AssetDatabase.isDeclaredAsset(%previewAssetName))
       {
          %previewDef = AssetDatabase.acquireAsset(%previewAssetName);  

@@ -374,7 +374,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
 
          // We only include materials that 
          // have more than a base texture.
-         if (!(mat->DetailMapValid() && mat->getDetailSize() > 0 && mat->getDetailDistance()>0))
+         if (!(mat->getDetailMap() && mat->getDetailSize() > 0 && mat->getDetailDistance()>0))
             continue;
 
          if (deferredMat)
@@ -382,12 +382,12 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
          features.addFeature(MFT_TerrainDetailMap, featureIndex);
 
          // check for macro detail texture
-         if (mat->MacroMapValid() && mat->getMacroSize() > 0 && mat->getMacroDistance() > 0)
+         if (mat->getMacroMap() && mat->getMacroSize() > 0 && mat->getMacroDistance() > 0)
          {
             features.addFeature(MFT_TerrainMacroMap, featureIndex);
          }
 
-         if (mat->ORMConfigMapValid())
+         if (mat->getORMConfigMap())
          {
             features.addFeature(MFT_TerrainORMMap, featureIndex);
          }
@@ -401,12 +401,12 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
 
 
          // Skip normal maps if we need to.
-         if (!disableNormalMaps && mat->NormalMapValid())
+         if (!disableNormalMaps && mat->getNormalMap())
          {
             normalMaps.increment();
             features.addFeature(MFT_TerrainNormalMap, featureIndex);
 
-            normalMaps.last() = mat->getNormalMapResource();
+            normalMaps.last() = mat->getNormalMap();
 
             GFXFormat normalFmt = normalMaps.last().getFormat();
             if (normalFmt == GFXFormatBC3)
@@ -632,7 +632,7 @@ bool TerrainCellMaterial::_initShader(bool deferredMat,
 
       // We only include materials that 
       // have more than a base texture.
-      if (!(mat->DetailMapValid() && mat->getDetailSize() > 0 && mat->getDetailDistance() > 0))
+      if (!(mat->getDetailMap() && mat->getDetailSize() > 0 && mat->getDetailDistance() > 0))
          continue;
 
       mMaterialInfos[i]->mBlendDepthConst = mShader->getShaderConstHandle(avar("$blendDepth%d", i));
@@ -676,7 +676,7 @@ void TerrainCellMaterial::_updateMaterialConsts( )
       if (mat == NULL)
          continue;
 
-      if (!(mat->DetailMapValid() && mat->getDetailSize() > 0 && mat->getDetailDistance() > 0))
+      if (!(mat->getDetailMap() && mat->getDetailSize() > 0 && mat->getDetailDistance() > 0))
          continue;
 
       detailMatCount++;
@@ -704,7 +704,7 @@ void TerrainCellMaterial::_updateMaterialConsts( )
       if (mat == NULL)
          continue;
 
-      if (!(mat->DetailMapValid() && mat->getDetailSize() > 0 && mat->getDetailDistance() > 0))
+      if (!(mat->getDetailMap() && mat->getDetailSize() > 0 && mat->getDetailDistance() > 0))
          continue;
 
       F32 detailSize = matInfo->mat->getDetailSize();

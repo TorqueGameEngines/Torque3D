@@ -49,7 +49,7 @@
 /// To implement different handlers for the modifier states, use the "onDefaultClick",
 /// "onCtrlClick", "onAltClick", and "onShiftClick" methods.
 ///
-class GuiBitmapButtonCtrl : public GuiButtonCtrl
+class GuiBitmapButtonCtrl : public GuiButtonCtrl, protected AssetPtrCallback
 {
    public:
    
@@ -118,9 +118,35 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       ///
       BitmapMode mBitmapMode;
 
-      DECLARE_IMAGEASSET(GuiBitmapButtonCtrl, Bitmap, onBitmapChange, GFXDefaultGUIProfile);
-      DECLARE_ASSET_SETGET(GuiBitmapButtonCtrl, Bitmap);
-      
+private: AssetPtr<ImageAsset> mBitmapAsset; public: void _setBitmap(StringTableEntry _in) {
+   if (mBitmapAsset.getAssetId() == _in) return; if (!AssetDatabase.isDeclaredAsset(_in)) {
+      StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback; AssetQuery query; S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in); if (foundAssetcount != 0) {
+         imageAssetId = query.mAssetList[0];
+      } mBitmapAsset = imageAssetId;
+   }
+   else {
+      mBitmapAsset = _in;
+      mBitmapName = _in;
+      mBitmap = getBitmap();
+   }
+}; inline StringTableEntry _getBitmap(void) const {
+   return mBitmapAsset.getAssetId();
+} GFXTexHandle getBitmap() {
+   return mBitmapAsset.notNull() ? mBitmapAsset->getTexture(&GFXDefaultGUIProfile) : 0;
+} AssetPtr<ImageAsset> getBitmapAsset(void) {
+   return mBitmapAsset;
+} static bool _setBitmapData(void* obj, const char* index, const char* data) {
+   static_cast<GuiBitmapButtonCtrl*>(obj)->_setBitmap(_getStringTable()->insert(data)); return false;
+}
+protected:
+
+      void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
+      {
+         setBitmap(mBitmapName);
+      }
+
+      GFXTexHandle mBitmap;
+      StringTableEntry mBitmapName;
       /// alpha masking
       bool mMasked;
       
@@ -158,11 +184,6 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       
       /// @}
 
-      void onBitmapChange()
-      {
-         setBitmap(getBitmap());
-      }
-
    public:
                            
       GuiBitmapButtonCtrl();
@@ -185,14 +206,6 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl
       DECLARE_CONOBJECT(GuiBitmapButtonCtrl);
       DECLARE_DESCRIPTION( "A button control rendered entirely from bitmaps.\n"
                            "The individual button states are represented with separate bitmaps." );
-
-      //Basically a wrapper function to do our special state handling setup when the fields change
-      static bool _setBitmapFieldData(void* obj, const char* index, const char* data)
-      {
-         GuiBitmapButtonCtrl* object = static_cast<GuiBitmapButtonCtrl*>(obj); 
-         object->setBitmap(StringTable->insert(data)); 
-         return false; 
-      }
 };
 
 typedef GuiBitmapButtonCtrl::BitmapMode GuiBitmapMode;

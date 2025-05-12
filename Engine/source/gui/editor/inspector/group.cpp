@@ -663,7 +663,7 @@ void GuiInspectorGroup::addInspectorField(StringTableEntry name, StringTableEntr
       else if (typeName == StringTable->insert("material"))
          fieldType = TypeMaterialAssetId;
       else if (typeName == StringTable->insert("image"))
-         fieldType = TypeImageAssetId;
+         fieldType = TypeImageAssetPtr;
       else if (typeName == StringTable->insert("shape"))
          fieldType = TypeShapeAssetId;
       else if (typeName == StringTable->insert("sound"))

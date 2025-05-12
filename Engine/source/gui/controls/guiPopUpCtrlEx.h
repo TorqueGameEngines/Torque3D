@@ -131,9 +131,8 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
       NumBitmapModes = 2
    };
 
-   DECLARE_IMAGEASSET_ARRAY(GuiPopUpMenuCtrlEx, Bitmap, NumBitmapModes, onBitmapChanged);
-   DECLARE_IMAGEASSET_ARRAY_SETGET(GuiPopUpMenuCtrlEx, Bitmap);
-   void onBitmapChanged() {}
+   DECLARE_IMAGEASSET_ARRAY(GuiPopUpMenuCtrlEx, Bitmap, GFXDefaultGUIProfile, NumBitmapModes)
+
    Point2I mBitmapBounds; //  Added
 
 	S32 mIdMax;

@@ -278,9 +278,6 @@ GuiPopUpMenuCtrl::GuiPopUpMenuCtrl(void)
    mBackgroundCancel = false; //  Added
    mReverseTextList = false; //  Added - Don't reverse text list if displaying up
 
-   INIT_IMAGEASSET_ARRAY(Bitmap, GFXDefaultGUIProfile, 0);
-   INIT_IMAGEASSET_ARRAY(Bitmap, GFXDefaultGUIProfile, 1);
-
    mBitmapBounds.set(16, 16); //  Added
    mIdMax = -1;
    mBackground = NULL;
@@ -302,8 +299,7 @@ void GuiPopUpMenuCtrl::initPersistFields(void)
    addField("sbUsesNAColor",            TypeBool,         Offset(mRenderScrollInNA, GuiPopUpMenuCtrl));
    addField("reverseTextList",          TypeBool,         Offset(mReverseTextList, GuiPopUpMenuCtrl));
 
-   addProtectedField("bitmap", TypeImageFilename, Offset(mBitmapName, GuiPopUpMenuCtrl), _setBitmaps, defaultProtectedGetFn, "");
-   addProtectedField("bitmapAsset", TypeImageAssetId, Offset(mBitmapAssetId, GuiPopUpMenuCtrl), _setBitmaps, defaultProtectedGetFn, "");
+   addProtectedField("BitmapAsset", TypeImageAssetPtr, Offset(mBitmapAsset, GuiPopUpMenuCtrl), _setBitmaps, &defaultProtectedGetFn, "@brief ""Bitmap"" ""asset \"\".");
 
    addField("bitmapBounds",             TypePoint2I,      Offset(mBitmapBounds, GuiPopUpMenuCtrl));
 
@@ -473,9 +469,6 @@ bool GuiPopUpMenuCtrl::onWake()
    if ( !Parent::onWake() )
       return false;
 
-   // Set the bitmap for the popup.
-   setBitmap(getBitmap(Normal));
-
    // Now update the Form Control's bitmap array, and possibly the child's too
    mProfile->constructBitmapArray();
 
@@ -592,8 +585,8 @@ void GuiPopUpMenuCtrl::setBitmap( const char *name )
       dStrcpy(p, "_d", pLen);
       _setBitmap((StringTableEntry)buffer, Depressed);
 
-      if ( !mBitmap[Depressed] )
-         mBitmap[Depressed] = mBitmap[Normal];
+      if ( mBitmapAsset[Depressed].isNull() )
+         mBitmapAsset[Depressed] = mBitmapAsset[Normal];
    }
    else
    {
@@ -898,17 +891,17 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
       }
 
       //  Draw a bitmap over the background?
-      if ( mBitmap[Depressed] )
+      if ( mBitmapAsset[Depressed].notNull() )
       {
          RectI rect(offset, mBitmapBounds);
          drawUtil->clearBitmapModulation();
-         drawUtil->drawBitmapStretch( mBitmap[Depressed], rect );
+         drawUtil->drawBitmapStretch( getBitmap(Depressed), rect );
       } 
-      else if ( mBitmap[Normal] )
+      else if ( mBitmapAsset[Normal].notNull() )
       {
          RectI rect(offset, mBitmapBounds);
          drawUtil->clearBitmapModulation();
-         drawUtil->drawBitmapStretch( mBitmap[Normal], rect );
+         drawUtil->drawBitmapStretch(getBitmap(Normal), rect );
       }
 
       // Do we render a bitmap border or lines?
@@ -948,11 +941,11 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
          }
 
          //  Draw a bitmap over the background?
-         if ( mBitmap[Normal] )
+         if ( mBitmapAsset[Normal].notNull() )
          {
             RectI rect( offset, mBitmapBounds );
             drawUtil->clearBitmapModulation();
-            drawUtil->drawBitmapStretch( mBitmap[Normal], rect );
+            drawUtil->drawBitmapStretch(getBitmap(Normal) , rect);
          }
 
          // Do we render a bitmap border or lines?
@@ -984,11 +977,11 @@ void GuiPopUpMenuCtrl::onRender( Point2I offset, const RectI &updateRect )
          }
 
          //  Draw a bitmap over the background?
-         if ( mBitmap[Normal] )
+         if (mBitmapAsset[Normal].notNull())
          {
             RectI rect(offset, mBitmapBounds);
             drawUtil->clearBitmapModulation();
-            drawUtil->drawBitmapStretch( mBitmap[Normal], rect );
+            drawUtil->drawBitmapStretch( getBitmap(Normal), rect);
          }
 
          // Do we render a bitmap border or lines?

@@ -132,7 +132,7 @@ bool GuiBitmapBorderCtrl::onWake()
 
    //get the texture for the close, minimize, and maximize buttons
    mBitmapBounds = NULL;
-   mTextureObject = mProfile->getBitmapResource();
+   mTextureObject = mProfile->getBitmap();
    if( mProfile->constructBitmapArray() >= NumBitmaps )
       mBitmapBounds = mProfile->mBitmapArrayRects.address();
    else

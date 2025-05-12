@@ -9,6 +9,7 @@ function Core_Rendering::onCreate(%this)
    $Core::WetnessTexture = "core/rendering/images/wetMap.png";
    
    $Core::NoImageAssetFallback = "Core_Rendering:missingTexture_image";
+   $Core::NamedTargetFallback = "Core_Rendering:namedTarget_image";
    $Core::NoMaterialAssetFallback = "Core_Rendering:noMaterial";
    $Core::NoShapeAssetFallback = "Core_Rendering:noShape";
    

@@ -60,10 +60,6 @@ GuiGameSettingsCtrl::GuiGameSettingsCtrl() :
    mCallbackOnB = mCallbackOnA;
    mCallbackOnX = mCallbackOnA;
    mCallbackOnY = mCallbackOnA;
-
-   INIT_ASSET(KeybindBitmap);
-   INIT_ASSET(PreviousBitmap);
-   INIT_ASSET(NextBitmap);
 }
 
 GuiGameSettingsCtrl::~GuiGameSettingsCtrl()
@@ -194,7 +190,7 @@ void GuiGameSettingsCtrl::onRenderListOption(Point2I currentOffset)
             arrowOffset.y = currentOffset.y + arrowOffsetY;
 
             drawer->clearBitmapModulation();
-            drawer->drawBitmapStretch(mPreviousBitmap, RectI(arrowOffset, Point2I(mArrowSize, mArrowSize)), GFXBitmapFlip_None, GFXTextureFilterLinear, false);
+            drawer->drawBitmapStretch(getPreviousBitmap(), RectI(arrowOffset, Point2I(mArrowSize, mArrowSize)), GFXBitmapFlip_None, GFXTextureFilterLinear, false);
          }
          else
          {
@@ -215,7 +211,7 @@ void GuiGameSettingsCtrl::onRenderListOption(Point2I currentOffset)
             arrowOffset.y = currentOffset.y + arrowOffsetY;
 
             drawer->clearBitmapModulation();
-            drawer->drawBitmapStretch(mNextBitmap, RectI(arrowOffset, Point2I(mArrowSize, mArrowSize)), GFXBitmapFlip_None, GFXTextureFilterLinear, false);
+            drawer->drawBitmapStretch(getNextBitmap(), RectI(arrowOffset, Point2I(mArrowSize, mArrowSize)), GFXBitmapFlip_None, GFXTextureFilterLinear, false);
          }
          else
          {
@@ -377,7 +373,7 @@ void GuiGameSettingsCtrl::onRenderKeybindOption(Point2I currentOffset)
    {
       RectI rect(button, buttonSize);
       drawer->clearBitmapModulation();
-      drawer->drawBitmapStretch(mKeybindBitmap, rect, GFXBitmapFlip_None, GFXTextureFilterLinear, false);
+      drawer->drawBitmapStretch(getKeybindBitmap(), rect, GFXBitmapFlip_None, GFXTextureFilterLinear, false);
    }
 
    //drawer->drawRectFill(button, ColorI::BLUE);
@@ -455,22 +451,11 @@ bool GuiGameSettingsCtrl::onWake()
    if( !Parent::onWake() )
       return false;
 
-   _setNextBitmap(getNextBitmap());
-   _setPreviousBitmap(getPreviousBitmap());
-   _setKeybindBitmap(getKeybindBitmap());
-
    return true;
 }
 
 void GuiGameSettingsCtrl::onSleep()
 {
-   if (mNextBitmapAsset.notNull())
-      mNextBitmap = NULL;
-   if (mPreviousBitmapAsset.notNull())
-      mPreviousBitmap = NULL;
-   if (mKeybindBitmapAsset.notNull())
-      mKeybindBitmap = NULL;
-
    Parent::onSleep();
 }
 

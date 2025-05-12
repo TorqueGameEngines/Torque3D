@@ -67,7 +67,7 @@ private:
      ColorI         color;            // 4// color of zodiac
      F32            angle;            // 4// angle in radians
      U32            zflags;           // 4// 0=normal,1=additive,2=subtractive
-     GFXTexHandle*  txr;              // 4// zodiac texture
+     GFXTexHandle   txr;              // 4// zodiac texture
 
      F32            distance_max;
      F32            distance_falloff;

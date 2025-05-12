@@ -31,51 +31,47 @@
 /// Renders a bitmap.
 class GuiBitmapCtrl : public GuiControl
 {
-   public:
-   
-      typedef GuiControl Parent;
+public:
 
-   protected:
-   
-      /// Name of the bitmap file.  If this is 'texhandle' the bitmap is not loaded
-      /// from a file but rather set explicitly on the control.
-      DECLARE_IMAGEASSET(GuiBitmapCtrl, Bitmap, onImageChanged, GFXDefaultGUIProfile);
-      DECLARE_ASSET_SETGET(GuiBitmapCtrl, Bitmap);
-            
-      Point2I mStartPoint;
-      ColorI   mColor;
-      F32     mAngle;
+   typedef GuiControl Parent;
 
-      /// If true, bitmap tiles inside control.  Otherwise stretches.
-      bool mWrap;
+protected:
 
-      static bool setBitmapName( void *object, const char *index, const char *data );
-      static const char *getBitmapName( void *obj, const char *data );
+   /// Name of the bitmap file.  If this is 'texhandle' the bitmap is not loaded
+   /// from a file but rather set explicitly on the control.
+   DECLARE_IMAGEASSET(GuiBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
 
-      void onImageChanged() {}
+   Point2I mStartPoint;
+   ColorI   mColor;
+   F32     mAngle;
 
-   public:
-      
-      GuiBitmapCtrl();
-      static void initPersistFields();
+   /// If true, bitmap tiles inside control.  Otherwise stretches.
+   bool mWrap;
 
-      void setBitmap(const char *name,bool resize = false);
-      void setBitmapHandle(GFXTexHandle handle, bool resize = false);
+public:
+   GFXTexHandle mBitmap;
+   StringTableEntry mBitmapName;
 
-      // GuiControl.
-      bool onWake() override;
-      void onSleep() override;
-      void inspectPostApply() override;
+   GuiBitmapCtrl();
+   static void initPersistFields();
 
-      void updateSizing();
+   // GuiControl.
+   bool onWake() override;
+   void onSleep() override;
+   void inspectPostApply() override;
 
-      void onRender(Point2I offset, const RectI &updateRect) override;
-      void setValue(S32 x, S32 y);
+   void setBitmap(const char* name, bool resize = true);
+   void setBitmapHandle(GFXTexHandle handle, bool resize = false);
 
-      DECLARE_CONOBJECT( GuiBitmapCtrl );
-      DECLARE_CATEGORY( "Gui Images" );
-      DECLARE_DESCRIPTION( "A control that displays a single, static image from a file.n"
-                           "The bitmap can either be tiled or stretched inside the control." );
+   void updateSizing();
+
+   void onRender(Point2I offset, const RectI& updateRect) override;
+   void setValue(S32 x, S32 y);
+
+   DECLARE_CONOBJECT(GuiBitmapCtrl);
+   DECLARE_CATEGORY("Gui Images");
+   DECLARE_DESCRIPTION("A control that displays a single, static image from a file.n"
+      "The bitmap can either be tiled or stretched inside the control.");
 };
 
 #endif

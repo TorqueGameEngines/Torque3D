@@ -1884,7 +1884,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                      {
                         //got a match!
                         ImageAsset* foundImageAsset = AssetDatabase.acquireAsset<ImageAsset>(testAssetId.c_str());
-                        imagePath = foundImageAsset->getImagePath();
+                        imagePath = foundImageAsset->getImageFile();
 
                         AssetImportObject* newImageAssetObj = addImportingAsset("ImageAsset", imagePath, assetItem, "");
 
@@ -1928,7 +1928,7 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
                         {
                            //got a match!
                            ImageAsset* foundImageAsset = AssetDatabase.acquireAsset<ImageAsset>(testAssetId.c_str());
-                           imagePath = foundImageAsset->getImagePath();
+                           imagePath = foundImageAsset->getImageFile();
 
                            AssetImportObject* newImageAssetObj = addImportingAsset("ImageAsset", imagePath, assetItem, "");
 
@@ -2824,7 +2824,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
 
    StringTableEntry assetName = StringTable->insert(assetItem->assetName.c_str());
 
-   String imageFileName = assetItem->filePath.getFileName() + "." + assetItem->filePath.getExtension();
+   String imageFileName = assetItem->filePath.getFullPath();
    String assetPath = targetPath + "/" + imageFileName;
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
    String originalPath = assetItem->filePath.getFullPath().c_str();
@@ -2841,7 +2841,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
 #endif
    
    newAsset->setAssetName(assetName);
-   newAsset->setImageFileName(imageFileName.c_str());
+   newAsset->setImageFile(imageFileName.c_str());
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
@@ -2995,27 +2995,27 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 
          if (imageType == ImageAsset::ImageTypes::Albedo || childItem->imageSuffixType.isEmpty())
          {
-            newMat->mDiffuseMapAssetId[0] = assetMapFillInStr;
+            newMat->_setDiffuseMap(assetMapFillInStr,0);
          }
          else if (imageType == ImageAsset::ImageTypes::Normal)
          {
-            newMat->mNormalMapAssetId[0] = assetMapFillInStr;
+            newMat->_setNormalMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::ORMConfig)
          {
-            newMat->mORMConfigMapAssetId[0] = assetMapFillInStr;
+            newMat->_setORMConfigMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::Metalness)
          {
-            newMat->mMetalMapAssetId[0] = assetMapFillInStr;
+            newMat->_setMetalMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::AO)
          {
-            newMat->mAOMapAssetId[0] = assetMapFillInStr;
+            newMat->_setAOMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::Roughness)
          {
-            newMat->mRoughMapAssetId[0] = assetMapFillInStr;
+            newMat->_setRoughMap(assetMapFillInStr, 0);
             hasRoughness = true;
          }
       }

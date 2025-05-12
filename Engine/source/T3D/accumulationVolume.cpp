@@ -83,24 +83,17 @@ AccumulationVolume::AccumulationVolume()
    mObjToWorld.identity();
    mWorldToObj.identity();
 
-   // Accumulation Texture.
-   INIT_ASSET(Texture);
-
    resetWorldBox();
 }
 
 AccumulationVolume::~AccumulationVolume()
 {
-   mTexture = nullptr;
 }
 
 void AccumulationVolume::initPersistFields()
 {
    docsURL;
-   addProtectedField("textureAsset", TypeImageAssetId, Offset(mTextureAssetId, AccumulationVolume),
-      &_setTexture, &defaultProtectedGetFn, "Accumulation texture.");
-   addProtectedField( "texture", TypeStringFilename, Offset( mTextureName, AccumulationVolume ),
-         &_setTexture, &defaultProtectedGetFn, "Accumulation texture." );
+   INITPERSISTFIELD_IMAGEASSET(Texture, AccumulationVolume, "Accumulation texture.")
 
    Parent::initPersistFields();
 }
@@ -236,7 +229,7 @@ U32 AccumulationVolume::packUpdate( NetConnection *connection, U32 mask, BitStre
 
    if (stream->writeFlag(mask & InitialUpdateMask))
    {
-      PACK_ASSET(connection, Texture);
+      PACK_ASSET_REFACTOR(connection, Texture);
    }
 
    return retMask;  
@@ -248,7 +241,7 @@ void AccumulationVolume::unpackUpdate( NetConnection *connection, BitStream *str
 
    if (stream->readFlag())
    {
-      UNPACK_ASSET(connection, Texture);
+      UNPACK_ASSET_REFACTOR(connection, Texture);
       //setTexture(mTextureName);
    }
 }
@@ -307,7 +300,7 @@ void AccumulationVolume::refreshVolumes()
          if ( object.isNull() ) continue;
 
          if ( volume->containsPoint(object->getPosition()) )
-            object->mAccuTex = volume->getTextureResource();
+            object->mAccuTex = volume->getTexture();
       }
    }
 }
@@ -341,6 +334,6 @@ void AccumulationVolume::updateObject(SceneObject* object)
       if ( volume.isNull() ) continue;
 
       if ( volume->containsPoint(object->getPosition()) )
-         object->mAccuTex = volume->getTextureResource();
+         object->mAccuTex = volume->getTexture();
    }
 }

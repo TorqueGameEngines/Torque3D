@@ -96,11 +96,6 @@ SplashData::SplashData()
    explosionId = 0;
 
    U32 i;
-   for (i = 0; i < NUM_TEX; i++)
-   {
-      INIT_IMAGEASSET_ARRAY(Texture, GFXStaticTextureSRGBProfile, i);
-   }
-
    for( i=0; i<NUM_TIME_KEYS; i++ )
       times[i] = 1.0;
 
@@ -188,6 +183,8 @@ void SplashData::packData(BitStream* stream)
       stream->writeRangedU32(explosion->getId(), DataBlockObjectIdFirst, DataBlockObjectIdLast);
    }
 
+   PACKDATA_ASSET_ARRAY_REFACTOR(Texture, NUM_TEX);
+
    S32 i;
    for( i=0; i<NUM_EMITTERS; i++ )
    {
@@ -205,11 +202,6 @@ void SplashData::packData(BitStream* stream)
    for( i=0; i<NUM_TIME_KEYS; i++ )
    {
       stream->write( times[i] );
-   }
-
-   for( i=0; i<NUM_TEX; i++ )
-   {
-      PACKDATA_ASSET_ARRAY(Texture, i);
    }
 }
 
@@ -244,6 +236,8 @@ void SplashData::unpackData(BitStream* stream)
       explosionId = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );
    }
 
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(Texture, NUM_TEX);
+
    U32 i;
    for( i=0; i<NUM_EMITTERS; i++ )
    {
@@ -261,11 +255,6 @@ void SplashData::unpackData(BitStream* stream)
    for( i=0; i<NUM_TIME_KEYS; i++ )
    {
       stream->read( &times[i] );
-   }
-
-   for( i=0; i<NUM_TEX; i++ )
-   {
-      UNPACKDATA_ASSET_ARRAY(Texture, i);
    }
 }
 
@@ -299,9 +288,9 @@ bool SplashData::preload(bool server, String &errorStr)
 
       for( i=0; i<NUM_TEX; i++ )
       {
-         if (mTexture[i].isNull())
+         if (mTextureAsset[i].isNull())
          {
-            _setTexture(getTexture(i), i);
+            _setTexture(_getTexture(i), i);
          }
       }
    }

@@ -330,9 +330,6 @@ GuiPopUpMenuCtrlEx::GuiPopUpMenuCtrlEx(void)
    mBackgroundCancel = false; //  Added
    mReverseTextList = false; //  Added - Don't reverse text list if displaying up
 
-   INIT_IMAGEASSET_ARRAY(Bitmap, GFXDefaultGUIProfile, Normal);
-   INIT_IMAGEASSET_ARRAY(Bitmap, GFXDefaultGUIProfile, Depressed);
-
    mBitmapBounds.set(16, 16); //  Added
    mHotTrackItems = false;
    mIdMax = -1;
@@ -357,8 +354,7 @@ void GuiPopUpMenuCtrlEx::initPersistFields(void)
    addField("sbUsesNAColor",            TypeBool,         Offset(mRenderScrollInNA, GuiPopUpMenuCtrlEx), "Deprecated" "@internal");
    addField("reverseTextList",          TypeBool,         Offset(mReverseTextList, GuiPopUpMenuCtrlEx), "Reverses text list if popup extends up, instead of down");
 
-   addProtectedField("bitmap",          TypeImageFilename,     Offset(mBitmapName, GuiPopUpMenuCtrlEx), _setBitmaps, &defaultProtectedGetFn, "File name of bitmap to use");
-   addProtectedField("bitmapAsset", TypeImageAssetId, Offset(mBitmapAssetId, GuiPopUpMenuCtrlEx), _setBitmaps, &defaultProtectedGetFn, "Name of bitmap asset to use");
+   addProtectedField("BitmapAsset", TypeImageAssetPtr, Offset(mBitmapAsset, GuiPopUpMenuCtrlEx), _setBitmaps, &defaultProtectedGetFn, "@brief ""Bitmap"" ""asset \"Name of bitmap asset to use\".");
 
    addField("bitmapBounds",             TypePoint2I,      Offset(mBitmapBounds, GuiPopUpMenuCtrlEx), "Boundaries of bitmap displayed");
    addField("hotTrackCallback",         TypeBool,         Offset(mHotTrackItems, GuiPopUpMenuCtrlEx),
@@ -367,14 +363,6 @@ void GuiPopUpMenuCtrlEx::initPersistFields(void)
    addField("allowTextSearch", TypeBool, Offset(mTextSearchItems, GuiPopUpMenuCtrlEx), "If true, will enable a text edit field so you can search filter the dropdown list");
 
    Parent::initPersistFields();
-}
-
-bool GuiPopUpMenuCtrlEx::_setBitmaps(void* obj, const char* index, const char* data)
-{
-   GuiPopUpMenuCtrlEx* object = static_cast<GuiPopUpMenuCtrlEx*>(obj);
-
-   object->setBitmap(data);
-   return true;
 }
 
 //------------------------------------------------------------------------------
@@ -691,9 +679,6 @@ bool GuiPopUpMenuCtrlEx::onWake()
    if ( !Parent::onWake() )
       return false;
 
-   // Set the bitmap for the popup.
-   setBitmap(getBitmap(Normal));
-
    // Now update the Form Control's bitmap array, and possibly the child's too
    mProfile->constructBitmapArray();
 
@@ -796,7 +781,15 @@ static S32 QSORT_CALLBACK idCompare(const void *a,const void *b)
    GuiPopUpMenuCtrlEx::Entry *ea = (GuiPopUpMenuCtrlEx::Entry *) (a);
    GuiPopUpMenuCtrlEx::Entry *eb = (GuiPopUpMenuCtrlEx::Entry *) (b);
    return ( (ea->id < eb->id) ? -1 : ((ea->id > eb->id) ? 1 : 0) );
-} 
+}
+
+bool GuiPopUpMenuCtrlEx::_setBitmaps(void* obj, const char* index, const char* data)
+{
+   GuiPopUpMenuCtrlEx* object = static_cast<GuiPopUpMenuCtrlEx*>(obj);
+
+   object->setBitmap(data);
+   return true;
+}
 
 //------------------------------------------------------------------------------
 //  Added
@@ -819,8 +812,8 @@ void GuiPopUpMenuCtrlEx::setBitmap(const char *name)
       dStrcpy(p, "_d", pLen);
       _setBitmap((StringTableEntry)buffer, Depressed);
 
-      if (!mBitmap[Depressed])
-         mBitmap[Depressed] = mBitmap[Normal];
+      if (mBitmapAsset[Depressed].isNull())
+         mBitmapAsset[Depressed] = mBitmapAsset[Normal];
    }
    else
    {
@@ -1097,17 +1090,17 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
       }
 
       //  Draw a bitmap over the background?
-      if ( mBitmap[Depressed] )
+      if ( mBitmapAsset[Depressed].notNull() )
       {
          RectI rect(offset, mBitmapBounds);
          drawUtil->clearBitmapModulation();
-         drawUtil->drawBitmapStretch(mBitmap[Depressed], rect );
+         drawUtil->drawBitmapStretch(getBitmap(Depressed), rect );
       } 
-      else if (mBitmap[Normal])
+      else if (mBitmapAsset[Normal].notNull())
       {
          RectI rect(offset, mBitmapBounds);
          drawUtil->clearBitmapModulation();
-         drawUtil->drawBitmapStretch(mBitmap[Normal], rect );
+         drawUtil->drawBitmapStretch(getBitmap(Normal), rect );
       }
 
       // Do we render a bitmap border or lines?
@@ -1141,11 +1134,11 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
          }
 
          //  Draw a bitmap over the background?
-         if (mBitmap[Normal])
+         if (mBitmapAsset[Normal].notNull())
          {
             RectI rect( offset, mBitmapBounds );
             drawUtil->clearBitmapModulation();
-            drawUtil->drawBitmapStretch(mBitmap[Normal], rect );
+            drawUtil->drawBitmapStretch(getBitmap(Normal), rect );
          }
 
          // Do we render a bitmap border or lines?
@@ -1171,11 +1164,11 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
          }
 
          //  Draw a bitmap over the background?
-         if (mBitmap[Normal])
+         if (mBitmapAsset[Normal].notNull())
          {
             RectI rect(offset, mBitmapBounds);
             drawUtil->clearBitmapModulation();
-            drawUtil->drawBitmapStretch(mBitmap[Normal], rect );
+            drawUtil->drawBitmapStretch(getBitmap(Normal), rect );
          }
 
          // Do we render a bitmap border or lines?

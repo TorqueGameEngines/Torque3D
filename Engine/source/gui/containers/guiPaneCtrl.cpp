@@ -193,7 +193,7 @@ void GuiPaneControl::onRender(Point2I offset, const RectI &updateRect)
 
       GFX->getDrawUtil()->clearBitmapModulation();
       GFX->getDrawUtil()->drawBitmapStretchSR(
-         mProfile->getBitmapResource(),
+         mProfile->getBitmap(),
          RectI(offset, mProfile->mBitmapArrayRects[idx].extent),
          mProfile->mBitmapArrayRects[idx]
       );
@@ -226,7 +226,7 @@ void GuiPaneControl::onRender(Point2I offset, const RectI &updateRect)
 
       // Draw the start of the bar...
       GFX->getDrawUtil()->drawBitmapStretchSR(
-         mProfile->getBitmapResource(),
+         mProfile->getBitmap(),
          RectI(barOffset, mProfile->mBitmapArrayRects[2].extent),
          mProfile->mBitmapArrayRects[2]
          );
@@ -243,7 +243,7 @@ void GuiPaneControl::onRender(Point2I offset, const RectI &updateRect)
          foo.inset(1,0);
 
          GFX->getDrawUtil()->drawBitmapStretchSR(
-            mProfile->getBitmapResource(),
+            mProfile->getBitmap(),
             RectI(barOffset, Point2I(barMiddleSize, mProfile->mBitmapArrayRects[3].extent.y)),
             foo
             );
@@ -253,7 +253,7 @@ void GuiPaneControl::onRender(Point2I offset, const RectI &updateRect)
       barOffset.x += barMiddleSize;
 
       GFX->getDrawUtil()->drawBitmapStretchSR(
-         mProfile->getBitmapResource(),
+         mProfile->getBitmap(),
          RectI(barOffset, mProfile->mBitmapArrayRects[4].extent),
          mProfile->mBitmapArrayRects[4]
          );

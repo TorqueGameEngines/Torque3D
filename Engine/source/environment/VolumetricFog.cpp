@@ -105,7 +105,6 @@ VolumetricFog::VolumetricFog()
    mFrontBufferTarget = NULL;
 
    z_buf = NULL;
-   mTexture = NULL;
 
    mIsVBDirty = false;
    mIsPBDirty = false;
@@ -138,7 +137,6 @@ VolumetricFog::VolumetricFog()
    mSpeed2.set(0.1f, 0.1f);
 
    INIT_ASSET(Shape);
-   INIT_ASSET(Texture);
 }
 
 VolumetricFog::~VolumetricFog()
@@ -159,8 +157,6 @@ VolumetricFog::~VolumetricFog()
 
    z_buf = NULL;
 
-   if (!mTexture.isNull())
-      mTexture.free();
 }
 
 void VolumetricFog::initPersistFields()
@@ -330,8 +326,10 @@ void VolumetricFog::handleResize(VolumetricFogRTManager *RTM, bool resize)
       F32 width = (F32)mPlatformWindow->getClientExtent().x;
       F32 height = (F32)mPlatformWindow->getClientExtent().y;
 
-      mTexScale.x = 2.0f - ((F32)mTexture.getWidth() / width);
-      mTexScale.y = 2.0f - ((F32)mTexture.getHeight() / height);
+      // load texture.
+      getTexture();
+      mTexScale.x = 2.0f - ((F32)mTextureAsset->getTextureWidth() / width);
+      mTexScale.y = 2.0f - ((F32)mTextureAsset->getTextureHeight() / height);
    }
 
    UpdateBuffers(0,true);
@@ -545,7 +543,7 @@ U32 VolumetricFog::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       stream->write(mFogDensity);
    if (stream->writeFlag(mask & FogModulationMask))
    {
-      PACK_ASSET(con, Texture);
+      PACK_ASSET_REFACTOR(con, Texture);
       mTexTiles = mFabs(mTexTiles);
       stream->write(mTexTiles);
       stream->write(mStrength);
@@ -597,7 +595,7 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    MatrixF mat;
    VectorF scale;
    VectorF mOldScale = getScale();
-   StringTableEntry oldTextureName = mTextureAssetId;
+   StringTableEntry oldTextureName = mTextureAsset.getAssetId();
    StringTableEntry oldShapeAsset = mShapeAssetId;
    StringTableEntry oldShape = mShapeName;
 
@@ -615,7 +613,7 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    }
    if (stream->readFlag())// Fog Modulation
    {
-      UNPACK_ASSET(con, Texture);
+      UNPACK_ASSET_REFACTOR(con, Texture);
       stream->read(&mTexTiles);
       mTexTiles = mFabs(mTexTiles);
       stream->read(&mStrength);
@@ -625,12 +623,11 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
 
       if (isProperlyAdded())
       {
-         if (oldTextureName != mTextureAssetId)
+         if (oldTextureName != mTextureAsset.getAssetId())
             InitTexture();
-         if (oldTextureName != StringTable->EmptyString() && mTextureAssetId == StringTable->EmptyString())
+         if (oldTextureName != StringTable->EmptyString() && mTextureAsset.isNull())
          {
             mIsTextured = false;
-            mTexture.free();
          }
       }
    }
@@ -1149,7 +1146,7 @@ void VolumetricFog::render(ObjectRenderInst *ri, SceneRenderState *state, BaseMa
 
    if (mIsTextured && mStrength > 0.0f)
    {
-      GFX->setTexture(3, mTexture);
+      GFX->setTexture(3, getTexture());
       mShaderConsts->setSafe(mIsTexturedSC, 1.0f);
    }
    else
@@ -1222,15 +1219,16 @@ void VolumetricFog::InitTexture()
    {
       return;
    }
-   if (!mTexture.isNull())
+   if (!mTextureAsset.isNull())
    {
       mIsTextured = true;
-
+      // load asset.
+      getTexture();
       F32 width = (F32)mPlatformWindow->getClientExtent().x;
       F32 height = (F32)mPlatformWindow->getClientExtent().y;
 
-      mTexScale.x = 2.0f - ((F32)mTexture.getWidth() / width);
-      mTexScale.y = 2.0f - ((F32)mTexture.getHeight() / height);
+      mTexScale.x = 2.0f - ((F32)mTextureAsset->getTextureWidth() / width);
+      mTexScale.y = 2.0f - ((F32)mTextureAsset->getTextureHeight() / height);
    }
 }
 

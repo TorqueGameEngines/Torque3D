@@ -1660,8 +1660,8 @@ void AssetManager::dumpDeclaredAssets( void ) const
             pAssetDefinition->mAssetInternal,
             pAssetDefinition->mAssetPrivate,
             pAssetDefinition->mAssetType,
-            pAssetDefinition->mpModuleDefinition->getModuleId(),
-            pAssetDefinition->mpModuleDefinition->getVersionId(),
+            pAssetDefinition->mAssetPrivate ? "Private" : pAssetDefinition->mpModuleDefinition->getModuleId(),
+            pAssetDefinition->mAssetPrivate ? 0 : pAssetDefinition->mpModuleDefinition->getVersionId(),
             pAssetDefinition->mAssetBaseFilePath );
     }
 

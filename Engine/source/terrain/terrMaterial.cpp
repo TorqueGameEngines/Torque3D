@@ -81,11 +81,6 @@ TerrainMaterial::TerrainMaterial()
       mIsSRGB(false),
       mInvertRoughness(false)
 {
-   INIT_ASSET(DiffuseMap);
-   INIT_ASSET(NormalMap);
-   INIT_ASSET(DetailMap);
-   INIT_ASSET(ORMConfigMap);
-   INIT_ASSET(MacroMap);
 }
 
 TerrainMaterial::~TerrainMaterial()
@@ -102,6 +97,7 @@ void TerrainMaterial::initPersistFields()
 
    INITPERSISTFIELD_IMAGEASSET(NormalMap, TerrainMaterial,"NormalMap");
    addFieldV( "parallaxScale", TypeRangedF32, Offset( mParallaxScale, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the height from the normal map to give some self "
+
 	   "occlusion effect (aka parallax) to the terrain material" );
 
    addFieldV("blendHeightBase", TypeRangedF32, Offset(mBlendDepth, TerrainMaterial), &CommonValidators::PositiveFloat, "A fixed value to add while blending using heightmap-based blending."
@@ -117,11 +113,11 @@ void TerrainMaterial::initPersistFields()
    addFieldV( "detailSize", TypeRangedF32, Offset( mDetailSize, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the detail map to the material square" );
    addFieldV( "detailStrength", TypeRangedF32, Offset( mDetailStrength, TerrainMaterial ), &CommonValidators::PositiveFloat, "Exponentially sharpens or lightens the detail map rendering on the material" );
    addFieldV( "detailDistance", TypeRangedF32, Offset( mDetailDistance, TerrainMaterial ), &CommonValidators::PositiveFloat, "Changes how far camera can see the detail map rendering on the material" );
-   /*
    addField( "useSideProjection", TypeBool, Offset( mSideProjection, TerrainMaterial ),"Makes that terrain material project along the sides of steep "
 	   "slopes instead of projected downwards");
-   */
+
    INITPERSISTFIELD_IMAGEASSET(ORMConfigMap, TerrainMaterial, "AO|Roughness|metalness map (uses DetailMap UV Coords)");
+
    addField("isSRGB", TypeBool, Offset(mIsSRGB, TerrainMaterial), "Is the PBR Config map's image in sRGB format?");
    addField("invertRoughness", TypeBool, Offset(mInvertRoughness, TerrainMaterial), "Should the roughness channel of the PBR Config map be inverted?");
 
@@ -130,6 +126,7 @@ void TerrainMaterial::initPersistFields()
    addFieldV( "macroSize", TypeRangedF32, Offset( mMacroSize, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the Macro map to the material square" );
    addFieldV( "macroStrength", TypeRangedF32, Offset( mMacroStrength, TerrainMaterial ), &CommonValidators::PositiveFloat, "Exponentially sharpens or lightens the Macro map rendering on the material" );
    addFieldV( "macroDistance", TypeRangedF32, Offset( mMacroDistance, TerrainMaterial ), &CommonValidators::PositiveFloat, "Changes how far camera can see the Macro map rendering on the material" );
+
 
    Parent::initPersistFields();
 
@@ -228,8 +225,8 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
 //material.getDiffuseMap(); //returns the raw file referenced
 //material.getDiffuseMapAsset(); //returns the asset id
 //material.setDiffuseMap(%texture); //tries to set the asset and failing that attempts a flat file reference
-DEF_ASSET_BINDS(TerrainMaterial, DiffuseMap);
-DEF_ASSET_BINDS(TerrainMaterial, NormalMap);
-DEF_ASSET_BINDS(TerrainMaterial, DetailMap);
-DEF_ASSET_BINDS(TerrainMaterial, ORMConfigMap);
-DEF_ASSET_BINDS(TerrainMaterial, MacroMap);
+DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, DiffuseMap)
+DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, NormalMap)
+DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, DetailMap)
+DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, ORMConfigMap)
+DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, MacroMap)

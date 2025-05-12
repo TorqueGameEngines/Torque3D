@@ -148,25 +148,25 @@ function MaterialAsset::generatePreviewImage(%this, %previewButton, %forceRegene
             {
                assetName = %previewAssetName;
                versionId = 1;
-               imageFile = fileName(%previewFilePath);
+               imageFile = makeFullPath(%previewFilePath);
             };
             
             %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
-            %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
             
+            %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
             %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
-               
+            
             %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
             
             if(!%success)
             {
                return false; //failed to register the preview image for some reason?
+            }
          }
-      }
       
          %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
          return true;
-   }
+      }
    }
    else
    {

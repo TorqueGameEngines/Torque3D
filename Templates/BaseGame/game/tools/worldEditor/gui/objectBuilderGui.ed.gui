@@ -1282,9 +1282,9 @@ function ObjectBuilderGui::addWaterObjectFields(%this)
    %this.addField("waveSpeed[2]", "TypeFloat", "Wave Speed", "1");
    %this.addField("overallWaveMagnitude", "TypeFloat", "Overall Wave Magnitude", "1.0");
    
-   %this.addField("rippleTex", "TypeImageAsset", "Ripple Texture", "Core_Rendering:ripple_image" );
-   %this.addField("depthGradientTex", "TypeImageAsset", "Depth Gradient Texture", "Core_Rendering:depthcolor_ramp_image" );
-   %this.addField("foamTex", "TypeImageAsset", "Foam Texture", "Core_Rendering:foam_image" );
+   %this.addField("RippleTexAsset", "TypeImageAssetPtr", "Ripple Texture", "Core_Rendering:ripple_image" );
+   %this.addField("DepthGradientTexAsset", "TypeImageAssetPtr", "Depth Gradient Texture", "Core_Rendering:depthcolor_ramp_image" );
+   %this.addField("FoamTexAsset", "TypeImageAssetPtr", "Foam Texture", "Core_Rendering:foam_image" );
 }
 
 function ObjectBuilderGui::buildWaterBlock(%this)

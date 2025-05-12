@@ -53,6 +53,93 @@ if (m##name##AssetId != StringTable->EmptyString())\
    m##name##Asset = other.m##name##Asset;\
    m##name = other.m##name
 
+// copy constructor refactor
+#define CLONE_ASSET_REFACTOR(name) \
+   m##name##Asset = other.m##name##Asset;\
+
+//network send - datablock refactor
+#define PACKDATA_ASSET_REFACTOR(name)\
+   if (stream->writeFlag(m##name##Asset.notNull()))\
+   {\
+      stream->writeString(m##name##Asset.getAssetId());\
+   }
+
+//network recieve - datablock
+#define UNPACKDATA_ASSET_REFACTOR(name)\
+   if (stream->readFlag())\
+   {\
+      _set##name(stream->readSTString());\
+   }
+
+//network send - object-instance
+#define PACK_ASSET_REFACTOR(netconn, name)\
+   if (stream->writeFlag(m##name##Asset.notNull()))\
+   {\
+      NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
+      netconn->packNetStringHandleU(stream, assetIdStr);\
+   }
+
+//network recieve - object-instance
+#define UNPACK_ASSET_REFACTOR(netconn, name)\
+   if (stream->readFlag())\
+   {\
+      _set##name(netconn->unpackNetStringHandleU(stream).getString());\
+   }
+
+//network send - datablock
+#define PACKDATA_ASSET_ARRAY_REFACTOR(name, max)\
+for (U32 i = 0; i < max; i++)\
+{\
+   if (stream->writeFlag(m##name##Asset[i].notNull()))\
+   {\
+      stream->writeString(m##name##Asset[i].getAssetId()); \
+   }\
+}
+
+//network recieve - datablock
+#define UNPACKDATA_ASSET_ARRAY_REFACTOR(name, max)\
+for (U32 i = 0; i < max; i++)\
+{\
+   if (stream->readFlag())\
+   {\
+      m##name##Asset[i] = stream->readSTString();\
+   }\
+}
+
+//network send - object-instance
+#define PACK_ASSET_ARRAY_REFACTOR(netconn, name, max)\
+for (U32 i = 0; i < max; i++)\
+{\
+   if (stream->writeFlag(m##name##Asset[i].notNull()))\
+   {\
+      NetStringHandle assetIdStr = m##name##Asset[i].getAssetId();\
+      netconn->packNetStringHandleU(stream, assetIdStr);\
+   }\
+}
+
+//network recieve - object-instance
+#define UNPACK_ASSET_ARRAY_REFACTOR(netconn, name, max)\
+for (U32 i = 0; i < max; i++)\
+{\
+   if (stream->readFlag())\
+   {\
+      m##name##Asset[i] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
+   }\
+}
+
+#define DEF_ASSET_BINDS_REFACTOR(className,name)\
+DefineEngineMethod(className, get##name, StringTableEntry, (), , "get name")\
+{\
+   return object->get##name##Asset()->getImageFile(); \
+}\
+DefineEngineMethod(className, get##name##Asset, StringTableEntry, (), , assetText(name, asset reference))\
+{\
+   return object->_get##name(); \
+}\
+DefineEngineMethod(className, set##name, void, (const char* assetName), , assetText(name,assignment. first tries asset then flat file.))\
+{\
+   object->_set##name(StringTable->insert(assetName));\
+}
 // addProtectedField acessors
 #define DECLARE_ASSET_SETGET(className, name)\
    static bool _set##name##Data(void* obj, const char* index, const char* data)\

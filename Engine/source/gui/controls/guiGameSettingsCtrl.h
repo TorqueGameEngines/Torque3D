@@ -72,14 +72,9 @@ protected:
    Point2F                    mRange;           ///< When working as a slider, this sets our min/max range
 
    //Keybind option
-   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, KeybindBitmap, changeBitmap, GFXDefaultGUIProfile);
-   DECLARE_ASSET_SETGET(GuiGameSettingsCtrl, KeybindBitmap);
-
-   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, PreviousBitmap, changeBitmap, GFXDefaultGUIProfile);
-   DECLARE_ASSET_SETGET(GuiGameSettingsCtrl, PreviousBitmap);
-
-   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, NextBitmap, changeBitmap, GFXDefaultGUIProfile);
-   DECLARE_ASSET_SETGET(GuiGameSettingsCtrl, NextBitmap);
+   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, KeybindBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, PreviousBitmap, GFXDefaultGUIProfile)
+   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, NextBitmap, GFXDefaultGUIProfile)
 
    S32 mArrowSize;
    S32 mColumnSplit; //Padding between the leftmost edge of the control, and the left side of the 'option'.
@@ -89,8 +84,6 @@ protected:
    bool mSelected;
 
 public:
-   void changeBitmap() {}
-
    /// Sets the control as selected . Only controls that are enabled can be selected. 
    virtual void setSelected();
 

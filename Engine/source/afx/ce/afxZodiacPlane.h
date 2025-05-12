@@ -56,14 +56,8 @@ public:
     FACES_BITS = 3
   };
 
-  void onImageChanged()
-  {
-     reloadOnLocalClient();
-  }
-
 public:
-   DECLARE_IMAGEASSET(afxZodiacPlaneData, Texture, onImageChanged, AFX_GFXZodiacTextureProfile);
-   DECLARE_ASSET_SETGET(afxZodiacPlaneData, Texture);
+   DECLARE_IMAGEASSET(afxZodiacPlaneData, Texture, AFX_GFXZodiacTextureProfile)
 
   F32               radius_xy;
   F32               start_ang;

@@ -115,8 +115,8 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
                selectionBoxColor = "255 255 0 255";
                selectionLocked = "0";
                toggleIgnoreList = "0";
-               selectHandle = "ToolsModule:SelectHandle_image";
-               defaultHandle = "ToolsModule:DefaultHandle_image";
+               selectHandleAsset = "ToolsModule:SelectHandle_image";
+               defaultHandleAsset = "ToolsModule:DefaultHandle_image";
                lockedHandleAsset = "ToolsModule:LockedHandle_image";
             };
             new TerrainEditor(ETerrainEditor) {
@@ -1534,7 +1534,7 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
                      internalName = "slider";
                      position = "9 17";
                      extent = "129 15";
-                     bitmap = "tools/gui/images/separator-h.png";  
+                     bitmapAsset = "ToolsModule:separator_h_image"; 
                      HorizSizing = "width";
                      VertSizing = "bottom"; 
                      range = "1 200";

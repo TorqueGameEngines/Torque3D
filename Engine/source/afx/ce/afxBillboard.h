@@ -47,8 +47,7 @@ public:
    };
 
 public:
-   DECLARE_IMAGEASSET(afxBillboardData, Texture, onChangeTexture, GFXStaticTextureSRGBProfile);
-   DECLARE_ASSET_SETGET(afxBillboardData, Texture);
+   DECLARE_IMAGEASSET(afxBillboardData, Texture, GFXStaticTextureSRGBProfile)
 
 
   LinearColorF            color;
@@ -70,11 +69,6 @@ public:
   bool      allowSubstitutions() const override { return true; }
 
   static void       initPersistFields();
-
-  void onChangeTexture()
-  {
-     reloadOnLocalClient();
-  }
 
   DECLARE_CONOBJECT(afxBillboardData);
 };

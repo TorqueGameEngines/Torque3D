@@ -106,11 +106,6 @@ protected:
    void _makePrimBuffer( GFXPrimitiveBufferHandle *pb, U32 count );
    void _renderCorona( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
 
-   void onImageChanged()
-   {
-      reloadOnLocalClient();
-   }
-
 protected:
    
    static const U32 LosMask;
@@ -123,8 +118,7 @@ protected:
    F32 mScale;
    bool mFlareEnabled;
 
-   DECLARE_IMAGEASSET(LightFlareData, FlareTexture, onImageChanged, GFXStaticTextureSRGBProfile);
-   DECLARE_ASSET_SETGET(LightFlareData, FlareTexture);
+   DECLARE_IMAGEASSET(LightFlareData, FlareTexture, GFXStaticTextureSRGBProfile)
 
    F32 mOcclusionRadius;
    bool mRenderReflectPass;

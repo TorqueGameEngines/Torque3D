@@ -4,8 +4,8 @@ function ImageAsset::buildBrowserElement(%this, %previewData)
 {
    //%module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getImagePath())));
       
-   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
-   %previewData.previewLoaded = false; //this marks it for loading progressively later
+   %previewData.previewImage = %assetDef.isNamedTarget() ? "Core_Rendering:namedTarget_image" : "ToolsModule:genericAssetIcon_image";
+   %previewData.previewLoaded = %assetDef.isNamedTarget() ? true : false; //if image target we are loaded, else mark for loading later.
    
    %previewData.assetName = %this.assetName;
    %previewData.assetPath = %this.scriptFile;
@@ -59,13 +59,13 @@ function ImageAsset::generatePreviewImage(%this, %previewButton, %forceRegenerat
             {
                assetName = %previewAssetName;
                versionId = 1;
-               imageFile = fileName(%previewFilePath);
+               imageFile = makeFullPath(%previewFilePath);
             };
-         
+            
             %previewAssetName = "ToolsModule:" @ %previewAssetName;
             %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
+            
             %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
-         
             %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
             
             %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);

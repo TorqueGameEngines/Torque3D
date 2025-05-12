@@ -136,7 +136,7 @@ new GuiControl(MaterialSelectorOverlay, EditorGuiGroup) {
          Command = "MaterialSelector.createNewMaterial();";
          hovertime = "1000";
          tooltip = "Create New Unmapped Material";
-         bitmap = "tools/gui/images/new";
+         bitmapAsset = "ToolsModule:new_n_image";
          groupNum = "-1";
          buttonType = "PushButton";
          useMouseEvents = "0";
@@ -1649,7 +1649,7 @@ function MaterialSelector::createNewMaterial( %this )
          position = "7 4";
          extent = "64 64";
          buttonType = "PushButton";
-         bitmap = "core/images/warnmat";
+         bitmapAsset = "CoreModule:warnMat_image";
          Command = "";
          text = "Loading...";
          useStates = false;

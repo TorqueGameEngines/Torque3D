@@ -98,9 +98,6 @@ BasicClouds::BasicClouds()
    mTexOffset[0].set( 0.5f, 0.5f );
    mTexOffset[1].set( 0.5f, 0.5f );
    mTexOffset[2].set( 0.5f, 0.5f );
-
-   for (U32 i=0; i< TEX_COUNT;i++)
-      INIT_IMAGEASSET_ARRAY(Texture, GFXStaticTextureSRGBProfile, i);
 }
 
 IMPLEMENT_CO_NETOBJECT_V1( BasicClouds );
@@ -215,12 +212,11 @@ U32 BasicClouds::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );
 
+   PACK_ASSET_ARRAY_REFACTOR(conn, Texture, TEX_COUNT)
+
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
       stream->writeFlag( mLayerEnabled[i] );
-
-      PACK_ASSET_ARRAY(conn, Texture, i);
-
       stream->write( mTexScale[i] );
       mathWrite( *stream, mTexDirection[i] );
       stream->write( mTexSpeed[i] );   
@@ -236,12 +232,11 @@ void BasicClouds::unpackUpdate( NetConnection *conn, BitStream *stream )
 {
    Parent::unpackUpdate( conn, stream );
 
+   UNPACK_ASSET_ARRAY_REFACTOR(conn, Texture, TEX_COUNT)
+
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
       mLayerEnabled[i] = stream->readFlag();
-
-      UNPACK_ASSET_ARRAY(conn, Texture, i);
-      
       stream->read( &mTexScale[i] );      
       mathRead( *stream, &mTexDirection[i] );
       stream->read( &mTexSpeed[i] );
@@ -315,14 +310,14 @@ void BasicClouds::renderObject( ObjectRenderInst *ri, SceneRenderState *state, B
 
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {      
-      if ( !mLayerEnabled[i] )
+      if ( !mLayerEnabled[i] || mTextureAsset[i].isNull())
          continue;
 
       mShaderConsts->setSafe( mTexScaleSC, mTexScale[i] );
       mShaderConsts->setSafe( mTexDirectionSC, mTexDirection[i] * mTexSpeed[i] );
       mShaderConsts->setSafe( mTexOffsetSC, mTexOffset[i] );         
 
-      GFX->setTexture( mDiffuseMapSC->getSamplerRegister(), mTexture[i] );                            
+      GFX->setTexture( mDiffuseMapSC->getSamplerRegister(), getTexture(i) );                            
       GFX->setVertexBuffer( mVB[i] );            
 
       GFX->drawIndexedPrimitive( GFXTriangleList, 0, 0, smVertCount, 0, smTriangleCount );
@@ -337,13 +332,11 @@ void BasicClouds::_initTexture()
 {
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
-      if ( !mLayerEnabled[i] )
+      if ( mLayerEnabled[i] && mTextureAsset[i].notNull())
       {
-         mTexture[i] = NULL;
-         continue;
+         // load the resource.
+         getTexture(i);
       }
-
-      _setTexture(getTexture(i), i);
    }
 }
 

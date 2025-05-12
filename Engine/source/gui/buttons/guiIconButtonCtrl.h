@@ -42,8 +42,7 @@ private:
 
 protected:
 
-   DECLARE_IMAGEASSET(GuiIconButtonCtrl, Bitmap, onImageChanged, GFXDefaultGUIProfile);
-   DECLARE_ASSET_SETGET(GuiIconButtonCtrl, Bitmap);
+   DECLARE_IMAGEASSET(GuiIconButtonCtrl, Bitmap, GFXDefaultGUIProfile)
 
    S32               mIconLocation;
    S32               mTextLocation;

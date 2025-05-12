@@ -53,7 +53,6 @@ GameMode::GameMode() :
    mIsActive(false),
    mIsAlwaysActive(false)
 {
-   INIT_ASSET(PreviewImage);
 }
 
 void GameMode::initPersistFields()

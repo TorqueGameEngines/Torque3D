@@ -139,19 +139,6 @@ Material::Material()
       mAccuCoverage[i] = 0.9f;
       mAccuSpecular[i] = 16.0f;
 
-      INIT_IMAGEASSET_ARRAY(DiffuseMap, GFXStaticTextureSRGBProfile, i);
-      INIT_IMAGEASSET_ARRAY(OverlayMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(LightMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(ToneMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(DetailMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(NormalMap, GFXNormalMapProfile, i);
-      INIT_IMAGEASSET_ARRAY(ORMConfigMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(RoughMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(AOMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(MetalMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(GlowMap, GFXStaticTextureProfile, i);
-      INIT_IMAGEASSET_ARRAY(DetailNormalMap, GFXNormalMapProfile, i);
-
       mParallaxScale[i] = 0.0f;
 
       mVertLit[i] = false;
@@ -245,11 +232,6 @@ FRangeValidator glowMulRange(0.0f, 20.0f);
 FRangeValidator parallaxScaleRange(0.0f, 4.0f);
 FRangeValidator scrollSpeedRange(0.0f, 10.0f);
 FRangeValidator waveFreqRange(0.0f, 10.0f);
-void Material::onImageAssetChanged()
-{
-   flush();
-   reload();
-}
 
 void Material::initPersistFields()
 {
@@ -279,21 +261,20 @@ void Material::initPersistFields()
          "Treat Roughness as Roughness");
 
       INITPERSISTFIELD_IMAGEASSET_ARRAY(AOMap, MAX_STAGES, Material, "AOMap");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(RoughMap, MAX_STAGES, Material, "RoughMap (also needs MetalMap)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(MetalMap, MAX_STAGES, Material, "MetalMap (also needs RoughMap)");
+      INITPERSISTFIELD_IMAGEASSET_ARRAY(GlowMap, MAX_STAGES, Material, "GlowMap (needs Albedo)");
+  
       addFieldV("AOChan", TypeRangedS32, Offset(mAOChan, Material), &bmpChanRange, MAX_STAGES,
          "The input channel AO maps use.");
-
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(RoughMap, MAX_STAGES, Material, "RoughMap (also needs MetalMap)");
       addFieldV("roughness", TypeRangedF32, Offset(mRoughness, Material),  &CommonValidators::F32_8BitPercent,MAX_STAGES,
          "The degree of roughness when not using a ORMConfigMap.");
       addFieldV("roughnessChan", TypeRangedS32, Offset(mRoughnessChan, Material), &bmpChanRange, MAX_STAGES,
          "The input channel roughness maps use.");
-
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(MetalMap, MAX_STAGES, Material, "MetalMap (also needs RoughMap)");
       addFieldV("metalness", TypeRangedF32, Offset(mMetalness, Material), &CommonValidators::F32_8BitPercent, MAX_STAGES,
          "The degree of Metalness when not using a ORMConfigMap.");
       addFieldV("metalChan", TypeRangedS32, Offset(mMetalChan, Material), &bmpChanRange, MAX_STAGES,
          "The input channel metalness maps use.");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(GlowMap, MAX_STAGES, Material, "GlowMap (needs Albedo)");
 
       addFieldV("glowMul", TypeRangedF32, Offset(mGlowMul, Material),&glowMulRange, MAX_STAGES,
          "glow mask multiplier");
@@ -306,6 +287,7 @@ void Material::initPersistFields()
 
       INITPERSISTFIELD_IMAGEASSET_ARRAY(DetailNormalMap, MAX_STAGES, Material, "DetailNormalMap");
       addFieldV("detailNormalMapStrength", TypeRangedF32, Offset(mDetailNormalMapStrength, Material), &CommonValidators::PositiveFloat, MAX_STAGES,
+
          "Used to scale the strength of the detail normal map when blended with the base normal map.");
 
       INITPERSISTFIELD_IMAGEASSET_ARRAY(OverlayMap, MAX_STAGES, Material, "Overlay");
@@ -508,18 +490,6 @@ void Material::initPersistFields()
   // They point at the new 'map' fields, but reads always return
   // an empty string and writes only apply if the value is not empty.
   //
-   addProtectedField("baseTex", TypeImageFilename, Offset(mDiffuseMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see diffuseMap\n", AbstractClassRep::FIELD_HideInInspectors);
-   addProtectedField("detailTex", TypeImageFilename, Offset(mDetailMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see detailMap\n", AbstractClassRep::FIELD_HideInInspectors);
-   addProtectedField("overlayTex", TypeImageFilename, Offset(mOverlayMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see overlayMap\n", AbstractClassRep::FIELD_HideInInspectors);
-   addProtectedField("bumpTex", TypeImageFilename, Offset(mNormalMapName, Material),
-      defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
-      "For backwards compatibility.\n@see normalMap\n", AbstractClassRep::FIELD_HideInInspectors);
    addProtectedField("colorMultiply", TypeColorF, Offset(mDiffuse, Material),
       defaultProtectedSetNotEmptyFn, emptyStringProtectedGetFn, MAX_STAGES,
       "For backwards compatibility.\n@see diffuseColor\n", AbstractClassRep::FIELD_HideInInspectors);
@@ -625,7 +595,7 @@ bool Material::isLightmapped() const
 {
    bool ret = false;
    for (U32 i = 0; i < MAX_STAGES; i++)
-      ret |= mLightMapName[i] != StringTable->EmptyString() || mToneMapName[i] != StringTable->EmptyString() || mVertLit[i];
+      ret |= mLightMapAsset[i].notNull() || mToneMapAsset[i].notNull() || mVertLit[i];
    return ret;
 }
 
@@ -658,26 +628,11 @@ void Material::_mapMaterial()
    // If mapTo not defined in script, try to use the base texture name instead
    if (mMapTo.isEmpty())
    {
-      if (mDiffuseMapName[0] == StringTable->EmptyString() && mDiffuseMapAsset->isNull())
+      if (mDiffuseMapAsset->isNull())
          return;
-
-      else
+      else if (mDiffuseMapAsset->notNull())
       {
-         // extract filename from base texture
-         if (mDiffuseMapName[0] != StringTable->EmptyString())
-         {
-            U32 slashPos = String(mDiffuseMapName[0]).find('/', 0, String::Right);
-            if (slashPos == String::NPos)
-               // no '/' character, must be no path, just the filename
-               mMapTo = mDiffuseMapName[0];
-            else
-               // use everything after the last slash
-               mMapTo = String(mDiffuseMapName[0]).substr(slashPos + 1, (U32)strlen(mDiffuseMapName[0]) - slashPos - 1);
-         }
-         else if (!mDiffuseMapAsset->isNull())
-         {
-            mMapTo = mDiffuseMapAsset[0]->getImageFileName();
-         }
+         mMapTo = mDiffuseMapAsset[0]->getImageFile();
       }
    }
 
@@ -852,16 +807,15 @@ bool Material::_setAccuEnabled(void* object, const char* index, const char* data
 //material.getDiffuseMap(%layer); //returns the raw file referenced
 //material.getDiffuseMapAsset(%layer); //returns the asset id
 //material.setDiffuseMap(%texture, %layer); //tries to set the asset and failing that attempts a flat file reference
-DEF_IMAGEASSET_ARRAY_BINDS(Material, DiffuseMap)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, OverlayMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, LightMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, ToneMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, NormalMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, ORMConfigMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, RoughMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, AOMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, MetalMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, GlowMap);
-DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailNormalMap);
-
+DEF_IMAGEASSET_ARRAY_BINDS(Material, DiffuseMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, NormalMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailNormalMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, OverlayMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, LightMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, ToneMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, ORMConfigMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, RoughMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, AOMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, MetalMap, Material::Constants::MAX_STAGES)
+DEF_IMAGEASSET_ARRAY_BINDS(Material, GlowMap, Material::Constants::MAX_STAGES)

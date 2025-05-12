@@ -96,19 +96,19 @@ void TerrainBlock::_updateMaterials()
    {
       TerrainMaterial *mat = mFile->mMaterials[i];
 
-      if (mat->getDiffuseMap() != StringTable->EmptyString())
+      if (mat->getDiffuseMapAsset().notNull())
       {
-         mBaseTextures[i] = mat->getDiffuseMapResource();
+         mBaseTextures[i] = mat->getDiffuseMap();
       }
       else
          mBaseTextures[ i ] = GFXTexHandle();
 
       // Find the maximum detail distance.
-      if (  mat->getDetailMap() != StringTable->EmptyString() &&
+      if (  mat->getDetailMapAsset().notNull() &&
             mat->getDetailDistance() > mMaxDetailDistance )
          mMaxDetailDistance = mat->getDetailDistance();
 
-      if (  mat->getMacroMap() != StringTable->EmptyString() &&
+      if (  mat->getMacroMapAsset().notNull() &&
             mat->getMacroDistance() > mMaxDetailDistance )
          mMaxDetailDistance = mat->getMacroDistance();
    }
@@ -126,19 +126,19 @@ void TerrainBlock::_updateMaterials()
    {
       TerrainMaterial* mat = mFile->mMaterials[i];
 
-      if (mat->getDetailMap() != StringTable->EmptyString())
-         detailTexArray[i] = mat->getDetailMapResource();
-      if (mat->getMacroMap() != StringTable->EmptyString())
-         macroTexArray[i] = mat->getMacroMapResource();
-      if (mat->getNormalMap() != StringTable->EmptyString())
-         normalTexArray[i] = mat->getNormalMapResource();
+      if (mat->getDetailMapAsset().notNull())
+         detailTexArray[i] = mat->getDetailMap();
+      if (mat->getMacroMapAsset().notNull())
+         macroTexArray[i] = mat->getMacroMap();
+      if (mat->getNormalMapAsset().notNull())
+         normalTexArray[i] = mat->getNormalMap();
 
       //depending on creation method this may or may not have been shoved into srgb space eroneously
       GFXTextureProfile* profile = &GFXStaticTextureProfile;
       if (mat->getIsSRGB())
          profile = &GFXStaticTextureSRGBProfile;
-      if (mat->getORMConfigMap() != StringTable->EmptyString())
-         ormTexArray[i] = TEXMGR->createTexture(mat->getORMConfigMap(), profile);
+      if (mat->getORMConfigMapAsset().notNull())
+         ormTexArray[i] = mat->getORMConfigMapAsset()->getTexture(profile);
    }
 
    if (mDetailTextureArray.isNull())

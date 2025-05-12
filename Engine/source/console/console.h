@@ -337,7 +337,8 @@ public:
    {
       cleanupData();
       type = ConsoleValueType::cvString;
-      s = const_cast<char*>(ref);
+      s = (char*)std::move(ref);
+      bufferLen = len;
    }
 
    TORQUE_FORCEINLINE void setBool(const bool val)
@@ -351,7 +352,8 @@ public:
    {
       cleanupData();
       type = ConsoleValueType::cvSTEntry;
-      s = const_cast<char*>(val);
+      s = (char*)std::move(val);
+      bufferLen = 0;
    }
 
    TORQUE_FORCEINLINE void setEmptyString()

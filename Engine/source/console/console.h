@@ -150,6 +150,7 @@ public:
    };
 
    S32 type;
+   U32 bufferLen;
 
    static DataChunker sConversionAllocator;
 
@@ -159,24 +160,27 @@ public:
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      if (type == cvString)
+      if (type <= cvString && bufferLen > 0)
       {
-         if (s != StringTable->EmptyString())
-            dFree(s);
+         dFree(s);
+         bufferLen = 0;
       }
 
+      s = const_cast<char*>(StringTable->EmptyString());
       type = ConsoleValueType::cvNULL;
    }
    ConsoleValue()
    {
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
+      bufferLen = 0;
    }
 
    ConsoleValue(const ConsoleValue& ref)
    {
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
+      bufferLen = 0;
 
       switch (ref.type)
       {
@@ -317,11 +321,14 @@ public:
          setEmptyString();
          return;
       }
+
       cleanupData();
 
       type = ConsoleValueType::cvString;
+
       s = (char*)dMalloc(len + 1);
 
+      bufferLen = len + 1;
       s[len] = '\0';
       dStrcpy(s, val, len + 1);
    }
@@ -342,7 +349,7 @@ public:
 
    TORQUE_FORCEINLINE void setStringTableEntry(StringTableEntry val)
    {
-      //cleanupData();
+      cleanupData();
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(val);
    }

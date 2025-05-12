@@ -612,7 +612,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
       {
          S32 reg = code[ip + (2 + 6 + 1 + 1) + i];
          ConsoleValue& value = argv[i + 1];
-         Script::gEvalState.moveConsoleValue(reg, std::move(value));
+         Script::gEvalState.moveConsoleValue(reg, (value));
       }
       ip = ip + fnArgc + (2 + 6 + 1 + 1);
       curFloatTable = functionFloats;
@@ -1214,7 +1214,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
       case OP_RETURN:
       {
-         returnValue = std::move(stack[_STK]);
+         returnValue = (stack[_STK]);
          _STK--;
 
          // Clear iterator state.
@@ -1905,7 +1905,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             if (nsEntry->mFunctionOffset)
             {
                ConsoleValue returnFromFn = nsEntry->mModule->exec(nsEntry->mFunctionOffset, fnName, nsEntry->mNamespace, callArgc, callArgv, false, nsEntry->mPackage).value;
-               stack[_STK + 1] = std::move(returnFromFn);
+               stack[_STK + 1] = (returnFromFn);
             }
             else // no body
                stack[_STK + 1].setEmptyString();
@@ -2040,7 +2040,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          break;
 
       case OP_PUSH:
-         gCallStack.push(std::move(stack[_STK--]));
+         gCallStack.push((stack[_STK--]));
          break;
 
       case OP_PUSH_FRAME:
@@ -2303,7 +2303,7 @@ execFinished:
    AssertFatal(!(_STK < stackStart), "String stack popped too much in script exec");
 #endif
 
-   return Con::EvalResult(std::move(returnValue));
+   return Con::EvalResult((returnValue));
 }
 
 //------------------------------------------------------------

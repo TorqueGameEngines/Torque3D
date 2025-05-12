@@ -116,7 +116,7 @@ ConsoleValue SimConsoleThreadExecCallback::waitForResult()
 {
    if(sem->acquire(true))
    {
-      return std::move(retVal);
+      return (retVal);
    }
 
    return ConsoleValue();
@@ -134,9 +134,9 @@ void SimConsoleThreadExecEvent::process(SimObject* object)
    if (cb)
    {
       if (mOnObject)
-         cb->handleCallback(std::move(Con::execute(object, mArgc, mArgv)));
+         cb->handleCallback(Con::execute(object, mArgc, mArgv));
       else
-         cb->handleCallback(std::move(Con::execute(mArgc, mArgv)));
+         cb->handleCallback(Con::execute(mArgc, mArgv));
    }
    else
    {

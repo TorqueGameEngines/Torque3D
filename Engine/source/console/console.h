@@ -37,6 +37,7 @@
 #include "core/util/str.h"
 #include "core/util/journal/journaledSignal.h"
 #include "core/stringTable.h"
+#include <iostream>
 
 class SimObject;
 class Namespace;
@@ -119,6 +120,7 @@ typedef const char *StringTableEntry;
 
 enum ConsoleValueType
 {
+   cvNULL = -5,
    cvInteger = -4,
    cvFloat = -3,
    cvString = -2,
@@ -126,92 +128,108 @@ enum ConsoleValueType
    cvConsoleValueType = 0
 };
 
-struct ConsoleValueConsoleType
-{
-   S32 consoleType;
-   void* dataPtr;
-   EnumTable* enumTable;
-};
-
 class ConsoleValue
 {
+public:
+#pragma warning( push )
+#pragma warning( disable : 4201 ) // warning C4201: nonstandard extension used : nameless struct/union
    union
    {
-      F64   f;
-      S64   i;
-      char* s;
-      void* data;
-      ConsoleValueConsoleType* ct;
+      struct
+      {
+         F64   f;
+         S64   i;
+         char* s;
+      };
+
+      struct
+      {
+         void* dataPtr;
+         EnumTable* enumTable;
+      };
    };
 
    S32 type;
+   U32 bufferLen;
 
    static DataChunker sConversionAllocator;
 
    char* convertToBuffer() const;
 
-   TORQUE_FORCEINLINE bool hasAllocatedData() const
-   {
-      return (type == ConsoleValueType::cvString || isConsoleType()) && data != NULL;
-   }
-
    const char* getConsoleData() const;
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      if (hasAllocatedData())
+      if (type <= cvString && bufferLen > 0)
       {
-         dFree(data);
-         data = NULL;
-      }
-   }
-
-   TORQUE_FORCEINLINE void _move(ConsoleValue&& ref) noexcept
-   {
-      type = ref.type;
-
-      switch (ref.type)
-      {
-      case cvInteger:
-         i = ref.i;
-         break;
-      case cvFloat:
-         f = ref.f;
-         break;
-      case cvSTEntry:
-         TORQUE_CASE_FALLTHROUGH;
-      case cvString:
-         s = ref.s;
-         break;
-      default:
-         data = ref.data;
-         break;
+         dFree(s);
+         bufferLen = 0;
       }
 
-      ref.data = NULL;
-      ref.setEmptyString();
+      s = const_cast<char*>(StringTable->EmptyString());
+      type = ConsoleValueType::cvNULL;
    }
-
-public:
    ConsoleValue()
    {
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
+      bufferLen = 0;
    }
 
-   ConsoleValue(ConsoleValue&& ref) noexcept
+   ConsoleValue(const ConsoleValue& ref)
    {
-      _move(std::move(ref));
+      type = ConsoleValueType::cvSTEntry;
+      s = const_cast<char*>(StringTable->EmptyString());
+      bufferLen = 0;
+
+      switch (ref.type)
+      {
+      case cvNULL:
+         std::cout << "Ref already cleared!";
+         break;
+      case cvInteger:
+         setInt(ref.i);
+         break;
+      case cvFloat:
+         setFloat(ref.f);
+         break;
+      case cvSTEntry:
+         setStringTableEntry(ref.s);
+         break;
+      case cvString:
+         setString(ref.s);
+         break;
+      default:
+         setConsoleData(ref.type, ref.dataPtr, ref.enumTable);
+         break;
+      }
    }
 
-   TORQUE_FORCEINLINE ConsoleValue& operator=(ConsoleValue&& ref) noexcept
+   ConsoleValue& operator=(const ConsoleValue& ref)
    {
-      _move(std::move(ref));
+      switch (ref.type)
+      {
+      case cvNULL:
+         std::cout << "Ref already cleared!";
+         break;
+      case cvInteger:
+         setInt(ref.i);
+         break;
+      case cvFloat:
+         setFloat(ref.f);
+         break;
+      case cvSTEntry:
+         setStringTableEntry(ref.s);
+         break;
+      case cvString:
+         setString(ref.s);
+         break;
+      default:
+         setConsoleData(ref.type, ref.dataPtr, ref.enumTable);
+         break;
+      }
       return *this;
    }
-
-   ConsoleValue(const ConsoleValue&) = delete;
-   ConsoleValue& operator=(const ConsoleValue&) = delete;
 
    TORQUE_FORCEINLINE ~ConsoleValue()
    {
@@ -308,16 +326,19 @@ public:
 
       type = ConsoleValueType::cvString;
 
-      s = (char*)dMalloc(static_cast<dsize_t>(len) + 1);
+      s = (char*)dMalloc(len + 1);
+
+      bufferLen = len + 1;
       s[len] = '\0';
-      dStrcpy(s, val, static_cast<dsize_t>(len) + 1);
+      dStrcpy(s, val, len + 1);
    }
 
    TORQUE_FORCEINLINE void setStringRef(const char* ref, S32 len)
    {
       cleanupData();
       type = ConsoleValueType::cvString;
-      s = const_cast<char*>(ref);
+      s = (char*)std::move(ref);
+      bufferLen = len;
    }
 
    TORQUE_FORCEINLINE void setBool(const bool val)
@@ -331,7 +352,8 @@ public:
    {
       cleanupData();
       type = ConsoleValueType::cvSTEntry;
-      s = const_cast<char*>(val);
+      s = (char*)std::move(val);
+      bufferLen = 0;
    }
 
    TORQUE_FORCEINLINE void setEmptyString()
@@ -339,12 +361,13 @@ public:
       setStringTableEntry(StringTable->EmptyString());
    }
 
-   TORQUE_FORCEINLINE void setConsoleData(S32 consoleType, void* dataPtr, const EnumTable* enumTable)
+   TORQUE_FORCEINLINE void setConsoleData(S32 inConsoleType, void* inDataPtr, const EnumTable* inEnumTable)
    {
       cleanupData();
-      type = ConsoleValueType::cvConsoleValueType;
-      ct = new ConsoleValueConsoleType{ consoleType, dataPtr, const_cast<EnumTable*>(enumTable) };
-   }
+      type = inConsoleType;
+      dataPtr = inDataPtr;
+      enumTable = const_cast<EnumTable*>(inEnumTable);
+   };
 
    TORQUE_FORCEINLINE S32 getType() const
    {
@@ -366,11 +389,11 @@ public:
       return type >= ConsoleValueType::cvConsoleValueType;
    }
 
-   TORQUE_FORCEINLINE ConsoleValueConsoleType* getConsoleType() const
+   TORQUE_FORCEINLINE S32 getConsoleType() const
    {
       if(type >= ConsoleValueType::cvConsoleValueType)
       {
-         return ct;
+         return type;
       }
       else
       {
@@ -1022,7 +1045,7 @@ namespace Con
    ConsoleValue executef(R r, ArgTs ...argTs)
    {
       _EngineConsoleExecCallbackHelper<R> callback(r);
-      return std::move(callback.template call<ConsoleValue>(argTs...));
+      return (callback.template call<ConsoleValue>(argTs...));
    }
    /// }
 };

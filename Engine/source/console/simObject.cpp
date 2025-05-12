@@ -3536,15 +3536,13 @@ DefineEngineMethod( SimObject, getDebugInfo, ArrayObject*, (),,
    array->push_back( "Flag|CanSave", object->getCanSave() ? "true" : "false" );
    
    #ifndef TORQUE_DISABLE_MEMORY_MANAGER
-   Memory::Info memInfo;
+   Memory::MemInfo memInfo;
    Memory::getMemoryInfo( object, memInfo );
    
-   array->push_back( "Memory|AllocNumber", String::ToString( memInfo.mAllocNumber ) );
-   array->push_back( "Memory|AllocSize", String::ToString( memInfo.mAllocSize ) );
-   array->push_back( "Memory|AllocFile", memInfo.mFileName );
-   array->push_back( "Memory|AllocLine", String::ToString( memInfo.mLineNumber ) );
-   array->push_back( "Memory|IsGlobal", memInfo.mIsGlobal ? "true" : "false" );
-   array->push_back( "Memory|IsStatic", memInfo.mIsStatic ? "true" : "false" );
+   array->push_back( "Memory|AllocNumber", String::ToString( memInfo.allocId) );
+   array->push_back( "Memory|AllocSize", String::ToString( (U32)memInfo.size) );
+   array->push_back( "Memory|AllocFile", memInfo.file);
+   array->push_back( "Memory|AllocLine", String::ToString( memInfo.line) );
    #endif
    
    return array;

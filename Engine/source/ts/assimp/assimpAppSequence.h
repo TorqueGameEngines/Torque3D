@@ -18,7 +18,19 @@
 #include "ts/loader/appSequence.h"
 #endif
 
+#if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
+#ifdef new
+#undef new
+#endif
+#endif
+
 #include <assimp/scene.h>
+
+#if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
+#  define _new new(__FILE__, __LINE__)
+#  define new  _new
+#endif
+
 
 class AssimpAppSequence : public AppSequence
 {

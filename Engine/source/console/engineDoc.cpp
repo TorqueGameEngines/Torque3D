@@ -148,7 +148,7 @@ static void dumpVariable(  Stream& stream,
 
    // Skip variables for which we can't decipher their type.
 
-   ConsoleBaseType* type = ConsoleBaseType::getType( entry->value.getConsoleType()->consoleType );
+   ConsoleBaseType* type = ConsoleBaseType::getType( entry->value.type );
    if( !type )
    {
       Con::errorf( "Can't find type for variable '%s'", entry->name );

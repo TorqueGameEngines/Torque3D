@@ -55,6 +55,9 @@
 
 /// Define me if you want to disable Torque memory manager.
 #cmakedefine TORQUE_DISABLE_MEMORY_MANAGER
+#ifndef TORQUE_ENABLE_ASSERTS // disable memory manager when in release build.
+#define TORQUE_DISABLE_MEMORY_MANAGER
+#endif
 
 /// Define me if you want to disable the virtual mount system.
 #cmakedefine TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM

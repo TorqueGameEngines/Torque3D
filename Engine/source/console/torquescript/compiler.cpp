@@ -269,8 +269,10 @@ U32 CompilerStringTable::addFloatString(F64 value)
 
 void CompilerStringTable::reset()
 {
-   list = NULL;
+   // Reset list and associated variables
+   list = nullptr;
    totalLen = 0;
+   hashTable.clear();  // Clear the lookup table too
 }
 
 char *CompilerStringTable::build()

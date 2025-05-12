@@ -922,7 +922,7 @@ void SceneZoneSpaceManager::verifyState()
             AssertFatal( mObjectZoneLists.containsBinItem(object->mZoneListHandle, zoneId), "SceneZoneSpaceManager::verifyState - Object doesn't have zone in list!");
 
             #ifndef TORQUE_DISABLE_MEMORY_MANAGER
-            Memory::checkPtr( ref->object );
+            Memory::checkPtr( object );
             #endif
          }
       }

@@ -924,6 +924,12 @@ void Namespace::shutdown()
 
    for (Namespace *walk = mNamespaceList; walk; walk = walk->mNext)
       walk->~Namespace();
+
+   gNamespaceCache.clear();
+
+   mNamespaceList = nullptr;
+   mGlobalNamespace = nullptr;
+   mAllocator.freeBlocks();
 }
 
 void Namespace::trashCache()
@@ -1153,11 +1159,11 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, SimObject *
    {
       if (mFunctionOffset)
       {
-         return std::move(mModule->exec(mFunctionOffset, argv[0].getString(), mNamespace, argc, argv, false, mPackage).value);
+         return (mModule->exec(mFunctionOffset, argv[0].getString(), mNamespace, argc, argv, false, mPackage).value);
       }
       else
       {
-         return std::move(ConsoleValue());
+         return (ConsoleValue());
       }
    }
 
@@ -1167,7 +1173,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, SimObject *
    if (mToolOnly && !Con::isCurrentScriptToolScript())
    {
       Con::errorf(ConsoleLogEntry::Script, "%s::%s - attempting to call tools only function from outside of tools", mNamespace->mName, mFunctionName);
-      return std::move(ConsoleValue());
+      return (ConsoleValue());
    }
 #endif
 
@@ -1175,7 +1181,7 @@ ConsoleValue Namespace::Entry::execute(S32 argc, ConsoleValue *argv, SimObject *
    {
       Con::warnf(ConsoleLogEntry::Script, "%s::%s - wrong number of arguments. got %d, expected %d to %d", mNamespace->mName, mFunctionName, argc, mMinArgs, mMaxArgs);
       Con::warnf(ConsoleLogEntry::Script, "usage: %s", mUsage);
-      return std::move(ConsoleValue());
+      return (ConsoleValue());
    }
 
    ConsoleValue result;

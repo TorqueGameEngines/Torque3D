@@ -114,29 +114,6 @@ namespace engineAPI
 }
 
 
-
-// The following are some tricks to make the memory leak checker run after global
-// dtors have executed by placing some code in the termination segments.
-
-#if defined( TORQUE_DEBUG ) && !defined( TORQUE_DISABLE_MEMORY_MANAGER )
-
-   #ifdef TORQUE_COMPILER_VISUALC
-   #  pragma data_seg( ".CRT$XTU" )
-   
-      static void* sCheckMemBeforeTermination = &Memory::ensureAllFreed;
-      
-   #  pragma data_seg()
-   #elif defined( TORQUE_COMPILER_GCC )
-   
-       __attribute__ ( ( destructor ) ) static void _ensureAllFreed()
-      {
-         Memory::ensureAllFreed();
-      }
-      
-   #endif
-
-#endif
-
 // Process a time event and update all sub-processes
 void processTimeEvent(S32 elapsedTime)
 {
@@ -216,10 +193,6 @@ void StandardMainLoop::init()
    gStartupTimer = PlatformTimer::create();
    #endif
    
-   #ifdef TORQUE_DEBUG_GUARD
-      Memory::flagCurrentAllocs( Memory::FLAG_Global );
-   #endif
-
    Platform::setMathControlStateKnown();
    
    // Asserts should be created FIRST
@@ -327,10 +300,6 @@ void StandardMainLoop::init()
 
    // Hook in for UDP notification
    Net::getPacketReceiveEvent().notify(GNet, &NetInterface::processPacketReceiveEvent);
-
-   #ifdef TORQUE_DEBUG_GUARD
-      Memory::flagCurrentAllocs( Memory::FLAG_Static );
-   #endif
 }
 
 void StandardMainLoop::shutdown()
@@ -378,9 +347,6 @@ void StandardMainLoop::shutdown()
    // asserts should be destroyed LAST
    PlatformAssert::destroy();
 
-#if defined( TORQUE_DEBUG ) && !defined( TORQUE_DISABLE_MEMORY_MANAGER )
-   Memory::validate();
-#endif
 }
 
 void StandardMainLoop::preShutdown()

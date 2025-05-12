@@ -193,7 +193,7 @@ private:
    {
       Node* mNext;
       Pair mPair;
-      Node(): mNext(0) {}
+      Node(): mNext(nullptr) {}
       Node(Pair p,Node* n)
          :  mNext(n),
             mPair(p)
@@ -226,8 +226,8 @@ public:
 
       _Iterator()
       {
-         mHashTable = 0;
-         mLink = 0;
+         mHashTable = nullptr;
+         mLink = nullptr;
       }
 
       _Iterator(M* table,E* ptr)
@@ -320,7 +320,7 @@ public:
 template<typename Key, typename Value> HashTable<Key,Value>::HashTable() : mNodeAllocator(512)
 {
    mTableSize = 0;
-   mTable = 0;
+   mTable = nullptr;
    mSize = 0;
 }
 
@@ -328,7 +328,7 @@ template<typename Key, typename Value> HashTable<Key,Value>::HashTable(const Has
 {
    mSize = 0;
    mTableSize = 0;
-   mTable = 0;
+   mTable = nullptr;
    *this = p;
 }
 
@@ -357,7 +357,7 @@ typename HashTable<Key,Value>::Node* HashTable<Key,Value>::_next(U32 index) cons
    for (; index < mTableSize; index++)
       if (Node* node = mTable[index])
          return node;
-   return 0;
+   return nullptr;
 }
 
 template<typename Key, typename Value>
@@ -402,7 +402,7 @@ void HashTable<Key,Value>::_destroy()
       
    mNodeAllocator.freeBlocks();
    delete[] mTable;
-   mTable = NULL;
+   mTable = nullptr;
 }
 
 
@@ -509,7 +509,7 @@ typename HashTable<Key,Value>::Iterator HashTable<Key,Value>::insertEqual(const 
 template<typename Key, typename Value>
 void HashTable<Key,Value>::erase(const Key& key)
 {
-   if (mTable==NULL)
+   if (mTable == nullptr)
       return;
    Node** prev = &mTable[_index(key)];
    for (Node* itr = *prev; itr; prev = &itr->mNext, itr = itr->mNext)
@@ -529,7 +529,7 @@ void HashTable<Key,Value>::erase(const Key& key)
 template<typename Key, typename Value>
 void HashTable<Key,Value>::erase(Iterator node)
 {
-   if (mTable==NULL)
+   if (mTable == nullptr)
       return;
    Node** prev = &mTable[_index(node->key)];
    for (Node* itr = *prev; itr; prev = &itr->mNext, itr = itr->mNext)
@@ -547,7 +547,7 @@ void HashTable<Key,Value>::erase(Iterator node)
 template<typename Key, typename Value>
 void HashTable<Key,Value>::erase(const Key & key, const Value & value)
 {
-   if (mTable==NULL)
+   if (mTable == nullptr)
       return;
    Node** prev = &mTable[_index(key)];
    for (Node* itr = *prev; itr; prev = &itr->mNext, itr = itr->mNext)
@@ -591,7 +591,7 @@ typename HashTable<Key,Value>::Iterator HashTable<Key,Value>::find(const Key& ke
       for (Node* itr = mTable[_index(key)]; itr; itr = itr->mNext)
          if ( KeyCmp::equals<Key>( itr->mPair.key, key ) )
             return Iterator(this,itr);
-   return Iterator(this,0);
+   return Iterator(this, nullptr);
 }
 
 template<typename Key, typename Value>
@@ -605,7 +605,7 @@ typename HashTable<Key,Value>::ConstIterator HashTable<Key,Value>::find(const Ke
             return ConstIterator(this,itr);
       }
    }
-   return ConstIterator(this,0);
+   return ConstIterator(this, nullptr);
 }
 
 template<typename Key, typename Value>
@@ -659,13 +659,13 @@ inline typename HashTable<Key,Value>::ConstIterator HashTable<Key,Value>::begin(
 template<typename Key, typename Value>
 inline typename HashTable<Key,Value>::Iterator HashTable<Key,Value>::end()
 {
-   return Iterator(this,0);
+   return Iterator(this, nullptr);
 }
 
 template<typename Key, typename Value>
 inline typename HashTable<Key,Value>::ConstIterator HashTable<Key,Value>::end() const
 {
-   return ConstIterator(this,0);
+   return ConstIterator(this, nullptr);
 }
 
 

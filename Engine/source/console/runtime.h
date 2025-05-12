@@ -14,10 +14,10 @@ namespace Con
    public:
       EvalResult() {}
 
-      EvalResult(ConsoleValue&& pValue)
+      EvalResult(ConsoleValue pValue)
       {
          valid = true;
-         value = (ConsoleValue&&)pValue;
+         value = (pValue);
       }
 
       EvalResult(String errorMessage)

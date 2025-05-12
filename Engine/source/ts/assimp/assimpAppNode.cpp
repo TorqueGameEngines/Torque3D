@@ -25,11 +25,24 @@
 #include "ts/assimp/assimpAppNode.h"
 #include "ts/assimp/assimpAppMesh.h"
 
+
+#if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
+#ifdef new
+#undef new
+#endif
+#endif
+
 // assimp include files. 
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/types.h>
+
+#if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
+#  define _new new(__FILE__, __LINE__)
+#  define new  _new
+#endif
+
 
 aiAnimation* AssimpAppNode::sActiveSequence = NULL;
 F32 AssimpAppNode::sTimeMultiplier = 1.0f;

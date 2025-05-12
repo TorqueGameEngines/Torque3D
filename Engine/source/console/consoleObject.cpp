@@ -286,6 +286,12 @@ void AbstractClassRep::shutdown()
 
    // Release storage allocated to the class table.
 
+   for (auto walk = classLinkList; walk; walk = walk->nextClass)
+   {
+      walk->mFieldList.clear();
+      walk->mFieldList.compact(); // Important: frees the internal buffer
+   }
+
    for (U32 group = 0; group < NetClassGroupsCount; group++)
       for(U32 type = 0; type < NetClassTypesCount; type++)
          if( classTable[ group ][ type ] )

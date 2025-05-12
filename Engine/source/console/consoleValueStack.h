@@ -89,10 +89,10 @@ public:
       stack.pop_back();
    }
 
-   TORQUE_FORCEINLINE void push(ConsoleValue&& val)
+   TORQUE_FORCEINLINE void push(ConsoleValue val)
    {
       Frame& frame = stack.last();
-      frame.values[frame.internalCounter++] = std::move(val);
+      frame.values[frame.internalCounter++] = (val);
    }
 
    TORQUE_FORCEINLINE void argvc(StringTableEntry fn, S32& argc, ConsoleValue** argv)

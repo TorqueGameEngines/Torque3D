@@ -321,7 +321,7 @@ public:
 
       void reset();
 
-      inline ConsoleValue getValue() { return std::move(value); }
+      inline ConsoleValue getValue() { return (value); }
 
       inline U32 getIntValue()
       {
@@ -349,8 +349,7 @@ public:
          if (value.isConsoleType())
          {
             const char* dptr = Con::getData(TypeS32, &val, 0);
-            ConsoleValueConsoleType* cvt = value.getConsoleType();
-            Con::setData(cvt->consoleType, cvt->dataPtr, 0, 1, &dptr, cvt->enumTable);
+            Con::setData(value.type, value.dataPtr, 0, 1, &dptr, value.enumTable);
          }
          else
          {
@@ -373,8 +372,7 @@ public:
          if (value.isConsoleType())
          {
             const char* dptr = Con::getData(TypeF32, &val, 0);
-            ConsoleValueConsoleType* cvt = value.getConsoleType();
-            Con::setData(cvt->consoleType, cvt->dataPtr, 0, 1, &dptr, cvt->enumTable);
+            Con::setData(value.type, value.dataPtr, 0, 1, &dptr, value.enumTable);
          }
          else
          {
@@ -397,8 +395,7 @@ public:
 
          if (value.isConsoleType())
          {
-            ConsoleValueConsoleType* cvt = value.getConsoleType();
-            Con::setData(cvt->consoleType, cvt->dataPtr, 0, 1, &val, cvt->enumTable);
+            Con::setData(value.type, value.dataPtr, 0, 1, &val, value.enumTable);
          }
          else
          {

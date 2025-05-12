@@ -1,4 +1,4 @@
-﻿#ifndef _EVALSTATE_H
+#ifndef _EVALSTATE_H
 #define _EVALSTATE_H
 #include "console/consoleInternal.h"
 
@@ -83,7 +83,7 @@ public:
 
    TORQUE_FORCEINLINE void moveConsoleValue(S32 reg, ConsoleValue val)
    {
-      currentRegisterArray->values[reg] = std::move(val);
+      currentRegisterArray->values[reg] = (val);
    }
 
    void pushFrame(StringTableEntry frameName, Namespace *ns, S32 regCount);

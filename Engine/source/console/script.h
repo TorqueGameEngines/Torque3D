@@ -16,7 +16,7 @@ namespace Con
       gLastEvalResult.value.setString(pLastEvalResult.value.getString());
       return pLastEvalResult;
    }
-   inline EvalResult getLastEvalResult() { return setLastEvalResult(std::move(gLastEvalResult)); };
+   inline EvalResult getLastEvalResult() { return setLastEvalResult((gLastEvalResult)); };
 
    bool runStream(Stream* byteCode, const char* fileName);
 

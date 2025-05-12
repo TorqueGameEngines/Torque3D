@@ -175,6 +175,9 @@ public:
 
    ConsoleValue(const ConsoleValue& ref)
    {
+      type = ConsoleValueType::cvSTEntry;
+      s = const_cast<char*>(StringTable->EmptyString());
+
       switch (ref.type)
       {
       case cvNULL:

@@ -163,6 +163,13 @@ ImageAsset::ImageAsset() :
 
 ImageAsset::~ImageAsset()
 {
+   ImageTextureMap::iterator resIter = mResourceMap.begin();
+   for (; resIter != mResourceMap.end(); ++resIter)
+   {
+      resIter->value.free();
+   }
+
+   mResourceMap.clear();
 }
 
 

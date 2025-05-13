@@ -138,6 +138,8 @@ private: AssetPtr<ImageAsset> mBitmapAsset; public: void _setBitmap(StringTableE
 } static bool _setBitmapData(void* obj, const char* index, const char* data) {
    static_cast<GuiBitmapButtonCtrl*>(obj)->_setBitmap(_getStringTable()->insert(data)); return false;
 }
+StringTableEntry getBitmapFile() { return mBitmapAsset.notNull() ? mBitmapAsset->getImageFile() : ""; }
+
 protected:
 
       void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override

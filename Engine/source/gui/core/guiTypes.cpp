@@ -701,7 +701,7 @@ DefineEngineMethod( GuiControlProfile, getStringWidth, S32, (const char* string)
 
 DefineEngineMethod(GuiControlProfile, getBitmap, const char*, (), , "get name")
 {
-   return object->getBitmapAsset()->getImageFile(); 
+   return object->getBitmapFile(); 
 }
 DefineEngineMethod(GuiControlProfile, getBitmapAsset, const char*, (), , "")
 {

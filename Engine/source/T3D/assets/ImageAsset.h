@@ -285,7 +285,8 @@ public:                                                                         
    inline StringTableEntry _get##name(void) const { return m##name##Asset.getAssetId(); }                                                                                     \
    GFXTexHandle get##name() { return m##name##Asset.notNull() ? m##name##Asset->getTexture(&profile) : NULL; }                                                                \
    AssetPtr<ImageAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
-   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}
+   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}   \
+   StringTableEntry get##name##File(){ return m##name##Asset.notNull() ? m##name##Asset->getImageFile() : ""; }
 
 
 #define DECLARE_IMAGEASSET_NET(className, name, profile, mask)                                                                                                       \
@@ -331,7 +332,8 @@ public:                                                                         
    inline StringTableEntry _get##name(void) const { return m##name##Asset.getAssetId(); }                                                                                     \
    GFXTexHandle get##name() { return m##name##Asset.notNull() ? m##name##Asset->getTexture(&profile) : NULL; }                                                                \
    AssetPtr<ImageAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
-   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}
+   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}   \
+   StringTableEntry get##name##File(){ return m##name##Asset.notNull() ? m##name##Asset->getImageFile() : ""; }
 
 
 #define INITPERSISTFIELD_IMAGEASSET(name, consoleClass, docs)                                                                                                        \
@@ -381,7 +383,8 @@ public:                                                                         
    GFXTexHandle get##name(const U32& index) { return get##name(&profile, index); }                                                                                            \
    GFXTexHandle get##name(GFXTextureProfile* requestedProfile, const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getTexture(requestedProfile) : NULL; }\
    AssetPtr<ImageAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
-   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}
+   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}\
+   StringTableEntry get##name##File(const U32& idx){ return m##name##Asset[idx].notNull() ? m##name##Asset[idx]->getImageFile() : ""; }
 
 
 #define DECLARE_IMAGEASSET_ARRAY_NET(className, name, profile, max, mask)                                                                                            \
@@ -428,7 +431,8 @@ public:                                                                         
    GFXTexHandle get##name(const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getTexture(&profile) : NULL; }                                  \
    GFXTexHandle get##name(GFXTextureProfile* requestedProfile, const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getTexture(requestedProfile) : NULL; }\
    AssetPtr<ImageAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
-   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}
+   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}\
+   StringTableEntry get##name##File(const U32& idx){ return m##name##Asset[idx].notNull() ? m##name##Asset[idx]->getImageFile() : ""; }
 
 
 #define INITPERSISTFIELD_IMAGEASSET_ARRAY(name, arraySize, consoleClass, docs)                                                                                       \

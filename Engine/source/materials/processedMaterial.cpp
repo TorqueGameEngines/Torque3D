@@ -478,9 +478,7 @@ void ProcessedMaterial::_setStageData()
             inputKey[2] = mMaterial->mMetalChan[i];
             inputKey[3] = 0;
             mStages[i].setTex(MFT_OrmMap,
-               _createCompositeTexture(mMaterial->getAOMapAsset(i).notNull() ? mMaterial->getAOMapAsset(i)->getImageFile() : "",
-                                       mMaterial->getRoughMapAsset(i).notNull() ? mMaterial->getRoughMapAsset(i)->getImageFile() : "",
-                                       mMaterial->getMetalMapAsset(i).notNull() ? mMaterial->getMetalMapAsset(i)->getImageFile() : "",
+               _createCompositeTexture(mMaterial->getAOMapFile(i), mMaterial->getRoughMapFile(i), mMaterial->getMetalMapFile(i),
                   "", inputKey, profile));
             if (!mStages[i].getTex(MFT_OrmMap))
                mMaterial->logError("Failed to dynamically create ORM Config map for stage %i", i);

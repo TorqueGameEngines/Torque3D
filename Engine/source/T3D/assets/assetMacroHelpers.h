@@ -130,7 +130,7 @@ for (U32 i = 0; i < max; i++)\
 #define DEF_ASSET_BINDS_REFACTOR(className,name)\
 DefineEngineMethod(className, get##name, StringTableEntry, (), , "get name")\
 {\
-   return object->get##name##Asset()->getImageFile(); \
+   return object->get##name##Asset().notNull() ? object->get##name##Asset()->getImageFile() : ""; \
 }\
 DefineEngineMethod(className, get##name##Asset, StringTableEntry, (), , assetText(name, asset reference))\
 {\

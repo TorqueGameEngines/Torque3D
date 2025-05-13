@@ -249,7 +249,11 @@ public:                                                                         
    void _set##name(StringTableEntry _in){                                                                                                                                     \
       if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
          return;                                                                                                                                                              \
-                                                                                                                                                                              \
+      if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
+      {                                                                                                                                                                       \
+         m##name##Asset = NULL;                                                                                                                                               \
+         return;                                                                                                                                                              \
+      }                                                                                                                                                                       \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
          StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
@@ -296,6 +300,12 @@ public:                                                                         
    void _set##name(StringTableEntry _in){                                                                                                                                     \
       if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
          return;                                                                                                                                                              \
+      if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
+      {                                                                                                                                                                       \
+         m##name##Asset = NULL;                                                                                                                                               \
+         setMaskBits(mask);                                                                                                                                                   \
+         return;                                                                                                                                                              \
+      }                                                                                                                                                                       \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
          StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
@@ -347,6 +357,11 @@ public:                                                                         
    void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
       if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \
          return;                                                                                                                                                              \
+      if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
+      {                                                                                                                                                                       \
+         m##name##Asset[index] = NULL;                                                                                                                                        \
+         return;                                                                                                                                                              \
+      }                                                                                                                                                                       \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
          StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \
@@ -394,6 +409,12 @@ public:                                                                         
    void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
       if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \
          return;                                                                                                                                                              \
+      if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
+      {                                                                                                                                                                       \
+         m##name##Asset[index] = NULL;                                                                                                                                        \
+         setMaskBits(mask);                                                                                                                                                   \
+         return;                                                                                                                                                              \
+      }                                                                                                                                                                       \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
       {                                                                                                                                                                       \
          StringTableEntry imageAssetId = StringTable->EmptyString();                                                                                                          \

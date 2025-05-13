@@ -119,6 +119,8 @@ void AssetManager::onRemove()
         mAssetTagsManifest->deleteObject();
     }
 
+    purgeAssets();
+
     // Call parent.
     Parent::onRemove();
 }

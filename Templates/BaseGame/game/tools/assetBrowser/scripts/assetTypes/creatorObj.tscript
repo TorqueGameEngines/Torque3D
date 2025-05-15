@@ -30,30 +30,12 @@ function AssetBrowser::onFinishCreateObject(%this, %objId)
 
 function Creator::onWorldEditorDropped(%this, %position)
 {
-   if(EditorIsActive())
-   {
-      %targetPosition = EWorldEditor.unproject(%position SPC 1);
-      %camPos = LocalClientConnection.camera.getPosition();
-      %rayResult = containerRayCast(%camPos, %targetPosition, -1);
-      
-      %pos = ObjectCreator.getCreateObjectPosition();
+   %func = %this.val[2];
+   
+   $CurrentAssetBrowser.createdObjectPos = %position;
+   %newObj = eval(%func);
+}
 
-      if(%rayResult != 0)
-      {
-         %pos = getWords(%rayResult, 1, 3);
-      }
-      else
-      {
-         %pos = "0 0 0";  
-      }
-      
-      %func = %this.val[2];
-      
-      $CurrentAssetBrowser.createdObjectPos = %pos;
-      %newObj = eval(%func);
-   }
-   else if(GuiEditorIsActive())
-   {
-      %placeholderVar = "";
-   }
+function Creator::onGUIEditorDropped(%this, %position)
+{
 }

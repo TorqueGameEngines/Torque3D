@@ -1,14 +1,14 @@
-function AssetBrowser::buildCreatorPreview(%this, %assetDef, %previewData)
+AssetBrowser::registerObjectType("Creator", "Creator's");
+
+function Creator::buildBrowserElement(%this, %className, %previewData)
 {
-   %class = %assetDef.val[0];
-   %name = %assetDef.val[1];
-   %func = %assetDef.val[2];
-            
-   %previewData.assetName = %name;
+   //echo("Creator::buildBrowserElement() - " @ %this @ ", " @ %previewData);
+   //%this.dump();
+   %previewData.assetName = %this.val1;
    %previewData.assetPath = "";
    %previewData.moduleName = "";
    
-   %previewData.previewImage = "ToolsModule:" @ %class @ "_image";
+   %previewData.previewImage = "ToolsModule:" @ %this.val0 @ "_image";
    
    if(!AssetDatabase.isDeclaredAsset(%previewData.previewImage))
    {
@@ -18,10 +18,9 @@ function AssetBrowser::buildCreatorPreview(%this, %assetDef, %previewData)
          %previewData.previewImage = "ToolsModule:GuiControl_image";
    }
    
-   //%previewData.assetFriendlyName = %assetDef.assetName;
-   %previewData.assetDesc = %assetDef;
-   %previewData.tooltip = "This creates a new object of the class " @ %class;
-   %previewData.doubleClickCommand = %func;
+   %previewData.assetDesc = %this;
+   %previewData.tooltip = "This creates a new object of the class " @ %this.val0;
+   %previewData.doubleClickCommand = %this.val2;
 }
 
 function AssetBrowser::onFinishCreateObject(%this, %objId)
@@ -29,32 +28,14 @@ function AssetBrowser::onFinishCreateObject(%this, %objId)
    %objId.position = %this.createdObjectPos;
 }
 
-function AssetBrowser::onCreatorEditorDropped(%this, %assetDef, %position)
+function Creator::onWorldEditorDropped(%this, %position)
 {
-   if(EditorIsActive())
-   {
-   %targetPosition = EWorldEditor.unproject(%position SPC 1);
-   %camPos = LocalClientConnection.camera.getPosition();
-   %rayResult = containerRayCast(%camPos, %targetPosition, -1);
+   %func = %this.val[2];
    
-   %pos = ObjectCreator.getCreateObjectPosition();
-
-   if(%rayResult != 0)
-   {
-      %pos = getWords(%rayResult, 1, 3);
-   }
-   else
-   {
-      %pos = "0 0 0";  
-   }
-   
-   %func = %assetDef.val[2];
-   
-   %this.createdObjectPos = %pos;
+   $CurrentAssetBrowser.createdObjectPos = %position;
    %newObj = eval(%func);
-   }
-   else if(GuiEditorIsActive())
-   {
-      %placeholderVar = "";
-   }
+}
+
+function Creator::onGUIEditorDropped(%this, %position)
+{
 }

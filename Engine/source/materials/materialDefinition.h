@@ -223,10 +223,10 @@ public:
 
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
    bool     mIsSRGb[MAX_STAGES];           // SRGB ORM
-   F32      mAOChan[MAX_STAGES];
+   U32      mAOChan[MAX_STAGES];
    bool     mInvertRoughness[MAX_STAGES];
-   F32      mRoughnessChan[MAX_STAGES];
-   F32      mMetalChan[MAX_STAGES];
+   U32      mRoughnessChan[MAX_STAGES];
+   U32      mMetalChan[MAX_STAGES];
    F32      mGlowMul[MAX_STAGES];
 
    /// The strength scalar for the detail normal map.

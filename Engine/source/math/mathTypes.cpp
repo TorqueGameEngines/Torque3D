@@ -573,7 +573,19 @@ ConsoleSetType( TypeTransformF )
       char buffer[256] = { 0 };
       dStrncpy(buffer, *argv, sizeof(buffer));
 
-      if (PropertyInfo::ParseProperty<F32, 7>(buffer, parsed))
+      if (!PropertyInfo::ParseProperty<F32, 7>(buffer, parsed))
+      {
+         TransformF* aa = (TransformF*)dptr;
+         aa->mPosition.x = parsed[0];
+         aa->mPosition.y = parsed[1];
+         aa->mPosition.z = parsed[2];
+         aa->mOrientation.axis.x = 1.000f;
+         aa->mOrientation.axis.y = 0.000f;
+         aa->mOrientation.axis.z = 0.000f;
+         aa->mOrientation.angle = 0.000f;
+         return;
+      }
+      else
       {
          TransformF* aa = (TransformF*)dptr;
          aa->mPosition.x = parsed[0];

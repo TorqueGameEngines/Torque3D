@@ -172,6 +172,7 @@ bool ProcessedMaterial::stepInstance()
 
 String ProcessedMaterial::_getTexturePath(const String& filename)
 {
+   if (filename.isEmpty()) return filename;
    // if '/', then path is specified, use it.
    if( filename.find('/') != String::NPos )
    {

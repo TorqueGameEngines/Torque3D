@@ -80,9 +80,7 @@ bool GFXTexHandle::set(const String &texNameR, const String &texNameG, const Str
    // Clear the existing texture first, so that
    // its memory is free for the new allocation.
    free();
-   
-   // Create and set the new texture.
-   AssertFatal( texNameR.isNotEmpty(), "Texture name is empty" );
+
    StrongObjectRef::set( TEXMGR->createCompositeTexture( texNameR, texNameG, texNameB, texNameA, inputKey, profile ) );
    
    #ifdef TORQUE_DEBUG

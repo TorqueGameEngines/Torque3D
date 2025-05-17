@@ -231,7 +231,7 @@ S32 TorqueMain(S32 argc, const char **argv)
    //      argv = argvFake;
    //   }
 
-#if defined( TORQUE_DEBUG ) && !defined(TORQUE_DISABLE_MEMORY_MANAGER)
+#if defined( TORQUE_ENABLE_ASSERTS ) && !defined(TORQUE_DISABLE_MEMORY_MANAGER)
    Memory::init();
 #endif
 
@@ -258,7 +258,7 @@ S32 TorqueMain(S32 argc, const char **argv)
 
 
 
-#if defined( TORQUE_DEBUG ) && !defined( TORQUE_DISABLE_MEMORY_MANAGER )
+#if defined( TORQUE_ENABLE_ASSERTS ) && !defined( TORQUE_DISABLE_MEMORY_MANAGER )
    Memory::shutdown();
 #endif
 

@@ -72,7 +72,7 @@ void SubSceneAsset::initPersistFields()
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
-
+#ifdef TORQUE_TOOLS
 IMPLEMENT_CONOBJECT(GuiInspectorTypeSubSceneAssetPtr);
 
 ConsoleDocClass(GuiInspectorTypeSubSceneAssetPtr,
@@ -164,3 +164,4 @@ void GuiInspectorTypeSubSceneAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeSubSceneAssetId)->setInspectorFieldType("GuiInspectorTypeSubSceneAssetId");
 }
+#endif

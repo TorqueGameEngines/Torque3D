@@ -129,6 +129,8 @@ void SubScene::onInspect(GuiInspector* inspector)
 {
    Parent::onInspect(inspector);
 
+#ifdef TORQUE_TOOLS
+
    //Put the SubScene group before everything that'd be SubScene-effecting, for orginazational purposes
    GuiInspectorGroup* subsceneGrp = inspector->findExistentGroup(StringTable->insert("SubScene"));
    if (!subsceneGrp)
@@ -165,6 +167,7 @@ void SubScene::onInspect(GuiInspector* inspector)
    saveButton->setConsoleCommand(szBuffer);
 
    saveFieldGui->addObject(saveButton);
+#endif
 }
 
 void SubScene::inspectPostApply()

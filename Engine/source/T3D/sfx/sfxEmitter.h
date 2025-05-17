@@ -42,6 +42,7 @@ class SFXSource;
 class SFXTrack;
 
 DefineConsoleType(TypeSoundControls, bool)
+#ifdef TORQUE_TOOLS
 class GuiInspectorTypeSoundControls : public GuiInspectorField
 {
    typedef GuiInspectorField Parent;
@@ -56,6 +57,7 @@ public:
    GuiControl* constructEditControl() override;
    bool updateRects() override;
 };
+#endif
 //RDTODO: make 3D sound emitters yield their source when being culled
 
 /// The SFXEmitter is used to place 2D or 3D sounds into a 

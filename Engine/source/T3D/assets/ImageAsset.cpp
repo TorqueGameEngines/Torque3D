@@ -765,7 +765,7 @@ DefineEngineStaticMethod(ImageAsset, getAssetIdByFilename, const char*, (const c
 {
    return ImageAsset::getAssetIdByFilename(StringTable->insert(filePath));
 }
-#endif
+
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
 //-----------------------------------------------------------------------------
@@ -1048,3 +1048,4 @@ void GuiInspectorTypeImageAssetPtr::setPreviewImage(StringTableEntry assetId)
    if (mPreviewImage->getBitmapAsset().isNull())
       mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
 }
+#endif

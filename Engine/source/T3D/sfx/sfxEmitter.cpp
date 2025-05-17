@@ -102,6 +102,7 @@ ConsoleSetType(TypeSoundControls)
 {
 }
 
+#ifdef TORQUE_TOOLS
 IMPLEMENT_CONOBJECT(GuiInspectorTypeSoundControls);
 ConsoleDocClass(GuiInspectorTypeSoundControls,
    "@brief Inspector field type for Controlling playback of sounds\n\n"
@@ -201,7 +202,7 @@ bool GuiInspectorTypeSoundControls::updateRects()
 
    return resized;
 }
-
+#endif
 
 //-----------------------------------------------------------------------------
 

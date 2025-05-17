@@ -88,6 +88,10 @@ function onStart()
    // common, along with the guiProfiles they depend on.
    exec( "./gui/guiDialogs.ed." @ $TorqueScriptFileExtension );
    
+   //class method prototyping
+   exec( "./gui/classPrototyping.gui");
+   exec( "./gui/classPrototyping");
+   
    //%toggle = $Scripts::ignoreDSOs;
    //$Scripts::ignoreDSOs = true;
    

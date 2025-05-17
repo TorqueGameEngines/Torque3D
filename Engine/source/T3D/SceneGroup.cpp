@@ -117,6 +117,8 @@ void SceneGroup::inspectPostApply()
 void SceneGroup::onInspect(GuiInspector* inspector)
 {
    Parent::onInspect(inspector);
+
+#ifdef TORQUE_TOOLS
    
    //Put the SubScene group before everything that'd be SubScene-effecting, for orginazational purposes
    GuiInspectorGroup* sceneGroupGrp = inspector->findExistentGroup(StringTable->insert("Editing"));
@@ -154,6 +156,7 @@ void SceneGroup::onInspect(GuiInspector* inspector)
    regenButton->setConsoleCommand(rgBuffer);
 
    regenFieldGui->addObject(regenButton);
+#endif
 }
 
 void SceneGroup::setTransform(const MatrixF& mat)

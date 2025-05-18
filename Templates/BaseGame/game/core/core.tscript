@@ -38,6 +38,26 @@ function CoreModule::onCreate(%this)
    // Parse the command line arguments
    echo("\n--------- Parsing Arguments ---------");
    parseArgs();
+
+   if($compileAll)
+   {
+      echo(" --- Compiling all files ---");
+      compileFiles("*" @ $TorqueScriptFileExtension);
+      compileFiles("*.gui");
+      compileFiles("*.ts");  
+      echo(" --- Exiting after compile ---");
+      quit();
+   }
+
+   if($compileTools)
+   {
+      echo(" --- Compiling tools scritps ---");
+      compileFiles("tools/*" @ $TorqueScriptFileExtension);
+      compileFiles("tools/*.gui");
+      compileFiles("tools/*.ts");  
+      echo(" --- Exiting after compile ---");
+      quit();
+   }
    
    // The canvas needs to be initialized before any gui scripts are run since
    // some of the controls assume that the canvas exists at load time.

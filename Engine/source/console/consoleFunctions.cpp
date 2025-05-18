@@ -2859,7 +2859,7 @@ const char* getDocsLink(const char* filename, U32 lineNumber)
    String baseUrL = String(Con::getVariable("Pref::DocURL","https://github.com/TorqueGameEngines/Torque3D/blob/development/Engine/source"));
    String URL = String("<a:") + baseUrL + fileLineString + String(">docs</a>");
 
-   return (new String(URL))->c_str();
+   return StringTable->insert(URL.c_str());
 }
 
 bool getDocsURL(void* obj, const char* array, const char* data)

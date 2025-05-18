@@ -215,6 +215,7 @@ protected:
    /// Parent and sibling PostEffects in the chain are still processed.
    /// This is intended for debugging purposes.
    bool mSkip;
+   bool mPreProcessed;
 
    bool mOneFrameOnly;
    bool mOnThisFrame;  
@@ -323,6 +324,7 @@ protected:
 
    EffectConstTable mEffectConsts;
 
+   PlatformTimer* mConstUpdateTimer;
    ///
    virtual void _updateScreenGeometry( const Frustum &frustum,
                                        GFXVertexBufferHandle<PFXVertex> *outVB );

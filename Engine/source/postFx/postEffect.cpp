@@ -458,6 +458,7 @@ PostEffect::PostEffect()
       mStateBlockData( NULL ),
       mUpdateShader( true ),
       mSkip( false ),
+      mPreProcessed(false),
       mAllowReflectPass( false ),
       mTargetClear( PFXTargetClear_None ),
       mTargetScale( Point2F::One ),
@@ -508,6 +509,7 @@ PostEffect::PostEffect()
    dMemset( mTexSizeSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
    dMemset( mRenderTargetParamsSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
 
+   mConstUpdateTimer = PlatformTimer::create();
 }
 
 PostEffect::~PostEffect()
@@ -1109,28 +1111,32 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
       dSscanf( buffer.c_str(), "%g %g", texSizeScriptConst.x, texSizeScriptConst.y );
    }
    */
-      
-   {
-      PROFILE_SCOPE( PostEffect_SetShaderConsts );
 
-      // Pass some data about the current render state to script.
-      // 
-      // TODO: This is pretty messy... it should go away.  This info
-      // should be available from some other script accessible method
-      // or field which isn't PostEffect specific.
-      //
-      if ( state )
+   if (mConstUpdateTimer->getElapsedMs() > TickMs)
+   {
+      mConstUpdateTimer->reset();
       {
-         Con::setFloatVariable( "$Param::NearDist", state->getNearPlane() );
-         Con::setFloatVariable( "$Param::FarDist", state->getFarPlane() );   
+         PROFILE_SCOPE(PostEffect_SetShaderConsts);
+
+         // Pass some data about the current render state to script.
+         // 
+         // TODO: This is pretty messy... it should go away.  This info
+         // should be available from some other script accessible method
+         // or field which isn't PostEffect specific.
+         //
+         if (state)
+         {
+            Con::setFloatVariable("$Param::NearDist", state->getNearPlane());
+            Con::setFloatVariable("$Param::FarDist", state->getFarPlane());
+         }
+
+         setShaderConsts_callback();
       }
 
-      setShaderConsts_callback();
-   }   
-
-   EffectConstTable::Iterator iter = mEffectConsts.begin();
-   for ( ; iter != mEffectConsts.end(); iter++ )
-      iter->value->setToBuffer( mShaderConsts );
+      EffectConstTable::Iterator iter = mEffectConsts.begin();
+      for (; iter != mEffectConsts.end(); iter++)
+         iter->value->setToBuffer(mShaderConsts);
+   }
 }
 
 void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *inTexViewport )
@@ -1423,9 +1429,11 @@ void PostEffect::process(  const SceneRenderState *state,
       return;
 
    GFXDEBUGEVENT_SCOPE_EX( PostEffect_Process, ColorI::GREEN, avar("PostEffect: %s", getName()) );
-
-   preProcess_callback();   
-
+   if (!mPreProcessed || mShader->getReloadKey() != mShaderReloadKey)
+   {
+      mPreProcessed = true;
+      preProcess_callback();
+   }
    GFXTransformSaver saver;
 
    // Set the textures.
@@ -1578,6 +1586,7 @@ bool PostEffect::_setIsEnabled( void *object, const char *index, const char *dat
 
 void PostEffect::enable()
 {
+   mPreProcessed = false;
    // Don't add TexGen PostEffects to the PostEffectManager!
    if ( mRenderTime == PFXTexGenOnDemand )
       return;
@@ -1621,6 +1630,7 @@ void PostEffect::disable()
 
 void PostEffect::reload()
 {
+   mPreProcessed = false;
    // Reload the shader if we have one or mark it
    // for updating when its processed next.
    if ( mShader )

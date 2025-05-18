@@ -2744,6 +2744,20 @@ DefineEngineFunction( debug, void, (),,
 
 //-----------------------------------------------------------------------------
 
+DefineEngineFunction(isPlayerBuild, bool, (), ,
+   "Test whether the engine has been compiled with TORQUE_PLAYER.\n\n"
+   "@return True if this is a playback only build; false otherwise.\n\n"
+   "@ingroup Platform")
+{
+#ifdef TORQUE_PLAYER
+   return true;
+#else
+   return false;
+#endif
+}
+
+//-----------------------------------------------------------------------------
+
 DefineEngineFunction( isShippingBuild, bool, (),,
    "Test whether the engine has been compiled with TORQUE_SHIPPING, i.e. in a form meant for final release.\n\n"
    "@return True if this is a shipping build; false otherwise.\n\n"

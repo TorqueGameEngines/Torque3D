@@ -1722,7 +1722,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          TORQUE_CASE_FALLTHROUGH;
 
       case OP_LOADIMMED_STR:
-         stack[_STK + 1].setString(curStringTable + code[ip++]);
+         stack[_STK + 1].setStringTableEntry(curStringTable + code[ip++]);
          _STK ++;
          break;
 
@@ -1758,7 +1758,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
       break;
 
       case OP_LOADIMMED_IDENT:
-         stack[_STK + 1].setString(CodeToSTE(code, ip));
+         stack[_STK + 1].setStringTableEntry(CodeToSTE(code, ip));
          _STK++;
          ip += 2;
          break;

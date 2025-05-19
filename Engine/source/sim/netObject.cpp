@@ -570,7 +570,7 @@ void NetObject::addNetworkedField(const char*  in_pFieldname,
    f.pFieldname = StringTable->insert(in_pFieldname);
 
    if (in_pFieldDocs)
-      f.pFieldDocs = in_pFieldDocs;
+      f.pFieldDocs = StringTable->insert(in_pFieldDocs);
 
    f.type = in_fieldType;
    f.offset = in_fieldOffset;

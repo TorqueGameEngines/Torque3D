@@ -256,12 +256,6 @@ S32 TorqueMain(S32 argc, const char **argv)
    if( StandardMainLoop::requiresRestart() )
       Platform::restartInstance();
 
-
-
-#if defined( TORQUE_ENABLE_ASSERTS ) && !defined( TORQUE_DISABLE_MEMORY_MANAGER )
-   Memory::shutdown();
-#endif
-
    // Return.
    return StandardMainLoop::getReturnStatus();
 }

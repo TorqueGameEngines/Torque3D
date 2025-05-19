@@ -87,6 +87,13 @@ namespace Memory
       U32 total = 0;
    } memLog[MaxAllocs];
 
+   bool sortMemReports(memReport const& lhs, memReport const& rhs)
+   {
+      if (lhs.total != rhs.total)
+         return lhs.total > rhs.total;
+      return lhs.count > rhs.count;
+   }
+
    void init()
    {
       if (initialized) return;
@@ -100,7 +107,7 @@ namespace Memory
       std::tm* localTime = std::localtime(&now);
       std::strftime(gLogFilename, sizeof(gLogFilename), "memlog_%Y-%m-%d_%H-%M-%S.txt", localTime);
 
-      //std::atexit(shutdown);
+      std::atexit(shutdown);
    }
 
    void shutdown()
@@ -113,14 +120,7 @@ namespace Memory
 
       std::fprintf(log, "\n--- Memory Leak Report ---\n");
 
-      U32 start = 0;
-      U32 stop = allocCount;
-      if (gFromScript) //filter out the bits from console
-      {
-         start = 6;
-         stop = allocCount - 8;
-      }
-      for (U32 curRep = start; curRep < stop; ++curRep)
+      for (U32 curRep = 0; curRep < allocCount; ++curRep)
       {
          if (allocList[curRep].ptr != nullptr)
          {
@@ -151,16 +151,16 @@ namespace Memory
 
                   if (SymFromAddr(process, addr, 0, symbol)) {
                      if (SymGetLineFromAddr64(process, addr, &displacement, &line)) {
-                        std::sprintf(stack, "  [%d] %s - %s:%lu (0x%0llX)\n",
-                           curStack, symbol->Name, line.FileName, line.LineNumber, symbol->Address);
+                        std::sprintf(stack, "  [%d] %s - %s:%lu\n",
+                           curStack, symbol->Name, line.FileName, line.LineNumber);
                      }
                      else {
-                        std::sprintf(stack, "  [%d] %s - ???:??? (0x%0llX)\n",
-                           curStack, symbol->Name, symbol->Address);
+                        std::sprintf(stack, "  [%d] %s - ???:???\n",
+                           curStack, symbol->Name);
                      }
                   }
                   else {
-                     std::sprintf(stack, "  [%d] ??? - 0x%0llX\n", curStack, addr);
+                     std::sprintf(stack, "  [%d] ???\n", curStack);
                   }
                   report += stack;
                }
@@ -177,13 +177,7 @@ namespace Memory
 #endif
             }
 
-            //if (report.find("getDocsLink") != std::string::npos)
-            //{
-            //   //known issue. one off allocation
-            //   memLog[curRep].skip = true;
-            //}
-
-            for (U32 oldRep = start; oldRep < curRep; ++oldRep)
+            for (U32 oldRep = 0; oldRep < curRep; ++oldRep)
             {
                if (!memLog[oldRep].skip && (memLog[oldRep].report.find(report) != std::string::npos))
                {
@@ -202,10 +196,10 @@ namespace Memory
             }
          }
       }
-
-      for (U32 ntry = start; ntry < stop; ++ntry)
+      std::sort(memLog, memLog + allocCount, &sortMemReports);
+      for (U32 ntry = 0; ntry < allocCount; ++ntry)
       {
-         if (!memLog[ntry].skip)
+         if (!memLog[ntry].skip /* && (memLog[ntry].count>9 || memLog[ntry].total >1023)*/) //unrem to focus on large leaks only -BJR
          {
             std::fprintf(log, "Leak-count[%i]total[%i]:%s", memLog[ntry].count, memLog[ntry].total, memLog[ntry].report.c_str());
             memLog[ntry].report.clear();

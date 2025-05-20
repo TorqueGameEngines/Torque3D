@@ -82,7 +82,7 @@ set(DEFAULT_TARGET_PROPS
     # Prefer C11, but support C99 and earlier when possible.
     C_STANDARD 11)
 
-set(CMAKE_MODULE_PATH "${OpenAL_SOURCE_DIR}/cmake")
+list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(CheckFunctionExists)
 include(CheckLibraryExists)

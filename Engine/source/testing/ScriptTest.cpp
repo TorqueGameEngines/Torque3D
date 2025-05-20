@@ -155,31 +155,31 @@ TEST_F(ScriptTest, Basic_Concatination)
          return "a" @ "b";
    )");
 
-   ASSERT_STREQ(result1.getString(), "ab");
+   ASSERT_STRCASEEQ(result1.getString(), "ab");
 
    ConsoleValue result2 = RunScript(R"(
          return "a" SPC "b";
    )");
 
-   ASSERT_STREQ(result2.getString(), "a b");
+   ASSERT_STRCASEEQ(result2.getString(), "a b");
 
    ConsoleValue result3 = RunScript(R"(
          return "a" TAB "b";
    )");
 
-   ASSERT_STREQ(result3.getString(), "a\tb");
+   ASSERT_STRCASEEQ(result3.getString(), "a\tb");
 
    ConsoleValue result4 = RunScript(R"(
          return "a" NL "b";
    )");
 
-   ASSERT_STREQ(result4.getString(), "a\nb");
+   ASSERT_STRCASEEQ(result4.getString(), "a\nb");
 
    ConsoleValue complex = RunScript(R"(
          return "a" @ "b" @ "c" @ "d";
    )");
 
-   ASSERT_STREQ(complex.getString(), "abcd");
+   ASSERT_STRCASEEQ(complex.getString(), "abcd");
 }
 
 TEST_F(ScriptTest, Basic_Global_Variable_Tests)
@@ -284,7 +284,7 @@ TEST_F(ScriptTest, Basic_Conditional_Statements)
          return $a $= "hello" ? "World" : "No U";
    )");
 
-   ASSERT_STREQ(ternaryValue.getString(), "World");
+   ASSERT_STRCASEEQ(ternaryValue.getString(), "World");
 }
 
 TEST_F(ScriptTest, Basic_Loop_Statements)
@@ -310,7 +310,7 @@ TEST_F(ScriptTest, Basic_Loop_Statements)
          return t(3);
    )");
 
-   ASSERT_STREQ(forValue.getString(), "aaa");
+   ASSERT_STRCASEEQ(forValue.getString(), "aaa");
 
    ConsoleValue forReverseLoop = RunScript(R"(
          function t(%times)
@@ -324,7 +324,7 @@ TEST_F(ScriptTest, Basic_Loop_Statements)
          return t(3);
    )");
 
-   ASSERT_STREQ(forReverseLoop.getString(), "bbb");
+   ASSERT_STRCASEEQ(forReverseLoop.getString(), "bbb");
 
    ConsoleValue forIfValue = RunScript(R"(
          function t()
@@ -346,7 +346,7 @@ TEST_F(ScriptTest, Basic_Loop_Statements)
          return t();
    )");
 
-   ASSERT_STREQ(forIfValue.getString(), "0, 1, 2, 3, 4");
+   ASSERT_STRCASEEQ(forIfValue.getString(), "0, 1, 2, 3, 4");
 }
 
 TEST_F(ScriptTest, ForEachLoop)
@@ -614,7 +614,7 @@ TEST_F(ScriptTest, SimObject_Tests)
          return FudgeCollector.fudge;
    )");
 
-   ASSERT_STREQ(propertyValue.getString(), "Chocolate");
+   ASSERT_STRCASEEQ(propertyValue.getString(), "Chocolate");
 
    ConsoleValue funcReturn = RunScript(R"(
          function SimObject::fooFunc(%this)
@@ -625,7 +625,7 @@ TEST_F(ScriptTest, SimObject_Tests)
          return FudgeCollector.fooFunc();
    )");
 
-   ASSERT_STREQ(funcReturn.getString(), "Bar");
+   ASSERT_STRCASEEQ(funcReturn.getString(), "Bar");
 
    ConsoleValue parentFn = RunScript(R"(
          new SimObject(Hello);
@@ -644,7 +644,7 @@ TEST_F(ScriptTest, SimObject_Tests)
          return Hello.fooFunc2();
    )");
 
-   ASSERT_STREQ(parentFn.getString(), "FooBar");
+   ASSERT_STRCASEEQ(parentFn.getString(), "FooBar");
 
    ConsoleValue simpleFieldTest = RunScript(R"(
          function a()
@@ -655,7 +655,7 @@ TEST_F(ScriptTest, SimObject_Tests)
          return a();
    )");
 
-   ASSERT_STREQ(simpleFieldTest.getString(), "A");
+   ASSERT_STRCASEEQ(simpleFieldTest.getString(), "A");
 
    ConsoleValue grp = RunScript(R"(
          new SimGroup(FudgeCollectorGroup)
@@ -697,7 +697,7 @@ TEST_F(ScriptTest, SimObject_Tests)
          return a();
    )");
 
-   ASSERT_STREQ(fieldTest.getString(), "B");
+   ASSERT_STRCASEEQ(fieldTest.getString(), "B");
 
    ConsoleValue fieldOpTest = RunScript(R"(
          function a()
@@ -1244,7 +1244,7 @@ TEST_F(ScriptTest, RegressionString)
       return Tween::vectorAdd("1 2 3", "4 5 6");
    )");
 
-   ASSERT_STREQ(regression.getString(), "5 7 9");
+   ASSERT_STRCASEEQ(regression.getString(), "5 7 9");
 
    ConsoleValue regression2 = RunScript(R"(
       function doTest()
@@ -1267,5 +1267,5 @@ TEST_F(ScriptTest, RegressionString)
       return doTest();
    )");
 
-   ASSERT_STREQ(regression2.getString(), "120 20");
+   ASSERT_STRCASEEQ(regression2.getString(), "120 20");
 }

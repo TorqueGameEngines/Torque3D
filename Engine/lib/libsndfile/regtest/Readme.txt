@@ -45,7 +45,7 @@ with the libsndfile source code distribution.
 
 Organization of Files
 ---------------------
-The regession test program keeps its database file in the directory it
+The regression test program keeps its database file in the directory it
 is run from. In addition, the database only contains information about
 the files, not the files themselves.
 

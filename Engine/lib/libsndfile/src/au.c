@@ -291,6 +291,7 @@ static int
 au_read_header (SF_PRIVATE *psf)
 {	AU_FMT	au_fmt ;
 	int		marker, dword ;
+	sf_count_t data_end ;
 
 	memset (&au_fmt, 0, sizeof (au_fmt)) ;
 	psf_binheader_readf (psf, "pm", 0, &marker) ;
@@ -317,14 +318,15 @@ au_read_header (SF_PRIVATE *psf)
 		return SFE_AU_EMBED_BAD_LEN ;
 		} ;
 
+	data_end = (sf_count_t) au_fmt.dataoffset + (sf_count_t) au_fmt.datasize ;
 	if (psf->fileoffset > 0)
-	{	psf->filelength = au_fmt.dataoffset + au_fmt.datasize ;
+	{	psf->filelength = data_end ;
 		psf_log_printf (psf, "  Data Size   : %d\n", au_fmt.datasize) ;
 		}
-	else if (au_fmt.datasize == -1 || au_fmt.dataoffset + au_fmt.datasize == psf->filelength)
+	else if (au_fmt.datasize == -1 || data_end == psf->filelength)
 		psf_log_printf (psf, "  Data Size   : %d\n", au_fmt.datasize) ;
-	else if (au_fmt.dataoffset + au_fmt.datasize < psf->filelength)
-	{	psf->filelength = au_fmt.dataoffset + au_fmt.datasize ;
+	else if (data_end < psf->filelength)
+	{	psf->filelength = data_end ;
 		psf_log_printf (psf, "  Data Size   : %d\n", au_fmt.datasize) ;
 		}
 	else

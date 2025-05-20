@@ -1,11 +1,15 @@
-cmake_minimum_required(VERSION 2.8.12)
-project(libogg)
+cmake_minimum_required(VERSION 3.6)
+
+# Extract project version from configure.ac
+file(READ configure.ac CONFIGURE_AC_CONTENTS)
+string(REGEX MATCH "AC_INIT\\(\\[libogg\\],\\[([0-9]*\\.[0-9]*\\.[0-9]*)\\]" DUMMY ${CONFIGURE_AC_CONTENTS})
+
+project(ogg VERSION ${CMAKE_MATCH_1} LANGUAGES C)
 
 # Required modules
 include(GNUInstallDirs)
 include(CheckIncludeFiles)
 include(CMakePackageConfigHelpers)
-include(CTest)
 
 # Build options
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
@@ -17,14 +21,6 @@ endif()
 option(INSTALL_DOCS "Install documentation" ON)
 option(INSTALL_PKG_CONFIG_MODULE "Install ogg.pc file" ON)
 option(INSTALL_CMAKE_PACKAGE_MODULE "Install CMake package configuration module" ON)
-
-# Extract project version from configure.ac
-file(READ configure.ac CONFIGURE_AC_CONTENTS)
-string(REGEX MATCH "AC_INIT\\(\\[libogg\\],\\[([0-9]*).([0-9]*).([0-9]*)" DUMMY ${CONFIGURE_AC_CONTENTS})
-set(PROJECT_VERSION_MAJOR ${CMAKE_MATCH_1})
-set(PROJECT_VERSION_MINOR ${CMAKE_MATCH_2})
-set(PROJECT_VERSION_PATCH ${CMAKE_MATCH_3})
-set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
 # Extract library version from configure.ac
 string(REGEX MATCH "LIB_CURRENT=([0-9]*)" DUMMY ${CONFIGURE_AC_CONTENTS})
@@ -179,7 +175,7 @@ if(INSTALL_DOCS)
         doc/skeleton.html
     )
     install(FILES ${OGG_DOCS} DESTINATION ${CMAKE_INSTALL_DOCDIR}/html)
-    install(DIRECTORY doc/libogg DESTINATION ${CMAKE_INSTALL_DOCDIR}/html)
+    install(DIRECTORY doc/libogg DESTINATION ${CMAKE_INSTALL_DOCDIR}/html PATTERN "*.am" EXCLUDE)
 endif()
 
 if(BUILD_TESTING)
@@ -200,3 +196,5 @@ if(BUILD_TESTING)
     add_test(NAME test_framing COMMAND $<TARGET_FILE:test_framing>)
 endif()
 
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+include(CPack)

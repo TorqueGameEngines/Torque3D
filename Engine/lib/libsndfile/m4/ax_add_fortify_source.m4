@@ -10,8 +10,8 @@
 #
 #   Check whether -D_FORTIFY_SOURCE=2 can be added to CPPFLAGS without macro
 #   redefinition warnings, other cpp warnings or linker. Some distributions
-#   (such as Gentoo Linux) enable _FORTIFY_SOURCE globally in their
-#   compilers, leading to unnecessary warnings in the form of
+#   (such as Ubuntu or Gentoo Linux) enable _FORTIFY_SOURCE globally in
+#   their compilers, leading to unnecessary warnings in the form of
 #
 #     <command-line>:0:0: error: "_FORTIFY_SOURCE" redefined [-Werror]
 #     <built-in>: note: this is the location of the previous definition
@@ -29,19 +29,57 @@
 # LICENSE
 #
 #   Copyright (c) 2017 David Seifert <soap@gentoo.org>
-#   Copyright (c) 2019 Reini Urban <rurban@cpan.org>
+#   Copyright (c) 2019, 2023 Reini Urban <rurban@cpan.org>
 #
 #   Copying and distribution of this file, with or without modification, are
 #   permitted in any medium without royalty provided the copyright notice
 #   and this notice are preserved.  This file is offered as-is, without any
 #   warranty.
 
-#serial 4
+#serial 10
 
 AC_DEFUN([AX_ADD_FORTIFY_SOURCE],[
     ac_save_cflags=$CFLAGS
     ac_cwerror_flag=yes
     AX_CHECK_COMPILE_FLAG([-Werror],[CFLAGS="$CFLAGS -Werror"])
+    ax_add_fortify_3_failed=
+    AC_MSG_CHECKING([whether to add -D_FORTIFY_SOURCE=3 to CPPFLAGS])
+    AC_LINK_IFELSE([
+        AC_LANG_PROGRAM([],
+            [[
+                #ifndef _FORTIFY_SOURCE
+                    return 0;
+                #else
+                    _FORTIFY_SOURCE_already_defined;
+                #endif
+            ]]
+        )],
+        AC_LINK_IFELSE([
+            AC_LANG_SOURCE([[
+                #define _FORTIFY_SOURCE 3
+                #include <string.h>
+                int main(void) {
+                    char *s = " ";
+                    strcpy(s, "x");
+                    return strlen(s)-1;
+                }
+              ]]
+            )],
+            [
+              AC_MSG_RESULT([yes])
+              CFLAGS=$ac_save_cflags
+              CPPFLAGS="$CPPFLAGS -D_FORTIFY_SOURCE=3"
+            ], [
+              AC_MSG_RESULT([no])
+              ax_add_fortify_3_failed=1
+            ],
+        ),
+        [
+          AC_MSG_RESULT([no])
+          ax_add_fortify_3_failed=1
+        ])
+    if test -n "$ax_add_fortify_3_failed"
+    then
     AC_MSG_CHECKING([whether to add -D_FORTIFY_SOURCE=2 to CPPFLAGS])
     AC_LINK_IFELSE([
         AC_LANG_PROGRAM([],
@@ -49,7 +87,7 @@ AC_DEFUN([AX_ADD_FORTIFY_SOURCE],[
                 #ifndef _FORTIFY_SOURCE
                     return 0;
                 #else
-                    this_is_an_error;
+                    _FORTIFY_SOURCE_already_defined;
                 #endif
             ]]
         )],
@@ -57,7 +95,7 @@ AC_DEFUN([AX_ADD_FORTIFY_SOURCE],[
             AC_LANG_SOURCE([[
                 #define _FORTIFY_SOURCE 2
                 #include <string.h>
-                int main() {
+                int main(void) {
                     char *s = " ";
                     strcpy(s, "x");
                     return strlen(s)-1;
@@ -77,4 +115,5 @@ AC_DEFUN([AX_ADD_FORTIFY_SOURCE],[
           AC_MSG_RESULT([no])
           CFLAGS=$ac_save_cflags
         ])
+    fi
 ])

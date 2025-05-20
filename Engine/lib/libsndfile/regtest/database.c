@@ -533,7 +533,7 @@ int dummy (void) ;
 int
 dummy (void)
 {	/*
-	**	Empty dummy fnction so tha compiler doesn't winge about an
+	**	Empty dummy function so the compiler doesn't whine about an
 	**	empty file.
 	*/
 	return 0 ;

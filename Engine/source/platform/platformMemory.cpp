@@ -30,6 +30,9 @@
 #include "platform/threads/mutex.h"
 #include "core/module.h"
 
+#include <mutex>
+#include <atomic>
+
 #ifdef _WIN32
 #include <windows.h>
 #include <dbghelp.h>
@@ -72,9 +75,11 @@ namespace Memory
 
    static const U32 MaxAllocs = 10240;
    static MemInfo allocList[MaxAllocs];
-   static U32 allocCount = 0;
-   static U32 currentAllocId = 0;
+   static std::atomic<U32> allocCount{ 0 };
+   static std::atomic<U32> currentAllocId{ 0 };
    static bool initialized = false;
+
+   static std::mutex memMutex; // Use shared_mutex if you need more granularity
    char gLogFilename[256] = { 0 };
    bool gStackTrace = true;
    bool gFromScript = false;
@@ -96,6 +101,7 @@ namespace Memory
 
    void init()
    {
+      std::lock_guard<std::mutex> lock(memMutex);
       if (initialized) return;
       std::memset(allocList, 0, sizeof(allocList));
       std::memset(memLog, 0, sizeof(memLog));
@@ -113,7 +119,10 @@ namespace Memory
 
    void shutdown()
    {
+      std::lock_guard<std::mutex> lock(memMutex);
       if (!initialized) return;
+
+      initialized = false; // stop memlog from running now.
 
       FILE* log = std::fopen(gLogFilename, "w");
       if (!log)
@@ -218,6 +227,7 @@ namespace Memory
 
    void checkPtr(void* ptr)
    {
+      std::lock_guard<std::mutex> lock(memMutex);
       for (U32 i = 0; i < allocCount; ++i)
          if (allocList[i].ptr == ptr)
             return;
@@ -237,6 +247,7 @@ namespace Memory
       if (!initialized || allocCount >= MaxAllocs)
          return ptr;
 
+      std::lock_guard<std::mutex> lock(memMutex);
       MemInfo& info = allocList[allocCount++];
       info.ptr = ptr;
       info.size = size;
@@ -250,7 +261,7 @@ namespace Memory
 #ifdef _WIN32
          info.backtraceSize = CaptureStackBackTrace(0, 16, info.backtracePtrs, nullptr);
 #else
-         info.backtraceSize = backtrace(info.backtracePtrs, MaxBacktraceDepth);
+         info.backtraceSize = backtrace(info.backtracePtrs, 16);
 #endif
       }
 
@@ -267,6 +278,8 @@ namespace Memory
          std::free(ptr);
          return;
       }
+
+      std::lock_guard<std::mutex> lock(memMutex);
 
       for (U32 i = 0; i < allocCount; ++i)
       {
@@ -288,6 +301,7 @@ namespace Memory
       if (!ptr || !initialized)
          return;
 
+      std::lock_guard<std::mutex> lock(memMutex);
       for (U32 i = 0; i < allocCount; ++i)
       {
          if (allocList[i].ptr == ptr)
@@ -317,6 +331,7 @@ namespace Memory
       if (!newPtr)
          return nullptr;
 
+      std::lock_guard<std::mutex> lock(memMutex);
 
       // Update existing record
       for (U32 i = 0; i < allocCount; ++i)

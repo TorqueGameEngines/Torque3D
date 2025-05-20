@@ -16,8 +16,7 @@ EXTRA_DIST = sndfile.pc.in Scripts/android-configure.sh \
 	NEWS.OLD CHANGELOG.md Scripts/linux-to-win-cross-configure.sh \
 	CMakeLists.txt $(cmake_files) Win32 SECURITY.md
 
-cmake_files = cmake/ClipMode.cmake cmake/FindFLAC.cmake \
-	cmake/CMakeAutoGen.cmake cmake/CMakeAutoGenScript.cmake \
+cmake_files = cmake/CMakeAutoGen.cmake cmake/CMakeAutoGenScript.cmake \
 	cmake/FindOgg.cmake cmake/FindVorbis.cmake cmake/FindSndio.cmake \
 	cmake/FindSpeex.cmake cmake/sqlite/FindSQLite3.cmake \
 	cmake/SndFileChecks.cmake cmake/TestInline.cmake \
@@ -25,7 +24,7 @@ cmake_files = cmake/ClipMode.cmake cmake/FindFLAC.cmake \
 	cmake/FindOpus.cmake cmake/SndFileConfig.cmake.in \
 	cmake/CheckCPUArch.cmake cmake/CheckCPUArch.c.in \
 	cmake/Findmp3lame.cmake cmake/Findmpg123.cmake \
-	cmake/SetupABIVersions.cmake
+	cmake/FindFLAC.cmake cmake/SetupABIVersions.cmake
 
 pkgconfig_DATA = sndfile.pc
 
@@ -403,6 +402,7 @@ tests_scale_clip_test_LDADD = src/libsndfile.la
 # Yes, this sucks, but GNU make patterns aren't portable,
 # see also https://github.com/libsndfile/libsndfile/issues/369
 
+if HAVE_AUTOGEN
 SUFFIXES = .tpl .def
 
 .tpl.def:
@@ -424,6 +424,7 @@ tests/utils.h : tests/utils.c
 	  rm -f tests/utils.c && \
 	  $(MAKE) $(AM_MAKEFLAGS) tests/utils.c; \
 	fi
+endif
 
 ########
 # man/ #
@@ -455,7 +456,7 @@ if USE_OSSFUZZ_STATIC
 FUZZ_LDADD = $(LIB_FUZZING_ENGINE)
 FUZZ_FLAG =
 else
-FUZZ_LDADD = libstandaloneengine.la
+FUZZ_LDADD = ossfuzz/libstandaloneengine.la
 FUZZ_FLAG =
 endif
 endif

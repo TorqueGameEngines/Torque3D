@@ -43,7 +43,7 @@
 #endif
 
 /*
-**	Neat solution to the Win32/OS2 binary file flage requirement.
+**	Neat solution to the Win32/OS2 binary file flag requirement.
 **	If O_BINARY isn't already defined by the inclusion of the system
 **	headers, set it to zero.
 */

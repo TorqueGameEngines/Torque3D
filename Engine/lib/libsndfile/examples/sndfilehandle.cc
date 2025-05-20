@@ -43,7 +43,7 @@ create_file (const char * fname, int format)
 	/*
 	**	The SndfileHandle object will automatically close the file and
 	**	release all allocated memory when the object goes out of scope.
-	**	This is the Resource Acquisition Is Initailization idom.
+	**	This is the Resource Acquisition Is Initialization idom.
 	**	See : http://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization
 	*/
 } /* create_file */

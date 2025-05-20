@@ -57,7 +57,7 @@
 #ifdef TORQUE_MULTITHREAD
 void* gMemMutex = NULL;
 #endif
-   
+
 //-------------------------------------- Make sure we don't have the define set
 #ifdef new
 #undef new
@@ -438,7 +438,7 @@ void dFree(void* in_pFree)
 
 void* dRealloc_r(void* in_pResize, dsize_t in_size, const char* fileName, const dsize_t line)
 {
-   return realloc(in_pResize,in_size);
+   return realloc(in_pResize, in_size);
 }
 
 #endif

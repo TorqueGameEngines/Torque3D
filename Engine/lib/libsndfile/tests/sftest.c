@@ -58,7 +58,7 @@ main (int argc, char *argv [])
 		} ;
 
 	printf ("Total         : %d\n", total) ;
-	printf ("Maximun value : %d\n", max) ;
+	printf ("Maximum value : %d\n", max) ;
 
 	sf_close (file) ;
 

@@ -36,7 +36,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 9
+#serial 14
 
 # for intel
 AC_DEFUN([_AX_COMPILER_VERSION_INTEL],
@@ -442,6 +442,20 @@ AC_DEFUN([_AX_COMPILER_VERSION_WATCOM],[dnl
   ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="$_ax_[]_AC_LANG_ABBREV[]_compiler_version_major.$_ax_[]_AC_LANG_ABBREV[]_compiler_version_minor"
   ])
 
+# for NVHPC
+AC_DEFUN([_AX_COMPILER_VERSION_NVHPC],[
+  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_major,
+    __NVCOMPILER_MAJOR__,,
+    AC_MSG_FAILURE([[[$0]] unknown nvhpc major]))
+  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_minor,
+    __NVCOMPILER_MINOR__,,
+    AC_MSG_FAILURE([[[$0]] unknown nvhpc minor]))
+  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_patch,
+    [__NVCOMPILER_PATCHLEVEL__],,
+    AC_MSG_FAILURE([[[$0]] unknown nvhpc patch level]))
+  ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="$_ax_[]_AC_LANG_ABBREV[]_compiler_version_major.$_ax_[]_AC_LANG_ABBREV[]_compiler_version_minor.$_ax_[]_AC_LANG_ABBREV[]_compiler_version_patch"
+  ])
+
 # for PGI
 AC_DEFUN([_AX_COMPILER_VERSION_PORTLAND],[
   AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_major,
@@ -460,6 +474,42 @@ AC_DEFUN([_AX_COMPILER_VERSION_PORTLAND],[
 AC_DEFUN([_AX_COMPILER_VERSION_TCC],[
   ax_cv_[]_AC_LANG_ABBREV[]_compiler_version=[`tcc -v | $SED 's/^[ ]*tcc[ ]\+version[ ]\+\([0-9.]\+\).*/\1/g'`]
   ])
+
+# for GNU
+AC_DEFUN([_AX_COMPILER_VERSION_SDCC],[
+  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_major,
+    /* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_MAJOR))
+	__SDCC_VERSION_MAJOR
+    #else
+	SDCC/100
+    #endif
+    ,,
+    AC_MSG_FAILURE([[[$0]] unknown sdcc major]))
+  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_minor,
+    /* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_MINOR))
+	__SDCC_VERSION_MINOR
+    #else
+	(SDCC%100)/10
+    #endif
+    ,,
+    AC_MSG_FAILURE([[[$0]] unknown sdcc minor]))
+  AC_COMPUTE_INT(_ax_[]_AC_LANG_ABBREV[]_compiler_version_patch,
+    [
+    /* avoid parse error with comments */
+    #if(defined(__SDCC_VERSION_PATCH))
+	__SDCC_VERSION_PATCH
+    #elsif(defined(_SDCC_VERSION_PATCHLEVEL))
+	__SDCC_VERSION_PATCHLEVEL
+    #else
+	SDCC%10
+    #endif
+    ],,
+    AC_MSG_FAILURE([[[$0]] unknown sdcc patch level]))
+  ax_cv_[]_AC_LANG_ABBREV[]_compiler_version="$_ax_[]_AC_LANG_ABBREV[]_compiler_version_major.$_ax_[]_AC_LANG_ABBREV[]_compiler_version_minor.$_ax_[]_AC_LANG_ABBREV[]_compiler_version_patch"
+  ])
+
 # main entry point
 AC_DEFUN([AX_COMPILER_VERSION],[dnl
   AC_REQUIRE([AX_COMPILER_VENDOR])
@@ -485,8 +535,10 @@ AC_DEFUN([AX_COMPILER_VERSION],[dnl
 	[microsoft],[_AX_COMPILER_VERSION_MICROSOFT],
 	[metrowerks],[_AX_COMPILER_VERSION_METROWERKS],
 	[watcom],[_AX_COMPILER_VERSION_WATCOM],
+	[nvhpc],[_AX_COMPILER_VERSION_NVHPC],
 	[portland],[_AX_COMPILER_VERSION_PORTLAND],
 	[tcc],[_AX_COMPILER_VERSION_TCC],
+	[sdcc],[_AX_COMPILER_VERSION_SDCC],
   	[ax_cv_[]_AC_LANG_ABBREV[]_compiler_version=""])
     ])
 ])

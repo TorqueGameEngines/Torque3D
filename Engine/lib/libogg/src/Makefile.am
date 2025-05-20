@@ -17,9 +17,11 @@ test_bitwise_CFLAGS = -D_V_SELFTEST
 test_framing_SOURCES = framing.c crctable.h
 test_framing_CFLAGS = -D_V_SELFTEST
 
-check: $(noinst_PROGRAMS)
-	./test_bitwise$(EXEEXT)
-	./test_framing$(EXEEXT)
+TEST_ENV = @TEST_ENV@
+LOG_COMPILER=$(LIBTOOL) --mode=execute $(VALGRIND) $(TEST_ENV)
+
+TESTS = $(noinst_PROGRAMS)
+check_PROGRAMS = $(noinst_PROGRAMS)
 
 debug:
 	$(MAKE) all CFLAGS="@DEBUG@"

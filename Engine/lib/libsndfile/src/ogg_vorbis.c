@@ -82,28 +82,6 @@
 /* How many seconds in the future to not bother bisection searching for. */
 #define VORBIS_SEEK_THRESHOLD 2
 
-typedef int convert_func (SF_PRIVATE *psf, int, void *, int, int, float **) ;
-
-static int	vorbis_read_header (SF_PRIVATE *psf) ;
-static int	vorbis_write_header (SF_PRIVATE *psf, int calc_length) ;
-static int	vorbis_close (SF_PRIVATE *psf) ;
-static int	vorbis_command (SF_PRIVATE *psf, int command, void *data, int datasize) ;
-static int	vorbis_byterate (SF_PRIVATE *psf) ;
-static int	vorbis_calculate_granulepos (SF_PRIVATE *psf, uint64_t *gp_out) ;
-static int	vorbis_skip (SF_PRIVATE *psf, uint64_t target_gp) ;
-static int	vorbis_seek_trysearch (SF_PRIVATE *psf, uint64_t target_gp) ;
-static sf_count_t	vorbis_seek (SF_PRIVATE *psf, int mode, sf_count_t offset) ;
-static sf_count_t	vorbis_read_s (SF_PRIVATE *psf, short *ptr, sf_count_t len) ;
-static sf_count_t	vorbis_read_i (SF_PRIVATE *psf, int *ptr, sf_count_t len) ;
-static sf_count_t	vorbis_read_f (SF_PRIVATE *psf, float *ptr, sf_count_t len) ;
-static sf_count_t	vorbis_read_d (SF_PRIVATE *psf, double *ptr, sf_count_t len) ;
-static sf_count_t	vorbis_write_s (SF_PRIVATE *psf, const short *ptr, sf_count_t len) ;
-static sf_count_t	vorbis_write_i (SF_PRIVATE *psf, const int *ptr, sf_count_t len) ;
-static sf_count_t	vorbis_write_f (SF_PRIVATE *psf, const float *ptr, sf_count_t len) ;
-static sf_count_t	vorbis_write_d (SF_PRIVATE *psf, const double *ptr, sf_count_t len) ;
-static sf_count_t	vorbis_read_sample (SF_PRIVATE *psf, void *ptr, sf_count_t lens, convert_func *transfn) ;
-static int	vorbis_rnull (SF_PRIVATE *psf, int samples, void *vptr, int off , int channels, float **pcm) ;
-
 typedef struct
 {	int id ;
 	const char *name ;
@@ -144,6 +122,45 @@ typedef struct
 	/* File offset of the start of the last page. */
 	sf_count_t last_page ;
 } VORBIS_PRIVATE ;
+
+typedef int convert_func (SF_PRIVATE *psf, int, void *, int, int, float **) ;
+
+static int	vorbis_read_header (SF_PRIVATE *psf) ;
+static int	vorbis_write_header (SF_PRIVATE *psf, int calc_length) ;
+static int	vorbis_close (SF_PRIVATE *psf) ;
+static int	vorbis_command (SF_PRIVATE *psf, int command, void *data, int datasize) ;
+static int	vorbis_byterate (SF_PRIVATE *psf) ;
+static int	vorbis_calculate_granulepos (SF_PRIVATE *psf, uint64_t *gp_out) ;
+static int	vorbis_skip (SF_PRIVATE *psf, uint64_t target_gp) ;
+static int	vorbis_seek_trysearch (SF_PRIVATE *psf, uint64_t target_gp) ;
+static sf_count_t	vorbis_seek (SF_PRIVATE *psf, int mode, sf_count_t offset) ;
+static sf_count_t	vorbis_read_s (SF_PRIVATE *psf, short *ptr, sf_count_t len) ;
+static sf_count_t	vorbis_read_i (SF_PRIVATE *psf, int *ptr, sf_count_t len) ;
+static sf_count_t	vorbis_read_f (SF_PRIVATE *psf, float *ptr, sf_count_t len) ;
+static sf_count_t	vorbis_read_d (SF_PRIVATE *psf, double *ptr, sf_count_t len) ;
+static sf_count_t	vorbis_write_s (SF_PRIVATE *psf, const short *ptr, sf_count_t len) ;
+static sf_count_t	vorbis_write_i (SF_PRIVATE *psf, const int *ptr, sf_count_t len) ;
+static sf_count_t	vorbis_write_f (SF_PRIVATE *psf, const float *ptr, sf_count_t len) ;
+static sf_count_t	vorbis_write_d (SF_PRIVATE *psf, const double *ptr, sf_count_t len) ;
+static sf_count_t	vorbis_read_sample (SF_PRIVATE *psf, void *ptr, sf_count_t lens, convert_func *transfn) ;
+static int	vorbis_write_samples (SF_PRIVATE *psf, OGG_PRIVATE *odata, VORBIS_PRIVATE *vdata, int in_frames) ;
+static int	vorbis_rnull (SF_PRIVATE *psf, int samples, void *vptr, int off , int channels, float **pcm) ;
+static void	vorbis_log_error (SF_PRIVATE *psf, int error) ;
+
+
+static void
+vorbis_log_error(SF_PRIVATE *psf, int error) {
+	switch (error)
+	{	case 0: return;
+		case OV_EIMPL:		psf->error = SFE_UNIMPLEMENTED ; break ;
+		case OV_ENOTVORBIS:	psf->error = SFE_MALFORMED_FILE ; break ;
+		case OV_EBADHEADER:	psf->error = SFE_MALFORMED_FILE ; break ;
+		case OV_EVERSION:	psf->error = SFE_UNSUPPORTED_ENCODING ; break ;
+		case OV_EFAULT:
+		case OV_EINVAL:
+		default: psf->error = SFE_INTERNAL ;
+		} ;
+} ;
 
 static int
 vorbis_read_header (SF_PRIVATE *psf)
@@ -380,7 +397,6 @@ vorbis_write_header (SF_PRIVATE *psf, int UNUSED (calc_length))
 	{	ogg_packet header ;
 		ogg_packet header_comm ;
 		ogg_packet header_code ;
-		int result ;
 
 		vorbis_analysis_headerout (&vdata->vdsp, &vdata->vcomment, &header, &header_comm, &header_code) ;
 		ogg_stream_packetin (&odata->ostream, &header) ; /* automatically placed in its own page */
@@ -390,9 +406,9 @@ vorbis_write_header (SF_PRIVATE *psf, int UNUSED (calc_length))
 		/* This ensures the actual
 		 * audio data will start on a new page, as per spec
 		 */
-		while ((result = ogg_stream_flush (&odata->ostream, &odata->opage)) != 0)
-		{	ogg_write_page (psf, &odata->opage) ;
-			} ;
+		while (ogg_stream_flush (&odata->ostream, &odata->opage))
+			if (ogg_write_page (psf, &odata->opage) < 0)
+				return -1 ;
 	}
 
 	return 0 ;
@@ -402,44 +418,25 @@ static int
 vorbis_close (SF_PRIVATE *psf)
 {	OGG_PRIVATE* odata = psf->container_data ;
 	VORBIS_PRIVATE *vdata = psf->codec_data ;
+	int ret = 0 ;
 
 	if (odata == NULL || vdata == NULL)
 		return 0 ;
 
-	/*	Clean up this logical bitstream ; before exit we shuld see if we're
+	/*	Clean up this logical bitstream ; before exit we should see if we're
 	**	followed by another [chained]. */
 
 	if (psf->file.mode == SFM_WRITE)
 	{
 		if (psf->write_current <= 0)
-			vorbis_write_header (psf, 0) ;
+			ret = vorbis_write_header (psf, 0) ;
 
-		vorbis_analysis_wrote (&vdata->vdsp, 0) ;
-		while (vorbis_analysis_blockout (&vdata->vdsp, &vdata->vblock) == 1)
-		{
-
-		/* analysis, assume we want to use bitrate management */
-			vorbis_analysis (&vdata->vblock, NULL) ;
-			vorbis_bitrate_addblock (&vdata->vblock) ;
-
-			while (vorbis_bitrate_flushpacket (&vdata->vdsp, &odata->opacket))
-			{	/* weld the packet into the bitstream */
-				ogg_stream_packetin (&odata->ostream, &odata->opacket) ;
-
-				/* write out pages (if any) */
-				while (!odata->eos)
-				{	int result = ogg_stream_pageout (&odata->ostream, &odata->opage) ;
-					if (result == 0) break ;
-					ogg_write_page (psf, &odata->opage) ;
-
-		/* this could be set above, but for illustrative purposes, I do
-		   it here (to show that vorbis does know where the stream ends) */
-
-					if (ogg_page_eos (&odata->opage)) odata->eos = 1 ;
-				}
-			}
-		}
-	}
+		if (ret == 0)
+		{	/* A write of zero samples tells Vorbis the stream is done and to
+			   flush. */
+			ret = vorbis_write_samples (psf, odata, vdata, 0) ;
+			} ;
+		} ;
 
 	/* ogg_page and ogg_packet structs always point to storage in
 	   libvorbis.  They are never freed or manipulated directly */
@@ -449,7 +446,7 @@ vorbis_close (SF_PRIVATE *psf)
 	vorbis_comment_clear (&vdata->vcomment) ;
 	vorbis_info_clear (&vdata->vinfo) ;
 
-	return 0 ;
+	return ret ;
 } /* vorbis_close */
 
 int
@@ -688,33 +685,40 @@ vorbis_read_d (SF_PRIVATE *psf, double *ptr, sf_count_t lens)
 /*==============================================================================
 */
 
-static void
+static int
 vorbis_write_samples (SF_PRIVATE *psf, OGG_PRIVATE *odata, VORBIS_PRIVATE *vdata, int in_frames)
-{
-	vorbis_analysis_wrote (&vdata->vdsp, in_frames) ;
+{	int ret ;
+
+	if ((ret = vorbis_analysis_wrote (&vdata->vdsp, in_frames)) != 0)
+		return ret ;
 
 	/*
 	**	Vorbis does some data preanalysis, then divvies up blocks for
 	**	more involved (potentially parallel) processing. Get a single
 	**	block for encoding now.
 	*/
-	while (vorbis_analysis_blockout (&vdata->vdsp, &vdata->vblock) == 1)
+	while ((ret = vorbis_analysis_blockout (&vdata->vdsp, &vdata->vblock)) == 1)
 	{
 		/* analysis, assume we want to use bitrate management */
-		vorbis_analysis (&vdata->vblock, NULL) ;
-		vorbis_bitrate_addblock (&vdata->vblock) ;
+		if ((ret = vorbis_analysis (&vdata->vblock, NULL)) != 0)
+			return ret ;
+		if ((ret = vorbis_bitrate_addblock (&vdata->vblock)) != 0)
+			return ret ;
 
-		while (vorbis_bitrate_flushpacket (&vdata->vdsp, &odata->opacket))
+		while ((ret = vorbis_bitrate_flushpacket (&vdata->vdsp, &odata->opacket)) == 1)
 		{
 			/* weld the packet into the bitstream */
-			ogg_stream_packetin (&odata->ostream, &odata->opacket) ;
+			if ((ret = ogg_stream_packetin (&odata->ostream, &odata->opacket)) != 0)
+				return ret ;
 
 			/* write out pages (if any) */
 			while (!odata->eos)
-			{	int result = ogg_stream_pageout (&odata->ostream, &odata->opage) ;
-				if (result == 0)
+			{	ret = ogg_stream_pageout (&odata->ostream, &odata->opage) ;
+				if (ret == 0)
 					break ;
-				ogg_write_page (psf, &odata->opage) ;
+
+				if (ogg_write_page (psf, &odata->opage) < 0)
+					return -1 ;
 
 				/*	This could be set above, but for illustrative purposes, I do
 				**	it here (to show that vorbis does know where the stream ends) */
@@ -722,16 +726,22 @@ vorbis_write_samples (SF_PRIVATE *psf, OGG_PRIVATE *odata, VORBIS_PRIVATE *vdata
 					odata->eos = 1 ;
 				} ;
 			} ;
+		if (ret != 0)
+			return ret ;
 		} ;
+	if (ret != 0)
+		return ret ;
 
 	vdata->gp += in_frames ;
+
+	return 0 ;
 } /* vorbis_write_data */
 
 
 static sf_count_t
 vorbis_write_s (SF_PRIVATE *psf, const short *ptr, sf_count_t lens)
 {
-	int i, m, j = 0 ;
+	int i, m, j = 0, ret ;
 	OGG_PRIVATE *odata = (OGG_PRIVATE *) psf->container_data ;
 	VORBIS_PRIVATE *vdata = (VORBIS_PRIVATE *) psf->codec_data ;
 	int in_frames = lens / psf->sf.channels ;
@@ -740,14 +750,17 @@ vorbis_write_s (SF_PRIVATE *psf, const short *ptr, sf_count_t lens)
 		for (m = 0 ; m < psf->sf.channels ; m++)
 			buffer [m][i] = (float) (ptr [j++]) / 32767.0f ;
 
-	vorbis_write_samples (psf, odata, vdata, in_frames) ;
+	if ((ret = vorbis_write_samples (psf, odata, vdata, in_frames)))
+	{	vorbis_log_error (psf, ret) ;
+		return 0 ;
+		} ;
 
 	return lens ;
 } /* vorbis_write_s */
 
 static sf_count_t
 vorbis_write_i (SF_PRIVATE *psf, const int *ptr, sf_count_t lens)
-{	int i, m, j = 0 ;
+{	int i, m, j = 0, ret ;
 	OGG_PRIVATE *odata = (OGG_PRIVATE *) psf->container_data ;
 	VORBIS_PRIVATE *vdata = (VORBIS_PRIVATE *) psf->codec_data ;
 	int in_frames = lens / psf->sf.channels ;
@@ -756,14 +769,17 @@ vorbis_write_i (SF_PRIVATE *psf, const int *ptr, sf_count_t lens)
 		for (m = 0 ; m < psf->sf.channels ; m++)
 			buffer [m][i] = (float) (ptr [j++]) / 2147483647.0f ;
 
-	vorbis_write_samples (psf, odata, vdata, in_frames) ;
+	if ((ret = vorbis_write_samples (psf, odata, vdata, in_frames)))
+	{	vorbis_log_error (psf, ret) ;
+		return 0 ;
+		} ;
 
 	return lens ;
 } /* vorbis_write_i */
 
 static sf_count_t
 vorbis_write_f (SF_PRIVATE *psf, const float *ptr, sf_count_t lens)
-{	int i, m, j = 0 ;
+{	int i, m, j = 0, ret ;
 	OGG_PRIVATE *odata = (OGG_PRIVATE *) psf->container_data ;
 	VORBIS_PRIVATE *vdata = (VORBIS_PRIVATE *) psf->codec_data ;
 	int in_frames = lens / psf->sf.channels ;
@@ -772,14 +788,17 @@ vorbis_write_f (SF_PRIVATE *psf, const float *ptr, sf_count_t lens)
 		for (m = 0 ; m < psf->sf.channels ; m++)
 			buffer [m][i] = ptr [j++] ;
 
-	vorbis_write_samples (psf, odata, vdata, in_frames) ;
+	if ((ret = vorbis_write_samples (psf, odata, vdata, in_frames)) != 0)
+	{	vorbis_log_error (psf, ret) ;
+		return 0 ;
+		} ;
 
 	return lens ;
 } /* vorbis_write_f */
 
 static sf_count_t
 vorbis_write_d (SF_PRIVATE *psf, const double *ptr, sf_count_t lens)
-{	int i, m, j = 0 ;
+{	int i, m, j = 0, ret ;
 	OGG_PRIVATE *odata = (OGG_PRIVATE *) psf->container_data ;
 	VORBIS_PRIVATE *vdata = (VORBIS_PRIVATE *) psf->codec_data ;
 	int in_frames = lens / psf->sf.channels ;
@@ -788,7 +807,10 @@ vorbis_write_d (SF_PRIVATE *psf, const double *ptr, sf_count_t lens)
 		for (m = 0 ; m < psf->sf.channels ; m++)
 			buffer [m][i] = (float) ptr [j++] ;
 
-	vorbis_write_samples (psf, odata, vdata, in_frames) ;
+	if ((ret = vorbis_write_samples (psf, odata, vdata, in_frames)) != 0)
+	{	vorbis_log_error (psf, ret) ;
+		return 0 ;
+		} ;
 
 	return lens ;
 } /* vorbis_write_d */
@@ -884,7 +906,7 @@ vorbis_seek_trysearch (SF_PRIVATE *psf, uint64_t target_gp)
 		return 0 ;
 
 	/*	Search for a position a half large-block before our target. As Vorbis is
-	**	lapped, every sample position come from two blocks, the "left" half of
+	**	lapped, every sample position comes from two blocks, the "left" half of
 	**	one block and the "right" half of the previous block.  The granule
 	**	position of an Ogg page of a Vorbis stream is the sample offset of the
 	**	last finished sample in the stream that can be decoded from a page.  A

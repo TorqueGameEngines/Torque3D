@@ -26,8 +26,8 @@ documented) [here](command.md).**
 ## Synopsis
 
 ```c
-#include <stdio.h>;
-#include <sndfile.h>;
+#include <stdio.h>
+#include <sndfile.h>
 ```
 
 | Name                                                                                                        | Description                                    |

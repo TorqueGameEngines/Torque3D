@@ -39,6 +39,8 @@ static const unsigned int mask8B[]=
 void oggpack_writeinit(oggpack_buffer *b){
   memset(b,0,sizeof(*b));
   b->ptr=b->buffer=_ogg_malloc(BUFFER_INCREMENT);
+  if (!b->buffer)
+    return;
   b->buffer[0]='\0';
   b->storage=BUFFER_INCREMENT;
 }
@@ -284,13 +286,13 @@ long oggpack_look(oggpack_buffer *b,int bits){
 
   ret=b->ptr[0]>>b->endbit;
   if(bits>8){
-    ret|=b->ptr[1]<<(8-b->endbit);
+    ret|=(unsigned long)b->ptr[1]<<(8-b->endbit);
     if(bits>16){
-      ret|=b->ptr[2]<<(16-b->endbit);
+      ret|=(unsigned long)b->ptr[2]<<(16-b->endbit);
       if(bits>24){
-        ret|=b->ptr[3]<<(24-b->endbit);
+        ret|=(unsigned long)b->ptr[3]<<(24-b->endbit);
         if(bits>32 && b->endbit)
-          ret|=b->ptr[4]<<(32-b->endbit);
+          ret|=(unsigned long)b->ptr[4]<<(32-b->endbit);
       }
     }
   }
@@ -313,13 +315,13 @@ long oggpackB_look(oggpack_buffer *b,int bits){
     else if(!bits)return(0L);
   }
 
-  ret=b->ptr[0]<<(24+b->endbit);
+  ret=(unsigned long)b->ptr[0]<<(24+b->endbit);
   if(bits>8){
-    ret|=b->ptr[1]<<(16+b->endbit);
+    ret|=(unsigned long)b->ptr[1]<<(16+b->endbit);
     if(bits>16){
-      ret|=b->ptr[2]<<(8+b->endbit);
+      ret|=(unsigned long)b->ptr[2]<<(8+b->endbit);
       if(bits>24){
-        ret|=b->ptr[3]<<(b->endbit);
+        ret|=(unsigned long)b->ptr[3]<<(b->endbit);
         if(bits>32 && b->endbit)
           ret|=b->ptr[4]>>(8-b->endbit);
       }
@@ -389,13 +391,13 @@ long oggpack_read(oggpack_buffer *b,int bits){
 
   ret=b->ptr[0]>>b->endbit;
   if(bits>8){
-    ret|=b->ptr[1]<<(8-b->endbit);
+    ret|=(unsigned long)b->ptr[1]<<(8-b->endbit);
     if(bits>16){
-      ret|=b->ptr[2]<<(16-b->endbit);
+      ret|=(unsigned long)b->ptr[2]<<(16-b->endbit);
       if(bits>24){
-        ret|=b->ptr[3]<<(24-b->endbit);
+        ret|=(unsigned long)b->ptr[3]<<(24-b->endbit);
         if(bits>32 && b->endbit){
-          ret|=b->ptr[4]<<(32-b->endbit);
+          ret|=(unsigned long)b->ptr[4]<<(32-b->endbit);
         }
       }
     }
@@ -430,13 +432,13 @@ long oggpackB_read(oggpack_buffer *b,int bits){
     else if(!bits)return(0L);
   }
 
-  ret=b->ptr[0]<<(24+b->endbit);
+  ret=(unsigned long)b->ptr[0]<<(24+b->endbit);
   if(bits>8){
-    ret|=b->ptr[1]<<(16+b->endbit);
+    ret|=(unsigned long)b->ptr[1]<<(16+b->endbit);
     if(bits>16){
-      ret|=b->ptr[2]<<(8+b->endbit);
+      ret|=(unsigned long)b->ptr[2]<<(8+b->endbit);
       if(bits>24){
-        ret|=b->ptr[3]<<(b->endbit);
+        ret|=(unsigned long)b->ptr[3]<<(b->endbit);
         if(bits>32 && b->endbit)
           ret|=b->ptr[4]>>(8-b->endbit);
       }

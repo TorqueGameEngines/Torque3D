@@ -244,7 +244,7 @@ show_stat_fstat_error (void)
 
 	assert (write (fd, data, sizeof (data)) > 0) ;
 
-	printf ("1) Now call stat and fstat on the file and retreive the file lengths.\n") ;
+	printf ("1) Now call stat and fstat on the file and retrieve the file lengths.\n") ;
 
 	if (stat (filename, &buf) != 0)
 	{	printf ("\n\nLine %d: stat() failed : %s\n\n", __LINE__, strerror (errno)) ;

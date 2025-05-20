@@ -41,6 +41,10 @@
 #define HAVE_ALSA_ASOUNDLIB_H 0
 #endif
 
+#ifndef HAVE_SNDIO_H
+#define HAVE_SNDIO_H 0
+#endif
+
 #ifndef HAVE_BYTESWAP_H
 #define HAVE_BYTESWAP_H 0
 #endif

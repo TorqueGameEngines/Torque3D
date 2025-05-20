@@ -45,22 +45,22 @@ if test -z "$GCC"; then
 else
         case $host in
         *-*-linux*)
-                DEBUG="-g -Wall -fsigned-char"
-                CFLAGS="-O2 -Wall -ffast-math -fsigned-char"
-                PROFILE="-Wall -W -pg -g -O2 -ffast-math -fsigned-char"
+                DEBUG="-g -Wall -Wextra -fsigned-char"
+                CFLAGS="-O2 -Wall -Wextra -ffast-math -fsigned-char"
+                PROFILE="-Wall -Wextra -W -pg -g -O2 -ffast-math -fsigned-char"
 		;;
         sparc-sun-*)
-                DEBUG="-g -Wall -fsigned-char"
+                DEBUG="-g -Wall -Wextra -fsigned-char"
                 CFLAGS="-O2 -ffast-math -fsigned-char"
                 PROFILE="-pg -g -O2 -fsigned-char"
 		;;
 	*-*-darwin*)
-		DEBUG="-fno-common -g -Wall -fsigned-char"
-		CFLAGS="-fno-common -O4 -Wall -fsigned-char -ffast-math"
-		PROFILE="-fno-common -O4 -Wall -pg -g -fsigned-char -ffast-math"
+		DEBUG="-fno-common -g -Wall -Wextra -fsigned-char"
+		CFLAGS="-fno-common -O4 -Wall -Wextra -fsigned-char -ffast-math"
+		PROFILE="-fno-common -O4 -Wall -Wextra -pg -g -fsigned-char -ffast-math"
 		;;
         *)
-                DEBUG="-g -Wall -fsigned-char"
+                DEBUG="-g -Wall -Wextra -fsigned-char"
                 CFLAGS="-O2 -fsigned-char"
                 PROFILE="-O2 -g -pg -fsigned-char"
 		;;
@@ -75,7 +75,6 @@ dnl Checks for programs.
 dnl Checks for libraries.
 
 dnl Checks for header files.
-AC_HEADER_STDC
 INCLUDE_INTTYPES_H=0
 INCLUDE_STDINT_H=0
 INCLUDE_SYS_TYPES_H=0
@@ -175,6 +174,36 @@ AS_IF([test "$enable_crc" = "no"],[
 
 dnl Checks for library functions.
 AC_FUNC_MEMCMP
+
+AC_ARG_ENABLE(gcc-sanitizers,
+    AS_HELP_STRING([--enable-gcc-sanitizers], [Enable GCC sanitizers]),
+    [ ac_enable_gcc_sanitizers=$enableval ], [ ac_enable_gcc_sanitizers=no] )
+
+if test "$GCC" && test "x${ac_enable_gcc_sanitizers}" = xyes; then
+  CFLAGS="${CFLAGS} -fsanitize=address -fsanitize=undefined -g"
+  LDFLAGS="${CFLAGS} -fsanitize=address"
+
+  TEST_ENV="env UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1"
+  AC_SUBST(TEST_ENV)
+fi
+
+# Check for valgrind
+AC_ARG_ENABLE(valgrind-testing,
+     AS_HELP_STRING([--enable-valgrind-testing],[enable running of tests inside Valgrind (default disabled)]))
+if test "x$enable_valgrind_testing" = "xyes"
+then
+  AC_PATH_PROG(VALGRIND,valgrind,)
+  if test "x$VALGRIND" != "x"
+  then
+    VALGRIND="$VALGRIND -q --error-exitcode=99 --leak-check=full --show-reachable=yes --num-callers=50"
+    TESTS_INFO="Test suite will be run under:
+    ${VALGRIND}"
+  else
+    TESTS_INFO="Type 'make check' to run test suite (Valgrind not found)"
+  fi
+else
+  TESTS_INFO="Type 'make check' to run test suite (Valgrind testing not enabled)"
+fi
 
 dnl Make substitutions
 

@@ -39,8 +39,10 @@ void  oggpack_writeinit(<a href="oggpack_buffer.html">oggpack_buffer</a> *b);
 
 <h3>Return Values</h3>
 <blockquote>
-<li>
-No values are returned.</li>
+<p>No values are returned.  If initialization fail, the buffer is
+  unusable and calls to
+  <a href="oggpack_writecheck.html">oggpack_writecheck()</a> will
+  report the error.</p>
 </blockquote>
 <p>
 

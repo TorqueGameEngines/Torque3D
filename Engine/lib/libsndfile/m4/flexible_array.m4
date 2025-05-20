@@ -1,6 +1,6 @@
 dnl @synopsis MN_C99_FLEXIBLE_ARRAY
 dnl
-dnl Dose the compiler support the 1999 ISO C Standard "stuct hack".
+dnl Does the compiler support the 1999 ISO C Standard "struct hack".
 dnl @version 1.1	Mar 15 2004
 dnl @author Erik de Castro Lopo <erikd AT mega-nerd DOT com>
 dnl

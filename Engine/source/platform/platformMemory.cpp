@@ -98,6 +98,7 @@ namespace Memory
    {
       if (initialized) return;
       std::memset(allocList, 0, sizeof(allocList));
+      std::memset(memLog, 0, sizeof(memLog));
       allocCount = 0;
       currentAllocId = 0;
       initialized = true;
@@ -209,6 +210,7 @@ namespace Memory
       std::fclose(log);
 
       std::memset(allocList, 0, sizeof(allocList));
+      std::memset(memLog, 0, sizeof(memLog));
       allocCount = 0;
       currentAllocId = 0;
       initialized = false;

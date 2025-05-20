@@ -1626,7 +1626,7 @@ void postConsoleInput( RawData data )
 {
    // Schedule this to happen at the next time event.
    ConsoleValue argv[2];
-   argv[0].setString("eval");
+   argv[0].setStringTableEntry("eval");
    argv[1].setString(reinterpret_cast<const char*>(data.data));
 
    Sim::postCurrentEvent(Sim::getRootGroup(), new SimConsoleEvent(2, argv, false));

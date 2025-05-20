@@ -352,7 +352,7 @@ public:
    {
       cleanupData();
       type = ConsoleValueType::cvSTEntry;
-      s = (char*)std::move(val);
+      s = (char*)(StringTable->insert(val));
       bufferLen = 0;
    }
 

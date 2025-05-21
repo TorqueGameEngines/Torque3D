@@ -889,7 +889,8 @@ void GFXGLShader::initHandles()
       // Index element 1 of the name to skip the '$' we inserted earier.
       GLint loc = glGetUniformLocation(mProgram, &desc.name.c_str()[1]);
 
-      //AssertFatal(loc != -1, avar("uniform %s in shader file Vert: (%s) Frag: (%s)", &desc.name.c_str()[1], mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str()));
+      // The location for uniforms inside a UBO come back as -1.
+      // AssertFatal(loc != -1, avar("uniform %s in shader file Vert: (%s) Frag: (%s)", &desc.name.c_str()[1], mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str()));
 
       HandleMap::Iterator handle = mHandles.find(desc.name);
       S32 sampler = -1;
@@ -908,6 +909,7 @@ void GFXGLShader::initHandles()
       {
          if (desc.bindPoint == -1)
          {
+            AssertFatal(loc != -1, avar("uniform %s in shader file Vert: (%s) Frag: (%s)", &desc.name.c_str()[1], mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str()));
             desc.bindPoint = loc;
             mHandles[desc.name]->mUBOUniform = false;
          }
@@ -922,6 +924,7 @@ void GFXGLShader::initHandles()
       {
          if (desc.bindPoint == -1)
          {
+            AssertFatal(loc != -1, avar("uniform %s in shader file Vert: (%s) Frag: (%s)", &desc.name.c_str()[1], mVertexFile.getFullPath().c_str(), mPixelFile.getFullPath().c_str()));
             desc.bindPoint = loc;
             mHandles[desc.name] = new GFXGLShaderConstHandle(this, desc);
             mHandles[desc.name]->mUBOUniform = false;

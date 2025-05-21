@@ -323,8 +323,12 @@ GLuint GFXGLDevice::getDeviceBuffer(const GFXShaderConstDesc desc)
 
    GLuint uboHandle;
    glGenBuffers(1, &uboHandle);
+   glBindBuffer(GL_UNIFORM_BUFFER, uboHandle);
+   glBufferData(GL_UNIFORM_BUFFER, desc.size, NULL, GL_DYNAMIC_DRAW); // allocate once
 
    mDeviceBufferMap[name] = uboHandle;
+
+   glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
    return uboHandle;
 }

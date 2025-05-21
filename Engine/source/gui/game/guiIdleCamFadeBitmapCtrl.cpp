@@ -115,14 +115,14 @@ public:
       }
 
       ColorI color(255,255,255,alpha);
-      if (mBitmap)
+      if (getBitmap())
       {
          GFX->getDrawUtil()->setBitmapModulation(color);
 
          if(mWrap)
          {
 
-            GFXTextureObject* texture = mBitmap;
+            GFXTextureObject* texture = getBitmap();
             RectI srcRegion;
             RectI dstRegion;
             F32 xdone = ((F32)getExtent().x/(F32)texture->mBitmapSize.x)+1;
@@ -145,11 +145,11 @@ public:
          else
          {
             RectI rect(offset, getExtent());
-            GFX->getDrawUtil()->drawBitmapStretch(mBitmap, rect);
+            GFX->getDrawUtil()->drawBitmapStretch(getBitmap(), rect);
          }
       }
 
-      if (mProfile->mBorder || !mBitmap)
+      if (mProfile->mBorder || !getBitmap())
       {
          RectI rect(offset.x, offset.y, getExtent().x, getExtent().y);
          ColorI borderCol(mProfile->mBorderColor);

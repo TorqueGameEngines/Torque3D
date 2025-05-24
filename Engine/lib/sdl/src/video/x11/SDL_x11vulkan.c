@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_VULKAN && SDL_VIDEO_DRIVER_X11
+#if defined(SDL_VIDEO_VULKAN) && defined(SDL_VIDEO_DRIVER_X11)
 
 #include "SDL_x11video.h"
 
@@ -32,8 +32,10 @@
 
 #if defined(__OpenBSD__)
 #define DEFAULT_VULKAN "libvulkan.so"
+#define DEFAULT_X11_XCB "libX11-xcb.so"
 #else
 #define DEFAULT_VULKAN "libvulkan.so.1"
+#define DEFAULT_X11_XCB "libX11-xcb.so.1"
 #endif
 
 /*
@@ -56,10 +58,10 @@ int X11_Vulkan_LoadLibrary(_THIS, const char *path)
     }
 
     /* Load the Vulkan loader library */
-    if (path == NULL) {
+    if (!path) {
         path = SDL_getenv("SDL_VULKAN_LIBRARY");
     }
-    if (path == NULL) {
+    if (!path) {
         path = DEFAULT_VULKAN;
     }
     _this->vulkan_config.loader_handle = SDL_LoadObject(path);
@@ -83,7 +85,7 @@ int X11_Vulkan_LoadLibrary(_THIS, const char *path)
         (PFN_vkEnumerateInstanceExtensionProperties)
             _this->vulkan_config.vkEnumerateInstanceExtensionProperties,
         &extensionCount);
-    if (extensions == NULL) {
+    if (!extensions) {
         goto fail;
     }
     for (i = 0; i < extensionCount; i++) {
@@ -107,8 +109,8 @@ int X11_Vulkan_LoadLibrary(_THIS, const char *path)
         goto fail;
     } else {
         const char *libX11XCBLibraryName = SDL_getenv("SDL_X11_XCB_LIBRARY");
-        if (libX11XCBLibraryName == NULL) {
-            libX11XCBLibraryName = "libX11-xcb.so";
+        if (!libX11XCBLibraryName) {
+            libX11XCBLibraryName = DEFAULT_X11_XCB;
         }
         videoData->vulkan_xlib_xcb_library = SDL_LoadObject(libX11XCBLibraryName);
         if (!videoData->vulkan_xlib_xcb_library) {

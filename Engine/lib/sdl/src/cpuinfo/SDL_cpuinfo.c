@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -57,7 +57,7 @@
 #elif defined(__FreeBSD__) && defined(__powerpc__)
 #include <machine/cpu.h>
 #include <sys/auxv.h>
-#elif SDL_ALTIVEC_BLITTERS && HAVE_SETJMP
+#elif defined(SDL_ALTIVEC_BLITTERS) && defined(HAVE_SETJMP)
 #include <signal.h>
 #include <setjmp.h>
 #endif
@@ -83,6 +83,10 @@
 #ifndef HWCAP_NEON
 #define HWCAP_NEON (1 << 12)
 #endif
+#endif
+
+#if defined (__FreeBSD__)
+#include <sys/param.h>
 #endif
 
 #if defined(__ANDROID__) && defined(__arm__) && !defined(HAVE_GETAUXVAL)
@@ -123,7 +127,7 @@
 #define CPU_CFG2_LSX  (1 << 6)
 #define CPU_CFG2_LASX (1 << 7)
 
-#if SDL_ALTIVEC_BLITTERS && HAVE_SETJMP && !__MACOSX__ && !__OpenBSD__ && !__FreeBSD__
+#if defined(SDL_ALTIVEC_BLITTERS) && defined(HAVE_SETJMP) && !defined(__MACOSX__) && !defined(__OpenBSD__) && !defined(__FreeBSD__)
 /* This is the brute force way of detecting instruction sets...
    the idea is borrowed from the libmpeg2 library - thanks!
  */
@@ -352,7 +356,7 @@ static int CPU_haveAltiVec(void)
     elf_aux_info(AT_HWCAP, &cpufeatures, sizeof(cpufeatures));
     altivec = cpufeatures & PPC_FEATURE_HAS_ALTIVEC;
     return altivec;
-#elif SDL_ALTIVEC_BLITTERS && HAVE_SETJMP
+#elif defined(SDL_ALTIVEC_BLITTERS) && defined(HAVE_SETJMP)
     void (*handler)(int sig);
     handler = signal(SIGILL, illegal_instruction);
     if (setjmp(jmpbuf) == 0) {
@@ -468,9 +472,9 @@ static int CPU_haveNEON(void)
     return IsProcessorFeaturePresent(PF_ARM_NEON_INSTRUCTIONS_AVAILABLE) != 0;
 #elif (defined(__ARM_ARCH) && (__ARM_ARCH >= 8)) || defined(__aarch64__)
     return 1; /* ARMv8 always has non-optional NEON support. */
-#elif __VITA__
+#elif defined(__VITA__)
     return 1;
-#elif __3DS__
+#elif defined(__3DS__)
     return 0;
 #elif defined(__APPLE__) && defined(__ARM_ARCH) && (__ARM_ARCH >= 7)
     /* (note that sysctlbyname("hw.optional.neon") doesn't work!) */
@@ -891,6 +895,7 @@ static const char *SDL_GetCPUName(void)
 int SDL_GetCPUCacheLineSize(void)
 {
     const char *cpuType = SDL_GetCPUType();
+    int cacheline_size = SDL_CACHELINE_SIZE; /* initial guess */
     int a, b, c, d;
     (void)a;
     (void)b;
@@ -898,14 +903,34 @@ int SDL_GetCPUCacheLineSize(void)
     (void)d;
     if (SDL_strcmp(cpuType, "GenuineIntel") == 0 || SDL_strcmp(cpuType, "CentaurHauls") == 0 || SDL_strcmp(cpuType, "  Shanghai  ") == 0) {
         cpuid(0x00000001, a, b, c, d);
-        return ((b >> 8) & 0xff) * 8;
+        cacheline_size = ((b >> 8) & 0xff) * 8;
     } else if (SDL_strcmp(cpuType, "AuthenticAMD") == 0 || SDL_strcmp(cpuType, "HygonGenuine") == 0) {
         cpuid(0x80000005, a, b, c, d);
-        return c & 0xff;
+        cacheline_size = c & 0xff;
     } else {
-        /* Just make a guess here... */
-        return SDL_CACHELINE_SIZE;
+#if defined(HAVE_SYSCONF) && defined(_SC_LEVEL1_DCACHE_LINESIZE)
+        if ((cacheline_size = sysconf(_SC_LEVEL1_DCACHE_LINESIZE)) > 0) {
+            return cacheline_size;
+        } else {
+            cacheline_size = SDL_CACHELINE_SIZE;
+        }
+#endif
+#if defined(__LINUX__)
+        {
+            FILE *f = fopen("/sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size", "r");
+            if (f) {
+                int size;
+                if (fscanf(f, "%d", &size) == 1) {
+                    cacheline_size = size;
+                }
+                fclose(f);
+            }
+        }
+#elif defined(__FreeBSD__) && defined(CACHE_LINE_SIZE)
+        cacheline_size = CACHE_LINE_SIZE;
+#endif
     }
+    return cacheline_size;
 }
 
 static Uint32 SDL_CPUFeatures = 0xFFFFFFFF;
@@ -1079,16 +1104,19 @@ int SDL_GetSystemRAM(void)
 #endif
 #ifdef HAVE_SYSCTLBYNAME
         if (SDL_SystemRAM <= 0) {
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__NetBSD__) || defined(__DragonFly__)
-#ifdef HW_REALMEM
+#ifdef HW_PHYSMEM64
+            /* (64-bit): NetBSD since 2003, OpenBSD */
+            int mib[2] = { CTL_HW, HW_PHYSMEM64 };
+#elif defined(HW_REALMEM)
+            /* (64-bit): FreeBSD since 2005, DragonFly */
             int mib[2] = { CTL_HW, HW_REALMEM };
-#else
-            /* might only report up to 2 GiB */
-            int mib[2] = { CTL_HW, HW_PHYSMEM };
-#endif /* HW_REALMEM */
-#else
+#elif defined(HW_MEMSIZE)
+            /* (64-bit): Darwin */
             int mib[2] = { CTL_HW, HW_MEMSIZE };
-#endif /* __FreeBSD__ || __FreeBSD_kernel__ */
+#else
+            /* (32-bit): very old BSD, might only report up to 2 GiB */
+            int mib[2] = { CTL_HW, HW_PHYSMEM };
+#endif /* HW_PHYSMEM64 */
             Uint64 memsize = 0;
             size_t len = sizeof(memsize);
 
@@ -1198,7 +1226,7 @@ void *SDL_SIMDRealloc(void *mem, const size_t len)
 
     ptr = (Uint8 *)SDL_realloc(mem, to_allocate);
 
-    if (ptr == NULL) {
+    if (!ptr) {
         return NULL; /* Out of memory, bail! */
     }
 
@@ -1236,7 +1264,7 @@ void SDL_SIMDFree(void *ptr)
 
 #include <stdio.h>
 
-int main()
+int main(void)
 {
     printf("CPU count: %d\n", SDL_GetCPUCount());
     printf("CPU type: %s\n", SDL_GetCPUType());

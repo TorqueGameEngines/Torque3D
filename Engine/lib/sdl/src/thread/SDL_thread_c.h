@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -26,25 +26,25 @@
 #include "SDL_thread.h"
 
 /* Need the definitions of SYS_ThreadHandle */
-#if SDL_THREADS_DISABLED
+#ifdef SDL_THREADS_DISABLED
 #include "generic/SDL_systhread_c.h"
-#elif SDL_THREAD_PTHREAD
+#elif defined(SDL_THREAD_PTHREAD)
 #include "pthread/SDL_systhread_c.h"
-#elif SDL_THREAD_WINDOWS
+#elif defined(SDL_THREAD_WINDOWS)
 #include "windows/SDL_systhread_c.h"
-#elif SDL_THREAD_PS2
+#elif defined(SDL_THREAD_PS2)
 #include "ps2/SDL_systhread_c.h"
-#elif SDL_THREAD_PSP
+#elif defined(SDL_THREAD_PSP)
 #include "psp/SDL_systhread_c.h"
-#elif SDL_THREAD_VITA
+#elif defined(SDL_THREAD_VITA)
 #include "vita/SDL_systhread_c.h"
-#elif SDL_THREAD_N3DS
+#elif defined(SDL_THREAD_N3DS)
 #include "n3ds/SDL_systhread_c.h"
-#elif SDL_THREAD_STDCPP
+#elif defined(SDL_THREAD_STDCPP)
 #include "stdcpp/SDL_systhread_c.h"
-#elif SDL_THREAD_OS2
+#elif defined(SDL_THREAD_OS2)
 #include "os2/SDL_systhread_c.h"
-#elif SDL_THREAD_NGAGE
+#elif defined(SDL_THREAD_NGAGE)
 #include "ngage/SDL_systhread_c.h"
 #else
 #error Need thread implementation for this platform
@@ -93,17 +93,17 @@ typedef struct
 /* This is how many TLS entries we allocate at once */
 #define TLS_ALLOC_CHUNKSIZE 4
 
-/* Get cross-platform, slow, thread local storage for this thread.
-   This is only intended as a fallback if getting real thread-local
-   storage fails or isn't supported on this platform.
- */
-extern SDL_TLSData *SDL_Generic_GetTLSData(void);
+extern void SDL_InitTLSData(void);
+extern void SDL_QuitTLSData(void);
 
-/* Set cross-platform, slow, thread local storage for this thread.
+/* Generic TLS support.
    This is only intended as a fallback if getting real thread-local
    storage fails or isn't supported on this platform.
  */
+extern void SDL_Generic_InitTLSData(void);
+extern SDL_TLSData *SDL_Generic_GetTLSData(void);
 extern int SDL_Generic_SetTLSData(SDL_TLSData *data);
+extern void SDL_Generic_QuitTLSData(void);
 
 #endif /* SDL_thread_c_h_ */
 

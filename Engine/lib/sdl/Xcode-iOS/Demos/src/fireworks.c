@@ -52,9 +52,9 @@ void spawnTrailFromEmitter(struct particle *emitter);
 void spawnEmitterParticle(GLfloat x, GLfloat y);
 void explodeEmitter(struct particle *emitter);
 void initializeParticles(void);
-void initializeTexture();
+void initializeTexture(void);
 int nextPowerOfTwo(int x);
-void drawParticles();
+void drawParticles(void);
 void stepParticles(double deltaTime);
 
 /*  helper function (used in texture loading)
@@ -159,7 +159,7 @@ stepParticles(double deltaTime)
     This draws all the particles shown on screen
 */
 void
-drawParticles()
+drawParticles(void)
 {
 
     /* draw the background */
@@ -324,7 +324,7 @@ initializeParticles(void)
     loads the particle texture
  */
 void
-initializeTexture()
+initializeTexture(void)
 {
 
     int bpp;                    /* texture bits per pixel */
@@ -334,7 +334,7 @@ initializeTexture()
                                            to format passed into OpenGL */
 
     bmp_surface = SDL_LoadBMP("stroke.bmp");
-    if (bmp_surface == NULL) {
+    if (!bmp_surface) {
         fatalError("could not load stroke.bmp");
     }
 

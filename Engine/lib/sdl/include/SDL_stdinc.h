@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -19,10 +19,12 @@
   3. This notice may not be removed or altered from any source distribution.
 */
 
+/* WIKI CATEGORY: StdInc */
+
 /**
- *  \file SDL_stdinc.h
+ * # CategoryStdInc
  *
- *  This is a general header that includes C language support.
+ * This is a general header that includes C language support.
  */
 
 #ifndef SDL_stdinc_h_
@@ -107,7 +109,7 @@
 # elif defined(__MRC__)
 void *alloca(unsigned);
 # else
-char *alloca();
+void *alloca(size_t);
 # endif
 #endif
 
@@ -129,15 +131,19 @@ char *alloca();
 #endif
 
 /**
- *  The number of elements in an array.
+ * The number of elements in an array.
  */
 #define SDL_arraysize(array)    (sizeof(array)/sizeof(array[0]))
 #define SDL_TABLESIZE(table)    SDL_arraysize(table)
 
 /**
- *  Macro useful for building other macros with strings in them
+ * Macro useful for building other macros with strings in them
  *
- *  e.g. #define LOG_ERROR(X) OutputDebugString(SDL_STRINGIFY_ARG(__FUNCTION__) ": " X "\n")
+ * e.g:
+ *
+ * ```c
+ * #define LOG_ERROR(X) OutputDebugString(SDL_STRINGIFY_ARG(__FUNCTION__) ": " X "\n")
+ * ```
  */
 #define SDL_STRINGIFY_ARG(arg)  #arg
 
@@ -185,54 +191,61 @@ typedef enum
 #endif
 
 /**
- * \brief A signed 8-bit integer type.
+ * A signed 8-bit integer type.
  */
+typedef int8_t Sint8;
 #define SDL_MAX_SINT8   ((Sint8)0x7F)           /* 127 */
 #define SDL_MIN_SINT8   ((Sint8)(~0x7F))        /* -128 */
-typedef int8_t Sint8;
-/**
- * \brief An unsigned 8-bit integer type.
- */
-#define SDL_MAX_UINT8   ((Uint8)0xFF)           /* 255 */
-#define SDL_MIN_UINT8   ((Uint8)0x00)           /* 0 */
-typedef uint8_t Uint8;
-/**
- * \brief A signed 16-bit integer type.
- */
-#define SDL_MAX_SINT16  ((Sint16)0x7FFF)        /* 32767 */
-#define SDL_MIN_SINT16  ((Sint16)(~0x7FFF))     /* -32768 */
-typedef int16_t Sint16;
-/**
- * \brief An unsigned 16-bit integer type.
- */
-#define SDL_MAX_UINT16  ((Uint16)0xFFFF)        /* 65535 */
-#define SDL_MIN_UINT16  ((Uint16)0x0000)        /* 0 */
-typedef uint16_t Uint16;
-/**
- * \brief A signed 32-bit integer type.
- */
-#define SDL_MAX_SINT32  ((Sint32)0x7FFFFFFF)    /* 2147483647 */
-#define SDL_MIN_SINT32  ((Sint32)(~0x7FFFFFFF)) /* -2147483648 */
-typedef int32_t Sint32;
-/**
- * \brief An unsigned 32-bit integer type.
- */
-#define SDL_MAX_UINT32  ((Uint32)0xFFFFFFFFu)   /* 4294967295 */
-#define SDL_MIN_UINT32  ((Uint32)0x00000000)    /* 0 */
-typedef uint32_t Uint32;
 
 /**
- * \brief A signed 64-bit integer type.
+ * An unsigned 8-bit integer type.
  */
+typedef uint8_t Uint8;
+#define SDL_MAX_UINT8   ((Uint8)0xFF)           /* 255 */
+#define SDL_MIN_UINT8   ((Uint8)0x00)           /* 0 */
+
+/**
+ * A signed 16-bit integer type.
+ */
+typedef int16_t Sint16;
+#define SDL_MAX_SINT16  ((Sint16)0x7FFF)        /* 32767 */
+#define SDL_MIN_SINT16  ((Sint16)(~0x7FFF))     /* -32768 */
+
+/**
+ * An unsigned 16-bit integer type.
+ */
+typedef uint16_t Uint16;
+#define SDL_MAX_UINT16  ((Uint16)0xFFFF)        /* 65535 */
+#define SDL_MIN_UINT16  ((Uint16)0x0000)        /* 0 */
+
+/**
+ * A signed 32-bit integer type.
+ */
+typedef int32_t Sint32;
+#define SDL_MAX_SINT32  ((Sint32)0x7FFFFFFF)    /* 2147483647 */
+#define SDL_MIN_SINT32  ((Sint32)(~0x7FFFFFFF)) /* -2147483648 */
+
+/**
+ * An unsigned 32-bit integer type.
+ */
+typedef uint32_t Uint32;
+#define SDL_MAX_UINT32  ((Uint32)0xFFFFFFFFu)   /* 4294967295 */
+#define SDL_MIN_UINT32  ((Uint32)0x00000000)    /* 0 */
+
+/**
+ * A signed 64-bit integer type.
+ */
+typedef int64_t Sint64;
 #define SDL_MAX_SINT64  ((Sint64)0x7FFFFFFFFFFFFFFFll)      /* 9223372036854775807 */
 #define SDL_MIN_SINT64  ((Sint64)(~0x7FFFFFFFFFFFFFFFll))   /* -9223372036854775808 */
-typedef int64_t Sint64;
+
 /**
- * \brief An unsigned 64-bit integer type.
+ * An unsigned 64-bit integer type.
  */
+typedef uint64_t Uint64;
 #define SDL_MAX_UINT64  ((Uint64)0xFFFFFFFFFFFFFFFFull)     /* 18446744073709551615 */
 #define SDL_MIN_UINT64  ((Uint64)(0x0000000000000000ull))   /* 0 */
-typedef uint64_t Uint64;
+
 
 /* @} *//* Basic data types */
 
@@ -253,44 +266,44 @@ typedef uint64_t Uint64;
  * <stdint.h> should define these but this is not true all platforms.
  * (for example win32) */
 #ifndef SDL_PRIs64
-#ifdef PRIs64
-#define SDL_PRIs64 PRIs64
-#elif defined(__WIN32__) || defined(__GDK__)
+#if defined(__WIN32__) || defined(__GDK__)
 #define SDL_PRIs64 "I64d"
-#elif defined(__LINUX__) && defined(__LP64__)
+#elif defined(PRId64)
+#define SDL_PRIs64 PRId64
+#elif defined(__LP64__) && !defined(__APPLE__) && !defined(__EMSCRIPTEN__)
 #define SDL_PRIs64 "ld"
 #else
 #define SDL_PRIs64 "lld"
 #endif
 #endif
 #ifndef SDL_PRIu64
-#ifdef PRIu64
-#define SDL_PRIu64 PRIu64
-#elif defined(__WIN32__) || defined(__GDK__)
+#if defined(__WIN32__) || defined(__GDK__)
 #define SDL_PRIu64 "I64u"
-#elif defined(__LINUX__) && defined(__LP64__)
+#elif defined(PRIu64)
+#define SDL_PRIu64 PRIu64
+#elif defined(__LP64__) && !defined(__APPLE__)
 #define SDL_PRIu64 "lu"
 #else
 #define SDL_PRIu64 "llu"
 #endif
 #endif
 #ifndef SDL_PRIx64
-#ifdef PRIx64
-#define SDL_PRIx64 PRIx64
-#elif defined(__WIN32__) || defined(__GDK__)
+#if defined(__WIN32__) || defined(__GDK__)
 #define SDL_PRIx64 "I64x"
-#elif defined(__LINUX__) && defined(__LP64__)
+#elif defined(PRIx64)
+#define SDL_PRIx64 PRIx64
+#elif defined(__LP64__) && !defined(__APPLE__)
 #define SDL_PRIx64 "lx"
 #else
 #define SDL_PRIx64 "llx"
 #endif
 #endif
 #ifndef SDL_PRIX64
-#ifdef PRIX64
-#define SDL_PRIX64 PRIX64
-#elif defined(__WIN32__) || defined(__GDK__)
+#if defined(__WIN32__) || defined(__GDK__)
 #define SDL_PRIX64 "I64X"
-#elif defined(__LINUX__) && defined(__LP64__)
+#elif defined(PRIX64)
+#define SDL_PRIX64 PRIX64
+#elif defined(__LP64__) && !defined(__APPLE__)
 #define SDL_PRIX64 "lX"
 #else
 #define SDL_PRIX64 "llX"
@@ -336,7 +349,9 @@ typedef uint64_t Uint64;
 #define SDL_PRINTF_FORMAT_STRING
 #define SDL_SCANF_FORMAT_STRING
 #define SDL_PRINTF_VARARG_FUNC( fmtargnumber )
+#define SDL_PRINTF_VARARG_FUNCV( fmtargnumber )
 #define SDL_SCANF_VARARG_FUNC( fmtargnumber )
+#define SDL_SCANF_VARARG_FUNCV( fmtargnumber )
 #else
 #if defined(_MSC_VER) && (_MSC_VER >= 1600) /* VS 2010 and above */
 #include <sal.h>
@@ -362,18 +377,25 @@ typedef uint64_t Uint64;
 #endif
 #if defined(__GNUC__)
 #define SDL_PRINTF_VARARG_FUNC( fmtargnumber ) __attribute__ (( format( __printf__, fmtargnumber, fmtargnumber+1 )))
+#define SDL_PRINTF_VARARG_FUNCV( fmtargnumber ) __attribute__(( format( __printf__, fmtargnumber, 0 )))
 #define SDL_SCANF_VARARG_FUNC( fmtargnumber ) __attribute__ (( format( __scanf__, fmtargnumber, fmtargnumber+1 )))
+#define SDL_SCANF_VARARG_FUNCV( fmtargnumber ) __attribute__(( format( __scanf__, fmtargnumber, 0 )))
 #else
 #define SDL_PRINTF_VARARG_FUNC( fmtargnumber )
+#define SDL_PRINTF_VARARG_FUNCV( fmtargnumber )
 #define SDL_SCANF_VARARG_FUNC( fmtargnumber )
+#define SDL_SCANF_VARARG_FUNCV( fmtargnumber )
 #endif
 #endif /* SDL_DISABLE_ANALYZE_MACROS */
 
 #ifndef SDL_COMPILE_TIME_ASSERT
 #if defined(__cplusplus)
+/* Keep C++ case alone: Some versions of gcc will define __STDC_VERSION__ even when compiling in C++ mode. */
 #if (__cplusplus >= 201103L)
 #define SDL_COMPILE_TIME_ASSERT(name, x)  static_assert(x, #x)
 #endif
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 202311L)
+#define SDL_COMPILE_TIME_ASSERT(name, x)  static_assert(x, #x)
 #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 #define SDL_COMPILE_TIME_ASSERT(name, x) _Static_assert(x, #x)
 #endif
@@ -406,8 +428,8 @@ SDL_COMPILE_TIME_ASSERT(sint64, sizeof(Sint64) == 8);
 
 /** \cond */
 #ifndef DOXYGEN_SHOULD_IGNORE_THIS
-#if !defined(__ANDROID__) && !defined(__VITA__) && !defined(__3DS__)
-   /* TODO: include/SDL_stdinc.h:174: error: size of array 'SDL_dummy_enum' is negative */
+#if !defined(__VITA__) && !defined(__3DS__)
+/* TODO: include/SDL_stdinc.h:422: error: size of array 'SDL_dummy_enum' is negative */
 typedef enum
 {
     DUMMY_ENUM_VALUE
@@ -482,8 +504,9 @@ extern DECLSPEC int SDLCALL SDL_GetNumAllocations(void);
 extern DECLSPEC char *SDLCALL SDL_getenv(const char *name);
 extern DECLSPEC int SDLCALL SDL_setenv(const char *name, const char *value, int overwrite);
 
-extern DECLSPEC void SDLCALL SDL_qsort(void *base, size_t nmemb, size_t size, int (SDLCALL *compare) (const void *, const void *));
-extern DECLSPEC void * SDLCALL SDL_bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (SDLCALL *compare) (const void *, const void *));
+typedef int (SDLCALL *SDL_CompareCallback)(const void *, const void *);
+extern DECLSPEC void SDLCALL SDL_qsort(void *base, size_t nmemb, size_t size, SDL_CompareCallback compare);
+extern DECLSPEC void * SDLCALL SDL_bsearch(const void *key, const void *base, size_t nmemb, size_t size, SDL_CompareCallback compare);
 
 extern DECLSPEC int SDLCALL SDL_abs(int x);
 
@@ -512,6 +535,7 @@ extern DECLSPEC Uint32 SDLCALL SDL_crc32(Uint32 crc, const void *data, size_t le
 
 extern DECLSPEC void *SDLCALL SDL_memset(SDL_OUT_BYTECAP(len) void *dst, int c, size_t len);
 
+/* Some safe(r) macros for zero'ing structures... */
 #define SDL_zero(x) SDL_memset(&(x), 0, sizeof((x)))
 #define SDL_zerop(x) SDL_memset((x), 0, sizeof(*(x)))
 #define SDL_zeroa(x) SDL_memset((x), 0, sizeof((x)))
@@ -603,11 +627,11 @@ extern DECLSPEC int SDLCALL SDL_strcasecmp(const char *str1, const char *str2);
 extern DECLSPEC int SDLCALL SDL_strncasecmp(const char *str1, const char *str2, size_t len);
 
 extern DECLSPEC int SDLCALL SDL_sscanf(const char *text, SDL_SCANF_FORMAT_STRING const char *fmt, ...) SDL_SCANF_VARARG_FUNC(2);
-extern DECLSPEC int SDLCALL SDL_vsscanf(const char *text, const char *fmt, va_list ap);
+extern DECLSPEC int SDLCALL SDL_vsscanf(const char *text, SDL_SCANF_FORMAT_STRING const char *fmt, va_list ap) SDL_SCANF_VARARG_FUNCV(2);
 extern DECLSPEC int SDLCALL SDL_snprintf(SDL_OUT_Z_CAP(maxlen) char *text, size_t maxlen, SDL_PRINTF_FORMAT_STRING const char *fmt, ... ) SDL_PRINTF_VARARG_FUNC(3);
-extern DECLSPEC int SDLCALL SDL_vsnprintf(SDL_OUT_Z_CAP(maxlen) char *text, size_t maxlen, const char *fmt, va_list ap);
+extern DECLSPEC int SDLCALL SDL_vsnprintf(SDL_OUT_Z_CAP(maxlen) char *text, size_t maxlen, SDL_PRINTF_FORMAT_STRING const char *fmt, va_list ap) SDL_PRINTF_VARARG_FUNCV(3);
 extern DECLSPEC int SDLCALL SDL_asprintf(char **strp, SDL_PRINTF_FORMAT_STRING const char *fmt, ...) SDL_PRINTF_VARARG_FUNC(2);
-extern DECLSPEC int SDLCALL SDL_vasprintf(char **strp, const char *fmt, va_list ap);
+extern DECLSPEC int SDLCALL SDL_vasprintf(char **strp, SDL_PRINTF_FORMAT_STRING const char *fmt, va_list ap) SDL_PRINTF_VARARG_FUNCV(2);
 
 #ifndef HAVE_M_PI
 #ifndef M_PI
@@ -688,8 +712,8 @@ extern DECLSPEC size_t SDLCALL SDL_iconv(SDL_iconv_t cd, const char **inbuf,
                                          size_t * outbytesleft);
 
 /**
- * This function converts a buffer or string between encodings in one pass, returning a
- * string that must be freed with SDL_free() or NULL on error.
+ * This function converts a buffer or string between encodings in one pass,
+ * returning a string that must be freed with SDL_free() or NULL on error.
  *
  * \since This function is available since SDL 2.0.0.
  */
@@ -697,9 +721,11 @@ extern DECLSPEC char *SDLCALL SDL_iconv_string(const char *tocode,
                                                const char *fromcode,
                                                const char *inbuf,
                                                size_t inbytesleft);
+
+/* Some helper macros for common cases... */
 #define SDL_iconv_utf8_locale(S)    SDL_iconv_string("", "UTF-8", S, SDL_strlen(S)+1)
-#define SDL_iconv_utf8_ucs2(S)      (Uint16 *)SDL_iconv_string("UCS-2-INTERNAL", "UTF-8", S, SDL_strlen(S)+1)
-#define SDL_iconv_utf8_ucs4(S)      (Uint32 *)SDL_iconv_string("UCS-4-INTERNAL", "UTF-8", S, SDL_strlen(S)+1)
+#define SDL_iconv_utf8_ucs2(S)      (Uint16 *)SDL_iconv_string("UCS-2", "UTF-8", S, SDL_strlen(S)+1)
+#define SDL_iconv_utf8_ucs4(S)      (Uint32 *)SDL_iconv_string("UCS-4", "UTF-8", S, SDL_strlen(S)+1)
 #define SDL_iconv_wchar_utf8(S)     SDL_iconv_string("UTF-8", "WCHAR_T", (char *)S, (SDL_wcslen(S)+1)*sizeof(wchar_t))
 
 /* force builds using Clang's static analysis tools to use literal C runtime
@@ -723,6 +749,9 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t size);
 #ifndef HAVE_WCSLCAT
 size_t wcslcat(wchar_t *dst, const wchar_t *src, size_t size);
 #endif
+
+/* strdup is not ANSI but POSIX, and its prototype might be hidden... */
+char *strdup(const char *str);
 
 /* Starting LLVM 16, the analyser errors out if these functions do not have
    their prototype defined (clang-diagnostic-implicit-function-declaration) */
@@ -769,8 +798,9 @@ SDL_FORCE_INLINE void *SDL_memcpy4(SDL_OUT_BYTECAP(dwords*4) void *dst, SDL_IN_B
 }
 
 /**
- * If a * b would overflow, return -1. Otherwise store a * b via ret
- * and return 0.
+ * If a * b would overflow, return -1.
+ *
+ * Otherwise store a * b via ret and return 0.
  *
  * \since This function is available since SDL 2.24.0.
  */
@@ -799,8 +829,9 @@ SDL_FORCE_INLINE int _SDL_size_mul_overflow_builtin (size_t a,
 #endif
 
 /**
- * If a + b would overflow, return -1. Otherwise store a + b via ret
- * and return 0.
+ * If a + b would overflow, return -1.
+ *
+ * Otherwise store a + b via ret and return 0.
  *
  * \since This function is available since SDL 2.24.0.
  */

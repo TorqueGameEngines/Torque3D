@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -18,12 +18,25 @@
 
 #include <stdlib.h> /* exit() */
 
-#ifdef __IPHONEOS__
+#ifdef __3DS__
+/* For mouse-based tests, we want to have the window on the touch screen */
+#define SCREEN_X 40
+#define SCREEN_Y 240
+#define SCREEN_WIDTH    320
+#define SCREEN_HEIGHT   240
+#elif defined(__IPHONEOS__)
 #define SCREEN_WIDTH    320
 #define SCREEN_HEIGHT   480
 #else
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 480
+#endif
+
+#ifndef SCREEN_X
+#define SCREEN_X SDL_WINDOWPOS_CENTERED
+#endif
+#ifndef SCREEN_Y
+#define SCREEN_Y SDL_WINDOWPOS_CENTERED
 #endif
 
 static SDL_Window *window;
@@ -83,7 +96,7 @@ void DrawObject(SDL_Renderer *renderer, Object *object)
 void DrawObjects(SDL_Renderer *renderer)
 {
     Object *next = objects;
-    while (next != NULL) {
+    while (next) {
         DrawObject(renderer, next);
         next = next->next;
     }
@@ -93,7 +106,7 @@ void AppendObject(Object *object)
 {
     if (objects) {
         Object *next = objects;
-        while (next->next != NULL) {
+        while (next->next) {
             next = next->next;
         }
         next->next = object;
@@ -130,7 +143,7 @@ void loop(void *arg)
             break;
 
         case SDL_MOUSEMOTION:
-            if (active == NULL) {
+            if (!active) {
                 break;
             }
 
@@ -139,7 +152,7 @@ void loop(void *arg)
             break;
 
         case SDL_MOUSEBUTTONDOWN:
-            if (active == NULL) {
+            if (!active) {
                 active = SDL_calloc(1, sizeof(*active));
                 active->x1 = active->x2 = event.button.x;
                 active->y1 = active->y2 = event.button.y;
@@ -173,7 +186,7 @@ void loop(void *arg)
             break;
 
         case SDL_MOUSEBUTTONUP:
-            if (active == NULL) {
+            if (!active) {
                 break;
             }
 
@@ -263,16 +276,14 @@ int main(int argc, char *argv[])
     }
 
     /* Create a window to display joystick axis position */
-    window = SDL_CreateWindow("Mouse Test", SDL_WINDOWPOS_CENTERED,
-                              SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH,
-                              SCREEN_HEIGHT, 0);
-    if (window == NULL) {
+    window = SDL_CreateWindow("Mouse Test", SCREEN_X, SCREEN_Y, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+    if (!window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window: %s\n", SDL_GetError());
         return SDL_FALSE;
     }
 
     renderer = SDL_CreateRenderer(window, -1, 0);
-    if (renderer == NULL) {
+    if (!renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create renderer: %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
         return SDL_FALSE;

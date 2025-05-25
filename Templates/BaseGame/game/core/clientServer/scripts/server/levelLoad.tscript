@@ -156,7 +156,7 @@ function loadMissionStage3()
 function GameBase::onCreateGame(%this)
 {
     %db = %this.getDatablock();
-    if (%db.isMethod("onCreateGame"))
+    if (isObject(%db) && %db.isMethod("onCreateGame"))
     {
         %db.onCreateGame(%this);
     }

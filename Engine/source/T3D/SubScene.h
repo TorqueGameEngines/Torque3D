@@ -52,6 +52,9 @@ private:
 
    bool mGlobalLayer;
 
+   bool mUseSeparateLoadBounds;
+   Point3F mLoadBounds;
+
 public:
    SubScene();
    virtual ~SubScene();
@@ -118,7 +121,7 @@ public:
       return mStartUnloadTimerMS;
    }
 
-   bool save();
+   bool save(const String& filename = String());
 
    DECLARE_CALLBACK(void, onLoaded, ());
    DECLARE_CALLBACK(void, onUnloaded, ());

@@ -521,3 +521,86 @@ function AssetBrowser::openFolderLocation(%this, %folderPath)
       }
    }
 }
+
+//-------------------------------------------------------------
+function AssetBrowser::getAssetBackupCount(%this, %assetId)
+{
+   //process it and then check if we have any autosave backups
+   %processedId = strReplace(EditAssetPopup.assetId, ":", "_");
+   %autosavePath = "tools/autosave/" @ %processedId @ "/";
+   
+   RestoreBackupListPopup.clearItems();
+   
+   if(isDirectory(%autosavePath))
+   {
+      %dirs = getDirectoryList(%autosavePath); 
+      %count = getFieldCount(%dirs);
+      
+      return %count;
+   }
+   
+   return 0;
+}
+
+function AssetBrowser::restoreAssetBackup(%this, %assetId, %index)
+{
+   if(!AssetDatabase.isDeclaredAsset(%assetId))
+   {
+      error("AssetBrowser::restoreAssetBackup() - Attempted to restore backed up version of asset: " @ %assetId @ " but asset is not validly declared!");
+      return;
+   }
+   
+   //process it and then check if we have any autosave backups
+   %processedId = strReplace(%assetId, ":", "_");
+   %autosavePath = "tools/autosave/" @ %processedId @ "/";
+   
+   if(isDirectory(%autosavePath))
+   {
+      %dirs = getDirectoryList(%autosavePath); 
+      %count = getFieldCount(%dirs);
+      if(%count > 0)
+      {
+         %saveArray = new ArrayObject(){};
+         //loop over the entries and find the oldest one
+         for(%f=0; %f < %count; %f++)
+         {
+            %saveArray.add(getField(%dirs, %f));            
+         }
+         
+         %saveArray.sortk();
+         
+         %folderName = %saveArray.getKey(%index);
+         
+         //now we just copy the contents of the folder into our assetId path and refresh
+         %assetPath = AssetDatabase.getAssetPath(%assetId);
+         
+         %autosaveFullPath = %autosavePath @ "/" @ %folderName @ "/";
+         %autosaveFullPath = strReplace(%autosaveFullPath, "//", "/");
+         
+         %file = findFirstFile( %autosaveFullPath @ "*.*" );
+         while( %file !$= "" )
+         {      
+            %fileName = fileName(%file);
+            %assetFileName = %assetPath @ "/" @ %fileName;
+            
+            warn("| Copying file from: " @ %file @ " to: " @ %assetFileName);
+            if(!pathCopy(%file, %assetFileName, false))
+            {
+               error("AssetBrowser::restoreAssetBackup() - Something went wrong when copying the file: " @ %file @ " to " @ %assetFileName);  
+            }
+            
+            %file = findNextFile( %autosaveFullPath @ "*.*" );
+         }
+         
+         AssetBrowser.reloadAsset(%assetId);
+      }
+      else
+      {
+         error("AssetBrowser::restoreAssetBackup() - Attempted to restore backed up version of asset: " @ %assetId @ " but no autosaves were found!");
+      }
+   }
+   else
+   {
+      error("AssetBrowser::restoreAssetBackup() - Attempted to restore backed up version of asset: " @ %assetId @ " but autosave directory doesn't exist!");
+   }
+}

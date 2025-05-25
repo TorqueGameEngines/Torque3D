@@ -763,6 +763,36 @@ DefineEngineMethod(AssetManager, findAssetLooseFile, S32, (const char* assetQuer
 
 //-----------------------------------------------------------------------------
 
+DefineEngineMethod(AssetManager, getAssetLooseFileCount, S32, (const char* assetId), (""),
+   "Gets the number of loose files associated with the given assetId.\n"
+   "@param assetId The assetId to check.\n"
+   "@return The number of loose files associated with the assetId.\n")
+{
+   // Fetch asset loose file.
+   const char* pAssetId = assetId;
+
+   // Perform query.
+   return object->getAssetLooseFileCount(pAssetId);
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(AssetManager, getAssetLooseFile, const char*, (const char* assetId, S32 index), ("", 0),
+   "Gets the loose file associated to the given assetId at the provided index.\n"
+   "@param assetId The assetId to check.\n"
+   "@param index The index of the loose file to get.\n"
+   "@return The file name of the associated loose file.\n")
+{
+
+   // Fetch asset loose file.
+   const char* pAssetId = assetId;
+
+   // Perform query.
+   return object->getAssetLooseFile(pAssetId, index);
+}
+
+//-----------------------------------------------------------------------------
+
 DefineEngineMethod(AssetManager, getDeclaredAssetCount, bool, (),,
    "Gets the number of declared assets.\n"
    "@return Returns the number of declared assets.\n")

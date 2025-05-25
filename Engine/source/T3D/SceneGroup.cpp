@@ -9,6 +9,7 @@
 #include "physics/physicsShape.h"
 #include "renderInstance/renderPassManager.h"
 #include "scene/sceneRenderState.h"
+#include "Scene.h"
 
 IMPLEMENT_CO_NETOBJECT_V1(SceneGroup);
 
@@ -156,6 +157,37 @@ void SceneGroup::onInspect(GuiInspector* inspector)
    regenButton->setConsoleCommand(rgBuffer);
 
    regenFieldGui->addObject(regenButton);
+
+   //
+    //Regen bounds button
+   GuiInspectorField* reparentFieldGui = sceneGroupGrp->createInspectorField();
+   reparentFieldGui->init(inspector, sceneGroupGrp);
+
+   reparentFieldGui->setSpecialEditField(true);
+   reparentFieldGui->setTargetObject(this);
+
+   fldnm = StringTable->insert("ReparentOOBObjs");
+
+   reparentFieldGui->setSpecialEditVariableName(fldnm);
+
+   reparentFieldGui->setInspectorField(NULL, fldnm);
+   reparentFieldGui->setDocs("");
+
+   stack->addObject(reparentFieldGui);
+
+   GuiButtonCtrl* reparentButton = new GuiButtonCtrl();
+   reparentButton->registerObject();
+   reparentButton->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiButtonProfile");
+   reparentButton->setText("Reparent Out-of-bounds Objs");
+   reparentButton->resize(Point2I::Zero, regenFieldGui->getExtent());
+   reparentButton->setHorizSizing(GuiControl::horizResizeWidth);
+   reparentButton->setVertSizing(GuiControl::vertResizeHeight);
+
+   char rprntBuffer[512];
+   dSprintf(rprntBuffer, 512, "%d.reparentOOBObjects();", this->getId());
+   reparentButton->setConsoleCommand(rprntBuffer);
+
+   reparentFieldGui->addObject(reparentButton);
 #endif
 }
 
@@ -279,6 +311,27 @@ void SceneGroup::recalculateBoundingBox()
    setMaskBits(TransformMask);
 }
 
+void SceneGroup::reparentOOBObjects()
+{
+   if (empty())
+      return;
+
+   // Extend the bounding box to include each child's bounding box
+   for (SimSetIterator itr(this); *itr; ++itr)
+   {
+      SceneObject* child = dynamic_cast<SceneObject*>(*itr);
+      if (child)
+      {
+         const Box3F& childBox = child->getWorldBox();
+
+         if(!mWorldBox.isOverlapped(childBox))
+         {
+            Scene::getRootScene()->addObject(child);
+         }
+      }
+   }
+}
+
 U32 SceneGroup::packUpdate(NetConnection* conn, U32 mask, BitStream* stream)
 {
    U32 retMask = Parent::packUpdate(conn, mask, stream);
@@ -362,4 +415,10 @@ DefineEngineMethod(SceneGroup, recalculateBounds, void, (), ,
    "Recalculates the SceneGroups' bounds and centerpoint.\n")
 {
    object->recalculateBoundingBox();
+}
+
+DefineEngineMethod(SceneGroup, reparentOOBObjects, void, (), ,
+   "Finds objects that are children of the SceneGroup and, if not overlapping or in the bounds, reparents them to the root scene.\n")
+{
+   object->reparentOOBObjects();
 }

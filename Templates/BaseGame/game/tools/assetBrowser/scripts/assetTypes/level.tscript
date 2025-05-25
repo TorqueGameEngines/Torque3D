@@ -99,6 +99,52 @@ function LevelAsset::onEdit(%this)
    schedule( 1, 0, "EditorOpenMission", %this);
 }
 
+function LevelAsset::onShowActionMenu(%this)
+{
+   if( !isObject( EditLevelAssetPopup ) )
+   {
+      new PopupMenu( EditLevelAssetPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+
+         jumpFileName = "";
+         jumpLineNumber = "";
+      };
+   }
+   
+   //Regen the menu so we're fully up and current with options and references
+   EditLevelAssetPopup.clearItems();
+   
+   EditLevelAssetPopup.appendItem("Edit Asset" TAB "" TAB $CurrentAssetBrowser @ ".editAsset();");
+   EditLevelAssetPopup.appendItem("Rename Asset" TAB "" TAB $CurrentAssetBrowser @ ".renameAsset();");
+   EditLevelAssetPopup.appendItem("Reload Asset" TAB "" TAB $CurrentAssetBrowser @ ".refreshAsset();");
+   EditLevelAssetPopup.appendItem("Asset Properties" TAB "" TAB $CurrentAssetBrowser @ ".editAssetInfo();");
+   EditLevelAssetPopup.appendItem("-");
+   EditLevelAssetPopup.appendItem("Duplicate Asset" TAB "" TAB $CurrentAssetBrowser @ ".duplicateAsset();");
+   EditLevelAssetPopup.appendItem("-");
+   EditLevelAssetPopup.appendItem("Regenerate Preview Image" TAB "" TAB $CurrentAssetBrowser @ ".regeneratePreviewImage();");
+   EditLevelAssetPopup.appendItem("-");
+   EditLevelAssetPopup.appendItem("Restore Backup" TAB RestoreBackupListPopup);
+   EditLevelAssetPopup.appendItem("-");
+   EditLevelAssetPopup.appendItem("Open File Location" TAB "" TAB $CurrentAssetBrowser @ ".openFileLocation();");
+   EditLevelAssetPopup.appendItem("-");
+   EditLevelAssetPopup.appendItem("Delete Asset" TAB "" TAB $CurrentAssetBrowser @ ".deleteAsset();");
+   
+   %assetId = %this.getAssetId();
+   %assetType = AssetDatabase.getAssetType(%assetId);
+   
+   EditLevelAssetPopup.objectData = %assetId;
+   EditLevelAssetPopup.objectType = %assetType;
+   
+   RestoreBackupListPopup.populateList(%assetId);
+   EditLevelAssetPopup.reloadItems();
+   
+   EditLevelAssetPopup.showPopup(Canvas); 
+   
+   $CurrentAssetBrowser.popupMenu = EditLevelAssetPopup;
+}
+
 function LevelAsset::buildBrowserElement(%this, %previewData)
 {
    %previewData.assetName = %this.assetName;

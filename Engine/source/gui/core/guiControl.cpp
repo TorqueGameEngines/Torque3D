@@ -2855,6 +2855,23 @@ DefineEngineMethod( GuiControl, getGlobalCenter, Point2I, (),,
 
 //-----------------------------------------------------------------------------
 
+DefineEngineMethod(GuiControl, setGlobalCenter, void, (S32 x, S32 y), ,
+   "Set the coordinate of the control's center point in coordinates relative to the root control in its control hierarchy.\n"
+   "@param x The X coordinate of the new center point of the control relative to the root control's.\n"
+   "@param y The Y coordinate of the new center point of the control relative to the root control's.")
+{
+   //see if we can turn the x/y into ints directly, 
+   Point2I lPosOffset = object->globalToLocalCoord(Point2I(x, y));
+
+   lPosOffset += object->getPosition();
+
+   const Point2I ext = object->getExtent();
+   Point2I newpos(lPosOffset.x - ext.x / 2, lPosOffset.y - ext.y / 2);
+   object->setPosition(newpos);
+}
+
+//-----------------------------------------------------------------------------
+
 DefineEngineMethod( GuiControl, getGlobalPosition, Point2I, (),,
    "Get the position of the control relative to the root of the GuiControl hierarchy it is contained in.\n"
    "@return The control's current position in root-relative coordinates." )

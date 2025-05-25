@@ -349,6 +349,14 @@ void GameBase::inspectPostApply()
    setMaskBits(ExtendedInfoMask);
 }
 
+void GameBase::onInspect(GuiInspector* inspector)
+{
+   if (mDataBlock && mDataBlock->isMethod("onInspect"))
+      Con::executef(mDataBlock, "onInspect", this, inspector);
+   else
+      Parent::onInspect(inspector);
+}
+
 //----------------------------------------------------------------------------
 
 void GameBase::processTick(const Move * move)

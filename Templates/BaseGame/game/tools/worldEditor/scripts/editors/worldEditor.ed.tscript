@@ -555,7 +555,7 @@ function simGroup::onInspectPostApply(%this)
     %this.callOnChildren("setLocked",%this.locked);    
 }
 
-function simGroup::SelectFiteredObjects(%this, %min, %max)
+function simGroup::SelectFilteredObjects(%this, %min, %max)
 {
     EWorldEditor.clearSelection();
     %this.callOnChildren("filteredSelect", %min, %max );
@@ -577,16 +577,29 @@ function SceneObject::filteredSelect(%this, %min, %max)
 
 function simGroup::onInspect(%obj, %inspector)
 {
-   //Find the 'Editing' group in the inspector
-   %group = %inspector.findExistentGroup("Editing");
-   if(isObject(%group))
+   if(%obj.isInNamespaceHierarchy("SceneGroup") || %obj.isInNamespaceHierarchy("SubScene"))
    {
-      //We add a field of the type 'SimGroupSelectionButton'. This isn't a 'real' type, so when the inspector group tries to add it
-      //it will route down through GuiInspectorGroup(the namespace of %group) and call onConstructField in an attemp to see if there's any
-      //script defined functions that can build a field of that type.
-      //We happen to define the required 'build @ <fieldTypeName> @ Field()' function below, allowing us to build out the custom field type
-      %group.addField("Select Objects", "SimGroupSelectionButton", "Select filtered objects");
-    }
+      //Find the 'Editing' group in the inspector
+      %group = %inspector.findExistentGroup("Editing");
+      if(isObject(%group))
+      {
+         //We add a field of the type 'SimGroupSelectionButton'. This isn't a 'real' type, so when the inspector group tries to add it
+         //it will route down through GuiInspectorGroup(the namespace of %group) and call onConstructField in an attemp to see if there's any
+         //script defined functions that can build a field of that type.
+         //We happen to define the required 'build @ <fieldTypeName> @ Field()' function below, allowing us to build out the custom field type
+         %group.addField("Select Objects", "SimGroupSelectionButton", "Select filtered objects");
+       }
+   }
+}
+
+function scene::onInspect(%obj, %inspector)
+{
+    simGroup::onInspect(%obj, %inspector);
+}
+
+function subScene::onInspect(%obj, %inspector)
+{
+    simGroup::onInspect(%obj, %inspector);
 }
 
 function GuiInspectorGroup::buildSimGroupSelectionButtonField(%this, %fieldName, %fieldLabel, %fieldDesc,
@@ -687,7 +700,7 @@ function GuiInspectorGroup::buildSimGroupSelectionButtonField(%this, %fieldName,
          tooltipProfile = "EditorToolTipProfile";
          text = "Select";
          maxLength = "1024";
-         command = %ownerObj @ ".SelectFiteredObjects("@ %ownerObj.minSize @","@ %ownerObj.maxSize @");";
+         command = %ownerObj @ ".SelectFilteredObjects("@ %ownerObj @".getFieldValue(\"minSize\"),"@ %ownerObj @".getFieldValue(\"maxSize\"));";
       };
    };
    

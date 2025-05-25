@@ -189,7 +189,9 @@ class EditTSCtrl : public GuiTSCtrl
       virtual void on3DMouseWheelDown(const Gui3DMouseEvent &){};
       virtual void get3DCursor(GuiCursor *&cursor, bool &visible, const Gui3DMouseEvent &);
 
+      virtual bool isLeftMouseDown() { return mLeftMouseDown; }
       virtual bool isMiddleMouseDown() {return mMiddleMouseDown;}
+      virtual bool isRightMouseDown() { return mLeftMouseDown; }
 
       bool resize(const Point2I& newPosition, const Point2I& newExtent) override;
 

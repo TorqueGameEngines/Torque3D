@@ -376,6 +376,9 @@ public:
 
     typeAssetDependsOnHash* getDependedOnAssets();
 
+    S32 getAssetLooseFileCount(const char* pAssetId);
+    const char* getAssetLooseFile(const char* pAssetId, const S32& index);
+
     /// Declare Console Object.
     DECLARE_CONOBJECT( AssetManager );
 

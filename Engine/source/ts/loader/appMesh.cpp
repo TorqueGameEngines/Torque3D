@@ -126,6 +126,9 @@ void AppMesh::computeNormals()
 
 TSMesh* AppMesh::constructTSMesh()
 {
+   if (points.empty() || normals.empty() || primitives.empty() || indices.empty())
+      return NULL;
+
    TSMesh* tsmesh;
    if (isSkin())
    {

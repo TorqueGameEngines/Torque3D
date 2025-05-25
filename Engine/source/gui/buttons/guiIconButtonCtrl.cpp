@@ -382,7 +382,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
          Point2I start( mTextMargin, ( getHeight() - mProfile->mFont->getHeight() ) / 2 );
          if (mBitmapAsset.notNull() && mIconLocation != IconLocNone)
          {
-            start.x = iconRect.extent.x + mButtonMargin.x + mTextMargin;
+            start.x = getWidth() - (iconRect.extent.x + mButtonMargin.x + textWidth);
          }
 
          drawer->setBitmapModulation(fontColor);

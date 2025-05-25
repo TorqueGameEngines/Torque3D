@@ -78,7 +78,7 @@ public:
    StringTableEntry getOriginatingFile();
    StringTableEntry getLevelAsset();
 
-   bool saveScene(StringTableEntry fileName);
+   bool saveScene(StringTableEntry fileName, const bool& saveSubScenes = true);
 
    //
    //Networking
@@ -86,7 +86,7 @@ public:
    void unpackUpdate(NetConnection *conn, BitStream *stream) override;
 
    //
-   Vector<SceneObject*> getObjectsByClass(String className);
+   void getObjectsByClass(SimObject* object, StringTableEntry className, Vector<SimObject*>* objectsList, bool checkSubscenes = false);
 
    void getUtilizedAssetsFromSceneObject(SimObject* object, Vector<StringTableEntry>* usedAssetsList);
 

@@ -78,7 +78,7 @@ AssetImportConfig::AssetImportConfig() :
    SeparateAnimations(false),
    SeparateAnimationPrefix(""),
    animTiming("FrameCount"),
-   animFPS(false),
+   animFPS(30),
    AlwaysAddShapeAnimationSuffix(true),
    AddedShapeAnimationSuffix("_anim"),
    GenerateCollisions(false),
@@ -193,7 +193,7 @@ void AssetImportConfig::initPersistFields()
       addField("SeparateAnimations", TypeBool, Offset(SeparateAnimations, AssetImportConfig), "When importing a shape file, should the animations within be separated out into unique files");
       addField("SeparateAnimationPrefix", TypeRealString, Offset(SeparateAnimationPrefix, AssetImportConfig), "If separating animations out from a source file, what prefix should be added to the names for grouping association");
       addField("animTiming", TypeRealString, Offset(animTiming, AssetImportConfig), "Defines the animation timing for the given animation sequence. Options are FrameTime, Seconds, Milliseconds");
-      addField("animFPS", TypeBool, Offset(animFPS, AssetImportConfig), "The FPS of the animation sequence");
+      addField("animFPS", TypeF32, Offset(animFPS, AssetImportConfig), "The FPS of the animation sequence");
       addField("AlwaysAddShapeAnimationSuffix", TypeBool, Offset(AlwaysAddShapeAnimationSuffix, AssetImportConfig), "When importing a shape animation, this indicates if it should automatically add a standard suffix onto the name");
       addField("AddedShapeAnimationSuffix", TypeString, Offset(AddedShapeAnimationSuffix, AssetImportConfig), " If AlwaysAddShapeAnimationSuffix is on, this is the suffix to be added");
    endGroup("Animation");

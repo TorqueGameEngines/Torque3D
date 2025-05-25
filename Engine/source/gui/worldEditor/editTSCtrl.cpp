@@ -1409,3 +1409,13 @@ DefineEngineMethod( EditTSCtrl, isMiddleMouseDown, bool, (),, "" )
 {
    return object->isMiddleMouseDown();
 }
+
+DefineEngineMethod(EditTSCtrl, isLeftMouseDown, bool, (), , "")
+{
+   return object->isLeftMouseDown();
+}
+
+DefineEngineMethod(EditTSCtrl, isRightMouseDown, bool, (), , "")
+{
+   return object->isRightMouseDown();
+}

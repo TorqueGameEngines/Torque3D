@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,7 +28,7 @@
 #include "../../events/SDL_keyboard_c.h"
 #include "SDL_dbus.h"
 #include "SDL_syswm.h"
-#if SDL_VIDEO_DRIVER_X11
+#ifdef SDL_VIDEO_DRIVER_X11
 #  include "../../video/x11/SDL_x11video.h"
 #endif
 #include "SDL_hints.h"
@@ -55,7 +55,7 @@ typedef struct _FcitxClient
 
 static FcitxClient fcitx_client;
 
-static char *GetAppName()
+static char *GetAppName(void)
 {
 #if defined(__LINUX__) || defined(__FREEBSD__)
     char *spot;
@@ -368,7 +368,7 @@ static Uint32 Fcitx_ModState(void)
     return fcitx_mods;
 }
 
-SDL_bool SDL_Fcitx_Init()
+SDL_bool SDL_Fcitx_Init(void)
 {
     fcitx_client.dbus = SDL_DBus_GetContext();
 
@@ -380,7 +380,7 @@ SDL_bool SDL_Fcitx_Init()
     return FcitxClientCreateIC(&fcitx_client);
 }
 
-void SDL_Fcitx_Quit()
+void SDL_Fcitx_Quit(void)
 {
     FcitxClientICCallMethod(&fcitx_client, "DestroyIC");
     if (fcitx_client.ic_path) {
@@ -438,7 +438,7 @@ void SDL_Fcitx_UpdateTextRect(const SDL_Rect *rect)
     }
 
     focused_win = SDL_GetKeyboardFocus();
-    if (focused_win == NULL) {
+    if (!focused_win) {
         return;
     }
 
@@ -449,7 +449,7 @@ void SDL_Fcitx_UpdateTextRect(const SDL_Rect *rect)
 
     SDL_GetWindowPosition(focused_win, &x, &y);
 
-#if SDL_VIDEO_DRIVER_X11
+#ifdef SDL_VIDEO_DRIVER_X11
     if (info.subsystem == SDL_SYSWM_X11) {
         SDL_DisplayData *displaydata = (SDL_DisplayData *) SDL_GetDisplayForWindow(focused_win)->driverdata;
 
@@ -485,7 +485,6 @@ void SDL_Fcitx_PumpEvents(void)
 
     while (dbus->connection_dispatch(conn) == DBUS_DISPATCH_DATA_REMAINS) {
         /* Do nothing, actual work happens in DBus_MessageFilter */
-        usleep(10);
     }
 }
 

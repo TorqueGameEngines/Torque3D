@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_DRIVER_UIKIT
+#ifdef SDL_VIDEO_DRIVER_UIKIT
 
 #include "../SDL_sysvideo.h"
 #include "SDL_hints.h"
@@ -189,12 +189,14 @@ static UIImage *SDL_LoadLaunchImageNamed(NSString *name, int screenh)
 
 - (instancetype)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
+    NSString *screenname;
+    NSBundle *bundle;
     if (!(self = [super initWithNibName:nil bundle:nil])) {
         return nil;
     }
 
-    NSString *screenname = nibNameOrNil;
-    NSBundle *bundle = nibBundleOrNil;
+    screenname = nibNameOrNil;
+    bundle = nibBundleOrNil;
 
     /* A launch screen may not exist. Fall back to launch images in that case. */
     if (screenname) {
@@ -230,6 +232,10 @@ static UIImage *SDL_LoadLaunchImageNamed(NSString *name, int screenh)
         /* Xcode 5 introduced a dictionary of launch images in Info.plist. */
         if (launchimages) {
             for (NSDictionary *dict in launchimages) {
+#if !TARGET_OS_TV
+                UIInterfaceOrientationMask orientmask;
+                NSString *orientstring;
+#endif
                 NSString *minversion = dict[@"UILaunchImageMinimumOSVersion"];
                 NSString *sizestring = dict[@"UILaunchImageSize"];
 
@@ -247,8 +253,8 @@ static UIImage *SDL_LoadLaunchImageNamed(NSString *name, int screenh)
                 }
 
 #if !TARGET_OS_TV
-                UIInterfaceOrientationMask orientmask = UIInterfaceOrientationMaskPortrait | UIInterfaceOrientationMaskPortraitUpsideDown;
-                NSString *orientstring = dict[@"UILaunchImageOrientation"];
+                orientmask = UIInterfaceOrientationMaskPortrait | UIInterfaceOrientationMaskPortraitUpsideDown;
+                orientstring = dict[@"UILaunchImageOrientation"];
 
                 if (orientstring) {
                     if ([orientstring isEqualToString:@"PortraitUpsideDown"]) {
@@ -408,7 +414,7 @@ static UIImage *SDL_LoadLaunchImageNamed(NSString *name, int screenh)
 {
     NSBundle *bundle = [NSBundle mainBundle];
 
-#if SDL_IPHONE_LAUNCHSCREEN
+#ifdef SDL_IPHONE_LAUNCHSCREEN
     /* The normal launch screen is displayed until didFinishLaunching returns,
      * but SDL_main is called after that happens and there may be a noticeable
      * delay between the start of SDL_main and when the first real frame is

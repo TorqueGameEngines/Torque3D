@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -22,7 +22,7 @@
 
 /* NSOpenGL implementation of SDL OpenGL support */
 
-#if SDL_VIDEO_OPENGL_CGL
+#ifdef SDL_VIDEO_OPENGL_CGL
 #include "SDL_cocoavideo.h"
 #include "SDL_cocoaopengl.h"
 #include "SDL_cocoaopengles.h"
@@ -270,7 +270,7 @@ SDL_GLContext Cocoa_GL_CreateContext(_THIS, SDL_Window * window)
     int interval;
 
     if (_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES) {
-#if SDL_VIDEO_OPENGL_EGL
+#ifdef SDL_VIDEO_OPENGL_EGL
         /* Switch to EGL based functions */
         Cocoa_GL_UnloadLibrary(_this);
         _this->GL_LoadLibrary = Cocoa_GLES_LoadLibrary;
@@ -507,13 +507,31 @@ int Cocoa_GL_SwapWindow(_THIS, SDL_Window * window)
     return 0;
 }}
 
-void Cocoa_GL_DeleteContext(_THIS, SDL_GLContext context)
-{ @autoreleasepool
+static void DispatchedDeleteContext(SDL_GLContext context)
 {
-    SDLOpenGLContext *nscontext = (__bridge SDLOpenGLContext *)context;
-    [nscontext cleanup];
-    CFRelease(context);
-}}
+    @autoreleasepool {
+        SDLOpenGLContext *nscontext = (__bridge SDLOpenGLContext *)context;
+        [nscontext cleanup];
+        CFRelease(context);
+    }
+}
+
+void Cocoa_GL_DeleteContext(_THIS, SDL_GLContext context)
+{
+    if ([NSThread isMainThread]) {
+        DispatchedDeleteContext(context);
+    } else {
+        if (SDL_opengl_async_dispatch) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+              DispatchedDeleteContext(context);
+            });
+        } else {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+              DispatchedDeleteContext(context);
+            });
+        }
+    }
+}
 
 /* We still support OpenGL as long as Apple offers it, deprecated or not, so disable deprecation warnings about it. */
 #ifdef __clang__

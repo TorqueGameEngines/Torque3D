@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -64,6 +64,7 @@ typedef struct WindowsGamingInputControllerState
     int naxes;
     int nhats;
     int nbuttons;
+    int steam_virtual_gamepad_slot;
 } WindowsGamingInputControllerState;
 
 static struct
@@ -109,7 +110,7 @@ extern SDL_bool SDL_XINPUT_Enabled(void);
 extern SDL_bool SDL_DINPUT_JoystickPresent(Uint16 vendor, Uint16 product, Uint16 version);
 
 
-static SDL_bool SDL_IsXInputDevice(Uint16 vendor, Uint16 product)
+static SDL_bool SDL_IsXInputDevice(Uint16 vendor, Uint16 product, const char* name)
 {
 #if defined(SDL_JOYSTICK_XINPUT) || defined(SDL_JOYSTICK_RAWINPUT)
     PRAWINPUTDEVICELIST raw_devices = NULL;
@@ -125,18 +126,26 @@ static SDL_bool SDL_IsXInputDevice(Uint16 vendor, Uint16 product)
         return SDL_FALSE;
     }
 
+    /* Sometimes we'll get a Windows.Gaming.Input callback before the raw input device is even in the list,
+     * so try to do some checks up front to catch these cases. */
+    if (SDL_IsJoystickXboxOne(vendor, product) ||
+        (name && SDL_strncmp(name, "Xbox ", 5) == 0)) {
+        return SDL_TRUE;
+    }
+
     /* Go through RAWINPUT (WinXP and later) to find HID devices. */
     if ((GetRawInputDeviceList(NULL, &raw_device_count, sizeof(RAWINPUTDEVICELIST)) == -1) || (!raw_device_count)) {
         return SDL_FALSE; /* oh well. */
     }
 
     raw_devices = (PRAWINPUTDEVICELIST)SDL_malloc(sizeof(RAWINPUTDEVICELIST) * raw_device_count);
-    if (raw_devices == NULL) {
+    if (!raw_devices) {
         SDL_OutOfMemory();
         return SDL_FALSE;
     }
 
-    if (GetRawInputDeviceList(raw_devices, &raw_device_count, sizeof(RAWINPUTDEVICELIST)) == -1) {
+    raw_device_count = GetRawInputDeviceList(raw_devices, &raw_device_count, sizeof(RAWINPUTDEVICELIST));
+    if (raw_device_count == (UINT)-1) {
         SDL_free(raw_devices);
         raw_devices = NULL;
         return SDL_FALSE; /* oh well. */
@@ -214,7 +223,7 @@ static SDL_bool SDL_IsXInputDevice(Uint16 vendor, Uint16 product)
     return SDL_FALSE;
 }
 
-static void WGI_LoadRawGameControllerStatics()
+static void WGI_LoadRawGameControllerStatics(void)
 {
     WindowsCreateStringReference_t WindowsCreateStringReferenceFunc = NULL;
     RoGetActivationFactory_t RoGetActivationFactoryFunc = NULL;
@@ -245,7 +254,7 @@ static void WGI_LoadRawGameControllerStatics()
     }
 }
 
-static void WGI_LoadOtherControllerStatics()
+static void WGI_LoadOtherControllerStatics(void)
 {
     WindowsCreateStringReference_t WindowsCreateStringReferenceFunc = NULL;
     RoGetActivationFactory_t RoGetActivationFactoryFunc = NULL;
@@ -352,7 +361,7 @@ typedef struct RawGameControllerDelegate
 
 static HRESULT STDMETHODCALLTYPE IEventHandler_CRawGameControllerVtbl_QueryInterface(__FIEventHandler_1_Windows__CGaming__CInput__CRawGameController *This, REFIID riid, void **ppvObject)
 {
-    if (ppvObject == NULL) {
+    if (!ppvObject) {
         return E_INVALIDARG;
     }
 
@@ -382,6 +391,50 @@ static ULONG STDMETHODCALLTYPE IEventHandler_CRawGameControllerVtbl_Release(__FI
     /* Should never free the static delegate objects */
     SDL_assert(rc > 0);
     return rc;
+}
+
+static int GetSteamVirtualGamepadSlot(__x_ABI_CWindows_CGaming_CInput_CIRawGameController *controller, Uint16 vendor_id, Uint16 product_id)
+{
+    int slot = -1;
+
+    if (vendor_id == USB_VENDOR_VALVE &&
+        product_id == USB_PRODUCT_STEAM_VIRTUAL_GAMEPAD) {
+        __x_ABI_CWindows_CGaming_CInput_CIRawGameController2 *controller2 = NULL;
+        HRESULT hr = __x_ABI_CWindows_CGaming_CInput_CIRawGameController_QueryInterface(controller, &IID_IRawGameController2, (void **)&controller2);
+        if (SUCCEEDED(hr)) {
+            HSTRING hString;
+            hr = __x_ABI_CWindows_CGaming_CInput_CIRawGameController2_get_NonRoamableId(controller2, &hString);
+            if (SUCCEEDED(hr)) {
+                typedef PCWSTR(WINAPI * WindowsGetStringRawBuffer_t)(HSTRING string, UINT32 * length);
+                typedef HRESULT(WINAPI * WindowsDeleteString_t)(HSTRING string);
+
+                WindowsGetStringRawBuffer_t WindowsGetStringRawBufferFunc = NULL;
+                WindowsDeleteString_t WindowsDeleteStringFunc = NULL;
+#ifdef __WINRT__
+                WindowsGetStringRawBufferFunc = WindowsGetStringRawBuffer;
+                WindowsDeleteStringFunc = WindowsDeleteString;
+#else
+                {
+                    WindowsGetStringRawBufferFunc = (WindowsGetStringRawBuffer_t)WIN_LoadComBaseFunction("WindowsGetStringRawBuffer");
+                    WindowsDeleteStringFunc = (WindowsDeleteString_t)WIN_LoadComBaseFunction("WindowsDeleteString");
+                }
+#endif /* __WINRT__ */
+                if (WindowsGetStringRawBufferFunc && WindowsDeleteStringFunc) {
+                    PCWSTR string = WindowsGetStringRawBufferFunc(hString, NULL);
+                    if (string) {
+                        char *id = WIN_StringToUTF8W(string);
+                        if (id) {
+                            (void)SDL_sscanf(id, "{wgi/nrid/:steam-%*X&%*X&%*X#%d#%*u}", &slot);
+                            SDL_free(id);
+                        }
+                    }
+                    WindowsDeleteStringFunc(hString);
+                }
+            }
+            __x_ABI_CWindows_CGaming_CInput_CIRawGameController2_Release(controller2);
+        }
+    }
+    return slot;
 }
 
 static HRESULT STDMETHODCALLTYPE IEventHandler_CRawGameControllerVtbl_InvokeAdded(__FIEventHandler_1_Windows__CGaming__CInput__CRawGameController *This, IInspectable *sender, __x_ABI_CWindows_CGaming_CInput_CIRawGameController *e)
@@ -442,7 +495,7 @@ static HRESULT STDMETHODCALLTYPE IEventHandler_CRawGameControllerVtbl_InvokeAdde
             }
             __x_ABI_CWindows_CGaming_CInput_CIRawGameController2_Release(controller2);
         }
-        if (name == NULL) {
+        if (!name) {
             name = SDL_strdup("");
         }
 
@@ -462,7 +515,7 @@ static HRESULT STDMETHODCALLTYPE IEventHandler_CRawGameControllerVtbl_InvokeAdde
             ignore_joystick = SDL_TRUE;
         }
 
-        if (!ignore_joystick && SDL_IsXInputDevice(vendor, product)) {
+        if (!ignore_joystick && SDL_IsXInputDevice(vendor, product, name)) {
             ignore_joystick = SDL_TRUE;
         }
 
@@ -481,7 +534,7 @@ static HRESULT STDMETHODCALLTYPE IEventHandler_CRawGameControllerVtbl_InvokeAdde
                 __x_ABI_CWindows_CGaming_CInput_CIGameController_Release(gamecontroller);
             }
 
-            guid = SDL_CreateJoystickGUID(bus, vendor, product, version, name, 'w', (Uint8)type);
+            guid = SDL_CreateJoystickGUID(bus, vendor, product, version, NULL, name, 'w', (Uint8)type);
 
             if (SDL_ShouldIgnoreJoystick(name, guid)) {
                 ignore_joystick = SDL_TRUE;
@@ -501,6 +554,7 @@ static HRESULT STDMETHODCALLTYPE IEventHandler_CRawGameControllerVtbl_InvokeAdde
                 state->name = name;
                 state->guid = guid;
                 state->type = type;
+                state->steam_virtual_gamepad_slot = GetSteamVirtualGamepadSlot(controller, vendor, product);
 
                 __x_ABI_CWindows_CGaming_CInput_CIRawGameController_get_ButtonCount(controller, &state->nbuttons);
                 __x_ABI_CWindows_CGaming_CInput_CIRawGameController_get_AxisCount(controller, &state->naxes);
@@ -687,6 +741,11 @@ static const char *WGI_JoystickGetDevicePath(int device_index)
     return NULL;
 }
 
+static int WGI_JoystickGetDeviceSteamVirtualGamepadSlot(int device_index)
+{
+    return wgi.controllers[device_index].steam_virtual_gamepad_slot;
+}
+
 static int WGI_JoystickGetDevicePlayerIndex(int device_index)
 {
     return -1;
@@ -713,7 +772,7 @@ static int WGI_JoystickOpen(SDL_Joystick *joystick, int device_index)
     boolean wireless = SDL_FALSE;
 
     hwdata = (struct joystick_hwdata *)SDL_calloc(1, sizeof(*hwdata));
-    if (hwdata == NULL) {
+    if (!hwdata) {
         return SDL_OutOfMemory();
     }
     joystick->hwdata = hwdata;
@@ -1003,6 +1062,7 @@ SDL_JoystickDriver SDL_WGI_JoystickDriver = {
     WGI_JoystickDetect,
     WGI_JoystickGetDeviceName,
     WGI_JoystickGetDevicePath,
+    WGI_JoystickGetDeviceSteamVirtualGamepadSlot,
     WGI_JoystickGetDevicePlayerIndex,
     WGI_JoystickSetDevicePlayerIndex,
     WGI_JoystickGetDeviceGUID,

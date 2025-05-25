@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_DRIVER_WINDOWS
+#ifdef SDL_VIDEO_DRIVER_WINDOWS
 
 #include "SDL_main.h"
 #include "SDL_video.h"
@@ -35,6 +35,7 @@
 #include "SDL_windowsframebuffer.h"
 #include "SDL_windowsshape.h"
 #include "SDL_windowsvulkan.h"
+#include "SDL_windowsmessagebox.h"
 
 /* #define HIGHDPI_DEBUG */
 
@@ -138,6 +139,9 @@ static SDL_VideoDevice *WIN_CreateDevice(void)
         data->GetDpiForWindow = (UINT (WINAPI *)(HWND))SDL_LoadFunction(data->userDLL, "GetDpiForWindow");
         data->AreDpiAwarenessContextsEqual = (BOOL (WINAPI *)(DPI_AWARENESS_CONTEXT, DPI_AWARENESS_CONTEXT))SDL_LoadFunction(data->userDLL, "AreDpiAwarenessContextsEqual");
         data->IsValidDpiAwarenessContext = (BOOL (WINAPI *)(DPI_AWARENESS_CONTEXT))SDL_LoadFunction(data->userDLL, "IsValidDpiAwarenessContext");
+        data->GetDisplayConfigBufferSizes = (LONG (WINAPI *)(UINT32,UINT32*,UINT32* ))SDL_LoadFunction(data->userDLL, "GetDisplayConfigBufferSizes");
+        data->QueryDisplayConfig = (LONG (WINAPI *)(UINT32,UINT32*,DISPLAYCONFIG_PATH_INFO*,UINT32*,DISPLAYCONFIG_MODE_INFO*,DISPLAYCONFIG_TOPOLOGY_ID*))SDL_LoadFunction(data->userDLL, "QueryDisplayConfig");
+        data->DisplayConfigGetDeviceInfo = (LONG (WINAPI *)(DISPLAYCONFIG_DEVICE_INFO_HEADER*))SDL_LoadFunction(data->userDLL, "DisplayConfigGetDeviceInfo");
         /* *INDENT-ON* */ /* clang-format on */
     } else {
         SDL_ClearError();
@@ -215,7 +219,7 @@ static SDL_VideoDevice *WIN_CreateDevice(void)
     device->shape_driver.ResizeWindowShape = Win32_ResizeWindowShape;
 #endif
 
-#if SDL_VIDEO_OPENGL_WGL
+#ifdef SDL_VIDEO_OPENGL_WGL
     device->GL_LoadLibrary = WIN_GL_LoadLibrary;
     device->GL_GetProcAddress = WIN_GL_GetProcAddress;
     device->GL_UnloadLibrary = WIN_GL_UnloadLibrary;
@@ -225,7 +229,7 @@ static SDL_VideoDevice *WIN_CreateDevice(void)
     device->GL_GetSwapInterval = WIN_GL_GetSwapInterval;
     device->GL_SwapWindow = WIN_GL_SwapWindow;
     device->GL_DeleteContext = WIN_GL_DeleteContext;
-#elif SDL_VIDEO_OPENGL_EGL
+#elif defined(SDL_VIDEO_OPENGL_EGL)
     /* Use EGL based functions */
     device->GL_LoadLibrary = WIN_GLES_LoadLibrary;
     device->GL_GetProcAddress = WIN_GLES_GetProcAddress;
@@ -237,7 +241,7 @@ static SDL_VideoDevice *WIN_CreateDevice(void)
     device->GL_SwapWindow = WIN_GLES_SwapWindow;
     device->GL_DeleteContext = WIN_GLES_DeleteContext;
 #endif
-#if SDL_VIDEO_VULKAN
+#ifdef SDL_VIDEO_VULKAN
     device->Vulkan_LoadLibrary = WIN_Vulkan_LoadLibrary;
     device->Vulkan_UnloadLibrary = WIN_Vulkan_UnloadLibrary;
     device->Vulkan_GetInstanceExtensions = WIN_Vulkan_GetInstanceExtensions;
@@ -262,7 +266,12 @@ static SDL_VideoDevice *WIN_CreateDevice(void)
 }
 
 VideoBootStrap WINDOWS_bootstrap = {
-    "windows", "SDL Windows video driver", WIN_CreateDevice
+    "windows", "SDL Windows video driver", WIN_CreateDevice,
+    #if !defined(__XBOXONE__) && !defined(__XBOXSERIES__)
+    WIN_ShowMessageBox
+    #else
+    NULL
+    #endif
 };
 
 static BOOL WIN_DeclareDPIAwareUnaware(_THIS)
@@ -385,7 +394,7 @@ static void WIN_InitDPIAwareness(_THIS)
 {
     const char *hint = SDL_GetHint(SDL_HINT_WINDOWS_DPI_AWARENESS);
 
-    if (hint != NULL) {
+    if (hint) {
         if (SDL_strcmp(hint, "permonitorv2") == 0) {
             WIN_DeclareDPIAwarePerMonitorV2(_this);
         } else if (SDL_strcmp(hint, "permonitor") == 0) {
@@ -540,7 +549,7 @@ int SDL_Direct3D9GetAdapterIndex(int displayIndex)
         SDL_DisplayData *pData = (SDL_DisplayData *)SDL_GetDisplayDriverData(displayIndex);
         int adapterIndex = D3DADAPTER_DEFAULT;
 
-        if (pData == NULL) {
+        if (!pData) {
             SDL_SetError("Invalid display index");
             adapterIndex = -1; /* make sure we return something invalid */
         } else {
@@ -623,12 +632,12 @@ SDL_bool SDL_DXGIGetOutputInfo(int displayIndex, int *adapterIndex, int *outputI
     IDXGIAdapter *pDXGIAdapter;
     IDXGIOutput *pDXGIOutput;
 
-    if (adapterIndex == NULL) {
+    if (!adapterIndex) {
         SDL_InvalidParamError("adapterIndex");
         return SDL_FALSE;
     }
 
-    if (outputIndex == NULL) {
+    if (!outputIndex) {
         SDL_InvalidParamError("outputIndex");
         return SDL_FALSE;
     }
@@ -636,7 +645,7 @@ SDL_bool SDL_DXGIGetOutputInfo(int displayIndex, int *adapterIndex, int *outputI
     *adapterIndex = -1;
     *outputIndex = -1;
 
-    if (pData == NULL) {
+    if (!pData) {
         SDL_SetError("Invalid display index");
         return SDL_FALSE;
     }

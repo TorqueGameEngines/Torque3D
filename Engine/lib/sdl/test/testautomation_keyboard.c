@@ -102,7 +102,7 @@ int keyboard_getKeyFromName(void *arg)
 /*
  * Local helper to check for the invalid scancode error message
  */
-void _checkInvalidScancodeError()
+void _checkInvalidScancodeError(void)
 {
     const char *expectedError = "Parameter 'scancode' is invalid";
     const char *error;
@@ -127,9 +127,9 @@ int keyboard_getKeyFromScancode(void *arg)
     SDL_Keycode result;
 
     /* Case where input is valid */
-    result = SDL_GetKeyFromScancode(SDL_SCANCODE_A);
+    result = SDL_GetKeyFromScancode(SDL_SCANCODE_SPACE);
     SDLTest_AssertPass("Call to SDL_GetKeyFromScancode(valid)");
-    SDLTest_AssertCheck(result == SDLK_a, "Verify result from call, expected: %i, got: %" SDL_PRIs32, SDLK_a, result);
+    SDLTest_AssertCheck(result == SDLK_SPACE, "Verify result from call, expected: %i, got: %" SDL_PRIs32, SDLK_SPACE, result);
 
     /* Case where input is zero */
     result = SDL_GetKeyFromScancode(0);
@@ -463,32 +463,34 @@ int keyboard_setTextInputRect(void *arg)
  */
 int keyboard_setTextInputRectNegative(void *arg)
 {
+    int platform_sets_error_message = SDL_strcmp(SDL_GetCurrentVideoDriver(), "windows") == 0 ||
+                                      SDL_strcmp(SDL_GetCurrentVideoDriver(), "android") == 0 ||
+                                      SDL_strcmp(SDL_GetCurrentVideoDriver(), "cococa") == 0;
     /* Some platforms set also an error message; prepare for checking it */
-#if SDL_VIDEO_DRIVER_WINDOWS || SDL_VIDEO_DRIVER_ANDROID || SDL_VIDEO_DRIVER_COCOA
     const char *expectedError = "Parameter 'rect' is invalid";
     const char *error;
 
     SDL_ClearError();
     SDLTest_AssertPass("Call to SDL_ClearError()");
-#endif
 
     /* NULL refRect */
     SDL_SetTextInputRect(NULL);
     SDLTest_AssertPass("Call to SDL_SetTextInputRect(NULL)");
 
     /* Some platforms set also an error message; so check it */
-#if SDL_VIDEO_DRIVER_WINDOWS || SDL_VIDEO_DRIVER_ANDROID || SDL_VIDEO_DRIVER_COCOA
-    error = SDL_GetError();
-    SDLTest_AssertPass("Call to SDL_GetError()");
-    SDLTest_AssertCheck(error != NULL, "Validate that error message was not NULL");
-    if (error != NULL) {
-        SDLTest_AssertCheck(SDL_strcmp(error, expectedError) == 0,
-                            "Validate error message, expected: '%s', got: '%s'", expectedError, error);
+
+    if (platform_sets_error_message) {
+        error = SDL_GetError();
+        SDLTest_AssertPass("Call to SDL_GetError()");
+        SDLTest_AssertCheck(error != NULL, "Validate that error message was not NULL");
+        if (error != NULL) {
+            SDLTest_AssertCheck(SDL_strcmp(error, expectedError) == 0,
+                                "Validate error message, expected: '%s', got: '%s'", expectedError, error);
+        }
     }
 
     SDL_ClearError();
     SDLTest_AssertPass("Call to SDL_ClearError()");
-#endif
 
     return TEST_COMPLETED;
 }
@@ -572,7 +574,7 @@ int keyboard_getScancodeFromName(void *arg)
 /*
  * Local helper to check for the invalid scancode error message
  */
-void _checkInvalidNameError()
+void _checkInvalidNameError(void)
 {
     const char *expectedError = "Parameter 'name' is invalid";
     const char *error;

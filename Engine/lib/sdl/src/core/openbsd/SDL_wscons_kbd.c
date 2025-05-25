@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -423,7 +423,7 @@ static SDL_WSCONS_input_data *SDL_WSCONS_Init_Keyboard(const char *dev)
 #endif
     SDL_WSCONS_input_data *input = (SDL_WSCONS_input_data *)SDL_calloc(1, sizeof(SDL_WSCONS_input_data));
 
-    if (input == NULL) {
+    if (!input) {
         return input;
     }
     input->fd = open(dev, O_RDWR | O_NONBLOCK | O_CLOEXEC);
@@ -433,7 +433,7 @@ static SDL_WSCONS_input_data *SDL_WSCONS_Init_Keyboard(const char *dev)
         return NULL;
     }
     input->keymap.map = SDL_calloc(sizeof(struct wscons_keymap), KS_NUMKEYCODES);
-    if (input->keymap.map == NULL) {
+    if (!input->keymap.map) {
         free(input);
         return NULL;
     }
@@ -449,7 +449,7 @@ static SDL_WSCONS_input_data *SDL_WSCONS_Init_Keyboard(const char *dev)
     return input;
 }
 
-void SDL_WSCONS_Init()
+void SDL_WSCONS_Init(void)
 {
     inputs[0] = SDL_WSCONS_Init_Keyboard("/dev/wskbd0");
     inputs[1] = SDL_WSCONS_Init_Keyboard("/dev/wskbd1");
@@ -460,7 +460,7 @@ void SDL_WSCONS_Init()
     return;
 }
 
-void SDL_WSCONS_Quit()
+void SDL_WSCONS_Quit(void)
 {
     int i = 0;
     SDL_WSCONS_input_data *input = NULL;
@@ -583,7 +583,7 @@ static void updateKeyboard(SDL_WSCONS_input_data *input)
     keysym_t *group;
     keysym_t ksym, result;
 
-    if (input == NULL) {
+    if (!input) {
         return;
     }
     if ((n = read(input->fd, events, sizeof(events))) > 0) {
@@ -921,13 +921,13 @@ static void updateKeyboard(SDL_WSCONS_input_data *input)
     }
 }
 
-void SDL_WSCONS_PumpEvents()
+void SDL_WSCONS_PumpEvents(void)
 {
     int i = 0;
     for (i = 0; i < 4; i++) {
         updateKeyboard(inputs[i]);
     }
-    if (mouseInputData != NULL) {
+    if (mouseInputData) {
         updateMouse(mouseInputData);
     }
 }

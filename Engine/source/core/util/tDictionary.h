@@ -179,8 +179,8 @@ class HashTable
 public:
    struct Pair
    {
-      Key  key;
-      Value value;
+      Key  key{};
+      Value value{};
       Pair() {}
       Pair(Key k,Value v)
          :  key(k),

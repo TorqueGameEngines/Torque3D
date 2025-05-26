@@ -703,6 +703,8 @@ X_LIBS
 X_PRE_LIBS
 X_CFLAGS
 XMKMF
+RPI_EGL_LIBS
+RPI_EGL_CFLAGS
 RPI_LIBS
 RPI_CFLAGS
 DECOR_LIBS
@@ -845,6 +847,7 @@ enable_assertions
 enable_dependency_tracking
 enable_libc
 enable_system_iconv
+enable_libiconv
 enable_gcc_atomics
 enable_atomic
 enable_audio
@@ -872,7 +875,6 @@ enable_sse2
 enable_sse3
 enable_altivec
 enable_lsx
-enable_lasx
 enable_oss
 enable_alsa
 with_alsa_prefix
@@ -991,6 +993,8 @@ DECOR_CFLAGS
 DECOR_LIBS
 RPI_CFLAGS
 RPI_LIBS
+RPI_EGL_CFLAGS
+RPI_EGL_LIBS
 XMKMF
 DIRECTFB_CFLAGS
 DIRECTFB_LIBS
@@ -1641,7 +1645,9 @@ Optional Features:
                           Use gcc -MMD -MT dependency tracking [default=yes]
   --enable-libc           Use the system C library [default=yes]
   --enable-system-iconv   Use iconv() from system-installed libraries
-                          [default=yes]
+                          [default=no for windows, yes for others]
+  --enable-libiconv       Prefer iconv() from libiconv, if available, over
+                          libc version [default=no]
   --enable-gcc-atomics    Use gcc builtin atomics [default=yes]
   --enable-atomic         Enable the atomic operations subsystem [default=yes]
   --enable-audio          Enable the audio subsystem [default=yes]
@@ -1666,13 +1672,12 @@ Optional Features:
   --enable-ssemath        Allow GCC to use SSE floating point math
                           [default=maybe]
   --enable-mmx            use MMX assembly routines [default=yes]
-  --enable-3dnow          use 3DNow! assembly routines [default=yes]
+  --enable-3dnow          use 3DNow! assembly routines [default=no]
   --enable-sse            use SSE assembly routines [default=yes]
   --enable-sse2           use SSE2 assembly routines [default=maybe]
   --enable-sse3           use SSE3 assembly routines [default=maybe]
   --enable-altivec        use Altivec assembly routines [default=yes]
   --enable-lsx            use LSX assembly routines [default=yes]
-  --enable-lasx           use LASX assembly routines [default=yes]
   --enable-oss            support the OSS audio API [default=maybe]
   --enable-alsa           support the ALSA audio API [default=yes]
   --disable-alsatest      Do not try to compile and run a test Alsa program
@@ -1717,7 +1722,7 @@ Optional Features:
                           [default=yes]
   --enable-libdecor-shared
                           dynamically load libdecor [default=yes]
-  --enable-video-rpi      use Raspberry Pi 2/3 video driver [default=yes]
+  --enable-video-rpi      use Raspberry Pi 0-3 video driver [default=yes]
   --enable-video-x11      use X11 video driver [default=maybe]
   --enable-x11-shared     dynamically load X11 support [default=maybe]
   --enable-video-x11-xcursor
@@ -1847,6 +1852,10 @@ Some influential environment variables:
   DECOR_LIBS  linker flags for DECOR, overriding pkg-config
   RPI_CFLAGS  C compiler flags for RPI, overriding pkg-config
   RPI_LIBS    linker flags for RPI, overriding pkg-config
+  RPI_EGL_CFLAGS
+              C compiler flags for RPI_EGL, overriding pkg-config
+  RPI_EGL_LIBS
+              linker flags for RPI_EGL, overriding pkg-config
   XMKMF       Path to xmkmf, Makefile generator for X Window System
   DIRECTFB_CFLAGS
               C compiler flags for DIRECTFB, overriding pkg-config
@@ -3506,8 +3515,8 @@ orig_CFLAGS="$CFLAGS"
 
 # See docs/release_checklist.md
 SDL_MAJOR_VERSION=2
-SDL_MINOR_VERSION=28
-SDL_MICRO_VERSION=4
+SDL_MINOR_VERSION=32
+SDL_MICRO_VERSION=6
 SDL_VERSION=$SDL_MAJOR_VERSION.$SDL_MINOR_VERSION.$SDL_MICRO_VERSION
 
 SDL_BINARY_AGE=`expr $SDL_MINOR_VERSION \* 100 + $SDL_MICRO_VERSION`
@@ -5032,7 +5041,7 @@ if test yes = "$GCC"; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ld used by $CC" >&5
 printf %s "checking for ld used by $CC... " >&6; }
   case $host in
-  *-*-mingw*)
+  *-*-mingw* | *-*-windows*)
     # gcc leaves a trailing carriage return, which upsets mingw
     ac_prog=`($CC -print-prog-name=ld) 2>&5 | tr -d '\015'` ;;
   *)
@@ -5159,7 +5168,7 @@ else
 	# Tru64's nm complains that /dev/null is an invalid object file
 	# MSYS converts /dev/null to NUL, MinGW nm treats NUL as empty
 	case $build_os in
-	mingw*) lt_bad_file=conftest.nm/nofile ;;
+	mingw* | windows*) lt_bad_file=conftest.nm/nofile ;;
 	*) lt_bad_file=/dev/null ;;
 	esac
 	case `"$tmp_nm" -B $lt_bad_file 2>&1 | sed '1q'` in
@@ -5388,7 +5397,7 @@ else $as_nop
     lt_cv_sys_max_cmd_len=-1;
     ;;
 
-  cygwin* | mingw* | cegcc*)
+  cygwin* | mingw* | windows* | cegcc*)
     # On Win9x/ME, this test blows up -- it succeeds, but takes
     # about 5 minutes as the teststring grows exponentially.
     # Worse, since 9x/ME are not pre-emptively multitasking,
@@ -5552,7 +5561,7 @@ else $as_nop
   case $host in
   *-*-mingw* )
     case $build in
-      *-*-mingw* ) # actually msys
+      *-*-mingw* | *-*-windows* ) # actually msys
         lt_cv_to_host_file_cmd=func_convert_file_msys_to_w32
         ;;
       *-*-cygwin* )
@@ -5565,7 +5574,7 @@ else $as_nop
     ;;
   *-*-cygwin* )
     case $build in
-      *-*-mingw* ) # actually msys
+      *-*-mingw* | *-*-windows* ) # actually msys
         lt_cv_to_host_file_cmd=func_convert_file_msys_to_cygwin
         ;;
       *-*-cygwin* )
@@ -5600,9 +5609,9 @@ else $as_nop
   #assume ordinary cross tools, or native build.
 lt_cv_to_tool_file_cmd=func_convert_file_noop
 case $host in
-  *-*-mingw* )
+  *-*-mingw* | *-*-windows* )
     case $build in
-      *-*-mingw* ) # actually msys
+      *-*-mingw* | *-*-windows* ) # actually msys
         lt_cv_to_tool_file_cmd=func_convert_file_msys_to_w32
         ;;
     esac
@@ -5636,7 +5645,7 @@ case $reload_flag in
 esac
 reload_cmds='$LD$reload_flag -o $output$reload_objs'
 case $host_os in
-  cygwin* | mingw* | pw32* | cegcc*)
+  cygwin* | mingw* | windows* | pw32* | cegcc*)
     if test yes != "$GCC"; then
       reload_cmds=false
     fi
@@ -5806,10 +5815,10 @@ cygwin*)
   # func_win32_libid is a shell function defined in ltmain.sh
   lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
   lt_cv_file_magic_cmd='func_win32_libid'
-  lt_cv_deplibs_check_method=pass_all # SDL customization
+  lt_cv_deplibs_check_method=pass_all # SDL customization.
   ;;
 
-mingw* | pw32*)
+mingw* | windows* | pw32*)
   # Base MSYS/MinGW do not provide the 'file' command needed by
   # func_win32_libid shell function, so use a weaker test based on 'objdump',
   # unless we find 'file', for example because we are cross-compiling.
@@ -5818,10 +5827,10 @@ mingw* | pw32*)
     lt_cv_file_magic_cmd='func_win32_libid'
   else
     # Keep this pattern in sync with the one in func_win32_libid.
-    lt_cv_deplibs_check_method='file_magic file format (pei*-i386(.*architecture: i386)?|pe-arm-wince|pe-x86-64)'
+    lt_cv_deplibs_check_method='file_magic file format (pei*-i386(.*architecture: i386)?|pe-arm-wince|pe-x86-64|pe-aarch64)'
     lt_cv_file_magic_cmd='$OBJDUMP -f'
   fi
-  lt_cv_deplibs_check_method=pass_all # SDL customization
+  lt_cv_deplibs_check_method=pass_all # SDL customization.
   ;;
 
 cegcc*)
@@ -5977,7 +5986,7 @@ file_magic_glob=
 want_nocaseglob=no
 if test "$build" = "$host"; then
   case $host_os in
-  mingw* | pw32*)
+  mingw* | windows* | pw32*)
     if ( shopt | grep nocaseglob ) >/dev/null 2>&1; then
       want_nocaseglob=yes
     else
@@ -6131,7 +6140,7 @@ else $as_nop
   lt_cv_sharedlib_from_linklib_cmd='unknown'
 
 case $host_os in
-cygwin* | mingw* | pw32* | cegcc*)
+cygwin* | mingw* | windows* | pw32* | cegcc*)
   # two different shell functions defined in ltmain.sh;
   # decide which one to use based on capabilities of $DLLTOOL
   case `$DLLTOOL --help 2>&1` in
@@ -6569,15 +6578,8 @@ old_postinstall_cmds='chmod 644 $oldlib'
 old_postuninstall_cmds=
 
 if test -n "$RANLIB"; then
-  case $host_os in
-  bitrig* | openbsd*)
-    old_postinstall_cmds="$old_postinstall_cmds~\$RANLIB -t \$tool_oldlib"
-    ;;
-  *)
-    old_postinstall_cmds="$old_postinstall_cmds~\$RANLIB \$tool_oldlib"
-    ;;
-  esac
   old_archive_cmds="$old_archive_cmds~\$RANLIB \$tool_oldlib"
+  old_postinstall_cmds="$old_postinstall_cmds~\$RANLIB \$tool_oldlib"
 fi
 
 case $host_os in
@@ -6704,7 +6706,7 @@ case $host_os in
 aix*)
   symcode='[BCDT]'
   ;;
-cygwin* | mingw* | pw32* | cegcc*)
+cygwin* | mingw* | windows* | pw32* | cegcc*)
   symcode='[ABCDGISTW]'
   ;;
 hpux*)
@@ -6783,7 +6785,7 @@ $lt_c_name_lib_hook\
 # Handle CRLF in mingw tool chain
 opt_cr=
 case $build_os in
-mingw*)
+mingw* | windows*)
   opt_cr=`$ECHO 'x\{0,1\}' | tr x '\015'` # option cr in regexp
   ;;
 esac
@@ -6798,7 +6800,7 @@ for ac_symprfx in "" "_"; do
   if test "$lt_cv_nm_interface" = "MS dumpbin"; then
     # Fake it for dumpbin and say T for any non-static function,
     # D for any global variable and I for any imported variable.
-    # Also find C++ and __fastcall symbols from MSVC++,
+    # Also find C++ and __fastcall symbols from MSVC++ or ICC,
     # which start with @ or ?.
     lt_cv_sys_global_symbol_pipe="$AWK '"\
 "     {last_section=section; section=\$ 3};"\
@@ -6834,7 +6836,7 @@ void nm_test_func(void){}
 #ifdef __cplusplus
 }
 #endif
-int main(){nm_test_var='a';nm_test_func();return(0);}
+int main(void){nm_test_var='a';nm_test_func();return(0);}
 _LT_EOF
 
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
@@ -7232,7 +7234,7 @@ mips64*-*linux*)
   ;;
 
 x86_64-*kfreebsd*-gnu|x86_64-*linux*|powerpc*-*linux*| \
-s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+s390*-*linux*|s390*-*tpf*|sparc*-*linux*|x86_64-gnu*)
   # Find out what ABI is being produced by ac_compile, and set linker
   # options accordingly.  Note that the listed cases only cover the
   # situations where additional linker options are needed (such as when
@@ -7251,7 +7253,7 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
 	  x86_64-*kfreebsd*-gnu)
 	    LD="${LD-ld} -m elf_i386_fbsd"
 	    ;;
-	  x86_64-*linux*)
+	  x86_64-*linux*|x86_64-gnu*)
 	    case `/usr/bin/file conftest.o` in
 	      *x86-64*)
 		LD="${LD-ld} -m elf32_x86_64"
@@ -7280,7 +7282,7 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
 	  x86_64-*kfreebsd*-gnu)
 	    LD="${LD-ld} -m elf_x86_64_fbsd"
 	    ;;
-	  x86_64-*linux*)
+	  x86_64-*linux*|x86_64-gnu*)
 	    LD="${LD-ld} -m elf_x86_64"
 	    ;;
 	  powerpcle-*linux*|powerpc64le-*linux*)
@@ -8096,6 +8098,43 @@ fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $lt_cv_apple_cc_single_mod" >&5
 printf "%s\n" "$lt_cv_apple_cc_single_mod" >&6; }
 
+    # Feature test to disable chained fixups since it is not
+    # compatible with '-undefined dynamic_lookup'
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for -no_fixup_chains linker flag" >&5
+printf %s "checking for -no_fixup_chains linker flag... " >&6; }
+if test ${lt_cv_support_no_fixup_chains+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+   save_LDFLAGS=$LDFLAGS
+        LDFLAGS="$LDFLAGS -Wl,-no_fixup_chains"
+        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  lt_cv_support_no_fixup_chains=yes
+else $as_nop
+  lt_cv_support_no_fixup_chains=no
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+        LDFLAGS=$save_LDFLAGS
+
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $lt_cv_support_no_fixup_chains" >&5
+printf "%s\n" "$lt_cv_support_no_fixup_chains" >&6; }
+
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for -exported_symbols_list linker flag" >&5
 printf %s "checking for -exported_symbols_list linker flag... " >&6; }
 if test ${lt_cv_ld_exported_symbols_list+y}
@@ -8148,7 +8187,7 @@ _LT_EOF
       echo "$RANLIB libconftest.a" >&5
       $RANLIB libconftest.a 2>&5
       cat > conftest.c << _LT_EOF
-int main() { return 0;}
+int main(void) { return 0;}
 _LT_EOF
       echo "$LTCC $LTCFLAGS $LDFLAGS -o conftest conftest.c -Wl,-force_load,./libconftest.a" >&5
       $LTCC $LTCFLAGS $LDFLAGS -o conftest conftest.c -Wl,-force_load,./libconftest.a 2>conftest.err
@@ -8176,7 +8215,12 @@ printf "%s\n" "$lt_cv_ld_force_load" >&6; }
         10.[012],*|,*powerpc*-darwin[5-8]*)
           _lt_dar_allow_undefined='$wl-flat_namespace $wl-undefined ${wl}suppress' ;;
         *)
-          _lt_dar_allow_undefined='$wl-undefined ${wl}dynamic_lookup' ;;
+          if test yes = "$lt_cv_support_no_fixup_chains"; then
+            _lt_dar_allow_undefined='$wl-undefined ${wl}dynamic_lookup $wl-no_fixup_chains'
+          else
+            _lt_dar_allow_undefined='$wl-undefined ${wl}dynamic_lookup'
+          fi
+        ;;
       esac
     ;;
   esac
@@ -8276,7 +8320,7 @@ fi
 enable_win32_dll=yes
 
 case $host in
-*-*-cygwin* | *-*-mingw* | *-*-pw32* | *-*-cegcc*)
+*-*-cygwin* | *-*-mingw* | *-*-windows* | *-*-pw32* | *-*-cegcc*)
   if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}as", so it can be a program name with args.
 set dummy ${ac_tool_prefix}as; ac_word=$2
@@ -8892,8 +8936,8 @@ esac
 ofile=libtool
 can_build_shared=yes
 
-# All known linkers require a '.a' archive for static linking (except MSVC,
-# which needs '.lib').
+# All known linkers require a '.a' archive for static linking (except MSVC and
+# ICC, which need '.lib').
 libext=a
 
 with_gnu_ld=$lt_cv_prog_gnu_ld
@@ -9076,7 +9120,7 @@ objext=$objext
 lt_simple_compile_test_code="int some_variable = 0;"
 
 # Code to be used in simple link tests
-lt_simple_link_test_code='int main(){return(0);}'
+lt_simple_link_test_code='int main(void){return(0);}'
 
 
 
@@ -9217,7 +9261,7 @@ lt_prog_compiler_static=
       # PIC is the default for these OSes.
       ;;
 
-    mingw* | cygwin* | pw32* | os2* | cegcc*)
+    mingw* | windows* | cygwin* | pw32* | os2* | cegcc*)
       # This hack is so that the source file can tell whether it is being
       # built for inclusion in a dll (and should export symbols for example).
       # Although the cygwin gcc ignores -fPIC, still need this for old-style
@@ -9320,7 +9364,7 @@ lt_prog_compiler_static=
       esac
       ;;
 
-    mingw* | cygwin* | pw32* | os2* | cegcc*)
+    mingw* | windows* | cygwin* | pw32* | os2* | cegcc*)
       # This hack is so that the source file can tell whether it is being
       # built for inclusion in a dll (and should export symbols for example).
       lt_prog_compiler_pic='-DDLL_EXPORT'
@@ -9827,16 +9871,16 @@ printf %s "checking whether the $compiler linker ($LD) supports shared libraries
   extract_expsyms_cmds=
 
   case $host_os in
-  cygwin* | mingw* | pw32* | cegcc*)
-    # FIXME: the MSVC++ port hasn't been tested in a loooong time
+  cygwin* | mingw* | windows* | pw32* | cegcc*)
+    # FIXME: the MSVC++ and ICC port hasn't been tested in a loooong time
     # When not using gcc, we currently assume that we are using
-    # Microsoft Visual C++.
+    # Microsoft Visual C++ or Intel C++ Compiler.
     if test yes != "$GCC"; then
       with_gnu_ld=no
     fi
     ;;
   interix*)
-    # we just hope/assume this is gcc and not c89 (= MSVC++)
+    # we just hope/assume this is gcc and not c89 (= MSVC++ or ICC)
     with_gnu_ld=yes
     ;;
   openbsd* | bitrig*)
@@ -9942,7 +9986,7 @@ _LT_EOF
       fi
       ;;
 
-    cygwin* | mingw* | pw32* | cegcc*)
+    cygwin* | mingw* | windows* | pw32* | cegcc*)
       # _LT_TAGVAR(hardcode_libdir_flag_spec, ) is actually meaningless,
       # as there is no search path for DLLs.
       hardcode_libdir_flag_spec='-L$libdir'
@@ -10487,14 +10531,14 @@ fi
       export_dynamic_flag_spec=-rdynamic
       ;;
 
-    cygwin* | mingw* | pw32* | cegcc*)
+    cygwin* | mingw* | windows* | pw32* | cegcc*)
       # When not using gcc, we currently assume that we are using
-      # Microsoft Visual C++.
+      # Microsoft Visual C++ or Intel C++ Compiler.
       # hardcode_libdir_flag_spec is actually meaningless, as there is
       # no search path for DLLs.
       case $cc_basename in
-      cl*)
-	# Native MSVC
+      cl* | icl*)
+	# Native MSVC or ICC
 	hardcode_libdir_flag_spec=' '
 	allow_undefined_flag=unsupported
 	always_export_symbols=yes
@@ -10504,14 +10548,14 @@ fi
 	# Tell ltmain to make .dll files, not .so files.
 	shrext_cmds=.dll
 	# FIXME: Setting linknames here is a bad hack.
-	archive_cmds='$CC -o $output_objdir/$soname $libobjs $compiler_flags $deplibs -Wl,-DLL,-IMPLIB:"$tool_output_objdir$libname.dll.lib"~linknames='
+	archive_cmds='$CC -Fe $output_objdir/$soname $libobjs $compiler_flags $deplibs -Wl,-DLL,-IMPLIB:"$tool_output_objdir$libname.dll.lib"~linknames='
 	archive_expsym_cmds='if   test DEF = "`$SED -n     -e '\''s/^[	 ]*//'\''     -e '\''/^\(;.*\)*$/d'\''     -e '\''s/^\(EXPORTS\|LIBRARY\)\([	 ].*\)*$/DEF/p'\''     -e q     $export_symbols`" ; then
             cp "$export_symbols" "$output_objdir/$soname.def";
             echo "$tool_output_objdir$soname.def" > "$output_objdir/$soname.exp";
           else
             $SED -e '\''s/^/-link -EXPORT:/'\'' < $export_symbols > $output_objdir/$soname.exp;
           fi~
-          $CC -o $tool_output_objdir$soname $libobjs $compiler_flags $deplibs "@$tool_output_objdir$soname.exp" -Wl,-DLL,-IMPLIB:"$tool_output_objdir$libname.dll.lib"~
+          $CC -Fe $tool_output_objdir$soname $libobjs $compiler_flags $deplibs "@$tool_output_objdir$soname.exp" -Wl,-DLL,-IMPLIB:"$tool_output_objdir$libname.dll.lib"~
           linknames='
 	# The linker will not automatically build a static lib if we build a DLL.
 	# _LT_TAGVAR(old_archive_from_new_cmds, )='true'
@@ -10535,7 +10579,7 @@ fi
           fi'
 	;;
       *)
-	# Assume MSVC wrapper
+	# Assume MSVC and ICC wrapper
 	hardcode_libdir_flag_spec=' '
 	allow_undefined_flag=unsupported
 	# Tell ltmain to make .lib files, not .a files.
@@ -11301,7 +11345,7 @@ if test yes = "$GCC"; then
     *) lt_awk_arg='/^libraries:/' ;;
   esac
   case $host_os in
-    mingw* | cegcc*) lt_sed_strip_eq='s|=\([A-Za-z]:\)|\1|g' ;;
+    mingw* | windows* | cegcc*) lt_sed_strip_eq='s|=\([A-Za-z]:\)|\1|g' ;;
     *) lt_sed_strip_eq='s|=/|/|g' ;;
   esac
   lt_search_path_spec=`$CC -print-search-dirs | awk $lt_awk_arg | $SED -e "s/^libraries://" -e $lt_sed_strip_eq`
@@ -11359,7 +11403,7 @@ BEGIN {RS = " "; FS = "/|\n";} {
   # AWK program above erroneously prepends '/' to C:/dos/paths
   # for these hosts.
   case $host_os in
-    mingw* | cegcc*) lt_search_path_spec=`$ECHO "$lt_search_path_spec" |\
+    mingw* | windows* | cegcc*) lt_search_path_spec=`$ECHO "$lt_search_path_spec" |\
       $SED 's|/\([A-Za-z]:\)|\1|g'` ;;
   esac
   sys_lib_search_path_spec=`$ECHO "$lt_search_path_spec" | $lt_NL2SP`
@@ -11527,7 +11571,7 @@ bsdi[45]*)
   # libtool to hard-code these into programs
   ;;
 
-cygwin* | mingw* | pw32* | cegcc*)
+cygwin* | mingw* | windows* | pw32* | cegcc*)
   version_type=windows
   shrext_cmds=.dll
   need_version=no
@@ -11556,14 +11600,14 @@ cygwin* | mingw* | pw32* | cegcc*)
     cygwin*)
       # Cygwin DLLs use 'cyg' prefix rather than 'lib'
       #soname_spec='`echo $libname | sed -e 's/^lib/cyg/'``echo $release | $SED -e 's/[[.]]/-/g'`$versuffix$shared_ext'
-      soname_spec='`echo $libname | sed -e 's/^lib//'`$shared_ext' # SDL customization
+      soname_spec='`echo $libname | sed -e 's/^lib//'`$shared_ext' # SDL customization.
 
       sys_lib_search_path_spec="$sys_lib_search_path_spec /usr/lib/w32api"
       ;;
-    mingw* | cegcc*)
+    mingw* | windows* | cegcc*)
       # MinGW DLLs use traditional 'lib' prefix
       #soname_spec='$libname`echo $release | $SED -e 's/[[.]]/-/g'`$versuffix$shared_ext'
-      soname_spec='`echo $libname | $SED -e 's/^lib//'`$shared_ext' # SDL customization
+      soname_spec='`echo $libname | $SED -e 's/^lib//'`$shared_ext' # SDL customization.
       ;;
     pw32*)
       # pw32 DLLs use 'pw' prefix rather than 'lib'
@@ -11573,14 +11617,14 @@ cygwin* | mingw* | pw32* | cegcc*)
     dynamic_linker='Win32 ld.exe'
     ;;
 
-  *,cl*)
-    # Native MSVC
+  *,cl* | *,icl*)
+    # Native MSVC or ICC
     libname_spec='$name'
     soname_spec='$libname`echo $release | $SED -e 's/[.]/-/g'`$versuffix$shared_ext'
     library_names_spec='$libname.dll.lib'
 
     case $build_os in
-    mingw*)
+    mingw* | windows*)
       sys_lib_search_path_spec=
       lt_save_ifs=$IFS
       IFS=';'
@@ -11630,7 +11674,7 @@ cygwin* | mingw* | pw32* | cegcc*)
     ;;
 
   *)
-    # Assume MSVC wrapper
+    # Assume MSVC and ICC wrapper
     library_names_spec='$libname`echo $release | $SED -e 's/[.]/-/g'`$versuffix$shared_ext $libname.lib'
     dynamic_linker='Win32 ld.exe'
     ;;
@@ -12300,7 +12344,7 @@ else
     lt_cv_dlopen_self=yes
     ;;
 
-  mingw* | pw32* | cegcc*)
+  mingw* | windows* | pw32* | cegcc*)
     lt_cv_dlopen=LoadLibrary
     lt_cv_dlopen_libs=
     ;;
@@ -12627,11 +12671,11 @@ else
 /* When -fvisibility=hidden is used, assume the code has been annotated
    correspondingly for the symbols needed.  */
 #if defined __GNUC__ && (((__GNUC__ == 3) && (__GNUC_MINOR__ >= 3)) || (__GNUC__ > 3))
-int fnord () __attribute__((visibility("default")));
+int fnord (void) __attribute__((visibility("default")));
 #endif
 
-int fnord () { return 42; }
-int main ()
+int fnord (void) { return 42; }
+int main (void)
 {
   void *self = dlopen (0, LT_DLGLOBAL|LT_DLLAZY_OR_NOW);
   int status = $lt_dlunknown;
@@ -12734,11 +12778,11 @@ else
 /* When -fvisibility=hidden is used, assume the code has been annotated
    correspondingly for the symbols needed.  */
 #if defined __GNUC__ && (((__GNUC__ == 3) && (__GNUC_MINOR__ >= 3)) || (__GNUC__ > 3))
-int fnord () __attribute__((visibility("default")));
+int fnord (void) __attribute__((visibility("default")));
 #endif
 
-int fnord () { return 42; }
-int main ()
+int fnord (void) { return 42; }
+int main (void)
 {
   void *self = dlopen (0, LT_DLGLOBAL|LT_DLLAZY_OR_NOW);
   int status = $lt_dlunknown;
@@ -14576,7 +14620,7 @@ if test yes = "$GCC"; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ld used by $CC" >&5
 printf %s "checking for ld used by $CC... " >&6; }
   case $host in
-  *-*-mingw*)
+  *-*-mingw* | *-*-windows*)
     # gcc leaves a trailing carriage return, which upsets mingw
     ac_prog=`($CC -print-prog-name=ld) 2>&5 | tr -d '\015'` ;;
   *)
@@ -14710,7 +14754,7 @@ with_gnu_ld=$lt_cv_prog_gnu_ld
       # Commands to make compiler produce verbose output that lists
       # what "hidden" libraries, object files and flags are used when
       # linking a shared library.
-      output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "\-L"'
+      output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "[-]L"'
 
     else
       GXX=no
@@ -15008,10 +15052,10 @@ fi
         esac
         ;;
 
-      cygwin* | mingw* | pw32* | cegcc*)
+      cygwin* | mingw* | windows* | pw32* | cegcc*)
 	case $GXX,$cc_basename in
-	,cl* | no,cl*)
-	  # Native MSVC
+	,cl* | no,cl* | ,icl* | no,icl*)
+	  # Native MSVC or ICC
 	  # hardcode_libdir_flag_spec is actually meaningless, as there is
 	  # no search path for DLLs.
 	  hardcode_libdir_flag_spec_CXX=' '
@@ -15207,7 +15251,7 @@ fi
             # explicitly linking system object files so we need to strip them
             # from the output so that they don't get included in the library
             # dependencies.
-            output_verbose_link_cmd='templist=`($CC -b $CFLAGS -v conftest.$objext 2>&1) | $EGREP "\-L"`; list= ; for z in $templist; do case $z in conftest.$objext) list="$list $z";; *.$objext);; *) list="$list $z";;esac; done; func_echo_all "$list"'
+            output_verbose_link_cmd='templist=`($CC -b $CFLAGS -v conftest.$objext 2>&1) | $EGREP "[-]L"`; list= ; for z in $templist; do case $z in conftest.$objext) list="$list $z";; *.$objext);; *) list="$list $z";;esac; done; func_echo_all "$list"'
             ;;
           *)
             if test yes = "$GXX"; then
@@ -15272,7 +15316,7 @@ fi
 	    # explicitly linking system object files so we need to strip them
 	    # from the output so that they don't get included in the library
 	    # dependencies.
-	    output_verbose_link_cmd='templist=`($CC -b $CFLAGS -v conftest.$objext 2>&1) | $GREP "\-L"`; list= ; for z in $templist; do case $z in conftest.$objext) list="$list $z";; *.$objext);; *) list="$list $z";;esac; done; func_echo_all "$list"'
+	    output_verbose_link_cmd='templist=`($CC -b $CFLAGS -v conftest.$objext 2>&1) | $GREP "[-]L"`; list= ; for z in $templist; do case $z in conftest.$objext) list="$list $z";; *.$objext);; *) list="$list $z";;esac; done; func_echo_all "$list"'
 	    ;;
           *)
 	    if test yes = "$GXX"; then
@@ -15611,7 +15655,7 @@ fi
 	      # Commands to make compiler produce verbose output that lists
 	      # what "hidden" libraries, object files and flags are used when
 	      # linking a shared library.
-	      output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "\-L"'
+	      output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "[-]L"'
 
 	    else
 	      # FIXME: insert proper C++ library support
@@ -15695,7 +15739,7 @@ fi
 	        # Commands to make compiler produce verbose output that lists
 	        # what "hidden" libraries, object files and flags are used when
 	        # linking a shared library.
-	        output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "\-L"'
+	        output_verbose_link_cmd='$CC -shared $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "[-]L"'
 	      else
 	        # g++ 2.7 appears to require '-G' NOT '-shared' on this
 	        # platform.
@@ -15706,7 +15750,7 @@ fi
 	        # Commands to make compiler produce verbose output that lists
 	        # what "hidden" libraries, object files and flags are used when
 	        # linking a shared library.
-	        output_verbose_link_cmd='$CC -G $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "\-L"'
+	        output_verbose_link_cmd='$CC -G $CFLAGS -v conftest.$objext 2>&1 | $GREP -v "^Configured with:" | $GREP "[-]L"'
 	      fi
 
 	      hardcode_libdir_flag_spec_CXX='$wl-R $wl$libdir'
@@ -16020,7 +16064,7 @@ lt_prog_compiler_static_CXX=
     beos* | irix5* | irix6* | nonstopux* | osf3* | osf4* | osf5*)
       # PIC is the default for these OSes.
       ;;
-    mingw* | cygwin* | os2* | pw32* | cegcc*)
+    mingw* | windows* | cygwin* | os2* | pw32* | cegcc*)
       # This hack is so that the source file can tell whether it is being
       # built for inclusion in a dll (and should export symbols for example).
       # Although the cygwin gcc ignores -fPIC, still need this for old-style
@@ -16095,7 +16139,7 @@ lt_prog_compiler_static_CXX=
 	  ;;
 	esac
 	;;
-      mingw* | cygwin* | os2* | pw32* | cegcc*)
+      mingw* | windows* | cygwin* | os2* | pw32* | cegcc*)
 	# This hack is so that the source file can tell whether it is being
 	# built for inclusion in a dll (and should export symbols for example).
 	lt_prog_compiler_pic_CXX='-DDLL_EXPORT'
@@ -16589,9 +16633,9 @@ printf %s "checking whether the $compiler linker ($LD) supports shared libraries
   pw32*)
     export_symbols_cmds_CXX=$ltdll_cmds
     ;;
-  cygwin* | mingw* | cegcc*)
+  cygwin* | mingw* | windows* | cegcc*)
     case $cc_basename in
-    cl*)
+    cl* | icl*)
       exclude_expsyms_CXX='_NULL_IMPORT_DESCRIPTOR|_IMPORT_DESCRIPTOR_.*'
       ;;
     *)
@@ -16911,7 +16955,7 @@ bsdi[45]*)
   # libtool to hard-code these into programs
   ;;
 
-cygwin* | mingw* | pw32* | cegcc*)
+cygwin* | mingw* | windows* | pw32* | cegcc*)
   version_type=windows
   shrext_cmds=.dll
   need_version=no
@@ -16940,13 +16984,13 @@ cygwin* | mingw* | pw32* | cegcc*)
     cygwin*)
       # Cygwin DLLs use 'cyg' prefix rather than 'lib'
       #soname_spec='`echo $libname | sed -e 's/^lib/cyg/'``echo $release | $SED -e 's/[[.]]/-/g'`$versuffix$shared_ext'
-      soname_spec='`echo $libname | sed -e 's/^lib//'`$shared_ext' # SDL customization
+      soname_spec='`echo $libname | sed -e 's/^lib//'`$shared_ext' # SDL customization.
 
       ;;
-    mingw* | cegcc*)
+    mingw* | windows* | cegcc*)
       # MinGW DLLs use traditional 'lib' prefix
       #soname_spec='$libname`echo $release | $SED -e 's/[[.]]/-/g'`$versuffix$shared_ext'
-      soname_spec='`echo $libname | $SED -e 's/^lib//'`$shared_ext' # SDL customization
+      soname_spec='`echo $libname | $SED -e 's/^lib//'`$shared_ext' # SDL customization.
       ;;
     pw32*)
       # pw32 DLLs use 'pw' prefix rather than 'lib'
@@ -16956,14 +17000,14 @@ cygwin* | mingw* | pw32* | cegcc*)
     dynamic_linker='Win32 ld.exe'
     ;;
 
-  *,cl*)
-    # Native MSVC
+  *,cl* | *,icl*)
+    # Native MSVC or ICC
     libname_spec='$name'
     soname_spec='$libname`echo $release | $SED -e 's/[.]/-/g'`$versuffix$shared_ext'
     library_names_spec='$libname.dll.lib'
 
     case $build_os in
-    mingw*)
+    mingw* | windows*)
       sys_lib_search_path_spec=
       lt_save_ifs=$IFS
       IFS=';'
@@ -17013,7 +17057,7 @@ cygwin* | mingw* | pw32* | cegcc*)
     ;;
 
   *)
-    # Assume MSVC wrapper
+    # Assume MSVC and ICC wrapper
     library_names_spec='$libname`echo $release | $SED -e 's/[.]/-/g'`$versuffix$shared_ext $libname.lib'
     dynamic_linker='Win32 ld.exe'
     ;;
@@ -18820,12 +18864,26 @@ else $as_nop
 fi
 
 
+enable_system_iconv_default=yes
+case "$host" in
+  *-*-cygwin*|*-*-mingw*|*-*-darwin*|*-ios-*)
+    enable_system_iconv_default=no
+    ;;
+esac
 # Check whether --enable-system-iconv was given.
 if test ${enable_system_iconv+y}
 then :
   enableval=$enable_system_iconv;
 else $as_nop
-  enable_system_iconv=yes
+  enable_system_iconv=$enable_system_iconv_default
+fi
+
+# Check whether --enable-libiconv was given.
+if test ${enable_libiconv+y}
+then :
+  enableval=$enable_libiconv;
+else $as_nop
+  enable_libiconv=no
 fi
 
 
@@ -18941,12 +18999,6 @@ ac_fn_c_check_header_compile "$LINENO" "signal.h" "ac_cv_header_signal_h" "$ac_i
 if test "x$ac_cv_header_signal_h" = xyes
 then :
   printf "%s\n" "#define HAVE_SIGNAL_H 1" >>confdefs.h
-
-fi
-ac_fn_c_check_header_compile "$LINENO" "linux/input.h" "ac_cv_header_linux_input_h" "$ac_includes_default"
-if test "x$ac_cv_header_linux_input_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_LINUX_INPUT_H 1" >>confdefs.h
 
 fi
 
@@ -19746,6 +19798,18 @@ then :
   printf "%s\n" "#define HAVE_POLL 1" >>confdefs.h
 
 fi
+ac_fn_c_check_func "$LINENO" "memfd_create" "ac_cv_func_memfd_create"
+if test "x$ac_cv_func_memfd_create" = xyes
+then :
+  printf "%s\n" "#define HAVE_MEMFD_CREATE 1" >>confdefs.h
+
+fi
+ac_fn_c_check_func "$LINENO" "posix_fallocate" "ac_cv_func_posix_fallocate"
+if test "x$ac_cv_func_posix_fallocate" = xyes
+then :
+  printf "%s\n" "#define HAVE_POSIX_FALLOCATE 1" >>confdefs.h
+
+fi
 ac_fn_c_check_func "$LINENO" "_Exit" "ac_cv_func__Exit"
 if test "x$ac_cv_func__Exit" = xyes
 then :
@@ -20049,53 +20113,90 @@ fi
 
 
     if test x$enable_system_iconv = xyes; then
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for iconv_open in -liconv" >&5
-printf %s "checking for iconv_open in -liconv... " >&6; }
-if test ${ac_cv_lib_iconv_iconv_open+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-liconv  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for iconv in libc" >&5
+printf %s "checking for iconv in libc... " >&6; }
+        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-char iconv_open ();
+         #define LIBICONV_PLUG 1 /* in case libiconv header is in include path */
+         #include <stddef.h>
+         #include <iconv.h>
+
 int
 main (void)
 {
-return iconv_open ();
+
+         iconv_open(NULL,NULL);
+
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_link "$LINENO"
 then :
-  ac_cv_lib_iconv_iconv_open=yes
+  have_libc_iconv=yes
 else $as_nop
-  ac_cv_lib_iconv_iconv_open=no
+  have_libc_iconv=no
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_iconv_iconv_open" >&5
-printf "%s\n" "$ac_cv_lib_iconv_iconv_open" >&6; }
-if test "x$ac_cv_lib_iconv_iconv_open" = xyes
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_libc_iconv" >&5
+printf "%s\n" "$have_libc_iconv" >&6; }
+
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for iconv in libiconv" >&5
+printf %s "checking for iconv in libiconv... " >&6; }
+        save_LIBS="$LIBS"
+        LIBS="$LIBS -liconv"
+        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+         #include <stddef.h>
+         #include <iconv.h>
+
+int
+main (void)
+{
+
+         iconv_open(NULL,NULL);
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
 then :
-  LIBS="$LIBS -liconv"; EXTRA_LDFLAGS="$EXTRA_LDFLAGS -liconv"
+  have_libiconv=yes
+else $as_nop
+  have_libiconv=no
 fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+        LIBS="$save_LIBS"
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_libiconv" >&5
+printf "%s\n" "$have_libiconv" >&6; }
 
-        ac_fn_c_check_func "$LINENO" "iconv" "ac_cv_func_iconv"
-if test "x$ac_cv_func_iconv" = xyes
-then :
-  printf "%s\n" "#define HAVE_ICONV 1" >>confdefs.h
+        if test x$have_libc_iconv = xyes || test x$have_libiconv = xyes; then
 
-fi
+printf "%s\n" "#define HAVE_ICONV 1" >>confdefs.h
 
+
+           if test x$have_libiconv = xyes; then
+              if test x$have_libc_iconv != xyes; then
+                 use_libiconv=yes
+              elif test x$enable_libiconv = xyes; then
+                 use_libiconv=yes
+              fi
+           fi
+           if test x$use_libiconv = xyes; then
+
+printf "%s\n" "#define SDL_USE_LIBICONV 1" >>confdefs.h
+
+              EXTRA_LDFLAGS="$EXTRA_LDFLAGS -liconv"
+              echo "-- Using iconv from libiconv"
+           else
+              echo "-- Using iconv from libc"
+           fi
+        fi
     fi
 
     ac_fn_c_check_member "$LINENO" "struct sigaction" "sa_sigaction" "ac_cv_member_struct_sigaction_sa_sigaction" "#include <signal.h>
@@ -20596,7 +20697,7 @@ if test ${enable_3dnow+y}
 then :
   enableval=$enable_3dnow;
 else $as_nop
-  enable_3dnow=yes
+  enable_3dnow=no
 fi
 
     if test x$enable_3dnow = xyes; then
@@ -20985,7 +21086,7 @@ printf "%s\n" "#define HAVE_ALTIVEC_H 1" >>confdefs.h
     fi
 fi
 
-    # Check whether --enable-lsx was given.
+# Check whether --enable-lsx was given.
 if test ${enable_lsx+y}
 then :
   enableval=$enable_lsx;
@@ -20993,20 +21094,20 @@ else $as_nop
   enable_lsx=yes
 fi
 
-    if test x$enable_lsx = xyes; then
-        save_CFLAGS="$CFLAGS"
-        have_gcc_lsx=no
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for GCC -mlsx option" >&5
+if test x$enable_lsx = xyes; then
+    save_CFLAGS="$CFLAGS"
+    have_gcc_lsx=no
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for GCC -mlsx option" >&5
 printf %s "checking for GCC -mlsx option... " >&6; }
-        lsx_CFLAGS="-mlsx"
-        CFLAGS="$save_CFLAGS $lsx_CFLAGS"
+    lsx_CFLAGS="-mlsx"
+    CFLAGS="$save_CFLAGS $lsx_CFLAGS"
 
-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-        #ifndef __loongarch_sx
-        #error Assembler CPP flag not enabled
-        #endif
+    #ifndef __loongarch_sx
+    #error Assembler CPP flag not enabled
+    #endif
 
 int
 main (void)
@@ -21021,19 +21122,19 @@ then :
   have_gcc_lsx=yes
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_gcc_lsx" >&5
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_gcc_lsx" >&5
 printf "%s\n" "$have_gcc_lsx" >&6; }
-        CFLAGS="$save_CFLAGS"
+    CFLAGS="$save_CFLAGS"
 
-        if test x$have_gcc_lsx = xyes; then
-            EXTRA_CFLAGS="$EXTRA_CFLAGS $lsx_CFLAGS"
-            SUMMARY_math="${SUMMARY_math} lsx"
-        fi
+    if test x$have_gcc_lsx = xyes; then
+       EXTRA_CFLAGS="$EXTRA_CFLAGS $lsx_CFLAGS"
+       SUMMARY_math="${SUMMARY_math} lsx"
     fi
+fi
 
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for lsxintrin.h" >&5
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for lsxintrin.h" >&5
 printf %s "checking for lsxintrin.h... " >&6; }
-    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <lsxintrin.h>
 int
@@ -21051,87 +21152,13 @@ else $as_nop
   have_lsxintrin_h_hdr=no
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_lsxintrin_h_hdr" >&5
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_lsxintrin_h_hdr" >&5
 printf "%s\n" "$have_lsxintrin_h_hdr" >&6; }
-    if test x$have_lsxintrin_h_hdr = xyes; then
+if test x$have_lsxintrin_h_hdr = xyes; then
 
 printf "%s\n" "#define HAVE_LSXINTRIN_H 1" >>confdefs.h
 
-    fi
-
-    # Check whether --enable-lasx was given.
-if test ${enable_lasx+y}
-then :
-  enableval=$enable_lasx;
-else $as_nop
-  enable_LASX=yes
 fi
-
-    if test x$enable_LASX = xyes; then
-        save_CFLAGS="$CFLAGS"
-        have_gcc_lasx=no
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for GCC -mlasx option" >&5
-printf %s "checking for GCC -mlasx option... " >&6; }
-        lasx_CFLAGS="-mlasx"
-        CFLAGS="$save_CFLAGS $lasx_CFLAGS"
-
-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-        #ifndef __loongarch_asx
-        #error Assembler CPP flag not enabled
-        #endif
-
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  have_gcc_lasx=yes
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_gcc_lasx" >&5
-printf "%s\n" "$have_gcc_lasx" >&6; }
-        CFLAGS="$save_CFLAGS"
-
-        if test x$have_gcc_lasx = xyes; then
-            EXTRA_CFLAGS="$EXTRA_CFLAGS $lasx_CFLAGS"
-            SUMMARY_math="${SUMMARY_math} lasx"
-        fi
-    fi
-
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for lasxintrin.h" >&5
-printf %s "checking for lasxintrin.h... " >&6; }
-    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-#include <lasxintrin.h>
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  have_lasxintrin_h_hdr=yes
-else $as_nop
-  have_lasxintrin_h_hdr=no
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_lasxintrin_h_hdr" >&5
-printf "%s\n" "$have_lasxintrin_h_hdr" >&6; }
-    if test x$have_lasxintrin_h_hdr = xyes; then
-
-printf "%s\n" "#define HAVE_LASXINTRIN_H 1" >>confdefs.h
-
-    fi
 
 CheckOSS()
 {
@@ -22083,19 +22110,19 @@ fi
     if test x$enable_audio = xyes -a x$enable_pulseaudio = xyes; then
 
 pkg_failed=no
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libpulse-simple >= 0.9" >&5
-printf %s "checking for libpulse-simple >= 0.9... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libpulse >= 0.9.15" >&5
+printf %s "checking for libpulse >= 0.9.15... " >&6; }
 
 if test -n "$PULSEAUDIO_CFLAGS"; then
     pkg_cv_PULSEAUDIO_CFLAGS="$PULSEAUDIO_CFLAGS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libpulse-simple >= 0.9\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "libpulse-simple >= 0.9") 2>&5
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libpulse >= 0.9.15\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libpulse >= 0.9.15") 2>&5
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_PULSEAUDIO_CFLAGS=`$PKG_CONFIG --cflags "libpulse-simple >= 0.9" 2>/dev/null`
+  pkg_cv_PULSEAUDIO_CFLAGS=`$PKG_CONFIG --cflags "libpulse >= 0.9.15" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -22107,12 +22134,12 @@ if test -n "$PULSEAUDIO_LIBS"; then
     pkg_cv_PULSEAUDIO_LIBS="$PULSEAUDIO_LIBS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libpulse-simple >= 0.9\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "libpulse-simple >= 0.9") 2>&5
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libpulse >= 0.9.15\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libpulse >= 0.9.15") 2>&5
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_PULSEAUDIO_LIBS=`$PKG_CONFIG --libs "libpulse-simple >= 0.9" 2>/dev/null`
+  pkg_cv_PULSEAUDIO_LIBS=`$PKG_CONFIG --libs "libpulse >= 0.9.15" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -22133,9 +22160,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        PULSEAUDIO_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libpulse-simple >= 0.9" 2>&1`
+	        PULSEAUDIO_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "libpulse >= 0.9.15" 2>&1`
         else
-	        PULSEAUDIO_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libpulse-simple >= 0.9" 2>&1`
+	        PULSEAUDIO_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "libpulse >= 0.9.15" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$PULSEAUDIO_PKG_ERRORS" >&5
@@ -22162,7 +22189,7 @@ else $as_nop
   enable_pulseaudio_shared=yes
 fi
 
-            pulseaudio_lib=`find_lib "libpulse-simple.so.*" "$PULSEAUDIO_LIBS" | sed 's/.*\/\(.*\)/\1/; q'`
+            pulseaudio_lib=`find_lib "libpulse.so.*" "$PULSEAUDIO_LIBS" | sed 's/.*\/\(.*\)/\1/; q'`
 
 
 printf "%s\n" "#define SDL_AUDIO_DRIVER_PULSEAUDIO 1" >>confdefs.h
@@ -22176,7 +22203,7 @@ printf "%s\n" "$as_me: WARNING: You must have SDL_LoadObject() support for dynam
             fi
             if test x$have_loadso = xyes && \
                test x$enable_pulseaudio_shared = xyes && test x$pulseaudio_lib != x; then
-                echo "-- dynamic libpulse-simple -> $pulseaudio_lib"
+                echo "-- dynamic libpulse -> $pulseaudio_lib"
 
 printf "%s\n" "#define SDL_AUDIO_DRIVER_PULSEAUDIO_DYNAMIC \"$pulseaudio_lib\"" >>confdefs.h
 
@@ -23643,19 +23670,19 @@ fi
     if test x$enable_video = xyes -a x$enable_video_rpi = xyes; then
 
 pkg_failed=no
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for bcm_host brcmegl" >&5
-printf %s "checking for bcm_host brcmegl... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for bcm_host" >&5
+printf %s "checking for bcm_host... " >&6; }
 
 if test -n "$RPI_CFLAGS"; then
     pkg_cv_RPI_CFLAGS="$RPI_CFLAGS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"bcm_host brcmegl\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "bcm_host brcmegl") 2>&5
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"bcm_host\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "bcm_host") 2>&5
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_RPI_CFLAGS=`$PKG_CONFIG --cflags "bcm_host brcmegl" 2>/dev/null`
+  pkg_cv_RPI_CFLAGS=`$PKG_CONFIG --cflags "bcm_host" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -23667,12 +23694,12 @@ if test -n "$RPI_LIBS"; then
     pkg_cv_RPI_LIBS="$RPI_LIBS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"bcm_host brcmegl\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "bcm_host brcmegl") 2>&5
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"bcm_host\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "bcm_host") 2>&5
   ac_status=$?
   printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_RPI_LIBS=`$PKG_CONFIG --libs "bcm_host brcmegl" 2>/dev/null`
+  pkg_cv_RPI_LIBS=`$PKG_CONFIG --libs "bcm_host" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -23693,9 +23720,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        RPI_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "bcm_host brcmegl" 2>&1`
+	        RPI_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "bcm_host" 2>&1`
         else
-	        RPI_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "bcm_host brcmegl" 2>&1`
+	        RPI_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "bcm_host" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$RPI_PKG_ERRORS" >&5
@@ -23713,13 +23740,92 @@ printf "%s\n" "yes" >&6; }
 	video_rpi=yes
 fi
 
+pkg_failed=no
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for brcmegl" >&5
+printf %s "checking for brcmegl... " >&6; }
+
+if test -n "$RPI_EGL_CFLAGS"; then
+    pkg_cv_RPI_EGL_CFLAGS="$RPI_EGL_CFLAGS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"brcmegl\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "brcmegl") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_RPI_EGL_CFLAGS=`$PKG_CONFIG --cflags "brcmegl" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+if test -n "$RPI_EGL_LIBS"; then
+    pkg_cv_RPI_EGL_LIBS="$RPI_EGL_LIBS"
+ elif test -n "$PKG_CONFIG"; then
+    if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"brcmegl\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "brcmegl") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  pkg_cv_RPI_EGL_LIBS=`$PKG_CONFIG --libs "brcmegl" 2>/dev/null`
+		      test "x$?" != "x0" && pkg_failed=yes
+else
+  pkg_failed=yes
+fi
+ else
+    pkg_failed=untried
+fi
+
+
+
+if test $pkg_failed = yes; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+
+if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
+        _pkg_short_errors_supported=yes
+else
+        _pkg_short_errors_supported=no
+fi
+        if test $_pkg_short_errors_supported = yes; then
+	        RPI_EGL_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "brcmegl" 2>&1`
+        else
+	        RPI_EGL_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "brcmegl" 2>&1`
+        fi
+	# Put the nasty error message in config.log where it belongs
+	echo "$RPI_EGL_PKG_ERRORS" >&5
+
+	video_rpi_egl=no
+elif test $pkg_failed = untried; then
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+	video_rpi_egl=no
+else
+	RPI_EGL_CFLAGS=$pkg_cv_RPI_EGL_CFLAGS
+	RPI_EGL_LIBS=$pkg_cv_RPI_EGL_LIBS
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+	video_rpi_egl=yes
+fi
+
         if test x$video_rpi = xno; then
             if test x$ARCH = xnetbsd; then
                 RPI_CFLAGS="-I/usr/pkg/include -I/usr/pkg/include/interface/vcos/pthreads -I/usr/pkg/include/interface/vmcs_host/linux"
-                RPI_LIBS="-Wl,-R/usr/pkg/lib -L/usr/pkg/lib -lbcm_host"
+                RPI_LIBS="-L/usr/pkg/lib -lbcm_host"
             else
                 RPI_CFLAGS="-I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux"
-                RPI_LIBS="-Wl,-rpath,/opt/vc/lib -L/opt/vc/lib -lbcm_host"
+                RPI_LIBS="-L/opt/vc/lib -lbcm_host"
+            fi
+        fi
+
+        if test x$video_rpi_egl = xno; then
+            if test x$ARCH = xnetbsd; then
+                RPI_EGL_LIBS="-Wl,-R/usr/pkg/lib"
+            else
+                RPI_EGL_LIBS="-Wl,-rpath,/opt/vc/lib"
             fi
         fi
 
@@ -23727,22 +23833,20 @@ fi
         ac_save_cflags="$CFLAGS"; ac_save_libs="$LIBS"
 
         # Add the Raspberry Pi compiler flags and libraries
-        CFLAGS="$CFLAGS $RPI_CFLAGS"; LIBS="$LIBS $RPI_LIBS"
+        CFLAGS="$CFLAGS $RPI_CFLAGS"; LIBS="$LIBS $RPI_EGL_LIBS $RPI_LIBS"
 
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for Raspberry Pi 2/3" >&5
-printf %s "checking for Raspberry Pi 2/3... " >&6; }
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for Raspberry Pi 0-3" >&5
+printf %s "checking for Raspberry Pi 0-3... " >&6; }
         have_video_rpi=no
         cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
           #include <bcm_host.h>
-          #include <EGL/eglplatform.h>
 
 int
 main (void)
 {
 
-          EGL_DISPMANX_WINDOW_T window;
           bcm_host_init();
 
   ;
@@ -23765,7 +23869,7 @@ printf "%s\n" "$have_video_rpi" >&6; }
             CFLAGS="$CFLAGS $RPI_CFLAGS"
             SDL_CFLAGS="$SDL_CFLAGS $RPI_CFLAGS"
             EXTRA_CFLAGS="$EXTRA_CFLAGS $RPI_CFLAGS"
-            EXTRA_LDFLAGS="$EXTRA_LDFLAGS $RPI_LIBS"
+            EXTRA_LDFLAGS="$EXTRA_LDFLAGS $RPI_EGL_LIBS $RPI_LIBS"
             SOURCES="$SOURCES $srcdir/src/video/raspberry/*.c"
 
 printf "%s\n" "#define SDL_VIDEO_DRIVER_RPI 1" >>confdefs.h
@@ -26349,6 +26453,9 @@ else $as_nop
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
                 ;;
+            *-*-solaris*)
+                enable_video_vulkan=no
+                ;;
             *-*-darwin*)
                 save_CFLAGS="$CFLAGS"
                 CFLAGS="$CFLAGS -x objective-c"
@@ -26405,6 +26512,14 @@ printf "%s\n" "#define SDL_VIDEO_VULKAN 1" >>confdefs.h
 
 CheckInputEvents()
 {
+        ac_fn_c_check_header_compile "$LINENO" "linux/input.h" "ac_cv_header_linux_input_h" "$ac_includes_default"
+if test "x$ac_cv_header_linux_input_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_LINUX_INPUT_H 1" >>confdefs.h
+
+fi
+
+
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for Linux 2.4 unified input interface" >&5
 printf %s "checking for Linux 2.4 unified input interface... " >&6; }
         use_input_events=no
@@ -27528,18 +27643,14 @@ then :
   have_d3d11=yes
 fi
 
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for d3d12 Windows SDK version" >&5
-printf %s "checking for d3d12 Windows SDK version... " >&6; }
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for compatible d3d12 headers" >&5
+printf %s "checking for compatible d3d12 headers... " >&6; }
         cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-#include <winsdkver.h>
-#include <sdkddkver.h>
 #include <d3d12.h>
+#include <d3d12sdklayers.h>
 ID3D12Device1 *device;
-#if WDK_NTDDI_VERSION <= 0x0A000008
-asdf
-#endif
 
 int
 main (void)
@@ -27558,6 +27669,7 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_d3d12" >&5
 printf "%s\n" "$have_d3d12" >&6; }
+
         ac_fn_c_check_header_compile "$LINENO" "ddraw.h" "ac_cv_header_ddraw_h" "$ac_includes_default"
 if test "x$ac_cv_header_ddraw_h" = xyes
 then :
@@ -27622,76 +27734,15 @@ else $as_nop
 fi
 
     if test x$enable_xinput = xyes; then
-        have_xinput_gamepadex=no
-        have_xinput_stateex=no
         ac_fn_c_check_header_compile "$LINENO" "xinput.h" "ac_cv_header_xinput_h" "$ac_includes_default"
 if test "x$ac_cv_header_xinput_h" = xyes
 then :
   have_xinput=yes
 fi
 
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for struct XINPUT_GAMEPAD_EX" >&5
-printf %s "checking for struct XINPUT_GAMEPAD_EX... " >&6; }
-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <windows.h>
-#include <xinput.h>
-XINPUT_GAMEPAD_EX x1;
-
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  have_xinput_gamepadex=yes
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_xinput_gamepadex" >&5
-printf "%s\n" "$have_xinput_gamepadex" >&6; }
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for struct XINPUT_STATE_EX" >&5
-printf %s "checking for struct XINPUT_STATE_EX... " >&6; }
-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#include <windows.h>
-#include <xinput.h>
-XINPUT_STATE_EX s1;
-
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  have_xinput_stateex=yes
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $have_xinput_stateex" >&5
-printf "%s\n" "$have_xinput_stateex" >&6; }
-
         if test x$have_xinput = xyes; then
 
 printf "%s\n" "#define HAVE_XINPUT_H 1" >>confdefs.h
-
-        fi
-        if test x$have_xinput_gamepadex = xyes; then
-
-printf "%s\n" "#define HAVE_XINPUT_GAMEPAD_EX 1" >>confdefs.h
-
-        fi
-        if test x$have_xinput_stateex = xyes; then
-
-printf "%s\n" "#define HAVE_XINPUT_STATE_EX 1" >>confdefs.h
 
         fi
     fi

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_DRIVER_UIKIT
+#ifdef SDL_VIDEO_DRIVER_UIKIT
 
 #include "SDL_hints.h"
 #include "SDL_mouse.h"
@@ -114,14 +114,6 @@ static int SetupWindowData(_THIS, SDL_Window *window, UIWindow *uiwindow, SDL_bo
 
 #if !TARGET_OS_TV
     if (displaydata.uiscreen == [UIScreen mainScreen]) {
-        /* SDL_CreateWindow sets the window w&h to the display's bounds if the
-         * fullscreen flag is set. But the display bounds orientation might not
-         * match what we want, and GetSupportedOrientations call below uses the
-         * window w&h. They're overridden below anyway, so we'll just set them
-         * to the requested size for the purposes of determining orientation. */
-        window->w = window->windowed.w;
-        window->h = window->windowed.h;
-
         NSUInteger orients = UIKit_GetSupportedOrientations(window);
         BOOL supportsLandscape = (orients & UIInterfaceOrientationMaskLandscape) != 0;
         BOOL supportsPortrait = (orients & (UIInterfaceOrientationMaskPortrait|UIInterfaceOrientationMaskPortraitUpsideDown)) != 0;
@@ -163,6 +155,10 @@ int UIKit_CreateWindow(_THIS, SDL_Window *window)
         SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window);
         SDL_DisplayData *data = (__bridge SDL_DisplayData *) display->driverdata;
         SDL_Window *other;
+        UIWindow *uiwindow;
+#if !TARGET_OS_TV
+        const CGSize origsize = data.uiscreen.currentMode.size;
+#endif
 
         /* We currently only handle a single window per display on iOS */
         for (other = _this->windows; other; other = other->next) {
@@ -175,14 +171,13 @@ int UIKit_CreateWindow(_THIS, SDL_Window *window)
          * user, so it's in standby), try to force the display to a resolution
          * that most closely matches the desired window size. */
 #if !TARGET_OS_TV
-        const CGSize origsize = data.uiscreen.currentMode.size;
         if ((origsize.width == 0.0f) && (origsize.height == 0.0f)) {
+            int i;
+            const SDL_DisplayMode *bestmode = NULL;
             if (display->num_display_modes == 0) {
                 _this->GetDisplayModes(_this, display);
             }
 
-            int i;
-            const SDL_DisplayMode *bestmode = NULL;
             for (i = display->num_display_modes; i >= 0; i--) {
                 const SDL_DisplayMode *mode = &display->display_modes[i];
                 if ((mode->w >= window->w) && (mode->h >= window->h)) {
@@ -212,7 +207,7 @@ int UIKit_CreateWindow(_THIS, SDL_Window *window)
 
         /* ignore the size user requested, and make a fullscreen window */
         /* !!! FIXME: can we have a smaller view? */
-        UIWindow *uiwindow = [[SDL_uikitwindow alloc] initWithFrame:data.uiscreen.bounds];
+        uiwindow = [[SDL_uikitwindow alloc] initWithFrame:data.uiscreen.bounds];
 
         /* put the window on an external display if appropriate. */
         if (data.uiscreen != [UIScreen mainScreen]) {
@@ -238,12 +233,14 @@ void UIKit_SetWindowTitle(_THIS, SDL_Window * window)
 void UIKit_ShowWindow(_THIS, SDL_Window * window)
 {
     @autoreleasepool {
+        SDL_VideoDisplay *display;
+        SDL_DisplayData *displaydata;
         SDL_WindowData *data = (__bridge SDL_WindowData *) window->driverdata;
         [data.uiwindow makeKeyAndVisible];
 
         /* Make this window the current mouse focus for touch input */
-        SDL_VideoDisplay *display = SDL_GetDisplayForWindow(window);
-        SDL_DisplayData *displaydata = (__bridge SDL_DisplayData *) display->driverdata;
+        display = SDL_GetDisplayForWindow(window);
+        displaydata = (__bridge SDL_DisplayData *) display->driverdata;
         if (displaydata.uiscreen == [UIScreen mainScreen]) {
             SDL_SetMouseFocus(window);
             SDL_SetKeyboardFocus(window);
@@ -392,7 +389,7 @@ SDL_bool UIKit_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
 
             /* These struct members were added in SDL 2.0.4. */
             if (versionnum >= SDL_VERSIONNUM(2,0,4)) {
-#if SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
+#if defined(SDL_VIDEO_OPENGL_ES) || defined(SDL_VIDEO_OPENGL_ES2)
                 if ([data.viewcontroller.view isKindOfClass:[SDL_uikitopenglview class]]) {
                     SDL_uikitopenglview *glview = (SDL_uikitopenglview *)data.viewcontroller.view;
                     info->info.uikit.framebuffer = glview.drawableFramebuffer;
@@ -459,10 +456,10 @@ NSUInteger UIKit_GetSupportedOrientations(SDL_Window * window)
         }
 
         if (orientationMask == 0) {
-            if (window->w >= window->h) {
+            if (window->windowed.w >= window->windowed.h) {
                 orientationMask |= UIInterfaceOrientationMaskLandscape;
             }
-            if (window->h >= window->w) {
+            if (window->windowed.h >= window->windowed.w) {
                 orientationMask |= (UIInterfaceOrientationMaskPortrait | UIInterfaceOrientationMaskPortraitUpsideDown);
             }
         }
@@ -484,7 +481,7 @@ NSUInteger UIKit_GetSupportedOrientations(SDL_Window * window)
 }
 #endif /* !TARGET_OS_TV */
 
-int SDL_iPhoneSetAnimationCallback(SDL_Window * window, int interval, void (*callback)(void*), void *callbackParam)
+int SDL_iPhoneSetAnimationCallback(SDL_Window * window, int interval, SDL_iOSAnimationCallback callback, void *callbackParam)
 {
     if (!window || !window->driverdata) {
         return SDL_SetError("Invalid window");

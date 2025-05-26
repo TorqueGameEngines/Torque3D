@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_DRIVER_X11
+#ifdef SDL_VIDEO_DRIVER_X11
 
 #include "SDL_hints.h"
 #include "../SDL_sysvideo.h"
@@ -35,7 +35,7 @@
 #include "SDL_x11xinput2.h"
 #include "SDL_x11xfixes.h"
 
-#if SDL_VIDEO_OPENGL_EGL
+#ifdef SDL_VIDEO_OPENGL_EGL
 #include "SDL_x11opengles.h"
 #endif
 
@@ -256,7 +256,7 @@ static int SetupWindowData(_THIS, SDL_Window *window, Window w, BOOL created)
 
     /* Allocate the window data */
     data = (SDL_WindowData *)SDL_calloc(1, sizeof(*data));
-    if (data == NULL) {
+    if (!data) {
         return SDL_OutOfMemory();
     }
     data->window = window;
@@ -284,9 +284,9 @@ static int SetupWindowData(_THIS, SDL_Window *window, Window w, BOOL created)
                                            (numwindows +
                                             1) *
                                                sizeof(*windowlist));
-        if (windowlist == NULL) {
-            SDL_free(data);
-            return SDL_OutOfMemory();
+        if (!windowlist) {
+            SDL_OutOfMemory();
+            goto error_cleanup;
         }
         windowlist[numwindows] = data;
         videodata->numwindows++;
@@ -331,9 +331,45 @@ static int SetupWindowData(_THIS, SDL_Window *window, Window w, BOOL created)
         }
     }
 
+#if defined(SDL_VIDEO_OPENGL_ES) || defined(SDL_VIDEO_OPENGL_ES2) || defined(SDL_VIDEO_OPENGL_EGL)
+    if ((window->flags & SDL_WINDOW_OPENGL) &&
+        ((_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES) ||
+         SDL_GetHintBoolean(SDL_HINT_VIDEO_X11_FORCE_EGL, SDL_FALSE))
+#ifdef SDL_VIDEO_OPENGL_GLX
+        && (!_this->gl_data || X11_GL_UseEGL(_this) )
+#endif
+    ) {
+#ifdef SDL_VIDEO_OPENGL_EGL
+        if (!_this->egl_data) {
+            goto error_cleanup;
+        }
+
+        /* Create the GLES window surface */
+        data->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType)w);
+
+        if (data->egl_surface == EGL_NO_SURFACE) {
+            SDL_SetError("Could not create GLES window surface");
+            goto error_cleanup;
+        }
+#else
+        SDL_SetError("Could not create GLES window surface (EGL support not configured)");
+        goto error_cleanup;
+#endif /* SDL_VIDEO_OPENGL_EGL */
+    }
+#endif
+
     /* All done! */
     window->driverdata = data;
     return 0;
+
+error_cleanup:
+#ifdef X_HAVE_UTF8_STRING
+    if (data->ic) {
+        X11_XDestroyIC(data->ic);
+    }
+#endif
+    SDL_free(data);
+    return -1;
 }
 
 static void SetWindowBordered(Display *display, int screen, Window window, SDL_bool border)
@@ -391,10 +427,10 @@ int X11_CreateWindow(_THIS, SDL_Window *window)
     long fevent = 0;
     const char *hint = NULL;
 
-#if SDL_VIDEO_OPENGL_GLX || SDL_VIDEO_OPENGL_EGL
+#if defined(SDL_VIDEO_OPENGL_GLX) || defined(SDL_VIDEO_OPENGL_EGL)
     const char *forced_visual_id = SDL_GetHint(SDL_HINT_VIDEO_X11_WINDOW_VISUALID);
 
-    if (forced_visual_id != NULL && forced_visual_id[0] != '\0') {
+    if (forced_visual_id && forced_visual_id[0] != '\0') {
         XVisualInfo *vi, template;
         int nvis;
 
@@ -412,23 +448,23 @@ int X11_CreateWindow(_THIS, SDL_Window *window)
                !SDL_getenv("SDL_VIDEO_X11_VISUALID")) {
         XVisualInfo *vinfo = NULL;
 
-#if SDL_VIDEO_OPENGL_EGL
+#ifdef SDL_VIDEO_OPENGL_EGL
         if (((_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES) ||
              SDL_GetHintBoolean(SDL_HINT_VIDEO_X11_FORCE_EGL, SDL_FALSE))
-#if SDL_VIDEO_OPENGL_GLX
-            && ( !_this->gl_data || X11_GL_UseEGL(_this) )
+#ifdef SDL_VIDEO_OPENGL_GLX
+            && (!_this->gl_data || X11_GL_UseEGL(_this) )
 #endif
         ) {
             vinfo = X11_GLES_GetVisual(_this, display, screen);
         } else
 #endif
         {
-#if SDL_VIDEO_OPENGL_GLX
+#ifdef SDL_VIDEO_OPENGL_GLX
             vinfo = X11_GL_GetVisual(_this, display, screen);
 #endif
         }
 
-        if (vinfo == NULL) {
+        if (!vinfo) {
             return -1;
         }
         visual = vinfo->visual;
@@ -465,7 +501,7 @@ int X11_CreateWindow(_THIS, SDL_Window *window)
 
         /* OK, we got a colormap, now fill it in as best as we can */
         colorcells = SDL_malloc(visual->map_entries * sizeof(XColor));
-        if (colorcells == NULL) {
+        if (!colorcells) {
             return SDL_OutOfMemory();
         }
         ncolors = visual->map_entries;
@@ -592,7 +628,7 @@ int X11_CreateWindow(_THIS, SDL_Window *window)
         wintype_name = "_NET_WM_WINDOW_TYPE_TOOLTIP";
     } else if (window->flags & SDL_WINDOW_POPUP_MENU) {
         wintype_name = "_NET_WM_WINDOW_TYPE_POPUP_MENU";
-    } else if (hint != NULL && *hint) {
+    } else if (hint && *hint) {
         wintype_name = hint;
     } else {
         wintype_name = "_NET_WM_WINDOW_TYPE_NORMAL";
@@ -633,31 +669,6 @@ int X11_CreateWindow(_THIS, SDL_Window *window)
         return -1;
     }
     windowdata = (SDL_WindowData *)window->driverdata;
-
-#if SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2 || SDL_VIDEO_OPENGL_EGL
-    if ((window->flags & SDL_WINDOW_OPENGL) &&
-        ((_this->gl_config.profile_mask == SDL_GL_CONTEXT_PROFILE_ES) ||
-         SDL_GetHintBoolean(SDL_HINT_VIDEO_X11_FORCE_EGL, SDL_FALSE))
-#if SDL_VIDEO_OPENGL_GLX
-        && ( !_this->gl_data || X11_GL_UseEGL(_this) )
-#endif
-    ) {
-#if SDL_VIDEO_OPENGL_EGL
-        if (!_this->egl_data) {
-            return -1;
-        }
-
-        /* Create the GLES window surface */
-        windowdata->egl_surface = SDL_EGL_CreateSurface(_this, (NativeWindowType)w);
-
-        if (windowdata->egl_surface == EGL_NO_SURFACE) {
-            return SDL_SetError("Could not create GLES window surface");
-        }
-#else
-        return SDL_SetError("Could not create GLES window surface (EGL support not configured)");
-#endif /* SDL_VIDEO_OPENGL_EGL */
-    }
-#endif
 
 #ifdef X_HAVE_UTF8_STRING
     if (SDL_X11_HAVE_UTF8 && windowdata->ic) {
@@ -861,11 +872,6 @@ void X11_SetWindowMinimumSize(_THIS, SDL_Window *window)
         X11_XSetWMNormalHints(display, data->xwindow, sizehints);
 
         X11_XFree(sizehints);
-
-        /* See comment in X11_SetWindowSize. */
-        X11_XResizeWindow(display, data->xwindow, window->w, window->h);
-        X11_XMoveWindow(display, data->xwindow, window->x - data->border_left, window->y - data->border_top);
-        X11_XRaiseWindow(display, data->xwindow);
     }
 
     X11_XFlush(display);
@@ -889,11 +895,6 @@ void X11_SetWindowMaximumSize(_THIS, SDL_Window *window)
         X11_XSetWMNormalHints(display, data->xwindow, sizehints);
 
         X11_XFree(sizehints);
-
-        /* See comment in X11_SetWindowSize. */
-        X11_XResizeWindow(display, data->xwindow, window->w, window->h);
-        X11_XMoveWindow(display, data->xwindow, window->x - data->border_left, window->y - data->border_top);
-        X11_XRaiseWindow(display, data->xwindow);
     }
 
     X11_XFlush(display);
@@ -1612,7 +1613,7 @@ static void X11_ReadProperty(SDL_x11Prop *p, Display *disp, Window w, Atom prop)
     int bytes_fetch = 0;
 
     do {
-        if (ret != NULL) {
+        if (ret) {
             X11_XFree(ret);
         }
         X11_XGetWindowProperty(disp, w, prop, 0, bytes_fetch, False, AnyPropertyType, &type, &fmt, &count, &bytes_left, &ret);
@@ -1662,7 +1663,7 @@ void *X11_GetWindowICCProfile(_THIS, SDL_Window *window, size_t *size)
     }
 
     ret_icc_profile_data = SDL_malloc(real_nitems);
-    if (ret_icc_profile_data == NULL) {
+    if (!ret_icc_profile_data) {
         SDL_OutOfMemory();
         return NULL;
     }
@@ -1679,7 +1680,7 @@ void X11_SetWindowMouseGrab(_THIS, SDL_Window *window, SDL_bool grabbed)
     SDL_WindowData *data = (SDL_WindowData *)window->driverdata;
     Display *display;
 
-    if (data == NULL) {
+    if (!data) {
         return;
     }
     data->mouse_grabbed = SDL_FALSE;
@@ -1734,7 +1735,7 @@ void X11_SetWindowKeyboardGrab(_THIS, SDL_Window *window, SDL_bool grabbed)
     SDL_WindowData *data = (SDL_WindowData *)window->driverdata;
     Display *display;
 
-    if (data == NULL) {
+    if (!data) {
         return;
     }
 
@@ -1798,7 +1799,7 @@ void X11_DestroyWindow(_THIS, SDL_Window *window)
         }
         SDL_free(data);
 
-#if SDL_VIDEO_DRIVER_X11_XFIXES
+#ifdef SDL_VIDEO_DRIVER_X11_XFIXES
         /* If the pointer barriers are active for this, deactivate it.*/
         if (videodata->active_cursor_confined_window == window) {
             X11_DestroyPointerBarrier(_this, window);
@@ -1813,7 +1814,7 @@ SDL_bool X11_GetWindowWMInfo(_THIS, SDL_Window * window, SDL_SysWMinfo * info)
     SDL_WindowData *data = (SDL_WindowData *) window->driverdata;
     Display *display;
 
-    if (data == NULL) {
+    if (!data) {
         /* This sometimes happens in SDL_IBus_UpdateTextRect() while creating the window */
         SDL_SetError("Window not initialized");
         return SDL_FALSE;
@@ -1860,7 +1861,7 @@ int X11_FlashWindow(_THIS, SDL_Window *window, SDL_FlashOperation operation)
     XWMHints *wmhints;
 
     wmhints = X11_XGetWMHints(display, data->xwindow);
-    if (wmhints == NULL) {
+    if (!wmhints) {
         return SDL_SetError("Couldn't get WM hints");
     }
 

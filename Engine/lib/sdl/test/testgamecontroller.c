@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -107,9 +107,9 @@ static int virtual_axis_start_x;
 static int virtual_axis_start_y;
 static SDL_GameControllerButton virtual_button_active = SDL_CONTROLLER_BUTTON_INVALID;
 
-static void UpdateWindowTitle()
+static void UpdateWindowTitle(void)
 {
-    if (window == NULL) {
+    if (!window) {
         return;
     }
 
@@ -201,13 +201,13 @@ static void AddController(int device_index, SDL_bool verbose)
     }
 
     controller = SDL_GameControllerOpen(device_index);
-    if (controller == NULL) {
+    if (!controller) {
         SDL_Log("Couldn't open controller: %s\n", SDL_GetError());
         return;
     }
 
     controllers = (SDL_GameController **)SDL_realloc(gamecontrollers, (num_controllers + 1) * sizeof(*controllers));
-    if (controllers == NULL) {
+    if (!controllers) {
         SDL_GameControllerClose(controller);
         return;
     }
@@ -221,6 +221,7 @@ static void AddController(int device_index, SDL_bool verbose)
         const char *name = SDL_GameControllerName(gamecontroller);
         const char *path = SDL_GameControllerPath(gamecontroller);
         SDL_Log("Opened game controller %s%s%s\n", name, path ? ", " : "", path ? path : "");
+        SDL_Log("Mapping: %s\n", SDL_GameControllerMapping(gamecontroller));
     }
 
     firmware_version = SDL_GameControllerGetFirmwareVersion(gamecontroller);
@@ -328,7 +329,7 @@ typedef struct
     Uint8 ucLedBlue;                  /* 46 */
 } DS5EffectsState_t;
 
-static void CyclePS5TriggerEffect()
+static void CyclePS5TriggerEffect(void)
 {
     DS5EffectsState_t state;
 
@@ -350,7 +351,7 @@ static void CyclePS5TriggerEffect()
     SDL_GameControllerSendEffect(gamecontroller, &state, sizeof(state));
 }
 
-static SDL_bool ShowingFront()
+static SDL_bool ShowingFront(void)
 {
     SDL_bool showing_front = SDL_TRUE;
     int i;
@@ -393,7 +394,7 @@ static int SDLCALL VirtualControllerSetLED(void *userdata, Uint8 red, Uint8 gree
     return 0;
 }
 
-static void OpenVirtualController()
+static void OpenVirtualController(void)
 {
     SDL_VirtualJoystickDesc desc;
     int virtual_index;
@@ -413,13 +414,13 @@ static void OpenVirtualController()
         SDL_Log("Couldn't open virtual device: %s\n", SDL_GetError());
     } else {
         virtual_joystick = SDL_JoystickOpen(virtual_index);
-        if (virtual_joystick == NULL) {
+        if (!virtual_joystick) {
             SDL_Log("Couldn't open virtual device: %s\n", SDL_GetError());
         }
     }
 }
 
-static void CloseVirtualController()
+static void CloseVirtualController(void)
 {
     int i;
 
@@ -624,7 +625,8 @@ void loop(void *arg)
             if (event.type == SDL_CONTROLLERBUTTONDOWN) {
                 SetController(event.cbutton.which);
             }
-            SDL_Log("Controller %" SDL_PRIs32 " button %s %s\n", event.cbutton.which, SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event.cbutton.button), event.cbutton.state ? "pressed" : "released");
+            SDL_Log("Controller %" SDL_PRIs32 " button %s %s\n", event.cbutton.which, SDL_GameControllerGetStringForButton((SDL_GameControllerButton)event.cbutton.button),
+                    event.cbutton.state ? "pressed" : "released");
 
             /* Cycle PS5 trigger effects when the microphone button is pressed */
             if (event.type == SDL_CONTROLLERBUTTONDOWN &&
@@ -896,13 +898,13 @@ int main(int argc, char *argv[])
     window = SDL_CreateWindow("Game Controller Test", SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH,
                               SCREEN_HEIGHT, 0);
-    if (window == NULL) {
+    if (!window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window: %s\n", SDL_GetError());
         return 2;
     }
 
     screen = SDL_CreateRenderer(window, -1, 0);
-    if (screen == NULL) {
+    if (!screen) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create renderer: %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
         return 2;
@@ -920,7 +922,7 @@ int main(int argc, char *argv[])
     button_texture = LoadTexture(screen, "button.bmp", SDL_TRUE, NULL, NULL);
     axis_texture = LoadTexture(screen, "axis.bmp", SDL_TRUE, NULL, NULL);
 
-    if (background_front == NULL || background_back == NULL || button_texture == NULL || axis_texture == NULL) {
+    if (!background_front || !background_back || !button_texture || !axis_texture) {
         SDL_DestroyRenderer(screen);
         SDL_DestroyWindow(window);
         return 2;

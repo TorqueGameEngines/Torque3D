@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,9 +20,9 @@
 */
 
 /**
- *  \file SDL_filesystem.h
+ * # CategoryFilesystem
  *
- *  \brief Include file for filesystem SDL API functions
+ * Include file for filesystem SDL API functions
  */
 
 #ifndef SDL_filesystem_h_
@@ -64,7 +64,7 @@ extern "C" {
  * directory of the application as it is uncommon to store resources outside
  * the executable. As such it is not a writable directory.
  *
- * The returned path is guaranteed to end with a path separator ('\' on
+ * The returned path is guaranteed to end with a path separator ('\\' on
  * Windows, '/' on most other platforms).
  *
  * The pointer returned is owned by the caller. Please call SDL_free() on the
@@ -120,14 +120,14 @@ extern DECLSPEC char *SDLCALL SDL_GetBasePath(void);
  * - ...only use letters, numbers, and spaces. Avoid punctuation like "Game
  *   Name 2: Bad Guy's Revenge!" ... "Game Name 2" is sufficient.
  *
- * The returned path is guaranteed to end with a path separator ('\' on
+ * The returned path is guaranteed to end with a path separator ('\\' on
  * Windows, '/' on most other platforms).
  *
  * The pointer returned is owned by the caller. Please call SDL_free() on the
  * pointer when done with it.
  *
- * \param org the name of your organization
- * \param app the name of your application
+ * \param org the name of your organization.
+ * \param app the name of your application.
  * \returns a UTF-8 string of the user directory in platform-dependent
  *          notation. NULL if there's a problem (creating directory failed,
  *          etc.).

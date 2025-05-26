@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_DRIVER_UIKIT
+#ifdef SDL_VIDEO_DRIVER_UIKIT
 
 #include "../../events/SDL_events_c.h"
 
@@ -110,10 +110,11 @@ static BOOL UIKit_EventPumpEnabled = YES;
 
 void SDL_iPhoneSetEventPump(SDL_bool enabled)
 {
-    UIKit_EventPumpEnabled = enabled;
-
     static SDL_LifecycleObserver *lifecycleObserver;
     static dispatch_once_t onceToken;
+
+    UIKit_EventPumpEnabled = enabled;
+
     dispatch_once(&onceToken, ^{
         lifecycleObserver = [SDL_LifecycleObserver new];
     });
@@ -122,10 +123,6 @@ void SDL_iPhoneSetEventPump(SDL_bool enabled)
 
 void UIKit_PumpEvents(_THIS)
 {
-    if (!UIKit_EventPumpEnabled) {
-        return;
-    }
-
     /* Let the run loop run for a short amount of time: long enough for
        touch events to get processed (which is important to get certain
        elements of Game Center's GKLeaderboardViewController to respond
@@ -133,9 +130,12 @@ void UIKit_PumpEvents(_THIS)
        delay in the rest of the app.
     */
     const CFTimeInterval seconds = 0.000002;
+    SInt32 result;
+    if (!UIKit_EventPumpEnabled) {
+        return;
+    }
 
     /* Pump most event types. */
-    SInt32 result;
     do {
         result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, seconds, TRUE);
     } while (result == kCFRunLoopRunHandledSource);
@@ -146,7 +146,7 @@ void UIKit_PumpEvents(_THIS)
     } while(result == kCFRunLoopRunHandledSource);
 
     /* See the comment in the function definition. */
-#if SDL_VIDEO_OPENGL_ES || SDL_VIDEO_OPENGL_ES2
+#if defined(SDL_VIDEO_OPENGL_ES) || defined(SDL_VIDEO_OPENGL_ES2)
     UIKit_GL_RestoreCurrentContext();
 #endif
 }
@@ -159,13 +159,14 @@ static id keyboard_disconnect_observer = nil;
 
 static void OnGCKeyboardConnected(GCKeyboard *keyboard) API_AVAILABLE(macos(11.0), ios(14.0), tvos(14.0))
 {
+    dispatch_queue_t queue;
     keyboard_connected = SDL_TRUE;
     keyboard.keyboardInput.keyChangedHandler = ^(GCKeyboardInput *kbrd, GCControllerButtonInput *key, GCKeyCode keyCode, BOOL pressed)
     {
         SDL_SendKeyboardKey(pressed ? SDL_PRESSED : SDL_RELEASED, (SDL_Scancode)keyCode);
     };
 
-    dispatch_queue_t queue = dispatch_queue_create( "org.libsdl.input.keyboard", DISPATCH_QUEUE_SERIAL );
+    queue = dispatch_queue_create( "org.libsdl.input.keyboard", DISPATCH_QUEUE_SERIAL );
     dispatch_set_target_queue( queue, dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_HIGH, 0 ) );
     keyboard.handlerQueue = queue;
 }
@@ -257,8 +258,33 @@ static int mice_connected = 0;
 static id mouse_connect_observer = nil;
 static id mouse_disconnect_observer = nil;
 static bool mouse_relative_mode = SDL_FALSE;
+static SDL_MouseWheelDirection mouse_scroll_direction = SDL_MOUSEWHEEL_NORMAL;
 
-static void UpdatePointerLock()
+static void UpdateScrollDirection(void)
+{
+#if 0 /* This code doesn't work for some reason */
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    if ([userDefaults boolForKey:@"com.apple.swipescrolldirection"]) {
+        mouse_scroll_direction = SDL_MOUSEWHEEL_FLIPPED;
+    } else {
+        mouse_scroll_direction = SDL_MOUSEWHEEL_NORMAL;
+    }
+#else
+    Boolean keyExistsAndHasValidFormat = NO;
+    Boolean naturalScrollDirection = CFPreferencesGetAppBooleanValue(CFSTR("com.apple.swipescrolldirection"), kCFPreferencesAnyApplication, &keyExistsAndHasValidFormat);
+    if (!keyExistsAndHasValidFormat) {
+        /* Couldn't read the preference, assume natural scrolling direction */
+        naturalScrollDirection = YES;
+    }
+    if (naturalScrollDirection) {
+        mouse_scroll_direction = SDL_MOUSEWHEEL_FLIPPED;
+    } else {
+        mouse_scroll_direction = SDL_MOUSEWHEEL_NORMAL;
+    }
+#endif
+}
+
+static void UpdatePointerLock(void)
 {
     SDL_VideoDevice *_this = SDL_GetVideoDevice();
     SDL_Window *window;
@@ -282,6 +308,8 @@ static void OnGCMouseButtonChanged(SDL_MouseID mouseID, Uint8 button, BOOL press
 
 static void OnGCMouseConnected(GCMouse *mouse) API_AVAILABLE(macos(11.0), ios(14.0), tvos(14.0))
 {
+    int auxiliary_button;
+    dispatch_queue_t queue;
     SDL_MouseID mouseID = mice_connected;
 
     mouse.mouseInput.leftButton.pressedChangedHandler = ^(GCControllerButtonInput *button, float value, BOOL pressed)
@@ -297,7 +325,7 @@ static void OnGCMouseConnected(GCMouse *mouse) API_AVAILABLE(macos(11.0), ios(14
         OnGCMouseButtonChanged(mouseID, SDL_BUTTON_RIGHT, pressed);
     };
 
-    int auxiliary_button = SDL_BUTTON_X1;
+    auxiliary_button = SDL_BUTTON_X1;
     for (GCControllerButtonInput *btn in mouse.mouseInput.auxiliaryButtons) {
         btn.pressedChangedHandler = ^(GCControllerButtonInput *button, float value, BOOL pressed)
         {
@@ -313,12 +341,24 @@ static void OnGCMouseConnected(GCMouse *mouse) API_AVAILABLE(macos(11.0), ios(14
         }
     };
 
-    mouse.mouseInput.scroll.valueChangedHandler = ^(GCControllerDirectionPad *dpad, float xValue, float yValue)
-    {
-        SDL_SendMouseWheel(SDL_GetMouseFocus(), 0, xValue, yValue, SDL_MOUSEWHEEL_NORMAL);
+    mouse.mouseInput.scroll.valueChangedHandler = ^(GCControllerDirectionPad *dpad, float xValue, float yValue) {
+        /* Raw scroll values come in here, vertical values in the first axis, horizontal values in the second axis.
+         * The vertical values are negative moving the mouse wheel up and positive moving it down.
+         * The horizontal values are negative moving the mouse wheel left and positive moving it right.
+         * The vertical values are inverted compared to SDL, and the horizontal values are as expected.
+         */
+        float vertical = -xValue;
+        float horizontal = yValue;
+        if (mouse_scroll_direction == SDL_MOUSEWHEEL_FLIPPED) {
+            /* Since these are raw values, we need to flip them ourselves */
+            vertical = -vertical;
+            horizontal = -horizontal;
+        }
+        SDL_SendMouseWheel(SDL_GetMouseFocus(), mouseID, horizontal, vertical, mouse_scroll_direction);
     };
+    UpdateScrollDirection();
 
-    dispatch_queue_t queue = dispatch_queue_create( "org.libsdl.input.mouse", DISPATCH_QUEUE_SERIAL );
+    queue = dispatch_queue_create( "org.libsdl.input.mouse", DISPATCH_QUEUE_SERIAL );
     dispatch_set_target_queue( queue, dispatch_get_global_queue( DISPATCH_QUEUE_PRIORITY_HIGH, 0 ) );
     mouse.handlerQueue = queue;
 

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -40,11 +40,11 @@
 
 /* #define DEBUG_RAZOR */
 
-#if DEBUG_RAZOR
+#ifdef DEBUG_RAZOR
 #include <psp2/sysmodule.h>
 #endif
 
-static SDL_Renderer *VITA_GXM_CreateRenderer(SDL_Window *window, Uint32 flags);
+static int VITA_GXM_CreateRenderer(SDL_Renderer *renderer, SDL_Window *window, Uint32 flags);
 
 static void VITA_GXM_WindowEvent(SDL_Renderer *renderer, const SDL_WindowEvent *event);
 
@@ -169,7 +169,7 @@ void StartDrawing(SDL_Renderer *renderer)
     //    data->colorFragmentProgram = in->color;
     //    data->textureFragmentProgram = in->texture;
 
-    if (renderer->target == NULL) {
+    if (!renderer->target) {
         sceGxmBeginScene(
             data->gxm_context,
             0,
@@ -211,22 +211,13 @@ static int VITA_GXM_SetVSync(SDL_Renderer *renderer, const int vsync)
     return 0;
 }
 
-SDL_Renderer *VITA_GXM_CreateRenderer(SDL_Window *window, Uint32 flags)
+int VITA_GXM_CreateRenderer(SDL_Renderer *renderer, SDL_Window *window, Uint32 flags)
 {
-    SDL_Renderer *renderer;
     VITA_GXM_RenderData *data;
 
-    renderer = (SDL_Renderer *)SDL_calloc(1, sizeof(*renderer));
-    if (renderer == NULL) {
-        SDL_OutOfMemory();
-        return NULL;
-    }
-
     data = (VITA_GXM_RenderData *)SDL_calloc(1, sizeof(VITA_GXM_RenderData));
-    if (data == NULL) {
-        SDL_free(renderer);
-        SDL_OutOfMemory();
-        return NULL;
+    if (!data) {
+        return SDL_OutOfMemory();
     }
 
     renderer->WindowEvent = VITA_GXM_WindowEvent;
@@ -266,18 +257,17 @@ SDL_Renderer *VITA_GXM_CreateRenderer(SDL_Window *window, Uint32 flags)
         data->displayData.wait_vblank = SDL_FALSE;
     }
 
-#if DEBUG_RAZOR
+#ifdef DEBUG_RAZOR
     sceSysmoduleLoadModule(SCE_SYSMODULE_RAZOR_HUD);
     sceSysmoduleLoadModule(SCE_SYSMODULE_RAZOR_CAPTURE);
 #endif
 
     if (gxm_init(renderer) != 0) {
         SDL_free(data);
-        SDL_free(renderer);
-        return NULL;
+        return -1;
     }
 
-    return renderer;
+    return 0;
 }
 
 static void VITA_GXM_WindowEvent(SDL_Renderer *renderer, const SDL_WindowEvent *event)
@@ -295,7 +285,7 @@ static int VITA_GXM_CreateTexture(SDL_Renderer *renderer, SDL_Texture *texture)
     VITA_GXM_RenderData *data = (VITA_GXM_RenderData *)renderer->driverdata;
     VITA_GXM_TextureData *vita_texture = (VITA_GXM_TextureData *)SDL_calloc(1, sizeof(VITA_GXM_TextureData));
 
-    if (vita_texture == NULL) {
+    if (!vita_texture) {
         return SDL_OutOfMemory();
     }
 
@@ -366,6 +356,7 @@ static int VITA_GXM_UpdateTexture(SDL_Renderer *renderer, SDL_Texture *texture,
     length = rect->w * SDL_BYTESPERPIXEL(texture->format);
     if (length == pitch && length == dpitch) {
         SDL_memcpy(dst, pixels, length * rect->h);
+        pixels += pitch * rect->h;
     } else {
         for (row = 0; row < rect->h; ++row) {
             SDL_memcpy(dst, pixels, length);
@@ -393,6 +384,7 @@ static int VITA_GXM_UpdateTexture(SDL_Renderer *renderer, SDL_Texture *texture,
         // U plane
         if (length == uv_src_pitch && length == uv_pitch) {
             SDL_memcpy(Udst, pixels, length * UVrect.h);
+            pixels += uv_src_pitch * UVrect.h;
         } else {
             for (row = 0; row < UVrect.h; ++row) {
                 SDL_memcpy(Udst, pixels, length);
@@ -583,7 +575,7 @@ static int VITA_GXM_LockTexture(SDL_Renderer *renderer, SDL_Texture *texture,
     *pitch = vita_texture->pitch;
 
     // make sure that rendering is finished on render target textures
-    if (vita_texture->tex->gxm_rendertarget != NULL) {
+    if (vita_texture->tex->gxm_rendertarget) {
         sceGxmFinish(data->gxm_context);
     }
 
@@ -733,7 +725,7 @@ static int VITA_GXM_QueueGeometry(SDL_Renderer *renderer, SDL_RenderCommand *cmd
             data,
             count * sizeof(texture_vertex));
 
-        if (vertices == NULL) {
+        if (!vertices) {
             return -1;
         }
 
@@ -772,7 +764,7 @@ static int VITA_GXM_QueueGeometry(SDL_Renderer *renderer, SDL_RenderCommand *cmd
             data,
             count * sizeof(color_vertex));
 
-        if (vertices == NULL) {
+        if (!vertices) {
             return -1;
         }
 
@@ -956,6 +948,7 @@ static int VITA_GXM_RunCommandQueue(SDL_Renderer *renderer, SDL_RenderCommand *c
             if (SDL_memcmp(viewport, &cmd->data.viewport.rect, sizeof(cmd->data.viewport.rect)) != 0) {
                 SDL_copyp(viewport, &cmd->data.viewport.rect);
                 data->drawstate.viewport_dirty = SDL_TRUE;
+                data->drawstate.cliprect_dirty = SDL_TRUE;
             }
             break;
         }
@@ -1006,7 +999,7 @@ static int VITA_GXM_RunCommandQueue(SDL_Renderer *renderer, SDL_RenderCommand *c
             SDL_RenderCommand *nextcmd = cmd->next;
             size_t count = cmd->data.draw.count;
             int ret;
-            while (nextcmd != NULL) {
+            while (nextcmd) {
                 const SDL_RenderCommandType nextcmdtype = nextcmd->command;
                 if (nextcmdtype != thiscmdtype) {
                     break; /* can't go any further on this draw call, different render command up next. */
@@ -1103,7 +1096,7 @@ static int VITA_GXM_RenderReadPixels(SDL_Renderer *renderer, const SDL_Rect *rec
     }
 
     temp_pixels = SDL_malloc(buflen);
-    if (temp_pixels == NULL) {
+    if (!temp_pixels) {
         return SDL_OutOfMemory();
     }
 
@@ -1161,7 +1154,7 @@ static int VITA_GXM_RenderPresent(SDL_Renderer *renderer)
 
     sceCommonDialogUpdate(&updateParam);
 
-#if DEBUG_RAZOR
+#ifdef DEBUG_RAZOR
     sceGxmPadHeartbeat(
         (const SceGxmColorSurface *)&data->displaySurface[data->backBufferIndex],
         (SceGxmSyncObject *)data->displayBufferSync[data->backBufferIndex]);
@@ -1186,15 +1179,15 @@ static void VITA_GXM_DestroyTexture(SDL_Renderer *renderer, SDL_Texture *texture
     VITA_GXM_RenderData *data = (VITA_GXM_RenderData *)renderer->driverdata;
     VITA_GXM_TextureData *vita_texture = (VITA_GXM_TextureData *)texture->driverdata;
 
-    if (data == NULL) {
+    if (!data) {
         return;
     }
 
-    if (vita_texture == NULL) {
+    if (!vita_texture) {
         return;
     }
 
-    if (vita_texture->tex == NULL) {
+    if (!vita_texture->tex) {
         return;
     }
 
@@ -1221,7 +1214,6 @@ static void VITA_GXM_DestroyRenderer(SDL_Renderer *renderer)
         data->drawing = SDL_FALSE;
         SDL_free(data);
     }
-    SDL_free(renderer);
 }
 
 #endif /* SDL_VIDEO_RENDER_VITA_GXM */

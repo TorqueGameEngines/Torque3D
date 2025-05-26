@@ -1,6 +1,6 @@
  /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_DRIVER_UIKIT
+#ifdef SDL_VIDEO_DRIVER_UIKIT
 
 #include "SDL_uikitview.h"
 
@@ -38,7 +38,7 @@
 #define MAX_MOUSE_BUTTONS    5
 
 /* This is defined in SDL_sysjoystick.m */
-#if !SDL_JOYSTICK_DISABLED
+#ifndef SDL_JOYSTICK_DISABLED
 extern int SDL_AppleTVRemoteOpenedAsJoystick;
 #endif
 
@@ -53,20 +53,25 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
 {
     if ((self = [super initWithFrame:frame])) {
 #if TARGET_OS_TV
+        UISwipeGestureRecognizer *swipeUp;
+        UISwipeGestureRecognizer *swipeDown;
+        UISwipeGestureRecognizer *swipeLeft;
+        UISwipeGestureRecognizer *swipeRight;
+
         /* Apple TV Remote touchpad swipe gestures. */
-        UISwipeGestureRecognizer *swipeUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
+        swipeUp = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
         swipeUp.direction = UISwipeGestureRecognizerDirectionUp;
         [self addGestureRecognizer:swipeUp];
 
-        UISwipeGestureRecognizer *swipeDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
+        swipeDown = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
         swipeDown.direction = UISwipeGestureRecognizerDirectionDown;
         [self addGestureRecognizer:swipeDown];
 
-        UISwipeGestureRecognizer *swipeLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
+        swipeLeft = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
         swipeLeft.direction = UISwipeGestureRecognizerDirectionLeft;
         [self addGestureRecognizer:swipeLeft];
 
-        UISwipeGestureRecognizer *swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
+        swipeRight = [[UISwipeGestureRecognizer alloc] initWithTarget:self action:@selector(swipeGesture:)];
         swipeRight.direction = UISwipeGestureRecognizerDirectionRight;
         [self addGestureRecognizer:swipeRight];
 #endif
@@ -257,6 +262,7 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
         }
 #endif
         if (!handled) {
+            CGPoint locationInView;
             SDL_TouchDeviceType touchType = [self touchTypeForTouch:touch];
             SDL_TouchID touchId = [self touchIdForType:touchType];
             float pressure = [self pressureForTouch:touch];
@@ -267,7 +273,7 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
 
             /* FIXME, need to send: int clicks = (int) touch.tapCount; ? */
 
-            CGPoint locationInView = [self touchLocation:touch shouldNormalize:YES];
+            locationInView = [self touchLocation:touch shouldNormalize:YES];
             SDL_SendTouch(touchId, (SDL_FingerID)((size_t)touch), sdlwindow,
                           SDL_TRUE, locationInView.x, locationInView.y, pressure);
         }
@@ -312,6 +318,7 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
         }
 #endif
         if (!handled) {
+            CGPoint locationInView;
             SDL_TouchDeviceType touchType = [self touchTypeForTouch:touch];
             SDL_TouchID touchId = [self touchIdForType:touchType];
             float pressure = [self pressureForTouch:touch];
@@ -322,7 +329,7 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
 
             /* FIXME, need to send: int clicks = (int) touch.tapCount; ? */
 
-            CGPoint locationInView = [self touchLocation:touch shouldNormalize:YES];
+            locationInView = [self touchLocation:touch shouldNormalize:YES];
             SDL_SendTouch(touchId, (SDL_FingerID)((size_t)touch), sdlwindow,
                           SDL_FALSE, locationInView.x, locationInView.y, pressure);
         }
@@ -348,6 +355,7 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
         }
 #endif
         if (!handled) {
+            CGPoint locationInView;
             SDL_TouchDeviceType touchType = [self touchTypeForTouch:touch];
             SDL_TouchID touchId = [self touchIdForType:touchType];
             float pressure = [self pressureForTouch:touch];
@@ -356,7 +364,7 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
                 continue;
             }
 
-            CGPoint locationInView = [self touchLocation:touch shouldNormalize:YES];
+            locationInView = [self touchLocation:touch shouldNormalize:YES];
             SDL_SendTouchMotion(touchId, (SDL_FingerID)((size_t)touch), sdlwindow,
                                 locationInView.x, locationInView.y, pressure);
         }
@@ -374,7 +382,7 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
     }
 #endif
 
-#if !SDL_JOYSTICK_DISABLED
+#ifndef SDL_JOYSTICK_DISABLED
     /* Presses from Apple TV remote */
     if (!SDL_AppleTVRemoteOpenedAsJoystick) {
         switch (press.type) {
@@ -458,7 +466,7 @@ extern int SDL_AppleTVRemoteOpenedAsJoystick;
 {
     /* Swipe gestures don't trigger begin states. */
     if (gesture.state == UIGestureRecognizerStateEnded) {
-#if !SDL_JOYSTICK_DISABLED
+#ifndef SDL_JOYSTICK_DISABLED
         if (!SDL_AppleTVRemoteOpenedAsJoystick) {
             /* Send arrow key presses for now, as we don't have an external API
              * which better maps to swipe gestures. */

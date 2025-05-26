@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -20,7 +20,7 @@
 */
 #include "../../SDL_internal.h"
 
-#if SDL_VIDEO_DRIVER_WAYLAND
+#ifdef SDL_VIDEO_DRIVER_WAYLAND
 
 #include "../SDL_sysvideo.h"
 #include "SDL_waylandvideo.h"
@@ -32,7 +32,7 @@ int Wayland_InitKeyboard(_THIS)
 {
 #ifdef SDL_USE_IME
     SDL_VideoData *driverdata = _this->driverdata;
-    if (driverdata->text_input_manager == NULL) {
+    if (!driverdata->text_input_manager) {
         SDL_IME_Init();
     }
 #endif
@@ -45,7 +45,7 @@ void Wayland_QuitKeyboard(_THIS)
 {
 #ifdef SDL_USE_IME
     SDL_VideoData *driverdata = _this->driverdata;
-    if (driverdata->text_input_manager == NULL) {
+    if (!driverdata->text_input_manager) {
         SDL_IME_Quit();
     }
 #endif
@@ -54,25 +54,13 @@ void Wayland_QuitKeyboard(_THIS)
 void Wayland_StartTextInput(_THIS)
 {
     SDL_VideoData *driverdata = _this->driverdata;
+    struct SDL_WaylandInput *input = driverdata->input;
 
     if (driverdata->text_input_manager) {
-        struct SDL_WaylandInput *input = driverdata->input;
-        if (input != NULL && input->text_input) {
+        if (input && input->text_input) {
             const SDL_Rect *rect = &input->text_input->cursor_rect;
 
-            /* Don't re-enable if we're already enabled. */
-            if (input->text_input->is_enabled) {
-                return;
-            }
-
-            /* For some reason this has to be done twice, it appears to be a
-             * bug in mutter? Maybe?
-             * -flibit
-             */
             zwp_text_input_v3_enable(input->text_input->text_input);
-            zwp_text_input_v3_commit(input->text_input->text_input);
-            zwp_text_input_v3_enable(input->text_input->text_input);
-            zwp_text_input_v3_commit(input->text_input->text_input);
 
             /* Now that it's enabled, set the input properties */
             zwp_text_input_v3_set_content_type(input->text_input->text_input,
@@ -87,43 +75,50 @@ void Wayland_StartTextInput(_THIS)
                                                        rect->h);
             }
             zwp_text_input_v3_commit(input->text_input->text_input);
-            input->text_input->is_enabled = SDL_TRUE;
         }
+    }
+
+    if (input && input->xkb.compose_state) {
+        /* Reset compose state so composite and dead keys don't carry over */
+        WAYLAND_xkb_compose_state_reset(input->xkb.compose_state);
     }
 }
 
 void Wayland_StopTextInput(_THIS)
 {
     SDL_VideoData *driverdata = _this->driverdata;
+    struct SDL_WaylandInput *input = driverdata->input;
 
     if (driverdata->text_input_manager) {
-        struct SDL_WaylandInput *input = driverdata->input;
-        if (input != NULL && input->text_input) {
+        if (input && input->text_input) {
             zwp_text_input_v3_disable(input->text_input->text_input);
             zwp_text_input_v3_commit(input->text_input->text_input);
-            input->text_input->is_enabled = SDL_FALSE;
         }
     }
-
 #ifdef SDL_USE_IME
     else {
         SDL_IME_Reset();
     }
 #endif
+
+    if (input && input->xkb.compose_state) {
+        /* Reset compose state so composite and dead keys don't carry over */
+        WAYLAND_xkb_compose_state_reset(input->xkb.compose_state);
+    }
 }
 
 void Wayland_SetTextInputRect(_THIS, const SDL_Rect *rect)
 {
     SDL_VideoData *driverdata = _this->driverdata;
 
-    if (rect == NULL) {
+    if (!rect) {
         SDL_InvalidParamError("rect");
         return;
     }
 
     if (driverdata->text_input_manager) {
         struct SDL_WaylandInput *input = driverdata->input;
-        if (input != NULL && input->text_input) {
+        if (input && input->text_input) {
             if (!SDL_RectEquals(rect, &input->text_input->cursor_rect)) {
                 SDL_copyp(&input->text_input->cursor_rect, rect);
                 zwp_text_input_v3_set_cursor_rectangle(input->text_input->text_input,

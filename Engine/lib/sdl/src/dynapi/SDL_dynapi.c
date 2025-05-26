@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -195,7 +195,7 @@ static SDL_DYNAPI_jump_table jump_table = {
         SDL_InitDynamicAPI();                      \
         ret jump_table.fn args;                    \
     }
-#define SDL_DYNAPI_PROC_NO_VARARGS 1
+#define SDL_DYNAPI_PROC_NO_VARARGS
 #include "SDL_dynapi_procs.h"
 #undef SDL_DYNAPI_PROC
 #undef SDL_DYNAPI_PROC_NO_VARARGS
@@ -212,7 +212,7 @@ SDL_DYNAPI_VARARGS(static, _DEFAULT, SDL_InitDynamicAPI())
     {                                              \
         ret jump_table.fn args;                    \
     }
-#define SDL_DYNAPI_PROC_NO_VARARGS 1
+#define SDL_DYNAPI_PROC_NO_VARARGS
 #include "SDL_dynapi_procs.h"
 #undef SDL_DYNAPI_PROC
 #undef SDL_DYNAPI_PROC_NO_VARARGS
@@ -295,7 +295,7 @@ SDL_DYNAPI_VARARGS_LOGFN_LOGSDLCALLS(Error, ERROR)
 SDL_DYNAPI_VARARGS_LOGFN_LOGSDLCALLS(Critical, CRITICAL)
 #define SDL_DYNAPI_PROC(rc,fn,params,args,ret) \
     rc SDLCALL fn##_LOGSDLCALLS params { SDL_Log_REAL("SDL2CALL %s", #fn); ret fn##_REAL args; }
-#define SDL_DYNAPI_PROC_NO_VARARGS 1
+#define SDL_DYNAPI_PROC_NO_VARARGS
 #include "SDL_dynapi_procs.h"
 #undef SDL_DYNAPI_PROC
 #undef SDL_DYNAPI_PROC_NO_VARARGS
@@ -372,7 +372,7 @@ static SDL_INLINE void *get_sdlapi_entry(const char *fname, const char *sym)
     void *retval = NULL;
     if (lib) {
         retval = (void *) GetProcAddress(lib, sym);
-        if (retval == NULL) {
+        if (!retval) {
             FreeLibrary(lib);
         }
     }
@@ -385,9 +385,9 @@ static SDL_INLINE void *get_sdlapi_entry(const char *fname, const char *sym)
 {
     void *lib = dlopen(fname, RTLD_NOW | RTLD_LOCAL);
     void *retval = NULL;
-    if (lib != NULL) {
+    if (lib) {
         retval = dlsym(lib, sym);
-        if (retval == NULL) {
+        if (!retval) {
             dlclose(lib);
         }
     }
@@ -440,9 +440,23 @@ extern SDL_NORETURN void SDL_ExitProcess(int exitcode);
 
 static void SDL_InitDynamicAPILocked(void)
 {
-    char *libname = SDL_getenv_REAL(SDL_DYNAMIC_API_ENVVAR);
     SDL_DYNAPI_ENTRYFN entry = NULL; /* funcs from here by default. */
     SDL_bool use_internal = SDL_TRUE;
+
+    /* this can't use SDL_getenv_REAL, because it might allocate memory before the app can set their allocator */
+#if defined(WIN32) || defined(_WIN32) || defined(__CYGWIN__)
+    /* We've always used LoadLibraryA for this, so this has never worked with Unicode paths on Windows. Sorry. */
+    char envbuf[512];  /* overflows will just report as environment variable being unset, but LoadLibraryA has a MAX_PATH of 260 anyhow, apparently. */
+    const DWORD rc = GetEnvironmentVariableA(SDL_DYNAMIC_API_ENVVAR, envbuf, (DWORD) sizeof (envbuf));
+    char *libname = ((rc != 0) && (rc < sizeof (envbuf))) ? envbuf : NULL;
+#elif defined(__OS2__)
+    char * libname;
+    if (DosScanEnv(SDL_DYNAMIC_API_ENVVAR, &libname) != NO_ERROR) {
+        libname = NULL;
+    }
+#else
+    char *libname = getenv(SDL_DYNAMIC_API_ENVVAR);
+#endif
 
     if (libname) {
         while (*libname && !entry) {
@@ -505,7 +519,7 @@ static void SDL_InitDynamicAPI(void)
     /* SDL_AtomicLock calls SDL mutex functions to emulate if
        SDL_ATOMIC_DISABLED, which we can't do here, so in such a
        configuration, you're on your own. */
-    #if !SDL_ATOMIC_DISABLED
+    #ifndef SDL_ATOMIC_DISABLED
     static SDL_SpinLock lock = 0;
     SDL_AtomicLock_REAL(&lock);
     #endif
@@ -515,7 +529,7 @@ static void SDL_InitDynamicAPI(void)
         already_initialized = SDL_TRUE;
     }
 
-    #if !SDL_ATOMIC_DISABLED
+    #ifndef SDL_ATOMIC_DISABLED
     SDL_AtomicUnlock_REAL(&lock);
     #endif
 }

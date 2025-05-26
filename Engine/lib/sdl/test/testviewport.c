@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -95,7 +95,7 @@ void DrawOnViewport(SDL_Renderer *renderer)
     SDL_RenderSetClipRect(renderer, NULL);
 }
 
-void loop()
+void loop(void)
 {
     SDL_Event event;
     int i;
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
 
     /* Initialize test framework */
     state = SDLTest_CommonCreateState(argv, SDL_INIT_VIDEO);
-    if (state == NULL) {
+    if (!state) {
         return 1;
     }
 
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 
     sprite = LoadTexture(state->renderers[0], "icon.bmp", SDL_TRUE, &sprite_w, &sprite_h);
 
-    if (sprite == NULL) {
+    if (!sprite) {
         quit(2);
     }
 

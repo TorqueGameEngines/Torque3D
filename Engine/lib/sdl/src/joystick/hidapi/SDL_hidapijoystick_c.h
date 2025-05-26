@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2023 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2025 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -39,6 +39,7 @@
 #define SDL_JOYSTICK_HIDAPI_PS5
 #define SDL_JOYSTICK_HIDAPI_STADIA
 #define SDL_JOYSTICK_HIDAPI_STEAM /* Simple support for BLE Steam Controller, hint is disabled by default */
+#define SDL_JOYSTICK_HIDAPI_STEAMDECK
 #define SDL_JOYSTICK_HIDAPI_SWITCH
 #define SDL_JOYSTICK_HIDAPI_WII
 #define SDL_JOYSTICK_HIDAPI_XBOX360
@@ -46,7 +47,14 @@
 #define SDL_JOYSTICK_HIDAPI_SHIELD
 
 /* Whether HIDAPI is enabled by default */
+#if defined(__ANDROID__) || \
+    defined(__IPHONEOS__) || \
+    defined(__TVOS__)
+/* On Android, HIDAPI prompts for permissions and acquires exclusive access to the device, and on Apple mobile platforms it doesn't do anything except for handling Bluetooth Steam Controllers, so we'll leave it off by default. */
+#define SDL_HIDAPI_DEFAULT SDL_FALSE
+#else
 #define SDL_HIDAPI_DEFAULT SDL_TRUE
+#endif
 
 /* The maximum size of a USB packet for HID devices */
 #define USB_PACKET_LENGTH 64
@@ -58,6 +66,8 @@ typedef struct _SDL_HIDAPI_Device
 {
     const void *magic;
     char *name;
+    char *manufacturer_string;
+    char *product_string;
     char *path;
     Uint16 vendor_id;
     Uint16 product_id;
@@ -73,6 +83,7 @@ typedef struct _SDL_HIDAPI_Device
     SDL_bool is_bluetooth;
     SDL_JoystickType joystick_type;
     SDL_GameControllerType type;
+    int steam_virtual_gamepad_slot;
 
     struct _SDL_HIDAPI_DeviceDriver *driver;
     void *context;
@@ -132,6 +143,7 @@ extern SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverPS5;
 extern SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverShield;
 extern SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverStadia;
 extern SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverSteam;
+extern SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverSteamDeck;
 extern SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverSwitch;
 extern SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverWii;
 extern SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverXbox360;

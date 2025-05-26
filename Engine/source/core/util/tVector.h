@@ -407,7 +407,7 @@ template<class T> inline void Vector<T>::insert(U32 index)
 
    dMemmove(&mArray[index + 1],
                     &mArray[index],
-                    (mElementCount - index - 1) * sizeof(value_type));
+                    dsize_t(mElementCount - index - 1) * sizeof(value_type));
    
    constructInPlace(&mArray[index]);
 }
@@ -428,7 +428,7 @@ template<class T> inline void Vector<T>::erase(U32 index)
    {
       dMemmove(&mArray[index],
          &mArray[index + 1],
-         (mElementCount - index - 1) * sizeof(value_type));
+         dsize_t(mElementCount - index - 1) * sizeof(value_type));
    }
 
    mElementCount--;
@@ -461,7 +461,7 @@ template<class T> inline void Vector<T>::erase(U32 index, U32 count)
 
    dMemmove(   &mArray[index],
                &mArray[index + count],
-               (mElementCount - index - count) * sizeof(value_type));
+               dsize_t(mElementCount - index - count) * sizeof(value_type));
 
    mElementCount -= count;
 }

@@ -299,6 +299,7 @@ struct RenderInst
 
    /// Does a memset to clear the render instance.
    void clear();
+   RenderInst() { clear(); }
 };
 
 struct ObjectRenderInst : public RenderInst
@@ -327,6 +328,7 @@ struct ObjectRenderInst : public RenderInst
 
    // Clear this instance.
    void clear();
+   ObjectRenderInst() { clear(); }
 };
 
 struct MeshRenderInst : public RenderInst
@@ -397,6 +399,7 @@ struct MeshRenderInst : public RenderInst
    Vector<CustomShaderBindingData> mCustomShaderData;
 
    void clear();
+   MeshRenderInst() { clear(); };
 };
 
 enum ParticleSystemState
@@ -455,6 +458,7 @@ struct ParticleRenderInst : public RenderInst
    GFXTextureObject *diffuseTex;
 
    void clear();
+   ParticleRenderInst() { clear(); }
 };
 
 class GFXOcclusionQuery;
@@ -477,6 +481,7 @@ struct OccluderRenderInst : public RenderInst
    bool isSphere;
 
    void clear();
+   OccluderRenderInst() { clear(); }
 };
 
 #endif // _RENDERPASSMANAGER_H_

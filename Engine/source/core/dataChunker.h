@@ -41,7 +41,7 @@ public:
 
    struct alignas(uintptr_t) DataBlock : public AlignedBufferAllocator<T>
    {
-      DataBlock* mNext;
+      DataBlock* mNext = NULL;
 
       inline DataBlock* getEnd()
       {

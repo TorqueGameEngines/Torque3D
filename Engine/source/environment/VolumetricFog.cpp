@@ -303,7 +303,8 @@ void VolumetricFog::onRemove()
       GuiCanvas::getCanvasSizeChangeSignal().remove(this, &VolumetricFog::handleCanvasResize);
    }
    removeFromScene();
-   VFRTM->DecFogObjects();
+   if (VFRTM)
+      VFRTM->DecFogObjects();
    Parent::onRemove();
 }
 void VolumetricFog::handleCanvasResize(GuiCanvas* canvas)

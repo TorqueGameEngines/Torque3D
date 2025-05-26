@@ -233,7 +233,7 @@ SFXEmitter::SFXEmitter()
 
 SFXEmitter::~SFXEmitter()
 {
-   if (mLocalProfile->getRefCount() && !mLocalProfile->isDeleted())
+   if (mLocalProfile && mLocalProfile->getRefCount() && !mLocalProfile->isDeleted())
       mLocalProfile->onRemove();
 
    SFX_DELETE( mSource );

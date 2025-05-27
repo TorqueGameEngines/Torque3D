@@ -1101,7 +1101,7 @@ function MaterialEditorGui::guiSync( %this, %material )
    %diffuseMap = (%material).getDiffuseMap(%layer);
    %diffuseMapText = %diffuseMap !$= "" && %diffuseMap !$=$MaterialEditor::emptyMaterialImage ? (%material).getDiffuseMapAsset(%layer) : "None";
    MaterialEditorPropertiesWindow-->diffuseMapNameText.setText( %diffuseMapText );      
-   MaterialEditorPropertiesWindow-->diffuseMapDisplayBitmap.setBitmap( getAssetPreviewImage(%diffuseMapText) );
+   MaterialEditorPropertiesWindow-->diffuseMapDisplayBitmap.setBitmap( getAssetPreviewImage(%diffuseMap) );
  
    //Normal
    %normalMap = (%material).getNormalMap(%layer);

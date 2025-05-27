@@ -2482,7 +2482,7 @@ const char* AssetManager::getAssetLooseFile(const char* pAssetId, const S32& ind
    {
       // No, so warn.
       Con::warnf("Asset Manager: Failed to get loose file for asset Id '%s' as it does not exist.", pAssetId);
-      return false;
+      return StringTable->EmptyString();
    }
 
    if(index < 0 || index >= pAssetDefinition->mAssetLooseFiles.size())

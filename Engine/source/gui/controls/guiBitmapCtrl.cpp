@@ -121,7 +121,7 @@ void GuiBitmapCtrl::setBitmap(const char* name, bool resize)
       if (assetId != StringTable->EmptyString())
          _setBitmap(assetId);
       else
-         return;
+         _setBitmap(name);
    }
 
    mBitmap = mBitmapAsset->getTexture(&GFXDefaultGUIProfile);

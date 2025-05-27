@@ -4,7 +4,17 @@ function ImageAsset::buildBrowserElement(%this, %previewData)
 {
    //%module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getImagePath())));
       
-   %previewData.previewImage = %this.isNamedTarget() ? "Core_Rendering:namedTarget_image" : "ToolsModule:genericAssetIcon_image";
+   if( %this.isNamedTarget())
+      %previewImage = "Core_Rendering:namedTarget_image";
+   else
+   {
+      %previewImage = getAssetPreviewImage(%this.getAssetId());    
+      if(!isFile(%previewImage))
+         %previewImage = "ToolsModule:genericAssetIcon_image";
+   }
+      
+   %previewData.previewImage = %previewImage;
+
    %previewData.previewLoaded = %this.isNamedTarget() ? true : false;//this marks it for loading progressively later
    
    %previewData.assetName = %this.assetName;
@@ -39,55 +49,20 @@ function ImageAsset::generatePreviewImage(%this, %previewButton, %forceRegenerat
       $CurrentAssetBrowser.dirHandler.createFolder(%previewPath);
    }
    
-   %previewFilePath = %previewPath @ %this.assetName @ "_Preview.png";
+   %previewFilePath = %previewPath @ %this.assetName @ ".png";
    if(!isFile(%previewFilePath) || (compareFileTimes(%this.getImagePath(), %previewFilePath) == 1))
    {
       %generatePreview = true;
    }
-   
-   %previewAssetName = %previewButton.moduleName @ "_" @ %this.assetName @ "_PreviewImage";
-   
+
    if(%generatePreview || %forceRegenerate)
    {
       %success = saveScaledImage(%this.getImagePath(), %previewFilePath, EditorSettings.value("Assets/Browser/PreviewImageSize"));
       
       if(%success)
-      {
-         if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
-         {
-            %previewAsset = new ImageAsset()
-            {
-               assetName = %previewAssetName;
-               versionId = 1;
-               imageFile = makeFullPath(%previewFilePath);
-            };
-         
-            %previewAssetName = "ToolsModule:" @ %previewAssetName;
-            %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
-            %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
-         
-            %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
-            
-            %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
-            
-            if(!%success)
-            {
-               return false; //failed to register the preview image for some reason?
-            }
-         }
-            
-            %previewButton.bitmapAsset = %previewAssetName;
-            return true;
-         }
-      }
-      else
-      {
-         //just map the existing one then
-         if(AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
-      {
-            %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
-            return true;
-      }
+         %previewButton.setBitmap(%previewFilePath);
+      
+      return %success;
    }
    
    return false;

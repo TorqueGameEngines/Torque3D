@@ -101,6 +101,9 @@ void AssimpAppMesh::computeBounds(Box3F& bounds)
 
 TSMesh* AssimpAppMesh::constructTSMesh()
 {
+   if (points.empty() || normals.empty() || primitives.empty() || indices.empty())
+      return NULL;
+
    TSMesh* tsmesh;
    if (isSkin())
    {

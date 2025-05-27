@@ -262,6 +262,8 @@ public:
    static void initPersistFields();
    static void consoleInit();
 
+   virtual void onInspect(GuiInspector*) override;
+
    /// @}
 
    ///@name Datablock

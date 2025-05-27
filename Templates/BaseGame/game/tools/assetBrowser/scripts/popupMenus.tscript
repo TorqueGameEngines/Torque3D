@@ -43,6 +43,18 @@ function AssetBrowser::buildPopupMenus(%this)
       };
    }
    
+   if( !isObject( RestoreBackupListPopup ) )
+   {
+      new PopupMenu( RestoreBackupListPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+         //isPopup = true;
+         
+         radioSelection = false;
+      };
+   }
+   
    if( !isObject( EditLevelAssetPopup ) )
    {
       new PopupMenu( EditLevelAssetPopup )
@@ -59,9 +71,11 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 5 ] = "-";
          Item[ 6 ] = "Duplicate Asset" TAB "" TAB "AssetBrowser.duplicateAsset();";
          item[ 7 ] = "-";
-         item[ 8 ] = "Open File Location" TAB "" TAB "AssetBrowser.openFileLocation();";
+         Item[ 8 ] = "Restore Backup" TAB RestoreBackupListPopup;
          item[ 9 ] = "-";
-         item[ 10 ] = "Delete Asset" TAB "" TAB "AssetBrowser.deleteAsset();";
+         item[ 10 ] = "Open File Location" TAB "" TAB "AssetBrowser.openFileLocation();";
+         item[ 11 ] = "-";
+         item[ 12 ] = "Delete Asset" TAB "" TAB "AssetBrowser.deleteAsset();";
 
          jumpFileName = "";
          jumpLineNumber = "";
@@ -82,9 +96,11 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 3 ] = "-";
          Item[ 4 ] = "Duplicate Asset" TAB "" TAB "AssetBrowser.duplicateAsset();";
          item[ 5 ] = "-";
-         item[ 6 ] = "Open File Location" TAB "" TAB "AssetBrowser.openFileLocation();";
+         Item[ 6 ] = "Restore Backup" TAB RestoreBackupListPopup;
          item[ 7 ] = "-";
-         item[ 8 ] = "Delete Asset" TAB "" TAB "AssetBrowser.deleteAsset();";
+         item[ 8 ] = "Open File Location" TAB "" TAB "AssetBrowser.openFileLocation();";
+         item[ 9 ] = "-";
+         item[ 10 ] = "Delete Asset" TAB "" TAB "AssetBrowser.deleteAsset();";
 
          jumpFileName = "";
          jumpLineNumber = "";
@@ -397,4 +413,42 @@ function AddNewScriptAssetPopupMenu::setupDefaultState(%this)
 
 function AddNewScriptAssetPopupMenu::setupGuiControls(%this)
 {
+}
+
+function RestoreBackupListPopup::populateList(%this, %assetId)
+{
+   //process it and then check if we have any autosave backups
+   %processedId = strReplace(%assetId, ":", "_");
+   %autosavePath = "tools/autosave/" @ %processedId @ "/";
+   
+   RestoreBackupListPopup.clearItems();
+   
+   if(isDirectory(%autosavePath))
+   {
+      %dirs = getDirectoryList(%autosavePath); 
+      %count = getFieldCount(%dirs);
+
+      if(%count > 0)
+      {
+         %saveArray = new ArrayObject(){};
+         //loop over the entries and find the oldest one
+         for(%f=0; %f < %count; %f++)
+         {
+            %saveArray.add(getField(%dirs, %f));            
+         }
+         
+         %saveArray.sortk();
+         
+         for(%i=0; %i < %count; %i++)
+         {
+            %folderName = %saveArray.getKey(%i);
+            %labelText = %folderName @ " (" @ fileModifiedTime(%autosavePath @ %folderName) @ ")";
+            RestoreBackupListPopup.addItem(%i, %labelText TAB "" TAB "AssetBrowser.restoreAssetBackup(\"" @ %assetId @ "\"," @ %i @ ");");
+            
+            echo("Added restore item: " @ %labelText TAB "" TAB "AssetBrowser.restoreAssetBackup(\"" @ %assetId @ "\"," @ %i @ ");");
+         }
+         
+         %saveArray.delete();
+      }    
+   }
 }

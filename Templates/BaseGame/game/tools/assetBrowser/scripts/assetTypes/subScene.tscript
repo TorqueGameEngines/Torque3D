@@ -64,6 +64,52 @@ function SubSceneAsset::onCreateNew(%this)
 	return %tamlpath;  
 }
 
+function SubSceneAsset::onShowActionMenu(%this)
+{
+   if( !isObject( EditSubSceneAssetPopup ) )
+   {
+      new PopupMenu( EditSubSceneAssetPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+
+         jumpFileName = "";
+         jumpLineNumber = "";
+      };
+   }
+   
+   //Regen the menu so we're fully up and current with options and references
+   EditSubSceneAssetPopup.clearItems();
+   
+   EditSubSceneAssetPopup.appendItem("Edit Asset" TAB "" TAB $CurrentAssetBrowser @ ".editAsset();");
+   EditSubSceneAssetPopup.appendItem("Rename Asset" TAB "" TAB $CurrentAssetBrowser @ ".renameAsset();");
+   EditSubSceneAssetPopup.appendItem("Reload Asset" TAB "" TAB $CurrentAssetBrowser @ ".refreshAsset();");
+   EditSubSceneAssetPopup.appendItem("Asset Properties" TAB "" TAB $CurrentAssetBrowser @ ".editAssetInfo();");
+   EditSubSceneAssetPopup.appendItem("-");
+   EditSubSceneAssetPopup.appendItem("Duplicate Asset" TAB "" TAB $CurrentAssetBrowser @ ".duplicateAsset();");
+   EditSubSceneAssetPopup.appendItem("-");
+   EditSubSceneAssetPopup.appendItem("Regenerate Preview Image" TAB "" TAB $CurrentAssetBrowser @ ".regeneratePreviewImage();");
+   EditSubSceneAssetPopup.appendItem("-");
+   EditSubSceneAssetPopup.appendItem("Restore Backup" TAB RestoreBackupListPopup);
+   EditSubSceneAssetPopup.appendItem("-");
+   EditSubSceneAssetPopup.appendItem("Open File Location" TAB "" TAB $CurrentAssetBrowser @ ".openFileLocation();");
+   EditSubSceneAssetPopup.appendItem("-");
+   EditSubSceneAssetPopup.appendItem("Delete Asset" TAB "" TAB $CurrentAssetBrowser @ ".deleteAsset();");
+   
+   %assetId = %this.getAssetId();
+   %assetType = AssetDatabase.getAssetType(%assetId);
+   
+   EditSubSceneAssetPopup.objectData = %assetId;
+   EditSubSceneAssetPopup.objectType = %assetType;
+   
+   RestoreBackupListPopup.populateList(%assetId);
+   EditSubSceneAssetPopup.reloadItems();
+   
+   EditSubSceneAssetPopup.showPopup(Canvas); 
+   
+   $CurrentAssetBrowser.popupMenu = EditSubSceneAssetPopup;
+}
+
 function SubSceneAsset::buildBrowserElement(%this, %previewData)
 {
    %previewData.assetName = %this.assetName;

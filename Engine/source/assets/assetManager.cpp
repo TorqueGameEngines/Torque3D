@@ -2435,6 +2435,69 @@ AssetManager::typeAssetDependsOnHash* AssetManager::getDependedOnAssets()
    // Find any asset dependencies.
    return &mAssetDependsOn;
 }
+
+//-----------------------------------------------------------------------------
+S32 AssetManager::getAssetLooseFileCount(const char* pAssetId)
+{
+   // Debug Profiling.
+   PROFILE_SCOPE(AssetManager_getAssetLooseFileCount);
+
+   // Sanity!
+   AssertFatal(pAssetId != NULL, "Cannot get loose files for NULL asset Id.");
+
+   // Find asset.
+   AssetDefinition* pAssetDefinition = findAsset(pAssetId);
+
+   // Did we find the asset?
+   if (pAssetDefinition == NULL)
+   {
+      // No, so warn.
+      Con::warnf("Asset Manager: Failed to get loose files for asset Id '%s' as it does not exist.", pAssetId);
+      return false;
+   }
+
+   S32 looseFileCount = pAssetDefinition->mAssetLooseFiles.size();
+
+   // Cleanup our reference
+   pAssetDefinition = NULL;
+
+   return looseFileCount;
+}
+
+//-----------------------------------------------------------------------------
+
+const char* AssetManager::getAssetLooseFile(const char* pAssetId, const S32& index)
+{
+   // Debug Profiling.
+   PROFILE_SCOPE(AssetManager_getAssetLooseFile);
+
+   // Sanity!
+   AssertFatal(pAssetId != NULL, "Cannot get loose file for NULL asset Id.");
+
+   // Find asset.
+   AssetDefinition* pAssetDefinition = findAsset(pAssetId);
+
+   // Did we find the asset?
+   if (pAssetDefinition == NULL)
+   {
+      // No, so warn.
+      Con::warnf("Asset Manager: Failed to get loose file for asset Id '%s' as it does not exist.", pAssetId);
+      return StringTable->EmptyString();
+   }
+
+   if(index < 0 || index >= pAssetDefinition->mAssetLooseFiles.size())
+   {
+      Con::warnf("Asset Manager : Failed to get loose file for asset Id '%s' as the index was out of range.", pAssetId);
+   }
+
+   StringTableEntry looseFile = pAssetDefinition->mAssetLooseFiles[index];
+
+   // Cleanup our reference
+   pAssetDefinition = NULL;
+
+   return looseFile;
+}
+
 //-----------------------------------------------------------------------------
 
 bool AssetManager::scanDeclaredAssets( const char* pPath, const char* pExtension, const bool recurse, ModuleDefinition* pModuleDefinition )

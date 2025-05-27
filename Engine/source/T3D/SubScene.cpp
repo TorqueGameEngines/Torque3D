@@ -10,6 +10,8 @@
 #include "gfx/gfxDrawUtil.h"
 #include "gfx/gfxTransformSaver.h"
 #include "gui/editor/inspector/group.h"
+#include "gui/worldEditor/editor.h"
+#include "math/mathIO.h"
 #include "T3D/gameBase/gameBase.h"
 
 bool SubScene::smTransformChildren = false;
@@ -32,7 +34,9 @@ SubScene::SubScene() :
    mTickPeriodMS(1000),
    mCurrTick(0),
    mGlobalLayer(false),
-   mSaving(false)
+   mSaving(false),
+   mUseSeparateLoadBounds(false),
+   mLoadBounds(Point3F::One)
 {
    mNetFlags.set(Ghostable | ScopeAlways);
 
@@ -70,6 +74,8 @@ void SubScene::initPersistFields()
    INITPERSISTFIELD_SUBSCENEASSET(SubScene, SubScene, "The subscene asset to load.");
    addField("tickPeriodMS", TypeS32, Offset(mTickPeriodMS, SubScene), "evaluation rate (ms)");
    addField("gameModes", TypeGameModeList, Offset(mGameModesNames, SubScene), "The game modes that this subscene is associated with.");
+   addField("UseSeparateLoadBounds", TypeBool, Offset(mUseSeparateLoadBounds, SubScene), "If true, this subscene will utilize a separate bounds for triggering loading/unloading than it's object bounds");
+   addField("LoadBounds", TypePoint3F, Offset(mLoadBounds, SubScene), "If UseSeparateLoadBounds is true, this subscene will use this value to set up the load/unload bounds");
    endGroup("SubScene");
 
    addGroup("LoadingManagement");
@@ -113,6 +119,11 @@ U32 SubScene::packUpdate(NetConnection* conn, U32 mask, BitStream* stream)
    U32 retMask = Parent::packUpdate(conn, mask, stream);
 
    stream->writeFlag(mGlobalLayer);
+   if(stream->writeFlag(mUseSeparateLoadBounds))
+   {
+      mathWrite(*stream, mLoadBounds);
+   }
+
 
    return retMask;
 }
@@ -123,6 +134,11 @@ void SubScene::unpackUpdate(NetConnection* conn, BitStream* stream)
 
    mGlobalLayer = stream->readFlag();
 
+   mUseSeparateLoadBounds = stream->readFlag();
+   if(mUseSeparateLoadBounds)
+   {
+      mathRead(*stream, &mLoadBounds);
+   }
 }
 
 void SubScene::onInspect(GuiInspector* inspector)
@@ -220,7 +236,21 @@ bool SubScene::testBox(const Box3F& testBox)
    bool passes = mGlobalLayer;
 
    if (!passes)
-      passes = getWorldBox().isOverlapped(testBox);
+   {
+      if(mUseSeparateLoadBounds)
+      {
+         Box3F loadBox = Box3F(-mLoadBounds.x, -mLoadBounds.y, -mLoadBounds.z,
+                                    mLoadBounds.x, mLoadBounds.y, mLoadBounds.z);
+
+         loadBox.setCenter(getPosition());
+
+         passes = loadBox.isOverlapped(testBox);
+      }
+      else
+      {
+         passes = getWorldBox().isOverlapped(testBox);
+      }
+   }
 
    if (passes)
       passes = evaluateCondition();
@@ -268,6 +298,9 @@ void SubScene::processTick(const Move* move)
 
 void SubScene::_onFileChanged(const Torque::Path& path)
 {
+   if (gEditingMission)
+      return;
+
    if(mSubSceneAsset.isNull() || Torque::Path(mSubSceneAsset->getLevelPath()) != path)
       return;
 
@@ -426,7 +459,7 @@ void SubScene::unload()
 
 }
 
-bool SubScene::save()
+bool SubScene::save(const String& filename)
 {
    if (!isServerObject())
       return false;
@@ -450,6 +483,9 @@ bool SubScene::save()
    PersistenceManager prMger;
 
    StringTableEntry levelPath = mSubSceneAsset->getLevelPath();
+
+   if (filename.isNotEmpty())
+      levelPath = StringTable->insert(filename.c_str());
 
    FileStream fs;
    fs.open(levelPath, Torque::FS::File::Write);
@@ -547,8 +583,26 @@ void SubScene::renderObject(ObjectRenderInst* ri,
    //Box3F scale = getScale()
    //Box3F bounds = Box3F(-m)
 
+   if(mUseSeparateLoadBounds && !mGlobalLayer)
+   {
+      Box3F loadBounds = Box3F(-mLoadBounds.x, -mLoadBounds.y, -mLoadBounds.z,
+         mLoadBounds.x, mLoadBounds.y, mLoadBounds.z);
+
+      //bounds.setCenter(getPosition());
+
+      ColorI loadBoundsColor = ColorI(200, 200, 100, 50);
+
+      drawer->drawCube(desc, loadBounds, loadBoundsColor);
+
+      // Render wireframe.
+
+      desc.setFillModeWireframe();
+      drawer->drawCube(desc, loadBounds, ColorI::BLACK);
+      desc.setFillModeSolid();
+   }
+
    Point3F scale = getScale();
-   Box3F bounds = Box3F(-scale/2, scale/2);
+   Box3F bounds = Box3F(-scale / 2, scale / 2);
 
    ColorI boundsColor = ColorI(135, 206, 235, 50);
 
@@ -565,10 +619,11 @@ void SubScene::renderObject(ObjectRenderInst* ri,
    drawer->drawCube(desc, bounds, ColorI::BLACK);
 }
 
-DefineEngineMethod(SubScene, save, bool, (),,
-   "Save out the subScene.\n")
+DefineEngineMethod(SubScene, save, bool, (const char* filename), (""),
+   "Save out the subScene.\n"
+   "@param filename (optional) If empty, the subScene will save to it's regular asset path. If defined, it will save out to the filename provided")
 {
-   return object->save();
+   return object->save(filename);
 }
 
 

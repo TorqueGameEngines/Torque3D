@@ -427,79 +427,148 @@ function EditorSaveMissionAs( %levelAsset )
 
 function EditorAutoSaveMission()
 {
-   // just save the mission without renaming it
+   //re-init the schedule
+   %autosaveInterval = EditorSettings.value("WorldEditor/AutosaveInterval", "5");
+   %autosaveInterval = %autosaveInterval * 60000; //convert to milliseconds from minutes
    
-   if($Editor::AutoSaveIndex $= "" || $Editor::AutoSaveIndex $= "5")
-      $Editor::AutoSaveIndex = 1;
-   else
-      $Editor::AutoSaveIndex++;
+   if(EditorGui.autosaveSchedule !$= "")
+      cancel(EditorGui.autosaveSchedule);
       
-   %autosaveFileName = "tools/autosave/" @ fileBase($Server::MissionFile) @ "_autosave" @ $Editor::AutoSaveIndex @ fileExt($Server::MissionFile);
+   EditorGui.autosaveSchedule = schedule( %autosaveInterval, 0, "EditorAutoSaveMission" );
    
-   // first check for dirty and read-only files:
-   if((EWorldEditor.isDirty || ETerrainEditor.isMissionDirty) && !isWriteableFileName(%autosaveFileName))
+   // first check for dirty
+   if(!EWorldEditor.isDirty && !ETerrainEditor.isMissionDirty)
    {
       return false;
    }
    
-   //TODO: Make Autosave work with terrains
-   /*if(ETerrainEditor.isDirty)
-   {
-      // Find all of the terrain files
-      initContainerTypeSearch($TypeMasks::TerrainObjectType);
-
-      while ((%terrainObject = containerSearchNext()) != 0)
-      {
-         if (!isWriteableFileName(%terrainObject.terrainFile))
-         {
-            if (toolsMessageBox("Error", "Terrain file \""@ %terrainObject.terrainFile @ "\" is read-only.  Continue?", "Ok", "Stop") == $MROk)
-               continue;
-            else
-               return false;
-         }
-      }
-   }*/
-  
-   // now write the terrain and mission files out:
-
-   if(EWorldEditor.isDirty || ETerrainEditor.isMissionDirty)
-      getScene(0).save(%autosaveFileName);
+   //Also skip out if we're actively performing an action
+   if(EditorGui.currentEditor.editorGui.isLeftMouseDown() || EditorGui.currentEditor.editorGui.isMiddleMouseDown() ||
+         EditorGui.currentEditor.editorGui.isRightMouseDown())
+      return false;
       
-   //TODO: Make Autosave work with terrains
-   /*if(ETerrainEditor.isDirty)
+   %backupFilePathBase = "tools/autosave/";
+   if(!isObject(AssetBackupListArray))
    {
-      // Find all of the terrain files
-      initContainerTypeSearch($TypeMasks::TerrainObjectType);
-
-      while ((%terrainObject = containerSearchNext()) != 0)
+      new ArrayObject(AssetBackupListArray){};
+   }
+   
+   AssetBackupListArray.empty();
+   
+   //Next, we figure out what all we're planning to save
+   %terrainObjects = getRootScene().getObjectsByClass("TerrainBlock", false);
+   for(%i=0; %i < getWordCount(%terrainObjects); %i++)
+   {
+      %terrObj = getWord(%terrainObjects, %i);
+      %terrAssetId = %terrObj.terrainAsset;
+      
+      %sanitizedName = strReplace(%terrAssetId, ":", "_");
+      
+      %terrAssetBackupPath = %backupFilePathBase @ %sanitizedName @ "/";
+      
+      AssetBackupListArray.add(%terrAssetBackupPath, %terrAssetId SPC %terrObj);
+   }
+   
+   %subScenes = getRootScene().getObjectsByClass("SubScene", false);
+   for(%i=0; %i < getWordCount(%subScenes); %i++)
+   {
+      %subSceneObj = getWord(%subScenes, %i);
+      %subSceneAssetId = %subSceneObj.levelAsset;
+      
+      %sanitizedName = strReplace(%subSceneAssetId, ":", "_");
+      
+      %subSceneAssetBackupPath = %backupFilePathBase @ %sanitizedName @ "/";
+      
+      AssetBackupListArray.add(%subSceneAssetBackupPath, %subSceneAssetId SPC %subSceneObj);
+   }
+   
+   %levelAssetId = $Server::LevelAsset.getAssetId();
+   %levelSanitizedName = strReplace(%levelAssetId, ":", "_");
+   %levelAssetBackupPath = %backupFilePathBase @ %levelSanitizedName @ "/";
+   AssetBackupListArray.add(%levelAssetBackupPath, %levelAssetId SPC getRootScene());
+   
+   //Now we process through our assets to find index counts and save off a copy duplicate to the backup path
+   if($Editor::MaxAutosaves $= "")
+      $Editor::MaxAutosaves = 10;
+      
+   for(%i=0; %i < AssetBackupListArray.count(); %i++)
+   {
+      %path = AssetBackupListArray.getKey(%i);
+      %assetId = getWord(AssetBackupListArray.getValue(%i), 0);
+      %obj = getWord(AssetBackupListArray.getValue(%i), 1);
+      
+      %dirList = getDirectoryList(%path);
+      %savesCount = getFieldCount(%dirList);
+      %newestFolder = 0;
+      %oldestFolder = -1;
+      
+      if(%savesCount != 0)
       {
-         if(%terrainObject.terrainAsset !$= "")
+         %saveArray = new ArrayObject(){};
+         //loop over the entries and find the oldest one
+         for(%f=0; %f < %savesCount; %f++)
          {
-            //we utilize a terrain asset, so we'll update our dependencies while we're at it
-            %terrainObject.saveAsset();
+            %saveArray.add(getField(%dirList, %f), %f);            
          }
-         else
+         
+         %saveArray.sortk(true);
+         
+         %oldestFolder = %saveArray.getKey(0);
+         %newestFolder = %saveArray.getKey(%savesCount-1);
+         
+         %saveArray.delete();
+      }
+
+      if(%savesCount >= $Editor::MaxAutosaves)
+      {
+         AssetBrowser.dirHandler.deleteFolder(%path @ %oldestFolder @ "/");
+      }
+      
+      %newSaveFolder = %newestFolder + 1;
+      %newSaveFolderPath = %path @ %newSaveFolder @ "/";
+      
+      if(!isDirectory(%newSaveFolderPath))
+      {
+         AssetBrowser.dirHandler.createFolder(%newSaveFolderPath);
+      }
+      else
+      {
+         error("EditorAutoSaveMission() - Somehow we indicated a brand new save folder, but it already exists? Stopping to avoid problems");
+         continue;
+      }
+      
+      %assetFilePath = AssetDatabase.getAssetFilePath(%assetId);
+      %assetFileName = fileName(%assetFilePath);
+      %assetPath = filePath(%assetFilePath) @ "/";
+      
+      if(!pathCopy(%assetFilePath, %newSaveFolderPath @ %assetFileName))
+      {
+         error("EditorAutoSaveMission() - failed to copy the asset file: " @ %assetFilePath @ " to backup directory!");
+         continue;
+      }
+      
+      //Do the actual copy of the files for backup purposes now
+      %looseFileCount = AssetDatabase.getAssetLooseFileCount(%assetId);
+      for(%lf = 0; %lf < %looseFileCount; %lf++)
+      {
+         %looseFile = AssetDatabase.getAssetLooseFile(%assetId, %lf);
+         %looseFileName = fileName(%looseFile);
+         
+         if(!isFile(%looseFile))
+            continue; //only bother with real files
+         
+         if(!pathCopy(%looseFile, %newSaveFolderPath @ %looseFileName))
          {
-            %terrainObject.save(%terrainObject.terrainFile);
+            error("EditorAutoSaveMission() - failed to copy the asset loose file: " @ %assetPath @ %looseFileName @ " to backup directory!");
          }
+         
+         %fileExt = fileExt(%looseFile);
+         if(%fileExt $= ".mis")
+            %obj.save(%newSaveFolderPath @ %looseFileName, false);
+         else if(%fileExt $= ".subMis" || %fileExt $= ".ter")
+            %obj.save(%newSaveFolderPath @ %looseFileName); //Save out the current status of it to the file so we have our actual snapshot
       }
    }
-
-   ETerrainPersistMan.saveDirty();*/
-      
-   // Give EditorPlugins a chance to save.
-   for ( %i = 0; %i < EditorPluginSet.getCount(); %i++ )
-   {
-      %obj = EditorPluginSet.getObject(%i);
-      if ( %obj.isDirty() )
-         %obj.onSaveMission( %autosaveFileName );      
-   } 
-   
-   %autosaveInterval = EditorSettings.value("WorldEditor/AutosaveInterval", "5");
-   %autosaveInterval = %autosaveInterval * 60000; //convert to milliseconds from minutes
-   EditorGui.autosaveSchedule = schedule( %autosaveInterval, 0, "EditorAutoSaveMission" );
-   
-   return true;
 }
 
 function EditorOpenMission(%levelAsset)
@@ -722,6 +791,14 @@ function EditorExplodePrefab()
 
 function makeSelectedAMesh(%assetId)
 {      
+   %selectedCount = EWorldEditor.getSelectionSize();
+   
+   if(!%selectedCount)
+   {
+      error("You need to select at least one object to turn it into a mesh!");
+      return;  
+   }
+   
    %assetDef = AssetDatabase.acquireAsset(%assetId);
    
    %assetPath = AssetDatabase.getAssetPath(%assetId);
@@ -740,6 +817,21 @@ function makeSelectedAMesh(%assetId)
    {      
       //Next, for safety purposes(and convenience!) we'll make them a prefab aping off the filepath/name provided
       //TODO: Make this an editor option
+      
+      //We want to figure out where this stuff goes, so scan through our selected objects
+      //And see if we have a common parent
+      %sameParent = true;
+      %firstParent = EWorldEditor.getSelectedObject(0).parentGroup;
+      for(%i=1; %i < %selectedCount; %i++)
+      {
+         %selectedObj = EWorldEditor.getSelectedObject(%i);
+         if(%firstParent != %selectedObj.parentGroup)
+         {
+            %sameParent = false;
+            break;
+         }
+      }
+      
       %prefabPath = %assetPath @ "/" @ %assetDef.AssetName @ ".prefab";
       EWorldEditor.makeSelectionPrefab(%prefabPath, false);
       %selectionPos = EWorldEditor.getSelectedObject(0).getPosition();
@@ -752,8 +844,14 @@ function makeSelectedAMesh(%assetId)
          shapeAsset = %assetId;
          position = %selectionPos;
       };
-      
-      getRootScene().add(%newStatic);
+
+      if(%sameParent)
+         %firstParent.add(%newStatic);
+      else
+         getRootScene().add(%newStatic);
+         
+      EWorldEditor.clearSelection();
+      EWorldEditor.selectObject(%newStatic);
    }
    
    EditorTree.buildVisibleTree( true );  

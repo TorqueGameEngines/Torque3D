@@ -133,6 +133,25 @@ void GuiInputCtrl::onSleep()
    clearFirstResponder();
 }
 
+void GuiInputCtrl::setActive(bool value)
+{
+   Parent::setActive(value);
+
+   if (value)
+   {
+      if (!smDesignTime && !mIgnoreMouseEvents)
+         mouseLock();
+
+      setFirstResponder();
+   }
+   else
+   {
+      mouseUnlock();
+      clearFirstResponder();
+   }
+
+}
+
 
 //------------------------------------------------------------------------------
 static bool isModifierKey( U16 keyCode )

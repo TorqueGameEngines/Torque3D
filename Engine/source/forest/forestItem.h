@@ -118,9 +118,10 @@ public:
 
    /// Called from Forest the first time a datablock is used
    /// in order to lazy load content.
-   void preload() 
-   { 
-      if ( !mNeedPreload ) 
+   bool preload(bool server, String& errorStr) override { return false; }; // we don't ghost ForestItemData specifically. we do do so for TSForestItemData
+   void preload()
+   {
+      if (!mNeedPreload)
          return;
 
       _preload();

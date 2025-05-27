@@ -132,6 +132,49 @@ function createTerrainBlock(%assetId)
    //
 }
 
+function TerrainAsset::onShowActionMenu(%this)
+{
+   if( !isObject( EditTerrainAssetPopup ) )
+   {
+      new PopupMenu( EditTerrainAssetPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+
+         jumpFileName = "";
+         jumpLineNumber = "";
+      };
+   }
+   
+   //Regen the menu so we're fully up and current with options and references
+   EditTerrainAssetPopup.clearItems();
+   
+   EditTerrainAssetPopup.appendItem("Edit Asset" TAB "" TAB $CurrentAssetBrowser @ ".editAsset();");
+   EditTerrainAssetPopup.appendItem("Rename Asset" TAB "" TAB $CurrentAssetBrowser @ ".renameAsset();");
+   EditTerrainAssetPopup.appendItem("Reload Asset" TAB "" TAB $CurrentAssetBrowser @ ".refreshAsset();");
+   EditTerrainAssetPopup.appendItem("Asset Properties" TAB "" TAB $CurrentAssetBrowser @ ".editAssetInfo();");
+   EditTerrainAssetPopup.appendItem("-");
+   EditTerrainAssetPopup.appendItem("Duplicate Asset" TAB "" TAB $CurrentAssetBrowser @ ".duplicateAsset();");
+   EditTerrainAssetPopup.appendItem("-");
+   EditTerrainAssetPopup.appendItem("Restore Backup" TAB RestoreBackupListPopup);
+   EditTerrainAssetPopup.appendItem("-");
+   EditTerrainAssetPopup.appendItem("Open File Location" TAB "" TAB $CurrentAssetBrowser @ ".openFileLocation();");
+   EditTerrainAssetPopup.appendItem("-");
+   EditTerrainAssetPopup.appendItem("Delete Asset" TAB "" TAB $CurrentAssetBrowser @ ".deleteAsset();");
+   
+   %assetId = %this.getAssetId();
+   %assetType = AssetDatabase.getAssetType(%assetId);
+   
+   EditTerrainAssetPopup.objectData = %assetId;
+   EditTerrainAssetPopup.objectType = %assetType;
+   
+   RestoreBackupListPopup.populateList(%assetId);
+   EditTerrainAssetPopup.reloadItems();
+   
+   EditTerrainAssetPopup.showPopup(Canvas); 
+   
+   $CurrentAssetBrowser.popupMenu = EditTerrainAssetPopup;
+}
 
 function TerrainAsset::onWorldEditorDropped(%this, %position)
 {

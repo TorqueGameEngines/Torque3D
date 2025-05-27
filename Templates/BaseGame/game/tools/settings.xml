@@ -41,7 +41,7 @@
             <Setting
                 name="doubleClickAction">Edit Asset</Setting>
             <Setting
-                name="LastPosExt">0 634 1560 360</Setting>
+                name="LastPosExt">0 1047 2200 360</Setting>
             <Setting
                 name="previewTileSize">1</Setting>
             <Setting
@@ -76,7 +76,7 @@
         <Group
             name="Grid">
             <Setting
-                name="forceSnapRotations">1</Setting>
+                name="forceSnapRotations">0</Setting>
             <Setting
                 name="gridColor">255 255 255 20</Setting>
             <Setting
@@ -210,7 +210,7 @@
         <Setting
             name="backgroundBuild">1</Setting>
         <Setting
-            name="SpawnClass">AIPlayer</Setting>
+            name="SpawnClass">Player</Setting>
         <Setting
             name="spawnDatablock">DefaultPlayerData</Setting>
     </Group>
@@ -276,7 +276,7 @@
     <Group
         name="TerrainEditor">
         <Setting
-            name="currentAction">lowerHeight</Setting>
+            name="currentAction">raiseHeight</Setting>
         <Group
             name="ActionValues">
             <Setting
@@ -367,6 +367,8 @@
             name="dropType">screenCenter</Setting>
         <Setting
             name="EditorLayoutMode">Modern</Setting>
+        <Setting
+            name="forceLoadDAE">0</Setting>
         <Setting
             name="forceSidebarToSide">1</Setting>
         <Setting

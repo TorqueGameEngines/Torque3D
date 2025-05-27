@@ -51,6 +51,8 @@ public:
    bool onWake() override;
    void onSleep() override;
 
+   virtual void setActive(bool state);
+
    bool onInputEvent( const InputEventInfo &event ) override;
 
    static void initPersistFields();

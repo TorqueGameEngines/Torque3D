@@ -291,7 +291,7 @@ StringTableEntry Scene::getLevelAsset()
       return query->mAssetList[0];
 }
 
-bool Scene::saveScene(StringTableEntry fileName)
+bool Scene::saveScene(StringTableEntry fileName, const bool& saveSubScenes)
 {
    if (!isServerObject())
       return false;
@@ -316,9 +316,12 @@ bool Scene::saveScene(StringTableEntry fileName)
 
    //Inform our subscenes we're saving so they can do any
    //special work required as well
-   for (U32 i = 0; i < mSubScenes.size(); i++)
+   if (saveSubScenes)
    {
-      mSubScenes[i]->save();
+      for (U32 i = 0; i < mSubScenes.size(); i++)
+      {
+         mSubScenes[i]->save();
+      }
    }
 
    bool saveSuccess = save(fileName);
@@ -381,9 +384,30 @@ void Scene::getUtilizedAssetsFromSceneObject(SimObject* object, Vector<StringTab
 }
 
 //
-Vector<SceneObject*> Scene::getObjectsByClass(String className)
+void Scene::getObjectsByClass(SimObject* object, StringTableEntry className, Vector<SimObject*>* objectsList, bool checkSubscenes)
 {
-   return Vector<SceneObject*>();
+   if(object->getClassName() == className)
+   {
+      objectsList->push_back(object);
+   }
+
+   //If it's a subscene and we DON'T want to scan through them, bail out now
+   SubScene* subScene = dynamic_cast<SubScene*>(object);
+   if (subScene && !checkSubscenes)
+      return;
+
+   //If possible, now we iterate over the children
+   SimGroup* group = dynamic_cast<SimGroup*>(object);
+   if (group)
+   {
+      for (U32 c = 0; c < group->size(); c++)
+      {
+         SimObject* childObj = dynamic_cast<SimObject*>(group->getObject(c));
+
+         //Recurse down
+         getObjectsByClass(childObj, className, objectsList);
+      }
+   }
 }
 
 void Scene::loadAtPosition(const Point3F& position)
@@ -460,15 +484,37 @@ DefineEngineMethod(Scene, removeDynamicObject, void, (SceneObject* sceneObj), (n
    object->removeDynamicObject(sceneObj);
 }
 
-DefineEngineMethod(Scene, getObjectsByClass, String, (String className), (""),
+DefineEngineMethod(Scene, getObjectsByClass, String, (String className, bool checkSubScenes), ("", false),
    "Get the root Scene object that is loaded.\n"
-   "@return The id of the Root Scene. Will be 0 if no root scene is loaded")
+   "@param className The name of the class of objects to get a list of.\n"
+   "@param checkSubScenes If true, will also scan through currently loaded subscenes to get matching objects.\n"
+   "@return A space-separated list of object ids that match the searched-for className")
 {
    if (className == String::EmptyString)
       return "";
 
-   //return object->getObjectsByClass(className);
-   return "";
+   Vector<SimObject*>* objectsList = new Vector<SimObject*>();
+
+   object->getObjectsByClass(object, StringTable->insert(className.c_str()), objectsList, checkSubScenes);
+
+   char* retBuffer = Con::getReturnBuffer(1024);
+
+   U32 len = 0;
+   S32 i;
+   //Get the length of our return string
+   for(U32 i=0; i < objectsList->size(); i++)
+      len += dStrlen((*objectsList)[i]->getIdString());
+
+   char* ret = Con::getReturnBuffer(len + 1);
+   ret[0] = 0;
+   for (U32 i = 0; i < objectsList->size(); i++)
+   {
+      dStrcat(ret, (*objectsList)[i]->getIdString(), len + 1);
+      dStrcat(ret, " ", len + 1);
+   }
+      
+
+   return ret;
 }
 
 DefineEngineMethod(Scene, dumpUtilizedAssets, void, (), ,
@@ -492,12 +538,12 @@ DefineEngineMethod(Scene, getLevelAsset, const char*, (), ,
    return object->getLevelAsset();
 }
 
-DefineEngineMethod(Scene, save, bool, (const char* fileName), (""),
+DefineEngineMethod(Scene, save, bool, (const char* fileName, bool saveSubScenes), ("", true),
    "Save out the object to the given file.\n"
    "@param fileName The name of the file to save to."
    "@param True on success, false on failure.")
 {
-   return object->saveScene(StringTable->insert(fileName));
+   return object->saveScene(StringTable->insert(fileName), saveSubScenes);
 }
 
 DefineEngineMethod(Scene, loadAtPosition, void, (Point3F position), (Point3F::Zero),

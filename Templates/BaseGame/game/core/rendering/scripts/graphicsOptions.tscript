@@ -1199,140 +1199,169 @@ function AutodetectGraphics()
    %intel = ( strstr( strupr( getDisplayDeviceInformation() ), "INTEL" ) != -1 ) ? true : false;
    %videoMem = GFXCardProfilerAPI::getVideoMemoryMB();
    
-   if ( %shaderVer < 2.0 )
-   {      
-      echo("Your video card does not meet the minimum requirment of shader model 2.0.");
-   }
-   
-   if ( %shaderVer < 3.0 || %intel )
+   //Is this a steamdeck?
+   if(startsWith(getDisplayDeviceInformation(), "AMD Custom GPU 0405"))
    {
-      // Allow specular and normals for 2.0a and 2.0b
-      if ( %shaderVer > 2.0 )
-      {
-         MeshQualityGroup.applySetting("Lowest");
-         TextureQualityGroup.applySetting("Lowest");
-         GroundCoverDensityGroup.applySetting("Lowest");
-         DecalLifetimeGroup.applySetting("None");
-         TerrainQualityGroup.applySetting("Lowest");
-         ShaderQualityGroup.applySetting("High");
-         
-         ShadowQualityList.applySetting("None");
-         
-         SoftShadowList.applySetting("Off");
-         
-         $pref::Shadows::useShadowCaching = true;
-         
-         AnisotropicFilterOptionsGroup.applySetting("None");
-         AntiAliasingOptionsGroup.applySetting("Off");
-         ParallaxOptionsGroup.applySetting("Off");
-         TrueWaterReflectionsOptionsGroup.applySetting("Off");
-         PostFXSSAOOptionsGroup.applySetting("Off");
-         PostFXDOFOptionsGroup.applySetting("Off");
-         PostFXVignetteOptionsGroup.applySetting("Off");
-         PostFXLightRayOptionsGroup.applySetting("Off");
-      }
-      else
-      {
-         MeshQualityGroup.applySetting("Lowest");
-         TextureQualityGroup.applySetting("Lowest");
-         GroundCoverDensityGroup.applySetting("Lowest");
-         DecalLifetimeGroup.applySetting("None");
-         TerrainQualityGroup.applySetting("Lowest");
-         ShaderQualityGroup.applySetting("Low");
-         
-         ShadowQualityList.applySetting("None");
-         
-         SoftShadowList.applySetting("Off");
-         
-         $pref::Shadows::useShadowCaching = true;
-         
-         AnisotropicFilterOptionsGroup.applySetting("None");
-         AntiAliasingOptionsGroup.applySetting("Off");
-         ParallaxOptionsGroup.applySetting("Off");
-         TrueWaterReflectionsOptionsGroup.applySetting("Off");
-         PostFXSSAOOptionsGroup.applySetting("Off");
-         PostFXDOFOptionsGroup.applySetting("Off");
-         PostFXVignetteOptionsGroup.applySetting("Off");
-         PostFXLightRayOptionsGroup.applySetting("Off");
-      }
-   }   
+      //If we're on a steamdeck, we can specifically calibrate settings for the platform here
+      MeshQualityGroup.applySetting("Medium");
+      TextureQualityGroup.applySetting("Medium");
+      GroundCoverDensityGroup.applySetting("Medium");
+      DecalLifetimeGroup.applySetting("Medium");
+      TerrainQualityGroup.applySetting("Medium");
+      ShaderQualityGroup.applySetting("High");
+      
+      ShadowQualityList.applySetting("None");
+      
+      SoftShadowList.applySetting("Low");
+      
+      $pref::Shadows::useShadowCaching = true;
+      
+      AnisotropicFilterOptionsGroup.applySetting("4x");
+      AntiAliasingOptionsGroup.applySetting("SMAA");
+      ParallaxOptionsGroup.applySetting("On");
+      TrueWaterReflectionsOptionsGroup.applySetting("On");
+      PostFXSSAOOptionsGroup.applySetting("Off");
+      PostFXDOFOptionsGroup.applySetting("On");
+      PostFXVignetteOptionsGroup.applySetting("On");
+      PostFXLightRayOptionsGroup.applySetting("On");
+   }
    else
    {
-      if ( %videoMem > 1000 )
-      {
-         MeshQualityGroup.applySetting("High");
-         TextureQualityGroup.applySetting("High");
-         GroundCoverDensityGroup.applySetting("High");
-         DecalLifetimeGroup.applySetting("High");
-         TerrainQualityGroup.applySetting("High");
-         ShaderQualityGroup.applySetting("High");
-         
-         ShadowQualityList.applySetting("High");
-         
-         SoftShadowList.applySetting("High");
-         
-         //Should this default to on in ultra settings?
-         $pref::Shadows::useShadowCaching = true;
-         
-         AnisotropicFilterOptionsGroup.applySetting("16x");
-         AntiAliasingOptionsGroup.applySetting("SMAA High");
-         ParallaxOptionsGroup.applySetting("On");
-         TrueWaterReflectionsOptionsGroup.applySetting("On");
-         PostFXSSAOOptionsGroup.applySetting("On");
-         PostFXDOFOptionsGroup.applySetting("On");
-         PostFXVignetteOptionsGroup.applySetting("On");
-         PostFXLightRayOptionsGroup.applySetting("On");
+      if ( %shaderVer < 2.0 )
+      {      
+         echo("Your video card does not meet the minimum requirment of shader model 2.0.");
       }
-      else if ( %videoMem > 400 || %videoMem == 0 )
+      
+      if ( %shaderVer < 3.0 || %intel )
       {
-         MeshQualityGroup.applySetting("Medium");
-         TextureQualityGroup.applySetting("Medium");
-         GroundCoverDensityGroup.applySetting("Medium");
-         DecalLifetimeGroup.applySetting("Medium");
-         TerrainQualityGroup.applySetting("Medium");
-         ShaderQualityGroup.applySetting("High");
-         
-         ShadowQualityList.applySetting("Medium");
-         
-         SoftShadowList.applySetting("Low");
-         
-         $pref::Shadows::useShadowCaching = true;
-         
-         AnisotropicFilterOptionsGroup.applySetting("4x");
-         AntiAliasingOptionsGroup.applySetting("SMAA");
-         ParallaxOptionsGroup.applySetting("On");
-         TrueWaterReflectionsOptionsGroup.applySetting("On");
-         PostFXSSAOOptionsGroup.applySetting("Off");
-         PostFXDOFOptionsGroup.applySetting("On");
-         PostFXVignetteOptionsGroup.applySetting("On");
-         PostFXLightRayOptionsGroup.applySetting("On");
-         
-         if ( %videoMem == 0 )
-            echo("Torque was unable to detect available video memory. Applying 'Medium' quality.");
-      }
+         // Allow specular and normals for 2.0a and 2.0b
+         if ( %shaderVer > 2.0 )
+         {
+            MeshQualityGroup.applySetting("Lowest");
+            TextureQualityGroup.applySetting("Lowest");
+            GroundCoverDensityGroup.applySetting("Lowest");
+            DecalLifetimeGroup.applySetting("None");
+            TerrainQualityGroup.applySetting("Lowest");
+            ShaderQualityGroup.applySetting("High");
+            
+            ShadowQualityList.applySetting("None");
+            
+            SoftShadowList.applySetting("Off");
+            
+            $pref::Shadows::useShadowCaching = true;
+            
+            AnisotropicFilterOptionsGroup.applySetting("None");
+            AntiAliasingOptionsGroup.applySetting("Off");
+            ParallaxOptionsGroup.applySetting("Off");
+            TrueWaterReflectionsOptionsGroup.applySetting("Off");
+            PostFXSSAOOptionsGroup.applySetting("Off");
+            PostFXDOFOptionsGroup.applySetting("Off");
+            PostFXVignetteOptionsGroup.applySetting("Off");
+            PostFXLightRayOptionsGroup.applySetting("Off");
+         }
+         else
+         {
+            MeshQualityGroup.applySetting("Lowest");
+            TextureQualityGroup.applySetting("Lowest");
+            GroundCoverDensityGroup.applySetting("Lowest");
+            DecalLifetimeGroup.applySetting("None");
+            TerrainQualityGroup.applySetting("Lowest");
+            ShaderQualityGroup.applySetting("Low");
+            
+            ShadowQualityList.applySetting("None");
+            
+            SoftShadowList.applySetting("Off");
+            
+            $pref::Shadows::useShadowCaching = true;
+            
+            AnisotropicFilterOptionsGroup.applySetting("None");
+            AntiAliasingOptionsGroup.applySetting("Off");
+            ParallaxOptionsGroup.applySetting("Off");
+            TrueWaterReflectionsOptionsGroup.applySetting("Off");
+            PostFXSSAOOptionsGroup.applySetting("Off");
+            PostFXDOFOptionsGroup.applySetting("Off");
+            PostFXVignetteOptionsGroup.applySetting("Off");
+            PostFXLightRayOptionsGroup.applySetting("Off");
+         }
+      }   
       else
       {
-         MeshQualityGroup.applySetting("Low");
-         TextureQualityGroup.applySetting("Low");
-         GroundCoverDensityGroup.applySetting("Low");
-         DecalLifetimeGroup.applySetting("Low");
-         TerrainQualityGroup.applySetting("Low");
-         ShaderQualityGroup.applySetting("Low");
-         
-         ShadowQualityList.applySetting("None");
-         
-         SoftShadowList.applySetting("Off");
-         
-         $pref::Shadows::useShadowCaching = true;
-         
-         AnisotropicFilterOptionsGroup.applySetting("None");
-         AntiAliasingOptionsGroup.applySetting("FXAA");
-         ParallaxOptionsGroup.applySetting("On");
-         TrueWaterReflectionsOptionsGroup.applySetting("On");
-         PostFXSSAOOptionsGroup.applySetting("Off");
-         PostFXDOFOptionsGroup.applySetting("Off");
-         PostFXVignetteOptionsGroup.applySetting("Off");
-         PostFXLightRayOptionsGroup.applySetting("Off");
+         if ( %videoMem > 1000 )
+         {
+            MeshQualityGroup.applySetting("High");
+            TextureQualityGroup.applySetting("High");
+            GroundCoverDensityGroup.applySetting("High");
+            DecalLifetimeGroup.applySetting("High");
+            TerrainQualityGroup.applySetting("High");
+            ShaderQualityGroup.applySetting("High");
+            
+            ShadowQualityList.applySetting("High");
+            
+            SoftShadowList.applySetting("High");
+            
+            //Should this default to on in ultra settings?
+            $pref::Shadows::useShadowCaching = true;
+            
+            AnisotropicFilterOptionsGroup.applySetting("16x");
+            AntiAliasingOptionsGroup.applySetting("SMAA High");
+            ParallaxOptionsGroup.applySetting("On");
+            TrueWaterReflectionsOptionsGroup.applySetting("On");
+            PostFXSSAOOptionsGroup.applySetting("On");
+            PostFXDOFOptionsGroup.applySetting("On");
+            PostFXVignetteOptionsGroup.applySetting("On");
+            PostFXLightRayOptionsGroup.applySetting("On");
+         }
+         else if ( %videoMem > 400 || %videoMem == 0 )
+         {
+            MeshQualityGroup.applySetting("Medium");
+            TextureQualityGroup.applySetting("Medium");
+            GroundCoverDensityGroup.applySetting("Medium");
+            DecalLifetimeGroup.applySetting("Medium");
+            TerrainQualityGroup.applySetting("Medium");
+            ShaderQualityGroup.applySetting("High");
+            
+            ShadowQualityList.applySetting("Medium");
+            
+            SoftShadowList.applySetting("Low");
+            
+            $pref::Shadows::useShadowCaching = true;
+            
+            AnisotropicFilterOptionsGroup.applySetting("4x");
+            AntiAliasingOptionsGroup.applySetting("SMAA");
+            ParallaxOptionsGroup.applySetting("On");
+            TrueWaterReflectionsOptionsGroup.applySetting("On");
+            PostFXSSAOOptionsGroup.applySetting("Off");
+            PostFXDOFOptionsGroup.applySetting("On");
+            PostFXVignetteOptionsGroup.applySetting("On");
+            PostFXLightRayOptionsGroup.applySetting("On");
+            
+            if ( %videoMem == 0 )
+               echo("Torque was unable to detect available video memory. Applying 'Medium' quality.");
+         }
+         else
+         {
+            MeshQualityGroup.applySetting("Low");
+            TextureQualityGroup.applySetting("Low");
+            GroundCoverDensityGroup.applySetting("Low");
+            DecalLifetimeGroup.applySetting("Low");
+            TerrainQualityGroup.applySetting("Low");
+            ShaderQualityGroup.applySetting("Low");
+            
+            ShadowQualityList.applySetting("None");
+            
+            SoftShadowList.applySetting("Off");
+            
+            $pref::Shadows::useShadowCaching = true;
+            
+            AnisotropicFilterOptionsGroup.applySetting("None");
+            AntiAliasingOptionsGroup.applySetting("FXAA");
+            ParallaxOptionsGroup.applySetting("On");
+            TrueWaterReflectionsOptionsGroup.applySetting("On");
+            PostFXSSAOOptionsGroup.applySetting("Off");
+            PostFXDOFOptionsGroup.applySetting("Off");
+            PostFXVignetteOptionsGroup.applySetting("Off");
+            PostFXLightRayOptionsGroup.applySetting("Off");
+         }
       }
    }
    

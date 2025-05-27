@@ -333,11 +333,13 @@ function MenuBuilder::addItem(%this, %pos, %item)
    {
       %this.insertItem(%pos, %name !$= "-" ? %name : "", %accel, %cmd, %bitmapIdx $= "" ? -1 : %bitmapIdx);
    }
+   
+   return %pos;
 }
 
 function MenuBuilder::appendItem(%this, %item)
 {
-   %this.addItem(%this.getItemCount(), %item);
+   return %this.addItem(%this.getItemCount(), %item);
 }
 
 function MenuBuilder::onAdd(%this)

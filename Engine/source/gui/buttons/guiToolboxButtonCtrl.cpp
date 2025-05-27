@@ -88,7 +88,7 @@ void GuiToolboxButtonCtrl::inspectPostApply()
    // set it's extent to be exactly the size of the normal bitmap (if present)
    Parent::inspectPostApply();
 
-   if ((getWidth() == 0) && (getHeight() == 0) && mNormalBitmapAsset.notNull())
+   if ((getWidth() == 0) && (getHeight() == 0) && getNormalBitmap())
    {
       setExtent(getNormalBitmap()->getWidth(), getNormalBitmap()->getHeight());
    }
@@ -142,7 +142,7 @@ void GuiToolboxButtonCtrl::onRender(Point2I offset, const RectI& updateRect)
    }
 
    // Now render the image
-   if( mNormalBitmapAsset.notNull() )
+   if(getNormalBitmap())
    {
       renderButton(getNormalBitmap(), offset, updateRect );
       return;

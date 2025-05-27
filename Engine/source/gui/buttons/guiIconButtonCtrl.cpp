@@ -296,7 +296,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
    RectI iconRect( 0, 0, 0, 0 );
 
    // Render the icon
-   if ( mBitmapAsset.notNull() && mIconLocation != GuiIconButtonCtrl::IconLocNone)
+   if ( getBitmap() && mIconLocation != GuiIconButtonCtrl::IconLocNone)
    {
       // Render the normal bitmap
       drawer->clearBitmapModulation();

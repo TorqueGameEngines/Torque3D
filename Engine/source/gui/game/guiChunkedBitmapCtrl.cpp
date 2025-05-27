@@ -155,7 +155,7 @@ void GuiChunkedBitmapCtrl::renderRegion(const Point2I &offset, const Point2I &ex
 void GuiChunkedBitmapCtrl::onRender(Point2I offset, const RectI &updateRect)
 {
 
-   if( mBitmapAsset.notNull() )
+   if(getBitmap())
    {
       RectI boundsRect( offset, getExtent());
       GFX->getDrawUtil()->drawBitmapStretch(getBitmap(), boundsRect, GFXBitmapFlip_None, GFXTextureFilterLinear);

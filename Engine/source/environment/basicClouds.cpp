@@ -332,7 +332,7 @@ void BasicClouds::_initTexture()
 {
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
-      if ( mLayerEnabled[i] && mTextureAsset[i].notNull())
+      if ( mLayerEnabled[i])
       {
          // load the resource.
          getTexture(i);

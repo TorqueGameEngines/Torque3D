@@ -101,7 +101,7 @@ void GuiBitmapCtrl::inspectPostApply()
    // set it's extent to be exactly the size of the bitmap (if present)
    Parent::inspectPostApply();
 
-   if (!mWrap && (getExtent().x == 0) && (getExtent().y == 0) && mBitmapAsset.notNull())
+   if (!mWrap && (getExtent().x == 0) && (getExtent().y == 0) && getBitmap())
    {
       setExtent(mBitmap->getWidth(), mBitmap->getHeight());
    }
@@ -126,7 +126,7 @@ void GuiBitmapCtrl::setBitmap(const char* name, bool resize)
 
    mBitmap = mBitmapAsset->getTexture(&GFXDefaultGUIProfile);
 
-   if (mBitmapAsset.notNull() && resize)
+   if (getBitmap() && resize)
    {
      
       setExtent(mBitmap->getWidth(), mBitmap->getHeight());
@@ -212,7 +212,7 @@ void GuiBitmapCtrl::onRender(Point2I offset, const RectI& updateRect)
 
 void GuiBitmapCtrl::setValue(S32 x, S32 y)
 {
-   if (mBitmapAsset.notNull())
+   if (getBitmap())
    {
       x += mBitmapAsset->getTextureBitmapWidth() / 2;
       y += mBitmapAsset->getTextureBitmapHeight() / 2;

@@ -112,7 +112,7 @@ void GuiCursor::onRemove()
 
 void GuiCursor::render(const Point2I &pos)
 {
-   if (mBitmapAsset.notNull())
+   if (getBitmap())
    {
       mExtent.set(getBitmap()->getWidth(), getBitmap()->getHeight());
    }

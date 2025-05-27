@@ -200,7 +200,7 @@ IESLoadHelper::load(const std::string& data, IESFileInfo& info)
 		info._anglesH.push_back(value);
 	}
 
-	info._candalaValues.reserve(info.anglesNumH * info.anglesNumV);
+	info._candalaValues.reserve(size_t(info.anglesNumH * info.anglesNumV));
 
 	for (std::int32_t y = 0; y < info.anglesNumH; ++y)
 	{

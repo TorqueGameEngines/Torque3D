@@ -324,10 +324,7 @@ bool afxZodiacData::preload(bool server, String &errorStr)
   if (vert_range.x == 0.0f && vert_range.y == 0.0f)
     vert_range.x = vert_range.y = radius_xy;
 
-  if (mTextureAsset.notNull())
-  {
-     getTexture();
-  }
+  getTexture();
 
   return true;
 }
@@ -345,10 +342,7 @@ void afxZodiacData::onStaticModified(const char* slot, const char* newValue)
 
 void afxZodiacData::onPerformSubstitutions() 
 {
-   if (mTextureAsset.notNull())
-   {
-      getTexture();
-   }
+   getTexture();
 }
 
 F32 afxZodiacData::calcRotationAngle(F32 elapsed, F32 rate_factor)

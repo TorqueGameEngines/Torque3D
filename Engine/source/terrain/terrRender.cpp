@@ -96,7 +96,7 @@ void TerrainBlock::_updateMaterials()
    {
       TerrainMaterial *mat = mFile->mMaterials[i];
 
-      if (mat->getDiffuseMapAsset().notNull())
+      if (mat->getDiffuseMap())
       {
          mBaseTextures[i] = mat->getDiffuseMap();
       }
@@ -104,11 +104,11 @@ void TerrainBlock::_updateMaterials()
          mBaseTextures[ i ] = GFXTexHandle();
 
       // Find the maximum detail distance.
-      if (  mat->getDetailMapAsset().notNull() &&
+      if (  mat->getDetailMap() &&
             mat->getDetailDistance() > mMaxDetailDistance )
          mMaxDetailDistance = mat->getDetailDistance();
 
-      if (  mat->getMacroMapAsset().notNull() &&
+      if (  mat->getMacroMap() &&
             mat->getMacroDistance() > mMaxDetailDistance )
          mMaxDetailDistance = mat->getMacroDistance();
    }
@@ -126,18 +126,18 @@ void TerrainBlock::_updateMaterials()
    {
       TerrainMaterial* mat = mFile->mMaterials[i];
 
-      if (mat->getDetailMapAsset().notNull())
+      if (mat->getDetailMap())
          detailTexArray[i] = mat->getDetailMap();
-      if (mat->getMacroMapAsset().notNull())
+      if (mat->getMacroMap())
          macroTexArray[i] = mat->getMacroMap();
-      if (mat->getNormalMapAsset().notNull())
+      if (mat->getNormalMap())
          normalTexArray[i] = mat->getNormalMap();
 
       //depending on creation method this may or may not have been shoved into srgb space eroneously
       GFXTextureProfile* profile = &GFXStaticTextureProfile;
       if (mat->getIsSRGB())
          profile = &GFXStaticTextureSRGBProfile;
-      if (mat->getORMConfigMapAsset().notNull())
+      if (mat->getORMConfigMap())
          ormTexArray[i] = mat->getORMConfigMapAsset()->getTexture(profile);
    }
 

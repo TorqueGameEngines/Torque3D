@@ -50,6 +50,7 @@ function ImageAsset::generatePreviewImage(%this, %previewButton, %forceRegenerat
    }
    
    %previewFilePath = %previewPath @ %this.assetName @ ".png";
+   
    if(!isFile(%previewFilePath) || (compareFileTimes(%this.getImagePath(), %previewFilePath) == 1))
    {
       %generatePreview = true;

@@ -28,7 +28,7 @@ function ShapeAsset::onDelete(%this)
 {
    //Special handle the cache preview image
    %module = $CurrentAssetBrowser.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%this.getShapePath())));
-   %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/" @ %this.assetName @ ".png";
+   %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/" @ %this.assetName @ ".dds";
 
    if(isFile(%previewPath))
    {

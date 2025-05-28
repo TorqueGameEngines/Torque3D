@@ -2778,7 +2778,7 @@ function getAssetPreviewImage(%asset)
    
    if(%previewPath $= "")
       %previewPath = "ToolsModule:unknownImage_image";
-   
+
    return %previewPath;
 }
 

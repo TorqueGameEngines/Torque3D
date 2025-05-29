@@ -393,7 +393,7 @@ void ProcessedMaterial::_setStageData()
    for (i = 0; i < Material::MAX_STAGES; i++)
    {
       // DiffuseMap
-      if (mMaterial->getDiffuseMapAsset(i).notNull())
+      if (mMaterial->getDiffuseMap(i))
       {
          mStages[i].setTex(MFT_DiffuseMap, mMaterial->getDiffuseMap(i));
          if (!mStages[i].getTex(MFT_DiffuseMap))
@@ -406,7 +406,7 @@ void ProcessedMaterial::_setStageData()
          }
       }
       // OverlayMap
-      if (mMaterial->getOverlayMapAsset(i).notNull())
+      if (mMaterial->getOverlayMap(i))
       {
          mStages[i].setTex(MFT_OverlayMap, mMaterial->getOverlayMap(i));
          if (!mStages[i].getTex(MFT_OverlayMap))
@@ -414,7 +414,7 @@ void ProcessedMaterial::_setStageData()
       }
 
       // LightMap
-      if (mMaterial->getLightMapAsset(i).notNull())
+      if (mMaterial->getLightMap(i))
       {
          mStages[i].setTex(MFT_LightMap, mMaterial->getLightMap(i));
          if (!mStages[i].getTex(MFT_LightMap))
@@ -422,7 +422,7 @@ void ProcessedMaterial::_setStageData()
       }
 
       // ToneMap
-      if (mMaterial->getToneMapAsset(i).notNull())
+      if (mMaterial->getToneMap(i))
       {
          mStages[i].setTex(MFT_ToneMap, mMaterial->getToneMap(i));
          if (!mStages[i].getTex(MFT_ToneMap))
@@ -430,7 +430,7 @@ void ProcessedMaterial::_setStageData()
       }
 
       // DetailMap
-      if (mMaterial->getDetailMapAsset(i).notNull())
+      if (mMaterial->getDetailMap(i))
       {
          mStages[i].setTex(MFT_DetailMap, mMaterial->getDetailMap(i));
          if (!mStages[i].getTex(MFT_DetailMap))
@@ -438,7 +438,7 @@ void ProcessedMaterial::_setStageData()
       }
 
       // NormalMap
-      if (mMaterial->getNormalMapAsset(i).notNull())
+      if (mMaterial->getNormalMap(i))
       {
          mStages[i].setTex(MFT_NormalMap, mMaterial->getNormalMap(i));
          if (!mStages[i].getTex(MFT_NormalMap))
@@ -450,7 +450,7 @@ void ProcessedMaterial::_setStageData()
       }
 
       // Detail Normal Map
-      if (mMaterial->getDetailNormalMapAsset(i).notNull())
+      if (mMaterial->getDetailNormalMap(i))
       {
          mStages[i].setTex(MFT_DetailNormalMap, mMaterial->getDetailNormalMap(i));
          if (!mStages[i].getTex(MFT_DetailNormalMap))
@@ -463,7 +463,7 @@ void ProcessedMaterial::_setStageData()
          profile = &GFXStaticTextureSRGBProfile;
 
       // ORMConfig
-      if (mMaterial->getORMConfigMapAsset(i).notNull())
+      if (mMaterial->getORMConfigMap(i))
       {
          mStages[i].setTex(MFT_OrmMap, mMaterial->getORMConfigMap(profile, i));
          if (!mStages[i].getTex(MFT_OrmMap))
@@ -471,7 +471,7 @@ void ProcessedMaterial::_setStageData()
       }
       else
       {
-         if ((mMaterial->getAOMapAsset(i).notNull()) || (mMaterial->getRoughMapAsset(i).notNull()) || (mMaterial->getMetalMapAsset(i).notNull()))
+         if ((mMaterial->getAOMap(i)) || (mMaterial->getRoughMap(i)) || (mMaterial->getMetalMap(i)))
          {
             U32 inputKey[4];
             inputKey[0] = mMaterial->mAOChan[i];
@@ -485,7 +485,7 @@ void ProcessedMaterial::_setStageData()
                mMaterial->logError("Failed to dynamically create ORM Config map for stage %i", i);
          }
       }
-      if (mMaterial->getGlowMapAsset(i).notNull())
+      if (mMaterial->getGlowMap(i))
       {
          mStages[i].setTex(MFT_GlowMap, mMaterial->getGlowMap(i));
          if (!mStages[i].getTex(MFT_GlowMap))

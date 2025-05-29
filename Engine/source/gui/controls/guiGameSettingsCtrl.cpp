@@ -184,7 +184,7 @@ void GuiGameSettingsCtrl::onRenderListOption(Point2I currentOffset)
       bool arrowOnR = (isSelected() || isHighlighted()) && (mWrapOptions || (mSelectedOption < mOptions.size() - 1));
       if (arrowOnL)
       {
-         if (mPreviousBitmapAsset.notNull())
+         if (getPreviousBitmap())
          {
             arrowOffset.x = currentOffset.x + mColumnSplit;
             arrowOffset.y = currentOffset.y + arrowOffsetY;
@@ -205,7 +205,7 @@ void GuiGameSettingsCtrl::onRenderListOption(Point2I currentOffset)
       }
       if (arrowOnR)
       {
-         if (mNextBitmapAsset.notNull())
+         if (getNextBitmap())
          {
             arrowOffset.x = currentOffset.x + getWidth() - mRightPad - mArrowSize;
             arrowOffset.y = currentOffset.y + arrowOffsetY;
@@ -369,7 +369,7 @@ void GuiGameSettingsCtrl::onRenderKeybindOption(Point2I currentOffset)
    buttonSize.x = height;
    buttonSize.y = height;
 
-   if (mKeybindBitmapAsset.notNull())
+   if (getKeybindBitmap())
    {
       RectI rect(button, buttonSize);
       drawer->clearBitmapModulation();

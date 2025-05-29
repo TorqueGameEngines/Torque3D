@@ -875,7 +875,7 @@ void ProcessedShaderMaterial::setTextureStages( SceneRenderState *state, const S
          case Material::TexTarget:
             {
                texTarget = rpd->mTexSlot[i].texTarget;
-               if (!mMaterial->getDiffuseMapAsset(0).notNull())
+               if (!mMaterial->getDiffuseMap(0))
                {
                   GFX->setTexture(i, NULL);
                   break;

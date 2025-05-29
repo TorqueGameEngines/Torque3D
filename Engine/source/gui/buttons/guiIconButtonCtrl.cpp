@@ -296,7 +296,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
    RectI iconRect( 0, 0, 0, 0 );
 
    // Render the icon
-   if ( mBitmapAsset.notNull() && mIconLocation != GuiIconButtonCtrl::IconLocNone)
+   if ( getBitmap() && mIconLocation != GuiIconButtonCtrl::IconLocNone)
    {
       // Render the normal bitmap
       drawer->clearBitmapModulation();
@@ -380,7 +380,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       if ( mTextLocation == TextLocRight )
       {
          Point2I start( mTextMargin, ( getHeight() - mProfile->mFont->getHeight() ) / 2 );
-         if (mBitmapAsset.notNull() && mIconLocation != IconLocNone)
+         if (getBitmap() && mIconLocation != IconLocNone)
          {
             start.x = getWidth() - (iconRect.extent.x + mButtonMargin.x + textWidth);
          }
@@ -400,7 +400,7 @@ void GuiIconButtonCtrl::renderButton( Point2I &offset, const RectI& updateRect )
       if ( mTextLocation == TextLocCenter )
       {
          Point2I start;
-         if (mBitmapAsset.notNull() && mIconLocation == IconLocLeft )
+         if (getBitmap() && mIconLocation == IconLocLeft )
          {
             start.set( ( getWidth() - textWidth - iconRect.extent.x ) / 2 + iconRect.extent.x, 
                        ( getHeight() - mProfile->mFont->getHeight() ) / 2 );

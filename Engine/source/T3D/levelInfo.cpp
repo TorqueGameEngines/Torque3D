@@ -367,7 +367,7 @@ void LevelInfo::_onLMActivate(const char *lm, bool enable)
 
 void LevelInfo::setLevelAccuTexture()
 {
-   if (isClientObject() && mAccuTextureAsset.notNull())
+   if (isClientObject() && getAccuTexture())
    {
       gLevelAccuMap = getAccuTexture();
    }

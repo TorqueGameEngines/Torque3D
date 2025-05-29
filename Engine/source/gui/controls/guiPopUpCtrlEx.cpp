@@ -1090,13 +1090,13 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
       }
 
       //  Draw a bitmap over the background?
-      if ( mBitmapAsset[Depressed].notNull() )
+      if (getBitmap(Depressed))
       {
          RectI rect(offset, mBitmapBounds);
          drawUtil->clearBitmapModulation();
          drawUtil->drawBitmapStretch(getBitmap(Depressed), rect );
       } 
-      else if (mBitmapAsset[Normal].notNull())
+      else if (getBitmap(Normal))
       {
          RectI rect(offset, mBitmapBounds);
          drawUtil->clearBitmapModulation();
@@ -1134,7 +1134,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
          }
 
          //  Draw a bitmap over the background?
-         if (mBitmapAsset[Normal].notNull())
+         if (getBitmap(Normal))
          {
             RectI rect( offset, mBitmapBounds );
             drawUtil->clearBitmapModulation();
@@ -1164,7 +1164,7 @@ void GuiPopUpMenuCtrlEx::onRender(Point2I offset, const RectI &updateRect)
          }
 
          //  Draw a bitmap over the background?
-         if (mBitmapAsset[Normal].notNull())
+         if (getBitmap(Normal))
          {
             RectI rect(offset, mBitmapBounds);
             drawUtil->clearBitmapModulation();

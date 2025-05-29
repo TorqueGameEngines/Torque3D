@@ -974,8 +974,6 @@ void GroundCover::_initialize( U32 cellCount, U32 cellPlacementCount )
          GFXTexHandle tex;
          if (mat->getDiffuseMap(0))
             tex = mat->getDiffuseMap(0);
-         else if (mat->getDiffuseMapAsset(0).notNull())
-            tex = mat->getDiffuseMap(0);
 
          if(tex.isValid())
          {

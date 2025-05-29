@@ -239,7 +239,7 @@ U32 CloudLayer::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );
 
-   if (stream->writeFlag(mTextureAsset.notNull())) {
+   if (stream->writeFlag(getTexture())) {
       NetStringHandle assetIdStr = mTextureAsset.getAssetId(); conn->packNetStringHandleU(stream, assetIdStr);
    }
    

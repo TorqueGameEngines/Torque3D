@@ -100,8 +100,6 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
    S32 x, y, n, channels;
    String ext = path.getExtension();
 
-   U32 prevWaterMark = FrameAllocator::getWaterMark();
-
    // if this is an ies profile we need to create a texture for it.
    if (ext.equal("ies"))
    {
@@ -130,8 +128,6 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
          dMemcpy(pBase, data, rowBytes);
 
          stbi_image_free(data);
-
-         FrameAllocator::setWaterMark(prevWaterMark);
 
          return true;
       }
@@ -190,8 +186,6 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 
          stbi_image_free(dataChar);
 
-         FrameAllocator::setWaterMark(prevWaterMark);
-
          sWriteSTB(textureName, bitmap, 10);
 
          return true;
@@ -201,7 +195,6 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 
    if (!stbi_info(path.getFullPath().c_str(), &x, &y, &channels))
    {
-      FrameAllocator::setWaterMark(prevWaterMark);
       const char* stbErr = stbi_failure_reason();
 
       if (!stbErr)
@@ -243,8 +236,6 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 
             stbi_image_free(data);
 
-            FrameAllocator::setWaterMark(prevWaterMark);
-
             return true;
          }
       }
@@ -271,8 +262,6 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
       //stbi_image_free(data);
       stbi_image_free(dataChar);
 
-      FrameAllocator::setWaterMark(prevWaterMark);
-
       return true;
    }
 
@@ -296,7 +285,6 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
       format = GFXFormatR8G8B8A8;
       break;
    default:
-      FrameAllocator::setWaterMark(prevWaterMark);
       return false;
    }
 
@@ -315,8 +303,6 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
    // Check this bitmap for transparency
    if (channels == 4)
       bitmap->checkForTransparency();
-
-   FrameAllocator::setWaterMark(prevWaterMark);
 
    return true;
 }

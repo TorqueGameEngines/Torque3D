@@ -244,7 +244,8 @@ DefineEnumType(ImageAssetType);
 
 #define DECLARE_IMAGEASSET(className, name, profile)                                                                                                                 \
 private:                                                                                                                                                                      \
-   AssetPtr<ImageAsset> m##name##Asset;                                                                                                                                       \
+   AssetPtr<ImageAsset> m##name##Asset;\
+   String               m##name##File;\
 public:                                                                                                                                                                       \
    void _set##name(StringTableEntry _in){                                                                                                                                     \
       if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
@@ -263,7 +264,7 @@ public:                                                                         
          {                                                                                                                                                                    \
             imageAssetId = query.mAssetList[0];                                                                                                                               \
          }                                                                                                                                                                    \
-         else if(Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                 \
+         else if(Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                                                     \
          {                                                                                                                                                                    \
             imageAssetId = ImageAsset::getAssetIdByFilename(_in);                                                                                                             \
             if (imageAssetId == ImageAsset::smNoImageAssetFallback)                                                                                                           \
@@ -296,6 +297,7 @@ public:                                                                         
 #define DECLARE_IMAGEASSET_NET(className, name, profile, mask)                                                                                                       \
 private:                                                                                                                                                                      \
    AssetPtr<ImageAsset> m##name##Asset;                                                                                                                                       \
+   String               m##name##File;\
 public:                                                                                                                                                                       \
    void _set##name(StringTableEntry _in){                                                                                                                                     \
       if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
@@ -347,12 +349,14 @@ public:                                                                         
 
 
 #define INITPERSISTFIELD_IMAGEASSET(name, consoleClass, docs)                                                                                                        \
-   addProtectedField(assetText(name, Asset), TypeImageAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.));
+   addProtectedField(assetText(name, Asset), TypeImageAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.)); \
+   addProtectedField(assetText(name, File), TypeFilename, Offset(m##name##File, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, file docs.));
 
 
 #define DECLARE_IMAGEASSET_ARRAY(className, name, profile, max)                                                                                                      \
 private:                                                                                                                                                                      \
    AssetPtr<ImageAsset> m##name##Asset[max];                                                                                                                                  \
+   String               m##name##File[max];\
 public:                                                                                                                                                                       \
    void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
       if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \
@@ -405,6 +409,7 @@ public:                                                                         
 #define DECLARE_IMAGEASSET_ARRAY_NET(className, name, profile, max, mask)                                                                                            \
 private:                                                                                                                                                                      \
    AssetPtr<ImageAsset> m##name##Asset[max];                                                                                                                                  \
+   String               m##name##File[max];\
 public:                                                                                                                                                                       \
    void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
       if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \

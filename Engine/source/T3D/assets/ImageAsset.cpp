@@ -289,7 +289,7 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
                   Torque::Path temp1 = temp->getImageFile();
                   Torque::Path temp2 = fileName;
 
-                  if (temp1.getFileName() == temp2.getFileName())
+                  if (temp1.getPath() == temp2.getPath() && temp1.getFileName() == temp2.getFileName())
                   {
                      return imgAsset;
                   }

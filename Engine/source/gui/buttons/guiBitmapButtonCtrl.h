@@ -118,7 +118,11 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl, protected AssetPtrCallback
       ///
       BitmapMode mBitmapMode;
 
-private: AssetPtr<ImageAsset> mBitmapAsset; public: void _setBitmap(StringTableEntry _in) {
+private:
+   AssetPtr<ImageAsset> mBitmapAsset;
+   String               mBitmapFile; 
+public:
+   void _setBitmap(StringTableEntry _in) {
    if (mBitmapAsset.getAssetId() == _in) return; if (!AssetDatabase.isDeclaredAsset(_in)) {
       StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback; AssetQuery query; S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in); if (foundAssetcount != 0) {
          imageAssetId = query.mAssetList[0];

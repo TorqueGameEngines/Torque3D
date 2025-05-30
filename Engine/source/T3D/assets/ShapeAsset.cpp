@@ -626,28 +626,13 @@ const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overri
    delete imposterCap;
    delete shape;
 
-   String dumpPath = String(mFilePath) + "_Preview.dds";
+   String dumpPath = String(mFilePath) + ".png";
 
    char* returnBuffer = Con::getReturnBuffer(128);
    dSprintf(returnBuffer, 128, "%s", dumpPath.c_str());
 
-   /*FileStream stream;
-   if (stream.open(dumpPath, Torque::FS::File::Write))
-      destBmp.writeBitmap("png", stream);
-   stream.close();*/
+   imposter->writeBitmap("png", dumpPath);
    
-   DDSFile* ddsDest = DDSFile::createDDSFileFromGBitmap(imposter);
-   ImageUtil::ddsCompress(ddsDest, GFXFormatBC2);
-
-   // Finally save the imposters to disk.
-   FileStream fs;
-   if (fs.open(returnBuffer, Torque::FS::File::Write))
-   {
-      ddsDest->write(fs);
-      fs.close();
-   }
-
-   delete ddsDest;
    delete imposter;
    delete imposterNrml;
 

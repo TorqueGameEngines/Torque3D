@@ -509,7 +509,6 @@ PostEffect::PostEffect()
    dMemset( mTexSizeSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
    dMemset( mRenderTargetParamsSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
 
-   mConstUpdateTimer = PlatformTimer::create();
 }
 
 PostEffect::~PostEffect()
@@ -1112,9 +1111,7 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
    }
    */
 
-   if (mConstUpdateTimer->getElapsedMs() > TickMs)
    {
-      mConstUpdateTimer->reset();
       {
          PROFILE_SCOPE(PostEffect_SetShaderConsts);
 

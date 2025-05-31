@@ -324,7 +324,6 @@ protected:
 
    EffectConstTable mEffectConsts;
 
-   PlatformTimer* mConstUpdateTimer;
    ///
    virtual void _updateScreenGeometry( const Frustum &frustum,
                                        GFXVertexBufferHandle<PFXVertex> *outVB );

@@ -264,7 +264,7 @@ public:                                                                         
          {                                                                                                                                                                    \
             imageAssetId = query.mAssetList[0];                                                                                                                               \
          }                                                                                                                                                                    \
-         else if(Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                                                     \
+         else if(Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                 \
          {                                                                                                                                                                    \
             imageAssetId = ImageAsset::getAssetIdByFilename(_in);                                                                                                             \
             if (imageAssetId == ImageAsset::smNoImageAssetFallback)                                                                                                           \

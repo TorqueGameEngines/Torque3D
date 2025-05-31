@@ -132,6 +132,7 @@ GuiBitmapButtonCtrl::GuiBitmapButtonCtrl()
    mBitmapName = StringTable->EmptyString();
    mBitmap = NULL;
    mBitmapAsset.registerRefreshNotify(this);
+   mBitmapFile = String::EmptyString;
 }
 
 //-----------------------------------------------------------------------------

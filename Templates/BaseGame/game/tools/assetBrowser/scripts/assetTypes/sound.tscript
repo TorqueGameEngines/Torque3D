@@ -87,6 +87,8 @@ function SoundAsset::onGUIEditorDropped(%this, %position)
    %cmd = %cmd @ "};";
    %ctrl = GuiEditCanvas.createObject(%cmd);
    //echo(%ctrl SPC "created");
+   
+   return %ctrl;
 }
 
 function GuiInspectorTypeSoundAssetPtr::onControlDropped( %this, %payload, %position )

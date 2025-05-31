@@ -148,9 +148,16 @@ function ShapeAsset::onWorldEditorDropped(%assetDef, %position)
    MECreateUndoAction::submit(%newStatic );
 }
 
-function ShapeAsset::onGUIEditorDropped(%assetDef, %position)
+function ShapeAsset::onGUIEditorDropped(%this, %position)
 {
+   %assetId = %this.getAssetId();
+   %cmd = "new GuiObjectView(){";
+   %cmd = %cmd @ "ModelAsset =\""@ %assetId @"\";";
+   %cmd = %cmd @ "position =\""@ %position @"\";";
+   %cmd = %cmd @ "};";
+   %ctrl = GuiEditCanvas.createObject(%cmd);
    
+   return %ctrl;
 }
 
 function GuiInspectorTypeShapeAssetPtr::onControlDropped( %this, %payload, %position )

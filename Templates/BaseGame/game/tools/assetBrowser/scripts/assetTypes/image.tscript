@@ -84,6 +84,18 @@ function ImageAsset::onSaveProperties(%this)
 {
    GenericAsset::onSaveProperties(%this);
 }
+
+function ImageAsset::onGuiEditorDropped(%this, %position)
+{
+   %assetId = %this.getAssetId();
+   %cmd = "new GuiBitmapCtrl(){";
+   %cmd = %cmd @ "BitmapAsset =\""@ %assetId @"\";";
+   %cmd = %cmd @ "position =\""@ %position @"\";";
+   %cmd = %cmd @ "};";
+   %ctrl = GuiEditCanvas.createObject(%cmd);
+   
+   return %ctrl;
+}
    
 function GuiInspectorTypeImageAssetPtr::onControlDropped( %this, %payload, %position )
 {

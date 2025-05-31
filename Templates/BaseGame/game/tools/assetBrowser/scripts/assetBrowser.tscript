@@ -2515,7 +2515,7 @@ function GuiEditor::onControlDropped(%this, %payload, %position)
       %assetId = %payload.moduleName @ ":" @ %payload.assetName;
       %assetType = AssetDatabase.getAssetType(%assetId);
       
-      AssetBrowser.callAssetTypeFunc(%assetType, "GUIEditorDropped", %payload.moduleName, %payload.assetName, %pos);
+      %ctrl = AssetBrowser.callAssetTypeFunc(%assetType, "onGUIEditorDropped", %payload.moduleName, %payload.assetName, %pos);
    }
    else
    {

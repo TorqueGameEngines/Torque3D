@@ -319,18 +319,18 @@ function GenericAsset::onSaveProperties(%this)
 //Called when the asset's Preview has been dragged and dropped into the world editor
 //This would usually spawn an associated instance, or a scene object that can utilize the
 //asset in question(ie, Dropping a SoundAsset spawns a SoundEmitter)
-function GenericAsset::onWorldEditorDropped(%this, %position)
+/*function GenericAsset::onWorldEditorDropped(%this, %position)
 {
    echo("GenericAsset::onWorldEditorDropped() - " @ %this @ ", " @ %position);
-}
+}*/
 
 //Called when the asset's Preview has been dragged and dropped into the GUI editor
 //This would usually spawn an associated instance, or a gui object that can utilize the
 //asset in question(ie, Dropping a SoundAsset spawns a guiAudioCtrl)
-function GenericAsset::onGuiEditorDropped(%this, %position)
+/*function GenericAsset::onGuiEditorDropped(%this, %position)
 {
    echo("GenericAsset::onGuiEditorDropped() - " @ %this @ ", " @ %position);
-}
+}*/
 
 //An example case of handling other specialized editors, such as dropping a Datablock
 //Preview into the DatablockEditor. This would be very case-by-case

@@ -64,7 +64,10 @@ function AssetBrowser::renameMaterialAsset(%this, %assetDef, %newAssetName)
 
 function MaterialAsset::buildBrowserElement(%this, %previewData)
 {   
-   %previewData.previewImage = "ToolsModule:genericAssetIcon_image";
+   %previewImage = getAssetPreviewImage(%this.getAssetId());
+   
+   %previewData.previewImage = isFile(%previewImage) ? %previewImage : "ToolsModule:genericAssetIcon_image";
+
    %previewData.previewLoaded = false; //this marks it for loading progressively later
       
    %previewData.assetName = %this.assetName;
@@ -108,7 +111,7 @@ function MaterialAsset::generatePreviewImage(%this, %previewButton, %forceRegene
 
    %generatePreview = false;
 
-   %previewFilePath = %previewPath @ %this.assetName @ "_Preview.dds";
+   %previewFilePath = %previewPath @ %this.assetName @ ".png";
    if(!isFile(%previewFilePath))
    {
       %generatePreview = true;
@@ -123,8 +126,6 @@ function MaterialAsset::generatePreviewImage(%this, %previewButton, %forceRegene
       }
    }
 
-   %previewAssetName = %module.moduleId @ "_" @ %this.assetName @ "_PreviewImage";
-                                   
    if(%generatePreview || %forceRegenerate)
    {
       if(isObject(%this.materialDefinitionName))
@@ -142,39 +143,13 @@ function MaterialAsset::generatePreviewImage(%this, %previewButton, %forceRegene
          pathCopy(%generatedFilePath, %previewFilePath, false);
          fileDelete(%generatedFilePath);
 
-         if(!AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
+         if(isFile(%previewFilePath))
          {
-            %previewAsset = new ImageAsset()
-            {
-               assetName = %previewAssetName;
-               versionId = 1;
-               imageFile = makeFullPath(%previewFilePath);
-            };
-            
-            %previewImgAssetPath = %previewPath @ %previewAsset.assetName @ ".asset.taml";
-            
-            %assetImportSuccessful = TAMLWrite(%previewAsset, %previewImgAssetPath); 
-            %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
-            
-            %success = AssetDatabase.addDeclaredAsset(%toolsModuleDef, %previewImgAssetPath);
-            
-            if(!%success)
-            {
-               return false; //failed to register the preview image for some reason?
-            }
+            %previewButton.setBitmap(%previewFilePath);
+            return true;
          }
-      
-         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
-         return true;
-      }
-   }
-   else
-   {
-      //just map the existing one then
-      if(AssetDatabase.isDeclaredAsset("ToolsModule:" @ %previewAssetName))
-      {
-         %previewButton.bitmapAsset = "ToolsModule:" @ %previewAssetName;
-         return true;
+
+         return false;
       }
    }
       

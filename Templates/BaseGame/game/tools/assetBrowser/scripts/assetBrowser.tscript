@@ -740,7 +740,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    %previewButton.assetType = %assetType;
    %previewButton.assetBrowser = %this;
    
-   %previewButton.bitmapAsset = %this.previewData.previewImage;
+   %previewButton.setBitmap(%this.previewData.previewImage);
    
    %previewButton.profile = "AssetBrowserPreview" @ %previewButton.assetType;
    %previewButton.tooltip = %this.previewData.tooltip;
@@ -789,21 +789,15 @@ function AssetBrowser::doRefresh(%this)
 
 function AssetBrowser::populatePreviewImages(%this)
 {
-   if (AssetPreviewArray.count()>0)
-      echo("AssetBrowser::populatePreviewImages() - Previews to generate: " @ AssetPreviewArray.count());
-      
    for(%i=0; %i < AssetPreviewArray.count(); %i++)
    {
       %previewButton = AssetPreviewArray.getKey(%i);
       %assetType = %previewButton.assetType;
       
-      echo("   - Generating preview for asset: " @ %previewButton.moduleName @ ":" @ %previewButton.assetName);
-      
       %this.callAssetTypeFunc(%assetType, "generatePreviewImage", %previewButton.moduleName, %previewButton.assetName, %previewButton);
       
       AssetPreviewArray.erase(%i);
-      
-      echo("   - done, scheduling another pass");
+
       %this.schedule(32, "populatePreviewImages");
       return;
    }
@@ -2521,7 +2515,7 @@ function GuiEditor::onControlDropped(%this, %payload, %position)
       %assetId = %payload.moduleName @ ":" @ %payload.assetName;
       %assetType = AssetDatabase.getAssetType(%assetId);
       
-      AssetBrowser.callAssetTypeFunc(%assetType, "GUIEditorDropped", %payload.moduleName, %payload.assetName, %pos);
+      %ctrl = AssetBrowser.callAssetTypeFunc(%assetType, "onGUIEditorDropped", %payload.moduleName, %payload.assetName, %pos);
    }
    else
    {
@@ -2764,12 +2758,13 @@ function getAssetPreviewImage(%asset)
    {
       %moduleName = AssetDatabase.getAssetModule(%asset).ModuleId;
       %assetName = AssetDatabase.getAssetName(%asset);
-      %previewAssetName = "ToolsModule:" @ %moduleName @ "_" @ %assetName @ "_PreviewImage";
-      if(AssetDatabase.isDeclaredAsset(%previewAssetName))
+      
+      %previewPath = "tools/resources/previewCache/" @ %moduleName @ "/";
+      %previewFilePath = %previewPath @ %assetName @ ".png";
+
+      if(isFile(%previewFilePath))
       {
-         %previewDef = AssetDatabase.acquireAsset(%previewAssetName);  
-         %previewPath = %previewDef.getImagePath();
-         AssetDatabase.releaseAsset(%previewAssetName);
+         %previewPath = %previewFilePath;
       }
       else
       {
@@ -2783,7 +2778,7 @@ function getAssetPreviewImage(%asset)
    
    if(%previewPath $= "")
       %previewPath = "ToolsModule:unknownImage_image";
-   
+
    return %previewPath;
 }
 

@@ -40,6 +40,9 @@ function directoryHandler::loadFolders(%this, %path, %parentId)
          if(%parentName $= "Data" && (%folderName $= "shaderCache" || %folderName $= "cache"))
             continue;
             
+         if(%folderName $= "previewCache")
+            continue;
+            
          if(%folderName $= ".git")
             continue;
          

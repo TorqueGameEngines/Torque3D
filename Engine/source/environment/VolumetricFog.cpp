@@ -329,8 +329,8 @@ void VolumetricFog::handleResize(VolumetricFogRTManager *RTM, bool resize)
 
       // load texture.
       getTexture();
-      mTexScale.x = 2.0f - ((F32)mTextureAsset->getTextureWidth() / width);
-      mTexScale.y = 2.0f - ((F32)mTextureAsset->getTextureHeight() / height);
+      mTexScale.x = 2.0f - ((F32)mTextureAsset->getTextureBitmapWidth() / width);
+      mTexScale.y = 2.0f - ((F32)mTextureAsset->getTextureBitmapHeight() / height);
    }
 
    UpdateBuffers(0,true);
@@ -1228,8 +1228,8 @@ void VolumetricFog::InitTexture()
       F32 width = (F32)mPlatformWindow->getClientExtent().x;
       F32 height = (F32)mPlatformWindow->getClientExtent().y;
 
-      mTexScale.x = 2.0f - ((F32)mTextureAsset->getTextureWidth() / width);
-      mTexScale.y = 2.0f - ((F32)mTextureAsset->getTextureHeight() / height);
+      mTexScale.x = 2.0f - ((F32)mTextureAsset->getTextureBitmapWidth() / width);
+      mTexScale.y = 2.0f - ((F32)mTextureAsset->getTextureBitmapHeight() / height);
    }
 }
 

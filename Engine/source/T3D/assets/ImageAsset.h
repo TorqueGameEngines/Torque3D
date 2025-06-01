@@ -136,7 +136,6 @@ private:
    StringTableEntry  mImageFile;
    bool              mUseMips;
    bool              mIsHDRImage;
-   GFXTexHandle      mTextureHandle;
    ImageTypes        mImageType;
    ImageTextureMap   mResourceMap;
    bool              mIsNamedTarget;
@@ -144,8 +143,6 @@ private:
    S32               mImageHeight;
    S32               mImageDepth;
    S32               mImageChannels;
-
-   void generateTexture(void);
 public:
    ImageAsset();
    virtual ~ImageAsset();
@@ -179,7 +176,6 @@ public:
    void                    setTextureHDR(const bool pIsHDR);
    inline bool             getTextureHDR(void) const { return mIsHDRImage; };
 
-   inline GFXTexHandle&    getTexture(void) { load(); generateTexture(); return mTextureHandle; }
    GFXTexHandle            getTexture(GFXTextureProfile* requestedProfile);
 
    static StringTableEntry getImageTypeNameFromType(ImageTypes type);
@@ -188,14 +184,9 @@ public:
    void                    setImageType(ImageTypes type) { mImageType = type; }
    ImageTypes              getImageType() { return mImageType; }
 
-   inline U32              getTextureWidth(void) const { return isAssetValid() ? mTextureHandle->getWidth() : 0; }
-   inline U32              getTextureHeight(void) const { return isAssetValid() ? mTextureHandle->getHeight() : 0; }
-   inline U32              getTextureDepth(void) const { return isAssetValid() ? mTextureHandle->getDepth() : 0; }
-
    inline U32              getTextureBitmapWidth(void) const { return mImageWidth; }
    inline U32              getTextureBitmapHeight(void) const { return mImageHeight; }
    inline U32              getTextureBitmapDepth(void) const { return mImageDepth; }
-   bool                    isAssetValid(void) const override { return !mTextureHandle.isNull(); }
 
    bool                    isNamedTarget(void) const { return mIsNamedTarget; }
    NamedTexTargetRef       getNamedTarget(void) const { return NamedTexTarget::find(mImageFile + 1); }

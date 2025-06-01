@@ -227,7 +227,7 @@ StringTableEntry LevelAsset::getPreviewImageAsset() const
 
 StringTableEntry LevelAsset::getPreviewImagePath(void) const
 {
-   if (mPreviewImageAsset.notNull() && mPreviewImageAsset->isAssetValid())
+   if (mPreviewImageAsset.notNull())
    {
       return mPreviewImageAsset->getImageFile();
    }

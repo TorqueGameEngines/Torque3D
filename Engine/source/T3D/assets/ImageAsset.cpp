@@ -149,7 +149,6 @@ ImageAsset::ImageAsset() :
    mUseMips(true),
    mIsHDRImage(false),
    mImageType(Albedo),
-   mTextureHandle(NULL),
    mIsNamedTarget(false),
    mImageWidth(-1),
    mImageHeight(-1),
@@ -473,7 +472,8 @@ U32 ImageAsset::load()
          return mLoadedState;
       }
 
-      Con::errorf("ImageAsset::initializeAsset: Attempted to load file %s but it was not valid!", mImageFile);
+      if (mLoadedState != AssetErrCode::BadFileReference && mLoadedState != AssetErrCode::Failed)
+         Con::errorf("ImageAsset::initializeAsset: Attempted to load file %s but it was not valid!", mImageFile);
       mLoadedState = BadFileReference;
       return mLoadedState;
    }
@@ -487,7 +487,15 @@ U32 ImageAsset::load()
 
 GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
 {
-   load();
+   if (mLoadedState == Ok && mResourceMap.contains(requestedProfile))
+   {
+      return mResourceMap.find(requestedProfile)->value;
+   }
+   else
+   {
+      //try a reload
+      load();
+   }
 
    if (isNamedTarget())
    {
@@ -499,75 +507,30 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
          tex = getNamedTarget()->getTexture();
          if (tex.isNull())
          {
-            return fallbackAsset->getTexture();
+            return fallbackAsset->getTexture(requestedProfile);
          }
-
+         mResourceMap.insert(requestedProfile, tex);
          return tex;
       }
       else
       {
-         return fallbackAsset->getTexture();
+         return fallbackAsset->getTexture(requestedProfile);
       }
    }
 
    if (mLoadedState == Ok)
    {
-      if (mResourceMap.contains(requestedProfile))
-      {
-         return mResourceMap.find(requestedProfile)->value;
-      }
-      else
-      {
-
          //If we don't have an existing map case to the requested format, we'll just create it and insert it in
          GFXTexHandle newTex;
          newTex.set(mImageFile, requestedProfile, avar("%s %s() - mTextureObject (line %d)", mImageFile, __FUNCTION__, __LINE__));
          if (newTex)
          {
-            mLoadedState = AssetErrCode::Ok;
             mResourceMap.insert(requestedProfile, newTex);
             return newTex;
          }
-      }
    }
-
-   mLoadedState = AssetErrCode::Failed;
 
    return nullptr;
-}
-
-void ImageAsset::generateTexture(void)
-{
-   // already have a generated texture, get out.
-   if (mTextureHandle.isValid())
-      return;
-
-   // implement some defaults, eventually SRGB should be optional.
-   U32 flags = GFXTextureProfile::Static | GFXTextureProfile::SRGB;
-
-   // dont want mips?
-   if (!mUseMips)
-   {
-      flags |= GFXTextureProfile::NoMipmap;
-   }
-
-   GFXTextureProfile::Types type = GFXTextureProfile::Types::DiffuseMap;
-
-   if (mImageType == ImageTypes::Normal) {
-      type = GFXTextureProfile::Types::NormalMap;
-   }
-
-   GFXTextureProfile* genProfile = new GFXTextureProfile("ImageAssetGennedProfile", type, flags);
-
-   mTextureHandle.set(mImageFile, genProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
-   mResourceMap.insert(genProfile, mTextureHandle);
-
-   if (mTextureHandle.isValid())
-      mLoadedState = AssetErrCode::Ok;
-   else
-      mLoadedState = AssetErrCode::Failed;
-
-   ResourceManager::get().getChangedSignal().notify(this, &ImageAsset::_onResourceChanged);
 }
 
 const char* ImageAsset::getImageTypeNameFromType(ImageAsset::ImageTypes type)

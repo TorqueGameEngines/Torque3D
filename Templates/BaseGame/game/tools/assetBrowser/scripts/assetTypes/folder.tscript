@@ -1,5 +1,62 @@
 AssetBrowser::registerFileType("FolderObjectType", "Folder", "/", false);
 
+function AssetBrowser::createNewFolder(%this)
+{
+   AssetBrowser_newFolderNameTxt.text = "NewFolder";
+   Canvas.pushDialog(AssetBrowser_newFolder, 99, true);
+
+   AssetBrowser_newFolderNameTxt.selectAllText();
+}
+
+function AssetBrowser::doCreateNewFolder(%this)
+{
+   %newFolderName = AssetBrowser_newFolderNameTxt.getText();
+   
+   if(%newFolderName $= "")
+      %newFolderName = "NewFolder";
+      
+   if(SelectAssetPath.isAwake())
+   {
+      %currentAddressPath = SelectAssetPath-->folderTree.getItemValue(SelectAssetPath.selectedTreeItem) @ "/" @ SelectAssetPath-->folderTree.getItemText(SelectAssetPath.selectedTreeItem);
+   }
+   else
+   {
+      %currentAddressPath = AssetBrowser.dirHandler.currentAddress;
+   }
+      
+   %newFolderIdx = "";
+   %matched = true;
+   %newFolderPath = "";
+   while(%matched == true)
+   {
+      %newFolderPath = %currentAddressPath @ "/" @ %newFolderName @ %newFolderIdx;
+      if(!isDirectory(%newFolderPath))
+      {
+         %matched = false;
+      }
+      else
+      {
+         %newFolderIdx++;         
+      }
+   }
+   
+   //make a dummy file
+   %file = new FileObject();
+   %file.openForWrite(%newFolderPath @ "/test");
+   %file.close();
+   
+   fileDelete(%newFolderPath @ "/test");
+   
+   //refresh the directory
+   AssetBrowser.loadDirectories();
+   
+   %this.navigateTo(%newFolderPath);
+   
+   //On the off chance we're trying to select a path, we'll update the select path window too
+   if(SelectAssetPath.isAwake())
+      SelectAssetPath.showDialog(%newFolderPath, SelectAssetPath.callback);
+}
+
 function FolderObjectType::setupCreateNew()
 {
    AssetBrowser_newFolderNameTxt.text = "NewFolder";

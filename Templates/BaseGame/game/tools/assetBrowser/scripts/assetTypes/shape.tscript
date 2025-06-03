@@ -1,5 +1,38 @@
 AssetBrowser::registerAssetType("ShapeAsset", "Shapes"); 
 
+function ShapeAsset::onCreateNew()
+{
+   %moduleName = $CurrentAssetBrowser.newAssetSettings.moduleName;
+   %modulePath = "data/" @ %moduleName;
+      
+   %assetName = $CurrentAssetBrowser.newAssetSettings.assetName;
+   
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %shapeFilePath = %assetPath @ %assetName @ ".dae";
+   
+   %asset = new ShapeAsset()
+   {
+      AssetName = %assetName;
+      versionId = 1;
+      friendlyName = $CurrentAssetBrowser.newAssetSettings.friendlyName;
+      description = $CurrentAssetBrowser.newAssetSettings.description;
+      fileName = %assetName @ ".dae";
+   };
+   
+   TamlWrite(%asset, %tamlpath);
+   
+   Canvas.popDialog(AssetBrowser_newComponentAsset);
+	
+	%moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+
+	$CurrentAssetBrowser.refresh();
+	
+	return %tamlpath;
+}
+
 function ShapeAsset::onEdit(%this)
 {
    if(EditorSettings.value("Assets/Browser/doubleClickAction", "Edit Asset") $= "Edit Asset")

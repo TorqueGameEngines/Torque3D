@@ -36,7 +36,7 @@
 #include "core/color.h"
 #endif
 
-
+#pragma pack(push, 1)
 struct GFXSamplerStateDesc
 {
    GFXTextureAddressMode addressModeU;
@@ -84,8 +84,10 @@ struct GFXSamplerStateDesc
       return !dMemcmp(this, &b, sizeof(GFXSamplerStateDesc));
    }
 };
+#pragma pack(pop)
 
 /// GFXStateBlockDesc defines a render state, which is then used to create a GFXStateBlock instance.  
+#pragma pack(push, 1)
 struct GFXStateBlockDesc
 {   
    // Blending   
@@ -189,6 +191,7 @@ struct GFXStateBlockDesc
    ///
    void setColorWrites( bool red, bool green, bool blue, bool alpha );
 };
+#pragma pack(pop)
 
 class GFXStateBlock : public StrongRefBase, public GFXResource
 {

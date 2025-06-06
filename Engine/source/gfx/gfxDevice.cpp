@@ -292,8 +292,9 @@ GFXStateBlockRef GFXDevice::createStateBlock(const GFXStateBlockDesc& desc)
    PROFILE_SCOPE( GFXDevice_CreateStateBlock );
 
    U32 hashValue = desc.getHashValue();
-   if (mCurrentStateBlocks[hashValue])
-      return mCurrentStateBlocks[hashValue];
+   auto it = mCurrentStateBlocks.find(hashValue);
+   if (it != mCurrentStateBlocks.end())
+      return it->value;
 
    GFXStateBlockRef result = createStateBlockInternal(desc);
    result->registerResourceWithDevice(this);   

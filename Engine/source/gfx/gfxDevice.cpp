@@ -292,7 +292,7 @@ GFXStateBlockRef GFXDevice::createStateBlock(const GFXStateBlockDesc& desc)
    PROFILE_SCOPE( GFXDevice_CreateStateBlock );
 
    U32 hashValue = desc.getHashValue();
-   auto it = mCurrentStateBlocks.find(hashValue);
+   StateBlockMap::Iterator it = mCurrentStateBlocks.find(hashValue);
    if (it != mCurrentStateBlocks.end())
       return it->value;
 

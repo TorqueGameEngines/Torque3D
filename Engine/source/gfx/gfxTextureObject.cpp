@@ -144,7 +144,8 @@ GFXTextureObject::~GFXTextureObject()
 
 void GFXTextureObject::destroySelf()
 {
-   mDevice->mTextureManager->requestDeleteTexture(this);
+   if (mDevice && mDevice->mTextureManager)
+      mDevice->mTextureManager->requestDeleteTexture(this);
 }
 
 //-----------------------------------------------------------------------------

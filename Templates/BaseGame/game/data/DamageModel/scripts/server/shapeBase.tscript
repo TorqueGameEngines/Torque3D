@@ -268,16 +268,10 @@ function ShapeBaseData::onDestroyed(%this, %obj, %state)
       if (%obj.getMountedImage(%slot))
          %obj.setImageTrigger(%slot, false);
    }
-   
-   if (%obj.client)
-   {
-      %obj.client.player = 0;
-      %obj.client.schedule($DeathDuration, "spawnControlObject");
-   } 
    // Schedule corpse removal. Just keeping the place clean.
    %obj.schedule($CorpseTimeoutValue - 1000, "startFade", 1000, 0, true);
-   %obj.schedule($CorpseTimeoutValue, "delete");
    %obj.schedule($CorpseTimeoutValue,"blowUp");
+   %obj.schedule($CorpseTimeoutValue+32, "delete");
 }
 
 function ShapeBaseData::onRemove(%this, %obj)

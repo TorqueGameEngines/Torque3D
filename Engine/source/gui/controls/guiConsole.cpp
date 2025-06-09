@@ -27,6 +27,7 @@
 #include "gui/controls/guiConsole.h"
 #include "gui/containers/guiScrollCtrl.h"
 #include "console/engineAPI.h"
+#include <console/consoleInternal.h>
 
 IMPLEMENT_CONOBJECT(GuiConsole);
 
@@ -145,7 +146,10 @@ void GuiConsole::refreshLogText()
          }
       }
 
+      bool tracing = Con::gTraceOn;
+      Con::gTraceOn = false;
       onNewMessage_callback(errorCount, warnCount, normalCount);
+      Con::gTraceOn = tracing;
    }
 
    Con::unlockLog();

@@ -364,51 +364,8 @@ void SceneGroup::unpackUpdate(NetConnection* conn, BitStream* stream)
    }
 }
 
-bool SceneGroup::buildPolyList(PolyListContext context, AbstractPolyList* polyList, const Box3F& box, const SphereF& sphere)
-{
-   Vector<SceneObject*> foundObjects;
-   if (empty())
-   {
-      Con::warnf("SceneGroup::buildPolyList() - SceneGroup %s is empty!", getName());
-      return false;
-   }
-   findObjectByType(foundObjects);
-
-   for (S32 i = 0; i < foundObjects.size(); i++)
-   {
-      foundObjects[i]->buildPolyList(context, polyList, box, sphere);
-   }
-
-   return true;
-}
-
-bool SceneGroup::buildExportPolyList(ColladaUtils::ExportData* exportData, const Box3F& box, const SphereF& sphere)
-{
-   Vector<SceneObject*> foundObjects;
-   findObjectByType(foundObjects);
-
-   for (S32 i = 0; i < foundObjects.size(); i++)
-   {
-      foundObjects[i]->buildExportPolyList(exportData, box, sphere);
-   }
-
-   return true;
-}
-
 void SceneGroup::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
-   //if (empty())
-      return;
-
-   Vector<SceneObject*> foundObjects;
-   findObjectByType(foundObjects);
-
-   for (S32 i = 0; i < foundObjects.size(); i++)
-   {
-      SceneObject* child = foundObjects[i];
-
-      child->getUtilizedAssets(usedAssetsList);
-   }
 }
 
 DefineEngineMethod(SceneGroup, recalculateBounds, void, (), ,

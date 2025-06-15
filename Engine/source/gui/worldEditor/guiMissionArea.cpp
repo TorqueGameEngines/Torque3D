@@ -141,8 +141,6 @@ bool GuiMissionAreaCtrl::onWake()
    if(!Parent::onWake())
       return(false);
 
-   updateLevelBitmap();
-
    // make sure mission area is clamped
    setArea(getArea());
 
@@ -167,6 +165,11 @@ void GuiMissionAreaCtrl::onMouseUp(const GuiEvent & event)
    if(!bool(mMissionArea))
       return;
 
+   //unlock the mouse
+   mouseUnlock();
+
+   mLastMousePoint = event.mousePoint;
+
    RectI box;
    getScreenMissionArea(box);
    S32 hit = getHitHandles(event.mousePoint, box);
@@ -187,6 +190,11 @@ void GuiMissionAreaCtrl::onMouseDown(const GuiEvent & event)
 {
    if(!bool(mMissionArea))
       return;
+
+   setFirstResponder();
+
+   // lock mouse
+   mouseLock();
 
    RectI box;
    getScreenMissionArea(box);
@@ -353,6 +361,19 @@ void GuiMissionAreaCtrl::updateLevelBitmap()
       // Merge bounds
       mLevelBounds.intersect(box);
    }
+
+   const F32 minSize = 256.0f;
+
+   // Ensure the bounding box has a minimum size and is square
+   VectorF size = mLevelBounds.getExtents();
+   F32 maxExtent = getMax(getMax(size.x, size.y), minSize);
+
+   // Expand to make it square and centered
+   Point3F center = mLevelBounds.getCenter();
+
+   Point3F halfExtents(maxExtent * 0.5f, maxExtent * 0.5f, size.z * 0.5f);
+   mLevelBounds.minExtents = center - halfExtents;
+   mLevelBounds.maxExtents = center + halfExtents;
 
    GFXTransformSaver saver;
 

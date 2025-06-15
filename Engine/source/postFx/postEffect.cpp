@@ -44,6 +44,7 @@
 #include "materials/shaderData.h"
 #include "postFx/postEffectManager.h"
 #include "postFx/postEffectVis.h"
+#include <console/consoleInternal.h>
 
 using namespace Torque;
 
@@ -1126,8 +1127,10 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
             Con::setFloatVariable("$Param::NearDist", state->getNearPlane());
             Con::setFloatVariable("$Param::FarDist", state->getFarPlane());
          }
-
+         bool tracing = Con::gTraceOn;
+         Con::gTraceOn = false;
          setShaderConsts_callback();
+         Con::gTraceOn = tracing;
       }
 
       EffectConstTable::Iterator iter = mEffectConsts.begin();

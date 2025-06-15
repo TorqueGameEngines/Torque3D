@@ -51,7 +51,7 @@ ConsoleDocClass( MissionArea,
    "@ingroup enviroMisc\n"
 );
 
-RectI MissionArea::smMissionArea(Point2I(768, 768), Point2I(512, 512));
+RectI MissionArea::smMissionArea(Point2I(-100, -100), Point2I(100, 100));
 
 MissionArea * MissionArea::smServerObject = NULL;
 
@@ -59,7 +59,7 @@ MissionArea * MissionArea::smServerObject = NULL;
 
 MissionArea::MissionArea()
 {
-   mArea.set(Point2I(768, 768), Point2I(512, 512));
+   mArea.set(Point2I(-100, -100), Point2I(100, 100));
    mNetFlags.set(Ghostable | ScopeAlways);
 
    mFlightCeiling      = 2000;

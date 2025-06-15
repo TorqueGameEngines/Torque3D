@@ -79,7 +79,7 @@ $guiContent = new GuiMissionAreaEditorCtrl(MissionAreaEditorGui, EditorGuiGroup)
          VertSizing = "height";
          isContainer = "1";
          
-         new GuiMissionAreaCtrl(MissionAreaEditorTerrainEditor) {
+         new GuiMissionAreaCtrl(MissionAreaEditorLevelEditor) {
             canSaveDynamicFields = "0";
             isContainer = "0";
             Profile = "EditorDefaultProfile";

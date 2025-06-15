@@ -58,10 +58,11 @@ protected:
    };
 
    SimObjectPtr<MissionArea>  mMissionArea;
-   SimObjectPtr<TerrainBlock> mTerrainBlock;
 
    GFXStateBlockRef  mBlendStateBlock;
    GFXStateBlockRef  mSolidStateBlock;
+   GFXTextureTargetRef mLevelTexture;
+   Box3F mLevelBounds;
 
    DECLARE_IMAGEASSET(GuiMissionAreaCtrl, HandleBitmap, GFXDefaultGUIProfile)
 
@@ -81,10 +82,6 @@ protected:
    bool     mSavedDrag;
 
    void submitUndo( const UTF8 *name = "Action" );
-
-   TerrainBlock * getTerrainObj();
-   GBitmap * createTerrainBitmap();
-   void updateTerrainBitmap();
 
    //void onUpdate();
 
@@ -132,7 +129,7 @@ public:
    void onMouseLeave(const GuiEvent & event) override;
 
    void setMissionArea( MissionArea* area );
-   void updateTerrain();
+   void updateLevelBitmap();
 
    const RectI & getArea();
    void setArea(const RectI & area);

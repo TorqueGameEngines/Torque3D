@@ -350,16 +350,11 @@ void GuiMissionAreaCtrl::updateLevelBitmap()
       if (!obj)
          continue;
 
-      // Skip if bounds are too large (e.g., GroundPlane or visual-only objects)
-      const Box3F& box = obj->getWorldBox();
-      const F32 maxSizeThreshold = 2048.0f; // or tweak for your game scale
-
-      VectorF extents = box.getExtents();
-      if (extents.x > maxSizeThreshold || extents.y > maxSizeThreshold)
+      if (obj->isGlobalBounds())
          continue;
 
       // Merge bounds
-      mLevelBounds.intersect(box);
+      mLevelBounds.intersect(obj->getWorldBox());
    }
 
    const F32 minSize = 256.0f;

@@ -272,6 +272,9 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
       foundAssetcount = AssetDatabase.findAssetType(&query, "ImageAsset");
       if (foundAssetcount != 0)
       {
+         char buf[1024];
+         Torque::Path temp2 = Platform::makeFullPathName(fileName, buf, sizeof(buf));
+
          // loop all image assets and see if we can find one
          // using the same image file/named target.
          for (auto imgAsset : query.mAssetList)
@@ -286,7 +289,6 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
                else
                {
                   Torque::Path temp1 = temp->getImageFile();
-                  Torque::Path temp2 = fileName;
 
                   if (temp1.getPath() == temp2.getPath() && temp1.getFileName() == temp2.getFileName())
                   {

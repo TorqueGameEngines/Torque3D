@@ -111,23 +111,21 @@ function ShapeAsset::generatePreviewImage(%this, %previewButton, %forceRegenerat
    if(%forceRegenerate $= "")
       %forceRegenerate = false;
       
-   %assetId = %this.getAssetId();
-
-   %module = %previewButton.assetBrowser.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%this.getShapePath())));
-   %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
+   %previewPath =  "tools/resources/previewCache/" @ %previewButton.moduleName @ "/";
    
    if(!IsDirectory(%previewPath))
    {
-      %previewButton.assetBrowser.dirHandler.createFolder(%previewPath);
+      $CurrentAssetBrowser.dirHandler.createFolder(%previewPath);
    }
    
-   %generatePreview = false;
+   %previewFilePath = %previewPath @ %this.assetName @ "_Preview.png";
    
-   %previewFilePath = %previewPath @ %this.assetName @ ".png";
    if(!isFile(%previewFilePath) || (compareFileTimes(%this.getShapePath(), %previewFilePath) == 1))
    {
       %generatePreview = true;
    }
+
+   %previewAssetName = "ToolsModule:" @ %this.assetName @ "_Preview";
    
    if(%generatePreview || %forceRegenerate)
    {
@@ -146,14 +144,28 @@ function ShapeAsset::generatePreviewImage(%this, %previewButton, %forceRegenerat
       
       pathCopy(%filePath, %previewFilePath, false);
       fileDelete(%filePath); //cleanup
-      
-      if(isFile(%previewFilePath))
+
+      if(!AssetDatabase.isDeclaredAsset(%previewAssetName))
       {
-         %previewButton.setBitmap(%previewFilePath);
-         return true;
+         %preview_Asset = new ImageAsset()
+         {
+            assetName = %this.assetName @ "_Preview";
+            versionId = 1;
+            imageFile = makeFullPath(%previewFilePath);
+         };
+
+         TamlWrite(%preview_Asset, expandPath("^ToolsModule/resources/previewCache/" @ %previewButton.moduleName @ "/" @ %preview_Asset.AssetName @ ".asset.taml"));
+         %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+         AssetDatabase.addDeclaredAsset(%toolsModuleDef, expandPath("^ToolsModule/resources/previewCache/" @ %previewButton.moduleName @ "/" @ %preview_Asset.AssetName @ ".asset.taml"));
       }
 
-      return false;
+      %previewButton.bitmapAsset = %previewAssetName;
+      return true;
+   }
+   else
+   {
+      %previewButton.bitmapAsset = %previewAssetName;
+      return true;
    }
    
    return false;

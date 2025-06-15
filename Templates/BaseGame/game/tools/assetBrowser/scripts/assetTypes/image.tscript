@@ -42,28 +42,52 @@ function ImageAsset::generatePreviewImage(%this, %previewButton, %forceRegenerat
    if(%forceRegenerate $= "")
       %forceRegenerate = false;
       
-   %previewPath = "tools/resources/previewCache/" @ %previewButton.moduleName @ "/";
+   %previewPath =  "tools/resources/previewCache/" @ %previewButton.moduleName @ "/";
    
    if(!IsDirectory(%previewPath))
    {
       $CurrentAssetBrowser.dirHandler.createFolder(%previewPath);
    }
    
-   %previewFilePath = %previewPath @ %this.assetName @ ".png";
+   %previewFilePath = %previewPath @ %this.assetName @ "_Preview.png";
    
    if(!isFile(%previewFilePath) || (compareFileTimes(%this.getImagePath(), %previewFilePath) == 1))
    {
       %generatePreview = true;
    }
 
+   %previewAssetName = "ToolsModule:" @ %this.assetName @ "_Preview";
+
    if(%generatePreview || %forceRegenerate)
    {
       %success = saveScaledImage(%this.getImagePath(), %previewFilePath, EditorSettings.value("Assets/Browser/PreviewImageSize"));
       
       if(%success)
-         %previewButton.setBitmap(%previewFilePath);
-      
+      {
+         
+         if(!AssetDatabase.isDeclaredAsset(%previewAssetName))
+         {
+            %preview_Asset = new ImageAsset()
+            {
+               assetName = %this.assetName @ "_Preview";
+               versionId = 1;
+               imageFile = makeFullPath(%previewFilePath);
+            };
+
+            TamlWrite(%preview_Asset, expandPath("^ToolsModule/resources/previewCache/" @ %previewButton.moduleName @ "/" @ %preview_Asset.AssetName @ ".asset.taml"));
+            %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+            AssetDatabase.addDeclaredAsset(%toolsModuleDef, expandPath("^ToolsModule/resources/previewCache/" @ %previewButton.moduleName @ "/" @ %preview_Asset.AssetName @ ".asset.taml"));
+         }
+
+         %previewButton.bitmapAsset = %previewAssetName;
+      }
+
       return %success;
+   }
+   else
+   {
+      %previewButton.bitmapAsset = %previewAssetName;
+      return true;
    }
    
    return false;

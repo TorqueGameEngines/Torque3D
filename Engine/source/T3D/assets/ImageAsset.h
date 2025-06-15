@@ -233,10 +233,10 @@ DefineEnumType(ImageAssetType);
 
 #pragma region Refactor Asset Macros
 
-#define DECLARE_IMAGEASSET(className, name, profile)                                                                                                                 \
+#define DECLARE_IMAGEASSET(className, name, profile)                                                                                                                          \
 private:                                                                                                                                                                      \
-   AssetPtr<ImageAsset> m##name##Asset;\
-   String               m##name##File;\
+   AssetPtr<ImageAsset> m##name##Asset;                                                                                                                                       \
+   StringTableEntry     m##name##File  = StringTable->EmptyString();                                                                                                          \
 public:                                                                                                                                                                       \
    void _set##name(StringTableEntry _in){                                                                                                                                     \
       if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
@@ -244,6 +244,7 @@ public:                                                                         
       if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
       {                                                                                                                                                                       \
          m##name##Asset = NULL;                                                                                                                                               \
+         m##name##File = "";                                                                                                                                                  \
          return;                                                                                                                                                              \
       }                                                                                                                                                                       \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
@@ -271,10 +272,12 @@ public:                                                                         
             imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                                \
          }                                                                                                                                                                    \
          m##name##Asset = imageAssetId;                                                                                                                                       \
+         m##name##File = _in;                                                                                                                                                 \
       }                                                                                                                                                                       \
       else                                                                                                                                                                    \
       {                                                                                                                                                                       \
          m##name##Asset = _in;                                                                                                                                                \
+         m##name##File = get##name##File();                                                                                                                                   \
       }                                                                                                                                                                       \
    };                                                                                                                                                                         \
                                                                                                                                                                               \
@@ -285,10 +288,10 @@ public:                                                                         
    StringTableEntry get##name##File(){ return m##name##Asset.notNull() ? m##name##Asset->getImageFile() : ""; }
 
 
-#define DECLARE_IMAGEASSET_NET(className, name, profile, mask)                                                                                                       \
+#define DECLARE_IMAGEASSET_NET(className, name, profile, mask)                                                                                                                \
 private:                                                                                                                                                                      \
    AssetPtr<ImageAsset> m##name##Asset;                                                                                                                                       \
-   String               m##name##File;\
+   StringTableEntry     m##name##File  = StringTable->EmptyString();                                                                                                          \
 public:                                                                                                                                                                       \
    void _set##name(StringTableEntry _in){                                                                                                                                     \
       if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
@@ -296,6 +299,7 @@ public:                                                                         
       if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
       {                                                                                                                                                                       \
          m##name##Asset = NULL;                                                                                                                                               \
+         m##name##File = "";                                                                                                                                                  \
          setMaskBits(mask);                                                                                                                                                   \
          return;                                                                                                                                                              \
       }                                                                                                                                                                       \
@@ -324,10 +328,12 @@ public:                                                                         
             imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                                \
          }                                                                                                                                                                    \
          m##name##Asset = imageAssetId;                                                                                                                                       \
+         m##name##File = _in;                                                                                                                                                 \
       }                                                                                                                                                                       \
       else                                                                                                                                                                    \
       {                                                                                                                                                                       \
          m##name##Asset = _in;                                                                                                                                                \
+         m##name##File = get##name##File();                                                                                                                                   \
       }                                                                                                                                                                       \
       setMaskBits(mask);                                                                                                                                                      \
    };                                                                                                                                                                         \
@@ -339,15 +345,15 @@ public:                                                                         
    StringTableEntry get##name##File(){ return m##name##Asset.notNull() ? m##name##Asset->getImageFile() : ""; }
 
 
-#define INITPERSISTFIELD_IMAGEASSET(name, consoleClass, docs)                                                                                                        \
+#define INITPERSISTFIELD_IMAGEASSET(name, consoleClass, docs)                                                                                                                 \
    addProtectedField(assetText(name, Asset), TypeImageAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.)); \
    addProtectedField(assetText(name, File), TypeFilename, Offset(m##name##File, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, file docs.));
 
 
-#define DECLARE_IMAGEASSET_ARRAY(className, name, profile, max)                                                                                                      \
+#define DECLARE_IMAGEASSET_ARRAY(className, name, profile, max)                                                                                                               \
 private:                                                                                                                                                                      \
    AssetPtr<ImageAsset> m##name##Asset[max];                                                                                                                                  \
-   String               m##name##File[max];\
+   StringTableEntry     m##name##File[max] = {StringTable->EmptyString() };                                                                                                   \
 public:                                                                                                                                                                       \
    void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
       if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \
@@ -355,6 +361,7 @@ public:                                                                         
       if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
       {                                                                                                                                                                       \
          m##name##Asset[index] = NULL;                                                                                                                                        \
+         m##name##File[index] = "";                                                                                                                                           \
          return;                                                                                                                                                              \
       }                                                                                                                                                                       \
       if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
@@ -382,10 +389,12 @@ public:                                                                         
             imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                                \
          }                                                                                                                                                                    \
          m##name##Asset[index] = imageAssetId;                                                                                                                                \
+         m##name##File[index] = _in;                                                                                                                                          \
       }                                                                                                                                                                       \
       else                                                                                                                                                                    \
       {                                                                                                                                                                       \
          m##name##Asset[index] = _in;                                                                                                                                         \
+         m##name##File[index] = get##name##File(index);                                                                                                                       \
       }                                                                                                                                                                       \
    };                                                                                                                                                                         \
                                                                                                                                                                               \
@@ -397,10 +406,10 @@ public:                                                                         
    StringTableEntry get##name##File(const U32& idx){ return m##name##Asset[idx].notNull() ? m##name##Asset[idx]->getImageFile() : ""; }
 
 
-#define DECLARE_IMAGEASSET_ARRAY_NET(className, name, profile, max, mask)                                                                                            \
+#define DECLARE_IMAGEASSET_ARRAY_NET(className, name, profile, max, mask)                                                                                                     \
 private:                                                                                                                                                                      \
    AssetPtr<ImageAsset> m##name##Asset[max];                                                                                                                                  \
-   String               m##name##File[max];\
+   StringTableEntry     m##name##File[max] = {StringTable->EmptyString() };                                                                                                   \
 public:                                                                                                                                                                       \
    void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
       if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \
@@ -408,6 +417,7 @@ public:                                                                         
       if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
       {                                                                                                                                                                       \
          m##name##Asset[index] = NULL;                                                                                                                                        \
+         m##name##File[index] = "";                                                                                                                                           \
          setMaskBits(mask);                                                                                                                                                   \
          return;                                                                                                                                                              \
       }                                                                                                                                                                       \
@@ -436,10 +446,12 @@ public:                                                                         
             imageAssetId = ImageAsset::smNoImageAssetFallback;                                                                                                                \
          }                                                                                                                                                                    \
          m##name##Asset[index] = imageAssetId;                                                                                                                                \
+         m##name##File[index] = _in;                                                                                                                                          \
       }                                                                                                                                                                       \
       else                                                                                                                                                                    \
       {                                                                                                                                                                       \
          m##name##Asset[index] = _in;                                                                                                                                         \
+         m##name##File[index] = get##name##File(index);                                                                                                                       \
       }                                                                                                                                                                       \
       setMaskBits(mask);                                                                                                                                                      \
    };                                                                                                                                                                         \

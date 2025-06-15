@@ -101,8 +101,7 @@ function MaterialAsset::generatePreviewImage(%this, %previewButton, %forceRegene
    if(%forceRegenerate $= "")
       %forceRegenerate = false;
       
-   %module = $CurrentAssetBrowser.dirHandler.getModuleFromAddress(makeRelativePath(filePath(AssetDatabase.getAssetFilePath(%this.getAssetId()))));
-   %previewPath = "tools/resources/previewCache/" @ %module.moduleId @ "/";
+   %previewPath =  "tools/resources/previewCache/" @ %previewButton.moduleName @ "/";
 
    if(!IsDirectory(%previewPath))
    {
@@ -111,7 +110,8 @@ function MaterialAsset::generatePreviewImage(%this, %previewButton, %forceRegene
 
    %generatePreview = false;
 
-   %previewFilePath = %previewPath @ %this.assetName @ ".png";
+   %previewFilePath = %previewPath @ %this.assetName @ "_Preview.png";
+   
    if(!isFile(%previewFilePath))
    {
       %generatePreview = true;
@@ -126,6 +126,8 @@ function MaterialAsset::generatePreviewImage(%this, %previewButton, %forceRegene
       }
    }
 
+   %previewAssetName = "ToolsModule:" @ %this.assetName @ "_Preview";
+
    if(%generatePreview || %forceRegenerate)
    {
       if(isObject(%this.materialDefinitionName))
@@ -137,22 +139,41 @@ function MaterialAsset::generatePreviewImage(%this, %previewButton, %forceRegene
             %diffuseMapAsset = AssetDatabase.acquireAsset(%diffuseMapAssetId);
             AssetDatabase.releaseAsset(%diffuseMapAssetId);
          }
+
          %previewShapeDef = AssetDatabase.acquireAsset("ToolsModule:previewSphereShape");
          %generatedFilePath = %previewShapeDef.generateCachedPreviewImage(256, %this.materialDefinitionName);
       
          pathCopy(%generatedFilePath, %previewFilePath, false);
          fileDelete(%generatedFilePath);
 
-         if(isFile(%previewFilePath))
+         if(!AssetDatabase.isDeclaredAsset(%previewAssetName))
          {
-            %previewButton.setBitmap(%previewFilePath);
-            return true;
+            %preview_Asset = new ImageAsset()
+            {
+               assetName = %this.assetName @ "_Preview";
+               versionId = 1;
+               imageFile = makeFullPath(%previewFilePath);
+            };
+
+            TamlWrite(%preview_Asset, expandPath("^ToolsModule/resources/previewCache/" @ %previewButton.moduleName @ "/" @ %preview_Asset.AssetName @ ".asset.taml"));
+            %toolsModuleDef = ModuleDatabase.findModule("ToolsModule",1);
+            AssetDatabase.addDeclaredAsset(%toolsModuleDef, expandPath("^ToolsModule/resources/previewCache/" @ %previewButton.moduleName @ "/" @ %preview_Asset.AssetName @ ".asset.taml"));
          }
 
+         %previewButton.bitmapAsset = %previewAssetName;
+         return true;
+      }
+      else
+      {
          return false;
       }
    }
-      
+   else
+   {
+      %previewButton.bitmapAsset = %previewAssetName;
+      return true;
+   }
+   
    return false;
 }
 

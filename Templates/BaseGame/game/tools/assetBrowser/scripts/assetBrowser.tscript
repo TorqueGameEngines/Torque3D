@@ -258,7 +258,7 @@ function AssetBrowser::initialize(%this)
       
    if(!isObject(%this.dirHandler))
    {
-      %this.dirHandler = makedirectoryHandler(%this-->filterTree, "cache,shaderCache", ""); 
+      %this.dirHandler = makedirectoryHandler(%this-->filterTree, "cache,shaderCache,previewCache", ""); 
       %this.dirHandler.currentAddress = "data/";
    }
       
@@ -1613,7 +1613,7 @@ function AssetBrowser::doRebuildAssetArray(%this)
             else
             {
                //got it.	
-               if(%folderName $= "shaderCache" || %folderName $= "cache" || %folderName $= ".git")
+               if(%folderName $= "shaderCache" || %folderName $= "cache" || %folderName $= ".git" || %folderName $= "previewCache")
                   continue;
                   
                if(!%this.coreModulesFilter && %folderName $= "core" && %breadcrumbPath $= "")

@@ -2226,6 +2226,23 @@ bool stripRepeatSlashes(char* pDstPath, const char* pSrcPath, S32 dstSize)
 
 //-----------------------------------------------------------------------------
 
+DefineEngineFunction(expandPath, const char*, (const char* path),, "(string path) - Expands an expando or relative path into a full path.")
+{
+   char* ret = Con::getReturnBuffer(1024);
+   Con::expandPath(ret, 1024, path);
+   return ret;
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineFunction(collapsePath, const char*, (const char* path), , "(string path) - Collapses a path into either an expando path or a relative path.")
+{
+   char* ret = Con::getReturnBuffer(1024);
+   Con::collapsePath(ret, 1024, path);
+   return ret;
+}
+
+
 DefineEngineFunction( log, void, ( const char* message ),,
    "@brief Logs a message to the console.\n\n"
    "@param message The message text.\n"

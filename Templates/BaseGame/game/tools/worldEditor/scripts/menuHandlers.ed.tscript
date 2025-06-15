@@ -455,6 +455,10 @@ function EditorAutoSaveMission()
    
    AssetBackupListArray.empty();
    
+   %scenePath = makeFullPath(getRootScene().getFileName());
+   if(startsWith(%scenePath, "tools/levels/")
+      return false;
+   
    //Next, we figure out what all we're planning to save
    %terrainObjects = getRootScene().getObjectsByClass("TerrainBlock", false);
    for(%i=0; %i < getWordCount(%terrainObjects); %i++)

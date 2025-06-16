@@ -456,7 +456,7 @@ function EditorAutoSaveMission()
    AssetBackupListArray.empty();
    
    %scenePath = makeFullPath(getRootScene().getFileName());
-   if(startsWith(%scenePath, "tools/levels/")
+   if(startsWith(%scenePath, "tools/levels/"))
       return false;
    
    //Next, we figure out what all we're planning to save

@@ -29,6 +29,13 @@
 #include "gui/3d/guiTSControl.h"
 #include "T3D/gameFunctions.h"
 #include "terrain/terrData.h"
+#include "gfx/gfxTransformSaver.h"
+#include "scene/sceneManager.h"
+#include "scene/sceneRenderState.h"
+#include "lighting/lightManager.h"
+#include "lighting/shadowMap/lightShadowMap.h"
+#include "math/mathUtils.h"
+#include "math/util/frustum.h"
 
 namespace {
    F32 round_local(F32 val)
@@ -65,7 +72,8 @@ GuiMissionAreaCtrl::GuiMissionAreaCtrl()
    mSquareBitmap = true;
 
    mMissionArea = 0;
-   mTerrainBlock = 0;
+   mLevelTexture = NULL;
+   mLevelBounds = Box3F::Zero;
 
    mMissionBoundsColor.set(255,0,0);
    mCameraColor.set(255,0,0);
@@ -75,6 +83,8 @@ GuiMissionAreaCtrl::GuiMissionAreaCtrl()
 
    mLastHitMode = Handle_None;
    mSavedDrag = false;
+
+   mBitmap.set(256, 256, GFXFormatR8G8B8, &GFXRenderTargetProfile, "MissionAreaRenderTarget");
 }
 
 GuiMissionAreaCtrl::~GuiMissionAreaCtrl()
@@ -131,19 +141,6 @@ bool GuiMissionAreaCtrl::onWake()
    if(!Parent::onWake())
       return(false);
 
-   //mMissionArea = const_cast<MissionArea*>(MissionArea::getServerObject());
-   //if(!bool(mMissionArea))
-   //   Con::warnf(ConsoleLogEntry::General, "GuiMissionAreaCtrl::onWake: no MissionArea object.");
-
-   //mTerrainBlock = getTerrainObj();
-   //if(!bool(mTerrainBlock))
-   //   Con::warnf(ConsoleLogEntry::General, "GuiMissionAreaCtrl::onWake: no TerrainBlock object.");
-
-   //if ( !bool(mMissionArea) || !bool(mTerrainBlock) )
-   //   return true;
-
-   updateTerrainBitmap();
-
    // make sure mission area is clamped
    setArea(getArea());
 
@@ -157,7 +154,6 @@ void GuiMissionAreaCtrl::onSleep()
 {
    mBitmap = NULL;
    mMissionArea = 0;
-   mTerrainBlock = 0;
 
    Parent::onSleep();
 }
@@ -168,6 +164,11 @@ void GuiMissionAreaCtrl::onMouseUp(const GuiEvent & event)
 {
    if(!bool(mMissionArea))
       return;
+
+   //unlock the mouse
+   mouseUnlock();
+
+   mLastMousePoint = event.mousePoint;
 
    RectI box;
    getScreenMissionArea(box);
@@ -189,6 +190,11 @@ void GuiMissionAreaCtrl::onMouseDown(const GuiEvent & event)
 {
    if(!bool(mMissionArea))
       return;
+
+   setFirstResponder();
+
+   // lock mouse
+   mouseLock();
 
    RectI box;
    getScreenMissionArea(box);
@@ -319,71 +325,6 @@ void GuiMissionAreaCtrl::submitUndo( const UTF8 *name )
 
 //------------------------------------------------------------------------------
 
-void GuiMissionAreaCtrl::updateTerrain()
-{
-   mTerrainBlock = getTerrainObj();
-   updateTerrainBitmap();
-}
-
-TerrainBlock * GuiMissionAreaCtrl::getTerrainObj()
-{
-   SimSet * scopeAlwaysSet = Sim::getGhostAlwaysSet();
-   for(SimSet::iterator itr = scopeAlwaysSet->begin(); itr != scopeAlwaysSet->end(); itr++)
-   {
-      TerrainBlock * terrain = dynamic_cast<TerrainBlock*>(*itr);
-      if(terrain)
-         return(terrain);
-   }
-   return(0);
-}
-
-void GuiMissionAreaCtrl::updateTerrainBitmap()
-{
-   GBitmap * bitmap = createTerrainBitmap();
-   if( bitmap )
-      setBitmapHandle( GFXTexHandle( bitmap, &GFXDefaultGUIProfile, true, String("Terrain Bitmap Update") ) );
-   else
-      setBitmap( "" );
-}
-
-GBitmap * GuiMissionAreaCtrl::createTerrainBitmap()
-{
-   if(!mTerrainBlock)
-      return NULL;
-
-   GBitmap * bitmap = new GBitmap(mTerrainBlock->getBlockSize(), mTerrainBlock->getBlockSize(), false, GFXFormatR8G8B8 );
-
-   // get the min/max
-   F32 min, max;
-   mTerrainBlock->getMinMaxHeight(&min, &max);
-
-   F32 diff = max - min;
-   F32 colRange = 255.0f / diff;
-
-   // This method allocates it's bitmap above, and does all assignment
-   // in the following loop. It is not subject to 24-bit -> 32-bit conversion
-   // problems, because the texture handle creation is where the conversion would
-   // occur, if it occurs. Since the data in the texture is never read back, and
-   // the bitmap is deleted after texture-upload, this is not a problem.
-   for(S32 y = 0; y < mTerrainBlock->getBlockSize() ; y++)
-   {
-      for(S32 x = 0; x < mTerrainBlock->getBlockSize(); x++)
-      {
-         F32 height;
-         height = mTerrainBlock->getHeight(Point2I(x, y));
- 
-         U8 col = U8((height - min) * colRange);
-         ColorI color(col, col, col);
-         bitmap->setColor(x, y, color);
-    
-      }
-   }
-
-   return(bitmap);
-}
-
-//------------------------------------------------------------------------------
-
 void GuiMissionAreaCtrl::setMissionArea( MissionArea* area )
 {
    mMissionArea = area;
@@ -391,6 +332,98 @@ void GuiMissionAreaCtrl::setMissionArea( MissionArea* area )
    {
       setArea(getArea());
    }
+}
+
+void GuiMissionAreaCtrl::updateLevelBitmap()
+{
+   if (mLevelTexture.isNull())
+      mLevelTexture = GFX->allocRenderToTextureTarget();
+
+   mLevelTexture->attachTexture(GFXTextureTarget::DepthStencil, GFXTextureTarget::sDefaultDepthStencil);
+   mLevelTexture->attachTexture(GFXTextureTarget::Color0, mBitmap);
+
+   mLevelBounds = Box3F::Zero;
+
+   for (SimSetIterator iter(Sim::getRootGroup()); *iter; ++iter)
+   {
+      SceneObject* obj = dynamic_cast<SceneObject*>(*iter);
+      if (!obj)
+         continue;
+
+      if (obj->isGlobalBounds())
+         continue;
+
+      // Merge bounds
+      mLevelBounds.intersect(obj->getWorldBox());
+   }
+
+   const F32 minSize = 256.0f;
+
+   // Ensure the bounding box has a minimum size and is square
+   VectorF size = mLevelBounds.getExtents();
+   F32 maxExtent = getMax(getMax(size.x, size.y), minSize);
+
+   // Expand to make it square and centered
+   Point3F center = mLevelBounds.getCenter();
+
+   Point3F halfExtents(maxExtent * 0.5f, maxExtent * 0.5f, size.z * 0.5f);
+   mLevelBounds.minExtents = center - halfExtents;
+   mLevelBounds.maxExtents = center + halfExtents;
+
+   GFXTransformSaver saver;
+
+   // Calculate orthographic dimensions
+   Point3F minPt = mLevelBounds.minExtents;
+   Point3F maxPt = mLevelBounds.maxExtents;
+
+   F32 orthoWidth = maxPt.x - minPt.x;
+   F32 orthoHeight = maxPt.y - minPt.y;
+   F32 nearPlane = 0.01f;
+   F32 farPlane = 1000.0f;
+
+   // Set orthographic projection centered around level bounds
+   GFX->setOrtho(
+      -orthoWidth * 0.5f, orthoWidth * 0.5f,  // left/right
+      -orthoHeight * 0.5f, orthoHeight * 0.5f, // bottom/top
+      nearPlane, farPlane,
+      true // flip y
+   );
+
+   GFX->pushActiveRenderTarget();
+
+   // create camera matrix
+   MatrixF lightMatrix(true);
+   VectorF eye = mLevelBounds.getCenter();
+   eye.z += 500.0f;
+   lightMatrix.LookAt(eye, VectorF(0.0f, 0.0f, -1.0f), VectorF(0.0f, -1.0f, 0.0f));
+   lightMatrix.inverse();
+
+   GFX->setWorldMatrix(lightMatrix);
+   GFX->clearTextureStateImmediate(0);
+
+   GFX->setActiveRenderTarget(mLevelTexture);
+   GFX->clear(GFXClearStencil | GFXClearTarget | GFXClearZBuffer, ColorI::BLACK, 1.0f, 0);
+
+   SceneRenderState reflectRenderState
+   (
+      gClientSceneGraph,
+      SPT_Reflect,
+      SceneCameraState::fromGFX()
+   );
+
+   // We don't use a special clipping projection, but still need to initialize 
+   // this for objects like SkyBox which will use it during a reflect pass.
+   gClientSceneGraph->setNonClipProjection(GFX->getProjectionMatrix());
+
+   // render scene
+   LIGHTMGR->registerGlobalLights(&reflectRenderState.getCullingFrustum(), false);
+   gClientSceneGraph->renderSceneNoLights(&reflectRenderState);
+   LIGHTMGR->unregisterAllLights();
+
+   // Clean up.
+   mLevelTexture->resolve();
+
+   GFX->popActiveRenderTarget();
 }
 
 const RectI & GuiMissionAreaCtrl::getArea()
@@ -503,31 +536,33 @@ Point2I GuiMissionAreaCtrl::screenDeltaToWorldDelta(const Point2I &screenPoint)
    return(Point2I(S32(screenPoint.x / mScale.x), S32(screenPoint.y / mScale.y)));
 }
 
-void GuiMissionAreaCtrl::setupScreenTransform(const Point2I & offset)
+void GuiMissionAreaCtrl::setupScreenTransform(const Point2I& offset)
 {
-   const MatrixF & terrMat = mTerrainBlock->getTransform();
-   Point3F terrPos;
-   terrMat.getColumn(3, &terrPos);
-   terrPos.z = 0;
+   // Compute 2D size of the bounding box
+   Point2F boxSize(mLevelBounds.len_x(), mLevelBounds.len_y());
+   Point2F boxMin(mLevelBounds.minExtents.x, mLevelBounds.minExtents.y);
+   Point2F boxCenter = Point2F(mLevelBounds.getCenter().x, mLevelBounds.getCenter().y);
 
-   F32 terrDim = mTerrainBlock->getWorldBlockSize();
+   // GUI control size
+   const Point2I& extenti = getExtent();
+   Point2F extent((F32)extenti.x, (F32)extenti.y);
 
-   const Point2I& extenti = getExtent( );
-   Point2F extent( static_cast<F32>( extenti.x ), static_cast<F32>( extenti.y ) );
-
-   if(mSquareBitmap)
+   // Maintain square aspect ratio if requested
+   if (mSquareBitmap)
       extent.x > extent.y ? extent.x = extent.y : extent.y = extent.x;
 
-   // We need to negate the y-axis so we are correctly oriented with
-   // positive y increase up the screen.
-   mScale.set(extent.x / terrDim, -extent.y / terrDim, 0);
+   // Compute scale (how many pixels per world unit)
+   mScale.set(extent.x / boxSize.x, -extent.y / boxSize.y, 0); // Y flipped
 
-   Point3F terrOffset = -terrPos;
-   terrOffset.convolve(mScale);
+   // Instead of offsetting the center to (0,0), we want to place the box center at GUI center
+   // So we compute the world-to-screen offset for center
+   Point2F screenCenter((F32)offset.x + extent.x * 0.5f, (F32)offset.y + extent.y * 0.5f);
 
-   // We need to add the y extent so we start from the bottom left of the control
-   // rather than the top left.
-   mCenterPos.set(terrOffset.x + F32(offset.x), terrOffset.y + F32(offset.y) + extent.y);
+   Point2F worldCenterOffset = boxCenter * Point2F(mScale.x, mScale.y);
+
+   // Compute the final offset that maps world center to screen center
+   mCenterPos.set(screenCenter.x - worldCenterOffset.x,
+      screenCenter.y - worldCenterOffset.y);
 }
 
 void GuiMissionAreaCtrl::getScreenMissionArea(RectI & rect)
@@ -575,7 +610,7 @@ void GuiMissionAreaCtrl::onRender(Point2I offset, const RectI & updateRect)
    setUpdate();
 
    // draw an x
-   if(!bool(mMissionArea) || !bool(mTerrainBlock))
+   if(!bool(mMissionArea))
    {
       GFX->setStateBlock(mSolidStateBlock);
       PrimBuild::color3i( 0, 0, 0 );
@@ -683,11 +718,12 @@ DefineEngineMethod( GuiMissionAreaCtrl, setMissionArea, void, ( MissionArea* are
    object->setMissionArea( area );
 }
 
-DefineEngineMethod( GuiMissionAreaCtrl, updateTerrain, void, ( ),,
-   "@brief Update the terrain bitmap.\n\n")
+DefineEngineMethod(GuiMissionAreaCtrl, updateLevelBitmap, void, (), ,
+   "@brief Update the level bitmap and bounds.\n\n")
 {
-   object->updateTerrain();
+   object->updateLevelBitmap();
 }
+
 
 //------------------------------------------------------------------------------
 

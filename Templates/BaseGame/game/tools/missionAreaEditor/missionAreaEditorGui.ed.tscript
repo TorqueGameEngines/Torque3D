@@ -290,7 +290,7 @@ function MissionAreaEditorGui::onEditorActivated( %this )
    {
       EWorldEditor.selectObject( %ma );
       EWorldEditor.syncGui();
-      MissionAreaEditorTerrainEditor.updateTerrain();
+      MissionAreaEditorLevelEditor.updateLevelBitmap();
       %this.setSelectedMissionArea( %ma );
       %this.onMissionAreaSelected( %this.getSelectedMissionArea() );   
    }
@@ -303,18 +303,18 @@ function MissionAreaEditorGui::onEditorDeactivated( %this )
 function MissionAreaEditorGui::onMissionAreaSelected( %this, %missionArea )
 {
    %this.missionArea = %missionArea;
-   MissionAreaEditorTerrainEditor.setMissionArea( %missionArea );
+   MissionAreaEditorLevelEditor.setMissionArea( %missionArea );
    MissionAreaInspector.inspect( %missionArea );  
 }
 
 //-----------------------------------------------------------------------------
 
-function MissionAreaEditorTerrainEditor::onMissionAreaModified( %this )
+function MissionAreaEditorLevelEditor::onMissionAreaModified( %this )
 {
    MissionAreaInspector.refresh();
 }
 
-function MissionAreaEditorTerrainEditor::onUndo( %this )
+function MissionAreaEditorLevelEditor::onUndo( %this )
 {
    MissionAreaInspector.refresh();
 }

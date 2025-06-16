@@ -151,7 +151,7 @@ function ShapeAsset::generatePreviewImage(%this, %previewButton, %forceRegenerat
          {
             assetName = %this.assetName @ "_Preview";
             versionId = 1;
-            imageFile = makeFullPath(%previewFilePath);
+            imageFile = "@" @ %this.assetName @ "_Preview.png";
          };
 
          TamlWrite(%preview_Asset, expandPath("^ToolsModule/resources/previewCache/" @ %previewButton.moduleName @ "/" @ %preview_Asset.AssetName @ ".asset.taml"));

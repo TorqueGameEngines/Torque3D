@@ -2825,7 +2825,7 @@ Torque::Path AssetImporter::importImageAsset(AssetImportObject* assetItem)
    StringTableEntry assetName = StringTable->insert(assetItem->assetName.c_str());
 
    String imageFileName = assetItem->filePath.getFullFileName();
-   String assetPath = targetPath + "/" + imageFileName;
+   String assetPath = "@" + imageFileName;
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
    String originalPath = assetItem->filePath.getFullPath().c_str();
 

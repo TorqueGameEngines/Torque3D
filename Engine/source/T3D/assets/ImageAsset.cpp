@@ -213,6 +213,8 @@ bool ImageAsset::onAdd()
 
 void ImageAsset::onRemove()
 {
+   Torque::FS::RemoveChangeNotification(mImageFile, this, &ImageAsset::_onResourceChanged);
+
    // Call Parent.
    Parent::onRemove();
 }
@@ -346,6 +348,9 @@ void ImageAsset::initializeAsset(void)
 
    mImageFile = expandAssetFilePath(mImageFile);
 
+   if (getOwned())
+      Torque::FS::AddChangeNotification(mImageFile, this, &ImageAsset::_onResourceChanged);
+
    populateImage();
 }
 
@@ -388,6 +393,8 @@ void ImageAsset::setImageFile(StringTableEntry pImageFile)
 
    if (pImageFile == mImageFile)
       return;
+
+   Torque::FS::RemoveChangeNotification(mImageFile, this, &ImageAsset::_onResourceChanged);
 
    if (String(pImageFile).startsWith("#") || String(pImageFile).startsWith("$"))
    {

@@ -345,6 +345,8 @@ void ImageAsset::initializeAsset(void)
       return;
 
    mImageFile = expandAssetFilePath(mImageFile);
+
+   populateImage();
 }
 
 void ImageAsset::onAssetRefresh(void)
@@ -355,6 +357,8 @@ void ImageAsset::onAssetRefresh(void)
 
    // Call parent.
    Parent::onAssetRefresh();
+
+   populateImage();
 
 }
 
@@ -394,46 +398,6 @@ void ImageAsset::setImageFile(StringTableEntry pImageFile)
    }
 
    mImageFile = getOwned() ? expandAssetFilePath(pImageFile) : StringTable->insert(pImageFile);
-
-   if (Torque::FS::IsFile(mImageFile))
-   {
-      if (dStrEndsWith(mImageFile, ".dds"))
-      {
-         DDSFile* tempFile = new DDSFile();
-         FileStream* ddsFs;
-         if ((ddsFs = FileStream::createAndOpen(mImageFile, Torque::FS::File::Read)) == NULL)
-         {
-            Con::errorf("ImageAsset::setImageFile Failed to open ddsfile: %s", mImageFile);
-         }
-
-         if (!tempFile->readHeader(*ddsFs))
-         {
-            Con::errorf("ImageAsset::setImageFile Failed to read header of ddsfile: %s", mImageFile);
-         }
-         else
-         {
-            mImageWidth = tempFile->mWidth;
-            mImageHeight = tempFile->mHeight;
-         }
-
-         ddsFs->close();
-         delete tempFile;
-      }
-      else
-      {
-         if (!stbi_info(mImageFile, &mImageWidth, &mImageHeight, &mImageChannels))
-         {
-            StringTableEntry stbErr = stbi_failure_reason();
-            if (stbErr == StringTable->EmptyString())
-               stbErr = "ImageAsset::Unkown Error!";
-
-            Con::errorf("ImageAsset::setImageFile STB Get file info failed: %s", stbErr);
-         }
-      }
-
-      // we only support 2d textures..... for no ;)
-      mImageDepth = 1;
-   }
 
    refreshAsset();
 }
@@ -672,6 +636,49 @@ void ImageAsset::onTamlCustomRead(const TamlCustomNodes& customNodes)
             continue;
          }
       }
+   }
+}
+
+void ImageAsset::populateImage(void)
+{
+   if (Torque::FS::IsFile(mImageFile))
+   {
+      if (dStrEndsWith(mImageFile, ".dds"))
+      {
+         DDSFile* tempFile = new DDSFile();
+         FileStream* ddsFs;
+         if ((ddsFs = FileStream::createAndOpen(mImageFile, Torque::FS::File::Read)) == NULL)
+         {
+            Con::errorf("ImageAsset::setImageFile Failed to open ddsfile: %s", mImageFile);
+         }
+
+         if (!tempFile->readHeader(*ddsFs))
+         {
+            Con::errorf("ImageAsset::setImageFile Failed to read header of ddsfile: %s", mImageFile);
+         }
+         else
+         {
+            mImageWidth = tempFile->mWidth;
+            mImageHeight = tempFile->mHeight;
+         }
+
+         ddsFs->close();
+         delete tempFile;
+      }
+      else
+      {
+         if (!stbi_info(mImageFile, &mImageWidth, &mImageHeight, &mImageChannels))
+         {
+            StringTableEntry stbErr = stbi_failure_reason();
+            if (stbErr == StringTable->EmptyString())
+               stbErr = "ImageAsset::Unkown Error!";
+
+            Con::errorf("ImageAsset::setImageFile STB Get file info failed: %s", stbErr);
+         }
+      }
+
+      // we only support 2d textures..... for now ;)
+      mImageDepth = 1; 
    }
 }
 

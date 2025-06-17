@@ -196,7 +196,7 @@ public:
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* imageAsset);
    static U32 getAssetById(String assetId, AssetPtr<ImageAsset>* imageAsset) { return getAssetById(assetId.c_str(), imageAsset); };
 
-
+   void populateImage(void);
    const char* getImageInfo();
 
 protected:

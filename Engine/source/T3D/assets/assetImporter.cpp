@@ -2805,6 +2805,7 @@ void AssetImporter::acquireAssets(AssetImportObject* assetItem)
       if (AssetDatabase.isDeclaredAsset(assetId))
       {
          AssetDatabase.acquireAsset<AssetBase>(assetId);
+         AssetDatabase.refreshAsset(assetId);
          AssetDatabase.releaseAsset(assetId);
       }
    }

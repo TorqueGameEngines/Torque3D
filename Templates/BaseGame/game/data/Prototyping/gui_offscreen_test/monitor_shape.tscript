@@ -17,45 +17,4 @@ function monitor_shapefbx::onLoad(%this)
    %this.addNode("ColBox-1", "Col-1", "0 0 0 1 0 0 0", "0", "Bounds");
    %this.addCollisionDetail("-1", "Box", "Bounds", "4", "10", "30", "32", "30", "30", "30", "Flood fill");
    %this.setBounds("-0.8 -0.244957 -0.0409516 0.8 0.244957 1.10231");
-   
-   if (!isObject(screen_Canvas))
-   {
-      new GuiOffscreenCanvas(screen_Canvas) {
-         targetName = "screen_Canvas";
-         targetSize = "1280 720";
-         dynamicTarget = false;
-         canInteract = true;
-         maxInteractDistance = "3";
-      };
-   }
-
-   if(isObject(OptionsMenu))
-   {
-      screen_Canvas.setContent(OptionsMenu);
-   }
-
-   %screen_Canvas_asset = "Prototyping:ScreenTarget";
-   if(!AssetDatabase.isDeclaredAsset(%screen_Canvas_asset))
-   {
-      %screen_asset = new ImageAsset()
-      {
-         assetName = "ScreenTarget";
-         versionId = 1;
-         imageFile = "#screen_Canvas";
-      };
-      TamlWrite(%screen_asset, expandPath("^Prototyping/gui_offscreen_test/" @ %screen_asset.AssetName @ ".asset.taml"));
-      %previewModule = ModuleDatabase.findModule("Prototyping",1);
-      AssetDatabase.addDeclaredAsset(%previewModule, expandPath("^Prototyping/gui_offscreen_test/" @ %screen_asset.AssetName @ ".asset.taml"));
-   }
-
-   %mat_asset = "Prototyping:monitor_screen_mat";
-   if(!AssetDatabase.isDeclaredAsset(%mat_asset))
-   {
-      echo("Material asset not found, this should exist");
-   }
-
-   %assetDef = AssetDatabase.acquireAsset(%mat_asset);
-   %material = %assetDef.materialDefinitionName;  
-   %material.DiffuseMapAsset = %screen_Canvas_asset;
-
 }

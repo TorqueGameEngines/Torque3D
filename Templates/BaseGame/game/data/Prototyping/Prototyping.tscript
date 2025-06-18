@@ -42,6 +42,21 @@ function Prototyping::initClient(%this)
 //This is called when a client connects to a server
 function Prototyping::onCreateClientConnection(%this)
 {
+   if (!isObject(screen_Canvas))
+   {
+      new GuiOffscreenCanvas(screen_Canvas) {
+         targetName = "screen_Canvas";
+         targetSize = "1280 720";
+         dynamicTarget = false;
+         canInteract = true;
+         maxInteractDistance = "3";
+      };
+   }
+
+   if(isObject(OptionsMenu))
+   {
+      screen_Canvas.setContent(OptionsMenu);
+   }
 }
 
 //This is called when a client disconnects from a server

@@ -134,7 +134,7 @@ function AssetBrowser::buildPopupMenus(%this)
          item[ 0 ] = "Create Script" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ScriptAsset\", AssetBrowser.selectedModule);";
          item[ 1 ] = "Create State Machine" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"StateMachineAsset\", AssetBrowser.selectedModule);";
          item[ 2 ] = "-";
-         item[ 3 ] = "Create Game Mode" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"GameMode\", AssetBrowser.selectedModule);";
+         item[ 3 ] = "Create Game Mode" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"GameModeType\", AssetBrowser.selectedModule);";
          //item[ 3 ] = "Create Game Object" TAB "" TAB "AssetBrowser.createNewGameObjectAsset(\"NewGameObject\", AssetBrowser.selectedModule);";
       };
       //%this.AddNewScriptAssetPopup.insertSubMenu(0, "Create Component", AddNewComponentAssetPopup);

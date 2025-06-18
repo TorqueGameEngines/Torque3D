@@ -1,0 +1,6 @@
+<ShapeAsset
+    AssetName="monitor_shape"
+    fileName="@assetFile=monitor_shape.fbx"
+    constuctorFileName="@assetFile=monitor_shape.tscript"
+    materialSlot0="@asset=Prototyping:monitor_base_mat"
+    materialSlot1="@asset=Prototyping:monitor_screen_mat"/>

@@ -1,0 +1,16 @@
+<MaterialAsset
+    AssetName="monitor_screen_mat"
+    materialDefinitionName="monitor_screen_mat">
+    <Material
+        Name="monitor_screen_mat"
+        mapTo="monitor_screen_mat"
+        originalAssetName="monitor_base_mat">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="@asset=Prototyping:ScreenTarget"
+                IgnoreLighting="true"/>
+            <Stages_beginarray
+                DiffuseColor="White"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

@@ -690,6 +690,12 @@ bool GuiCanvas::processInputEvent(InputEventInfo &inputEvent)
    mConsumeLastInputEvent = true;
    mLastInputDeviceType = inputEvent.deviceType;
 
+   // If we have an active offscreen canvas, give it the input
+   if (GuiOffscreenCanvas::sActiveOffscreenCanvas &&
+      (GuiOffscreenCanvas::sActiveOffscreenCanvas != this) &&
+      GuiOffscreenCanvas::sActiveOffscreenCanvas->processInputEvent(inputEvent))
+      return mConsumeLastInputEvent;
+
    // First call the general input handler (on the extremely off-chance that it will be handled):
    if (mFirstResponder &&  mFirstResponder->onInputEvent(inputEvent))
    {

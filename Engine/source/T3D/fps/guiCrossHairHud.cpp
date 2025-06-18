@@ -131,9 +131,9 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
    GameConnection* conn = GameConnection::getConnectionToServer();
    if (!conn)
       return;
-   /*GameBase* control = dynamic_cast<GameBase*>(conn->getCameraObject());
+   GameBase* control = dynamic_cast<GameBase*>(conn->getCameraObject());
    if (!control || !(control->getTypeMask() & ObjectMask) || !conn->isFirstPerson())
-      return;*/
+      return;
 
    // Parent render.
    Parent::onRender(offset,updateRect);
@@ -153,7 +153,7 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
    // Collision info. We're going to be running LOS tests and we
    // don't want to collide with the control object.
    static U32 losMask = TerrainObjectType | ShapeBaseObjectType | StaticShapeObjectType;
-   //control->disableCollision();
+   control->disableCollision();
 
    RayInfo info;
    if (gClientContainer.castRay(camPos, endPos, losMask, &info)) {
@@ -220,7 +220,7 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
    }
 
    // Restore control object collision
-   //control->enableCollision();
+   control->enableCollision();
 }
 
 

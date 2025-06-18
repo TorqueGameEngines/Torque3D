@@ -126,7 +126,6 @@ void GuiCrossHairHud::initPersistFields()
 
 void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
 {
-   GuiOffscreenCanvas::sActiveOffscreenCanvas = NULL;
    // Must have a connection and player control object
    GameConnection* conn = GameConnection::getConnectionToServer();
    if (!conn)
@@ -162,6 +161,7 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
       {
          if (mFrameTime->getElapsedMs() > 32)
          {
+            GuiOffscreenCanvas::sActiveOffscreenCanvas = NULL;
             mFrameTime->reset();
 
             Point3F newStart, newEnd;
@@ -204,7 +204,6 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
                }
             }
          }
-
       }
 
       // Hit something... but we'll only display health for named

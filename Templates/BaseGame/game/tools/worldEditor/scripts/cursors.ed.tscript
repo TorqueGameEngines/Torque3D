@@ -27,48 +27,48 @@
 new GuiCursor(EditorHandCursor)
 {
    hotSpot = "7 0";
-   bitmapName = "~/worldEditor/images/CUR_hand.png";
+   bitmapAsset = "ToolsModule:CUR_hand_image";
 };
 
 new GuiCursor(EditorRotateCursor)
 {
    hotSpot = "11 18";
-   bitmapName = "~/worldEditor/images/CUR_rotate.png";
+   bitmapAsset = "ToolsModule:CUR_rotate_image";
 };
 
 new GuiCursor(EditorMoveCursor)
 {
    hotSpot = "9 13";
-   bitmapName = "~/worldEditor/images/CUR_grab.png";
+   bitmapAsset = "ToolsModule:CUR_grab_image";
 };
 
 new GuiCursor(EditorArrowCursor)
 {
    hotSpot = "0 0";
-   bitmapName = "~/worldEditor/images/CUR_3darrow.png";
+   bitmapAsset = "ToolsModule:CUR_3darrow_image";
 };
 
 new GuiCursor(EditorUpDownCursor)
 {
    hotSpot = "5 10";
-   bitmapName = "~/worldEditor/images/CUR_3dupdown";
+   bitmapAsset = "ToolsModule:CUR_3dupdown_image";
 };
 new GuiCursor(EditorLeftRightCursor)
 {
    hotSpot = "9 5";
-   bitmapName = "~/worldEditor/images/CUR_3dleftright";
+   bitmapAsset = "ToolsModule:CUR_3dleftright_image";
 };
 
 new GuiCursor(EditorDiagRightCursor)
 {
    hotSpot = "8 8";
-   bitmapName = "~/worldEditor/images/CUR_3ddiagright";
+   bitmapAsset = "ToolsModule:CUR_3ddiagright_image";
 };
 
 new GuiCursor(EditorDiagLeftCursor)
 {
    hotSpot = "8 8";
-   bitmapName = "~/worldEditor/images/CUR_3ddiagleft";
+   bitmapAsset = "ToolsModule:CUR_3ddiagleft_image";
 };
 
 new GuiControl(EmptyControl)

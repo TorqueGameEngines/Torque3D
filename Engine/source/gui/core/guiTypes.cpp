@@ -116,6 +116,10 @@ void GuiCursor::render(const Point2I &pos)
    {
       mExtent.set(getBitmap()->getWidth(), getBitmap()->getHeight());
    }
+   else
+   {
+      return;
+   }
 
    // Render the cursor centered according to dimensions of texture
    S32 texWidth = getBitmap()->getWidth();

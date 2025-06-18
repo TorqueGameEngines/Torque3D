@@ -1,4 +1,4 @@
-AssetBrowser::registerObjectType("GameModeType", "Gamemode Objects", "Gamemode");
+AssetBrowser::registerObjectType("GameModeType", "Gamemode Objects", "GameMode");
 
 function GameModeType::setupCreateNew()
 {
@@ -7,7 +7,99 @@ function GameModeType::setupCreateNew()
 
 function GameModeType::onCreateNew()
 {
+   %moduleName = $CurrentAssetBrowser.newAssetSettings.moduleName;
+   %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+      
+   %assetName = $CurrentAssetBrowser.newAssetSettings.assetName;   
+   %assetPath = NewAssetTargetAddress.getText() @ "/";
    
+   %scriptPath = %assetPath @ %assetName @ "." @ $TorqueScriptFileExtension;
+   %fullScriptPath = makeFullPath(%scriptPath);
+
+   %file = new FileObject();
+	%templateFile = new FileObject();
+	
+   %postFXTemplateCodeFilePath = $CurrentAssetBrowser.templateFilesPath @ "gameMode." @ $TorqueScriptFileExtension @ ".template";
+   
+   if(%file.openForWrite(%fullScriptPath) && %templateFile.openForRead(%postFXTemplateCodeFilePath))
+   {
+      while( !%templateFile.isEOF() )
+      {
+         %line = %templateFile.readline();
+         %line = strreplace( %line, "@@", %assetName );
+         
+         %file.writeline(%line);
+      }
+      
+      %file.close();
+      %templateFile.close();
+   }
+   else
+   {
+      %file.close();
+      %templateFile.close();
+      
+      warnf("createGameMode - Something went wrong and we couldn't write the gameMode script file!");
+   }
+
+   %localScriptPath = strReplace(%scriptPath, "data/" @ %moduleName @ "/", "./");
+   %execLine = "   %this.queueExec(\"" @ %localScriptPath @ "\");";
+   
+   %moduleScriptPath = makeFullPath(%moduleDef.ModuleScriptFilePath);
+   
+   echo("Attempting exec insert for file: " @ %moduleScriptPath);
+   
+   %lineIdx = Tools::findInFile(%moduleScriptPath, "*function*" @ %moduleName @ "::initClient*");
+   if(%lineIdx != -1)
+   {
+      echo("INIT CLIENT FUNCTION LINE FOUND ON: " @ %lineIdx);
+      
+      %insertLineIdx = Tools::findInFunction(%moduleScriptPath, %moduleName, "initClient", "*//--FILE EXEC END--*");
+      echo("FILE EXEC END LINE FOUND ON: " @ %insertLineIdx);
+      
+      if(%insertLineIdx == -1)
+      {
+         //If there are not 'blocking' comments, then just slap the exec on the end of the function def
+         //as it doesn't really matter now
+         Tools::appendLineToFunction(%moduleScriptPath, %moduleName, "initClient", %execLine);
+      }
+      else
+      {
+         Tools::insertInFile(%moduleScriptPath, %insertLineIdx, %execLine, true);
+      }
+   }
+   
+   %lineIdx = Tools::findInFile(%moduleScriptPath, "*function*" @ %moduleName @ "::initServer*");
+   if(%lineIdx != -1)
+   {
+      echo("INIT SERVER FUNCTION LINE FOUND ON: " @ %lineIdx);
+      
+      %insertLineIdx = Tools::findInFunction(%moduleScriptPath, %moduleName, "initServer", "*//--FILE EXEC END--*");
+      echo("FILE EXEC END LINE FOUND ON: " @ %insertLineIdx);
+      
+      if(%insertLineIdx == -1)
+      {
+         //If there are not 'blocking' comments, then just slap the exec on the end of the function def
+         //as it doesn't really matter now
+         Tools::appendLineToFunction(%moduleScriptPath, %moduleName, "initServer", %execLine);
+      }
+      else
+      {
+         Tools::insertInFile(%moduleScriptPath, %insertLineIdx, %execLine, true);
+      }
+   }
+   
+   //and we'll go ahead and force execute the script file so the gamemode is 'available' for use immediately
+   exec(%scriptPath);
+   
+   if(isObject(%assetName))
+   {
+      //it's possible it got moved to an instant group upon execution, so we'll just 
+      //shove it back to the RootGroup by force to be 100% sure
+      RootGroup.add(%assetName); 
+   }
+   
+	return %scriptPath;
 }
 
 function GameModeType::buildBrowserElement(%this, %className, %previewData)

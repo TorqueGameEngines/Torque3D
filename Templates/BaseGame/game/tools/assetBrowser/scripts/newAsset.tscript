@@ -255,8 +255,10 @@ function CreateNewAsset()
 	
 	Canvas.popDialog(AssetBrowser_newAsset);
 	
+	%assetTypeGroup = AssetBrowser::getAssetTypeGroup(%assetType);
+	
 	//Load it
-	if(!AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
+	if(%assetTypeGroup $= "Asset" && !AssetDatabase.isDeclaredAsset(%moduleName @ ":" @ %assetName))
 	{
       %moduleDef = ModuleDatabase.findModule(%moduleName,1);
       AssetDatabase.addDeclaredAsset(%moduleDef, %assetFilePath);
@@ -270,18 +272,7 @@ function CreateNewAsset()
       %callbackCommand = "" @ AssetBrowser_newAsset.callbackFunc @ "(\"" @ %moduleName @ ":" @ %assetName @ "\");";
       eval(%callbackCommand);
 	}
-	
-	//Update the selection to immediately jump to the new asset
-   /*AssetBrowser-->filterTree.clearSelection();
-   %ModuleItem = AssetBrowser-->filterTree.findItemByName(%moduleName);
-   %assetTypeId = AssetBrowser-->filterTree.findChildItemByName(%ModuleItem, %assetType);
-   
-   AssetBrowser-->filterTree.selectItem(%assetTypeId);
-   
-   %selectedItem = AssetBrowser-->filterTree.getSelectedItem();
-   AssetBrowser-->filterTree.scrollVisibleByObjectId(%selectedItem);
-   
-   AssetBrowser-->filterTree.buildVisibleTree(); */
+
    AssetBrowser.refresh();
 }
 

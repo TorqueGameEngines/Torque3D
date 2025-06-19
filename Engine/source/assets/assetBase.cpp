@@ -226,9 +226,20 @@ StringTableEntry AssetBase::expandAssetFilePath(const char* pAssetFilePath) cons
       assetBasePathHint = NULL;
    }
 
-   // Expand the path with the asset base-path hint.
    char assetFilePathBuffer[1024];
-   Con::expandPath(assetFilePathBuffer, sizeof(assetFilePathBuffer), pAssetFilePath, assetBasePathHint);
+
+   if (*pAssetFilePath != '@')
+   {
+      // Expand the path with the asset base-path hint.
+      Con::expandPath(assetFilePathBuffer, sizeof(assetFilePathBuffer), pAssetFilePath, assetBasePathHint);
+      return StringTable->insert(assetFilePathBuffer);
+   }
+
+   if(!getOwned())
+      return StringTable->insert(pAssetFilePath);
+
+   // Format expanded path taking into account any missing slash.
+   dSprintf(assetFilePathBuffer, sizeof(assetFilePathBuffer), "%s/%s", mpOwningAssetManager->getAssetPath(getAssetId()), pAssetFilePath + (pAssetFilePath[1] == '/' ? 2 : 1));
    return StringTable->insert(assetFilePathBuffer);
 }
 
@@ -254,6 +265,11 @@ StringTableEntry AssetBase::collapseAssetFilePath(const char* pAssetFilePath) co
 
    char assetFilePathBuffer[1024];
 
+   if (*pAssetFilePath == '@')
+   {
+      return StringTable->insert(pAssetFilePath);
+   }
+
    // Is the asset not owned or private?
    if (!getOwned() || getAssetPrivate())
    {
@@ -272,7 +288,7 @@ StringTableEntry AssetBase::collapseAssetFilePath(const char* pAssetFilePath) co
       StringTableEntry relativePath = Platform::makeRelativePathName(pAssetFilePath, assetBasePath);
 
       // Format the collapsed path.
-      dSprintf(assetFilePathBuffer, sizeof(assetFilePathBuffer), "%s", relativePath);
+      dSprintf(assetFilePathBuffer, sizeof(assetFilePathBuffer), "@%s", relativePath);
    }
    else
    {

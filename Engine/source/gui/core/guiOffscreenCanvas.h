@@ -38,6 +38,8 @@ public:
    void _teardownTargets();
 
    NamedTexTargetRef getTarget() { return &mNamedTarget; }
+   bool canInteract() { return mCanInteract; }
+   F32 getMaxInteractDistance() { return mMaxInteractDistance; }
 
    void markDirty() { mTargetDirty = true; }
 
@@ -59,9 +61,12 @@ protected:
    
    bool mUseDepth;
    GFXTexHandle mTargetDepth;
+   bool mCanInteract;
+   F32 mMaxInteractDistance;
 
 public:
    static Vector<GuiOffscreenCanvas*> sList;
+   static GuiOffscreenCanvas* sActiveOffscreenCanvas;
 };
 
 #endif

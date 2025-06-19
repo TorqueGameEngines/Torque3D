@@ -1,0 +1,11 @@
+<ImageAsset
+    AssetName="ScreenTarget"
+    imageFile="@assetFile=#screen_Canvas"
+    VersionId="1">
+    <ImageAsset.ImageMetadata>
+        <ImageInfo
+            ImageWidth="-1"
+            ImageHeight="-1"
+            ImageDepth="-1"/>
+    </ImageAsset.ImageMetadata>
+</ImageAsset>

@@ -74,7 +74,12 @@ PhysicsDebrisData::PhysicsDebrisData()
    lifetime = 5.0f;
    lifetimeVariance = 0.0f;
 
-   INIT_ASSET(Shape);
+   mShapeAsset.registerRefreshNotify(this);
+}
+
+PhysicsDebrisData::~PhysicsDebrisData()
+{
+   mShapeAsset.unregisterRefreshNotify();
 }
 
 bool PhysicsDebrisData::onAdd()
@@ -96,12 +101,12 @@ bool PhysicsDebrisData::preload( bool server, String &errorStr )
    {
       // Create a dummy shape to force the generation of shaders and materials
       // during the level load and not during gameplay.
-      TSShapeInstance *pDummy = new TSShapeInstance( mShape, !server );
+      TSShapeInstance *pDummy = new TSShapeInstance( getShape(), !server);
       delete pDummy;
    }
    else
    {
-      errorStr = String::ToString("PhysicsDebrisData::load: Couldn't load shape asset \"%s\"", mShapeAssetId);
+      errorStr = String::ToString("PhysicsDebrisData::load: Couldn't load shape asset \"%s\"", _getShapeAssetId());
       return false;
    }
 
@@ -113,12 +118,9 @@ void PhysicsDebrisData::initPersistFields()
    docsURL;
    addGroup( "Shapes" );
 
-      addProtectedField( "shapeFile", TypeShapeFilename, Offset( mShapeName, PhysicsDebrisData ), &_setShapeData, &defaultProtectedGetFn,
-         "@brief Path to the .DAE or .DTS file to use for this shape.\n\n"
-         "Compatable with Live-Asset Reloading.", AbstractClassRep::FIELD_HideInInspectors);
+   INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, PhysicsDebrisData, "@brief Shape to use with this debris.\n\n"
+      "Compatable with Live-Asset Reloading.");
 
-      INITPERSISTFIELD_SHAPEASSET(Shape, PhysicsDebrisData, "@brief Shape to use with this debris.\n\n"
-         "Compatable with Live-Asset Reloading.");
    endGroup( "Shapes" );
 
    addGroup("Rendering");
@@ -216,7 +218,7 @@ void PhysicsDebrisData::packData(BitStream* stream)
    stream->write( waterDampingScale );
    stream->write( buoyancyDensity );
 
-   PACKDATA_ASSET(Shape);
+   PACKDATA_ASSET_REFACTOR(Shape);
 }
 
 void PhysicsDebrisData::unpackData(BitStream* stream)
@@ -237,7 +239,7 @@ void PhysicsDebrisData::unpackData(BitStream* stream)
    stream->read( &waterDampingScale );
    stream->read( &buoyancyDensity );
 
-   UNPACKDATA_ASSET(Shape);
+   UNPACKDATA_ASSET_REFACTOR(Shape);
 }
 
 DefineEngineMethod( PhysicsDebrisData, preload, void, (), , 
@@ -248,7 +250,7 @@ DefineEngineMethod( PhysicsDebrisData, preload, void, (), ,
 {
    String errorStr;
 
-   object->_setShape(object->getShape());
+   object->_setShape(object->_getShapeAssetId());
 
    if( !object->preload( false, errorStr ) )
       Con::errorf( "PhsysicsDebrisData::preload - error: %s", errorStr.c_str() );
@@ -362,7 +364,7 @@ bool PhysicsDebris::onAdd()
    }
 
    // Setup our bounding box
-   mObjBox = mDataBlock->mShape->mBounds;
+   mObjBox = mDataBlock->getShape()->mBounds;
    resetWorldBox();
 
    // Add it to the client scene.
@@ -625,7 +627,7 @@ void PhysicsDebris::_createFragments()
    if ( !mWorld )
       return;
 
-   TSShape *shape = mDataBlock->mShape;
+   TSShape *shape = mDataBlock->getShape();
 
    mShapeInstance = new TSShapeInstance( shape, true );
    mShapeInstance->animate();
@@ -699,7 +701,7 @@ void PhysicsDebris::_findNodes( U32 colNode, Vector<U32> &nodeIds )
    // 1. Visible mesh nodes are siblings of the collision node under a common parent dummy node
    // 2. Collision node is a child of its visible mesh node
 
-   TSShape *shape = mDataBlock->mShape;
+   TSShape *shape = mDataBlock->getShape();
    S32 itr = shape->nodes[colNode].parentIndex;
    itr = shape->nodes[itr].firstChild;
 

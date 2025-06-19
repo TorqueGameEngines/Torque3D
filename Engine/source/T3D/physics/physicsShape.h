@@ -51,7 +51,7 @@ class PhysicsDebrisData;
 class ExplosionData;
 
 
-class PhysicsShapeData : public GameBaseData
+class PhysicsShapeData : public GameBaseData, protected AssetPtrCallback
 {
    typedef GameBaseData Parent;
 
@@ -74,8 +74,7 @@ public:
 
 public:
 
-   DECLARE_SHAPEASSET(PhysicsShapeData, Shape, onShapeChanged);
-   DECLARE_ASSET_SETGET(PhysicsShapeData, Shape);
+   DECLARE_SHAPEASSET_REFACTOR(PhysicsShapeData, Shape)
 
    /// The shared unscaled collision shape.
    PhysicsCollisionRef colShape;
@@ -135,7 +134,8 @@ public:
    SimObjectRef< ExplosionData > explosion;   
    SimObjectRef< PhysicsShapeData > destroyedShape;
 
-   void onShapeChanged()
+protected:
+   void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
    {
       reloadOnLocalClient();
    }

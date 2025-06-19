@@ -48,7 +48,7 @@ struct RayInfo;
 class AbstractPolyList;
 
 
-class ForestItemData : public SimDataBlock
+class ForestItemData : public SimDataBlock, protected AssetPtrCallback
 {
 protected:
 
@@ -62,8 +62,7 @@ protected:
 
 public:
    
-   DECLARE_SHAPEASSET(ForestItemData, Shape, onShapeChanged);
-   DECLARE_ASSET_SETGET(ForestItemData, Shape);
+   DECLARE_SHAPEASSET_REFACTOR(ForestItemData, Shape)
 
    /// This is the radius used during placement to ensure
    /// the element isn't crowded up against other trees.
@@ -144,7 +143,10 @@ public:
       return theSignal;
    }
 
-   void onShapeChanged()
+   Resource<TSShape> mShape;
+
+protected:
+   void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
    {
       reloadOnLocalClient();
    }

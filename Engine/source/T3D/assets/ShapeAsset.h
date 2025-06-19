@@ -513,7 +513,7 @@ public:                                                                         
          return;                                                                                                                                                              \
       if(get##name##File() == _in)                                                                                                                                            \
          return;                                                                                                                                                              \
-      if (_in == NULL || _in == StringTable->EmptyString())                                                                                                                   \
+      if(_in == NULL || _in == StringTable->EmptyString() || _in == "")                                                                                                       \
       {                                                                                                                                                                       \
          m##name##Asset = NULL;                                                                                                                                               \
          m##name##File = "";                                                                                                                                                  \
@@ -569,7 +569,7 @@ public:                                                                         
          return;                                                                                                                                                              \
       if(get##name##File() == _in)                                                                                                                                            \
          return;                                                                                                                                                              \
-      if (_in == NULL || _in == StringTable->EmptyString())                                                                                                                   \
+      if(_in == NULL || _in == StringTable->EmptyString() || _in == "")                                                                                                       \
       {                                                                                                                                                                       \
          m##name##Asset = NULL;                                                                                                                                               \
          m##name##File = "";                                                                                                                                                  \
@@ -632,7 +632,7 @@ public:                                                                         
          return;                                                                                                                                                              \
       if(get##name##File(index) == _in)                                                                                                                                       \
          return;                                                                                                                                                              \
-      if (_in == NULL || _in == StringTable->EmptyString())                                                                                                                   \
+      if(_in == NULL || _in == StringTable->EmptyString() || _in == "")                                                                                                       \
       {                                                                                                                                                                       \
          m##name##Asset[index] = NULL;                                                                                                                                        \
          m##name##File[index] = "";                                                                                                                                           \

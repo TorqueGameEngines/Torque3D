@@ -54,7 +54,6 @@ ConsoleDocClass( afxModelData,
 
 afxModelData::afxModelData()
 {
-   INIT_ASSET(Shape);
   sequence = ST_NULLSTRING;
   seq_rate = 1.0f;
   seq_offset = 0.0f;
@@ -79,11 +78,13 @@ afxModelData::afxModelData()
   shadowMaxVisibleDistance = 80.0f;
   shadowProjectionDistance = 10.0f;
   shadowSphereAdjust = 1.0;
+
+  mShapeAsset.registerRefreshNotify(this);
 }
 
 afxModelData::afxModelData(const afxModelData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-   CLONE_ASSET(Shape);
+   mShapeAsset = other.mShapeAsset;
   sequence = other.sequence;
   seq_rate = other.seq_rate;
   seq_offset = other.seq_offset;
@@ -113,6 +114,8 @@ afxModelData::~afxModelData()
 {
    if (remap_buffer)
       dFree(remap_buffer);
+
+   mShapeAsset.unregisterRefreshNotify();
 }
 
 bool afxModelData::preload(bool server, String &errorStr)
@@ -126,9 +129,9 @@ bool afxModelData::preload(bool server, String &errorStr)
   
   if (mShapeAsset.notNull())
   {
-    if (!mShape)
+    if (!getShape())
     {
-      errorStr = String::ToString("afxModelData::load: Failed to load shape \"%s\"", mShapeAssetId);
+      errorStr = String::ToString("afxModelData::load: Failed to load shape \"%s\"", _getShapeAssetId());
       return false;
     }
 
@@ -160,7 +163,7 @@ bool afxModelData::preload(bool server, String &errorStr)
     if (txr_tag_remappings.size() == 0)
     {
       // this little hack forces the textures to preload
-      TSShapeInstance* pDummy = new TSShapeInstance(mShape);
+      TSShapeInstance* pDummy = new TSShapeInstance(getShape());
       delete pDummy;
     }
   }
@@ -174,7 +177,7 @@ void afxModelData::initPersistFields()
 {
    docsURL;
    addGroup("Shapes");
-      INITPERSISTFIELD_SHAPEASSET(Shape, afxModelData, "The name of a .dts format file to use for the model.");
+      INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, afxModelData, "The name of a .dts format file to use for the model.");
    endGroup("Shapes");
 
    addGroup("Animation");
@@ -258,7 +261,7 @@ void afxModelData::packData(BitStream* stream)
 {
   Parent::packData(stream);
 
-  PACKDATA_ASSET(Shape);
+  PACKDATA_ASSET_REFACTOR(Shape);
   stream->writeString(sequence);
   stream->write(seq_rate);  
   stream->write(seq_offset);
@@ -289,7 +292,7 @@ void afxModelData::unpackData(BitStream* stream)
 {
   Parent::unpackData(stream);
 
-  UNPACKDATA_ASSET(Shape);
+  UNPACKDATA_ASSET_REFACTOR(Shape);
   sequence = stream->readSTString();
   stream->read(&seq_rate);
   stream->read(&seq_offset);
@@ -318,21 +321,10 @@ void afxModelData::unpackData(BitStream* stream)
 
 void afxModelData::onPerformSubstitutions()
 {
-   if (mShapeAssetId != StringTable->EmptyString())
+   if (!getShape())
    {
-      mShapeAsset = mShapeAssetId;
-      if (mShapeAsset.notNull())
-      {
-         mShape = mShapeAsset->getShapeResource();
-      }
-
-      if (!mShape)
-      {
-         Con::errorf("afxModelData::onPerformSubstitutions: Failed to load shape \"%s\"", mShapeAssetId);
-         return;
-      }
-
-      // REMAP-TEXTURE-TAGS ISSUES?
+      Con::errorf("afxModelData::onPerformSubstitutions: Failed to load shape \"%s\"", _getShapeAssetId());
+      return;
    }
 }
 
@@ -406,18 +398,18 @@ bool afxModel::onAdd()
     return false;
 
   // setup our bounding box
-  if (mDataBlock->mShape)
-    mObjBox = mDataBlock->mShape->mBounds;
+  if (mDataBlock->getShape())
+    mObjBox = mDataBlock->getShape()->mBounds;
   else
     mObjBox = Box3F(Point3F(-1, -1, -1), Point3F(1, 1, 1));
 
   // setup the shape instance and sequence
-  if (mDataBlock->mShape)
+  if (mDataBlock->getShape())
   {
      if (/*isClientObject() && */mDataBlock->txr_tag_remappings.size() > 0)
      {
         // temporarily substitute material tags with alternates
-        TSMaterialList* mat_list = mDataBlock->mShape->materialList;
+        TSMaterialList* mat_list = mDataBlock->getShape()->materialList;
         if (mat_list)
         {
            for (S32 i = 0; i < mDataBlock->txr_tag_remappings.size(); i++)
@@ -438,7 +430,7 @@ bool afxModel::onAdd()
         }
      }
 
-    shape_inst = new TSShapeInstance(mDataBlock->mShape);
+    shape_inst = new TSShapeInstance(mDataBlock->getShape());
 
     if (true) // isClientObject())
     {
@@ -447,7 +439,7 @@ bool afxModel::onAdd()
        // restore the material tags to original form
        if (mDataBlock->txr_tag_remappings.size() > 0)
        {
-          TSMaterialList* mat_list = mDataBlock->mShape->materialList;
+          TSMaterialList* mat_list = mDataBlock->getShape()->materialList;
           if (mat_list)
           {
              for (S32 i = 0; i < mDataBlock->txr_tag_remappings.size(); i++)
@@ -513,14 +505,14 @@ bool afxModel::onAdd()
 
   resetWorldBox();
 
-  if (mDataBlock->mShape)
+  if (mDataBlock->getShape())
   {
     // Scan out the collision hulls...
     static const String sCollisionStr( "collision-" );
 
-    for (U32 i = 0; i < mDataBlock->mShape->details.size(); i++)
+    for (U32 i = 0; i < mDataBlock->getShape()->details.size(); i++)
     {
-      const String &name = mDataBlock->mShape->names[mDataBlock->mShape->details[i].nameIndex];
+      const String &name = mDataBlock->getShape()->names[mDataBlock->getShape()->details[i].nameIndex];
 
       if (name.compare( sCollisionStr, sCollisionStr.length(), String::NoCase ) == 0)
       {
@@ -534,7 +526,7 @@ bool afxModel::onAdd()
 
         char buff[128];
         dSprintf(buff, sizeof(buff), "LOS-%d", i + 1 + 8/*MaxCollisionShapes*/);
-        U32 los = mDataBlock->mShape->findDetail(buff);
+        U32 los = mDataBlock->getShape()->findDetail(buff);
         if (los == -1)
           mLOSDetails.last() = i;
         else
@@ -545,9 +537,9 @@ bool afxModel::onAdd()
     // Snag any "unmatched" LOS details
     static const String sLOSStr( "LOS-" );
 
-    for (U32 i = 0; i < mDataBlock->mShape->details.size(); i++)
+    for (U32 i = 0; i < mDataBlock->getShape()->details.size(); i++)
     {
-      const String &name = mDataBlock->mShape->names[mDataBlock->mShape->details[i].nameIndex];
+      const String &name = mDataBlock->getShape()->names[mDataBlock->getShape()->details[i].nameIndex];
 
       if (name.compare( sLOSStr, sLOSStr.length(), String::NoCase ) == 0)
       {

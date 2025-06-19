@@ -144,11 +144,11 @@ bool ProximityMineData::preload( bool server, String& errorStr )
       }
    }
 
-   if ( mShape )
+   if ( getShape() )
    {
       // Lookup animation sequences
-      armingSequence = mShape->findSequence( "armed" );
-      triggerSequence = mShape->findSequence( "triggered" );
+      armingSequence = getShape()->findSequence( "armed" );
+      triggerSequence = getShape()->findSequence( "triggered" );
    }
 
    return true;

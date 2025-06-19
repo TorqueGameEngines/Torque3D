@@ -117,6 +117,54 @@ ConsoleSetType(TypeShapeAssetId)
 
 //-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// REFACTOR
+//-----------------------------------------------------------------------------
+
+IMPLEMENT_STRUCT(AssetPtr<ShapeAsset>, AssetPtrShapeAsset, , "")
+END_IMPLEMENT_STRUCT
+
+ConsoleType(ShapeAssetPtrRefactor, TypeShapeAssetPtrRefactor, AssetPtr<ShapeAsset>, ASSET_ID_FIELD_PREFIX)
+
+
+ConsoleGetType(TypeShapeAssetPtrRefactor)
+{
+   // Fetch asset Id.
+   return (*((AssetPtr<ShapeAsset>*)dptr)).getAssetId();
+}
+
+ConsoleSetType(TypeShapeAssetPtrRefactor)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset pointer.
+      AssetPtr<ShapeAsset>* pAssetPtr = dynamic_cast<AssetPtr<ShapeAsset>*>((AssetPtrBase*)(dptr));
+
+      // Is the asset pointer the correct type?
+      if (pAssetPtr == NULL)
+      {
+         Con::warnf("(TypeShapeAssetPtrRefactor) - Failed to set asset Id '%d'.", pFieldValue);
+         return;
+      }
+
+      // Set asset.
+      pAssetPtr->setAssetId(pFieldValue);
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeShapeAssetPtrRefactor) - Cannot set multiple args to a single asset.");
+}
+
+//-----------------------------------------------------------------------------
+// REFACTOR END
+//-----------------------------------------------------------------------------
+
 const String ShapeAsset::mErrCodeStrings[] =
 {
    "TooManyVerts",
@@ -478,7 +526,38 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
    }
    else
    {
-      AssetPtr<ShapeAsset> shapeAsset = shapeAssetId; //ensures the fallback is loaded
+      foundAssetcount = AssetDatabase.findAssetType(&query, "ShapeAsset");
+      if (foundAssetcount != 0)
+      {
+         // loop all image assets and see if we can find one
+         // using the same image file/named target.
+         for (auto shapeAsset : query.mAssetList)
+         {
+            AssetPtr<ShapeAsset> temp = shapeAsset;
+            if (temp.notNull())
+            {
+               if (temp->getShapePath() == fileName)
+               {
+                  return shapeAsset;
+               }
+               else
+               {
+                  Torque::Path temp1 = temp->getShapePath();
+                  Torque::Path temp2 = fileName;
+
+                  if (temp1.getPath() == temp2.getPath() && temp1.getFileName() == temp2.getFileName())
+                  {
+                     return shapeAsset;
+                  }
+               }
+
+            }
+         }
+      }
+      else
+      {
+         AssetPtr<ShapeAsset> shapeAsset = shapeAssetId; //ensures the fallback is loaded
+      }
    }
 
    return shapeAssetId;

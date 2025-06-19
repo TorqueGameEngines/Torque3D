@@ -502,10 +502,10 @@ bool PlayerData::preload(bool server, String &errorStr)
 
    // If we don't have a shape don't crash out trying to
    // setup animations and sequences.
-   if ( mShape )
+   if (getShape())
    {
       // Go ahead a pre-load the player shape
-      TSShapeInstance* si = new TSShapeInstance(mShape, false);
+      TSShapeInstance* si = new TSShapeInstance(getShape(), false);
       TSThread* thread = si->addThread();
 
       // Extract ground transform velocity from animations
@@ -516,7 +516,7 @@ bool PlayerData::preload(bool server, String &errorStr)
          ActionAnimationDef *sp = &ActionAnimationList[i];
          dp->name          = sp->name;
          dp->dir.set(sp->dir.x,sp->dir.y,sp->dir.z);
-         dp->sequence      = mShape->findSequence(sp->name);
+         dp->sequence      = getShape()->findSequence(sp->name);
 
          // If this is a sprint action and is missing a sequence, attempt to use
          // the standard run ones.
@@ -524,7 +524,7 @@ bool PlayerData::preload(bool server, String &errorStr)
          {
             S32 offset = i-SprintRootAnim;
             ActionAnimationDef *standDef = &ActionAnimationList[RootAnim+offset];
-            dp->sequence = mShape->findSequence(standDef->name);
+            dp->sequence = getShape()->findSequence(standDef->name);
          }
 
          dp->velocityScale = true;
@@ -532,12 +532,12 @@ bool PlayerData::preload(bool server, String &errorStr)
          if (dp->sequence != -1)
             getGroundInfo(si,thread,dp);
       }
-      for (S32 b = 0; b < mShape->sequences.size(); b++)
+      for (S32 b = 0; b < getShape()->sequences.size(); b++)
       {
          if (!isTableSequence(b))
          {
             dp->sequence      = b;
-            dp->name          = mShape->getName(mShape->sequences[b].nameIndex);
+            dp->name          = getShape()->getName(getShape()->sequences[b].nameIndex);
             dp->velocityScale = false;
             getGroundInfo(si,thread,dp++);
          }
@@ -554,17 +554,17 @@ bool PlayerData::preload(bool server, String &errorStr)
             lookAction = c;
 
       // Resolve spine
-      spineNode[0] = mShape->findNode("Bip01 Pelvis");
-      spineNode[1] = mShape->findNode("Bip01 Spine");
-      spineNode[2] = mShape->findNode("Bip01 Spine1");
-      spineNode[3] = mShape->findNode("Bip01 Spine2");
-      spineNode[4] = mShape->findNode("Bip01 Neck");
-      spineNode[5] = mShape->findNode("Bip01 Head");
+      spineNode[0] = getShape()->findNode("Bip01 Pelvis");
+      spineNode[1] = getShape()->findNode("Bip01 Spine");
+      spineNode[2] = getShape()->findNode("Bip01 Spine1");
+      spineNode[3] = getShape()->findNode("Bip01 Spine2");
+      spineNode[4] = getShape()->findNode("Bip01 Neck");
+      spineNode[5] = getShape()->findNode("Bip01 Head");
 
       // Recoil animations
-      recoilSequence[0] = mShape->findSequence("light_recoil");
-      recoilSequence[1] = mShape->findSequence("medium_recoil");
-      recoilSequence[2] = mShape->findSequence("heavy_recoil");
+      recoilSequence[0] = getShape()->findSequence("light_recoil");
+      recoilSequence[1] = getShape()->findSequence("medium_recoil");
+      recoilSequence[2] = getShape()->findSequence("heavy_recoil");
    }
 
    // Convert pickupRadius to a delta of boundingBox
@@ -7511,8 +7511,8 @@ F32 Player::getAnimationDurationByID(U32 anim_id)
    if (anim_id == BAD_ANIM_ID)
       return 0.0f;
    S32 seq_id = mDataBlock->actionList[anim_id].sequence;
-   if (seq_id >= 0 && seq_id < mDataBlock->mShape->sequences.size())
-      return mDataBlock->mShape->sequences[seq_id].duration;
+   if (seq_id >= 0 && seq_id < mDataBlock->getShape()->sequences.size())
+      return mDataBlock->getShape()->sequences[seq_id].duration;
 
    return 0.0f;
 }
@@ -7524,8 +7524,8 @@ bool Player::isBlendAnimation(const char* name)
       return false;
 
    S32 seq_id = mDataBlock->actionList[anim_id].sequence;
-   if (seq_id >= 0 && seq_id < mDataBlock->mShape->sequences.size())
-      return mDataBlock->mShape->sequences[seq_id].isBlend();
+   if (seq_id >= 0 && seq_id < mDataBlock->getShape()->sequences.size())
+      return mDataBlock->getShape()->sequences[seq_id].isBlend();
 
    return false;
 }

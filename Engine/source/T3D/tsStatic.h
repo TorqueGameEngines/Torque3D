@@ -101,7 +101,7 @@ public:
 
 
 /// A simple mesh shape with optional ambient animation.
-class TSStatic : public SceneObject
+class TSStatic : public SceneObject, protected AssetPtrCallback
 {
    typedef SceneObject Parent;
 
@@ -186,12 +186,17 @@ protected:
    ReflectorDesc* reflectorDesc;
    CubeReflector mCubeReflector;
 
+   void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
+   {
+      _createShape();
+      _updateShouldTick();
+   }
+
 protected:
 
    Convex* mConvexList;
 
-   DECLARE_SHAPEASSET(TSStatic, Shape, onShapeChanged);
-   DECLARE_ASSET_NET_SETGET(TSStatic, Shape, AdvancedStaticOptionsMask);
+   DECLARE_SHAPEASSET_NET_REFACTOR(TSStatic, Shape, AdvancedStaticOptionsMask)
 
    U32               mShapeHash;
    Vector<S32> mCollisionDetails;
@@ -239,7 +244,7 @@ public:
    DECLARE_CATEGORY("Object \t Simple");
    static void initPersistFields();
    /// returns the shape asset used for this object
-   StringTableEntry getTypeHint() const override { return (getShapeAsset()) ? getShapeAsset()->getAssetName(): StringTable->EmptyString(); }
+   StringTableEntry getTypeHint() const override { return (mShapeAsset.notNull()) ? mShapeAsset->getAssetName(): StringTable->EmptyString(); }
    static void consoleInit();
    static bool _setFieldSkin(void* object, const char* index, const char* data);
    static const char* _getFieldSkin(void* object, const char* data);

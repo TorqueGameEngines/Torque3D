@@ -201,13 +201,12 @@ ShapeBaseData::ShapeBaseData()
    inheritEnergyFromMount( false ),
    mAIControllData(NULL)
 {
-   INIT_ASSET(Shape);
-   INIT_ASSET(DebrisShape);
-
    dMemset( mountPointNode, -1, sizeof( S32 ) * SceneObject::NumMountPoints );
    remap_txr_tags = NULL;
    remap_buffer = NULL;
    silent_bbox_check = false;
+   mShapeAsset.registerRefreshNotify(this);
+   mDebrisShapeAsset.registerRefreshNotify(this);
 }
 
 ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : GameBaseData(other, temp_clone)
@@ -217,13 +216,13 @@ ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : Game
    shadowProjectionDistance = other.shadowProjectionDistance;
    shadowSphereAdjust = other.shadowSphereAdjust;
    cloakTexName = other.cloakTexName;
-   CLONE_ASSET(Shape);
+   mShapeAsset = other.mShapeAsset;
    cubeDescName = other.cubeDescName;
    cubeDescId = other.cubeDescId;
    reflectorDesc = other.reflectorDesc;
    debris = other.debris;
    debrisID = other.debrisID; // -- for pack/unpack of debris ptr
-   CLONE_ASSET(DebrisShape);
+   mDebrisShapeAsset = other.mDebrisShapeAsset;
    explosion = other.explosion;
    explosionID = other.explosionID; // -- for pack/unpack of explosion ptr
    underwaterExplosion = other.underwaterExplosion;
@@ -245,7 +244,6 @@ ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : Game
    cameraMaxFov = other.cameraMaxFov;
    cameraCanBank = other.cameraCanBank;
    mountedImagesBank = other.mountedImagesBank;
-   mShape = other.mShape; // -- TSShape loaded using shapeName
    mCRC = other.mCRC; // -- from shape, used to verify client shape 
    computeCRC = other.computeCRC;
    eyeNode = other.eyeNode; // -- from shape node "eye"
@@ -304,6 +302,9 @@ ShapeBaseData::~ShapeBaseData()
 
    if (remap_buffer && !isTempClone())
       dFree(remap_buffer);
+
+   mShapeAsset.unregisterRefreshNotify();
+   mDebrisShapeAsset.unregisterRefreshNotify();
 }
 
 bool ShapeBaseData::preload(bool server, String &errorStr)
@@ -342,156 +343,159 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
             "ShapeBaseData::preload: invalid debris data");
       }
 
-      if( bool(mDebrisShape))
+      if(mDebrisShapeAsset.notNull())
       {
-         TSShapeInstance* pDummy = new TSShapeInstance(mDebrisShape, !server);
+         TSShapeInstance* pDummy = new TSShapeInstance(getDebrisShape(), !server);
          delete pDummy;
       }
    }
 
    S32 i;
-   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
-   if (assetStatus == AssetBase::Ok || assetStatus == AssetBase::UsingFallback)
+   if (mShapeAsset.notNull())
    {
-      if (!server && !mShape->preloadMaterialList(mShape.getPath()) && NetConnection::filesWereDownloaded())
-         shapeError = true;
-
-      if(computeCRC)
+      U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
+      if (assetStatus == AssetBase::Ok || assetStatus == AssetBase::UsingFallback)
       {
-         Con::printf("Validation required for shape asset: %s", mShapeAsset.getAssetId());
+         if (!server && !getShape()->preloadMaterialList(getShape().getPath()) && NetConnection::filesWereDownloaded())
+            shapeError = true;
 
-         Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(mShapeAsset->getShapePath());
-
-         if (!fileRef)
+         if (computeCRC)
          {
-            errorStr = String::ToString("ShapeBaseData: Couldn't load shape asset \"%s\"", mShapeAsset.getAssetId());
-            return false;
-         }
+            Con::printf("Validation required for shape asset: %s", mShapeAsset.getAssetId());
 
-         if(server)
-            mCRC = fileRef->getChecksum();
-         else if(mCRC != fileRef->getChecksum())
-         {
-            errorStr = String::ToString("Shape asset \"%s\" does not match version on server.", mShapeAsset.getAssetId());
-            return false;
-         }
-      }
-      // Resolve details and camera node indexes.
-      static const String sCollisionStr( "collision-" );
+            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(mShapeAsset->getShapePath());
 
-      for (i = 0; i < mShape->details.size(); i++)
-      {
-         const String &name = mShape->names[mShape->details[i].nameIndex];
-
-         if (name.compare( sCollisionStr, sCollisionStr.length(), String::NoCase ) == 0)
-         {
-            collisionDetails.push_back(i);
-            collisionBounds.increment();
-
-            mShape->computeBounds(collisionDetails.last(), collisionBounds.last());
-            mShape->getAccelerator(collisionDetails.last());
-
-            if (!mShape->mBounds.isContained(collisionBounds.last()))
+            if (!fileRef)
             {
-               if (!silent_bbox_check)
-               Con::warnf("Warning: shape asset %s collision detail %d (Collision-%d) bounds exceed that of shape.", mShapeAsset.getAssetId(), collisionDetails.size() - 1, collisionDetails.last());
-               collisionBounds.last() = mShape->mBounds;
-            }
-            else if (collisionBounds.last().isValidBox() == false)
-            {
-               if (!silent_bbox_check)
-               Con::errorf("Error: shape asset %s-collision detail %d (Collision-%d) bounds box invalid!", mShapeAsset.getAssetId(), collisionDetails.size() - 1, collisionDetails.last());
-               collisionBounds.last() = mShape->mBounds;
+               errorStr = String::ToString("ShapeBaseData: Couldn't load shape asset \"%s\"", mShapeAsset.getAssetId());
+               return false;
             }
 
-            // The way LOS works is that it will check to see if there is a LOS detail that matches
-            // the the collision detail + 1 + MaxCollisionShapes (this variable name should change in
-            // the future). If it can't find a matching LOS it will simply use the collision instead.
-            // We check for any "unmatched" LOS's further down
-            LOSDetails.increment();
-
-            String   buff = String::ToString("LOS-%d", i + 1 + MaxCollisionShapes);
-            U32 los = mShape->findDetail(buff);
-            if (los == -1)
-               LOSDetails.last() = i;
-            else
-               LOSDetails.last() = los;
-         }
-      }
-
-      // Snag any "unmatched" LOS details
-      static const String sLOSStr( "LOS-" );
-
-      for (i = 0; i < mShape->details.size(); i++)
-      {
-         const String &name = mShape->names[mShape->details[i].nameIndex];
-
-         if (name.compare( sLOSStr, sLOSStr.length(), String::NoCase ) == 0)
-         {
-            // See if we already have this LOS
-            bool found = false;
-            for (U32 j = 0; j < LOSDetails.size(); j++)
+            if (server)
+               mCRC = fileRef->getChecksum();
+            else if (mCRC != fileRef->getChecksum())
             {
-               if (LOSDetails[j] == i)
+               errorStr = String::ToString("Shape asset \"%s\" does not match version on server.", mShapeAsset.getAssetId());
+               return false;
+            }
+         }
+         // Resolve details and camera node indexes.
+         static const String sCollisionStr("collision-");
+
+         for (i = 0; i < getShape()->details.size(); i++)
+         {
+            const String& name = getShape()->names[getShape()->details[i].nameIndex];
+
+            if (name.compare(sCollisionStr, sCollisionStr.length(), String::NoCase) == 0)
+            {
+               collisionDetails.push_back(i);
+               collisionBounds.increment();
+
+               getShape()->computeBounds(collisionDetails.last(), collisionBounds.last());
+               getShape()->getAccelerator(collisionDetails.last());
+
+               if (!getShape()->mBounds.isContained(collisionBounds.last()))
                {
+                  if (!silent_bbox_check)
+                     Con::warnf("Warning: shape asset %s collision detail %d (Collision-%d) bounds exceed that of shape.", mShapeAsset.getAssetId(), collisionDetails.size() - 1, collisionDetails.last());
+                  collisionBounds.last() = getShape()->mBounds;
+               }
+               else if (collisionBounds.last().isValidBox() == false)
+               {
+                  if (!silent_bbox_check)
+                     Con::errorf("Error: shape asset %s-collision detail %d (Collision-%d) bounds box invalid!", mShapeAsset.getAssetId(), collisionDetails.size() - 1, collisionDetails.last());
+                  collisionBounds.last() = getShape()->mBounds;
+               }
+
+               // The way LOS works is that it will check to see if there is a LOS detail that matches
+               // the the collision detail + 1 + MaxCollisionShapes (this variable name should change in
+               // the future). If it can't find a matching LOS it will simply use the collision instead.
+               // We check for any "unmatched" LOS's further down
+               LOSDetails.increment();
+
+               String   buff = String::ToString("LOS-%d", i + 1 + MaxCollisionShapes);
+               U32 los = getShape()->findDetail(buff);
+               if (los == -1)
+                  LOSDetails.last() = i;
+               else
+                  LOSDetails.last() = los;
+            }
+         }
+
+         // Snag any "unmatched" LOS details
+         static const String sLOSStr("LOS-");
+
+         for (i = 0; i < getShape()->details.size(); i++)
+         {
+            const String& name = getShape()->names[getShape()->details[i].nameIndex];
+
+            if (name.compare(sLOSStr, sLOSStr.length(), String::NoCase) == 0)
+            {
+               // See if we already have this LOS
+               bool found = false;
+               for (U32 j = 0; j < LOSDetails.size(); j++)
+               {
+                  if (LOSDetails[j] == i)
+                  {
                      found = true;
                      break;
+                  }
                }
-            }
 
-            if (!found)
-               LOSDetails.push_back(i);
+               if (!found)
+                  LOSDetails.push_back(i);
+            }
          }
-      }
 
-      debrisDetail = mShape->findDetail("Debris-17");
-      eyeNode = mShape->findNode("eye");
-      earNode = mShape->findNode( "ear" );
-      if( earNode == -1 )
-         earNode = eyeNode;
-      cameraNode = mShape->findNode("cam");
-      if (cameraNode == -1)
-         cameraNode = eyeNode;
+         debrisDetail = getShape()->findDetail("Debris-17");
+         eyeNode = getShape()->findNode("eye");
+         earNode = getShape()->findNode("ear");
+         if (earNode == -1)
+            earNode = eyeNode;
+         cameraNode = getShape()->findNode("cam");
+         if (cameraNode == -1)
+            cameraNode = eyeNode;
 
-      // Resolve mount point node indexes
-      for (i = 0; i < SceneObject::NumMountPoints; i++) {
-         char fullName[256];
-         dSprintf(fullName,sizeof(fullName),"mount%d",i);
-         mountPointNode[i] = mShape->findNode(fullName);
-      }
+         // Resolve mount point node indexes
+         for (i = 0; i < SceneObject::NumMountPoints; i++) {
+            char fullName[256];
+            dSprintf(fullName, sizeof(fullName), "mount%d", i);
+            mountPointNode[i] = getShape()->findNode(fullName);
+         }
 
-        // find the AIRepairNode - hardcoded to be the last node in the array...
-      mountPointNode[AIRepairNode] = mShape->findNode("AIRepairNode");
+         // find the AIRepairNode - hardcoded to be the last node in the array...
+         mountPointNode[AIRepairNode] = getShape()->findNode("AIRepairNode");
 
-      //
-      hulkSequence = mShape->findSequence("Visibility");
-      damageSequence = mShape->findSequence("Damage");
+         //
+         hulkSequence = getShape()->findSequence("Visibility");
+         damageSequence = getShape()->findSequence("Damage");
 
-      //
-      F32 w = mShape->mBounds.len_y() / 2;
-      if (cameraMaxDist < w)
-         cameraMaxDist = w;
-      // just parse up the string and collect the remappings in txr_tag_remappings.
-      if (!server && remap_txr_tags != NULL && remap_txr_tags != StringTable->insert(""))
-      {
-         txr_tag_remappings.clear();
-         if (remap_buffer)
-            dFree(remap_buffer);
-
-         remap_buffer = dStrdup(remap_txr_tags);
-
-         char* remap_token = dStrtok(remap_buffer, " \t");
-         while (remap_token != NULL)
+         //
+         F32 w = getShape()->mBounds.len_y() / 2;
+         if (cameraMaxDist < w)
+            cameraMaxDist = w;
+         // just parse up the string and collect the remappings in txr_tag_remappings.
+         if (!server && remap_txr_tags != NULL && remap_txr_tags != StringTable->insert(""))
          {
-            char* colon = dStrchr(remap_token, ':');
-            if (colon)
+            txr_tag_remappings.clear();
+            if (remap_buffer)
+               dFree(remap_buffer);
+
+            remap_buffer = dStrdup(remap_txr_tags);
+
+            char* remap_token = dStrtok(remap_buffer, " \t");
+            while (remap_token != NULL)
             {
-               *colon = '\0';
-               txr_tag_remappings.increment();
-               txr_tag_remappings.last().old_tag = remap_token;
-               txr_tag_remappings.last().new_tag = colon+1;
+               char* colon = dStrchr(remap_token, ':');
+               if (colon)
+               {
+                  *colon = '\0';
+                  txr_tag_remappings.increment();
+                  txr_tag_remappings.last().old_tag = remap_token;
+                  txr_tag_remappings.last().new_tag = colon + 1;
+               }
+               remap_token = dStrtok(NULL, " \t");
             }
-            remap_token = dStrtok(NULL, " \t");
          }
       }
    }
@@ -543,12 +547,12 @@ void ShapeBaseData::initPersistFields()
 {
    docsURL;
    addGroup( "Shapes" );
-      INITPERSISTFIELD_SHAPEASSET(Shape, ShapeBaseData, "The source shape asset.");
+   INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, ShapeBaseData, "The source shape asset.");
       addField("computeCRC", TypeBool, Offset(computeCRC, ShapeBaseData),
          "If true, verify that the CRC of the client's shape model matches the "
          "server's CRC for the shape model when loaded by the client.");
       addField("silentBBoxValidation", TypeBool, Offset(silent_bbox_check, ShapeBaseData));
-      INITPERSISTFIELD_SHAPEASSET(DebrisShape, ShapeBaseData, "The shape asset to use for auto-generated breakups via blowup(). @note may not be functional.");
+      INITPERSISTFIELD_SHAPEASSET_REFACTOR(DebrisShape, ShapeBaseData, "The shape asset to use for auto-generated breakups via blowup(). @note may not be functional.");
    endGroup( "Shapes" );
    addGroup("Movement");
       addField("aiControllerData", TYPEID< AIControllerData >(), Offset(mAIControllData, ShapeBaseData),
@@ -677,12 +681,12 @@ DefineEngineMethod( ShapeBaseData, checkDeployPos, bool, ( TransformF txfm ),,
 
    "@note This is a server side only check, and is not actually limited to spawning.\n")
 {
-   if (bool(object->mShape) == false)
+   if (bool(object->getShape()) == false)
       return false;
 
    MatrixF mat = txfm.getMatrix();
 
-   Box3F objBox = object->mShape->mBounds;
+   Box3F objBox = object->getShape()->mBounds;
    Point3F boxCenter = (objBox.minExtents + objBox.maxExtents) * 0.5f;
    objBox.minExtents = boxCenter + (objBox.minExtents - boxCenter) * 0.9f;
    objBox.maxExtents = boxCenter + (objBox.maxExtents - boxCenter) * 0.9f;
@@ -752,8 +756,8 @@ void ShapeBaseData::packData(BitStream* stream)
    stream->write(shadowProjectionDistance);
    stream->write(shadowSphereAdjust);
 
-   PACKDATA_ASSET(Shape);
-   PACKDATA_ASSET(DebrisShape);
+   PACKDATA_ASSET_REFACTOR(Shape);
+   PACKDATA_ASSET_REFACTOR(DebrisShape);
 
    stream->writeString(cloakTexName);
    if(stream->writeFlag(mass != gShapeBaseDataProto.mass))
@@ -829,8 +833,8 @@ void ShapeBaseData::unpackData(BitStream* stream)
    stream->read(&shadowProjectionDistance);
    stream->read(&shadowSphereAdjust);
 
-   UNPACKDATA_ASSET(Shape);
-   UNPACKDATA_ASSET(DebrisShape);
+   UNPACKDATA_ASSET_REFACTOR(Shape);
+   UNPACKDATA_ASSET_REFACTOR(DebrisShape);
 
    cloakTexName = stream->readSTString();
    if(stream->readFlag())
@@ -918,17 +922,6 @@ void ShapeBaseData::unpackData(BitStream* stream)
    silent_bbox_check = stream->readFlag();
 }
 
-//
-//
-void ShapeBaseData::onShapeChanged()
-{
-   reloadOnLocalClient();
-}
-
-void ShapeBaseData::onDebrisChanged()
-{
-   reloadOnLocalClient();
-}
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -1210,12 +1203,12 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
 
    // Even if loadShape succeeds, there may not actually be
    // a shape assigned to this object.
-   if (bool(mDataBlock->mShape)) {
+   if (bool(mDataBlock->getShape())) {
       delete mShapeInstance;
       if (isClientObject() && mDataBlock->txr_tag_remappings.size() > 0)
       {
          // temporarily substitute material tags with alternates
-         TSMaterialList* mat_list = mDataBlock->mShape->materialList;
+         TSMaterialList* mat_list = mDataBlock->getShape()->materialList;
          if (mat_list)
          {
             for (S32 i = 0; i < mDataBlock->txr_tag_remappings.size(); i++)
@@ -1235,7 +1228,7 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
             }
          }
       }
-      mShapeInstance = new TSShapeInstance(mDataBlock->mShape, isClientObject());
+      mShapeInstance = new TSShapeInstance(mDataBlock->getShape(), isClientObject());
       if (isClientObject())
       {
          mShapeInstance->cloneMaterialList();
@@ -1243,7 +1236,7 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
          // restore the material tags to original form
          if (mDataBlock->txr_tag_remappings.size() > 0)
          {
-            TSMaterialList* mat_list = mDataBlock->mShape->materialList;
+            TSMaterialList* mat_list = mDataBlock->getShape()->materialList;
             if (mat_list)
             {
                for (S32 i = 0; i < mDataBlock->txr_tag_remappings.size(); i++)
@@ -1269,11 +1262,11 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
          }
       }
 
-      mObjBox = mDataBlock->mShape->mBounds;
+      mObjBox = mDataBlock->getShape()->mBounds;
       resetWorldBox();
 
       // Set the initial mesh hidden state.
-      mMeshHidden.setSize(mDataBlock->mShape->objects.size());
+      mMeshHidden.setSize(mDataBlock->getShape()->objects.size());
       mMeshHidden.clear();
 
       // Initialize the threads
@@ -1297,11 +1290,11 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
 
             AssertFatal(prevDB != NULL, "ShapeBase::onNewDataBlock - how did you have a sequence playing without a prior datablock?");
 
-            const TSShape* prevShape = prevDB->mShape;
+            const TSShape* prevShape = prevDB->getShape();
             const TSShape::Sequence& prevSeq = prevShape->sequences[st.sequence];
             const String& prevSeqName = prevShape->names[prevSeq.nameIndex];
 
-            st.sequence = mDataBlock->mShape->findSequence(prevSeqName);
+            st.sequence = mDataBlock->getShape()->findSequence(prevSeqName);
 
             if (st.sequence != -1)
             {
@@ -1971,13 +1964,13 @@ void ShapeBase::blowUp()
 
    TSShapeInstance *debShape = NULL;
 
-   if( mDataBlock->mDebrisShape == NULL )
+   if( mDataBlock->getDebrisShape() == NULL)
    {
       return;
    }
    else
    {
-      debShape = new TSShapeInstance( mDataBlock->mDebrisShape, true);
+      debShape = new TSShapeInstance( mDataBlock->getDebrisShape(), true);
    }
 
 
@@ -2049,7 +2042,7 @@ Point3F ShapeBase::getAIRepairPoint()
 //----------------------------------------------------------------------------
 void ShapeBase::getNodeTransform(const char* nodeName, MatrixF* outMat)
 {
-   S32 nodeIDx = mDataBlock->getShapeResource()->findNode(nodeName);
+   S32 nodeIDx = mDataBlock->getShape()->findNode(nodeName);
    const MatrixF& xfm = isMounted() ? mMount.xfm : MatrixF::Identity;
 
    MatrixF nodeTransform(xfm);
@@ -2216,7 +2209,7 @@ void ShapeBase::getNodeTransform(const char* nodeName, const MatrixF& xfm, Matri
    if (!mShapeInstance)
       return;
 
-   S32 nodeIDx = mDataBlock->getShapeResource()->findNode(nodeName);
+   S32 nodeIDx = mDataBlock->getShape()->findNode(nodeName);
 
    MatrixF nodeTransform(xfm);
    const Point3F& scale = getScale();
@@ -5027,7 +5020,7 @@ void ShapeBase::_updateHiddenMeshes()
 
 void ShapeBase::setMeshHidden( const char *meshName, bool forceHidden )
 {
-   setMeshHidden( mDataBlock->mShape->findObject( meshName ), forceHidden );
+   setMeshHidden( mDataBlock->getShape()->findObject(meshName), forceHidden);
 }
 
 void ShapeBase::setMeshHidden( S32 meshIndex, bool forceHidden )
@@ -5096,7 +5089,7 @@ void ShapeBase::dumpMeshVisibility()
    {
       const TSShapeInstance::MeshObjectInstance &mesh = meshes[i];
 
-      const String &meshName = mDataBlock->mShape->getMeshName( i );
+      const String &meshName = mDataBlock->getShape()->getMeshName( i );
 
       Con::printf( "%d - %s - forceHidden = %s, visibility = %f", 
          i,
@@ -5378,8 +5371,8 @@ F32 ShapeBase::getAnimationDurationByID(U32 anim_id)
       return 0.0f;
 
    S32 seq_id = (S32) anim_id;
-   if (seq_id >= 0 && seq_id < mDataBlock->mShape->sequences.size())
-      return mDataBlock->mShape->sequences[seq_id].duration;
+   if (seq_id >= 0 && seq_id < mDataBlock->getShape()->sequences.size())
+      return mDataBlock->getShape()->sequences[seq_id].duration;
 
    return 0.0f;
 }
@@ -5391,8 +5384,8 @@ bool ShapeBase::isBlendAnimation(const char* name)
       return false;
 
    S32 seq_id = (S32) anim_id;
-   if (seq_id >= 0 && seq_id < mDataBlock->mShape->sequences.size())
-      return mDataBlock->mShape->sequences[seq_id].isBlend();
+   if (seq_id >= 0 && seq_id < mDataBlock->getShape()->sequences.size())
+      return mDataBlock->getShape()->sequences[seq_id].isBlend();
 
    return false;
 }
@@ -5404,11 +5397,11 @@ const char* ShapeBase::getLastClipName(U32 clip_tag)
 
    S32 seq_id = (S32) last_anim_id;
 
-   S32 idx = mDataBlock->mShape->sequences[seq_id].nameIndex;
-   if (idx < 0 || idx >= mDataBlock->mShape->names.size())
+   S32 idx = mDataBlock->getShape()->sequences[seq_id].nameIndex;
+   if (idx < 0 || idx >= mDataBlock->getShape()->names.size())
       return 0;
 
-   return mDataBlock->mShape->names[idx];
+   return mDataBlock->getShape()->names[idx];
 }
 
 //

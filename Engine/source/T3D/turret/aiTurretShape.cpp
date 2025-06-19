@@ -246,8 +246,8 @@ bool AITurretShapeData::preload(bool server, String &errorStr)
       return false;
 
    // We have mShape at this point.  Resolve nodes.
-   scanNode = mShape->findNode("scanPoint");
-   aimNode = mShape->findNode("aimPoint");
+   scanNode = getShape()->findNode("scanPoint");
+   aimNode = getShape()->findNode("aimPoint");
 
    if (scanNode == -1) scanNode = pitchNode;
    if (scanNode == -1) scanNode = headingNode;
@@ -259,7 +259,7 @@ bool AITurretShapeData::preload(bool server, String &errorStr)
    for (U32 j = 0; j < MaxStates; j++) {
       StateData& s = state[j];
       if (stateSequence[j] && stateSequence[j][0])
-         s.sequence = mShape->findSequence(stateSequence[j]);
+         s.sequence = getShape()->findSequence(stateSequence[j]);
       if (s.sequence != -1)
       {
          // This state has an animation sequence

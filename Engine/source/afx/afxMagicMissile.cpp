@@ -141,7 +141,6 @@ U32 Projectile::smProjectileWarpTicks = 5;
 //
 afxMagicMissileData::afxMagicMissileData()
 {
-   INIT_ASSET(ProjectileShape);
    INIT_ASSET(ProjectileSound);
 
    /* From stock Projectile code...
@@ -241,11 +240,13 @@ afxMagicMissileData::afxMagicMissileData()
   reverse_targeting = false;
 
   caster_safety_time = U32_MAX;
+
+  mProjectileShapeAsset.registerRefreshNotify(this);
 }
 
 afxMagicMissileData::afxMagicMissileData(const afxMagicMissileData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-   CLONE_ASSET(ProjectileShape);
+   mProjectileShapeAsset = other.mProjectileShapeAsset;
   projectileShape = other.projectileShape; // -- TSShape loads using projectileShapeName
   CLONE_ASSET(ProjectileSound);
   splash = other.splash;
@@ -305,6 +306,8 @@ afxMagicMissileData::~afxMagicMissileData()
 {
   if (wiggle_axis)
     delete [] wiggle_axis;
+
+  mProjectileShapeAsset.unregisterRefreshNotify();
 }
 
 afxMagicMissileData* afxMagicMissileData::cloneAndPerformSubstitutions(const SimObject* owner, S32 index)
@@ -334,7 +337,7 @@ void afxMagicMissileData::initPersistFields()
    static IRangeValidatorScaled ticksFromMS(TickMs, 0, MaxLifetimeTicks);
 
    addGroup("Shapes");
-      INITPERSISTFIELD_SHAPEASSET(ProjectileShape, afxMagicMissileData, "Shape for the projectile");
+      INITPERSISTFIELD_SHAPEASSET_REFACTOR(ProjectileShape, afxMagicMissileData, "Shape for the projectile");
       addField("scale", TypePoint3F, Offset(scale, afxMagicMissileData));
       addField("missileShapeScale",   TypePoint3F,  myOffset(scale));
    endGroup("Shapes");
@@ -531,10 +534,10 @@ bool afxMagicMissileData::preload(bool server, String &errorStr)
    U32 assetStatus = ShapeAsset::getAssetErrCode(mProjectileShapeAsset);
    if (assetStatus == AssetBase::Ok || assetStatus == AssetBase::UsingFallback)
    {
-      projectileShape = mProjectileShapeAsset->getShapeResource();
+      projectileShape = getProjectileShape();
       if (bool(projectileShape) == false)
       {
-         errorStr = String::ToString("afxMagicMissileData::preload: Couldn't load shape \"%s\"", mProjectileShapeAssetId);
+         errorStr = String::ToString("afxMagicMissileData::preload: Couldn't load shape \"%s\"", _getProjectileShapeAssetId());
          return false;
       }
       /* From stock Projectile code...
@@ -586,7 +589,7 @@ void afxMagicMissileData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(ProjectileShape);
+   PACKDATA_ASSET_REFACTOR(ProjectileShape);
 
    /* From stock Projectile code...
    stream->writeFlag(faceViewer);
@@ -697,7 +700,7 @@ void afxMagicMissileData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(ProjectileShape);
+   UNPACKDATA_ASSET_REFACTOR(ProjectileShape);
    /* From stock Projectile code...
    faceViewer = stream->readFlag();
    */

@@ -47,7 +47,7 @@ class TSShape;
 //**************************************************************************
 // Debris Data
 //**************************************************************************
-struct DebrisData : public GameBaseData
+struct DebrisData : public GameBaseData, protected AssetPtrCallback
 {
    typedef GameBaseData Parent;
 
@@ -83,8 +83,7 @@ struct DebrisData : public GameBaseData
    F32      terminalVelocity;    // max velocity magnitude
    bool     ignoreWater;
 
-   DECLARE_SHAPEASSET(DebrisData, Shape, onShapeChanged);
-   DECLARE_ASSET_SETGET(DebrisData, Shape);
+   DECLARE_SHAPEASSET_REFACTOR(DebrisData, Shape)
 
    StringTableEntry  textureName;
 
@@ -111,7 +110,8 @@ public:
    void onPerformSubstitutions() override;
    bool allowSubstitutions() const override { return true; }
 
-   void onShapeChanged()
+protected:
+   void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
    {
       reloadOnLocalClient();
    }

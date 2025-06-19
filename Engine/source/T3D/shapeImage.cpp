@@ -293,8 +293,7 @@ ShapeBaseImageData::ShapeBaseImageData()
       isAnimated[i] = false;
       hasFlash[i] = false;
       shapeIsValid[i] = false;
-
-      INIT_ASSET_ARRAY(Shape, i);
+      mShapeAsset[i].registerRefreshNotify(this);
    }
 
    shakeCamera = false;
@@ -454,10 +453,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
 
       if (!mShapeAsset[i].isNull())
       {
-         // Resolve shapename
-         mShape[i] = mShapeAsset[i]->getShapeResource();
-
-         if (!bool(mShape[i])) {
+         if (!bool(getShape(i))) {
             errorStr = String::ToString("Unable to load shape asset: %s", mShapeAsset[i]->getAssetId());
             return false;
          }
@@ -465,7 +461,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          {
             Con::printf("Validation required for shape asset: %s", mShapeAsset[i]->getAssetId());
 
-            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(mShape[i].getPath());
+            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(getShape(i).getPath());
 
             if (!fileRef)
             {
@@ -485,23 +481,23 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          }
 
          // Resolve nodes & build mount transform
-         eyeMountNode[i] = mShape[i]->findNode("eyeMount");
-         eyeNode[i] = mShape[i]->findNode("eye");
+         eyeMountNode[i]   = getShape(i)->findNode("eyeMount");
+         eyeNode[i]        = getShape(i)->findNode("eye");
          if (eyeNode[i] == -1)
             eyeNode[i] = eyeMountNode[i];
-         ejectNode[i] = mShape[i]->findNode("ejectPoint");
-         muzzleNode[i] = mShape[i]->findNode("muzzlePoint");
-         retractNode[i] = mShape[i]->findNode("retractionPoint");
+         ejectNode[i]      = getShape(i)->findNode("ejectPoint");
+         muzzleNode[i]     = getShape(i)->findNode("muzzlePoint");
+         retractNode[i]    = getShape(i)->findNode("retractionPoint");
          mountTransform[i] = mountOffset;
-         S32 node = mShape[i]->findNode("mountPoint");
+         S32 node          = getShape(i)->findNode("mountPoint");
          if (node != -1) {
             MatrixF total(1);
             do {
                MatrixF nmat;
                QuatF q;
-               TSTransform::setMatrix(mShape[i]->defaultRotations[node].getQuatF(&q), mShape[i]->defaultTranslations[node],&nmat);
+               TSTransform::setMatrix(getShape(i)->defaultRotations[node].getQuatF(&q), getShape(i)->defaultTranslations[node],&nmat);
                total.mul(nmat);
-               node = mShape[i]->nodes[node].parentIndex;
+               node = getShape(i)->nodes[node].parentIndex;
             }
             while(node != -1);
             total.inverse();
@@ -514,7 +510,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          for (U32 j = 0; j < MaxStates; j++) {
             StateData& s = state[j];
             if (stateSequence[j] && stateSequence[j][0])
-               s.sequence[i] = mShape[i]->findSequence(stateSequence[j]);
+               s.sequence[i] = getShape(i)->findSequence(stateSequence[j]);
             if (s.sequence[i] != -1)
             {
                // This state has an animation sequence
@@ -525,7 +521,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
                char bufferVis[128];
                dStrncpy(bufferVis, stateSequence[j], 100);
                dStrcat(bufferVis, "_vis", 128);
-               s.sequenceVis[i] = mShape[i]->findSequence(bufferVis);
+               s.sequenceVis[i] = getShape(i)->findSequence(bufferVis);
             }
             if (s.sequenceVis[i] != -1)
             {
@@ -537,13 +533,13 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             s.ignoreLoadedForReady = stateIgnoreLoadedForReady[j];
 
             if (stateEmitterNode[j] && stateEmitterNode[j][0])
-               s.emitterNode[i] = mShape[i]->findNode(stateEmitterNode[j]);
+               s.emitterNode[i] = getShape(i)->findNode(stateEmitterNode[j]);
             if (s.emitterNode[i] == -1)
                s.emitterNode[i] = muzzleNode[i];
          }
 
-         ambientSequence[i] = mShape[i]->findSequence("ambient");
-         spinSequence[i] = mShape[i]->findSequence("spin");
+         ambientSequence[i]   = getShape(i)->findSequence("ambient");
+         spinSequence[i]      = getShape(i)->findSequence("spin");
 
          shapeIsValid[i] = true;
       }
@@ -567,7 +563,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
    {
       if( shapeIsValid[i] )
       {
-         TSShapeInstance* pDummy = new TSShapeInstance(mShape[i], !server);
+         TSShapeInstance* pDummy = new TSShapeInstance(getShape(i), !server);
          delete pDummy;
       }
    }
@@ -628,8 +624,8 @@ void ShapeBaseImageData::initPersistFields()
 {
    docsURL;
    addGroup("Shapes");
-      INITPERSISTFIELD_SHAPEASSET_ARRAY(Shape, MaxShapes, ShapeBaseImageData, "The shape asset to use for this image in the third person")
-   //addProtectedField("shapeFileFP", TypeShapeFilename, Offset(mShapeName[1], ShapeBaseImageData), _setShapeData, defaultProtectedGetFn, "deprecated alias for ShapeFPFile/Asset", AbstractClassRep::FIELD_HideInInspectors);
+   INITPERSISTFIELD_SHAPEASSET_ARRAY_REFACTOR(Shape, MaxShapes, ShapeBaseImageData, "The shape assets for this shape image")
+
       addField("casing", TYPEID< DebrisData >(), Offset(casing, ShapeBaseImageData),
             "@brief DebrisData datablock to use for ejected casings.\n\n"
             "@see stateEjectShell");
@@ -1002,10 +998,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
       }
    }
 
-   for (U32 j = 0; j < MaxShapes; ++j)
-   {
-      PACKDATA_ASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
-   }
+   PACKDATA_ASSET_ARRAY_REFACTOR(Shape, MaxShapes);        // shape 0 for normal use, shape 1 for first person use (optional)
 
    stream->writeString(imageAnimPrefix);
    stream->writeString(imageAnimPrefixFP);
@@ -1186,10 +1179,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
       }
    }
 
-   for (U32 j = 0; j < MaxShapes; ++j)
-   {
-      UNPACKDATA_ASSET_ARRAY(Shape, j);        // shape 0 for normal use, shape 1 for first person use (optional)
-   }
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(Shape, MaxShapes);        // shape 0 for normal use, shape 1 for first person use (optional)
 
    imageAnimPrefix = stream->readSTString();
    imageAnimPrefixFP = stream->readSTString();
@@ -2148,7 +2138,7 @@ S32 ShapeBase::getNodeIndex(U32 imageSlot,StringTableEntry nodeName)
 {
    MountedImage& image = mMountedImageList[imageSlot];
    if (image.dataBlock)
-      return image.dataBlock->mShape[getImageShapeIndex(image)]->findNode(nodeName);
+      return image.dataBlock->getShape(getImageShapeIndex(image))->findNode(nodeName);
    else
       return -1;
 }
@@ -2338,7 +2328,7 @@ void ShapeBase::setImage(  U32 imageSlot,
    for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
    {
       if (image.dataBlock->shapeIsValid[i])
-         image.shapeInstance[i] = new TSShapeInstance(image.dataBlock->mShape[i], isClientObject());
+         image.shapeInstance[i] = new TSShapeInstance(image.dataBlock->getShape(i), isClientObject());
    }
 
    if (isClientObject())

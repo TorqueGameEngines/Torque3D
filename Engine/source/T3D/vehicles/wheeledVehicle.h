@@ -39,12 +39,11 @@ class ParticleEmitterData;
 
 //----------------------------------------------------------------------------
 
-struct WheeledVehicleTire: public SimDataBlock 
+struct WheeledVehicleTire: public SimDataBlock, protected AssetPtrCallback
 {
    typedef SimDataBlock Parent;
 
-   DECLARE_SHAPEASSET(WheeledVehicleTire, Shape, onShapeChanged);
-   DECLARE_ASSET_SETGET(WheeledVehicleTire, Shape);
+   DECLARE_SHAPEASSET_REFACTOR(WheeledVehicleTire, Shape)
 
    // Physical properties
    F32 mass;                  // Mass of the whole wheel
@@ -74,7 +73,8 @@ struct WheeledVehicleTire: public SimDataBlock
    void packData(BitStream* stream) override;
    void unpackData(BitStream* stream) override;
 
-   void onShapeChanged()
+protected:
+   void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
    {
       reloadOnLocalClient();
    }

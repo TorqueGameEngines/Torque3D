@@ -135,8 +135,6 @@ VolumetricFog::VolumetricFog()
    mTexTiles = 1.0f;
    mSpeed1.set(0.5f, 0.0f);
    mSpeed2.set(0.1f, 0.1f);
-
-   INIT_ASSET(Shape);
 }
 
 VolumetricFog::~VolumetricFog()
@@ -164,7 +162,7 @@ void VolumetricFog::initPersistFields()
    docsURL;
    Parent::initPersistFields();
    addGroup("Shapes");
-      INITPERSISTFIELD_SHAPEASSET(Shape, VolumetricFog, "The source shape asset.");
+      INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, VolumetricFog, "The source shape asset.");
    endGroup("Shapes");
 
    addGroup("VolumetricFogData");
@@ -342,7 +340,7 @@ void VolumetricFog::handleResize(VolumetricFogRTManager *RTM, bool resize)
 
 bool VolumetricFog::setShapeAsset(const StringTableEntry shapeAssetId)
 {
-   mShapeAssetId = shapeAssetId;
+   _setShape(shapeAssetId);
 
    LoadShape();
    return true;
@@ -358,20 +356,20 @@ bool VolumetricFog::LoadShape()
       return false;
    }
 
-   if (!mShape)
+   if (!getShape())
    {
       Con::errorf("VolumetricFog::_createShape() - Shape Asset had no valid shape!");
       return false;
    }
 
-   mObjBox = mShape->mBounds;
-   mRadius = mShape->mRadius;
+   mObjBox = getShape()->mBounds;
+   mRadius = getShape()->mRadius;
    resetWorldBox();
 
    if (!isClientObject())
       return false;
 
-   TSShapeInstance *mShapeInstance = new TSShapeInstance(mShape, false);
+   TSShapeInstance *mShapeInstance = new TSShapeInstance(getShape(), false);
    meshes mesh_detail;
 
    for (S32 i = 0; i < det_size.size(); i++)
@@ -387,9 +385,9 @@ bool VolumetricFog::LoadShape()
 
    // browsing model for detail levels
 
-   for (U32 i = 0; i < mShape->details.size(); i++)
+   for (U32 i = 0; i < getShape()->details.size(); i++)
    {
-      const TSDetail *detail = &mShape->details[i];
+      const TSDetail *detail = &getShape()->details[i];
       mesh_detail.det_size = detail->size;
       mesh_detail.sub_shape = detail->subShapeNum;
       mesh_detail.obj_det = detail->objectDetailNum;
@@ -405,8 +403,8 @@ bool VolumetricFog::LoadShape()
       const S32 ss = det_size[i].sub_shape;
       if (ss >= 0)
       {
-         const S32 start = mShape->subShapeFirstObject[ss];
-         const S32 end = start + mShape->subShapeNumObjects[ss];
+         const S32 start = getShape()->subShapeFirstObject[ss];
+         const S32 end = start + getShape()->subShapeNumObjects[ss];
          for (S32 j = start; j < end; j++)
          {
             // Loading shape, only the first mesh for each detail will be used!
@@ -568,7 +566,7 @@ U32 VolumetricFog::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    }
    if (stream->writeFlag(mask & FogShapeMask))
    {
-      PACK_ASSET(con, Shape);
+      PACK_ASSET_REFACTOR(con, Shape);
       mathWrite(*stream, getTransform());
       mathWrite(*stream, getScale());
 
@@ -597,8 +595,8 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    VectorF scale;
    VectorF mOldScale = getScale();
    StringTableEntry oldTextureName = mTextureAsset.getAssetId();
-   StringTableEntry oldShapeAsset = mShapeAssetId;
-   StringTableEntry oldShape = mShapeName;
+   StringTableEntry oldShapeAsset = _getShapeAssetId();
+   StringTableEntry oldShape = getShapeFile();
 
    if (stream->readFlag())// Fog color
       stream->read(&mFogColor);
@@ -667,11 +665,11 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    }
    if (stream->readFlag())//Fog shape
    {
-      UNPACK_ASSET(con, Shape);
+      UNPACK_ASSET_REFACTOR(con, Shape);
 
       mathRead(*stream, &mat);
       mathRead(*stream, &scale);
-      if (strcmp(oldShapeAsset, mShapeAssetId) != 0 || strcmp(oldShape, mShapeName) != 0)
+      if (strcmp(oldShapeAsset, _getShapeAssetId()) != 0 || strcmp(oldShape, getShapeFile()) != 0)
       {
          mIsVBDirty = true;
          mShapeLoaded = LoadShape();

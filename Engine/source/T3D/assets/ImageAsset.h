@@ -123,7 +123,7 @@ public:
    };
 
    static const String mErrCodeStrings[U32(ImageAssetErrCode::Extended) - U32(Parent::Extended) + 1];
-   static U32 getAssetErrCode(ConcreteAssetPtr checkAsset) { if (checkAsset) return checkAsset->mLoadedState; else return 0; }
+   static U32 getAssetErrCode(ConcreteAssetPtr checkAsset) { if (checkAsset.notNull()) return checkAsset->mLoadedState; else return 0; }
 
    static String getAssetErrstrn(U32 errCode)
    {
@@ -241,6 +241,8 @@ public:                                                                         
    void _set##name(StringTableEntry _in){                                                                                                                                     \
       if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
          return;                                                                                                                                                              \
+      if(get##name##File() == _in)                                                                                                                                            \
+         return;                                                                                                                                                              \
       if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
       {                                                                                                                                                                       \
          m##name##Asset = NULL;                                                                                                                                               \
@@ -295,6 +297,8 @@ private:                                                                        
 public:                                                                                                                                                                       \
    void _set##name(StringTableEntry _in){                                                                                                                                     \
       if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
+         return;                                                                                                                                                              \
+      if(get##name##File() == _in)                                                                                                                                            \
          return;                                                                                                                                                              \
       if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
       {                                                                                                                                                                       \
@@ -358,6 +362,8 @@ public:                                                                         
    void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
       if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \
          return;                                                                                                                                                              \
+      if(get##name##File(index) == _in)                                                                                                                                       \
+         return;                                                                                                                                                              \
       if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
       {                                                                                                                                                                       \
          m##name##Asset[index] = NULL;                                                                                                                                        \
@@ -413,6 +419,8 @@ private:                                                                        
 public:                                                                                                                                                                       \
    void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
       if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \
+         return;                                                                                                                                                              \
+      if(get##name##File(index) == _in)                                                                                                                                       \
          return;                                                                                                                                                              \
       if(_in == NULL || _in == StringTable->EmptyString())                                                                                                                    \
       {                                                                                                                                                                       \

@@ -119,8 +119,6 @@ GuiObjectView::GuiObjectView()
    // By default don't do dynamic reflection
    // updates for this viewport.
    mReflectPriority = 0.0f;
-   INIT_ASSET(Model);
-   INIT_ASSET(MountedModel);
 }
 
 //------------------------------------------------------------------------------
@@ -137,7 +135,7 @@ void GuiObjectView::initPersistFields()
 {
    docsURL;
    addGroup( "Model" );   
-      INITPERSISTFIELD_SHAPEASSET(Model, GuiObjectView, "The source shape asset.");
+      INITPERSISTFIELD_SHAPEASSET_REFACTOR(Model, GuiObjectView, "The source shape asset.");
       addField( "skin", TypeRealString, Offset( mSkinName, GuiObjectView ),
          "The skin to use on the object model." );   
    endGroup( "Model" );
@@ -150,7 +148,7 @@ void GuiObjectView::initPersistFields()
    endGroup( "Animation" );
    
    addGroup( "Mounting" );   
-      INITPERSISTFIELD_SHAPEASSET(MountedModel, GuiObjectView, "The mounted shape asset.");
+   INITPERSISTFIELD_SHAPEASSET_REFACTOR(MountedModel, GuiObjectView, "The mounted shape asset.");
       addField( "mountedSkin", TypeRealString, Offset( mMountSkinName, GuiObjectView ),
          "Skin name used on mounted shape file." );
       addField( "mountedNode", TypeRealString, Offset( mMountNodeName, GuiObjectView ),
@@ -335,19 +333,23 @@ bool GuiObjectView::setObjectModel( const String& modelName )
 {
    mRunThread = 0;
 
-   // Load the shape.
-   _setModel(modelName);
-   if( !getModelResource())
+   // Load the shape if its not the one already set.
+   if (modelName.c_str() != _getModelAssetId())
+      _setModel(modelName.c_str());
+   else
+      return true;
+
+   if( !getModel())
    {
       Con::warnf( "GuiObjectView::setObjectModel - Failed to load model '%s'", modelName.c_str() );
       return false;
    }
 
-   if (!getModelResource()->preloadMaterialList(getModelResource().getPath())) return false;
+   if (!getModel()->preloadMaterialList(getModel().getPath())) return false;
 
    // Instantiate it.
 
-   mModelInstance = new TSShapeInstance(getModelResource(), true );
+   mModelInstance = new TSShapeInstance(getModel(), true );
    mModelInstance->resetMaterialList();
    mModelInstance->cloneMaterialList();
    
@@ -359,19 +361,14 @@ bool GuiObjectView::setObjectModel( const String& modelName )
    mModelInstance->initMaterialList();
    // Initialize camera values.
    
-   mOrbitPos = getModelResource()->center;
-   mMinOrbitDist = getModelResource()->mRadius;
+   mOrbitPos = getModel()->center;
+   mMinOrbitDist = getModel()->mRadius;
 
    // Initialize animation.
    
    _initAnimation();
    _initMount();
    return true;
-}
-
-void GuiObjectView::onModelChanged()
-{
-
 }
 
 //------------------------------------------------------------------------------
@@ -389,17 +386,21 @@ void GuiObjectView::setSkin( const String& name )
 
 bool GuiObjectView::setMountedObject( const String& modelName )
 {
-   // Load the model.   
-   _setMountedModel(modelName);
-   if (!getMountedModelResource())
+   // Load the model if it is not already the asset then set it..
+   if (modelName.c_str() != _getMountedModelAssetId())
+      _setMountedModel(modelName.c_str());
+   else
+      return true;
+
+   if (!getMountedModel())
    {
       Con::warnf("GuiObjectView::setMountedObject - Failed to load model '%s'", modelName.c_str());
       return false;
    }
 
-   if (!getMountedModelResource()->preloadMaterialList(getMountedModelResource().getPath())) return false;
+   if (!getMountedModel()->preloadMaterialList(getMountedModel().getPath())) return false;
 
-   mMountedModelInstance = new TSShapeInstance(getMountedModelResource(), true);
+   mMountedModelInstance = new TSShapeInstance(getMountedModel(), true);
    mMountedModelInstance->resetMaterialList();
    mMountedModelInstance->cloneMaterialList();
 
@@ -411,11 +412,6 @@ bool GuiObjectView::setMountedObject( const String& modelName )
    if(mMountedModelInstance)
       _initMount();
    return true;
-}
-
-void GuiObjectView::onMountedModelChanged()
-{
-
 }
 
 //------------------------------------------------------------------------------
@@ -632,7 +628,7 @@ void GuiObjectView::setLightDirection( const Point3F& direction )
 
 void GuiObjectView::_initAnimation()
 {
-   AssertFatal(getModelResource(), "GuiObjectView::_initAnimation - No model loaded!" );
+   AssertFatal(getModel(), "GuiObjectView::_initAnimation - No model loaded!" );
    
    if( mAnimationSeqName.isEmpty() && mAnimationSeq == -1 )
       return;
@@ -641,13 +637,13 @@ void GuiObjectView::_initAnimation()
             
    if( !mAnimationSeqName.isEmpty() )
    {
-      mAnimationSeq = getModelResource()->findSequence( mAnimationSeqName );
+      mAnimationSeq = getModel()->findSequence( mAnimationSeqName );
       
       if( mAnimationSeq == -1 )
       {
          Con::errorf( "GuiObjectView::_initAnimation - Cannot find animation sequence '%s' on '%s'",
             mAnimationSeqName.c_str(),
-            mModelName
+            _getModelAssetId()
          );
          
          return;
@@ -658,11 +654,11 @@ void GuiObjectView::_initAnimation()
       
    if( mAnimationSeq != -1 )
    {
-      if( mAnimationSeq >= getModelResource()->sequences.size() )
+      if( mAnimationSeq >= getModel()->sequences.size() )
       {
          Con::errorf( "GuiObjectView::_initAnimation - Sequence '%i' out of range for model '%s'",
             mAnimationSeq,
-            mModelName
+            _getModelAssetId()
          );
          
          mAnimationSeq = -1;
@@ -693,12 +689,12 @@ void GuiObjectView::_initMount()
    
    if( !mMountNodeName.isEmpty() )
    {
-      mMountNode = getModelResource()->findNode( mMountNodeName );
+      mMountNode = getModel()->findNode( mMountNodeName );
       if( mMountNode == -1 )
       {
          Con::errorf( "GuiObjectView::_initMount - No node '%s' on '%s'",
             mMountNodeName.c_str(),
-            mModelName
+            _getModelAssetId()
          );
          
          return;
@@ -707,11 +703,11 @@ void GuiObjectView::_initMount()
    
    // Make sure mount node is valid.
    
-   if( mMountNode != -1 && mMountNode >= getModelResource()->nodes.size() )
+   if( mMountNode != -1 && mMountNode >= getModel()->nodes.size() )
    {
       Con::errorf( "GuiObjectView::_initMount - Mount node index '%i' out of range for '%s'",
          mMountNode,
-         mModelName
+         _getModelAssetId()
       );
       
       mMountNode = -1;
@@ -720,11 +716,11 @@ void GuiObjectView::_initMount()
    
    // Look up node on the mounted model from
    // which to mount to the primary model's node.
-   if (!getMountedModelResource()) return;
-   S32 mountPoint = getMountedModelResource()->findNode( "mountPoint" );
+   if (!getMountedModel()) return;
+   S32 mountPoint = getMountedModel()->findNode( "mountPoint" );
    if( mountPoint != -1 )
    {
-      getMountedModelResource()->getNodeWorldTransform(mountPoint, &mMountTransform),
+      getMountedModel()->getNodeWorldTransform(mountPoint, &mMountTransform),
       mMountTransform.inverse();
    }
 }
@@ -745,7 +741,7 @@ DefineEngineMethod( GuiObjectView, getModel, const char*, (),,
    "@return Name of the displayed model.\n\n"
    "@see GuiControl")
 {
-   return Con::getReturnBuffer( object->getModel() );
+   return Con::getReturnBuffer( object->_getModelAssetId() );
 }
 
 //-----------------------------------------------------------------------------
@@ -775,7 +771,7 @@ DefineEngineMethod( GuiObjectView, getMountedModel, const char*, (),,
    "@return Name of the mounted model.\n\n"
    "@see GuiControl")
 {
-   return Con::getReturnBuffer( object->getMountedModel() );
+   return Con::getReturnBuffer( object->_getMountedModelAssetId() );
 }
 
 //-----------------------------------------------------------------------------

@@ -239,7 +239,7 @@ ExplosionData::ExplosionData()
    explosionScale.set(1.0f, 1.0f, 1.0f);
    playSpeed = 1.0f;
 
-   INIT_ASSET(ExplosionShape);
+   mExplosionShapeAsset.registerRefreshNotify(this);
 
    explosionAnimation = -1;
 
@@ -315,7 +315,7 @@ ExplosionData::ExplosionData(const ExplosionData& other, bool temp_clone) : Game
    particleEmitterId = other.particleEmitterId; // -- for pack/unpack of particleEmitter ptr 
    explosionScale = other.explosionScale;
    playSpeed = other.playSpeed;
-   CLONE_ASSET(ExplosionShape);
+   mExplosionShapeAsset = other.mExplosionShapeAsset;
    explosionAnimation = other.explosionAnimation; // -- from explosionShape sequence "ambient"
    dMemcpy( emitterList, other.emitterList, sizeof( emitterList ) );
    dMemcpy( emitterIDList, other.emitterIDList, sizeof( emitterIDList ) ); // -- for pack/unpack of emitterList ptrs
@@ -360,6 +360,8 @@ ExplosionData::~ExplosionData()
    if (!isTempClone())
       return;
 
+   mExplosionShapeAsset.unregisterRefreshNotify();
+
    // particleEmitter, emitterList[*], debrisList[*], explosionList[*] will delete themselves
 
 #ifdef TRACK_EXPLOSION_DATA_CLONES
@@ -393,7 +395,7 @@ void ExplosionData::initPersistFields()
 {
    docsURL;
    addGroup("Shapes");
-      INITPERSISTFIELD_SHAPEASSET(ExplosionShape, ExplosionData, "@brief Optional shape asset to place at the center of the explosion.\n\n"
+      INITPERSISTFIELD_SHAPEASSET_REFACTOR(ExplosionShape, ExplosionData, "@brief Optional shape asset to place at the center of the explosion.\n\n"
          "The <i>ambient</i> animation of this model will be played automatically at the start of the explosion.");
    endGroup("Shapes");
 
@@ -668,7 +670,7 @@ void ExplosionData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(ExplosionShape);
+   PACKDATA_ASSET_REFACTOR(ExplosionShape);
 
    //PACKDATA_SOUNDASSET(Sound);
    PACKDATA_ASSET(Sound);
@@ -773,7 +775,7 @@ void ExplosionData::unpackData(BitStream* stream)
 {
 	Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(ExplosionShape);
+   UNPACKDATA_ASSET_REFACTOR(ExplosionShape);
 
    UNPACKDATA_ASSET(Sound);
 
@@ -897,10 +899,10 @@ bool ExplosionData::preload(bool server, String &errorStr)
    if (mExplosionShapeAsset.notNull()) {
 
       // Resolve animations
-      explosionAnimation = mExplosionShape->findSequence("ambient");
+      explosionAnimation = getExplosionShape()->findSequence("ambient");
 
       // Preload textures with a dummy instance...
-      TSShapeInstance* pDummy = new TSShapeInstance(mExplosionShape, !server);
+      TSShapeInstance* pDummy = new TSShapeInstance(getExplosionShape(), !server);
       delete pDummy;
 
    } else {
@@ -1392,8 +1394,8 @@ bool Explosion::explode()
    launchDebris( mInitialNormal );
    spawnSubExplosions();
 
-   if (bool(mDataBlock->mExplosionShape) && mDataBlock->explosionAnimation != -1) {
-      mExplosionInstance = new TSShapeInstance(mDataBlock->mExplosionShape, true);
+   if (bool(mDataBlock->getExplosionShape()) && mDataBlock->explosionAnimation != -1) {
+      mExplosionInstance = new TSShapeInstance(mDataBlock->getExplosionShape(), true);
 
       mExplosionThread   = mExplosionInstance->addThread();
       mExplosionInstance->setSequence(mExplosionThread, mDataBlock->explosionAnimation, 0);
@@ -1403,7 +1405,7 @@ bool Explosion::explode()
       mEndingMS = U32(mExplosionInstance->getScaledDuration(mExplosionThread) * 1000.0f);
 
       mObjScale.convolve(mDataBlock->explosionScale);
-      mObjBox = mDataBlock->mExplosionShape->mBounds;
+      mObjBox = mDataBlock->getExplosionShape()->mBounds;
       resetWorldBox();
    }
 

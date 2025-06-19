@@ -37,7 +37,7 @@ class LightInfo;
 
 
 /// A control that displays a TSShape in its view.
-class GuiObjectView : public GuiTSCtrl
+class GuiObjectView : public GuiTSCtrl, protected AssetPtrCallback
 {
    public:
    
@@ -70,15 +70,8 @@ class GuiObjectView : public GuiTSCtrl
       /// @{
       
       ///Model loaded for display.
-      DECLARE_SHAPEASSET(GuiObjectView, Model, onModelChanged);
-      static bool _setModelData(void* obj, const char* index, const char* data)\
-      {
-         bool ret = false;
-         GuiObjectView* object = static_cast<GuiObjectView*>(obj);
-         ret = object->setObjectModel(StringTable->insert(data));
-         return ret;
-      }
-      void onModelChanged();
+      DECLARE_SHAPEASSET_REFACTOR(GuiObjectView, Model)
+
       TSShapeInstance* mModelInstance;
       /// Name of skin to use on model.
       String mSkinName;
@@ -109,15 +102,7 @@ class GuiObjectView : public GuiTSCtrl
       /// @{
       
       ///Model to mount to the primary model.
-      DECLARE_SHAPEASSET(GuiObjectView, MountedModel, onMountedModelChanged);
-      static bool _setMountedModelData(void* obj, const char* index, const char* data)\
-      {
-         bool ret = false;
-         GuiObjectView* object = static_cast<GuiObjectView*>(obj);
-         ret = object->setMountedObject(StringTable->insert(data));
-         return ret;
-      }
-      void onMountedModelChanged();
+      DECLARE_SHAPEASSET_REFACTOR(GuiObjectView, MountedModel)
       TSShapeInstance* mMountedModelInstance;
       
       ///
@@ -284,7 +269,17 @@ class GuiObjectView : public GuiTSCtrl
       static void initPersistFields();
 
       DECLARE_CONOBJECT( GuiObjectView );
-      DECLARE_DESCRIPTION( "A control that shows a TSShape model." );   
+      DECLARE_DESCRIPTION( "A control that shows a TSShape model." );
+
+protected:
+   void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
+   {
+      if (mModelAsset.notNull())
+         setObjectModel(_getModelAssetId());
+
+      if (mMountedModelAsset.notNull())
+         setMountedObject(_getMountedModelAssetId());
+   }
 };
 
 #endif // !_GUIOBJECTVIEW_H_

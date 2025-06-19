@@ -63,7 +63,7 @@ class Projectile;
 
 //--------------------------------------------------------------------------
 /// Datablock for projectiles.  This class is the base class for all other projectiles.
-class ProjectileData : public GameBaseData
+class ProjectileData : public GameBaseData, protected AssetPtrCallback
 {
    typedef GameBaseData Parent;
 
@@ -71,8 +71,7 @@ protected:
    bool onAdd() override;
 
 public:
-   DECLARE_SHAPEASSET(ProjectileData, ProjectileShape, onShapeChanged);
-   DECLARE_ASSET_SETGET(ProjectileData, ProjectileShape);
+   DECLARE_SHAPEASSET_REFACTOR(ProjectileData, ProjectileShape)
 
    /// Set to true if it is a billboard and want it to always face the viewer, false otherwise
    bool faceViewer;
@@ -154,7 +153,8 @@ public:
    ProjectileData(const ProjectileData&, bool = false);
    bool allowSubstitutions() const override { return true; }
 
-   void onShapeChanged()
+protected:
+   void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
    {
       reloadOnLocalClient();
    }

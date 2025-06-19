@@ -297,7 +297,7 @@ PlayerData::PlayerData()
    imageAnimPrefixFP = StringTable->EmptyString();
    for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
-      INIT_ASSET_ARRAY(ShapeFP, i);
+      mShapeFPAsset[i].registerRefreshNotify(this);
       mCRCFP[i] = 0;
       mValidShapeFP[i] = false;
    }
@@ -607,26 +607,26 @@ bool PlayerData::preload(bool server, String &errorStr)
    {
       bool shapeError = false;
 
-      if (mShapeFPAssetId[i] != StringTable->EmptyString())
+      if (mShapeFPAsset[i].notNull())
       {
-         if (!mShapeFP[i])
+         if (!getShapeFP(i))
          {
-            errorStr = String::ToString("PlayerData: Couldn't load mounted image %d shape \"%s\"", i, mShapeFPAssetId[i]);
+            errorStr = String::ToString("PlayerData: Couldn't load mounted image %d shape \"%s\"", i, _getShapeFPAssetId(i));
             return false;
          }
 
-         if (!server && !mShapeFP[i]->preloadMaterialList(mShapeFP[i].getPath()) && NetConnection::filesWereDownloaded())
+         if (!server && !getShapeFP(i)->preloadMaterialList(getShapeFP(i).getPath()) && NetConnection::filesWereDownloaded())
             shapeError = true;
 
          if (computeCRC)
          {
-            Con::printf("Validation required for mounted image %d shape: %s", i, mShapeFPAssetId[i]);
+            Con::printf("Validation required for mounted image %d shape: %s", i, _getShapeFPAssetId(i));
 
-            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(mShapeFP[i].getPath());
+            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(getShapeFP(i).getPath());
 
             if (!fileRef)
             {
-               errorStr = String::ToString("PlayerData: Mounted image %d loading failed, shape \"%s\" is not found.", i, mShapeFP[i].getPath().getFullPath().c_str());
+               errorStr = String::ToString("PlayerData: Mounted image %d loading failed, shape \"%s\" is not found.", i, getShapeFP(i).getPath().getFullPath().c_str());
                return false;
             }
 
@@ -634,7 +634,7 @@ bool PlayerData::preload(bool server, String &errorStr)
                mCRCFP[i] = fileRef->getChecksum();
             else if (mCRCFP[i] != fileRef->getChecksum())
             {
-               errorStr = String::ToString("PlayerData: Mounted image %d shape \"%s\" does not match version on server.", i, mShapeFPAssetId[i]);
+               errorStr = String::ToString("PlayerData: Mounted image %d shape \"%s\" does not match version on server.", i, _getShapeFPAssetId(i));
                return false;
             }
          }
@@ -1134,13 +1134,8 @@ void PlayerData::initPersistFields()
 
       // Mounted images arrays
       addArray( "Mounted Images", ShapeBase::MaxMountedImages );
-         addProtectedField("shapeNameFP", TypeShapeFilename, Offset(mShapeFPName, PlayerData), &_setShapeFPData, &defaultProtectedGetFn, ShapeBase::MaxMountedImages,
-            "@brief File name of this player's shape that will be used in conjunction with the corresponding mounted image.\n\n"
-            "These optional parameters correspond to each mounted image slot to indicate a shape that is rendered "
-            "in addition to the mounted image shape.  Typically these are a player's arms (or arm) that is "
-            "animated along with the mounted image's state animation sequences.\n", AbstractClassRep::FIELD_HideInInspectors);
 
-         INITPERSISTFIELD_SHAPEASSET_ARRAY(ShapeFP, ShapeBase::MaxMountedImages, PlayerData, "@brief File name of this player's shape that will be used in conjunction with the corresponding mounted image.\n\n"
+         INITPERSISTFIELD_SHAPEASSET_ARRAY_REFACTOR(ShapeFP, ShapeBase::MaxMountedImages, PlayerData, "@brief File name of this player's shape that will be used in conjunction with the corresponding mounted image.\n\n"
             "These optional parameters correspond to each mounted image slot to indicate a shape that is rendered "
             "in addition to the mounted image shape.  Typically these are a player's arms (or arm) that is "
             "animated along with the mounted image's state animation sequences.\n");
@@ -1340,14 +1335,14 @@ void PlayerData::packData(BitStream* stream)
    stream->writeString(imageAnimPrefixFP);
    for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
-      PACKDATA_ASSET_ARRAY(ShapeFP, i);
-
       // computeCRC is handled in ShapeBaseData
       if (computeCRC)
       {
          stream->write(mCRCFP[i]);
       }
    }
+
+   PACKDATA_ASSET_ARRAY_REFACTOR(ShapeFP, ShapeBase::MaxMountedImages)
 }
 
 void PlayerData::unpackData(BitStream* stream)
@@ -1520,14 +1515,14 @@ void PlayerData::unpackData(BitStream* stream)
    imageAnimPrefixFP = stream->readSTString();
    for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
-      UNPACKDATA_ASSET_ARRAY(ShapeFP, i);
-
       // computeCRC is handled in ShapeBaseData
       if (computeCRC)
       {
          stream->read(&(mCRCFP[i]));
       }
    }
+
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(ShapeFP, ShapeBase::MaxMountedImages)
 }
 
 
@@ -1863,9 +1858,9 @@ bool Player::onNewDataBlock( GameBaseData *dptr, bool reload )
    {
       for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
       {
-         if (bool(mDataBlock->mShapeFP[i]))
+         if (bool(mDataBlock->getShapeFP(i)))
          {
-            mShapeFPInstance[i] = new TSShapeInstance(mDataBlock->mShapeFP[i], isClientObject());
+            mShapeFPInstance[i] = new TSShapeInstance(mDataBlock->getShapeFP(i), isClientObject());
 
             mShapeFPInstance[i]->cloneMaterialList();
 

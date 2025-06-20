@@ -970,13 +970,14 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 
       stream->write(mForceDetail);
 
-   if (stream->writeFlag(mAnimOffset != 0.0f))
-      stream->writeFloat(mAnimOffset, 7);
+      if (stream->writeFlag(mPlayAmbient && hasAnim()))
+      {
+         if (stream->writeFlag(mAnimOffset != 0.0f))
+            stream->writeFloat(mAnimOffset, 7);
 
-   if (stream->writeFlag(mAnimSpeed != 1.0f))
-      stream->writeSignedFloat(mAnimSpeed / AnimSpeedMax, 7);
-
-      stream->writeFlag(mPlayAmbient);
+            if (stream->writeFlag(mAnimSpeed != 1.0f))
+               stream->writeSignedFloat(mAnimSpeed / AnimSpeedMax, 7);
+      }
    }
 
    if (stream->writeFlag(mUseAlphaFade))
@@ -1086,13 +1087,15 @@ void TSStatic::unpackUpdate(NetConnection* con, BitStream* stream)
 
       stream->read(&mForceDetail);
 
-      if (stream->readFlag())
-         mAnimOffset = stream->readFloat(7);
-
-      if (stream->readFlag())
-         mAnimSpeed = stream->readSignedFloat(7) * AnimSpeedMax;
-
       mPlayAmbient = stream->readFlag();
+      if (mPlayAmbient)
+      {
+         if (stream->readFlag())
+            mAnimOffset = stream->readFloat(7);
+
+         if (stream->readFlag())
+            mAnimSpeed = stream->readSignedFloat(7) * AnimSpeedMax;
+      }
 
       //update our shape, figuring that it likely changed
       _createShape();

@@ -1587,7 +1587,7 @@ void TSStatic::updateMaterials()
 
    String path;
    if (mShapeAsset->isAssetValid())
-      path = mShapeAsset->getShapeFileName();
+      path = mShapeAsset->getShapeFile();
    else
       path = mShapeFile;
 

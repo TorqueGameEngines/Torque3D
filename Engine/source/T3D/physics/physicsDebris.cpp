@@ -119,7 +119,7 @@ void PhysicsDebrisData::initPersistFields()
    addGroup( "Shapes" );
 
    INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, PhysicsDebrisData, "@brief Shape to use with this debris.\n\n"
-      "Compatable with Live-Asset Reloading.");
+      "Compatable with Live-Asset Reloading."); 
 
    endGroup( "Shapes" );
 

@@ -2138,7 +2138,7 @@ DefineTSShapeConstructorMethod(addSequence, bool,
       if (assetType == StringTable->insert("ShapeAsset"))
       {
          ShapeAsset* asset = AssetDatabase.acquireAsset<ShapeAsset>(assetId);
-         srcPath = asset->getShapeFilePath();
+         srcPath = asset->getShapeFile();
          AssetDatabase.releaseAsset(assetId);
       }
       else if (assetType == StringTable->insert("ShapeAnimationAsset"))

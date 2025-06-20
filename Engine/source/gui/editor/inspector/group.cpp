@@ -665,7 +665,7 @@ void GuiInspectorGroup::addInspectorField(StringTableEntry name, StringTableEntr
       else if (typeName == StringTable->insert("image"))
          fieldType = TypeImageAssetPtr;
       else if (typeName == StringTable->insert("shape"))
-         fieldType = TypeShapeAssetId;
+         fieldType = TypeShapeAssetPtr;
       else if (typeName == StringTable->insert("sound"))
          fieldType = TypeSoundAssetId;
       else if (typeName == StringTable->insert("bool"))

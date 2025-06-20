@@ -247,7 +247,7 @@ void PhysicsShapeData::_onResourceChanged( const Torque::Path &path )
    {
       return;
    }
-   if ( path != Path(mShapeAsset->getShapeFilePath()) )
+   if ( path != Path(mShapeAsset->getShapeFile()) )
       return;
 
    _setShape(_getShapeAssetId());

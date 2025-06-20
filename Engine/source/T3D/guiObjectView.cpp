@@ -357,7 +357,7 @@ bool GuiObjectView::setObjectModel( const String& modelName )
       mModelInstance->reSkin( mSkinName );
 
    TSMaterialList* pMatList = mModelInstance->getMaterialList();
-   pMatList->setTextureLookupPath(mModelAsset->getShapeFileName());
+   pMatList->setTextureLookupPath(mModelAsset->getShapeFile());
    mModelInstance->initMaterialList();
    // Initialize camera values.
    

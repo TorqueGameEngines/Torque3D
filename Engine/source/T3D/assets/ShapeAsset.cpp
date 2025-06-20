@@ -190,7 +190,7 @@ void ShapeAsset::initPersistFields()
    addProtectedField("diffuseImposterFileName", TypeAssetLooseFilePath, Offset(mDiffuseImposterFileName, ShapeAsset),
       &setDiffuseImposterFile, &getDiffuseImposterFile, "Path to the diffuse imposter file we want to render");
    addProtectedField("normalImposterFileName", TypeAssetLooseFilePath, Offset(mNormalImposterFileName, ShapeAsset),
-      &setNormalImposterFile, &getNormalImposterFilePath, "Path to the normal imposter file we want to render");
+      &setNormalImposterFile, &getNormalImposterFile, "Path to the normal imposter file we want to render");
 
 }
 

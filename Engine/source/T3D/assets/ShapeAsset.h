@@ -161,7 +161,7 @@ public:
    inline StringTableEntry getDiffuseImposterFile(void) const { return mDiffuseImposterFileName; };
 
    void                    setNormalImposterFile(const char* pImageFile);
-   inline StringTableEntry getNormalImposterFilePath(void) const { return mNormalImposterFileName; };
+   inline StringTableEntry getNormalImposterFile(void) const { return mNormalImposterFileName; };
 
    static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsset>* shapeAsset);
 
@@ -193,7 +193,7 @@ protected:
    static const char* getDiffuseImposterFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getDiffuseImposterFile(); }
 
    static bool setNormalImposterFile(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ShapeAsset*>(obj)->setNormalImposterFile(data); return false; }
-   static const char* getNormalImposterFilePath(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getNormalImposterFilePath(); }
+   static const char* getNormalImposterFile(void* obj, const char* data) { return static_cast<ShapeAsset*>(obj)->getNormalImposterFile(); }
 };
 
 DefineConsoleType(TypeShapeAssetId, String)

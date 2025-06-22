@@ -621,7 +621,7 @@ bool AIPlayer::getAIMove(Move *movePtr)
    // Replicate the trigger state into the move so that
    // triggers can be controlled from scripts.
    for( U32 i = 0; i < MaxTriggerKeys; i++ )
-      movePtr->trigger[ i ] = getImageTriggerState( i );
+      movePtr->trigger[ i ] = getMoveTrigger( i );
 
 #ifdef TORQUE_NAVIGATION_ENABLED
    if(mJump == Now)
@@ -1390,14 +1390,14 @@ DefineEngineMethod(AIPlayer, checkInFoV, bool, (ShapeBase* obj, F32 fov, bool ch
    return object->checkInFoV(obj, fov, checkEnabled);
 }
 
-DefineEngineMethod( AIPlayer, setMoveTrigger, void, ( U32 slot ),,
+DefineEngineMethod( AIPlayer, setMoveTrigger, void, ( U32 slot, bool state ),(true),
    "@brief Sets a movement trigger on an AI object.\n\n"
    "@param slot The trigger slot to set.\n"
    "@see getMoveTrigger()\n"
    "@see clearMoveTrigger()\n"
    "@see clearMoveTriggers()\n")
 {
-   object->setMoveTrigger( slot, true );
+   object->setMoveTrigger( slot, state );
 }
 
 DefineEngineMethod( AIPlayer, clearMoveTrigger, void, ( U32 slot ),,

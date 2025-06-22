@@ -346,6 +346,16 @@ void AIController::TriggerState::setMoveTrigger(U32 slot, const bool isSet)
    }
 }
 
+DefineEngineMethod(AIController, setMoveTrigger, void, (U32 slot, bool state), (true),
+   "@brief Sets a movement trigger on an AI object.\n\n"
+   "@param slot The trigger slot to set.\n"
+   "@see getMoveTrigger()\n"
+   "@see clearMoveTrigger()\n"
+   "@see clearMoveTriggers()\n")
+{
+   object->mTriggerState.setMoveTrigger(slot, state);
+}
+
 /**
  * Get the state of a movement trigger.
  *

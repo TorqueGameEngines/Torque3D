@@ -58,7 +58,7 @@ class OpenVRTrackedObject;
 
 //----------------------------------------------------------------------------
 
-struct PlayerData: public ShapeBaseData {
+struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already in shapebasedata. */ {
    typedef ShapeBaseData Parent;
    enum Constants {
       RecoverDelayBits = 7,
@@ -82,8 +82,7 @@ struct PlayerData: public ShapeBaseData {
                                                                   ///  that we don't create a TSThread on the player if we don't
                                                                   ///  need to.
 
-   DECLARE_SHAPEASSET_ARRAY(PlayerData, ShapeFP, ShapeBase::MaxMountedImages, onShapeChanged); ///< Used to render with mounted images in first person [optional]
-   DECLARE_ASSET_ARRAY_SETGET(PlayerData, ShapeFP);
+   DECLARE_SHAPEASSET_ARRAY_REFACTOR(PlayerData, ShapeFP, ShapeBase::MaxMountedImages)
 
    StringTableEntry  imageAnimPrefixFP;                           ///< Passed along to mounted images to modify
                                                                   ///  animation sequences played in first person. [optional]
@@ -391,6 +390,11 @@ struct PlayerData: public ShapeBaseData {
    DECLARE_CALLBACK( void, onEnterMissionArea, ( Player* obj ) );
    DECLARE_CALLBACK( void, onLeaveMissionArea, ( Player* obj ) );
    /// @}
+protected:
+   void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
+   {
+      reloadOnLocalClient();
+   }
 };
 
 

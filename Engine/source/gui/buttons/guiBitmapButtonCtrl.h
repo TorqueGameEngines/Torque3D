@@ -123,6 +123,12 @@ private:
    String               mBitmapFile; 
 public:
    void _setBitmap(StringTableEntry _in) {
+      if (_in == NULL || _in == StringTable->EmptyString() || _in == "")
+      {
+         mBitmapAsset = NULL;
+         mBitmapFile = "";
+         return;
+      }
    if (mBitmapAsset.getAssetId() == _in) return; if (!AssetDatabase.isDeclaredAsset(_in)) {
       StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback; AssetQuery query; S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in); if (foundAssetcount != 0) {
          imageAssetId = query.mAssetList[0];

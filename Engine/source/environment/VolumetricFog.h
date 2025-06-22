@@ -84,8 +84,7 @@ class VolumetricFog : public SceneObject
       Vector <U32> *indices;
    };
 
-   DECLARE_SHAPEASSET(VolumetricFog, Shape, onShapeChanged);
-   DECLARE_ASSET_NET_SETGET(VolumetricFog, Shape, FogShapeMask);
+   DECLARE_SHAPEASSET_REFACTOR(VolumetricFog, Shape)
    
    protected:
       // Rendertargets;
@@ -203,6 +202,7 @@ class VolumetricFog : public SceneObject
       void ResizeRT(PlatformWindow *win, bool resize);
    
    protected:
+
       // Protected methods
       bool onAdd() override;
       void onRemove() override;
@@ -246,8 +246,6 @@ class VolumetricFog : public SceneObject
       bool isInsideFog();
 
       bool setShapeAsset(const StringTableEntry shapeAssetId);
-
-      void onShapeChanged() {}
    
       DECLARE_CONOBJECT(VolumetricFog);
       DECLARE_CATEGORY("Environment \t Weather");

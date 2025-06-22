@@ -9,6 +9,7 @@
 
 IMPLEMENT_CONOBJECT(GuiOffscreenCanvas);
 
+GuiOffscreenCanvas* GuiOffscreenCanvas::sActiveOffscreenCanvas = NULL;
 Vector<GuiOffscreenCanvas*> GuiOffscreenCanvas::sList;
 
 GuiOffscreenCanvas::GuiOffscreenCanvas()
@@ -33,7 +34,8 @@ void GuiOffscreenCanvas::initPersistFields()
    addField( "targetName", TypeRealString, Offset( mTargetName, GuiOffscreenCanvas ), "");
    addField( "dynamicTarget", TypeBool, Offset( mDynamicTarget, GuiOffscreenCanvas ), "");
    addField( "useDepth", TypeBool, Offset( mUseDepth, GuiOffscreenCanvas ), "");
-
+   addField("canInteract", TypeBool, Offset(mCanInteract, GuiOffscreenCanvas), "");
+   addField("maxInteractDistance", TypeF32, Offset(mMaxInteractDistance, GuiOffscreenCanvas), "");
    Parent::initPersistFields();
 }
 

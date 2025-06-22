@@ -30,7 +30,11 @@
 #include "T3D/shapeBase.h"
 #include "gfx/gfxDrawUtil.h"
 #include "console/engineAPI.h"
-
+#include "gui/core/guiOffscreenCanvas.h"
+#include "T3D/tsStatic.h"
+#include "materials/baseMatInstance.h"
+#include "materials/matInstance.h"
+#include "materials/materialDefinition.h"
 
 //-----------------------------------------------------------------------------
 /// Vary basic cross hair hud.
@@ -46,12 +50,14 @@ class GuiCrossHairHud : public GuiBitmapCtrl
    LinearColorF   mDamageFrameColor;
    Point2I  mDamageRectSize;
    Point2I  mDamageOffset;
+   PlatformTimer* mFrameTime;
 
 protected:
    void drawDamage(Point2I offset, F32 damage, F32 opacity);
 
 public:
    GuiCrossHairHud();
+   ~GuiCrossHairHud();
 
    void onRender( Point2I, const RectI &) override;
    static void initPersistFields();
@@ -95,6 +101,12 @@ GuiCrossHairHud::GuiCrossHairHud()
    mDamageFrameColor.set( 1.0f, 0.6f, 0.0f, 1.0f );
    mDamageRectSize.set(50, 4);
    mDamageOffset.set(0,32);
+   mFrameTime = PlatformTimer::create();
+}
+
+GuiCrossHairHud::~GuiCrossHairHud()
+{
+   SAFE_DELETE(mFrameTime);
 }
 
 void GuiCrossHairHud::initPersistFields()
@@ -139,11 +151,61 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
 
    // Collision info. We're going to be running LOS tests and we
    // don't want to collide with the control object.
-   static U32 losMask = TerrainObjectType | ShapeBaseObjectType;
+   static U32 losMask = TerrainObjectType | ShapeBaseObjectType | StaticShapeObjectType;
    control->disableCollision();
 
    RayInfo info;
    if (gClientContainer.castRay(camPos, endPos, losMask, &info)) {
+      // is this a tsstatic? then it could be a offscreen canvas, check the list.
+      if (TSStatic* ts = dynamic_cast<TSStatic*>(info.object))
+      {
+         if (mFrameTime->getElapsedMs() > 32)
+         {
+            GuiOffscreenCanvas::sActiveOffscreenCanvas = NULL;
+            mFrameTime->reset();
+
+            Point3F newStart, newEnd;
+            ts->getWorldTransform().mulP(camPos, &newStart);
+            ts->getWorldTransform().mulP(endPos, &newEnd);
+
+            newStart.convolveInverse(ts->getScale());
+            newEnd.convolveInverse(ts->getScale());
+
+            info.generateTexCoord = true;
+            if (ts->getShapeInstance()->castRayOpcode(0, newStart, newEnd, &info))
+            {
+               MatInstance* matInst = dynamic_cast<MatInstance*>(info.material);
+               if (matInst)
+               {
+                  Material* mat = matInst->getMaterial();
+                  if (mat && mat->getDiffuseMapAsset(0).notNull() && mat->getDiffuseMapAsset(0)->isNamedTarget())
+                  {
+                     String canvasName = String(mat->getDiffuseMapAsset(0)->getImageFile()).substr(1, (U32)strlen(mat->getDiffuseMapAsset(0)->getImageFile()) - 1);
+                     for (GuiOffscreenCanvas* canvas : GuiOffscreenCanvas::sList)
+                     {
+                        if (canvas->getTarget()->getName() == canvasName)
+                        {
+                           if (!canvas->canInteract() || canvas->getMaxInteractDistance() < info.distance)
+                           {
+                              break;
+                           }
+
+                           Point2I canvasSize = canvas->getWindowSize();
+                           Point2I newCursorPos(mRound(mClampF((info.texCoord.x * canvasSize.x), 0.0f, (F32)canvasSize.x)),
+                              mRound(mClampF((info.texCoord.y * canvasSize.y), 0.0f, (F32)canvasSize.y)));
+
+                           canvas->setCursorPos(newCursorPos);
+                           canvas->markDirty();
+                           GuiOffscreenCanvas::sActiveOffscreenCanvas = canvas;
+                           break;
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      }
+
       // Hit something... but we'll only display health for named
       // ShapeBase objects.  Could mask against the object type here
       // and do a static cast if it's a ShapeBaseObjectType, but this

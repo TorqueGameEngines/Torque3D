@@ -420,7 +420,7 @@ bool GuiShapeEdPreview::setObjectShapeAsset(const char* assetId)
       if (assetType == StringTable->insert("ShapeAsset"))
       {
          ShapeAsset* asset = AssetDatabase.acquireAsset<ShapeAsset>(id);
-         modelName = asset->getShapeFilePath();
+         modelName = asset->getShapeFile();
          AssetDatabase.releaseAsset(id);
       }
       else if (assetType == StringTable->insert("ShapeAnimationAsset"))

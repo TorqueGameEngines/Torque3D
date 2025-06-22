@@ -145,7 +145,7 @@ U32 Projectile::smProjectileWarpTicks = 5;
 //
 ProjectileData::ProjectileData()
 {
-   INIT_ASSET(ProjectileShape);
+   mProjectileShapeAsset.registerRefreshNotify(this);
 
    INIT_ASSET(ProjectileSound);
 
@@ -223,7 +223,7 @@ ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : G
    CLONE_ASSET(ProjectileSound);
    lightDesc = other.lightDesc;
    lightDescId = other.lightDescId; // -- for pack/unpack of lightDesc ptr
-   CLONE_ASSET(ProjectileShape);// -- TSShape loads using mProjectileShapeName
+   mProjectileShapeAsset = other.mProjectileShapeAsset;// -- TSShape loads using mProjectileShapeName
    activateSeq = other.activateSeq; // -- from projectileShape sequence "activate"
    maintainSeq = other.maintainSeq; // -- from projectileShape sequence "maintain"
    particleEmitter = other.particleEmitter;
@@ -237,9 +237,7 @@ void ProjectileData::initPersistFields()
 {
    docsURL;
    addGroup("Shapes");
-      addProtectedField("projectileShapeName", TypeShapeFilename, Offset(mProjectileShapeName, ProjectileData), &_setProjectileShapeData, &defaultProtectedGetFn,
-         "@brief File path to the model of the projectile.\n\n", AbstractClassRep::FIELD_HideInInspectors);
-      INITPERSISTFIELD_SHAPEASSET(ProjectileShape, ProjectileData, "@brief The model of the projectile.\n\n");
+      INITPERSISTFIELD_SHAPEASSET_REFACTOR(ProjectileShape, ProjectileData, "@brief The model of the projectile.\n\n");
       addField("scale", TypePoint3F, Offset(scale, ProjectileData),
          "@brief Scale to apply to the projectile's size.\n\n"
          "@note This is applied after SceneObject::scale\n");
@@ -383,20 +381,20 @@ bool ProjectileData::preload(bool server, String &errorStr)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockid(lightDesc): %d", lightDescId);   
    }
 
-   if (mProjectileShapeAssetId != StringTable->EmptyString())
+   if (mProjectileShapeAsset.notNull())
    {
       //If we've got a shapeAsset assigned for our projectile, but we failed to load the shape data itself, report the error
-      if (!mProjectileShape)
+      if (!getProjectileShape())
       {
-         errorStr = String::ToString("ProjectileData::load: Couldn't load shape \"%s\"", mProjectileShapeAssetId);
+         errorStr = String::ToString("ProjectileData::load: Couldn't load shape \"%s\"", _getProjectileShapeAssetId());
          return false;
       }
       else
       {
-         activateSeq = mProjectileShape->findSequence("activate");
-         maintainSeq = mProjectileShape->findSequence("maintain");
+         activateSeq = getProjectileShape()->findSequence("activate");
+         maintainSeq = getProjectileShape()->findSequence("maintain");
 
-         TSShapeInstance* pDummy = new TSShapeInstance(mProjectileShape, !server);
+         TSShapeInstance* pDummy = new TSShapeInstance(getProjectileShape(), !server);
          delete pDummy;
       }
    }
@@ -409,7 +407,7 @@ void ProjectileData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(ProjectileShape);
+   PACKDATA_ASSET_REFACTOR(ProjectileShape);
 
    stream->writeFlag(faceViewer);
    if(stream->writeFlag(scale.x != 1 || scale.y != 1 || scale.z != 1))
@@ -474,7 +472,7 @@ void ProjectileData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(ProjectileShape);
+   UNPACKDATA_ASSET_REFACTOR(ProjectileShape);
 
    faceViewer = stream->readFlag();
    if(stream->readFlag())
@@ -800,9 +798,9 @@ bool Projectile::onAdd()
    }
    else
    {
-      if (bool(mDataBlock->mProjectileShape))
+      if (bool(mDataBlock->getProjectileShape()))
       {
-         mProjectileShape = new TSShapeInstance(mDataBlock->mProjectileShape, isClientObject());
+         mProjectileShape = new TSShapeInstance(mDataBlock->getProjectileShape(), isClientObject());
 
          if (mDataBlock->activateSeq != -1)
          {
@@ -841,8 +839,8 @@ bool Projectile::onAdd()
       processAfter(mSourceObject);
 
    // Setup our bounding box
-   if (bool(mDataBlock->mProjectileShape) == true)
-      mObjBox = mDataBlock->mProjectileShape->mBounds;
+   if (bool(mDataBlock->getProjectileShape()) == true)
+      mObjBox = mDataBlock->getProjectileShape()->mBounds;
    else
       mObjBox = Box3F(Point3F(0, 0, 0), Point3F(0, 0, 0));
 

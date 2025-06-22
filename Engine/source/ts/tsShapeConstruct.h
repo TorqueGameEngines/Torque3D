@@ -236,7 +236,7 @@ public:
    StringTableEntry getShapePath() const
    {
       if (mShapeAsset.notNull())
-         return mShapeAsset->getShapeFilePath();
+         return mShapeAsset->getShapeFile();
       else
          return StringTable->EmptyString();
    }

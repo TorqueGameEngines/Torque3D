@@ -75,8 +75,6 @@ ConsoleDocClass( WheeledVehicleTire,
 
 WheeledVehicleTire::WheeledVehicleTire()
 {
-   INIT_ASSET(Shape);
-
    staticFriction = 1;
    kineticFriction = 0.5f;
    restitution = 1;
@@ -88,15 +86,16 @@ WheeledVehicleTire::WheeledVehicleTire()
    longitudinalDamping = 1;
    longitudinalRelaxation = 1;
    mass = 1.f;
+   mShapeAsset.registerRefreshNotify(this);
 }
 
 bool WheeledVehicleTire::preload(bool server, String &errorStr)
 {
    // Load up the tire shape.  ShapeBase has an option to force a
    // CRC check, this is left out here, but could be easily added.
-   if (!mShape)
+   if (!getShape())
    {
-      errorStr = String::ToString("WheeledVehicleTire: Couldn't load shape \"%s\"", mShapeAssetId);
+      errorStr = String::ToString("WheeledVehicleTire: Couldn't load shape \"%s\"", _getShapeAssetId());
       return false;
    }
    else
@@ -104,7 +103,7 @@ bool WheeledVehicleTire::preload(bool server, String &errorStr)
       // Determinw wheel radius from the shape's bounding box.
       // The tire should be built with it's hub axis along the
       // object's Y axis.
-      radius = mShape->mBounds.len_z() / 2;
+      radius = getShape()->mBounds.len_z() / 2;
    }
 
    return true;
@@ -113,7 +112,7 @@ bool WheeledVehicleTire::preload(bool server, String &errorStr)
 void WheeledVehicleTire::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_SHAPEASSET(Shape, WheeledVehicleTire, "The shape to use for the wheel.");
+   INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, WheeledVehicleTire, "The shape to use for the wheel.");
 
    addFieldV( "mass", TypeRangedF32, Offset(mass, WheeledVehicleTire), &CommonValidators::PositiveFloat,
       "The mass of the wheel.\nCurrently unused." );
@@ -178,7 +177,7 @@ void WheeledVehicleTire::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(Shape);
+   PACKDATA_ASSET_REFACTOR(Shape);
 
    stream->write(mass);
    stream->write(staticFriction);
@@ -197,7 +196,7 @@ void WheeledVehicleTire::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(Shape);
+   UNPACKDATA_ASSET_REFACTOR(Shape);
 
    stream->read(&mass);
    stream->read(&staticFriction);
@@ -343,7 +342,7 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
 
    // A temporary shape instance is created so that we can
    // animate the shape and extract wheel information.
-   TSShapeInstance* si = new TSShapeInstance(mShape, false);
+   TSShapeInstance* si = new TSShapeInstance(getShape(), false);
 
    // Resolve objects transmitted from server
    if (!server) {
@@ -367,14 +366,14 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
 
       // The wheel must have a hub node to operate at all.
       dSprintf(buff,sizeof(buff),"hub%d",i);
-      wp->springNode = mShape->findNode(buff);
+      wp->springNode = getShape()->findNode(buff);
       if (wp->springNode != -1) {
 
          // Check for spring animation.. If there is none we just grab
          // the current position of the hub. Otherwise we'll animate
          // and get the position at time 0.
          dSprintf(buff,sizeof(buff),"spring%d",i);
-         wp->springSequence = mShape->findSequence(buff);
+         wp->springSequence = getShape()->findSequence(buff);
          if (wp->springSequence == -1)
             si->mNodeTransforms[wp->springNode].getColumn(3, &wp->pos);
          else {
@@ -403,17 +402,17 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
    // Check for steering. Should think about normalizing the
    // steering animation the way the suspension is, but I don't
    // think it's as critical.
-   steeringSequence = mShape->findSequence("steering");
+   steeringSequence = getShape()->findSequence("steering");
 
    // Brakes
-   brakeLightSequence = mShape->findSequence("brakelight");
+   brakeLightSequence = getShape()->findSequence("brakelight");
 
    // Extract collision planes from shape collision detail level
    if (collisionDetails[0] != -1) {
       MatrixF imat(1);
       SphereF sphere;
-      sphere.center = mShape->center;
-      sphere.radius = mShape->mRadius;
+      sphere.center = getShape()->center;
+      sphere.radius = getShape()->mRadius;
       PlaneExtractorPolyList polyList;
       polyList.mPlaneList = &rigidBody.mPlaneList;
       polyList.setTransform(&imat, Point3F(1,1,1));
@@ -1579,8 +1578,8 @@ void WheeledVehicle::unpackUpdate(NetConnection *con, BitStream *stream)
 
             // Create an instance of the tire for rendering
             delete wheel->shapeInstance;
-            wheel->shapeInstance = (wheel->tire->mShape == NULL) ? 0:
-               new TSShapeInstance(wheel->tire->mShape);
+            wheel->shapeInstance = (wheel->tire->getShape() == NULL) ? 0:
+               new TSShapeInstance(wheel->tire->getShape());
          }
       }
    }

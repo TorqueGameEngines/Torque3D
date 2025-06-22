@@ -121,16 +121,19 @@ void GuiBitmapCtrl::setBitmap(const char* name, bool resize)
       if (assetId != StringTable->EmptyString())
          _setBitmap(assetId);
       else
-         _setBitmap(name);
+         _setBitmap(StringTable->EmptyString());
    }
 
-   mBitmap = mBitmapAsset->getTexture(&GFXDefaultGUIProfile);
-
-   if (getBitmap() && resize)
+   if (mBitmapAsset.notNull())
    {
-     
-      setExtent(mBitmap->getWidth(), mBitmap->getHeight());
-      updateSizing();
+      mBitmap = mBitmapAsset->getTexture(&GFXDefaultGUIProfile);
+
+      if (getBitmap() && resize)
+      {
+
+         setExtent(mBitmap->getWidth(), mBitmap->getHeight());
+         updateSizing();
+      }
    }
 
    setUpdate();

@@ -59,7 +59,6 @@ RenderShapeExample::RenderShapeExample()
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
 
    // Make sure to initialize our TSShapeInstance to NULL
-   INIT_ASSET(Shape);
    mShapeInstance = NULL;
 }
 
@@ -75,7 +74,7 @@ void RenderShapeExample::initPersistFields()
    docsURL;
    Parent::initPersistFields();
    addGroup( "Shapes" );
-   INITPERSISTFIELD_SHAPEASSET(Shape, RenderShapeExample, "The path to the shape file.")
+   INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, RenderShapeExample, "The path to the shape file.")
    endGroup( "Shapes" );
 
    // SceneObject already handles exposing the transform
@@ -147,7 +146,7 @@ U32 RenderShapeExample::packUpdate( NetConnection *conn, U32 mask, BitStream *st
    // Write out any of the updated editable properties
    if ( stream->writeFlag( mask & UpdateMask ) )
    {
-      PACK_ASSET(conn, Shape);
+      PACK_ASSET_REFACTOR(conn, Shape);
 
       // Allow the server object a chance to handle a new shape
       createShape();
@@ -171,7 +170,7 @@ void RenderShapeExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if ( stream->readFlag() )  // UpdateMask
    {
-      UNPACK_ASSET(conn, Shape);
+      UNPACK_ASSET_REFACTOR(conn, Shape);
 
       if ( isProperlyAdded() )
          createShape();
@@ -183,11 +182,7 @@ void RenderShapeExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 //-----------------------------------------------------------------------------
 void RenderShapeExample::createShape()
 {
-   if ( getShape() == StringTable->EmptyString() )
-      return;
-
-   // If this is the same shape then no reason to update it
-   if ( mShapeInstance && getShape() == StringTable->insert(mShape.getPath().getFullPath().c_str()) )
+   if ( mShapeAsset.isNull() )
       return;
 
    // Clean up our previous shape
@@ -196,19 +191,19 @@ void RenderShapeExample::createShape()
 
    // Attempt to preload the Materials for this shape
    if ( isClientObject() && 
-        !mShape->preloadMaterialList( mShape.getPath() ) && 
+        !getShape()->preloadMaterialList(getShape().getPath() ) &&
         NetConnection::filesWereDownloaded() )
    {
       return;
    }
 
    // Update the bounding box
-   mObjBox = mShape->mBounds;
+   mObjBox = getShape()->mBounds;
    resetWorldBox();
    setRenderTransform(mObjToWorld);
 
    // Create the TSShapeInstance
-   mShapeInstance = new TSShapeInstance( mShape, isClientObject() );
+   mShapeInstance = new TSShapeInstance(getShape(), isClientObject() );
 }
 
 void RenderShapeExample::prepRenderImage( SceneRenderState *state )

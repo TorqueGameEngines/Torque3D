@@ -205,7 +205,7 @@ void GuiVariableInspector::addField(const char* name, const char* label, const c
       else if (newField->mFieldTypeName == StringTable->insert("image"))
          fieldTypeMask = TypeImageAssetPtr;
       else if (newField->mFieldTypeName == StringTable->insert("shape"))
-         fieldTypeMask = TypeShapeAssetId;
+         fieldTypeMask = TypeShapeAssetPtr;
       else if (newField->mFieldTypeName == StringTable->insert("bool"))
          fieldTypeMask = TypeBool;
       else if (newField->mFieldTypeName == StringTable->insert("object"))

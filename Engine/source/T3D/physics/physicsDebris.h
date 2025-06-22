@@ -42,7 +42,7 @@ class TSShape;
 //**************************************************************************
 // Debris Data
 //**************************************************************************
-class PhysicsDebrisData : public GameBaseData
+class PhysicsDebrisData : public GameBaseData, protected AssetPtrCallback
 {
    typedef GameBaseData Parent;
 
@@ -86,10 +86,10 @@ public:
    /// Is rendererd during shadow passes.
    bool castShadows;
 
-   DECLARE_SHAPEASSET(PhysicsDebrisData, Shape, onShapeChanged);
-   DECLARE_ASSET_SETGET(PhysicsDebrisData, Shape);
+   DECLARE_SHAPEASSET_REFACTOR(PhysicsDebrisData, Shape)
 
    PhysicsDebrisData();
+   virtual ~PhysicsDebrisData();
 
    bool        onAdd() override;
    bool        preload( bool server, String &errorStr ) override;
@@ -97,12 +97,13 @@ public:
    void        packData( BitStream *stream ) override;
    void        unpackData( BitStream *stream ) override;
 
-   void onShapeChanged()
+   DECLARE_CONOBJECT( PhysicsDebrisData );
+
+protected:
+   void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
    {
       reloadOnLocalClient();
    }
-
-   DECLARE_CONOBJECT( PhysicsDebrisData );
 
 };
 

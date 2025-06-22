@@ -52,7 +52,7 @@ struct DebrisData;
 
 class SFXProfile;
 //--------------------------------------------------------------------------
-class ExplosionData : public GameBaseData {
+class ExplosionData : public GameBaseData, protected AssetPtrCallback {
   public:
    typedef GameBaseData Parent;
 
@@ -79,8 +79,7 @@ class ExplosionData : public GameBaseData {
    Point3F              explosionScale;
    F32                  playSpeed;
 
-   DECLARE_SHAPEASSET(ExplosionData, ExplosionShape, onShapeChanged);
-   DECLARE_ASSET_SETGET(ExplosionData, ExplosionShape);
+   DECLARE_SHAPEASSET_REFACTOR(ExplosionData, ExplosionShape)
 
    S32               explosionAnimation;
 
@@ -143,7 +142,8 @@ public:
    ExplosionData* cloneAndPerformSubstitutions(const SimObject*, S32 index=0);
    bool   allowSubstitutions() const override { return true; }
 
-   void onShapeChanged()
+protected:
+   void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
    {
       reloadOnLocalClient();
    }

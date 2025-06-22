@@ -24,40 +24,40 @@ new GuiCursor(LeftRightCursor)
 {
    hotSpot = "0.5 0";
    renderOffset = "0.5 0";
-   bitmapName = "./Images/leftRight";
+   bitmapAsset = "ToolsModule:leftRight_image";
 };
 
 new GuiCursor(UpDownCursor)
 {
    hotSpot = "1 1";
    renderOffset = "0 1";
-   bitmapName = "./Images/upDown";
+   bitmapAsset = "ToolsModule:upDown_image";
 };
 
 new GuiCursor(NWSECursor)
 {
    hotSpot = "1 1";
    renderOffset = "0.5 0.5";
-   bitmapName = "./Images/NWSE";
+   bitmapAsset = "ToolsModule:NWSE_image";
 };
 
 new GuiCursor(NESWCursor)
 {
    hotSpot = "1 1";
    renderOffset = "0.5 0.5";
-   bitmapName = "./Images/NESW";
+   bitmapAsset = "ToolsModule:NESW_image";
 };
 
 new GuiCursor(MoveCursor)
 {
    hotSpot = "1 1";
    renderOffset = "0.5 0.5";
-   bitmapName = "./Images/move";
+   bitmapAsset = "ToolsModule:move_image";
 };
 
 new GuiCursor(TextEditCursor)
 {
    hotSpot = "1 1";
    renderOffset = "0.5 0.5";
-   bitmapName = "./Images/textEdit";
+   bitmapAsset = "ToolsModule:textEdit_image";
 };

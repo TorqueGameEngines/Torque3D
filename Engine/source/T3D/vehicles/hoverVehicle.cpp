@@ -332,7 +332,7 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
    }
    // Resolve jet nodes
    for (S32 j = 0; j < MaxJetNodes; j++)
-      jetNode[j] = mShape->findNode(sJetNode[j]);
+      jetNode[j] = getShape()->findNode(sJetNode[j]);
 
    return true;
 }

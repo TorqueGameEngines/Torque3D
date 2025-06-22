@@ -1,0 +1,20 @@
+
+singleton TSShapeConstructor(monitor_shapefbx)
+{
+   baseShapeAsset = "Prototyping:monitor_shape";
+   singleDetailSize = "0";
+   neverImportMat = "DefaultMaterial	ColorEffect*";
+   flipUVCoords = "0";
+   joinIdenticalVerts = "0";
+   reverseWindingOrder = "0";
+   removeRedundantMats = "0";
+   animFPS = "2";
+};
+
+function monitor_shapefbx::onLoad(%this)
+{
+   %this.addNode("Col-1", "", "0 0 0 0 0 1 0", "0", "");
+   %this.addNode("ColBox-1", "Col-1", "0 0 0 1 0 0 0", "0", "Bounds");
+   %this.addCollisionDetail("-1", "Box", "Bounds", "4", "10", "30", "32", "30", "30", "30", "Flood fill");
+   %this.setBounds("-0.8 -0.244957 -0.0409516 0.8 0.244957 1.10231");
+}

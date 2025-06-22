@@ -1,0 +1,14 @@
+<MaterialAsset
+    AssetName="monitor_base_mat"
+    materialDefinitionName="monitor_base_mat">
+    <Material
+        Name="monitor_base_mat"
+        mapTo="monitor_base_mat"
+        doubleSided="true"
+        originalAssetName="monitor_base_mat">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseColor="0 0 0 1"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

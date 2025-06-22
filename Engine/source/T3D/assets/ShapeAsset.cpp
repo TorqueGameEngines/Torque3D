@@ -60,12 +60,20 @@ StringTableEntry ShapeAsset::smNoShapeAssetFallback = NULL;
 
 IMPLEMENT_CONOBJECT(ShapeAsset);
 
-ConsoleType(assetIdString, TypeShapeAssetPtr, String, ASSET_ID_FIELD_PREFIX)
+
+//-----------------------------------------------------------------------------
+// REFACTOR
+//-----------------------------------------------------------------------------
+
+IMPLEMENT_STRUCT(AssetPtr<ShapeAsset>, AssetPtrShapeAsset, , "")
+END_IMPLEMENT_STRUCT
+
+ConsoleType(ShapeAssetPtr, TypeShapeAssetPtr, AssetPtr<ShapeAsset>, ASSET_ID_FIELD_PREFIX)
+
 
 ConsoleGetType(TypeShapeAssetPtr)
 {
    // Fetch asset Id.
-   //return *((StringTableEntry*)dptr);
    return (*((AssetPtr<ShapeAsset>*)dptr)).getAssetId();
 }
 
@@ -77,17 +85,24 @@ ConsoleSetType(TypeShapeAssetPtr)
       // Yes, so fetch field value.
       const char* pFieldValue = argv[0];
 
-      // Fetch asset Id.
-      StringTableEntry* assetId = (StringTableEntry*)(dptr);
+      // Fetch asset pointer.
+      AssetPtr<ShapeAsset>* pAssetPtr = dynamic_cast<AssetPtr<ShapeAsset>*>((AssetPtrBase*)(dptr));
 
-      // Update asset value.
-      *assetId = StringTable->insert(pFieldValue);
+      // Is the asset pointer the correct type?
+      if (pAssetPtr == NULL)
+      {
+         Con::warnf("(TypeShapeAssetPtr) - Failed to set asset Id '%d'.", pFieldValue);
+         return;
+      }
+
+      // Set asset.
+      pAssetPtr->setAssetId(pFieldValue);
 
       return;
    }
 
    // Warn.
-   Con::warnf("(TypeAssetId) - Cannot set multiple args to a single asset.");
+   Con::warnf("(TypeShapeAssetPtr) - Cannot set multiple args to a single asset.");
 }
 
 //-----------------------------------------------------------------------------
@@ -116,6 +131,8 @@ ConsoleSetType(TypeShapeAssetId)
 }
 
 //-----------------------------------------------------------------------------
+// REFACTOR END
+//-----------------------------------------------------------------------------
 
 const String ShapeAsset::mErrCodeStrings[] =
 {
@@ -128,15 +145,11 @@ const String ShapeAsset::mErrCodeStrings[] =
 
 ShapeAsset::ShapeAsset()
 {
-   mFileName = StringTable->EmptyString();
+   mShapeFile = StringTable->EmptyString();
    mConstructorFileName = StringTable->EmptyString();
-   mFilePath = StringTable->EmptyString();
-   mConstructorFilePath = StringTable->EmptyString();
 
    mDiffuseImposterFileName = StringTable->EmptyString();
-   mDiffuseImposterPath = StringTable->EmptyString();
    mNormalImposterFileName = StringTable->EmptyString();
-   mNormalImposterPath = StringTable->EmptyString();
 
 
    mLoadedState = AssetErrCode::NotLoaded;
@@ -169,7 +182,7 @@ void ShapeAsset::initPersistFields()
    // Call parent.
    Parent::initPersistFields();
 
-   addProtectedField("fileName", TypeAssetLooseFilePath, Offset(mFileName, ShapeAsset),
+   addProtectedField("fileName", TypeAssetLooseFilePath, Offset(mShapeFile, ShapeAsset),
       &setShapeFile, &getShapeFile, "Path to the shape file we want to render");
    addProtectedField("constuctorFileName", TypeAssetLooseFilePath, Offset(mConstructorFileName, ShapeAsset),
       &setShapeConstructorFile, &getShapeConstructorFile, "Path to the shape file we want to render");
@@ -200,29 +213,31 @@ void ShapeAsset::initializeAsset()
    // Call parent.
    Parent::initializeAsset();
 
-   if (mFileName == StringTable->EmptyString())
+   if (mShapeFile == StringTable->EmptyString())
       return;
 
    ResourceManager::get().getChangedSignal().notify(this, &ShapeAsset::_onResourceChanged);
 
    //Ensure our path is expando'd if it isn't already
-   mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
+   mShapeFile = getOwned() ? expandAssetFilePath(mShapeFile) : mShapeFile;
 
-   mConstructorFilePath = getOwned() ? expandAssetFilePath(mConstructorFileName) : mConstructorFilePath;
-   if (!Torque::FS::IsFile(mConstructorFilePath))
-      Con::errorf("ShapeAsset::initializeAsset (%s) could not find %s!", getAssetName(), mConstructorFilePath);
-   mDiffuseImposterPath = getOwned() ? expandAssetFilePath(mDiffuseImposterFileName) : mDiffuseImposterFileName;
-   if (mDiffuseImposterPath == StringTable->EmptyString())
+   mConstructorFileName = getOwned() ? expandAssetFilePath(mConstructorFileName) : mConstructorFileName;
+   if (!Torque::FS::IsFile(mConstructorFileName))
+      Con::errorf("ShapeAsset::initializeAsset (%s) could not find %s!", getAssetName(), mConstructorFileName);
+
+
+   mDiffuseImposterFileName = getOwned() ? expandAssetFilePath(mDiffuseImposterFileName) : mDiffuseImposterFileName;
+   if (mDiffuseImposterFileName == StringTable->EmptyString())
    {
-      String diffusePath = String(mFilePath) + "_imposter.dds";
-      mDiffuseImposterPath = StringTable->insert(diffusePath.c_str());
+      String diffusePath = String(mShapeFile) + "_imposter.dds";
+      mDiffuseImposterFileName = StringTable->insert(diffusePath.c_str());
    }
 
-   mNormalImposterPath = getOwned() ? expandAssetFilePath(mNormalImposterFileName) : mNormalImposterFileName;
-   if (mNormalImposterPath == StringTable->EmptyString())
+   mNormalImposterFileName = getOwned() ? expandAssetFilePath(mNormalImposterFileName) : mNormalImposterFileName;
+   if (mNormalImposterFileName == StringTable->EmptyString())
    {
-      String normalPath = String(mFilePath) + "_imposter_normals.dds";
-      mNormalImposterPath = StringTable->insert(normalPath.c_str());
+      String normalPath = String(mShapeFile) + "_imposter_normals.dds";
+      mNormalImposterFileName = StringTable->insert(normalPath.c_str());
    }
 }
 
@@ -235,10 +250,10 @@ void ShapeAsset::setShapeFile(const char* pShapeFile)
    pShapeFile = StringTable->insert(pShapeFile, true);
 
    // Ignore no change,
-   if (pShapeFile == mFileName)
+   if (pShapeFile == mShapeFile)
       return;
 
-   mFileName = getOwned() ? expandAssetFilePath(pShapeFile) : pShapeFile;
+   mShapeFile = getOwned() ? expandAssetFilePath(pShapeFile) : pShapeFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -300,7 +315,7 @@ void ShapeAsset::setNormalImposterFile(const char* pImageFile)
 
 void ShapeAsset::_onResourceChanged(const Torque::Path &path)
 {
-   if (path != Torque::Path(mFilePath) )
+   if (path != Torque::Path(mShapeFile) )
       return;
 
    refreshAsset();
@@ -349,17 +364,17 @@ U32 ShapeAsset::load()
       }
    }
 
-   mShape = ResourceManager::get().load(mFilePath);
+   mShape = ResourceManager::get().load(mShapeFile);
 
    if (!mShape)
    {
-      Con::errorf("ShapeAsset::loadShape : failed to load shape file %s (%s)!", getAssetName(), mFilePath);
+      Con::errorf("ShapeAsset::loadShape : failed to load shape file %s (%s)!", getAssetName(), mShapeFile);
       mLoadedState = BadFileReference;
       return mLoadedState; //if it failed to load, bail out
    }
    // Construct billboards if not done already
    if (GFXDevice::devicePresent())
-      mShape->setupBillboardDetails(mFilePath, mDiffuseImposterPath, mNormalImposterPath);
+      mShape->setupBillboardDetails(mShapeFile, mDiffuseImposterFileName, mNormalImposterFileName);
 
    //If they exist, grab our imposters here and bind them to our shapeAsset
 
@@ -419,8 +434,6 @@ U32 ShapeAsset::load()
 
    mLoadedState = Ok;
 
-   mChangeSignal.trigger();
-
    return mLoadedState;
 }
 
@@ -478,7 +491,38 @@ StringTableEntry ShapeAsset::getAssetIdByFilename(StringTableEntry fileName)
    }
    else
    {
-      AssetPtr<ShapeAsset> shapeAsset = shapeAssetId; //ensures the fallback is loaded
+      foundAssetcount = AssetDatabase.findAssetType(&query, "ShapeAsset");
+      if (foundAssetcount != 0)
+      {
+         // loop all image assets and see if we can find one
+         // using the same image file/named target.
+         for (auto shapeAsset : query.mAssetList)
+         {
+            AssetPtr<ShapeAsset> temp = shapeAsset;
+            if (temp.notNull())
+            {
+               if (temp->getShapeFile() == fileName)
+               {
+                  return shapeAsset;
+               }
+               else
+               {
+                  Torque::Path temp1 = temp->getShapeFile();
+                  Torque::Path temp2 = fileName;
+
+                  if (temp1.getPath() == temp2.getPath() && temp1.getFileName() == temp2.getFileName())
+                  {
+                     return shapeAsset;
+                  }
+               }
+
+            }
+         }
+      }
+      else
+      {
+         AssetPtr<ShapeAsset> shapeAsset = shapeAssetId; //ensures the fallback is loaded
+      }
    }
 
    return shapeAssetId;
@@ -527,14 +571,41 @@ void ShapeAsset::copyTo(SimObject* object)
 
 void ShapeAsset::onAssetRefresh(void)
 {
-   if (mFileName == StringTable->EmptyString())
+   // Ignore if not yet added to the sim.
+   if (!isProperlyAdded())
       return;
 
-   // Update.
-   if(!Platform::isFullPath(mFileName))
-      mFilePath = getOwned() ? expandAssetFilePath(mFileName) : mFilePath;
+   if (mShapeFile == StringTable->EmptyString())
+      return;
+
+   // Call parent.
+   Parent::onAssetRefresh();
 
    load();
+}
+
+void ShapeAsset::onTamlPreWrite(void)
+{
+   // Call parent.
+   Parent::onTamlPreWrite();
+
+   // ensure paths are collapsed.
+   mShapeFile                 = collapseAssetFilePath(mShapeFile);
+   mConstructorFileName       = collapseAssetFilePath(mConstructorFileName);
+   mDiffuseImposterFileName   = collapseAssetFilePath(mDiffuseImposterFileName);
+   mNormalImposterFileName    = collapseAssetFilePath(mNormalImposterFileName);
+}
+
+void ShapeAsset::onTamlPostWrite(void)
+{
+   // Call parent.
+   Parent::onTamlPostWrite();
+
+   // ensure paths are expanded.
+   mShapeFile                 = expandAssetFilePath(mShapeFile);
+   mConstructorFileName       = expandAssetFilePath(mConstructorFileName);
+   mDiffuseImposterFileName   = expandAssetFilePath(mDiffuseImposterFileName);
+   mNormalImposterFileName    = expandAssetFilePath(mNormalImposterFileName);
 }
 
 void ShapeAsset::SplitSequencePathAndName(String& srcPath, String& srcName)
@@ -626,7 +697,7 @@ const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overri
    delete imposterCap;
    delete shape;
 
-   String dumpPath = String(mFilePath) + ".png";
+   String dumpPath = String(mShapeFile) + ".png";
 
    char* returnBuffer = Con::getReturnBuffer(128);
    dSprintf(returnBuffer, 128, "%s", dumpPath.c_str());
@@ -670,14 +741,14 @@ DefineEngineMethod(ShapeAsset, getShapePath, const char*, (), ,
    "Gets the shape's file path\n"
    "@return The filename of the shape file")
 {
-   return object->getShapeFilePath();
+   return object->getShapeFile();
 }
 
 DefineEngineMethod(ShapeAsset, getShapeConstructorFilePath, const char*, (), ,
    "Gets the shape's constructor file.\n"
    "@return The filename of the shape constructor file")
 {
-   return object->getShapeConstructorFilePath();
+   return object->getShapeConstructorFile();
 }
 
 DefineEngineMethod(ShapeAsset, getStatusString, String, (), , "get status string")\
@@ -913,5 +984,4 @@ void GuiInspectorTypeShapeAssetId::consoleInit()
 
    ConsoleBaseType::getType(TypeShapeAssetId)->setInspectorFieldType("GuiInspectorTypeShapeAssetId");
 }
-
 #endif

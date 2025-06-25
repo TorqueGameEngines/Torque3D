@@ -761,146 +761,68 @@ bool ScatterSky::_initShader()
    return true;
 }
 
-void ScatterSky::clearVectors()
-{
-   tmpVertices.clear();
-   vertsVec.clear();
-}
-
-void ScatterSky::addVertex(Point3F vert)
-{
-   vertsVec.push_back(vert.x);
-   vertsVec.push_back(vert.y);
-   vertsVec.push_back(vert.z);
-}
-
-void ScatterSky::BuildFinalVert()
-{
-   U32 count = vertsVec.size();
-   U32 i, j;
-   for (i = 0, j = 0; i < count; i += 3, j += 2)
-   {
-      FinalVertexData temp;
-      temp.pos.set(Point3F(vertsVec[i], vertsVec[i + 1], vertsVec[i + 2]));
-
-      finalVertData.push_back(temp);
-   }
-}
-
 void ScatterSky::_initVBIB()
 {
-   U32 rings = 18;
-   U32 height = 9;
-   U32 radius = 10;
+   const U32 rings = 16; // 32 for high end
+   const U32 segments = 32; // 64 for high end
+   const F32 radius = smAtmosphereRadius;
 
-   F32 x, y, z, xy;                     // vertex position
+   const U32 vertexCount = (rings + 1) * (segments + 1);
+   const U32 triangleCount = rings * segments * 2;
+   const U32 indexCount = triangleCount * 3;
 
-   F32 ringStep = M_2PI / rings;
-   F32 heightStep = M_HALFPI / height; // M_PI for full sphere.
-   F32 ringAng, heightAng;
+   mVertCount = vertexCount;
+   mPrimCount = triangleCount;
 
-   //clear vecs
-   clearVectors();
+   // Allocate vertex buffer
+   mVB.set(GFX, mVertCount, GFXBufferTypeStatic);
+   GFXVertexP* pVert = mVB.lock();
+   if (!pVert)
+      return;
 
-   for (U32 i = 0; i <= height; ++i)
+   // Generate hemisphere vertices
+   for (U32 r = 0; r <= rings; ++r)
    {
-      heightAng = M_PI / 2 - (F32)i * heightStep;
-      xy = radius * mCos(heightAng);
-      z = radius * mSin(heightAng);
+      F32 theta = (r / (F32)rings) * (M_PI_F / 2.0f); // from zenith (0) to horizon (PI/2)
+      F32 z = radius * cos(theta);
+      F32 ringRadius = radius * sin(theta);
 
-      for (U32 j = 0; j <= rings; ++j)
+      for (U32 s = 0; s <= segments; ++s)
       {
-         SphereVertex vert;
-         ringAng = j * ringStep;
-         x = xy * mCos(ringAng);
-         y = xy * mSin(ringAng);
-         vert.pos.set(Point3F(x, y, z));
+         F32 phi = (s / (F32)segments) * M_2PI_F;
+         F32 x = ringRadius * cos(phi);
+         F32 y = ringRadius * sin(phi);
 
-         tmpVertices.push_back(vert);
-      }
-   }
-
-   SphereVertex v1, v2, v3, v4;
-   U32 vi1, vi2 = 0;
-
-   for (U32 i = 0; i < height; ++i)
-   {
-      vi1 = i * (rings + 1);
-      vi2 = (i + 1) * (rings + 1);
-
-      for (U32 j = 0; j < rings; ++j, ++vi1, ++vi2)
-      {
-         v1 = tmpVertices[vi1];
-         v2 = tmpVertices[vi2];
-         v3 = tmpVertices[vi1 + 1];
-         v4 = tmpVertices[vi2 + 1];
-
-         // 1st = triangle.
-         if (i == 0)
-         {
-            // verts for tri.
-            addVertex(v1.pos);
-            addVertex(v2.pos);
-            addVertex(v4.pos);
-         }
-         /* UNCOMMENT WHEN FULL SPHERE
-         else if (i == (height - 1))
-         {
-            // verts for tri.
-            addVertex(v1.pos);
-            addVertex(v2.pos);
-            addVertex(v3.pos);
-         }*/
-         else
-         {
-            // verts for quad.
-            addVertex(v1.pos);
-            addVertex(v2.pos);
-            addVertex(v3.pos);
-
-            addVertex(v3.pos);
-            addVertex(v4.pos);
-            addVertex(v2.pos);
-         }
-      }
-   }
-
-   BuildFinalVert();
-
-   // Vertex Buffer...
-   mVertCount = finalVertData.size();
-   mPrimCount = mVertCount / 3;
-
-   mVB.set( GFX, mVertCount, GFXBufferTypeStatic );
-   GFXVertexP *pVert = mVB.lock();
-   if(!pVert) return;
-
-   for ( U32 i = 0; i < mVertCount; i++ )
-   {
-         pVert->point.set(finalVertData[i].pos);
-
-         pVert->point.normalize();
-         pVert->point *= 200000.0f;
+         pVert->point.set(x, y, z);
          pVert++;
+      }
    }
 
    mVB.unlock();
 
-   // Primitive Buffer...
-   mPrimBuffer.set( GFX, mVertCount, mPrimCount, GFXBufferTypeStatic );
-
-   U16 *pIdx = NULL;
+   // Build index buffer
+   mPrimBuffer.set(GFX, indexCount, triangleCount, GFXBufferTypeStatic);
+   U16* pIdx = NULL;
    mPrimBuffer.lock(&pIdx);
-   U32 curIdx = 0;
+   U32 idx = 0;
 
-   for ( U32 i = 0, k = 0; i < mPrimCount; i++, k+=3 )
+   for (U32 r = 0; r < rings; ++r)
    {
-         pIdx[curIdx] = k;
-         curIdx++;
-         pIdx[curIdx] = k + 1;
-         curIdx++;
-         pIdx[curIdx] = k + 2;
-         curIdx++;
+      for (U32 s = 0; s < segments; ++s)
+      {
+         U32 i0 = r * (segments + 1) + s;
+         U32 i1 = i0 + segments + 1;
+
+         // Triangle 1 (counter-clockwise)
+         pIdx[idx++] = i0;
+         pIdx[idx++] = i1;
+         pIdx[idx++] = i0 + 1;
+
+         // Triangle 2
+         pIdx[idx++] = i1;
+         pIdx[idx++] = i1 + 1;
+         pIdx[idx++] = i0 + 1;
+      }
    }
 
    mPrimBuffer.unlock();

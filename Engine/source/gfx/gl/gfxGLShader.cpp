@@ -485,6 +485,7 @@ GFXGLShader::GFXGLShader(GFXGLDevice* device) :
    mVertexShader(0),
    mPixelShader(0),
    mGeometryShader(0),
+   mComputeShader(0),
    mProgram(0),
    mDevice(device),
    mGlobalConstBuffer(NULL)
@@ -512,11 +513,13 @@ void GFXGLShader::clearShaders()
    glDeleteShader(mVertexShader);
    glDeleteShader(mPixelShader);
    glDeleteShader(mGeometryShader);
+   glDeleteShader(mComputeShader);
 
    mProgram = 0;
    mVertexShader = 0;
    mPixelShader = 0;
    mGeometryShader = 0;
+   mComputeShader = 0;
 }
 
 bool GFXGLShader::_init()
@@ -1387,6 +1390,8 @@ bool GFXGLShader::initShader(const Torque::Path& file,
    case HULL_SHADER:
       break;
    case COMPUTE_SHADER:
+      activeShader = glCreateShader(GL_COMPUTE_SHADER);
+      mComputeShader = activeShader;
       break;
    default:
       break;

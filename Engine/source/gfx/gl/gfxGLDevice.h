@@ -114,6 +114,7 @@ public:
    void  setPixelShaderVersion( F32 version ) override { mPixelShaderVersion = version; }
 
    void setShader(GFXShader *shader, bool force = false) override;
+   void dispatchCompute(U32 x, U32 y, U32 z) override;
 
    /// @attention GL cannot check if the given format supports blending or filtering!
    GFXFormat selectSupportedFormat(GFXTextureProfile *profile,

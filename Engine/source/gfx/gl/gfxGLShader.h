@@ -219,6 +219,7 @@ protected:
    GLuint mVertexShader;
    GLuint mPixelShader;
    GLuint mGeometryShader;
+   GLuint mComputeShader;
    GLuint mProgram;
    /// @}
 

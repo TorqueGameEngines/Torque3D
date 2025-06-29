@@ -763,7 +763,20 @@ void GFXGLDevice::setTextureInternal(U32 textureUnit, const GFXTextureObject*tex
    else if(mActiveTextureType[textureUnit] != GL_ZERO)
    {
       glActiveTexture(GL_TEXTURE0 + textureUnit);
-      glBindTexture(mActiveTextureType[textureUnit], 0);
+
+      if (tex->mProfile->isStructured())
+      {
+         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, mActiveTextureType[textureUnit]);
+      }
+      else if(tex->mProfile->isUnorderedAccessView())
+      {
+         glBindImageTexture(0, mActiveTextureType[textureUnit], 0, GL_FALSE, 0, GL_WRITE_ONLY, GFXGLTextureFormat[tex->mFormat]);
+      }
+      else
+      {
+         glBindTexture(mActiveTextureType[textureUnit], 0);
+      }
+
       getOpenglCache()->setCacheBindedTex(textureUnit, mActiveTextureType[textureUnit], 0);
       mActiveTextureType[textureUnit] = GL_ZERO;
    }
@@ -982,6 +995,19 @@ void GFXGLDevice::setShader(GFXShader *shader, bool force)
    {
       setupGenericShaders();
    }
+}
+
+void GFXGLDevice::dispatchCompute(U32 x, U32 y, U32 z)
+{
+   if (mStateDirty)
+      updateStates();
+
+   if (mCurrentShaderConstBuffer)
+      setShaderConstBufferInternal(mCurrentShaderConstBuffer);
+   
+   glDispatchCompute(x, y, z);
+   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
 }
 
 void GFXGLDevice::setShaderConstBufferInternal(GFXShaderConstBuffer* buffer)

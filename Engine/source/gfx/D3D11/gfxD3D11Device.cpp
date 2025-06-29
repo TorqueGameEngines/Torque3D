@@ -1287,6 +1287,9 @@ void GFXD3D11Device::dispatchCompute(U32 x, U32 y, U32 z)
    if (mStateDirty)
       updateStates();
 
+   if (mCurrentShaderConstBuffer)
+      setShaderConstBufferInternal(mCurrentShaderConstBuffer);
+
    mD3DDeviceContext->Dispatch(x, y, z);
 
    // Auto-cleanup UAVs and SRVs to prevent binding conflicts

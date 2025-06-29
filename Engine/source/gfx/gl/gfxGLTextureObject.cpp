@@ -227,7 +227,10 @@ void GFXGLTextureObject::initSamplerState(const GFXSamplerStateDesc &ssd)
 void GFXGLTextureObject::bind(U32 textureUnit)
 {
    glActiveTexture(GL_TEXTURE0 + textureUnit);
-   glBindTexture(mBinding, mHandle);
+   if(mProfile->isUnorderedAccessView())
+      glBindImageTexture(0, textureUnit, 0, GL_FALSE, 0, GL_WRITE_ONLY, GFXGLTextureFormat[mFormat]);
+   else
+      glBindTexture(mBinding, mHandle);
    GFXGL->getOpenglCache()->setCacheBindedTex(textureUnit, mBinding, mHandle);
 }
 

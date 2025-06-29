@@ -763,16 +763,7 @@ void GFXGLDevice::setTextureInternal(U32 textureUnit, const GFXTextureObject*tex
    else if(mActiveTextureType[textureUnit] != GL_ZERO)
    {
       glActiveTexture(GL_TEXTURE0 + textureUnit);
-
-      if(tex->mProfile->isUnorderedAccessView())
-      {
-         glBindImageTexture(0, mActiveTextureType[textureUnit], 0, GL_FALSE, 0, GL_WRITE_ONLY, GFXGLTextureFormat[tex->mFormat]);
-      }
-      else
-      {
-         glBindTexture(mActiveTextureType[textureUnit], 0);
-      }
-
+      glBindTexture(mActiveTextureType[textureUnit], 0);
       getOpenglCache()->setCacheBindedTex(textureUnit, mActiveTextureType[textureUnit], 0);
       mActiveTextureType[textureUnit] = GL_ZERO;
    }

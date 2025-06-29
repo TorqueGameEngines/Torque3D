@@ -257,6 +257,9 @@ protected:
    // the geometry shader file.
    Torque::Path mGeometryFile;
 
+   // the compute shader file.
+   Torque::Path mComputeFile;
+
    /// The macros to be passed to the shader.
    Vector<GFXShaderMacro> mMacros;
 

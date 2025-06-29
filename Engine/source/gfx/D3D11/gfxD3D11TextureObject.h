@@ -42,9 +42,10 @@ protected:
    // used for z buffers...
    ID3D11Texture2D *mD3DSurface;
 
-   ID3D11ShaderResourceView* mSRView; // for shader resource input
-   ID3D11RenderTargetView* mRTView; // for render targets
-   ID3D11DepthStencilView* mDSView; //render target view for depth stencil
+   ID3D11UnorderedAccessView* mUAView; // Unordered access view.
+   ID3D11ShaderResourceView*  mSRView; // for shader resource input
+   ID3D11RenderTargetView*    mRTView; // for render targets
+   ID3D11DepthStencilView*    mDSView; // render target view for depth stencil
 
 public:
 
@@ -55,27 +56,31 @@ public:
    ID3D11Texture2D*     get2DTex(){ return (ID3D11Texture2D*) mD3DTexture; }
    ID3D11Texture2D**    get2DTexPtr(){ return (ID3D11Texture2D**) &mD3DTexture; }
    ID3D11Texture3D*		get3DTex(){ return (ID3D11Texture3D*) mD3DTexture; }
-   ID3D11Texture3D**	get3DTexPtr(){ return (ID3D11Texture3D**) &mD3DTexture; }
-   
-   ID3D11ShaderResourceView* getSRView();
-   ID3D11RenderTargetView* getRTView();
-   ID3D11DepthStencilView* getDSView();
+   ID3D11Texture3D**	   get3DTexPtr(){ return (ID3D11Texture3D**) &mD3DTexture; }
+   ID3D11Buffer*        getBuffer() { return (ID3D11Buffer*)mD3DTexture; }
+   ID3D11Buffer**       getBufferPtr() { return (ID3D11Buffer**)&mD3DTexture; }
 
-   ID3D11ShaderResourceView** getSRViewPtr();
-   ID3D11RenderTargetView** getRTViewPtr();
-   ID3D11DepthStencilView** getDSViewPtr();
+   ID3D11UnorderedAccessView*    getUAView();
+   ID3D11ShaderResourceView*     getSRView();
+   ID3D11RenderTargetView*       getRTView();
+   ID3D11DepthStencilView*       getDSView();
+
+   ID3D11UnorderedAccessView**   getUAViewPtr();
+   ID3D11ShaderResourceView**    getSRViewPtr();
+   ID3D11RenderTargetView**      getRTViewPtr();
+   ID3D11DepthStencilView**      getDSViewPtr();
   
 
    void release();
 
    bool isManaged; //setting to true tells this texture not to be released from being zombify
 
-   GFXLockedRect * lock(U32 mipLevel = 0, RectI *inRect = NULL) override;
-   void unlock(U32 mipLevel = 0 ) override;
+   GFXLockedRect *   lock(U32 mipLevel = 0, RectI *inRect = NULL) override;
+   void              unlock(U32 mipLevel = 0 ) override;
 
-   bool			copyToBmp(GBitmap* bmp) override;
+   bool			         copyToBmp(GBitmap* bmp) override;
    ID3D11Texture2D*		getSurface() {return mD3DSurface;}
-   ID3D11Texture2D**	getSurfacePtr() {return &mD3DSurface;}
+   ID3D11Texture2D**	   getSurfacePtr() {return &mD3DSurface;}
 
    // GFXResource
    void zombify() override;

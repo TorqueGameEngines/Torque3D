@@ -106,6 +106,7 @@ GFXD3D11Device::GFXD3D11Device(U32 index)
    mLastVertShader = NULL;
    mLastPixShader = NULL;
    mLastGeoShader = NULL;
+   mLastComputeShader = NULL;
 
    mCanCurrentlyRender = false;
    mTextureManager = NULL;
@@ -528,6 +529,7 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
       mVertexShaderTarget     = "vs_5_0";
       mPixelShaderTarget      = "ps_5_0";
       mGeometryShaderTarget   = "gs_5_0";
+      mComputeShaderTarget =  "cs_5_0";
       mPixVersion = 5.0f;
       mShaderModel = "50";
       break;
@@ -535,6 +537,7 @@ void GFXD3D11Device::init(const GFXVideoMode &mode, PlatformWindow *window)
       mVertexShaderTarget     = "vs_4_1";
       mPixelShaderTarget      = "ps_4_1";
       mGeometryShaderTarget   = "gs_4_1";
+      mComputeShaderTarget    = "cs_4_1";
       mPixVersion = 4.1f;
       mShaderModel = "41";
       break;
@@ -1243,6 +1246,18 @@ void GFXD3D11Device::setShader(GFXShader *shader, bool force)
    {
       GFXD3D11Shader *d3dShader = static_cast<GFXD3D11Shader*>(shader);
 
+      if (d3dShader->mComputeShader)
+      {
+         // we should probably return after a cs shader is set.
+         mD3DDeviceContext->CSSetShader(d3dShader->mComputeShader, NULL, 0);
+         mLastComputeShader = d3dShader->mComputeShader;
+
+         // unbind all other stages.
+         mD3DDeviceContext->VSSetShader(nullptr, nullptr, 0);
+         mD3DDeviceContext->PSSetShader(nullptr, nullptr, 0);
+         mD3DDeviceContext->GSSetShader(nullptr, nullptr, 0);
+      }
+
       if (d3dShader->mPixShader != mLastPixShader || force)
       {
         mD3DDeviceContext->PSSetShader( d3dShader->mPixShader, NULL, 0);
@@ -1265,6 +1280,24 @@ void GFXD3D11Device::setShader(GFXShader *shader, bool force)
    {
       setupGenericShaders();
    }
+}
+
+void GFXD3D11Device::dispatchCompute(U32 x, U32 y, U32 z)
+{
+   mD3DDeviceContext->Dispatch(x, y, z);
+
+   // Auto-cleanup UAVs and SRVs to prevent binding conflicts
+   ID3D11UnorderedAccessView* nullUAV[1] = { nullptr };
+   ID3D11ShaderResourceView* nullSRV[1] = { nullptr };
+
+   for (U32 i = 0; i < getNumSamplers(); i++)
+   {
+      mD3DDeviceContext->CSSetUnorderedAccessViews(i, 1, nullUAV, nullptr);
+      mD3DDeviceContext->CSSetShaderResources(i, 1, nullSRV);
+   }
+
+   mD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
+   mLastComputeShader = nullptr;
 }
 
 GFXPrimitiveBuffer * GFXD3D11Device::allocPrimitiveBuffer(U32 numIndices, U32 numPrimitives, GFXBufferType bufferType, void *data )
@@ -1677,15 +1710,34 @@ void GFXD3D11Device::setVertexDecl( const GFXVertexDecl *decl )
 //-----------------------------------------------------------------------------
 void GFXD3D11Device::setTextureInternal( U32 textureUnit, const GFXTextureObject *texture)
 {
-   if( texture == NULL )
-   {
-      ID3D11ShaderResourceView *pView = NULL;
-      mD3DDeviceContext->PSSetShaderResources(textureUnit, 1, &pView);
-      return;
-   }
+   ID3D11ShaderResourceView* srv = nullptr;
+   ID3D11UnorderedAccessView* uav = nullptr;
 
-   GFXD3D11TextureObject  *tex = (GFXD3D11TextureObject*)(texture);
-   mD3DDeviceContext->PSSetShaderResources(textureUnit, 1, tex->getSRViewPtr());
+   if (texture)
+   {
+      GFXD3D11TextureObject* tex = (GFXD3D11TextureObject*)(texture);
+
+      // If compute shader is active, bind UAV too
+      if (mLastComputeShader)
+      {
+         mD3DDeviceContext->CSSetShaderResources(textureUnit, 1, tex->getSRViewPtr());
+         mD3DDeviceContext->CSSetUnorderedAccessViews(textureUnit, 1, tex->getUAViewPtr(), nullptr);
+      }
+      else
+      {
+         // Not compute just bind for graphics shaders.
+         mD3DDeviceContext->PSSetShaderResources(textureUnit, 1, tex->getSRViewPtr());
+         mD3DDeviceContext->VSSetShaderResources(textureUnit, 1, tex->getSRViewPtr());
+      }
+   }
+   else
+   {
+      // Unbind slot
+      mD3DDeviceContext->PSSetShaderResources(textureUnit, 1, &srv);
+      mD3DDeviceContext->VSSetShaderResources(textureUnit, 1, &srv);
+      mD3DDeviceContext->CSSetShaderResources(textureUnit, 1, &srv);
+      mD3DDeviceContext->CSSetUnorderedAccessViews(textureUnit, 1, &uav, nullptr);
+   }
 }
 
 GFXFence *GFXD3D11Device::createFence()

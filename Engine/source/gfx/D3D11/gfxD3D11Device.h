@@ -124,6 +124,7 @@ protected:
    ID3D11VertexShader *mLastVertShader;
    ID3D11PixelShader *mLastPixShader;
    ID3D11GeometryShader *mLastGeoShader;
+   ID3D11ComputeShader *mLastComputeShader;
 
    S32 mCreateFenceType;
 
@@ -144,6 +145,7 @@ protected:
    String mVertexShaderTarget;
    String mPixelShaderTarget;
    String mGeometryShaderTarget;
+   String mComputeShaderTarget;
    // String for use with shader macros in the form of shader model version * 10
    String mShaderModel;
    bool mDebugLayers;
@@ -236,6 +238,7 @@ public:
    void setPixelShaderVersion( F32 version ) override{ mPixVersion = version;}
 
    void setShader(GFXShader *shader, bool force = false) override;
+   void dispatchCompute(U32 x, U32 y, U32 z) override;
    U32  getNumSamplers() const override { return 16; }
    U32  getNumRenderTargets() const override { return 8; }
    // }
@@ -322,6 +325,7 @@ public:
    const String &getVertexShaderTarget() const { return mVertexShaderTarget; }
    const String &getPixelShaderTarget() const { return mPixelShaderTarget; }
    const String &getGeometryShaderTarget() const { return mGeometryShaderTarget; }
+   const String &getComputeShaderTarget() const { return mComputeShaderTarget; }
    const String &getShaderModel() const { return mShaderModel; }
 
    // grab the sampler map

@@ -73,39 +73,29 @@ public:
       DiffuseMap,
       NormalMap,
       AlphaMap,
-      LuminanceMap
+      LuminanceMap,
+      BufferObject
    };
 
    enum Flags
    {
-      PreserveSize   = BIT(0),  ///< Never shrink this bitmap in low VRAM situations.
-      NoMipmap       = BIT(1),  ///< Do not generate mipmap chain for this texture.
-      SystemMemory   = BIT(2),  ///< System memory texture - isn't uploaded to card - useful as target for copying surface data out of video ram
-      RenderTarget   = BIT(3),  ///< This texture will be used as a render target.
-      Dynamic        = BIT(4),  ///< This texture may be refreshed. (Precludes Static)
-      Static         = BIT(5),  ///< This texture will never be modified once loaded. (Precludes Dynamic)
-      NoPadding      = BIT(6),  ///< Do not pad this texture if it's non pow2.
-      KeepBitmap     = BIT(7),  ///< Always keep a copy of this texture's bitmap. (Potentially in addition to the API managed copy?)
-      ZTarget        = BIT(8),  ///< This texture will be used as a Z target.
-      SRGB           = BIT(9),  ///< sRGB texture
+      PreserveSize   = BIT(0),   ///< Never shrink this bitmap in low VRAM situations.
+      NoMipmap       = BIT(1),   ///< Do not generate mipmap chain for this texture.
+      SystemMemory   = BIT(2),   ///< System memory texture - isn't uploaded to card.
+      RenderTarget   = BIT(3),   ///< This texture will be used as a render target.
+      Dynamic        = BIT(4),   ///< This texture may be refreshed. (Precludes Static)
+      Static         = BIT(5),   ///< This texture will never be modified once loaded. (Precludes Dynamic)
+      NoPadding      = BIT(6),   ///< Do not pad this texture if it's non pow2.
+      KeepBitmap     = BIT(7),   ///< Always keep a copy of this texture's bitmap.
+      ZTarget        = BIT(8),   ///< This texture will be used as a Z target.
+      SRGB           = BIT(9),   ///< sRGB texture
+      Pooled         = BIT(10),  ///< Pooling flag for reuse
+      NoDiscard      = BIT(11),  ///< Do not discard contents of target texture
+      Structured     = BIT(12),  ///< Buffer specific flag for a structured buffer.
+      Raw            = BIT(13),  ///< Buffer specific flag for a raw buffer.
+      AllowUav       = BIT(14),  ///< Buffer specific flag for a raw buffer.
 
-      /// Track and pool textures of this type for reuse.
-      ///
-      /// You should use this profile flag sparingly.  Odd
-      /// sized textures and spikes in allocation can cause
-      /// the pool to contain unused textures which will remain
-      /// in memory until a flush occurs.
-      ///
-      Pooled = BIT(10), 
-
-      /// A hint that the device is not allowed to discard the content
-      /// of a target texture after presentation or deactivated.
-      ///
-      /// This is mainly a depth buffer optimization.
-      NoDiscard = BIT(11),
-
-      
-      NoModify = BIT(11)
+      NoModify = BIT(15)
 
    };
 
@@ -173,6 +163,9 @@ public:
    inline bool isPooled() const { return testFlag(Pooled); }
    inline bool canDiscard() const { return !testFlag(NoDiscard); }
    inline bool isSRGB() const { return testFlag(SRGB); }
+   inline bool isStructured() const { return testFlag(Structured); }
+   inline bool isRaw() const { return testFlag(Raw); }
+   inline bool isUnorderedAccessView() const { return testFlag(AllowUav); }
    //compare profile flags for equality
    inline bool compareFlags(const GFXTextureProfile& in_Cmp) const{ return (mProfile == in_Cmp.mProfile); }
 private:

@@ -199,6 +199,7 @@ protected:
    ID3D11VertexShader *mVertShader;
    ID3D11PixelShader *mPixShader;
    ID3D11GeometryShader *mGeoShader;
+   ID3D11ComputeShader *mComputeShader;
 
    static gfxD3DIncludeRef smD3DInclude;
 
@@ -207,7 +208,7 @@ protected:
 
    /// Vector of descriptions (consolidated for the getShaderConstDesc call)
    Vector<GFXShaderConstDesc> mShaderConsts;
-   Vector<GFXShaderConstDesc> mSamplerDescriptions;
+   Vector<GFXShaderConstDesc> mShaderResources;
 
    // These two functions are used when compiling shaders from hlsl
    virtual bool _compileShader( const Torque::Path &filePath,

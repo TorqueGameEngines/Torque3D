@@ -57,6 +57,12 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
    U32 usage = 0;
    U32 bindFlags = 0;
    U32 miscFlags = 0;
+
+   if (profile->getType() == GFXTextureProfile::BufferObject)
+   {
+      createBufferObjectTexture(retTex, width, height, format, profile);
+      return;
+   }
    
    if(!retTex->mProfile->isZTarget() && !retTex->mProfile->isSystemMemory())
       bindFlags =  D3D11_BIND_SHADER_RESOURCE;
@@ -102,6 +108,11 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
    {
       bindFlags |= D3D11_BIND_DEPTH_STENCIL;
       retTex->isManaged = false;
+   }
+
+   if (retTex->mProfile->isUnorderedAccessView())
+   {
+      bindFlags |= D3D11_BIND_UNORDERED_ACCESS;
    }
 
    if( !forceMips && !retTex->mProfile->isSystemMemory() &&
@@ -254,6 +265,106 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
 		GFXREVERSE_LOOKUP( GFXD3D11TextureFormat, GFXFormat, fmt );
 		retTex->mFormat = (GFXFormat)fmt;
 	}
+}
+
+void GFXD3D11TextureManager::createBufferObjectTexture(  GFXD3D11TextureObject* retTex,
+                                                         U32 elementSize,
+                                                         U32 elementCount,
+                                                         GFXFormat format,
+                                                         GFXTextureProfile* profile)
+{
+   // Total buffer size in bytes
+   UINT bufferSize = elementSize * elementCount;
+
+   // Usage and CPU access flags based on profile
+   D3D11_USAGE usage = D3D11_USAGE_DEFAULT;
+   UINT cpuAccessFlags = 0;
+   UINT bindFlags = 0;
+   UINT miscFlags = 0;
+
+   // UAV allowed if profile is render target or BufferObject
+   bool allowUAV = (profile->isRenderTarget() || profile->isUnorderedAccessView());
+
+   // Determine usage and CPU access flags from profile flags
+   if (profile->isDynamic())
+   {
+      usage = D3D11_USAGE_DYNAMIC;
+      cpuAccessFlags |= D3D11_CPU_ACCESS_WRITE;
+   }
+   else if (profile->isSystemMemory())
+   {
+      usage = D3D11_USAGE_STAGING;
+      cpuAccessFlags |= D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+   }
+
+   // Bind flags: always shader resource, UAV if allowed
+   bindFlags |= D3D11_BIND_SHADER_RESOURCE;
+   if (allowUAV)
+      bindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+
+   // Get existing resource pointer
+   ID3D11Resource* resource = retTex->getResource();
+
+   // Check for structured or raw buffer flags
+   bool isStructured = profile->isStructured();
+   bool isRaw = profile->isRaw();
+
+   // Describe buffer
+   D3D11_BUFFER_DESC bufferDesc = {};
+   bufferDesc.ByteWidth = bufferSize;
+   bufferDesc.Usage = usage;
+   bufferDesc.BindFlags = bindFlags;
+   bufferDesc.CPUAccessFlags = cpuAccessFlags;
+   bufferDesc.MiscFlags = 0;
+
+   if (isStructured)
+      bufferDesc.MiscFlags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+   else if (isRaw)
+      bufferDesc.MiscFlags |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+
+   bufferDesc.StructureByteStride = isStructured ? elementSize : 0;
+
+   // Create buffer resource
+   HRESULT hr = D3D11DEVICE->CreateBuffer(&bufferDesc, nullptr, retTex->getBufferPtr());
+   if (FAILED(hr))
+   {
+      AssertFatal(false, "Failed to create buffer object texture!");
+      return;
+   }
+
+   // Create views if not system memory
+   if (!profile->isSystemMemory())
+   {
+      // Shader Resource View desc
+      D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+      srvDesc.Format = DXGI_FORMAT_UNKNOWN; // unknown for structured/raw buffers
+      srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+      srvDesc.Buffer.FirstElement = 0;
+      srvDesc.Buffer.NumElements = elementCount;
+
+      hr = D3D11DEVICE->CreateShaderResourceView(resource, &srvDesc, retTex->getSRViewPtr());
+      AssertFatal(SUCCEEDED(hr), "Failed to create SRV for buffer object texture!");
+
+      if (allowUAV)
+      {
+         // UAV desc
+         D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+         uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+         uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+         uavDesc.Buffer.FirstElement = 0;
+         uavDesc.Buffer.NumElements = elementCount;
+         uavDesc.Buffer.Flags = isRaw ? D3D11_BUFFER_UAV_FLAG_RAW : 0;
+
+         hr = D3D11DEVICE->CreateUnorderedAccessView(resource, &uavDesc, retTex->getUAViewPtr());
+         AssertFatal(SUCCEEDED(hr), "Failed to create UAV for buffer object texture!");
+      }
+   }
+
+   // Store size for reference (using width as total size here)
+   retTex->mTextureSize.set(bufferSize, 1, 1);
+   retTex->mFormat = format;
+   retTex->isManaged = false;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -577,6 +688,23 @@ void GFXD3D11TextureManager::createResourceView(U32 height, U32 width, U32 depth
 		hr = D3D11DEVICE->CreateShaderResourceView(resource,&desc, tex->getSRViewPtr());
 		AssertFatal(SUCCEEDED(hr), "CreateShaderResourceView:: failed to create view!");
 	}
+
+   if (usageFlags & D3D11_BIND_UNORDERED_ACCESS)
+   {
+      D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+      uavDesc.Format = format;
+      if (depth > 0)
+      {
+         uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+      }
+      else
+      {
+         uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+      }
+      uavDesc.Texture2D.MipSlice = 0;
+      hr = D3D11DEVICE->CreateUnorderedAccessView(resource, &uavDesc, tex->getUAViewPtr());
+      AssertFatal(SUCCEEDED(hr), "CreateDepthStencilView:: failed to create view!");
+   }
 
 	if(usageFlags & D3D11_BIND_RENDER_TARGET)
 	{

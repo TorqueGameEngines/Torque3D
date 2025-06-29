@@ -151,7 +151,7 @@ GFXD3D11ShaderConstBuffer::GFXD3D11ShaderConstBuffer(GFXD3D11Shader* shader)
 GFXD3D11ShaderConstBuffer::~GFXD3D11ShaderConstBuffer()
 {
    for (auto& pair : mBufferMap) {
-      delete[] pair.value.data;
+      SAFE_DELETE_ARRAY(pair.value.data);
    }
    mBufferMap.clear(); // Clear the map
 
@@ -563,6 +563,15 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
       D3D11DEVICECONTEXT->GSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
    }
 
+   if (mShader->mComputeShader && bufRanges[2].isValid())
+   {
+      const U32 bufStartSlot = bufRanges[2].mBufMin;
+      const U32 numBufs = bufRanges[2].mBufMax - bufRanges[2].mBufMin + 1;
+      ID3D11Buffer** psBuffers = mBoundBuffers[2] + bufStartSlot;
+
+      D3D11DEVICECONTEXT->GSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
+   }
+
    mWasLost = false;
 
 }
@@ -572,7 +581,7 @@ void GFXD3D11ShaderConstBuffer::onShaderReload( GFXD3D11Shader *shader )
    AssertFatal( shader == mShader, "GFXD3D11ShaderConstBuffer::onShaderReload is hosed!" );
 
    for (auto& pair : mBufferMap) {
-      delete[] pair.value.data;
+      SAFE_DELETE_ARRAY(pair.value.data);
    }
    mBufferMap.clear(); // Clear the map
 
@@ -596,6 +605,7 @@ GFXD3D11Shader::GFXD3D11Shader()
    mVertShader = NULL;
    mPixShader = NULL;
    mGeoShader = NULL;
+   mComputeShader = NULL;
 
    if( smD3DInclude == NULL )
       smD3DInclude = new gfxD3D11Include;
@@ -617,6 +627,7 @@ GFXD3D11Shader::~GFXD3D11Shader()
    SAFE_RELEASE(mVertShader);
    SAFE_RELEASE(mPixShader);
    SAFE_RELEASE(mGeoShader);
+   SAFE_RELEASE(mComputeShader);
    //maybe add SAFE_RELEASE(mVertexCode) ?
 }
 
@@ -627,6 +638,7 @@ bool GFXD3D11Shader::_init()
    SAFE_RELEASE(mVertShader);
    SAFE_RELEASE(mPixShader);
    SAFE_RELEASE(mGeoShader);
+   SAFE_RELEASE(mComputeShader);
 
    // Create the macro array including the system wide macros.
    const U32 macroCount = smGlobalMacros.size() + mMacros.size() + 2;
@@ -650,7 +662,7 @@ bool GFXD3D11Shader::_init()
    memset(&d3dMacros[macroCount - 1], 0, sizeof(D3D_SHADER_MACRO));
 
    mShaderConsts.clear();
-   mSamplerDescriptions.clear();
+   mShaderResources.clear();
 
    if (!mVertexFile.isEmpty() && !_compileShader( mVertexFile, GFXShaderStage::VERTEX_SHADER, d3dMacros) )
       return false;
@@ -661,6 +673,12 @@ bool GFXD3D11Shader::_init()
    if (!mGeometryFile.isEmpty())
    {
       if (!_compileShader(mGeometryFile, GFXShaderStage::GEOMETRY_SHADER, d3dMacros))
+         return false;
+   }
+
+   if (!mComputeFile.isEmpty())
+   {
+      if (!_compileShader(mComputeFile, GFXShaderStage::COMPUTE_SHADER, d3dMacros))
          return false;
    }
 
@@ -757,6 +775,7 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
       case HULL_SHADER:
          break;
       case COMPUTE_SHADER:
+         target = D3D11->getComputeShaderTarget();
          break;
       default:
          break;
@@ -806,6 +825,7 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
       case HULL_SHADER:
          break;
       case COMPUTE_SHADER:
+         res = D3D11DEVICE->CreateComputeShader(code->GetBufferPointer(), code->GetBufferSize(), NULL, &mComputeShader);
          break;
       default:
          break;
@@ -854,6 +874,8 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
    case HULL_SHADER:
       break;
    case COMPUTE_SHADER:
+      shader = mComputeFile.getFileName();
+      mComputeShader->SetPrivateData(WKPDID_D3DDebugObjectName, shader.size(), shader.c_str());
       break;
    default:
       break;
@@ -992,63 +1014,51 @@ void GFXD3D11Shader::_getShaderConstants( ID3D11ShaderReflection* refTable,
       D3D11_SHADER_INPUT_BIND_DESC shaderInputBind;
       refTable->GetResourceBindingDesc(i, &shaderInputBind);
 
-      if (shaderInputBind.Type == D3D_SIT_TEXTURE || shaderInputBind.Type == D3D_SIT_UAV_RWTYPED)
+      desc.name = String(shaderInputBind.Name);
+
+      // Prepend "$" if missing
+      if (!desc.name.startsWith("$"))
+         desc.name = String::ToString("$%s", desc.name.c_str());
+
+      desc.shaderStage = shaderStage;
+      desc.samplerReg = shaderInputBind.BindPoint;
+      desc.bindPoint = -1;
+      desc.arraySize = shaderInputBind.BindCount;
+
+      // Classify the resource type
+      switch (shaderInputBind.Type)
       {
-         // these should return shaderResourceViews and add them to shaderResources.
-         /*switch (shaderInputBind.Dimension)
-         {
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE1D:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE1DARRAY:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE2D:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE2DARRAY:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE2DMS:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE2DMSARRAY:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURE3D:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURECUBE:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_BUFFER:
-            break;
-         case D3D_SRV_DIMENSION::D3D_SRV_DIMENSION_BUFFEREX:
-            break;
-         default:
-            break;
-         }*/
-      }
-      else if (shaderInputBind.Type == D3D_SIT_SAMPLER)
-      {
-         // Prepend a "$" if it doesn't exist.  Just to make things consistent.
-         desc.name = String(shaderInputBind.Name);
-         if (desc.name.find("$") != 0)
-            desc.name = String::ToString("$%s", desc.name.c_str());
+      case D3D_SIT_SAMPLER:
          desc.constType = GFXSCT_Sampler;
-         desc.samplerReg = shaderInputBind.BindPoint;
-         desc.bindPoint = -1;
-         desc.shaderStage = shaderStage;
-         desc.arraySize = shaderInputBind.BindCount;
-         mSamplerDescriptions.push_back(desc);
+         break;
+
+      case D3D_SIT_TBUFFER:
+         desc.constType = GFXSCT_TBuffer;
+         break;
+
+      case D3D_SIT_STRUCTURED:
+         desc.constType = GFXSCT_StructuredBuffer;
+         break;
+
+      case D3D_SIT_BYTEADDRESS:
+         desc.constType = GFXSCT_ByteAddressBuffer;
+         break;
+
+      case D3D_SIT_UAV_RWTYPED:
+      case D3D_SIT_UAV_RWSTRUCTURED:
+      case D3D_SIT_UAV_RWBYTEADDRESS:
+      case D3D_SIT_UAV_APPEND_STRUCTURED:
+      case D3D_SIT_UAV_CONSUME_STRUCTURED:
+      case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
+         desc.constType = GFXSCT_UAV;
+         break;
+
+      default:
+         // Skip unknown types
+         continue;
       }
-      else if (shaderInputBind.Type == D3D_SIT_UAV_RWSTRUCTURED         ||
-               shaderInputBind.Type == D3D_SIT_UAV_RWBYTEADDRESS        ||
-               shaderInputBind.Type == D3D_SIT_UAV_APPEND_STRUCTURED    ||
-               shaderInputBind.Type == D3D_SIT_UAV_CONSUME_STRUCTURED   ||
-               shaderInputBind.Type == D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER)
-      {
-         // these should return an unorderedAccessViews and add them to shaderResources.
-      }
-      else if (shaderInputBind.Type == D3D_SIT_STRUCTURED ||
-               shaderInputBind.Type == D3D_SIT_BYTEADDRESS)
-      {
-         // these should return shaderResourceViews and add them to shaderResources.
-      }
+
+      mShaderResources.push_back(desc);
    }
 }
 
@@ -1124,15 +1134,11 @@ void GFXD3D11Shader::_buildShaderConstantHandles()
       }
    }
 
-   for (U32 j = 0; j < mSamplerDescriptions.size(); j++)
+   for (U32 j = 0; j < mShaderResources.size(); j++)
    {
-      const GFXShaderConstDesc& desc = mSamplerDescriptions[j];
+      const GFXShaderConstDesc& desc = mShaderResources[j];
 
-      AssertFatal(desc.constType == GFXSCT_Sampler ||
-         desc.constType == GFXSCT_SamplerCube ||
-         desc.constType == GFXSCT_SamplerCubeArray ||
-         desc.constType == GFXSCT_SamplerTextureArray,
-         "GFXD3D11Shader::_buildShaderConstantHandles - Invalid samplerDescription type!");
+      AssertFatal(desc.constType >= GFXSCT_Sampler, "GFXD3D11Shader::_buildShaderConstantHandles - Invalid samplerDescription type!");
 
       GFXD3D11ShaderConstHandle* handle;
       HandleMap::Iterator k = mHandles.find(desc.name);

@@ -753,6 +753,7 @@ public:
    virtual U32 getNumRenderTargets() const = 0;
 
    virtual void setShader( GFXShader *shader, bool force = false ) {}
+   virtual void dispatchCompute(U32 x, U32 y, U32 z) {}
 
    /// Set the buffer! (Actual set happens on the next draw call, just like textures, state blocks, etc)
    void setShaderConstBuffer(GFXShaderConstBuffer* buffer);

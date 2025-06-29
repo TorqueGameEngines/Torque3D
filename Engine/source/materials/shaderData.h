@@ -58,6 +58,7 @@ protected:
    StringTableEntry mDXVertexShaderName;
    StringTableEntry mDXPixelShaderName;
    StringTableEntry mDXGeometryShaderName;
+   StringTableEntry mDXComputeShaderName;
 
    StringTableEntry mOGLVertexShaderName;
    StringTableEntry mOGLPixelShaderName;

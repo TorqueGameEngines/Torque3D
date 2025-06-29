@@ -49,6 +49,7 @@ GFXD3D11TextureObject::GFXD3D11TextureObject( GFXDevice * d, GFXTextureProfile *
    dMemset(&mLockRect, 0, sizeof(mLockRect));
    dMemset(&mLockBox, 0, sizeof(mLockBox));
    mLockedSubresource = 0;
+   mUAView = NULL;
    mDSView = NULL;
    mRTView = NULL;
    mSRView = NULL;
@@ -309,6 +310,11 @@ bool GFXD3D11TextureObject::copyToBmp(GBitmap* bmp)
    return true;
 }
 
+ID3D11UnorderedAccessView* GFXD3D11TextureObject::getUAView()
+{
+   return mUAView;
+}
+
 ID3D11ShaderResourceView* GFXD3D11TextureObject::getSRView()
 {
 	return mSRView;
@@ -320,6 +326,11 @@ ID3D11RenderTargetView* GFXD3D11TextureObject::getRTView()
 ID3D11DepthStencilView* GFXD3D11TextureObject::getDSView()
 {
 	return mDSView;
+}
+
+ID3D11UnorderedAccessView** GFXD3D11TextureObject::getUAViewPtr()
+{
+    return &mUAView;
 }
 
 ID3D11ShaderResourceView** GFXD3D11TextureObject::getSRViewPtr()

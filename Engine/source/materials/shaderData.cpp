@@ -74,6 +74,7 @@ ShaderData::ShaderData()
    mDXVertexShaderName = StringTable->EmptyString();
    mDXPixelShaderName = StringTable->EmptyString();
    mDXGeometryShaderName = StringTable->EmptyString();
+   mDXComputeShaderName = StringTable->EmptyString();
 
    mOGLVertexShaderName = StringTable->EmptyString();
    mOGLPixelShaderName = StringTable->EmptyString();
@@ -96,6 +97,11 @@ void ShaderData::initPersistFields()
       "must have a filename extension of .hlsl, otherwise its assumed to be an assembly file.");
 
    addField("DXGeometryShaderFile", TypeStringFilename, Offset(mDXGeometryShaderName, ShaderData),
+      "@brief %Path to the DirectX geometry shader file to use for this ShaderData.\n\n"
+      "It can be either an HLSL or assembly level shader. HLSL's must have a "
+      "filename extension of .hlsl, otherwise its assumed to be an assembly file.");
+
+   addField("DXComputeShaderFile", TypeStringFilename, Offset(mDXComputeShaderName, ShaderData),
       "@brief %Path to the DirectX geometry shader file to use for this ShaderData.\n\n"
       "It can be either an HLSL or assembly level shader. HLSL's must have a "
       "filename extension of .hlsl, otherwise its assumed to be an assembly file.");
@@ -257,12 +263,14 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
    {
       case Direct3D11:
       {
-         if (mDXVertexShaderName != String::EmptyString)
+         if (mDXVertexShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::VERTEX_SHADER, mDXVertexShaderName);
-         if (mDXPixelShaderName != String::EmptyString)
+         if (mDXPixelShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::PIXEL_SHADER, mDXPixelShaderName);
-         if (mDXGeometryShaderName != String::EmptyString)
+         if (mDXGeometryShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::GEOMETRY_SHADER, mDXGeometryShaderName);
+         if (mDXComputeShaderName != StringTable->EmptyString())
+            shader->setShaderStageFile(GFXShaderStage::COMPUTE_SHADER, mDXComputeShaderName);
          success = shader->init( pixver,
                                  macros,
                                  samplers);
@@ -271,11 +279,11 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
 
       case OpenGL:
       {
-         if(mOGLVertexShaderName != String::EmptyString)
+         if(mOGLVertexShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::VERTEX_SHADER, mOGLVertexShaderName);
-         if (mOGLPixelShaderName != String::EmptyString)
+         if (mOGLPixelShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::PIXEL_SHADER, mOGLPixelShaderName);
-         if (mOGLGeometryShaderName != String::EmptyString)
+         if (mOGLGeometryShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::GEOMETRY_SHADER, mOGLGeometryShaderName);
 
          success = shader->init( pixver,

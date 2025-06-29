@@ -42,8 +42,15 @@ GFXShader::GFXShader()
 
 GFXShader::~GFXShader()
 {
-   Torque::FS::RemoveChangeNotification( mVertexFile, this, &GFXShader::_onFileChanged );
-   Torque::FS::RemoveChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
+   // Remove file change notifications for reloads.
+   if (!mVertexFile.isEmpty())
+      Torque::FS::RemoveChangeNotification(mVertexFile, this, &GFXShader::_onFileChanged);
+   if (!mPixelFile.isEmpty())
+      Torque::FS::RemoveChangeNotification(mPixelFile, this, &GFXShader::_onFileChanged);
+   if (!mGeometryFile.isEmpty())
+      Torque::FS::RemoveChangeNotification(mGeometryFile, this, &GFXShader::_onFileChanged);
+   if (!mComputeFile.isEmpty())
+      Torque::FS::RemoveChangeNotification(mComputeFile, this, &GFXShader::_onFileChanged);
 
    SAFE_DELETE(mInstancingFormat);
 }
@@ -100,6 +107,8 @@ bool GFXShader::init(   F32 pixVersion,
       Torque::FS::AddChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
    if(!mGeometryFile.isEmpty())
       Torque::FS::AddChangeNotification( mGeometryFile, this, &GFXShader::_onFileChanged);
+   if (!mComputeFile.isEmpty())
+      Torque::FS::AddChangeNotification(mComputeFile, this, &GFXShader::_onFileChanged);
 
    return true;
 }
@@ -180,6 +189,9 @@ void GFXShader::setShaderStageFile(const GFXShaderStage stage, const Torque::Pat
       break;
    case GFXShaderStage::GEOMETRY_SHADER:
       mGeometryFile = filePath;
+      break;
+   case GFXShaderStage::COMPUTE_SHADER:
+      mComputeFile = filePath;
       break;
    default:
       break;

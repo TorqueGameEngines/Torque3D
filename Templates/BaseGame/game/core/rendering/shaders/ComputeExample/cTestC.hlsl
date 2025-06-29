@@ -4,10 +4,13 @@ RWTexture2D<float4> BufferOut;
 [numthreads(32, 32, 1)]
 void main(uint3 id : SV_DispatchThreadID)
 {
-    float4 col = float4(1.0, 0.0, 0.0, 1.0);
+    uint2 dims;
+    BufferOut.GetDimensions(dims.x, dims.y);
 
-    col.r = float(id.x) / 256.0f;
-    col.g = float(id.y) / 256.0f;
-    
-    BufferOut[id.xy] = col;
+    float2 uv = float2(id.xy) / float2(dims);
+
+    float checker = fmod(floor(id.x / 32.0) + floor(id.y / 32.0), 2.0);
+    float3 color = lerp(float3(uv, 1.0), float3(0.0, 0.0, 0.0), checker);
+
+    BufferOut[id.xy] = float4(color, 1.0);
 }

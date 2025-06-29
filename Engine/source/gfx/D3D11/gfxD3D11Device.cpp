@@ -1713,17 +1713,24 @@ void GFXD3D11Device::setVertexDecl( const GFXVertexDecl *decl )
 //-----------------------------------------------------------------------------
 void GFXD3D11Device::setTextureInternal( U32 textureUnit, const GFXTextureObject *texture)
 {
-   ID3D11ShaderResourceView* srv = nullptr;
-   ID3D11UnorderedAccessView* uav = nullptr;
+   if (texture == NULL)
+   {
 
-   if (texture)
+      ID3D11ShaderResourceView* pView = NULL;
+      ID3D11UnorderedAccessView* uav = NULL;
+      mD3DDeviceContext->PSSetShaderResources(textureUnit, 1, &pView);
+      mD3DDeviceContext->CSSetShaderResources(textureUnit, 1, &pView);
+      mD3DDeviceContext->CSSetUnorderedAccessViews(textureUnit, 1, &uav, 0);
+      return;
+   }
+   else
    {
       GFXD3D11TextureObject* tex = (GFXD3D11TextureObject*)(texture);
 
       // If compute shader is active, bind UAV too
       if (mLastComputeShader)
       {
-         if(tex->getUAViewPtr())
+         if (tex->getUAViewPtr())
          {
             mD3DDeviceContext->CSSetUnorderedAccessViews(textureUnit, 1, tex->getUAViewPtr(), nullptr);
          }
@@ -1736,16 +1743,7 @@ void GFXD3D11Device::setTextureInternal( U32 textureUnit, const GFXTextureObject
       {
          // Not compute just bind for graphics shaders.
          mD3DDeviceContext->PSSetShaderResources(textureUnit, 1, tex->getSRViewPtr());
-         mD3DDeviceContext->VSSetShaderResources(textureUnit, 1, tex->getSRViewPtr());
       }
-   }
-   else
-   {
-      // Unbind slot
-      mD3DDeviceContext->PSSetShaderResources(textureUnit, 1, &srv);
-      mD3DDeviceContext->VSSetShaderResources(textureUnit, 1, &srv);
-      mD3DDeviceContext->CSSetShaderResources(textureUnit, 1, &srv);
-      mD3DDeviceContext->CSSetUnorderedAccessViews(textureUnit, 1, &uav, nullptr);
    }
 }
 

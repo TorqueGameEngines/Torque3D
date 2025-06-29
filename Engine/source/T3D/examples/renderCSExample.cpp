@@ -354,8 +354,16 @@ void RenderCSExample::render(ObjectRenderInst* ri, SceneRenderState* state, Base
    // it goes out of scope at the end of the function
    GFXTransformSaver saver;
 
-   if(mComputeTarget == NULL)
+   if (mComputeTarget == NULL)
+   {
       mComputeTarget = _getTestTexture(256, 256);
+
+      GFX->clearTextureStateImmediate(0);
+      GFX->setShader(mCompShader);
+      GFX->setTexture(0, mComputeTarget);
+      GFX->dispatchCompute(256 / 32, 256 / 32, 1);
+      GFX->clearTextureStateImmediate(0);
+   }
 
    // Calculate our object to world transform matrix
    MatrixF objectToWorld = getRenderTransform();
@@ -369,13 +377,7 @@ void RenderCSExample::render(ObjectRenderInst* ri, SceneRenderState* state, Base
    xform *= GFX->getWorldMatrix();
 
    mShaderConsts->setSafe(mModelViewSC, xform);
-
-   GFX->clearTextureStateImmediate(0);
-   GFX->setShader(mCompShader);
-   GFX->setTexture(0, mComputeTarget);
-   GFX->dispatchCompute(256/32, 256/32, 1);
-
-   GFX->clearTextureStateImmediate(0);
+   
    // Set the vertex buffer
    GFX->setVertexBuffer(mVertexBuffer);
 

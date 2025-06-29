@@ -692,7 +692,7 @@ void GFXD3D11TextureManager::createResourceView(U32 height, U32 width, U32 depth
    if (usageFlags & D3D11_BIND_UNORDERED_ACCESS)
    {
       D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-      uavDesc.Format = format;
+      uavDesc.Format = DXGI_FORMAT_UNKNOWN;
       if (depth > 0)
       {
          uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
@@ -701,7 +701,8 @@ void GFXD3D11TextureManager::createResourceView(U32 height, U32 width, U32 depth
       {
          uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
       }
-      uavDesc.Texture2D.MipSlice = 0;
+      uavDesc.Buffer.FirstElement = 0;
+
       hr = D3D11DEVICE->CreateUnorderedAccessView(resource, &uavDesc, tex->getUAViewPtr());
       AssertFatal(SUCCEEDED(hr), "CreateDepthStencilView:: failed to create view!");
    }

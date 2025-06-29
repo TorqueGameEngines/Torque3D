@@ -1284,6 +1284,9 @@ void GFXD3D11Device::setShader(GFXShader *shader, bool force)
 
 void GFXD3D11Device::dispatchCompute(U32 x, U32 y, U32 z)
 {
+   if (mStateDirty)
+      updateStates();
+
    mD3DDeviceContext->Dispatch(x, y, z);
 
    // Auto-cleanup UAVs and SRVs to prevent binding conflicts
@@ -1296,7 +1299,7 @@ void GFXD3D11Device::dispatchCompute(U32 x, U32 y, U32 z)
       mD3DDeviceContext->CSSetShaderResources(i, 1, nullSRV);
    }
 
-   mD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
+   //mD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
    mLastComputeShader = nullptr;
 }
 
@@ -1720,8 +1723,14 @@ void GFXD3D11Device::setTextureInternal( U32 textureUnit, const GFXTextureObject
       // If compute shader is active, bind UAV too
       if (mLastComputeShader)
       {
-         mD3DDeviceContext->CSSetShaderResources(textureUnit, 1, tex->getSRViewPtr());
-         mD3DDeviceContext->CSSetUnorderedAccessViews(textureUnit, 1, tex->getUAViewPtr(), nullptr);
+         if(tex->getUAViewPtr())
+         {
+            mD3DDeviceContext->CSSetUnorderedAccessViews(textureUnit, 1, tex->getUAViewPtr(), nullptr);
+         }
+         else
+         {
+            mD3DDeviceContext->CSSetShaderResources(textureUnit, 1, tex->getSRViewPtr());
+         }
       }
       else
       {

@@ -95,7 +95,7 @@ public:
       Raw            = BIT(13),  ///< Buffer specific flag for a raw buffer.
       AllowUav       = BIT(14),  ///< Buffer specific flag for a raw buffer.
 
-      NoModify = BIT(15)
+      NoModify = BIT(14)
 
    };
 
@@ -174,7 +174,7 @@ private:
    enum Constants
    {
       TypeBits = 2,
-      FlagBits = 12,
+      FlagBits = 15,
       CompressionBits = 3,
    };
 

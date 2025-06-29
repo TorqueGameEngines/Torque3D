@@ -72,7 +72,7 @@ bool GFXShader::init(   F32 pixVersion,
                         GFXVertexFormat *instanceFormat)
 {
    // early out.
-   if (mVertexFile.isEmpty() && mPixelFile.isEmpty() && mGeometryFile.isEmpty())
+   if (mVertexFile.isEmpty() && mPixelFile.isEmpty() && mGeometryFile.isEmpty() && mComputeFile.isEmpty())
    {
       Con::errorf("Shader files empty, please call setShaderStageFile from shaderData");
       return false;

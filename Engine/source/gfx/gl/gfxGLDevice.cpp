@@ -764,11 +764,7 @@ void GFXGLDevice::setTextureInternal(U32 textureUnit, const GFXTextureObject*tex
    {
       glActiveTexture(GL_TEXTURE0 + textureUnit);
 
-      if (tex->mProfile->isStructured())
-      {
-         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, mActiveTextureType[textureUnit]);
-      }
-      else if(tex->mProfile->isUnorderedAccessView())
+      if(tex->mProfile->isUnorderedAccessView())
       {
          glBindImageTexture(0, mActiveTextureType[textureUnit], 0, GL_FALSE, 0, GL_WRITE_ONLY, GFXGLTextureFormat[tex->mFormat]);
       }

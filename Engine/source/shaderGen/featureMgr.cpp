@@ -96,16 +96,41 @@ ShaderFeature* FeatureMgr::getByType( const FeatureType &type )
    return NULL;
 }
 
-void FeatureMgr::registerFeature(   const FeatureType &type, 
-                                    ShaderFeature *feature )
+ShaderFeature* FeatureMgr::createFeature(const FeatureType& type, void* argStruct)
 {
-   // Remove any existing feature first.
+   FeatureInfoVector::iterator iter = mFeatures.begin();
+
+   for (; iter != mFeatures.end(); iter++)
+   {
+      if (*iter->type == type)
+      {
+         if (iter->createFunc != NULL)
+         {
+            return iter->createFunc(argStruct);
+         }
+      }
+   }
+
+   return nullptr;
+}
+
+void FeatureMgr::registerFeature(   const FeatureType &type, 
+                                    ShaderFeature *feature,
+                                    CreateShaderFeatureDelegate featureDelegate)
+{
+   if (feature == nullptr && featureDelegate == nullptr)
+   {
+      AssertFatal(false, "FeatureMgr::registerFeature - no feature or featureDelegate defined, cannot create this feature.");
+   }
+
+   // Remove any existing feature.
    unregisterFeature( type );
 
    // Now add the new feature.
    mFeatures.increment();
    mFeatures.last().type = &type;
    mFeatures.last().feature = feature;
+   mFeatures.last().createFunc = featureDelegate;
 
    // Make sure we resort the features.
    mNeedsSort = true;

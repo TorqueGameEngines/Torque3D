@@ -4754,6 +4754,8 @@ bool Player::step(Point3F *pos,F32 *maxStep,F32 time)
 // If so, it will attempt to attach to it.
 void Player::updateAttachment()
 {
+   if (getDamageState() != Enabled && mVelocity.z > mDataBlock->fallingSpeedThreshold) return;
+
    Point3F rot, pos;
     RayInfo rInfo;
     MatrixF mat = getTransform();
@@ -4761,10 +4763,10 @@ void Player::updateAttachment()
     disableCollision();
     if (gServerContainer.castRay(Point3F(pos.x, pos.y, pos.z + 0.1f),
         Point3F(pos.x, pos.y, pos.z - 1.0f ),
-       sCollisionMoveMask, &rInfo))
+       PathShapeObjectType | StaticShapeObjectType | TerrainObjectType, &rInfo))
     {
        Point3F setPos = rInfo.point;
-       setPos.z = mMax(setPos.z+sMinFaceDistance, pos.z);
+       setPos.z = mMax(setPos.z + sMinFaceDistance, pos.z);
 
        if ((mJumpSurfaceLastContact < JumpSkipContactsMax) && !mSwimming)
           setPosition(setPos, getRotation());

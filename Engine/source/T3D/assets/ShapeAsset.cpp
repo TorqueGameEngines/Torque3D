@@ -368,7 +368,6 @@ U32 ShapeAsset::load()
 
    if (!mShape)
    {
-      Con::errorf("ShapeAsset::loadShape : failed to load shape file %s (%s)!", getAssetName(), mShapeFile);
       mLoadedState = BadFileReference;
       return mLoadedState; //if it failed to load, bail out
    }

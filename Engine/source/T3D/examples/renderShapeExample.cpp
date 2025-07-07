@@ -191,7 +191,7 @@ void RenderShapeExample::createShape()
 
    // Attempt to preload the Materials for this shape
    if ( isClientObject() && 
-        !getShape()->preloadMaterialList(getShape().getPath() ) &&
+        !getShape()->preloadMaterialList(getShapeFile()) &&
         NetConnection::filesWereDownloaded() )
    {
       return;

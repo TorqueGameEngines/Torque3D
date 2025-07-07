@@ -274,10 +274,10 @@ class GuiObjectView : public GuiTSCtrl, protected AssetPtrCallback
 protected:
    void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
    {
-      if (mModelAsset.notNull())
+      if (getModel())
          setObjectModel(_getModelAssetId());
 
-      if (mMountedModelAsset.notNull())
+      if (getMountedModel())
          setMountedObject(_getMountedModelAssetId());
    }
 };

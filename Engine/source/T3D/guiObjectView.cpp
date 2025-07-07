@@ -345,7 +345,7 @@ bool GuiObjectView::setObjectModel( const String& modelName )
       return false;
    }
 
-   if (!getModel()->preloadMaterialList(getModel().getPath())) return false;
+   if (!getModel()->preloadMaterialList(getModelFile())) return false;
 
    // Instantiate it.
 
@@ -398,7 +398,7 @@ bool GuiObjectView::setMountedObject( const String& modelName )
       return false;
    }
 
-   if (!getMountedModel()->preloadMaterialList(getMountedModel().getPath())) return false;
+   if (!getMountedModel()->preloadMaterialList(getMountedModelFile())) return false;
 
    mMountedModelInstance = new TSShapeInstance(getMountedModel(), true);
    mMountedModelInstance->resetMaterialList();

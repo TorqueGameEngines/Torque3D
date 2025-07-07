@@ -896,7 +896,7 @@ bool ExplosionData::preload(bool server, String &errorStr)
          }
    }
 
-   if (mExplosionShapeAsset.notNull()) {
+   if (getExplosionShape()) {
 
       // Resolve animations
       explosionAnimation = getExplosionShape()->findSequence("ambient");

@@ -390,16 +390,10 @@ bool TSStatic::_createShape()
    mAmbientThread = NULL;
    //mShape = NULL;
 
-   if (mShapeAsset.notNull())
+   if (getShape())
    {
-      if (!getShape())
-      {
-         Con::errorf("TSStatic::_createShape() - Shape Asset %s had no valid shape!", mShapeAsset.getAssetId());
-         return false;
-      }
-
       if (isClientObject() &&
-         !getShape()->preloadMaterialList(getShape().getPath()) &&
+         !getShape()->preloadMaterialList(getShapeFile()) &&
          NetConnection::filesWereDownloaded())
          return false;
 
@@ -439,6 +433,11 @@ bool TSStatic::_createShape()
       {
          Sim::findObject(cubeDescId, reflectorDesc);
       }
+   }
+   else
+   {
+      Con::errorf("TSStatic::_createShape() - Shape Asset %s had no valid shape!", mShapeAsset.getAssetId());
+      return false;
    }
 
    //Set up the material slot vars for easy manipulation

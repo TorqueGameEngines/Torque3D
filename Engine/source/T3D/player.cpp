@@ -615,18 +615,18 @@ bool PlayerData::preload(bool server, String &errorStr)
             return false;
          }
 
-         if (!server && !getShapeFP(i)->preloadMaterialList(getShapeFP(i).getPath()) && NetConnection::filesWereDownloaded())
+         if (!server && !getShapeFP(i)->preloadMaterialList(getShapeFPFile(i)) && NetConnection::filesWereDownloaded())
             shapeError = true;
 
          if (computeCRC)
          {
             Con::printf("Validation required for mounted image %d shape: %s", i, _getShapeFPAssetId(i));
 
-            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(getShapeFP(i).getPath());
+            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(getShapeFPFile(i));
 
             if (!fileRef)
             {
-               errorStr = String::ToString("PlayerData: Mounted image %d loading failed, shape \"%s\" is not found.", i, getShapeFP(i).getPath().getFullPath().c_str());
+               errorStr = String::ToString("PlayerData: Mounted image %d loading failed, shape \"%s\" is not found.", i, getShapeFPFile(i));
                return false;
             }
 

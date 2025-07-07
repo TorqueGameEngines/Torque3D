@@ -283,7 +283,7 @@ bool DebrisData::preload(bool server, String &errorStr)
             return false;
       }
    }
-   else
+   else if (!mShapeAsset.isNull())
    {
       errorStr = String::ToString("DebrisData::load: Couldn't load shape \"%s\"", _getShapeAssetId());
       return false;

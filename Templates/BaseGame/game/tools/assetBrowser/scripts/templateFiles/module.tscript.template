@@ -23,8 +23,8 @@ function @@::onCreateGameServer(%this)
     %this.registerDatablock("./scripts/managedData/managedDatablocks");
     %this.registerDatablock("./scripts/managedData/managedForestItemData");
     %this.registerDatablock("./scripts/managedData/managedForestBrushData");
-    %this.registerDatablock("./scripts/managedData/managedParticleEmitterData");
     %this.registerDatablock("./scripts/managedData/managedParticleData");
+    %this.registerDatablock("./scripts/managedData/managedParticleEmitterData");
     //--DATABLOCK EXEC END--
 }
 

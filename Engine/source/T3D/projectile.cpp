@@ -389,9 +389,9 @@ bool ProjectileData::preload(bool server, String &errorStr)
       TSShapeInstance* pDummy = new TSShapeInstance(getProjectileShape(), !server);
       delete pDummy;
    }
-   else
+   else if (mProjectileShapeAsset.notNull())
    {
-      errorStr = String::ToString("ProjectileData::load: Couldn't load shape \"%s\"", _getProjectileShapeAssetId());
+      errorStr = String::ToString("ProjectileData::preload: Couldn't load shape \"%s\"", _getProjectileShapeAssetId());
       return false;
    }
 

@@ -276,12 +276,10 @@ bool DebrisData::preload(bool server, String &errorStr)
 
    if (getShape())
    {
-      {
-         TSShapeInstance* pDummy = new TSShapeInstance(getShape(), !server);
-         delete pDummy;
-         if (!server && !getShape()->preloadMaterialList(getShapeFile()) && NetConnection::filesWereDownloaded())
-            return false;
-      }
+      TSShapeInstance* pDummy = new TSShapeInstance(getShape(), !server);
+      delete pDummy;
+      if (!server && !getShape()->preloadMaterialList(getShapeFile()) && NetConnection::filesWereDownloaded())
+         return false;
    }
    else if (!mShapeAsset.isNull())
    {

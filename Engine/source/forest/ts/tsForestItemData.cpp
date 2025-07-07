@@ -127,7 +127,7 @@ void TSForestItemData::_loadShape()
       return;
 
    if ( mIsClientObject && 
-       !mShape->preloadMaterialList(mShape.getPath()) )
+       !mShape->preloadMaterialList(getShapeFile()) )
       return;
    
    // Lets add an autobillboard detail if don't have one.
@@ -177,7 +177,7 @@ void TSForestItemData::_checkLastDetail()
    // TODO: Expose some real parameters to the datablock maybe?
    if ( detail->subShapeNum != -1 )
    {
-      mShape->addImposter(mShape.getPath(), 10, 4, 0, 0, 256, 0, 0);
+      mShape->addImposter(getShapeFile(), 10, 4, 0, 0, 256, 0, 0);
 
       // HACK: If i don't do this it crashes!
       while ( mShape->detailCollisionAccelerators.size() < mShape->details.size() )

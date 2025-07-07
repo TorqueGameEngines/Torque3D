@@ -285,16 +285,15 @@ bool PhysicsShapeData::preload( bool server, String &errorBuffer )
 
    bool shapeError = false;
 
-   if (mShapeAsset.notNull())
+   if (getShape())
    {
-      if (bool(getShape()) == false)
-      {
-         errorBuffer = String::ToString("PhysicsShapeData: Couldn't load shape \"%s\"", _getShapeAssetId());
-         return false;
-      }
-      if (!server && !getShape()->preloadMaterialList(getShape().getPath()) && NetConnection::filesWereDownloaded())
+      if (!server && !getShape()->preloadMaterialList(getShapeFile()) && NetConnection::filesWereDownloaded())
          shapeError = true;
-
+   }
+   else
+   {
+      errorBuffer = String::ToString("PhysicsShapeData: Couldn't load shape \"%s\"", _getShapeAssetId());
+      return false;
    }
 
    // Prepare the shared physics collision shape.

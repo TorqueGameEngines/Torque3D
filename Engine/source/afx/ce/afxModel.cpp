@@ -127,14 +127,8 @@ bool afxModelData::preload(bool server, String &errorStr)
   if (server) 
     return true;
   
-  if (mShapeAsset.notNull())
+  if (getShape())
   {
-    if (!getShape())
-    {
-      errorStr = String::ToString("afxModelData::load: Failed to load shape \"%s\"", _getShapeAssetId());
-      return false;
-    }
-
     // just parse up the string and collect the remappings in txr_tag_remappings.
     if (remap_txr_tags != ST_NULLSTRING)
     {
@@ -167,7 +161,11 @@ bool afxModelData::preload(bool server, String &errorStr)
       delete pDummy;
     }
   }
-
+  else
+  {
+     errorStr = String::ToString("afxModelData::load: Failed to load shape \"%s\"", _getShapeAssetId());
+     return false;
+  }
   return true;
 }
 

@@ -451,20 +451,15 @@ GFXPrimitiveBuffer *GFXGLDevice::allocPrimitiveBuffer( U32 numIndices, U32 numPr
 
 void GFXGLDevice::setVertexStream( U32 stream, GFXVertexBuffer *buffer )
 {
-   AssertFatal(stream <= 1, "GFXGLDevice::setVertexStream only support 2 stream (0: data, 1: instancing)");
-
-   //if(mCurrentVB[stream] != buffer)
+   // Reset the state the old VB required, then set the state the new VB requires.
+   if (mCurrentVB[stream])
    {
-      // Reset the state the old VB required, then set the state the new VB requires.
-      if( mCurrentVB[stream] )
-      {
-         mCurrentVB[stream]->finish();
-      }
-
-      mCurrentVB[stream] = static_cast<GFXGLVertexBuffer*>( buffer );
-
-      mNeedUpdateVertexAttrib = true;
+      mCurrentVB[stream]->finish();
    }
+
+   mCurrentVB[stream] = static_cast<GFXGLVertexBuffer*>(buffer);
+
+   mNeedUpdateVertexAttrib = true;
 }
 
 void GFXGLDevice::setVertexStreamFrequency( U32 stream, U32 frequency )
@@ -511,6 +506,8 @@ void GFXGLDevice::endSceneInternal()
 {
    // nothing to do for opengl
    mCanCurrentlyRender = false;
+   mVolatileVBs.clear();
+   mVolatilePBs.clear();
 }
 
 void GFXGLDevice::copyResource(GFXTextureObject* pDst, GFXCubemap* pSrc, const U32 face)

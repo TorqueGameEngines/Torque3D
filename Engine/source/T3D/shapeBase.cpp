@@ -500,7 +500,7 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
          }
       }
       else
-         Con::errorf("ShapeBaseData::preload -%s failed: %s", mShapeAsset.getAssetId(), ShapeAsset::getAssetErrstrn(assetStatus));
+         Con::errorf("ShapeBaseData::preload -%s failed: %s", mShapeAsset.getAssetId(), ShapeAsset::getAssetErrstrn(assetStatus).c_str());
    }
 
    if(!server)

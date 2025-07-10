@@ -139,7 +139,7 @@ public:
   */
 
    // variables set on preload:
-  Resource<TSShape>     projectileShape;
+  TSShape*     projectileShape;
   /*
   S32 activateSeq;
   S32 maintainSeq;

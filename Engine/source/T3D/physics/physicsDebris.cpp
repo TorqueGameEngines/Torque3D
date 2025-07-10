@@ -97,7 +97,7 @@ bool PhysicsDebrisData::preload( bool server, String &errorStr )
 
    if ( server ) return true;
 
-   if ( mShapeAsset.notNull() )
+   if ( getShape() )
    {
       // Create a dummy shape to force the generation of shaders and materials
       // during the level load and not during gameplay.

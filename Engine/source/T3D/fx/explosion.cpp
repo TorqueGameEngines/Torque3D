@@ -896,7 +896,7 @@ bool ExplosionData::preload(bool server, String &errorStr)
          }
    }
 
-   if (mExplosionShapeAsset.notNull()) {
+   if (getExplosionShape()) {
 
       // Resolve animations
       explosionAnimation = getExplosionShape()->findSequence("ambient");
@@ -905,7 +905,13 @@ bool ExplosionData::preload(bool server, String &errorStr)
       TSShapeInstance* pDummy = new TSShapeInstance(getExplosionShape(), !server);
       delete pDummy;
 
-   } else {
+   }
+   else if (mExplosionShapeAsset.notNull())
+   {
+      errorStr = String::ToString("ExplosionData::preload: Couldn't load shape \"%s\"", _getExplosionShapeAssetId());
+      return false;
+   }
+   else {
       explosionAnimation = -1;
    }
 

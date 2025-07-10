@@ -461,7 +461,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          {
             Con::printf("Validation required for shape asset: %s", mShapeAsset[i]->getAssetId());
 
-            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(getShape(i).getPath());
+            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(getShapeFile(i));
 
             if (!fileRef)
             {

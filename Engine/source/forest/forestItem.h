@@ -143,7 +143,7 @@ public:
       return theSignal;
    }
 
-   Resource<TSShape> mShape;
+   TSShape* mShape;
 
 protected:
    void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override

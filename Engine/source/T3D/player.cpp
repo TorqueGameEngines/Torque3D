@@ -615,18 +615,18 @@ bool PlayerData::preload(bool server, String &errorStr)
             return false;
          }
 
-         if (!server && !getShapeFP(i)->preloadMaterialList(getShapeFP(i).getPath()) && NetConnection::filesWereDownloaded())
+         if (!server && !getShapeFP(i)->preloadMaterialList(getShapeFPFile(i)) && NetConnection::filesWereDownloaded())
             shapeError = true;
 
          if (computeCRC)
          {
             Con::printf("Validation required for mounted image %d shape: %s", i, _getShapeFPAssetId(i));
 
-            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(getShapeFP(i).getPath());
+            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(getShapeFPFile(i));
 
             if (!fileRef)
             {
-               errorStr = String::ToString("PlayerData: Mounted image %d loading failed, shape \"%s\" is not found.", i, getShapeFP(i).getPath().getFullPath().c_str());
+               errorStr = String::ToString("PlayerData: Mounted image %d loading failed, shape \"%s\" is not found.", i, getShapeFPFile(i));
                return false;
             }
 
@@ -4754,6 +4754,8 @@ bool Player::step(Point3F *pos,F32 *maxStep,F32 time)
 // If so, it will attempt to attach to it.
 void Player::updateAttachment()
 {
+   if (getDamageState() != Enabled && mVelocity.z > mDataBlock->fallingSpeedThreshold) return;
+
    Point3F rot, pos;
     RayInfo rInfo;
     MatrixF mat = getTransform();
@@ -4761,10 +4763,13 @@ void Player::updateAttachment()
     disableCollision();
     if (gServerContainer.castRay(Point3F(pos.x, pos.y, pos.z + 0.1f),
         Point3F(pos.x, pos.y, pos.z - 1.0f ),
-       sCollisionMoveMask, &rInfo))
+       PathShapeObjectType | StaticShapeObjectType | TerrainObjectType, &rInfo))
     {
+       Point3F setPos = rInfo.point;
+       setPos.z = mMax(setPos.z + sMinFaceDistance, pos.z);
+
        if ((mJumpSurfaceLastContact < JumpSkipContactsMax) && !mSwimming)
-          setPosition(rInfo.point, getRotation());
+          setPosition(setPos, getRotation());
 
        if( rInfo.object->getTypeMask() & PathShapeObjectType) //Ramen
        {

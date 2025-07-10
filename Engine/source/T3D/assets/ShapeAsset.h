@@ -122,7 +122,7 @@ public:
 
    U32 load() override;
 
-   TSShape* getShape() { return mShape; }
+   TSShape* getShape() { load(); return mShape; }
 
    Resource<TSShape> getShapeResource() { load(); return mShape; }
 
@@ -295,7 +295,7 @@ public:                                                                         
    };                                                                                                                                                                         \
                                                                                                                                                                               \
    inline StringTableEntry _get##name##AssetId(void) const { return m##name##Asset.getAssetId(); }                                                                            \
-   Resource<TSShape> get##name() { if (m##name##Asset.notNull()) return m##name##Asset->getShapeResource(); else return ResourceManager::get().load( "" ); }                  \
+   TSShape* get##name() { if (m##name##Asset.notNull()) return m##name##Asset->getShape(); else return NULL; }                                                                \
    AssetPtr<ShapeAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false; }  \
    StringTableEntry get##name##File() { return m##name##Asset.notNull() ? m##name##Asset->getShapeFile() : ""; }
@@ -353,12 +353,12 @@ public:                                                                         
    };                                                                                                                                                                         \
                                                                                                                                                                               \
    inline StringTableEntry _get##name##AssetId(void) const { return m##name##Asset.getAssetId(); }                                                                            \
-   Resource<TSShape> get##name() { if (m##name##Asset.notNull()) return m##name##Asset->getShapeResource(); else return ResourceManager::get().load( "" ); }                  \
+   TSShape* get##name() { if (m##name##Asset.notNull()) return m##name##Asset->getShape(); else return NULL; }                                                                \
    AssetPtr<ShapeAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false; }  \
    StringTableEntry get##name##File() { return m##name##Asset.notNull() ? m##name##Asset->getShapeFile() : ""; }  
 
-#define INITPERSISTFIELD_SHAPEASSET_REFACTOR(name, consoleClass, docs)                                                                                                                \
+#define INITPERSISTFIELD_SHAPEASSET_REFACTOR(name, consoleClass, docs)                                                                                                        \
    addProtectedField(assetText(name, Asset), TypeShapeAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.)); \
    addProtectedField(assetText(name, File), TypeFilename, Offset(m##name##File, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, file docs.));
 
@@ -414,7 +414,7 @@ public:                                                                         
    };                                                                                                                                                                         \
                                                                                                                                                                               \
    inline StringTableEntry _get##name##AssetId(const U32& index) const { return m##name##Asset[index].getAssetId(); }                                                         \
-   Resource<TSShape> get##name(const U32& index) { if (m##name##Asset[index].notNull()) return m##name##Asset[index]->getShapeResource(); else return ResourceManager::get().load( "" ); } \
+   TSShape* get##name(const U32& index) { if (m##name##Asset[index].notNull()) return m##name##Asset[index]->getShape(); else return NULL; }                                  \
    AssetPtr<ShapeAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}\
    StringTableEntry get##name##File(const U32& idx) { return m##name##Asset[idx].notNull() ? m##name##Asset[idx]->getShapeFile() : ""; }
@@ -472,7 +472,7 @@ public:                                                                         
    };                                                                                                                                                                         \
                                                                                                                                                                               \
    inline StringTableEntry _get##name##AssetId(const U32& index) const { return m##name##Asset[index].getAssetId(); }                                                         \
-   Resource<TSShape> get##name(const U32& index) { if (m##name##Asset[index].notNull()) return m##name##Asset[index]->getShapeResource(); else return ResourceManager::get().load( "" ); } \
+   TSShape* get##name(const U32& index) { if (m##name##Asset[index].notNull()) return m##name##Asset[index]->getShape(); else return NULL; }                                   \
    AssetPtr<ShapeAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}\
    StringTableEntry get##name##File(const U32& idx) { return m##name##Asset[idx].notNull() ? m##name##Asset[idx]->getShapeFile() : ""; }

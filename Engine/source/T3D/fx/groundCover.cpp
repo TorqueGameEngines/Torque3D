@@ -889,7 +889,7 @@ void GroundCover::_initShapes()
       if ( mShapeAsset[i].isNull() || getShape(i) == nullptr)
          continue;
 
-      if ( isClientObject() && !getShape(i)->preloadMaterialList(getShape(i).getPath()) && NetConnection::filesWereDownloaded() )
+      if ( isClientObject() && !getShape(i)->preloadMaterialList(getShapeFile(i)) && NetConnection::filesWereDownloaded() )
       {
          Con::warnf( "GroundCover::_initShapes() material preload failed for shape: %s", _getShapeAssetId(i));
          continue;

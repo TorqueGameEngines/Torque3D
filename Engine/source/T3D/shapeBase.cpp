@@ -343,7 +343,7 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
             "ShapeBaseData::preload: invalid debris data");
       }
 
-      if(mDebrisShapeAsset.notNull())
+      if(getDebrisShape())
       {
          TSShapeInstance* pDummy = new TSShapeInstance(getDebrisShape(), !server);
          delete pDummy;
@@ -351,12 +351,13 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
    }
 
    S32 i;
-   if (mShapeAsset.notNull())
+   if (getShape())
    {
+      //mShapeAsset->load();
       U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
       if (assetStatus == AssetBase::Ok || assetStatus == AssetBase::UsingFallback)
       {
-         if (!server && !getShape()->preloadMaterialList(getShape().getPath()) && NetConnection::filesWereDownloaded())
+         if (!server && !getShape()->preloadMaterialList(getShapeFile()) && NetConnection::filesWereDownloaded())
             shapeError = true;
 
          if (computeCRC)
@@ -498,6 +499,8 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
             }
          }
       }
+      else
+         Con::errorf("ShapeBaseData::preload -%s failed: %s", mShapeAsset.getAssetId(), ShapeAsset::getAssetErrstrn(assetStatus).c_str());
    }
 
    if(!server)

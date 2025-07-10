@@ -274,20 +274,17 @@ bool DebrisData::preload(bool server, String &errorStr)
 
    if( server ) return true;
 
-   if (mShapeAsset.notNull())
+   if (getShape())
    {
-      if (!getShape())
-      {
-         errorStr = String::ToString("DebrisData::load: Couldn't load shape \"%s\"", _getShapeAssetId());
+      TSShapeInstance* pDummy = new TSShapeInstance(getShape(), !server);
+      delete pDummy;
+      if (!server && !getShape()->preloadMaterialList(getShapeFile()) && NetConnection::filesWereDownloaded())
          return false;
-      }
-      else
-      {
-         TSShapeInstance* pDummy = new TSShapeInstance(getShape(), !server);
-         delete pDummy;
-         if (!server && !getShape()->preloadMaterialList(getShape().getPath()) && NetConnection::filesWereDownloaded())
-            return false;
-      }
+   }
+   else if (!mShapeAsset.isNull())
+   {
+      errorStr = String::ToString("DebrisData::load: Couldn't load shape \"%s\"", _getShapeAssetId());
+      return false;
    }
 
    return true;

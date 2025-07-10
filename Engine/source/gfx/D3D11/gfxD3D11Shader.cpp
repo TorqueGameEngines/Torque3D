@@ -563,13 +563,13 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
       D3D11DEVICECONTEXT->GSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
    }
 
-   if (mShader->mComputeShader && bufRanges[2].isValid())
+   if (mShader->mComputeShader && bufRanges[5].isValid())
    {
-      const U32 bufStartSlot = bufRanges[2].mBufMin;
-      const U32 numBufs = bufRanges[2].mBufMax - bufRanges[2].mBufMin + 1;
-      ID3D11Buffer** psBuffers = mBoundBuffers[2] + bufStartSlot;
+      const U32 bufStartSlot = bufRanges[5].mBufMin;
+      const U32 numBufs = bufRanges[5].mBufMax - bufRanges[5].mBufMin + 1;
+      ID3D11Buffer** psBuffers = mBoundBuffers[5] + bufStartSlot;
 
-      D3D11DEVICECONTEXT->GSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
+      D3D11DEVICECONTEXT->CSSetConstantBuffers(bufStartSlot, numBufs, psBuffers);
    }
 
    mWasLost = false;

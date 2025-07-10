@@ -25,7 +25,7 @@ if(TORQUE_VULKAN)
 	# Vulkan SDK
 	find_package(Vulkan REQUIRED)
 	if(NOT ${Vulkan_Found})
-		set(TORQUE_VULKAN OFF)
+		set(TORQUE_VULKAN OFF CACHE BOOL "" FORCE)
 	else()
 		set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} glslang spirv-cross-core spirv-cross-glsl spirv-cross-hlsl)
 		set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${Vulkan_INCLUDE_DIR} )
@@ -63,7 +63,7 @@ advanced_option(TORQUE_DEBUG_GFX_MODE "triggers graphics debug mode" OFF)
 advanced_option(TORQUE_ADVANCED_LIGHTING "Advanced Lighting" ON)
 advanced_option(TORQUE_BASIC_LIGHTING "Basic Lighting" ON)
 advanced_option(TORQUE_OPENGL "Allow OpenGL render" ON) # we need OpenGL to render on Linux/Mac
-advanced_option(TORQUE_VULKAN "Allow Vulkan render" ON) # we can use this to render on win/lin/mac (until metal)
+advanced_option(TORQUE_VULKAN "Allow Vulkan render (note must install vulkan sdk)" ON) # we can use this to render on win/lin/mac (until metal)
 
 if(WIN32)
 	advanced_option(TORQUE_D3D11 "Allow Direct3D 11 render" ON)

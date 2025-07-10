@@ -28,7 +28,7 @@
 #ifdef TORQUE_OPENGL
 
 #include "tGL.h"
-#include <glad/glad_wgl.h>
+#include <glad/wgl.h>
 
 #define gglHasWExtension(EXTENSION) GLAD_WGL_##EXTENSION
 

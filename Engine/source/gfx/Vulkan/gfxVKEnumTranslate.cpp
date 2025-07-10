@@ -1,0 +1,137 @@
+#include "platform/platform.h"
+#include "gfx/Vulkan/gfxVKEnumTranslate.h"
+
+VkPrimitiveTopology GFXVKPrimType[GFXPT_COUNT];
+VkBlendFactor GFXVKBlend[GFXBlend_COUNT];
+VkBlendOp GFXVKBlendOp[GFXBlendOp_COUNT];
+VkCompareOp GFXVKCmpFunc[GFXCmp_COUNT];
+VkSamplerAddressMode GFXVKTextureAddress[GFXAddress_COUNT];
+VkFilter GFXVKTextureFilter[GFXTextureFilter_COUNT];
+VkStencilOp GFXVKStencilOp[GFXStencilOp_COUNT];
+VkFormat GFXVKTextureFormat[GFXFormat_COUNT];
+VkCullModeFlagBits GFXVKCullMode[GFXCull_COUNT];
+VkPolygonMode GFXVKFillMode[GFXFill_COUNT];
+
+void GFXVKEnumTranslate::init()
+{
+   // Primitives
+   GFXVKPrimType[GFXPointList] = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+   GFXVKPrimType[GFXLineList] = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+   GFXVKPrimType[GFXLineStrip] = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+   GFXVKPrimType[GFXTriangleList] = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+   GFXVKPrimType[GFXTriangleStrip] = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+
+   // Blend factors
+   GFXVKBlend[GFXBlendZero] = VK_BLEND_FACTOR_ZERO;
+   GFXVKBlend[GFXBlendOne] = VK_BLEND_FACTOR_ONE;
+   GFXVKBlend[GFXBlendSrcColor] = VK_BLEND_FACTOR_SRC_COLOR;
+   GFXVKBlend[GFXBlendInvSrcColor] = VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+   GFXVKBlend[GFXBlendSrcAlpha] = VK_BLEND_FACTOR_SRC_ALPHA;
+   GFXVKBlend[GFXBlendInvSrcAlpha] = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+   GFXVKBlend[GFXBlendDestAlpha] = VK_BLEND_FACTOR_DST_ALPHA;
+   GFXVKBlend[GFXBlendInvDestAlpha] = VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+   GFXVKBlend[GFXBlendDestColor] = VK_BLEND_FACTOR_DST_COLOR;
+   GFXVKBlend[GFXBlendInvDestColor] = VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+   GFXVKBlend[GFXBlendSrcAlphaSat] = VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+
+   // Blend ops
+   GFXVKBlendOp[GFXBlendOpAdd] = VK_BLEND_OP_ADD;
+   GFXVKBlendOp[GFXBlendOpSubtract] = VK_BLEND_OP_SUBTRACT;
+   GFXVKBlendOp[GFXBlendOpRevSubtract] = VK_BLEND_OP_REVERSE_SUBTRACT;
+   GFXVKBlendOp[GFXBlendOpMin] = VK_BLEND_OP_MIN;
+   GFXVKBlendOp[GFXBlendOpMax] = VK_BLEND_OP_MAX;
+
+   // Comparison functions
+   GFXVKCmpFunc[GFXCmpNever] = VK_COMPARE_OP_NEVER;
+   GFXVKCmpFunc[GFXCmpLess] = VK_COMPARE_OP_LESS;
+   GFXVKCmpFunc[GFXCmpEqual] = VK_COMPARE_OP_EQUAL;
+   GFXVKCmpFunc[GFXCmpLessEqual] = VK_COMPARE_OP_LESS_OR_EQUAL;
+   GFXVKCmpFunc[GFXCmpGreater] = VK_COMPARE_OP_GREATER;
+   GFXVKCmpFunc[GFXCmpNotEqual] = VK_COMPARE_OP_NOT_EQUAL;
+   GFXVKCmpFunc[GFXCmpGreaterEqual] = VK_COMPARE_OP_GREATER_OR_EQUAL;
+   GFXVKCmpFunc[GFXCmpAlways] = VK_COMPARE_OP_ALWAYS;
+
+   // Texture address modes
+   GFXVKTextureAddress[GFXAddressWrap] = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   GFXVKTextureAddress[GFXAddressMirror] = VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+   GFXVKTextureAddress[GFXAddressClamp] = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+   GFXVKTextureAddress[GFXAddressBorder] = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+   GFXVKTextureAddress[GFXAddressMirrorOnce] = VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+
+   // Texture filters
+   GFXVKTextureFilter[GFXTextureFilterNone] = VK_FILTER_NEAREST;
+   GFXVKTextureFilter[GFXTextureFilterPoint] = VK_FILTER_NEAREST;
+   GFXVKTextureFilter[GFXTextureFilterLinear] = VK_FILTER_LINEAR;
+   GFXVKTextureFilter[GFXTextureFilterAnisotropic] = VK_FILTER_LINEAR; // no direct anisotropic but there is cubic?
+
+   // Stencil ops
+   GFXVKStencilOp[GFXStencilOpKeep] = VK_STENCIL_OP_KEEP;
+   GFXVKStencilOp[GFXStencilOpZero] = VK_STENCIL_OP_ZERO;
+   GFXVKStencilOp[GFXStencilOpReplace] = VK_STENCIL_OP_REPLACE;
+   GFXVKStencilOp[GFXStencilOpIncrSat] = VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+   GFXVKStencilOp[GFXStencilOpDecrSat] = VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+   GFXVKStencilOp[GFXStencilOpInvert] = VK_STENCIL_OP_INVERT;
+   GFXVKStencilOp[GFXStencilOpIncr] = VK_STENCIL_OP_INCREMENT_AND_WRAP;
+   GFXVKStencilOp[GFXStencilOpDecr] = VK_STENCIL_OP_DECREMENT_AND_WRAP;
+
+   // Cull modes (Vulkan default front face is CCW)
+   GFXVKCullMode[GFXCullNone] = VK_CULL_MODE_NONE;
+   GFXVKCullMode[GFXCullCW] = VK_CULL_MODE_FRONT_BIT;
+   GFXVKCullMode[GFXCullCCW] = VK_CULL_MODE_BACK_BIT;
+
+   // Fill modes
+   GFXVKFillMode[GFXFillPoint] = VK_POLYGON_MODE_POINT;
+   GFXVKFillMode[GFXFillWireframe] = VK_POLYGON_MODE_LINE;
+   GFXVKFillMode[GFXFillSolid] = VK_POLYGON_MODE_FILL;
+
+   // Texture formats
+   GFXVKTextureFormat[GFXFormatA8] = VK_FORMAT_R8_UNORM;
+   GFXVKTextureFormat[GFXFormatL8] = VK_FORMAT_R8_UNORM;
+   GFXVKTextureFormat[GFXFormatA4L4] = VK_FORMAT_UNDEFINED;
+
+   GFXVKTextureFormat[GFXFormatR5G6B5] = VK_FORMAT_R5G6B5_UNORM_PACK16;
+   GFXVKTextureFormat[GFXFormatR5G5B5A1] = VK_FORMAT_A1R5G5B5_UNORM_PACK16;
+   GFXVKTextureFormat[GFXFormatR5G5B5X1] = VK_FORMAT_UNDEFINED;
+   GFXVKTextureFormat[GFXFormatA8L8] = VK_FORMAT_R8G8_UNORM;
+   GFXVKTextureFormat[GFXFormatL16] = VK_FORMAT_R16_UNORM;
+   GFXVKTextureFormat[GFXFormatR16F] = VK_FORMAT_R16_SFLOAT;
+   GFXVKTextureFormat[GFXFormatD16] = VK_FORMAT_D16_UNORM;
+
+   GFXVKTextureFormat[GFXFormatR8G8B8] = VK_FORMAT_R8G8B8_UNORM;
+   GFXVKTextureFormat[GFXFormatR8G8B8_SRGB] = VK_FORMAT_R8G8B8_SRGB;
+
+   GFXVKTextureFormat[GFXFormatR8G8B8A8] = VK_FORMAT_R8G8B8A8_UNORM;
+   GFXVKTextureFormat[GFXFormatR8G8B8X8] = VK_FORMAT_R8G8B8A8_UNORM; // ignore alpha
+   GFXVKTextureFormat[GFXFormatB8G8R8A8] = VK_FORMAT_B8G8R8A8_UNORM;
+   GFXVKTextureFormat[GFXFormatR8G8B8A8_SRGB] = VK_FORMAT_R8G8B8A8_SRGB;
+
+   GFXVKTextureFormat[GFXFormatR32F] = VK_FORMAT_R32_SFLOAT;
+   GFXVKTextureFormat[GFXFormatR16G16] = VK_FORMAT_R16G16_UNORM;
+   GFXVKTextureFormat[GFXFormatR16G16F] = VK_FORMAT_R16G16_SFLOAT;
+
+   GFXVKTextureFormat[GFXFormatR10G10B10A2] = VK_FORMAT_A2B10G10R10_UNORM_PACK32;
+   GFXVKTextureFormat[GFXFormatR11G11B10] = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
+
+   GFXVKTextureFormat[GFXFormatD32] = VK_FORMAT_D32_SFLOAT;
+   GFXVKTextureFormat[GFXFormatD24X8] = VK_FORMAT_X8_D24_UNORM_PACK32;
+   GFXVKTextureFormat[GFXFormatD24S8] = VK_FORMAT_D24_UNORM_S8_UINT;
+   GFXVKTextureFormat[GFXFormatD24FS8] = VK_FORMAT_D32_SFLOAT_S8_UINT;
+
+   GFXVKTextureFormat[GFXFormatR8G8B8A8_LINEAR_FORCE] = VK_FORMAT_R8G8B8A8_UNORM;
+
+   GFXVKTextureFormat[GFXFormatR16G16B16A16] = VK_FORMAT_R16G16B16A16_UNORM;
+   GFXVKTextureFormat[GFXFormatR16G16B16A16F] = VK_FORMAT_R16G16B16A16_SFLOAT;
+   GFXVKTextureFormat[GFXFormatD32FS8X24] = VK_FORMAT_D32_SFLOAT_S8_UINT;
+
+   GFXVKTextureFormat[GFXFormatR32G32B32A32F] = VK_FORMAT_R32G32B32A32_SFLOAT;
+
+   GFXVKTextureFormat[GFXFormatBC1] = VK_FORMAT_BC1_RGBA_UNORM_BLOCK;
+   GFXVKTextureFormat[GFXFormatBC2] = VK_FORMAT_BC2_UNORM_BLOCK;
+   GFXVKTextureFormat[GFXFormatBC3] = VK_FORMAT_BC3_UNORM_BLOCK;
+   GFXVKTextureFormat[GFXFormatBC4] = VK_FORMAT_BC4_UNORM_BLOCK;
+   GFXVKTextureFormat[GFXFormatBC5] = VK_FORMAT_BC5_UNORM_BLOCK;
+
+   GFXVKTextureFormat[GFXFormatBC1_SRGB] = VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
+   GFXVKTextureFormat[GFXFormatBC2_SRGB] = VK_FORMAT_BC2_SRGB_BLOCK;
+   GFXVKTextureFormat[GFXFormatBC3_SRGB] = VK_FORMAT_BC3_SRGB_BLOCK;
+}

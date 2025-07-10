@@ -1,7 +1,7 @@
 #ifndef _GFXGLTEXTUREARRAY_H_
 #define _GFXGLTEXTUREARRAY_H_
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 #include "gfx/gfxTextureArray.h"
 #include "gfx/gfxTextureManager.h"

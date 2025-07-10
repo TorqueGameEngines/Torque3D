@@ -18,6 +18,13 @@ if(AL_ALEXT_PROTOTYPES)
 	addDef( "AL_ALEXT_PROTOTYPES" )
 endif()
 
+if(TORQUE_VULKAN)
+advanced_option(SPIRV_CROSS_ENABLE_TESTS "" OFF)
+advanced_option(ENABLE_OPT "" OFF)
+add_subdirectory(glslang ${TORQUE_LIB_TARG_DIRECTORY}/glslang EXCLUDE_FROM_ALL)
+add_subdirectory(spirv-cross ${TORQUE_LIB_TARG_DIRECTORY}/spirv-cross EXCLUDE_FROM_ALL)
+endif()
+
 #SDL
 set(SDL_SHARED ON CACHE BOOL "Build a shared version of the library" FORCE)
 set(SDL_STATIC OFF CACHE BOOL "Build a static version of the library" FORCE)

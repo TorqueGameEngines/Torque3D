@@ -451,7 +451,7 @@ GFXPrimitiveBuffer *GFXGLDevice::allocPrimitiveBuffer( U32 numIndices, U32 numPr
 
 void GFXGLDevice::setVertexStream( U32 stream, GFXVertexBuffer *buffer )
 {
-   AssertFatal(stream <= 1, "GFXGLDevice::setVertexStream only support 2 stream (0: data, 1: instancing)");
+   //AssertFatal(stream <= 1, "GFXGLDevice::setVertexStream only support 2 stream (0: data, 1: instancing)");
 
    //if(mCurrentVB[stream] != buffer)
    {

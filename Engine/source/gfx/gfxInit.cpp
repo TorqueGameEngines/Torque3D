@@ -77,6 +77,9 @@ inline static void _GFXInitReportAdapters(Vector<GFXAdapter*> &adapters)
       case Direct3D11:
          Con::printf("   Direct 3D (version 11.x) device found");
          break;
+      case Vulkan:
+         Con::printf("   Vulkan device found");
+         break;
       default :
          Con::printf("   Unknown device found");
          break;
@@ -243,7 +246,7 @@ GFXAdapter* GFXInit::chooseAdapter(GFXAdapterType type, S32 outputDeviceIndex)
 const char* GFXInit::getAdapterNameFromType(GFXAdapterType type)
 {
    // must match GFXAdapterType order
-   static const char* _names[] = { "OpenGL", "D3D11", "NullDevice" };
+   static const char* _names[] = { "OpenGL", "D3D11", "Vulkan", "NullDevice" };
    
    if( type < 0 || type >= GFXAdapterType_Count )
    {

@@ -23,7 +23,7 @@
 #ifndef T_GL_H
 #define T_GL_H
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 // JTH: When we use glad, extensions are chached into simple booleans (ints)
 #define gglHasExtension(EXTENSION) GLAD_GL_##EXTENSION

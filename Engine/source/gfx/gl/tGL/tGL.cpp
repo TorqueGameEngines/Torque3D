@@ -35,7 +35,7 @@ namespace GL
 {
    void gglPerformBinds()
    {
-      if (!gladLoadGL()) 
+      if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress))
       {
 	     AssertFatal(false, "Unable to load GLAD. Make sure your OpenGL drivers are up to date!");
       }
@@ -44,7 +44,7 @@ namespace GL
    void gglPerformExtensionBinds(void *context)
    {
 #if defined(TORQUE_OS_WIN)
-      if (!gladLoadWGL((HDC)context))
+      if (!gladLoaderLoadWGL((HDC)context))
       {
          AssertFatal(false, "Unable to load WGL in GLAD. Make sure your OpenGL drivers are up to date!");
       }

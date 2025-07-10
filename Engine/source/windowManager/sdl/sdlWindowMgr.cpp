@@ -242,8 +242,10 @@ PlatformWindow *PlatformWindowManagerSDL::createWindow(GFXDevice *device, const 
    PlatformWindowSDL *window = new PlatformWindowSDL();   
    U32 windowFlags = /*SDL_WINDOW_SHOWN |*/ SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
 
-   if(GFX->getAdapterType() == OpenGL)
-       windowFlags |= SDL_WINDOW_OPENGL;
+   if (GFX->getAdapterType() == OpenGL)
+      windowFlags |= SDL_WINDOW_OPENGL;
+   else if (GFX->getAdapterType() == Vulkan)
+      windowFlags |= SDL_WINDOW_VULKAN;
 
    window->mWindowHandle = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, mode.resolution.x, mode.resolution.y, windowFlags );
    window->mWindowId = SDL_GetWindowID( window->mWindowHandle );

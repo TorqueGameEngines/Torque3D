@@ -1,13 +1,20 @@
-file(GLOB GLAD_SOURCES "src/*.c")
+set(GLAD_SOURCES
+    src/gl.c
+    src/gles1.c
+    src/gles2.c
+    src/vulkan.c
+)
 
-# TODO EGL support if we ever use EGL instead of GLX
-if (WIN32)
-  file(GLOB GLAD_SOURCES_WGL "src/wgl/*.c")
-  set(GLAD_SOURCES ${GLAD_SOURCES} ${GLAD_SOURCES_WGL})
-elseif (UNIX AND NOT APPLE)
-  file(GLOB GLAD_SOURCES_GLX "src/glx/*.c")
-  set(GLAD_SOURCES ${GLAD_SOURCES} ${GLAD_SOURCES_GLX})
+if(WIN32)
+    list(APPEND GLAD_SOURCES src/wgl.c)
+elseif(UNIX AND NOT APPLE)
+    list(APPEND GLAD_SOURCES src/glx.c src/egl.c)
 endif()
+
 
 add_library(glad STATIC ${GLAD_SOURCES})
 target_include_directories(glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+if(WIN32)
+    target_link_libraries(glad PUBLIC opengl32)
+endif()

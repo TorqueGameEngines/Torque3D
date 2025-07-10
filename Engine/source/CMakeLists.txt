@@ -8,6 +8,7 @@ endif (APPLE)
 ################# Helper Function Calls ###################
 forwardDef(TORQUE_OPENGL)
 forwardDef(TORQUE_D3D11)
+forwardDef(TORQUE_VULKAN)
 forwardDef(TORQUE_ADVANCED_LIGHTING)
 forwardDef(TORQUE_BASIC_LIGHTING)
 set(TORQUE_SDL ON) # we need sdl to do our platform interop
@@ -91,6 +92,10 @@ if (TORQUE_OPENGL)
   torqueAddSourceDirectories("gfx/gl" "gfx/gl/sdl" "gfx/gl/tGL")
 endif (TORQUE_OPENGL)
 
+if(TORQUE_VULKAN)
+torqueAddSourceDirectories("gfx/Vulkan")
+endif(TORQUE_VULKAN)
+
 if (WIN32 AND TORQUE_D3D11)
   torqueAddSourceDirectories("gfx/D3D11")
 endif (WIN32 AND TORQUE_D3D11)
@@ -142,7 +147,7 @@ if(TORQUE_D3D11)
 endif(TORQUE_D3D11)
 
 # Handle shadergen
-torqueAddSourceDirectories("shaderGen")
+torqueAddSourceDirectories("shaderGen" "shaderGen/ShaderNode" "shaderGen/ShaderNode/Nodes")
 
 if (WIN32 AND TORQUE_D3D11)
   torqueAddSourceDirectories("shaderGen/HLSL")
@@ -502,6 +507,11 @@ foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
   # remove warnings from 3rd parties.
   #target_compile_options(${TORQUE_LIBRARY} PRIVATE "-w")
 endforeach()
+
+# add vulkan after
+if(TORQUE_VULKAN)
+set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} ${Vulkan_LIBRARY})
+endif(TORQUE_VULKAN)
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
 target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})

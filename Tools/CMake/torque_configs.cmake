@@ -21,6 +21,17 @@ if(TORQUE_TESTING)
 set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest gmock)
 endif()
 
+if(TORQUE_VULKAN)
+	# Vulkan SDK
+	find_package(Vulkan REQUIRED)
+	if(NOT ${Vulkan_Found})
+		set(TORQUE_VULKAN OFF)
+	else()
+		set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} glslang spirv-cross-core spirv-cross-glsl spirv-cross-hlsl)
+		set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${Vulkan_INCLUDE_DIR} )
+	endif()
+endif(TORQUE_VULKAN)
+
 if(NOT WIN32)
    set(WIN32 OFF CACHE BOOL "" FORCE)
 endif()
@@ -52,6 +63,8 @@ advanced_option(TORQUE_DEBUG_GFX_MODE "triggers graphics debug mode" OFF)
 advanced_option(TORQUE_ADVANCED_LIGHTING "Advanced Lighting" ON)
 advanced_option(TORQUE_BASIC_LIGHTING "Basic Lighting" ON)
 advanced_option(TORQUE_OPENGL "Allow OpenGL render" ON) # we need OpenGL to render on Linux/Mac
+advanced_option(TORQUE_VULKAN "Allow Vulkan render" ON) # we can use this to render on win/lin/mac (until metal)
+
 if(WIN32)
 	advanced_option(TORQUE_D3D11 "Allow Direct3D 11 render" ON)
 	addDef(TORQUE_D3D11)
@@ -79,3 +92,4 @@ advanced_option(USE_TEMPLATE_MATRIX "Set to true to use the new templated matrix
 advanced_option(TORQUE_TESTING "Unit test build" OFF)
 
 setupVersionNumbers()
+

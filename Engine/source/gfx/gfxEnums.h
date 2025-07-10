@@ -242,6 +242,7 @@ enum GFXAdapterType
 {
    OpenGL = 0,
    Direct3D11,
+   Vulkan,
    NullDevice,
    GFXAdapterType_Count
 };

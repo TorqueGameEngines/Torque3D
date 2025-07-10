@@ -25,6 +25,7 @@
 #include "shaderGen/GLSL/shaderCompGLSL.h"
 #include "shaderGen/featureMgr.h"
 #include "gfx/gl/tGL/tGL.h"
+#include "gfx/gl/gfxGLVertexAttribLocation.h"
 
 
 void ShaderGenPrinterGLSL::printShaderHeader( Stream& stream )
@@ -75,11 +76,11 @@ void ShaderGenPrinterGLSL::printPixelShaderOutputStruct( Stream& stream, const M
     }
 
     WRITESTR(avar("//Fragment shader OUT\r\n"));
-    WRITESTR(avar("out vec4 OUT_col;\r\n"));
+    WRITESTR(avar("layout (location = 0) out vec4 OUT_col;\r\n"));
     for( U32 i = 1; i < 4; i++ )
     {
         if( numMRTs & 1 << i )
-            WRITESTR(avar("out vec4 OUT_col%d;\r\n", i));
+            WRITESTR(avar("layout (location = %d) out vec4 OUT_col%d;\r\n",i, i));
     }
 
     WRITESTR("\r\n");
@@ -124,75 +125,91 @@ const char* ShaderGenComponentFactoryGLSL::typeToString( GFXDeclType type )
 
 ShaderComponent* ShaderGenComponentFactoryGLSL::createVertexInputConnector( const GFXVertexFormat &vertexFormat )
 {
-   AppVertConnectorGLSL *vertComp = new AppVertConnectorGLSL;
+   AppVertConnectorGLSL* vertComp = new AppVertConnectorGLSL;
 
    // Loop thru the vertex format elements.
-   for ( U32 i=0; i < vertexFormat.getElementCount(); i++ )
+   U32 texCoordIndex = 0;
+   for (U32 i = 0; i < vertexFormat.getElementCount(); i++)
    {
-      const GFXVertexElement &element = vertexFormat.getElement( i );
-      
-      Var *var = NULL;
+      const GFXVertexElement& element = vertexFormat.getElement(i);
 
-      if ( element.isSemantic( GFXSemantic::POSITION ) )
+      Var* var = NULL;
+
+      if (element.isSemantic(GFXSemantic::POSITION))
       {
-         var = vertComp->getElement( RT_POSITION );
-         var->setName( "position" );
+         var = vertComp->getElement(RT_POSITION);
+         var->setName("position");
+         var->constNum = Torque::GL_VertexAttrib_Position;
       }
-      else if ( element.isSemantic( GFXSemantic::NORMAL ) )
+      else if (element.isSemantic(GFXSemantic::NORMAL))
       {
-         var = vertComp->getElement( RT_NORMAL );
-         var->setName( "normal" );
+         var = vertComp->getElement(RT_NORMAL);
+         var->setName("normal");
+         var->constNum = Torque::GL_VertexAttrib_Normal;
       }
-      else if ( element.isSemantic( GFXSemantic::TANGENT ) )
+      else if (element.isSemantic(GFXSemantic::TANGENT))
       {
-         var = vertComp->getElement( RT_TANGENT );
-         var->setName( "T" );
+         var = vertComp->getElement(RT_TANGENT);
+         var->setName("T");
+         var->constNum = Torque::GL_VertexAttrib_Tangent;
       }
-      else if ( element.isSemantic( GFXSemantic::TANGENTW ) )
+      else if (element.isSemantic(GFXSemantic::TANGENTW))
       {
-         var = vertComp->getElement( RT_TANGENTW );
-         var->setName( "tangentW" );
+         var = vertComp->getElement(RT_TANGENTW);
+         var->setName("tangentW");
+         var->constNum = Torque::GL_VertexAttrib_TangentW;
       }
-      else if ( element.isSemantic( GFXSemantic::BINORMAL ) )
+      else if (element.isSemantic(GFXSemantic::BINORMAL))
       {
-         var = vertComp->getElement( RT_BINORMAL );
-         var->setName( "B" );
+         var = vertComp->getElement(RT_BINORMAL);
+         var->setName("B");
+         var->constNum = Torque::GL_VertexAttrib_Binormal;
       }
-      else if ( element.isSemantic( GFXSemantic::COLOR ) )
+      else if (element.isSemantic(GFXSemantic::COLOR))
       {
-         var = vertComp->getElement( RT_COLOR );
-         var->setName( "diffuse" );
+         var = vertComp->getElement(RT_COLOR);
+         var->setName("diffuse");
+         var->constNum = Torque::GL_VertexAttrib_Color;
       }
       else if (element.isSemantic(GFXSemantic::BLENDINDICES))
       {
          var = vertComp->getElement(RT_BLENDINDICES);
          var->setName(String::ToString("vBlendIndex%d", element.getSemanticIndex()));
+         var->constNum = Torque::GL_VertexAttrib_BlendIndex0 + element.getSemanticIndex();
       }
       else if (element.isSemantic(GFXSemantic::BLENDWEIGHT))
       {
          var = vertComp->getElement(RT_BLENDWEIGHT);
          var->setName(String::ToString("vBlendWeight%d", element.getSemanticIndex()));
+         var->constNum = Torque::GL_VertexAttrib_BlendWeight0 + element.getSemanticIndex();
       }
-      else if ( element.isSemantic( GFXSemantic::TEXCOORD ) )
+      else if (element.isSemantic(GFXSemantic::TEXCOORD))
       {
-         var = vertComp->getElement( RT_TEXCOORD );
-         if ( element.getSemanticIndex() == 0 )
-            var->setName( "texCoord" );
+         texCoordIndex = getMax(texCoordIndex, element.getSemanticIndex());
+         var = vertComp->getElement(RT_TEXCOORD);
+         if (element.getSemanticIndex() == 0)
+            var->setName("texCoord");
          else
-            var->setName( String::ToString( "texCoord%d", element.getSemanticIndex() + 1 ) );
+            var->setName(String::ToString("texCoord%d", element.getSemanticIndex() + 1));
+
+         var->constNum = Torque::GL_VertexAttrib_TexCoord0 + texCoordIndex;
+         ++texCoordIndex;
       }
       else
       {
          // Everything else is a texcoord!
-         var = vertComp->getElement( RT_TEXCOORD );
-         var->setName( "tc" + element.getSemantic() );
+         var = vertComp->getElement(RT_TEXCOORD);
+         texCoordIndex = getMax(texCoordIndex, element.getSemanticIndex());
+         var->setName("tc" + element.getSemantic());
+         var->constNum = Torque::GL_VertexAttrib_TexCoord0 + texCoordIndex;
+         ++texCoordIndex;
       }
 
-      if ( !var )
+      if (!var)
          continue;
 
-      var->setStructName( "IN" );
-      var->setType( typeToString( element.getType() ) );
+      var->setStructName("IN");
+      var->setType(typeToString(element.getType()));
    }
 
    return vertComp;

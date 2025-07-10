@@ -22,13 +22,14 @@ set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest gmock)
 endif()
 
 if(TORQUE_VULKAN)
-	# Vulkan SDK
-	find_package(Vulkan REQUIRED)
-	if(NOT Vulkan_Found)
+	find_package(Vulkan)
+	if(NOT Vulkan_INCLUDE_DIRS OR NOT Vulkan_LIBRARIES)
+		message(WARNING "Vulkan SDK not fully detected, disabling Vulkan support")
 		set(TORQUE_VULKAN OFF CACHE BOOL "" FORCE)
 	else()
+		message(STATUS "Vulkan SDK found at ${Vulkan_INCLUDE_DIRS}")
 		set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} glslang spirv-cross-core spirv-cross-glsl spirv-cross-hlsl)
-		set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${Vulkan_INCLUDE_DIRS} )
+		set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${Vulkan_INCLUDE_DIRS})
 	endif()
 endif(TORQUE_VULKAN)
 

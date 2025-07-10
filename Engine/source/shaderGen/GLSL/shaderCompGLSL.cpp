@@ -158,53 +158,30 @@ void AppVertConnectorGLSL::reset()
 
 void AppVertConnectorGLSL::print( Stream &stream, bool isVertexShader )
 {
-   if(!isVertexShader)
+   if (!isVertexShader)
       return;
 
    U8 output[256];
 
-   // print struct
-   dSprintf( (char*)output, sizeof(output), "struct VertexData\r\n" );
-   stream.write( dStrlen((char*)output), output );
-   dSprintf( (char*)output, sizeof(output), "{\r\n" );
-   stream.write( dStrlen((char*)output), output );
-
-   for( U32 i=0; i<mElementList.size(); i++ )
+   // Output GLSL layout(location = N) in ...;
+   for (U32 i = 0; i < mElementList.size(); i++)
    {
-      Var *var = mElementList[i];
-      
-      if( var->arraySize == 1)
-      {         
-         dSprintf( (char*)output, sizeof(output), "   %s %s;\r\n", var->type, (char*)var->name );
-         stream.write( dStrlen((char*)output), output );
+      Var* var = mElementList[i];
+
+      if (var->arraySize == 1)
+      {
+         dSprintf((char*)output, sizeof(output), "layout(location = %d) in %s IN_%s;\r\n", var->constNum, var->type, (char*)var->name);
+         stream.write(dStrlen((char*)output), output);
       }
       else
       {
-         dSprintf( (char*)output, sizeof(output), "   %s %s[%d];\r\n", var->type, (char*)var->name, var->arraySize );
-         stream.write( dStrlen((char*)output), output );
+         dSprintf((char*)output, sizeof(output), "layout(location = %d) in %s IN_%s[%d];\r\n", var->constNum, var->type, (char*)var->name, var->arraySize);
+         stream.write(dStrlen((char*)output), output);
       }
    }
 
-   dSprintf( (char*)output, sizeof(output), "} IN;\r\n\r\n" );
-   stream.write( dStrlen((char*)output), output );   
-
-   // print in elements
-   for( U32 i=0; i<mElementList.size(); i++ )
-   {
-      Var *var = mElementList[i];
-      
-      for(int j = 0; j < var->arraySize; ++j)
-      {        
-         const char *name = j == 0 ? var->connectName : avar("vTexCoord%d", var->constNum + j) ;
-         dSprintf( (char*)output, sizeof(output), "in %s %s;\r\n", var->type, name );
-         stream.write( dStrlen((char*)output), output );         
-      }
-
-      dSprintf( (char*)output, sizeof(output), "#define IN_%s IN.%s\r\n", var->name, var->name ); // TODO REMOVE
-      stream.write( dStrlen((char*)output), output );
-   }
-   const char* newLine ="\r\n";
-   stream.write( dStrlen((char*)newLine), newLine );
+   const char* newLine = "\r\n";
+   stream.write(dStrlen((char*)newLine), newLine);
 }
 
 Var * VertPixelConnectorGLSL::getElement( RegisterType type, 
@@ -304,6 +281,7 @@ void VertPixelConnectorGLSL::reset()
 void VertPixelConnectorGLSL::print( Stream &stream, bool isVerterShader )
 {
    // print out elements
+   U32 idx = 0;
    for( U32 i=0; i<mElementList.size(); i++ )
    {
       U8 output[256];
@@ -313,10 +291,11 @@ void VertPixelConnectorGLSL::print( Stream &stream, bool isVerterShader )
          continue;
 
       if(var->arraySize <= 1)
-         dSprintf((char*)output, sizeof(output), "%s %s _%s_;\r\n", (isVerterShader ? "out" : "in"), var->type, var->connectName);
+         dSprintf((char*)output, sizeof(output), "layout (location = %d) %s %s _%s_;\r\n", idx, (isVerterShader ? "out" : "in"), var->type, var->connectName);
       else
-         dSprintf((char*)output, sizeof(output), "%s %s _%s_[%d];\r\n", (isVerterShader ? "out" : "in"),var->type, var->connectName, var->arraySize);      
+         dSprintf((char*)output, sizeof(output), "layout (location = %d) %s %s _%s_[%d];\r\n", idx, (isVerterShader ? "out" : "in"),var->type, var->connectName, var->arraySize);
 
+      idx++;
       stream.write( dStrlen((char*)output), output );
    }
 
@@ -354,41 +333,7 @@ void VertPixelConnectorGLSL::printOnMain( Stream &stream, bool isVerterShader )
 
 void AppVertConnectorGLSL::printOnMain( Stream &stream, bool isVerterShader )
 {
-   if(!isVerterShader)
-      return;   
-
-   const char *newLine = "\r\n";
-   const char *header = "   //-------------------------\r\n";
-   stream.write( dStrlen((char*)newLine), newLine );
-   stream.write( dStrlen((char*)header), header );
-
-   // print out elements
-   for( U32 i=0; i<mElementList.size(); i++ )
-   {
-      Var *var = mElementList[i];
-      U8 output[256];  
-
-      if(var->arraySize <= 1)
-      {
-         dSprintf((char*)output, sizeof(output), "   IN.%s = %s;\r\n", var->name, var->connectName);
-         stream.write( dStrlen((char*)output), output );
-      }
-      else
-      {
-         for(int j = 0; j < var->arraySize; ++j)
-         {
-            const char *name = j == 0 ? var->connectName : avar("vTexCoord%d", var->constNum + j) ;
-            dSprintf((char*)output, sizeof(output), "   IN.%s[%d] = %s;\r\n", var->name, j, name );
-            stream.write( dStrlen((char*)output), output );
-         }
-      }
-   }
-
-   stream.write( dStrlen((char*)header), header );
-   stream.write( dStrlen((char*)newLine), newLine );
 }
-
-
 
 
 Vector<String> initDeprecadedDefines()

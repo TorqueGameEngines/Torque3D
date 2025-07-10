@@ -1317,6 +1317,10 @@ bool GFXGLShader::_loadShaderFromStream(GLuint shader,
    buffers.push_back(dStrdup(gpuShader5Ext));
    lengths.push_back(dStrlen(gpuShader5Ext));
 
+   const char* gpuLayoutLoc = "#extension GL_ARB_separate_shader_objects : enable\n";
+   buffers.push_back(dStrdup(gpuLayoutLoc));
+   lengths.push_back(dStrlen(gpuLayoutLoc));
+
    const char* newLine = "\r\n";
    buffers.push_back(dStrdup(newLine));
    lengths.push_back(dStrlen(newLine));

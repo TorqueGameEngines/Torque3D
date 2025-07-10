@@ -24,11 +24,11 @@ endif()
 if(TORQUE_VULKAN)
 	# Vulkan SDK
 	find_package(Vulkan REQUIRED)
-	if(NOT ${Vulkan_Found})
+	if(NOT Vulkan_Found)
 		set(TORQUE_VULKAN OFF CACHE BOOL "" FORCE)
 	else()
 		set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} glslang spirv-cross-core spirv-cross-glsl spirv-cross-hlsl)
-		set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${Vulkan_INCLUDE_DIR} )
+		set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${Vulkan_INCLUDE_DIRS} )
 	endif()
 endif(TORQUE_VULKAN)
 

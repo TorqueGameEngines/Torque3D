@@ -21,18 +21,6 @@ if(TORQUE_TESTING)
 set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest gmock)
 endif()
 
-if(TORQUE_VULKAN)
-	find_package(Vulkan)
-	if(NOT Vulkan_INCLUDE_DIRS OR NOT Vulkan_LIBRARIES)
-		message(WARNING "Vulkan SDK not fully detected, disabling Vulkan support")
-		set(TORQUE_VULKAN OFF CACHE BOOL "" FORCE)
-	else()
-		message(STATUS "Vulkan SDK found at ${Vulkan_INCLUDE_DIRS}")
-		set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} glslang spirv-cross-core spirv-cross-glsl spirv-cross-hlsl)
-		set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${Vulkan_INCLUDE_DIRS})
-	endif()
-endif(TORQUE_VULKAN)
-
 if(NOT WIN32)
    set(WIN32 OFF CACHE BOOL "" FORCE)
 endif()
@@ -91,6 +79,18 @@ advanced_option(TORQUE_SHOW_LEGACY_FILE_FIELDS "If on, shows legacy direct file 
 advanced_option(USE_TEMPLATE_MATRIX "Set to true to use the new templated matrix class(still in beta)." OFF)
 #testing
 advanced_option(TORQUE_TESTING "Unit test build" OFF)
+
+if(TORQUE_VULKAN)
+   find_package(Vulkan)
+   if(NOT Vulkan_INCLUDE_DIRS OR NOT Vulkan_LIBRARIES)
+      message(WARNING "Vulkan SDK not fully detected, disabling Vulkan support")
+      set(TORQUE_VULKAN OFF CACHE BOOL "" FORCE)
+   else()
+      message(STATUS "Vulkan SDK found at ${Vulkan_INCLUDE_DIRS}")
+      set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} glslang spirv-cross-core spirv-cross-glsl spirv-cross-hlsl)
+      set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${Vulkan_INCLUDE_DIRS})
+   endif()
+endif(TORQUE_VULKAN)
 
 setupVersionNumbers()
 

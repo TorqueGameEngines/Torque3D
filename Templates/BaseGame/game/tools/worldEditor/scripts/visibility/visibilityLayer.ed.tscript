@@ -93,18 +93,15 @@ function setupEditorVisibilityMenu()
       item[ 7 ] = "Show Sound Spaces" TAB "" TAB "toggleVolumeViz(\"SoundSpaces\");";
    };
    
-   %debugRenderpopup = new PopupMenu(EVisibilityDebugRenderOptions)
-   {
-      superClass = "MenuBuilder";
-      class = "EditorWorldMenu";
-      
-      item[ 0 ] = "Show Player Collision" TAB "" TAB "togglePlayerCollisionViz();";
-      item[ 1 ] = "Show Terrain Debug" TAB "" TAB "toggleTerrainDebugViz();";
-      item[ 2 ] = "Show Decals Debug" TAB "" TAB "toggleDecalsDebugViz();";
-      item[ 3 ] = "Show Bounding Boxes" TAB "" TAB "toggleBoundingBoxesViz();";
-      item[ 4 ] = "Show Physics World" TAB "" TAB "togglePhysicsDebugViz();";
-      item[ 5 ] = "Show Texel Density" TAB "" TAB "toggleTexelDensityViz();";
-   };
+   %debugRenderpopup = MenuBuilder::newMenu("Visibility Debug Render", "EditorWorldMenu");
+   %debugRenderpopup.newItem("Show Player Collision", "togglePlayerCollisionViz();", "");
+   %debugRenderpopup.newItem("Show Terrain Debug", "toggleTerrainDebugViz();");
+   %debugRenderpopup.newItem("Show Decals Debug", "toggleDecalsDebugViz();");
+   %debugRenderpopup.newItem("Show Bounding Boxes", "toggleBoundingBoxesViz();");
+   %debugRenderpopup.newItem("Show Physics World", "togglePhysicsDebugViz();");
+   %debugRenderpopup.newItem("Show Texel Density", "toggleBoundingBoxesViz();");
+   
+   %debugRenderpopup.setName(EVisibilityDebugRenderOptions);
    
    if(!physicsPluginPresent())
       %debugRenderpopup.enableItem(4, false);
@@ -247,6 +244,8 @@ function setupEditorVisibilityMenu()
       item[ 14 ] = "-" TAB "" TAB "";
       item[ 15 ] = "Class Visibility" TAB "" TAB "Editor_VisibilityOptionsButton::onClick();";
    };
+      
+   callOnModules("setupEditorVisibilityMenu", "Game");
 }
 
 function Editor_VisibilityOptionsButton::onClick(%this)

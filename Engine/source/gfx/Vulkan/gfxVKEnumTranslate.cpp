@@ -9,6 +9,7 @@ VkSamplerAddressMode GFXVKTextureAddress[GFXAddress_COUNT];
 VkFilter GFXVKTextureFilter[GFXTextureFilter_COUNT];
 VkStencilOp GFXVKStencilOp[GFXStencilOp_COUNT];
 VkFormat GFXVKTextureFormat[GFXFormat_COUNT];
+VkFormat GFXVKDeclType[GFXDeclType_COUNT];
 VkCullModeFlagBits GFXVKCullMode[GFXCull_COUNT];
 VkPolygonMode GFXVKFillMode[GFXFill_COUNT];
 
@@ -134,4 +135,11 @@ void GFXVKEnumTranslate::init()
    GFXVKTextureFormat[GFXFormatBC1_SRGB] = VK_FORMAT_BC1_RGBA_SRGB_BLOCK;
    GFXVKTextureFormat[GFXFormatBC2_SRGB] = VK_FORMAT_BC2_SRGB_BLOCK;
    GFXVKTextureFormat[GFXFormatBC3_SRGB] = VK_FORMAT_BC3_SRGB_BLOCK;
+
+   GFXVKDeclType[GFXDeclType_Float] = VK_FORMAT_R32_SFLOAT;
+   GFXVKDeclType[GFXDeclType_Float2] = VK_FORMAT_R32G32_SFLOAT;
+   GFXVKDeclType[GFXDeclType_Float3] = VK_FORMAT_R32G32B32_SFLOAT;
+   GFXVKDeclType[GFXDeclType_Float4] = VK_FORMAT_R32G32B32A32_SFLOAT;
+   GFXVKDeclType[GFXDeclType_Color] = VK_FORMAT_R8G8B8A8_UNORM;
+   GFXVKDeclType[GFXDeclType_UByte4] = VK_FORMAT_R8G8B8A8_UINT;
 }

@@ -3,12 +3,14 @@
 #include "console/console.h"
 #include "gfx/Vulkan/gfxVKDevice.h"
 #include "gfx/Vulkan/gfxVKWindowTarget.h"
+#include "gfx/Vulkan/gfxVKEnumTranslate.h"
 #include "core/stream/fileStream.h"
 #include "core/strings/unicode.h"
 #include "core/util/journal/process.h"
 
 #include "windowManager/sdl/sdlWindow.h"
 #include "SDL.h"
+#include "gfx/gl/gfxGLVertexAttribLocation.h"
 
 //
 // Register this device with GFXInit
@@ -27,6 +29,8 @@ static GFXVKRegisterDevice pVKRegisterDevice;
 GFXVKDevice::GFXVKDevice(U32 index)
 {
    mAdapterIndex = index;
+   mCurrentFrameIndex = 0;
+   mCurrentImageIndex = 0;
 
    mGraphicsQueueFamily = U32_MAX;
    mPresentQueueFamily = U32_MAX;
@@ -42,10 +46,19 @@ GFXVKDevice::GFXVKDevice(U32 index)
    mPipelineLayout = VK_NULL_HANDLE;
    mGraphicsPipeline = VK_NULL_HANDLE;
    mCommandPool = VK_NULL_HANDLE;
+   mSwapChain = VK_NULL_HANDLE;
+
+   mCurrentCommandBuffer = VK_NULL_HANDLE;
 }
 
 GFXVKDevice::~GFXVKDevice()
 {
+
+   for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+      vkDestroySemaphore(mDevice, mRenderFinishedSemaphores[i], NULL);
+      vkDestroySemaphore(mDevice, mImageAvailableSemaphores[i], NULL);
+      vkDestroyFence(mDevice, mInFlightFences[i], NULL);
+   }
 }
 
 void GFXVKDevice::init(const GFXVideoMode& mode, PlatformWindow* window)
@@ -183,6 +196,222 @@ void GFXVKDevice::init(const GFXVideoMode& mode, PlatformWindow* window)
 
    mInitialized = true;
 
+}
+
+bool GFXVKDevice::beginSceneInternal()
+{
+   vkWaitForFences(mDevice, 1, &mInFlightFences[mCurrentFrameIndex], VK_TRUE, UINT64_MAX);
+   vkResetFences(mDevice, 1, &mInFlightFences[mCurrentFrameIndex]);
+
+   VkResult result = vkAcquireNextImageKHR(
+      mDevice,
+      mSwapChain,
+      UINT64_MAX,
+      mImageAvailableSemaphores[mCurrentFrameIndex],
+      VK_NULL_HANDLE,
+      &mCurrentImageIndex
+   );
+
+   if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+      //recreateSwapchain();
+      return false;
+   }
+
+   // Reset and begin command buffer
+   mCurrentCommandBuffer = mCommandBuffers[mCurrentFrameIndex];
+
+   vkResetCommandBuffer(mCurrentCommandBuffer, 0);
+
+   VkCommandBufferBeginInfo beginInfo{};
+   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+   vkBeginCommandBuffer(mCurrentCommandBuffer, &beginInfo);
+
+   // Begin render pass (just an example)
+   VkRenderPassBeginInfo renderPassInfo{};
+   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+   renderPassInfo.renderPass = mRenderPass;
+   renderPassInfo.framebuffer = mFramebuffers[mCurrentImageIndex];
+   renderPassInfo.renderArea.offset = { 0, 0 };
+   //renderPassInfo.renderArea.extent = mSwapchainExtent;
+
+   VkClearValue clearValues[2];
+   clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+   clearValues[1].depthStencil = { 1.0f, 0 };
+
+   renderPassInfo.clearValueCount = 2;
+   renderPassInfo.pClearValues = clearValues;
+
+   vkCmdBeginRenderPass(mCurrentCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+   return true;
+}
+
+void GFXVKDevice::endSceneInternal()
+{
+   // End render pass and command buffer
+   vkCmdEndRenderPass(mCurrentCommandBuffer);
+   vkEndCommandBuffer(mCurrentCommandBuffer);
+
+   // Submit command buffer
+   VkSubmitInfo submitInfo{};
+   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+   VkSemaphore waitSemaphores[] = { mImageAvailableSemaphores[mCurrentFrameIndex] };
+   VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+   submitInfo.waitSemaphoreCount = 1;
+   submitInfo.pWaitSemaphores = waitSemaphores;
+   submitInfo.pWaitDstStageMask = waitStages;
+
+   submitInfo.commandBufferCount = 1;
+   submitInfo.pCommandBuffers = &mCurrentCommandBuffer;
+
+   VkSemaphore signalSemaphores[] = { mRenderFinishedSemaphores[mCurrentFrameIndex] };
+   submitInfo.signalSemaphoreCount = 1;
+   submitInfo.pSignalSemaphores = signalSemaphores;
+
+   if (vkQueueSubmit(mGraphicsQueue, 1, &submitInfo, mInFlightFences[mCurrentFrameIndex]) != VK_SUCCESS) {
+      AssertFatal(false, "Failed to submit Vulkan command buffer.");
+   }
+
+   // Present the frame
+   VkPresentInfoKHR presentInfo{};
+   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+   presentInfo.waitSemaphoreCount = 1;
+   presentInfo.pWaitSemaphores = signalSemaphores;
+
+   VkSwapchainKHR swapchains[] = { mSwapChain };
+   presentInfo.swapchainCount = 1;
+   presentInfo.pSwapchains = swapchains;
+   presentInfo.pImageIndices = &mCurrentImageIndex;
+
+   vkQueuePresentKHR(mPresentQueue, &presentInfo);
+
+   // Move to next frame
+   mCurrentFrameIndex = (mCurrentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+GFXVertexDecl* GFXVKDevice::allocVertexDecl(const GFXVertexFormat* vertexFormat)
+{
+   PROFILE_SCOPE(GFXVKDevice_allocVertexDecl);
+
+   GFXVKVertexDecl* decl = mVertexDecls[vertexFormat->getDescription()];
+   if (decl)
+      return decl;
+
+   const U32 elemCount = vertexFormat->getElementCount();
+
+   Vector<VkVertexInputAttributeDescription> attributeDescs;
+   Vector<VkVertexInputBindingDescription> bindingDescs;
+
+   U32 maxStream = 0;
+
+   // First, determine the highest stream index
+   for (U32 i = 0; i < elemCount; ++i)
+   {
+      const U32 stream = vertexFormat->getElement(i).getStreamIndex();
+      if (stream + 1 > maxStream)
+         maxStream = stream + 1;
+   }
+
+   // Prepare per-stream stride and offset tracking
+   Vector<U32> streamStrides;
+   streamStrides.setSize(maxStream);
+   dMemset(streamStrides.address(), 0, sizeof(U32) * maxStream);
+
+   Vector<U32> streamOffsets;
+   streamOffsets.setSize(maxStream);
+   dMemset(streamOffsets.address(), 0, sizeof(U32) * maxStream);
+
+   U32 texCoordIndex = 0;
+
+   for (U32 i = 0; i < elemCount; ++i)
+   {
+      const GFXVertexElement& element = vertexFormat->getElement(i);
+      const U32 stream = element.getStreamIndex();
+      const U32 sizeInBytes = element.getSizeInBytes();
+
+      VkVertexInputAttributeDescription attrib{};
+      attrib.binding = stream;
+      attrib.offset = streamOffsets[stream];
+      attrib.format = GFXVKDeclType[element.getType()];
+
+      streamOffsets[stream] += sizeInBytes;
+      streamStrides[stream] += sizeInBytes;
+
+      // Assign location based on semantic
+      if (element.isSemantic(GFXSemantic::POSITION))
+         attrib.location = Torque::GL_VertexAttrib_Position;
+      else if (element.isSemantic(GFXSemantic::NORMAL))
+         attrib.location = Torque::GL_VertexAttrib_Normal;
+      else if (element.isSemantic(GFXSemantic::TANGENT))
+         attrib.location = Torque::GL_VertexAttrib_Tangent;
+      else if (element.isSemantic(GFXSemantic::TANGENTW))
+         attrib.location = Torque::GL_VertexAttrib_TangentW;
+      else if (element.isSemantic(GFXSemantic::BINORMAL))
+         attrib.location = Torque::GL_VertexAttrib_Binormal;
+      else if (element.isSemantic(GFXSemantic::COLOR))
+         attrib.location = Torque::GL_VertexAttrib_Color;
+      else if (element.isSemantic(GFXSemantic::BLENDWEIGHT))
+         attrib.location = Torque::GL_VertexAttrib_BlendWeight0 + element.getSemanticIndex();
+      else if (element.isSemantic(GFXSemantic::BLENDINDICES))
+         attrib.location = Torque::GL_VertexAttrib_BlendIndex0 + element.getSemanticIndex();
+      else // Texture coordinates
+      {
+         attrib.location = Torque::GL_VertexAttrib_TexCoord0 + texCoordIndex;
+         ++texCoordIndex;
+      }
+
+      attributeDescs.push_back(attrib);
+   }
+
+   // Fill in one binding per stream
+   for (U32 i = 0; i < maxStream; ++i)
+   {
+      VkVertexInputBindingDescription binding{};
+      binding.binding = i;
+      binding.inputRate = (vertexFormat->hasInstancing() && i == 1)
+         ? VK_VERTEX_INPUT_RATE_INSTANCE
+         : VK_VERTEX_INPUT_RATE_VERTEX;
+      binding.stride = streamStrides[i];
+
+      bindingDescs.push_back(binding);
+   }
+
+   // Create and store the declaration
+   decl = new GFXVKVertexDecl();
+   decl->bindingDescriptions = std::move(bindingDescs);
+   decl->attributeDescriptions = std::move(attributeDescs);
+
+   mVertexDecls[vertexFormat->getDescription()] = decl;
+   return decl;
+}
+
+void GFXVKDevice::setVertexDecl(const GFXVertexDecl* decl)
+{
+   const GFXVKVertexDecl* vkDecl = NULL;
+   if (decl)
+   {
+      vkDecl = static_cast<const GFXVKVertexDecl*>(decl);
+
+      VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+      vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+      vertexInputInfo.vertexBindingDescriptionCount = vkDecl->bindingDescriptions.size();
+      vertexInputInfo.pVertexBindingDescriptions = vkDecl->bindingDescriptions.begin();
+      vertexInputInfo.vertexAttributeDescriptionCount = vkDecl->attributeDescriptions.size();
+      vertexInputInfo.pVertexAttributeDescriptions = vkDecl->attributeDescriptions.begin();
+   }
+}
+
+void GFXVKDevice::drawPrimitive(GFXPrimitiveType primType, U32 vertexStart, U32 primitiveCount)
+{
+}
+
+void GFXVKDevice::drawIndexedPrimitive(GFXPrimitiveType primType, U32 startVertex, U32 minIndex, U32 numVerts, U32 startIndex, U32 primitiveCount)
+{
 }
 
 void GFXVKDevice::enumerateAdapters(Vector<GFXAdapter*>& adapterList)
@@ -370,6 +599,9 @@ GFXWindowTarget* GFXVKDevice::allocWindowTarget(PlatformWindow* window)
       vkwt->_createSwapchain();
       vkwt->_createDepthBuffer();
       vkwt->_createFramebuffers();
+
+      mSwapChain = vkwt->mSwapchain;
+      mFramebuffers = vkwt->mFramebuffers;
    }
    else
    {

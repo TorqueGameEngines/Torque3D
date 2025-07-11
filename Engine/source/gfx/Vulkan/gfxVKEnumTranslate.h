@@ -18,6 +18,7 @@ extern VkSamplerAddressMode GFXVKTextureAddress[GFXAddress_COUNT];
 extern VkFilter GFXVKTextureFilter[GFXTextureFilter_COUNT];
 extern VkStencilOp GFXVKStencilOp[GFXStencilOp_COUNT];
 extern VkFormat GFXVKTextureFormat[GFXFormat_COUNT];
+extern VkFormat GFXVKDeclType[GFXDeclType_COUNT];
 extern VkCullModeFlagBits GFXVKCullMode[GFXCull_COUNT];
 extern VkPolygonMode GFXVKFillMode[GFXFill_COUNT];
 

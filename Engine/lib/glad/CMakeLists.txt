@@ -1,14 +1,16 @@
 set(GLAD_SOURCES
     src/gl.c
-    src/gles1.c
-    src/gles2.c
     src/vulkan.c
 )
+
+#    src/gles1.c
+#    src/gles2.c mobile gles
+#    src/egl.c gles android loader
 
 if(WIN32)
     list(APPEND GLAD_SOURCES src/wgl.c)
 elseif(UNIX AND NOT APPLE)
-    list(APPEND GLAD_SOURCES src/glx.c src/egl.c)
+    list(APPEND GLAD_SOURCES src/glx.c)
 endif()
 
 

@@ -8,13 +8,13 @@ include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_configs.cmake")
 # Ensure multi-core compilation is enabled for everything
 add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
 
-project(${TORQUE_APP_NAME})
-
 # An application name must be set first
 set(TORQUE_APP_NAME "" CACHE STRING "the app name")
 if("${TORQUE_APP_NAME}" STREQUAL "")
 	message(FATAL_ERROR "Please set TORQUE_APP_NAME first")
 endif()
+
+project(${TORQUE_APP_NAME})
 
 # Once an app name is determined, we know what our project pathing structure should look like
 set(TORQUE_APP_ROOT_DIRECTORY "${CMAKE_SOURCE_DIR}/My Projects/${TORQUE_APP_NAME}")

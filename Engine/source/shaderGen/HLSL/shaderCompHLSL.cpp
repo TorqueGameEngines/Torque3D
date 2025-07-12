@@ -411,20 +411,31 @@ void PixelParamsDefHLSL::print( Stream &stream, bool isVerterShader )
 ConstBufferDefHLSL::ConstBufferDefHLSL()
 {
    ConstBuffer* sceneBuff = new ConstBuffer("SceneData", 0);
-
-   sceneBuff->addField(new Var("eyeMat", GFXSCT_Float4x4));
-
-   sceneBuff->addField(new Var("accumTime", GFXSCT_Float));
-   sceneBuff->addField(new Var("vEye", GFXSCT_Float3));
-   
+   sceneBuff->addField(new Var("accumTime", GFXSCT_Float));   
    sceneBuff->addField(new Var("dampness", GFXSCT_Float));
 
    sceneBuff->addField(new Var("fogColor", GFXSCT_Float4));
 
-   ConstBuffer* objBuff = new ConstBuffer("ObjectData", 1);
+   sceneBuff->addField(new Var("vEye", GFXSCT_Float3));
 
+   sceneBuff->addField(new Var("eyeMat", GFXSCT_Float4x4));
+
+   ConstBuffer* objBuff = new ConstBuffer("ObjectData", 1);
    objBuff->addField(new Var("modelview", GFXSCT_Float4x4));
+
    objBuff->addField(new Var("objTrans", GFXSCT_Float4x4));
+
+   ConstBuffer* camData = new ConstBuffer("CameraData", 2);
+   camData->addField(new Var("eyePosWorld", GFXSCT_Float3));
+
+   ConstBuffer* matBuff = new ConstBuffer("MaterialData", 3);
+
+   matBuff->addField(new Var("diffuseMaterialColor", GFXSCT_Float4));
+
+   matBuff->addField(new Var("metalness", GFXSCT_Float));
+   matBuff->addField(new Var("roughness", GFXSCT_Float));
+   matBuff->addField(new Var("matInfoFlags", GFXSCT_Float));
+
 }
 
 void ConstBufferDefHLSL::print(Stream& stream, bool isVerterShader)

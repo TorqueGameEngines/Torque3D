@@ -170,11 +170,15 @@ void MatInfoFlagsHLSL::processPix( Vector<ShaderComponent*> &componentList, cons
       if (!ormConfig) ormConfig = new Var("ORMConfig", "float4");
    }
 
-   Var *matInfoFlags = new Var;
-   matInfoFlags->setType( "float" );
-   matInfoFlags->setName( "matInfoFlags" );
-   matInfoFlags->uniform = true;
-   matInfoFlags->constSortPos = cspPotentialPrimitive;
+   Var *matInfoFlags = (Var*)LangElement::find("matInfoFlags");
+   if (!matInfoFlags)
+   {
+      matInfoFlags = new Var;
+      matInfoFlags->setType(GFXSCT_Float);
+      matInfoFlags->setName("matInfoFlags");
+      matInfoFlags->uniform = true;
+      matInfoFlags->constSortPos = cspPotentialPrimitive;
+   }
 
    output = new GenOp( "   @.r = @;\r\n", ormConfig, matInfoFlags );
 }
@@ -206,13 +210,22 @@ void ORMConfigVarsHLSL::processPix( Vector<ShaderComponent*> &componentList, con
       if (!ormConfig) ormConfig = new Var("ORMConfig", "float4");
       meta->addStatement(new GenOp("   @;\r\n", new DecOp(ormConfig)));
    }
-   Var *metalness = new Var("metalness", "float");
-   metalness->uniform = true;
-   metalness->constSortPos = cspPotentialPrimitive;
 
-   Var *roughness = new Var("roughness", "float");
-   roughness->uniform = true;
-   roughness->constSortPos = cspPotentialPrimitive;
+   Var* metalness = (Var*)LangElement::find("metalness");
+   if (!metalness)
+   {
+      metalness = new Var("metalness", "float");
+      metalness->uniform = true;
+      metalness->constSortPos = cspPotentialPrimitive;
+   }
+
+   Var* roughness = (Var*)LangElement::find("roughness");
+   if (!roughness)
+   {
+      roughness = new Var("roughness", "float");
+      roughness->uniform = true;
+      roughness->constSortPos = cspPotentialPrimitive;
+   }
 
    //matinfo.g slot reserved for AO later
    meta->addStatement(new GenOp("   @.g = 1.0;\r\n", ormConfig));

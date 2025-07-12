@@ -1183,11 +1183,15 @@ U32 DiffuseFeatureHLSL::getOutputTargets(const MaterialFeatureData &fd) const
 void DiffuseFeatureHLSL::processPix(   Vector<ShaderComponent*> &componentList, 
                                        const MaterialFeatureData &fd )
 {
-   Var *diffuseMaterialColor  = new Var;
-   diffuseMaterialColor->setType( "float4" );
-   diffuseMaterialColor->setName( "diffuseMaterialColor" );
-   diffuseMaterialColor->uniform = true;
-   diffuseMaterialColor->constSortPos = cspPotentialPrimitive;
+   Var *diffuseMaterialColor  = (Var*)LangElement::find("diffuseMaterialColor");
+   if (!diffuseMaterialColor)
+   {
+      diffuseMaterialColor = new Var;
+      diffuseMaterialColor->setType("float4");
+      diffuseMaterialColor->setName("diffuseMaterialColor");
+      diffuseMaterialColor->uniform = true;
+      diffuseMaterialColor->constSortPos = cspPotentialPrimitive;
+   }
 
    MultiLine* meta = new MultiLine;
    Var *col = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));

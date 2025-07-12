@@ -70,11 +70,15 @@ void EyeSpaceDepthOutGLSL::processPix( Vector<ShaderComponent*> &componentList,
    wsEyeVec->uniform = false;
 
    // get shader constants
-   Var *vEye = new Var;
-   vEye->setType("float3");
-   vEye->setName("vEye");
-   vEye->uniform = true;
-   vEye->constSortPos = cspPass;
+   Var* vEye = (Var*)Var::find("vEye");
+   if (!vEye)
+   {
+      vEye->setType(GFXSCT_Float3);
+      vEye->setName("vEye");
+      vEye->uniform = true;
+      vEye->constSortPos = cspPass;
+   }
+
 
    // Expose the depth to the depth format feature
    Var *depthOut = new Var;

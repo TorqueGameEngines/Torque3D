@@ -2352,9 +2352,12 @@ void FogFeatHLSL::processVert(   Vector<ShaderComponent*> &componentList,
          eyePos->constSortPos = cspPass;
       }
 
-      Var *fogData = new Var( "fogData", "float3" );
-      fogData->uniform = true;
-      fogData->constSortPos = cspPass;   
+      Var* fogData = (Var*)LangElement::find("fogData");
+      {
+         fogData = new Var("fogData", GFXSCT_Float3);
+         fogData->uniform = true;
+         fogData->constSortPos = cspPass;
+      }
 
       Var *wsPosition = new Var( "fogPos", "float3" );
       getWsPosition( componentList, 
@@ -2389,11 +2392,15 @@ void FogFeatHLSL::processPix( Vector<ShaderComponent*> &componentList,
 {
    MultiLine *meta = new MultiLine;
 
-   Var *fogColor = new Var;
-   fogColor->setType( "float4" );
-   fogColor->setName( "fogColor" );
-   fogColor->uniform = true;
-   fogColor->constSortPos = cspPass;
+   Var* fogColor = (Var*)LangElement::find("fogColor");
+   if (!fogColor)
+   {
+      fogColor = new Var;
+      fogColor->setType(GFXSCT_Float4);
+      fogColor->setName("fogColor");
+      fogColor->uniform = true;
+      fogColor->constSortPos = cspPass;
+   }
 
    // Get the out color.
    Var *color = (Var*) LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
@@ -2432,9 +2439,13 @@ void FogFeatHLSL::processPix( Vector<ShaderComponent*> &componentList,
          eyePos->constSortPos = cspPass;
       }
 
-      Var *fogData = new Var( "fogData", "float3" );
-      fogData->uniform = true;
-      fogData->constSortPos = cspPass;   
+      Var* fogData = (Var*)LangElement::find("fogData");
+      {
+         fogData = new Var("fogData", GFXSCT_Float3);
+         fogData->uniform = true;
+         fogData->constSortPos = cspPass;
+      }
+
 
       /// Get the fog amount.
       fogAmount = new Var( "fogAmount", "float" );

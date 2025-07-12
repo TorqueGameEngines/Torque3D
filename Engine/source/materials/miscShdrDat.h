@@ -51,7 +51,8 @@ enum Components
    C_VERT_STRUCT = 0,
    C_CONNECTOR,
    C_VERT_MAIN,
-   C_PIX_MAIN
+   C_PIX_MAIN,
+   C_CONST_BUFFER
 };
 
 #endif // _MISCSHDRDAT_H_

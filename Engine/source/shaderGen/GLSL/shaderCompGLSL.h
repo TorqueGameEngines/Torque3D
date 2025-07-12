@@ -75,4 +75,11 @@ public:
    void print( Stream &stream, bool isVerterShader ) override;
 };
 
+class ConstBufferDefGLSL : public ParamsDef
+{
+public:
+   ConstBufferDefGLSL();
+	void print(Stream& stream, bool isVerterShader) override;
+};
+
 #endif // _SHADERCOMP_GLSL_H_

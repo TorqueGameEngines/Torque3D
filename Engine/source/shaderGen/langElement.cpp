@@ -301,3 +301,27 @@ void MultiLine::print( Stream &stream )
       mStatementList[i]->print( stream );
    }
 } 
+
+void ConstBuffer::print(Stream& stream)
+{
+   bool isDx = GFX->getAdapterType() == Direct3D11;
+   if (isDx)
+   {
+      stream.writeFormattedBuffer("cbuffer %s : register(b%d)\r\n{\r\n", bufferName.c_str(), bindingSlot);
+   }
+   else
+   {
+      stream.writeFormattedBuffer("layout(std140, binding = %d) uniform %s\r\n{\r\n", bindingSlot, bufferName.c_str());
+   }
+
+   for (auto* var : fields)
+   {
+      if (var->arraySize <= 1)
+         stream.writeFormattedBuffer("    %s %s;\r\n", var->type, var->name);
+      else
+         stream.writeFormattedBuffer("    %s %s[%d];\r\n", var->type, var->name, var->arraySize);
+   }
+
+   stream.writeText("};\r\n\r\n");
+
+}

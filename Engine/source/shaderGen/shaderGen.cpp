@@ -194,6 +194,9 @@ void ShaderGen::generateShader( const MaterialFeatureData &featureData,
    ((ShaderConnector*)mComponents[C_CONNECTOR])->reset();
    LangElement::deleteElements();
 
+   // have to recreate between stages.
+   mComponents[C_CONST_BUFFER] = mComponentFactory->createConstBufferef();
+
    // create pixel shader
    //------------------------
    s = new FileStream();
@@ -244,6 +247,9 @@ void ShaderGen::_createComponents()
 
    ShaderComponent* pixParamDef = mComponentFactory->createPixelParamsDef();
    mComponents.push_back(pixParamDef);
+
+   ShaderComponent* constBufferDef = mComponentFactory->createConstBufferef();
+   mComponents.push_back(constBufferDef);
 }
 
 //----------------------------------------------------------------------------
@@ -434,6 +440,8 @@ void ShaderGen::_printVertShader( Stream &stream )
    mComponents[C_VERT_STRUCT]->print( stream, true );
    mComponents[C_CONNECTOR]->print( stream, true );
 
+   mComponents[C_CONST_BUFFER]->print(stream, true);
+
    mPrinter->printMainComment(stream);
 
    mComponents[C_VERT_MAIN]->print( stream, true );
@@ -453,6 +461,8 @@ void ShaderGen::_printPixShader( Stream &stream )
    _printFeatureList(stream);
 
    mComponents[C_CONNECTOR]->print( stream, false );
+
+   mComponents[C_CONST_BUFFER]->print(stream, false);
 
    mPrinter->printPixelShaderOutputStruct(stream, mFeatureData);
    mPrinter->printMainComment(stream);

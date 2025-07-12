@@ -333,7 +333,7 @@ void VertexParamsDefHLSL::print( Stream &stream, bool isVerterShader )
    stream.write( dStrlen(opener), opener );
 
    // find all the uniform variables and print them out
-   for( U32 i=0; i<LangElement::elementList.size(); i++)
+   for(U32 i = 0; i < LangElement::elementList.size(); i++)
    {
       Var *var = dynamic_cast<Var*>(LangElement::elementList[i]);
       if( var )
@@ -369,7 +369,7 @@ void PixelParamsDefHLSL::print( Stream &stream, bool isVerterShader )
    stream.write( dStrlen(opener), opener );
 
    // find all the sampler & uniform variables and print them out
-   for( U32 i=0; i<LangElement::elementList.size(); i++)
+   for(U32 i = 0; i < LangElement::elementList.size(); i++)
    {
       Var *var = dynamic_cast<Var*>(LangElement::elementList[i]);
       if( var )
@@ -406,4 +406,36 @@ void PixelParamsDefHLSL::print( Stream &stream, bool isVerterShader )
 
    const char *closer = "\r\n)\r\n{\r\n   Fragout OUT;\r\n\r\n";
    stream.write( dStrlen(closer), closer );
+}
+
+ConstBufferDefHLSL::ConstBufferDefHLSL()
+{
+   ConstBuffer* sceneBuff = new ConstBuffer("SceneData", 0);
+
+   sceneBuff->addField(new Var("eyeMat", GFXSCT_Float4x4));
+
+   sceneBuff->addField(new Var("accumTime", GFXSCT_Float));
+   sceneBuff->addField(new Var("vEye", GFXSCT_Float3));
+   
+   sceneBuff->addField(new Var("dampness", GFXSCT_Float));
+
+   sceneBuff->addField(new Var("fogColor", GFXSCT_Float4));
+
+   ConstBuffer* objBuff = new ConstBuffer("ObjectData", 1);
+
+   objBuff->addField(new Var("modelview", GFXSCT_Float4x4));
+   objBuff->addField(new Var("objTrans", GFXSCT_Float4x4));
+}
+
+void ConstBufferDefHLSL::print(Stream& stream, bool isVerterShader)
+{
+   U32 i = 0;
+   for (i = 0; i < LangElement::elementList.size(); i++)
+   {
+      ConstBuffer* cbuffer = dynamic_cast<ConstBuffer*>(LangElement::elementList[i]);
+      if (cbuffer)
+      {
+         cbuffer->print(stream);
+      }
+   }
 }

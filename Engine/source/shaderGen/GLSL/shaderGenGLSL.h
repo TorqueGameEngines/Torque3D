@@ -57,6 +57,7 @@ public:
    ShaderComponent* createVertexPixelConnector() override;
    ShaderComponent* createVertexParamsDef() override;
    ShaderComponent* createPixelParamsDef() override;
+   ShaderComponent* createConstBufferef() override;
 };
 
 #endif

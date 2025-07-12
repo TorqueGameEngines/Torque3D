@@ -218,3 +218,9 @@ ShaderComponent* ShaderGenComponentFactoryHLSL::createPixelParamsDef()
    ShaderComponent* comp = new PixelParamsDefHLSL;
    return comp;
 }
+
+ShaderComponent* ShaderGenComponentFactoryHLSL::createConstBufferef()
+{
+   ShaderComponent* comp = new ConstBufferDefHLSL;
+   return comp;
+}

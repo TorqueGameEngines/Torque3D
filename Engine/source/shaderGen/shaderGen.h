@@ -91,6 +91,8 @@ public:
 
    /// Creates an instance of PixelParamsDef
    virtual ShaderComponent* createPixelParamsDef() = 0;
+
+   virtual ShaderComponent* createConstBufferef() = 0;
 };
 
 //**************************************************************************

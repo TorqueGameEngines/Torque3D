@@ -496,3 +496,35 @@ void PixelParamsDefGLSL::print( Stream &stream, bool isVerterShader )
       }
    }
 }
+
+ConstBufferDefGLSL::ConstBufferDefGLSL()
+{
+   ConstBuffer* sceneBuff = new ConstBuffer("SceneData", 0);
+
+   sceneBuff->addField(new Var("eyeMat", GFXSCT_Float4x4));
+
+   sceneBuff->addField(new Var("accumTime", GFXSCT_Float));
+   sceneBuff->addField(new Var("vEye", GFXSCT_Float3));
+
+   sceneBuff->addField(new Var("dampness", GFXSCT_Float));
+
+   sceneBuff->addField(new Var("fogColor", GFXSCT_Float4));
+
+   ConstBuffer* objBuff = new ConstBuffer("ObjectData", 1);
+
+   objBuff->addField(new Var("modelview", GFXSCT_Float4x4));
+   objBuff->addField(new Var("objTrans", GFXSCT_Float4x4));
+}
+
+void ConstBufferDefGLSL::print(Stream& stream, bool isVerterShader)
+{
+   U32 i = 0;
+   for (i = 0; i < LangElement::elementList.size(); i++)
+   {
+      ConstBuffer* cbuffer = dynamic_cast<ConstBuffer*>(LangElement::elementList[i]);
+      if (cbuffer)
+      {
+         cbuffer->print(stream);
+      }
+   }
+}

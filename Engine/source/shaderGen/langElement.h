@@ -185,6 +185,21 @@ public:
    void print( Stream &stream ) override;
 };
 
+struct ConstBuffer : public LangElement
+{
+   String bufferName;
+   U32 bindingSlot;
+   Vector<Var*> fields;
 
+   ConstBuffer(const String& name, U32 binding = 0)
+      : bufferName(name), bindingSlot(binding) {}
+
+   void addField(Var* var)
+   {
+      fields.push_back(var);
+   }
+
+   void print(Stream& stream) override;
+};
 
 #endif // _LANG_ELEMENT_H_

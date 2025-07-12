@@ -216,3 +216,12 @@ ShaderComponent* ShaderGenComponentFactoryGLSL::createPixelParamsDef()
    return comp;
 }
 
+
+ShaderComponent* ShaderGenComponentFactoryGLSL::createConstBufferef()
+{
+   ConstBufferDefGLSL* comp = new ConstBufferDefGLSL;
+   return comp;
+}
+
+
+

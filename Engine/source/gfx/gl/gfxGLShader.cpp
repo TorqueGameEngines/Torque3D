@@ -389,39 +389,27 @@ void GFXGLShaderConstBuffer::activate(GFXGLShaderConstBuffer* prevShaderBuffer)
          continue;
       }
 
-      ConstantBuffer thisBuff = i->value;
+      ConstantBuffer& thisBuff = i->value; // FIXED: reference, not copy
+
+      bool isDirty = true;
 
       if (prevShaderBuffer && prevShaderBuffer != this)
       {
-         const ConstantBuffer prevBuffer = prevShaderBuffer->mBufferMap[i->key];
+         BufferMap::Iterator prevIt = prevShaderBuffer->mBufferMap.find(thisBufferDesc);
+         if (prevIt != prevShaderBuffer->mBufferMap.end())
+         {
+            const ConstantBuffer& prevBuffer = prevIt->value;
+            if (prevBuffer.data && // remove the isDirty check, we want to compare the data regardless.
+               prevBuffer.size == thisBuff.size &&
+               dMemcmp(prevBuffer.data, thisBuff.data, thisBuff.size) == 0)
+            {
 
-         if (prevBuffer.data && !prevBuffer.isDirty)
-         {
-            if (prevBuffer.size != thisBuff.size)
-            {
-               thisBuff.isDirty = true;
-            }
-            else
-            {
-               if (dMemcmp(prevBuffer.data, thisBuff.data, thisBuff.size) != 0)
-               {
-                  thisBuff.isDirty = true;
-               }
-               else
-               {
-                  thisBuff.isDirty = false;
-               }
+               isDirty = false;
             }
          }
-         else
-         {
-            thisBuff.isDirty = true;
-         }
       }
-      else
-      {
-         thisBuff.isDirty = true;
-      }
+
+      thisBuff.isDirty = isDirty;
 
       if (thisBuff.data && thisBuff.isDirty)
       {

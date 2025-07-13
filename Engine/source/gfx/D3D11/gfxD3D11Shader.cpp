@@ -252,7 +252,11 @@ void GFXD3D11ShaderConstBuffer::internalSet(GFXShaderConstHandle* handle, const 
 
          GFXShaderConstDesc constDesc = _dxHandle->getDesc((GFXShaderStage)i);
          BufferKey bufDesc(constDesc.bindPoint, shaderStageID);
-         U8* basePointer = mBufferMap[bufDesc].data;
+         BufferMap::Iterator it = mBufferMap.find(bufDesc);
+         AssertFatal(it != mBufferMap.end(), "internalSet - Missing constant buffer for key!");
+
+         ConstantBuffer& buffer = it->value;
+         U8* basePointer = buffer.data;
 
          if (_dxHandle->mInstancingConstant)
          {
@@ -494,44 +498,44 @@ void GFXD3D11ShaderConstBuffer::activate( GFXD3D11ShaderConstBuffer *prevShaderB
 
    for (BufferMap::Iterator i = mBufferMap.begin(); i != mBufferMap.end(); ++i)
    {
-      const BufferKey thisBufferDesc = i->key;
-      ConstantBuffer thisBuff = i->value;
+      const BufferKey& thisBufferDesc = i->key;
+      ConstantBuffer& thisBuff = i->value; // FIXED: reference, not copy
+
+      bool isDirty = true;
 
       if (prevShaderBuffer && prevShaderBuffer != this)
       {
-         const ConstantBuffer prevBuffer = prevShaderBuffer->mBufferMap[i->key];
+         BufferMap::Iterator prevIt = prevShaderBuffer->mBufferMap.find(thisBufferDesc);
+         if (prevIt != prevShaderBuffer->mBufferMap.end())
+         {
+            const ConstantBuffer& prevBuffer = prevIt->value;
+            if (prevBuffer.data && // remove the isDirty check, we want to compare the data regardless.
+               prevBuffer.size == thisBuff.size &&
+               dMemcmp(prevBuffer.data, thisBuff.data, thisBuff.size) == 0)
+            {
 
-         if (prevBuffer.data && !prevBuffer.isDirty)
-         {
-            if (prevBuffer.size != thisBuff.size)
-            {
-               thisBuff.isDirty = true;
-            }
-            else
-            {
-               if (dMemcmp(prevBuffer.data, thisBuff.data, thisBuff.size) != 0)
-               {
-                  thisBuff.isDirty = true;
-               }
-               else
-               {
-                  thisBuff.isDirty = false;
-               }
+               isDirty = false;
             }
          }
-         else
-         {
-            thisBuff.isDirty = true;
-         }
       }
-      else
-      {
-         thisBuff.isDirty = true;
-      }
+
+      thisBuff.isDirty = isDirty;
 
       if (thisBuff.data && thisBuff.isDirty)
       {
-         D3D11DEVICECONTEXT->UpdateSubresource(mBoundBuffers[thisBufferDesc.key2][thisBufferDesc.key1], 0, NULL, thisBuff.data, thisBuff.size, 0);
+         D3D11DEVICECONTEXT->UpdateSubresource(
+            mBoundBuffers[thisBufferDesc.key2][thisBufferDesc.key1],
+            0,
+            NULL,
+            thisBuff.data,
+            thisBuff.size,
+            0
+         );
+
+#ifdef D3D11_DEBUG_SPEW
+         Con::printf("Updated constant buffer slot %u on stage %u", thisBufferDesc.key1, thisBufferDesc.key2);
+#endif
+
          bufRanges[thisBufferDesc.key2].addSlot(thisBufferDesc.key1);
       }
    }

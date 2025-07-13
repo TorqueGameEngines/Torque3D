@@ -414,7 +414,7 @@ ConstBufferDefHLSL::ConstBufferDefHLSL()
    canvasBuff->addField(new Var("oneOverFarplane", GFXSCT_Float4));
    canvasBuff->addField(new Var("targetSize", GFXSCT_Float2));
    canvasBuff->addField(new Var("oneOverTargetSize", GFXSCT_Float2));
-   canvasBuff->addField(new Var("viewProj", GFXSCT_Float4x4));
+   //canvasBuff->addField(new Var("viewProj", GFXSCT_Float4x4));
 
    ConstBuffer* sceneBuff = new ConstBuffer("SceneData", 1);
    sceneBuff->addField(new Var("fogColor", GFXSCT_Float4));

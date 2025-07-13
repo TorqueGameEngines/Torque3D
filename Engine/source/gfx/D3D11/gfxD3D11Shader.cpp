@@ -252,11 +252,7 @@ void GFXD3D11ShaderConstBuffer::internalSet(GFXShaderConstHandle* handle, const 
 
          GFXShaderConstDesc constDesc = _dxHandle->getDesc((GFXShaderStage)i);
          BufferKey bufDesc(constDesc.bindPoint, shaderStageID);
-         BufferMap::Iterator it = mBufferMap.find(bufDesc);
-         AssertFatal(it != mBufferMap.end(), "internalSet - Missing constant buffer for key!");
-
-         ConstantBuffer& buffer = it->value;
-         U8* basePointer = buffer.data;
+         U8* basePointer = mBufferMap[bufDesc].data;
 
          if (_dxHandle->mInstancingConstant)
          {

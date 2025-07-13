@@ -2359,6 +2359,7 @@ void FogFeatHLSL::processVert(   Vector<ShaderComponent*> &componentList,
       }
 
       Var* fogData = (Var*)LangElement::find("fogData");
+      if(!fogData)
       {
          fogData = new Var("fogData", GFXSCT_Float3);
          fogData->uniform = true;
@@ -2446,6 +2447,7 @@ void FogFeatHLSL::processPix( Vector<ShaderComponent*> &componentList,
       }
 
       Var* fogData = (Var*)LangElement::find("fogData");
+      if (!fogData)
       {
          fogData = new Var("fogData", GFXSCT_Float3);
          fogData->uniform = true;

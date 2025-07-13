@@ -1908,11 +1908,13 @@ void ReflectCubeFeatGLSL::processPix(  Vector<ShaderComponent*> &componentList,
    cubeMap->sampler = true;
    cubeMap->constNum = Var::getTexUnitNum();     // used as texture unit num here
 
-   Var *cubeMips = new Var;
-   cubeMips->setType("float");
-   cubeMips->setName("cubeMips");
-   cubeMips->uniform = true;
-   cubeMips->constSortPos = cspPotentialPrimitive;
+   Var* cubeMips = (Var*)LangElement::find("cubeMips");
+   if (!cubeMips)
+   {
+      cubeMips = new Var("cubeMips", "float");
+      cubeMips->uniform = true;
+      cubeMips->constSortPos = cspPotentialPrimitive;
+   }
 
    // TODO: Restore the lighting attenuation here!
    Var *attn = NULL;
@@ -2995,9 +2997,13 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    numProbes->uniform = true;
    numProbes->constSortPos = cspPotentialPrimitive;
 
-   Var * cubeMips = new Var("cubeMips", "float");
-   cubeMips->uniform = true;
-   cubeMips->constSortPos = cspPotentialPrimitive;
+   Var * cubeMips = (Var*)LangElement::find("cubeMips");
+   if (!cubeMips)
+   {
+      cubeMips = new Var("cubeMips", "float");
+      cubeMips->uniform = true;
+      cubeMips->constSortPos = cspPotentialPrimitive;
+   }
 
    Var * skylightCubemapIdx = new Var("inSkylightCubemapIdx", "float");
    skylightCubemapIdx->uniform = true;

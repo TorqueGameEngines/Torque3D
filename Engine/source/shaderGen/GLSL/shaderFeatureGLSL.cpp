@@ -1172,11 +1172,15 @@ U32 DiffuseFeatureGLSL::getOutputTargets(const MaterialFeatureData &fd) const
 void DiffuseFeatureGLSL::processPix(   Vector<ShaderComponent*> &componentList, 
                                        const MaterialFeatureData &fd )
 {
-   Var* diffuseMaterialColor  = new Var;
-   diffuseMaterialColor->setType( "vec4" );
-   diffuseMaterialColor->setName( "diffuseMaterialColor" );
-   diffuseMaterialColor->uniform = true;
-   diffuseMaterialColor->constSortPos = cspPotentialPrimitive;
+   Var* diffuseMaterialColor = (Var*)LangElement::find("diffuseMaterialColor");
+   if (!diffuseMaterialColor)
+   {
+      diffuseMaterialColor = new Var;
+      diffuseMaterialColor->setType("float4");
+      diffuseMaterialColor->setName("diffuseMaterialColor");
+      diffuseMaterialColor->uniform = true;
+      diffuseMaterialColor->constSortPos = cspPotentialPrimitive;
+   }
 
    MultiLine* meta = new MultiLine;
    Var *col = (Var*)LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
@@ -2281,6 +2285,7 @@ void FogFeatGLSL::processVert(   Vector<ShaderComponent*> &componentList,
       }
       
       Var *fogData = (Var*)LangElement::find("fogData");
+      if(!fogData)
       {
          fogData = new Var("fogData", GFXSCT_Float3);
          fogData->uniform = true;
@@ -2368,6 +2373,7 @@ void FogFeatGLSL::processPix( Vector<ShaderComponent*> &componentList,
       }
       
       Var* fogData = (Var*)LangElement::find("fogData");
+      if(!fogData)
       {
          fogData = new Var("fogData", GFXSCT_Float3);
          fogData->uniform = true;

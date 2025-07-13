@@ -499,25 +499,67 @@ void PixelParamsDefGLSL::print( Stream &stream, bool isVerterShader )
 
 ConstBufferDefGLSL::ConstBufferDefGLSL()
 {
-   ConstBuffer* sceneBuff = new ConstBuffer("SceneData", 0);
+   ConstBuffer* canvasBuff = new ConstBuffer("CanvasData", 0);
+   canvasBuff->addField(new Var("oneOverFarplane", GFXSCT_Float4));
+   canvasBuff->addField(new Var("targetSize", GFXSCT_Float2));
+   canvasBuff->addField(new Var("oneOverTargetSize", GFXSCT_Float2));
+   canvasBuff->addField(new Var("viewProj", GFXSCT_Float4x4));
 
-   sceneBuff->addField(new Var("eyeMat", GFXSCT_Float4x4));
-
-   sceneBuff->addField(new Var("accumTime", GFXSCT_Float));
-   sceneBuff->addField(new Var("vEye", GFXSCT_Float3));
-
-   sceneBuff->addField(new Var("dampness", GFXSCT_Float));
-
+   ConstBuffer* sceneBuff = new ConstBuffer("SceneData", 1);
    sceneBuff->addField(new Var("fogColor", GFXSCT_Float4));
+   sceneBuff->addField(new Var("fogData", GFXSCT_Float3));
+   sceneBuff->addField(new Var("dampness", GFXSCT_Float));
+   sceneBuff->addField(new Var("vEye", GFXSCT_Float3));
+   sceneBuff->addField(new Var("cubeMips", GFXSCT_Float));
+   sceneBuff->addField(new Var("accumTime", GFXSCT_Float));
 
-   ConstBuffer* objBuff = new ConstBuffer("ObjectData", 1);
+   ConstBuffer* camBuff = new ConstBuffer("CameraData", 2);
+   camBuff->addField(new Var("eyePos", GFXSCT_Float3));
+   camBuff->addField(new Var("eyePosWorld", GFXSCT_Float3));
+   camBuff->addField(new Var("eyeMat", GFXSCT_Float4x4));
+   camBuff->addField(new Var("cubeEyePos", GFXSCT_Float3));
 
-   objBuff->addField(new Var("modelview", GFXSCT_Float4x4));
-   objBuff->addField(new Var("objTrans", GFXSCT_Float4x4));
+   ConstBuffer* matBuff = new ConstBuffer("MaterialData", 3);
+   matBuff->addField(new Var("diffuseMaterialColor", GFXSCT_Float4));
+   matBuff->addField(new Var("metalness", GFXSCT_Float));
+   matBuff->addField(new Var("roughness", GFXSCT_Float));
+   matBuff->addField(new Var("glowMul", GFXSCT_Float));
+   matBuff->addField(new Var("matInfoFlags", GFXSCT_Float));
+   matBuff->addField(new Var("minnaertConstant", GFXSCT_Float));
+   matBuff->addField(new Var("subSurfaceParams", GFXSCT_Float4));
+   matBuff->addField(new Var("parallaxInfo", GFXSCT_Float));
+   matBuff->addField(new Var("detailScale", GFXSCT_Float));
+   matBuff->addField(new Var("detailBumpStrength", GFXSCT_Float));
+   matBuff->addField(new Var("alphaTestValue", GFXSCT_Float));
+   camBuff->addField(new Var("texMat", GFXSCT_Float4x4));
+
+   ConstBuffer* accuVolumeBuff = new ConstBuffer("accuVolumeData", 4);
+   accuVolumeBuff->addField(new Var("accuScale", GFXSCT_Float));
+   accuVolumeBuff->addField(new Var("accuDirection", GFXSCT_Float));
+   accuVolumeBuff->addField(new Var("accuStrength", GFXSCT_Float));
+   accuVolumeBuff->addField(new Var("accuCoverage", GFXSCT_Float));
+   accuVolumeBuff->addField(new Var("accuSpecular", GFXSCT_Float));
+
+   ConstBuffer* atlasBuff = new ConstBuffer("atlasData", 5);
+   atlasBuff->addField(new Var("diffuseAtlasParams", GFXSCT_Float4));
+   atlasBuff->addField(new Var("diffuseAtlasTileParams", GFXSCT_Float));
+   atlasBuff->addField(new Var("bumpAtlasParams", GFXSCT_Float));
+   atlasBuff->addField(new Var("bumpAtlasTileParams", GFXSCT_Float));
+
+
+   //ConstBuffer* objBuff = new ConstBuffer("ObjectData", 5);
+   //objBuff->addField(new Var("modelview", GFXSCT_Float4x4));
+   /*
+   ConstBuffer* instanceData = new ConstBuffer("instanceData", 6);
+   instanceData->addField(new  Var("visibility", GFXSCT_Float));
+   instanceData->addField(new Var("objTrans", GFXSCT_Float4x4));
+   instanceData->addField(new Var("windDirAndSpeed", GFXDeclType_Float3));
+   */
 }
 
 void ConstBufferDefGLSL::print(Stream& stream, bool isVerterShader)
 {
+
    U32 i = 0;
    for (i = 0; i < LangElement::elementList.size(); i++)
    {

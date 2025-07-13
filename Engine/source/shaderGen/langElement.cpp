@@ -311,7 +311,7 @@ void ConstBuffer::print(Stream& stream)
    }
    else
    {
-      stream.writeFormattedBuffer("layout(std140, binding = %d) uniform %s\r\n{\r\n", bindingSlot, bufferName.c_str());
+      stream.writeFormattedBuffer("layout(std140) uniform %s\r\n{\r\n", bufferName.c_str());
    }
 
    for (auto* var : fields)

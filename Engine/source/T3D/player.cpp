@@ -4604,10 +4604,12 @@ void Player::onUnmount( SceneObject *obj, S32 node )
 
 void Player::unmount()
 {
+
    // Reset back to root position during dismount.  This copies what is
    // done on the server and corrects the fact that the RootAnim change
    // is not sent across to the client using the standard ActionMask.
-   setActionThread(PlayerData::RootAnim,true,false,false);
+   if (!isRemoved())
+      setActionThread(PlayerData::RootAnim,true,false,false);
 
    Parent::unmount();
 }

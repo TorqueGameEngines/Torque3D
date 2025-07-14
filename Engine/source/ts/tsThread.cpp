@@ -534,7 +534,6 @@ void TSShapeInstance::destroyThread(TSThread * thread)
    delete mThreadList[i];
    mThreadList.erase(i);
    setDirty(AllDirtyMask);
-   checkScaleCurrentlyAnimated();
 }
 
 U32 TSShapeInstance::threadCount()

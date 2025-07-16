@@ -77,6 +77,7 @@ class GFXD3D11WindowTarget : public GFXWindowTarget
 
    /// Our backbuffer
    ID3D11Texture2D* mBackBuffer;
+   ID3D11Texture2D* mPrevBackBuffer;
    ID3D11Texture2D* mDepthStencil;
    ID3D11RenderTargetView* mBackBufferView;
    ID3D11DepthStencilView* mDepthStencilView;
@@ -116,6 +117,7 @@ public:
    // These are all reference counted and must be released by whomever uses the get* function
    IDXGISwapChain* getSwapChain();
    ID3D11Texture2D* getBackBuffer();
+   ID3D11Texture2D* getPrevBackBuffer();
    ID3D11Texture2D* getDepthStencil();
    ID3D11RenderTargetView* getBackBufferView();
    ID3D11DepthStencilView* getDepthStencilView();

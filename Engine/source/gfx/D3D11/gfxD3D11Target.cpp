@@ -324,6 +324,7 @@ GFXD3D11WindowTarget::GFXD3D11WindowTarget()
    mDepthStencilView = NULL;
    mDepthStencil = NULL;
    mBackBufferView = NULL;
+   mPrevBackBuffer = NULL;
    mSwapChain = NULL;
    dMemset(&mPresentationParams, 0, sizeof(mPresentationParams));
    mSecondaryWindow = false;
@@ -332,9 +333,10 @@ GFXD3D11WindowTarget::GFXD3D11WindowTarget()
 GFXD3D11WindowTarget::~GFXD3D11WindowTarget()
 {
    SAFE_RELEASE(mDepthStencilView)
-      SAFE_RELEASE(mDepthStencil);
+   SAFE_RELEASE(mDepthStencil);
    SAFE_RELEASE(mBackBufferView);
    SAFE_RELEASE(mBackBuffer);
+   SAFE_RELEASE(mPrevBackBuffer);
    SAFE_RELEASE(mSwapChain);
 }
 
@@ -382,7 +384,9 @@ bool GFXD3D11WindowTarget::present()
       else if (result == DXGI_ERROR_INVALID_CALL)
          AssertFatal(false, "DXGI_ERROR_INVALID_CALL");
    }
-
+   // if swap chain flip this needs to be called right after present as it unbinds the backbuffer.
+   setBackBuffer();
+   activate();
    return (hr == S_OK);
 }
 
@@ -553,8 +557,12 @@ void GFXD3D11WindowTarget::resurrect()
 
 void GFXD3D11WindowTarget::setBackBuffer()
 {
-   if (!mBackBuffer)
-      mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)& mBackBuffer);
+   // dx automatically handles the backbuffer swaps, 0 is always the previous backbuffer.
+   HRESULT hr = mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&mBackBuffer);
+   if (FAILED(hr))
+      AssertFatal(false, "GFXD3D11WindowTarget::setBackBuffer - Failed to retrieve backbuffer.");
+
+   mPrevBackBuffer = mBackBuffer;
 }
 
 void GFXD3D11WindowTarget::activate()
@@ -586,7 +594,7 @@ void GFXD3D11WindowTarget::resolveTo(GFXTextureObject *tex)
    D3D11_TEXTURE2D_DESC desc;
    ID3D11Texture2D* surf = ((GFXD3D11TextureObject*)(tex))->get2DTex();
    surf->GetDesc(&desc);
-   D3D11DEVICECONTEXT->ResolveSubresource(surf, 0, mBackBuffer, 0, desc.Format);
+   D3D11DEVICECONTEXT->ResolveSubresource(surf, 0, mPrevBackBuffer, 0, desc.Format);
 }
 
 IDXGISwapChain* GFXD3D11WindowTarget::getSwapChain()
@@ -599,6 +607,12 @@ ID3D11Texture2D* GFXD3D11WindowTarget::getBackBuffer()
 {
    mBackBuffer->AddRef();
    return mBackBuffer;
+}
+
+ID3D11Texture2D* GFXD3D11WindowTarget::getPrevBackBuffer()
+{
+   mPrevBackBuffer->AddRef();
+   return mPrevBackBuffer;
 }
 
 ID3D11Texture2D* GFXD3D11WindowTarget::getDepthStencil()

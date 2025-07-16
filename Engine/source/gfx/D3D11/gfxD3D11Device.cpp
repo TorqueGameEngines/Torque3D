@@ -234,17 +234,17 @@ DXGI_SWAP_CHAIN_DESC GFXD3D11Device::setupPresentParams(const GFXVideoMode &mode
 
    mMultisampleDesc = sampleDesc;
 
-   d3dpp.BufferCount = smEnableVSync ? 2 : 1; // triple buffering when vsync is on.
+   d3dpp.BufferCount = smEnableVSync ? 3 : 2; // triple buffering in vsync, double buffered non vsync.
    d3dpp.BufferDesc.Width = mode.resolution.x;
    d3dpp.BufferDesc.Height = mode.resolution.y;
-   d3dpp.BufferDesc.Format = GFXD3D11TextureFormat[GFXFormatR8G8B8A8_SRGB];
+   d3dpp.BufferDesc.Format = GFXD3D11TextureFormat[GFXFormatR8G8B8A8];
    d3dpp.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
    d3dpp.OutputWindow = hwnd;
    d3dpp.SampleDesc = sampleDesc;
    d3dpp.Windowed = !mode.fullScreen;
    d3dpp.BufferDesc.RefreshRate.Numerator = mode.refreshRate;
    d3dpp.BufferDesc.RefreshRate.Denominator = 1;
-   d3dpp.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+   d3dpp.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
    if (mode.fullScreen)
    {

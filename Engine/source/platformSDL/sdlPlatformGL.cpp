@@ -13,18 +13,16 @@ namespace PlatformGL
 
    void init()
    {
-       const U32 majorOGL = 3;
-       const U32 minorOGL = 3;
        U32 debugFlag = 0;
 #ifdef TORQUE_DEBUG
        debugFlag |= SDL_GL_CONTEXT_DEBUG_FLAG;
 #endif
-
-       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, majorOGL);
-       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minorOGL);
        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, debugFlag);
        SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1);
+       SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1); // Enable double buffering
+       // Make sure the visual is accelerated
+       SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 #ifdef TORQUE_GL_SOFTWARE
        SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 0);
 #endif
@@ -50,6 +48,10 @@ namespace PlatformGL
            Con::printf( err );
            AssertFatal(0, err );
        }
+       int majorOGL = 0;
+       int minorOGL = 0;
+       SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &majorOGL);
+       SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minorOGL);
 
        return ctx;
    }

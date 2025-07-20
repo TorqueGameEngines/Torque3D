@@ -141,7 +141,7 @@ void TurretShapeData::initPersistFields()
          "@brief Should the turret allow only z rotations.\n\n"
          "True indicates that the turret may only be rotated on its z axis, just like the Item class.  "
          "This keeps the turret always upright regardless of the surface it lands on.\n");
-      addFieldV("maxHeading", TypeRangedF32,       Offset(maxHeading,         TurretShapeData), &CommonValidators::PosDegreeRangeQuarter,
+      addFieldV("maxHeading", TypeRangedF32,       Offset(maxHeading,         TurretShapeData), &CommonValidators::PosDegreeRangeHalf,
          "@brief Maximum number of degrees to rotate from center.\n\n"
          "A value of 180 or more degrees indicates the turret may rotate completely around.\n");
       addFieldV("minPitch", TypeRangedF32,       Offset(minPitch,           TurretShapeData), &CommonValidators::PosDegreeRangeQuarter,
@@ -1047,8 +1047,8 @@ void TurretShape::writePacketData(GameConnection *connection, BitStream *stream)
    // Update client regardless of status flags.
    Parent::writePacketData(connection, stream);
    
-   stream->writeSignedFloat(mRot.x / M_2PI_F, 7);
-   stream->writeSignedFloat(mRot.z / M_2PI_F, 7);
+   stream->writeSignedFloat(mRot.x / M_2PI_F, 11);
+   stream->writeSignedFloat(mRot.z / M_2PI_F, 11);
 }
 
 void TurretShape::readPacketData(GameConnection *connection, BitStream *stream)
@@ -1056,8 +1056,8 @@ void TurretShape::readPacketData(GameConnection *connection, BitStream *stream)
    Parent::readPacketData(connection, stream);
 
    Point3F rot(0.0f, 0.0f, 0.0f);
-   rot.x = stream->readSignedFloat(7) * M_2PI_F;
-   rot.z = stream->readSignedFloat(7) * M_2PI_F;
+   rot.x = stream->readSignedFloat(11) * M_2PI_F;
+   rot.z = stream->readSignedFloat(11) * M_2PI_F;
    _setRotation(rot);
 
    mTurretDelta.rot = rot;

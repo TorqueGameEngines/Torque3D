@@ -38,19 +38,15 @@
 
 duDebugDrawTorque::duDebugDrawTorque()
 {
+   VECTOR_SET_ASSOCIATION(mVertList);
    mPrimType = 0;
    mQuadsMode = false;
    mVertCount = 0;
-   mGroup = 0;
-   mCurrColor = 0;
-   mOverrideColor = 0;
-   mOverride = false;
    dMemset(&mStore, 0, sizeof(mStore));
 }
 
 duDebugDrawTorque::~duDebugDrawTorque()
 {
-   clear();
 }
 
 void duDebugDrawTorque::depthMask(bool state)
@@ -60,6 +56,22 @@ void duDebugDrawTorque::depthMask(bool state)
 
 void duDebugDrawTorque::texture(bool state)
 {
+   // need a checker texture?...... if(state is true) then set first slot to that texture.
+}
+
+unsigned int duDebugDrawTorque::areaToCol(unsigned int area)
+{
+   switch (area)
+   {
+      // Ground (0) : light blue
+   case GroundArea: return duRGBA(0, 192, 255, 255);
+      // Water : blue
+   case WaterArea: return duRGBA(0, 0, 255, 255);
+      // Road : brown
+   case OffMeshArea: return duRGBA(50, 20, 12, 255);
+      // Unexpected : red
+   default: return duRGBA(255, 0, 0, 255);
+   }
 }
 
 /// Begin drawing primitives.
@@ -67,27 +79,23 @@ void duDebugDrawTorque::texture(bool state)
 /// @param size [in] size of a primitive, applies to point size and line width only.
 void duDebugDrawTorque::begin(duDebugDrawPrimitives prim, float size)
 {
-   mCurrColor = -1;
+   if (!mVertList.empty())
+      mVertList.clear();
+
    mQuadsMode = false;
    mVertCount = 0;
    mPrimType = 0;
-   switch(prim)
+
+   switch (prim)
    {
-   case DU_DRAW_POINTS: mPrimType = GFXPointList;    break;
-   case DU_DRAW_LINES:  mPrimType = GFXLineList;     break;
+   case DU_DRAW_POINTS: mPrimType = GFXPointList; break;
+   case DU_DRAW_LINES:  mPrimType = GFXLineList; break;
    case DU_DRAW_TRIS:   mPrimType = GFXTriangleList; break;
-   case DU_DRAW_QUADS:  mPrimType = GFXTriangleList;
-                        mQuadsMode = true;           break;
+   case DU_DRAW_QUADS:  mPrimType = GFXTriangleList; mQuadsMode = true; break;
    }
-   mBuffers.push_back(Buffer(mPrimType));
-   mBuffers.last().group = mGroup;
+
    mDesc.setCullMode(GFXCullNone);
    mDesc.setBlend(true);
-}
-
-void duDebugDrawTorque::beginGroup(U32 group)
-{
-   mGroup = group;
 }
 
 /// Submit a vertex
@@ -103,30 +111,7 @@ void duDebugDrawTorque::vertex(const float* pos, unsigned int color)
 /// @param color [in] color of the verts.
 void duDebugDrawTorque::vertex(const float x, const float y, const float z, unsigned int color)
 {
-   if(mQuadsMode)
-   {
-      if(mVertCount == 3)
-      {
-         _vertex(x, -z, y, color);
-         _vertex(mStore[0][0], mStore[0][1], mStore[0][2], color);
-         _vertex(mStore[1][0], mStore[1][1], mStore[1][2], color);
-         _vertex(mStore[1][0], mStore[1][1], mStore[1][2], color);
-         _vertex(mStore[2][0], mStore[2][1], mStore[2][2], color);
-         _vertex(x, -z, y, color);
-         mVertCount = 0;
-      }
-      else
-      {
-         mStore[mVertCount][0] = x;
-         mStore[mVertCount][1] = -z;
-         mStore[mVertCount][2] = y;
-         mVertCount++;
-      }
-   }
-   else 
-   {
-      _vertex(x, -z, y, color);
-   }
+   _vertex(x, -z, y, color);
 }
 
 /// Submit a vertex
@@ -148,105 +133,60 @@ void duDebugDrawTorque::vertex(const float x, const float y, const float z, unsi
 /// Push a vertex onto the buffer.
 void duDebugDrawTorque::_vertex(const float x, const float y, const float z, unsigned int color)
 {
-   // Use override color if we must.
-   //if(mOverride)
-      //color = mOverrideColor;
-   if(mCurrColor != color || !mBuffers.last().buffer.size())
-   {
-      U8 r, g, b, a;
-      // Convert color integer to components.
-      rcCol(color, r, g, b, a);
-      mBuffers.last().buffer.push_back(Instruction(r, g, b, a));
-      mCurrColor = color;
-   }
-   // Construct vertex data.
-   mBuffers.last().buffer.push_back(Instruction(x, y, z));
+   GFXVertexPCT vert;
+   vert.point.set(x, y, z);
+
+   U8 r, g, b, a;
+   // Convert color integer to components.
+   rcCol(color, r, g, b, a);
+
+   vert.color.set(r, g, b, a);
+
+   mVertList.push_back(vert);
 }
 
 /// End drawing primitives.
 void duDebugDrawTorque::end()
 {
-}
+   if (mVertList.empty())
+      return;
 
-void duDebugDrawTorque::overrideColor(unsigned int col)
-{
-   mOverride = true;
-   mOverrideColor = col;
-}
+   const U32 maxVertsPerDraw = GFX_MAX_DYNAMIC_VERTS;
 
-void duDebugDrawTorque::cancelOverride()
-{
-   mOverride = false;
-}
+   U32 totalVerts = mVertList.size();
+   U32 stride = 1;
+   U32 stripStart = 0;
 
-void duDebugDrawTorque::renderBuffer(Buffer &b)
-{
-   PrimBuild::begin(b.primType, b.buffer.size());
-   Vector<Instruction> &buf = b.buffer;
-   for(U32 i = 0; i < buf.size(); i++)
+   switch (mPrimType)
    {
-      switch(buf[i].type)
-      {
-      case Instruction::POINT:
-         PrimBuild::vertex3f(buf[i].data.point.x,
-                             buf[i].data.point.y,
-                             buf[i].data.point.z);
-         break;
-
-      case Instruction::COLOR:
-         if(mOverride)
-            break;
-         PrimBuild::color4i(buf[i].data.color.r,
-                            buf[i].data.color.g,
-                            buf[i].data.color.b,
-                            buf[i].data.color.a);
-         break;
-            
-       default:
-         break;
-      }
+   case GFXLineList:     stride = 2; break;
+   case GFXTriangleList: stride = 3; break;
+   case GFXLineStrip:    stripStart = 1; stride = 1; break;
+   case GFXTriangleStrip:stripStart = 2; stride = 1; break;
+   default:              stride = 1; break;
    }
-   PrimBuild::end();
+
+   GFX->setPrimitiveBuffer(NULL);
+   GFX->setStateBlockByDesc(mDesc);
+   GFX->setupGenericShaders(GFXDevice::GSColor);
+
+   for (U32 i = 0; i < totalVerts; i += maxVertsPerDraw)
+   {
+      U32 batchSize = getMin(maxVertsPerDraw, totalVerts - i);
+
+      mVertexBuffer.set(GFX, batchSize, GFXBufferTypeDynamic);
+      GFXVertexPCT* verts = mVertexBuffer.lock();
+
+      if (verts)
+         dMemcpy(verts, &mVertList[i], sizeof(GFXVertexPCT) * batchSize);
+      mVertexBuffer.unlock();
+
+      GFX->setVertexBuffer(mVertexBuffer);
+
+      U32 numPrims = (batchSize / stride) - stripStart;
+      GFX->drawPrimitive((GFXPrimitiveType)mPrimType, 0, numPrims);
+   }
+
+   mVertList.clear();
 }
 
-void duDebugDrawTorque::render()
-{
-   GFXStateBlockRef sb = GFX->createStateBlock(mDesc);
-   GFX->setStateBlock(sb);
-   // Use override color for all rendering.
-   if(mOverride)
-   {
-      U8 r, g, b, a;
-      rcCol(mOverrideColor, r, g, b, a);
-      PrimBuild::color4i(r, g, b, a);
-   }
-   for(U32 b = 0; b < mBuffers.size(); b++)
-   {
-      renderBuffer(mBuffers[b]);
-   }
-}
-
-void duDebugDrawTorque::renderGroup(U32 group)
-{
-   GFXStateBlockRef sb = GFX->createStateBlock(mDesc);
-   GFX->setStateBlock(sb);
-   // Use override color for all rendering.
-   if(mOverride)
-   {
-      U8 r, g, b, a;
-      rcCol(mOverrideColor, r, g, b, a);
-      PrimBuild::color4i(r, g, b, a);
-   }
-   for(U32 b = 0; b < mBuffers.size(); b++)
-   {
-      if(mBuffers[b].group == group)
-         renderBuffer(mBuffers[b]);
-   }
-}
-
-void duDebugDrawTorque::clear()
-{
-   for(U32 b = 0; b < mBuffers.size(); b++)
-      mBuffers[b].buffer.clear();
-   mBuffers.clear();
-}

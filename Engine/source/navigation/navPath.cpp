@@ -640,9 +640,7 @@ void NavPath::renderSimple(ObjectRenderInst *ri, SceneRenderState *state, BaseMa
       if(np->mQuery && !dtStatusSucceed(np->mStatus))
       {
          duDebugDrawTorque dd;
-         dd.overrideColor(duRGBA(250, 20, 20, 255));
          duDebugDrawNavMeshNodes(&dd, *np->mQuery);
-         dd.render();
       }
    }
 }

@@ -366,9 +366,6 @@ private:
    /// @name Intermediate data
    /// @{
 
-   /// Config struct.
-   rcConfig cfg;
-
    /// Updates our config from console members.
    void updateConfig();
 
@@ -419,6 +416,18 @@ private:
 
    /// Use this object to manage update events.
    static SimObjectPtr<EventManager> smEventManager;
+
+protected:
+   RecastPolyList* m_geo;
+   unsigned char* m_triareas;
+   rcHeightfield* m_solid;
+   rcCompactHeightfield* m_chf;
+   rcContourSet* m_cset;
+   rcPolyMesh* m_pmesh;
+   rcPolyMeshDetail* m_dmesh;
+   rcConfig m_cfg;
+
+   void cleanup();
 };
 
 typedef NavMesh::WaterMethod NavMeshWaterMethod;

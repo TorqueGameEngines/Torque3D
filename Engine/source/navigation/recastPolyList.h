@@ -26,6 +26,10 @@
 #include "collision/abstractPolyList.h"
 #include "core/util/tVector.h"
 
+#ifndef CHUNKYTRIMESH_H
+#include "ChunkyTriMesh.h"
+#endif
+
 /// Represents polygons in the same manner as the .obj file format. Handy for
 /// padding data to Recast, since it expects this data format. At the moment,
 /// this class only accepts triangles.
@@ -70,6 +74,9 @@ public:
    /// Default destructor.
    ~RecastPolyList();
 
+   rcChunkyTriMesh* getChunkyMesh();
+
+
 protected:
    /// Number of vertices defined.
    U32 nverts;
@@ -92,6 +99,8 @@ protected:
    Vector<PlaneF> planes;
    /// Another inherited utility function.
    const PlaneF& getIndexedPlane(const U32 index) override { return planes[index]; }
+
+   rcChunkyTriMesh* mChunkyMesh;
 
 private:
 };

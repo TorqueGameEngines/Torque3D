@@ -173,6 +173,12 @@ DefineEngineFunction(NavMeshUpdateOne, void, (S32 meshid, S32 objid, bool remove
 }
 
 NavMesh::NavMesh()
+:  m_triareas(0),
+   m_solid(0),
+   m_chf(0),
+   m_cset(0),
+   m_pmesh(0),
+   m_dmesh(0)
 {
    mTypeMask |= StaticShapeObjectType | MarkerObjectType;
    mFileName = StringTable->EmptyString();
@@ -184,8 +190,7 @@ NavMesh::NavMesh()
 
    mWaterMethod = Ignore;
 
-   dMemset(&cfg, 0, sizeof(cfg));
-   mCellSize = mCellHeight = 0.2f;
+   mCellSize = mCellHeight = 0.01f;
    mWalkableHeight = 2.0f;
    mWalkableClimb = 0.3f;
    mWalkableRadius = 0.5f;
@@ -599,6 +604,13 @@ DefineEngineMethod(NavMesh, deleteLinks, void, (),,
    //object->eraseLinks();
 }
 
+static void buildCallback(SceneObject* object, void* key)
+{
+   SceneContainer::CallbackInfo* info = reinterpret_cast<SceneContainer::CallbackInfo*>(key);
+   if (!object->mPathfindingIgnore)
+      object->buildPolyList(info->context, info->polyList, info->boundingBox, info->boundingSphere);
+}
+
 bool NavMesh::build(bool background, bool saveIntermediates)
 {
    if(mBuilding)
@@ -622,14 +634,53 @@ bool NavMesh::build(bool background, bool saveIntermediates)
       return false;
    }
 
-   updateConfig();
+   Box3F worldBox = getWorldBox();
+   SceneContainer::CallbackInfo info;
+   info.context = PLC_Navigation;
+   info.boundingBox = worldBox;
+   m_geo = new RecastPolyList;
+   info.polyList = m_geo;
+   info.key = this;
+   getContainer()->findObjects(worldBox, StaticObjectType | DynamicShapeObjectType, buildCallback, &info);
+
+   // Parse water objects into the same list, but remember how much geometry was /not/ water.
+   U32 nonWaterVertCount = m_geo->getVertCount();
+   U32 nonWaterTriCount = m_geo->getTriCount();
+   if (mWaterMethod != Ignore)
+   {
+      getContainer()->findObjects(worldBox, WaterObjectType, buildCallback, &info);
+   }
+
+   // Check for no geometry.
+   if (!m_geo->getVertCount())
+   {
+      m_geo->clear();
+      return false;
+   }
+
+   m_geo->getChunkyMesh();
+
+   // Needed for the recast config and generation params.
+   Box3F rc_box = DTStoRC(getWorldBox());
+   S32 gw = 0, gh = 0;
+   rcCalcGridSize(rc_box.minExtents, rc_box.maxExtents, mCellSize, &gw, &gh);
+   const S32 ts = (S32)mTileSize;
+   const S32 tw = (gw + ts - 1) / ts;
+   const S32 th = (gh + ts - 1) / ts;
+   Con::printf("NavMesh::Build - Tiles %d x %d", tw, th);
+
+   U32 tileBits = mMin(getNextBinLog2(tw * th), 14);
+   if (tileBits > 14) tileBits = 14;
+   U32 maxTiles = 1 << tileBits;
+   U32 polyBits = 22 - tileBits;
+   mMaxPolysPerTile = 1 << polyBits;
 
    // Build navmesh parameters from console members.
    dtNavMeshParams params;
-   rcVcopy(params.orig, cfg.bmin);
-   params.tileWidth = cfg.tileSize * mCellSize;
-   params.tileHeight = cfg.tileSize * mCellSize;
-   params.maxTiles = mCeil(getWorldBox().len_x() / params.tileWidth) * mCeil(getWorldBox().len_y() / params.tileHeight);
+   rcVcopy(params.orig, rc_box.minExtents);
+   params.tileWidth = mTileSize * mCellSize;
+   params.tileHeight = mTileSize * mCellSize;
+   params.maxTiles = maxTiles;
    params.maxPolys = mMaxPolysPerTile;
 
    // Initialise our navmesh.
@@ -690,29 +741,29 @@ void NavMesh::inspectPostApply()
 
 void NavMesh::updateConfig()
 {
-   // Build rcConfig object from our console members.
-   dMemset(&cfg, 0, sizeof(cfg));
-   cfg.cs = mCellSize;
-   cfg.ch = mCellHeight;
-   Box3F box = DTStoRC(getWorldBox());
-   rcVcopy(cfg.bmin, box.minExtents);
-   rcVcopy(cfg.bmax, box.maxExtents);
-   rcCalcGridSize(cfg.bmin, cfg.bmax, cfg.cs, &cfg.width, &cfg.height);
+   //// Build rcConfig object from our console members.
+   //dMemset(&cfg, 0, sizeof(cfg));
+   //cfg.cs = mCellSize;
+   //cfg.ch = mCellHeight;
+   //Box3F box = DTStoRC(getWorldBox());
+   //rcVcopy(cfg.bmin, box.minExtents);
+   //rcVcopy(cfg.bmax, box.maxExtents);
+   //rcCalcGridSize(cfg.bmin, cfg.bmax, cfg.cs, &cfg.width, &cfg.height);
 
-   cfg.walkableHeight = mCeil(mWalkableHeight / mCellHeight);
-   cfg.walkableClimb = mCeil(mWalkableClimb / mCellHeight);
-   cfg.walkableRadius = mCeil(mWalkableRadius / mCellSize);
-   cfg.walkableSlopeAngle = mWalkableSlope;
-   cfg.borderSize = cfg.walkableRadius + 3;
+   //cfg.walkableHeight = mCeil(mWalkableHeight / mCellHeight);
+   //cfg.walkableClimb = mCeil(mWalkableClimb / mCellHeight);
+   //cfg.walkableRadius = mCeil(mWalkableRadius / mCellSize);
+   //cfg.walkableSlopeAngle = mWalkableSlope;
+   //cfg.borderSize = cfg.walkableRadius + 3;
 
-   cfg.detailSampleDist = mDetailSampleDist;
-   cfg.detailSampleMaxError = mDetailSampleMaxError;
-   cfg.maxEdgeLen = mMaxEdgeLen;
-   cfg.maxSimplificationError = mMaxSimplificationError;
-   cfg.maxVertsPerPoly = mMaxVertsPerPoly;
-   cfg.minRegionArea = mMinRegionArea;
-   cfg.mergeRegionArea = mMergeRegionArea;
-   cfg.tileSize = mTileSize / cfg.cs;
+   //cfg.detailSampleDist = mDetailSampleDist;
+   //cfg.detailSampleMaxError = mDetailSampleMaxError;
+   //cfg.maxEdgeLen = mMaxEdgeLen;
+   //cfg.maxSimplificationError = mMaxSimplificationError;
+   //cfg.maxVertsPerPoly = mMaxVertsPerPoly;
+   //cfg.minRegionArea = mMinRegionArea;
+   //cfg.mergeRegionArea = mMergeRegionArea;
+   //cfg.tileSize = mTileSize / cfg.cs;
 }
 
 S32 NavMesh::getTile(const Point3F& pos)
@@ -740,6 +791,36 @@ void NavMesh::updateTiles(bool dirty)
    if(!isProperlyAdded())
       return;
 
+   // this is just here so that load regens the mesh, we should be saving it out.
+   if (!m_geo)
+   {
+      Box3F worldBox = getWorldBox();
+      SceneContainer::CallbackInfo info;
+      info.context = PLC_Navigation;
+      info.boundingBox = worldBox;
+      m_geo = new RecastPolyList;
+      info.polyList = m_geo;
+      info.key = this;
+      getContainer()->findObjects(worldBox, StaticObjectType | DynamicShapeObjectType, buildCallback, &info);
+
+      // Parse water objects into the same list, but remember how much geometry was /not/ water.
+      U32 nonWaterVertCount = m_geo->getVertCount();
+      U32 nonWaterTriCount = m_geo->getTriCount();
+      if (mWaterMethod != Ignore)
+      {
+         getContainer()->findObjects(worldBox, WaterObjectType, buildCallback, &info);
+      }
+
+      // Check for no geometry.
+      if (!m_geo->getVertCount())
+      {
+         m_geo->clear();
+         return;
+      }
+
+      m_geo->getChunkyMesh();
+   }
+
    mTiles.clear();
    mTileData.clear();
    mDirtyTiles.clear();
@@ -748,13 +829,15 @@ void NavMesh::updateTiles(bool dirty)
    if(box.isEmpty())
       return;
 
-   updateConfig();
-
    // Calculate tile dimensions.
-   const U32 ts = cfg.tileSize;
-   const U32 tw = (cfg.width  + ts-1) / ts;
-   const U32 th = (cfg.height + ts-1) / ts;
-   const F32 tcs = cfg.tileSize * cfg.cs;
+   const F32* bmin = box.minExtents;
+   const F32* bmax = box.maxExtents;
+   S32 gw = 0, gh = 0;
+   rcCalcGridSize(bmin, bmax, mCellSize, &gw, &gh);
+   const S32 ts = (S32)mTileSize;
+   const S32 tw = (gw + ts - 1) / ts;
+   const S32 th = (gh + ts - 1) / ts;
+   const F32 tcs = mTileSize * mCellSize;
 
    // Iterate over tiles.
    F32 tileBmin[3], tileBmax[3];
@@ -762,13 +845,13 @@ void NavMesh::updateTiles(bool dirty)
    {
       for(U32 x = 0; x < tw; ++x)
       {
-         tileBmin[0] = cfg.bmin[0] + x*tcs;
-         tileBmin[1] = cfg.bmin[1];
-         tileBmin[2] = cfg.bmin[2] + y*tcs;
+         tileBmin[0] = bmin[0] + x*tcs;
+         tileBmin[1] = bmin[1];
+         tileBmin[2] = bmin[2] + y*tcs;
 
-         tileBmax[0] = cfg.bmin[0] + (x+1)*tcs;
-         tileBmax[1] = cfg.bmax[1];
-         tileBmax[2] = cfg.bmin[2] + (y+1)*tcs;
+         tileBmax[0] = bmin[0] + (x+1)*tcs;
+         tileBmax[1] = bmax[1];
+         tileBmax[2] = bmin[2] + (y+1)*tcs;
 
          mTiles.push_back(
             Tile(RCtoDTS(tileBmin, tileBmax),
@@ -846,112 +929,127 @@ void NavMesh::buildNextTile()
    }
 }
 
-static void buildCallback(SceneObject* object,void *key)
-{
-   SceneContainer::CallbackInfo* info = reinterpret_cast<SceneContainer::CallbackInfo*>(key);
-   if (!object->mPathfindingIgnore)
-   object->buildPolyList(info->context,info->polyList,info->boundingBox,info->boundingSphere);
-}
-
 unsigned char *NavMesh::buildTileData(const Tile &tile, TileData &data, U32 &dataSize)
 {
+
+   cleanup();
+
+   const rcChunkyTriMesh* chunkyMesh = m_geo->getChunkyMesh();
+
    // Push out tile boundaries a bit.
    F32 tileBmin[3], tileBmax[3];
    rcVcopy(tileBmin, tile.bmin);
    rcVcopy(tileBmax, tile.bmax);
-   tileBmin[0] -= cfg.borderSize * cfg.cs;
-   tileBmin[2] -= cfg.borderSize * cfg.cs;
-   tileBmax[0] += cfg.borderSize * cfg.cs;
-   tileBmax[2] += cfg.borderSize * cfg.cs;
-
-   // Parse objects from level into RC-compatible format.
-   Box3F box = RCtoDTS(tileBmin, tileBmax);
-   SceneContainer::CallbackInfo info;
-   info.context = PLC_Navigation;
-   info.boundingBox = box;
-   data.geom.clear();
-   info.polyList = &data.geom;
-   info.key = this;
-   getContainer()->findObjects(box, StaticObjectType | DynamicShapeObjectType, buildCallback, &info);
-
-   // Parse water objects into the same list, but remember how much geometry was /not/ water.
-   U32 nonWaterVertCount = data.geom.getVertCount();
-   U32 nonWaterTriCount = data.geom.getTriCount();
-   if(mWaterMethod != Ignore)
-   {
-      getContainer()->findObjects(box, WaterObjectType, buildCallback, &info);
-   }
-
-   // Check for no geometry.
-   if (!data.geom.getVertCount())
-   {
-      data.geom.clear();
-      return NULL;
-   }
-
-   // Figure out voxel dimensions of this tile.
-   U32 width = 0, height = 0;
-   width = cfg.tileSize + cfg.borderSize * 2;
-   height = cfg.tileSize + cfg.borderSize * 2;
+   // Setup our rcConfig
+   dMemset(&m_cfg, 0, sizeof(m_cfg));
+   m_cfg.cs = mCellSize;
+   m_cfg.ch = mCellHeight;
+   m_cfg.walkableSlopeAngle = mWalkableSlope;
+   m_cfg.walkableHeight = (S32)mCeil(mWalkableHeight / m_cfg.ch);
+   m_cfg.walkableClimb = (S32)mFloor(mWalkableClimb / m_cfg.ch);
+   m_cfg.walkableRadius = (S32)mCeil(mWalkableRadius / m_cfg.cs);
+   m_cfg.maxEdgeLen = (S32)(mMaxEdgeLen / mCellSize);
+   m_cfg.maxSimplificationError = mMaxSimplificationError;
+   m_cfg.minRegionArea = (S32)mSquared((F32)mMinRegionArea);
+   m_cfg.mergeRegionArea = (S32)mSquared((F32)mMergeRegionArea);
+   m_cfg.maxVertsPerPoly = (S32)mMaxVertsPerPoly;
+   m_cfg.tileSize = (S32)mTileSize;
+   m_cfg.borderSize = mMax(m_cfg.walkableRadius + 3, mBorderSize); // use the border size if it is bigger.
+   m_cfg.width = m_cfg.tileSize + m_cfg.borderSize * 2;
+   m_cfg.height = m_cfg.tileSize + m_cfg.borderSize * 2;
+   m_cfg.detailSampleDist = mDetailSampleDist < 0.9f ? 0 : mCellSize * mDetailSampleDist;
+   m_cfg.detailSampleMaxError = mCellHeight * mDetailSampleMaxError;
+   rcVcopy(m_cfg.bmin, tileBmin);
+   rcVcopy(m_cfg.bmax, tileBmax);
+   m_cfg.bmin[0] -= m_cfg.borderSize * m_cfg.cs;
+   m_cfg.bmin[2] -= m_cfg.borderSize * m_cfg.cs;
+   m_cfg.bmax[0] += m_cfg.borderSize * m_cfg.cs;
+   m_cfg.bmax[2] += m_cfg.borderSize * m_cfg.cs;
 
    // Create a heightfield to voxelise our input geometry.
-   data.hf = rcAllocHeightfield();
-   if(!data.hf)
+   m_solid = rcAllocHeightfield();
+   if(!m_solid)
    {
       Con::errorf("Out of memory (rcHeightField) for NavMesh %s", getIdString());
       return NULL;
    }
-   if(!rcCreateHeightfield(ctx, *data.hf, width, height, tileBmin, tileBmax, cfg.cs, cfg.ch))
+   if (!rcCreateHeightfield(ctx, *m_solid, m_cfg.width, m_cfg.height, m_cfg.bmin, m_cfg.bmax, m_cfg.cs, m_cfg.ch))
    {
       Con::errorf("Could not generate rcHeightField for NavMesh %s", getIdString());
       return NULL;
    }
 
-   unsigned char *areas = new unsigned char[data.geom.getTriCount()];
-
-   dMemset(areas, 0, data.geom.getTriCount() * sizeof(unsigned char));
-
-   // Mark walkable triangles with the appropriate area flags, and rasterize.
-   if(mWaterMethod == Solid)
+   m_triareas = new unsigned char[chunkyMesh->maxTrisPerChunk];
+   if (!m_triareas)
    {
-      // Treat water as solid: i.e. mark areas as walkable based on angle.
-      rcMarkWalkableTriangles(ctx, cfg.walkableSlopeAngle,
-         data.geom.getVerts(), data.geom.getVertCount(),
-         data.geom.getTris(), data.geom.getTriCount(), areas);
-   }
-   else
-   {
-      // Treat water as impassable: leave all area flags 0.
-      rcMarkWalkableTriangles(ctx, cfg.walkableSlopeAngle,
-         data.geom.getVerts(), nonWaterVertCount,
-         data.geom.getTris(), nonWaterTriCount, areas);
-   }
-   rcRasterizeTriangles(ctx,
-      data.geom.getVerts(), data.geom.getVertCount(),
-      data.geom.getTris(), areas, data.geom.getTriCount(),
-      *data.hf, cfg.walkableClimb);
-
-   delete[] areas;
-
-   // Filter out areas with low ceilings and other stuff.
-   rcFilterLowHangingWalkableObstacles(ctx, cfg.walkableClimb, *data.hf);
-   rcFilterLedgeSpans(ctx, cfg.walkableHeight, cfg.walkableClimb, *data.hf);
-   rcFilterWalkableLowHeightSpans(ctx, cfg.walkableHeight, *data.hf);
-
-   data.chf = rcAllocCompactHeightfield();
-   if(!data.chf)
-   {
-      Con::errorf("Out of memory (rcCompactHeightField) for NavMesh %s", getIdString());
+      Con::errorf("NavMesh::buildTileData: Out of memory 'm_triareas' (%d).", chunkyMesh->maxTrisPerChunk);
       return NULL;
    }
-   if(!rcBuildCompactHeightfield(ctx, cfg.walkableHeight, cfg.walkableClimb, *data.hf, *data.chf))
+
+   F32 tbmin[2], tbmax[2];
+   tbmin[0] = m_cfg.bmin[0];
+   tbmin[1] = m_cfg.bmin[2];
+   tbmax[0] = m_cfg.bmax[0];
+   tbmax[1] = m_cfg.bmax[2];
+   int cid[512];
+   const int ncid = rcGetChunksOverlappingRect(chunkyMesh, tbmin, tbmax, cid, 512);
+   if (!ncid)
+      return 0;
+
+   for (int i = 0; i < ncid; ++i)
    {
-      Con::errorf("Could not generate rcCompactHeightField for NavMesh %s", getIdString());
+      const rcChunkyTriMeshNode& node = chunkyMesh->nodes[cid[i]];
+      const int* ctris = &chunkyMesh->tris[node.i * 3];
+      const int nctris = node.n;
+
+      memset(m_triareas, 0, nctris * sizeof(unsigned char));
+      rcMarkWalkableTriangles(ctx, m_cfg.walkableSlopeAngle,
+         m_geo->getVerts(), m_geo->getVertCount(), ctris, nctris, m_triareas);
+
+      if (!rcRasterizeTriangles(ctx, m_geo->getVerts(), m_geo->getVertCount(), ctris, m_triareas, nctris, *m_solid, m_cfg.walkableClimb))
+         return NULL;
+   }
+
+   if (!mSaveIntermediates)
+   {
+      delete[] m_triareas;
+      m_triareas = 0;
+   }
+
+   // these should be optional.
+   //if (m_filterLowHangingObstacles)
+      rcFilterLowHangingWalkableObstacles(ctx, m_cfg.walkableClimb, *m_solid);
+   //if (m_filterLedgeSpans)
+      rcFilterLedgeSpans(ctx, m_cfg.walkableHeight, m_cfg.walkableClimb, *m_solid);
+   //if (m_filterWalkableLowHeightSpans)
+      rcFilterWalkableLowHeightSpans(ctx, m_cfg.walkableHeight, *m_solid);
+
+
+   // Compact the heightfield so that it is faster to handle from now on.
+   // This will result more cache coherent data as well as the neighbours
+   // between walkable cells will be calculated.
+   m_chf = rcAllocCompactHeightfield();
+   if (!m_chf)
+   {
+      Con::errorf("NavMesh::buildTileData: Out of memory 'chf'.");
       return NULL;
    }
-   if(!rcErodeWalkableArea(ctx, cfg.walkableRadius, *data.chf))
+   if (!rcBuildCompactHeightfield(ctx, m_cfg.walkableHeight, m_cfg.walkableClimb, *m_solid, *m_chf))
    {
-      Con::errorf("Could not erode walkable area for NavMesh %s", getIdString());
+      Con::errorf("NavMesh::buildTileData: Could not build compact data.");
+      return NULL;
+   }
+
+   if (!mSaveIntermediates)
+   {
+      rcFreeHeightField(m_solid);
+      m_solid = NULL;
+   }
+
+   // Erode the walkable area by agent radius.
+   if (!rcErodeWalkableArea(ctx, m_cfg.walkableRadius, *m_chf))
+   {
+      Con::errorf("NavMesh::buildTileData: Could not erode.");
       return NULL;
    }
 
@@ -962,132 +1060,186 @@ unsigned char *NavMesh::buildTileData(const Tile &tile, TileData &data, U32 &dat
       //rcMarkConvexPolyArea(m_ctx, vols[i].verts, vols[i].nverts, vols[i].hmin, vols[i].hmax, (unsigned char)vols[i].area, *m_chf);
    //--------------------------
 
-   if(false)
+   // Partition the heightfield so that we can use simple algorithm later to triangulate the walkable areas.
+   // There are 3 martitioning methods, each with some pros and cons:
+   // These should be implemented.
+   // 1) Watershed partitioning
+   //   - the classic Recast partitioning
+   //   - creates the nicest tessellation
+   //   - usually slowest
+   //   - partitions the heightfield into nice regions without holes or overlaps
+   //   - the are some corner cases where this method creates produces holes and overlaps
+   //      - holes may appear when a small obstacles is close to large open area (triangulation can handle this)
+   //      - overlaps may occur if you have narrow spiral corridors (i.e stairs), this make triangulation to fail
+   //   * generally the best choice if you precompute the nacmesh, use this if you have large open areas
+   // 2) Monotone partioning
+   //   - fastest
+   //   - partitions the heightfield into regions without holes and overlaps (guaranteed)
+   //   - creates long thin polygons, which sometimes causes paths with detours
+   //   * use this if you want fast navmesh generation
+   // 3) Layer partitoining
+   //   - quite fast
+   //   - partitions the heighfield into non-overlapping regions
+   //   - relies on the triangulation code to cope with holes (thus slower than monotone partitioning)
+   //   - produces better triangles than monotone partitioning
+   //   - does not have the corner cases of watershed partitioning
+   //   - can be slow and create a bit ugly tessellation (still better than monotone)
+   //     if you have large open areas with small obstacles (not a problem if you use tiles)
+   //   * good choice to use for tiled navmesh with medium and small sized tiles
+
+
+   if (/*m_partitionType == SAMPLE_PARTITION_WATERSHED*/ true)
    {
-      if(!rcBuildRegionsMonotone(ctx, *data.chf, cfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea))
+      // Prepare for region partitioning, by calculating distance field along the walkable surface.
+      if (!rcBuildDistanceField(ctx, *m_chf))
       {
-         Con::errorf("Could not build regions for NavMesh %s", getIdString());
+         Con::errorf("NavMesh::buildTileData: Could not build distance field.");
+         return 0;
+      }
+
+      // Partition the walkable surface into simple regions without holes.
+      if (!rcBuildRegions(ctx, *m_chf, m_cfg.borderSize, m_cfg.minRegionArea, m_cfg.mergeRegionArea))
+      {
+         Con::errorf("NavMesh::buildTileData: Could not build watershed regions.");
          return NULL;
       }
    }
-   else
+   else if (/*m_partitionType == SAMPLE_PARTITION_MONOTONE*/ false)
    {
-      if(!rcBuildDistanceField(ctx, *data.chf))
+      // Partition the walkable surface into simple regions without holes.
+      // Monotone partitioning does not need distancefield.
+      if (!rcBuildRegionsMonotone(ctx, *m_chf, m_cfg.borderSize, m_cfg.minRegionArea, m_cfg.mergeRegionArea))
       {
-         Con::errorf("Could not build distance field for NavMesh %s", getIdString());
-         return NULL;
-      }
-      if(!rcBuildRegions(ctx, *data.chf, cfg.borderSize, cfg.minRegionArea, cfg.mergeRegionArea))
-      {
-         Con::errorf("Could not build regions for NavMesh %s", getIdString());
+         Con::errorf("NavMesh::buildTileData: Could not build monotone regions.");
          return NULL;
       }
    }
-
-   data.cs = rcAllocContourSet();
-   if(!data.cs)
+   else // SAMPLE_PARTITION_LAYERS
    {
-      Con::errorf("Out of memory (rcContourSet) for NavMesh %s", getIdString());
-      return NULL;
-   }
-   if(!rcBuildContours(ctx, *data.chf, cfg.maxSimplificationError, cfg.maxEdgeLen, *data.cs))
-   {
-      Con::errorf("Could not construct rcContourSet for NavMesh %s", getIdString());
-      return NULL;
-   }
-   if(data.cs->nconts <= 0)
-   {
-      Con::errorf("No contours in rcContourSet for NavMesh %s", getIdString());
-      return NULL;
+      // Partition the walkable surface into simple regions without holes.
+      if (!rcBuildLayerRegions(ctx, *m_chf, m_cfg.borderSize, m_cfg.minRegionArea))
+      {
+         Con::errorf("NavMesh::buildTileData: Could not build layer regions.");
+         return NULL;
+      }
    }
 
-   data.pm = rcAllocPolyMesh();
-   if(!data.pm)
+   m_cset = rcAllocContourSet();
+   if (!m_cset)
    {
-      Con::errorf("Out of memory (rcPolyMesh) for NavMesh %s", getIdString());
-      return NULL;
-   }
-   if(!rcBuildPolyMesh(ctx, *data.cs, cfg.maxVertsPerPoly, *data.pm))
-   {
-      Con::errorf("Could not construct rcPolyMesh for NavMesh %s", getIdString());
+      Con::errorf("NavMesh::buildTileData: Out of memory 'cset'");
       return NULL;
    }
 
-   data.pmd = rcAllocPolyMeshDetail();
-   if(!data.pmd)
+   if (!rcBuildContours(ctx, *m_chf, m_cfg.maxSimplificationError, m_cfg.maxEdgeLen, *m_cset))
    {
-      Con::errorf("Out of memory (rcPolyMeshDetail) for NavMesh %s", getIdString());
-      return NULL;
-   }
-   if(!rcBuildPolyMeshDetail(ctx, *data.pm, *data.chf, cfg.detailSampleDist, cfg.detailSampleMaxError, *data.pmd))
-   {
-      Con::errorf("Could not construct rcPolyMeshDetail for NavMesh %s", getIdString());
+      Con::errorf("NavMesh::buildTileData: Could not create contours");
       return NULL;
    }
 
-   if(data.pm->nverts >= 0xffff)
+   if (m_cset->nconts == 0)
+      return NULL;
+
+   // Build polygon navmesh from the contours.
+   m_pmesh = rcAllocPolyMesh();
+   if (!m_pmesh)
    {
-      Con::errorf("Too many vertices in rcPolyMesh for NavMesh %s", getIdString());
+      Con::errorf("NavMesh::buildTileData: Out of memory 'pmesh'.");
       return NULL;
    }
-   for(U32 i = 0; i < data.pm->npolys; i++)
+   if (!rcBuildPolyMesh(ctx, *m_cset, m_cfg.maxVertsPerPoly, *m_pmesh))
    {
-      if(data.pm->areas[i] == RC_WALKABLE_AREA)
-         data.pm->areas[i] = GroundArea;
+      Con::errorf("NavMesh::buildTileData: Could not triangulate contours.");
+      return NULL;
+   }
 
-      if(data.pm->areas[i] == GroundArea)
-         data.pm->flags[i] |= WalkFlag;
-      if(data.pm->areas[i] == WaterArea)
-         data.pm->flags[i] |= SwimFlag;
+   // Build detail mesh.
+   m_dmesh = rcAllocPolyMeshDetail();
+   if (!m_dmesh)
+   {
+      Con::errorf("NavMesh::buildTileData: Out of memory 'dmesh'.");
+      return NULL;
+   }
+
+   if (!rcBuildPolyMeshDetail(ctx, *m_pmesh, *m_chf, m_cfg.detailSampleDist, m_cfg.detailSampleMaxError, *m_dmesh))
+   {
+      Con::errorf("NavMesh::buildTileData: Could build polymesh detail.");
+      return NULL;
+   }
+
+   if (!mSaveIntermediates)
+   {
+      rcFreeCompactHeightfield(m_chf);
+      m_chf = 0;
+      rcFreeContourSet(m_cset);
+      m_cset = 0;
    }
 
    unsigned char* navData = 0;
    int navDataSize = 0;
-
-   dtNavMeshCreateParams params;
-   dMemset(&params, 0, sizeof(params));
-
-   params.verts = data.pm->verts;
-   params.vertCount = data.pm->nverts;
-   params.polys = data.pm->polys;
-   params.polyAreas = data.pm->areas;
-   params.polyFlags = data.pm->flags;
-   params.polyCount = data.pm->npolys;
-   params.nvp = data.pm->nvp;
-
-   params.detailMeshes = data.pmd->meshes;
-   params.detailVerts = data.pmd->verts;
-   params.detailVertsCount = data.pmd->nverts;
-   params.detailTris = data.pmd->tris;
-   params.detailTriCount = data.pmd->ntris;
-
-   params.offMeshConVerts = mLinkVerts.address();
-   params.offMeshConRad = mLinkRads.address();
-   params.offMeshConDir = mLinkDirs.address();
-   params.offMeshConAreas = mLinkAreas.address();
-   params.offMeshConFlags = mLinkFlags.address();
-   params.offMeshConUserID = mLinkIDs.address();
-   params.offMeshConCount = mLinkIDs.size();
-
-   params.walkableHeight = mWalkableHeight;
-   params.walkableRadius = mWalkableRadius;
-   params.walkableClimb = mWalkableClimb;
-   params.tileX = tile.x;
-   params.tileY = tile.y;
-   params.tileLayer = 0;
-   rcVcopy(params.bmin, data.pm->bmin);
-   rcVcopy(params.bmax, data.pm->bmax);
-   params.cs = cfg.cs;
-   params.ch = cfg.ch;
-   params.buildBvTree = true;
-
-   if(!dtCreateNavMeshData(&params, &navData, &navDataSize))
+   if (m_cfg.maxVertsPerPoly <= DT_VERTS_PER_POLYGON)
    {
-      Con::errorf("Could not create dtNavMeshData for tile (%d, %d) of NavMesh %s",
-         tile.x, tile.y, getIdString());
-      return NULL;
-   }
+      if (m_pmesh->nverts >= 0xffff)
+      {
+         // The vertex indices are ushorts, and cannot point to more than 0xffff vertices.
+         Con::errorf("NavMesh::buildTileData: Too many vertices per tile %d (max: %d).", m_pmesh->nverts, 0xffff);
+         return NULL;
+      }
 
+      for (U32 i = 0; i < m_pmesh->npolys; i++)
+      {
+         if (m_pmesh->areas[i] == RC_WALKABLE_AREA)
+            m_pmesh->areas[i] = GroundArea;
+
+         if (m_pmesh->areas[i] == GroundArea)
+            m_pmesh->flags[i] |= WalkFlag;
+         if (m_pmesh->areas[i] == WaterArea)
+            m_pmesh->flags[i] |= SwimFlag;
+      }
+
+      dtNavMeshCreateParams params;
+      dMemset(&params, 0, sizeof(params));
+
+      params.verts = m_pmesh->verts;
+      params.vertCount = m_pmesh->nverts;
+      params.polys = m_pmesh->polys;
+      params.polyAreas = m_pmesh->areas;
+      params.polyFlags = m_pmesh->flags;
+      params.polyCount = m_pmesh->npolys;
+      params.nvp = m_pmesh->nvp;
+
+      params.detailMeshes = m_dmesh->meshes;
+      params.detailVerts = m_dmesh->verts;
+      params.detailVertsCount = m_dmesh->nverts;
+      params.detailTris = m_dmesh->tris;
+      params.detailTriCount = m_dmesh->ntris;
+
+      params.offMeshConVerts = mLinkVerts.address();
+      params.offMeshConRad = mLinkRads.address();
+      params.offMeshConDir = mLinkDirs.address();
+      params.offMeshConAreas = mLinkAreas.address();
+      params.offMeshConFlags = mLinkFlags.address();
+      params.offMeshConUserID = mLinkIDs.address();
+      params.offMeshConCount = mLinkIDs.size();
+
+      params.walkableHeight = mWalkableHeight;
+      params.walkableRadius = mWalkableRadius;
+      params.walkableClimb = mWalkableClimb;
+      params.tileX = tile.x;
+      params.tileY = tile.y;
+      params.tileLayer = 0;
+      rcVcopy(params.bmin, m_pmesh->bmin);
+      rcVcopy(params.bmax, m_pmesh->bmax);
+      params.cs = m_cfg.cs;
+      params.ch = m_cfg.ch;
+      params.buildBvTree = true;
+
+      if (!dtCreateNavMeshData(&params, &navData, &navDataSize))
+      {
+         Con::errorf("NavMesh::buildTileData: Could not build Detour navmesh.");
+         return NULL;
+      }
+   }
    dataSize = navDataSize;
 
    return navData;
@@ -1329,6 +1481,22 @@ bool NavMesh::testEdgeCover(const Point3F &pos, const VectorF &dir, CoverPointDa
 
 void NavMesh::renderToDrawer()
 {
+}
+
+void NavMesh::cleanup()
+{
+   delete[] m_triareas;
+   m_triareas = 0;
+   rcFreeHeightField(m_solid);
+   m_solid = 0;
+   rcFreeCompactHeightfield(m_chf);
+   m_chf = 0;
+   rcFreeContourSet(m_cset);
+   m_cset = 0;
+   rcFreePolyMesh(m_pmesh);
+   m_pmesh = 0;
+   rcFreePolyMeshDetail(m_dmesh);
+   m_dmesh = 0;
 }
 
 void NavMesh::prepRenderImage(SceneRenderState *state)

@@ -51,7 +51,7 @@ duDebugDrawTorque::~duDebugDrawTorque()
 
 void duDebugDrawTorque::depthMask(bool state)
 {
-   mDesc.setZReadWrite(state, state);
+   mDesc.setZReadWrite(state, false);
 }
 
 void duDebugDrawTorque::texture(bool state)
@@ -94,7 +94,7 @@ void duDebugDrawTorque::begin(duDebugDrawPrimitives prim, float size)
    case DU_DRAW_QUADS:  mPrimType = GFXTriangleList; mQuadsMode = true; break;
    }
 
-   mDesc.setCullMode(GFXCullNone);
+   mDesc.setCullMode(GFXCullCW);
    mDesc.setBlend(true);
 }
 

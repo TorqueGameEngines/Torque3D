@@ -27,7 +27,7 @@
 #include "gfx/primBuilder.h"
 #include "gfx/gfxStateBlock.h"
 
-RecastPolyList::RecastPolyList()
+RecastPolyList::RecastPolyList() : mChunkyMesh(0)
 {
    nverts = 0;
    verts = NULL;
@@ -42,6 +42,28 @@ RecastPolyList::RecastPolyList()
 RecastPolyList::~RecastPolyList()
 {
    clear();
+}
+
+rcChunkyTriMesh* RecastPolyList::getChunkyMesh()
+{
+   if (!mChunkyMesh)
+   {
+      mChunkyMesh = new rcChunkyTriMesh;
+      if (!mChunkyMesh)
+      {
+         Con::errorf("Build tile navigation: out of memory");
+         return NULL;
+      }
+
+      if (!rcCreateChunkyTriMesh(getVerts(), getTris(), getTriCount(), 256, mChunkyMesh))
+      {
+         Con::errorf("Build tile navigation: out of memory");
+         return NULL;
+      }
+
+   }
+
+   return mChunkyMesh;
 }
 
 void RecastPolyList::clear()

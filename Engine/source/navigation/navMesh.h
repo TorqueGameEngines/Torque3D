@@ -250,6 +250,8 @@ public:
 
    void inspectPostApply() override;
 
+   void createNewFile();
+
 protected:
 
    dtNavMesh const* getNavMesh() { return nm; }
@@ -272,17 +274,37 @@ private:
       /// Recast min and max points.
       F32 bmin[3], bmax[3];
       /// Default constructor.
-      Tile() : box(Box3F::Invalid), x(0), y(0)
+      Tile() : box(Box3F::Invalid), x(0), y(0), chf(0), solid(0), cset(0), pmesh(0), dmesh(0)
       {
          bmin[0] = bmin[1] = bmin[2] = bmax[0] = bmax[1] = bmax[2] = 0.0f;
       }
       /// Value constructor.
       Tile(const Box3F &b, U32 _x, U32 _y, const F32 *min, const F32 *max)
-         : box(b), x(_x), y(_y)
+         : box(b), x(_x), y(_y), chf(0), solid(0), cset(0), pmesh(0), dmesh(0)
       {
          rcVcopy(bmin, min);
          rcVcopy(bmax, max);
       }
+
+      ~Tile()
+      {
+         if (chf)
+            delete chf;
+         if (cset)
+            delete cset;
+         if (solid)
+            delete solid;
+         if (pmesh)
+            delete pmesh;
+         if (dmesh)
+            delete dmesh;
+      }
+
+      rcCompactHeightfield* chf;
+      rcHeightfield* solid;
+      rcContourSet* cset;
+      rcPolyMesh* pmesh;
+      rcPolyMeshDetail* dmesh;
    };
 
    /// List of tiles.

@@ -40,6 +40,7 @@
 #include "math/mathIO.h"
 
 #include "core/stream/fileStream.h"
+#include "T3D/assets/LevelAsset.h"
 
 extern bool gEditingMission;
 
@@ -365,7 +366,7 @@ bool NavMesh::onAdd()
    if(gEditingMission || mAlwaysRender)
    {
       mNetFlags.set(Ghostable);
-      if(isClientObject())
+      if (isClientObject())
          renderToDrawer();
    }
 
@@ -740,6 +741,27 @@ void NavMesh::inspectPostApply()
       cancelBuild();
 }
 
+void NavMesh::createNewFile()
+{
+   // We need to construct a default file name
+   String levelAssetId(Con::getVariable("$Client::LevelAsset"));
+
+   LevelAsset* levelAsset;
+   if (!Sim::findObject(levelAssetId.c_str(), levelAsset))
+   {
+      Con::errorf("NavMesh::createNewFile() - Unable to find current level's LevelAsset. Unable to construct NavMesh filePath");
+      return;
+   }
+
+   Torque::Path basePath(levelAsset->getNavmeshPath());
+
+   if (basePath.isEmpty())
+      basePath = (Torque::Path)(levelAsset->getLevelPath());
+
+   String fileName = Torque::FS::MakeUniquePath(basePath.getPath(), basePath.getFileName(), "nav");
+   mFileName = StringTable->insert(fileName.c_str());
+}
+
 void NavMesh::updateConfig()
 {
    //// Build rcConfig object from our console members.
@@ -792,36 +814,6 @@ void NavMesh::updateTiles(bool dirty)
    if(!isProperlyAdded())
       return;
 
-   // this is just here so that load regens the mesh, we should be saving it out.
-   if (!m_geo)
-   {
-      Box3F worldBox = getWorldBox();
-      SceneContainer::CallbackInfo info;
-      info.context = PLC_Navigation;
-      info.boundingBox = worldBox;
-      m_geo = new RecastPolyList;
-      info.polyList = m_geo;
-      info.key = this;
-      getContainer()->findObjects(worldBox, StaticObjectType | DynamicShapeObjectType, buildCallback, &info);
-
-      // Parse water objects into the same list, but remember how much geometry was /not/ water.
-      U32 nonWaterVertCount = m_geo->getVertCount();
-      U32 nonWaterTriCount = m_geo->getTriCount();
-      if (mWaterMethod != Ignore)
-      {
-         getContainer()->findObjects(worldBox, WaterObjectType, buildCallback, &info);
-      }
-
-      // Check for no geometry.
-      if (!m_geo->getVertCount())
-      {
-         m_geo->clear();
-         return;
-      }
-
-      m_geo->getChunkyMesh();
-   }
-
    mTiles.clear();
    mDirtyTiles.clear();
 
@@ -834,7 +826,7 @@ void NavMesh::updateTiles(bool dirty)
    const F32* bmax = box.maxExtents;
    S32 gw = 0, gh = 0;
    rcCalcGridSize(bmin, bmax, mCellSize, &gw, &gh);
-   const S32 ts = (S32)mTileSize;
+   const S32 ts = (S32)(mTileSize / mCellSize);
    const S32 tw = (gw + ts - 1) / ts;
    const S32 th = (gh + ts - 1) / ts;
    const F32 tcs = mTileSize;
@@ -872,12 +864,43 @@ void NavMesh::processTick(const Move *move)
 void NavMesh::buildNextTile()
 {
    PROFILE_SCOPE(NavMesh_buildNextTile);
+
+   // this is just here so that load regens the mesh, also buildTile needs to regen incase geometry has changed.
+   if (!m_geo)
+   {
+      Box3F worldBox = getWorldBox();
+      SceneContainer::CallbackInfo info;
+      info.context = PLC_Navigation;
+      info.boundingBox = worldBox;
+      m_geo = new RecastPolyList;
+      info.polyList = m_geo;
+      info.key = this;
+      getContainer()->findObjects(worldBox, StaticObjectType | DynamicShapeObjectType, buildCallback, &info);
+
+      // Parse water objects into the same list, but remember how much geometry was /not/ water.
+      U32 nonWaterVertCount = m_geo->getVertCount();
+      U32 nonWaterTriCount = m_geo->getTriCount();
+      if (mWaterMethod != Ignore)
+      {
+         getContainer()->findObjects(worldBox, WaterObjectType, buildCallback, &info);
+      }
+
+      // Check for no geometry.
+      if (!m_geo->getVertCount())
+      {
+         m_geo->clear();
+         return;
+      }
+
+      m_geo->getChunkyMesh();
+   }
+
    if(!mDirtyTiles.empty())
    {
       // Pop a single dirty tile and process it.
       U32 i = mDirtyTiles.front();
       mDirtyTiles.pop_front();
-      const Tile &tile = mTiles[i];
+      Tile &tile = mTiles[i];
 
       // Remove any previous data.
       nm->removeTile(nm->getTileRefAt(tile.x, tile.y, 0), 0, 0);
@@ -885,6 +908,33 @@ void NavMesh::buildNextTile()
       // Generate navmesh for this tile.
       U32 dataSize = 0;
       unsigned char* data = buildTileData(tile, dataSize);
+      // cache our result (these only exist if keep intermediates is ticked)
+      if (m_chf)
+      {
+         tile.chf = m_chf;
+         m_chf = 0;
+      }
+      if (m_solid)
+      {
+         tile.solid = m_solid;
+         m_solid = 0;
+      }
+      if (m_cset)
+      {
+         tile.cset = m_cset;
+         m_cset = 0;
+      }
+      if (m_pmesh)
+      {
+         tile.pmesh = m_pmesh;
+         m_pmesh = 0;
+      }
+      if (m_dmesh)
+      {
+         tile.dmesh = m_dmesh;
+         m_dmesh = 0;
+      }
+
       if(data)
       {
          // Add new data (navmesh owns and deletes the data).
@@ -1275,6 +1325,7 @@ void NavMesh::buildTile(const U32 &tile)
    {
       mDirtyTiles.push_back_unique(tile);
       ctx->startTimer(RC_TIMER_TOTAL);
+      m_geo = NULL;
    }
 }
 
@@ -1757,8 +1808,13 @@ DefineEngineMethod(NavMesh, load, bool, (),,
 
 bool NavMesh::save()
 {
-   if(!dStrlen(mFileName) || !nm)
+   if (!nm)
       return false;
+
+   if (!dStrlen(mFileName) || !nm)
+   {
+      createNewFile();
+   }
    
    FileStream stream;
    if(!stream.open(mFileName, Torque::FS::File::Write))

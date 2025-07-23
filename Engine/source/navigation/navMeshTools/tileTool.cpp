@@ -1,4 +1,4 @@
-#include "TileTool.h"
+#include "tileTool.h"
 #include "navigation/guiNavEditorCtrl.h"
 #include "console/consoleTypes.h"
 #include "gfx/gfxDrawUtil.h"

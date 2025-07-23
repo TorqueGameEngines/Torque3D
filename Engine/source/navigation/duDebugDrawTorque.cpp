@@ -51,7 +51,7 @@ duDebugDrawTorque::~duDebugDrawTorque()
 
 void duDebugDrawTorque::depthMask(bool state)
 {
-   mDesc.setZReadWrite(state, false);
+   mDesc.setZReadWrite(state);
 }
 
 void duDebugDrawTorque::texture(bool state)
@@ -95,7 +95,8 @@ void duDebugDrawTorque::begin(duDebugDrawPrimitives prim, float size)
    }
 
    mDesc.setCullMode(GFXCullCW);
-   mDesc.setBlend(true);
+   mDesc.setBlend(false);
+   mDesc.setZReadWrite(true);
 }
 
 /// Submit a vertex

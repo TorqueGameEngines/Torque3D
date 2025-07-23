@@ -254,10 +254,6 @@ protected:
    dtNavMesh const* getNavMesh() { return nm; }
 
 private:
-   /// Generates a navigation mesh for the collection of objects in this
-   /// mesh. Returns true if successful. Stores the created mesh in tnm.
-   bool generateMesh();
-
    /// Builds the next tile in the dirty list.
    void buildNextTile();
 
@@ -288,42 +284,8 @@ private:
       }
    };
 
-   /// Intermediate data for tile creation.
-   struct TileData {
-      RecastPolyList          geom;
-      rcHeightfield        *hf;
-      rcCompactHeightfield *chf;
-      rcContourSet         *cs;
-      rcPolyMesh           *pm;
-      rcPolyMeshDetail     *pmd;
-      TileData()
-      {
-         hf = NULL;
-         chf = NULL;
-         cs = NULL;
-         pm = NULL;
-         pmd = NULL;
-      }
-      void freeAll()
-      {
-         geom.clear();
-         rcFreeHeightField(hf);
-         rcFreeCompactHeightfield(chf);
-         rcFreeContourSet(cs);
-         rcFreePolyMesh(pm);
-         rcFreePolyMeshDetail(pmd);
-      }
-      ~TileData()
-      {
-         freeAll();
-      }
-   };
-
    /// List of tiles.
    Vector<Tile> mTiles;
-
-   /// List of tile intermediate data.
-   Vector<TileData> mTileData;
 
    /// List of indices to the tile array which are dirty.
    Vector<U32> mDirtyTiles;
@@ -332,7 +294,7 @@ private:
    void updateTiles(bool dirty = false);
 
    /// Generates navmesh data for a single tile.
-   unsigned char *buildTileData(const Tile &tile, TileData &data, U32 &dataSize);
+   unsigned char *buildTileData(const Tile &tile, U32 &dataSize);
 
    /// @}
 

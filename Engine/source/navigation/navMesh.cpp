@@ -187,10 +187,11 @@ NavMesh::NavMesh()
    mSaveIntermediates = false;
    nm = NULL;
    ctx = NULL;
+   m_geo = NULL;
 
    mWaterMethod = Ignore;
 
-   mCellSize = mCellHeight = 0.01f;
+   mCellSize = mCellHeight = 0.2f;
    mWalkableHeight = 2.0f;
    mWalkableClimb = 0.3f;
    mWalkableRadius = 0.5f;
@@ -664,12 +665,12 @@ bool NavMesh::build(bool background, bool saveIntermediates)
    Box3F rc_box = DTStoRC(getWorldBox());
    S32 gw = 0, gh = 0;
    rcCalcGridSize(rc_box.minExtents, rc_box.maxExtents, mCellSize, &gw, &gh);
-   const S32 ts = (S32)mTileSize;
+   const S32 ts = (S32)(mTileSize / mCellSize);
    const S32 tw = (gw + ts - 1) / ts;
    const S32 th = (gh + ts - 1) / ts;
    Con::printf("NavMesh::Build - Tiles %d x %d", tw, th);
 
-   U32 tileBits = mMin(getNextBinLog2(tw * th), 14);
+   U32 tileBits = mMin(getBinLog2(getNextPow2(tw * th)), 14);
    if (tileBits > 14) tileBits = 14;
    U32 maxTiles = 1 << tileBits;
    U32 polyBits = 22 - tileBits;
@@ -678,8 +679,8 @@ bool NavMesh::build(bool background, bool saveIntermediates)
    // Build navmesh parameters from console members.
    dtNavMeshParams params;
    rcVcopy(params.orig, rc_box.minExtents);
-   params.tileWidth = mTileSize * mCellSize;
-   params.tileHeight = mTileSize * mCellSize;
+   params.tileWidth = mTileSize;
+   params.tileHeight = mTileSize;
    params.maxTiles = maxTiles;
    params.maxPolys = mMaxPolysPerTile;
 
@@ -822,7 +823,6 @@ void NavMesh::updateTiles(bool dirty)
    }
 
    mTiles.clear();
-   mTileData.clear();
    mDirtyTiles.clear();
 
    const Box3F &box = DTStoRC(getWorldBox());
@@ -837,7 +837,7 @@ void NavMesh::updateTiles(bool dirty)
    const S32 ts = (S32)mTileSize;
    const S32 tw = (gw + ts - 1) / ts;
    const S32 th = (gh + ts - 1) / ts;
-   const F32 tcs = mTileSize * mCellSize;
+   const F32 tcs = mTileSize;
 
    // Iterate over tiles.
    F32 tileBmin[3], tileBmax[3];
@@ -860,9 +860,6 @@ void NavMesh::updateTiles(bool dirty)
 
          if(dirty)
             mDirtyTiles.push_back_unique(mTiles.size() - 1);
-
-         if(mSaveIntermediates)
-            mTileData.increment();
       }
    }
 }
@@ -881,16 +878,13 @@ void NavMesh::buildNextTile()
       U32 i = mDirtyTiles.front();
       mDirtyTiles.pop_front();
       const Tile &tile = mTiles[i];
-      // Intermediate data for tile build.
-      TileData tempdata;
-      TileData &tdata = mSaveIntermediates ? mTileData[i] : tempdata;
-      
+
       // Remove any previous data.
       nm->removeTile(nm->getTileRefAt(tile.x, tile.y, 0), 0, 0);
 
       // Generate navmesh for this tile.
       U32 dataSize = 0;
-      unsigned char* data = buildTileData(tile, tdata, dataSize);
+      unsigned char* data = buildTileData(tile, dataSize);
       if(data)
       {
          // Add new data (navmesh owns and deletes the data).
@@ -929,7 +923,7 @@ void NavMesh::buildNextTile()
    }
 }
 
-unsigned char *NavMesh::buildTileData(const Tile &tile, TileData &data, U32 &dataSize)
+unsigned char *NavMesh::buildTileData(const Tile &tile, U32 &dataSize)
 {
 
    cleanup();
@@ -953,7 +947,7 @@ unsigned char *NavMesh::buildTileData(const Tile &tile, TileData &data, U32 &dat
    m_cfg.minRegionArea = (S32)mSquared((F32)mMinRegionArea);
    m_cfg.mergeRegionArea = (S32)mSquared((F32)mMergeRegionArea);
    m_cfg.maxVertsPerPoly = (S32)mMaxVertsPerPoly;
-   m_cfg.tileSize = (S32)mTileSize;
+   m_cfg.tileSize = (S32)(mTileSize / mCellSize);
    m_cfg.borderSize = mMax(m_cfg.walkableRadius + 3, mBorderSize); // use the border size if it is bigger.
    m_cfg.width = m_cfg.tileSize + m_cfg.borderSize * 2;
    m_cfg.height = m_cfg.tileSize + m_cfg.borderSize * 2;
@@ -1572,21 +1566,22 @@ void NavMesh::renderLinks(duDebugDraw &dd)
 
 void NavMesh::renderTileData(duDebugDrawTorque &dd, U32 tile)
 {
-   if(tile >= mTileData.size())
-      return;
    if(nm)
    {
       duDebugDrawNavMesh(&dd, *nm, 0);
-      if(mTileData[tile].chf)
-         duDebugDrawCompactHeightfieldSolid(&dd, *mTileData[tile].chf);
+      if(m_chf)
+         duDebugDrawCompactHeightfieldSolid(&dd, *m_chf);
 
       duDebugDrawNavMeshPortals(&dd, *nm);
+
+      if (!m_geo)
+         return;
+
       int col = duRGBA(255, 0, 255, 255);
-      RecastPolyList &in = mTileData[tile].geom;
       dd.begin(DU_DRAW_LINES);
-      const F32 *verts = in.getVerts();
-      const S32 *tris = in.getTris();
-      for(U32 t = 0; t < in.getTriCount(); t++)
+      const F32 *verts = m_geo->getVerts();
+      const S32 *tris = m_geo->getTris();
+      for(U32 t = 0; t < m_geo->getTriCount(); t++)
       {
          dd.vertex(&verts[tris[t*3]*3], col);
          dd.vertex(&verts[tris[t*3+1]*3], col);

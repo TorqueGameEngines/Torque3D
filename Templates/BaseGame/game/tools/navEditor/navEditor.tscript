@@ -298,6 +298,44 @@ function NavEditorGui::showSidePanel()
 
 //------------------------------------------------------------------------------
 
+function TileTool::onActivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->SelectActions.setVisible(false);
+   %actions->LinkActions.setVisible(false);
+   %actions->CoverActions.setVisible(false);
+   %actions->TileActions.setVisible(false);
+   %actions->TestActions.setVisible(false);
+
+   %properties = NavEditorOptionsWindow->PropertiesBox;
+   %properties->LinkProperties.setVisible(false);
+   %properties->TileProperties.setVisible(false);
+   %properties->TestProperties.setVisible(false);
+
+   %actions->TileActions.setVisible(true);
+   %properties->TileProperties.setVisible(true);
+}
+
+function TileTool::onDeactivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->SelectActions.setVisible(false);
+   %actions->LinkActions.setVisible(false);
+   %actions->CoverActions.setVisible(false);
+   %actions->TileActions.setVisible(false);
+   %actions->TestActions.setVisible(false);
+
+   %properties = NavEditorOptionsWindow->PropertiesBox;
+   %properties->LinkProperties.setVisible(false);
+   %properties->TileProperties.setVisible(false);
+   %properties->TestProperties.setVisible(false);
+}
+
+
 function NavEditorGui::onModeSet(%this, %mode)
 {
    // Callback when the nav editor changes mode. Set the appropriate dynamic

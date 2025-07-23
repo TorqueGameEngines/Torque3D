@@ -422,7 +422,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
                VertSizing = "bottom";
                Extent = "182 18";
                text = "Rebuild tile";
-               command = "NavEditorGui.buildTile();";
+               command = "NavMeshTools->TileTool.buildTile();";
             };
          };
          new GuiStackControl()

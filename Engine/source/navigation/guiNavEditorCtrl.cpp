@@ -51,7 +51,6 @@ ConsoleDocClass(GuiNavEditorCtrl,
 const String GuiNavEditorCtrl::mSelectMode = "SelectMode";
 const String GuiNavEditorCtrl::mLinkMode = "LinkMode";
 const String GuiNavEditorCtrl::mCoverMode = "CoverMode";
-const String GuiNavEditorCtrl::mTileMode = "TileMode";
 const String GuiNavEditorCtrl::mTestMode = "TestMode";
 
 GuiNavEditorCtrl::GuiNavEditorCtrl()
@@ -60,7 +59,6 @@ GuiNavEditorCtrl::GuiNavEditorCtrl()
    mIsDirty = false;
    mStartDragMousePoint = InvalidMousePoint;
    mMesh = NULL;
-   mCurTile = mTile = -1;
    mPlayer = mCurPlayer = NULL;
    mSpawnClass = mSpawnDatablock = "";
    mLinkStart = Point3F::Max;
@@ -158,7 +156,6 @@ void GuiNavEditorCtrl::deselect()
       mMesh->setSelected(false);
    mMesh = NULL;
    mPlayer = mCurPlayer = NULL;
-   mCurTile = mTile = -1;
    mLinkStart = Point3F::Max;
    mLink = mCurLink = -1;
 }
@@ -198,18 +195,6 @@ DefineEngineMethod(GuiNavEditorCtrl, setLinkFlags, void, (U32 flags),,
    "@Brief Set jump and drop properties of the selected link.")
 {
    object->setLinkFlags(LinkData(flags));
-}
-
-void GuiNavEditorCtrl::buildTile()
-{
-   if(!mMesh.isNull() && mTile != -1)
-      mMesh->buildTile(mTile);
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, buildTile, void, (),,
-   "@brief Build the currently selected tile.")
-{
-   object->buildTile();
 }
 
 void GuiNavEditorCtrl::spawnPlayer(const Point3F &pos)
@@ -313,12 +298,17 @@ bool GuiNavEditorCtrl::get3DCentre(Point3F &pos)
 
 void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 {
+   if (!mMesh)
+      return;
+
    mGizmo->on3DMouseDown(event);
 
-   if(!isFirstResponder())
-      setFirstResponder();
+   if (mTool)
+      mTool->on3DMouseDown(event);
 
    mouseLock();
+
+   return;
 
    // Construct a LineSegment from the camera position to 1000 meters away in
    // the direction clicked.
@@ -375,15 +365,6 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
          mMesh->selectLink(mLink, false);
          mLink = -1;
          Con::executef(this, "onLinkDeselected");
-      }
-   }
-
-   if(mMode == mTileMode && !mMesh.isNull())
-   {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri))
-      {
-         mTile = mMesh->getTile(ri.point);
-         mMesh->renderTileData(dd, mTile);
       }
    }
 
@@ -460,14 +441,28 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 
 void GuiNavEditorCtrl::on3DMouseUp(const Gui3DMouseEvent & event)
 {
+   if (!mMesh)
+      return;
+
    // Keep the Gizmo up to date.
    mGizmo->on3DMouseUp(event);
+
+   if (mTool)
+      mTool->on3DMouseUp(event);
 
    mouseUnlock();
 }
 
 void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 {
+   if (!mMesh)
+      return;
+
+   if (mTool)
+      mTool->on3DMouseMove(event);
+
+   return;
+
    //if(mSelRiver != NULL && mSelNode != -1)
       //mGizmo->on3DMouseMove(event);
 
@@ -505,15 +500,6 @@ void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
       }
    }
 
-   // Select a tile from our current NavMesh.
-   if(mMode == mTileMode && !mMesh.isNull())
-   {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-         mCurTile = mMesh->getTile(ri.point);
-      else
-         mCurTile = -1;
-   }
-
    if(mMode == mTestMode)
    {
       if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType | VehicleObjectType, &ri))
@@ -548,6 +534,11 @@ void GuiNavEditorCtrl::on3DMouseLeave(const Gui3DMouseEvent & event)
 
 void GuiNavEditorCtrl::updateGuiInfo()
 {
+   if (mTool)
+   {
+      if (mTool->updateGuiInfo())
+         return;
+   }
 }
 
 void GuiNavEditorCtrl::onRender(Point2I offset, const RectI &updateRect)
@@ -591,6 +582,9 @@ void GuiNavEditorCtrl::renderScene(const RectI & updateRect)
    Point3F camPos;
    mat.getColumn(3,&camPos);
 
+   if (mTool)
+      mTool->onRender3D();
+
    if(mMode == mLinkMode)
    {
       if(mLinkStart != Point3F::Max)
@@ -603,19 +597,6 @@ void GuiNavEditorCtrl::renderScene(const RectI & updateRect)
          Point3F scale(0.8f, 0.8f, 0.8f);
          GFX->getDrawUtil()->drawTransform(desc, linkMat, &scale);
       }
-   }
-
-   if(mMode == mTileMode && !mMesh.isNull())
-   {
-      renderBoxOutline(mMesh->getTileBox(mCurTile), ColorI::BLUE);
-      renderBoxOutline(mMesh->getTileBox(mTile), ColorI::GREEN);
-      /*if (Con::getBoolVariable("$Nav::Editor::renderVoxels", false)) dd.renderGroup(0);
-      if (Con::getBoolVariable("$Nav::Editor::renderInput", false))
-      {
-         dd.depthMask(false);
-         dd.renderGroup(1);
-         dd.depthMask(true);
-      }*/
    }
 
    if(mMode == mTestMode)
@@ -688,6 +669,29 @@ void GuiNavEditorCtrl::_prepRenderImage(SceneManager* sceneGraph, const SceneRen
       state->getRenderPass()->addInst(ri);
    }*/
 }
+
+void GuiNavEditorCtrl::setActiveTool(NavMeshTool* tool)
+{
+   if (mTool)
+   {
+      mTool->onDeactivated();
+   }
+
+   mTool = tool;
+
+   if (mTool)
+   {
+      mTool->setActiveNavMesh(mMesh);
+      mTool->onActivated(mLastEvent);
+   }
+}
+
+DefineEngineMethod(GuiNavEditorCtrl, setActiveTool, void, (const char* toolName), , "( NavMeshTool tool )")
+{
+   NavMeshTool* tool = dynamic_cast<NavMeshTool*>(Sim::findObject(toolName));
+   object->setActiveTool(tool);
+}
+
 
 DefineEngineMethod(GuiNavEditorCtrl, getMode, const char*, (), , "")
 {

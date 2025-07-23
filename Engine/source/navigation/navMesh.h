@@ -102,6 +102,7 @@ public:
    U32 mMergeRegionArea;
    F32 mTileSize;
    U32 mMaxPolysPerTile;
+   duDebugDrawTorque mDbgDraw;
    /// @}
 
    /// @name Water
@@ -366,8 +367,6 @@ private:
 
    /// @name Rendering
    /// @{
-
-   duDebugDrawTorque mDbgDraw;
 
    void renderToDrawer();
 

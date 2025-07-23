@@ -34,6 +34,10 @@
 #include "gui/worldEditor/gizmo.h"
 #endif
 
+#ifndef _NAVMESH_TOOL_H_
+#include "navigation/navMeshTool.h"
+#endif
+
 #include "navMesh.h"
 #include "T3D/aiPlayer.h"
 
@@ -51,7 +55,6 @@ public:
    static const String mSelectMode;
    static const String mLinkMode;
    static const String mCoverMode;
-   static const String mTileMode;
    static const String mTestMode;
 
    GuiNavEditorCtrl();
@@ -110,12 +113,10 @@ public:
 
    void deleteLink();
    void setLinkFlags(const LinkData &d);
-
-   void buildTile();
-
    void spawnPlayer(const Point3F &pos);
 
    /// @}
+   void setActiveTool(NavMeshTool* tool);
 
 protected:
 
@@ -133,6 +134,9 @@ protected:
    /// Currently-selected NavMesh.
    SimObjectPtr<NavMesh> mMesh;
 
+   /// The active tool in used by the editor.
+   SimObjectPtr<NavMeshTool> mTool;
+
    /// @name Link mode
    /// @{
 
@@ -144,9 +148,6 @@ protected:
 
    /// @name Tile mode
    /// @{
-
-   S32 mCurTile;
-   S32 mTile;
 
    duDebugDrawTorque dd;
 

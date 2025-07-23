@@ -335,7 +335,7 @@ void NavMesh::initPersistFields()
       "Sets the sampling distance to use when generating the detail mesh.");
    addFieldV("detailSampleError", TypeRangedF32, Offset(mDetailSampleMaxError, NavMesh), &CommonValidators::PositiveFloat,
       "The maximum distance the detail mesh surface should deviate from heightfield data.");
-   addFieldV("maxEdgeLen", TypeRangedS32, Offset(mDetailSampleDist, NavMesh), &CommonValidators::PositiveInt,
+   addFieldV("maxEdgeLen", TypeRangedS32, Offset(mMaxEdgeLen, NavMesh), &CommonValidators::PositiveInt,
       "The maximum allowed length for contour edges along the border of the mesh.");
    addFieldV("simplificationError", TypeRangedF32, Offset(mMaxSimplificationError, NavMesh), &CommonValidators::PositiveFloat,
       "The maximum distance a simplfied contour's border edges should deviate from the original raw contour.");

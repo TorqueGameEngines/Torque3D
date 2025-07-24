@@ -323,51 +323,6 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
    bool shift = keys & SI_LSHIFT;
    bool ctrl = keys & SI_LCTRL;
 
-   if(mMode == mLinkMode && !mMesh.isNull())
-   {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-      {
-         U32 link = mMesh->getLink(ri.point);
-         if(link != -1)
-         {
-            if(mLink != -1)
-               mMesh->selectLink(mLink, false);
-            mMesh->selectLink(link, true, false);
-            mLink = link;
-            LinkData d = mMesh->getLinkFlags(mLink);
-            Con::executef(this, "onLinkSelected", Con::getIntArg(d.getFlags()));
-         }
-         else
-         {
-            if(mLink != -1)
-            {
-               mMesh->selectLink(mLink, false);
-               mLink = -1;
-               Con::executef(this, "onLinkDeselected");
-            }
-            else
-            {
-               if(mLinkStart != Point3F::Max)
-               {
-                  mMesh->addLink(mLinkStart, ri.point);
-                  if(!shift)
-                     mLinkStart = Point3F::Max;
-               }
-               else
-               {
-                  mLinkStart = ri.point;
-               }
-            }
-         }
-      }
-      else
-      {
-         mMesh->selectLink(mLink, false);
-         mLink = -1;
-         Con::executef(this, "onLinkDeselected");
-      }
-   }
-
    if(mMode == mTestMode)
    {
       // Spawn new character
@@ -470,35 +425,6 @@ void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
    Point3F endPnt = event.pos + event.vec * 1000.0f;
 
    RayInfo ri;
-
-   if(mMode == mLinkMode && !mMesh.isNull())
-   {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-      {
-         U32 link = mMesh->getLink(ri.point);
-         if(link != -1)
-         {
-            if(link != mLink)
-            {
-               if(mCurLink != -1)
-                  mMesh->selectLink(mCurLink, false);
-               mMesh->selectLink(link, true, true);
-            }
-            mCurLink = link;
-         }
-         else
-         {
-            if(mCurLink != mLink)
-               mMesh->selectLink(mCurLink, false);
-            mCurLink = -1;
-         }
-      }
-      else
-      {
-         mMesh->selectLink(mCurLink, false);
-         mCurLink = -1;
-      }
-   }
 
    if(mMode == mTestMode)
    {

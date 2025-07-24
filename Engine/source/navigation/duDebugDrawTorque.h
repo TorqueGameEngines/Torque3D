@@ -105,6 +105,7 @@ public:
 
    void clearCache();
    void render(SceneRenderState* state);
+   void immediateRender();
 
 private:
 

@@ -405,7 +405,7 @@ void NavMesh::setScale(const VectorF &scale)
    Parent::setScale(scale);
 }
 
-S32 NavMesh::addLink(const Point3F &from, const Point3F &to, U32 flags)
+S32 NavMesh::addLink(const Point3F &from, const Point3F &to, bool biDir, U32 flags)
 {
    Point3F rcFrom = DTStoRC(from), rcTo = DTStoRC(to);
    mLinkVerts.push_back(rcFrom.x);
@@ -416,7 +416,7 @@ S32 NavMesh::addLink(const Point3F &from, const Point3F &to, U32 flags)
    mLinkVerts.push_back(rcTo.z);
    mLinksUnsynced.push_back(true);
    mLinkRads.push_back(mWalkableRadius);
-   mLinkDirs.push_back(0);
+   mLinkDirs.push_back(biDir ? 1 : 0);
    mLinkAreas.push_back(OffMeshArea);
    if (flags == 0) {
       Point3F dir = to - from;
@@ -435,11 +435,11 @@ S32 NavMesh::addLink(const Point3F &from, const Point3F &to, U32 flags)
    return mLinkIDs.size() - 1;
 }
 
-DefineEngineMethod(NavMesh, addLink, S32, (Point3F from, Point3F to, U32 flags), (0),
+DefineEngineMethod(NavMesh, addLink, S32, (Point3F from, Point3F to, bool biDir, U32 flags), (0),
    "Add a link to this NavMesh between two points.\n\n"
    "")
 {
-   return object->addLink(from, to, flags);
+   return object->addLink(from, to, biDir, flags);
 }
 
 S32 NavMesh::getLink(const Point3F &pos)
@@ -480,6 +480,23 @@ LinkData NavMesh::getLinkFlags(U32 idx)
       return LinkData(mLinkFlags[idx]);
    }
    return LinkData();
+}
+
+bool NavMesh::getLinkDir(U32 idx)
+{
+   if (idx < mLinkIDs.size())
+   {
+      return mLinkDirs[idx];
+   }
+}
+
+void NavMesh::setLinkDir(U32 idx, bool biDir)
+{
+   if (idx < mLinkIDs.size())
+   {
+      mLinkDirs[idx] = biDir ? 1 : 0;
+      mLinksUnsynced[idx] = true;
+   }
 }
 
 DefineEngineMethod(NavMesh, getLinkFlags, S32, (U32 id),,
@@ -1667,8 +1684,8 @@ void NavMesh::renderLinks(duDebugDraw &dd)
 {
    if(mBuilding)
       return;
-   dd.depthMask(true);
    dd.begin(DU_DRAW_LINES);
+   dd.depthMask(false);
    for(U32 i = 0; i < mLinkIDs.size(); i++)
    {
       U32 col = 0;
@@ -1686,7 +1703,7 @@ void NavMesh::renderLinks(duDebugDraw &dd)
          s[0], s[1], s[2],
          e[0], e[1], e[2],
          0.3f,
-         0.0f, mLinkFlags[i] == DropFlag ? 0.0f : 0.4f,
+         (mLinkDirs[i]&1) ? 0.6f : 0.0f, mLinkFlags[i] == DropFlag ? 0.0f : 0.6f,
          col);
       if(!mDeleteLinks[i])
          duAppendCircle(&dd, e[0], e[1], e[2], mLinkRads[i], col);

@@ -69,9 +69,6 @@ void TileTool::onRender3D()
    if (mNavMesh.isNull())
       return;
 
-   // Optional: Draw all tile bounds as overlays
-   //mNavMesh->renderTilesOverlay(DebugDraw::get()->getDD());
-
    if(mCurTile != -1)
       renderBoxOutline(mNavMesh->getTileBox(mCurTile), ColorI::BLUE);
 
@@ -87,8 +84,8 @@ void TileTool::buildTile()
 
 bool TileTool::updateGuiInfo()
 {
-   GuiTextCtrl* statusbar;
-   Sim::findObject("EWorldEditorStatusBarInfo", statusbar);
+   SimObject* statusbar;
+   Sim::findObject("EditorGuiStatusBar", statusbar);
 
    GuiTextCtrl* selectionBar;
    Sim::findObject("EWorldEditorStatusBarSelection", selectionBar);
@@ -98,7 +95,7 @@ bool TileTool::updateGuiInfo()
    text = "LMB To select NavMesh Tile";
 
    if (statusbar)
-      statusbar->setText(text);
+      Con::executef(statusbar, "setInfo", text.c_str());
 
    if (mSelTile != -1)
       text = String::ToString("Selected Tile: %d", mSelTile);

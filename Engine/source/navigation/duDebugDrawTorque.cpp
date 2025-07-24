@@ -421,3 +421,25 @@ void duDebugDrawTorque::render(SceneRenderState* state)
    }
 }
 
+void duDebugDrawTorque::immediateRender()
+{
+   for (U32 i = 0; i < mDrawCache.size(); ++i)
+   {
+      const CachedDraw& draw = mDrawCache[i];
+
+      GFX->setPrimitiveBuffer(draw.primitiveBuffer);
+      GFX->setStateBlockByDesc(draw.state);
+      GFX->setupGenericShaders(GFXDevice::GSColor);
+      GFX->setVertexBuffer(draw.buffer);
+
+      GFX->drawIndexedPrimitive(
+         draw.primType,
+         0,                      // start vertex
+         0,                      // min vertex index
+         draw.vertexCount,       // vertex count
+         0,                      // start index
+         draw.primitiveCount     // primitive count
+      );
+   }
+}
+

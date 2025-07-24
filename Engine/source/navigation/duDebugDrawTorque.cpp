@@ -62,7 +62,7 @@ unsigned int duDebugDrawTorque::areaToCol(unsigned int area)
 {
    switch (area)
    {
-      // Ground (0) : light blue
+      // Ground (1) : light blue
    case GroundArea: return duRGBA(0, 192, 255, 255);
       // Water : blue
    case WaterArea: return duRGBA(0, 0, 255, 255);
@@ -94,6 +94,7 @@ void duDebugDrawTorque::begin(duDebugDrawPrimitives prim, float size)
 
    mDesc.setCullMode(GFXCullCW);
    mDesc.setBlend(false);
+   mDesc.setZReadWrite(true);
 }
 
 /// Submit a vertex

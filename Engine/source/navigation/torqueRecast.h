@@ -52,7 +52,7 @@ inline void rcCol(unsigned int col, U8 &r, U8 &g, U8 &b, U8 &a)
 }
 
 enum PolyAreas {
-   GroundArea,
+   GroundArea = 1,
    WaterArea,
    OffMeshArea,
    NumAreas

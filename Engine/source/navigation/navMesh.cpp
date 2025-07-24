@@ -1534,22 +1534,6 @@ void NavMesh::renderToDrawer()
    {
       NavMesh* n = static_cast<NavMesh*>(no);
 
-      mDbgDraw.depthMask(false);
-
-      if (n->nm && m_drawMode != DRAWMODE_NAVMESH_TRANS)
-      {
-         if (m_drawMode != DRAWMODE_NAVMESH_INVIS)
-            duDebugDrawNavMesh(&mDbgDraw, *n->nm, 0);
-
-         ////const F32 texScale = 1.0f / (n->mCellSize * 10.0f); this draw mode is useless for us.
-         ////duDebugDrawNavMesh(&mDbgDraw, *n->nm, 0);
-         //if (n->m_geo != NULL)
-         //{
-         //   duDebugDrawTriMeshSlope(&mDbgDraw, n->m_geo->getVerts(), n->m_geo->getVertCount(),
-         //      n->m_geo->getTris(), n->m_geo->getNormals(), n->m_geo->getTriCount(), n->mWalkableSlope, texScale);
-         //}
-      }
-
       if (n->nm &&
          (m_drawMode == DRAWMODE_NAVMESH ||
             m_drawMode == DRAWMODE_NAVMESH_TRANS ||
@@ -1558,13 +1542,13 @@ void NavMesh::renderToDrawer()
             m_drawMode == DRAWMODE_NAVMESH_PORTALS ||
             m_drawMode == DRAWMODE_NAVMESH_INVIS))
       {
+         if (m_drawMode != DRAWMODE_NAVMESH_INVIS)
+            duDebugDrawNavMesh(&mDbgDraw, *n->nm, 0);
          if(m_drawMode == DRAWMODE_NAVMESH_BVTREE)
             duDebugDrawNavMeshBVTree(&mDbgDraw, *n->nm);
          if(m_drawMode == DRAWMODE_NAVMESH_PORTALS)
             duDebugDrawNavMeshPortals(&mDbgDraw, *n->nm);
       }
-
-      mDbgDraw.depthMask(true);
 
       for (Tile& tile : n->mTiles)
       {
@@ -1595,47 +1579,35 @@ void NavMesh::renderToDrawer()
 
          if (tile.cset && m_drawMode == DRAWMODE_RAW_CONTOURS)
          {
-            mDbgDraw.depthMask(false);
             duDebugDrawRawContours(&mDbgDraw, *tile.cset);
-            mDbgDraw.depthMask(true);
          }
 
          if (tile.cset && m_drawMode == DRAWMODE_BOTH_CONTOURS)
          {
-            mDbgDraw.depthMask(false);
             duDebugDrawRawContours(&mDbgDraw, *tile.cset);
             duDebugDrawContours(&mDbgDraw, *tile.cset);
-            mDbgDraw.depthMask(true);
          }
 
          if (tile.cset && m_drawMode == DRAWMODE_CONTOURS)
          {
-            mDbgDraw.depthMask(false);
             duDebugDrawContours(&mDbgDraw, *tile.cset);
-            mDbgDraw.depthMask(true);
          }
 
          if (tile.chf && tile.cset && m_drawMode == DRAWMODE_REGION_CONNECTIONS)
          {
             duDebugDrawCompactHeightfieldRegions(&mDbgDraw, *tile.chf);
 
-            mDbgDraw.depthMask(false);
             duDebugDrawRegionConnections(&mDbgDraw, *tile.cset);
-            mDbgDraw.depthMask(true);
          }
 
          if (tile.pmesh && m_drawMode == DRAWMODE_POLYMESH)
          {
-            mDbgDraw.depthMask(false);
             duDebugDrawPolyMesh(&mDbgDraw, *tile.pmesh);
-            mDbgDraw.depthMask(true);
          }
 
          if (tile.dmesh && m_drawMode == DRAWMODE_POLYMESH_DETAIL)
          {
-            mDbgDraw.depthMask(false);
             duDebugDrawPolyMeshDetail(&mDbgDraw, *tile.dmesh);
-            mDbgDraw.depthMask(true);
          }
 
       }

@@ -45,11 +45,6 @@ void TileTool::on3DMouseDown(const Gui3DMouseEvent& evt)
    if (gServerContainer.castRay(start, end, StaticObjectType, &ri))
    {
       mSelTile = mNavMesh->getTile(ri.point);
-      if (mSelTile != -1)
-      {
-         mNavMesh->renderTileData(mNavMesh->mDbgDraw, mSelTile);
-         //mNavMesh->buildTile(tile); // Immediate rebuild
-      }
    }
 }
 

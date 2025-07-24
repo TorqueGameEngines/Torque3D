@@ -686,6 +686,20 @@ void GuiNavEditorCtrl::setActiveTool(NavMeshTool* tool)
    }
 }
 
+void GuiNavEditorCtrl::setDrawMode(S32 id)
+{
+   if (mMesh.isNull())
+      return;
+
+   mMesh->setDrawMode((NavMesh::DrawMode)id);
+}
+
+DefineEngineMethod(GuiNavEditorCtrl, setDrawMode, void, (S32 id), ,
+   "@brief Deselect whatever is currently selected in the editor.")
+{
+   object->setDrawMode(id);
+}
+
 DefineEngineMethod(GuiNavEditorCtrl, setActiveTool, void, (const char* toolName), , "( NavMeshTool tool )")
 {
    NavMeshTool* tool = dynamic_cast<NavMeshTool*>(Sim::findObject(toolName));

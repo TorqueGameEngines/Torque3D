@@ -39,10 +39,9 @@
 duDebugDrawTorque::duDebugDrawTorque()
 {
    VECTOR_SET_ASSOCIATION(mVertList);
+   VECTOR_SET_ASSOCIATION(mDrawCache);
    mPrimType = 0;
-   mQuadsMode = false;
    mVertCount = 0;
-   dMemset(&mStore, 0, sizeof(mStore));
 }
 
 duDebugDrawTorque::~duDebugDrawTorque()
@@ -82,21 +81,19 @@ void duDebugDrawTorque::begin(duDebugDrawPrimitives prim, float size)
    if (!mVertList.empty())
       mVertList.clear();
 
-   mQuadsMode = false;
    mVertCount = 0;
    mPrimType = 0;
 
    switch (prim)
    {
-   case DU_DRAW_POINTS: mPrimType = GFXPointList; break;
-   case DU_DRAW_LINES:  mPrimType = GFXLineList; break;
-   case DU_DRAW_TRIS:   mPrimType = GFXTriangleList; break;
-   case DU_DRAW_QUADS:  mPrimType = GFXTriangleList; mQuadsMode = true; break;
+   case DU_DRAW_POINTS: mPrimType = DU_DRAW_POINTS; break;
+   case DU_DRAW_LINES:  mPrimType = DU_DRAW_LINES; break;
+   case DU_DRAW_TRIS:   mPrimType = DU_DRAW_TRIS; break;
+   case DU_DRAW_QUADS:  mPrimType = DU_DRAW_QUADS; break;
    }
 
    mDesc.setCullMode(GFXCullCW);
    mDesc.setBlend(false);
-   mDesc.setZReadWrite(true);
 }
 
 /// Submit a vertex
@@ -153,41 +150,273 @@ void duDebugDrawTorque::end()
       return;
 
    const U32 maxVertsPerDraw = GFX_MAX_DYNAMIC_VERTS;
-
-   U32 totalVerts = mVertList.size();
-   U32 stride = 1;
-   U32 stripStart = 0;
+   Box3F box;
+   box.minExtents.set(F32_MAX, F32_MAX, F32_MAX);
+   box.maxExtents.set(-F32_MAX, -F32_MAX, -F32_MAX);
 
    switch (mPrimType)
    {
-   case GFXLineList:     stride = 2; break;
-   case GFXTriangleList: stride = 3; break;
-   case GFXLineStrip:    stripStart = 1; stride = 1; break;
-   case GFXTriangleStrip:stripStart = 2; stride = 1; break;
-   default:              stride = 1; break;
+   case DU_DRAW_POINTS:
+   {
+      const U32 totalPoints = mVertList.size();
+
+      for (U32 p = 0; p < totalPoints;)
+      {
+         const U32 pointsThisBatch = getMin(maxVertsPerDraw, totalPoints - p);
+         const U32 batchVerts = pointsThisBatch;
+
+         GFXVertexBufferHandle<GFXVertexPCT> buffer;
+         buffer.set(GFX, batchVerts, GFXBufferTypeStatic);
+         GFXVertexPCT* verts = buffer.lock();
+
+         for (U32 i = 0; i < pointsThisBatch; ++i)
+         {
+            verts[i] = mVertList[p + i];
+            box.minExtents.setMin(verts[i].point);
+            box.maxExtents.setMax(verts[i].point);
+         }
+         buffer.unlock();
+
+         // --- Build index buffer
+         GFXPrimitiveBufferHandle pb;
+         pb.set(GFX, pointsThisBatch, pointsThisBatch, GFXBufferTypeStatic);
+         U16* indices = nullptr;
+         pb.lock(&indices);
+
+         for (U32 i = 0; i < pointsThisBatch; ++i)
+         {
+            indices[i] = i;
+         }
+
+         pb.unlock();
+
+         CachedDraw batch;
+         batch.primType = GFXPointList;
+         batch.buffer = buffer;
+         batch.vertexCount = batchVerts;
+         batch.primitiveBuffer = pb;
+         batch.primitiveCount = pointsThisBatch;
+         batch.state = mDesc;
+         batch.bounds = box;
+
+         mDrawCache.push_back(batch);
+
+         p += pointsThisBatch;
+      }
+      break;
    }
 
-   GFX->setPrimitiveBuffer(NULL);
-   GFX->setStateBlockByDesc(mDesc);
-   GFX->setupGenericShaders(GFXDevice::GSColor);
-
-   for (U32 i = 0; i < totalVerts; i += maxVertsPerDraw)
+   case DU_DRAW_LINES:
    {
-      U32 batchSize = getMin(maxVertsPerDraw, totalVerts - i);
+      AssertFatal(mVertList.size() % 2 == 0, "DU_DRAW_LINES given invalid vertex count.");
 
-      mVertexBuffer.set(GFX, batchSize, GFXBufferTypeDynamic);
-      GFXVertexPCT* verts = mVertexBuffer.lock();
+      const U32 vertsPerLine = 2;
+      const U32 totalLines = mVertList.size() / vertsPerLine;
 
-      if (verts)
-         dMemcpy(verts, &mVertList[i], sizeof(GFXVertexPCT) * batchSize);
-      mVertexBuffer.unlock();
+      for (U32 l = 0; l < totalLines;)
+      {
+         const U32 linesThisBatch = getMin(maxVertsPerDraw / vertsPerLine, totalLines - l);
+         const U32 batchVerts = linesThisBatch * vertsPerLine;
 
-      GFX->setVertexBuffer(mVertexBuffer);
+         GFXVertexBufferHandle<GFXVertexPCT> buffer;
+         buffer.set(GFX, batchVerts, GFXBufferTypeStatic);
+         GFXVertexPCT* verts = buffer.lock();
 
-      U32 numPrims = (batchSize / stride) - stripStart;
-      GFX->drawPrimitive((GFXPrimitiveType)mPrimType, 0, numPrims);
+         for (U32 i = 0; i < linesThisBatch * vertsPerLine; ++i)
+         {
+            verts[i] = mVertList[l * vertsPerLine + i];
+            box.minExtents.setMin(verts[i].point);
+            box.maxExtents.setMax(verts[i].point);
+         }
+         buffer.unlock();
+
+         // --- Build index buffer
+         GFXPrimitiveBufferHandle pb;
+         pb.set(GFX, linesThisBatch * 2, linesThisBatch, GFXBufferTypeStatic);
+         U16* indices = nullptr;
+         pb.lock(&indices);
+
+         for (U32 i = 0; i < linesThisBatch; ++i)
+         {
+            indices[i * 2 + 0] = i * 2;
+            indices[i * 2 + 1] = i * 2 + 1;
+         }
+
+         pb.unlock();
+
+         CachedDraw batch;
+         batch.primType = GFXLineList;
+         batch.buffer = buffer;
+         batch.vertexCount = batchVerts;
+         batch.primitiveBuffer = pb;
+         batch.primitiveCount = linesThisBatch;
+         batch.state = mDesc;
+         batch.bounds = box;
+
+         mDrawCache.push_back(batch);
+
+         l += linesThisBatch;
+      }
+
+      break;
+   }
+
+   case DU_DRAW_TRIS:
+   {
+      AssertFatal(mVertList.size() % 3 == 0, "DU_DRAW_TRIS given invalid vertex count.");
+
+      const U32 vertsPerTri = 3;
+      const U32 totalTris = mVertList.size() / vertsPerTri;
+
+      for (U32 t = 0; t < totalTris;)
+      {
+         const U32 trisThisBatch = getMin(maxVertsPerDraw / vertsPerTri, totalTris - t);
+         const U32 batchVerts = trisThisBatch * vertsPerTri;
+
+         GFXVertexBufferHandle<GFXVertexPCT> buffer;
+         buffer.set(GFX, batchVerts, GFXBufferTypeStatic);
+         GFXVertexPCT* verts = buffer.lock();
+
+         for (U32 i = 0; i < trisThisBatch * vertsPerTri; ++i)
+         {
+            verts[i] = mVertList[t * vertsPerTri + i];
+            box.minExtents.setMin(verts[i].point);
+            box.maxExtents.setMax(verts[i].point);
+         }
+
+         buffer.unlock();
+
+         // --- Build index buffer
+         GFXPrimitiveBufferHandle pb;
+         pb.set(GFX, trisThisBatch*3, trisThisBatch, GFXBufferTypeStatic);
+         U16* indices = nullptr;
+         pb.lock(&indices);
+
+         for (U32 i = 0; i < trisThisBatch; ++i)
+         {
+            indices[i * 3 + 0] = i * 3 + 0;
+            indices[i * 3 + 1] = i * 3 + 1;
+            indices[i * 3 + 2] = i * 3 + 2;
+         }
+
+         pb.unlock();
+
+         CachedDraw batch;
+         batch.primType = GFXTriangleList;
+         batch.buffer = buffer;
+         batch.vertexCount = batchVerts;
+         batch.primitiveBuffer = pb;
+         batch.primitiveCount = trisThisBatch;
+         batch.state = mDesc;
+         batch.bounds = box;
+
+         mDrawCache.push_back(batch);
+
+         t += trisThisBatch;
+      }
+
+      break;
+   }
+
+   case DU_DRAW_QUADS:
+   {
+      AssertFatal(mVertList.size() % 4 == 0, "DU_DRAW_QUADS given wrong number of vertices.");
+      const U32 vertsPerQuad = 4;
+      const U32 totalQuads = mVertList.size() / 4;
+
+      for (U32 q = 0; q < totalQuads;)
+      {
+         const U32 quadsThisBatch = getMin(maxVertsPerDraw / vertsPerQuad, totalQuads - q);
+         const U32 batchVerts = quadsThisBatch * vertsPerQuad;
+         const U32 batchIndices = quadsThisBatch * 6;
+
+         GFXVertexBufferHandle<GFXVertexPCT> buffer;
+         buffer.set(GFX, batchVerts, GFXBufferTypeStatic);
+         GFXVertexPCT* verts = buffer.lock();
+
+         U32 outIdx = 0;
+         for (U32 i = 0; i < quadsThisBatch; ++i)
+         {
+            const GFXVertexPCT& v0 = mVertList[(q + i) * 4 + 0];
+            const GFXVertexPCT& v1 = mVertList[(q + i) * 4 + 1];
+            const GFXVertexPCT& v2 = mVertList[(q + i) * 4 + 2];
+            const GFXVertexPCT& v3 = mVertList[(q + i) * 4 + 3];
+
+            verts[outIdx++] = v0;
+            verts[outIdx++] = v1;
+            verts[outIdx++] = v2;
+            verts[outIdx++] = v3;
+         }
+
+         buffer.unlock();
+
+         GFXPrimitiveBufferHandle pb;
+         pb.set(GFX, batchIndices, quadsThisBatch*2, GFXBufferTypeStatic);
+         U16* indices = nullptr;
+         pb.lock(&indices);
+
+         for (U32 i = 0; i < quadsThisBatch; ++i)
+         {
+            const U16 base = i * 4;
+            indices[i * 6 + 0] = base + 0;
+            indices[i * 6 + 1] = base + 1;
+            indices[i * 6 + 2] = base + 2;
+            indices[i * 6 + 3] = base + 0;
+            indices[i * 6 + 4] = base + 2;
+            indices[i * 6 + 5] = base + 3;
+         }
+
+         pb.unlock();
+
+         CachedDraw batch;
+         batch.primType = GFXTriangleList;
+         batch.buffer = buffer;
+         batch.vertexCount = batchVerts;
+         batch.primitiveBuffer = pb;
+         batch.primitiveCount = quadsThisBatch*2;
+         batch.state = mDesc;
+
+         mDrawCache.push_back(batch);
+
+         q += quadsThisBatch;
+      }
+      break;
+   }
+
    }
 
    mVertList.clear();
+}
+
+void duDebugDrawTorque::clearCache()
+{
+   mDrawCache.clear();
+}
+
+void duDebugDrawTorque::render(SceneRenderState* state)
+{
+   const Frustum& frustum = state->getCameraFrustum();
+
+   for (U32 i = 0; i < mDrawCache.size(); ++i)
+   {
+      const CachedDraw& draw = mDrawCache[i];
+
+      if (!frustum.getBounds().isOverlapped(draw.bounds))
+         continue;
+
+      GFX->setPrimitiveBuffer(draw.primitiveBuffer);
+      GFX->setStateBlockByDesc(draw.state);
+      GFX->setupGenericShaders(GFXDevice::GSColor);
+      GFX->setVertexBuffer(draw.buffer);
+
+      GFX->drawIndexedPrimitive(
+         draw.primType,
+         0,                      // start vertex
+         0,                      // min vertex index
+         draw.vertexCount,       // vertex count
+         0,                      // start index
+         draw.primitiveCount     // primitive count
+      );
+   }
 }
 

@@ -61,6 +61,8 @@ public:
    U32 getVertCount() const;
    const F32 *getVerts() const;
 
+   const F32* getNormals() const;
+
    U32 getTriCount() const;
    const S32 *getTris() const;
 
@@ -84,6 +86,13 @@ protected:
    F32 *verts;
    /// Size of vertex array.
    U32 vertcap;
+
+   // Number of normals defined.
+   U32 nnormals;
+   // Array of normals (xyz in float array)
+   F32* normals;
+   // Size of normal array (matches verts)
+   U32 normalcap;
 
    /// Number of triangles defined.
    U32 ntris;

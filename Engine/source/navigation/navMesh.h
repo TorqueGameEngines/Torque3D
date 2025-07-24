@@ -113,6 +113,29 @@ public:
       Impassable
    };
 
+   enum DrawMode
+   {
+      DRAWMODE_NAVMESH,
+      DRAWMODE_NAVMESH_TRANS,
+      DRAWMODE_NAVMESH_BVTREE,
+      DRAWMODE_NAVMESH_NODES,
+      DRAWMODE_NAVMESH_PORTALS,
+      DRAWMODE_NAVMESH_INVIS,
+      DRAWMODE_MESH,
+      DRAWMODE_VOXELS,
+      DRAWMODE_VOXELS_WALKABLE,
+      DRAWMODE_COMPACT,
+      DRAWMODE_COMPACT_DISTANCE,
+      DRAWMODE_COMPACT_REGIONS,
+      DRAWMODE_REGION_CONNECTIONS,
+      DRAWMODE_RAW_CONTOURS,
+      DRAWMODE_BOTH_CONTOURS,
+      DRAWMODE_CONTOURS,
+      DRAWMODE_POLYMESH,
+      DRAWMODE_POLYMESH_DETAIL,
+      MAX_DRAWMODE
+   };
+
    WaterMethod mWaterMethod;
    /// @}
 
@@ -147,6 +170,8 @@ public:
 
    /// Set flags used by a link.
    void setLinkFlags(U32 idx, const LinkData &d);
+
+   void setDrawMode(DrawMode mode) { m_drawMode = mode; setMaskBits(LoadFlag); }
 
    /// Set the selected state of a link.
    void selectLink(U32 idx, bool select, bool hover = true);
@@ -409,6 +434,7 @@ protected:
    rcPolyMesh* m_pmesh;
    rcPolyMeshDetail* m_dmesh;
    rcConfig m_cfg;
+   DrawMode m_drawMode;
 
    void cleanup();
 };

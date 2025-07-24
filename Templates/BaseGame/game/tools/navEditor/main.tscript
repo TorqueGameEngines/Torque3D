@@ -188,6 +188,9 @@ function NavEditorPlugin::onActivated(%this)
 
    Parent::onActivated(%this);
    EditorGui.SetNavPalletBar();
+
+   DrawModeSelector.init();
+   DrawModeSelector.selectDefault();
 }
 
 function NavEditorPlugin::onDeactivated(%this)

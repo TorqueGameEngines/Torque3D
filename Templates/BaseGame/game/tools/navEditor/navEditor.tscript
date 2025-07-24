@@ -673,3 +673,38 @@ singleton GuiControlProfile(NavEditorProfile)
    fillColor = "192 192 192 192";
    category = "Editor";
 };
+
+function DrawModeSelector::init(%this)
+{
+   %this.clear();
+
+   %this.add("Draw NavMesh", 0);
+   %this.add("Draw NavMesh Transparent", 1);
+   %this.add("Draw NavMesh BVTree", 2);
+   %this.add("Draw NavMesh Nodes", 3);
+   %this.add("Draw NavMesh Portals", 4);
+   %this.add("Draw NavMesh Invis", 5);
+   %this.add("Draw Mesh", 6);
+   %this.add("Draw Voxels", 7);
+   %this.add("Draw Walkable Voxels", 8);
+   %this.add("Draw Compact Heightfield", 9);
+   %this.add("Draw Compact Distance", 10);
+   %this.add("Draw Compact Regions", 11);
+   %this.add("Draw Region Connections", 12);
+   %this.add("Draw Raw Contours", 13);
+   %this.add("Draw Both Contours", 14);
+   %this.add("Draw Contours", 15);
+   %this.add("Draw PolyMesh", 16);
+   %this.add("Draw PolyMesh Detail", 17);
+
+}
+
+function DrawModeSelector::selectDefault(%this)
+{
+   %this.setSelected(0);
+}
+
+function DrawModeSelector::onSelect(%this, %id)
+{
+   NavEditorGui.setDrawMode(%id);
+}

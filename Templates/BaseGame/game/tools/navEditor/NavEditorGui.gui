@@ -292,6 +292,12 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
             Extent = "86 18";
             text = "Actions";
          };
+         new GuiPopUpMenuCtrl(DrawModeSelector) {
+            position = "155 0";
+            extent = "189 20";
+            profile = "ToolsGuiPopUpMenuProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
          new GuiStackControl()
          {
             internalName = "SelectActions";

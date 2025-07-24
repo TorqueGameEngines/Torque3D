@@ -40,6 +40,10 @@
 #include "gfx/gfxVertexBuffer.h"
 #endif
 
+#ifndef _SCENERENDERSTATE_H_
+#include "scene/sceneRenderState.h"
+#endif
+
 /**
 * @class duDebugDrawTorque
 *  @brief Implements the duDebugDraw interface in Torque.
@@ -99,17 +103,29 @@ public:
    /// End drawing primitives.
    void end() override;
 
+   void clearCache();
+   void render(SceneRenderState* state);
+
 private:
+
+   struct CachedDraw {
+      GFXPrimitiveType primType;
+      GFXVertexBufferHandle<GFXVertexPCT> buffer;
+      GFXPrimitiveBufferHandle primitiveBuffer;
+      U32 vertexCount;
+      U32 primitiveCount;
+      GFXStateBlockDesc state;
+      Box3F bounds;
+   };
+
+   Vector<CachedDraw> mDrawCache;
 
    GFXStateBlockDesc mDesc;
    Vector<GFXVertexPCT> mVertList;                    // Our vertex list for setting up vertexBuffer in the End function.
    GFXVertexBufferHandle<GFXVertexPCT> mVertexBuffer; // our vertex buffer for drawing.
 
    U32 mPrimType;
-   bool mQuadsMode;
-
    U32 mVertCount;
-   F32 mStore[3][3];
 
    void _vertex(const float x, const float y, const float z, unsigned int color);
 };

@@ -118,6 +118,8 @@ public:
    /// @}
    void setActiveTool(NavMeshTool* tool);
 
+   void setDrawMode(S32 id);
+
 protected:
 
    void _prepRenderImage(SceneManager* sceneGraph, const SceneRenderState* sceneState);

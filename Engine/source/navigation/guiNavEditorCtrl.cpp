@@ -61,8 +61,6 @@ GuiNavEditorCtrl::GuiNavEditorCtrl()
    mMesh = NULL;
    mPlayer = mCurPlayer = NULL;
    mSpawnClass = mSpawnDatablock = "";
-   mLinkStart = Point3F::Max;
-   mLink = mCurLink = -1;
 }
 
 GuiNavEditorCtrl::~GuiNavEditorCtrl()
@@ -118,6 +116,9 @@ void GuiNavEditorCtrl::selectMesh(NavMesh *mesh)
 {
    mesh->setSelected(true);
    mMesh = mesh;
+
+   if (mTool)
+      mTool->setActiveNavMesh(mMesh);
 }
 
 DefineEngineMethod(GuiNavEditorCtrl, selectMesh, void, (S32 id),,
@@ -156,45 +157,12 @@ void GuiNavEditorCtrl::deselect()
       mMesh->setSelected(false);
    mMesh = NULL;
    mPlayer = mCurPlayer = NULL;
-   mLinkStart = Point3F::Max;
-   mLink = mCurLink = -1;
 }
 
 DefineEngineMethod(GuiNavEditorCtrl, deselect, void, (),,
    "@brief Deselect whatever is currently selected in the editor.")
 {
    object->deselect();
-}
-
-void GuiNavEditorCtrl::deleteLink()
-{
-   if(!mMesh.isNull() && mLink != -1)
-   {
-      mMesh->selectLink(mLink, false);
-      mMesh->deleteLink(mLink);
-      mLink = -1;
-      Con::executef(this, "onLinkDeselected");
-   }
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, deleteLink, void, (),,
-   "@brief Delete the currently selected link.")
-{
-   object->deleteLink();
-}
-
-void GuiNavEditorCtrl::setLinkFlags(const LinkData &d)
-{
-   if(mMode == mLinkMode && !mMesh.isNull() && mLink != -1)
-   {
-      mMesh->setLinkFlags(mLink, d);
-   }
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, setLinkFlags, void, (U32 flags),,
-   "@Brief Set jump and drop properties of the selected link.")
-{
-   object->setLinkFlags(LinkData(flags));
 }
 
 void GuiNavEditorCtrl::spawnPlayer(const Point3F &pos)
@@ -510,20 +478,6 @@ void GuiNavEditorCtrl::renderScene(const RectI & updateRect)
 
    if (mTool)
       mTool->onRender3D();
-
-   if(mMode == mLinkMode)
-   {
-      if(mLinkStart != Point3F::Max)
-      {
-         GFXStateBlockDesc desc;
-         desc.setBlend(false);
-         desc.setZReadWrite(true ,true);
-         MatrixF linkMat(true);
-		 linkMat.setPosition(mLinkStart);
-         Point3F scale(0.8f, 0.8f, 0.8f);
-         GFX->getDrawUtil()->drawTransform(desc, linkMat, &scale);
-      }
-   }
 
    if(mMode == mTestMode)
    {

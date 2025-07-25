@@ -67,7 +67,12 @@ void OffMeshConnectionTool::on3DMouseDown(const Gui3DMouseEvent& evt)
          {
             mLink = mNavMesh->addLink(mLinkStart, ri.point, mBiDir);
             mNavMesh->selectLink(mLink, true, false);
-            mLinkStart = Point3F::Max;
+
+            if (shift)
+               mLinkStart = ri.point;
+            else
+               mLinkStart = Point3F::Max;
+
             Con::executef(this, "onLinkSelected", Con::getIntArg(mLinkCache.getFlags()), Con::getBoolArg(mBiDir));
          }
          else
@@ -155,6 +160,9 @@ bool OffMeshConnectionTool::updateGuiInfo()
 
    String text;
    text = "LMB To Select Link. CTRL+LMB To Delete Link";
+
+   if (mLinkStart != Point3F::Max)
+      text = "LinkStarted: LMB To place End Point. Hold Left Shift to start a new Link from the end point.";
 
    if (statusbar)
       Con::executef(statusbar, "setInfo", text.c_str());

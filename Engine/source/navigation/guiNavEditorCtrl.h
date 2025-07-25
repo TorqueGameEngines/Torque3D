@@ -139,13 +139,6 @@ protected:
    /// The active tool in used by the editor.
    SimObjectPtr<NavMeshTool> mTool;
 
-   /// @name Link mode
-   /// @{
-
-   Point3F mLinkStart;
-   S32 mCurLink;
-   S32 mLink;
-
    /// @}
 
    /// @name Tile mode

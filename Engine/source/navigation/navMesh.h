@@ -443,6 +443,8 @@ protected:
    rcPolyMeshDetail* m_dmesh;
    rcConfig m_cfg;
    DrawMode m_drawMode;
+   U32 mWaterVertStart;
+   U32 mWaterTriStart;
 
    void cleanup();
 };

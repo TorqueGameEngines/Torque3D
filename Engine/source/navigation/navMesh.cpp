@@ -222,6 +222,9 @@ NavMesh::NavMesh()
 
    mBuilding = false;
    mCurLinkID = 0;
+
+   mWaterVertStart = 0;
+   mWaterTriStart = 0;
 }
 
 NavMesh::~NavMesh()
@@ -488,6 +491,8 @@ bool NavMesh::getLinkDir(U32 idx)
    {
       return mLinkDirs[idx];
    }
+
+   return false;
 }
 
 F32 NavMesh::getLinkRadius(U32 idx)
@@ -496,6 +501,8 @@ F32 NavMesh::getLinkRadius(U32 idx)
    {
       return mLinkRads[idx];
    }
+
+   return -1.0f;
 }
 
 void NavMesh::setLinkDir(U32 idx, bool biDir)
@@ -680,8 +687,8 @@ bool NavMesh::build(bool background, bool saveIntermediates)
    getContainer()->findObjects(worldBox, StaticObjectType | DynamicShapeObjectType, buildCallback, &info);
 
    // Parse water objects into the same list, but remember how much geometry was /not/ water.
-   U32 nonWaterVertCount = m_geo->getVertCount();
-   U32 nonWaterTriCount = m_geo->getTriCount();
+   mWaterVertStart = m_geo->getVertCount();
+   mWaterTriStart = m_geo->getTriCount();
    if (mWaterMethod != Ignore)
    {
       getContainer()->findObjects(worldBox, WaterObjectType, buildCallback, &info);
@@ -912,8 +919,8 @@ void NavMesh::buildNextTile()
       getContainer()->findObjects(worldBox, StaticObjectType | DynamicShapeObjectType, buildCallback, &info);
 
       // Parse water objects into the same list, but remember how much geometry was /not/ water.
-      U32 nonWaterVertCount = m_geo->getVertCount();
-      U32 nonWaterTriCount = m_geo->getTriCount();
+      mWaterVertStart = m_geo->getVertCount();
+      mWaterTriStart = m_geo->getTriCount();
       if (mWaterMethod != Ignore)
       {
          getContainer()->findObjects(worldBox, WaterObjectType, buildCallback, &info);
@@ -1083,6 +1090,37 @@ unsigned char *NavMesh::buildTileData(const Tile &tile, U32 &dataSize)
       memset(m_triareas, 0, nctris * sizeof(unsigned char));
       rcMarkWalkableTriangles(ctx, m_cfg.walkableSlopeAngle,
          m_geo->getVerts(), m_geo->getVertCount(), ctris, nctris, m_triareas);
+
+      // Post-process triangle areas if we need to capture water.
+      if (mWaterMethod != Ignore)
+      {
+         for (int t = 0; t < nctris; ++t)
+         {
+            const int* tri = &ctris[t * 3];
+
+            bool isWater = false;
+            for (int j = 0; j < 3; ++j)
+            {
+               if (tri[j] >= mWaterVertStart)
+               {
+                  isWater = true;
+                  break;
+               }
+            }
+
+            if (isWater)
+            {
+               if (mWaterMethod == Solid)
+               {
+                  m_triareas[t] = WaterArea;  // Custom enum you define, like 64
+               }
+               else if (mWaterMethod == Impassable)
+               {
+                  m_triareas[t] = RC_NULL_AREA;
+               }
+            }
+         }
+      }
 
       if (!rcRasterizeTriangles(ctx, m_geo->getVerts(), m_geo->getVertCount(), ctris, m_triareas, nctris, *m_solid, m_cfg.walkableClimb))
          return NULL;

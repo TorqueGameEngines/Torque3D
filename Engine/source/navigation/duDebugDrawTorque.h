@@ -61,6 +61,13 @@ public:
    /// Enable/disable Z read.
    void depthMask(bool state) override;
 
+   /// <summary>
+   /// Enable/disable Z read and overrides any setting that will come from detour.
+   /// </summary>
+   /// <param name="state">Z read state.</param>
+   /// <param name="isOverride">Set to true to override any future changes.</param>
+   void depthMask(bool state, bool isOverride);
+
    /// Begin drawing primitives.
    /// @param prim [in] primitive type to draw, one of rcDebugDrawPrimitives.
    /// @param size [in] size of a primitive, applies to point size and line width only.
@@ -127,6 +134,7 @@ private:
 
    U32 mPrimType;
    U32 mVertCount;
+   bool mOverrideState;
 
    void _vertex(const float x, const float y, const float z, unsigned int color);
 };

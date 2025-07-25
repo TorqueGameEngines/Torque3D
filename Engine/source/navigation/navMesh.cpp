@@ -1566,7 +1566,7 @@ void NavMesh::renderToDrawer()
    if (no)
    {
       NavMesh* n = static_cast<NavMesh*>(no);
-
+      mDbgDraw.depthMask(true, true);
       if (n->nm &&
          (m_drawMode == DRAWMODE_NAVMESH ||
             m_drawMode == DRAWMODE_NAVMESH_TRANS ||
@@ -1582,6 +1582,8 @@ void NavMesh::renderToDrawer()
          if(m_drawMode == DRAWMODE_NAVMESH_PORTALS)
             duDebugDrawNavMeshPortals(&mDbgDraw, *n->nm);
       }
+
+      mDbgDraw.depthMask(true, false);
 
       for (Tile& tile : n->mTiles)
       {
@@ -1612,35 +1614,47 @@ void NavMesh::renderToDrawer()
 
          if (tile.cset && m_drawMode == DRAWMODE_RAW_CONTOURS)
          {
+            mDbgDraw.depthMask(false);
             duDebugDrawRawContours(&mDbgDraw, *tile.cset);
+            mDbgDraw.depthMask(true);
          }
 
          if (tile.cset && m_drawMode == DRAWMODE_BOTH_CONTOURS)
          {
+            mDbgDraw.depthMask(false);
             duDebugDrawRawContours(&mDbgDraw, *tile.cset);
             duDebugDrawContours(&mDbgDraw, *tile.cset);
+            mDbgDraw.depthMask(true);
          }
 
          if (tile.cset && m_drawMode == DRAWMODE_CONTOURS)
          {
+            mDbgDraw.depthMask(false);
             duDebugDrawContours(&mDbgDraw, *tile.cset);
+            mDbgDraw.depthMask(true);
          }
 
          if (tile.chf && tile.cset && m_drawMode == DRAWMODE_REGION_CONNECTIONS)
          {
+            
             duDebugDrawCompactHeightfieldRegions(&mDbgDraw, *tile.chf);
-
+            mDbgDraw.depthMask(false);
             duDebugDrawRegionConnections(&mDbgDraw, *tile.cset);
+            mDbgDraw.depthMask(true);
          }
 
          if (tile.pmesh && m_drawMode == DRAWMODE_POLYMESH)
          {
+            mDbgDraw.depthMask(false);
             duDebugDrawPolyMesh(&mDbgDraw, *tile.pmesh);
+            mDbgDraw.depthMask(true);
          }
 
          if (tile.dmesh && m_drawMode == DRAWMODE_POLYMESH_DETAIL)
          {
+            mDbgDraw.depthMask(false);
             duDebugDrawPolyMeshDetail(&mDbgDraw, *tile.dmesh);
+            mDbgDraw.depthMask(true);
          }
 
       }

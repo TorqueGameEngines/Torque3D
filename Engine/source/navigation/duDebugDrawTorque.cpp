@@ -42,6 +42,7 @@ duDebugDrawTorque::duDebugDrawTorque()
    VECTOR_SET_ASSOCIATION(mDrawCache);
    mPrimType = 0;
    mVertCount = 0;
+   mOverrideState = false;
 }
 
 duDebugDrawTorque::~duDebugDrawTorque()
@@ -50,7 +51,26 @@ duDebugDrawTorque::~duDebugDrawTorque()
 
 void duDebugDrawTorque::depthMask(bool state)
 {
+   if (mOverrideState)
+      return;
+
    mDesc.setZReadWrite(state);
+   if (!state)
+   {
+      mDesc.setCullMode(GFXCullNone);
+      mDesc.setBlend(true);
+   }
+   else
+   {
+      mDesc.setCullMode(GFXCullCW);
+      mDesc.setBlend(false);
+   }
+}
+
+void duDebugDrawTorque::depthMask(bool state, bool isOverride)
+{
+   depthMask(state);
+   mOverrideState = isOverride;
 }
 
 void duDebugDrawTorque::texture(bool state)
@@ -92,9 +112,6 @@ void duDebugDrawTorque::begin(duDebugDrawPrimitives prim, float size)
    case DU_DRAW_QUADS:  mPrimType = DU_DRAW_QUADS; break;
    }
 
-   mDesc.setCullMode(GFXCullCW);
-   mDesc.setBlend(false);
-   mDesc.setZReadWrite(true);
 }
 
 /// Submit a vertex
@@ -151,10 +168,7 @@ void duDebugDrawTorque::end()
       return;
 
    const U32 maxVertsPerDraw = GFX_MAX_DYNAMIC_VERTS;
-   Box3F box;
-   box.minExtents.set(F32_MAX, F32_MAX, F32_MAX);
-   box.maxExtents.set(-F32_MAX, -F32_MAX, -F32_MAX);
-
+   
    switch (mPrimType)
    {
    case DU_DRAW_POINTS:
@@ -165,6 +179,9 @@ void duDebugDrawTorque::end()
       {
          const U32 pointsThisBatch = getMin(maxVertsPerDraw, totalPoints - p);
          const U32 batchVerts = pointsThisBatch;
+         Box3F box;
+         box.minExtents.set(F32_MAX, F32_MAX, F32_MAX);
+         box.maxExtents.set(-F32_MAX, -F32_MAX, -F32_MAX);
 
          GFXVertexBufferHandle<GFXVertexPCT> buffer;
          buffer.set(GFX, batchVerts, GFXBufferTypeStatic);
@@ -218,6 +235,9 @@ void duDebugDrawTorque::end()
       {
          const U32 linesThisBatch = getMin(maxVertsPerDraw / vertsPerLine, totalLines - l);
          const U32 batchVerts = linesThisBatch * vertsPerLine;
+         Box3F box;
+         box.minExtents.set(F32_MAX, F32_MAX, F32_MAX);
+         box.maxExtents.set(-F32_MAX, -F32_MAX, -F32_MAX);
 
          GFXVertexBufferHandle<GFXVertexPCT> buffer;
          buffer.set(GFX, batchVerts, GFXBufferTypeStatic);
@@ -273,6 +293,9 @@ void duDebugDrawTorque::end()
       {
          const U32 trisThisBatch = getMin(maxVertsPerDraw / vertsPerTri, totalTris - t);
          const U32 batchVerts = trisThisBatch * vertsPerTri;
+         Box3F box;
+         box.minExtents.set(F32_MAX, F32_MAX, F32_MAX);
+         box.maxExtents.set(-F32_MAX, -F32_MAX, -F32_MAX);
 
          GFXVertexBufferHandle<GFXVertexPCT> buffer;
          buffer.set(GFX, batchVerts, GFXBufferTypeStatic);
@@ -330,6 +353,9 @@ void duDebugDrawTorque::end()
          const U32 quadsThisBatch = getMin(maxVertsPerDraw / vertsPerQuad, totalQuads - q);
          const U32 batchVerts = quadsThisBatch * vertsPerQuad;
          const U32 batchIndices = quadsThisBatch * 6;
+         Box3F box;
+         box.minExtents.set(F32_MAX, F32_MAX, F32_MAX);
+         box.maxExtents.set(-F32_MAX, -F32_MAX, -F32_MAX);
 
          GFXVertexBufferHandle<GFXVertexPCT> buffer;
          buffer.set(GFX, batchVerts, GFXBufferTypeStatic);

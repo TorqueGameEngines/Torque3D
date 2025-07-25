@@ -573,7 +573,44 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
             position = "7 21";
             extent = "186 64";
             padding = "2 2 2 2";
-            
+            new GuiTextEditSliderCtrl() {
+               internalName = "LinkRadius";
+               class = "NavMeshLinkRadius";
+               extent = "50 15";
+               format = "%3.2f";
+               range = "0 1e+03";
+               increment = "0.1";
+               focusOnMouseWheel = "0";
+               historySize = "0";
+               password = "0";
+               tabComplete = "0";
+               sinkAllKeyEvents = "0";
+               profile = "ToolsGuiCheckBoxProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               toolTip = "The radius for this link.";
+               AltCommand = "NavMeshTools->LinkTool.updateRadius();";
+            };
+            new GuiCheckBoxCtrl() {
+               internalName = "LinkBiDirection";
+               class = "NavMeshLinkBiDirection";
+               text = " Link Bi-Directional";
+               buttonType = "ToggleButton";
+               useMouseEvents = "0";
+               extent = "159 15";
+               minExtent = "8 2";
+               horizSizing = "right";
+               vertSizing = "bottom";
+               profile = "ToolsGuiCheckBoxProfile";
+               visible = "1";
+               active = "0";
+               tooltipProfile = "GuiToolTipProfile";
+               toolTip = "This link is bidirectional.";
+               hovertime = "1000";
+               isContainer = "0";
+               canSave = "1";
+               canSaveDynamicFields = "0";
+            };
+
             new GuiCheckBoxCtrl() {
                internalName = "LinkWalkFlag";
                class = "NavMeshLinkFlagButton";

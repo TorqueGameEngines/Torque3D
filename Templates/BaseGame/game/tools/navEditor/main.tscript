@@ -59,6 +59,13 @@ function initializeNavEditor()
 
    new SimSet(NavMeshTools)
    {
+      new OffMeshConnectionTool()
+      {
+         internalName = "LinkTool";
+         toolTip = "Link tool";
+         buttonImage = "ToolsModule:nav_link_n_image";  
+      };
+
       new TileTool()
       {
          internalName = "TileTool";
@@ -130,7 +137,7 @@ function EditorGui::SetNavPalletBar()
    //Adds a button to the pallete stack
                                  //Name          Icon                                     Click Command                              Tooltip text              Keybind
    EWToolsPaletteWindow.addButton("ViewNavMesh", "ToolsModule:visibility_toggle_n_image", "NavEditorGui.prepSelectionMode();", "",   "View NavMesh",           "1"); 
-   // EWToolsPaletteWindow.addButton("LinkMode",    "ToolsModule:nav_link_n_image",          "NavEditorGui.setMode(\"LinkMode\");", "", "Create off-mesh links",  "2");  
+   EWToolsPaletteWindow.addButton("LinkMode",    "ToolsModule:nav_link_n_image",          "NavEditorGui.setActiveTool(NavMeshTools->LinkTool);", "", "Create off-mesh links",  "2");  
    // EWToolsPaletteWindow.addButton("CoverMode",   "ToolsModule:nav_cover_n_image",         "NavEditorGui.setMode(\"CoverMode\");", "","Edit cover",             "3");  
    // EWToolsPaletteWindow.addButton("TileMode",    "ToolsModule:select_bounds_n_image",     "NavEditorGui.setMode(\"TileMode\");", "", "View tiles",             "4"); 
    // EWToolsPaletteWindow.addButton("TestMode",    "ToolsModule:3rd_person_camera_n_image", "NavEditorGui.setMode(\"TestMode\");", "", "Test pathfinding",       "5"); 

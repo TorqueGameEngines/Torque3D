@@ -405,7 +405,7 @@ void NavMesh::setScale(const VectorF &scale)
    Parent::setScale(scale);
 }
 
-S32 NavMesh::addLink(const Point3F &from, const Point3F &to, bool biDir, U32 flags)
+S32 NavMesh::addLink(const Point3F &from, const Point3F &to, bool biDir, F32 rad, U32 flags)
 {
    Point3F rcFrom = DTStoRC(from), rcTo = DTStoRC(to);
    mLinkVerts.push_back(rcFrom.x);
@@ -415,7 +415,7 @@ S32 NavMesh::addLink(const Point3F &from, const Point3F &to, bool biDir, U32 fla
    mLinkVerts.push_back(rcTo.y);
    mLinkVerts.push_back(rcTo.z);
    mLinksUnsynced.push_back(true);
-   mLinkRads.push_back(mWalkableRadius);
+   mLinkRads.push_back(rad);
    mLinkDirs.push_back(biDir ? 1 : 0);
    mLinkAreas.push_back(OffMeshArea);
    if (flags == 0) {
@@ -490,12 +490,28 @@ bool NavMesh::getLinkDir(U32 idx)
    }
 }
 
+F32 NavMesh::getLinkRadius(U32 idx)
+{
+   if (idx < mLinkIDs.size())
+   {
+      return mLinkRads[idx];
+   }
+}
+
 void NavMesh::setLinkDir(U32 idx, bool biDir)
 {
    if (idx < mLinkIDs.size())
    {
       mLinkDirs[idx] = biDir ? 1 : 0;
       mLinksUnsynced[idx] = true;
+   }
+}
+
+void NavMesh::setLinkRadius(U32 idx, F32 rad)
+{
+   if (idx < mLinkIDs.size())
+   {
+      mLinkRads[idx] = rad;
    }
 }
 

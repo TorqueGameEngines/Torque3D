@@ -15,6 +15,7 @@ class OffMeshConnectionTool : public NavMeshTool
    S32 mCurLink;
    Point3F mLinkStart;
    LinkData mLinkCache;
+   F32 mLinkRadius;
 public:
 
    DECLARE_CONOBJECT(OffMeshConnectionTool);
@@ -26,8 +27,16 @@ public:
       mCurLink = -1;
       mLinkStart = Point3F::Max;
       mLinkCache = LinkData(0);
+      mLinkRadius = 1.0;
    }
    virtual ~OffMeshConnectionTool() {}
+
+   void setActiveNavMesh(NavMesh* nav_mesh) override {
+      mNavMesh = nav_mesh;
+
+      if (!mNavMesh.isNull())
+         mLinkRadius = mNavMesh->mWalkableRadius;
+   }
 
    void onActivated(const Gui3DMouseEvent& evt) override;
    void onDeactivated() override;
@@ -38,7 +47,7 @@ public:
 
    bool updateGuiInfo() override;
 
-   void setLinkProperties(const LinkData& d, bool biDir);
+   void setLinkProperties(const LinkData& d, bool biDir, F32 rad);
 };
 
 #endif

@@ -151,7 +151,7 @@ public:
    /// @{
 
    /// Add an off-mesh link.
-   S32 addLink(const Point3F &from, const Point3F &to, bool biDir, U32 flags = 0);
+   S32 addLink(const Point3F &from, const Point3F &to, bool biDir, F32 rad, U32 flags = 0);
 
    /// Get the ID of the off-mesh link near the point.
    S32 getLink(const Point3F &pos);
@@ -170,7 +170,11 @@ public:
 
    bool getLinkDir(U32 idx);
 
+   F32 getLinkRadius(U32 idx);
+
    void setLinkDir(U32 idx, bool biDir);
+
+   void setLinkRadius(U32 idx, F32 rad);
 
    /// Set flags used by a link.
    void setLinkFlags(U32 idx, const LinkData &d);

@@ -51,7 +51,8 @@ void OffMeshConnectionTool::on3DMouseDown(const Gui3DMouseEvent& evt)
          {
             LinkData d = mNavMesh->getLinkFlags(mLink);
             bool biDir = mNavMesh->getLinkDir(mLink);
-            Con::executef(this, "onLinkSelected", Con::getIntArg(d.getFlags()), Con::getBoolArg(biDir));
+            F32 linkRad = mNavMesh->getLinkRadius(mLink);
+            Con::executef(this, "onLinkSelected", Con::getIntArg(d.getFlags()), Con::getBoolArg(biDir), Con::getFloatArg(linkRad));
          }
       }
       else
@@ -65,7 +66,7 @@ void OffMeshConnectionTool::on3DMouseDown(const Gui3DMouseEvent& evt)
 
          if (mLinkStart != Point3F::Max)
          {
-            mLink = mNavMesh->addLink(mLinkStart, ri.point, mBiDir);
+            mLink = mNavMesh->addLink(mLinkStart, ri.point, mBiDir, mLinkRadius);
             mNavMesh->selectLink(mLink, true, false);
 
             if (shift)
@@ -73,7 +74,7 @@ void OffMeshConnectionTool::on3DMouseDown(const Gui3DMouseEvent& evt)
             else
                mLinkStart = Point3F::Max;
 
-            Con::executef(this, "onLinkSelected", Con::getIntArg(mLinkCache.getFlags()), Con::getBoolArg(mBiDir));
+            Con::executef(this, "onLinkSelected", Con::getIntArg(mLinkCache.getFlags()), Con::getBoolArg(mBiDir), Con::getFloatArg(mLinkRadius));
          }
          else
          {
@@ -141,7 +142,7 @@ void OffMeshConnectionTool::onRender3D()
       Point3F rcFrom = DTStoRC(mLinkStart);
       dd.begin(DU_DRAW_LINES);
       dd.depthMask(false);
-      duAppendCircle(&dd, rcFrom.x, rcFrom.y, rcFrom.z, mNavMesh->mWalkableRadius, duRGBA(0, 255, 0, 255));
+      duAppendCircle(&dd, rcFrom.x, rcFrom.y, rcFrom.z, mLinkRadius, duRGBA(0, 255, 0, 255));
       dd.end();
    }
 
@@ -178,20 +179,22 @@ bool OffMeshConnectionTool::updateGuiInfo()
    return true;
 }
 
-void OffMeshConnectionTool::setLinkProperties(const LinkData& d, bool biDir)
+void OffMeshConnectionTool::setLinkProperties(const LinkData& d, bool biDir, F32 rad)
 {
    if (!mNavMesh.isNull() && mLink != -1)
    {
       mNavMesh->setLinkFlags(mLink, d);
       mNavMesh->setLinkDir(mLink, biDir);
+      mNavMesh->setLinkRadius(mLink, rad);
    }
 
    mLinkCache = d;
    mBiDir = biDir;
+   mLinkRadius = rad;
 }
 
-DefineEngineMethod(OffMeshConnectionTool, setLinkProperties, void, (U32 flags, bool biDir), ,
+DefineEngineMethod(OffMeshConnectionTool, setLinkProperties, void, (U32 flags, bool biDir, F32 rad), ,
    "@Brief Set properties of the selected link.")
 {
-   object->setLinkProperties(LinkData(flags), biDir);
+   object->setLinkProperties(LinkData(flags), biDir, rad);
 }

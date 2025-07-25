@@ -298,6 +298,119 @@ function NavEditorGui::showSidePanel()
 
 //------------------------------------------------------------------------------
 
+function OffMeshConnectionTool::onActivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->SelectActions.setVisible(false);
+   %actions->LinkActions.setVisible(false);
+   %actions->CoverActions.setVisible(false);
+   %actions->TileActions.setVisible(false);
+   %actions->TestActions.setVisible(false);
+
+   %properties = NavEditorOptionsWindow->PropertiesBox;
+   %properties->LinkProperties.setVisible(false);
+   %properties->TileProperties.setVisible(false);
+   %properties->TestProperties.setVisible(false);
+
+   %actions->LinkActions.setVisible(true);
+   %properties->LinkProperties.setVisible(true);
+}
+
+function OffMeshConnectionTool::onDeactivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->SelectActions.setVisible(false);
+   %actions->LinkActions.setVisible(false);
+   %actions->CoverActions.setVisible(false);
+   %actions->TileActions.setVisible(false);
+   %actions->TestActions.setVisible(false);
+
+   %properties = NavEditorOptionsWindow->PropertiesBox;
+   %properties->LinkProperties.setVisible(false);
+   %properties->TileProperties.setVisible(false);
+   %properties->TestProperties.setVisible(false);
+}
+
+function OffMeshConnectionTool::updateLinkFlags(%this)
+{
+   %properties = NavEditorOptionsWindow-->LinkProperties;
+   %this.setLinkProperties(getLinkFlags(%properties), %properties->LinkBiDirection.isStateOn(), %properties->LinkRadius.getValue());
+}
+
+function updateLinkData(%control, %flags, %biDir, %radius)
+{
+   %control->LinkRadius.setActive(true);
+   %control->LinkBiDirection.setActive(true);
+   %control->LinkWalkFlag.setActive(true);
+   %control->LinkJumpFlag.setActive(true);
+   %control->LinkDropFlag.setActive(true);
+   %control->LinkLedgeFlag.setActive(true);
+   %control->LinkClimbFlag.setActive(true);
+   %control->LinkTeleportFlag.setActive(true);
+
+   %control->LinkRadius.setValue(%radius);
+   %control->LinkBiDirection.setStateOn(%biDir);
+   %control->LinkWalkFlag.setStateOn(%flags & $Nav::WalkFlag);
+   %control->LinkJumpFlag.setStateOn(%flags & $Nav::JumpFlag);
+   %control->LinkDropFlag.setStateOn(%flags & $Nav::DropFlag);
+   %control->LinkLedgeFlag.setStateOn(%flags & $Nav::LedgeFlag);
+   %control->LinkClimbFlag.setStateOn(%flags & $Nav::ClimbFlag);
+   %control->LinkTeleportFlag.setStateOn(%flags & $Nav::TeleportFlag);
+}
+
+function getLinkFlags(%control)
+{
+   return (%control->LinkWalkFlag.isStateOn() ? $Nav::WalkFlag : 0) |
+          (%control->LinkJumpFlag.isStateOn() ? $Nav::JumpFlag : 0) |
+          (%control->LinkDropFlag.isStateOn() ? $Nav::DropFlag : 0) |
+          (%control->LinkLedgeFlag.isStateOn() ? $Nav::LedgeFlag : 0) |
+          (%control->LinkClimbFlag.isStateOn() ? $Nav::ClimbFlag : 0) |
+          (%control->LinkTeleportFlag.isStateOn() ? $Nav::TeleportFlag : 0);
+}
+
+function disableLinkData(%control)
+{
+   %control->LinkRadius.setActive(false);
+   %control->LinkBiDirection.setActive(false);
+   %control->LinkWalkFlag.setActive(false);
+   %control->LinkJumpFlag.setActive(false);
+   %control->LinkDropFlag.setActive(false);
+   %control->LinkLedgeFlag.setActive(false);
+   %control->LinkClimbFlag.setActive(false);
+   %control->LinkTeleportFlag.setActive(false);
+}
+
+function OffMeshConnectionTool::onLinkSelected(%this, %flags, %biDir, %radius)
+{
+   updateLinkData(NavEditorOptionsWindow-->LinkProperties, %flags, %biDir, %radius);
+}
+
+function OffMeshConnectionTool::onLinkDeselected(%this)
+{
+   disableLinkData(NavEditorOptionsWindow-->LinkProperties);
+}
+
+function OffMeshConnectionTool::updateRadius(%this)
+{
+   %this.updateLinkFlags();
+}
+
+function NavMeshLinkFlagButton::onClick(%this)
+{
+   NavMeshTools->LinkTool.updateLinkFlags();
+}
+
+function NavMeshLinkBiDirection::onClick(%this)
+{
+   NavMeshTools->LinkTool.updateLinkFlags();
+}
+
+//------------------------------------------------------
+
 function TileTool::onActivated(%this)
 {
    NavInspector.setVisible(false);
@@ -335,6 +448,7 @@ function TileTool::onDeactivated(%this)
    %properties->TestProperties.setVisible(false);
 }
 
+//------------------------------------------------------
 
 function NavEditorGui::onModeSet(%this, %mode)
 {
@@ -453,43 +567,6 @@ function NavEditorGui::buildLinks(%this)
    }
 }
 
-function updateLinkData(%control, %flags)
-{
-   %control->LinkWalkFlag.setActive(true);
-   %control->LinkJumpFlag.setActive(true);
-   %control->LinkDropFlag.setActive(true);
-   %control->LinkLedgeFlag.setActive(true);
-   %control->LinkClimbFlag.setActive(true);
-   %control->LinkTeleportFlag.setActive(true);
-
-   %control->LinkWalkFlag.setStateOn(%flags & $Nav::WalkFlag);
-   %control->LinkJumpFlag.setStateOn(%flags & $Nav::JumpFlag);
-   %control->LinkDropFlag.setStateOn(%flags & $Nav::DropFlag);
-   %control->LinkLedgeFlag.setStateOn(%flags & $Nav::LedgeFlag);
-   %control->LinkClimbFlag.setStateOn(%flags & $Nav::ClimbFlag);
-   %control->LinkTeleportFlag.setStateOn(%flags & $Nav::TeleportFlag);
-}
-
-function getLinkFlags(%control)
-{
-   return (%control->LinkWalkFlag.isStateOn() ? $Nav::WalkFlag : 0) |
-          (%control->LinkJumpFlag.isStateOn() ? $Nav::JumpFlag : 0) |
-          (%control->LinkDropFlag.isStateOn() ? $Nav::DropFlag : 0) |
-          (%control->LinkLedgeFlag.isStateOn() ? $Nav::LedgeFlag : 0) |
-          (%control->LinkClimbFlag.isStateOn() ? $Nav::ClimbFlag : 0) |
-          (%control->LinkTeleportFlag.isStateOn() ? $Nav::TeleportFlag : 0);
-}
-
-function disableLinkData(%control)
-{
-   %control->LinkWalkFlag.setActive(false);
-   %control->LinkJumpFlag.setActive(false);
-   %control->LinkDropFlag.setActive(false);
-   %control->LinkLedgeFlag.setActive(false);
-   %control->LinkClimbFlag.setActive(false);
-   %control->LinkTeleportFlag.setActive(false);
-}
-
 function NavEditorGui::onLinkSelected(%this, %flags)
 {
    updateLinkData(NavEditorOptionsWindow-->LinkProperties, %flags);
@@ -508,16 +585,6 @@ function NavEditorGui::onPlayerSelected(%this, %flags)
    updateLinkData(NavEditorOptionsWindow-->TestProperties, %flags);
 }
 
-function NavEditorGui::updateLinkFlags(%this)
-{
-   if(isObject(%this.getMesh()))
-   {
-      %properties = NavEditorOptionsWindow-->LinkProperties;
-      %this.setLinkFlags(getLinkFlags(%properties));
-      %this.isDirty = true;
-   }
-}
-
 function NavEditorGui::updateTestFlags(%this)
 {
    if(isObject(%this.getPlayer()))
@@ -534,11 +601,6 @@ function NavEditorGui::updateTestFlags(%this)
 
       %this.isDirty = true;
    }
-}
-
-function NavEditorGui::onLinkDeselected(%this)
-{
-   disableLinkData(NavEditorOptionsWindow-->LinkProperties);
 }
 
 function NavEditorGui::onPlayerDeselected(%this)
@@ -655,11 +717,6 @@ function ENavEditorPaletteButton::onClick(%this)
 }
 
 //-----------------------------------------------------------------------------
-
-function NavMeshLinkFlagButton::onClick(%this)
-{
-   NavEditorGui.updateLinkFlags();
-}
 
 function NavMeshTestFlagButton::onClick(%this)
 {

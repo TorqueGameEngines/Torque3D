@@ -146,7 +146,7 @@ void OffMeshConnectionTool::onRender3D()
       dd.end();
    }
 
-   mNavMesh->renderLinks(dd);
+   //mNavMesh->renderLinks(dd);
 
    dd.immediateRender();
 }

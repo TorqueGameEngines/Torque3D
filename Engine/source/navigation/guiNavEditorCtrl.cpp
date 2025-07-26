@@ -285,8 +285,11 @@ void GuiNavEditorCtrl::renderScene(const RectI & updateRect)
       mTool->onRender3D();
 
    duDebugDrawTorque d;
-   if(!mMesh.isNull())
+   if (!mMesh.isNull())
+   {
       mMesh->renderLinks(d);
+      d.immediateRender();
+   }
 
    // Now draw all the 2d stuff!
    GFX->setClipRect(updateRect);

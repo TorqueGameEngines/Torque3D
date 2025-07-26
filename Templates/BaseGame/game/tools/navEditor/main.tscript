@@ -66,6 +66,13 @@ function initializeNavEditor()
          buttonImage = "ToolsModule:nav_link_n_image";  
       };
 
+      new NavMeshTestTool()
+      {
+         internalName = "TestTool";
+         toolTip = "PathFinding Test tool";
+         buttonImage = "ToolsModule:3rd_person_camera_n_image";
+      };
+
       new TileTool()
       {
          internalName = "TileTool";
@@ -140,7 +147,7 @@ function EditorGui::SetNavPalletBar()
    EWToolsPaletteWindow.addButton("LinkMode",    "ToolsModule:nav_link_n_image",          "NavEditorGui.setActiveTool(NavMeshTools->LinkTool);", "", "Create off-mesh links",  "2");  
    // EWToolsPaletteWindow.addButton("CoverMode",   "ToolsModule:nav_cover_n_image",         "NavEditorGui.setMode(\"CoverMode\");", "","Edit cover",             "3");  
    // EWToolsPaletteWindow.addButton("TileMode",    "ToolsModule:select_bounds_n_image",     "NavEditorGui.setMode(\"TileMode\");", "", "View tiles",             "4"); 
-   // EWToolsPaletteWindow.addButton("TestMode",    "ToolsModule:3rd_person_camera_n_image", "NavEditorGui.setMode(\"TestMode\");", "", "Test pathfinding",       "5"); 
+   EWToolsPaletteWindow.addButton("TestMode",    "ToolsModule:3rd_person_camera_n_image", "NavEditorGui.setActiveTool(NavMeshTools->TestTool);", "", "Test pathfinding",       "5"); 
    EWToolsPaletteWindow.addButton("TileMode", "ToolsModule:select_bounds_n_image", "NavEditorGui.setActiveTool(NavMeshTools->TileTool);" , "", "View and Edit Tiles", "4");
    EWToolsPaletteWindow.refresh();
 }
@@ -263,7 +270,7 @@ function NavEditorPlugin::initSettings(%this)
    EditorSettings.beginGroup("NavEditor", true);
 
    EditorSettings.setDefaultValue("SpawnClass",     "AIPlayer");
-   EditorSettings.setDefaultValue("SpawnDatablock", "DefaultPlayerData");
+   EditorSettings.setDefaultValue("SpawnDatablock", "ProtoPlayer");
 
    EditorSettings.endGroup();
 }
@@ -273,9 +280,6 @@ function NavEditorPlugin::readSettings(%this)
    EditorSettings.beginGroup("NavEditor", true);
 
    // Currently these are globals because of the way they are accessed in navMesh.cpp.
-   $Nav::Editor::renderMesh       = EditorSettings.value("RenderMesh");
-   $Nav::Editor::renderPortals    = EditorSettings.value("RenderPortals");
-   $Nav::Editor::renderBVTree     = EditorSettings.value("RenderBVTree");
    NavEditorGui.spawnClass        = EditorSettings.value("SpawnClass");
    NavEditorGui.spawnDatablock    = EditorSettings.value("SpawnDatablock");
    NavEditorGui.backgroundBuild   = EditorSettings.value("BackgroundBuild");
@@ -295,9 +299,6 @@ function NavEditorPlugin::writeSettings(%this)
 {
    EditorSettings.beginGroup("NavEditor", true);
 
-   EditorSettings.setValue("RenderMesh",        $Nav::Editor::renderMesh);
-   EditorSettings.setValue("RenderPortals",     $Nav::Editor::renderPortals);
-   EditorSettings.setValue("RenderBVTree",      $Nav::Editor::renderBVTree);
    EditorSettings.setValue("SpawnClass",        NavEditorGui.spawnClass);
    EditorSettings.setValue("SpawnDatablock",    NavEditorGui.spawnDatablock);
    EditorSettings.setValue("BackgroundBuild",   NavEditorGui.backgroundBuild);

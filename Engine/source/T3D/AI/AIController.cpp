@@ -535,6 +535,10 @@ AIControllerData::AIControllerData()
 
 #ifdef TORQUE_NAVIGATION_ENABLED
    mLinkTypes = LinkData(AllFlags);
+   mFilter.setIncludeFlags(mLinkTypes.getFlags());
+   mFilter.setExcludeFlags(0);
+   mAreaCosts.setSize(PolyAreas::NumAreas);
+   mAreaCosts.fill(1.0f);
    mNavSize = AINavigation::Regular;
    mFlocking.mChance = 90;
    mFlocking.mMin = 1.0f;
@@ -560,6 +564,8 @@ AIControllerData::AIControllerData(const AIControllerData& other, bool temp_clon
 
 #ifdef TORQUE_NAVIGATION_ENABLED
    mLinkTypes = other.mLinkTypes;
+   mFilter = other.mFilter;
+   mAreaCosts = other.mAreaCosts;
    mNavSize = other.mNavSize;
    mFlocking.mChance = other.mFlocking.mChance;
    mFlocking.mMin = other.mFlocking.mMin;
@@ -629,6 +635,8 @@ void AIControllerData::initPersistFields()
    addFieldV("FlockSideStep", TypeRangedF32, Offset(mFlocking.mSideStep, AIControllerData), &CommonValidators::PositiveFloat,
       "@brief Distance from destination before we stop moving out of the way.");
 
+   addField("areaCosts", TypeF32Vector, Offset(mAreaCosts, AIControllerData),
+      "Vector of costs for each PolyArea.");
    addField("allowWalk", TypeBool, Offset(mLinkTypes.walk, AIControllerData),
       "Allow the character to walk on dry land.");
    addField("allowJump", TypeBool, Offset(mLinkTypes.jump, AIControllerData),
@@ -662,6 +670,10 @@ void AIControllerData::packData(BitStream* stream)
 
 #ifdef TORQUE_NAVIGATION_ENABLED
    //enums
+   stream->write(mAreaCosts.size());
+   for (U32 i = 0; i < mAreaCosts.size(); i++) {
+      stream->write(mAreaCosts[i]);
+   }
    stream->write(mLinkTypes.getFlags());
    stream->write((U32)mNavSize);
    // end enums
@@ -684,10 +696,23 @@ void AIControllerData::unpackData(BitStream* stream)
    stream->read(&mFollowTolerance);
 
 #ifdef TORQUE_NAVIGATION_ENABLED
+   U32 num;
+   stream->read(&num);
+   mAreaCosts.setSize(num);
+   for (U32 i = 0; i < num; i++)
+   {
+      stream->read(&mAreaCosts[i]);
+   }
    //enums
    U16 linkFlags;
    stream->read(&linkFlags);
    mLinkTypes = LinkData(linkFlags);
+   mFilter.setIncludeFlags(mLinkTypes.getFlags());
+   mFilter.setExcludeFlags(mLinkTypes.getExcludeFlags());
+   for (U32 i = 0; i < PolyAreas::NumAreas; i++)
+   {
+      mFilter.setAreaCost((PolyAreas)i, mAreaCosts[i]);
+   }
    U32 navSize;
    stream->read(&navSize);
    mNavSize = (AINavigation::NavSize)(navSize);   

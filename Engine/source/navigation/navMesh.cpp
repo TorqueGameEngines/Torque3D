@@ -225,10 +225,13 @@ NavMesh::NavMesh()
 
    mWaterVertStart = 0;
    mWaterTriStart = 0;
+
+   mQuery = NULL;
 }
 
 NavMesh::~NavMesh()
 {
+   dtFreeNavMeshQuery(mQuery);
    dtFreeNavMesh(nm);
    nm = NULL;
    delete ctx;
@@ -677,32 +680,6 @@ bool NavMesh::build(bool background, bool saveIntermediates)
       return false;
    }
 
-   Box3F worldBox = getWorldBox();
-   SceneContainer::CallbackInfo info;
-   info.context = PLC_Navigation;
-   info.boundingBox = worldBox;
-   m_geo = new RecastPolyList;
-   info.polyList = m_geo;
-   info.key = this;
-   getContainer()->findObjects(worldBox, StaticObjectType | DynamicShapeObjectType, buildCallback, &info);
-
-   // Parse water objects into the same list, but remember how much geometry was /not/ water.
-   mWaterVertStart = m_geo->getVertCount();
-   mWaterTriStart = m_geo->getTriCount();
-   if (mWaterMethod != Ignore)
-   {
-      getContainer()->findObjects(worldBox, WaterObjectType, buildCallback, &info);
-   }
-
-   // Check for no geometry.
-   if (!m_geo->getVertCount())
-   {
-      m_geo->clear();
-      return false;
-   }
-
-   m_geo->getChunkyMesh();
-
    // Needed for the recast config and generation params.
    Box3F rc_box = DTStoRC(getWorldBox());
    S32 gw = 0, gh = 0;
@@ -801,33 +778,6 @@ void NavMesh::createNewFile()
 
    String fileName = Torque::FS::MakeUniquePath(basePath.getPath(), basePath.getFileName(), "nav");
    mFileName = StringTable->insert(fileName.c_str());
-}
-
-void NavMesh::updateConfig()
-{
-   //// Build rcConfig object from our console members.
-   //dMemset(&cfg, 0, sizeof(cfg));
-   //cfg.cs = mCellSize;
-   //cfg.ch = mCellHeight;
-   //Box3F box = DTStoRC(getWorldBox());
-   //rcVcopy(cfg.bmin, box.minExtents);
-   //rcVcopy(cfg.bmax, box.maxExtents);
-   //rcCalcGridSize(cfg.bmin, cfg.bmax, cfg.cs, &cfg.width, &cfg.height);
-
-   //cfg.walkableHeight = mCeil(mWalkableHeight / mCellHeight);
-   //cfg.walkableClimb = mCeil(mWalkableClimb / mCellHeight);
-   //cfg.walkableRadius = mCeil(mWalkableRadius / mCellSize);
-   //cfg.walkableSlopeAngle = mWalkableSlope;
-   //cfg.borderSize = cfg.walkableRadius + 3;
-
-   //cfg.detailSampleDist = mDetailSampleDist;
-   //cfg.detailSampleMaxError = mDetailSampleMaxError;
-   //cfg.maxEdgeLen = mMaxEdgeLen;
-   //cfg.maxSimplificationError = mMaxSimplificationError;
-   //cfg.maxVertsPerPoly = mMaxVertsPerPoly;
-   //cfg.minRegionArea = mMinRegionArea;
-   //cfg.mergeRegionArea = mMergeRegionArea;
-   //cfg.tileSize = mTileSize / cfg.cs;
 }
 
 S32 NavMesh::getTile(const Point3F& pos)
@@ -938,6 +888,8 @@ void NavMesh::buildNextTile()
 
    if(!mDirtyTiles.empty())
    {
+      dtFreeNavMeshQuery(mQuery);
+      mQuery = NULL;
       // Pop a single dirty tile and process it.
       U32 i = mDirtyTiles.front();
       mDirtyTiles.pop_front();
@@ -1002,6 +954,12 @@ void NavMesh::buildNextTile()
       // Did we just build the last tile?
       if(mDirtyTiles.empty())
       {
+         mQuery = dtAllocNavMeshQuery();
+         if (dtStatusFailed(mQuery->init(nm, 2048)))
+         {
+            Con::errorf("NavMesh - Failed to create navmesh query");
+         }
+
          ctx->stopTimer(RC_TIMER_TOTAL);
          if(getEventManager())
          {
@@ -1010,6 +968,15 @@ void NavMesh::buildNextTile()
             setMaskBits(LoadFlag);
          }
          mBuilding = false;
+      }
+   }
+
+   if (mQuery == NULL)
+   {
+      mQuery = dtAllocNavMeshQuery();
+      if (dtStatusFailed(mQuery->init(nm, 2048)))
+      {
+         Con::errorf("NavMesh - Failed to create navmesh query");
       }
    }
 }
@@ -1614,11 +1581,13 @@ void NavMesh::renderToDrawer()
             m_drawMode == DRAWMODE_NAVMESH_INVIS))
       {
          if (m_drawMode != DRAWMODE_NAVMESH_INVIS)
-            duDebugDrawNavMesh(&mDbgDraw, *n->nm, 0);
+            duDebugDrawNavMeshWithClosedList(&mDbgDraw, *n->nm, *n->mQuery, 0);
          if(m_drawMode == DRAWMODE_NAVMESH_BVTREE)
             duDebugDrawNavMeshBVTree(&mDbgDraw, *n->nm);
          if(m_drawMode == DRAWMODE_NAVMESH_PORTALS)
             duDebugDrawNavMeshPortals(&mDbgDraw, *n->nm);
+         if (m_drawMode == DRAWMODE_NAVMESH_NODES)
+            duDebugDrawNavMeshNodes(&mDbgDraw, *n->mQuery);
       }
 
       mDbgDraw.depthMask(true, false);

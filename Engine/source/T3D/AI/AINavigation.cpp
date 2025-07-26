@@ -77,6 +77,7 @@ bool AINavigation::setPathDestination(const Point3F& pos, bool replace)
    path->mAlwaysRender = true;
    path->mLinkTypes = getCtrl()->mControllerData->mLinkTypes;
    path->mXray = true;
+   path->mFilter = getCtrl()->mControllerData->mFilter;
    // Paths plan automatically upon being registered.
    if (!path->registerObject())
    {

@@ -187,6 +187,8 @@ public:
    /// Delete the selected link.
    void deleteLink(U32 idx);
 
+   dtNavMeshQuery* getNavMeshQuery() { return mQuery; }
+
    /// @}
 
    /// Should small characters use this mesh?
@@ -381,16 +383,9 @@ private:
 
    /// @}
 
-   /// @name Intermediate data
-   /// @{
-
-   /// Updates our config from console members.
-   void updateConfig();
-
    dtNavMesh *nm;
    rcContext *ctx;
-
-   /// @}
+   dtNavMeshQuery* mQuery;
 
    /// @name Cover
    /// @{

@@ -103,17 +103,8 @@ public:
    String getMode() { return mMode; }
 
    void selectMesh(NavMesh *mesh);
-   void deselect();
 
    S32 getMeshId();
-   S32 getPlayerId();
-
-   String mSpawnClass;
-   String mSpawnDatablock;
-
-   void deleteLink();
-   void setLinkFlags(const LinkData &d);
-   void spawnPlayer(const Point3F &pos);
 
    /// @}
    void setActiveTool(NavMeshTool* tool);
@@ -145,14 +136,6 @@ protected:
    /// @{
 
    duDebugDrawTorque dd;
-
-   /// @}
-
-   /// @name Test mode
-   /// @{
-
-   SimObjectPtr<SceneObject> mPlayer;
-   SimObjectPtr<SceneObject> mCurPlayer;
 
    /// @}
 

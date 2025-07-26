@@ -59,8 +59,6 @@ GuiNavEditorCtrl::GuiNavEditorCtrl()
    mIsDirty = false;
    mStartDragMousePoint = InvalidMousePoint;
    mMesh = NULL;
-   mPlayer = mCurPlayer = NULL;
-   mSpawnClass = mSpawnDatablock = "";
 }
 
 GuiNavEditorCtrl::~GuiNavEditorCtrl()
@@ -96,11 +94,6 @@ void GuiNavEditorCtrl::initPersistFields()
 {
    docsURL;
    addField("isDirty", TypeBool, Offset(mIsDirty, GuiNavEditorCtrl));
-
-   addField("spawnClass", TypeRealString, Offset(mSpawnClass, GuiNavEditorCtrl),
-      "Class of object to spawn in test mode.");
-   addField("spawnDatablock", TypeRealString, Offset(mSpawnDatablock, GuiNavEditorCtrl),
-      "Datablock to give new objects in test mode.");
 
    Parent::initPersistFields();
 }
@@ -138,79 +131,6 @@ DefineEngineMethod(GuiNavEditorCtrl, getMesh, S32, (),,
    "@brief Select a NavMesh object.")
 {
    return object->getMeshId();
-}
-
-S32 GuiNavEditorCtrl::getPlayerId()
-{
-   return mPlayer.isNull() ? 0 : mPlayer->getId();
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, getPlayer, S32, (),,
-   "@brief Select a NavMesh object.")
-{
-   return object->getPlayerId();
-}
-
-void GuiNavEditorCtrl::deselect()
-{
-   if(!mMesh.isNull())
-      mMesh->setSelected(false);
-   mMesh = NULL;
-   mPlayer = mCurPlayer = NULL;
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, deselect, void, (),,
-   "@brief Deselect whatever is currently selected in the editor.")
-{
-   object->deselect();
-}
-
-void GuiNavEditorCtrl::spawnPlayer(const Point3F &pos)
-{
-   SceneObject *obj = (SceneObject*)Sim::spawnObject(mSpawnClass, mSpawnDatablock);
-   if(obj)
-   {
-      MatrixF mat(true);
-      mat.setPosition(pos);
-      obj->setTransform(mat);
-      SimObject* cleanup = Sim::findObject("MissionCleanup");
-      if(cleanup)
-      {
-         SimGroup* missionCleanup = dynamic_cast<SimGroup*>(cleanup);
-         missionCleanup->addObject(obj);
-      }
-      mPlayer = obj;
-#ifdef TORQUE_NAVIGATION_ENABLED
-      AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(obj);
-      if (asAIPlayer) //try direct
-      {
-         Con::executef(this, "onPlayerSelected", Con::getIntArg(asAIPlayer->mLinkTypes.getFlags()));
-      }
-      else
-      {
-         ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj);
-         if (sbo->getAIController())
-         {
-            if (sbo->getAIController()->mControllerData)
-               Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
-         }
-         else
-         {
-#endif
-            Con::executef(this, "onPlayerSelected");
-#ifdef TORQUE_NAVIGATION_ENABLED
-         }
-      }
-#endif
-   }
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, spawnPlayer, void, (),,
-                   "@brief Spawn an AIPlayer at the centre of the screen.")
-{
-   Point3F c;
-   if(object->get3DCentre(c))
-      object->spawnPlayer(c);
 }
 
 void GuiNavEditorCtrl::get3DCursor(GuiCursor *&cursor,
@@ -277,89 +197,6 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
    mouseLock();
 
    return;
-
-   // Construct a LineSegment from the camera position to 1000 meters away in
-   // the direction clicked.
-   // If that segment hits the terrain, truncate the ray to only be that length.
-
-   Point3F startPnt = event.pos;
-   Point3F endPnt = event.pos + event.vec * 1000.0f;
-
-   RayInfo ri;
-
-   U8 keys = Input::getModifierKeys();
-   bool shift = keys & SI_LSHIFT;
-   bool ctrl = keys & SI_LCTRL;
-
-   if(mMode == mTestMode)
-   {
-      // Spawn new character
-      if(ctrl)
-      {
-         if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-            spawnPlayer(ri.point);
-      }
-      // Deselect character
-      else if(shift)
-      {
-         mPlayer = NULL;
-         Con::executef(this, "onPlayerDeselected");
-      }
-      // Select/move character
-      else
-      {
-         if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType | VehicleObjectType, &ri))
-         {
-            if(ri.object)
-            {
-               mPlayer = ri.object;
-#ifdef TORQUE_NAVIGATION_ENABLED
-               AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
-               if (asAIPlayer) //try direct
-               {
-                  Con::executef(this, "onPlayerSelected", Con::getIntArg(asAIPlayer->mLinkTypes.getFlags()));
-               }
-               else
-               {
-                  ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
-                  if (sbo->getAIController())
-                  {
-                     if (sbo->getAIController()->mControllerData)
-                        Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
-                  }
-                  else
-                  {
-#endif
-                     Con::executef(this, "onPlayerSelected");
-                  }
-#ifdef TORQUE_NAVIGATION_ENABLED
-               }
-            }
-#endif
-         }
-         else if (!mPlayer.isNull() && gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-         {
-            AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
-            if (asAIPlayer) //try direct
-            {
-#ifdef TORQUE_NAVIGATION_ENABLED
-               asAIPlayer->setPathDestination(ri.point);
-#else
-                asAIPlayer->setMoveDestination(ri.point,false);
-#endif
-            }
-            else
-            {
-               ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
-               if (sbo->getAIController())
-               {
-                  if (sbo->getAIController()->mControllerData)
-                     sbo->getAIController()->getNav()->setPathDestination(ri.point, true);
-               }
-            }
-         }
-      }
-   }
 }
 
 void GuiNavEditorCtrl::on3DMouseUp(const Gui3DMouseEvent & event)
@@ -385,22 +222,6 @@ void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
       mTool->on3DMouseMove(event);
 
    return;
-
-   //if(mSelRiver != NULL && mSelNode != -1)
-      //mGizmo->on3DMouseMove(event);
-
-   Point3F startPnt = event.pos;
-   Point3F endPnt = event.pos + event.vec * 1000.0f;
-
-   RayInfo ri;
-
-   if(mMode == mTestMode)
-   {
-      if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType | VehicleObjectType, &ri))
-         mCurPlayer = ri.object;
-      else
-         mCurPlayer = NULL;
-   }
 }
 
 void GuiNavEditorCtrl::on3DMouseDragged(const Gui3DMouseEvent & event)
@@ -443,22 +264,6 @@ void GuiNavEditorCtrl::onRender(Point2I offset, const RectI &updateRect)
    return;
 }
 
-static void renderBoxOutline(const Box3F &box, const ColorI &col)
-{
-   if(box != Box3F::Invalid)
-   {
-      GFXStateBlockDesc desc;
-      desc.setCullMode(GFXCullNone);
-      desc.setFillModeSolid();
-      desc.setZReadWrite(true, false);
-      desc.setBlend(true);
-      GFX->getDrawUtil()->drawCube(desc, box, ColorI(col, 20));
-      desc.setFillModeWireframe();
-      desc.setBlend(false);
-      GFX->getDrawUtil()->drawCube(desc, box, ColorI(col, 255));
-   }
-}
-
 void GuiNavEditorCtrl::renderScene(const RectI & updateRect)
 {
    GFX->setStateBlock(mZDisableSB);
@@ -478,14 +283,6 @@ void GuiNavEditorCtrl::renderScene(const RectI & updateRect)
 
    if (mTool)
       mTool->onRender3D();
-
-   if(mMode == mTestMode)
-   {
-      if(!mCurPlayer.isNull())
-         renderBoxOutline(mCurPlayer->getWorldBox(), ColorI::BLUE);
-      if(!mPlayer.isNull())
-         renderBoxOutline(mPlayer->getWorldBox(), ColorI::GREEN);
-   }
 
    duDebugDrawTorque d;
    if(!mMesh.isNull())

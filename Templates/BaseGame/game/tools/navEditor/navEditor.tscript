@@ -411,6 +411,142 @@ function NavMeshLinkBiDirection::onClick(%this)
 
 //------------------------------------------------------
 
+function NavMeshTestTool::onActivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->SelectActions.setVisible(false);
+   %actions->LinkActions.setVisible(false);
+   %actions->CoverActions.setVisible(false);
+   %actions->TileActions.setVisible(false);
+   %actions->TestActions.setVisible(false);
+
+   %properties = NavEditorOptionsWindow->PropertiesBox;
+   %properties->LinkProperties.setVisible(false);
+   %properties->TileProperties.setVisible(false);
+   %properties->TestProperties.setVisible(false);
+
+   %actions->TestActions.setVisible(true);
+   %properties->TestProperties.setVisible(true);
+}
+
+function NavMeshTestTool::onDeactivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->SelectActions.setVisible(false);
+   %actions->LinkActions.setVisible(false);
+   %actions->CoverActions.setVisible(false);
+   %actions->TileActions.setVisible(false);
+   %actions->TestActions.setVisible(false);
+
+   %properties = NavEditorOptionsWindow->PropertiesBox;
+   %properties->LinkProperties.setVisible(false);
+   %properties->TileProperties.setVisible(false);
+   %properties->TestProperties.setVisible(false);
+}
+
+function updateTestData(%control, %flags)
+{
+   %control->LinkWalkFlag.setActive(true);
+   %control->LinkSwimFlag.setActive(true);
+   %control->LinkJumpFlag.setActive(true);
+   %control->LinkDropFlag.setActive(true);
+   %control->LinkLedgeFlag.setActive(true);
+   %control->LinkClimbFlag.setActive(true);
+   %control->LinkTeleportFlag.setActive(true);
+  
+   %control->LinkWalkFlag.setStateOn(%flags & $Nav::WalkFlag);
+   %control->LinkSwimFlag.setStateOn(%flags & $Nav::SwimFlag);
+   %control->LinkJumpFlag.setStateOn(%flags & $Nav::JumpFlag);
+   %control->LinkDropFlag.setStateOn(%flags & $Nav::DropFlag);
+   %control->LinkLedgeFlag.setStateOn(%flags & $Nav::LedgeFlag);
+   %control->LinkClimbFlag.setStateOn(%flags & $Nav::ClimbFlag);
+   %control->LinkTeleportFlag.setStateOn(%flags & $Nav::TeleportFlag);
+}
+
+function getTestFlags(%control)
+{
+   return (%control->LinkWalkFlag.isStateOn() ? $Nav::WalkFlag : 0) |
+          (%control->LinkSwimFlag.isStateOn() ? $Nav::SwimFlag : 0) |
+          (%control->LinkJumpFlag.isStateOn() ? $Nav::JumpFlag : 0) |
+          (%control->LinkDropFlag.isStateOn() ? $Nav::DropFlag : 0) |
+          (%control->LinkLedgeFlag.isStateOn() ? $Nav::LedgeFlag : 0) |
+          (%control->LinkClimbFlag.isStateOn() ? $Nav::ClimbFlag : 0) |
+          (%control->LinkTeleportFlag.isStateOn() ? $Nav::TeleportFlag : 0);
+}
+
+function disableTestData(%control)
+{
+   %control->LinkWalkFlag.setActive(false);
+   %control->LinkSwimFlag.setActive(false);
+   %control->LinkJumpFlag.setActive(false);
+   %control->LinkDropFlag.setActive(false);
+   %control->LinkLedgeFlag.setActive(false);
+   %control->LinkClimbFlag.setActive(false);
+   %control->LinkTeleportFlag.setActive(false);
+}
+
+function getControllerDataFlags(%controllerData)
+{
+   return (%controllerData.allowWalk  ? $Nav::WalkFlag : 0 ) |
+          (%controllerData.allowSwim  ? $Nav::SwimFlag : 0 ) |
+          (%controllerData.allowJump  ? $Nav::JumpFlag : 0 ) |
+          (%controllerData.allowDrop  ? $Nav::DropFlag : 0 ) |
+          (%controllerData.allowLedge ? $Nav::LedgeFlag : 0) |
+          (%controllerData.allowClimb ? $Nav::ClimbFlag : 0) |
+          (%controllerData.allowTeleport ? $Nav::TeleportFlag : 0 );
+}
+
+function NavMeshTestTool::updateTestFlags(%this)
+{
+   if(isObject(%this.getPlayer()))
+   {
+      %properties = NavEditorOptionsWindow-->TestProperties;
+      %player = %this.getPlayer();
+      %controllerData = %player.getDatablock().aiControllerData;
+
+      %controllerData.allowWalk = %properties->LinkWalkFlag.isStateOn();
+      %controllerData.allowSwim = %properties->LinkSwimFlag.isStateOn();
+      %controllerData.allowJump = %properties->LinkJumpFlag.isStateOn();
+      %controllerData.allowDrop = %properties->LinkDropFlag.isStateOn();
+      %controllerData.allowLedge = %properties->LinkLedgeFlag.isStateOn();
+      %controllerData.allowClimb = %properties->LinkClimbFlag.isStateOn();
+      %controllerData.allowTeleport = %properties->LinkTeleportFlag.isStateOn();
+
+      %player.aiController = new AIController(){ ControllerData = %controllerData; };
+      %player.setAIController(%player.aiController);
+   }
+}
+
+function NavMeshTestTool::onPlayerSelected(%this, %flags)
+{
+   if (!isObject(%this.getPlayer().aiController) || (isObject(%this.getPlayer().aiController) && !(%this.getPlayer().isMemberOfClass("AIPlayer"))))
+   {
+      %this.getPlayer().aiController = new AIController(){ ControllerData = %this.getPlayer().getDatablock().aiControllerData; };
+      %this.getPlayer().setAIController(%this.getPlayer().aiController);
+      %flags = getControllerDataFlags(%this.getPlayer().getDatablock().aiControllerData);
+   }
+   NavMeshIgnore(%this.getPlayer(), true);
+   %this.getPlayer().setDamageState("Enabled");
+   
+   updateTestData(NavEditorOptionsWindow-->TestProperties, %flags);
+}
+
+function NavMeshTestTool::onPlayerDeselected(%this)
+{
+   disableTestData(NavEditorOptionsWindow-->TestProperties);
+}
+
+function NavMeshTestFlagButton::onClick(%this)
+{
+   NavMeshTools->TestTool.updateTestFlags();
+}
+
+//------------------------------------------------------
+
 function TileTool::onActivated(%this)
 {
    NavInspector.setVisible(false);
@@ -540,13 +676,13 @@ function NavEditorGui::deleteSelected(%this)
          toolsMessageBoxYesNo("Warning",
             "Are you sure you want to delete" SPC NavEditorGui.selectedObject.getName(),
             "NavEditorGui.deleteMesh();");
-   case "TestMode":
-      %this.getPlayer().delete();
-      %this.onPlayerDeselected();
-   case "LinkMode":
-      %this.deleteLink();
-      %this.isDirty = true;
-   }
+   // case "TestMode":
+   //    %this.getPlayer().delete();
+   //    %this.onPlayerDeselected();
+   // case "LinkMode":
+   //    %this.deleteLink();
+   //    %this.isDirty = true;
+   // }
 }
 
 function NavEditorGui::buildSelectedMeshes(%this)
@@ -565,47 +701,6 @@ function NavEditorGui::buildLinks(%this)
       %this.getMesh().buildLinks();
       %this.isDirty = true;
    }
-}
-
-function NavEditorGui::onLinkSelected(%this, %flags)
-{
-   updateLinkData(NavEditorOptionsWindow-->LinkProperties, %flags);
-}
-
-function NavEditorGui::onPlayerSelected(%this, %flags)
-{
-   if (!isObject(%this.getPlayer().aiController) || (isObject(%this.getPlayer().aiController) && !(%this.getPlayer().isMemberOfClass("AIPlayer"))))
-   {
-      %this.getPlayer().aiController = new AIController(){ ControllerData = %this.getPlayer().getDatablock().aiControllerData; };
-      %this.getPlayer().setAIController(%this.getPlayer().aiController);
-   }
-   NavMeshIgnore(%this.getPlayer(), true);
-   %this.getPlayer().setDamageState("Enabled");
-   
-   updateLinkData(NavEditorOptionsWindow-->TestProperties, %flags);
-}
-
-function NavEditorGui::updateTestFlags(%this)
-{
-   if(isObject(%this.getPlayer()))
-   {
-      %properties = NavEditorOptionsWindow-->TestProperties;
-      %player = %this.getPlayer();
-
-      %player.allowWwalk = %properties->LinkWalkFlag.isStateOn();
-      %player.allowJump = %properties->LinkJumpFlag.isStateOn();
-      %player.allowDrop = %properties->LinkDropFlag.isStateOn();
-      %player.allowLedge = %properties->LinkLedgeFlag.isStateOn();
-      %player.allowClimb = %properties->LinkClimbFlag.isStateOn();
-      %player.allowTeleport = %properties->LinkTeleportFlag.isStateOn();
-
-      %this.isDirty = true;
-   }
-}
-
-function NavEditorGui::onPlayerDeselected(%this)
-{
-   disableLinkData(NavEditorOptionsWindow-->TestProperties);
 }
 
 function NavEditorGui::createCoverPoints(%this)
@@ -717,11 +812,6 @@ function ENavEditorPaletteButton::onClick(%this)
 }
 
 //-----------------------------------------------------------------------------
-
-function NavMeshTestFlagButton::onClick(%this)
-{
-   NavEditorGui.updateTestFlags();
-}
 
 singleton GuiControlProfile(NavEditorProfile)
 {

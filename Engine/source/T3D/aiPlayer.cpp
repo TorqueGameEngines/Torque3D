@@ -114,6 +114,10 @@ AIPlayer::AIPlayer()
    mJump = None;
    mNavSize = Regular;
    mLinkTypes = LinkData(AllFlags);
+   mFilter.setIncludeFlags(mLinkTypes.getFlags());
+   mFilter.setExcludeFlags(0);
+   mAreaCosts.setSize(PolyAreas::NumAreas);
+   mAreaCosts.fill(1.0f);
 #endif
 
    mIsAiControlled = true;
@@ -163,7 +167,8 @@ void AIPlayer::initPersistFields()
 
 #ifdef TORQUE_NAVIGATION_ENABLED
    addGroup("Pathfinding");
-
+      addField("areaCosts", TypeF32Vector, Offset(mAreaCosts, AIPlayer),
+         "Vector of costs for each PolyArea.");
       addField("allowWalk", TypeBool, Offset(mLinkTypes.walk, AIPlayer),
          "Allow the character to walk on dry land.");
       addField("allowJump", TypeBool, Offset(mLinkTypes.jump, AIPlayer),
@@ -785,6 +790,7 @@ void AIPlayer::moveToNode(S32 node)
 
 bool AIPlayer::setPathDestination(const Point3F &pos)
 {
+#ifdef TORQUE_NAVIGATION_ENABLED
    // Pathfinding only happens on the server.
    if(!isServerObject())
       return false;
@@ -799,6 +805,13 @@ bool AIPlayer::setPathDestination(const Point3F &pos)
       return false;
    }
 
+   mFilter.setIncludeFlags(mLinkTypes.getFlags());
+   mFilter.setExcludeFlags(mLinkTypes.getExcludeFlags());
+   for (U32 i = 0; i < PolyAreas::NumAreas; i++)
+   {
+      mFilter.setAreaCost((PolyAreas)i, mAreaCosts[i]);
+   }
+
    // Create a new path.
    NavPath *path = new NavPath();
 
@@ -808,6 +821,7 @@ bool AIPlayer::setPathDestination(const Point3F &pos)
    path->mFromSet = path->mToSet = true;
    path->mAlwaysRender = true;
    path->mLinkTypes = mLinkTypes;
+   path->mFilter = mFilter;
    path->mXray = true;
    // Paths plan automatically upon being registered.
    if(!path->registerObject())
@@ -839,6 +853,9 @@ bool AIPlayer::setPathDestination(const Point3F &pos)
       path->deleteObject();
       return false;
    }
+#else
+   setMoveDestination(pos, false);
+#endif
 }
 
 DefineEngineMethod(AIPlayer, setPathDestination, bool, (Point3F goal),,

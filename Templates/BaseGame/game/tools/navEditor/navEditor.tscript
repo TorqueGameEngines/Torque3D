@@ -682,7 +682,7 @@ function NavEditorGui::deleteSelected(%this)
    // case "LinkMode":
    //    %this.deleteLink();
    //    %this.isDirty = true;
-   // }
+   }
 }
 
 function NavEditorGui::buildSelectedMeshes(%this)

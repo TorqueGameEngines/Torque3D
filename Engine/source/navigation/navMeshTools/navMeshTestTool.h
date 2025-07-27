@@ -6,6 +6,10 @@
 #include "navigation/navMeshTool.h"
 #endif
 
+#ifndef _NAVPATH_H_
+#include "navigation/navPath.h"
+#endif
+
 class NavMeshTestTool : public NavMeshTool
 {
    typedef NavMeshTool Parent;

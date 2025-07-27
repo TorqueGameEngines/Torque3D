@@ -428,7 +428,18 @@ function NavMeshTestTool::onActivated(%this)
    %properties->TestProperties.setVisible(false);
 
    %actions->TestActions.setVisible(true);
-   %properties->TestProperties.setVisible(true);
+   %properties->TestProperties.setVisible(false);
+
+   %classList =  enumerateConsoleClasses("Player") TAB enumerateConsoleClasses("Vehicle");
+   echo(%classList);
+
+   SpawnClassSelector.clear();
+   foreach$(%class in %classList)
+   {
+      SpawnClassSelector.add(%class);
+   }
+
+   SpawnClassSelector.setFirstSelected(true);
 }
 
 function NavMeshTestTool::onDeactivated(%this)
@@ -448,102 +459,108 @@ function NavMeshTestTool::onDeactivated(%this)
    %properties->TestProperties.setVisible(false);
 }
 
-function updateTestData(%control, %flags)
+function NavMeshTestTool::onPlayerSelected(%this)
 {
-   %control->LinkWalkFlag.setActive(true);
-   %control->LinkSwimFlag.setActive(true);
-   %control->LinkJumpFlag.setActive(true);
-   %control->LinkDropFlag.setActive(true);
-   %control->LinkLedgeFlag.setActive(true);
-   %control->LinkClimbFlag.setActive(true);
-   %control->LinkTeleportFlag.setActive(true);
-  
-   %control->LinkWalkFlag.setStateOn(%flags & $Nav::WalkFlag);
-   %control->LinkSwimFlag.setStateOn(%flags & $Nav::SwimFlag);
-   %control->LinkJumpFlag.setStateOn(%flags & $Nav::JumpFlag);
-   %control->LinkDropFlag.setStateOn(%flags & $Nav::DropFlag);
-   %control->LinkLedgeFlag.setStateOn(%flags & $Nav::LedgeFlag);
-   %control->LinkClimbFlag.setStateOn(%flags & $Nav::ClimbFlag);
-   %control->LinkTeleportFlag.setStateOn(%flags & $Nav::TeleportFlag);
-}
-
-function getTestFlags(%control)
-{
-   return (%control->LinkWalkFlag.isStateOn() ? $Nav::WalkFlag : 0) |
-          (%control->LinkSwimFlag.isStateOn() ? $Nav::SwimFlag : 0) |
-          (%control->LinkJumpFlag.isStateOn() ? $Nav::JumpFlag : 0) |
-          (%control->LinkDropFlag.isStateOn() ? $Nav::DropFlag : 0) |
-          (%control->LinkLedgeFlag.isStateOn() ? $Nav::LedgeFlag : 0) |
-          (%control->LinkClimbFlag.isStateOn() ? $Nav::ClimbFlag : 0) |
-          (%control->LinkTeleportFlag.isStateOn() ? $Nav::TeleportFlag : 0);
-}
-
-function disableTestData(%control)
-{
-   %control->LinkWalkFlag.setActive(false);
-   %control->LinkSwimFlag.setActive(false);
-   %control->LinkJumpFlag.setActive(false);
-   %control->LinkDropFlag.setActive(false);
-   %control->LinkLedgeFlag.setActive(false);
-   %control->LinkClimbFlag.setActive(false);
-   %control->LinkTeleportFlag.setActive(false);
-}
-
-function getControllerDataFlags(%controllerData)
-{
-   return (%controllerData.allowWalk  ? $Nav::WalkFlag : 0 ) |
-          (%controllerData.allowSwim  ? $Nav::SwimFlag : 0 ) |
-          (%controllerData.allowJump  ? $Nav::JumpFlag : 0 ) |
-          (%controllerData.allowDrop  ? $Nav::DropFlag : 0 ) |
-          (%controllerData.allowLedge ? $Nav::LedgeFlag : 0) |
-          (%controllerData.allowClimb ? $Nav::ClimbFlag : 0) |
-          (%controllerData.allowTeleport ? $Nav::TeleportFlag : 0 );
-}
-
-function NavMeshTestTool::updateTestFlags(%this)
-{
-   if(isObject(%this.getPlayer()))
-   {
-      %properties = NavEditorOptionsWindow-->TestProperties;
-      %player = %this.getPlayer();
-      %controllerData = %player.getDatablock().aiControllerData;
-
-      %controllerData.allowWalk = %properties->LinkWalkFlag.isStateOn();
-      %controllerData.allowSwim = %properties->LinkSwimFlag.isStateOn();
-      %controllerData.allowJump = %properties->LinkJumpFlag.isStateOn();
-      %controllerData.allowDrop = %properties->LinkDropFlag.isStateOn();
-      %controllerData.allowLedge = %properties->LinkLedgeFlag.isStateOn();
-      %controllerData.allowClimb = %properties->LinkClimbFlag.isStateOn();
-      %controllerData.allowTeleport = %properties->LinkTeleportFlag.isStateOn();
-
-      %player.aiController = new AIController(){ ControllerData = %controllerData; };
-      %player.setAIController(%player.aiController);
-   }
-}
-
-function NavMeshTestTool::onPlayerSelected(%this, %flags)
-{
-   if (!isObject(%this.getPlayer().aiController) || (isObject(%this.getPlayer().aiController) && !(%this.getPlayer().isMemberOfClass("AIPlayer"))))
+   if (!isObject(%this.getPlayer().aiController))
    {
       %this.getPlayer().aiController = new AIController(){ ControllerData = %this.getPlayer().getDatablock().aiControllerData; };
       %this.getPlayer().setAIController(%this.getPlayer().aiController);
-      %flags = getControllerDataFlags(%this.getPlayer().getDatablock().aiControllerData);
    }
+
+   if(%this.getPlayer().isMemberOfClass("AIPlayer"))
+   {
+      NavInspector.inspect(%this.getPlayer());
+      NavInspector.setVisible(true);
+   }
+   else
+   {
+      NavInspector.inspect(%this.getPlayer().getDatablock().aiControllerData);
+      NavInspector.setVisible(true);
+   }
+
    NavMeshIgnore(%this.getPlayer(), true);
    %this.getPlayer().setDamageState("Enabled");
-   
-   updateTestData(NavEditorOptionsWindow-->TestProperties, %flags);
 }
 
 function NavMeshTestTool::onPlayerDeselected(%this)
 {
-   disableTestData(NavEditorOptionsWindow-->TestProperties);
+   NavInspector.inspect();
 }
 
-function NavMeshTestFlagButton::onClick(%this)
+function NavMeshTestTool::stop(%this)
 {
-   NavMeshTools->TestTool.updateTestFlags();
+    if (isObject(%this.getPlayer().aiController))
+        %this.getPlayer().aiController.stop();
+    else
+    {
+        %this.getPlayer().stop();
+    }
 }
+
+function SpawnClassSelector::onSelect(%this, %id)
+{
+   %className = %this.getTextById(%id);
+
+   NavMeshTools->TestTool.setSpawnClass(%className);
+
+   SpawnDatablockSelector.clear();
+   %classData = %className @ "Data";
+   if(%className $= "AIPlayer")
+   {
+      %classData = "PlayerData";
+   }
+
+   // add the datablocks
+   for(%i = 0; %i < DataBlockGroup.getCount(); %i++)
+   {
+      %obj = DataBlockGroup.getObject(%i);
+      if( isMemberOfClass( %obj.getClassName(), %classData ))
+         SpawnDatablockSelector.add(%obj.getName());
+   }
+
+   SpawnDatablockSelector.setFirstSelected(true);
+
+}
+
+function SpawnDatablockSelector::onSelect(%this, %id)
+{
+   %className = %this.getTextById(%id);
+   NavMeshTools->TestTool.setSpawnDatablock(%className);
+}
+
+
+// function NavEditorGui::findCover(%this)
+// {
+//    if(%this.getMode() $= "TestMode" && isObject(%this.getPlayer()))
+//    {
+//       %pos = LocalClientConnection.getControlObject().getPosition();
+//       %text = NavEditorOptionsWindow-->TestProperties->CoverPosition.getText();
+//       if(%text !$= "")
+//          %pos = eval("return " @ %text);
+//       %this.getPlayer().getAIController().findCover(%pos, NavEditorOptionsWindow-->TestProperties->CoverRadius.getText());
+//    }
+// }
+
+// function NavEditorGui::followObject(%this)
+// {
+//    if(%this.getMode() $= "TestMode" && isObject(%this.getPlayer()))
+//    {
+//       %obj = LocalClientConnection.player;
+//       %text = NavEditorOptionsWindow-->TestProperties->FollowObject.getText();
+//       if(%text !$= "")
+//       {
+//          %command = "return " @ %text;
+//          if(!endsWith(%command, ";"))
+//             %command = %command @ ";";
+            
+//          %obj = eval(%command);
+//          if(!isObject(%obj))
+//             toolsMessageBoxOk("Error", "Cannot find object" SPC %text);
+//       }
+//       if(isObject(%obj))
+//          %this.getPlayer().getAIController().followObject(%obj, NavEditorOptionsWindow-->TestProperties->FollowRadius.getText());
+//    }
+// }
 
 //------------------------------------------------------
 
@@ -721,48 +738,6 @@ function NavEditorGui::deleteCoverPoints(%this)
    }
 }
 
-function NavEditorGui::findCover(%this)
-{
-   if(%this.getMode() $= "TestMode" && isObject(%this.getPlayer()))
-   {
-      %pos = LocalClientConnection.getControlObject().getPosition();
-      %text = NavEditorOptionsWindow-->TestProperties->CoverPosition.getText();
-      if(%text !$= "")
-         %pos = eval("return " @ %text);
-      %this.getPlayer().getAIController().findCover(%pos, NavEditorOptionsWindow-->TestProperties->CoverRadius.getText());
-   }
-}
-
-function NavEditorGui::followObject(%this)
-{
-   if(%this.getMode() $= "TestMode" && isObject(%this.getPlayer()))
-   {
-      %obj = LocalClientConnection.player;
-      %text = NavEditorOptionsWindow-->TestProperties->FollowObject.getText();
-      if(%text !$= "")
-      {
-         %command = "return " @ %text;
-         if(!endsWith(%command, ";"))
-            %command = %command @ ";";
-            
-         %obj = eval(%command);
-         if(!isObject(%obj))
-            toolsMessageBoxOk("Error", "Cannot find object" SPC %text);
-      }
-      if(isObject(%obj))
-         %this.getPlayer().getAIController().followObject(%obj, NavEditorOptionsWindow-->TestProperties->FollowRadius.getText());
-   }
-}
-
-function NavEditorGui::stop(%this)
-{
-    if (isObject(%this.getPlayer().aiController))
-        %this.getPlayer().aiController.stop();
-    else
-    {
-        NavEditorGui.getPlayer().stop();
-    }
-}
 function NavInspector::inspect(%this, %obj)
 {
    %name = "";

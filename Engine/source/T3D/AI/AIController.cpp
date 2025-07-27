@@ -168,8 +168,19 @@ bool AIController::getAIMove(Move* movePtr)
             {
                obj = getAIInfo()->mObj;
             }
+            bool adjusted = false;
+            if (getNav()->avoidObstacles()) 
+            {
+               adjusted = true;
+            }
+            else if (mRandI(0, 100) < mControllerData->mFlocking.mChance && getNav()->flock())
+            {
+               adjusted = true;
+            }
+
+            // Only repath if not already adjusted and on risky ground
             RayInfo info;
-            if (obj->getContainer()->castRay(obj->getPosition(), obj->getPosition() - Point3F(0, 0, mControllerData->mHeightTolerance), StaticShapeObjectType, &info))
+            if (!adjusted && obj->getContainer()->castRay(obj->getPosition(), obj->getPosition() - Point3F(0, 0, mControllerData->mHeightTolerance), StaticShapeObjectType, &info))
             {
                getNav()->repath();
             }

@@ -668,6 +668,7 @@ bool NavMesh::build(bool background, bool saveIntermediates)
    }
 
    mBuilding = true;
+   m_geo = NULL;
 
    ctx->startTimer(RC_TIMER_TOTAL);
 
@@ -1083,7 +1084,7 @@ unsigned char *NavMesh::buildTileData(const Tile &tile, U32 &dataSize)
                }
                else if (mWaterMethod == Impassable)
                {
-                  m_triareas[t] = RC_NULL_AREA;
+                  m_triareas[t] = NullArea;
                }
             }
          }

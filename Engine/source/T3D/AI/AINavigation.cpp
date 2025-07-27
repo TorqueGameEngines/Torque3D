@@ -343,6 +343,10 @@ void AINavigation::repath()
    {
       mPathData.path->mTo = mMoveDestination;
    }
+   else if (avoidObstacles())
+   {
+      mPathData.path->mTo = mMoveDestination;
+   }
    else
    {
       // If we're following, get their position.
@@ -378,6 +382,60 @@ void AINavigation::clearPath()
       mPathData.path->deleteObject();
    // Reset path data.
    mPathData = PathData();
+}
+
+bool AINavigation::avoidObstacles()
+{
+   SimObjectPtr<SceneObject> obj = getCtrl()->getAIInfo()->mObj;
+   obj->disableCollision();
+
+   Point3F pos = obj->getBoxCenter();
+   VectorF forward = obj->getTransform().getForwardVector();
+   forward.normalizeSafe();
+
+   // Generate forward-left and forward-right by rotating forward vector
+   VectorF right = mCross(forward, Point3F(0, 0, 1));
+   VectorF leftDir = forward + right * -0.5f;  // front-left
+   VectorF rightDir = forward + right * 0.5f;  // front-right
+
+   leftDir.normalizeSafe();
+   rightDir.normalizeSafe();
+
+   F32 rayLength = getCtrl()->mMovement.getMoveSpeed();
+   Point3F directions[3] = {
+       forward,
+       leftDir,
+       rightDir
+   };
+
+   bool hit[3] = { false, false, false };
+   RayInfo info;
+   for (int i = 0; i < 3; ++i)
+   {
+      Point3F end = pos + directions[i] * rayLength;
+      if (obj->getContainer()->castRay(pos, end, sAILoSMask, &info))
+      {
+         hit[i] = true;
+      }
+   }
+
+   Point3F avoidance = Point3F::Zero;
+   if (hit[0]) avoidance += right * 1.0f;
+   if (hit[1]) avoidance += right * 1.5f;
+   if (hit[2]) avoidance -= right * 1.5f;
+
+   if (!avoidance.isZero())
+   {
+      avoidance.normalizeSafe();
+      F32 clearance = getCtrl()->getAIInfo()->mRadius * 1.5f;
+      Point3F newDest = info.point + avoidance * rayLength;
+      mMoveDestination = newDest;
+      obj->enableCollision();
+      return true;
+   }
+
+   obj->enableCollision();
+   return false;
 }
 
 bool AINavigation::flock()

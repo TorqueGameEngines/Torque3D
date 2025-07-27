@@ -51,7 +51,6 @@ void NavMeshTestTool::spawnPlayer(const Point3F& position)
    }
 
    obj->setPosition(position);
-   obj->registerObject();
    SimObject* cleanup = Sim::findObject("MissionCleanup");
    if (cleanup)
    {
@@ -59,8 +58,29 @@ void NavMeshTestTool::spawnPlayer(const Point3F& position)
       missionCleanup->addObject(obj);
    }
    mPlayer = obj;
-
    Con::executef(this, "onPlayerSpawned", obj->getIdString());
+
+#ifdef TORQUE_NAVIGATION_ENABLED
+   AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
+   if (asAIPlayer)
+   {
+      Con::executef(this, "onPlayerSelected");
+   }
+   else
+   {
+      ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
+      if (sbo && sbo->getAIController() && sbo->getAIController()->mControllerData)
+      {
+         Con::executef(this, "onPlayerSelected");
+      }
+      else
+      {
+         Con::executef(this, "onPlayerSelected");
+      }
+   }
+#else
+   Con::executef(this, "onPlayerSelected");
+#endif
 }
 
 void NavMeshTestTool::drawAgent(duDebugDrawTorque& dd, const F32* pos, F32 r, F32 h, F32 c, const U32 col)
@@ -94,6 +114,12 @@ NavMeshTestTool::NavMeshTestTool()
 
    mPathStart = Point3F::Max;
    mPathEnd = Point3F::Max;
+
+   mTestPath = NULL;
+
+   mLinkTypes = LinkData(AllFlags);
+   mFilter.setIncludeFlags(mLinkTypes.getFlags());
+   mFilter.setExcludeFlags(0);
 }
 
 void NavMeshTestTool::onActivated(const Gui3DMouseEvent& evt)
@@ -103,6 +129,17 @@ void NavMeshTestTool::onActivated(const Gui3DMouseEvent& evt)
 
 void NavMeshTestTool::onDeactivated()
 {
+   if (mTestPath != NULL) {
+      mTestPath->deleteObject();
+      mTestPath = NULL;
+   }
+
+   if (mPlayer != NULL)
+   {
+      mPlayer = NULL;
+      Con::executef(this, "onPlayerDeselected");
+   }
+
    Con::executef(this, "onDeactivated");
 }
 
@@ -145,14 +182,14 @@ void NavMeshTestTool::on3DMouseDown(const Gui3DMouseEvent& evt)
       AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
       if (asAIPlayer)
       {
-         Con::executef(this, "onPlayerSelected", Con::getIntArg(asAIPlayer->mLinkTypes.getFlags()));
+         Con::executef(this, "onPlayerSelected");
       }
       else
       {
          ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
          if (sbo && sbo->getAIController() && sbo->getAIController()->mControllerData)
          {
-            Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
+            Con::executef(this, "onPlayerSelected");
          }
          else
          {
@@ -176,10 +213,30 @@ void NavMeshTestTool::on3DMouseDown(const Gui3DMouseEvent& evt)
          if (mPathStart != Point3F::Max)
          {
             mPathEnd = ri.point;
+            mTestPath = new NavPath();
+
+            mTestPath->mMesh = mNavMesh;
+            mTestPath->mFrom = mPathStart;
+            mTestPath->mTo = mPathEnd;
+            mTestPath->mFromSet = mTestPath->mToSet = true;
+            mTestPath->mAlwaysRender = true;
+            mTestPath->mLinkTypes = mLinkTypes;
+            mTestPath->mFilter = mFilter;
+            mTestPath->mXray = true;
+            // Paths plan automatically upon being registered.
+            if (!mTestPath->registerObject())
+            {
+               delete mTestPath;
+               return;
+            }
          }
          else
          {
             mPathStart = ri.point;
+            if (mTestPath != NULL) {
+               mTestPath->deleteObject();
+               mTestPath = NULL;
+            }
          }
       }
       else
@@ -300,3 +357,4 @@ DefineEngineMethod(NavMeshTestTool, setSpawnDatablock, void, (String dbName), , 
 {
    object->setSpawnDatablock(dbName);
 }
+

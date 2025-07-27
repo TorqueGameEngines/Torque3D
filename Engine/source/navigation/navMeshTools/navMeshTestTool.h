@@ -16,6 +16,9 @@ protected:
    SimObjectPtr<SceneObject> mCurPlayer;
    Point3F mPathStart;
    Point3F mPathEnd;
+   NavPath* mTestPath;
+   LinkData mLinkTypes;
+   dtQueryFilter mFilter;
 public:
    DECLARE_CONOBJECT(NavMeshTestTool);
 

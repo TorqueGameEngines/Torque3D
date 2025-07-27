@@ -436,7 +436,8 @@ function NavMeshTestTool::onActivated(%this)
    SpawnClassSelector.clear();
    foreach$(%class in %classList)
    {
-      SpawnClassSelector.add(%class);
+      if(%class !$= "Vehicle") // vehicle doesnt work, purely virtual class.
+         SpawnClassSelector.add(%class);
    }
 
    SpawnClassSelector.setFirstSelected(true);

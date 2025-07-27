@@ -112,6 +112,9 @@ NavMeshTestTool::NavMeshTestTool()
    mPlayer = NULL;
    mCurPlayer = NULL;
 
+   mFollowObject = NULL;
+   mCurFollowObject = NULL;
+
    mPathStart = Point3F::Max;
    mPathEnd = Point3F::Max;
 
@@ -120,10 +123,12 @@ NavMeshTestTool::NavMeshTestTool()
    mLinkTypes = LinkData(AllFlags);
    mFilter.setIncludeFlags(mLinkTypes.getFlags());
    mFilter.setExcludeFlags(0);
+   mSelectFollow = false;
 }
 
 void NavMeshTestTool::onActivated(const Gui3DMouseEvent& evt)
 {
+   mSelectFollow = false;
    Con::executef(this, "onActivated");
 }
 
@@ -139,6 +144,8 @@ void NavMeshTestTool::onDeactivated()
       mPlayer = NULL;
       Con::executef(this, "onPlayerDeselected");
    }
+
+   mSelectFollow = false;
 
    Con::executef(this, "onDeactivated");
 }
@@ -175,8 +182,17 @@ void NavMeshTestTool::on3DMouseDown(const Gui3DMouseEvent& evt)
    {
       if (!ri.object)
          return;
-
-      mPlayer = ri.object;
+      if (mSelectFollow)
+      {
+         mFollowObject = ri.object;
+         Con::executef(this, "onFollowSelected");
+         mSelectFollow = false;
+         return;
+      }
+      else
+      {
+         mPlayer = ri.object;
+      }
 
 #ifdef TORQUE_NAVIGATION_ENABLED
       AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
@@ -277,10 +293,17 @@ void NavMeshTestTool::on3DMouseMove(const Gui3DMouseEvent& evt)
    RayInfo ri;
 
    if (gServerContainer.castRay(startPnt, endPnt, PlayerObjectType | VehicleObjectType, &ri))
-      mCurPlayer = ri.object;
+   {
+      if (mSelectFollow)
+         mCurFollowObject = ri.object;
+      else
+         mCurPlayer = ri.object;
+   }
    else
+   {
+      mCurFollowObject = NULL;
       mCurPlayer = NULL;
-
+   }
 }
 
 void NavMeshTestTool::onRender3D()
@@ -310,10 +333,15 @@ void NavMeshTestTool::onRender3D()
 
    dd.immediateRender();
 
+   if (!mCurFollowObject.isNull())
+      renderBoxOutline(mCurFollowObject->getWorldBox(), ColorI::LIGHT);
    if (!mCurPlayer.isNull())
       renderBoxOutline(mCurPlayer->getWorldBox(), ColorI::BLUE);
    if (!mPlayer.isNull())
       renderBoxOutline(mPlayer->getWorldBox(), ColorI::GREEN);
+   if (!mFollowObject.isNull())
+      renderBoxOutline(mFollowObject->getWorldBox(), ColorI::WHITE);
+   
 }
 
 bool NavMeshTestTool::updateGuiInfo()
@@ -326,10 +354,25 @@ bool NavMeshTestTool::updateGuiInfo()
 
    String text;
 
+   if (mPlayer)
+      text = "LMB To Select move Destination. LSHIFT+LMB To Deselect Current Bot.";
+   if (mCurPlayer != NULL && mCurPlayer != mPlayer)
+      text = "LMB To select Bot.";
+
+   if (mPlayer == NULL)
+   {
+      text = "LMB To place start/end for test path.";
+   }
+
+   if (mSpawnClass != String::EmptyString && mSpawnDatablock != String::EmptyString)
+      text += " CTRL+LMB To spawn a new Bot.";
+
    if (statusbar)
       Con::executef(statusbar, "setInfo", text.c_str());
 
    text = "";
+   if (mPlayer)
+      text = String::ToString("Bot Selected: %d", mPlayer->getId());
 
    if (selectionBar)
       selectionBar->setText(text);
@@ -342,10 +385,22 @@ S32 NavMeshTestTool::getPlayerId()
    return mPlayer.isNull() ? 0 : mPlayer->getId();
 }
 
+S32 NavMeshTestTool::getFollowObjectId()
+{
+   return mFollowObject.isNull() ? 0 : mFollowObject->getId();
+}
+
+
 DefineEngineMethod(NavMeshTestTool, getPlayer, S32, (), ,
    "@brief Return the current player id.")
 {
    return object->getPlayerId();
+}
+
+DefineEngineMethod(NavMeshTestTool, getFollowObject, S32, (), ,
+   "@brief Return the current follow object id.")
+{
+   return object->getFollowObjectId();
 }
 
 DefineEngineMethod(NavMeshTestTool, setSpawnClass, void, (String className), , "")
@@ -356,5 +411,11 @@ DefineEngineMethod(NavMeshTestTool, setSpawnClass, void, (String className), , "
 DefineEngineMethod(NavMeshTestTool, setSpawnDatablock, void, (String dbName), , "")
 {
    object->setSpawnDatablock(dbName);
+}
+
+DefineEngineMethod(NavMeshTestTool, followSelectMode, void, (), ,
+   "@brief Set NavMeshTool to select a follow object.")
+{
+   return object->followSelectMode();
 }
 

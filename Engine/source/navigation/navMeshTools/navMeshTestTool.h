@@ -18,11 +18,15 @@ protected:
    String mSpawnDatablock;
    SimObjectPtr<SceneObject> mPlayer;
    SimObjectPtr<SceneObject> mCurPlayer;
+   SimObjectPtr<SceneObject> mFollowObject;
+   SimObjectPtr<SceneObject> mCurFollowObject;
    Point3F mPathStart;
    Point3F mPathEnd;
    NavPath* mTestPath;
    LinkData mLinkTypes;
    dtQueryFilter mFilter;
+   bool mSelectFollow;
+
 public:
    DECLARE_CONOBJECT(NavMeshTestTool);
 
@@ -44,9 +48,11 @@ public:
    bool updateGuiInfo() override;
 
    S32 getPlayerId();
+   S32 getFollowObjectId();
 
    void setSpawnClass(String className) { mSpawnClass = className; }
    void setSpawnDatablock(String dbName) { mSpawnDatablock = dbName; }
+   void followSelectMode() { mSelectFollow = true; }
 
 };
 

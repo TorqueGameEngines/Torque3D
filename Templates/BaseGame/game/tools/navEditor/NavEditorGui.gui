@@ -294,7 +294,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
          {
             internalName = "SelectActions";
             position = "7 21";
-            extent = "190 64";
+            extent = "190 136";
             
             new GuiButtonCtrl() {
                Profile = "ToolsGuiButtonProfile";
@@ -370,7 +370,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
          {
             internalName = "LinkActions";
             position = "7 21";
-            extent = "190 64";
+            extent = "190 136";
             
             new GuiButtonCtrl() {
                Profile = "ToolsGuiButtonProfile";
@@ -386,7 +386,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
          {
             internalName = "CoverActions";
             position = "7 21";
-            extent = "190 64";
+            extent = "190 136";
             
             new GuiButtonCtrl() {
                Profile = "ToolsGuiButtonProfile";
@@ -411,7 +411,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
          {
             internalName = "TileActions";
             position = "7 21";
-            extent = "190 64";
+            extent = "190 136";
             
             new GuiButtonCtrl() {
                Profile = "ToolsGuiButtonProfile";
@@ -427,7 +427,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
          {
             internalName = "TestActions";
             position = "7 21";
-            extent = "190 64";
+            extent = "190 136";
             new GuiControl() {
                profile = "GuiDefaultProfile";
                Extent = "190 20";
@@ -481,7 +481,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
                   Extent = "90 18";
                   text = "Delete";
                   tooltipProfile = "GuiToolTipProfile";
-                  tooltip = "Delete Selected.";
+                  tooltip = "Delete Selected Bot.";
                   command = "NavMeshTools->TestTool.getPlayer().delete();NavInspector.inspect();";
                };
                new GuiButtonCtrl() {
@@ -505,7 +505,7 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
                   HorizSizing = "right";
                   VertSizing = "bottom";
                   Extent = "90 18";
-                  text = "Follow";
+                  text = "Select Follow";
                   command = "NavMeshTools->TestTool.followObject();";
                };
                new GuiButtonCtrl() {
@@ -517,6 +517,20 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
                   Extent = "90 18";
                   text = "Stop";
                   command = "NavMeshTools->TestTool.stop();";
+               };
+            };
+            new GuiControl() {
+               profile = "GuiDefaultProfile";
+               Extent = "190 18";
+
+               new GuiButtonCtrl() {
+                  Profile = "ToolsGuiButtonProfile";
+                  buttonType = "PushButton";
+                  HorizSizing = "right";
+                  VertSizing = "bottom";
+                  Extent = "90 18";
+                  text = "Toggle Follow";
+                  command = "NavMeshTools->TestTool.toggleFollow();";
                };
             };
          };

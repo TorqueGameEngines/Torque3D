@@ -168,22 +168,20 @@ bool AIController::getAIMove(Move* movePtr)
             {
                obj = getAIInfo()->mObj;
             }
-            bool adjusted = false;
-            if (getNav()->avoidObstacles()) 
-            {
-               adjusted = true;
-            }
-            else if (mRandI(0, 100) < mControllerData->mFlocking.mChance && getNav()->flock())
-            {
-               adjusted = true;
-            }
+            
+            Point3F start = obj->getPosition();
+            Point3F end = start;
+            start.z = obj->getBoxCenter().z;
+            end.z -= mControllerData->mHeightTolerance;
 
+            obj->disableCollision();
             // Only repath if not already adjusted and on risky ground
             RayInfo info;
-            if (!adjusted && obj->getContainer()->castRay(obj->getPosition(), obj->getPosition() - Point3F(0, 0, mControllerData->mHeightTolerance), StaticShapeObjectType, &info))
+            if (obj->getContainer()->castRay(start, end, StaticShapeObjectType, &info))
             {
                getNav()->repath();
             }
+            obj->enableCollision();
             getGoal()->mInRange = false;
          }
          if (getGoal()->getDist() < mControllerData->mFollowTolerance )
@@ -541,7 +539,7 @@ AIControllerData::AIControllerData()
    mAttackRadius = 2.0f;
    mMoveStuckTolerance = 0.01f;
    mMoveStuckTestDelay = 30;
-   mHeightTolerance = 0.001f;
+   mHeightTolerance = 0.1f;
    mFollowTolerance = 1.0f;
 
 #ifdef TORQUE_NAVIGATION_ENABLED

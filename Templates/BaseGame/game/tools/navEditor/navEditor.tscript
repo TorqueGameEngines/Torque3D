@@ -431,7 +431,7 @@ function NavMeshTestTool::onActivated(%this)
    %properties->TestProperties.setVisible(false);
 
    %classList =  enumerateConsoleClasses("Player") TAB enumerateConsoleClasses("Vehicle");
-   echo(%classList);
+   //echo(%classList);
 
    SpawnClassSelector.clear();
    foreach$(%class in %classList)
@@ -496,6 +496,23 @@ function NavMeshTestTool::stop(%this)
     {
         %this.getPlayer().stop();
     }
+}
+
+function NavMeshTestTool::toggleFollow(%this)
+{
+   
+   if(isObject(%this.getFollowObject()) && isObject(%this.getPlayer()))
+   {
+      if(%this.getPlayer().isMemberOfClass("AIPlayer"))
+         %this.getPlayer().followObject(%this.getFollowObject(), "2.0");
+      else
+         %this.getPlayer().getAIController().followObject(%this.getFollowObject(), %this.getPlayer().getDatablock().aiControllerData.mFollowTolerance);
+   }
+}
+
+function NavMeshTestTool::followObject(%this)
+{
+   %this.followSelectMode();
 }
 
 function SpawnClassSelector::onSelect(%this, %id)

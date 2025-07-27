@@ -296,23 +296,37 @@ function NavEditorGui::showSidePanel()
    %parent.panelHidden = false;
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------
+// NAVMESHTESTTOOL
+//------------------------------------------------------
+
+function NavMeshSelectTool::onActivated(%this)
+{
+   NavInspector.setVisible(false);
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   NavInspector.setVisible(true);
+   %actions->SelectActions.setVisible(true);
+
+   NavInspector.inspect(NavEditorGui.getMesh());
+}
+
+function NavMeshSelectTool::onDeactivated(%this)
+{
+   NavInspector.setVisible(false);
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->SelectActions.setVisible(false);
+}
+
+//------------------------------------------------------
+// OffMeshConnectionTool
+//------------------------------------------------------
 
 function OffMeshConnectionTool::onActivated(%this)
 {
    NavInspector.setVisible(false);
 
    %actions = NavEditorOptionsWindow->ActionsBox;
-   %actions->SelectActions.setVisible(false);
-   %actions->LinkActions.setVisible(false);
-   %actions->CoverActions.setVisible(false);
-   %actions->TileActions.setVisible(false);
-   %actions->TestActions.setVisible(false);
-
    %properties = NavEditorOptionsWindow->PropertiesBox;
-   %properties->LinkProperties.setVisible(false);
-   %properties->TileProperties.setVisible(false);
-   %properties->TestProperties.setVisible(false);
 
    %actions->LinkActions.setVisible(true);
    %properties->LinkProperties.setVisible(true);
@@ -323,16 +337,9 @@ function OffMeshConnectionTool::onDeactivated(%this)
    NavInspector.setVisible(false);
 
    %actions = NavEditorOptionsWindow->ActionsBox;
-   %actions->SelectActions.setVisible(false);
    %actions->LinkActions.setVisible(false);
-   %actions->CoverActions.setVisible(false);
-   %actions->TileActions.setVisible(false);
-   %actions->TestActions.setVisible(false);
-
    %properties = NavEditorOptionsWindow->PropertiesBox;
    %properties->LinkProperties.setVisible(false);
-   %properties->TileProperties.setVisible(false);
-   %properties->TestProperties.setVisible(false);
 }
 
 function OffMeshConnectionTool::updateLinkFlags(%this)
@@ -410,25 +417,15 @@ function NavMeshLinkBiDirection::onClick(%this)
 }
 
 //------------------------------------------------------
+// NAVMESHTESTTOOL
+//------------------------------------------------------
 
 function NavMeshTestTool::onActivated(%this)
 {
    NavInspector.setVisible(false);
 
    %actions = NavEditorOptionsWindow->ActionsBox;
-   %actions->SelectActions.setVisible(false);
-   %actions->LinkActions.setVisible(false);
-   %actions->CoverActions.setVisible(false);
-   %actions->TileActions.setVisible(false);
-   %actions->TestActions.setVisible(false);
-
-   %properties = NavEditorOptionsWindow->PropertiesBox;
-   %properties->LinkProperties.setVisible(false);
-   %properties->TileProperties.setVisible(false);
-   %properties->TestProperties.setVisible(false);
-
    %actions->TestActions.setVisible(true);
-   %properties->TestProperties.setVisible(false);
 
    %classList =  enumerateConsoleClasses("Player") TAB enumerateConsoleClasses("Vehicle");
    //echo(%classList);
@@ -448,16 +445,7 @@ function NavMeshTestTool::onDeactivated(%this)
    NavInspector.setVisible(false);
 
    %actions = NavEditorOptionsWindow->ActionsBox;
-   %actions->SelectActions.setVisible(false);
-   %actions->LinkActions.setVisible(false);
-   %actions->CoverActions.setVisible(false);
-   %actions->TileActions.setVisible(false);
    %actions->TestActions.setVisible(false);
-
-   %properties = NavEditorOptionsWindow->PropertiesBox;
-   %properties->LinkProperties.setVisible(false);
-   %properties->TileProperties.setVisible(false);
-   %properties->TestProperties.setVisible(false);
 }
 
 function NavMeshTestTool::onPlayerSelected(%this)
@@ -503,16 +491,31 @@ function NavMeshTestTool::toggleFollow(%this)
    
    if(isObject(%this.getFollowObject()) && isObject(%this.getPlayer()))
    {
-      if(%this.getPlayer().isMemberOfClass("AIPlayer"))
-         %this.getPlayer().followObject(%this.getFollowObject(), "2.0");
+      %player = %this.getPlayer();
+      if(%player.isMemberOfClass("AIPlayer"))
+         %player.followObject(%this.getFollowObject(), "2.0");
       else
-         %this.getPlayer().getAIController().followObject(%this.getFollowObject(), %this.getPlayer().getDatablock().aiControllerData.mFollowTolerance);
+         %player.getAIController().followObject(%this.getFollowObject(), %player.getDatablock().aiControllerData.mFollowTolerance);
    }
 }
 
 function NavMeshTestTool::followObject(%this)
 {
    %this.followSelectMode();
+}
+
+function NavMeshTestTool::findCover(%this)
+{
+   if(isObject(%this.getPlayer()))
+   {
+      %player = %this.getPlayer();
+      %pos = %player.getPosition();
+
+      if(%player.isMemberOfClass("AIPlayer"))
+         %player.findCover(%pos,  CoverRadius.getText());
+      else
+         %player.getAIController().findCover(%pos, CoverRadius.getText());
+   }
 }
 
 function SpawnClassSelector::onSelect(%this, %id)
@@ -546,40 +549,8 @@ function SpawnDatablockSelector::onSelect(%this, %id)
    NavMeshTools->TestTool.setSpawnDatablock(%className);
 }
 
-
-// function NavEditorGui::findCover(%this)
-// {
-//    if(%this.getMode() $= "TestMode" && isObject(%this.getPlayer()))
-//    {
-//       %pos = LocalClientConnection.getControlObject().getPosition();
-//       %text = NavEditorOptionsWindow-->TestProperties->CoverPosition.getText();
-//       if(%text !$= "")
-//          %pos = eval("return " @ %text);
-//       %this.getPlayer().getAIController().findCover(%pos, NavEditorOptionsWindow-->TestProperties->CoverRadius.getText());
-//    }
-// }
-
-// function NavEditorGui::followObject(%this)
-// {
-//    if(%this.getMode() $= "TestMode" && isObject(%this.getPlayer()))
-//    {
-//       %obj = LocalClientConnection.player;
-//       %text = NavEditorOptionsWindow-->TestProperties->FollowObject.getText();
-//       if(%text !$= "")
-//       {
-//          %command = "return " @ %text;
-//          if(!endsWith(%command, ";"))
-//             %command = %command @ ";";
-            
-//          %obj = eval(%command);
-//          if(!isObject(%obj))
-//             toolsMessageBoxOk("Error", "Cannot find object" SPC %text);
-//       }
-//       if(isObject(%obj))
-//          %this.getPlayer().getAIController().followObject(%obj, NavEditorOptionsWindow-->TestProperties->FollowRadius.getText());
-//    }
-// }
-
+//------------------------------------------------------
+// TILETOOL
 //------------------------------------------------------
 
 function TileTool::onActivated(%this)
@@ -587,17 +558,7 @@ function TileTool::onActivated(%this)
    NavInspector.setVisible(false);
 
    %actions = NavEditorOptionsWindow->ActionsBox;
-   %actions->SelectActions.setVisible(false);
-   %actions->LinkActions.setVisible(false);
-   %actions->CoverActions.setVisible(false);
-   %actions->TileActions.setVisible(false);
-   %actions->TestActions.setVisible(false);
-
    %properties = NavEditorOptionsWindow->PropertiesBox;
-   %properties->LinkProperties.setVisible(false);
-   %properties->TileProperties.setVisible(false);
-   %properties->TestProperties.setVisible(false);
-
    %actions->TileActions.setVisible(true);
    %properties->TileProperties.setVisible(true);
 }
@@ -607,16 +568,9 @@ function TileTool::onDeactivated(%this)
    NavInspector.setVisible(false);
 
    %actions = NavEditorOptionsWindow->ActionsBox;
-   %actions->SelectActions.setVisible(false);
-   %actions->LinkActions.setVisible(false);
-   %actions->CoverActions.setVisible(false);
    %actions->TileActions.setVisible(false);
-   %actions->TestActions.setVisible(false);
-
    %properties = NavEditorOptionsWindow->PropertiesBox;
-   %properties->LinkProperties.setVisible(false);
    %properties->TileProperties.setVisible(false);
-   %properties->TestProperties.setVisible(false);
 }
 
 //------------------------------------------------------
@@ -658,14 +612,6 @@ function NavEditorGui::onModeSet(%this, %mode)
       %properties->TestProperties.setVisible(true);
    }
 }
-
-function NavEditorGui::paletteSync(%this, %mode)
-{
-   // Synchronise the palette (small buttons on the left) with the actual mode
-   // the nav editor is in.
-   %evalShortcut = "ToolsPaletteArray-->" @ %mode @ ".setStateOn(1);";
-   eval(%evalShortcut);
-} 
 
 function NavEditorGui::onEscapePressed(%this)
 {
@@ -791,8 +737,7 @@ function NavTreeView::onSelect(%this, %obj)
 
 function NavEditorGui::prepSelectionMode(%this)
 {
-   %this.setMode("SelectMode");
-   ToolsPaletteArray-->NavEditorSelectMode.setStateOn(1);
+   NavEditorGui.setActiveTool(NavMeshTools->SelectTool);
 }
 
 //-----------------------------------------------------------------------------

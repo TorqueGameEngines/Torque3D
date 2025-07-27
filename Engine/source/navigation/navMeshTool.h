@@ -12,6 +12,10 @@
 #include "navigation/navMesh.h"
 #endif
 
+#ifndef _GUINAVEDITORCTRL_H_
+#include "navigation/guiNavEditorCtrl.h"
+#endif
+
 class UndoAction;
 
 class NavMeshTool : public SimObject
@@ -19,6 +23,8 @@ class NavMeshTool : public SimObject
    typedef SimObject Parent;
 protected:
    SimObjectPtr<NavMesh> mNavMesh;
+   SimObjectPtr<GuiNavEditorCtrl> mCurEditor;
+
    void _submitUndo(UndoAction* action);
 
 public:
@@ -29,6 +35,7 @@ public:
    DECLARE_CONOBJECT(NavMeshTool);
 
    virtual void setActiveNavMesh(NavMesh* nav_mesh) { mNavMesh = nav_mesh; }
+   virtual void setActiveEditor(GuiNavEditorCtrl* nav_editor) { mCurEditor = nav_editor; }
 
    virtual void onActivated(const Gui3DMouseEvent& lastEvent) {}
    virtual void onDeactivated() {}

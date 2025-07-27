@@ -38,6 +38,7 @@
 #include "gui/worldEditor/undoActions.h"
 #include "T3D/gameBase/gameConnection.h"
 #include "T3D/AI/AIController.h"
+#include "navigation/navMeshTool.h"
 
 IMPLEMENT_CONOBJECT(GuiNavEditorCtrl);
 
@@ -47,15 +48,8 @@ ConsoleDocClass(GuiNavEditorCtrl,
                 "@internal"
                 );
 
-// Each of the mode names directly correlates with the Nav Editor's tool palette.
-const String GuiNavEditorCtrl::mSelectMode = "SelectMode";
-const String GuiNavEditorCtrl::mLinkMode = "LinkMode";
-const String GuiNavEditorCtrl::mCoverMode = "CoverMode";
-const String GuiNavEditorCtrl::mTestMode = "TestMode";
-
 GuiNavEditorCtrl::GuiNavEditorCtrl()
 {
-   mMode = mSelectMode;
    mIsDirty = false;
    mStartDragMousePoint = InvalidMousePoint;
    mMesh = NULL;
@@ -101,8 +95,6 @@ void GuiNavEditorCtrl::initPersistFields()
 void GuiNavEditorCtrl::onSleep()
 {
    Parent::onSleep();
-
-   //mMode = mSelectMode;
 }
 
 void GuiNavEditorCtrl::selectMesh(NavMesh *mesh)
@@ -311,15 +303,6 @@ bool GuiNavEditorCtrl::getStaticPos(const Gui3DMouseEvent & event, Point3F &tpos
    return hit;
 }
 
-void GuiNavEditorCtrl::setMode(String mode, bool sourceShortcut = false)
-{
-   mMode = mode;
-   Con::executef(this, "onModeSet", mode);
-
-   if(sourceShortcut)
-      Con::executef(this, "paletteSync", mode);
-}
-
 void GuiNavEditorCtrl::submitUndo(const UTF8 *name)
 {
    // Grab the mission editor undo manager.
@@ -361,6 +344,7 @@ void GuiNavEditorCtrl::setActiveTool(NavMeshTool* tool)
 
    if (mTool)
    {
+      mTool->setActiveEditor(this);
       mTool->setActiveNavMesh(mMesh);
       mTool->onActivated(mLastEvent);
    }
@@ -386,14 +370,4 @@ DefineEngineMethod(GuiNavEditorCtrl, setActiveTool, void, (const char* toolName)
    object->setActiveTool(tool);
 }
 
-
-DefineEngineMethod(GuiNavEditorCtrl, getMode, const char*, (), , "")
-{
-   return object->getMode();
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, setMode, void, (String mode),, "setMode(String mode)")
-{
-   object->setMode(mode);
-}
 #endif

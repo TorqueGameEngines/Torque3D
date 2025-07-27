@@ -34,9 +34,9 @@
 #include "gui/worldEditor/gizmo.h"
 #endif
 
-#ifndef _NAVMESH_TOOL_H_
-#include "navigation/navMeshTool.h"
-#endif
+//#ifndef _NAVMESH_TOOL_H_
+//#include "navigation/navMeshTool.h"
+//#endif
 
 #include "navMesh.h"
 #include "T3D/aiPlayer.h"
@@ -45,6 +45,7 @@ struct ObjectRenderInst;
 class SceneManager;
 class SceneRenderState;
 class BaseMatInstance;
+class NavMeshTool;
 
 class GuiNavEditorCtrl : public EditTSCtrl
 {
@@ -99,9 +100,6 @@ public:
 
    bool getStaticPos(const Gui3DMouseEvent & event, Point3F &tpos);
 
-   void setMode(String mode, bool sourceShortcut);
-   String getMode() { return mMode; }
-
    void selectMesh(NavMesh *mesh);
 
    S32 getMeshId();
@@ -121,8 +119,6 @@ protected:
    GFXStateBlockRef mZEnableSB;
 
    bool mIsDirty;
-
-   String mMode;
 
    /// Currently-selected NavMesh.
    SimObjectPtr<NavMesh> mMesh;

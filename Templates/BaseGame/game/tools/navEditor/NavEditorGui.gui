@@ -491,8 +491,8 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
                   HorizSizing = "right";
                   VertSizing = "bottom";
                   Extent = "90 18";
-                  text = "Find cover";
-                  command = "NavMeshTools->TestTool.findCover();";
+                  text = "Stop";
+                  command = "NavMeshTools->TestTool.stop();";
                };
             };
             new GuiControl() {
@@ -515,8 +515,8 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
                   HorizSizing = "right";
                   VertSizing = "bottom";
                   Extent = "90 18";
-                  text = "Stop";
-                  command = "NavMeshTools->TestTool.stop();";
+                  text = "Find cover";
+                  command = "NavMeshTools->TestTool.findCover();";
                };
             };
             new GuiControl() {
@@ -531,6 +531,23 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
                   Extent = "90 18";
                   text = "Toggle Follow";
                   command = "NavMeshTools->TestTool.toggleFollow();";
+               };
+
+               new GuiTextEditSliderCtrl(CoverRadius) {
+                  position = "100 0";
+                  extent = "90 18";
+                  format = "%3.2f";
+                  range = "0 1e+03";
+                  increment = "0.1";
+                  focusOnMouseWheel = "0";
+                  historySize = "0";
+                  password = "0";
+                  tabComplete = "0";
+                  sinkAllKeyEvents = "0";
+                  hovertime = "1000";
+                  profile = "ToolsGuiTextEditProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+                  toolTip = "The radius to search for cover";
                };
             };
          };
@@ -813,67 +830,6 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
                canSave = "1";
                canSaveDynamicFields = "0";
                variable = "$Nav::Editor::renderVoxels";
-            };
-         };
-         new GuiStackControl() {
-            internalName = "TestProperties";
-            position = "7 21";
-            extent = "186 64";
-            padding = "2 2 2 2";
-            
-			new GuiTextCtrl() {
-               text = "Cover";
-               profile = "ToolsGuiTextProfile";
-               extent = "180 20";
-               minExtent = "8 2";
-               visible = "1";
-            };
-            new GuiTextEditCtrl() {
-               internalName = "CoverRadius";
-               text = "10";
-               profile = "ToolsGuiTextEditProfile";
-               extent = "40 20";
-               minExtent = "8 2";
-               visible = "1";
-               tooltipProfile = "GuiToolTipProfile";
-               toolTip = "Radius for cover-finding.";
-            };
-            new GuiTextEditCtrl() {
-               internalName = "CoverPosition";
-               text = "LocalClientConnection.getControlObject().getPosition();";
-               profile = "ToolsGuiTextEditProfile";
-               extent = "140 20";
-               minExtent = "8 2";
-               visible = "1";
-               tooltipProfile = "GuiToolTipProfile";
-               toolTip = "Position to find cover from.";
-            };
-            new GuiTextCtrl() {
-               text = "Follow";
-               profile = "ToolsuiTextProfile";
-               extent = "180 20";
-               minExtent = "8 2";
-               visible = "1";
-            };
-            new GuiTextEditCtrl() {
-               internalName = "FollowRadius";
-               text = "1";
-               profile = "ToolsGuiTextEditProfile";
-               extent = "40 20";
-               minExtent = "8 2";
-               visible = "1";
-               tooltipProfile = "GuiToolTipProfile";
-               toolTip = "Radius for following.";
-            };
-            new GuiTextEditCtrl() {
-               internalName = "FollowObject";
-               text = "LocalClientConnection.player";
-               profile = "ToolsGuiTextEditProfile";
-               extent = "140 20";
-               minExtent = "8 2";
-               visible = "1";
-               tooltipProfile = "GuiToolTipProfile";
-               toolTip = "Object to follow.";
             };
          };
       };

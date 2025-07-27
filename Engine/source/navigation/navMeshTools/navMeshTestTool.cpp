@@ -367,6 +367,9 @@ bool NavMeshTestTool::updateGuiInfo()
    if (mSpawnClass != String::EmptyString && mSpawnDatablock != String::EmptyString)
       text += " CTRL+LMB To spawn a new Bot.";
 
+   if (mSelectFollow)
+      text = "LMB To select Follow Target.";
+
    if (statusbar)
       Con::executef(statusbar, "setInfo", text.c_str());
 

@@ -80,7 +80,7 @@ bool AIController::findCover(const Point3F& from, F32 radius)
    if (s.point)
    {
       // Calling setPathDestination clears cover...
-      bool foundPath = getNav()->setPathDestination(s.point->getPosition());
+      bool foundPath = getNav()->setPathDestination(s.point->getPosition(), true);
       setCover(s.point);
       s.point->setOccupied(true);
       return foundPath;

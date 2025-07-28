@@ -46,7 +46,7 @@ extern bool gEditingMission;
 
 IMPLEMENT_CO_NETOBJECT_V1(NavMesh);
 
-const U32 NavMesh::mMaxVertsPerPoly = 3;
+const U32 NavMesh::mMaxVertsPerPoly = DT_VERTS_PER_POLYGON;
 
 SimObjectPtr<SimSet> NavMesh::smServerSet = NULL;
 
@@ -857,36 +857,6 @@ void NavMesh::buildNextTile()
 {
    PROFILE_SCOPE(NavMesh_buildNextTile);
 
-   // this is just here so that load regens the mesh, also buildTile needs to regen incase geometry has changed.
-   if (!m_geo)
-   {
-      Box3F worldBox = getWorldBox();
-      SceneContainer::CallbackInfo info;
-      info.context = PLC_Navigation;
-      info.boundingBox = worldBox;
-      m_geo = new RecastPolyList;
-      info.polyList = m_geo;
-      info.key = this;
-      getContainer()->findObjects(worldBox, StaticObjectType | DynamicShapeObjectType, buildCallback, &info);
-
-      // Parse water objects into the same list, but remember how much geometry was /not/ water.
-      mWaterVertStart = m_geo->getVertCount();
-      mWaterTriStart = m_geo->getTriCount();
-      if (mWaterMethod != Ignore)
-      {
-         getContainer()->findObjects(worldBox, WaterObjectType, buildCallback, &info);
-      }
-
-      // Check for no geometry.
-      if (!m_geo->getVertCount())
-      {
-         m_geo->clear();
-         return;
-      }
-
-      m_geo->getChunkyMesh();
-   }
-
    if(!mDirtyTiles.empty())
    {
       dtFreeNavMeshQuery(mQuery);
@@ -927,6 +897,11 @@ void NavMesh::buildNextTile()
       {
          tile.dmesh = m_dmesh;
          m_dmesh = 0;
+      }
+      if (m_triareas)
+      {
+         tile.triareas = m_triareas;
+         m_triareas = nullptr;
       }
 
       if(data)
@@ -987,8 +962,6 @@ unsigned char *NavMesh::buildTileData(const Tile &tile, U32 &dataSize)
 
    cleanup();
 
-   const rcChunkyTriMesh* chunkyMesh = m_geo->getChunkyMesh();
-
    // Push out tile boundaries a bit.
    F32 tileBmin[3], tileBmax[3];
    rcVcopy(tileBmin, tile.bmin);
@@ -1019,7 +992,33 @@ unsigned char *NavMesh::buildTileData(const Tile &tile, U32 &dataSize)
    m_cfg.bmax[0] += m_cfg.borderSize * m_cfg.cs;
    m_cfg.bmax[2] += m_cfg.borderSize * m_cfg.cs;
 
-   // Create a heightfield to voxelise our input geometry.
+   Box3F worldBox = RCtoDTS(m_cfg.bmin, m_cfg.bmax);
+   SceneContainer::CallbackInfo info;
+   info.context = PLC_Navigation;
+   info.boundingBox = worldBox;
+   m_geo = new RecastPolyList;
+   info.polyList = m_geo;
+   info.key = this;
+   getContainer()->findObjects(worldBox, StaticObjectType | DynamicShapeObjectType, buildCallback, &info);
+
+   // Parse water objects into the same list, but remember how much geometry was /not/ water.
+   mWaterVertStart = m_geo->getVertCount();
+   mWaterTriStart = m_geo->getTriCount();
+   if (mWaterMethod != Ignore)
+   {
+      getContainer()->findObjects(worldBox, WaterObjectType, buildCallback, &info);
+   }
+
+   // Check for no geometry.
+   if (!m_geo->getVertCount())
+   {
+      m_geo->clear();
+      return NULL;
+   }
+
+   const rcChunkyTriMesh* chunkyMesh = m_geo->getChunkyMesh();
+
+   // Create a heightfield to voxelize our input geometry.
    m_solid = rcAllocHeightfield();
    if(!m_solid)
    {
@@ -1686,6 +1685,7 @@ void NavMesh::cleanup()
    m_pmesh = 0;
    rcFreePolyMeshDetail(m_dmesh);
    m_dmesh = 0;
+   SAFE_DELETE(m_geo);
 }
 
 void NavMesh::prepRenderImage(SceneRenderState *state)

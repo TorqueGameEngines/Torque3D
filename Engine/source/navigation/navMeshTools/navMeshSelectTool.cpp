@@ -105,9 +105,14 @@ bool NavMeshSelectTool::updateGuiInfo()
    Sim::findObject("EWorldEditorStatusBarSelection", selectionBar);
 
    String text;
+   text = "LMB To select a NavMesh.";
 
    if (statusbar)
       Con::executef(statusbar, "setInfo", text.c_str());
+
+   text = "";
+   if(mSelMesh)
+      text = String::ToString("NavMesh Selected: %d", mSelMesh->getId());
 
    if (selectionBar)
       selectionBar->setText(text);

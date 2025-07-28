@@ -73,6 +73,11 @@ void duDebugDrawTorque::depthMask(bool state, bool isOverride)
    mOverrideState = isOverride;
 }
 
+void duDebugDrawTorque::blend(bool blend)
+{
+   mDesc.setBlend(true);
+}
+
 void duDebugDrawTorque::texture(bool state)
 {
    // need a checker texture?...... if(state is true) then set first slot to that texture.

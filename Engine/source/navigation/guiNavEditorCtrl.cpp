@@ -178,9 +178,6 @@ bool GuiNavEditorCtrl::get3DCentre(Point3F &pos)
 
 void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 {
-   if (!mMesh)
-      return;
-
    mGizmo->on3DMouseDown(event);
 
    if (mTool)
@@ -193,9 +190,6 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 
 void GuiNavEditorCtrl::on3DMouseUp(const Gui3DMouseEvent & event)
 {
-   if (!mMesh)
-      return;
-
    // Keep the Gizmo up to date.
    mGizmo->on3DMouseUp(event);
 
@@ -207,9 +201,6 @@ void GuiNavEditorCtrl::on3DMouseUp(const Gui3DMouseEvent & event)
 
 void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 {
-   if (!mMesh)
-      return;
-
    if (mTool)
       mTool->on3DMouseMove(event);
 

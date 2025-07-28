@@ -1582,7 +1582,12 @@ void NavMesh::renderToDrawer()
             m_drawMode == DRAWMODE_NAVMESH_INVIS))
       {
          if (m_drawMode != DRAWMODE_NAVMESH_INVIS)
+         {
+            if (m_drawMode == DRAWMODE_NAVMESH_TRANS)
+               mDbgDraw.blend(true);
             duDebugDrawNavMeshWithClosedList(&mDbgDraw, *n->nm, *n->mQuery, 0);
+            mDbgDraw.blend(false);
+         }
          if(m_drawMode == DRAWMODE_NAVMESH_BVTREE)
             duDebugDrawNavMeshBVTree(&mDbgDraw, *n->nm);
          if(m_drawMode == DRAWMODE_NAVMESH_PORTALS)

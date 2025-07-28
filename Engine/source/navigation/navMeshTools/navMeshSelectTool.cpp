@@ -44,7 +44,7 @@ void NavMeshSelectTool::on3DMouseDown(const Gui3DMouseEvent& evt)
    Point3F endPnt = evt.pos + evt.vec * 1000.0f;
 
    RayInfo ri;
-   if (gServerContainer.castRay(startPnt, endPnt, MarkerObjectType, &ri))
+   if (gServerContainer.collideBox(startPnt, endPnt, MarkerObjectType, &ri))
    {
       if (!ri.object)
          return;
@@ -53,6 +53,8 @@ void NavMeshSelectTool::on3DMouseDown(const Gui3DMouseEvent& evt)
       if (selNavMesh)
       {
          mCurEditor->selectMesh(selNavMesh);
+         mSelMesh = selNavMesh;
+         Con::executef(this, "onNavMeshSelected");
          return;
       }
    }
@@ -68,7 +70,7 @@ void NavMeshSelectTool::on3DMouseMove(const Gui3DMouseEvent& evt)
    Point3F endPnt = evt.pos + evt.vec * 1000.0f;
 
    RayInfo ri;
-   if (gServerContainer.castRay(startPnt, endPnt, MarkerObjectType, &ri))
+   if (gServerContainer.collideBox(startPnt, endPnt, MarkerObjectType, &ri))
    {
       NavMesh* selNavMesh = dynamic_cast<NavMesh*>(ri.object);
       if (selNavMesh)
@@ -90,6 +92,8 @@ void NavMeshSelectTool::onRender3D()
 {
    if (!mCurMesh.isNull())
       renderBoxOutline(mCurMesh->getWorldBox(), ColorI::LIGHT);
+   if (!mSelMesh.isNull())
+      renderBoxOutline(mSelMesh->getWorldBox(), ColorI::LIGHT);
 }
 
 bool NavMeshSelectTool::updateGuiInfo()

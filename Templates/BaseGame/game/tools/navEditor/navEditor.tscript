@@ -297,7 +297,7 @@ function NavEditorGui::showSidePanel()
 }
 
 //------------------------------------------------------
-// NAVMESHTESTTOOL
+// NAVMESHSELECTTOOL
 //------------------------------------------------------
 
 function NavMeshSelectTool::onActivated(%this)
@@ -315,6 +315,18 @@ function NavMeshSelectTool::onDeactivated(%this)
    NavInspector.setVisible(false);
    %actions = NavEditorOptionsWindow->ActionsBox;
    %actions->SelectActions.setVisible(false);
+}
+
+function NavMeshSeletTool::onNavMeshSelected(%this)
+{
+   %obj = NavEditorGui.getMesh();
+   // we set the naveditorgui navmesh in source so just get it 
+   // and update here.
+   NavInspector.inspect(NavEditorGui.getMesh());
+
+   NavTreeView.clearSelection();
+   if(isObject(%obj))
+      NavTreeView.selectItem(%obj);
 }
 
 //------------------------------------------------------
@@ -414,6 +426,22 @@ function NavMeshLinkFlagButton::onClick(%this)
 function NavMeshLinkBiDirection::onClick(%this)
 {
    NavMeshTools->LinkTool.updateLinkFlags();
+}
+
+//------------------------------------------------------
+// CoverTool
+//------------------------------------------------------
+
+function CoverTool::onActivated(%this)
+{
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->CoverActions.setVisible(true);
+}
+
+function CoverTool::onDeactivated(%this)
+{
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->CoverActions.setVisible(false);
 }
 
 //------------------------------------------------------
@@ -573,69 +601,9 @@ function TileTool::onDeactivated(%this)
    %properties->TileProperties.setVisible(false);
 }
 
-//------------------------------------------------------
-
-function NavEditorGui::onModeSet(%this, %mode)
-{
-   // Callback when the nav editor changes mode. Set the appropriate dynamic
-   // GUI contents in the properties/actions boxes.
-   NavInspector.setVisible(false);
-
-   %actions = NavEditorOptionsWindow->ActionsBox;
-   %actions->SelectActions.setVisible(false);
-   %actions->LinkActions.setVisible(false);
-   %actions->CoverActions.setVisible(false);
-   %actions->TileActions.setVisible(false);
-   %actions->TestActions.setVisible(false);
-
-   %properties = NavEditorOptionsWindow->PropertiesBox;
-   %properties->LinkProperties.setVisible(false);
-   %properties->TileProperties.setVisible(false);
-   %properties->TestProperties.setVisible(false);
-
-   switch$(%mode)
-   {
-   case "SelectMode":
-      NavInspector.setVisible(true);
-      %actions->SelectActions.setVisible(true);
-   case "LinkMode":
-      %actions->LinkActions.setVisible(true);
-      %properties->LinkProperties.setVisible(true);
-   case "CoverMode":
-      // 
-      %actions->CoverActions.setVisible(true);
-   case "TileMode":
-      %actions->TileActions.setVisible(true);
-      %properties->TileProperties.setVisible(true);
-   case "TestMode":
-      %actions->TestActions.setVisible(true);
-      %properties->TestProperties.setVisible(true);
-   }
-}
-
 function NavEditorGui::onEscapePressed(%this)
 {
    return false;
-}
-
-function NavEditorGui::selectObject(%this, %obj)
-{
-   NavTreeView.clearSelection();
-   if(isObject(%obj))
-      NavTreeView.selectItem(%obj);
-   %this.onObjectSelected(%obj);
-}
-
-function NavEditorGui::onObjectSelected(%this, %obj)
-{
-   if(isObject(%this.selectedObject))
-      %this.deselect();
-   %this.selectedObject = %obj;
-   if(isObject(%obj))
-   {
-      %this.selectMesh(%obj);
-      NavInspector.inspect(%obj);
-   }
 }
 
 function NavEditorGui::deleteMesh(%this)
@@ -732,7 +700,6 @@ function NavTreeView::onInspect(%this, %obj)
 function NavTreeView::onSelect(%this, %obj)
 {
    NavInspector.inspect(%obj);
-   NavEditorGui.onObjectSelected(%obj);
 }
 
 function NavEditorGui::prepSelectionMode(%this)

@@ -68,6 +68,8 @@ public:
    /// <param name="isOverride">Set to true to override any future changes.</param>
    void depthMask(bool state, bool isOverride);
 
+   void blend(bool blend);
+
    /// Begin drawing primitives.
    /// @param prim [in] primitive type to draw, one of rcDebugDrawPrimitives.
    /// @param size [in] size of a primitive, applies to point size and line width only.

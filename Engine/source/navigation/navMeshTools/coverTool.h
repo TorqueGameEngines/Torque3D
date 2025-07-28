@@ -1,22 +1,23 @@
-#ifndef _NAVMESHSELECTTOOL_H_
-#define _NAVMESHSELECTTOOL_H_
-
+#ifndef _COVERTOOL_H_
+#define _COVERTOOL_H_
 
 #ifndef _NAVMESH_TOOL_H_
 #include "navigation/navMeshTool.h"
 #endif
 
-class NavMeshSelectTool : public NavMeshTool
+#ifndef _NAVPATH_H_
+#include "navigation/navPath.h"
+#endif
+
+class CoverTool : public NavMeshTool
 {
    typedef NavMeshTool Parent;
-protected:
-   SimObjectPtr<NavMesh> mCurMesh;
-   SimObjectPtr<NavMesh> mSelMesh;
 public:
-   DECLARE_CONOBJECT(NavMeshSelectTool);
+   DECLARE_CONOBJECT(CoverTool);
 
-   NavMeshSelectTool();
-   virtual ~NavMeshSelectTool() {}
+   CoverTool();
+
+   virtual ~CoverTool() {}
 
    void onActivated(const Gui3DMouseEvent& evt) override;
    void onDeactivated() override;
@@ -28,4 +29,5 @@ public:
    bool updateGuiInfo() override;
 };
 
-#endif
+#endif // !_COVERTOOL_H_
+

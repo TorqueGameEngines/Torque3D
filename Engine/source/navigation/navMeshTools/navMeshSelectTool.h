@@ -18,6 +18,7 @@ public:
    NavMeshSelectTool();
    virtual ~NavMeshSelectTool() {}
 
+   void setActiveNavMesh(NavMesh* nav_mesh) { mNavMesh = nav_mesh; mSelMesh = nav_mesh; }
    void onActivated(const Gui3DMouseEvent& evt) override;
    void onDeactivated() override;
 

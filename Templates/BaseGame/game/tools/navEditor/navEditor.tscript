@@ -698,6 +698,8 @@ function NavTreeView::onInspect(%this, %obj)
 function NavTreeView::onSelect(%this, %obj)
 {
    NavInspector.inspect(%obj);
+   
+   NavEditorGui.selectMesh(%obj);
 }
 
 function NavEditorGui::prepSelectionMode(%this)

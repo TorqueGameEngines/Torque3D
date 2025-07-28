@@ -331,6 +331,8 @@ void NavMeshTestTool::onRender3D()
    }
    dd.depthMask(true);
 
+   mNavMesh->renderSearch(dd);
+
    dd.immediateRender();
 
    if (!mCurFollowObject.isNull())

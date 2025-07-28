@@ -1592,8 +1592,6 @@ void NavMesh::renderToDrawer()
             duDebugDrawNavMeshBVTree(&mDbgDraw, *n->nm);
          if(m_drawMode == DRAWMODE_NAVMESH_PORTALS)
             duDebugDrawNavMeshPortals(&mDbgDraw, *n->nm);
-         if (m_drawMode == DRAWMODE_NAVMESH_NODES)
-            duDebugDrawNavMeshNodes(&mDbgDraw, *n->mQuery);
       }
 
       mDbgDraw.depthMask(true, false);
@@ -1752,6 +1750,15 @@ void NavMesh::renderLinks(duDebugDraw &dd)
          duAppendCircle(&dd, e[0], e[1], e[2], mLinkRads[i], col);
    }
    dd.end();
+}
+
+void NavMesh::renderSearch(duDebugDraw& dd)
+{
+   if (mQuery == NULL)
+      return;
+
+   if (m_drawMode == DRAWMODE_NAVMESH_NODES)
+      duDebugDrawNavMeshNodes(&dd, *mQuery);
 }
 
 void NavMesh::renderTileData(duDebugDrawTorque &dd, U32 tile)

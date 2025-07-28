@@ -266,6 +266,7 @@ public:
    void prepRenderImage(SceneRenderState *state) override;
    void render(ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat);
    void renderLinks(duDebugDraw &dd);
+   void renderSearch(duDebugDraw& dd);
    void renderTileData(duDebugDrawTorque &dd, U32 tile);
 
    bool mAlwaysRender;

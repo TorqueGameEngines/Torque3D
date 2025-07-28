@@ -317,16 +317,14 @@ function NavMeshSelectTool::onDeactivated(%this)
    %actions->SelectActions.setVisible(false);
 }
 
-function NavMeshSeletTool::onNavMeshSelected(%this)
+function NavMeshSelectTool::onNavMeshSelected(%this)
 {
-   %obj = NavEditorGui.getMesh();
+   NavTreeView.clearSelection();
+   if(isObject(NavEditorGui.getMesh()))
+      NavTreeView.selectItem(NavEditorGui.getMesh());
    // we set the naveditorgui navmesh in source so just get it 
    // and update here.
    NavInspector.inspect(NavEditorGui.getMesh());
-
-   NavTreeView.clearSelection();
-   if(isObject(%obj))
-      NavTreeView.selectItem(%obj);
 }
 
 //------------------------------------------------------

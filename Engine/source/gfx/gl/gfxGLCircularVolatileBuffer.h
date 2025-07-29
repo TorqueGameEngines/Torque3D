@@ -224,6 +224,8 @@ public:
       if (GFXGL->mCapabilities.bufferStorage)
       {
          outPtr = static_cast<U8*>(mBufferPtr) + mBufferFreePos;
+         _getBufferData.mOffset = outOffset;
+         _getBufferData.mSize = size;
       }
       else if (GFXGL->glUseMap())
       {

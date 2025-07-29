@@ -201,8 +201,6 @@ public:
          if (mBufferFreePos < mBufferSize)
             mUsedRanges.push_back(UsedRange(mBufferFreePos, mBufferSize - 1));
 
-         init();
-
          // Reset free pos
          mBufferFreePos = 0;
 

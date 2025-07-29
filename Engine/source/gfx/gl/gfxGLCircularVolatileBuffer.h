@@ -201,6 +201,8 @@ public:
          if (mBufferFreePos < mBufferSize)
             mUsedRanges.push_back(UsedRange(mBufferFreePos, mBufferSize - 1));
 
+         init();
+
          // Reset free pos
          mBufferFreePos = 0;
 
@@ -224,8 +226,6 @@ public:
       if (GFXGL->mCapabilities.bufferStorage)
       {
          outPtr = static_cast<U8*>(mBufferPtr) + mBufferFreePos;
-         _getBufferData.mOffset = outOffset;
-         _getBufferData.mSize = size;
       }
       else if (GFXGL->glUseMap())
       {

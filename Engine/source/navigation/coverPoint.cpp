@@ -31,6 +31,7 @@
 #include "gfx/gfxDrawUtil.h"
 #include "renderInstance/renderPassManager.h"
 #include "console/engineAPI.h"
+#include "T3D/gameBase/gameConnection.h"
 
 extern bool gEditingMission;
 
@@ -285,14 +286,22 @@ void CoverPoint::prepRenderImage(SceneRenderState *state)
 
 void CoverPoint::render(ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat)
 {
-   initGFXResources();
+   if (!state->isDiffusePass()) return;
 
-   if(overrideMat)
+   GameConnection* conn = GameConnection::getConnectionToServer();
+   MatrixF camTrans;
+   conn->getControlCameraTransform(0, &camTrans);
+
+   if ((getPosition() - camTrans.getPosition()).lenSquared() > 2500) return; //50 unit clamp
+
+   if (overrideMat)
       return;
 
+   initGFXResources();
+   
    if(smVertexBuffer[mSize].isNull())
       return;
-
+   
    PROFILE_SCOPE(CoverPoint_Render);
 
    // Set up a GFX debug event (this helps with debugging rendering events in external tools)

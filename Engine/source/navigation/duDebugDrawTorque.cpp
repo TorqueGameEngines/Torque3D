@@ -427,6 +427,8 @@ void duDebugDrawTorque::clearCache()
 
 void duDebugDrawTorque::render(SceneRenderState* state)
 {
+   if (!state->isDiffusePass()) return;
+
    const Frustum& frustum = state->getCameraFrustum();
 
    for (U32 i = 0; i < mDrawCache.size(); ++i)

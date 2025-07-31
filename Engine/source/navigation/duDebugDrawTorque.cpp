@@ -245,7 +245,7 @@ void duDebugDrawTorque::end()
          box.maxExtents.set(-F32_MAX, -F32_MAX, -F32_MAX);
 
          GFXVertexBufferHandle<GFXVertexPCT> buffer;
-         buffer.set(GFX, batchVerts, GFXBufferTypeVolatile);
+         buffer.set(GFX, batchVerts, GFXBufferTypeStatic);
          GFXVertexPCT* verts = buffer.lock();
 
          for (U32 i = 0; i < linesThisBatch * vertsPerLine; ++i)
@@ -258,7 +258,7 @@ void duDebugDrawTorque::end()
 
          // --- Build index buffer
          GFXPrimitiveBufferHandle pb;
-         pb.set(GFX, linesThisBatch * 2, linesThisBatch, GFXBufferTypeVolatile);
+         pb.set(GFX, linesThisBatch * 2, linesThisBatch, GFXBufferTypeStatic);
          U16* indices = nullptr;
          pb.lock(&indices);
 
@@ -303,7 +303,7 @@ void duDebugDrawTorque::end()
          box.maxExtents.set(-F32_MAX, -F32_MAX, -F32_MAX);
 
          GFXVertexBufferHandle<GFXVertexPCT> buffer;
-         buffer.set(GFX, batchVerts, GFXBufferTypeVolatile);
+         buffer.set(GFX, batchVerts, GFXBufferTypeStatic);
          GFXVertexPCT* verts = buffer.lock();
 
          for (U32 i = 0; i < trisThisBatch * vertsPerTri; ++i)
@@ -317,7 +317,7 @@ void duDebugDrawTorque::end()
 
          // --- Build index buffer
          GFXPrimitiveBufferHandle pb;
-         pb.set(GFX, trisThisBatch*3, trisThisBatch, GFXBufferTypeVolatile);
+         pb.set(GFX, trisThisBatch*3, trisThisBatch, GFXBufferTypeStatic);
          U16* indices = nullptr;
          pb.lock(&indices);
 
@@ -363,7 +363,7 @@ void duDebugDrawTorque::end()
          box.maxExtents.set(-F32_MAX, -F32_MAX, -F32_MAX);
 
          GFXVertexBufferHandle<GFXVertexPCT> buffer;
-         buffer.set(GFX, batchVerts, GFXBufferTypeVolatile);
+         buffer.set(GFX, batchVerts, GFXBufferTypeStatic);
          GFXVertexPCT* verts = buffer.lock();
 
          U32 outIdx = 0;
@@ -383,7 +383,7 @@ void duDebugDrawTorque::end()
          buffer.unlock();
 
          GFXPrimitiveBufferHandle pb;
-         pb.set(GFX, batchIndices, quadsThisBatch*2, GFXBufferTypeVolatile);
+         pb.set(GFX, batchIndices, quadsThisBatch*2, GFXBufferTypeStatic);
          U16* indices = nullptr;
          pb.lock(&indices);
 

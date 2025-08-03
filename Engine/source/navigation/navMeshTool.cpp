@@ -1,7 +1,7 @@
 
 #include "platform/platform.h"
 #include "navigation/navMeshTool.h"
-
+#ifdef TORQUE_TOOLS
 #include "util/undo.h"
 #include "math/mMath.h"
 #include "math/mathUtils.h"
@@ -37,3 +37,4 @@ NavMeshTool::NavMeshTool()
 NavMeshTool::~NavMeshTool()
 {
 }
+#endif

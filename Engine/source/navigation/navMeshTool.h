@@ -1,7 +1,7 @@
 #pragma once
 #ifndef _NAVMESH_TOOL_H_
 #define _NAVMESH_TOOL_H_
-
+#ifdef TORQUE_TOOLS
 #ifndef _SIMBASE_H_
 #include "console/simBase.h"
 #endif
@@ -54,5 +54,5 @@ public:
    virtual void onUndoAction() {}
 
 };
-
+#endif
 #endif // !_NAVMESH_TOOL_H_

@@ -808,6 +808,8 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    if (Sim::findObject("ToolsGuiTextEditProfile", toolEditProfile))
       editTextCtrl->setControlProfile(toolEditProfile);
 
+   editTextCtrl->setPlaceholderText("(None)");
+
    GuiControlProfile* toolDefaultProfile = nullptr;
    Sim::findObject("ToolsGuiDefaultProfile", toolDefaultProfile);
 
@@ -836,21 +838,25 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
 
    //
    // Create "Open in Editor" button
-   /*mEditButton = new GuiBitmapButtonCtrl();
+   mEditButton = new GuiBitmapButtonCtrl();
 
-   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.editAsset(%d.getText());", retCtrl->getId());
+   if (mInspector->getInspectObject() != nullptr)
+      dSprintf(szBuffer, sizeof(szBuffer), "%d.apply(\"\");", getId());
+   else
+      dSprintf(szBuffer, sizeof(szBuffer), "%s = \"\";", mVariableName);
+
    mEditButton->setField("Command", szBuffer);
 
-   mEditButton->setText("Edit");
-   mEditButton->setSizing(horizResizeLeft, vertResizeAspectTop);
+   mEditButton->setBitmap(StringTable->insert("ToolsModule:delete_n_image"));
+   mEditButton->setSizing(horizResizeRight, vertResizeAspectBottom);
 
    mEditButton->setDataField(StringTable->insert("Profile"), NULL, "ToolsGuiButtonProfile");
    mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
    mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
-   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this asset in the Image Editor");
+   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Clear this ImageAsset");
 
    mEditButton->registerObject();
-   addObject(mEditButton);*/
+   addObject(mEditButton);
 
    //
    mUseHeightOverride = true;
@@ -875,9 +881,9 @@ bool GuiInspectorTypeImageAssetPtr::updateRects()
    mPreviewImage->resize(previewRect.point, previewRect.extent);
 
    S32 editPos = previewRect.point.x + previewRect.extent.x + 10;
-   mEdit->resize(Point2I(editPos, rowSize * 1.5), Point2I(fieldExtent.x - editPos - 5, rowSize));
+   mEdit->resize(Point2I(editPos, rowSize * 1.5), Point2I(fieldExtent.x - editPos - 5 - rowSize, rowSize));
 
-   //mEditButton->resize(Point2I(fieldExtent.x - 105, previewRect.point.y + previewRect.extent.y - rowSize), Point2I(100, rowSize));
+   mEditButton->resize(Point2I(mEdit->getPosition().x + mEdit->getExtent().x, mEdit->getPosition().y), Point2I(rowSize, rowSize));
 
    mBrowseButton->setHidden(true);
 
@@ -975,7 +981,7 @@ void GuiInspectorTypeImageAssetPtr::updatePreviewImage()
    //if what we're working with isn't even a valid asset, don't present like we found a good one
    if (!AssetDatabase.isDeclaredAsset(previewImage))
    {
-      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:unknownImage_image"));
       return;
    }
 
@@ -1003,7 +1009,7 @@ void GuiInspectorTypeImageAssetPtr::setPreviewImage(StringTableEntry assetId)
    //if what we're working with isn't even a valid asset, don't present like we found a good one
    if (!AssetDatabase.isDeclaredAsset(assetId))
    {
-      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:unknownImage_image"));
       return;
    }
 
@@ -1024,5 +1030,21 @@ void GuiInspectorTypeImageAssetPtr::setPreviewImage(StringTableEntry assetId)
 
    if (mPreviewImage->getBitmapAsset().isNull())
       mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
+}
+
+void GuiInspectorTypeImageAssetPtr::setCaption(StringTableEntry caption)
+{
+   mCaption = caption;
+   mLabel->setText(mCaption);
+}
+
+DefineEngineMethod(GuiInspectorTypeImageAssetPtr, setCaption, void, (String newCaption), , "() - Sets the caption of the field.")
+{
+   object->setCaption(StringTable->insert(newCaption.c_str()));
+}
+
+DefineEngineMethod(GuiInspectorTypeImageAssetPtr, setIsDeleteBtnVisible, void, (bool isVisible), (false), "() - Sets if the delete/clear button is visible for the field")
+{
+   object->setIsDeleteBtnVisible(isVisible);
 }
 #endif

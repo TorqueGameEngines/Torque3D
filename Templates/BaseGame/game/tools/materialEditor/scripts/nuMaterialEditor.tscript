@@ -1,0 +1,249 @@
+//Generic methods
+function GuiInspector::getWindow(%this)
+{
+    %windowParent = %this;
+    if (!%windowParent.isMemberOfClass("GuiWindowCtrl"))
+    {
+        while(%windowParent.getParent() && !%windowParent.isMemberOfClass("GuiWindowCtrl"))
+        {
+            %windowParent = %windowParent.getParent();
+        }
+    }
+    return %windowParent;
+}
+
+function MaterialEditorPropInspector::getScrollbar(%this)
+{
+    %scrollParent = %this;
+    if (!%scrollParent.isMemberOfClass("GuiScrollCtrl"))
+    {
+        while(%scrollParent.getParent() && !%scrollParent.isMemberOfClass("GuiScrollCtrl"))
+        {
+            %scrollParent = %scrollParent.getParent();
+        }
+    }
+    return %scrollParent;
+}
+
+function MaterialEditorPropInspector::onPreInspectObject(%this, %obj)
+{
+   echo("MaterialEditorPropInspector::onPreInspectObject()");
+   %this.saveCollapseState();
+   %this.saveScrollState();
+}
+
+function MaterialEditorPropInspector::onPostInspectObject(%this, %obj)
+{
+   echo("MaterialEditorPropInspector::onPostInspectObject()");
+   %this.loadCollapseState();
+   %this.loadScrollState();
+}
+
+function MaterialEditorPropInspector::saveScrollState(%this)
+{
+   %this.scrollPos = %this.getScrollbar().getScrollPosition();
+   //echo(%this.getName() @ "::saveScrollState" SPC %this.scrollPos);
+}
+
+function MaterialEditorPropInspector::loadScrollState(%this)
+{
+   if (%this.scrollPos $= "") return;
+   %this.getScrollbar().setScrollPosition(%this.scrollPos.x, %this.scrollPos.y);
+   //echo(%this.getName() @ "::loadScrollState" SPC %this.scrollPos);
+}
+
+
+function MaterialEditorPropInspector::saveCollapseState(%this)
+{   
+   %groupCount = %this.getInspectedGroupCount();
+   if (%groupCount == 0) return;
+   %this.collapseState = "";
+   for(%grp=0; %grp<%groupCount; %grp++)
+   {
+      %this.collapseState = %this.collapseState SPC %this.getInspectedGroup(%grp).isExpanded(); 
+   }
+   %this.collapseState = trim(%this.collapseState);
+   //echo(%this.getName() @ "::saveCollapsState" SPC %groupCount SPC %this.collapseState);
+}
+
+function MaterialEditorPropInspector::loadCollapseState(%this)
+{
+   if (%this.collapseState $= "") return;
+   %groupCount = %this.getInspectedGroupCount();
+   //echo(%this.getName() @ "::loadCollapsState" SPC %groupCount SPC %this.collapseState);
+   for(%grp=0; %grp<%groupCount; %grp++)
+   {
+     if (getword(%this.collapseState,%grp))
+        %this.getInspectedGroup(%grp).instantExpand();     
+     else
+        %this.getInspectedGroup(%grp).instantCollapse();   
+   }
+}
+
+function GuiInspector::renew(%this)
+{    
+   %count = %this.getNumInspectObjects();
+   %inspecting = %this.getInspectObject(0);
+   for(%i=1; %i< %count;%i++)
+      %inspecting = %inspecting SPC %this.getInspectObject(%i);
+
+   %this.inspect(""); //clear
+   //readd
+   for(%i=0; %i<%count;%i++)
+      %this.addInspect(getword(%inspecting,%i));
+}
+
+/// Material Editor specific
+
+function MaterialEditorPlugin::BuildEditorUI(%this)
+{
+   if(isObject(NuMaterialEditorWindow))
+      NuMaterialEditorWindow.delete();  
+      
+   $MaterialEditor::currentLayer = 0;
+   
+   %matWindow = UIBuilder::Window("Material Editor", MaterialEditorPropertiesWindow.Position.x - MaterialEditorPropertiesWindow.Extent.x SPC MaterialEditorPropertiesWindow.Position.y, MaterialEditorPropertiesWindow.Extent.x SPC MaterialEditorPropertiesWindow.Extent.y);
+   %matWindow.setName("NuMaterialEditorWindow");
+   %matWindow.closeCommand = "EWorldEditor.remove(NuMaterialEditorWindow);";
+      UIBuilder::Stack();
+         UIBuilder::SameLine();
+            %label = UIBuilder::Label("Layer");
+            %label.name = "numatedlabel";
+            %matLayerListCtrl = UIBuilder::Dropdown("0\t1\t2\t3", "$MaterialEditor::currentLayer", "onMaterialLayerSelected($ThisControl);");
+            %matLayerListCtrl.name = "NuMatEdLayerSelector";
+            UIBuilder::FitAllOnLine();
+         UIBuilder::End();
+         %inspector = UIBuilder::Inspector("NuMaterialEdPropInspector");
+      UIBuilder::End();
+   UIBuilder::End();
+   
+   
+   
+   MaterialEditorGui.currentMaterial = materialEd_previewMaterial;//DetailBlue;
+   
+   NuMaterialEdPropInspector.refreshMaterial();
+
+   %this.editorUI = %matWindow;
+   EWorldEditor.add(%matWindow);
+}
+
+function MaterialEditorPlugin::CloseEditorUI(%this)
+{
+   EWorldEditor.remove(NuMaterialEditorWindow);
+}
+
+function onMaterialLayerSelected(%this)
+{
+   $MaterialEditor::currentLayer = %this.getText();
+   NuMaterialEdPropInspector.refreshMaterial();
+}
+
+
+function MaterialEditorPropInspector::refreshMaterial(%this)
+{
+   %this.onPreInspectObject(%this.getInspectObject());
+   %this.inspect(MaterialEditorGui.currentMaterial);
+   %this.setForcedArrayIndex(MaterialEditorGui.currentLayer);   
+   //
+   //%this.getScrollbar().setExtent(%ext.x, %ext.y);
+   MaterialEditorGui.guiSync();
+   %this.onPostInspectObject(%this.getInspectObject());
+}
+
+function MaterialEditorPropInspector::onPostInspectorFieldModified(%this, %obj, %inspecting)
+{
+   MaterialEditorGui.guiSync();
+}
+
+function NuMaterialEditorWindow::syncGUI(%this)
+{
+   //do some presentation adjustments
+   %ormMapPresent = MaterialEditorGui.currentMaterial.ORMConfigMapAsset[$MaterialEditor::currentLayer] !$= "";
+   
+   %hideORMSliders = %ormMapPresent;
+   if (!%hideORMSliders)
+      %hideORMSliders = MaterialEditorGui.currentMaterial.AOMapAsset[$MaterialEditor::currentLayer] !$= "";
+   if (!%hideORMSliders)
+      %hideORMSliders = MaterialEditorGui.currentMaterial.RoughMapAsset[$MaterialEditor::currentLayer] !$= "";
+   if (!%hideORMSliders)
+      %hideORMSliders = MaterialEditorGui.currentMaterial.MetalMapAsset[$MaterialEditor::currentLayer] !$= "";
+        
+   %group = NuMaterialEdPropInspector.findExistentGroup("Light Influence Maps");
+   if(%ormMapPresent)
+   {
+      %group.hideField("isSRGb",false);
+      %group.hideField("AOMapAsset");
+      %group.hideField("aoChan");
+      %group.hideField("RoughMapAsset");
+      %group.hideField("roughness");
+      %group.hideField("roughnessChan");
+      %group.hideField("MetalMapAsset");
+      %group.hideField("metalness"); 
+      %group.hideField("metalChan");
+      %group.hideField("save");
+   }
+   else
+   {
+      %group.hideField("isSRGb");
+      if (%hideORMSliders)
+      {
+         %group.hideField("aoChan",false);
+         
+         %group.hideField("roughness");
+         %group.hideField("roughnessChan",false);
+         
+         %group.hideField("metalness");
+         %group.hideField("metalChan",false);
+         %group.hideField("save",false);     
+      }
+      else
+      {
+         %group.hideField("aoChan");
+         
+         %group.hideField("roughness",false);
+         %group.hideField("roughnessChan");
+         
+         %group.hideField("metalness",false);  
+         %group.hideField("metalChan");
+         %group.hideField("save");
+      }
+      %group.hideField("AOMapAsset",false);
+      %group.hideField("RoughMapAsset",false);
+      %group.hideField("MetalMapAsset",false);
+   }
+   
+   %animflags = MaterialEditorGui.currentMaterial.animFlags[$MaterialEditor::currentLayer];
+   %group = NuMaterialEdPropInspector.findExistentGroup("Animation Properties");
+   
+   %hideScroll = true;
+   if (strstr(%animflags, "Scroll")>=0)
+        %hideScroll = false;        
+   %group.hideField("scrollDir",%hideScroll);
+   %group.hideField("scrollSpeed",%hideScroll);
+   
+   %hideRotate = true;
+   if (strstr(%animflags, "Rotate")>=0)
+        %hideRotate = false;
+   %group.hideField("rotSpeed",%hideRotate);
+   %group.hideField("rotPivotOffset",%hideRotate);
+   
+   %hideWave = true;
+   if (strstr(%animflags, "Wave")>=0)
+        %hideWave = false;
+   %group.hideField("waveType",%hideWave);
+   %group.hideField("waveFreq",%hideWave);
+   %group.hideField("waveAmp",%hideWave);
+   
+   %showScale = false;
+   if (strstr(%animflags, "Scale")>=0)
+        %showScale = true;
+   
+   %hideSequence = true;
+   if (strstr(%animflags, "Sequence")>=0)
+        %hideSequence = false;
+   %group.hideField("sequenceFramePerSec",%hideSequence);
+   %group.hideField("sequenceSegmentSize",%hideSequence);
+   
+   cancel(NuMaterialEdPropInspector.refreshing);
+   NuMaterialEdPropInspector.refreshing = NuMaterialEdPropInspector.schedule(64,"renew");
+}

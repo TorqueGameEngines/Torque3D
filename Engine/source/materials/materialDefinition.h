@@ -129,6 +129,14 @@ public:
       Square,
    };
 
+   enum SourceChannelType
+   {
+      RedChannel = 0,
+      GreenChannel,
+      BlueChannel,
+      AlphaChannel
+   };
+
    class StageData
    {
    protected:
@@ -425,9 +433,11 @@ private:
 typedef Material::AnimType MaterialAnimType;
 typedef Material::BlendOp MaterialBlendOp;
 typedef Material::WaveType MaterialWaveType;
+typedef Material::SourceChannelType MaterialSourceChannelType;
 
 DefineBitfieldType(MaterialAnimType);
 DefineEnumType(MaterialBlendOp);
 DefineEnumType(MaterialWaveType);
+DefineEnumType(MaterialSourceChannelType);
 
 #endif // _MATERIALDEFINITION_H_

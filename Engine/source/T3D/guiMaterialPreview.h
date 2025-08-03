@@ -28,6 +28,8 @@
 #ifndef _GUIMATERIALPREVIEW_H_
 #define _GUIMATERIALPREVIEW_H_
 
+#include "assets/ShapeAsset.h"
+
 #include "gui/3d/guiTSControl.h"
 #include "ts/tsShapeInstance.h"
 
@@ -50,8 +52,11 @@ protected:
 
    MouseState  mMouseState;
 
-   TSShapeInstance*  mModel;
-   TSShapeInstance*  mMountedModel;
+   DECLARE_SHAPEASSET_REFACTOR(GuiMaterialPreview, Model)
+   DECLARE_SHAPEASSET_REFACTOR(GuiMaterialPreview, MountedModel)
+
+   TSShapeInstance*  mModelInstance;
+   TSShapeInstance*  mMountedModelInstance;
    U32   mSkinTag;
 
    // For Camera Panning.

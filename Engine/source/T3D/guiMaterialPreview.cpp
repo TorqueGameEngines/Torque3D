@@ -40,7 +40,8 @@
 // GuiMaterialPreview
 GuiMaterialPreview::GuiMaterialPreview()
 :  mMouseState(None),
-   mModel(NULL),
+   mModelInstance(NULL),
+   mMountedModelInstance(NULL),
    runThread(0),
    lastRenderTime(0),
    mLastMousePoint(0, 0),
@@ -64,13 +65,13 @@ GuiMaterialPreview::GuiMaterialPreview()
    // By default don't do dynamic reflection
    // updates for this viewport.
    mReflectPriority = 0.0f;
-   mMountedModel = NULL;
+
    mSkinTag = 0;
 }
 
 GuiMaterialPreview::~GuiMaterialPreview()
 {
-   SAFE_DELETE(mModel);
+   SAFE_DELETE(mModelInstance);
    SAFE_DELETE(mFakeSun);
 }
 
@@ -258,30 +259,34 @@ void GuiMaterialPreview::onMiddleMouseDragged(const GuiEvent &event)
 }
 
 // This is used to set the model we want to view in the control object.
-void GuiMaterialPreview::setObjectModel(const char* modelName)
+void GuiMaterialPreview::setObjectModel(StringTableEntry modelName)
 {
    deleteModel();
 
-   Resource<TSShape> model = ResourceManager::get().load(modelName);
-   if (! bool(model))
+   _setModel(modelName);
+
+   if (!getModel())
    {
-      Con::warnf(avar("GuiMaterialPreview: Failed to load model %s. Please check your model name and load a valid model.", modelName));
+      Con::warnf("GuiMaterialPreview::setObjectModel - Failed to load model '%s'", modelName);
       return;
    }
 
-   mModel = new TSShapeInstance(model, true);
-   AssertFatal(mModel, avar("GuiMaterialPreview: Failed to load model %s. Please check your model name and load a valid model.", modelName));
+   mModelInstance = new TSShapeInstance(getModel(), true);
+   mModelInstance->resetMaterialList();
+   mModelInstance->cloneMaterialList();
+
+   AssertFatal(mModelInstance, avar("GuiMaterialPreview: Failed to load model %s. Please check your model name and load a valid model.", modelName));
 
    // Initialize camera values:
-   mOrbitPos = mModel->getShape()->center;
-   mMinOrbitDist = mModel->getShape()->mRadius;
+   mOrbitPos = mModelInstance->getShape()->center;
+   mMinOrbitDist = mModelInstance->getShape()->mRadius;
 
    lastRenderTime = Platform::getVirtualMilliseconds();
 }
 
 void GuiMaterialPreview::deleteModel()
 {
-   SAFE_DELETE(mModel);
+   SAFE_DELETE(mModelInstance);
    runThread = 0;
 }
 
@@ -358,7 +363,7 @@ void GuiMaterialPreview::onMouseLeave(const GuiEvent & event)
 void GuiMaterialPreview::renderWorld(const RectI &updateRect)
 {
    // nothing to render, punt
-   if ( !mModel && !mMountedModel )
+   if ( !mModelInstance && !mMountedModelInstance )
       return;
 
    S32 time = Platform::getVirtualMilliseconds();
@@ -408,10 +413,10 @@ void GuiMaterialPreview::renderWorld(const RectI &updateRect)
    LIGHTMGR->unregisterAllLights();
    LIGHTMGR->setSpecialLight( LightManager::slSunLightType, mFakeSun );
 
-   if ( mModel )
-      mModel->render( rdata );
+   if ( mModelInstance )
+      mModelInstance->render( rdata );
 
-   if ( mMountedModel )
+   if ( mMountedModelInstance )
    {
       // render a weapon
 	   /*
@@ -441,7 +446,7 @@ void GuiMaterialPreview::renderSunDirection() const
 {
    // Render four arrows aiming in the direction of the sun's light
    ColorI color = LinearColorF(mFakeSun->getColor()).toColorI();
-   F32 length = mModel->getShape()->mBounds.len() * 0.8f;
+   F32 length = mModelInstance->getShape()->mBounds.len() * 0.8f;
 
    // Get the sun's vectors
    Point3F fwd = mFakeSun->getTransform().getForwardVector();
@@ -449,8 +454,8 @@ void GuiMaterialPreview::renderSunDirection() const
    Point3F right = mFakeSun->getTransform().getRightVector() * length / 8;
 
    // Calculate the start and end points of the first arrow (bottom left)
-   Point3F start = mModel->getShape()->center - fwd * length - up / 2 - right / 2;
-   Point3F end = mModel->getShape()->center - fwd * length / 3 - up / 2 - right / 2;
+   Point3F start = mModelInstance->getShape()->center - fwd * length - up / 2 - right / 2;
+   Point3F end = mModelInstance->getShape()->center - fwd * length / 3 - up / 2 - right / 2;
 
    GFXStateBlockDesc desc;
    desc.setZReadWrite(true, true);
@@ -476,7 +481,7 @@ void GuiMaterialPreview::resetViewport()
    mCameraRot.set( mDegToRad(30.0f), 0, mDegToRad(-30.0f) );
    mCameraPos.set(0.0f, 1.75f, 1.25f);
    mOrbitDist = 5.0f;
-   mOrbitPos = mModel->getShape()->center;
+   mOrbitPos = mModelInstance->getShape()->center;
 
    // Reset the viewport's lighting.
    GuiMaterialPreview::mFakeSun->setColor( LinearColorF( 1.0f, 1.0f, 1.0f ) );
@@ -498,7 +503,7 @@ DefineEngineMethod(GuiMaterialPreview, setModel, void, ( const char* shapeName )
    "Sets the model to be displayed in this control\n\n"
    "@param shapeName Name of the model to display.\n")
 {
-   object->setObjectModel(shapeName);
+   object->setObjectModel(StringTable->insert(shapeName));
 }
 
 DefineEngineMethod(GuiMaterialPreview, deleteModel, void, (),,

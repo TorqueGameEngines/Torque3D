@@ -16,7 +16,9 @@ public:
    GuiTextCtrl* mLabel = NULL;
    GuiBitmapButtonCtrl* mPreviewBorderButton = NULL;
    GuiBitmapCtrl* mPreviewImage = NULL;
-   GuiButtonCtrl* mEditButton = NULL;
+   GuiBitmapButtonCtrl* mEditButton = NULL;
+
+   bool mIsDeleteButtonVisible;
 
    DECLARE_CONOBJECT(GuiInspectorTypeImageAssetPtr);
    static void consoleInit();
@@ -29,6 +31,16 @@ public:
 
    void updatePreviewImage();
    void setPreviewImage(StringTableEntry assetId);
+
+   /// Sets this control's caption text, usually set within setInspectorField,
+      /// this is exposed in case someone wants to override the normal caption.
+   void setCaption(StringTableEntry caption) override;
+
+   void setIsDeleteBtnVisible(const bool& isVisible)
+   {
+      if (mEditButton)
+         mEditButton->setVisible(isVisible);
+   }
 };
 
 class GuiInspectorTypeImageAssetId : public GuiInspectorTypeImageAssetPtr

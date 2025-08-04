@@ -1,0 +1,31 @@
+function GuiInspectorGroup::buildBakeCompositeButtonField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
+{
+   %fieldCtrl = %this.createInspectorField();
+   
+   %extent = %this.stack.getExtent();
+
+   %width = mRound(%extent/2);
+    
+   %button = new GuiButtonCtrl() {
+      canSaveDynamicFields = "0";
+      Profile = "ToolsGuiButtonProfile";
+      HorizSizing = "width";
+      VertSizing = "bottom";
+      Position = "16 3";
+      Extent = %width SPC 18;
+      MinExtent = "8 2";
+      canSave = "0";
+      Visible = "1";
+      hovertime = "100";
+      tooltip = ""; //%tooltip;
+      tooltipProfile = "EditorToolTipProfile";
+      text = "Bake";
+      maxLength = "1024";
+      command = "MaterialEditorGui.saveCompositeMap();";
+   };
+      
+   %fieldCtrl.setCaption(%fieldLabel);
+   %fieldCtrl.setEditControl(%button);
+
+   %this.addInspectorField(%fieldCtrl);
+}

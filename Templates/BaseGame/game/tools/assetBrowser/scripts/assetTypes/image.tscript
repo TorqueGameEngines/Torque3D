@@ -1,5 +1,39 @@
 AssetBrowser::registerAssetType("ImageAsset", "Images"); 
 
+function ImageAsset::onCreateNew()
+{
+   %moduleName = $CurrentAssetBrowser.newAssetSettings.moduleName;
+   %modulePath = "data/" @ %moduleName;
+      
+   %assetName = $CurrentAssetBrowser.newAssetSettings.assetName;  
+   
+   %assetPath = NewAssetTargetAddress.getText() @ "/";    
+   
+   %tamlpath = %assetPath @ %assetName @ ".asset.taml";
+   %filePath = %assetPath @ %assetName @ ".png";
+   
+   %asset = new ImageAsset()
+   {
+      AssetName = %assetName;
+      versionId = 1;
+      imageFile = %assetName @ ".png";
+   };
+   
+   TamlWrite(%asset, %tamlpath);
+   
+   %moduleDef = ModuleDatabase.findModule(%moduleName, 1);
+	AssetDatabase.addDeclaredAsset(%moduleDef, %tamlpath);
+	
+	%file = new FileObject();
+   
+   if(%file.openForWrite(%filePath))
+	{
+		%file.close();
+	}
+   
+	return %tamlpath;
+}
+
 function ImageAsset::buildBrowserElement(%this, %previewData)
 {
    //%module = %this.dirHandler.getModuleFromAddress(makeRelativePath(filePath(%assetDef.getImagePath())));
@@ -96,6 +130,17 @@ function ImageAsset::generatePreviewImage(%this, %previewButton, %forceRegenerat
 function ImageAsset::onShowActionMenu(%this)
 {
    GenericAsset::onShowActionMenu(%this);
+   
+   %assetId = %this.getAssetId();
+   
+   EditAssetPopup.setItemPosition("Create Composite Texture" TAB "" TAB "CompositeTextureEditor.buildComposite(\"" @ %assetId @ "\");", 4);
+
+   EditAssetPopup.objectData = %assetId;
+   EditAssetPopup.objectType = AssetDatabase.getAssetType(%assetId);
+   
+   EditAssetPopup.reloadItems();
+   
+   EditAssetPopup.showPopup(Canvas); 
 }
 
 function ImageAsset::onEditProperties(%this)

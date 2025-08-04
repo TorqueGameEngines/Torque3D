@@ -671,7 +671,7 @@ function EditorGui::updateSideBar(%this)
          case "ForestEditorPlugin ":
             ForestEditorPalleteWindow.onMouseDragged();
          case "MaterialEditorPlugin":
-            MaterialEditorPreviewWindow.onMouseDragged();
+            MaterialEditorGuiWindow.onMouseDragged();
          case "MeshRoadEditorPlugin":
             MeshRoadEditorTreeWindow.onMouseDragged();
          case "MissionAreaEditorPlugin":

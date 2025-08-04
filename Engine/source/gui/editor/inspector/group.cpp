@@ -211,7 +211,7 @@ GuiInspectorField *GuiInspectorGroup::findField( const char *fieldName )
 
    for( ; i != mChildren.end(); i++ )
    {
-      if( (*i)->getFieldName() != NULL && dStricmp( (*i)->getFieldName(), fieldName ) == 0 )
+      if( ((*i)->getFieldName() != NULL && dStricmp( (*i)->getFieldName(), fieldName ) == 0) || ((*i)->getCaption() != StringTable->EmptyString() && dStricmp((*i)->getCaption(), fieldName) == 0) )
          return (*i);
    }
 
@@ -833,4 +833,27 @@ DefineEngineMethod(GuiInspectorGroup, setForcedArrayIndex, void, (S32 arrayIndex
    "@param arrayIndex The specific field index for arrayed fields to show. Use -1 or blank arg to go back to normal behavior.")
 {
    object->setForcedArrayIndex(arrayIndex);
+}
+
+DefineEngineMethod(GuiInspectorGroup, findField, S32, (const char* fieldName),,
+   "Finds an Inspector field in this group of a given name.\n"
+   "@param fieldName The name of the field to be found.\n"
+   "@return Field SimObjectId")
+{
+   if (dStrEqual(fieldName, ""))
+      return 0;
+
+   GuiInspectorField* field = object->findField(StringTable->insert(fieldName));
+   if (field == nullptr)
+      return 0;
+
+   return field->getId();
+}
+
+DefineEngineMethod(GuiInspectorGroup, refresh, void, (), ,
+   "Finds an Inspector field in this group of a given name.\n"
+   "@param fieldName The name of the field to be found.\n"
+   "@return Field SimObjectId")
+{
+   object->inspectGroup();
 }

@@ -1,0 +1,192 @@
+function CompositeTextureEditor::buildComposite(%this, %sourceTex0, %sourceTex1, %sourceTex2, %sourceTex3, %sourceChan0, %sourceChan1, %sourceChan2, %sourceChan3, %callback)
+{
+   Canvas.pushDialog(%this);   
+   
+   CompTextureEd_RedChan.setChannelData(%sourceTex0, %sourceChan0);
+   CompTextureEd_GreenChan.setChannelData(%sourceTex1, %sourceChan1);
+   CompTextureEd_BlueChan.setChannelData(%sourceTex2, %sourceChan2);
+   CompTextureEd_AlphaChan.setChannelData(%sourceTex3, %sourceChan3);
+   
+   %this.callbackFunc = %callback;
+}
+
+function CompositeTextureSlotContainer::onWake(%this)
+{
+   %this-->InputMode.clear(); 
+   %this-->InputMode.add("Raw Value");
+   %this-->InputMode.add("Texture");
+   %this-->InputMode.setSelected(1);
+   %this-->InputMode.active = false;
+   
+   %this-->sourceChannel.clear();
+   %this-->sourceChannel.add("Red");
+   %this-->sourceChannel.add("Green");
+   %this-->sourceChannel.add("Blue");
+   %this-->sourceChannel.add("Alpha");
+}
+
+function CompositeTextureSlotContainer::setChannelData(%this, %sourceValue, %sourceChannel)
+{
+   //for now, hard-force Texture mode
+   %this-->InputMode.setSelected(1);
+   
+   if(AssetDatabase.isDeclaredAsset(%sourceValue))
+   {
+      %this-->InputMode.setSelected(1);
+      
+      %this-->bitmap.setBitmap(%sourceValue);
+      
+      if(%sourceChannel $= "")
+         %sourceChannel = "Red";
+         
+      %this-->sourceChannel.setText(%sourceChannel);
+   }
+   /*else
+   {
+      %this-->InputMode.setSelected(0);
+      
+      %value = 0;
+      if(%sourceValue !$= "" && (isFloat(%sourceValue) || isFloat(%sourceValue)))
+      {
+         %value = %sourceValue;
+      }
+      
+      %this-->RawValueTxtEdit.setText(%value);
+      %this-->RawValueSlider.setValue(%value);
+   }*/
+}
+
+function CompositeTextureSlotContainer::getChannelData(%this)
+{
+   return "";
+}
+
+function CompositeTextureChannelMode::onSelect(%this, %id, %text)
+{
+   %isRawValueMode = %text $= "Raw Value";
+   %this.getParent()-->RawValueContainer.setVisible(%isRawValueMode);
+   %this.getParent()-->TextureContainer.setVisible(!%isRawValueMode);
+}
+
+function CompositeTextureEditor::setSourceTex(%this, %assetId)
+{
+   if($CompTexSourceChannel $= "")
+      $CompTexSourceChannel = 0;
+      
+   %channelContainer = CompositeTextureEditorWindow.getObject($CompTexSourceChannel);
+   %channelContainer-->bitmap.setBitmap(%assetId);
+}
+
+function CompositeTextureEditor::saveComposite(%this)
+{
+   %cubemap = CubemapEditor.currentCubemap;
+   
+   %aoMap = CompTextureEd_RedChan-->Bitmap.getBitmap();
+   %roughMap = CompTextureEd_GreenChan-->Bitmap.getBitmap();
+   %metalMap = CompTextureEd_BlueChan-->Bitmap.getBitmap();
+
+   if(%aoMap $= "ToolsModule:unknownImage_image")
+      %aoMap = "";
+   if(%roughMap $= "ToolsModule:unknownImage_image")
+      %roughMap = "";
+   if(%metalMap $= "ToolsModule:unknownImage_image")
+      %metalMap = "";
+      
+   if(%aoMap $= "" && %roughMap $= "" && %metalMap $= "")
+   {
+      toolsMessageBoxOK("Error", "Saving a composite map requires at least one channel slot to have source data!");
+      return;
+   }
+   
+   AssetBrowser.setupCreateNewAsset("ImageAsset", AssetBrowser.selectedModule, "CompositeEditorDoSaveComposite");
+}
+
+function CompositeEditorDoSaveComposite(%assetId)
+{
+   %assetDef = AssetDatabase.acquireAsset(%assetId);
+   if(!isObject(%assetDef))
+   {
+      toolsMessageBoxOK("Error", "We somehow failed to successfully create a new ImageAsset!");
+      return;
+   }
+   
+    %targetFilePath = %assetDef.getImagePath();
+   
+    %aoMapAsset = CompTextureEd_RedChan-->Bitmap.getBitmap();
+    %roughMapAsset = CompTextureEd_GreenChan-->Bitmap.getBitmap();
+    %metalMapAsset = CompTextureEd_BlueChan-->Bitmap.getBitmap();
+    
+    
+    if(%aoMapAsset $= "ToolsModule:unknownImage_image")
+    {
+      %aoMap = "";
+    }
+    else
+    {
+      %aoAssetDef = AssetDatabase.acquireAsset(%aoMapAsset);
+      %aoMap = %aoAssetDef.getImagePath();
+    }
+    if(%roughMapAsset $= "ToolsModule:unknownImage_image")
+    {
+      %roughMap = "";
+    }
+    else
+    {
+      %roughAssetDef = AssetDatabase.acquireAsset(%roughMapAsset);
+      %roughMap = %roughAssetDef.getImagePath();
+    }
+    if(%metalMapAsset $= "ToolsModule:unknownImage_image")
+    {
+      %metalMap = "";
+    }
+    else
+    {
+      %metalAssetDef = AssetDatabase.acquireAsset(%metalMapAsset);
+      %metalMap = %roughAssetDef.getImagePath();
+    }
+    
+    if(%aoMap $= "" && %roughMap $= "" && %metalMap $= "")
+    {
+       toolsMessageBoxOK("Error", "Attempted to create a composite texture but all three source textures are blank or invalid!");
+       return;  
+    }
+    
+    %redChanSource = CompTextureEd_RedChan-->sourceChannel;
+    %greenChanSource = CompTextureEd_GreenChan-->sourceChannel;
+    %blueChanSource = CompTextureEd_BlueChan-->sourceChannel;
+    
+    %aoChan = %redChanSource.findText(%redChanSource.getText());
+    %aoChan = %aoChan == -1 ? 0 : %aoChan;
+    
+    %roughChan = %greenChanSource.findText(%greenChanSource.getText());
+    %roughChan = %roughChan == -1 ? 1 : %roughChan;
+    
+    %metalChan = %blueChanSource.findText(%blueChanSource.getText());
+    %metalChan = %metalChan == -1 ? 2 : %metalChan;
+    
+    %channelKey = %aoChan SPC %roughChan SPC %metalChan SPC 3;
+    error("Storing: \"" @ %aoMap @"\" \""@ %roughMap @"\" \""@ %metalMap @"\" \""@ %channelKey @"\" \""@ %targetFilePath @"\"");
+    saveCompositeTexture(%aoMap, %roughMap, %metalMap, "", %channelKey, %targetFilePath);
+    
+    %assetDef.refreshAsset();
+    
+    %command = CompositeTextureEditor.callbackFunc @ "(\"" @ %assetId @ "\");";
+    if(CompositeTextureEditor.callbackFunc !$= "")
+    {
+       eval(%command);
+       CompositeTextureEditor.callbackFunc = "";
+    }
+    
+    Canvas.popDialog(CompositeTextureEditor);
+}
+
+function CompositeTextureRawValueEdit::onReturn(%this)
+{
+   %this.getParent()-->RawValueSlider.setValue(%this.getText());
+}
+
+function CompositeTextureRawValueSlider::onDragComplete(%this)
+{
+   %value = %this.getValue();
+   %this.getParent()-->RawValueTxtEdit.setText(%value);
+}

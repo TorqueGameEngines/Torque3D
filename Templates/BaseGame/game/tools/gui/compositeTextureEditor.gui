@@ -1,0 +1,437 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(CompositeTextureEditor) {
+   extent = "1920 1080";
+   horizSizing = "width";
+   vertSizing = "height";
+   profile = "ToolsGuiDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+      enabled = "1";
+
+   new GuiWindowCtrl(CompositeTextureEditorWindow) {
+      Text = "Composite Texture Editor";
+      resizeWidth = "0";
+      resizeHeight = "0";
+      canMinimize = "0";
+      canMaximize = "0";
+      closeCommand = "Canvas.popDialog(CompositeTextureEditor);";
+      position = "721 416";
+      extent = "478 248";
+      minExtent = "478 248";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "ToolsGuiWindowProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiContainer(CompTextureEd_RedChan) {
+         position = "11 39";
+         extent = "107 174";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         className = "CompositeTextureSlotContainer";
+
+         new GuiTextCtrl() {
+            Text = "Red Channel";
+            position = "5 -2";
+            extent = "100 15";
+            horizSizing = "width";
+            profile = "ToolsGuiTextProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiPopUpMenuCtrl() {
+            position = "1 20";
+            extent = "106 23";
+            horizSizing = "width";
+            profile = "ToolsGuiPopUpMenuEditProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "InputMode";
+            className = "CompositeTextureChannelMode";
+         };
+         new GuiContainer() {
+            position = "0 41";
+            extent = "107 125";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "RawValueContainer";
+
+            new GuiTextEditCtrl() {
+               position = "0 8";
+               extent = "28 20";
+               profile = "ToolsGuiTextEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "RawValueTxtEdit";
+               className = "CompositeTextureRawValueEdit";
+            };
+            new GuiSliderCtrl() {
+               position = "38 9";
+               extent = "68 19";
+               profile = "GuiSliderProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "RawValueSlider";
+               className = "CompositeTextureRawValueSlider";
+               Command = "$thisControl.onDragComplete();";
+               range = 0 SPC 1;
+               ticks = 0.01;
+            };
+         };
+         new GuiContainer() {
+            position = "0 41";
+            extent = "107 125";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "TextureContainer";
+
+            new GuiBitmapCtrl() {
+               BitmapAsset = "ToolsModule:unknownImage_image";
+               BitmapFile = "tools/materialEditor/images/unknownImage.png";
+               position = "21 9";
+               horizSizing = "center";
+               profile = "ToolsGuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "Bitmap";
+            };
+            new GuiBitmapButtonCtrl() {
+               BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
+               position = "21 9";
+               extent = "64 64";
+               horizSizing = "center";
+               profile = "ToolsGuiDefaultProfile";
+               command = "$CompTexSourceChannel = 0;AssetBrowser.showDialog(\"ImageAsset\", \"CompositeTextureEditor.setSourceTex\");";
+               tooltipProfile = "ToolsGuiDefaultProfile";
+               ToolTip = "Set the source of the texture for this channel to sample from when baking a composite.";
+            };
+            new GuiTextCtrl() {
+               Text = "Source Channel";
+               position = "5 85";
+               extent = "100 10";
+               horizSizing = "width";
+               profile = "ToolsGuiTextProfile";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiPopUpMenuCtrl() {
+               position = "1 97";
+               extent = "106 23";
+               horizSizing = "width";
+               profile = "ToolsGuiPopUpMenuEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "sourceChannel";
+               className = "CompositeTextureTexSrcChannel";
+            };
+         };
+      };
+      new GuiContainer(CompTextureEd_GreenChan) {
+         position = "129 39";
+         extent = "107 174";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         className = "CompositeTextureSlotContainer";
+
+         new GuiTextCtrl() {
+            Text = "Green Channel";
+            position = "5 -2";
+            extent = "100 15";
+            horizSizing = "width";
+            profile = "ToolsGuiTextProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiPopUpMenuCtrl() {
+            position = "1 20";
+            extent = "106 23";
+            horizSizing = "width";
+            profile = "ToolsGuiPopUpMenuEditProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "InputMode";
+            className = "CompositeTextureChannelMode";
+         };
+         new GuiContainer() {
+            position = "0 41";
+            extent = "107 125";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "RawValueContainer";
+
+            new GuiTextEditCtrl() {
+               position = "0 8";
+               extent = "28 20";
+               profile = "ToolsGuiTextEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "RawValueTxtEdit";
+               className = "CompositeTextureRawValueEdit";
+            };
+            new GuiSliderCtrl() {
+               position = "38 9";
+               extent = "68 19";
+               profile = "GuiSliderProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "RawValueSlider";
+               className = "CompositeTextureRawValueSlider";
+               Command = "$thisControl.onDragComplete();";
+               range = 0 SPC 1;
+               ticks = 0.01;
+            };
+         };
+         new GuiContainer() {
+            position = "0 41";
+            extent = "107 125";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "TextureContainer";
+
+            new GuiBitmapCtrl() {
+               BitmapAsset = "ToolsModule:unknownImage_image";
+               BitmapFile = "tools/materialEditor/images/unknownImage.png";
+               position = "21 9";
+               horizSizing = "center";
+               profile = "ToolsGuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "Bitmap";
+            };
+            new GuiBitmapButtonCtrl() {
+               BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
+               position = "21 9";
+               extent = "64 64";
+               horizSizing = "center";
+               profile = "ToolsGuiDefaultProfile";
+               command = "$CompTexSourceChannel = 1;AssetBrowser.showDialog(\"ImageAsset\", \"CompositeTextureEditor.setSourceTex\");";
+               tooltipProfile = "ToolsGuiDefaultProfile";
+               ToolTip = "Set the source of the texture for this channel to sample from when baking a composite.";
+            };
+            new GuiTextCtrl() {
+               Text = "Source Channel";
+               position = "5 85";
+               extent = "100 10";
+               horizSizing = "width";
+               profile = "ToolsGuiTextProfile";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiPopUpMenuCtrl() {
+               position = "1 97";
+               extent = "106 23";
+               horizSizing = "width";
+               profile = "ToolsGuiPopUpMenuEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "sourceChannel";
+               className = "CompositeTextureTexSrcChannel";
+            };
+         };
+      };
+      new GuiContainer(CompTextureEd_BlueChan) {
+         position = "247 39";
+         extent = "107 174";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         className = "CompositeTextureSlotContainer";
+
+         new GuiTextCtrl() {
+            Text = "Blue Channel";
+            position = "5 -2";
+            extent = "100 15";
+            horizSizing = "width";
+            profile = "ToolsGuiTextProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiPopUpMenuCtrl() {
+            position = "1 20";
+            extent = "106 23";
+            horizSizing = "width";
+            profile = "ToolsGuiPopUpMenuEditProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "InputMode";
+            className = "CompositeTextureChannelMode";
+         };
+         new GuiContainer() {
+            position = "0 41";
+            extent = "107 125";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "RawValueContainer";
+
+            new GuiTextEditCtrl() {
+               position = "0 8";
+               extent = "28 20";
+               profile = "ToolsGuiTextEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "RawValueTxtEdit";
+               className = "CompositeTextureRawValueEdit";
+            };
+            new GuiSliderCtrl() {
+               position = "38 9";
+               extent = "68 19";
+               profile = "GuiSliderProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "RawValueSlider";
+               className = "CompositeTextureRawValueSlider";
+               Command = "$thisControl.onDragComplete();";
+               range = 0 SPC 1;
+               ticks = 0.01;
+            };
+         };
+         new GuiContainer() {
+            position = "0 41";
+            extent = "107 125";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "TextureContainer";
+
+            new GuiBitmapCtrl() {
+               BitmapAsset = "ToolsModule:unknownImage_image";
+               BitmapFile = "tools/materialEditor/images/unknownImage.png";
+               position = "21 9";
+               horizSizing = "center";
+               profile = "ToolsGuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "Bitmap";
+            };
+            new GuiBitmapButtonCtrl() {
+               BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
+               position = "21 9";
+               extent = "64 64";
+               horizSizing = "center";
+               profile = "ToolsGuiDefaultProfile";
+               command = "$CompTexSourceChannel = 2;AssetBrowser.showDialog(\"ImageAsset\", \"CompositeTextureEditor.setSourceTex\");";
+               tooltipProfile = "ToolsGuiDefaultProfile";
+               ToolTip = "Set the source of the texture for this channel to sample from when baking a composite.";
+            };
+            new GuiTextCtrl() {
+               Text = "Source Channel";
+               position = "5 85";
+               extent = "100 10";
+               horizSizing = "width";
+               profile = "ToolsGuiTextProfile";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiPopUpMenuCtrl() {
+               position = "1 97";
+               extent = "106 23";
+               horizSizing = "width";
+               profile = "ToolsGuiPopUpMenuEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "sourceChannel";
+               className = "CompositeTextureTexSrcChannel";
+            };
+         };
+      };
+      new GuiContainer(CompTextureEd_AlphaChan) {
+         position = "361 39";
+         extent = "107 174";
+         profile = "GuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         className = "CompositeTextureSlotContainer";
+
+         new GuiTextCtrl() {
+            Text = "Alpha Channel";
+            position = "5 -2";
+            extent = "100 15";
+            horizSizing = "width";
+            profile = "ToolsGuiTextProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiPopUpMenuCtrl() {
+            position = "1 20";
+            extent = "106 23";
+            horizSizing = "width";
+            profile = "ToolsGuiPopUpMenuEditProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "InputMode";
+            className = "CompositeTextureChannelMode";
+         };
+         new GuiContainer() {
+            position = "0 41";
+            extent = "107 125";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "RawValueContainer";
+
+            new GuiTextEditCtrl() {
+               position = "0 8";
+               extent = "28 20";
+               profile = "ToolsGuiTextEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "RawValueTxtEdit";
+               className = "CompositeTextureRawValueEdit";
+            };
+            new GuiSliderCtrl() {
+               position = "38 9";
+               extent = "68 19";
+               profile = "GuiSliderProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "RawValueSlider";
+               className = "CompositeTextureRawValueSlider";
+               Command = "$thisControl.onDragComplete();";
+               range = 0 SPC 1;
+               ticks = 0.01;
+            };
+         };
+         new GuiContainer() {
+            position = "0 41";
+            extent = "107 125";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "TextureContainer";
+
+            new GuiBitmapCtrl() {
+               BitmapAsset = "ToolsModule:unknownImage_image";
+               BitmapFile = "tools/materialEditor/images/unknownImage.png";
+               position = "21 9";
+               horizSizing = "center";
+               profile = "ToolsGuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "Bitmap";
+            };
+            new GuiBitmapButtonCtrl() {
+               BitmapAsset = "ToolsModule:cubemapBtnBorder_n_image";
+               position = "21 9";
+               extent = "64 64";
+               horizSizing = "center";
+               profile = "ToolsGuiDefaultProfile";
+               command = "$CompTexSourceChannel = 3;AssetBrowser.showDialog(\"ImageAsset\", \"CompositeTextureEditor.setSourceTex\");";
+               tooltipProfile = "ToolsGuiDefaultProfile";
+               ToolTip = "Set the source of the texture for this channel to sample from when baking a composite.";
+            };
+            new GuiTextCtrl() {
+               Text = "Source Channel";
+               position = "5 85";
+               extent = "100 10";
+               horizSizing = "width";
+               profile = "ToolsGuiTextProfile";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+            new GuiPopUpMenuCtrl() {
+               position = "1 97";
+               extent = "106 23";
+               horizSizing = "width";
+               profile = "ToolsGuiPopUpMenuEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "sourceChannel";
+               className = "CompositeTextureTexSrcChannel";
+            };
+         };
+      };
+      new GuiButtonCtrl() {
+         Text = "Save";
+         position = "339 216";
+         extent = "74 24";
+         profile = "ToolsGuiButtonProfile";
+         command = "CompositeTextureEditor.saveComposite();";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiButtonCtrl() {
+         Text = "Cancel";
+         position = "417 216";
+         extent = "52 24";
+         profile = "ToolsGuiButtonProfile";
+         command = "Canvas.popDialog(CompositeTextureEditor);";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

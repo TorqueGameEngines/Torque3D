@@ -1,5 +1,13 @@
 AssetBrowser::registerAssetType("MaterialAsset", "Materials"); 
 
+function MaterialAsset::setupCreateNew()
+{
+   NewAssetPropertiesInspector.startGroup("Material");
+   NewAssetPropertiesInspector.addField("InheritFrom", "Inherit From", "MaterialInheritList",  "What material should this new one inherit from.", "", "", $CurrentAssetBrowser.newAssetSettings);
+   
+   NewAssetPropertiesInspector.endGroup();
+}
+
 function MaterialAsset::onCreateNew()
 {
    %assetName = $CurrentAssetBrowser.newAssetSettings.assetName;
@@ -18,6 +26,7 @@ function MaterialAsset::onCreateNew()
       materialDefinitionName = %assetName;
       
       new Material(%assetName) {
+         inheritFrom = $CurrentAssetBrowser.newAssetSettings.inheritFrom;
          mapTo = %assetName;
       };
    };
@@ -226,4 +235,102 @@ function GuiInspectorTypeMaterialAssetPtr::onControlDropped( %this, %payload, %p
    }
    
    EWorldEditor.isDirty = true;
+}
+
+function GuiInspectorGroup::buildMaterialInheritListField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
+{
+   %extent = 18;
+   
+   %fieldCtrl = %this.createInspectorField();
+   
+   %extent = %this.stack.getExtent();
+   
+   %width = mRound(%extent/2);
+   %height = 20;
+   %inset = 10;
+      
+   %editControl = new GuiPopUpMenuCtrlEx() {
+      class = "materialInheritListField";
+      maxPopupHeight = "200";
+      sbUsesNAColor = "0";
+      reverseTextList = "0";
+      bitmapBounds = "16 16";
+      maxLength = "1024";
+      Margin = "0 0 0 0";
+      Padding = "0 0 0 0";
+      AnchorTop = "1";
+      AnchorBottom = "0";
+      AnchorLeft = "1";
+      AnchorRight = "0";
+      isContainer = "0";
+      Profile = "ToolsGuiPopUpMenuProfile";
+      HorizSizing = "right";
+      VertSizing = "bottom";
+      Position = %fieldCtrl.edit.position;
+      Extent = %fieldCtrl.edit.extent;
+      MinExtent = "8 2";
+      canSave = "1";
+      Visible = "1";
+      tooltipprofile = "ToolsGuiToolTipProfile";
+      tooltip = ""; //%tooltip;
+      text = %fieldDefaultVal;
+      hovertime = "1000";
+      ownerObject = %ownerObj;
+      fieldName = %fieldName;
+      callbackName = %callbackName;
+      allowTextSearch = true;
+   };
+   
+   //set the field value
+   if(getSubStr(%this.fieldName, 0, 1) $= "$")
+   {
+      if(%fieldName $= "")
+         %editControl.setText(%fieldName);
+   }
+   else if(isObject(%ownerObj))
+   {
+      //regular variable
+      %setCommand = %editControl @ ".setText(" @ %ownerObj @ "." @ %fieldName @ ");";
+      eval(%setCommand);
+   }
+   
+   %listCount = getTokenCount(%fieldDataVals, ",;");
+   
+   for(%i=0; %i < materialSet.getCount(); %i++)
+   {
+      %matObj = materialSet.getObject(%i);
+      %matName = %matObj.getName();
+      
+      if(%matName !$= "")
+         %editControl.add(%matName); 
+   }
+
+   %fieldCtrl.setCaption(%fieldLabel);
+   %fieldCtrl.setEditControl(%editControl);
+   
+   //echo("GuiInspectorListField - " @ %editControl.getID() @ " - " @ %fieldName);
+
+   %this.addInspectorField(%fieldCtrl);
+}
+
+function materialInheritListField::onSelect( %this, %id, %text )
+{   
+   if(getSubStr(%this.fieldName, 0, 1) $= "$")
+   {
+      //ah, a global var, just do it straight, then
+      %setCommand = %this.fieldName @ " = \"" @ %text @ "\";";
+   }
+   else if(isObject(%this.ownerObject))
+   {
+      //regular variable
+      %setCommand = %this.ownerObject @ "." @ %this.fieldName @ " = \"" @ %text @ "\";";
+   }
+   else if(%this.callbackName !$= "")
+   {
+      %setCommand = %this.callbackName @ "(\"" @ %this.fieldName @ "\",\"" @ %text @"\");";
+   }
+   
+   echo("materialInheritListField::onSelect() - command: " @ %setCommand);
+   
+   eval(%setCommand);
 }

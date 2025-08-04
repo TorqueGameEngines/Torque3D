@@ -38,6 +38,7 @@
 #include "gui/worldEditor/undoActions.h"
 #include "T3D/gameBase/gameConnection.h"
 #include "T3D/AI/AIController.h"
+#include "navigation/navMeshTool.h"
 
 IMPLEMENT_CONOBJECT(GuiNavEditorCtrl);
 
@@ -47,24 +48,11 @@ ConsoleDocClass(GuiNavEditorCtrl,
                 "@internal"
                 );
 
-// Each of the mode names directly correlates with the Nav Editor's tool palette.
-const String GuiNavEditorCtrl::mSelectMode = "SelectMode";
-const String GuiNavEditorCtrl::mLinkMode = "LinkMode";
-const String GuiNavEditorCtrl::mCoverMode = "CoverMode";
-const String GuiNavEditorCtrl::mTileMode = "TileMode";
-const String GuiNavEditorCtrl::mTestMode = "TestMode";
-
 GuiNavEditorCtrl::GuiNavEditorCtrl()
 {
-   mMode = mSelectMode;
    mIsDirty = false;
    mStartDragMousePoint = InvalidMousePoint;
    mMesh = NULL;
-   mCurTile = mTile = -1;
-   mPlayer = mCurPlayer = NULL;
-   mSpawnClass = mSpawnDatablock = "";
-   mLinkStart = Point3F::Max;
-   mLink = mCurLink = -1;
 }
 
 GuiNavEditorCtrl::~GuiNavEditorCtrl()
@@ -101,25 +89,21 @@ void GuiNavEditorCtrl::initPersistFields()
    docsURL;
    addField("isDirty", TypeBool, Offset(mIsDirty, GuiNavEditorCtrl));
 
-   addField("spawnClass", TypeRealString, Offset(mSpawnClass, GuiNavEditorCtrl),
-      "Class of object to spawn in test mode.");
-   addField("spawnDatablock", TypeRealString, Offset(mSpawnDatablock, GuiNavEditorCtrl),
-      "Datablock to give new objects in test mode.");
-
    Parent::initPersistFields();
 }
 
 void GuiNavEditorCtrl::onSleep()
 {
    Parent::onSleep();
-
-   //mMode = mSelectMode;
 }
 
 void GuiNavEditorCtrl::selectMesh(NavMesh *mesh)
 {
    mesh->setSelected(true);
    mMesh = mesh;
+
+   if (mTool)
+      mTool->setActiveNavMesh(mMesh);
 }
 
 DefineEngineMethod(GuiNavEditorCtrl, selectMesh, void, (S32 id),,
@@ -139,125 +123,6 @@ DefineEngineMethod(GuiNavEditorCtrl, getMesh, S32, (),,
    "@brief Select a NavMesh object.")
 {
    return object->getMeshId();
-}
-
-S32 GuiNavEditorCtrl::getPlayerId()
-{
-   return mPlayer.isNull() ? 0 : mPlayer->getId();
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, getPlayer, S32, (),,
-   "@brief Select a NavMesh object.")
-{
-   return object->getPlayerId();
-}
-
-void GuiNavEditorCtrl::deselect()
-{
-   if(!mMesh.isNull())
-      mMesh->setSelected(false);
-   mMesh = NULL;
-   mPlayer = mCurPlayer = NULL;
-   mCurTile = mTile = -1;
-   mLinkStart = Point3F::Max;
-   mLink = mCurLink = -1;
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, deselect, void, (),,
-   "@brief Deselect whatever is currently selected in the editor.")
-{
-   object->deselect();
-}
-
-void GuiNavEditorCtrl::deleteLink()
-{
-   if(!mMesh.isNull() && mLink != -1)
-   {
-      mMesh->selectLink(mLink, false);
-      mMesh->deleteLink(mLink);
-      mLink = -1;
-      Con::executef(this, "onLinkDeselected");
-   }
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, deleteLink, void, (),,
-   "@brief Delete the currently selected link.")
-{
-   object->deleteLink();
-}
-
-void GuiNavEditorCtrl::setLinkFlags(const LinkData &d)
-{
-   if(mMode == mLinkMode && !mMesh.isNull() && mLink != -1)
-   {
-      mMesh->setLinkFlags(mLink, d);
-   }
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, setLinkFlags, void, (U32 flags),,
-   "@Brief Set jump and drop properties of the selected link.")
-{
-   object->setLinkFlags(LinkData(flags));
-}
-
-void GuiNavEditorCtrl::buildTile()
-{
-   if(!mMesh.isNull() && mTile != -1)
-      mMesh->buildTile(mTile);
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, buildTile, void, (),,
-   "@brief Build the currently selected tile.")
-{
-   object->buildTile();
-}
-
-void GuiNavEditorCtrl::spawnPlayer(const Point3F &pos)
-{
-   SceneObject *obj = (SceneObject*)Sim::spawnObject(mSpawnClass, mSpawnDatablock);
-   if(obj)
-   {
-      MatrixF mat(true);
-      mat.setPosition(pos);
-      obj->setTransform(mat);
-      SimObject* cleanup = Sim::findObject("MissionCleanup");
-      if(cleanup)
-      {
-         SimGroup* missionCleanup = dynamic_cast<SimGroup*>(cleanup);
-         missionCleanup->addObject(obj);
-      }
-      mPlayer = obj;
-#ifdef TORQUE_NAVIGATION_ENABLED
-      AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(obj);
-      if (asAIPlayer) //try direct
-      {
-         Con::executef(this, "onPlayerSelected", Con::getIntArg(asAIPlayer->mLinkTypes.getFlags()));
-      }
-      else
-      {
-         ShapeBase* sbo = dynamic_cast<ShapeBase*>(obj);
-         if (sbo->getAIController())
-         {
-            if (sbo->getAIController()->mControllerData)
-               Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
-         }
-         else
-         {
-#endif
-            Con::executef(this, "onPlayerSelected");
-#ifdef TORQUE_NAVIGATION_ENABLED
-         }
-      }
-#endif
-   }
-}
-
-DefineEngineMethod(GuiNavEditorCtrl, spawnPlayer, void, (),,
-                   "@brief Spawn an AIPlayer at the centre of the screen.")
-{
-   Point3F c;
-   if(object->get3DCentre(c))
-      object->spawnPlayer(c);
 }
 
 void GuiNavEditorCtrl::get3DCursor(GuiCursor *&cursor,
@@ -315,148 +180,12 @@ void GuiNavEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 {
    mGizmo->on3DMouseDown(event);
 
-   if(!isFirstResponder())
-      setFirstResponder();
+   if (mTool)
+      mTool->on3DMouseDown(event);
 
    mouseLock();
 
-   // Construct a LineSegment from the camera position to 1000 meters away in
-   // the direction clicked.
-   // If that segment hits the terrain, truncate the ray to only be that length.
-
-   Point3F startPnt = event.pos;
-   Point3F endPnt = event.pos + event.vec * 1000.0f;
-
-   RayInfo ri;
-
-   U8 keys = Input::getModifierKeys();
-   bool shift = keys & SI_LSHIFT;
-   bool ctrl = keys & SI_LCTRL;
-
-   if(mMode == mLinkMode && !mMesh.isNull())
-   {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-      {
-         U32 link = mMesh->getLink(ri.point);
-         if(link != -1)
-         {
-            if(mLink != -1)
-               mMesh->selectLink(mLink, false);
-            mMesh->selectLink(link, true, false);
-            mLink = link;
-            LinkData d = mMesh->getLinkFlags(mLink);
-            Con::executef(this, "onLinkSelected", Con::getIntArg(d.getFlags()));
-         }
-         else
-         {
-            if(mLink != -1)
-            {
-               mMesh->selectLink(mLink, false);
-               mLink = -1;
-               Con::executef(this, "onLinkDeselected");
-            }
-            else
-            {
-               if(mLinkStart != Point3F::Max)
-               {
-                  mMesh->addLink(mLinkStart, ri.point);
-                  if(!shift)
-                     mLinkStart = Point3F::Max;
-               }
-               else
-               {
-                  mLinkStart = ri.point;
-               }
-            }
-         }
-      }
-      else
-      {
-         mMesh->selectLink(mLink, false);
-         mLink = -1;
-         Con::executef(this, "onLinkDeselected");
-      }
-   }
-
-   if(mMode == mTileMode && !mMesh.isNull())
-   {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticShapeObjectType, &ri))
-      {
-         mTile = mMesh->getTile(ri.point);
-         dd.clear();
-         mMesh->renderTileData(dd, mTile);
-      }
-   }
-
-   if(mMode == mTestMode)
-   {
-      // Spawn new character
-      if(ctrl)
-      {
-         if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-            spawnPlayer(ri.point);
-      }
-      // Deselect character
-      else if(shift)
-      {
-         mPlayer = NULL;
-         Con::executef(this, "onPlayerDeselected");
-      }
-      // Select/move character
-      else
-      {
-         if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType | VehicleObjectType, &ri))
-         {
-            if(ri.object)
-            {
-               mPlayer = ri.object;
-#ifdef TORQUE_NAVIGATION_ENABLED
-               AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
-               if (asAIPlayer) //try direct
-               {
-                  Con::executef(this, "onPlayerSelected", Con::getIntArg(asAIPlayer->mLinkTypes.getFlags()));
-               }
-               else
-               {
-                  ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
-                  if (sbo->getAIController())
-                  {
-                     if (sbo->getAIController()->mControllerData)
-                        Con::executef(this, "onPlayerSelected", Con::getIntArg(sbo->getAIController()->mControllerData->mLinkTypes.getFlags()));
-                  }
-                  else
-                  {
-#endif
-                     Con::executef(this, "onPlayerSelected");
-                  }
-#ifdef TORQUE_NAVIGATION_ENABLED
-               }
-            }
-#endif
-         }
-         else if (!mPlayer.isNull() && gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-         {
-            AIPlayer* asAIPlayer = dynamic_cast<AIPlayer*>(mPlayer.getPointer());
-            if (asAIPlayer) //try direct
-            {
-#ifdef TORQUE_NAVIGATION_ENABLED
-               asAIPlayer->setPathDestination(ri.point);
-#else
-                asAIPlayer->setMoveDestination(ri.point,false);
-#endif
-            }
-            else
-            {
-               ShapeBase* sbo = dynamic_cast<ShapeBase*>(mPlayer.getPointer());
-               if (sbo->getAIController())
-               {
-                  if (sbo->getAIController()->mControllerData)
-                     sbo->getAIController()->getNav()->setPathDestination(ri.point, true);
-               }
-            }
-         }
-      }
-   }
+   return;
 }
 
 void GuiNavEditorCtrl::on3DMouseUp(const Gui3DMouseEvent & event)
@@ -464,64 +193,18 @@ void GuiNavEditorCtrl::on3DMouseUp(const Gui3DMouseEvent & event)
    // Keep the Gizmo up to date.
    mGizmo->on3DMouseUp(event);
 
+   if (mTool)
+      mTool->on3DMouseUp(event);
+
    mouseUnlock();
 }
 
 void GuiNavEditorCtrl::on3DMouseMove(const Gui3DMouseEvent & event)
 {
-   //if(mSelRiver != NULL && mSelNode != -1)
-      //mGizmo->on3DMouseMove(event);
+   if (mTool)
+      mTool->on3DMouseMove(event);
 
-   Point3F startPnt = event.pos;
-   Point3F endPnt = event.pos + event.vec * 1000.0f;
-
-   RayInfo ri;
-
-   if(mMode == mLinkMode && !mMesh.isNull())
-   {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-      {
-         U32 link = mMesh->getLink(ri.point);
-         if(link != -1)
-         {
-            if(link != mLink)
-            {
-               if(mCurLink != -1)
-                  mMesh->selectLink(mCurLink, false);
-               mMesh->selectLink(link, true, true);
-            }
-            mCurLink = link;
-         }
-         else
-         {
-            if(mCurLink != mLink)
-               mMesh->selectLink(mCurLink, false);
-            mCurLink = -1;
-         }
-      }
-      else
-      {
-         mMesh->selectLink(mCurLink, false);
-         mCurLink = -1;
-      }
-   }
-
-   // Select a tile from our current NavMesh.
-   if(mMode == mTileMode && !mMesh.isNull())
-   {
-      if(gServerContainer.castRay(startPnt, endPnt, StaticObjectType, &ri))
-         mCurTile = mMesh->getTile(ri.point);
-      else
-         mCurTile = -1;
-   }
-
-   if(mMode == mTestMode)
-   {
-      if(gServerContainer.castRay(startPnt, endPnt, PlayerObjectType | VehicleObjectType, &ri))
-         mCurPlayer = ri.object;
-      else
-         mCurPlayer = NULL;
-   }
+   return;
 }
 
 void GuiNavEditorCtrl::on3DMouseDragged(const Gui3DMouseEvent & event)
@@ -549,6 +232,11 @@ void GuiNavEditorCtrl::on3DMouseLeave(const Gui3DMouseEvent & event)
 
 void GuiNavEditorCtrl::updateGuiInfo()
 {
+   if (mTool)
+   {
+      if (mTool->updateGuiInfo())
+         return;
+   }
 }
 
 void GuiNavEditorCtrl::onRender(Point2I offset, const RectI &updateRect)
@@ -557,22 +245,6 @@ void GuiNavEditorCtrl::onRender(Point2I offset, const RectI &updateRect)
 
    Parent::onRender(offset, updateRect);
    return;
-}
-
-static void renderBoxOutline(const Box3F &box, const ColorI &col)
-{
-   if(box != Box3F::Invalid)
-   {
-      GFXStateBlockDesc desc;
-      desc.setCullMode(GFXCullNone);
-      desc.setFillModeSolid();
-      desc.setZReadWrite(true, false);
-      desc.setBlend(true);
-      GFX->getDrawUtil()->drawCube(desc, box, ColorI(col, 20));
-      desc.setFillModeWireframe();
-      desc.setBlend(false);
-      GFX->getDrawUtil()->drawCube(desc, box, ColorI(col, 255));
-   }
 }
 
 void GuiNavEditorCtrl::renderScene(const RectI & updateRect)
@@ -592,45 +264,15 @@ void GuiNavEditorCtrl::renderScene(const RectI & updateRect)
    Point3F camPos;
    mat.getColumn(3,&camPos);
 
-   if(mMode == mLinkMode)
-   {
-      if(mLinkStart != Point3F::Max)
-      {
-         GFXStateBlockDesc desc;
-         desc.setBlend(false);
-         desc.setZReadWrite(true ,true);
-         MatrixF linkMat(true);
-		 linkMat.setPosition(mLinkStart);
-         Point3F scale(0.8f, 0.8f, 0.8f);
-         GFX->getDrawUtil()->drawTransform(desc, linkMat, &scale);
-      }
-   }
-
-   if(mMode == mTileMode && !mMesh.isNull())
-   {
-      renderBoxOutline(mMesh->getTileBox(mCurTile), ColorI::BLUE);
-      renderBoxOutline(mMesh->getTileBox(mTile), ColorI::GREEN);
-      if(Con::getBoolVariable("$Nav::Editor::renderVoxels", false)) dd.renderGroup(0);
-      if(Con::getBoolVariable("$Nav::Editor::renderInput", false))
-      {
-         dd.depthMask(false);
-         dd.renderGroup(1);
-         dd.depthMask(true);
-      }
-   }
-
-   if(mMode == mTestMode)
-   {
-      if(!mCurPlayer.isNull())
-         renderBoxOutline(mCurPlayer->getWorldBox(), ColorI::BLUE);
-      if(!mPlayer.isNull())
-         renderBoxOutline(mPlayer->getWorldBox(), ColorI::GREEN);
-   }
+   if (mTool)
+      mTool->onRender3D();
 
    duDebugDrawTorque d;
-   if(!mMesh.isNull())
+   if (!mMesh.isNull())
+   {
       mMesh->renderLinks(d);
-   d.render();
+      d.immediateRender();
+   }
 
    // Now draw all the 2d stuff!
    GFX->setClipRect(updateRect);
@@ -650,15 +292,6 @@ bool GuiNavEditorCtrl::getStaticPos(const Gui3DMouseEvent & event, Point3F &tpos
    tpos = ri.point;
 
    return hit;
-}
-
-void GuiNavEditorCtrl::setMode(String mode, bool sourceShortcut = false)
-{
-   mMode = mode;
-   Con::executef(this, "onModeSet", mode);
-
-   if(sourceShortcut)
-      Con::executef(this, "paletteSync", mode);
 }
 
 void GuiNavEditorCtrl::submitUndo(const UTF8 *name)
@@ -691,13 +324,41 @@ void GuiNavEditorCtrl::_prepRenderImage(SceneManager* sceneGraph, const SceneRen
    }*/
 }
 
-DefineEngineMethod(GuiNavEditorCtrl, getMode, const char*, (), , "")
+void GuiNavEditorCtrl::setActiveTool(NavMeshTool* tool)
 {
-   return object->getMode();
+   if (mTool)
+   {
+      mTool->onDeactivated();
+   }
+
+   mTool = tool;
+
+   if (mTool)
+   {
+      mTool->setActiveEditor(this);
+      mTool->setActiveNavMesh(mMesh);
+      mTool->onActivated(mLastEvent);
+   }
 }
 
-DefineEngineMethod(GuiNavEditorCtrl, setMode, void, (String mode),, "setMode(String mode)")
+void GuiNavEditorCtrl::setDrawMode(S32 id)
 {
-   object->setMode(mode);
+   if (mMesh.isNull())
+      return;
+
+   mMesh->setDrawMode((NavMesh::DrawMode)id);
 }
+
+DefineEngineMethod(GuiNavEditorCtrl, setDrawMode, void, (S32 id), ,
+   "@brief Deselect whatever is currently selected in the editor.")
+{
+   object->setDrawMode(id);
+}
+
+DefineEngineMethod(GuiNavEditorCtrl, setActiveTool, void, (const char* toolName), , "( NavMeshTool tool )")
+{
+   NavMeshTool* tool = dynamic_cast<NavMeshTool*>(Sim::findObject(toolName));
+   object->setActiveTool(tool);
+}
+
 #endif

@@ -52,6 +52,7 @@ inline void rcCol(unsigned int col, U8 &r, U8 &g, U8 &b, U8 &a)
 }
 
 enum PolyAreas {
+   NullArea = 0,
    GroundArea,
    WaterArea,
    OffMeshArea,
@@ -98,6 +99,10 @@ struct LinkData {
          (ledge ? LedgeFlag : 0) |
          (climb ? ClimbFlag : 0) |
          (teleport ? TeleportFlag : 0);
+   }
+   U16 getExcludeFlags() const
+   {
+      return AllFlags & ~getFlags();
    }
 };
 

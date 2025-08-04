@@ -1050,6 +1050,15 @@ DefineEngineMethod(GuiInspectorField, setCaption, void, (String newCaption),, "(
    object->setCaption(StringTable->insert(newCaption.c_str()));
 }
 
+DefineEngineMethod(GuiInspectorField, getFieldName, const char*, (), , "() - Gets the fieldName of the field.")
+{
+   constexpr U32 bufSize = 128;
+   char* retBuffer = Con::getReturnBuffer(bufSize);
+   dSprintf(retBuffer, bufSize, "%s", object->getFieldName());
+
+   return retBuffer;
+}
+
 DefineEngineMethod(GuiInspectorField, setSpecialEditVariableName, void, (String newCaption), , "() - Sets the variable name for special edit fields.")
 {
    object->setSpecialEditVariableName(StringTable->insert(newCaption.c_str()));

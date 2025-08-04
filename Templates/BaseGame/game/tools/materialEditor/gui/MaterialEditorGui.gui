@@ -1,0 +1,490 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(MaterialEditorGui) {
+   extent = "2560 1440";
+   profile = "GuiNonModalDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+      currentLayer = "0";
+      currentMaterialAsset = "Prototyping:FloorGray";
+      currentMeshMode = "EditorShape";
+      currentMode = "Material";
+      docked = "1";
+      fileSpec = "Torque Material Files (materials.tscript)|materials.tscript|All Files (*.*)|*.*|";
+      livePreview = "1";
+      materialDirty = "0";
+      modelFormats = "DTS Files (*.dts)|*.dts";
+      originalAssetName = "MaterialEditorGui";
+      originalName = "FloorGray";
+      panelHidden = "0";
+      preventUndo = "1";
+      resizing = "0";
+      textureFormats = "Image Files (*.png, *.jpg, *.dds, *.bmp, *.gif, *.jng. *.tga)|*.png;*.jpg;*.dds;*.bmp;*.gif;*.jng;*.tga|All Files (*.*)|*.*|";
+
+   new GuiWindowCollapseCtrl(MaterialEditorGuiWindow) {
+      Text = "    :: Material Editor";
+      canMove = "0";
+      canClose = "0";
+      canMinimize = "0";
+      canMaximize = "0";
+      canCollapse = "0";
+      margin = "5 5 5 5";
+      position = "2168 39";
+      extent = "392 1303";
+      minExtent = "300 150";
+      horizSizing = "windowRelative";
+      vertSizing = "windowRelative";
+      profile = "ToolsGuiWindowProfile";
+      tooltipProfile = "GuiToolTipProfile";
+      internalName = "InspectorWindow";
+
+      new GuiBitmapButtonCtrl(MaterialEditorGui_showBtn) {
+         BitmapAsset = "ToolsModule:panel_show_n_image";
+         position = "4 1";
+         extent = "18 18";
+         minExtent = "8 8";
+         profile = "ToolsGuiButtonProfile";
+         visible = "0";
+         command = "MaterialEditorGui.showSidePanel();";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         ToolTip = "Show Sidepanel";
+         hidden = "1";
+      };
+      new GuiBitmapButtonCtrl(MaterialEditorGui_UnDockBtn) {
+         BitmapAsset = "ToolsModule:panel_undock_n_image";
+         position = "369 0";
+         extent = "18 18";
+         minExtent = "8 8";
+         horizSizing = "left";
+         profile = "ToolsGuiButtonProfile";
+         command = "MaterialEditorGui.releaseSidePanel();";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         ToolTip = "Detach Sidepanel";
+      };
+      new GuiBitmapButtonCtrl(MaterialEditorGui_hideBtn) {
+         BitmapAsset = "ToolsModule:panel_hide_n_image";
+         position = "351 0";
+         extent = "18 18";
+         minExtent = "8 8";
+         horizSizing = "left";
+         profile = "ToolsGuiButtonProfile";
+         command = "MaterialEditorGui.hideSidePanel();";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         ToolTip = "Hide Sidepanel";
+      };
+      new GuiBitmapButtonCtrl(MaterialEditorGui_DockBtn) {
+         BitmapAsset = "ToolsModule:panel_dock_n_image";
+         position = "369 0";
+         extent = "18 18";
+         minExtent = "8 8";
+         horizSizing = "left";
+         profile = "ToolsGuiButtonProfile";
+         visible = "0";
+         command = "MaterialEditorGui.dockSidePanel();";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         ToolTip = "Dock Sidepanel";
+         hidden = "1";
+      };
+      new GuiSplitContainer() {
+         orientation = "Horizontal";
+         splitPoint = "182 354";
+         fixedSize = "692";
+         position = "3 24";
+         extent = "387 1269";
+         horizSizing = "width";
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+
+         new GuiPanel() {
+            docking = "Client";
+            extent = "387 352";
+            profile = "ToolsGuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "Panel1";
+
+            new GuiContainer(matEd_previewPanel) {
+               docking = "Client";
+               margin = "24 1 3 3";
+               position = "3 24";
+               extent = "381 327";
+               horizSizing = "width";
+               vertSizing = "height";
+               profile = "ToolsGuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiSwatchButtonCtrl(matEd_previewBackground) {
+                  color = "0 0 0 0.2";
+                  position = "-1 -1";
+                  extent = "383 329";
+                  horizSizing = "width";
+                  vertSizing = "height";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiContainer() {
+                  position = "-1 -1";
+                  extent = "383 329";
+                  horizSizing = "width";
+                  vertSizing = "height";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiMaterialPreview(matEd_previewObjectView) {
+                  position = "1 1";
+                  extent = "380 326";
+                  horizSizing = "width";
+                  vertSizing = "height";
+                  profile = "ToolsGuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+                  isContainer = "0";
+               };
+            };
+            new GuiPopUpMenuCtrl(matEd_quickPreview_Popup) {
+               Text = "Cube";
+               position = "4 0";
+               extent = "67 18";
+               profile = "ToolsGuiPopUpMenuProfile";
+               command = "MaterialEditorGui.updatePreviewObject();";
+               tooltipProfile = "GuiToolTipProfile";
+               ToolTip = "Changes the Preview Mesh";
+               isContainer = "0";
+            };
+            new GuiSwatchButtonCtrl(matEd_lightColorPicker) {
+               position = "79 4";
+               extent = "14 14";
+               command = "getColorF($ThisControl.color, \"MaterialEditorGui.updateLightColor\");";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               ToolTip = "Change Normal Light Color";
+            };
+            new GuiSwatchButtonCtrl(matEd_ambientLightColorPicker) {
+               position = "97 4";
+               extent = "14 14";
+               command = "getColorF($ThisControl.color, \"MaterialEditorGui.updateAmbientColor\");";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               ToolTip = "Change Ambient Light Color";
+            };
+            new GuiSwatchButtonCtrl(MaterialPreviewBackgroundPicker) {
+               color = "0 0 0 0.2";
+               position = "113 0";
+               extent = "20 20";
+               command = "getColorF($thisControl.color, \"MaterialEditorGui.updatePreviewBackground\");";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               ToolTip = "Change Background Color (preview)";
+            };
+            new GuiCheckBoxCtrl() {
+               Text = "Preview in World";
+               position = "266 1";
+               extent = "114 18";
+               horizSizing = "left";
+               profile = "ToolsGuiCheckBoxProfile";
+               variable = "MaterialEditorGui.livePreview";
+               command = "MaterialEditorGui.updateLivePreview($ThisControl.getValue());";
+               tooltipProfile = "GuiToolTipProfile";
+            };
+         };
+         new GuiPanel() {
+            docking = "Client";
+            position = "0 356";
+            extent = "387 913";
+            profile = "ToolsGuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "panel2";
+
+            new GuiContainer() {
+               extent = "388 22";
+               horizSizing = "width";
+               profile = "GuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiBitmapButtonCtrl(MatEd_phoBreadcrumb) {
+                  BitmapAsset = "ToolsModule:folderUp_image";
+                  position = "-1 0";
+                  extent = "20 19";
+                  profile = "GuiDefaultProfile";
+                  visible = "0";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+                  ToolTip = "Go back to previous editor";
+                  hidden = "1";
+               };
+               new GuiBitmapButtonCtrl() {
+                  BitmapAsset = "ToolsModule:delete_n_image";
+                  position = "368 1";
+                  extent = "17 17";
+                  horizSizing = "left";
+                  profile = "ToolsGuiButtonProfile";
+                  command = "MaterialEditorGui.deleteMaterial();";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+                  ToolTip = "Delete Material from File";
+               };
+               new GuiBitmapButtonCtrl(MatEd_editMaterial) {
+                  BitmapAsset = "ToolsModule:open_file_n_image";
+                  position = "249 1";
+                  extent = "16 16";
+                  horizSizing = "left";
+                  profile = "GuiDefaultProfile";
+                  command = "AssetBrowser.showDialog(\"MaterialAsset\", \"MaterialEditorGui.selectMaterialAsset\");";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+                  ToolTip = "Open Existing Material";
+               };
+               new GuiBitmapButtonCtrl() {
+                  BitmapAsset = "ToolsModule:new_n_image";
+                  position = "269 1";
+                  extent = "16 16";
+                  horizSizing = "left";
+                  profile = "ToolsGuiDefaultProfile";
+                  command = "MaterialEditorGui.createNewMaterial();";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+                  ToolTip = "Create New Material";
+               };
+               new GuiBitmapButtonCtrl() {
+                  BitmapAsset = "ToolsModule:save_icon_n_image";
+                  position = "289 1";
+                  extent = "16 16";
+                  horizSizing = "left";
+                  profile = "ToolsGuiDefaultProfile";
+                  command = "MaterialEditorGui.save();";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+                  ToolTip = "Save Material (ALT S)";
+               };
+               new GuiBitmapButtonCtrl() {
+                  BitmapAsset = "ToolsModule:visible_n_image";
+                  position = "309 1";
+                  extent = "16 16";
+                  horizSizing = "left";
+                  profile = "ToolsGuiDefaultProfile";
+                  command = "MaterialEditorGui.lookupMaterialInstances();";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+                  ToolTip = "Lookup Material Instances";
+               };
+               new GuiBitmapCtrl() {
+                  BitmapAsset = "ToolsModule:separator_h_image";
+                  BitmapFile = "tools/gui/images/separator-h.png";
+                  position = "330 1";
+                  extent = "2 16";
+                  minExtent = "2 16";
+                  horizSizing = "left";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiBitmapButtonCtrl() {
+                  BitmapAsset = "ToolsModule:reset_icon_n_image";
+                  position = "334 1";
+                  extent = "17 17";
+                  horizSizing = "left";
+                  profile = "ToolsGuiButtonProfile";
+                  command = "MaterialEditorGui.refreshMaterial();";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+                  ToolTip = "Revert Material to Saved";
+               };
+               new GuiBitmapButtonCtrl() {
+                  BitmapAsset = "ToolsModule:clear_icon_n_image";
+                  position = "351 1";
+                  extent = "17 17";
+                  horizSizing = "left";
+                  profile = "ToolsGuiButtonProfile";
+                  command = "MaterialEditorGui.clearMaterial();";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+                  ToolTip = "Clear All Material Properties";
+               };
+            };
+            new GuiContainer() {
+               position = "0 27";
+               extent = "388 88";
+               horizSizing = "width";
+               profile = "GuiDefaultProfile";
+               tooltipProfile = "GuiToolTipProfile";
+
+               new GuiContainer(MatEdMaterialMode) {
+                  extent = "392 39";
+                  horizSizing = "width";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+
+                  new GuiTextCtrl() {
+                     Text = "Material";
+                     position = "10 1";
+                     extent = "50 16";
+                     profile = "ToolsGuiTextRightProfile";
+                     tooltipProfile = "GuiToolTipProfile";
+                  };
+                  new GuiTextEditCtrl() {
+                     position = "80 0";
+                     extent = "305 20";
+                     horizSizing = "width";
+                     profile = "ToolsGuiTextEditProfile";
+                     altCommand = "MaterialEditorGui.setMaterialDirty();MaterialEditorGui.updateActiveMaterialName($ThisControl.getText());";
+                     tooltipProfile = "GuiToolTipProfile";
+                     internalName = "selMaterialName";
+                  };
+                  new GuiTextCtrl() {
+                     position = "70 20";
+                     extent = "317 16";
+                     horizSizing = "width";
+                     profile = "GuiTextProfile";
+                     tooltipProfile = "GuiToolTipProfile";
+                  };
+               };
+               new GuiContainer(MatEdTargetMode) {
+                  extent = "394 20";
+                  horizSizing = "width";
+                  profile = "GuiDefaultProfile";
+                  visible = "0";
+                  tooltipProfile = "GuiToolTipProfile";
+                  hidden = "1";
+
+                  new GuiTextCtrl() {
+                     Text = "Material Slot";
+                     position = "4 1";
+                     extent = "74 16";
+                     profile = "ToolsGuiTextRightProfile";
+                     tooltipProfile = "GuiToolTipProfile";
+                     ToolTip = "List of Material Slots available for selected object (If applicable)";
+                  };
+                  new GuiPopUpMenuCtrlEx(SubMaterialSelector) {
+                     Text = "MaterialAsset";
+                     position = "96 0";
+                     extent = "292 17";
+                     horizSizing = "width";
+                     profile = "ToolsGuiPopUpMenuProfile";
+                     active = "0";
+                     command = "SubMaterialSelector.onSelect();";
+                     tooltipProfile = "GuiToolTipProfile";
+                     ToolTip = "Target Material Slot";
+                  };
+               };
+               new GuiContainer() {
+                  position = "0 24";
+                  extent = "394 62";
+                  horizSizing = "width";
+                  profile = "GuiDefaultProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+
+                  new GuiTextCtrl() {
+                     Text = "MapTo";
+                     position = "6 2";
+                     extent = "58 16";
+                     profile = "ToolsGuiTextRightProfile";
+                     tooltipProfile = "ToolsGuiToolTipProfile";
+                     ToolTip = "Name of material slot lookup to associate this material to for shapes.";
+                  };
+                  new GuiTextEditCtrl() {
+                     position = "80 -2";
+                     extent = "307 20";
+                     horizSizing = "width";
+                     profile = "ToolsGuiTextEditProfile";
+                     altCommand = "MaterialEditorGui.setMaterialDirty();MaterialEditorGui.updateActiveMaterialMapTo($ThisControl.getText());";
+                     tooltipProfile = "ToolsGuiToolTipProfile";
+                     ToolTip = "Name of material slot lookup to associate this material to for shapes.";
+                     internalName = "selMaterialMapTo";
+                  };
+                  new GuiTextCtrl() {
+                     Text = "Inherit From";
+                     position = "6 25";
+                     extent = "69 16";
+                     tooltipProfile = "ToolsGuiToolTipProfile";
+                     ToolTip = "Other material that this one should inherit fields from as its parent.";
+                     profile = "ToolsGuiTextRightProfile";
+                  };
+                  new GuiTextEditCtrl() {
+                     position = "80 21";
+                     extent = "285 20";
+                     horizSizing = "width";
+                     profile = "ToolsGuiTextEditProfile";
+                     altCommand = "MaterialEditorGui.setMaterialDirty();MaterialEditorGui.updateActiveMaterialInheritFrom($ThisControl.getText());";
+                     tooltipProfile = "GuiToolTipProfile";
+                     internalName = "selMaterialInheritFrom";
+                     tooltipProfile = "ToolsGuiToolTipProfile";
+                     ToolTip = "Other material that this one should inherit fields from as its parent.";
+                  };
+                  new GuiBitmapButtonCtrl() {
+                     BitmapAsset = "ToolsModule:material_image";
+                     position = "368 24";
+                     extent = "16 16";
+                     horizSizing = "left";
+                     profile = "GuiDefaultProfile";
+                     command = "AssetBrowser.showDialog(\"MaterialAsset\", \"MaterialEditorGui.updateActiveMaterialInheritFrom\");";
+                     tooltipProfile = "ToolsGuiToolTipProfile";
+                     ToolTip = "Select Material to set as this material to inherit from.";
+                  };
+                  new GuiTextCtrl() {
+                     Text = "Layer";
+                     position = "4 46";
+                     extent = "56 16";
+                     profile = "ToolsGuiTextRightProfile";
+                     tooltipProfile = "GuiToolTipProfile";
+                  };
+                  new GuiPopUpMenuCtrlEx(MaterialEditorLayerSelector) {
+                     Text = "Layer 0";
+                     position = "80 45";
+                     extent = "305 17";
+                     horizSizing = "width";
+                     profile = "ToolsGuiPopUpMenuProfile";
+                     command = "MaterialEditorGui.changeLayer( $ThisControl.getText() );";
+                     tooltipProfile = "GuiToolTipProfile";
+                     ToolTip = "Material Layer";
+                  };
+               };
+            };
+            new GuiContainer() {
+               docking = "None";
+               margin = "0 43 0 5";
+               anchorTop = "0";
+               anchorLeft = "0";
+               position = "0 120";
+               extent = "382 793";
+               minExtent = "64 64";
+               horizSizing = "width";
+               profile = "ToolsGuiDefaultProfile";
+               tooltipProfile = "ToolsGuiToolTipProfile";
+               isContainer = "0";
+
+               new GuiTextEditCtrl(MaterialEditorGuiFilter) {
+                  placeholderText = "Filter...";
+                  validate = "MaterialEditorPropInspector.setSearchText($ThisControl.getText());";
+                  position = "5 0";
+                  extent = "383 20";
+                  horizSizing = "width";
+                  profile = "ToolsGuiTextEditProfile";
+                  tooltipProfile = "GuiToolTipProfile";
+               };
+               new GuiBitmapButtonCtrl() {
+                  BitmapAsset = "ToolsModule:clear_icon_n_image";
+                  position = "371 1";
+                  extent = "17 17";
+                  horizSizing = "left";
+                  profile = "ToolsGuiDefaultProfile";
+                  command = "MaterialEditorGuiFilter.setText(\"\");MaterialEditorPropInspector.setSearchText(\"\");";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+               };
+               new GuiScrollCtrl() {
+                  hScrollBar = "alwaysOff";
+                  lockHorizScroll = "1";
+                  docking = "None";
+                  anchorTop = "0";
+                  anchorLeft = "0";
+                  position = "5 22";
+                  extent = "382 766";
+                  minExtent = "8 8";
+                  horizSizing = "width";
+                  vertSizing = "height";
+                  profile = "GuiEditorScrollProfile";
+                  tooltipProfile = "ToolsGuiToolTipProfile";
+
+                  new GuiInspector(MaterialEditorPropInspector) {
+                     groupFilters = "-Internal -Ungrouped -Editing -Object -Persistence -Dynamic Fields";
+                     forcedArrayIndex = "0";
+                     position = "1 1";
+                     extent = "367 48";
+                     minExtent = "8 8";
+                     horizSizing = "width";
+                     profile = "GuiInspectorProfile";
+                     tooltipProfile = "ToolsGuiToolTipProfile";
+                     superClass = "EditorInspectorBase";
+                     collapseState = "1 1 0 0 0 0 0 0";
+                  };
+               };
+            };
+         };
+      };
+   };
+};
+//--- OBJECT WRITE END ---

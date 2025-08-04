@@ -98,6 +98,7 @@ struct AINavigation
 
    /// Move to the specified node in the current path.
    void moveToNode(S32 node);
+   bool avoidObstacles();
    bool flock();
 #endif
 };

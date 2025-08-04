@@ -2179,8 +2179,7 @@ function ShapeEdMaterials::editSelectedMaterial( %this )
       ShapeEdSelectWindow.setVisible( false );
       ShapeEdPropWindow.setVisible( false );
       
-      EditorGui-->MatEdPropertiesWindow.setVisible( true );
-      EditorGui-->MatEdPreviewWindow.setVisible( true );
+      Canvas.pushDialog(MaterialEditorGui);
       
       MatEd_phoBreadcrumb.setVisible( true );
       MatEd_phoBreadcrumb.command = "ShapeEdMaterials.editSelectedMaterialEnd();";
@@ -2204,8 +2203,7 @@ function ShapeEdMaterials::editSelectedMaterialEnd( %this, %closeEditor )
    MatEd_phoBreadcrumb.command = "";
    
    MaterialEditorGui.quit();
-   EditorGui-->MatEdPropertiesWindow.setVisible( false );
-   EditorGui-->MatEdPreviewWindow.setVisible( false );
+   Canvas.popDialog(MaterialEditorGui);
 
    // Delete the temporary TSStatic
    %this.tempShape.delete();

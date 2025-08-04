@@ -16,6 +16,11 @@ function AssetBrowser::editAsset(%this, %assetDef)
    }
    else
    {
+      if(AssetDatabase.isDeclaredAsset(%assetDef))
+      {
+         %assetDef = AssetDatabase.acquireAsset(%assetDef);  
+      }
+      
       if(isObject(%assetDef))
       {
          %assetType = AssetDatabase.getAssetType(%assetDef.getAssetId());

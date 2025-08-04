@@ -1,0 +1,939 @@
+function GuiInspectorGroup::buildMaterialRotAnimationField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
+{
+   %container = new GuiContainer()
+   { 
+      profile="inspectorStyleRolloutInnerProfile";
+      isContainer = "1";
+      position = "-1 120";
+      Extent = 300 SPC 100;
+      HorizSizing = "width";
+      
+      new GuiCheckboxCtrl() {
+         canSaveDynamicFields = "0";
+         internalName = "RotationAnimation";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiInspectorCheckBoxTitleProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "4 3";
+         Extent = "200 18";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         Command = "MaterialEditorGui.updateAnimationFlags();";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         text = " Rotation Animation";
+         maxLength = "1024";
+      };
+      
+      new GuiControl(){
+         class = "AggregateControl";
+         position = "0 29";
+         Extent = "290 20";
+         HorizSizing = "width";
+         internalName = "RotAnimAggCtrl";
+         
+         new GuiTextCtrl(){ // u
+            profile = "ToolsGuiTextProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "11 1";
+            Extent = "12 16";
+            text = "U";
+         };
+      
+         new GuiSliderCtrl() { // u
+            Profile = "ToolsGuiSliderProfile";
+            internalName = "RotationSliderU";
+            HorizSizing = "width";
+            VertSizing = "bottom";
+            position = "25 2";
+            Extent = "180 15";
+            Command = "MaterialEditorGui.updateRotationOffset(true, true);";
+            AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateRotationOffset(true, false);";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Change U Scroll Direction";
+            hovertime = "1000";
+            range = "-1 0";
+            ticks = "1";
+            value = "-0.5";
+         };
+         new GuiTextEditCtrl(){ // u
+            internalName = "RotationTextEditU";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "210 0";
+            Extent = "34 18";
+            text = "0";
+            Command = "$ThisControl.getParent().updateFromChild($ThisControl);";
+            Profile = "ToolsGuiTextEditProfile";
+         };
+      };
+      
+      new GuiControl() {
+         class = "AggregateControl";
+         position = "0 50";
+         Extent = "290 20";
+         HorizSizing = "width";
+         
+         new GuiTextCtrl(){ // v
+            profile = "ToolsGuiTextProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "11 1";
+            Extent = "12 16";
+            text = "V";
+         };
+      
+         new GuiSliderCtrl() { // v
+            Profile = "ToolsGuiSliderProfile";
+            internalName = "RotationSliderV";
+            HorizSizing = "width";
+            VertSizing = "bottom";
+            position = "25 2";
+            Extent = "180 15";
+            Command = "MaterialEditorGui.updateRotationOffset(true, true);";
+            AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateRotationOffset(true, false);";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Change V Scroll Direction";
+            hovertime = "1000";
+            range = "-1 0";
+            ticks = "1";
+            value = "-0.5";
+         };
+         
+         new GuiTextEditCtrl(){ // v
+            internalName = "RotationTextEditV";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "210 0";
+            Extent = "34 18";
+            text = "0";
+            Profile = "ToolsGuiTextEditProfile";
+            Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateRotationOffset();";
+         };
+      };
+      new GuiTextCtrl(){ // Pivot Point
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         position = "211 12";
+         Extent = "34 16";
+         text = "Pivot";
+         profile = "ToolsGuiTextProfile";
+      };
+      new GuiBitmapCtrl(){
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         position = "248 20";
+         Extent = "48 48";
+         isContainer = true;
+         bitmapAsset="";
+         
+         new GuiBitmapCtrl(){
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "0 0";
+            Extent = "48 48";
+            bitmapAsset="ToolsModule:cubemapBtnBorder_n_image";
+         };
+         
+         new GuiBitmapCtrl(){ //horizontal bar
+            internalName = "RotationCrosshair";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "20 20";
+            Extent = "7 7";
+            MinExtent = "0 0";
+            bitmapAsset="ToolsModule:crosshair_blue_image";
+         };
+      };
+      
+      new GuiControl() {
+         class = "AggregateControl";
+         position = "0 75";
+         Extent = "300 35";
+         HorizSizing = "width";
+         
+         new GuiTextCtrl(){ // Speed
+            profile = "ToolsGuiTextRightProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "11 0";
+            Extent = "40 16";
+            text = "Speed";
+         };
+         
+         new GuiSliderCtrl() {
+            canSaveDynamicFields = "0";
+            internalName = "RotationSpeedSlider";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiSliderProfile";
+            HorizSizing = "width";
+            VertSizing = "bottom";
+            position = "58 3";
+            Extent = "148 16";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "MaterialEditorGui.updateRotationSpeed(true, true);";
+            AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateRotationSpeed(true, false);";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Scrolling Speed";
+            hovertime = "1000";
+            range = "-10 10";
+            ticks = "1";
+            value = "0";
+         };
+         
+         new GuiTextEditCtrl() {
+            canSaveDynamicFields = "0";
+            internalName = "RotationSpeedTextEdit";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiTextEditProfile";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "210 1";
+            Extent = "34 18";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateRotationSpeed();";
+            hovertime = "1000";
+            Margin = "0 0 0 0";
+            Padding = "0 0 0 0";
+            AnchorTop = "1";
+            AnchorBottom = "0";
+            AnchorLeft = "1";
+            AnchorRight = "0";
+            text = "0";
+            maxLength = "1024";
+            historySize = "0";
+            password = "0";
+            tabComplete = "0";
+            sinkAllKeyEvents = "0";
+            password = "0";
+            passwordMask = "*";
+         };
+         new GuiTextCtrl(){ // space
+            profile = "ToolsGuiTextRightProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "0 20";
+            Extent = "300 20";
+            text = " ";
+         };
+      };
+   };
+   
+   %container.resize(0,0,%this-->stack.extent.x, 100);
+   
+   %this-->stack.add(%container);
+}
+
+function MaterialEditorGui::updateRotationOffset(%this, %isSlider, %onMouseUp)
+{
+   %layer = MaterialEditorGui.currentLayer;
+	%X = MaterialEditorGuiWindow-->RotationTextEditU.getText();
+	%Y = MaterialEditorGuiWindow-->RotationTextEditV.getText();
+	MaterialEditorPropertiesWindow-->RotationCrosshair.setPosition(45*mAbs(%X)-2, 45*mAbs(%Y)-2);
+	
+	MaterialEditorGui.updateActiveMaterial("rotPivotOffset[" @ %layer @ "]", %X SPC %Y,%isSlider,%onMouseUp);
+}
+
+function MaterialEditorGui::updateRotationSpeed(%this, %isSlider, %onMouseUp)
+{
+   %layer = MaterialEditorGui.currentLayer;
+   %speed = MaterialEditorGuiWindow-->RotationSpeedTextEdit.getText();
+   MaterialEditorGui.updateActiveMaterial("rotSpeed[" @ %layer @ "]",%speed,%isSlider,%onMouseUp);
+}
+
+function GuiInspectorGroup::buildMaterialScrollAnimationField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
+{
+   %container = new GuiContainer(){ // Scroll Animation Properties
+      profile="inspectorStyleRolloutInnerProfile";
+      isContainer = "1";
+      position = "-1 240";
+      Extent = "300 105";
+      HorizSizing = "width";
+      
+      new GuiBitmapCtrl(){
+         position = "0 5";
+         extent ="300 2";
+         HorizSizing = "width";
+         bitmapAsset ="ToolsModule:separator_v_image"; 
+      };
+      
+      new GuiCheckboxCtrl() {
+         canSaveDynamicFields = "0";
+         internalName = "ScrollAnimation";
+         Enabled = "1";
+         isContainer = "0";
+         Profile = "ToolsGuiInspectorCheckBoxTitleProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "4 10";
+         Extent = "200 18";
+         MinExtent = "8 2";
+         canSave = "1";
+         Visible = "1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+         hovertime = "1000";
+         Margin = "0 0 0 0";
+         Padding = "0 0 0 0";
+         AnchorTop = "1";
+         AnchorBottom = "0";
+         AnchorLeft = "1";
+         AnchorRight = "0";
+         Command = "MaterialEditorGui.updateAnimationFlags();";
+         text = " Scroll Animation";
+         maxLength = "1024";
+      };
+      
+      new GuiControl(){
+         class = "AggregateControl";
+         position = "0 29";
+         Extent = "290 20";
+         HorizSizing = "width";
+         
+         new GuiTextCtrl(){ // u
+            profile = "ToolsGuiTextProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "11 1";
+            Extent = "12 16";
+            text = "U";
+         };
+      
+         new GuiSliderCtrl() { // u
+            Profile = "ToolsGuiSliderProfile";
+            internalName = "ScrollSliderU";
+            HorizSizing = "width";
+            VertSizing = "bottom";
+            position = "25 2";
+            Extent = "180 15";
+            Command = "MaterialEditorGui.updateScrollOffset(true, true);";
+            AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl);MaterialEditorGui.updateScrollOffset(true, false);";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Change U Scroll Direction";
+            hovertime = "1000";
+            range = "-1 1";
+            ticks = "1";
+            value = "0";
+         };
+         new GuiTextEditCtrl(){ // u
+            internalName = "ScrollTextEditU";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "210 0";
+            Extent = "34 18";
+            text = "0";
+            Profile = "ToolsGuiTextEditProfile";
+            Command = "$ThisControl.getParent().updateFromChild($ThisControl);MaterialEditorGui.updateScrollOffset();";
+         };
+      };
+      
+      new GuiControl() {
+         class = "AggregateControl";
+         position = "0 50";
+         Extent = "290 20";
+         HorizSizing = "width";
+         
+         new GuiTextCtrl(){ // v
+            profile = "ToolsGuiTextProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "11 1";
+            Extent = "12 16";
+            text = "V";
+         };
+      
+         new GuiSliderCtrl() { // v
+            Profile = "ToolsGuiSliderProfile";
+            internalName = "ScrollSliderV";
+            HorizSizing = "width";
+            VertSizing = "bottom";
+            position = "25 2";
+            Extent = "180 15";
+            Command = "MaterialEditorGui.updateScrollOffset(true, true);";
+            AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl);MaterialEditorGui.updateScrollOffset(true, false);";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Change V Scroll Direction";
+            hovertime = "1000";
+            range = "-1 1";
+            ticks = "1";
+            value = "0";
+         };
+         new GuiTextEditCtrl(){ // v
+            internalName = "ScrollTextEditV";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "210 0";
+            Extent = "34 18";
+            text = "0";
+            Profile = "ToolsGuiTextEditProfile";
+            Command = "$ThisControl.getParent().updateFromChild($ThisControl);MaterialEditorGui.updateScrollOffset();";
+         };
+      };
+      new GuiTextCtrl(){ // Direction Offset
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         position = "211 12";
+         Extent = "34 16";
+         text = "Offset";
+         profile = "ToolsGuiTextProfile";
+      };
+      new GuiBitmapCtrl(){
+         HorizSizing = "left";
+         VertSizing = "bottom";
+         position = "248 20";
+         Extent = "48 48";
+         isContainer = true;
+         bitmapAsset="";
+         
+         new GuiBitmapCtrl(){
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "0 0";
+            Extent = "48 48";
+            bitmapAsset="ToolsModule:cubemapBtnBorder_n_image";
+         };
+         new GuiBitmapCtrl(){ //vertical bar
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "20 20";
+            Extent = "7 7";
+            MinExtent = "7 7";
+            bitmapAsset="ToolsModule:crosshair_image";
+         };
+         new GuiBitmapCtrl(){ //horizontal bar
+            internalName = "ScrollCrosshair";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "20 20";
+            Extent = "7 7";
+            MinExtent = "0 0";
+            bitmapAsset="ToolsModule:crosshair_blue_image";
+         };
+      };
+      
+      new GuiControl() {
+         class = "AggregateControl";
+         position = "0 75";
+         Extent = "300 35";
+         HorizSizing = "width";
+         
+         new GuiTextCtrl(){ // Speed
+            profile = "ToolsGuiTextRightProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "11 0";
+            Extent = "40 16";
+            text = "Speed";
+         };
+         
+         new GuiSliderCtrl() {
+            canSaveDynamicFields = "0";
+            internalName = "ScrollSpeedSlider";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiSliderProfile";
+            HorizSizing = "width";
+            VertSizing = "bottom";
+            position = "58 3";
+            Extent = "148 16";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "MaterialEditorGui.updateScrollSpeed(true, true);";
+            AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl);MaterialEditorGui.updateScrollSpeed(true, false);";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Scrolling Speed";
+            hovertime = "1000";
+            range = "0 10";
+            ticks = "0";
+            value = "0";
+         };
+         
+         new GuiTextEditCtrl() {
+            canSaveDynamicFields = "0";
+            internalName = "ScrollSpeedTextEdit";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiTextEditProfile";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "210 1";
+            Extent = "34 18";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "$ThisControl.getParent().updateFromChild($ThisControl);MaterialEditorGui.updateScrollSpeed();";
+            hovertime = "1000";
+            Margin = "0 0 0 0";
+            Padding = "0 0 0 0";
+            AnchorTop = "1";
+            AnchorBottom = "0";
+            AnchorLeft = "1";
+            AnchorRight = "0";
+            text = "0";
+            maxLength = "1024";
+            historySize = "0";
+            password = "0";
+            tabComplete = "0";
+            sinkAllKeyEvents = "0";
+            password = "0";
+            passwordMask = "*";
+         };
+         new GuiTextCtrl(){ // space
+            profile = "ToolsGuiTextRightProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "0 20";
+            Extent = "300 20";
+            text = " ";
+         };
+      };
+   };
+
+   %this-->stack.add(%container);
+}
+
+function MaterialEditorGui::updateScrollOffset(%this, %isSlider, %onMouseUp)
+{
+   %layer = MaterialEditorGui.currentLayer;
+	%X = MaterialEditorGuiWindow-->ScrollTextEditU.getText();
+	%Y = MaterialEditorGuiWindow-->ScrollTextEditV.getText();
+	MaterialEditorGuiWindow-->ScrollCrosshair.setPosition( -(23 * %X)+20, -(23 * %Y)+20);
+	
+	MaterialEditorGui.updateActiveMaterial("scrollDir[" @ %layer @ "]",%X SPC %Y,%isSlider,%onMouseUp);	
+}
+
+function MaterialEditorGui::updateScrollSpeed(%this, %isSlider, %onMouseUp)
+{
+   %layer = MaterialEditorGui.currentLayer;
+   %speed = MaterialEditorGuiWindow-->ScrollSpeedTextEdit.getText();
+   MaterialEditorGui.updateActiveMaterial("scrollSpeed[" @ %layer @ "]",%speed,%isSlider,%onMouseUp);
+}
+
+function GuiInspectorGroup::buildMaterialWaveAnimationField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
+{
+   %container = new GuiContainer(){ // Wave Animation Properties
+      profile="inspectorStyleRolloutInnerProfile";
+      isContainer = "1";
+      position = "-1 360";
+      Extent = "300 85";
+      HorizSizing = "width";
+      
+      new GuiBitmapCtrl(){
+         position = "0 0";
+         extent ="300 2";
+         HorizSizing = "width";
+         bitmapAsset ="ToolsModule:separator_v_image"; 
+      };
+      
+      new GuiCheckboxCtrl() {
+         Profile = "ToolsGuiInspectorCheckBoxTitleProfile";
+         internalName = "WaveAnimation";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "4 5";
+         Extent = "200 16";
+         MinExtent = "8 2";
+         text = " Wave Animation";
+         Command = "MaterialEditorGui.updateAnimationFlags();";
+         groupNum = "-1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+      };
+      
+      new GuiCheckboxCtrl() {
+         Profile = "ToolsGuiCheckBoxProfile";
+         internalName = "ScaleAnimation";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "180 24";
+         Extent = "55 16";
+         MinExtent = "8 2";
+         text = " Scale";
+         Command = "MaterialEditorGui.updateAnimationFlags();";
+         groupNum = "-1";
+         tooltipprofile = "ToolsGuiToolTipProfile";
+      };
+      
+      new GuiTextCtrl() {
+         profile = "ToolsGuiTextRightProfile";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "1 22";
+         Extent = "100 16";
+         text = " Wave Type";
+      };
+      new GuiContainer(){ // Wave Radio Button container
+         profile = "ToolsGuiDefaultProfile";
+         internalName = "WaveButtonContainer";
+         position = "120 24";
+         Extent = "49 13";
+         isContainer = "1";
+         
+         new GuiBitmapButtonCtrl(){
+            profile = "ToolsGuiDefaultProfile";
+            buttonType = "RadioButton";
+            position = "1 0";
+            Extent = "13 13";
+            bitmapAsset = "ToolsModule:wav_sine_n_image";
+            command = "MaterialEditorGui.updateWaveType();";
+            tooltip="Sine Wave";
+            hovertime = "1000";
+            groupNum = "0";
+            waveType = "Sin";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+         };
+         new GuiBitmapButtonCtrl(){
+            profile = "ToolsGuiDefaultProfile";
+            buttonType = "RadioButton";
+            position = "17 0";
+            Extent = "13 13";
+            bitmapAsset = "ToolsModule:wav_triangle_n_image";
+            command = "MaterialEditorGui.updateWaveType();";
+            tooltip="Triangle Wave";
+            hovertime = "1000";
+            groupNum = "0";
+            waveType = "Triangle";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+         };
+         new GuiBitmapButtonCtrl(){
+            profile = "ToolsGuiDefaultProfile";
+            buttonType = "RadioButton";
+            position = "33 0";
+            Extent = "13 13";
+            bitmapAsset = "ToolsModule:wav_square_n_image";
+            command = "MaterialEditorGui.updateWaveType();";
+            tooltip="Square Wave";
+            hovertime = "1000";
+            groupNum = "0";
+            waveType = "Square";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+         };
+      };
+      
+      new GuiControl() {
+         class = "AggregateControl";
+         position = "0 61";
+         Extent = "300 20";
+         HorizSizing = "width";
+         
+         
+         new GuiTextCtrl() {
+            profile = "ToolsGuiTextRightProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "1 2";
+            Extent = "100 16";
+            text = "Frequency";
+         };
+         
+         new GuiTextEditCtrl() { // frequence
+            canSaveDynamicFields = "0";
+            internalName = "WaveTextEditFreq";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiTextEditProfile";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "260 1";
+            Extent = "34 18";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateWaveFreq();";
+            hovertime = "1000";
+            Margin = "0 0 0 0";
+            Padding = "0 0 0 0";
+            AnchorTop = "1";
+            AnchorBottom = "0";
+            AnchorLeft = "1";
+            AnchorRight = "0";
+            text = "0";
+            maxLength = "1024";
+            historySize = "0";
+            password = "0";
+            tabComplete = "0";
+            sinkAllKeyEvents = "0";
+            password = "0";
+            passwordMask = "*";
+         };
+         new GuiSliderCtrl() { // freqency
+            canSaveDynamicFields = "0";
+            internalName = "WaveSliderFreq";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiSliderProfile";
+            HorizSizing = "width";
+            VertSizing = "bottom";
+            position = "120 4";
+            Extent = "137 16";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "MaterialEditorGui.updateWaveFreq(true, true);";
+            AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateWaveFreq(true, false);";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Changes Wave Frequency";
+            hovertime = "1000";
+            range = "0 10";
+            ticks = "9";
+            value = "0";
+         };
+      
+      };
+      
+      new GuiControl() {
+         class = "AggregateControl";
+         position = "0 40";
+         Extent = "300 20";
+         HorizSizing = "width";
+         
+         new GuiTextCtrl() {
+            profile = "ToolsGuiTextRightProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "1 2";
+            Extent = "100 16";
+            text = "Amplitude";
+         };
+            
+         new GuiTextEditCtrl() { // amplitude
+            Profile = "ToolsGuiTextEditProfile";
+            internalName = "WaveTextEditAmp";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "260 1";
+            Extent = "34 18";
+            Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateWaveAmp();";
+            hovertime = "1000";
+            text = "0";
+         };
+         new GuiSliderCtrl() { // amplitude
+            canSaveDynamicFields = "0";
+            internalName = "WaveSliderAmp";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiSliderProfile";
+            HorizSizing = "width";
+            VertSizing = "bottom";
+            position = "120 4";
+            Extent = "137 16";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "MaterialEditorGui.updateWaveAmp(true, true);";
+            AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateWaveAmp(true, false);";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "Changes Wave Amplitude";
+            hovertime = "1000";
+            range = "0 1";
+            ticks = "1";
+            value = "0";
+         };
+      
+      };
+   };
+
+   %this-->stack.add(%container);
+}
+
+function MaterialEditorGui::updateWaveType(%this)
+{
+   for( %radioButton = 0; %radioButton < MaterialEditorGuiWindow-->WaveButtonContainer.getCount(); %radioButton++ )
+   {
+      if( MaterialEditorGuiWindow-->WaveButtonContainer.getObject(%radioButton).getValue() == 1 )
+         %type = MaterialEditorGuiWindow-->WaveButtonContainer.getObject(%radioButton).waveType;
+   }
+   
+   %layer = MaterialEditorGui.currentLayer;
+   MaterialEditorGui.updateActiveMaterial("waveType[" @ %layer @ "]", %type);
+}
+
+function MaterialEditorGui::updateWaveAmp(%this, %isSlider, %onMouseUp)
+{
+   %layer = MaterialEditorGui.currentLayer;
+   %amp = MaterialEditorGuiWindow-->WaveTextEditAmp.getText();
+   MaterialEditorGui.updateActiveMaterial("waveAmp[" @ %layer @ "]", %amp, %isSlider, %onMouseUp);
+}
+
+function MaterialEditorGui::updateWaveFreq(%this, %isSlider, %onMouseUp)
+{
+   %layer = MaterialEditorGui.currentLayer;
+   %freq = MaterialEditorGuiWindow-->WaveTextEditFreq.getText();
+   MaterialEditorGui.updateActiveMaterial("waveFreq[" @ %layer @ "]", %freq, %isSlider, %onMouseUp);
+}
+
+function GuiInspectorGroup::buildMaterialSequenceAnimationField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
+{
+   %container = new GuiContainer(){ // image Sequence Animation Properties
+      profile="inspectorStyleRolloutInnerProfile";
+      isContainer = "1";
+      position = "-1 480";
+      Extent = "300 80";
+      HorizSizing = "width";
+      
+      new GuiBitmapCtrl(){
+         position = "0 5";
+         extent ="300 2";
+         HorizSizing = "width";
+         bitmapAsset ="ToolsModule:separator_v_image"; 
+      };
+      
+      new GuiCheckboxCtrl() {
+         Profile = "ToolsGuiInspectorCheckBoxTitleProfile";
+         internalName = "SequenceAnimation";
+         HorizSizing = "right";
+         VertSizing = "bottom";
+         position = "4 10";
+         Extent = "200 16";
+         MinExtent = "8 2";
+         text = " Image Sequence";
+         Command = "MaterialEditorGui.updateAnimationFlags();";
+         groupNum = "-1";
+      };
+      
+      
+      new GuiControl() {
+         class = "AggregateControl";
+         position = "0 28";
+         Extent = "300 20";
+         HorizSizing = "width";
+         
+         new GuiTextCtrl() {
+            profile = "ToolsGuiTextRightProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "1 2";
+            Extent = "100 16";
+            text = "Frames / Sec";
+         };
+      
+         new GuiTextEditCtrl() {
+            canSaveDynamicFields = "0";
+            internalName = "SequenceTextEditFPS";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiTextEditProfile";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "260 1";
+            Extent = "34 18";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateSequenceFPS();";
+            hovertime = "1000";
+            Margin = "0 0 0 0";
+            Padding = "0 0 0 0";
+            AnchorTop = "1";
+            AnchorBottom = "0";
+            AnchorLeft = "1";
+            AnchorRight = "0";
+            text = "0";
+            maxLength = "1024";
+         };
+         new GuiSliderCtrl() {
+            canSaveDynamicFields = "0";
+            internalName = "SequenceSliderFPS";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiSliderProfile";
+            HorizSizing = "width";
+            VertSizing = "bottom";
+            position = "120 4";
+            Extent = "137 16";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "MaterialEditorGui.updateSequenceFPS(true, true);";
+            AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateSequenceFPS(true, false);";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "How many frames to display per second.";
+            hovertime = "1000";
+            range = "0 30";
+            ticks = "5";
+            value = "0";
+         };
+      };
+      
+      new GuiControl() {
+         class = "AggregateControl";
+         position = "0 49";
+         Extent = "300 20";
+         HorizSizing = "width";
+         
+         new GuiTextCtrl() {
+            profile = "ToolsGuiTextRightProfile";
+            HorizSizing = "right";
+            VertSizing = "bottom";
+            position = "1 2";
+            Extent = "100 16";
+            text = "Frames";
+         };
+         
+         new GuiTextEditCtrl() { // size
+            Profile = "ToolsGuiTextEditProfile";
+            internalName = "SequenceTextEditSSS";
+            HorizSizing = "left";
+            VertSizing = "bottom";
+            position = "260 1";
+            Extent = "34 18";
+            Command = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateSequenceSSS();";
+            hovertime = "1000";
+            text = "0";
+         };
+         new GuiSliderCtrl() { //size
+            canSaveDynamicFields = "0";
+            internalName = "SequenceSliderSSS";
+            Enabled = "1";
+            isContainer = "0";
+            Profile = "ToolsGuiSliderProfile";
+            HorizSizing = "width";
+            VertSizing = "bottom";
+            position = "120 4";
+            Extent = "137 16";
+            MinExtent = "8 2";
+            canSave = "1";
+            Visible = "1";
+            Command = "MaterialEditorGui.updateSequenceSSS(true, true);";
+            AltCommand = "$ThisControl.getParent().updateFromChild($ThisControl); MaterialEditorGui.updateSequenceSSS(true, false);";
+            tooltipprofile = "ToolsGuiToolTipProfile";
+            ToolTip = "How many frames in the sequence.";
+            hovertime = "1000";
+            range = "0 100";
+            ticks = "9";
+            value = "0";
+         };
+      };
+   };  
+
+   %this-->stack.add(%container);
+}
+
+function MaterialEditorGui::updateSequenceFPS(%this, %isSlider, %onMouseUp)
+{
+   %layer = MaterialEditorGui.currentLayer;
+	%fps = MaterialEditorGuiWindow-->SequenceTextEditFPS.getText();
+	MaterialEditorGui.updateActiveMaterial("sequenceFramePerSec[" @ %layer @ "]", %fps, %isSlider, %onMouseUp);	
+}
+
+function MaterialEditorGui::updateSequenceSSS(%this, %isSlider, %onMouseUp)
+{
+   %layer = MaterialEditorGui.currentLayer;
+   %sss = 1 / MaterialEditorGuiWindow-->SequenceTextEditSSS.getText();
+   MaterialEditorGui.updateActiveMaterial("sequenceSegmentSize[" @ %layer @ "]", %sss, %isSlider, %onMouseUp);
+}

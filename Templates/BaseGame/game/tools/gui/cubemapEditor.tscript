@@ -1,0 +1,367 @@
+function CubemapEditor::onWake(%this)
+{
+   cubemapEd_availableCubemapList.clear();  
+}
+
+function CubemapEditor::cancelCubemap(%this)
+{
+   %cubemap = CubemapEditor.currentCubemap;
+   
+   %idx = cubemapEd_availableCubemapList.findItemText( %cubemap.getName() );
+   cubemapEd_availableCubemapList.setItemText( %idx, notDirtyCubemap.originalName );      
+   %cubemap.setName( notDirtyCubemap.originalName );
+   
+   CubemapEditor.copyCubemaps( notDirtyCubemap, %cubemap );
+   CubemapEditor.copyCubemaps( notDirtyCubemap, matEdCubeMapPreviewMat);
+   
+   %cubemap.updateFaces();
+   matEdCubeMapPreviewMat.updateFaces();
+}
+
+function CubemapEditor::showCubemapEditor(%this)
+{
+   if (cubemapEditor.isVisible())
+      return;
+
+   CubemapEditor.currentCubemap = "";
+   
+   cubemapEditor.setVisible(1);
+   new PersistenceManager(cubemapEdPerMan);
+   CubemapEditor.setCubemapNotDirty();
+   
+   for( %i = 0; %i < RootGroup.getCount(); %i++ )
+   {
+      if( RootGroup.getObject(%i).getClassName()!$= "CubemapData" )
+         continue;
+         
+      for( %k = 0; %k < UnlistedCubemaps.count(); %k++ )
+      {
+         %unlistedFound = 0;
+         if( UnlistedCubemaps.getValue(%k) $= RootGroup.getObject(%i).name )
+         {
+            %unlistedFound = 1;
+            break;
+         }
+      }
+   
+      if( %unlistedFound )
+         continue;
+      
+      cubemapEd_availableCubemapList.addItem( RootGroup.getObject(%i).name );
+   }
+   
+   singleton CubemapData(notDirtyCubemap);
+   
+   // if there was no cubemap, pick the first, select, and bail, these are going to take
+   // care of themselves in the selected function
+   if( !isObject( CubemapEditor.currentMaterial.cubemap ) )
+   {
+      if( cubemapEd_availableCubemapList.getItemCount() > 0 )
+      {
+         cubemapEd_availableCubemapList.setSelected(0, true);
+         return;
+      }
+      else 
+      {  
+         // if there are no cubemaps, then create one, select, and bail
+         %cubemap = CubemapEditor.createNewCubemap();
+         cubemapEd_availableCubemapList.addItem( %cubemap.name );
+         cubemapEd_availableCubemapList.setSelected(0, true);
+         return;
+      }
+   }
+
+   // do not directly change activeMat!
+   CubemapEditor.currentCubemap = CubemapEditor.currentMaterial.cubemap.getId();
+   %cubemap = CubemapEditor.currentCubemap;
+   
+   notDirtyCubemap.originalName = %cubemap.getName();
+   CubemapEditor.copyCubemaps( %cubemap, notDirtyCubemap);
+   CubemapEditor.copyCubemaps( %cubemap, matEdCubeMapPreviewMat);
+   CubemapEditor.syncCubemap( %cubemap );
+}
+
+function CubemapEditor::hideCubemapEditor(%this,%cancel)
+{
+   if(%cancel)
+      CubemapEditor.cancelCubemap();
+      
+   cubemapEd_availableCubemapList.clearItems();
+   cubemapEdPerMan.delete();
+   cubemapEditor.setVisible(0);
+}
+
+// create category and update current material if there is one
+function CubemapEditor::addCubemap( %this,%cubemapName )
+{
+   if( %cubemapName $= "" )
+   {
+      toolsMessageBoxOK( "Error", "Can not create a cubemap without a valid name.");
+      return;
+   }
+   
+   for(%i = 0; %i < RootGroup.getCount(); %i++)
+   {
+      if( %cubemapName $= RootGroup.getObject(%i).getName() )
+      {
+         toolsMessageBoxOK( "Error", "There is already an object with the same name.");
+         return;
+      }
+   }
+
+   // Create and select a new cubemap
+   %cubemap = CubemapEditor.createNewCubemap( %cubemapName );
+   %idx = cubemapEd_availableCubemapList.addItem( %cubemap.name );
+   cubemapEd_availableCubemapList.setSelected( %idx, true );
+
+   // material category text field to blank
+   addCubemapWindow-->cubemapName.setText("");
+}
+
+function CubemapEditor::createNewCubemap( %this, %cubemap )
+{
+   if( %cubemap $= "" )
+   {
+      for(%i = 0; ; %i++)
+      {
+         %cubemap = "newCubemap_" @ %i;
+         if( !isObject(%cubemap) )
+            break;
+      }
+   }
+   
+   new CubemapData(%cubemap) 
+   {
+      cubeMapFaceAsset[0] = "ToolsModule:cube_xNeg_image";
+      cubeMapFaceAsset[1] = "ToolsModule:cube_xPos_image";
+      cubeMapFaceAsset[2] = "ToolsModule:cube_zNeg_image";
+      cubeMapFaceAsset[3] = "ToolsModule:cube_zPos_image";
+      cubeMapFaceAsset[4] = "ToolsModule:cube_yNeg_image";
+      cubeMapFaceAsset[5] = "ToolsModule:cube_yPos_image";
+
+      parentGroup = RootGroup;
+   };
+
+   cubemapEdPerMan.setDirty( %cubemap, "art/materials." @ $TorqueScriptFileExtension );
+   cubemapEdPerMan.saveDirty();
+
+   return %cubemap;
+}
+
+function CubemapEditor::setCubemapDirty(%this)
+{ 
+   %propertyText = "Create Cubemap *";
+   cubemapEditor.text = %propertyText;
+   cubemapEditor.dirty = true;
+   cubemapEditor-->saveCubemap.setActive(true);
+
+   %cubemap = CubemapEditor.currentCubemap;
+
+   // materials created in the materail selector are given that as its filename, so we run another check
+   if( CubemapEditor.isMatEditorMaterial( %cubemap ) )
+      cubemapEdPerMan.setDirty(%cubemap, "art/materials." @ $TorqueScriptFileExtension);
+   else
+      cubemapEdPerMan.setDirty(%cubemap);
+}
+
+function CubemapEditor::setCubemapNotDirty(%this)
+{
+   %propertyText= strreplace("Create Cubemap" , "*" , "");
+   cubemapEditor.text = %propertyText;
+   cubemapEditor.dirty = false;
+   cubemapEditor-->saveCubemap.setActive(false);
+
+   %cubemap = CubemapEditor.currentCubemap;
+   cubemapEdPerMan.removeDirty(%cubemap);
+}
+
+function CubemapEditor::showDeleteCubemapDialog(%this)
+{
+   %idx = cubemapEd_availableCubemapList.getSelectedItem();
+   %cubemap = cubemapEd_availableCubemapList.getItemText( %idx );
+   %cubemap = %cubemap.getId();
+   
+   if( %cubemap == -1 || !isObject(%cubemap) )
+      return;
+      
+   if( isObject( %cubemap ) )
+   {
+      toolsMessageBoxYesNoCancel("Delete Cubemap?", 
+         "Are you sure you want to delete<br><br>" @ %cubemap.getName() @ "<br><br> Cubemap deletion won't take affect until the engine is quit.", 
+         "CubemapEditor.deleteCubemap( " @ %cubemap @ ", " @ %idx @ " );", 
+         "", 
+         "" );
+   }
+}
+
+function CubemapEditor::deleteCubemap( %this, %cubemap, %idx )
+{
+   cubemapEd_availableCubemapList.deleteItem( %idx );
+   
+   UnlistedCubemaps.add( "unlistedCubemaps", %cubemap.getName() );
+      
+   if( !CubemapEditor.isMatEditorMaterial( %cubemap ) )
+   {
+      cubemapEdPerMan.removeDirty( %cubemap );
+      cubemapEdPerMan.removeObjectFromFile( %cubemap );
+   }
+
+   if( cubemapEd_availableCubemapList.getItemCount() > 0 )
+   {
+      cubemapEd_availableCubemapList.setSelected(0, true);
+   }
+   else 
+   {  
+      // if there are no cubemaps, then create one, select, and bail
+      %cubemap = CubemapEditor.createNewCubemap();
+      cubemapEd_availableCubemapList.addItem( %cubemap.getName() );
+      cubemapEd_availableCubemapList.setSelected(0, true);
+   }
+}
+
+function cubemapEd_availableCubemapList::onSelect( %this, %id, %cubemap )
+{
+   %cubemap = %cubemap.getId();
+   if( CubemapEditor.currentCubemap $= %cubemap )
+      return;
+   
+   if( cubemapEditor.dirty )
+   {         
+      %savedCubemap = CubemapEditor.currentCubemap;
+      toolsMessageBoxYesNoCancel("Save Existing Cubemap?", 
+      "Do you want to save changes to <br><br>" @ %savedCubemap.getName(), 
+      "CubemapEditor.saveCubemap(" @ true @ ");", 
+      "CubemapEditor.saveCubemapDialogDontSave(" @ %cubemap @ ");",
+      "CubemapEditor.saveCubemapDialogCancel();" );
+   }
+   else
+      CubemapEditor.changeCubemap( %cubemap );
+}
+
+function CubemapEditor::showSaveCubemapDialog( %this )
+{
+   %cubemap = CubemapEditor.currentCubemap;
+   if( !isObject(%cubemap) )
+      return;
+      
+   toolsMessageBoxYesNoCancel("Save Cubemap?", 
+      "Do you want to save changes to <br><br>" @ %cubemap.getName(), 
+      "CubemapEditor.saveCubemap( " @ %cubemap @ " );", 
+      "", 
+      "" );
+}
+
+function CubemapEditor::saveCubemap( %this, %cubemap )
+{   
+   notDirtyCubemap.originalName = %cubemap.getName();
+   CubemapEditor.copyCubemaps( %cubemap, notDirtyCubemap );
+   CubemapEditor.copyCubemaps( %cubemap, matEdCubeMapPreviewMat);
+
+   cubemapEdPerMan.saveDirty(); 
+
+   CubemapEditor.setCubemapNotDirty();
+}
+
+function CubemapEditor::saveCubemapDialogDontSave( %this, %newCubemap)
+{  
+   //deal with old cubemap first
+   %oldCubemap = CubemapEditor.currentCubemap;
+   
+   %idx = cubemapEd_availableCubemapList.findItemText( %oldCubemap.getName() );
+   cubemapEd_availableCubemapList.setItemText( %idx, notDirtyCubemap.originalName );      
+   %oldCubemap.setName( notDirtyCubemap.originalName );
+   
+   CubemapEditor.copyCubemaps( notDirtyCubemap, %oldCubemap);
+   CubemapEditor.copyCubemaps( notDirtyCubemap, matEdCubeMapPreviewMat);
+   CubemapEditor.syncCubemap( %oldCubemap ); 
+   
+   CubemapEditor.changeCubemap( %newCubemap );
+}
+
+function CubemapEditor::saveCubemapDialogCancel( %this )
+{ 
+   %cubemap = CubemapEditor.currentCubemap;
+   %idx = cubemapEd_availableCubemapList.findItemText( %cubemap.getName() );
+   cubemapEd_availableCubemapList.clearSelection();
+   cubemapEd_availableCubemapList.setSelected( %idx, true );
+}
+
+function CubemapEditor::changeCubemap( %this, %cubemap )
+{  
+   CubemapEditor.setCubemapNotDirty();
+   CubemapEditor.currentCubemap = %cubemap;
+   
+   notDirtyCubemap.originalName = %cubemap.getName();
+   CubemapEditor.copyCubemaps( %cubemap, notDirtyCubemap);
+   CubemapEditor.copyCubemaps( %cubemap, matEdCubeMapPreviewMat);
+   CubemapEditor.syncCubemap( %cubemap );  
+}
+
+function CubemapEditor::editCubemapImage( %this, %face )
+{   
+   CubemapEditor.setCubemapDirty();
+   
+   %cubemap = CubemapEditor.currentCubemap;
+   %bitmap = CubemapEditor.openFile("texture");
+   if( %bitmap !$= "" && %bitmap !$= "tools/materialEditor/gui/cubemapBtnBorder" )
+   {
+      %cubemap.cubeFace[%face] = %bitmap;
+      CubemapEditor.copyCubemaps( %cubemap, matEdCubeMapPreviewMat);
+      CubemapEditor.syncCubemap( %cubemap );
+   }
+}
+
+function CubemapEditor::editCubemapName( %this, %newName )
+{   
+   CubemapEditor.setCubemapDirty();
+   
+   %cubemap = CubemapEditor.currentCubemap;
+   
+   %idx = cubemapEd_availableCubemapList.findItemText( %cubemap.getName() );
+   cubemapEd_availableCubemapList.setItemText( %idx, %newName );   
+   %cubemap.setName(%newName);
+   
+   CubemapEditor.syncCubemap( %cubemap );
+}
+
+function CubemapEditor::syncCubemap( %this, %cubemap )
+{
+   %xpos = CubemapEditor.searchForTexture(%cubemap.getName(), %cubemap.cubeFace[0]);
+   if( %xpos !$= "" )
+      cubemapEd_XPos.setBitmap( %xpos );
+   
+   %xneg = CubemapEditor.searchForTexture(%cubemap.getName(), %cubemap.cubeFace[1]);
+   if( %xneg !$= "" )
+      cubemapEd_XNeg.setBitmap( %xneg );      
+   
+   %yneg = CubemapEditor.searchForTexture(%cubemap.getName(), %cubemap.cubeFace[2]);
+   if( %yneg !$= "" )
+      cubemapEd_YNeG.setBitmap( %yneg );
+   
+   %ypos = CubemapEditor.searchForTexture(%cubemap.getName(), %cubemap.cubeFace[3]);
+   if( %ypos !$= "" )
+      cubemapEd_YPos.setBitmap( %ypos );
+   
+   %zpos = CubemapEditor.searchForTexture(%cubemap.getName(), %cubemap.cubeFace[4]);
+   if( %zpos !$= "" )
+      cubemapEd_ZPos.setBitmap( %zpos );
+   
+   %zneg = CubemapEditor.searchForTexture(%cubemap.getName(), %cubemap.cubeFace[5]);
+   if( %zneg !$= "" )
+      cubemapEd_ZNeg.setBitmap( %zneg );
+   
+   cubemapEd_activeCubemapNameTxt.setText(%cubemap.getName());
+   
+   %cubemap.updateFaces();
+   matEdCubeMapPreviewMat.updateFaces();
+}
+
+function CubemapEditor::copyCubemaps( %this, %copyFrom, %copyTo)
+{
+   %copyTo.cubeFace[0] = %copyFrom.cubeFace[0];
+   %copyTo.cubeFace[1] = %copyFrom.cubeFace[1];
+   %copyTo.cubeFace[2] = %copyFrom.cubeFace[2];
+   %copyTo.cubeFace[3] = %copyFrom.cubeFace[3];
+   %copyTo.cubeFace[4] = %copyFrom.cubeFace[4];
+   %copyTo.cubeFace[5] = %copyFrom.cubeFace[5];
+}

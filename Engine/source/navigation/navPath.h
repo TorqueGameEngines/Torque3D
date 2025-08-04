@@ -57,7 +57,7 @@ public:
 
    /// What sort of link types are we allowed to move on?
    LinkData mLinkTypes;
-
+   dtQueryFilter mFilter;
    /// Plan the path.
    bool plan();
 
@@ -152,7 +152,6 @@ private:
 
    dtNavMeshQuery *mQuery;
    dtStatus mStatus;
-   dtQueryFilter mFilter;
    S32 mCurIndex;
    Vector<Point3F> mPoints;
    Vector<U16> mFlags;

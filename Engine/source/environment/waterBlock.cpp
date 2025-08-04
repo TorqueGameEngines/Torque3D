@@ -531,12 +531,9 @@ void WaterBlock::initPersistFields()
    docsURL;
    addGroup( "WaterBlock" );
 
-   addProtectedFieldV("gridSize", TypeRangedS32, Offset(mGridElementSize, WaterBlock), &setGridSizeProperty, &defaultProtectedGetFn, &CommonValidators::NaturalNumber,
+   addProtectedFieldV("gridSize", TypeRangedF32, Offset(mGridElementSize, WaterBlock), &setGridSizeProperty, &defaultProtectedGetFn, &CommonValidators::PositiveFloat,
       "Spacing between vertices in the WaterBlock mesh");
-
-   addProtectedFieldV("gridElementSize", TypeRangedS32, Offset(mGridElementSize, WaterBlock), &setGridSizeProperty, &defaultProtectedGetFn, &CommonValidators::NaturalNumber,
-      "Duplicate of gridElementSize for backwards compatility");
-
+   addProtectedFieldV("gridElementSize", TypeRangedF32, Offset(mGridElementSize, WaterBlock), &setGridSizeProperty, &defaultProtectedGetFn, &CommonValidators::PositiveFloat, "Duplicate of gridElementSize for backwards compatility");
    Parent::initPersistFields();
 }     
 

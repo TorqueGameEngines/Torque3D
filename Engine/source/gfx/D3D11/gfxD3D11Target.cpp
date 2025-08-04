@@ -133,17 +133,14 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXTextureObject *te
             mTargets[slot] = d3dto->get2DTex();
             mTargets[slot]->AddRef();
             mTargetViews[slot] = d3dto->getRTView();
-            mTargetViews[slot]->AddRef();         
+            mTargetViews[slot]->AddRef();
+            mResolveTargets[slot] = d3dto;
          } 
          else 
          {
             mTargets[slot] = d3dto->getSurface();
             mTargets[slot]->AddRef();
             mTargetViews[slot]->AddRef();
-            // Only assign resolve target if d3dto has a surface to give us.
-            //
-            // That usually means there is an MSAA target involved, which is why
-            // the resolve is needed to get the data out of the target.
             mResolveTargets[slot] = d3dto;
 
             if ( tex && slot == Color0 )

@@ -45,6 +45,7 @@
 #include "T3D/sfx/sfx3DWorld.h"
 #include "sfx/sfxTypes.h"
 #include "console/typeValidators.h"
+#include "gfx/gfxTransformSaver.h"
 
 GFXImplementVertexFormat( GFXWaterVertex )
 {
@@ -698,6 +699,8 @@ void WaterObject::prepRenderImage( SceneRenderState *state )
    // We only render during the normal diffuse render pass.
    if( !state->isDiffusePass() )
       return;
+
+   GFXTransformSaver saver;
 
    // Setup scene transforms
    mMatrixSet->setSceneView(GFX->getWorldMatrix());

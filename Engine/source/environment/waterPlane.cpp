@@ -124,9 +124,7 @@ void WaterPlane::initPersistFields()
 
       addProtectedFieldV( "gridSize", TypeRangedS32, Offset( mGridSize, WaterPlane ), &protectedSetGridSize, &defaultProtectedGetFn, &CommonValidators::NaturalNumber,
 		  "Spacing between vertices in the WaterBlock mesh" );
-
-      addProtectedFieldV( "gridElementSize", TypeRangedS32, Offset( mGridElementSize, WaterPlane ), &protectedSetGridElementSize, &defaultProtectedGetFn, &CommonValidators::NaturalNumber,
-		  "Duplicate of gridElementSize for backwards compatility");
+      addProtectedFieldV("gridElementSize", TypeRangedF32, Offset(mGridElementSize, WaterPlane), &protectedSetGridElementSize, &defaultProtectedGetFn, &CommonValidators::PositiveFloat, "Duplicate of gridElementSize for backwards compatility");
 
    endGroup( "WaterPlane" );
 
@@ -698,6 +696,8 @@ void WaterPlane::prepRenderImage( SceneRenderState *state )
 
    if( !state->isDiffusePass() )
       return;
+
+   GFXTransformSaver saver;
 
    mBasicLighting = dStricmp( LIGHTMGR->getId(), "BLM" ) == 0;
    mUnderwater = isUnderwater( state->getCameraPosition() );

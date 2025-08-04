@@ -29,12 +29,14 @@ uniform int mipCount0;
  
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-  float4 downSample = float4(0, 0, 0, 0);
-  float x = oneOverTargetSize.x;
-  float y = oneOverTargetSize.y;
+  float4 downSample = float4(0, 0, 0, 0);  
+  float4 finalOut = float4(0, 0, 0, 0);
   
   for (int mipId = 0; mipId<mipCount0; mipId++)
   {
+    float mipWeight = float(mipId)/float(mipCount0);
+    float x = oneOverTargetSize.x*pow(0.5, mipId);
+    float y = oneOverTargetSize.y*pow(0.5, mipId);
     float3 a = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x - 2 * x, IN.uv0.y + 2*y, 0, mipId)).rgb;
     float3 b = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x		   , IN.uv0.y + 2*y, 0, mipId)).rgb;
     float3 c = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x + 2 * x, IN.uv0.y + 2*y, 0, mipId)).rgb;
@@ -71,13 +73,14 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
             break;
 		
         default:
-            downSample.rgb = e*0.125;
-            downSample.rgb += (a+c+g+i)*0.03125;
-            downSample.rgb += (b+d+f+h)*0.0625;
-            downSample.rgb += (j+k+l+m)*0.125;
+            downSample.rgb = e*mipWeight;
+            downSample.rgb += (a+c+g+i)*mipWeight*0.125;
+            downSample.rgb += (b+d+f+h)*mipWeight*0.25;
+            downSample.rgb += (j+k+l+m)*mipWeight*0.5;
             downSample.a = 1.0;
             break;
     }
+    finalOut += downSample*(1.0-mipWeight);
   }
-  return downSample;
+  return float4(finalOut.rgb,1);
 }

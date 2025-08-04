@@ -108,7 +108,6 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
        (numMipLevels == 0 || numMipLevels > 1)&&
        !(depth > 0) )
    {
-      if (numMipLevels == 5) Con::errorf("GFXD3D11TextureManager::_innerCreateTexture - numMipLevels == 5 found!");
       miscFlags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
       bindFlags |= D3D11_BIND_RENDER_TARGET; // in order to automatically generate mips. Resource needs to be a rendertarget and shader resource
    }

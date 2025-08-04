@@ -849,9 +849,7 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
 
       if (mMipCountSC[i]->isValid())
       {
-         S32 mipLevels = (S32)mActiveTextures[i]->getMipLevels();
-         mShaderConsts->set(mMipCountSC[i], mipLevels);
-         if (mipLevels == 5) Con::errorf("PostEffect::_setupConstants - mipLevels == 5 found!");
+         mShaderConsts->set(mMipCountSC[i], (S32)mActiveTextures[i]->getMipLevels());
       }
    }
 

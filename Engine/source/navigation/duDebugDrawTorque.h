@@ -23,12 +23,37 @@
 #ifndef _DU_DEBUG_DRAW_TORQUE_H_
 #define _DU_DEBUG_DRAW_TORQUE_H_
 
+#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
+#endif
 #include <DebugDraw.h>
-#include "gfx/gfxStateBlock.h"
 
-/// @brief Implements the duDebugDraw interface in Torque.
-class duDebugDrawTorque: public duDebugDraw {
+#ifndef _GFXSTATEBLOCK_H_
+#include "gfx/gfxStateBlock.h"
+#endif
+
+#ifndef _GFXVERTEXTYPES_H_
+#include "gfx/gfxVertexTypes.h"
+#endif
+
+#ifndef _GFXVERTEXBUFFER_H_
+#include "gfx/gfxVertexBuffer.h"
+#endif
+
+#ifndef _SCENERENDERSTATE_H_
+#include "scene/sceneRenderState.h"
+#endif
+
+/**
+* @class duDebugDrawTorque
+*  @brief Implements the duDebugDraw interface in Torque.
+*
+* Every debug draw from recast goes through a process of begin, add vertex and then end
+* just like our primbuilder class, but we need to catch these vertices
+* and add them to a GFXVertexBuffer as recast supports GL_QUADS which is now
+* deprecated.
+*/
+class duDebugDrawTorque : public duDebugDraw {
 public:
    duDebugDrawTorque();
    ~duDebugDrawTorque();
@@ -36,22 +61,19 @@ public:
    /// Enable/disable Z read.
    void depthMask(bool state) override;
 
-   /// Enable/disable texturing. Not used.
-   void texture(bool state) override;
+   /// <summary>
+   /// Enable/disable Z read and overrides any setting that will come from detour.
+   /// </summary>
+   /// <param name="state">Z read state.</param>
+   /// <param name="isOverride">Set to true to override any future changes.</param>
+   void depthMask(bool state, bool isOverride);
 
-   /// Special colour overwrite for when I get picky about the colours Mikko chose.
-   void overrideColor(unsigned int col);
-
-   /// Stop the colour override.
-   void cancelOverride();
+   void blend(bool blend);
 
    /// Begin drawing primitives.
    /// @param prim [in] primitive type to draw, one of rcDebugDrawPrimitives.
    /// @param size [in] size of a primitive, applies to point size and line width only.
    void begin(duDebugDrawPrimitives prim, float size = 1.0f) override;
-
-   /// All new buffers go into this group.
-   void beginGroup(U32 group);
 
    /// Submit a vertex
    /// @param pos [in] position of the verts.
@@ -66,92 +88,57 @@ public:
    /// Submit a vertex
    /// @param pos [in] position of the verts.
    /// @param color [in] color of the verts.
+   /// @param uv [in] the uv coordinates.
    void vertex(const float* pos, unsigned int color, const float* uv) override;
 
    /// Submit a vertex
    /// @param x,y,z [in] position of the verts.
    /// @param color [in] color of the verts.
+   /// @param u [in] the u coordinate.
+   /// @param v [in] the v coordinate.
    void vertex(const float x, const float y, const float z, unsigned int color, const float u, const float v) override;
+
+   /// Set a texture
+   /// @param state, use a texture in this draw, usually a checker texture.
+   void texture(bool state) override;
+
+   /// <summary>
+   /// Assigns a colour to an area type.
+   /// </summary>
+   /// <param name="area">The area type.</param>
+   /// <returns>The colour in recast format for the area.</returns>
+   unsigned int areaToCol(unsigned int area) override;
 
    /// End drawing primitives.
    void end() override;
 
-   /// Render buffered primitive.
-   void render();
+   void clearCache();
+   void render(SceneRenderState* state);
+   void immediateRender();
 
-   /// Render buffered primitives in a group.
-   void renderGroup(U32 group);
-
-   /// Delete buffered primitive.
-   void clear();
-      
 private:
+
+   struct CachedDraw {
+      GFXPrimitiveType primType;
+      GFXVertexBufferHandle<GFXVertexPCT> buffer;
+      GFXPrimitiveBufferHandle primitiveBuffer;
+      U32 vertexCount;
+      U32 primitiveCount;
+      GFXStateBlockDesc state;
+      Box3F bounds;
+   };
+
+   Vector<CachedDraw> mDrawCache;
+
    GFXStateBlockDesc mDesc;
+   Vector<GFXVertexPCT> mVertList;                    // Our vertex list for setting up vertexBuffer in the End function.
+   GFXVertexBufferHandle<GFXVertexPCT> mVertexBuffer; // our vertex buffer for drawing.
 
    U32 mPrimType;
-   bool mQuadsMode;
-
    U32 mVertCount;
-   F32 mStore[3][3];
-
-   U32 mGroup;
-
-   struct Instruction {
-      // Contain either a point or a color command.
-      union {
-         struct {
-            U8 r, g, b, a;
-         } color;
-         struct {
-            float x, y, z;
-         } point;
-         U32 primType;
-      } data;
-      // Which type of data do we store?
-      enum {
-         COLOR,
-         POINT,
-         PRIMTYPE,
-      } type;
-      // Construct as color instruction.
-      Instruction(U8 r, U8 g, U8 b, U8 a) {
-         type = COLOR;
-         data.color.r = r;
-         data.color.g = g;
-         data.color.b = b;
-         data.color.a = a;
-      }
-      // Construct as point.
-      Instruction(float x, float y, float z) {
-         type = POINT;
-         data.point.x = x;
-         data.point.y = y;
-         data.point.z = z;
-      }
-      Instruction(U32 t = 0) {
-         type = PRIMTYPE;
-         data.primType = t;
-      }
-   };
-
-   struct Buffer {
-      U32 group;
-      Vector<Instruction> buffer;
-      GFXPrimitiveType primType;
-      Buffer(U32 type = 0) {
-         primType = (GFXPrimitiveType)type;
-         group = 0;
-      }
-   };
-   Vector<Buffer> mBuffers;
-
-   U32 mCurrColor;
-   U32 mOverrideColor;
-   bool mOverride;
+   bool mOverrideState;
 
    void _vertex(const float x, const float y, const float z, unsigned int color);
-
-   void renderBuffer(Buffer &b);
 };
 
 #endif

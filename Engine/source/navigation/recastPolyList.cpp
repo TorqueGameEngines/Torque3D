@@ -27,11 +27,15 @@
 #include "gfx/primBuilder.h"
 #include "gfx/gfxStateBlock.h"
 
-RecastPolyList::RecastPolyList()
+RecastPolyList::RecastPolyList() : mChunkyMesh(0)
 {
    nverts = 0;
    verts = NULL;
    vertcap = 0;
+
+   nnormals = 0;
+   normals = NULL;
+   normalcap = 0;
 
    ntris = 0;
    tris = NULL;
@@ -44,12 +48,39 @@ RecastPolyList::~RecastPolyList()
    clear();
 }
 
+rcChunkyTriMesh* RecastPolyList::getChunkyMesh()
+{
+   if (!mChunkyMesh)
+   {
+      mChunkyMesh = new rcChunkyTriMesh;
+      if (!mChunkyMesh)
+      {
+         Con::errorf("Build tile navigation: out of memory");
+         return NULL;
+      }
+
+      if (!rcCreateChunkyTriMesh(getVerts(), getTris(), getTriCount(), 256, mChunkyMesh))
+      {
+         Con::errorf("Build tile navigation: out of memory");
+         return NULL;
+      }
+
+   }
+
+   return mChunkyMesh;
+}
+
 void RecastPolyList::clear()
 {
    nverts = 0;
    delete[] verts;
    verts = NULL;
    vertcap = 0;
+
+   nnormals = 0;
+   delete[] normals;
+   normals = NULL;
+   normalcap = 0;
 
    ntris = 0;
    delete[] tris;
@@ -134,6 +165,39 @@ void RecastPolyList::vertex(U32 vi)
 
 void RecastPolyList::end()
 {
+   // Fetch current triangle indices
+   const U32 i0 = tris[ntris * 3 + 0];
+   const U32 i1 = tris[ntris * 3 + 1];
+   const U32 i2 = tris[ntris * 3 + 2];
+
+   // Rebuild vertices
+   Point3F v0(verts[i0 * 3 + 0], verts[i0 * 3 + 1], verts[i0 * 3 + 2]);
+   Point3F v1(verts[i1 * 3 + 0], verts[i1 * 3 + 1], verts[i1 * 3 + 2]);
+   Point3F v2(verts[i2 * 3 + 0], verts[i2 * 3 + 1], verts[i2 * 3 + 2]);
+
+   // Compute normal
+   Point3F edge1 = v1 - v0;
+   Point3F edge2 = v2 - v0;
+   Point3F normal = mCross(edge1, edge2);
+   normal.normalizeSafe();
+
+   // Allocate/resize normal buffer if needed
+   if (nnormals == normalcap)
+   {
+      normalcap = (normalcap == 0) ? 16 : normalcap * 2;
+      F32* newNormals = new F32[normalcap * 3];
+      if (normals)
+         dMemcpy(newNormals, normals, nnormals * 3 * sizeof(F32));
+      delete[] normals;
+      normals = newNormals;
+   }
+
+   // Store normal
+   normals[nnormals * 3 + 0] = normal.x;
+   normals[nnormals * 3 + 1] = normal.y;
+   normals[nnormals * 3 + 2] = normal.z;
+
+   nnormals++;
    ntris++;
 }
 
@@ -145,6 +209,11 @@ U32 RecastPolyList::getVertCount() const
 const F32 *RecastPolyList::getVerts() const
 {
    return verts;
+}
+
+const F32* RecastPolyList::getNormals() const
+{
+   return normals;
 }
 
 U32 RecastPolyList::getTriCount() const

@@ -178,39 +178,59 @@ public:
       U32 mSize = 0;
    }_getBufferData;
 
-   void lock(const U32 size, U32 offsetAlign, U32 &outOffset, void* &outPtr)
+   void lock(const U32 size, U32 offsetAlign, U32& outOffset, void*& outPtr)
    {
-      if( !size )
+      if (!size)
       {
-         AssertFatal(0, "");
+         AssertFatal(0, "GLCircularVolatileBuffer::lock - size must be > 0");
          outOffset = 0;
-         outPtr = NULL;
+         outPtr = nullptr;
+         return;
       }
 
-      mLockManager.waitFirstRange( mBufferFreePos, (mBufferFreePos + size)-1 );
+      // Align free pos first (before wraparound check)
+      if (offsetAlign)
+      {
+         mBufferFreePos = ((mBufferFreePos + offsetAlign - 1) / offsetAlign) * offsetAlign;
+      }
 
-      if( mBufferFreePos + size > mBufferSize )
-      {         
-         mUsedRanges.push_back( UsedRange( mBufferFreePos, mBufferSize-1 ) );
+      // If the size won't fit from current pos to end, wrap around
+      if (mBufferFreePos + size > mBufferSize)
+      {
+         // Protect the remaining space
+         if (mBufferFreePos < mBufferSize)
+            mUsedRanges.push_back(UsedRange(mBufferFreePos, mBufferSize - 1));
+
+         // Reset free pos
          mBufferFreePos = 0;
-      }
 
-      // force offset buffer align
-      if( offsetAlign )
-         mBufferFreePos = ( (mBufferFreePos/offsetAlign) + 1 ) * offsetAlign;
+         // Realign after wrap
+         if (offsetAlign)
+         {
+            mBufferFreePos = ((mBufferFreePos + offsetAlign - 1) / offsetAlign) * offsetAlign;
+         }
+
+         // Now check for overlaps *after* wrapping
+         mLockManager.waitOverlapRanges(mBufferFreePos, mBufferFreePos + size - 1);
+      }
+      else
+      {
+         // Normal range wait
+         mLockManager.waitOverlapRanges(mBufferFreePos, mBufferFreePos + size - 1);
+      }
 
       outOffset = mBufferFreePos;
 
-      if( GFXGL->mCapabilities.bufferStorage )
-      {         
-         outPtr = (U8*)(mBufferPtr) + mBufferFreePos; 
-      }
-      else if( GFXGL->glUseMap() )
+      if (GFXGL->mCapabilities.bufferStorage)
       {
-         PRESERVE_BUFFER( mBinding );
+         outPtr = static_cast<U8*>(mBufferPtr) + mBufferFreePos;
+      }
+      else if (GFXGL->glUseMap())
+      {
+         PRESERVE_BUFFER(mBinding);
          glBindBuffer(mBinding, mBufferName);
 
-         const GLbitfield access = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT;
+         const GLbitfield access = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
          outPtr = glMapBufferRange(mBinding, outOffset, size, access);
       }
       else
@@ -218,14 +238,13 @@ public:
          _getBufferData.mOffset = outOffset;
          _getBufferData.mSize = size;
 
-         outPtr = mFrameAllocator.lock( size );
-      }      
+         outPtr = mFrameAllocator.lock(size);
+      }
 
-      //set new buffer pos
-      mBufferFreePos = mBufferFreePos + size;
+      mBufferFreePos += size;
 
       //align 4bytes
-      mBufferFreePos = ( (mBufferFreePos/4) + 1 ) * 4;
+      mBufferFreePos = ((mBufferFreePos + 4 - 1) / 4) * 4;
    }
 
    void unlock()

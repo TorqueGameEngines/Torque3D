@@ -228,6 +228,8 @@ public:
 
    /// Types of link we can use.
    LinkData mLinkTypes;
+   dtQueryFilter mFilter;
+   Vector<F32> mAreaCosts;
 
    /// @}
 #endif // TORQUE_NAVIGATION_ENABLED

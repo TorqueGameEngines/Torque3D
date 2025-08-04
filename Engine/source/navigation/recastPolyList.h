@@ -26,6 +26,10 @@
 #include "collision/abstractPolyList.h"
 #include "core/util/tVector.h"
 
+#ifndef CHUNKYTRIMESH_H
+#include "ChunkyTriMesh.h"
+#endif
+
 /// Represents polygons in the same manner as the .obj file format. Handy for
 /// padding data to Recast, since it expects this data format. At the moment,
 /// this class only accepts triangles.
@@ -57,6 +61,8 @@ public:
    U32 getVertCount() const;
    const F32 *getVerts() const;
 
+   const F32* getNormals() const;
+
    U32 getTriCount() const;
    const S32 *getTris() const;
 
@@ -70,6 +76,9 @@ public:
    /// Default destructor.
    ~RecastPolyList();
 
+   rcChunkyTriMesh* getChunkyMesh();
+
+
 protected:
    /// Number of vertices defined.
    U32 nverts;
@@ -77,6 +86,13 @@ protected:
    F32 *verts;
    /// Size of vertex array.
    U32 vertcap;
+
+   // Number of normals defined.
+   U32 nnormals;
+   // Array of normals (xyz in float array)
+   F32* normals;
+   // Size of normal array (matches verts)
+   U32 normalcap;
 
    /// Number of triangles defined.
    U32 ntris;
@@ -92,6 +108,8 @@ protected:
    Vector<PlaneF> planes;
    /// Another inherited utility function.
    const PlaneF& getIndexedPlane(const U32 index) override { return planes[index]; }
+
+   rcChunkyTriMesh* mChunkyMesh;
 
 private:
 };

@@ -34,6 +34,10 @@
 #include "gui/worldEditor/gizmo.h"
 #endif
 
+//#ifndef _NAVMESH_TOOL_H_
+//#include "navigation/navMeshTool.h"
+//#endif
+
 #include "navMesh.h"
 #include "T3D/aiPlayer.h"
 
@@ -41,6 +45,7 @@ struct ObjectRenderInst;
 class SceneManager;
 class SceneRenderState;
 class BaseMatInstance;
+class NavMeshTool;
 
 class GuiNavEditorCtrl : public EditTSCtrl
 {
@@ -51,7 +56,6 @@ public:
    static const String mSelectMode;
    static const String mLinkMode;
    static const String mCoverMode;
-   static const String mTileMode;
    static const String mTestMode;
 
    GuiNavEditorCtrl();
@@ -96,26 +100,14 @@ public:
 
    bool getStaticPos(const Gui3DMouseEvent & event, Point3F &tpos);
 
-   void setMode(String mode, bool sourceShortcut);
-   String getMode() { return mMode; }
-
    void selectMesh(NavMesh *mesh);
-   void deselect();
 
    S32 getMeshId();
-   S32 getPlayerId();
-
-   String mSpawnClass;
-   String mSpawnDatablock;
-
-   void deleteLink();
-   void setLinkFlags(const LinkData &d);
-
-   void buildTile();
-
-   void spawnPlayer(const Point3F &pos);
 
    /// @}
+   void setActiveTool(NavMeshTool* tool);
+
+   void setDrawMode(S32 id);
 
 protected:
 
@@ -128,35 +120,18 @@ protected:
 
    bool mIsDirty;
 
-   String mMode;
-
    /// Currently-selected NavMesh.
    SimObjectPtr<NavMesh> mMesh;
 
-   /// @name Link mode
-   /// @{
-
-   Point3F mLinkStart;
-   S32 mCurLink;
-   S32 mLink;
+   /// The active tool in used by the editor.
+   SimObjectPtr<NavMeshTool> mTool;
 
    /// @}
 
    /// @name Tile mode
    /// @{
 
-   S32 mCurTile;
-   S32 mTile;
-
    duDebugDrawTorque dd;
-
-   /// @}
-
-   /// @name Test mode
-   /// @{
-
-   SimObjectPtr<SceneObject> mPlayer;
-   SimObjectPtr<SceneObject> mCurPlayer;
 
    /// @}
 

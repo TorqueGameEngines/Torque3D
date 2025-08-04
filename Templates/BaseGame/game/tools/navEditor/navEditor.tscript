@@ -296,77 +296,312 @@ function NavEditorGui::showSidePanel()
    %parent.panelHidden = false;
 }
 
-//------------------------------------------------------------------------------
+//------------------------------------------------------
+// NAVMESHSELECTTOOL
+//------------------------------------------------------
 
-function NavEditorGui::onModeSet(%this, %mode)
+function NavMeshSelectTool::onActivated(%this)
 {
-   // Callback when the nav editor changes mode. Set the appropriate dynamic
-   // GUI contents in the properties/actions boxes.
+   NavInspector.setVisible(false);
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   NavInspector.setVisible(true);
+   %actions->SelectActions.setVisible(true);
+
+   NavInspector.inspect(NavEditorGui.getMesh());
+}
+
+function NavMeshSelectTool::onDeactivated(%this)
+{
+   NavInspector.setVisible(false);
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->SelectActions.setVisible(false);
+}
+
+function NavMeshSelectTool::onNavMeshSelected(%this)
+{
+   NavTreeView.clearSelection();
+   if(isObject(NavEditorGui.getMesh()))
+      NavTreeView.selectItem(NavEditorGui.getMesh());
+   // we set the naveditorgui navmesh in source so just get it 
+   // and update here.
+   NavInspector.inspect(NavEditorGui.getMesh());
+}
+
+//------------------------------------------------------
+// OffMeshConnectionTool
+//------------------------------------------------------
+
+function OffMeshConnectionTool::onActivated(%this)
+{
    NavInspector.setVisible(false);
 
    %actions = NavEditorOptionsWindow->ActionsBox;
-   %actions->SelectActions.setVisible(false);
-   %actions->LinkActions.setVisible(false);
-   %actions->CoverActions.setVisible(false);
-   %actions->TileActions.setVisible(false);
-   %actions->TestActions.setVisible(false);
+   %properties = NavEditorOptionsWindow->PropertiesBox;
 
+   %actions->LinkActions.setVisible(true);
+   %properties->LinkProperties.setVisible(true);
+}
+
+function OffMeshConnectionTool::onDeactivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->LinkActions.setVisible(false);
    %properties = NavEditorOptionsWindow->PropertiesBox;
    %properties->LinkProperties.setVisible(false);
-   %properties->TileProperties.setVisible(false);
-   %properties->TestProperties.setVisible(false);
+}
 
-   switch$(%mode)
+function OffMeshConnectionTool::updateLinkFlags(%this)
+{
+   %properties = NavEditorOptionsWindow-->LinkProperties;
+   %this.setLinkProperties(getLinkFlags(%properties), %properties->LinkBiDirection.isStateOn(), %properties->LinkRadius.getValue());
+}
+
+function updateLinkData(%control, %flags, %biDir, %radius)
+{
+   %control->LinkRadius.setActive(true);
+   %control->LinkBiDirection.setActive(true);
+   %control->LinkWalkFlag.setActive(true);
+   %control->LinkJumpFlag.setActive(true);
+   %control->LinkDropFlag.setActive(true);
+   %control->LinkLedgeFlag.setActive(true);
+   %control->LinkClimbFlag.setActive(true);
+   %control->LinkTeleportFlag.setActive(true);
+
+   %control->LinkRadius.setValue(%radius);
+   %control->LinkBiDirection.setStateOn(%biDir);
+   %control->LinkWalkFlag.setStateOn(%flags & $Nav::WalkFlag);
+   %control->LinkJumpFlag.setStateOn(%flags & $Nav::JumpFlag);
+   %control->LinkDropFlag.setStateOn(%flags & $Nav::DropFlag);
+   %control->LinkLedgeFlag.setStateOn(%flags & $Nav::LedgeFlag);
+   %control->LinkClimbFlag.setStateOn(%flags & $Nav::ClimbFlag);
+   %control->LinkTeleportFlag.setStateOn(%flags & $Nav::TeleportFlag);
+}
+
+function getLinkFlags(%control)
+{
+   return (%control->LinkWalkFlag.isStateOn() ? $Nav::WalkFlag : 0) |
+          (%control->LinkJumpFlag.isStateOn() ? $Nav::JumpFlag : 0) |
+          (%control->LinkDropFlag.isStateOn() ? $Nav::DropFlag : 0) |
+          (%control->LinkLedgeFlag.isStateOn() ? $Nav::LedgeFlag : 0) |
+          (%control->LinkClimbFlag.isStateOn() ? $Nav::ClimbFlag : 0) |
+          (%control->LinkTeleportFlag.isStateOn() ? $Nav::TeleportFlag : 0);
+}
+
+function disableLinkData(%control)
+{
+   %control->LinkRadius.setActive(false);
+   %control->LinkBiDirection.setActive(false);
+   %control->LinkWalkFlag.setActive(false);
+   %control->LinkJumpFlag.setActive(false);
+   %control->LinkDropFlag.setActive(false);
+   %control->LinkLedgeFlag.setActive(false);
+   %control->LinkClimbFlag.setActive(false);
+   %control->LinkTeleportFlag.setActive(false);
+}
+
+function OffMeshConnectionTool::onLinkSelected(%this, %flags, %biDir, %radius)
+{
+   updateLinkData(NavEditorOptionsWindow-->LinkProperties, %flags, %biDir, %radius);
+}
+
+function OffMeshConnectionTool::onLinkDeselected(%this)
+{
+   disableLinkData(NavEditorOptionsWindow-->LinkProperties);
+}
+
+function OffMeshConnectionTool::updateRadius(%this)
+{
+   %this.updateLinkFlags();
+}
+
+function NavMeshLinkFlagButton::onClick(%this)
+{
+   NavMeshTools->LinkTool.updateLinkFlags();
+}
+
+function NavMeshLinkBiDirection::onClick(%this)
+{
+   NavMeshTools->LinkTool.updateLinkFlags();
+}
+
+//------------------------------------------------------
+// CoverTool
+//------------------------------------------------------
+
+function CoverTool::onActivated(%this)
+{
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->CoverActions.setVisible(true);
+}
+
+function CoverTool::onDeactivated(%this)
+{
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->CoverActions.setVisible(false);
+}
+
+//------------------------------------------------------
+// NAVMESHTESTTOOL
+//------------------------------------------------------
+
+function NavMeshTestTool::onActivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->TestActions.setVisible(true);
+
+   %classList =  enumerateConsoleClasses("Player") TAB enumerateConsoleClasses("Vehicle");
+   //echo(%classList);
+
+   SpawnClassSelector.clear();
+   foreach$(%class in %classList)
    {
-   case "SelectMode":
+      if(%class !$= "Vehicle") // vehicle doesnt work, purely virtual class.
+         SpawnClassSelector.add(%class);
+   }
+
+   SpawnClassSelector.setFirstSelected(true);
+}
+
+function NavMeshTestTool::onDeactivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->TestActions.setVisible(false);
+}
+
+function NavMeshTestTool::onPlayerSelected(%this)
+{
+   if (!isObject(%this.getPlayer().aiController))
+   {
+      %this.getPlayer().aiController = new AIController(){ ControllerData = %this.getPlayer().getDatablock().aiControllerData; };
+      %this.getPlayer().setAIController(%this.getPlayer().aiController);
+   }
+
+   if(%this.getPlayer().isMemberOfClass("AIPlayer"))
+   {
+      NavInspector.inspect(%this.getPlayer());
       NavInspector.setVisible(true);
-      %actions->SelectActions.setVisible(true);
-   case "LinkMode":
-      %actions->LinkActions.setVisible(true);
-      %properties->LinkProperties.setVisible(true);
-   case "CoverMode":
-      // 
-      %actions->CoverActions.setVisible(true);
-   case "TileMode":
-      %actions->TileActions.setVisible(true);
-      %properties->TileProperties.setVisible(true);
-   case "TestMode":
-      %actions->TestActions.setVisible(true);
-      %properties->TestProperties.setVisible(true);
+   }
+   else
+   {
+      NavInspector.inspect(%this.getPlayer().getDatablock().aiControllerData);
+      NavInspector.setVisible(true);
+   }
+
+   NavMeshIgnore(%this.getPlayer(), true);
+   %this.getPlayer().setDamageState("Enabled");
+}
+
+function NavMeshTestTool::onPlayerDeselected(%this)
+{
+   NavInspector.inspect();
+}
+
+function NavMeshTestTool::stop(%this)
+{
+    if (isObject(%this.getPlayer().aiController))
+        %this.getPlayer().aiController.stop();
+    else
+    {
+        %this.getPlayer().stop();
+    }
+}
+
+function NavMeshTestTool::toggleFollow(%this)
+{
+   
+   if(isObject(%this.getFollowObject()) && isObject(%this.getPlayer()))
+   {
+      %player = %this.getPlayer();
+      if(%player.isMemberOfClass("AIPlayer"))
+         %player.followObject(%this.getFollowObject(), "2.0");
+      else
+         %player.getAIController().followObject(%this.getFollowObject(), %player.getDatablock().aiControllerData.mFollowTolerance);
    }
 }
 
-function NavEditorGui::paletteSync(%this, %mode)
+function NavMeshTestTool::followObject(%this)
 {
-   // Synchronise the palette (small buttons on the left) with the actual mode
-   // the nav editor is in.
-   %evalShortcut = "ToolsPaletteArray-->" @ %mode @ ".setStateOn(1);";
-   eval(%evalShortcut);
-} 
+   %this.followSelectMode();
+}
+
+function NavMeshTestTool::findCover(%this)
+{
+   if(isObject(%this.getPlayer()))
+   {
+      %player = %this.getPlayer();
+      %pos = %player.getPosition();
+
+      if(%player.isMemberOfClass("AIPlayer"))
+         %player.findCover(%pos,  CoverRadius.getText());
+      else
+         %player.getAIController().findCover(%pos, CoverRadius.getText());
+   }
+}
+
+function SpawnClassSelector::onSelect(%this, %id)
+{
+   %className = %this.getTextById(%id);
+
+   NavMeshTools->TestTool.setSpawnClass(%className);
+
+   SpawnDatablockSelector.clear();
+   %classData = %className @ "Data";
+   if(%className $= "AIPlayer")
+   {
+      %classData = "PlayerData";
+   }
+
+   // add the datablocks
+   for(%i = 0; %i < DataBlockGroup.getCount(); %i++)
+   {
+      %obj = DataBlockGroup.getObject(%i);
+      if( isMemberOfClass( %obj.getClassName(), %classData ))
+         SpawnDatablockSelector.add(%obj.getName());
+   }
+
+   SpawnDatablockSelector.setFirstSelected(true);
+
+}
+
+function SpawnDatablockSelector::onSelect(%this, %id)
+{
+   %className = %this.getTextById(%id);
+   NavMeshTools->TestTool.setSpawnDatablock(%className);
+}
+
+//------------------------------------------------------
+// TILETOOL
+//------------------------------------------------------
+
+function TileTool::onActivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %properties = NavEditorOptionsWindow->PropertiesBox;
+   %actions->TileActions.setVisible(true);
+   %properties->TileProperties.setVisible(true);
+}
+
+function TileTool::onDeactivated(%this)
+{
+   NavInspector.setVisible(false);
+
+   %actions = NavEditorOptionsWindow->ActionsBox;
+   %actions->TileActions.setVisible(false);
+   %properties = NavEditorOptionsWindow->PropertiesBox;
+   %properties->TileProperties.setVisible(false);
+}
 
 function NavEditorGui::onEscapePressed(%this)
 {
    return false;
-}
-
-function NavEditorGui::selectObject(%this, %obj)
-{
-   NavTreeView.clearSelection();
-   if(isObject(%obj))
-      NavTreeView.selectItem(%obj);
-   %this.onObjectSelected(%obj);
-}
-
-function NavEditorGui::onObjectSelected(%this, %obj)
-{
-   if(isObject(%this.selectedObject))
-      %this.deselect();
-   %this.selectedObject = %obj;
-   if(isObject(%obj))
-   {
-      %this.selectMesh(%obj);
-      NavInspector.inspect(%obj);
-   }
 }
 
 function NavEditorGui::deleteMesh(%this)
@@ -388,12 +623,12 @@ function NavEditorGui::deleteSelected(%this)
          toolsMessageBoxYesNo("Warning",
             "Are you sure you want to delete" SPC NavEditorGui.selectedObject.getName(),
             "NavEditorGui.deleteMesh();");
-   case "TestMode":
-      %this.getPlayer().delete();
-      %this.onPlayerDeselected();
-   case "LinkMode":
-      %this.deleteLink();
-      %this.isDirty = true;
+   // case "TestMode":
+   //    %this.getPlayer().delete();
+   //    %this.onPlayerDeselected();
+   // case "LinkMode":
+   //    %this.deleteLink();
+   //    %this.isDirty = true;
    }
 }
 
@@ -415,99 +650,6 @@ function NavEditorGui::buildLinks(%this)
    }
 }
 
-function updateLinkData(%control, %flags)
-{
-   %control->LinkWalkFlag.setActive(true);
-   %control->LinkJumpFlag.setActive(true);
-   %control->LinkDropFlag.setActive(true);
-   %control->LinkLedgeFlag.setActive(true);
-   %control->LinkClimbFlag.setActive(true);
-   %control->LinkTeleportFlag.setActive(true);
-
-   %control->LinkWalkFlag.setStateOn(%flags & $Nav::WalkFlag);
-   %control->LinkJumpFlag.setStateOn(%flags & $Nav::JumpFlag);
-   %control->LinkDropFlag.setStateOn(%flags & $Nav::DropFlag);
-   %control->LinkLedgeFlag.setStateOn(%flags & $Nav::LedgeFlag);
-   %control->LinkClimbFlag.setStateOn(%flags & $Nav::ClimbFlag);
-   %control->LinkTeleportFlag.setStateOn(%flags & $Nav::TeleportFlag);
-}
-
-function getLinkFlags(%control)
-{
-   return (%control->LinkWalkFlag.isStateOn() ? $Nav::WalkFlag : 0) |
-          (%control->LinkJumpFlag.isStateOn() ? $Nav::JumpFlag : 0) |
-          (%control->LinkDropFlag.isStateOn() ? $Nav::DropFlag : 0) |
-          (%control->LinkLedgeFlag.isStateOn() ? $Nav::LedgeFlag : 0) |
-          (%control->LinkClimbFlag.isStateOn() ? $Nav::ClimbFlag : 0) |
-          (%control->LinkTeleportFlag.isStateOn() ? $Nav::TeleportFlag : 0);
-}
-
-function disableLinkData(%control)
-{
-   %control->LinkWalkFlag.setActive(false);
-   %control->LinkJumpFlag.setActive(false);
-   %control->LinkDropFlag.setActive(false);
-   %control->LinkLedgeFlag.setActive(false);
-   %control->LinkClimbFlag.setActive(false);
-   %control->LinkTeleportFlag.setActive(false);
-}
-
-function NavEditorGui::onLinkSelected(%this, %flags)
-{
-   updateLinkData(NavEditorOptionsWindow-->LinkProperties, %flags);
-}
-
-function NavEditorGui::onPlayerSelected(%this, %flags)
-{
-   if (!isObject(%this.getPlayer().aiController) || (isObject(%this.getPlayer().aiController) && !(%this.getPlayer().isMemberOfClass("AIPlayer"))))
-   {
-      %this.getPlayer().aiController = new AIController(){ ControllerData = %this.getPlayer().getDatablock().aiControllerData; };
-      %this.getPlayer().setAIController(%this.getPlayer().aiController);
-   }
-   NavMeshIgnore(%this.getPlayer(), true);
-   %this.getPlayer().setDamageState("Enabled");
-   
-   updateLinkData(NavEditorOptionsWindow-->TestProperties, %flags);
-}
-
-function NavEditorGui::updateLinkFlags(%this)
-{
-   if(isObject(%this.getMesh()))
-   {
-      %properties = NavEditorOptionsWindow-->LinkProperties;
-      %this.setLinkFlags(getLinkFlags(%properties));
-      %this.isDirty = true;
-   }
-}
-
-function NavEditorGui::updateTestFlags(%this)
-{
-   if(isObject(%this.getPlayer()))
-   {
-      %properties = NavEditorOptionsWindow-->TestProperties;
-      %player = %this.getPlayer();
-
-      %player.allowWwalk = %properties->LinkWalkFlag.isStateOn();
-      %player.allowJump = %properties->LinkJumpFlag.isStateOn();
-      %player.allowDrop = %properties->LinkDropFlag.isStateOn();
-      %player.allowLedge = %properties->LinkLedgeFlag.isStateOn();
-      %player.allowClimb = %properties->LinkClimbFlag.isStateOn();
-      %player.allowTeleport = %properties->LinkTeleportFlag.isStateOn();
-
-      %this.isDirty = true;
-   }
-}
-
-function NavEditorGui::onLinkDeselected(%this)
-{
-   disableLinkData(NavEditorOptionsWindow-->LinkProperties);
-}
-
-function NavEditorGui::onPlayerDeselected(%this)
-{
-   disableLinkData(NavEditorOptionsWindow-->TestProperties);
-}
-
 function NavEditorGui::createCoverPoints(%this)
 {
    if(isObject(%this.getMesh()))
@@ -526,48 +668,6 @@ function NavEditorGui::deleteCoverPoints(%this)
    }
 }
 
-function NavEditorGui::findCover(%this)
-{
-   if(%this.getMode() $= "TestMode" && isObject(%this.getPlayer()))
-   {
-      %pos = LocalClientConnection.getControlObject().getPosition();
-      %text = NavEditorOptionsWindow-->TestProperties->CoverPosition.getText();
-      if(%text !$= "")
-         %pos = eval("return " @ %text);
-      %this.getPlayer().getAIController().findCover(%pos, NavEditorOptionsWindow-->TestProperties->CoverRadius.getText());
-   }
-}
-
-function NavEditorGui::followObject(%this)
-{
-   if(%this.getMode() $= "TestMode" && isObject(%this.getPlayer()))
-   {
-      %obj = LocalClientConnection.player;
-      %text = NavEditorOptionsWindow-->TestProperties->FollowObject.getText();
-      if(%text !$= "")
-      {
-         %command = "return " @ %text;
-         if(!endsWith(%command, ";"))
-            %command = %command @ ";";
-            
-         %obj = eval(%command);
-         if(!isObject(%obj))
-            toolsMessageBoxOk("Error", "Cannot find object" SPC %text);
-      }
-      if(isObject(%obj))
-         %this.getPlayer().getAIController().followObject(%obj, NavEditorOptionsWindow-->TestProperties->FollowRadius.getText());
-   }
-}
-
-function NavEditorGui::stop(%this)
-{
-    if (isObject(%this.getPlayer().aiController))
-        %this.getPlayer().aiController.stop();
-    else
-    {
-        NavEditorGui.getPlayer().stop();
-    }
-}
 function NavInspector::inspect(%this, %obj)
 {
    %name = "";
@@ -598,13 +698,13 @@ function NavTreeView::onInspect(%this, %obj)
 function NavTreeView::onSelect(%this, %obj)
 {
    NavInspector.inspect(%obj);
-   NavEditorGui.onObjectSelected(%obj);
+   
+   NavEditorGui.selectMesh(%obj);
 }
 
 function NavEditorGui::prepSelectionMode(%this)
 {
-   %this.setMode("SelectMode");
-   ToolsPaletteArray-->NavEditorSelectMode.setStateOn(1);
+   NavEditorGui.setActiveTool(NavMeshTools->SelectTool);
 }
 
 //-----------------------------------------------------------------------------
@@ -618,16 +718,6 @@ function ENavEditorPaletteButton::onClick(%this)
 
 //-----------------------------------------------------------------------------
 
-function NavMeshLinkFlagButton::onClick(%this)
-{
-   NavEditorGui.updateLinkFlags();
-}
-
-function NavMeshTestFlagButton::onClick(%this)
-{
-   NavEditorGui.updateTestFlags();
-}
-
 singleton GuiControlProfile(NavEditorProfile)
 {
    canKeyFocus = true;
@@ -635,3 +725,38 @@ singleton GuiControlProfile(NavEditorProfile)
    fillColor = "192 192 192 192";
    category = "Editor";
 };
+
+function DrawModeSelector::init(%this)
+{
+   %this.clear();
+
+   %this.add("Draw NavMesh", 0);
+   %this.add("Draw NavMesh Transparent", 1);
+   %this.add("Draw NavMesh BVTree", 2);
+   %this.add("Draw NavMesh Nodes", 3);
+   %this.add("Draw NavMesh Portals", 4);
+   %this.add("Draw NavMesh Invis", 5);
+   %this.add("Draw Mesh", 6);
+   %this.add("Draw Voxels", 7);
+   %this.add("Draw Walkable Voxels", 8);
+   %this.add("Draw Compact Heightfield", 9);
+   %this.add("Draw Compact Distance", 10);
+   %this.add("Draw Compact Regions", 11);
+   %this.add("Draw Region Connections", 12);
+   %this.add("Draw Raw Contours", 13);
+   %this.add("Draw Both Contours", 14);
+   %this.add("Draw Contours", 15);
+   %this.add("Draw PolyMesh", 16);
+   %this.add("Draw PolyMesh Detail", 17);
+
+}
+
+function DrawModeSelector::selectDefault(%this)
+{
+   %this.setSelected(0);
+}
+
+function DrawModeSelector::onSelect(%this, %id)
+{
+   NavEditorGui.setDrawMode(%id);
+}

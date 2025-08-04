@@ -168,6 +168,8 @@ public:
 
    /// Types of link we can use.
    LinkData mLinkTypes;
+   dtQueryFilter mFilter;
+   Vector<F32> mAreaCosts;
    AINavigation::NavSize mNavSize;
 #endif
    Delegate<void(AIController* obj, Point3F location, Move* movePtr)> resolveYawPtr;

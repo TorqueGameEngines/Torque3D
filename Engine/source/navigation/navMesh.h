@@ -102,6 +102,7 @@ public:
    U32 mMergeRegionArea;
    F32 mTileSize;
    U32 mMaxPolysPerTile;
+   duDebugDrawTorque mDbgDraw;
    /// @}
 
    /// @name Water
@@ -110,6 +111,29 @@ public:
       Ignore,
       Solid,
       Impassable
+   };
+
+   enum DrawMode
+   {
+      DRAWMODE_NAVMESH,
+      DRAWMODE_NAVMESH_TRANS,
+      DRAWMODE_NAVMESH_BVTREE,
+      DRAWMODE_NAVMESH_NODES,
+      DRAWMODE_NAVMESH_PORTALS,
+      DRAWMODE_NAVMESH_INVIS,
+      DRAWMODE_MESH,
+      DRAWMODE_VOXELS,
+      DRAWMODE_VOXELS_WALKABLE,
+      DRAWMODE_COMPACT,
+      DRAWMODE_COMPACT_DISTANCE,
+      DRAWMODE_COMPACT_REGIONS,
+      DRAWMODE_REGION_CONNECTIONS,
+      DRAWMODE_RAW_CONTOURS,
+      DRAWMODE_BOTH_CONTOURS,
+      DRAWMODE_CONTOURS,
+      DRAWMODE_POLYMESH,
+      DRAWMODE_POLYMESH_DETAIL,
+      MAX_DRAWMODE
    };
 
    WaterMethod mWaterMethod;
@@ -127,7 +151,7 @@ public:
    /// @{
 
    /// Add an off-mesh link.
-   S32 addLink(const Point3F &from, const Point3F &to, U32 flags = 0);
+   S32 addLink(const Point3F &from, const Point3F &to, bool biDir, F32 rad, U32 flags = 0);
 
    /// Get the ID of the off-mesh link near the point.
    S32 getLink(const Point3F &pos);
@@ -144,14 +168,26 @@ public:
    /// Get the flags used by a link.
    LinkData getLinkFlags(U32 idx);
 
+   bool getLinkDir(U32 idx);
+
+   F32 getLinkRadius(U32 idx);
+
+   void setLinkDir(U32 idx, bool biDir);
+
+   void setLinkRadius(U32 idx, F32 rad);
+
    /// Set flags used by a link.
    void setLinkFlags(U32 idx, const LinkData &d);
+
+   void setDrawMode(DrawMode mode) { m_drawMode = mode; setMaskBits(LoadFlag); }
 
    /// Set the selected state of a link.
    void selectLink(U32 idx, bool select, bool hover = true);
 
    /// Delete the selected link.
    void deleteLink(U32 idx);
+
+   dtNavMeshQuery* getNavMeshQuery() { return mQuery; }
 
    /// @}
 
@@ -230,6 +266,7 @@ public:
    void prepRenderImage(SceneRenderState *state) override;
    void render(ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat);
    void renderLinks(duDebugDraw &dd);
+   void renderSearch(duDebugDraw& dd);
    void renderTileData(duDebugDrawTorque &dd, U32 tile);
 
    bool mAlwaysRender;
@@ -249,15 +286,13 @@ public:
 
    void inspectPostApply() override;
 
+   void createNewFile();
+
 protected:
 
    dtNavMesh const* getNavMesh() { return nm; }
 
 private:
-   /// Generates a navigation mesh for the collection of objects in this
-   /// mesh. Returns true if successful. Stores the created mesh in tnm.
-   bool generateMesh();
-
    /// Builds the next tile in the dirty list.
    void buildNextTile();
 
@@ -275,55 +310,44 @@ private:
       /// Recast min and max points.
       F32 bmin[3], bmax[3];
       /// Default constructor.
-      Tile() : box(Box3F::Invalid), x(0), y(0)
+      Tile() : box(Box3F::Invalid), x(0), y(0), chf(0), solid(0), cset(0), pmesh(0), dmesh(0), triareas(nullptr)
       {
          bmin[0] = bmin[1] = bmin[2] = bmax[0] = bmax[1] = bmax[2] = 0.0f;
       }
       /// Value constructor.
       Tile(const Box3F &b, U32 _x, U32 _y, const F32 *min, const F32 *max)
-         : box(b), x(_x), y(_y)
+         : box(b), x(_x), y(_y), chf(0), solid(0), cset(0), pmesh(0), dmesh(0), triareas(nullptr)
       {
          rcVcopy(bmin, min);
          rcVcopy(bmax, max);
       }
-   };
 
-   /// Intermediate data for tile creation.
-   struct TileData {
-      RecastPolyList          geom;
-      rcHeightfield        *hf;
-      rcCompactHeightfield *chf;
-      rcContourSet         *cs;
-      rcPolyMesh           *pm;
-      rcPolyMeshDetail     *pmd;
-      TileData()
+      ~Tile()
       {
-         hf = NULL;
-         chf = NULL;
-         cs = NULL;
-         pm = NULL;
-         pmd = NULL;
+         if (chf)
+            delete chf;
+         if (cset)
+            delete cset;
+         if (solid)
+            delete solid;
+         if (pmesh)
+            delete pmesh;
+         if (dmesh)
+            delete dmesh;
+         if (triareas)
+            delete[] triareas;
       }
-      void freeAll()
-      {
-         geom.clear();
-         rcFreeHeightField(hf);
-         rcFreeCompactHeightfield(chf);
-         rcFreeContourSet(cs);
-         rcFreePolyMesh(pm);
-         rcFreePolyMeshDetail(pmd);
-      }
-      ~TileData()
-      {
-         freeAll();
-      }
+
+      unsigned char* triareas;
+      rcCompactHeightfield* chf;
+      rcHeightfield* solid;
+      rcContourSet* cset;
+      rcPolyMesh* pmesh;
+      rcPolyMeshDetail* dmesh;
    };
 
    /// List of tiles.
    Vector<Tile> mTiles;
-
-   /// List of tile intermediate data.
-   Vector<TileData> mTileData;
 
    /// List of indices to the tile array which are dirty.
    Vector<U32> mDirtyTiles;
@@ -332,7 +356,7 @@ private:
    void updateTiles(bool dirty = false);
 
    /// Generates navmesh data for a single tile.
-   unsigned char *buildTileData(const Tile &tile, TileData &data, U32 &dataSize);
+   unsigned char *buildTileData(const Tile &tile, U32 &dataSize);
 
    /// @}
 
@@ -363,19 +387,9 @@ private:
 
    /// @}
 
-   /// @name Intermediate data
-   /// @{
-
-   /// Config struct.
-   rcConfig cfg;
-
-   /// Updates our config from console members.
-   void updateConfig();
-
    dtNavMesh *nm;
    rcContext *ctx;
-
-   /// @}
+   dtNavMeshQuery* mQuery;
 
    /// @name Cover
    /// @{
@@ -408,8 +422,6 @@ private:
    /// @name Rendering
    /// @{
 
-   duDebugDrawTorque mDbgDraw;
-
    void renderToDrawer();
 
    /// @}
@@ -419,6 +431,21 @@ private:
 
    /// Use this object to manage update events.
    static SimObjectPtr<EventManager> smEventManager;
+
+protected:
+   RecastPolyList* m_geo;
+   unsigned char* m_triareas;
+   rcHeightfield* m_solid;
+   rcCompactHeightfield* m_chf;
+   rcContourSet* m_cset;
+   rcPolyMesh* m_pmesh;
+   rcPolyMeshDetail* m_dmesh;
+   rcConfig m_cfg;
+   DrawMode m_drawMode;
+   U32 mWaterVertStart;
+   U32 mWaterTriStart;
+
+   void cleanup();
 };
 
 typedef NavMesh::WaterMethod NavMeshWaterMethod;

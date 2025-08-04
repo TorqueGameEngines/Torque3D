@@ -151,7 +151,13 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXTextureObject *te
                mTargetSize.set( tex->getSize().x, tex->getSize().y );
                mTargetFormat = tex->getFormat();
             }
-         }           
+         }
+
+         if (mGenMips)
+         {
+            mTargetSRViews[slot] = d3dto->getSRView();
+            mTargetSRViews[slot]->AddRef();
+         }
       }
 
       // Update surface size

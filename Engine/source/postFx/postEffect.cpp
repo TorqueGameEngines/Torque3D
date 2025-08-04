@@ -142,25 +142,23 @@ IMPLEMENT_CONOBJECT(PostEffect);
 
 GFX_ImplementTextureProfile( PostFxTextureProfile,
                             GFXTextureProfile::DiffuseMap,
-                            GFXTextureProfile::Static | GFXTextureProfile::PreserveSize | GFXTextureProfile::NoMipmap,
+                            GFXTextureProfile::Static | GFXTextureProfile::PreserveSize,
                             GFXTextureProfile::NONE );
 
 GFX_ImplementTextureProfile( PostFxTextureSRGBProfile,
                              GFXTextureProfile::DiffuseMap,
-                             GFXTextureProfile::Static | GFXTextureProfile::PreserveSize | GFXTextureProfile::NoMipmap | GFXTextureProfile::SRGB,
+                             GFXTextureProfile::Static | GFXTextureProfile::PreserveSize | GFXTextureProfile::SRGB,
                              GFXTextureProfile::NONE);
 
 GFX_ImplementTextureProfile( VRTextureProfile,
                             GFXTextureProfile::DiffuseMap,
                             GFXTextureProfile::PreserveSize |
-                            GFXTextureProfile::RenderTarget |
-                            GFXTextureProfile::NoMipmap,
+                            GFXTextureProfile::RenderTarget,
                             GFXTextureProfile::NONE );
 
 GFX_ImplementTextureProfile( VRDepthProfile,
                             GFXTextureProfile::DiffuseMap,
                             GFXTextureProfile::PreserveSize |
-                            GFXTextureProfile::NoMipmap |
                             GFXTextureProfile::ZTarget,
                             GFXTextureProfile::NONE );
 
@@ -501,7 +499,8 @@ PostEffect::PostEffect()
       mInvCameraTransSC(NULL),
       mMatCameraToScreenSC(NULL),
       mMatScreenToCameraSC(NULL),
-      mIsCapturingSC(NULL)
+      mIsCapturingSC(NULL),
+      mMipCap(1)
 {
    dMemset( mTexSRGB, 0, sizeof(bool) * NumTextures);
    dMemset( mActiveTextures, 0, sizeof( GFXTextureObject* ) * NumTextures );
@@ -509,7 +508,7 @@ PostEffect::PostEffect()
    dMemset( mActiveTextureViewport, 0, sizeof( RectI ) * NumTextures );
    dMemset( mTexSizeSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
    dMemset( mRenderTargetParamsSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
-
+   dMemset(mMipCountSC, 0, sizeof(GFXShaderConstHandle*) * NumTextures);
 }
 
 PostEffect::~PostEffect()
@@ -538,6 +537,9 @@ void PostEffect::initPersistFields()
 
    addField( "targetScale", TypePoint2F, Offset( mTargetScale, PostEffect ),
        "If targetSize is zero this is used to set a relative size from the current target." );
+
+   addField("mipCap", TypePoint2F, Offset(mMipCap, PostEffect),
+      "generate up to this many mips. 0 = all, 1 = none, >1 = as specified max."); //todo: de-stupid
        
    addField( "targetSize", TypePoint2I, Offset( mTargetSize, PostEffect ), 
       "If non-zero this is used as the absolute target size." );   
@@ -760,6 +762,7 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
       {
          mTexSizeSC[i] = mShader->getShaderConstHandle(String::ToString("$texSize%d", i));
          mRenderTargetParamsSC[i] = mShader->getShaderConstHandle(String::ToString("$rtParams%d",i));
+         mMipCountSC[i] = mShader->getShaderConstHandle(String::ToString("$mipCount%d", i));
       }
 
       mTargetViewportSC = mShader->getShaderConstHandle( "$targetViewport" );
@@ -842,6 +845,11 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
          texSizeConst.x = (F32)mActiveTextures[i]->getWidth();
          texSizeConst.y = (F32)mActiveTextures[i]->getHeight();
          mShaderConsts->set( mTexSizeSC[i], texSizeConst );
+      }
+
+      if (mMipCountSC[i]->isValid())
+      {
+         mShaderConsts->set(mMipCountSC[i], (S32)mActiveTextures[i]->getMipLevels());
       }
    }
 
@@ -1265,7 +1273,7 @@ void PostEffect::_setupTarget( const SceneRenderState *state, bool *outClearTarg
             mTargetTex.getWidthHeight() != targetSize )
       {
          mTargetTex.set( targetSize.x, targetSize.y, mTargetFormat,
-            &PostFxTargetProfile, "PostEffect::_setupTarget" );
+            &PostFxTargetProfile, "PostEffect::_setupTarget", mMipCap);
 
          if ( mTargetClear == PFXTargetClear_OnCreate )
             *outClearTarget = true;

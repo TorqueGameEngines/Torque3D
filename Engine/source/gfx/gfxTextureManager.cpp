@@ -1414,13 +1414,13 @@ void GFXTextureManager::_validateTexParams( const U32 width, const U32 height,
    {
       inOutNumMips = 1;
    }
-   else if( !isPow2( width ) || !isPow2( height ) )
+   else if (!isPow2(width) || !isPow2(height))
    {
       // If a texture is not power-of-2 in size for both dimensions, it must
       // have only 1 mip level.
-      inOutNumMips = 1;
+      inOutNumMips = mFloor(mLog2(mMax(width, height))) + 1;
    }
-   
+
    // Check format, and compatibility with texture profile requirements
    bool autoGenSupp = ( inOutNumMips == 0 );
 

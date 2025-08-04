@@ -133,6 +133,7 @@ protected:
 
    GFXShaderConstHandle *mTexSizeSC[NumTextures];
    GFXShaderConstHandle *mRenderTargetParamsSC[NumTextures];
+   GFXShaderConstHandle* mMipCountSC[NumTextures];
 
    GFXShaderConstHandle *mViewportOffsetSC;
 
@@ -176,6 +177,7 @@ protected:
 
    String mTargetName;
    GFXTexHandle mTargetTex;
+   S32 mMipCap;
 
    String mTargetDepthStencilName;
    GFXTexHandle mTargetDepthStencil;

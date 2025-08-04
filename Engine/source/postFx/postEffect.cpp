@@ -538,7 +538,7 @@ void PostEffect::initPersistFields()
    addField( "targetScale", TypePoint2F, Offset( mTargetScale, PostEffect ),
        "If targetSize is zero this is used to set a relative size from the current target." );
 
-   addField("mipCap", TypePoint2F, Offset(mMipCap, PostEffect),
+   addField("mipCap", TypeS32, Offset(mMipCap, PostEffect),
       "generate up to this many mips. 0 = all, 1 = none, >1 = as specified max."); //todo: de-stupid
        
    addField( "targetSize", TypePoint2I, Offset( mTargetSize, PostEffect ), 

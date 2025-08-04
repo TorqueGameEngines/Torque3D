@@ -276,11 +276,18 @@ void GFXD3D11TextureTarget::deactivate()
    //re-gen mip maps
    for (U32 i = 0; i < 6; i++)
    {
-      ID3D11ShaderResourceView* pSRView = mTargetSRViews[GFXTextureTarget::Color0 + i];
-      if (pSRView)
-         D3D11DEVICECONTEXT->GenerateMips(pSRView);
-   }
-   
+      D3D11_TEXTURE2D_DESC desc;
+      if (mResolveTargets[GFXTextureTarget::Color0 + i])
+      {
+         mResolveTargets[GFXTextureTarget::Color0 + i]->get2DTex()->GetDesc(&desc);
+         if (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS)
+         {
+            ID3D11ShaderResourceView* pSRView = mTargetSRViews[GFXTextureTarget::Color0 + i];
+            if (pSRView)
+               D3D11DEVICECONTEXT->GenerateMips(pSRView);
+         }
+      }
+   }   
 }
 
 void GFXD3D11TextureTarget::resolve()

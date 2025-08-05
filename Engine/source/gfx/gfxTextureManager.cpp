@@ -1424,6 +1424,7 @@ void GFXTextureManager::_validateTexParams( const U32 width, const U32 height,
             inOutNumMips = mFloor(mLog2(mMax(width, height))) + 1;
          else if (inOutNumMips > 1) //capped
             inOutNumMips = mMin(inOutNumMips,mFloor(mLog2(mMax(width, height))) + 1);
+         inOutNumMips = mClampF(inOutNumMips, 1, 13);
       }
       else
       {

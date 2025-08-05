@@ -37,6 +37,7 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
     float mipWeight = float(mipId)/float(mipCount0);
     float x = oneOverTargetSize.x*pow(0.5, mipId);
     float y = oneOverTargetSize.y*pow(0.5, mipId);
+    
     float3 a = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x - 2 * x, IN.uv0.y + 2*y, 0, mipId)).rgb;
     float3 b = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x		   , IN.uv0.y + 2*y, 0, mipId)).rgb;
     float3 c = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x + 2 * x, IN.uv0.y + 2*y, 0, mipId)).rgb;

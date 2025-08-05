@@ -28,59 +28,66 @@
 #line 28
 uniform sampler2D inputTex;
 uniform vec2 oneOverTargetSize;
-uniform int mipId;
+uniform int mipCount0;
 
 out vec4 OUT_col;
  
 void main()
 {
   vec4 downSample = vec4(0, 0, 0, 0);
-  float x = oneOverTargetSize.x;
-  float y = oneOverTargetSize.y;
-  
-  vec3 a = texture(inputTex, vec2(IN_uv0.x - 2 * x, IN_uv0.y + 2 * y)).rgb;
-  vec3 b = texture(inputTex, vec2(IN_uv0.x,         IN_uv0.y + 2 * y)).rgb;
-  vec3 c = texture(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y + 2 * y)).rgb;
+  vec4 finalOut = float4(0, 0, 0, 0);
 
-  vec3 d = texture(inputTex, vec2(IN_uv0.x - 2 * x, IN_uv0.y)).rgb;
-  vec3 e = texture(inputTex, vec2(IN_uv0.x,         IN_uv0.y)).rgb;
-  vec3 f = texture(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y)).rgb;
-
-  vec3 g = texture(inputTex, vec2(IN_uv0.x - 2 * x, IN_uv0.y - 2 * y)).rgb;
-  vec3 h = texture(inputTex, vec2(IN_uv0.x,         IN_uv0.y - 2 * y)).rgb;
-  vec3 i = texture(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y - 2 * y)).rgb;
-
-  vec3 j = texture(inputTex, vec2(IN_uv0.x - x, IN_uv0.y + y)).rgb;
-  vec3 k = texture(inputTex, vec2(IN_uv0.x + x, IN_uv0.y + y)).rgb;
-  vec3 l = texture(inputTex, vec2(IN_uv0.x - x, IN_uv0.y - y)).rgb;
-  vec3 m = texture(inputTex, vec2(IN_uv0.x + x, IN_uv0.y - y)).rgb;
-
-  vec3 group[5];
-  switch (mipId)
+  for (int mipId = 0; mipId<mipCount0; mipId++)
   {
-	case 0:
-		group[0] = (a+b+d+e) * (0.125/4.0);
-		group[1] = (b+c+e+f) * (0.125/4.0);
-		group[2] = (d+e+g+h) * (0.125/4.0);
-		group[3] = (e+f+h+i) * (0.125/4.0);
-		group[4] = (j+k+l+m) * (0.5/4.0);
-		group[0] *= KarisAverage(group[0]);
-		group[1] *= KarisAverage(group[1]);
-		group[2] *= KarisAverage(group[2]);
-		group[3] *= KarisAverage(group[3]);
-		group[4] *= KarisAverage(group[4]);
-		downSample.rgb = group[0]+group[1]+group[2]+group[3]+group[4];
-		downSample.a = 1.0;
-		break;
-		
-	default:
-		downSample.rgb = e*0.125;
-		downSample.rgb += (a+c+g+i)*0.03125;
-		downSample.rgb += (b+d+f+h)*0.0625;
-		downSample.rgb += (j+k+l+m)*0.125;
-		downSample.a = 1.0;
-		break;
-  }
+    float mipWeight = float(mipId)/float(mipCount0);
+    float mipIDf = float(mipId);
+    float x = oneOverTargetSize.x*pow(0.5, mipId);
+    float y = oneOverTargetSize.y*pow(0.5, mipId);
   
-  OUT_col = downSample;
+    vec3 a = textureLod(inputTex, vec2(IN_uv0.x - 2 * x, IN_uv0.y + 2 * y), mipIDf).rgb;
+    vec3 b = textureLod(inputTex, vec2(IN_uv0.x,         IN_uv0.y + 2 * y), mipIDf).rgb;
+    vec3 c = textureLod(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y + 2 * y), mipIDf).rgb;
+
+    vec3 d = textureLod(inputTex, vec2(IN_uv0.x - 2 * x, IN_uv0.y), mipIDf).rgb;
+    vec3 e = textureLod(inputTex, vec2(IN_uv0.x,         IN_uv0.y), mipIDf).rgb;
+    vec3 f = textureLod(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y), mipIDf).rgb;
+
+    vec3 g = textureLod(inputTex, vec2(IN_uv0.x - 2 * x, IN_uv0.y - 2 * y), mipIDf).rgb;
+    vec3 h = textureLod(inputTex, vec2(IN_uv0.x,         IN_uv0.y - 2 * y, mipIDf)).rgb;
+    vec3 i = textureLod(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y - 2 * y), mipIDf).rgb;
+
+    vec3 j = textureLod(inputTex, vec2(IN_uv0.x - x, IN_uv0.y + y), mipIDf).rgb;
+    vec3 k = textureLod(inputTex, vec2(IN_uv0.x + x, IN_uv0.y + y), mipIDf).rgb;
+    vec3 l = textureLod(inputTex, vec2(IN_uv0.x - x, IN_uv0.y - y), mipIDf).rgb;
+    vec3 m = textureLod(inputTex, vec2(IN_uv0.x + x, IN_uv0.y - y), mipIDf).rgb;
+
+    vec3 group[5];
+    switch (mipId)
+    {
+        case 0:
+            group[0] = (a+b+d+e) * (0.125/4.0);
+            group[1] = (b+c+e+f) * (0.125/4.0);
+            group[2] = (d+e+g+h) * (0.125/4.0);
+            group[3] = (e+f+h+i) * (0.125/4.0);
+            group[4] = (j+k+l+m) * (0.5/4.0);
+            group[0] *= KarisAverage(group[0]);
+            group[1] *= KarisAverage(group[1]);
+            group[2] *= KarisAverage(group[2]);
+            group[3] *= KarisAverage(group[3]);
+            group[4] *= KarisAverage(group[4]);
+            downSample.rgb = group[0]+group[1]+group[2]+group[3]+group[4];
+            downSample.a = 1.0;
+            break;
+		
+        default:
+            downSample.rgb = e*mipWeight;
+            downSample.rgb += (a+c+g+i)*mipWeight*0.125;
+            downSample.rgb += (b+d+f+h)*mipWeight*0.25;
+            downSample.rgb += (j+k+l+m)*mipWeight*0.5;
+            downSample.a = 1.0;
+            break;
+    }
+    finalOut += downSample*(1.0-mipWeight);
+  }
+  OUT_col = finalOut;
 }

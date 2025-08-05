@@ -24,38 +24,43 @@
 #include "core/rendering/shaders/postFX/gl/postFx.glsl"
 #include "shadergen:/autogenConditioners.h"
 #line 26
-uniform sampler2D nxtTex;
-uniform sampler2D mipTex;
+uniform sampler2D hdrbloomDown;
 uniform float filterRadius;
 uniform vec2 oneOverTargetSize;
+uniform int mipCount0;
 
 out vec4 OUT_col;
 
 void main()
 {
   vec4 upSample = vec4(0, 0, 0, 0);
-  float x = filterRadius*oneOverTargetSize.x;
-  float y = filterRadius*oneOverTargetSize.y;
+  vec4 finalOut = float4(0, 0, 0, 0);
+  for (int mipId = 0; mipId<mipCount0; mipId++)
+  {    
+    float x = filterRadius*oneOverTargetSize.x*pow(0.5, mipId);
+    float y = filterRadius*oneOverTargetSize.y*pow(0.5, mipId);
+    float mipIDf = float(mipId);
 
-  vec3 a = texture(mipTex, vec2(IN_uv1.x - x, IN_uv1.y + y)).rgb;
-  vec3 b = texture(mipTex, vec2(IN_uv1.x,     IN_uv1.y + y)).rgb;
-  vec3 c = texture(mipTex, vec2(IN_uv1.x + x, IN_uv1.y + y)).rgb;
+    vec3 a = textureLod(hdrbloomDown, vec2(IN_uv0.x - x, IN_uv0.y + y), mipIDf).rgb;
+    vec3 b = textureLod(hdrbloomDown, vec2(IN_uv0.x,     IN_uv0.y + y), mipIDf).rgb;
+    vec3 c = textureLod(hdrbloomDown, vec2(IN_uv0.x + x, IN_uv0.y + y), mipIDf).rgb;
 
-  vec3 d = texture(mipTex, vec2(IN_uv1.x - x, IN_uv1.y)).rgb;
-  vec3 e = texture(mipTex, vec2(IN_uv1.x,     IN_uv1.y)).rgb;
-  vec3 f = texture(mipTex, vec2(IN_uv1.x + x, IN_uv1.y)).rgb;
+    vec3 d = textureLod(hdrbloomDown, vec2(IN_uv0.x - x, IN_uv0.y), mipIDf).rgb;
+    vec3 e = textureLod(hdrbloomDown, vec2(IN_uv0.x,     IN_uv0.y), mipIDf).rgb;
+    vec3 f = textureLod(hdrbloomDown, vec2(IN_uv0.x + x, IN_uv0.y), mipIDf).rgb;
 
-  vec3 g = texture(mipTex, vec2(IN_uv1.x - x, IN_uv1.y - y)).rgb;
-  vec3 h = texture(mipTex, vec2(IN_uv1.x,     IN_uv1.y - y)).rgb;
-  vec3 i = texture(mipTex, vec2(IN_uv1.x + x, IN_uv1.y - y)).rgb;
+    vec3 g = textureLod(hdrbloomDown, vec2(IN_uv0.x - x, IN_uv0.y - y), mipIDf).rgb;
+    vec3 h = textureLod(hdrbloomDown, vec2(IN_uv0.x,     IN_uv0.y - y), mipIDf).rgb;
+    vec3 i = textureLod(hdrbloomDown, vec2(IN_uv0.x + x, IN_uv0.y - y), mipIDf).rgb;
 
-  upSample.rgb = e*4.0;
-  upSample.rgb += (b+d+f+h)*2.0;
-  upSample.rgb += (a+c+g+i);
-  upSample.rgb *= 1.0 / 16.0; 
-  upSample.a = 1.0;
+    upSample.rgb = e*4.0;
+    upSample.rgb += (b+d+f+h)*2.0;
+    upSample.rgb += (a+c+g+i);
+    upSample.rgb *= 1.0 / 16.0; 
+    finalOut += upSample;
+ } 
+ finalOut /= mipCount0;
+ finalOut.a = 1.0;  
   
-  upSample = texture(nxtTex, IN_uv0) + upSample;
-  
-  OUT_col = upSample;
+  OUT_col = finalOut;
 }

@@ -53,7 +53,7 @@ void main()
     vec3 f = textureLod(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y), mipIDf).rgb;
 
     vec3 g = textureLod(inputTex, vec2(IN_uv0.x - 2 * x, IN_uv0.y - 2 * y), mipIDf).rgb;
-    vec3 h = textureLod(inputTex, vec2(IN_uv0.x,         IN_uv0.y - 2 * y, mipIDf)).rgb;
+    vec3 h = textureLod(inputTex, vec2(IN_uv0.x,         IN_uv0.y - 2 * y), mipIDf).rgb;
     vec3 i = textureLod(inputTex, vec2(IN_uv0.x + 2 * x, IN_uv0.y - 2 * y), mipIDf).rgb;
 
     vec3 j = textureLod(inputTex, vec2(IN_uv0.x - x, IN_uv0.y + y), mipIDf).rgb;

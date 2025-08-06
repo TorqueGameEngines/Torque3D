@@ -92,6 +92,7 @@ $guiContent = new GuiControl(MaterialEditorGui) {
          position = "3 24";
          extent = "387 1269";
          horizSizing = "width";
+         vertSizing = "height";
          profile = "ToolsGuiDefaultProfile";
          tooltipProfile = "GuiToolTipProfile";
 
@@ -433,6 +434,7 @@ $guiContent = new GuiControl(MaterialEditorGui) {
                extent = "382 793";
                minExtent = "64 64";
                horizSizing = "width";
+               vertSizing = "height";
                profile = "ToolsGuiDefaultProfile";
                tooltipProfile = "ToolsGuiToolTipProfile";
                isContainer = "0";

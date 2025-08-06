@@ -110,12 +110,11 @@ function CompositeEditorDoSaveComposite(%assetId)
       return;
    }
    
-    %targetFilePath = %assetDef.getImagePath();
+    %targetFilePath = filePath(%assetDef.getFilename()) @ "/" @ fileName(%assetDef.imageFile);
    
     %aoMapAsset = CompTextureEd_RedChan-->Bitmap.getBitmap();
     %roughMapAsset = CompTextureEd_GreenChan-->Bitmap.getBitmap();
     %metalMapAsset = CompTextureEd_BlueChan-->Bitmap.getBitmap();
-    
     
     if(%aoMapAsset $= "ToolsModule:unknownImage_image")
     {

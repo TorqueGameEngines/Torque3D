@@ -43,7 +43,7 @@ function WorldEditor::onSelect( %this, %obj )
    
    // Used to help the Material Editor( the M.E doesn't utilize its own TS control )
    // so this dirty extension is used to fake it
-   if ( MaterialEditorGui.isVisible() )
+   if ( MaterialEditorGui.isAwake() )
       MaterialEditorGui.prepareActiveObject();
    
    // Update the Transform Selection window

@@ -116,9 +116,17 @@ void GFXGLTextureManager::innerCreateTexture( GFXGLTextureObject *retTex,
    {
       retTex->mMipLevels = numMipLevels > 1 ? numMipLevels : 0;
    }
-   else if(profile->testFlag(GFXTextureProfile::NoMipmap) || profile->testFlag(GFXTextureProfile::RenderTarget) || numMipLevels == 1 || retTex->mIsNPoT2)
+   else if(profile->testFlag(GFXTextureProfile::NoMipmap) || numMipLevels == 1)
    {
       retTex->mMipLevels = 1;
+   }
+   else if (profile->testFlag(GFXTextureProfile::RenderTarget))
+   {
+         if (numMipLevels == 0) //auto
+            numMipLevels = mFloor(mLog2(mMax(width, height))) + 1;
+         else if (numMipLevels > 1) //capped
+            numMipLevels = mMin(numMipLevels, mFloor(mLog2(mMax(width, height))) + 1);
+         retTex->mMipLevels = mClampF(numMipLevels, 1, 13);
    }
    else
    {

@@ -526,7 +526,7 @@ function MaterialEditorGui::prepareActiveObject( %this, %override )
       {
          %fieldName = %obj.getField(%i);
          
-         if( %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetId" /*&& %obj.getFieldType(%fieldName) !$= "TypeMaterialName"*/)
+         if( %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetId" && %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetPtr")
             continue;
       
          if( !%canSupportMaterial )
@@ -1022,6 +1022,7 @@ function MaterialEditorGui::guiSync( %this )
    }
    
    MaterialEditorPropInspector.loadCollapseState();
+   MaterialEditorPropInspector.loadScrollState();
    
    cancel(MaterialEditorGui.refreshSchedule);
    
@@ -1990,12 +1991,15 @@ function MaterialEditorGui::doSwapMaterial(%this, %materialAsset)
 
 function MaterialEditorPropInspector::onInspectorFieldModified(%this, %object, %fieldName, %arrayIndex, %oldValue, %newValue)
 {
+   MaterialEditorPropInspector.saveScrollState();
+   
    if(%arrayIndex !$= "" && %arrayIndex !$= "(null)")
       MaterialEditorGui.updateActiveMaterial(%fieldName @ "[" @ %arrayIndex @ "]", %newValue);
    else
       MaterialEditorGui.updateActiveMaterial(%fieldName, %newValue);
       
-   MaterialEditorGui.refreshSchedule = MaterialEditorGui.schedule(32, "guiSync");
+   cancel(MaterialEditorGui.refreshSchedule);
+   MaterialEditorGui.refreshSchedule = MaterialEditorGui.schedule(256, "guiSync");
 }
 
 function MaterialEditorPropInspector::getScrollbar(%this)
@@ -2026,7 +2030,7 @@ function MaterialEditorPropInspector::onPostInspectObject(%this, %obj)
 function MaterialEditorPropInspector::saveScrollState(%this)
 {
    %this.scrollPos = %this.getScrollbar().getScrollPosition();
-   //echo(%this.getName() @ "::saveScrollState" SPC %this.scrollPos);
+   echo(%this.getName() @ "::saveScrollState" SPC %this.scrollPos);
 }
 
 function MaterialEditorPropInspector::loadScrollState(%this)
@@ -2034,7 +2038,7 @@ function MaterialEditorPropInspector::loadScrollState(%this)
    if (%this.scrollPos $= "") 
       return;
    %this.getScrollbar().setScrollPosition(%this.scrollPos.x, %this.scrollPos.y);
-   //echo(%this.getName() @ "::loadScrollState" SPC %this.scrollPos);
+   echo(%this.getName() @ "::loadScrollState" SPC %this.scrollPos);
 }
 
 

@@ -117,8 +117,7 @@ singleton ShaderData( HDR_BloomUpSampleShader )
    OGLVertexShaderFile= $Core::CommonShaderPath @ "/postFX/gl/postFxV.glsl";
    OGLPixelShaderFile = "./HDR_Bloom/upSampleP.glsl";
    
-   samplerNames[0] = "$nxtTex";
-   samplerNames[1] = "$mipTex";
+   samplerNames[0] = "$hdrbloomDown";
    
    pixVersion = 3.0;
 };
@@ -292,13 +291,7 @@ function HDRPostFX::setShaderConsts( %this )
    %bloom.skip = (!$PostFX::HDRPostFX::enableBloom || !$pref::PostFX::EnableHDRBloom);
 
    %bloom.setShaderConst("$threshold", $PostFX::HDRPostFX::threshold);
-
-   for (%idx = 0; %idx < %this.mipsCount; %idx++)
-   {
-     %mip = %bloom.getObject(%this.mipsCount + %idx);
-     %mip.setShaderConst("$filterRadius", $PostFX::HDRPostFX::radius);
-     %mip.setShaderConst("$mipId", %idx);
-   }
+   %bloom-->upFX.setShaderConst("$filterRadius", $PostFX::HDRPostFX::radius);
 
    %strength = $PostFX::HDRPostFX::intensity;
    if (!$PostFX::HDRPostFX::enableBloom || !$pref::PostFX::EnableHDRBloom)
@@ -524,50 +517,36 @@ function HDRPostFX::SetupBloomFX( %this )
      shader = HDR_BloomThresholdShader;
      stateBlock = HDR_DownSampleStateBlock;
      texture[0] = "#hdrInitBloom";
-     target = "#hdrbloom_0";
+     target = "#hdrbloomIn";
+     mipCap = "5";
      targetFormat = %this.mipTexFormat;
    };
-  
-   %textureName = "#hdrbloom_0";
-   for (%idx = 0; %idx < %this.mipsCount; %idx++)
-   {
-     %mipName = "hdrbloom_" @ (%idx + 1);
-     %mipFX = new PostEffect()
-     { 
-       internalName = %mipName;
-       allowReflectPass = false;
-       shader = HDR_BloomDownSampleShader;
-       stateBlock = HDR_DownSampleStateBlock;
-       texture[0] = %textureName;
-       target = "#" @ %mipName;
-       targetScale = "0.5 0.5";
-       targetFormat = %this.mipTexFormat;
-     };
-     
-     %bloomFX.add(%mipFX);
-     %textureName = "#" @ %mipName;
-   }
    
-   for (%idx = %this.mipsCount - 1; %idx >= 0; %idx--)
+   %downFX = new PostEffect()
    {
-     %nxt = "#hdrbloom_" @ %idx;
-     %mipName = "hdrbloom_up_" @ %idx;
-     
-     %mipFX = new PostEffect()
-     {
-       internalName = %mipName;
-       allowReflectPass = false;
-       shader = HDR_BloomUpSampleShader;
-       stateBlock = HDR_DownSampleStateBlock;
-       texture[0] = %nxt;
-       texture[1] = %textureName;
-       target = "#" @ %mipName;
-       targetFormat = %this.mipTexFormat;
-     };
-     
-     %bloomFX.add(%mipFX);
-     %textureName = "#" @ %mipName;
-   }
+      internalName = "downFX";
+      allowReflectPass = false;
+      shader = HDR_BloomDownSampleShader;
+      stateBlock = HDR_DownSampleStateBlock;
+      texture[0] = "#hdrbloomIn";
+      target = "#hdrbloomDown";
+      mipCap = "5";
+      targetScale = "0.5 0.5";
+      targetFormat = %this.mipTexFormat;
+   };
+   %bloomFX.add(%downFX);
+   
+   %upFX = new PostEffect()
+   {
+      internalName = "upFX";
+      allowReflectPass = false;
+      shader = HDR_BloomUpSampleShader;
+      stateBlock = HDR_DownSampleStateBlock;
+      texture[0] = "#hdrbloomDown";
+      target = "#hdrbloomUp";
+      targetFormat = %this.mipTexFormat;
+   };
+   %bloomFX.add(%upFX);
 
    %finalFX = new PostEffect()
    {
@@ -575,7 +554,7 @@ function HDRPostFX::SetupBloomFX( %this )
      allowReflectPass = false;
      shader = HDR_BloomDirtShader;
      stateBlock = HDR_LensDirtStateBlock;
-     texture[0] = "#hdrbloom_up_0";
+     texture[0] = "#hdrbloomUp";
      target = "#hdrbloom_end";
      targetFormat = %this.mipTexFormat;
    };

@@ -105,7 +105,7 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
    }
 
    if( !forceMips && !retTex->mProfile->isSystemMemory() &&
-       numMipLevels == 0 &&
+       (numMipLevels == 0 || numMipLevels > 1)&&
        !(depth > 0) )
    {
       miscFlags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;

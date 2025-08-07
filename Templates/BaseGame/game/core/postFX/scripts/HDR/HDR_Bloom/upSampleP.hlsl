@@ -22,36 +22,40 @@
 
 #include "core/rendering/shaders/postFX/postFx.hlsl"
 
-TORQUE_UNIFORM_SAMPLER2D(nxtTex, 0);
-TORQUE_UNIFORM_SAMPLER2D(mipTex, 1);
+TORQUE_UNIFORM_SAMPLER2D(hdrbloomDown, 0);
 uniform float filterRadius;
 uniform float2 oneOverTargetSize;
+uniform int mipCount0;
 
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
   float4 upSample = float4(0, 0, 0, 0);
-  float x = filterRadius*oneOverTargetSize.x;
-  float y = filterRadius*oneOverTargetSize.y;
+  float4 finalOut = float4(0, 0, 0, 0);
+  for (int mipId = 0; mipId<mipCount0; mipId++)
+  {
+    float x = filterRadius*oneOverTargetSize.x*pow(0.5, mipId);
+    float y = filterRadius*oneOverTargetSize.y*pow(0.5, mipId);
   
-  float3 a = TORQUE_TEX2D(mipTex, float2(IN.uv1.x - x, IN.uv1.y + y)).rgb;
-  float3 b = TORQUE_TEX2D(mipTex, float2(IN.uv1.x,     IN.uv1.y + y)).rgb;
-  float3 c = TORQUE_TEX2D(mipTex, float2(IN.uv1.x + x, IN.uv1.y + y)).rgb;
+    float3 a = TORQUE_TEX2DLOD(hdrbloomDown, float4(IN.uv0.x - x, IN.uv0.y + y, 0, mipId)).rgb;
+    float3 b = TORQUE_TEX2DLOD(hdrbloomDown, float4(IN.uv0.x,     IN.uv0.y + y, 0, mipId)).rgb;
+    float3 c = TORQUE_TEX2DLOD(hdrbloomDown, float4(IN.uv0.x + x, IN.uv0.y + y, 0, mipId)).rgb;
   
-  float3 d = TORQUE_TEX2D(mipTex, float2(IN.uv1.x - x, IN.uv1.y)).rgb;
-  float3 e = TORQUE_TEX2D(mipTex, float2(IN.uv1.x,     IN.uv1.y)).rgb;
-  float3 f = TORQUE_TEX2D(mipTex, float2(IN.uv1.x + x, IN.uv1.y)).rgb;
+    float3 d = TORQUE_TEX2DLOD(hdrbloomDown, float4(IN.uv0.x - x, IN.uv0.y, 0, mipId)).rgb;
+    float3 e = TORQUE_TEX2DLOD(hdrbloomDown, float4(IN.uv0.x,     IN.uv0.y, 0, mipId)).rgb;
+    float3 f = TORQUE_TEX2DLOD(hdrbloomDown, float4(IN.uv0.x + x, IN.uv0.y, 0, mipId)).rgb;
 
-  float3 g = TORQUE_TEX2D(mipTex, float2(IN.uv1.x - x, IN.uv1.y - y)).rgb;
-  float3 h = TORQUE_TEX2D(mipTex, float2(IN.uv1.x,     IN.uv1.y - y)).rgb;
-  float3 i = TORQUE_TEX2D(mipTex, float2(IN.uv1.x + x, IN.uv1.y - y)).rgb;
+    float3 g = TORQUE_TEX2DLOD(hdrbloomDown, float4(IN.uv0.x - x, IN.uv0.y - y, 0, mipId)).rgb;
+    float3 h = TORQUE_TEX2DLOD(hdrbloomDown, float4(IN.uv0.x,     IN.uv0.y - y, 0, mipId)).rgb;
+    float3 i = TORQUE_TEX2DLOD(hdrbloomDown, float4(IN.uv0.x + x, IN.uv0.y - y, 0, mipId)).rgb;
   
-  upSample.rgb = e*4.0;
-  upSample.rgb += (b+d+f+h)*2.0;
-  upSample.rgb += (a+c+g+i);
-  upSample.rgb *= 1.0 / 16.0;
-  upSample.a = 1.0;
-  
-  upSample = TORQUE_TEX2D(nxtTex, IN.uv0) + upSample;
-  
-  return upSample;
+    upSample.rgb = e*4.0;
+    upSample.rgb += (b+d+f+h)*2.0;
+    upSample.rgb += (a+c+g+i);
+    upSample.rgb *= 1.0 / 16.0;
+    finalOut += upSample;
+ } 
+ finalOut /= mipCount0;
+ finalOut.a = 1.0;
+   
+  return float4(finalOut.rgb,1);
 }

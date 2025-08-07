@@ -1410,17 +1410,28 @@ void GFXTextureManager::_validateTexParams( const U32 width, const U32 height,
                                           U32 &inOutNumMips, GFXFormat &inOutFormat  )
 {
    // Validate mipmap parameter. If this profile requests no mips, set mips to 1.
-   if( profile->noMip() )
+   if( profile->noMip()|| inOutNumMips == 1)
    {
       inOutNumMips = 1;
    }
-   else if( !isPow2( width ) || !isPow2( height ) )
+   else if (!isPow2(width) || !isPow2(height))
    {
       // If a texture is not power-of-2 in size for both dimensions, it must
       // have only 1 mip level.
-      inOutNumMips = 1;
+      if (profile->isRenderTarget())
+      {
+         if (inOutNumMips == 0) //auto
+            inOutNumMips = mFloor(mLog2(mMax(width, height))) + 1;
+         else if (inOutNumMips > 1) //capped
+            inOutNumMips = mMin(inOutNumMips,mFloor(mLog2(mMax(width, height))) + 1);
+         inOutNumMips = mClampF(inOutNumMips, 1, 13);
+      }
+      else
+      {
+         inOutNumMips = 1;
+      }
    }
-   
+
    // Check format, and compatibility with texture profile requirements
    bool autoGenSupp = ( inOutNumMips == 0 );
 

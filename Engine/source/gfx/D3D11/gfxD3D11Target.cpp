@@ -133,17 +133,14 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXTextureObject *te
             mTargets[slot] = d3dto->get2DTex();
             mTargets[slot]->AddRef();
             mTargetViews[slot] = d3dto->getRTView();
-            mTargetViews[slot]->AddRef();         
+            mTargetViews[slot]->AddRef();
+            mResolveTargets[slot] = d3dto;
          } 
          else 
          {
             mTargets[slot] = d3dto->getSurface();
             mTargets[slot]->AddRef();
             mTargetViews[slot]->AddRef();
-            // Only assign resolve target if d3dto has a surface to give us.
-            //
-            // That usually means there is an MSAA target involved, which is why
-            // the resolve is needed to get the data out of the target.
             mResolveTargets[slot] = d3dto;
 
             if ( tex && slot == Color0 )
@@ -151,7 +148,13 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXTextureObject *te
                mTargetSize.set( tex->getSize().x, tex->getSize().y );
                mTargetFormat = tex->getFormat();
             }
-         }           
+         }
+
+         if (mGenMips)
+         {
+            mTargetSRViews[slot] = d3dto->getSRView();
+            mTargetSRViews[slot]->AddRef();
+         }
       }
 
       // Update surface size
@@ -270,11 +273,18 @@ void GFXD3D11TextureTarget::deactivate()
    //re-gen mip maps
    for (U32 i = 0; i < 6; i++)
    {
-      ID3D11ShaderResourceView* pSRView = mTargetSRViews[GFXTextureTarget::Color0 + i];
-      if (pSRView)
-         D3D11DEVICECONTEXT->GenerateMips(pSRView);
-   }
-   
+      D3D11_TEXTURE2D_DESC desc;
+      if (mResolveTargets[GFXTextureTarget::Color0 + i])
+      {
+         mResolveTargets[GFXTextureTarget::Color0 + i]->get2DTex()->GetDesc(&desc);
+         if (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS)
+         {
+            ID3D11ShaderResourceView* pSRView = mTargetSRViews[GFXTextureTarget::Color0 + i];
+            if (pSRView)
+               D3D11DEVICECONTEXT->GenerateMips(pSRView);
+         }
+      }
+   }   
 }
 
 void GFXD3D11TextureTarget::resolve()

@@ -25,57 +25,63 @@
 
 TORQUE_UNIFORM_SAMPLER2D(inputTex, 0);
 uniform float2 oneOverTargetSize;
-uniform int mipId;
+uniform int mipCount0;
  
 float4 main(PFXVertToPix IN) : TORQUE_TARGET0
 {
-  float4 downSample = float4(0, 0, 0, 0);
-  float x = oneOverTargetSize.x;
-  float y = oneOverTargetSize.y;
+  float4 downSample = float4(0, 0, 0, 0);  
+  float4 finalOut = float4(0, 0, 0, 0);
   
-  float3 a = TORQUE_TEX2D(inputTex, float2(IN.uv0.x - 2 * x, IN.uv0.y + 2*y)).rgb;
-  float3 b = TORQUE_TEX2D(inputTex, float2(IN.uv0.x		   , IN.uv0.y + 2*y)).rgb;
-  float3 c = TORQUE_TEX2D(inputTex, float2(IN.uv0.x + 2 * x, IN.uv0.y + 2*y)).rgb;
-  
-  float3 d = TORQUE_TEX2D(inputTex, float2(IN.uv0.x - 2 * x, IN.uv0.y)).rgb;
-  float3 e = TORQUE_TEX2D(inputTex, float2(IN.uv0.x		   , IN.uv0.y)).rgb;
-  float3 f = TORQUE_TEX2D(inputTex, float2(IN.uv0.x + 2 * x, IN.uv0.y)).rgb;
-  
-  float3 g = TORQUE_TEX2D(inputTex, float2(IN.uv0.x - 2 * x, IN.uv0.y - 2*y)).rgb;
-  float3 h = TORQUE_TEX2D(inputTex, float2(IN.uv0.x		   , IN.uv0.y - 2*y)).rgb;
-  float3 i = TORQUE_TEX2D(inputTex, float2(IN.uv0.x + 2 * x, IN.uv0.y - 2*y)).rgb;
-  
-  float3 j = TORQUE_TEX2D(inputTex, float2(IN.uv0.x - x, IN.uv0.y + y)).rgb;
-  float3 k = TORQUE_TEX2D(inputTex, float2(IN.uv0.x + x, IN.uv0.y + y)).rgb;
-  float3 l = TORQUE_TEX2D(inputTex, float2(IN.uv0.x - x, IN.uv0.y - y)).rgb;
-  float3 m = TORQUE_TEX2D(inputTex, float2(IN.uv0.x + x, IN.uv0.y - y)).rgb;
-  
-  float3 group[5];
-  switch (mipId)
+  for (int mipId = 0; mipId<mipCount0; mipId++)
   {
-	case 0:
-		group[0] = (a+b+d+e) * (0.125f/4.0f);
-		group[1] = (b+c+e+f) * (0.125f/4.0f);
-		group[2] = (d+e+g+h) * (0.125f/4.0f);
-		group[3] = (e+f+h+i) * (0.125f/4.0f);
-		group[4] = (j+k+l+m) * (0.5f/4.0f);
-		group[0] *= KarisAverage(group[0]);
-		group[1] *= KarisAverage(group[1]);
-		group[2] *= KarisAverage(group[2]);
-		group[3] *= KarisAverage(group[3]);
-		group[4] *= KarisAverage(group[4]);
-		downSample.rgb = group[0]+group[1]+group[2]+group[3]+group[4];
-		downSample.a = 1.0;
-		break;
-		
-	default:
-		downSample.rgb = e*0.125;
-		downSample.rgb += (a+c+g+i)*0.03125;
-		downSample.rgb += (b+d+f+h)*0.0625;
-		downSample.rgb += (j+k+l+m)*0.125;
-		downSample.a = 1.0;
-		break;
-  }
+    float mipWeight = float(mipId)/float(mipCount0);
+    float x = oneOverTargetSize.x*pow(0.5, mipId);
+    float y = oneOverTargetSize.y*pow(0.5, mipId);
+    
+    float3 a = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x - 2 * x, IN.uv0.y + 2*y, 0, mipId)).rgb;
+    float3 b = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x		   , IN.uv0.y + 2*y, 0, mipId)).rgb;
+    float3 c = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x + 2 * x, IN.uv0.y + 2*y, 0, mipId)).rgb;
   
-  return downSample;
+    float3 d = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x - 2 * x, IN.uv0.y, 0, mipId)).rgb;
+    float3 e = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x		   , IN.uv0.y, 0, mipId)).rgb;
+    float3 f = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x + 2 * x, IN.uv0.y, 0, mipId)).rgb;
+  
+    float3 g = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x - 2 * x, IN.uv0.y - 2*y, 0, mipId)).rgb;
+    float3 h = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x		   , IN.uv0.y - 2*y, 0, mipId)).rgb;
+    float3 i = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x + 2 * x, IN.uv0.y - 2*y, 0, mipId)).rgb;
+  
+    float3 j = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x - x, IN.uv0.y + y, 0, mipId)).rgb;
+    float3 k = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x + x, IN.uv0.y + y, 0, mipId)).rgb;
+    float3 l = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x - x, IN.uv0.y - y, 0, mipId)).rgb;
+    float3 m = TORQUE_TEX2DLOD(inputTex, float4(IN.uv0.x + x, IN.uv0.y - y, 0, mipId)).rgb;
+  
+    float3 group[5];
+    switch (mipId)
+    {
+        case 0:
+            group[0] = (a+b+d+e) * (0.125f/4.0f);
+            group[1] = (b+c+e+f) * (0.125f/4.0f);
+            group[2] = (d+e+g+h) * (0.125f/4.0f);
+            group[3] = (e+f+h+i) * (0.125f/4.0f);
+            group[4] = (j+k+l+m) * (0.5f/4.0f);
+            group[0] *= KarisAverage(group[0]);
+            group[1] *= KarisAverage(group[1]);
+            group[2] *= KarisAverage(group[2]);
+            group[3] *= KarisAverage(group[3]);
+            group[4] *= KarisAverage(group[4]);
+            downSample.rgb = group[0]+group[1]+group[2]+group[3]+group[4];
+            downSample.a = 1.0;
+            break;
+		
+        default:
+            downSample.rgb = e*mipWeight;
+            downSample.rgb += (a+c+g+i)*mipWeight*0.125;
+            downSample.rgb += (b+d+f+h)*mipWeight*0.25;
+            downSample.rgb += (j+k+l+m)*mipWeight*0.5;
+            downSample.a = 1.0;
+            break;
+    }
+    finalOut += downSample*(1.0-mipWeight);
+  }
+  return float4(finalOut.rgb,1);
 }

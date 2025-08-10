@@ -364,8 +364,8 @@ function GameConnection::onDrop(%this, %reason)
    {
       %hasGameMode = callGamemodeFunction("onClientLeaveGame", %this);
       // Cleanup the player
-      if (isObject(%client.player))
-         %client.player.delete();
+      if (isObject(%this.player))
+         %this.player.delete();
    }
    
    removeFromServerGuidList( %this.guid );

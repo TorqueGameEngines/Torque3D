@@ -291,6 +291,7 @@ function GameConnectionListener::onPostSpawnComplete(%this, %client)
     if (%client.moduleLoadedDone < %client.numModsNeedingLoaded)
         return; //continue to wait 
         
+   %client.GetEventManager().remove( %client.listener, "postSpawnComplete" );
     //Continue on. Room for special handling here if needbe but not expressly required
 }
 

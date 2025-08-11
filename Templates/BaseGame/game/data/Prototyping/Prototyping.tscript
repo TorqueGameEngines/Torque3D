@@ -50,6 +50,7 @@ function Prototyping::onCreateClientConnection(%this)
          dynamicTarget = false;
          canInteract = true;
          maxInteractDistance = "3";
+         active = false;
       };
    }
 

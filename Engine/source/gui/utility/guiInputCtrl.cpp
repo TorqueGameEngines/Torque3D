@@ -23,6 +23,7 @@
 #include "gui/utility/guiInputCtrl.h"
 #include "sim/actionMap.h"
 #include "console/engineAPI.h"
+#include "gui/core/guiCanvas.h"
 
 IMPLEMENT_CONOBJECT(GuiInputCtrl);
 
@@ -88,6 +89,13 @@ void GuiInputCtrl::initPersistFields()
 }
 
 //------------------------------------------------------------------------------
+bool GuiInputCtrl::onAdd()
+{
+   if (!Parent::onAdd())
+      return false;
+
+   GuiCanvas::getCanvasSetActiveSignal().notify(this, &GuiInputCtrl::handleCanvasSetActive);
+}
 
 bool GuiInputCtrl::onWake()
 {
@@ -108,8 +116,11 @@ bool GuiInputCtrl::onWake()
 
    if(mActionmap != nullptr)
    {
-      SimSet* actionMapSet = Sim::getActiveActionMapSet();
-      actionMapSet->pushObject(mActionmap);
+      if (getRoot()->isActive())
+      {
+         SimSet* actionMapSet = Sim::getActiveActionMapSet();
+         actionMapSet->pushObject(mActionmap);
+      }
    }
       
    setFirstResponder();
@@ -152,6 +163,25 @@ void GuiInputCtrl::setActive(bool value)
 
 }
 
+void GuiInputCtrl::handleCanvasSetActive(GuiCanvas* canvas, bool isActive)
+{
+   if (mActionmap == nullptr)
+      return;
+
+   if (getRoot() == canvas)
+   {
+      if (isActive)
+      {
+         SimSet* actionMapSet = Sim::getActiveActionMapSet();
+         actionMapSet->pushObject(mActionmap);
+      }
+      else
+      {
+         SimSet* actionMapSet = Sim::getActiveActionMapSet();
+         actionMapSet->removeObject(mActionmap);
+      }
+   }
+}
 
 //------------------------------------------------------------------------------
 static bool isModifierKey( U16 keyCode )

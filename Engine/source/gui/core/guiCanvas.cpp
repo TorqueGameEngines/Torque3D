@@ -393,6 +393,7 @@ void GuiCanvas::setWindowTitle(const char *newTitle)
 }
 
 CanvasSizeChangeSignal GuiCanvas::smCanvasSizeChangeSignal;
+CanvasSetActiveSignal GuiCanvas::smCanvasSetActiveSignal;
 
 void GuiCanvas::handleResize( WindowId did, S32 width, S32 height )
 {
@@ -2202,6 +2203,13 @@ StringTableEntry GuiCanvas::getLastInputDeviceType()
    return StringTable->EmptyString();
 }
 
+void GuiCanvas::setActive(bool value)
+{
+   Parent::setActive(value);
+
+   GuiCanvas::getCanvasSetActiveSignal().trigger(this, value);
+}
+
 DefineEngineMethod( GuiCanvas, getContent, S32, (),,
                "@brief Get the GuiControl which is being used as the content.\n\n"
 
@@ -3026,4 +3034,12 @@ DefineEngineMethod(GuiCanvas, resetVideoMode, void, (), , "")
 DefineEngineMethod(GuiCanvas, getLastInputDevice, const char*, (), , "Returns the name of the last input device that the GuiCanvas consumed.")
 {
    return object->getLastInputDeviceType();
+}
+
+DefineEngineMethod(GuiCanvas, getActiveOffscreenCanvas, S32, (), , "Returns the SimID of the active offscreen canvas, if one exists. If not, returns 0")
+{
+   if (GuiOffscreenCanvas::sActiveOffscreenCanvas && GuiOffscreenCanvas::sActiveOffscreenCanvas->isActive())
+      return GuiOffscreenCanvas::sActiveOffscreenCanvas->getId();
+
+   return 0;
 }

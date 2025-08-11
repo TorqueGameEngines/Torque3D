@@ -95,6 +95,15 @@ bool GuiInputCtrl::onAdd()
       return false;
 
    GuiCanvas::getCanvasSetActiveSignal().notify(this, &GuiInputCtrl::handleCanvasSetActive);
+
+   return true;
+}
+
+void GuiInputCtrl::onRemove()
+{
+   GuiCanvas::getCanvasSetActiveSignal().remove(this, &GuiInputCtrl::handleCanvasSetActive);
+
+   Parent::onRemove();
 }
 
 bool GuiInputCtrl::onWake()

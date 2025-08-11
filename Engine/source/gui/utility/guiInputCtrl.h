@@ -48,6 +48,7 @@ public:
    GuiInputCtrl();
 
    bool onAdd() override;
+   void onRemove() override;
 
    // GuiControl.
    bool onWake() override;

@@ -81,8 +81,8 @@ function GameConnection::onConnect( %this, %clientData )
 	
 	%this.connectData = %clientData;
 	
-	//Signal and listener logic for the spawn config/processing here
-	%this.GetEventManager().registerEvent("setSpawnObjectTypeComplete");
+   //Signal and listener logic for the spawn config/processing here
+   %this.GetEventManager().registerEvent("setSpawnObjectTypeComplete");
    %this.GetEventManager().registerEvent("setSpawnObjectTypeFailed");
    %this.GetEventManager().registerEvent("setSpawnPointComplete");
    %this.GetEventManager().registerEvent("setSpawnPointFailed");
@@ -91,11 +91,6 @@ function GameConnection::onConnect( %this, %clientData )
    %this.listener = new ScriptMsgListener() {
       class = GameConnectionListener;
    }; 
-   %this.GetEventManager().subscribe( %this.listener, "setSpawnObjectTypeComplete" ); 
-   %this.GetEventManager().subscribe( %this.listener, "setSpawnObjectTypeFailed" ); 
-   %this.GetEventManager().subscribe( %this.listener, "setSpawnPointComplete" );
-   %this.GetEventManager().subscribe( %this.listener, "setSpawnPointFailed" );
-   %this.GetEventManager().subscribe( %this.listener, "postSpawnComplete" );
 	
 	callGamemodeFunction("onClientConnect", %this);
 	
@@ -124,9 +119,12 @@ function GameConnection::spawnControlObject( %this )
     %modulesIDList = getModulesAndGameModesList(true, "Game");
     
     %this.numModsNeedingLoaded = getNumCanCallOnObjectList("setSpawnObjectType", %modulesIDList);
-    
     if (%this.numModsNeedingLoaded)
+    {
+       %this.GetEventManager().subscribe( %this.listener, "setSpawnObjectTypeComplete" ); 
+       %this.GetEventManager().subscribe( %this.listener, "setSpawnObjectTypeFailed" ); 
        callOnObjectList("setSpawnObjectType", %modulesIdList, %this);
+    }
     else
         %this.listener.onSetSpawnObjectTypeComplete(%this); //just jump to progress
 }
@@ -134,9 +132,12 @@ function GameConnection::spawnControlObject( %this )
 function GameConnectionListener::onSetSpawnObjectTypeComplete( %this, %client )
 {
     %client.moduleLoadedDone++;
-
     if (%client.moduleLoadedDone < %client.numModsNeedingLoaded)
         return; //continue to wait  
+   %client.GetEventManager().remove( %client.listener, "setSpawnObjectTypeComplete" ); 
+   %client.GetEventManager().remove( %client.listener, "setSpawnObjectTypeFailed" );
+   %client.GetEventManager().subscribe( %client.listener, "setSpawnPointComplete" );
+   %client.GetEventManager().subscribe( %client.listener, "setSpawnPointFailed" ); 
     
     if (isObject(%client.player))
     {
@@ -187,6 +188,10 @@ function GameConnectionListener::onSetSpawnPointComplete( %this, %client )
     if (%client.moduleLoadedDone < %client.numModsNeedingLoaded)
         return; //continue to wait 
         
+   %client.GetEventManager().remove( %client.listener, "setSpawnPointComplete" ); 
+   %client.GetEventManager().remove( %client.listener, "setSpawnPointFailed" );   
+   %client.GetEventManager().subscribe( %client.listener, "postSpawnComplete" );
+   
     // Spawn with the engine's Sim::spawnObject() function
     %client.player = spawnObject(%client.spawnClass, %client.spawnDataBlock, %client.spawnProperties, %client.spawnScript);
     
@@ -286,6 +291,7 @@ function GameConnectionListener::onPostSpawnComplete(%this, %client)
     if (%client.moduleLoadedDone < %client.numModsNeedingLoaded)
         return; //continue to wait 
         
+   %client.GetEventManager().remove( %client.listener, "postSpawnComplete" );
     //Continue on. Room for special handling here if needbe but not expressly required
 }
 
@@ -357,6 +363,9 @@ function GameConnection::onDrop(%this, %reason)
    if($missionRunning)
    {
       %hasGameMode = callGamemodeFunction("onClientLeaveGame", %this);
+      // Cleanup the player
+      if (isObject(%this.player))
+         %this.player.delete();
    }
    
    removeFromServerGuidList( %this.guid );

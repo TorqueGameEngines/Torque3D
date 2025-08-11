@@ -86,6 +86,8 @@
 class guiCanvas;
 class Point2I;
 typedef Signal<void(GuiCanvas* canvas)> CanvasSizeChangeSignal;
+typedef Signal<void(GuiCanvas* canvas, bool isActive)> CanvasSetActiveSignal;
+
 class GuiCanvas : public GuiControl, public IProcessInput
 {
 
@@ -210,10 +212,13 @@ protected:
    void checkLockMouseMove( const GuiEvent& event );
    //Signal used to let others know this canvas has changed size.
 	static CanvasSizeChangeSignal smCanvasSizeChangeSignal;
+   static CanvasSetActiveSignal smCanvasSetActiveSignal;
 
    GuiControl *mMenuBarCtrl;
    GuiControl* mMenuBackground;
    bool mConstrainMouse;
+
+   typedef Signal< void(SetModification modification, SimSet* set, SimObject* object) > SetModificationSignal;
 public:
    DECLARE_CONOBJECT(GuiCanvas);
    DECLARE_CATEGORY( "Gui Core" );
@@ -230,6 +235,7 @@ public:
    static void initPersistFields();
 
    static CanvasSizeChangeSignal& getCanvasSizeChangeSignal() { return smCanvasSizeChangeSignal; }
+   static CanvasSetActiveSignal& getCanvasSetActiveSignal() { return smCanvasSetActiveSignal; }
 
    /// @name Rendering methods
    ///
@@ -477,16 +483,18 @@ public:
 
 private:
    static const U32 MAX_GAMEPADS = 4; ///< The maximum number of supported gamepads
-  protected:
+protected:
      bool   mConsumeLastInputEvent;
      S32    mLastInputDeviceType;
-  public:
+public:
      void clearMouseRightButtonDown(void) { mMouseRightButtonDown = false; }
      void clearMouseButtonDown(void) { mMouseButtonDown = false; }
      void setConsumeLastInputEvent(bool flag) { mConsumeLastInputEvent = flag; }
      bool getLastCursorPoint(Point2I& pt) const { pt = mLastCursorPt; return mLastCursorEnabled; }
 
      StringTableEntry getLastInputDeviceType();
+
+   void setActive(bool value) override;
 };
 typedef GuiCanvas::KeyTranslationMode KeyboardTranslationMode;
 DefineEnumType(KeyboardTranslationMode);

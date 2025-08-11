@@ -161,6 +161,9 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
       {
          if (mFrameTime->getElapsedMs() > 32)
          {
+            if (GuiOffscreenCanvas::sActiveOffscreenCanvas)
+               GuiOffscreenCanvas::sActiveOffscreenCanvas->setActive(false);
+
             GuiOffscreenCanvas::sActiveOffscreenCanvas = NULL;
             mFrameTime->reset();
 
@@ -197,6 +200,7 @@ void GuiCrossHairHud::onRender(Point2I offset, const RectI &updateRect)
                            canvas->setCursorPos(newCursorPos);
                            canvas->markDirty();
                            GuiOffscreenCanvas::sActiveOffscreenCanvas = canvas;
+                           GuiOffscreenCanvas::sActiveOffscreenCanvas->setActive(true);
                            break;
                         }
                      }

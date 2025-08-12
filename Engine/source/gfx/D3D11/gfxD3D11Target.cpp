@@ -106,9 +106,9 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXTextureObject *te
    else
    {
       // Cast the texture object to D3D...
-      AssertFatal(static_cast<GFXD3D11TextureObject*>(tex), "GFXD3D11TextureTarget::attachTexture - invalid texture object.");
+      AssertFatal(dynamic_cast<GFXD3D11TextureObject*>(tex), "GFXD3D11TextureTarget::attachTexture - invalid texture object.");
 
-      GFXD3D11TextureObject *d3dto = static_cast<GFXD3D11TextureObject*>(tex);
+      GFXD3D11TextureObject *d3dto = dynamic_cast<GFXD3D11TextureObject*>(tex);
 
       // Grab the surface level.
       if( slot == DepthStencil )
@@ -134,7 +134,6 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXTextureObject *te
             mTargets[slot]->AddRef();
             mTargetViews[slot] = d3dto->getRTView();
             mTargetViews[slot]->AddRef();
-            mResolveTargets[slot] = d3dto;
          } 
          else 
          {
@@ -271,17 +270,21 @@ void GFXD3D11TextureTarget::deactivate()
       return;
 
    //re-gen mip maps
-   for (U32 i = 0; i < 6; i++)
+   for (U32 i = GFXTextureTarget::Color0; i < GFXTextureTarget::MaxRenderSlotId; i++)
    {
-      D3D11_TEXTURE2D_DESC desc;
-      if (mResolveTargets[GFXTextureTarget::Color0 + i])
+      GFXD3D11TextureObject*  targ = mResolveTargets[i];
+      ID3D11ShaderResourceView* pSRView = mTargetSRViews[i];
+      if (targ && targ->getSurface() && pSRView)
       {
-         mResolveTargets[GFXTextureTarget::Color0 + i]->get2DTex()->GetDesc(&desc);
-         if (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS)
+         ID3D11Texture2D* tex = dynamic_cast<ID3D11Texture2D*>(targ->getResource());
+         if (tex)
          {
-            ID3D11ShaderResourceView* pSRView = mTargetSRViews[GFXTextureTarget::Color0 + i];
-            if (pSRView)
+            D3D11_TEXTURE2D_DESC desc;
+            tex->GetDesc(&desc);
+            if (desc.MiscFlags & D3D11_RESOURCE_MISC_GENERATE_MIPS)
+            {
                D3D11DEVICECONTEXT->GenerateMips(pSRView);
+            }
          }
       }
    }   
@@ -341,8 +344,8 @@ GFXD3D11WindowTarget::GFXD3D11WindowTarget()
 
 GFXD3D11WindowTarget::~GFXD3D11WindowTarget()
 {
-   SAFE_RELEASE(mDepthStencilView)
-      SAFE_RELEASE(mDepthStencil);
+   SAFE_RELEASE(mDepthStencilView);
+   SAFE_RELEASE(mDepthStencil);
    SAFE_RELEASE(mBackBufferView);
    SAFE_RELEASE(mBackBuffer);
    SAFE_RELEASE(mSwapChain);

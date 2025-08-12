@@ -1418,7 +1418,7 @@ void GFXTextureManager::_validateTexParams( const U32 width, const U32 height,
    {
       // If a texture is not power-of-2 in size for both dimensions, it must
       // have only 1 mip level.
-      if (profile->isRenderTarget())
+      if (profile->isRenderTarget() && !profile->noMip())
       {
          if (inOutNumMips == 0) //auto
             inOutNumMips = mFloor(mLog2(mMax(width, height))) + 1;

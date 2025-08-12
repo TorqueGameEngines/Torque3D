@@ -51,7 +51,6 @@ float4 main(PFXVertToPix IN) : TORQUE_TARGET0
     upSample.rgb = e*4.0;
     upSample.rgb += (b+d+f+h)*2.0;
     upSample.rgb += (a+c+g+i);
-    upSample.rgb *= 1.0 / 16.0;
     finalOut += upSample;
  } 
  finalOut /= mipCount0;

@@ -59,3 +59,8 @@ function ForestSelectionTool::onDeactivated( %this )
 {
    %this.clearSelection();
 }
+
+function ForestBrushTool::onAction(%this, %actionMode, %point)
+{
+   ForestEditorPlugin.dirty = true;
+}

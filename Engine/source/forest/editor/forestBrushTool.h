@@ -128,7 +128,9 @@ protected:
    Point3F mLastBrushNormal;
 
    /// The creation action we're actively filling.
-   ForestUndoAction *mCurrAction;  
+   ForestUndoAction *mCurrAction;
+
+   DECLARE_CALLBACK(void, onAction, (U32 mode, Point3F point));
 };
 
 typedef ForestBrushTool::BrushMode ForestBrushMode;

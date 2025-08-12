@@ -105,6 +105,11 @@ ConsoleDocClass( ForestBrushTool,
    "@internal"
 );
 
+IMPLEMENT_CALLBACK(ForestBrushTool, onAction, void, (U32 mode, Point3F point), (mode, point),
+   "Called when the editor performs a brush action\n"
+   "@param mode the Int/Enum value of the mode of the action\n"
+   "@param point the position the action was performed at\n");
+
 FRangeValidator fBrushRange(0.0f, 150.0f);
 void ForestBrushTool::initPersistFields()
 {
@@ -338,6 +343,8 @@ void ForestBrushTool::_action( const Point3F &point )
       _paint( point );
    else if ( mMode == Erase || mMode == EraseSelected )
       _erase( point );
+
+   onAction_callback(mMode, point);
 }
 
 inline F32 mCircleArea( F32 radius )

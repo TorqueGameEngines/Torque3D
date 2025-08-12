@@ -309,6 +309,8 @@ function ForestEditorPlugin::onEditMenuSelect( %this, %editMenu )
 function ForestEditorPlugin::handleDelete( %this )
 {
    ForestTools->SelectionTool.deleteSelection();   
+   
+   ForestEditorPlugin.dirty = true;
 }
 
 function ForestEditorPlugin::handleDeselect( %this )
@@ -319,6 +321,8 @@ function ForestEditorPlugin::handleDeselect( %this )
 function ForestEditorPlugin::handleCut( %this )
 {
    ForestTools->SelectionTool.cutSelection();
+   
+   ForestEditorPlugin.dirty = true;
 }
 
 function ForestEditorPlugin::handleCopy( %this )
@@ -329,4 +333,6 @@ function ForestEditorPlugin::handleCopy( %this )
 function ForestEditorPlugin::handlePaste( %this )
 {
    ForestTools->SelectionTool.pasteSelection();
+   
+   ForestEditorPlugin.dirty = true;
 }

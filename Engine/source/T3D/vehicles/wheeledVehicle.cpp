@@ -821,7 +821,7 @@ void WheeledVehicle::advanceTime(F32 dt)
 
    // Stick the wheels to the ground.  This is purely so they look
    // good while the vehicle is being interpolated.
-   //extendWheels();
+   extendWheels(isClientObject());
 
    // Update wheel angular position and slip, this is a client visual
    // feature only, it has no affect on the physics.
@@ -1201,6 +1201,7 @@ void WheeledVehicle::extendWheels(bool clientHack)
             wheel->surface.pos      = rInfo.point;
             wheel->surface.material = rInfo.material;
             wheel->surface.object   = rInfo.object;
+            wheel->slipping = false;
          }
          else 
          {
@@ -1475,35 +1476,36 @@ void WheeledVehicle::writePacketData(GameConnection *connection, BitStream *stre
 {
    Parent::writePacketData(connection, stream);
    stream->writeFlag(mBraking);
-
-   Wheel* wend = &mWheel[mDataBlock->wheelCount];
-   for (Wheel* wheel = mWheel; wheel < wend; wheel++) 
-   {
-      stream->write(wheel->avel);
-      stream->write(wheel->Dy);
-      stream->write(wheel->Dx);
-      stream->writeFlag(wheel->slipping);
-   }
+   
 }
 
 void WheeledVehicle::readPacketData(GameConnection *connection, BitStream *stream)
 {
    Parent::readPacketData(connection, stream);
    mBraking = stream->readFlag();
-
+   
    Wheel* wend = &mWheel[mDataBlock->wheelCount];
+
    for (Wheel* wheel = mWheel; wheel < wend; wheel++) 
    {
-      stream->read(&wheel->avel);
-      stream->read(&wheel->Dy);
-      stream->read(&wheel->Dx);
-      wheel->slipping = stream->readFlag();
+      if (wheel->tire && wheel->spring) {
+         // Update angular position
+         wheel->apos += (wheel->avel) / M_2PI;
+         wheel->apos -= mFloor(wheel->apos);
+         if (wheel->apos < 0)
+            wheel->apos = 1 - wheel->apos;
+      }
    }
 
    // Rigid state is transmitted by the parent...
    setPosition(mRigid.linPosition,mRigid.angPosition);
    mDelta.pos = mRigid.linPosition;
    mDelta.rot[1] = mRigid.angPosition;
+
+   // Stick the wheels to the ground.  This is purely so they look
+   // good while the vehicle is being interpolated.
+   extendWheels(isClientObject());
+   updateWheelThreads();
 }
 
 

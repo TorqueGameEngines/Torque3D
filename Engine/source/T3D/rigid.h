@@ -61,11 +61,18 @@ public:
    F32 oneOverMass;              ///< 1 / mass
    F32 restitution;              ///< Collision restitution
    F32 friction;                 ///< Friction coefficient
+
+   // sleep threshold parameters
+   F32 sleepLinearThreshold;     ///< M/S ^ 2
+   F32 sleepAngThreshold;        ///< R/S ^ 2
+   F32 sleepTimeThreshold;       ///< Seconds
+   F32 sleepTimer;
+
    bool atRest;
 
 private:
    void translateCenterOfMass(const Point3F &oldPos,const Point3F &newPos);
-
+   void trySleep(F32 dt);
 public:
    //
    Rigid();
@@ -94,6 +101,11 @@ public:
 
    bool checkRestCondition();
    void setAtRest();
+
+   //
+   void setSleepThresholds(F32 linVel2, F32 angVel2, F32 timeToSleep);
+   void wake();
+   TORQUE_FORCEINLINE void updateAngularVelocity() { invWorldInertia.mulV(angMomentum, &angVelocity); }
 };
 
 

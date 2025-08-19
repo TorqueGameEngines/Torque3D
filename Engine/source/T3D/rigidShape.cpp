@@ -1688,7 +1688,7 @@ void RigidShape::initPersistFields()
    docsURL;
    addField("disableMove", TypeBool, Offset(mDisableMove, RigidShape),
       "When this flag is set, the vehicle will ignore throttle changes.");
-   addField("isAtRest", TypeBool, Offset(mRigid.atRest, RigidShape),
+   addProtectedField("isAtRest", TypeBool, Offset(mRigid.atRest, RigidShape), &defaultProtectedNotSetFn, &defaultProtectedGetFn,
       "Debug read of the rest state. do not set");   
    Parent::initPersistFields();
 }

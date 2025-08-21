@@ -1,0 +1,44 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+#pragma once
+
+/// Steamworks App ID for this game.
+#define TORQUE_STEAMWORKS_APPID @TORQUE_STEAMWORKS_APPID@
+
+/// Define me if your game requires the steam client to be running in order to
+/// launch. If steam is required but not running, SteamAPI_RestartAppIfNecessary
+/// will be called and the game will be restarted after the steam client.
+/// Note: This will only take effect on distributed builds. If the steam_appid.txt
+/// file is present (development builds), The app will not be restarted and
+/// SteamAPI_Init() will return false.
+#cmakedefine TORQUE_STEAMWORKS_REQUIRED
+
+/// Not sure whether or not this should be here but it was in the previous implementation
+#cmakedefine TORQUE_STEAM_GAMESERVER
+
+#cmakedefine USE_GS_AUTH_API
+
+/// The maximum length of text that can be entered into the Big Picture text input dialog
+/// You set the maximum text length for each instance of the dialog, but it cannot be
+/// greater than this value.
+#define TORQUE_STEAMWORKS_MAX_TEXT_INPUT 256

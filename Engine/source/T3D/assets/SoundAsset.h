@@ -205,7 +205,7 @@ public: \
    {\
       if(m##name##AssetId != _in || m##name##Name != _in)\
       {\
-         if (_in == NULL || _in == StringTable->EmptyString())\
+         if (_in == NULL || !String::compare(_in,StringTable->EmptyString()))\
          {\
             m##name##Name = StringTable->EmptyString();\
             m##name##AssetId = StringTable->EmptyString();\
@@ -394,7 +394,7 @@ public: \
       {\
          if(index >= sm##name##Count || index < 0) \
                return false;\
-         if (_in == NULL || _in == StringTable->EmptyString())\
+         if (_in == NULL || !String::compare(_in,StringTable->EmptyString()))\
          {\
             m##name##Name[index] = StringTable->EmptyString();\
             m##name##AssetId[index] = StringTable->EmptyString();\

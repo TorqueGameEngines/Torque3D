@@ -197,7 +197,7 @@ public: \
          {\
             m##name##Asset->getChangedSignal().remove(this, &className::changeFunc);\
          }\
-         if (_in == NULL || _in == StringTable->EmptyString())\
+         if (_in == NULL || !String::compare(_in,StringTable->EmptyString()))\
          {\
             m##name##AssetId = StringTable->EmptyString();\
             m##name##Asset = NULL;\

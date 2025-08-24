@@ -46,6 +46,11 @@ Rigid::Rigid()
    restitution = 0.3f;
    friction = 0.5f;
    atRest = false;
+
+   sleepLinearThreshold = 0.0004f;
+   sleepAngThreshold = 0.0004f;
+   sleepTimeThreshold = 0.75f;
+   sleepTimer = 0.0f;
 }
 
 void Rigid::clearForces()
@@ -57,9 +62,18 @@ void Rigid::clearForces()
 //-----------------------------------------------------------------------------
 void Rigid::integrate(F32 delta)
 {
-   // Update Angular position
+   if (atRest && force.isZero() && torque.isZero())
+      return;
+
+   // 1. advance momentum
+   angMomentum += torque * delta;
+   linMomentum += force * delta;
+   linVelocity = linMomentum * oneOverMass;
+
+   // 2. advance orientation if ang vel significant
    F32 angle = angVelocity.len();
-   if (angle != 0.0f) {
+   if (mFabs(angle)> POINT_EPSILON)
+   {
       QuatF dq;
       F32 sinHalfAngle;
       mSinCos(angle * delta * -0.5f, sinHalfAngle, dq.w);
@@ -73,22 +87,29 @@ void Rigid::integrate(F32 delta)
 
       // Rotate the position around the center of mass
       Point3F lp = linPosition - worldCenterOfMass;
-      dq.mulP(lp,&linPosition);
+      dq.mulP(lp, &linPosition);
       linPosition += worldCenterOfMass;
    }
 
-   // Update angular momentum
-   angMomentum = angMomentum + torque * delta;
+   // 3. advance position
+   linPosition += linVelocity * delta;
 
-   // Update linear position, momentum
-   linPosition = linPosition + linVelocity * delta;
-   linMomentum = linMomentum + force * delta;
-   linVelocity = linMomentum * oneOverMass;
+   // 4. rebuild world inertia
+   if (mFabs(angle) > POINT_EPSILON)
+   {
+      updateInertialTensor();
+   }
 
-   // Update dependent state variables
-   updateInertialTensor();
-   updateVelocity();
+   // 5. refresh ang velocity
+   updateAngularVelocity();
+
+
+   // 6. CoM update
    updateCenterOfMass();
+
+   // 7. check if we can sleep
+   trySleep(delta);
+
 }
 
 void Rigid::updateVelocity()
@@ -118,7 +139,7 @@ void Rigid::updateCenterOfMass()
 void Rigid::applyImpulse(const Point3F &r, const Point3F &impulse)
 {
    if (impulse.lenSquared() < mass) return;
-   atRest = false;
+   wake();
 
    // Linear momentum and velocity
    linMomentum  += impulse;
@@ -276,6 +297,47 @@ void Rigid::translateCenterOfMass(const Point3F &oldPos,const Point3F &newPos)
    objectInertia(1,0) = objectInertia(0,1);
    objectInertia(2,0) = objectInertia(0,2);
    objectInertia(2,1) = objectInertia(1,2);
+}
+
+void Rigid::trySleep(F32 dt)
+{
+   // If there is active force/torque, don’t sleep
+   if (!force.isZero() || !torque.isZero())
+   {
+      sleepTimer = 0.0f; return;
+   }
+
+   const F32 linV2 = linVelocity.lenSquared();
+   const F32 angV2 = angVelocity.lenSquared();
+
+   if (linV2 < sleepLinearThreshold && angV2 < sleepAngThreshold)
+   {
+      sleepTimer += dt;
+      if (sleepTimer >= sleepTimeThreshold)
+      {
+         setAtRest();
+      }
+   }
+   else
+   {
+      sleepTimer = 0.0f;
+   }
+}
+
+void Rigid::setSleepThresholds(F32 linVel2, F32 angVel2, F32 timeToSleep)
+{
+   sleepLinearThreshold = linVel2;
+   sleepAngThreshold = angVel2;
+   sleepTimeThreshold = timeToSleep;
+}
+
+void Rigid::wake()
+{
+   if (atRest)
+   {
+      atRest = false;
+      sleepTimer = 0.0f;
+   }
 }
 
 void Rigid::getVelocity(const Point3F& r, Point3F* v)

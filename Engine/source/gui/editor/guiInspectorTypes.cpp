@@ -42,6 +42,7 @@
 #include "math/mathTypes.h"
 #include "sim/actionMap.h"
 #include "console/typeValidators.h"
+#include "console/script.h"
 
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeMenuBase
@@ -1983,6 +1984,16 @@ void GuiInspectorType2DValue::constructEditControlChildren(GuiControl* retCtrl, 
 
    retCtrl->addObject(mContainerX);
    retCtrl->addObject(mContainerY);
+
+   mCtrlX->setDataField(StringTable->insert("tabComplete"), NULL, "true");
+   String tabCmdX = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder();}",
+      mCtrlX->getName(), mCtrlY->getName());
+   Con::evaluatef(tabCmdX);
+
+   mCtrlY->setDataField(StringTable->insert("tabComplete"), NULL, "true");
+   String tabCmdY = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder();}",
+      mCtrlY->getName(), mCtrlX->getName());
+   Con::evaluatef(tabCmdY);
    //retCtrl->addObject(mScriptValue);
 }
 
@@ -2107,6 +2118,16 @@ void GuiInspectorType3DValue::constructEditControlChildren(GuiControl* retCtrl, 
    mContainerZ->addObject(mLabelZ);
    mContainerZ->addObject(mCtrlZ);
    _registerEditControl(mContainerZ, "cz");
+
+   mCtrlY->setDataField(StringTable->insert("tabComplete"), NULL, "true");
+   String tabCmdY = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder();}",
+      mCtrlY->getName(), mCtrlZ->getName());
+   Con::evaluatef(tabCmdY);
+
+   mCtrlZ->setDataField(StringTable->insert("tabComplete"), NULL, "true");
+   String tabCmdZ = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder();}",
+      mCtrlZ->getName(), mCtrlX->getName());
+   Con::evaluatef(tabCmdZ);
 
    retCtrl->addObject(mContainerZ);
 }

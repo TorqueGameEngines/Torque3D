@@ -725,8 +725,7 @@ void HoverVehicle::updateForces(F32 /*dt*/)
 
    for (j = 0; j < 2; j++) {
       if (getContainer()->castRay(stabPoints[j].wsPoint, stabPoints[j].wsPoint + stabPoints[j].wsExtension * 2.0,
-                                  TerrainObjectType | 
-                                  WaterObjectType, &rinfo)) 
+         sCollisionMoveMask, &rinfo))
       {
          reallyFloating = false;
 

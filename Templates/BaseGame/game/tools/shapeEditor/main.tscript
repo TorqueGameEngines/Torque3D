@@ -151,8 +151,8 @@ function ShapeEditorPlugin::openShapeAsset(%this, %assetDef)
 function ShapeEditorPlugin::openShapeAssetId(%this, %assetId)
 {
    %this.selectedAssetDef = AssetDatabase.acquireAsset(%assetId);
-   //%this.selectedAssetDef = %assetDef;
-   %this.open(%this.selectedAssetDef);
+   EditorGui.setEditor( ShapeEditorPlugin );
+   ShapeEditorPlugin.openShapeAsset(%this.selectedAssetDef);
 }
 
 function ShapeEditorPlugin::open(%this, %shapeAsset)
@@ -323,7 +323,7 @@ function ShapeEditorPlugin::onExitMission( %this )
 {
    // unselect the current shape
    ShapeEdShapeView.setModel( "" );
-   if (ShapeEditor.shape != -1)
+   if (ShapeEditor.shape != 0 && ShapeEditor.shape != -1)
       ShapeEditor.shape.delete();
    ShapeEditor.shape = 0;
    ShapeEdUndoManager.clearAll();

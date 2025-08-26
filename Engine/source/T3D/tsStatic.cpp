@@ -400,7 +400,7 @@ bool TSStatic::_createShape()
       mObjBox = getShape()->mBounds;
       resetWorldBox();
 
-      mShapeInstance = new TSShapeInstance(getShape(), isClientObject());
+      mShapeInstance = new TSShapeInstance(getShape(), true);
       mShapeInstance->resetMaterialList();
       mShapeInstance->cloneMaterialList();
 
@@ -711,7 +711,7 @@ void TSStatic::_updateShouldTick()
 
 void TSStatic::prepRenderImage(SceneRenderState* state)
 {
-   if (!mShapeInstance)
+   if (!mShapeAsset.isValid() || !mShapeInstance)
       return;
 
    Point3F cameraOffset;
@@ -1326,27 +1326,25 @@ bool TSStatic::buildExportPolyList(ColladaUtils::ExportData* exportData, const B
    }
 
    //Next, process the LOD levels and materials.
-   if (isServerObject() && getClientObject())
+   if (isServerObject())
    {
-      TSStatic* clientShape = dynamic_cast<TSStatic*>(getClientObject());
-
       exportData->meshData.increment();
 
       //Prep a meshData for this shape in particular
       ColladaUtils::ExportData::meshLODData* meshData = &exportData->meshData.last();
 
       //Fill out the info we'll need later to actually append our mesh data for the detail levels during the processing phase
-      meshData->shapeInst = clientShape->mShapeInstance;
+      meshData->shapeInst = mShapeInstance;
       meshData->originatingObject = this;
       meshData->meshTransform = mObjToWorld;
       meshData->scale = mObjScale;
 
       //Iterate over all our detail levels
-      for (U32 i = 0; i < clientShape->mShapeInstance->getNumDetails(); i++)
+      for (U32 i = 0; i < mShapeInstance->getNumDetails(); i++)
       {
-         TSShape::Detail detail = clientShape->mShapeInstance->getShape()->details[i];
+         TSShape::Detail detail = mShapeInstance->getShape()->details[i];
 
-         String detailName = String::ToLower(clientShape->mShapeInstance->getShape()->getName(detail.nameIndex));
+         String detailName = String::ToLower(mShapeInstance->getShape()->getName(detail.nameIndex));
 
          //Skip it if it's a collision or line of sight element
          if (detailName.startsWith("col") || detailName.startsWith("los"))

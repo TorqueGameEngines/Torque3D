@@ -34,7 +34,7 @@ function CompositeTextureSlotContainer::setChannelData(%this, %sourceValue, %sou
    {
       %this-->InputMode.setSelected(1);
       
-      %this-->bitmap.setBitmap(%sourceValue);
+      %this-->bitmap.setBitmap(getAssetPreviewImage(%sourceValue));
       
       if(%sourceChannel $= "")
          %sourceChannel = "Red";
@@ -74,7 +74,7 @@ function CompositeTextureEditor::setSourceTex(%this, %assetId)
       $CompTexSourceChannel = 0;
       
    %channelContainer = CompositeTextureEditorWindow.getObject($CompTexSourceChannel);
-   %channelContainer-->bitmap.setBitmap(%assetId);
+   %channelContainer-->bitmap.setBitmap(getAssetPreviewImage(%assetId));
 }
 
 function CompositeTextureEditor::saveComposite(%this)

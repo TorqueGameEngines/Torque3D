@@ -575,6 +575,26 @@ function SpawnDatablockSelector::onSelect(%this, %id)
    NavMeshTools->TestTool.setSpawnDatablock(%className);
 }
 
+function SpawnDatablockEditDBBtn::onClick(%this)
+{
+   %dbName = SpawnDatablockSelector.getText();
+   DatablockEditorPlugin.openDatablock(%dbName);
+}
+
+function SpawnDatablockAddDBBtn::onClick(%this)
+{
+   %className = SpawnClassSelector.getText();
+   %classData = %className @ "Data";
+   if(%className $= "AIPlayer")
+   {
+      %classData = "PlayerData";
+   }
+   
+   %dbName = SpawnDatablockSelector.getText();
+   
+   DatablockEditorPlugin.createNewDatablockOfType(%classData, %dbName);
+}
+
 //------------------------------------------------------
 // TILETOOL
 //------------------------------------------------------

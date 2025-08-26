@@ -1383,7 +1383,7 @@ void PersistenceManager::updateObject(SimObject* object, ParsedObject* parentObj
       const AbstractClassRep::Field* f = &list[i];
 
       // Skip the special field types.
-      if ( f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
+      if ( f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors) || f->flag.test(AbstractClassRep::FieldFlags::FIELD_DontWriteToFile))
          continue;
 
       if (f->flag.test(AbstractClassRep::FIELD_SpecialtyArrayField))

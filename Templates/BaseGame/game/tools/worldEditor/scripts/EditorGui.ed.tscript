@@ -1709,7 +1709,7 @@ function EWorldEditor::maxSize(%this, %window)
       
       %fixedWindow = EWTreeWindow;
       %fluidWindow = EWInspectorWindow;
-      %offset = 25; // tweak the vertical offset so that it aligns neatly
+      %offset = 0; // tweak the vertical offset so that it aligns neatly
       %top = EditorGuiToolbar.extent.y + %offset;
       %bottom = %top + 59;
       %maxHeight = Canvas.extent.y - %top - %bottom + 12;
@@ -2101,7 +2101,10 @@ function EditorTree::onRightMouseUp( %this, %itemId, %mouse, %obj )
       %popup.item[ 0 ] = "Delete" TAB "" TAB "EditorMenuEditDelete();";
       %popup.item[ 1 ] = "Group" TAB "" TAB "EWorldEditor.addSimGroup( true );";
       %popup.item[ 2 ] = "-";
-      %popup.item[ 3 ] = "Make selected a Sub-Level" TAB "" TAB "MakeSelectionASublevel();";
+      %popup.item[ 3 ] = "Make selected a Prefab" TAB "" TAB "EWorldEditor.makeSelectionPrefab();";
+      %popup.item[ 4 ] = "Bake selected into Mesh" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ShapeAsset\", AssetBrowser.selectedModule, \"makeSelectedAMesh\");";
+      %popup.item[ 5 ] = "-";
+      %popup.item[ 6 ] = "Make selected a Sub-Level" TAB "" TAB "MakeSelectionASublevel();";
    }
    else
    {
@@ -2206,6 +2209,29 @@ function EditorTree::onRightMouseUp( %this, %itemId, %mouse, %obj )
                %popup.item[ 13 ] = "Convert to SubScene" TAB "" TAB "EWorldEditor.createSelectedAsSubScene( " @ %popup.object @ " );";
             }
          }  
+         else if(%obj.getClassName() $= "TSStatic")
+         {
+            if(AssetDatabase.isDeclaredAsset(%obj.shapeAsset))
+            {
+               %assetDef = AssetDatabase.acquireAsset(%obj.shapeAsset);
+               
+               %assetFileName = %assetDef.getFilename();
+               %assetFileBase = strreplace(fileBase(%assetFileName), ".asset", "");
+               %assetFileBase = strreplace(%assetFileBase, ".taml", "");
+               
+               %prefabFile = filePath(%assetFileName) @ "/" @ %assetFileBase @ ".prefab";
+               if(isFile(%prefabFile))
+               {
+                  %popup.item[ 8 ] = "-";
+                  %popup.item[ 9 ] = "Restore to Prefab" TAB "" TAB "EWorldEditor.restoreSelectedToPrefab( " @ %popup.object @ " );";
+                  %popup.item[ 10 ] = "Rebake Mesh" TAB "" TAB "EWorldEditor.rebakeSelectedMesh( " @ %popup.object @ " );";
+               }
+            }
+         }
+         else if( %obj.isMemberOfClass( "Prefab" ) )
+         {
+            %popup.item[ 8 ] = "Explode Prefab" TAB "" TAB "EWorldEditor.explodeSelectedPrefab();";
+         }
       }
    }
 

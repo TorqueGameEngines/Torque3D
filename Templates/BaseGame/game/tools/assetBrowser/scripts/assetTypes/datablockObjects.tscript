@@ -16,7 +16,6 @@ function DatablockObjectType::onEdit(%this, %className)
 
 function DatablockObjectType::buildBrowserElement(%this, %className, %previewData)
 {
-   echo("DatablockObjectType::buildBrowserElement() - " @ %this @ ", " @ %previewData);
    %previewData.assetName = %this.getName();
    %previewData.assetPath = %this.getFileName();
    
@@ -71,19 +70,92 @@ function DatablockObjectType::onShowActionMenu(%this, %className)
    $CurrentAssetBrowser.popupMenu = EditDatablockObjectTypePopup;
 }
 
-function spawnDatablockObject(%datablock)
+function spawnDatablockObject(%datablock, %position)
 {
    %name = %datablock.getName();
    %class = %datablock.getClassName();
    %cmd = %class @ "::create(" @ %name @ ");";
    
-   %shapePath = ( %datablock.shapeAsset !$= "" ) ? %datablock.shapeFile : %datablock.shapeName;
    %createCmd = "ObjectCreator.createObject( \"" @ %cmd @ "\" );";
-   return eval(%createCmd);//eval("showImportDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );");
+   %newObject = eval(%createCmd);
+   
+   if(%position !$= "")
+      %newObject.position = %position;
+      
+   return %newObject;
+}
+
+function spawnAIObject(%datablock, %position)
+{
+   %name = %datablock.getName();
+   
+   %class = %datablock.getClassName();
+   %class = strreplace(%class, "Data", "");
+   
+   %cmd = "AI" @ %class @ "::create(" @ %name @ ");";
+   
+   %createCmd = "ObjectCreator.createObject( \"" @ %cmd @ "\" );";
+   %newObject = eval(%createCmd);
+   
+   if(%position !$= "")
+      %newObject.position = %position;
+      
+   return %newObject;
+}
+
+function spawnSpawnMarker(%datablock, %position)
+{
+   %class = %datablock.getClassName();
+   %class = strreplace(%class, "Data", "");
+   
+   ObjectBuilderGui.newObjectCallback = "finishedSpawningSpawnMarker"; 
+   ObjectCreator.createObject( "ObjectBuilderGui.buildSpawnSphere(" @ %class @ ", " @ %datablock.getName() @ ");" );
+}
+
+function finishedSpawningSpawnMarker(%objId)
+{
+   %objId.position = SpawnDatablockObjectPopup.position;
 }
 
 function DatablockObjectType::onWorldEditorDropped(%this, %position)
 {
-   %newObj = spawnDatablockObject(%this);
-   %newObj.position = %position;
+   if( !isObject( SpawnDatablockObjectPopup ) )
+   {
+      new PopupMenu( SpawnDatablockObjectPopup )
+      {
+         superClass = "MenuBuilder";
+         class = "EditorWorldMenu";
+
+         jumpFileName = "";
+         jumpLineNumber = "";
+      };
+   }
+   
+   SpawnDatablockObjectPopup.objectData = %this;
+   SpawnDatablockObjectPopup.objectType = "DatablockObjectType";
+   SpawnDatablockObjectPopup.position = %position;
+   
+   //Regen the menu so we're fully up and current with options and references
+   SpawnDatablockObjectPopup.clearItems();
+   
+   %class = %this.getClassName();
+   %class = strreplace(%class, "Data", "");
+   
+   SpawnDatablockObjectPopup.appendItem("Create " @ %class @ " Object" TAB "" TAB "spawnDatablockObject(" @ %this @ ", " @ %position @ ");");
+   
+   %category = getCategoryOfClass(%class);
+   if(%class $= "Player")
+   {
+      SpawnDatablockObjectPopup.appendItem("Create AI" @ %class @ " Object" TAB "" TAB "spawnAIObject(" @ %this @ ", " @ %position @ ");");
+   }
+   
+   SpawnDatablockObjectPopup.appendItem("Create SpawnNode of " @ %class TAB "" TAB "spawnSpawnMarker(" @ %this @ "," @ %position @ ");");
+
+   SpawnDatablockObjectPopup.reloadItems();
+   
+   SpawnDatablockObjectPopup.showPopup(Canvas); 
+   
+   
+   //%newObj = spawnDatablockObject(%this);
+   //%newObj.position = %position;
 }

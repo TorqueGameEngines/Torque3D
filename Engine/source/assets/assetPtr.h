@@ -179,6 +179,7 @@ public:
     /// Validity.
     bool isNull( void ) const override { return mpAsset.isNull(); }
     bool notNull( void ) const override { return !mpAsset.isNull(); }
+    bool isValid(void) const { return notNull() && static_cast<AssetBase*>(mpAsset.getObject())->isAssetValid(); }
 };
 
 #endif // _ASSET_PTR_H_

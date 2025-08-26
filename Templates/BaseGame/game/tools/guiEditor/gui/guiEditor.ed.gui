@@ -273,12 +273,12 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                bitmapAsset = "ToolsModule:separator_xt_h_image";
                bitmapMode = "Centered";
             };
-            new GuiPopUpMenuCtrl(GuiEditorContentList) {
+            new GuiPopUpMenuCtrlEx(GuiEditorContentList) {
                maxPopupHeight = "200";
                sbUsesNAColor = "0";
                reverseTextList = "0";
                bitmapBounds = "16 16";
-               text = "NewGui - 8844";
+               text = "";
                maxLength = "1024";
                margin = "0 0 0 0";
                padding = "0 0 0 0";
@@ -291,13 +291,14 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                horizSizing = "right";
                vertSizing = "center";
                position = "8 0";
-               extent = "145 27";
+               extent = "300 27";
                minExtent = "8 2";
                canSave = "1";
                visible = "1";
                tooltipProfile = "ToolsGuiToolTipProfile";
                hovertime = "1000";
                canSaveDynamicFields = "0";
+               allowTextSearch = true;
             };
             new GuiPopUpMenuCtrl(GuiEditorResList) {
                maxPopupHeight = "200";
@@ -316,8 +317,8 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                profile = "ToolsGuiPopUpMenuProfile";
                horizSizing = "right";
                vertSizing = "center";
-               position = "161 0";
-               extent = "136 27";
+               position = "303 0";
+               extent = "250 27";
                minExtent = "8 2";
                canSave = "1";
                visible = "1";
@@ -333,7 +334,7 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                profile = "ToolsGuiDefaultProfile";
                horizSizing = "right";
                vertSizing = "center";
-               position = "307 3";
+               position = "556 3";
                extent = "9 26";
                minExtent = "1 1";
                canSave = "1";

@@ -455,7 +455,7 @@ function EditorAutoSaveMission()
    
    AssetBackupListArray.empty();
    
-   %scenePath = makeFullPath(getRootScene().getFileName());
+   %scenePath = getRootScene().getFileName();
    if(startsWith(%scenePath, "tools/levels/"))
       return false;
    
@@ -793,7 +793,7 @@ function EditorExplodePrefab()
    EditorTree.buildVisibleTree( true );
 }
 
-function makeSelectedAMesh(%assetId)
+function makeSelectedAMesh(%assetId, %createPrefab, %spawnNewStatic)
 {      
    %selectedCount = EWorldEditor.getSelectionSize();
    
@@ -802,6 +802,12 @@ function makeSelectedAMesh(%assetId)
       error("You need to select at least one object to turn it into a mesh!");
       return;  
    }
+   
+   if(%createPrefab $= "")
+      %createPrefab = true;
+      
+   if(%spawnNewStatic $= "")
+      %spawnNewStatic = true;
    
    %assetDef = AssetDatabase.acquireAsset(%assetId);
    
@@ -836,29 +842,46 @@ function makeSelectedAMesh(%assetId)
          }
       }
       
-      %prefabPath = %assetPath @ "/" @ %assetDef.AssetName @ ".prefab";
-      EWorldEditor.makeSelectionPrefab(%prefabPath, false);
-      %selectionPos = EWorldEditor.getSelectedObject(0).getPosition();
-      //Next, nuke 'em
-      EditorMenuEditDelete();
-      
-      //now make a new static  
-      %newStatic = new TSStatic()
+      if(%createPrefab)
       {
-         shapeAsset = %assetId;
-         position = %selectionPos;
-      };
-
-      if(%sameParent)
-         %firstParent.add(%newStatic);
-      else
-         getRootScene().add(%newStatic);
+         %prefabPath = %assetPath @ "/" @ %assetDef.AssetName @ ".prefab";
+         EWorldEditor.makeSelectionPrefab(%prefabPath, false);
+      }
+      
+      if(%spawnNewStatic)
+      {
+         %selectionPos = EWorldEditor.getSelectedObject(0).getPosition();
          
-      EWorldEditor.clearSelection();
-      EWorldEditor.selectObject(%newStatic);
+         //Next, nuke 'em
+         EditorMenuEditDelete();
+         
+         //now make a new static  
+         %newStatic = new TSStatic()
+         {
+            shapeAsset = %assetId;
+            position = %selectionPos;
+         };
+
+         if(%sameParent)
+            %firstParent.add(%newStatic);
+         else
+            getRootScene().add(%newStatic);
+            
+         EWorldEditor.clearSelection();
+         EWorldEditor.selectObject(%newStatic);
+      }
    }
    
    EditorTree.buildVisibleTree( true );  
+}
+
+function EditorToggleControlOfEntity()
+{
+   %object = EWorldEditor.getSelectedObject(0);
+   if(%object == localClientConnection.getControlObject())
+      EditorReleaseControlOfEntity();
+   else
+      EditorTakeControlOfEntity();
 }
 
 function EditorTakeControlOfEntity()
@@ -868,8 +891,9 @@ function EditorTakeControlOfEntity()
    {
       $Editor::previousControlObject = localClientConnection.getControlObject(); 
       localClientConnection.setControlObject(%object);
-
    }
+   
+   Inspector.refresh();
 }
 
 function EditorReleaseControlOfEntity()
@@ -878,6 +902,8 @@ function EditorReleaseControlOfEntity()
    {
       localClientConnection.setControlObject($Editor::previousControlObject);
    }
+   
+   Inspector.refresh();
 }
 
 function EditorMount()

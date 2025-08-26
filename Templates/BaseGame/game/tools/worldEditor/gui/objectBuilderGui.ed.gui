@@ -893,7 +893,7 @@ function ObjectBuilderGui::createCommandType(%this, %index)
       text = %this.field[%index, value];
       position = %this.curXPos + %this.columnOffset @ " " @ %this.curYPos;
       modal = "1";
-      command = "TextPad($ThisControl.text, \"$ThisControl.apply\", $ThisControl.getRoot());";
+      command = "TextPad($ThisControl.text, $ThisControl@\".apply\", $ThisControl.getRoot());";
    };
    
    %this.numControls++;

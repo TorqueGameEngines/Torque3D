@@ -323,7 +323,7 @@ function ShapeEditorPlugin::onExitMission( %this )
 {
    // unselect the current shape
    ShapeEdShapeView.setModel( "" );
-   if (ShapeEditor.shape != 0)
+   if (ShapeEditor.shape != 0 && ShapeEditor.shape != -1)
       ShapeEditor.shape.delete();
    ShapeEditor.shape = 0;
    ShapeEdUndoManager.clearAll();

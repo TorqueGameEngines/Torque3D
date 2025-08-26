@@ -1,106 +1,76 @@
 //--- OBJECT WRITE BEGIN ---
-$guiContent = new GuiControl(ObjectBuilderGui, EditorGuiGroup) {
-	profile = "ToolsGuiDefaultProfile";
-	horizSizing = "right";
-	vertSizing = "bottom";
-	position = "0 0";
-	extent = "800 600";
-	minExtent = "8 8";
-	visible = "1";
-	setFirstResponder = "0";
-	modal = "1";
-	helpTag = "0";
+$guiContent = new GuiControl(ObjectBuilderGui,EditorGuiGroup) {
+   extent = "1920 1080";
+   minExtent = "8 8";
+   profile = "ToolsGuiDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+      helpTag = "0";
 
-	new GuiWindowCtrl(OBTargetWindow) {
-		profile = "ToolsGuiWindowProfile";
-		horizSizing = "center";
-		vertSizing = "center";
-		position = "384 205";
-		extent = "256 282";
-		minExtent = "256 8";
-		visible = "1";
-		setFirstResponder = "0";
-		modal = "1";
-		helpTag = "0";
-		resizeWidth = "1";
-		resizeHeight = "1";
-		canMove = "1";
-		canClose = "0";
-		canMinimize = "0";
-		canMaximize = "0";
-		minSize = "50 50";
-		text = "Create Object";
+   new GuiWindowCtrl(OBTargetWindow) {
+      Text = "Create Object";
+      canClose = "0";
+      canMinimize = "0";
+      canMaximize = "0";
+      position = "735 399";
+      extent = "449 282";
+      minExtent = "256 8";
+      horizSizing = "center";
+      vertSizing = "center";
+      profile = "ToolsGuiWindowProfile";
+      tooltipProfile = "GuiToolTipProfile";
 
-		new GuiTextCtrl() {
-			profile = "ToolsGuiTextProfile";
-			horizSizing = "right";
-			vertSizing = "bottom";
-			position = "9 26";
-			extent = "84 16";
-			minExtent = "8 8";
-			visible = "1";
-			setFirstResponder = "0";
-			modal = "1";
-			helpTag = "0";
-			text = "Object Name:";
-		};
-		new GuiTextEditCtrl(OBObjectName) {
-		   class = ObjectBuilderGuiTextEditCtrl;
-			profile = "ToolsGuiTextEditProfile";
-			horizSizing = "width";
-			vertSizing = "bottom";
-			position = "78 26";
-			extent = "172 18";
-			minExtent = "8 8";
-			visible = "1";
-			setFirstResponder = "0";
-			modal = "1";
-			helpTag = "0";
-			historySize = "0";
-		};
-		new GuiBitmapBorderCtrl(OBContentWindow) {
-			profile = "ToolsGuiGroupBorderProfile";
-			horizSizing = "width";
-			vertSizing = "bottom";
-			position = "7 51";
-			extent = "243 193";
-			minExtent = "0 0";
-			visible = "1";
-			setFirstResponder = "0";
-			modal = "1";
-			helpTag = "0";
-		};
-		new GuiButtonCtrl(OBOKButton) {
-			profile = "ToolsGuiButtonProfile";
-			horizSizing = "width";
-			vertSizing = "bottom";
-			position = "7 250";
-			extent = "156 24";
-			minExtent = "8 8";
-			visible = "1";
-			setFirstResponder = "0";
-			modal = "1";
-			command = "ObjectBuilderGui.onOK();";
-			helpTag = "0";
-			text = "Create New";
-			Accelerator = "return";
-		};
-		new GuiButtonCtrl(OBCancelButton) {
-			profile = "ToolsGuiButtonProfile";
-			horizSizing = "left";
-			vertSizing = "bottom";
-			position = "170 250";
-			extent = "80 24";
-			minExtent = "8 8";
-			visible = "1";
-			setFirstResponder = "0";
-			modal = "1";
-			command = "ObjectBuilderGui.onCancel();";
-			helpTag = "0";
-			text = "Cancel";
-			Accelerator = "escape";
-		};
-	};
+      new GuiTextCtrl() {
+         Text = "Object Name:";
+         position = "9 26";
+         extent = "84 16";
+         minExtent = "8 8";
+         profile = "ToolsGuiTextProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiTextEditCtrl(OBObjectName) {
+         position = "102 26";
+         extent = "341 20";
+         minExtent = "8 8";
+         horizSizing = "width";
+         profile = "ToolsGuiTextEditProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         class = "ObjectBuilderGuiTextEditCtrl";
+      };
+      new GuiBitmapBorderCtrl(OBContentWindow) {
+         position = "7 51";
+         extent = "437 193";
+         minExtent = "0 0";
+         horizSizing = "width";
+         profile = "ToolsGuiGroupBorderProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiButtonCtrl(OBOKButton) {
+         Text = "Create New";
+         position = "263 250";
+         extent = "97 24";
+         minExtent = "8 8";
+         horizSizing = "left";
+         vertSizing = "top";
+         profile = "ToolsGuiButtonProfile";
+         command = "ObjectBuilderGui.onOK();";
+         accelerator = "return";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiButtonCtrl(OBCancelButton) {
+         Text = "Cancel";
+         position = "364 250";
+         extent = "80 24";
+         minExtent = "8 8";
+         horizSizing = "left";
+         vertSizing = "top";
+         profile = "ToolsGuiButtonProfile";
+         command = "ObjectBuilderGui.onCancel();";
+         accelerator = "escape";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+   };
 };
 //--- OBJECT WRITE END ---
 
@@ -110,13 +80,13 @@ function ObjectBuilderGui::init(%this)
    %this.baseOffsetY       = 5;
    %this.defaultObjectName = "";
    %this.defaultFieldStep  = 22;
-   %this.columnOffset      = 110;
+   %this.columnOffset      = 140;
 
-   %this.fieldNameExtent   = "105 18";
-   %this.textEditExtent    = "122 18";
+   %this.fieldNameExtent   = "135 18";
+   %this.textEditExtent    = "280 18";
    %this.checkBoxExtent    = "13 18";
-   %this.popupMenuExtent   = "122 18";
-   %this.fileButtonExtent  = "122 18";
+   %this.popupMenuExtent   = "280 18";
+   %this.fileButtonExtent  = "280 18";
    %this.matButtonExtent   = "17 18";
 
    //
@@ -886,6 +856,50 @@ function ObjectBuilderGui::createStringType(%this, %index)
    %this.curYPos += %this.defaultFieldStep;
 }
 
+function ObjectBuilderGuiCommandCtrl::apply(%this, %text)
+{
+   %this.text = %text;
+}
+
+function ObjectBuilderGui::createCommandType(%this, %index)
+{
+   if(%index >= %this.numFields || %this.field[%index, name] $= "")
+   {
+      error("ObjectBuilderGui::createCommandType: invalid field");
+      return;
+   }
+   
+   //
+   if(%this.field[%index, text] $= "")
+      %name = %this.field[%index, name];
+   else
+      %name = %this.field[%index, text];
+
+   // 
+   %this.textControls[%this.numControls] = new GuiTextCtrl() {
+      profile = "ToolsGuiTextRightProfile";
+      text = %name;
+      extent = %this.fieldNameExtent;
+      position = %this.curXPos @ " " @ %this.curYPos;
+      modal = "1";
+   };
+   
+   // 
+   %this.controls[%this.numControls] = new GuiButtonCtrl() {
+      class = ObjectBuilderGuiCommandCtrl;
+      HorizSizing = "width";
+      profile = "ToolsGuiTextEditProfile";
+      extent = %this.textEditExtent;
+      text = %this.field[%index, value];
+      position = %this.curXPos + %this.columnOffset @ " " @ %this.curYPos;
+      modal = "1";
+      command = "TextPad($ThisControl.text, \"$ThisControl.apply\", $ThisControl.getRoot());";
+   };
+   
+   %this.numControls++;
+   %this.curYPos += %this.defaultFieldStep;
+}
+
 //------------------------------------------------------------------------------
 
 function ObjectBuilderGui::adjustSizes(%this)
@@ -940,6 +954,9 @@ function ObjectBuilderGui::process(%this)
 
          case "TypeMaterialName":
             %this.createMaterialNameType(%i);
+            
+         case "TypeCommand":
+            %this.createCommandType(%i);
 
          default:
             %this.createStringType(%i);
@@ -1502,18 +1519,18 @@ function ObjectBuilderGui::buildFlyingVehicle(%this)
    %this.process();
 }
 
-function ObjectBuilderGui::buildSpawnSphere(%this)
+function ObjectBuilderGui::buildSpawnSphere(%this, %spawnClass, %spawnDatablock)
 {
    %this.objectClassName = "SpawnSphere";
    %this.addField("dataBlock",    "TypeDataBlock", "dataBlock",   "MissionMarkerData SpawnSphereMarker");
    %this.addField("radius",       "TypeFloat",     "Radius",        1);
    %this.addField("sphereWeight", "TypeFloat",     "Sphere Weight", 1);
 
-   %this.addField("spawnClass",     "TypeString",    "Spawn Class", "");
-   %this.addField("spawnDatablock", "TypeString", "Spawn Data", "");
+   %this.addField("spawnClass",     "TypeString",    "Spawn Class", %spawnClass);
+   %this.addField("spawnDatablock", "TypeString", "Spawn Data", %spawnDatablock);
    %this.addField("spawnTransform", "TypeBool", "Spawn Here", "true");
    %this.addField("autoSpawn", "TypeBool", "Auto Spawn Objects", "false");
-   %this.addField("spawnScript", "TypeString", "spawnScript", "%this.spawned = $SpawnObject;");
+   %this.addField("spawnScript", "TypeCommand", "spawnScript", "%this.spawned = $SpawnObject;");
    %this.addField("canSaveDynamicFields", "TypeBool", "Save metadata", "false");
    %this.process();
 }
@@ -1766,6 +1783,100 @@ function TriggerData::create(%datablock)
       dataBlock = %datablock;
       parentGroup = ObjectCreator.objectGroup;
       polyhedron = "-0.5 0.5 0.0 1.0 0.0 0.0 0.0 -1.0 0.0 0.0 0.0 1.0";
+   };
+   return %obj;
+}
+
+//
+function PlayerData::create(%datablock)
+{
+   %obj = new Player()
+   {
+      dataBlock = %datablock;
+      parentGroup = ObjectCreator.objectGroup;
+   };
+   return %obj;
+}
+
+function Player::create(%datablock)
+{
+   %obj = new Player()
+   {
+      dataBlock = %datablock;
+      parentGroup = ObjectCreator.objectGroup;
+   };
+   return %obj;
+}
+
+function AIPlayer::create(%datablock)
+{
+   %obj = new AIPlayer()
+   {
+      dataBlock = %datablock;
+      parentGroup = ObjectCreator.objectGroup;
+   };
+   return %obj;
+}
+
+//
+function WheeledVehicleData::create(%datablock)
+{
+   %obj = new WheeledVehicle()
+   {
+      dataBlock = %datablock;
+      parentGroup = ObjectCreator.objectGroup;
+   };
+   return %obj;
+}
+
+function WheeledVehicle::create(%datablock)
+{
+   %obj = new WheeledVehicle()
+   {
+      dataBlock = %datablock;
+      parentGroup = ObjectCreator.objectGroup;
+   };
+   return %obj;
+}
+
+//
+function FlyingVehicleData::create(%datablock)
+{
+   %obj = new FlyingVehicle()
+   {
+      dataBlock = %datablock;
+      parentGroup = ObjectCreator.objectGroup;
+   };
+   return %obj;
+}
+
+function FlyingVehicle::create(%datablock)
+{
+   %obj = new FlyingVehicle()
+   {
+      dataBlock = %datablock;
+      parentGroup = ObjectCreator.objectGroup;
+   };
+   return %obj;
+}
+
+//
+function HoverVehicleData::create(%datablock)
+{
+   %obj = new HoverVehicle()
+   {
+      dataBlock = %datablock;
+      parentGroup = ObjectCreator.objectGroup;
+   };
+   return %obj;
+}
+
+function HoverVehicle::create(%datablock)
+{
+   %obj = new HoverVehicle()
+   {
+      dataBlock = %datablock;
+      parentGroup = ObjectCreator.objectGroup;
    };
    return %obj;
 }

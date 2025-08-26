@@ -546,7 +546,7 @@ function ShapeEdSelectWindow::addObjectHint( %this, %type, %name, %desc, %presen
          autoSize = true;
          buttonType = "radioButton";
          groupNum = "-1";
-         iconBitmap = "tools/editorClasses/gui/images/iconCancel";
+         iconBitmapFile = "tools/editorClasses/gui/images/iconCancel";
          text = "hint";
          tooltip = "";
       };

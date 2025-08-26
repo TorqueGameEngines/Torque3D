@@ -647,8 +647,7 @@ function DatablockEditorPlugin::createDatablock(%this)
    if( %class !$= "" )
    {  
       // Need to prompt for a name.
-      
-      DatablockEditorCreatePrompt-->CreateDatablockName.setText("Name");
+      DatablockEditorCreatePrompt-->CreateDatablockName.setText("");
       DatablockEditorCreatePrompt-->CreateDatablockName.selectAllText();
       
       // Populate the copy source dropdown.
@@ -686,7 +685,7 @@ function DatablockEditorPlugin::createDatablock(%this)
       // Show the dialog.
       
       canvas.pushDialog( DatablockEditorCreatePrompt, 0, true );
-      DatablockEditorCreatePrompt-->promptWindow.text = "Create New Datablock in module: " @ DatablockEditorPlugin.targetCreationModule;
+      DatablockEditorCreatePrompt-->promptWindow.text = "Create New " @ %class @ " Datablock in module: " @ DatablockEditorPlugin.targetCreationModule;
    }
 }
 
@@ -717,7 +716,10 @@ function DatablockEditorPlugin::createPromptNameCheck(%this, %path)
 {
    %name = DatablockEditorCreatePrompt-->CreateDatablockName.getText();
    if( !Editor::validateObjectName( %name, true ) )
-      return;
+   {
+      toolsMessageBoxOK("Error", "Unable to validate new datablock name. Please make sure it's an alphanumeric value and that it is unique!");
+      return;  
+   }
       
    // Fetch the copy source and clear the list.
    
@@ -762,6 +764,8 @@ function DatablockEditorPlugin::createDatablockFinish( %this, %name, %copySource
       %this.submitUndo( %action );
       
       %action.redo();
+      
+      DatablockEditorPlugin.openDatablock(%name);
    }
    
    $DATABLOCK_EDITOR_NEWDB_CLASS = "";

@@ -123,7 +123,10 @@ public:
    StringTableEntry        expandAssetFilePath(const char* pAssetFilePath) const;
    StringTableEntry        collapseAssetFilePath(const char* pAssetFilePath) const;
 
-   virtual bool            isAssetValid(void) const                          { return true; }
+   virtual bool            isAssetValid(void) const
+   {
+      return mpOwningAssetManager != nullptr && mAssetInitialized && (mLoadedState == AssetErrCode::Ok || mLoadedState == AssetErrCode::UsingFallback);
+   }
 
    void                    refreshAsset(void);
 

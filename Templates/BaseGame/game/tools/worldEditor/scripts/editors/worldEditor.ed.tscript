@@ -516,6 +516,15 @@ function Inspector::inspect( %this, %obj )
       %name = %obj.getName();   
    else
       FieldInfoControl.setText( "" );
+      
+   %category = getCategoryOfClass(%obj.getClassName());
+   if(getFieldCount(%category > 1) && trim(getField(%category, 1)) $= "Controllable")
+   {
+      %genGroup = %this.findExistentGroup("General");
+      
+      if(isObject(%genGroup))
+         %genGroup.addField("ToggleControlBtn", "ToggleControlButton", "Takes control of the selected controllable object");
+   }
    
    //InspectorNameEdit.setValue( %name );
    Parent::inspect( %this, %obj );  

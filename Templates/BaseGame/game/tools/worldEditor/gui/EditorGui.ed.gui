@@ -32,30 +32,11 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
       isDecoy = "1";
    };
    
-   new GuiTabBookCtrl(EditorGuiMainTabBook) {
-      tabHeight = "20";
-      selectedPage = "0";
-      position = "0 5";
-      extent = "800 595";
-      horizSizing = "width";
-      vertSizing = "height";
-      profile = "ToolsGuiTabBookProfile";
-      tooltipProfile = "GuiToolTipProfile";
-
-      new GuiTabPageCtrl(MainSceneEditorTab) {
-         text = "Main Scene";
-         position = 0 SPC 20;
-         extent = 800 SPC 580;
-         horizSizing = "width";
-         vertSizing = "height";
-         profile = "ToolsGuiTabPageProfile";
-         tooltipProfile = "GuiToolTipProfile";
-         
          new GuiContainer(MainSceneTabPanel) {
             HorizSizing = "width";
             VertSizing = "height";
-            Position = "0 0";
-            Extent = "800 580";
+            Position = "0 5";
+            Extent = "800 595";
             
             new WorldEditor(EWorldEditor) {
                canSaveDynamicFields = "0";
@@ -1569,7 +1550,5 @@ $guiContent = new GuiContainer(EditorGui,EditorGuiGroup) {
                };
             };
          };
-      };
-   };
 };
 //--- OBJECT WRITE END ---

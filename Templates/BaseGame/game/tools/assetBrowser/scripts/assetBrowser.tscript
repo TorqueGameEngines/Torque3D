@@ -778,9 +778,12 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       AssetPreviewArray.add( %previewButton );
 }
 
-function AssetBrowser::refresh(%this)
+function AssetBrowser::refresh(%this, %regenPreviews)
 {
-   if(!%this.dirty)
+   if(%regenPreviews $= "")
+      %regenPreviews = true;
+      
+   if(!%this.dirty && %regenPreviews)
    {
       %this.dirty = true;
       
@@ -839,7 +842,7 @@ function AssetPreviewButton::onDoubleClick(%this)
 function assetBrowserPreviewSlider::onMouseDragged(%this)
 {
    EditorSettings.setValue("Assets/Browser/previewTileSize", %this.getValue());
-   AssetBrowser.refresh();  
+   AssetBrowser.refresh(false);  
 }
 
 function AssetBrowser::loadDirectories( %this )
@@ -2417,7 +2420,7 @@ function AssetBrowserPreviewButton::onMouseDragged(%this)
    Canvas.repaint();
 }
 
-function AssetBrowserPreviewButton::onControlDragCancelled(%this)
+function AssetPreviewControlType_AssetDrop::onControlDragCancelled(%this)
 {
    Canvas.popDialog(EditorDragAndDropLayer);
 }
@@ -2852,8 +2855,15 @@ function AssetBrowserWindow::releasePanel(%this)
 function AssetBrowserWindow::onResize(%this, %posX, %posY, %width, %height)
 {
     if (%width>%height)
+    {
         AssetBrowser-->assetList.fillRowFirst = true;
+        AssetBrowser-->assetList.extent.x = AssetListPanel.extent.x;
+    }
     else
+    {
         AssetBrowser-->assetList.fillRowFirst = false;
-    AssetBrowser.rebuildAssetArray();
+        AssetBrowser-->assetList.extent.y = AssetListPanel.extent.y;
+    }
+        
+    //AssetBrowser.rebuildAssetArray();
 }

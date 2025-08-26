@@ -135,7 +135,7 @@ function ObjectCreator::createObject( %this, %cmd )
    if(startsWith(%cmd, "return "))
       %objId = eval(%cmd);
    else
-   %objId = eval("return " @ %cmd);
+      %objId = eval("return " @ %cmd);
    popInstantGroup();
    
    if( isObject( %objId ) )
@@ -246,7 +246,7 @@ function ObjectCreator::addMissionObjectIcon( %this, %class, %name, %buildfunc )
       %cmd = "ObjectBuilderGui." @ %method @ "();";
 
    %ctrl.altCommand = "ObjectBuilderGui.newObjectCallback = \"ObjectCreator.onFinishCreateObject\"; ObjectCreator.createObject( \"" @ %cmd @ "\" );";
-   %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( %class );
+   %ctrl.iconBitmapFile = EditorIconRegistry::findIconByClassName( %class );
    %ctrl.text = %name;
    %ctrl.class = "CreatorMissionObjectIconBtn";   
    %ctrl.tooltip = %class; 
@@ -270,7 +270,7 @@ function ObjectCreator::addShapeIcon( %this, %datablock )
    %createCmd = "ObjectCreator.createObject( \\\"" @ %cmd @ "\\\" );";
    %ctrl.altCommand = "showImportDialog( \"" @ %shapePath @ "\", \"" @ %createCmd @ "\" );";
 
-   %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( %class );
+   %ctrl.iconBitmapFile = EditorIconRegistry::findIconByClassName( %class );
    %ctrl.text = %name;
    %ctrl.class = "CreatorShapeIconBtn";
    %ctrl.tooltip = %name;
@@ -296,7 +296,7 @@ function ObjectCreator::addStaticIcon( %this, %fullPath )
    %createCmd = "ObjectCreator.createStatic( \\\"" @ %fullPath @ "\\\" );";
    %ctrl.altCommand = "showImportDialog( \"" @ %fullPath @ "\", \"" @ %createCmd @ "\" );";
 
-   %ctrl.iconBitmap = ( ( %ext $= ".dts" ) ? EditorIconRegistry::findIconByClassName( "TSStatic" ) : "tools/gui/images/iconCollada" );
+   %ctrl.iconBitmapFile = ( ( %ext $= ".dts" ) ? EditorIconRegistry::findIconByClassName( "TSStatic" ) : "tools/gui/images/iconCollada" );
    %ctrl.text = %file;
    %ctrl.class = "CreatorStaticIconBtn";
    %ctrl.tooltip = %tip;
@@ -320,7 +320,7 @@ function ObjectCreator::addPrefabIcon( %this, %fullPath )
           "Last Modified: " @ fileModifiedTime( %fullPath );
 
    %ctrl.altCommand = "ObjectCreator.createPrefab( \"" @ %fullPath @ "\" );";
-   %ctrl.iconBitmap = EditorIconRegistry::findIconByClassName( "Prefab" );
+   %ctrl.iconBitmapFile = EditorIconRegistry::findIconByClassName( "Prefab" );
    %ctrl.text = %file;
    %ctrl.class = "CreatorPrefabIconBtn";
    %ctrl.tooltip = %tip;

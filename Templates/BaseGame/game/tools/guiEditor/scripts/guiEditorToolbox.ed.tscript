@@ -91,7 +91,7 @@ function GuiEditorToolbox::setViewTypeAlphabetical( %this )
          profile = "ToolsGuiIconButtonSmallProfile";
          extent = "128 18";
          text = %className;
-         iconBitmap = EditorIconRegistry::findIconByClassName( %className );
+         iconBitmapFile = EditorIconRegistry::findIconByClassName( %className );
          buttonMargin = "2 2";
          iconLocation = "left";
          textLocation = "left";
@@ -174,7 +174,7 @@ function GuiEditorToolbox::setViewTypeCategorized( %this )
             profile = "ToolsGuiIconButtonSmallProfile";
             extent = "128 18";
             text = %className;
-            iconBitmap = EditorIconRegistry::findIconByClassName( %className );
+            iconBitmapFile = EditorIconRegistry::findIconByClassName( %className );
             buttonMargin = "2 2";
             iconLocation = "left";
             textLocation = "left";

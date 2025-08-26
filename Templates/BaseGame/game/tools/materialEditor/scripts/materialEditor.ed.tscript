@@ -1992,6 +1992,7 @@ function MaterialEditorGui::doSwapMaterial(%this, %materialAsset)
 function MaterialEditorPropInspector::onInspectorFieldModified(%this, %object, %fieldName, %arrayIndex, %oldValue, %newValue)
 {
    MaterialEditorPropInspector.saveScrollState();
+   MaterialEditorPropInspector.saveCollapseState();
    
    if(%arrayIndex !$= "" && %arrayIndex !$= "(null)")
       MaterialEditorGui.updateActiveMaterial(%fieldName @ "[" @ %arrayIndex @ "]", %newValue);

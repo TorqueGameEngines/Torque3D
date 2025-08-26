@@ -24,8 +24,6 @@ function PrefabFileType::buildBrowserElement(%filePath, %previewData)
    %previewData.assetName = fileName(%filePath);
    %previewData.assetPath = %filePath;
    
-   echo("PrefabFileType::buildBrowserElement() - name, path: " @ %previewData.assetName @ ", " @ %filePath);
-   
    %previewData.previewImage = "ToolsModule:prefabIcon_image";
    
    //%previewData.assetFriendlyName = %assetDef.assetName;
@@ -49,4 +47,76 @@ function PrefabFileType::onWorldEditorDropped(%filePath, %position)
    EWorldEditor.selectObject(%newPrefab);
       
    EWorldEditor.isDirty = true;
+}
+
+function EWorldEditor::restoreSelectedToPrefab(%this, %object)
+{
+   %assetDef = AssetDatabase.acquireAsset(%object.shapeAsset);
+   %assetFileName = %assetDef.getFilename();
+   
+   %assetFileBase = strreplace(fileBase(%assetFileName), ".asset", "");
+   %assetFileBase = strreplace(%assetFileBase, ".taml", "");
+   
+   %prefabFile = filePath(%assetFileName) @ "/" @ %assetFileBase @ ".prefab";
+   
+   %name = %object.getName();
+   
+   %prefab = new Prefab() {
+      fileName = %prefabFile;
+      position = %object.position;
+      rotation = %object.rotation;
+      scale = %object.scale;
+   };
+   
+   %object.getGroup().add(%prefab);
+   
+   %prefab.setName(%name);
+   
+   MECreateUndoAction::submit( %prefab );
+   
+   MEDeleteUndoAction::submit( %object );
+}
+
+function EWorldEditor::rebakeSelectedMesh(%this, %object)
+{
+   %assetDef = AssetDatabase.acquireAsset(%object.shapeAsset);
+   %assetFileName = %assetDef.getFilename();
+   
+   %assetFileBase = strreplace(fileBase(%assetFileName), ".asset", "");
+   %assetFileBase = strreplace(%assetFileBase, ".taml", "");
+   
+   %prefabFile = filePath(%assetFileName) @ "/" @ %assetFileBase @ ".prefab";
+   
+   %name = %object;
+   
+   %prefab = new Prefab() {
+      fileName = %prefabFile;
+      position = %object.position;
+      rotation = %object.rotation;
+      scale = %object.scale;
+   };
+   
+   %object.getGroup().add(%prefab);
+   
+   EWorldEditor.clearSelection();
+   EWorldEditor.selectObject(%prefab);
+   
+   EWorldEditor.explodeSelectedPrefab();
+   
+   //after the explode, we'll have the group selected
+   %prefabGroup = EWorldEditor.getSelectedObject(0);
+   
+   EWorldEditor.clearSelection();
+   for(%i=0; %i < %prefabGroup.getCount(); %i++)
+   {
+      %prefabObj = %prefabGroup.getObject(%i); 
+      EWorldEditor.getActiveSelection().add(%prefabObj);
+   }
+   
+   makeSelectedAMesh(%object.shapeAsset, false, false);
+   
+   EWorldEditor.clearSelection();
+   EWorldEditor.selectObject(%object);
+   
+   %prefabGroup.delete();
 }

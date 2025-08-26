@@ -501,7 +501,7 @@ bool GuiInspector::isGroupFiltered( const char *groupName ) const
 
    // Is this group explicitly show? Does it immediately follow a + char.
    searchStr = String::ToString( "+%s", groupName );
-   if ( mGroupFilters.find( searchStr ) != String::NPos )
+   if ( mGroupFilters.find( searchStr, 0, String::NoCase | String::Left) != String::NPos )
       return false;   
 
    // Were there any other + characters, if so, we are implicitly hidden.   
@@ -510,7 +510,7 @@ bool GuiInspector::isGroupFiltered( const char *groupName ) const
 
    // Is this group explicitly hidden? Does it immediately follow a - char.
    searchStr = String::ToString( "-%s", groupName );
-   if ( mGroupFilters.find( searchStr ) != String::NPos )
+   if ( mGroupFilters.find( searchStr, 0, String::NoCase | String::Left) != String::NPos )
       return true;   
 
    return false;

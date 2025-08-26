@@ -585,18 +585,35 @@ function DecalEditorGui::updateDecalPreview( %this, %material )
    
    if( isObject( %material ) )
    {
-      %previewImage = %material.getDiffuseMap(0);
+      %previewImage = %material.getDiffuseMapAsset(0);
+   }
+   else if(AssetDatabase.isDeclaredAsset(%material))
+   {
+      if(AssetDatabase.getAssetType(%material) $= "MaterialAsset")
+      {
+         %matAsset = AssetDatabase.acquireAsset(%material);
+         
+         %previewImage = %matAsset.materialDefinitionName.getDiffuseMap(0);
+         //AssetDatabase.releaseAsset(%material);
+      }
+      else if(AssetDatabase.getAssetType(%material) $= "ImageAsset")
+      {
+         %previewImage = %material;
+      }
+      else
+      {
+         error("DecalEditorGui::updateDecalPreview() - Tried to set an invalid asset type for the editor preview!");
+         return;
+      }
    }
    else
    {
-      if(AssetDatabase.isDeclaredAsset(%material))
-      {
-         %previewImage = %material;
-         }
-      }
+      error("DecalEditorGui::updateDecalPreview() - Tried to set a non material, non asset value for the editor preview!");
+      return;  
+   }
    
    DecalPreviewWindow-->decalPreview.setBitmap( getAssetPreviewImage(%previewImage) );
-   }
+}
 
 function DecalEditorGui::updateInstancePreview( %this, %material )
 {

@@ -372,7 +372,7 @@ void SimObject::writeFields(Stream &stream, U32 tabStop)
       const AbstractClassRep::Field* f = &list[i];
 
       // Skip the special field types.
-      if ( f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
+      if ( f->type >= AbstractClassRep::ARCFirstCustomField || f->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors) || f->flag.test(AbstractClassRep::FieldFlags::FIELD_DontWriteToFile))
          continue;
 
       for(U32 j = 0; S32(j) < f->elementCount; j++)

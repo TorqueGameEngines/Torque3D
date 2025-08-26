@@ -427,7 +427,8 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
          {
             internalName = "TestActions";
             position = "7 21";
-            extent = "190 136";
+            extent = "300 136";
+            
             new GuiControl() {
                profile = "GuiDefaultProfile";
                Extent = "190 20";
@@ -445,18 +446,70 @@ $guiContent = new GuiNavEditorCtrl(NavEditorGui, EditorGuiGroup) {
             };
             new GuiControl() {
                profile = "GuiDefaultProfile";
-               Extent = "190 20";
+               Extent = "300 20";
                new GuiPopUpMenuCtrl(SpawnClassSelector) {
                   extent = "89 20";
                   profile = "ToolsGuiPopUpMenuProfile";
                   tooltipProfile = "GuiToolTipProfile";
                };
 
-               new GuiPopUpMenuCtrl(SpawnDatablockSelector) {
+               new GuiPopUpMenuCtrlEx(SpawnDatablockSelector) {
                   position = "100 0";
                   extent = "89 20";
                   profile = "ToolsGuiPopUpMenuProfile";
                   tooltipProfile = "GuiToolTipProfile";
+                  allowTextSearch = true;
+               };
+               
+               new GuiButtonCtrl(SpawnDatablockEditDBBtn) {
+                  text = "...";
+                  autoFitExtents = "0";
+                  useModifiers = "0";
+                  useStates = "1";
+                  masked = "0";
+                  groupNum = "-1";
+                  buttonType = "PushButton";
+                  useMouseEvents = "0";
+                  position = "193 0";
+                  extent = "17 17";
+                  minExtent = "8 2";
+                  horizSizing = "right";
+                  vertSizing = "bottom";
+                  profile = "ToolsGuiButtonProfile";
+                  visible = "1";
+                  active = "1";
+                  tooltipProfile = "GuiToolTipProfile";
+                  hovertime = "1000";
+                  isContainer = "0";
+                  canSave = "1";
+                  canSaveDynamicFields = "0";
+                  tooltip = "Edit Datablock";
+               };
+               
+               new GuiBitmapButtonCtrl(SpawnDatablockAddDBBtn) {
+                  bitmapAsset = "ToolsModule:iconAdd_image";
+                  bitmapMode = "Centered";
+                  autoFitExtents = "0";
+                  useModifiers = "0";
+                  useStates = "1";
+                  masked = "0";
+                  groupNum = "-1";
+                  buttonType = "PushButton";
+                  useMouseEvents = "0";
+                  position = "211 -2";
+                  extent = "22 22";
+                  minExtent = "8 2";
+                  horizSizing = "right";
+                  vertSizing = "bottom";
+                  profile = "ToolsGuiButtonProfile";
+                  visible = "1";
+                  active = "1";
+                  tooltipProfile = "GuiToolTipProfile";
+                  hovertime = "1000";
+                  isContainer = "0";
+                  canSave = "1";
+                  canSaveDynamicFields = "0";
+                  tooltip = "Create new Datablock";
                };
             };
 

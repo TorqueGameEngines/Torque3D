@@ -42,3 +42,4 @@ exec("./fieldTypes/listField." @ $TorqueScriptFileExtension);
 exec("./fieldTypes/range." @ $TorqueScriptFileExtension);
 exec("./fieldTypes/moduleDependencies." @ $TorqueScriptFileExtension);
 exec("./fieldTypes/buttonField." @ $TorqueScriptFileExtension);
+exec("./fieldTypes/toggleControlButton." @ $TorqueScriptFileExtension);

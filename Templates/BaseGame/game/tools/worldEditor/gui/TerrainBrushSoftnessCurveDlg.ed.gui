@@ -228,5 +228,5 @@ function TerrainBrushSoftnessCurveDlg::onOk( %this )
 function TerrainBrushSoftnessCurveDlg::resetCurve( %this )
 {
    %curve = %this-->FilterCurveCtrl;
-   %curve.identity();
+   %curve.resetFiltering();
 }

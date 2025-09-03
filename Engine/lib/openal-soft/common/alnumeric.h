@@ -1,17 +1,19 @@
 #ifndef AL_NUMERIC_H
 #define AL_NUMERIC_H
 
+#include "config_simd.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <iterator>
+#include <string_view>
 #include <type_traits>
 #ifdef HAVE_INTRIN_H
 #include <intrin.h>
 #endif
-#ifdef HAVE_SSE_INTRINSICS
+#if HAVE_SSE_INTRINSICS
 #include <xmmintrin.h>
 #endif
 
@@ -29,19 +31,27 @@ constexpr auto operator "" _uz(unsigned long long n) noexcept { return static_ca
 constexpr auto operator "" _zu(unsigned long long n) noexcept { return static_cast<std::size_t>(n); }
 
 
-constexpr auto GetCounterSuffix(size_t count) noexcept -> const char*
+template<typename T, std::enable_if_t<std::is_integral_v<T>,bool> = true>
+constexpr auto as_unsigned(T value) noexcept
 {
-    auto &suffix = (((count%100)/10) == 1) ? "th" :
-        ((count%10) == 1) ? "st" :
-        ((count%10) == 2) ? "nd" :
-        ((count%10) == 3) ? "rd" : "th";
-    return std::data(suffix);
+    using UT = std::make_unsigned_t<T>;
+    return static_cast<UT>(value);
 }
 
 
-constexpr inline float lerpf(float val1, float val2, float mu) noexcept
+constexpr auto GetCounterSuffix(size_t count) noexcept -> std::string_view
+{
+    using namespace std::string_view_literals;
+    return (((count%100)/10) == 1) ? "th"sv :
+        ((count%10) == 1) ? "st"sv :
+        ((count%10) == 2) ? "nd"sv :
+        ((count%10) == 3) ? "rd"sv : "th"sv;
+}
+
+
+constexpr auto lerpf(float val1, float val2, float mu) noexcept -> float
 { return val1 + (val2-val1)*mu; }
-constexpr inline double lerpd(double val1, double val2, double mu) noexcept
+constexpr auto lerpd(double val1, double val2, double mu) noexcept -> double
 { return val1 + (val2-val1)*mu; }
 
 
@@ -84,7 +94,7 @@ constexpr T RoundUp(T value, al::type_identity_t<T> r) noexcept
  */
 inline int fastf2i(float f) noexcept
 {
-#if defined(HAVE_SSE_INTRINSICS)
+#if HAVE_SSE_INTRINSICS
     return _mm_cvt_ss2si(_mm_set_ss(f));
 
 #elif defined(_MSC_VER) && defined(_M_IX86_FP) && _M_IX86_FP == 0
@@ -112,7 +122,7 @@ inline unsigned int fastf2u(float f) noexcept
 /** Converts float-to-int using standard behavior (truncation). */
 inline int float2int(float f) noexcept
 {
-#if defined(HAVE_SSE_INTRINSICS)
+#if HAVE_SSE_INTRINSICS
     return _mm_cvtt_ss2si(_mm_set_ss(f));
 
 #elif (defined(_MSC_VER) && defined(_M_IX86_FP) && _M_IX86_FP == 0) \
@@ -143,7 +153,7 @@ inline unsigned int float2uint(float f) noexcept
 /** Converts double-to-int using standard behavior (truncation). */
 inline int double2int(double d) noexcept
 {
-#if defined(HAVE_SSE_INTRINSICS)
+#if HAVE_SSE_INTRINSICS
     return _mm_cvttsd_si32(_mm_set_sd(d));
 
 #elif (defined(_MSC_VER) && defined(_M_IX86_FP) && _M_IX86_FP < 2) \
@@ -241,7 +251,7 @@ inline float level_mb_to_gain(float x)
 // Converts gain to level (mB).
 inline float gain_to_level_mb(float x)
 {
-    if (x <= 0.0f)
+    if(x <= 1e-05f)
         return -10'000.0f;
     return std::max(std::log10(x) * 2'000.0f, -10'000.0f);
 }

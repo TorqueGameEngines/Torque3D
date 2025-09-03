@@ -15,6 +15,7 @@
 #include "AL/alc.h"
 #include "AL/al.h"
 
+#include "albit.h"
 #include "alstring.h"
 #include "opthelpers.h"
 #include "strutils.h"
@@ -37,13 +38,13 @@ void AddModule(HMODULE module, const std::wstring_view name)
     {
         if(drv->Module == module)
         {
-            TRACE("Skipping already-loaded module %p\n", decltype(std::declval<void*>()){module});
+            TRACE("Skipping already-loaded module {}", decltype(std::declval<void*>()){module});
             FreeLibrary(module);
             return;
         }
         if(drv->Name == name)
         {
-            TRACE("Skipping similarly-named module %.*ls\n", al::sizei(name), name.data());
+            TRACE("Skipping similarly-named module {}", wstr_to_utf8(name));
             FreeLibrary(module);
             return;
         }
@@ -55,7 +56,7 @@ void AddModule(HMODULE module, const std::wstring_view name)
             { return al::case_compare(name, accept) == 0; });
         if(iter == gAcceptList.cend())
         {
-            TRACE("%.*ls not found in ALROUTER_ACCEPT, skipping\n", al::sizei(name), name.data());
+            TRACE("{} not found in ALROUTER_ACCEPT, skipping", wstr_to_utf8(name));
             FreeLibrary(module);
             return;
         }
@@ -67,7 +68,7 @@ void AddModule(HMODULE module, const std::wstring_view name)
             { return al::case_compare(name, accept) == 0; });
         if(iter != gRejectList.cend())
         {
-            TRACE("%.*ls found in ALROUTER_REJECT, skipping\n", al::sizei(name), name.data());
+            TRACE("{} found in ALROUTER_REJECT, skipping", wstr_to_utf8(name));
             FreeLibrary(module);
             return;
         }
@@ -83,12 +84,11 @@ void AddModule(HMODULE module, const std::wstring_view name)
         auto ptr = GetProcAddress(module, fname);
         if(!ptr)
         {
-            ERR("Failed to find entry point for %s in %.*ls\n", fname, al::sizei(name),
-                name.data());
+            ERR("Failed to find entry point for {} in {}", fname, wstr_to_utf8(name));
             return false;
         }
 
-        func = reinterpret_cast<func_t>(reinterpret_cast<void*>(ptr));
+        func = al::bit_cast<func_t>(ptr);
         return true;
     };
 #define LOAD_PROC(x) loadok &= do_load(newdrv.x, #x)
@@ -181,12 +181,11 @@ void AddModule(HMODULE module, const std::wstring_view name)
         newdrv.alcGetIntegerv(nullptr, ALC_MAJOR_VERSION, 1, &alc_ver[0]);
         newdrv.alcGetIntegerv(nullptr, ALC_MINOR_VERSION, 1, &alc_ver[1]);
         if(newdrv.alcGetError(nullptr) == ALC_NO_ERROR)
-            newdrv.ALCVer = MAKE_ALC_VER(alc_ver[0], alc_ver[1]);
+            newdrv.ALCVer = MakeALCVer(alc_ver[0], alc_ver[1]);
         else
         {
-            WARN("Failed to query ALC version for %.*ls, assuming 1.0\n", al::sizei(name),
-                name.data());
-            newdrv.ALCVer = MAKE_ALC_VER(1, 0);
+            WARN("Failed to query ALC version for {}, assuming 1.0", wstr_to_utf8(name));
+            newdrv.ALCVer = MakeALCVer(1, 0);
         }
 
         auto do_load2 = [module,name](auto &func, const char *fname) -> void
@@ -194,10 +193,10 @@ void AddModule(HMODULE module, const std::wstring_view name)
             using func_t = std::remove_reference_t<decltype(func)>;
             auto ptr = GetProcAddress(module, fname);
             if(!ptr)
-                WARN("Failed to find optional entry point for %s in %.*ls\n", fname,
-                    al::sizei(name), name.data());
+                WARN("Failed to find optional entry point for {} in {}", fname,
+                    wstr_to_utf8(name));
             else
-                func = reinterpret_cast<func_t>(reinterpret_cast<void*>(ptr));
+                func = al::bit_cast<func_t>(ptr);
         };
 #define LOAD_PROC(x) do_load2(newdrv.x, #x)
         LOAD_PROC(alBufferf);
@@ -220,8 +219,7 @@ void AddModule(HMODULE module, const std::wstring_view name)
             auto ptr = newdrv.alcGetProcAddress(nullptr, fname);
             if(!ptr)
             {
-                ERR("Failed to find entry point for %s in %.*ls\n", fname, al::sizei(name),
-                    name.data());
+                ERR("Failed to find entry point for {} in {}", fname, wstr_to_utf8(name));
                 return false;
             }
 
@@ -242,13 +240,13 @@ void AddModule(HMODULE module, const std::wstring_view name)
         DriverList.pop_back();
         return;
     }
-    TRACE("Loaded module %p, %.*ls, ALC %d.%d\n", decltype(std::declval<void*>()){module},
-        al::sizei(name), name.data(), newdrv.ALCVer>>8, newdrv.ALCVer&255);
+    TRACE("Loaded module {}, {}, ALC {}.{}", decltype(std::declval<void*>()){module},
+        wstr_to_utf8(name), newdrv.ALCVer>>8, newdrv.ALCVer&255);
 }
 
 void SearchDrivers(const std::wstring_view path)
 {
-    TRACE("Searching for drivers in %.*ls...\n", al::sizei(path), path.data());
+    TRACE("Searching for drivers in {}...", wstr_to_utf8(path));
     std::wstring srchPath{path};
     srchPath += L"\\*oal.dll";
 
@@ -260,11 +258,11 @@ void SearchDrivers(const std::wstring_view path)
         srchPath = path;
         srchPath += L"\\";
         srchPath += std::data(fdata.cFileName);
-        TRACE("Found %ls\n", srchPath.c_str());
+        TRACE("Found {}", wstr_to_utf8(srchPath));
 
         HMODULE mod{LoadLibraryW(srchPath.c_str())};
         if(!mod)
-            WARN("Could not load %ls\n", srchPath.c_str());
+            WARN("Could not load {}", wstr_to_utf8(srchPath));
         else
             AddModule(mod, std::data(fdata.cFileName));
     } while(FindNextFileW(srchHdl, &fdata));
@@ -306,8 +304,12 @@ bool GetLoadedModuleDirectory(const WCHAR *name, std::wstring *moddir)
     return !moddir->empty();
 }
 
+} // namespace
+
 void LoadDriverList()
 {
+    TRACE("Initializing router v0.1-{} {}", ALSOFT_GIT_COMMIT_HASH, ALSOFT_GIT_BRANCH);
+
     if(auto list = al::getenv(L"ALROUTER_ACCEPT"))
     {
         std::wstring_view namelist{*list};
@@ -339,7 +341,7 @@ void LoadDriverList()
 
     std::wstring dll_path;
     if(GetLoadedModuleDirectory(L"OpenAL32.dll", &dll_path))
-        TRACE("Got DLL path %ls\n", dll_path.c_str());
+        TRACE("Got DLL path {}", wstr_to_utf8(dll_path));
 
     std::wstring cwd_path;
     if(DWORD pathlen{GetCurrentDirectoryW(0, nullptr)})
@@ -353,11 +355,11 @@ void LoadDriverList()
     if(!cwd_path.empty() && (cwd_path.back() == '\\' || cwd_path.back() == '/'))
         cwd_path.pop_back();
     if(!cwd_path.empty())
-        TRACE("Got current working directory %ls\n", cwd_path.c_str());
+        TRACE("Got current working directory {}", wstr_to_utf8(cwd_path));
 
     std::wstring proc_path;
     if(GetLoadedModuleDirectory(nullptr, &proc_path))
-        TRACE("Got proc path %ls\n", proc_path.c_str());
+        TRACE("Got proc path {}", wstr_to_utf8(proc_path));
 
     std::wstring sys_path;
     if(UINT pathlen{GetSystemDirectoryW(nullptr, 0)})
@@ -371,39 +373,55 @@ void LoadDriverList()
     if(!sys_path.empty() && (sys_path.back() == '\\' || sys_path.back() == '/'))
         sys_path.pop_back();
     if(!sys_path.empty())
-        TRACE("Got system path %ls\n", sys_path.c_str());
+        TRACE("Got system path {}", wstr_to_utf8(sys_path));
 
     /* Don't search the DLL's path if it is the same as the current working
      * directory, app's path, or system path (don't want to do duplicate
      * searches, or increase the priority of the app or system path).
      */
-    if(!dll_path.empty() &&
-       (cwd_path.empty() || dll_path != cwd_path) &&
-       (proc_path.empty() || dll_path != proc_path) &&
-       (sys_path.empty() || dll_path != sys_path))
+    if(!dll_path.empty() && (cwd_path.empty() || dll_path != cwd_path)
+        && (proc_path.empty() || dll_path != proc_path)
+        && (sys_path.empty() || dll_path != sys_path))
         SearchDrivers(dll_path);
-    if(!cwd_path.empty() &&
-       (proc_path.empty() || cwd_path != proc_path) &&
-       (sys_path.empty() || cwd_path != sys_path))
+    if(!cwd_path.empty() && (proc_path.empty() || cwd_path != proc_path)
+        && (sys_path.empty() || cwd_path != sys_path))
         SearchDrivers(cwd_path);
     if(!proc_path.empty() && (sys_path.empty() || proc_path != sys_path))
         SearchDrivers(proc_path);
     if(!sys_path.empty())
         SearchDrivers(sys_path);
-}
 
-} // namespace
+    /* Sort drivers that can enumerate device names to the front. */
+    static constexpr auto is_enumerable = [](DriverIfacePtr &drv)
+    {
+        return drv->ALCVer >= MakeALCVer(1, 1)
+            || drv->alcIsExtensionPresent(nullptr, "ALC_ENUMERATE_ALL_EXT")
+            || drv->alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
+    };
+    std::stable_partition(DriverList.begin(), DriverList.end(), is_enumerable);
+
+    /* HACK: rapture3d_oal.dll isn't likely to work if it's one distributed for
+     * specific games licensed to use it. It will enumerate a Rapture3D device
+     * but fail to open. This isn't much of a problem, the device just won't
+     * work for users not allowed to use it. But if it's the first in the list
+     * where it gets used for the default device, the default device will fail
+     * to open. Move it down so it's not used for the default device.
+     */
+    if(DriverList.size() > 1
+        && al::case_compare(DriverList.front()->Name, L"rapture3d_oal.dll") == 0)
+        std::swap(*DriverList.begin(), *(DriverList.begin()+1));
+}
 
 BOOL APIENTRY DllMain(HINSTANCE, DWORD reason, void*)
 {
     switch(reason)
     {
     case DLL_PROCESS_ATTACH:
-        if(auto logfname = al::getenv("ALROUTER_LOGFILE"))
+        if(auto logfname = al::getenv(L"ALROUTER_LOGFILE"))
         {
-            gsl::owner<std::FILE*> f{fopen(logfname->c_str(), "w")};
+            gsl::owner<std::FILE*> f{_wfopen(logfname->c_str(), L"w")};
             if(f == nullptr)
-                ERR("Could not open log file: %s\n", logfname->c_str());
+                ERR("Could not open log file: {}", wstr_to_utf8(*logfname));
             else
                 LogFile = f;
         }
@@ -412,16 +430,13 @@ BOOL APIENTRY DllMain(HINSTANCE, DWORD reason, void*)
             char *end = nullptr;
             long l{strtol(loglev->c_str(), &end, 0)};
             if(!end || *end != '\0')
-                ERR("Invalid log level value: %s\n", loglev->c_str());
+                ERR("Invalid log level value: {}", *loglev);
             else if(l < al::to_underlying(eLogLevel::None)
                 || l > al::to_underlying(eLogLevel::Trace))
-                ERR("Log level out of range: %s\n", loglev->c_str());
+                ERR("Log level out of range: {}", *loglev);
             else
                 LogLevel = static_cast<eLogLevel>(l);
         }
-        TRACE("Initializing router v0.1-%s %s\n", ALSOFT_GIT_COMMIT_HASH, ALSOFT_GIT_BRANCH);
-        LoadDriverList();
-
         break;
 
     case DLL_THREAD_ATTACH:

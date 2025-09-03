@@ -1,5 +1,6 @@
 
 #include "config.h"
+#include "config_simd.h"
 
 #include <algorithm>
 #include <array>
@@ -11,11 +12,10 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include <variant>
 
-#ifdef HAVE_SSE_INTRINSICS
+#if HAVE_SSE_INTRINSICS
 #include <xmmintrin.h>
-#elif defined(HAVE_NEON)
+#elif HAVE_NEON
 #include <arm_neon.h>
 #endif
 
@@ -171,7 +171,7 @@ constexpr size_t ConvolveUpdateSamples{ConvolveUpdateSize / 2};
 void apply_fir(al::span<float> dst, const al::span<const float> input, const al::span<const float,ConvolveUpdateSamples> filter)
 {
     auto src = input.begin();
-#ifdef HAVE_SSE_INTRINSICS
+#if HAVE_SSE_INTRINSICS
     std::generate(dst.begin(), dst.end(), [&src,filter]
     {
         __m128 r4{_mm_setzero_ps()};
@@ -189,7 +189,7 @@ void apply_fir(al::span<float> dst, const al::span<const float> input, const al:
         return _mm_cvtss_f32(r4);
     });
 
-#elif defined(HAVE_NEON)
+#elif HAVE_NEON
 
     std::generate(dst.begin(), dst.end(), [&src,filter]
     {
@@ -227,7 +227,7 @@ struct ConvolutionState final : public EffectState {
     al::vector<std::array<float,ConvolveUpdateSamples>,16> mFilter;
     al::vector<std::array<float,ConvolveUpdateSamples*2>,16> mOutput;
 
-    PFFFTSetup mFft{};
+    PFFFTSetup mFft;
     alignas(16) std::array<float,ConvolveUpdateSize> mFftBuffer{};
     alignas(16) std::array<float,ConvolveUpdateSize> mFftWorkBuffer{};
 
@@ -237,7 +237,7 @@ struct ConvolutionState final : public EffectState {
     struct ChannelData {
         alignas(16) FloatBufferLine mBuffer{};
         float mHfScale{}, mLfScale{};
-        BandSplitter mFilter{};
+        BandSplitter mFilter;
         std::array<float,MaxOutputChannels> Current{};
         std::array<float,MaxOutputChannels> Target{};
     };
@@ -322,13 +322,13 @@ void ConvolutionState::deviceUpdate(const DeviceBase *device, const BufferStorag
      * called very infrequently, go ahead and use the polyphase resampler.
      */
     PPhaseResampler resampler;
-    if(device->Frequency != buffer->mSampleRate)
-        resampler.init(buffer->mSampleRate, device->Frequency);
+    if(device->mSampleRate != buffer->mSampleRate)
+        resampler.init(buffer->mSampleRate, device->mSampleRate);
     const auto resampledCount = static_cast<uint>(
-        (uint64_t{buffer->mSampleLen}*device->Frequency+(buffer->mSampleRate-1)) /
+        (uint64_t{buffer->mSampleLen}*device->mSampleRate+(buffer->mSampleRate-1)) /
         buffer->mSampleRate);
 
-    const BandSplitter splitter{device->mXOverFreq / static_cast<float>(device->Frequency)};
+    const BandSplitter splitter{device->mXOverFreq / static_cast<float>(device->mSampleRate)};
     for(auto &e : mChans)
         e.mFilter = splitter;
 

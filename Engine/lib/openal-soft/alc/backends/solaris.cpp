@@ -60,7 +60,7 @@ std::string solaris_driver{"/dev/audio"};
 
 
 struct SolarisBackend final : public BackendBase {
-    SolarisBackend(DeviceBase *device) noexcept : BackendBase{device} { }
+    explicit SolarisBackend(DeviceBase *device) noexcept : BackendBase{device} { }
     ~SolarisBackend() override;
 
     int mixerProc();
@@ -106,13 +106,13 @@ int SolarisBackend::mixerProc()
         {
             if(errno == EINTR || errno == EAGAIN)
                 continue;
-            ERR("poll failed: %s\n", strerror(errno));
-            mDevice->handleDisconnect("Failed to wait for playback buffer: %s", strerror(errno));
+            ERR("poll failed: {}", strerror(errno));
+            mDevice->handleDisconnect("Failed to wait for playback buffer: {}", strerror(errno));
             break;
         }
         else if(pret == 0)
         {
-            WARN("poll timeout\n");
+            WARN("poll timeout");
             continue;
         }
 
@@ -126,8 +126,8 @@ int SolarisBackend::mixerProc()
             {
                 if(errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR)
                     continue;
-                ERR("write failed: %s\n", strerror(errno));
-                mDevice->handleDisconnect("Failed to write playback samples: %s", strerror(errno));
+                ERR("write failed: {}", strerror(errno));
+                mDevice->handleDisconnect("Failed to write playback samples: {}", strerror(errno));
                 break;
             }
 
@@ -144,19 +144,19 @@ void SolarisBackend::open(std::string_view name)
     if(name.empty())
         name = GetDefaultName();
     else if(name != GetDefaultName())
-        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%.*s\" not found",
-            al::sizei(name), name.data()};
+        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"{}\" not found",
+            name};
 
     int fd{::open(solaris_driver.c_str(), O_WRONLY)};
     if(fd == -1)
-        throw al::backend_exception{al::backend_error::NoDevice, "Could not open %s: %s",
-            solaris_driver.c_str(), strerror(errno)};
+        throw al::backend_exception{al::backend_error::NoDevice, "Could not open {}: {}",
+            solaris_driver, strerror(errno)};
 
     if(mFd != -1)
         ::close(mFd);
     mFd = fd;
 
-    mDevice->DeviceName = name;
+    mDeviceName = name;
 }
 
 bool SolarisBackend::reset()
@@ -164,7 +164,7 @@ bool SolarisBackend::reset()
     audio_info_t info;
     AUDIO_INITINFO(&info);
 
-    info.play.sample_rate = mDevice->Frequency;
+    info.play.sample_rate = mDevice->mSampleRate;
     info.play.channels = mDevice->channelsFromFmt();
     switch(mDevice->FmtType)
     {
@@ -187,11 +187,11 @@ bool SolarisBackend::reset()
         info.play.encoding = AUDIO_ENCODING_LINEAR;
         break;
     }
-    info.play.buffer_size = mDevice->BufferSize * mDevice->frameSizeFromFmt();
+    info.play.buffer_size = mDevice->mBufferSize * mDevice->frameSizeFromFmt();
 
     if(ioctl(mFd, AUDIO_SETINFO, &info) < 0)
     {
-        ERR("ioctl failed: %s\n", strerror(errno));
+        ERR("ioctl failed: {}", strerror(errno));
         return false;
     }
 
@@ -203,7 +203,7 @@ bool SolarisBackend::reset()
             mDevice->FmtChans = DevFmtMono;
         else
             throw al::backend_exception{al::backend_error::DeviceError,
-                "Got %u device channels", info.play.channels};
+                "Got {} device channels", info.play.channels};
     }
 
     if(info.play.precision == 8 && info.play.encoding == AUDIO_ENCODING_LINEAR8)
@@ -216,20 +216,20 @@ bool SolarisBackend::reset()
         mDevice->FmtType = DevFmtInt;
     else
     {
-        ERR("Got unhandled sample type: %d (0x%x)\n", info.play.precision, info.play.encoding);
+        ERR("Got unhandled sample type: {} ({:#x})", info.play.precision, info.play.encoding);
         return false;
     }
 
     uint frame_size{mDevice->bytesFromFmt() * info.play.channels};
     mFrameStep = info.play.channels;
-    mDevice->Frequency = info.play.sample_rate;
-    mDevice->BufferSize = info.play.buffer_size / frame_size;
+    mDevice->mSampleRate = info.play.sample_rate;
+    mDevice->mBufferSize = info.play.buffer_size / frame_size;
     /* How to get the actual period size/count? */
-    mDevice->UpdateSize = mDevice->BufferSize / 2;
+    mDevice->mUpdateSize = mDevice->mBufferSize / 2;
 
     setDefaultChannelOrder();
 
-    mBuffer.resize(mDevice->UpdateSize * size_t{frame_size});
+    mBuffer.resize(mDevice->mUpdateSize * size_t{frame_size});
     std::fill(mBuffer.begin(), mBuffer.end(), std::byte{});
 
     return true;
@@ -239,11 +239,11 @@ void SolarisBackend::start()
 {
     try {
         mKillNow.store(false, std::memory_order_release);
-        mThread = std::thread{std::mem_fn(&SolarisBackend::mixerProc), this};
+        mThread = std::thread{&SolarisBackend::mixerProc, this};
     }
     catch(std::exception& e) {
         throw al::backend_exception{al::backend_error::DeviceError,
-            "Failed to start mixing thread: %s", e.what()};
+            "Failed to start mixing thread: {}", e.what()};
     }
 }
 
@@ -254,7 +254,7 @@ void SolarisBackend::stop()
     mThread.join();
 
     if(ioctl(mFd, AUDIO_DRAIN) < 0)
-        ERR("Error draining device: %s\n", strerror(errno));
+        ERR("Error draining device: {}", strerror(errno));
 }
 
 } // namespace

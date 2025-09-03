@@ -3,23 +3,24 @@
 
 #include <variant>
 
+#include "AL/alc.h"
 #include "AL/al.h"
 
-#include "al/error.h"
 #include "core/effects/base.h"
+#include "opthelpers.h"
 
 #define DECL_HANDLER(N, T)                                                    \
 struct N {                                                                    \
     using prop_type = T;                                                      \
                                                                               \
-    static void SetParami(prop_type &props, ALenum param, int val);           \
-    static void SetParamiv(prop_type &props, ALenum param, const int *vals);  \
-    static void SetParamf(prop_type &props, ALenum param, float val);         \
-    static void SetParamfv(prop_type &props, ALenum param, const float *vals);\
-    static void GetParami(const prop_type &props, ALenum param, int *val);    \
-    static void GetParamiv(const prop_type &props, ALenum param, int *vals);  \
-    static void GetParamf(const prop_type &props, ALenum param, float *val);  \
-    static void GetParamfv(const prop_type &props, ALenum param, float *vals);\
+    static void SetParami(ALCcontext *context, prop_type &props, ALenum param, int val);           \
+    static void SetParamiv(ALCcontext *context, prop_type &props, ALenum param, const int *vals);  \
+    static void SetParamf(ALCcontext *context, prop_type &props, ALenum param, float val);         \
+    static void SetParamfv(ALCcontext *context, prop_type &props, ALenum param, const float *vals);\
+    static void GetParami(ALCcontext *context, const prop_type &props, ALenum param, int *val);    \
+    static void GetParamiv(ALCcontext *context, const prop_type &props, ALenum param, int *vals);  \
+    static void GetParamf(ALCcontext *context, const prop_type &props, ALenum param, float *val);  \
+    static void GetParamfv(ALCcontext *context, const prop_type &props, ALenum param, float *vals);\
 };
 DECL_HANDLER(NullEffectHandler, std::monostate)
 DECL_HANDLER(ReverbEffectHandler, ReverbProps)
@@ -41,26 +42,23 @@ DECL_HANDLER(ConvolutionEffectHandler, ConvolutionProps)
 #undef DECL_HANDLER
 
 
-using effect_exception = al::context_error;
-
-
 /* Default properties for the given effect types. */
-extern const EffectProps NullEffectProps;
-extern const EffectProps ReverbEffectProps;
-extern const EffectProps StdReverbEffectProps;
-extern const EffectProps AutowahEffectProps;
-extern const EffectProps ChorusEffectProps;
-extern const EffectProps CompressorEffectProps;
-extern const EffectProps DistortionEffectProps;
-extern const EffectProps EchoEffectProps;
-extern const EffectProps EqualizerEffectProps;
-extern const EffectProps FlangerEffectProps;
-extern const EffectProps FshifterEffectProps;
-extern const EffectProps ModulatorEffectProps;
-extern const EffectProps PshifterEffectProps;
-extern const EffectProps VmorpherEffectProps;
-extern const EffectProps DedicatedDialogEffectProps;
-extern const EffectProps DedicatedLfeEffectProps;
-extern const EffectProps ConvolutionEffectProps;
+DECL_HIDDEN extern const EffectProps NullEffectProps;
+DECL_HIDDEN extern const EffectProps ReverbEffectProps;
+DECL_HIDDEN extern const EffectProps StdReverbEffectProps;
+DECL_HIDDEN extern const EffectProps AutowahEffectProps;
+DECL_HIDDEN extern const EffectProps ChorusEffectProps;
+DECL_HIDDEN extern const EffectProps CompressorEffectProps;
+DECL_HIDDEN extern const EffectProps DistortionEffectProps;
+DECL_HIDDEN extern const EffectProps EchoEffectProps;
+DECL_HIDDEN extern const EffectProps EqualizerEffectProps;
+DECL_HIDDEN extern const EffectProps FlangerEffectProps;
+DECL_HIDDEN extern const EffectProps FshifterEffectProps;
+DECL_HIDDEN extern const EffectProps ModulatorEffectProps;
+DECL_HIDDEN extern const EffectProps PshifterEffectProps;
+DECL_HIDDEN extern const EffectProps VmorpherEffectProps;
+DECL_HIDDEN extern const EffectProps DedicatedDialogEffectProps;
+DECL_HIDDEN extern const EffectProps DedicatedLfeEffectProps;
+DECL_HIDDEN extern const EffectProps ConvolutionEffectProps;
 
 #endif /* AL_EFFECTS_EFFECTS_H */

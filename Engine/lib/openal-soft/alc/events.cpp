@@ -3,9 +3,11 @@
 
 #include "events.h"
 
+#include "alnumeric.h"
 #include "alspan.h"
 #include "core/logging.h"
 #include "device.h"
+#include "fmt/core.h"
 
 
 namespace {
@@ -19,7 +21,7 @@ ALCenum EnumFromEventType(const alc::EventType type)
     case alc::EventType::DeviceRemoved: return ALC_EVENT_TYPE_DEVICE_REMOVED_SOFT;
     case alc::EventType::Count: break;
     }
-    throw std::runtime_error{"Invalid EventType: "+std::to_string(al::to_underlying(type))};
+    throw std::runtime_error{fmt::format("Invalid EventType: {}", int{al::to_underlying(type)})};
 }
 
 } // namespace
@@ -74,7 +76,7 @@ FORCE_ALIGN ALCboolean ALC_APIENTRY alcEventControlSOFT(ALCsizei count, const AL
         auto etype = alc::GetEventType(type);
         if(!etype)
         {
-            WARN("Invalid event type: 0x%04x\n", type);
+            WARN("Invalid event type: {:#04x}", as_unsigned(type));
             alcSetError(nullptr, ALC_INVALID_ENUM);
             return ALC_FALSE;
         }

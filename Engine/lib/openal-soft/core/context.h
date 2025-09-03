@@ -1,6 +1,8 @@
 #ifndef CORE_CONTEXT_H
 #define CORE_CONTEXT_H
 
+#include "config.h"
+
 #include <array>
 #include <atomic>
 #include <bitset>
@@ -9,7 +11,6 @@
 #include <thread>
 #include <vector>
 
-#include "almalloc.h"
 #include "alsem.h"
 #include "alspan.h"
 #include "async_event.h"
@@ -53,19 +54,22 @@ struct ContextProps {
     float DopplerFactor;
     float DopplerVelocity;
     float SpeedOfSound;
+#if ALSOFT_EAX
+    float DistanceFactor;
+#endif
     bool SourceDistanceModel;
     DistanceModel mDistanceModel;
 
-    std::atomic<ContextProps*> next;
+    std::atomic<ContextProps*> next{};
 };
 
 struct ContextParams {
     /* Pointer to the most recent property values that are awaiting an update. */
     std::atomic<ContextProps*> ContextUpdate{nullptr};
 
-    alu::Vector Position{};
+    alu::Vector Position;
     alu::Matrix Matrix{alu::Matrix::Identity()};
-    alu::Vector Velocity{};
+    alu::Vector Velocity;
 
     float Gain{1.0f};
     float MetersPerUnit{1.0f};
@@ -113,7 +117,7 @@ struct ContextBase {
     ContextParams mParams;
 
     using VoiceArray = al::FlexArray<Voice*>;
-    al::atomic_unique_ptr<VoiceArray> mVoices{};
+    al::atomic_unique_ptr<VoiceArray> mVoices;
     std::atomic<size_t> mActiveVoiceCount{};
 
     void allocVoices(size_t addcount);
@@ -172,10 +176,10 @@ struct ContextBase {
     std::vector<ContextPropsCluster> mContextPropClusters;
 
 
-    ContextBase(DeviceBase *device);
+    explicit ContextBase(DeviceBase *device);
     ContextBase(const ContextBase&) = delete;
     ContextBase& operator=(const ContextBase&) = delete;
-    ~ContextBase();
+    virtual ~ContextBase();
 };
 
 #endif /* CORE_CONTEXT_H */

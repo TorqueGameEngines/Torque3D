@@ -7,6 +7,7 @@
 
 #include "alspan.h"
 #include "bufferline.h"
+#include "opthelpers.h"
 
 
 inline constexpr std::size_t UhjLength256{256};
@@ -29,14 +30,10 @@ struct UhjAllPassFilter {
         std::array<float,2> z{};
     };
     std::array<AllPassState,4> mState;
-
-    void processOne(const al::span<const float,4> coeffs, float x);
-    void process(const al::span<const float,4> coeffs, const al::span<const float> src,
-        const bool update, const al::span<float> dst);
 };
 
 
-struct UhjEncoderBase {
+struct SIMDALIGN UhjEncoderBase {
     UhjEncoderBase() = default;
     UhjEncoderBase(const UhjEncoderBase&) = delete;
     UhjEncoderBase(UhjEncoderBase&&) = delete;
@@ -120,7 +117,7 @@ struct UhjEncoderIIR final : public UhjEncoderBase {
 };
 
 
-struct DecoderBase {
+struct SIMDALIGN DecoderBase {
     static constexpr std::size_t sMaxPadding{256};
 
     /* For 2-channel UHJ, shelf filters should use these LF responses. */

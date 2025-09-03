@@ -10,7 +10,6 @@
 #include <optional>
 #include <string>
 
-#include "almalloc.h"
 #include "alspan.h"
 #include "bufferline.h"
 #include "buffer_storage.h"
@@ -20,6 +19,7 @@
 #include "filters/splitter.h"
 #include "mixer/defs.h"
 #include "mixer/hrtfdefs.h"
+#include "opthelpers.h"
 #include "resampler_limits.h"
 #include "uhjfilter.h"
 #include "vector.h"
@@ -102,7 +102,10 @@ struct VoiceBufferItem {
     uint mLoopStart{0u};
     uint mLoopEnd{0u};
 
-    al::span<std::byte> mSamples{};
+    al::span<std::byte> mSamples;
+
+protected:
+    ~VoiceBufferItem() = default;
 };
 
 
@@ -180,7 +183,7 @@ enum : uint {
     VoiceFlagCount
 };
 
-struct Voice {
+struct SIMDALIGN Voice {
     enum State {
         Stopped,
         Playing,
@@ -233,9 +236,9 @@ struct Voice {
 
     ResamplerFunc mResampler{};
 
-    InterpState mResampleState{};
+    InterpState mResampleState;
 
-    std::bitset<VoiceFlagCount> mFlags{};
+    std::bitset<VoiceFlagCount> mFlags;
     uint mNumCallbackBlocks{0};
     uint mCallbackBlockBase{0};
 
@@ -277,6 +280,6 @@ struct Voice {
     static void InitMixer(std::optional<std::string> resopt);
 };
 
-inline Resampler ResamplerDefault{Resampler::Gaussian};
+inline Resampler ResamplerDefault{Resampler::Spline};
 
 #endif /* CORE_VOICE_H */

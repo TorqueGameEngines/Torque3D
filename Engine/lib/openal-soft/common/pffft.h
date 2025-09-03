@@ -96,9 +96,8 @@ enum pffft_direction_t { PFFFT_FORWARD, PFFFT_BACKWARD };
 /* type of transform */
 enum pffft_transform_t { PFFFT_REAL, PFFFT_COMPLEX };
 
-void pffft_destroy_setup(gsl::owner<PFFFT_Setup*> setup) noexcept;
 struct PFFFTSetupDeleter {
-    void operator()(gsl::owner<PFFFT_Setup*> setup) const noexcept { pffft_destroy_setup(setup); }
+    void operator()(gsl::owner<PFFFT_Setup*> setup) const noexcept;
 };
 using PFFFTSetupPtr = std::unique_ptr<PFFFT_Setup,PFFFTSetupDeleter>;
 
@@ -175,7 +174,7 @@ void pffft_zconvolve_accumulate(const PFFFT_Setup *setup, const float *dft_a, co
 
 
 struct PFFFTSetup {
-    PFFFTSetupPtr mSetup{};
+    PFFFTSetupPtr mSetup;
 
     PFFFTSetup() = default;
     PFFFTSetup(const PFFFTSetup&) = delete;

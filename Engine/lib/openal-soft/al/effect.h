@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <string_view>
 #include <utility>
+#include <variant>
 
 #include "AL/al.h"
 #include "AL/alc.h"
@@ -43,7 +44,7 @@ struct EffectList {
     ALuint type;
     ALenum val;
 };
-extern const std::array<EffectList,16> gEffectList;
+DECL_HIDDEN extern const std::array<EffectList,16> gEffectList;
 
 using EffectHandlerVariant = std::variant<NullEffectHandler,ReverbEffectHandler,
     StdReverbEffectHandler,AutowahEffectHandler,ChorusEffectHandler,CompressorEffectHandler,
@@ -56,7 +57,7 @@ struct ALeffect {
     ALenum type{AL_EFFECT_NULL};
 
     EffectHandlerVariant PropsVariant;
-    EffectProps Props{};
+    EffectProps Props;
 
     /* Self ID */
     ALuint id{0u};

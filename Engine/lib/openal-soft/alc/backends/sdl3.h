@@ -1,9 +1,9 @@
-#ifndef BACKENDS_PORTAUDIO_H
-#define BACKENDS_PORTAUDIO_H
+#ifndef BACKENDS_SDL3_H
+#define BACKENDS_SDL3_H
 
 #include "base.h"
 
-struct PortBackendFactory final : public BackendFactory {
+struct SDL3BackendFactory final : public BackendFactory {
 public:
     auto init() -> bool final;
 
@@ -16,4 +16,4 @@ public:
     static auto getFactory() -> BackendFactory&;
 };
 
-#endif /* BACKENDS_PORTAUDIO_H */
+#endif /* BACKENDS_SDL3_H */

@@ -20,24 +20,19 @@
 
 #include "config.h"
 
-#include "error.h"
-
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
-#include <atomic>
 #include <csignal>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <limits>
 #include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "AL/al.h"
 #include "AL/alc.h"
@@ -45,53 +40,19 @@
 #include "al/debug.h"
 #include "alc/alconfig.h"
 #include "alc/context.h"
-#include "alc/inprogext.h"
+#include "alnumeric.h"
+#include "core/except.h"
 #include "core/logging.h"
 #include "opthelpers.h"
 #include "strutils.h"
 
 
-namespace al {
-context_error::context_error(ALenum code, const char *msg, ...) : mErrorCode{code}
+void ALCcontext::setErrorImpl(ALenum errorCode, const fmt::string_view fmt, fmt::format_args args)
 {
-    /* NOLINTBEGIN(*-array-to-pointer-decay) */
-    std::va_list args;
-    va_start(args, msg);
-    setMessage(msg, args);
-    va_end(args);
-    /* NOLINTEND(*-array-to-pointer-decay) */
-}
-context_error::~context_error() = default;
-} /* namespace al */
+    const auto msg = fmt::vformat(fmt, std::move(args));
 
-void ALCcontext::setError(ALenum errorCode, const char *msg, ...)
-{
-    auto message = std::vector<char>(256);
-
-    /* NOLINTBEGIN(*-array-to-pointer-decay) */
-    std::va_list args, args2;
-    va_start(args, msg);
-    va_copy(args2, args);
-    int msglen{std::vsnprintf(message.data(), message.size(), msg, args)};
-    if(msglen >= 0 && static_cast<size_t>(msglen) >= message.size())
-    {
-        message.resize(static_cast<size_t>(msglen) + 1u);
-        msglen = std::vsnprintf(message.data(), message.size(), msg, args2);
-    }
-    va_end(args2);
-    va_end(args);
-    /* NOLINTEND(*-array-to-pointer-decay) */
-
-    if(msglen >= 0)
-        msg = message.data();
-    else
-    {
-        msg = "<internal error constructing message>";
-        msglen = static_cast<int>(strlen(msg));
-    }
-
-    WARN("Error generated on context %p, code 0x%04x, \"%s\"\n",
-        decltype(std::declval<void*>()){this}, errorCode, msg);
+    WARN("Error generated on context {}, code {:#04x}, \"{}\"",
+        decltype(std::declval<void*>()){this}, as_unsigned(errorCode), msg);
     if(TrapALError)
     {
 #ifdef _WIN32
@@ -106,9 +67,17 @@ void ALCcontext::setError(ALenum errorCode, const char *msg, ...)
     if(mLastThreadError.get() == AL_NO_ERROR)
         mLastThreadError.set(errorCode);
 
-    debugMessage(DebugSource::API, DebugType::Error, 0, DebugSeverity::High,
-        {msg, static_cast<uint>(msglen)});
+    debugMessage(DebugSource::API, DebugType::Error, static_cast<ALuint>(errorCode),
+        DebugSeverity::High, msg);
 }
+
+void ALCcontext::throw_error_impl(ALenum errorCode, const fmt::string_view fmt,
+    fmt::format_args args)
+{
+    setErrorImpl(errorCode, fmt, std::move(args));
+    throw al::base_exception{};
+}
+
 
 /* Special-case alGetError since it (potentially) raises a debug signal and
  * returns a non-default value for a null context.
@@ -125,17 +94,20 @@ AL_API auto AL_APIENTRY alGetError() noexcept -> ALenum
             optstr = ConfigValueStr({}, "game_compat", optname);
         if(optstr)
         {
-            char *end{};
-            auto value = std::strtoul(optstr->c_str(), &end, 0);
-            if(end && *end == '\0' && value <= std::numeric_limits<ALenum>::max())
-                return static_cast<ALenum>(value);
-            ERR("Invalid default error value: \"%s\"", optstr->c_str());
+            try {
+                auto idx = 0_uz;
+                auto value = std::stoi(*optstr, &idx, 0);
+                if(idx >= optstr->size() || std::isspace(optstr->at(idx)))
+                    return static_cast<ALenum>(value);
+            } catch(...) {
+            }
+            ERR("Invalid default error value: \"{}\"", *optstr);
         }
         return AL_INVALID_OPERATION;
     };
     static const ALenum deferror{get_value("__ALSOFT_DEFAULT_ERROR", "default-error")};
 
-    WARN("Querying error state on null context (implicitly 0x%04x)\n", deferror);
+    WARN("Querying error state on null context (implicitly {:#04x})", as_unsigned(deferror));
     if(TrapALError)
     {
 #ifdef _WIN32

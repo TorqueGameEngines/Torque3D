@@ -24,7 +24,7 @@ using namespace std::string_view_literals;
 
 
 struct OboePlayback final : public BackendBase, public oboe::AudioStreamCallback {
-    OboePlayback(DeviceBase *device) : BackendBase{device} { }
+    explicit OboePlayback(DeviceBase *device) : BackendBase{device} { }
 
     oboe::ManagedStream mStream;
 
@@ -54,8 +54,9 @@ oboe::DataCallbackResult OboePlayback::onAudioReady(oboe::AudioStream *oboeStrea
 void OboePlayback::onErrorAfterClose(oboe::AudioStream*, oboe::Result error)
 {
     if(error == oboe::Result::ErrorDisconnected)
-        mDevice->handleDisconnect("Oboe AudioStream was disconnected: %s", oboe::convertToText(error));
-    TRACE("Error was %s", oboe::convertToText(error));
+        mDevice->handleDisconnect("Oboe AudioStream was disconnected: {}",
+            oboe::convertToText(error));
+    TRACE("Error was {}", oboe::convertToText(error));
 }
 
 void OboePlayback::open(std::string_view name)
@@ -63,8 +64,8 @@ void OboePlayback::open(std::string_view name)
     if(name.empty())
         name = GetDeviceName();
     else if(name != GetDeviceName())
-        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%.*s\" not found",
-            al::sizei(name), name.data()};
+        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"{}\" not found",
+            name};
 
     /* Open a basic output stream, just to ensure it can work. */
     oboe::ManagedStream stream;
@@ -72,10 +73,10 @@ void OboePlayback::open(std::string_view name)
         ->setPerformanceMode(oboe::PerformanceMode::LowLatency)
         ->openManagedStream(stream)};
     if(result != oboe::Result::OK)
-        throw al::backend_exception{al::backend_error::DeviceError, "Failed to create stream: %s",
+        throw al::backend_exception{al::backend_error::DeviceError, "Failed to create stream: {}",
             oboe::convertToText(result)};
 
-    mDevice->DeviceName = name;
+    mDeviceName = name;
 }
 
 bool OboePlayback::reset()
@@ -95,7 +96,7 @@ bool OboePlayback::reset()
     if(mDevice->Flags.test(FrequencyRequest))
     {
         builder.setSampleRateConversionQuality(oboe::SampleRateConversionQuality::High);
-        builder.setSampleRate(static_cast<int32_t>(mDevice->Frequency));
+        builder.setSampleRate(static_cast<int32_t>(mDevice->mSampleRate));
     }
     if(mDevice->Flags.test(ChannelsRequest))
     {
@@ -145,11 +146,11 @@ bool OboePlayback::reset()
         result = builder.openManagedStream(mStream);
     }
     if(result != oboe::Result::OK)
-        throw al::backend_exception{al::backend_error::DeviceError, "Failed to create stream: %s",
+        throw al::backend_exception{al::backend_error::DeviceError, "Failed to create stream: {}",
             oboe::convertToText(result)};
-    mStream->setBufferSizeInFrames(std::min(static_cast<int32_t>(mDevice->BufferSize),
+    mStream->setBufferSizeInFrames(std::min(static_cast<int32_t>(mDevice->mBufferSize),
         mStream->getBufferCapacityInFrames()));
-    TRACE("Got stream with properties:\n%s", oboe::convertToText(mStream.get()));
+    TRACE("Got stream with properties:\n{}", oboe::convertToText(mStream.get()));
 
     if(static_cast<uint>(mStream->getChannelCount()) != mDevice->channelsFromFmt())
     {
@@ -159,7 +160,7 @@ bool OboePlayback::reset()
             mDevice->FmtChans = DevFmtMono;
         else
             throw al::backend_exception{al::backend_error::DeviceError,
-                "Got unhandled channel count: %d", mStream->getChannelCount()};
+                "Got unhandled channel count: {}", mStream->getChannelCount()};
     }
     setDefaultWFXChannelOrder();
 
@@ -183,18 +184,18 @@ bool OboePlayback::reset()
     case oboe::AudioFormat::Unspecified:
     case oboe::AudioFormat::Invalid:
         throw al::backend_exception{al::backend_error::DeviceError,
-            "Got unhandled sample type: %s", oboe::convertToText(mStream->getFormat())};
+            "Got unhandled sample type: {}", oboe::convertToText(mStream->getFormat())};
     }
-    mDevice->Frequency = static_cast<uint32_t>(mStream->getSampleRate());
+    mDevice->mSampleRate = static_cast<uint32_t>(mStream->getSampleRate());
 
     /* Ensure the period size is no less than 10ms. It's possible for FramesPerCallback to be 0
      * indicating variable updates, but OpenAL should have a reasonable minimum update size set.
      * FramesPerBurst may not necessarily be correct, but hopefully it can act as a minimum
      * update size.
      */
-    mDevice->UpdateSize = std::max(mDevice->Frequency/100u,
+    mDevice->mUpdateSize = std::max(mDevice->mSampleRate/100u,
         static_cast<uint32_t>(mStream->getFramesPerBurst()));
-    mDevice->BufferSize = std::max(mDevice->UpdateSize*2u,
+    mDevice->mBufferSize = std::max(mDevice->mUpdateSize*2u,
         static_cast<uint32_t>(mStream->getBufferSizeInFrames()));
 
     return true;
@@ -204,7 +205,7 @@ void OboePlayback::start()
 {
     const oboe::Result result{mStream->start()};
     if(result != oboe::Result::OK)
-        throw al::backend_exception{al::backend_error::DeviceError, "Failed to start stream: %s",
+        throw al::backend_exception{al::backend_error::DeviceError, "Failed to start stream: {}",
             oboe::convertToText(result)};
 }
 
@@ -212,12 +213,12 @@ void OboePlayback::stop()
 {
     oboe::Result result{mStream->stop()};
     if(result != oboe::Result::OK)
-        ERR("Failed to stop stream: %s\n", oboe::convertToText(result));
+        ERR("Failed to stop stream: {}", oboe::convertToText(result));
 }
 
 
 struct OboeCapture final : public BackendBase, public oboe::AudioStreamCallback {
-    OboeCapture(DeviceBase *device) : BackendBase{device} { }
+    explicit OboeCapture(DeviceBase *device) : BackendBase{device} { }
 
     oboe::ManagedStream mStream;
 
@@ -246,8 +247,8 @@ void OboeCapture::open(std::string_view name)
     if(name.empty())
         name = GetDeviceName();
     else if(name != GetDeviceName())
-        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%.*s\" not found",
-            al::sizei(name), name.data()};
+        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"{}\" not found",
+            name};
 
     oboe::AudioStreamBuilder builder;
     builder.setDirection(oboe::Direction::Input)
@@ -255,7 +256,7 @@ void OboeCapture::open(std::string_view name)
         ->setSampleRateConversionQuality(oboe::SampleRateConversionQuality::High)
         ->setChannelConversionAllowed(true)
         ->setFormatConversionAllowed(true)
-        ->setSampleRate(static_cast<int32_t>(mDevice->Frequency))
+        ->setSampleRate(static_cast<int32_t>(mDevice->mSampleRate))
         ->setCallback(this);
     /* Only use mono or stereo at user request. There's no telling what
      * other counts may be inferred as.
@@ -276,7 +277,7 @@ void OboeCapture::open(std::string_view name)
     case DevFmtX7144:
     case DevFmtX3D71:
     case DevFmtAmbi3D:
-        throw al::backend_exception{al::backend_error::DeviceError, "%s capture not supported",
+        throw al::backend_exception{al::backend_error::DeviceError, "{} capture not supported",
             DevFmtChannelsString(mDevice->FmtChans)};
     }
 
@@ -301,28 +302,28 @@ void OboeCapture::open(std::string_view name)
     case DevFmtUShort:
     case DevFmtUInt:
         throw al::backend_exception{al::backend_error::DeviceError,
-            "%s capture samples not supported", DevFmtTypeString(mDevice->FmtType)};
+            "{} capture samples not supported", DevFmtTypeString(mDevice->FmtType)};
     }
 
     oboe::Result result{builder.openManagedStream(mStream)};
     if(result != oboe::Result::OK)
-        throw al::backend_exception{al::backend_error::DeviceError, "Failed to create stream: %s",
+        throw al::backend_exception{al::backend_error::DeviceError, "Failed to create stream: {}",
             oboe::convertToText(result)};
 
-    TRACE("Got stream with properties:\n%s", oboe::convertToText(mStream.get()));
+    TRACE("Got stream with properties:\n{}", oboe::convertToText(mStream.get()));
 
     /* Ensure a minimum ringbuffer size of 100ms. */
-    mRing = RingBuffer::Create(std::max(mDevice->BufferSize, mDevice->Frequency/10u),
+    mRing = RingBuffer::Create(std::max(mDevice->mBufferSize, mDevice->mSampleRate/10u),
         static_cast<uint32_t>(mStream->getBytesPerFrame()), false);
 
-    mDevice->DeviceName = name;
+    mDeviceName = name;
 }
 
 void OboeCapture::start()
 {
     const oboe::Result result{mStream->start()};
     if(result != oboe::Result::OK)
-        throw al::backend_exception{al::backend_error::DeviceError, "Failed to start stream: %s",
+        throw al::backend_exception{al::backend_error::DeviceError, "Failed to start stream: {}",
             oboe::convertToText(result)};
 }
 
@@ -330,7 +331,7 @@ void OboeCapture::stop()
 {
     const oboe::Result result{mStream->stop()};
     if(result != oboe::Result::OK)
-        ERR("Failed to stop stream: %s\n", oboe::convertToText(result));
+        ERR("Failed to stop stream: {}", oboe::convertToText(result));
 }
 
 uint OboeCapture::availableSamples()

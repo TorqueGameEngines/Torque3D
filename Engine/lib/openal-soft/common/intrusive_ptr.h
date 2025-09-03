@@ -15,6 +15,9 @@ template<typename T>
 class intrusive_ref {
     std::atomic<unsigned int> mRef{1u};
 
+protected:
+    ~intrusive_ref() = default;
+
 public:
     unsigned int add_ref() noexcept { return IncrementRef(mRef); }
     unsigned int dec_ref() noexcept
@@ -48,7 +51,7 @@ public:
 };
 
 
-template<typename T>
+template<typename T> /* NOLINTNEXTLINE(clazy-rule-of-three) False positive */
 class intrusive_ptr {
     T *mPtr{nullptr};
 
@@ -58,7 +61,7 @@ public:
     { if(mPtr) mPtr->add_ref(); }
     intrusive_ptr(intrusive_ptr&& rhs) noexcept : mPtr{rhs.mPtr}
     { rhs.mPtr = nullptr; }
-    intrusive_ptr(std::nullptr_t) noexcept { }
+    intrusive_ptr(std::nullptr_t) noexcept { } /* NOLINT(google-explicit-constructor) */
     explicit intrusive_ptr(T *ptr) noexcept : mPtr{ptr} { }
     ~intrusive_ptr() { if(mPtr) mPtr->dec_ref(); }
 

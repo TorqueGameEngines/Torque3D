@@ -18,6 +18,7 @@
 #include "devformat.h"
 #include "filters/nfc.h"
 #include "flexarray.h"
+#include "fmt/core.h"
 #include "intrusive_ptr.h"
 #include "mixer/hrtfdefs.h"
 #include "opthelpers.h"
@@ -80,14 +81,14 @@ struct DistanceComp {
     static constexpr uint MaxDelay{1024};
 
     struct ChanData {
-        al::span<float> Buffer{}; /* Valid size is [0...MaxDelay). */
+        al::span<float> Buffer; /* Valid size is [0...MaxDelay). */
         float Gain{1.0f};
     };
 
     std::array<ChanData,MaxOutputChannels> mChannels;
     al::FlexArray<float,16> mSamples;
 
-    DistanceComp(std::size_t count) : mSamples{count} { }
+    explicit DistanceComp(std::size_t count) : mSamples{count} { }
 
     static std::unique_ptr<DistanceComp> Create(std::size_t numsamples)
     { return std::unique_ptr<DistanceComp>{new(FamCount(numsamples)) DistanceComp{numsamples}}; }
@@ -179,13 +180,16 @@ enum class DeviceState : std::uint8_t {
     Playing
 };
 
-struct DeviceBase {
+/* NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding) */
+struct SIMDALIGN DeviceBase {
     std::atomic<bool> Connected{true};
     const DeviceType Type{};
 
-    uint Frequency{};
-    uint UpdateSize{};
-    uint BufferSize{};
+    std::string mDeviceName;
+
+    uint mSampleRate{};
+    uint mUpdateSize{};
+    uint mBufferSize{};
 
     DevFmtChannels FmtChans{};
     DevFmtType FmtType{};
@@ -199,10 +203,8 @@ struct DeviceBase {
     DevAmbiLayout mAmbiLayout{DevAmbiLayout::Default};
     DevAmbiScaling mAmbiScale{DevAmbiScaling::Default};
 
-    std::string DeviceName;
-
     // Device flags
-    std::bitset<DeviceFlagsCount> Flags{};
+    std::bitset<DeviceFlagsCount> Flags;
     DeviceState mDeviceState{DeviceState::Unprepared};
 
     uint NumAuxSends{};
@@ -220,8 +222,13 @@ struct DeviceBase {
      */
     NfcFilter mNFCtrlFilter{};
 
+    using seconds32 = std::chrono::duration<int32_t>;
+    using nanoseconds32 = std::chrono::duration<int32_t, std::nano>;
+
     std::atomic<uint> mSamplesDone{0u};
-    std::atomic<std::chrono::nanoseconds> mClockBase{std::chrono::nanoseconds{}};
+    /* Split the clock to avoid a 64-bit atomic for certain 32-bit targets. */
+    std::atomic<seconds32> mClockBaseSec{seconds32{}};
+    std::atomic<nanoseconds32> mClockBaseNSec{nanoseconds32{}};
     std::chrono::nanoseconds FixedLatency{0};
 
     AmbiRotateMatrix mAmbiRotateMatrix{};
@@ -288,11 +295,6 @@ struct DeviceBase {
     al::atomic_unique_ptr<al::FlexArray<ContextBase*>> mContexts;
 
 
-    DeviceBase(DeviceType type);
-    DeviceBase(const DeviceBase&) = delete;
-    DeviceBase& operator=(const DeviceBase&) = delete;
-    ~DeviceBase();
-
     [[nodiscard]] auto bytesFromFmt() const noexcept -> uint { return BytesFromDevFmt(FmtType); }
     [[nodiscard]] auto channelsFromFmt() const noexcept -> uint { return ChannelsFromDevFmt(FmtChans, mAmbiOrder); }
     [[nodiscard]] auto frameSizeFromFmt() const noexcept -> uint { return bytesFromFmt() * channelsFromFmt(); }
@@ -314,9 +316,8 @@ struct DeviceBase {
         /* Increment the mix count at the start of mixing and writing clock
          * info (lsb should be 1).
          */
-        auto mixCount = mMixCount.load(std::memory_order_relaxed);
-        mMixCount.store(++mixCount, std::memory_order_release);
-        return MixLock{this, ++mixCount};
+        const auto oldCount = mMixCount.fetch_add(1u, std::memory_order_acq_rel);
+        return MixLock{this, oldCount+2};
     }
 
     /** Waits for the mixer to not be mixing or updating the clock. */
@@ -337,8 +338,9 @@ struct DeviceBase {
         using std::chrono::seconds;
         using std::chrono::nanoseconds;
 
-        auto ns = nanoseconds{seconds{mSamplesDone.load(std::memory_order_relaxed)}} / Frequency;
-        return mClockBase.load(std::memory_order_relaxed) + ns;
+        auto ns = nanoseconds{seconds{mSamplesDone.load(std::memory_order_relaxed)}} / mSampleRate;
+        return nanoseconds{mClockBaseNSec.load(std::memory_order_relaxed)}
+            + mClockBaseSec.load(std::memory_order_relaxed) + ns;
     }
 
     void ProcessHrtf(const std::size_t SamplesToDo);
@@ -347,19 +349,18 @@ struct DeviceBase {
     void ProcessUhj(const std::size_t SamplesToDo);
     void ProcessBs2b(const std::size_t SamplesToDo);
 
-    inline void postProcess(const std::size_t SamplesToDo)
+    void postProcess(const std::size_t SamplesToDo)
     { if(PostProcess) LIKELY (this->*PostProcess)(SamplesToDo); }
 
-    void renderSamples(const al::span<float*> outBuffers, const uint numSamples);
+    void renderSamples(const al::span<void*> outBuffers, const uint numSamples);
     void renderSamples(void *outBuffer, const uint numSamples, const std::size_t frameStep);
 
     /* Caller must lock the device state, and the mixer must not be running. */
-#ifdef __MINGW32__
-    [[gnu::format(__MINGW_PRINTF_FORMAT,2,3)]]
-#else
-    [[gnu::format(printf,2,3)]]
-#endif
-    void handleDisconnect(const char *msg, ...);
+    void doDisconnect(std::string msg);
+
+    template<typename ...Args>
+    void handleDisconnect(fmt::format_string<Args...> fmt, Args&& ...args)
+    { doDisconnect(fmt::format(std::move(fmt), std::forward<Args>(args)...)); }
 
     /**
      * Returns the index for the given channel name (e.g. FrontCenter), or
@@ -370,6 +371,14 @@ struct DeviceBase {
 
 private:
     uint renderSamples(const uint numSamples);
+
+protected:
+    explicit DeviceBase(DeviceType type);
+    ~DeviceBase();
+
+public:
+    DeviceBase(const DeviceBase&) = delete;
+    DeviceBase& operator=(const DeviceBase&) = delete;
 };
 
 /* Must be less than 15 characters (16 including terminating null) for

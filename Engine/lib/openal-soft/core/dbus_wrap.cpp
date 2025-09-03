@@ -3,7 +3,7 @@
 
 #include "dbus_wrap.h"
 
-#ifdef HAVE_DYNLOAD
+#if HAVE_DYNLOAD
 
 #include <mutex>
 #include <type_traits>
@@ -18,7 +18,7 @@ void PrepareDBus()
     dbus_handle = LoadLib(libname);
     if(!dbus_handle)
     {
-        WARN("Failed to load %s\n", libname);
+        WARN("Failed to load {}", libname);
         return;
     }
 
@@ -28,7 +28,7 @@ void PrepareDBus()
     load_func(p##x, #x);                          \
     if(!p##x)                                     \
     {                                             \
-        WARN("Failed to load function %s\n", #x); \
+        WARN("Failed to load function {}", #x);   \
         CloseLib(dbus_handle);                    \
         dbus_handle = nullptr;                    \
         return;                                   \

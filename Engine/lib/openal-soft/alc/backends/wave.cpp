@@ -30,7 +30,6 @@
 #include <cstdio>
 #include <cstring>
 #include <exception>
-#include <functional>
 #include <system_error>
 #include <thread>
 #include <vector>
@@ -39,12 +38,9 @@
 #include "alc/alconfig.h"
 #include "almalloc.h"
 #include "alnumeric.h"
-#include "alstring.h"
 #include "althrd_setname.h"
 #include "core/device.h"
-#include "core/helpers.h"
 #include "core/logging.h"
-#include "opthelpers.h"
 #include "strutils.h"
 
 
@@ -99,7 +95,7 @@ void fwrite32le(uint val, FILE *f)
 
 
 struct WaveBackend final : public BackendBase {
-    WaveBackend(DeviceBase *device) noexcept : BackendBase{device} { }
+    explicit WaveBackend(DeviceBase *device) noexcept : BackendBase{device} { }
     ~WaveBackend() override;
 
     int mixerProc();
@@ -122,7 +118,7 @@ WaveBackend::~WaveBackend() = default;
 
 int WaveBackend::mixerProc()
 {
-    const milliseconds restTime{mDevice->UpdateSize*1000/mDevice->Frequency / 2};
+    const milliseconds restTime{mDevice->mUpdateSize*1000/mDevice->mSampleRate / 2};
 
     althrd_setname(GetMixerThreadName());
 
@@ -137,17 +133,17 @@ int WaveBackend::mixerProc()
         auto now = std::chrono::steady_clock::now();
 
         /* This converts from nanoseconds to nanosamples, then to samples. */
-        int64_t avail{std::chrono::duration_cast<seconds>((now-start) *
-            mDevice->Frequency).count()};
-        if(avail-done < mDevice->UpdateSize)
+        const auto avail = int64_t{std::chrono::duration_cast<seconds>((now-start) *
+            mDevice->mSampleRate).count()};
+        if(avail-done < mDevice->mUpdateSize)
         {
             std::this_thread::sleep_for(restTime);
             continue;
         }
-        while(avail-done >= mDevice->UpdateSize)
+        while(avail-done >= mDevice->mUpdateSize)
         {
-            mDevice->renderSamples(mBuffer.data(), mDevice->UpdateSize, frameStep);
-            done += mDevice->UpdateSize;
+            mDevice->renderSamples(mBuffer.data(), mDevice->mUpdateSize, frameStep);
+            done += mDevice->mUpdateSize;
 
             if(al::endian::native != al::endian::little)
             {
@@ -170,10 +166,10 @@ int WaveBackend::mixerProc()
                 }
             }
 
-            const size_t fs{fwrite(mBuffer.data(), frameSize, mDevice->UpdateSize, mFile.get())};
-            if(fs < mDevice->UpdateSize || ferror(mFile.get()))
+            const size_t fs{fwrite(mBuffer.data(), frameSize, mDevice->mUpdateSize, mFile.get())};
+            if(fs < mDevice->mUpdateSize || ferror(mFile.get()))
             {
-                ERR("Error writing to file\n");
+                ERR("Error writing to file");
                 mDevice->handleDisconnect("Failed to write playback samples");
                 break;
             }
@@ -184,10 +180,10 @@ int WaveBackend::mixerProc()
          * and current time from growing too large, while maintaining the
          * correct number of samples to render.
          */
-        if(done >= mDevice->Frequency)
+        if(done >= mDevice->mSampleRate)
         {
-            seconds s{done/mDevice->Frequency};
-            done %= mDevice->Frequency;
+            seconds s{done/mDevice->mSampleRate};
+            done %= mDevice->mSampleRate;
             start += s;
         }
     }
@@ -204,8 +200,8 @@ void WaveBackend::open(std::string_view name)
     if(name.empty())
         name = GetDeviceName();
     else if(name != GetDeviceName())
-        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"%.*s\" not found",
-            al::sizei(name), name.data()};
+        throw al::backend_exception{al::backend_error::NoDevice, "Device name \"{}\" not found",
+            name};
 
     /* There's only one "device", so if it's already open, we're done. */
     if(mFile) return;
@@ -219,20 +215,14 @@ void WaveBackend::open(std::string_view name)
     mFile = FilePtr{fopen(fname->c_str(), "wb")};
 #endif
     if(!mFile)
-        throw al::backend_exception{al::backend_error::DeviceError, "Could not open file '%s': %s",
-            fname->c_str(), std::generic_category().message(errno).c_str()};
+        throw al::backend_exception{al::backend_error::DeviceError, "Could not open file '{}': {}",
+            *fname, std::generic_category().message(errno)};
 
-    mDevice->DeviceName = name;
+    mDeviceName = name;
 }
 
 bool WaveBackend::reset()
 {
-    uint channels{0}, bytes{0}, chanmask{0};
-    bool isbformat{false};
-
-    fseek(mFile.get(), 0, SEEK_SET);
-    clearerr(mFile.get());
-
     if(GetConfigValueBool({}, "wave", "bformat", false))
     {
         mDevice->FmtChans = DevFmtAmbi3D;
@@ -256,6 +246,8 @@ bool WaveBackend::reset()
     case DevFmtFloat:
         break;
     }
+    auto chanmask = 0u;
+    auto isbformat = false;
     switch(mDevice->FmtChans)
     {
     case DevFmtMono:   chanmask = 0x04; break;
@@ -282,13 +274,24 @@ bool WaveBackend::reset()
         chanmask = 0;
         break;
     }
-    bytes = mDevice->bytesFromFmt();
-    channels = mDevice->channelsFromFmt();
+    const auto bytes = mDevice->bytesFromFmt();
+    const auto channels = mDevice->channelsFromFmt();
 
-    rewind(mFile.get());
+    if(fseek(mFile.get(), 0, SEEK_CUR) != 0)
+    {
+        /* ESPIPE means the underlying file isn't seekable, which is fine for
+         * piped output.
+         */
+        if(auto errcode = errno; errcode != ESPIPE)
+        {
+            ERR("Failed to reset file offset: {} ({})", std::generic_category().message(errcode),
+                errcode);
+        }
+    }
+    clearerr(mFile.get());
 
     fputs("RIFF", mFile.get());
-    fwrite32le(0xFFFFFFFF, mFile.get()); // 'RIFF' header len; filled in at close
+    fwrite32le(0xFFFFFFFF, mFile.get()); // 'RIFF' header len; filled in at stop
 
     fputs("WAVE", mFile.get());
 
@@ -300,9 +303,9 @@ bool WaveBackend::reset()
     // 16-bit val, channel count
     fwrite16le(static_cast<ushort>(channels), mFile.get());
     // 32-bit val, frequency
-    fwrite32le(mDevice->Frequency, mFile.get());
+    fwrite32le(mDevice->mSampleRate, mFile.get());
     // 32-bit val, bytes per second
-    fwrite32le(mDevice->Frequency * channels * bytes, mFile.get());
+    fwrite32le(mDevice->mSampleRate * channels * bytes, mFile.get());
     // 16-bit val, frame size
     fwrite16le(static_cast<ushort>(channels * bytes), mFile.get());
     // 16-bit val, bits per sample
@@ -319,18 +322,18 @@ bool WaveBackend::reset()
         (isbformat ? SUBTYPE_BFORMAT_PCM.data() : SUBTYPE_PCM.data()), 1, 16, mFile.get());
 
     fputs("data", mFile.get());
-    fwrite32le(0xFFFFFFFF, mFile.get()); // 'data' header len; filled in at close
+    fwrite32le(0xFFFFFFFF, mFile.get()); // 'data' header len; filled in at stop
 
     if(ferror(mFile.get()))
     {
-        ERR("Error writing header: %s\n", std::generic_category().message(errno).c_str());
+        ERR("Error writing header: {}", std::generic_category().message(errno));
         return false;
     }
     mDataStart = ftell(mFile.get());
 
     setDefaultWFXChannelOrder();
 
-    const uint bufsize{mDevice->frameSizeFromFmt() * mDevice->UpdateSize};
+    const uint bufsize{mDevice->frameSizeFromFmt() * mDevice->mUpdateSize};
     mBuffer.resize(bufsize);
 
     return true;
@@ -339,14 +342,14 @@ bool WaveBackend::reset()
 void WaveBackend::start()
 {
     if(mDataStart > 0 && fseek(mFile.get(), 0, SEEK_END) != 0)
-        WARN("Failed to seek on output file\n");
+        WARN("Failed to seek on output file");
     try {
         mKillNow.store(false, std::memory_order_release);
-        mThread = std::thread{std::mem_fn(&WaveBackend::mixerProc), this};
+        mThread = std::thread{&WaveBackend::mixerProc, this};
     }
     catch(std::exception& e) {
         throw al::backend_exception{al::backend_error::DeviceError,
-            "Failed to start mixing thread: %s", e.what()};
+            "Failed to start mixing thread: {}", e.what()};
     }
 }
 

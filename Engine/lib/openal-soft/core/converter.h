@@ -24,7 +24,7 @@ struct SampleConverter {
 
     uint mFracOffset{};
     uint mIncrement{};
-    InterpState mState{};
+    InterpState mState;
     ResamplerFunc mResample{};
 
     alignas(16) FloatBufferLine mSrcSamples{};
@@ -35,7 +35,7 @@ struct SampleConverter {
     };
     al::FlexArray<ChanSamples> mChan;
 
-    SampleConverter(size_t numchans) : mChan{numchans} { }
+    explicit SampleConverter(size_t numchans) : mChan{numchans} { }
 
     [[nodiscard]] auto convert(const void **src, uint *srcframes, void *dst, uint dstframes) -> uint;
     [[nodiscard]] auto convertPlanar(const void **src, uint *srcframes, void *const*dst, uint dstframes) -> uint;

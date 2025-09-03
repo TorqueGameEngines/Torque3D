@@ -11,6 +11,7 @@
 
 #include "alstring.h"
 
+/* NOLINTBEGIN(bugprone-suspicious-stringview-data-usage) */
 std::string wstr_to_utf8(std::wstring_view wstr)
 {
     std::string ret;
@@ -40,6 +41,7 @@ std::wstring utf8_to_wstr(std::string_view str)
 
     return ret;
 }
+/* NOLINTEND(bugprone-suspicious-stringview-data-usage) */
 #endif
 
 namespace al {

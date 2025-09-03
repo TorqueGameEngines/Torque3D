@@ -28,7 +28,7 @@
 namespace {
 
 struct LoopbackBackend final : public BackendBase {
-    LoopbackBackend(DeviceBase *device) noexcept : BackendBase{device} { }
+    explicit LoopbackBackend(DeviceBase *device) noexcept : BackendBase{device} { }
 
     void open(std::string_view name) override;
     bool reset() override;
@@ -39,7 +39,7 @@ struct LoopbackBackend final : public BackendBase {
 
 void LoopbackBackend::open(std::string_view name)
 {
-    mDevice->DeviceName = name;
+    mDeviceName = name;
 }
 
 bool LoopbackBackend::reset()

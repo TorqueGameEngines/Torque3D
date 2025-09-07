@@ -96,7 +96,11 @@ function GuiEditorContentList::scanGroup( %this, %group )
 
 //---------------------------------------------------------------------------------------------
 
-function GuiEditorContentList::onSelect( %this, %ctrl )
+function GuiEditorContentList::onSelect( %this, %index, %text )
 {
-   GuiEditor.openForEditing( %ctrl );
+   //Strip out just the guiControl id
+   %ctrlId = getToken(%text, "-", 1);
+   %ctrlId = trim(%ctrlId);
+   
+   GuiEditor.openForEditing( %ctrlId );
 }

@@ -1317,21 +1317,35 @@ void GuiPopUpMenuCtrlEx::closePopUp()
       return;
 
    // Get the selection from the text list:
-   mSelIndex = mTl->getSelectedCell().y;
+   if (mSearchText.isEmpty())
+   {
+      mSelIndex = mTl->getSelectedCell().y;
+   }
+   else
+   {
+      S32 filteredEntryCount = 0;
+      for (U32 i=0; i < mEntries.size(); i++)
+      {
+         String entryText = String::ToLower(mEntries[i].buf);
+         if (entryText.find(mSearchText) != -1 && mEntries[i].id != -2)
+         {
+            if (filteredEntryCount == mTl->getSelectedCell().y)
+            {
+               mSelIndex = i;
+               break;
+            }
+
+            filteredEntryCount++;
+         }
+      }
+   }
    mSelIndex = ( mRevNum >= mSelIndex && mSelIndex != -1 ) ? mRevNum - mSelIndex : mSelIndex;
    if ( mSelIndex != -1 )
    {
       if (mReplaceText)
          setText(mEntries[mSelIndex].buf);
 
-      for(U32 i=0; i < mEntries.size(); i++)
-      {
-        if(dStrcmp(mEntries[i].buf,mTl->mList[mSelIndex].text) == 0)
-        {
-           setIntVariable(mEntries[i].id);
-            break;
-         }
-      }
+      setIntVariable(mEntries[mSelIndex].id);
    }
 
    // Release the mouse:

@@ -192,8 +192,10 @@ function GameConnectionListener::onSetSpawnPointComplete( %this, %client )
    %client.GetEventManager().remove( %client.listener, "setSpawnPointFailed" );   
    %client.GetEventManager().subscribe( %client.listener, "postSpawnComplete" );
    
+   %client.spawnProperties = "position =\""@ getWords(%client.spawnLocation,0,2) @"\";" @ %client.spawnProperties;
+   
     // Spawn with the engine's Sim::spawnObject() function
-    %client.player = spawnObject(%client.spawnClass, %client.spawnDataBlock, %client.spawnProperties, %client.spawnScript);
+    %client.player = spawnObject(%client.spawnClass, %client.spawnDataBlock, "", %client.spawnProperties, %client.spawnScript);
     
     if(!isObject(%client.player))
        error("Failed to spawn player object!");

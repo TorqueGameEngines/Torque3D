@@ -1008,8 +1008,11 @@ bool Platform::isFile(const char *pFilePath)
    {
       MungePath(pathName, MaxPath, pFilePath, GetPrefDir());
    }
-   else
+
+   if (Torque::FS::IsFile(pathName) == false)
    {
+      //clear pathName for reusage
+      dStrncpy(pathName, "\n", MaxPath);
       // here if the path is absolute or not in the pref dir
       MungePath(pathName, MaxPath, pFilePath, cwd);
    }

@@ -136,8 +136,6 @@ function GameConnectionListener::onSetSpawnObjectTypeComplete( %this, %client )
         return; //continue to wait  
    %client.GetEventManager().remove( %client.listener, "setSpawnObjectTypeComplete" ); 
    %client.GetEventManager().remove( %client.listener, "setSpawnObjectTypeFailed" );
-   %client.GetEventManager().subscribe( %client.listener, "setSpawnPointComplete" );
-   %client.GetEventManager().subscribe( %client.listener, "setSpawnPointFailed" ); 
     
     if (isObject(%client.player))
     {
@@ -177,7 +175,11 @@ function GameConnection::setSpawnPoint( %this )
     %this.numModsNeedingLoaded = getNumCanCallOnObjectList("setSpawnPoint", %modulesIDList);
     
     if (%this.numModsNeedingLoaded)
-        callOnObjectList("setSpawnPoint", %modulesIdList, %this);
+    {
+        %this.GetEventManager().subscribe( %this.listener, "setSpawnPointComplete" );
+        %this.GetEventManager().subscribe( %this.listener, "setSpawnPointFailed" );      
+        callOnObjectList("setSpawnPoint", %modulesIdList, %this);        
+    }
     else
         %this.listener.onSetSpawnPointComplete(%this);   
 }
@@ -189,8 +191,7 @@ function GameConnectionListener::onSetSpawnPointComplete( %this, %client )
         return; //continue to wait 
         
    %client.GetEventManager().remove( %client.listener, "setSpawnPointComplete" ); 
-   %client.GetEventManager().remove( %client.listener, "setSpawnPointFailed" );   
-   %client.GetEventManager().subscribe( %client.listener, "postSpawnComplete" );
+   %client.GetEventManager().remove( %client.listener, "setSpawnPointFailed" ); 
    
    %client.spawnProperties = "position =\""@ getWords(%client.spawnLocation,0,2) @"\";" @ %client.spawnProperties;
    
@@ -280,9 +281,13 @@ function GameConnection::onPostSpawn( %this )
     %this.numModsNeedingLoaded = getNumCanCallOnObjectList("onPostSpawn", %modulesIDList);
     
     if (%this.numModsNeedingLoaded)
+    {
+        %this.GetEventManager().subscribe( %this.listener, "postSpawnComplete" );
         callOnObjectList("onPostSpawn", %modulesIdList, %this);
+    }
     else
         %this.listener.onPostSpawnComplete(%this);
+        
     if (isObject(%this.player.getDatablock().controlMap))
         commandToClient(%this, 'setMoveMap', %this.player.getDatablock().controlMap);
 }

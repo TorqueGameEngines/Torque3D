@@ -79,24 +79,26 @@ bool EventManagerListener::onMessageReceived( StringTableEntry queue, const char
    if( subscribers == NULL )
       return true;
 
-   for( Vector<Subscriber>::iterator iter = subscribers->begin(); iter != subscribers->end(); iter++ )
+   for (U32 i = 0; i < subscribers->size(); i++)
    {
-      if( iter->listener == NULL )
+      Subscriber* itter = &((*subscribers)[i]);
+      if (itter->listener == NULL)
       {
-         subscribers->erase_fast( iter -- );
-         continue;
+         (*subscribers).erase(i);
+      }
+      else if (!itter->removeFlag)
+      {
+         itter->callDepth++;
+         Con::executef(itter->listener, itter->callback, data);
+         itter->callDepth--;
+         if (itter->removeFlag && itter->callDepth == 0)
+         {
+            (*subscribers).erase(i);
+         }
       }
 
-      if (!iter->removeFlag)
-	   {
-		   iter->callDepth++;
-		   Con::executef( iter->listener, iter->callback, data );
-		   iter->callDepth--;
-		   if (iter->removeFlag && iter->callDepth==0)
-		   {
-			   subscribers->erase_fast(iter--);
-		   }
-	   }
+      if (subscribers->size() == 0)
+         return true;
    }
 
    return true;

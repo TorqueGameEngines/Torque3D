@@ -1356,6 +1356,25 @@ bool TSShape::removeDetail( S32 size )
    return true;
 }
 
+bool TSShape::isShapeFileType(Torque::Path filePath)
+{
+   String fileExt = filePath.getExtension();
+
+   if (
+      fileExt.equal("dts", String::NoCase) ||
+      fileExt.equal("dsq", String::NoCase) ||
+      fileExt.equal("dae", String::NoCase) ||
+      fileExt.equal("fbx", String::NoCase) ||
+      fileExt.equal("blend", String::NoCase) ||
+      fileExt.equal("obj", String::NoCase) ||
+      fileExt.equal("gltf", String::NoCase) ||
+      fileExt.equal("glb", String::NoCase)
+      )
+      return true;
+
+   return false;
+}
+
 //-----------------------------------------------------------------------------
 bool TSShape::addSequence(const Torque::Path& path, const String& fromSeq,
                           const String& name, S32 startFrame, S32 endFrame,
@@ -1439,8 +1458,7 @@ bool TSShape::addSequence(const Torque::Path& path, const String& fromSeq,
    Resource<TSShape> hSrcShape;
    TSShape* srcShape = this;        // Assume we are copying an existing sequence
 
-   if (path.getExtension().equal("dts", String::NoCase) ||
-       path.getExtension().equal("dae", String::NoCase))
+   if (isShapeFileType(path))
    {
       // DTS or DAE source file
       char filenameBuf[1024];

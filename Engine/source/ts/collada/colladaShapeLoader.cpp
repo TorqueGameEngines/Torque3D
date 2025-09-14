@@ -737,23 +737,25 @@ TSShape* loadColladaShape(const Torque::Path &path)
             tss->write(&dtsStream);
          }
 
-         Torque::Path dsqPath(cachedPath);
-         dsqPath.setExtension("dsq");
-         FileStream animOutStream;
-         for (S32 i = 0; i < tss->sequences.size(); i++)
+         if (tss->meshes.empty())
          {
-            const String& seqName = tss->getName(tss->sequences[i].nameIndex);
-            Con::printf("Writing DSQ Animation File for sequence '%s'", seqName.c_str());
-
-            dsqPath.setFileName(cachedPath.getFileName() + "_" + seqName);
-            if (animOutStream.open(dsqPath.getFullPath(), Torque::FS::File::Write))
+            Torque::Path dsqPath(cachedPath);
+            dsqPath.setExtension("dsq");
+            FileStream animOutStream;
+            for (S32 i = 0; i < tss->sequences.size(); i++)
             {
-               tss->exportSequence(&animOutStream, tss->sequences[i], false);
-               animOutStream.close();
+               const String& seqName = tss->getName(tss->sequences[i].nameIndex);
+               Con::printf("Writing DSQ Animation File for sequence '%s'", seqName.c_str());
+
+               dsqPath.setFileName(cachedPath.getFileName() + "_" + seqName);
+               if (animOutStream.open(dsqPath.getFullPath(), Torque::FS::File::Write))
+               {
+                  tss->exportSequence(&animOutStream, tss->sequences[i], false);
+                  animOutStream.close();
+               }
+
             }
-
          }
-
 #endif // DAE2DTS_TOOL
 
          // Add collada materials to materials.tscript

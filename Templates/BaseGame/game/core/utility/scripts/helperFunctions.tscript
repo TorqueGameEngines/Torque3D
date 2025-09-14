@@ -784,13 +784,13 @@ function getNumCanCallOnObjectList(%functionName, %objectsList)
    return %numberWithFunction;
 }
 
-function getImageFileName(%id)
+function getImageFileName(%assetName)
 {
-    %assetDef = AssetDatabase.acquireAsset(%id);
+    %assetDef = AssetDatabase.acquireAsset(%assetName);
     return %assetDef.getImagePath();
 }
 
-function makeTerrainMapsFrom(%id)
+function makeTerrainMapsFrom(%assetName)
 {
-    splitTerrainMaps(getImageFileName(%id));
+    splitTerrainMaps(getImageFileName(%assetName));
 }

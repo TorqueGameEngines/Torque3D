@@ -11,23 +11,14 @@ function ShapeAnimationAsset::buildBrowserElement(%this, %previewData)
 {
    %previewData.assetName = %this.animationName;
    %previewData.assetPath = %this.scriptFile;
-
-   //Lotta prepwork
-   /*%previewData.doubleClickCommand = %assetDef@".materialDefinitionName.reload(); "
-                                   @ "$Tools::materialEditorList = \"\";"
-                                   @ "EWorldEditor.clearSelection();"
-                                   @ "MaterialEditorGui.currentObject = 0;"
-                                   @ "MaterialEditorGui.currentMode = \"asset\";"
-                                   @ "MaterialEditorGui.currentMaterial = "@%assetDef@".materialDefinitionName;"
-                                   @ "MaterialEditorGui.setActiveMaterial( "@%assetDef@".materialDefinitionName );"
-                                   @ "EditorGui.setEditor(MaterialEditorPlugin); "
-                                   @ "AssetBrowser.hideDialog();";*/
    
    %previewData.previewImage = "ToolsModule:animationIcon_image";
    
    %previewData.assetFriendlyName = %this.assetName;
    %previewData.assetDesc = %this.description;
-   %previewData.tooltip = %this.friendlyName @ "\n" 
-                          @ %this @ "\nShape File path: " 
-                          @ %this.getShapePath();
+   
+   %previewData.tooltip = "Asset Name: " @ %this.assetName @ "\n" @ 
+                           "Asset Type: Animation Asset\n" @ 
+                           "Asset Definition ID: " @  %this @ "\n" @ 
+                           "Animation File path: " @ %this.getAnimationPath();
 }

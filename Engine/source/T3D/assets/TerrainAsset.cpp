@@ -191,8 +191,14 @@ void TerrainAsset::setTerrainFileName(const char* pScriptFile)
 
 U32 TerrainAsset::load()
 {
+   if (mLoadedState == AssetErrCode::Ok)
+      return mLoadedState;
+
    if (!Torque::FS::IsFile(mTerrainFilePath))
-      return BadFileReference;
+   {
+      mLoadedState = BadFileReference;
+      return mLoadedState;
+   }
 
    mTerrMaterialAssets.clear();
    mTerrMaterialAssetIds.clear();
@@ -229,9 +235,15 @@ U32 TerrainAsset::load()
    mTerrainFile = ResourceManager::get().load(mTerrainFilePath);
 
    if (mTerrainFile)
-      return Ok;
+   {
+      mLoadedState = Ok;
+   }
+   else
+   {
+      mLoadedState = BadFileReference;
+   }
 
-   return BadFileReference;
+   return mLoadedState;
 }
 
 //------------------------------------------------------------------------------

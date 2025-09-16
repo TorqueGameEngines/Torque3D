@@ -191,6 +191,9 @@ void TerrainAsset::setTerrainFileName(const char* pScriptFile)
 
 U32 TerrainAsset::load()
 {
+   if (mLoadedState == AssetErrCode::Ok)
+      return mLoadedState;
+
    if (!Torque::FS::IsFile(mTerrainFilePath))
    {
       mLoadedState = BadFileReference;

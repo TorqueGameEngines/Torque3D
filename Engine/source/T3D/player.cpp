@@ -1924,44 +1924,6 @@ bool Player::onNewDataBlock( GameBaseData *dptr, bool reload )
 
 //----------------------------------------------------------------------------
 
-void Player::reSkin()
-{
-   if ( isGhost() && mShapeInstance && mSkinNameHandle.isValidString() )
-   {
-	  mShapeInstance->resetMaterialList();
-      Vector<String> skins;
-      String(mSkinNameHandle.getString()).split( ";", skins );
-
-      for ( S32 i = 0; i < skins.size(); i++ )
-      {
-         String oldSkin( mAppliedSkinName.c_str() );
-         String newSkin( skins[i] );
-
-         // Check if the skin handle contains an explicit "old" base string. This
-         // allows all models to support skinning, even if they don't follow the 
-         // "base_xxx" material naming convention.
-         S32 split = newSkin.find( '=' );    // "old=new" format skin?
-         if ( split != String::NPos )
-         {
-            oldSkin = newSkin.substr( 0, split );
-            newSkin = newSkin.erase( 0, split+1 );
-         }
-
-         // Apply skin to both 3rd person and 1st person shape instances
-         mShapeInstance->reSkin( newSkin, oldSkin );
-         for ( S32 j = 0; j < ShapeBase::MaxMountedImages; j++ )
-         {
-            if (mShapeFPInstance[j])
-               mShapeFPInstance[j]->reSkin( newSkin, oldSkin );
-         }
-
-         mAppliedSkinName = newSkin;
-      }
-   }
-}
-
-//----------------------------------------------------------------------------
-
 void Player::setControllingClient(GameConnection* client)
 {
    Parent::setControllingClient(client);

@@ -614,7 +614,6 @@ protected:
 #endif
 
   protected:
-   void reSkin() override;
 
    void setState(ActionState state, U32 ticks=0);
    void updateState();

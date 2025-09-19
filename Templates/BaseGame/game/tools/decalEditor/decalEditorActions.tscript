@@ -71,7 +71,11 @@ function ActionEditNodeDetails::doit(%this)
    %count = getWordCount(%this.newTransformData);
    if(%this.instanceId !$= "" && %count == 7)
    {
-      DecalEditorGui.editDecalDetails( %this.instanceId, %this.newTransformData );
+      %pos = getwords(%this.newTransformData,0,2);
+      %tan = getwords(%this.newTransformData,3,5);
+      %size = getword(%this.newTransformData,6);
+      %uvID = DecalEditorGui.getDecalFrame(%this.instanceId);
+      DecalEditorGui.editDecalDetails( %this.instanceId, %pos, %tan, %size, %uvID  );
       DecalEditorGui.syncNodeDetails();
       DecalEditorGui.selectDecal( %this.instanceId );
       return true;
@@ -84,7 +88,11 @@ function ActionEditNodeDetails::undo(%this)
    %count = getWordCount(%this.oldTransformData);
    if(%this.instanceId !$= "" && %count == 7)
    {
-      DecalEditorGui.editDecalDetails( %this.instanceId, %this.oldTransformData );
+      %pos = getwords(%this.oldTransformData,0,2);
+      %tan = getwords(%this.oldTransformData,3,5);
+      %size = getword(%this.oldTransformData,6);
+      %uvID = DecalEditorGui.getDecalFrame(%this.instanceId);
+      DecalEditorGui.editDecalDetails( %this.instanceId, %pos, %tan, %size, %uvID );
       DecalEditorGui.syncNodeDetails();
       DecalEditorGui.selectDecal( %this.instanceId );
    }

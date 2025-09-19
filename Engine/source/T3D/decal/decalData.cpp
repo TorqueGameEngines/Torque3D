@@ -406,12 +406,15 @@ void DecalData::reloadRects()
 	bool canRenderColsByFrame = false;
 	S32 id = 0;
 	
-	texRect[id].point.x = 0.f;
-	texRect[id].extent.x = 1.f;
-	texRect[id].point.y = 0.f;
-	texRect[id].extent.y = 1.f;
-	
-	texCoordCount = (texRows * texCols) - 1;
+
+   if (texRows > 1 || texCols > 1)
+   {
+      texCoordCount = (texRows * texCols) - 1;
+      texRect[id].point.x = 0.f;
+      texRect[id].extent.x = 1.f;
+      texRect[id].point.y = 0.f;
+      texRect[id].extent.y = 1.f;
+   }
 
 	if( texCoordCount > 16 )
 	{

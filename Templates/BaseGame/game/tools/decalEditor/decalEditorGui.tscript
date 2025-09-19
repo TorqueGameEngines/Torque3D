@@ -341,7 +341,8 @@ function DecalEditorGui::prepGizmoTransform( %this, %decalId, %nodeDetails )
 // Activated in onMouseUp while gizmo is dirty
 function DecalEditorGui::completeGizmoTransform( %this, %decalId, %nodeDetails )
 {
-   DecalEditorGui.doEditNodeDetails( %decalId, %nodeDetails, true );
+   if( getWordCount(%nodeDetails) == 7 )
+      DecalEditorGui.doEditNodeDetails( %decalId, %nodeDetails, true );
 }
 
 function DecalEditorGui::onSleep( %this )
@@ -628,8 +629,8 @@ function DecalEditorGui::updateInstancePreview( %this, %material )
       if(AssetDatabase.isDeclaredAsset(%material))
       {
          %previewImage = %material;
-         }
       }
+   }
       
    DecalPreviewWindow-->instancePreview.setBitmap( getAssetPreviewImage(%previewImage) ); 
 }

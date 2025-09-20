@@ -677,7 +677,7 @@ $guiContent = new GuiDecalEditorCtrl(DecalEditorGui) {
                   
                   new GuiContainer(DecalEditorDetailContainer){
                      Position = "0 202";
-                     Extent = "202 79";
+                     Extent = "202 100";
                      HorizSizing = "width";
                      VertSizing = "bottom";
                      isContainer = "1";
@@ -750,6 +750,24 @@ $guiContent = new GuiDecalEditorCtrl(DecalEditorGui) {
                         VertSizing = "bottom";
                         AltCommand = "DecalEditorGui.editNodeDetails();";
                         Position = "54 60";
+                        Extent = "128 18";
+                        text = "";
+                     };
+                     new GuiTextCtrl(){ 
+                        Profile = "ToolsGuiTextRightProfile";
+                        HorizSizing = "right";
+                        VertSizing = "bottom";
+                        Position = "3 80";
+                        Extent = "47 16";
+                        text = "frame";
+                     };
+                     new GuiTextEditCtrl(){ // instance frame
+                        Profile = "ToolsGuiTextEditProfile";
+                        internalName = "frame";
+                        HorizSizing = "width";
+                        VertSizing = "bottom";
+                        AltCommand = "DecalEditorGui.editNodeDetails();";
+                        Position = "54 80";
                         Extent = "128 18";
                         text = "";
                      };

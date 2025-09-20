@@ -74,7 +74,8 @@ function ActionEditNodeDetails::doit(%this)
       %pos = getwords(%this.newTransformData,0,2);
       %tan = getwords(%this.newTransformData,3,5);
       %size = getword(%this.newTransformData,6);
-      %uvID = DecalEditorGui.getDecalFrame(%this.instanceId);
+      //%uvID = DecalEditorGui.getDecalFrame(%this.instanceId);
+      %uvID = DecalEditorDetailContainer-->frame.getText();
       DecalEditorGui.editDecalDetails( %this.instanceId, %pos, %tan, %size, %uvID  );
       DecalEditorGui.syncNodeDetails();
       DecalEditorGui.selectDecal( %this.instanceId );

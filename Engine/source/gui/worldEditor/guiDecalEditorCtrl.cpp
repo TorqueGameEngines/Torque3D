@@ -854,7 +854,7 @@ DefineEngineMethod( GuiDecalEditorCtrl, selectDecal, void, ( U32 id ), , "select
 	object->selectDecal( decalInstance );
 }
 
-DefineEngineMethod( GuiDecalEditorCtrl, editDecalDetails, void, ( U32 id, Point3F pos, Point3F tan,F32 size ), , "editDecalDetails( S32 )()" )
+DefineEngineMethod( GuiDecalEditorCtrl, editDecalDetails, void, ( U32 id, Point3F pos, Point3F tan, F32 size, S32 uvID), , "editDecalDetails( S32,Point3F,Point3F,F32,S32 )()" )
 {
 	DecalInstance *decalInstance = gDecalManager->mDecalInstanceVec[id];
 	if( decalInstance == NULL )
@@ -864,13 +864,19 @@ DefineEngineMethod( GuiDecalEditorCtrl, editDecalDetails, void, ( U32 id, Point3
    decalInstance->mPosition = pos;
 	decalInstance->mTangent = tan;
 	decalInstance->mSize = size;
-	
+   decalInstance->mTextureRectIdx = uvID;
+
 	if ( decalInstance == object->mSELDecal )
 		object->setGizmoFocus( decalInstance );
 
 	object->forceRedraw( decalInstance );
 
 	gDecalManager->notifyDecalModified( decalInstance );
+}
+
+DefineEngineMethod(GuiDecalEditorCtrl, getDecalFrame, S32, (U32 id), , "")
+{
+   return gDecalManager->mDecalInstanceVec[id]->mTextureRectIdx;
 }
 
 DefineEngineMethod( GuiDecalEditorCtrl, getSelectionCount, S32, (), , "" )

@@ -291,6 +291,9 @@ function DecalEditorGui::onSelectInstance( %this, %decalId, %lookupName )
    %item = DecalEditorTreeView.findItemByName( %name );
    DecalEditorTreeView.selectItem( %item );
    DecalEditorGui.syncNodeDetails();
+   
+   %dbListID = DecalDataList.findItemText(%lookupName);
+   DecalDataList.setCurSel( %dbListID );
 }
 
 function DecalEditorGui::onCreateInstance( %this, %decalId, %lookupName )
@@ -341,7 +344,8 @@ function DecalEditorGui::prepGizmoTransform( %this, %decalId, %nodeDetails )
 // Activated in onMouseUp while gizmo is dirty
 function DecalEditorGui::completeGizmoTransform( %this, %decalId, %nodeDetails )
 {
-   DecalEditorGui.doEditNodeDetails( %decalId, %nodeDetails, true );
+   if( getWordCount(%nodeDetails) == 7 )
+      DecalEditorGui.doEditNodeDetails( %decalId, %nodeDetails, true );
 }
 
 function DecalEditorGui::onSleep( %this )
@@ -362,6 +366,7 @@ function DecalEditorGui::syncNodeDetails( %this )
    DecalEditorDetailContainer-->nodePosition.setText(getWords(%transformData, 0, 2));
    DecalEditorDetailContainer-->nodeTangent.setText(getWords(%transformData, 3, 5));
    DecalEditorDetailContainer-->nodeSize.setText(getWord(%transformData, 6));
+   DecalEditorDetailContainer-->frame.setText(DecalEditorGui.getDecalFrame(DecalEditorGui.selDecalInstanceId));
 }
 
 function DecalEditorGui::paletteSync( %this, %mode )
@@ -385,7 +390,8 @@ function DecalDataList::onSelect( %this, %id, %text )
    $Tools::materialEditorList = %data.getId();
    
    //Canvas.pushDialog( DecalEditDlg );
-   DecalInspector.inspect( %data );
+   DecalInspector.inspect( %data );   
+   DecalEditorDetailContainer-->frame.setText(%obj.frame);
    DecalEditorGui.updateDecalPreview( %data.materialAsset );
 }
 
@@ -559,7 +565,9 @@ function DecalInspector::onInspectorFieldModified( %this, %object, %fieldName, %
       DecalEditorGui.updateDecalPreview( %newValue );
       
    // Same work to do as for the regular WorldEditor Inspector.
-   Inspector::onInspectorFieldModified( %this, %object, %fieldName, %arrayIndex, %oldValue, %newValue );   
+   Inspector::onInspectorFieldModified( %this, %object, %fieldName, %arrayIndex, %oldValue, %newValue );
+   
+   warn( "modified "@ DecalEditorGui.selDecalInstanceId); //this is an array id, not an objectid
    
    if (%oldValue != %newValue || %oldValue !$= %newValue)
       %this.setDirty(%object);
@@ -628,8 +636,8 @@ function DecalEditorGui::updateInstancePreview( %this, %material )
       if(AssetDatabase.isDeclaredAsset(%material))
       {
          %previewImage = %material;
-         }
       }
+   }
       
    DecalPreviewWindow-->instancePreview.setBitmap( getAssetPreviewImage(%previewImage) ); 
 }

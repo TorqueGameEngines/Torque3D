@@ -294,12 +294,12 @@ bool DecalManager::clipDecal( DecalInstance *decal, Vector<Point3F> *edgeVerts, 
    // Free old verts and indices.
    _freeBuffers( decal );
 
-   F32 halfSize = decal->mSize * 0.5f;
-   
+   const Point2F& halfSize = decal->mSize * 0.5f * decal->mDataBlock->texRect[decal->mTextureRectIdx].extent;
+
    // Ugly hack for ProjectedShadow!
-   F32 halfSizeZ = clipDepth ? clipDepth->x : halfSize;
-   F32 negHalfSize = clipDepth ? clipDepth->y : halfSize;
-   Point3F decalHalfSize( halfSize, halfSize, halfSize );
+   F32 halfSizeZ = clipDepth ? clipDepth->x : halfSize.x;
+   F32 negHalfSize = clipDepth ? clipDepth->y : halfSize.y;
+   Point3F decalHalfSize( halfSize.x, halfSize.y, halfSize.x );
    Point3F decalHalfSizeZ( halfSizeZ, halfSizeZ, halfSizeZ );
 
    MatrixF projMat( true );
@@ -319,11 +319,11 @@ bool DecalManager::clipDecal( DecalInstance *decal, Vector<Point3F> *edgeVerts, 
    // See above re: decalHalfSizeZ hack.
    mClipper.clear();
    mClipper.mPlaneList.setSize(6);
-   mClipper.mPlaneList[0].set( ( decalPos + ( -newRight * halfSize ) ), -newRight );
-   mClipper.mPlaneList[1].set( ( decalPos + ( -newFwd * halfSize ) ), -newFwd );
+   mClipper.mPlaneList[0].set( ( decalPos + ( -newRight * halfSize.x ) ), -newRight );
+   mClipper.mPlaneList[1].set( ( decalPos + ( -newFwd * halfSize.y ) ), -newFwd );
    mClipper.mPlaneList[2].set( ( decalPos + ( -crossVec * decalHalfSizeZ ) ), -crossVec );
-   mClipper.mPlaneList[3].set( ( decalPos + ( newRight * halfSize ) ), newRight );
-   mClipper.mPlaneList[4].set( ( decalPos + ( newFwd * halfSize ) ), newFwd );
+   mClipper.mPlaneList[3].set( ( decalPos + ( newRight * halfSize.x ) ), newRight );
+   mClipper.mPlaneList[4].set( ( decalPos + ( newFwd * halfSize.y ) ), newFwd );
    mClipper.mPlaneList[5].set( ( decalPos + ( crossVec * negHalfSize ) ), crossVec );
 
    mClipper.mNormal = decal->mNormal;

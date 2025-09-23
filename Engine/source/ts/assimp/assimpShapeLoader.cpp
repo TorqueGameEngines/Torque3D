@@ -231,7 +231,7 @@ void AssimpShapeLoader::enumerateScene()
    // Read the file
    mScene = mImporter.ReadFile(shapePath.getFullPath().c_str(), ppsteps);
 
-   if (!mScene || (mScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || !mScene->mRootNode) {
+   if (!mScene || !mScene->mRootNode) {
       Con::errorf("[ASSIMP] ERROR: Could not load file: %s", shapePath.getFullPath().c_str());
       Con::errorf("[ASSIMP] Importer error: %s", mImporter.GetErrorString());
       TSShapeLoader::updateProgress(TSShapeLoader::Load_Complete, "Import failed");
@@ -341,24 +341,7 @@ void AssimpShapeLoader::processAssimpNode(const aiNode* node, const aiScene* sce
    else
    {
       currNode = new AssimpAppNode(scene, node, parentNode);
-
-      if (parentNode)
-      {
-         parentNode->addChild(currNode);
-      }
-
-      for (U32 i = 0; i < node->mNumMeshes; i++)
-      {
-         U32 meshIdx = node->mMeshes[i];
-         const aiMesh* mesh = scene->mMeshes[meshIdx];
-         AssimpAppMesh* curMesh = new AssimpAppMesh(mesh, currNode);
-         currNode->addMesh(curMesh);
-      }
-   }
-   // Recursively process child nodes
-   for (U32 i = 0; i < node->mNumChildren; i++)
-   {
-      processAssimpNode(node->mChildren[i], scene, currNode);
+      processNode(currNode);
    }
 }
 

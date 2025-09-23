@@ -61,8 +61,8 @@ class AssimpAppNode : public AppNode
    void getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animSeq);
    Point3F interpolateVectorKey(const aiVectorKey* keys, U32 numKeys, F32 frameTime);
    QuatF interpolateQuaternionKey(const aiQuatKey* keys, U32 numKeys, F32 frameTime);
-   void buildMeshList() override {};
-   void buildChildList() override {};
+   void buildMeshList() override;
+   void buildChildList() override;
 protected:
 
    const aiScene*   mScene;

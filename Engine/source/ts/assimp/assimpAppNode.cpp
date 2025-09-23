@@ -289,3 +289,23 @@ void AssimpAppNode::addMesh(AssimpAppMesh* child)
 {
    mMeshes.push_back(child);
 }
+
+void AssimpAppNode::buildMeshList()
+{
+   for (U32 i = 0; i < mNode->mNumMeshes; i++)
+   {
+      U32 meshIdx = mNode->mMeshes[i];
+      const aiMesh* mesh = mScene->mMeshes[meshIdx];
+      AssimpAppMesh* curMesh = new AssimpAppMesh(mesh, this);
+      mMeshes.push_back(curMesh);
+   }
+}
+
+void AssimpAppNode::buildChildList()
+{
+   for (U32 i = 0; i < mNode->mNumChildren; i++)
+   {
+      const aiNode* node = mNode->mChildren[i];
+      mChildNodes.push_back(new AssimpAppNode(mScene, node, this));
+   }
+}

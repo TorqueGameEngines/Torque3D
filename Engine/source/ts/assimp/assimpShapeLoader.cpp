@@ -968,7 +968,14 @@ TSShape* assimpLoadShape(const Torque::Path &path)
       TSShapeLoader::updateProgress(TSShapeLoader::Load_Complete, "Import complete");
       Con::printf("[ASSIMP] Shape created successfully.");
 
-      if (tss->meshes.empty())
+      bool realMesh = false;
+      for (U32 i = 0; i < tss->meshes.size(); ++i)
+      {
+         if (tss->meshes[i] && tss->meshes[i]->getMeshType() != TSMesh::NullMeshType)
+            realMesh = true;
+      }
+
+      if (!realMesh)
       {
          Torque::Path dsqPath(cachedPath);
          dsqPath.setExtension("dsq");

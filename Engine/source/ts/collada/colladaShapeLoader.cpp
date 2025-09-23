@@ -725,7 +725,14 @@ TSShape* loadColladaShape(const Torque::Path &path)
       {
 #ifndef DAE2DTS_TOOL
 
-         if (tss->meshes.empty())
+         bool realMesh = false;
+         for (U32 i = 0; i < tss->meshes.size(); ++i)
+         {
+            if (tss->meshes[i] && tss->meshes[i]->getMeshType() != TSMesh::NullMeshType)
+               realMesh = true;
+         }
+
+         if (!realMesh)
          {
             Torque::Path dsqPath(cachedPath);
             dsqPath.setExtension("dsq");

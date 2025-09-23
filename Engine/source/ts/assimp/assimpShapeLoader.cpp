@@ -985,14 +985,6 @@ TSShape* assimpLoadShape(const Torque::Path &path)
       TSShapeLoader::updateProgress(TSShapeLoader::Load_Complete, "Import complete");
       Con::printf("[ASSIMP] Shape created successfully.");
 
-      // Cache the model to a DTS file for faster loading next time.
-      FileStream dtsStream;
-      if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))
-      {
-         Con::printf("Writing cached shape to %s", cachedPath.getFullPath().c_str());
-         tss->write(&dtsStream);
-      }
-
       if (tss->meshes.empty())
       {
          Torque::Path dsqPath(cachedPath);
@@ -1010,6 +1002,16 @@ TSShape* assimpLoadShape(const Torque::Path &path)
                animOutStream.close();
             }
 
+         }
+      }
+      else
+      {
+         // Cache the model to a DTS file for faster loading next time.
+         FileStream dtsStream;
+         if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))
+         {
+            Con::printf("Writing cached shape to %s", cachedPath.getFullPath().c_str());
+            tss->write(&dtsStream);
          }
       }
 

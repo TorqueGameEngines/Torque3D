@@ -2155,15 +2155,13 @@ DefineTSShapeConstructorMethod(addSequence, bool,
       StringTableEntry assetType = AssetDatabase.getAssetType(assetId);
       if (assetType == StringTable->insert("ShapeAsset"))
       {
-         ShapeAsset* asset = AssetDatabase.acquireAsset<ShapeAsset>(assetId);
+         AssetPtr<ShapeAsset> asset = assetId;
          srcPath = asset->getShapeFile();
-         AssetDatabase.releaseAsset(assetId);
       }
       else if (assetType == StringTable->insert("ShapeAnimationAsset"))
       {
-         ShapeAnimationAsset* asset = AssetDatabase.acquireAsset<ShapeAnimationAsset>(assetId);
+         AssetPtr<ShapeAnimationAsset> asset = assetId;
          srcPath = asset->getAnimationPath();
-         AssetDatabase.releaseAsset(assetId);
       }
    }
 

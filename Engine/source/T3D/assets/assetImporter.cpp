@@ -2097,7 +2097,7 @@ void AssetImporter::processShapeAnimationAsset(AssetImportObject* assetItem)
       {
          enumColladaForImport(filePath, shapeInfo, false);
       }
-      else if (fileExt.compare("dts") == 0 || fileExt.compare("dsq") == 0)
+      else if (fileExt.compare("dts") == 0)
       {
          enumDTSForImport(filePath, shapeInfo);
       }

@@ -1535,9 +1535,27 @@ DefineTSShapeConstructorMethod(addMesh, bool, (const char* meshName, const char*
    "%this.addMesh( \"SimpleShape10\", \"./testShape.dae\", \"MyMesh2\", "" );\n"
    "@endtsexample\n")
 {
+   const char* targShape = StringTable->EmptyString();
+
+   bool found = false;
+
+   if (AssetDatabase.isDeclaredAsset(srcShape))
+   {
+      ShapeAsset* assetShape = AssetDatabase.acquireAsset<ShapeAsset>(srcShape);
+      if (assetShape)
+      {
+         targShape = assetShape->getShapeFile();
+         //Con::printf("Found assetID %s for assetName %s; shape file path %s", assetShape->getAssetId(), srcShape, targShape);
+         found = true;
+      }
+   }
+
+   if (!found)
+      targShape = srcShape;
+
    // Load the shape source file
    char filenameBuf[1024];
-   Con::expandScriptFilename(filenameBuf, sizeof(filenameBuf), srcShape);
+   Con::expandScriptFilename(filenameBuf, sizeof(filenameBuf), targShape);
 
    Resource<TSShape> hSrcShape = ResourceManager::get().load(filenameBuf);
    if (!bool(hSrcShape))

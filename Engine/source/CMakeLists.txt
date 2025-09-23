@@ -497,6 +497,10 @@ endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
+  # Skip if it's a raw library file instead of a target
+  if(TORQUE_LIBRARY MATCHES "\\.(lib|a|so|dylib|dll)$")
+    continue()
+  endif()
   set_target_properties(${TORQUE_LIBRARY} PROPERTIES
   FOLDER "Libraries")
   # remove warnings from 3rd parties.

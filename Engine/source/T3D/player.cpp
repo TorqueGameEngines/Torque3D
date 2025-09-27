@@ -1582,6 +1582,7 @@ Player::Player()
    mActionAnimation.holdAtEnd = false;
    mActionAnimation.animateOnServer = false;
    mActionAnimation.atEnd = false;
+   mActionAnimation.useSynchedPos = true;
    mActionAnimation.callbackTripped = false;
    mState = MoveState;
    mJetting = false;

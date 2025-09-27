@@ -517,6 +517,7 @@ protected:
       bool animateOnServer;
       bool atEnd;
       bool callbackTripped;
+      bool useSynchedPos;
    } mActionAnimation;
 
    struct ArmAnimation {
@@ -632,7 +633,7 @@ protected:
    virtual bool updatePos(const F32 travelTime = TickSec);
 
    // PATHSHAPE
-   void updateAttachment();
+   virtual void updateAttachment();
    // PATHSHAPE END
    ///Update head animation
    void updateLookAnimation(F32 dT = 0.f);
@@ -805,7 +806,7 @@ public:
    void prepRenderImage( SceneRenderState* state ) override;
    virtual void renderConvex( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );   
    void renderMountedImage( U32 imageSlot, TSRenderState &rstate, SceneRenderState *state ) override;
-private:
+protected:
    static void  afx_consoleInit();
    void         afx_init();
    U32          afx_packUpdate(NetConnection*, U32 mask, BitStream*, U32 retMask);
@@ -835,7 +836,7 @@ public:
 public:
    bool ignore_updates;
    void resetContactTimer() { mContactTimer = 0; }
-private:
+protected:
    U8     move_trigger_states;
    U32    fx_s_triggers;
    U32    mark_fx_c_triggers;
@@ -868,7 +869,7 @@ public:
    };
    U32  getClientEventTriggers() const { return fx_c_triggers; }
    U32  getServerEventTriggers() const { return fx_s_triggers; }
-private:
+protected:
    F32      speed_bias;
    F32      speed_bias_goal;
    bool     override_movement;
@@ -880,7 +881,7 @@ public:
    void     setMovementSpeedBias(F32 bias);
    U32      setMovementOverride(F32 bias, const Point3F* mov=0, U32 op=1);
    void     restoreMovement(U32 tag);
-private:
+protected:
    S32      footfallDecalOverride;
    S32      footfallSoundOverride;
    S32      footfallDustOverride;

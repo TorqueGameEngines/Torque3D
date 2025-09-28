@@ -371,6 +371,24 @@ U32 IterStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
 }
 
 //------------------------------------------------------------
+//
+U32 VectorExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
+{
+   // Emit instruction to create vector
+   codeStream.emit(OP_CREATE_VECTOR);
+   codeStream.emit(elements.size());
+
+   for (U32 i = 0; i < elements.size(); i++)
+   {
+      ip = elements[i]->compile(codeStream, ip, TypeReqNone);
+      codeStream.emit(OP_VECTOR_PUSH);
+   }
+
+   return ip;
+}
+
+// 
+//------------------------------------------------------------
 
 U32 ConditionalExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 {

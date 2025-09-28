@@ -2238,6 +2238,49 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          break;
       }
 
+      case OP_CREATE_VECTOR:
+      {
+         U32 count = code[ip++];
+
+         ConsoleValue vecVal;
+         vecVal.setVector(new Vector<ConsoleValue>());
+         vecVal.getVector()->reserve(count);
+
+         stack[++_STK] = vecVal;
+
+         Con::printf("%i: OP_CREATE_VECTOR pushed vector, count=%u, _STK=%d", ip - 2, count, _STK);
+         break;
+      }
+
+      case OP_VECTOR_PUSH:
+      {
+         // Vector must be at _STK
+         ConsoleValue& vecVal = stack[_STK];
+         Vector<ConsoleValue>* vec = vecVal.getVector();
+
+         if (!vec)
+         {
+            Con::printf("ERROR: OP_VECTOR_PUSH vector is null at _STK=%d", _STK);
+            break;
+         }
+
+         // Element is right above vector on the stack
+         ConsoleValue elem = stack[_STK + 1];
+
+         // Push element into vector
+         vec->push_back(elem);
+
+         // Remove element from stack
+         // _STK remains pointing to the vector
+         // shift elements down if necessary
+         for (int i = _STK + 1; i < _STK + 1; ++i)
+            stack[i] = stack[i + 1];
+
+         Con::printf("OP_VECTOR_PUSH pushed element into vector, _STK=%d, vector size=%zu", _STK, vec->size());
+
+         break;
+      }
+
       case OP_INVALID:
          TORQUE_CASE_FALLTHROUGH;
       default:

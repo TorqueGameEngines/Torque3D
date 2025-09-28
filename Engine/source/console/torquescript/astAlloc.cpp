@@ -37,6 +37,16 @@ using namespace Compiler;
 
 //------------------------------------------------------------
 
+VectorExprNode* VectorExprNode::alloc(S32 lineNumber, const Vector<ExprNode*>& elements)
+{
+   VectorExprNode* ret = (VectorExprNode*)consoleAlloc(sizeof(VectorExprNode));
+   constructInPlace(ret);
+   ret->dbgLineNumber = lineNumber;
+   ret->optimizedNode = NULL;
+   ret->elements = elements;
+   return ret;
+}
+
 BreakStmtNode* BreakStmtNode::alloc(S32 lineNumber)
 {
    BreakStmtNode* ret = (BreakStmtNode*)consoleAlloc(sizeof(BreakStmtNode));

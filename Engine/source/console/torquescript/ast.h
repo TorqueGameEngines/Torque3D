@@ -134,6 +134,17 @@ struct ExprNode : StmtNode
    virtual ExprNodeName getExprNodeNameEnum() const { return NameExprNode; }
 };
 
+struct VectorExprNode : ExprNode
+{
+   Vector<ExprNode*> elements;  ///< Elements of the vector literal
+
+   static VectorExprNode* alloc(S32 lineNumber, const Vector<ExprNode*>& elements);
+
+   U32 compile(CodeStream& codeStream, U32 ip, TypeReq type) override;
+   TypeReq getPreferredType() override { return TypeReqNone; }
+   DBG_STMT_TYPE(VectorExprNode);
+};
+
 struct ReturnStmtNode : StmtNode
 {
    ExprNode* expr;

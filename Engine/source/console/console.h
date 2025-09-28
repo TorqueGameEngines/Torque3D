@@ -125,7 +125,8 @@ enum ConsoleValueType
    cvFloat = -3,
    cvString = -2,
    cvSTEntry = -1,
-   cvConsoleValueType = 0
+   cvConsoleValueType = 0,
+   cvVector = 1,
 };
 
 class ConsoleValue
@@ -160,7 +161,12 @@ public:
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      if (type <= cvString && bufferLen > 0)
+      if (type == cvVector && dataPtr)
+      {
+         delete static_cast<Vector<ConsoleValue>*>(dataPtr);
+         dataPtr = nullptr;
+      }
+      else if (type <= cvString && bufferLen > 0)
       {
          dFree(s);
          bufferLen = 0;
@@ -211,6 +217,17 @@ public:
       {
       case cvNULL:
          std::cout << "Ref already cleared!";
+         break;
+      case cvVector:
+         if (ref.dataPtr)
+         {
+            Vector<ConsoleValue>* newVec = new Vector<ConsoleValue>(*static_cast<Vector<ConsoleValue>*>(ref.dataPtr));
+            setVector(newVec);
+         }
+         else
+         {
+            setVector(new Vector<ConsoleValue>());
+         }
          break;
       case cvInteger:
          setInt(ref.i);
@@ -266,6 +283,18 @@ public:
          return dStrcmp(s, "") == 0 ? 0 : dAtoi(s);
 
       return dAtoi(getConsoleData());
+   }
+
+   TORQUE_FORCEINLINE void setVector(Vector<ConsoleValue>* v)
+   {
+      cleanupData();
+      type = cvVector;
+      dataPtr = v;
+   }
+
+   TORQUE_FORCEINLINE Vector<ConsoleValue>* getVector() const
+   {
+      return (type == cvVector) ? static_cast<Vector<ConsoleValue>*>(dataPtr) : NULL;
    }
 
    TORQUE_FORCEINLINE const char* getString() const

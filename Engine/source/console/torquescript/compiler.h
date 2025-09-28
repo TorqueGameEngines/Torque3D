@@ -166,6 +166,9 @@ namespace Compiler
       OP_ITER,             ///< Enter foreach loop.
       OP_ITER_END,         ///< End foreach loop.
 
+      OP_CREATE_VECTOR,
+      OP_VECTOR_PUSH,
+
       OP_INVALID,   // 90
 
       MAX_OP_CODELEN ///< The amount of op codes.

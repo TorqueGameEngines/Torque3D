@@ -360,6 +360,11 @@ const char *ExprEvalState::getStringVariable()
    return currentVariable ? currentVariable->getStringValue() : "";
 }
 
+Vector<ConsoleValue>* ExprEvalState::getVectorVariable()
+{
+   return currentVariable ? currentVariable->getVectorValue() : nullptr;
+}
+
 //------------------------------------------------------------
 
 void ExprEvalState::setIntVariable(S32 val)
@@ -378,6 +383,12 @@ void ExprEvalState::setStringVariable(const char *val)
 {
    AssertFatal(currentVariable != NULL, "Invalid evaluator state - trying to set null variable!");
    currentVariable->setStringValue(val);
+}
+
+void ExprEvalState::setVectorVariable(Vector<ConsoleValue>* val)
+{
+   AssertFatal(currentVariable != NULL, "Invalid evaluator state - trying to set null variable!");
+   currentVariable->setVectorValue(val);
 }
 
 //-----------------------------------------------------------------------------
@@ -1459,6 +1470,12 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          _STK++;
          break;
 
+      case OP_LOADVAR_VECTOR:
+         currentRegister = -1;
+         stack[_STK + 1].setVector(Script::gEvalState.getVectorVariable());
+         _STK++;
+         break;
+
       case OP_SAVEVAR_UINT:
          Script::gEvalState.setIntVariable(stack[_STK].getInt());
          break;
@@ -1469,6 +1486,10 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
       case OP_SAVEVAR_STR:
          Script::gEvalState.setStringVariable(stack[_STK].getString());
+         break;
+
+      case OP_SAVEVAR_VECTOR:
+         Script::gEvalState.setVectorVariable(stack[_STK].getVector());
          break;
 
       case OP_LOAD_LOCAL_VAR_UINT:
@@ -1511,6 +1532,19 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          _STK++;
          break;
 
+      case OP_LOAD_LOCAL_VAR_VECTOR:
+         reg = code[ip++];
+         currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
+         stack[_STK + 1].setVector(Script::gEvalState.getLocalVectorVariable(reg));
+         _STK++;
+         break;
+
       case OP_SAVE_LOCAL_VAR_UINT:
          reg = code[ip++];
          currentRegister = reg;
@@ -1546,6 +1580,18 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          curObject = NULL;
 
          Script::gEvalState.setLocalStringVariable(reg, val, (S32)dStrlen(val));
+         break;
+
+      case OP_SAVE_LOCAL_VAR_VECTOR:
+         reg = code[ip++];
+         currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
+         Script::gEvalState.setLocalVectorVariable(reg, stack[_STK].getVector());
          break;
 
       case OP_SETCUROBJECT:
@@ -2248,7 +2294,6 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
          stack[++_STK] = vecVal;
 
-         Con::printf("%i: OP_CREATE_VECTOR pushed vector, count=%u, _STK=%d", ip - 2, count, _STK);
          break;
       }
 
@@ -2265,18 +2310,10 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          }
 
          // Element is right above vector on the stack
-         ConsoleValue elem = stack[_STK + 1];
+         ConsoleValue elem = stack[ip + _STK];
 
          // Push element into vector
          vec->push_back(elem);
-
-         // Remove element from stack
-         // _STK remains pointing to the vector
-         // shift elements down if necessary
-         for (int i = _STK + 1; i < _STK + 1; ++i)
-            stack[i] = stack[i + 1];
-
-         Con::printf("OP_VECTOR_PUSH pushed element into vector, _STK=%d, vector size=%zu", _STK, vec->size());
 
          break;
       }

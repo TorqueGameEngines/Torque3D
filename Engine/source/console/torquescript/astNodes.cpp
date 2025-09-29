@@ -708,6 +708,9 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       case TypeReqString:
          codeStream.emit(OP_LOADVAR_STR);
          break;
+      case TypeReqVector:
+         codeStream.emit(OP_LOADVAR_VECTOR);
+         break;
       case TypeReqNone:
          break;
       default:
@@ -718,9 +721,10 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    {
       switch (type)
       {
-      case TypeReqUInt:  codeStream.emit(OP_LOAD_LOCAL_VAR_UINT); break;
-      case TypeReqFloat: codeStream.emit(OP_LOAD_LOCAL_VAR_FLT); break;
-      default:           codeStream.emit(OP_LOAD_LOCAL_VAR_STR);
+      case TypeReqUInt:   codeStream.emit(OP_LOAD_LOCAL_VAR_UINT); break;
+      case TypeReqFloat:  codeStream.emit(OP_LOAD_LOCAL_VAR_FLT); break;
+      case TypeReqVector: codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR); break;
+      default:            codeStream.emit(OP_LOAD_LOCAL_VAR_STR);
       }
 
       codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber));
@@ -960,6 +964,7 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       case TypeReqString: codeStream.emit(OP_SAVEVAR_STR);  break;
       case TypeReqUInt:   codeStream.emit(OP_SAVEVAR_UINT); break;
       case TypeReqFloat:  codeStream.emit(OP_SAVEVAR_FLT);  break;
+      case TypeReqVector: codeStream.emit(OP_SAVEVAR_VECTOR); break;
       default: break;
       }
    }
@@ -967,9 +972,10 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    {
       switch (subType)
       {
-      case TypeReqUInt:  codeStream.emit(OP_SAVE_LOCAL_VAR_UINT); break;
-      case TypeReqFloat: codeStream.emit(OP_SAVE_LOCAL_VAR_FLT); break;
-      default:           codeStream.emit(OP_SAVE_LOCAL_VAR_STR);
+      case TypeReqUInt:   codeStream.emit(OP_SAVE_LOCAL_VAR_UINT); break;
+      case TypeReqFloat:  codeStream.emit(OP_SAVE_LOCAL_VAR_FLT); break;
+      case TypeReqVector: codeStream.emit(OP_SAVE_LOCAL_VAR_VECTOR); break;
+      default:            codeStream.emit(OP_SAVE_LOCAL_VAR_STR);
       }
       codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, subType == TypeReqNone ? TypeReqString : subType, dbgLineNumber));
    }

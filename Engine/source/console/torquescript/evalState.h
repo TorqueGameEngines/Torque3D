@@ -42,9 +42,11 @@ public:
    S32 getIntVariable();
    F64 getFloatVariable();
    const char *getStringVariable();
+   Vector<ConsoleValue>* getVectorVariable();
    void setIntVariable(S32 val);
    void setFloatVariable(F64 val);
    void setStringVariable(const char *str);
+   void setVectorVariable(Vector<ConsoleValue>* val);
 
    TORQUE_FORCEINLINE S32 getLocalIntVariable(S32 reg)
    {
@@ -59,6 +61,11 @@ public:
    TORQUE_FORCEINLINE const char* getLocalStringVariable(S32 reg)
    {
       return currentRegisterArray->values[reg].getString();
+   }
+
+   TORQUE_FORCEINLINE Vector<ConsoleValue>* getLocalVectorVariable(S32 reg)
+   {
+      return currentRegisterArray->values[reg].getVector();
    }
 
    TORQUE_FORCEINLINE void setLocalIntVariable(S32 reg, S64 val)
@@ -79,6 +86,11 @@ public:
    TORQUE_FORCEINLINE void setLocalStringTableEntryVariable(S32 reg, StringTableEntry val)
    {
       currentRegisterArray->values[reg].setStringTableEntry(val);
+   }
+
+   TORQUE_FORCEINLINE void setLocalVectorVariable(S32 reg, Vector<ConsoleValue>* val)
+   {
+      currentRegisterArray->values[reg].setVector(val);
    }
 
    TORQUE_FORCEINLINE void moveConsoleValue(S32 reg, ConsoleValue val)

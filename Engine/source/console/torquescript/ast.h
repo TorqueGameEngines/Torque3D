@@ -40,7 +40,8 @@ enum TypeReq
    TypeReqNone,
    TypeReqUInt,
    TypeReqFloat,
-   TypeReqString
+   TypeReqString,
+   TypeReqVector
 };
 
 enum ExprNodeName
@@ -141,7 +142,7 @@ struct VectorExprNode : ExprNode
    static VectorExprNode* alloc(S32 lineNumber, const Vector<ExprNode*>& elements);
 
    U32 compile(CodeStream& codeStream, U32 ip, TypeReq type) override;
-   TypeReq getPreferredType() override { return TypeReqNone; }
+   TypeReq getPreferredType() override { return TypeReqVector; }
    DBG_STMT_TYPE(VectorExprNode);
 };
 

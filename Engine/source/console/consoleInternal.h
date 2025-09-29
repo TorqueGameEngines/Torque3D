@@ -338,6 +338,11 @@ public:
          return value.getString();
       }
 
+      inline Vector<ConsoleValue>* getVectorValue()
+      {
+         return value.getVector();
+      }
+
       void setIntValue(U32 val)
       {
          if (mIsConstant)
@@ -400,6 +405,28 @@ public:
          else
          {
             value.setString(val);
+         }
+
+         // Fire off the notification if we have one.
+         if (notify)
+            notify->trigger();
+      }
+
+      void setVectorValue(Vector<ConsoleValue>* val)
+      {
+         if (mIsConstant)
+         {
+            Con::errorf("Cannot assign value to constant '%s'.", name);
+            return;
+         }
+
+         if (value.isConsoleType())
+         {
+            Con::setData(value.type, value.dataPtr, 0, 1, NULL, value.enumTable); // null for now
+         }
+         else
+         {
+            value.setVector(val);
          }
 
          // Fire off the notification if we have one.

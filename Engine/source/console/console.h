@@ -161,12 +161,7 @@ public:
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      if (type == cvVector && dataPtr)
-      {
-         delete static_cast<Vector<ConsoleValue>*>(dataPtr);
-         dataPtr = nullptr;
-      }
-      else if (type <= cvString && bufferLen > 0)
+      if (type <= cvString && bufferLen > 0)
       {
          dFree(s);
          bufferLen = 0;
@@ -204,6 +199,15 @@ public:
          break;
       case cvString:
          setString(ref.s);
+         break;
+      case cvVector:
+         if (ref.dataPtr)
+         {
+            Vector<ConsoleValue>* newVec = new Vector<ConsoleValue>(*static_cast<Vector<ConsoleValue>*>(ref.dataPtr));
+            setVector(newVec);
+         }
+         else
+            setVector(new Vector<ConsoleValue>());
          break;
       default:
          setConsoleData(ref.type, ref.dataPtr, ref.enumTable);

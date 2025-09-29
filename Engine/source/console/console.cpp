@@ -69,6 +69,28 @@ char* ConsoleValue::convertToBuffer() const
    return buffer;
 }
 
+char* ConsoleValue::convertVectorToBuffer() const
+{
+   static char buffer[4096]; // ⚠️ reuse buffer, or use FrameAllocator
+   buffer[0] = 0;
+
+   if (!getVector())
+      return (char*)"";
+
+   Vector<ConsoleValue>* vec = getVector();
+
+   // concatenate elements, space-separated
+   for (U32 i = 0; i < vec->size(); i++)
+   {
+      const char* elemStr = (*vec)[i].getString(); // convert element
+      if (i > 0)
+         dStrcat(buffer, " ", sizeof(buffer));
+      dStrcat(buffer, elemStr, sizeof(buffer));
+   }
+
+   return buffer;
+}
+
 const char* ConsoleValue::getConsoleData() const
 {
    return Con::getData(type, dataPtr, 0, enumTable);

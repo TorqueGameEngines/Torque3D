@@ -380,7 +380,8 @@ U32 VectorExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
    for (U32 i = 0; i < elements.size(); i++)
    {
-      ip = elements[i]->compile(codeStream, ip, TypeReqNone);
+      ip = elements[i]->compile(codeStream, ip, TypeReqString);
+      codeStream.emit(OP_POP_STK);
       codeStream.emit(OP_VECTOR_PUSH);
    }
 

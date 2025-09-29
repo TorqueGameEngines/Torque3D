@@ -2310,7 +2310,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          }
 
          // Element is right above vector on the stack
-         ConsoleValue elem = stack[ip + _STK];
+         ConsoleValue elem = stack[_STK + 1];
 
          // Push element into vector
          vec->push_back(elem);

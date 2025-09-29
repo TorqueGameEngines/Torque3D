@@ -156,6 +156,7 @@ public:
    static DataChunker sConversionAllocator;
 
    char* convertToBuffer() const;
+   char* convertVectorToBuffer() const;
 
    const char* getConsoleData() const;
 
@@ -307,6 +308,8 @@ public:
          return s;
       if (isNumberType())
          return convertToBuffer();
+      if ((type == cvVector))
+         return convertVectorToBuffer();
       return getConsoleData();
    }
 

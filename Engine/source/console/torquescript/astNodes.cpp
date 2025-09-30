@@ -380,7 +380,14 @@ U32 VectorExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
    for (U32 i = 0; i < elements.size(); i++)
    {
-      ip = elements[i]->compile(codeStream, ip, elements[i]->getPreferredType());
+      TypeReq req = elements[i]->getPreferredType();
+
+      if (req == TypeReqNone)
+      {
+         req = type;
+      }
+
+      ip = elements[i]->compile(codeStream, ip, req);
       codeStream.emit(OP_POP_STK);
       codeStream.emit(OP_VECTOR_PUSH);
    }
@@ -683,21 +690,43 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
    precompileIdent(varName);
 
-   bool oldVariables = arrayIndex || varName[0] == '$';
+   bool hasArrayIndex = arrayIndex;
+   bool isGlobal = varName[0] == '$';
+   bool isVector = type == TypeReqVector;
 
-   if (oldVariables)
+   if (hasArrayIndex || isGlobal)
    {
-      codeStream.emit(arrayIndex ? OP_LOADIMMED_IDENT : OP_SETCURVAR);
-      codeStream.emitSTE(varName);
-
-      if (arrayIndex)
+      if (isGlobal)
       {
-         //codeStream.emit(OP_ADVANCE_STR);
-         ip = arrayIndex->compile(codeStream, ip, TypeReqString);
-         codeStream.emit(OP_REWIND_STR);
-         codeStream.emit(OP_SETCURVAR_ARRAY);
-         codeStream.emit(OP_POP_STK);
+         codeStream.emit((hasArrayIndex) ? OP_LOADIMMED_IDENT : OP_SETCURVAR);
+         codeStream.emitSTE(varName);
       }
+
+      if (isVector && hasArrayIndex)
+      {
+         if (!isGlobal)
+         {
+            codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR);
+            codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber));
+         }
+
+         ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
+         codeStream.emit(OP_LOADVAR_VECTOR_MEMBER);
+         
+         return codeStream.tell();
+      }
+      else
+      {
+         if (hasArrayIndex && !isVector)
+         {
+            //codeStream.emit(OP_ADVANCE_STR);
+            ip = arrayIndex->compile(codeStream, ip, TypeReqString);
+            codeStream.emit(OP_REWIND_STR);
+            codeStream.emit(OP_SETCURVAR_ARRAY);
+            codeStream.emit(OP_POP_STK);
+         }
+      }
+
       switch (type)
       {
       case TypeReqUInt:
@@ -736,7 +765,16 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
 TypeReq VarNode::getPreferredType()
 {
-   bool oldVariables = arrayIndex || varName[0] == '$';
+   bool globalScope = varName[0] == '$';
+
+   if (!globalScope)
+   {
+      TypeReq actType = getFuncVars(dbgLineNumber)->lookupType(varName, dbgLineNumber);
+      if (actType == TypeReqVector)
+         return actType;
+   }
+
+   bool oldVariables = arrayIndex || globalScope;
    return oldVariables ? TypeReqNone : getFuncVars(dbgLineNumber)->lookupType(varName, dbgLineNumber);
 }
 

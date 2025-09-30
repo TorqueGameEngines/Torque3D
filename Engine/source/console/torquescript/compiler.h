@@ -110,6 +110,7 @@ namespace Compiler
       OP_LOADVAR_FLT,
       OP_LOADVAR_STR,
       OP_LOADVAR_VECTOR,
+      OP_LOADVAR_VECTOR_MEMBER,
 
       OP_SAVEVAR_UINT,
       OP_SAVEVAR_FLT,

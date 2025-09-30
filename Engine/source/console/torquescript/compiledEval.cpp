@@ -1476,6 +1476,31 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          _STK++;
          break;
 
+      case OP_LOADVAR_VECTOR_MEMBER:
+      {
+         U32 index = stack[_STK--].getInt();   // pop the index
+         ConsoleValue& vecVal = stack[_STK];   // this is the vector
+
+         Vector<ConsoleValue>* vec = vecVal.getVector();
+         if (!vec)
+         {
+            Con::errorf("Tried to index a non-vector variable.");
+            stack[_STK].setEmptyString(); // fail safe
+            break;
+         }
+
+         if (index >= vec->size())
+         {
+            Con::warnf("Vector index %u out of range (size=%zu)", index, vec->size());
+            stack[_STK].setEmptyString(); // fail safe
+            break;
+         }
+
+         // Replace vector with the element at that index
+         stack[_STK].setString((*vec)[index].getString());
+         break;
+      }
+
       case OP_SAVEVAR_UINT:
          Script::gEvalState.setIntVariable(stack[_STK].getInt());
          break;

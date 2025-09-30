@@ -167,7 +167,7 @@ SoundAsset::SoundAsset()
    mProfileDesc.mScatterDistance = Point3F(0.f, 0.f, 0.f);
    mProfileDesc.mPriority = 1.0f;
    mProfileDesc.mSourceGroup = NULL;
-
+   mProfileDesc.mFadeInEase = EaseF();
    mIsPlaylist = false;
 
    mPlaylist.mNumSlotsToPlay = SFXPlayList::SFXPlaylistSettings::NUM_SLOTS;
@@ -235,10 +235,10 @@ void SoundAsset::initPersistFields()
       addField("referenceDistanceVariance", TypePoint2F, Offset(mPlaylist.mSlots.mMinDistance.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
          "Bounds on randomization of #referenceDistance.\n\n"
          "@ref SFXPlayList_randomization\n");
-      addFieldV("maxDistance", TypeRangedF32, Offset(mPlaylist.mSlots.mMaxDistance.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
+      addFieldV("maxSlotDistance", TypeRangedF32, Offset(mPlaylist.mSlots.mMaxDistance.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
          "@c maxDistance to apply to 3D sounds in this slot (<1 to use @c maxDistance of track's own description).\n"
          "@see SFXDescription::maxDistance");
-      addField("maxDistanceVariance", TypePoint2F, Offset(mPlaylist.mSlots.mMaxDistance.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
+      addField("maxSlotDistanceVariance", TypePoint2F, Offset(mPlaylist.mSlots.mMaxDistance.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
          "Bounds on randomization of #maxDistance.\n\n"
          "@ref SFXPlayList_randomization\n");
       addFieldV("volumeScale", TypeRangedF32, Offset(mPlaylist.mSlots.mVolumeScale.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,

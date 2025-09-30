@@ -167,7 +167,7 @@ SoundAsset::SoundAsset()
    mProfileDesc.mScatterDistance = Point3F(0.f, 0.f, 0.f);
    mProfileDesc.mPriority = 1.0f;
    mProfileDesc.mSourceGroup = NULL;
-
+   mProfileDesc.mFadeInEase = EaseF();
    mIsPlaylist = false;
 
    mPlaylist.mNumSlotsToPlay = SFXPlayList::SFXPlaylistSettings::NUM_SLOTS;

@@ -2312,8 +2312,20 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          // Element is right above vector on the stack
          ConsoleValue elem = stack[_STK + 1];
 
-         // Push element into vector
-         vec->push_back(elem);
+         // if this is a vector loop its value.
+         if (elem.type == cvVector)
+         {
+            Vector<ConsoleValue>* embedVec = elem.getVector();
+            for (U32 v = 0; v < embedVec->size(); v++)
+            {
+               vec->push_back((*embedVec)[v]);
+            }
+         }
+         else
+         {
+            // Push element into vector
+            vec->push_back(elem);
+         }
 
          break;
       }

@@ -80,10 +80,10 @@ char* ConsoleValue::convertVectorToBuffer() const
    Vector<ConsoleValue>* vec = getVector();
 
    // concatenate elements, space-separated
-   for (U32 i = 0; i < vec->size(); i++)
+   for (U32 v = 0; v < vec->size(); v++)
    {
-      const char* elemStr = (*vec)[i].getString(); // convert element
-      if (i > 0)
+      const char* elemStr = (*vec)[v].getString(); // convert element
+      if (v > 0)
          dStrcat(buffer, " ", sizeof(buffer));
       dStrcat(buffer, elemStr, sizeof(buffer));
    }

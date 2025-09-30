@@ -120,13 +120,13 @@ typedef const char *StringTableEntry;
 
 enum ConsoleValueType
 {
-   cvNULL = -5,
+   cvNULL = -6,
+   cvVector = -5,
    cvInteger = -4,
    cvFloat = -3,
    cvString = -2,
    cvSTEntry = -1,
    cvConsoleValueType = 0,
-   cvVector = 1,
 };
 
 class ConsoleValue

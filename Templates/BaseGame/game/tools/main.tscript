@@ -98,8 +98,8 @@ function onStart()
    $ignoredDatablockSet = new SimSet();
 
    // fill the list of editors
-   $editors[count] = getWordCount( $Tools::loadFirst );
-   for ( %i = 0; %i < $editors[count]; %i++ )
+   $editorsCount = getWordCount( $Tools::loadFirst );
+   for ( %i = 0; %i < $editorsCount; %i++ )
    {
       $editors[%i] = getWord( $Tools::loadFirst, %i );
    }
@@ -123,8 +123,8 @@ function onStart()
             // Yes, this sucks and should be done better
             if ( strstr( $Tools::loadFirst, %editor ) == -1 )
             {
-               $editors[$editors[count]] = %editor;
-               $editors[count]++;
+               $editors[$editorsCount] = %editor;
+               $editorsCount++;
             }
          }
       }
@@ -151,9 +151,9 @@ function onStart()
             // Yes, this sucks and should be done better
             if ( strstr( $Tools::loadFirst, %editor ) == -1 )
             {
-               $editors[$editors[count]] = %editor;
-               $editorsPath[$editors[count]] = %folder;
-               $editors[count]++;
+               $editors[$editorsCount] = %editor;
+               $editorsPath[$editorsCount] = %folder;
+               $editorsCount++;
             }
          }
       }
@@ -162,7 +162,7 @@ function onStart()
 
    // initialize every editor
    new SimSet( EditorPluginSet );      
-   %count = $editors[count];
+   %count = $editorsCount;
    for ( %i = 0; %i < %count; %i++ )
    {
       %editorFilename = "./" @ $editors[%i] @ "/main." @ $TorqueScriptFileExtension;
@@ -261,8 +261,7 @@ function onExit()
                
    // Save any Layouts we might be using
    //GuiFormManager::SaveLayout(LevelBuilder, Default, User);
-         
-   %count = $editors[count];
+   %count = $editorsCount;
    for (%i = 0; %i < %count; %i++)
    {
       %destroyFunction = "destroy" @ $editors[%i];

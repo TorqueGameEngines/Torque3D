@@ -1468,7 +1468,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
          if (index >= vec->size())
          {
-            vec->setSize(index + 1);
+            vec->push_back(exprVal);
+            break;
          }
 
          (*vec)[index] = exprVal;
@@ -1498,6 +1499,12 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
       case OP_LOADVAR_VECTOR:
          currentRegister = -1;
          stack[_STK + 1].setVector(Script::gEvalState.getVectorVariable());
+         if (!stack[_STK + 1].getVector())
+         {
+            stack[_STK + 1].setVector(new Vector<ConsoleValue>());
+            stack[_STK + 1].getVector()->reserve(16);
+            Script::gEvalState.setVectorVariable(stack[_STK + 1].getVector());
+         }
          _STK++;
          break;
 
@@ -1518,9 +1525,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
          if (index >= vec->size())
          {
-            Con::warnf("Vector index %u out of range (size=%zu)", index, vec->size());
-            stack[_STK].setEmptyString(); // fail safe
-            break;
+            vec->setSize(index + 1);
          }
 
          // Replace vector with the element at that index use the type.
@@ -1609,6 +1614,12 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          curObject = NULL;
 
          stack[_STK + 1].setVector(Script::gEvalState.getLocalVectorVariable(reg));
+         if (!stack[_STK + 1].getVector())
+         {
+            stack[_STK + 1].setVector(new Vector<ConsoleValue>());
+            stack[_STK + 1].getVector()->reserve(16);
+            Script::gEvalState.setLocalVectorVariable(reg, stack[_STK + 1].getVector());
+         }
          _STK++;
          break;
 

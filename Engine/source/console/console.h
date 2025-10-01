@@ -273,6 +273,8 @@ public:
          return s == StringTable->EmptyString() ? 0.0f : dAtof(s);
       if (type == ConsoleValueType::cvString)
          return dStrcmp(s, "") == 0 ? 0.0f : dAtof(s);
+      if (type == ConsoleValueType::cvVector)
+         return getVector()->size();
       return dAtof(getConsoleData());
    }
 
@@ -286,7 +288,8 @@ public:
          return s == StringTable->EmptyString() ? 0 : dAtoi(s);
       if (type == ConsoleValueType::cvString)
          return dStrcmp(s, "") == 0 ? 0 : dAtoi(s);
-
+      if (type == ConsoleValueType::cvVector)
+         return getVector()->size();
       return dAtoi(getConsoleData());
    }
 
@@ -328,6 +331,8 @@ public:
          return s == StringTable->EmptyString() ? false : dAtob(s);
       if (type == ConsoleValueType::cvString)
          return dStrcmp(s, "") == 0 ? false : dAtob(s);
+      if (type == ConsoleValueType::cvVector)
+         return getVector()->size() > 0;
       return dAtob(getConsoleData());
    }
 

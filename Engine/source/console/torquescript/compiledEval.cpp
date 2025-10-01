@@ -1452,6 +1452,31 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          curNSDocBlock = NULL;
          break;
 
+      case OP_SETCURVAR_VECTOR_MEMBER:
+      {
+         U32 index = stack[_STK--].getInt();    // index
+         ConsoleValue& vecVal = stack[_STK--];    // vector
+         ConsoleValue exprVal = stack[_STK--];      // value
+
+         Vector<ConsoleValue>* vec = vecVal.getVector();
+         if (!vec)
+         {
+            Con::errorf("Assigning to non-vector variable, promoting to a vector.");
+            vecVal.setVector(new Vector<ConsoleValue>());
+            vec = vecVal.getVector();
+         }
+
+         if (index >= vec->size())
+         {
+            vec->setSize(index + 1);
+         }
+
+         (*vec)[index] = exprVal;
+
+         // leave the vector itself on stack (like other save ops)
+         break;
+      }
+
       case OP_LOADVAR_UINT:
          currentRegister = -1;
          stack[_STK + 1].setInt(Script::gEvalState.getIntVariable());
@@ -1484,9 +1509,10 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          Vector<ConsoleValue>* vec = vecVal.getVector();
          if (!vec)
          {
-            Con::errorf("Tried to index a non-vector variable.");
-            stack[_STK].setEmptyString(); // fail safe
-            break;
+            Con::errorf("Tried to index a non-vector variable. Promoting to vector.");
+            vecVal.setVector(new Vector<ConsoleValue>());
+            vec = vecVal.getVector();
+            vec->setSize(index + 1);
          }
 
          if (index >= vec->size())

@@ -1505,6 +1505,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
       {
          U32 index = stack[_STK--].getInt();   // pop the index
          ConsoleValue& vecVal = stack[_STK];   // this is the vector
+         TypeReq type = (TypeReq)code[ip++];
 
          Vector<ConsoleValue>* vec = vecVal.getVector();
          if (!vec)
@@ -1522,8 +1523,23 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             break;
          }
 
-         // Replace vector with the element at that index
-         stack[_STK].setString((*vec)[index].getString());
+         // Replace vector with the element at that index use the type.
+         switch (type)
+         {
+         case TypeReqUInt:
+            stack[_STK].setInt((*vec)[index].getInt());
+            break;
+         case TypeReqFloat:
+            stack[_STK].setFloat((*vec)[index].getFloat());
+            break;
+         case TypeReqString:
+         case TypeReqVector:
+         case TypeReqNone:
+            stack[_STK].setString((*vec)[index].getString());
+            break;
+         default:
+            break;
+         }
          break;
       }
 

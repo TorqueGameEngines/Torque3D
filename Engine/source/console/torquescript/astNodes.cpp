@@ -713,6 +713,7 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
       ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
       codeStream.emit(OP_LOADVAR_VECTOR_MEMBER);
+      codeStream.emit(type);
 
       return codeStream.tell();
    }
@@ -1143,6 +1144,7 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
       // Load element at index
       codeStream.emit(OP_LOADVAR_VECTOR_MEMBER);
+      codeStream.emit(subType);
 
       codeStream.emit((subType == TypeReqFloat) ? OP_LOADVAR_FLT : OP_LOADVAR_UINT);
       codeStream.emit(operand);

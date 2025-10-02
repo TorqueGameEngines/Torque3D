@@ -1537,8 +1537,10 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          case TypeReqFloat:
             stack[_STK].setFloat((*vec)[index].getFloat());
             break;
-         case TypeReqString:
          case TypeReqVector:
+            stack[_STK].setVector((*vec)[index].getVector());
+            break;
+         case TypeReqString:
          case TypeReqNone:
             stack[_STK].setString((*vec)[index].getString());
             break;
@@ -2389,21 +2391,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
          // Element is right above vector on the stack
          ConsoleValue elem = stack[_STK + 1];
-
-         // if this is a vector loop its value.
-         if (elem.type == cvVector)
-         {
-            Vector<ConsoleValue>* embedVec = elem.getVector();
-            for (U32 v = 0; v < embedVec->size(); v++)
-            {
-               vec->push_back((*embedVec)[v]);
-            }
-         }
-         else
-         {
-            // Push element into vector
-            vec->push_back(elem);
-         }
+         // Push element into vector
+         vec->push_back(elem);
 
          break;
       }

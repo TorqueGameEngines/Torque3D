@@ -146,6 +146,18 @@ struct VectorExprNode : ExprNode
    DBG_STMT_TYPE(VectorExprNode);
 };
 
+struct VectorIndexNode : ExprNode
+{
+   ExprNode* base;
+   ExprNode* index;
+
+   static VectorIndexNode* alloc(S32 lineNumber, ExprNode* b, ExprNode* i);
+
+   U32 compile(CodeStream& codeStream, U32 ip, TypeReq type) override;
+   TypeReq getPreferredType() override { return TypeReqNone; }
+   DBG_STMT_TYPE(VectorIndexNode);
+};
+
 struct ReturnStmtNode : StmtNode
 {
    ExprNode* expr;

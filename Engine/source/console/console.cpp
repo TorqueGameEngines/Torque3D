@@ -71,24 +71,26 @@ char* ConsoleValue::convertToBuffer() const
 
 char* ConsoleValue::convertVectorToBuffer() const
 {
-   static char buffer[4096]; // ⚠️ reuse buffer, or use FrameAllocator
-   buffer[0] = 0;
-
    if (!getVector())
       return (char*)"";
 
    Vector<ConsoleValue>* vec = getVector();
 
-   // concatenate elements, space-separated
+   // use FrameAllocator to avoid static overwrite
+   FrameTemp<char> outBuf(4096);
+   outBuf[0] = 0;
+
    for (U32 v = 0; v < vec->size(); v++)
    {
-      const char* elemStr = (*vec)[v].getString(); // convert element
+      const char* elemStr = (*vec)[v].getString();
+
       if (v > 0)
-         dStrcat(buffer, " ", sizeof(buffer));
-      dStrcat(buffer, elemStr, sizeof(buffer));
+         dStrcat(outBuf, " ", 4096);
+
+      dStrcat(outBuf, elemStr, 4096);
    }
 
-   return buffer;
+   return outBuf;
 }
 
 const char* ConsoleValue::getConsoleData() const

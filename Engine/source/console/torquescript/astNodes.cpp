@@ -371,7 +371,7 @@ U32 IterStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
 }
 
 //------------------------------------------------------------
-//
+
 U32 VectorExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 {
    // Emit instruction to create vector
@@ -395,7 +395,24 @@ U32 VectorExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    return ip;
 }
 
-// 
+
+//------------------------------------------------------------
+
+U32 VectorIndexNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
+{
+   // Compile base expression as vector
+   ip = base->compile(codeStream, ip, TypeReqVector);
+
+   // Compile index
+   ip = index->compile(codeStream, ip, TypeReqUInt);
+
+   // Emit load member
+   codeStream.emit(OP_LOADVAR_VECTOR_MEMBER);
+   codeStream.emit(type);
+
+   return ip;
+}
+
 //------------------------------------------------------------
 
 U32 ConditionalExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)

@@ -156,6 +156,9 @@ struct VectorIndexNode : ExprNode
    U32 compile(CodeStream& codeStream, U32 ip, TypeReq type) override;
    TypeReq getPreferredType() override { return TypeReqNone; }
    DBG_STMT_TYPE(VectorIndexNode);
+
+   ExprNode* getBase() const { return base; }
+   ExprNode* getIndex() const { return index; }
 };
 
 struct ReturnStmtNode : StmtNode

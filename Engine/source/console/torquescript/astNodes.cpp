@@ -717,7 +717,7 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    {
       if (isVector)
       {
-         if (dynamic_cast<CommaCatExprNode*>(arrayIndex))
+         if (dynamic_cast<CommaCatExprNode*>(arrayIndex) || arrayIndex->getPreferredType() == TypeReqString)
          {
             type = TypeReqString;
             codeStream.emit(OP_LOADIMMED_IDENT);
@@ -1009,7 +1009,7 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    {
       if (isVector)
       {
-         if (dynamic_cast<CommaCatExprNode*>(arrayIndex))
+         if (dynamic_cast<CommaCatExprNode*>(arrayIndex) || arrayIndex->getPreferredType() == TypeReqString)
          {
             codeStream.emit(OP_LOADIMMED_IDENT);
             codeStream.emitSTE(varName);

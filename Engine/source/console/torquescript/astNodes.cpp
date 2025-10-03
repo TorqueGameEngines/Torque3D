@@ -1009,8 +1009,6 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    {
       if (isVector)
       {
-         subType = TypeReqVector;
-
          if (dynamic_cast<CommaCatExprNode*>(arrayIndex))
          {
             codeStream.emit(OP_LOADIMMED_IDENT);
@@ -1046,7 +1044,7 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
             else
             {
                codeStream.emit(OP_SAVE_LOCAL_VAR_VECTOR);
-               codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, subType == TypeReqNone ? TypeReqString : subType, dbgLineNumber));
+               codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber));
                codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR);
                codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber));
             }

@@ -269,6 +269,39 @@ TEST_F(ScriptTest, Basic_Function_Call_And_Local_Variable_Testing)
    ASSERT_EQ(staticCall.getInt(), 3);
 }
 
+TEST_F(ScriptTest, VectorTests)
+{
+   ConsoleValue vecTest = RunScript(R"(
+      function doTest(){
+         %arr = [1,2,3,4];
+         return %arr[1];
+      }
+      return doTest();
+   )");
+   ASSERT_EQ(vecTest.getInt(), 2);
+
+   vecTest = RunScript(R"(
+      $arr = [[1,2,3],[4,5,6]];
+      return $arr[1][1];
+   )");
+   ASSERT_EQ(vecTest.getInt(), 5);
+
+   vecTest = RunScript(R"(
+      function doTest(){
+         %vec1 = [1,2,3];
+         %vec2 = [4,5,6];
+         %vec3 = [7,8,9];
+         %vecCombine = [%vec1,%vec2,%vec3];
+
+         return %vecCombine[2][1];
+      }
+      return doTest();
+   )");
+   
+   ASSERT_EQ(vecTest.getInt(), 8);
+
+}
+
 TEST_F(ScriptTest, Basic_Conditional_Statements)
 {
    ConsoleValue value = RunScript(R"(

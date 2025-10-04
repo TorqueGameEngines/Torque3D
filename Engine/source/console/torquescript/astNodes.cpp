@@ -739,7 +739,7 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
             else
             {
                codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR);
-               codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber));
+               codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
             }
 
             ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
@@ -795,6 +795,7 @@ TypeReq VarNode::getPreferredType()
 {
    bool globalScope = varName[0] == '$';
    TypeReq actType = TypeReqNone;
+   bool isVector = arrayIndex;
    bool isOldArray = dynamic_cast<CommaCatExprNode*>(arrayIndex);
 
    if (!globalScope && !isOldArray)
@@ -803,7 +804,12 @@ TypeReq VarNode::getPreferredType()
    }
 
    
-   return globalScope || isOldArray ? TypeReqNone : actType;
+   if (globalScope && isVector)
+      return TypeReqVector;
+   else if (isOldArray)
+      return TypeReqNone;
+   else
+      return actType;
 }
 
 //------------------------------------------------------------
@@ -1038,12 +1044,29 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
             {
                codeStream.emit(OP_SETCURVAR_CREATE);
                codeStream.emitSTE(varName);
+               Dictionary::Entry* ent = Con::gGlobalVars.lookup(varName);
+               if (!ent)
+               {
+                  Con::gGlobalVars.add(varName);
+               }
+
                codeStream.emit(OP_LOADVAR_VECTOR);
             }
             else
             {
+               if (Con::getFrameStack().size() > 0)
+               {
+                  Dictionary::Entry* ent = Con::getCurrentStackFrame()->lookup(varName);
+                  if (!ent)
+                  {
+                     codeStream.emit(OP_SAVE_LOCAL_VAR_VECTOR);
+                     codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber));
+                     Con::getCurrentStackFrame()->add(varName);
+                  }
+               }
+
                codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR);
-               codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber));
+               codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
             }
 
             ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);

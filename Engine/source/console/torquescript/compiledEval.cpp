@@ -1455,8 +1455,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
       case OP_SETCURVAR_VECTOR_MEMBER:
       {
          U32 index = stack[_STK--].getInt();    // index
-         ConsoleValue& vecVal = stack[_STK--];    // vector
-         ConsoleValue exprVal = stack[_STK--];      // value
+         ConsoleValue& vecVal = stack[_STK--];  // vector
+         ConsoleValue exprVal = stack[_STK--];  // value
 
          Vector<ConsoleValue>* vec = vecVal.getVector();
          if (!vec)
@@ -1473,10 +1473,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
          (*vec)[index] = exprVal;
 
-         // leave the vector itself on stack (like other save ops)
          break;
       }
-
       case OP_LOADVAR_UINT:
          currentRegister = -1;
          stack[_STK + 1].setInt(Script::gEvalState.getIntVariable());
@@ -1501,7 +1499,6 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          if (!stack[_STK + 1].getVector())
          {
             stack[_STK + 1].setVector(new Vector<ConsoleValue>());
-            stack[_STK + 1].getVector()->reserve(16);
             Script::gEvalState.setVectorVariable(stack[_STK + 1].getVector());
          }
          _STK++;

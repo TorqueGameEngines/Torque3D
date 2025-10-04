@@ -106,6 +106,7 @@ namespace Compiler
       OP_SETCURVAR_ARRAY,
       OP_SETCURVAR_ARRAY_CREATE,
       OP_SETCURVAR_VECTOR_MEMBER,
+      OP_SETCURVAR_VECTOR_MEMBER_LOCAL,
 
       OP_LOADVAR_UINT,// 40
       OP_LOADVAR_FLT,
@@ -306,7 +307,7 @@ class FuncVars
 public:
    S32 assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, bool isConstant = false);
 
-   S32 lookup(StringTableEntry var, S32 lineNumber);
+   S32 lookup(StringTableEntry var, S32 lineNumber, TypeReq defaultType = TypeReqString);
 
    TypeReq lookupType(StringTableEntry var, S32 lineNumber);
 

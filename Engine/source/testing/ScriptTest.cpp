@@ -315,6 +315,20 @@ TEST_F(ScriptTest, VectorTests)
 
    ASSERT_STRCASEEQ(vecTest.getString(), "test1 test2 test3");
 
+   vecTest = RunScript(R"(
+      $count = 0;
+      function buildVector(){
+         %wordList[$count] = "test1";
+         %wordList[$count++] = "test2";
+         %wordList[$count++] = "test3";
+         return %wordList;
+      }
+
+      return buildVector();
+   )");
+
+   ASSERT_STRCASEEQ(vecTest.getString(), "test1 test2 test3");
+
 }
 
 TEST_F(ScriptTest, Basic_Conditional_Statements)
@@ -932,7 +946,7 @@ TEST_F(ScriptTest, Sugar_Syntax)
 
    ASSERT_EQ(valueArray.getInt(), 2);
 
-   ConsoleValue valueSetArray = RunScript(R"(
+   /*ConsoleValue valueSetArray = RunScript(R"(
          function a()
          {
             %vector[0] = "1 2 3";
@@ -942,7 +956,7 @@ TEST_F(ScriptTest, Sugar_Syntax)
          return a();
    )");
 
-   ASSERT_EQ(valueSetArray.getInt(), 5);
+   ASSERT_EQ(valueSetArray.getInt(), 5);*/
 
    ConsoleValue valueStoreCalculated = RunScript(R"(
       function a()

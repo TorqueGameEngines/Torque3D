@@ -54,7 +54,7 @@ public:
    private:
 
       friend class WeakRefBase;
-      constexpr explicit WeakReference(WeakRefBase *object) { mObject = object; mRefCount = 0; }
+     constexpr explicit WeakReference(WeakRefBase *object) :mObject(object), mRefCount(0) {}
       ~WeakReference() { AssertFatal(mObject==nullptr, "Deleting weak reference which still points at an object."); }
 
       // Object we reference

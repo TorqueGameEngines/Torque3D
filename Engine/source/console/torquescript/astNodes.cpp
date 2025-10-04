@@ -1038,13 +1038,10 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
             {
                codeStream.emit(OP_SETCURVAR_CREATE);
                codeStream.emitSTE(varName);
-               codeStream.emit(OP_SAVEVAR_VECTOR);
                codeStream.emit(OP_LOADVAR_VECTOR);
             }
             else
             {
-               codeStream.emit(OP_SAVE_LOCAL_VAR_VECTOR);
-               codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber));
                codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR);
                codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber));
             }

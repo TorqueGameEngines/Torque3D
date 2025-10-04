@@ -302,68 +302,7 @@ public:
 
    TORQUE_FORCEINLINE Vector<ConsoleValue>* getVector() const
    {
-      if (type == cvVector)
-         return static_cast<Vector<ConsoleValue>*>(dataPtr);
-
-      Vector<ConsoleValue>* newVec = new Vector<ConsoleValue>();
-      switch (type)
-      {
-      case cvInteger:
-      {
-         ConsoleValue cv;
-         cv.setInt(i);
-         newVec->push_back(cv);
-         break;
-      }
-      case cvFloat:
-      {
-         ConsoleValue cv;
-         cv.setFloat(f);
-         newVec->push_back(cv);
-         break;
-      }
-      case cvSTEntry:
-      case cvString:
-      {
-         if (s && *s)
-         {
-            // Split by whitespace
-            const char* walk = s;
-            while (*walk)
-            {
-               while (*walk && dIsspace(*walk))
-                  walk++;
-
-               if (!*walk) break;
-
-               const char* start = walk;
-               while (*walk && !dIsspace(*walk))
-                  walk++;
-
-               U32 len = walk - start;
-               char* word = new char[len + 1];
-               dStrncpy(word, start, len);
-               word[len] = 0;
-
-               ConsoleValue cv;
-               cv.setString(word);
-               newVec->push_back(cv);
-
-               delete[] word;
-            }
-         }
-         break;
-      }
-      case cvNULL:
-         // Leave empty vector
-         break;
-
-      default:
-         // Fallback: treat as empty
-         break;
-      }
-
-      return newVec;
+      return (type == cvVector) ? static_cast<Vector<ConsoleValue>*>(dataPtr) : NULL;
    }
 
    TORQUE_FORCEINLINE const char* getString() const

@@ -297,8 +297,23 @@ TEST_F(ScriptTest, VectorTests)
       }
       return doTest();
    )");
-   
+
    ASSERT_EQ(vecTest.getInt(), 8);
+
+   vecTest = RunScript(R"(
+      $count = 0;
+      function addToVector(%inWord){
+         $wordList[$count] = %inWord;
+         $count++;
+      }
+      addToVector("test1");
+      addToVector("test2");
+      addToVector("test3");
+
+      return $wordList;
+   )");
+
+   ASSERT_STRCASEEQ(vecTest.getString(), "test1 test2 test3");
 
 }
 

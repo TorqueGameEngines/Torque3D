@@ -140,6 +140,7 @@ public:
       {
          F64   f;
          S64   i;
+         Vector<ConsoleValue>* vec;
          char* s;
       };
 
@@ -162,13 +163,17 @@ public:
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      if (type <= cvString && bufferLen > 0)
+      if (type <= ConsoleValueType::cvString && bufferLen > 0)
       {
          dFree(s);
          bufferLen = 0;
       }
 
       s = const_cast<char*>(StringTable->EmptyString());
+
+      /*if (type == ConsoleValueType::cvVector && vec->size() > 0)
+         vec->clear();*/
+
       type = ConsoleValueType::cvNULL;
    }
    ConsoleValue()
@@ -202,10 +207,9 @@ public:
          setString(ref.s);
          break;
       case cvVector:
-         if (ref.dataPtr)
+         if (ref.vec)
          {
-            Vector<ConsoleValue>* newVec = new Vector<ConsoleValue>(*static_cast<Vector<ConsoleValue>*>(ref.dataPtr));
-            setVector(newVec);
+            setVector(ref.vec);
          }
          else
             setVector(new Vector<ConsoleValue>());
@@ -224,10 +228,9 @@ public:
          std::cout << "Ref already cleared!";
          break;
       case cvVector:
-         if (ref.dataPtr)
+         if (ref.vec)
          {
-            Vector<ConsoleValue>* newVec = new Vector<ConsoleValue>(*static_cast<Vector<ConsoleValue>*>(ref.dataPtr));
-            setVector(newVec);
+            setVector(ref.vec);
          }
          else
          {
@@ -274,7 +277,7 @@ public:
       if (type == ConsoleValueType::cvString)
          return dStrcmp(s, "") == 0 ? 0.0f : dAtof(s);
       if (type == ConsoleValueType::cvVector)
-         return getVector()->size();
+         return vec->size();
       return dAtof(getConsoleData());
    }
 
@@ -289,26 +292,25 @@ public:
       if (type == ConsoleValueType::cvString)
          return dStrcmp(s, "") == 0 ? 0 : dAtoi(s);
       if (type == ConsoleValueType::cvVector)
-         return getVector()->size();
+         return vec->size();
       return dAtoi(getConsoleData());
    }
 
    TORQUE_FORCEINLINE void setVector(Vector<ConsoleValue>* v)
    {
-      cleanupData();
+      //cleanupData();
       type = cvVector;
-      dataPtr = v;
+      vec = v;
    }
 
    TORQUE_FORCEINLINE Vector<ConsoleValue>* getVector() const
    {
       if (type == cvVector)
-         return static_cast<Vector<ConsoleValue>*>(dataPtr);
+         return vec;
 
       // Handle string or string table entry as a space-delimited vector
       if (type == cvString || type == cvSTEntry)
       {
-         Vector<ConsoleValue>* vec = new Vector<ConsoleValue>;
          const char* str = s ? s : "";
 
          char* buffer = dStrdup(str);
@@ -356,7 +358,7 @@ public:
       if (type == ConsoleValueType::cvString)
          return dStrcmp(s, "") == 0 ? false : dAtob(s);
       if (type == ConsoleValueType::cvVector)
-         return getVector()->size() > 0;
+         return vec->size() > 0;
       return dAtob(getConsoleData());
    }
 

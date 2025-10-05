@@ -1054,15 +1054,7 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
             }
             else // the issue with locals is that the framestack only exists after the op_ codes are run.
             {
-               if (Con::getFrameStack().size() > 0) // check the frame stack
-               {
-                  Dictionary::Entry* ent = Con::getCurrentStackFrame()->lookup(varName);
-                  if (!ent)
-                  {
-                     Con::getCurrentStackFrame()->add(varName);
-                  }
-               }
-               else if(getFuncVars(dbgLineNumber)->count() == 0)// no frame stack, if func vars count is 0, save the var.
+               if(getFuncVars(dbgLineNumber)->count() == 0)// no frame stack, if func vars count is 0, save the var.
                {
                   getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber);
                }

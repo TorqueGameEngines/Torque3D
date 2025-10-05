@@ -43,7 +43,7 @@ public:
    public:
 
       [[nodiscard]] constexpr WeakRefBase* get() const { return mObject; }
-      [[nodiscard]] constexpr U32 getRefCount() const { return mRefCount; }
+      [[nodiscard]] constexpr U32 getRefCount()  const { return mRefCount; }
 
       constexpr void incRefCount() { mRefCount++; }
       constexpr void decRefCount() {
@@ -54,7 +54,8 @@ public:
    private:
 
       friend class WeakRefBase;
-     constexpr explicit WeakReference(WeakRefBase *object) :mObject(object), mRefCount(0) {}
+      constexpr explicit WeakReference(WeakRefBase *object) :mObject(object), mRefCount(0) {}
+
       ~WeakReference() { AssertFatal(mObject==nullptr, "Deleting weak reference which still points at an object."); }
 
       // Object we reference
@@ -66,7 +67,7 @@ public:
 
 public:
    constexpr WeakRefBase() : mReference(nullptr) {}
-   virtual ~WeakRefBase() { clearWeakReferences(); }
+   virtual ~WeakRefBase()  { clearWeakReferences(); }
 
    WeakReference* getWeakReference();
 
@@ -106,17 +107,17 @@ public:
    }
 
    /// Returns true if the pointer is not set.
-   [[nodiscard]] constexpr bool isNull()  const { return mReference == nullptr || mReference->get() == nullptr; }
+   [[nodiscard]] constexpr bool isNull()        const { return mReference == nullptr || mReference->get() == nullptr; }
    
    /// Returns true if the pointer is set.
-   [[nodiscard]] constexpr bool isValid() const { return mReference && mReference->get(); }
+   [[nodiscard]] constexpr bool isValid()       const { return mReference && mReference->get(); }
    
-   T* operator->()   const { return getPointer(); }
-   T& operator*()    const { return *getPointer(); }
-   operator T*()     const { return getPointer(); }
+   [[nodiscard]] constexpr T* operator->()      const { return getPointer(); }
+   [[nodiscard]] constexpr T& operator*()       const { return *getPointer(); }
+   [[nodiscard]] constexpr operator T*()        const { return getPointer(); }
    
    /// Returns the pointer.
-   [[nodiscard]] constexpr T* getPointer() const { return mReference ? ( T* ) mReference->get() : nullptr; }
+   [[nodiscard]] constexpr T* getPointer()      const { return mReference ? (T*)mReference->get() : nullptr; }
 
 protected:
    void set(WeakRefBase::WeakReference* ref)
@@ -146,10 +147,10 @@ class WeakRefUnion
    typedef WeakRefUnion<ExposedType> Union;
 
 public:
-   WeakRefUnion() : mPtr(nullptr) {}
-   WeakRefUnion(const WeakRefPtr<WeakRefBase> & ref, ExposedType * ptr) : mPtr(nullptr) { set(ref, ptr); }
-   WeakRefUnion(const Union & lock)                                     : mPtr(nullptr) { *this = lock; }
-   WeakRefUnion(WeakRefBase * ref)       : mPtr(nullptr) { set(ref, dynamic_cast<ExposedType*>(ref)); }
+   constexpr WeakRefUnion() : mPtr(nullptr) {}
+   constexpr WeakRefUnion(const WeakRefPtr<WeakRefBase> & ref, ExposedType * ptr) : mPtr(nullptr) { set(ref, ptr); }
+   constexpr WeakRefUnion(const Union & lock)                                     : mPtr(nullptr) { *this = lock; }
+   constexpr WeakRefUnion(WeakRefBase * ref)       : mPtr(nullptr) { set(ref, dynamic_cast<ExposedType*>(ref)); }
    ~WeakRefUnion() { mWeakReference = nullptr; }
 
    Union & operator=(const Union & ptr)
@@ -425,7 +426,7 @@ inline void WeakRefBase::clearWeakReferences()
    }
 }
 
-inline WeakRefBase::WeakReference * WeakRefBase::getWeakReference()
+inline WeakRefBase::WeakReference* WeakRefBase::getWeakReference()
 {
    if (!mReference)
    {
@@ -454,17 +455,17 @@ struct TypeTraits< StrongWeakRefPtr< T > > : public _TypeTraits< StrongWeakRefPt
 };
 
 template< typename T >
-inline T& Deref( WeakRefPtr< T >& ref )
+[[nodiscard]] constexpr T& Deref( WeakRefPtr< T >& ref )
 {
    return *ref;
 }
 template< typename T >
-inline T& Deref( StrongRefPtr< T >& ref )
+[[nodiscard]] constexpr T& Deref( StrongRefPtr< T >& ref )
 {
    return *ref;
 }
 template< typename T >
-inline T& Deref( StrongWeakRefPtr< T >& ref )
+[[nodiscard]] constexpr T& Deref( StrongWeakRefPtr< T >& ref )
 {
    return *ref;
 }

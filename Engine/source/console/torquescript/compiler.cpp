@@ -188,6 +188,17 @@ S32 FuncVars::lookup(StringTableEntry var, S32 lineNumber, TypeReq defaultType)
    return found->second.reg;
 }
 
+bool FuncVars::find(StringTableEntry var)
+{
+   std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
+   if (found == vars.end())
+   {
+      return false;
+   }
+
+   return true;
+}
+
 TypeReq FuncVars::lookupType(StringTableEntry var, S32 lineNumber)
 {
    std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);

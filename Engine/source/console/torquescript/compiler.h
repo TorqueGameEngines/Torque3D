@@ -309,6 +309,8 @@ public:
 
    S32 lookup(StringTableEntry var, S32 lineNumber, TypeReq defaultType = TypeReqString);
 
+   bool find(StringTableEntry var);
+
    TypeReq lookupType(StringTableEntry var, S32 lineNumber);
 
    inline S32 count() { return counter; }

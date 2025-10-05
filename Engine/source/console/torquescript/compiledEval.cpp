@@ -1665,7 +1665,6 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          prevField = NULL;
          prevObject = NULL;
          curObject = NULL;
-
          Script::gEvalState.setLocalVectorVariable(reg, stack[_STK].getVector());
          break;
 

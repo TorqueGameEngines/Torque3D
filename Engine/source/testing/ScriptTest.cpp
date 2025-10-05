@@ -281,6 +281,29 @@ TEST_F(ScriptTest, VectorTests)
    ASSERT_EQ(vecTest.getInt(), 2);
 
    vecTest = RunScript(R"(
+      function doTest(){
+         for ( %i = 0; %i < 7; %i++ )
+            %val[%i] = %i;
+
+         return %val[1];
+      }
+      return doTest();
+   )");
+
+   ASSERT_EQ(vecTest.getInt(), 1);
+
+   vecTest = RunScript(R"(
+      function doTest(){
+         for ( %i = 0; %i < 7; %i++ )
+            $val[%i] = %i;
+      }
+      doTest();
+      return $val[1];
+   )");
+
+   ASSERT_EQ(vecTest.getInt(), 1);
+
+   vecTest = RunScript(R"(
       $arr = [[1,2,3],[4,5,6]];
       return $arr[1][1];
    )");

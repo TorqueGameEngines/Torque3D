@@ -1059,20 +1059,16 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
                   Dictionary::Entry* ent = Con::getCurrentStackFrame()->lookup(varName);
                   if (!ent)
                   {
-                     codeStream.emit(OP_SAVE_LOCAL_VAR_VECTOR);
-                     codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber));
                      Con::getCurrentStackFrame()->add(varName);
                   }
                }
                else if(getFuncVars(dbgLineNumber)->count() == 0)// no frame stack, if func vars count is 0, save the var.
                {
-                  codeStream.emit(OP_SAVE_LOCAL_VAR_VECTOR);
-                  codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber));
+                  getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber);
                }
                else if(!getFuncVars(dbgLineNumber)->find(varName))
                {
-                  codeStream.emit(OP_SAVE_LOCAL_VAR_VECTOR);
-                  codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber));
+                  getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber);
                }
 
                codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR);

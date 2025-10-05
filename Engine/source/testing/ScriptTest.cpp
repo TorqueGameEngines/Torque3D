@@ -272,6 +272,31 @@ TEST_F(ScriptTest, Basic_Function_Call_And_Local_Variable_Testing)
 TEST_F(ScriptTest, VectorTests)
 {
    ConsoleValue vecTest = RunScript(R"(
+      $pref::SFX::channelVolume[1] = 1;
+      $pref::SFX::channelVolume[2] = 1;
+      $pref::SFX::channelVolume[3] = 1;
+      $pref::SFX::channelVolume[4] = 1;
+      $pref::SFX::channelVolume[5] = 1;
+      $pref::SFX::channelVolume[6] = 1;
+      $pref::SFX::channelVolume[7] = 1;
+      $pref::SFX::channelVolume[8] = 1;
+
+      function setChannel(%channel, %volume){
+         $channelVol[%channel] = %volume;
+      }
+
+      function doTest(){
+         for( %channel = 0; %channel <= 8; %channel ++ )
+            setChannel(%channel, $pref::SFX::channelVolume[ %channel ] );
+      }
+   
+      doTest();
+
+      return $channelVol[1];
+   )");
+   ASSERT_EQ(vecTest.getInt(), 1);
+
+   vecTest = RunScript(R"(
       function doTest(){
          %arr = [1,2,3,4];
          return %arr[1];

@@ -1521,7 +1521,25 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
          if (index >= vec->size())
          {
-            Con::errorf(ConsoleLogEntry::Script, "%s: Attempt to access an index larger than the size of the vector.", getFileLine(ip - 2));
+            Con::warnf(ConsoleLogEntry::Script, "%s: Attempt to access an index larger than the size of the vector", getFileLine(ip - 2));
+            switch (type)
+            {
+            case TypeReqUInt:
+               stack[_STK].setInt(-1);
+               break;
+            case TypeReqFloat:
+               stack[_STK].setFloat(0.0f);
+               break;
+            case TypeReqVector:
+               stack[_STK].setVector(new Vector<ConsoleValue>());
+               break;
+            case TypeReqString:
+            case TypeReqNone:
+               stack[_STK].setString("");
+               break;
+            default:
+               break;
+            }
             break;
          }
          // Replace vector with the element at that index use the type.

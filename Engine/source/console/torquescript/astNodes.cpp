@@ -805,7 +805,7 @@ TypeReq VarNode::getPreferredType()
 
    
    if (globalScope && isVector)
-      return TypeReqVector;
+      return TypeReqNone;
    else if (isOldArray)
       return TypeReqNone;
    else
@@ -1047,7 +1047,8 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
                Dictionary::Entry* ent = Con::gGlobalVars.lookup(varName);
                if (!ent)
                {
-                  Con::gGlobalVars.add(varName);
+                  ent = Con::gGlobalVars.add(varName);
+                  ent->setVectorValue(new Vector<ConsoleValue>());
                }
 
                codeStream.emit(OP_LOADVAR_VECTOR);

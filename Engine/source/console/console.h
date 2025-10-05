@@ -302,7 +302,31 @@ public:
 
    TORQUE_FORCEINLINE Vector<ConsoleValue>* getVector() const
    {
-      return (type == cvVector) ? static_cast<Vector<ConsoleValue>*>(dataPtr) : NULL;
+      if (type == cvVector)
+         return static_cast<Vector<ConsoleValue>*>(dataPtr);
+
+      // Handle string or string table entry as a space-delimited vector
+      if (type == cvString || type == cvSTEntry)
+      {
+         Vector<ConsoleValue>* vec = new Vector<ConsoleValue>;
+         const char* str = s ? s : "";
+
+         char* buffer = dStrdup(str);
+         char* tok = dStrtok(buffer, " \t\r\n");
+
+         while (tok)
+         {
+            ConsoleValue elem;
+            elem.setString(tok);
+            vec->push_back(elem);
+            tok = dStrtok(NULL, " \t\r\n");
+         }
+
+         dFree(buffer);
+         return vec;
+      }
+
+      return NULL;
    }
 
    TORQUE_FORCEINLINE const char* getString() const

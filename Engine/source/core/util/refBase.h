@@ -42,21 +42,21 @@ public:
    {
    public:
 
-      WeakRefBase * get() { return mObject; }
-      void incRefCount() { mRefCount++; }
-      void decRefCount()
-      {
+      [[nodiscard]] constexpr WeakRefBase* get() const { return mObject; }
+      [[nodiscard]] constexpr U32 getRefCount()  const { return mRefCount; }
+
+      constexpr void incRefCount() { mRefCount++; }
+      constexpr void decRefCount() {
          AssertFatal( mRefCount > 0, "WeakReference - decrementing count of zero!" );
          if (--mRefCount==0)
             delete this;
       }
-      U32 getRefCount() { return mRefCount; }
-
    private:
 
       friend class WeakRefBase;
-      WeakReference(WeakRefBase *object) { mObject = object; mRefCount = 0; }
-      ~WeakReference() { AssertFatal(mObject==NULL, "Deleting weak reference which still points at an object."); }
+      constexpr explicit WeakReference(WeakRefBase *object) :mObject(object), mRefCount(0) {}
+
+      ~WeakReference() { AssertFatal(mObject==nullptr, "Deleting weak reference which still points at an object."); }
 
       // Object we reference
       WeakRefBase *mObject;
@@ -66,10 +66,10 @@ public:
    };
 
 public:
-   WeakRefBase() { mReference = NULL; }
-   virtual ~WeakRefBase() { clearWeakReferences(); }
+   constexpr WeakRefBase() : mReference(nullptr) {}
+   virtual ~WeakRefBase()  { clearWeakReferences(); }
 
-   WeakReference * getWeakReference();
+   WeakReference* getWeakReference();
 
 protected:
    void clearWeakReferences();
@@ -88,14 +88,15 @@ template< typename T > class SimObjectPtr;
 template <class T> class WeakRefPtr
 {
 public:
-   WeakRefPtr()  { mReference = NULL; }
-   WeakRefPtr(T *ptr)  { mReference = NULL; set(ptr); }
-   WeakRefPtr(const WeakRefPtr<T> & ref) { mReference = NULL; set(ref.mReference); }
+   constexpr WeakRefPtr()  : mReference(nullptr) {}
+   WeakRefPtr(T *ptr)      : mReference(nullptr) { set(ptr); }
+   WeakRefPtr(const WeakRefPtr<T> & ref) { mReference = nullptr; set(ref.mReference); }
    
-   ~WeakRefPtr() { set((WeakRefBase::WeakReference*)NULL); }
+   ~WeakRefPtr() { set(static_cast<WeakRefBase::WeakReference *>(nullptr)); }
 
    WeakRefPtr<T>& operator=(const WeakRefPtr<T>& ref)
    {
+      if (this == &ref) { return *this; } // handle self assignment ( x = x; )
       set(ref.mReference);
       return *this;
    }
@@ -106,24 +107,24 @@ public:
    }
 
    /// Returns true if the pointer is not set.
-   bool isNull() const { return mReference == NULL || mReference->get() == NULL; }
+   [[nodiscard]] constexpr bool isNull()        const { return mReference == nullptr || mReference->get() == nullptr; }
    
    /// Returns true if the pointer is set.
-   bool isValid() const { return mReference && mReference->get(); }
+   [[nodiscard]] constexpr bool isValid()       const { return mReference && mReference->get(); }
    
-   T* operator->() const { return getPointer(); }
-   T& operator*() const { return *getPointer(); }
-   operator T*() const { return getPointer(); }
+   [[nodiscard]] constexpr T* operator->()      const { return getPointer(); }
+   [[nodiscard]] constexpr T& operator*()       const { return *getPointer(); }
+   [[nodiscard]] constexpr operator T*()        const { return getPointer(); }
    
    /// Returns the pointer.
-   T* getPointer() const { return mReference ? ( T* ) mReference->get() : NULL; }
+   [[nodiscard]] constexpr T* getPointer()      const { return mReference ? (T*)mReference->get() : nullptr; }
 
 protected:
-   void set(WeakRefBase::WeakReference * ref)
+   void set(WeakRefBase::WeakReference* ref)
    {
       if (mReference)
          mReference->decRefCount();
-      mReference = NULL;
+      mReference = nullptr;
       if (ref)
       {
          mReference = ref;
@@ -131,10 +132,10 @@ protected:
       }
    }
 
-   void set(T * obj) { set(obj ? obj->getWeakReference() : (WeakRefBase::WeakReference *)NULL); }
+   void set(T* obj) { set(obj ? obj->getWeakReference() : nullptr); }
 private:
    template< typename > friend class SimObjectPtr;
-   WeakRefBase::WeakReference * mReference;
+   WeakRefBase::WeakReference * mReference {nullptr};
 };
 
 /// Union of an arbitrary type with a WeakRefBase.  The exposed type will
@@ -146,14 +147,15 @@ class WeakRefUnion
    typedef WeakRefUnion<ExposedType> Union;
 
 public:
-   WeakRefUnion() : mPtr(NULL) {}
-   WeakRefUnion(const WeakRefPtr<WeakRefBase> & ref, ExposedType * ptr) : mPtr(NULL) { set(ref, ptr); }
-   WeakRefUnion(const Union & lock) : mPtr(NULL) { *this = lock; }
-   WeakRefUnion(WeakRefBase * ref) : mPtr(NULL) { set(ref, dynamic_cast<ExposedType*>(ref)); }
-   ~WeakRefUnion() { mWeakReference = NULL; }
+   constexpr WeakRefUnion() : mPtr(nullptr) {}
+   constexpr WeakRefUnion(const WeakRefPtr<WeakRefBase> & ref, ExposedType * ptr) : mPtr(nullptr) { set(ref, ptr); }
+   constexpr WeakRefUnion(const Union & lock)                                     : mPtr(nullptr) { *this = lock; }
+   constexpr WeakRefUnion(WeakRefBase * ref)       : mPtr(nullptr) { set(ref, dynamic_cast<ExposedType*>(ref)); }
+   ~WeakRefUnion() { mWeakReference = nullptr; }
 
    Union & operator=(const Union & ptr)
    {
+      if (this == *ptr) { return *this; }
       set(ptr.mWeakReference, ptr.getPointer());
       return *this;
    }
@@ -164,18 +166,18 @@ public:
       mPtr = ptr;
    }
 
-   bool operator == (const ExposedType * t ) const { return getPointer() == t; }
-   bool operator != (const ExposedType * t ) const { return getPointer() != t; }
-   bool operator == (const Union &t ) const { return getPointer() == t.getPointer(); }
-   bool operator != (const Union &t ) const { return getPointer() != t.getPointer(); }
-   bool isNull()  const  { return mWeakReference.isNull() || !mPtr; }
+   [[nodiscard]] constexpr bool operator == (const ExposedType * t ) const { return getPointer() == t; }
+   [[nodiscard]] constexpr bool operator != (const ExposedType * t ) const { return getPointer() != t; }
+   [[nodiscard]] constexpr bool operator == (const Union &t )        const { return getPointer() == t.getPointer(); }
+   [[nodiscard]] constexpr bool operator != (const Union &t )        const { return getPointer() != t.getPointer(); }
+   [[nodiscard]] constexpr bool isNull()                             const { return mWeakReference.isNull() || !mPtr; }
 
-   ExposedType* getPointer() const { return !mWeakReference.isNull() ? mPtr : NULL; }
-   ExposedType* operator->() const { return getPointer(); }
-   ExposedType& operator*() const { return *getPointer(); }
-   operator ExposedType*() const { return getPointer(); }
+   [[nodiscard]] constexpr ExposedType* getPointer()        const { return !mWeakReference.isNull() ? mPtr : nullptr; }
+   [[nodiscard]] constexpr ExposedType* operator->()        const { return getPointer(); }
+   [[nodiscard]] constexpr ExposedType& operator*()         const { return *getPointer(); }
+   [[nodiscard]] constexpr operator ExposedType*()          const { return getPointer(); }
 
-   WeakRefPtr<WeakRefBase> getRef() const { return mWeakReference; }
+   [[nodiscard]] WeakRefPtr<WeakRefBase> getRef()           const { return mWeakReference; }
 
 private:
    WeakRefPtr<WeakRefBase> mWeakReference;
@@ -221,11 +223,7 @@ class StrongObjectRef
 
 public:
    /// Constructor, assigns from the object and increments its reference count if it's not NULL
-   StrongObjectRef(StrongRefBase *object = NULL) : mObject( object )
-   {
-      mObject = object;
-      incRef();
-   }
+   StrongObjectRef(StrongRefBase *object = nullptr) : mObject( object ) { incRef(); }
 
    /// Destructor, dereferences the object, if there is one
    ~StrongObjectRef() { decRef(); }
@@ -245,14 +243,14 @@ protected:
    StrongRefBase *mObject; ///< the object this RefObjectRef references
 
    /// increments the reference count on the referenced object
-   void incRef()
+   constexpr void incRef() const
    {
       if(mObject)
          mObject->incRefCount();
    }
 
    /// decrements the reference count on the referenced object
-   void decRef()
+   constexpr void decRef() const
    {
       if(mObject)
          mObject->decRefCount();
@@ -270,7 +268,7 @@ public:
    StrongRefPtr() : StrongObjectRef() {}
    StrongRefPtr(T *ptr) : StrongObjectRef(ptr) {}
    StrongRefPtr(const StrongRefPtr<T>& ref) : StrongObjectRef(ref.mObject) {}
-   ~StrongRefPtr() {}
+   ~StrongRefPtr() = default;
 
    StrongRefPtr<T>& operator=(const StrongRefPtr<T>& ref)
    {
@@ -283,9 +281,9 @@ public:
       return *this;
    }
 
-   bool isNull()  const  { return mObject == 0; }
-   bool isValid() const  { return mObject != 0; }
-   T* operator->() const { return getPointer(); }
+   [[nodiscard]] constexpr bool isNull()  const  { return mObject == nullptr; }
+   [[nodiscard]] constexpr bool isValid() const  { return mObject != nullptr; }
+   [[nodiscard]] T* operator->() const { return getPointer(); }
    T& operator*() const  { return *getPointer(); }
    operator T*() const { return getPointer(); }
    T* getPointer() const { return const_cast<T*>(static_cast<T* const>(mObject)); }
@@ -301,13 +299,13 @@ class StrongRefUnion
    typedef StrongRefUnion<ExposedType> Union;
 
 public:
-   StrongRefUnion() : mPtr(NULL) {}
+   StrongRefUnion() : mPtr(nullptr) {}
 
-   StrongRefUnion(const StrongRefPtr<StrongRefBase> & ref, ExposedType * ptr) : mPtr(NULL) { set(ref, ptr); }
-   StrongRefUnion(const Union & lock) : mPtr(NULL) { *this = lock; }
-   StrongRefUnion(StrongRefBase * ref) : mPtr(NULL) { set(ref, dynamic_cast<ExposedType*>(ref)); }
+   StrongRefUnion(const StrongRefPtr<StrongRefBase> & ref, ExposedType * ptr) : mPtr(nullptr) { set(ref, ptr); }
+   StrongRefUnion(const Union & lock)                                         : mPtr(nullptr) { *this = lock; }
+   StrongRefUnion(StrongRefBase * ref)         : mPtr(nullptr) { set(ref, dynamic_cast<ExposedType*>(ref)); }
 
-   ~StrongRefUnion() { mReference = NULL; }
+   ~StrongRefUnion() { mReference = nullptr; }
 
    Union & operator=(const Union & ptr)
    {
@@ -321,12 +319,12 @@ public:
       mPtr = ptr;
    }
 
-   bool operator == (const ExposedType * t ) const { return mPtr == t; }
-   bool operator != (const ExposedType * t ) const { return mPtr != t; }
-   bool operator == (const Union &t ) const { return mPtr == t.mPtr; }
-   bool operator != (const Union &t ) const { return mPtr != t.mPtr; }
-   bool isNull()  const  { return mReference.isNull() || !mPtr; }
-   bool isValid() const  { return mReference.isValid() && mPtr; }
+   [[nodiscard]] constexpr bool operator == (const ExposedType * t ) const { return mPtr == t; }
+   [[nodiscard]] constexpr bool operator != (const ExposedType * t ) const { return mPtr != t; }
+   [[nodiscard]] constexpr bool operator == (const Union &t )        const { return mPtr == t.mPtr; }
+   [[nodiscard]] constexpr bool operator != (const Union &t )        const { return mPtr != t.mPtr; }
+   [[nodiscard]] constexpr bool isNull()        const { return mReference.isNull() || !mPtr; }
+   [[nodiscard]] constexpr bool isValid()       const { return mReference.isValid() && mPtr; }
 
    ExposedType* operator->() const { return mPtr; }
    ExposedType& operator*() const { return *mPtr; }
@@ -353,8 +351,8 @@ template< class T >
 class StrongWeakRefPtr
 {
 public:
-   StrongWeakRefPtr() : mReference( NULL ) {}
-   StrongWeakRefPtr( T* ptr ) : mReference( NULL ) { _set( ptr ); }
+   constexpr StrongWeakRefPtr()           : mReference( nullptr ) {}
+   constexpr StrongWeakRefPtr( T* ptr )   : mReference( nullptr ) { _set( ptr ); }
    ~StrongWeakRefPtr()
    {
       if( mReference )
@@ -367,13 +365,15 @@ public:
       }
    }
 
-   bool isNull() const { return ( _get() == NULL ); }
-   bool operator ==( T* ptr ) const { return ( _get() == ptr ); }
-   bool operator !=( T* ptr ) const { return ( _get() != ptr ); }
-   bool operator !() const { return isNull(); }
-   T* operator ->() const { return _get(); }
-   T& operator *() const { return *( _get() ); }
-   operator T*() const { return _get(); }
+   [[nodiscard]] constexpr bool isNull()              const { return ( _get() == nullptr ); }
+   [[nodiscard]] constexpr bool operator ==( T* ptr ) const { return ( _get() == ptr ); }
+   [[nodiscard]] constexpr bool operator !=( T* ptr ) const { return ( _get() != ptr ); }
+   [[nodiscard]] constexpr bool operator !()          const { return isNull(); }
+   [[nodiscard]] constexpr T* operator ->()           const { return _get(); }
+   [[nodiscard]] constexpr T& operator *()            const { return *( _get() ); }
+
+   constexpr operator T*() const { return _get(); } // consider making this explicit
+
    T* getPointer() const { return _get(); }
 
    StrongWeakRefPtr& operator =( T* ptr )
@@ -390,7 +390,7 @@ private:
       if( mReference )
          return static_cast< T* >( mReference->get() );
       else
-         return NULL;
+         return nullptr;
    }
    void _set( T* ptr )
    {
@@ -410,7 +410,7 @@ private:
          mReference->incRefCount();
       }
       else
-         mReference = NULL;
+         mReference = nullptr;
    }
 };
 
@@ -420,13 +420,13 @@ inline void WeakRefBase::clearWeakReferences()
 {
    if (mReference)
    {
-      mReference->mObject = NULL;
+      mReference->mObject = nullptr;
       mReference->decRefCount();
-      mReference = NULL;
+      mReference = nullptr;
    }
 }
 
-inline WeakRefBase::WeakReference * WeakRefBase::getWeakReference()
+inline WeakRefBase::WeakReference* WeakRefBase::getWeakReference()
 {
    if (!mReference)
    {
@@ -455,17 +455,17 @@ struct TypeTraits< StrongWeakRefPtr< T > > : public _TypeTraits< StrongWeakRefPt
 };
 
 template< typename T >
-inline T& Deref( WeakRefPtr< T >& ref )
+[[nodiscard]] constexpr T& Deref( WeakRefPtr< T >& ref )
 {
    return *ref;
 }
 template< typename T >
-inline T& Deref( StrongRefPtr< T >& ref )
+[[nodiscard]] constexpr T& Deref( StrongRefPtr< T >& ref )
 {
    return *ref;
 }
 template< typename T >
-inline T& Deref( StrongWeakRefPtr< T >& ref )
+[[nodiscard]] constexpr T& Deref( StrongWeakRefPtr< T >& ref )
 {
    return *ref;
 }

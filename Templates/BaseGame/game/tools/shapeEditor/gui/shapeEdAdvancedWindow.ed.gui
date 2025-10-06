@@ -1,12 +1,4 @@
-// Let's check if the ShapeEdAdvancedWindow can be stacked in the side panel
-if (getWord($pref::Video::mode, 1) > 899 && isObject(ShapeEdSelectWindow) && isObject(ShapeEdPropWindow))
-{ 
-   $ShapeEdAdvancedWindowPos = getWord($pref::Video::mode, 0) - 360 SPC getWord(ShapeEdSelectWindow.extent, 1) + getWord(ShapeEdPropWindow.extent, 1) + getWord(EditorGuiToolbar.extent, 1) + 12 - 7;
-}
-else 
-{ 
-   $ShapeEdAdvancedWindowPos = getWord($pref::Video::mode, 0) - 720 SPC getWord(EditorGuiToolbar.extent, 1) + 6 - 7; 
-}
+$ShapeEdAdvancedWindowPos = getWord($pref::Video::mode, 0) - 720 SPC getWord(EditorGuiToolbar.extent, 1) + 6 - 7; 
 
 //--- OBJECT WRITE BEGIN ---
 $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
@@ -105,8 +97,8 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                   ticks = "1";
                   snap = "1";
                   value = "0";
-                  position = "57 22";
-                  extent = "1178 14";
+                  position = "68 22";
+                  extent = "251 14";
                   horizSizing = "width";
                   profile = "ToolsGuiSliderBoxProfile";
                   variable = "ShapeEdShapeView.currentDL";
@@ -116,9 +108,9 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiBitmapCtrl() {
                   BitmapAsset = "ToolsModule:inactive_overlay_image";
-                  position = "57 19";
-                  extent = "290 20";
-                  profile = "GuiDefaultProfile";
+                  position = "68 19";
+                  extent = "279 20";
+                  profile = "ToolsGuiDefaultProfile";
                   tooltipProfile = "GuiToolTipProfile";
                   tooltip = "Levels needs to be selected to enable the detail level slider";
                   hovertime = "500";
@@ -138,14 +130,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Polys";
-                  position = "37 40";
+                  position = "45 40";
                   extent = "26 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiTextCtrl() {
                   text = "0";
-                  position = "77 40";
+                  position = "86 40";
                   extent = "40 16";
                   profile = "ToolsGuiTextProfile";
                   variable = "ShapeEdShapeView.detailPolys";
@@ -154,14 +146,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Size";
-                  position = "127 40";
+                  position = "159 40";
                   extent = "24 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiTextEditCtrl() {
-                  position = "160 39";
-                  extent = "35 20";
+                  position = "192 40";
+                  extent = "35 16";
                   profile = "ToolsGuiTextEditProfile";
                   variable = "ShapeEdShapeView.detailSize";
                   altCommand = "ShapeEdAdvancedWindow.onEditDetailSize();";
@@ -171,14 +163,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Pixels";
-                  position = "35 60";
+                  position = "43 60";
                   extent = "28 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiTextCtrl() {
                   text = "0";
-                  position = "77 60";
+                  position = "85 60";
                   extent = "40 16";
                   profile = "ToolsGuiTextProfile";
                   variable = "ShapeEdShapeView.pixelSize";
@@ -187,14 +179,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Distance";
-                  position = "109 60";
-                  extent = "42 16";
+                  position = "130 60";
+                  extent = "53 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiTextCtrl() {
                   text = "5";
-                  position = "160 60";
+                  position = "192 60";
                   extent = "38 16";
                   profile = "ToolsGuiTextProfile";
                   variable = "ShapeEdShapeView.orbitDist";
@@ -204,13 +196,13 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                new GuiTextCtrl() {
                   text = "Materials";
                   position = "20 80";
-                  extent = "43 16";
+                  extent = "52 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiTextCtrl() {
                   text = "0";
-                  position = "77 80";
+                  position = "85 80";
                   extent = "40 16";
                   profile = "ToolsGuiTextProfile";
                   variable = "ShapeEdShapeView.numMaterials";
@@ -219,14 +211,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Bones";
-                  position = "120 80";
-                  extent = "31 16";
+                  position = "144 80";
+                  extent = "39 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiTextCtrl() {
                   text = "0";
-                  position = "160 80";
+                  position = "192 80";
                   extent = "38 16";
                   profile = "ToolsGuiTextProfile";
                   variable = "ShapeEdShapeView.numBones";
@@ -235,14 +227,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Primitives";
-                  position = "19 100";
-                  extent = "44 16";
+                  position = "15 100";
+                  extent = "56 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiTextCtrl() {
                   text = "0";
-                  position = "77 100";
+                  position = "85 100";
                   extent = "40 16";
                   profile = "ToolsGuiTextProfile";
                   variable = "ShapeEdShapeView.numDrawCalls";
@@ -251,14 +243,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Weights";
-                  position = "109 100";
-                  extent = "42 16";
+                  position = "134 100";
+                  extent = "49 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiTextCtrl() {
                   text = "0";
-                  position = "160 100";
+                  position = "192 100";
                   extent = "38 16";
                   profile = "ToolsGuiTextProfile";
                   variable = "ShapeEdShapeView.numWeights";
@@ -267,31 +259,31 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Col Meshes";
-                  position = "7 120";
-                  extent = "56 16";
+                  position = "4 120";
+                  extent = "67 16";
                   profile = "ToolsGuiTextProfile";
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiTextCtrl() {
                   text = "0";
-                  position = "74 120";
+                  position = "82 120";
                   extent = "40 16";
-                  profile = "GuiTextProfile";
+                  profile = "ToolsGuiTextProfile";
                   variable = "ShapeEdShapeView.colMeshes";
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiTextCtrl() {
                   text = "Col Polys";
-                  position = "108 120";
-                  extent = "43 16";
+                  position = "128 120";
+                  extent = "55 16";
                   profile = "ToolsGuiTextProfile";
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiTextCtrl() {
                   text = "0";
-                  position = "160 120";
+                  position = "192 120";
                   extent = "38 16";
-                  profile = "GuiTextProfile";
+                  profile = "ToolsGuiTextProfile";
                   variable = "ShapeEdShapeView.colPolys";
                   tooltipProfile = "GuiToolTipProfile";
                };
@@ -314,7 +306,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                new GuiCheckBoxCtrl() {
                   text = "Use Imposters";
                   position = "72 2";
-                  extent = "83 13";
+                  extent = "104 13";
                   profile = "ToolsGuiCheckBoxProfile";
                   command = "ShapeEdDetails.onToggleImposter( $ThisControl.getValue() );";
                   tooltipProfile = "ToolsGuiToolTipProfile";
@@ -324,13 +316,13 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                new GuiTextCtrl() {
                   text = "Detail Level";
                   position = "6 23";
-                  extent = "57 16";
+                  extent = "64 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                   isContainer = "0";
                };
                new GuiTextEditCtrl() {
-                  position = "68 22";
+                  position = "80 22";
                   extent = "36 20";
                   profile = "ToolsGuiTextEditProfile";
                   altCommand = "ShapeEdDetails.onEditImposter();";
@@ -340,13 +332,13 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Dimension";
-                  position = "6 43";
-                  extent = "57 16";
+                  position = "13 43";
+                  extent = "59 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiTextEditCtrl() {
-                  position = "72 43";
+                  position = "80 43";
                   extent = "36 20";
                   profile = "ToolsGuiTextEditProfile";
                   altCommand = "ShapeEdDetails.onEditImposter();";
@@ -356,13 +348,13 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "X Steps";
-                  position = "6 65";
+                  position = "13 65";
                   extent = "57 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                };
                new GuiTextEditCtrl() {
-                  position = "68 64";
+                  position = "81 64";
                   extent = "36 20";
                   profile = "ToolsGuiTextEditProfile";
                   altCommand = "ShapeEdDetails.onEditImposter();";
@@ -372,8 +364,8 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiCheckBoxCtrl() {
                   text = "Include Poles";
-                  position = "113 24";
-                  extent = "83 18";
+                  position = "129 24";
+                  extent = "97 18";
                   profile = "ToolsGuiCheckBoxProfile";
                   command = "ShapeEdDetails.onEditImposter();";
                   tooltipProfile = "ToolsGuiToolTipProfile";
@@ -382,15 +374,15 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Y Steps";
-                  position = "116 44";
-                  extent = "41 16";
+                  position = "130 44";
+                  extent = "45 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                   tooltip = "Number of steps in the vertical axis";
                   isContainer = "0";
                };
                new GuiTextEditCtrl() {
-                  position = "161 43";
+                  position = "185 43";
                   extent = "36 20";
                   profile = "ToolsGuiTextEditProfile";
                   altCommand = "ShapeEdDetails.onEditImposter();";
@@ -399,14 +391,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Y Angle";
-                  position = "116 65";
-                  extent = "41 16";
+                  position = "130 65";
+                  extent = "44 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                   tooltip = "Polar Angle - Y axis";
                };
                new GuiTextEditCtrl() {
-                  position = "161 64";
+                  position = "185 64";
                   extent = "36 20";
                   profile = "ToolsGuiTextEditProfile";
                   altCommand = "ShapeEdDetails.onEditImposter();";
@@ -416,8 +408,8 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                new GuiBitmapCtrl() {
                   BitmapAsset = "ToolsModule:inactive_overlay_image";
                   position = "4 18";
-                  extent = "193 68";
-                  profile = "GuiDefaultProfile";
+                  extent = "246 68";
+                  profile = "ToolsGuiDefaultProfile";
                   tooltipProfile = "GuiToolTipProfile";
                   tooltip = "Imposters must be enabled, and an imposter detail level selected to edit these properties";
                   hovertime = "500";
@@ -491,15 +483,15 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                   position = "1 1";
                   extent = "1242 11";
                   minExtent = "8 11";
-                  profile = "GuiDefaultProfile";
+                  profile = "ToolsGuiDefaultProfile";
                   command = "ShapeEdMountWindow.update_onMountSelectionChanged();";
                   tooltipProfile = "ToolsGuiToolTipProfile";
                   internalName = "mountList";
                };
             };
             new GuiContainer() {
-               position = "0 579";
-               extent = "1244 85";
+               position = "0 159";
+               extent = "324 85";
                horizSizing = "width";
                vertSizing = "top";
                profile = "inspectorStyleRolloutDarkProfile";
@@ -514,7 +506,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiBitmapButtonCtrl() {
                   BitmapAsset = "ToolsModule:delete_n_image";
-                  position = "1224 1";
+                  position = "286 1";
                   extent = "16 16";
                   horizSizing = "left";
                   profile = "ToolsGuiDefaultProfile";
@@ -524,7 +516,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiBitmapButtonCtrl() {
                   BitmapAsset = "ToolsModule:new_n_image";
-                  position = "1210 1";
+                  position = "305 1";
                   extent = "16 16";
                   horizSizing = "left";
                   profile = "ToolsGuiDefaultProfile";
@@ -535,14 +527,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                new GuiTextCtrl() {
                   text = "Shape";
                   position = "5 21";
-                  extent = "33 16";
+                  extent = "38 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiPopUpMenuCtrl(ShapeEdMountShapeMenu) {
                   text = "Browse...";
-                  position = "42 20";
-                  extent = "1198 18";
+                  position = "54 20";
+                  extent = "266 18";
                   horizSizing = "width";
                   profile = "ToolsGuiPopUpMenuProfile";
                   tooltipProfile = "GuiToolTipProfile";
@@ -551,13 +543,13 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                new GuiTextCtrl() {
                   text = "Node";
                   position = "5 42";
-                  extent = "33 16";
+                  extent = "31 16";
                   profile = "ToolsGuiTextRightProfile";
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiPopUpMenuCtrl() {
-                  position = "42 41";
-                  extent = "1104 18";
+                  position = "53 41";
+                  extent = "163 18";
                   horizSizing = "width";
                   profile = "ToolsGuiPopUpMenuProfile";
                   command = "ShapeEdMountWindow.updateSelectedMount();";
@@ -567,15 +559,15 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiTextCtrl() {
                   text = "Type";
-                  position = "1152 42";
-                  extent = "24 16";
+                  position = "229 42";
+                  extent = "29 16";
                   horizSizing = "left";
                   profile = "ToolsGuiTextProfile";
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiPopUpMenuCtrl() {
                   text = "Image";
-                  position = "1180 41";
+                  position = "260 41";
                   extent = "60 18";
                   horizSizing = "left";
                   profile = "ToolsGuiPopUpMenuProfile";
@@ -587,7 +579,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                new GuiPopUpMenuCtrl() {
                   text = "<rootpose>";
                   position = "5 62";
-                  extent = "1141 18";
+                  extent = "112 18";
                   horizSizing = "width";
                   profile = "ToolsGuiPopUpMenuProfile";
                   command = "ShapeEdMountWindow.setMountThreadSequence();";
@@ -598,8 +590,8 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                new GuiSliderCtrl(ShapeEdMountSeqSlider) {
                   ticks = "0";
                   value = "0";
-                  position = "109 64";
-                  extent = "1110 14";
+                  position = "120 64";
+                  extent = "179 14";
                   horizSizing = "width";
                   vertSizing = "top";
                   profile = "ToolsGuiSliderBoxProfile";
@@ -610,7 +602,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                   BitmapAsset = "ToolsModule:playfwd_btn_n_image";
                   groupNum = "0";
                   buttonType = "ToggleButton";
-                  position = "1222 62";
+                  position = "302 62";
                   extent = "18 18";
                   horizSizing = "left";
                   vertSizing = "top";
@@ -626,7 +618,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
       new GuiTabPageCtrl() {
          text = "Threads";
          position = "0 19";
-         extent = "1262 663";
+         extent = "342 243";
          minExtent = "0 -500";
          horizSizing = "width";
          vertSizing = "height";
@@ -637,14 +629,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
 
          new GuiContainer(ShapeEdThreadWindow) {
             docking = "Client";
-            extent = "1262 663";
+            extent = "342 243";
             minExtent = "8 8";
             horizSizing = "width";
             profile = "ToolsGuiDefaultProfile";
             tooltipProfile = "ToolsGuiToolTipProfile";
 
             new GuiContainer() {
-               extent = "1263 580";
+               extent = "343 160";
                horizSizing = "width";
                vertSizing = "height";
                profile = "inspectorStyleRolloutDarkProfile";
@@ -663,7 +655,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                   lockHorizScroll = "1";
                   anchorTop = "0";
                   position = "0 17";
-                  extent = "47 563";
+                  extent = "47 143";
                   minExtent = "8 8";
                   vertSizing = "height";
                   profile = "GuiScrollProfile";
@@ -674,14 +666,14 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                      position = "1 1";
                      extent = "45 11";
                      minExtent = "8 11";
-                     profile = "GuiDefaultProfile";
+                     profile = "ToolsGuiDefaultProfile";
                      tooltipProfile = "ToolsGuiToolTipProfile";
                   };
                };
                new GuiTextCtrl() {
                   text = "Sequence";
                   position = "52 1";
-                  extent = "53 16";
+                  extent = "63 16";
                   profile = "ToolsGuiTextProfile";
                   tooltipProfile = "GuiToolTipProfile";
                };
@@ -691,7 +683,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                   lockHorizScroll = "1";
                   anchorTop = "0";
                   position = "46 17";
-                  extent = "1262 563";
+                  extent = "342 143";
                   minExtent = "8 8";
                   horizSizing = "width";
                   vertSizing = "height";
@@ -703,7 +695,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                      position = "1 1";
                      extent = "1260 11";
                      minExtent = "8 11";
-                     profile = "GuiDefaultProfile";
+                     profile = "ToolsGuiDefaultProfile";
                      command = "ShapeEdSequenceList.setSelectedById( $ThisControl.getSelectedId() );";
                      tooltipProfile = "ToolsGuiToolTipProfile";
                      internalName = "seqList";
@@ -711,7 +703,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiBitmapButtonCtrl() {
                   BitmapAsset = "ToolsModule:delete_n_image";
-                  position = "1244 1";
+                  position = "324 1";
                   extent = "16 16";
                   horizSizing = "left";
                   profile = "ToolsGuiDefaultProfile";
@@ -721,7 +713,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                };
                new GuiBitmapButtonCtrl() {
                   BitmapAsset = "ToolsModule:new_n_image";
-                  position = "1231 1";
+                  position = "311 1";
                   extent = "16 16";
                   horizSizing = "left";
                   profile = "ToolsGuiDefaultProfile";
@@ -734,8 +726,8 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                range = "0 0";
                ticks = "0";
                value = "0";
-               position = "29 585";
-               extent = "1193 14";
+               position = "29 163";
+               extent = "273 14";
                horizSizing = "width";
                vertSizing = "top";
                profile = "ToolsGuiSliderBoxProfile";
@@ -746,7 +738,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                BitmapAsset = "ToolsModule:playbkwd_btn_n_image";
                groupNum = "0";
                buttonType = "RadioButton";
-               position = "6 583";
+               position = "6 163";
                extent = "18 18";
                vertSizing = "top";
                profile = "ToolsGuiButtonProfile";
@@ -759,7 +751,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                BitmapAsset = "ToolsModule:pause_btn_n_image";
                groupNum = "0";
                buttonType = "RadioButton";
-               position = "1226 583";
+               position = "306 163";
                extent = "18 18";
                horizSizing = "left";
                vertSizing = "top";
@@ -773,7 +765,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                BitmapAsset = "ToolsModule:playfwd_btn_n_image";
                groupNum = "0";
                buttonType = "RadioButton";
-               position = "1244 583";
+               position = "324 163";
                extent = "18 18";
                horizSizing = "left";
                vertSizing = "top";
@@ -785,8 +777,9 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiCheckBoxCtrl() {
                text = " Transition lasts";
-               position = "3 606";
-               extent = "88 13";
+               position = "3 186";
+               extent = "109 13";
+               horizSizing = "right";
                vertSizing = "top";
                profile = "ToolsGuiCheckBoxProfile";
                tooltipProfile = "ToolsGuiToolTipProfile";
@@ -795,8 +788,8 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextEditCtrl() {
                text = "0.5";
-               position = "98 603";
-               extent = "1109 20";
+               position = "116 183";
+               extent = "161 20";
                horizSizing = "width";
                vertSizing = "top";
                profile = "ToolsGuiTextEditProfile";
@@ -806,8 +799,8 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextCtrl() {
                text = "seconds";
-               position = "1213 604";
-               extent = "44 16";
+               position = "284 184";
+               extent = "57 16";
                horizSizing = "left";
                vertSizing = "top";
                profile = "ToolsGuiTextProfile";
@@ -815,16 +808,17 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextCtrl() {
                text = "Transition to";
-               position = "4 625";
-               extent = "62 16";
+               position = "4 205";
+               extent = "74 16";
+               horizSizing = "right";
                vertSizing = "top";
                profile = "ToolsGuiTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiPopUpMenuCtrl() {
                text = "synched position";
-               position = "68 624";
-               extent = "1193 18";
+               position = "87 204";
+               extent = "254 18";
                horizSizing = "width";
                vertSizing = "top";
                profile = "ToolsGuiPopUpMenuProfile";
@@ -834,16 +828,16 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextCtrl() {
                text = "Target anim";
-               position = "4 646";
-               extent = "58 16";
+               position = "4 226";
+               extent = "76 16";
                vertSizing = "top";
                profile = "ToolsGuiTextProfile";
                tooltipProfile = "GuiToolTipProfile";
             };
             new GuiPopUpMenuCtrl() {
                text = "plays during transition";
-               position = "68 645";
-               extent = "1193 18";
+               position = "88 225";
+               extent = "253 18";
                horizSizing = "width";
                vertSizing = "top";
                profile = "ToolsGuiPopUpMenuProfile";
@@ -938,7 +932,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextCtrl() {
                text = "4";
-               position = "320 71";
+               position = "317 71";
                extent = "25 16";
                profile = "ToolsGuiTextRightProfile";
                tooltipProfile = "GuiToolTipProfile";
@@ -966,7 +960,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextCtrl() {
                text = "10";
-               position = "320 92";
+               position = "317 92";
                extent = "25 16";
                profile = "ToolsGuiTextRightProfile";
                tooltipProfile = "GuiToolTipProfile";
@@ -994,7 +988,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextCtrl() {
                text = "30";
-               position = "320 113";
+               position = "317 113";
                extent = "25 16";
                profile = "ToolsGuiTextRightProfile";
                tooltipProfile = "GuiToolTipProfile";
@@ -1022,7 +1016,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextCtrl() {
                text = "32";
-               position = "320 134";
+               position = "317 134";
                extent = "25 16";
                profile = "ToolsGuiTextRightProfile";
                tooltipProfile = "GuiToolTipProfile";
@@ -1050,7 +1044,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextCtrl() {
                text = "30";
-               position = "320 155";
+               position = "317 155";
                extent = "25 16";
                profile = "ToolsGuiTextRightProfile";
                tooltipProfile = "GuiToolTipProfile";
@@ -1078,7 +1072,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextCtrl() {
                text = "30";
-               position = "320 176";
+               position = "317 176";
                extent = "25 16";
                profile = "ToolsGuiTextRightProfile";
                tooltipProfile = "GuiToolTipProfile";
@@ -1106,7 +1100,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             };
             new GuiTextCtrl() {
                text = "30";
-               position = "320 197";
+               position = "317 197";
                extent = "25 16";
                profile = "ToolsGuiTextRightProfile";
                tooltipProfile = "GuiToolTipProfile";

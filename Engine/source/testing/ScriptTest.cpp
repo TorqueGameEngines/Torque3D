@@ -1016,7 +1016,7 @@ TEST_F(ScriptTest, Sugar_Syntax)
 
    ASSERT_EQ(valueArray.getInt(), 2);
 
-   /*ConsoleValue valueSetArray = RunScript(R"(
+   ConsoleValue valueSetArray = RunScript(R"(
          function a()
          {
             %vector[0] = "1 2 3";
@@ -1026,7 +1026,19 @@ TEST_F(ScriptTest, Sugar_Syntax)
          return a();
    )");
 
-   ASSERT_EQ(valueSetArray.getInt(), 5);*/
+   ASSERT_EQ(valueSetArray.getInt(), 5);
+
+   ConsoleValue valueSetArrayGlobal = RunScript(R"(
+         function a()
+         {
+            $vector[0] = "1 2 3";
+            $vector[0].z = 5;
+            return $vector[0].z;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(valueSetArrayGlobal.getInt(), 5);
 
    ConsoleValue valueStoreCalculated = RunScript(R"(
       function a()

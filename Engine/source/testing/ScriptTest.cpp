@@ -377,6 +377,28 @@ TEST_F(ScriptTest, VectorTests)
 
    ASSERT_STRCASEEQ(vecTest.getString(), "test1 test2 test3");
 
+   vecTest = RunScript(R"(
+      function doTest(){
+         %vec1 = [1,2,3];
+
+         return %vec1[0]++;
+      }
+      return doTest();
+   )");
+
+   ASSERT_EQ(vecTest.getInt(), 2);
+
+   vecTest = RunScript(R"(
+      function doTest(){
+         $vec1 = [1,2,3];
+
+         return $vec1[0]++;
+      }
+      return doTest();
+   )");
+
+   ASSERT_EQ(vecTest.getInt(), 2);
+
 }
 
 TEST_F(ScriptTest, Basic_Conditional_Statements)

@@ -1472,7 +1472,6 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          }
 
          (*vec)[index] = exprVal;
-
          break;
       }
       case OP_LOADVAR_UINT:
@@ -1545,7 +1544,6 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             case TypeReqNone:   stack[_STK].setString((*vec)[index].getString()); break;
             }
          }
-
          break;
       }
 

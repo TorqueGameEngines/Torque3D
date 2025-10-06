@@ -140,7 +140,6 @@ public:
       {
          F64   f;
          S64   i;
-         Vector<ConsoleValue>* vec;
          char* s;
       };
 
@@ -153,6 +152,7 @@ public:
 
    S32 type;
    U32 bufferLen;
+   Vector<ConsoleValue>* vec;
 
    static DataChunker sConversionAllocator;
 
@@ -171,8 +171,14 @@ public:
 
       s = const_cast<char*>(StringTable->EmptyString());
 
-      /*if (type == ConsoleValueType::cvVector && vec->size() > 0)
-         vec->clear();*/
+      if (type == ConsoleValueType::cvVector)
+      {
+         /*if (vec && vec->size() > 0)
+         {
+            vec->clear();
+            vec = NULL;
+         }*/
+      }
 
       type = ConsoleValueType::cvNULL;
    }
@@ -181,6 +187,7 @@ public:
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
       bufferLen = 0;
+      vec = NULL;
    }
 
    ConsoleValue(const ConsoleValue& ref)
@@ -188,6 +195,7 @@ public:
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
       bufferLen = 0;
+      vec = NULL;
 
       switch (ref.type)
       {
@@ -298,7 +306,7 @@ public:
 
    TORQUE_FORCEINLINE void setVector(Vector<ConsoleValue>* v)
    {
-      //cleanupData();
+      cleanupData();
       type = cvVector;
       vec = v;
    }

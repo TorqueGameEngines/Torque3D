@@ -1455,7 +1455,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
       case OP_SETCURVAR_VECTOR_MEMBER:
       {
          U32 index = stack[_STK--].getInt();    // index
-         ConsoleValue vecVal = stack[_STK--];   // vector
+         ConsoleValue& vecVal = stack[_STK--];   // vector
          ConsoleValue exprVal = stack[_STK--];  // value
 
          Vector<ConsoleValue>* vec = vecVal.getVector();
@@ -1506,10 +1506,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
       case OP_LOADVAR_VECTOR_MEMBER:
       {
-         currentRegister = -1;
-         
          U32 index = stack[_STK--].getInt();   // pop the index
-         ConsoleValue vecVal = stack[_STK];   // this is the vector
+         ConsoleValue& vecVal = stack[_STK];   // this is the vector
          
          TypeReq type = (TypeReq)code[ip++];
 
@@ -1523,33 +1521,31 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          }
 
          // out-of-bounds handling
-         ConsoleValue elem;
          if (index >= vec->size())
          {
             Con::warnf(ConsoleLogEntry::Script, "%s: Index out of bounds", getFileLine(ip - 2));
             switch (type)
             {
-            case TypeReqUInt:   elem.setInt(-1); break;
-            case TypeReqFloat:  elem.setFloat(0.0f); break;
-            case TypeReqVector: elem.setVector(new Vector<ConsoleValue>()); break;
+            case TypeReqUInt:   stack[_STK].setInt(-1); break;
+            case TypeReqFloat:  stack[_STK].setFloat(0.0f); break;
+            case TypeReqVector: stack[_STK].setVector(new Vector<ConsoleValue>()); break;
             case TypeReqString:
-            case TypeReqNone:   elem.setString(""); break;
+            case TypeReqNone:   stack[_STK].setString(""); break;
             }
          }
          else
          {
-            const ConsoleValue& src = (*vec)[index]; // read-only
+            //ConsoleValueType indexType = (ConsoleValueType)(*vec)[index].getType();
             switch (type)
             {
-            case TypeReqUInt:   elem.setInt(src.getInt()); break;
-            case TypeReqFloat:  elem.setFloat(src.getFloat()); break;
-            case TypeReqVector: elem.setVector(src.getVector()); break;
+            case TypeReqUInt:   stack[_STK].setInt((*vec)[index].getInt()); break;
+            case TypeReqFloat:  stack[_STK].setFloat((*vec)[index].getFloat()); break;
+            case TypeReqVector: stack[_STK].setVector((*vec)[index].getVector()); break;
             case TypeReqString:
-            case TypeReqNone:   elem.setString(src.getString()); break;
+            case TypeReqNone:   stack[_STK].setString((*vec)[index].getString()); break;
             }
          }
 
-         stack[_STK] = elem;
          break;
       }
 

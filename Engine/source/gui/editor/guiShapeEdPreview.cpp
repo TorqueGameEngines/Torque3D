@@ -256,7 +256,7 @@ bool GuiShapeEdPreview::setFieldSunAngleZ( void *object, const char *index, cons
 bool GuiShapeEdPreview::setFieldThreadPos( void *object, const char *index, const char *data )
 {
    GuiShapeEdPreview* gui = static_cast<GuiShapeEdPreview*>( object );
-   if ( gui && ( gui->mActiveThread >= 0 ) && gui->mThreads[gui->mActiveThread].key )
+   if ( gui && (gui->mThreads.size() && gui->mActiveThread >= 0 ) && gui->mThreads[gui->mActiveThread].key )
       gui->mModel->setPos( gui->mThreads[gui->mActiveThread].key, dAtof( data ) );
    return false;
 }
@@ -264,7 +264,7 @@ bool GuiShapeEdPreview::setFieldThreadPos( void *object, const char *index, cons
 const char *GuiShapeEdPreview::getFieldThreadPos( void *object, const char *data )
 {
    GuiShapeEdPreview* gui = static_cast<GuiShapeEdPreview*>( object );
-   if ( gui && ( gui->mActiveThread >= 0 ) && gui->mThreads[gui->mActiveThread].key )
+   if ( gui && (gui->mThreads.size() && gui->mActiveThread >= 0 ) && gui->mThreads[gui->mActiveThread].key )
       return Con::getFloatArg( gui->mModel->getPos( gui->mThreads[gui->mActiveThread].key ) );
    else
       return "0";
@@ -273,7 +273,7 @@ const char *GuiShapeEdPreview::getFieldThreadPos( void *object, const char *data
 bool GuiShapeEdPreview::setFieldThreadDir( void *object, const char *index, const char *data )
 {
    GuiShapeEdPreview* gui = static_cast<GuiShapeEdPreview*>( object );
-   if ( gui && ( gui->mActiveThread >= 0 ) )
+   if ( gui && (gui->mThreads.size() && gui->mActiveThread >= 0 ) )
    {
       Thread& thread = gui->mThreads[gui->mActiveThread];
       Con::setData( TypeS32, &(thread.direction), 0, 1, &data );
@@ -286,7 +286,7 @@ bool GuiShapeEdPreview::setFieldThreadDir( void *object, const char *index, cons
 const char *GuiShapeEdPreview::getFieldThreadDir( void *object, const char *data )
 {
    GuiShapeEdPreview* gui = static_cast<GuiShapeEdPreview*>( object );
-   if ( gui && ( gui->mActiveThread >= 0 ) )
+   if ( gui && (gui->mThreads.size() && gui->mActiveThread >= 0 ) )
       return Con::getIntArg( gui->mThreads[gui->mActiveThread].direction );
    else
       return "0";
@@ -295,7 +295,7 @@ const char *GuiShapeEdPreview::getFieldThreadDir( void *object, const char *data
 bool GuiShapeEdPreview::setFieldThreadPingPong( void *object, const char *index, const char *data )
 {
    GuiShapeEdPreview* gui = static_cast<GuiShapeEdPreview*>( object );
-   if ( gui && ( gui->mActiveThread >= 0 ) )
+   if ( gui && (gui->mThreads.size() && gui->mActiveThread >= 0 ) )
       Con::setData( TypeBool, &(gui->mThreads[gui->mActiveThread].pingpong), 0, 1, &data );
    return false;
 }
@@ -303,7 +303,7 @@ bool GuiShapeEdPreview::setFieldThreadPingPong( void *object, const char *index,
 const char *GuiShapeEdPreview::getFieldThreadPingPong( void *object, const char *data )
 {
    GuiShapeEdPreview* gui = static_cast<GuiShapeEdPreview*>( object );
-   if ( gui && ( gui->mActiveThread >= 0 ) )
+   if ( gui && (gui->mThreads.size() && gui->mActiveThread >= 0 ) )
       return Con::getIntArg( gui->mThreads[gui->mActiveThread].pingpong );
    else
       return "0";
@@ -478,7 +478,7 @@ void GuiShapeEdPreview::setTimeScale( F32 scale )
 
 void GuiShapeEdPreview::setActiveThreadSequence(const char* seqName, F32 duration, F32 pos, bool play)
 {
-   if ( mActiveThread == -1 )
+   if ( mActiveThread == -1 || mThreads.empty())
       return;
 
    setThreadSequence(mThreads[mActiveThread], mModel, seqName, duration, pos, play);
@@ -533,7 +533,7 @@ void GuiShapeEdPreview::setThreadSequence(GuiShapeEdPreview::Thread& thread, TSS
 
 const char* GuiShapeEdPreview::getThreadSequence() const
 {
-   return ( mActiveThread >= 0 ) ? mThreads[mActiveThread].seqName.c_str() : "";
+   return ( mActiveThread >= 0 && mThreads.size()) ? mThreads[mActiveThread].seqName.c_str() : "";
 }
 
 void GuiShapeEdPreview::refreshThreadSequences()

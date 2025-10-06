@@ -23,7 +23,7 @@ $guiContent = new GuiControl() {
       VertSizing = "windowRelative";
       Position = getWord($pref::Video::mode, 0) - 360
          SPC getWord(EditorGuiToolbar.extent, 1) + 6;
-      Extent = "360 165";
+      Extent = "360 400";
       MinExtent = "300 165";
       canSave = "1";
       Visible = "0";
@@ -334,17 +334,18 @@ $guiContent = new GuiControl() {
             };
             new GuiTextCtrl(){
                Position = "5 5";
-               Extent = "60 16";
+               Extent = "80 16";
                text = "Shape Type";
+               Profile = "ToolsGuiTextProfile";
             };
             new GuiPopUpMenuCtrl(ShapeEdHintMenu) {
                canSaveDynamicFields = "0";
                isContainer = "0";
                Profile = "ToolsGuiPopUpMenuProfile";
-               HorizSizing = "width";
+               HorizSizing = "right";
                VertSizing = "bottom";
-               position = "66 4";
-               Extent = "132 18";
+               position = "85 4";
+               Extent = "255 18";
                MinExtent = "8 2";
                canSave = "1";
                Visible = "1";
@@ -369,16 +370,16 @@ $guiContent = new GuiControl() {
       // Force load DAEs
       new GuiCheckBoxCtrl() {
          Profile = "ToolsGuiCheckBoxProfile";
-         HorizSizing = "left";
+         HorizSizing = "right";
          VertSizing = "bottom";
-         Position = "133 27";
-         Extent = "72 13";
+         Position = "198 27";
+         Extent = "145 13";
          Variable = "EWorldEditor.forceLoadDAE";
          Command = "EWorldEditor.forceLoadDAE = $ThisControl.getValue(); EditorSettings.setValue(\"forceLoadDAE\", EWorldEditor.forceLoadDAE);";
          tooltipprofile = "ToolsGuiToolTipProfile";
          ToolTip = "Forces loading of DAE files (ignores cached.dts if present)";
          hovertime = "1000";
-         text = " Source Art";
+         text = " Force Use Source Art";
          visible = false;
       };
 

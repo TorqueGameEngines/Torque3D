@@ -37,6 +37,9 @@ function initializeShapeEditor()
    exec("./gui/shapeEdPropWindow.ed.gui");
    exec("./gui/shapeEdAdvancedWindow.ed.gui");
    exec("./gui/shapeEdAnimWindow.ed.gui");
+   
+   exec("./gui/shapeEdAddSequenceGui.gui");
+   exec("./gui/shapeEdAddSequenceGui.tscript");
 
    exec("./scripts/shapeEditor.ed." @ $TorqueScriptFileExtension);
    exec("./scripts/shapeEditorHints.ed." @ $TorqueScriptFileExtension);
@@ -120,9 +123,8 @@ function ShapeEditorPlugin::onWorldEditorStartup(%this)
    // Add ourselves to the Editor Settings window
    exec( "./gui/ShapeEditorSettingsTab.gui" );
    //ESettingsWindow.addTabPage( EShapeEditorSettingsPage );
-
+   
    GuiWindowCtrl::attach(ShapeEdPropWindow, ShapeEdSelectWindow);
-   ShapeEdAnimWindow.resize( -1, 526, 593, 53 );
    
    // Initialise gui
    ShapeEdSeqNodeTabBook.selectPage(0);
@@ -188,7 +190,7 @@ function ShapeEditorPlugin::open(%this, %shapeAsset)
       ShapeEdAdvancedWindow.setVisible(ShapeEditorToolbar-->showAdvanced.getValue());
       MainSceneTabPanel.bringToFront(ShapeEdPreviewGui);
 
-      ToolsPaletteArray->WorldEditorMove.performClick();
+      ToolsPaletteArray.getObject(0).performClick();
       %this.map.push();
 
       // Switch to the ShapeEditor UndoManager
@@ -241,6 +243,10 @@ function EditorGui::SetShapePalletBar()
 function ShapeEditorPlugin::onActivated(%this)
 {
    %this.open("");
+   
+   %this.storedHDRAdaptRateVal = $PostFX::HDRPostFX::enableAutoExposure;
+   
+   $PostFX::HDRPostFX::enableAutoExposure = false;
 
    // Try to start with the shape selected in the world editor
    %count = EWorldEditor.getSelectionSize();
@@ -315,6 +321,8 @@ function ShapeEditorPlugin::onDeactivated(%this)
    // Restore menu bar
    %this.replaceMenuCmd( "Camera", 8, %this.oldCamFitCmd );
    %this.replaceMenuCmd( "Camera", 9, %this.oldCamFitOrbitCmd );
+   
+   $PostFX::HDRPostFX::enableAutoExposure = %this.storedHDRAdaptRateVal;
 
    Parent::onDeactivated(%this);
 }
@@ -323,7 +331,7 @@ function ShapeEditorPlugin::onExitMission( %this )
 {
    // unselect the current shape
    ShapeEdShapeView.setModel( "" );
-   if (ShapeEditor.shape != 0 && ShapeEditor.shape != -1)
+   if (isObject(ShapeEditor.shape))
       ShapeEditor.shape.delete();
    ShapeEditor.shape = 0;
    ShapeEdUndoManager.clearAll();

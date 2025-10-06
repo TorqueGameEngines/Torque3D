@@ -9,7 +9,7 @@ function ShapeAnimationAsset::onEdit(%this)
 
 function ShapeAnimationAsset::buildBrowserElement(%this, %previewData)
 {
-   %previewData.assetName = %this.animationName;
+   %previewData.assetName = %this.assetName;
    %previewData.assetPath = %this.scriptFile;
    
    %previewData.previewImage = "ToolsModule:animationIcon_image";

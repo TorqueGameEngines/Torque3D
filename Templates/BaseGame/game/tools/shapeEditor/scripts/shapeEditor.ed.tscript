@@ -146,6 +146,18 @@ function ShapeEditor::getSequenceSource( %this, %seqName )
       %source = setField( %source, 1, "" );
    if ( %src0 $= "" )
       %source = setField( %source, 0, %seqName );
+   
+   %aq = new AssetQuery();
+   %foundAssets = AssetDatabase.findAssetLooseFile(%aq, %src0);
+   if(%foundAssets != 0)
+   {
+      //if we have an assetId associated to the file, we're gunna just pass that
+      //through for the edit actions
+      %assetId = %aq.getAsset(0);
+      
+      %source = setField( %source, 0, %assetId );
+   }
+   %aq.delete();
 
    return %source;
 }
@@ -216,10 +228,25 @@ function ShapeEditor::saveChanges( %this )
 {
    if ( isObject( ShapeEditor.shape ) )
    {
+      %threadSequence = ShapeEdShapeView.getThreadSequence();
+      
+      %assetPath = AssetDatabase.getAssetFilePath(ShapeEditorPlugin.selectedAssetId);
+      %assetWriteSuccessful = TAMLWrite(ShapeEditorPlugin.selectedAssetDef, %assetPath); 
+      AssetDatabase.refreshAsset(ShapeEditorPlugin.selectedAssetId);
+      
       ShapeEditor.saveConstructor( ShapeEditor.shape );
       ShapeEditor.shape.writeChangeSet();
       ShapeEditor.shape.notifyShapeChanged();      // Force game objects to reload shape
       ShapeEditor.setDirty( false );
+      
+      //Re-set up our sequence playback thread
+      ShapeEdThreadList.clear();
+      
+      ShapeEdShapeView.addThread();
+      ShapeEdThreadList.addRow( %this.threadID++, ShapeEdThreadList.rowCount() );
+      ShapeEdThreadList.setSelectedRow( ShapeEdThreadList.rowCount()-1 );
+      
+      ShapeEdShapeView.setThreadSequence(%threadSequence);
    }
 }
 
@@ -398,19 +425,6 @@ function ShapeEdPropWindow::update_onShapeSelectionChanged( %this )
    }
    ShapeEdThreadWindow.onAddThread();        // add thread 0
    
-   //Now, fetch any animation assets if we're utilizing a shape asset
-   if(ShapeEditorPlugin.selectedAssetDef !$= "")
-   {
-      %animationAssetCount = ShapeEditorPlugin.selectedAssetDef.getAnimationCount();
-      
-      for(%animIdx = 0; %animIdx < %animationAssetCount; %animIdx++)
-      {
-         %animAsset = ShapeEditorPlugin.selectedAssetDef.getAnimation(%animIdx);
-         
-         //ShapeEdSequenceList.addItem( %animAsset.assetName );
-      }
-   }
-
    // --- DETAILS TAB ---
    // Add detail levels and meshes to tree
    ShapeEdDetailTree.clearSelection();
@@ -593,6 +607,9 @@ function ShapeEdSeqNodeTabBook::onTabSelected( %this, %name, %index )
          ShapeEdPropWindow-->newBtn.ToolTip = "Add new sequence";
          ShapeEdPropWindow-->newBtn.Command = "ShapeEdSequences.onAddSequence();"; 
          ShapeEdPropWindow-->newBtn.setActive( true );
+         ShapeEdPropWindow-->newFromExistingBtn.ToolTip = "Add new from existing sequence";
+         ShapeEdPropWindow-->newFromExistingBtn.Command = "ShapeEdSequences.onAddSeqFromExisting();"; 
+         ShapeEdPropWindow-->newFromExistingBtn.setActive( true );
          ShapeEdPropWindow-->deleteBtn.ToolTip = "Delete selected sequence (cannot be undone)";
          ShapeEdPropWindow-->deleteBtn.Command = "ShapeEdSequences.onDeleteSequence();";
          ShapeEdPropWindow-->deleteBtn.setActive( true );
@@ -601,6 +618,9 @@ function ShapeEdSeqNodeTabBook::onTabSelected( %this, %name, %index )
          ShapeEdPropWindow-->newBtn.ToolTip = "Add new node";
          ShapeEdPropWindow-->newBtn.Command = "ShapeEdNodes.onAddNode();";
          ShapeEdPropWindow-->newBtn.setActive( true );
+         ShapeEdPropWindow-->newFromExistingBtn.ToolTip = "";
+         ShapeEdPropWindow-->newFromExistingBtn.Command = "";
+         ShapeEdPropWindow-->newFromExistingBtn.setActive( false );
          ShapeEdPropWindow-->deleteBtn.ToolTip = "Delete selected node (cannot be undone)";
          ShapeEdPropWindow-->deleteBtn.Command = "ShapeEdNodes.onDeleteNode();";
          ShapeEdPropWindow-->deleteBtn.setActive( true );
@@ -609,6 +629,9 @@ function ShapeEdSeqNodeTabBook::onTabSelected( %this, %name, %index )
          ShapeEdPropWindow-->newBtn.ToolTip = "";
          ShapeEdPropWindow-->newBtn.Command = "";
          ShapeEdPropWindow-->newBtn.setActive( false );
+         ShapeEdPropWindow-->newFromExistingBtn.ToolTip = "";
+         ShapeEdPropWindow-->newFromExistingBtn.Command = "";
+         ShapeEdPropWindow-->newFromExistingBtn.setActive( false );
          ShapeEdPropWindow-->deleteBtn.ToolTip = "Delete the selected mesh or detail level (cannot be undone)";
          ShapeEdPropWindow-->deleteBtn.Command = "ShapeEdDetails.onDeleteMesh();";
          ShapeEdPropWindow-->deleteBtn.setActive( true );
@@ -617,6 +640,9 @@ function ShapeEdSeqNodeTabBook::onTabSelected( %this, %name, %index )
          ShapeEdPropWindow-->newBtn.ToolTip = "";
          ShapeEdPropWindow-->newBtn.Command = "";
          ShapeEdPropWindow-->newBtn.setActive( false );
+         ShapeEdPropWindow-->newFromExistingBtn.ToolTip = "";
+         ShapeEdPropWindow-->newFromExistingBtn.Command = "";
+         ShapeEdPropWindow-->newFromExistingBtn.setActive( false );
          ShapeEdPropWindow-->deleteBtn.ToolTip = "";
          ShapeEdPropWindow-->deleteBtn.Command = "";
          ShapeEdPropWindow-->deleteBtn.setActive( false );
@@ -1277,8 +1303,45 @@ function ShapeEdPropWindow::syncPlaybackDetails( %this )
          %backupData = ShapeEditor.getSequenceSource( getField( %seqFrom, 0 ) );
          %seqFrom = rtrim( getFields( %backupData, 0, 1 ) );
       }
+      
+      ShapeEdSeqNameFromMenu.clear();
+      
+      echo("ShapeEdPropWindow::syncPlaybackDetails() - %seqFrom: " @ %seqFrom);
+      
+      %seqFromSource = rtrim(getField(%seqFrom, 0));
+      if(AssetDatabase.isDeclaredAsset(%seqFromSource) || isFile(%seqFromSource))
+      {
+         ShapeEdSeqFromMenu.setText( %seqFromSource );
+         
+         ShapeEdSeqNameFromMenu.active = true;
+         ShapeEdSeqNameFromMenu.setText(rtrim(getField(%seqFrom, 1)));
+         
+         if(AssetDatabase.isDeclaredAsset(%seqFromSource))
+         {
+            %sourceShapeConstructor = findShapeConstructorByAssetId( %seqFromSource );
+         }
+         else if(isFile(%seqFromSource))
+         {
+            %sourceShapeConstructor = findShapeConstructorByFilename( %seqFromSource );
+         }
+         
+         for(%i=0; %i < %sourceShapeConstructor.getSequenceCount(); %i++)
+         {
+            %name = %sourceShapeConstructor.getSequenceName( %i );
 
-      ShapeEdSeqFromMenu.setText( %seqFrom );
+            // Ignore __backup__ sequences (only used by editor)
+            if ( !startswith( %name, "__backup__" ) )
+               ShapeEdSeqNameFromMenu.add( %name );
+         }
+      }
+      else
+      {
+         ShapeEdSeqFromMenu.setText( %seqFrom );
+         
+         ShapeEdSeqNameFromMenu.active = false;
+         ShapeEdSeqNameFromMenu.setText("");
+      }
+
       ShapeEdSeqFromMenu.tooltip = ShapeEdSeqFromMenu.getText();   // use tooltip to show long names
       ShapeEdSequences-->startFrame.setText( %seqStart );
       ShapeEdSequences-->endFrame.setText( %seqEnd );
@@ -1301,6 +1364,8 @@ function ShapeEdPropWindow::syncPlaybackDetails( %this )
 
       ShapeEdSeqFromMenu.setText( "" );
       ShapeEdSeqFromMenu.tooltip = "";
+      ShapeEdSeqNameFromMenu.clear();
+      ShapeEdSeqNameFromMenu.active = false;
       ShapeEdSequences-->startFrame.setText( 0 );
       ShapeEdSequences-->endFrame.setText( 0 );
 
@@ -1361,17 +1426,45 @@ function ShapeEdSequences::onEditSequenceSource( %this, %from )
 
       if ( getFields( %oldSource, 0, 3 ) !$= ( %from TAB "" TAB %start TAB %end ) )
       {
-         %aq = new AssetQuery();
-         %foundAssets = AssetDatabase.findAssetLooseFile(%aq, %from);
-         if(%foundAssets != 0)
+         if(!AssetDatabase.isDeclaredAsset(%from))
          {
-            //if we have an assetId associated to the file, we're gunna just pass that
-            //through for the edit actions
-            %from = %aq.getAsset(0);
+            %aq = new AssetQuery();
+            %foundAssets = AssetDatabase.findAssetLooseFile(%aq, %from);
+            if(%foundAssets != 0)
+            {
+               //if we have an assetId associated to the file, we're gunna just pass that
+               //through for the edit actions
+               %from = %aq.getAsset(0);
+            }
+            %aq.delete();
          }
-         %aq.delete();
          ShapeEditor.doEditSeqSource( %seqName, %from, %start, %end );
+      }
    }
+}
+
+function ShapeEdSequences::onEditSequenceSourceName( %this, %seq )
+{
+   // ignore for shapes without sequences
+   if (ShapeEditor.shape.getSequenceCount() == 0)
+      return;
+
+   %start = %this-->startFrame.getText();
+   %end = %this-->endFrame.getText();
+
+   if ( ( %start !$= "" ) && ( %end !$= "" ) )
+   {
+      %seqName = ShapeEdSequenceList.getSelectedName();
+      %oldSource = ShapeEditor.getSequenceSource( %seqName );
+      %from = rtrim( getFields( %oldSource, 0, 0 ) );
+
+      if ( %seq $= "" )
+         %seq = rtrim( getFields( %oldSource, 0, 1 ) );
+
+      if ( getFields( %oldSource, 0, 3 ) !$= ( %from TAB %seq TAB %start TAB %end ) )
+      {
+         ShapeEditor.doEditSeqSource( %seqName, %from TAB %seq, %start, %end );
+      }
    }
 }
 
@@ -1441,25 +1534,8 @@ function ShapeEdSequences::onAddSequence( %this, %name )
    if ( %name $= "" )
       %name = ShapeEditor.getUniqueName( "sequence", "mySequence" );
 
-   // Use the currently selected sequence as the base
-   %from = ShapeEdSequenceList.getSelectedName();
-   %row = ShapeEdSequenceList.getSelectedRow();
-   if ( ( %row < 2 ) && ( ShapeEdSequenceList.rowCount() > 2 ) )
-      %row = 2;
-   if ( %from $= "" )
-   {
-      // No sequence selected => open dialog to browse for one
-      //getLoadFormatFilename( %this @ ".onAddSequenceFromBrowse", ShapeEdFromMenu.lastPath );
-      AssetBrowser.showDialog("ShapeAnimationAsset", "onAddAnimationAssetShapeEditor", "", "", "");
-      return;
-   }
-   else
-   {
-      // Add the new sequence
-      %start = ShapeEdSequences-->startFrame.getText();
-      %end = ShapeEdSequences-->endFrame.getText();
-      ShapeEditor.doAddSequence( %name, %from, %start, %end );
-   }
+   %this.newSeqName = %name;
+   AssetBrowser.showDialog("ShapeAnimationAsset ShapeAsset", "onAddAnimationAssetShapeEditor", "", "", "");
 }
 
 function ShapeEdSequences::onAddSequenceFromBrowse( %this, %path )
@@ -1470,6 +1546,30 @@ function ShapeEdSequences::onAddSequenceFromBrowse( %this, %path )
 
    %name = ShapeEditor.getUniqueName( "sequence", "mySequence" );
    ShapeEditor.doAddSequence( %name, %path, 0, -1 );
+}
+
+function ShapeEdSequences::onAddSeqFromExisting( %this, %name )
+{
+   if ( %name $= "" )
+      %name = ShapeEditor.getUniqueName( "sequence", "mySequence" );
+
+   // Use the currently selected sequence as the base
+   %from = ShapeEdSequenceList.getSelectedName();
+   %row = ShapeEdSequenceList.getSelectedRow();
+   if ( ( %row < 2 ) && ( ShapeEdSequenceList.rowCount() > 2 ) )
+      %row = 2;
+   if ( %from $= "" )
+   {
+      toolsMessageBoxOK("Error", "You need to select a valid sequence from the sequences list to act as a source for the new sequence!");
+      return;
+   }
+   else
+   {
+      // Add the new sequence
+      %start = ShapeEdSequences-->startFrame.getText();
+      %end = ShapeEdSequences-->endFrame.getText();
+      ShapeEditor.doAddSequence( %name, %from, %start, %end );
+   }
 }
 
 // Delete the selected sequence
@@ -1573,19 +1673,27 @@ function ShapeEdSeqFromMenu::onBrowseSelect( %this, %assetId )
    //%this.lastPath = %path;
    %this.setText( %assetId );
    
-   %assetDef = AssetDatabase.acquireAsset(%assetId);
-   %shapePath = %assetDef.getShapePath();
-   AssetDatabase.releaseAsset(%assetId);
+   if(!AssetDatabase.isDeclaredAsset(%assetId))
+   {
+      toolsMessageBoxOK("Error!", "Tried to add a new sequence to shape, but the assetId was invalid!");
+      %this.setText( "Browse..." );
+      return;  
+   }
    
-   ShapeEdSequences.onEditSequenceSource( %shapePath );
+   ShapeEdSequences.onEditSequenceSource( %assetId );
+}
+
+function ShapeEdSeqNameFromMenu::onSelect( %this, %id, %text )
+{
+   ShapeEdSequences.onEditSequenceSourceName( %text );
 }
 
 //------------------------------------------------------------------------------
 
-function ShapeEdAnimWIndow::onWake(%this)
+function ShapeEdAnimWindow::onResize(%this)
 {
-   %animWindow = ShapeEdAnimWIndow;
-   %position = "1" SPC Canvas.extent.y - 132;
+   %animWindow = ShapeEdAnimWindow;
+   %position = "1" SPC Canvas.extent.y - EditorGuiStatusBar.extent.y - %this.Extent.y;
    
    if(isObject(ShapeEdPropWindow))
    {
@@ -1598,6 +1706,8 @@ function ShapeEdAnimWIndow::onWake(%this)
       // (when the order of GUI loading has changed for example)
       %extent = Canvas.extent.x - 360 - 2 SPC %animWindow.extent.y;
    }
+   
+   //echo("ShapeEdAnimWIndow::onWake() - " @ %position.x @ ", " @  %position.y @ ", " @  %extent.x @ ", " @  %extent.y);
    
    // resize and position accordingly
    %animWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
@@ -3261,11 +3371,12 @@ function ShapeEditorTabbook::onTabSelected( %this )
    if( ShapeEditorTabbook.getSelectedPage() == 1)
    {
       AssetBrowser.showDialog("ShapeAsset", "openShapeInShapeEditor");
+      %this.selectPage(0);
    }
 }
 
 function openShapeInShapeEditor(%shapeAssetId)
 {
    %assetDef = AssetDatabase.acquireAsset(%shapeAssetId);
-   AssetBrowser.editShapeAsset(%assetDef);  
+   ShapeEditorPlugin.openShapeAsset(%assetDef);
 }

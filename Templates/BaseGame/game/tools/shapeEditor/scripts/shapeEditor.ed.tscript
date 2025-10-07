@@ -2116,8 +2116,12 @@ function ShapeEdTriggerList::removeItem( %this, %frame, %state )
    %row = %this.findTextIndex( %this.getTriggerText( %frame, %state ) );
    if ( %row > 0 )
    {
-      eval( "ShapeEdAnimWindow-->trigger" @ %this.getRowId( %row ) @ ".delete();" );
-      %this.removeRow( %row );
+      %id = %this.getRowId( %row );
+      if (%id>=0)
+      {
+        eval( "ShapeEdAnimWindow-->trigger" @ %id @ ".delete();");
+        %this.removeRow( %row );
+      }
    }
 }
 
@@ -2126,8 +2130,12 @@ function ShapeEdTriggerList::removeAll( %this )
    %count = %this.rowCount();
    for ( %row = %count-1; %row > 0; %row-- )
    {
-      eval( "ShapeEdAnimWindow-->trigger" @ %this.getRowId( %row ) @ ".delete();" );
-      %this.removeRow( %row );
+      %id = %this.getRowId( %row );
+      if (%id>=0)
+      {
+        eval( "ShapeEdAnimWindow-->trigger" @ %id @ ".delete();");
+        %this.removeRow( %row );
+      }
    }
 }
 

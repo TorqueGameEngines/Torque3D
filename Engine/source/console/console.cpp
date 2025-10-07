@@ -75,20 +75,20 @@ char* ConsoleValue::convertVectorToBuffer() const
       return (char*)"";
 
    // use FrameAllocator to avoid static overwrite
-   FrameTemp<char> outBuf(4096);
-   outBuf[0] = 0;
+   char* buffer = static_cast<char*>(sConversionAllocator.alloc(4096));
+   buffer[0] = 0;
 
    for (U32 v = 0; v < vec->size(); v++)
    {
       const char* elemStr = (*vec)[v].getString();
 
       if (v > 0)
-         dStrcat(outBuf, " ", 4096);
+         dStrcat(buffer, " ", 4096);
 
-      dStrcat(outBuf, elemStr, 4096);
+      dStrcat(buffer, elemStr, 4096);
    }
 
-   return outBuf;
+   return buffer;
 }
 
 const char* ConsoleValue::getConsoleData() const

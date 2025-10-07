@@ -455,6 +455,28 @@ TEST_F(ScriptTest, VectorTests)
       return doTest();
    )");
    ASSERT_STRCASEEQ(vecTest.getString(), "0 1 2 0 1 2 3 4 5 0 1 2 3 4 5 6 7 8");
+
+   vecTest = RunScript(R"(
+      $val = "";
+      function doTestAdd(%size){
+         %stryng = "$val = [0";
+         for (%i=0; %i<%size; %i++)
+         {
+            %stryng = %stryng @","@ %i;
+         }
+         %stryng = %stryng @"];";
+         eval(%stryng);
+         return $val;
+      }
+
+      function doTest(){
+         %bar = [doTestAdd(3), doTestAdd(3), doTestAdd(3)];
+         return %bar;
+      }
+      
+      return doTest();
+   )");
+   ASSERT_STRCASEEQ(vecTest.getString(), "0 0 1 2 0 0 1 2 0 0 1 2");
 }
 
 TEST_F(ScriptTest, Basic_Conditional_Statements)

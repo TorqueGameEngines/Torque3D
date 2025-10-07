@@ -315,27 +315,48 @@ public:
          return vec;
 
       // Handle string or string table entry as a space-delimited vector
-      Vector<ConsoleValue>* temp = new Vector<ConsoleValue>();
-      if (type == cvString || type == cvSTEntry)
+      if (isNumberType() || isStringType())
       {
-         if (s == StringTable->EmptyString())
-            return NULL;
-
-         const char* str = s ? s : "";
-
-         char* buffer = dStrdup(str);
-         char* tok = dStrtok(buffer, " \t\r\n");
-
-         while (tok)
+         if (type == cvString || type == cvSTEntry)
          {
-            ConsoleValue elem;
-            elem.setString(tok);
-            temp->push_back(elem);
-            tok = dStrtok(NULL, " \t\r\n");
+            if (s == StringTable->EmptyString())
+               return NULL;
          }
 
-         dFree(buffer);
-         return temp;
+         Vector<ConsoleValue>* temp = new Vector<ConsoleValue>();
+         if (isNumberType())
+         {
+            ConsoleValue elem;
+            if (type == cvFloat)
+               elem.setFloat(f);
+            else if (type == cvInteger)
+               elem.setInt(i);
+
+            temp->push_back(elem);
+            return temp;
+         }
+
+         if (type == cvString || type == cvSTEntry)
+         {
+            if (s == StringTable->EmptyString())
+               return NULL;
+
+            const char* str = s ? s : "";
+
+            char* buffer = dStrdup(str);
+            char* tok = dStrtok(buffer, " \t\r\n");
+
+            while (tok)
+            {
+               ConsoleValue elem;
+               elem.setString(tok);
+               temp->push_back(elem);
+               tok = dStrtok(NULL, " \t\r\n");
+            }
+
+            dFree(buffer);
+            return temp;
+         }
       }
 
       return NULL;

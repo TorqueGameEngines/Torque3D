@@ -2365,9 +2365,9 @@ DefineEngineFunction( exec, bool, ( const char* fileName, bool noCalls, bool jou
    return Con::executeFile(fileName, noCalls, journalScript);
 }
 
-DefineEngineFunction( eval, const char*, ( const char* consoleString ), , "eval(consoleString)" )
+DefineEngineFunction( eval, const char*, ( const char* consoleString, bool echo ), (false), "eval(consoleString)")
 {
-   Con::EvalResult returnValue = Con::evaluate(consoleString, false, NULL);
+   Con::EvalResult returnValue = Con::evaluate(consoleString, echo, NULL);
 
    return Con::getReturnBuffer(returnValue.value.getString());
 }

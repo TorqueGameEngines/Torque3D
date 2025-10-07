@@ -153,7 +153,7 @@ public:
    S32 type;
    U32 bufferLen;
    Vector<ConsoleValue>* vec;
-
+   bool ownsVector;
    static DataChunker sConversionAllocator;
 
    char* convertToBuffer() const;
@@ -173,11 +173,11 @@ public:
 
       if (type == ConsoleValueType::cvVector)
       {
-         /*if (vec && vec->size() > 0)
+         if (ownsVector && vec && vec->size() > 0)
          {
             vec->clear();
             vec = NULL;
-         }*/
+         }
       }
 
       type = ConsoleValueType::cvNULL;
@@ -188,6 +188,7 @@ public:
       s = const_cast<char*>(StringTable->EmptyString());
       bufferLen = 0;
       vec = NULL;
+      ownsVector = false;
    }
 
    ConsoleValue(const ConsoleValue& ref)
@@ -196,7 +197,7 @@ public:
       s = const_cast<char*>(StringTable->EmptyString());
       bufferLen = 0;
       vec = NULL;
-
+      ownsVector = false;
       switch (ref.type)
       {
       case cvNULL:
@@ -215,12 +216,7 @@ public:
          setString(ref.s);
          break;
       case cvVector:
-         if (ref.vec)
-         {
-            setVector(ref.vec);
-         }
-         else
-            setVector(new Vector<ConsoleValue>());
+         setVector(ref.vec);
          break;
       default:
          setConsoleData(ref.type, ref.dataPtr, ref.enumTable);
@@ -236,14 +232,7 @@ public:
          std::cout << "Ref already cleared!";
          break;
       case cvVector:
-         if (ref.vec)
-         {
-            setVector(ref.vec);
-         }
-         else
-         {
-            setVector(new Vector<ConsoleValue>());
-         }
+         setVector(ref.vec);
          break;
       case cvInteger:
          setInt(ref.i);
@@ -304,11 +293,20 @@ public:
       return dAtoi(getConsoleData());
    }
 
+   TORQUE_FORCEINLINE void setVectorRef(Vector<ConsoleValue>* v)
+   {
+      ownsVector = false;
+      cleanupData();
+      type = cvVector;
+      vec = v;
+   }
+
    TORQUE_FORCEINLINE void setVector(Vector<ConsoleValue>* v)
    {
       cleanupData();
       type = cvVector;
       vec = v;
+      ownsVector = true;
    }
 
    TORQUE_FORCEINLINE Vector<ConsoleValue>* getVector() const
@@ -317,8 +315,12 @@ public:
          return vec;
 
       // Handle string or string table entry as a space-delimited vector
+      Vector<ConsoleValue>* temp = new Vector<ConsoleValue>();
       if (type == cvString || type == cvSTEntry)
       {
+         if (s == StringTable->EmptyString())
+            return NULL;
+
          const char* str = s ? s : "";
 
          char* buffer = dStrdup(str);
@@ -328,12 +330,12 @@ public:
          {
             ConsoleValue elem;
             elem.setString(tok);
-            vec->push_back(elem);
+            temp->push_back(elem);
             tok = dStrtok(NULL, " \t\r\n");
          }
 
          dFree(buffer);
-         return vec;
+         return temp;
       }
 
       return NULL;

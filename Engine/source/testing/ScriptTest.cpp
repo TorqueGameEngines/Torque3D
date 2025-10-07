@@ -399,6 +399,62 @@ TEST_F(ScriptTest, VectorTests)
 
    ASSERT_EQ(vecTest.getInt(), 2);
 
+   vecTest = RunScript(R"(
+      function doTestAdd(%size){
+         for ( %i = 0; %i < %size; %i++ )
+            %val[%i] = %i;
+
+         return %val;
+      }
+
+      function doTest(){
+         %bar = [[doTestAdd(3)], [doTestAdd(3)], [doTestAdd(3)]];
+         return %bar;
+      }
+      
+      return doTest();
+   )");
+   ASSERT_STRCASEEQ(vecTest.getString(), "0 1 2 0 1 2 0 1 2");
+
+   vecTest = RunScript(R"(
+      $vecSize = 0;
+      $val = "";
+      function doTestAdd(%size){
+         $vecSize = $val + %size;
+         for ( %i = 0; %i < $vecSize; %i++ )
+            $val[%i] = %i;
+
+         return $val;
+      }
+
+      function doTest(){
+         %bar = [[doTestAdd(3)], [doTestAdd(3)], [doTestAdd(3)]];
+         return %bar;
+      }
+      
+      return doTest();
+   )");
+   ASSERT_STRCASEEQ(vecTest.getString(), "0 1 2 0 1 2 3 4 5 0 1 2 3 4 5 6 7 8");
+
+   vecTest = RunScript(R"(
+      $vecSize = 0;
+      $val = "";
+      function doTestAdd(%size){
+         $vecSize = $val + %size;
+         for ( %i = 0; %i < $vecSize; %i++ )
+            $val[%i] = %i;
+
+         return $val;
+      }
+
+      function doTest(){
+         %bar = [doTestAdd(3), doTestAdd(3), doTestAdd(3)];
+         return %bar;
+      }
+      
+      return doTest();
+   )");
+   ASSERT_STRCASEEQ(vecTest.getString(), "0 1 2 0 1 2 3 4 5 0 1 2 3 4 5 6 7 8");
 }
 
 TEST_F(ScriptTest, Basic_Conditional_Statements)

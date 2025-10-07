@@ -1494,12 +1494,11 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
       case OP_LOADVAR_VECTOR:
          currentRegister = -1;
-         stack[_STK + 1].setVector(Script::gEvalState.getVectorVariable());
-         if (!stack[_STK + 1].getVector())
+         if (!Script::gEvalState.getVectorVariable())
          {
-            stack[_STK + 1].setVector(new Vector<ConsoleValue>());
-            Script::gEvalState.setVectorVariable(stack[_STK + 1].getVector());
+            Script::gEvalState.setVectorVariable(new Vector<ConsoleValue>());
          }
+         stack[_STK + 1].setVectorRef(Script::gEvalState.getVectorVariable());
          _STK++;
          break;
 
@@ -1527,7 +1526,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             {
             case TypeReqUInt:   stack[_STK].setInt(-1); break;
             case TypeReqFloat:  stack[_STK].setFloat(0.0f); break;
-            case TypeReqVector: stack[_STK].setVector(new Vector<ConsoleValue>()); break;
+            case TypeReqVector: stack[_STK].setVectorRef(new Vector<ConsoleValue>()); break;
             case TypeReqString:
             case TypeReqNone:   stack[_STK].setString(""); break;
             }
@@ -1539,7 +1538,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             {
             case TypeReqUInt:   stack[_STK].setInt((*vec)[index].getInt()); break;
             case TypeReqFloat:  stack[_STK].setFloat((*vec)[index].getFloat()); break;
-            case TypeReqVector: stack[_STK].setVector((*vec)[index].getVector()); break;
+            case TypeReqVector: stack[_STK].setVectorRef((*vec)[index].getVector()); break;
             case TypeReqString:
             case TypeReqNone:   stack[_STK].setString((*vec)[index].getString()); break;
             }
@@ -1560,7 +1559,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          break;
 
       case OP_SAVEVAR_VECTOR:
-         Script::gEvalState.setVectorVariable(stack[_STK].getVector());
+         Script::gEvalState.setVectorVariable(new Vector<ConsoleValue>(*stack[_STK].getVector()));
          break;
 
       case OP_LOAD_LOCAL_VAR_UINT:
@@ -1612,12 +1611,11 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          prevObject = NULL;
          curObject = NULL;
 
-         stack[_STK + 1].setVector(Script::gEvalState.getLocalVectorVariable(reg));
-         if (!stack[_STK + 1].getVector())
+         if (!Script::gEvalState.getLocalVectorVariable(reg))
          {
-            stack[_STK + 1].setVector(new Vector<ConsoleValue>());
-            Script::gEvalState.setLocalVectorVariable(reg, stack[_STK + 1].getVector());
+            Script::gEvalState.setLocalVectorVariable(reg, new Vector<ConsoleValue>());
          }
+         stack[_STK + 1].setVectorRef(Script::gEvalState.getLocalVectorVariable(reg));
          _STK++;
          break;
 
@@ -1666,7 +1664,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          prevField = NULL;
          prevObject = NULL;
          curObject = NULL;
-         Script::gEvalState.setLocalVectorVariable(reg, stack[_STK].getVector());
+         Script::gEvalState.setLocalVectorVariable(reg, new Vector<ConsoleValue>(*stack[_STK].getVector()));
          break;
 
       case OP_SETCUROBJECT:
@@ -2368,7 +2366,6 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          vecVal.getVector()->reserve(count);
 
          stack[++_STK] = vecVal;
-
          break;
       }
 
@@ -2376,6 +2373,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
       {
          // Vector must be at _STK
          ConsoleValue& vecVal = stack[_STK];
+         ConsoleValue elem = stack[_STK+1];
          Vector<ConsoleValue>* vec = vecVal.getVector();
 
          if (!vec)
@@ -2385,10 +2383,19 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          }
 
          // Element is right above vector on the stack
-         ConsoleValue elem = stack[_STK + 1];
          // Push element into vector
-         vec->push_back(elem);
-
+         if (elem.getType() == ConsoleValueType::cvVector)
+         {
+            // Store a reference to the same vector, not a deep copy
+            ConsoleValue ref;
+            ref.setVectorRef(new Vector<ConsoleValue>(*elem.getVector()));
+            vec->push_back(ref);
+         }
+         else
+         {
+            // Regular copy for numbers, strings, etc.
+            vec->push_back(elem);
+         }
          break;
       }
 

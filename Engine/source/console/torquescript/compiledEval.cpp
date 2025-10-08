@@ -360,7 +360,7 @@ const char *ExprEvalState::getStringVariable()
    return currentVariable ? currentVariable->getStringValue() : "";
 }
 
-Vector<ConsoleValue>* ExprEvalState::getVectorVariable()
+std::shared_ptr<Vector<ConsoleValue>> ExprEvalState::getVectorVariable()
 {
    return currentVariable ? currentVariable->getVectorValue() : NULL;
 }
@@ -385,7 +385,7 @@ void ExprEvalState::setStringVariable(const char *val)
    currentVariable->setStringValue(val);
 }
 
-void ExprEvalState::setVectorVariable(Vector<ConsoleValue>* val)
+void ExprEvalState::setVectorVariable(std::shared_ptr<Vector<ConsoleValue>> val)
 {
    AssertFatal(currentVariable != NULL, "Invalid evaluator state - trying to set null variable!");
    currentVariable->setVectorValue(val);
@@ -1458,7 +1458,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          ConsoleValue& vecVal = stack[_STK--];   // vector
          ConsoleValue exprVal = stack[_STK--];  // value
 
-         Vector<ConsoleValue>* vec = vecVal.getVector();
+         std::shared_ptr<Vector<ConsoleValue>> vec = vecVal.getVector();
          if (!vec)
          {
             Con::errorf("Assigning to non-vector variable, promoting to a vector.");
@@ -1471,7 +1471,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec->setSize(index + 1);
          }
 
-         (*vec)[index] = exprVal;
+         vec->insert(index, exprVal);
+         vec.reset();
          break;
       }
       case OP_SETCURVAR_VECTOR_MEMBER_GLOBAL:
@@ -1480,11 +1481,11 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          U32 index = stack[_STK--].getInt();   // pop index
          ConsoleValue exprVal = stack[_STK--]; // pop assigned value
 
-         Vector<ConsoleValue>* vec = Script::gEvalState.getVectorVariable();
+         std::shared_ptr<Vector<ConsoleValue>> vec = Script::gEvalState.getVectorVariable();
 
          if (!vec)
          {
-            Script::gEvalState.setVectorVariable(NULL);
+            Script::gEvalState.setVectorVariable(std::make_shared<Vector<ConsoleValue>>());
             vec = Script::gEvalState.getVectorVariable();
          }
 
@@ -1492,9 +1493,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          if (index >= vec->size())
             vec->setSize(index + 1);
 
-         // Assign (deep copy)
-         (*vec)[index] = exprVal;
-
+         vec->insert(index, exprVal);
+         vec.reset();
          break;
       }
       case OP_SETCURVAR_VECTOR_MEMBER_LOCAL:
@@ -1504,18 +1504,18 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          reg = code[ip++];                      // read the local variable register
          currentRegister = reg;
 
-         Vector<ConsoleValue>* vec = Script::gEvalState.getLocalVectorVariable(reg);
+         std::shared_ptr<Vector<ConsoleValue>> vec = Script::gEvalState.getLocalVectorVariable(reg);
          if (!vec)
          {
-            Script::gEvalState.setLocalVectorVariable(reg, NULL);
+            Script::gEvalState.setLocalVectorVariable(reg, std::make_shared<Vector<ConsoleValue>>());
             vec = Script::gEvalState.getLocalVectorVariable(reg);
          }
 
          if (index >= vec->size())
             vec->setSize(index + 1);
 
-         (*vec)[index] = exprVal;
-
+         vec->insert(index, exprVal);
+         vec.reset();
          break;
       }
       case OP_LOADVAR_UINT:
@@ -1540,7 +1540,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          currentRegister = -1;
          if (!Script::gEvalState.getVectorVariable())
          {
-            Script::gEvalState.setVectorVariable(NULL);
+            Script::gEvalState.setVectorVariable(std::make_shared<Vector<ConsoleValue>>());
          }
          stack[_STK + 1].setVector(Script::gEvalState.getVectorVariable());
          _STK++;
@@ -1553,11 +1553,11 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
          TypeReq type = (TypeReq)code[ip++];
 
-         Vector<ConsoleValue>* vec = vecVal.getVector();
+         std::shared_ptr<Vector<ConsoleValue>> vec = vecVal.getVector();
          if (!vec)
          {
             Con::errorf("Tried to index a non-vector variable. Promoting to vector.");
-            vecVal.setVector(NULL);
+            vecVal.setVector(std::make_shared<Vector<ConsoleValue>>());
             vec = vecVal.getVector();
             vec->setSize(index + 1);
          }
@@ -1570,7 +1570,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             {
             case TypeReqUInt:   stack[_STK].setInt(-1); break;
             case TypeReqFloat:  stack[_STK].setFloat(0.0f); break;
-            case TypeReqVector: stack[_STK].setVector(NULL); break;
+            case TypeReqVector: stack[_STK].setVector(std::make_shared<Vector<ConsoleValue>>()); break;
             case TypeReqString:
             case TypeReqNone:   stack[_STK].setString(""); break;
             }
@@ -1587,6 +1587,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             case TypeReqNone:   stack[_STK].setString((*vec)[index].getString()); break;
             }
          }
+
+         vec.reset();
          break;
       }
       case OP_LOADVAR_VECTOR_MEMBER_GLOBAL:
@@ -1595,10 +1597,10 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          TypeReq type = (TypeReq)code[ip++];
 
          // Grab global vector variable
-         Vector<ConsoleValue>* vec = Script::gEvalState.getVectorVariable();
+         std::shared_ptr<Vector<ConsoleValue>> vec = Script::gEvalState.getVectorVariable();
          if (!vec)
          {
-            Script::gEvalState.setVectorVariable(NULL);
+            Script::gEvalState.setVectorVariable(std::make_shared<Vector<ConsoleValue>>());
             vec = Script::gEvalState.getVectorVariable();
          }
 
@@ -1609,7 +1611,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             {
             case TypeReqUInt:   stack[_STK + 1].setInt(-1); break;
             case TypeReqFloat:  stack[_STK + 1].setFloat(0.0f); break;
-            case TypeReqVector: stack[_STK + 1].setVector(NULL); break;
+            case TypeReqVector: stack[_STK + 1].setVector(std::make_shared<Vector<ConsoleValue>>()); break;
             case TypeReqString:
             case TypeReqNone:   stack[_STK + 1].setString(""); break;
             }
@@ -1625,7 +1627,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             case TypeReqNone:   stack[_STK + 1].setString((*vec)[index].getString()); break;
             }
          }
-
+         vec.reset();
          _STK++;
          break;
       }
@@ -1642,10 +1644,10 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          prevObject = NULL;
          curObject = NULL;
 
-         Vector<ConsoleValue>* vec = Script::gEvalState.getLocalVectorVariable(reg);
+         std::shared_ptr<Vector<ConsoleValue>> vec = Script::gEvalState.getLocalVectorVariable(reg);
          if (!vec)
          {
-            Script::gEvalState.setLocalVectorVariable(reg, NULL);
+            Script::gEvalState.setLocalVectorVariable(reg, std::make_shared<Vector<ConsoleValue>>());
             vec = Script::gEvalState.getLocalVectorVariable(reg);
          }
 
@@ -1656,7 +1658,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             {
             case TypeReqUInt:   stack[_STK + 1].setInt(-1); break;
             case TypeReqFloat:  stack[_STK + 1].setFloat(0.0f); break;
-            case TypeReqVector: stack[_STK + 1].setVector(NULL); break;
+            case TypeReqVector: stack[_STK + 1].setVector(std::make_shared<Vector<ConsoleValue>>()); break;
             case TypeReqString:
             case TypeReqNone:   stack[_STK + 1].setString(""); break;
             }
@@ -1672,7 +1674,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             case TypeReqNone:   stack[_STK + 1].setString((*vec)[index].getString()); break;
             }
          }
-
+         vec.reset();
          _STK++;
          break;
       }
@@ -1743,7 +1745,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
          if (!Script::gEvalState.getLocalVectorVariable(reg))
          {
-            Script::gEvalState.setLocalVectorVariable(reg, NULL);
+            Script::gEvalState.setLocalVectorVariable(reg, std::make_shared<Vector<ConsoleValue>>());
          }
          stack[_STK + 1].setVector(Script::gEvalState.getLocalVectorVariable(reg));
          _STK++;
@@ -2491,7 +2493,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
       {
          U32 count = code[ip++];
 
-         stack[_STK + 1].setVector(NULL);
+         stack[_STK + 1].setVector(std::make_shared<Vector<ConsoleValue>>());
          stack[_STK + 1].getVector()->reserve(count);
          _STK++;
          break;
@@ -2508,20 +2510,10 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             break;
          }
 
-         // Element is right above vector on the stack
-         // Push element into vector
-         if (elem.getType() == ConsoleValueType::cvVector)
-         {
-            // Store a reference to the same vector, not a deep copy
-            ConsoleValue ref;
-            ref.setVectorRef(new Vector<ConsoleValue>(*elem.getVector()));
-            stack[_STK].getVector()->push_back(ref);
-         }
-         else
-         {
-            // Regular copy for numbers, strings, etc.
-            stack[_STK].getVector()->push_back(elem);
-         }
+         stack[_STK].getVector()->push_back(elem);
+         if (elem.getType() == cvVector)
+            elem.getVector().reset();
+
          break;
       }
 

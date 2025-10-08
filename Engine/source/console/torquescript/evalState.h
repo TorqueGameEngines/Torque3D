@@ -42,11 +42,11 @@ public:
    S32 getIntVariable();
    F64 getFloatVariable();
    const char *getStringVariable();
-   Vector<ConsoleValue>* getVectorVariable();
+   std::shared_ptr<Vector<ConsoleValue>> getVectorVariable();
    void setIntVariable(S32 val);
    void setFloatVariable(F64 val);
    void setStringVariable(const char *str);
-   void setVectorVariable(Vector<ConsoleValue>* val);
+   void setVectorVariable(std::shared_ptr<Vector<ConsoleValue>> val);
 
    TORQUE_FORCEINLINE S32 getLocalIntVariable(S32 reg)
    {
@@ -63,7 +63,7 @@ public:
       return currentRegisterArray->values[reg].getString();
    }
 
-   TORQUE_FORCEINLINE Vector<ConsoleValue>* getLocalVectorVariable(S32 reg)
+   TORQUE_FORCEINLINE std::shared_ptr<Vector<ConsoleValue>> getLocalVectorVariable(S32 reg)
    {
       return currentRegisterArray->values[reg].getVector();
    }
@@ -88,7 +88,7 @@ public:
       currentRegisterArray->values[reg].setStringTableEntry(val);
    }
 
-   TORQUE_FORCEINLINE void setLocalVectorVariable(S32 reg, Vector<ConsoleValue>* val)
+   TORQUE_FORCEINLINE void setLocalVectorVariable(S32 reg, std::shared_ptr<Vector<ConsoleValue>> val)
    {
       currentRegisterArray->values[reg].setVector(val);
    }

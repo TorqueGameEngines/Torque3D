@@ -1105,7 +1105,6 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
                if (!ent)
                {
                   ent = Con::gGlobalVars.add(varName);
-                  ent->setVectorValue(NULL);
                }
 
                codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER_GLOBAL);
@@ -1324,7 +1323,6 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
                if (!ent)
                {
                   ent = Con::gGlobalVars.add(varName);
-                  ent->setVectorValue(NULL);
                }
 
                codeStream.emit(OP_LOADVAR_VECTOR_MEMBER_GLOBAL);

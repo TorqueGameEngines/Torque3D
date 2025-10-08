@@ -151,8 +151,7 @@ public:
 
    S32 type;
    U32 bufferLen;
-   Vector<ConsoleValue>* vec;
-   bool ownsVector;
+   std::shared_ptr<Vector<ConsoleValue>> vec;
    static DataChunker sConversionAllocator;
 
    char* convertToBuffer() const;
@@ -172,14 +171,7 @@ public:
 
       if (type == ConsoleValueType::cvVector)
       {
-         if (ownsVector && vec)
-         {
-            vec->clear();
-            delete vec;
-         }
-
-         vec = nullptr;
-         ownsVector = false;
+         vec.reset();
       }
 
       type = ConsoleValueType::cvNULL;
@@ -189,8 +181,6 @@ public:
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
       bufferLen = 0;
-      vec = nullptr;
-      ownsVector = false;
    }
 
    ConsoleValue(const ConsoleValue& ref)
@@ -198,8 +188,7 @@ public:
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
       bufferLen = 0;
-      vec = nullptr;
-      ownsVector = false;
+
       switch (ref.type)
       {
       case cvNULL:
@@ -218,8 +207,7 @@ public:
          setString(ref.s);
          break;
       case cvVector:
-         if (ref.vec)
-            setVectorRef(ref.vec);  // copy-by-reference, no ownership
+         setVector(ref.vec);  // copy-by-reference, no ownership
          break;
       default:
          setConsoleData(ref.type, ref.dataPtr, ref.enumTable);
@@ -235,8 +223,7 @@ public:
          std::cout << "Ref already cleared!";
          break;
       case cvVector:
-         if (ref.vec)
-            setVectorRef(ref.vec);
+         setVector(ref.vec);
          break;
       case cvInteger:
          setInt(ref.i);
@@ -297,32 +284,14 @@ public:
       return dAtoi(getConsoleData());
    }
 
-   TORQUE_FORCEINLINE void setVectorRef(Vector<ConsoleValue>* v)
-   {
-      cleanupData();
-      type = cvVector;
-      vec = v;
-      ownsVector = false;
-   }
-
-   TORQUE_FORCEINLINE void setVector(Vector<ConsoleValue>* v)
+   TORQUE_FORCEINLINE void setVector(std::shared_ptr<Vector<ConsoleValue>> v)
    {
       cleanupData();
       type = ConsoleValueType::cvVector;
-
-      if (v)
-      {
-         vec = new Vector<ConsoleValue>(*v);
-      }
-      else
-      {
-         vec = new Vector<ConsoleValue>();
-      }
-
-      ownsVector = true;
+      vec = v;
    }
 
-   TORQUE_FORCEINLINE Vector<ConsoleValue>* getVector() const
+   TORQUE_FORCEINLINE std::shared_ptr<Vector<ConsoleValue>> getVector() const
    {
       if (type == cvVector)
          return vec;
@@ -336,7 +305,7 @@ public:
                return NULL;
          }
 
-         Vector<ConsoleValue>* temp = new Vector<ConsoleValue>();
+         std::shared_ptr<Vector<ConsoleValue>> temp = std::make_shared<Vector<ConsoleValue>>();
          if (isNumberType())
          {
             ConsoleValue elem;

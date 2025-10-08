@@ -338,7 +338,7 @@ public:
          return value.getString();
       }
 
-      inline Vector<ConsoleValue>* getVectorValue()
+      inline std::shared_ptr<Vector<ConsoleValue>> getVectorValue()
       {
          return value.getVector();
       }
@@ -412,7 +412,7 @@ public:
             notify->trigger();
       }
 
-      void setVectorValue(Vector<ConsoleValue>* val)
+      void setVectorValue(std::shared_ptr<Vector<ConsoleValue>> val)
       {
          if (mIsConstant)
          {

@@ -362,7 +362,7 @@ const char *ExprEvalState::getStringVariable()
 
 Vector<ConsoleValue>* ExprEvalState::getVectorVariable()
 {
-   return currentVariable ? currentVariable->getVectorValue() : nullptr;
+   return currentVariable ? currentVariable->getVectorValue() : NULL;
 }
 
 //------------------------------------------------------------
@@ -1462,7 +1462,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          if (!vec)
          {
             Con::errorf("Assigning to non-vector variable, promoting to a vector.");
-            vecVal.setVector(new Vector<ConsoleValue>());
+            vecVal.setVector(NULL);
             vec = vecVal.getVector();
          }
 
@@ -1472,6 +1472,50 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          }
 
          (*vec)[index] = exprVal;
+         break;
+      }
+      case OP_SETCURVAR_VECTOR_MEMBER_GLOBAL:
+      {
+         currentRegister = -1;
+         U32 index = stack[_STK--].getInt();   // pop index
+         ConsoleValue exprVal = stack[_STK--]; // pop assigned value
+
+         Vector<ConsoleValue>* vec = Script::gEvalState.getVectorVariable();
+
+         if (!vec)
+         {
+            Script::gEvalState.setVectorVariable(NULL);
+            vec = Script::gEvalState.getVectorVariable();
+         }
+
+         // Grow vector if necessary
+         if (index >= vec->size())
+            vec->setSize(index + 1);
+
+         // Assign (deep copy)
+         (*vec)[index] = exprVal;
+
+         break;
+      }
+      case OP_SETCURVAR_VECTOR_MEMBER_LOCAL:
+      {
+         U32 index = stack[_STK--].getInt();    // pop index
+         ConsoleValue exprVal = stack[_STK--];  // pop assigned value
+         reg = code[ip++];                      // read the local variable register
+         currentRegister = reg;
+
+         Vector<ConsoleValue>* vec = Script::gEvalState.getLocalVectorVariable(reg);
+         if (!vec)
+         {
+            Script::gEvalState.setLocalVectorVariable(reg, NULL);
+            vec = Script::gEvalState.getLocalVectorVariable(reg);
+         }
+
+         if (index >= vec->size())
+            vec->setSize(index + 1);
+
+         (*vec)[index] = exprVal;
+
          break;
       }
       case OP_LOADVAR_UINT:
@@ -1496,24 +1540,24 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          currentRegister = -1;
          if (!Script::gEvalState.getVectorVariable())
          {
-            Script::gEvalState.setVectorVariable(new Vector<ConsoleValue>());
+            Script::gEvalState.setVectorVariable(NULL);
          }
-         stack[_STK + 1].setVectorRef(Script::gEvalState.getVectorVariable());
+         stack[_STK + 1].setVector(Script::gEvalState.getVectorVariable());
          _STK++;
          break;
 
       case OP_LOADVAR_VECTOR_MEMBER:
       {
-         U32 index = stack[_STK--].getInt();   // pop the index
-         ConsoleValue& vecVal = stack[_STK];   // this is the vector
-         
+         U32 index = stack[_STK--].getInt();      // pop the index
+         ConsoleValue vecVal = stack[_STK];       // this is the vector
+
          TypeReq type = (TypeReq)code[ip++];
 
          Vector<ConsoleValue>* vec = vecVal.getVector();
          if (!vec)
          {
             Con::errorf("Tried to index a non-vector variable. Promoting to vector.");
-            vecVal.setVector(new Vector<ConsoleValue>());
+            vecVal.setVector(NULL);
             vec = vecVal.getVector();
             vec->setSize(index + 1);
          }
@@ -1526,7 +1570,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             {
             case TypeReqUInt:   stack[_STK].setInt(-1); break;
             case TypeReqFloat:  stack[_STK].setFloat(0.0f); break;
-            case TypeReqVector: stack[_STK].setVectorRef(new Vector<ConsoleValue>()); break;
+            case TypeReqVector: stack[_STK].setVector(NULL); break;
             case TypeReqString:
             case TypeReqNone:   stack[_STK].setString(""); break;
             }
@@ -1538,14 +1582,100 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             {
             case TypeReqUInt:   stack[_STK].setInt((*vec)[index].getInt()); break;
             case TypeReqFloat:  stack[_STK].setFloat((*vec)[index].getFloat()); break;
-            case TypeReqVector: stack[_STK].setVectorRef((*vec)[index].getVector()); break;
+            case TypeReqVector: stack[_STK].setVector((*vec)[index].getVector()); break;
             case TypeReqString:
             case TypeReqNone:   stack[_STK].setString((*vec)[index].getString()); break;
             }
          }
          break;
       }
+      case OP_LOADVAR_VECTOR_MEMBER_GLOBAL:
+      {
+         U32 index = stack[_STK--].getInt();   // pop index
+         TypeReq type = (TypeReq)code[ip++];
 
+         // Grab global vector variable
+         Vector<ConsoleValue>* vec = Script::gEvalState.getVectorVariable();
+         if (!vec)
+         {
+            Script::gEvalState.setVectorVariable(NULL);
+            vec = Script::gEvalState.getVectorVariable();
+         }
+
+         if (index >= vec->size())
+         {
+            Con::warnf(ConsoleLogEntry::Script, "%s: Index %u out of bounds", getFileLine(ip - 2), index);
+            switch (type)
+            {
+            case TypeReqUInt:   stack[_STK + 1].setInt(-1); break;
+            case TypeReqFloat:  stack[_STK + 1].setFloat(0.0f); break;
+            case TypeReqVector: stack[_STK + 1].setVector(NULL); break;
+            case TypeReqString:
+            case TypeReqNone:   stack[_STK + 1].setString(""); break;
+            }
+         }
+         else
+         {
+            switch (type)
+            {
+            case TypeReqUInt:   stack[_STK + 1].setInt((*vec)[index].getInt()); break;
+            case TypeReqFloat:  stack[_STK + 1].setFloat((*vec)[index].getFloat()); break;
+            case TypeReqVector: stack[_STK + 1].setVector((*vec)[index].getVector()); break;
+            case TypeReqString:
+            case TypeReqNone:   stack[_STK + 1].setString((*vec)[index].getString()); break;
+            }
+         }
+
+         _STK++;
+         break;
+      }
+      case OP_LOADVAR_VECTOR_MEMBER_LOCAL:
+      {
+         U32 index = stack[_STK--].getInt();   // pop index
+         TypeReq type = (TypeReq)code[ip++];
+
+         reg = code[ip++];                 // local variable register index
+         currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
+         Vector<ConsoleValue>* vec = Script::gEvalState.getLocalVectorVariable(reg);
+         if (!vec)
+         {
+            Script::gEvalState.setLocalVectorVariable(reg, NULL);
+            vec = Script::gEvalState.getLocalVectorVariable(reg);
+         }
+
+         if (index >= vec->size())
+         {
+            Con::warnf(ConsoleLogEntry::Script, "%s: Index %u out of bounds", getFileLine(ip - 2), index);
+            switch (type)
+            {
+            case TypeReqUInt:   stack[_STK + 1].setInt(-1); break;
+            case TypeReqFloat:  stack[_STK + 1].setFloat(0.0f); break;
+            case TypeReqVector: stack[_STK + 1].setVector(NULL); break;
+            case TypeReqString:
+            case TypeReqNone:   stack[_STK + 1].setString(""); break;
+            }
+         }
+         else
+         {
+            switch (type)
+            {
+            case TypeReqUInt:   stack[_STK + 1].setInt((*vec)[index].getInt()); break;
+            case TypeReqFloat:  stack[_STK + 1].setFloat((*vec)[index].getFloat()); break;
+            case TypeReqVector: stack[_STK + 1].setVector((*vec)[index].getVector()); break;
+            case TypeReqString:
+            case TypeReqNone:   stack[_STK + 1].setString((*vec)[index].getString()); break;
+            }
+         }
+
+         _STK++;
+         break;
+      }
       case OP_SAVEVAR_UINT:
          Script::gEvalState.setIntVariable(stack[_STK].getInt());
          break;
@@ -1559,7 +1689,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          break;
 
       case OP_SAVEVAR_VECTOR:
-         Script::gEvalState.setVectorVariable(new Vector<ConsoleValue>(*stack[_STK].getVector()));
+         Script::gEvalState.setVectorVariable(stack[_STK].getVector());
          break;
 
       case OP_LOAD_LOCAL_VAR_UINT:
@@ -1613,9 +1743,9 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
          if (!Script::gEvalState.getLocalVectorVariable(reg))
          {
-            Script::gEvalState.setLocalVectorVariable(reg, new Vector<ConsoleValue>());
+            Script::gEvalState.setLocalVectorVariable(reg, NULL);
          }
-         stack[_STK + 1].setVectorRef(Script::gEvalState.getLocalVectorVariable(reg));
+         stack[_STK + 1].setVector(Script::gEvalState.getLocalVectorVariable(reg));
          _STK++;
          break;
 
@@ -1664,7 +1794,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          prevField = NULL;
          prevObject = NULL;
          curObject = NULL;
-         Script::gEvalState.setLocalVectorVariable(reg, new Vector<ConsoleValue>(*stack[_STK].getVector()));
+         Script::gEvalState.setLocalVectorVariable(reg, stack[_STK].getVector());
          break;
 
       case OP_SETCUROBJECT:
@@ -2361,22 +2491,18 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
       {
          U32 count = code[ip++];
 
-         ConsoleValue vecVal;
-         vecVal.setVector(new Vector<ConsoleValue>());
-         vecVal.getVector()->reserve(count);
-
-         stack[++_STK] = vecVal;
+         stack[_STK + 1].setVector(NULL);
+         stack[_STK + 1].getVector()->reserve(count);
+         _STK++;
          break;
       }
 
       case OP_VECTOR_PUSH:
       {
          // Vector must be at _STK
-         ConsoleValue& vecVal = stack[_STK];
          ConsoleValue elem = stack[_STK+1];
-         Vector<ConsoleValue>* vec = vecVal.getVector();
 
-         if (!vec)
+         if (!stack[_STK].getVector())
          {
             Con::printf("ERROR: OP_VECTOR_PUSH vector is null at _STK=%d", _STK);
             break;
@@ -2389,12 +2515,12 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             // Store a reference to the same vector, not a deep copy
             ConsoleValue ref;
             ref.setVectorRef(new Vector<ConsoleValue>(*elem.getVector()));
-            vec->push_back(ref);
+            stack[_STK].getVector()->push_back(ref);
          }
          else
          {
             // Regular copy for numbers, strings, etc.
-            vec->push_back(elem);
+            stack[_STK].getVector()->push_back(elem);
          }
          break;
       }

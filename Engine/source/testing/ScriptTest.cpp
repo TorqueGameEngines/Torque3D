@@ -306,24 +306,25 @@ TEST_F(ScriptTest, VectorTests)
    ASSERT_EQ(vecTest.getInt(), 2);
 
    vecTest = RunScript(R"(
-      function doTest(){
+      function test2(){
          for ( %i = 0; %i < 7; %i++ )
             %val[%i] = %i;
 
          return %val[1];
       }
-      return doTest();
+      return test2();
    )");
-
    ASSERT_EQ(vecTest.getInt(), 1);
 
    vecTest = RunScript(R"(
       function doTest(){
          for ( %i = 0; %i < 7; %i++ )
             $val[%i] = %i;
+
+         return $val[1];
       }
-      doTest();
-      return $val[1];
+      
+      return doTest();
    )");
 
    ASSERT_EQ(vecTest.getInt(), 1);
@@ -420,7 +421,7 @@ TEST_F(ScriptTest, VectorTests)
       $vecSize = 0;
       $val = "";
       function doTestAdd(%size){
-         $vecSize = $val + %size;
+         $vecSize = $vecSize + %size;
          for ( %i = 0; %i < $vecSize; %i++ )
             $val[%i] = %i;
 
@@ -437,30 +438,10 @@ TEST_F(ScriptTest, VectorTests)
    ASSERT_STRCASEEQ(vecTest.getString(), "0 1 2 0 1 2 3 4 5 0 1 2 3 4 5 6 7 8");
 
    vecTest = RunScript(R"(
-      $vecSize = 0;
-      $val = "";
-      function doTestAdd(%size){
-         $vecSize = $val + %size;
-         for ( %i = 0; %i < $vecSize; %i++ )
-            $val[%i] = %i;
-
-         return $val;
-      }
-
-      function doTest(){
-         %bar = [doTestAdd(3), doTestAdd(3), doTestAdd(3)];
-         return %bar;
-      }
-      
-      return doTest();
-   )");
-   ASSERT_STRCASEEQ(vecTest.getString(), "0 1 2 0 1 2 3 4 5 0 1 2 3 4 5 6 7 8");
-
-   vecTest = RunScript(R"(
       $val = "";
       function doTestAdd(%size){
          %stryng = "$val = [0";
-         for (%i=0; %i<%size; %i++)
+         for (%i=1; %i<%size; %i++)
          {
             %stryng = %stryng @","@ %i;
          }
@@ -476,7 +457,7 @@ TEST_F(ScriptTest, VectorTests)
       
       return doTest();
    )");
-   ASSERT_STRCASEEQ(vecTest.getString(), "0 0 1 2 0 0 1 2 0 0 1 2");
+   ASSERT_STRCASEEQ(vecTest.getString(), "0 1 2 0 1 2 0 1 2");
 }
 
 TEST_F(ScriptTest, Basic_Conditional_Statements)

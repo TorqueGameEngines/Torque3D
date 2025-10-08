@@ -405,7 +405,6 @@ U32 VectorIndexNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       ip = innerVec->compile(codeStream, ip, TypeReqVector);
    else
       ip = base->compile(codeStream, ip, TypeReqVector);
-
    // Compile index
    ip = index->compile(codeStream, ip, TypeReqUInt);
 
@@ -752,21 +751,28 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
          }
          else
          {
+            // Compile the index expression
+            ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
+
+            // Load the base vector
             if (isGlobal)
             {
                codeStream.emit(OP_SETCURVAR);
                codeStream.emitSTE(varName);
-               codeStream.emit(OP_LOADVAR_VECTOR);
+            }
+
+            // Emit the correct vector member load opcode
+            if (isGlobal)
+            {
+               codeStream.emit(OP_LOADVAR_VECTOR_MEMBER_GLOBAL);
+               codeStream.emit(type);
             }
             else
             {
-               codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR);
+               codeStream.emit(OP_LOADVAR_VECTOR_MEMBER_LOCAL);
+               codeStream.emit(type);
                codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
             }
-
-            ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
-            codeStream.emit(OP_LOADVAR_VECTOR_MEMBER);
-            codeStream.emit(type);
 
             return codeStream.tell();
          }
@@ -1089,6 +1095,8 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
                return ip;
             }
 
+            ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
+
             if (isGlobal)
             {
                codeStream.emit(OP_SETCURVAR_CREATE);
@@ -1097,10 +1105,10 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
                if (!ent)
                {
                   ent = Con::gGlobalVars.add(varName);
-                  ent->setVectorValue(new Vector<ConsoleValue>());
+                  ent->setVectorValue(NULL);
                }
 
-               codeStream.emit(OP_LOADVAR_VECTOR);
+               codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER_GLOBAL);
             }
             else // the issue with locals is that the framestack only exists after the op_ codes are run.
             {
@@ -1109,12 +1117,10 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
                   getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber);
                }
 
-               codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR);
+               codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER_LOCAL);
                codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
             }
 
-            ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
-            codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER);
             return ip;
          }
       }
@@ -1308,6 +1314,8 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
          }
          else
          {
+            ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
+
             if (isGlobal)
             {
                codeStream.emit(OP_SETCURVAR_CREATE);
@@ -1316,10 +1324,11 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
                if (!ent)
                {
                   ent = Con::gGlobalVars.add(varName);
-                  ent->setVectorValue(new Vector<ConsoleValue>());
+                  ent->setVectorValue(NULL);
                }
 
-               codeStream.emit(OP_LOADVAR_VECTOR);
+               codeStream.emit(OP_LOADVAR_VECTOR_MEMBER_GLOBAL);
+               codeStream.emit(subType);
             }
             else // the issue with locals is that the framestack only exists after the op_ codes are run.
             {
@@ -1332,31 +1341,28 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
                   getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber);
                }
 
-               codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR);
+               codeStream.emit(OP_LOADVAR_VECTOR_MEMBER_LOCAL);
+               codeStream.emit(subType);
                codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
             }
 
-            ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
-            // Load element at index
-            codeStream.emit(OP_LOADVAR_VECTOR_MEMBER);
-            codeStream.emit(subType);
             ip = expr->compile(codeStream, ip, subType);
             codeStream.emit(operand);
             codeStream.emit((subType == TypeReqFloat) ? OP_LOADVAR_FLT : OP_LOADVAR_UINT);
 
-            if (isGlobal)
-            {
-               codeStream.emit(OP_LOADVAR_VECTOR);
-            }
-            else
-            {
-               codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR);
-               codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
-            }
-
             ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
 
-            codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER);
+            if (isGlobal)
+            {
+               codeStream.emit(OP_SETCURVAR_CREATE);
+               codeStream.emitSTE(varName);
+               codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER_GLOBAL);
+            }
+            else // the issue with locals is that the framestack only exists after the op_ codes are run.
+            {
+               codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER_LOCAL);
+               codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
+            }
 
             if (type == TypeReqNone)
                codeStream.emit(OP_POP_STK);

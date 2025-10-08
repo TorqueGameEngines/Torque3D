@@ -33,7 +33,6 @@
 #include "core/util/refBase.h"
 #endif
 #include <stdarg.h>
-
 #include "core/util/str.h"
 #include "core/util/journal/journaledSignal.h"
 #include "core/stringTable.h"
@@ -173,11 +172,14 @@ public:
 
       if (type == ConsoleValueType::cvVector)
       {
-         if (ownsVector && vec && vec->size() > 0)
+         if (ownsVector && vec)
          {
             vec->clear();
-            vec = NULL;
+            delete vec;
          }
+
+         vec = nullptr;
+         ownsVector = false;
       }
 
       type = ConsoleValueType::cvNULL;
@@ -187,7 +189,7 @@ public:
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
       bufferLen = 0;
-      vec = NULL;
+      vec = nullptr;
       ownsVector = false;
    }
 
@@ -196,7 +198,7 @@ public:
       type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
       bufferLen = 0;
-      vec = NULL;
+      vec = nullptr;
       ownsVector = false;
       switch (ref.type)
       {
@@ -216,7 +218,8 @@ public:
          setString(ref.s);
          break;
       case cvVector:
-         setVector(ref.vec);
+         if (ref.vec)
+            setVectorRef(ref.vec);  // copy-by-reference, no ownership
          break;
       default:
          setConsoleData(ref.type, ref.dataPtr, ref.enumTable);
@@ -232,7 +235,8 @@ public:
          std::cout << "Ref already cleared!";
          break;
       case cvVector:
-         setVector(ref.vec);
+         if (ref.vec)
+            setVectorRef(ref.vec);
          break;
       case cvInteger:
          setInt(ref.i);
@@ -295,17 +299,26 @@ public:
 
    TORQUE_FORCEINLINE void setVectorRef(Vector<ConsoleValue>* v)
    {
-      ownsVector = false;
       cleanupData();
       type = cvVector;
       vec = v;
+      ownsVector = false;
    }
 
    TORQUE_FORCEINLINE void setVector(Vector<ConsoleValue>* v)
    {
       cleanupData();
-      type = cvVector;
-      vec = v;
+      type = ConsoleValueType::cvVector;
+
+      if (v)
+      {
+         vec = new Vector<ConsoleValue>(*v);
+      }
+      else
+      {
+         vec = new Vector<ConsoleValue>();
+      }
+
       ownsVector = true;
    }
 

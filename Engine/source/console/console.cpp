@@ -71,7 +71,7 @@ char* ConsoleValue::convertToBuffer() const
 
 char* ConsoleValue::convertVectorToBuffer() const
 {
-   if (vec->size() == 0)
+   if (!vec || vec->size() == 0)
       return (char*)"";
 
    // use FrameAllocator to avoid static overwrite

@@ -1466,6 +1466,11 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec = vecVal.getVector();
          }
 
+         if (index > vec->size())
+         {
+            vec->setSize(index);
+         }
+
          vec->insert(index, exprVal);
          vec.reset();
          break;
@@ -1484,6 +1489,10 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec = Script::gEvalState.getVectorVariable();
          }
 
+         // Grow vector if necessary
+         if (index > vec->size())
+            vec->setSize(index);
+
          vec->insert(index, exprVal);
          vec.reset();
          break;
@@ -1501,6 +1510,9 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             Script::gEvalState.setLocalVectorVariable(reg, std::make_shared<Vector<ConsoleValue>>());
             vec = Script::gEvalState.getLocalVectorVariable(reg);
          }
+
+         if (index > vec->size())
+            vec->setSize(index);
 
          vec->insert(index, exprVal);
          vec.reset();

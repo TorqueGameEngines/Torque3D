@@ -1466,9 +1466,9 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec = vecVal.getVector();
          }
 
-         if (index >= vec->size())
+         if (index > vec->size())
          {
-            vec->setSize(index + 1);
+            vec->setSize(index);
          }
 
          vec->insert(index, exprVal);
@@ -1490,8 +1490,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          }
 
          // Grow vector if necessary
-         if (index >= vec->size())
-            vec->setSize(index + 1);
+         if (index > vec->size())
+            vec->setSize(index);
 
          vec->insert(index, exprVal);
          vec.reset();
@@ -1511,8 +1511,8 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec = Script::gEvalState.getLocalVectorVariable(reg);
          }
 
-         if (index >= vec->size())
-            vec->setSize(index + 1);
+         if (index > vec->size())
+            vec->setSize(index);
 
          vec->insert(index, exprVal);
          vec.reset();
@@ -1559,11 +1559,11 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             Con::errorf("Tried to index a non-vector variable. Promoting to vector.");
             vecVal.setVector(std::make_shared<Vector<ConsoleValue>>());
             vec = vecVal.getVector();
-            vec->setSize(index + 1);
+            vec->setSize(index);
          }
 
          // out-of-bounds handling
-         if (index >= vec->size())
+         if (index > vec->size())
          {
             Con::warnf(ConsoleLogEntry::Script, "%s: Index out of bounds", getFileLine(ip - 2));
             switch (type)
@@ -1603,7 +1603,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec = Script::gEvalState.getVectorVariable();
          }
 
-         if (index >= vec->size())
+         if (index > vec->size())
          {
             Con::warnf(ConsoleLogEntry::Script, "%s: Index %u out of bounds", getFileLine(ip - 2), index);
             switch (type)
@@ -1650,7 +1650,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec = Script::gEvalState.getLocalVectorVariable(reg);
          }
 
-         if (index >= vec->size())
+         if (index > vec->size())
          {
             Con::warnf(ConsoleLogEntry::Script, "%s: Index %u out of bounds", getFileLine(ip - 2), index);
             switch (type)

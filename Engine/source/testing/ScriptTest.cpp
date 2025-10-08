@@ -419,8 +419,8 @@ TEST_F(ScriptTest, VectorTests)
 
    vecTest = RunScript(R"(
       $vecSize = 0;
-      $val = "";
       function doTestAdd(%size){
+         $val = "";
          $vecSize = $vecSize + %size;
          for ( %i = 0; %i < $vecSize; %i++ )
             $val[%i] = %i;

@@ -1466,11 +1466,6 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec = vecVal.getVector();
          }
 
-         if (index > vec->size())
-         {
-            vec->setSize(index);
-         }
-
          vec->insert(index, exprVal);
          vec.reset();
          break;
@@ -1489,10 +1484,6 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec = Script::gEvalState.getVectorVariable();
          }
 
-         // Grow vector if necessary
-         if (index > vec->size())
-            vec->setSize(index);
-
          vec->insert(index, exprVal);
          vec.reset();
          break;
@@ -1510,9 +1501,6 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             Script::gEvalState.setLocalVectorVariable(reg, std::make_shared<Vector<ConsoleValue>>());
             vec = Script::gEvalState.getLocalVectorVariable(reg);
          }
-
-         if (index > vec->size())
-            vec->setSize(index);
 
          vec->insert(index, exprVal);
          vec.reset();
@@ -1563,7 +1551,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          }
 
          // out-of-bounds handling
-         if (index > vec->size())
+         if (index >= vec->size())
          {
             Con::warnf(ConsoleLogEntry::Script, "%s: Index out of bounds", getFileLine(ip - 2));
             switch (type)
@@ -1603,7 +1591,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec = Script::gEvalState.getVectorVariable();
          }
 
-         if (index > vec->size())
+         if (index >= vec->size())
          {
             Con::warnf(ConsoleLogEntry::Script, "%s: Index %u out of bounds", getFileLine(ip - 2), index);
             switch (type)
@@ -1650,7 +1638,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             vec = Script::gEvalState.getLocalVectorVariable(reg);
          }
 
-         if (index > vec->size())
+         if (index >= vec->size())
          {
             Con::warnf(ConsoleLogEntry::Script, "%s: Index %u out of bounds", getFileLine(ip - 2), index);
             switch (type)

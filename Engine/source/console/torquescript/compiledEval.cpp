@@ -1462,7 +1462,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          if (!vec)
          {
             Con::errorf("Assigning to non-vector variable, promoting to a vector.");
-            vecVal.setVector(NULL);
+            vecVal.setVector(std::make_shared<Vector<ConsoleValue>>());
             vec = vecVal.getVector();
          }
 
@@ -1577,14 +1577,13 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          }
          else
          {
-            //ConsoleValueType indexType = (ConsoleValueType)(*vec)[index].getType();
             switch (type)
             {
-            case TypeReqUInt:   stack[_STK].setInt((*vec)[index].getInt()); break;
-            case TypeReqFloat:  stack[_STK].setFloat((*vec)[index].getFloat()); break;
-            case TypeReqVector: stack[_STK].setVector((*vec)[index].getVector()); break;
+            case TypeReqUInt:   stack[_STK].setInt(vec->address()[index].getInt()); break;
+            case TypeReqFloat:  stack[_STK].setFloat(vec->address()[index].getFloat()); break;
+            case TypeReqVector: stack[_STK].setVector(vec->address()[index].getVector()); break;
             case TypeReqString:
-            case TypeReqNone:   stack[_STK].setString((*vec)[index].getString()); break;
+            case TypeReqNone:   stack[_STK].setString(vec->address()[index].getString()); break;
             }
          }
 
@@ -1620,11 +1619,11 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          {
             switch (type)
             {
-            case TypeReqUInt:   stack[_STK + 1].setInt((*vec)[index].getInt()); break;
-            case TypeReqFloat:  stack[_STK + 1].setFloat((*vec)[index].getFloat()); break;
-            case TypeReqVector: stack[_STK + 1].setVector((*vec)[index].getVector()); break;
+            case TypeReqUInt:   stack[_STK + 1].setInt(vec->address()[index].getInt()); break;
+            case TypeReqFloat:  stack[_STK + 1].setFloat(vec->address()[index].getFloat()); break;
+            case TypeReqVector: stack[_STK + 1].setVector(vec->address()[index].getVector()); break;
             case TypeReqString:
-            case TypeReqNone:   stack[_STK + 1].setString((*vec)[index].getString()); break;
+            case TypeReqNone:   stack[_STK + 1].setString(vec->address()[index].getString()); break;
             }
          }
          vec.reset();
@@ -1667,11 +1666,11 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          {
             switch (type)
             {
-            case TypeReqUInt:   stack[_STK + 1].setInt((*vec)[index].getInt()); break;
-            case TypeReqFloat:  stack[_STK + 1].setFloat((*vec)[index].getFloat()); break;
-            case TypeReqVector: stack[_STK + 1].setVector((*vec)[index].getVector()); break;
+            case TypeReqUInt:   stack[_STK + 1].setInt(vec->address()[index].getInt()); break;
+            case TypeReqFloat:  stack[_STK + 1].setFloat(vec->address()[index].getFloat()); break;
+            case TypeReqVector: stack[_STK + 1].setVector(vec->address()[index].getVector()); break;
             case TypeReqString:
-            case TypeReqNone:   stack[_STK + 1].setString((*vec)[index].getString()); break;
+            case TypeReqNone:   stack[_STK + 1].setString(vec->address()[index].getString()); break;
             }
          }
          vec.reset();

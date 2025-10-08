@@ -3,6 +3,7 @@
 #ZLIB
 get_filename_component(ZLIB_ROOT "zlib" REALPATH BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(ZLIB_ROOT "${ZLIB_ROOT}" CACHE STRING "ZLib root location" FORCE)
+advanced_option(ZLIB_BUILD_EXAMPLES "Enable Zlib Examples" OFF)
 mark_as_advanced(ZLIB_ROOT)
 # Png depends on zlib
 add_subdirectory(zlib ${TORQUE_LIB_TARG_DIRECTORY}/zlib EXCLUDE_FROM_ALL)

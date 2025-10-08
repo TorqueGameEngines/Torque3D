@@ -32,6 +32,9 @@
 #ifndef _REFBASE_H_
 #include "core/util/refBase.h"
 #endif
+#ifndef __RESOURCE_H__
+#include "core/resource.h"
+#endif
 #include <stdarg.h>
 #include "core/util/str.h"
 #include "core/util/journal/journaledSignal.h"

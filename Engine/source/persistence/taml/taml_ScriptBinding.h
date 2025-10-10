@@ -235,37 +235,36 @@ DefineEngineFunction(TamlWrite, bool, (SimObject* simObject, const char* filenam
                                         "@return Whether the write was successful or not.")
 {
 
-    // Did we find the object?
-    if ( simObject == NULL )
-    {
-        // No, so warn.
-       //Con::warnf( "TamlWrite() - Could not find object '%s' to write to file '%s'.", simObject->getIdString(), filename );
-       Con::warnf( "TamlWrite() - Could not find object to write to file '%s'.", filename );
-        return false;
-    }
+   // Did we find the object?
+   if ( simObject == NULL )
+   {
+      // No, so warn.
+      Con::warnf( "TamlWrite() - Could not find object to write to file '%s'.", filename );
+      return false;
+   }
 
-    Taml taml;
+   Taml taml;
 
-    taml.setFormatMode( Taml::getFormatModeEnum(format) );  
+   taml.setFormatMode( Taml::getFormatModeEnum(format) );  
 
    // Yes, so is the format mode binary?
    if ( taml.getFormatMode() == Taml::BinaryFormat )
    {
-         // Yes, so set binary compression.
+      // Yes, so set binary compression.
       taml.setBinaryCompression( compressed );
    }
    else
    {
-#ifdef TORQUE_DEBUG
+      #ifdef TORQUE_DEBUG
       // No, so warn.
       Con::warnf( "TamlWrite() - Setting binary compression is only valid for XML formatting." );
-#endif
+      #endif
    }
 
    // Turn-off auto-formatting.
    taml.setAutoFormat( false );
 
-    // Write.
+   // Write.
    return taml.write( simObject, filename );
 }
 
@@ -277,27 +276,27 @@ DefineEngineFunction(TamlRead, const char*, (const char* filename, const char* f
                                                 "@return (Object) The object read from the file or an empty string if read failed.")
 {
 
-    // Set the format mode.
-    Taml taml;
+   // Set the format mode.
+   Taml taml;
 
-	// Yes, so set it.
-    taml.setFormatMode( Taml::getFormatModeEnum(format) );  
+   // Yes, so set it.
+   taml.setFormatMode( Taml::getFormatModeEnum(format) );  
 
-	// Turn-off auto-formatting.
-	taml.setAutoFormat( false );
+   // Turn-off auto-formatting.
+   taml.setAutoFormat( false );
 
-    // Read object.
+   // Read object.
    SimObject* pSimObject = taml.read( filename );
 
-    // Did we find the object?
-    if ( pSimObject == NULL )
-    {
-        // No, so warn.
-        Con::warnf( "TamlRead() - Could not read object from file '%s'.", filename );
-        return StringTable->EmptyString();
-    }
+   // Did we find the object?
+   if ( pSimObject == NULL )
+   {
+      // No, so warn.
+      Con::warnf( "TamlRead() - Could not read object from file '%s'.", filename );
+      return StringTable->EmptyString();
+   }
 
-    return pSimObject->getIdString();
+   return pSimObject->getIdString();
 }
 
 //-----------------------------------------------------------------------------
@@ -306,8 +305,8 @@ DefineEngineFunction(GenerateTamlSchema, bool, (), , "() - Generate a TAML schem
                                                 "The schema file is specified using the console variable '" TAML_SCHEMA_VARIABLE "'.\n"
                                                 "@return Whether the schema file was writtent or not." )
 {
-    // Generate the schema.
-    return Taml::generateTamlSchema();
+   // Generate the schema.
+   return Taml::generateTamlSchema();
 }
 
 #endif //_TAML_SCRIPTBINDING_H

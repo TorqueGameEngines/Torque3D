@@ -1103,7 +1103,7 @@ bool AssetManager::compileAsset(const char* pAssetId)
       Con::printf("Asset Manager: Finished compiling Asset Id '%s'.", pAssetId);
    }
 
-   return false;
+   return true;
 }
 
 //-----------------------------------------------------------------------------

@@ -876,7 +876,7 @@ DefineEngineMethod(AssetManager, compileModuleAssets, bool, (const char* moduleD
    if (pModuleDefinition == NULL)
    {
       // No, so warn.
-      Con::warnf("AssetManager::removeDeclaredAssets() - Could not find the module definition '%s'.", moduleDefinition);
+      Con::warnf("AssetManager::compileModuleAssets() - Could not find the module definition '%s'.", moduleDefinition);
       return false;
    }
 

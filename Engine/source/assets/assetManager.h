@@ -151,6 +151,28 @@ public:
     bool isReferencedAsset( const char* pAssetId );
     bool renameReferencedAsset( const char* pAssetIdFrom, const char* pAssetIdTo );
 
+    /// <summary>
+    /// Compile all assets.
+    /// </summary>
+    /// <param name="compressed">Do we want binary compression?</param>
+    /// <param name="includeUnloaded">Do we want to include unloaded assets?</param>
+    /// <returns>True if successful, otherwise false.</returns>
+    bool compileAllAssets(const bool compressed = false, const bool includeUnloaded = false);
+
+    /// <summary>
+    /// Compile all assets for a module.
+    /// </summary>
+    /// <param name="pModuleDefinition">The module definition to compile.</param>
+    /// <returns></returns>
+    bool compileModuleAssets(ModuleDefinition* pModuleDefinition);
+
+    /// <summary>
+    /// Compile a single asset to binary.
+    /// </summary>
+    /// <param name="pAssetId">The asset id to be compiled.</param>
+    /// <returns>True if successful, otherwise false.</returns>
+    bool compileAsset(const char* pAssetId);
+
     /// Public asset acquisition.
     template<typename T> T* acquireAsset( const char* pAssetId )
     {

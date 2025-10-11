@@ -964,6 +964,148 @@ bool AssetManager::renameReferencedAsset( const char* pAssetIdFrom, const char* 
     return true;
 }
 
+bool AssetManager::compileAllAssets(const bool compressed, const bool includeUnloaded)
+{
+   // Debug Profiling.
+   PROFILE_SCOPE(AssetManager_CompileAllAssets);
+
+   // Info.
+   if (mEchoInfo)
+   {
+      Con::printSeparator();
+      Con::printf("Asset Manager: Started compiling ALL assets.");
+   }
+
+   Vector<typeAssetId> assetsToRelease;
+
+   // Are we including unloaded assets?
+   if (includeUnloaded)
+   {
+      // Yes, so prepare a list of assets to release and load them.
+      for (typeDeclaredAssetsHash::iterator assetItr = mDeclaredAssets.begin(); assetItr != mDeclaredAssets.end(); ++assetItr)
+      {
+         // Fetch asset Id.
+         typeAssetId assetId = assetItr->key;
+
+         // Skip if asset is loaded.
+         if (assetItr->value->mpAssetBase != NULL)
+            continue;
+
+         // Note asset as needing a release.
+         assetsToRelease.push_back(assetId);
+
+         // Acquire the asset.
+         acquireAsset<AssetBase>(assetId);
+      }
+   }
+
+   bool oldCompressed = mTaml.getBinaryCompression();
+   mTaml.setBinaryCompression(compressed);
+   bool success = false;
+   // Refresh the current loaded assets.
+   // NOTE: This will result in some assets being refreshed more than once due to asset dependencies.
+   for (typeDeclaredAssetsHash::iterator assetItr = mDeclaredAssets.begin(); assetItr != mDeclaredAssets.end(); ++assetItr)
+   {
+      // Skip private assets.
+      if (assetItr->value->mAssetPrivate)
+         continue;
+
+      // Refresh asset if it's loaded.
+      success = compileAsset(assetItr->key);
+      if (!success)
+      {
+         break;
+      }
+   }
+
+   mTaml.setBinaryCompression(oldCompressed);
+
+   // Are we including unloaded assets?
+   if (includeUnloaded)
+   {
+      // Yes, so release the assets we loaded.
+      for (Vector<typeAssetId>::iterator assetItr = assetsToRelease.begin(); assetItr != assetsToRelease.end(); ++assetItr)
+      {
+         releaseAsset(*assetItr);
+      }
+   }
+
+   // Info.
+   if (mEchoInfo)
+   {
+      Con::printSeparator();
+      Con::printf("Asset Manager: Finished compiling ALL assets.");
+   }
+
+   return success;
+}
+
+bool AssetManager::compileModuleAssets(ModuleDefinition* pModuleDefinition)
+{
+   // Sanity!
+   AssertFatal(pModuleDefinition != NULL, "Cannot remove declared assets using a NULL module definition");
+
+   // Fetch module assets.
+   ModuleDefinition::typeModuleAssetsVector& moduleAssets = pModuleDefinition->getModuleAssets();
+
+   // Remove all module assets.
+   while (moduleAssets.size() > 0)
+   {
+      // Fetch asset definition.
+      AssetDefinition* pAssetDefinition = *moduleAssets.begin();
+      bool success = compileAsset(pAssetDefinition->mAssetId);
+      if (!success)
+         return false;
+   }
+
+   return true;
+}
+
+bool AssetManager::compileAsset(const char* pAssetId)
+{
+   // Sanity!
+   AssertFatal(pAssetId != NULL, "Cannot compile NULL asset");
+
+   AssetDefinition* pAssetDefinition = findAsset(pAssetId);
+
+   // Does the asset exist?
+   if (pAssetDefinition == NULL)
+   {
+      Con::warnf("Asset Manager::compileAsset Failed to compile asset Id '%s' as it does not exist", pAssetId);
+      return false;
+   }
+
+   // Info.
+   if (mEchoInfo)
+   {
+      Con::printSeparator();
+      Con::printf("Asset Manager::compileAsset Started compiling Asset Id '%s'...", pAssetId);
+   }
+
+   AssetBase* pAssetBase = pAssetDefinition->mpAssetBase;
+   if (pAssetBase != NULL)
+   {
+      Torque::Path binaryPath = pAssetDefinition->mAssetBaseFilePath;
+      binaryPath.setExtension(mTaml.getAutoFormatBinaryExtension());
+      // Save asset.
+      mTaml.write(pAssetBase, binaryPath.getFullPath().c_str());
+   }
+   else
+   {
+      Con::warnf("Asset Manager::compileAsset Failed to compile asset Id '%s' as it does not have an assetBase", pAssetId);
+      return false;
+   }
+
+   // Info.
+   if (mEchoInfo)
+   {
+      Con::printSeparator();
+      Con::printf("Asset Manager: Finished refreshing Asset Id '%s'.", pAssetId);
+   }
+
+   return false;
+}
+
 //-----------------------------------------------------------------------------
 
 bool AssetManager::releaseAsset( const char* pAssetId )

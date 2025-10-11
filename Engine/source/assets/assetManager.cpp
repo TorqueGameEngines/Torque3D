@@ -1100,7 +1100,7 @@ bool AssetManager::compileAsset(const char* pAssetId)
    if (mEchoInfo)
    {
       Con::printSeparator();
-      Con::printf("Asset Manager: Finished refreshing Asset Id '%s'.", pAssetId);
+      Con::printf("Asset Manager: Finished compiling Asset Id '%s'.", pAssetId);
    }
 
    return false;

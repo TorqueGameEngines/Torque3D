@@ -226,7 +226,7 @@ DefineEngineMethod(Taml, read, SimObject*, (const char* filename), ,    "(filena
 //-----------------------------------------------------------------------------
 
 DefineEngineFunction(TamlWrite, bool, (SimObject* simObject, const char* filename, const char* format, bool compressed), 
-                                       ("xml", true),  
+                                       ("xml", false),  
                                         "(object, filename, [format], [compressed]) - Writes an object to a file using Taml.\n"
                                         "@param object The object to write.\n"
                                         "@param filename The filename to write to.\n"
@@ -245,24 +245,28 @@ DefineEngineFunction(TamlWrite, bool, (SimObject* simObject, const char* filenam
 
    Taml taml;
 
-   taml.setFormatMode( Taml::getFormatModeEnum(format) );  
-
-   // Yes, so is the format mode binary?
-   if ( taml.getFormatMode() == Taml::BinaryFormat )
+   if (filename != NULL && filename[0] != '\0')
    {
-      // Yes, so set binary compression.
-      taml.setBinaryCompression( compressed );
-   }
-   else
-   {
-      #ifdef TORQUE_DEBUG
-      // No, so warn.
-      Con::warnf( "TamlWrite() - Setting binary compression is only valid for XML formatting." );
-      #endif
+      taml.setFormatMode(Taml::getFormatModeEnum(format));
+      // Turn-off auto-formatting.
+      taml.setAutoFormat(false);
    }
 
-   // Turn-off auto-formatting.
-   taml.setAutoFormat( false );
+   // should only be checking if compression if compressed is true.
+   if (compressed)
+   {
+      // Yes, so is the format mode binary?
+      if (taml.getFormatMode() == Taml::BinaryFormat)
+      {
+         // Yes, so set binary compression.
+         taml.setBinaryCompression(compressed);
+      }
+      else
+      {
+         // No, so warn.
+         Con::warnf("TamlWrite() - Setting binary compression is only valid for BINARY format.");
+      }
+   }
 
    // Write.
    return taml.write( simObject, filename );

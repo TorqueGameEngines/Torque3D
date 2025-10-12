@@ -252,20 +252,10 @@ DefineEngineFunction(TamlWrite, bool, (SimObject* simObject, const char* filenam
       taml.setAutoFormat(false);
    }
 
-   // should only be checking if compression if compressed is true.
-   if (compressed)
+   if (taml.getFormatMode() == Taml::BinaryFormat)
    {
-      // Yes, so is the format mode binary?
-      if (taml.getFormatMode() == Taml::BinaryFormat)
-      {
-         // Yes, so set binary compression.
-         taml.setBinaryCompression(compressed);
-      }
-      else
-      {
-         // No, so warn.
-         Con::warnf("TamlWrite() - Setting binary compression is only valid for BINARY format.");
-      }
+      // Yes, so set binary compression.
+      taml.setBinaryCompression(compressed);
    }
 
    // Write.

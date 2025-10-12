@@ -42,6 +42,10 @@
 #include "persistence/taml/binary/tamlBinaryReader.h"
 #endif
 
+#ifndef _TAML_BINARYPARSER_H_
+#include "persistence/taml/binary/tamlBinaryParser.h"
+#endif
+
 #ifndef _TAML_JSONWRITER_H_
 #include "persistence/taml/json/tamlJSONWriter.h"
 #endif
@@ -455,6 +459,19 @@ bool Taml::parse(const char* pFilename, TamlVisitor& visitor)
    }
 
    case BinaryFormat:
+   {
+      // Parse with the visitor.
+      TamlBinaryParser parser;
+      // Are property changes needed but not supported?
+      if (visitor.wantsPropertyChanges() && !parser.canChangeProperty())
+      {
+         // Yes, so warn.
+         Con::warnf("Taml::parse() - Cannot parse '%s' file-type for filename '%s' as a specified visitor requires property changes which are not supported by the parser.", getFormatModeDescription(formatMode), pFilename);
+         return false;
+      }
+
+      return parser.accept(pFilename, visitor);
+   }
    default:
       break;
    }

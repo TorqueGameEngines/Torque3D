@@ -6,6 +6,7 @@
 
 bool TamlBinaryParser::accept(const char* pFilename, TamlVisitor& visitor)
 {
+   isRoot = true;
    PROFILE_SCOPE(TamlBinaryParser_Accept);
    AssertFatal(pFilename != NULL, "TamlBinaryParser::accept - NULL filename.");
 
@@ -28,6 +29,8 @@ bool TamlBinaryParser::accept(const char* pFilename, TamlVisitor& visitor)
       return false;
    }
 
+   setParsingFilename(pFilename);
+
    U32 versionId;
    stream.read(&versionId);
 
@@ -47,6 +50,9 @@ bool TamlBinaryParser::accept(const char* pFilename, TamlVisitor& visitor)
    }
 
    stream.close();
+
+   setParsingFilename(StringTable->EmptyString());
+
    return true;
 }
 
@@ -56,108 +62,151 @@ bool TamlBinaryParser::parseElement(Stream& stream, TamlVisitor& visitor, const 
 {
    PROFILE_SCOPE(TamlBinaryParser_ParseElement);
 
-   // Read the type and name.
-   StringTableEntry typeName = stream.readSTString();
-   StringTableEntry objectName = stream.readSTString();
+   // --- Read element header ---
+   StringTableEntry pElementName = stream.readSTString();
+   StringTableEntry pObjectName = stream.readSTString();
 
    // Read references.
    U32 refId, refToId;
    stream.read(&refId);
    stream.read(&refToId);
 
+   // If this is a reference to another object, skip it.
+   if (refToId != 0)
+      return true;
+
    // Create a property visitor state.
    TamlVisitor::PropertyState propertyState;
-   propertyState.setObjectName(typeName, false);
 
-   if (objectName != StringTable->EmptyString())
-      propertyState.setProperty("Name", objectName);
+   propertyState.setObjectName(pElementName, isRoot);
+   if (pObjectName != StringTable->EmptyString())
+      propertyState.setProperty("Name", pObjectName);
 
-   if (!visitor.visit(*this, propertyState))
-      return false;
+   if(isRoot)
+      isRoot = false;
 
-   // Parse attributes.
-   U32 attrCount;
-   stream.read(&attrCount);
+   // --- Attributes ---
+   parseAttributes(stream, visitor, versionId, propertyState);
+   // --- Children ---
+   parseChildren(stream, visitor, versionId);
+   // --- Custom elements ---
+   parseCustomElements(stream, visitor, versionId);
 
-   char valueBuffer[4096];
-   for (U32 i = 0; i < attrCount; ++i)
-   {
-      StringTableEntry attrName = stream.readSTString();
-      stream.readLongString(sizeof(valueBuffer), valueBuffer);
-      propertyState.setProperty(attrName, valueBuffer);
-      visitor.visit(*this, propertyState);
-   }
-
-   // Parse children.
-   U32 childCount;
-   stream.read(&childCount);
-   for (U32 c = 0; c < childCount; ++c)
-   {
-      if (!parseElement(stream, visitor, versionId))
-         return false;
-   }
-
-   // Parse custom nodes.
-   U32 customCount;
-   stream.read(&customCount);
-   for (U32 cn = 0; cn < customCount; ++cn)
-   {
-      StringTableEntry customNodeName = stream.readSTString();
-      propertyState.setProperty("CustomNode", customNodeName);
-      visitor.visit(*this, propertyState);
-      parseCustomNode(stream, visitor, versionId);
-   }
 
    return true;
 }
 
+void TamlBinaryParser::parseAttributes(Stream& stream, TamlVisitor& visitor, const U32 versionId, TamlVisitor::PropertyState& state)
+{
+   PROFILE_SCOPE(TamlBinaryParser_ParseAttributes);
+
+   U32 attributeCount;
+   stream.read(&attributeCount);
+   if (attributeCount == 0)
+      return;
+
+   char valueBuffer[4096];
+   for (U32 i = 0; i < attributeCount; ++i)
+   {
+      StringTableEntry attrName = stream.readSTString();
+      stream.readLongString(4096, valueBuffer);
+      state.setProperty(attrName, valueBuffer);
+      const bool visitStatus = visitor.visit(*this, state);
+      if (!visitStatus)
+         return;
+   }
+}
+
 //-----------------------------------------------------------------------------
 
-bool TamlBinaryParser::parseCustomNode(Stream& stream, TamlVisitor& visitor, const U32 versionId)
+void TamlBinaryParser::parseChildren(Stream& stream, TamlVisitor& visitor, const U32 versionId)
+{
+   PROFILE_SCOPE(TamlBinaryParser_ParseChildren);
+
+   U32 childCount = 0;
+   stream.read(&childCount);
+   if (childCount == 0)
+      return;
+
+   for (U32 i = 0; i < childCount; ++i)
+   {
+      parseElement(stream, visitor, versionId);
+   }
+}
+
+//-----------------------------------------------------------------------------
+
+void TamlBinaryParser::parseCustomElements(Stream& stream, TamlVisitor& visitor, const U32 versionId)
+{
+   PROFILE_SCOPE(TamlBinaryParser_ParseCustomElements);
+
+   U32 customNodeCount = 0;
+   stream.read(&customNodeCount);
+   if (customNodeCount == 0)
+      return;
+
+   TamlVisitor::PropertyState state;
+
+   for (U32 nodeIndex = 0; nodeIndex < customNodeCount; ++nodeIndex)
+   {
+      StringTableEntry nodeName = stream.readSTString();
+      state.setObjectName(nodeName, false);
+
+      U32 nodeChildrenCount = 0;
+      stream.read(&nodeChildrenCount);
+      if (nodeChildrenCount == 0)
+         return;
+
+      for(U32 nodeChild = 0; nodeChild < nodeChildrenCount; ++nodeChild)
+         parseCustomNode(stream, visitor, versionId, state);
+   }
+
+}
+
+
+//-----------------------------------------------------------------------------
+
+bool TamlBinaryParser::parseCustomNode(Stream& stream, TamlVisitor& visitor, const U32 versionId, TamlVisitor::PropertyState& state)
 {
    PROFILE_SCOPE(TamlBinaryParser_ParseCustomNode);
 
    bool isProxyObject;
    stream.read(&isProxyObject);
-
    if (isProxyObject)
    {
       // Parse nested proxy element.
       return parseElement(stream, visitor, versionId);
    }
 
-   // Read custom node name and text.
    StringTableEntry nodeName = stream.readSTString();
 
-   char textBuffer[1024];
-   stream.readLongString(sizeof(textBuffer), textBuffer);
+   char nodeValue[MAX_TAML_NODE_FIELDVALUE_LENGTH];
 
-   // Create visitor state for the node.
-   TamlVisitor::PropertyState nodeState;
-   nodeState.setObjectName(nodeName, false);
-   nodeState.setProperty("Text", textBuffer);
-   visitor.visit(*this, nodeState);
+   stream.readLongString(MAX_TAML_NODE_FIELDVALUE_LENGTH, nodeValue);
 
-   // Parse child nodes.
    U32 childCount;
    stream.read(&childCount);
    for (U32 i = 0; i < childCount; ++i)
    {
-      if (!parseCustomNode(stream, visitor, versionId))
+      if (!parseCustomNode(stream, visitor, versionId, state))
          return false;
    }
 
-   // Parse fields.
    U32 fieldCount;
    stream.read(&fieldCount);
 
-   char valueBuffer[1024];
-   for (U32 f = 0; f < fieldCount; ++f)
+   if (fieldCount > 0)
    {
-      StringTableEntry fieldName = stream.readSTString();
-      stream.readLongString(sizeof(valueBuffer), valueBuffer);
-      nodeState.setProperty(fieldName, valueBuffer);
-      visitor.visit(*this, nodeState);
+      char valueBuffer[MAX_TAML_NODE_FIELDVALUE_LENGTH];
+      for (U32 f = 0; f < fieldCount; ++f)
+      {
+         StringTableEntry fieldName = stream.readSTString();
+         stream.readLongString(MAX_TAML_NODE_FIELDVALUE_LENGTH, valueBuffer);
+         state.setProperty(fieldName, valueBuffer);
+         const bool visitStatus = visitor.visit(*this, state);
+         if (!visitStatus)
+            return false;
+      }
    }
 
    return true;

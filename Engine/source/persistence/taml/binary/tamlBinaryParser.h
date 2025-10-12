@@ -31,7 +31,12 @@ public:
 
 private:
    bool parseElement(Stream& stream, TamlVisitor& visitor, const U32 versionId);
-   bool parseCustomNode(Stream& stream, TamlVisitor& visitor, const U32 versionId);
+   void parseAttributes(Stream& stream, TamlVisitor& visitor, const U32 versionId, TamlVisitor::PropertyState& state);
+   void parseChildren(Stream& stream, TamlVisitor& visitor, const U32 versionId);
+   void parseCustomElements(Stream& stream, TamlVisitor& visitor, const U32 versionId);
+   bool parseCustomNode(Stream& stream, TamlVisitor& visitor, const U32 versionId, TamlVisitor::PropertyState& state);
+
+   bool isRoot;
 };
 
 #endif // !_TAML_BINARYPARSER_H_

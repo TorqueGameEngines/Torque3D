@@ -115,7 +115,8 @@ torqueAddSourceDirectories("scene" "scene/culling" "scene/zones" "scene/mixin")
 torqueAddSourceDirectories("math" "math/util")
 
 # Handle persistence
-torqueAddSourceDirectories("persistence/taml" "persistence/taml/binary" "persistence/taml/xml")
+set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "persistence/rapidjson")
+torqueAddSourceDirectories("persistence/taml" "persistence/taml/binary" "persistence/taml/xml" "persistence/taml/json")
 
 # Handle Cinterface
 torqueAddSourceDirectories("cinterface")

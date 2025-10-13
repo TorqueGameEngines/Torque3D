@@ -345,8 +345,14 @@ void TamlBinaryReader::parseCustomElements( Stream& stream, TamlCallbacks* pCall
         // Add custom node.
         TamlCustomNode* pCustomNode = customNodes.addNode( nodeName );
 
+        U32 nodeChildrenCount = 0;
+        stream.read(&nodeChildrenCount);
+        if (nodeChildrenCount == 0)
+           return;
+
         // Parse the custom node.
-        parseCustomNode( stream, pCustomNode, versionId );
+        for (U32 nodeChild = 0; nodeChild < nodeChildrenCount; ++nodeChild)
+         parseCustomNode( stream, pCustomNode, versionId );
     }
 
     // Do we have callbacks?

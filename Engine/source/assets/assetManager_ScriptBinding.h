@@ -1,4 +1,4 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // Copyright (c) 2013 GarageGames, LLC
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,10 +20,11 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 #include "console/engineAPI.h"
-#include "assetBase.h"
-#include "assetManager.h"
+#include "assets/assetBase.h"
+#include "assets/assetManager.h"
 #include "module/moduleDefinition.h"
 #include "console/sim.h"
+
 
 DefineEngineMethod(AssetManager, compileReferencedAssets, bool, (const char* moduleDefinition), (""),
    "Compile the referenced assets determined by the specified module definition.\n"
@@ -853,3 +854,40 @@ DefineEngineMethod(AssetManager, dumpDeclaredAssets, void, (), ,
 {
     return object->dumpDeclaredAssets();
 }
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(AssetManager, compileAllAssets, bool, (bool compressed, bool includeUnloaded),(false, true),
+   "Compile all assets.\n"
+   "@return true on success.\n")
+{
+   return object->compileAllAssets(compressed, includeUnloaded);
+}
+
+DefineEngineMethod(AssetManager, compileModuleAssets, bool, (const char* moduleDefinition), (""),
+   "Compile all assets for a module.\n"
+   "@return true on success.\n")
+{
+   // Fetch module definition.
+   ModuleDefinition* pModuleDefinition;
+   Sim::findObject(moduleDefinition, pModuleDefinition);
+
+   // Did we find the module definition?
+   if (pModuleDefinition == NULL)
+   {
+      // No, so warn.
+      Con::warnf("AssetManager::compileModuleAssets() - Could not find the module definition '%s'.", moduleDefinition);
+      return false;
+   }
+
+   // Remove declared assets.
+   return object->compileModuleAssets(pModuleDefinition);
+}
+
+DefineEngineMethod(AssetManager, compileAsset, bool, (const char* assetId), (""),
+   "Compile a single asset.\n"
+   "@return true on success.\n")
+{
+   return object->compileAsset(assetId);
+}
+

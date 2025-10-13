@@ -92,3 +92,11 @@ DefineEngineMethod(AssetBase, getStatusString, const char*, (), ,
 {
    return object->getAssetErrstrn(object->getStatus());
 }
+
+DefineEngineMethod(AssetBase, load, String, (), , 
+   "Manually initates a loading of the asset and it's contents.\n"
+   "@return The status code of the loading results.\n")\
+{
+   U32 code = object->load();
+   return object->getAssetErrstrn(code);
+}

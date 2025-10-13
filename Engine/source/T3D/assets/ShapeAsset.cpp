@@ -755,12 +755,6 @@ DefineEngineMethod(ShapeAsset, getStatusString, String, (), , "get status string
    return ShapeAsset::getAssetErrstrn(object->getStatus());
 }
 
-DefineEngineMethod(ShapeAsset, load, String, (), , "get status string")\
-{
-   U32 code = object->load();
-   return ShapeAsset::getAssetErrstrn(code);
-}
-
 #ifdef TORQUE_TOOLS
 DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 resolution, const char* overrideMaterialName), (256, ""),
    "Generates a baked preview image of the given shapeAsset. Only really used for generating Asset Browser icons.\n"

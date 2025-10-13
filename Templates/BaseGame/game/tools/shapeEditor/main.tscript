@@ -308,7 +308,7 @@ function ShapeEditorPlugin::onDeactivated(%this)
    ShapeEdAnimWindow.setVisible(false);
    ShapeEdAdvancedWindow.setVisible(false);
    
-   if( EditorGui-->MatEdPropertiesWindow.visible )
+   if( MaterialEditorGui.isAwake() )
    {
       ShapeEdMaterials.editSelectedMaterialEnd( true );
    }

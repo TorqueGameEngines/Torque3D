@@ -387,7 +387,7 @@ U32 ShapeAsset::load()
       String srcPath(mAnimationAssets[i]->getAnimationFilename());
       //SplitSequencePathAndName(srcPath, srcName);
 
-      if (!mShape->addSequence(srcPath, srcName, srcName,
+      if (!mShape->addSequence(srcPath, mAnimationAssets[i]->getAssetId(), srcName, srcName,
          mAnimationAssets[i]->getStartFrame(), mAnimationAssets[i]->getEndFrame(), mAnimationAssets[i]->getPadRotation(), mAnimationAssets[i]->getPadTransforms()))
       {
          mLoadedState = MissingAnimatons;
@@ -755,6 +755,11 @@ DefineEngineMethod(ShapeAsset, getStatusString, String, (), , "get status string
    return ShapeAsset::getAssetErrstrn(object->getStatus());
 }
 
+DefineEngineMethod(ShapeAsset, load, String, (), , "get status string")\
+{
+   U32 code = object->load();
+   return ShapeAsset::getAssetErrstrn(code);
+}
 
 #ifdef TORQUE_TOOLS
 DefineEngineMethod(ShapeAsset, generateCachedPreviewImage, const char*, (S32 resolution, const char* overrideMaterialName), (256, ""),

@@ -2147,11 +2147,13 @@ DefineTSShapeConstructorMethod(addSequence, bool,
 {
    String srcName;
    String srcPath(source);
+   StringTableEntry assetId = StringTable->EmptyString();
+
    SplitSequencePathAndName(srcPath, srcName);
 
    if (AssetDatabase.isDeclaredAsset(srcPath))
    {
-      StringTableEntry assetId = StringTable->insert(srcPath.c_str());
+      assetId = StringTable->insert(srcPath.c_str());
       StringTableEntry assetType = AssetDatabase.getAssetType(assetId);
       if (assetType == StringTable->insert("ShapeAsset"))
       {
@@ -2167,7 +2169,7 @@ DefineTSShapeConstructorMethod(addSequence, bool,
       }
    }
 
-   if (!mShape->addSequence(srcPath, srcName, name, start, end, padRot, padTrans))
+   if (!mShape->addSequence(srcPath, assetId, srcName, name, start, end, padRot, padTrans))
       return false;
 
    ADD_TO_CHANGE_SET();

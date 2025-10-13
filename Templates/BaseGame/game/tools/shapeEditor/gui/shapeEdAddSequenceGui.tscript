@@ -6,6 +6,21 @@ function shapeEdAddSequenceGui::show(%seqSourceData)
    shapeEdAddSequenceWindow-->startFrame.setText("0");
    shapeEdAddSequenceWindow-->endFrame.setText("-1");
    
+   shapeEdAddSequenceWindow.constructor = "";
+   
+   if(AssetDatabase.isDeclaredAsset(%seqSourceData))
+   {
+      %shapeDef = AssetDatabase.acquireAsset(%seqSourceData);
+      %shapeDef.load();
+      
+      shapeEdAddSequenceWindow.constructor = findShapeConstructorByAssetId( %seqSourceData );
+      AssetDatabase.releaseAsset(%seqSourceData);
+   }
+   else if(isFile(%seqSourceData))
+   {
+      shapeEdAddSequenceWindow.constructor = findShapeConstructorByFilename( %seqSourceData );
+   }
+   
    Canvas.pushDialog(shapeEdAddSequenceGui);
 }
 
@@ -13,29 +28,16 @@ function shapeEdAddSequenceWindow::onWake(%this)
 {
    %sourceSeq = %this-->sourceSeq.getText();
    
-   if(AssetDatabase.isDeclaredAsset(%sourceSeq))
-   {
-      %sourceShapeConstructor = findShapeConstructorByAssetId( %sourceSeq );
-   }
-   else if(isFile(%sourceSeq))
-   {
-      %sourceShapeConstructor = findShapeConstructorByFilename( %sourceSeq );
-   }
-   else
-   {
-      toolsMessageBoxOK("Error!", "Source animation data appears to not be valid. Please close the window and select a different source.");
-      return;  
-   }
    
-   if(!isObject(%sourceShapeConstructor))
+   if(!isObject(%this.constructor))
    {
       toolsMessageBoxOK("Error!", "Unable to find shape constructor for source animation data. Please close the window and select a different source, or make sure the constructor is valid.");
       return;  
    }
    
-   for(%i=0; %i < %sourceShapeConstructor.getSequenceCount(); %i++)
+   for(%i=0; %i < %this.constructor.getSequenceCount(); %i++)
    {
-      %name = %sourceShapeConstructor.getSequenceName( %i );
+      %name = %this.constructor.getSequenceName( %i );
 
       // Ignore __backup__ sequences (only used by editor)
       if ( !startswith( %name, "__backup__" ) )
@@ -51,6 +53,8 @@ function onShapeEditorDoAddNewSequence()
    %seqSource = shapeEdAddSequenceWindow-->sourceSeq.getText() TAB shapeEdAddSequenceWindow-->fromSeqName.getText();
    %startFrame = shapeEdAddSequenceWindow-->startFrame.getText();
    %endFrame = shapeEdAddSequenceWindow-->endFrame.getText();
+   
+   %seqSource = trim(%seqSource);
 
    ShapeEditor.doAddSequence(%seqName, %seqSource, %startFrame, %endFrame);
    

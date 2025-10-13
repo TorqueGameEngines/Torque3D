@@ -30,6 +30,7 @@
 #include "ts/tsMaterialList.h"
 #include "core/stream/fileStream.h"
 #include "core/volume.h"
+#include "assets/assetManager.h"
 
 
 //-----------------------------------------------------------------------------
@@ -1376,7 +1377,7 @@ bool TSShape::isShapeFileType(Torque::Path filePath)
 }
 
 //-----------------------------------------------------------------------------
-bool TSShape::addSequence(const Torque::Path& path, const String& fromSeq,
+bool TSShape::addSequence(const Torque::Path& path, const String& assetId, const String& fromSeq,
                           const String& name, S32 startFrame, S32 endFrame,
                           bool padRotKeys, bool padTransKeys)
 {
@@ -1810,7 +1811,11 @@ bool TSShape::addSequence(const Torque::Path& path, const String& fromSeq,
       seq.dirtyFlags |= TSShapeInstance::MatFrameDirty;
 
    // Store information about how this sequence was created
-   seq.sourceData.from = String::ToString("%s\t%s", path.getFullPath().c_str(), oldName.c_str());
+   String fromData = path.getFullPath();
+   if (assetId.isNotEmpty() && AssetDatabase.isDeclaredAsset(assetId.c_str()))
+      fromData = assetId;
+
+   seq.sourceData.from = String::ToString("%s\t%s", fromData.c_str(), oldName.c_str());
    seq.sourceData.total = srcSeq->numKeyframes;
    seq.sourceData.start = startFrame;
    seq.sourceData.end = endFrame;

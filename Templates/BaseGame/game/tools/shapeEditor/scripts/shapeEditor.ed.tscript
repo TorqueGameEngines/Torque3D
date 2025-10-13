@@ -147,17 +147,20 @@ function ShapeEditor::getSequenceSource( %this, %seqName )
    if ( %src0 $= "" )
       %source = setField( %source, 0, %seqName );
    
-   %aq = new AssetQuery();
-   %foundAssets = AssetDatabase.findAssetLooseFile(%aq, %src0);
-   if(%foundAssets != 0)
+   if(!AssetDatabase.isDeclaredAsset(%src0))
    {
-      //if we have an assetId associated to the file, we're gunna just pass that
-      //through for the edit actions
-      %assetId = %aq.getAsset(0);
-      
-      %source = setField( %source, 0, %assetId );
+      %aq = new AssetQuery();
+      %foundAssets = AssetDatabase.findAssetLooseFile(%aq, %src0);
+      if(%foundAssets != 0)
+      {
+         //if we have an assetId associated to the file, we're gunna just pass that
+         //through for the edit actions
+         %assetId = %aq.getAsset(0);
+         
+         %source = setField( %source, 0, %assetId );
+      }
+      %aq.delete();
    }
-   %aq.delete();
 
    return %source;
 }
@@ -1058,9 +1061,20 @@ function ShapeEdShapeView::onEditNodeTransform( %this, %node, %txfm, %gizmoID )
 //------------------------------------------------------------------------------
 // Sequence Editing
 //------------------------------------------------------------------------------
+function ShapeEdSelectWindow::onWake( %this )
+{
+    %this.setPosition(Canvas.extent.x-%this.extent.x, %this.position.y);
+}
+
+function ShapeEdAdvancedWindow::onWake( %this )
+{
+    %this.setPosition(Canvas.extent.x-ShapeEdSelectWindow.extent.x-%this.extent.x, %this.position.y);
+}
 
 function ShapeEdPropWindow::onWake( %this )
 {
+   %this.setPosition(Canvas.extent.x-%this.extent.x, %this.position.y);
+   
    ShapeEdTriggerList.triggerId = 1;
 
    ShapeEdTriggerList.addRow( -1, "-1" TAB "Frame" TAB "Trigger" TAB "State" );
@@ -1689,11 +1703,18 @@ function ShapeEdSeqNameFromMenu::onSelect( %this, %id, %text )
 }
 
 //------------------------------------------------------------------------------
-
-function ShapeEdAnimWindow::onResize(%this)
+function ShapeEdAnimWindow::onWake(%this)
 {
+   %this.doResize();
+}
+
+function ShapeEdAnimWindow::doResize(%this)
+{
+   if(GuiEditorGui.isAwake())
+      return;
+      
    %animWindow = ShapeEdAnimWindow;
-   %position = "1" SPC Canvas.extent.y - EditorGuiStatusBar.extent.y - %this.Extent.y;
+   %position = "1" SPC Canvas.extent.y - EditorGuiStatusBar.extent.y - %this.Extent.y - 20;
    
    if(isObject(ShapeEdPropWindow))
    {
@@ -1706,11 +1727,15 @@ function ShapeEdAnimWindow::onResize(%this)
       // (when the order of GUI loading has changed for example)
       %extent = Canvas.extent.x - 360 - 2 SPC %animWindow.extent.y;
    }
-   
-   //echo("ShapeEdAnimWIndow::onWake() - " @ %position.x @ ", " @  %position.y @ ", " @  %extent.x @ ", " @  %extent.y);
-   
+
    // resize and position accordingly
    %animWindow.resize(%position.x, %position.y, %extent.x, %extent.y);
+   
+}
+
+function ShapeEdAnimWindow::onResize(%this)
+{
+   %this.doResize();
 }
 
 //------------------------------------------------------------------------------
@@ -2259,14 +2284,14 @@ function ShapeEdMaterials::updateSelectedMaterial( %this, %highlight )
    // Remove the highlight effect from the old selection
    if ( isObject( %this.selectedMaterial ) )
    {
-      %this.selectedMaterial.diffuseMap[1] = %this.savedMap;
+      %this.selectedMaterial.diffuseMapAsset[1] = %this.savedMap;
       %this.selectedMaterial.reload();
    }
 
    // Apply the highlight effect to the new selected material
    %this.selectedMapTo = getField( ShapeEdMaterialList.getRowText( ShapeEdMaterialList.getSelectedRow() ), 0 );
    %this.selectedMaterial = ShapeEdMaterialList.getSelectedId();
-   %this.savedMap = %this.selectedMaterial.diffuseMap[1];
+   %this.savedMap = %this.selectedMaterial.diffuseMapAsset[1];
    if ( %highlight && isObject( %this.selectedMaterial ) )
    {
       %this.selectedMaterial.setDiffuseMap("ToolsModule:highlight_material_image", 1);

@@ -153,9 +153,12 @@ ImageAsset::ImageAsset() :
    mImageWidth(-1),
    mImageHeight(-1),
    mImageDepth(-1),
-   mImageChannels(-1)
+   mImageChannels(-1),
+   mCellCountX(1),
+   mCellCountY(1)
 {
    mLoadedState = AssetErrCode::NotLoaded;
+   VECTOR_SET_ASSOCIATION(mFrames);
 }
 
 //-----------------------------------------------------------------------------
@@ -169,6 +172,16 @@ ImageAsset::~ImageAsset()
    }
 
    mResourceMap.clear();
+
+   FrameTextureMap::iterator frameIter = mFrameTextureMap.begin();
+   for (; frameIter != mFrameTextureMap.end(); ++frameIter)
+   {
+      frameIter->value.free();
+   }
+
+   mFrameTextureMap.clear();
+
+   mFrames.clear();
 }
 
 
@@ -201,6 +214,9 @@ void ImageAsset::initPersistFields()
    addProtectedField("isHDRImage", TypeBool, Offset(mIsHDRImage, ImageAsset), &setTextureHDR, &defaultProtectedGetFn, &writeTextureHDR, "HDR Image?");
 
    addField("imageType", TypeImageAssetType, Offset(mImageType, ImageAsset), "What the main use-case for the image is for.");
+
+   addField("cellCountX", TypeS32, Offset(mCellCountX, ImageAsset), "Number of cells along the X axis.");
+   addField("cellCountY", TypeS32, Offset(mCellCountY, ImageAsset), "Number of cells along the Y axis.");
 }
 bool ImageAsset::onAdd()
 {
@@ -456,9 +472,9 @@ U32 ImageAsset::load()
    return mLoadedState;
 }
 
-GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
+GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile, U32 frame)
 {
-   if (mLoadedState == Ok && mResourceMap.contains(requestedProfile))
+   if (mLoadedState == Ok && frame == 0 && mResourceMap.contains(requestedProfile))
    {
       return mResourceMap.find(requestedProfile)->value;
    }
@@ -491,6 +507,8 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
 
    if (mLoadedState == Ok)
    {
+      if (frame == 0 || mCellCountX <= 1 || mCellCountY <= 1)
+      {
          //If we don't have an existing map case to the requested format, we'll just create it and insert it in
          GFXTexHandle newTex;
          newTex.set(mImageFile, requestedProfile, avar("%s %s() - mTextureObject (line %d)", mImageFile, __FUNCTION__, __LINE__));
@@ -499,6 +517,35 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
             mResourceMap.insert(requestedProfile, newTex);
             return newTex;
          }
+      }
+
+      if (frame > mFrames.size())
+      {
+         Con::warnf("ImageAsset::getTexture - Frame %d out of range (max %d). Returning full texture.", frame, mFrames.size());
+         return getTexture(requestedProfile, 0);
+      }
+
+      const FrameKey frameKey(frame, requestedProfile);
+      if (mFrameTextureMap.contains(frameKey))
+         return mFrameTextureMap.find(frameKey)->value;
+
+      GBitmap* source = GBitmap::load(mImageFile);
+      if (!source)
+      {
+         Con::errorf("ImageAsset::getTexture - Failed to load bitmap for %s", mImageFile);
+         return nullptr;
+      }
+
+      const Frame& frameData = mFrames[frame];
+
+      GBitmap* cropped = new GBitmap(frameData.pixelSize.x, frameData.pixelSize.y, false, source->getFormat());
+      source->copyRect(cropped, RectI(frameData.pixelOffset, frameData.pixelSize), Point2I(0, 0));
+      delete source;
+
+      // Create texture and cache
+      GFXTexHandle tex(cropped, requestedProfile, true, avar("%s %s() - frame %d", mImageFile, __FUNCTION__, frame));
+      mFrameTextureMap.insert(frameKey, tex);
+      return tex;
    }
 
    return nullptr;
@@ -685,7 +732,9 @@ void ImageAsset::populateImage(void)
       }
 
       // we only support 2d textures..... for now ;)
-      mImageDepth = 1; 
+      mImageDepth = 1;
+
+      generateFrames();
    }
 }
 
@@ -711,6 +760,36 @@ const char* ImageAsset::getImageInfo()
    }
 
    return "";
+}
+
+void ImageAsset::generateFrames(void)
+{
+   mFrames.clear();
+
+   const F32 texelWidthScale = 1.0f / (F32)mImageWidth;
+   const F32 texelHeightScale = 1.0f / (F32)mImageHeight;
+
+   // mFrames zero is always the full image.
+   mFrames.push_back(Frame(0, 0,
+      mImageWidth, mImageHeight,
+      texelWidthScale, texelHeightScale));
+
+   if (mCellCountX <= 1 && mCellCountY <= 1)
+      return;
+
+   const U32 cellWidth = mImageWidth / mCellCountX;
+   const U32 cellHeight = mImageHeight / mCellCountY;
+
+   for (U32 y = 0; y < mCellCountY; y++)
+   {
+      for (U32 x = 0; x < mCellCountX; x++)
+      {
+         mFrames.push_back(Frame(
+            x * cellWidth, y * cellHeight,
+            cellWidth, cellHeight,
+            texelWidthScale, texelHeightScale));
+      }
+   }
 }
 
 DefineEngineMethod(ImageAsset, getImagePath, const char*, (), ,

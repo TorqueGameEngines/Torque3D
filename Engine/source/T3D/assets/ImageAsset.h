@@ -63,6 +63,9 @@ class ImageAsset : public AssetBase
 
 public:
    typedef HashMap<GFXTextureProfile*, GFXTexHandle> ImageTextureMap;
+
+   typedef CompoundKey<U32, GFXTextureProfile*> FrameKey;
+   typedef HashMap<FrameKey, GFXTexHandle> FrameTextureMap;
    /// The different types of image use cases
    enum ImageTypes
    {
@@ -83,6 +86,16 @@ public:
    class Frame
    {
    public:
+      Frame()
+         : regionName(StringTable->EmptyString())
+      {
+         pixelOffset.set(0, 0);
+         pixelSize.set(0, 0);
+         texelLower.set(0.0f, 0.0f);
+         texelUpper.set(0.0f, 0.0f);
+         texelSize.set(0.0f, 0.0f);
+      }
+
       Frame(const S32 pixelOffsetX, const S32 pixelOffsetY,
          const U32 pixelWidth, const U32 pixelHeight,
          const F32 texelWidthScale, const F32 texelHeightScale,
@@ -143,6 +156,12 @@ private:
    S32               mImageHeight;
    S32               mImageDepth;
    S32               mImageChannels;
+   U32					mCellCountX;
+   U32					mCellCountY;
+   Vector<Frame>		mFrames;
+   FrameTextureMap	mFrameTextureMap;
+
+   inline void clampFrame(U32& frame) const { const U32 totalFrames = mFrames.size(); if (frame >= totalFrames) frame = (totalFrames == 0 ? 0 : totalFrames - 1); };
 public:
    ImageAsset();
    virtual ~ImageAsset();
@@ -176,7 +195,7 @@ public:
    void                    setTextureHDR(const bool pIsHDR);
    inline bool             getTextureHDR(void) const { return mIsHDRImage; };
 
-   GFXTexHandle            getTexture(GFXTextureProfile* requestedProfile);
+   GFXTexHandle            getTexture(GFXTextureProfile* requestedProfile, U32 frame = 0);
 
    static StringTableEntry getImageTypeNameFromType(ImageTypes type);
    static ImageTypes       getImageTypeFromName(StringTableEntry name);
@@ -191,6 +210,8 @@ public:
    bool                    isNamedTarget(void) const { return mIsNamedTarget; }
    NamedTexTargetRef       getNamedTarget(void) const { return NamedTexTarget::find(mImageFile + 1); }
 
+   inline const Frame& getImageFrame(U32 frame) const { clampFrame(frame); return mFrames[frame]; };
+
    static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<ImageAsset>* imageAsset);
    static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* imageAsset);
@@ -198,6 +219,7 @@ public:
 
    void populateImage(void);
    const char* getImageInfo();
+   void generateFrames(void);
 
 protected:
    // Asset Base callback

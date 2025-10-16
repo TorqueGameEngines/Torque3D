@@ -42,6 +42,8 @@
 
 IMPLEMENT_CONOBJECT(AssetBase);
 
+bool gEmbedAssetData = false;
+
 //-----------------------------------------------------------------------------
 
 StringTableEntry assetNameField = StringTable->insert("AssetName");

@@ -1002,6 +1002,7 @@ bool AssetManager::compileAllAssets(const bool compressed, const bool includeUnl
    bool oldCompressed = mTaml.getBinaryCompression();
    mTaml.setBinaryCompression(compressed);
    bool success = false;
+   gEmbedAssetData = true;
    // Refresh the current loaded assets.
    // NOTE: This will result in some assets being refreshed more than once due to asset dependencies.
    for (typeDeclaredAssetsHash::iterator assetItr = mDeclaredAssets.begin(); assetItr != mDeclaredAssets.end(); ++assetItr)
@@ -1019,6 +1020,7 @@ bool AssetManager::compileAllAssets(const bool compressed, const bool includeUnl
    }
 
    mTaml.setBinaryCompression(oldCompressed);
+   gEmbedAssetData = false;
 
    // Are we including unloaded assets?
    if (includeUnloaded)

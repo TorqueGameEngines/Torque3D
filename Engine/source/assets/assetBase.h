@@ -38,6 +38,8 @@
 
 class AssetManager;
 
+extern bool gEmbedAssetData;
+
 //-----------------------------------------------------------------------------
 
 extern StringTableEntry assetNameField;

@@ -43,6 +43,7 @@
 #include "gfx/gfxStringEnumTranslate.h"
 
 #include "ImageAssetInspectors.h"
+#include "core/stream/memStream.h"
 
 // Debug Profiling.
 #include "platform/profiler.h"
@@ -150,6 +151,7 @@ ImageAsset::ImageAsset() :
    mIsHDRImage(false),
    mImageType(Albedo),
    mIsNamedTarget(false),
+   mIsDDS(false),
    mImageWidth(-1),
    mImageHeight(-1),
    mImageDepth(-1),
@@ -157,6 +159,7 @@ ImageAsset::ImageAsset() :
    mCellCountX(1),
    mCellCountY(1)
 {
+   mEmbeddedBitmap = NULL;
    mLoadedState = AssetErrCode::NotLoaded;
    VECTOR_SET_ASSOCIATION(mFrames);
 }
@@ -182,6 +185,9 @@ ImageAsset::~ImageAsset()
    mFrameTextureMap.clear();
 
    mFrames.clear();
+
+   if (mEmbeddedBitmap)
+      delete mEmbeddedBitmap;
 }
 
 
@@ -451,6 +457,12 @@ U32 ImageAsset::load()
    if (mLoadedState == Ok)
       return mLoadedState;
 
+   if (mEmbeddedBitmap)
+   {
+      mLoadedState = Ok;
+      return mLoadedState;
+   }
+
    if (!Torque::FS::IsFile(mImageFile))
    {
       if (isNamedTarget())
@@ -472,9 +484,9 @@ U32 ImageAsset::load()
    return mLoadedState;
 }
 
-GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile, U32 frame)
+GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
 {
-   if (mLoadedState == Ok && frame == 0 && mResourceMap.contains(requestedProfile))
+   if (mLoadedState == Ok && mResourceMap.contains(requestedProfile))
    {
       return mResourceMap.find(requestedProfile)->value;
    }
@@ -507,7 +519,17 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile, U32 fra
 
    if (mLoadedState == Ok)
    {
-      if (frame == 0 || mCellCountX <= 1 || mCellCountY <= 1)
+      if (mEmbeddedBitmap)
+      {
+         GFXTexHandle newTex;
+         newTex.set(mEmbeddedBitmap, requestedProfile, false, avar("%s %s() - mTextureObject (line %d)", mImageFile, __FUNCTION__, __LINE__));
+         if (newTex)
+         {
+            mResourceMap.insert(requestedProfile, newTex);
+            return newTex;
+         }
+      }
+      else
       {
          //If we don't have an existing map case to the requested format, we'll just create it and insert it in
          GFXTexHandle newTex;
@@ -518,34 +540,6 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile, U32 fra
             return newTex;
          }
       }
-
-      if (frame > mFrames.size())
-      {
-         Con::warnf("ImageAsset::getTexture - Frame %d out of range (max %d). Returning full texture.", frame, mFrames.size());
-         return getTexture(requestedProfile, 0);
-      }
-
-      const FrameKey frameKey(frame, requestedProfile);
-      if (mFrameTextureMap.contains(frameKey))
-         return mFrameTextureMap.find(frameKey)->value;
-
-      GBitmap* source = GBitmap::load(mImageFile);
-      if (!source)
-      {
-         Con::errorf("ImageAsset::getTexture - Failed to load bitmap for %s", mImageFile);
-         return nullptr;
-      }
-
-      const Frame& frameData = mFrames[frame];
-
-      GBitmap* cropped = new GBitmap(frameData.pixelSize.x, frameData.pixelSize.y, false, source->getFormat());
-      source->copyRect(cropped, RectI(frameData.pixelOffset, frameData.pixelSize), Point2I(0, 0));
-      delete source;
-
-      // Create texture and cache
-      GFXTexHandle tex(cropped, requestedProfile, true, avar("%s %s() - frame %d", mImageFile, __FUNCTION__, frame));
-      mFrameTextureMap.insert(frameKey, tex);
-      return tex;
    }
 
    return nullptr;
@@ -647,6 +641,52 @@ void ImageAsset::onTamlCustomWrite(TamlCustomNodes& customNodes)
    pImageInfoNode->addField(StringTable->insert("ImageHeight"), mImageHeight);
    pImageInfoNode->addField(StringTable->insert("ImageDepth"), mImageDepth);
 
+   if (gEmbedAssetData)
+   {
+      GBitmap* image = NULL;
+      Torque::Path path = expandAssetFilePath(mImageFile);
+      if (mIsDDS)
+      {
+         Resource<DDSFile> dds = DDSFile::load(path, 0);
+         if (dds != NULL)
+         {
+            image = new GBitmap();
+            if (!dds->decompressToGBitmap(image))
+            {
+               delete image;
+               image = NULL;
+            }
+         }
+      }
+      else
+      {
+         Resource<GBitmap> resImage = GBitmap::load(path);
+         if(resImage)
+            image = new GBitmap(*resImage);
+      }
+
+      if (!image)
+         return;
+
+      path.setExtension("dbm");
+
+      FileStream stream;
+      if (!stream.open(path, Torque::FS::File::Write))
+      {
+         Con::errorf("ImageAsset::onTamlCustomWrite failed to open cache path %s", path.getFullFileName().c_str());
+         stream.close();
+         delete image;
+         return;
+      }
+
+      image->write(stream);
+      stream.close();
+
+      delete image;
+
+      pImageInfoNode->addField(StringTable->insert("BitmapCache"), path.getFullPath().c_str());
+   }
+
 }
 
 void ImageAsset::onTamlCustomRead(const TamlCustomNodes& customNodes)
@@ -683,6 +723,20 @@ void ImageAsset::onTamlCustomRead(const TamlCustomNodes& customNodes)
          {
             pField->getFieldValue(mImageDepth);
          }
+         else if (fieldName == StringTable->insert("BitmapCache"))
+         {
+            Torque::Path path = pField->getFieldValue();
+
+            if (Torque::FS::IsFile(path))
+            {
+               FileStream stream;
+               if (stream.open(path, Torque::FS::File::Read))
+               {
+                  mEmbeddedBitmap = new GBitmap;
+                  mEmbeddedBitmap->read(stream);
+               }
+            }
+         }
          else
          {
             // Unknown name so warn.
@@ -695,45 +749,53 @@ void ImageAsset::onTamlCustomRead(const TamlCustomNodes& customNodes)
 
 void ImageAsset::populateImage(void)
 {
-   if (Torque::FS::IsFile(mImageFile))
+   if (mEmbeddedBitmap == NULL)
    {
-      if (dStrEndsWith(mImageFile, ".dds"))
+      if (Torque::FS::IsFile(mImageFile))
       {
-         DDSFile* tempFile = new DDSFile();
-         FileStream* ddsFs;
-         if ((ddsFs = FileStream::createAndOpen(mImageFile, Torque::FS::File::Read)) == NULL)
+         if (dStrEndsWith(mImageFile, ".dds"))
          {
-            Con::errorf("ImageAsset::setImageFile Failed to open ddsfile: %s", mImageFile);
-         }
+            DDSFile* tempFile = new DDSFile();
+            FileStream* ddsFs;
+            if ((ddsFs = FileStream::createAndOpen(mImageFile, Torque::FS::File::Read)) == NULL)
+            {
+               Con::errorf("ImageAsset::setImageFile Failed to open ddsfile: %s", mImageFile);
+            }
 
-         if (!tempFile->readHeader(*ddsFs))
-         {
-            Con::errorf("ImageAsset::setImageFile Failed to read header of ddsfile: %s", mImageFile);
+            if (!tempFile->readHeader(*ddsFs))
+            {
+               Con::errorf("ImageAsset::setImageFile Failed to read header of ddsfile: %s", mImageFile);
+            }
+            else
+            {
+               mImageWidth = tempFile->mWidth;
+               mImageHeight = tempFile->mHeight;
+            }
+
+            ddsFs->close();
+            delete tempFile;
+            mIsDDS = true;
          }
          else
          {
-            mImageWidth = tempFile->mWidth;
-            mImageHeight = tempFile->mHeight;
+            if (!stbi_info(mImageFile, &mImageWidth, &mImageHeight, &mImageChannels))
+            {
+               StringTableEntry stbErr = stbi_failure_reason();
+               if (stbErr == StringTable->EmptyString())
+                  stbErr = "ImageAsset::Unkown Error!";
+
+               Con::errorf("ImageAsset::setImageFile STB Get file info failed: %s", stbErr);
+            }
          }
 
-         ddsFs->close();
-         delete tempFile;
+         // we only support 2d textures..... for now ;)
+         mImageDepth = 1;
+
+         generateFrames();
       }
-      else
-      {
-         if (!stbi_info(mImageFile, &mImageWidth, &mImageHeight, &mImageChannels))
-         {
-            StringTableEntry stbErr = stbi_failure_reason();
-            if (stbErr == StringTable->EmptyString())
-               stbErr = "ImageAsset::Unkown Error!";
-
-            Con::errorf("ImageAsset::setImageFile STB Get file info failed: %s", stbErr);
-         }
-      }
-
-      // we only support 2d textures..... for now ;)
-      mImageDepth = 1;
-
+   }
+   else // we have an embedded bitmap, just generate frames.
+   {
       generateFrames();
    }
 }

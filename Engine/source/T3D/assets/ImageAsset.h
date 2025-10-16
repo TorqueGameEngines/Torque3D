@@ -145,10 +145,11 @@ public:
       return mErrCodeStrings[errCode - Parent::Extended];
    };
 private:
-
+   GBitmap*          mEmbeddedBitmap;
    StringTableEntry  mImageFile;
    bool              mUseMips;
    bool              mIsHDRImage;
+   bool              mIsDDS;
    ImageTypes        mImageType;
    ImageTextureMap   mResourceMap;
    bool              mIsNamedTarget;
@@ -195,7 +196,7 @@ public:
    void                    setTextureHDR(const bool pIsHDR);
    inline bool             getTextureHDR(void) const { return mIsHDRImage; };
 
-   GFXTexHandle            getTexture(GFXTextureProfile* requestedProfile, U32 frame = 0);
+   GFXTexHandle            getTexture(GFXTextureProfile* requestedProfile);
 
    static StringTableEntry getImageTypeNameFromType(ImageTypes type);
    static ImageTypes       getImageTypeFromName(StringTableEntry name);

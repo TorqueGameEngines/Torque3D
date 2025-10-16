@@ -170,6 +170,12 @@ if(gProfiler) gProfiler->hashPush(& pdata##name##obj )
 
 #define PROFILE_END_NAMED(name) if(gProfiler) gProfiler->hashPop(& pdata##name##obj)
 
+#define PROFILE_START_IF(act, val,fmt) \
+   if (val.equal(#fmt, String::NoCase)) { \
+      static ProfilerRootData pdata##act##_##fmt##obj(#act#fmt); \
+      if (gProfiler) gProfiler->hashPush(&pdata##act##_##fmt##obj); \
+   }
+
 class ScopedProfiler {
 public:
    ScopedProfiler(ProfilerRootData *data) {

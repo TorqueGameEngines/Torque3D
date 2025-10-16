@@ -116,6 +116,7 @@ $pref::SFX::masterVolume = 0.8;
 /// The startup sound channel volumes.  These are 
 /// used to control the overall volume of different 
 /// classes of sounds.
+$pref::SFX::channelVolume0 = 1;
 $pref::SFX::channelVolume1 = 1;
 $pref::SFX::channelVolume2 = 1;
 $pref::SFX::channelVolume3 = 1;

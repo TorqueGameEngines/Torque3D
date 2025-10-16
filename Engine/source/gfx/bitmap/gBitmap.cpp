@@ -40,6 +40,101 @@ const U32 GBitmap::csFileVersion   = 3;
 
 Vector<GBitmap::Registration>   GBitmap::sRegistrations( __FILE__, __LINE__ );
 
+//-----------------------------------------------------------------------------
+// Half <-> Float Conversion Utilities
+//-----------------------------------------------------------------------------
+
+inline F32 convertHalfToFloat(U16 h)
+{
+   U32 sign = (h >> 15) & 0x00000001;
+   U32 exp = (h >> 10) & 0x0000001F;
+   U32 mant = h & 0x000003FF;
+
+   U32 outSign = sign << 31;
+   U32 outExp, outMant;
+
+   if (exp == 0)
+   {
+      if (mant == 0)
+      {
+         // Zero
+         outExp = 0;
+         outMant = 0;
+      }
+      else
+      {
+         // Subnormal number -> normalize
+         exp = 1;
+         while ((mant & 0x00000400) == 0)
+         {
+            mant <<= 1;
+            exp -= 1;
+         }
+         mant &= 0x000003FF;
+         outExp = (exp + (127 - 15)) << 23;
+         outMant = mant << 13;
+      }
+   }
+   else if (exp == 31)
+   {
+      // Inf or NaN
+      outExp = 0xFF << 23;
+      outMant = mant ? (mant << 13) : 0;
+   }
+   else
+   {
+      // Normalized
+      outExp = (exp + (127 - 15)) << 23;
+      outMant = mant << 13;
+   }
+
+   U32 out = outSign | outExp | outMant;
+   F32 result;
+   dMemcpy(&result, &out, sizeof(F32));
+   return result;
+}
+
+inline U16 convertFloatToHalf(F32 f)
+{
+   U32 bits;
+   dMemcpy(&bits, &f, sizeof(U32));
+
+   U32 sign = (bits >> 16) & 0x00008000;
+   U32 exp = ((bits >> 23) & 0x000000FF) - (127 - 15);
+   U32 mant = bits & 0x007FFFFF;
+
+   if (exp <= 0)
+   {
+      if (exp < -10)
+         return (U16)sign; // Too small => 0
+      mant = (mant | 0x00800000) >> (1 - exp);
+      return (U16)(sign | (mant >> 13));
+   }
+   else if (exp == 0xFF - (127 - 15))
+   {
+      if (mant == 0)
+      {
+         // Inf
+         return (U16)(sign | 0x7C00);
+      }
+      else
+      {
+         // NaN
+         mant >>= 13;
+         return (U16)(sign | 0x7C00 | mant | (mant == 0));
+      }
+   }
+   else
+   {
+      if (exp > 30)
+      {
+         // Overflow => Inf
+         return (U16)(sign | 0x7C00);
+      }
+      return (U16)(sign | (exp << 10) | (mant >> 13));
+   }
+}
+
 
 GBitmap::GBitmap()
  : mInternalFormat(GFXFormatR8G8B8),
@@ -122,6 +217,65 @@ GBitmap::GBitmap(const U32  in_width,
 GBitmap::~GBitmap()
 {
    deleteImage();
+}
+
+//--------------------------------------------------------------------------
+
+U32 GBitmap::getFormatBytesPerPixel(GFXFormat fmt)
+{
+   switch (fmt)
+   {
+      // 8-bit formats
+   case GFXFormatA8:
+   case GFXFormatL8:
+   case GFXFormatA4L4:
+      return 1;
+
+      // 16-bit formats
+   case GFXFormatR5G6B5:
+   case GFXFormatR5G5B5A1:
+   case GFXFormatR5G5B5X1:
+   case GFXFormatA8L8:
+   case GFXFormatL16:
+   case GFXFormatR16F:
+   case GFXFormatR16G16:
+   case GFXFormatR16G16F:
+   case GFXFormatD16:
+      return 2;
+
+      // 24-bit formats
+   case GFXFormatR8G8B8:
+   case GFXFormatR8G8B8_SRGB:
+      return 3;
+
+      // 32-bit formats
+   case GFXFormatR8G8B8A8:
+   case GFXFormatR8G8B8X8:
+   case GFXFormatB8G8R8A8:
+   case GFXFormatR8G8B8A8_SRGB:
+   case GFXFormatR32F:
+   case GFXFormatR10G10B10A2:
+   case GFXFormatR11G11B10:
+   case GFXFormatD24X8:
+   case GFXFormatD24S8:
+   case GFXFormatD24FS8:
+   case GFXFormatR8G8B8A8_LINEAR_FORCE:
+      return 4;
+
+      // 64-bit formats
+   case GFXFormatR16G16B16A16:
+   case GFXFormatR16G16B16A16F:
+   case GFXFormatD32FS8X24:
+      return 8;
+
+      // 128-bit formats
+   case GFXFormatR32G32B32A32F:
+      return 16;
+
+   default:
+      AssertWarn(false, "getFormatBytesPerPixel() - Unknown or compressed format");
+      return 4;
+   }
 }
 
 //--------------------------------------------------------------------------
@@ -285,29 +439,7 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
    mWidth          = in_width;
    mHeight         = in_height;
 
-   mBytesPerPixel = 1;
-   switch (mInternalFormat) 
-   {
-     case GFXFormatA8:
-     case GFXFormatL8:           mBytesPerPixel = 1;
-      break;
-     case GFXFormatR8G8B8:       mBytesPerPixel = 3;
-      break;
-     case GFXFormatR8G8B8A8_LINEAR_FORCE:
-     case GFXFormatR8G8B8X8:
-     case GFXFormatR8G8B8A8:     mBytesPerPixel = 4;
-      break;
-	 case GFXFormatL16:
-     case GFXFormatR5G6B5:
-     case GFXFormatR5G5B5A1:     mBytesPerPixel = 2;
-      break;
-     case GFXFormatR16G16B16A16F:
-      case GFXFormatR16G16B16A16: mBytesPerPixel = 8;
-         break;
-      default:
-         AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
-         break;
-   }
+   mBytesPerPixel = getFormatBytesPerPixel(mInternalFormat);
 
    // Set up the mip levels, if necessary...
    mNumMipLevels       = 1;
@@ -364,28 +496,7 @@ void GBitmap::allocateBitmapWithMips(const U32 in_width, const U32 in_height, co
    mWidth = in_width;
    mHeight = in_height;
 
-   mBytesPerPixel = 1;
-   switch (mInternalFormat)
-   {
-   case GFXFormatA8:
-   case GFXFormatL8:           mBytesPerPixel = 1;
-      break;
-   case GFXFormatR8G8B8:       mBytesPerPixel = 3;
-      break;
-   case GFXFormatR8G8B8X8:
-   case GFXFormatR8G8B8A8:     mBytesPerPixel = 4;
-      break;
-   case GFXFormatL16:
-   case GFXFormatR5G6B5:
-   case GFXFormatR5G5B5A1:     mBytesPerPixel = 2;
-      break;
-   case GFXFormatR16G16B16A16F:
-   case GFXFormatR16G16B16A16: mBytesPerPixel = 8;
-      break;
-   default:
-      AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
-      break;
-   }
+   mBytesPerPixel = getFormatBytesPerPixel(mInternalFormat);
 
    // Set up the mip levels, if necessary...
    mNumMipLevels = 1;
@@ -688,40 +799,43 @@ bool GBitmap::checkForTransparency()
 {
    mHasTransparency = false;
 
+   if (!mBits || mByteSize == 0)
+      return false;
+
    ColorI pixel(255, 255, 255, 255);
 
+   // Only check formats that can *possibly* have alpha.
    switch (mInternalFormat)
    {
-      // Non-transparent formats
-      case GFXFormatL8:
-	  case GFXFormatL16:
-      case GFXFormatR8G8B8:
-      case GFXFormatR5G6B5:
-         break;
-      // Transparent formats
-      case GFXFormatA8:
-      case GFXFormatR8G8B8A8:
-      case GFXFormatR5G5B5A1:
-         // Let getColor() do the heavy lifting
-         for (U32 x = 0; x < mWidth; x++)
+   case GFXFormatA8:
+   case GFXFormatA4L4:
+   case GFXFormatA8L8:
+   case GFXFormatR5G5B5A1:
+   case GFXFormatR8G8B8A8:
+   case GFXFormatB8G8R8A8:
+   case GFXFormatR8G8B8A8_SRGB:
+   case GFXFormatR10G10B10A2:
+   case GFXFormatR16G16B16A16:
+   case GFXFormatR16G16B16A16F:
+   case GFXFormatR32G32B32A32F:
+      break; // alpha-capable
+   default:
+      return false; // skip formats with no alpha
+   }
+
+   for (U32 x = 0; x < mWidth; x++)
+   {
+      for (U32 y = 0; y < mHeight; y++)
+      {
+         if (getColor(x, y, pixel))
          {
-            for (U32 y = 0; y < mHeight; y++)
+            if (pixel.alpha < 255)
             {
-               if (getColor(x, y, pixel))
-               {
-                  if (pixel.alpha < 255)
-                  {
-                     mHasTransparency = true;
-                     break;
-                  }
-               }
+               mHasTransparency = true;
+               break;
             }
          }
-
-         break;
-      default:
-         AssertFatal(false, "GBitmap::checkForTransparency: misunderstood format specifier");
-      break;
+      }
    }
 
    return mHasTransparency;
@@ -770,40 +884,144 @@ bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor) const
    if (x >= mWidth || y >= mHeight)
       return false;
 
-   const U8* pLoc = getAddress(x, y);
+   const U8* p = getAddress(x, y);
 
-   switch (mInternalFormat) {
-     case GFXFormatA8:
-     case GFXFormatL8:
-      rColor.set( *pLoc, *pLoc, *pLoc, *pLoc );
-      break;
-	 case GFXFormatL16:
-		 rColor.set(U8(U16((pLoc[0] << 8) + pLoc[1])), 0, 0, 0);
-       break;
-     case GFXFormatR8G8B8:
-     case GFXFormatR8G8B8X8:
-        rColor.set( pLoc[0], pLoc[1], pLoc[2], 255 );
+   switch (mInternalFormat)
+   {
+      // --- 8-bit ---
+   case GFXFormatA8:
+      rColor.set(255, 255, 255, p[0]);
       break;
 
-     case GFXFormatR8G8B8A8:
-      rColor.set( pLoc[0], pLoc[1], pLoc[2], pLoc[3] );
+   case GFXFormatL8:
+      rColor.set(p[0], p[0], p[0], 255);
       break;
 
-     case GFXFormatR5G5B5A1:
-#if defined(TORQUE_OS_MAC)
-      rColor.set( (*((U16*)pLoc) >> 0) & 0x1F,
-                  (*((U16*)pLoc) >> 5) & 0x1F,
-                  (*((U16*)pLoc) >> 10) & 0x1F,
-                  ((*((U16*)pLoc) >> 15) & 0x01) ? 255 : 0 );
+   case GFXFormatA4L4:
+   {
+      U8 v = p[0];
+      U8 lum = (v & 0x0F) * 17;
+      U8 alp = ((v >> 4) & 0x0F) * 17;
+      rColor.set(lum, lum, lum, alp);
+      break;
+   }
+
+   // --- 16-bit ---
+   case GFXFormatR5G6B5:
+   {
+      U16 c = ((U16*)p)[0];
+#ifdef TORQUE_BIG_ENDIAN
+      c = convertLEndianToHost(c);
+#endif
+      U8 r = (c >> 11) & 0x1F;
+      U8 g = (c >> 5) & 0x3F;
+      U8 b = c & 0x1F;
+      rColor.set((r << 3) | (r >> 2),
+         (g << 2) | (g >> 4),
+         (b << 3) | (b >> 2),
+         255);
+      break;
+   }
+
+   case GFXFormatR5G5B5A1:
+   {
+      U16 c = ((U16*)p)[0];
+#ifdef TORQUE_BIG_ENDIAN
+      c = convertLEndianToHost(c);
+#endif
+      U8 r = (c >> 11) & 0x1F;
+      U8 g = (c >> 6) & 0x1F;
+      U8 b = (c >> 1) & 0x1F;
+      U8 a = (c & 0x01) ? 255 : 0;
+      rColor.set((r << 3) | (r >> 2),
+         (g << 3) | (g >> 2),
+         (b << 3) | (b >> 2),
+         a);
+      break;
+   }
+
+   case GFXFormatA8L8:
+   {
+      U16 c = ((U16*)p)[0];
+#ifdef TORQUE_BIG_ENDIAN
+      c = convertLEndianToHost(c);
+#endif
+      U8 l = c & 0xFF;
+      U8 a = (c >> 8) & 0xFF;
+      rColor.set(l, l, l, a);
+      break;
+   }
+
+   case GFXFormatL16:
+   {
+      U16 l = ((U16*)p)[0];
+#ifdef TORQUE_BIG_ENDIAN
+      l = convertLEndianToHost(l);
+#endif
+      U8 lum = l >> 8;
+      rColor.set(lum, lum, lum, 255);
+      break;
+   }
+
+   // --- 24-bit ---
+   case GFXFormatR8G8B8:
+   case GFXFormatR8G8B8_SRGB:
+      rColor.set(p[0], p[1], p[2], 255);
+      break;
+
+      // --- 32-bit ---
+   case GFXFormatR8G8B8A8:
+   case GFXFormatR8G8B8A8_SRGB:
+      rColor.set(p[0], p[1], p[2], p[3]);
+      break;
+
+   case GFXFormatB8G8R8A8:
+      rColor.set(p[2], p[1], p[0], p[3]);
+      break;
+
+   case GFXFormatR8G8B8X8:
+      rColor.set(p[0], p[1], p[2], 255);
+      break;
+
+      // --- 64-bit (16 bits per channel) ---
+   case GFXFormatR16G16B16A16:
+   {
+      const U16* v = (U16*)p;
+#ifdef TORQUE_BIG_ENDIAN
+      rColor.set(v[2] >> 8, v[1] >> 8, v[0] >> 8, v[3] >> 8); // fallback
 #else
-      rColor.set( *((U16*)pLoc) >> 11,
-                  (*((U16*)pLoc) >> 6) & 0x1f,
-                  (*((U16*)pLoc) >> 1) & 0x1f,
-                  (*((U16*)pLoc) & 1) ? 255 : 0 );
+      rColor.set(v[0] >> 8, v[1] >> 8, v[2] >> 8, v[3] >> 8);
 #endif
       break;
+   }
 
-     default:
+   // --- 64-bit float ---
+   case GFXFormatR16G16B16A16F:
+   {
+      const U16* v = (U16*)p;
+      F32 r = convertHalfToFloat(v[0]);
+      F32 g = convertHalfToFloat(v[1]);
+      F32 b = convertHalfToFloat(v[2]);
+      F32 a = convertHalfToFloat(v[3]);
+      rColor.set(mClamp(r * 255.0f, 0.0f, 255.0f),
+         mClamp(g * 255.0f, 0.0f, 255.0f),
+         mClamp(b * 255.0f, 0.0f, 255.0f),
+         mClamp(a * 255.0f, 0.0f, 255.0f));
+      break;
+   }
+
+   // --- 128-bit float ---
+   case GFXFormatR32G32B32A32F:
+   {
+      const F32* v = (F32*)p;
+      rColor.set(mClamp(v[0] * 255.0f, 0.0f, 255.0f),
+         mClamp(v[1] * 255.0f, 0.0f, 255.0f),
+         mClamp(v[2] * 255.0f, 0.0f, 255.0f),
+         mClamp(v[3] * 255.0f, 0.0f, 255.0f));
+      break;
+   }
+
+   default:
       AssertFatal(false, "Bad internal format");
       return false;
    }
@@ -1133,23 +1351,7 @@ bool GBitmap::read(Stream& io_rStream)
    U32 fmt;
    io_rStream.read(&fmt);
    mInternalFormat = GFXFormat(fmt);
-   mBytesPerPixel = 1;
-   switch (mInternalFormat) {
-     case GFXFormatA8:
-     case GFXFormatL8:  mBytesPerPixel = 1;
-      break;
-     case GFXFormatR8G8B8:        mBytesPerPixel = 3;
-      break;
-     case GFXFormatR8G8B8A8:       mBytesPerPixel = 4;
-      break;
-	 case GFXFormatL16:
-     case GFXFormatR5G6B5:
-     case GFXFormatR5G5B5A1:    mBytesPerPixel = 2;
-      break;
-     default:
-      AssertFatal(false, "GBitmap::read: misunderstood format specifier");
-      break;
-   }
+   mBytesPerPixel = getFormatBytesPerPixel(mInternalFormat);
 
    io_rStream.read(&mByteSize);
 

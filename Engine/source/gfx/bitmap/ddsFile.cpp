@@ -652,6 +652,12 @@ Resource<DDSFile> DDSFile::load( const Torque::Path &path, U32 dropMipCount )
 
 //------------------------------------------------------------------------------
 
+bool DDSFile::isCompressedFormat(GFXFormat fmt)
+{
+   return (fmt >= GFXFormatBC1 && fmt <= GFXFormatBC5) ||
+      (fmt >= GFXFormatBC1_SRGB && fmt <= GFXFormatBC3_SRGB);
+}
+
 DDSFile *DDSFile::createDDSFileFromGBitmap( const GBitmap *gbmp )
 {
    if( gbmp == NULL )
@@ -778,8 +784,29 @@ DDSFile *DDSFile::createDDSCubemapFileFromGBitmaps(GBitmap **gbmps)
 bool DDSFile::decompressToGBitmap(GBitmap *dest)
 {
    // TBD: do we support other formats?
-   if (mFormat != GFXFormatBC1 && mFormat != GFXFormatBC2 && mFormat != GFXFormatBC3)
-      return false;
+   if (!isCompressedFormat(mFormat))
+   {
+      dest->allocateBitmapWithMips(getWidth(), getHeight(), getMipLevels(), mFormat);
+      U32 numMips = getMipLevels();
+
+      for (U32 i = 0; i < numMips; i++)
+      {
+         U8* addr = dest->getAddress(0, 0, i);
+
+         const U8* mipBuffer = mSurfaces[0]->mMips[i];
+         const U32 mipWidth = getWidth(i);
+         const U32 mipHeight = getHeight(i);
+
+         const U32 bpp = dest->getBytesPerPixel();
+         const U32 rowBytes = mipWidth * bpp;
+
+         for (U32 y = 0; y < mipHeight; ++y)
+         {
+            dMemcpy(addr + y * rowBytes, mipBuffer + y * rowBytes, rowBytes);
+         }
+      }
+      return true;
+   }
 
    dest->allocateBitmapWithMips(getWidth(), getHeight(), getMipLevels(), GFXFormatR8G8B8A8);
 

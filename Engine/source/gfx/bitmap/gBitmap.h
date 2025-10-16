@@ -201,6 +201,7 @@ public:
 
    U32         getByteSize() const { return mByteSize; }
    U32         getBytesPerPixel() const { return mBytesPerPixel; }
+   U32         getFormatBytesPerPixel(GFXFormat fmt);
 
    U32         getSurfaceSize(const U32 mipLevel) const;
 

@@ -87,14 +87,12 @@ template <typename T>
 void bitmapExtrudeGeneric(
    const T* src, T* dst,
    U32 srcWidth, U32 srcHeight,
-   U32 channels,
-   U32 srcRowStride = 0,  // in elements, 0 = tightly packed
-   U32 dstRowStride = 0)  // in elements, 0 = tightly packed
+   U32 channels, U32 bpp)
 {
-   if (srcRowStride == 0) srcHeight != 1 ? srcRowStride = srcWidth * channels : srcRowStride = 0;
+   U32 srcRowStride = srcHeight != 1 ? (srcWidth * bpp) / sizeof(T) : 0;
    U32 dstWidth = srcWidth > 1 ? srcWidth / 2 : 1;
    U32 dstHeight = srcHeight > 1 ? srcHeight / 2 : 1;
-   if (dstRowStride == 0) dstRowStride = dstWidth * channels;
+   U32 dstRowStride = dstHeight != 1 ? (dstWidth * bpp) / sizeof(T) : 0;
 
    for (U32 y = 0; y < dstHeight; ++y)
    {
@@ -132,31 +130,31 @@ void bitmapExtrudeGeneric(
 }
 
 // 8-bit RGBA
-auto bitmapExtrudeU8_RGBA = [](const void* src, void* dst, U32 h, U32 w) {
-   bitmapExtrudeGeneric((const U8*)src, (U8*)dst, w, h, 4);
+auto bitmapExtrudeU8_RGBA = [](const void* src, void* dst, U32 h, U32 w, U32 bpp) {
+   bitmapExtrudeGeneric((const U8*)src, (U8*)dst, w, h, 4, bpp);
 };
 
 // 16-bit RGBA (U16 / F32 stored as U16)
-auto bitmapExtrudeU16_RGBA = [](const void* src, void* dst, U32 h, U32 w) {
-   bitmapExtrudeGeneric((const U16*)src, (U16*)dst, w, h, 4);
+auto bitmapExtrudeU16_RGBA = [](const void* src, void* dst, U32 h, U32 w, U32 bpp) {
+   bitmapExtrudeGeneric((const U16*)src, (U16*)dst, w, h, 4, bpp);
 };
 
 // 32-bit float RGBA
-auto bitmapExtrudeF32_RGBA = [](const void* src, void* dst, U32 h, U32 w) {
-   bitmapExtrudeGeneric((const F32*)src, (F32*)dst, w, h, 4);
+auto bitmapExtrudeF32_RGBA = [](const void* src, void* dst, U32 h, U32 w, U32 bpp) {
+   bitmapExtrudeGeneric((const F32*)src, (F32*)dst, w, h, 4, bpp);
 };
 
 // RGB U8
-auto bitmapExtrudeU8_RGB = [](const void* src, void* dst, U32 h, U32 w) {
-   bitmapExtrudeGeneric((const U8*)src, (U8*)dst, w, h, 3);
+auto bitmapExtrudeU8_RGB = [](const void* src, void* dst, U32 h, U32 w, U32 bpp) {
+   bitmapExtrudeGeneric((const U8*)src, (U8*)dst, w, h, 3, bpp);
 };
 
 void (*bitmapExtrude5551)(const void* srcMip, void* mip, U32 height, U32 width) = bitmapExtrude5551_c;
-void (*bitmapExtrudeRGB)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeU8_RGB;
-void (*bitmapExtrudeRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeU8_RGBA;
-void (*bitmapExtrude16BitRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeU16_RGBA;
-void (*bitmapExtrudeFPRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeU16_RGBA;
-void (*bitmapExtrudeF32RGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeF32_RGBA;
+void (*bitmapExtrudeRGB)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth, U32 bpp) = bitmapExtrudeU8_RGB;
+void (*bitmapExtrudeRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth, U32 bpp) = bitmapExtrudeU8_RGBA;
+void (*bitmapExtrude16BitRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth, U32 bpp) = bitmapExtrudeU16_RGBA;
+void (*bitmapExtrudeFPRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth, U32 bpp) = bitmapExtrudeU16_RGBA;
+void (*bitmapExtrudeF32RGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth, U32 bpp) = bitmapExtrudeF32_RGBA;
 
 //--------------------------------------------------------------------------
 

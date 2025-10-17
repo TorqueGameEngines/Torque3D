@@ -460,7 +460,7 @@ void GBitmap::extrudeMipLevels(bool clearBorders)
       case GFXFormatR8G8B8:
       {
          for(U32 i = 1; i < mNumMipLevels; i++)
-            bitmapExtrudeRGB(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1));
+            bitmapExtrudeRGB(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1), mBytesPerPixel);
          break;
       }
 
@@ -470,28 +470,28 @@ void GBitmap::extrudeMipLevels(bool clearBorders)
       case GFXFormatR8G8B8A8_SRGB:
       {
          for(U32 i = 1; i < mNumMipLevels; i++)
-            bitmapExtrudeRGBA(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1));
+            bitmapExtrudeRGBA(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1), mBytesPerPixel);
          break;
       }
 
       case GFXFormatR16G16B16A16:
       {
          for (U32 i = 1; i < mNumMipLevels; i++)
-            bitmapExtrude16BitRGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1));
+            bitmapExtrude16BitRGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1), mBytesPerPixel);
          break;
       }
 
       case GFXFormatR16G16B16A16F:
       {
          for (U32 i = 1; i < mNumMipLevels; i++)
-            bitmapExtrudeFPRGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1));
+            bitmapExtrudeFPRGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1), mBytesPerPixel);
          break;
       }
 
       case GFXFormatR32G32B32A32F:
       {
          for (U32 i = 1; i < mNumMipLevels; i++)
-            bitmapExtrudeF32RGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1));
+            bitmapExtrudeF32RGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1), mBytesPerPixel);
          break;
       }
 
@@ -571,7 +571,7 @@ void GBitmap::extrudeMipLevelsDetail()
       allocateBitmap(getWidth(), getHeight(), true, getFormat());
 
    for (i = 1; i < mNumMipLevels; i++) {
-      bitmapExtrudeRGB(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1));
+      bitmapExtrudeRGB(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1), mBytesPerPixel);
    }
 
    // Ok, now that we have the levels extruded, we need to move the lower miplevels
@@ -1264,6 +1264,7 @@ void GBitmap::copyChannel( U32 index, GBitmap *outBitmap ) const
 
 bool GBitmap::read(Stream& io_rStream)
 {
+   PROFILE_SCOPE(GBitmap_Read);
    // Handle versioning
    U32 version;
    io_rStream.read(&version);
@@ -1294,6 +1295,7 @@ bool GBitmap::read(Stream& io_rStream)
 
 bool GBitmap::write(Stream& io_rStream) const
 {
+   PROFILE_SCOPE(GBitmap_Write);
    // Handle versioning
    io_rStream.write(csFileVersion);
 

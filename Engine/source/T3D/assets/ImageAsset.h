@@ -102,7 +102,7 @@ public:
          StringTableEntry inRegionName = StringTable->EmptyString())
          : regionName(inRegionName)
       {
-         pixelOffset.set(pixelOffsetY, pixelOffsetY);
+         pixelOffset.set(pixelOffsetX, pixelOffsetY);
          pixelSize.set(pixelWidth, pixelHeight);
 
          texelLower.set(pixelOffsetX * texelWidthScale, pixelOffsetY * texelHeightScale);

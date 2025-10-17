@@ -94,7 +94,7 @@ function ImportAssetWindow::onWake(%this)
 //
 function isImageFormat(%fileExt)
 {
-   if( (%fileExt $= ".png") || (%fileExt $= ".jpg") || (%fileExt $= ".bmp") || (%fileExt $= ".dds") || (%fileExt $= ".tif") || (%fileExt $= ".psd") || (%fileExt $= ".gif") || (%fileExt $= ".hdr"))
+   if( (%fileExt $= ".png") || (%fileExt $= ".jpg") || (%fileExt $= ".jpeg") || (%fileExt $= ".bmp") || (%fileExt $= ".dds") || (%fileExt $= ".tga") || (%fileExt $= ".psd") || (%fileExt $= ".gif") || (%fileExt $= ".hdr") || (%fileExt $= ".ies"))
       return true;
       
    return false;
@@ -133,12 +133,20 @@ function findImageFile(%path, %materialName, %type)
 {
    if(isFile(%path @ "/" @ %materialName @ ".jpg"))
       return %path @ "/" @ %materialName @ ".jpg";
+   else if(isFile(%path @ "/" @ %materialName @ ".jpeg"))
+      return %path @ "/" @ %materialName @ ".jpeg";
+   else if(isFile(%path @ "/" @ %materialName @ ".bmp"))
+      return %path @ "/" @ %materialName @ ".bmp";
    else if(isFile(%path @ "/" @ %materialName @ ".png"))
       return %path @ "/" @ %materialName @ ".png";
    else if(isFile(%path @ "/" @ %materialName @ ".dds"))
       return %path @ "/" @ %materialName @ ".dds";
-   else if(isFile(%path @ "/" @ %materialName @ ".tif"))
-      return %path @ "/" @ %materialName @ ".tif";
+   else if(isFile(%path @ "/" @ %materialName @ ".tga"))
+      return %path @ "/" @ %materialName @ ".tga";
+   else if(isFile(%path @ "/" @ %materialName @ ".hdr"))
+      return %path @ "/" @ %materialName @ ".hdr";
+   else if(isFile(%path @ "/" @ %materialName @ ".ies"))
+      return %path @ "/" @ %materialName @ ".ies";
 }
 
 function getAssetTypeByFilename(%filePath)
@@ -270,7 +278,7 @@ function AssetBrowser::onDropFolder(%this, %filePath)
       %fileExt = "";
 
       //If not modules, it's likely an art pack or other mixed files, so we'll import them as normal
-      if( (%fileExt $= ".png") || (%fileExt $= ".jpg") || (%fileExt $= ".bmp") || (%fileExt $= ".dds") )
+      if( (%fileExt $= ".png") || (%fileExt $= ".jpg") || (%fileExt $= ".jpeg") || (%fileExt $= ".bmp") || (%fileExt $= ".dds") || (%fileExt $= ".tga") || (%fileExt $= ".psd") || (%fileExt $= ".gif") || (%fileExt $= ".hdr") || (%fileExt $= ".ies"))
          %this.importAssetListArray.add("ImageAsset", %filePath);
       else if( (%fileExt $= ".dae") || (%fileExt $= ".dts"))
          %this.importAssetListArray.add("ShapeAsset", %filePath);
@@ -746,7 +754,7 @@ function ImportAssetWindow::addNewImportingAsset(%this, %filterType)
    if(%filterType $= "Sound" || %filterType $= "")
       %filter = "Sound Files(*.wav, *.ogg)|*.wav;*.ogg|" @ %filter;
    if(%filterType $= "Image" || %filterType $= "")
-      %filter = "Images Files(*.jpg,*.png,*.tga,*.bmp,*.dds)|*.jpg;*.png;*.tga;*.bmp;*.dds|" @ %filter;
+      %filter = "Images Files(*.jpg,*.jpeg,*.png,*.tga,*.bmp,*.dds,*.ies)|*.jpg;*.jpeg;*.png;*.tga;*.bmp;*.dds;*.ies|" @ %filter;
    if(%filterType $= "Shape" || %filterType $= "")
       %filter = "Shape Files(*.dae, *.cached.dts)|*.dae;*.cached.dts|" @ %filter;
       
@@ -870,7 +878,7 @@ function ImportAssetWindow::findMissingFile(%this, %assetItem)
    if(%assetItem.assetType $= "ShapeAsset")
       %filters = "Shape Files(*.dae, *.cached.dts)|*.dae;*.cached.dts";
    else if(%assetItem.assetType $= "ImageAsset")
-      %filters = "Images Files(*.jpg,*.png,*.tga,*.bmp,*.dds)|*.jpg;*.png;*.tga;*.bmp;*.dds";
+      %filters = "Images Files(*.jpg,*.jpeg,*.png,*.tga,*.bmp,*.dds,*.ies)|*.jpg;*.jpeg;*.png;*.tga;*.bmp;*.dds;*.ies";
       
    %dlg = new OpenFileDialog()
    {

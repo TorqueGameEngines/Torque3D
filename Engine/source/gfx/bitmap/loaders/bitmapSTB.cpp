@@ -27,6 +27,7 @@
 #include "core/stream/memStream.h"
 #include "core/strings/stringFunctions.h"
 #include "gfx/bitmap/gBitmap.h"
+#include "gfx/bitmap/bitmapUtils.h"
 #include "gfx/bitmap/imageUtils.h"
 #include "gfx/bitmap/loaders/ies/ies_loader.h"
 #include "platform/profiler.h"
@@ -55,6 +56,43 @@ static bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len);
 
 static bool sWriteSTB(const Torque::Path& path, GBitmap* bitmap, U32 compressionLevel);
 static bool sWriteStreamSTB(const String& bmType, Stream& stream, GBitmap* bitmap, U32 compressionLevel);
+
+static GFXFormat determineFormat(bool isHDR, bool is16Bit, int numChannels)
+{
+   if (isHDR)
+   {
+      switch (numChannels)
+      {
+      case 1: return GFXFormatR32F;
+      case 2: return GFXFormatR16G16F; // approximate, most HDRs are 3 or 4 channel though
+      case 3: return GFXFormatR16G16B16A16F; // store RGB in RGBA
+      case 4: return GFXFormatR16G16B16A16F;
+      }
+   }
+   else if (is16Bit)
+   {
+      switch (numChannels)
+      {
+      case 1: return GFXFormatL16;
+      case 2: return GFXFormatA8L8; // No native L16A16, but could add one later
+      case 3: return GFXFormatR16G16B16A16;
+      case 4: return GFXFormatR16G16B16A16;
+      }
+   }
+   else // 8-bit
+   {
+      switch (numChannels)
+      {
+      case 1: return GFXFormatA8;
+      case 2: return GFXFormatA8L8;
+      case 3: return GFXFormatR8G8B8;
+      case 4: return GFXFormatR8G8B8A8;
+      }
+   }
+
+   // fallback
+   return GFXFormatR8G8B8A8;
+}
 
 // stbi_write callback / rextimmy.
 static void stbiWriteFunc(void* context, void* data, int size)
@@ -210,119 +248,55 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 
    }
 
-   if (!stbi_info(path.getFullPath().c_str(), &x, &y, &channels))
-   {
-      const char* stbErr = stbi_failure_reason();
+   const char* filePath = path.getFullPath().c_str();
 
-      if (!stbErr)
-         stbErr = "Unknown Error!";
+   // Detect format
+   bool isHDR = stbi_is_hdr(filePath);
+   bool is16Bit = stbi_is_16_bit(filePath);
 
-      Con::errorf("STB get file info: %s", stbErr);
+   void* data = nullptr;
+
+   if (isHDR) {
+      data = stbi_loadf(filePath, &x, &y, &n, 4);
    }
+   else if (is16Bit)
+      data = stbi_load_16(filePath, &x, &y, &n, 4);
+   else
+      data = stbi_load(filePath, &x, &y, &n, 0);
 
-   // do this to map 2 channels to 4, 2 channel not supported by gbitmap yet..
-   if (channels == 2)
-      channels = 4;
-   if (!ext.equal("png"))
+   if (!data)
    {
-      if (stbi_is_16_bit(path.getFullPath().c_str()))
-      {
-         U16* data = stbi_load_16(path.getFullPath().c_str(), &x, &y, &n, channels);
-
-         // if succesful deal make the bitmap, else try other loaders.
-         if (data)
-         {
-            GFXFormat format;
-            if (n == 1)
-               format = GFXFormatL16;
-            else
-               format = GFXFormatR16G16B16A16; // not sure if this is correct.
-
-            bitmap->deleteImage();
-
-            // actually allocate the bitmap space...
-            bitmap->allocateBitmap(x, y,
-               false,            // don't extrude miplevels...
-               format);          // use determined format...
-
-            U16* pBase = (U16*)bitmap->getBits();
-
-            U32 rowBytes = bitmap->getByteSize();
-
-            dMemcpy(pBase, data, rowBytes);
-
-            stbi_image_free(data);
-
-            PROFILE_END();
-            return true;
-         }
-      }
-   }
-
-   if (ext.equal("hdr"))
-   {
-      // force load to 4 channel.
-      float* data = stbi_loadf(path.getFullPath().c_str(), &x, &y, &n, 0);
-
-      unsigned char* dataChar = stbi__hdr_to_ldr(data, x, y, n);
-      bitmap->deleteImage();
-      // actually allocate the bitmap space...
-      bitmap->allocateBitmap(x, y,
-         false,
-         GFXFormatR8G8B8);
-
-      U8* pBase = (U8*)bitmap->getBits();
-
-      U32 rowBytes = x * y * n;
-
-      dMemcpy(pBase, dataChar, rowBytes);
-
-      //stbi_image_free(data);
-      stbi_image_free(dataChar);
-
       PROFILE_END();
-      return true;
-   }
-
-   unsigned char* data = stbi_load(path.getFullPath().c_str(), &x, &y, &n, channels);
-
-   bitmap->deleteImage();
-
-   GFXFormat format;
-
-   switch (channels) {
-   case  1:
-      format = GFXFormatA8;
-      break;
-   case 2:
-      format = GFXFormatA8L8;
-      break;
-   case 3:
-      format = GFXFormatR8G8B8;
-      break;
-   case 4:
-      format = GFXFormatR8G8B8A8;
-      break;
-   default:
-      PROFILE_END();
+      Con::errorf("sReadSTB() - Failed to load %s: %s", filePath, stbi_failure_reason());
       return false;
    }
 
-   // actually allocate the bitmap space...
-   bitmap->allocateBitmap(x, y,
-      false,            // don't extrude miplevels...
-      format);          // use determined format...
+   // Determine internal GFX format
+   GFXFormat format = determineFormat(isHDR, is16Bit, n);
 
-   U8* pBase = (U8*)bitmap->getBits();
+   // Allocate bitmap
+   bitmap->deleteImage();
+   bitmap->allocateBitmap(x, y, false, format);
 
-   U32 rowBytes = bitmap->getByteSize();
-
-   dMemcpy(pBase, data, rowBytes);
+   if (isHDR)
+   {
+      U16* pBase = (U16*)bitmap->getBits();
+      const size_t totalPixels = (size_t)x * (size_t)y;
+      for (size_t i = 0; i < totalPixels * 4; ++i)
+      {
+         pBase[i] = convertFloatToHalf(reinterpret_cast<F32*>(data)[i]); // convert F32 -> U16
+      }
+   }
+   else
+   {
+      U8* dst = (U8*)bitmap->getBits();
+      U32 byteSize = bitmap->getByteSize();
+      dMemcpy(dst, data, byteSize);
+   }
 
    stbi_image_free(data);
-   // Check this bitmap for transparency
-   if (channels == 4)
-      bitmap->checkForTransparency();
+
+   bitmap->checkForTransparency();
 
    PROFILE_END();
    return true;
@@ -331,45 +305,36 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 bool sReadStreamSTB(Stream& stream, GBitmap* bitmap, U32 len)
 {
    PROFILE_SCOPE(sReadStreamSTB);
-   // only used for font at the moment.
 
-   U8* data = new U8[len];
-   stream.read(len, data);
+   Vector<U8> data(len);
+   stream.read(len, data.address());
 
-   S32 width, height, comp = 0;
+   int x, y, n;
+   bool isHDR = stbi_is_hdr_from_memory(data.address(), len);
+   bool is16Bit = stbi_is_16_bit_from_memory(data.address(), len);
 
-   unsigned char* pixelData = stbi_load_from_memory((const U8*)data, (int)len, &width, &height, &comp, 0);
+   void* pixels = nullptr;
+   if (isHDR)
+      pixels = stbi_loadf_from_memory(data.address(), len, &x, &y, &n, 0);
+   else if (is16Bit)
+      pixels = stbi_load_16_from_memory(data.address(), len, &x, &y, &n, 0);
+   else
+      pixels = stbi_load_from_memory(data.address(), len, &x, &y, &n, 0);
 
-   if (!pixelData)
+   if (!pixels)
    {
-      const char* stbErr = stbi_failure_reason();
-
-      if (!stbErr)
-         stbErr = "Unknown Error!";
-
-      Con::errorf("sReadStreamSTB Error: %s", stbErr);
+      Con::errorf("sReadStreamSTB() - STB load failed: %s", stbi_failure_reason());
       return false;
    }
+
+   GFXFormat format = determineFormat(isHDR, is16Bit, n);
    bitmap->deleteImage();
+   bitmap->allocateBitmap(x, y, false, format);
+   dMemcpy(bitmap->getWritableBits(0), pixels, bitmap->getByteSize());
 
-   //work out what format we need to use - todo floating point?
-   GFXFormat fmt = GFXFormat_FIRST;
-   switch (comp)
-   {
-   case 1: fmt = GFXFormatA8; break;
-   case 2: fmt = GFXFormatA8L8; break; //todo check this
-   case 3: fmt = GFXFormatR8G8B8; break;
-   case 4: fmt = GFXFormatR8G8B8A8; break;
-   }
+   stbi_image_free(pixels);
 
-   bitmap->allocateBitmap(width, height, false, fmt);
-
-   U8* pBase = bitmap->getWritableBits(0);
-   U32 rowBytes = bitmap->getByteSize();
-   dMemcpy(pBase, pixelData, rowBytes);
-
-   dFree(data);
-   dFree(pixelData);
+   bitmap->checkForTransparency();
 
    return true;
 }

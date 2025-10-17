@@ -961,12 +961,20 @@ public:
       String imagePath;
       if (Platform::isFile(testPath + String(".jpg")))
          imagePath = testPath + String(".jpg");
+      else if (Platform::isFile(testPath + String(".jpeg")))
+         imagePath = testPath + String(".jpeg");
       else if (Platform::isFile(testPath + String(".png")))
          imagePath = testPath + String(".png");
       else if (Platform::isFile(testPath + String(".dds")))
          imagePath = testPath + String(".dds");
-      else if (Platform::isFile(testPath + String(".tif")))
-         imagePath = testPath + String(".tif");
+      else if (Platform::isFile(testPath + String(".tga")))
+         imagePath = testPath + String(".tga");
+      else if (Platform::isFile(testPath + String(".bmp")))
+         imagePath = testPath + String(".bmp");
+      else if (Platform::isFile(testPath + String(".hdr")))
+         imagePath = testPath + String(".hdr");
+      else if (Platform::isFile(testPath + String(".ies")))
+         imagePath = testPath + String(".ies");
 
       if(imagePath.isNotEmpty())
          //This ensures case-correct for the filename

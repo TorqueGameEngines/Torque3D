@@ -40,101 +40,6 @@ const U32 GBitmap::csFileVersion   = 3;
 
 Vector<GBitmap::Registration>   GBitmap::sRegistrations( __FILE__, __LINE__ );
 
-//-----------------------------------------------------------------------------
-// Half <-> Float Conversion Utilities
-//-----------------------------------------------------------------------------
-
-inline F32 convertHalfToFloat(U16 h)
-{
-   U32 sign = (h >> 15) & 0x00000001;
-   U32 exp = (h >> 10) & 0x0000001F;
-   U32 mant = h & 0x000003FF;
-
-   U32 outSign = sign << 31;
-   U32 outExp, outMant;
-
-   if (exp == 0)
-   {
-      if (mant == 0)
-      {
-         // Zero
-         outExp = 0;
-         outMant = 0;
-      }
-      else
-      {
-         // Subnormal number -> normalize
-         exp = 1;
-         while ((mant & 0x00000400) == 0)
-         {
-            mant <<= 1;
-            exp -= 1;
-         }
-         mant &= 0x000003FF;
-         outExp = (exp + (127 - 15)) << 23;
-         outMant = mant << 13;
-      }
-   }
-   else if (exp == 31)
-   {
-      // Inf or NaN
-      outExp = 0xFF << 23;
-      outMant = mant ? (mant << 13) : 0;
-   }
-   else
-   {
-      // Normalized
-      outExp = (exp + (127 - 15)) << 23;
-      outMant = mant << 13;
-   }
-
-   U32 out = outSign | outExp | outMant;
-   F32 result;
-   dMemcpy(&result, &out, sizeof(F32));
-   return result;
-}
-
-inline U16 convertFloatToHalf(F32 f)
-{
-   U32 bits;
-   dMemcpy(&bits, &f, sizeof(U32));
-
-   U32 sign = (bits >> 16) & 0x00008000;
-   U32 exp = ((bits >> 23) & 0x000000FF) - (127 - 15);
-   U32 mant = bits & 0x007FFFFF;
-
-   if (exp <= 0)
-   {
-      if (exp < -10)
-         return (U16)sign; // Too small => 0
-      mant = (mant | 0x00800000) >> (1 - exp);
-      return (U16)(sign | (mant >> 13));
-   }
-   else if (exp == 0xFF - (127 - 15))
-   {
-      if (mant == 0)
-      {
-         // Inf
-         return (U16)(sign | 0x7C00);
-      }
-      else
-      {
-         // NaN
-         mant >>= 13;
-         return (U16)(sign | 0x7C00 | mant | (mant == 0));
-      }
-   }
-   else
-   {
-      if (exp > 30)
-      {
-         // Overflow => Inf
-         return (U16)(sign | 0x7C00);
-      }
-      return (U16)(sign | (exp << 10) | (mant >> 13));
-   }
-}
-
 
 GBitmap::GBitmap()
  : mInternalFormat(GFXFormatR8G8B8),
@@ -561,9 +466,18 @@ void GBitmap::extrudeMipLevels(bool clearBorders)
 
       case GFXFormatR8G8B8A8:
       case GFXFormatR8G8B8X8:
+      case GFXFormatB8G8R8A8:
+      case GFXFormatR8G8B8A8_SRGB:
       {
          for(U32 i = 1; i < mNumMipLevels; i++)
             bitmapExtrudeRGBA(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1));
+         break;
+      }
+
+      case GFXFormatR16G16B16A16:
+      {
+         for (U32 i = 1; i < mNumMipLevels; i++)
+            bitmapExtrude16BitRGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1));
          break;
       }
 
@@ -573,8 +487,16 @@ void GBitmap::extrudeMipLevels(bool clearBorders)
             bitmapExtrudeFPRGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1));
          break;
       }
-      
+
+      case GFXFormatR32G32B32A32F:
+      {
+         for (U32 i = 1; i < mNumMipLevels; i++)
+            bitmapExtrudeF32RGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1));
+         break;
+      }
+
       default:
+         Con::warnf("GBitmap::extrudeMipLevels() - Unsupported format %d", getFormat());
          break;
    }
    if (clearBorders)

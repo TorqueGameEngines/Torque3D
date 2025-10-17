@@ -67,7 +67,7 @@ void bitmapExtrude5551_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWi
       {
          U32 a = src[0];
          U32 c = src[stride];
-#if defined(TORQUE_OS_MAC)
+#if defined(TORQUE_BIG_ENDIAN)
             dst[y] = ((( (a >> 10) + (c >> 10)) >> 1) << 10) |
                      ((( ((a >> 5) & 0x1F) + ((c >> 5) & 0x1f)) >> 1) << 5) |
                      ((( ((a >> 0) & 0x1F) + ((c >> 0) & 0x1f)) >> 1) << 0);
@@ -81,151 +81,82 @@ void bitmapExtrude5551_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWi
    }
 }
 
-
 //--------------------------------------------------------------------------
-void bitmapExtrudeRGB_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth)
+
+template <typename T>
+void bitmapExtrudeGeneric(
+   const T* src, T* dst,
+   U32 srcWidth, U32 srcHeight,
+   U32 channels,
+   U32 srcRowStride = 0,  // in elements, 0 = tightly packed
+   U32 dstRowStride = 0)  // in elements, 0 = tightly packed
 {
-   const U8 *src = (const U8 *) srcMip;
-   U8 *dst = (U8 *) mip;
-   U32 stride = srcHeight != 1 ? (srcWidth) * 3 : 0;
+   if (srcRowStride == 0) srcHeight != 1 ? srcRowStride = srcWidth * channels : srcRowStride = 0;
+   U32 dstWidth = srcWidth > 1 ? srcWidth / 2 : 1;
+   U32 dstHeight = srcHeight > 1 ? srcHeight / 2 : 1;
+   if (dstRowStride == 0) dstRowStride = dstWidth * channels;
 
-   U32 width  = srcWidth  >> 1;
-   U32 height = srcHeight >> 1;
-   if (width  == 0) width  = 1;
-   if (height == 0) height = 1;
-
-   if (srcWidth != 1)
+   for (U32 y = 0; y < dstHeight; ++y)
    {
-      for(U32 y = 0; y < height; y++)
+      for (U32 x = 0; x < dstWidth; ++x)
       {
-         for(U32 x = 0; x < width; x++)
+         for (U32 c = 0; c < channels; ++c)
          {
-            *dst++ = (U32(*src) + U32(src[3]) + U32(src[stride]) + U32(src[stride+3]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[3]) + U32(src[stride]) + U32(src[stride+3]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[3]) + U32(src[stride]) + U32(src[stride+3]) + 2) >> 2;
-            src += 4;
-         }
-         src += stride;   // skip
-      }
-   }
-   else
-   {
-      for(U32 y = 0; y < height; y++)
-      {
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src += 4;
+            U32 x0 = x * 2;
+            U32 y0 = y * 2;
+            U32 x1 = (x0 + 1 < srcWidth) ? x0 + 1 : x0;
+            U32 y1 = (y0 + 1 < srcHeight) ? y0 + 1 : y0;
 
-         src += stride;   // skip
+            if constexpr (std::is_floating_point_v<T>)
+            {
+               T sum = 0;
+               sum += src[y0 * srcRowStride + x0 * channels + c];
+               sum += src[y0 * srcRowStride + x1 * channels + c];
+               sum += src[y1 * srcRowStride + x0 * channels + c];
+               sum += src[y1 * srcRowStride + x1 * channels + c];
+
+               dst[y * dstRowStride + x * channels + c] = sum * 0.25f;
+            }
+            else
+            {
+               U32 sum = 0;
+               sum += src[y0 * srcRowStride + x0 * channels + c];
+               sum += src[y0 * srcRowStride + x1 * channels + c];
+               sum += src[y1 * srcRowStride + x0 * channels + c];
+               sum += src[y1 * srcRowStride + x1 * channels + c];
+               dst[y * dstRowStride + x * channels + c] = T((sum + 2) >> 2);
+            }
+         }
       }
    }
 }
 
-//--------------------------------------------------------------------------
-void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth)
-{
-   const U8 *src = (const U8 *) srcMip;
-   U8 *dst = (U8 *) mip;
-   U32 stride = srcHeight != 1 ? (srcWidth) * 4 : 0;
+// 8-bit RGBA
+auto bitmapExtrudeU8_RGBA = [](const void* src, void* dst, U32 h, U32 w) {
+   bitmapExtrudeGeneric((const U8*)src, (U8*)dst, w, h, 4);
+};
 
-   U32 width  = srcWidth  >> 1;
-   U32 height = srcHeight >> 1;
-   if (width  == 0) width  = 1;
-   if (height == 0) height = 1;
+// 16-bit RGBA (U16 / F32 stored as U16)
+auto bitmapExtrudeU16_RGBA = [](const void* src, void* dst, U32 h, U32 w) {
+   bitmapExtrudeGeneric((const U16*)src, (U16*)dst, w, h, 4);
+};
 
-   if (srcWidth != 1)
-   {
-      for(U32 y = 0; y < height; y++)
-      {
-         for(U32 x = 0; x < width; x++)
-         {
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride+4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride+4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride+4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride+4]) + 2) >> 2;
-            src += 5;
-         }
-         src += stride;   // skip
-      }
-   }
-   else
-   {
-      for(U32 y = 0; y < height; y++)
-      {
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src += 5;
+// 32-bit float RGBA
+auto bitmapExtrudeF32_RGBA = [](const void* src, void* dst, U32 h, U32 w) {
+   bitmapExtrudeGeneric((const F32*)src, (F32*)dst, w, h, 4);
+};
 
-         src += stride;   // skip
-      }
-   }
-}
+// RGB U8
+auto bitmapExtrudeU8_RGB = [](const void* src, void* dst, U32 h, U32 w) {
+   bitmapExtrudeGeneric((const U8*)src, (U8*)dst, w, h, 3);
+};
 
-void bitmapExtrudeFPRGBA_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth)
-{
-   const U16 *src = (const U16 *)srcMip;
-   U16 *dst = (U16 *)mip;
-   U32 stride = srcHeight != 1 ? (srcWidth) * 8 : 0;
-
-   U32 width = srcWidth >> 1;
-   U32 height = srcHeight >> 1;
-   if (width == 0) width = 1;
-   if (height == 0) height = 1;
-
-   if (srcWidth != 1)
-   {
-      for (U32 y = 0; y < height; y++)
-      {
-         for (U32 x = 0; x < width; x++)
-         {
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
-            src += 5;
-         }
-         src += stride;   // skip
-      }
-   }
-   else
-   {
-      for (U32 y = 0; y < height; y++)
-      {
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src += 5;
-
-         src += stride;   // skip
-      }
-   }
-}
-
-void (*bitmapExtrude5551)(const void *srcMip, void *mip, U32 height, U32 width) = bitmapExtrude5551_c;
-void (*bitmapExtrudeRGB)(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeRGB_c;
-void (*bitmapExtrudeRGBA)(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeRGBA_c;
-void (*bitmapExtrudeFPRGBA)(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeFPRGBA_c;
-
+void (*bitmapExtrude5551)(const void* srcMip, void* mip, U32 height, U32 width) = bitmapExtrude5551_c;
+void (*bitmapExtrudeRGB)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeU8_RGB;
+void (*bitmapExtrudeRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeU8_RGBA;
+void (*bitmapExtrude16BitRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeU16_RGBA;
+void (*bitmapExtrudeFPRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeU16_RGBA;
+void (*bitmapExtrudeF32RGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeF32_RGBA;
 
 //--------------------------------------------------------------------------
 
@@ -238,7 +169,7 @@ void bitmapConvertRGB_to_1555_c(U8 *src, U32 pixels)
       U32 g = src[1] >> 3;
       U32 b = src[2] >> 3;
 
-#if defined(TORQUE_OS_MAC)
+#if defined(TORQUE_BIG_ENDIAN)
       *dst++ = 0x8000 | (b << 10) | (g << 5) | (r << 0);
 #else
       *dst++ = b | (g << 5) | (r << 10) | 0x8000;
@@ -260,7 +191,7 @@ void bitmapConvertRGB_to_5551_c(U8 *src, U32 pixels)
       U32 g = src[1] >> 3;
       U32 b = src[2] >> 3;
 
-#if defined(TORQUE_OS_MAC)
+#if defined(TORQUE_BIG_ENDIAN)
       *dst++ = (1 << 15) | (b << 10) | (g << 5) | (r << 0);
 #else
       *dst++ = (b << 1) | (g << 6) | (r << 11) | 1;

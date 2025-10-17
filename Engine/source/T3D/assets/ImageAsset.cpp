@@ -759,12 +759,12 @@ void ImageAsset::populateImage(void)
             FileStream* ddsFs;
             if ((ddsFs = FileStream::createAndOpen(mImageFile, Torque::FS::File::Read)) == NULL)
             {
-               Con::errorf("ImageAsset::setImageFile Failed to open ddsfile: %s", mImageFile);
+               Con::errorf("ImageAsset::populateImage Failed to open ddsfile: %s", mImageFile);
             }
 
             if (!tempFile->readHeader(*ddsFs))
             {
-               Con::errorf("ImageAsset::setImageFile Failed to read header of ddsfile: %s", mImageFile);
+               Con::errorf("ImageAsset::populateImage Failed to read header of ddsfile: %s", mImageFile);
             }
             else
             {
@@ -778,13 +778,18 @@ void ImageAsset::populateImage(void)
          }
          else
          {
+            if (dStrEndsWith(mImageFile, ".ies"))
+            {
+               return;
+            }
+
             if (!stbi_info(mImageFile, &mImageWidth, &mImageHeight, &mImageChannels))
             {
                StringTableEntry stbErr = stbi_failure_reason();
                if (stbErr == StringTable->EmptyString())
                   stbErr = "ImageAsset::Unkown Error!";
 
-               Con::errorf("ImageAsset::setImageFile STB Get file info failed: %s", stbErr);
+               Con::errorf("ImageAsset::populateImage STB Get file info failed: %s", stbErr);
             }
          }
 

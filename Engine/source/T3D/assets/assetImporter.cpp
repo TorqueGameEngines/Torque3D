@@ -813,7 +813,7 @@ String AssetImporter::getAssetTypeByFile(Torque::Path filePath)
    if (fileExt == String("dts") && fileName.endsWith("cached"))
       return "";
 
-   if (fileExt == String("png") || fileExt == String("jpg") || fileExt == String("jpeg") || fileExt == String("dds"))
+   if (fileExt == String("png") || fileExt == String("jpg") || fileExt == String("jpeg") || fileExt == String("bmp") || fileExt == String("hdr") || fileExt == String("dds") || fileExt == String("ies"))
       return "ImageAsset";
    else if (fileExt == String("dae") || fileExt == String("fbx") || fileExt == String("blend") || fileExt == String("obj") || fileExt == String("dts") || fileExt == String("gltf") || fileExt == String("glb"))
       return "ShapeAsset";

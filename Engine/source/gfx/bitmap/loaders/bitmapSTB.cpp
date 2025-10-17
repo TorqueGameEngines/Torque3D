@@ -29,6 +29,7 @@
 #include "gfx/bitmap/gBitmap.h"
 #include "gfx/bitmap/imageUtils.h"
 #include "gfx/bitmap/loaders/ies/ies_loader.h"
+#include "platform/profiler.h"
 
 #ifdef __clang__
 #define STBIWDEF static inline
@@ -93,13 +94,24 @@ static struct _privateRegisterSTB
    }
 } sStaticRegisterSTB;
 
+
 bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 {
-   PROFILE_SCOPE(sReadSTB);
-
    S32 x, y, n, channels;
    String ext = path.getExtension();
 
+   PROFILE_START_IF(sReadSTB_,ext, png)
+   else PROFILE_START_IF(sReadSTB_, ext, bmp)
+   else PROFILE_START_IF(sReadSTB_, ext, jpg)
+   else PROFILE_START_IF(sReadSTB_, ext, jpeg)
+   else PROFILE_START_IF(sReadSTB_, ext, psd)
+   else PROFILE_START_IF(sReadSTB_, ext, hdr)
+   else PROFILE_START_IF(sReadSTB_, ext, tga)
+   else PROFILE_START_IF(sReadSTB_, ext, ies)
+   else
+   {
+      PROFILE_START(sReadSTB);
+   }
    // if this is an ies profile we need to create a texture for it.
    if (ext.equal("ies"))
    {
@@ -128,7 +140,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
          dMemcpy(pBase, data, rowBytes);
 
          stbi_image_free(data);
-
+         PROFILE_END();
          return true;
       }
       else
@@ -138,12 +150,14 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
          if (!readIes->open(path.getFullPath(), Torque::FS::File::Read))
          {
             Con::printf("Failed to open IES profile:%s", path.getFullFileName().c_str());
+            PROFILE_END();
             return false;
          }
 
          if (readIes->getStatus() != Stream::Ok)
          {
             Con::printf("Failed to open IES profile:%s", path.getFullFileName().c_str());
+            PROFILE_END();
             return false;
          }
 
@@ -158,6 +172,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
          if (!IESLoader.load(buffer, buffSize, info))
          {
             Con::printf("Failed to load IES profile:%s \n LoaderError: %s", path.getFullFileName().c_str(), info.error().c_str());
+            PROFILE_END();
             return false;
          }
 
@@ -166,6 +181,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
          if (!IESLoader.saveAs1D(info, data, x, channels))
          {
             Con::printf("Failed to create 2d Texture for IES profile:%s", path.getFullFileName().c_str());
+            PROFILE_END();
             return false;
          }
 
@@ -188,6 +204,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 
          sWriteSTB(textureName, bitmap, 10);
 
+         PROFILE_END();
          return true;
       }
 
@@ -236,6 +253,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
 
             stbi_image_free(data);
 
+            PROFILE_END();
             return true;
          }
       }
@@ -262,6 +280,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
       //stbi_image_free(data);
       stbi_image_free(dataChar);
 
+      PROFILE_END();
       return true;
    }
 
@@ -285,6 +304,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
       format = GFXFormatR8G8B8A8;
       break;
    default:
+      PROFILE_END();
       return false;
    }
 
@@ -304,6 +324,7 @@ bool sReadSTB(const Torque::Path& path, GBitmap* bitmap)
    if (channels == 4)
       bitmap->checkForTransparency();
 
+   PROFILE_END();
    return true;
 }
 

@@ -24,9 +24,9 @@ endif()
 
 if(APPLE)
 	if(GIT_CI_BUILD)
-	set(VCPKG_TARGET_TRIPLET "arm64-osx-11-mixed-release" CACHE STRING "")
+	set(VCPKG_TARGET_TRIPLET "arm64-osx-11-release" CACHE STRING "")
 	else()
-	set(VCPKG_TARGET_TRIPLET "arm64-osx-11-mixed" CACHE STRING "")
+	set(VCPKG_TARGET_TRIPLET "arm64-osx-11" CACHE STRING "")
 	endif()
 endif()
 

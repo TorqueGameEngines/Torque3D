@@ -65,7 +65,8 @@ jobs:
                     autoconf-archive \
                     automake \
                     make \
-                    libtool
+                    libtool \
+                    libltdl-dev
 
                 sudo apt-get install -y \
                     python3

@@ -46,14 +46,14 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
    else
    {
 #ifdef TORQUE_DEBUG
-      openal_library = dlopen("@rpath/libopenald.1.23.1.dylib", RTLD_NOW);
+      openal_library = dlopen("@rpath/libopenal.1.24.3.dylib", RTLD_NOW);
       
       if (openal_library == NULL)
       {
          openal_library = dlopen("@rpath/libopenald.1.dylib", RTLD_NOW);
       }
 #else
-      openal_library = dlopen("@rpath/libopenal.1.23.1.dylib", RTLD_NOW);
+      openal_library = dlopen("@rpath/libopenal.1.24.3.dylib", RTLD_NOW);
       
       if (openal_library == NULL)
       {

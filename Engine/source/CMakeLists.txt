@@ -549,8 +549,6 @@ target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
 
 if(APPLE)
   target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_FRAMEWORKS})
-
-
 endif(APPLE)
 
 if(WIN32)
@@ -577,47 +575,3 @@ endif(TORQUE_TESTING)
 
 append_defs()
 
-# Process library binaries - these are coming from modules that are providing links to external, precompiled code that should be included
-# with the executable. This is done because on Windows, the .lib is separate from the .dll so we can't automatically scan for shared
-# objects in our link libraries in that case.
-foreach (LIBRARY_BINARY ${TORQUE_ADDITIONAL_LIBRARY_BINARIES})
-  if (APPLE)
-    # For OSX, we want these binaries to be copied to the Frameworks directory
-    add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD 
-    COMMAND ${CMAKE_COMMAND} -E make_directory  "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks"
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/$(CONFIGURATION)")
-  else()
-    # All other platforms expect the file next to the executable
-    add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}")
-  endif (APPLE)
-endforeach()
-
-# Process link libraries for dynamic links - we do this on OSX/Linux to ensure the binaries end up in the correct App directory
-# as in the root CMake we force everything to be in game. This is necessary because on these platforms these are considered "libraries"
-# and not runtime binaries like we configure in the root CMake. We don't globally set library outputs to avoid outputting eg. a files to
-# our game directory.
-if (UNIX)
-	get_target_property(GAME_LINK_LIBRARIES ${TORQUE_APP_NAME} LINK_LIBRARIES)
-	foreach (GAME_LINK_LIBRARY ${GAME_LINK_LIBRARIES})
-	  # For eg. OSX some links are not valid targets - for example frameworks provided by OS
-	  if (TARGET ${GAME_LINK_LIBRARY})
-		  get_target_property(LINK_LIBRARY_TYPE ${GAME_LINK_LIBRARY} TYPE)
-		  # Only pay attention to shared libraries and make them output to the app resources
-		  if ("${LINK_LIBRARY_TYPE}" STREQUAL "SHARED_LIBRARY")
-        if (APPLE)
-          set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES 
-          XCODE_ATTRIBUTE_SKIP_INSTALL YES
-          )
-          add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD 
-          COMMAND ${CMAKE_COMMAND} -E make_directory  "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks"
-          COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${GAME_LINK_LIBRARY}>" "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/$<TARGET_FILE_NAME:${GAME_LINK_LIBRARY}>"
-          COMMAND ${CMAKE_COMMAND} -E create_symlink "$<TARGET_FILE:${GAME_LINK_LIBRARY}>" "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/$<TARGET_LINKER_FILE_NAME:${GAME_LINK_LIBRARY}>"
-          COMMAND ${CMAKE_COMMAND} -E create_symlink "$<TARGET_FILE:${GAME_LINK_LIBRARY}>" "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/lib$<TARGET_LINKER_FILE_BASE_NAME:${GAME_LINK_LIBRARY}>.1.dylib"
-          )
-        else()
-          set_target_properties(${GAME_LINK_LIBRARY} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${TORQUE_APP_GAME_DIRECTORY}")
-        endif(APPLE)
-		  endif()
-	  endif()
-	endforeach()
-endif (UNIX)

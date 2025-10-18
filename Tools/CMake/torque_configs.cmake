@@ -14,8 +14,10 @@ if(NOT EXISTS "${VCPKG_ROOT}/vcpkg")
 	endif()
 endif()
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
-set(VCPKG_TARGET_TRIPLET "x64-windows-mixed" CACHE STRING "")
-set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/tools/cmake/vcpkg/triplets" CACHE STRING "")
+if(WIN32)
+	set(VCPKG_TARGET_TRIPLET "x64-windows-mixed" CACHE STRING "")
+	set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/tools/cmake/vcpkg/triplets" CACHE STRING "")
+endif()
 
 # All include directories to search. Modules should append to this when they want includes to point
 # into themselves.

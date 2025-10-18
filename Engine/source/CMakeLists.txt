@@ -5,6 +5,42 @@ if (APPLE)
 	enable_language(OBJC)
 endif (APPLE)
 
+# ------------------------------------------------------------------
+# Find all dependencies (using vcpkg's toolchain integration)
+# ------------------------------------------------------------------
+find_package(ZLIB REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(unofficial-pcre REQUIRED)
+find_package(Ogg REQUIRED)
+find_package(Vorbis REQUIRED)
+find_package(FLAC REQUIRED)
+find_package(Opus REQUIRED)
+find_package(unofficial-theora REQUIRED)
+find_package(SndFile REQUIRED)
+find_package(TinyXML2 REQUIRED)
+find_package(assimp REQUIRED)
+find_package(OpenAL CONFIG REQUIRED)
+
+# ------------------------------------------------------------------
+# Collect imported targets into a single variable
+# ------------------------------------------------------------------
+set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES}
+    ZLIB::ZLIB
+    $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+    $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    unofficial::pcre::pcre unofficial::pcre::pcre16 unofficial::pcre::pcre32 unofficial::pcre::pcrecpp
+    Ogg::ogg
+    Vorbis::vorbis
+    Vorbis::vorbisfile
+    FLAC::FLAC
+    Opus::opus
+    unofficial::theora::theora unofficial::theora::theoradec unofficial::theora::theoraenc
+    SndFile::sndfile
+    tinyxml2::tinyxml2
+    assimp::assimp
+    OpenAL::OpenAL
+)
+
 ################# Helper Function Calls ###################
 forwardDef(TORQUE_OPENGL)
 forwardDef(TORQUE_D3D11)
@@ -497,16 +533,16 @@ if(MSVC)
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
-  # Skip if it's a raw library file instead of a target
-  if(TORQUE_LIBRARY MATCHES "\\.(lib|a|so|dylib|dll)$")
-    continue()
-  endif()
-  set_target_properties(${TORQUE_LIBRARY} PROPERTIES
-  FOLDER "Libraries")
-  # remove warnings from 3rd parties.
-  #target_compile_options(${TORQUE_LIBRARY} PRIVATE "-w")
-endforeach()
+# foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
+#   # Skip if it's a raw library file instead of a target
+#   if(TORQUE_LIBRARY MATCHES "\\.(lib|a|so|dylib|dll)$")
+#     continue()
+#   endif()
+#   set_target_properties(${TORQUE_LIBRARY} PROPERTIES
+#   FOLDER "Libraries")
+#   # remove warnings from 3rd parties.
+#   #target_compile_options(${TORQUE_LIBRARY} PRIVATE "-w")
+# endforeach()
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
 target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})

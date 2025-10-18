@@ -37,7 +37,7 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
    else
    {
 #ifdef TORQUE_DEBUG
-      g_hOpenALDLL = LoadLibraryA("openal32d.dll");
+      g_hOpenALDLL = LoadLibraryA("openal32.dll");
 #else
       g_hOpenALDLL = LoadLibraryA("openal32.dll");
 #endif

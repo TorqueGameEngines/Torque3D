@@ -1,5 +1,22 @@
 ################# Initialize Common Variables ###################
 
+set(VCPKG_ROOT "${CMAKE_BINARY_DIR}/vcpkg" CACHE PATH "VCPKG Root")
+if(NOT EXISTS "${VCPKG_ROOT}/vcpkg")
+	message(STATUS "Bootstrapping vcpkg...")
+	execute_process(
+		COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
+		WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+	)
+	if(WIN32)
+		execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat")
+	else()
+		execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.sh")
+	endif()
+endif()
+set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+set(VCPKG_TARGET_TRIPLET "x64-windows-mixed" CACHE STRING "")
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/tools/cmake/vcpkg/triplets" CACHE STRING "")
+
 # All include directories to search. Modules should append to this when they want includes to point
 # into themselves.
 set(TORQUE_INCLUDE_DIRECTORIES "")
@@ -14,8 +31,7 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 							   TORQUE_UNICODE UNICODE _UNICODE)
 
 # All link libraries. Modules should append to this the path to specify additional link libraries (.a, .lib, .dylib, .so)
-set(TORQUE_LINK_LIBRARIES tinyxml2 collada squish opcode assimp FLAC FLAC++ ogg vorbis  
-			vorbisfile vorbisenc opus sndfile SDL2 glad pcre convexMath zlib)
+set(TORQUE_LINK_LIBRARIES collada squish opcode glad convexMath)
 
 if(TORQUE_TESTING)
 set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest gmock)

@@ -20,22 +20,42 @@ if(WIN32)
 	else()
 	set(VCPKG_TARGET_TRIPLET "x64-windows-mixed" CACHE STRING "")
 	endif()
-endif()
 
-if(APPLE)
-	if(GIT_CI_BUILD)
-	set(VCPKG_TARGET_TRIPLET "arm64-osx-11-release" CACHE STRING "")
-	else()
-	set(VCPKG_TARGET_TRIPLET "arm64-osx-11" CACHE STRING "")
-	endif()
-endif()
+else()
 
-if(UNIX AND NOT APPLE)
-	if(GIT_CI_BUILD)
-	set(VCPKG_TARGET_TRIPLET "x64-linux-mixed-release" CACHE STRING "")
-	else()
-	set(VCPKG_TARGET_TRIPLET "x64-linux-mixed" CACHE STRING "")
+	execute_process(
+		COMMAND uname -m
+		OUTPUT_VARIABLE _HOST_ARCH
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+
+	# Determine vcpkg target architecture
+	if(_HOST_ARCH STREQUAL "arm64")
+		if(APPLE)
+			if(GIT_CI_BUILD)
+				set(VCPKG_TARGET_TRIPLET "arm64-osx-11-release" CACHE STRING "")
+			else()
+				set(VCPKG_TARGET_TRIPLET "arm64-osx-11" CACHE STRING "")
+			endif()
+		endif()
+	elseif(_HOST_ARCH STREQUAL "x86_64")
+		if(APPLE)
+			if(GIT_CI_BUILD)
+				set(VCPKG_TARGET_TRIPLET "x64-osx-11-release" CACHE STRING "")
+			else()
+				set(VCPKG_TARGET_TRIPLET "x64-osx-11" CACHE STRING "")
+			endif()
+		endif()
 	endif()
+
+	if(UNIX AND NOT APPLE)
+		if(GIT_CI_BUILD)
+			set(VCPKG_TARGET_TRIPLET "x64-linux-mixed-release" CACHE STRING "")
+		else()
+			set(VCPKG_TARGET_TRIPLET "x64-linux-mixed" CACHE STRING "")
+		endif()
+	endif()
+
 endif()
 
 set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/triplets" CACHE STRING "")

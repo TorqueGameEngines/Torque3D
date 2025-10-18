@@ -70,8 +70,7 @@ jobs:
                 sudo apt-get install -y \
                     python3
                 
-                pip install -y \
-                    jinja2
+                pip install jinja2
                 
 
             - name: Configure, Build & Install

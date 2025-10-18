@@ -4,7 +4,7 @@ execute_process(
     COMMAND ${VCPKG_ROOT}/vcpkg remove --outdated
     RESULT_VARIABLE result
 )
-if(WIN32)
+
 execute_process( 
     COMMAND ${VCPKG_ROOT}/vcpkg install 
     zlib pcre libogg libvorbis libflac opus libtheora libsndfile[core,external-libs] tinyxml2 assimp sdl2 openal-soft
@@ -12,13 +12,7 @@ execute_process(
     --overlay-triplets "${VCPKG_OVERLAY_TRIPLETS}"
     RESULT_VARIABLE result
 )
-else()
-execute_process( 
-    COMMAND ${VCPKG_ROOT}/vcpkg install 
-    zlib pcre libogg libvorbis libflac opus libtheora libsndfile[core,external-libs] tinyxml2 assimp sdl2 openal-soft
-    RESULT_VARIABLE result
-)
-endif()
+
 if(NOT result EQUAL 0)
     message(FATAL_ERROR "Failed to install required libraries with vcpkg")
 endif()

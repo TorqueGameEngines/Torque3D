@@ -56,26 +56,22 @@ jobs:
                 sudo apt-get install -y \
                     build-essential \
                     nasm \
-                    libogg-dev \
-                    libxft-dev \
-                    libx11-dev \
-                    libxxf86vm-dev \
-                    libopenal-dev \
-                    libasound2-dev \
-                    libpipewire-0.3-dev \
-                    portaudio19-dev \
-                    oss4-dev \
-                    libjack-dev \
-                    libpulse-dev \
-                    libdbus-1-dev \
-                    libfreetype6-dev \
-                    libxcursor-dev \
-                    libxinerama-dev \
-                    libxi-dev \
-                    libxrandr-dev \
-                    libxss-dev \
-                    libglu1-mesa-dev \
-                    libgtk-3-dev
+                    git \
+                    curl \
+                    zip \
+                    unzip \
+                    pkgconfig \
+                    autoconf \
+                    autoconf-archive \
+                    automake \
+                    make \
+                    libtool
+
+                sudo apt-get install -y \
+                    python3
+                
+                pip install -y \
+                    jinja2
                 
 
             - name: Configure, Build & Install
@@ -86,20 +82,20 @@ jobs:
                 c-compiler: ${{matrix.config.cc}}
                 cxx-compiler: ${{matrix.config.cxx}}
                 generator: ${{matrix.config.generator}}
-                options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
+                options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} VCPKG_BUILD_TYPE=release TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
                 run-build: true
                 build-args: --config ${{matrix.config.build_type}} --target install
 
             - name: Unit Tests
               run: |
-                cd "${{github.workspace}}/My Projects/Torque3D/game"
+                cd "${{github.workspace}}/My_Projects/Torque3D/game"
                 ./Torque3D runTests.tscript
 
             - name: Test Reporter
               uses: phoenix-actions/test-reporting@v14
               with:
                 name: Linux test results
-                path: "**/My Projects/Torque3D/game/test_detail.xml"
+                path: "**/My_Projects/Torque3D/game/test_detail.xml"
                 reporter: java-junit
                 fail-on-error: false
               if: github.event_name != 'pull_request'

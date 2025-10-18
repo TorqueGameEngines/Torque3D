@@ -56,7 +56,7 @@ jobs:
                 c-compiler: ${{matrix.config.cc}}
                 cxx-compiler: ${{matrix.config.cxx}}
                 generator: ${{matrix.config.generator}}
-                options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} VCPKG_BUILD_TYPE=release TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
+                options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} GIT_CI_BUILD=ON TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
                 run-build: true
                 build-args: --config ${{matrix.config.build_type}} --target install
 

@@ -49,7 +49,7 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE lpOALFnTable
        // If the .1 library is not found, try the normal filename
        if (openal_library == NULL)
        {
-          openal_library = dlopen("libopenald.so", RTLD_NOW);
+          openal_library = dlopen("libopenal.so", RTLD_NOW);
        }
 #else
 		openal_library = dlopen("libopenal.so.1", RTLD_NOW);

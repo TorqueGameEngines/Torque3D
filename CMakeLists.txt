@@ -18,7 +18,7 @@ endif()
 project(${TORQUE_APP_NAME})
 
 # Once an app name is determined, we know what our project pathing structure should look like
-set(TORQUE_APP_ROOT_DIRECTORY "${CMAKE_SOURCE_DIR}/My Projects/${TORQUE_APP_NAME}")
+set(TORQUE_APP_ROOT_DIRECTORY "${CMAKE_SOURCE_DIR}/My_Projects/${TORQUE_APP_NAME}")
 set(TORQUE_APP_GAME_DIRECTORY "${TORQUE_APP_ROOT_DIRECTORY}/game")
 
 #library handling

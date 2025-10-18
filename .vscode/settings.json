@@ -1,0 +1,7 @@
+{
+    "cmake.configureArgs": [
+        "-DTORQUE_APP_NAME=TestProject"
+    ],
+
+    "cmake.buildDirectory": "${workspaceFolder}/My_Projects/cmake"
+}

@@ -16,13 +16,18 @@ endif()
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 if(WIN32)
 	set(VCPKG_TARGET_TRIPLET "x64-windows-mixed" CACHE STRING "")
-	set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/tools/cmake/vcpkg/triplets" CACHE STRING "")
 endif()
 
 if(APPLE)
 	set(VCPKG_TARGET_TRIPLET "arm64-osx-11" CACHE STRING "")
-	set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/tools/cmake/vcpkg/triplets" CACHE STRING "")
 endif()
+
+if(UNIX AND NOT APPLE)
+	set(VCPKG_TARGET_TRIPLET "x64-linux-mixed" CACHE STRING "")
+endif()
+
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/triplets" CACHE STRING "")
+
 # All include directories to search. Modules should append to this when they want includes to point
 # into themselves.
 set(TORQUE_INCLUDE_DIRECTORIES "")

@@ -26,10 +26,6 @@ if(UNIX AND NOT APPLE)
 	set(VCPKG_TARGET_TRIPLET "x64-linux-mixed" CACHE STRING "")
 endif()
 
-if(GIT_CI_BUILD)
-set(VCPKG_BUILD_TYPE release)
-endif()
-
 set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/triplets" CACHE STRING "")
 
 # All include directories to search. Modules should append to this when they want includes to point

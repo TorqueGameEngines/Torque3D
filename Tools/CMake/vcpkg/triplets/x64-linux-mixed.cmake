@@ -10,3 +10,6 @@ endif()
 
 set(VCPKG_CMAKE_SYSTEM_NAME Linux)
 
+if(GIT_CI_BUILD)
+set(VCPKG_BUILD_TYPE release)
+endif()

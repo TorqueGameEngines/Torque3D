@@ -22,23 +22,14 @@ if(WIN32)
 	endif()
 
 else()
-
-	execute_process(
-		COMMAND uname -m
-		OUTPUT_VARIABLE _HOST_ARCH
-		OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
-
-	# Determine vcpkg target architecture
-	if(_HOST_ARCH STREQUAL "arm64")
-		if(APPLE)
+	if(TORQUE_CPU_ARM64)
 			if(GIT_CI_BUILD)
 				set(VCPKG_TARGET_TRIPLET "arm64-osx-11-release" CACHE STRING "")
 			else()
 				set(VCPKG_TARGET_TRIPLET "arm64-osx-11" CACHE STRING "")
 			endif()
 		endif()
-	elseif(_HOST_ARCH STREQUAL "x86_64")
+	elseif(TORQUE_CPU_X64)
 		if(APPLE)
 			if(GIT_CI_BUILD)
 				set(VCPKG_TARGET_TRIPLET "x64-osx-11-release" CACHE STRING "")

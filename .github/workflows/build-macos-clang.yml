@@ -17,10 +17,10 @@ permissions:
   checks: write
 
 jobs:
-    build-linux:
+    build-macos:
         if: github.repository == 'TorqueGameEngines/Torque3D'
         name: ${{matrix.config.name}}
-        runs-on: macos-13
+        runs-on: macos-latest
         strategy:
             fail-fast: false
             matrix:

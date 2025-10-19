@@ -56,9 +56,9 @@ ALboolean LoadOAL10Library(char *szOALFullPathName, LPOPENALFNTABLE oal)
    {
 #if defined(TORQUE_OS_WIN)
       openaAlDll = LOAD_LIBRARY("openal32.dll");
-#elif defined(__linux__)
+#elif defined(TORQUE_OS_LINUX)
       openaAlDll = LOAD_LIBRARY("libopenal.so");
-#eilf defined(__APPLE__)
+#elif defined(TORQUE_OS_MAC)
    openaAlDll = LOAD_LIBRARY("@rpath/libopenal.1.24.3.dylib");
 #endif
    }

@@ -131,8 +131,6 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
 #endif
    attribs[1] = 4;
 
-   printALInfo(NULL);
-
    mDevice = mOpenAL.alcOpenDevice( name );
    U32 err = mOpenAL.alcGetError(mDevice);
    if (err != ALC_NO_ERROR)
@@ -144,6 +142,46 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
 
       if( mContext ) 
          mOpenAL.alcMakeContextCurrent( mContext );
+
+#define LOAD_PROC(x) mOpenAL.x = reinterpret_cast<decltype(mOpenAL.x)>(reinterpret_cast<void*>( mOpenAL.alcGetProcAddress(mDevice, #x)))
+
+      if (mOpenAL.alcIsExtensionPresent(mDevice, "ALC_EXT_EFX"))
+      {
+         LOAD_PROC(alGenFilters);
+         LOAD_PROC(alDeleteFilters);
+         LOAD_PROC(alIsFilter);
+         LOAD_PROC(alFilterf);
+         LOAD_PROC(alFilterfv);
+         LOAD_PROC(alFilteri);
+         LOAD_PROC(alFilteriv);
+         LOAD_PROC(alGetFilterf);
+         LOAD_PROC(alGetFilterfv);
+         LOAD_PROC(alGetFilteri);
+         LOAD_PROC(alGetFilteriv);
+         LOAD_PROC(alGenEffects);
+         LOAD_PROC(alDeleteEffects);
+         LOAD_PROC(alIsEffect);
+         LOAD_PROC(alEffectf);
+         LOAD_PROC(alEffectfv);
+         LOAD_PROC(alEffecti);
+         LOAD_PROC(alEffectiv);
+         LOAD_PROC(alGetEffectf);
+         LOAD_PROC(alGetEffectfv);
+         LOAD_PROC(alGetEffecti);
+         LOAD_PROC(alGetEffectiv);
+         LOAD_PROC(alGenAuxiliaryEffectSlots);
+         LOAD_PROC(alDeleteAuxiliaryEffectSlots);
+         LOAD_PROC(alIsAuxiliaryEffectSlot);
+         LOAD_PROC(alAuxiliaryEffectSlotf);
+         LOAD_PROC(alAuxiliaryEffectSlotfv);
+         LOAD_PROC(alAuxiliaryEffectSloti);
+         LOAD_PROC(alAuxiliaryEffectSlotiv);
+         LOAD_PROC(alGetAuxiliaryEffectSlotf);
+         LOAD_PROC(alGetAuxiliaryEffectSlotfv);
+         LOAD_PROC(alGetAuxiliaryEffectSloti);
+         LOAD_PROC(alGetAuxiliaryEffectSlotiv);
+      }
+#undef LOAD_PROC
 
 #if defined(AL_ALEXT_PROTOTYPES)
        mOpenAL.alcGetIntegerv(mDevice, ALC_MAX_AUXILIARY_SENDS, 1, &iSends);

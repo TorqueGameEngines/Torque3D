@@ -1,7 +1,7 @@
 ################# Initialize Common Variables ###################
 
 set(VCPKG_ROOT "${CMAKE_BINARY_DIR}/vcpkg" CACHE PATH "VCPKG Root")
-if(NOT EXISTS "${VCPKG_ROOT}/vcpkg")
+if(NOT EXISTS "${VCPKG_ROOT}")
 	message(STATUS "Bootstrapping vcpkg...")
 	execute_process(
 		COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"

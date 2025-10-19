@@ -104,17 +104,10 @@ torqueAddSourceDirectories( "T3D" "T3D/AI" "T3D/assets" "T3D/decal" "T3D/example
 # Handle TS
 torqueAddSourceDirectories("ts" "ts/collada" "ts/assimp" "ts/loader" "ts/arch")
 
-# Handle SFX - OpenAL is handled as a module later on
+# Handle SFX - OpenAL as default
 torqueAddSourceDirectories("sfx" "sfx/media" "sfx/null")
 if(TORQUE_SFX_OPENAL AND NOT TORQUE_DEDICATED)
     torqueAddSourceDirectories("sfx/openal")
-    if(WIN32)
-      torqueAddSourceDirectories("sfx/openal/win32")
-    elseif(UNIX AND NOT APPLE)
-        torqueAddSourceDirectories("sfx/openal/linux")
-    elseif(APPLE)
-        torqueAddSourceDirectories("sfx/openal/mac")
-    endif()
 endif()
 # Handle GFX
 torqueAddSourceDirectories("gfx" "gfx/Null" "gfx/test" "gfx/bitmap" "gfx/bitmap/loaders" "gfx/bitmap/loaders/ies"

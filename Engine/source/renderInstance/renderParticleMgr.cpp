@@ -495,7 +495,7 @@ void RenderParticleMgr::renderParticle(ParticleRenderInst* ri, SceneRenderState*
 
    mParticleShaderConsts.mShaderConsts->setSafe( mParticleShaderConsts.mAlphaFactorSC, alphaFactor );
    mParticleShaderConsts.mShaderConsts->setSafe( mParticleShaderConsts.mAlphaScaleSC, alphaScale );
-   mParticleShaderConsts.mShaderConsts->setSafe(mParticleShaderConsts.mGlowSC, ri->glow ? 1 : 0);
+   mParticleShaderConsts.mShaderConsts->setSafe(mParticleShaderConsts.mGlowSC, ri->glow);
    
    mParticleShaderConsts.mShaderConsts->setSafe( mParticleShaderConsts.mFSModelViewProjSC, *ri->modelViewProj  );
    mParticleShaderConsts.mShaderConsts->setSafe( mParticleShaderConsts.mOneOverFarSC, 1.0f / state->getFarPlane() );     

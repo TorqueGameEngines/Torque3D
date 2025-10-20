@@ -19,7 +19,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
 #include "torque.glsl"
 #include "hlslCompat.glsl"
    
@@ -77,7 +76,7 @@ vec4 lmSample( vec3 nrm )
 
 uniform float alphaFactor;
 uniform float alphaScale;
-uniform int glow;
+uniform bool glow;
 
 out vec4 OUT_col;
 
@@ -107,9 +106,10 @@ void main()
    
    // Scale output color by the alpha factor (turn LerpAlpha into pre-multiplied alpha)
    vec3 colorScale = ( alphaFactor < 0.0 ? IN_color.rgb * diffuse.rgb : vec3( alphaFactor > 0.0 ? IN_color.a * diffuse.a * alphaFactor * softBlend : softBlend ) );
-   if (glow >0)
+   if (glow)
    {
-      vec4 glowCol = vec4(pow(max((IN_color * diffuse).rgb*10,0.0),3.54406804435),(IN_color * diffuse).a);
+      vec3 glowCol = (IN_color * diffuse).rgb*10;//pow((IN_color * diffuse).rgb*10,3.54406804435);
+      glowCol*=glowCol*glowCol*0.54406804435;
       colorScale *= glowCol.rgb;
    }
    OUT_col = hdrEncode( vec4( IN_color.rgb * diffuse.rgb * colorScale,

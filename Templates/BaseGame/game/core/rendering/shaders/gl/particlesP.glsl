@@ -77,6 +77,7 @@ vec4 lmSample( vec3 nrm )
 
 uniform float alphaFactor;
 uniform float alphaScale;
+uniform int glow;
 
 out vec4 OUT_col;
 
@@ -106,7 +107,11 @@ void main()
    
    // Scale output color by the alpha factor (turn LerpAlpha into pre-multiplied alpha)
    vec3 colorScale = ( alphaFactor < 0.0 ? IN_color.rgb * diffuse.rgb : vec3( alphaFactor > 0.0 ? IN_color.a * diffuse.a * alphaFactor * softBlend : softBlend ) );
-   
+   if (glow >0)
+   {
+      vec4 glowCol = vec4(pow(max((IN_color * diffuse).rgb*10,0.0),3.54406804435),(IN_color * diffuse).a);
+      colorScale *= glowCol.rgb;
+   }
    OUT_col = hdrEncode( vec4( IN_color.rgb * diffuse.rgb * colorScale,
                   IN_color.a * diffuse.a * softBlend * alphaScale ) );
 }

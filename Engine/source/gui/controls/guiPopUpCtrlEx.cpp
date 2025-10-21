@@ -1651,10 +1651,17 @@ void GuiPopUpMenuCtrlEx::addChildren()
 
 void GuiPopUpMenuCtrlEx::removeChildren()
 {
-   mTl->deleteObject();
-   mSc->deleteObject();
-   mSearchEdit->deleteObject();
-   mBackground->deleteObject();
+   if (mTl && !mTl->isDeleted())
+      mTl->deleteObject();
+
+   if (mSc && !mSc->isDeleted())
+      mSc->deleteObject();
+
+   if (mSearchEdit && !mSearchEdit->isDeleted())
+      mSearchEdit->deleteObject();
+
+   if (mBackground && !mBackground->isDeleted())
+      mBackground->deleteObject();
 }
 
 //------------------------------------------------------------------------------

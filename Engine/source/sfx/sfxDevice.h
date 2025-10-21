@@ -23,21 +23,19 @@
 #ifndef _SFXDEVICE_H_
 #define _SFXDEVICE_H_
 
+#ifndef _SFXPROVIDER_H_
+#include "sfx/sfxProvider.h"
+#endif
 #ifndef _PLATFORM_H_
    #include "platform/platform.h"
 #endif
 #ifndef _TVECTOR_H_
    #include "core/util/tVector.h"
 #endif
-#ifndef _SFXCOMMON_H_
-   #include "sfx/sfxCommon.h"
-#endif
 #ifndef _THREADSAFEREF_H_
    #include "platform/threads/threadSafeRefCount.h"
 #endif
 
-
-class SFXProvider;
 class SFXListener;
 class SFXBuffer;
 class SFXVoice;
@@ -45,8 +43,6 @@ class SFXProfile;
 class SFXDevice;
 class SFXStream;
 class SFXDescription;
-
-
 
 /// Abstract base class for back-end sound API implementations.
 class SFXDevice
@@ -73,13 +69,11 @@ class SFXDevice
       typedef BufferVector::iterator BufferIterator;
       typedef VoiceVector::iterator VoiceIterator;
 
-      SFXDevice( const String& name, SFXProvider* provider, bool useHardware, S32 maxBuffers );
-
       /// The name of this device.
       String mName;
 
       /// The provider which created this device.
-      SFXProvider* mProvider;
+      SFXProvider mProvider;
 
       /// Should the device try to use hardware processing.
       bool mUseHardware;
@@ -125,11 +119,12 @@ class SFXDevice
       void _releaseAllResources();
 
 public:
-
+      SFXDevice();
       virtual ~SFXDevice();
 
       /// Returns the provider which created this device.
-      SFXProvider* getProvider() const { return mProvider; }
+      virtual const SFXProvider& getProvider() { return mProvider; }
+      virtual void setProvider(const SFXProvider& provider) { mProvider = provider; }
 
       /// Is the device set to use hardware processing.
       bool getUseHardware() const { return mUseHardware; }

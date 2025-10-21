@@ -55,8 +55,7 @@ class SFXALBuffer : public SFXBuffer
       Vector< ALuint > mFreeBuffers;
 
       ///
-      SFXALBuffer(   const OPENALFNTABLE &oalft, 
-                     const ThreadSafeRef< SFXStream >& stream,
+      SFXALBuffer(   const ThreadSafeRef< SFXStream >& stream,
                      SFXDescription* description,
                      bool useHardware );
 
@@ -65,9 +64,6 @@ class SFXALBuffer : public SFXBuffer
 
       ///
       bool mUseHardware;
-
-      const OPENALFNTABLE &mOpenAL;
-
       ///
       ALenum _getALFormat() const
       {
@@ -108,8 +104,7 @@ class SFXALBuffer : public SFXBuffer
 
    public:
 
-      static SFXALBuffer* create(   const OPENALFNTABLE &oalft, 
-                                    const ThreadSafeRef< SFXStream >& stream,
+      static SFXALBuffer* create(   const ThreadSafeRef< SFXStream >& stream,
                                     SFXDescription* description,
                                     bool useHardware );
 

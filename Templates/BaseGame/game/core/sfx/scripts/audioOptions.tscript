@@ -6,16 +6,16 @@ new SimGroup(AudioSettingsGroup)
    new SimGroup()
    {
       class = "SubOptionsGroup";
-      displayName = "Audio Devices";
-      
+      displayName = "Audio Settings";
+
       new SimGroup(AudioSettingsProviderGroup)
       { 
-         class = "AudioOptionsSettings";
+         class = "OptionsSettings";
          
          OptionName = "Audio Provider";
          Description = "";
       };
-      
+         
       new SimGroup(AudioSettingsDeviceGroup)
       { 
          class = "AudioOptionsSettings";
@@ -31,43 +31,40 @@ function AudioSettingsGroup::populateSettings(%this)
    AudioSettingsProviderGroup.clear();
    AudioSettingsDeviceGroup.clear();
    
-   %buffer = sfxGetAvailableDevices();
-   %count = getRecordCount( %buffer );
-   
-   for(%i = 0; %i < %count; %i++)
+   %pCount = sfxGetProviderCount();
+   for(%i = 0; %i < %pCount; %i++)
    {
-      %record = getRecord(%buffer, %i);
-      %provider = getField(%record, 0);
-      %device = getField(%record, 1);
-      
-      //When the client is actually running, we don't care about null audo devices
-      if(%provider $= "null")
-         continue;
-         
-      //We can't have duplicate providers, so double check for uniqueness
-      %foundProvider = false;
-      foreach(%registeredProviders in AudioSettingsProviderGroup)
+      %provider = sfxGetProviderType(%i);
+      if(%provider !$= "NullProvider")
       {
-         if(%registeredProviders.displayName $= %provider)
+         //We can't have duplicate providers, so double check for uniqueness
+         %foundProvider = false;
+         foreach(%registeredProviders in AudioSettingsProviderGroup)
          {
-            %foundProvider = true;
-            break;
+            if(%registeredProviders.displayName $= %provider)
+            {
+               %foundProvider = true;
+               break;
+            }
+         }
+         
+         if(!%foundProvider)
+         {
+            //Provider entry
+            %providerEntry = new ArrayObject()
+            {
+               class = "OptionsQualityLevel";
+               displayName = %provider;
+               key["$pref::SFX::provider"] = %provider;
+            };
+            AudioSettingsProviderGroup.add(%providerEntry);
          }
       }
-      
-      if(!%foundProvider)
-      {
-         //Provider entry
-         %providerEntry = new ArrayObject()
-         {
-            class = "OptionsQualityLevel";
-            displayName = %provider;
-            key["$pref::SFX::provider"] = %provider;
-         };
-         
-         AudioSettingsProviderGroup.add(%providerEntry);
-      }
-         
+   }
+
+   for(%i = 0; %i < %pCount; %i++)
+   {
+      %device = sfxGetProviderDevice(%i);
       //Device Entry
       %deviceEntry = new ArrayObject()
       {
@@ -93,10 +90,7 @@ function AudioSettingsDeviceGroup::onApply(%this)
 
 function updateAudioOptionsSettings()
 {
-   if ( !sfxCreateDevice(  $pref::SFX::provider, 
-                           $pref::SFX::device, 
-                           $pref::SFX::useHardware,
-                           -1 ) )                              
+   if ( !sfxCreateDevice() )                              
       error( "Unable to create SFX device: " @ $pref::SFX::provider 
                                              SPC $pref::SFX::device 
                                              SPC $pref::SFX::useHardware );

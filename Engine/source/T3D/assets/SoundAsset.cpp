@@ -398,7 +398,6 @@ U32 SoundAsset::load()
                trackProfile->setDescription(&mProfileDesc);
                trackProfile->setSoundFileName(mSoundPath[i]);
                trackProfile->setPreload(mPreload);
-               trackProfile->getBuffer();
 
                mSFXProfile[i] = *trackProfile;
 
@@ -430,9 +429,6 @@ U32 SoundAsset::load()
             mSFXProfile[0].setDescription(&mProfileDesc);
             mSFXProfile[0].setSoundFileName(mSoundPath[0]);
             mSFXProfile[0].setPreload(mPreload);
-
-            //give it a nudge to preload if required
-            mSFXProfile[0].getBuffer();
          }
 
       }

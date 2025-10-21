@@ -10,7 +10,7 @@ new SimGroup(AudioSettingsGroup)
 
       new SimGroup(AudioSettingsProviderGroup)
       { 
-         class = "OptionsSettings";
+         class = "AudioOptionsSettings";
          
          OptionName = "Audio Provider";
          Description = "";

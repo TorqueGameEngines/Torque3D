@@ -42,6 +42,7 @@ else()
 endif()
 
 set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/triplets" CACHE STRING "")
+set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/ports" CACHE STRING "")
 
 # All include directories to search. Modules should append to this when they want includes to point
 # into themselves.

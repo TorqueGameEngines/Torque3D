@@ -1,0 +1,15 @@
+set(LOCAL_ARCHIVE "${TORQUE_LIB_ROOT_DIRECTORY}/nothings-stb-f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31.tar.gz")
+
+vcpkg_extract_source_archive(
+    SOURCE_PATH
+    ARCHIVE "${LOCAL_ARCHIVE}"
+)
+
+file(GLOB HEADER_FILES "${SOURCE_PATH}/*.h" "${SOURCE_PATH}/stb_vorbis.c")
+file(COPY ${HEADER_FILES} DESTINATION "${CURRENT_PACKAGES_DIR}/include")
+
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/FindStb.cmake" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/vcpkg-cmake-wrapper.cmake" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
+
+vcpkg_install_copyright(FILE_LIST "${SOURCE_PATH}/LICENSE")

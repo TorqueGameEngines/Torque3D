@@ -12,6 +12,7 @@ execute_process(
     zlib pcre libogg libvorbis libflac opus libtheora libsndfile[core,external-libs] tinyxml2 assimp sdl2 openal-soft
     --triplet ${VCPKG_TARGET_TRIPLET}
     --overlay-triplets "${VCPKG_OVERLAY_TRIPLETS}"
+    --overlay-ports "${VCPKG_OVERLAY_PORTS}"
     RESULT_VARIABLE result
 )
 

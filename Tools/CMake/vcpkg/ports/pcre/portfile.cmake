@@ -15,7 +15,6 @@ set(LOCAL_ARCHIVE "$ENV{VCPKG_LIB_SOURCE_ROOT}/pcre-8.45.zip")
 vcpkg_extract_source_archive(
     SOURCE_PATH
     ARCHIVE "${LOCAL_ARCHIVE}"
-    REF ${PCRE_VERSION}
     PATCHES ${PATCHES}
 )
 

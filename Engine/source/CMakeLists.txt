@@ -41,6 +41,12 @@ set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES}
     OpenAL::OpenAL
 )
 
+if (MSVC)
+    add_compile_options(/wd4648 /wd4191)
+else()
+    add_compile_options(-Wno-invalid-offsetof -Wno-return-type-c-linkage)
+endif()
+
 ################# Helper Function Calls ###################
 forwardDef(TORQUE_OPENGL)
 forwardDef(TORQUE_D3D11)

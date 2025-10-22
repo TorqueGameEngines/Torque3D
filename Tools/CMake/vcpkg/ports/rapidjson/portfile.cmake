@@ -1,4 +1,4 @@
-set(LOCAL_ARCHIVE "${TORQUE_LIB_ROOT_DIRECTORY}/Tencent-rapidjson-24b5e7a8b27f42fa16b96fc70aade9106cf7102f-2.tar.gz")
+set(LOCAL_ARCHIVE "$ENV{VCPKG_LIB_SOURCE_ROOT}/Tencent-rapidjson-24b5e7a8b27f42fa16b96fc70aade9106cf7102f-2.tar.gz")
 
 vcpkg_extract_source_archive(
     SOURCE_PATH

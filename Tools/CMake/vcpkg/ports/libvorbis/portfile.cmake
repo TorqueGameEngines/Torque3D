@@ -1,4 +1,4 @@
-set(LOCAL_ARCHIVE "${TORQUE_LIB_ROOT_DIRECTORY}/xiph-vorbis-v1.3.7.tar.gz")
+set(LOCAL_ARCHIVE "$ENV{VCPKG_LIB_SOURCE_ROOT}/xiph-vorbis-v1.3.7.tar.gz")
 
 vcpkg_extract_source_archive(
     SOURCE_PATH

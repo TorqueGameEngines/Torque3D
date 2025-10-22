@@ -1,4 +1,4 @@
-set(LOCAL_ARCHIVE "${TORQUE_LIB_ROOT_DIRECTORY}/kcat-openal-soft-1.24.3.tar.gz")
+set(LOCAL_ARCHIVE "$ENV{VCPKG_LIB_SOURCE_ROOT}/kcat-openal-soft-1.24.3.tar.gz")
 
 vcpkg_extract_source_archive(
     SOURCE_PATH

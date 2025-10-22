@@ -1,4 +1,4 @@
-set(LOCAL_ARCHIVE "${TORQUE_LIB_ROOT_DIRECTORY}/xiph-flac-1.5.0.tar.gz")
+set(LOCAL_ARCHIVE "$ENV{VCPKG_LIB_SOURCE_ROOT}/xiph-flac-1.5.0.tar.gz")
 
 vcpkg_extract_source_archive(
     SOURCE_PATH

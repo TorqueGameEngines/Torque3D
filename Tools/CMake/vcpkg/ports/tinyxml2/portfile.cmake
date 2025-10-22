@@ -1,4 +1,4 @@
-set(LOCAL_ARCHIVE "${TORQUE_LIB_ROOT_DIRECTORY}/leethomason-tinyxml2-11.0.0.tar.gz")
+set(LOCAL_ARCHIVE "$ENV{VCPKG_LIB_SOURCE_ROOT}/leethomason-tinyxml2-11.0.0.tar.gz")
 
 vcpkg_extract_source_archive(
     SOURCE_PATH

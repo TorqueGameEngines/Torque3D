@@ -10,7 +10,7 @@ set(PATCHES
         export-cmake-targets.patch
         pcre-8.4.5_fix_check_function_exists_for_arm-androi_builds.patch)
 
-set(LOCAL_ARCHIVE "${TORQUE_LIB_ROOT_DIRECTORY}/pcre-8.45.zip")
+set(LOCAL_ARCHIVE "$ENV{VCPKG_LIB_SOURCE_ROOT}/pcre-8.45.zip")
 
 vcpkg_extract_source_archive(
     SOURCE_PATH

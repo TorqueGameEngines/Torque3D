@@ -1,4 +1,4 @@
-set(LOCAL_ARCHIVE "${TORQUE_LIB_ROOT_DIRECTORY}/libsndfile-libsndfile-1.2.2.tar.gz")
+set(LOCAL_ARCHIVE "$ENV{VCPKG_LIB_SOURCE_ROOT}/libsndfile-libsndfile-1.2.2.tar.gz")
 
 vcpkg_extract_source_archive(
     SOURCE_PATH

@@ -1,4 +1,4 @@
-set(LOCAL_ARCHIVE "${TORQUE_LIB_ROOT_DIRECTORY}/nothings-stb-f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31.tar.gz")
+set(LOCAL_ARCHIVE "$ENV{VCPKG_LIB_SOURCE_ROOT}/nothings-stb-f75e8d1cad7d90d72ef7a4661f1b994ef78b4e31.tar.gz")
 
 vcpkg_extract_source_archive(
     SOURCE_PATH

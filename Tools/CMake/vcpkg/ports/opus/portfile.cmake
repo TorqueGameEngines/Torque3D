@@ -1,4 +1,4 @@
-set(LOCAL_ARCHIVE "${TORQUE_LIB_ROOT_DIRECTORY}/xiph-opus-v1.5.2.tar.gz")
+set(LOCAL_ARCHIVE "$ENV{VCPKG_LIB_SOURCE_ROOT}/xiph-opus-v1.5.2.tar.gz")
 
 vcpkg_extract_source_archive(
     SOURCE_PATH

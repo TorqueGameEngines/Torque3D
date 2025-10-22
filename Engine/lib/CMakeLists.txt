@@ -2,6 +2,8 @@
 # We also use EXCLUDE_FROM_ALL to ensure we only build and install what we want
 execute_process( 
     COMMAND ${VCPKG_ROOT}/vcpkg remove --outdated
+    --triplet ${VCPKG_TARGET_TRIPLET}
+    --overlay-triplets "${VCPKG_OVERLAY_TRIPLETS}"
     RESULT_VARIABLE result
 )
 

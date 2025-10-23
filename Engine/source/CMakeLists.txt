@@ -20,11 +20,12 @@ find_package(SndFile REQUIRED)
 find_package(TinyXML2 REQUIRED)
 find_package(assimp REQUIRED)
 find_package(OpenAL CONFIG REQUIRED)
+find_package(directx-dxc CONFIG REQUIRED)
 
 # ------------------------------------------------------------------
 # Collect imported targets into a single variable
 # ------------------------------------------------------------------
-set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES}
+set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
     ZLIB::ZLIB
     $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
     $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
@@ -39,6 +40,7 @@ set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES}
     tinyxml2::tinyxml2
     assimp::assimp
     OpenAL::OpenAL
+    Microsoft::DirectXShaderCompiler
 )
 
 if (MSVC)
@@ -449,7 +451,7 @@ if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
   # Build the main engine library
   add_library(TorqueEngine SHARED ${TORQUE_SOURCE_FILES})
   target_compile_definitions(TorqueEngine PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-  target_link_libraries(TorqueEngine ${TORQUE_LINK_LIBRARIES})
+  target_link_libraries(TorqueEngine ${TORQUE_LINK_LIBRARIES} ${TORQUE_LINK_THIRDPARTY})
   target_include_directories(TorqueEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
 
   set(TORQUE_SOURCE_FILES "main/main.cpp")
@@ -532,19 +534,19 @@ if(MSVC)
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-# foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
-#   # Skip if it's a raw library file instead of a target
-#   if(TORQUE_LIBRARY MATCHES "\\.(lib|a|so|dylib|dll)$")
-#     continue()
-#   endif()
-#   set_target_properties(${TORQUE_LIBRARY} PROPERTIES
-#   FOLDER "Libraries")
-#   # remove warnings from 3rd parties.
-#   #target_compile_options(${TORQUE_LIBRARY} PRIVATE "-w")
-# endforeach()
+foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
+  # Skip if it's a raw library file instead of a target
+  if(TORQUE_LIBRARY MATCHES "\\.(lib|a|so|dylib|dll)$")
+    continue()
+  endif()
+  set_target_properties(${TORQUE_LIBRARY} PROPERTIES
+  FOLDER "Libraries")
+  # remove warnings from 3rd parties.
+  #target_compile_options(${TORQUE_LIBRARY} PRIVATE "-w")
+endforeach()
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
+target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES} ${TORQUE_LINK_THIRDPARTY})
 
 if(APPLE)
   target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_FRAMEWORKS})

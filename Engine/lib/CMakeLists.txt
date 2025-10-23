@@ -9,11 +9,20 @@ execute_process(
 
 execute_process( 
     COMMAND ${VCPKG_ROOT}/vcpkg install 
-    zlib pcre libogg libvorbis libflac opus libtheora libsndfile[core,external-libs] tinyxml2 assimp sdl2 openal-soft
+    directx-dxc zlib pcre libogg libvorbis libflac opus libtheora libsndfile[core,external-libs] tinyxml2 assimp sdl2 openal-soft
     --triplet ${VCPKG_TARGET_TRIPLET}
     --overlay-triplets "${VCPKG_OVERLAY_TRIPLETS}"
     --overlay-ports "${VCPKG_OVERLAY_PORTS}"
     --clean-after-build
+    RESULT_VARIABLE result
+)
+
+if(NOT result EQUAL 0)
+    message(FATAL_ERROR "Failed to install required libraries with vcpkg")
+endif()
+
+execute_process( 
+    COMMAND ${VCPKG_ROOT}/vcpkg license-report
     RESULT_VARIABLE result
 )
 

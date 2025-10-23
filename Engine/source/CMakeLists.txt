@@ -39,7 +39,6 @@ set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
     tinyxml2::tinyxml2
     assimp::assimp
     OpenAL::OpenAL
-    Microsoft::DirectXShaderCompiler
 )
 
 if(WIN32)

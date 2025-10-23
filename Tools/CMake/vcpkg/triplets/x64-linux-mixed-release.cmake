@@ -1,6 +1,6 @@
 set(VCPKG_TARGET_ARCHITECTURE x64)
 
-if(${PORT} MATCHES "openal-soft")
+if(${PORT} MATCHES "openal-soft|libsndfile")
 	set(VCPKG_CRT_LINKAGE dynamic)
 	set(VCPKG_LIBRARY_LINKAGE dynamic)
 else()

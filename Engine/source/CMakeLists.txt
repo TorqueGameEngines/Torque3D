@@ -20,7 +20,6 @@ find_package(SndFile REQUIRED)
 find_package(TinyXML2 REQUIRED)
 find_package(assimp REQUIRED)
 find_package(OpenAL CONFIG REQUIRED)
-find_package(directx-dxc CONFIG REQUIRED)
 
 # ------------------------------------------------------------------
 # Collect imported targets into a single variable
@@ -42,6 +41,14 @@ set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
     OpenAL::OpenAL
     Microsoft::DirectXShaderCompiler
 )
+
+if(WIN32)
+find_package(directx-dxc CONFIG REQUIRED)
+
+set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
+    Microsoft::DirectXShaderCompiler
+)
+endif(WIN32)
 
 if (MSVC)
     add_compile_options(/wd4648 /wd4191)

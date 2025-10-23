@@ -33,10 +33,16 @@ endmacro()
 
 function(installTemplate templateName)
   message("Prepare Template(${templateName}) install...")
-  
-  file(COPY "${CMAKE_SOURCE_DIR}/Templates/${templateName}/" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" FILES_MATCHING PATTERN "*.in")
-  file(COPY "${CMAKE_SOURCE_DIR}/Templates/${templateName}/" DESTINATION "${TORQUE_APP_ROOT_DIRECTORY}" FILES_MATCHING PATTERN "*.cmake")
+
+  set(SRC_DIR "${CMAKE_SOURCE_DIR}/Templates/${templateName}")
+  set(DEST_DIR "${TORQUE_APP_ROOT_DIRECTORY}")
+
   add_subdirectory("${CMAKE_SOURCE_DIR}/Templates/${templateName}")
+  # Add a "sync back" target
+  add_custom_target(sync_${templateName}_back
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${DEST_DIR}" "${SRC_DIR}"
+    COMMENT "Syncing modified ${templateName} files back to Templates..."
+  )
 endfunction()
 
 MACRO(SUBDIRLIST result curdir)

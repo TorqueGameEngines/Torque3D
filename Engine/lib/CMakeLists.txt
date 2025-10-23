@@ -13,6 +13,7 @@ execute_process(
     --triplet ${VCPKG_TARGET_TRIPLET}
     --overlay-triplets "${VCPKG_OVERLAY_TRIPLETS}"
     --overlay-ports "${VCPKG_OVERLAY_PORTS}"
+    --clean-after-build
     RESULT_VARIABLE result
 )
 

@@ -92,6 +92,7 @@ protected:
    SFXProfile              mSFXProfile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
 
    SFXDescription          mProfileDesc;
+
    SFXPlayList             mPlaylist;
    // subtitles
    StringTableEntry        mSubtitleString;

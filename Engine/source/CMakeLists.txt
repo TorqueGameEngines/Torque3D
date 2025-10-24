@@ -5,6 +5,19 @@ if (APPLE)
 	enable_language(OBJC)
 endif (APPLE)
 
+set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "${TORQUE_LIB_ROOT_DIRECTORY}/libsndfile/include")
+
+if (WIN32)
+    set(TORQUE_ADDITIONAL_LIBRARY_BINARIES ${TORQUE_ADDITIONAL_LIBRARY_BINARIES} "${TORQUE_LIB_ROOT_DIRECTORY}/precompiled/win/sndfile.dll")
+    set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} "${TORQUE_LIB_ROOT_DIRECTORY}/precompiled/win/sndfile.lib")
+elseif(APPLE)
+    set(TORQUE_ADDITIONAL_LIBRARY_BINARIES ${TORQUE_ADDITIONAL_LIBRARY_BINARIES} "${TORQUE_LIB_ROOT_DIRECTORY}/precompiled/mac/libsndfile.1.0.37.dylib")
+
+elseif(UNIX)
+    set(TORQUE_ADDITIONAL_LIBRARY_BINARIES ${TORQUE_ADDITIONAL_LIBRARY_BINARIES} "${TORQUE_LIB_ROOT_DIRECTORY}/precompiled/linux/libsndfile.so.1.0.37")
+endif()
+
+
 ################# Helper Function Calls ###################
 forwardDef(TORQUE_OPENGL)
 forwardDef(TORQUE_D3D11)
@@ -549,7 +562,10 @@ foreach (LIBRARY_BINARY ${TORQUE_ADDITIONAL_LIBRARY_BINARIES})
     # For OSX, we want these binaries to be copied to the Frameworks directory
     add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD 
     COMMAND ${CMAKE_COMMAND} -E make_directory  "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks"
-    COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/$(CONFIGURATION)")
+          COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${LIBRARY_BINARY}>" "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/$<TARGET_FILE_NAME:${LIBRARY_BINARY}>"
+          COMMAND ${CMAKE_COMMAND} -E create_symlink "$<TARGET_FILE:${LIBRARY_BINARY}>" "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/$<TARGET_LINKER_FILE_NAME:${LIBRARY_BINARY}>"
+          COMMAND ${CMAKE_COMMAND} -E create_symlink "$<TARGET_FILE:${LIBRARY_BINARY}>" "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.app/Contents/Frameworks/lib$<TARGET_LINKER_FILE_BASE_NAME:${LIBRARY_BINARY}>.1.dylib"
+    )
   else()
     # All other platforms expect the file next to the executable
     add_custom_command(TARGET ${TORQUE_APP_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${LIBRARY_BINARY} "${TORQUE_APP_GAME_DIRECTORY}")

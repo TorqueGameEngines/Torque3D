@@ -69,7 +69,9 @@ local.properties
 *.dotCover
 *.dll
 !d3dcompiler_47.dll
+!sndfile.dll
 *.lib
+!sndfile.lib
 *.exp
 *.exe
 

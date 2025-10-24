@@ -29,8 +29,6 @@ SFXNullDevice::SFXNullDevice( SFXProvider* provider,
                               String name, 
                               bool useHardware, 
                               S32 maxBuffers )
-
-   :  SFXDevice( name, provider, useHardware, maxBuffers )
 {
    mMaxBuffers = getMax( maxBuffers, 8 );
 }

@@ -25,10 +25,13 @@ function OptionsMenu::onWake(%this)
    
    %this.populateVideoSettings();
    
+   %this.optsListCount = -1;
    %this.populateAudioSettings();
    
+   %this.optsListCount = -1;
    %this.populateKBMControls();
    
+   %this.optsListCount = -1;
    %this.populateGamepadControls();
    //establish the cached prefs values here
    
@@ -93,7 +96,7 @@ function OptionsMenuList::syncGui(%this)
          %hasLevels = %option.optionsObject.getCount() <= 1;
          
          %optionObject = %option.optionsObject;
-         
+
          //If it's out of range of the options, it's probably a custom value
          if(%option.currentOptionIndex < %optionObject.getCount() && %option.currentOptionIndex >= 0)
          {
@@ -219,6 +222,10 @@ function OptionsMenu::openOptionsCategory(%this, %categoryName)
    else if(%categoryName $= "Audio")
    {
       $MenuList = AudioSettingsList;
+      while($MenuList.getObject($MenuList.listPosition).class !$= "OptionsListEntry" && $MenuList.listPosition < $MenuList.getCount())
+      {
+         $MenuList.listPosition += 1;
+      }
       
       %this.currentCatgeoryIdx = 1;
    }
@@ -409,9 +416,8 @@ function OptionMenuNextSetting(%val)
 {
    if(!%val)
       return;
-      
-   %option = $MenuList.getObject($MenuList.listPosition);
    
+   %option = $MenuList.getObject($MenuList.listPosition);
    if(!isObject(%option) )
       return;
       
@@ -524,24 +530,24 @@ function OptionsMenu::populateVideoSettings(%this)
 function OptionsMenu::populateAudioSettings(%this)
 {
    AudioSettingsList.clear();
-   AudioSettingsGroup.populateSettings(); 
+   AudioSettingsGroup::populateSettings(); 
    
    //Process the lists
-   for(%i=0; %i < AudioSettingsGroup.getCount(); %i++)
+    for(%i=0; %i < AudioSettingsGroup.getCount(); %i++)
    {
       %setting = AudioSettingsGroup.getObject(%i);
       
       if(%setting.class $= "SubOptionsGroup")
       {
          %entry = addOptionGroup(%setting.displayName);
-
+         
          if(isObject(%entry))
             AudioSettingsList.add(%entry);
          
          for(%s=0; %s < %setting.getCount(); %s++)
          {
             %option = %setting.getObject(%s);
-            
+      
             %optionsEntry = addOptionEntry(%option);
 
             if(isObject(%optionsEntry))
@@ -555,7 +561,8 @@ function OptionsMenu::populateAudioSettings(%this)
          if(isObject(%optionsEntry))
             AudioSettingsList.add(%optionsEntry);
       }
-   }
+   }  
+   
    
    AudioSettingsList.add(addOptionGroup("Channel Volume"));
    
@@ -831,7 +838,7 @@ function addOptionEntry(%optionObj)
       %qualityLevelText = %qualityLevel;
       %qualityLevelIndex = %optionObj.getCount();
    }
-   
+
    %optionNameHeight = 20;
    if(%optionObj.Description $= "")
       %optionNameHeight = 40;

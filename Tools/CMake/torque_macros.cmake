@@ -38,11 +38,6 @@ function(installTemplate templateName)
   set(DEST_DIR "${TORQUE_APP_ROOT_DIRECTORY}")
 
   add_subdirectory("${CMAKE_SOURCE_DIR}/Templates/${templateName}")
-  # Add a "sync back" target
-  add_custom_target(sync_${templateName}_back
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${DEST_DIR}" "${SRC_DIR}"
-    COMMENT "Syncing modified ${templateName} files back to Templates..."
-  )
 endfunction()
 
 MACRO(SUBDIRLIST result curdir)

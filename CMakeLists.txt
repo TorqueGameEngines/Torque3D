@@ -67,8 +67,16 @@ endif()
 
 if (NOT TORQUE_INSTALLED_TEMPLATE)
     installTemplate(${TORQUE_TEMPLATE})
-    set(TORQUE_INSTALLED_TEMPLATE TRUE CACHE BOOL "Whether or not the game template is installed. This may be reset to false (or removed) to force a reinstall.")
+    set(TORQUE_INSTALLED_TEMPLATE TRUE CACHE BOOL "Whether or not the game template is installed. This may be reset to false (or removed) to force a reinstall." FORCE)
 endif(NOT TORQUE_INSTALLED_TEMPLATE)
+
+# Add a "sync back" target
+set(SRC_DIR "${CMAKE_SOURCE_DIR}/Templates/${TORQUE_TEMPLATE}")
+set(DEST_DIR "${TORQUE_APP_ROOT_DIRECTORY}")
+add_custom_target(sync_${TORQUE_TEMPLATE}_back
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${DEST_DIR}" "${SRC_DIR}"
+    COMMENT "Syncing modified ${TORQUE_TEMPLATE} files back to Templates..."
+)
 
 # Generate torqueConfig.h in our temp directory
 configure_file("${CMAKE_SOURCE_DIR}/Tools/CMake/torqueConfig.h.in" "${TORQUE_APP_ROOT_DIRECTORY}/source/torqueConfig.h")

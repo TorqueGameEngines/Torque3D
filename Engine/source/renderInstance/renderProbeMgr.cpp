@@ -1028,7 +1028,6 @@ void RenderProbeMgr::testProbeAtlas()
       mProbeAtlas->getColor(++i, 0, tCol);
       check.sh[shID] = unpackF32(tCol);
    }
-   mProbeAtlas->getColor(++i, 0, tCol);
    MatrixF inmat;
    for (U32 x = 0; x < 4; x++)
    {
@@ -1054,9 +1053,6 @@ void RenderProbeMgr::testProbeAtlas()
    Con::warnf("  radius: %f", check.radius);
    Con::warnf("   scale: %f", check.scale);
    Con::warnf("   atten: %f", check.attenuation);
-   inmat.dumpMatrix("inmat");
-   MatrixF groundTruth = MatrixF(Point3F(0, 0, 0), Point3F(5, 5, 0));
-   groundTruth.dumpMatrix("groundTruth");
 }
 
 DefineEngineFunction(bakeProbeAtlas, void, (), ,"")

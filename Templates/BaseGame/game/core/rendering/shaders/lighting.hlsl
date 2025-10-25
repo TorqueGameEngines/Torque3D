@@ -113,27 +113,18 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, 
     }
     
     [unroll]
-    for (int x=0;x<3;x++)
+    for (int x=0;x<4;x++)
     {
         [unroll]
-        for (int y=0;y<3;y++)
+        for (int y=0;y<4;y++)
         {
             entryLoc+=entryStep;
             probeInfo.xform[x][y] = RGBAtoFloat(TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc)));
         }
     }
     
-    float4 coordCol[3];
-    [unroll]
-    for (i=0;i<3;i++)
-    {
-        entryLoc+=entryStep;
-        coordCol[i] = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
-    }
-    probeInfo.offset = RGBAstoCoord(coordCol);
-    
     entryLoc+=entryStep;
-    probeInfo.probeConfigData= TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
+    probeInfo.probeConfigData = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
     return probeInfo;
     
     entryLoc+=entryStep;

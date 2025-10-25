@@ -26,6 +26,9 @@ TORQUE_UNIFORM_SAMPLER2D(WetnessTexture, 6);
 TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 7);
 uniform float4 rtParams7;
 #endif
+
+TORQUE_UNIFORM_SAMPLER2D(probeAtlas, 8);
+
 uniform float accumTime;
 uniform float dampness;
 
@@ -205,10 +208,14 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float3 finalColor = diffuse + specularCol*horizon;
    finalColor *= surface.ao;
    
+   ProbeInfo probeInfo = createProbeinfo(TORQUE_SAMPLER2D_MAKEARG(probeAtlas),0,10);
+   return (probeInfo.ambientCol);
+   
    if(isCapturing == 1) 
       return float4(lerp(finalColor, surface.baseColor.rgb,surface.metalness),0);
    else
    {
       return float4((finalColor*ambientColor), 0);
    }
+   
 }

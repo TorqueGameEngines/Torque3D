@@ -30,6 +30,41 @@ static float M_PI_F       = 3.14159265358979323846f;
 static float M_2PI_F      = 6.28318530717958647692f;
 static float M_1OVER_PI_F  = 0.31830988618f;
 
+float RGBAtoFloat(float4 INrgba)
+{
+    // These constants represent the powers of 2 (2^0, 2^8, 2^16, 2^24)
+    // and are used to reconstruct the 32-bit integer representation of the float.
+    const float4 bitShifts = float4(1.0, 256.0, 65536.0, 16777216.0); 
+
+    // Reconstruct the 32-bit integer value from the RGBA components.
+    // Each channel is effectively a byte, so we multiply by increasing powers of 2.
+    float decodedInt = dot(INrgba * 255.0, bitShifts);
+
+    // Now, cast the reconstructed integer to a float.
+    // This relies on the hardware's interpretation of the bit pattern as a float.
+    return asfloat(asuint(decodedInt)); 
+}
+
+float3 RGBAstoCoord(float4 inCol[3] )
+{
+    return float3(RGBAtoFloat(inCol[0]),RGBAtoFloat(inCol[1]),RGBAtoFloat(inCol[2]));
+}
+
+int RGBAtoInt(float4 INrgba)
+{
+    // These constants represent the powers of 2 (2^0, 2^8, 2^16, 2^24)
+    // and are used to reconstruct the 32-bit integer representation of the float.
+    const float4 bitShifts = float4(1.0, 256.0, 65536.0, 16777216.0); 
+
+    // Reconstruct the 32-bit integer value from the RGBA components.
+    // Each channel is effectively a byte, so we multiply by increasing powers of 2.
+    float decodedInt = dot(INrgba * 255.0, bitShifts);
+
+    // Now, cast the reconstructed integer to an int.
+    // This relies on the hardware's interpretation of the bit pattern as a int.
+    return asuint(decodedInt); 
+}
+
 /// Calculate fog based on a start and end positions in worldSpace.
 float computeSceneFog(  float3 startPos,
                         float3 endPos,

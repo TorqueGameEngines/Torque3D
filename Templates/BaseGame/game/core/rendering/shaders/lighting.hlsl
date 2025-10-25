@@ -86,6 +86,64 @@ inline float3 getDistanceVectorToPlane( float negFarPlaneDotEye, float3 directio
    return direction.xyz * t;
 }
 
+struct ProbeInfo
+{
+   float4 ambientCol;
+   float4 sh[9];
+   float3 worldPos;
+   float3 rot;
+   float3 offset;
+   int flags;
+   float4    probeConfigData;
+};
+
+inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex), int slot, int atlasLen)
+{
+	ProbeInfo probeInfo = (ProbeInfo)0;
+    
+    float slotLoc = slot/atlasLen;
+    float entryLoc = 0;
+    float entryStep = 1/(84/4);
+    probeInfo.ambientCol = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
+    int i;
+    [unroll]
+    for (i=0;i<9;i++)
+    {
+        entryLoc+=entryStep;
+        probeInfo.sh[i] = RGBAtoFloat(TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc)));
+    }
+    
+    float4 coordCol[3];
+    [unroll]
+    for (i=0;i<0;i++)
+    {
+        entryLoc+=entryStep;
+        coordCol[i] = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
+    }
+    probeInfo.worldPos = RGBAstoCoord(coordCol);
+    [unroll]
+    for (i=0;i<0;i++)
+    {
+        entryLoc+=entryStep;
+        coordCol[i] = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
+    }
+    probeInfo.rot = RGBAstoCoord(coordCol);
+    [unroll]
+    for (i=0;i<0;i++)
+    {
+        entryLoc+=entryStep;
+        coordCol[i] = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
+    }
+    probeInfo.offset = RGBAstoCoord(coordCol);
+    
+    entryLoc+=entryStep;
+    probeInfo.flags = RGBAtoInt(TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc)));
+    
+    entryLoc+=entryStep;
+    probeInfo.probeConfigData= TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
+    return probeInfo;
+}
+
 struct Surface
 {
 	float3 P;				// world space position

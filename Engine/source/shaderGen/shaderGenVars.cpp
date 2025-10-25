@@ -93,6 +93,7 @@ const String ShaderGenVars::irradianceCubemapAR("$IrradianceCubemapAR");
 const String ShaderGenVars::probeCount("$inNumProbes");
 
 const String ShaderGenVars::BRDFTextureMap("$BRDFTexture");
+const String ShaderGenVars::ProbeAtlasMap("$probeAtlas");
 const String ShaderGenVars::WetnessTextureMap("$WetnessTexture");
 
 const String ShaderGenVars::maxProbeDrawDistance("$maxProbeDrawDistance");

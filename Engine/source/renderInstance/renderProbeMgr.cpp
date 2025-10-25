@@ -139,6 +139,7 @@ void ProbeShaderConstants::init(GFXShader* shader)
    mProbeCountSC = shader->getShaderConstHandle(ShaderGenVars::probeCount);
 
    mBRDFTextureMap = shader->getShaderConstHandle(ShaderGenVars::BRDFTextureMap);
+   mProbeAtlasMap = shader->getShaderConstHandle(ShaderGenVars::ProbeAtlasMap);
    mWetnessTextureMap = shader->getShaderConstHandle(ShaderGenVars::WetnessTextureMap);
 
    mSkylightCubemapIdxSC = shader->getShaderConstHandle(ShaderGenVars::skylightCubemapIdx);   
@@ -177,7 +178,8 @@ RenderProbeMgr::RenderProbeMgr()
    mSkylightCubemapIdx(-1),
    mSkylightDamp(true),
    mCubeMapCount(0),
-   mUseHDRCaptures(true)
+   mUseHDRCaptures(true),
+   mProbeAtlas(NULL)
 {
    mEffectiveProbeCount = 0;
    mMipCount = 0;
@@ -800,6 +802,11 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData& sgData,
       if (mBRDFTexture.isValid() && probeShaderConsts->mBRDFTextureMap->getSamplerRegister() != -1)
          GFX->setTexture(probeShaderConsts->mBRDFTextureMap->getSamplerRegister(), mBRDFTexture);
 
+
+      if (mBRDFTexture.isValid() && probeShaderConsts->mBRDFTextureMap->getSamplerRegister() != -1)
+         GFX->setTexture(probeShaderConsts->mBRDFTextureMap->getSamplerRegister(), mBRDFTexture);
+
+      
       if (mWetnessTexture.isValid() && probeShaderConsts->mWetnessTextureMap->getSamplerRegister() != -1)
          GFX->setTexture(probeShaderConsts->mWetnessTextureMap->getSamplerRegister(), mWetnessTexture);
 
@@ -894,6 +901,14 @@ void RenderProbeMgr::render( SceneRenderState *state )
    {
       mProbeArrayEffect->setTexture(7, GFXTexHandle(NULL));
    }
+
+   String atlasTexturePath = Con::getVariable("$Probes::AtlasTexture");
+   if (mProbeAtlasTexture.set(atlasTexturePath, &GFXTexturePersistentProfile, "atlasTexture"))
+   {
+      mProbeArrayEffect->setTexture(8, mProbeAtlasTexture);
+      //mProbeArrayEffect->setShaderConst("$numAtlasEntries", (S32)10); //make adaptive
+   }
+
    mProbeArrayEffect->setShaderConst("$numProbes", (S32)mProbeData.effectiveProbeCount);
    mProbeArrayEffect->setShaderConst("$skylightCubemapIdx", (S32)mProbeData.skyLightIdx);
    mProbeArrayEffect->setShaderConst(ShaderGenVars::skylightDamp, mProbeData.skyLightDamp);
@@ -939,7 +954,112 @@ void RenderProbeMgr::render( SceneRenderState *state )
    // Make sure the effect is gonna render.
    getProbeArrayEffect()->setSkip(false);
 }
+#pragma pack(push, 1)
+struct ProbeSerialize
+{
+   U8 ambientCol[4]{255,0,0,255};
+   F32 sh[9];
+   F32 worldPos[3]{ 0, 0, 0 };
+   F32 rot[3]{ 1.0, 0.0, 0.0 };
+   F32 offset[3]{ 0,0,0 };
+   U32 flags = BIT(0); //[0]canDamp
+   U8 type = 0;
+   U8 radius = 5;
+   U8 scale = 10;
+   U8 attenuation = 0;
+};
+#pragma pack(pop)
+void RenderProbeMgr::serializeProbes()
+{
+   U32 probeDataLength = (U32)(sizeof(ProbeSerialize) / 4);
+   U32 count = 10;
+   ProbeSerialize* saveBuffer = (ProbeSerialize*)dMalloc(sizeof(ProbeSerialize) * count);
+   for (U32 i = 0; i < count; i++)
+   {
+      ProbeSerialize pSer;
+      for (U32 SHID = 0; SHID < 9; SHID++)
+      {
+            pSer.sh[SHID]= 0.0f;
+      }
+      pSer.worldPos[0] = 5 + i*10;
+      pSer.worldPos[1] = 5 + i*10;
+      pSer.worldPos[2] = 5 + i*10;
 
+      saveBuffer[i] = pSer; // ensures defaults are applied
+
+   }
+
+   if (mProbeAtlas)
+      delete(mProbeAtlas);
+
+   mProbeAtlas = new GBitmap(probeDataLength, count, (U8*)saveBuffer);
+   mProbeAtlas->writeBitmap("bmp", "probeinfoAtlas.bmp");
+   free(saveBuffer);
+}
+
+F32 RenderProbeMgr::unpackF32(ColorI in)
+{
+   U8 convert[4]{ in.red, in.green, in.blue, in.alpha};
+   F32 out;
+   std::memcpy(&out, &convert, sizeof(F32));
+   return out;
+}
+
+void RenderProbeMgr::testProbeAtlas()
+{
+   if (mProbeAtlas)
+      delete(mProbeAtlas);
+
+   mProbeAtlas = new GBitmap();
+   mProbeAtlas->readBitmap("bmp", "probeinfoAtlas.bmp");
+
+   ProbeSerialize check;
+   ColorI tCol;
+   U32 i = 0;
+   mProbeAtlas->getColor(i, 0, tCol);
+   check.ambientCol[0] = tCol.red;
+   check.ambientCol[1] = tCol.green;
+   check.ambientCol[2] = tCol.blue;
+   check.ambientCol[3] = tCol.alpha;
+   for (U32 shID = 0; shID < 9; shID++)
+   {
+      mProbeAtlas->getColor(++i, 0, tCol);
+      check.sh[shID] = unpackF32(tCol);
+   }
+   mProbeAtlas->getColor(++i, 0, tCol);
+   check.worldPos[0] = unpackF32(tCol);
+   mProbeAtlas->getColor(++i, 0, tCol);
+   check.worldPos[1] = unpackF32(tCol);
+   mProbeAtlas->getColor(++i, 0, tCol);
+   check.worldPos[2] = unpackF32(tCol);
+   mProbeAtlas->getColor(++i, 0, tCol);
+   check.rot[0] = unpackF32(tCol);
+   mProbeAtlas->getColor(++i, 0, tCol);
+   check.rot[1] = unpackF32(tCol);
+   mProbeAtlas->getColor(++i, 0, tCol);
+   check.rot[2] = unpackF32(tCol);
+   mProbeAtlas->getColor(++i, 0, tCol);
+   check.offset[0] = unpackF32(tCol);
+   mProbeAtlas->getColor(++i, 0, tCol);
+   check.offset[1] = unpackF32(tCol);
+   mProbeAtlas->getColor(++i, 0, tCol);
+   check.offset[2] = unpackF32(tCol);
+   Con::warnf(" ambient: %i %i %i %i", check.ambientCol[0], check.ambientCol[1], check.ambientCol[2], check.ambientCol[3]);
+   Con::warnf("      sh: %f %f %f %f", check.sh[0], check.sh[1], check.sh[2], check.sh[3]);
+   Con::warnf("worldPos: %f %f %f", check.worldPos[0], check.worldPos[1], check.worldPos[2]);
+   Con::warnf("     rot: %f %f %f", check.rot[0], check.rot[1], check.rot[2]);
+   Con::warnf("  offset: %f %f %f", check.offset[0], check.offset[1], check.offset[2]);
+}
+
+DefineEngineFunction(bakeProbeAtlas, void, (), ,"")
+{
+   PROBEMGR->serializeProbes();
+}
+
+DefineEngineFunction(testProbeAtlas, void, (), , "")
+{
+   PROBEMGR->testProbeAtlas();
+}
 //=============================================================================
 // Console functions
 //=============================================================================

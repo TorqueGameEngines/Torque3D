@@ -98,9 +98,10 @@ struct ProbeShaderConstants
    GFXShaderConstHandle *mProbeCountSC;
 
    GFXShaderConstHandle *mBRDFTextureMap;
-   GFXShaderConstHandle* mWetnessTextureMap;   
+   GFXShaderConstHandle *mProbeAtlasMap;
+   GFXShaderConstHandle *mWetnessTextureMap;
    GFXShaderConstHandle *mSkylightCubemapIdxSC;
-   GFXShaderConstHandle* mSkylightDampSC;
+   GFXShaderConstHandle *mSkylightDampSC;
 
    GFXShaderConstHandle* mMaxProbeDrawDistanceSC;
 
@@ -279,6 +280,7 @@ private:
    /// The BRDF texture used in PBR math calculations
    /// </summary>
    GFXTexHandle mBRDFTexture;
+   GFXTexHandle mProbeAtlasTexture;
    GFXTexHandle mWetnessTexture;
    
    /// <summary>
@@ -484,6 +486,11 @@ public:
    void render(SceneRenderState * state) override;
 
    void clear() override { mActiveProbes.clear(); Parent::clear(); }
+
+   GBitmap* mProbeAtlas;
+   void serializeProbes();
+   void testProbeAtlas();
+   F32 unpackF32(ColorI in);
 };
 
 RenderProbeMgr* RenderProbeMgr::getProbeManager()

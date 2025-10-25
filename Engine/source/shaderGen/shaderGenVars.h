@@ -104,6 +104,7 @@ struct ShaderGenVars
    const static String probeCount;
 
    const static String BRDFTextureMap;
+   const static String ProbeAtlasMap;
    const static String WetnessTextureMap;   
    const static String maxProbeDrawDistance;
 

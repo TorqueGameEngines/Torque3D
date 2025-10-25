@@ -959,14 +959,12 @@ struct ProbeSerialize
 {
    U8 ambientCol[4]{255,0,0,255};
    F32 sh[9];
-   F32 worldPos[3]{ 0, 0, 0 };
-   F32 rot[3]{ 1.0, 0.0, 0.0 };
-   F32 offset[3]{ 0,0,0 };
-   U32 flags = BIT(0); //[0]canDamp
-   U8 type = 0;
+   F32 xForm[4][4];
+   U8 type = 0;//(U8)(ProbeInfo::Box);
    U8 radius = 5;
    U8 scale = 10;
    U8 attenuation = 0;
+   U32 flags = BIT(0); //[0]canDamp
 };
 #pragma pack(pop)
 void RenderProbeMgr::serializeProbes()
@@ -981,10 +979,14 @@ void RenderProbeMgr::serializeProbes()
       {
             pSer.sh[SHID]= 0.0f;
       }
-      pSer.worldPos[0] = 5 + i*10;
-      pSer.worldPos[1] = 5 + i*10;
-      pSer.worldPos[2] = 5 + i*10;
-
+      MatrixF inmat = MatrixF(Point3F(0,0,0), Point3F(5 + i * 10, 5 + i * 10, 5 + i * 10));
+      for (U32 x = 0; x < 4; x++)
+      {
+         for (U32 y = 0; y < 4; y++)
+         {
+            pSer.xForm[x][y] = inmat(x, y);
+         }
+      }
       saveBuffer[i] = pSer; // ensures defaults are applied
 
    }
@@ -1027,28 +1029,31 @@ void RenderProbeMgr::testProbeAtlas()
       check.sh[shID] = unpackF32(tCol);
    }
    mProbeAtlas->getColor(++i, 0, tCol);
-   check.worldPos[0] = unpackF32(tCol);
+   MatrixF inmat;
+   for (U32 x = 0; x < 4; x++)
+   {
+      for (U32 y = 0; y < 4; y++)
+      {
+         mProbeAtlas->getColor(++i, 0, tCol);
+         check.xForm[x][y] = unpackF32(tCol);
+         inmat(x, y) = check.xForm[x][y];
+      }
+   }
+
    mProbeAtlas->getColor(++i, 0, tCol);
-   check.worldPos[1] = unpackF32(tCol);
-   mProbeAtlas->getColor(++i, 0, tCol);
-   check.worldPos[2] = unpackF32(tCol);
-   mProbeAtlas->getColor(++i, 0, tCol);
-   check.rot[0] = unpackF32(tCol);
-   mProbeAtlas->getColor(++i, 0, tCol);
-   check.rot[1] = unpackF32(tCol);
-   mProbeAtlas->getColor(++i, 0, tCol);
-   check.rot[2] = unpackF32(tCol);
-   mProbeAtlas->getColor(++i, 0, tCol);
-   check.offset[0] = unpackF32(tCol);
-   mProbeAtlas->getColor(++i, 0, tCol);
-   check.offset[1] = unpackF32(tCol);
-   mProbeAtlas->getColor(++i, 0, tCol);
-   check.offset[2] = unpackF32(tCol);
+   check.type = tCol.red;
+   check.radius = tCol.blue;
+   check.scale = tCol.green;
+   check.attenuation = tCol.alpha;
+
    Con::warnf(" ambient: %i %i %i %i", check.ambientCol[0], check.ambientCol[1], check.ambientCol[2], check.ambientCol[3]);
    Con::warnf("      sh: %f %f %f %f", check.sh[0], check.sh[1], check.sh[2], check.sh[3]);
-   Con::warnf("worldPos: %f %f %f", check.worldPos[0], check.worldPos[1], check.worldPos[2]);
-   Con::warnf("     rot: %f %f %f", check.rot[0], check.rot[1], check.rot[2]);
-   Con::warnf("  offset: %f %f %f", check.offset[0], check.offset[1], check.offset[2]);
+   Con::warnf("worldPos: %f %f %f", inmat.getPosition().x, inmat.getPosition().y, inmat.getPosition().z);
+   Con::warnf("rotation: %f %f %f", inmat.getForwardVector().x, inmat.getForwardVector().y, inmat.getForwardVector().z);
+   Con::warnf("    type: %i", check.type);
+   Con::warnf("  radius: %f", check.radius);
+   Con::warnf("   scale: %f", check.scale);
+   Con::warnf("   atten: %f", check.attenuation);
 }
 
 DefineEngineFunction(bakeProbeAtlas, void, (), ,"")

@@ -90,20 +90,19 @@ struct ProbeInfo
 {
    float4 ambientCol;
    float4 sh[9];
-   float3 worldPos;
-   float3 rot;
+   float4x4 xform;
    float3 offset;
    int flags;
    float4    probeConfigData;
 };
 
-inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex), int slot, int atlasLen)
+inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, int slot, int atlasLen)
 {
 	ProbeInfo probeInfo = (ProbeInfo)0;
     
     float slotLoc = slot/atlasLen;
     float entryLoc = 0;
-    float entryStep = 1/(84/4);
+    float entryStep = 1/(112/4);
     probeInfo.ambientCol = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
     int i;
     [unroll]
@@ -113,23 +112,20 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex), int slot, int atlas
         probeInfo.sh[i] = RGBAtoFloat(TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc)));
     }
     
+    [unroll]
+    for (int x=0;x<3;x++)
+    {
+        [unroll]
+        for (int y=0;y<3;y++)
+        {
+            entryLoc+=entryStep;
+            probeInfo.xform[x][y] = RGBAtoFloat(TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc)));
+        }
+    }
+    
     float4 coordCol[3];
     [unroll]
-    for (i=0;i<0;i++)
-    {
-        entryLoc+=entryStep;
-        coordCol[i] = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
-    }
-    probeInfo.worldPos = RGBAstoCoord(coordCol);
-    [unroll]
-    for (i=0;i<0;i++)
-    {
-        entryLoc+=entryStep;
-        coordCol[i] = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
-    }
-    probeInfo.rot = RGBAstoCoord(coordCol);
-    [unroll]
-    for (i=0;i<0;i++)
+    for (i=0;i<3;i++)
     {
         entryLoc+=entryStep;
         coordCol[i] = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
@@ -137,11 +133,12 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex), int slot, int atlas
     probeInfo.offset = RGBAstoCoord(coordCol);
     
     entryLoc+=entryStep;
-    probeInfo.flags = RGBAtoInt(TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc)));
-    
-    entryLoc+=entryStep;
     probeInfo.probeConfigData= TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
     return probeInfo;
+    
+    entryLoc+=entryStep;
+    probeInfo.flags = RGBAtoInt(TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc)));
+    
 }
 
 struct Surface

@@ -979,7 +979,7 @@ void RenderProbeMgr::serializeProbes()
       {
             pSer.sh[SHID]= 0.0f;
       }
-      MatrixF inmat = MatrixF(Point3F(0,0,0), Point3F(5 + i * 10, 5 + i * 10, 5 + i * 10));
+      MatrixF inmat = MatrixF(Point3F(0,0,0), Point3F(5 + i * 10, 5 + i * 10, 0));
       for (U32 x = 0; x < 4; x++)
       {
          for (U32 y = 0; y < 4; y++)
@@ -1054,6 +1054,9 @@ void RenderProbeMgr::testProbeAtlas()
    Con::warnf("  radius: %f", check.radius);
    Con::warnf("   scale: %f", check.scale);
    Con::warnf("   atten: %f", check.attenuation);
+   inmat.dumpMatrix("inmat");
+   MatrixF groundTruth = MatrixF(Point3F(0, 0, 0), Point3F(5, 5, 0));
+   groundTruth.dumpMatrix("groundTruth");
 }
 
 DefineEngineFunction(bakeProbeAtlas, void, (), ,"")

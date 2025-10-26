@@ -89,7 +89,7 @@ inline float3 getDistanceVectorToPlane( float negFarPlaneDotEye, float3 directio
 struct ProbeInfo
 {
    float4 ambientCol;
-   float4 sh[9];
+   float sh[9];
    float4x4 xform;
    float3 offset;
    int flags;
@@ -122,14 +122,13 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, 
             probeInfo.xform[x][y] = RGBAtoFloat(TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc)));
         }
     }
-    
+    //probeInfo.xform[3].xyz = float3(1,1,0);
     entryLoc+=entryStep;
     probeInfo.probeConfigData = TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc));
-    return probeInfo;
     
     entryLoc+=entryStep;
     probeInfo.flags = RGBAtoInt(TORQUE_TEX2D(atlasTex, float2(entryLoc,slotLoc)));
-    
+    return probeInfo;
 }
 
 struct Surface
@@ -453,6 +452,15 @@ float getDistBoxToPoint(float3 pt, float3 extents)
 float defineBoxSpaceInfluence(float3 wsPosition, float4x4 worldToObj, float attenuation)
 {
    float3 surfPosLS = mul(worldToObj, float4(wsPosition, 1.0)).xyz;
+   float baseVal = 0.25;
+   float dist = getDistBoxToPoint(surfPosLS, float3(baseVal, baseVal, baseVal));
+   return saturate(smoothstep(baseVal, (baseVal-attenuation/2), dist));
+}
+
+float defineFauxSpaceInfluence(float3 wsPosition, float4x4 worldMat, float attenuation)
+{
+   float3 surfPosLS = wsPosition-worldMat[3].xyz; 
+   
    float baseVal = 0.25;
    float dist = getDistBoxToPoint(surfPosLS, float3(baseVal, baseVal, baseVal));
    return saturate(smoothstep(baseVal, (baseVal-attenuation/2), dist));

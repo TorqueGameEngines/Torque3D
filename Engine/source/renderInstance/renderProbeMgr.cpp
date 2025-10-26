@@ -979,7 +979,9 @@ void RenderProbeMgr::serializeProbes()
       {
             pSer.sh[SHID]= 0.0f;
       }
-      MatrixF inmat = MatrixF(Point3F(0,0,0), Point3F(5 + i * 10, 5 + i * 10, 0));
+      MatrixF inmat = MatrixF(Point3F(45,0,0), Point3F(5 + i * 10, 5 + i * 10, 0));
+      inmat.scale(10);
+      inmat.inverse();
       for (U32 x = 0; x < 4; x++)
       {
          for (U32 y = 0; y < 4; y++)
@@ -1038,7 +1040,7 @@ void RenderProbeMgr::testProbeAtlas()
          inmat(x, y) = check.xForm[x][y];
       }
    }
-
+   inmat.inverse();
    mProbeAtlas->getColor(++i, 0, tCol);
    check.type = tCol.red;
    check.radius = tCol.blue;

@@ -902,11 +902,13 @@ void RenderProbeMgr::render( SceneRenderState *state )
       mProbeArrayEffect->setTexture(7, GFXTexHandle(NULL));
    }
 
-   String atlasTexturePath = Con::getVariable("$Probes::AtlasTexture");
-   if (mProbeAtlasTexture.set(atlasTexturePath, &GFXTexturePersistentProfile, "atlasTexture"))
+   if (mProbeAtlas)
    {
-      mProbeArrayEffect->setTexture(8, mProbeAtlasTexture);
-      //mProbeArrayEffect->setShaderConst("$numAtlasEntries", (S32)10); //make adaptive
+      if (mProbeAtlasTexture.set(mProbeAtlas, &GFXTexturePersistentProfile, false, "atlasTexture"))
+      {
+         mProbeArrayEffect->setTexture(8, mProbeAtlasTexture);
+         //mProbeArrayEffect->setShaderConst("$numAtlasEntries", (S32)10); //make adaptive
+      }
    }
 
    mProbeArrayEffect->setShaderConst("$numProbes", (S32)mProbeData.effectiveProbeCount);
@@ -1015,7 +1017,8 @@ void RenderProbeMgr::testProbeAtlas()
       delete(mProbeAtlas);
 
    mProbeAtlas = new GBitmap();
-   mProbeAtlas->readBitmap("bmp", "probeinfoAtlas.bmp");
+   String atlasTexturePath = Con::getVariable("$Probes::AtlasTexture");
+   mProbeAtlas->readBitmap("bmp", atlasTexturePath);
 
    ProbeSerialize check;
    ColorI tCol;

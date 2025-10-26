@@ -32,16 +32,22 @@ static float M_1OVER_PI_F  = 0.31830988618f;
 
 float decode32(float4 rgba)
 {
-    float Sign = 1.0 - step(128.0,rgba[0])*2.0;
-    float Exponent = 2.0 * (rgba[0] % 128.0) + step(128.0,rgba[1]) - 127.0; 
-    float Mantissa = (rgba[1] % 128.0)*65536.0 + rgba[2]*256.0 +rgba[3] + float(0x800000);
-    float Result =  Sign * exp2(Exponent) * (Mantissa * exp2(-23.0 )); 
+    float Sign = 1.0 - step(128.0,rgba.a)*2.0;
+    float Exponent = 2.0 * (rgba.a % 128.0) + step(128.0,rgba.b) - 127.0; 
+    float Mantissa = (rgba.b % 128.0)*65536.0 + rgba.g*256.0 +rgba.r + float(0x800000);
+    float Result =  Sign * exp2(Exponent) * (Mantissa * exp2(-23.0 ));
     return Result;
 }
 
 float RGBAtoFloat(uint4 INrgba)
 {
-   int convert = (INrgba.z << 24) | (INrgba.b << 16) | (INrgba.g << 8) | INrgba.r;
+   int convert = (INrgba.a << 24) | (INrgba.b << 16) | (INrgba.g << 8) | INrgba.r;
+   return asfloat(convert); 
+}
+
+float faux5() 
+{
+   int convert = (64 << 24) | (160 << 16) | (0<< 8) | 0;
    return asfloat(convert); 
 }
 

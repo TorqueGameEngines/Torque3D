@@ -1031,11 +1031,15 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
             if (!ret)
             {
-               // This error is usually caused by failing to call Parent::initPersistFields in the class' initPersistFields().
-               Con::warnf(ConsoleLogEntry::General, "%s: Register object failed for object %s of class %s.", getFileLine(ip - 2), currentNewObject->getName(), currentNewObject->getClassName());
+               if (Con::gObjectCopyFailures == -1)
+               {
+                  // This error is usually caused by failing to call Parent::initPersistFields in the class' initPersistFields(), or relying on an undefined yet dependency
+                  Con::warnf(ConsoleLogEntry::General, "%s: Register object failed for object %s of class %s.", getFileLine(ip - 2), currentNewObject->getName(), currentNewObject->getClassName());
+               }
                delete currentNewObject;
                currentNewObject = NULL;
                ip = failJump;
+               ++Con::gObjectCopyFailures;
                break;
             }
          }
@@ -1047,8 +1051,11 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          // If so, preload it.
          if (dataBlock && !dataBlock->preload(true, errorStr))
          {
-            Con::errorf(ConsoleLogEntry::General, "%s: preload failed for %s: %s.", getFileLine(ip - 2),
-               currentNewObject->getName(), errorStr.c_str());
+            if (Con::gObjectCopyFailures == -1)
+            {
+               Con::errorf(ConsoleLogEntry::General, "%s: preload failed for %s: %s.", getFileLine(ip - 2),
+                  currentNewObject->getName(), errorStr.c_str());
+            }
             dataBlock->deleteObject();
             currentNewObject = NULL;
             ip = failJump;

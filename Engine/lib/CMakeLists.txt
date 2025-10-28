@@ -360,8 +360,8 @@ if(NOT Python3_FOUND)
 
     file(GLOB embedded_python_exe "${python_dir}/python*.exe")
     if(embedded_python_exe)
-        set(Python3_EXECUTABLE "${embedded_python_exe}" CACHE FILEPATH "Path to embedded Python" FORCE)
-        message(STATUS "Using embedded Python: ${Python3_EXECUTABLE}")
+        set(Python_EXECUTABLE "${embedded_python_exe}" CACHE FILEPATH "Path to embedded Python" FORCE)
+        message(STATUS "Using embedded Python: ${Python_EXECUTABLE}")
     endif()
 endif()
 

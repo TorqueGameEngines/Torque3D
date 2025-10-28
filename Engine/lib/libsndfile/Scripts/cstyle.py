@@ -31,13 +31,13 @@ class Preprocessor:
 	"""
 	def __init__ (self):
 		self.comment_nest = 0
-		self.leading_space_re = re.compile (r'^(\t+| )')
-		self.trailing_space_re = re.compile (r'(\t+| )$')
-		self.define_hack_re = re.compile (r"(#\s*define\s+[a-zA-Z0-9_]+)\(")
+		self.leading_space_re = re.compile ('^(\t+| )')
+		self.trailing_space_re = re.compile ('(\t+| )$')
+		self.define_hack_re = re.compile ("(#\s*define\s+[a-zA-Z0-9_]+)\(")
 
 	def comment_nesting (self):
 		"""
-		Return the current comment nesting. At the start and end of the file,
+		Return the currect comment nesting. At the start and end of the file,
 		this value should be zero. Inside C comments it should be 1 or
 		(possibly) more.
 		"""
@@ -55,7 +55,7 @@ class Preprocessor:
 
 		# Strip C++ style comments.
 		if self.comment_nest == 0:
-			line = re.sub (r"( |\t*)//.*", '', line)
+			line = re.sub ("( |\t*)//.*", '', line)
 
 		# Strip C style comments.
 		open_comment = line.find ('/*')
@@ -108,51 +108,51 @@ class CStyleChecker:
 		self.error_count = 0
 		self.line_num = 1
 		self.orig_line = ''
-		self.trailing_newline_re = re.compile (r'[\r\n]+$')
-		self.indent_re = re.compile (r"^\s*")
+		self.trailing_newline_re = re.compile ('[\r\n]+$')
+		self.indent_re = re.compile ("^\s*")
 		self.last_line_indent = ""
 		self.last_line_indent_curly = False
 		self.re_checks = \
-			[ ( re.compile (r"  "),		"multiple space instead of tab" )
-			, ( re.compile (r"\t "), 	"space after tab" )
-			, ( re.compile (r"[^ ];"),	"missing space before semi-colon" )
-			, ( re.compile (r"{[^\s}]"),	"missing space after open brace" )
-			, ( re.compile (r"[^{\s]}"),	"missing space before close brace" )
-			, ( re.compile (r"[ \t]+$"),	"contains trailing whitespace" )
+			[ ( re.compile ("  "),		"multiple space instead of tab" )
+			, ( re.compile ("\t "), 	"space after tab" )
+			, ( re.compile ("[^ ];"),	"missing space before semi-colon" )
+			, ( re.compile ("{[^\s}]"),	"missing space after open brace" )
+			, ( re.compile ("[^{\s]}"),	"missing space before close brace" )
+			, ( re.compile ("[ \t]+$"),	"contains trailing whitespace" )
 
-			, ( re.compile (r",[^\s\n]"),		"missing space after comma" )
-			, ( re.compile (r";[^\s]"), 	"missing space after semi-colon" )
-			, ( re.compile (r"=[^\s\"'=]"),		"missing space after assignment" )
+			, ( re.compile (",[^\s\n]"),		"missing space after comma" )
+			, ( re.compile (";[^\s]"), 	"missing space after semi-colon" )
+			, ( re.compile ("=[^\s\"'=]"),		"missing space after assignment" )
 
 			# Open and close parenthesis.
-			, ( re.compile (r"[^\s\(\[\*&']\("),				"missing space before open parenthesis" )
-			, ( re.compile (r"\)(-[^>]|[^,'\s\n\)\]-])"),	"missing space after close parenthesis" )
-			, ( re.compile (r"\s(do|for|if|when)\s.*{$"),	"trailing open parenthesis at end of line" )
-			, ( re.compile (r"\( [^;]"),						"space after open parenthesis" )
-			, ( re.compile (r"[^;] \)"),						"space before close parenthesis" )
+			, ( re.compile ("[^\s\(\[\*&']\("),				"missing space before open parenthesis" )
+			, ( re.compile ("\)(-[^>]|[^,'\s\n\)\]-])"),	"missing space after close parenthesis" )
+			, ( re.compile ("\s(do|for|if|when)\s.*{$"),	"trailing open parenthesis at end of line" )
+			, ( re.compile ("\( [^;]"),						"space after open parenthesis" )
+			, ( re.compile ("[^;] \)"),						"space before close parenthesis" )
 
 			# Open and close square brace.
-			, ( re.compile (r"[^\s\(\]]\["),			"missing space before open square brace" )
-			, ( re.compile (r"\][^,\)\]\[\s\.-]"),	"missing space after close square brace" )
-			, ( re.compile (r"\[ "),					"space after open square brace" )
-			, ( re.compile (r" \]"),					"space before close square brace" )
+			, ( re.compile ("[^\s\(\]]\["),			"missing space before open square brace" )
+			, ( re.compile ("\][^,\)\]\[\s\.-]"),	"missing space after close square brace" )
+			, ( re.compile ("\[ "),					"space after open square brace" )
+			, ( re.compile (" \]"),					"space before close square brace" )
 
 			# Space around operators.
-			, ( re.compile (r"[^\s][\*/%+-][=][^\s]"),		"missing space around opassign" )
-			, ( re.compile (r"[^\s][<>!=^/][=]{1,2}[^\s]"),	"missing space around comparison" )
+			, ( re.compile ("[^\s][\*/%+-][=][^\s]"),		"missing space around opassign" )
+			, ( re.compile ("[^\s][<>!=^/][=]{1,2}[^\s]"),	"missing space around comparison" )
 
 			# Parens around single argument to return.
-			, ( re.compile (r"\s+return\s+\([a-zA-Z0-9_]+\)\s+;"),	"parens around return value" )
+			, ( re.compile ("\s+return\s+\([a-zA-Z0-9_]+\)\s+;"),	"parens around return value" )
 
 			# Parens around single case argument.
-			, ( re.compile (r"\s+case\s+\([a-zA-Z0-9_]+\)\s+:"),	"parens around single case argument" )
+			, ( re.compile ("\s+case\s+\([a-zA-Z0-9_]+\)\s+:"),	"parens around single case argument" )
 
 			# Open curly at end of line.
-			, ( re.compile (r"\)\s*{\s*$"),	"open curly brace at end of line" )
+			, ( re.compile ("\)\s*{\s*$"),	"open curly brace at end of line" )
 
-			# Pre and post increment/decrement.
-			, ( re.compile (r"[^\(\[][+-]{2}[a-zA-Z0-9_]"),       "space after pre increment/decrement" )
-			, ( re.compile (r"[a-zA-Z0-9_][+-]{2}[^\)\,]]"),       "space before post increment/decrement" )
+			# Pre and post increment/decrment.
+			, ( re.compile ("[^\(\[][+-]{2}[a-zA-Z0-9_]"),       "space after pre increment/decrement" )
+			, ( re.compile ("[a-zA-Z0-9_][+-]{2}[^\)\,]]"),       "space before post increment/decrement" )
 			]
 
 	def get_error_count (self):
@@ -207,7 +207,7 @@ class CStyleChecker:
 		"""
 
 		indent = len (self.indent_re.search (line).group ())
-		if re.search (r"^\s+}", line):
+		if re.search ("^\s+}", line):
 			if not self.last_line_indent_curly and indent != self.last_line_indent:
 				None	# self.error ("bad indent on close curly brace")
 			self.last_line_indent_curly = True
@@ -219,8 +219,8 @@ class CStyleChecker:
 			if check_re.search (line):
 				self.error (msg)
 
-		if re.search (r"[a-zA-Z0-9][<>!=^/&\|]{1,2}[a-zA-Z0-9]", line):
-			if not re.search (r".*#include.*[a-zA-Z0-9]/[a-zA-Z]", line):
+		if re.search ("[a-zA-Z0-9][<>!=^/&\|]{1,2}[a-zA-Z0-9]", line):
+			if not re.search (".*#include.*[a-zA-Z0-9]/[a-zA-Z]", line):
 				self.error ("missing space around operator")
 
 		self.last_line_indent = indent

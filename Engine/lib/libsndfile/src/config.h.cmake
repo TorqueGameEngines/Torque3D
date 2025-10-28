@@ -1,6 +1,12 @@
 /* Set to 1 if the compile is GNU GCC. */
 #cmakedefine01 COMPILER_IS_GCC
 
+/* Target processor clips on negative float to int conversion. */
+#cmakedefine01 CPU_CLIPS_NEGATIVE
+
+/* Target processor clips on positive float to int conversion. */
+#cmakedefine01 CPU_CLIPS_POSITIVE
+
 /* Target processor is big endian. */
 #cmakedefine01 CPU_IS_BIG_ENDIAN
 

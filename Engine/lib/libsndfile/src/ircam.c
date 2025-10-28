@@ -171,35 +171,35 @@ ircam_read_header	(SF_PRIVATE *psf)
 	switch (encoding)
 	{	case IRCAM_PCM_16 :
 				psf->bytewidth = 2 ;
-				psf->blockwidth = (sf_count_t) psf->sf.channels * psf->bytewidth ;
+				psf->blockwidth = psf->sf.channels * psf->bytewidth ;
 
 				psf->sf.format = SF_FORMAT_IRCAM | SF_FORMAT_PCM_16 ;
 				break ;
 
 		case IRCAM_PCM_32 :
 				psf->bytewidth = 4 ;
-				psf->blockwidth = (sf_count_t) psf->sf.channels * psf->bytewidth ;
+				psf->blockwidth = psf->sf.channels * psf->bytewidth ;
 
 				psf->sf.format = SF_FORMAT_IRCAM | SF_FORMAT_PCM_32 ;
 				break ;
 
 		case IRCAM_FLOAT :
 				psf->bytewidth = 4 ;
-				psf->blockwidth = (sf_count_t) psf->sf.channels * psf->bytewidth ;
+				psf->blockwidth = psf->sf.channels * psf->bytewidth ;
 
 				psf->sf.format = SF_FORMAT_IRCAM | SF_FORMAT_FLOAT ;
 				break ;
 
 		case IRCAM_ALAW :
 				psf->bytewidth = 1 ;
-				psf->blockwidth = (sf_count_t) psf->sf.channels * psf->bytewidth ;
+				psf->blockwidth = psf->sf.channels * psf->bytewidth ;
 
 				psf->sf.format = SF_FORMAT_IRCAM | SF_FORMAT_ALAW ;
 				break ;
 
 		case IRCAM_ULAW :
 				psf->bytewidth = 1 ;
-				psf->blockwidth = (sf_count_t) psf->sf.channels * psf->bytewidth ;
+				psf->blockwidth = psf->sf.channels * psf->bytewidth ;
 
 				psf->sf.format = SF_FORMAT_IRCAM | SF_FORMAT_ULAW ;
 				break ;

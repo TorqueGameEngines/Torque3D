@@ -714,7 +714,7 @@ instrumet_rw_test (const char *filename)
 	{	inst.basenote = 22 ;
 
 		if (sf_command (sndfile, SFC_SET_INSTRUMENT, &inst, sizeof (inst)) == SF_TRUE)
-			printf ("Success: [%s] updated\n", filename) ;
+			printf ("Sucess: [%s] updated\n", filename) ;
 		else
 			printf ("Error: SFC_SET_INSTRUMENT on [%s] [%s]\n", filename, sf_strerror (sndfile)) ;
 		}
@@ -913,7 +913,7 @@ cue_rw_test (const char *filename)
 	{	cues.cue_points [1].sample_offset = 3 ;
 
 		if (sf_command (sndfile, SFC_SET_CUE, &cues, sizeof (cues)) == SF_TRUE)
-			printf ("Success: [%s] updated\n", filename) ;
+			printf ("Sucess: [%s] updated\n", filename) ;
 		else
 			printf ("Error: SFC_SET_CUE on [%s] [%s]\n", filename, sf_strerror (sndfile)) ;
 		}

@@ -856,7 +856,7 @@ mono_rdwr_[+ (get "type_name") +]_test (const char *filename, int format, int lo
 		create_short_file (filename) ;
 
 		/* Opening a already existing short file (ie invalid header) RDWR is disallowed.
-		** If this returns a valid pointer sf_open() screwed up.
+		** If this returns a valif pointer sf_open() screwed up.
 		*/
 		if ((file = sf_open (filename, SFM_RDWR, &sfinfo)))
 		{	printf ("\n\nLine %d: sf_open should (SFM_RDWR) have failed but didn't.\n", __LINE__) ;

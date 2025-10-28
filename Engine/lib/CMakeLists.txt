@@ -359,7 +359,7 @@ if(NOT Python3_FOUND)
             message(FATAL_ERROR "Failed to extract ${python_zip}")
         endif()
 
-        file(GLOB embedded_python_exe "${python_dir}/python*.exe")
+        file(GLOB embedded_python_exe "${python_dir}/python.exe")
         if(embedded_python_exe)
             set(Python_EXECUTABLE "${embedded_python_exe}" CACHE FILEPATH "Path to embedded Python" FORCE)
             message(STATUS "Using embedded Python: ${Python_EXECUTABLE}")

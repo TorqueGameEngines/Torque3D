@@ -175,7 +175,7 @@ compression_size_test (int format, const char * filename)
 
 int
 main (int argc, char *argv [])
-{	int all_tests = 0 ;
+{	int all_tests = 0, tests = 0 ;
 
 	if (argc != 2)
 	{	printf (
@@ -197,6 +197,7 @@ main (int argc, char *argv [])
 	{	if (HAVE_EXTERNAL_XIPH_LIBS)
 		{	vorbis_test () ;
 			compression_size_test (SF_FORMAT_OGG | SF_FORMAT_VORBIS, "vorbis.oga") ;
+			tests ++ ;
 			}
 		else
 			puts ("    No Ogg Vorbis tests because support was not compiled in.") ;
@@ -205,6 +206,7 @@ main (int argc, char *argv [])
 	if (all_tests || strcmp (argv [1], "flac") == 0)
 	{	if (HAVE_EXTERNAL_XIPH_LIBS)
 		{	compression_size_test (SF_FORMAT_FLAC | SF_FORMAT_PCM_16, "pcm16.flac") ;
+			tests ++ ;
 			}
 		else
 			puts ("    No FLAC tests because support was not compiled in.") ;
@@ -213,6 +215,7 @@ main (int argc, char *argv [])
 	if (all_tests || strcmp (argv [1], "opus") == 0)
 	{	if (HAVE_EXTERNAL_XIPH_LIBS)
 		{	compression_size_test (SF_FORMAT_OGG | SF_FORMAT_OPUS, "opus.opus") ;
+			tests ++ ;
 			}
 		else
 			puts ("    No Opus tests because support was not compiled in.") ;
@@ -221,6 +224,7 @@ main (int argc, char *argv [])
 	if (all_tests || strcmp (argv [1], "mpeg") == 0)
 	{	if (HAVE_MPEG)
 		{	compression_size_test (SF_FORMAT_MPEG | SF_FORMAT_MPEG_LAYER_III, "mpeg.mp3") ;
+			tests ++ ;
 			}
 		else
 			puts ("    No MPEG tests because support was not compiled in.") ;

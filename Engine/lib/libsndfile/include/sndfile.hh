@@ -111,7 +111,6 @@ class SndfileHandle
 		operator bool () const { return (p != SF_NULL) ; }
 
 		bool operator == (const SndfileHandle &rhs) const { return (p == rhs.p) ; }
-		bool operator != (const SndfileHandle &rhs) const { return !(*this == rhs); }
 
 		sf_count_t	frames (void) const		{ return p ? p->sfinfo.frames : 0 ; }
 		int			format (void) const		{ return p ? p->sfinfo.format : 0 ; }

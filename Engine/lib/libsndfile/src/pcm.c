@@ -127,7 +127,7 @@ pcm_init (SF_PRIVATE *psf)
 		return SFE_INTERNAL ;
 		} ;
 
-	psf->blockwidth = (sf_count_t) psf->bytewidth * psf->sf.channels ;
+	psf->blockwidth = psf->bytewidth * psf->sf.channels ;
 
 	if ((SF_CODEC (psf->sf.format)) == SF_FORMAT_PCM_S8)
 		chars = SF_CHARS_SIGNED ;
@@ -1782,20 +1782,20 @@ static void
 f2sc_clip_array (const float *src, signed char *dest, int count, int normalize)
 {	float	normfact, scaled_value ;
 
-	normfact = normalize ? (8.0 * 0x10) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x1000000) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7F))
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	dest [i] = 127 ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x10))
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	dest [i] = -128 ;
 			continue ;
 			} ;
 
-		dest [i] = psf_lrintf (scaled_value) ;
+		dest [i] = psf_lrintf (scaled_value) >> 24 ;
 		} ;
 } /* f2sc_clip_array */
 
@@ -1841,20 +1841,20 @@ static	void
 f2uc_clip_array	(const float *src, unsigned char *dest, int count, int normalize)
 {	float	normfact, scaled_value ;
 
-	normfact = normalize ? (8.0 * 0x10) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x1000000) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7F))
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	dest [i] = 0xFF ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x10))
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	dest [i] = 0 ;
 			continue ;
 			} ;
 
-		dest [i] = psf_lrintf (scaled_value) + 128 ;
+		dest [i] = (psf_lrintf (scaled_value) >> 24) + 128 ;
 		} ;
 } /* f2uc_clip_array */
 
@@ -1907,25 +1907,25 @@ f2bes_clip_array (const float *src, short *dest, int count, int normalize)
 	float			normfact, scaled_value ;
 	int				value ;
 
-	normfact = normalize ? (8.0 * 0x1000) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x10000) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	ucptr = (unsigned char*) &dest [i] ;
 		scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7FFF))
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	ucptr [1] = 0xFF ;
 			ucptr [0] = 0x7F ;
 			continue ;
 		} ;
-		if (scaled_value <= (-8.0 * 0x1000))
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	ucptr [1] = 0x00 ;
 			ucptr [0] = 0x80 ;
 			continue ;
 			} ;
 
 		value = psf_lrintf (scaled_value) ;
-		ucptr [1] = value ;
-		ucptr [0] = value >> 8 ;
+		ucptr [1] = value >> 16 ;
+		ucptr [0] = value >> 24 ;
 		} ;
 } /* f2bes_clip_array */
 
@@ -1978,25 +1978,25 @@ f2les_clip_array (const float *src, short *dest, int count, int normalize)
 	float			normfact, scaled_value ;
 	int				value ;
 
-	normfact = normalize ? (8.0 * 0x1000) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x10000) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	ucptr = (unsigned char*) &dest [i] ;
 		scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7FFF))
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	ucptr [0] = 0xFF ;
 			ucptr [1] = 0x7F ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x1000))
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	ucptr [0] = 0x00 ;
 			ucptr [1] = 0x80 ;
 			continue ;
 			} ;
 
 		value = psf_lrintf (scaled_value) ;
-		ucptr [0] = value ;
-		ucptr [1] = value >> 8 ;
+		ucptr [0] = value >> 16 ;
+		ucptr [1] = value >> 24 ;
 		} ;
 } /* f2les_clip_array */
 
@@ -2047,27 +2047,31 @@ f2let_clip_array (const float *src, tribyte *dest, int count, int normalize)
 {	float	normfact, scaled_value ;
 	int		value ;
 
-	normfact = normalize ? (8.0 * 0x100000) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x100) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7FFFFF))
+#if CPU_CLIPS_POSITIVE == 0
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	dest [i].bytes [0] = 0xFF ;
 			dest [i].bytes [1] = 0xFF ;
 			dest [i].bytes [2] = 0x7F ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x100000))
+#endif
+#if CPU_CLIPS_NEGATIVE == 0
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	dest [i].bytes [0] = 0x00 ;
 			dest [i].bytes [1] = 0x00 ;
 			dest [i].bytes [2] = 0x80 ;
 			continue ;
 		} ;
+#endif
 
 		value = psf_lrintf (scaled_value) ;
-		dest [i].bytes [0] = value ;
-		dest [i].bytes [1] = value >> 8 ;
-		dest [i].bytes [2] = value >> 16 ;
+		dest [i].bytes [0] = value >> 8 ;
+		dest [i].bytes [1] = value >> 16 ;
+		dest [i].bytes [2] = value >> 24 ;
 		} ;
 } /* f2let_clip_array */
 
@@ -2118,27 +2122,31 @@ f2bet_clip_array (const float *src, tribyte *dest, int count, int normalize)
 {	float	normfact, scaled_value ;
 	int		value ;
 
-	normfact = normalize ? (8.0 * 0x100000) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x100) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7FFFFF))
+#if CPU_CLIPS_POSITIVE == 0
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	dest [i].bytes [0] = 0x7F ;
 			dest [i].bytes [1] = 0xFF ;
 			dest [i].bytes [2] = 0xFF ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x100000))
+#endif
+#if CPU_CLIPS_NEGATIVE == 0
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	dest [i].bytes [0] = 0x80 ;
 			dest [i].bytes [1] = 0x00 ;
 			dest [i].bytes [2] = 0x00 ;
 			continue ;
 		} ;
+#endif
 
 		value = psf_lrint (scaled_value) ;
-		dest [i].bytes [0] = value >> 16 ;
-		dest [i].bytes [1] = value >> 8 ;
-		dest [i].bytes [2] = value ;
+		dest [i].bytes [0] = value >> 24 ;
+		dest [i].bytes [1] = value >> 16 ;
+		dest [i].bytes [2] = value >> 8 ;
 		} ;
 } /* f2bet_clip_array */
 
@@ -2198,6 +2206,7 @@ f2bei_clip_array (const float *src, int *dest, int count, int normalize)
 	for (int i = 0 ; i < count ; i++)
 	{	ucptr = (unsigned char*) &dest [i] ;
 		scaled_value = src [i] * normfact ;
+#if CPU_CLIPS_POSITIVE == 0
 		if (scaled_value >= 1.0 * 0x7FFFFFFF)
 		{	ucptr [0] = 0x7F ;
 			ucptr [1] = 0xFF ;
@@ -2205,6 +2214,8 @@ f2bei_clip_array (const float *src, int *dest, int count, int normalize)
 			ucptr [3] = 0xFF ;
 			continue ;
 			} ;
+#endif
+#if CPU_CLIPS_NEGATIVE == 0
 		if (scaled_value <= (-8.0 * 0x10000000))
 		{	ucptr [0] = 0x80 ;
 			ucptr [1] = 0x00 ;
@@ -2212,6 +2223,7 @@ f2bei_clip_array (const float *src, int *dest, int count, int normalize)
 			ucptr [3] = 0x00 ;
 			continue ;
 		} ;
+#endif
 
 		value = psf_lrintf (scaled_value) ;
 		ucptr [0] = value >> 24 ;
@@ -2277,6 +2289,7 @@ f2lei_clip_array (const float *src, int *dest, int count, int normalize)
 	for (int i = 0 ; i < count ; i++)
 	{	ucptr = (unsigned char*) &dest [i] ;
 		scaled_value = src [i] * normfact ;
+#if CPU_CLIPS_POSITIVE == 0
 		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	ucptr [0] = 0xFF ;
 			ucptr [1] = 0xFF ;
@@ -2284,6 +2297,8 @@ f2lei_clip_array (const float *src, int *dest, int count, int normalize)
 			ucptr [3] = 0x7F ;
 			continue ;
 			} ;
+#endif
+#if CPU_CLIPS_NEGATIVE == 0
 		if (scaled_value <= (-8.0 * 0x10000000))
 		{	ucptr [0] = 0x00 ;
 			ucptr [1] = 0x00 ;
@@ -2291,6 +2306,7 @@ f2lei_clip_array (const float *src, int *dest, int count, int normalize)
 			ucptr [3] = 0x80 ;
 			continue ;
 			} ;
+#endif
 
 		value = psf_lrintf (scaled_value) ;
 		ucptr [0] = value ;
@@ -2342,20 +2358,20 @@ static void
 d2sc_clip_array	(const double *src, signed char *dest, int count, int normalize)
 {	double	normfact, scaled_value ;
 
-	normfact = normalize ? (8.0 * 0x10) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x1000000) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7F))
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	dest [i] = 127 ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x10))
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	dest [i] = -128 ;
 			continue ;
 			} ;
 
-		dest [i] = psf_lrintf (scaled_value) ;
+		dest [i] = psf_lrintf (scaled_value) >> 24 ;
 		} ;
 } /* d2sc_clip_array */
 
@@ -2401,20 +2417,20 @@ static	void
 d2uc_clip_array	(const double *src, unsigned char *dest, int count, int normalize)
 {	double	normfact, scaled_value ;
 
-	normfact = normalize ? (8.0 * 0x10) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x1000000) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7F))
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	dest [i] = 255 ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x10))
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	dest [i] = 0 ;
 			continue ;
 			} ;
 
-		dest [i] = psf_lrint (src [i] * normfact) + 128 ;
+		dest [i] = (psf_lrint (src [i] * normfact) >> 24) + 128 ;
 		} ;
 } /* d2uc_clip_array */
 
@@ -2467,25 +2483,25 @@ d2bes_clip_array (const double *src, short *dest, int count, int normalize)
 	double			normfact, scaled_value ;
 	int				value ;
 
-	normfact = normalize ? (8.0 * 0x1000) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x10000) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	ucptr = (unsigned char*) &dest [i] ;
 		scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7FFF))
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	ucptr [1] = 0xFF ;
 			ucptr [0] = 0x7F ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x1000))
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	ucptr [1] = 0x00 ;
 			ucptr [0] = 0x80 ;
 			continue ;
 			} ;
 
 		value = psf_lrint (scaled_value) ;
-		ucptr [1] = value ;
-		ucptr [0] = value >> 8 ;
+		ucptr [1] = value >> 16 ;
+		ucptr [0] = value >> 24 ;
 		} ;
 } /* d2bes_clip_array */
 
@@ -2538,25 +2554,25 @@ d2les_clip_array (const double *src, short *dest, int count, int normalize)
 	int				value ;
 	double			normfact, scaled_value ;
 
-	normfact = normalize ? (8.0 * 0x1000) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x10000) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	ucptr = (unsigned char*) &dest [i] ;
 		scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7FFF))
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	ucptr [0] = 0xFF ;
 			ucptr [1] = 0x7F ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x1000))
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	ucptr [0] = 0x00 ;
 			ucptr [1] = 0x80 ;
 			continue ;
 			} ;
 
 		value = psf_lrint (scaled_value) ;
-		ucptr [0] = value ;
-		ucptr [1] = value >> 8 ;
+		ucptr [0] = value >> 16 ;
+		ucptr [1] = value >> 24 ;
 		} ;
 } /* d2les_clip_array */
 
@@ -2607,27 +2623,31 @@ d2let_clip_array (const double *src, tribyte *dest, int count, int normalize)
 {	int		value ;
 	double	normfact, scaled_value ;
 
-	normfact = normalize ? (8.0 * 0x100000) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x100) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7FFFFF))
+#if CPU_CLIPS_POSITIVE == 0
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	dest [i].bytes [0] = 0xFF ;
 			dest [i].bytes [1] = 0xFF ;
 			dest [i].bytes [2] = 0x7F ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x100000))
+#endif
+#if CPU_CLIPS_NEGATIVE == 0
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	dest [i].bytes [0] = 0x00 ;
 			dest [i].bytes [1] = 0x00 ;
 			dest [i].bytes [2] = 0x80 ;
 			continue ;
 			} ;
+#endif
 
 		value = psf_lrint (scaled_value) ;
-		dest [i].bytes [0] = value ;
-		dest [i].bytes [1] = value >> 8 ;
-		dest [i].bytes [2] = value >> 16 ;
+		dest [i].bytes [0] = value >> 8 ;
+		dest [i].bytes [1] = value >> 16 ;
+		dest [i].bytes [2] = value >> 24 ;
 		} ;
 } /* d2let_clip_array */
 
@@ -2678,27 +2698,31 @@ d2bet_clip_array (const double *src, tribyte *dest, int count, int normalize)
 {	int		value ;
 	double	normfact, scaled_value ;
 
-	normfact = normalize ? (8.0 * 0x100000) : 1.0 ;
+	normfact = normalize ? (8.0 * 0x10000000) : (1.0 * 0x100) ;
 
 	for (int i = 0 ; i < count ; i++)
 	{	scaled_value = src [i] * normfact ;
-		if (scaled_value >= (1.0 * 0x7FFFFF))
+#if CPU_CLIPS_POSITIVE == 0
+		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	dest [i].bytes [2] = 0xFF ;
 			dest [i].bytes [1] = 0xFF ;
 			dest [i].bytes [0] = 0x7F ;
 			continue ;
 			} ;
-		if (scaled_value <= (-8.0 * 0x100000))
+#endif
+#if CPU_CLIPS_NEGATIVE == 0
+		if (scaled_value <= (-8.0 * 0x10000000))
 		{	dest [i].bytes [2] = 0x00 ;
 			dest [i].bytes [1] = 0x00 ;
 			dest [i].bytes [0] = 0x80 ;
 			continue ;
 			} ;
+#endif
 
 		value = psf_lrint (scaled_value) ;
-		dest [i].bytes [2] = value ;
-		dest [i].bytes [1] = value >> 8 ;
-		dest [i].bytes [0] = value >> 16 ;
+		dest [i].bytes [2] = value >> 8 ;
+		dest [i].bytes [1] = value >> 16 ;
+		dest [i].bytes [0] = value >> 24 ;
 		} ;
 } /* d2bet_clip_array */
 
@@ -2758,6 +2782,7 @@ d2bei_clip_array (const double *src, int *dest, int count, int normalize)
 	for (int i = 0 ; i < count ; i++)
 	{	ucptr = (unsigned char*) &dest [i] ;
 		scaled_value = src [i] * normfact ;
+#if CPU_CLIPS_POSITIVE == 0
 		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	ucptr [3] = 0xFF ;
 			ucptr [2] = 0xFF ;
@@ -2765,6 +2790,8 @@ d2bei_clip_array (const double *src, int *dest, int count, int normalize)
 			ucptr [0] = 0x7F ;
 			continue ;
 			} ;
+#endif
+#if CPU_CLIPS_NEGATIVE == 0
 		if (scaled_value <= (-8.0 * 0x10000000))
 		{	ucptr [3] = 0x00 ;
 			ucptr [2] = 0x00 ;
@@ -2772,6 +2799,7 @@ d2bei_clip_array (const double *src, int *dest, int count, int normalize)
 			ucptr [0] = 0x80 ;
 			continue ;
 			} ;
+#endif
 
 		value = psf_lrint (scaled_value) ;
 		ucptr [0] = value >> 24 ;
@@ -2837,6 +2865,7 @@ d2lei_clip_array (const double *src, int *dest, int count, int normalize)
 	for (int i = 0 ; i < count ; i++)
 	{	ucptr = (unsigned char*) &dest [i] ;
 		scaled_value = src [i] * normfact ;
+#if CPU_CLIPS_POSITIVE == 0
 		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	ucptr [0] = 0xFF ;
 			ucptr [1] = 0xFF ;
@@ -2844,6 +2873,8 @@ d2lei_clip_array (const double *src, int *dest, int count, int normalize)
 			ucptr [3] = 0x7F ;
 			continue ;
 			} ;
+#endif
+#if CPU_CLIPS_NEGATIVE == 0
 		if (scaled_value <= (-8.0 * 0x10000000))
 		{	ucptr [0] = 0x00 ;
 			ucptr [1] = 0x00 ;
@@ -2851,6 +2882,7 @@ d2lei_clip_array (const double *src, int *dest, int count, int normalize)
 			ucptr [3] = 0x80 ;
 			continue ;
 			} ;
+#endif
 
 		value = psf_lrint (scaled_value) ;
 		ucptr [0] = value ;

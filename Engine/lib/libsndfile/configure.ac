@@ -141,6 +141,9 @@ AC_DEFINE_UNQUOTED([ENABLE_EXPERIMENTAL_CODE], [${EXPERIMENTAL_CODE}], [Set to 1
 AC_ARG_ENABLE([werror],
 	[AS_HELP_STRING([--enable-werror], [enable -Werror in all Makefiles])])
 
+AC_ARG_ENABLE([cpu-clip],
+	[AS_HELP_STRING([--disable-cpu-clip], [disable tricky cpu specific clipper])])
+
 AC_ARG_ENABLE([bow-docs],
 	[AS_HELP_STRING([--enable-bow-docs], [enable black-on-white html docs])])
 
@@ -149,9 +152,6 @@ AC_ARG_ENABLE([sqlite],
 
 AC_ARG_ENABLE([alsa],
 	[AS_HELP_STRING([--disable-alsa], [disable ALSA support (default=autodetect)])], [], [enable_alsa=auto])
-
-AC_ARG_ENABLE([sndio],
-	[AS_HELP_STRING([--disable-sndio], [disable Sndio support (default=autodetect)])], [], [enable_sndio=auto])
 
 AC_ARG_ENABLE([external-libs],
 	[AS_HELP_STRING([--disable-external-libs], [disable use of FLAC, Ogg and Vorbis [[default=no]]])])
@@ -264,7 +264,7 @@ AC_SEARCH_LIBS([floor], [m], [], [
 AC_CHECK_FUNCS([floor ceil fmod lrint lrintf])
 
 dnl ====================================================================================
-dnl  Check for requirements for building plugins for other languages/environments.
+dnl  Check for requirements for building plugins for other languages/enviroments.
 
 dnl Octave maths environment http://www.octave.org/
 AS_IF([test "x$cross_compiling" = "xno"], [
@@ -345,7 +345,7 @@ AS_IF([test -n "$PKG_CONFIG"], [
 AC_DEFINE_UNQUOTED([HAVE_EXTERNAL_XIPH_LIBS], [$HAVE_EXTERNAL_XIPH_LIBS], [Will be set to 1 if flac, ogg, vorbis, and opus are available.])
 
 dnl ====================================================================================
-dnl  Check for MPEG libraries liblame
+dnl  Check for MPEG libraris liblame
 
 ac_cv_lame="no"
 ac_cv_mpg123="no"
@@ -401,6 +401,22 @@ AS_IF([test "x$enable_sqlite" != "xno"], [
 
 AC_DEFINE_UNQUOTED([HAVE_SQLITE3], [${ac_cv_sqlite3}], [Set to 1 if you have libsqlite3.])
 AM_CONDITIONAL([HAVE_SQLITE3], [test "x$ac_cv_sqlite3" = "x1"])
+
+dnl ====================================================================================
+dnl  Determine if the processor can do clipping on float to int conversions.
+
+AS_IF([test "x$enable_cpu_clip" != "xno"], [
+		MN_C_CLIP_MODE
+	], [
+		AS_ECHO(["checking processor clipping capabilities... disabled"])
+		ac_cv_c_clip_positive=0
+		ac_cv_c_clip_negative=0
+	])
+
+AC_DEFINE_UNQUOTED([CPU_CLIPS_POSITIVE], [${ac_cv_c_clip_positive}],
+	[Host processor clips on positive float to int conversion.])
+AC_DEFINE_UNQUOTED([CPU_CLIPS_NEGATIVE], [${ac_cv_c_clip_negative}],
+	[Host processor clips on negative float to int conversion.])
 
 dnl ====================================================================================
 dnl  Host OS specific stuff.
@@ -474,30 +490,17 @@ AS_IF([test "x$enable_alsa" != "xno"], [
 	])
 
 dnl ====================================================================================
-dnl  Check for Sndio.
+dnl  Check for OpenBSD's sndio.
 
+SNDIO_LIBS=""
 HAVE_SNDIO_H=0
-AS_IF([test "x$alsa_works" != "xyes"], [
-		AS_IF([test "x$enable_sndio" != "xno"], [
-				PKG_CHECK_MODULES([SNDIO], [sndio], [
-						HAVE_SNDIO_H=1
-						ac_cv_sndio="yes"
-					], [
-						ac_cv_sndio="no"
-					])
-		
-				AS_IF([test "x$ac_cv_sndio" = "xno"], [
-						AS_IF([test "x$enable_sndio" = "xyes"], [
-								dnl explicitly passed --enable-sndio, hence error out loud and clearly
-								AC_MSG_ERROR([You explicitly requested sndio support, but sndio could not be found!])
-							], [
-								dnl did not explicitly pass --enable-sndio, relying on default automagic on
-								enable_sndio="no (auto)"
-							])
-					])
+AS_CASE([$host_os],
+	[openbsd*], [
+		AC_CHECK_HEADERS(sndio.h)
+		AS_IF([test "x$ac_cv_header_sndio_h" = "xyes"], [
+				SNDIO_LIBS="-lsndio"
+				HAVE_SNDIO_H=1
 			])
-	], [
-		AC_MSG_WARN([You have requested ALSA already, disable ALSA if you want to use Sndio.])
 	])
 
 AC_DEFINE_UNQUOTED([HAVE_SNDIO_H], [${HAVE_SNDIO_H}], [Set to 1 if <sndio.h> is available.])
@@ -529,7 +532,10 @@ AS_IF([test "x$ac_cv_sizeof_double" != "x8"], [
 		AC_MSG_WARN([[******************************************************************]])
 	])
 
-AM_CONDITIONAL([HAVE_AUTOGEN], [test "x$ac_cv_prog_HAVE_AUTOGEN" = "xyes"])
+AS_IF([test "x$ac_cv_prog_HAVE_AUTOGEN" = "xno"], [
+		AC_MSG_WARN([[Touching files in directory tests/.]])
+		touch tests/*.c tests/*.h
+	])
 
 dnl ====================================================================================
 dnl  Settings for the HTML documentation.
@@ -572,9 +578,17 @@ AS_IF([test "x$enable_werror" = "xyes"], [
 		AC_LANG_POP([C++])
 	])
 
-common_flags="-Wall -Wextra -Wpointer-arith -Wcast-align -Wcast-qual -Wshadow -Wwrite-strings -Wundef -Wuninitialized -Winit-self -Wno-format-truncation"
+common_flags="-Wall -Wextra -Wpointer-arith -Wcast-align -Wcast-qual -Wshadow -Wwrite-strings -Wundef -Wuninitialized -Winit-self"
 common_cflags="${common_flags}"
+dnl Clang doesn't know about -Wno-format-truncation
+dnl and would spew tons of warnings otherwise.
+AS_IF([test "x$ax_cv_c_compiler_vendor" = "xgnu"], [
+		common_cflags+=" -Wno-format-truncation"
+	])
 common_cxxflags="${common_flags}"
+AS_IF([test "x$ax_cv_cxx_compiler_vendor" = "xgnu"], [
+		common_cxxflags+=" -Wno-format-truncation"
+	])
 
 AX_APPEND_COMPILE_FLAGS([${common_cflags} -Wvla -Wbad-function-cast -Wnested-externs -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Waggregate-return], [CFLAGS])
 

@@ -370,7 +370,7 @@ dwvw_decode_load_bits (SF_PRIVATE *psf, DWVW_PRIVATE *pdwvw, int bit_count)
 
 	if (bit_count < 0)
 	{	get_dwm = SF_TRUE ;
-		/* modify bit_count to ensure we have enough bits for finding dwm. */
+		/* modify bit_count to ensure we have enought bits for finding dwm. */
 		bit_count = pdwvw->dwm_maxsize ;
 		} ;
 
@@ -428,7 +428,7 @@ static void
 dwvw_encode_store_bits (SF_PRIVATE *psf, DWVW_PRIVATE *pdwvw, int data, int new_bits)
 {	int 	byte ;
 
-	/* Shift the bits into the reservoir. */
+	/* Shift the bits into the resevoir. */
 	pdwvw->bits = arith_shift_left (pdwvw->bits, new_bits) | (data & (arith_shift_left (1, new_bits) - 1)) ;
 	pdwvw->bit_count += new_bits ;
 

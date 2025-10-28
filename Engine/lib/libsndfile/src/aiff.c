@@ -94,7 +94,7 @@
 #define MAC6_MARKER		(MAKE_MARKER ('M', 'A', 'C', '6'))
 #define ADP4_MARKER		(MAKE_MARKER ('A', 'D', 'P', '4'))
 
-/* Predefined chunk sizes. */
+/* Predfined chunk sizes. */
 #define SIZEOF_AIFF_COMM		18
 #define SIZEOF_AIFC_COMM_MIN	22
 #define SIZEOF_AIFC_COMM		24
@@ -1702,7 +1702,7 @@ static int
 aiff_read_basc_chunk (SF_PRIVATE * psf, int datasize)
 {	const char * type_str ;
 	basc_CHUNK bc ;
-	sf_count_t count ;
+	int count ;
 
 	count = psf_binheader_readf (psf, "E442", &bc.version, &bc.numBeats, &bc.rootNote) ;
 	count += psf_binheader_readf (psf, "E222", &bc.scaleType, &bc.sigNumerator, &bc.sigDenominator) ;

@@ -242,7 +242,7 @@ rf64_read_header (SF_PRIVATE *psf, int *blockalign, int *framesperblock)
 							} ;
 						} ;
 
-					if (psf->filelength - 8 != riff_size)
+					if (psf->filelength != riff_size + 8)
 						psf_log_printf (psf, "  Riff size : %D (should be %D)\n", riff_size, psf->filelength - 8) ;
 					else
 						psf_log_printf (psf, "  Riff size : %D\n", riff_size) ;

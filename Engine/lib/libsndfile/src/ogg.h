@@ -151,7 +151,7 @@ int ogg_stream_unpack_page (SF_PRIVATE *psf, OGG_PRIVATE *odata) ;
 
 /*
 ** Seek within the Ogg virtual bitstream for a page containing target_gp.
-** Performs a bisection search. If not found exactly, the best result is
+** Preforms a bisection search. If not found exactly, the best result is
 ** returned in *best_gp. Found page is loaded into the virtual bitstream,
 ** ready for unpacking. Arguments pcm_start and pcm_end are the highest and
 ** lowest granule positions of the file. begin and end are the file offset

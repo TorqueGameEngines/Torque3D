@@ -18,7 +18,6 @@
 
 #include <config.h>
 
-#include <limits.h>
 #include <stdarg.h>
 #include <string.h>
 #if HAVE_UNISTD_H
@@ -991,7 +990,6 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 	double			*doubleptr ;
 	char			c ;
 	int				byte_count = 0, count = 0 ;
-	int				read_bytes = 0 ;
 
 	if (! format)
 		return psf_ftell (psf) ;
@@ -1000,7 +998,6 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 
 	while ((c = *format++))
 	{
-		read_bytes = 0 ;
 		if (psf->header.indx + 16 >= psf->header.len && psf_bump_header_allocation (psf, 16))
 			break ;
 
@@ -1017,7 +1014,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 					intptr = va_arg (argptr, unsigned int*) ;
 					*intptr = 0 ;
 					ucptr = (unsigned char*) intptr ;
-					read_bytes = header_read (psf, ucptr, sizeof (int)) ;
+					byte_count += header_read (psf, ucptr, sizeof (int)) ;
 					*intptr = GET_MARKER (ucptr) ;
 					break ;
 
@@ -1025,7 +1022,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 					intptr = va_arg (argptr, unsigned int*) ;
 					*intptr = 0 ;
 					ucptr = (unsigned char*) intptr ;
-					read_bytes = header_read (psf, sixteen_bytes, sizeof (sixteen_bytes)) ;
+					byte_count += header_read (psf, sixteen_bytes, sizeof (sixteen_bytes)) ;
 					{	int k ;
 						intdata = 0 ;
 						for (k = 0 ; k < 16 ; k++)
@@ -1037,14 +1034,14 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 			case '1' :
 					charptr = va_arg (argptr, char*) ;
 					*charptr = 0 ;
-					read_bytes = header_read (psf, charptr, sizeof (char)) ;
+					byte_count += header_read (psf, charptr, sizeof (char)) ;
 					break ;
 
 			case '2' : /* 2 byte value with the current endian-ness */
 					shortptr = va_arg (argptr, unsigned short*) ;
 					*shortptr = 0 ;
 					ucptr = (unsigned char*) shortptr ;
-					read_bytes = header_read (psf, ucptr, sizeof (short)) ;
+					byte_count += header_read (psf, ucptr, sizeof (short)) ;
 					if (psf->rwf_endian == SF_ENDIAN_BIG)
 						*shortptr = GET_BE_SHORT (ucptr) ;
 					else
@@ -1054,7 +1051,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 			case '3' : /* 3 byte value with the current endian-ness */
 					intptr = va_arg (argptr, unsigned int*) ;
 					*intptr = 0 ;
-					read_bytes = header_read (psf, sixteen_bytes, 3) ;
+					byte_count += header_read (psf, sixteen_bytes, 3) ;
 					if (psf->rwf_endian == SF_ENDIAN_BIG)
 						*intptr = GET_BE_3BYTE (sixteen_bytes) ;
 					else
@@ -1065,7 +1062,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 					intptr = va_arg (argptr, unsigned int*) ;
 					*intptr = 0 ;
 					ucptr = (unsigned char*) intptr ;
-					read_bytes = header_read (psf, ucptr, sizeof (int)) ;
+					byte_count += header_read (psf, ucptr, sizeof (int)) ;
 					if (psf->rwf_endian == SF_ENDIAN_BIG)
 						*intptr = psf_get_be32 (ucptr, 0) ;
 					else
@@ -1075,7 +1072,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 			case '8' : /* 8 byte value with the current endian-ness */
 					countptr = va_arg (argptr, sf_count_t *) ;
 					*countptr = 0 ;
-					read_bytes = header_read (psf, sixteen_bytes, 8) ;
+					byte_count += header_read (psf, sixteen_bytes, 8) ;
 					if (psf->rwf_endian == SF_ENDIAN_BIG)
 						countdata = psf_get_be64 (sixteen_bytes, 0) ;
 					else
@@ -1086,7 +1083,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 			case 'f' : /* Float conversion */
 					floatptr = va_arg (argptr, float *) ;
 					*floatptr = 0.0 ;
-					read_bytes = header_read (psf, floatptr, sizeof (float)) ;
+					byte_count += header_read (psf, floatptr, sizeof (float)) ;
 					if (psf->rwf_endian == SF_ENDIAN_BIG)
 						*floatptr = float32_be_read ((unsigned char*) floatptr) ;
 					else
@@ -1096,7 +1093,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 			case 'd' : /* double conversion */
 					doubleptr = va_arg (argptr, double *) ;
 					*doubleptr = 0.0 ;
-					read_bytes = header_read (psf, doubleptr, sizeof (double)) ;
+					byte_count += header_read (psf, doubleptr, sizeof (double)) ;
 					if (psf->rwf_endian == SF_ENDIAN_BIG)
 						*doubleptr = double64_be_read ((unsigned char*) doubleptr) ;
 					else
@@ -1120,7 +1117,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 					charptr = va_arg (argptr, char*) ;
 					count = va_arg (argptr, size_t) ;
 					memset (charptr, 0, count) ;
-					read_bytes = header_read (psf, charptr, count) ;
+					byte_count += header_read (psf, charptr, count) ;
 					break ;
 
 			case 'G' :
@@ -1131,7 +1128,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 					if (psf->header.indx + count >= psf->header.len && psf_bump_header_allocation (psf, count))
 						break ;
 
-					read_bytes = header_gets (psf, charptr, count) ;
+					byte_count += header_gets (psf, charptr, count) ;
 					break ;
 
 			case 'z' :
@@ -1155,7 +1152,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 			case 'j' :	/* Seek to position from current position. */
 					count = va_arg (argptr, size_t) ;
 					header_seek (psf, count, SEEK_CUR) ;
-					read_bytes = count ;
+					byte_count += count ;
 					break ;
 
 			case '!' : /* Clear buffer, forcing re-read. */
@@ -1167,16 +1164,7 @@ psf_binheader_readf (SF_PRIVATE *psf, char const *format, ...)
 				psf->error = SFE_INTERNAL ;
 				break ;
 			} ;
-
-		if (read_bytes > 0 && byte_count > (INT_MAX - read_bytes))
-		{	psf_log_printf (psf, "Header size exceeds INT_MAX. Aborting.", c) ;
-			psf->error = SFE_INTERNAL ;
-			break ;
-		} else
-		{	byte_count += read_bytes ;
 		} ;
-
-		} ;	/*end while*/
 
 	va_end (argptr) ;
 
@@ -1773,14 +1761,18 @@ psf_f2i_clip_array (const float *src, int *dest, int count, int normalize)
 
 	for (int i = 0 ; i < count ; i++)
 	{	scaled_value = src [i] * normfact ;
+#if CPU_CLIPS_POSITIVE == 0
 		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	dest [i] = 0x7FFFFFFF ;
 			continue ;
 			} ;
+#endif
+#if CPU_CLIPS_NEGATIVE == 0
 		if (scaled_value <= (-8.0 * 0x10000000))
 		{	dest [i] = 0x80000000 ;
 			continue ;
 			} ;
+#endif
 
 		dest [i] = psf_lrintf (scaled_value) ;
 		} ;
@@ -1790,7 +1782,7 @@ psf_f2i_clip_array (const float *src, int *dest, int count, int normalize)
 
 void
 psf_d2i_array (const double *src, int *dest, int count, int normalize)
-{	double			normfact ;
+{	double 			normfact ;
 
 	normfact = normalize ? (1.0 * 0x7FFFFFFF) : 1.0 ;
 	for (int i = 0 ; i < count ; i++)
@@ -1807,14 +1799,18 @@ psf_d2i_clip_array (const double *src, int *dest, int count, int normalize)
 
 	for (int i = 0 ; i < count ; i++)
 	{	scaled_value = src [i] * normfact ;
+#if CPU_CLIPS_POSITIVE == 0
 		if (scaled_value >= (1.0 * 0x7FFFFFFF))
 		{	dest [i] = 0x7FFFFFFF ;
 			continue ;
 			} ;
+#endif
+#if CPU_CLIPS_NEGATIVE == 0
 		if (scaled_value <= (-8.0 * 0x10000000))
 		{	dest [i] = 0x80000000 ;
 			continue ;
 			} ;
+#endif
 
 		dest [i] = psf_lrint (scaled_value) ;
 		} ;

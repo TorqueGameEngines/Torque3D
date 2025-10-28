@@ -26,8 +26,6 @@
 	Copyright:	(c) 2001-2011 Apple, Inc.
 */
 
-#include "config.h"
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

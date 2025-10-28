@@ -114,7 +114,7 @@ mat5_open	(SF_PRIVATE *psf)
 
 	psf->container_close = mat5_close ;
 
-	psf->blockwidth = (sf_count_t) psf->bytewidth * psf->sf.channels ;
+	psf->blockwidth = psf->bytewidth * psf->sf.channels ;
 
 	switch (subformat)
 	{	case SF_FORMAT_PCM_U8 :

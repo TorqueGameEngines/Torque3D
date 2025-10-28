@@ -127,7 +127,7 @@ You can pass additional options with `/D<parameter>=<value>` when you run
  Useful libsndfile options:
 
 * `BUILD_SHARED_LIBS` - build shared library (DLL under Windows) when `ON`,
-  build static library otherwise. This option is `OFF` by default.
+  build static library othervise. This option is `OFF` by default.
 * `BUILD_PROGRAMS` - build libsndfile's utilities from `programs/` directory,
   `ON` by default.
 * `BUILD_EXAMPLES` - build examples, `ON` by default.
@@ -137,6 +137,8 @@ You can pass additional options with `/D<parameter>=<value>` when you run
   option is available and set to `ON` if all dependency libraries were found.
 * `ENABLE_MPEG` - MP3 support. This option is available and set to `ON` if all
   dependency libraries were found.
+* `ENABLE_CPU_CLIP` - enable tricky cpu specific clipper. Enabled and set to
+  `ON` when CPU clips negative\positive. Don't touch it if you are not sure
 * `ENABLE_BOW_DOCS` - enable black-on-white documentation theme, `OFF` by
   default.
 * `ENABLE_EXPERIMENTAL` - enable experimental code. Don't use it if you are
@@ -163,7 +165,7 @@ You can pass additional options with `/D<parameter>=<value>` when you run
   is native for MinGW ecosystem, Autotools constructs it using MinGW platform
   rules from `sndfile` target. But when you build with CMake using native
   Windows compiler, the name is `sndfile.dll`. This is name for native Windows
-  platform, because Windows has no library naming rules. It is preferred
+  platform, because Windows has no library naming rules. It is preffered
   because you can search library using package manager or CMake's
   `find_library` command on any platform using the same `sndfile` name.
 
@@ -181,6 +183,8 @@ Deprecated options:
 
 * `DISABLE_EXTERNAL_LIBS` - disable Ogg, Vorbis and FLAC support. Replaced by
   `ENABLE_EXTERNAL_LIBS`
+* `DISABLE_CPU_CLIP` - disable tricky cpu specific clipper. Replaced by
+  `ENABLE_CPU_CLIP`
 * `BUILD_STATIC_LIBS` - build static library. Use `BUILD_SHARED_LIBS` instead
 
 ### Linking from CMake projects

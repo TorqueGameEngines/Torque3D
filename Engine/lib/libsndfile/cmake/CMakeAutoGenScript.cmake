@@ -22,7 +22,7 @@ function(read_definition DEFINITION_FILENAME TEMPLATE_FILENAME DATA)
 
     string(REGEX MATCH "autogen definitions ([a-zA-Z\\._-]+);[${WS}]*" TEMPLATE_MATCH "${DEFINITION_CONTENTS}")
     if (NOT TEMPLATE_MATCH)
-        message(FATAL_ERROR "${DEFINITION_FILENAME} does not contain an AutoGen definition.")
+        message(FATAL_ERROR "${DEFINITION_FILENAME} doest not contain an AutoGen definition.")
     endif()
 
     get_filename_component(DEFINITION_DIR "${DEFINITION_FILENAME}" PATH)

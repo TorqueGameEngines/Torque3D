@@ -151,7 +151,7 @@ main (void)
 
 
 /*=================================================================================
-**	The following routines came from the sox-12.15 (Sound eXchange) distribution.
+**	The following routines came from the sox-12.15 (Sound eXcahcnge) distribution.
 **
 **	This code is not compiled into libsndfile. It is only used to test the
 **	libsndfile lookup tables for correctness.

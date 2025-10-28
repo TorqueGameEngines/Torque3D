@@ -339,7 +339,7 @@ read_write_peak_test (const char *filename, int filetype)
 
 	sf_close (file) ;
 
-	/* Open the file RDWR, write sample valid 1.25. */
+	/* Open the fiel RDWR, write sample valied 1.25. */
 	file = test_open_file_or_die (filename, SFM_RDWR, &sfinfo, SF_FALSE, __LINE__) ;
 
 	for (k = 0 ; k < ARRAY_LEN (small_data) ; k ++)

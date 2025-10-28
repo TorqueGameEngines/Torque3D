@@ -472,7 +472,7 @@ SNDFILE*
 sf_open_virtual	(SF_VIRTUAL_IO *sfvirtual, int mode, SF_INFO *sfinfo, void *user_data)
 {	SF_PRIVATE 	*psf ;
 
-	/* Make sure we have a valid set of virtual pointers. */
+	/* Make sure we have a valid set ot virtual pointers. */
 	if (sfvirtual->get_filelen == NULL)
 	{	sf_errno = SFE_BAD_VIRTUAL_IO ;
 		snprintf (sf_parselog, sizeof (sf_parselog), "Bad vio_get_filelen in SF_VIRTUAL_IO struct.\n") ;
@@ -658,7 +658,7 @@ sf_format_check	(const SF_INFO *info)
 
 	/* This is the place where each file format can check if the supplied
 	** SF_INFO struct is valid.
-	** Return 0 on failure, 1 on success.
+	** Return 0 on failure, 1 ons success.
 	*/
 
 	if (info->channels < 1 || info->channels > SF_MAX_CHANNELS)
@@ -1112,7 +1112,7 @@ sf_command	(SNDFILE *sndfile, int command, void *data, int datasize)
 
 				format = SF_CODEC (psf->sf.format) ;
 
-				/* Only files containing the following data types support the PEAK chunk. */
+				/* Only files containg the following data types support the PEAK chunk. */
 				if (format != SF_FORMAT_FLOAT && format != SF_FORMAT_DOUBLE)
 					return SF_FALSE ;
 
@@ -1522,7 +1522,7 @@ sf_seek	(SNDFILE *sndfile, sf_count_t offset, int whence)
 	** used with SEEK_SET.
 	*/
 	switch (whence)
-	{	/* The SEEK_SET behaviour is independent of mode. */
+	{	/* The SEEK_SET behaviour is independant of mode. */
 		case SEEK_SET :
 		case SEEK_SET | SFM_READ :
 		case SEEK_SET | SFM_WRITE :

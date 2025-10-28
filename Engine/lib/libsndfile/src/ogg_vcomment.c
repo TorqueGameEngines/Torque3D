@@ -79,7 +79,7 @@ vorbiscomment_read_tags (SF_PRIVATE *psf, ogg_packet *packet, vorbiscomment_iden
 
 	/*
 	** The smallest possible header is the ident string length plus two 4-byte
-	** integers, (vendor string length, tags count.)
+	** integers, (vender string length, tags count.)
 	*/
 	if (packet->bytes < (ident ? ident->length : 0) + 4 + 4)
 		return SFE_MALFORMED_FILE ;

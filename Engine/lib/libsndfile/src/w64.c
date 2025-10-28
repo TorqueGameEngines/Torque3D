@@ -153,7 +153,7 @@ w64_open	(SF_PRIVATE *psf)
 
 			/*
 			** At this point we don't know the file length so set it stupidly high, but not
-			** so high that it triggers undefined behaviour when something is added to it.
+			** so high that it triggers undefined behaviour whan something is added to it.
 			*/
 			psf->filelength = SF_COUNT_MAX - 10000 ;
 			psf->datalength = psf->filelength ;

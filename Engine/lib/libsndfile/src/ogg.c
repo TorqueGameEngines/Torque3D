@@ -211,16 +211,12 @@ ogg_read_first_page (SF_PRIVATE *psf, OGG_PRIVATE *odata)
 
 int
 ogg_write_page (SF_PRIVATE *psf, ogg_page *page)
-{	int n ;
+{	int bytes ;
 
-	n = psf_fwrite (page->header, 1, page->header_len, psf) ;
-	if (n == page->header_len)
-		n += psf_fwrite (page->body, 1, page->body_len, psf) ;
+	bytes = psf_fwrite (page->header, 1, page->header_len, psf) ;
+	bytes += psf_fwrite (page->body, 1, page->body_len, psf) ;
 
-	if (n != page->body_len + page->header_len)
-		return -1 ;
-
-	return n ;
+	return bytes == page->header_len + page->body_len ;
 } /* ogg_write_page */
 
 sf_count_t
@@ -387,7 +383,7 @@ ogg_stream_unpack_page (SF_PRIVATE *psf, OGG_PRIVATE *odata)
 	/*
 	** Unpack all the packets on the page. It is undocumented (like much of
 	** libOgg behavior) but all packets from a page read into the stream are
-	** guaranteed to remain valid in memory until a new page is read into the
+	** guarenteed to remain valid in memory until a new page is read into the
 	** stream.
 	*/
 	for (i = 1 ; ; i++)
@@ -823,7 +819,7 @@ ogg_stream_classify (SF_PRIVATE *psf, OGG_PRIVATE* odata)
 			break ;
 		} ;
 
-	psf_log_printf (psf, "This Ogg bitstream contains some unknown data type.\n") ;
+	psf_log_printf (psf, "This Ogg bitstream contains some uknown data type.\n") ;
 	return SFE_UNIMPLEMENTED ;
 } /* ogg_stream_classify */
 

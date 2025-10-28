@@ -350,7 +350,7 @@ paf24_init (SF_PRIVATE *psf)
 					(PAF24_BLOCK_SIZE + PAF24_SAMPLES_PER_BLOCK * sizeof (int)) ;
 
 	/*
-	**	Not exactly sure why this needs to be here but the tests
+	**	Not exatly sure why this needs to be here but the tests
 	**	fail without it.
 	*/
 	psf->last_op = 0 ;

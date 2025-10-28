@@ -187,7 +187,7 @@ ima_reader_init (SF_PRIVATE *psf, int blockalign, int samplesperblock)
 	**	to avoid having to branch when pulling apart the nibbles.
 	*/
 	count = ((samplesperblock - 2) | 7) + 2 ;
-	pimasize = sizeof (IMA_ADPCM_PRIVATE) + psf->sf.channels * (blockalign + samplesperblock + sizeof (short) * count) ;
+	pimasize = sizeof (IMA_ADPCM_PRIVATE) + psf->sf.channels * (blockalign + samplesperblock + sizeof(short) * count) ;
 
 	if (! (pima = calloc (1, pimasize)))
 		return SFE_MALLOC_FAILED ;
@@ -238,7 +238,7 @@ ima_reader_init (SF_PRIVATE *psf, int blockalign, int samplesperblock)
 		case SF_FORMAT_AIFF :
 				psf_log_printf (psf, "still need to check block count\n") ;
 				pima->decode_block = aiff_ima_decode_block ;
-				psf->sf.frames = (sf_count_t) pima->samplesperblock * pima->blocks / pima->channels ;
+				psf->sf.frames = pima->samplesperblock * pima->blocks / pima->channels ;
 				break ;
 
 		default :
@@ -261,6 +261,9 @@ aiff_ima_decode_block (SF_PRIVATE *psf, IMA_ADPCM_PRIVATE *pima)
 {	unsigned char *blockdata ;
 	int		chan, k, diff, bytecode, predictor ;
 	short	step, stepindx, *sampledata ;
+
+static int count = 0 ;
+count ++ ;
 
 	pima->blockcount += pima->channels ;
 	pima->samplecount = 0 ;
@@ -388,7 +391,7 @@ aiff_ima_encode_block (SF_PRIVATE *psf, IMA_ADPCM_PRIVATE *pima)
 static int
 wavlike_ima_decode_block (SF_PRIVATE *psf, IMA_ADPCM_PRIVATE *pima)
 {	int		chan, k, predictor, blockindx, indx, indxstart, diff ;
-	short	step, bytecode, stepindx [2] = { 0 } ;
+	short	step, bytecode, stepindx [2] = { 0 };
 
 	pima->blockcount ++ ;
 	pima->samplecount = 0 ;
@@ -1002,3 +1005,4 @@ ima_write_d (SF_PRIVATE *psf, const double *ptr, sf_count_t len)
 
 	return total ;
 } /* ima_write_d */
+

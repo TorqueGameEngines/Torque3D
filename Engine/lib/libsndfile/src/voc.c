@@ -845,7 +845,7 @@ Detailed description of new data blocks (VOC files version 1.20 and above):
 
         (Source is fax from Barry Boone at Creative Labs, 405/742-6622)
 
-BLOCK 8 - digitized sound attribute extension, must precede block 1.
+BLOCK 8 - digitized sound attribute extension, must preceed block 1.
           Used to define stereo, 8 bit audio
         BYTE bBlockID;       // = 8
         BYTE nBlockLen[3];   // 3 byte length

@@ -66,7 +66,7 @@
 #define	SENSIBLE_SIZE	(0x40000000)
 
 /*
-**	Neat solution to the Win32/OS2 binary file flag requirement.
+**	Neat solution to the Win32/OS2 binary file flage requirement.
 **	If O_BINARY isn't already defined by the inclusion of the system
 **	headers, set it to zero.
 */

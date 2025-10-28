@@ -413,7 +413,7 @@ float32_get_capability	(SF_PRIVATE *psf)
 		unsigned char	c [4] ;
 	} data ;
 
-	data.f = (float) 1.23456789 ; /* Some arbitrary value. */
+	data.f = (float) 1.23456789 ; /* Some abitrary value. */
 
 	if (! psf->ieee_replace)
 	{	/* If this test is true ints and floats are compatible and little endian. */
@@ -468,9 +468,9 @@ f2i_clip_array (const float *src, int count, int *dest, float scale)
 {	for (int i = 0 ; i < count ; i++)
 	{	float tmp = scale * src [i] ;
 
-		if (tmp > (1.0 * INT_MAX))
+		if (CPU_CLIPS_POSITIVE == 0 && tmp > (1.0 * INT_MAX))
 			dest [i] = INT_MAX ;
-		else if (tmp < (-1.0 * INT_MAX))
+		else if (CPU_CLIPS_NEGATIVE == 0 && tmp < (-1.0 * INT_MAX))
 			dest [i] = INT_MIN ;
 		else
 			dest [i] = psf_lrintf (tmp) ;

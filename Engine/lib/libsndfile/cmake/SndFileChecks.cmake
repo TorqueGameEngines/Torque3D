@@ -6,6 +6,7 @@ include (CheckTypeSize)
 include (TestBigEndian)
 
 include (TestInline)
+include (ClipMode)
 include (TestLargeFiles)
 include (CheckCPUArch)
 
@@ -15,9 +16,10 @@ if (LARGE_FILES_DEFINITIONS)
 	add_definitions(${LARGE_FILES_DEFINITIONS})
 endif ()
 
-if (NOT WIN32)
-	find_package (ALSA)
+if (CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
 	find_package (Sndio)
+elseif (NOT WIN32)
+	find_package (ALSA)
 endif ()
 
 if (VCPKG_TOOLCHAIN AND (NOT CMAKE_VERSION VERSION_LESS 3.15))
@@ -102,7 +104,7 @@ check_type_size (wchar_t			SIZEOF_WCHAR_T)
 # Never checked
 # check_type_size (size_t			SIZEOF_SIZE_T)
 
-# Used in configure.ac
+# Used in configre.ac
 # check_type_size (double			SIZEOF_DOUBLE)
 # check_type_size (float			SIZEOF_FLOAT)
 # check_type_size (int				SIZEOF_INT)
@@ -194,6 +196,7 @@ if (CMAKE_COMPILER_IS_GNUCC OR (CMAKE_C_COMPILER_ID MATCHES "Clang"))
 endif ()
 
 test_inline ()
+clip_mode ()
 
 if (MSVC)
 	add_definitions (-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE)
@@ -249,5 +252,5 @@ if (DEFINED ENABLE_STATIC_RUNTIME)
 endif ()
 
 if (BUILD_SHARED_LIBS)
-	find_package (Python REQUIRED)
+	find_package (PythonInterp REQUIRED)
 endif()

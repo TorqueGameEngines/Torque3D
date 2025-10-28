@@ -52,25 +52,26 @@
 	#define ALSA_PCM_NEW_SW_PARAMS_API
 	#include <alsa/asoundlib.h>
 	#include <sys/time.h>
+#endif
+
+#if defined (__ANDROID__)
+
+#elif defined (__linux__) || defined (__FreeBSD_kernel__) || defined (__FreeBSD__) || defined (__riscos__)
+	#include 	<fcntl.h>
+	#include 	<sys/ioctl.h>
+	#include 	<sys/soundcard.h>
 
 #elif HAVE_SNDIO_H
 	#include <sndio.h>
-
-#elif defined (__ANDROID__)
-
-#elif defined (__linux__) || defined (__FreeBSD_kernel__) || defined (__FreeBSD__) || defined (__riscos__)
-	#include <fcntl.h>
-	#include <sys/ioctl.h>
-	#include <sys/soundcard.h>
-
-#elif (OS_IS_WIN32 == 1)
-	#include <windows.h>
-	#include <mmsystem.h>
 
 #elif (defined (sun) && defined (unix)) || defined(__NetBSD__)
 	#include <fcntl.h>
 	#include <sys/ioctl.h>
 	#include <sys/audioio.h>
+
+#elif (OS_IS_WIN32 == 1)
+	#include <windows.h>
+	#include <mmsystem.h>
 
 #endif
 
@@ -348,71 +349,13 @@ alsa_write_float (snd_pcm_t *alsa_dev, float *data, int frames, int channels)
 	return total ;
 } /* alsa_write_float */
 
-/*------------------------------------------------------------------------------
-**	Sndio.
-*/
-
-#elif HAVE_SNDIO_H
-
-static void
-sndio_play (int argc, char *argv [])
-{	struct sio_hdl	*hdl ;
-	struct sio_par	par ;
-	short buffer [BUFFER_LEN] ;
-	SNDFILE	*sndfile ;
-	SF_INFO	sfinfo ;
-	int		k, readcount ;
-
-	for (k = 1 ; k < argc ; k++)
-	{	printf ("Playing %s\n", argv [k]) ;
-		if (! (sndfile = sf_open (argv [k], SFM_READ, &sfinfo)))
-		{	puts (sf_strerror (NULL)) ;
-			continue ;
-			} ;
-
-		if (sfinfo.channels < 1 || sfinfo.channels > 2)
-		{	printf ("Error : channels = %d.\n", sfinfo.channels) ;
-			continue ;
-			} ;
-
-		if ((hdl = sio_open (NULL, SIO_PLAY, 0)) == NULL)
-		{	fprintf (stderr, "open sndio device failed") ;
-			return ;
-			} ;
-
-		sio_initpar (&par) ;
-		par.rate = sfinfo.samplerate ;
-		par.pchan = sfinfo.channels ;
-		par.bits = 16 ;
-		par.sig = 1 ;
-		par.le = SIO_LE_NATIVE ;
-
-		if (! sio_setpar (hdl, &par) || ! sio_getpar (hdl, &par))
-		{	fprintf (stderr, "set sndio params failed") ;
-			return ;
-			} ;
-
-		if (! sio_start (hdl))
-		{	fprintf (stderr, "sndio start failed") ;
-			return ;
-			} ;
-
-		while ((readcount = sf_read_short (sndfile, buffer, BUFFER_LEN)))
-			sio_write (hdl, buffer, readcount * sizeof (short)) ;
-
-		sio_close (hdl) ;
-		} ;
-
-	return ;
-} /* sndio_play */
-
-#elif defined (__ANDROID__)
+#endif /* HAVE_ALSA_ASOUNDLIB_H */
 
 /*------------------------------------------------------------------------------
 **	Linux/OSS functions for playing a sound.
 */
 
-#elif defined (__linux__) || defined (__FreeBSD_kernel__) || defined (__FreeBSD__) || defined (__riscos__)
+#if !defined (__ANDROID__) && (defined (__linux__) || defined (__FreeBSD_kernel__) || defined (__FreeBSD__) || defined (__riscos__))
 
 static	int	opensoundsys_open_device (int channels, int srate) ;
 
@@ -523,6 +466,8 @@ opensoundsys_open_device (int channels, int srate)
 	return 	fd ;
 } /* opensoundsys_open_device */
 
+#endif /* __linux__ */
+
 /*------------------------------------------------------------------------------
 **	Mac OS X functions for playing a sound.
 */
@@ -537,7 +482,7 @@ opensoundsys_open_device (int channels, int srate)
 **  point to data instead of short*. It plain sucks!
 */
 
-#elif (OS_IS_WIN32 == 1)
+#if (OS_IS_WIN32 == 1)
 
 #define	WIN32_BUFFER_LEN	(1 << 15)
 
@@ -563,7 +508,7 @@ static void
 win32_play_data (Win32_Audio_Data *audio_data)
 {	int thisread, readcount ;
 
-	/* fill a buffer if there is more data and we can read it successfully */
+	/* fill a buffer if there is more data and we can read it sucessfully */
 	readcount = (audio_data->remaining > audio_data->bufferlen) ? audio_data->bufferlen : (int) audio_data->remaining ;
 
 	short *lpData = (short *) (void *) audio_data->whdr [audio_data->current].lpData ;
@@ -718,11 +663,73 @@ win32_play (int argc, char *argv [])
 
 } /* win32_play */
 
+#endif /* Win32 */
+
+/*------------------------------------------------------------------------------
+**	OpenBSD's sndio.
+*/
+
+#if HAVE_SNDIO_H
+
+static void
+sndio_play (int argc, char *argv [])
+{	struct sio_hdl	*hdl ;
+	struct sio_par	par ;
+	short buffer [BUFFER_LEN] ;
+	SNDFILE	*sndfile ;
+	SF_INFO	sfinfo ;
+	int		k, readcount ;
+
+	for (k = 1 ; k < argc ; k++)
+	{	printf ("Playing %s\n", argv [k]) ;
+		if (! (sndfile = sf_open (argv [k], SFM_READ, &sfinfo)))
+		{	puts (sf_strerror (NULL)) ;
+			continue ;
+			} ;
+
+		if (sfinfo.channels < 1 || sfinfo.channels > 2)
+		{	printf ("Error : channels = %d.\n", sfinfo.channels) ;
+			continue ;
+			} ;
+
+		if ((hdl = sio_open (NULL, SIO_PLAY, 0)) == NULL)
+		{	fprintf (stderr, "open sndio device failed") ;
+			return ;
+			} ;
+
+		sio_initpar (&par) ;
+		par.rate = sfinfo.samplerate ;
+		par.pchan = sfinfo.channels ;
+		par.bits = 16 ;
+		par.sig = 1 ;
+		par.le = SIO_LE_NATIVE ;
+
+		if (! sio_setpar (hdl, &par) || ! sio_getpar (hdl, &par))
+		{	fprintf (stderr, "set sndio params failed") ;
+			return ;
+			} ;
+
+		if (! sio_start (hdl))
+		{	fprintf (stderr, "sndio start failed") ;
+			return ;
+			} ;
+
+		while ((readcount = sf_read_short (sndfile, buffer, BUFFER_LEN)))
+			sio_write (hdl, buffer, readcount * sizeof (short)) ;
+
+		sio_close (hdl) ;
+		} ;
+
+	return ;
+} /* sndio_play */
+
+#endif /* sndio */
+
 /*------------------------------------------------------------------------------
 **	Solaris.
 */
 
-#elif (defined (sun) && defined (unix)) || defined(__NetBSD__)
+#if (defined (sun) && defined (unix)) || defined(__NetBSD__)
 
 static void
 solaris_play (int argc, char *argv [])
@@ -752,7 +759,7 @@ solaris_play (int argc, char *argv [])
 			return ;
 			} ;
 
-		/*	Retrieve standard values. */
+		/*	Retrive standard values. */
 		AUDIO_INITINFO (&audio_info) ;
 
 		audio_info.play.sample_rate = sfinfo.samplerate ;
@@ -823,35 +830,31 @@ main (int argc, char *argv [])
 		return 1 ;
 		} ;
 
-#if HAVE_ALSA_ASOUNDLIB_H
-	if (access ("/proc/asound/cards", R_OK) == 0)
-		alsa_play (argc, argv) ;
-	else
-		return EXIT_FAILURE ;
-
-#elif HAVE_SNDIO_H
-	sndio_play (argc, argv) ;
-
-#elif defined (__ANDROID__)
+#if defined (__ANDROID__)
 	puts ("*** Playing sound not yet supported on Android.") ;
 	puts ("*** Please feel free to submit a patch.") ;
-	return EXIT_FAILURE ;
-
-#elif defined (__linux__) || defined (__FreeBSD_kernel__) || defined (__FreeBSD__) || defined (__riscos__)
+	return 1 ;
+#elif defined (__linux__)
+	#if HAVE_ALSA_ASOUNDLIB_H
+		if (access ("/proc/asound/cards", R_OK) == 0)
+			alsa_play (argc, argv) ;
+		else
+	#endif
+		opensoundsys_play (argc, argv) ;
+#elif defined (__FreeBSD_kernel__) || defined (__FreeBSD__) || defined (__riscos__)
 	opensoundsys_play (argc, argv) ;
-
-#elif (OS_IS_WIN32 == 1)
-	win32_play (argc, argv) ;
-
+#elif HAVE_SNDIO_H
+	sndio_play (argc, argv) ;
 #elif (defined (sun) && defined (unix)) || defined(__NetBSD__)
 	solaris_play (argc, argv) ;
-
+#elif (OS_IS_WIN32 == 1)
+	win32_play (argc, argv) ;
 #else
 	puts ("*** Playing sound not supported on this platform.") ;
 	puts ("*** Please feel free to submit a patch.") ;
-	return EXIT_FAILURE ;
+	return 1 ;
 #endif
 
-	return EXIT_SUCCESS ;
+	return 0 ;
 } /* main */
 

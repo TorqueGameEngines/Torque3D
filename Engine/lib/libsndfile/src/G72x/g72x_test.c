@@ -130,7 +130,7 @@ g723_test	(double margin)
 			} ;
 		} ;
 
-	printf ("\n\nMax error of %d at position %d.\n", max_err, position) ;
+	printf ("\n\nMax error of %d at postion %d.\n", max_err, position) ;
 
 	for (k = 0 ; k < BUFFER_SIZE ; k++)
 	{	if (error_function (data [k], orig [k], margin))

@@ -162,7 +162,7 @@ avr_read_header (SF_PRIVATE *psf)
 	psf->endian = SF_ENDIAN_BIG ;
 
  	psf->dataoffset = AVR_HDR_SIZE ;
-	psf->datalength = (sf_count_t) hdr.frames * (hdr.rez / 8) ;
+	psf->datalength = hdr.frames * (hdr.rez / 8) ;
 
 	if (psf->fileoffset > 0)
 		psf->filelength = AVR_HDR_SIZE + psf->datalength ;

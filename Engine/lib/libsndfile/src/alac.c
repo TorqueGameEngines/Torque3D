@@ -885,7 +885,7 @@ alac_pakt_encode (const SF_PRIVATE *psf, uint32_t * pakt_size_out)
 	plac = psf->codec_data ;
 	info = plac->pakt_info ;
 
-	allocated = 100 + 4 * info->count ;
+	allocated = 100 + 2 * info->count ;
 	if ((data = calloc (1, allocated)) == NULL)
 		return NULL ;
 

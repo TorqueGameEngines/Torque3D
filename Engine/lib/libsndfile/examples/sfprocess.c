@@ -56,7 +56,7 @@ main (void)
 	static double data [BUFFER_LEN] ;
 
 	/* A SNDFILE is very much like a FILE in the Standard C library. The
-	** sf_open function return an SNDFILE* pointer when they successfully
+	** sf_open function return an SNDFILE* pointer when they sucessfully
 	** open the specified file.
 	*/
 	SNDFILE	*infile, *outfile ;
@@ -131,8 +131,8 @@ process_data (double *data, int count, int channels)
 
 	/* Process the data here.
 	** If the soundfile contains more then 1 channel you need to take care of
-	** the data interleaving yourself.
-	** Current we just apply a channel dependent gain.
+	** the data interleaving youself.
+	** Current we just apply a channel dependant gain.
 	*/
 
 	for (chan = 0 ; chan < channels ; chan ++)

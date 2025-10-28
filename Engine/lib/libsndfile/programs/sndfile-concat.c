@@ -51,7 +51,7 @@ usage_exit (const char *progname)
 	printf ("\nUsage : %s <infile1> <infile2>  ... <outfile>\n\n", progname) ;
 	puts (
 		"    Create a new output file <outfile> containing the concatenated\n"
-		"    audio data from <infile1> <infile2> ....\n"
+		"    audio data from froms <infile1> <infile2> ....\n"
 		"\n"
 		"    The joined file will be encoded in the same format as the data\n"
 		"    in infile1, with all the data in subsequent files automatically\n"

@@ -208,7 +208,7 @@ sf_count_t		file_length_fd (int fd) ;
 #define	LOG_BUFFER_SIZE		4096
 
 /*
-**	Neat solution to the Win32/OS2 binary file flag requirement.
+**	Neat solution to the Win32/OS2 binary file flage requirement.
 **	If O_BINARY isn't already defined by the inclusion of the system
 **	headers, set it to zero.
 */
@@ -426,8 +426,8 @@ check_log_buffer_or_die (SNDFILE *file, int line_num)
 		} ;
 
 	/* Look for "Should" */
-	if (strstr (buffer, "unknown marker"))
-	{	printf ("\n\nLine %d : Log buffer contains `unknown marker'. Dumping.\n", line_num) ;
+	if (strstr (buffer, "nknown marker"))
+	{	printf ("\n\nLine %d : Log buffer contains `nknown marker'. Dumping.\n", line_num) ;
 		puts (buffer) ;
 		exit (1) ;
 		} ;

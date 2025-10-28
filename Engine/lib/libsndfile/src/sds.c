@@ -454,7 +454,7 @@ sds_2byte_read (SF_PRIVATE *psf, SDS_PRIVATE *psds)
 
 	ucptr = psds->read_data + 5 ;
 	for (k = 0 ; k < 120 ; k += 2)
-	{	sample = arith_shift_left (ucptr [k], 25) | arith_shift_left (ucptr [k + 1], 18) ;
+	{	sample = arith_shift_left (ucptr [k], 25) + arith_shift_left (ucptr [k + 1], 18) ;
 		psds->read_samples [k / 2] = (int) (sample - 0x80000000) ;
 		} ;
 
@@ -498,7 +498,7 @@ sds_3byte_read (SF_PRIVATE *psf, SDS_PRIVATE *psds)
 
 	ucptr = psds->read_data + 5 ;
 	for (k = 0 ; k < 120 ; k += 3)
-	{	sample = (((uint32_t) ucptr [k]) << 25) | (ucptr [k + 1] << 18) | (ucptr [k + 2] << 11) ;
+	{	sample = (((uint32_t) ucptr [k]) << 25) + (ucptr [k + 1] << 18) + (ucptr [k + 2] << 11) ;
 		psds->read_samples [k / 3] = (int) (sample - 0x80000000) ;
 		} ;
 
@@ -542,7 +542,7 @@ sds_4byte_read (SF_PRIVATE *psf, SDS_PRIVATE *psds)
 
 	ucptr = psds->read_data + 5 ;
 	for (k = 0 ; k < 120 ; k += 4)
-	{	sample = (((uint32_t) ucptr [k]) << 25) | (ucptr [k + 1] << 18) | (ucptr [k + 2] << 11) | (ucptr [k + 3] << 4) ;
+	{	sample = (((uint32_t) ucptr [k]) << 25) + (ucptr [k + 1] << 18) + (ucptr [k + 2] << 11) + (ucptr [k + 3] << 4) ;
 		psds->read_samples [k / 4] = (int) (sample - 0x80000000) ;
 		} ;
 

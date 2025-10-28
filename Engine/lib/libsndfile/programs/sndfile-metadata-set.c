@@ -161,7 +161,7 @@ main (int argc, char *argv [])
 	info.has_bext_fields = has_bext_fields_set (&info) ;
 
 	if (filenames [0] == NULL)
-	{	printf ("Error : No input file specified.\n\n") ;
+	{	printf ("Error : No input file specificed.\n\n") ;
 		exit (1) ;
 		} ;
 

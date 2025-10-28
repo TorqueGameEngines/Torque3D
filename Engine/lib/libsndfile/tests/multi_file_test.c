@@ -79,6 +79,7 @@ static int verbose = SF_FALSE ;
 int
 main (int argc, char **argv)
 {	int		do_all = 0 ;
+	int		test_count = 0 ;
 
 	if (argc == 3 && strcmp (argv [2], "-v") == 0)
 	{	verbose = SF_TRUE ;
@@ -106,14 +107,17 @@ main (int argc, char **argv)
 
 	if (do_all || ! strcmp (argv [1], "wav"))
 	{	multi_file_test	("multi_wav.dat", wav_formats, ARRAY_LEN (wav_formats)) ;
+		test_count++ ;
 		} ;
 
 	if (do_all || ! strcmp (argv [1], "aiff"))
 	{	multi_file_test	("multi_aiff.dat", aiff_formats, ARRAY_LEN (aiff_formats)) ;
+		test_count++ ;
 		} ;
 
 	if (do_all || ! strcmp (argv [1], "au"))
 	{	multi_file_test	("multi_au.dat", au_formats, ARRAY_LEN (au_formats)) ;
+		test_count++ ;
 		} ;
 
 	return 0 ;
@@ -231,3 +235,4 @@ write_file_at_end (int fd, int filetype, int channels, int file_num)
 
 	sf_close (sndfile) ;
 } /* write_file_at_end */
+

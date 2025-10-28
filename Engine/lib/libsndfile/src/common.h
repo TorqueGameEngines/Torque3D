@@ -102,7 +102,7 @@
 #define		SF_MAX_CHANNELS		1024
 
 /*
-*	Macros for splitting the format file of SF_INFO into container type,
+*	Macros for spliting the format file of SF_INFO into container type,
 **	codec type and endian-ness.
 */
 #define SF_CONTAINER(x)		((x) & SF_FORMAT_TYPEMASK)
@@ -305,7 +305,7 @@ void *psf_memdup (const void *src, size_t n) ;
 int psf_isprint (int ch) ;
 
 /*=======================================================================================
-**	SF_PRIVATE struct - a pointer to this struct is passed back to the caller of the
+**	SF_PRIVATE stuct - a pointer to this struct is passed back to the caller of the
 **	sf_open_XXXX functions. The caller however has no knowledge of the struct's
 **	contents.
 */
@@ -402,7 +402,7 @@ typedef struct sf_private_tag
 
 	int				scale_int_float ;
 
-	/* Variables for handling pipes. */
+	/* Vairables for handling pipes. */
 	int				is_pipe ;		/* True if file is a pipe. */
 	sf_count_t		pipeoffset ;	/* Number of bytes read from a pipe. */
 
@@ -439,7 +439,7 @@ typedef struct sf_private_tag
 	sf_count_t		datalength ;	/* Length in bytes of the audio data. */
 	sf_count_t		dataend ;		/* Offset to file tailer. */
 
-	sf_count_t		blockwidth ;	/* Size in bytes of one set of interleaved samples. */
+	int				blockwidth ;	/* Size in bytes of one set of interleaved samples. */
 	int				bytewidth ;		/* Size in bytes of one sample (one channel). */
 
 	void			*dither ;
@@ -947,7 +947,7 @@ int		psf_find_write_chunk (WRITE_CHUNKS * pchk, const char * marker) ;
 **
 ** See : http://www.gratisoft.us/todd/papers/strlcpy.html
 **
-** These functions are available on *BSD, but are not available everywhere so we
+** These functions are available on *BSD, but are not avaialble everywhere so we
 ** implement them here.
 **
 ** The argument order has been changed to that of strncpy/strncat to cause
@@ -964,7 +964,7 @@ void psf_strlcpy (char *dest, size_t n, const char *src) ;
 static inline int psf_lrintf (float x)
 {
 	#ifdef USE_SSE2
-		return _mm_cvtss_si32 (_mm_load_ss (&x)) ;
+ 		return _mm_cvtss_si32 (_mm_load_ss (&x)) ;
 	#else
 		return lrintf (x) ;
 	#endif
@@ -973,7 +973,7 @@ static inline int psf_lrintf (float x)
 static inline int psf_lrint (double x)
 {
 	#ifdef USE_SSE2
-		return _mm_cvtsd_si32 (_mm_load_sd (&x)) ;
+ 		return _mm_cvtsd_si32 (_mm_load_sd (&x)) ;
 	#else
 		return lrint (x) ;
 	#endif

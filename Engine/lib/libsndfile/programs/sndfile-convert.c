@@ -336,7 +336,7 @@ main (int argc, char * argv [])
 	if ((sfinfo.format & SF_FORMAT_SUBMASK) == SF_FORMAT_GSM610 && sfinfo.samplerate != 8000)
 	{	printf (
 			"WARNING: GSM 6.10 data format only supports 8kHz sample rate. The converted\n"
-			"output file will contain the input data converted to the GSM 6.10 data format\n"
+			"ouput file will contain the input data converted to the GSM 6.10 data format\n"
 			"but not re-sampled.\n"
 			) ;
 		} ;

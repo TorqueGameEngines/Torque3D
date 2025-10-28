@@ -48,36 +48,36 @@
 /* Variable names from ITU G.726 spec */
 struct nms_adpcm_state
 {	/* Log of the step size multiplier. Operated on by codewords. */
-	short yl ;
+	int yl ;
 
 	/* Quantizer step size multiplier. Generated from yl. */
-	short y ;
+	int y ;
 
-	/* Coefficients of the pole predictor */
-	short a [2] ;
+	/* Coefficents of the pole predictor */
+	int a [2] ;
 
-	/* Coefficients of the zero predictor  */
-	short b [6] ;
+	/* Coefficents of the zero predictor  */
+	int b [6] ;
 
 	/* Previous quantized deltas (multiplied by 2^14) */
-	short d_q [7] ;
+	int d_q [7] ;
 
 	/* d_q [x] + s_ez [x], used by the pole-predictor for signs only. */
-	short p [3] ;
+	int p [3] ;
 
 	/* Previous reconstructed signal values. */
-	short s_r [2] ;
+	int s_r [2] ;
 
 	/* Zero predictor components of the signal estimate. */
-	short s_ez ;
+	int s_ez ;
 
 	/* Signal estimate, (including s_ez). */
-	short s_e ;
+	int s_e ;
 
 	/* The most recent codeword (enc:generated, dec:inputted) */
-	char Ik ;
+	int Ik ;
 
-	char parity ;
+	int parity ;
 
 	/*
 	** Offset into code tables for the bitrate.
@@ -109,7 +109,7 @@ typedef struct
 } NMS_ADPCM_PRIVATE ;
 
 /* Pre-computed exponential interval used in the antilog approximation. */
-static unsigned short table_expn [] =
+static unsigned int table_expn [] =
 {	0x4000, 0x4167, 0x42d5, 0x444c,	0x45cb, 0x4752, 0x48e2, 0x4a7a,
 	0x4c1b, 0x4dc7, 0x4f7a, 0x5138,	0x52ff, 0x54d1, 0x56ac, 0x5892,
 	0x5a82, 0x5c7e, 0x5e84, 0x6096,	0x62b4, 0x64dd, 0x6712, 0x6954,
@@ -117,21 +117,21 @@ static unsigned short table_expn [] =
 } ;
 
 /* Table mapping codewords to scale factor deltas. */
-static short table_scale_factor_step [] =
+static int table_scale_factor_step [] =
 {	0x0,	0x0,	0x0,	0x0,	0x4b0,	0x0,	0x0,	0x0,	/* 2-bit */
 	-0x3c,	0x0,	0x90,	0x0,	0x2ee,	0x0,	0x898,	0x0,	/* 3-bit */
 	-0x30,	0x12,	0x6b,	0xc8,	0x188,	0x2e0,	0x551,	0x1150,	/* 4-bit */
 } ;
 
 /* Table mapping codewords to quantized delta interval steps. */
-static unsigned short table_step [] =
+static unsigned int table_step [] =
 {	0x73F,	0,		0,		0,		0x1829,	0,		0,		0,		/* 2-bit */
 	0x3EB,	0,		0xC18,	0,		0x1581,	0,		0x226E,	0,		/* 3-bit */
 	0x20C,	0x635,	0xA83,	0xF12,	0x1418,	0x19E3,	0x211A,	0x2BBA,	/* 4-bit */
 } ;
 
 /* Binary search lookup table for quantizing using table_step. */
-static short table_step_search [] =
+static int table_step_search [] =
 {	0,		0x1F6D,	0,		-0x1F6D,	0,		0,			0,			0, /* 2-bit */
 	0x1008,	0x1192,	0,		-0x219A,	0x1656,	-0x1656,	0,			0, /* 3-bit */
 	0x872,	0x1277,	-0x8E6,	-0x232B,	0xD06,	-0x17D7,	-0x11D3,	0, /* 4-bit */
@@ -179,23 +179,23 @@ static sf_count_t nms_adpcm_seek (SF_PRIVATE *psf, int mode, sf_count_t offset) 
 ** Maps [1,20480] to [1,1024] in an exponential relationship. This is
 ** approximately ret = b^exp where b = e^(ln(1024)/ln(20480)) ~= 1.0003385
 */
-static inline short
-nms_adpcm_antilog (short exp)
-{	int_fast32_t r ;
+static inline int
+nms_adpcm_antilog (int exp)
+{	int ret ;
 
-	r = 0x1000 ;
-	r += (((int_fast32_t) (exp & 0x3f) * 0x166b) >> 12) ;
-	r *= table_expn [(exp & 0x7c0) >> 6] ;
-	r >>= (26 - (exp >> 11)) ;
+	ret = 0x1000 ;
+	ret += (((exp & 0x3f) * 0x166b) >> 12) ;
+	ret *= table_expn [(exp & 0x7c0) >> 6] ;
+	ret >>= (26 - (exp >> 11)) ;
 
-	return (short) r ;
+	return ret ;
 } /* nms_adpcm_antilog */
 
 static void
 nms_adpcm_update (struct nms_adpcm_state *s)
 {	/* Variable names from ITU G.726 spec */
-	short a1ul, fa1 ;
-	int_fast32_t se ;
+	int a1ul ;
+	int fa1 ;
 	int i ;
 
 	/* Decay and Modify the scale factor in the log domain based on the codeword. */
@@ -206,7 +206,7 @@ nms_adpcm_update (struct nms_adpcm_state *s)
 		s->yl = 20480 ;
 	s->y = nms_adpcm_antilog (s->yl) ;
 
-	/* Update the zero predictor coefficients. */
+	/* Update the zero predictor coefficents. */
 	for (i = 0 ; i < 6 ; i++)
 	{	s->b [i] = (s->b [i] * 0xff) >> 8 ;
 		if ((s->d_q [0] ^ s->d_q [i + 1]) >= 0)
@@ -215,14 +215,14 @@ nms_adpcm_update (struct nms_adpcm_state *s)
 			s->b [i] -= 128 ;
 		}
 
-	/* Update the pole predictor coefficients. */
+	/* Update the pole predictor coefficents. */
 	fa1 = s->a [0] >> 5 ;
 	if (fa1 < -256)
 		fa1 = -256 ;
 	else if (fa1 > 256)
 		fa1 = 256 ;
 
-	s->a [0] = (s->a [0] * 0xff) >> 8 ;
+	s->a [0] = (0xff * s->a [0]) >> 8 ;
 	if (s->p [0] != 0 && s->p [1] != 0 && ((s->p [0] ^ s->p [1]) < 0))
 		s->a [0] -= 192 ;
 	else
@@ -230,7 +230,7 @@ nms_adpcm_update (struct nms_adpcm_state *s)
 		fa1 = -fa1 ;
 		}
 
-	s->a [1] = fa1 + ((s->a [1] * 0xfe) >> 8) ;
+	s->a [1] = fa1 + ((0xfe * s->a [1]) >> 8) ;
 	if (s->p [0] != 0 && s->p [2] != 0 && ((s->p [0] ^ s->p [2]) < 0))
 		s->a [1] -= 128 ;
 	else
@@ -250,18 +250,19 @@ nms_adpcm_update (struct nms_adpcm_state *s)
 			s->a [0] = a1ul ;
 		} ;
 
-	/* Compute the zero predictor estimate and rotate past deltas. */
-	se = 0 ;
+	/* Compute the zero predictor estimate. Rotate past deltas too. */
+	s->s_ez = 0 ;
 	for (i = 5 ; i >= 0 ; i--)
-	{	se += (int_fast32_t) s->d_q [i] * s->b [i] ;
+	{	s->s_ez += s->d_q [i] * s->b [i] ;
 		s->d_q [i + 1] = s->d_q [i] ;
 		} ;
-	s->s_ez = se >> 14 ;
 
-	/* Complete the signal estimate. */
-	se += (int_fast32_t) s->a [0] * s->s_r [0] ;
-	se += (int_fast32_t) s->a [1] * s->s_r [1] ;
-	s->s_e = se >> 14 ;
+	/* Compute the signal estimate. */
+	s->s_e = s->a [0] * s->s_r [0] + s->a [1] * s->s_r [1] + s->s_ez ;
+
+	/* Return to scale */
+	s->s_ez >>= 14 ;
+	s->s_e >>= 14 ;
 
 	/* Rotate members to prepare for next iteration. */
 	s->s_r [1] = s->s_r [0] ;
@@ -273,7 +274,7 @@ nms_adpcm_update (struct nms_adpcm_state *s)
 static int16_t
 nms_adpcm_reconstruct_sample (struct nms_adpcm_state *s, uint8_t I)
 {	/* Variable names from ITU G.726 spec */
-	int_fast32_t dqx ;
+	int dqx ;
 
 	/*
 	** The ordering of the 12-bit right-shift is a precision loss. It agrees
@@ -307,17 +308,17 @@ nms_adpcm_codec_init (struct nms_adpcm_state *s, enum nms_enc_type type)
 /*
 ** nms_adpcm_encode_sample()
 **
-** Encode a linear 16-bit pcm sample into a 2, 3, or 4 bit NMS-ADPCM codeword
+** Encode a linear 16-bit pcm sample into a 2,3, or 4 bit NMS-ADPCM codeword
 ** using and updating the predictor state.
 */
 static uint8_t
 nms_adpcm_encode_sample (struct nms_adpcm_state *s, int16_t sl)
 {	/* Variable names from ITU G.726 spec */
-	int_fast32_t d ;
+	int d ;
 	uint8_t I ;
 
 	/* Down scale the sample from 16 => ~14 bits. */
-	sl = ((int_fast32_t) sl * 0x1fdf) / 0x7fff ;
+	sl = (sl * 0x1fdf) / 0x7fff ;
 
 	/* Compute estimate, and delta from actual value */
 	nms_adpcm_update (s) ;
@@ -406,7 +407,7 @@ nms_adpcm_encode_sample (struct nms_adpcm_state *s, int16_t sl)
 */
 static int16_t
 nms_adpcm_decode_sample (struct nms_adpcm_state *s, uint8_t I)
-{	int_fast32_t sl ;
+{	int sl ;
 
 	nms_adpcm_update (s) ;
 	sl = nms_adpcm_reconstruct_sample (s, I) ;
@@ -1090,7 +1091,7 @@ nms_adpcm_init (SF_PRIVATE *psf)
 	else
 		pnms->blocks_total = psf->datalength / (pnms->shortsperblock * sizeof (short)) ;
 
-	psf->sf.frames		= (sf_count_t) pnms->blocks_total * NMS_SAMPLES_PER_BLOCK ;
+	psf->sf.frames		= pnms->blocks_total * NMS_SAMPLES_PER_BLOCK ;
 	psf->codec_close	= nms_adpcm_close ;
 	psf->seek			= nms_adpcm_seek ;
 

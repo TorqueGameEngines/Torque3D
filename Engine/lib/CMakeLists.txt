@@ -298,71 +298,75 @@ mark_as_advanced(PULSEAUDIO_LIBRARY)
 find_package(Python3 QUIET)
 
 if(NOT Python3_FOUND)
-    message(STATUS "Python3 not found — downloading embedded Python...")
+    if(WIN32)
+        message(STATUS "Python3 not found — downloading embedded Python...")
+        set(program_version 3.12.7)
+        # Detect architecture
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+            if(TORQUE_CPU_ARM64)
+                set(download_url "https://www.python.org/ftp/python/${program_version}/python-${program_version}-embed-arm64.zip")
+                set(download_filename "python-${program_version}-embed-arm64.zip")
+                set(download_sha512 D1D1183682D20AC057C45BF2AD264B6568CDEB54A1502823C76A2448386CAEF79A3AB9EA8FF57A5C023D432590FCCB5E3E9980F8760CD9BAAC5A2A82BA240D73)
+            endif()
+        else()
+            if(TORQUE_CPU_X64)
+                set(download_url "https://www.python.org/ftp/python/${program_version}/python-${program_version}-embed-amd64.zip")
+                set(download_filename "python-${program_version}-embed-amd64.zip")
+                set(download_sha512 2F67A8487A9EDECE26B73AAB27E75249E538938AD976D371A9411B54DBAE20AFEAC82B406AD4EEEE38B1CF6F407E7620679D30C0FFF82EC8E8AE62268C322D59)
+            endif()
+        endif()
+        if(TORQUE_CPU_X32 OR TORQUE_CPU_ARM32)
+            set(download_urls "https://www.python.org/ftp/python/${program_version}/python-${program_version}-embed-win32.zip")
+            set(download_filename "python-${program_version}-embed-win32.zip")
+            set(download_sha512 15542080E0CC25C574391218107FE843006E8C5A7161D1CD48CF14A3C47155C0244587273D9C747F35B15EA17676869ECCE079214824214C1A62ABFC86AD9F9B)
+        endif()
 
-    # Detect architecture
-    if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
-        if(TORQUE_CPU_ARM64)
-            set(download_url "https://www.python.org/ftp/python/${program_version}/python-${program_version}-embed-arm64.zip")
-            set(download_filename "python-${program_version}-embed-arm64.zip")
-            set(download_sha512 D1D1183682D20AC057C45BF2AD264B6568CDEB54A1502823C76A2448386CAEF79A3AB9EA8FF57A5C023D432590FCCB5E3E9980F8760CD9BAAC5A2A82BA240D73)
+        if(NOT download_url)
+            message(FATAL_ERROR "Unsupported architecture or missing TORQUE_CPU_* definition.")
+        endif()
+
+        set(python_dir "${CMAKE_BINARY_DIR}/tools/python")
+        set(python_zip "${python_dir}/${download_filename}")
+
+        # Ensure the target directory exists
+        file(MAKE_DIRECTORY "${python_dir}")
+
+        # Download the Python embedded zip if not already there
+        if(NOT EXISTS "${python_zip}")
+            message(STATUS "Downloading ${download_url} ...")
+            file(DOWNLOAD
+                "${download_url}"
+                "${python_zip}"
+                SHOW_PROGRESS
+                EXPECTED_HASH SHA512=${download_sha512}
+                STATUS download_status
+            )
+            list(GET download_status 0 status_code)
+            if(NOT status_code EQUAL 0)
+                message(FATAL_ERROR "Download failed: ${download_status}")
+            endif()
+        endif()
+
+        # Extract the embedded Python ZIP
+        message(STATUS "Extracting Python to ${python_dir}")
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E tar xzf "${python_zip}"
+            WORKING_DIRECTORY "${python_dir}"
+            RESULT_VARIABLE extract_result
+        )
+
+        if(NOT extract_result EQUAL 0)
+            message(FATAL_ERROR "Failed to extract ${python_zip}")
+        endif()
+
+        file(GLOB embedded_python_exe "${python_dir}/python*.exe")
+        if(embedded_python_exe)
+            set(Python_EXECUTABLE "${embedded_python_exe}" CACHE FILEPATH "Path to embedded Python" FORCE)
+            message(STATUS "Using embedded Python: ${Python_EXECUTABLE}")
         endif()
     else()
-        if(TORQUE_CPU_X64)
-            set(download_url "https://www.python.org/ftp/python/${program_version}/python-${program_version}-embed-amd64.zip")
-            set(download_filename "python-${program_version}-embed-amd64.zip")
-            set(download_sha512 2F67A8487A9EDECE26B73AAB27E75249E538938AD976D371A9411B54DBAE20AFEAC82B406AD4EEEE38B1CF6F407E7620679D30C0FFF82EC8E8AE62268C322D59)
-        endif()
-    endif()
-    if(TORQUE_CPU_X32 OR TORQUE_CPU_ARM32)
-        set(download_urls "https://www.python.org/ftp/python/${program_version}/python-${program_version}-embed-win32.zip")
-        set(download_filename "python-${program_version}-embed-win32.zip")
-        set(download_sha512 15542080E0CC25C574391218107FE843006E8C5A7161D1CD48CF14A3C47155C0244587273D9C747F35B15EA17676869ECCE079214824214C1A62ABFC86AD9F9B)
-    endif()
-
-    if(NOT download_url)
-        message(FATAL_ERROR "Unsupported architecture or missing TORQUE_CPU_* definition.")
-    endif()
-
-    set(python_dir "${CMAKE_BINARY_DIR}/tools/python")
-    set(python_zip "${python_dir}/${download_filename}")
-
-    # Ensure the target directory exists
-    file(MAKE_DIRECTORY "${python_dir}")
-
-    # Download the Python embedded zip if not already there
-    if(NOT EXISTS "${python_zip}")
-        message(STATUS "Downloading ${download_url} ...")
-        file(DOWNLOAD
-            "${download_url}"
-            "${python_zip}"
-            SHOW_PROGRESS
-            EXPECTED_HASH SHA512=${download_sha512}
-            STATUS download_status
-        )
-        list(GET download_status 0 status_code)
-        if(NOT status_code EQUAL 0)
-            message(FATAL_ERROR "Download failed: ${download_status}")
-        endif()
-    endif()
-
-    # Extract the embedded Python ZIP
-    message(STATUS "Extracting Python to ${python_dir}")
-    execute_process(
-        COMMAND ${CMAKE_COMMAND} -E tar xzf "${python_zip}"
-        WORKING_DIRECTORY "${python_dir}"
-        RESULT_VARIABLE extract_result
-    )
-
-    if(NOT extract_result EQUAL 0)
-        message(FATAL_ERROR "Failed to extract ${python_zip}")
-    endif()
-
-    file(GLOB embedded_python_exe "${python_dir}/python*.exe")
-    if(embedded_python_exe)
-        set(Python_EXECUTABLE "${embedded_python_exe}" CACHE FILEPATH "Path to embedded Python" FORCE)
-        message(STATUS "Using embedded Python: ${Python_EXECUTABLE}")
-    endif()
+        message(FATAL_ERROR "Cannot find python3 please install it")
+    endif(WIN32)
 endif()
 
 advanced_option(BUILD_PROGRAMS "" OFF)

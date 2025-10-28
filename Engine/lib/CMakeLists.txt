@@ -367,6 +367,7 @@ endif()
 
 advanced_option(BUILD_PROGRAMS "" OFF)
 advanced_option(BUILD_EXAMPLES "" OFF)
+advanced_option(BUILD_TESTING "" OFF)
 advanced_option(BUILD_REGTEST "" OFF)
 advanced_option(ENABLE_BOW_DOCS "" OFF)
 set(BUILD_SHARED_LIBS ON )

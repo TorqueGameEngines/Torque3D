@@ -1,5 +1,49 @@
 ################# Initialize Common Variables ###################
+set(VCPKG_ROOT "${CMAKE_BINARY_DIR}/vcpkg" CACHE PATH "VCPKG Root")
+if(NOT EXISTS "${VCPKG_ROOT}")
+	message(STATUS "Bootstrapping vcpkg...")
+	execute_process(
+		COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
+		WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+	)
+	if(WIN32)
+		execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat")
+	else()
+		execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.sh")
+	endif()
+endif()
+set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+if(WIN32)
+	if(GIT_CI_BUILD)
+		set(VCPKG_TARGET_TRIPLET "x64-windows-mixed-release" CACHE STRING "")
+	else()
+		set(VCPKG_TARGET_TRIPLET "x64-windows-mixed" CACHE STRING "")
+	endif()
 
+else()
+	if(APPLE)
+		if(GIT_CI_BUILD)
+			set(VCPKG_TARGET_TRIPLET "universal-osx-11-release" CACHE STRING "")
+		else()
+			set(VCPKG_TARGET_TRIPLET "universal-osx-11" CACHE STRING "")
+		endif()
+	endif(APPLE)
+	
+
+	if(UNIX AND NOT APPLE)
+		if(GIT_CI_BUILD)
+			set(VCPKG_TARGET_TRIPLET "x64-linux-mixed-release" CACHE STRING "")
+		else()
+			set(VCPKG_TARGET_TRIPLET "x64-linux-mixed" CACHE STRING "")
+		endif()
+	endif()
+
+endif()
+
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/triplets" CACHE STRING "")
+set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/ports" CACHE STRING "")
+set(ENV{VCPKG_LIB_SOURCE_ROOT} "${CMAKE_SOURCE_DIR}/Engine/lib")
+set(ENV{VCPKG_KEEP_ENV_VARS} "VCPKG_LIB_SOURCE_ROOT")
 # All include directories to search. Modules should append to this when they want includes to point
 # into themselves.
 set(TORQUE_INCLUDE_DIRECTORIES "")

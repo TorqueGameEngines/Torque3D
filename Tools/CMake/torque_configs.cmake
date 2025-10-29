@@ -46,6 +46,7 @@ endif()
 
 set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/triplets" CACHE STRING "")
 set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/ports" CACHE STRING "")
+set(VCPKG_INSTALL_OPTIONS "--clean-after-build" CACHE STRING "")
 set(ENV{VCPKG_LIB_SOURCE_ROOT} "${CMAKE_SOURCE_DIR}/Engine/lib")
 set(ENV{VCPKG_KEEP_ENV_VARS} "VCPKG_LIB_SOURCE_ROOT")
 # All include directories to search. Modules should append to this when they want includes to point

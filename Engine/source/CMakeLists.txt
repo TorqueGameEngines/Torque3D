@@ -5,6 +5,24 @@ if (APPLE)
 	enable_language(OBJC)
 endif (APPLE)
 
+# ------------------------------------------------------------------
+# Find all dependencies (using vcpkg's toolchain integration)
+# ------------------------------------------------------------------
+find_package(Ogg CONFIG REQUIRED)
+find_package(Vorbis CONFIG REQUIRED)
+find_package(FLAC CONFIG REQUIRED)
+find_package(Opus CONFIG REQUIRED)
+find_package(unofficial-theora CONFIG REQUIRED)
+find_package(SndFile CONFIG REQUIRED)
+set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
+    Ogg::ogg
+    Vorbis::vorbis
+    Vorbis::vorbisfile
+    FLAC::FLAC
+    Opus::opus
+    unofficial::theora::theora unofficial::theora::theoradec unofficial::theora::theoraenc
+    SndFile::sndfile
+)
 ################# Helper Function Calls ###################
 forwardDef(TORQUE_OPENGL)
 forwardDef(TORQUE_D3D11)
@@ -414,7 +432,7 @@ if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
   # Build the main engine library
   add_library(TorqueEngine SHARED ${TORQUE_SOURCE_FILES})
   target_compile_definitions(TorqueEngine PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-  target_link_libraries(TorqueEngine ${TORQUE_LINK_LIBRARIES})
+  target_link_libraries(TorqueEngine ${TORQUE_LINK_LIBRARIES} ${TORQUE_LINK_THIRDPARTY})
   target_include_directories(TorqueEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
 
   set(TORQUE_SOURCE_FILES "main/main.cpp")
@@ -509,7 +527,7 @@ foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
 endforeach()
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES})
+target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_LIBRARIES} ${TORQUE_LINK_THIRDPARTY})
 
 if(APPLE)
   target_link_libraries(${TORQUE_APP_NAME} ${TORQUE_LINK_FRAMEWORKS})

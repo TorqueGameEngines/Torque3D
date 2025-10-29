@@ -1,16 +1,20 @@
 ################# Initialize Common Variables ###################
-set(VCPKG_ROOT "${CMAKE_BINARY_DIR}/vcpkg" CACHE PATH "VCPKG Root")
-if(NOT EXISTS "${VCPKG_ROOT}")
-	message(STATUS "Bootstrapping vcpkg...")
-	execute_process(
-		COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
-		WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-	)
-	if(WIN32)
-		execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat")
-	else()
-		execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.sh")
+if(NOT DEFINED ENV{VCPKG_ROOT})
+	set(VCPKG_ROOT "${CMAKE_BINARY_DIR}/vcpkg" CACHE PATH "VCPKG Root")
+	if(NOT EXISTS "${VCPKG_ROOT}")
+		message(STATUS "Bootstrapping vcpkg...")
+		execute_process(
+			COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
+			WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+		)
+		if(WIN32)
+			execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat")
+		else()
+			execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.sh")
+		endif()
 	endif()
+else()
+	file(TO_CMAKE_PATH $ENV{VCPKG_ROOT} VCPKG_ROOT)
 endif()
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 if(WIN32)

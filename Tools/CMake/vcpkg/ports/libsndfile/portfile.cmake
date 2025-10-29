@@ -33,10 +33,12 @@ vcpkg_cmake_configure(
         -DBUILD_PROGRAMS=OFF
         -DBUILD_REGTEST=OFF
         -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON
+        -DCMAKE_DEBUG_POSTFIX="d"
         -DPYTHON_EXECUTABLE=${PYTHON3}
         ${FEATURE_OPTIONS}
     MAYBE_UNUSED_VARIABLES
         PYTHON_EXECUTABLE
+        CMAKE_DEBUG_POSTFIX
 )
 
 vcpkg_cmake_install()

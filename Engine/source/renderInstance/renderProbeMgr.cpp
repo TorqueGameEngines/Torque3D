@@ -885,6 +885,19 @@ void RenderProbeMgr::render( SceneRenderState *state )
    mProbeArrayEffect->setCubemapArrayTexture(4, mPrefilterArray);
    mProbeArrayEffect->setCubemapArrayTexture(5, mIrradianceArray);
    mProbeArrayEffect->setTexture(6, mWetnessTexture);
+
+   if (mProbeAtlas)
+   {
+      if (mProbeAtlasTexture.set(mProbeAtlas, &GFXTexturePersistentProfile, false, "atlasTexture"))
+      {
+         mProbeArrayEffect->setTexture(7, mProbeAtlasTexture);
+         //mProbeArrayEffect->setShaderConst("$numAtlasEntries", (S32)10); //make adaptive
+      }
+   }
+   else
+   {
+      mProbeArrayEffect->setTexture(7, GFXTexHandle(NULL));
+   }
    //ssao mask
    if (AdvancedLightBinManager::smUseSSAOMask)
    {
@@ -894,22 +907,10 @@ void RenderProbeMgr::render( SceneRenderState *state )
       if (pTexObj)
       {
          mProbeArrayEffect->setShaderMacro("USE_SSAO_MASK");
-         mProbeArrayEffect->setTexture(7, pTexObj);
+         mProbeArrayEffect->setTexture(8, pTexObj);
       }
-   }
-   else
-   {
-      mProbeArrayEffect->setTexture(7, GFXTexHandle(NULL));
    }
 
-   if (mProbeAtlas)
-   {
-      if (mProbeAtlasTexture.set(mProbeAtlas, &GFXTexturePersistentProfile, false, "atlasTexture"))
-      {
-         mProbeArrayEffect->setTexture(8, mProbeAtlasTexture);
-         //mProbeArrayEffect->setShaderConst("$numAtlasEntries", (S32)10); //make adaptive
-      }
-   }
 
    mProbeArrayEffect->setShaderConst("$numProbes", (S32)mProbeData.effectiveProbeCount);
    mProbeArrayEffect->setShaderConst("$skylightCubemapIdx", (S32)mProbeData.skyLightIdx);
@@ -972,8 +973,9 @@ struct ProbeSerialize
 void RenderProbeMgr::serializeProbes()
 {
    U32 probeDataLength = (U32)(sizeof(ProbeSerialize) / 4);
-   U32 count = 10;
-   ProbeSerialize* saveBuffer = (ProbeSerialize*)dMalloc(sizeof(ProbeSerialize) * count);
+   U32 count = 1;
+   U32 probeAllocSize = sizeof(ProbeSerialize) * count;
+   ProbeSerialize* saveBuffer = (ProbeSerialize*)dMalloc(probeAllocSize);
    for (U32 i = 0; i < count; i++)
    {
       ProbeSerialize pSer;
@@ -981,9 +983,8 @@ void RenderProbeMgr::serializeProbes()
       {
             pSer.sh[SHID]= 0.0f;
       }
-      MatrixF inmat = MatrixF(Point3F(45,0,0), Point3F(5 + i * 10, 5 + i * 10, 0));
+      MatrixF inmat = MatrixF(Point3F(0,0,0), Point3F(5.0f + i * 10, 5.0f + i * 10, 0));
       inmat.scale(10);
-      inmat.inverse();
       for (U32 x = 0; x < 4; x++)
       {
          for (U32 y = 0; y < 4; y++)
@@ -997,6 +998,12 @@ void RenderProbeMgr::serializeProbes()
 
    if (mProbeAtlas)
       delete(mProbeAtlas);
+   U8* checkPack = (U8*)dMalloc(probeAllocSize);
+   memcpy(checkPack, saveBuffer, probeAllocSize);
+   for (U32 i = 0; i < probeAllocSize / count; i+=4)
+   {
+      Con::warnf("packed: (%i,%i,%i,%i)", checkPack[i], checkPack[i+1], checkPack[i+2], checkPack[i+3]);
+   }
 
    mProbeAtlas = new GBitmap(probeDataLength, count, (U8*)saveBuffer);
    mProbeAtlas->writeBitmap("bmp", "probeinfoAtlas.bmp");
@@ -1008,6 +1015,8 @@ F32 RenderProbeMgr::unpackF32(ColorI in)
    U8 convert[4]{ in.red, in.green, in.blue, in.alpha};
    F32 out;
    std::memcpy(&out, &convert, sizeof(F32));
+   if (in.alpha == 64) Con::warnf("FOUND 64 in ALPHA!");
+   if (in.red == 64) Con::warnf("FOUND 64 in RED!");
    return out;
 }
 
@@ -1043,7 +1052,6 @@ void RenderProbeMgr::testProbeAtlas()
          inmat(x, y) = check.xForm[x][y];
       }
    }
-   inmat.inverse();
    mProbeAtlas->getColor(++i, 0, tCol);
    check.type = tCol.red;
    check.radius = tCol.blue;

@@ -22,12 +22,12 @@ TORQUE_UNIFORM_SAMPLERCUBEARRAY(specularCubemapAR, 4);
 TORQUE_UNIFORM_SAMPLERCUBEARRAY(irradianceCubemapAR, 5);
 TORQUE_UNIFORM_SAMPLER2D(WetnessTexture, 6);
 
+TORQUE_UNIFORM_SAMPLER2D(probeAtlas, 7);
+
 #ifdef USE_SSAO_MASK
-TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 7);
+TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 8);
 uniform float4 rtParams7;
 #endif
-
-TORQUE_UNIFORM_SAMPLER2D(probeAtlas, 8);
 
 uniform float accumTime;
 uniform float dampness;

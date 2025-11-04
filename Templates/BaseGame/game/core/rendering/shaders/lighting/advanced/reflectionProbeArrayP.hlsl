@@ -198,9 +198,9 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
    float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    float3 diffuse = irradiance * lerp(surface.baseColor.rgb, float3(0.04f,0.04f,0.04f), surface.metalness); 
-   float3 specularCol = (specular * surface.f0 * envBRDF.x + envBRDF.y)*surface.metalness; 
+   float3 specularCol = (specular * surface.f0 * envBRDF.x + envBRDF.y)*surface.metalness;
 
-   float horizonOcclusion = 1.3;
+   float horizonOcclusion = 1.3;  
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
    horizon *= horizon;
    
@@ -208,10 +208,10 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float3 finalColor = diffuse + specularCol*horizon;
    finalColor *= surface.ao;
    
-   ProbeInfo probeInfo = createProbeinfo(TORQUE_SAMPLER2D_MAKEARG(probeAtlas), eyePosWorld,0,10); 
+   ProbeInfo probeInfo = createProbeinfo(TORQUE_SAMPLER2D_MAKEARG(probeAtlas), eyePosWorld,0,1);
    float contribution = defineFauxSpaceInfluence(surface.P, probeInfo.xform, probeInfo.probeConfigData.a);
    contribution = max(contribution,0);
-   return lerp(float4(0,0,1,0), probeInfo.ambientCol,contribution);
+   return lerp(float4(0,0,1,0), probeInfo.ambientCol,contribution);  
    
    if(isCapturing == 1) 
       return float4(lerp(finalColor, surface.baseColor.rgb,surface.metalness),0);

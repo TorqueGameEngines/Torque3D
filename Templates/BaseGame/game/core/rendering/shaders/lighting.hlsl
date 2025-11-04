@@ -101,33 +101,34 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, 
 	ProbeInfo probeInfo = (ProbeInfo)0;
     
     float slotLoc = slot/atlasLen;
-    float entryLoc = 0;
-    float entryStep = 1/(112/4-1);
-    probeInfo.ambientCol = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc,slotLoc,0,0));
-    int i;
-    [unroll]
-    for (i=0;i<9;i++)
+    float entryLoc[28];
+    for (int locPos; locPos<28;locPos++)
     {
-        entryLoc+=entryStep;
-        probeInfo.sh[i] = RGBAtoFloat(TORQUE_TEX2DLOD(atlasTex, float4(entryLoc,slotLoc,0,0)));
+        entryLoc[locPos] = locPos/28.0;
     }
-    
+    int entry = 0;
+    probeInfo.ambientCol = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0));
+    [unroll]
+    for (int shID=0;shID<9;shID++)
+    {
+        entry++;
+        probeInfo.sh[shID] = RGBAtoFloat(TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0))*512);
+    }
     [unroll]
     for (int x=0;x<4;x++)
     {
         [unroll]
         for (int y=0;y<4;y++)
         {
-            entryLoc+=entryStep;
-            probeInfo.xform[x][y] = decode32(TORQUE_TEX2DLOD(atlasTex, float4(entryLoc,slotLoc,0,0)));
+            entry++;
+            probeInfo.xform[y][x] = decode32(uint4(floor(TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0))*512)));
         }
     }
-    probeInfo.xform[3].z = 0; 
-    entryLoc+=entryStep;
-    probeInfo.probeConfigData = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc,slotLoc,0,0));
+    entry++;
+    probeInfo.probeConfigData = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0));
     
-    entryLoc+=entryStep;
-    probeInfo.flags = RGBAtoInt(TORQUE_TEX2DLOD(atlasTex, float4(entryLoc,slotLoc,0,0)));
+    entry++;
+    probeInfo.flags = RGBAtoInt(TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0))*512);
     return probeInfo;
 }
 

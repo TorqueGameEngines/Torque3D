@@ -960,7 +960,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
 #pragma pack(push, 1)
 struct ProbeSerialize
 {
-   U8 ambientCol[4]{255,0,0,255};
+   U8 ambientCol[4]{0,255,0,255};
    F32 sh[9];
    F32 xForm[4][4];
    U8 type = 0;//(U8)(ProbeInfo::Box);
@@ -983,7 +983,7 @@ void RenderProbeMgr::serializeProbes()
       {
             pSer.sh[SHID]= 0.0f;
       }
-      MatrixF inmat = MatrixF(Point3F(0,0,0), Point3F(5.0f + i * 10, 5.0f + i * 10, 0));
+      MatrixF inmat = MatrixF(Point3F(0,0,0), Point3F(5.0f + i * 10, 5.0f + i * 10, 0.0f));
       inmat.scale(10);
       for (U32 x = 0; x < 4; x++)
       {

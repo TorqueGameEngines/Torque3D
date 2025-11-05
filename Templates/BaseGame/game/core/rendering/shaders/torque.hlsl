@@ -30,7 +30,7 @@ static float M_PI_F       = 3.14159265358979323846f;
 static float M_2PI_F      = 6.28318530717958647692f;
 static float M_1OVER_PI_F  = 0.31830988618f;
 
-float decode32(uint4 rgba)
+float decode32(float4 rgba)
 {
     float Sign = 1.0 - step(128.0,rgba.a)*2.0;
     float Exponent = 2.0 * (rgba.a % 128.0) + step(128.0,rgba.b) - 127.0; 

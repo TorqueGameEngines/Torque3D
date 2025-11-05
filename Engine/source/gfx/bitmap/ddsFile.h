@@ -205,6 +205,8 @@ struct DDSFile
       mSurfaces.clear();
    }
 
+   bool isCompressedFormat(GFXFormat fmt);
+
    static DDSFile *createDDSFileFromGBitmap( const GBitmap *gbmp );
    //Create a single cubemap texture from 6 GBitmap
    static DDSFile *createDDSCubemapFileFromGBitmaps(GBitmap **gbmps);

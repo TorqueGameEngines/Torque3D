@@ -281,6 +281,7 @@ namespace dds
    #define DDS_MAGIC       0x20534444  // "DDS "
    #define DDS_FOURCC      0x00000004  // DDPF_FOURCC
    #define DDS_RGB         0x00000040  // DDPF_RGB
+   #define DDS_R32F        0x00000072  // R32F Fourcc
    #define DDS_RGBA        0x00000041  // DDPF_RGB | DDPF_ALPHAPIXELS
    #define DDS_LUMINANCE   0x00020000  // DDPF_LUMINANCE
    #define DDS_LUMINANCEA  0x00020001  // DDPF_LUMINANCE | DDPF_ALPHAPIXELS
@@ -517,6 +518,9 @@ namespace dds
    const DDS_PIXELFORMAT DDSPF_V16U16 =
    { sizeof(DDS_PIXELFORMAT), DDS_BUMPDUDV, 0, 32, 0x0000ffff, 0xffff0000, 0x00000000, 0x00000000 };
 
+   const DDS_PIXELFORMAT DDSPF_F32 =
+   { sizeof(DDS_PIXELFORMAT), DDS_FOURCC, DDS_R32F, 32, 0, 0, 0, 0 };
+
    // D3DFMT_A2R10G10B10/D3DFMT_A2B10G10R10 should be written using DX10 extension to avoid D3DX 10:10:10:2 reversal issue
 
    // This indicates the DDS_HEADER_DXT10 extension is present (the format is in dxgiFormat)
@@ -547,6 +551,7 @@ namespace dds
          case GFXFormatB8G8R8A8: return DDSPF_A8B8G8R8;
          case GFXFormatR16G16B16A16F:
          case GFXFormatR32G32B32A32F: return DDSPF_DX10;
+         case GFXFormatR32F:     return DDSPF_F32;
          //compressed
          case GFXFormatBC1:      return DDSPF_DXT1;
          case GFXFormatBC2:      return DDSPF_DXT3;
@@ -712,6 +717,8 @@ namespace dds
          return GFXFormatR5G6B5;
       else if (format == DDSPF_A1R5G5B5)
          return GFXFormatR5G5B5A1;
+      else if (format == DDSPF_F32)
+         return GFXFormatR32F;
       else
       {
          Con::errorf("dds::getGFXFormat: unknown format");

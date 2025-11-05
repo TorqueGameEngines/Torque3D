@@ -291,7 +291,7 @@ singleton shaderData( PrefiterCubemapShader )
 };
 
 //
-$Probes::AtlasTexture = "probeinfoAtlas.bmp"; 
+
 singleton ShaderData( PFX_ReflectionProbeArray )
 {
    DXVertexShaderFile   = $Core::CommonShaderPath @ "/postFX/postFxV.hlsl";

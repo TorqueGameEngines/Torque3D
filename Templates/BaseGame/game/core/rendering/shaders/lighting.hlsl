@@ -92,27 +92,35 @@ struct ProbeInfo
    float sh[9];
    float4x4 xform;
    float3 offset;
-   int flags;
    float4    probeConfigData;
+   int flags;
 };
 
+#define PROBEINFO_DATA_LEN ((148/4)-1)
 inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, int slot, int atlasLen)
 {
 	ProbeInfo probeInfo = (ProbeInfo)0;
     
     float slotLoc = slot/atlasLen;
-    float entryLoc[28];
-    for (int locPos; locPos<28;locPos++)
+    float entryLoc[PROBEINFO_DATA_LEN];
+    for (int locPos; locPos<PROBEINFO_DATA_LEN;locPos++)
     {
-        entryLoc[locPos] = locPos/28.0;
+        entryLoc[locPos] = locPos/float(PROBEINFO_DATA_LEN);
     }
     int entry = 0;
-    probeInfo.ambientCol = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0));
+    probeInfo.ambientCol.r = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    entry++;
+    probeInfo.ambientCol.g = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    entry++;
+    probeInfo.ambientCol.b = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    entry++;
+    probeInfo.ambientCol.a = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    
     [unroll]
     for (int shID=0;shID<9;shID++)
     {
         entry++;
-        probeInfo.sh[shID] = RGBAtoFloat(TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0))*512);
+        probeInfo.sh[shID] = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
     }
     [unroll]
     for (int x=0;x<4;x++)
@@ -121,14 +129,21 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, 
         for (int y=0;y<4;y++)
         {
             entry++;
-            probeInfo.xform[y][x] = decode32(uint4(floor(TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0))*512)));
+            probeInfo.xform[y][x] = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
         }
     }
+    entry++;
+    probeInfo.offset.x = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    entry++;
+    probeInfo.offset.y = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    entry++;
+    probeInfo.offset.z = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    
     entry++;
     probeInfo.probeConfigData = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0));
     
     entry++;
-    probeInfo.flags = RGBAtoInt(TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0))*512);
+    probeInfo.flags = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
     return probeInfo;
 }
 

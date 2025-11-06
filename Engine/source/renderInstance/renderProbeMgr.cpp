@@ -958,19 +958,20 @@ void RenderProbeMgr::render( SceneRenderState *state )
    // Make sure the effect is gonna render.
    getProbeArrayEffect()->setSkip(false);
 }
-
+#pragma pack(push, 4)
 struct ProbeSerialize
 {
    F32 ambientCol[4]{0,1.0,0,1.0};
-   F32 sh[9];
    F32 xForm[4][4];
    F32 offset[3]{ 0.0,0.0,0.0 };
+   F32 refScale[3]{ 0.0,0.0,0.0 };
    F32 type = 0;//(U8)(ProbeInfo::Box);
    F32 radius = 5;
    F32 scale = 10;
    F32 attenuation = 0;
    U32 flags = BIT(0); //[0]canDamp
 };
+#pragma pop(pop)
 
 #define  probeDataLength (U32)(sizeof(ProbeSerialize) / 4)
 void RenderProbeMgr::serializeProbes()
@@ -981,10 +982,6 @@ void RenderProbeMgr::serializeProbes()
    for (U32 i = 0; i < count; i++)
    {
       ProbeSerialize pSer;
-      for (U32 SHID = 0; SHID < 9; SHID++)
-      {
-            pSer.sh[SHID]= 0.0f;
-      }
       MatrixF inmat = MatrixF(Point3F(0,0,0), Point3F(-5.0f + i * 10, 100.0f + i * 10, 0.0f));
       inmat.scale(10);
       for (U32 x = 0; x < 4; x++)
@@ -1091,7 +1088,6 @@ void RenderProbeMgr::testProbeAtlas()
    }
 
    Con::warnf(" ambient: %f %f %f %f", readBuffer[0].ambientCol[0], readBuffer[0].ambientCol[1], readBuffer[0].ambientCol[2], readBuffer[0].ambientCol[3]);
-   Con::warnf("      sh: %f %f %f %f", readBuffer[0].sh[0], readBuffer[0].sh[1], readBuffer[0].sh[2], readBuffer[0].sh[3]);
    Con::warnf("worldPos: %f %f %f", inmat.getPosition().x, inmat.getPosition().y, inmat.getPosition().z);
    Con::warnf("rotation: %f %f %f", inmat.getForwardVector().x, inmat.getForwardVector().y, inmat.getForwardVector().z);
    Con::warnf("    type: %f", readBuffer[0].type);

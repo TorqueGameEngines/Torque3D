@@ -338,5 +338,6 @@ singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
    samplerStates[4] = SamplerClampLinear;
    samplerStates[5] = SamplerClampLinear;
    samplerStates[6] = SamplerWrapPoint;
-   samplerStates[7] = SamplerClampPoint;
+   samplerStates[7] = SamplerWrapPoint;
+   samplerStates[8] = SamplerClampPoint;
 };

@@ -975,7 +975,7 @@ struct ProbeSerialize
 #define  probeDataLength (U32)(sizeof(ProbeSerialize) / 4)
 void RenderProbeMgr::serializeProbes()
 {
-   U32 count = 1;
+   U32 count = 10;
    U32 probeAllocSize = sizeof(ProbeSerialize) * count;
    ProbeSerialize* saveBuffer = (ProbeSerialize*)dMalloc(probeAllocSize);
    for (U32 i = 0; i < count; i++)
@@ -1007,8 +1007,21 @@ void RenderProbeMgr::serializeProbes()
       Con::warnf("packed[%i]: %f",i, checkPack[i]);
    }
 
-   //mProbeAtlas = new GBitmap(probeDataLength, count, (U8*)saveBuffer);
-   //mProbeAtlas->writeBitmap("bmp", "probeinfoAtlas.bmp");
+   /*
+   mProbeAtlas = new GBitmap(probeDataLength, count, reinterpret_cast<U8*>(checkPack), 1, GFXFormatR32F);
+
+   FileStream out;
+   out.open(Con::getVariable("$Probes::AtlasTexture"), Torque::FS::File::Write);
+   if (out.getStatus() != out::Ok)
+   {
+      Con::errorf("RenderProbeMgr::serializeProbes - failed to open probeAtlastTexture");
+   }
+   else
+   {
+      mProbeAtlas->write(out);
+      out.close();
+   }
+   */
 
    if (mProbeAtlasDDS)
       delete(mProbeAtlasDDS);
@@ -1022,8 +1035,8 @@ void RenderProbeMgr::serializeProbes()
    mProbeAtlasDDS->mSurfaces.last()->mMips.push_back(reinterpret_cast<U8*>(checkPack));
 
    FileStream* out = FileStream::createAndOpen(Con::getVariable("$Probes::AtlasTexture"), Torque::FS::File::Write);
-
    mProbeAtlasDDS->write(*out);
+   out->close();
    free(saveBuffer);
 }
 
@@ -1038,16 +1051,25 @@ F32 RenderProbeMgr::unpackF32(ColorI in)
 }
 
 void RenderProbeMgr::testProbeAtlas()
-{/*
+{
+   U32 count = 10;
+   /*
    if (mProbeAtlas)
       delete(mProbeAtlas);
-
    mProbeAtlas = new GBitmap();
-   String atlasTexturePath = Con::getVariable("$Probes::AtlasTexture");
-   mProbeAtlas->readBitmap("bmp", atlasTexturePath);
+   FileStream stream;
+   stream.open(Con::getVariable("$Probes::AtlasTexture"), Torque::FS::File::Read);
+   if (stream.getStatus() != Stream::Ok)
+   {
+      Con::errorf("RenderProbeMgr::testProbeAtlas - failed to open probeAtlastTexture");
+   }
+   else
+   {
+      mProbeAtlas->read(stream);
+      stream.close();
+   }
    */
-
-   U32 count = 1;
+   
    if (mProbeAtlasDDS)
       delete(mProbeAtlasDDS);
    mProbeAtlasDDS = new DDSFile();
@@ -1055,7 +1077,9 @@ void RenderProbeMgr::testProbeAtlas()
 
    U32 probeAllocSize = sizeof(F32) * probeDataLength * count;
    ProbeSerialize* readBuffer = (ProbeSerialize*)dMalloc(probeAllocSize);
-   memcpy(readBuffer, mProbeAtlasDDS->mSurfaces[0]->mMips[0], probeAllocSize);
+   //const void* dataStart = mProbeAtlas->getBits();
+   const void* dataStart = mProbeAtlasDDS->mSurfaces[0]->mMips[0];
+   memcpy(readBuffer, dataStart, probeAllocSize);
 
    MatrixF inmat;
    for (U32 x = 0; x < 4; x++)

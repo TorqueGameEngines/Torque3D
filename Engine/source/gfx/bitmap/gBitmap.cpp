@@ -99,13 +99,12 @@ GBitmap::GBitmap(const U32  in_width,
 GBitmap::GBitmap(const U32  in_width,
                  const U32  in_height,
                  const U8*  data,
-                 const U32 in_numFaces,
-                 const GFXFormat in_format)
+                 const U32 in_numFaces)
  : mBits(NULL),
    mByteSize(0),
    mNumFaces(in_numFaces)
 {
-   allocateBitmap(in_width, in_height, false, in_format, in_numFaces);
+   allocateBitmap(in_width, in_height, false, GFXFormatR8G8B8A8, in_numFaces);
 
    mHasTransparency = false;
 
@@ -996,10 +995,6 @@ bool GBitmap::setColor(const U32 x, const U32 y, const ColorI& rColor)
 
      case GFXFormatL16:
         dMemcpy(pLoc, &rColor, 2 * sizeof(U8));
-        break;
-
-     case GFXFormatR32F:
-        dMemcpy(pLoc, &rColor, 4 * sizeof(U8));
         break;
 
      case GFXFormatR8G8B8:

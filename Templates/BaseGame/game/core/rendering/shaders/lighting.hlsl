@@ -85,20 +85,7 @@ inline float3 getDistanceVectorToPlane( float negFarPlaneDotEye, float3 directio
 
    return direction.xyz * t;
 }
-/*
-struct ProbeSerialize
-{
-   F32 ambientCol[4]{0,1.0,0,1.0};
-   F32 xForm[4][4];
-   F32 offset[3]{ 0.0,0.0,0.0 };
-   F32 refscale[3]{ 0.0,0.0,0.0 };
-   F32 type = 0;//(U8)(ProbeInfo::Box);
-   F32 radius = 5;
-   F32 scale = 10;
-   F32 attenuation = 0;
-   U32 flags = BIT(0); //[0]canDamp
-};
-*/
+
 struct ProbeInfo
 {
    float4 ambientCol;
@@ -109,25 +96,18 @@ struct ProbeInfo
    int flags;
 };
 
-#define PROBEINFO_DATA_LEN (124/4)
-inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, float slot, float atlasLen)
+inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, int slot)
 {
 	ProbeInfo probeInfo = (ProbeInfo)0;
     
-    float slotLoc = slot/atlasLen;
-    float entryLoc[PROBEINFO_DATA_LEN];
-    for (int locPos; locPos<(PROBEINFO_DATA_LEN);locPos++)
-    {
-        entryLoc[locPos] = locPos/float(PROBEINFO_DATA_LEN-1);
-    }
     int entry = 0;
-    probeInfo.ambientCol.r = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.ambientCol.r = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     entry++;
-    probeInfo.ambientCol.g = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.ambientCol.g = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     entry++;
-    probeInfo.ambientCol.b = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.ambientCol.b = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     entry++; //3
-    probeInfo.ambientCol.a = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.ambientCol.a = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     
     [unroll]
     for (int x=0;x<4;x++)
@@ -136,34 +116,34 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, 
         for (int y=0;y<4;y++)
         {
             entry++; //19
-            probeInfo.xform[y][x] = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+            probeInfo.xform[y][x] = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
         }
     }
     entry++;
-    probeInfo.offset.x = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.offset.x = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     entry++;
-    probeInfo.offset.y = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.offset.y = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     entry++; //22
-    probeInfo.offset.z = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.offset.z = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     
     entry++;
-    probeInfo.refScale.x = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.refScale.x = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     entry++;
-    probeInfo.refScale.y = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.refScale.y = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     entry++; //25
-    probeInfo.refScale.z = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.refScale.z = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     
     entry++;
-    probeInfo.probeConfigData.r = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.probeConfigData.r = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     entry++;
-    probeInfo.probeConfigData.g = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.probeConfigData.g = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     entry++;
-    probeInfo.probeConfigData.b = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.probeConfigData.b = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     entry++; //29
-    probeInfo.probeConfigData.a = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.probeConfigData.a = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     
     entry++; //30
-    probeInfo.flags = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    probeInfo.flags = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     return probeInfo;
 }
 

@@ -143,8 +143,7 @@ public:
    GBitmap(const U32  in_width,
            const U32  in_height,
            const U8*  data,
-           const U32 in_numFaces = 1,
-           const GFXFormat in_format = GFXFormatR8G8B8A8);
+           const U32 in_numFaces = 1);
 
    virtual ~GBitmap();
 

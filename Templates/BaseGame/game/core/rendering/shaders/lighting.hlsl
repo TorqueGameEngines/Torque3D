@@ -85,7 +85,20 @@ inline float3 getDistanceVectorToPlane( float negFarPlaneDotEye, float3 directio
 
    return direction.xyz * t;
 }
-
+/*
+struct ProbeSerialize
+{
+   F32 ambientCol[4]{0,1.0,0,1.0};
+   F32 sh[9];
+   F32 xForm[4][4];
+   F32 offset[3]{ 0.0,0.0,0.0 };
+   F32 type = 0;//(U8)(ProbeInfo::Box);
+   F32 radius = 5;
+   F32 scale = 10;
+   F32 attenuation = 0;
+   U32 flags = BIT(0); //[0]canDamp
+};
+*/
 struct ProbeInfo
 {
    float4 ambientCol;
@@ -96,16 +109,16 @@ struct ProbeInfo
    int flags;
 };
 
-#define PROBEINFO_DATA_LEN ((148/4)-1)
-inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, int slot, int atlasLen)
+#define PROBEINFO_DATA_LEN (148/4)
+inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, float slot, float atlasLen)
 {
 	ProbeInfo probeInfo = (ProbeInfo)0;
     
     float slotLoc = slot/atlasLen;
     float entryLoc[PROBEINFO_DATA_LEN];
-    for (int locPos; locPos<PROBEINFO_DATA_LEN;locPos++)
+    for (int locPos; locPos<(PROBEINFO_DATA_LEN);locPos++)
     {
-        entryLoc[locPos] = locPos/float(PROBEINFO_DATA_LEN);
+        entryLoc[locPos] = locPos/float(PROBEINFO_DATA_LEN-1);
     }
     int entry = 0;
     probeInfo.ambientCol.r = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
@@ -113,13 +126,13 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, 
     probeInfo.ambientCol.g = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
     entry++;
     probeInfo.ambientCol.b = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
-    entry++;
+    entry++; //3
     probeInfo.ambientCol.a = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
     
     [unroll]
     for (int shID=0;shID<9;shID++)
     {
-        entry++;
+        entry++; //12
         probeInfo.sh[shID] = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
     }
     [unroll]
@@ -128,7 +141,7 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, 
         [unroll]
         for (int y=0;y<4;y++)
         {
-            entry++;
+            entry++; //28
             probeInfo.xform[y][x] = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
         }
     }
@@ -136,13 +149,19 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, 
     probeInfo.offset.x = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
     entry++;
     probeInfo.offset.y = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
-    entry++;
+    entry++; //31
     probeInfo.offset.z = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
     
     entry++;
-    probeInfo.probeConfigData = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0));
-    
+    probeInfo.probeConfigData.r = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
     entry++;
+    probeInfo.probeConfigData.g = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    entry++;
+    probeInfo.probeConfigData.b = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    entry++; //35
+    probeInfo.probeConfigData.a = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
+    
+    entry++; //36
     probeInfo.flags = TORQUE_TEX2DLOD(atlasTex, float4(entryLoc[entry],slotLoc,0,0)).r;
     return probeInfo;
 }

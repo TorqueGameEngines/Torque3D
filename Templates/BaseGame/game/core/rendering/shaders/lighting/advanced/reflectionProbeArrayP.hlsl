@@ -202,13 +202,13 @@ float4 main(PFXVertToPix IN) : SV_TARGET
 
    float horizonOcclusion = 1.3;  
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
-   horizon *= horizon;
+   horizon *= horizon; 
    
    // Final color output after environment lighting
    float3 finalColor = diffuse + specularCol*horizon;
    finalColor *= surface.ao;
    
-   ProbeInfo probeInfo = createProbeinfo(TORQUE_SAMPLER2D_MAKEARG(probeAtlas), eyePosWorld,0,1);
+   ProbeInfo probeInfo = createProbeinfo(TORQUE_SAMPLER2D_MAKEARG(probeAtlas), eyePosWorld,0.0,10.0);
    float contribution = defineFauxSpaceInfluence(surface.P, probeInfo.xform, probeInfo.probeConfigData.a);
    contribution = max(contribution,0);
    return lerp(float4(0,0,1,0), probeInfo.ambientCol,contribution);  

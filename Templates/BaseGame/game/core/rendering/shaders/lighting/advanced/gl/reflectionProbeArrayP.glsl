@@ -26,6 +26,7 @@ uniform int numProbes;
 uniform samplerCubeArray specularCubemapAR;
 uniform samplerCubeArray irradianceCubemapAR;
 uniform sampler2D WetnessTexture;
+uniform sampler2D probeAtlas;
 #ifdef USE_SSAO_MASK
 uniform sampler2D ssaoMask;
 uniform vec4 rtParams7;
@@ -215,6 +216,12 @@ void main()
    // Final color output after environment lighting
    vec3 finalColor = diffuse + specularCol * horizon;
    finalColor *= surface.ao;
+      ProbeInfo probeInfo = createProbeinfo(probeAtlas, eyePosWorld,0);
+      
+   float contribution = defineFauxSpaceInfluence(surface.P, probeInfo.xform, probeInfo.probeConfigData.a);
+   contribution = max(contribution,0);
+   OUT_col = lerp(vec4(0,0,1.0,0), probeInfo.ambientCol,contribution);  
+   return;
    
    if(isCapturing == 1)
       OUT_col = vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);

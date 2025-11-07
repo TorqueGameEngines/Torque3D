@@ -971,7 +971,7 @@ struct ProbeSerialize
    F32 attenuation = 0;
    U32 flags = BIT(0); //[0]canDamp
 };
-#pragma pop(pop)
+#pragma pack(pop)
 
 #define  probeDataLength (U32)(sizeof(ProbeSerialize) / 4)
 void RenderProbeMgr::serializeProbes()

@@ -92,7 +92,7 @@ struct ProbeInfo
    float4x4 xform;
    float3 offset;
    float3 refScale;
-   float4    probeConfigData;
+   float4 probeConfigData;
    int flags;
 };
 

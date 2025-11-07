@@ -84,6 +84,65 @@ vec3 getDistanceVectorToPlane( float negFarPlaneDotEye, vec3 direction, vec4 pla
    return direction.xyz * t;
 }
 
+struct ProbeInfo
+{
+   vec4 ambientCol;
+   mat4 xform;
+   vec3 offset;
+   vec3 refScale;
+   vec4 probeConfigData;
+   int flags;
+};
+
+ProbeInfo createProbeinfo(sampler2D atlasTex, vec3 eyePosWorld, int slot)
+{
+	ProbeInfo probeInfo;
+    
+    int entry = 0;
+    probeInfo.ambientCol.r = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    entry++;
+    probeInfo.ambientCol.g = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    entry++;
+    probeInfo.ambientCol.b = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    entry++; //3
+    probeInfo.ambientCol.a = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    
+    for (int x=0;x<4;x++)
+    {
+        for (int y=0;y<4;y++)
+        {
+            entry++; //19
+            probeInfo.xform[y][x] = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+        }
+    }
+    entry++;
+    probeInfo.offset.x = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    entry++;
+    probeInfo.offset.y = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    entry++; //22
+    probeInfo.offset.z = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    
+    entry++;
+    probeInfo.refScale.x = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    entry++;
+    probeInfo.refScale.y = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    entry++; //25
+    probeInfo.refScale.z = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    
+    entry++;
+    probeInfo.probeConfigData.r = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    entry++;
+    probeInfo.probeConfigData.g = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    entry++;
+    probeInfo.probeConfigData.b = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    entry++; //29
+    probeInfo.probeConfigData.a = texelFetch(atlasTex, ivec2(entry,slot),0).r;
+    
+    entry++; //30
+    probeInfo.flags = int(texelFetch(atlasTex, ivec2(entry,slot),0).r);
+    return probeInfo;
+}
+
 struct Surface
 {
 	vec3 P;				// world space position
@@ -389,7 +448,7 @@ vec4 compute4Lights( Surface surface,
 //Probe IBL stuff
 float defineSphereSpaceInfluence(vec3 wsPosition, vec3 wsProbePosition, float radius, float atten)
 {
-   float3 L = (wsProbePosition.xyz - wsPosition);
+   vec3 L = (wsProbePosition.xyz - wsPosition);
    float innerRadius = radius-(radius*atten);
    float contribution = 1.0-pow(saturate(length(L)/mix(radius, innerRadius, atten)), M_2PI_F*(1.0-atten));
    return saturate(contribution);
@@ -408,6 +467,16 @@ float defineBoxSpaceInfluence(vec3 wsPosition, mat4 worldToObj, float attenuatio
    float dist = getDistBoxToPoint(surfPosLS, vec3(baseVal, baseVal, baseVal));
    return saturate(smoothstep(baseVal, (baseVal-attenuation/2), dist));
 }
+
+float defineFauxSpaceInfluence(vec3 wsPosition, mat4 worldMat, float attenuation)
+{
+   vec3 surfPosLS = wsPosition-worldMat[3].xyz; 
+   
+   float baseVal = 0.25;
+   float dist = getDistBoxToPoint(surfPosLS, vec3(baseVal, baseVal, baseVal));
+   return saturate(smoothstep(baseVal, (baseVal-attenuation/2), dist));
+}
+
 
 // Box Projected IBL Lighting
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
@@ -449,7 +518,7 @@ void dampen(inout Surface surface, sampler2D WetnessTexture, float accumTime, fl
    wetness = pow(wetness*ang*degree,3);
    
    surface.roughness = lerp(surface.roughness, 0.04f, wetness);
-   surface.baseColor.rgb = lerp(surface.baseColor.rgb, surface.baseColor.rgb*0.6+float3(0.4,0.4,0.4)*wetness, wetness);
+   surface.baseColor.rgb = lerp(surface.baseColor.rgb, surface.baseColor.rgb*0.6+vec3(0.4,0.4,0.4)*wetness, wetness);
    surface.metalness = lerp(surface.metalness, 0.96, wetness); 
    updateSurface(surface);
 }

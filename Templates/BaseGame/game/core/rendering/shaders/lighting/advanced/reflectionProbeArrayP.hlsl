@@ -208,7 +208,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
    float3 finalColor = diffuse + specularCol*horizon;
    finalColor *= surface.ao;
    
-   ProbeInfo probeInfo = createProbeinfo(TORQUE_SAMPLER2D_MAKEARG(probeAtlas), eyePosWorld,0.0);
+   ProbeInfo probeInfo = createProbeinfo(TORQUE_SAMPLER2D_MAKEARG(probeAtlas), eyePosWorld,0);
    float contribution = defineFauxSpaceInfluence(surface.P, probeInfo.xform, probeInfo.probeConfigData.a);
    contribution = max(contribution,0);
    return lerp(float4(0,0,1,0), probeInfo.ambientCol,contribution);  

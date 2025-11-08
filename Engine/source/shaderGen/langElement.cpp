@@ -93,6 +93,39 @@ const char* LangElement::constTypeToString(GFXShaderConstType constType)
    return "";
 }
 
+const char* LangElement::samplerTypeToString(GFXShaderConstType constType)
+{
+   if (constType < GFXSCT_Sampler)
+      return "";
+
+   // Determine shader language based on GFXAdapterAPI
+   if (GFX->getAdapterType() == OpenGL)
+   {
+      switch (constType)
+      {
+      case GFXSCT_Sampler:                return "sampler2D"; break;
+      case GFXSCT_SamplerCube:            return "samplerCube"; break;
+      case GFXSCT_SamplerTextureArray:    return "sampler2DArray"; break;
+      case GFXSCT_SamplerCubeArray:       return "samplerCubeArray"; break;
+      default:                            return "unknown"; break;
+      }
+   }
+   else // Assume DirectX/HLSL
+   {
+      switch (constType)
+      {
+      case GFXSCT_Sampler:                return "Texture2D"; break;
+      case GFXSCT_SamplerCube:            return "TextureCube"; break;
+      case GFXSCT_SamplerTextureArray:    return "Texture2DArray"; break;
+      case GFXSCT_SamplerCubeArray:       return "TextureCubeArray"; break;
+      default:                            return "unknown"; break;
+      }
+   }
+
+   return "";
+}
+
+
 //--------------------------------------------------------------------------
 // Constructor
 //--------------------------------------------------------------------------

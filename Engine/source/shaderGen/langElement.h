@@ -60,6 +60,7 @@ struct LangElement
       
    U8    name[32];
    static const char* constTypeToString(GFXShaderConstType constType);
+   static const char* samplerTypeToString(GFXShaderConstType constType);
    LangElement();
    virtual ~LangElement() {};
    virtual void print( Stream &stream ){};

@@ -57,5 +57,6 @@ DefineConsoleType( TypeGFXTextureFilterType, GFXTextureFilterType );
 DefineConsoleType( TypeGFXCullMode, GFXCullMode );
 DefineConsoleType( TypeGFXStencilOp, GFXStencilOp );
 DefineConsoleType( TypeGFXBlendOp, GFXBlendOp );
+DefineConsoleType( TypeGFXShaderConstType, GFXShaderConstType);
 
 #endif // !_GFXAPI_H_

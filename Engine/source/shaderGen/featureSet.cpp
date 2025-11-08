@@ -82,7 +82,7 @@ const FeatureType& FeatureSet::getAt( U32 index, S32 *outIndex ) const
    return *mFeatures[index].type; 
 }
 
-void* FeatureSet::getArguments(U32 index) const
+FeatureParamsBase* FeatureSet::getArguments(U32 index) const
 {
    if (mFeatures[index].argStruct)
       return mFeatures[index].argStruct;
@@ -146,7 +146,7 @@ void FeatureSet::setFeature( const FeatureType &type, bool set, S32 index )
    mDescription.clear();
 }
 
-void FeatureSet::addFeature( const FeatureType &type, S32 index, void* argStruct )
+void FeatureSet::addFeature( const FeatureType &type, S32 index, FeatureParamsBase* argStruct )
 {
    if (!argStruct)
    {

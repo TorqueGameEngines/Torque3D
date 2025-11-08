@@ -36,7 +36,48 @@
 class FeatureType;
 class ShaderFeature;
 
-typedef Delegate<ShaderFeature* (void*)> CreateShaderFeatureDelegate;
+struct FeatureParamField
+{
+   StringTableEntry paramName;
+   S32 offset;
+   S32 type;
+   U32 arraySize;
+};
+
+inline void addParam(Vector<FeatureParamField>& list,
+                     const char* name,
+                     S32 offset,
+                     S32 consoleType,
+                     U32 arraySize = 1)
+{
+   FeatureParamField f = { name, offset, consoleType, arraySize };
+   list.push_back(f);
+}
+
+/// <summary>
+/// Base class for all shader feature parameter structs.
+/// </summary>
+class FeatureParamsBase
+{
+public:
+   virtual ~FeatureParamsBase() {}
+
+   // For debug or script reflection, you can override to serialize/print parameters
+   virtual const char* getFeatureParamTypeName() const { return "FeatureParamsBase"; }
+};
+
+typedef Delegate<FeatureParamsBase* ()> CreateFeatureParams;
+
+/// Metadata for a parameter struct type.
+struct FeatureParamInfo
+{
+   const FeatureType* type;     // Matches feature
+   const FeatureParamField* fields;
+   U32 fieldCount;
+   CreateFeatureParams createFn; // makes a new param struct
+};
+
+typedef Delegate<ShaderFeature* (FeatureParamsBase*)> CreateShaderFeatureDelegate;
 
 /// <summary>
 /// Used by the feature manager.
@@ -60,8 +101,10 @@ protected:
    bool mNeedsSort;
 
    typedef Vector<FeatureInfo> FeatureInfoVector;
-
    FeatureInfoVector mFeatures;
+
+   typedef Vector<FeatureParamInfo> FeatureParamInfoVector;
+   FeatureParamInfoVector mParamInfos;
 
    static S32 QSORT_CALLBACK _featureInfoCompare( const FeatureInfo *a, const FeatureInfo *b );
 
@@ -87,7 +130,13 @@ public:
    /// <returns>An instance of the shader feature using its static createFunction taking in the
    /// argument struct.
    /// </returns>
-   ShaderFeature* createFeature(const FeatureType& type, void* argStruct);
+   ShaderFeature* createFeature(const FeatureType& type, FeatureParamsBase* argStruct);
+
+   void registerFeatureParams(const FeatureType& type, const FeatureParamField* fields, U32 fieldCount, CreateFeatureParams createFn);
+
+   FeatureParamsBase* createFeatureParams(const FeatureType& type) const;
+
+   void applyFeatureParams(const FeatureType& type, FeatureParamsBase* params, const Vector<String>& args) const;
 
    /// <summary>
    /// Allows other systems to add features.  index is 
@@ -113,5 +162,21 @@ public:
 
 // Helper for accessing the feature manager singleton.
 #define FEATUREMGR ManagedSingleton<FeatureMgr>::instance()
+
+#define REGISTER_FEATURE_PARAMS(TYPE, STRUCT_TYPE)                                \
+   struct STRUCT_TYPE##_AutoRegister                                              \
+   {                                                                              \
+      STRUCT_TYPE##_AutoRegister()                                                \
+      {                                                                           \
+         Vector<FeatureParamField> fieldList;                                     \
+         STRUCT_TYPE::persistedFields(fieldList);                                 \
+         FEATUREMGR->registerFeatureParams(                                       \
+            TYPE,                                                                 \
+            fieldList.address(),                                                  \
+            fieldList.size(),                                                     \
+             Delegate<FeatureParamsBase*()>([]() -> FeatureParamsBase* { return new STRUCT_TYPE(); })\
+         );                                                                       \
+      }                                                                           \
+   } STRUCT_TYPE##_AutoRegisterInstance;
 
 #endif // FEATUREMGR

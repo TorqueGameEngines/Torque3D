@@ -905,62 +905,48 @@ U32 SceneObject::packUpdate( NetConnection* conn, U32 mask, BitStream* stream )
    if ( stream->writeFlag( mask & FlagMask ) )
       stream->writeRangedU32( (U32)mObjectFlags, 0, getObjectFlagMax() );
 
-   // PATHSHAPE
-   //Begin attachment
    retMask = 0; //retry mask
-
-   if (stream->writeFlag(getParent() != NULL))   {
-      stream->writeAffineTransform(mGraph.objToParent);
-   }
    if (stream->writeFlag(mask & MountedMask))
    {
       // Check to see if we need to write an object ID      
-      if (stream->writeFlag(mGraph.parent))      {
+      if (stream->writeFlag(mGraph.parent))
+      {
          S32 t = conn->getGhostIndex(mGraph.parent);
          // Check to see if we can actually ghost this...         
-         if (t == -1)         {
-            // Cant, try again later            
-            retMask |= MountedMask;
-            stream->writeFlag(false);
-         }
-         else {
-            // Can, write it.            
-            stream->writeFlag(true);
+         if (stream->writeFlag(t != -1))
+         {
+            // Can, write it.
             stream->writeRangedU32(U32(t), 0, NetConnection::MaxGhostCount);
             stream->writeAffineTransform(mGraph.objToParent);
             //Con::errorf("%d: sent mounted on %d", getId(), mGraph.parent->getId());         
          }
-      }
-   }
-   // End of Attachment   
-   // PATHSHAPE END
-
-   if ( mask & MountedMask ) 
-   {                  
-      if ( mMount.object ) 
-      {
-         S32 gIndex = conn->getGhostIndex( mMount.object );
-
-         if ( stream->writeFlag( gIndex != -1 ) ) 
+         else
          {
-            stream->writeFlag( true );
-            stream->writeInt( gIndex, NetConnection::GhostIdBitSize );
-            if ( stream->writeFlag( mMount.node != -1 ) )
-               stream->writeInt( mMount.node, NumMountPointBits );
-            mathWrite( *stream, mMount.xfm );
+            // Cant, try again later            
+            retMask |= MountedMask;
+         }
+      }
+      else if (stream->writeFlag(mMount.object))
+      {
+         S32 gIndex = conn->getGhostIndex(mMount.object);
+
+         if (stream->writeFlag(gIndex != -1))
+         {
+            stream->writeInt(gIndex, NetConnection::GhostIdBitSize);
+            if (stream->writeFlag(mMount.node != -1))
+               stream->writeInt(mMount.node, NumMountPointBits);
+            mathWrite(*stream, mMount.xfm);
          }
          else
             // Will have to try again later
             retMask |= MountedMask;
       }
-      else
-         // Unmount if this isn't the initial packet
-         if ( stream->writeFlag( !(mask & InitialUpdateMask) ) )
-            stream->writeFlag( false );
    }
-   else
-      stream->writeFlag( false );
-   
+   else if (stream->writeFlag(getParent() != NULL)) //parent xform sync
+   {
+      stream->writeAffineTransform(mGraph.objToParent);
+   }
+
    return retMask;
 }
 
@@ -974,15 +960,7 @@ void SceneObject::unpackUpdate( NetConnection* conn, BitStream* stream )
    if ( stream->readFlag() )      
       mObjectFlags = stream->readRangedU32( 0, getObjectFlagMax() );
 
-   // PATHSHAPE  
-   // begin of attachment
-   if (stream->readFlag())
-   {
-      MatrixF m;
-      stream->readAffineTransform(&m);
-      mGraph.objToParent = m;
-   }
-   if (stream->readFlag())
+   if (stream->readFlag())// MountedMask
    {
       // Check to see if we need to read an object ID      
       if (stream->readFlag())
@@ -990,7 +968,7 @@ void SceneObject::unpackUpdate( NetConnection* conn, BitStream* stream )
          // Check to see if we can actually ghost this...         
          if (stream->readFlag())
          {
-            GameBase *newParent = static_cast<GameBase*>(conn->resolveGhost(stream->readRangedU32(0, NetConnection::MaxGhostCount)));
+            GameBase* newParent = static_cast<GameBase*>(conn->resolveGhost(stream->readRangedU32(0, NetConnection::MaxGhostCount)));
             MatrixF m;
             stream->readAffineTransform(&m);
 
@@ -1000,40 +978,43 @@ void SceneObject::unpackUpdate( NetConnection* conn, BitStream* stream )
                processAfter(newParent);
             }
 
-            attachToParent(newParent, &m);
-            //Con::errorf("%d: got mounted on %d", getId(), mParentObject->getId());         
+            attachToParent(newParent, &m);    
          }
       }
       else
       {
          attachToParent(NULL);
-      }
-   }
-   // End of attachment
-   // PATHSHAPE END
 
-   // MountedMask
-   if ( stream->readFlag() ) 
-   {
-      if ( stream->readFlag() ) 
-      {
-         S32 gIndex = stream->readInt( NetConnection::GhostIdBitSize );
-         SceneObject* obj = dynamic_cast<SceneObject*>( conn->resolveGhost( gIndex ) );
-         S32 node = -1;
-         if ( stream->readFlag() ) // node != -1
-            node = stream->readInt( NumMountPointBits );
-         MatrixF xfm;
-         mathRead( *stream, &xfm );
-         if ( !obj )
+         if (stream->readFlag()) //mounted to an object
          {
-            conn->setLastError( "Invalid packet from server." );
-            return;
+            if (stream->readFlag()) //object was ghosted
+            {
+               S32 gIndex = stream->readInt(NetConnection::GhostIdBitSize);
+               SceneObject* obj = dynamic_cast<SceneObject*>(conn->resolveGhost(gIndex));
+               S32 node = -1;
+               if (stream->readFlag()) // node != -1
+                  node = stream->readInt(NumMountPointBits);
+               MatrixF xfm;
+               mathRead(*stream, &xfm);
+               if (!obj)
+               {
+                  conn->setLastError("Invalid packet from server.");
+                  return;
+               }
+               obj->mountObject(this, node, xfm);
+            }
          }
-         obj->mountObject( this, node, xfm );
+         else
+            unmount();
       }
-      else
-         unmount();
    }
+   else if (stream->readFlag()) //parent xform sync
+   {
+      MatrixF m;
+      stream->readAffineTransform(&m);
+      mGraph.objToParent = m;
+   }
+
 }
 
 //-----------------------------------------------------------------------------

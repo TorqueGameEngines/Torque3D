@@ -741,6 +741,7 @@ namespace dds
          case D3DFMT_A16B16G16R16F: return GFXFormatR16G16B16A16F;
          case D3DFMT_A32B32G32R32F: return GFXFormatR32G32B32A32F;
          case D3DFMT_G16R16F: return GFXFormatR16G16F;
+         case D3DFMT_R32F: return GFXFormatR32F;            
          default:
          {
             Con::errorf("dds::getGFXFormatFourcc: unknown format");

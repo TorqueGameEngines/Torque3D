@@ -179,8 +179,7 @@ RenderProbeMgr::RenderProbeMgr()
    mSkylightDamp(true),
    mCubeMapCount(0),
    mUseHDRCaptures(true),
-   mProbeAtlas(NULL),
-   mProbeAtlasDDS(NULL)
+   mProbeAtlas(NULL)
 {
    mEffectiveProbeCount = 0;
    mMipCount = 0;
@@ -887,9 +886,9 @@ void RenderProbeMgr::render( SceneRenderState *state )
    mProbeArrayEffect->setCubemapArrayTexture(5, mIrradianceArray);
    mProbeArrayEffect->setTexture(6, mWetnessTexture);
 
-   if (mProbeAtlasDDS)
+   if (mProbeAtlas)
    {
-      if (mProbeAtlasTexture.set(mProbeAtlasDDS, &GFXTexturePersistentProfile, false, "atlasTexture"))
+      if (mProbeAtlasTexture.set(mProbeAtlas, &GFXTexturePersistentProfile, false, "atlasTexture"))
       {
          mProbeArrayEffect->setTexture(7, mProbeAtlasTexture);
          //mProbeArrayEffect->setShaderConst("$numAtlasEntries", (S32)10); //make adaptive
@@ -995,8 +994,6 @@ void RenderProbeMgr::serializeProbes()
 
    }
 
-   if (mProbeAtlas)
-      delete(mProbeAtlas);
    F32* checkPack = (F32*)dMalloc(probeAllocSize);
    memcpy(checkPack, saveBuffer, probeAllocSize);
    for (U32 i = 0; i < probeDataLength; i++)
@@ -1004,78 +1001,31 @@ void RenderProbeMgr::serializeProbes()
       Con::warnf("packed[%i]: %f",i, checkPack[i]);
    }
 
-   /*
-   mProbeAtlas = new GBitmap(probeDataLength, count, reinterpret_cast<U8*>(checkPack), 1, GFXFormatR32F);
-
-   FileStream out;
-   out.open(Con::getVariable("$Probes::AtlasTexture"), Torque::FS::File::Write);
-   if (out.getStatus() != out::Ok)
-   {
-      Con::errorf("RenderProbeMgr::serializeProbes - failed to open probeAtlastTexture");
-   }
-   else
-   {
-      mProbeAtlas->write(out);
-      out.close();
-   }
-   */
-
-   if (mProbeAtlasDDS)
-      delete(mProbeAtlasDDS);
-   mProbeAtlasDDS = new DDSFile();
-   mProbeAtlasDDS->mFormat = GFXFormatR32F;
-   mProbeAtlasDDS->mBytesPerPixel = 4;
-   mProbeAtlasDDS->mHeight = count;
-   mProbeAtlasDDS->mWidth = probeDataLength;
-   mProbeAtlasDDS->mMipMapCount = 1;
-   mProbeAtlasDDS->mSurfaces.push_back(new DDSFile::SurfaceData);
-   mProbeAtlasDDS->mSurfaces.last()->mMips.push_back(reinterpret_cast<U8*>(checkPack));
+   DDSFile dataFile;
+   dataFile.mFormat = GFXFormatR32F;
+   dataFile.mBytesPerPixel = 4;
+   dataFile.mHeight = count;
+   dataFile.mWidth = probeDataLength;
+   dataFile.mMipMapCount = 1;
+   dataFile.mSurfaces.push_back(new DDSFile::SurfaceData);
+   dataFile.mSurfaces.last()->mMips.push_back(reinterpret_cast<U8*>(checkPack));
 
    FileStream* out = FileStream::createAndOpen(Con::getVariable("$Probes::AtlasTexture"), Torque::FS::File::Write);
-   mProbeAtlasDDS->write(*out);
+   dataFile.write(*out);
    out->close();
    free(saveBuffer);
-}
-
-F32 RenderProbeMgr::unpackF32(ColorI in)
-{
-   U8 convert[4]{ in.red, in.green, in.blue, in.alpha};
-   F32 out;
-   std::memcpy(&out, &convert, sizeof(F32));
-   if (in.alpha == 64) Con::warnf("FOUND 64 in ALPHA!");
-   if (in.red == 64) Con::warnf("FOUND 64 in RED!");
-   return out;
+   mProbeAtlas = dataFile.load(Con::getVariable("$Probes::AtlasTexture"), 0);
 }
 
 void RenderProbeMgr::testProbeAtlas()
 {
    U32 count = 10;
-   /*
-   if (mProbeAtlas)
-      delete(mProbeAtlas);
-   mProbeAtlas = new GBitmap();
-   FileStream stream;
-   stream.open(Con::getVariable("$Probes::AtlasTexture"), Torque::FS::File::Read);
-   if (stream.getStatus() != Stream::Ok)
-   {
-      Con::errorf("RenderProbeMgr::testProbeAtlas - failed to open probeAtlastTexture");
-   }
-   else
-   {
-      mProbeAtlas->read(stream);
-      stream.close();
-   }
-   */
-   
-   if (mProbeAtlasDDS)
-      delete(mProbeAtlasDDS);
-   mProbeAtlasDDS = new DDSFile();
-   mProbeAtlasDDS->load(Con::getVariable("$Probes::AtlasTexture"),0);
+   DDSFile dataFile;
+   mProbeAtlas = dataFile.load(Con::getVariable("$Probes::AtlasTexture"),0);
 
    U32 probeAllocSize = sizeof(F32) * probeDataLength * count;
    ProbeSerialize* readBuffer = (ProbeSerialize*)dMalloc(probeAllocSize);
-   //const void* dataStart = mProbeAtlas->getBits();
-   const void* dataStart = mProbeAtlasDDS->mSurfaces[0]->mMips[0];
+   const void* dataStart = mProbeAtlas->mSurfaces[0]->mMips[0];
    memcpy(readBuffer, dataStart, probeAllocSize);
 
    MatrixF inmat;
@@ -1094,46 +1044,6 @@ void RenderProbeMgr::testProbeAtlas()
    Con::warnf("  radius: %f", readBuffer[0].radius);
    Con::warnf("   scale: %f", readBuffer[0].scale);
    Con::warnf("   atten: %f", readBuffer[0].attenuation);
-
-   /*
-   ProbeSerialize check;
-   ColorI tCol;
-   U32 i = 0;
-   mProbeAtlas->getColor(i, 0, tCol);
-   check.ambientCol[0] = tCol.red;
-   check.ambientCol[1] = tCol.green;
-   check.ambientCol[2] = tCol.blue;
-   check.ambientCol[3] = tCol.alpha;
-   for (U32 shID = 0; shID < 9; shID++)
-   {
-      mProbeAtlas->getColor(++i, 0, tCol);
-      check.sh[shID] = unpackF32(tCol);
-   }
-   MatrixF inmat;
-   for (U32 x = 0; x < 4; x++)
-   {
-      for (U32 y = 0; y < 4; y++)
-      {
-         mProbeAtlas->getColor(++i, 0, tCol);
-         check.xForm[x][y] = unpackF32(tCol);
-         inmat(x, y) = check.xForm[x][y];
-      }
-   }
-   mProbeAtlas->getColor(++i, 0, tCol);
-   check.type = tCol.red;
-   check.radius = tCol.blue;
-   check.scale = tCol.green;
-   check.attenuation = tCol.alpha;
-
-   Con::warnf(" ambient: %i %i %i %i", check.ambientCol[0], check.ambientCol[1], check.ambientCol[2], check.ambientCol[3]);
-   Con::warnf("      sh: %f %f %f %f", check.sh[0], check.sh[1], check.sh[2], check.sh[3]);
-   Con::warnf("worldPos: %f %f %f", inmat.getPosition().x, inmat.getPosition().y, inmat.getPosition().z);
-   Con::warnf("rotation: %f %f %f", inmat.getForwardVector().x, inmat.getForwardVector().y, inmat.getForwardVector().z);
-   Con::warnf("    type: %i", check.type);
-   Con::warnf("  radius: %f", check.radius);
-   Con::warnf("   scale: %f", check.scale);
-   Con::warnf("   atten: %f", check.attenuation);
-   */
 }
 
 DefineEngineFunction(bakeProbeAtlas, void, (), ,"")

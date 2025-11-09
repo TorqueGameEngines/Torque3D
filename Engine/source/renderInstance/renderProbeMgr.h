@@ -487,11 +487,9 @@ public:
 
    void clear() override { mActiveProbes.clear(); Parent::clear(); }
 
-   GBitmap* mProbeAtlas;
-   DDSFile* mProbeAtlasDDS;
+   Resource<DDSFile> mProbeAtlas;
    void serializeProbes();
    void testProbeAtlas();
-   F32 unpackF32(ColorI in);
 };
 
 RenderProbeMgr* RenderProbeMgr::getProbeManager()

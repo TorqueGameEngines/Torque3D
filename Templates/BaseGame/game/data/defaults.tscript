@@ -212,4 +212,4 @@ $pref::PostFX::EnableSSAO = 1;
 
 $pref::PostFX::EnableHDRBloom = 1;
 
-$Probes::AtlasTexture = "probeinfoAtlas.dds"; 
+$Probes::AtlasTexture = "probeinfoAtlas.dbm"; 

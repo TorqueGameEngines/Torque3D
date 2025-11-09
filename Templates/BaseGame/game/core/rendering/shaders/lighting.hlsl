@@ -143,7 +143,7 @@ inline ProbeInfo createProbeinfo(TORQUE_SAMPLER2D(atlasTex),float3 eyePosWorld, 
     probeInfo.probeConfigData.a = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
     
     entry++; //30
-    probeInfo.flags = TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r;
+    probeInfo.flags = asuint(TORQUE_TEX2D_PIX(atlasTex, int2(entry,slot)).r);
     return probeInfo;
 }
 

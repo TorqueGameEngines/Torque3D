@@ -307,8 +307,8 @@ singleton ShaderData( PFX_ReflectionProbeArray )
    samplerNames[4] = "$specularCubemapAR";
    samplerNames[5] = "$irradianceCubemapAR";
    samplerNames[6] = "$WetnessTexture";
-   samplerNames[7] = "$ssaoMask";
-   samplerNames[8] = "$probeAtlas";
+   samplerNames[7] = "$probeAtlas";
+   samplerNames[8] = "$ssaoMask";
 
    pixVersion = 2.0;
 };  

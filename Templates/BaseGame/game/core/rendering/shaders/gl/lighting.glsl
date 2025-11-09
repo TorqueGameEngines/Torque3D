@@ -139,7 +139,7 @@ ProbeInfo createProbeinfo(sampler2D atlasTex, vec3 eyePosWorld, int slot)
     probeInfo.probeConfigData.a = texelFetch(atlasTex, ivec2(entry,slot),0).r;
     
     entry++; //30
-    probeInfo.flags = int(texelFetch(atlasTex, ivec2(entry,slot),0).r);
+    probeInfo.flags = floatBitsToInt(texelFetch(atlasTex, ivec2(entry,slot),0).r);
     return probeInfo;
 }
 

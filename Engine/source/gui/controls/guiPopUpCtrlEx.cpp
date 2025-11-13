@@ -1427,7 +1427,7 @@ bool GuiPopUpMenuCtrlEx::onKeyDown(const GuiEvent &event)
 //------------------------------------------------------------------------------
 void GuiPopUpMenuCtrlEx::onAction()
 {
-   if (!mActive)
+   if (!mActive || dynamic_cast<GuiPopupTextListCtrlEx*>(mTl) == NULL )
       return;
 
    GuiControl *canCtrl = getParent();

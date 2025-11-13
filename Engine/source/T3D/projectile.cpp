@@ -336,6 +336,47 @@ bool ProjectileData::onAdd()
    if(!Parent::onAdd())
       return false;
 
+   if (!particleEmitter && particleEmitterId != 0)
+   {
+      if (Sim::findObject(particleEmitterId, particleEmitter) == false)
+      {
+         Con::errorf(ConsoleLogEntry::General, "ProjectileData::onAdd: Invalid packet, bad datablockId(particleEmitter): 0x%x", particleEmitterId);
+         return false;
+      }
+   }
+   if (!explosion && explosionId != 0)
+   {
+      if (Sim::findObject(explosionId, explosion) == false)
+      {
+         Con::errorf(ConsoleLogEntry::General, "ProjectileData::onAdd: Invalid packet, bad datablockId(explosion): 0x%x", explosionId);
+         return false;
+      }
+   }
+   if (!waterExplosion && waterExplosionId != 0)
+   {
+      if (Sim::findObject(waterExplosionId, waterExplosion) == false)
+      {
+         Con::errorf(ConsoleLogEntry::General, "ProjectileData::onAdd: Invalid packet, bad datablockId(waterExplosion): 0x%x", waterExplosionId);
+         return false;
+      }
+   }
+   if (!splash && splashId != 0)
+   {
+      if (Sim::findObject(splashId, splash) == false)
+      {
+         Con::errorf(ConsoleLogEntry::General, "ProjectileData::onAdd: Invalid packet, bad datablockId(waterExplosion): 0x%x", splashId);
+         return false;
+      }
+   }
+   if (!decal && decalId != 0)
+   {
+      if (Sim::findObject(decalId, decal) == false)
+      {
+         Con::errorf(ConsoleLogEntry::General, "ProjectileData::onAdd: Invalid packet, bad datablockId(waterExplosion): 0x%x", decalId);
+         return false;
+      }
+   }
+      
    return true;
 }
 

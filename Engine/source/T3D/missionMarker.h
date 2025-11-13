@@ -174,6 +174,8 @@ class SpawnSphere : public MissionMarker
       F32      mSphereWeight;
       F32      mIndoorWeight;
       F32      mOutdoorWeight;
+      String   mSpawnIf;
+      bool testCondition();
 
       SimObject* spawnObject(String additionalProps = String::EmptyString);
 

@@ -942,8 +942,9 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 
    if (stream->writeFlag(mask & UpdateCollisionMask))
    {
-      stream->write(mCollisionLOD);
-      stream->write((U32)mCollisionType);
+      if (stream->writeFlag(mCollisionLOD>0))
+         stream->writeInt(mCollisionLOD,12);
+      stream->writeInt(mCollisionType,4);
    }
    if (stream->writeFlag(mask & SkinMask))
       con->packNetStringHandleU(stream, mSkinNameHandle);
@@ -952,7 +953,7 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
    {
       PACK_ASSET_REFACTOR(con, Shape);
 
-      stream->write((U32)mDecalType);
+      stream->writeInt(mDecalType,4);
 
       stream->writeFlag(mAllowPlayerStep);
       stream->writeFlag(mMeshCulling);
@@ -998,17 +999,18 @@ U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 
    if (stream->writeFlag(mask & MaterialMask))
    {
-      stream->writeInt(mChangingMaterials.size(), 16);
-
-      for (U32 i = 0; i < mChangingMaterials.size(); i++)
+      if (stream->writeFlag(mChangingMaterials.size() > 0))
       {
-         stream->writeInt(mChangingMaterials[i].slot, 16);
+         stream->writeInt(mChangingMaterials.size(), 16);
 
-         NetStringHandle matNameStr = mChangingMaterials[i].assetId.c_str();
-         con->packNetStringHandleU(stream, matNameStr);
+         for (U32 i = 0; i < mChangingMaterials.size(); i++)
+         {
+            stream->writeInt(mChangingMaterials[i].slot, 16);
+
+            NetStringHandle matNameStr = mChangingMaterials[i].assetId.c_str();
+            con->packNetStringHandleU(stream, matNameStr);
+         }
       }
-
-      //mChangingMaterials.clear();
    }
 
    return retMask;
@@ -1042,8 +1044,9 @@ void TSStatic::unpackUpdate(NetConnection* con, BitStream* stream)
    {
       U32 collisionType = CollisionMesh;
 
-      stream->read(&mCollisionLOD);
-      stream->read(&collisionType);
+      if (stream->readFlag())
+         mCollisionLOD = stream->readInt(12);
+      collisionType = stream->readInt(4);
 
       // Handle it if we have changed CollisionType's
       if ((MeshType)collisionType != mCollisionType)
@@ -1069,7 +1072,7 @@ void TSStatic::unpackUpdate(NetConnection* con, BitStream* stream)
    {
       UNPACK_ASSET_REFACTOR(con, Shape);
 
-      stream->read((U32*)&mDecalType);
+      mDecalType = (MeshType)stream->readInt(4);
 
       mAllowPlayerStep = stream->readFlag();
       mMeshCulling = stream->readFlag();
@@ -1124,20 +1127,22 @@ void TSStatic::unpackUpdate(NetConnection* con, BitStream* stream)
    if (stream->readFlag())
    {
       mChangingMaterials.clear();
-      U32 materialCount = stream->readInt(16);
-
-      for (U32 i = 0; i < materialCount; i++)
+      if (stream->readFlag())
       {
-         matMap newMatMap;
-         newMatMap.slot = stream->readInt(16);
-         newMatMap.assetId = String(con->unpackNetStringHandleU(stream).getString());
+         U32 materialCount = stream->readInt(16);
 
-         //do the lookup, now
-         newMatMap.matAsset = AssetDatabase.acquireAsset<MaterialAsset>(newMatMap.assetId);
+         for (U32 i = 0; i < materialCount; i++)
+         {
+            matMap newMatMap;
+            newMatMap.slot = stream->readInt(16);
+            newMatMap.assetId = String(con->unpackNetStringHandleU(stream).getString());
 
-         mChangingMaterials.push_back(newMatMap);
+            //do the lookup, now
+            newMatMap.matAsset = AssetDatabase.acquireAsset<MaterialAsset>(newMatMap.assetId);
+
+            mChangingMaterials.push_back(newMatMap);
+         }
       }
-
       updateMaterials();
    }
 

@@ -174,7 +174,8 @@ bool VehicleData::preload(bool server, String &errorStr)
       {
          if( !Sim::findObject( damageEmitterIDList[i], damageEmitterList[i] ) )
          {
-            Con::errorf( ConsoleLogEntry::General, "VehicleData::preload Invalid packet, bad datablockId(damageEmitter): 0x%x", damageEmitterIDList[i] );
+            errorStr = String::ToString("VehicleData::preload Invalid packet, bad datablockId(damageEmitter): 0x%x", damageEmitterIDList[i] );
+            return false;
          }
       }
    }

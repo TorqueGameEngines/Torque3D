@@ -297,6 +297,36 @@ bool RigidShapeData::onAdd()
    if(!Parent::onAdd())
       return false;
 
+   for (S32 i = 0; i < VC_NUM_SPLASH_EMITTERS; i++)
+   {
+      if (!splashEmitterList[i] && splashEmitterIDList[i] != 0)
+      {
+         if (Sim::findObject(splashEmitterIDList[i], splashEmitterList[i]) == false)
+         {
+            Con::errorf(ConsoleLogEntry::General, "ExplosionData::onAdd: Invalid packet, bad datablockId(explosion): 0x%x", splashEmitterIDList[i]);
+            return false;
+         }
+      }
+   }
+
+   if (!dustTrailEmitter && dustTrailID != 0)
+   {
+      if (Sim::findObject(dustID, dustEmitter) == false)
+      {
+         Con::errorf(ConsoleLogEntry::General, "RigidShapeData::onAdd: Invalid packet, bad datablockId(dustEmitter): 0x%x", dustID);
+         return false;
+      }
+   }
+
+   if (!dustTrailEmitter && dustTrailID != 0)
+   {
+      if (Sim::findObject(dustTrailID, dustTrailEmitter) == false)
+      {
+         Con::errorf(ConsoleLogEntry::General, "RigidShapeData::onAdd: Invalid packet, bad datablockId(dustTrailEmitter): 0x%x", dustTrailID);
+         return false;
+      }
+   }
+
    return true;
 }
 
@@ -338,7 +368,8 @@ bool RigidShapeData::preload(bool server, String &errorStr)
    {
       if( !Sim::findObject( dustID, dustEmitter ) )
       {
-         Con::errorf( ConsoleLogEntry::General, "RigidShapeData::preload Invalid packet, bad datablockId(dustEmitter): 0x%x", dustID );
+         errorStr = String::ToString("RigidShapeData::preload Invalid packet, bad datablockId(dustEmitter): 0x%x", dustID);
+         return false;
       }
    }
 
@@ -349,7 +380,8 @@ bool RigidShapeData::preload(bool server, String &errorStr)
       {
          if( !Sim::findObject( splashEmitterIDList[i], splashEmitterList[i] ) )
          {
-            Con::errorf( ConsoleLogEntry::General, "RigidShapeData::preload Invalid packet, bad datablockId(splashEmitter): 0x%x", splashEmitterIDList[i] );
+            errorStr = String::ToString("RigidShapeData::preload Invalid packet, bad datablockId(splashEmitter): 0x%x", splashEmitterIDList[i] );
+            return false;
          }
       }
    }
@@ -370,7 +402,8 @@ bool RigidShapeData::preload(bool server, String &errorStr)
    {
       if( !Sim::findObject( dustTrailID, dustTrailEmitter ) )
       {
-         Con::errorf( ConsoleLogEntry::General, "RigidShapeData::preload Invalid packet, bad datablockId(dustTrailEmitter): 0x%x", dustTrailID );
+         errorStr = String::ToString("RigidShapeData::preload Invalid packet, bad datablockId(dustTrailEmitter): 0x%x", dustTrailID );
+         return false;
       }
    }
 

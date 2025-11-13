@@ -1122,15 +1122,19 @@ void GFXGLShader::setConstantsFromBuffer(U8* buffer)
          // Set sampler number on our program.
          glUniform1i(handle->mDesc.bindPoint, handle->mDesc.samplerReg);
          break;
+      case GFXSCT_Bool:
       case GFXSCT_Int:
          glUniform1iv(handle->mDesc.bindPoint, handle->mDesc.arraySize, (GLint*)(mGlobalConstBuffer + handle->mDesc.offset));
          break;
+      case GFXSCT_Bool2:
       case GFXSCT_Int2:
          glUniform2iv(handle->mDesc.bindPoint, handle->mDesc.arraySize, (GLint*)(mGlobalConstBuffer + handle->mDesc.offset));
          break;
+      case GFXSCT_Bool3:
       case GFXSCT_Int3:
          glUniform3iv(handle->mDesc.bindPoint, handle->mDesc.arraySize, (GLint*)(mGlobalConstBuffer + handle->mDesc.offset));
          break;
+      case GFXSCT_Bool4:
       case GFXSCT_Int4:
          glUniform4iv(handle->mDesc.bindPoint, handle->mDesc.arraySize, (GLint*)(mGlobalConstBuffer + handle->mDesc.offset));
          break;

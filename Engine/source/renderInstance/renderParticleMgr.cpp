@@ -495,7 +495,8 @@ void RenderParticleMgr::renderParticle(ParticleRenderInst* ri, SceneRenderState*
 
    mParticleShaderConsts.mShaderConsts->setSafe( mParticleShaderConsts.mAlphaFactorSC, alphaFactor );
    mParticleShaderConsts.mShaderConsts->setSafe( mParticleShaderConsts.mAlphaScaleSC, alphaScale );
-
+   mParticleShaderConsts.mShaderConsts->setSafe(mParticleShaderConsts.mGlowSC, ri->glow);
+   
    mParticleShaderConsts.mShaderConsts->setSafe( mParticleShaderConsts.mFSModelViewProjSC, *ri->modelViewProj  );
    mParticleShaderConsts.mShaderConsts->setSafe( mParticleShaderConsts.mOneOverFarSC, 1.0f / state->getFarPlane() );     
 
@@ -556,6 +557,7 @@ bool RenderParticleMgr::_initShader()
       mParticleShaderConsts.mOneOverSoftnessSC = mParticleShader->getShaderConstHandle( "$oneOverSoftness" );
       mParticleShaderConsts.mAlphaFactorSC = mParticleShader->getShaderConstHandle( "$alphaFactor" );
       mParticleShaderConsts.mAlphaScaleSC = mParticleShader->getShaderConstHandle( "$alphaScale" );
+      mParticleShaderConsts.mGlowSC = mParticleShader->getShaderConstHandle("$glow");
       mParticleShaderConsts.mFSModelViewProjSC = mParticleShader->getShaderConstHandle( "$fsModelViewProj" );
       mParticleShaderConsts.mDeferredTargetParamsSC = mParticleShader->getShaderConstHandle( "$deferredTargetParams" );
 

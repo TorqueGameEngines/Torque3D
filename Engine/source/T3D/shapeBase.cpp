@@ -320,7 +320,8 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
       {
          if( Sim::findObject( explosionID, explosion ) == false)
          {
-            Con::errorf( ConsoleLogEntry::General, "ShapeBaseData::preload: Invalid packet, bad datablockId(explosion): 0x%x", explosionID );
+            errorStr = String::ToString("ShapeBaseData::preload: Invalid packet, bad datablockId(explosion): 0x%x", explosionID );
+            return false;
          }
          AssertFatal(!(explosion && ((explosionID < DataBlockObjectIdFirst) || (explosionID > DataBlockObjectIdLast))),
             "ShapeBaseData::preload: invalid explosion data");
@@ -330,7 +331,8 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
       {
          if( Sim::findObject( underwaterExplosionID, underwaterExplosion ) == false)
          {
-            Con::errorf( ConsoleLogEntry::General, "ShapeBaseData::preload: Invalid packet, bad datablockId(underwaterExplosion): 0x%x", underwaterExplosionID );
+            errorStr = String::ToString("ShapeBaseData::preload: Invalid packet, bad datablockId(underwaterExplosion): 0x%x", underwaterExplosionID );
+            return false;
          }
          AssertFatal(!(underwaterExplosion && ((underwaterExplosionID < DataBlockObjectIdFirst) || (underwaterExplosionID > DataBlockObjectIdLast))),
             "ShapeBaseData::preload: invalid underwaterExplosion data");
@@ -339,6 +341,11 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
       if( !debris && debrisID != 0 )
       {
          Sim::findObject( debrisID, debris );
+         if (Sim::findObject(debrisID, debris) == false)
+         {
+            errorStr = String::ToString("ShapeBaseData::preload: Invalid packet, bad datablockId(debris): 0x%x", debrisID);
+            return false;
+         }
          AssertFatal(!(debris && ((debrisID < DataBlockObjectIdFirst) || (debrisID > DataBlockObjectIdLast))),
             "ShapeBaseData::preload: invalid debris data");
       }

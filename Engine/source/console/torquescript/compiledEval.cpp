@@ -917,8 +917,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
                {
                   if (Con::gObjectCopyFailures == -1)
                      Con::errorf(ConsoleLogEntry::General, "%s: Unable to find parent object %s for %s.", getFileLine(ip - 1), objParent, callArgv[1].getString());
-                  else
-                     ++Con::gObjectCopyFailures;
+                  ++Con::gObjectCopyFailures;
 
                   delete object;
                   currentNewObject = NULL;
@@ -1033,6 +1032,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
             {
                // This error is usually caused by failing to call Parent::initPersistFields in the class' initPersistFields().
                Con::warnf(ConsoleLogEntry::General, "%s: Register object failed for object %s of class %s.", getFileLine(ip - 2), currentNewObject->getName(), currentNewObject->getClassName());
+               ++Con::gObjectCopyFailures;
                delete currentNewObject;
                currentNewObject = NULL;
                ip = failJump;
@@ -1049,6 +1049,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          {
             Con::errorf(ConsoleLogEntry::General, "%s: preload failed for %s: %s.", getFileLine(ip - 2),
                currentNewObject->getName(), errorStr.c_str());
+            ++Con::gObjectCopyFailures;
             dataBlock->deleteObject();
             currentNewObject = NULL;
             ip = failJump;

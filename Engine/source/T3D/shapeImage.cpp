@@ -553,7 +553,8 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
    {
       if( !Sim::findObject( SimObjectId( casingID ), casing ) )
       {
-         Con::errorf( ConsoleLogEntry::General, "ShapeBaseImageData::preload: Invalid packet, bad datablockId(casing): 0x%x", casingID );
+         errorStr = String::ToString("ShapeBaseImageData::preload: Invalid packet, bad datablockId(casing): 0x%x", casingID );
+         return false;
       }
    }
 

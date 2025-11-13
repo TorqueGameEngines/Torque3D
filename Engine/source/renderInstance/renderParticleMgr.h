@@ -112,6 +112,7 @@ protected:
       GFXShaderConstHandle *mDeferredTargetParamsSC;
       GFXShaderConstHandle *mAlphaFactorSC;
       GFXShaderConstHandle *mAlphaScaleSC;
+      GFXShaderConstHandle* mGlowSC;
       GFXShaderConstHandle *mSamplerDiffuse;
       GFXShaderConstHandle *mSamplerDeferredTex;
       GFXShaderConstHandle *mSamplerParaboloidLightMap;

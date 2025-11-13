@@ -637,6 +637,7 @@ bool ExplosionData::onAdd()
          if( !Sim::findObject( debrisIDList[i], debrisList[i] ) )
          {
             Con::errorf( ConsoleLogEntry::General, "ExplosionData::onAdd: Invalid packet, bad datablockId(debris): 0x%x", debrisIDList[i] );
+            return false;
          }
       }
    }
@@ -648,6 +649,7 @@ bool ExplosionData::onAdd()
          if( Sim::findObject( emitterIDList[i], emitterList[i] ) == false)
          {
             Con::errorf( ConsoleLogEntry::General, "ExplosionData::onAdd: Invalid packet, bad datablockId(particle emitter): 0x%x", emitterIDList[i] );
+            return false;
          }
       }
    }
@@ -659,6 +661,7 @@ bool ExplosionData::onAdd()
          if( Sim::findObject( explosionIDList[k], explosionList[k] ) == false)
          {
             Con::errorf( ConsoleLogEntry::General, "ExplosionData::onAdd: Invalid packet, bad datablockId(explosion): 0x%x", explosionIDList[k] );
+            return false;
          }
       }
    }
@@ -880,20 +883,34 @@ bool ExplosionData::preload(bool server, String &errorStr)
    if (Parent::preload(server, errorStr) == false)
       return false;
 
-   if( !server )
+   if (!server)
    {
 
       if (!isSoundValid())
       {
          //return false; -TODO: trigger asset download
       }
-
       if (!particleEmitter && particleEmitterId != 0)
+      {
          if (Sim::findObject(particleEmitterId, particleEmitter) == false)
          {
-            Con::errorf(ConsoleLogEntry::General, "Error, unable to load particle emitter for explosion datablock");
+            errorStr = String::ToString("Error, unable to load particle emitter for explosion datablock");
             return false;
          }
+      }
+
+      U32 i;
+      for (i = 0; i < EC_NUM_EMITTERS; i++)
+      {
+         if (!emitterList[i] && emitterIDList[i] != 0)
+         {
+            if (Sim::findObject(emitterIDList[i], emitterList[i]) == false)
+            {
+               errorStr = String::ToString("Error, unable to load emitter[%i] for explosion datablock 0x%x", i, emitterIDList[i]);
+               return false;
+            }
+         }
+      }
    }
 
    if (getExplosionShape()) {

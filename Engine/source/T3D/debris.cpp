@@ -206,14 +206,18 @@ bool DebrisData::onAdd()
          if( Sim::findObject( emitterIDList[i], emitterList[i] ) == false)
          {
             Con::errorf( ConsoleLogEntry::General, "DebrisData::onAdd: Invalid packet, bad datablockId(emitter): 0x%x", emitterIDList[i]);
+            return false;
          }
       }
    }
 
    if (!explosion && explosionId != 0)
    {
-      if (!Sim::findObject( SimObjectId( explosionId ), explosion ))
-            Con::errorf( ConsoleLogEntry::General, "DebrisData::onAdd: Invalid packet, bad datablockId(particle emitter): 0x%x", explosionId);
+      if (!Sim::findObject(SimObjectId(explosionId), explosion))
+      {
+         Con::errorf(ConsoleLogEntry::General, "DebrisData::onAdd: Invalid packet, bad datablockId(particle emitter): 0x%x", explosionId);
+         return false;
+      }
    }
 
    // validate data

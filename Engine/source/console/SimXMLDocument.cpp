@@ -1419,4 +1419,99 @@ DefineEngineMethod( SimXMLDocument, getData, const char*, (),,
    return text;
 }
 
+bool SimXMLDocument::prevElement()
+{
+   m_CurrentAttribute = NULL;
+
+   if (m_paNode.empty())
+      return false;
+
+   S32 idx = m_paNode.size() - 1;
+   tinyxml2::XMLNode*& curr = m_paNode[idx];
+
+   if (!curr)
+      return false;
+
+   tinyxml2::XMLNode* prev = curr->PreviousSiblingElement();
+
+   if (!prev)
+      return false;
+
+   curr = prev;
+   return true;
+}
+
+DefineEngineMethod(SimXMLDocument, prevElement, const char*, (), ,
+   "@brief Move to previous sibling element regardless of name.\n"
+   "@return The element name, or empty string if none.\n")
+{
+   if (object->prevElement())
+      return object->elementValue();
+
+   return "";
+}
+
+bool SimXMLDocument::nextElement()
+{
+   m_CurrentAttribute = NULL;
+
+   if (m_paNode.empty())
+      return false;
+
+   S32 idx = m_paNode.size() - 1;
+   tinyxml2::XMLNode*& curr = m_paNode[idx];
+
+   if (!curr)
+      return false;
+
+   tinyxml2::XMLNode* next = curr->NextSiblingElement();
+
+   if (!next)
+      return false;
+
+   curr = next;
+   return true;
+}
+
+DefineEngineMethod(SimXMLDocument, nextElement, const char*, (), ,
+   "@brief Move to next sibling element regardless of name.\n"
+   "@return The element name, or empty string if none.\n")
+{
+   if (object->nextElement())
+      return object->elementValue(); // return the name of the element
+
+   return "";
+}
+
+bool SimXMLDocument::nextChildElement()
+{
+   m_CurrentAttribute = NULL;
+
+   if (m_paNode.empty())
+      return false;
+
+   tinyxml2::XMLNode* parent = m_paNode.back();
+   if (!parent)
+      return false;
+
+   tinyxml2::XMLElement* firstChild = parent->FirstChildElement();
+   if (!firstChild)
+      return false;
+
+   m_paNode.push_back(firstChild);
+   return true;
+}
+
+DefineEngineMethod(SimXMLDocument, nextChildElement, const char*, (),,
+    "@brief Move to the next child element under the same parent.\n"
+    "@return True if a next child exists, false otherwise.")
+{
+   if (object->nextChildElement())
+   {
+      const char* name = object->elementValue();
+      return name ? name : "";
+   }
+   return "";
+}
+
 ////EOF/////////////////////////////////////////////////////////////////////////

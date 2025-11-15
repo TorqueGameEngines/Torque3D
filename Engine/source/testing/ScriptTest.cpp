@@ -269,6 +269,197 @@ TEST_F(ScriptTest, Basic_Function_Call_And_Local_Variable_Testing)
    ASSERT_EQ(staticCall.getInt(), 3);
 }
 
+TEST_F(ScriptTest, VectorTests)
+{
+   ConsoleValue vecTest = RunScript(R"(
+      $pref::SFX::channelVolume[1] = 1;
+      $pref::SFX::channelVolume[2] = 1;
+      $pref::SFX::channelVolume[3] = 1;
+      $pref::SFX::channelVolume[4] = 1;
+      $pref::SFX::channelVolume[5] = 1;
+      $pref::SFX::channelVolume[6] = 1;
+      $pref::SFX::channelVolume[7] = 1;
+      $pref::SFX::channelVolume[8] = 1;
+
+      function setChannel(%channel, %volume){
+         $channelVol[%channel] = %volume;
+      }
+
+      function doTest(){
+         for( %channel = 0; %channel <= 8; %channel ++ )
+            setChannel(%channel, $pref::SFX::channelVolume[ %channel ] );
+      }
+   
+      doTest();
+
+      return $channelVol[1];
+   )");
+   ASSERT_EQ(vecTest.getInt(), 1);
+
+   vecTest = RunScript(R"(
+      function doTest(){
+         %arr = [1,2,3,4];
+         return %arr[1];
+      }
+      return doTest();
+   )");
+   ASSERT_EQ(vecTest.getInt(), 2);
+
+   vecTest = RunScript(R"(
+      function test2(){
+         for ( %i = 0; %i < 7; %i++ )
+            %val[%i] = %i;
+
+         return %val[1];
+      }
+      return test2();
+   )");
+   ASSERT_EQ(vecTest.getInt(), 1);
+
+   vecTest = RunScript(R"(
+      function doTest(){
+         for ( %i = 0; %i < 7; %i++ )
+            $val[%i] = %i;
+
+         return $val[1];
+      }
+      
+      return doTest();
+   )");
+
+   ASSERT_EQ(vecTest.getInt(), 1);
+
+   vecTest = RunScript(R"(
+      $arr = [[1,2,3],[4,5,6]];
+      return $arr[1][1];
+   )");
+   ASSERT_EQ(vecTest.getInt(), 5);
+
+   vecTest = RunScript(R"(
+      function doTest(){
+         %vec1 = [1,2,3];
+         %vec2 = [4,5,6];
+         %vec3 = [7,8,9];
+         %vecCombine = [%vec1,%vec2,%vec3];
+
+         return %vecCombine[2][1];
+      }
+      return doTest();
+   )");
+
+   ASSERT_EQ(vecTest.getInt(), 8);
+
+   vecTest = RunScript(R"(
+      $count = 0;
+      function addToVector(%inWord){
+         $wordList[$count] = %inWord;
+         $count++;
+      }
+      addToVector("test1");
+      addToVector("test2");
+      addToVector("test3");
+
+      return $wordList;
+   )");
+
+   ASSERT_STRCASEEQ(vecTest.getString(), "test1 test2 test3");
+
+   vecTest = RunScript(R"(
+      $count = 0;
+      function buildVector(){
+         %wordList[$count] = "test1";
+         %wordList[$count++] = "test2";
+         %wordList[$count++] = "test3";
+         return %wordList;
+      }
+
+      return buildVector();
+   )");
+
+   ASSERT_STRCASEEQ(vecTest.getString(), "test1 test2 test3");
+
+   vecTest = RunScript(R"(
+      function doTest(){
+         %vec1 = [1,2,3];
+
+         return %vec1[0]++;
+      }
+      return doTest();
+   )");
+
+   ASSERT_EQ(vecTest.getInt(), 2);
+
+   vecTest = RunScript(R"(
+      function doTest(){
+         $vec1 = [1,2,3];
+
+         return $vec1[0]++;
+      }
+      return doTest();
+   )");
+
+   ASSERT_EQ(vecTest.getInt(), 2);
+
+   vecTest = RunScript(R"(
+      function doTestAdd(%size){
+         for ( %i = 0; %i < %size; %i++ )
+            %val[%i] = %i;
+
+         return %val;
+      }
+
+      function doTest(){
+         %bar = [[doTestAdd(3)], [doTestAdd(3)], [doTestAdd(3)]];
+         return %bar;
+      }
+      
+      return doTest();
+   )");
+   ASSERT_STRCASEEQ(vecTest.getString(), "0 1 2 0 1 2 0 1 2");
+
+   vecTest = RunScript(R"(
+      $vecSize = 0;
+      function doTestAdd(%size){
+         $val = "";
+         $vecSize = $vecSize + %size;
+         for ( %i = 0; %i < $vecSize; %i++ )
+            $val[%i] = %i;
+
+         return $val;
+      }
+
+      function doTest(){
+         %bar = [[doTestAdd(3)], [doTestAdd(3)], [doTestAdd(3)]];
+         return %bar;
+      }
+      
+      return doTest();
+   )");
+   ASSERT_STRCASEEQ(vecTest.getString(), "0 1 2 0 1 2 3 4 5 0 1 2 3 4 5 6 7 8");
+
+   vecTest = RunScript(R"(
+      $val = "";
+      function doTestAdd(%size){
+         %stryng = "$val = [0";
+         for (%i=1; %i<%size; %i++)
+         {
+            %stryng = %stryng @","@ %i;
+         }
+         %stryng = %stryng @"];";
+         eval(%stryng);
+         return $val;
+      }
+
+      function doTest(){
+         %bar = [doTestAdd(3), doTestAdd(3), doTestAdd(3)];
+         return %bar;
+      }
+      
+      return doTest();
+   )");
+   ASSERT_STRCASEEQ(vecTest.getString(), "0 1 2 0 1 2 0 1 2");
+}
+
 TEST_F(ScriptTest, Basic_Conditional_Statements)
 {
    ConsoleValue value = RunScript(R"(
@@ -895,6 +1086,18 @@ TEST_F(ScriptTest, Sugar_Syntax)
    )");
 
    ASSERT_EQ(valueSetArray.getInt(), 5);
+
+   ConsoleValue valueSetArrayGlobal = RunScript(R"(
+         function a()
+         {
+            $vector[0] = "1 2 3";
+            $vector[0].z = 5;
+            return $vector[0].z;
+         }
+         return a();
+   )");
+
+   ASSERT_EQ(valueSetArrayGlobal.getInt(), 5);
 
    ConsoleValue valueStoreCalculated = RunScript(R"(
       function a()

@@ -69,6 +69,28 @@ char* ConsoleValue::convertToBuffer() const
    return buffer;
 }
 
+char* ConsoleValue::convertVectorToBuffer() const
+{
+   if (!vec || vec->size() == 0)
+      return (char*)"";
+
+   // use FrameAllocator to avoid static overwrite
+   char* buffer = static_cast<char*>(sConversionAllocator.alloc(4096));
+   buffer[0] = 0;
+
+   for (U32 v = 0; v < vec->size(); v++)
+   {
+      const char* elemStr = (*vec)[v].getString();
+
+      if (v > 0)
+         dStrcat(buffer, " ", 4096);
+
+      dStrcat(buffer, elemStr, 4096);
+   }
+
+   return buffer;
+}
+
 const char* ConsoleValue::getConsoleData() const
 {
    return Con::getData(type, dataPtr, 0, enumTable);

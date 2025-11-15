@@ -173,7 +173,7 @@ S32 FuncVars::assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, 
    return id;
 }
 
-S32 FuncVars::lookup(StringTableEntry var, S32 lineNumber)
+S32 FuncVars::lookup(StringTableEntry var, S32 lineNumber, TypeReq defaultType)
 {
    std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
 
@@ -182,10 +182,21 @@ S32 FuncVars::lookup(StringTableEntry var, S32 lineNumber)
       const char* str = avar("Script Warning: Variable %s referenced before used when compiling script. File: %s Line: %d", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber);
       scriptErrorHandler(str);
 
-      return assign(var, TypeReqString, lineNumber, false);
+      return assign(var, defaultType, lineNumber, false);
    }
 
    return found->second.reg;
+}
+
+bool FuncVars::find(StringTableEntry var)
+{
+   std::unordered_map<StringTableEntry, Var>::iterator found = vars.find(var);
+   if (found == vars.end())
+   {
+      return false;
+   }
+
+   return true;
 }
 
 TypeReq FuncVars::lookupType(StringTableEntry var, S32 lineNumber)

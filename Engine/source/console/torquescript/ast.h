@@ -40,7 +40,8 @@ enum TypeReq
    TypeReqNone,
    TypeReqUInt,
    TypeReqFloat,
-   TypeReqString
+   TypeReqString,
+   TypeReqVector
 };
 
 enum ExprNodeName
@@ -132,6 +133,32 @@ struct ExprNode : StmtNode
    virtual U32 compile(CodeStream& codeStream, U32 ip, TypeReq type) = 0;
    virtual TypeReq getPreferredType() = 0;
    virtual ExprNodeName getExprNodeNameEnum() const { return NameExprNode; }
+};
+
+struct VectorExprNode : ExprNode
+{
+   Vector<ExprNode*> elements;  ///< Elements of the vector literal
+
+   static VectorExprNode* alloc(S32 lineNumber, const Vector<ExprNode*>& elements);
+
+   U32 compile(CodeStream& codeStream, U32 ip, TypeReq type) override;
+   TypeReq getPreferredType() override { return TypeReqVector; }
+   DBG_STMT_TYPE(VectorExprNode);
+};
+
+struct VectorIndexNode : ExprNode
+{
+   ExprNode* base;
+   ExprNode* index;
+
+   static VectorIndexNode* alloc(S32 lineNumber, ExprNode* b, ExprNode* i);
+
+   U32 compile(CodeStream& codeStream, U32 ip, TypeReq type) override;
+   TypeReq getPreferredType() override { return TypeReqNone; }
+   DBG_STMT_TYPE(VectorIndexNode);
+
+   ExprNode* getBase() const { return base; }
+   ExprNode* getIndex() const { return index; }
 };
 
 struct ReturnStmtNode : StmtNode

@@ -154,7 +154,7 @@ U32 ReturnStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    else
    {
       TypeReq walkType = expr->getPreferredType();
-      if (walkType == TypeReqNone) walkType = TypeReqString;
+      if (walkType == TypeReqNone || walkType == TypeReqVector) walkType = TypeReqString;
       ip = expr->compile(codeStream, ip, walkType);
 
       // Return the correct type
@@ -368,6 +368,51 @@ U32 IterStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    codeStream.popFixScope();
 
    return codeStream.tell();
+}
+
+//------------------------------------------------------------
+
+U32 VectorExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
+{
+   // Emit instruction to create vector
+   codeStream.emit(OP_CREATE_VECTOR);
+   codeStream.emit(elements.size());
+
+   for (U32 i = 0; i < elements.size(); i++)
+   {
+      TypeReq req = elements[i]->getPreferredType();
+
+      if (req == TypeReqNone)
+      {
+         req = type;
+      }
+
+      ip = elements[i]->compile(codeStream, ip, req);
+      codeStream.emit(OP_POP_STK);
+      codeStream.emit(OP_VECTOR_PUSH);
+   }
+
+   return ip;
+}
+
+
+//------------------------------------------------------------
+
+U32 VectorIndexNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
+{
+   // Compile base expression as vector
+   if (VectorIndexNode* innerVec = dynamic_cast<VectorIndexNode*>(base))
+      ip = innerVec->compile(codeStream, ip, TypeReqVector);
+   else
+      ip = base->compile(codeStream, ip, TypeReqVector);
+   // Compile index
+   ip = index->compile(codeStream, ip, TypeReqUInt);
+
+   // Emit load member
+   codeStream.emit(OP_LOADVAR_VECTOR_MEMBER);
+   codeStream.emit(type);
+
+   return ip;
 }
 
 //------------------------------------------------------------
@@ -645,40 +690,99 @@ TypeReq FloatUnaryExprNode::getPreferredType()
 
 U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 {
-   // if this has an arrayIndex...
-   // OP_LOADIMMED_IDENT
-   // varName
-   // OP_ADVANCE_STR
-   // evaluate arrayIndex TypeReqString
-   // OP_REWIND_STR
-   // OP_SETCURVAR_ARRAY
-   // OP_LOADVAR (type)
-
-   // else
-   // OP_SETCURVAR
-   // varName
-   // OP_LOADVAR (type)
+// If this variable has an array or vector index, the logic is:
+//
+// eval arrayIndex
+//
+// if arrayIndex is a string expression (CommaCatExprNode or TypeReqString):
+//    OP_LOADIMMED_IDENT
+//    varName
+//    eval arrayIndex as TypeReqString
+//    OP_REWIND_STR
+//    OP_SETCURVAR_ARRAY
+//    OP_POP_STK
+//
+// else if it's a numeric or vector index:
+//    if global ($var):
+//       OP_SETCURVAR
+//       varName
+//       OP_LOADVAR_VECTOR
+//    else (local):
+//       OP_LOAD_LOCAL_VAR_VECTOR
+//       (emit local var lookup index)
+//
+//    eval arrayIndex as TypeReqUInt
+//    OP_LOADVAR_VECTOR_MEMBER
+//    emit requested type (TypeReqUInt / TypeReqFloat / TypeReqString / TypeReqVector)
+//
+// else if it's a global variable (starts with '$'):
+//    OP_SETCURVAR
+//    varName
+//    OP_LOADVAR_<type>
+//
+// else (local variable):
+//    OP_LOAD_LOCAL_VAR_<type>
+//    (emit local variable lookup index)
+//
+// return current instruction pointer
 
    if (type == TypeReqNone)
       return codeStream.tell();
 
    precompileIdent(varName);
 
-   bool oldVariables = arrayIndex || varName[0] == '$';
+   bool isGlobal = varName[0] == '$';
+   bool isVector = arrayIndex;
 
-   if (oldVariables)
+   if (isVector || isGlobal)
    {
-      codeStream.emit(arrayIndex ? OP_LOADIMMED_IDENT : OP_SETCURVAR);
-      codeStream.emitSTE(varName);
-
-      if (arrayIndex)
+      if (isVector)
       {
-         //codeStream.emit(OP_ADVANCE_STR);
-         ip = arrayIndex->compile(codeStream, ip, TypeReqString);
-         codeStream.emit(OP_REWIND_STR);
-         codeStream.emit(OP_SETCURVAR_ARRAY);
-         codeStream.emit(OP_POP_STK);
+         if (dynamic_cast<CommaCatExprNode*>(arrayIndex) || arrayIndex->getPreferredType() == TypeReqString)
+         {
+            type = TypeReqString;
+            codeStream.emit(OP_LOADIMMED_IDENT);
+            codeStream.emitSTE(varName);
+
+            ip = arrayIndex->compile(codeStream, ip, TypeReqString);
+            codeStream.emit(OP_REWIND_STR);
+            codeStream.emit(OP_SETCURVAR_ARRAY);
+            codeStream.emit(OP_POP_STK);
+         }
+         else
+         {
+            // Compile the index expression
+            ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
+
+            // Load the base vector
+            if (isGlobal)
+            {
+               codeStream.emit(OP_SETCURVAR);
+               codeStream.emitSTE(varName);
+            }
+
+            // Emit the correct vector member load opcode
+            if (isGlobal)
+            {
+               codeStream.emit(OP_LOADVAR_VECTOR_MEMBER_GLOBAL);
+               codeStream.emit(type);
+            }
+            else
+            {
+               codeStream.emit(OP_LOADVAR_VECTOR_MEMBER_LOCAL);
+               codeStream.emit(type);
+               codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
+            }
+
+            return codeStream.tell();
+         }
       }
+      else
+      {
+         codeStream.emit(OP_SETCURVAR);
+         codeStream.emitSTE(varName);
+      }
+
       switch (type)
       {
       case TypeReqUInt:
@@ -690,6 +794,9 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
       case TypeReqString:
          codeStream.emit(OP_LOADVAR_STR);
          break;
+      case TypeReqVector:
+         codeStream.emit(OP_LOADVAR_VECTOR);
+         break;
       case TypeReqNone:
          break;
       default:
@@ -700,9 +807,10 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    {
       switch (type)
       {
-      case TypeReqUInt:  codeStream.emit(OP_LOAD_LOCAL_VAR_UINT); break;
-      case TypeReqFloat: codeStream.emit(OP_LOAD_LOCAL_VAR_FLT); break;
-      default:           codeStream.emit(OP_LOAD_LOCAL_VAR_STR);
+      case TypeReqUInt:   codeStream.emit(OP_LOAD_LOCAL_VAR_UINT); break;
+      case TypeReqFloat:  codeStream.emit(OP_LOAD_LOCAL_VAR_FLT); break;
+      case TypeReqVector:  codeStream.emit(OP_LOAD_LOCAL_VAR_VECTOR); break;
+      default:            codeStream.emit(OP_LOAD_LOCAL_VAR_STR);
       }
 
       codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber));
@@ -713,8 +821,23 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
 TypeReq VarNode::getPreferredType()
 {
-   bool oldVariables = arrayIndex || varName[0] == '$';
-   return oldVariables ? TypeReqNone : getFuncVars(dbgLineNumber)->lookupType(varName, dbgLineNumber);
+   bool globalScope = varName[0] == '$';
+   TypeReq actType = TypeReqNone;
+   bool isVector = arrayIndex;
+   bool isOldArray = dynamic_cast<CommaCatExprNode*>(arrayIndex);
+
+   if (!globalScope && !isOldArray)
+   {
+      actType = getFuncVars(dbgLineNumber)->lookupType(varName, dbgLineNumber);
+   }
+
+   
+   if (globalScope && isVector)
+      return TypeReqNone;
+   else if (isOldArray)
+      return TypeReqNone;
+   else
+      return actType;
 }
 
 //------------------------------------------------------------
@@ -885,73 +1008,143 @@ TypeReq ConstantNode::getPreferredType()
 
 U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 {
+// If it's an array or vector expression, the general logic is:
+//
+// eval expr
+//
+// if arrayIndex exists:
+//    if arrayIndex is a string expression (CommaCatExprNode or TypeReqString):
+//       OP_LOADIMMED_IDENT
+//       varName
+//       eval arrayIndex as string
+//       OP_REWIND_STR
+//       OP_SETCURVAR_ARRAY_CREATE
+//       (if type == TypeReqNone) OP_POP_STK
+//
+//    else if arrayIndex is a VectorIndexNode:
+//       eval vector expression (TypeReqVector)
+//       eval index expression (TypeReqUInt)
+//       OP_SETCURVAR_VECTOR_MEMBER
+//
+//    else:
+//       if global ($var):
+//          OP_SETCURVAR_CREATE
+//          varName
+//          ensure global var exists as vector
+//          OP_LOADVAR_VECTOR
+//       else (local):
+//          ensure local vector variable is registered in function scope
+//          OP_LOAD_LOCAL_VAR_VECTOR
+//          (emit var lookup index)
+//       eval arrayIndex as UInt
+//       OP_SETCURVAR_VECTOR_MEMBER
+//
+//    (then return ip after setting vector member)
+//
+// else if it's a global variable (starts with '$'):
+//    OP_SETCURVAR_CREATE
+//    varName
+//    OP_SAVEVAR_<type>
+//
+// else (local variable):
+//    OP_SAVE_LOCAL_VAR_<type>
+//    (register or assign varName in local function scope)
+//
+// if type == TypeReqNone:
+//    OP_POP_STK
+
    subType = expr->getPreferredType();
    if (subType == TypeReqNone)
       subType = type;
    if (subType == TypeReqNone)
       subType = TypeReqString;
 
-   // if it's an array expr, the formula is:
-   // eval expr
-   // (push and pop if it's TypeReqString) OP_ADVANCE_STR
-   // OP_LOADIMMED_IDENT
-   // varName
-   // OP_ADVANCE_STR
-   // eval array
-   // OP_REWIND_STR
-   // OP_SETCURVAR_ARRAY_CREATE
-   // OP_TERMINATE_REWIND_STR
-   // OP_SAVEVAR
-
-   //else
-   // eval expr
-   // OP_SETCURVAR_CREATE
-   // varname
-   // OP_SAVEVAR
-
    precompileIdent(varName);
 
    ip = expr->compile(codeStream, ip, subType);
 
-   bool oldVariables = arrayIndex || varName[0] == '$';
+   bool isGlobal = varName[0] == '$';
+   bool isVector = arrayIndex;
 
-   if (oldVariables)
+   if (isVector || isGlobal)
    {
-      if (arrayIndex)
+      if (isVector)
       {
-         //if (subType == TypeReqString)
-         //   codeStream.emit(OP_ADVANCE_STR);
+         if (dynamic_cast<CommaCatExprNode*>(arrayIndex) || arrayIndex->getPreferredType() == TypeReqString)
+         {
+            codeStream.emit(OP_LOADIMMED_IDENT);
+            codeStream.emitSTE(varName);
 
-         codeStream.emit(OP_LOADIMMED_IDENT);
-         codeStream.emitSTE(varName);
+            //codeStream.emit(OP_ADVANCE_STR);
+            ip = arrayIndex->compile(codeStream, ip, TypeReqString);
+            codeStream.emit(OP_REWIND_STR);
+            codeStream.emit(OP_SETCURVAR_ARRAY_CREATE);
+            if (type == TypeReqNone)
+               codeStream.emit(OP_POP_STK);
+         }
+         else
+         {
+            if (VectorIndexNode* vecIndex = dynamic_cast<VectorIndexNode*>(arrayIndex))
+            {
+               ip = vecIndex->compile(codeStream, ip, TypeReqVector);
 
-         //codeStream.emit(OP_ADVANCE_STR);
-         ip = arrayIndex->compile(codeStream, ip, TypeReqString);
-         codeStream.emit(OP_REWIND_STR);
-         codeStream.emit(OP_SETCURVAR_ARRAY_CREATE);
-         if (type == TypeReqNone)
-            codeStream.emit(OP_POP_STK);
+               ip = vecIndex->getIndex()->compile(codeStream, ip, TypeReqUInt);
+
+               // emit the opcode to store the value in the nested vector
+               codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER);
+               return ip;
+            }
+
+            ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
+
+            if (isGlobal)
+            {
+               codeStream.emit(OP_SETCURVAR_CREATE);
+               codeStream.emitSTE(varName);
+               Dictionary::Entry* ent = Con::gGlobalVars.lookup(varName);
+               if (!ent)
+               {
+                  ent = Con::gGlobalVars.add(varName);
+               }
+
+               codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER_GLOBAL);
+            }
+            else // the issue with locals is that the framestack only exists after the op_ codes are run.
+            {
+               if(getFuncVars(dbgLineNumber)->count() == 0 || !getFuncVars(dbgLineNumber)->find(varName))// no frame stack, if func vars count is 0, save the var.
+               {
+                  getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber);
+               }
+
+               codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER_LOCAL);
+               codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
+            }
+
+            return ip;
+         }
       }
       else
       {
          codeStream.emit(OP_SETCURVAR_CREATE);
          codeStream.emitSTE(varName);
       }
+
       switch (subType)
       {
-      case TypeReqString: codeStream.emit(OP_SAVEVAR_STR);  break;
-      case TypeReqUInt:   codeStream.emit(OP_SAVEVAR_UINT); break;
-      case TypeReqFloat:  codeStream.emit(OP_SAVEVAR_FLT);  break;
-      default: break;
+         case TypeReqUInt:   codeStream.emit(OP_SAVEVAR_UINT); break;
+         case TypeReqFloat:  codeStream.emit(OP_SAVEVAR_FLT);  break;
+         case TypeReqVector:  codeStream.emit(OP_SAVEVAR_VECTOR);  break;
+         default: codeStream.emit(OP_SAVEVAR_STR);  break;
       }
    }
    else
    {
       switch (subType)
       {
-      case TypeReqUInt:  codeStream.emit(OP_SAVE_LOCAL_VAR_UINT); break;
-      case TypeReqFloat: codeStream.emit(OP_SAVE_LOCAL_VAR_FLT); break;
-      default:           codeStream.emit(OP_SAVE_LOCAL_VAR_STR);
+      case TypeReqUInt:   codeStream.emit(OP_SAVE_LOCAL_VAR_UINT); break;
+      case TypeReqFloat:  codeStream.emit(OP_SAVE_LOCAL_VAR_FLT); break;
+      case TypeReqVector:  codeStream.emit(OP_SAVE_LOCAL_VAR_VECTOR); break;
+      default:            codeStream.emit(OP_SAVE_LOCAL_VAR_STR);
       }
       codeStream.emit(getFuncVars(dbgLineNumber)->assign(varName, subType == TypeReqNone ? TypeReqString : subType, dbgLineNumber));
    }
@@ -1023,52 +1216,91 @@ static void getAssignOpTypeOp(S32 op, TypeReq& type, U32& operand)
 
 U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 {
-
-   // goes like this...
-   // eval expr as float or int
-   // if there's an arrayIndex
-
-   // OP_LOADIMMED_IDENT
-   // varName
-   // OP_ADVANCE_STR
-   // eval arrayIndex stringwise
-   // OP_REWIND_STR
-   // OP_SETCURVAR_ARRAY_CREATE
-
-   // else
-   // OP_SETCURVAR_CREATE
-   // varName
-
-   // OP_LOADVAR_FLT or UINT
-   // operand
-   // OP_SAVEVAR_FLT or UINT
+// If it's a vector, array, or global assignment, the general logic is:
+//
+// 1. Determine assignment type and operand:
+//       getAssignOpTypeOp(op, subType, operand)
+//
+// 2. Special case: local ++/-- with no vector or global
+//       - assign local var as float if not already
+//       - emit OP_INC and var index
+//       - return
+//
+// 3. If vector or global variable (arrayIndex exists or varName starts with '$'):
+//
+//    a. String-based arrayIndex (CommaCatExprNode or TypeReqString):
+//       - Compile expr
+//       - OP_LOADIMMED_IDENT
+//       - varName
+//       - Compile arrayIndex as string
+//       - OP_REWIND_STR
+//       - OP_SETCURVAR_ARRAY_CREATE
+//       - (if type == TypeReqNone) OP_POP_STK
+//
+//    b. Numeric vector/array index:
+//       - If global:
+//           - OP_SETCURVAR_CREATE
+//           - varName
+//           - Ensure global vector exists
+//           - OP_LOADVAR_VECTOR
+//       - Else (local):
+//           - Ensure local vector variable is registered
+//           - OP_LOAD_LOCAL_VAR_VECTOR
+//           - emit local var lookup index
+//       - Compile arrayIndex as UInt
+//       - OP_LOADVAR_VECTOR_MEMBER
+//       - emit subType
+//       - Compile expr
+//       - emit operand
+//       - emit OP_LOADVAR_FLT or OP_LOADVAR_UINT as needed
+//       - Reload vector
+//       - Recompile arrayIndex as UInt
+//       - OP_SETCURVAR_VECTOR_MEMBER
+//       - (if type == TypeReqNone) OP_POP_STK
+//       - return ip
+//
+//    c. If no vector (but still global):
+//       - Compile expr
+//       - OP_SETCURVAR_CREATE
+//       - varName
+//       - OP_LOADVAR_FLT or OP_LOADVAR_UINT
+//       - emit operand
+//       - OP_SAVEVAR_FLT or OP_SAVEVAR_UINT
+//
+// 4. Else (local variable, not vector/array):
+//       - Compile expr
+//       - Assign/register local variable
+//       - OP_LOAD_LOCAL_VAR_FLT or OP_LOAD_LOCAL_VAR_UINT
+//       - emit operand
+//       - OP_SAVE_LOCAL_VAR_FLT or OP_SAVE_LOCAL_VAR_UINT
+//
+// 5. If type == TypeReqNone:
+//       - OP_POP_STK
 
    // conversion OP if necessary.
    getAssignOpTypeOp(op, subType, operand);
    precompileIdent(varName);
 
-   bool oldVariables = arrayIndex || varName[0] == '$';
+   bool isGlobal = varName[0] == '$';
+   bool isVector = arrayIndex;
 
-   if (op == opPLUSPLUS && !oldVariables && type == TypeReqNone)
+   // Special case: ++/-- locals
+   if (op == opPLUSPLUS && !isGlobal && !isVector && type == TypeReqNone)
    {
       const S32 varIdx = getFuncVars(dbgLineNumber)->assign(varName, TypeReqFloat, dbgLineNumber);
-
       codeStream.emit(OP_INC);
       codeStream.emit(varIdx);
+      return codeStream.tell();
    }
-   else
-   {
-      ip = expr->compile(codeStream, ip, subType);
 
-      if (oldVariables)
+   // Vector compound assignment branch
+   if (isVector || isGlobal)
+   {
+      if (isVector)
       {
-         if (!arrayIndex)
+         if (dynamic_cast<CommaCatExprNode*>(arrayIndex) || arrayIndex->getPreferredType() == TypeReqString)
          {
-            codeStream.emit(OP_SETCURVAR_CREATE);
-            codeStream.emitSTE(varName);
-         }
-         else
-         {
+            ip = expr->compile(codeStream, ip, subType);
             codeStream.emit(OP_LOADIMMED_IDENT);
             codeStream.emitSTE(varName);
 
@@ -1079,25 +1311,90 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
             if (type == TypeReqNone)
                codeStream.emit(OP_POP_STK);
          }
-         codeStream.emit((subType == TypeReqFloat) ? OP_LOADVAR_FLT : OP_LOADVAR_UINT);
-         codeStream.emit(operand);
-         codeStream.emit((subType == TypeReqFloat) ? OP_SAVEVAR_FLT : OP_SAVEVAR_UINT);
+         else
+         {
+            ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
+
+            if (isGlobal)
+            {
+               codeStream.emit(OP_SETCURVAR_CREATE);
+               codeStream.emitSTE(varName);
+               Dictionary::Entry* ent = Con::gGlobalVars.lookup(varName);
+               if (!ent)
+               {
+                  ent = Con::gGlobalVars.add(varName);
+               }
+
+               codeStream.emit(OP_LOADVAR_VECTOR_MEMBER_GLOBAL);
+               codeStream.emit(subType);
+            }
+            else // the issue with locals is that the framestack only exists after the op_ codes are run.
+            {
+               if (getFuncVars(dbgLineNumber)->count() == 0)// no frame stack, if func vars count is 0, save the var.
+               {
+                  getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber);
+               }
+               else if (!getFuncVars(dbgLineNumber)->find(varName))
+               {
+                  getFuncVars(dbgLineNumber)->assign(varName, TypeReqVector, dbgLineNumber);
+               }
+
+               codeStream.emit(OP_LOADVAR_VECTOR_MEMBER_LOCAL);
+               codeStream.emit(subType);
+               codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
+            }
+
+            ip = expr->compile(codeStream, ip, subType);
+            codeStream.emit(operand);
+            codeStream.emit((subType == TypeReqFloat) ? OP_LOADVAR_FLT : OP_LOADVAR_UINT);
+
+            ip = arrayIndex->compile(codeStream, ip, TypeReqUInt);
+
+            if (isGlobal)
+            {
+               codeStream.emit(OP_SETCURVAR_CREATE);
+               codeStream.emitSTE(varName);
+               codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER_GLOBAL);
+            }
+            else // the issue with locals is that the framestack only exists after the op_ codes are run.
+            {
+               codeStream.emit(OP_SETCURVAR_VECTOR_MEMBER_LOCAL);
+               codeStream.emit(getFuncVars(dbgLineNumber)->lookup(varName, dbgLineNumber, TypeReqVector));
+            }
+
+            if (type == TypeReqNone)
+               codeStream.emit(OP_POP_STK);
+
+            return codeStream.tell();
+         }
       }
-      else
+      else if (!isVector)
       {
-         const bool isFloat = subType == TypeReqFloat;
-         const S32 varIdx = getFuncVars(dbgLineNumber)->assign(varName, subType == TypeReqNone ? TypeReqString : subType, dbgLineNumber);
-
-         codeStream.emit(isFloat ? OP_LOAD_LOCAL_VAR_FLT : OP_LOAD_LOCAL_VAR_UINT);
-         codeStream.emit(varIdx);
-         codeStream.emit(operand);
-         codeStream.emit(isFloat ? OP_SAVE_LOCAL_VAR_FLT : OP_SAVE_LOCAL_VAR_UINT);
-         codeStream.emit(varIdx);
+         ip = expr->compile(codeStream, ip, subType);
+         codeStream.emit(OP_SETCURVAR_CREATE);
+         codeStream.emitSTE(varName);
       }
 
-      if (type == TypeReqNone)
-         codeStream.emit(OP_POP_STK);
+      codeStream.emit((subType == TypeReqFloat) ? OP_LOADVAR_FLT : OP_LOADVAR_UINT);
+      codeStream.emit(operand);
+      codeStream.emit((subType == TypeReqFloat) ? OP_SAVEVAR_FLT : OP_SAVEVAR_UINT);
    }
+   else
+   {
+      ip = expr->compile(codeStream, ip, subType);
+      const bool isFloat = subType == TypeReqFloat;
+      const S32 varIdx = getFuncVars(dbgLineNumber)->assign(varName, subType == TypeReqNone ? TypeReqString : subType, dbgLineNumber);
+
+      codeStream.emit(isFloat ? OP_LOAD_LOCAL_VAR_FLT : OP_LOAD_LOCAL_VAR_UINT);
+      codeStream.emit(varIdx);
+      codeStream.emit(operand);
+      codeStream.emit(isFloat ? OP_SAVE_LOCAL_VAR_FLT : OP_SAVE_LOCAL_VAR_UINT);
+      codeStream.emit(varIdx);
+   }
+
+   if (type == TypeReqNone)
+      codeStream.emit(OP_POP_STK);
+
    return codeStream.tell();
 }
 

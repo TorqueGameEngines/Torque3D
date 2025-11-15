@@ -32,8 +32,10 @@
 #ifndef _REFBASE_H_
 #include "core/util/refBase.h"
 #endif
+#ifndef __RESOURCE_H__
+#include "core/resource.h"
+#endif
 #include <stdarg.h>
-
 #include "core/util/str.h"
 #include "core/util/journal/journaledSignal.h"
 #include "core/stringTable.h"
@@ -120,12 +122,13 @@ typedef const char *StringTableEntry;
 
 enum ConsoleValueType
 {
-   cvNULL = -5,
+   cvNULL = -6,
+   cvVector = -5,
    cvInteger = -4,
    cvFloat = -3,
    cvString = -2,
    cvSTEntry = -1,
-   cvConsoleValueType = 0
+   cvConsoleValueType = 0,
 };
 
 class ConsoleValue
@@ -151,22 +154,29 @@ public:
 
    S32 type;
    U32 bufferLen;
-
+   std::shared_ptr<Vector<ConsoleValue>> vec;
    static DataChunker sConversionAllocator;
 
    char* convertToBuffer() const;
+   char* convertVectorToBuffer() const;
 
    const char* getConsoleData() const;
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      if (type <= cvString && bufferLen > 0)
+      if (type <= ConsoleValueType::cvString && bufferLen > 0)
       {
          dFree(s);
          bufferLen = 0;
       }
 
       s = const_cast<char*>(StringTable->EmptyString());
+
+      if (type == ConsoleValueType::cvVector)
+      {
+         vec.reset();
+      }
+
       type = ConsoleValueType::cvNULL;
    }
    ConsoleValue()
@@ -199,6 +209,9 @@ public:
       case cvString:
          setString(ref.s);
          break;
+      case cvVector:
+         setVector(ref.vec);  // copy-by-reference, no ownership
+         break;
       default:
          setConsoleData(ref.type, ref.dataPtr, ref.enumTable);
          break;
@@ -211,6 +224,9 @@ public:
       {
       case cvNULL:
          std::cout << "Ref already cleared!";
+         break;
+      case cvVector:
+         setVector(ref.vec);
          break;
       case cvInteger:
          setInt(ref.i);
@@ -251,6 +267,8 @@ public:
          return s == StringTable->EmptyString() ? 0.0f : dAtof(s);
       if (type == ConsoleValueType::cvString)
          return dStrcmp(s, "") == 0 ? 0.0f : dAtof(s);
+      if (type == ConsoleValueType::cvVector)
+         return vec->size();
       return dAtof(getConsoleData());
    }
 
@@ -264,8 +282,69 @@ public:
          return s == StringTable->EmptyString() ? 0 : dAtoi(s);
       if (type == ConsoleValueType::cvString)
          return dStrcmp(s, "") == 0 ? 0 : dAtoi(s);
-
+      if (type == ConsoleValueType::cvVector)
+         return vec->size();
       return dAtoi(getConsoleData());
+   }
+
+   TORQUE_FORCEINLINE void setVector(std::shared_ptr<Vector<ConsoleValue>> v)
+   {
+      cleanupData();
+      type = ConsoleValueType::cvVector;
+      vec = v;
+   }
+
+   TORQUE_FORCEINLINE std::shared_ptr<Vector<ConsoleValue>> getVector() const
+   {
+      if (type == cvVector)
+         return vec;
+
+      // Handle string or string table entry as a space-delimited vector
+      if (isNumberType() || isStringType())
+      {
+         if (type == cvString || type == cvSTEntry)
+         {
+            if (s == StringTable->EmptyString())
+               return NULL;
+         }
+
+         std::shared_ptr<Vector<ConsoleValue>> temp = std::make_shared<Vector<ConsoleValue>>();
+         if (isNumberType())
+         {
+            ConsoleValue elem;
+            if (type == cvFloat)
+               elem.setFloat(f);
+            else if (type == cvInteger)
+               elem.setInt(i);
+
+            temp->push_back(elem);
+            return temp;
+         }
+
+         if (type == cvString || type == cvSTEntry)
+         {
+            if (s == StringTable->EmptyString())
+               return NULL;
+
+            const char* str = s ? s : "";
+
+            char* buffer = dStrdup(str);
+            char* tok = dStrtok(buffer, " \t\r\n");
+
+            while (tok)
+            {
+               ConsoleValue elem;
+               elem.setString(tok);
+               temp->push_back(elem);
+               tok = dStrtok(NULL, " \t\r\n");
+            }
+
+            dFree(buffer);
+            return temp;
+         }
+      }
+
+      return NULL;
    }
 
    TORQUE_FORCEINLINE const char* getString() const
@@ -274,6 +353,8 @@ public:
          return s;
       if (isNumberType())
          return convertToBuffer();
+      if ((type == cvVector))
+         return convertVectorToBuffer();
       return getConsoleData();
    }
 
@@ -292,6 +373,8 @@ public:
          return s == StringTable->EmptyString() ? false : dAtob(s);
       if (type == ConsoleValueType::cvString)
          return dStrcmp(s, "") == 0 ? false : dAtob(s);
+      if (type == ConsoleValueType::cvVector)
+         return vec->size() > 0;
       return dAtob(getConsoleData());
    }
 

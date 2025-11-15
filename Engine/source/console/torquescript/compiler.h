@@ -105,22 +105,32 @@ namespace Compiler
       OP_SETCURVAR_CREATE,
       OP_SETCURVAR_ARRAY,
       OP_SETCURVAR_ARRAY_CREATE,
+      OP_SETCURVAR_VECTOR_MEMBER,
+      OP_SETCURVAR_VECTOR_MEMBER_GLOBAL,
+      OP_SETCURVAR_VECTOR_MEMBER_LOCAL,
 
       OP_LOADVAR_UINT,// 40
       OP_LOADVAR_FLT,
       OP_LOADVAR_STR,
+      OP_LOADVAR_VECTOR,
+      OP_LOADVAR_VECTOR_MEMBER,
+      OP_LOADVAR_VECTOR_MEMBER_GLOBAL,
+      OP_LOADVAR_VECTOR_MEMBER_LOCAL,
 
       OP_SAVEVAR_UINT,
       OP_SAVEVAR_FLT,
       OP_SAVEVAR_STR,
+      OP_SAVEVAR_VECTOR,
 
       OP_LOAD_LOCAL_VAR_UINT,
       OP_LOAD_LOCAL_VAR_FLT,
       OP_LOAD_LOCAL_VAR_STR,
+      OP_LOAD_LOCAL_VAR_VECTOR,
 
       OP_SAVE_LOCAL_VAR_UINT,
       OP_SAVE_LOCAL_VAR_FLT,
       OP_SAVE_LOCAL_VAR_STR,
+      OP_SAVE_LOCAL_VAR_VECTOR,
 
       OP_SETCUROBJECT,
       OP_SETCUROBJECT_NEW,
@@ -165,6 +175,9 @@ namespace Compiler
       OP_ITER_BEGIN_STR,   ///< Prepare foreach$ iterator.
       OP_ITER,             ///< Enter foreach loop.
       OP_ITER_END,         ///< End foreach loop.
+
+      OP_CREATE_VECTOR,
+      OP_VECTOR_PUSH,
 
       OP_INVALID,   // 90
 
@@ -297,7 +310,9 @@ class FuncVars
 public:
    S32 assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, bool isConstant = false);
 
-   S32 lookup(StringTableEntry var, S32 lineNumber);
+   S32 lookup(StringTableEntry var, S32 lineNumber, TypeReq defaultType = TypeReqString);
+
+   bool find(StringTableEntry var);
 
    TypeReq lookupType(StringTableEntry var, S32 lineNumber);
 

@@ -360,6 +360,11 @@ const char *ExprEvalState::getStringVariable()
    return currentVariable ? currentVariable->getStringValue() : "";
 }
 
+std::shared_ptr<Vector<ConsoleValue>> ExprEvalState::getVectorVariable()
+{
+   return currentVariable ? currentVariable->getVectorValue() : NULL;
+}
+
 //------------------------------------------------------------
 
 void ExprEvalState::setIntVariable(S32 val)
@@ -378,6 +383,12 @@ void ExprEvalState::setStringVariable(const char *val)
 {
    AssertFatal(currentVariable != NULL, "Invalid evaluator state - trying to set null variable!");
    currentVariable->setStringValue(val);
+}
+
+void ExprEvalState::setVectorVariable(std::shared_ptr<Vector<ConsoleValue>> val)
+{
+   AssertFatal(currentVariable != NULL, "Invalid evaluator state - trying to set null variable!");
+   currentVariable->setVectorValue(val);
 }
 
 //-----------------------------------------------------------------------------
@@ -1442,6 +1453,72 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          curNSDocBlock = NULL;
          break;
 
+      case OP_SETCURVAR_VECTOR_MEMBER:
+      {
+         U32 index = stack[_STK--].getInt();    // index
+         ConsoleValue& vecVal = stack[_STK--];   // vector
+         ConsoleValue exprVal = stack[_STK--];  // value
+
+         std::shared_ptr<Vector<ConsoleValue>> vec = vecVal.getVector();
+         if (!vec)
+         {
+            Con::errorf("Assigning to non-vector variable, promoting to a vector.");
+            vecVal.setVector(std::make_shared<Vector<ConsoleValue>>());
+            vec = vecVal.getVector();
+         }
+
+         if (index > vec->size())
+         {
+            vec->setSize(index);
+         }
+
+         vec->insert(index, exprVal);
+         vec.reset();
+         break;
+      }
+      case OP_SETCURVAR_VECTOR_MEMBER_GLOBAL:
+      {
+         currentRegister = -1;
+         U32 index = stack[_STK--].getInt();   // pop index
+         ConsoleValue exprVal = stack[_STK--]; // pop assigned value
+
+         std::shared_ptr<Vector<ConsoleValue>> vec = Script::gEvalState.getVectorVariable();
+
+         if (!vec)
+         {
+            Script::gEvalState.setVectorVariable(std::make_shared<Vector<ConsoleValue>>());
+            vec = Script::gEvalState.getVectorVariable();
+         }
+
+         // Grow vector if necessary
+         if (index > vec->size())
+            vec->setSize(index);
+
+         vec->insert(index, exprVal);
+         vec.reset();
+         break;
+      }
+      case OP_SETCURVAR_VECTOR_MEMBER_LOCAL:
+      {
+         U32 index = stack[_STK--].getInt();    // pop index
+         ConsoleValue exprVal = stack[_STK--];  // pop assigned value
+         reg = code[ip++];                      // read the local variable register
+         currentRegister = reg;
+
+         std::shared_ptr<Vector<ConsoleValue>> vec = Script::gEvalState.getLocalVectorVariable(reg);
+         if (!vec)
+         {
+            Script::gEvalState.setLocalVectorVariable(reg, std::make_shared<Vector<ConsoleValue>>());
+            vec = Script::gEvalState.getLocalVectorVariable(reg);
+         }
+
+         if (index > vec->size())
+            vec->setSize(index);
+
+         vec->insert(index, exprVal);
+         vec.reset();
+         break;
+      }
       case OP_LOADVAR_UINT:
          currentRegister = -1;
          stack[_STK + 1].setInt(Script::gEvalState.getIntVariable());
@@ -1460,6 +1537,147 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          _STK++;
          break;
 
+      case OP_LOADVAR_VECTOR:
+         currentRegister = -1;
+         if (!Script::gEvalState.getVectorVariable())
+         {
+            Script::gEvalState.setVectorVariable(std::make_shared<Vector<ConsoleValue>>());
+         }
+         stack[_STK + 1].setVector(Script::gEvalState.getVectorVariable());
+         _STK++;
+         break;
+
+      case OP_LOADVAR_VECTOR_MEMBER:
+      {
+         U32 index = stack[_STK--].getInt();      // pop the index
+         ConsoleValue vecVal = stack[_STK];       // this is the vector
+
+         TypeReq type = (TypeReq)code[ip++];
+
+         std::shared_ptr<Vector<ConsoleValue>> vec = vecVal.getVector();
+         if (!vec)
+         {
+            Con::errorf("Tried to index a non-vector variable. Promoting to vector.");
+            vecVal.setVector(std::make_shared<Vector<ConsoleValue>>());
+            vec = vecVal.getVector();
+            vec->setSize(index);
+         }
+
+         // out-of-bounds handling
+         if (index >= vec->size())
+         {
+            Con::warnf(ConsoleLogEntry::Script, "%s: Index out of bounds", getFileLine(ip - 2));
+            switch (type)
+            {
+            case TypeReqUInt:   stack[_STK].setInt(-1); break;
+            case TypeReqFloat:  stack[_STK].setFloat(0.0f); break;
+            case TypeReqVector: stack[_STK].setVector(std::make_shared<Vector<ConsoleValue>>()); break;
+            case TypeReqString:
+            case TypeReqNone:   stack[_STK].setString(""); break;
+            }
+         }
+         else
+         {
+            switch (type)
+            {
+            case TypeReqUInt:   stack[_STK].setInt(vec->address()[index].getInt()); break;
+            case TypeReqFloat:  stack[_STK].setFloat(vec->address()[index].getFloat()); break;
+            case TypeReqVector: stack[_STK].setVector(vec->address()[index].getVector()); break;
+            case TypeReqString:
+            case TypeReqNone:   stack[_STK].setString(vec->address()[index].getString()); break;
+            }
+         }
+
+         vec.reset();
+         break;
+      }
+      case OP_LOADVAR_VECTOR_MEMBER_GLOBAL:
+      {
+         U32 index = stack[_STK--].getInt();   // pop index
+         TypeReq type = (TypeReq)code[ip++];
+
+         // Grab global vector variable
+         std::shared_ptr<Vector<ConsoleValue>> vec = Script::gEvalState.getVectorVariable();
+         if (!vec)
+         {
+            Script::gEvalState.setVectorVariable(std::make_shared<Vector<ConsoleValue>>());
+            vec = Script::gEvalState.getVectorVariable();
+         }
+
+         if (index >= vec->size())
+         {
+            Con::warnf(ConsoleLogEntry::Script, "%s: Index %u out of bounds", getFileLine(ip - 2), index);
+            switch (type)
+            {
+            case TypeReqUInt:   stack[_STK + 1].setInt(-1); break;
+            case TypeReqFloat:  stack[_STK + 1].setFloat(0.0f); break;
+            case TypeReqVector: stack[_STK + 1].setVector(std::make_shared<Vector<ConsoleValue>>()); break;
+            case TypeReqString:
+            case TypeReqNone:   stack[_STK + 1].setString(""); break;
+            }
+         }
+         else
+         {
+            switch (type)
+            {
+            case TypeReqUInt:   stack[_STK + 1].setInt(vec->address()[index].getInt()); break;
+            case TypeReqFloat:  stack[_STK + 1].setFloat(vec->address()[index].getFloat()); break;
+            case TypeReqVector: stack[_STK + 1].setVector(vec->address()[index].getVector()); break;
+            case TypeReqString:
+            case TypeReqNone:   stack[_STK + 1].setString(vec->address()[index].getString()); break;
+            }
+         }
+         vec.reset();
+         _STK++;
+         break;
+      }
+      case OP_LOADVAR_VECTOR_MEMBER_LOCAL:
+      {
+         U32 index = stack[_STK--].getInt();   // pop index
+         TypeReq type = (TypeReq)code[ip++];
+
+         reg = code[ip++];                 // local variable register index
+         currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
+         std::shared_ptr<Vector<ConsoleValue>> vec = Script::gEvalState.getLocalVectorVariable(reg);
+         if (!vec)
+         {
+            Script::gEvalState.setLocalVectorVariable(reg, std::make_shared<Vector<ConsoleValue>>());
+            vec = Script::gEvalState.getLocalVectorVariable(reg);
+         }
+
+         if (index >= vec->size())
+         {
+            Con::warnf(ConsoleLogEntry::Script, "%s: Index %u out of bounds", getFileLine(ip - 2), index);
+            switch (type)
+            {
+            case TypeReqUInt:   stack[_STK + 1].setInt(-1); break;
+            case TypeReqFloat:  stack[_STK + 1].setFloat(0.0f); break;
+            case TypeReqVector: stack[_STK + 1].setVector(std::make_shared<Vector<ConsoleValue>>()); break;
+            case TypeReqString:
+            case TypeReqNone:   stack[_STK + 1].setString(""); break;
+            }
+         }
+         else
+         {
+            switch (type)
+            {
+            case TypeReqUInt:   stack[_STK + 1].setInt(vec->address()[index].getInt()); break;
+            case TypeReqFloat:  stack[_STK + 1].setFloat(vec->address()[index].getFloat()); break;
+            case TypeReqVector: stack[_STK + 1].setVector(vec->address()[index].getVector()); break;
+            case TypeReqString:
+            case TypeReqNone:   stack[_STK + 1].setString(vec->address()[index].getString()); break;
+            }
+         }
+         vec.reset();
+         _STK++;
+         break;
+      }
       case OP_SAVEVAR_UINT:
          Script::gEvalState.setIntVariable(stack[_STK].getInt());
          break;
@@ -1470,6 +1688,10 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
 
       case OP_SAVEVAR_STR:
          Script::gEvalState.setStringVariable(stack[_STK].getString());
+         break;
+
+      case OP_SAVEVAR_VECTOR:
+         Script::gEvalState.setVectorVariable(stack[_STK].getVector());
          break;
 
       case OP_LOAD_LOCAL_VAR_UINT:
@@ -1512,6 +1734,23 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          _STK++;
          break;
 
+      case OP_LOAD_LOCAL_VAR_VECTOR:
+         reg = code[ip++];
+         currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+
+         if (!Script::gEvalState.getLocalVectorVariable(reg))
+         {
+            Script::gEvalState.setLocalVectorVariable(reg, std::make_shared<Vector<ConsoleValue>>());
+         }
+         stack[_STK + 1].setVector(Script::gEvalState.getLocalVectorVariable(reg));
+         _STK++;
+         break;
+
       case OP_SAVE_LOCAL_VAR_UINT:
          reg = code[ip++];
          currentRegister = reg;
@@ -1547,6 +1786,17 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          curObject = NULL;
 
          Script::gEvalState.setLocalStringVariable(reg, val, (S32)dStrlen(val));
+         break;
+
+      case OP_SAVE_LOCAL_VAR_VECTOR:
+         reg = code[ip++];
+         currentRegister = reg;
+
+         // See OP_SETCURVAR
+         prevField = NULL;
+         prevObject = NULL;
+         curObject = NULL;
+         Script::gEvalState.setLocalVectorVariable(reg, stack[_STK].getVector());
          break;
 
       case OP_SETCUROBJECT:
@@ -2236,6 +2486,34 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          _STK--;
 
          iterStack[_ITER].mIsStringIter = false;
+         break;
+      }
+
+      case OP_CREATE_VECTOR:
+      {
+         U32 count = code[ip++];
+
+         stack[_STK + 1].setVector(std::make_shared<Vector<ConsoleValue>>());
+         stack[_STK + 1].getVector()->reserve(count);
+         _STK++;
+         break;
+      }
+
+      case OP_VECTOR_PUSH:
+      {
+         // Vector must be at _STK
+         ConsoleValue elem = stack[_STK+1];
+
+         if (!stack[_STK].getVector())
+         {
+            Con::printf("ERROR: OP_VECTOR_PUSH vector is null at _STK=%d", _STK);
+            break;
+         }
+
+         stack[_STK].getVector()->push_back(elem);
+         if (elem.getType() == cvVector)
+            elem.getVector().reset();
+
          break;
       }
 

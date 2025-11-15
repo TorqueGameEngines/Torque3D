@@ -1389,6 +1389,19 @@ void CodeBlock::dumpInstructions(U32 startIp, bool upToReturn)
          break;
       }
 
+      case OP_CREATE_VECTOR:
+      {
+         U32 count = code[ip];
+         Con::printf("%i: OP_CREATE_VECTOR stk=+1 count=%u", ip - 2, count);
+         ++ip;
+         break;
+      }
+      case OP_VECTOR_PUSH:
+      {
+         Con::printf("%i: OP_VECTOR_PUSH stk=0", ip - 1);
+         break;
+      }
+
       default:
          Con::printf("%i: !!INVALID!!", ip - 1);
          break;

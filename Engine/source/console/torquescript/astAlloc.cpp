@@ -206,6 +206,19 @@ VarNode* VarNode::alloc(S32 lineNumber, StringTableEntry varName, ExprNode* arra
    ret->optimizedNode = NULL;
    ret->varName = varName;
    ret->arrayIndex = arrayIndex;
+   ret->defaultValue = NULL;
+   return ret;
+}
+
+VarNode* VarNode::allocParam(S32 lineNumber, StringTableEntry varName, ExprNode* defaultValue)
+{
+   VarNode* ret = (VarNode*)consoleAlloc(sizeof(VarNode));
+   constructInPlace(ret);
+   ret->dbgLineNumber = lineNumber;
+   ret->optimizedNode = NULL;
+   ret->varName = varName;
+   ret->arrayIndex = NULL;
+   ret->defaultValue = defaultValue;
    return ret;
 }
 

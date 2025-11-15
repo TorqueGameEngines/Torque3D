@@ -138,6 +138,7 @@ struct Token
 %type <slot>   slot_acc
 %type <intslot>   intslot_acc
 %type <stmt>   expression_stmt
+%type <var>    param
 %type <var>    var_list
 %type <var>    var_list_decl
 %type <asn>    assign_op_struct
@@ -242,11 +243,30 @@ var_list_decl
    ;
 
 var_list
-   : VAR
-      { $$ = VarNode::alloc( $1.lineNumber, $1.value, NULL ); }
-   | var_list ',' VAR
-      { $$ = $1; ((StmtNode*)($1))->append((StmtNode*)VarNode::alloc( $3.lineNumber, $3.value, NULL ) ); }
+   : param
+      { $$ = $1; }
+   | var_list ',' param
+      { $$ = $1; ((StmtNode*)($1))->append((StmtNode*)$3 ); }
    ;
+
+param
+    : VAR
+      {
+        $$ = VarNode::allocParam($1.lineNumber, $1.value, NULL);
+      }
+    | VAR '?'
+      {
+        $$ = VarNode::allocParam($1.lineNumber, $1.value, NULL);
+      }
+    | VAR '=' expr
+      {
+        $$ = VarNode::allocParam($1.lineNumber, $1.value, $3);
+      }
+    | VAR '?' '=' expr
+      {
+        $$ = VarNode::allocParam($1.lineNumber, $1.value, $4);
+      }
+    ;
 
 datablock_decl
    : rwDATABLOCK class_name_expr '(' expr parent_block ')'  '{' slot_assign_list_opt '}' ';'

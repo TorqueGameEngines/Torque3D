@@ -49,6 +49,12 @@ namespace Compiler
    }
 }
 
+bool hasTrailingNumber(StringTableEntry varName) {
+   size_t len = dStrlen(varName);
+   if (len == 0) return false;        // empty string
+   return dIsdigit((unsigned char)varName[len - 1]);
+}
+
 using namespace Compiler;
 
 FuncVars gEvalFuncVars;
@@ -664,7 +670,7 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
    precompileIdent(varName);
 
-   bool oldVariables = arrayIndex || varName[0] == '$';
+   bool oldVariables = arrayIndex || varName[0] == '$' || hasTrailingNumber(varName);
 
    if (oldVariables)
    {
@@ -713,7 +719,7 @@ U32 VarNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
 TypeReq VarNode::getPreferredType()
 {
-   bool oldVariables = arrayIndex || varName[0] == '$';
+   bool oldVariables = arrayIndex || varName[0] == '$' || hasTrailingNumber(varName);
    return oldVariables ? TypeReqNone : getFuncVars(dbgLineNumber)->lookupType(varName, dbgLineNumber);
 }
 
@@ -913,7 +919,7 @@ U32 AssignExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
    ip = expr->compile(codeStream, ip, subType);
 
-   bool oldVariables = arrayIndex || varName[0] == '$';
+   bool oldVariables = arrayIndex || varName[0] == '$' || hasTrailingNumber(varName);
 
    if (oldVariables)
    {
@@ -1047,7 +1053,7 @@ U32 AssignOpExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    getAssignOpTypeOp(op, subType, operand);
    precompileIdent(varName);
 
-   bool oldVariables = arrayIndex || varName[0] == '$';
+   bool oldVariables = arrayIndex || varName[0] == '$' || hasTrailingNumber(varName);
 
    if (op == opPLUSPLUS && !oldVariables && type == TypeReqNone)
    {

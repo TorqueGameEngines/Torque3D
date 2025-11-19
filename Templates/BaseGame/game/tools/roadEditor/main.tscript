@@ -204,8 +204,8 @@ function RoadEditorPlugin::initSettings( %this )
    EditorSettings.beginGroup( "RoadEditor", true );
    
    EditorSettings.setDefaultValue(  "DefaultWidth",         "10" );
-   EditorSettings.setDefaultValue(  "HoverSplineColor",     "255 0 0 255" );
-   EditorSettings.setDefaultValue(  "SelectedSplineColor",  "0 255 0 255" );
+   EditorSettings.setDefaultValue(  "HoverSplineColor",     "255 0 255 255" );
+   EditorSettings.setDefaultValue(  "SelectedSplineColor",  "192 0 192 255" );
    EditorSettings.setDefaultValue(  "HoverNodeColor",       "255 255 255 255" ); //<-- Not currently used
    EditorSettings.setDefaultValue(  "MaterialName",         "DefaultDecalRoadMaterial" );
    

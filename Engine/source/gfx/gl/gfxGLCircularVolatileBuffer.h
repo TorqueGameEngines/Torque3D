@@ -29,7 +29,7 @@ public:
 
    bool checkOverlap(U32 start, U32 end) 
    {         
-      if( mStart < end && start < mEnd )
+      if ((mStart < end - 1) && (start < mEnd - 1))
          return true;
 
       return false;

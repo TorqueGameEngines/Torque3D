@@ -192,26 +192,35 @@ void AssimpShapeLoader::enumerateScene()
    TSShapeLoader::updateProgress(TSShapeLoader::Load_ReadFile, "Reading File");
    Con::printf("[ASSIMP] Attempting to load file: %s", shapePath.getFullPath().c_str());
 
-   // Define post-processing steps
-   U32 ppsteps = aiProcess_Triangulate | /*aiProcess_PreTransformVertices |*/ aiProcess_ConvertToLeftHanded & ~aiProcess_MakeLeftHanded;
+   const ColladaUtils::ImportOptions& opts = ColladaUtils::getOptions();
 
-   const auto& options = ColladaUtils::getOptions();
-   if (options.calcTangentSpace) ppsteps |= aiProcess_CalcTangentSpace;
-   if (options.joinIdenticalVerts) ppsteps |= aiProcess_JoinIdenticalVertices;
-   if (options.removeRedundantMats) ppsteps |= aiProcess_RemoveRedundantMaterials;
-   if (options.genUVCoords) ppsteps |= aiProcess_GenUVCoords;
-   if (options.transformUVCoords) ppsteps |= aiProcess_TransformUVCoords;
-   if (options.findInstances) ppsteps |= aiProcess_FindInstances;
-   if (options.limitBoneWeights) ppsteps |= aiProcess_LimitBoneWeights;
+   // Define post-processing steps
+   unsigned flags =
+      aiProcess_Triangulate |
+      aiProcess_JoinIdenticalVertices |
+      aiProcess_ValidateDataStructure |
+      aiProcess_ConvertToLeftHanded & ~aiProcess_MakeLeftHanded;
+
+   if (opts.convertLeftHanded)   flags |= aiProcess_MakeLeftHanded;
+   if (opts.reverseWindingOrder) flags |= aiProcess_FlipWindingOrder;
+   if (opts.genUVCoords)         flags |= aiProcess_GenUVCoords;
+   if (opts.transformUVCoords)   flags |= aiProcess_TransformUVCoords;
+   if (opts.limitBoneWeights)    flags |= aiProcess_LimitBoneWeights;
+   if (opts.calcTangentSpace)    flags |= aiProcess_CalcTangentSpace;
+   if (opts.findInstances)       flags |= aiProcess_FindInstances;
+   if (opts.removeRedundantMats) flags |= aiProcess_RemoveRedundantMaterials;
+   if (opts.joinIdenticalVerts)  flags |= aiProcess_JoinIdenticalVertices;
+   if (opts.invertNormals)       flags |= aiProcess_FixInfacingNormals;
+   if (opts.flipUVCoords)        flags |= aiProcess_FlipUVs;
+
 
    if (Con::getBoolVariable("$Assimp::OptimizeMeshes", false)) {
-      ppsteps |= aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph;
+      flags |= aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph;
    }
    if (Con::getBoolVariable("$Assimp::SplitLargeMeshes", false)) {
-      ppsteps |= aiProcess_SplitLargeMeshes;
+      flags |= aiProcess_SplitLargeMeshes;
    }
 
-   ppsteps |= aiProcess_ValidateDataStructure;
 
    struct aiLogStream shapeLog = aiGetPredefinedLogStream(aiDefaultLogStream_STDOUT, NULL);
    shapeLog.callback = assimpLogCallback;
@@ -221,15 +230,8 @@ void AssimpShapeLoader::enumerateScene()
    aiEnableVerboseLogging(true);
 #endif
 
-   /*mImporter.SetPropertyInteger(AI_CONFIG_PP_PTV_KEEP_HIERARCHY, 1);
-   mImporter.SetPropertyInteger(AI_CONFIG_PP_PTV_ADD_ROOT_TRANSFORMATION, 1);
-   mImporter.SetPropertyMatrix(AI_CONFIG_PP_PTV_ROOT_TRANSFORMATION, aiMatrix4x4(1, 0, 0, 0,
-                                                                                 0, 0, -1, 0,
-                                                                                 0, 1, 0, 0,
-                                                                                 0, 0, 0, 1));*/
-
    // Read the file
-   mScene = mImporter.ReadFile(shapePath.getFullPath().c_str(), ppsteps);
+   mScene = mImporter.ReadFile(shapePath.getFullPath().c_str(), flags);
 
    if (!mScene || !mScene->mRootNode) {
       Con::errorf("[ASSIMP] ERROR: Could not load file: %s", shapePath.getFullPath().c_str());
@@ -245,25 +247,23 @@ void AssimpShapeLoader::enumerateScene()
    debugSceneMetaData(mScene);
 #endif
 
-   ColladaUtils::getOptions().upAxis = UPAXISTYPE_Y_UP; // default to Y up for assimp.
    // Handle scaling
    configureImportUnits();
 
-   // Format-specific adjustments
-   String fileExt = String::ToLower(shapePath.getExtension());
-   const aiImporterDesc* importerDescription = aiGetImporterDesc(fileExt.c_str());
-   if (importerDescription && dStrcmp(importerDescription->mName, "Autodesk FBX Importer") == 0) {
-      Con::printf("[ASSIMP] Detected FBX format, checking unit scale...");
-      F32 scaleFactor = ColladaUtils::getOptions().unit;
-      if (scaleFactor != 1.0f) {
-         Con::printf("[ASSIMP] Applying FBX scale factor: %f", scaleFactor);
-         scaleScene(mScene, scaleFactor);
-      }
-      else
-      {
-         scaleScene(mScene, 0.01f);
+   if (mScene->mMetaData) {
+      aiString fmt;
+      if (mScene->mMetaData->Get("SourceAsset_Format", fmt)) {
+         if (dStrstr(fmt.C_Str(), "FBX") != NULL) {
+            // FBX is always centimeters. Convert to meters.
+            ColladaUtils::getOptions().formatScaleFactor = 0.0100f;
+            Con::printf("[ASSIMP] FBX detected: applying 0.01 scale (cm -> m).");
+         }
       }
    }
+
+   ColladaUtils::getOptions().upAxis = UPAXISTYPE_Z_UP;
+   // Compute & apply axis conversion matrix
+   getRootAxisTransform();
 
    for (U32 i = 0; i < mScene->mNumTextures; ++i) {
       extractTexture(i, mScene->mTextures[i]);
@@ -278,25 +278,21 @@ void AssimpShapeLoader::enumerateScene()
    // Setup LOD checks
    detectDetails();
 
-   aiMatrix4x4 sceneRoot = aiMatrix4x4(1, 0, 0, 0,
-      0, 0, -1, 0,
-      0, 1, 0, 0,
-      0, 0, 0, 1);
+   aiNode* root = mScene->mRootNode;
 
-   applyTransformation(mScene->mRootNode, sceneRoot);
-
-   // Process the scene graph
-   AssimpAppNode* rootNode = new AssimpAppNode(mScene, mScene->mRootNode, 0);
-   if (!processNode(rootNode)) {
-      delete rootNode;
+   for (S32 iNode = 0; iNode < root->mNumChildren; iNode++)
+   {
+      aiNode* child = root->mChildren[iNode];
+      AssimpAppNode* node = new AssimpAppNode(mScene, child);
+      if (!processNode(node)) {
+         delete node;
+      }
    }
-
-   processAssimpNode(mScene->mRootNode, mScene, rootNode);
 
    // Add a bounds node if none exists
    if (!boundsNode) {
+      
       aiNode* reqNode = new aiNode("bounds");
-      mScene->mRootNode->addChildren(1, &reqNode);
       reqNode->mTransformation = aiMatrix4x4();// *sceneRoot;
       AssimpAppNode* appBoundsNode = new AssimpAppNode(mScene, reqNode);
       if (!processNode(appBoundsNode)) {
@@ -312,10 +308,16 @@ void AssimpShapeLoader::enumerateScene()
 }
 
 void AssimpShapeLoader::configureImportUnits() {
-   auto& options = ColladaUtils::getOptions();
+   auto& opts = ColladaUtils::getOptions();
 
    // Configure unit scaling
-   if (options.unit <= 0.0f) {
+   if (opts.unit > 0.0f)
+      return;
+
+
+   // Try metadata for some formats
+   if (mScene->mMetaData)
+   {
       F64 unitScaleFactor = 1.0;
       if (!getMetaDouble("UnitScaleFactor", unitScaleFactor)) {
          F32 floatVal;
@@ -327,22 +329,55 @@ void AssimpShapeLoader::configureImportUnits() {
             unitScaleFactor = static_cast<F64>(intVal);
          }
       }
-      options.unit = static_cast<F32>(unitScaleFactor);
+
+      opts.formatScaleFactor = unitScaleFactor;
+
+      unitScaleFactor = 1.0;
+      if (!getMetaDouble("OriginalUnitScaleFactor", unitScaleFactor)) {
+         F32 floatVal;
+         S32 intVal;
+         if (getMetaFloat("OriginalUnitScaleFactor", floatVal)) {
+            unitScaleFactor = static_cast<F64>(floatVal);
+         }
+         else if (getMetaInt("OriginalUnitScaleFactor", intVal)) {
+            unitScaleFactor = static_cast<F64>(intVal);
+         }
+      }
+
+      opts.unit = unitScaleFactor;
+
+      // FBX may use another property name
+      U32 unit = 0;
+      if (mScene->mMetaData->Get("Unit", unit))
+      {
+         opts.unit = (F32)unit;
+      }
    }
 }
 
-void AssimpShapeLoader::processAssimpNode(const aiNode* node, const aiScene* scene, AssimpAppNode* parentNode)
+void AssimpShapeLoader::getRootAxisTransform()
 {
-   AssimpAppNode* currNode;
-   if (node == scene->mRootNode)
+   aiMetadata* meta = mScene->mMetaData;
+   if (!meta)
    {
-      currNode = parentNode;
+      // assume y up
+      ColladaUtils::getOptions().upAxis = UPAXISTYPE_Y_UP;
+      return;
    }
-   else
-   {
-      currNode = new AssimpAppNode(scene, node, parentNode);
-      processNode(currNode);
-   }
+
+   // Fetch metadata values
+   int upAxis = 1, upSign = 1;
+   int frontAxis = 2, frontSign = -1;
+   int coordAxis = 0, coordSign = 1;
+
+   meta->Get("UpAxis", upAxis);
+   meta->Get("UpAxisSign", upSign);
+   meta->Get("FrontAxis", frontAxis);
+   meta->Get("FrontAxisSign", frontSign);
+   meta->Get("CoordAxis", coordAxis);
+   meta->Get("CoordAxisSign", coordSign);
+
+   ColladaUtils::getOptions().upAxis = (domUpAxisType)upAxis;
 }
 
 void AssimpShapeLoader::processAnimations()
@@ -568,46 +603,6 @@ bool AssimpShapeLoader::fillGuiTreeView(const char* sourceShapePath, GuiTreeView
       tree->setDataField(StringTable->insert("_upAxis"), 0, "Z_AXIS");
 
    return true;
-}
-
-void AssimpShapeLoader::updateMaterialsScript(const Torque::Path &path)
-{
-   return;
-   /*
-   Torque::Path scriptPath(path);
-   scriptPath.setFileName("materials");
-   scriptPath.setExtension(TORQUE_SCRIPT_EXTENSION);
-
-   // First see what materials we need to update
-   PersistenceManager persistMgr;
-   for ( U32 iMat = 0; iMat < AppMesh::appMaterials.size(); iMat++ )
-   {
-      AssimpAppMaterial *mat = dynamic_cast<AssimpAppMaterial*>( AppMesh::appMaterials[iMat] );
-      if ( mat )
-      {
-         Material *mappedMat;
-         if ( Sim::findObject( MATMGR->getMapEntry( mat->getName() ), mappedMat ) )
-         {
-            // Only update existing materials if forced to
-            if (ColladaUtils::getOptions().forceUpdateMaterials)
-            {
-               mat->initMaterial(scriptPath, mappedMat);
-               persistMgr.setDirty(mappedMat);
-            }
-         }
-         else
-         {
-            // Create a new material definition
-            persistMgr.setDirty( mat->createMaterial( scriptPath ), scriptPath.getFullPath() );
-         }
-      }
-   }
-
-   if ( persistMgr.getDirtyList().empty() )
-      return;
-
-   persistMgr.saveDirty();
-   */
 }
 
 /// Check if an up-to-date cached DTS is available for this DAE file
@@ -1004,8 +999,6 @@ TSShape* assimpLoadShape(const Torque::Path &path)
             tss->write(&dtsStream);
          }
       }
-
-      loader.updateMaterialsScript(path);
    }
    loader.releaseImport();
    return tss;

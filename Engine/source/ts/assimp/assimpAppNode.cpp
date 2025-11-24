@@ -84,6 +84,8 @@ MatrixF AssimpAppNode::getTransform(F32 time)
       // no parent (ie. root level) => scale by global shape <unit>
       mLastTransform.identity();
       mLastTransform.scale(ColladaUtils::getOptions().unit * ColladaUtils::getOptions().formatScaleFactor);
+      if (!isBounds())
+         ColladaUtils::convertTransform(mLastTransform);
    }
 
    // If this node is animated in the active sequence, fetch the animated transform

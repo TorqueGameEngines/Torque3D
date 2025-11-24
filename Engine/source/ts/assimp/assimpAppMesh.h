@@ -46,9 +46,6 @@ protected:
    static S32 fixedSize;                             ///< The fixed detail size value for all geometry
 
 public:
-   void computeBounds(Box3F& bounds) override;
-   TSMesh* constructTSMesh() override;
-
    AssimpAppMesh(const struct aiMesh* mesh, AssimpAppNode* node);
    ~AssimpAppMesh()
    {

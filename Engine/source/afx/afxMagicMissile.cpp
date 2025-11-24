@@ -242,6 +242,7 @@ afxMagicMissileData::afxMagicMissileData()
   caster_safety_time = U32_MAX;
 
   mProjectileShapeAsset.registerRefreshNotify(this);
+  projectileShape = NULL;
 }
 
 afxMagicMissileData::afxMagicMissileData(const afxMagicMissileData& other, bool temp_clone) : GameBaseData(other, temp_clone)
@@ -530,26 +531,16 @@ bool afxMagicMissileData::preload(bool server, String &errorStr)
          if (Sim::findObject(lightDescId, lightDesc) == false)
             Con::errorf(ConsoleLogEntry::General, "afxMagicMissileData::preload: Invalid packet, bad datablockid(lightDesc): %d", lightDescId);   
    }
-
-   U32 assetStatus = ShapeAsset::getAssetErrCode(mProjectileShapeAsset);
-   if (assetStatus == AssetBase::Ok || assetStatus == AssetBase::UsingFallback)
+   
+   if (getProjectileShape())
    {
-      projectileShape = getProjectileShape();
-      if (bool(projectileShape) == false)
-      {
-         errorStr = String::ToString("afxMagicMissileData::preload: Couldn't load shape \"%s\"", _getProjectileShapeAssetId());
-         return false;
-      }
-      /* From stock Projectile code...
-      activateSeq = projectileShape->findSequence("activate");
-      maintainSeq = projectileShape->findSequence("maintain");
-      */
-   }
-
-   if (bool(projectileShape)) // create an instance to preload shape data
-   {
-      TSShapeInstance* pDummy = new TSShapeInstance(projectileShape, !server);
+      TSShapeInstance* pDummy = new TSShapeInstance(getProjectileShape(), !server);
       delete pDummy;
+   }
+   else if (mProjectileShapeAsset.notNull())
+   {
+      errorStr = String::ToString("afxMagicMissileData::preload: Couldn't load shape \"%s\"", _getProjectileShapeAssetId());
+      return false;
    }
 
    return true;

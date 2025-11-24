@@ -1449,7 +1449,7 @@ GuiControl* GuiInspectorTypeRangedS32::constructEditControl()
       if (scaledValidator)
       {
          retCtrl->setField("range", String::ToString("%d %d", scaledValidator->getMin(), scaledValidator->getMax()));
-         if (validator->getFidelity() > 1)
+         if (scaledValidator->getScaleFactor() > 1)
             retCtrl->setField("increment", String::ToString("%d", scaledValidator->getScaleFactor()));
       }
    }

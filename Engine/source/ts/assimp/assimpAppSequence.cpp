@@ -15,7 +15,7 @@
 AssimpAppSequence::AssimpAppSequence(aiAnimation* a)
    : seqStart(0.0f), seqEnd(0.0f), mTimeMultiplier(1.0f)
 {
-   fps = 30.0f;
+   fps = ColladaUtils::getOptions().animFPS;
    // Deep copy animation structure
    mAnim = new aiAnimation(*a);
    mAnim->mChannels = new aiNodeAnim * [a->mNumChannels];

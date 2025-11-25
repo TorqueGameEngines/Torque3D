@@ -178,12 +178,16 @@ Point3F AssimpAppNode::interpolateVectorKey(const aiVectorKey* keys, U32 numKeys
    {
       if (frameTime < keys[i].mTime)
       {
+         Assimp::Interpolator<aiVectorKey> interp;
+
+         const aiVectorKey& next = keys[i];
+         const aiVectorKey& prev = keys[i - 1];
+
          const F32 factor = (frameTime - keys[i - 1].mTime) / (keys[i].mTime - keys[i - 1].mTime);
-         Point3F start(keys[i - 1].mValue.x, keys[i - 1].mValue.y, keys[i - 1].mValue.z);
-         Point3F end(keys[i].mValue.x, keys[i].mValue.y, keys[i].mValue.z);
-         Point3F result;
-         result.interpolate(start, end, factor);
-         return result;
+
+         aiVector3D out;
+         interp(out, prev, next, factor);
+         return Point3F(out.x, out.y, out.z);
       }
    }
 
@@ -195,6 +199,16 @@ QuatF AssimpAppNode::interpolateQuaternionKey(const aiQuatKey* keys, U32 numKeys
 {
    if (numKeys == 1) // Single keyframe: use it directly
       return QuatF(keys[0].mValue.x, keys[0].mValue.y, keys[0].mValue.z, keys[0].mValue.w);
+
+   // Clamp frameTime to the bounds of the keyframes
+   if (frameTime <= keys[0].mTime) {
+      // Before the first keyframe, return the first key
+      return QuatF(keys[0].mValue.x, keys[0].mValue.y, keys[0].mValue.z, keys[0].mValue.w);
+   }
+   if (frameTime >= keys[numKeys - 1].mTime) {
+      // After the last keyframe, return the last key
+      return QuatF(keys[numKeys - 1].mValue.x, keys[numKeys - 1].mValue.y, keys[numKeys - 1].mValue.z, keys[numKeys - 1].mValue.w);
+   }
 
    for (U32 i = 1; i < numKeys; ++i)
    {

@@ -279,7 +279,6 @@ void AssimpShapeLoader::enumerateScene()
    detectDetails();
 
    aiNode* root = mScene->mRootNode;
-
    for (S32 iNode = 0; iNode < root->mNumChildren; iNode++)
    {
       aiNode* child = root->mChildren[iNode];
@@ -352,6 +351,10 @@ void AssimpShapeLoader::configureImportUnits() {
       {
          opts.unit = (F32)unit;
       }
+
+      F32 fps;
+      getMetaFloat("CustomFrameRate", fps);
+      opts.animFPS = fps;
    }
 }
 
@@ -388,21 +391,18 @@ void AssimpShapeLoader::processAnimations()
 
    Vector<aiNodeAnim*> ambientChannels;
    F32 duration = 0.0f;
-   F32 ticks = 0.0f;
+   F32 maxKeyTime = 0.0f;
    if (mScene->mNumAnimations > 0)
    {
       for (U32 i = 0; i < mScene->mNumAnimations; ++i)
       {
          aiAnimation* anim = mScene->mAnimations[i];
 
-         ticks = anim->mTicksPerSecond;
-
          duration = 0.0f;
          for (U32 j = 0; j < anim->mNumChannels; j++)
          {
             aiNodeAnim* nodeAnim = anim->mChannels[j];
             // Determine the maximum keyframe time for this animation
-            F32 maxKeyTime = 0.0f;
             for (U32 k = 0; k < nodeAnim->mNumPositionKeys; k++) {
                maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mPositionKeys[k].mTime);
             }
@@ -422,7 +422,7 @@ void AssimpShapeLoader::processAnimations()
       ambientSeq->mNumChannels = ambientChannels.size();
       ambientSeq->mChannels = ambientChannels.address();
       ambientSeq->mDuration = duration;
-      ambientSeq->mTicksPerSecond = ticks;
+      ambientSeq->mTicksPerSecond = ColladaUtils::getOptions().animFPS;
 
       AssimpAppSequence* defaultAssimpSeq = new AssimpAppSequence(ambientSeq);
       appSequences.push_back(defaultAssimpSeq);

@@ -47,106 +47,6 @@ S32 AssimpAppMesh::fixedSize = 2;
 
 //------------------------------------------------------------------------------
 
-void AssimpAppMesh::computeBounds(Box3F& bounds)
-{
-   bounds = Box3F::Invalid;
-
-   if (isSkin())
-   {
-      // Compute bounds for skinned mesh
-      Vector<MatrixF> boneTransforms;
-      boneTransforms.setSize(nodeIndex.size());
-
-      // Calculate bone transformations
-      for (S32 iBone = 0; iBone < boneTransforms.size(); iBone++) {
-         MatrixF nodeMat = bones[iBone]->getNodeTransform(TSShapeLoader::DefaultTime);
-         TSShapeLoader::zapScale(nodeMat); // Remove scaling to ensure uniform transformation
-         boneTransforms[iBone].mul(nodeMat, initialTransforms[iBone]);
-      }
-
-      // Transform vertices using weighted bone transformations
-      Vector<Point3F> transformedVerts;
-      transformedVerts.setSize(initialVerts.size());
-      transformedVerts.fill(Point3F::Zero);
-
-      for (S32 iWeight = 0; iWeight < vertexIndex.size(); iWeight++) {
-         const S32 vertIndex = vertexIndex[iWeight];
-         const MatrixF& deltaTransform = boneTransforms[boneIndex[iWeight]];
-
-         Point3F weightedVert;
-         deltaTransform.mulP(initialVerts[vertIndex], &weightedVert);
-         weightedVert *= weight[iWeight];
-
-         transformedVerts[vertIndex] += weightedVert;
-      }
-
-      // Extend bounds using the transformed vertices
-      for (const auto& vert : transformedVerts) {
-         bounds.extend(vert);
-      }
-   }
-   else
-   {
-      MatrixF transform = getMeshTransform(TSShapeLoader::DefaultTime);
-      TSShapeLoader::zapScale(transform);
-
-      for (S32 iVert = 0; iVert < points.size(); iVert++)
-      {
-         Point3F p;
-         transform.mulP(points[iVert], &p);
-         bounds.extend(p);
-      }
-   }
-}
-
-TSMesh* AssimpAppMesh::constructTSMesh()
-{
-   if (points.empty() || normals.empty() || primitives.empty() || indices.empty())
-      return NULL;
-
-   TSMesh* tsmesh;
-   if (isSkin())
-   {
-      TSSkinMesh* tsskin = new TSSkinMesh();
-      tsmesh = tsskin;
-
-      // Copy skin elements
-      tsskin->weight = weight;
-      tsskin->boneIndex = boneIndex;
-      tsskin->vertexIndex = vertexIndex;
-      tsskin->batchData.nodeIndex = nodeIndex;
-      tsskin->batchData.initialTransforms = initialTransforms;
-      tsskin->batchData.initialVerts = initialVerts;
-      tsskin->batchData.initialNorms = initialNorms;
-   }
-   else
-   {
-      tsmesh = new TSMesh();
-   }
-
-   // Copy mesh elements
-   tsmesh->mVerts = points;
-   tsmesh->mNorms = normals;
-   tsmesh->mTverts = uvs;
-   tsmesh->mPrimitives = primitives;
-   tsmesh->mIndices = indices;
-   tsmesh->mColors = colors;
-   tsmesh->mTverts2 = uv2s;
-
-   // Finish initializing the shape
-   computeBounds(tsmesh->mBounds);
-   tsmesh->setFlags(flags);
-   tsmesh->updateMeshFlags();
-   //tsmesh->computeBounds();
-   tsmesh->numFrames = numFrames;
-   tsmesh->numMatFrames = numMatFrames;
-   tsmesh->vertsPerFrame = vertsPerFrame;
-   tsmesh->createTangents(tsmesh->mVerts, tsmesh->mNorms);
-   tsmesh->mEncodedNorms.set(NULL, 0);
-
-   return tsmesh;
-}
-
 AssimpAppMesh::AssimpAppMesh(const struct aiMesh* mesh, AssimpAppNode* node)
    : mMeshData(mesh), appNode(node)
 {
@@ -326,7 +226,6 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
          bonePos /= scaleMult;
       }
 
-      bonePos *= ColladaUtils::getOptions().unit * ColladaUtils::getOptions().formatScaleFactor;
       boneTransform.setPosition(bonePos);
 
       initialTransforms.push_back(boneTransform);

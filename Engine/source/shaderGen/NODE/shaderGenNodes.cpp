@@ -15,12 +15,14 @@
 #include "materials/materialFeatureTypes.h"
 
 
-ImplementFeatureType(SNF_DefaultTexCoord, U32(-1), -1, false);
-ImplementFeatureType(SNF_TextureFeature, U32(-1), -1, false);
+ImplementFeatureType(SNF_DefaultTexCoord,    U32(-1), -1, false);
+ImplementFeatureType(SNF_TextureFeature,     U32(-1), -1, false);
+ImplementFeatureType(SNF_NormalMapFeature,   U32(-1), -1, false);
 
 ImplementEnumType(ShaderNodeFeature_enum, "Shader node features. Each of thes relates to a specific node for generating a shader.\n\n")
    { ShaderNodeFeature_enum::eSNF_DefaultTexCoord, "SNF_DefaultTexCoord", "Setup the default texcoord." },
-   { ShaderNodeFeature_enum::eSNF_TextureFeature, "SNF_TextureFeature", "Sample a Texture - Params: (string,string,GFXSamplerStateData,bool)." },
+   { ShaderNodeFeature_enum::eSNF_TextureFeature,  "SNF_TextureFeature", "Sample a Texture - Params: (string,string,GFXSamplerStateData,bool)." },
+   { ShaderNodeFeature_enum::eSNF_NormalMapFeature,"SNF_NormalMapFeature", "Convert a texture to a normalmap - Params: (string,float,bool,bool)." },
 EndImplementEnumType;
 
 namespace
@@ -28,7 +30,11 @@ namespace
    void register_node_features(GFXAdapterType type)
    {
       FEATUREMGR->registerFeature(SNF_DefaultTexCoord,   new DefaultTexcoordFeature);
-      FEATUREMGR->registerFeature(SNF_TextureFeature,    new TextureFeature, TextureFeature::createFunction);
+      FEATUREMGR->registerFeature(SNF_TextureFeature,    new TextureFeature,     TextureFeature::createFunction);
+      FEATUREMGR->registerFeature(SNF_NormalMapFeature,  new NormalMapFeature,   NormalMapFeature::createFunction);
+
+      REGISTER_FEATURE_PARAMS(SNF_TextureFeature, TextureFeatureParams);
+      REGISTER_FEATURE_PARAMS(SNF_NormalMapFeature, NormalMapFeatureParams);
    }
 
 };
@@ -58,14 +64,15 @@ void ShaderFeatureNode::setupTextureSample(  const String& samplerName,
 
    // ---- Create or find texture/sampler vars ----
    String texVarName = samplerName + "_tex";
-   String sampVarName = samplerName + "_sampler";
+   String sampVarName = samplerName;
+   String resultVarName = samplerName + "_col";
 
-   Var* textureVar = dynamic_cast<Var*>(LangElement::find(texVarName));
+   
    Var* samplerVar = dynamic_cast<Var*>(LangElement::find(sampVarName));
-
-   if (!isGL)
+   Var* textureVar;
+  
+   if (!isGL) // HLSL requires both Texture + SamplerState
    {
-      // HLSL requires both Texture + SamplerState
       if (!samplerVar)
       {
          samplerVar = new Var;
@@ -76,6 +83,7 @@ void ShaderFeatureNode::setupTextureSample(  const String& samplerName,
          samplerVar->constNum = Var::getTexUnitNum();
       }
 
+      textureVar = dynamic_cast<Var*>(LangElement::find(texVarName));
       if (!textureVar)
       {
          textureVar = new Var;
@@ -88,65 +96,80 @@ void ShaderFeatureNode::setupTextureSample(  const String& samplerName,
    }
    else
    {
-      // GLSL uses a single sampler uniform
-      if (!textureVar)
+      if (!samplerVar)
       {
-         textureVar = new Var;
-         textureVar->setType(LangElement::samplerTypeToString(samplerType));
-         textureVar->setName(texVarName);
-         textureVar->uniform = true;
-         textureVar->sampler = true;
-         textureVar->constNum = Var::getTexUnitNum();
+         samplerVar = new Var;
+         samplerVar->setType(LangElement::samplerTypeToString(samplerType));
+         samplerVar->setName(sampVarName);
+         samplerVar->uniform = true;
+         samplerVar->sampler = true;
+         samplerVar->constNum = Var::getTexUnitNum();
       }
    }
 
-   // ---- Emit sampling code ----
-   String sampleFunc;
-   if (isComparison)
+   // The sampled color variable (e.g. "samplerName_col") should always be new but just in case
+   Var* sampledColor = (Var*)LangElement::find(resultVarName);
+   if (!sampledColor)
    {
-      if (useGather)
-         sampleFunc = isGL ? "textureGather" : "SampleCmpGather";
-      else
-         sampleFunc = isGL ? "texture" : "SampleCmp";
+      sampledColor->setType(GFXSCT_Float4);
+      sampledColor->setName(resultVarName); // The result var will be named like the sampler
+      meta->addStatement(new GenOp("   @", new DecOp(sampledColor)));
    }
    else
    {
-      sampleFunc = isGL ? "texture" : "Sample";
+      meta->addStatement(new GenOp("   @",sampledColor));
    }
-
-   // The sampled color variable (e.g. "diffuseColor")
-   Var* sampledColor = new Var;
-   sampledColor->setType("float4");
-   sampledColor->setName(samplerName); // The result var will be named like the sampler
-
+   
    if (isGL)
    {
-      if (isComparison)
-      {
-         meta->addStatement(new GenOp("   @ = %s(@, @, @);\r\n",
-            sampledColor, sampleFunc.c_str(), textureVar, texCoord, compareValue));
-      }
-      else
-      {
-         meta->addStatement(new GenOp("   @ = %s(@, @);\r\n",
-            sampledColor, sampleFunc.c_str(), textureVar, texCoord));
-      }
-   }
-   else
-   {
+      // ---------------- GLSL Sampling ----------------
       if (isComparison)
       {
          if (useGather)
-            meta->addStatement(new GenOp("   @ = @.%s(@, @, @);\r\n",
-               sampledColor, textureVar, sampleFunc.c_str(), samplerVar, texCoord, compareValue));
+            meta->addStatement(new GenOp(
+               " = textureGather(@, @, @);\r\n",
+                samplerVar, texCoord, compareValue));
          else
-            meta->addStatement(new GenOp("   @ = @.%s(@, @, @);\r\n",
-               sampledColor, textureVar, sampleFunc.c_str(), samplerVar, texCoord, compareValue));
+            meta->addStatement(new GenOp(
+               " = texture(@, @, @);\r\n",
+               samplerVar, texCoord, compareValue));
       }
       else
       {
-         meta->addStatement(new GenOp("   @ = @.%s(@, @);\r\n",
-            sampledColor, textureVar, sampleFunc.c_str(), samplerVar, texCoord));
+         if (useGather)
+            meta->addStatement(new GenOp(
+               " = textureGather(@, @);\r\n",
+               samplerVar, texCoord));
+         else
+            meta->addStatement(new GenOp(
+               " = texture(@, @);\r\n",
+               samplerVar, texCoord));
+      }
+   }
+   else
+   {
+      // ---------------- HLSL Sampling ----------------
+      if (isComparison)
+      {
+         if (useGather)
+            meta->addStatement(new GenOp(
+               " = @.SampleCmpGather(@, @, @);\r\n",
+               textureVar, samplerVar, texCoord, compareValue));
+         else
+            meta->addStatement(new GenOp(
+               " = @.SampleCmp(@, @, @);\r\n",
+               textureVar, samplerVar, texCoord, compareValue));
+      }
+      else
+      {
+         if (useGather)
+            meta->addStatement(new GenOp(
+               " = @.Gather(@, @);\r\n",
+               textureVar, samplerVar, texCoord));
+         else
+            meta->addStatement(new GenOp(
+               " = @.Sample(@, @);\r\n",
+               textureVar, samplerVar, texCoord));
       }
    }
 }
@@ -272,7 +295,7 @@ void DefaultTexcoordFeature::processPix(Vector<ShaderComponent*>& componentList,
 void TextureFeature::processPix(Vector<ShaderComponent*>& componentList, const MaterialFeatureData& fd)
 {
    // find the uv var.
-   Var* inTex = (Var*)LangElement::find(params->uvName);
+   Var* inTex = getInTexCoord(params->uvName, GFXSCT_Float2, componentList);
    if (!inTex)
       return;
 
@@ -299,4 +322,44 @@ ShaderFeature::Resources TextureFeature::getResources(const MaterialFeatureData&
    res.numTexReg = 1;
 
    return res;
+}
+
+//--------------------------------------------------------
+// NORMAL MAPPING FEATURE
+//--------------------------------------------------------
+
+void NormalMapFeature::processPix(Vector<ShaderComponent*>& componentList, const MaterialFeatureData& fd)
+{
+   String colorVarName = params->inputName;
+   Var* sampledColor = (Var*)LangElement::find(colorVarName);
+
+   if (!sampledColor)
+   {
+      Con::warnf("NormalMapFeature: sampler %s not sampled yet!", params->inputName.c_str());
+      return; // TextureFeature must run first
+   }
+
+
+   MultiLine* meta = new MultiLine;
+
+   // TEMP float3 for base decoded normal
+   Var* tempNorm = new Var;
+   tempNorm->setName(params->inputName + "_normTemp");
+   tempNorm->setType(GFXSCT_Float4);
+   LangElement* tempNormDecl = new DecOp(tempNorm);
+
+   // sampledColor is the result of the textureFeature.
+   meta->addStatement(expandNormalMap(sampledColor, tempNormDecl, tempNorm, fd));
+
+   meta->addStatement(
+      new GenOp("   @.xy *= float2(@, @);\r\n", tempNorm, params->flipX ? -1.0f : 1.0f, params->flipY ? -1.0f : 1.0f));
+
+   meta->addStatement(new GenOp("   @.xyz = normalize( float3( @.xy * @, @.z ) );\r\n",
+      tempNorm, tempNorm, params->strength, tempNorm));
+
+   // write back into our known variable.
+   meta->addStatement(new GenOp("   @ = @;\r\n", sampledColor, tempNorm));
+
+   output = meta;
+
 }

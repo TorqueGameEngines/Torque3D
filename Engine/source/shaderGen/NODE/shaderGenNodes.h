@@ -22,6 +22,7 @@
 
 DeclareFeatureType(SNF_DefaultTexCoord);
 DeclareFeatureType(SNF_TextureFeature);
+DeclareFeatureType(SNF_NormalMapFeature);
 
 /// <summary>
 /// This enum is so we can map to nodes in script.
@@ -30,6 +31,7 @@ enum ShaderNodeFeature_enum
 {
    eSNF_DefaultTexCoord,
    eSNF_TextureFeature,
+   eSNF_NormalMapFeature,
 };
 
 DefineEnumType(ShaderNodeFeature_enum);
@@ -56,6 +58,25 @@ public:
    LangElement* assignColor(LangElement* elem, Material::BlendOp blend, LangElement* lerpElem = NULL, ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget) override;
 };
 
+
+class DefaultTexcoordFeature : public ShaderFeatureNode
+{
+   void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
+
+   void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
+
+   String getName() override
+   {
+      return "DefaultTexCoord";
+   }
+};
+
+//--------------------------------------------------------
+// TEXTURE SAMPLER FEATURE
+//--------------------------------------------------------
+
 /// <summary>
 /// Parameters for the TextureFeature
 /// </summary>
@@ -78,6 +99,12 @@ struct TextureFeatureParams : public FeatureParamsBase
 
    const char* getFeatureParamTypeName() const override { return "TextureFeatureParams"; }
 
+   /// <summary>
+   /// Texture features output variable is samplerName + "_col"
+   /// </summary>
+   /// <returns>The output variable for a texture feature.</returns>
+   const char* getOutputVar() const override { return samplerName + "_col"; }
+
    static void persistedFields(Vector<FeatureParamField>& fields)
    {
       addParam(fields, "sampler", Offset(samplerName, TextureFeatureParams), TypeString);
@@ -85,22 +112,6 @@ struct TextureFeatureParams : public FeatureParamsBase
       addParam(fields, "samplerState", Offset(samplerState, TextureFeatureParams), TYPEID<GFXSamplerStateData>());
       addParam(fields, "uvName", Offset(uvName, TextureFeatureParams), TypeString);
       addParam(fields, "useGather", Offset(useGather, TextureFeatureParams), TypeBool);
-   }
-};
-
-REGISTER_FEATURE_PARAMS(SNF_TextureFeature, TextureFeatureParams)
-
-class DefaultTexcoordFeature : public ShaderFeatureNode
-{
-   void processVert(Vector<ShaderComponent*>& componentList,
-      const MaterialFeatureData& fd) override;
-
-   void processPix(Vector<ShaderComponent*>& componentList,
-      const MaterialFeatureData& fd) override;
-
-   String getName() override
-   {
-      return "Default TexCoord";
    }
 };
 
@@ -124,7 +135,7 @@ public:
    void processPix(Vector<ShaderComponent*>& componentList,
       const MaterialFeatureData& fd) override;
 
-   ShaderFeature::Resources getResources(const MaterialFeatureData& fd);
+   ShaderFeature::Resources getResources(const MaterialFeatureData& fd) override;
 
    // create a static function on the feature class
    static ShaderFeature* createFunction(FeatureParamsBase* args)
@@ -135,6 +146,69 @@ public:
 
    String getName() override
    {
-      return "Texture Sampler";
+      return "TextureSampler_" + params->samplerName + "_" + params->uvName;
+   }
+};
+
+//--------------------------------------------------------
+// NORMAL MAPPING FEATURE
+//--------------------------------------------------------
+
+/// <summary>
+/// Parameters for the NormalMapFeature
+/// </summary>
+struct NormalMapFeatureParams : public FeatureParamsBase
+{
+   String inputName;    // name of the sampled normal texture (Var* from TextureFeature)
+   F32 strength;        // normal strength multiplier
+   bool flipX;
+   bool flipY;
+
+   NormalMapFeatureParams()
+   {
+      inputName = "normalSampler";
+      strength = 1.0f;
+      flipX = false;
+      flipY = false;
+   }
+
+   const char* getFeatureParamTypeName() const override { return "NormalMapFeatureParams"; }
+
+   /// <summary>
+   /// Normal map feature writes the result into the input name
+   /// </summary>
+   /// <returns>The output variable for a normal map feature.</returns>
+   const char* getOutputVar() const override { return inputName; }
+
+   static void persistedFields(Vector<FeatureParamField>& fields)
+   {
+      addParam(fields, "input", Offset(inputName, NormalMapFeatureParams), TypeString);
+      addParam(fields, "strength", Offset(strength, NormalMapFeatureParams), TypeF32);
+      addParam(fields, "flipX", Offset(flipX, NormalMapFeatureParams), TypeBool);
+      addParam(fields, "flipY", Offset(flipY, NormalMapFeatureParams), TypeBool);
+   }
+};
+
+class NormalMapFeature : public ShaderFeatureNode
+{
+private:
+   NormalMapFeatureParams* params;
+
+public:
+   NormalMapFeature() { params = new NormalMapFeatureParams(); }
+   NormalMapFeature(NormalMapFeatureParams* p) { params = p; }
+
+   void processPix(Vector<ShaderComponent*>& componentList, const MaterialFeatureData& fd) override;
+
+   // normal map feature does not need any resources as these were created from the texture feature.
+
+   static ShaderFeature* createFunction(FeatureParamsBase* args)
+   {
+      return new NormalMapFeature(static_cast<NormalMapFeatureParams*>(args));
+   }
+
+   String getName() override
+   {
+      return "NormalMap_" + params->inputName;
    }
 };

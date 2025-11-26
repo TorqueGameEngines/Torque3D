@@ -671,10 +671,15 @@ Namespace::Entry::Entry()
    mNext = NULL;
    mPackage = StringTable->EmptyString();
    mToolOnly = false;
+   VECTOR_SET_ASSOCIATION(mArgFlags);
+   VECTOR_SET_ASSOCIATION(mDefaultValues);
 }
 
 void Namespace::Entry::clear()
 {
+   mArgFlags.clear();
+   mDefaultValues.clear();
+
    if (mModule)
    {
       mModule->decRefCount();

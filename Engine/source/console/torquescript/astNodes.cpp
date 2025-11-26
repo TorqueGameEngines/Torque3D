@@ -1529,6 +1529,19 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
 
    CodeBlock::smInFunction = false;
 
+   // check for argument setup
+   for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
+   {
+      if (walk->defaultValue)
+      {
+         TypeReq walkType = walk->defaultValue->getPreferredType();
+         if (walkType == TypeReqNone)
+            walkType = TypeReqString;
+
+         ip = walk->defaultValue->compile(codeStream, ip, walkType);
+      }
+   }
+
    codeStream.emit(OP_FUNC_DECL);
    codeStream.emitSTE(fnName);
    codeStream.emitSTE(nameSpace);
@@ -1538,11 +1551,22 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    const U32 endIp = codeStream.emit(0);
    codeStream.emit(argc);
    const U32 localNumVarsIP = codeStream.emit(0);
+
    for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
    {
       StringTableEntry name = walk->varName;
       codeStream.emit(getFuncVars(dbgLineNumber)->lookup(name, dbgLineNumber));
    }
+
+   // check for argument setup
+   for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
+   {
+      U32 flags = 0;
+      if (walk->defaultValue) flags |= 0x1;
+
+      codeStream.emit(flags);
+   }
+
    CodeBlock::smInFunction = true;
    ip = compileBlock(stmts, codeStream, ip);
 

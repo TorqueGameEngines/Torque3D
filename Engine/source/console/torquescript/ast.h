@@ -311,7 +311,12 @@ struct VarNode : ExprNode
    StringTableEntry varName;
    ExprNode* arrayIndex;
 
+   ExprNode* defaultValue;   // optional expression
+
    static VarNode* alloc(S32 lineNumber, StringTableEntry varName, ExprNode* arrayIndex);
+
+   // function params initialization.
+   static VarNode* allocParam(S32 lineNumber, StringTableEntry varName, ExprNode* defaultValue);
 
    U32 compile(CodeStream& codeStream, U32 ip, TypeReq type) override;
    TypeReq getPreferredType() override;

@@ -614,7 +614,22 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          ConsoleValue& value = argv[i + 1];
          Script::gEvalState.moveConsoleValue(reg, (value));
       }
-      ip = ip + fnArgc + (2 + 6 + 1 + 1);
+
+      if (wantedArgc < fnArgc)
+      {
+         Namespace::Entry* temp = thisNamespace->lookup(thisFunctionName);
+         for (; i < fnArgc; i++)
+         {
+            S32 reg = code[ip + (2 + 6 + 1 + 1) + i];
+            if (temp->mArgFlags[i] & 0x1)
+            {
+               ConsoleValue& value = temp->mDefaultValues[i];
+               Script::gEvalState.moveConsoleValue(reg, (value));
+            }
+         }
+      }
+
+      ip = ip + fnArgc + (2 + 6 + 1 + 1) + fnArgc;
       curFloatTable = functionFloats;
       curStringTable = functionStrings;
       curStringTableLen = functionStringsMaxLen;
@@ -736,8 +751,39 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
                   curNSDocBlock = NULL;
                }
             }
-            Namespace::relinkPackages();
+           
 
+            U32 fnArgc = code[ip + 2 + 6];
+
+            // Compute pointer to the register mapping like exec() does.
+            U32 readPtr = ip + 2 + 6 + 1;  // points to the slot after argc (localNumVarsIP)
+            readPtr += 1;                  // skip localNumVarsIP
+            readPtr += fnArgc;             // skip register mapping
+
+            Namespace::Entry* temp = ns->lookup(fnName);
+
+            temp->mArgFlags.setSize(fnArgc);
+            temp->mDefaultValues.setSize(fnArgc);
+
+            // Read flags sequentially
+            for (U32 fa = 0; fa < fnArgc; ++fa)
+            {
+               temp->mArgFlags[fa] = code[readPtr++];
+            }
+
+            // this might seem weird but because of the order
+            // the stack accumulates consoleValues we cant be sure
+            // all args have a console value, and we need to pop
+            // the stack, do this in reverse order.
+            for (S32 fa = S32(fnArgc - 1); fa >= 0; fa--)
+            {
+               if (temp->mArgFlags[fa] & 0x1)
+               {
+                  temp->mDefaultValues[fa] = stack[_STK--];
+               }
+            }
+
+            Namespace::relinkPackages();
             // If we had a docblock, it's definitely not valid anymore, so clear it out.
             curFNDocBlock = NULL;
 

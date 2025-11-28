@@ -133,6 +133,9 @@ void ShaderGen::initShaderGen()
 
    // Delete the auto-generated conditioner include file.
    Torque::FS::Remove( "shadergen:/" + ConditionerFeature::ConditionerIncludeFileName );
+
+   // build our type maps.
+   LangElement::buildTypeMaps();
 }
 
 void ShaderGen::generateShader( const MaterialFeatureData &featureData,

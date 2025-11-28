@@ -36,6 +36,46 @@
 
 #define WRITESTR( a ){ stream.write( dStrlen(a), a ); }
 
+//**************************************************************************
+/*!
+   These structs are helpers for unifying both sides of shadergen, the setup
+   allows us to create other shaderops such as constructors for vars, cast
+   operations and also checks to make sure mathops can be executed cleanly.
+*/
+//**************************************************************************
+
+enum ShaderTypeCategory
+{
+   STC_Scalar,
+   STC_Vector,
+   STC_Matrix,
+   STC_Sampler
+};
+
+/// <summary>
+/// ShaderTypeInfo type helper for casts and other ops
+/// </summary>
+/// <param name="type">GFXShaderConstType enum type</param>
+/// <param name="glslName">const char* type name for glsl</param>
+/// <param name="hlslName">const char* type name for hlsl</param>
+/// <param name="category">ShaderTypeCategory enum for category eg STC_Scalar</param>
+struct ShaderTypeInfo
+{
+   GFXShaderConstType type;
+
+   const char* glslName;
+   const char* hlslName;
+
+   ShaderTypeCategory category;
+
+   U32 rows;    // for matrices (otherwise 1)
+   U32 cols;    // vector size for scalars/vectors, column count for matrices
+
+   bool isSampler() const { return category == STC_Sampler; }
+   bool isVector()  const { return category == STC_Vector; }
+   bool isMatrix()  const { return category == STC_Matrix; }
+   bool isScalar()  const { return category == STC_Scalar; }
+};
 
 //**************************************************************************
 /*!
@@ -54,13 +94,17 @@
 //**************************************************************************
 struct LangElement
 {
+   static void buildTypeMaps();
    static Vector<LangElement*> elementList;
    static LangElement * find( const char *name );
    static void deleteElements();
+   static const ShaderTypeInfo* getTypeInfo(GFXShaderConstType type);
       
    U8    name[32];
-   static const char* constTypeToString(GFXShaderConstType constType);
-   static const char* samplerTypeToString(GFXShaderConstType constType);
+
+   static const char* constTypeToString(GFXShaderConstType constType, bool sampler = false, bool matrix = false);
+   static GFXShaderConstType stringToConstType(const char* name);
+
    LangElement();
    virtual ~LangElement() {};
    virtual void print( Stream &stream ){};
@@ -186,6 +230,13 @@ public:
    void print( Stream &stream ) override;
 };
 
-
+class LiteralStr : public LangElement {
+public:
+   LiteralStr(const char* s) : mStr(s) {}
+   void print(Stream& stream) override { WRITESTR(mStr.c_str()); }
+   String mStr;
+};
 
 #endif // _LANG_ELEMENT_H_
+
+

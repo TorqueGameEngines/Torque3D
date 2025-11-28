@@ -45,7 +45,7 @@
 */
 //**************************************************************************
 
-
+bool resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& outInfo);
 
 ///**************************************************************************
 /// Shader operation base class
@@ -117,8 +117,8 @@ class IndexOp : public ShaderOp
 {
    typedef ShaderOp Parent;
    U32 mIndex;
-
 public:
+   Var* arrVar;
    IndexOp( Var* var, U32 index );
    void print( Stream &stream ) override;
 };
@@ -161,14 +161,86 @@ public:
 
 };
 
+//----------------------------------------------------------------------------
+/*!
+   Like the name suggests, prints out the type as a string, for working between
+   glsl and hlsl.
+*/
+//----------------------------------------------------------------------------
+class TypeOp : public ShaderOp
+{
+	typedef ShaderOp Parent;
+   GFXShaderConstType mType;
+public:
+   TypeOp(GFXShaderConstType type);
+	~TypeOp();
+	void print(Stream& stream) override;
+};
+
+//----------------------------------------------------------------------------
+/*!
+   Casting operation to cast a var from one type to another.
+*/
+//----------------------------------------------------------------------------
 class CastOp : public ShaderOp
 {
    typedef ShaderOp Parent;
-   const char* mConstType;
+   GFXShaderConstType mTargetType;
+   Vector<String> mSwizzle;     // "x", "y", "z", "w"
+   Vector<String> mFillValues;  // "0", "0", "0", "1"
 public:
-   CastOp(Var* in1, GFXShaderConstType type);
+   CastOp(  LangElement* srcVar,
+            GFXShaderConstType type,
+            const char* swizzleStr = "x;y;z;w",
+            const char* fillStr = "0;0;0;1");
+
+   void print(Stream& stream) override;
+
+   void parseStringList(const char* src, Vector<String>& out)
+   {
+      out.clear();
+      const char* p = src;
+
+      while (*p)
+      {
+         const char* start = p;
+         while (*p && *p != ';')
+            p++;
+
+         out.push_back(String(start, p - start));
+
+         if (*p == ';')
+            p++;
+      }
+   }
+};
+
+//----------------------------------------------------------------------------
+/*!
+   Matrix initialize operation, initializes a matrix with the input
+   vars as a vector.
+*/
+//----------------------------------------------------------------------------
+
+class MatrixInitializeOp : public ShaderOp
+{
+   typedef ShaderOp Parent;
+   Vector<LangElement*> mInitialVals;
+public:
+   MatrixInitializeOp(Var* matrixVar, const Vector<LangElement*>& inputs)
+      : Parent(matrixVar, nullptr)
+   {
+      mInitialVals = inputs;
+      mInput[0] = matrixVar;
+   }
+
    void print(Stream& stream) override;
 };
 
+//----------------------------------------------------------------------------
+/*!
+   Matrix multiplication operation. 
+*/
+//----------------------------------------------------------------------------
 
 #endif // _SHADEROP_H_

@@ -62,6 +62,7 @@ class FeatureParamsBase
 public:
    virtual ~FeatureParamsBase() {}
 
+   virtual const char* getOutputVar() const { return "default"; }
    // For debug or script reflection, you can override to serialize/print parameters
    virtual const char* getFeatureParamTypeName() const { return "FeatureParamsBase"; }
 };

@@ -38,6 +38,73 @@ void ShaderFeature::addDependency( const ShaderDependency *dependsOn )
    mDependencies.push_back( dependsOn );
 }
 
+Var* ShaderFeature::getVertTexCoord(const String& name)
+{
+   Var* inTex = NULL;
+
+   for (U32 i = 0; i < LangElement::elementList.size(); i++)
+   {
+      if (!String::compare((char*)LangElement::elementList[i]->name, name.c_str()))
+      {
+         inTex = dynamic_cast<Var*>(LangElement::elementList[i]);
+         if (inTex)
+         {
+            // NOTE: This used to do this check...
+            //
+            // String::compare( (char*)inTex->structName, "IN" )
+            //
+            // ... to ensure that the var was from the input
+            // vertex structure, but this kept some features
+            // ( ie. imposter vert ) from decoding their own
+            // coords for other features to use.
+            //
+            // If we run into issues with collisions between
+            // IN vars and local vars we may need to revise.
+
+            break;
+         }
+      }
+   }
+
+   return inTex;
+}
+
+LangElement* ShaderFeature::expandNormalMap(LangElement* sampleNormalOp, LangElement* normalDecl, LangElement* normalVar, const MaterialFeatureData& fd)
+{
+   MultiLine* meta = new MultiLine;
+   const bool hasBc3 = fd.features.hasFeature(MFT_IsBC3nm, getProcessIndex());
+   const bool hasBc5 = fd.features.hasFeature(MFT_IsBC5nm, getProcessIndex());
+
+   if (hasBc3 || hasBc5)
+   {
+      if (fd.features[MFT_ImposterVert])
+      {
+         // The imposter system uses object space normals and
+         // encodes them with the z axis in the alpha component.
+         meta->addStatement(new GenOp("   @ = @( normalize( @.xyw * 2.0 - 1.0 ), 0.0 ); // Obj DXTnm\r\n", normalDecl, new TypeOp(GFXSCT_Float4), sampleNormalOp));
+      }
+      else if (hasBc3)
+      {
+         // BC3 Swizzle trick
+         meta->addStatement(new GenOp("   @ = @( @.ag * 2.0 - 1.0, 0.0, 0.0 ); // DXTnm\r\n", normalDecl, new TypeOp(GFXSCT_Float4), sampleNormalOp));
+         meta->addStatement(new GenOp("   @.z = sqrt( 1.0 - dot( @.xy, @.xy ) ); // DXTnm\r\n", normalVar, normalVar, normalVar));
+      }
+      else if (hasBc5)
+      {
+         // BC5
+         meta->addStatement(new GenOp("   @ = @( @.gr * 2.0 - 1.0, 0.0, 0.0 ); // bc5nm\r\n", normalDecl, new TypeOp(GFXSCT_Float4), sampleNormalOp));
+         meta->addStatement(new GenOp("   @.z = sqrt( 1.0 - dot( @.xy, @.xy ) ); // bc5nm\r\n", normalVar, normalVar, normalVar));
+      }
+   }
+   else
+   {
+      meta->addStatement(new GenOp("   @ = @;\r\n", normalDecl, sampleNormalOp));
+      meta->addStatement(new GenOp("   @.xyz = @.xyz * 2.0 - 1.0;\r\n", normalVar, normalVar));
+   }
+
+   return meta;
+}
+
 ShaderFeature::Resources ShaderFeature::getResources( const MaterialFeatureData &fd )
 {
    Resources temp; 

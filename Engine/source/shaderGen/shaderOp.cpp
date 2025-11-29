@@ -26,7 +26,7 @@
 
 #include "shaderOp.h"
 
-bool resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& outInfo)
+bool ShaderOp::resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& outInfo)
 {
    outVar = nullptr;
    outInfo = nullptr;
@@ -35,18 +35,18 @@ bool resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& o
    if (Var* v = dynamic_cast<Var*>(elem))
    {
       outVar = v;
-      outInfo = LangElement::getTypeInfo(LangElement::stringToConstType((const char*)v->type));
+      outInfo = getTypeInfo(stringToConstType((const char*)v->type));
       return outInfo != nullptr;
    }
 
    // INDEX OP: arrVar[index]
    if (IndexOp* idx = dynamic_cast<IndexOp*>(elem))
    {
-      Var* arr = idx->arrVar;
+      Var* arr = dynamic_cast<Var*>(idx->mInput[0]);
       if (!arr)
          return false;
 
-      const ShaderTypeInfo* arrInfo = LangElement::getTypeInfo(LangElement::stringToConstType((const char*)arr->type));
+      const ShaderTypeInfo* arrInfo = getTypeInfo(stringToConstType((const char*)arr->type));
       if (!arrInfo)
          return false;
 
@@ -56,9 +56,22 @@ bool resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& o
       return true;
    }
 
+   if (CastOp* cast = dynamic_cast<CastOp*>(elem))
+   {
+      Var* castVar = dynamic_cast<Var*>(cast->mInput[0]);
+      if (!castVar)
+         return false;
+
+      const ShaderTypeInfo* castInfo = getTypeInfo(cast->mTargetType);// get the casts target type.
+      if (!castInfo)
+         return false;
+
+      outVar = castVar;
+      outInfo = castInfo;
+   }
+
    return false;
 }
-
 
 //**************************************************************************
 // Shader Operations
@@ -117,9 +130,8 @@ void EchoOp::print( Stream &stream )
 //**************************************************************************
 // Index operation
 //**************************************************************************
-IndexOp::IndexOp( Var* var, U32 index ) : Parent( NULL, NULL )
+IndexOp::IndexOp( Var* var, U32 index ) : Parent(var, NULL )
 {
-   arrVar = var; // need to keep hold of it for casts.
    mInput[0] = var;
    mIndex = index;
 }
@@ -266,13 +278,13 @@ void CastOp::print(Stream& stream)
    const ShaderTypeInfo* dstInfo = getTypeInfo(mTargetType);
 
    // no info? types match? nothing to do.
-   if (!srcInfo || !dstInfo || (srcInfo->type == dstInfo->type))
+   if (!srcInfo || !dstInfo)
    {
       srcElem->print(stream); // print something....
       return;
    }
 
-   bool glsl = (GFX->getAdapterType() == OpenGL);
+   const bool glsl = (GFX->getAdapterType() == OpenGL);
    const char* dstName = glsl ? dstInfo->glslName : dstInfo->hlslName;
 
    U32 srcSize = srcInfo->cols;
@@ -322,7 +334,7 @@ void CastOp::print(Stream& stream)
    }
 
    // vector -> vector widening
-   if (srcSize < dstSize)
+   if (srcSize <= dstSize)
    {
       WRITESTR(dstName);
       WRITESTR("(");
@@ -452,7 +464,18 @@ void MatrixInitializeOp::print(Stream& stream)
    // If not enough elements → pad with zeros
    while (count < matSize)
    {
-      WRITESTR("0");
+      U32 row = count / cols;
+      U32 col = count % cols;
+
+      if (row == col)
+      {
+         WRITESTR("1");
+      }
+      else
+      {
+         WRITESTR("0");
+      }
+
       count++;
 
       if (count < matSize)
@@ -472,3 +495,71 @@ void MatrixInitializeOp::print(Stream& stream)
    }
 }
 
+MatrixMultiplyOp::MatrixMultiplyOp(LangElement* left, LangElement* right) : Parent(left, right)
+{
+   mInput[0] = left;
+   mInput[1] = right;
+}
+
+void MatrixMultiplyOp::print(Stream& stream)
+{
+   LangElement* leftElem = mInput[0];
+   Var* leftVar = nullptr;
+   const ShaderTypeInfo* leftInfo = nullptr;
+
+   if (!resolveSourceType(leftElem, leftVar, leftInfo))
+   {
+      return;
+   }
+
+   LangElement* rightElem = mInput[0];
+   Var* rightVar = nullptr;
+   const ShaderTypeInfo* rightInfo = nullptr;
+
+   if (!resolveSourceType(rightElem, rightVar, rightInfo))
+   {
+      return;
+   }
+
+   if (leftInfo->isMatrix() && rightInfo->isVector())
+   {
+      if (rightInfo->cols != leftInfo->cols)
+      {
+         rightElem = new CastOp(rightVar, (GFXShaderConstType)(GFXSCT_Float + (leftInfo->cols - 1)));
+      }
+   }
+
+   if (leftInfo->isVector() && rightInfo->isMatrix())
+   {
+      if (rightInfo->cols != leftInfo->cols)
+      {
+         leftElem = new CastOp(leftVar, (GFXShaderConstType)(GFXSCT_Float + (rightInfo->cols - 1)));
+      }
+   }
+
+   else if (leftInfo->isMatrix() && rightInfo->isMatrix())
+   {
+      if (leftInfo->cols != rightInfo->rows)
+         Con::warnf("MatrixMultiplyOp: incompatible matrices: (%dx%d) × (%dx%d)",
+            leftInfo->rows, leftInfo->cols,
+            rightInfo->rows, rightInfo->cols);
+   }
+
+   const bool glsl = (GFX->getAdapterType() == OpenGL);
+
+   if (!glsl)
+   {
+      WRITESTR("mul(");
+      leftElem->print(stream);
+      WRITESTR(", ");
+      rightElem->print(stream);
+      WRITESTR(")");
+   }
+   else
+   {
+      leftElem->print(stream);
+      WRITESTR(" * ");
+      rightElem->print(stream);
+   }
+
+}

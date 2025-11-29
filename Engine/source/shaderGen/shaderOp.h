@@ -45,7 +45,7 @@
 */
 //**************************************************************************
 
-bool resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& outInfo);
+
 
 ///**************************************************************************
 /// Shader operation base class
@@ -56,6 +56,7 @@ protected:
    LangElement * mInput[2];
 
 public:
+   bool resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& outInfo);
    ShaderOp( LangElement *in1, LangElement *in2 );
 };
 
@@ -118,7 +119,6 @@ class IndexOp : public ShaderOp
    typedef ShaderOp Parent;
    U32 mIndex;
 public:
-   Var* arrVar;
    IndexOp( Var* var, U32 index );
    void print( Stream &stream ) override;
 };
@@ -185,10 +185,10 @@ public:
 class CastOp : public ShaderOp
 {
    typedef ShaderOp Parent;
-   GFXShaderConstType mTargetType;
    Vector<String> mSwizzle;     // "x", "y", "z", "w"
    Vector<String> mFillValues;  // "0", "0", "0", "1"
 public:
+   GFXShaderConstType mTargetType;
    CastOp(  LangElement* srcVar,
             GFXShaderConstType type,
             const char* swizzleStr = "x;y;z;w",
@@ -242,5 +242,14 @@ public:
    Matrix multiplication operation. 
 */
 //----------------------------------------------------------------------------
+
+class MatrixMultiplyOp : public ShaderOp
+{
+   typedef ShaderOp Parent;
+public:
+   MatrixMultiplyOp(LangElement* left, LangElement* right);
+
+   void print(Stream& stream) override;
+};
 
 #endif // _SHADEROP_H_

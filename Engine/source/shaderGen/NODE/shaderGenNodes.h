@@ -20,6 +20,7 @@
 #include "gfx/gfxAPI.h"
 #endif
 
+DeclareFeatureType(SNF_VertexPosition);
 DeclareFeatureType(SNF_DefaultTexCoord);
 DeclareFeatureType(SNF_TextureFeature);
 DeclareFeatureType(SNF_NormalMapFeature);
@@ -29,6 +30,7 @@ DeclareFeatureType(SNF_NormalMapFeature);
 /// </summary>
 enum ShaderNodeFeature_enum
 {
+   eSNF_VertexPosition,
    eSNF_DefaultTexCoord,
    eSNF_TextureFeature,
    eSNF_NormalMapFeature,
@@ -39,6 +41,18 @@ DefineEnumType(ShaderNodeFeature_enum);
 class ShaderFeatureNode : public ShaderFeature
 {
 public:
+
+   ///
+   Var* getObjTrans( Vector<ShaderComponent*>& componentList,
+                     bool useInstancing,
+                     MultiLine* meta);
+
+   Var* getModelView(Vector<ShaderComponent*>& componentList,
+                     bool useInstancing,
+                     MultiLine* meta);
+
+   Var* getWorldView(Vector<ShaderComponent*>& componentList, bool useInstancing, MultiLine* meta);
+
    void setupTextureSample(const String& samplerName,
                            GFXShaderConstType samplerType,
                            Vector<ShaderComponent*>& componentList,
@@ -58,6 +72,19 @@ public:
    LangElement* assignColor(LangElement* elem, Material::BlendOp blend, LangElement* lerpElem = NULL, ShaderFeature::OutputTarget outputTarget = ShaderFeature::DefaultTarget) override;
 };
 
+class NodeVertexPositionFeature : public ShaderFeatureNode
+{
+   void processVert(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
+
+   void processPix(Vector<ShaderComponent*>& componentList,
+      const MaterialFeatureData& fd) override;
+
+   String getName() override
+   {
+      return "NodeVertexPositionFeature";
+   }
+};
 
 class DefaultTexcoordFeature : public ShaderFeatureNode
 {

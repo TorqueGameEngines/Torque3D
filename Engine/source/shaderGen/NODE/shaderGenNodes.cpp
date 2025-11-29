@@ -15,11 +15,13 @@
 #include "materials/materialFeatureTypes.h"
 
 
+ImplementFeatureType(SNF_VertexPosition,    U32(-1), -1, false);
 ImplementFeatureType(SNF_DefaultTexCoord,    U32(-1), -1, false);
 ImplementFeatureType(SNF_TextureFeature,     U32(-1), -1, false);
 ImplementFeatureType(SNF_NormalMapFeature,   U32(-1), -1, false);
 
 ImplementEnumType(ShaderNodeFeature_enum, "Shader node features. Each of thes relates to a specific node for generating a shader.\n\n")
+   { ShaderNodeFeature_enum::eSNF_VertexPosition,  "SNF_VertexPosition", "Setup vertex position." },
    { ShaderNodeFeature_enum::eSNF_DefaultTexCoord, "SNF_DefaultTexCoord", "Setup the default texcoord." },
    { ShaderNodeFeature_enum::eSNF_TextureFeature,  "SNF_TextureFeature", "Sample a Texture - Params: (string,string,GFXSamplerStateData,bool)." },
    { ShaderNodeFeature_enum::eSNF_NormalMapFeature,"SNF_NormalMapFeature", "Convert a texture to a normalmap - Params: (string,float,bool,bool)." },
@@ -29,6 +31,7 @@ namespace
 {
    void register_node_features(GFXAdapterType type)
    {
+      FEATUREMGR->registerFeature(SNF_VertexPosition,   new NodeVertexPositionFeature);
       FEATUREMGR->registerFeature(SNF_DefaultTexCoord,   new DefaultTexcoordFeature);
       FEATUREMGR->registerFeature(SNF_TextureFeature,    new TextureFeature,     TextureFeature::createFunction);
       FEATUREMGR->registerFeature(SNF_NormalMapFeature,  new NormalMapFeature,   NormalMapFeature::createFunction);
@@ -51,6 +54,125 @@ MODULE_INIT
 
 MODULE_END;
 
+Var* ShaderFeatureNode::getObjTrans(Vector<ShaderComponent*>& componentList,
+                                    bool useInstancing,
+                                    MultiLine* meta)
+{
+   Var* objTrans = (Var*)LangElement::find("objTrans");
+   if (objTrans)
+      return objTrans;
+
+   if (useInstancing)
+   {
+      ShaderConnector* vertStruct = dynamic_cast<ShaderConnector*>(componentList[C_VERT_STRUCT]);
+      Var* instObjTrans = vertStruct->getElement(RT_TEXCOORD, 4, 4);
+      instObjTrans->setStructName("IN");
+      instObjTrans->setName("inst_objectTrans");
+
+      mInstancingFormat->addElement("objTrans", GFXDeclType_Float4, instObjTrans->constNum + 0);
+      mInstancingFormat->addElement("objTrans", GFXDeclType_Float4, instObjTrans->constNum + 1);
+      mInstancingFormat->addElement("objTrans", GFXDeclType_Float4, instObjTrans->constNum + 2);
+      mInstancingFormat->addElement("objTrans", GFXDeclType_Float4, instObjTrans->constNum + 3);
+
+      objTrans = new Var;
+      objTrans->setType(GFXSCT_Float4x4);
+      objTrans->setName("objTrans");
+
+      Vector<LangElement*> matrixVars;
+      matrixVars.push_back(instObjTrans);
+      meta->addStatement(new GenOp(" @ = @;", new DecOp(objTrans), new MatrixInitializeOp(objTrans, matrixVars)));
+   }
+   else
+   {
+      objTrans = new Var;
+      objTrans->setType(GFXSCT_Float4x4);
+      objTrans->setName("objTrans");
+      objTrans->uniform = true;
+      objTrans->constSortPos = cspPrimitive;
+   }
+
+   return objTrans;
+}
+
+Var* ShaderFeatureNode::getModelView(  Vector<ShaderComponent*>& componentList,
+                                       bool useInstancing,
+                                       MultiLine* meta)
+{
+   Var* modelview = (Var*)LangElement::find("modelview");
+   if (modelview)
+      return modelview;
+
+   if (useInstancing)
+   {
+      Var* objTrans = getObjTrans(componentList, useInstancing, meta);
+
+      Var* viewProj = (Var*)LangElement::find("viewProj");
+      if (!viewProj)
+      {
+         viewProj = new Var;
+         viewProj->setType(GFXSCT_Float4x4);
+         viewProj->setName("viewProj");
+         viewProj->uniform = true;
+         viewProj->constSortPos = cspPass;
+      }
+
+      modelview = new Var;
+      modelview->setType(GFXSCT_Float4x4);
+      modelview->setName("modelview");
+      meta->addStatement(new GenOp("   @ = @; // Instancing!\r\n", new DecOp(modelview), new MatrixMultiplyOp(viewProj, objTrans)));
+   }
+   else
+   {
+      modelview = new Var;
+      modelview->setType(GFXSCT_Float4x4);
+      modelview->setName("modelview");
+      modelview->uniform = true;
+      modelview->constSortPos = cspPrimitive;
+   }
+
+   return modelview;
+}
+
+Var* ShaderFeatureNode::getWorldView(  Vector<ShaderComponent*>& componentList,
+                                       bool useInstancing,
+                                       MultiLine* meta)
+{
+   Var* worldView = (Var*)LangElement::find("worldViewOnly");
+   if (worldView)
+      return worldView;
+
+   if (useInstancing)
+   {
+      Var* objTrans = getObjTrans(componentList, useInstancing, meta);
+
+      Var* worldToCamera = (Var*)LangElement::find("worldToCamera");
+      if (!worldToCamera)
+      {
+         worldToCamera = new Var;
+         worldToCamera->setType(GFXSCT_Float4x4);
+         worldToCamera->setName("worldToCamera");
+         worldToCamera->uniform = true;
+         worldToCamera->constSortPos = cspPass;
+      }
+
+      worldView = new Var;
+      worldView->setType(GFXSCT_Float4x4);
+      worldView->setName("worldViewOnly");
+
+      meta->addStatement(new GenOp("   @ = @; // Instancing!\r\n", new DecOp(worldView), new MatrixMultiplyOp(worldToCamera, objTrans) ));
+   }
+   else
+   {
+      worldView = new Var;
+      worldView->setType(GFXSCT_Float4x4);
+      worldView->setName("worldViewOnly");
+      worldView->uniform = true;
+      worldView->constSortPos = cspPrimitive;
+   }
+
+   return worldView;
+}
+
 void ShaderFeatureNode::setupTextureSample(  const String& samplerName,
                                              GFXShaderConstType samplerType,
                                              Vector<ShaderComponent*>& componentList,
@@ -69,43 +191,7 @@ void ShaderFeatureNode::setupTextureSample(  const String& samplerName,
 
    
    Var* samplerVar = dynamic_cast<Var*>(LangElement::find(sampVarName));
-   Var* textureVar;
-  
-   if (!isGL) // HLSL requires both Texture + SamplerState
-   {
-      if (!samplerVar)
-      {
-         samplerVar = new Var;
-         samplerVar->setType(isComparison ? "SamplerComparisonState" : "SamplerState");
-         samplerVar->setName(sampVarName);
-         samplerVar->uniform = true;
-         samplerVar->sampler = true;
-         samplerVar->constNum = Var::getTexUnitNum();
-      }
-
-      textureVar = dynamic_cast<Var*>(LangElement::find(texVarName));
-      if (!textureVar)
-      {
-         textureVar = new Var;
-         textureVar->setType(LangElement::samplerTypeToString(samplerType)); // Texture2D, TextureCube, etc.
-         textureVar->setName(texVarName);
-         textureVar->uniform = true;
-         textureVar->texture = true;
-         textureVar->constNum = samplerVar->constNum;
-      }
-   }
-   else
-   {
-      if (!samplerVar)
-      {
-         samplerVar = new Var;
-         samplerVar->setType(LangElement::samplerTypeToString(samplerType));
-         samplerVar->setName(sampVarName);
-         samplerVar->uniform = true;
-         samplerVar->sampler = true;
-         samplerVar->constNum = Var::getTexUnitNum();
-      }
-   }
+   Var* textureVar = NULL;
 
    // The sampled color variable (e.g. "samplerName_col") should always be new but just in case
    Var* sampledColor = (Var*)LangElement::find(resultVarName);
@@ -123,6 +209,16 @@ void ShaderFeatureNode::setupTextureSample(  const String& samplerName,
    if (isGL)
    {
       // ---------------- GLSL Sampling ----------------
+      if (!samplerVar)
+      {
+         samplerVar = new Var;
+         samplerVar->setType(LangElement::constTypeToString(samplerType, true));
+         samplerVar->setName(sampVarName);
+         samplerVar->uniform = true;
+         samplerVar->sampler = true;
+         samplerVar->constNum = Var::getTexUnitNum();
+      }
+
       if (isComparison)
       {
          if (useGather)
@@ -149,6 +245,27 @@ void ShaderFeatureNode::setupTextureSample(  const String& samplerName,
    else
    {
       // ---------------- HLSL Sampling ----------------
+      if (!samplerVar)
+      {
+         samplerVar = new Var;
+         samplerVar->setType(isComparison ? "SamplerComparisonState" : "SamplerState");
+         samplerVar->setName(sampVarName);
+         samplerVar->uniform = true;
+         samplerVar->sampler = true;
+         samplerVar->constNum = Var::getTexUnitNum();
+      }
+
+      textureVar = dynamic_cast<Var*>(LangElement::find(texVarName));
+      if (!textureVar)
+      {
+         textureVar = new Var;
+         textureVar->setType(LangElement::constTypeToString(samplerType, true)); // Texture2D, TextureCube, etc.
+         textureVar->setName(texVarName);
+         textureVar->uniform = true;
+         textureVar->texture = true;
+         textureVar->constNum = samplerVar->constNum;
+      }
+
       if (isComparison)
       {
          if (useGather)
@@ -192,8 +309,7 @@ Var* ShaderFeatureNode::getOutTexCoord(const char* name, GFXShaderConstType type
 
       // Statement allows for casting of different types which
       // eliminates vector truncation problems.
-      String statement = String::ToString("   @ = (%s)@;\r\n", type);
-      meta->addStatement(new GenOp(statement, texCoord, inTex));
+      meta->addStatement(new GenOp("   @ = (@)@;\r\n", texCoord, new TypeOp(type), inTex));
 
    }
 
@@ -263,6 +379,57 @@ LangElement* ShaderFeatureNode::assignColor(LangElement* elem, Material::BlendOp
    }
 
    return NULL;
+}
+
+//--------------------------------------------------------
+// Vertex position.
+//--------------------------------------------------------
+
+void NodeVertexPositionFeature::processVert(Vector<ShaderComponent*>& componentList, const MaterialFeatureData& fd)
+{
+   // First check for an input position from a previous feature
+   // then look for the default vertex position.
+   Var* inPosition = (Var*)LangElement::find("inPosition");
+   if (!inPosition)
+      inPosition = (Var*)LangElement::find("position");
+
+   const bool glsl = (GFX->getAdapterType() == OpenGL);
+
+   // grab connector position
+   ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
+   Var* outPosition = connectComp->getElement( glsl ? RT_POSITION : RT_SVPOSITION);
+
+   if (glsl)
+   {
+      outPosition->setName("gl_Position");
+   }
+   else
+   {
+      outPosition->setName("hpos");
+      outPosition->setStructName("OUT");
+   }
+
+   MultiLine* meta = new MultiLine;
+
+   Var* modelview = getModelView(componentList, fd.features[MFT_UseInstancing], meta);
+
+   meta->addStatement(new GenOp("   @ = @;\r\n", outPosition, new MatrixMultiplyOp( modelview, new CastOp(inPosition, GFXSCT_Float4, "x;y;z"))));
+
+   output = meta;
+}
+
+void NodeVertexPositionFeature::processPix(Vector<ShaderComponent*>& componentList, const MaterialFeatureData& fd)
+{
+   const bool glsl = (GFX->getAdapterType() == OpenGL);
+
+   if (!glsl)
+   {
+      // grab connector position
+      ShaderConnector* connectComp = dynamic_cast<ShaderConnector*>(componentList[C_CONNECTOR]);
+      Var* outPosition = connectComp->getElement(RT_SVPOSITION);
+      outPosition->setName("vpos");
+      outPosition->setStructName("IN");
+   }
 }
 
 //--------------------------------------------------------
@@ -352,10 +519,10 @@ void NormalMapFeature::processPix(Vector<ShaderComponent*>& componentList, const
    meta->addStatement(expandNormalMap(sampledColor, tempNormDecl, tempNorm, fd));
 
    meta->addStatement(
-      new GenOp("   @.xy *= float2(@, @);\r\n", tempNorm, params->flipX ? -1.0f : 1.0f, params->flipY ? -1.0f : 1.0f));
+      new GenOp("   @.xy *= @(@, @);\r\n", tempNorm, new TypeOp(GFXSCT_Float2), params->flipX ? -1.0f : 1.0f, params->flipY ? -1.0f : 1.0f));
 
-   meta->addStatement(new GenOp("   @.xyz = normalize( float3( @.xy * @, @.z ) );\r\n",
-      tempNorm, tempNorm, params->strength, tempNorm));
+   meta->addStatement(new GenOp("   @.xyz = normalize( @( @.xy * @, @.z ) );\r\n",
+      tempNorm, new TypeOp(GFXSCT_Float3), tempNorm, params->strength, tempNorm));
 
    // write back into our known variable.
    meta->addStatement(new GenOp("   @ = @;\r\n", sampledColor, tempNorm));
@@ -363,3 +530,4 @@ void NormalMapFeature::processPix(Vector<ShaderComponent*>& componentList, const
    output = meta;
 
 }
+

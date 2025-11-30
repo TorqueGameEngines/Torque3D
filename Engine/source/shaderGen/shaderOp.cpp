@@ -375,8 +375,8 @@ void MatrixInitializeOp::print(Stream& stream)
                initElem = new IndexOp(initVar, arr);
                if (cast)
                {
-                  CastOp* cast = new CastOp(initElem, (GFXShaderConstType)(GFXSCT_Float + (cols - 1)));
-                  cast->print(stream);
+                  CastOp* castOp = new CastOp(initElem, (GFXShaderConstType)(GFXSCT_Float + (cols - 1)));
+                  castOp->print(stream);
                   count += cols;
                }
                else
@@ -395,8 +395,8 @@ void MatrixInitializeOp::print(Stream& stream)
          {
             if (cast)
             {
-               CastOp* cast = new CastOp(initElem, (GFXShaderConstType)(GFXSCT_Float + (cols - 1)));
-               cast->print(stream);
+               CastOp* castOp = new CastOp(initElem, (GFXShaderConstType)(GFXSCT_Float + (cols - 1)));
+               castOp->print(stream);
                count += cols;
             }
             else

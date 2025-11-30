@@ -26,53 +26,6 @@
 
 #include "shaderOp.h"
 
-bool ShaderOp::resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& outInfo)
-{
-   outVar = nullptr;
-   outInfo = nullptr;
-
-   // DIRECT VAR
-   if (Var* v = dynamic_cast<Var*>(elem))
-   {
-      outVar = v;
-      outInfo = getTypeInfo(stringToConstType((const char*)v->type));
-      return outInfo != nullptr;
-   }
-
-   // INDEX OP: arrVar[index]
-   if (IndexOp* idx = dynamic_cast<IndexOp*>(elem))
-   {
-      Var* arr = dynamic_cast<Var*>(idx->mInput[0]);
-      if (!arr)
-         return false;
-
-      const ShaderTypeInfo* arrInfo = getTypeInfo(stringToConstType((const char*)arr->type));
-      if (!arrInfo)
-         return false;
-
-      // array element type = same as var type but no array dimension
-      outVar = arr;
-      outInfo = arrInfo;
-      return true;
-   }
-
-   if (CastOp* cast = dynamic_cast<CastOp*>(elem))
-   {
-      Var* castVar = dynamic_cast<Var*>(cast->mInput[0]);
-      if (!castVar)
-         return false;
-
-      const ShaderTypeInfo* castInfo = getTypeInfo(cast->mTargetType);// get the casts target type.
-      if (!castInfo)
-         return false;
-
-      outVar = castVar;
-      outInfo = castInfo;
-   }
-
-   return false;
-}
-
 //**************************************************************************
 // Shader Operations
 //**************************************************************************
@@ -396,32 +349,40 @@ void MatrixInitializeOp::print(Stream& stream)
    U32 count = 0;
    for (U32 elem = 0; elem < mInitialVals.size(); elem++)
    {
-      LangElement* writeOut = NULL;
-      Var* curVar = dynamic_cast<Var*>(mInitialVals[elem]);
-      if (curVar) // is a var
+      LangElement* initElem = mInitialVals[elem];
+      Var* initVar = nullptr;
+      const ShaderTypeInfo* initInfo = nullptr;
+
+      if (!resolveSourceType(initElem, initVar, initInfo))
       {
-         const ShaderTypeInfo* curInfo = getTypeInfo(stringToConstType((const char*)curVar->type));
-         if (!curInfo) // no info, cant do it cleanly.
-            return;
+         return;
+      }
 
-         const U32 curSize = curInfo->cols;
+      if (dynamic_cast<IndexOp*>(initElem) || dynamic_cast<CastOp*>(initElem)) // if we are a cast or index, write out.
+      {
+         count += initInfo->cols;
+         initElem->print(stream);
+      }
+      else if(dynamic_cast<Var*>(initElem)) // we are a var (hopefully)
+      {
+         const U32 varSize = initInfo->cols;
+         const bool cast = cols != varSize;
 
-         // if we are an array
-         if (curVar->arraySize > 1)
+         if (initVar->arraySize > 1)
          {
-            for (U32 arr = 0; arr < curVar->arraySize; arr++)
+            for (U32 arr = 0; arr < initVar->arraySize; arr++)
             {
-               writeOut = new IndexOp(curVar, arr);
-               if (curSize != cols)
+               initElem = new IndexOp(initVar, arr);
+               if (cast)
                {
-                  CastOp* cast = new CastOp(writeOut, (GFXShaderConstType)(GFXSCT_Float + (cols - 1)));
+                  CastOp* cast = new CastOp(initElem, (GFXShaderConstType)(GFXSCT_Float + (cols - 1)));
                   cast->print(stream);
                   count += cols;
                }
                else
                {
-                  writeOut->print(stream);
-                  count += curSize;
+                  initElem->print(stream);
+                  count += varSize;
                }
 
                if (count < matSize)
@@ -432,16 +393,16 @@ void MatrixInitializeOp::print(Stream& stream)
          }
          else
          {
-            if (curSize != cols)
+            if (cast)
             {
-               CastOp* cast = new CastOp(curVar, (GFXShaderConstType)(GFXSCT_Float + (cols - 1)));
+               CastOp* cast = new CastOp(initElem, (GFXShaderConstType)(GFXSCT_Float + (cols - 1)));
                cast->print(stream);
                count += cols;
             }
             else
             {
-               curVar->print(stream);
-               count += curSize;
+               initElem->print(stream);
+               count += varSize;
             }
 
             if (count < matSize)
@@ -450,18 +411,9 @@ void MatrixInitializeOp::print(Stream& stream)
             }
          }
       }
-      else
-      {
-         // Non-var LangElement, assume it produces correct vector
-         mInitialVals[elem]->print(stream);
-         count += cols;
-
-         if (count < matSize)
-            WRITESTR(",\r\n");
-      }
    }
 
-   // If not enough elements → pad with zeros
+   // If not enough elements → pad with identity
    while (count < matSize)
    {
       U32 row = count / cols;
@@ -512,7 +464,7 @@ void MatrixMultiplyOp::print(Stream& stream)
       return;
    }
 
-   LangElement* rightElem = mInput[0];
+   LangElement* rightElem = mInput[1];
    Var* rightVar = nullptr;
    const ShaderTypeInfo* rightInfo = nullptr;
 

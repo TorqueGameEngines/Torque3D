@@ -509,7 +509,7 @@ void NormalMapFeature::processPix(Vector<ShaderComponent*>& componentList, const
 
    MultiLine* meta = new MultiLine;
 
-   // TEMP float3 for base decoded normal
+   // TEMP float4 for base decoded normal
    Var* tempNorm = new Var;
    tempNorm->setName(params->inputName + "_normTemp");
    tempNorm->setType(GFXSCT_Float4);

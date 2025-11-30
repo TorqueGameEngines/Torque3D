@@ -23,6 +23,7 @@
 #include "core/strings/stringFunctions.h"
 #include "core/util/str.h"
 #include "gfx/gfxDevice.h"
+#include "shaderGen/shaderOp.h"
 #include "langElement.h"
 
 //**************************************************************************
@@ -131,6 +132,56 @@ GFXShaderConstType LangElement::stringToConstType(const char* name)
 
    return GFXSCT_Uknown;
 }
+
+bool LangElement::resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& outInfo)
+{
+   outVar = nullptr;
+   outInfo = nullptr;
+
+   // DIRECT VAR
+   if (Var* v = dynamic_cast<Var*>(elem))
+   {
+      outVar = v;
+      outInfo = getTypeInfo(stringToConstType((const char*)v->type));
+      return outInfo != nullptr;
+   }
+
+   // INDEX OP: arrVar[index]
+   if (IndexOp* idx = dynamic_cast<IndexOp*>(elem))
+   {
+      Var* arr = dynamic_cast<Var*>(idx->mInput[0]);
+      if (!arr)
+         return false;
+
+      const ShaderTypeInfo* arrInfo = getTypeInfo(stringToConstType((const char*)arr->type));
+      if (!arrInfo)
+         return false;
+
+      // array element type = same as var type but no array dimension
+      outVar = arr;
+      outInfo = arrInfo;
+      return true;
+   }
+
+   // CAST OP: cast var
+   if (CastOp* cast = dynamic_cast<CastOp*>(elem))
+   {
+      Var* castVar = dynamic_cast<Var*>(cast->mInput[0]);
+      if (!castVar)
+         return false;
+
+      const ShaderTypeInfo* castInfo = getTypeInfo(cast->mTargetType);// get the casts target type.
+      if (!castInfo)
+         return false;
+
+      outVar = castVar; // we should probably return null as we should just write the castop langelement, not a var.
+      outInfo = castInfo;
+      return true;
+   }
+
+   return false;
+}
+
 
 //--------------------------------------------------------------------------
 // Constructor

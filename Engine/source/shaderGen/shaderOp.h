@@ -52,11 +52,8 @@
 ///**************************************************************************
 class ShaderOp : public LangElement
 {
-protected:
-   LangElement * mInput[2];
-
 public:
-   bool resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& outInfo);
+   LangElement* mInput[2];
    ShaderOp( LangElement *in1, LangElement *in2 );
 };
 

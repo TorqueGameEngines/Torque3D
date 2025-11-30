@@ -92,6 +92,7 @@ struct ShaderTypeInfo
 //**************************************************************************
 // Language element
 //**************************************************************************
+struct Var; // forward declaration
 struct LangElement
 {
    static void buildTypeMaps();
@@ -99,7 +100,8 @@ struct LangElement
    static LangElement * find( const char *name );
    static void deleteElements();
    static const ShaderTypeInfo* getTypeInfo(GFXShaderConstType type);
-      
+   static bool resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& outInfo);
+
    U8    name[32];
 
    static const char* constTypeToString(GFXShaderConstType constType, bool sampler = false, bool matrix = false);

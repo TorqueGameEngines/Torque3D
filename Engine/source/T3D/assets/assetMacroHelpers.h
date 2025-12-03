@@ -62,14 +62,26 @@ if (m##name##AssetId != StringTable->EmptyString())\
    if (stream->writeFlag(m##name##Asset.notNull()))\
    {\
       stream->writeString(m##name##Asset.getAssetId());\
-   }
+   }\
+   else if (stream->writeFlag(m##name##File != StringTable->EmptyString()))\
+   {\
+      stream->writeString(m##name##File);\
+   }\
 
 //network recieve - datablock
 #define UNPACKDATA_ASSET_REFACTOR(name)\
    if (stream->readFlag())\
    {\
       _set##name(stream->readSTString());\
-   }
+   }\
+   else if (stream->readFlag())\
+   {\
+      _set##name(stream->readSTString());\
+   }\
+   else\
+   {\
+      _set##name(StringTable->EmptyString());\
+   }\
 
 //network send - object-instance
 #define PACK_ASSET_REFACTOR(netconn, name)\
@@ -77,14 +89,27 @@ if (m##name##AssetId != StringTable->EmptyString())\
    {\
       NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
       netconn->packNetStringHandleU(stream, assetIdStr);\
-   }
+   }\
+   else if (stream->writeFlag(m##name##File != StringTable->EmptyString()))\
+   {\
+      NetStringHandle fileStr = m##name##File;\
+      netconn->packNetStringHandleU(stream, fileStr);\
+   }\
 
 //network recieve - object-instance
 #define UNPACK_ASSET_REFACTOR(netconn, name)\
    if (stream->readFlag())\
    {\
       _set##name(netconn->unpackNetStringHandleU(stream).getString());\
-   }
+   }\
+   else if (stream->readFlag())\
+   {\
+      _set##name(netconn->unpackNetStringHandleU(stream).getString());\
+   }\
+   else\
+   {\
+      _set##name(StringTable->EmptyString());\
+   }\
 
 //network send - datablock
 #define PACKDATA_ASSET_ARRAY_REFACTOR(name, max)\
@@ -93,6 +118,10 @@ for (U32 i = 0; i < max; i++)\
    if (stream->writeFlag(m##name##Asset[i].notNull()))\
    {\
       stream->writeString(m##name##Asset[i].getAssetId()); \
+   }\
+   else if (stream->writeFlag(m##name##File[i] != StringTable->EmptyString()))\
+   {\
+      stream->writeString(m##name##File[i]);\
    }\
 }
 
@@ -103,6 +132,14 @@ for (U32 i = 0; i < max; i++)\
    if (stream->readFlag())\
    {\
       m##name##Asset[i] = stream->readSTString();\
+   }\
+   else if (stream->readFlag())\
+   {\
+      _set##name(stream->readSTString(), i);\
+   }\
+   else\
+   {\
+      _set##name(StringTable->EmptyString(), i);\
    }\
 }
 
@@ -115,6 +152,11 @@ for (U32 i = 0; i < max; i++)\
       NetStringHandle assetIdStr = m##name##Asset[i].getAssetId();\
       netconn->packNetStringHandleU(stream, assetIdStr);\
    }\
+   else if (stream->writeFlag(m##name##File[i] != StringTable->EmptyString()))\
+   {\
+      NetStringHandle fileStr = m##name##File[i];\
+      netconn->packNetStringHandleU(stream, fileStr);\
+   }\
 }
 
 //network recieve - object-instance
@@ -124,6 +166,14 @@ for (U32 i = 0; i < max; i++)\
    if (stream->readFlag())\
    {\
       m##name##Asset[i] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
+   }\
+   else if (stream->readFlag())\
+   {\
+      _set##name(StringTable->insert(netconn->unpackNetStringHandleU(stream).getString()), i);\
+   }\
+   else\
+   {\
+      _set##name(StringTable->EmptyString(), i);\
    }\
 }
 
@@ -168,8 +218,10 @@ DefineEngineMethod(className, set##name, void, (const char* assetName), , assetT
    {\
       stream->writeString(m##name##Asset.getAssetId());\
    }\
-   else\
-      stream->writeString(m##name##Name);
+   else if(stream->writeFlag(m##name##Name != StringTable->EmptyString()))\
+   {\
+      stream->writeString(m##name##Name);\
+   }\
 
 //network recieve - datablock
 #define UNPACKDATA_ASSET(name)\
@@ -178,11 +230,15 @@ DefineEngineMethod(className, set##name, void, (const char* assetName), , assetT
       m##name##AssetId = stream->readSTString();\
       _set##name(m##name##AssetId);\
    }\
-   else\
+   else if (stream->readFlag())\
    {\
       m##name##Name = stream->readSTString();\
       _set##name(m##name##Name);\
-   }
+   }\
+   else\
+   {\
+      _set##name(StringTable->EmptyString());\
+   }\
 
 //network send - object-instance
 #define PACK_ASSET(netconn, name)\
@@ -191,8 +247,11 @@ DefineEngineMethod(className, set##name, void, (const char* assetName), , assetT
       NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
       netconn->packNetStringHandleU(stream, assetIdStr);\
    }\
-   else\
-      stream->writeString(m##name##Name);
+   else if (stream->writeFlag(m##name##Name != StringTable->EmptyString()))\
+   {\
+      NetStringHandle nameStr = m##name##Name;\
+      netconn->packNetStringHandleU(stream, nameStr);\
+   }\
 
 //network recieve - object-instance
 #define UNPACK_ASSET(netconn, name)\
@@ -201,8 +260,14 @@ DefineEngineMethod(className, set##name, void, (const char* assetName), , assetT
       m##name##AssetId = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
       _set##name(m##name##AssetId);\
    }\
+   else if (stream->readFlag())\
+   {\
+      _set##name(StringTable->insert(netconn->unpackNetStringHandleU(stream).getString()));\
+   }\
    else\
-      m##name##Name = stream->readSTString();
+   {\
+      _set##name(StringTable->EmptyString()); \
+   }\
 
 //script methods for class.asset acces
 //declare general get<entry>, get<entry>Asset and set<entry> methods
@@ -287,8 +352,10 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    {\
       stream->writeString(m##name##Asset[index].getAssetId());\
    }\
-   else\
-      stream->writeString(m##name##Name[index]);
+   else if (stream->writeFlag(m##name##Name[index] != StringTable->EmptyString()))\
+   {\
+      stream->writeString(m##name##Name[index].getAssetId());\
+   }\
 
 //network recieve - datablock
 #define UNPACKDATA_ASSET_ARRAY(name, index)\
@@ -297,11 +364,15 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       m##name##AssetId[index] = stream->readSTString();\
       _set##name(m##name##AssetId[index], index);\
    }\
-   else\
+   else if (stream->readFlag())\
    {\
       m##name##Name[index] = stream->readSTString();\
       _set##name(m##name##Name[index], index);\
-   }
+   }\
+   else\
+   {\
+      _set##name(StringTable->EmptyString());\
+   }\
 
 //network send - object-instance
 #define PACK_ASSET_ARRAY(netconn, name, index)\
@@ -310,8 +381,11 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       NetStringHandle assetIdStr = m##name##Asset[index].getAssetId();\
       netconn->packNetStringHandleU(stream, assetIdStr);\
    }\
-   else\
-      stream->writeString(m##name##Name[index]);
+   else if (stream->writeFlag(m##name##Name[index] != StringTable->EmptyString()))\
+   {\
+      NetStringHandle fileStr = m##name##Name[index].getAssetId();\
+      netconn->packNetStringHandleU(stream, fileStr);\
+   }\
 
 //network recieve - object-instance
 #define UNPACK_ASSET_ARRAY(netconn, name, index)\
@@ -320,10 +394,14 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       m##name##AssetId[index] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
       _set##name(m##name##AssetId[index], index);\
    }\
+   else if (stream->readFlag())\
+   {\
+      m##name##Name[index] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
+      _set##name(m##name##Name[index], index);\
+   }\
    else\
    {\
-      m##name##Name[index] = stream->readSTString();\
-      _set##name(m##name##Name[index], index);\
+      _set##name(StringTable->EmptyString(), index);\
    }
 
 //script methods for class.asset acces
@@ -363,8 +441,12 @@ DefineEngineMethod(className, set##name, bool, (const char* assetName, S32 index
       const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
       Con::printf("pack: %s = %s",enumString, m##name##AssetId[index]);\
    }\
-   else\
-      stream->writeString(m##name##Name[index]);\
+   else if (stream->writeFlag(m##name##File[index] != StringTable->EmptyString()))\
+   {\
+      stream->writeString(m##name##File[index]);\
+      const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
+      Con::printf("pack: %s = %s",enumString, m##name##File[index]);\
+   }\
 }
 //network recieve - object-instance
 #define UNPACKDATA_ASSET_ARRAY_ENUMED(name, enumType, index )\
@@ -376,10 +458,16 @@ DefineEngineMethod(className, set##name, bool, (const char* assetName, S32 index
       const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
       Con::printf("unpack: %s = %s",enumString, m##name##AssetId[index]);\
    }\
+   else if (stream->readFlag())\
+   {\
+      m##name##File[index] = stream->readSTString();\
+      _set##name(m##name##File[index], index);\
+      const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
+      Con::printf("unpack: %s = %s",enumString, m##name##AssetId[index]);\
+   }\
    else\
    {\
-      m##name##Name[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
+      _set##name(StringTable->EmptyString(), index);\
    }\
 }
 

@@ -16,7 +16,6 @@ uniform vec3 ambientColor;
 uniform vec4 rtParams0;
 uniform vec4 vsFarPlane;
 uniform mat4 cameraToWorld;
-uniform vec3 eyePosWorld;
 
 //cubemap arrays require all the same size. so shared mips# value
 uniform float cubeMips;

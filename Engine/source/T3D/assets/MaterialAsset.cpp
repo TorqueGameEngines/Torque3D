@@ -484,13 +484,22 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
 
    if (mInspector->getInspectObject() != nullptr)
    {
-      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
-         mInspector->getIdString(), mCaption);
+      StringBuilder varNameStr;
+      varNameStr.append(mCaption);
+      if (mFieldArrayIndex != nullptr)
+      {
+         varNameStr.append("[");
+         varNameStr.append(mFieldArrayIndex);
+         varNameStr.append("]");
+      }
+
+      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"MaterialAsset\", \"AssetBrowser.changeAsset\", %s, \"%s\");",
+         mInspector->getIdString(), varNameStr.end().c_str());
       mBrowseButton->setField("Command", szBuffer);
 
       setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
 
-      previewImage = mInspector->getInspectObject()->getDataField(mCaption, NULL);
+      previewImage = mInspector->getInspectObject()->getDataField(varNameStr.end().c_str(), NULL);
    }
    else
    {

@@ -22,12 +22,13 @@
 
 #include "./torque.glsl"
 #include "./brdf.glsl"
+#line 25
 
 uniform float maxProbeDrawDistance;
 uniform int isCapturing;
 
 #ifndef TORQUE_SHADERGEN
-#line 27
+uniform vec3 eyePosWorld;
 // These are the uniforms used by most lighting shaders.
 
 uniform vec4 inLightPos[4];

@@ -45,7 +45,6 @@ uniform vec4 lightColor;
 uniform vec4 lightAmbient; 
 
 uniform float shadowSoftness;
-uniform vec3 eyePosWorld; 
 
 uniform vec4 atlasXOffset;
 uniform vec4 atlasYOffset;

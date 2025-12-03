@@ -42,7 +42,6 @@ uniform vec4 rtParams0;
 
 uniform vec4 vsFarPlane;
 uniform mat4 cameraToWorld;
-uniform vec3 eyePosWorld;
 
 vec3 iblSpecular(in Surface surface, vec3 F)
 {

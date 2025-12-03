@@ -25,10 +25,10 @@
 #include "./shaderModelAutoGen.hlsl"
 
 //globals
-uniform float3 eyePosWorld;
 uniform float maxProbeDrawDistance;
 uniform int isCapturing;
 #ifndef TORQUE_SHADERGEN
+uniform float3 eyePosWorld;
 
 // These are the uniforms used by most lighting shaders.
 

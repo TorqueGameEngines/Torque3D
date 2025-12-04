@@ -289,6 +289,30 @@ class TSShape
    ConvexHullAccelerator* getAccelerator(S32 dl);
    /// @}
 
+   /// <summary>
+   /// <c>IKChain</c> struct for building an ik chain.
+   /// </summary>
+   /// <para>A structure for holding our ik required data.</para>
+   /// <param name="rootNode">The index of the root node.</param>
+   /// <param name="endNode">The index of the end node.</param>
+   /// <param name="nodes">Vector of nodes making up the chain, end->root order.</param>
+   /// <param name="weight">The weight of the ik.</param>
+   /// <param name="threshold">The minimum distance to consider as solved.</param>
+   /// <param name="maxIterations">The maximum number of iterations to try to solve.</param>
+   /// <param name="targetIndex">The index of the target node.</param>
+   /// <param name="enabled"><c>True</c> if you want this chain to have an effect.</param>
+   struct IKChain {
+      S32 nameIndex;
+      S32 rootNode;
+      S32 endNode;
+      Vector<S32> nodes;
+      F32 weight;
+      F32 threshold;
+      S32 maxIterations;
+      S32 targetIndex;
+      bool enabled;
+   };
+
 
    /// @name Shape Vector Data
    /// @{
@@ -346,6 +370,7 @@ class TSShape
    Vector<TSLastDetail*>            billboardDetails;
    Vector<ConvexHullAccelerator*>   detailCollisionAccelerators;
    Vector<String>                   names;
+   Vector<IKChain>                  ikChains;
 
    /// @}
 
@@ -529,6 +554,9 @@ class TSShape
    /// Returns name string for sequence at the passed index.
    const String& getSequenceName( S32 seqIndex ) const;
 
+   // returns name string for the ikchain at the passed index.
+   const String& getIKChainName(S32 ikIndex) const;
+
 	S32 getTargetCount() const;
 	const String& getTargetName( S32 mapToNameIndex ) const;
 
@@ -544,6 +572,9 @@ class TSShape
 
    S32 findSequence(S32 nameIndex) const;
    S32 findSequence(const String &name) const { return findSequence(findName(name)); }
+
+   S32 findIKChain(S32 nameIndex) const;
+   S32 findIKChain(const String& name) const { return findIKChain(findName(name)); }
 
    S32 getSubShapeForNode(S32 nodeIndex);
    S32 getSubShapeForObject(S32 objIndex);
@@ -684,6 +715,21 @@ class TSShape
    static bool isShapeFileType(Torque::Path filePath);
    bool addSequence(const Torque::Path& path, const String& assetId, const String& fromSeq, const String& name, S32 startFrame, S32 endFrame, bool padRotKeys, bool padTransKeys);
    bool removeSequence(const String& name);
+
+   /// <summary>
+   /// Convenience function to make sure nodes are related to each other.
+   /// </summary>
+   /// <param name="ancestor">Ancestor node index to test.</param>
+   /// <param name="descendant">Descendent node index to test.</param>
+   /// <returns><c>true</c> if the nodes are related, otherwise <c>false</c>.</returns>
+   bool isAncestorOf(S32 ancestor, S32 descendant) const;
+   bool addIKChain(const String& name, const String& nodeA, const String& nodeB);
+   bool removeIKChain(const String& name);
+   bool setIKChainEnabled(const String& name, bool isEnabled);
+   bool setIKChainWeight(const String& name, F32 weight);
+   bool setIKChainThreshold(const String& name, F32 threshold);
+   bool setIKChainMaxIterations(const String& name, S32 maxIterations);
+   bool setIKChainTarget(const String& name, const String& targetNode);
 
    bool addTrigger(const String& seqName, S32 keyframe, S32 state);
    bool removeTrigger(const String& seqName, S32 keyframe, S32 state);

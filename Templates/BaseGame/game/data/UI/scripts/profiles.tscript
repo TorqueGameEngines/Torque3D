@@ -227,3 +227,103 @@ new GuiControlProfile(MenuTextEditprofile)
    fontSize = "18";
    cursorColor = "255 255 255 255";
 };
+
+//-----------------------------------------------------------------------------
+// Core Hud profiles
+
+singleton GuiControlProfile (HudScrollProfile)
+{
+   opaque = false;
+   border = true;
+   borderColor = "0 255 0";
+   bitmap = "data/UI/art/scrollBar";
+   hasBitmapArray = true;
+};
+
+singleton GuiControlProfile (HudTextProfile)
+{
+   opaque = false;
+   fillColor = "128 128 128";
+   fontColor = "0 255 0";
+   border = true;
+   borderColor = "0 255 0";
+   modal = false;
+};
+
+singleton GuiControlProfile (ChatHudBorderProfile)
+{
+   bitmap = "data/UI/art/chatHudBorderArray";
+   hasBitmapArray = true;
+   opaque = false;
+   modal = false;
+};
+
+
+//-----------------------------------------------------------------------------
+// Center and bottom print
+
+singleton GuiControlProfile (CenterPrintProfile)
+{
+   opaque = false;
+   fillColor = "128 128 128";
+   fontColor = "0 255 0";
+   border = true;
+   borderColor = "0 255 0";
+   modal = false;
+};
+
+singleton GuiControlProfile (CenterPrintTextProfile)
+{
+   opaque = false;
+   fontType = "Arial";
+   fontSize = 12;
+   fontColor = "0 255 0";
+   modal = false;
+};
+
+// -----------------------------------------------------------------------------
+// HUD text
+// -----------------------------------------------------------------------------
+singleton GuiControlProfile (HudTextNormalProfile)
+{
+   opaque = false;
+   fontType = "Arial";
+   fontSize = 18;
+   fontColor = "255 255 255";
+   modal = false;
+};
+
+singleton GuiControlProfile (HudTextItalicProfile : HudTextNormalProfile)
+{
+   fontType = "ArialItalic";
+};
+
+singleton GuiControlProfile (HudTextBoldProfile : HudTextNormalProfile)
+{
+   fontType = "ArialBold";
+};
+
+singleton GuiControlProfile( GuiBigTextProfile : GuiMenuDefaultProfile )
+{
+   fontType = "Arial Bold";
+   fontSize = 24;
+   fontColor = "255 255 255";
+   justify = "center";
+   modal = false;
+   category = "BaseUI";
+   modal = false;
+};
+
+// -----------------------------------------------------------------------------
+// Numerical health text
+// -----------------------------------------------------------------------------
+
+singleton GuiControlProfile (NumericHealthProfile)
+{
+   opaque = true;
+   justify = "center";
+   fontType = "ArialBold";
+   fontSize = 32;
+   fontColor = "255 255 255";
+   modal = false;
+};

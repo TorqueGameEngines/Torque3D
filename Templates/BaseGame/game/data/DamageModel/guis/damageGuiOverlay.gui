@@ -25,8 +25,7 @@ $guiContent = new GuiContainer(damageGuiOverlay) {
    };
    new GuiCrossHairHud(Reticle) {
       damageOffset = "0 10";
-      BitmapAsset = "FPSEquipment:crosshair_image";
-      BitmapFile = "data/FPSEquipment/images/weaponHud/crossHair.png";
+      BitmapAsset = "";
       position = "624 344";
       extent = "32 32";
       minExtent = "8 8";
@@ -64,8 +63,7 @@ $guiContent = new GuiContainer(damageGuiOverlay) {
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiBitmapCtrl(previewImage) {
-         BitmapAsset = "FPSEquipment:ryder_image";
-         BitmapFile = "data/FPSEquipment/images/weaponHud/ryder.png";
+         BitmapAsset = "UI:hudfill_image";
          position = "8 0";
          extent = "108 56";
          horizSizing = "width";

@@ -44,6 +44,7 @@ DefineEnumType( GFXTextureFilterType );
 DefineEnumType( GFXCullMode );
 DefineEnumType( GFXStencilOp );
 DefineEnumType( GFXBlendOp );
+DefineEnumType(GFXShaderConstType);
 DefineEnumType( GFXAdapterType );
 
 DECLARE_STRUCT( GFXVideoMode );

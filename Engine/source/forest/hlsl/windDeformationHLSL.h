@@ -46,6 +46,8 @@ public:
    void processVert( Vector<ShaderComponent*> &componentList,
                              const MaterialFeatureData &fd ) override;
 
+   U32 getShaderStages() override { return GFXShaderStage::VERTEX_SHADER; }
+
    String getName() override
    {
       return "Wind Effect";

@@ -180,6 +180,8 @@ public:
 
    void processPix( Vector<ShaderComponent*> &componentList, 
       const MaterialFeatureData &fd ) override;
+
+   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
    
    U32 getOutputTargets( const MaterialFeatureData &fd ) const override { return mOutputTargetMask; }
 };
@@ -306,6 +308,8 @@ class DiffuseFeatureHLSL : public ShaderFeatureHLSL
 public:   
    void processPix(   Vector<ShaderComponent*> &componentList, 
                               const MaterialFeatureData &fd ) override;
+
+   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
 
    Material::BlendOp getBlendOp() override{ return Material::None; }
 
@@ -558,6 +562,9 @@ public:
 
    void processPix(   Vector<ShaderComponent*> &componentList, 
                               const MaterialFeatureData &fd ) override;
+
+   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
+
    String getName() override
    {
       return "Glow Mask";
@@ -581,6 +588,8 @@ public:
 
    void processPix(   Vector<ShaderComponent*> &componentList, 
                               const MaterialFeatureData &fd ) override;
+
+   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
 
    Material::BlendOp getBlendOp() override { return Material::None; }
 
@@ -625,6 +634,8 @@ public:
 
    void processVert( Vector<ShaderComponent*> &componentList,
       const MaterialFeatureData &fd ) override;
+
+   U32 getShaderStages() override { return GFXShaderStage::VERTEX_SHADER; }
 
    String getName() override
    {
@@ -671,6 +682,8 @@ public:
 
    void processVert(  Vector<ShaderComponent*> &componentList,
                               const MaterialFeatureData &fd ) override;
+
+   U32 getShaderStages() override { return GFXShaderStage::VERTEX_SHADER; }
 
    String getName() override { return "Hardware Skinning"; }
 };

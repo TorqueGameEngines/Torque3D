@@ -126,9 +126,11 @@ protected:
 
 public:
    ConditionerMethodDependency( ConditionerFeature *conditioner, const ConditionerFeature::MethodType methodType ) :
-      mConditioner(conditioner), mMethodType(methodType) {}
+      mConditioner(conditioner), mMethodType(methodType) {
+      stages = (GFXShaderStage::VERTEX_SHADER | GFXShaderStage::PIXEL_SHADER);
+   }
 
-   void print( Stream &s ) const override;
+   void print( Stream &s, GFXShaderStage stage ) const override;
 
    // Auto insert information into a macro
    virtual void createMethodMacro( const String &methodName, Vector<GFXShaderMacro> &macros );

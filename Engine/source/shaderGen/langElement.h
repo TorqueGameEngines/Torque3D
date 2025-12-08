@@ -124,6 +124,8 @@ enum ConstantSortPosition
    cspPotentialPrimitive,
    /// Updated one per pass
    cspPass,
+   /// Set once per scene
+   cspScene,
    /// Count var, do not use
    csp_Count
 };

@@ -46,6 +46,10 @@
 #ifndef _MATERIALFEATUREDATA_H_
 #include "materials/materialFeatureData.h"
 #endif
+#ifndef _SHADERDATA_H_
+#include "materials/shaderData.h"
+#endif // !_SHADERDATA_H_
+
 
 /// Base class used by shaderGen to be API agnostic.  Subclasses implement the various methods
 /// in an API specific way.
@@ -145,13 +149,11 @@ public:
    /// the vertex and pixel shader files.  pixVersion is also filled in by
    /// this function.
    /// @param assignNum used to assign a specific number as the filename   
-   void generateShader( const MaterialFeatureData &featureData,
-                        char *vertFile, 
-                        char *pixFile, 
-                        F32 *pixVersion,
-                        const GFXVertexFormat *vertexFormat,
+   void generateShader( const MaterialFeatureData& featureData,
+                        ShaderData* shaderData,
+                        const GFXVertexFormat* vertexFormat,
                         const char* cacheName,
-                        Vector<GFXShaderMacro> &macros);
+                        Vector<GFXShaderMacro>& macros);
 
    // Returns a shader that implements the features listed by dat.
    GFXShader* getShader( const MaterialFeatureData &dat, const GFXVertexFormat *vertexFormat, const Vector<GFXShaderMacro> *macros, const Vector<String> &samplers );
@@ -191,10 +193,15 @@ protected:
    FeatureInitSignal mFeatureInitSignal;
    bool mRegisteredWithGFX;
    Torque::FS::FileSystemRef mMemFS;
-   
-   /// Map of cache string -> shaders
-   typedef Map<String, GFXShaderRef> ShaderMap;
-   ShaderMap mProcShaders;
+
+   /// <summary>
+   /// Map of shaderdata, string should be built up of stage files
+   /// </summary>
+   typedef HashMap<String, SimObjectPtr<ShaderData>> ShaderDataMap;
+   ShaderDataMap mProcShaderData;
+
+   typedef HashMap<String, bool> FileCacheSet; // we use a hashmap because it is quicker for finding.
+   FileCacheSet mFileCache;
 
    ShaderGen();
 
@@ -215,7 +222,7 @@ protected:
    /// print out the processed features to the file stream
    void _printFeatures( Stream &stream );
 
-   void _printDependencies( Stream &stream );
+   void _printDependencies( Stream &stream, GFXShaderStage stage);
 
    void _processPixFeatures( Vector<GFXShaderMacro> &macros, bool macrosOnly = false );
    void _printPixShader( Stream &stream );

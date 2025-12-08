@@ -93,6 +93,8 @@ ShaderGen::~ShaderGen()
 {
    GFXDevice::getDeviceEventSignal().remove(this, &ShaderGen::_handleGFXEvent);
    _uninit();
+
+   mFileCache.clear();
 }
 
 void ShaderGen::registerInitDelegate(GFXAdapterType adapterType, ShaderGenInitDelegate& initDelegate)
@@ -190,7 +192,7 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
    _uninit();
    _init();
 
-   const bool skipRegen = !Con::getBoolVariable("ShaderGen::GenNewShaders", true);
+   bool skipRegen = !Con::getBoolVariable("ShaderGen::GenNewShaders", true);
    const FeatureSet& features = mFeatureData.features;
    U32 stages = 0;
 
@@ -240,7 +242,12 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
          // set the shaderdata file for this stage, shaderdata ptr needs to be passed in here.
          dSprintf(fileName, sizeof(fileName), "shadergen:/%s.%s", stageName.c_str(), mFileEnding.c_str());
          shaderData->setShaderStageFile(curStage, fileName);
-         continue;
+         if (!(curStage & GFXShaderStage::VERTEX_SHADER))
+         {
+            continue;
+         }
+
+         skipRegen = true;
       }
 
       mFileCache[stageName] = true;
@@ -251,10 +258,13 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
 
       mOutput = new MultiLine;
       FileStream* stream = new FileStream();
-      if (!stream->open(fileName, Torque::FS::File::Write))
+      if (!skipRegen)
       {
-         AssertFatal(false, "Failed to open Shader Stream");
-         return;
+         if (!stream->open(fileName, Torque::FS::File::Write))
+         {
+            AssertFatal(false, "Failed to open Shader Stream");
+            return;
+         }
       }
 
       switch (curStage)
@@ -350,14 +360,14 @@ void ShaderGen::_processVertFeatures( Vector<GFXShaderMacro> &macros, bool macro
 
          feature->processVertMacros( macros, mFeatureData );
 
-         if ( macrosOnly )
-            continue;
-
          feature->setInstancingFormat( &mInstancingFormat );
 
          feature->mVertexFormat = mVertexFormat;
 
          feature->processVert( mComponents, mFeatureData );
+
+         if (macrosOnly)
+            continue;
 
          String line;
          if ( index > -1 )
@@ -601,5 +611,4 @@ void ShaderGen::flushProceduralShaders()
    }
 
    mProcShaderData.clear();
-   mFileCache.clear();
 }

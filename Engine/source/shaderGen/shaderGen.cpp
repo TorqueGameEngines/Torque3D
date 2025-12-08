@@ -227,7 +227,7 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
          const FeatureType& type = features.getAt(i);
          if (stage & FEATUREMGR->getByType(type)->getShaderStages())
          {
-            stageName += type.getName() + "," + String::ToString(i);
+            stageName += type.getName();
          }
       }
 

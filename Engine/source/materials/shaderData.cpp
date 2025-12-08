@@ -219,6 +219,8 @@ GFXShader* ShaderData::getShader( const Vector<GFXShaderMacro> &macros)
    String cacheKey;
    GFXShaderMacro::stringize( macros, &cacheKey );
 
+   cacheKey = Torque::getStringHash64(cacheKey);
+
    // Lookup the shader for this instance.
    ShaderCache::Iterator iter = mShaders.find( cacheKey );
    if ( iter != mShaders.end() )

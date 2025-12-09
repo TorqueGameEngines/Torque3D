@@ -1,0 +1,11 @@
+<ImageAsset
+    AssetName="ArrowGreen_ALBEDO"
+    imageFile="@assetFile=@ArrowGreen.png"
+    originalFilePath="data/Prototyping/Materials/ArrowGreen.png">
+    <ImageAsset.ImageMetadata>
+        <ImageInfo
+            ImageWidth="256"
+            ImageHeight="256"
+            ImageDepth="1"/>
+    </ImageAsset.ImageMetadata>
+</ImageAsset>

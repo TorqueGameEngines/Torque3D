@@ -439,21 +439,6 @@ void AssimpShapeLoader::getRootAxisTransform()
       }
    }
 
-   // ===== SIGN FLIP =====
-   if (upSign == -1)
-   {
-      rot(0, 2) = -rot(0, 2);
-      rot(1, 2) = -rot(1, 2);
-      rot(2, 2) = -rot(2, 2);
-   }
-
-   if (frontSign == -1)
-   {
-      rot(0, 1) = -rot(0, 1);
-      rot(1, 1) = -rot(1, 1);
-      rot(2, 1) = -rot(2, 1);
-   }
-
    ColladaUtils::getOptions().axisCorrectionMat = rot;
 }
 

@@ -115,7 +115,9 @@ function getButtonBitmap(%device, %button)
    {
       if(%button $= "lshift" || %button $= "rshift")
          %button = "shift";
-         
+      else if(%button $= "lcontrol" || %button $= "rcontrol")
+         %button = "ctrl";
+
       %assetId = "UI:Keyboard_Black_" @ %button @ "_image";
    }
    else if(%device !$= "")

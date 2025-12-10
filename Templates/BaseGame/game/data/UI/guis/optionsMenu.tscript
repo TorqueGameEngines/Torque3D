@@ -583,7 +583,7 @@ function OptionsMenu::populateAudioSettings(%this)
 
 function OptionsMenu::populateKBMControls(%this)
 {
-   %this.populateKeybinds("keyboard", KBMControlsList);
+   %this.populateKeybinds("keyboard" TAB "mouse", KBMControlsList); 
    
    %this.syncGui();
    
@@ -599,7 +599,7 @@ function OptionsMenu::populateGamepadControls(%this)
    GamepadControlsList.syncGui();
 }
 
-function OptionsMenu::populateKeybinds(%this, %device, %controlsList)
+function OptionsMenu::populateKeybinds(%this, %devices, %controlsList)
 {
 	%controlsList.clear();
 
@@ -662,21 +662,30 @@ function OptionsMenu::populateKeybinds(%this, %device, %controlsList)
       
       for ( %i = 0; %i < $RemapCount; %i++ )
       {
-         if(%device !$= "" && %device !$= $RemapDevice[%i])
+        %entryDevice = "";
+         //Check each field of %devices for device matching the remappable action
+         foreach$(%d in %devices){
+            if(%d $= $RemapDevice[%i]) {
+               %entryDevice = %d;
+               break;
+            }
+         }
+         //If there was no match go to the next remappable action
+         if(%entryDevice $= "")
             continue;
-            
-         %actionMapName = $RemapActionMap[%i].humanReadableName $= "" ? $RemapActionMap[%i].getName() : $RemapActionMap[%i].humanReadableName; 
-            
+
+         %actionMapName = $RemapActionMap[%i].humanReadableName $= "" ? $RemapActionMap[%i].getName() : $RemapActionMap[%i].humanReadableName;
+
          if(%currentActionMap !$= %actionMapName)
             continue;
-            
-         %keyMap = buildFullMapString( %i, $RemapActionMap[%i], %device );
+
+         %keyMap = buildFullMapString( %i, $RemapActionMap[%i], %entryDevice );
 
          %description = $RemapDescription[%i];
-         if ($reportKeymapping)
-            echo("Added ActionMap Entry: " @ %actionMapName @ " | " @ %device @ " | " @ %keymap @ " | " @ %description);
-         
-         %remapEntry = addActionMapEntry(%actionMapName, %device, %keyMap, %i, %description);
+
+         echo("Added ActionMap Entry: " @ %actionMapName @ " | " @ %entryDevice @ " | " @ %keymap @ " | " @ %description);
+
+         %remapEntry = addActionMapEntry(%actionMapName, %entryDevice, %keyMap, %i, %description);
          %controlsList.add(%remapEntry);
       }
    }

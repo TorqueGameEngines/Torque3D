@@ -30,6 +30,7 @@
 #include "gfx/gfxDevice.h"
 #include "core/memVolume.h"
 #include "core/module.h"
+#include "console/persistenceManager.h"
 
 #ifdef TORQUE_D3D11
 #include "shaderGen/HLSL/customFeatureHLSL.h"
@@ -95,6 +96,14 @@ ShaderGen::~ShaderGen()
    _uninit();
 
    mFileCache.clear();
+
+   for (ShaderDataMap::Pair data : mProcShaderData)
+   {
+      if (data.value->isProperlyAdded() && !data.value->isDeleted())
+         data.value->unregisterObject();
+   }
+
+   mProcShaderData.clear();
 }
 
 void ShaderGen::registerInitDelegate(GFXAdapterType adapterType, ShaderGenInitDelegate& initDelegate)
@@ -272,14 +281,20 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
       case VERTEX_SHADER:
          _processVertFeatures(macros, skipRegen);
          if (skipRegen)
+         {
+            LangElement::deleteElements();
             continue;
+         }
          _printVertShader(*stream);
          ((ShaderConnector*)mComponents[C_CONNECTOR])->reset();
          break;
       case PIXEL_SHADER:
          _processPixFeatures(macros, skipRegen);
          if (skipRegen)
+         {
+            LangElement::deleteElements();
             continue;
+         }
          _printPixShader(*stream);
          break;
       case GEOMETRY_SHADER:
@@ -568,14 +583,14 @@ GFXShader* ShaderGen::getShader(const MaterialFeatureData& featureData, const GF
 
    String cacheKey = Torque::getStringHash64(shaderDescription);
 
+   Vector<GFXShaderMacro> shaderMacros;
+   shaderMacros.push_back(GFXShaderMacro("TORQUE_SHADERGEN"));
+   if (macros)
+      shaderMacros.merge(*macros);
+
    ShaderDataMap::iterator dat = mProcShaderData.find(cacheKey);
    if (dat != mProcShaderData.end())
    {
-      Vector<GFXShaderMacro> shaderMacros;
-      shaderMacros.push_back(GFXShaderMacro("TORQUE_SHADERGEN"));
-      if (macros)
-         shaderMacros.merge(*macros);
-
       // should we loop vertex shader features to build mInstancingFormat before sending it down to see old hob?
       return dat->value->getShader(shaderMacros);
    }
@@ -589,26 +604,15 @@ GFXShader* ShaderGen::getShader(const MaterialFeatureData& featureData, const GF
       shaderData->setSamplerName(samplers[samp], samp);
    }
 
-   Vector<GFXShaderMacro> shaderMacros;
-   shaderMacros.push_back(GFXShaderMacro("TORQUE_SHADERGEN"));
-   if (macros)
-      shaderMacros.merge(*macros);
-
    generateShader(featureData, shaderData, vertexFormat, cacheKey, shaderMacros);
 
    shaderData->setInstancingFormat(&mInstancingFormat);
-   shaderData->registerObject();
 
-   mProcShaderData[cacheKey] = shaderData;
+   mProcShaderData.insert(cacheKey, shaderData);
    return shaderData->getShader(shaderMacros);
 }
 
 void ShaderGen::flushProceduralShaders()
 {
-   for (auto data : mProcShaderData)
-   {
-      data.value->deleteObject();
-   }
 
-   mProcShaderData.clear();
 }

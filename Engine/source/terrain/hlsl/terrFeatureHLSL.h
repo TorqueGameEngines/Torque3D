@@ -153,8 +153,6 @@ public:
 
    void processPix( Vector<ShaderComponent*> &componentList, 
                             const MaterialFeatureData &fd ) override;
-
-   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
           
    Resources getResources( const MaterialFeatureData &fd ) override;
 
@@ -184,7 +182,6 @@ public:
    void processPix(Vector<ShaderComponent*> &componentList,
       const MaterialFeatureData &fd) override;
    String getName() override { return "Blank Matinfo map"; }
-   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
 };
 
 class TerrainHeightMapBlendHLSL : public TerrainFeatHLSL

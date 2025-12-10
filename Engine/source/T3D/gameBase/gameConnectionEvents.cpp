@@ -311,8 +311,7 @@ SimSoundAssetEvent::SimSoundAssetEvent(StringTableEntry assetId, const MatrixF* 
 
 void SimSoundAssetEvent::pack(NetConnection* con, BitStream* stream)
 {
-   NetStringHandle assetIdStr = mAsset->getAssetId();
-   con->packNetStringHandleU(stream, assetIdStr);
+   AssetDatabase.packUpdateAsset(con, 0, stream, mAsset.getAssetId());
 
    SFXDescription* ad = mAsset->getSfxDescription();
    if (stream->writeFlag(sentTransform))
@@ -348,14 +347,7 @@ void SimSoundAssetEvent::write(NetConnection* con, BitStream* stream)
 void SimSoundAssetEvent::unpack(NetConnection* con, BitStream* stream)
 {
 
-   StringTableEntry temp = StringTable->insert(con->unpackNetStringHandleU(stream).getString());
-   if (AssetDatabase.isDeclaredAsset(temp))
-   {
-      AssetPtr<SoundAsset> tempSoundAsset;
-      tempSoundAsset = temp;
-
-      mAsset = temp;
-   }
+   mAsset = AssetDatabase.unpackUpdateAsset(con, stream);
 
    sentTransform = stream->readFlag();
    if (sentTransform) {

@@ -326,6 +326,17 @@ bool AssetManager::addDeclaredAsset( ModuleDefinition* pModuleDefinition, const 
 
 //-----------------------------------------------------------------------------
 
+static U32 HashAssetId(const char* str)
+{
+   U32 hash = 2166136261u;
+   while (*str)
+   {
+      hash ^= (U8)*str++;
+      hash *= 16777619u;
+   }
+   return hash;
+}
+
 StringTableEntry AssetManager::addPrivateAsset( AssetBase* pAssetBase )
 {
     // Debug Profiling.
@@ -376,6 +387,22 @@ StringTableEntry AssetManager::addPrivateAsset( AssetBase* pAssetBase )
 
     // Set ownership by asset manager.
     pAssetDefinition->mpAssetBase->setOwned( this, pAssetDefinition );
+
+    U32 netId = HashAssetId(pAssetDefinition->mAssetName);
+
+    // Collision detection 
+    typeNetIdToAssetMap::iterator netIterator = mNetIdToAsset.find(netId);
+    if (netIterator != mNetIdToAsset.end())
+    {
+       Con::warnf(
+          "AssetManager: Hash collision for '%s' and '%s'",
+          pAssetDefinition->mAssetName,
+          mNetIdToAsset.find(netId)->value
+       );
+    }
+
+    mNetIdToAsset.insert(netId, pAssetDefinition->mAssetId);
+    mAssetToNetId.insert(pAssetDefinition->mAssetId, netId);
 
     // Store in declared assets.
     mDeclaredAssets.insert( pAssetDefinition->mAssetId, pAssetDefinition );
@@ -474,6 +501,14 @@ bool AssetManager::removeDeclaredAsset( const char* pAssetId )
 
     // Remove from declared assets.
     mDeclaredAssets.erase( declaredAssetItr );
+
+    typeAssetToNetIdMap::iterator netId = mAssetToNetId.find(pAssetId);
+    typeNetIdToAssetMap::iterator netChar = mNetIdToAsset.find(netId->value);
+    if (netId != mAssetToNetId.end() && netChar != mNetIdToAsset.end())
+    {
+       mNetIdToAsset.erase(netChar);
+       mAssetToNetId.erase(netId);
+    }
 
     // Info.
     if ( mEchoInfo )
@@ -2691,17 +2726,6 @@ const char* AssetManager::getAssetLooseFile(const char* pAssetId, const S32& ind
 
 //-----------------------------------------------------------------------------
 
-static U32 HashAssetId(const char* str)
-{
-   U32 hash = 2166136261u;
-   while (*str)
-   {
-      hash ^= (U8)*str++;
-      hash *= 16777619u;
-   }
-   return hash;
-}
-
 bool AssetManager::scanDeclaredAssets( const char* pPath, const char* pExtension, const bool recurse, ModuleDefinition* pModuleDefinition )
 {
     // Debug Profiling.
@@ -2829,13 +2853,11 @@ bool AssetManager::scanDeclaredAssets( const char* pPath, const char* pExtension
       typeNetIdToAssetMap::iterator netIterator = mNetIdToAsset.find(netId);
       if (netIterator != mNetIdToAsset.end())
       {
-         Con::errorf(
+         Con::warnf(
             "AssetManager: Hash collision for '%s' and '%s'",
             assetIdBuffer,
             mNetIdToAsset.find(netId)->value
          );
-
-         AssertFatal(false, "Asset hash collision detected.");
       }
 
       mNetIdToAsset.insert(netId, foundAssetDefinition.mAssetId);

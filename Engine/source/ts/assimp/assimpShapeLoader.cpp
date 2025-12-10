@@ -380,7 +380,81 @@ void AssimpShapeLoader::getRootAxisTransform()
    meta->Get("CoordAxis", coordAxis);
    meta->Get("CoordAxisSign", coordSign);
 
-   ColladaUtils::getOptions().upAxis = (domUpAxisType)upAxis;
+   switch (upAxis)
+   {
+      case 0: ColladaUtils::getOptions().upAxis = UPAXISTYPE_X_UP; break;
+      case 1: ColladaUtils::getOptions().upAxis = UPAXISTYPE_Y_UP; break;
+      case 2: ColladaUtils::getOptions().upAxis = UPAXISTYPE_Z_UP; break;
+      default: ColladaUtils::getOptions().upAxis = UPAXISTYPE_Y_UP; break;
+   }
+
+   MatrixF rot(true);
+
+   // ===== Y-UP SOURCE =====
+   if (upAxis == 1)
+   {
+      if (frontAxis == 2)
+      {
+         // Y-up, Z-forward  → Z-up, Y-forward
+         // Rotate 180° Y, then 90° X
+         rot(0, 0) = -1.0f;
+         rot(1, 1) = 0.0f;  rot(2, 1) = 1.0f;
+         rot(1, 2) = 1.0f;  rot(2, 2) = 0.0f;
+      }
+      else if (frontAxis == 0)
+      {
+         // Y-up, X-forward → Z-up, Y-forward
+         // Rotate -90° around Z then 90° around X
+         rot(0, 0) = 0.0f;   rot(0, 1) = -1.0f;
+         rot(1, 0) = 1.0f;   rot(1, 1) = 0.0f;
+         rot(2, 2) = 1.0f;
+      }
+   }
+
+   // ===== Z-UP SOURCE =====
+   if (upAxis == 2)
+   {
+      if (frontAxis == 1)
+      {
+         // Already Z-up, Y-forward → no change
+      }
+      else if (frontAxis == 0)
+      {
+         // Z-up, X-forward → rotate -90° around Z
+         rot(0, 0) = 0.0f;  rot(0, 1) = -1.0f;
+         rot(1, 0) = 1.0f;  rot(1, 1) = 0.0f;
+      }
+   }
+
+   // ===== X-UP SOURCE =====
+   if (upAxis == 0)
+   {
+      if (frontAxis == 2)
+      {
+         // X-up, Z-forward → Z-up, Y-forward
+         // Rotate -90° around Y then -90° around Z
+         rot(0, 0) = 0.0f;  rot(0, 1) = 0.0f;  rot(0, 2) = -1.0f;
+         rot(1, 0) = 1.0f;  rot(1, 1) = 0.0f;  rot(1, 2) = 0.0f;
+         rot(2, 0) = 0.0f;  rot(2, 1) = -1.0f; rot(2, 2) = 0.0f;
+      }
+   }
+
+   // ===== SIGN FLIP =====
+   if (upSign == -1)
+   {
+      rot(0, 2) = -rot(0, 2);
+      rot(1, 2) = -rot(1, 2);
+      rot(2, 2) = -rot(2, 2);
+   }
+
+   if (frontSign == -1)
+   {
+      rot(0, 1) = -rot(0, 1);
+      rot(1, 1) = -rot(1, 1);
+      rot(2, 1) = -rot(2, 1);
+   }
+
+   ColladaUtils::getOptions().axisCorrectionMat = rot;
 }
 
 void AssimpShapeLoader::processAnimations()

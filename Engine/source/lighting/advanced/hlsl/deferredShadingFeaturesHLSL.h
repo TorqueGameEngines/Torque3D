@@ -57,8 +57,6 @@ public:
       const MaterialFeatureData &fd ) override;
 
    U32 getOutputTargets(const MaterialFeatureData& fd) const override;
-
-   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
 };
 
 class ORMConfigVarsHLSL : public ShaderFeatureHLSL
@@ -70,8 +68,6 @@ public:
 
    void processPix( Vector<ShaderComponent*> &componentList, 
       const MaterialFeatureData &fd ) override;
-
-   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
 };
 
 class GlowMapHLSL : public ShaderFeatureHLSL
@@ -81,8 +77,6 @@ public:
 
    void processPix(Vector<ShaderComponent*> &componentList,
       const MaterialFeatureData &fd) override;
-
-   //U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
 
    U32 getOutputTargets(const MaterialFeatureData& fd) const override;
 

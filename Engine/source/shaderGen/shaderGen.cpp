@@ -229,20 +229,21 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
       const char* postfix = _getStagePostfix(curStage);
       String stageName;
 
-      if (curStage & GFXShaderStage::VERTEX_SHADER)
-         stageName += vertexFormat->getDescription();
+      //if (curStage & GFXShaderStage::VERTEX_SHADER)
+      //   stageName += vertexFormat->getDescription();
 
-      // build our filename.
-      for (U32 i = 0; i < features.getCount(); i++)
-      {
-         const FeatureType& type = features.getAt(i);
-         if (stage & FEATUREMGR->getByType(type)->getShaderStages())
-         {
-            stageName += type.getName();
-         }
-      }
+      //// build our filename.
+      //for (U32 i = 0; i < features.getCount(); i++)
+      //{
+      //   const FeatureType& type = features.getAt(i);
+      //   if (stage & FEATUREMGR->getByType(type)->getShaderStages())
+      //   {
+      //      stageName += type.getName();
+      //   }
+      //}
 
-      stageName = Torque::getStringHash64(stageName);
+      //stageName = Torque::getStringHash64(stageName);
+      stageName = cacheName;
       stageName += postfix;
 
       FileCacheSet::iterator file = mFileCache.find(stageName);

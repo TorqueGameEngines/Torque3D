@@ -98,8 +98,6 @@ public:
       }
    }
 
-   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
-
    String getName() override { return "Accu Scale"; }
 };
 
@@ -119,8 +117,6 @@ public:
          accuDirection->uniform = true;
       }
    }
-
-   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
 
    String getName() override { return "Accu Direction"; }
 };
@@ -142,8 +138,6 @@ public:
       }
    }
 
-   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
-
    String getName() override { return "Accu Strength"; }
 };
 
@@ -163,8 +157,6 @@ public:
          accuCoverage->uniform = true;
       }
    }
-
-   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
 
    String getName() override { return "Accu Coverage"; }
 };
@@ -186,8 +178,6 @@ public:
          accuSpecular->uniform = true;
       }
    }
-
-   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
 
    String getName() override { return "Accu Specular"; }
 };

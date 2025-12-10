@@ -138,8 +138,6 @@ public:
    void processPix(   Vector<ShaderComponent*> &componentList, 
                               const MaterialFeatureData &fd ) override;
 
-   U32 getShaderStages() override { return GFXShaderStage::PIXEL_SHADER; }
-
    String getName() override
    {
       return "Sub-Surface Approximation [Deferred]";

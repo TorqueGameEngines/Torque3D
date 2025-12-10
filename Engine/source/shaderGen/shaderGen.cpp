@@ -192,7 +192,6 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
    _uninit();
    _init();
 
-   bool skipRegen = !Con::getBoolVariable("ShaderGen::GenNewShaders", true);
    const FeatureSet& features = mFeatureData.features;
    U32 stages = 0;
 
@@ -214,6 +213,7 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
       if (!(stages & stage))
          continue;
 
+      bool skipRegen = !Con::getBoolVariable("ShaderGen::GenNewShaders", true);
       GFXShaderStage curStage = (GFXShaderStage)stage;
 
       char fileName[256];

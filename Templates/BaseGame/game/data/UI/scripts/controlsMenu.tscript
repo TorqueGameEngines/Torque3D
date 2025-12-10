@@ -126,85 +126,6 @@ function buildFullMapString( %index, %actionMap, %deviceType )
    return %name TAB %mapString; 
 }
 
-function fillRemapList()
-{
-   %device = $remapListDevice;
-   
-	OptionsMenuSettingsList.clear();
-
-   //build out our list of action maps
-   %actionMapCount = ActionMapGroup.getCount();
-   
-   %actionMapList = "";
-   for(%i=0; %i < %actionMapCount; %i++)
-   {
-      %actionMap = ActionMapGroup.getObject(%i);
-      
-      if(%actionMap == GlobalActionMap.getId())
-         continue;
-      
-      %actionMapName = %actionMap.humanReadableName $= "" ? %actionMap.getName() : %actionMap.humanReadableName;
-      
-      //see if we have any actual listed remappable keys for this movemap. if so, drop it from the listing
-      %hasRemaps = false;
-      for ( %r = 0; %r < $RemapCount; %r++ )
-      {
-         %testMapName = $RemapActionMap[%r].humanReadableName $= "" ? $RemapActionMap[%r].getName() : $RemapActionMap[%r].humanReadableName; 
-         
-         if(%actionMapName $= %testMapName)
-         {
-            //got a match to at least one, so we're ok to continue
-            %hasRemaps = true;
-            break;  
-         }
-      }
-      
-      if(!%hasRemaps)
-         continue;
-      
-      if(%actionMapList $= "")
-         %actionMapList = %actionMapName;
-      else
-         %actionMapList = %actionMapList TAB %actionMapName;
-   }
-   
-   //If we didn't find any valid actionMaps, then just exit out
-   if(%actionMapList $= "")
-      return;
-      
-   if($activeRemapControlSet $= "")
-      $activeRemapControlSet = getField(%actionMapList, 0);
-   
-   OptionsMenuSettingsList.addOptionRow("Control Set", "$activeRemapControlSet", %actionMapList, false, "controlSetChanged", true, "Which keybind control set to edit", $activeRemapControlSet);
-	
-   for ( %i = 0; %i < $RemapCount; %i++ )
-   {
-      if(%device !$= "" && %device !$= $RemapDevice[%i])
-         continue;
-         
-      %actionMapName = $RemapActionMap[%i].humanReadableName $= "" ? $RemapActionMap[%i].getName() : $RemapActionMap[%i].humanReadableName; 
-         
-      if($activeRemapControlSet !$= %actionMapName)
-         continue;
-         
-      %keyMap = buildFullMapString( %i, $RemapActionMap[%i], %device );
-      %description = $RemapDescription[%i];
-      
-      %buttonImageAsset = getButtonBitmap(%device, getField(%keyMap, 1));
-      
-      OptionsMenuSettingsList.addKeybindRow(getField(%keyMap, 0), %buttonImageAsset, "doKeyRemap", true, %description, %i);
-   }
-
-   //OptionsMenuSettingsList.refresh();
-      //OptionsMenu.addRow( %i, %this.buildFullMapString( %i ) );
-}
-
-function controlSetChanged()
-{
-   $activeRemapControlSet = OptionsMenuSettingsList.getObject(0).getCurrentOption();
-   fillRemapList();
-}
-
 function ControlsMenuRebindButton::onClick(%this)
 {
    %name = $RemapName[%this.keybindIndex];
@@ -231,5 +152,6 @@ function redoMapping( %device, %actionMap, %action, %cmd, %oldIndex, %newIndex )
 	//%actionMap.bind( %device, %action, $RemapCmd[%newIndex] );
 	%actionMap.bind( %device, %action, %cmd );
 	
-	fillRemapList();
+	OptionsMenu.populateKBMControls();
+   OptionsMenu.populateGamepadControls();
 }

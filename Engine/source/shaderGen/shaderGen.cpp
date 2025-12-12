@@ -196,7 +196,6 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
 
    mFeatureData = featureData;
    mVertexFormat = vertexFormat;
-   mInstancingFormat.clear();
 
    _uninit();
    _init();
@@ -222,28 +221,28 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
       if (!(stages & stage))
          continue;
 
-      bool skipRegen = !Con::getBoolVariable("ShaderGen::GenNewShaders", true);
+      bool macrosOnly = !Con::getBoolVariable("ShaderGen::GenNewShaders", true);
+      bool skipPrint = false;
       GFXShaderStage curStage = (GFXShaderStage)stage;
 
       char fileName[256];
       const char* postfix = _getStagePostfix(curStage);
       String stageName;
 
-      //if (curStage & GFXShaderStage::VERTEX_SHADER)
-      //   stageName += vertexFormat->getDescription();
+      if (curStage & GFXShaderStage::VERTEX_SHADER)
+         stageName += vertexFormat->getDescription();
 
-      //// build our filename.
-      //for (U32 i = 0; i < features.getCount(); i++)
-      //{
-      //   const FeatureType& type = features.getAt(i);
-      //   if (stage & FEATUREMGR->getByType(type)->getShaderStages())
-      //   {
-      //      stageName += type.getName();
-      //   }
-      //}
+      // build our filename.
+      for (U32 i = 0; i < features.getCount(); i++)
+      {
+         const FeatureType& type = features.getAt(i);
+         if (stage & FEATUREMGR->getByType(type)->getShaderStages())
+         {
+            stageName += type.getName();
+         }
+      }
 
-      //stageName = Torque::getStringHash64(stageName);
-      stageName = cacheName;
+      stageName = Torque::getStringHash64(stageName);
       stageName += postfix;
 
       FileCacheSet::iterator file = mFileCache.find(stageName);
@@ -257,7 +256,7 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
             continue;
          }
 
-         skipRegen = true;
+         skipPrint = true;
       }
 
       mFileCache[stageName] = true;
@@ -266,9 +265,9 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
 
       shaderData->setShaderStageFile(curStage, fileName);
 
-      mOutput = new MultiLine;
+      
       FileStream* stream = new FileStream();
-      if (!skipRegen)
+      if (!skipPrint)
       {
          if (!stream->open(fileName, Torque::FS::File::Write))
          {
@@ -280,23 +279,20 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
       switch (curStage)
       {
       case VERTEX_SHADER:
-         _processVertFeatures(macros, skipRegen);
-         if (skipRegen)
-         {
-            LangElement::deleteElements();
-            continue;
-         }
-         _printVertShader(*stream);
+         mOutput = new MultiLine;
+         mInstancingFormat.clear();
+         _processVertFeatures(macros, macrosOnly);
+         if(!skipPrint || macrosOnly) _printVertShader(*stream);
+         delete stream;
          ((ShaderConnector*)mComponents[C_CONNECTOR])->reset();
+         LangElement::deleteElements();
          break;
       case PIXEL_SHADER:
-         _processPixFeatures(macros, skipRegen);
-         if (skipRegen)
-         {
-            LangElement::deleteElements();
-            continue;
-         }
-         _printPixShader(*stream);
+         mOutput = new MultiLine;
+         _processPixFeatures(macros, macrosOnly);
+         if (!skipPrint || macrosOnly)_printPixShader(*stream);
+         delete stream;
+         LangElement::deleteElements();
          break;
       case GEOMETRY_SHADER:
          break;
@@ -311,9 +307,6 @@ void ShaderGen::generateShader( const MaterialFeatureData& featureData,
       default:
          break;
       }
-
-      delete stream;
-      LangElement::deleteElements();
 
    }
 }
@@ -376,14 +369,14 @@ void ShaderGen::_processVertFeatures( Vector<GFXShaderMacro> &macros, bool macro
 
          feature->processVertMacros( macros, mFeatureData );
 
+         if (macrosOnly)
+            continue;
+
          feature->setInstancingFormat( &mInstancingFormat );
 
          feature->mVertexFormat = mVertexFormat;
 
          feature->processVert( mComponents, mFeatureData );
-
-         if (macrosOnly)
-            continue;
 
          String line;
          if ( index > -1 )

@@ -35,6 +35,13 @@ singleton SFXDescription( AudioChannel )
    sourceGroup = AudioChannelMaster;
 };
 
+singleton SFXDescription( AudioEffectChannel )
+{
+   sourceGroup = AudioChannelMaster;
+   allowReverb = true;
+};
+
+
 singleton SFXSource( AudioChannelDefault )
 {
    description = AudioChannel;
@@ -45,7 +52,7 @@ singleton SFXSource( AudioChannelGui )
 };
 singleton SFXSource( AudioChannelEffects )
 {
-   description = AudioChannel;
+   description = AudioEffectChannel;
 };
 singleton SFXSource( AudioChannelMessages )
 {
@@ -66,7 +73,7 @@ AudioChannelMusic.play();
 AudioChannelMessages.play();
 
 // Stop in-game effects channels.
-AudioChannelEffects.stop();
+AudioChannelEffects.play();
 
 //-----------------------------------------------------------------------------
 //    Master SFXDescriptions.

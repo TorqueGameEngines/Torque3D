@@ -40,7 +40,6 @@ ConsoleDocClass( GuiAudioCtrl,
 
 GuiAudioCtrl::GuiAudioCtrl()
 {
-   INIT_ASSET(Sound);
    mTickPeriodMS = 100;
    mLastThink = 0;
    mCurrTick = 0;
@@ -85,7 +84,7 @@ void GuiAudioCtrl::processTick()
    {
       mCurrTick = 0;
       mLastThink = 0;
-      if (isSoundValid())
+      if (getSoundAsset().notNull())
       {
          _update();
       }
@@ -154,14 +153,11 @@ void GuiAudioCtrl::_update()
 
    if (testCondition() && isAwake())
    {
-      bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && getSoundProfile());
+      bool useTrackDescriptionOnly = mUseTrackDescriptionOnly;
 
-      if (getSoundProfile())
+      if (mSoundPlaying == NULL)
       {
-         if (mSoundPlaying == NULL)
-         {
-            mSoundPlaying = SFX->createSource(getSoundProfile(), &(SFX->getListener().getTransform()));
-         }
+         mSoundPlaying = SFX->createSource(getSoundSFXTrack(), &(SFX->getListener().getTransform()));
       }
 
       if ( mSoundPlaying && !mSoundPlaying->isPlaying())

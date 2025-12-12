@@ -212,7 +212,7 @@ class SFXVoice :  public StrongRefBase,
                               
       /// Set the reverb properties for playback of this sound.
       /// @note Has no effect on devices that do not support reverb.
-      virtual void setReverb( const SFXSoundReverbProperties& reverb ) {}
+      virtual void setReverb( bool useReverb ) {}
       
       /// Set the priority of this voice.  Default 1.0.
       /// @note Has no effect on devices that do not support voice management.

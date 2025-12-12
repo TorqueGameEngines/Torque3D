@@ -238,13 +238,6 @@ void LightningStrikeEvent::process(NetConnection*)
 //
 LightningData::LightningData()
 {
-   INIT_ASSET(StrikeSound);
-
-   for (S32 i = 0; i < MaxThunders; i++)
-   {
-      INIT_SOUNDASSET_ARRAY(ThunderSound, i);
-   }
-
    for (S32 i = 0; i < MaxTextures; i++)
    {
       strikeTextureNames[i] = NULL;
@@ -297,13 +290,13 @@ bool LightningData::preload(bool server, String &errorStr)
    {
       for (S32 i = 0; i < MaxThunders; i++)
       {
-         if (!isThunderSoundValid(i))
+         if (!getThunderSoundSFXTrack(i))
          {
             //return false; -TODO: trigger asset download
          }
 
       }
-      if (!isStrikeSoundValid())
+      if (!getStrikeSoundSFXTrack())
       {
          //return false; -TODO: trigger asset download
       }
@@ -332,7 +325,7 @@ void LightningData::packData(BitStream* stream)
    U32 i;
    for (i = 0; i < MaxThunders; i++)
    {
-      PACKDATA_SOUNDASSET_ARRAY(ThunderSound, i);
+      PACKDATA_ASSET_ARRAY(ThunderSound, i);
    }
 
    stream->writeInt(mNumStrikeTextures, 4);
@@ -340,7 +333,7 @@ void LightningData::packData(BitStream* stream)
    for (i = 0; i < MaxTextures; i++)
       stream->writeString(strikeTextureNames[i]);
 
-   PACKDATA_ASSET(StrikeSound);
+   PACKDATA_ASSET_REFACTOR(StrikeSound);
 }
 
 void LightningData::unpackData(BitStream* stream)
@@ -350,7 +343,7 @@ void LightningData::unpackData(BitStream* stream)
    U32 i;
    for (i = 0; i < MaxThunders; i++)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(ThunderSound, i);
+      UNPACKDATA_ASSET_ARRAY(ThunderSound, i);
    }
 
    mNumStrikeTextures = stream->readInt(4);
@@ -358,7 +351,7 @@ void LightningData::unpackData(BitStream* stream)
    for (i = 0; i < MaxTextures; i++)
       strikeTextureNames[i] = stream->readSTString();
 
-   UNPACKDATA_ASSET(StrikeSound);
+   UNPACKDATA_ASSET_REFACTOR(StrikeSound);
 }
 
 
@@ -584,7 +577,7 @@ void Lightning::scheduleThunder(Strike* newStrike)
          if (t <= 0.03f) {
             // If it's really close, just play it...
             U32 thunder = sgLightningRand.randI(0, mDataBlock->numThunders - 1);
-            SFX->playOnce(mDataBlock->getThunderSoundProfile(thunder));
+            SFX->playOnce(mDataBlock->getThunderSoundSFXTrack(thunder));
          } else {
             Thunder* pThunder = new Thunder;
             pThunder->tRemaining = t;
@@ -651,7 +644,7 @@ void Lightning::advanceTime(F32 dt)
 
          // Play the sound...
          U32 thunder = sgLightningRand.randI(0, mDataBlock->numThunders - 1);
-         SFX->playOnce(mDataBlock->getThunderSoundProfile(thunder));
+         SFX->playOnce(mDataBlock->getThunderSoundSFXTrack(thunder));
       } else {
          pThunderWalker = &((*pThunderWalker)->next);
       }
@@ -735,9 +728,9 @@ void Lightning::processEvent(LightningStrikeEvent* pEvent)
       MatrixF trans(true);
       trans.setPosition( strikePoint );
 
-      if (mDataBlock->getStrikeSoundProfile())
+      if (mDataBlock->getStrikeSoundSFXTrack())
       {
-         SFX->playOnce(mDataBlock->getStrikeSoundProfile(), &trans );
+         SFX->playOnce(mDataBlock->getStrikeSoundSFXTrack(), &trans );
       }
 
 }

@@ -124,9 +124,6 @@ FlyingVehicleData::FlyingVehicleData()
    for (S32 j = 0; j < MaxJetEmitters; j++)
       jetEmitter[j] = 0;
 
-   for (S32 i = 0; i < MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(FlyingSounds, i);
-
    vertThrustMultiple = 1.0;
 }
 
@@ -141,7 +138,7 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
       {
-         if (!isFlyingSoundsValid(i))
+         if (!getFlyingSoundsSFXTrack(i))
          {
             //return false; -TODO: trigger asset download
          }
@@ -258,10 +255,7 @@ void FlyingVehicleData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   for (S32 i = 0; i < MaxSounds; i++)
-   {
-      PACKDATA_SOUNDASSET_ARRAY(FlyingSounds, i);
-   }
+   PACKDATA_ASSET_ARRAY_REFACTOR(FlyingSounds, MaxSounds);
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
    {
@@ -293,10 +287,7 @@ void FlyingVehicleData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   for (S32 i = 0; i < MaxSounds; i++)
-   {
-      UNPACKDATA_SOUNDASSET_ARRAY(FlyingSounds, i);
-   }
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(FlyingSounds, MaxSounds);
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {
       jetEmitter[j] = NULL;
@@ -385,11 +376,11 @@ bool FlyingVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mJetSound );
       SFX_DELETE( mEngineSound );
 
-      if ( mDataBlock->getFlyingSounds(FlyingVehicleData::EngineSound) )
-         mEngineSound = SFX->createSource( mDataBlock->getFlyingSoundsProfile(FlyingVehicleData::EngineSound), &getTransform() );
+      if ( mDataBlock->getFlyingSoundsSFXTrack(FlyingVehicleData::EngineSound) )
+         mEngineSound = SFX->createSource( mDataBlock->getFlyingSoundsSFXTrack(FlyingVehicleData::EngineSound), &getTransform() );
 
-      if ( mDataBlock->getFlyingSounds(FlyingVehicleData::JetSound))
-         mJetSound = SFX->createSource( mDataBlock->getFlyingSoundsProfile(FlyingVehicleData::JetSound), &getTransform() );
+      if ( mDataBlock->getFlyingSoundsSFXTrack(FlyingVehicleData::JetSound))
+         mJetSound = SFX->createSource( mDataBlock->getFlyingSoundsSFXTrack(FlyingVehicleData::JetSound), &getTransform() );
    }
 
    // Jet Sequences

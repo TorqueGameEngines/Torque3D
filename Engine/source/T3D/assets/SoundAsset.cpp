@@ -59,17 +59,19 @@
 
 IMPLEMENT_CONOBJECT(SoundAsset);
 
-ConsoleType(SoundAssetPtr, TypeSoundAssetPtr, const char*, ASSET_ID_FIELD_PREFIX)
-
 //-----------------------------------------------------------------------------
+// REFACTOR
+//-----------------------------------------------------------------------------
+IMPLEMENT_STRUCT(AssetPtr<SoundAsset>, AssetPtrSoundAsset, , "")
+END_IMPLEMENT_STRUCT
+
+ConsoleType(SoundAssetPtr, TypeSoundAssetPtr, AssetPtr<SoundAsset>, ASSET_ID_FIELD_PREFIX)
 
 ConsoleGetType(TypeSoundAssetPtr)
 {
    // Fetch asset Id.
-   return *((const char**)(dptr));
+   return (*((AssetPtr<SoundAsset>*)dptr)).getAssetId();
 }
-
-//-----------------------------------------------------------------------------
 
 ConsoleSetType(TypeSoundAssetPtr)
 {
@@ -77,14 +79,31 @@ ConsoleSetType(TypeSoundAssetPtr)
    if (argc == 1)
    {
       // Yes, so fetch field value.
-      *((const char**)dptr) = StringTable->insert(argv[0]);
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset pointer.
+      AssetPtr<SoundAsset>* pAssetPtr = dynamic_cast<AssetPtr<SoundAsset>*>((AssetPtrBase*)(dptr));
+
+      // Is the asset pointer the correct type?
+      if (pAssetPtr == NULL)
+      {
+         Con::warnf("(TypeSoundAssetPtrRefactor) - Failed to set asset Id '%d'.", pFieldValue);
+         return;
+      }
+
+      // Set asset.
+      pAssetPtr->setAssetId(pFieldValue);
 
       return;
    }
 
    // Warn.
-   Con::warnf("(TypeSoundAssetPtr) - Cannot set multiple args to a single asset.");
+   Con::warnf("(TypeSoundAssetPtrRefactor) - Cannot set multiple args to a single asset.");
 }
+
+//-----------------------------------------------------------------------------
+// REFACTOR END
+//-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 
@@ -122,7 +141,6 @@ const String SoundAsset::mErrCodeStrings[] =
 //-----------------------------------------------------------------------------
 
 SoundAsset::SoundAsset()
-   : AssetBase()
 {
    dMemset(mPlaylist.mSlots.mReplayMode, 0, sizeof(mPlaylist.mSlots.mReplayMode));
    dMemset(mPlaylist.mSlots.mTransitionIn, 0, sizeof(mPlaylist.mSlots.mTransitionIn));
@@ -135,6 +153,7 @@ SoundAsset::SoundAsset()
    {
       mSoundFile[i] = StringTable->EmptyString();
       mSoundPath[i] = StringTable->EmptyString();
+      mSoundResource[i] = NULL;
 
       mPlaylist.mSlots.mTransitionOut[i] = SFXPlayList::TRANSITION_Wait;
       mPlaylist.mSlots.mVolumeScale.mValue[i] = 1.f;
@@ -173,7 +192,8 @@ SoundAsset::SoundAsset()
    mProfileDesc.mPriority = 1.0f;
    mProfileDesc.mSourceGroup = NULL;
    mProfileDesc.mFadeInEase = EaseF();
-   mProfileDesc.mReverb = SFXSoundReverbProperties();
+   mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
+
    dMemset(mProfileDesc.mParameters, 0, sizeof(mProfileDesc.mParameters));
    mIsPlaylist = false;
 
@@ -183,21 +203,13 @@ SoundAsset::SoundAsset()
    mPlaylist.mLoopMode = SFXPlayList::LOOP_All;
    mPlaylist.mActiveSlots = 1;
 
+   mResolvedTrack = NULL;
 }
 
 //-----------------------------------------------------------------------------
 
 SoundAsset::~SoundAsset()
 {
-   
-   for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
-   {
-      if(mSFXProfile[i].isProperlyAdded() && !mSFXProfile[i].isDeleted())
-         mSFXProfile[i].unregisterObject();
-   }
-
-   if (mPlaylist.isProperlyAdded() && !mPlaylist.isDeleted())
-      mPlaylist.unregisterObject();
 }
 
 //-----------------------------------------------------------------------------
@@ -323,15 +335,37 @@ void SoundAsset::initPersistFields()
 
 //------------------------------------------------------------------------------
 
+void SoundAsset::onRemove()
+{
+   for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; i++)
+   {
+      if (mSoundFile[i] == StringTable->EmptyString())
+         break;
+
+      Torque::FS::RemoveChangeNotification(mSoundFile[i], this, &SoundAsset::_onResourceChanged);
+   }
+
+   Parent::onRemove();
+}
+
+void SoundAsset::inspectPostApply()
+{
+   Parent::inspectPostApply();
+
+   refreshAsset();
+}
+
 void SoundAsset::copyTo(SimObject* object)
 {
    // Call to parent.
    Parent::copyTo(object);
+
 }
 
 void SoundAsset::initializeAsset(void)
 {
    Parent::initializeAsset();
+
    for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; i++)
    {
       if (i == 0 && mSoundFile[i] == StringTable->EmptyString())
@@ -340,10 +374,12 @@ void SoundAsset::initializeAsset(void)
       if (mSoundFile[i] == StringTable->EmptyString())
          break;
 
-      mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
-      if (!Torque::FS::IsFile(mSoundPath[i]))
-         Con::errorf("SoundAsset::initializeAsset (%s)[%d] could not find %s!", getAssetName(), i, mSoundPath[i]);
+      mSoundFile[i] = expandAssetFilePath(mSoundFile[i]);
+      if (getOwned())
+         Torque::FS::AddChangeNotification(mSoundFile[i], this, &SoundAsset::_onResourceChanged);
    }
+
+   populateSFXTrack();
 }
 
 void SoundAsset::_onResourceChanged(const Torque::Path &path)
@@ -354,129 +390,44 @@ void SoundAsset::_onResourceChanged(const Torque::Path &path)
       if (path != Torque::Path(mSoundPath[i]))
          return;
    }
+
    refreshAsset();
 }
 
 void SoundAsset::onAssetRefresh(void)
 {
-   for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; i++)
-   {
-      if (i == 0 && mSoundFile[i] == StringTable->EmptyString())
-         return;
+   if (!isProperlyAdded())
+      return;
 
-      if (mSoundFile[i] == StringTable->EmptyString())
-         break;
+   Parent::onAssetRefresh();
 
-      mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
-   }
-
+   populateSFXTrack();
 }
 
 U32 SoundAsset::load()
 {
-   if (mLoadedState == AssetErrCode::Ok) return mLoadedState;
+   if (mLoadedState == AssetErrCode::Ok)
+      return mLoadedState;
 
-   // find out how many active slots we have.
-   U32 numSlots = 0;
-   for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; i++)
+   if (!mResolvedTrack)
    {
-      if (i == 0 && mSoundPath[i] == StringTable->EmptyString())
-         return false;
-
-      if (mSoundPath[i] == StringTable->EmptyString())
-         break;
-
-      numSlots++;
-   }
-
-   if (mProfileDesc.mSourceGroup == NULL)
-      mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
-
-   if (numSlots > 1)
-   {
-      mIsPlaylist = true;
-
-      for (U32 i = 0; i < numSlots; i++)
+      if (mIsPlaylist)
       {
-         if (mSoundPath[i])
-         {
-            if (!Torque::FS::IsFile(mSoundPath[i]))
-            {
-               Con::errorf("SoundAsset::initializeAsset: Attempted to load file %s but it was not valid!", mSoundFile[i]);
-               mLoadedState = BadFileReference;
-               mSFXProfile[i].setDescription(NULL);
-               mSFXProfile[i].setSoundFileName(StringTable->insert(StringTable->EmptyString()));
-               mSFXProfile[i].setPreload(false);
-               return mLoadedState;
-            }
-            else
-            {
-               SFXProfile* trackProfile = new SFXProfile();
-               trackProfile->setDescription(&mProfileDesc);
-               trackProfile->setSoundFileName(mSoundPath[i]);
-               trackProfile->setPreload(mPreload);
-
-               mSFXProfile[i] = *trackProfile;
-               mSFXProfile[i].registerObject(String::ToString("%s_profile_track%d", getAssetName()).c_str());
-
-               mPlaylist.mSlots.mTrack[i] = trackProfile;
-               
-            }
-         }
+         mResolvedTrack = buildPlaylist();
+      }
+      else
+      {
+         mResolvedTrack = buildProfile();
       }
 
-      mPlaylist.setDescription(&mProfileDesc);
-      mPlaylist.registerObject(String::ToString("%s_playlist", getAssetName()).c_str());
-   }
-   else
-   {
-      if (mSoundPath[0])
-      {
-         if (!Torque::FS::IsFile(mSoundPath[0]))
-         {
-            Con::errorf("SoundAsset::initializeAsset: Attempted to load file %s but it was not valid!", mSoundFile[0]);
-            mLoadedState = BadFileReference;
-            mSFXProfile[0].setDescription(NULL);
-            mSFXProfile[0].setSoundFileName(StringTable->insert(StringTable->EmptyString()));
-            mSFXProfile[0].setPreload(false);
-            return mLoadedState;
-         }
-         else
-         {
-            mSFXProfile[0].setDescription(&mProfileDesc);
-            mSFXProfile[0].setSoundFileName(mSoundPath[0]);
-            mSFXProfile[0].setPreload(mPreload);
-
-            mSFXProfile[0].registerObject(String::ToString("%s_profile", getAssetName()).c_str());
-         }
-
-      }
+      mResolvedTrack->registerObject(String::ToString("%s_profile_track", getAssetName()).c_str());
    }
 
-   mChangeSignal.trigger();
    mLoadedState = Ok;
    return mLoadedState;
 }
 
-bool SoundAsset::_setSoundFile(void* object, const char* index, const char* data)
-{
-   SoundAsset* pData = static_cast<SoundAsset*>(object);
-
-   U32 id = 0;
-   if (index)
-      id = dAtoui(index);
-
-   // Update.
-   pData->mSoundFile[id] = StringTable->insert(data, true);
-   if (pData->mSoundFile[id] == StringTable->EmptyString())
-      pData->mSoundPath[id] = StringTable->EmptyString();
-
-   // Refresh the asset.
-   pData->refreshAsset();
-   return true;
-}
-
-StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)
+StringTableEntry SoundAsset::getAssetIdByFilename(StringTableEntry fileName)
 {
    if (fileName == StringTable->EmptyString())
       return StringTable->EmptyString();
@@ -519,7 +470,7 @@ U32 SoundAsset::getAssetById(StringTableEntry assetId, AssetPtr<SoundAsset>* sou
    }
 }
 
-U32 SoundAsset::getAssetByFileName(StringTableEntry fileName, AssetPtr<SoundAsset>* soundAsset)
+U32 SoundAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<SoundAsset>* soundAsset)
 {
    AssetQuery query;
    U32 foundAssetcount = AssetDatabase.findAssetType(&query, "SoundAsset");
@@ -546,6 +497,123 @@ U32 SoundAsset::getAssetByFileName(StringTableEntry fileName, AssetPtr<SoundAsse
 
    //No good match
    return AssetErrCode::Failed;
+}
+
+SFXProfile* SoundAsset::buildProfile()
+{
+   SFXProfile* profile = new SFXProfile(&mProfileDesc, mSoundFile[0], mPreload);
+   mSoundResource[0] = profile->getResource();
+   return profile;
+}
+
+//-----------------------------------------------------------------------------
+//  BUILD PLAYLIST
+//-----------------------------------------------------------------------------
+
+SFXPlayList* SoundAsset::buildPlaylist()
+{
+   SFXPlayList* pl = new SFXPlayList();
+
+   pl->mRandomMode = mPlaylist.mRandomMode;
+   pl->mLoopMode = mPlaylist.mLoopMode;
+   pl->mNumSlotsToPlay = mPlaylist.mNumSlotsToPlay;
+   pl->mTrace = mPlaylist.mTrace;
+   pl->mSlots = mPlaylist.mSlots;
+
+   // Build child tracks for each valid slot
+   for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; ++i)
+   {
+      if (mSoundFile[i] == StringTable->EmptyString())
+         continue;
+
+      // Build child SFXProfile
+      SFXProfile* child = new SFXProfile(&mProfileDesc, mSoundFile[i], mPreload);
+      mSoundResource[i] = child->getResource();
+      pl->mSlots.mTrack[i] = child;
+   }
+
+   return pl;
+}
+
+void SoundAsset::populateSFXTrack(void)
+{
+   U32 count = 0;
+   for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; ++i)
+      if (mSoundFile[i] != StringTable->EmptyString() && Torque::FS::IsFile(mSoundFile[i]))
+         ++count;
+
+   mIsPlaylist = (count > 1);
+
+   if (mResolvedTrack)
+   {
+      if (mResolvedTrack->isProperlyAdded() && !mResolvedTrack->isDeleted())
+      {
+         // Track will be referenced through simobjectptr
+         mResolvedTrack->deleteObject();
+      }
+   }
+
+   mResolvedTrack = NULL;
+
+   // reset loaded state.
+   mLoadedState = AssetErrCode::NotLoaded;
+}
+
+void SoundAsset::setSoundFile(StringTableEntry pSoundFile, U32 slot)
+{
+   AssertFatal(pSoundFile != NULL, "Cannot use a NULL sound file.");
+
+   pSoundFile = StringTable->insert(pSoundFile);
+
+   if (pSoundFile == mSoundFile[slot])
+      return;
+
+   mSoundFile[slot] = getOwned() ? expandAssetFilePath(pSoundFile) : StringTable->insert(pSoundFile);;
+
+   refreshAsset();
+}
+
+void SoundAsset::onTamlPreWrite(void)
+{
+   // Call parent.
+   Parent::onTamlPreWrite();
+
+   for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; i++)
+   {
+      if (mSoundFile[i] == StringTable->EmptyString())
+         break;
+
+      mSoundFile[i] = collapseAssetFilePath(mSoundFile[i]);
+   }
+}
+
+void SoundAsset::onTamlPostWrite(void)
+{
+   for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; i++)
+   {
+      if (mSoundFile[i] == StringTable->EmptyString())
+         break;
+
+      mSoundFile[i] = expandAssetFilePath(mSoundFile[i]);
+   }
+}
+
+void SoundAsset::onTamlCustomWrite(TamlCustomNodes& customNodes)
+{
+   // Debug Profiling.
+   PROFILE_SCOPE(SoundAsset_OnTamlCustomWrite);
+
+   // Call parent.
+   Parent::onTamlCustomRead(customNodes);
+}
+
+void SoundAsset::onTamlCustomRead(const TamlCustomNodes& customNodes)
+{
+   // Debug Profiling.
+   PROFILE_SCOPE(SoundAsset_OnTamlCustomRead);
+
+   // Call parent.
+   Parent::onTamlCustomRead(customNodes);
 }
 
 DefineEngineMethod(SoundAsset, getSoundPath, const char*, (), , "")
@@ -581,7 +649,7 @@ DefineEngineStaticMethod(SoundAsset, getAssetIdByFilename, const char*, (const c
    "Queries the Asset Database to see if any asset exists that is associated with the provided file path.\n"
    "@return The AssetId of the associated asset, if any.")
 {
-   return SoundAsset::getAssetIdByFileName(StringTable->insert(filePath));
+   return SoundAsset::getAssetIdByFilename(StringTable->insert(filePath));
 }
 IMPLEMENT_CONOBJECT(GuiInspectorTypeSoundAssetPtr);
 

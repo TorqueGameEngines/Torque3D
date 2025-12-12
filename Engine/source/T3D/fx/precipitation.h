@@ -47,7 +47,6 @@ class PrecipitationData : public GameBaseData
 
   public:
      DECLARE_SOUNDASSET(PrecipitationData, Sound);
-     DECLARE_ASSET_SETGET(PrecipitationData, Sound);
 
       DECLARE_IMAGEASSET(PrecipitationData, Drop, GFXStaticTextureSRGBProfile) ///< Texture for drop particles
 

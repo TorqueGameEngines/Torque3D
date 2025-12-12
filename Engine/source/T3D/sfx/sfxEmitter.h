@@ -122,9 +122,8 @@ class SFXEmitter : public SceneObject
       BitSet32 mDirty;
 
       DECLARE_SOUNDASSET(SFXEmitter, Sound);
-      DECLARE_ASSET_NET_SETGET(SFXEmitter, Sound, DirtyUpdateMask);
       /// returns the shape asset used for this object
-      StringTableEntry getTypeHint() const override { return (getSoundAsset()) ? getSoundAsset()->getAssetName() : StringTable->EmptyString(); }
+      StringTableEntry getTypeHint() const override { return (mSoundAsset.notNull()) ? mSoundAsset->getAssetName() : StringTable->EmptyString(); }
 
       /// The sound source for the emitter.
       SFXSource *mSource;

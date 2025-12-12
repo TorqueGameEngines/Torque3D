@@ -467,10 +467,8 @@ public:
    Vector<RectI> mBitmapArrayRects;                ///< Used for controls which use an array of bitmaps such as checkboxes
 
    DECLARE_SOUNDASSET(GuiControlProfile, SoundButtonDown);     ///< Sound played when a button is pressed.
-   DECLARE_ASSET_SETGET(GuiControlProfile, SoundButtonDown);
 
    DECLARE_SOUNDASSET(GuiControlProfile, SoundButtonOver);     ///< Sound played when a button is hovered.
-   DECLARE_ASSET_SETGET(GuiControlProfile, SoundButtonOver);
 
    StringTableEntry mChildrenProfileName;       ///< The name of the profile to use for the children controls
 

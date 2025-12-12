@@ -882,27 +882,27 @@ void Vehicle::updatePos(F32 dt)
             if (collSpeed >= mDataBlock->softImpactSpeed)
                impactSound = RigidShapeData::Body::SoftImpactSound;
 
-         if (impactSound != -1 && mDataBlock->getBodySoundsProfile(impactSound) != NULL)
-            SFX->playOnce( mDataBlock->getBodySoundsProfile(impactSound), &getTransform() );
+         if (impactSound != -1 && mDataBlock->getBodySoundsSFXTrack(impactSound) != NULL)
+            SFX->playOnce( mDataBlock->getBodySoundsSFXTrack(impactSound), &getTransform() );
       }
 
       // Water volume sounds
       F32 vSpeed = getVelocity().len();
       if (!inLiquid && mWaterCoverage >= 0.8f) {
          if (vSpeed >= mDataBlock->hardSplashSoundVel)
-            SFX->playOnce( mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactHard), &getTransform() );
+            SFX->playOnce( mDataBlock->getBodySoundsSFXTrack(RigidShapeData::ImpactHard), &getTransform() );
          else
             if (vSpeed >= mDataBlock->medSplashSoundVel)
-               SFX->playOnce( mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactMedium), &getTransform() );
+               SFX->playOnce( mDataBlock->getBodySoundsSFXTrack(RigidShapeData::ImpactMedium), &getTransform() );
          else
             if (vSpeed >= mDataBlock->softSplashSoundVel)
-               SFX->playOnce( mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactSoft), &getTransform() );
+               SFX->playOnce( mDataBlock->getBodySoundsSFXTrack(RigidShapeData::ImpactSoft), &getTransform() );
          inLiquid = true;
       }
       else
          if(inLiquid && mWaterCoverage < 0.8f) {
             if (vSpeed >= mDataBlock->exitSplashSoundVel)
-               SFX->playOnce( mDataBlock->getWaterSoundsProfile(RigidShapeData::ExitWater), &getTransform() );
+               SFX->playOnce( mDataBlock->getBodySoundsSFXTrack(RigidShapeData::ExitWater), &getTransform() );
          inLiquid = false;
       }
    }

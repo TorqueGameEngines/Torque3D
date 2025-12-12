@@ -50,7 +50,7 @@ void EyeSpaceDepthOutHLSL::processVert(   Vector<ShaderComponent*> &componentLis
       eyePos->setType("float3");
       eyePos->setName("eyePosWorld");
       eyePos->uniform = true;
-      eyePos->constSortPos = cspPass;
+      eyePos->constSortPos = cspScene;
    }
 
    meta->addStatement( new GenOp( "   @ = float4( @.xyz - @, 1 );\r\n", outWSEyeVec, wsPosition, eyePos ) );
@@ -74,7 +74,7 @@ void EyeSpaceDepthOutHLSL::processPix( Vector<ShaderComponent*> &componentList,
    vEye->setType("float3");
    vEye->setName("vEye");
    vEye->uniform = true;
-   vEye->constSortPos = cspPass;
+   vEye->constSortPos = cspScene;
 
    // Expose the depth to the depth format feature
    Var *depthOut = new Var;
@@ -99,7 +99,7 @@ void EyeSpaceDepthOutHLSL::processPix( Vector<ShaderComponent*> &componentList,
       farDist->setType("float4");
       farDist->setName("oneOverFarplane");
       farDist->uniform = true;
-      farDist->constSortPos = cspPass;
+      farDist->constSortPos = cspScene;
    }
 
    meta->addStatement( new GenOp( "   @ = length( @.xyz / @.w ) * @.x;\r\n", depthOutDecl, wsEyeVec, wsEyeVec, farDist ) );      

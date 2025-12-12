@@ -244,8 +244,6 @@ GuiControlProfile::GuiControlProfile(void) :
    mTextOffset(0,0),
    mBitmapArrayRects(0)
 {
-   INIT_ASSET(SoundButtonDown);
-   INIT_ASSET(SoundButtonOver);
    mLoadCount = 0;
    mUseCount = 0;
    
@@ -320,21 +318,6 @@ GuiControlProfile::GuiControlProfile(void) :
       mBitmapName     = def->mBitmapName;
       mUseBitmapArray = def->mUseBitmapArray;
       mTextOffset     = def->mTextOffset;
-
-      // default sound
-      _setSoundButtonDown(def->getSoundButtonDown());
-      if (getSoundButtonDown() != StringTable->EmptyString())
-      {
-         if (!getSoundButtonDownProfile())
-            Con::errorf(ConsoleLogEntry::General, "GuiControlProfile: Can't get default button pressed sound asset.");
-      }
-
-      _setSoundButtonOver(def->getSoundButtonOver());
-      if (getSoundButtonOver() != StringTable->EmptyString())
-      {
-         if (!getSoundButtonOverProfile())
-            Con::errorf(ConsoleLogEntry::General, "GuiControlProfile: Can't get default button hover sound asset.");
-      }
 
       //used by GuiTextCtrl
       mModal         = def->mModal;

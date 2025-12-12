@@ -171,9 +171,6 @@ class SFXDescription : public SimDataBlock
       /// Only relevant if "isStreaming" is true.
       U32 mStreamReadAhead;
 
-      /// Reverb properties for sound playback.
-      SFXSoundReverbProperties mReverb;
-            
       /// Parameters to which sources playing with this description should automatically
       /// connect when created.
       StringTableEntry mParameters[ MaxNumParameters ];

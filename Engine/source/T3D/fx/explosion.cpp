@@ -230,9 +230,6 @@ ExplosionData::ExplosionData()
 
    faceViewer   = false;
 
-   INIT_ASSET(Sound);
-
-   //soundProfile      = NULL;
    particleEmitter   = NULL;
    particleEmitterId = 0;
 
@@ -310,7 +307,7 @@ ExplosionData::ExplosionData(const ExplosionData& other, bool temp_clone) : Game
    faceViewer = other.faceViewer;
    particleDensity = other.particleDensity;
    particleRadius = other.particleRadius;
-   CLONE_ASSET(Sound);
+   mSoundAsset = other.mSoundAsset;
    particleEmitter = other.particleEmitter;
    particleEmitterId = other.particleEmitterId; // -- for pack/unpack of particleEmitter ptr 
    explosionScale = other.explosionScale;
@@ -675,8 +672,7 @@ void ExplosionData::packData(BitStream* stream)
 
    PACKDATA_ASSET_REFACTOR(ExplosionShape);
 
-   //PACKDATA_SOUNDASSET(Sound);
-   PACKDATA_ASSET(Sound);
+   PACKDATA_ASSET_REFACTOR(Sound);
 
    if (stream->writeFlag(particleEmitter))
       stream->writeRangedU32(particleEmitter->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
@@ -780,7 +776,7 @@ void ExplosionData::unpackData(BitStream* stream)
 
    UNPACKDATA_ASSET_REFACTOR(ExplosionShape);
 
-   UNPACKDATA_ASSET(Sound);
+   UNPACKDATA_ASSET_REFACTOR(Sound);
 
    if (stream->readFlag())
       particleEmitterId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
@@ -886,10 +882,11 @@ bool ExplosionData::preload(bool server, String &errorStr)
    if (!server)
    {
 
-      if (!isSoundValid())
+      if (!getSoundSFXTrack())
       {
          //return false; -TODO: trigger asset download
       }
+
       if (!particleEmitter && particleEmitterId != 0)
       {
          if (Sim::findObject(particleEmitterId, particleEmitter) == false)
@@ -1432,7 +1429,7 @@ bool Explosion::explode()
       resetWorldBox();
    }
 
-   SFXProfile* sound_prof = static_cast<SFXProfile*>(mDataBlock->getSoundProfile());
+   SFXProfile* sound_prof = static_cast<SFXProfile*>(mDataBlock->getSoundSFXTrack().getPointer());
    if (sound_prof)
    {
       soundProfile_clone = sound_prof->cloneAndPerformSubstitutions(ss_object, ss_index);

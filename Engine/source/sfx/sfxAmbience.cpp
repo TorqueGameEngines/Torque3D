@@ -88,7 +88,6 @@ SFXAmbience::SFXAmbience()
      mEnvironment( NULL )
 {
    dMemset( mState, 0, sizeof( mState ) );
-   INIT_ASSET(SoundTrack);
 }
 
 //-----------------------------------------------------------------------------
@@ -133,7 +132,6 @@ bool SFXAmbience::onAdd()
       
    Sim::getSFXAmbienceSet()->addObject( this );
 
-   _setSoundTrack(getSoundTrack());
    return true;
 }
 
@@ -153,7 +151,7 @@ bool SFXAmbience::preload( bool server, String& errorStr )
       if( !sfxResolve( &mEnvironment, errorStr ) )
          return false;
 
-      if (!isSoundTrackValid())
+      if (!getSoundTrackSFXTrack())
       {
          //return false; -TODO: trigger asset download
       }
@@ -173,7 +171,7 @@ void SFXAmbience::packData( BitStream* stream )
    Parent::packData( stream );
       
    sfxWrite( stream, mEnvironment );
-   PACKDATA_ASSET(SoundTrack);
+   PACKDATA_ASSET_REFACTOR(SoundTrack);
    
    stream->write( mRolloffFactor );
    stream->write( mDopplerFactor );
@@ -189,7 +187,7 @@ void SFXAmbience::unpackData( BitStream* stream )
    Parent::unpackData( stream );
       
    sfxRead( stream, &mEnvironment );
-   UNPACKDATA_ASSET(SoundTrack);
+   UNPACKDATA_ASSET_REFACTOR(SoundTrack);
    
    stream->read( &mRolloffFactor );
    stream->read( &mDopplerFactor );

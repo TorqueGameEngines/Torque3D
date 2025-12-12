@@ -282,7 +282,6 @@ GuiMLTextCtrl::GuiMLTextCtrl()
 {   
    mActive = true;
    //mInitialText = StringTable->EmptyString();
-   INIT_ASSET(DeniedSound);
 }
 
 //--------------------------------------------------------------------------
@@ -343,8 +342,6 @@ bool GuiMLTextCtrl::onAdd()
 
    if (!mTextBuffer.length() && mInitialText[0] != 0)
       setText(mInitialText, dStrlen(mInitialText)+1);
-
-   _setDeniedSound(getDeniedSound());
 
    return true;
 }
@@ -964,8 +961,8 @@ void GuiMLTextCtrl::insertChars(const char* inputChars,
    if (numCharsToInsert <= 0)
    {
       // Play the "Denied" sound:
-      if ( numInputChars > 0 && getDeniedSoundProfile())
-         SFX->playOnce(getDeniedSoundProfile());
+      if ( numInputChars > 0)
+         SFX->playOnce(getDeniedSoundSFXTrack());
 
       return;
    }

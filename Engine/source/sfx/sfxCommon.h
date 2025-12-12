@@ -178,7 +178,7 @@ inline F32 SFXDistanceAttenuation( SFXDistanceModel model, F32 minDistance, F32 
          distance = getMax( distance, minDistance );
          distance = getMin( distance, maxDistance );
          
-         gain = ( 1 - ( distance - minDistance ) / ( maxDistance - minDistance ) );
+         gain = ( 1 - rolloffFactor * ( distance - minDistance ) / ( maxDistance - minDistance ) );
          break;
                   
       case SFXDistanceModelLogarithmic:
@@ -363,8 +363,8 @@ public:
       flGain = 0.0f;
       flGainHF = 0.0f;
       flGainLF = 0.0000f;
-      flDecayTime = 0.0f;
-      flDecayHFRatio = 0.0f;
+      flDecayTime = 0.1f;
+      flDecayHFRatio = 0.1f;
       flDecayLFRatio = 0.0f;
       flReflectionsGain = 0.0f;
       flReflectionsDelay = 0.0f;
@@ -372,15 +372,17 @@ public:
       flLateReverbGain = 0.0f;
       flLateReverbDelay = 0.0f;
       dMemset(flLateReverbPan, 0, sizeof(flLateReverbPan));
-      flEchoTime = 0.0f;
+      flEchoTime = 0.075f;
       flEchoDepth = 0.0f;
-      flModulationTime = 0.0f;
+      flModulationTime = 0.04f;
       flModulationDepth = 0.0f;
-      flAirAbsorptionGainHF = 0.0f;
+      flAirAbsorptionGainHF = 0.892f;
       flHFReference = 0.0f;
       flLFReference = 0.0f;
       flRoomRolloffFactor = 0.0f;
       iDecayHFLimit = 0;
+
+      validate();
    }
 
    void validate()

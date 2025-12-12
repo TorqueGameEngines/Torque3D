@@ -67,7 +67,6 @@ class SFXAmbience : public SimDataBlock
    
       /// Sound track to play when inside the ambient space.
       DECLARE_SOUNDASSET(SFXAmbience, SoundTrack);
-      DECLARE_ASSET_SETGET(SFXAmbience, SoundTrack);
 
       /// Reverb environment to apply when inside the ambient space.
       SFXEnvironment* mEnvironment;

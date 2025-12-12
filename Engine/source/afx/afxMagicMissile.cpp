@@ -141,8 +141,6 @@ U32 Projectile::smProjectileWarpTicks = 5;
 //
 afxMagicMissileData::afxMagicMissileData()
 {
-   INIT_ASSET(ProjectileSound);
-
    /* From stock Projectile code...
    explosion = NULL;
    explosionId = 0;
@@ -247,9 +245,9 @@ afxMagicMissileData::afxMagicMissileData()
 
 afxMagicMissileData::afxMagicMissileData(const afxMagicMissileData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-   mProjectileShapeAsset = other.mProjectileShapeAsset;
+  mProjectileShapeAsset = other.mProjectileShapeAsset;
   projectileShape = other.projectileShape; // -- TSShape loads using projectileShapeName
-  CLONE_ASSET(ProjectileSound);
+  mProjectileSoundAsset = other.mProjectileSoundAsset;
   splash = other.splash;
   splashId = other.splashId; // -- for pack/unpack of splash ptr
   lightDesc = other.lightDesc;
@@ -522,7 +520,7 @@ bool afxMagicMissileData::preload(bool server, String &errorStr)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockId(decal): %d", decalId);
       */
 
-      if (!isProjectileSoundValid())
+      if (!getProjectileSoundSFXTrack())
       {
          //return false; -TODO: trigger asset download
       }
@@ -622,7 +620,7 @@ void afxMagicMissileData::packData(BitStream* stream)
                                               DataBlockObjectIdLast);
    */
 
-   PACKDATA_ASSET(ProjectileSound);
+   PACKDATA_ASSET_REFACTOR(ProjectileSound);
 
    if ( stream->writeFlag(lightDesc != NULL))
       stream->writeRangedU32(lightDesc->getId(), DataBlockObjectIdFirst,
@@ -728,7 +726,7 @@ void afxMagicMissileData::unpackData(BitStream* stream)
       decalId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
    */
    
-   UNPACKDATA_ASSET(ProjectileSound);
+   UNPACKDATA_ASSET_REFACTOR(ProjectileSound);
 
    if (stream->readFlag())
       lightDescId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
@@ -1152,8 +1150,7 @@ bool afxMagicMissile::onNewDataBlock(GameBaseData* dptr, bool reload)
 
       SFX_DELETE( mSound );
 
-      if (mDataBlock->getProjectileSound())
-         mSound = SFX->createSource(mDataBlock->getProjectileSoundProfile());
+      mSound = SFX->createSource(mDataBlock->getProjectileSoundSFXTrack());
    }
 
    return true;
@@ -1988,7 +1985,7 @@ void afxMagicMissile::get_launch_data(Point3F& pos, Point3F& vel)
 
 void afxMagicMissile::updateSound()
 {
-  if (!mDataBlock->isProjectileSoundValid())
+  if (!mDataBlock->getProjectileSoundAsset().isNull())
     return;
 
   if ( mSound )

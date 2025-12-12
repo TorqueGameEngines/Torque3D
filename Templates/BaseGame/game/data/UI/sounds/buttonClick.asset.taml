@@ -1,10 +1,8 @@
-<SoundAsset 
-	AssetName="buttonClick" 
-	soundFile="@assetFile=buttonClick.wav" 
-	PitchAdjust="1" 
-	VolumeAdjust="1" 
-	is3D="false" 
-	minDistance="1" 
-	maxDistance="100" 
-	sourceGroup="AudioChannelGui"
-	/>
+<SoundAsset
+    AssetName="buttonClick"
+    originalFilePath="data/UI/sounds/buttonClick.wav">
+    <SoundAsset.slots>
+        <slots_beginarray
+            SoundFile="@assetFile=@buttonClick.wav"/>
+    </SoundAsset.slots>
+</SoundAsset>

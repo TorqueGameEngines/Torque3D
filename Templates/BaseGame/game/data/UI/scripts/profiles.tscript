@@ -170,8 +170,8 @@ singleton GuiControlProfile( GuiMenuButtonProfile )
    justify = "center";
    canKeyFocus = false;
    hasBitmapArray = false;
-   soundButtonDown = "UI:buttonClick";
-   soundButtonOver = "UI:buttonHover";
+   soundButtonDownAsset = "UI:buttonClick";
+   soundButtonOverAsset = "UI:buttonHover";
    category = "BaseUI";
    fontColors[0] = "200 200 200 255";
    fontColors[2] = "108 108 108 255";

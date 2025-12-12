@@ -120,7 +120,7 @@ void WindDeformationHLSL::processVert( Vector<ShaderComponent*> &componentList,
    {
       accumTime = new Var( "accumTime", "float" );
       accumTime->uniform = true;
-      accumTime->constSortPos = cspPass;  
+      accumTime->constSortPos = cspScene;
    }
 
    // Get the transform to world space.

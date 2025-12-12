@@ -67,11 +67,6 @@ ConsoleDocClass( Splash,
 //--------------------------------------------------------------------------
 SplashData::SplashData()
 {
-   //soundProfile      = NULL;
-   //soundProfileId    = 0;
-
-   INIT_ASSET(Sound);
-
    scale.set(1, 1, 1);
 
    dMemset( emitterList, 0, sizeof( emitterList ) );
@@ -171,7 +166,7 @@ void SplashData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(Sound);
+   PACKDATA_ASSET_REFACTOR(Sound);
 
    mathWrite(*stream, scale);
    stream->write(delayMS);
@@ -224,7 +219,7 @@ void SplashData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(Sound);
+   UNPACKDATA_ASSET_REFACTOR(Sound);
 
    mathRead(*stream, &scale);
    stream->read(&delayMS);
@@ -280,7 +275,7 @@ bool SplashData::preload(bool server, String &errorStr)
 
    if (!server)
    {
-      if (!isSoundValid())
+      if (!getSoundSFXTrack())
       {
          Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Invalid Sound asset.");
          //return false;
@@ -689,7 +684,7 @@ void Splash::spawnExplosion()
 
    /// could just play the explosion one, but explosion could be weapon specific,
    /// splash sound could be liquid specific. food for thought.
-   SFXTrack* sound_prof = mDataBlock->getSoundProfile();
+   SFXTrack* sound_prof = mDataBlock->getSoundSFXTrack();
    if (sound_prof)
    {
       SFX->playOnce(sound_prof, &getTransform());

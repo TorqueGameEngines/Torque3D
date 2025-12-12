@@ -593,7 +593,7 @@ Var* ShaderFeatureHLSL::getModelView(  Vector<ShaderComponent*> &componentList,
          viewProj->setType( "float4x4" );
          viewProj->setName( "viewProj" );
          viewProj->uniform = true;
-         viewProj->constSortPos = cspPass;        
+         viewProj->constSortPos = cspScene;        
       }
 
       modelview = new Var;
@@ -893,7 +893,7 @@ Var* ShaderFeatureHLSL::getSurface(Vector<ShaderComponent*>& componentList, Mult
    {
       wsEyePos = new Var("eyePosWorld", "float3");
       wsEyePos->uniform = true;
-      wsEyePos->constSortPos = cspPass;
+      wsEyePos->constSortPos = cspScene;
    }
 
       Var *wsPosition = getInWsPosition(componentList);
@@ -1867,7 +1867,7 @@ void ReflectCubeFeatHLSL::processVert( Vector<ShaderComponent*> &componentList,
     {
         eyePos = new Var( "eyePosWorld", "float3" );
         eyePos->uniform = true;
-        eyePos->constSortPos = cspPass;
+        eyePos->constSortPos = cspScene;
     }
 
     // eye to vert
@@ -2152,7 +2152,7 @@ void RTLightingFeatHLSL::processVert(  Vector<ShaderComponent*> &componentList,
          {
             eyePos = new Var( "eyePosWorld", "float3" );
             eyePos->uniform = true;
-            eyePos->constSortPos = cspPass;
+            eyePos->constSortPos = cspScene;
          }
 
          //Temporarily disabled while we figure out how to better handle normals without a normal map
@@ -2237,43 +2237,43 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    Var *inLightPos  = new Var( "inLightPos", "float4" );
    inLightPos->uniform = true;
    inLightPos->arraySize = 4;
-   inLightPos->constSortPos = cspPotentialPrimitive;
+   inLightPos->constSortPos = cspLightBuffer;
 
    Var * inLightConfigData = new Var( "inLightConfigData", "float4" );
    inLightConfigData->uniform = true;
    inLightConfigData->arraySize = 4;
-   inLightConfigData->constSortPos = cspPotentialPrimitive;
+   inLightConfigData->constSortPos = cspLightBuffer;
 
    Var *inLightColor  = new Var( "inLightColor", "float4" );
    inLightColor->uniform = true;
    inLightColor->arraySize = 4;
-   inLightColor->constSortPos = cspPotentialPrimitive;
+   inLightColor->constSortPos = cspLightBuffer;
 
    Var *inLightSpotDir  = new Var( "inLightSpotDir", "float4" );
    inLightSpotDir->uniform = true;
    inLightSpotDir->arraySize = 4;
-   inLightSpotDir->constSortPos = cspPotentialPrimitive;
+   inLightSpotDir->constSortPos = cspLightBuffer;
 
    Var * lightSpotParams = new Var( "inlightSpotParams", "float2" );
    lightSpotParams->uniform = true;
    lightSpotParams->arraySize = 4;
-   lightSpotParams->constSortPos = cspPotentialPrimitive;
+   lightSpotParams->constSortPos = cspLightBuffer;
 
    Var* hasVectorLight = new Var("hasVectorLight", "int");
    hasVectorLight->uniform = true;
-   hasVectorLight->constSortPos = cspPotentialPrimitive;
+   hasVectorLight->constSortPos = cspLightBuffer;
 
    Var* vectorLightDirection = new Var("vectorLightDirection", "float4");
    vectorLightDirection->uniform = true;
-   vectorLightDirection->constSortPos = cspPotentialPrimitive;
+   vectorLightDirection->constSortPos = cspLightBuffer;
 
    Var* vectorLightColor = new Var("vectorLightColor", "float4");
    vectorLightColor->uniform = true;
-   vectorLightColor->constSortPos = cspPotentialPrimitive;
+   vectorLightColor->constSortPos = cspLightBuffer;
 
    Var* vectorLightBrightness = new Var("vectorLightBrightness", "float");
    vectorLightBrightness->uniform = true;
-   vectorLightBrightness->constSortPos = cspPotentialPrimitive;
+   vectorLightBrightness->constSortPos = cspLightBuffer;
 
    Var* surface = getSurface(componentList, meta, fd);
    if (!surface)
@@ -2289,7 +2289,7 @@ void RTLightingFeatHLSL::processPix(   Vector<ShaderComponent*> &componentList,
    {
       ambient = new Var("ambient", "float4");
       ambient->uniform = true;
-      ambient->constSortPos = cspPass;
+      ambient->constSortPos = cspScene;
    }
    
    Var* lighting = new Var("lighting", "float4");
@@ -2349,12 +2349,12 @@ void FogFeatHLSL::processVert(   Vector<ShaderComponent*> &componentList,
       {
          eyePos = new Var( "eyePosWorld", "float3" );
          eyePos->uniform = true;
-         eyePos->constSortPos = cspPass;
+         eyePos->constSortPos = cspScene;
       }
 
       Var *fogData = new Var( "fogData", "float3" );
       fogData->uniform = true;
-      fogData->constSortPos = cspPass;   
+      fogData->constSortPos = cspScene;
 
       Var *wsPosition = new Var( "fogPos", "float3" );
       getWsPosition( componentList, 
@@ -2393,7 +2393,7 @@ void FogFeatHLSL::processPix( Vector<ShaderComponent*> &componentList,
    fogColor->setType( "float4" );
    fogColor->setName( "fogColor" );
    fogColor->uniform = true;
-   fogColor->constSortPos = cspPass;
+   fogColor->constSortPos = cspScene;
 
    // Get the out color.
    Var *color = (Var*) LangElement::find(getOutputTargetVarName(ShaderFeature::DefaultTarget));
@@ -2429,12 +2429,12 @@ void FogFeatHLSL::processPix( Vector<ShaderComponent*> &componentList,
       {
          eyePos = new Var( "eyePosWorld", "float3" );
          eyePos->uniform = true;
-         eyePos->constSortPos = cspPass;
+         eyePos->constSortPos = cspScene;
       }
 
       Var *fogData = new Var( "fogData", "float3" );
       fogData->uniform = true;
-      fogData->constSortPos = cspPass;   
+      fogData->constSortPos = cspScene;
 
       /// Get the fog amount.
       fogAmount = new Var( "fogAmount", "float" );
@@ -2695,7 +2695,7 @@ void FoliageFeatureHLSL::processVert( Vector<ShaderComponent*> &componentList,
    {
       eyePos = new Var( "eyePosWorld", "float3" );
       eyePos->uniform = true;
-      eyePos->constSortPos = cspPass;
+      eyePos->constSortPos = cspScene;
    }
 
    // All actual work is offloaded to this method.
@@ -2832,7 +2832,7 @@ void ImposterVertFeatureHLSL::processVert(   Vector<ShaderComponent*> &component
    {
       eyePos = new Var( "eyePosWorld", "float3" );
       eyePos->uniform = true;
-      eyePos->constSortPos = cspPass;
+      eyePos->constSortPos = cspScene;
    }
 
    // Declare the outputs from this feature.
@@ -3153,7 +3153,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
       eyePos->setType("float3");
       eyePos->setName("eyePosWorld");
       eyePos->uniform = true;
-      eyePos->constSortPos = cspPass;
+      eyePos->constSortPos = cspScene;
    }
 
    Var* accumTime = (Var*)LangElement::find("accumTime");
@@ -3161,7 +3161,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    {
       accumTime = new Var("accumTime", "float");
       accumTime->uniform = true;
-      accumTime->constSortPos = cspPass;
+      accumTime->constSortPos = cspScene;
    }
 
    Var* dampness = (Var*)LangElement::find("dampness");
@@ -3169,7 +3169,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    {
       dampness = new Var("dampness", "float");
       dampness->uniform = true;
-      dampness->constSortPos = cspPass;
+      dampness->constSortPos = cspScene;
    }
 
    String computeForwardProbes = String("   @ = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
@@ -3185,7 +3185,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    {
       ambient = new Var("ambient","float4");
       ambient->uniform = true;
-      ambient->constSortPos = cspPass;
+      ambient->constSortPos = cspScene;
    }
    meta->addStatement(new GenOp("   @.rgb *= @.rgb;\r\n", ibl, ambient));
    meta->addStatement(new GenOp("   @.rgb = @.rgb;\r\n", curColor, ibl));

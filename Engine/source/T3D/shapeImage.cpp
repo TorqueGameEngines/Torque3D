@@ -132,7 +132,6 @@ ShapeBaseImageData::StateData::StateData()
    loaded = IgnoreLoaded;
    spin = IgnoreSpin;
    recoil = NoRecoil;
-   sound = NULL;
    soundTrack = NULL;
    emitter = NULL;
    shapeSequence = NULL;
@@ -255,8 +254,6 @@ ShapeBaseImageData::ShapeBaseImageData()
 
       stateShapeSequence[i] = 0;
       stateScaleShapeSequence[i] = false;
-
-      INIT_SOUNDASSET_ARRAY(stateSound, i);
       stateScript[i] = 0;
       stateEmitter[i] = 0;
       stateEmitterTime[i] = 0;
@@ -421,7 +418,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             if (!Sim::findObject(SimObjectId((uintptr_t)state[i].emitter), state[i].emitter))
                Con::errorf(ConsoleLogEntry::General, "Error, unable to load emitter for image datablock");
 
-         if (!isstateSoundValid(i))
+         if (!getstateSoundSFXTrack(i))
          {
             //return false; -TODO: trigger asset download
          }
@@ -577,37 +574,7 @@ void ShapeBaseImageData::handleStateSoundTrack(const U32& stateId)
       return;
 
    StateData& s = state[stateId];
-
-   s.sound = getstateSoundAsset(stateId);
-
-   if (s.sound == NULL)
-   {
-      if (mstateSoundName[stateId] != StringTable->EmptyString())
-      {
-         //ok, so we've got some sort of special-case here like a fallback or SFXPlaylist. So do the hook-up now
-         SFXTrack* sndTrack;
-         if (!Sim::findObject(mstateSoundName[stateId], sndTrack))
-         {
-            Con::errorf("ShapeBaseImageData::onAdd() - attempted to find sound %s but failed!", mstateSoundName[stateId]);
-         }
-         else
-         {
-            s.soundTrack = sndTrack;
-         }
-      }
-      else if (mstateSoundSFXId[stateId] != 0)
-      {
-         SFXTrack* sndTrack;
-         if (!Sim::findObject(mstateSoundSFXId[stateId], sndTrack))
-         {
-            Con::errorf("ShapeBaseImageData::onAdd() - attempted to find sound %i but failed!", mstateSoundSFXId[stateId]);
-         }
-         else
-         {
-            s.soundTrack = sndTrack;
-         }
-      }
-   }
+   s.soundTrack = getstateSoundSFXTrack(stateId);
 }
 
 S32 ShapeBaseImageData::lookupState(const char* name)
@@ -1162,7 +1129,7 @@ void ShapeBaseImageData::packData(BitStream* stream)
             }
          }
 
-         PACKDATA_SOUNDASSET_ARRAY(stateSound, i);
+         PACKDATA_ASSET_ARRAY(stateSound, i);
       }
    stream->write(maxConcurrentSounds);
    stream->writeFlag(useRemainderDT);
@@ -1364,7 +1331,7 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
          else
             s.emitter = 0;
             
-         UNPACKDATA_SOUNDASSET_ARRAY(stateSound, i);
+         UNPACKDATA_ASSET_ARRAY(stateSound, i);
          handleStateSoundTrack(i);
       }
    }
@@ -2776,7 +2743,7 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState, bool force)
    // Delete any loooping sounds that were in the previous state.
    // this is the crazy bit =/ needs to know prev state in order to stop sounds.
    // lastState does not return an id for the prev state so we keep track of it.
-   if (lastState->sound && lastState->sound->getSFXTrack()->getDescription()->mIsLooping)
+   if (lastState->soundTrack && lastState->soundTrack->getDescription()->mIsLooping)
    {  
       for (Vector<SFXSource*>::iterator i = image.mSoundSources.begin(); i != image.mSoundSources.end(); i++)
          SFX_DELETE((*i));    
@@ -2787,11 +2754,6 @@ void ShapeBase::setImageState(U32 imageSlot, U32 newState, bool force)
    // Play sound
    if (isGhost())
    {
-      if (stateData.sound)
-   {
-      const Point3F& velocity         = getVelocity();
-         image.addSoundSource(SFX->createSource(stateData.sound->getSFXTrack(), &getRenderTransform(), &velocity));
-      }
       if (stateData.soundTrack)
       {
          const Point3F& velocity = getVelocity();

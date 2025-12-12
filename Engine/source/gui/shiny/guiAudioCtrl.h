@@ -84,7 +84,6 @@ protected:
 
 public:
    DECLARE_SOUNDASSET(GuiAudioCtrl, Sound);
-   DECLARE_ASSET_SETGET(GuiAudioCtrl, Sound);
    GuiAudioCtrl();
    ~GuiAudioCtrl();
    // GuiControl.

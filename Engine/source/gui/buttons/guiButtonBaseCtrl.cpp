@@ -258,8 +258,7 @@ void GuiButtonBaseCtrl::onMouseDown(const GuiEvent& event)
    if (mProfile->mCanKeyFocus)
       setFirstResponder();
 
-   if (mProfile->isSoundButtonDownValid())
-      SFX->playOnce(mProfile->getSoundButtonDownProfile());
+   SFX->playOnce(mProfile->getSoundButtonDownSFXTrack());
 
    mMouseDownPoint = event.mousePoint;
    mMouseDragged = false;
@@ -299,8 +298,7 @@ void GuiButtonBaseCtrl::onMouseEnter(const GuiEvent& event)
    }
    else
    {
-      if (mProfile->isSoundButtonOverValid())
-         SFX->playOnce(mProfile->getSoundButtonOverProfile());
+      SFX->playOnce(mProfile->getSoundButtonOverSFXTrack());
 
       mHighlighted = true;
       messageSiblings(mRadioGroup);
@@ -388,8 +386,7 @@ bool GuiButtonBaseCtrl::onKeyDown(const GuiEvent& event)
    if ((event.keyCode == KEY_RETURN || event.keyCode == KEY_SPACE)
       && event.modifier == 0)
    {
-      if (mProfile->isSoundButtonDownValid())
-         SFX->playOnce(mProfile->getSoundButtonDownProfile());
+      SFX->playOnce(mProfile->getSoundButtonDownSFXTrack());
 
       return true;
    }

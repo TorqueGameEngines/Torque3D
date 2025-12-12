@@ -1,10 +1,9 @@
 <SoundAsset
     AssetName="buttonHover"
-    sourceGroup="AudioChannelDefault"
-    MaxDistance="100">
+    sourceGroup="AudioChannelGui"
+    originalFilePath="core/gui/sounds/buttonHover.wav">
     <SoundAsset.slots>
         <slots_beginarray
-            SoundFile="@assetFile=buttonHover.wav"
-            MaxDistance="100"/>
+            SoundFile="@assetFile=@buttonHover.wav"/>
     </SoundAsset.slots>
 </SoundAsset>

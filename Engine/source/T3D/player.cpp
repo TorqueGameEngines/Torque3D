@@ -421,9 +421,6 @@ PlayerData::PlayerData()
    boxHeadBackPercentage  = 0;
    boxHeadFrontPercentage = 1;
 
-   for (S32 i = 0; i < MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(PlayerSound, i);
-
    footPuffEmitter = NULL;
    footPuffID = 0;
    footPuffNumParts = 15;
@@ -471,7 +468,7 @@ bool PlayerData::preload(bool server, String &errorStr)
    if (!server) {
       for (U32 i = 0; i < MaxSounds; ++i)
       {
-         if (!isPlayerSoundValid(i))
+         if (!getPlayerSoundSFXTrack(i))
          {
             //return false; -TODO: trigger asset download
          }
@@ -1266,8 +1263,7 @@ void PlayerData::packData(BitStream* stream)
    stream->write(minImpactSpeed);
    stream->write(minLateralImpactSpeed);
 
-   for (U32 i = 0; i < MaxSounds; i++)
-      PACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
+   PACKDATA_ASSET_ARRAY_REFACTOR(PlayerSound, MaxSounds);
 
    mathWrite(*stream, boxSize);
    mathWrite(*stream, crouchBoxSize);
@@ -1447,8 +1443,7 @@ void PlayerData::unpackData(BitStream* stream)
    stream->read(&minImpactSpeed);
    stream->read(&minLateralImpactSpeed);
 
-   for (U32 i = 0; i < MaxSounds; i++)
-      UNPACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(PlayerSound, MaxSounds);
 
    mathRead(*stream, &boxSize);
    mathRead(*stream, &crouchBoxSize);
@@ -1895,11 +1890,11 @@ bool Player::onNewDataBlock( GameBaseData *dptr, bool reload )
       SFX_DELETE( mMoveBubbleSound );
       SFX_DELETE( mWaterBreathSound );
 
-      if ( mDataBlock->getPlayerSound(PlayerData::MoveBubbles) )
-         mMoveBubbleSound = SFX->createSource( mDataBlock->getPlayerSoundProfile(PlayerData::MoveBubbles) );
+      if ( mDataBlock->getPlayerSoundSFXTrack(PlayerData::MoveBubbles) )
+         mMoveBubbleSound = SFX->createSource( mDataBlock->getPlayerSoundSFXTrack(PlayerData::MoveBubbles) );
 
-      if ( mDataBlock->getPlayerSound(PlayerData::WaterBreath) )
-         mWaterBreathSound = SFX->createSource( mDataBlock->getPlayerSoundProfile(PlayerData::WaterBreath) );
+      if ( mDataBlock->getPlayerSoundSFXTrack(PlayerData::WaterBreath) )
+         mWaterBreathSound = SFX->createSource( mDataBlock->getPlayerSoundSFXTrack(PlayerData::WaterBreath) );
    }
 
    mObjBox.maxExtents.x = mDataBlock->boxSize.x * 0.5f;
@@ -3223,7 +3218,7 @@ void Player::updateMove(const Move* move)
       {
          // exit-water splash sound happens for client only
          if ( getSpeed() >= mDataBlock->exitSplashSoundVel && !isMounted() )         
-            SFX->playOnce( mDataBlock->getPlayerSoundProfile(PlayerData::ExitWater), &getTransform() );                     
+            SFX->playOnce( mDataBlock->getPlayerSoundSFXTrack(PlayerData::ExitWater), &getTransform() );
       }
    }
 
@@ -6998,26 +6993,26 @@ void Player::playFootstepSound( bool triggeredLeft, Material* contactMaterial, S
       // Treading water.
 
       if ( mWaterCoverage < mDataBlock->footSplashHeight )
-         SFX->playOnce( mDataBlock->getPlayerSoundProfile( PlayerData::FootShallowSplash ), &footMat );
+         SFX->playOnce( mDataBlock->getPlayerSoundSFXTrack( PlayerData::FootShallowSplash ), &footMat );
       else
       {
          if ( mWaterCoverage < 1.0 )
-            SFX->playOnce( mDataBlock->getPlayerSoundProfile( PlayerData::FootWading ), &footMat );
+            SFX->playOnce( mDataBlock->getPlayerSoundSFXTrack( PlayerData::FootWading ), &footMat );
          else
          {
             if ( triggeredLeft )
             {
-               SFX->playOnce( mDataBlock->getPlayerSoundProfile( PlayerData::FootUnderWater ), &footMat );
-               SFX->playOnce( mDataBlock->getPlayerSoundProfile( PlayerData::FootBubbles ), &footMat );
+               SFX->playOnce( mDataBlock->getPlayerSoundSFXTrack( PlayerData::FootUnderWater ), &footMat );
+               SFX->playOnce( mDataBlock->getPlayerSoundSFXTrack( PlayerData::FootBubbles ), &footMat );
             }
          }
       }
    }
-   else if( contactMaterial && contactMaterial->getCustomFootstepSoundProfile())
+   else if( contactMaterial && contactMaterial->getCustomFootstepSoundSFXTrack())
    {
       // Footstep sound defined on material.
 
-      SFX->playOnce( contactMaterial->getCustomFootstepSoundProfile(), &footMat );
+      SFX->playOnce( contactMaterial->getCustomFootstepSoundSFXTrack(), &footMat );
    }
    else
    {
@@ -7030,7 +7025,7 @@ void Player::playFootstepSound( bool triggeredLeft, Material* contactMaterial, S
          sound = 2;
 
       if (sound>=0)
-         SFX->playOnce(mDataBlock->getPlayerSoundProfile(sound), &footMat);
+         SFX->playOnce(mDataBlock->getPlayerSoundSFXTrack(sound), &footMat);
    }
 }
 
@@ -7050,8 +7045,8 @@ void Player:: playImpactSound()
       {
          Material* material = ( rInfo.material ? dynamic_cast< Material* >( rInfo.material->getMaterial() ) : 0 );
 
-         if( material && material->getCustomImpactSoundProfile() )
-            SFX->playOnce( material->getCustomImpactSoundProfile(), &getTransform() );
+         if( material && material->getCustomImpactSoundSFXTrack() )
+            SFX->playOnce( material->getCustomImpactSoundSFXTrack(), &getTransform() );
          else
          {
             S32 sound = -1;
@@ -7061,7 +7056,7 @@ void Player:: playImpactSound()
                sound = 2; // Play metal;
 
             if (sound >= 0)
-               SFX->playOnce(mDataBlock->getPlayerSoundProfile(PlayerData::ImpactSoft + sound), &getTransform());
+               SFX->playOnce(mDataBlock->getPlayerSoundSFXTrack(PlayerData::ImpactSoft + sound), &getTransform());
          }
       }
    }
@@ -7215,11 +7210,11 @@ bool Player::collidingWithWater( Point3F &waterHeight )
 void Player::createSplash( Point3F &pos, F32 speed )
 {
    if ( speed >= mDataBlock->hardSplashSoundVel )
-      SFX->playOnce( mDataBlock->getPlayerSoundProfile(PlayerData::ImpactWaterHard), &getTransform() );
+      SFX->playOnce( mDataBlock->getPlayerSoundSFXTrack(PlayerData::ImpactWaterHard), &getTransform() );
    else if ( speed >= mDataBlock->medSplashSoundVel )
-      SFX->playOnce( mDataBlock->getPlayerSoundProfile(PlayerData::ImpactWaterMedium), &getTransform() );
+      SFX->playOnce( mDataBlock->getPlayerSoundSFXTrack(PlayerData::ImpactWaterMedium), &getTransform() );
    else
-      SFX->playOnce( mDataBlock->getPlayerSoundProfile(PlayerData::ImpactWaterEasy), &getTransform() );
+      SFX->playOnce( mDataBlock->getPlayerSoundSFXTrack(PlayerData::ImpactWaterEasy), &getTransform() );
 
    if( mDataBlock->splash )
    {

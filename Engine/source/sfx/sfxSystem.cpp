@@ -1621,13 +1621,13 @@ DefineEngineFunction( sfxPlayOnce, S32, (StringTableEntry assetId, const char* a
 
       if (String::isEmpty(arg0) || !tempSoundAsset->is3D())
       {
-         source = SFX->playOnce(tempSoundAsset->getSfxProfile());
+         source = SFX->playOnce(tempSoundAsset->getSFXTrack());
       }
       else
       {
          MatrixF transform;
          transform.set(EulerF(0, 0, 0), Point3F(dAtof(arg0), dAtof(arg1), dAtof(arg2)));
-         source = SFX->playOnce(tempSoundAsset->getSfxProfile(), &transform, NULL, dAtof(arg3));
+         source = SFX->playOnce(tempSoundAsset->getSFXTrack(), &transform, NULL, dAtof(arg3));
       }
    }
    else

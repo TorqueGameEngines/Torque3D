@@ -83,7 +83,6 @@ class RigidShapeData : public ShapeBaseData
       MaxSounds
    };
    DECLARE_SOUNDASSET_ARRAY(RigidShapeData, WaterSounds, Sounds::MaxSounds)
-   DECLARE_ASSET_ARRAY_SETGET(RigidShapeData, WaterSounds);
 
    F32 exitSplashSoundVel;
    F32 softSplashSoundVel;

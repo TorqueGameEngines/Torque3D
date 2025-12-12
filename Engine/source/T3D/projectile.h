@@ -116,7 +116,6 @@ public:
    S32 decalId;                        // (impact) Decal ID
 
    DECLARE_SOUNDASSET(ProjectileData, ProjectileSound);
-   DECLARE_ASSET_SETGET(ProjectileData, ProjectileSound);
    
    LightDescription *lightDesc;
    S32 lightDescId;   

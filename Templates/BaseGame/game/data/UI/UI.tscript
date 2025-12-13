@@ -21,7 +21,8 @@ function UI::onCreate( %this )
    // addLanguage("defaultTable","try","tr");
    createLangTable("defaultTable");
    setCoreLangTable("defaultTable");
-   exec("./langs/languageMap");
+   if(isFile("./langs/languageMap"))
+      exec("./langs/languageMap");
 }
 
 function UI::onDestroy( %this )

@@ -182,11 +182,11 @@ function addLanguage(%langTable, %filename, %alias)
 {
     // generate an .lso file and if a languageMap file does not exist, it as well
     %needLangMap = true;
-    if(isFile("data/UI/langs/languageMap"))
-        %needLangMap = false;        
-        
-    CompileLanguage("data/UI/langs/"@ %filename @".txt", %needLangMap);    
-    %langTable.addLanguage("data/UI/langs/"@ %filename @".lso", %alias);
+    if(isFile("./langs/languageMap"))
+        %needLangMap = false;
+
+    CompileLanguage("./langs/"@ %filename @".tscript", %needLangMap);
+    %langTable.addLanguage("./langs/"@ %filename @".lso", %alias);
 }
 
 function switchLanguage(%language) //use here the #n as it's the order of inclusion

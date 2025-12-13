@@ -152,7 +152,6 @@ SoundAsset::SoundAsset()
    for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
    {
       mSoundFile[i] = StringTable->EmptyString();
-      mSoundPath[i] = StringTable->EmptyString();
       mSoundResource[i] = NULL;
 
       mPlaylist.mSlots.mTransitionOut[i] = SFXPlayList::TRANSITION_Wait;
@@ -204,12 +203,24 @@ SoundAsset::SoundAsset()
    mPlaylist.mActiveSlots = 1;
 
    mResolvedTrack = NULL;
+   mResolvedDescription = NULL;
 }
 
 //-----------------------------------------------------------------------------
 
 SoundAsset::~SoundAsset()
 {
+   if (mResolvedTrack)
+   {
+      if (mResolvedTrack->isProperlyAdded() && !mResolvedTrack->isDeleted())
+         mResolvedTrack->deleteObject();
+   }
+
+   if (mResolvedDescription)
+   {
+      if (mResolvedDescription->isProperlyAdded() && !mResolvedDescription->isDeleted())
+         mResolvedDescription->deleteObject();
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -387,7 +398,7 @@ void SoundAsset::_onResourceChanged(const Torque::Path &path)
    for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
    {
 
-      if (path != Torque::Path(mSoundPath[i]))
+      if (path != Torque::Path(mSoundFile[i]))
          return;
    }
 
@@ -443,7 +454,7 @@ StringTableEntry SoundAsset::getAssetIdByFilename(StringTableEntry fileName)
          SoundAsset* soundAsset = AssetDatabase.acquireAsset<SoundAsset>(query.mAssetList[i]);
          if (soundAsset)
          {
-            if (soundAsset->getSoundPath() == fileName)
+            if (soundAsset->getSoundFile() == fileName)
                soundAssetId = soundAsset->getAssetId();
 
             AssetDatabase.releaseAsset(query.mAssetList[i]);
@@ -485,7 +496,7 @@ U32 SoundAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<SoundAsse
       for (U32 i = 0; i < foundAssetcount; i++)
       {
          SoundAsset* tSoundAsset = AssetDatabase.acquireAsset<SoundAsset>(query.mAssetList[i]);
-         if (tSoundAsset && tSoundAsset->getSoundPath() == fileName)
+         if (tSoundAsset && tSoundAsset->getSoundFile() == fileName)
          {
             soundAsset->setAssetId(query.mAssetList[i]);
             AssetDatabase.releaseAsset(query.mAssetList[i]);
@@ -499,9 +510,44 @@ U32 SoundAsset::getAssetByFilename(StringTableEntry fileName, AssetPtr<SoundAsse
    return AssetErrCode::Failed;
 }
 
+void SoundAsset::buildDescription()
+{
+   if (!mResolvedDescription)
+   {
+      mResolvedDescription = new SFXDescription;
+      // calls on add which should validate the description. but do it on mProfileDesc before applying values anyway.
+      mResolvedDescription->registerObject(String::ToString("%s_profile_description", getAssetName()).c_str());
+   }
+
+   mProfileDesc.validate();
+
+   mResolvedDescription->mPitch = mProfileDesc.mPitch;
+   mResolvedDescription->mVolume = mProfileDesc.mVolume;
+   mResolvedDescription->mIs3D = mProfileDesc.mIs3D;
+   mResolvedDescription->mIsLooping = mProfileDesc.mIsLooping;
+   mResolvedDescription->mIsStreaming = mProfileDesc.mIsStreaming;
+   mResolvedDescription->mUseHardware = mProfileDesc.mUseHardware;
+   mResolvedDescription->mMinDistance = mProfileDesc.mMinDistance;
+   mResolvedDescription->mMaxDistance = mProfileDesc.mMaxDistance;
+   mResolvedDescription->mConeInsideAngle = mProfileDesc.mConeInsideAngle;
+   mResolvedDescription->mConeOutsideAngle = mProfileDesc.mConeOutsideAngle;
+   mResolvedDescription->mConeOutsideVolume = mProfileDesc.mConeOutsideVolume;
+   mResolvedDescription->mRolloffFactor = mProfileDesc.mRolloffFactor;
+   mResolvedDescription->mFadeInTime = mProfileDesc.mFadeInTime;
+   mResolvedDescription->mFadeOutTime = mProfileDesc.mFadeOutTime;
+   mResolvedDescription->mFadeLoops = mProfileDesc.mFadeLoops;
+   mResolvedDescription->mScatterDistance = mProfileDesc.mScatterDistance;
+   mResolvedDescription->mStreamPacketSize = mProfileDesc.mStreamPacketSize;
+   mResolvedDescription->mStreamReadAhead = mProfileDesc.mStreamReadAhead;
+   mResolvedDescription->mPriority = mProfileDesc.mPriority;
+   mResolvedDescription->mSourceGroup = mProfileDesc.mSourceGroup;
+   mResolvedDescription->mFadeInEase = mProfileDesc.mFadeInEase;
+   mResolvedDescription->mSourceGroup = mProfileDesc.mSourceGroup;
+}
+
 SFXProfile* SoundAsset::buildProfile()
 {
-   SFXProfile* profile = new SFXProfile(&mProfileDesc, mSoundFile[0], mPreload);
+   SFXProfile* profile = new SFXProfile(mResolvedDescription, mSoundFile[0], mPreload);
    mSoundResource[0] = profile->getResource();
    return profile;
 }
@@ -527,7 +573,7 @@ SFXPlayList* SoundAsset::buildPlaylist()
          continue;
 
       // Build child SFXProfile
-      SFXProfile* child = new SFXProfile(&mProfileDesc, mSoundFile[i], mPreload);
+      SFXProfile* child = new SFXProfile(mResolvedDescription, mSoundFile[i], mPreload);
       mSoundResource[i] = child->getResource();
       pl->mSlots.mTrack[i] = child;
    }
@@ -544,13 +590,14 @@ void SoundAsset::populateSFXTrack(void)
 
    mIsPlaylist = (count > 1);
 
-   if (mResolvedTrack)
+   buildDescription();
+
+   if (mResolvedTrack && mResolvedDescription)
    {
-      if (mResolvedTrack->isProperlyAdded() && !mResolvedTrack->isDeleted())
-      {
-         // Track will be referenced through simobjectptr
-         mResolvedTrack->deleteObject();
-      }
+      if (SFX)
+         SFX->notifyDescriptionChanged(mResolvedDescription);
+
+      return;
    }
 
    mResolvedTrack = NULL;
@@ -618,7 +665,7 @@ void SoundAsset::onTamlCustomRead(const TamlCustomNodes& customNodes)
 
 DefineEngineMethod(SoundAsset, getSoundPath, const char*, (), , "")
 {
-   return object->getSoundPath();
+   return object->getSoundFile();
 }
 
 DefineEngineMethod(SoundAsset, playSound, S32, (Point3F position), (Point3F::Zero),

@@ -133,7 +133,6 @@ public:
 
 private:
    StringTableEntry        mSoundFile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
-   StringTableEntry        mSoundPath[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
    Resource<SFXResource>   mSoundResource[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
 
    SFXDescription          mProfileDesc;
@@ -144,6 +143,7 @@ private:
    bool                    mPreload;
    bool                    mIsPlaylist;
    SFXTrack*               mResolvedTrack;
+   SFXDescription*         mResolvedDescription;
 
 public:
    SoundAsset();
@@ -167,10 +167,9 @@ public:
    void                    setSoundFile(StringTableEntry pSoundFile, U32 slot = 0);
    inline StringTableEntry getSoundFile(U32 slot = 0) { return mSoundFile[slot]; }
    inline StringTableEntry getRelativeSoundFile(U32 slot = 0) { return collapseAssetFilePath(mSoundFile[slot]); }
-   inline StringTableEntry getSoundPath(const U32 slot = 0) const { return mSoundPath[slot]; };
 
    SFXTrack* getSFXTrack() { load(); return mResolvedTrack; }
-   SFXDescription* getSfxDescription() { return &mProfileDesc; }
+   SFXDescription* getSfxDescription() { return mResolvedDescription ? mResolvedDescription : &mProfileDesc; }
    bool isPlaylist(){ return mIsPlaylist; }
 
    bool isLoop() { return mProfileDesc.mIsLooping; }
@@ -180,8 +179,8 @@ public:
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<SoundAsset>* materialAsset);
    static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<SoundAsset>* matAsset);
 
+   void        buildDescription();
    SFXProfile* buildProfile();
-
    SFXPlayList* buildPlaylist();
 
    void populateSFXTrack(void);

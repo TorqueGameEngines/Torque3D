@@ -22,23 +22,28 @@
 
 singleton SFXAmbience( AudioAmbienceDefault )
 {
-   environment = AudioEnvOff;
+   environment = "AudioEnvGeneric";
+   dopplerFactor = "1";
 };
 
 singleton SFXAmbience( AudioAmbienceOutside )
 {
-   environment = AudioEnvPlain;
+   environment = "AudioEnvPlain";
    states[ 0 ] = AudioLocationOutside;
+   dopplerFactor = "1";
 };
 
 singleton SFXAmbience( AudioAmbienceInside )
 {
-   environment = AudioEnvRoom;
+   environment = "AudioEnvRoom";
    states[ 0 ] = AudioLocationInside;
+   dopplerFactor = "1";
 };
 
 singleton SFXAmbience( AudioAmbienceUnderwater )
 {
-   environment = AudioEnvUnderwater;
-   states[ 0 ] = AudioLocationUnderwater;
+   environment = "AudioEnvUnderwater";
+   states[0] = AudioLocationUnderwater;
+   dopplerFactor = "0.5";
+   speedOfSound = "1500.0"
 };

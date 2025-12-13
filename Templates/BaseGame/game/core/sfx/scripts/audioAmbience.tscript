@@ -45,5 +45,5 @@ singleton SFXAmbience( AudioAmbienceUnderwater )
    environment = "AudioEnvUnderwater";
    states[0] = AudioLocationUnderwater;
    dopplerFactor = "0.5";
-   speedOfSound = "1500.0"
+   speedOfSound = "1500.0";
 };

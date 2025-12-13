@@ -184,8 +184,8 @@ function addLanguage(%langTable, %filename, %alias)
     %needLangMap = true;
     if(isFile("./langs/languageMap"))
         %needLangMap = false;
-
-    CompileLanguage("./langs/"@ %filename @".tscript", %needLangMap);
+    
+    CompileLanguage("./langs/"@ %filename @".txt", %needLangMap);
     %langTable.addLanguage("./langs/"@ %filename @".lso", %alias);
 }
 

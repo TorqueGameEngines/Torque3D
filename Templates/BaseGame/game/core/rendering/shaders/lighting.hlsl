@@ -226,9 +226,11 @@ float getDistanceAtt( float3 unormalizedLightVector , float invSqrAttRadius )
 
 float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 {
+   if (surface.depth >= 0.9999f)
+      return float3(0.0,0.0,0.0);
+      
    // Compute Fresnel term
    float3 F = F_Schlick(surface.f0, surfaceToLight.HdotV);
-   F += lerp(0.04f, surface.baseColor.rgb, surface.metalness);
     
    // GGX Normal Distribution Function
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughness);
@@ -596,8 +598,9 @@ float4 computeForwardProbes(Surface surface,
       irradiance = lerp(irradiance,TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.N, skylightCubemapIdx, 0).xyz,alpha);
       specular = lerp(specular,TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
    }
-   float reflectionOpacity = clamp(surface.baseColor.a, max(length(specular),length(irradiance)),1.0);
-   surface.baseColor.rgb = lerp(surface.baseColor.rgb, float3(1.0,1.0,1.0), reflectionOpacity*surface.roughness);
+
+   float reflectionOpacity = clamp(surface.baseColor.a, max(length(specular),length(irradiance))*surface.roughness,1.0);
+   surface.baseColor.rgb = lerp(surface.baseColor.rgb, float3(reflectionOpacity,reflectionOpacity,reflectionOpacity), surface.roughness);
    surface.Update();
    float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    float3 diffuse = irradiance * lerp(surface.baseColor.rgb, 0.04f, surface.metalness);

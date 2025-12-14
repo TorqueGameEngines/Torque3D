@@ -605,10 +605,11 @@ vec4 computeForwardProbes(Surface surface,
    finalColor *= surface.ao;
    
    if(isCapturing == 1)
-      return vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
+      return vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),surface.baseColor.a);
    else
    {
-      return vec4(finalColor, 0);
+      float reflectionOpacity = min(max(surface.baseColor.a,length(specular+irradiance)),1.0);
+      return vec4(finalColor, reflectionOpacity);
    }
 }
 

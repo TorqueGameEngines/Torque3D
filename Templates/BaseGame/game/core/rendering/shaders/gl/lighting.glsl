@@ -592,11 +592,14 @@ vec4 computeForwardProbes(Surface surface,
       specular = mix(specular,textureLod(specularCubemapAR, vec4(surface.R, skylightCubemapIdx), lod).xyz, alpha);
    }
 
-   float reflectionOpacity = clamp(surface.baseColor.a, pow(max(length(specular),length(irradiance)),2.2),1.0);
-   float reflectionInfluence = max(surface.metalness, reflectionOpacity);  
+   float reflectionOpacity = clamp(surface.baseColor.a, max(length(specular),length(irradiance)),1.0);
+   float reflectionInfluence = max(surface.metalness, reflectionOpacity);
+   surface.metalness = reflectionInfluence;
+   surface.baseColor.rgb = lerp(surface.baseColor.rgb, vec3(1.0,1.0,1.0), reflectionInfluence);
+   updateSurface(surface);
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
-   vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), reflectionInfluence);
-   vec3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*reflectionInfluence;
+   vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
+   vec3 specularCol = ((specular * surface.f0) * envBRDF.x + envBRDF.y)*surface.metalness;
    
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));

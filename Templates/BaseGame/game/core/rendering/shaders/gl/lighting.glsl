@@ -593,9 +593,7 @@ vec4 computeForwardProbes(Surface surface,
    }
 
    float reflectionOpacity = clamp(surface.baseColor.a, max(length(specular),length(irradiance)),1.0);
-   float reflectionInfluence = max(surface.metalness, reflectionOpacity);
-   surface.metalness = reflectionInfluence;
-   surface.baseColor.rgb = lerp(surface.baseColor.rgb, vec3(1.0,1.0,1.0), reflectionInfluence);
+   surface.baseColor.rgb = lerp(surface.baseColor.rgb, vec3(1.0,1.0,1.0), reflectionOpacity*surface.roughness);
    updateSurface(surface);
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
@@ -613,7 +611,7 @@ vec4 computeForwardProbes(Surface surface,
       return vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),surface.baseColor.a);
    else
    {
-      return vec4(finalColor, reflectionInfluence);
+      return vec4(finalColor, reflectionOpacity);
    }
 }
 

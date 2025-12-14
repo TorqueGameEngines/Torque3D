@@ -596,11 +596,8 @@ float4 computeForwardProbes(Surface surface,
       irradiance = lerp(irradiance,TORQUE_TEXCUBEARRAYLOD(irradianceCubemapAR, surface.N, skylightCubemapIdx, 0).xyz,alpha);
       specular = lerp(specular,TORQUE_TEXCUBEARRAYLOD(specularCubemapAR, surface.R, skylightCubemapIdx, lod).xyz,alpha);
    }
-
    float reflectionOpacity = clamp(surface.baseColor.a, max(length(specular),length(irradiance)),1.0);
-   float reflectionInfluence = max(surface.metalness, reflectionOpacity);
-   surface.metalness = reflectionInfluence;
-   surface.baseColor.rgb = lerp(surface.baseColor.rgb, float3(1.0,1.0,1.0), reflectionInfluence);
+   surface.baseColor.rgb = lerp(surface.baseColor.rgb, float3(1.0,1.0,1.0), reflectionOpacity*surface.roughness);
    surface.Update();
    float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    float3 diffuse = irradiance * lerp(surface.baseColor.rgb, 0.04f, surface.metalness);
@@ -618,7 +615,7 @@ float4 computeForwardProbes(Surface surface,
       return float4(lerp((finalColor), surface.baseColor.rgb, surface.metalness),surface.baseColor.a);
    else
    {
-      return float4(finalColor, reflectionInfluence);
+      return float4(finalColor, reflectionOpacity);
    }
 }
 

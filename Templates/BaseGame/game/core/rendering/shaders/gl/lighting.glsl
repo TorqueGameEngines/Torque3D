@@ -226,9 +226,11 @@ float getDistanceAtt( vec3 unormalizedLightVector , float invSqrAttRadius )
 
 vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 {
+   if (surface.depth >= 0.9999f)
+      return float3(0.0,0.0,0.0);
+      
    // Compute Fresnel term
    vec3 F = F_Schlick(surface.f0, surfaceToLight.HdotV);
-   F += lerp(vec3(0.04f,0.04f,0.04f), surface.baseColor.rgb, surface.metalness);
     
    // GGX Normal Distribution Function
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughness);
@@ -592,9 +594,12 @@ vec4 computeForwardProbes(Surface surface,
       specular = mix(specular,textureLod(specularCubemapAR, vec4(surface.R, skylightCubemapIdx), lod).xyz, alpha);
    }
 
+   float reflectionOpacity = clamp(surface.baseColor.a, max(length(specular),length(irradiance))*surface.roughness,1.0);
+   surface.baseColor.rgb = lerp(surface.baseColor.rgb, vec3(reflectionOpacity,reflectionOpacity,reflectionOpacity), surface.roughness);
+   updateSurface(surface);
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
-   vec3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
+   vec3 specularCol = ((specular * surface.f0) * envBRDF.x + envBRDF.y)*surface.metalness;
    
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
@@ -605,10 +610,10 @@ vec4 computeForwardProbes(Surface surface,
    finalColor *= surface.ao;
    
    if(isCapturing == 1)
-      return vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
+      return vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),surface.baseColor.a);
    else
    {
-      return vec4(finalColor, 0);
+      return vec4(finalColor, reflectionOpacity);
    }
 }
 

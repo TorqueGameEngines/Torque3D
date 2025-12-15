@@ -827,7 +827,7 @@ void Vehicle::updatePos(F32 dt)
       {
          F32 k = mRigid.getKineticEnergy();
          F32 G = mNetGravity* dt * TickMs / mDataBlock->integration;
-         F32 Kg = 0.5 * mRigid.mass * G * G;
+         F32 Kg = mRigid.mass * G * G * TickSec;
          if (k < sRestTol * Kg && ++restCount > sRestCount)
             mRigid.setAtRest();
       }

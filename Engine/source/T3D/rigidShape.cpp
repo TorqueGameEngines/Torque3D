@@ -1138,7 +1138,7 @@ void RigidShape::updatePos(F32 dt)
 
    // Update collision information based on our current pos.
    bool collided = false;
-   if (!mDisableMove)
+   if (!mRigid.atRest && !mDisableMove)
    {
       collided = updateCollision(dt);
 
@@ -1151,7 +1151,7 @@ void RigidShape::updatePos(F32 dt)
       {
          F32 k = mRigid.getKineticEnergy();
          F32 G = mNetGravity* dt * TickMs / mDataBlock->integration;
-         F32 Kg = mRigid.mass * G * G;
+         F32 Kg = mRigid.mass * G * G * TickSec;
          if (k < sRestTol * Kg && ++restCount > sRestCount)
             mRigid.setAtRest();
       }
@@ -1447,7 +1447,7 @@ void RigidShape::updateWorkingCollisionSet(const U32 mask)
    // working list is updated on a Tick basis, which means we only expand our box by
    // the possible movement in that tick, plus some extra for caching purposes
    Box3F convexBox = mConvex.getBoundingBox(getTransform(), getScale());
-   F32 len = (mRigid.linVelocity.len() + 50) * TickSec;
+   F32 len = (mRigid.linVelocity.len() + mDataBlock->getShape()->mRadius) * TickSec;
    F32 l = (len * 1.1) + 0.1;  // fudge factor
    convexBox.minExtents -= Point3F(l, l, l);
    convexBox.maxExtents += Point3F(l, l, l);

@@ -613,7 +613,8 @@ float4 computeForwardProbes(Surface surface,
       return float4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
    else
    {
-      return float4(finalColor, 0);
+      float reflectionOpacity = min(surface.baseColor.a+surface.baseColor.a*length(finalColor),1.0);
+      return float4(finalColor, reflectionOpacity);
    }
 }
 

@@ -3055,7 +3055,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    Var *ibl = (Var *)LangElement::find("ibl");
    if (!ibl)
    {
-      ibl = new Var("ibl", "float3");
+      ibl = new Var("ibl", "float4");
    }
 
    Var* eyePos = (Var*)LangElement::find("eyePosWorld");
@@ -3086,7 +3086,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    //Reflection vec
    String computeForwardProbes = String("   @ = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String("@,@,@,@,@,@,\r\n\t\t");
-   computeForwardProbes += String("@,@).rgb; \r\n");
+   computeForwardProbes += String("@,@); \r\n");
 
    meta->addStatement(new GenOp(computeForwardProbes.c_str(), new DecOp(ibl), surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray, eyePos,
       skylightCubemapIdx, SkylightDamp, BRDFTexture, WetnessTexture, accumTime, dampness,
@@ -3100,7 +3100,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
       ambient->constSortPos = cspPass;
    }
    meta->addStatement(new GenOp("   @.rgb *= @.rgb;\r\n", ibl, ambient));
-   meta->addStatement(new GenOp("   @.rgb = @.rgb;\r\n", curColor, ibl));
+   meta->addStatement(new GenOp("   @ = @;\r\n", curColor, ibl));
 
    output = meta;
 }

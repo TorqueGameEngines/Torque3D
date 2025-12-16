@@ -195,3 +195,26 @@ function switchLanguage(%language) //use here the #n as it's the order of inclus
 	getCoreLangTable().setCurrentLanguage(%language);
 	Canvas.setContent(Canvas.getContent());
 }
+
+function addKeyRemap(%name, %actionMap, %device, %command, %description)
+{
+   if(%name $= "" ||
+      %actionMap $= "" ||
+      %device $= "" ||
+      %command $= "")
+   {
+      error("addKeybindRemap() - tried to add a remap entry, but didn't have all the keeded info!");
+      return;
+   }
+
+   // "mouse" is accepted as a convenience, but the remappable actions related functions treat it same as "keyboard".
+   if(%device $= "mouse")
+      %device = "keyboard";
+
+   $RemapName[$RemapCount] = %name;
+   $RemapCmd[$RemapCount] = %command;
+   $RemapActionMap[$RemapCount] = %actionMap;
+   $RemapDevice[$RemapCount] = %device;
+   $RemapDescription[$RemapCount] = %description;
+   $RemapCount++;
+}

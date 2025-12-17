@@ -244,6 +244,7 @@ void LightAnimData::AnimValue<COUNT>::write( BitStream *stream ) const
       stream->write( value2[i] );
       stream->write( period[i] );
       stream->writeString( keys[i] );
+      stream->writeFlag(smooth[i]);
    }
 }
 
@@ -256,6 +257,7 @@ void LightAnimData::AnimValue<COUNT>::read( BitStream *stream )
       stream->read( &value2[i] );
       stream->read( &period[i] );
       keys[i] = stream->readSTString();
+      smooth[i] = stream->readFlag();
    }
 }
 

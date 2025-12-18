@@ -140,7 +140,7 @@ DefineEngineMethod(className, set##name, void, (const char* assetName), , assetT
 #define PACKDATA_ASSET(name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
    {\
-      stream->writeString(m##name##Asset.getAssetId());\
+      AssetDatabase.packDataAsset(stream, m##name##Asset.getAssetId());\
    }\
    else if(stream->writeFlag(m##name##Name != StringTable->EmptyString()))\
    {\
@@ -151,7 +151,7 @@ DefineEngineMethod(className, set##name, void, (const char* assetName), , assetT
 #define UNPACKDATA_ASSET(name)\
    if (stream->readFlag())\
    {\
-      m##name##AssetId = stream->readSTString();\
+      m##name##AssetId = AssetDatabase.unpackDataAsset(stream);\
       _set##name(m##name##AssetId);\
    }\
    else if (stream->readFlag())\
@@ -168,8 +168,7 @@ DefineEngineMethod(className, set##name, void, (const char* assetName), , assetT
 #define PACK_ASSET(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
    {\
-      NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
+      AssetDatabase.packDataAsset(stream, m##name##Asset.getAssetId());\
    }\
    else if (stream->writeFlag(m##name##Name != StringTable->EmptyString()))\
    {\
@@ -181,7 +180,7 @@ DefineEngineMethod(className, set##name, void, (const char* assetName), , assetT
 #define UNPACK_ASSET(netconn, name)\
    if (stream->readFlag())\
    {\
-      m##name##AssetId = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
+      m##name##AssetId = AssetDatabase.unpackDataAsset(stream);\
       _set##name(m##name##AssetId);\
    }\
    else if (stream->readFlag())\

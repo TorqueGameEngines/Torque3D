@@ -120,6 +120,7 @@ namespace ColladaUtils
       eAnimTimingType animTiming;         // How to import timing data as frames, seconds or milliseconds
       S32            animFPS;             // FPS value to use if timing is set in frames and the animations does not have an fps set
       F32            formatScaleFactor;   // Scale factor applied to convert the shape format default unit to meters
+      MatrixF        axisCorrectionMat;
 
       ImportOptions()
       {

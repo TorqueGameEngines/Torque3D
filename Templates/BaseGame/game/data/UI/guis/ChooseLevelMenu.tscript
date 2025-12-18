@@ -433,9 +433,9 @@ function ChooseLevelMenuOption(%val)
    if(%val)
    {
       if(ChooseLevelMenu.currentMenuIdx == 0)
-         ToggleGameMode(ChooseLevelMenu.listPosition);
+         ToggleGameMode($MenuList.listPosition);
       else if(ChooseLevelMenu.currentMenuIdx == 1)
-         ChooseLevelBegin(ChooseLevelMenu.listPosition);
+         ChooseLevelBegin($MenuList.listPosition);
    }
 }
 

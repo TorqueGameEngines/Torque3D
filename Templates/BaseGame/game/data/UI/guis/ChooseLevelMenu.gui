@@ -388,7 +388,7 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
          horizSizing = "left";
          vertSizing = "center";
          profile = "GuiMenuButtonProfile";
-         command = "ChooseLevelBegin(1);";
+         command = "ChooseLevelMenuOption(1);";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiIconButtonCtrl(ChooseLevelBackBtn) {

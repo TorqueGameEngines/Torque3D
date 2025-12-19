@@ -465,7 +465,7 @@ vec4 computeForwardProbes(Surface surface,
 {
    if (getFlag(surface.matFlag, 2))
    {
-      return vec4(0,0,0,0);
+      return vec4(0,0,0,surface.baseColor.a);
    }
    
    int i = 0;

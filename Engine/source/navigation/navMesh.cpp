@@ -195,9 +195,9 @@ NavMesh::NavMesh()
 
    mCellSize = mCellHeight = 0.2f;
    mWalkableHeight = 2.0f;
-   mWalkableClimb = 0.3f;
+   mWalkableClimb = 0.5f;
    mWalkableRadius = 0.5f;
-   mWalkableSlope = 40.0f;
+   mWalkableSlope = 45.0f;
    mBorderSize = 1;
    mDetailSampleDist = 6.0f;
    mDetailSampleMaxError = 1.0f;

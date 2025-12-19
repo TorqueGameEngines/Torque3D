@@ -467,7 +467,7 @@ float4 computeForwardProbes(Surface surface,
 {
    if (getFlag(surface.matFlag, 2))
    {
-      return float4(0,0,0,0);
+      return float4(0,0,0,surface.baseColor.a);
    }
 
    int i = 0;

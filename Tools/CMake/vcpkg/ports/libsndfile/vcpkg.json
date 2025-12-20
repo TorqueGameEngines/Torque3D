@@ -17,8 +17,7 @@
     }
   ],
   "default-features": [
-    "external-libs",
-    "mpeg"
+    "external-libs"
   ],
   "features": {
     "experimental": {

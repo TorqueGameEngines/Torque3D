@@ -2,11 +2,19 @@ cmake_minimum_required (VERSION 3.21.0)
 set (CMAKE_CXX_STANDARD 17)
 set(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo;Release" CACHE STRING "" FORCE)
 
+find_program(GIT_EXECUTABLE git)
+if(GIT_EXECUTABLE)
+    option(GIT_IN_USE "use Git" ON)
+else()
+    option(GIT_IN_USE "use Git" OFF)
+endif()
+
 # An application name must be set first
 set(TORQUE_APP_NAME "" CACHE STRING "the app name")
 if("${TORQUE_APP_NAME}" STREQUAL "")
 	message(FATAL_ERROR "Please set TORQUE_APP_NAME first")
 endif()
+
 
 include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_macros.cmake")
 include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_configs.cmake")

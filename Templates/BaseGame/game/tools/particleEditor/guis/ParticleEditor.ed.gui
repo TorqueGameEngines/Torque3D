@@ -1,0 +1,83 @@
+//-----------------------------------------------------------------------------
+// Torque
+// Copyright GarageGames, LLC 2011
+//-----------------------------------------------------------------------------
+
+$PE_guielement_pos_single_container = "0 0";
+$PE_guielement_ext_single_container = "184 20";
+$PE_guielement_pos_name = "1 0";
+$PE_guielement_ext_name = "70 18";
+$PE_guielement_pos_slider = "74 2";
+$PE_guielement_ext_slider = "58 12";
+$PE_guielement_pos_value = "138 0";
+$PE_guielement_ext_value = "36 18";
+$PE_guielement_pos_textedit = "74 0";
+$PE_guielement_ext_textedit = "100 18";
+$PE_guielement_ext_checkbox_name = "156 18";
+$PE_guielement_pos_checkbox = "161 0";
+$PE_guielement_ext_checkbox = "15 18";
+$PE_guielement_pos_colorpicker = "158 0";
+$PE_guielement_ext_colorpicker = "18 18";
+
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(ParticleEditorGui) {
+   extent = "1280 720";
+   profile = "GuiNonModalDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "0";
+
+   new GuiWindowCollapseCtrl(PE_Window) {
+      Text = ":: Particle Editor - Emitters";
+      canMove = "0";
+      canClose = "0";
+      canMinimize = "0";
+      canMaximize = "0";
+      canCollapse = "0";
+      edgeSnap = "0";
+      position = "920 39";
+      extent = "360 1345";
+      minExtent = "300 140";
+      horizSizing = "windowRelative";
+      vertSizing = "windowRelative";
+      profile = "ToolsGuiWindowProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiTabBookCtrl(PE_TabBook) {
+         tabMargin = "0";
+         tabHeight = "20";
+         selectedPage = "0";
+         docking = "Client";
+         margin = "3 2 3 3";
+         position = "9 29";
+         extent = "342 1306";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "ToolsGuiTabBookProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "EditorTabBook";
+      };
+      
+      new GuiBitmapButtonCtrl() {
+         BitmapAsset = "ToolsModule:play_btn_n_image";
+         position = "318 25";
+         extent = "18 18";
+         horizSizing = "left";
+         profile = "ToolsGuiButtonProfile";
+         command = "ParticleEditor.updateEmitterNode();";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         ToolTip = "Play Particle Effect from Start";
+      };
+      new GuiBitmapButtonCtrl() {
+         BitmapAsset = "ToolsModule:camera_image";
+         position = "338 26";
+         extent = "16 16";
+         horizSizing = "left";
+         profile = "ToolsGuiButtonProfile";
+         command = "ParticleEditor.resetEmitterNode();";
+         tooltipProfile = "ToolsGuiToolTipProfile";
+         ToolTip = "Drops Particle Effect in front of the Camera";
+      };
+   };
+};
+//--- OBJECT WRITE END ---

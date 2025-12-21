@@ -24,6 +24,7 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once
 
 #ifndef _PARTICLE_H_
 #define _PARTICLE_H_

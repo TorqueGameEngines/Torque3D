@@ -1,0 +1,127 @@
+if(!isObject( ContextedDropdownListActionMap ) )
+{
+   new ActionMap(ContextedDropdownListActionMap){};
+   
+   BaseUIActionMap.bindCmd( keyboard, Escape, "", "ContextedDropdownListGui.toggle();");
+}
+
+
+function ContextedDropdownListGui::onWake(%this)
+{
+   %this.clearFilterText();
+}
+
+function ContextedDropdownListGui::show(%this, %listObject, %titleText, %selectCallback, %callerObject)
+{
+     %this-->tree.open(%listObject, false);
+     %this-->tree.expandItem(1, true);
+     
+     //Epxand any sub-categories as appropriate
+     foreach(%child in %listObject)
+     {
+         %childId = %this-->tree.findItemByObjectId(%child);
+         %this-->tree.expandItem(%childId, true);
+     }
+     %this.callback = %selectCallback;
+     %this-->titleText.setText(%titleText);
+     
+     Canvas.pushDialog(ContextedDropdownListGui);
+     
+     if(isObject(%callerObject))
+     {
+         %canvasExt = Canvas.getExtent();
+         %contextListExt = ContextedDropdownList.extent;
+         %callerGlobalPos = %callerObject.getGlobalPosition();
+         %decoyPad = ContextedDropdownList-->window.position;
+
+         %width = %callerObject.extent.x + %decoyPad;
+         if(%width < ContextedDropdownList.minExtent.x)
+            %width = ContextedDropdownList.minExtent.x;
+            
+         %callerGlobalPos.x -= ContextedDropdownList-->window.position.x;
+         %callerGlobalPos.y -= ContextedDropdownList-->window.position.y - %callerObject.extent.y;
+
+         //bump us to fit to the screen if needbe
+         %xOvershoot = %callerGlobalPos.x + %contextListExt.x;
+         if(%xOvershoot > %canvasExt.x)
+            %callerGlobalPos.x -= %xOvershoot - %canvasExt.x;
+
+         //If we would go off the bottom of the screen, flip is to be above the callera object's position
+         %yOvershoot = %callerGlobalPos.y + %contextListExt.y;
+         if(%yOvershoot > %canvasExt.y)
+         {
+            %callerGlobalPos.y = %callerGlobalPos.y - %callerObject.extent.y - ContextedDropdownList.extent.y - %decoyPad.y;
+         }
+            
+          ContextedDropdownList.resize(%callerGlobalPos.x, %callerGlobalPos.y, %width, ContextedDropdownList.extent.y);
+     }
+     
+     %this-->scroll.scrollToTop();
+     %this-->Tree.clearSelection();
+}
+
+function ContextedDropdownListGui::seekText(%this, %text)
+{
+   %itemId = %this-->Tree.findItemByName(%text);
+   %this-->Tree.scrollVisible(%itemId);
+   %this-->Tree.clearSelection();
+   %this-->Tree.addSelection(%itemId);
+}
+
+function ContextedDropdownListGui::seekItemObject(%this, %obj)
+{
+   %itemId = %this-->Tree.findItemByObjectId(%obj.getId());
+   %this-->Tree.scrollVisible(%itemId);
+   %this-->Tree.clearSelection();
+   %this-->Tree.addSelection(%itemId);
+}
+
+function ContextedDropdownListGui::toggle(%this)
+{
+   if ( ContextedDropdownListGui.isAwake()  )
+   {
+      Canvas.popDialog(ContextedDropdownListGui);
+   }
+   else
+   {
+      Canvas.pushDialog(ContextedDropdownListGui);
+   }
+}
+
+function ContextedDropdownListDecoy::onMouseUp()
+{
+   ContextedDropdownListGui.toggle();
+}
+
+function ContextedDropdownListDecoy::onRightMouseUp()
+{
+   ContextedDropdownListGui.toggle();
+}
+
+function ContextedDropdownListGui::updateFilterText(%this)
+{
+   %filterText = %this-->textFilter.getText(); 
+   %this-->tree.setFilterText(%filterText); 
+}
+
+function ContextedDropdownListGui::clearFilterText(%this)
+{
+   %this-->textFilter.setText("");
+   %this-->tree.setFilterText("");
+}
+
+function ContextedDropdownListGui::select(%this)
+{
+   %obj = %this-->tree.getSelectedObject(0);
+   
+   %command = %this.callback @ "(" @ %obj @ ");";
+   echo("SELECT COMMAND: " @ %command);
+   eval(%command);
+   
+   ContextedDropdownListGui.toggle();
+}
+
+function ContextedDropdownListInputHandler::onInputEvent(%this)
+{
+   ContextedDropdownListGui.toggle();
+}

@@ -1,0 +1,398 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+
+$PE_AFXZodiacEditor_DEFAULT_FILENAME = "data/managedZodiacData." @ $TorqueScriptFileExtension;
+
+
+//=============================================================================================
+//    PE_AFXZodiacEditor.
+//=============================================================================================
+function PE_AFXZodiacEditor::init(%this)
+{
+   datablock afxZodiacData(PE_AFXZodiacEditor_NotDirtyEmitter)
+   {
+   };
+   
+   %this.unlistedSet.add(PE_AFXZodiacEditor_NotDirtyEmitter);
+}
+
+function PE_AFXZodiacEditor::openEditorTab(%this)
+{
+   PE_Window.text = ":: Particle Editor - AFX Zodiacs";
+   %this.guiSync();
+   ParticleEditor.activeEditor = %this;
+
+   if( !%this.dirty )
+      %this.setNotDirty();
+     
+   if( isObject( $ParticleEditor::zodiacNode ) )
+      $ParticleEditor::zodiacNode.setHidden(false);
+}
+
+function PE_AFXZodiacEditor::closeEditorTab(%this)
+{
+   if( isObject( $ParticleEditor::zodiacNode) )
+      $ParticleEditor::zodiacNode.delete();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXZodiacEditor::guiSync( %this )
+{
+   %this-->inspector.refresh();
+}
+
+function PE_AFXZodiacEditor::resetVizNode(%this, %tform)
+{
+   /*if( !isObject( $ParticleEditor::zodiacNode ) )
+   {
+      if( !isObject( TestZodiacData ) )
+      {
+         datablock ZodiacData( TestZodiacData )
+         {
+            timeMultiple = 1;
+         };
+      }
+
+      $ParticleEditor::zodiacNode = new afxZodiacPolysoupRenderer()
+      {
+         position = getWords( %tform, 0, 2 );
+         rotation = getWords( %tform, 3, 6 );
+         datablock = TestZodiacData;
+         parentGroup = MissionCleanup;
+      };
+   }
+   else
+   {
+      $ParticleEditor::zodiacNode.setTransform( %tform );
+      
+      %clientObject = $ParticleEditor::zodiacNode.getClientObject();
+      if( isObject( %clientObject ) )
+         %clientObject.setTransform( %tform );
+      
+      ParticleEditor.updateVizNode();
+   }
+   if (EWorldEditor.getSelectionSize()>0)
+   {
+        %obj = EWorldEditor.getSelectedObject(0);
+        if (%obj.isMemberOfClass("afxZodiacData"))
+            $ParticleEditor::zodiacNode.sethidden(true);
+   }  */
+}
+
+function PE_AFXZodiacEditor::updateVizNode(%this)
+{
+   /*if( isObject( $ParticleEditor::zodiacNode ) )
+   {
+      %id = %this.currZodiac;
+      
+      %clientObject = $ParticleEditor::zodiacNode.getClientObject();
+      if( isObject( %clientObject ) )
+         %clientObject.assignFieldsFrom( %id );
+   }
+   else
+      %this.resetVizNode();  */
+}
+
+//------------------------------------------------------------------------------
+
+function PE_AFXZodiacEditor::selectObject(%this, %obj)
+{
+   if( isObject(%obj )
+       && %obj.getName() $= %this-->popupMenu.text )
+      return;
+      
+   //FIXME: disregards particle tab dirty state
+   if( %this.dirty )
+   {   
+      %savedZodiac = %this.currZodiac;
+      toolsMessageBoxYesNoCancel("Save Existing Zodiac?", 
+         "Do you want to save changes to <br><br>" @ %savedZodiac.getName(), 
+         "PE_AFXZodiacEditor.saveZodiac(" @ %savedZodiac@ "); PE_AFXZodiacEditor.loadNewZodiac(" @ %obj @ ");", 
+         "PE_AFXZodiacEditor.saveZodiacDialogDontSave(" @ %savedZodiac @ "); PE_AFXZodiacEditor.loadNewZodiac(" @ %obj @ ");"
+      );
+   }
+   else
+   {
+      %this.loadNewZodiac(%obj);
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXZodiacEditor::loadNewZodiac( %this, %zodiac )
+{
+   %this-->popupMenu.setText(%zodiac.getName());
+   %this-->inspector.inspect(%zodiac);
+   
+   if( isObject( %zodiac ) )
+      %current = %zodiac.getId();
+   else
+      %current = %this-->popupMenu.text;
+   
+   %this.currZodiac = %current;
+   PE_AFXZodiacEditor_NotDirtyZodiac.assignFieldsFrom( %current );
+   PE_AFXZodiacEditor_NotDirtyZodiac.originalName = %current.name;
+   
+   %this.guiSync();
+   %this.setNotDirty();
+      
+   //PE_ParticleEditor.loadNewParticle( getWord( %current.particles, 0 ) );
+
+   %this.guiSync();
+   
+   PE_AFXZodiacEditor.updateVizNode();
+}
+
+//---------------------------------------------------------------------------------------------
+function PE_AFXZodiacEditor::onInspectorFieldModified(%this, %object, %fieldName, %arrayIndex, %oldValue, %newValue)
+{
+   %action = ParticleEditor.createUndo(ActionUpdateActiveZodiac, "Update Active AFX Zodiac");
+   %action.zodiac = %object;
+   %action.field = %fieldName;
+   %action.isSlider = false;
+   %action.onMouseUp = true;
+   %action.newValue = %newValue;
+   %action.oldValue = %oldValue;
+   
+   ParticleEditor.submitUndo( %action );
+}
+
+// Generic updateZodiac method
+function PE_AFXZodiacEditor::updateZodiac( %this, %propertyField, %value, %isSlider, %onMouseUp )
+{
+   PE_AFXZodiacEditor.setDirty();
+         
+   %zodiac = %this.currZodiac;
+      
+   %last = Editor.getUndoManager().getUndoAction(Editor.getUndoManager().getUndoCount() - 1);
+   if( (%isSlider) && (%last.isSlider) && (!%last.onMouseUp) )
+   {
+      %last.field = %propertyField;
+      %last.isSlider = %isSlider;
+      %last.onMouseUp = %onMouseUp;
+      %last.newValue = %value;
+   }
+   else
+   {
+      %action = ParticleEditor.createUndo(ActionUpdateActiveZodiac, "Update Active AFX Zodiac");
+      %action.zodiac = %zodiac;
+      %action.field = %propertyField;
+      %action.isSlider = %isSlider;
+      %action.onMouseUp = %onMouseUp;
+      %action.newValue = %value;
+      %action.oldValue = %zodiac.getFieldValue( %propertyField );
+      
+      ParticleEditor.submitUndo( %action );
+   }
+   	
+	%zodiac.setFieldValue( %propertyField, %value );
+	%zodiac.reload();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXZodiacEditor::setDirty( %this )
+{
+   %this.text = "*Zodiac";
+   %this.dirty = true;
+   
+   if(!startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = "*" @ %this-->PopupMenu.text;
+   }
+   
+   %zodiac = %this.currZodiac;
+   %filename = %zodiac.getFilename();
+   %editorFilename = "tools/particleEditor/scripts/afxZodiacEditor.ed." @ $TorqueScriptFileExtension;
+   
+   if( %filename $= "" || %filename $= %editorFilename )
+      %this.saver.setDirty( %zodiac, $PE_AFXZodiacEditor_DEFAULT_FILENAME );
+   else
+      %this.saver.setDirty( %zodiac );
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXZodiacEditor::setNotDirty( %this )
+{   
+   PE_AFXZodiacEditor.text = "Zodiac";
+   PE_AFXZodiacEditor.dirty = false;
+   
+   if(startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = stripChars(%this-->PopupMenu.text, "*");
+   }
+   
+   %this.saver.clearAll();
+}
+
+//---------------------------------------------------------------------------------------------
+
+// Create Functionality
+function PE_AFXZodiacEditor::showNewDialog( %this )
+{
+   if( PE_AFXZodiacEditor.dirty )
+   {
+      toolsMessageBoxYesNoCancel("Save Zodiac Changes?", 
+         "Do you wish to save the changes made to the <br>current zodiac before changing the zodiac?", 
+         "PE_AFXZodiacEditor.saveZodiac( " @ PE_AFXZodiacEditor.currZodiac.getName() @ " ); PE_AFXZodiacEditor.createZodiac();", 
+         "PE_AFXZodiacEditor.saveZodiacDialogDontSave( " @ PE_AFXZodiacEditor.currZodiac.getName() @ " ); PE_AFXZodiacEditor.createZodiac();"
+      );
+   }
+   else
+   {
+      PE_AFXZodiacEditor.createZodiac();
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXZodiacEditor::createZodiac( %this )
+{
+   AssetBrowser_SelectModule.showDialog("PE_AFXZodiacEditor.pickedNewZodiacTargetModule");
+   AssetBrowser_SelectModuleWindow.selectWindow();
+}
+
+function PE_AFXZodiacEditor::pickedNewZodiacTargetModule( %this, %module )
+{
+   ParticleEditorCreatePrompt.show("Zodiac", "afxZodiacData", "PE_AFXZodiacEditor.doCreateNewZodiac(\"" @ %module @ "\");" );
+}
+
+function PE_AFXZodiacEditor::doCreateNewZodiac( %this, %module )
+{
+   //Sanity checks
+   %newName = ParticleEditorCreatePrompt-->nameText.getText();
+   if(%newName $= "")
+   {
+      toolsMessageBoxOK("Error", "New Zodiac requires a name!");
+      return;
+   }
+   
+   Canvas.popDialog(ParticleEditorCreatePrompt);
+   
+   %sourceDB = ParticleEditorCreatePrompt-->CopySourceDropdown.getText();
+   
+   if(%sourceDB $= "")
+      %sourceDB = DefaultZodiac;
+   
+   %moduleDef = ModuleDatabase.findModule(%module);
+   PE_AFXZodiacEditor.targetModule = %module;
+   $PE_AFXZodiacEditor_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedZodiacData." @ $TorqueScriptFileExtension;
+   
+   if(!isDirectory(filePath($PE_AFXZodiacEditor_DEFAULT_FILENAME)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath($PE_AFXZodiacEditor_DEFAULT_FILENAME));
+   }
+   
+   // Create a new zodiac.
+   %zodiac = getUniqueName( %newName );
+   eval("datablock ZodiacData( " @ %zodiac @ " : " @ %sourceDB @ " ){};");
+   
+   // Submit undo.
+   
+   %action = ParticleEditor.createUndo( ActionCreateNewZodiac, "Create New AFX Zodiac" );
+   %action.prevZodiac = PE_AFXZodiacEditor.currZodiac;
+   %action.zodiac = %zodiac.getId();
+   %action.zodiacName = %zodiac;
+
+   ParticleEditor.submitUndo( %action );
+
+   // Execute action.
+   %action.redo();
+   
+   %this.saver.setDirty(%zodiac, $PE_AFXZodiacEditor_DEFAULT_FILENAME);
+   
+   %this.loadNewZodiac(%zodiac);
+   %this.setDirty();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXZodiacEditor::showDeleteDialog( %this )
+{
+   if( PE_AFXZodiacEditor.currZodiac.getName() $= "DefaultZodiac" )
+   {
+      toolsMessageBoxOK( "Error", "Cannot delete DefaultZodiac");
+      return;
+   }
+   
+   if( isObject( PE_AFXZodiacEditor.currZodiac ) )
+   {
+      toolsMessageBoxYesNoCancel("Delete Zodiac?", 
+         "Are you sure you want to delete<br><br>" @ PE_AFXZodiacEditor.currZodiac.getName() @ "<br><br> Zodiac deletion won't take affect until the level is exited.", 
+         "PE_AFXZodiacEditor.saveZodiacDialogDontSave( " @ PE_AFXZodiacEditor.currZodiac.getName() @ " ); PE_AFXZodiacEditor.deleteZodiac();"
+      );
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXZodiacEditor::deleteZodiac( %this )
+{  
+   %zodiac = PE_AFXZodiacEditor.currZodiac;
+   
+   // Create undo.
+   
+   %action = ParticleEditor.createUndo( ActionDeleteZodiac, "Delete Zodiac" );
+   %action.zodiac = %zodiac;
+   %action.zodiacFname = %zodiac.getFilename();
+
+   ParticleEditor.submitUndo( %action );
+   
+   // Execute action.
+
+   %action.redo();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXZodiacEditor::saveZodiac( %this, %zodiac )
+{   
+   if ( %zodiac $= "" )
+   {
+      %zodiac = %this.currZodiac;
+      %newName = %this.currZodiac.getName();
+   }
+   else
+   {
+      %newName = %zodiac.getName();
+   }
+   
+   %this.currZodiac.setName( %newName );
+   PE_AFXZodiacEditor_NotDirtyZodiac.assignFieldsFrom( %zodiac );
+   PE_AFXZodiacEditor_NotDirtyZodiac.originalName = %newName;
+   
+   %this.saver.saveDirty(); 
+   
+   %this.loadNewZodiac(%newName.getId());
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXZodiacEditor::saveZodiacDialogDontSave( %this, %zodiac)
+{  
+   %zodiac.setName( PE_AFXZodiacEditor_NotDirtyZodiac.originalName );
+   %zodiac.assignFieldsFrom( PE_AFXZodiacEditor_NotDirtyZodiac );
+   PE_AFXZodiacEditor.setNotDirty();
+}

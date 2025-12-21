@@ -109,7 +109,7 @@ class ParticleEmitterData : public GameBaseData
    bool  alignParticles;                     ///< Particles always face along a particular axis
    Point3F alignDirection;                   ///< The direction aligned particles should face
 
-   StringTableEntry      particleString;     ///< Used to load particle data directly from a string
+   Vector<StringTableEntry>      particleString;     ///< Used to load particle data directly from a string
 
    Vector<ParticleData*> particleDataBlocks; ///< Particle Datablocks 
    Vector<U32>           dataBlockIds;       ///< Datablock IDs (parellel array to particleDataBlocks)

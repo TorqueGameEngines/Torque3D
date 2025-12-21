@@ -94,6 +94,8 @@ public:
 
    bool reOrder(SimObject* obj, SimObject* target = 0) override;
 
+   void setPadding(const U32& padding);
+
    static void initPersistFields();
    
    DECLARE_CONOBJECT(GuiStackControl);

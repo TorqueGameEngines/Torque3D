@@ -29,14 +29,19 @@ function initializeParticleEditor()
 {
    echo( " % - Initializing Particle Editor" );
      
-   exec( "./ParticleEditor.ed.gui" );
-   exec( "./particleEditor.ed." @ $TorqueScriptFileExtension );
-   exec( "./particleEditorUndo.ed." @ $TorqueScriptFileExtension );   
-   exec( "./particleEmitterEditor.ed." @ $TorqueScriptFileExtension );
-   exec( "./particleParticleEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./guis/ParticleEditor.ed.gui" );
+   exec( "./guis/particleEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./guis/createNewPrompt.ed.gui" );
+   exec( "./guis/createNewPrompt.ed." @ $TorqueScriptFileExtension );
    
-   PE_Window.setVisible( false );
-   MainSceneTabPanel.add( PE_Window );
+   exec( "./scripts/particleEditorUndo.ed." @ $TorqueScriptFileExtension ); 
+     
+   exec( "./scripts/particleEmitterEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/particleParticleEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/explosionEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/particleRibbonEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/afxZodiacEditor.ed." @ $TorqueScriptFileExtension );
+   exec( "./scripts/afxChoreoEditor.ed." @ $TorqueScriptFileExtension );
    
    new ScriptObject( ParticleEditorPlugin )
    {
@@ -53,12 +58,13 @@ function initializeParticleEditor()
    ParticleEditorPlugin.map = %map;
 
    new ScriptObject( ParticleEditor );
-
-   new PersistenceManager( PE_EmitterSaver );
-   new PersistenceManager( PE_ParticleSaver );
-
-   new SimSet( PE_UnlistedParticles );
-   new SimSet( PE_UnlistedEmitters );
+   
+   ParticleEditor.registerParticleEdType("Emitter", "ParticleEmitterData", "PE_EmitterEditor");
+   ParticleEditor.registerParticleEdType("Particle", "ParticleData", "PE_ParticleEditor");
+   ParticleEditor.registerParticleEdType("Explosion", "ExplosionData", "PE_ExplosionEditor");
+   ParticleEditor.registerParticleEdType("Ribbon", "RibbonData", "PE_RibbonParticleEditor");
+   ParticleEditor.registerParticleEdType("Zodiac", "afxZodiacData", "PE_AFXZodiacEditor");
+   ParticleEditor.registerParticleEdType("Choreography", "afxChoreographerData", "PE_AFXChoreoEditor");
 }
 
 //---------------------------------------------------------------------------------------------
@@ -94,8 +100,9 @@ function ParticleEditorPlugin::onActivated( %this )
    }
    
    EditorGui-->WorldEditorToolbar.setVisible( true );
-   EditorGui.bringToFront( PE_Window);
-   PE_Window.setVisible( true );
+   
+   Canvas.pushDialog(ParticleEditorGui);
+
    PE_Window.makeFirstResponder( true );
    
    %this.map.push();
@@ -114,11 +121,12 @@ function ParticleEditorPlugin::onActivated( %this )
 function ParticleEditorPlugin::onDeactivated( %this )
 {   
    EditorGui-->WorldEditorToolbar.setVisible( false );
-   PE_Window.setVisible( false );
+
+   ParticleEditor.selectedEditor.closeEditorTab();
    
-   if( isObject( $ParticleEditor::emitterNode) )
-      $ParticleEditor::emitterNode.delete();
-        
+   Canvas.popDialog(ParticleEditorGui);
+   ParticleEditorGui.quit();
+    
    %this.map.pop(); 
    
    Parent::onDeactivated( %this );
@@ -153,11 +161,19 @@ function ParticleEditorPlugin::readSettings( %this )
    
       %selectedEmitter = EditorSettings.value( "selectedEmitter" );
       if( isObject( %selectedEmitter ) )
-         PEE_EmitterSelector.setSelected( %selectedEmitter.getId() );
+         PE_EmitterEditor.loadNewEmitter( %selectedEmitter.getId() );
 
       %selectedParticle = EditorSettings.value( "selectedParticle" );
       if( isObject( %selectedParticle ) )
-         PEP_ParticleSelector.setSelected( %selectedParticle.getId() );
+         PE_EmitterEditor.loadNewParticle( %selectedParticle.getId() );
+         
+      %selectedExplosion = EditorSettings.value( "selectedExplosion" );
+      if( isObject( %selectedExplosion ) )
+         PE_ExplosionEditor.loadNewExplosion( %selectedExplosion.getId() );
+         
+      %selectedRibbon = EditorSettings.value( "selectedRibbon" );
+      if( isObject( %selectedRibbon ) )
+         PE_RibbonParticleEditor.loadNewRibbon( %selectedRibbon.getId() );
    
       PE_TabBook.selectPage( EditorSettings.value( "selectedPage" ) );
 
@@ -170,9 +186,30 @@ function ParticleEditorPlugin::writeSettings( %this )
 {
    EditorSettings.beginGroup( "ParticleEditor", true );
    
-      EditorSettings.setValue( "selectedEmitter", PEE_EmitterSelector.getText() );
-      EditorSettings.setValue( "selectedParticle", PEP_ParticleSelector.getText() );
+      EditorSettings.setValue( "selectedEmitter", PE_EmitterEditor-->popupMenu.getText() );
+      EditorSettings.setValue( "selectedParticle", PE_EmitterEditor-->popupMenu.getText() );
+      EditorSettings.setValue( "selectedExplosion", PE_ExplosionEditor-->popupMenu.getText() );
+      EditorSettings.setValue( "selectedRibbon", PE_RibbonParticleEditor-->popupMenu.getText() );
+      
       EditorSettings.setValue( "selectedTab", PE_TabBook.getSelectedPage() );
 
    EditorSettings.endGroup();
 }
+
+//------------------------------------------------------------------------------
+function ParticleEditor::registerParticleEdType(%this, %groupName, %typesList, %editorName)
+{
+   if(!isObject(PE_ParticleDataTypes))
+   {
+      new ArrayObject(PE_ParticleDataTypes){};  
+   }
+   
+   if(PE_ParticleDataTypes.getIndexFromKey(%groupName) != -1)
+   {
+      error("ParticleEditor::registerParticleEdType() - Attempted to register an existing group name of a particle type!");
+      return;
+   }
+   
+   PE_ParticleDataTypes.add(%groupName, %typesList TAB %editorName);
+}
+

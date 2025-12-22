@@ -24,7 +24,7 @@
 #include "gfx/bitmap/imageUtils.h"
 #include "gfx/bitmap/ddsFile.h"
 #include "platform/threads/threadPool.h"
-#include "squish.h"
+#include "squish/squish.h"
 
 namespace ImageUtil
 {

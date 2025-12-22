@@ -69,6 +69,7 @@
 #  define new  _new
 #endif
 
+extern bool gTryUseDSQs;
 
 MODULE_BEGIN( AssimpShapeLoader )
    MODULE_INIT_AFTER( ShapeLoader )
@@ -664,13 +665,12 @@ bool AssimpShapeLoader::fillGuiTreeView(const char* sourceShapePath, GuiTreeView
    return true;
 }
 
-/// Check if an up-to-date cached DTS is available for this DAE file
+/// Check if an up-to-date cached DTS is available for this file
 bool AssimpShapeLoader::canLoadCachedDTS(const Torque::Path& path)
 {
    // Generate the cached filename
    Torque::Path cachedPath(path);
-   if (String::compare(path.getExtension(), "dsq") != 0)
-      cachedPath.setExtension("cached.dts");
+   cachedPath.setExtension("cached.dts");
 
    // Check if a cached DTS newer than this file is available
    FileTime cachedModifyTime;
@@ -681,6 +681,30 @@ bool AssimpShapeLoader::canLoadCachedDTS(const Torque::Path& path)
       FileTime daeModifyTime;
       if (!Platform::getFileTimes(path.getFullPath(), NULL, &daeModifyTime) ||
          (!forceLoad && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0) ))
+      {
+         // Original file not found, or cached DTS is newer
+         return true;
+      }
+   }
+   return false;
+}
+
+/// Check if an up-to-date cached DSQ is available for this file
+bool AssimpShapeLoader::canLoadCachedDSQ(const Torque::Path& path)
+{
+   // Generate the cached filename
+   Torque::Path cachedPath(path);
+   cachedPath.setExtension("dsq");
+
+   // Check if a cached DTS newer than this file is available
+   FileTime cachedModifyTime;
+   if (Platform::getFileTimes(cachedPath.getFullPath(), NULL, &cachedModifyTime))
+   {
+      bool forceLoad = Con::getBoolVariable("$assimp::forceLoad", false);
+
+      FileTime daeModifyTime;
+      if (!Platform::getFileTimes(path.getFullPath(), NULL, &daeModifyTime) ||
+         (!forceLoad && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0)))
       {
          // Original file not found, or cached DTS is newer
          return true;
@@ -973,30 +997,37 @@ TSShape* assimpLoadShape(const Torque::Path &path)
    // TODO: add .cached.dts generation.
    // Generate the cached filename
    Torque::Path cachedPath(path);
-   if ( String::compare(path.getExtension(),"dsq") != 0)
-      cachedPath.setExtension("cached.dts");
+   bool canLoadCached = false;
+   bool canLoadDSQ = false;
 
    // Check if an up-to-date cached DTS version of this file exists, and
    // if so, use that instead.
    if (AssimpShapeLoader::canLoadCachedDTS(path))
+   {
+      cachedPath.setExtension("cached.dts");
+      canLoadCached = true;
+   }
+   else if (gTryUseDSQs && AssimpShapeLoader::canLoadCachedDSQ(path))
+   {
+      cachedPath.setExtension("dsq");
+      canLoadDSQ = true;
+   }
+   if (canLoadCached || canLoadDSQ)
    {
       FileStream cachedStream;
       cachedStream.open(cachedPath.getFullPath(), Torque::FS::File::Read);
       if (cachedStream.getStatus() == Stream::Ok)
       {
          TSShape *shape = new TSShape;
-         if (String::compare(path.getExtension(), "dsq") == 0)
+         bool readSuccess = false;
+         if (canLoadCached)
          {
-            if (!shape->importSequences(&cachedStream, cachedPath.getFullPath()))
-            {
-               Con::errorf("assimpLoadShape: Load sequence file '%s' failed", cachedPath.getFullPath().c_str());
-               delete shape;
-               shape = NULL;
-            }
-            cachedStream.close();
-            return shape;
+            readSuccess = shape->read(&cachedStream);
          }
-         bool readSuccess = shape->read(&cachedStream);
+         else
+         {
+            readSuccess = shape->importSequences(&cachedStream, cachedPath);
+         }
          cachedStream.close();
 
          if (readSuccess)
@@ -1007,10 +1038,13 @@ TSShape* assimpLoadShape(const Torque::Path &path)
             return shape;
          }
          else
+         {
+         #ifdef TORQUE_DEBUG
+            Con::errorf("assimpLoadShape: Load sequence file '%s' failed", cachedPath.getFullPath().c_str());
+         #endif
             delete shape;
+         }
       }
-
-      Con::warnf("Failed to load cached shape from %s", cachedPath.getFullPath().c_str());
    }
 
    if (!Torque::FS::IsFile(path))
@@ -1041,27 +1075,22 @@ TSShape* assimpLoadShape(const Torque::Path &path)
             realMesh = true;
       }
 
-      if (!realMesh)
+      if (!realMesh && gTryUseDSQs)
       {
          Torque::Path dsqPath(cachedPath);
          dsqPath.setExtension("dsq");
          FileStream animOutStream;
-         for (S32 i = 0; i < tss->sequences.size(); i++)
+         dsqPath.setFileName(cachedPath.getFileName());
+         if (animOutStream.open(dsqPath.getFullPath(), Torque::FS::File::Write))
          {
-            const String& seqName = tss->getName(tss->sequences[i].nameIndex);
-            Con::printf("Writing DSQ Animation File for sequence '%s'", seqName.c_str());
-
-            dsqPath.setFileName(cachedPath.getFileName() + "_" + seqName);
-            if (animOutStream.open(dsqPath.getFullPath(), Torque::FS::File::Write))
-            {
-               tss->exportSequence(&animOutStream, tss->sequences[i], false);
-               animOutStream.close();
-            }
-
+            Con::printf("Writing DSQ Animation File for '%s'", dsqPath.getFileName().c_str());
+            tss->exportSequences(&animOutStream);
          }
       }
       else
       {
+         // Cache the model to a DTS file for faster loading next time.
+         cachedPath.setExtension("cached.dts");
          // Cache the model to a DTS file for faster loading next time.
          FileStream dtsStream;
          if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))

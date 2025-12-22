@@ -142,7 +142,7 @@ void RenderTranslucentMgr::render( SceneRenderState *state )
 
    // init loop data
    GFXTextureObject *lastLM = NULL;
-   GFXCubemap *lastCubemap = NULL;
+   GFXTexHandle lastCubemap = NULL;
    GFXTextureObject *lastReflectTex = NULL;
    GFXTextureObject *lastAccuTex = NULL;
 

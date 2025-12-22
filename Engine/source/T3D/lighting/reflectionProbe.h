@@ -94,8 +94,8 @@ public:
 
       F32 mScore;
 
-      GFXCubemapHandle mPrefilterCubemap;
-      GFXCubemapHandle mIrradianceCubemap;
+      GFXTexHandle mPrefilterCubemap;
+      GFXTexHandle mIrradianceCubemap;
 
       /// The priority of this light used for
       /// light and shadow scoring.
@@ -233,7 +233,7 @@ protected:
    /// </summary>
    StringTableEntry mCubemapName;
    CubemapData *mStaticCubemap;
-   GFXCubemapHandle  mDynamicCubemap;
+   GFXTexHandle  mDynamicCubemap;
 
    //String cubeDescName;
    //U32 cubeDescId;

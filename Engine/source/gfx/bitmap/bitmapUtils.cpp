@@ -24,6 +24,11 @@
 
 #include "platform/platform.h"
 
+#ifndef STB_IMAGE_RESIZE2_IMPLEMENTATION
+#define STB_IMAGE_RESIZE2_IMPLEMENTATION
+#define STBIR_PROFILE
+#include "gfx/bitmap/loaders/stb/stb_image_resize2.h"
+#endif // !STB_IMAGE_RESIZE2_IMPLEMENTATION
 
 void bitmapExtrude5551_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth)
 {
@@ -67,7 +72,7 @@ void bitmapExtrude5551_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWi
       {
          U32 a = src[0];
          U32 c = src[stride];
-#if defined(TORQUE_OS_MAC)
+#if defined(TORQUE_BIG_ENDIAN)
             dst[y] = ((( (a >> 10) + (c >> 10)) >> 1) << 10) |
                      ((( ((a >> 5) & 0x1F) + ((c >> 5) & 0x1f)) >> 1) << 5) |
                      ((( ((a >> 0) & 0x1F) + ((c >> 0) & 0x1f)) >> 1) << 0);
@@ -81,151 +86,434 @@ void bitmapExtrude5551_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWi
    }
 }
 
-
 //--------------------------------------------------------------------------
-void bitmapExtrudeRGB_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth)
+
+template <typename T>
+void bitmapExtrudeGeneric(
+   const T* src, T* dst,
+   U32 srcWidth, U32 srcHeight,
+   U32 channels, U32 bpp)
 {
-   const U8 *src = (const U8 *) srcMip;
-   U8 *dst = (U8 *) mip;
-   U32 stride = srcHeight != 1 ? (srcWidth) * 3 : 0;
+   U32 srcRowStride = srcHeight != 1 ? (srcWidth * bpp) / sizeof(T) : 0;
+   U32 dstWidth = srcWidth > 1 ? srcWidth / 2 : 1;
+   U32 dstHeight = srcHeight > 1 ? srcHeight / 2 : 1;
+   U32 dstRowStride = dstHeight != 1 ? (dstWidth * bpp) / sizeof(T) : 0;
 
-   U32 width  = srcWidth  >> 1;
-   U32 height = srcHeight >> 1;
-   if (width  == 0) width  = 1;
-   if (height == 0) height = 1;
-
-   if (srcWidth != 1)
+   for (U32 y = 0; y < dstHeight; ++y)
    {
-      for(U32 y = 0; y < height; y++)
+      for (U32 x = 0; x < dstWidth; ++x)
       {
-         for(U32 x = 0; x < width; x++)
+         for (U32 c = 0; c < channels; ++c)
          {
-            *dst++ = (U32(*src) + U32(src[3]) + U32(src[stride]) + U32(src[stride+3]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[3]) + U32(src[stride]) + U32(src[stride+3]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[3]) + U32(src[stride]) + U32(src[stride+3]) + 2) >> 2;
-            src += 4;
-         }
-         src += stride;   // skip
-      }
-   }
-   else
-   {
-      for(U32 y = 0; y < height; y++)
-      {
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src += 4;
+            U32 x0 = x * 2;
+            U32 y0 = y * 2;
+            U32 x1 = (x0 + 1 < srcWidth) ? x0 + 1 : x0;
+            U32 y1 = (y0 + 1 < srcHeight) ? y0 + 1 : y0;
 
-         src += stride;   // skip
+            if constexpr (std::is_floating_point_v<T>)
+            {
+               T sum = 0;
+               sum += src[y0 * srcRowStride + x0 * channels + c];
+               sum += src[y0 * srcRowStride + x1 * channels + c];
+               sum += src[y1 * srcRowStride + x0 * channels + c];
+               sum += src[y1 * srcRowStride + x1 * channels + c];
+
+               dst[y * dstRowStride + x * channels + c] = sum * 0.25f;
+            }
+            else
+            {
+               U32 sum = 0;
+               sum += src[y0 * srcRowStride + x0 * channels + c];
+               sum += src[y0 * srcRowStride + x1 * channels + c];
+               sum += src[y1 * srcRowStride + x0 * channels + c];
+               sum += src[y1 * srcRowStride + x1 * channels + c];
+               dst[y * dstRowStride + x * channels + c] = T((sum + 2) >> 2);
+            }
+         }
       }
    }
 }
 
-//--------------------------------------------------------------------------
-void bitmapExtrudeRGBA_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth)
+// 8-bit RGBA
+auto bitmapExtrudeU8_RGBA = [](const void* src, void* dst, U32 h, U32 w, U32 bpp) {
+   bitmapExtrudeGeneric((const U8*)src, (U8*)dst, w, h, 4, bpp);
+};
+
+// 16-bit RGBA (U16 / F32 stored as U16)
+auto bitmapExtrudeU16_RGBA = [](const void* src, void* dst, U32 h, U32 w, U32 bpp) {
+   bitmapExtrudeGeneric((const U16*)src, (U16*)dst, w, h, 4, bpp);
+};
+
+// 32-bit float RGBA
+auto bitmapExtrudeF32_RGBA = [](const void* src, void* dst, U32 h, U32 w, U32 bpp) {
+   bitmapExtrudeGeneric((const F32*)src, (F32*)dst, w, h, 4, bpp);
+};
+
+// RGB U8
+auto bitmapExtrudeU8_RGB = [](const void* src, void* dst, U32 h, U32 w, U32 bpp) {
+   bitmapExtrudeGeneric((const U8*)src, (U8*)dst, w, h, 3, bpp);
+};
+
+void (*bitmapExtrude5551)(const void* srcMip, void* mip, U32 height, U32 width) = bitmapExtrude5551_c;
+void (*bitmapExtrudeRGB)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth, U32 bpp) = bitmapExtrudeU8_RGB;
+void (*bitmapExtrudeRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth, U32 bpp) = bitmapExtrudeU8_RGBA;
+void (*bitmapExtrude16BitRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth, U32 bpp) = bitmapExtrudeU16_RGBA;
+void (*bitmapExtrudeFPRGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth, U32 bpp) = bitmapExtrudeU16_RGBA;
+void (*bitmapExtrudeF32RGBA)(const void* srcMip, void* mip, U32 srcHeight, U32 srcWidth, U32 bpp) = bitmapExtrudeF32_RGBA;
+
+struct StbResizeDesc
 {
-   const U8 *src = (const U8 *) srcMip;
-   U8 *dst = (U8 *) mip;
-   U32 stride = srcHeight != 1 ? (srcWidth) * 4 : 0;
+   stbir_datatype datatype;
+   stbir_pixel_layout layout;
+   U32 bytesPerPixel;
+};
 
-   U32 width  = srcWidth  >> 1;
-   U32 height = srcHeight >> 1;
-   if (width  == 0) width  = 1;
-   if (height == 0) height = 1;
-
-   if (srcWidth != 1)
+inline bool getStbResizeDesc(GFXFormat fmt, StbResizeDesc& out)
+{
+   switch (fmt)
    {
-      for(U32 y = 0; y < height; y++)
+      // ---- 1 channel ----
+   case GFXFormatA8:
+   case GFXFormatL8:
+      out = { STBIR_TYPE_UINT8, STBIR_1CHANNEL, 1 };
+      return true;
+
+   case GFXFormatL16:
+      out = { STBIR_TYPE_UINT16, STBIR_1CHANNEL, 2 };
+      return true;
+
+   case GFXFormatR16F:
+      out = { STBIR_TYPE_HALF_FLOAT, STBIR_1CHANNEL, 2 };
+      return true;
+
+   case GFXFormatR32F:
+      out = { STBIR_TYPE_FLOAT, STBIR_1CHANNEL, 4 };
+      return true;
+
+      // ---- 2 channel ----
+   case GFXFormatA8L8:
+      out = { STBIR_TYPE_UINT8, STBIR_2CHANNEL, 2 };
+      return true;
+
+   case GFXFormatR16G16:
+      out = { STBIR_TYPE_UINT16, STBIR_2CHANNEL, 4 };
+      return true;
+
+   case GFXFormatR16G16F:
+      out = { STBIR_TYPE_HALF_FLOAT, STBIR_2CHANNEL, 4 };
+      return true;
+
+      // ---- RGB ----
+   case GFXFormatR8G8B8:
+      out = { STBIR_TYPE_UINT8, STBIR_RGB, 3 };
+      return true;
+
+   case GFXFormatR8G8B8_SRGB:
+      out = { STBIR_TYPE_UINT8_SRGB, STBIR_RGB, 3 };
+      return true;
+
+      // ---- RGBA / RGBX ----
+   case GFXFormatR8G8B8A8:
+   case GFXFormatR8G8B8X8:
+      out = { STBIR_TYPE_UINT8, STBIR_RGBA, 4 };
+      return true;
+
+   case GFXFormatR8G8B8A8_SRGB:
+      out = { STBIR_TYPE_UINT8_SRGB_ALPHA, STBIR_RGBA, 4 };
+      return true;
+
+   case GFXFormatB8G8R8A8:
+      out = { STBIR_TYPE_UINT8, STBIR_BGRA, 4 };
+      return true;
+
+      // ---- 16-bit RGBA ----
+   case GFXFormatR16G16B16A16:
+      out = { STBIR_TYPE_UINT16, STBIR_RGBA, 8 };
+      return true;
+
+   case GFXFormatR16G16B16A16F:
+      out = { STBIR_TYPE_HALF_FLOAT, STBIR_RGBA, 8 };
+      return true;
+
+      // ---- 32-bit RGBA ----
+   case GFXFormatR32G32B32A32F:
+      out = { STBIR_TYPE_FLOAT, STBIR_RGBA, 16 };
+      return true;
+
+   default:
+      return false;
+   }
+}
+
+void bitmapStbResizeToOutput(const void* src, U32 srcHeight, U32 srcWidth, void* out, U32 outHeight, U32 outWidth, U32 bpp, GFXFormat format)
+{
+   StbResizeDesc desc;
+   if (!getStbResizeDesc(format, desc))
+   {
+      return;
+   }
+
+   const int srcStride = srcWidth * bpp;
+   const int dstStride = outWidth * bpp;
+
+   stbir_resize(
+      src,
+      srcWidth,
+      srcHeight,
+      srcStride,
+      out,
+      outWidth,
+      outHeight,
+      dstStride,
+      desc.layout,
+      desc.datatype,
+      STBIR_EDGE_CLAMP,
+      STBIR_FILTER_MITCHELL);
+}
+
+void(*bitmapResizeToOutput)(const void* src, U32 srcHeight, U32 srcWidth, void* out, U32 outHeight, U32 outWidth, U32 bpp, GFXFormat format) = bitmapStbResizeToOutput;
+
+//--------------------------------------------------------------------------------
+// Format description
+
+//--------------------------------------------------------------------------------
+// Channel semantics
+enum ChannelSemantic : U8
+{
+   CH_NONE,
+   CH_L,
+   CH_A,
+   CH_R,
+   CH_G,
+   CH_B
+};
+
+//--------------------------------------------------------------------------------
+// Bitmap format descriptor
+struct GBitmapFormatDesc
+{
+   U8 channels;
+   ChannelSemantic semantic[4]; // per-channel meaning
+   stbir_datatype datatype;
+   bool srgb;
+   bool premultiplied;
+   bool isFloat;
+   U8 bytesPerChannel;
+
+   bool is8()  const { return !isFloat && bytesPerChannel == 1; }
+   bool is16() const { return !isFloat && bytesPerChannel == 2; }
+};
+
+//--------------------------------------------------------------------------------
+// Table mapping GFXFormat -> descriptor
+GBitmapFormatDesc getFormatDesc(GFXFormat fmt)
+{
+   switch (fmt)
+   {
+      // 8-bit formats
+   case GFXFormatA8:
+      return { 1, {CH_A, CH_NONE, CH_NONE, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+   case GFXFormatL8:
+      return { 1, {CH_L, CH_NONE, CH_NONE, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+   case GFXFormatA4L4:
+      return { 2, {CH_L, CH_A, CH_NONE, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+
+      // 16-bit formats
+   case GFXFormatR5G6B5:
+      return { 3, {CH_R, CH_G, CH_B, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+   case GFXFormatR5G5B5A1:
+      return { 4, {CH_R, CH_G, CH_B, CH_A}, STBIR_TYPE_UINT8, false, false, false, 1 };
+   case GFXFormatR5G5B5X1:
+      return { 4, {CH_R, CH_G, CH_B, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+   case GFXFormatA8L8:
+      return { 2, {CH_L, CH_A, CH_NONE, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+   case GFXFormatL16:
+      return { 1, {CH_L, CH_NONE, CH_NONE, CH_NONE}, STBIR_TYPE_UINT16, false, false, false, 2 };
+   case GFXFormatR16F:
+      return { 1, {CH_R, CH_NONE, CH_NONE, CH_NONE}, STBIR_TYPE_HALF_FLOAT, false, false, true, 2 };
+   case GFXFormatD16:
+      return { 1, {CH_L, CH_NONE, CH_NONE, CH_NONE}, STBIR_TYPE_UINT16, false, false, false, 2 };
+
+      // 24-bit formats
+   case GFXFormatR8G8B8:
+      return { 3, {CH_R, CH_G, CH_B, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+   case GFXFormatR8G8B8_SRGB:
+      return { 3, {CH_R, CH_G, CH_B, CH_NONE}, STBIR_TYPE_UINT8_SRGB, true, false, false, 1 };
+
+      // 32-bit formats
+   case GFXFormatR8G8B8A8:
+   case GFXFormatR8G8B8X8:
+      return { 4, {CH_R, CH_G, CH_B, CH_A}, STBIR_TYPE_UINT8, false, false, false, 1 };
+   case GFXFormatB8G8R8A8:
+      return { 4, {CH_B, CH_G, CH_R, CH_A}, STBIR_TYPE_UINT8, false, false, false, 1 };
+   case GFXFormatR8G8B8A8_SRGB:
+      return { 4, {CH_R, CH_G, CH_B, CH_A}, STBIR_TYPE_UINT8_SRGB_ALPHA, true, false, false, 1 };
+   case GFXFormatR16G16:
+      return { 2, {CH_R, CH_G, CH_NONE, CH_NONE}, STBIR_TYPE_UINT16, false, false, false, 2 };
+   case GFXFormatR16G16F:
+      return { 2, {CH_R, CH_G, CH_NONE, CH_NONE}, STBIR_TYPE_HALF_FLOAT, false, false, true, 2 };
+
+      // 64-bit formats
+   case GFXFormatR16G16B16A16:
+      return { 4, {CH_R, CH_G, CH_B, CH_A}, STBIR_TYPE_UINT16, false, false, false, 2 };
+   case GFXFormatR16G16B16A16F:
+      return { 4, {CH_R, CH_G, CH_B, CH_A}, STBIR_TYPE_HALF_FLOAT, false, false, true, 2 };
+
+      // 128-bit formats
+   case GFXFormatR32G32B32A32F:
+      return { 4, {CH_R, CH_G, CH_B, CH_A}, STBIR_TYPE_FLOAT, false, false, true, 4 };
+
+   default: // fallback
+      return { 1, {CH_L, CH_NONE, CH_NONE, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+   }
+}
+
+//--------------------------------------------------------------------------------
+// Conversion plan
+struct ConversionPlan
+{
+   bool bitDepthChange;
+   bool channelRepack;
+   bool colorspaceChange;
+};
+
+ConversionPlan decideConversion(const GBitmapFormatDesc& src, const GBitmapFormatDesc& dst)
+{
+   ConversionPlan plan = {};
+   plan.bitDepthChange = src.bytesPerChannel != dst.bytesPerChannel || src.isFloat != dst.isFloat;
+   plan.channelRepack = src.channels != dst.channels || dMemcmp(src.semantic, dst.semantic, sizeof(src.semantic)) != 0;
+   plan.colorspaceChange = src.srgb != dst.srgb;
+   return plan;
+}
+
+//--------------------------------------------------------------------------------
+// Linear representation
+struct LinearPixel
+{
+   float r = 0.f, g = 0.f, b = 0.f, a = 1.f;
+};
+
+inline float srgbToLinear(float c)
+{
+   return (c <= 0.04045f) ? c / 12.92f : powf((c + 0.055f) / 1.055f, 2.4f);
+}
+
+inline float linearToSrgb(float c)
+{
+   return (c <= 0.0031308f) ? c * 12.92f : 1.055f * powf(c, 1.f / 2.4f) - 0.055f;
+}
+
+//--------------------------------------------------------------------------------
+// Load a pixel from src format into LinearPixel
+static inline LinearPixel loadPixel(const void* src, const GBitmapFormatDesc& fmt, U32 index)
+{
+   LinearPixel p;
+   const U8* base = (const U8*)src + index * fmt.channels * fmt.bytesPerChannel;
+
+   for (U32 c = 0; c < fmt.channels; ++c)
+   {
+      float v = 0.f;
+      if (fmt.is8())
+         v = float(base[c]) / 255.f;
+      else if (fmt.is16())
+         v = float(convert16To8(*(const U16*)(base + c * 2))) / 255.f;
+      else if (fmt.isFloat)
       {
-         for(U32 x = 0; x < width; x++)
-         {
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride+4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride+4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride+4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride+4]) + 2) >> 2;
-            src += 5;
-         }
-         src += stride;   // skip
+         if (fmt.bytesPerChannel == 2) // half float
+            v = convertHalfToFloat(*(const U16*)(base + c * 2));
+         else // full float
+            v = *(const float*)(base + c * 4);
+      }
+
+      if (fmt.srgb && fmt.semantic[c] != CH_A)
+         v = srgbToLinear(v);
+
+      switch (fmt.semantic[c])
+      {
+      case CH_R: p.r = v; break;
+      case CH_G: p.g = v; break;
+      case CH_B: p.b = v; break;
+      case CH_A: p.a = v; break;
+      case CH_L: p.r = p.g = p.b = v; break;
+      default: break;
       }
    }
-   else
-   {
-      for(U32 y = 0; y < height; y++)
-      {
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src += 5;
+   return p;
+}
 
-         src += stride;   // skip
+//--------------------------------------------------------------------------------
+// Store a LinearPixel into dst format
+static inline void storePixel(void* dst, const GBitmapFormatDesc& fmt, U32 index, const LinearPixel& p)
+{
+   U8* base = (U8*)dst + index * fmt.channels * fmt.bytesPerChannel;
+   for (U32 c = 0; c < fmt.channels; ++c)
+   {
+      float v = 0.f;
+      switch (fmt.semantic[c])
+      {
+      case CH_R: v = p.r; break;
+      case CH_G: v = p.g; break;
+      case CH_B: v = p.b; break;
+      case CH_A: v = p.a; break;
+      case CH_L: v = (p.r + p.g + p.b) / 3.f; break;
+      default: break;
+      }
+
+      if (fmt.srgb && fmt.semantic[c] != CH_A)
+         v = linearToSrgb(v);
+
+      if (fmt.is8())
+         base[c] = uint8_t(mClamp(v * 255.f, 0.f, 255.f));
+      else if (fmt.is16())
+         *(U16*)(base + c * 2) = convert8To16(uint8_t(mClamp(v * 255.f, 0.f, 255.f)));
+      else if (fmt.isFloat)
+      {
+         if (fmt.bytesPerChannel == 2) // half float
+            *(U16*)(base + c * 2) = convertFloatToHalf(v);
+         else
+            *(float*)(base + c * 4) = v;
       }
    }
 }
 
-void bitmapExtrudeFPRGBA_c(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth)
+//--------------------------------------------------------------------------------
+// Main generalized converter
+bool bitmapConvertFormat(U8** srcBuffer, U32 pixels, const GBitmapFormatDesc& srcFmt, const GBitmapFormatDesc& dstFmt)
 {
-   const U16 *src = (const U16 *)srcMip;
-   U16 *dst = (U16 *)mip;
-   U32 stride = srcHeight != 1 ? (srcWidth) * 8 : 0;
+   ConversionPlan plan = decideConversion(srcFmt, dstFmt);
+   if (!plan.bitDepthChange && !plan.channelRepack && !plan.colorspaceChange)
+      return true; // nothing to do
 
-   U32 width = srcWidth >> 1;
-   U32 height = srcHeight >> 1;
-   if (width == 0) width = 1;
-   if (height == 0) height = 1;
+   void* dstBuffer = *srcBuffer;
 
-   if (srcWidth != 1)
+   if (plan.bitDepthChange || plan.channelRepack)
+      dstBuffer = new U8[pixels * dstFmt.channels * dstFmt.bytesPerChannel];
+
+   for (U32 i = 0; i < pixels; ++i)
    {
-      for (U32 y = 0; y < height; y++)
-      {
-         for (U32 x = 0; x < width; x++)
-         {
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
-            src++;
-            *dst++ = (U32(*src) + U32(src[4]) + U32(src[stride]) + U32(src[stride + 4]) + 2) >> 2;
-            src += 5;
-         }
-         src += stride;   // skip
-      }
+      LinearPixel p = loadPixel(*srcBuffer, srcFmt, i);
+      storePixel(dstBuffer, dstFmt, i, p);
    }
-   else
-   {
-      for (U32 y = 0; y < height; y++)
-      {
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src++;
-         *dst++ = (U32(*src) + U32(src[stride]) + 1) >> 1;
-         src += 5;
 
-         src += stride;   // skip
-      }
+   if (dstBuffer != *srcBuffer)
+   {
+      delete[](U8*)* srcBuffer;
+      *srcBuffer = (U8*)dstBuffer;
    }
+
+   return true;
 }
 
-void (*bitmapExtrude5551)(const void *srcMip, void *mip, U32 height, U32 width) = bitmapExtrude5551_c;
-void (*bitmapExtrudeRGB)(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeRGB_c;
-void (*bitmapExtrudeRGBA)(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeRGBA_c;
-void (*bitmapExtrudeFPRGBA)(const void *srcMip, void *mip, U32 srcHeight, U32 srcWidth) = bitmapExtrudeFPRGBA_c;
+//--------------------------------------------------------------------------------
+// Entry point for GBitmap::setFormat
+bool bitmapALLConvertToOutput(U8** src, U32 pixels, GFXFormat srcFormat, GFXFormat dstFormat)
+{
+   const GBitmapFormatDesc& srcFmt = getFormatDesc(srcFormat);
+   const GBitmapFormatDesc& dstFmt = getFormatDesc(dstFormat);
+   return bitmapConvertFormat(src, pixels, srcFmt, dstFmt);
+}
 
+bool(*bitmapConvertToOutput)(U8** src, U32 pixels, GFXFormat srcFormat, GFXFormat dstFormat) = bitmapALLConvertToOutput;
 
 //--------------------------------------------------------------------------
 
@@ -238,7 +526,7 @@ void bitmapConvertRGB_to_1555_c(U8 *src, U32 pixels)
       U32 g = src[1] >> 3;
       U32 b = src[2] >> 3;
 
-#if defined(TORQUE_OS_MAC)
+#if defined(TORQUE_BIG_ENDIAN)
       *dst++ = 0x8000 | (b << 10) | (g << 5) | (r << 0);
 #else
       *dst++ = b | (g << 5) | (r << 10) | 0x8000;
@@ -260,7 +548,7 @@ void bitmapConvertRGB_to_5551_c(U8 *src, U32 pixels)
       U32 g = src[1] >> 3;
       U32 b = src[2] >> 3;
 
-#if defined(TORQUE_OS_MAC)
+#if defined(TORQUE_BIG_ENDIAN)
       *dst++ = (1 << 15) | (b << 10) | (g << 5) | (r << 0);
 #else
       *dst++ = (b << 1) | (g << 6) | (r << 11) | 1;

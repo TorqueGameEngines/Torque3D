@@ -266,6 +266,7 @@ protected:
 };
 
 GFX_DeclareTextureProfile( ShadowMapProfile );
+GFX_DeclareTextureProfile( CubeShadowMapProfile );
 GFX_DeclareTextureProfile( ShadowMapZProfile );
 
 

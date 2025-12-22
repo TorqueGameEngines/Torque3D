@@ -180,3 +180,37 @@ ImplementEnumType( GFXBlendOp,
    { GFXBlendOpMax, "GFXBlendOpMax" }
 
 EndImplementEnumType;
+
+ImplementEnumType(GFXShaderConstType,
+   "The shader const types.\n"
+   "@ingroup GFX")
+
+   { GFXSCT_Uknown, "GFXSCT_Uknown" },
+   { GFXSCT_ConstBuffer, "GFXSCT_ConstBuffer" },
+   { GFXSCT_Float, "GFXSCT_Float" },
+   { GFXSCT_Float2, "GFXSCT_Float2" },
+   { GFXSCT_Float3, "GFXSCT_Float3" },
+   { GFXSCT_Float4, "GFXSCT_Float4" },
+   { GFXSCT_Float2x2, "GFXSCT_Float2x2" },
+   { GFXSCT_Float3x3, "GFXSCT_Float3x3" },
+   { GFXSCT_Float3x4, "GFXSCT_Float3x4" },
+   { GFXSCT_Float4x3, "GFXSCT_Float4x3" },
+   { GFXSCT_Float4x4, "GFXSCT_Float4x4" },
+   { GFXSCT_Int, "GFXSCT_Int" },
+   { GFXSCT_Int2, "GFXSCT_Int2" },
+   { GFXSCT_Int3, "GFXSCT_Int3" },
+   { GFXSCT_Int4, "GFXSCT_Int4" },
+   { GFXSCT_UInt, "GFXSCT_UInt" },
+   { GFXSCT_UInt2, "GFXSCT_UInt2" },
+   { GFXSCT_UInt3, "GFXSCT_UInt3" },
+   { GFXSCT_UInt4, "GFXSCT_UInt4" },
+   { GFXSCT_Bool, "GFXSCT_Bool" },
+   { GFXSCT_Bool2, "GFXSCT_Bool2" },
+   { GFXSCT_Bool3, "GFXSCT_Bool3" },
+   { GFXSCT_Bool4, "GFXSCT_Bool4" },
+   { GFXSCT_Sampler, "GFXSCT_Sampler" },
+   { GFXSCT_SamplerCube, "GFXSCT_SamplerCube" },
+   { GFXSCT_SamplerCubeArray, "GFXSCT_SamplerCubeArray" },
+   { GFXSCT_SamplerTextureArray, "GFXSCT_SamplerTextureArray" }
+
+EndImplementEnumType;

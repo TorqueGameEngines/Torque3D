@@ -45,6 +45,7 @@ protected:
                                              U32 numMipLevels,
                                              bool forceMips = false,
                                              S32 antialiasLevel = 0,
+                                             U32 arraySize = 1,
                                              GFXTextureObject *inTex = NULL ) override;
    bool _loadTexture(GFXTextureObject *texture, DDSFile *dds) override;
    bool _loadTexture(GFXTextureObject *texture, GBitmap *bmp) override;
@@ -56,7 +57,7 @@ private:
    friend class GFXGLTextureObject;
    
    /// Creates internal GL texture
-   void innerCreateTexture(GFXGLTextureObject *obj, U32 height, U32 width, U32 depth, GFXFormat format, GFXTextureProfile *profile, U32 numMipLevels, bool forceMips = false);
+   void innerCreateTexture(GFXGLTextureObject *obj, U32 height, U32 width, U32 depth, GFXFormat format, GFXTextureProfile *profile, U32 numMipLevels, bool forceMips = false, U32 arraySize = 1);
 };
 
 #endif

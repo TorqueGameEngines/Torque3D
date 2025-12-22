@@ -42,8 +42,12 @@ GFXShader::GFXShader()
 
 GFXShader::~GFXShader()
 {
-   Torque::FS::RemoveChangeNotification( mVertexFile, this, &GFXShader::_onFileChanged );
-   Torque::FS::RemoveChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
+   if (!mVertexFile.isEmpty())
+      Torque::FS::RemoveChangeNotification( mVertexFile, this, &GFXShader::_onFileChanged );
+   if (!mPixelFile.isEmpty())
+      Torque::FS::RemoveChangeNotification( mPixelFile, this, &GFXShader::_onFileChanged );
+   if (!mGeometryFile.isEmpty())
+      Torque::FS::RemoveChangeNotification(mGeometryFile, this, &GFXShader::_onFileChanged);
 
    SAFE_DELETE(mInstancingFormat);
 }

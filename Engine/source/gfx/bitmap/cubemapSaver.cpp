@@ -34,9 +34,7 @@
 
 namespace CubemapSaver
 {
-   const U32 CubeFaces = 6;
-
-   bool save(GFXCubemapHandle cubemap, const Torque::Path &path, GFXFormat compressionFormat)
+   bool save(GFXTexHandle cubemap, const Torque::Path &path, GFXFormat compressionFormat)
    {
       if (!cubemap.isValid())
       {
@@ -44,43 +42,24 @@ namespace CubemapSaver
          return false;
       }
 
-
-      GFXCubemap *pCubemap = cubemap.getPointer();
-      const U32 faceSize = pCubemap->getSize();
-      const U32 mipLevels = pCubemap->getMipMapLevels();
-
-      GFXFormat targetFmt = pCubemap->getFormat();
-      //setup render targets
-      GFXTexHandle pTextures[CubeFaces];
-
-      for (U32 face = 0; face < CubeFaces; face++)
-      {
-         pTextures[face].set(faceSize, faceSize, targetFmt,
-            &GFXTexturePersistentProfile, avar("%s() - (line %d)", __FUNCTION__, __LINE__),
-            mipLevels, GFXTextureManager::AA_MATCH_BACKBUFFER);
-
-         // yep t3d has funky z up, need to change the face order
-         GFX->copyResource(pTextures[face], pCubemap, GFXCubemap::zUpFaceIndex(face) );
-      }
-
-      GBitmap *pBitmaps[CubeFaces];
       bool error = false;
       const bool compressedFormat = ImageUtil::isCompressedFormat(compressionFormat);
+      const U32 faceSize = cubemap->getWidth();
+      const U32 mipLevels = cubemap->getMipLevels();
+      GFXFormat targetFmt = cubemap->getFormat();
       const bool hasMips = mipLevels > 1 ? true : false;
-      for (U32 i = 0; i < CubeFaces; i++)
+
+      GBitmap* temp = new GBitmap(faceSize, faceSize, hasMips, targetFmt, 6);
+      bool result = cubemap.copyToBmp(temp);
+      if (!result)
       {
-         pBitmaps[i] = new GBitmap(faceSize, faceSize, hasMips, targetFmt);
-         bool result = pTextures[i].copyToBmp(pBitmaps[i]);
-         if (!result)
-         {
-            Con::errorf("CubemapSaver: cubemap number %u failed to copy", i);
-            error = true;
-         }
+         Con::errorf("CubemapSaver: cubemap failed to copy");
+         error = true;
       }
 
       if (!error)
       {
-         DDSFile *pDds = DDSFile::createDDSCubemapFileFromGBitmaps(pBitmaps);
+         DDSFile *pDds = DDSFile::createDDSFileFromGBitmap(temp);
          if (pDds)
          {
             // compressed and floating point don't need swizzling
@@ -103,14 +82,12 @@ namespace CubemapSaver
       }
 
       //cleanup
-      for (U32 i = 0; i < CubeFaces; i++)
-         SAFE_DELETE(pBitmaps[i]);
-
+      SAFE_DELETE(temp);
 
       return true;
    }
 
-   bool getBitmaps(GFXCubemapHandle cubemap, GFXFormat compressionFormat, GBitmap* faceBitmaps[6])
+   bool getBitmaps(GFXTexHandle cubemap, GFXFormat compressionFormat, GBitmap* faceBitmaps[6])
    {
       if (!cubemap.isValid())
       {

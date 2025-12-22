@@ -49,9 +49,11 @@ GBitmap::GBitmap()
    mHeight(0),
    mBytesPerPixel(0),
    mNumMipLevels(0),
-   mHasTransparency(false)
+   mHasTransparency(false),
+   mNumFaces(1)
 {
    std::fill_n(mMipLevelOffsets, c_maxMipLevels, 0xffffffff);
+   std::fill_n(mFaceOffsets, 6, 0xffffffff);
 }
 
 GBitmap::GBitmap(const GBitmap& rCopy)
@@ -67,33 +69,42 @@ GBitmap::GBitmap(const GBitmap& rCopy)
    mBytesPerPixel = rCopy.mBytesPerPixel;
    mNumMipLevels  = rCopy.mNumMipLevels;
    dMemcpy(mMipLevelOffsets, rCopy.mMipLevelOffsets, sizeof(mMipLevelOffsets));
+   dMemcpy(mFaceOffsets, rCopy.mFaceOffsets, sizeof(mFaceOffsets));
 
    mHasTransparency = rCopy.mHasTransparency;
+   mNumFaces = rCopy.mNumFaces;
 }
 
 
 GBitmap::GBitmap(const U32  in_width,
                  const U32  in_height,
                  const bool in_extrudeMipLevels,
-                 const GFXFormat in_format)
+                 const GFXFormat in_format,
+                 const U32 in_numFaces)
  : mBits(NULL),
-   mByteSize(0)
+   mByteSize(0),
+   mNumFaces(in_numFaces)
 {
    for (U32 i = 0; i < c_maxMipLevels; i++)
       mMipLevelOffsets[i] = 0xffffffff;
 
-   allocateBitmap(in_width, in_height, in_extrudeMipLevels, in_format);
+   for(U32 i = 0; i < 6; i++)
+      mFaceOffsets[i] = 0xffffffff;
+
+   allocateBitmap(in_width, in_height, in_extrudeMipLevels, in_format, in_numFaces);
 
    mHasTransparency = false;
 }
 
 GBitmap::GBitmap(const U32  in_width,
                  const U32  in_height,
-                 const U8*  data )
+                 const U8*  data,
+                 const U32 in_numFaces)
  : mBits(NULL),
-   mByteSize(0)
+   mByteSize(0),
+   mNumFaces(in_numFaces)
 {
-   allocateBitmap(in_width, in_height, false, GFXFormatR8G8B8A8);
+   allocateBitmap(in_width, in_height, false, GFXFormatR8G8B8A8, in_numFaces);
 
    mHasTransparency = false;
 
@@ -122,6 +133,65 @@ GBitmap::GBitmap(const U32  in_width,
 GBitmap::~GBitmap()
 {
    deleteImage();
+}
+
+//--------------------------------------------------------------------------
+
+U32 GBitmap::getFormatBytesPerPixel(GFXFormat fmt)
+{
+   switch (fmt)
+   {
+      // 8-bit formats
+   case GFXFormatA8:
+   case GFXFormatL8:
+   case GFXFormatA4L4:
+      return 1;
+
+      // 16-bit formats
+   case GFXFormatR5G6B5:
+   case GFXFormatR5G5B5A1:
+   case GFXFormatR5G5B5X1:
+   case GFXFormatA8L8:
+   case GFXFormatL16:
+   case GFXFormatR16F:
+   case GFXFormatD16:
+      return 2;
+
+      // 24-bit formats
+   case GFXFormatR8G8B8:
+   case GFXFormatR8G8B8_SRGB:
+      return 3;
+
+      // 32-bit formats
+   case GFXFormatR8G8B8A8:
+   case GFXFormatR8G8B8X8:
+   case GFXFormatB8G8R8A8:
+   case GFXFormatR8G8B8A8_SRGB:
+   case GFXFormatR32F:
+   case GFXFormatR10G10B10A2:
+   case GFXFormatR11G11B10:
+   case GFXFormatD24X8:
+   case GFXFormatD24S8:
+   case GFXFormatD24FS8:
+   case GFXFormatR16G16:
+   case GFXFormatR16G16F:
+   case GFXFormatR8G8B8A8_LINEAR_FORCE:
+      return 4;
+
+      // 64-bit formats
+   case GFXFormatR16G16B16A16:
+   case GFXFormatR16G16B16A16F:
+   case GFXFormatD32FS8X24:
+      return 8;
+
+      // 128-bit formats
+   case GFXFormatR32G32B32A32F:
+      return 16;
+
+   default:
+      AssertWarn(false, "getFormatBytesPerPixel() - Unknown or compressed format");
+      return 4;
+   }
 }
 
 //--------------------------------------------------------------------------
@@ -268,7 +338,7 @@ void GBitmap::copyRect(const GBitmap *src, const RectI &srcRect, const Point2I &
 }
 
 //--------------------------------------------------------------------------
-void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool in_extrudeMipLevels, const GFXFormat in_format )
+void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool in_extrudeMipLevels, const GFXFormat in_format, const U32 in_numFaces)
 {
    //-------------------------------------- Some debug checks...
    U32 svByteSize = mByteSize;
@@ -284,36 +354,13 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
    mInternalFormat = in_format;
    mWidth          = in_width;
    mHeight         = in_height;
+   mNumFaces       = in_numFaces;
 
-   mBytesPerPixel = 1;
-   switch (mInternalFormat) 
-   {
-     case GFXFormatA8:
-     case GFXFormatL8:           mBytesPerPixel = 1;
-      break;
-     case GFXFormatR8G8B8:       mBytesPerPixel = 3;
-      break;
-     case GFXFormatR8G8B8A8_LINEAR_FORCE:
-     case GFXFormatR8G8B8X8:
-     case GFXFormatR8G8B8A8:     mBytesPerPixel = 4;
-      break;
-	 case GFXFormatL16:
-     case GFXFormatR5G6B5:
-     case GFXFormatR5G5B5A1:     mBytesPerPixel = 2;
-      break;
-     case GFXFormatR16G16B16A16F:
-      case GFXFormatR16G16B16A16: mBytesPerPixel = 8;
-         break;
-      default:
-         AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
-         break;
-   }
+   mBytesPerPixel = getFormatBytesPerPixel(mInternalFormat);
 
    // Set up the mip levels, if necessary...
    mNumMipLevels       = 1;
-   U32 allocPixels = in_width * in_height * mBytesPerPixel;
    mMipLevelOffsets[0] = 0;
-
 
    if (in_extrudeMipLevels == true) 
    {
@@ -330,7 +377,6 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
          if (currHeight == 0) currHeight = 1;
 
          mNumMipLevels++;
-         allocPixels += currWidth * currHeight * mBytesPerPixel;
       }
 
       U32 expectedMips = mFloor(mLog2(mMax(in_width, in_height))) + 1;
@@ -338,8 +384,17 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
    }
    AssertFatal(mNumMipLevels <= c_maxMipLevels, "GBitmap::allocateBitmap: too many miplevels");
 
+   U32 faceStride = 0;
+   for (U32 mip = 0; mip < mNumMipLevels; mip++)
+      faceStride += getWidth(mip) * getHeight(mip) * mBytesPerPixel;
+
+   for (U32 face = 0; face < mNumFaces; face++)
+      mFaceOffsets[face] = face * faceStride;
+
+   U32 allocBytes = faceStride * mNumFaces;
+
    // Set up the memory...
-   mByteSize = allocPixels;
+   mByteSize = allocBytes;
    mBits    = new U8[mByteSize];
 
    dMemset(mBits, 0xFF, mByteSize);
@@ -352,7 +407,7 @@ void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool
 }
 
 //--------------------------------------------------------------------------
-void GBitmap::allocateBitmapWithMips(const U32 in_width, const U32 in_height, const U32 in_numMips, const GFXFormat in_format)
+void GBitmap::allocateBitmapWithMips(const U32 in_width, const U32 in_height, const U32 in_numMips, const GFXFormat in_format, const U32 in_numFaces)
 {
    //-------------------------------------- Some debug checks...
    U32 svByteSize = mByteSize;
@@ -363,35 +418,13 @@ void GBitmap::allocateBitmapWithMips(const U32 in_width, const U32 in_height, co
    mInternalFormat = in_format;
    mWidth = in_width;
    mHeight = in_height;
+   mNumFaces = in_numFaces;
 
-   mBytesPerPixel = 1;
-   switch (mInternalFormat)
-   {
-   case GFXFormatA8:
-   case GFXFormatL8:           mBytesPerPixel = 1;
-      break;
-   case GFXFormatR8G8B8:       mBytesPerPixel = 3;
-      break;
-   case GFXFormatR8G8B8X8:
-   case GFXFormatR8G8B8A8:     mBytesPerPixel = 4;
-      break;
-   case GFXFormatL16:
-   case GFXFormatR5G6B5:
-   case GFXFormatR5G5B5A1:     mBytesPerPixel = 2;
-      break;
-   case GFXFormatR16G16B16A16F:
-   case GFXFormatR16G16B16A16: mBytesPerPixel = 8;
-      break;
-   default:
-      AssertFatal(false, "GBitmap::GBitmap: misunderstood format specifier");
-      break;
-   }
+   mBytesPerPixel = getFormatBytesPerPixel(mInternalFormat);
 
    // Set up the mip levels, if necessary...
    mNumMipLevels = 1;
-   U32 allocPixels = in_width * in_height * mBytesPerPixel;
    mMipLevelOffsets[0] = 0;
-
 
    if (in_numMips != 0)
    {
@@ -408,13 +441,21 @@ void GBitmap::allocateBitmapWithMips(const U32 in_width, const U32 in_height, co
          if (currHeight == 0) currHeight = 1;
 
          mNumMipLevels++;
-         allocPixels += currWidth * currHeight * mBytesPerPixel;
       } while ((currWidth != 1 || currHeight != 1) && (mNumMipLevels != in_numMips));
    }
    AssertFatal(mNumMipLevels <= c_maxMipLevels, "GBitmap::allocateBitmap: too many miplevels");
 
+   U32 faceStride = 0;
+   for (U32 mip = 0; mip < mNumMipLevels; mip++)
+      faceStride += getWidth(mip) * getHeight(mip) * mBytesPerPixel;
+
+   for (U32 face = 0; face < mNumFaces; face++)
+      mFaceOffsets[face] = face * faceStride;
+
+   U32 allocBytes = faceStride * mNumFaces;
+
    // Set up the memory...
-   mByteSize = allocPixels;
+   mByteSize = allocBytes;
    mBits = new U8[mByteSize];
 
    dMemset(mBits, 0xFF, mByteSize);
@@ -432,40 +473,29 @@ void GBitmap::extrudeMipLevels(bool clearBorders)
    if(mNumMipLevels == 1)
       allocateBitmap(getWidth(), getHeight(), true, getFormat());
 
-   switch (getFormat())
+
+   if (getFormat() == GFXFormatR5G5B5A1)
    {
-      case GFXFormatR5G5B5A1:
-      {
-         for(U32 i = 1; i < mNumMipLevels; i++)
-            bitmapExtrude5551(getBits(i - 1), getWritableBits(i), getHeight(i), getWidth(i));
-         break;
-      }
-
-      case GFXFormatR8G8B8:
-      {
-         for(U32 i = 1; i < mNumMipLevels; i++)
-            bitmapExtrudeRGB(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1));
-         break;
-      }
-
-      case GFXFormatR8G8B8A8:
-      case GFXFormatR8G8B8X8:
-      {
-         for(U32 i = 1; i < mNumMipLevels; i++)
-            bitmapExtrudeRGBA(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1));
-         break;
-      }
-
-      case GFXFormatR16G16B16A16F:
-      {
-         for (U32 i = 1; i < mNumMipLevels; i++)
-            bitmapExtrudeFPRGBA(getBits(i - 1), getWritableBits(i), getHeight(i - 1), getWidth(i - 1));
-         break;
-      }
-      
-      default:
-         break;
+      for (U32 i = 1; i < mNumMipLevels; i++)
+         bitmapExtrude5551(getBits(i - 1), getWritableBits(i), getHeight(i), getWidth(i));
    }
+   else
+   {
+      for (U32 i = 1; i < mNumMipLevels; i++)
+      {
+         bitmapResizeToOutput(
+            getBits(i - 1),
+            getHeight(i - 1),
+            getWidth(i - 1),
+            getWritableBits(i),
+            getHeight(i),
+            getWidth(i),
+            mBytesPerPixel,
+            getFormat()
+         );
+      }
+   }
+
    if (clearBorders)
    {
       for (U32 i = 1; i<mNumMipLevels; i++)
@@ -538,7 +568,7 @@ void GBitmap::extrudeMipLevelsDetail()
       allocateBitmap(getWidth(), getHeight(), true, getFormat());
 
    for (i = 1; i < mNumMipLevels; i++) {
-      bitmapExtrudeRGB(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1));
+      bitmapExtrudeRGB(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1), mBytesPerPixel);
    }
 
    // Ok, now that we have the levels extruded, we need to move the lower miplevels
@@ -577,101 +607,24 @@ bool GBitmap::setFormat(GFXFormat fmt)
    for (U32 i=0; i < mNumMipLevels; i++)
       pixels += getHeight(i) * getWidth(i);
 
-   switch( getFormat() )
+   if (getFormat() == GFXFormatR8G8B8 && fmt == GFXFormatR5G5B5A1)
    {
-      case GFXFormatR8G8B8:
-         switch ( fmt )
-         {
-            case GFXFormatR5G5B5A1:
 #ifdef _XBOX
-               bitmapConvertRGB_to_1555(mBits, pixels);
+      bitmapConvertRGB_to_1555(mBits, pixels);
 #else
-               bitmapConvertRGB_to_5551(mBits, pixels);
+      bitmapConvertRGB_to_5551(mBits, pixels);
 #endif
-               mInternalFormat = GFXFormatR5G5B5A1;
-               mBytesPerPixel  = 2;
-               break;
-
-            case GFXFormatR8G8B8A8:
-            case GFXFormatR8G8B8X8:
-               // Took this out, it may crash -patw
-               //AssertFatal( mNumMipLevels == 1, "Do the mip-mapping in hardware." );
-
-               bitmapConvertRGB_to_RGBX( &mBits, pixels );
-               mInternalFormat = fmt;
-               mBytesPerPixel = 4;
-               mByteSize = pixels * 4;
-               break;
-
-            default:
-               AssertWarn(0, "GBitmap::setFormat: unable to convert bitmap to requested format.");
-               return false;
-         }
-         break;
-
-      case GFXFormatR8G8B8X8:
-         switch( fmt )
-         {
-            // No change needed for this
-            case GFXFormatR8G8B8A8:
-               mInternalFormat = GFXFormatR8G8B8A8;
-               break;
-
-            case GFXFormatR8G8B8:
-               bitmapConvertRGBX_to_RGB( &mBits, pixels );
-               mInternalFormat = GFXFormatR8G8B8;
-               mBytesPerPixel = 3;
-               mByteSize = pixels * 3;
-               break;
-
-            default:
-               AssertWarn(0, "GBitmap::setFormat: unable to convert bitmap to requested format.");
-               return false;
-         }
-         break;
-
-      case GFXFormatR8G8B8A8:
-         switch( fmt )
-         {
-            // No change needed for this
-            case GFXFormatR8G8B8X8:
-               mInternalFormat = GFXFormatR8G8B8X8;
-               break;
-
-            case GFXFormatR8G8B8:
-               bitmapConvertRGBX_to_RGB( &mBits, pixels );
-               mInternalFormat = GFXFormatR8G8B8;
-               mBytesPerPixel = 3;
-               mByteSize = pixels * 3;
-               break;
-
-            default:
-               AssertWarn(0, "GBitmap::setFormat: unable to convert bitmap to requested format.");
-               return false;
-         }
-         break;
-
-      case GFXFormatA8:
-         switch( fmt )
-         {
-            case GFXFormatR8G8B8A8:
-               mInternalFormat = GFXFormatR8G8B8A8;
-               bitmapConvertA8_to_RGBA( &mBits, pixels );
-               mBytesPerPixel = 4;
-               mByteSize = pixels * 4;
-               break;
-
-            default:
-               AssertWarn(0, "GBitmap::setFormat: unable to convert bitmap to requested format.");
-               return false;
-         }
-         break;
-
-      default:
-         AssertWarn(0, "GBitmap::setFormat: unable to convert bitmap to requested format.");
-         return false;
+      mInternalFormat = GFXFormatR5G5B5A1;
+      mBytesPerPixel = 2;
+   }
+   else
+   {
+      bitmapConvertToOutput(&mBits, pixels, getFormat(), fmt);
+      mInternalFormat = fmt;
+      mBytesPerPixel = getFormatBytesPerPixel(fmt);
    }
 
+   
    U32 offset = 0;
    for (U32 j=0; j < mNumMipLevels; j++)
    {
@@ -688,40 +641,43 @@ bool GBitmap::checkForTransparency()
 {
    mHasTransparency = false;
 
+   if (!mBits || mByteSize == 0)
+      return false;
+
    ColorI pixel(255, 255, 255, 255);
 
+   // Only check formats that can *possibly* have alpha.
    switch (mInternalFormat)
    {
-      // Non-transparent formats
-      case GFXFormatL8:
-	  case GFXFormatL16:
-      case GFXFormatR8G8B8:
-      case GFXFormatR5G6B5:
-         break;
-      // Transparent formats
-      case GFXFormatA8:
-      case GFXFormatR8G8B8A8:
-      case GFXFormatR5G5B5A1:
-         // Let getColor() do the heavy lifting
-         for (U32 x = 0; x < mWidth; x++)
+   case GFXFormatA8:
+   case GFXFormatA4L4:
+   case GFXFormatA8L8:
+   case GFXFormatR5G5B5A1:
+   case GFXFormatR8G8B8A8:
+   case GFXFormatB8G8R8A8:
+   case GFXFormatR8G8B8A8_SRGB:
+   case GFXFormatR10G10B10A2:
+   case GFXFormatR16G16B16A16:
+   case GFXFormatR16G16B16A16F:
+   case GFXFormatR32G32B32A32F:
+      break; // alpha-capable
+   default:
+      return false; // skip formats with no alpha
+   }
+
+   for (U32 x = 0; x < mWidth; x++)
+   {
+      for (U32 y = 0; y < mHeight; y++)
+      {
+         if (getColor(x, y, pixel))
          {
-            for (U32 y = 0; y < mHeight; y++)
+            if (pixel.alpha < 255)
             {
-               if (getColor(x, y, pixel))
-               {
-                  if (pixel.alpha < 255)
-                  {
-                     mHasTransparency = true;
-                     break;
-                  }
-               }
+               mHasTransparency = true;
+               break;
             }
          }
-
-         break;
-      default:
-         AssertFatal(false, "GBitmap::checkForTransparency: misunderstood format specifier");
-      break;
+      }
    }
 
    return mHasTransparency;
@@ -770,40 +726,197 @@ bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor) const
    if (x >= mWidth || y >= mHeight)
       return false;
 
-   const U8* pLoc = getAddress(x, y);
+   const U8* p = getAddress(x, y);
 
-   switch (mInternalFormat) {
-     case GFXFormatA8:
-     case GFXFormatL8:
-      rColor.set( *pLoc, *pLoc, *pLoc, *pLoc );
-      break;
-	 case GFXFormatL16:
-		 rColor.set(U8(U16((pLoc[0] << 8) + pLoc[1])), 0, 0, 0);
-       break;
-     case GFXFormatR8G8B8:
-     case GFXFormatR8G8B8X8:
-        rColor.set( pLoc[0], pLoc[1], pLoc[2], 255 );
+   switch (mInternalFormat)
+   {
+      // --- 8-bit ---
+   case GFXFormatA8:
+      rColor.set(255, 255, 255, p[0]);
       break;
 
-     case GFXFormatR8G8B8A8:
-      rColor.set( pLoc[0], pLoc[1], pLoc[2], pLoc[3] );
+   case GFXFormatL8:
+      rColor.set(p[0], p[0], p[0], 255);
       break;
 
-     case GFXFormatR5G5B5A1:
-#if defined(TORQUE_OS_MAC)
-      rColor.set( (*((U16*)pLoc) >> 0) & 0x1F,
-                  (*((U16*)pLoc) >> 5) & 0x1F,
-                  (*((U16*)pLoc) >> 10) & 0x1F,
-                  ((*((U16*)pLoc) >> 15) & 0x01) ? 255 : 0 );
+   case GFXFormatA4L4:
+   {
+      U8 v = p[0];
+      U8 lum = (v & 0x0F) * 17;
+      U8 alp = ((v >> 4) & 0x0F) * 17;
+      rColor.set(lum, lum, lum, alp);
+      break;
+   }
+
+   // --- 16-bit ---
+   case GFXFormatR5G6B5:
+   {
+      U16 c = ((U16*)p)[0];
+#ifdef TORQUE_BIG_ENDIAN
+      c = convertLEndianToHost(c);
+#endif
+      U8 r = (c >> 11) & 0x1F;
+      U8 g = (c >> 5) & 0x3F;
+      U8 b = c & 0x1F;
+      rColor.set((r << 3) | (r >> 2),
+         (g << 2) | (g >> 4),
+         (b << 3) | (b >> 2),
+         255);
+      break;
+   }
+
+   case GFXFormatR5G5B5A1:
+   {
+      U16 c = ((U16*)p)[0];
+#ifdef TORQUE_BIG_ENDIAN
+      c = convertLEndianToHost(c);
+#endif
+      U8 r = (c >> 11) & 0x1F;
+      U8 g = (c >> 6) & 0x1F;
+      U8 b = (c >> 1) & 0x1F;
+      U8 a = (c & 0x01) ? 255 : 0;
+      rColor.set((r << 3) | (r >> 2),
+         (g << 3) | (g >> 2),
+         (b << 3) | (b >> 2),
+         a);
+      break;
+   }
+
+   case GFXFormatA8L8:
+   {
+      U16 c = ((U16*)p)[0];
+#ifdef TORQUE_BIG_ENDIAN
+      c = convertLEndianToHost(c);
+#endif
+      U8 l = c & 0xFF;
+      U8 a = (c >> 8) & 0xFF;
+      rColor.set(l, l, l, a);
+      break;
+   }
+
+   case GFXFormatL16:
+   {
+      U16 l = ((U16*)p)[0];
+#ifdef TORQUE_BIG_ENDIAN
+      l = convertLEndianToHost(l);
+#endif
+      rColor.set(convert16To8(l), convert16To8(l), convert16To8(l), 255);
+      break;
+   }
+   case GFXFormatR16F:
+   {
+      const U16* v = (U16*)p;
+      rColor.set(
+         floatTo8(convertHalfToFloat(v[0])),
+         0,
+         0,
+         255
+      );
+      break;
+   }
+
+   // --- 24-bit ---
+   case GFXFormatR8G8B8:
+   case GFXFormatR8G8B8_SRGB:
+      rColor.set(p[0], p[1], p[2], 255);
+      break;
+
+   // --- 32-bit ---
+   case GFXFormatR32F:
+   {
+      const F32* v = (F32*)p;
+      rColor.set(
+         floatTo8(v[0]), // red
+         0,                                      // green
+         0,                                      // blue
+         255                                     // alpha
+      );
+      break;
+   }
+   case GFXFormatR16G16:
+   {
+      const U16* v = (U16*)p;
+#ifdef TORQUE_BIG_ENDIAN
+      U16 r = convertLEndianToHost(v[0]);
+      U16 g = convertLEndianToHost(v[1]);
 #else
-      rColor.set( *((U16*)pLoc) >> 11,
-                  (*((U16*)pLoc) >> 6) & 0x1f,
-                  (*((U16*)pLoc) >> 1) & 0x1f,
-                  (*((U16*)pLoc) & 1) ? 255 : 0 );
+      U16 r = v[0];
+      U16 g = v[1];
+#endif
+      rColor.set(
+         convert16To8(r),    // red
+         convert16To8(g),    // green
+         0,             // blue
+         255            // alpha
+      );
+      break;
+   }
+   case GFXFormatR16G16F:
+   {
+      const U16* v = (U16*)p;
+      rColor.set(
+         floatTo8(convertHalfToFloat(v[0])),
+         floatTo8(convertHalfToFloat(v[1])),
+         0,
+         255
+      );
+      break;
+   }
+
+   case GFXFormatR8G8B8A8:
+   case GFXFormatR8G8B8A8_SRGB:
+   case GFXFormatR8G8B8X8:
+      rColor.set(p[0], p[1], p[2], (mInternalFormat == GFXFormatR8G8B8X8) ? 255 : p[3]);
+      break;
+
+   case GFXFormatB8G8R8A8:
+      rColor.set(p[2], p[1], p[0], p[3]);
+      break;
+
+   // --- 64-bit ---
+   case GFXFormatR16G16B16A16:
+   {
+      const U16* v = (U16*)p;
+#ifdef TORQUE_BIG_ENDIAN
+      rColor.set(
+         convert16To8(v[2]),
+         convert16To8(v[1]),
+         convert16To8(v[0]),
+         convert16To8(v[3]));
+#else
+      rColor.set(
+         convert16To8(v[0]),
+         convert16To8(v[1]),
+         convert16To8(v[2]),
+         convert16To8(v[3]));
 #endif
       break;
+   }
 
-     default:
+   case GFXFormatR16G16B16A16F:
+   {
+      const U16* v = (const U16*)p;
+      rColor.set(floatTo8(
+         convertHalfToFloat(v[0])),
+         floatTo8(convertHalfToFloat(v[1])),
+         floatTo8(convertHalfToFloat(v[2])),
+         floatTo8(convertHalfToFloat(v[3])));
+      break;
+   }
+
+   // --- 128-bit ---
+   case GFXFormatR32G32B32A32F:
+   {
+      const F32* v = (const F32*)p;
+      rColor.set(
+         floatTo8(v[0]),
+         floatTo8(v[1]),
+         floatTo8(v[2]),
+         floatTo8(v[3]));
+      break;
+   }
+
+   default:
       AssertFatal(false, "Bad internal format");
       return false;
    }
@@ -820,45 +933,158 @@ bool GBitmap::setColor(const U32 x, const U32 y, const ColorI& rColor)
    if (x >= mWidth || y >= mHeight)
       return false;
 
-   U8* pLoc = getAddress(x, y);
+   U8* p = getAddress(x, y);
 
-   switch (mInternalFormat) {
-     case GFXFormatA8:
-     case GFXFormatL8:
-      *pLoc = rColor.alpha;
+   switch (mInternalFormat)
+   {
+
+   // --- 8-bit ---
+   case GFXFormatA8:
+      *p = rColor.alpha;
       break;
 
-	 case GFXFormatL16:
-		 dMemcpy(pLoc, &rColor, 2 * sizeof(U8));
-		 break;
-
-     case GFXFormatR8G8B8:
-      dMemcpy( pLoc, &rColor, 3 * sizeof( U8 ) );
+   case GFXFormatL8:
+      *p = rColor.red; // L = R channel
       break;
 
-     case GFXFormatR8G8B8A8:
-     case GFXFormatR8G8B8X8:
-      dMemcpy( pLoc, &rColor, 4 * sizeof( U8 ) );
+   case GFXFormatA4L4:
+   {
+      U8 lum = rColor.red / 17;
+      U8 alp = rColor.alpha / 17;
+      *p = (alp << 4) | (lum & 0x0F);
       break;
-      
-     case GFXFormatR5G6B5:
-      #ifdef TORQUE_OS_MAC
-         *((U16*)pLoc) = (rColor.red << 11) | (rColor.green << 5) | (rColor.blue << 0) ;
-      #else
-         *((U16*)pLoc) = (rColor.blue << 0) | (rColor.green << 5) | (rColor.red << 11);
-      #endif
+   }
+
+   // --- 16-bit ---
+   case GFXFormatR5G6B5:
+   {
+      U16 r = rColor.red * 31 / 255;
+      U16 g = rColor.green * 63 / 255;
+      U16 b = rColor.blue * 31 / 255;
+#ifdef TORQUE_BIG_ENDIAN
+      * (U16*)p = (r << 11) | (g << 5) | b;
+#else
+      * (U16*)p = (b) | (g << 5) | (r << 11);
+#endif
+      break;
+   }
+
+   case GFXFormatR5G5B5A1:
+   {
+      U16 r = rColor.red * 31 / 255;
+      U16 g = rColor.green * 31 / 255;
+      U16 b = rColor.blue * 31 / 255;
+      U16 a = (rColor.alpha > 0) ? 1 : 0;
+#ifdef TORQUE_BIG_ENDIAN
+      * (U16*)p = (a << 15) | (b << 10) | (g << 5) | r;
+#else
+      * (U16*)p = (r << 11) | (g << 6) | (b << 1) | a;
+#endif
+      break;
+   }
+
+   case GFXFormatA8L8:
+   {
+      U16 l = rColor.red;
+      U16 a = rColor.alpha;
+#ifdef TORQUE_BIG_ENDIAN
+      * (U16*)p = (a << 8) | l;
+#else
+      * (U16*)p = (l) | (a << 8);
+#endif
+      break;
+   }
+
+   case GFXFormatL16:
+      *(U16*)p = convert8To16(rColor.red);
       break;
 
-     case GFXFormatR5G5B5A1:
-      #ifdef TORQUE_OS_MAC
-         *((U16*)pLoc) = (((rColor.alpha>0) ? 1 : 0)<<15) | (rColor.blue << 10) | (rColor.green << 5) | (rColor.red << 0);
-      #else
-         *((U16*)pLoc) = (rColor.blue << 1) | (rColor.green << 6) | (rColor.red << 11) | ((rColor.alpha>0) ? 1 : 0);
-      #endif
+   case GFXFormatR16F:
+   {
+      U16* v = (U16*)p;
+      v[0] = convertFloatToHalf(rColor.red / 255.f);
+      break;
+   }
+
+   // --- 24-bit ---
+   case GFXFormatR8G8B8:
+   case GFXFormatR8G8B8_SRGB:
+      p[0] = rColor.red;
+      p[1] = rColor.green;
+      p[2] = rColor.blue;
       break;
 
-     default:
-      AssertFatal(false, "Bad internal format");
+   // --- 32-bit ---
+   case GFXFormatR32F:
+   {
+      F32* v = (F32*)p;
+      v[0] = rColor.red / 255.f;
+      break;
+   }
+   case GFXFormatR16G16:
+   {
+      U16* v = (U16*)p;
+      v[0] = convert8To16(rColor.red);
+      v[1] = convert8To16(rColor.green);
+      break;
+   }
+   case GFXFormatR16G16F:
+   {
+      U16* v = (U16*)p;
+      v[0] = convertFloatToHalf(rColor.red / 255.f);
+      v[1] = convertFloatToHalf(rColor.green / 255.f);
+      break;
+   }
+   case GFXFormatR8G8B8A8:
+   case GFXFormatR8G8B8A8_SRGB:
+   case GFXFormatR8G8B8X8:
+      p[0] = rColor.red;
+      p[1] = rColor.green;
+      p[2] = rColor.blue;
+      p[3] = (mInternalFormat == GFXFormatR8G8B8X8) ? 255 : rColor.alpha;
+      break;
+
+   case GFXFormatB8G8R8A8:
+      p[0] = rColor.blue;
+      p[1] = rColor.green;
+      p[2] = rColor.red;
+      p[3] = rColor.alpha;
+      break;
+
+   // --- 64-bit ---
+   case GFXFormatR16G16B16A16:
+   {
+      U16* v = (U16*)p;
+      v[0] = convert8To16(rColor.red);
+      v[1] = convert8To16(rColor.green);
+      v[2] = convert8To16(rColor.blue);
+      v[3] = convert8To16(rColor.alpha);
+      break;
+   }
+
+   case GFXFormatR16G16B16A16F:
+   {
+      U16* v = (U16*)p;
+      v[0] = convertFloatToHalf(rColor.red / 255.f);
+      v[1] = convertFloatToHalf(rColor.green / 255.f);
+      v[2] = convertFloatToHalf(rColor.blue / 255.f);
+      v[3] = convertFloatToHalf(rColor.alpha / 255.f);
+      break;
+   }
+
+   // --- 128-bit ---
+   case GFXFormatR32G32B32A32F:
+   {
+      F32* v = (F32*)p;
+      v[0] = rColor.red / 255.f;
+      v[1] = rColor.green / 255.f;
+      v[2] = rColor.blue / 255.f;
+      v[3] = rColor.alpha / 255.f;
+      break;
+   }
+
+   default:
+      AssertFatal(false, "Bad internal format in setColor");
       return false;
    }
 
@@ -870,7 +1096,7 @@ U8 GBitmap::getChanelValueAt(U32 x, U32 y, U32 chan)
 {
    ColorI pixelColor = ColorI(255,255,255,255);
    getColor(x, y, pixelColor);
-   if (mInternalFormat == GFXFormatL16)
+   if (mInternalFormat == GFXFormatL16 || mInternalFormat == GFXFormatL8)
    {
       chan = 0;
    }
@@ -1124,6 +1350,7 @@ void GBitmap::copyChannel( U32 index, GBitmap *outBitmap ) const
 
 bool GBitmap::read(Stream& io_rStream)
 {
+   PROFILE_SCOPE(GBitmap_Read);
    // Handle versioning
    U32 version;
    io_rStream.read(&version);
@@ -1133,23 +1360,7 @@ bool GBitmap::read(Stream& io_rStream)
    U32 fmt;
    io_rStream.read(&fmt);
    mInternalFormat = GFXFormat(fmt);
-   mBytesPerPixel = 1;
-   switch (mInternalFormat) {
-     case GFXFormatA8:
-     case GFXFormatL8:  mBytesPerPixel = 1;
-      break;
-     case GFXFormatR8G8B8:        mBytesPerPixel = 3;
-      break;
-     case GFXFormatR8G8B8A8:       mBytesPerPixel = 4;
-      break;
-	 case GFXFormatL16:
-     case GFXFormatR5G6B5:
-     case GFXFormatR5G5B5A1:    mBytesPerPixel = 2;
-      break;
-     default:
-      AssertFatal(false, "GBitmap::read: misunderstood format specifier");
-      break;
-   }
+   mBytesPerPixel = getFormatBytesPerPixel(mInternalFormat);
 
    io_rStream.read(&mByteSize);
 
@@ -1170,6 +1381,7 @@ bool GBitmap::read(Stream& io_rStream)
 
 bool GBitmap::write(Stream& io_rStream) const
 {
+   PROFILE_SCOPE(GBitmap_Write);
    // Handle versioning
    io_rStream.write(csFileVersion);
 
@@ -1266,7 +1478,30 @@ template<> void *Resource<GBitmap>::create(const Torque::Path &path)
    Con::printf( "Resource<GBitmap>::create - [%s]", path.getFullPath().c_str() );
 #endif
 
+   GBitmap* bmp = new GBitmap;
    FileStream  stream;
+
+   Torque::Path dbm = path;
+   dbm.setExtension("dbm");
+   if (Torque::FS::IsFile(dbm))
+   {
+
+      Torque::FS::FileNodeRef assetFile = Torque::FS::GetFileNode(path);
+      Torque::FS::FileNodeRef compiledFile = Torque::FS::GetFileNode(dbm);
+
+      if (assetFile != NULL && compiledFile != NULL)
+      {
+         if (compiledFile->getModifiedTime() >= assetFile->getModifiedTime())
+         {
+#ifdef TORQUE_DEBUG_RES_MANAGER
+            Con::printf("Resource<GBitmap>::create - Loading cached image file: %s", dbm.getFullPath().c_str());
+#endif
+            stream.open(dbm.getFullPath(), Torque::FS::File::Read);
+            bmp->read(stream);
+            return bmp;
+         }
+      }
+   }
 
    stream.open( path.getFullPath(), Torque::FS::File::Read );
 
@@ -1276,7 +1511,6 @@ template<> void *Resource<GBitmap>::create(const Torque::Path &path)
       return NULL;
    }
 
-   GBitmap *bmp = new GBitmap;
    const String extension = path.getExtension();
    if( !bmp->readBitmap( extension, path ) )
    {
@@ -1411,6 +1645,7 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
    "Saving it out to the destination path.\n")
 {
    bool isDDS = false;
+   bool isHDR = false;
 
    if (bitmapSource == 0 || bitmapSource[0] == '\0' || bitmapDest == 0 || bitmapDest[0] == '\0')
    {
@@ -1429,6 +1664,9 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
    {
       if (String::ToLower(ret) == String(".dds"))
          isDDS = true;
+
+      if (String::ToLower(ret) == String(".hdr"))
+         isHDR = true;
    }
    else
    {
@@ -1461,6 +1699,8 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
 
    if (isPow2(image->getWidth()) && isPow2(image->getHeight()))
       image->extrudeMipLevels();
+
+   image->setFormat(GFXFormatR8G8B8A8);
 
    U32 mipCount = image->getNumMipLevels();
    U32 targetMips = mFloor(mLog2((F32)(resolutionSize ? resolutionSize : 256))) + 1;

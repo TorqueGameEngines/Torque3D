@@ -33,26 +33,16 @@ U32 GFXD3D11TextureObject::mTexCount = 0;
 //	GFXFormatR8G8B8 has now the same behaviour as GFXFormatR8G8B8X8. 
 //	This is because 24 bit format are now deprecated by microsoft, for data alignment reason there's no changes beetween 24 and 32 bit formats.
 //	DirectX 10-11 both have 24 bit format no longer.
-
-
-GFXD3D11TextureObject::GFXD3D11TextureObject( GFXDevice * d, GFXTextureProfile *profile) : GFXTextureObject( d, profile )
+GFXD3D11TextureObject::GFXD3D11TextureObject( GFXDevice * d, GFXTextureProfile *profile, const U32 arraySize) : GFXTextureObject( d, profile )
 {
 #ifdef D3D11_DEBUG_SPEW
    mTexCount++;
    Con::printf("+ texMake %d %x", mTexCount, this);
 #endif
-
-   mD3DTexture = NULL;
-   mLocked = false;
-
-   mD3DSurface = NULL;
+   isManaged = false;
    dMemset(&mLockRect, 0, sizeof(mLockRect));
    dMemset(&mLockBox, 0, sizeof(mLockBox));
-   mLockedSubresource = 0;
-   mDSView = NULL;
-   mRTView = NULL;
-   mSRView = NULL;
-   isManaged = false;
+   mArraySize = arraySize;
 }
 
 GFXD3D11TextureObject::~GFXD3D11TextureObject()
@@ -64,53 +54,76 @@ GFXD3D11TextureObject::~GFXD3D11TextureObject()
 #endif
 }
 
-GFXLockedRect *GFXD3D11TextureObject::lock(U32 mipLevel /*= 0*/, RectI *inRect /*= NULL*/)
+ID3D11Texture2D* GFXD3D11TextureObject::get2DTex() const
 {
-   AssertFatal( !mLocked, "GFXD3D11TextureObject::lock - The texture is already locked!" );
+   ComPtr<ID3D11Texture2D> tex2D;
+   if (mD3DTexture) mD3DTexture.As(&tex2D);
+   return tex2D.Get();
+}
 
-   if( !mStagingTex ||
+ID3D11Texture3D* GFXD3D11TextureObject::get3DTex() const
+{
+   ComPtr<ID3D11Texture3D> tex3D;
+   if (mD3DTexture) mD3DTexture.As(&tex3D);
+   return tex3D.Get();
+}
+
+ID3D11Texture2D** GFXD3D11TextureObject::get2DTexPtr()
+{
+   return reinterpret_cast<ID3D11Texture2D**>(mD3DTexture.GetAddressOf());
+}
+
+ID3D11Texture3D** GFXD3D11TextureObject::get3DTexPtr()
+{
+   return reinterpret_cast<ID3D11Texture3D**>(mD3DTexture.GetAddressOf());
+}
+
+ID3D11RenderTargetView** GFXD3D11TextureObject::getCubeFaceRTViewPtr(U32 face)
+{
+   AssertFatal(isCubeMap(), "Not a cubemap texture!");
+   AssertFatal(face < 6, "Invalid cubemap face index!");
+   return mCubeRTV[face].GetAddressOf();
+}
+
+GFXLockedRect* GFXD3D11TextureObject::lock(U32 mipLevel /*= 0*/, RectI* inRect /*= NULL*/, U32 faceIndex /*= 0*/)
+{
+   AssertFatal(!mLocked, "GFXD3D11TextureObject::lock - Texture is already locked!");
+   AssertFatal(faceIndex < 6 || !isCubeMap(), "Invalid cubemap face index!");
+
+   // Ensure staging texture exists and matches size
+   if (!mStagingTex.isValid() ||
       mStagingTex->getWidth() != getWidth() ||
       mStagingTex->getHeight() != getHeight() ||
       mStagingTex->getDepth() != getDepth())
    {
-      if (getDepth() != 0)
-      {
-         mStagingTex.set(getWidth(), getHeight(), getDepth(), mFormat, &GFXSystemMemTextureProfile, avar("%s() - mLockTex (line %d)", __FUNCTION__, __LINE__, 0));
-      }
-      else
-      {
-         mStagingTex.set(getWidth(), getHeight(), mFormat, &GFXSystemMemTextureProfile, avar("%s() - mLockTex (line %d)", __FUNCTION__, __LINE__));
-      }
+      mStagingTex.set(getWidth(), getHeight(), mFormat, &GFXSystemMemTextureProfile,
+         avar("%s() - stagingTex", __FUNCTION__));
    }
 
-   ID3D11DeviceContext* pContext = D3D11DEVICECONTEXT;
    D3D11_MAPPED_SUBRESOURCE mapInfo;
-   U32 offset = 0;
-   mLockedSubresource = D3D11CalcSubresource(mipLevel, 0, getMipLevels());
-   GFXD3D11TextureObject* pD3DStagingTex = (GFXD3D11TextureObject*)&(*mStagingTex);
 
-   //map staging texture
-   HRESULT hr = pContext->Map(pD3DStagingTex->getResource(), mLockedSubresource, D3D11_MAP_WRITE, 0, &mapInfo);      
+   mLockedSubresource = D3D11CalcSubresource(mipLevel, faceIndex, getMipLevels());
+   GFXD3D11TextureObject* staging = (GFXD3D11TextureObject*)&(*mStagingTex);
 
+   HRESULT hr = D3D11DEVICECONTEXT->Map(staging->getResource(), mLockedSubresource, D3D11_MAP_WRITE, 0, &mapInfo);
    if (FAILED(hr))
       AssertFatal(false, "GFXD3D11TextureObject:lock - failed to map render target resource!");
-
 
    const bool is3D = mStagingTex->getDepth() != 0;
    const U32 width = mTextureSize.x >> mipLevel;
    const U32 height = mTextureSize.y >> mipLevel;
    const U32 depth = is3D ? mTextureSize.z >> mipLevel : 1;
+   U32 offset = 0;
 
-   //calculate locked box region and offset
    if (inRect)
    {
-      if ((inRect->point.x + inRect->extent.x > width) || (inRect->point.y + inRect->extent.y > height))
-         AssertFatal(false, "GFXD3D11TextureObject::lock - Rectangle too big!");
+      AssertFatal(inRect->point.x + inRect->extent.x <= width, "GFXD3D11TextureObject::lock - Invalid lock rect width!");
+      AssertFatal(inRect->point.y + inRect->extent.y <= height, "GFXD3D11TextureObject::lock - Invalid lock rect height!");
 
       mLockBox.top = inRect->point.y;
       mLockBox.left = inRect->point.x;
-      mLockBox.bottom = inRect->point.y + inRect->extent.y;
       mLockBox.right = inRect->point.x + inRect->extent.x;
+      mLockBox.bottom = inRect->point.y + inRect->extent.y;
       mLockBox.back = depth;
       mLockBox.front = 0;
 
@@ -121,49 +134,57 @@ GFXLockedRect *GFXD3D11TextureObject::lock(U32 mipLevel /*= 0*/, RectI *inRect /
    {
       mLockBox.top = 0;
       mLockBox.left = 0;
-      mLockBox.bottom = height;
       mLockBox.right = width;
+      mLockBox.bottom = height;
       mLockBox.back = depth;
       mLockBox.front = 0;
+
    }
 
    mLocked = true;
    mLockRect.pBits = static_cast<U8*>(mapInfo.pData) + offset;
    mLockRect.Pitch = mapInfo.RowPitch;
 
-   return (GFXLockedRect*)&mLockRect;
+   return reinterpret_cast<GFXLockedRect*>(&mLockRect);
 }
 
-void GFXD3D11TextureObject::unlock(U32 mipLevel)
+void GFXD3D11TextureObject::unlock(U32 mipLevel /*= 0*/, U32 faceIndex /*= 0*/)
 {
-   AssertFatal( mLocked, "GFXD3D11TextureObject::unlock - Attempting to unlock a surface that has not been locked" );
+   AssertFatal(mLocked, "GFXD3D11TextureObject::unlock - Texture is not locked!");
+   AssertFatal(faceIndex < 6 || !isCubeMap(), "Invalid cubemap face index!");
 
-   //profile in the unlock function because all the heavy lifting is done here
-   PROFILE_START(GFXD3D11TextureObject_lockRT);
+   PROFILE_START(GFXD3D11TextureObject_unlock);
 
-   ID3D11DeviceContext* pContext = D3D11DEVICECONTEXT;
-   GFXD3D11TextureObject* pD3DStagingTex = (GFXD3D11TextureObject*)&(*mStagingTex);
-   ID3D11Resource* pStagingResource = pD3DStagingTex->getResource();
-   const bool is3D = mStagingTex->getDepth() != 0;
+   GFXD3D11TextureObject* staging = (GFXD3D11TextureObject*)&(*mStagingTex);
 
-   //unmap staging texture
-   pContext->Unmap(pStagingResource, mLockedSubresource);
-   //copy lock box region from the staging texture to our regular texture
-   pContext->CopySubresourceRegion(mD3DTexture, mLockedSubresource, mLockBox.left, mLockBox.top, is3D ? mLockBox.back : 0, pStagingResource, mLockedSubresource, &mLockBox);
+   D3D11DEVICECONTEXT->Unmap(staging->getResource(), mLockedSubresource);
 
-   PROFILE_END();
+   // Copy from staging back to GPU texture
+   D3D11DEVICECONTEXT->CopySubresourceRegion(
+      mD3DTexture.Get(),
+      mLockedSubresource,
+      0, 0, 0,
+      staging->getResource(),
+      mLockedSubresource,
+      &mLockBox
+   );
 
    mLockedSubresource = 0;
    mLocked = false;
+   
+   PROFILE_END();
 }
 
 void GFXD3D11TextureObject::release()
 {
-   SAFE_RELEASE(mSRView);
-   SAFE_RELEASE(mRTView);
-   SAFE_RELEASE(mDSView);
-   SAFE_RELEASE(mD3DTexture);
-   SAFE_RELEASE(mD3DSurface);
+   mSRView.Reset();
+   mRTView.Reset();
+   mDSView.Reset();
+   mD3DTexture.Reset();
+   mD3DSurface.Reset();
+
+   for (auto& faceRTV : mCubeRTV)
+      faceRTV.Reset();
 }
 
 void GFXD3D11TextureObject::zombify()
@@ -189,149 +210,206 @@ bool GFXD3D11TextureObject::copyToBmp(GBitmap* bmp)
    if (!bmp)
       return false;
 
-   // check format limitations
-   // at the moment we only support RGBA for the source (other 4 byte formats should
-   // be easy to add though)
-   AssertFatal(mFormat == GFXFormatR16G16B16A16F || mFormat == GFXFormatR8G8B8A8 || mFormat == GFXFormatR8G8B8A8_LINEAR_FORCE || mFormat == GFXFormatR8G8B8A8_SRGB || mFormat == GFXFormatR8G8B8, "copyToBmp: invalid format");
-   if (mFormat != GFXFormatR16G16B16A16F && mFormat != GFXFormatR8G8B8A8 && mFormat != GFXFormatR8G8B8A8_LINEAR_FORCE && mFormat != GFXFormatR8G8B8A8_SRGB && mFormat != GFXFormatR8G8B8)
-      return false;
+   AssertFatal(mFormat == GFXFormatR16G16B16A16F || mFormat == GFXFormatR8G8B8A8 ||
+      mFormat == GFXFormatR8G8B8A8_LINEAR_FORCE || mFormat == GFXFormatR8G8B8A8_SRGB ||
+      mFormat == GFXFormatR8G8B8,
+      "GFXD3D11TextureObject::copyToBmp - Unsupported source format.");
 
    PROFILE_START(GFXD3D11TextureObject_copyToBmp);
 
-   AssertFatal(bmp->getWidth() == getWidth(), avar("GFXGLTextureObject::copyToBmp - Width mismatch: %i vs %i", bmp->getWidth(), getWidth()));
-   AssertFatal(bmp->getHeight() == getHeight(), avar("GFXGLTextureObject::copyToBmp - Height mismatch: %i vs %i", bmp->getHeight(), getHeight()));
-   const U32 mipLevels = getMipLevels();
+   AssertFatal(bmp->getWidth() == getWidth(), "Width mismatch between texture and bitmap.");
+   AssertFatal(bmp->getHeight() == getHeight(), "Height mismatch between texture and bitmap.");
 
+   const U32 mipLevels = getMipLevels();
    bmp->setHasTransparency(mHasTransparency);
 
-   // set some constants
-   U32 sourceBytesPerPixel = 4;
-   U32 destBytesPerPixel = 0;
+   // Figure out bytes per pixel
+   const bool isFP16 = (bmp->getFormat() == GFXFormatR16G16B16A16F);
+   const U32 destBpp = (bmp->getFormat() == GFXFormatR8G8B8 ? 3 :
+      bmp->getFormat() == GFXFormatR16G16B16A16F ? 8 : 4);
+   const U32 srcBpp = (mFormat == GFXFormatR16G16B16A16F ? 8 : 4);
 
-   const GFXFormat fmt = bmp->getFormat();
-   bool fp16 = false;//is rgba16f format?
-   if (fmt == GFXFormatR16G16B16A16F)
-   {
-      destBytesPerPixel = 8;
-      sourceBytesPerPixel = 8;
-      fp16 = true;
-   }
-   else if (fmt == GFXFormatR8G8B8A8 || fmt == GFXFormatR8G8B8A8_LINEAR_FORCE || fmt == GFXFormatR8G8B8A8_SRGB)
-      destBytesPerPixel = 4;
-   else if(bmp->getFormat() == GFXFormatR8G8B8)
-      destBytesPerPixel = 3;
-   else
-      // unsupported
-      AssertFatal(false, "GFXD3D11TextureObject::copyToBmp - unsupported bitmap format");
-   
-   //create temp staging texture
-   D3D11_TEXTURE2D_DESC desc;
-   static_cast<ID3D11Texture2D*>(mD3DTexture)->GetDesc(&desc);
+   // --- Create staging texture ---
+   D3D11_TEXTURE2D_DESC desc = {};
+   reinterpret_cast<ID3D11Texture2D*>(mD3DTexture.Get())->GetDesc(&desc);
    desc.BindFlags = 0;
-   desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+   desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
    desc.Usage = D3D11_USAGE_STAGING;
    desc.MiscFlags = 0;
 
-   ID3D11Texture2D* pStagingTexture = NULL;
-   HRESULT hr = D3D11DEVICE->CreateTexture2D(&desc, NULL, &pStagingTexture);
+   ComPtr<ID3D11Texture2D> stagingTex;
+   HRESULT hr = D3D11DEVICE->CreateTexture2D(&desc, nullptr, stagingTex.GetAddressOf());
    if (FAILED(hr))
    {
-      Con::errorf("GFXD3D11TextureObject::copyToBmp - Failed to create staging texture"); 
+      Con::errorf("GFXD3D11TextureObject::copyToBmp - Failed to create staging texture (0x%X)", hr);
       return false;
    }
 
-   //copy the classes texture to the staging texture
-   D3D11DEVICECONTEXT->CopyResource(pStagingTexture, mD3DTexture);
+   // --- Copy texture (handle cubemap or 2D) ---
+   const U32 faceCount = isCubeMap() && bmp->getNumFaces() == 6 ? 6 : 1;
 
-   for (U32 mip = 0; mip < mipLevels; mip++)
+   for (U32 face = 0; face < faceCount; ++face)
    {
-      const U32 width = bmp->getWidth(mip);
-      const U32 height = bmp->getHeight(mip);
-      //map the staging resource
-      D3D11_MAPPED_SUBRESOURCE mappedRes;
-      const U32 subResource = D3D11CalcSubresource(mip, 0, mipLevels);
-      hr = D3D11DEVICECONTEXT->Map(pStagingTexture, subResource, D3D11_MAP_READ, 0, &mappedRes);
-      if (FAILED(hr))
+      for (U32 mip = 0; mip < mipLevels; ++mip)
       {
-         //cleanup
-         SAFE_RELEASE(pStagingTexture);
-         Con::errorf("GFXD3D11TextureObject::copyToBmp - Failed to map staging texture");
-         return false;
-      }
+         const U32 srcSubRes = D3D11CalcSubresource(mip, face, mipLevels);
+         // Always map mip-level 0..mipLevels-1 on *slice 0* of the staging texture
+         const U32 dstSubRes = D3D11CalcSubresource(mip, face, mipLevels);
 
-      // set pointers
-      const U8* srcPtr = (U8*)mappedRes.pData;
-      U8* destPtr = bmp->getWritableBits(mip);
+         D3D11DEVICECONTEXT->CopySubresourceRegion(
+            stagingTex.Get(), dstSubRes, 0, 0, 0,
+            mD3DTexture.Get(), srcSubRes, nullptr);
 
-      // we will want to skip over any D3D cache data in the source texture
-      const S32 sourceCacheSize = mappedRes.RowPitch - width * sourceBytesPerPixel;
-      AssertFatal(sourceCacheSize >= 0, "GFXD3D11TextureObject::copyToBmp - cache size is less than zero?");
-
-      // copy data into bitmap
-      for (U32 row = 0; row < height; ++row)
-      {
-         for (U32 col = 0; col < width; ++col)
+         D3D11_MAPPED_SUBRESOURCE mapped = {};
+         hr = D3D11DEVICECONTEXT->Map(stagingTex.Get(), dstSubRes, D3D11_MAP_READ, 0, &mapped);
+         if (FAILED(hr))
          {
-            //we can just copy data straight in with RGBA16F format
-            if (fp16)
-            {
-               dMemcpy(destPtr, srcPtr, sizeof(U16) * 4);
-            }
-            else
-            {            
-               destPtr[0] = srcPtr[2]; // red
-               destPtr[1] = srcPtr[1]; // green
-               destPtr[2] = srcPtr[0]; // blue 
-               if (destBytesPerPixel == 4)
-                  destPtr[3] = srcPtr[3]; // alpha
-            }
-
-            // go to next pixel in src
-            srcPtr += sourceBytesPerPixel;
-
-            // go to next pixel in dest
-            destPtr += destBytesPerPixel;
+            Con::errorf("GFXD3D11TextureObject::copyToBmp - Failed to map staging texture (0x%X)", hr);
+            return false;
          }
-         // skip past the cache data for this row (if any)
-         srcPtr += sourceCacheSize;
+
+         const U8* src = static_cast<const U8*>(mapped.pData);
+         U8* dst = bmp->getWritableBits(mip, face);
+
+         const U32 width = bmp->getWidth(mip);
+         const U32 height = bmp->getHeight(mip);
+
+         for (U32 y = 0; y < height; ++y)
+         {
+            const U8* srcRow = src;
+            U8* dstRow = dst;
+
+            for (U32 x = 0; x < width; ++x)
+            {
+               if (isFP16)
+               {
+                  dMemcpy(dstRow, srcRow, sizeof(U16) * 4);
+               }
+               else
+               {
+                  // Convert BGRA → RGB(A)
+                  dstRow[0] = srcRow[2];
+                  dstRow[1] = srcRow[1];
+                  dstRow[2] = srcRow[0];
+                  if (destBpp == 4)
+                     dstRow[3] = srcRow[3];
+               }
+               srcRow += srcBpp;
+               dstRow += destBpp;
+            }
+
+            src += mapped.RowPitch;
+            dst += width * destBpp;
+         }
+
+         D3D11DEVICECONTEXT->Unmap(stagingTex.Get(), dstSubRes);
       }
-
-      // assert if we stomped or underran memory
-      AssertFatal(U32(destPtr - bmp->getWritableBits(mip)) == width * height * destBytesPerPixel, "GFXD3D11TextureObject::copyToBmp - memory error");
-      AssertFatal(U32(srcPtr - (U8*)mappedRes.pData) == height * mappedRes.RowPitch, "GFXD3D11TextureObject::copyToBmp - memory error");
-
-      D3D11DEVICECONTEXT->Unmap(pStagingTexture, subResource);
    }
 
-   SAFE_RELEASE(pStagingTexture);
    PROFILE_END();
-
    return true;
 }
 
-ID3D11ShaderResourceView* GFXD3D11TextureObject::getSRView()
+void GFXD3D11TextureObject::generateMipMaps()
 {
-	return mSRView;
-}
-ID3D11RenderTargetView* GFXD3D11TextureObject::getRTView()
-{
-	return mRTView;
-}
-ID3D11DepthStencilView* GFXD3D11TextureObject::getDSView()
-{
-	return mDSView;
+   //Generate mips
+   D3D11DEVICECONTEXT->GenerateMips(mSRView.Get());
+   //get mip level count
+   D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
+   mSRView->GetDesc(&viewDesc);
+   mMipLevels = viewDesc.TextureCube.MipLevels;
 }
 
-ID3D11ShaderResourceView** GFXD3D11TextureObject::getSRViewPtr()
+void GFXD3D11TextureObject::updateTextureSlot(const GFXTexHandle& texHandle, const U32 slot, const S32 faceIdx /*=-1*/)
 {
-	return &mSRView;
-}
-ID3D11RenderTargetView** GFXD3D11TextureObject::getRTViewPtr()
-{
-	return &mRTView;
+   AssertFatal(slot < getArraySize(), "updateTextureSlot - destination slot out of bounds");
+   AssertFatal(mFormat == texHandle->getFormat(), "updateTextureSlot - format mismatch");
+   AssertFatal(getMipLevels() == texHandle->getMipLevels(), "updateTextureSlot - mip level mismatch");
+
+   GFXD3D11TextureObject* srcTex = static_cast<GFXD3D11TextureObject*>(texHandle.getPointer());
+
+   ID3D11Resource* dstRes = get2DTex();
+   ID3D11Resource* srcRes = srcTex->get2DTex();
+
+   const UINT mipLevels = getMipLevels();
+
+   const bool dstIsCube = isCubeMap();
+   const bool srcIsCube = srcTex->isCubeMap();
+
+   const UINT dstArraySize = getArraySize();
+   const UINT srcArraySize = srcTex->getArraySize();
+
+   // Determine number of faces to copy
+   const UINT faceCount = srcIsCube ? 6 : 1;
+   const UINT startFace = (faceIdx >= 0) ? faceIdx : 0;
+   const UINT endFace = (faceIdx >= 0) ? faceIdx + 1 : faceCount;
+
+   for (UINT face = startFace; face < endFace; ++face)
+   {
+      // Compute source slice
+      const UINT srcSlice = srcIsCube
+         ? (srcArraySize > 1 ? face + slot * 6 : face)   // only add slot*6 if it's a cubemap array
+         : (srcArraySize > 1 ? face + slot : 0);        // otherwise, single 2D texture or 2D array
+
+      const UINT dstSlice = dstIsCube
+         ? (dstArraySize > 1 ? face + slot * 6 : face)  // only add slot*6 if it's a cubemap array
+         : (dstArraySize > 1 ? face + slot : 0);        // otherwise, single 2D texture or 2D array
+
+      for (UINT mip = 0; mip < mipLevels; ++mip)
+      {
+         const UINT srcSubresource = D3D11CalcSubresource(mip, srcSlice, mipLevels);
+         const UINT dstSubresource = D3D11CalcSubresource(mip, dstSlice, mipLevels);
+
+         D3D11DEVICECONTEXT->CopySubresourceRegion(dstRes, dstSubresource, 0, 0, 0, srcRes, srcSubresource, nullptr);
+      }
+   }
 }
 
-ID3D11DepthStencilView** GFXD3D11TextureObject::getDSViewPtr()
+void GFXD3D11TextureObject::copyTo(GFXTextureObject* dstTex)
 {
-	return &mDSView;
+   AssertFatal(dstTex, "GFXD3D11TextureObject::copyTo - destination is null");
+
+   GFXD3D11TextureObject* pDstTex = static_cast<GFXD3D11TextureObject*>(dstTex);
+
+   ID3D11Texture2D* srcTex = (ID3D11Texture2D*)mD3DTexture.Get();
+   ID3D11Texture2D* dstTex2D = pDstTex->get2DTex();
+
+   D3D11_TEXTURE2D_DESC srcDesc, dstDesc;
+   srcTex->GetDesc(&srcDesc);
+   dstTex2D->GetDesc(&dstDesc);
+
+   // Sanity check – sizes and formats must match for a full copy.
+   AssertFatal(srcDesc.Width == dstDesc.Width && srcDesc.Height == dstDesc.Height,
+      "GFXD3D11TextureObject::copyTo - Mismatched texture dimensions");
+   AssertFatal(srcDesc.Format == dstDesc.Format,
+      "GFXD3D11TextureObject::copyTo - Mismatched formats");
+
+   UINT srcMipLevels = srcDesc.MipLevels ? srcDesc.MipLevels : 1;
+   UINT dstMipLevels = dstDesc.MipLevels ? dstDesc.MipLevels : 1;
+   UINT mipLevels = getMin(srcMipLevels, dstMipLevels);
+
+   UINT srcArraySize = srcDesc.ArraySize;
+   UINT dstArraySize = dstDesc.ArraySize;
+   UINT arraySize = getMin(srcArraySize, dstArraySize);
+
+   // Handle cube maps and cube map arrays
+   bool isCubeSrc = (srcDesc.MiscFlags & D3D11_RESOURCE_MISC_TEXTURECUBE) != 0;
+
+   // In cubemaps, ArraySize is always 6 * numCubes
+   if (isCubeSrc) arraySize = srcArraySize; // 6 or 6*nCubes
+
+   for (UINT arraySlice = 0; arraySlice < arraySize; ++arraySlice)
+   {
+      for (UINT mip = 0; mip < mipLevels; ++mip)
+      {
+         UINT srcSubresource = D3D11CalcSubresource(mip, arraySlice, srcMipLevels);
+         UINT dstSubresource = D3D11CalcSubresource(mip, arraySlice, dstMipLevels);
+
+         D3D11DEVICECONTEXT->CopySubresourceRegion(
+            dstTex2D, dstSubresource,
+            0, 0, 0,
+            srcTex, srcSubresource,
+            nullptr);
+      }
+   }
 }

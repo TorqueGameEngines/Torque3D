@@ -178,7 +178,7 @@ public:
    /// @param mipLevel What level of this texture are we rendering to?
    /// @param zOffset  If this is a depth texture, what z level are we 
    ///                 rendering to?
-   virtual void attachTexture(RenderSlot slot, GFXTextureObject *tex, U32 mipLevel=0, U32 zOffset = 0) = 0;
+   virtual void attachTexture(RenderSlot slot, GFXTextureObject *tex, U32 mipLevel=0, U32 zOffset = 0, U32 faceIndex = 0) = 0;
 
    /// Support binding to cubemaps.
    ///

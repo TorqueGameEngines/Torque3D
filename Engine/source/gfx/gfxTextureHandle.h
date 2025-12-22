@@ -58,9 +58,9 @@ public:
    bool set( DDSFile *bmp, GFXTextureProfile *profile, bool deleteDDS, const String &desc );
 
    // Sized bitmap
-   GFXTexHandle( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels = 1, S32 antialiasLevel = 0);
-   bool set( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels = 1, S32 antialiasLevel = 0);
-   bool set( U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, const String& desc, U32 numMipLevels = 1);
+   GFXTexHandle( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels = 1, S32 antialiasLevel = 0, U32 arraySize = 1);
+   bool set( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels = 1, S32 antialiasLevel = 0, U32 arraySize = 1);
+   bool set( U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, const String& desc, U32 numMipLevels = 1, U32 arraySize = 1);
 
    /// Returns the width and height as a point.
    Point2I getWidthHeight() const { return getPointer() ? Point2I( getPointer()->getWidth(), getPointer()->getHeight() ) : Point2I::Zero; }
@@ -68,6 +68,7 @@ public:
    U32 getWidth() const    { return getPointer() ? getPointer()->getWidth()  : 0; }
    U32 getHeight() const   { return getPointer() ? getPointer()->getHeight() : 0; }
    U32 getDepth() const    { return getPointer() ? getPointer()->getDepth()  : 0; }
+   U32 getArraySize() const    { return getPointer() ? getPointer()->getArraySize()  : 0; }
    GFXFormat getFormat() const { return getPointer() ? getPointer()->getFormat() : GFXFormat_COUNT; }
    
    /// Reloads the texture.

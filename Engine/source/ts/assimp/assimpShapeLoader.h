@@ -79,6 +79,7 @@ public:
    bool fillGuiTreeView(const char* shapePath, GuiTreeViewCtrl* tree);
 
    static bool canLoadCachedDTS(const Torque::Path& path);
+   static bool canLoadCachedDSQ(const Torque::Path& path);
    static void assimpLogCallback(const char* message, char* user);
 };
 

@@ -53,6 +53,7 @@ public:
    void computeBounds(Box3F& bounds) override;
 
    static bool canLoadCachedDTS(const Torque::Path& path);
+   static bool canLoadCachedDSQ(const Torque::Path& path);
    static bool checkAndMountSketchup(const Torque::Path& path, String& mountPoint, Torque::Path& daePath);
    static domCOLLADA* getDomCOLLADA(const Torque::Path& path);
    static domCOLLADA* readColladaFile(const String& path);

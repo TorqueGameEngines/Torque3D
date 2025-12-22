@@ -781,6 +781,30 @@ void GuiInspectorGroup::hideInspectorField(StringTableEntry fieldName, bool setH
       field->flag.clear(AbstractClassRep::FIELD_HideInInspectors);
 }
 
+void GuiInspectorGroup::replaceInspectorField(StringTableEntry fieldName, GuiInspectorField* replacementField)
+{
+   for (U32 i = 0; i < mStack->size(); i++)
+   {
+      GuiInspectorField* field = dynamic_cast<GuiInspectorField*>(mStack->getObject(i));
+
+      if (field == nullptr)
+         continue;
+
+      if (field->getFieldName() == fieldName || field->getSpecialEditVariableName() == fieldName)
+      {
+         //ensure we match up to the internals
+         replacementField->mField = field->mField;
+
+         mStack->addObject(replacementField);
+         mStack->reOrder(replacementField, field);
+
+         mStack->removeObject(field);
+
+         return;
+      }
+   }
+}
+
 DefineEngineMethod(GuiInspectorGroup, createInspectorField, GuiInspectorField*, (), , "createInspectorField()")
 {
    return object->createInspectorField();
@@ -826,6 +850,16 @@ DefineEngineMethod(GuiInspectorGroup, hideField, void, (const char* fieldName, b
       return;
 
    object->hideInspectorField(StringTable->insert(fieldName), setHidden);
+}
+
+DefineEngineMethod(GuiInspectorGroup, replaceField, void, (const char* fieldName, GuiInspectorField* field), (nullAsType<GuiInspectorField*>()),
+   "Removes a Inspector field to this group of a given name.\n"
+   "@param fieldName The name of the field to be removed.")
+{
+   if (dStrEqual(fieldName, ""))
+      return;
+
+   object->replaceInspectorField(StringTable->insert(fieldName), field);
 }
 
 DefineEngineMethod(GuiInspectorGroup, setForcedArrayIndex, void, (S32 arrayIndex), (-1),

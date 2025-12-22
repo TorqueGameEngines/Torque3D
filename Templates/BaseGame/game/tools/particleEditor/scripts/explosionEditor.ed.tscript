@@ -1,0 +1,490 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+
+$PE_ExplosionEditor_DEFAULT_FILENAME = "data/managedExplosionData." @ $TorqueScriptFileExtension;
+
+
+//=============================================================================================
+//    PE_ExplosionEditor.
+//=============================================================================================
+function PE_ExplosionEditor::init(%this)
+{
+   datablock ExplosionData(PE_ExplosionEditor_NotDirtyEmitter)
+   {
+      emitters = "DefaultEmitter";
+   };
+   
+   %this.unlistedSet.add(PE_ExplosionEditor_NotDirtyEmitter);
+}
+
+function PE_ExplosionEditor::openEditorTab(%this)
+{
+   PE_Window.text = ":: Particle Editor - Explosions";
+   %this.guiSync();
+   ParticleEditor.activeEditor = %this;
+
+   if( !%this.dirty )
+      %this.setNotDirty();
+     
+   if( isObject( $ParticleEditor::explosionNode ) )
+      $ParticleEditor::explosionNode.setHidden(false);
+}
+
+function PE_ExplosionEditor::closeEditorTab(%this)
+{
+   if( isObject( $ParticleEditor::explosionNode) )
+      $ParticleEditor::explosionNode.delete();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::guiSync( %this )
+{
+   %this-->inspector.refresh();
+}
+
+function PE_ExplosionEditor::resetVizNode(%this, %tform)
+{
+   if( !isObject( $ParticleEditor::explosionNode ) )
+   {
+      if( !isObject( TestExplosionData ) )
+      {
+         datablock ExplosionData( TestExplosionData )
+         {
+            timeMultiple = 1;
+         };
+      }
+
+      $ParticleEditor::explosionNode = new Explosion()
+      {
+         position = getWords( %tform, 0, 2 );
+         rotation = getWords( %tform, 3, 6 );
+         datablock = TestExplosionData;
+         parentGroup = MissionCleanup;
+      };
+   }
+   else
+   {
+      $ParticleEditor::explosionNode.setTransform( %tform );
+      
+      %clientObject = $ParticleEditor::explosionNode.getClientObject();
+      if( isObject( %clientObject ) )
+         %clientObject.setTransform( %tform );
+      
+      %this.updateVizNode();
+   }
+   if (EWorldEditor.getSelectionSize()>0)
+   {
+        %obj = EWorldEditor.getSelectedObject(0);
+        if (%obj.isMemberOfClass("Explosion"))
+            $ParticleEditor::explosionNode.sethidden(true);
+   }  
+}
+
+function PE_ExplosionEditor::updateVizNode(%this)
+{
+   if( isObject( $ParticleEditor::explosionNode ) )
+   {
+      %id = %this.currExplosion;
+      
+      %clientObject = $ParticleEditor::explosionNode.getClientObject();
+      if( isObject( %clientObject ) )
+         %clientObject.assignFieldsFrom( %id );
+   }
+   else
+      %this.resetVizNode();  
+}
+
+//------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::selectObject(%this, %obj)
+{
+   if( isObject(%obj )
+       && %obj.getName() $= %this-->popupMenu.text )
+      return;
+      
+   //FIXME: disregards particle tab dirty state
+   if( %this.dirty )
+   {   
+      if( PE_ParticleEditor.dirty )
+      {         
+         toolsMessageBoxYesNo("Save Existing Explosion?", 
+            "Do you want to save changes to <br><br>" @ %this.currParticle.getName(), 
+            "PE_ParticleEditor.saveParticle(" @ %this.currParticle @ ");"
+         );
+      }
+            
+      %savedExplosion = %this.currExplosion;
+      toolsMessageBoxYesNoCancel("Save Existing Explosion?", 
+         "Do you want to save changes to <br><br>" @ %savedExplosion.getName(), 
+         "PE_ExplosionEditor.saveExplosion(" @ %savedExplosion@ "); PE_ExplosionEditor.loadNewExplosion(" @ %obj @ ");", 
+         "PE_ExplosionEditor.saveExplosionDialogDontSave(" @ %savedExplosion @ "); PE_ExplosionEditor.loadNewExplosion(" @ %obj @ ");"
+      );
+   }
+   else
+   {
+      %this.loadNewExplosion(%obj);
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::loadNewExplosion( %this, %explosion )
+{
+   %this-->popupMenu.setText(%explosion.getName());
+   %this-->inspector.inspect(%explosion);
+   
+   if( isObject( %explosion ) )
+      %current = %explosion.getId();
+   else
+      %current = %this-->popupMenu.text;
+   
+   %this.currExplosion = %current;
+   PE_ExplosionEditor_NotDirtyExplosion.assignFieldsFrom( %current );
+   PE_ExplosionEditor_NotDirtyExplosion.originalName = %current.name;
+   
+   %this.guiSync();
+   %this.setNotDirty();
+      
+   //PE_ParticleEditor.loadNewParticle( getWord( %current.particles, 0 ) );
+
+   %this.guiSync();
+   
+   PE_ExplosionEditor.updateVizNode();
+}
+
+//---------------------------------------------------------------------------------------------
+function PE_ExplosionEditor::onInspectorFieldModified(%this, %object, %fieldName, %arrayIndex, %oldValue, %newValue)
+{
+   %action = ParticleEditor.createUndo(ActionUpdateActiveExplosion, "Update Active Explosion");
+   %action.explosion = %object;
+   %action.field = %fieldName;
+   %action.isSlider = false;
+   %action.onMouseUp = true;
+   %action.newValue = %newValue;
+   %action.oldValue = %oldValue;
+   
+   ParticleEditor.submitUndo( %action );
+}
+
+// Generic updateExplosion method
+function PE_ExplosionEditor::updateExplosion( %this, %propertyField, %value, %isSlider, %onMouseUp )
+{
+   PE_ExplosionEditor.setDirty();
+         
+   %explosion = %this.currExplosion;
+      
+   %last = Editor.getUndoManager().getUndoAction(Editor.getUndoManager().getUndoCount() - 1);
+   if( (%isSlider) && (%last.isSlider) && (!%last.onMouseUp) )
+   {
+      %last.field = %propertyField;
+      %last.isSlider = %isSlider;
+      %last.onMouseUp = %onMouseUp;
+      %last.newValue = %value;
+   }
+   else
+   {
+      %action = ParticleEditor.createUndo(ActionUpdateActiveExplosion, "Update Active Explosion");
+      %action.explosion = %explosion;
+      %action.field = %propertyField;
+      %action.isSlider = %isSlider;
+      %action.onMouseUp = %onMouseUp;
+      %action.newValue = %value;
+      %action.oldValue = %explosion.getFieldValue( %propertyField );
+      
+      ParticleEditor.submitUndo( %action );
+   }
+   	
+	%explosion.setFieldValue( %propertyField, %value );
+	%explosion.reload();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::updateParticlesFields( %this )
+{
+   %particles = "";
+   for( %i = 1; %i < 5; %i ++ )
+   {
+      %explosionParticle = "PEE_ExplosionParticle" @ %i;
+      %popup = %explosionParticle-->PopUpMenu;
+      %text = %popup.getText();
+      
+      if( %text $= "" || %text $= "None" )
+         continue;
+         
+      if( %particles $= "" )
+         %particles = %text;
+      else
+         %particles = %particles SPC %text;
+   }
+   
+   %changedEditParticle = 1;
+   %currParticle = PE_ParticleEditor.currParticle.getName();
+
+   foreach$( %particleName in %particles )
+   {
+      if( %particleName $= %currParticle )
+      {
+         %changedEditParticle = 0; 
+         break;
+      }
+   }
+   
+   // True only if the currently edited particle has not been found and the 
+   // ParticleEditor is dirty.
+   
+   if( %changedEditParticle && PE_ParticleEditor.dirty )
+   {
+      toolsMessageBoxYesNoCancel("Save Particle Changes?", 
+         "Do you wish to save the changes made to the <br>current particle before changing the particle?", 
+         "PE_ParticleEditor.saveParticle( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_ExplosionEditor.updateExplosion( \"particles\"," @ %particles @ ");", 
+         "PE_ParticleEditor.saveParticleDialogDontSave( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_ExplosionEditor.updateExplosion( \"particles\"," @ %particles @ ");", 
+         "PE_ExplosionEditor.guiSync();" );
+   }
+   else
+   {
+      PE_ExplosionEditor.updateExplosion( "particles", %particles );
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::setDirty( %this )
+{
+   %this.text = "*Explosion";
+   %this.dirty = true;
+   
+   if(!startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = "*" @ %this-->PopupMenu.text;
+   }
+   
+   %explosion = %this.currExplosion;
+   %filename = %explosion.getFilename();
+   %editorFilename = "tools/particleEditor/scripts/explosionEditor.ed." @ $TorqueScriptFileExtension;
+   
+   if( %filename $= "" || %filename $= %editorFilename )
+      %this.saver.setDirty( %explosion, $PE_ExplosionEditor_DEFAULT_FILENAME );
+   else
+      %this.saver.setDirty( %explosion );
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::setNotDirty( %this )
+{   
+   PE_ExplosionEditor.text = "Explosion";
+   PE_ExplosionEditor.dirty = false;
+   
+   if(startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = stripChars(%this-->PopupMenu.text, "*");
+   }
+   
+   %this.saver.clearAll();
+}
+
+//---------------------------------------------------------------------------------------------
+
+// Create Functionality
+function PE_ExplosionEditor::showNewDialog( %this )
+{
+   //FIXME: disregards particle tab dirty state
+
+   // Open a dialog if the current explosion is dirty.
+   
+   if( PE_ParticleEditor.dirty )
+   {         
+      toolsMessageBoxYesNo("Save Existing Particle?", 
+         "Do you want to save changes to <br><br>" @ PE_ParticleEditor.currParticle.getName(), 
+         "PE_ParticleEditor.saveParticle(" @ PE_ParticleEditor.currParticle @ ");"
+      );
+   }   
+   
+   if( PE_ExplosionEditor.dirty )
+   {
+      toolsMessageBoxYesNoCancel("Save Explosion Changes?", 
+         "Do you wish to save the changes made to the <br>current explosion before changing the explosion?", 
+         "PE_ExplosionEditor.saveExplosion( " @ PE_ExplosionEditor.currExplosion.getName() @ " ); PE_ExplosionEditor.createExplosion();", 
+         "PE_ExplosionEditor.saveExplosionDialogDontSave( " @ PE_ExplosionEditor.currExplosion.getName() @ " ); PE_ExplosionEditor.createExplosion();"
+      );
+   }
+   else
+   {
+      PE_ExplosionEditor.createExplosion();
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::createExplosion( %this )
+{
+   AssetBrowser_SelectModule.showDialog("PE_ExplosionEditor.pickedNewExplosionTargetModule");
+   AssetBrowser_SelectModuleWindow.selectWindow();
+}
+
+function PE_ExplosionEditor::pickedNewExplosionTargetModule( %this, %module )
+{
+   ParticleEditorCreatePrompt.show("Explosion", "ExplosionData", "PE_ExplosionEditor.doCreateNewExplosion(\"" @ %module @ "\");" );
+}
+
+function PE_ExplosionEditor::doCreateNewExplosion( %this, %module )
+{
+   //Sanity checks
+   %newName = ParticleEditorCreatePrompt-->nameText.getText();
+   if(%newName $= "")
+   {
+      toolsMessageBoxOK("Error", "New Explosion requires a name!");
+      return;
+   }
+   
+   Canvas.popDialog(ParticleEditorCreatePrompt);
+   
+   %sourceDB = ParticleEditorCreatePrompt-->CopySourceDropdown.getText();
+   
+   if(%sourceDB $= "")
+      %sourceDB = DefaultExplosion;
+   
+   %moduleDef = ModuleDatabase.findModule(%module);
+   PE_ExplosionEditor.targetModule = %module;
+   $PE_ExplosionEditor_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedExplosionData." @ $TorqueScriptFileExtension;
+   
+   if(!isDirectory(filePath($PE_ExplosionEditor_DEFAULT_FILENAME)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath($PE_ExplosionEditor_DEFAULT_FILENAME));
+   }
+   
+   // Create a new explosion.
+   %explosion = getUniqueName( %newName );
+   eval("datablock ExplosionData( " @ %explosion @ " : " @ %sourceDB @ " ){};");
+   
+   // Submit undo.
+   
+   %action = ParticleEditor.createUndo( ActionCreateNewExplosion, "Create New Explosion" );
+   %action.prevExplosion = PE_ExplosionEditor.currExplosion;
+   %action.explosion = %explosion.getId();
+   %action.explosionName = %explosion;
+
+   ParticleEditor.submitUndo( %action );
+
+   // Execute action.
+   %action.redo();
+   
+   %this.saver.setDirty(%explosion, $PE_ExplosionEditor_DEFAULT_FILENAME);
+   
+   %this.loadNewExplosion(%explosion);
+   %this.setDirty();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::showDeleteDialog( %this )
+{
+   if( PE_ExplosionEditor.currExplosion.getName() $= "DefaultExplosion" )
+   {
+      toolsMessageBoxOK( "Error", "Cannot delete DefaultExplosion");
+      return;
+   }
+   
+   if( isObject( PE_ExplosionEditor.currExplosion ) )
+   {
+      toolsMessageBoxYesNoCancel("Delete Explosion?", 
+         "Are you sure you want to delete<br><br>" @ PE_ExplosionEditor.currExplosion.getName() @ "<br><br> Explosion deletion won't take affect until the level is exited.", 
+         "PE_ExplosionEditor.saveExplosionDialogDontSave( " @ PE_ExplosionEditor.currExplosion.getName() @ " ); PE_ExplosionEditor.deleteExplosion();"
+      );
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::deleteExplosion( %this )
+{  
+   %explosion = PE_ExplosionEditor.currExplosion;
+   
+   // Create undo.
+   
+   %action = ParticleEditor.createUndo( ActionDeleteExplosion, "Delete Explosion" );
+   %action.explosion = %explosion;
+   %action.explosionFname = %explosion.getFilename();
+
+   ParticleEditor.submitUndo( %action );
+   
+   // Execute action.
+
+   %action.redo();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::saveExplosion( %this, %explosion )
+{   
+   if ( %explosion $= "" )
+   {
+      %explosion = %this.currExplosion;
+      %newName = %this.currExplosion.getName();
+   }
+   else
+   {
+      %newName = %explosion.getName();
+   }
+   
+   //Sanity check our sub-explosions so we don't have recursions!
+   for(%i=0; %i < getWordCount(%explosion.subExplosion); %i++)
+   {
+      %subExpl = getWord(%explosion.subExplosion, %i);
+      if(%subExpl.getId() == %explosion.getId())
+      {
+         toolsMessageBoxOK("Error!", "Cannot save because subExplosion[" @ %i @ "] is pointed at this explosion, which would create a loop!");
+         return;  
+      }
+      
+      for(%si=0; %si < getWordCount(%subExpl.subExplosion); %si++)
+      {
+         %subSubExpl = getWord(%subExpl.subExplosion, %i);
+         if(%subSubExpl.getId() == %explosion.getId())
+         {
+            toolsMessageBoxOK("Error!", "Cannot save because subExplosion[" @ %i @ "] has a subExplosion that is pointed at this explosion, which would create a loop!");
+            return;  
+         }  
+      }
+   }
+   
+   %this.currExplosion.setName( %newName );
+   PE_ExplosionEditor_NotDirtyExplosion.assignFieldsFrom( %explosion );
+   PE_ExplosionEditor_NotDirtyExplosion.originalName = %newName;
+   
+   %this.saver.saveDirty(); 
+   
+   %this.loadNewExplosion(%newName.getId());
+
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ExplosionEditor::saveExplosionDialogDontSave( %this, %explosion)
+{  
+   %explosion.setName( PE_ExplosionEditor_NotDirtyExplosion.originalName );
+   %explosion.assignFieldsFrom( PE_ExplosionEditor_NotDirtyExplosion );
+   PE_ExplosionEditor.setNotDirty();
+}

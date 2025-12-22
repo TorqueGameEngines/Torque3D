@@ -1,0 +1,398 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+
+$PE_AFXChoreoEditor_DEFAULT_FILENAME = "data/managedChoreographyData." @ $TorqueScriptFileExtension;
+
+
+//=============================================================================================
+//    PE_AFXChoreoEditor.
+//=============================================================================================
+function PE_AFXChoreoEditor::init(%this)
+{
+   datablock afxChoreographerData(PE_AFXChoreoEditor_NotDirtyEmitter)
+   {
+   };
+   
+   %this.unlistedSet.add(PE_AFXChoreoEditor_NotDirtyEmitter);
+}
+
+function PE_AFXChoreoEditor::openEditorTab(%this)
+{
+   PE_Window.text = ":: Particle Editor - AFX Choreographer";
+   %this.guiSync();
+   ParticleEditor.activeEditor = %this;
+
+   if( !%this.dirty )
+      %this.setNotDirty();
+     
+   if( isObject( $ParticleEditor::choreographyNode ) )
+      $ParticleEditor::choreographyNode.setHidden(false);
+}
+
+function PE_AFXChoreoEditor::closeEditorTab(%this)
+{
+   if( isObject( $ParticleEditor::choreographyNode) )
+      $ParticleEditor::choreographyNode.delete();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXChoreoEditor::guiSync( %this )
+{
+   %this-->inspector.refresh();
+}
+
+function PE_AFXChoreoEditor::resetVizNode(%this, %tform)
+{
+   /*if( !isObject( $ParticleEditor::choreographyNode ) )
+   {
+      if( !isObject( TestChoreographyData ) )
+      {
+         datablock afxChoreographerData( TestChoreographyData )
+         {
+            timeMultiple = 1;
+         };
+      }
+
+      $ParticleEditor::choreographyNode = new afxChoreographer()
+      {
+         position = getWords( %tform, 0, 2 );
+         rotation = getWords( %tform, 3, 6 );
+         datablock = TestChoreographyData;
+         parentGroup = MissionCleanup;
+      };
+   }
+   else
+   {
+      $ParticleEditor::choreographyNode.setTransform( %tform );
+      
+      %clientObject = $ParticleEditor::choreographyNode.getClientObject();
+      if( isObject( %clientObject ) )
+         %clientObject.setTransform( %tform );
+      
+      ParticleEditor.updateVizNode();
+   }
+   if (EWorldEditor.getSelectionSize()>0)
+   {
+        %obj = EWorldEditor.getSelectedObject(0);
+        if (%obj.isMemberOfClass("afxChoreographerData"))
+            $ParticleEditor::choreographyNode.sethidden(true);
+   }*/
+}
+
+function PE_AFXChoreoEditor::updateVizNode(%this)
+{
+   /*if( isObject( $ParticleEditor::choreographyNode ) )
+   {
+      %id = %this.currChoreography;
+      
+      %clientObject = $ParticleEditor::choreographyNode.getClientObject();
+      if( isObject( %clientObject ) )
+         %clientObject.assignFieldsFrom( %id );
+   }
+   else
+      %this.resetVizNode(); */ 
+}
+
+//------------------------------------------------------------------------------
+
+function PE_AFXChoreoEditor::selectObject(%this, %obj)
+{
+   if( isObject(%obj )
+       && %obj.getName() $= %this-->popupMenu.text )
+      return;
+      
+   //FIXME: disregards particle tab dirty state
+   if( %this.dirty )
+   {   
+      %savedChoreography = %this.currChoreography;
+      toolsMessageBoxYesNoCancel("Save Existing AFX Choreographer?", 
+         "Do you want to save changes to <br><br>" @ %savedChoreography.getName(), 
+         "PE_AFXChoreoEditor.saveChoreography(" @ %savedChoreography@ "); PE_AFXChoreoEditor.loadNewChoreography(" @ %obj @ ");", 
+         "PE_AFXChoreoEditor.saveChoreographyDialogDontSave(" @ %savedChoreography @ "); PE_AFXChoreoEditor.loadNewChoreography(" @ %obj @ ");"
+      );
+   }
+   else
+   {
+      %this.loadNewChoreography(%obj);
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXChoreoEditor::loadNewChoreography( %this, %choreography )
+{
+   %this-->popupMenu.setText(%choreography.getName());
+   %this-->inspector.inspect(%choreography);
+   
+   if( isObject( %choreography ) )
+      %current = %choreography.getId();
+   else
+      %current = %this-->popupMenu.text;
+   
+   %this.currChoreography = %current;
+   PE_AFXChoreoEditor_NotDirtyChoreography.assignFieldsFrom( %current );
+   PE_AFXChoreoEditor_NotDirtyChoreography.originalName = %current.name;
+   
+   %this.guiSync();
+   %this.setNotDirty();
+      
+   //PE_ParticleEditor.loadNewParticle( getWord( %current.particles, 0 ) );
+
+   %this.guiSync();
+   
+   PE_AFXChoreoEditor.updateVizNode();
+}
+
+//---------------------------------------------------------------------------------------------
+function PE_AFXChoreoEditor::onInspectorFieldModified(%this, %object, %fieldName, %arrayIndex, %oldValue, %newValue)
+{
+   %action = ParticleEditor.createUndo(ActionUpdateActiveChoreography, "Update Active AFX Choreographer");
+   %action.choreography = %object;
+   %action.field = %fieldName;
+   %action.isSlider = false;
+   %action.onMouseUp = true;
+   %action.newValue = %newValue;
+   %action.oldValue = %oldValue;
+   
+   ParticleEditor.submitUndo( %action );
+}
+
+// Generic updateChoreography method
+function PE_AFXChoreoEditor::updateChoreography( %this, %propertyField, %value, %isSlider, %onMouseUp )
+{
+   PE_AFXChoreoEditor.setDirty();
+         
+   %choreography = %this.currChoreography;
+      
+   %last = Editor.getUndoManager().getUndoAction(Editor.getUndoManager().getUndoCount() - 1);
+   if( (%isSlider) && (%last.isSlider) && (!%last.onMouseUp) )
+   {
+      %last.field = %propertyField;
+      %last.isSlider = %isSlider;
+      %last.onMouseUp = %onMouseUp;
+      %last.newValue = %value;
+   }
+   else
+   {
+      %action = ParticleEditor.createUndo(ActionUpdateActiveChoreography, "Update Active AFX Choreographer");
+      %action.choreography = %choreography;
+      %action.field = %propertyField;
+      %action.isSlider = %isSlider;
+      %action.onMouseUp = %onMouseUp;
+      %action.newValue = %value;
+      %action.oldValue = %choreography.getFieldValue( %propertyField );
+      
+      ParticleEditor.submitUndo( %action );
+   }
+   	
+	%choreography.setFieldValue( %propertyField, %value );
+	%choreography.reload();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXChoreoEditor::setDirty( %this )
+{
+   %this.text = "*Choreography";
+   %this.dirty = true;
+   
+   if(!startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = "*" @ %this-->PopupMenu.text;
+   }
+   
+   %choreography = %this.currChoreography;
+   %filename = %choreography.getFilename();
+   %editorFilename = "tools/particleEditor/scripts/afxChoreographyEditor.ed." @ $TorqueScriptFileExtension;
+   
+   if( %filename $= "" || %filename $= %editorFilename )
+      %this.saver.setDirty( %choreography, $PE_AFXChoreoEditor_DEFAULT_FILENAME );
+   else
+      %this.saver.setDirty( %choreography );
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXChoreoEditor::setNotDirty( %this )
+{   
+   PE_AFXChoreoEditor.text = "Choreography";
+   PE_AFXChoreoEditor.dirty = false;
+   
+   if(startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = stripChars(%this-->PopupMenu.text, "*");
+   }
+   
+   %this.saver.clearAll();
+}
+
+//---------------------------------------------------------------------------------------------
+
+// Create Functionality
+function PE_AFXChoreoEditor::showNewDialog( %this )
+{
+   if( PE_AFXChoreoEditor.dirty )
+   {
+      toolsMessageBoxYesNoCancel("Save AFX Choreographer Changes?", 
+         "Do you wish to save the changes made to the <br>current choreography before changing the choreography?", 
+         "PE_AFXChoreoEditor.saveChoreography( " @ PE_AFXChoreoEditor.currChoreography.getName() @ " ); PE_AFXChoreoEditor.createChoreography();", 
+         "PE_AFXChoreoEditor.saveChoreographyDialogDontSave( " @ PE_AFXChoreoEditor.currChoreography.getName() @ " ); PE_AFXChoreoEditor.createChoreography();"
+      );
+   }
+   else
+   {
+      PE_AFXChoreoEditor.createChoreography();
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXChoreoEditor::createChoreography( %this )
+{
+   AssetBrowser_SelectModule.showDialog("PE_AFXChoreoEditor.pickedNewChoreographyTargetModule");
+   AssetBrowser_SelectModuleWindow.selectWindow();
+}
+
+function PE_AFXChoreoEditor::pickedNewChoreographyTargetModule( %this, %module )
+{
+   ParticleEditorCreatePrompt.show("Choreography", "afxChoreographerData", "PE_AFXChoreoEditor.doCreateNewChoreography(\"" @ %module @ "\");" );
+}
+
+function PE_AFXChoreoEditor::doCreateNewChoreography( %this, %module )
+{
+   //Sanity checks
+   %newName = ParticleEditorCreatePrompt-->nameText.getText();
+   if(%newName $= "")
+   {
+      toolsMessageBoxOK("Error", "New Choreography requires a name!");
+      return;
+   }
+   
+   Canvas.popDialog(ParticleEditorCreatePrompt);
+   
+   %sourceDB = ParticleEditorCreatePrompt-->CopySourceDropdown.getText();
+   
+   if(%sourceDB $= "")
+      %sourceDB = DefaultChoreography;
+   
+   %moduleDef = ModuleDatabase.findModule(%module);
+   PE_AFXChoreoEditor.targetModule = %module;
+   $PE_AFXChoreoEditor_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedChoreographyData." @ $TorqueScriptFileExtension;
+   
+   if(!isDirectory(filePath($PE_AFXChoreoEditor_DEFAULT_FILENAME)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath($PE_AFXChoreoEditor_DEFAULT_FILENAME));
+   }
+   
+   // Create a new choreography.
+   %choreography = getUniqueName( %newName );
+   eval("datablock ChoreographyData( " @ %choreography @ " : " @ %sourceDB @ " ){};");
+   
+   // Submit undo.
+   
+   %action = ParticleEditor.createUndo( ActionCreateNewChoreography, "Create New AFX Choreographer" );
+   %action.prevChoreography = PE_AFXChoreoEditor.currChoreography;
+   %action.choreography = %choreography.getId();
+   %action.choreographyName = %choreography;
+
+   ParticleEditor.submitUndo( %action );
+
+   // Execute action.
+   %action.redo();
+   
+   %this.saver.setDirty(%choreography, $PE_AFXChoreoEditor_DEFAULT_FILENAME);
+   
+   %this.loadNewChoreography(%choreography);
+   %this.setDirty();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXChoreoEditor::showDeleteDialog( %this )
+{
+   if( PE_AFXChoreoEditor.currChoreography.getName() $= "DefaultChoreography" )
+   {
+      toolsMessageBoxOK( "Error", "Cannot delete DefaultChoreography");
+      return;
+   }
+   
+   if( isObject( PE_AFXChoreoEditor.currChoreography ) )
+   {
+      toolsMessageBoxYesNoCancel("Delete Choreography?", 
+         "Are you sure you want to delete<br><br>" @ PE_AFXChoreoEditor.currChoreography.getName() @ "<br><br> Choreography deletion won't take affect until the level is exited.", 
+         "PE_AFXChoreoEditor.saveChoreographyDialogDontSave( " @ PE_AFXChoreoEditor.currChoreography.getName() @ " ); PE_AFXChoreoEditor.deleteChoreography();"
+      );
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXChoreoEditor::deleteChoreography( %this )
+{  
+   %choreography = PE_AFXChoreoEditor.currChoreography;
+   
+   // Create undo.
+   
+   %action = ParticleEditor.createUndo( ActionDeleteChoreography, "Delete AFX Choreographer" );
+   %action.choreography = %choreography;
+   %action.choreographyFname = %choreography.getFilename();
+
+   ParticleEditor.submitUndo( %action );
+   
+   // Execute action.
+
+   %action.redo();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXChoreoEditor::saveChoreography( %this, %choreography )
+{   
+   if ( %choreography $= "" )
+   {
+      %choreography = %this.currChoreography;
+      %newName = %this.currChoreography.getName();
+   }
+   else
+   {
+      %newName = %choreography.getName();
+   }
+   
+   %this.currChoreography.setName( %newName );
+   PE_AFXChoreoEditor_NotDirtyChoreography.assignFieldsFrom( %choreography );
+   PE_AFXChoreoEditor_NotDirtyChoreography.originalName = %newName;
+   
+   %this.saver.saveDirty(); 
+   
+   %this.loadNewChoreography(%newName.getId());
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_AFXChoreoEditor::saveChoreographyDialogDontSave( %this, %choreography)
+{  
+   %choreography.setName( PE_AFXChoreoEditor_NotDirtyChoreography.originalName );
+   %choreography.assignFieldsFrom( PE_AFXChoreoEditor_NotDirtyChoreography );
+   PE_AFXChoreoEditor.setNotDirty();
+}

@@ -1,0 +1,86 @@
+$guiContent = new GuiTabPageCtrl() {
+   position = "2 50";
+   extent = "361 615";
+   horizSizing = "width";
+   vertSizing = "height";
+   profile = "GuiDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   fitBook = "1";
+
+   new GuiControl() {
+      extent = "342 26";
+      horizSizing = "width";
+      profile = "GuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+      isContainer = "1";
+      class = "QuickEditDropDownTextEditCtrl";
+
+      new GuiButtonCtrl() {
+         Text = "";
+         maxLength = "255";
+         position = "4 4";
+         extent = "268 18";
+         horizSizing = "width";
+         profile = "ToolsGuiButtonProfile";
+         command = "ParticleEditorGui.openList($ThisControl.getParent().getParent());";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "0";
+         internalName = "PopupMenu";
+      };
+      new GuiBitmapButtonCtrl() {
+         BitmapAsset = "ToolsModule:new_n_image";
+         position = "276 5";
+         extent = "17 17";
+         horizSizing = "left";
+         profile = "ToolsGuiDefaultProfile";
+         command = "";
+         tooltipProfile = "GuiToolTipProfile";
+         ToolTip = "Create New";
+         internalName = "CreateNewBtn";
+      };
+      new GuiBitmapButtonCtrl() {
+         BitmapAsset = "ToolsModule:save_icon_n_image";
+         position = "292 5";
+         extent = "17 17";
+         horizSizing = "left";
+         profile = "ToolsGuiDefaultProfile";
+         command = "";
+         tooltipProfile = "GuiToolTipProfile";
+         ToolTip = "Save Current";
+         internalName = "SaveCurrentBtn";
+      };
+      new GuiBitmapButtonCtrl() {
+         BitmapAsset = "ToolsModule:delete_n_image";
+         position = "309 5";
+         extent = "17 17";
+         horizSizing = "left";
+         profile = "ToolsGuiDefaultProfile";
+         command = "";
+         tooltipProfile = "GuiToolTipProfile";
+         ToolTip = "Delete Current";
+         internalName = "DeleteCurrentBtn";
+      };
+   };
+   new GuiScrollCtrl() {
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      position = "0 30";
+      extent = "356 586";
+      minExtent = "8 8";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "ToolsGuiScrollProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiInspector() {
+         class = "ParticleEditorInspector";
+         groupFilters = "-Internal -Editing -Object -Persistence -Dynamic Fields -Scripting -AFX -AFX Pooled Particles";
+         position = "1 1";
+         extent = "339 48";
+         horizSizing = "width";
+         profile = "GuiInspectorProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "inspector";
+      };
+   };
+};

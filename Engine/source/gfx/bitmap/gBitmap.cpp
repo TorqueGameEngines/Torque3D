@@ -721,12 +721,13 @@ LinearColorF GBitmap::sampleTexel(F32 u, F32 v, bool retAlpha) const
 }
 
 //--------------------------------------------------------------------------
-bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor) const
+bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor, const U32 mipLevel, const U32 face) const
 {
    if (x >= mWidth || y >= mHeight)
       return false;
-
-   const U8* p = getAddress(x, y);
+   U32 targMip = getNumMipLevels() < mipLevel ? getNumMipLevels()-1 : mipLevel;
+   U32 targFace = getNumFaces() < face ? getNumFaces()-1 : face;
+   const U8* p = getAddress(x, y, targMip, targFace);
 
    switch (mInternalFormat)
    {

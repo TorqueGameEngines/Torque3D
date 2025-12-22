@@ -510,7 +510,12 @@ GroundCover::GroundCover()
       mMinElevation[i] = -99999.0f;
       mMaxElevation[i] = 99999.0f;
 
-      mLayer[i] = StringTable->EmptyString();
+      mLayerAsset[i] = nullptr;
+      mLayerFile[i] = StringTable->EmptyString();
+
+      mShapeAsset[i] = nullptr;
+      mShapeFile[i] = StringTable->EmptyString();
+
       mInvertLayer[i] = false;
 
       mMinClumpCount[i] = 1;
@@ -565,7 +570,10 @@ void GroundCover::initPersistFields()
 
          INITPERSISTFIELD_SHAPEASSET_ARRAY_REFACTOR(Shape, MAX_COVERTYPES, GroundCover, "The cover shape. [Optional]");
 
-         addField( "layer",         TypeTerrainMaterialAssetId, Offset( mLayer, GroundCover ), MAX_COVERTYPES,      "Terrain material assetId to limit coverage to, or blank to not limit." );
+         INITPERSISTFIELD_TERRAINMATERIALASSET_ARRAY(Layer, MAX_COVERTYPES, GroundCover, "Terrain material assetId to limit coverage to, or blank to not limit.");
+
+         //Legacy field
+         addProtectedField("layer", TypeTerrainMaterialAssetPtr, Offset(mLayerAsset, GroundCover), &_setLayerData, &defaultProtectedGetFn, MAX_COVERTYPES, "Terrain material assetId to limit coverage to, or blank to not limit.", AbstractClassRep::FIELD_HideInInspectors); 
 
          addField( "invertLayer",   TypeBool,      Offset( mInvertLayer, GroundCover ), MAX_COVERTYPES,     "Indicates that the terrain material index given in 'layer' is an exclusion mask." );
 
@@ -754,7 +762,6 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
          stream->write( mMinElevation[i] );
          stream->write( mMaxElevation[i] );     
 
-         stream->writeString( mLayer[i] );
          stream->writeFlag( mInvertLayer[i] );      
 
          stream->write( mMinClumpCount[i] );
@@ -768,6 +775,7 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
          stream->write( mBillboardRects[i].extent.y );
       }
 
+      PACK_ASSET_ARRAY_REFACTOR(connection, Layer, MAX_COVERTYPES)
       PACK_ASSET_ARRAY_REFACTOR(connection, Shape, MAX_COVERTYPES)
 
       stream->writeFlag( mDebugRenderCells );
@@ -825,7 +833,6 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
          stream->read( &mMinElevation[i] );
          stream->read( &mMaxElevation[i] );     
 
-         mLayer[i] = stream->readSTString();
          mInvertLayer[i] = stream->readFlag();
 
          stream->read( &mMinClumpCount[i] );
@@ -838,6 +845,8 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
          stream->read( &mBillboardRects[i].extent.x );
          stream->read( &mBillboardRects[i].extent.y );
       }
+
+      UNPACK_ASSET_ARRAY_REFACTOR(connection, Layer, MAX_COVERTYPES)
 
       UNPACK_ASSET_ARRAY_REFACTOR(connection, Shape, MAX_COVERTYPES)
 
@@ -1181,7 +1190,9 @@ GroundCoverCell* GroundCover::_generateCell( const Point2I& index,
       const Box3F typeShapeBounds = typeIsShape ? mShapeInstances[ type ]->getShape()->mBounds : Box3F();
       const F32 typeWindScale = mWindScale[type];
 
-      StringTableEntry typeLayer = mLayer[type];
+      StringTableEntry typeLayer = StringTable->EmptyString();
+      if (mLayerAsset[type].notNull())
+         typeLayer = mLayerAsset[type]->getAssetId();
       const bool typeInvertLayer = mInvertLayer[type];
 
       // We can set this once here... all the placements for this are the same.

@@ -536,52 +536,12 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    }
 
 #define PACKDATA_SOUNDASSET_ARRAY(name, index)\
-   if (stream->writeFlag(AssetDatabase.isDeclaredAsset(m##name##AssetId[index])))\
-   {\
-      stream->writeString(m##name##AssetId[index]);\
-   }\
-   else\
-   {\
-      if(stream->writeFlag(Sim::findObject(m##name##Name[index])))\
-      {\
-         SFXTrack* sndTrack = get##name##Profile(index);\
-         if(stream->writeFlag(sndTrack != nullptr))\
-         {\
-            stream->writeRangedU32(SimObjectId(sndTrack->getId()), DataBlockObjectIdFirst, DataBlockObjectIdLast);\
-            sfxWrite(stream, sndTrack);\
-         }\
-      }\
-      else\
-      {\
-         stream->writeString(m##name##Name[index]);\
-      }\
-   }
-      
+   AssetDatabase.packDataAsset(stream, m##name##AssetId[index])
 
 //network recieve - datablock
 #define UNPACKDATA_SOUNDASSET_ARRAY(name, index)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
-   }\
-   else\
-   {\
-      if(stream->readFlag())\
-      {\
-         String errorStr;\
-         if(stream->readFlag())\
-         {\
-            m##name##SFXId[index] = stream->readRangedU32( DataBlockObjectIdFirst, DataBlockObjectIdLast );\
-            sfxReadAndResolve(stream, &m##name##Profile[index], errorStr);\
-         }\
-      }\
-      else\
-      {\
-         m##name##Name[index] = stream->readSTString(); \
-         _set##name(m##name##Name[index], index); \
-      }\
-   }
+   m##name##AssetId[index] = AssetDatabase.unpackDataAsset(stream)
+
 #pragma endregion
 
 #endif // _ASSET_BASE_H_

@@ -77,7 +77,7 @@ public:
    /// The cubemap to use when the texture type is
    /// set to Material::Cube.
    /// @see mTexType
-   GFXCubemapHandle mCubeMap;
+   GFXTexHandle mCubeMap;
 
    U32 mNumTex;
 

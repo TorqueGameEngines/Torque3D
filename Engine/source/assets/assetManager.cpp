@@ -112,6 +112,21 @@ bool AssetManager::onAdd()
 
 void AssetManager::onRemove()
 {
+    // Remove all private assets explicitly before purge.
+    Vector<AssetDefinition*> assetDefinitions;
+    
+    // at this point all module assets should have been unloaded.
+    for (typeDeclaredAssetsHash::iterator assetItr = mDeclaredAssets.begin(); assetItr != mDeclaredAssets.end(); ++assetItr)
+    {
+       assetDefinitions.push_back(assetItr->value);
+    }
+    
+    for (Vector<AssetDefinition*>::iterator assetItr = assetDefinitions.begin(); assetItr != assetDefinitions.end(); ++assetItr)
+    {
+       AssetDefinition* pAssetDefinition = *assetItr;
+       unloadAsset(pAssetDefinition);
+    }
+
     // Do we have an asset tags manifest?
     if ( !mAssetTagsManifest.isNull() )
     {
@@ -326,6 +341,17 @@ bool AssetManager::addDeclaredAsset( ModuleDefinition* pModuleDefinition, const 
 
 //-----------------------------------------------------------------------------
 
+static U32 HashAssetId(const char* str)
+{
+   U32 hash = 2166136261u;
+   while (*str)
+   {
+      hash ^= (U8)*str++;
+      hash *= 16777619u;
+   }
+   return hash;
+}
+
 StringTableEntry AssetManager::addPrivateAsset( AssetBase* pAssetBase )
 {
     // Debug Profiling.
@@ -376,6 +402,22 @@ StringTableEntry AssetManager::addPrivateAsset( AssetBase* pAssetBase )
 
     // Set ownership by asset manager.
     pAssetDefinition->mpAssetBase->setOwned( this, pAssetDefinition );
+
+    U32 netId = HashAssetId(pAssetDefinition->mAssetName);
+
+    // Collision detection 
+    typeNetIdToAssetMap::iterator netIterator = mNetIdToAsset.find(netId);
+    if (netIterator != mNetIdToAsset.end())
+    {
+       Con::warnf(
+          "AssetManager: Hash collision for '%s' and '%s'",
+          pAssetDefinition->mAssetName,
+          mNetIdToAsset.find(netId)->value
+       );
+    }
+
+    mNetIdToAsset.insert(netId, pAssetDefinition->mAssetId);
+    mAssetToNetId.insert(pAssetDefinition->mAssetId, netId);
 
     // Store in declared assets.
     mDeclaredAssets.insert( pAssetDefinition->mAssetId, pAssetDefinition );
@@ -474,6 +516,14 @@ bool AssetManager::removeDeclaredAsset( const char* pAssetId )
 
     // Remove from declared assets.
     mDeclaredAssets.erase( declaredAssetItr );
+
+    typeAssetToNetIdMap::iterator netId = mAssetToNetId.find(pAssetId);
+    typeNetIdToAssetMap::iterator netChar = mNetIdToAsset.find(netId->value);
+    if (netId != mAssetToNetId.end() && netChar != mNetIdToAsset.end())
+    {
+       mNetIdToAsset.erase(netChar);
+       mAssetToNetId.erase(netId);
+    }
 
     // Info.
     if ( mEchoInfo )
@@ -962,6 +1012,55 @@ bool AssetManager::renameReferencedAsset( const char* pAssetIdFrom, const char* 
         Con::printSeparator();
 
     return true;
+}
+
+void AssetManager::packDataAsset(BitStream* stream, const char* pAssetId)
+{
+   if(stream->writeFlag(isDeclaredAsset(pAssetId)))
+   {
+      stream->write(mAssetToNetId.find(pAssetId)->value);
+   }
+}
+
+const char* AssetManager::unpackDataAsset(BitStream* stream)
+{
+   if (stream->readFlag())
+   {
+      typeAssetNetId netId;
+      stream->read(&netId);
+
+      typeNetIdToAssetMap::iterator netChar = mNetIdToAsset.find(netId);
+      if (netChar != mNetIdToAsset.end())
+      {
+         return netChar->value;
+      }
+   }
+
+   return StringTable->EmptyString();
+}
+
+void AssetManager::packUpdateAsset(NetConnection* con, U32 mask, BitStream* stream, const char* pAssetId)
+{
+   if (stream->writeFlag(isDeclaredAsset(pAssetId)))
+   {
+      stream->write(mAssetToNetId.find(pAssetId)->value);
+   }
+}
+
+const char* AssetManager::unpackUpdateAsset(NetConnection* con, BitStream* stream)
+{
+   if (stream->readFlag())
+   {
+      typeAssetNetId netId;
+      stream->read(&netId);
+
+      typeNetIdToAssetMap::iterator netChar = mNetIdToAsset.find(netId);
+      if (netChar != mNetIdToAsset.end())
+      {
+         return netChar->value;
+      }
+   }
+   return StringTable->EmptyString();
 }
 
 bool AssetManager::compileAllAssets(const bool compressed, const bool includeUnloaded)
@@ -2762,6 +2861,22 @@ bool AssetManager::scanDeclaredAssets( const char* pPath, const char* pExtension
 
          continue;
       }
+
+      U32 netId = HashAssetId(assetIdBuffer);
+
+      // Collision detection 
+      typeNetIdToAssetMap::iterator netIterator = mNetIdToAsset.find(netId);
+      if (netIterator != mNetIdToAsset.end())
+      {
+         Con::warnf(
+            "AssetManager: Hash collision for '%s' and '%s'",
+            assetIdBuffer,
+            mNetIdToAsset.find(netId)->value
+         );
+      }
+
+      mNetIdToAsset.insert(netId, foundAssetDefinition.mAssetId);
+      mAssetToNetId.insert(foundAssetDefinition.mAssetId, netId);
 
       // Create new asset definition.
       AssetDefinition* pAssetDefinition = new AssetDefinition( foundAssetDefinition );

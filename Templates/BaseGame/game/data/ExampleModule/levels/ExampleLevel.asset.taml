@@ -7,6 +7,6 @@
     DecalsFile="@assetFile=ExampleLevel.mis.decals"
     ForestFile="@assetFile=ExampleLevel.forest"
     NavmeshFile="@assetFile=ExampleLevel.nav"
+    gameModesNames="ExampleGameMode"
     staticObjectAssetDependency0="@asset=Prototyping:FloorGray"
-    gameModesNames="ExampleGameMode;"
     VersionId="1"/>

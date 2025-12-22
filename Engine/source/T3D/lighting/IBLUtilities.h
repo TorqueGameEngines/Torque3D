@@ -38,13 +38,13 @@
 
 namespace IBLUtilities
 {
-   void GenerateIrradianceMap(GFXTextureTargetRef renderTarget, GFXCubemapHandle cubemap, GFXCubemapHandle &cubemapOut);
-   void GenerateAndSaveIrradianceMap(String outputPath, S32 resolution, GFXCubemapHandle cubemap, GFXCubemapHandle &cubemapOut);
+   void GenerateIrradianceMap(GFXTextureTargetRef renderTarget, GFXTexHandle cubemap, GFXTexHandle& cubemapOut);
+   void GenerateAndSaveIrradianceMap(String outputPath, S32 resolution, GFXTexHandle cubemap, GFXTexHandle& cubemapOut);
 
-   void GeneratePrefilterMap(GFXTextureTargetRef renderTarget, GFXCubemapHandle cubemap, U32 mipLevels, GFXCubemapHandle &cubemapOut);
-   void GenerateAndSavePrefilterMap(String outputPath, S32 resolution, GFXCubemapHandle cubemap, U32 mipLevels, GFXCubemapHandle &cubemapOut);
+   void GeneratePrefilterMap(GFXTextureTargetRef renderTarget, GFXTexHandle cubemap, U32 mipLevels, GFXTexHandle &cubemapOut);
+   void GenerateAndSavePrefilterMap(String outputPath, S32 resolution, GFXTexHandle cubemap, U32 mipLevels, GFXTexHandle &cubemapOut);
 
-   void SaveCubeMap(String outputPath, GFXCubemapHandle &cubemap);
+   void SaveCubeMap(String outputPath, GFXTexHandle &cubemap);
 
    void bakeReflection(String outputPath, S32 resolution);
 
@@ -60,7 +60,7 @@ namespace IBLUtilities
    //SH Calculations
    // From http://sunandblackcat.com/tipFullView.php?l=eng&topicid=32&topic=Spherical-Harmonics-From-Cube-Texture
    // With shader decode logic from https://github.com/nicknikolov/cubemap-sh
-   void calculateSHTerms(GFXCubemapHandle cubemap, LinearColorF SHTerms[9], F32 SHConstants[5]);
+   void calculateSHTerms(GFXTexHandle cubemap, LinearColorF SHTerms[9], F32 SHConstants[5]);
 
    F32 texelSolidAngle(F32 aU, F32 aV, U32 width, U32 height);
 

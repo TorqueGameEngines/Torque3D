@@ -149,6 +149,18 @@ bool SplashData::onAdd()
    if (Parent::onAdd() == false)
       return false;
 
+   S32 i;
+   for (i = 0; i < NUM_EMITTERS; i++)
+   {
+      if (!emitterList[i] && emitterIDList[i] != 0)
+      {
+         if (Sim::findObject(emitterIDList[i], emitterList[i]) == false)
+         {
+            Con::errorf(ConsoleLogEntry::General, "ExplosionData::onAdd: Invalid packet, bad datablockId(particle emitter): 0x%x", emitterIDList[i]);
+            return false;
+         }
+      }
+   }
    return true;
 }
 
@@ -281,7 +293,8 @@ bool SplashData::preload(bool server, String &errorStr)
          {
             if( Sim::findObject( emitterIDList[i], emitterList[i] ) == false)
             {
-               Con::errorf( ConsoleLogEntry::General, "SplashData::onAdd: Invalid packet, bad datablockId(particle emitter): 0x%x", emitterIDList[i] );
+               errorStr = String::ToString("SplashData::onAdd: Invalid packet, bad datablockId(particle emitter): 0x%x", emitterIDList[i]);
+               return false;
             }
          }
       }
@@ -299,7 +312,8 @@ bool SplashData::preload(bool server, String &errorStr)
    {
       if( !Sim::findObject(explosionId, explosion) )
       {
-         Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Invalid packet, bad datablockId(explosion): %d", explosionId);
+         errorStr = String::ToString("SplashData::preload: Invalid packet, bad datablockId(explosion): %d", explosionId);
+         return false;
       }
    }
 

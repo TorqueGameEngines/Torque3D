@@ -352,6 +352,7 @@ function CreateNewNavMeshDlg::create(%this)
 
    %mesh = 0;
 
+   %navFileLoc = filePath($Client::MissionFile) @ "/" @ fileBase($Client::MissionFile) @".nav";
    if(MeshMissionBounds.isStateOn())
    {
       if(!isObject(getScene(0)))
@@ -362,14 +363,15 @@ function CreateNewNavMeshDlg::create(%this)
       // Get maximum extents of all objects.
       %box = MissionBoundsExtents(getScene(0));
       %pos = GetBoxCenter(%box);
-      %scale = (GetWord(%box, 3) - GetWord(%box, 0)) / 2 + 5
-         SPC (GetWord(%box, 4) - GetWord(%box, 1)) / 2 + 5
-         SPC (GetWord(%box, 5) - GetWord(%box, 2)) / 2 + 5;
-
+      %scale = (GetWord(%box, 3) - GetWord(%box, 0)) + 1
+         SPC (GetWord(%box, 4) - GetWord(%box, 1))  + 1
+         SPC (GetWord(%box, 5) - GetWord(%box, 2)) + 1;
+         
       %mesh = new NavMesh(%name)
       {
          position = %pos;
          scale = %scale;
+         fileName = %navFileLoc;
       };
    }
    else
@@ -378,6 +380,7 @@ function CreateNewNavMeshDlg::create(%this)
       {
          position = %this-->MeshPosition.getText();
          scale = %this-->MeshScale.getText();
+         fileName = %navFileLoc;
       };
    }
    getScene(0).add(%mesh);

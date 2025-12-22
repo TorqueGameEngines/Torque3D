@@ -135,7 +135,6 @@ uniform float lightInvSqrRange;
 uniform float shadowSoftness;
 uniform mat3 worldToLightProj;
 
-uniform vec3 eyePosWorld;
 uniform mat4 cameraToWorld;
 
 out vec4 OUT_col;

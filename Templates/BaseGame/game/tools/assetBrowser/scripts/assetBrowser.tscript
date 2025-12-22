@@ -1183,7 +1183,7 @@ function AssetBrowser::changeAsset(%this)
       if(%inspectorObject.getNumInspectObjects() != 0)
       {
          %targetObject = %inspectorObject.getInspectObject();
-         %inspectorObject.setObjectField(%this.fieldTargetName, %this.selectedAsset);
+         %cmd = %targetObject @ "." @ %this.fieldTargetName @ "=\"" @ %this.selectedAsset @ "\";";
       }
       else if(startsWith(%this.fieldTargetName, "$"))
       {

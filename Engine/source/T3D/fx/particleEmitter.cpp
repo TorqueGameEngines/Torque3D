@@ -42,6 +42,7 @@
 #include "T3D/gameBase/gameProcess.h"
 #include "lighting/lightInfo.h"
 #include "console/engineAPI.h"
+#include "particleInspectors.h"
 
 #if defined(AFX_CAP_PARTICLE_POOLS) 
 #include "afx/util/afxParticlePool.h"
@@ -145,7 +146,6 @@ ParticleEmitterData::ParticleEmitterData()
    ribbonParticles = false;
    useEmitterSizes  = false;
    useEmitterColors = false;
-   particleString   = NULL;
    partListInitSize = 0;
 
    // These members added for support of user defined blend factors
@@ -265,7 +265,7 @@ void ParticleEmitterData::initPersistFields()
       addField( "ribbonParticles", TYPEID< bool >(), Offset(ribbonParticles, ParticleEmitterData),
          "If true, particles are rendered as a continous ribbon." );
 
-      addField( "particles", TYPEID< StringTableEntry >(), Offset(particleString, ParticleEmitterData),
+      addField( "particles", TypeParticleList, Offset(particleString, ParticleEmitterData),
          "@brief List of space or TAB delimited ParticleData datablock names.\n\n"
          "A random one of these datablocks is selected each time a particle is "
          "emitted." );
@@ -605,19 +605,9 @@ bool ParticleEmitterData::onAdd()
       softnessDistance = 0.0f;
    }
 
-   if (particleString == NULL && dataBlockIds.size() == 0) 
+   if (particleString.empty() && dataBlockIds.size() == 0) 
    {
       Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) no particleString, invalid datablock", getName());
-      return false;
-   }
-   if (particleString && particleString[0] == '\0') 
-   {
-      Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) no particleString, invalid datablock", getName());
-      return false;
-   }
-   if (particleString && dStrlen(particleString) > 255) 
-   {
-      Con::errorf(ConsoleLogEntry::General, "ParticleEmitterData(%s) particle string too long [> 255 chars]", getName());
       return false;
    }
 
@@ -635,40 +625,18 @@ bool ParticleEmitterData::onAdd()
 
    // load the particle datablocks...
    //
-   if( particleString != NULL )
+   if( !particleString.empty() )
    {
-      //   particleString is once again a list of particle datablocks so it
-      //   must be parsed to extract the particle references.
-
-      // First we parse particleString into a list of particle name tokens 
-      Vector<char*> dataBlocks(__FILE__, __LINE__);
-      dsize_t tokLen = dStrlen(particleString) + 1;
-      char* tokCopy = new char[tokLen];
-      dStrcpy(tokCopy, particleString, tokLen);
-
-      char* currTok = dStrtok(tokCopy, " \t");
-      while (currTok != NULL) 
-      {
-         dataBlocks.push_back(currTok);
-         currTok = dStrtok(NULL, " \t");
-      }
-      if (dataBlocks.size() == 0) 
-      {
-         Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) invalid particles string.  No datablocks found", getName());
-         delete [] tokCopy;
-         return false;
-      }    
-
       // Now we convert the particle name tokens into particle datablocks and IDs 
       particleDataBlocks.clear();
       dataBlockIds.clear();
 
-      for (U32 i = 0; i < dataBlocks.size(); i++) 
+      for (U32 i = 0; i < particleString.size(); i++) 
       {
          ParticleData* pData = NULL;
-         if (Sim::findObject(dataBlocks[i], pData) == false) 
+         if (Sim::findObject(particleString[i], pData) == false)
          {
-            Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) unable to find particle datablock: %s", getName(), dataBlocks[i]);
+            Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) unable to find particle datablock: %s", getName(), particleString[i]);
          }
          else 
          {
@@ -676,9 +644,6 @@ bool ParticleEmitterData::onAdd()
             dataBlockIds.push_back(pData->getId());
          }
       }
-
-      // cleanup
-      delete [] tokCopy;
 
       // check that we actually found some particle datablocks
       if (particleDataBlocks.size() == 0) 
@@ -704,7 +669,10 @@ bool ParticleEmitterData::preload(bool server, String &errorStr)
    {
       ParticleData* pData = NULL;
       if (Sim::findObject(dataBlockIds[i], pData) == false)
-         Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) unable to find particle datablock: %d", getName(), dataBlockIds[i]);
+      {
+         errorStr = String::ToString("ParticleEmitterData(%s) unable to find particle datablock: %d", getName(), dataBlockIds[i]);
+         return false;
+      }
       else
          particleDataBlocks.push_back(pData);
    }
@@ -749,6 +717,7 @@ bool ParticleEmitterData::preload(bool server, String &errorStr)
               if (particleDataBlocks[i]->getTextureAsset()->getImageFile() != txr_name)
               {
                  Con::warnf(ConsoleLogEntry::General, "ParticleEmitterData(%s) particles reference different textures.", getName());
+                 return false;
                  break;
               }
            }
@@ -2566,26 +2535,12 @@ bool ParticleEmitterData::reload()
    dataBlockIds.clear();
    particleDataBlocks.clear();
 
-   // Parse out particle string.
-   
-   U32 numUnits = 0;
-   if( particleString )
-      numUnits = StringUnit::getUnitCount( particleString, " \t" );
-   if( !particleString || !particleString[ 0 ] || !numUnits )
+   for( U32 i = 0; i < particleString.size(); ++ i )
    {
-      Con::errorf( "ParticleEmitterData(%s) has an empty particles string.", getName() );
-      mReloadSignal.trigger();
-      return false;
-   }
-
-   for( U32 i = 0; i < numUnits; ++ i )
-   {
-      const char* dbName = StringUnit::getUnit( particleString, i, " \t" );
-
       ParticleData* data = NULL;
-      if( !Sim::findObject( dbName, data ) )
+      if( !Sim::findObject(particleString[i], data))
       {
-         Con::errorf( ConsoleLogEntry::General, "ParticleEmitterData(%s) unable to find particle datablock: %s", getName(), dbName );
+         Con::errorf( ConsoleLogEntry::General, "ParticleEmitterData(%s) unable to find particle datablock: %s", getName(), particleString[i]);
          continue;
       }
 

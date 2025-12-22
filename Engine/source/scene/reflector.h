@@ -145,7 +145,7 @@ class CubeReflector : public ReflectorBase
 public:
 
    CubeReflector();
-   virtual ~CubeReflector() {}
+   virtual ~CubeReflector() { mCubemap.free(); }
 
    void registerReflector( SceneObject *inObject,
                            ReflectorDesc *inDesc );
@@ -153,7 +153,7 @@ public:
    void unregisterReflector() override;
    void updateReflection( const ReflectParams &params, Point3F explicitPostion = Point3F::Max) override;
 
-   GFXCubemap* getCubemap() const { return mCubemap; }
+   GFXTexHandle getCubemap() const { return mCubemap; }
 
    void updateFace( const ReflectParams &params, U32 faceidx, Point3F explicitPostion = Point3F::Max);
    F32 calcFaceScore( const ReflectParams &params, U32 faceidx );
@@ -162,7 +162,7 @@ protected:
 
    GFXTexHandle mDepthBuff;
    GFXTextureTargetRef mRenderTarget;   
-   GFXCubemapHandle  mCubemap;
+   GFXTexHandle  mCubemap;
    U32 mLastTexSize;
 
    class CubeFaceReflector : public ReflectorBase

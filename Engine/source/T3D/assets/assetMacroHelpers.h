@@ -59,72 +59,46 @@ if (m##name##AssetId != StringTable->EmptyString())\
 
 //network send - datablock refactor
 #define PACKDATA_ASSET_REFACTOR(name)\
-   if (stream->writeFlag(m##name##Asset.notNull()))\
-   {\
-      stream->writeString(m##name##Asset.getAssetId());\
-   }
+AssetDatabase.packDataAsset(stream, m##name##Asset.getAssetId())
 
 //network recieve - datablock
 #define UNPACKDATA_ASSET_REFACTOR(name)\
-   if (stream->readFlag())\
-   {\
-      _set##name(stream->readSTString());\
-   }
+m##name##Asset = AssetDatabase.unpackDataAsset(stream)
 
 //network send - object-instance
 #define PACK_ASSET_REFACTOR(netconn, name)\
-   if (stream->writeFlag(m##name##Asset.notNull()))\
-   {\
-      NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
-   }
+AssetDatabase.packUpdateAsset(netconn, mask, stream, m##name##Asset.getAssetId())
 
 //network recieve - object-instance
 #define UNPACK_ASSET_REFACTOR(netconn, name)\
-   if (stream->readFlag())\
-   {\
-      _set##name(netconn->unpackNetStringHandleU(stream).getString());\
-   }
+_set##name(AssetDatabase.unpackUpdateAsset(netconn, stream))
 
 //network send - datablock
 #define PACKDATA_ASSET_ARRAY_REFACTOR(name, max)\
 for (U32 i = 0; i < max; i++)\
 {\
-   if (stream->writeFlag(m##name##Asset[i].notNull()))\
-   {\
-      stream->writeString(m##name##Asset[i].getAssetId()); \
-   }\
+   AssetDatabase.packDataAsset(stream, m##name##Asset[i].getAssetId());\
 }
 
 //network recieve - datablock
 #define UNPACKDATA_ASSET_ARRAY_REFACTOR(name, max)\
 for (U32 i = 0; i < max; i++)\
 {\
-   if (stream->readFlag())\
-   {\
-      m##name##Asset[i] = stream->readSTString();\
-   }\
+   m##name##Asset[i] = AssetDatabase.unpackDataAsset(stream);\
 }
 
 //network send - object-instance
 #define PACK_ASSET_ARRAY_REFACTOR(netconn, name, max)\
 for (U32 i = 0; i < max; i++)\
 {\
-   if (stream->writeFlag(m##name##Asset[i].notNull()))\
-   {\
-      NetStringHandle assetIdStr = m##name##Asset[i].getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
-   }\
+   AssetDatabase.packUpdateAsset(netconn, mask, stream, m##name##Asset[i].getAssetId());\
 }
 
 //network recieve - object-instance
 #define UNPACK_ASSET_ARRAY_REFACTOR(netconn, name, max)\
 for (U32 i = 0; i < max; i++)\
 {\
-   if (stream->readFlag())\
-   {\
-      m##name##Asset[i] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
-   }\
+   _set##name(AssetDatabase.unpackUpdateAsset(netconn, stream), i);\
 }
 
 #define DEF_ASSET_BINDS_REFACTOR(className,name)\
@@ -166,43 +140,57 @@ DefineEngineMethod(className, set##name, void, (const char* assetName), , assetT
 #define PACKDATA_ASSET(name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
    {\
-      stream->writeString(m##name##Asset.getAssetId());\
+      AssetDatabase.packDataAsset(stream, m##name##Asset.getAssetId());\
    }\
-   else\
-      stream->writeString(m##name##Name);
+   else if(stream->writeFlag(m##name##Name != StringTable->EmptyString()))\
+   {\
+      stream->writeString(m##name##Name);\
+   }\
 
 //network recieve - datablock
 #define UNPACKDATA_ASSET(name)\
    if (stream->readFlag())\
    {\
-      m##name##AssetId = stream->readSTString();\
+      m##name##AssetId = AssetDatabase.unpackDataAsset(stream);\
       _set##name(m##name##AssetId);\
    }\
-   else\
+   else if (stream->readFlag())\
    {\
       m##name##Name = stream->readSTString();\
       _set##name(m##name##Name);\
-   }
+   }\
+   else\
+   {\
+      _set##name(StringTable->EmptyString());\
+   }\
 
 //network send - object-instance
 #define PACK_ASSET(netconn, name)\
    if (stream->writeFlag(m##name##Asset.notNull()))\
    {\
-      NetStringHandle assetIdStr = m##name##Asset.getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
+      AssetDatabase.packDataAsset(stream, m##name##Asset.getAssetId());\
    }\
-   else\
-      stream->writeString(m##name##Name);
+   else if (stream->writeFlag(m##name##Name != StringTable->EmptyString()))\
+   {\
+      NetStringHandle nameStr = m##name##Name;\
+      netconn->packNetStringHandleU(stream, nameStr);\
+   }\
 
 //network recieve - object-instance
 #define UNPACK_ASSET(netconn, name)\
    if (stream->readFlag())\
    {\
-      m##name##AssetId = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
+      m##name##AssetId = AssetDatabase.unpackDataAsset(stream);\
       _set##name(m##name##AssetId);\
    }\
+   else if (stream->readFlag())\
+   {\
+      _set##name(StringTable->insert(netconn->unpackNetStringHandleU(stream).getString()));\
+   }\
    else\
-      m##name##Name = stream->readSTString();
+   {\
+      _set##name(StringTable->EmptyString()); \
+   }\
 
 //script methods for class.asset acces
 //declare general get<entry>, get<entry>Asset and set<entry> methods
@@ -283,48 +271,19 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    }
 //network send - datablock
 #define PACKDATA_ASSET_ARRAY(name, index)\
-   if (stream->writeFlag(m##name##Asset[index].notNull()))\
-   {\
-      stream->writeString(m##name##Asset[index].getAssetId());\
-   }\
-   else\
-      stream->writeString(m##name##Name[index]);
+   AssetDatabase.packDataAsset(stream, m##name##Asset[index].getAssetId())
 
 //network recieve - datablock
 #define UNPACKDATA_ASSET_ARRAY(name, index)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
-   }\
-   else\
-   {\
-      m##name##Name[index] = stream->readSTString();\
-      _set##name(m##name##Name[index], index);\
-   }
+   m##name##Asset[index] = AssetDatabase.unpackDataAsset(stream)
 
 //network send - object-instance
 #define PACK_ASSET_ARRAY(netconn, name, index)\
-   if (stream->writeFlag(m##name##Asset[index].notNull()))\
-   {\
-      NetStringHandle assetIdStr = m##name##Asset[index].getAssetId();\
-      netconn->packNetStringHandleU(stream, assetIdStr);\
-   }\
-   else\
-      stream->writeString(m##name##Name[index]);
+AssetDatabase.packUpdateAsset(netconn, mask, stream, m##name##Asset[index].getAssetId());
 
 //network recieve - object-instance
 #define UNPACK_ASSET_ARRAY(netconn, name, index)\
-   if (stream->readFlag())\
-   {\
-      m##name##AssetId[index] = StringTable->insert(netconn->unpackNetStringHandleU(stream).getString());\
-      _set##name(m##name##AssetId[index], index);\
-   }\
-   else\
-   {\
-      m##name##Name[index] = stream->readSTString();\
-      _set##name(m##name##Name[index], index);\
-   }
+_set##name(AssetDatabase.unpackUpdateAsset(netconn, stream), index);
 
 //script methods for class.asset acces
 //declare general get<entry>, get<entry>Asset and set<entry> methods
@@ -363,8 +322,12 @@ DefineEngineMethod(className, set##name, bool, (const char* assetName, S32 index
       const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
       Con::printf("pack: %s = %s",enumString, m##name##AssetId[index]);\
    }\
-   else\
-      stream->writeString(m##name##Name[index]);\
+   else if (stream->writeFlag(m##name##File[index] != StringTable->EmptyString()))\
+   {\
+      stream->writeString(m##name##File[index]);\
+      const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
+      Con::printf("pack: %s = %s",enumString, m##name##File[index]);\
+   }\
 }
 //network recieve - object-instance
 #define UNPACKDATA_ASSET_ARRAY_ENUMED(name, enumType, index )\
@@ -376,10 +339,16 @@ DefineEngineMethod(className, set##name, bool, (const char* assetName, S32 index
       const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
       Con::printf("unpack: %s = %s",enumString, m##name##AssetId[index]);\
    }\
+   else if (stream->readFlag())\
+   {\
+      m##name##File[index] = stream->readSTString();\
+      _set##name(m##name##File[index], index);\
+      const char* enumString = castConsoleTypeToString(static_cast<enumType>(index));\
+      Con::printf("unpack: %s = %s",enumString, m##name##AssetId[index]);\
+   }\
    else\
    {\
-      m##name##Name[index] = stream->readSTString();\
-      _set##name(m##name##AssetId[index], index);\
+      _set##name(StringTable->EmptyString(), index);\
    }\
 }
 

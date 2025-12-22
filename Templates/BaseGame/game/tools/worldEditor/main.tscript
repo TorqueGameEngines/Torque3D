@@ -50,6 +50,9 @@ function initializeWorldEditor()
    exec("tools/gui/compositeTextureEditor.gui" );
    exec("tools/gui/postFxEditor.gui" );
    
+   exec("tools/gui/contextedDropdownList.tscript");
+   exec("tools/gui/contextedDropdownList.gui");
+   
    // Load Scripts.
    exec("./scripts/menus.ed." @ $TorqueScriptFileExtension);
    exec("./scripts/menuHandlers.ed." @ $TorqueScriptFileExtension);

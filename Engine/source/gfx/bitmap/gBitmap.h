@@ -223,7 +223,7 @@ public:
    bool        checkForTransparency();
 
    LinearColorF      sampleTexel(F32 u, F32 v, bool retAlpha = false) const;
-   bool        getColor(const U32 x, const U32 y, ColorI& rColor) const;
+   bool        getColor(const U32 x, const U32 y, ColorI& rColor, const U32 mipLevel = 0, const U32 face = 0) const;
    bool        setColor(const U32 x, const U32 y, const ColorI& rColor);
    U8          getChanelValueAt(U32 x, U32 y, U32 chan);
    U32         getNumFaces() const { return mNumFaces; }

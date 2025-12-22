@@ -1,0 +1,119 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(ContextedDropdownListGui) {
+   extent = "1280 720";
+   profile = "GuiDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "0";
+   horizSizing = "width";
+   vertSizing = "height";
+   
+   new GuiMouseEventCtrl(ContextedDropdownListDecoy) {
+      extent = "1280 720";
+      minExtent = "8 8";
+      horizSizing = "width";
+      vertSizing = "height";
+      profile = "ToolsGuiDefaultProfile";
+      tooltipProfile = "GuiToolTipProfile";
+   };
+   
+   new GuiContainer(ContextedDropdownList) {
+      position = "472 151";
+      extent = "300 450";
+      profile = "ToolsGuiDefaultNonModalProfile";
+      tooltipProfile = "GuiToolTipProfile";
+      canSaveDynamicFields = "0";
+      minExtent = "300 350";
+
+      new GuiContainer() {
+         position = "25 25";
+         extent = "250 400";
+         profile = "IconDropdownProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         internalName = "window";
+         horizSizing = "width";
+         vertSizing = "height";
+
+         new GuiTextCtrl() {
+            position = "0 3";
+            extent = "250 16";
+            horizSizing = "width";
+            profile = "ToolsGuiTextCenterProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "titleText";
+         };
+         new GuiContainer() {
+            position = "0 22";
+            extent = "250 20";
+            horizSizing = "width";
+            profile = "GuiDefaultProfile";
+            tooltipProfile = "GuiToolTipProfile";
+
+            new GuiTextEditCtrl() {
+               position = "3 0";
+               extent = "223 20";
+               horizSizing = "width";
+               profile = "ToolsGuiTextEditProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "textFilter";
+               validate = "ContextedDropdownListGui.updateFilterText();";
+            };
+            new GuiIconButtonCtrl() {
+               BitmapAsset = "ToolsModule:cross_image";
+               BitmapFile = "tools/gui/images/stencilIcons/cross.png";
+               sizeIconToButton = "1";
+               position = "227 0";
+               extent = "20 20";
+               horizSizing = "left";
+               profile = "ToolsGuiIconButtonSmallProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               command = "ContextedDropdownListGui.clearFilterText();";
+            };
+         };
+         new GuiScrollCtrl() {
+            hScrollBar = "dynamic";
+            vScrollBar = "dynamic";
+            position = "7 44";
+            extent = "236 326";
+            horizSizing = "width";
+            vertSizing = "height";
+            profile = "ToolsGuiScrollProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            internalName = "scroll";
+
+            new GuiTreeViewCtrl() {
+               itemHeight = "21";
+               position = "1 1";
+               extent = "220 2";
+               profile = "ToolsGuiTreeViewProfile";
+               tooltipProfile = "GuiToolTipProfile";
+               internalName = "tree";
+               showObjectIds = "0";
+               showClassNames = "0";
+               showTypeHints = "0";
+               showRoot = "0";
+            };
+         };
+         new GuiButtonCtrl() {
+            Text = "Select";
+            position = "6 376";
+            extent = "118 20";
+            vertSizing = "top";
+            profile = "ToolsGuiButtonProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            Command = "ContextedDropdownListGui.select();";
+         };
+         new GuiButtonCtrl() {
+            Text = "Cancel";
+            position = "126 376";
+            extent = "117 20";
+            horizSizing = "left";
+            vertSizing = "top";
+            profile = "ToolsGuiButtonProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            Command = "ContextedDropdownListGui.toggle();";
+         };
+      };
+   };
+};
+//--- OBJECT WRITE END ---

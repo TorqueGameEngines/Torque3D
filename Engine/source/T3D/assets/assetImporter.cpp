@@ -1359,16 +1359,19 @@ static bool enumDTSForImport(const char* shapePath, GuiTreeViewCtrl* tree)
       stats.numMeshes++;
    }
 
-   // Get material count
-   for (S32 i = 0; i < dtsShape->materialList->size(); i++)
+   if (dtsShape->materialList)
    {
-      S32 matId = tree->insertItem(matsID, dtsShape->materialList->getMaterialName(i).c_str(), "", "", 0, 0);
-      stats.numMaterials++;
-
-      GFXTextureObject* difTex = dtsShape->materialList->getDiffuseTexture(i);
-      if (difTex)
+      // Get material count
+      for (S32 i = 0; i < dtsShape->materialList->size(); i++)
       {
-         tree->insertItem(matId, difTex->getPath().c_str(), "", "", 0, 0);
+         S32 matId = tree->insertItem(matsID, dtsShape->materialList->getMaterialName(i).c_str(), "", "", 0, 0);
+         stats.numMaterials++;
+
+         GFXTextureObject* difTex = dtsShape->materialList->getDiffuseTexture(i);
+         if (difTex)
+         {
+            tree->insertItem(matId, difTex->getPath().c_str(), "", "", 0, 0);
+         }
       }
    }
 
@@ -2003,7 +2006,7 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
       {
          enumColladaForImport(filePath, shapeInfo, false);
       }
-      else if (fileExt.compare("dts") == 0)
+      else if ((fileExt.compare("dts") == 0) || (fileExt.compare("dsq") == 0))
       {
          enumDTSForImport(filePath, shapeInfo);
       }
@@ -2097,7 +2100,7 @@ void AssetImporter::processShapeAnimationAsset(AssetImportObject* assetItem)
       {
          enumColladaForImport(filePath, shapeInfo, false);
       }
-      else if (fileExt.compare("dts") == 0)
+      else if ((fileExt.compare("dts") == 0)|| (fileExt.compare("dsq") == 0))
       {
          enumDTSForImport(filePath, shapeInfo);
       }

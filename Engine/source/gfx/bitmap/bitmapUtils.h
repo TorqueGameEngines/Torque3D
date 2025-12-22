@@ -28,6 +28,12 @@
 #ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
 #endif
+#ifndef _GFXENUMS_H_
+#include "gfx/gfxEnums.h"
+#endif
+#ifndef _MMATHFN_H_
+#include "math/mMathFn.h"
+#endif
 
 extern void (*bitmapExtrude5551)(const void *srcMip, void *mip, U32 height, U32 width);
 extern void (*bitmapExtrudeRGB)(const void *srcMip, void *mip, U32 height, U32 width, U32 bpp);
@@ -35,6 +41,8 @@ extern void (*bitmapExtrudeRGBA)(const void *srcMip, void *mip, U32 height, U32 
 extern void (*bitmapExtrude16BitRGBA)(const void *srcMip, void *mip, U32 height, U32 width, U32 bpp);
 extern void(*bitmapExtrudeFPRGBA)(const void *srcMip, void *mip, U32 height, U32 width, U32 bpp);
 extern void(*bitmapExtrudeF32RGBA)(const void *srcMip, void *mip, U32 height, U32 width, U32 bpp);
+extern void(*bitmapResizeToOutput)(const void* src, U32 srcHeight, U32 srcWidth, void* out, U32 outHeight, U32 outWidth, U32 bpp, GFXFormat format);
+extern bool(*bitmapConvertToOutput)(U8** src, U32 pixels, GFXFormat srcFormat, GFXFormat dstFormat);
 extern void (*bitmapConvertRGB_to_5551)(U8 *src, U32 pixels);
 extern void (*bitmapConvertRGB_to_1555)(U8 *src, U32 pixels);
 extern void (*bitmapConvertRGB_to_RGBX)( U8 **src, U32 pixels );
@@ -134,6 +142,24 @@ inline U16 convertFloatToHalf(F32 f)
       }
       return (U16)(sign | (exp << 10) | (mant >> 13));
    }
+}
+// Convert a single 16-bit value (0..65535) to 8-bit (0..255)
+inline U8 convert16To8(U16 v16)
+{
+   // Take the top 8 bits as approximation
+   return U8(v16 >> 8);
+}
+
+// Convert a single 8-bit value (0..255) to 16-bit (0..65535)
+inline U16 convert8To16(U8 v8)
+{
+   // Replicate into high and low byte: 0->0, 255->0xFFFF
+   return (U16(v8) << 8) | v8;
+}
+
+inline U8 floatTo8(F32 v)
+{
+   return U8(mClamp(v * 255.f, 0.f, 255.f));
 }
 
 #endif //_BITMAPUTILS_H_

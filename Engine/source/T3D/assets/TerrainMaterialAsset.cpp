@@ -49,7 +49,10 @@ StringTableEntry TerrainMaterialAsset::smNoTerrainMaterialAssetFallback = NULL;
 
 IMPLEMENT_CONOBJECT(TerrainMaterialAsset);
 
-ConsoleType(TerrainMaterialAssetPtr, TypeTerrainMaterialAssetPtr, TerrainMaterialAsset, ASSET_ID_FIELD_PREFIX)
+IMPLEMENT_STRUCT(AssetPtr<TerrainMaterialAsset>, AssetPtrTerrainMaterialAsset, , "")
+END_IMPLEMENT_STRUCT
+
+ConsoleType(TerrainMaterialAssetPtr, TypeTerrainMaterialAssetPtr, AssetPtr<TerrainMaterialAsset>, ASSET_ID_FIELD_PREFIX)
 
 //-----------------------------------------------------------------------------
 
@@ -511,10 +514,19 @@ GuiControl* GuiInspectorTypeTerrainMaterialAssetPtr::constructEditControl()
    if (retCtrl == NULL)
       return retCtrl;
 
+   StringBuilder varNameStr;
+   varNameStr.append(mCaption);
+   if (mFieldArrayIndex != nullptr)
+   {
+      varNameStr.append("[");
+      varNameStr.append(mFieldArrayIndex);
+      varNameStr.append("]");
+   }
+
    // Change filespec
    char szBuffer[512];
-   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"TerrainMaterialAsset\", \"AssetBrowser.changeAsset\", %s, %s);",
-      mInspector->getIdString(), mCaption);
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"TerrainMaterialAsset\", \"AssetBrowser.changeAsset\", %s, \"%s\");",
+      mInspector->getIdString(), varNameStr.end().c_str());
    mBrowseButton->setField("Command", szBuffer);
 
    setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());

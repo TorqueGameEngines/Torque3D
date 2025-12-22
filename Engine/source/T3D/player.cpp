@@ -6097,7 +6097,7 @@ void Player::updateWorkingCollisionSet()
    // box by the possible movement in that tick.
    Point3F scaledVelocity = mVelocity * TickSec;
    F32 len    = scaledVelocity.len();
-   F32 newLen = len + (10.0f * TickSec);
+   F32 newLen = len + (mDataBlock->getShape()->mRadius * TickSec);
 
    // Check to see if it is actually necessary to construct the new working list,
    // or if we can use the cached version from the last query.  We use the x

@@ -3359,11 +3359,11 @@ function TerrainSetHeightSliderCtrlContainer::onWake(%this)
 }
 
 //------------------------------------------------------------------------------------
-function CameraSpeedDropdownContainer::onWake(%this)
+function CameraSpeedDropdownCtrlContainer::onWake(%this)
 {
-   %this-->slider.setValue(CameraSpeedDropdownCtrlContainer-->textEdit.getText());
-   %pos = CameraSpeedDropdownCtrlContainer.getGlobalPosition();
-   %this-->slider.setPositionGlobal(%pos.x, %pos.y + 25);
+   %this-->slider.setValue(CameraSpeedDropdownContainer-->textEdit.getText());
+   %pos = CameraSpeedDropdownContainer.getGlobalPosition();
+   %this-->container.setPositionGlobal(%pos.x, %pos.y + 25);
 }
 
 //------------------------------------------------------------------------------------

@@ -377,12 +377,12 @@ void ProcessedCustomMaterial::setTextureStages( SceneRenderState *state, const S
             }
          case Material::Cube:
             {
-               GFX->setCubeTexture( samplerRegister, rpd->mCubeMap );
+               GFX->setTexture( samplerRegister, rpd->mCubeMap );
                break;
             }
          case Material::SGCube:
             {
-               GFX->setCubeTexture( samplerRegister, sgData.cubemap );
+               GFX->setTexture( samplerRegister, sgData.cubemap );
                break;
             }
          case Material::BackBuff:

@@ -45,6 +45,7 @@ class GFXTextureProfile;
 class GBitmap;
 struct DDSFile;
 class RectI;
+class GFXTexHandle;
 
 /// Contains information on a locked region of a texture.
 ///
@@ -91,6 +92,8 @@ public:
    String mPath;
 
    bool mDead;
+
+   U32 mArraySize;
 
    /// The device this texture belongs to.
    GFXDevice *mDevice;   
@@ -150,9 +153,12 @@ public:
    U32 getBitmapHeight() const { return mBitmapSize.y; }
    U32 getBitmapDepth() const { return mBitmapSize.z; }
    GFXFormat getFormat() const { return mFormat; }
+   U32 getArraySize() const { return mArraySize; }
 
    /// Returns true if this texture is a render target.
    bool isRenderTarget() const { return mProfile->isRenderTarget(); }
+
+   bool isCubeMap() const { return mProfile->isCubeMap(); }
 
    /// Returns the file path to the texture if
    /// it was loaded from disk.
@@ -167,11 +173,11 @@ public:
 
    /// Acquire a lock on part of the texture. The GFXLockedRect returned
    /// is managed by the GFXTextureObject and does not need to be freed.
-   virtual GFXLockedRect * lock( U32 mipLevel = 0, RectI *inRect = NULL ) = 0;
+   virtual GFXLockedRect * lock( U32 mipLevel = 0, RectI *inRect = NULL, U32 faceIndex = 0) = 0;
 
    /// Releases a lock previously acquired. Note that the mipLevel parameter
    /// must match the corresponding lock!
-   virtual void unlock( U32 mipLevel = 0) = 0;
+   virtual void unlock( U32 mipLevel = 0, U32 faceIndex = 0) = 0;
 
    // copy the texture data into the specified bitmap.  
    //   - this texture object must be a render target.  the function will assert if this is not the case.
@@ -181,6 +187,10 @@ public:
    //   - returns true if successful, false otherwise
    //   - this process is not fast.
    virtual bool copyToBmp(GBitmap* bmp) = 0;
+
+   virtual void updateTextureSlot(const GFXTexHandle& texHandle, const U32 slot, const S32 face = -1) = 0;
+   virtual void copyTo(GFXTextureObject* dstTex) = 0;
+   virtual void generateMipMaps() = 0;
 
    #ifdef TORQUE_DEBUG
 

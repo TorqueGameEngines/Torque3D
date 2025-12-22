@@ -47,8 +47,8 @@ Rigid::Rigid()
    friction = 0.5f;
    atRest = false;
 
-   sleepLinearThreshold = 0.0004f;
-   sleepAngThreshold = 0.0004f;
+   sleepLinearThreshold = POINT_EPSILON;
+   sleepAngThreshold = POINT_EPSILON;
    sleepTimeThreshold = 0.75f;
    sleepTimer = 0.0f;
 }
@@ -71,7 +71,7 @@ void Rigid::integrate(F32 delta)
    linVelocity = linMomentum * oneOverMass;
 
    // 2. advance orientation if ang vel significant
-   F32 angle = angVelocity.len();
+   F32 angle = angVelocity.len()*delta;
    if (mFabs(angle)> POINT_EPSILON)
    {
       QuatF dq;
@@ -101,7 +101,7 @@ void Rigid::integrate(F32 delta)
    }
 
    // 5. refresh ang velocity
-   updateAngularVelocity();
+   updateAngularVelocity(delta);
 
 
    // 6. CoM update
@@ -138,7 +138,7 @@ void Rigid::updateCenterOfMass()
 
 void Rigid::applyImpulse(const Point3F &r, const Point3F &impulse)
 {
-   if (impulse.lenSquared() < mass) return;
+   if ((impulse.lenSquared() - mass) < POINT_EPSILON) return;
    wake();
 
    // Linear momentum and velocity
@@ -304,7 +304,8 @@ void Rigid::trySleep(F32 dt)
    // If there is active force/torque, don’t sleep
    if (!force.isZero() || !torque.isZero())
    {
-      sleepTimer = 0.0f; return;
+      sleepTimer = 0.0f;
+      return;
    }
 
    const F32 linV2 = linVelocity.lenSquared();

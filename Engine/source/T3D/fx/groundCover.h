@@ -44,8 +44,12 @@
 #ifndef _SHADERFEATURE_H_
 #include "shaderGen/shaderFeature.h"
 #endif
-
+#ifndef SHAPE_ASSET_H
 #include "T3D/assets/ShapeAsset.h"
+#endif
+#ifndef TERRAINMATERIALASSET_H
+#include "T3D/assets/TerrainMaterialAsset.h"
+#endif
 
 class TerrainBlock;
 class GroundCoverCell;
@@ -315,8 +319,8 @@ protected:
 
    /// Terrain material assetId to limit coverage to, or
    /// left empty to cover entire terrain.
-   StringTableEntry mLayer[MAX_COVERTYPES];
-
+   DECLARE_TERRAINMATERIALASSET_NET_ARRAY(GroundCover, Layer, MAX_COVERTYPES, -1)
+   
    /// Inverts the data layer test making the 
    /// layer an exclusion mask.
    bool mInvertLayer[MAX_COVERTYPES];

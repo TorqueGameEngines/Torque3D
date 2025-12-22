@@ -77,7 +77,9 @@ enum GFXShaderStage
    GEOMETRY_SHADER   = BIT(2),
    DOMAIN_SHADER     = BIT(3),
    HULL_SHADER       = BIT(4),
-   COMPUTE_SHADER    = BIT(5)
+   COMPUTE_SHADER    = BIT(5),
+   ALL_STAGES = VERTEX_SHADER | PIXEL_SHADER | GEOMETRY_SHADER |
+   DOMAIN_SHADER | HULL_SHADER | COMPUTE_SHADER
 };
 
 /// Instances of this struct are returned GFXShaderConstBuffer

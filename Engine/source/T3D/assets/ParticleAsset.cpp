@@ -150,10 +150,19 @@ GuiControl* GuiInspectorTypeParticleAssetPtr::constructEditControl()
    if (retCtrl == NULL)
       return retCtrl;
 
+   StringBuilder varNameStr;
+   varNameStr.append(mCaption);
+   if (mFieldArrayIndex != nullptr)
+   {
+      varNameStr.append("[");
+      varNameStr.append(mFieldArrayIndex);
+      varNameStr.append("]");
+   }
+
    // Change filespec
    char szBuffer[512];
-   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ParticleAsset\", \"AssetBrowser.changeAsset\", %d, %s);",
-      mInspector->getIdString(), mCaption);
+   dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ParticleAsset\", \"AssetBrowser.changeAsset\", %d, \"%s\");",
+      mInspector->getIdString(), varNameStr.end().c_str());
    mBrowseButton->setField("Command", szBuffer);
 
    // Create "Open in ShapeEditor" button

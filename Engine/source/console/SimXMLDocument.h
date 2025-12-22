@@ -132,6 +132,12 @@ class SimXMLDocument: public SimObject
       void addData(const char* text);
       // Retrieve data from the current level.
       const char* getData();
+
+      bool prevElement();
+
+      bool nextElement();
+
+      bool nextChildElement();
       
    private:
       // Document.

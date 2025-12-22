@@ -62,7 +62,6 @@ uniform vec4 vsFarPlane;
 uniform mat4 worldToLightProj;
 uniform vec4 lightParams;
 uniform float shadowSoftness;
-uniform vec3 eyePosWorld;
 
 uniform mat4 cameraToWorld;
 uniform mat4 worldToCamera;

@@ -327,7 +327,8 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
    {
       if( !Sim::findObject( dustTrailID, dustTrailEmitter ) )
       {
-         Con::errorf( ConsoleLogEntry::General, "HoverVehicleData::preload Invalid packet, bad datablockId(dustTrailEmitter): 0x%x", dustTrailID );
+         errorStr = String::ToString("HoverVehicleData::preload Invalid packet, bad datablockId(dustTrailEmitter): 0x%x", dustTrailID );
+         return false;
       }
    }
    // Resolve jet nodes

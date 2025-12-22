@@ -1,0 +1,469 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+
+$PE_RibbonParticleEditor_DEFAULT_FILENAME = "data/managedParticleData." @ $TorqueScriptFileExtension;
+
+
+//=============================================================================================
+//    PE_RibbonParticleEditor.
+//=============================================================================================
+function PE_RibbonParticleEditor::init(%this)
+{
+   datablock RibbonData(PE_RibbonParticleEditor_NotDirtyEmitter)
+   {
+   };
+   
+   %this.unlistedSet.add(PE_RibbonParticleEditor_NotDirtyEmitter);
+}
+
+function PE_RibbonParticleEditor::openEditorTab(%this)
+{
+   PE_Window.text = ":: Particle Editor - Ribbons";
+   %this.guiSync();
+   ParticleEditor.activeEditor = %this;
+
+   if( !%this.dirty )
+      %this.setNotDirty();
+     
+   if( isObject( $ParticleEditor::ribbonNode ) )
+      $ParticleEditor::ribbonNode.setHidden(false);
+}
+
+function PE_RibbonParticleEditor::closeEditorTab(%this)
+{
+   if( isObject( $ParticleEditor::ribbonNode) )
+      $ParticleEditor::ribbonNode.delete();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::guiSync( %this )
+{
+   %this-->inspector.refresh();
+}
+
+function PE_RibbonParticleEditor::resetVizNode(%this, %tform)
+{
+   if( !isObject( $ParticleEditor::ribbonNode ) )
+   {
+      if( !isObject( TestRibbonEmitterNodeData ) )
+      {
+         datablock RibbonNodeData( TestRibbonEmitterNodeData )
+         {
+            timeMultiple = 1;
+         };
+      }
+
+      $ParticleEditor::ribbonNode = new RibbonNode()
+      {
+         ribbon = $ThisControl.currRibbon;
+         position = getWords( %tform, 0, 2 );
+         rotation = getWords( %tform, 3, 6 );
+         datablock = TestRibbonEmitterNodeData;
+         parentGroup = MissionCleanup;
+      };
+   }
+   else
+   {
+      $ParticleEditor::ribbonNode.setTransform( %tform );
+      
+      %clientObject = $ParticleEditor::ribbonNode.getClientObject();
+      if( isObject( %clientObject ) )
+         %clientObject.setTransform( %tform );
+      
+      %this.updateVizNode();
+   }
+   if (EWorldEditor.getSelectionSize()>0)
+   {
+        %obj = EWorldEditor.getSelectedObject(0);
+        if (%obj.isMemberOfClass("RibbonNodeData"))
+            $ParticleEditor::ribbonNode.sethidden(true);
+   }  
+}
+
+function PE_RibbonParticleEditor::updateVizNode(%this)
+{
+   if( isObject( $ParticleEditor::ribbonNode ) )
+   {
+      %id = %this-->PopupMenu.getText();
+      
+      %clientObject = $ParticleEditor::ribbonNode.getClientObject();
+      if( isObject( %clientObject ) )
+         %clientObject.setRibbonDataBlock( %id );
+   }
+   else
+      %this.resetVizNode();   
+}
+
+//------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::selectObject(%this, %obj)
+{
+   if( isObject(%obj )
+       && %obj.getName() $= %this-->popupMenu.text )
+      return;
+      
+   //FIXME: disregards particle tab dirty state
+   if( %this.dirty )
+   {   
+      if( PE_ParticleEditor.dirty )
+      {         
+         toolsMessageBoxYesNo("Save Existing Ribbon?", 
+            "Do you want to save changes to <br><br>" @ %this.currParticle.getName(), 
+            "PE_ParticleEditor.saveParticle(" @ %this.currParticle @ ");"
+         );
+      }
+            
+      %savedRibbon = %this.currRibbon;
+      toolsMessageBoxYesNoCancel("Save Existing Ribbon?", 
+         "Do you want to save changes to <br><br>" @ %savedRibbon.getName(), 
+         "PE_RibbonParticleEditor.saveRibbon(" @ %savedRibbon@ "); PE_RibbonParticleEditor.loadNewRibbon(" @ %obj @ ");", 
+         "PE_RibbonParticleEditor.saveRibbonDialogDontSave(" @ %savedRibbon @ "); PE_RibbonParticleEditor.loadNewRibbon(" @ %obj @ ");"
+      );
+   }
+   else
+   {
+      %this.loadNewRibbon(%obj);
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::loadNewRibbon( %this, %ribbon )
+{
+   %this-->popupMenu.setText(%ribbon.getName());
+   %this-->inspector.inspect(%ribbon);
+   
+   if( isObject( %ribbon ) )
+      %current = %ribbon.getId();
+   else
+      %current = %this-->popupMenu.text;
+   
+   %this.currRibbon = %current;
+   PE_RibbonParticleEditor_NotDirtyRibbon.assignFieldsFrom( %current );
+   PE_RibbonParticleEditor_NotDirtyRibbon.originalName = %current.name;
+   
+   %this.guiSync();
+   %this.setNotDirty();
+      
+   //PE_ParticleEditor.loadNewParticle( getWord( %current.particles, 0 ) );
+
+   %this.guiSync();
+   
+   PE_RibbonParticleEditor.updateVizNode();
+}
+
+//---------------------------------------------------------------------------------------------
+function PE_RibbonParticleEditor::onInspectorFieldModified(%this, %object, %fieldName, %arrayIndex, %oldValue, %newValue)
+{
+   %action = ParticleEditor.createUndo(ActionUpdateActiveRibbon, "Update Active Ribbon");
+   %action.ribbon = %object;
+   %action.field = %fieldName;
+   %action.isSlider = false;
+   %action.onMouseUp = true;
+   %action.newValue = %newValue;
+   %action.oldValue = %oldValue;
+   
+   ParticleEditor.submitUndo( %action );
+}
+
+// Generic updateRibbon method
+function PE_RibbonParticleEditor::updateRibbon( %this, %propertyField, %value, %isSlider, %onMouseUp )
+{
+   PE_RibbonParticleEditor.setDirty();
+         
+   %ribbon = %this.currRibbon;
+      
+   %last = Editor.getUndoManager().getUndoAction(Editor.getUndoManager().getUndoCount() - 1);
+   if( (%isSlider) && (%last.isSlider) && (!%last.onMouseUp) )
+   {
+      %last.field = %propertyField;
+      %last.isSlider = %isSlider;
+      %last.onMouseUp = %onMouseUp;
+      %last.newValue = %value;
+   }
+   else
+   {
+      %action = ParticleEditor.createUndo(ActionUpdateActiveRibbon, "Update Active Ribbon");
+      %action.ribbon = %ribbon;
+      %action.field = %propertyField;
+      %action.isSlider = %isSlider;
+      %action.onMouseUp = %onMouseUp;
+      %action.newValue = %value;
+      %action.oldValue = %ribbon.getFieldValue( %propertyField );
+      
+      ParticleEditor.submitUndo( %action );
+   }
+   	
+	%ribbon.setFieldValue( %propertyField, %value );
+	%ribbon.reload();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::updateParticlesFields( %this )
+{
+   %particles = "";
+   for( %i = 1; %i < 5; %i ++ )
+   {
+      %ribbonParticle = "PEE_RibbonParticle" @ %i;
+      %popup = %ribbonParticle-->PopUpMenu;
+      %text = %popup.getText();
+      
+      if( %text $= "" || %text $= "None" )
+         continue;
+         
+      if( %particles $= "" )
+         %particles = %text;
+      else
+         %particles = %particles SPC %text;
+   }
+   
+   %changedEditParticle = 1;
+   %currParticle = PE_ParticleEditor.currParticle.getName();
+
+   foreach$( %particleName in %particles )
+   {
+      if( %particleName $= %currParticle )
+      {
+         %changedEditParticle = 0; 
+         break;
+      }
+   }
+   
+   // True only if the currently edited particle has not been found and the 
+   // ParticleEditor is dirty.
+   
+   if( %changedEditParticle && PE_ParticleEditor.dirty )
+   {
+      toolsMessageBoxYesNoCancel("Save Particle Changes?", 
+         "Do you wish to save the changes made to the <br>current particle before changing the particle?", 
+         "PE_ParticleEditor.saveParticle( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_RibbonParticleEditor.updateRibbon( \"particles\"," @ %particles @ ");", 
+         "PE_ParticleEditor.saveParticleDialogDontSave( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_RibbonParticleEditor.updateRibbon( \"particles\"," @ %particles @ ");", 
+         "PE_RibbonParticleEditor.guiSync();" );
+   }
+   else
+   {
+      PE_RibbonParticleEditor.updateRibbon( "particles", %particles );
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::setDirty( %this )
+{
+   %this.text = "*Ribbon";
+   %this.dirty = true;
+   
+   if(!startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = "*" @ %this-->PopupMenu.text;
+   }
+   
+   %ribbon = %this.currRibbon;
+   %filename = %ribbon.getFilename();
+   %editorFilename = "tools/particleEditor/scripts/particleRibbonEditor.ed." @ $TorqueScriptFileExtension;
+   
+   if( %filename $= "" || %filename $= %editorFilename )
+      %this.saver.setDirty( %ribbon, $PE_RibbonParticleEditor_DEFAULT_FILENAME );
+   else
+      %this.saver.setDirty( %ribbon );
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::setNotDirty( %this )
+{   
+   PE_RibbonParticleEditor.text = "Ribbon";
+   PE_RibbonParticleEditor.dirty = false;
+   
+   if(startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = stripChars(%this-->PopupMenu.text, "*");
+   }
+   
+   %this.saver.clearAll();
+}
+
+//---------------------------------------------------------------------------------------------
+
+// Create Functionality
+function PE_RibbonParticleEditor::showNewDialog( %this )
+{
+   //FIXME: disregards particle tab dirty state
+
+   // Open a dialog if the current ribbon is dirty.
+   
+   if( PE_ParticleEditor.dirty )
+   {         
+      toolsMessageBoxYesNo("Save Existing Ribbon?", 
+         "Do you want to save changes to <br><br>" @ PE_ParticleEditor.currParticle.getName(), 
+         "PE_ParticleEditor.saveParticle(" @ PE_ParticleEditor.currParticle @ ");"
+      );
+   }   
+   
+   if( PE_RibbonParticleEditor.dirty )
+   {
+      toolsMessageBoxYesNoCancel("Save Ribbon Changes?", 
+         "Do you wish to save the changes made to the <br>current ribbon before changing the ribbon?", 
+         "PE_RibbonParticleEditor.saveRibbon( " @ PE_RibbonParticleEditor.currRibbon.getName() @ " ); PE_RibbonParticleEditor.createRibbon();", 
+         "PE_RibbonParticleEditor.saveRibbonDialogDontSave( " @ PE_RibbonParticleEditor.currRibbon.getName() @ " ); PE_RibbonParticleEditor.createRibbon();"
+      );
+   }
+   else
+   {
+      PE_RibbonParticleEditor.createRibbon();
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::createRibbon( %this )
+{
+   AssetBrowser_SelectModule.showDialog("PE_RibbonParticleEditor.pickedNewRibbonTargetModule");
+   AssetBrowser_SelectModuleWindow.selectWindow();
+}
+
+function PE_RibbonParticleEditor::pickedNewRibbonTargetModule( %this, %module )
+{
+   ParticleEditorCreatePrompt.show("Ribbon", "RibbonData", "PE_RibbonParticleEditor.doCreateNewRibbon(\"" @ %module @ "\");" );
+}
+
+function PE_RibbonParticleEditor::doCreateNewRibbon( %this, %module )
+{
+   //Sanity checks
+   %newName = ParticleEditorCreatePrompt-->nameText.getText();
+   if(%newName $= "")
+   {
+      toolsMessageBoxOK("Error", "New Ribbon requires a name!");
+      return;
+   }
+   
+   Canvas.popDialog(ParticleEditorCreatePrompt);
+   
+   %sourceDB = ParticleEditorCreatePrompt-->CopySourceDropdown.getText();
+   
+   if(%sourceDB $= "")
+      %sourceDB = DefaultRibbon;
+   
+   %moduleDef = ModuleDatabase.findModule(%module);
+   PE_RibbonParticleEditor.targetModule = %module;
+   $PE_RibbonParticleEditor_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedRibbonData." @ $TorqueScriptFileExtension;
+   
+   if(!isDirectory(filePath($PE_RibbonParticleEditor_DEFAULT_FILENAME)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath($PE_RibbonParticleEditor_DEFAULT_FILENAME));
+   }
+   
+   // Create a new ribbon.
+   %ribbon = getUniqueName( %newName );
+   eval("datablock RibbonData( " @ %ribbon @ " : " @ %sourceDB @ " ){};");
+   
+   // Submit undo.
+   
+   %action = ParticleEditor.createUndo( ActionCreateNewRibbon, "Create New Ribbon" );
+   %action.prevRibbon = PE_RibbonParticleEditor.currRibbon;
+   %action.ribbon = %ribbon.getId();
+   %action.ribbonName = %ribbon;
+
+   ParticleEditor.submitUndo( %action );
+
+   // Execute action.
+   %action.redo();
+   
+   %this.saver.setDirty(%ribbon, $PE_RibbonParticleEditor_DEFAULT_FILENAME);
+   
+   %this.loadNewRibbon(%ribbon);
+   %this.setDirty();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::showDeleteDialog( %this )
+{
+   if( PE_RibbonParticleEditor.currRibbon.getName() $= "BasicRibbon" )
+   {
+      toolsMessageBoxOK( "Error", "Cannot delete BasicRibbon");
+      return;
+   }
+   
+   if( isObject( PE_RibbonParticleEditor.currRibbon ) )
+   {
+      toolsMessageBoxYesNoCancel("Delete Ribbon?", 
+         "Are you sure you want to delete<br><br>" @ PE_RibbonParticleEditor.currRibbon.getName() @ "<br><br> Ribbon deletion won't take affect until the level is exited.", 
+         "PE_RibbonParticleEditor.saveRibbonDialogDontSave( " @ PE_RibbonParticleEditor.currRibbon.getName() @ " ); PE_RibbonParticleEditor.deleteRibbon();"
+      );
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::deleteRibbon( %this )
+{  
+   %ribbon = PE_RibbonParticleEditor.currRibbon;
+   
+   // Create undo.
+   
+   %action = ParticleEditor.createUndo( ActionDeleteRibbon, "Delete Ribbon" );
+   %action.ribbon = %ribbon;
+   %action.ribbonFname = %ribbon.getFilename();
+
+   ParticleEditor.submitUndo( %action );
+   
+   // Execute action.
+
+   %action.redo();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::saveRibbon( %this, %ribbon )
+{   
+   if ( %ribbon $= "" )
+   {
+      %ribbon = %this.currRibbon;
+      %newName = %this.currRibbon.getName();
+   }
+   else
+   {
+      %newName = %ribbon.getName();
+   }
+   
+   %this.currRibbon.setName( %newName );
+   PE_RibbonParticleEditor_NotDirtyRibbon.assignFieldsFrom( %ribbon );
+   PE_RibbonParticleEditor_NotDirtyRibbon.originalName = %newName;
+   
+   %this.saver.saveDirty(); 
+   
+   %this.loadNewRibbon(%newName.getId());
+
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_RibbonParticleEditor::saveRibbonDialogDontSave( %this, %ribbon)
+{  
+   %ribbon.setName( PE_RibbonParticleEditor_NotDirtyRibbon.originalName );
+   %ribbon.assignFieldsFrom( PE_RibbonParticleEditor_NotDirtyRibbon );
+   PE_RibbonParticleEditor.setNotDirty();
+}

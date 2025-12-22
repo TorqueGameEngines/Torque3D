@@ -38,6 +38,7 @@ GFXD3D11TextureTarget::GFXD3D11TextureTarget(bool genMips)
       mResolveTargets[i] = NULL;
       mTargetViews[i] = NULL;
       mTargetSRViews[i] = NULL;
+      mTargetArrayIdx[i] = 0;
    }
 
    mGenMips = genMips;
@@ -57,9 +58,9 @@ GFXD3D11TextureTarget::~GFXD3D11TextureTarget()
    zombify();
 }
 
-void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXTextureObject *tex, U32 mipLevel/*=0*/, U32 zOffset /*= 0*/ )
+void GFXD3D11TextureTarget::attachTexture(RenderSlot slot, GFXTextureObject* tex, U32 mipLevel /*= 0*/, U32 zOffset /*= 0*/, U32 faceIndex /*= 0*/)
 {
-   GFXDEBUGEVENT_SCOPE( GFXPCD3D11TextureTarget_attachTexture, ColorI::RED );
+   GFXDEBUGEVENT_SCOPE(GFXPCD3D11TextureTarget_attachTexture, ColorI::RED);
 
    AssertFatal(slot < MaxRenderSlotId, "GFXD3D11TextureTarget::attachTexture - out of range slot.");
 
@@ -76,17 +77,17 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXTextureObject *te
    SAFE_RELEASE(mTargetViews[slot]);
    SAFE_RELEASE(mTargets[slot]);
    SAFE_RELEASE(mTargetSRViews[slot]);
-   
    mResolveTargets[slot] = NULL;
+   mTargetArrayIdx[slot] = 0;
 
-   if(slot == Color0)
+   if (slot == Color0)
    {
       mTargetSize = Point2I::Zero;
       mTargetFormat = GFXFormatR8G8B8A8;
    }
 
    // Are we clearing?
-   if(!tex)
+   if (!tex)
    {
       // Yup - just exit, it'll stay NULL.      
       return;
@@ -96,7 +97,7 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXTextureObject *te
    mTargetSRViews[slot] = NULL;
 
    // Take care of default targets
-   if( tex == GFXTextureTarget::sDefaultDepthStencil )
+   if (tex == GFXTextureTarget::sDefaultDepthStencil)
    {
       mTargets[slot] = D3D11->mDeviceDepthStencil;
       mTargetViews[slot] = D3D11->mDeviceDepthStencilView;
@@ -108,80 +109,99 @@ void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXTextureObject *te
       // Cast the texture object to D3D...
       AssertFatal(dynamic_cast<GFXD3D11TextureObject*>(tex), "GFXD3D11TextureTarget::attachTexture - invalid texture object.");
 
-      GFXD3D11TextureObject *d3dto = dynamic_cast<GFXD3D11TextureObject*>(tex);
+      GFXD3D11TextureObject* d3dto = dynamic_cast<GFXD3D11TextureObject*>(tex);
+      bool isCube = d3dto->isCubeMap();
 
       // Grab the surface level.
-      if( slot == DepthStencil )
-      {       
+      if (slot == DepthStencil)
+      {
          mTargets[slot] = d3dto->getSurface();
-         if ( mTargets[slot] )
+         if (mTargets[slot])
             mTargets[slot]->AddRef();
 
          mTargetViews[slot] = d3dto->getDSView();
-         if( mTargetViews[slot])
-            mTargetViews[slot]->AddRef();         
+         if (mTargetViews[slot])
+            mTargetViews[slot]->AddRef();
 
       }
       else
-      {         
-         // getSurface will almost always return NULL. It will only return non-NULL
-         // if the surface that it needs to render to is different than the mip level
-         // in the actual texture. This will happen with MSAA.
-         if( d3dto->getSurface() == NULL )
+      {
+         if (!isCube)
          {
-            
-            mTargets[slot] = d3dto->get2DTex();
-            mTargets[slot]->AddRef();
-            mTargetViews[slot] = d3dto->getRTView();
-            mTargetViews[slot]->AddRef();
-         } 
-         else 
-         {
-            mTargets[slot] = d3dto->getSurface();
-            mTargets[slot]->AddRef();
-            mTargetViews[slot]->AddRef();
-            mResolveTargets[slot] = d3dto;
-
-            if ( tex && slot == Color0 )
+            if (d3dto->getSurface() == NULL)
             {
-               mTargetSize.set( tex->getSize().x, tex->getSize().y );
-               mTargetFormat = tex->getFormat();
+               mTargets[slot] = d3dto->get2DTex();
+               mTargets[slot]->AddRef();
+               mTargetViews[slot] = d3dto->getRTView();
+               mTargetViews[slot]->AddRef();
+            }
+            else
+            {
+               mTargets[slot] = d3dto->getSurface();
+               mTargets[slot]->AddRef();
+               mTargetViews[slot] = d3dto->getRTView();
+               mTargetViews[slot]->AddRef();
+               mResolveTargets[slot] = d3dto;
+            }
+         }
+         else
+         {
+            // Cubemap render target face
+            mGenMips = false;
+            AssertFatal(faceIndex < 6, "Invalid cubemap face index!");
+            ID3D11RenderTargetView* faceRTV = d3dto->getCubeFaceRTView(faceIndex);
+            AssertFatal(faceRTV, "Cubemap face RTV is null!");
+
+            mTargetArrayIdx[slot] = faceIndex;
+
+            if (d3dto->getSurface() == NULL)
+            {
+               mTargets[slot] = d3dto->get2DTex();
+               mTargets[slot]->AddRef();
+               mTargetViews[slot] = faceRTV;
+               mTargetViews[slot]->AddRef();
+            }
+            else
+            {
+               mTargets[slot] = d3dto->getSurface();
+               mTargets[slot]->AddRef();
+               mTargetViews[slot] = faceRTV;
+               mTargetViews[slot]->AddRef();
+               mResolveTargets[slot] = d3dto;
             }
          }
 
+         // For mip generation
          if (mGenMips)
          {
             mTargetSRViews[slot] = d3dto->getSRView();
-            mTargetSRViews[slot]->AddRef();
+            if (mTargetSRViews[slot])
+               mTargetSRViews[slot]->AddRef();
          }
       }
 
-      // Update surface size
-      if(slot == Color0)
+      // Update color target info
+      if (slot == Color0)
       {
-         ID3D11Texture2D *surface = mTargets[Color0];
-         if ( surface )
+         ID3D11Texture2D* surface = mTargets[Color0];
+         if (surface)
          {
             D3D11_TEXTURE2D_DESC sd;
             surface->GetDesc(&sd);
             mTargetSize = Point2I(sd.Width, sd.Height);
 
             S32 format = sd.Format;
-
             if (format == DXGI_FORMAT_R8G8B8A8_TYPELESS || format == DXGI_FORMAT_B8G8R8A8_TYPELESS)
-            {
                mTargetFormat = GFXFormatR8G8B8A8;
-               return;
+            else
+            {
+               GFXREVERSE_LOOKUP(GFXD3D11TextureFormat, GFXFormat, format);
+               mTargetFormat = (GFXFormat)format;
             }
-
-            GFXREVERSE_LOOKUP( GFXD3D11TextureFormat, GFXFormat, format );
-            mTargetFormat = (GFXFormat)format;
          }
       }
    }
-
 }
-
 
 void GFXD3D11TextureTarget::attachTexture( RenderSlot slot, GFXCubemap *tex, U32 face, U32 mipLevel/*=0*/ )
 {
@@ -316,7 +336,9 @@ void GFXD3D11TextureTarget::resolveTo( GFXTextureObject *tex )
 
    D3D11_TEXTURE2D_DESC desc;
    mTargets[Color0]->GetDesc(&desc);
-   D3D11DEVICECONTEXT->CopySubresourceRegion(((GFXD3D11TextureObject*)(tex))->get2DTex(), 0, 0, 0, 0, mTargets[Color0], 0, NULL);
+   UINT mipLevels = desc.MipLevels ? desc.MipLevels : 1;
+   UINT subResource = D3D11CalcSubresource(0, mTargetArrayIdx[Color0], mipLevels);
+   D3D11DEVICECONTEXT->CopySubresourceRegion(((GFXD3D11TextureObject*)(tex))->get2DTex(), 0, 0, 0, 0, mTargets[Color0], subResource, NULL);
       
 }
 

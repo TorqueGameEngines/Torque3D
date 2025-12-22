@@ -800,7 +800,7 @@ void GuiScrollCtrl::onMouseDragged(const GuiEvent &event)
          {
             S32 newVPos = (newVThumbPos - mVTrackRect.point.y) *
                           (mChildExt.y - mContentExt.y) /
-                          (mVTrackRect.extent.y - mVThumbSize);
+                          getMax(mVTrackRect.extent.y - mVThumbSize,1);
 
             scrollTo(mChildRelPosAnchor.x, newVPos);
          }
@@ -820,7 +820,7 @@ void GuiScrollCtrl::onMouseDragged(const GuiEvent &event)
          {
             S32 newHPos = (newHThumbPos - mHTrackRect.point.x) *
                           (mChildExt.x - mContentExt.x) /
-                          (mHTrackRect.extent.x - mHThumbSize);
+                          getMax(mHTrackRect.extent.x - mHThumbSize,1);
 
             scrollTo(newHPos, mChildRelPosAnchor.y);
          }

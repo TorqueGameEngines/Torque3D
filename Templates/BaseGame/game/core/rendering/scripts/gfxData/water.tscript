@@ -61,9 +61,9 @@ singleton GFXStateBlockData( WaterStateBlock )
 {
    samplersDefined = true;
    samplerStates[0] = WaterSampler;  // noise
-   samplerStates[1] = SamplerClampPoint;  // #deferred
+   samplerStates[1] = SamplerClampLinear;  // #deferred
    samplerStates[2] = SamplerClampLinear; // $reflectbuff
-   samplerStates[3] = SamplerClampPoint;  // $backbuff
+   samplerStates[3] = SamplerClampLinear;  // $backbuff
    samplerStates[4] = SamplerWrapLinear;  // $cubemap   
    samplerStates[5] = SamplerWrapLinear;  // foam     
    samplerStates[6] = SamplerClampLinear; // depthMap ( color gradient ) 

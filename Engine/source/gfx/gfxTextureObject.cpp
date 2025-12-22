@@ -99,6 +99,8 @@ GFXTextureObject::GFXTextureObject(GFXDevice *aDevice, GFXTextureProfile *aProfi
 
    mHasTransparency = false;
 
+   mArraySize = 1;
+
 #if defined(TORQUE_DEBUG)
    // Active object tracking.
    smActiveTOCount++;

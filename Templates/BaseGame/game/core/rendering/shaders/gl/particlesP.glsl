@@ -108,9 +108,10 @@ void main()
    vec3 colorScale = ( alphaFactor < 0.0 ? IN_color.rgb * diffuse.rgb : vec3( alphaFactor > 0.0 ? IN_color.a * diffuse.a * alphaFactor * softBlend : softBlend ) );
    if (glow)
    {
-      vec3 glowCol = (IN_color * diffuse).rgb*10;//pow((IN_color * diffuse).rgb*10,3.54406804435);
+      float alphaLim = IN_color.a * diffuse.a;
+      vec3 glowCol = (IN_color * diffuse).rgb*10;
       glowCol*=glowCol*glowCol*0.54406804435;
-      colorScale *= glowCol.rgb;
+      colorScale *= glowCol.rgb*alphaLim;
    }
    OUT_col = hdrEncode( vec4( IN_color.rgb * diffuse.rgb * colorScale,
                   IN_color.a * diffuse.a * softBlend * alphaScale ) );

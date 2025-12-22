@@ -1,0 +1,20 @@
+<MaterialAsset
+    AssetName="ArrowGreen"
+    materialDefinitionName="ArrowGreen"
+    imageMap0="@asset=Prototyping:ArrowGreen_ALBEDO">
+    <Material
+        Name="ArrowGreen"
+        mapTo="ArrowGreen"
+        alphaTest="true"
+        originalAssetName="ArrowGreen">
+        <Material.Stages>
+            <Stages_beginarray
+                DiffuseMapAsset="@asset=Prototyping:ArrowGreen_ALBEDO"
+                GlowMapAsset="@asset=Prototyping:ArrowGreen_ALBEDO"
+                GlowMul="1"
+                AnimFlags="$Scroll"
+                ScrollDir="0 1"
+                ScrollSpeed="1"/>
+        </Material.Stages>
+    </Material>
+</MaterialAsset>

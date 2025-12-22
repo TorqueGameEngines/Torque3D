@@ -149,7 +149,7 @@ SoundAsset::SoundAsset()
    mSubtitleString = StringTable->EmptyString();
 
    mLoadedState = AssetErrCode::NotLoaded;
-   mPreload = false;
+   mPreload = true;
    // SFX description inits
    // reverb is useless here, reverb is inacted on listener.
    mProfileDesc.mPitch = 1;
@@ -164,10 +164,17 @@ SoundAsset::SoundAsset()
    mProfileDesc.mConeOutsideAngle = 360;
    mProfileDesc.mConeOutsideVolume = 1;
    mProfileDesc.mRolloffFactor = -1.0f;
+   mProfileDesc.mFadeInTime = 0.0f;
+   mProfileDesc.mFadeOutTime = 0.0f;
+   mProfileDesc.mFadeLoops = false;
    mProfileDesc.mScatterDistance = Point3F(0.f, 0.f, 0.f);
+   mProfileDesc.mStreamPacketSize = 8;
+   mProfileDesc.mStreamReadAhead = 3;
    mProfileDesc.mPriority = 1.0f;
    mProfileDesc.mSourceGroup = NULL;
    mProfileDesc.mFadeInEase = EaseF();
+   mProfileDesc.mReverb = SFXSoundReverbProperties();
+   dMemset(mProfileDesc.mParameters, 0, sizeof(mProfileDesc.mParameters));
    mIsPlaylist = false;
 
    mPlaylist.mNumSlotsToPlay = SFXPlayList::SFXPlaylistSettings::NUM_SLOTS;
@@ -182,6 +189,15 @@ SoundAsset::SoundAsset()
 
 SoundAsset::~SoundAsset()
 {
+   
+   for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
+   {
+      if(mSFXProfile[i].isProperlyAdded() && !mSFXProfile[i].isDeleted())
+         mSFXProfile[i].unregisterObject();
+   }
+
+   if (mPlaylist.isProperlyAdded() && !mPlaylist.isDeleted())
+      mPlaylist.unregisterObject();
 }
 
 //-----------------------------------------------------------------------------
@@ -353,6 +369,7 @@ void SoundAsset::onAssetRefresh(void)
 
       mSoundPath[i] = getOwned() ? expandAssetFilePath(mSoundFile[i]) : mSoundPath[i];
    }
+
 }
 
 U32 SoundAsset::load()
@@ -372,6 +389,8 @@ U32 SoundAsset::load()
       numSlots++;
    }
 
+   if (mProfileDesc.mSourceGroup == NULL)
+      mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
 
    if (numSlots > 1)
    {
@@ -391,16 +410,14 @@ U32 SoundAsset::load()
                return mLoadedState;
             }
             else
-            {// = new SFXProfile(mProfileDesc, mSoundFile, mPreload);
-               if (mProfileDesc.mSourceGroup == NULL)
-                  mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
+            {
                SFXProfile* trackProfile = new SFXProfile();
                trackProfile->setDescription(&mProfileDesc);
                trackProfile->setSoundFileName(mSoundPath[i]);
                trackProfile->setPreload(mPreload);
-               trackProfile->getBuffer();
 
                mSFXProfile[i] = *trackProfile;
+               mSFXProfile[i].registerObject(String::ToString("%s_profile_track%d", getAssetName()).c_str());
 
                mPlaylist.mSlots.mTrack[i] = trackProfile;
                
@@ -409,6 +426,7 @@ U32 SoundAsset::load()
       }
 
       mPlaylist.setDescription(&mProfileDesc);
+      mPlaylist.registerObject(String::ToString("%s_playlist", getAssetName()).c_str());
    }
    else
    {
@@ -424,15 +442,12 @@ U32 SoundAsset::load()
             return mLoadedState;
          }
          else
-         {// = new SFXProfile(mProfileDesc, mSoundFile, mPreload);
-            if (mProfileDesc.mSourceGroup == NULL)
-               mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
+         {
             mSFXProfile[0].setDescription(&mProfileDesc);
             mSFXProfile[0].setSoundFileName(mSoundPath[0]);
             mSFXProfile[0].setPreload(mPreload);
 
-            //give it a nudge to preload if required
-            mSFXProfile[0].getBuffer();
+            mSFXProfile[0].registerObject(String::ToString("%s_profile", getAssetName()).c_str());
          }
 
       }

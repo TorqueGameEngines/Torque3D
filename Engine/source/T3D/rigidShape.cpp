@@ -297,6 +297,36 @@ bool RigidShapeData::onAdd()
    if(!Parent::onAdd())
       return false;
 
+   for (S32 i = 0; i < VC_NUM_SPLASH_EMITTERS; i++)
+   {
+      if (!splashEmitterList[i] && splashEmitterIDList[i] != 0)
+      {
+         if (Sim::findObject(splashEmitterIDList[i], splashEmitterList[i]) == false)
+         {
+            Con::errorf(ConsoleLogEntry::General, "ExplosionData::onAdd: Invalid packet, bad datablockId(explosion): 0x%x", splashEmitterIDList[i]);
+            return false;
+         }
+      }
+   }
+
+   if (!dustTrailEmitter && dustTrailID != 0)
+   {
+      if (Sim::findObject(dustID, dustEmitter) == false)
+      {
+         Con::errorf(ConsoleLogEntry::General, "RigidShapeData::onAdd: Invalid packet, bad datablockId(dustEmitter): 0x%x", dustID);
+         return false;
+      }
+   }
+
+   if (!dustTrailEmitter && dustTrailID != 0)
+   {
+      if (Sim::findObject(dustTrailID, dustTrailEmitter) == false)
+      {
+         Con::errorf(ConsoleLogEntry::General, "RigidShapeData::onAdd: Invalid packet, bad datablockId(dustTrailEmitter): 0x%x", dustTrailID);
+         return false;
+      }
+   }
+
    return true;
 }
 
@@ -338,7 +368,8 @@ bool RigidShapeData::preload(bool server, String &errorStr)
    {
       if( !Sim::findObject( dustID, dustEmitter ) )
       {
-         Con::errorf( ConsoleLogEntry::General, "RigidShapeData::preload Invalid packet, bad datablockId(dustEmitter): 0x%x", dustID );
+         errorStr = String::ToString("RigidShapeData::preload Invalid packet, bad datablockId(dustEmitter): 0x%x", dustID);
+         return false;
       }
    }
 
@@ -349,7 +380,8 @@ bool RigidShapeData::preload(bool server, String &errorStr)
       {
          if( !Sim::findObject( splashEmitterIDList[i], splashEmitterList[i] ) )
          {
-            Con::errorf( ConsoleLogEntry::General, "RigidShapeData::preload Invalid packet, bad datablockId(splashEmitter): 0x%x", splashEmitterIDList[i] );
+            errorStr = String::ToString("RigidShapeData::preload Invalid packet, bad datablockId(splashEmitter): 0x%x", splashEmitterIDList[i] );
+            return false;
          }
       }
    }
@@ -370,7 +402,8 @@ bool RigidShapeData::preload(bool server, String &errorStr)
    {
       if( !Sim::findObject( dustTrailID, dustTrailEmitter ) )
       {
-         Con::errorf( ConsoleLogEntry::General, "RigidShapeData::preload Invalid packet, bad datablockId(dustTrailEmitter): 0x%x", dustTrailID );
+         errorStr = String::ToString("RigidShapeData::preload Invalid packet, bad datablockId(dustTrailEmitter): 0x%x", dustTrailID );
+         return false;
       }
    }
 
@@ -1105,7 +1138,7 @@ void RigidShape::updatePos(F32 dt)
 
    // Update collision information based on our current pos.
    bool collided = false;
-   if (!mDisableMove)
+   if (!mRigid.atRest && !mDisableMove)
    {
       collided = updateCollision(dt);
 
@@ -1118,7 +1151,7 @@ void RigidShape::updatePos(F32 dt)
       {
          F32 k = mRigid.getKineticEnergy();
          F32 G = mNetGravity* dt * TickMs / mDataBlock->integration;
-         F32 Kg = mRigid.mass * G * G;
+         F32 Kg = mRigid.mass * G * G * TickSec;
          if (k < sRestTol * Kg && ++restCount > sRestCount)
             mRigid.setAtRest();
       }
@@ -1414,7 +1447,7 @@ void RigidShape::updateWorkingCollisionSet(const U32 mask)
    // working list is updated on a Tick basis, which means we only expand our box by
    // the possible movement in that tick, plus some extra for caching purposes
    Box3F convexBox = mConvex.getBoundingBox(getTransform(), getScale());
-   F32 len = (mRigid.linVelocity.len() + 50) * TickSec;
+   F32 len = (mRigid.linVelocity.len() + mDataBlock->getShape()->mRadius) * TickSec;
    F32 l = (len * 1.1) + 0.1;  // fudge factor
    convexBox.minExtents -= Point3F(l, l, l);
    convexBox.maxExtents += Point3F(l, l, l);

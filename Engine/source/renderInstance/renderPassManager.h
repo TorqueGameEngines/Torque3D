@@ -382,7 +382,7 @@ struct MeshRenderInst : public RenderInst
    GFXTextureObject *reflectTex;
    GFXTextureObject *miscTex;
    GFXTextureObject *accuTex;
-   GFXCubemap   *cubemap;
+   GFXTexHandle cubemap;
 
    /// @name Hardware Skinning
    /// {

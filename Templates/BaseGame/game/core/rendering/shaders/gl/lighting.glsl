@@ -22,12 +22,13 @@
 
 #include "./torque.glsl"
 #include "./brdf.glsl"
+#line 25
 
 uniform float maxProbeDrawDistance;
 uniform int isCapturing;
 
 #ifndef TORQUE_SHADERGEN
-#line 27
+uniform vec3 eyePosWorld;
 // These are the uniforms used by most lighting shaders.
 
 uniform vec4 inLightPos[4];
@@ -284,9 +285,11 @@ float getDistanceAtt( vec3 unormalizedLightVector , float invSqrAttRadius )
 
 vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 {
+   if (surface.depth >= 0.9999f)
+      return float3(0.0,0.0,0.0);
+      
    // Compute Fresnel term
    vec3 F = F_Schlick(surface.f0, surfaceToLight.HdotV);
-   F += lerp(vec3(0.04f,0.04f,0.04f), surface.baseColor.rgb, surface.metalness);
     
    // GGX Normal Distribution Function
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughness);
@@ -531,7 +534,7 @@ vec4 computeForwardProbes(Surface surface,
 {
    if (getFlag(surface.matFlag, 2))
    {
-      return vec4(0,0,0,0);
+      return vec4(0,0,0,surface.baseColor.a);
    }
    
    int i = 0;
@@ -662,7 +665,7 @@ vec4 computeForwardProbes(Surface surface,
 
    vec2 envBRDF = textureLod(BRDFTexture, vec2(surface.NdotV, surface.roughness),0).rg;
    vec3 diffuse = irradiance * lerp(surface.baseColor.rgb, vec3(0.04f,0.04f,0.04f), surface.metalness);
-   vec3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness;
+   vec3 specularCol = ((specular * surface.f0) * envBRDF.x + envBRDF.y)*surface.metalness;
    
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
@@ -676,7 +679,8 @@ vec4 computeForwardProbes(Surface surface,
       return vec4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
    else
    {
-      return vec4(finalColor, 0);
+      float reflectionOpacity = min(surface.baseColor.a+surface.baseColor.a*length(finalColor),1.0);
+      return vec4(finalColor, reflectionOpacity);
    }
 }
 

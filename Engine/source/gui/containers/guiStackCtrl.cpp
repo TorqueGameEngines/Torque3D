@@ -387,3 +387,8 @@ void GuiStackControl::childResized(GuiControl *child)
 {
    updatePanes();
 }
+
+void GuiStackControl::setPadding(const U32& padding)
+{
+   mPadding = padding;
+}

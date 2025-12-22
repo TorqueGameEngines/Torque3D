@@ -88,7 +88,7 @@ public:
       KeepBitmap     = BIT(7),  ///< Always keep a copy of this texture's bitmap. (Potentially in addition to the API managed copy?)
       ZTarget        = BIT(8),  ///< This texture will be used as a Z target.
       SRGB           = BIT(9),  ///< sRGB texture
-
+      CubeMap        = BIT(10), ///< Cubemap texture
       /// Track and pool textures of this type for reuse.
       ///
       /// You should use this profile flag sparingly.  Odd
@@ -96,16 +96,15 @@ public:
       /// the pool to contain unused textures which will remain
       /// in memory until a flush occurs.
       ///
-      Pooled = BIT(10), 
+      Pooled = BIT(11), 
 
       /// A hint that the device is not allowed to discard the content
       /// of a target texture after presentation or deactivated.
       ///
       /// This is mainly a depth buffer optimization.
-      NoDiscard = BIT(11),
+      NoDiscard = BIT(12),
 
-      
-      NoModify = BIT(11)
+      NoModify = BIT(12)
 
    };
 
@@ -173,6 +172,7 @@ public:
    inline bool isPooled() const { return testFlag(Pooled); }
    inline bool canDiscard() const { return !testFlag(NoDiscard); }
    inline bool isSRGB() const { return testFlag(SRGB); }
+   inline bool isCubeMap() const { return testFlag(CubeMap); }
    //compare profile flags for equality
    inline bool compareFlags(const GFXTextureProfile& in_Cmp) const{ return (mProfile == in_Cmp.mProfile); }
 private:
@@ -209,7 +209,7 @@ private:
 #define GFX_DeclareTextureProfile(name)  extern GFXTextureProfile name
 #define GFX_ImplementTextureProfile(name, type,  flags, compression) GFXTextureProfile name(#name, type, flags, compression)
 
-// Default Texture profiles
+// Default 2D Texture profiles
 // Texture we can render to.
 GFX_DeclareTextureProfile(GFXRenderTargetProfile);
 GFX_DeclareTextureProfile(GFXRenderTargetSRGBProfile);
@@ -230,5 +230,15 @@ GFX_DeclareTextureProfile(GFXZTargetProfile);
 // Dynamic Texure
 GFX_DeclareTextureProfile(GFXDynamicTextureProfile);
 GFX_DeclareTextureProfile(GFXDynamicTextureSRGBProfile);
+
+// Default Cubemap Texture profiles
+// Dynamic Texure
+GFX_DeclareTextureProfile(GFXDynamicCubemapTextureProfile);
+// Texture we can render to.
+GFX_DeclareTextureProfile(GFXCubemapRenderTargetProfile);
+// Standard static diffuse textures
+GFX_DeclareTextureProfile(GFXCubemapStaticTextureProfile);
+// Standard static diffuse textures that are persistent in memory
+GFX_DeclareTextureProfile(GFXCubemapTexturePersistentProfile);
 
 #endif

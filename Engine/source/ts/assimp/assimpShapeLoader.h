@@ -47,6 +47,9 @@ protected:
    Assimp::Importer mImporter;
    const aiScene* mScene;
 
+   // internal helpers
+   void getRootAxisTransform();
+
    //bool processNode(AppNode* node) override;
    bool ignoreNode(const String& name) override;
    bool ignoreMesh(const String& name) override;
@@ -54,7 +57,6 @@ protected:
    void extractTexture(U32 index, aiTexture* pTex);
 
 private:
-   void processAssimpNode(const aiNode* node, const aiScene* scene, AssimpAppNode* parentNode = nullptr);
    void addNodeToTree(S32 parentItem, aiNode* node, GuiTreeViewCtrl* tree, U32& nodeCount);
    void addMetaDataToTree(const aiMetadata* metaData, GuiTreeViewCtrl* tree);
    bool getMetabool(const char* key, bool& boolVal);
@@ -70,7 +72,6 @@ public:
    void releaseImport();
    void enumerateScene() override;
    void configureImportUnits();
-   void updateMaterialsScript(const Torque::Path &path);
    void processAnimations();
 
    void computeBounds(Box3F& bounds) override;
@@ -78,6 +79,7 @@ public:
    bool fillGuiTreeView(const char* shapePath, GuiTreeViewCtrl* tree);
 
    static bool canLoadCachedDTS(const Torque::Path& path);
+   static bool canLoadCachedDSQ(const Torque::Path& path);
    static void assimpLogCallback(const char* message, char* user);
 };
 

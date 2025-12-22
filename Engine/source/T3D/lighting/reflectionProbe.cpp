@@ -86,6 +86,13 @@ ImplementEnumType(ReflectionModeEnum,
 //{ ReflectionProbe::DynamicCubemap, "Dynamic Cubemap", "Uses a cubemap baked from the probe's current position, updated at a set rate" },
    EndImplementEnumType;
 
+void ReflectionProbe::ProbeInfo::clear()
+{
+   mPrefilterCubemap.free();
+   mIrradianceCubemap.free();
+}
+
+
 //-----------------------------------------------------------------------------
 // Object setup and teardown
 //-----------------------------------------------------------------------------
@@ -145,6 +152,19 @@ ReflectionProbe::~ReflectionProbe()
 #endif
    if (mReflectionModeType == StaticCubemap && mStaticCubemap)
       mStaticCubemap->deleteObject();
+
+   mProbeInfo.clear();
+
+   if (mIrridianceMap) {
+      if (mIrridianceMap->isProperlyAdded() && !mIrridianceMap->isRemoved())
+         mIrridianceMap->deleteObject();
+   }
+
+   if (mPrefilterMap)
+   {
+      if (mPrefilterMap->isProperlyAdded() && !mPrefilterMap->isRemoved())
+         mPrefilterMap->deleteObject();
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -597,7 +617,7 @@ void ReflectionProbe::processBakedCubemap()
       return;
 
    String irrPath = getIrradianceMapPath();
-   if (Platform::isFile(irrPath))
+   if ((mIrridianceMap == nullptr || mIrridianceMap->mCubemap.isNull()) && Platform::isFile(irrPath))
    {
       mIrridianceMap->setCubemapFile(FileName(irrPath));
       mIrridianceMap->updateFaces();
@@ -610,7 +630,7 @@ void ReflectionProbe::processBakedCubemap()
    }
 
    String prefilPath = getPrefilterMapPath();
-   if (Platform::isFile(prefilPath))
+   if ((mPrefilterMap == nullptr || mPrefilterMap->mCubemap.isNull()) && Platform::isFile(prefilPath))
    {
       mPrefilterMap->setCubemapFile(FileName(prefilPath));
       mPrefilterMap->updateFaces();
@@ -625,7 +645,7 @@ void ReflectionProbe::processBakedCubemap()
    mProbeInfo.mPrefilterCubemap = mPrefilterMap->mCubemap;
    mProbeInfo.mIrradianceCubemap = mIrridianceMap->mCubemap;
 
-   if (mEnabled && mProbeInfo.mPrefilterCubemap->isInitialized() && mProbeInfo.mIrradianceCubemap->isInitialized())
+   if (mEnabled && !mProbeInfo.mPrefilterCubemap.isNull() && !mProbeInfo.mIrradianceCubemap.isNull())
    {
       //mProbeInfo.mIsEnabled = true;
 
@@ -692,7 +712,7 @@ void ReflectionProbe::processStaticCubemap()
          return;
       }
 
-      if (mStaticCubemap->mCubemap == nullptr)
+      if (mStaticCubemap->mCubemap.isNull())
       {
          mStaticCubemap->createMap();
          mStaticCubemap->updateFaces();
@@ -700,13 +720,13 @@ void ReflectionProbe::processStaticCubemap()
 
       if (mUseHDRCaptures)
       {
-         mIrridianceMap->mCubemap->initDynamic(mPrefilterSize, GFXFormatR16G16B16A16F);
-         mPrefilterMap->mCubemap->initDynamic(mPrefilterSize, GFXFormatR16G16B16A16F);
+         mIrridianceMap->mCubemap.set(mPrefilterSize, mPrefilterSize, GFXFormatR16G16B16A16F, &GFXCubemapRenderTargetProfile, "ReflectionProbe::mIrridianceMap_HDR");
+         mPrefilterMap->mCubemap.set(mPrefilterSize, mPrefilterSize, GFXFormatR16G16B16A16F, &GFXCubemapRenderTargetProfile, "ReflectionProbe::mPrefilterMap_HDR");
       }
       else
       {
-         mIrridianceMap->mCubemap->initDynamic(mPrefilterSize, GFXFormatR8G8B8A8);
-         mPrefilterMap->mCubemap->initDynamic(mPrefilterSize, GFXFormatR8G8B8A8);
+         mIrridianceMap->mCubemap.set(mPrefilterSize, mPrefilterSize, GFXFormatR8G8B8A8, &GFXCubemapRenderTargetProfile, "ReflectionProbe::mIrridianceMap");
+         mPrefilterMap->mCubemap.set(mPrefilterSize, mPrefilterSize, GFXFormatR8G8B8A8, &GFXCubemapRenderTargetProfile, "ReflectionProbe::mPrefilterMap");
       }
 
       GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
@@ -724,7 +744,7 @@ void ReflectionProbe::processStaticCubemap()
       mProbeInfo.mIrradianceCubemap = mIrridianceMap->mCubemap;
    }
 
-   if (mEnabled && mProbeInfo.mPrefilterCubemap->isInitialized() && mProbeInfo.mIrradianceCubemap->isInitialized())
+   if (mEnabled && mProbeInfo.mPrefilterCubemap.isValid() && mProbeInfo.mIrradianceCubemap.isValid())
    {
       mProbeInfo.mIsEnabled = true;
 
@@ -1003,7 +1023,7 @@ void ReflectionProbe::setPreviewMatParameters(SceneRenderState* renderState, Bas
    GFX->setTexture(0, deferredTexObject);
 
    //Set the cubemap
-   GFX->setCubeTexture(1, mPrefilterMap->mCubemap);
+   GFX->setTexture(1, mPrefilterMap->mCubemap);
 
    //Set the invViewMat
    MatrixSet &matrixSet = renderState->getRenderPass()->getMatrixSet();
@@ -1030,3 +1050,4 @@ DefineEngineMethod(ReflectionProbe, Bake, void, (), ,
       clientProbe->bake();
    }
 }
+

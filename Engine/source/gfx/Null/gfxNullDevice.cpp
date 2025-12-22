@@ -72,10 +72,12 @@ public:
    void pureVirtualCrash() override {}
 #endif
 
-   GFXLockedRect * lock( U32 mipLevel = 0, RectI *inRect = NULL ) override { return NULL; };
-   void unlock( U32 mipLevel = 0) override {};
+   GFXLockedRect * lock( U32 mipLevel = 0, RectI *inRect = NULL, U32 faceIndex = 0)override { return NULL; };
+   void unlock( U32 mipLevel = 0, U32 faceIndex = 0)override {};
    bool copyToBmp(GBitmap *) override { return false; };
-
+   void updateTextureSlot(const GFXTexHandle& texHandle, const U32 slot, const S32 face = -1) override {};
+   void copyTo(GFXTextureObject* dstTex) override {};
+   void generateMipMaps() override {};
    void zombify() override {}
    void resurrect() override {}
 };
@@ -94,8 +96,8 @@ public:
    GFXTextureObject* createTexture(DDSFile* dds, GFXTextureProfile* profile, bool deleteDDS) override { return nullptr; }
    GFXTextureObject* createTexture(const Torque::Path& path, GFXTextureProfile* profile) override { return nullptr; }
    GFXTextureObject* createTexture(U32 width, U32 height, void* pixels, GFXFormat format, GFXTextureProfile* profile) override { return nullptr; }
-   GFXTextureObject* createTexture(U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels = 1) override { return nullptr; }
-   GFXTextureObject* createTexture(U32 width, U32 height, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels, S32 antialiasLevel) override { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels = 1, U32 arraySize = 1) override { return nullptr; }
+   GFXTextureObject* createTexture(U32 width, U32 height, GFXFormat format, GFXTextureProfile* profile, U32 numMipLevels, S32 antialiasLevel, U32 arraySize = 1) override { return nullptr; }
    GFXTextureObject* createCompositeTexture(GBitmap* bmp[4], U32 inputKey[4], const String& resourceName, GFXTextureProfile* profile, bool deleteBmp) override { return nullptr; }
 protected:
       GFXTextureObject *_createTextureObject( U32 height, 
@@ -105,7 +107,8 @@ protected:
                                                       GFXTextureProfile *profile, 
                                                       U32 numMipLevels, 
                                                       bool forceMips = false, 
-                                                      S32 antialiasLevel = 0, 
+                                                      S32 antialiasLevel = 0,
+                                                      U32 arraySize = 1,
                                                       GFXTextureObject *inTex = NULL ) override
       { 
          GFXNullTextureObject *retTex;

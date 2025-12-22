@@ -39,18 +39,9 @@ public:
 
    CubeLightShadowMap( LightInfo *light );
 
-   // LightShadowMap
-   bool hasShadowTex() const override { return mCubemap.isValid(); }
    ShadowType getShadowType() const override { return ShadowType_CubeMap; }
    void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState ) override;
    void setShaderParameters( GFXShaderConstBuffer* params, LightingShaderConstants* lsc ) override;
-   void releaseTextures() override;
-   bool setTextureStage( U32 currTexFlag, LightingShaderConstants* lsc ) override;
-
-protected:   
-
-   /// The shadow cubemap.
-   GFXCubemapHandle mCubemap;
 
 };
 

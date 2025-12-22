@@ -50,35 +50,35 @@ public:
 
    const Point2I getSize() override;
    GFXFormat getFormat() override;
-   void attachTexture(RenderSlot slot, GFXTextureObject *tex, U32 mipLevel=0, U32 zOffset = 0) override;
-   void attachTexture(RenderSlot slot, GFXCubemap *tex, U32 face, U32 mipLevel=0) override;
+   void attachTexture(RenderSlot slot, GFXTextureObject* tex, U32 mipLevel = 0, U32 zOffset = 0, U32 face = 0) override;
+   void attachTexture(RenderSlot slot, GFXCubemap* tex, U32 face, U32 mipLevel = 0) override;
    virtual void clearAttachments();
 
    /// Functions to query internal state
    /// @{
-   
+
    /// Returns the internal structure for the given slot.  This should only be called by our internal implementations.
    _GFXGLTargetDesc* getTargetDesc(RenderSlot slot) const;
 
    /// @}
-   
+
    void deactivate() override;
    void zombify() override;
    void resurrect() override;
    const String describeSelf() const override;
-   
+
    void resolve() override;
-   
+
    void resolveTo(GFXTextureObject* obj) override;
-   
+
 protected:
 
    friend class GFXGLDevice;
 
    /// The callback used to get texture events.
    /// @see GFXTextureManager::addEventDelegate
-   void _onTextureEvent( GFXTexCallbackCode code );
-   
+   void _onTextureEvent(GFXTexCallbackCode code);
+
    /// Pointer to our internal implementation
    AutoPtr<_GFXGLTextureTargetImpl> _impl;
 
@@ -87,10 +87,10 @@ protected:
 
    /// These redirect to our internal implementation
    /// @{
-   
+
    void applyState();
    void makeActive();
-   
+
    /// @}
 
    //copy FBO

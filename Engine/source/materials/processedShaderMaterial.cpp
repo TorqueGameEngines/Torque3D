@@ -854,11 +854,11 @@ void ProcessedShaderMaterial::setTextureStages( SceneRenderState *state, const S
             break;
 
          case Material::Cube:
-            GFX->setCubeTexture( i, rpd->mCubeMap );
+            GFX->setTexture( i, rpd->mCubeMap );
             break;
 
          case Material::SGCube:
-            GFX->setCubeTexture( i, sgData.cubemap );
+            GFX->setTexture( i, sgData.cubemap );
             break;
 
          case Material::BackBuff:
@@ -1333,7 +1333,7 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
       }
    }
    if (sgData.cubemap)
-      shaderConsts->setSafe(handles->mCubeMipsSC, (F32)sgData.cubemap->getMipMapLevels());
+      shaderConsts->setSafe(handles->mCubeMipsSC, (F32)sgData.cubemap->getMipLevels());
    else
       shaderConsts->setSafe(handles->mCubeMipsSC, (F32)getBinLog2(PROBEMGR->getProbeTexSize()));
 

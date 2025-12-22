@@ -31,7 +31,7 @@
 
 namespace IBLUtilities
 {
-   void GenerateIrradianceMap(GFXTextureTargetRef renderTarget, GFXCubemapHandle cubemap, GFXCubemapHandle &cubemapOut)
+   void GenerateIrradianceMap(GFXTextureTargetRef renderTarget, GFXTexHandle cubemap, GFXTexHandle &cubemapOut)
    {
       GFXTransformSaver saver;
 
@@ -65,11 +65,11 @@ namespace IBLUtilities
       GFX->setShaderConstBuffer(irrConsts);
       GFX->setStateBlock(irrStateBlock);
       GFX->setVertexBuffer(NULL);
-      GFX->setCubeTexture(0, cubemap);
+      GFX->setTexture(0, cubemap);
 
       for (U32 i = 0; i < 6; i++)
       {
-         renderTarget->attachTexture(GFXTextureTarget::Color0, cubemapOut, i);
+         renderTarget->attachTexture(GFXTextureTarget::Color0, cubemapOut, 0,0, i);
          irrConsts->setSafe(irrFaceSC, (S32)i);
          GFX->setActiveRenderTarget(renderTarget);
          GFX->clear(GFXClearTarget, LinearColorF::BLACK, 1.0f, 0);
@@ -80,7 +80,7 @@ namespace IBLUtilities
       GFX->popActiveRenderTarget();
    }
 
-   void GenerateAndSaveIrradianceMap(String outputPath, S32 resolution, GFXCubemapHandle cubemap, GFXCubemapHandle &cubemapOut)
+   void GenerateAndSaveIrradianceMap(String outputPath, S32 resolution, GFXTexHandle cubemap, GFXTexHandle &cubemapOut)
    {
       if (outputPath.isEmpty())
       {
@@ -101,7 +101,7 @@ namespace IBLUtilities
       }
    }
 
-   void SaveCubeMap(String outputPath, GFXCubemapHandle &cubemap)
+   void SaveCubeMap(String outputPath, GFXTexHandle &cubemap)
    {
       if (outputPath.isEmpty())
       {
@@ -118,7 +118,7 @@ namespace IBLUtilities
       }
    }
 
-   void GeneratePrefilterMap(GFXTextureTargetRef renderTarget, GFXCubemapHandle cubemap, U32 mipLevels, GFXCubemapHandle &cubemapOut)
+   void GeneratePrefilterMap(GFXTextureTargetRef renderTarget, GFXTexHandle cubemap, U32 mipLevels, GFXTexHandle &cubemapOut)
    {
       GFXTransformSaver saver;
 
@@ -153,9 +153,9 @@ namespace IBLUtilities
       GFX->pushActiveRenderTarget();
       GFX->setShader(prefilterShader);
       GFX->setShaderConstBuffer(prefilterConsts);
-      GFX->setCubeTexture(0, cubemap);
+      GFX->setTexture(0, cubemap);
 
-      U32 prefilterSize = cubemapOut->getSize();
+      U32 prefilterSize = cubemapOut->getWidth();
 
       U32 resolutionSize = prefilterSize;
 
@@ -171,7 +171,7 @@ namespace IBLUtilities
             prefilterConsts->setSafe(prefilterRoughnessSC, roughness);
             prefilterConsts->setSafe(prefilterMipSizeSC, mipSize);
             U32 size = prefilterSize * mPow(0.5f, mip);
-            renderTarget->attachTexture(GFXTextureTarget::Color0, cubemapOut, face);
+            renderTarget->attachTexture(GFXTextureTarget::Color0, cubemapOut, 0,0 ,face);
             GFX->setActiveRenderTarget(renderTarget, false);//we set the viewport ourselves
             GFX->setViewport(RectI(0, 0, size, size));
             GFX->clear(GFXClearTarget, LinearColorF::BLACK, 1.0f, 0);
@@ -183,7 +183,7 @@ namespace IBLUtilities
       GFX->popActiveRenderTarget();
    }
 
-   void GenerateAndSavePrefilterMap(String outputPath, S32 resolution, GFXCubemapHandle cubemap, U32 mipLevels, GFXCubemapHandle &cubemapOut)
+   void GenerateAndSavePrefilterMap(String outputPath, S32 resolution, GFXTexHandle cubemap, U32 mipLevels, GFXTexHandle &cubemapOut)
    {
       if (outputPath.isEmpty())
       {
@@ -504,7 +504,7 @@ namespace IBLUtilities
    //SH Calculations
    // From http://sunandblackcat.com/tipFullView.php?l=eng&topicid=32&topic=Spherical-Harmonics-From-Cube-Texture
    // With shader decode logic from https://github.com/nicknikolov/cubemap-sh
-   void calculateSHTerms(GFXCubemapHandle cubemap, LinearColorF SHTerms[9], F32 SHConstants[5])
+   void calculateSHTerms(GFXTexHandle cubemap, LinearColorF SHTerms[9], F32 SHConstants[5])
    {
       if (!cubemap)
          return;
@@ -525,7 +525,7 @@ namespace IBLUtilities
          VectorF(0.0f, 0.0f, -1.0f),
       };
 
-      U32 cubemapResolution = cubemap->getSize();
+      U32 cubemapResolution = cubemap->getWidth();
 
       GBitmap* cubeFaceBitmaps[6];
 

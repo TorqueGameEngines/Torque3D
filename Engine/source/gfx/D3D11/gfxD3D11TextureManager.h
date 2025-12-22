@@ -45,6 +45,7 @@ protected:
                                              U32 numMipLevels,
                                              bool forceMips = false,
                                              S32 antialiasLevel = 0,
+                                             U32 arraySize = 1,
                                              GFXTextureObject *inTex = NULL ) override;
    
    bool _loadTexture(GFXTextureObject *texture, DDSFile *dds) override;
@@ -56,7 +57,7 @@ protected:
 private:
    U32 mCurTexSet[GFX_TEXTURE_STAGE_COUNT];
 
-   void _innerCreateTexture(GFXD3D11TextureObject *obj, U32 height, U32 width, U32 depth, GFXFormat format, GFXTextureProfile *profile, U32 numMipLevels, bool forceMips = false, S32 antialiasLevel = 0);
+   void _innerCreateTexture(GFXD3D11TextureObject *obj, U32 height, U32 width, U32 depth, GFXFormat format, GFXTextureProfile *profile, U32 numMipLevels, bool forceMips = false, S32 antialiasLevel = 0, U32 arraySize = 1);
 };
 
 #endif

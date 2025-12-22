@@ -137,19 +137,19 @@ bool GFXTexHandle::set( DDSFile *dds, GFXTextureProfile *profile, bool deleteDDS
    return isValid();
 }
 
-GFXTexHandle::GFXTexHandle( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels, S32 antialiasLevel)
+GFXTexHandle::GFXTexHandle( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels, S32 antialiasLevel, U32 arraySize)
 {
-   set( width, height, format, profile, desc, numMipLevels, antialiasLevel );
+   set( width, height, format, profile, desc, numMipLevels, antialiasLevel, arraySize );
 }
 
-bool GFXTexHandle::set( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels, S32 antialiasLevel)
+bool GFXTexHandle::set( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, const String &desc, U32 numMipLevels, S32 antialiasLevel, U32 arraySize)
 {
    // Clear the existing texture first, so that
    // its memory is free for the new allocation.
    free();
 
    // Create and set the new texture.
-   StrongObjectRef::set( TEXMGR->createTexture( width, height, format, profile, numMipLevels, antialiasLevel ) );
+   StrongObjectRef::set( TEXMGR->createTexture( width, height, format, profile, numMipLevels, antialiasLevel, arraySize) );
 
    #ifdef TORQUE_DEBUG
       if ( getPointer() )
@@ -159,14 +159,14 @@ bool GFXTexHandle::set( U32 width, U32 height, GFXFormat format, GFXTextureProfi
    return isValid();
 }
 
-bool GFXTexHandle::set(U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, const String& desc, U32 numMipLevels)
+bool GFXTexHandle::set(U32 width, U32 height, U32 depth, GFXFormat format, GFXTextureProfile* profile, const String& desc, U32 numMipLevels, U32 arraySize)
 {
    // Clear the existing texture first, so that
    // its memory is free for the new allocation.
    free();
 
    // Create and set the new texture.
-   StrongObjectRef::set(TEXMGR->createTexture(width, height, depth, format, profile, numMipLevels));
+   StrongObjectRef::set(TEXMGR->createTexture(width, height, depth, format, profile, numMipLevels, arraySize));
 
    #ifdef TORQUE_DEBUG
       if ( getPointer() )

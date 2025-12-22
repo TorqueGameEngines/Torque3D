@@ -83,6 +83,21 @@ GFX_ImplementTextureProfile(GFXDynamicTextureSRGBProfile,
                             GFXTextureProfile::DiffuseMap,
                             GFXTextureProfile::Dynamic | GFXTextureProfile::SRGB,
                             GFXTextureProfile::NONE);
+GFX_ImplementTextureProfile(GFXDynamicCubemapTextureProfile,
+                           GFXTextureProfile::DiffuseMap,
+                           GFXTextureProfile::Dynamic | GFXTextureProfile::CubeMap,
+                           GFXTextureProfile::NONE);
+GFX_ImplementTextureProfile(GFXCubemapRenderTargetProfile,
+                           GFXTextureProfile::DiffuseMap,
+                           GFXTextureProfile::PreserveSize | GFXTextureProfile::RenderTarget | GFXTextureProfile::CubeMap,
+                           GFXTextureProfile::NONE);
+GFX_ImplementTextureProfile(GFXCubemapStaticTextureProfile, GFXTextureProfile::DiffuseMap,
+                           GFXTextureProfile::Static | GFXTextureProfile::CubeMap,
+                           GFXTextureProfile::NONE);
+GFX_ImplementTextureProfile(GFXCubemapTexturePersistentProfile,
+                           GFXTextureProfile::DiffuseMap,
+                           GFXTextureProfile::PreserveSize | GFXTextureProfile::Static | GFXTextureProfile::KeepBitmap | GFXTextureProfile::CubeMap,
+                           GFXTextureProfile::NONE);
 
 //-----------------------------------------------------------------------------
 

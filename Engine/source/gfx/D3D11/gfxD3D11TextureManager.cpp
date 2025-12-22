@@ -52,7 +52,8 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
                                                GFXTextureProfile *profile, 
                                                U32 numMipLevels,
                                                bool forceMips,
-                                               S32 antialiasLevel)
+                                               S32 antialiasLevel,
+															  U32 arraySize)
 {
    U32 usage = 0;
    U32 bindFlags = 0;
@@ -66,6 +67,9 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
    retTex->mProfile = profile;
    retTex->isManaged = false;
    DXGI_FORMAT d3dTextureFormat = GFXD3D11TextureFormat[format];
+
+   if (retTex->isCubeMap())
+      miscFlags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
 
    if( retTex->mProfile->isDynamic() )
    {
@@ -199,7 +203,7 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
 			D3D11_TEXTURE2D_DESC desc;
 		  
 			ZeroMemory(&desc, sizeof(D3D11_TEXTURE2D_DESC));
-			desc.ArraySize = 1;
+			desc.ArraySize = arraySize * (retTex->isCubeMap() ? 6 : 1);
 			desc.BindFlags = bindFlags;
 			desc.CPUAccessFlags = cpuFlags;
 			desc.Format = d3dTextureFormat;
@@ -219,6 +223,7 @@ void GFXD3D11TextureManager::_innerCreateTexture( GFXD3D11TextureObject *retTex,
 
 			retTex->get2DTex()->GetDesc(&desc);
 			retTex->mMipLevels = desc.MipLevels;
+			retTex->mArraySize = arraySize;
 		}
 
 		// start creating the resource views...
@@ -267,6 +272,7 @@ GFXTextureObject *GFXD3D11TextureManager::_createTextureObject( U32 height,
                                                                U32 numMipLevels,
                                                                bool forceMips, 
                                                                S32 antialiasLevel,
+                                                               U32 arraySize,
                                                                GFXTextureObject *inTex )
 {
    GFXD3D11TextureObject *retTex;
@@ -278,11 +284,11 @@ GFXTextureObject *GFXD3D11TextureManager::_createTextureObject( U32 height,
    }      
    else
    {
-      retTex = new GFXD3D11TextureObject(GFX, profile);
+      retTex = new GFXD3D11TextureObject(GFX, profile, arraySize);
       retTex->registerResourceWithDevice(GFX);
    }
 
-   _innerCreateTexture(retTex, height, width, depth, format, profile, numMipLevels, forceMips, antialiasLevel);
+   _innerCreateTexture(retTex, height, width, depth, format, profile, numMipLevels, forceMips, antialiasLevel, arraySize);
 
    return retTex;
 }
@@ -295,7 +301,9 @@ bool GFXD3D11TextureManager::_loadTexture(GFXTextureObject *aTexture, GBitmap *p
 
    // Check with profiler to see if we can do automatic mipmap generation.
    const bool supportsAutoMips = GFX->getCardProfiler()->queryProfile("autoMipMapLevel", true);
-
+   
+   const bool isCube = texture->isCubeMap() && pDL->getNumFaces() > 1;
+   const U32 numFaces = isCube ? 6 : 1;
    // Helper bool
    const bool isCompressedTexFmt = ImageUtil::isCompressedFormat(aTexture->mFormat);
 
@@ -312,98 +320,101 @@ bool GFXD3D11TextureManager::_loadTexture(GFXTextureObject *aTexture, GBitmap *p
 
    bool isDynamic = texture->mProfile->isDynamic();
    // Fill the texture...
-   for( U32 i = 0; i < maxDownloadMip; i++ )
+   for (U32 face = 0; face < numFaces; ++face)
    {
-	   U32 subResource = D3D11CalcSubresource(i, 0, aTexture->mMipLevels);
+      for (U32 i = 0; i < maxDownloadMip; i++)
+      {
+         U32 subResource = D3D11CalcSubresource(i, face, aTexture->mMipLevels);
 
-	   if(!isDynamic)
-	   {
-		   U8* copyBuffer = NULL;
+         if (!isDynamic)
+         {
+            U8* copyBuffer = NULL;
 
-		   switch(texture->mFormat)
-			{
+            switch (texture->mFormat)
+            {
             case GFXFormatR8G8B8:
             case GFXFormatR8G8B8_SRGB:
-				{
-					PROFILE_SCOPE(Swizzle24_Upload);
+            {
+               PROFILE_SCOPE(Swizzle24_Upload);
 
-					U8* Bits = new U8[pDL->getWidth(i) * pDL->getHeight(i) * 4];
-					dMemcpy(Bits, pDL->getBits(i), pDL->getWidth(i) * pDL->getHeight(i) * 3);
-					bitmapConvertRGB_to_RGBX(&Bits, pDL->getWidth(i) * pDL->getHeight(i));
-					copyBuffer = new U8[pDL->getWidth(i) * pDL->getHeight(i) * 4];
-					
-					dev->getDeviceSwizzle32()->ToBuffer(copyBuffer, Bits, pDL->getWidth(i) * pDL->getHeight(i) * 4);
-					dev->getDeviceContext()->UpdateSubresource(texture->get2DTex(), subResource, NULL, copyBuffer, pDL->getWidth() * 4, pDL->getHeight() *4);
+               U8* Bits = new U8[pDL->getWidth(i) * pDL->getHeight(i) * 4];
+               dMemcpy(Bits, pDL->getBits(i, face), pDL->getWidth(i) * pDL->getHeight(i) * 3);
+               bitmapConvertRGB_to_RGBX(&Bits, pDL->getWidth(i) * pDL->getHeight(i));
+               copyBuffer = new U8[pDL->getWidth(i) * pDL->getHeight(i) * 4];
+
+               dev->getDeviceSwizzle32()->ToBuffer(copyBuffer, Bits, pDL->getWidth(i) * pDL->getHeight(i) * 4);
+               dev->getDeviceContext()->UpdateSubresource(texture->get2DTex(), subResource, NULL, copyBuffer, pDL->getWidth() * 4, pDL->getHeight() * 4);
                SAFE_DELETE_ARRAY(Bits);
-					break;
-				}
-
-				case GFXFormatR8G8B8A8:
-				case GFXFormatR8G8B8X8:
-            case GFXFormatR8G8B8A8_SRGB:
-				{
-               PROFILE_SCOPE(Swizzle32_Upload);
-               copyBuffer = new U8[pDL->getWidth(i) * pDL->getHeight(i) * pDL->getBytesPerPixel()];
-               dev->getDeviceSwizzle32()->ToBuffer(copyBuffer, pDL->getBits(i), pDL->getWidth(i) * pDL->getHeight(i) * pDL->getBytesPerPixel());
-               dev->getDeviceContext()->UpdateSubresource(texture->get2DTex(), subResource, NULL, copyBuffer, pDL->getWidth() * pDL->getBytesPerPixel(), pDL->getHeight() *pDL->getBytesPerPixel());
-					break;
-				}
-
-				default:
-				{
-               // Just copy the bits in no swizzle or padding
-               PROFILE_SCOPE(SwizzleNull_Upload);
-               AssertFatal( pDL->getFormat() == texture->mFormat, "Format mismatch");
-               dev->getDeviceContext()->UpdateSubresource(texture->get2DTex(), subResource, NULL, pDL->getBits(i), pDL->getWidth() *pDL->getBytesPerPixel(), pDL->getHeight() *pDL->getBytesPerPixel());
-				}
-			}
-
-         SAFE_DELETE_ARRAY(copyBuffer);
-	    }
-	  
-	   else
-	   {
-			D3D11_MAPPED_SUBRESOURCE mapping;
-			HRESULT res =  dev->getDeviceContext()->Map(texture->get2DTex(), subResource, D3D11_MAP_WRITE, 0, &mapping);
-
-			AssertFatal(res, "tex2d map call failure");
-
-			switch( texture->mFormat )
-			{
-				case GFXFormatR8G8B8:
-            case GFXFormatR8G8B8_SRGB:
-				{
-					PROFILE_SCOPE(Swizzle24_Upload);
-
-					U8* Bits = new U8[pDL->getWidth(i) * pDL->getHeight(i) * 4];
-					dMemcpy(Bits, pDL->getBits(i), pDL->getWidth(i) * pDL->getHeight(i) * 3);
-					bitmapConvertRGB_to_RGBX(&Bits, pDL->getWidth(i) * pDL->getHeight(i));					
-
-					dev->getDeviceSwizzle32()->ToBuffer(mapping.pData, Bits, pDL->getWidth(i) * pDL->getHeight(i) * 4);
-               SAFE_DELETE_ARRAY(Bits);
-				}
-				break;
+               break;
+            }
 
             case GFXFormatR8G8B8A8:
             case GFXFormatR8G8B8X8:
             case GFXFormatR8G8B8A8_SRGB:
             {
                PROFILE_SCOPE(Swizzle32_Upload);
-               dev->getDeviceSwizzle32()->ToBuffer(mapping.pData, pDL->getBits(i), pDL->getWidth(i) * pDL->getHeight(i) * pDL->getBytesPerPixel());
+               copyBuffer = new U8[pDL->getWidth(i) * pDL->getHeight(i) * pDL->getBytesPerPixel()];
+               dev->getDeviceSwizzle32()->ToBuffer(copyBuffer, pDL->getBits(i, face), pDL->getWidth(i) * pDL->getHeight(i) * pDL->getBytesPerPixel());
+               dev->getDeviceContext()->UpdateSubresource(texture->get2DTex(), subResource, NULL, copyBuffer, pDL->getWidth() * pDL->getBytesPerPixel(), pDL->getHeight() * pDL->getBytesPerPixel());
+               break;
             }
-				break;
 
-				default:
-				{
+            default:
+            {
                // Just copy the bits in no swizzle or padding
                PROFILE_SCOPE(SwizzleNull_Upload);
-               AssertFatal( pDL->getFormat() == texture->mFormat, "Format mismatch");
-               dMemcpy(mapping.pData, pDL->getBits(i), pDL->getWidth(i) * pDL->getHeight(i) * pDL->getBytesPerPixel());
-				}
-			}
+               AssertFatal(pDL->getFormat() == texture->mFormat, "Format mismatch");
+               dev->getDeviceContext()->UpdateSubresource(texture->get2DTex(), subResource, NULL, pDL->getBits(i, face), pDL->getWidth() * pDL->getBytesPerPixel(), pDL->getHeight() * pDL->getBytesPerPixel());
+            }
+            }
 
-			dev->getDeviceContext()->Unmap(texture->get2DTex(), subResource);
-	   }
+            SAFE_DELETE_ARRAY(copyBuffer);
+         }
+
+         else
+         {
+            D3D11_MAPPED_SUBRESOURCE mapping;
+            HRESULT res = dev->getDeviceContext()->Map(texture->get2DTex(), subResource, D3D11_MAP_WRITE, 0, &mapping);
+
+            AssertFatal(res, "tex2d map call failure");
+
+            switch (texture->mFormat)
+            {
+            case GFXFormatR8G8B8:
+            case GFXFormatR8G8B8_SRGB:
+            {
+               PROFILE_SCOPE(Swizzle24_Upload);
+
+               U8* Bits = new U8[pDL->getWidth(i) * pDL->getHeight(i) * 4];
+               dMemcpy(Bits, pDL->getBits(i, face), pDL->getWidth(i) * pDL->getHeight(i) * 3);
+               bitmapConvertRGB_to_RGBX(&Bits, pDL->getWidth(i) * pDL->getHeight(i));
+
+               dev->getDeviceSwizzle32()->ToBuffer(mapping.pData, Bits, pDL->getWidth(i) * pDL->getHeight(i) * 4);
+               SAFE_DELETE_ARRAY(Bits);
+            }
+            break;
+
+            case GFXFormatR8G8B8A8:
+            case GFXFormatR8G8B8X8:
+            case GFXFormatR8G8B8A8_SRGB:
+            {
+               PROFILE_SCOPE(Swizzle32_Upload);
+               dev->getDeviceSwizzle32()->ToBuffer(mapping.pData, pDL->getBits(i, face), pDL->getWidth(i) * pDL->getHeight(i) * pDL->getBytesPerPixel());
+            }
+            break;
+
+            default:
+            {
+               // Just copy the bits in no swizzle or padding
+               PROFILE_SCOPE(SwizzleNull_Upload);
+               AssertFatal(pDL->getFormat() == texture->mFormat, "Format mismatch");
+               dMemcpy(mapping.pData, pDL->getBits(i, face), pDL->getWidth(i) * pDL->getHeight(i) * pDL->getBytesPerPixel());
+            }
+            }
+
+            dev->getDeviceContext()->Unmap(texture->get2DTex(), subResource);
+         }
+      }
    }
 
    D3D11_TEXTURE2D_DESC desc;
@@ -487,7 +498,7 @@ bool GFXD3D11TextureManager::_refreshTexture(GFXTextureObject *texture)
    if(texture->mProfile->isRenderTarget() || texture->mProfile->isDynamic() || texture->mProfile->isZTarget())
    {
       realTex->release();
-      _innerCreateTexture(realTex, texture->getHeight(), texture->getWidth(), texture->getDepth(), texture->mFormat, texture->mProfile, texture->mMipLevels, false, texture->mAntialiasLevel);
+      _innerCreateTexture(realTex, texture->getHeight(), texture->getWidth(), texture->getDepth(), texture->mFormat, texture->mProfile, texture->mMipLevels, false, texture->mAntialiasLevel, texture->mArraySize);
       usedStrategies++;
    }
 
@@ -519,14 +530,31 @@ bool GFXD3D11TextureManager::_loadTexture(GFXTextureObject *aTexture, DDSFile *d
    GFXD3D11TextureObject *texture = static_cast<GFXD3D11TextureObject*>(aTexture);
    GFXD3D11Device* dev = static_cast<GFXD3D11Device *>(GFX);
    // Fill the texture...
-   for( U32 i = 0; i < aTexture->mMipLevels; i++ )
+   const bool isCube = texture->isCubeMap() && dds->isCubemap();
+   const U32 numFaces = isCube ? 6 : 1;
+
+   // Loop over faces and mips
+   for (U32 face = 0; face < numFaces; ++face)
    {
-      PROFILE_SCOPE(GFXD3DTexMan_loadSurface);
+      for (U32 mip = 0; mip < aTexture->mMipLevels; ++mip)
+      {
+         PROFILE_SCOPE(GFXD3DTexMan_loadSurface);
 
-		AssertFatal( dds->mSurfaces.size() > 0, "Assumption failed. DDSFile has no surfaces." );
+         // DDSFile must have data for each face
+         AssertFatal(dds->mSurfaces.size() > face, "DDSFile missing cubemap face data.");
+         AssertFatal(dds->mSurfaces[face]->mMips.size() > mip, "DDSFile missing mip level.");
 
-		U32 subresource = D3D11CalcSubresource(i, 0, aTexture->mMipLevels);
-		dev->getDeviceContext()->UpdateSubresource(texture->get2DTex(), subresource, 0, dds->mSurfaces[0]->mMips[i], dds->getSurfacePitch(i), 0);
+         const U32 subresource = D3D11CalcSubresource(mip, face, aTexture->mMipLevels);
+
+         dev->getDeviceContext()->UpdateSubresource(
+            texture->get2DTex(),         // resource
+            subresource,                 // subresource index
+            nullptr,                     // box (nullptr for full subresource)
+            dds->mSurfaces[face]->mMips[mip], // source data pointer
+            dds->getSurfacePitch(mip),  // row pitch
+            0                            // depth pitch
+         );
+      }
    }
 
    D3D11_TEXTURE2D_DESC desc;
@@ -541,14 +569,14 @@ bool GFXD3D11TextureManager::_loadTexture(GFXTextureObject *aTexture, DDSFile *d
 void GFXD3D11TextureManager::createResourceView(U32 height, U32 width, U32 depth, DXGI_FORMAT format, U32 numMipLevels,U32 usageFlags, GFXTextureObject *inTex)
 {
 	GFXD3D11TextureObject *tex = static_cast<GFXD3D11TextureObject*>(inTex);
-	ID3D11Resource* resource = NULL;
-	
-	if(tex->get2DTex())
-		resource = tex->get2DTex();
-	else if(tex->getSurface())
-		resource = tex->getSurface();
-	else
-		resource = tex->get3DTex();
+   ID3D11Resource* resource;
+
+   if (tex->get2DTex())
+      resource = tex->get2DTex();
+   else if (tex->getSurface())
+      resource = tex->getSurface();
+   else
+      resource = tex->get3DTex();
 
 	HRESULT hr;
 	//TODO: add MSAA support later.
@@ -567,11 +595,40 @@ void GFXD3D11TextureManager::createResourceView(U32 height, U32 width, U32 depth
 			desc.Texture3D.MipLevels = -1;
 			desc.Texture3D.MostDetailedMip = 0;
 		}
-		else
+      else if (tex->isCubeMap())
+      {
+         if (tex->getArraySize() == 1)
+         {
+            desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+            desc.TextureCube.MipLevels = -1;
+            desc.TextureCube.MostDetailedMip = 0;
+         }
+         else
+         {
+				desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBEARRAY;
+				desc.TextureCubeArray.MostDetailedMip = 0;
+				desc.TextureCubeArray.MipLevels = -1;
+				desc.TextureCubeArray.First2DArrayFace = 0;
+            desc.TextureCubeArray.NumCubes = tex->getArraySize();
+         }
+         
+      }
+      else
 		{
-			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-			desc.Texture2D.MipLevels = -1;
-			desc.Texture2D.MostDetailedMip = 0;
+         if (tex->getArraySize() == 1)
+         {
+            desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+				desc.Texture2D.MipLevels = -1;
+            desc.Texture2D.MostDetailedMip = 0;
+         }
+         else
+         {
+            desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+            desc.Texture2DArray.MipLevels = -1;
+            desc.Texture2DArray.MostDetailedMip = 0;
+            desc.Texture2DArray.FirstArraySlice = 0;
+            desc.Texture2DArray.ArraySize = tex->getArraySize();
+         }
 		}
 		
 		hr = D3D11DEVICE->CreateShaderResourceView(resource,&desc, tex->getSRViewPtr());
@@ -580,12 +637,29 @@ void GFXD3D11TextureManager::createResourceView(U32 height, U32 width, U32 depth
 
 	if(usageFlags & D3D11_BIND_RENDER_TARGET)
 	{
-		D3D11_RENDER_TARGET_VIEW_DESC desc;
-		desc.Format = format;
-		desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-		desc.Texture2D.MipSlice = 0;
-		hr = D3D11DEVICE->CreateRenderTargetView(resource, &desc, tex->getRTViewPtr());
-		AssertFatal(SUCCEEDED(hr), "CreateRenderTargetView:: failed to create view!");
+      if (tex->isCubeMap())
+      {
+         for (U32 face = 0; face < 6; face++)
+         {
+            D3D11_RENDER_TARGET_VIEW_DESC desc;
+            desc.Format = format;
+            desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+            desc.Texture2DArray.ArraySize = 1;
+            desc.Texture2DArray.FirstArraySlice = face;
+            desc.Texture2DArray.MipSlice = 0;
+            hr = D3D11DEVICE->CreateRenderTargetView(resource, &desc, tex->getCubeFaceRTViewPtr(face));
+            AssertFatal(SUCCEEDED(hr), "CreateRenderTargetView:: failed to create view!");
+         }
+      }
+      else
+      {
+         D3D11_RENDER_TARGET_VIEW_DESC desc;
+         desc.Format = format;
+         desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+         desc.Texture2D.MipSlice = 0;
+         hr = D3D11DEVICE->CreateRenderTargetView(resource, &desc, tex->getRTViewPtr());
+         AssertFatal(SUCCEEDED(hr), "CreateRenderTargetView:: failed to create view!");
+      }
 	}
 
 	if(usageFlags & D3D11_BIND_DEPTH_STENCIL)

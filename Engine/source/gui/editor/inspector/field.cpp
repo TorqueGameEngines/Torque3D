@@ -468,7 +468,8 @@ void GuiInspectorField::setWordData(const S32& wordIndex, const char* data, bool
 
          // Fire callback single-object undo.
 
-         if (callbacks && !mField->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors))
+         if (callbacks && !mField->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors)
+            && (dStrcmp(fieldData, newFieldData.end().c_str()) != 0))
             Con::executef(mInspector, "onInspectorFieldModified",
                target->getIdString(),
                mField->pFieldname,
@@ -603,7 +604,8 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
          
          // Fire callback single-object undo.
          
-         if( callbacks && !mField->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors) )
+         if( callbacks && !mField->flag.test(AbstractClassRep::FieldFlags::FIELD_ComponentInspectors)
+            && (dStrcmp(oldValue.c_str(), newValue.c_str()) != 0))
             Con::executef( mInspector, "onInspectorFieldModified", 
                                           target->getIdString(), 
                                           mField->pFieldname, 

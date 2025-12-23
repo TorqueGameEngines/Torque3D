@@ -1031,8 +1031,8 @@ function MaterialEditorGui::guiSync( %this )
 
 function MaterialEditorGui::deArrayFieldsInRollout(%this, %rollout, %index)
 {
-   echo("====================================");
-   echo("Processing group for array index: " @ %index);
+   //echo("====================================");
+   //echo("Processing group for array index: " @ %index);
    
    %stack = %rollout.getObject(0);
    %count = %stack.getCount();
@@ -1046,38 +1046,38 @@ function MaterialEditorGui::deArrayFieldsInRollout(%this, %rollout, %index)
    {
       %fieldArrayGroup = %stack.getObject(%i);
       %fieldArrayStack = %fieldArrayGroup.getObject(0);
-      echo("Field Array: " @ %fieldArrayGroup.caption @ ", ID: " @ %fieldArrayGroup @ ", type: " @ %fieldArrayGroup.getClassName());
+      //echo("Field Array: " @ %fieldArrayGroup.caption @ ", ID: " @ %fieldArrayGroup @ ", type: " @ %fieldArrayGroup.getClassName());
       
       %fieldCaption = %fieldArrayGroup.caption;
       %newFieldCaption = getSubStr(%fieldCaption, 0, strLen(%fieldCaption) - 4);
       
-      echo("   New Caption: " @ %newFieldCaption);
+      //echo("   New Caption: " @ %newFieldCaption);
       
       %curLayerField = %fieldArrayStack.getObject(%index);
       
-      echo("   Field Obj for cur layer: " @ %curLayerField);
+      //echo("   Field Obj for cur layer: " @ %curLayerField);
 
       %stack.add(%curLayerField);
       %curLayerField.setCaption(%newFieldCaption);
       
       deArrayObjects.add(%stack, %fieldArrayGroup);
       
-      echo("   ---");
+      //echo("   ---");
    }
    
-   echo("Cleaning up field array groups");
+   //echo("Cleaning up field array groups");
    
    for(%i=0; %i < deArrayObjects.count(); %i++)
    {
       %group = deArrayObjects.getKey(%i);
       %obj = deArrayObjects.getValue(%i);
       
-      echo("Removing: " @ %obj @ " from group: " @ %group);
+      //echo("Removing: " @ %obj @ " from group: " @ %group);
       
       %group.remove(%obj);
    }
    
-   echo("====================================");
+   //echo("====================================");
    
    deArrayObjects.empty();
 }
@@ -1552,7 +1552,7 @@ function MaterialEditorGui::save( %this )
      
    if(MaterialEditorGui.currentMaterialAsset !$= "")
    {
-      echo("Attempting to save material: " @ MaterialEditorGui.currentMaterialAsset);
+      //echo("Attempting to save material: " @ MaterialEditorGui.currentMaterialAsset);
       MaterialEditorGui.copyMaterials( materialEd_previewMaterial, notDirtyMaterial );
       
       %assetDef = AssetDatabase.acquireAsset(MaterialEditorGui.currentMaterialAsset);
@@ -2031,7 +2031,7 @@ function MaterialEditorPropInspector::onPostInspectObject(%this, %obj)
 function MaterialEditorPropInspector::saveScrollState(%this)
 {
    %this.scrollPos = %this.getScrollbar().getScrollPosition();
-   echo(%this.getName() @ "::saveScrollState" SPC %this.scrollPos);
+   //echo(%this.getName() @ "::saveScrollState" SPC %this.scrollPos);
 }
 
 function MaterialEditorPropInspector::loadScrollState(%this)
@@ -2039,7 +2039,7 @@ function MaterialEditorPropInspector::loadScrollState(%this)
    if (%this.scrollPos $= "") 
       return;
    %this.getScrollbar().setScrollPosition(%this.scrollPos.x, %this.scrollPos.y);
-   echo(%this.getName() @ "::loadScrollState" SPC %this.scrollPos);
+   //echo(%this.getName() @ "::loadScrollState" SPC %this.scrollPos);
 }
 
 
@@ -2073,6 +2073,6 @@ function MaterialEditorPropInspector::loadCollapseState(%this)
 
 function MaterialEditorPropInspector::onFieldRightClick(%this, %fieldCtrl)
 {
-   echo("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-   echo(%fieldCtrl.getFieldName());
+   //echo("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+   //echo(%fieldCtrl.getFieldName());
 }

@@ -1036,7 +1036,7 @@ function OptionsMenu::populateKeybinds(%this,%device, %controlsList) {
    if($activeRemapControlSet $= "")
       $activeRemapControlSet = getField(%actionMapList, 0);
 
-   echo("============================================");
+   //echo("============================================");
 
    for(%am = 0; %am < getFieldCount(%actionMapList); %am++)
    {
@@ -1064,7 +1064,7 @@ function OptionsMenu::populateKeybinds(%this,%device, %controlsList) {
          %keyMap = buildFullMapString( %i, $RemapActionMap[%i], %device );
          %description = $RemapDescription[%i];
 
-         echo("Added ActionMap Entry: " @ %actionMapName @ " | " @ %device @ " | " @ %keymap @ " | " @ %description);
+         //echo("Added ActionMap Entry: " @ %actionMapName @ " | " @ %device @ " | " @ %keymap @ " | " @ %description);
 
          %remapEntry = addActionMapEntry(%actionMapName, %device, %keyMap, %i, %description);
          %controlsList.add(%remapEntry);
@@ -1245,7 +1245,7 @@ function addActionMapEntry(%actionMap, %device, %keyMap, %index, %description)
    };
 
    %buttonContainer = %entry.findObjectByInternalName("valuesContainer");
-   echo("Keymap: " @ %keymap @ " | Keymap word count: " @ getWordCount(getField(%keyMap, 1)));
+   //echo("Keymap: " @ %keymap @ " | Keymap word count: " @ getWordCount(getField(%keyMap, 1)));
    if(getWordCount(getField(%keyMap, 1)) == 2)
    {
       %modifierBtn = new GuiIconButtonCtrl() {

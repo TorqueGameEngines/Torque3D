@@ -4,7 +4,7 @@ $guiContent = new GuiContainer(damageGuiOverlay) {
    minExtent = "8 8";
    horizSizing = "relative";
    vertSizing = "relative";
-   profile = "GuiDefaultProfile";
+   profile = "GuiModelessDialogProfile";
    tooltipProfile = "GuiToolTipProfile";
    canSaveDynamicFields = "1";
       enabled = "1";
@@ -25,7 +25,6 @@ $guiContent = new GuiContainer(damageGuiOverlay) {
    };
    new GuiCrossHairHud(Reticle) {
       damageOffset = "0 10";
-      BitmapAsset = "";
       position = "624 344";
       extent = "32 32";
       minExtent = "8 8";
@@ -64,6 +63,7 @@ $guiContent = new GuiContainer(damageGuiOverlay) {
       };
       new GuiBitmapCtrl(previewImage) {
          BitmapAsset = "UI:hudfill_image";
+         BitmapFile = "data/UI/images/hudfill.png";
          position = "8 0";
          extent = "108 56";
          horizSizing = "width";
@@ -80,7 +80,7 @@ $guiContent = new GuiContainer(damageGuiOverlay) {
          extent = "120 16";
          minExtent = "8 8";
          vertSizing = "top";
-         profile = "HudTextItalicProfile";
+         profile = "GuiModelessDialogProfile";
          tooltipProfile = "GuiToolTipProfile";
          isContainer = "0";
       };
@@ -95,7 +95,7 @@ $guiContent = new GuiContainer(damageGuiOverlay) {
       position = "5 645";
       extent = "72 72";
       vertSizing = "top";
-      profile = "GuiBigTextProfile";
+      profile = "GuiModelessDialogProfile";
       tooltipProfile = "GuiToolTipProfile";
    };
    new GuiControl(DamageHUD) {

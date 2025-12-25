@@ -464,4 +464,10 @@ void GuiIconButtonCtrl::renderBitmapArray(RectI &bounds, S32 state)
    }
 }
 
-DEF_ASSET_BINDS_REFACTOR(GuiIconButtonCtrl, Bitmap)
+DefineEngineMethod(GuiIconButtonCtrl, getBitmap, StringTableEntry, (), , "get name") {
+   return object->getBitmapFile();
+}DefineEngineMethod(GuiIconButtonCtrl, getBitmapAsset, StringTableEntry, (), , assetText(Bitmap, asset reference)) {
+   return object->_getBitmap();
+}DefineEngineMethod(GuiIconButtonCtrl, setBitmap, void, (const char* assetName), , assetText(Bitmap, assignment.first tries asset then flat file.)) {
+   object->setBitmap(StringTable->insert(assetName));
+}

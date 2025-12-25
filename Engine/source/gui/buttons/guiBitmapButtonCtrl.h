@@ -122,24 +122,8 @@ private:
    AssetPtr<ImageAsset> mBitmapAsset;
    String               mBitmapFile; 
 public:
-   void _setBitmap(StringTableEntry _in) {
-      if (_in == NULL || _in == StringTable->EmptyString() || _in == "")
-      {
-         mBitmapAsset = NULL;
-         mBitmapFile = "";
-         return;
-      }
-   if (mBitmapAsset.getAssetId() == _in) return; if (!AssetDatabase.isDeclaredAsset(_in)) {
-      StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback; AssetQuery query; S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in); if (foundAssetcount != 0) {
-         imageAssetId = query.mAssetList[0];
-      } mBitmapAsset = imageAssetId;
-   }
-   else {
-      mBitmapAsset = _in;
-      mBitmapName = _in;
-      mBitmap = getBitmap();
-   }
-}; inline StringTableEntry _getBitmap(void) const {
+   void _setBitmap(StringTableEntry _in);
+inline StringTableEntry _getBitmap(void) const {
    return mBitmapAsset.getAssetId();
 } GFXTexHandle getBitmap() {
    return mBitmapAsset.notNull() ? mBitmapAsset->getTexture(&GFXDefaultGUIProfile) : 0;

@@ -262,51 +262,6 @@ void GuiBitmapButtonCtrl::setAutoFitExtents( bool state )
 }
 
 //-----------------------------------------------------------------------------
-void GuiBitmapButtonCtrl::_setBitmap(StringTableEntry _in)
-{
-   if (mBitmapAsset.getAssetId() == _in)
-      return;
-
-   if (getBitmapFile() == _in)
-      return;
-
-   if (_in == 0 || !String::compare(_in, _getStringTable()->EmptyString()))
-   {
-      mBitmapAsset = 0;
-      mBitmapFile = "";
-      return;
-   }
-   if (!AssetDatabase.isDeclaredAsset(_in))
-   {
-      StringTableEntry imageAssetId = _getStringTable()->EmptyString();
-      AssetQuery query;
-      S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);
-      if (foundAssetcount != 0)
-      {
-         imageAssetId = query.mAssetList[0];
-      }
-      else if (Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))
-      {
-         imageAssetId = ImageAsset::getAssetIdByFilename(_in);
-         if (imageAssetId == ImageAsset::smNoImageAssetFallback)
-         {
-            ImageAsset* privateImage = new ImageAsset();
-            privateImage->setImageFile(_in);
-            imageAssetId = AssetDatabase.addPrivateAsset(privateImage);
-         }
-      }
-      else {
-         Con::warnf("%s::%s: Could not find asset for: %s using fallback", "GuiBitmapButtonCtrl", "Bitmap", _in);
-         imageAssetId = ImageAsset::smNoImageAssetFallback;
-      } mBitmapAsset = imageAssetId;
-      mBitmapFile = _in;
-   }
-   else
-   {
-      mBitmapAsset = _in;
-      mBitmapFile = getBitmapFile();
-   }
-}
 
 void GuiBitmapButtonCtrl::setBitmap( StringTableEntry name )
 {

@@ -270,6 +270,7 @@ public:
    /// The repetition scale of the detail texture
    /// over the base texture.
    Point2F mDetailScale[MAX_STAGES];
+   Point2F mTileScale[MAX_STAGES];
 
    U32 mAnimFlags[MAX_STAGES];
    Point2F mScrollDir[MAX_STAGES];

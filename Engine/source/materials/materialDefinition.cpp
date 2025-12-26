@@ -158,7 +158,7 @@ Material::Material()
       mIgnoreLighting[i] = false;
 
       mDetailScale[i].set(2.0f, 2.0f);
-
+      mTileScale[i].set(1.0f, 1.0f);
       mDetailNormalMapStrength[i] = 1.0f;
 
       mMinnaertConstant[i] = -1.0f;
@@ -257,6 +257,8 @@ void Material::initPersistFields()
          "is present this is the material color.");
       addField("diffuseMapSRGB", TypeBool, Offset(mDiffuseMapSRGB, Material), MAX_STAGES,
          "Enable sRGB for the diffuse color texture map.");
+      addField("TileScale", TypePoint2F, Offset(mTileScale, Material), MAX_STAGES,
+         "The scale factor for the detail map.");
 
       INITPERSISTFIELD_IMAGEASSET_ARRAY(NormalMap, MAX_STAGES, Material, "NormalMap");
    endGroup("Basic Texture Maps");

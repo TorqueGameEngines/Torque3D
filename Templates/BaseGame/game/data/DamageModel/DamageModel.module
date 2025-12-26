@@ -4,7 +4,9 @@
     Group="Game"
     scriptFile="DamageModel.tscript"
     CreateFunction="onCreate"
-    DestroyFunction="onDestroy">
+    DestroyFunction="onDestroy"
+	Group="Game"
+    Dependencies="UI=1">
     <DeclaredAssets
         Extension="asset.taml"
         Recurse="true"/>

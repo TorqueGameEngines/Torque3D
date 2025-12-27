@@ -987,9 +987,6 @@ class SimObject: public ConsoleObject, public TamlCallbacks
       DECLARE_CALLBACK(void, onInspectPostApply, (SimObject* obj));
       DECLARE_CALLBACK(void, onSelected, (SimObject* obj));
       DECLARE_CALLBACK(void, onUnselected, (SimObject* obj));
-
-      DECLARE_CALLBACK(void, onAdd, (SimObjectId ID));
-      DECLARE_CALLBACK(void, onRemove, (SimObjectId ID));
       
       static SimObject* __findObject( const char* id ) { return Sim::findObject( id ); }
       static const char* __getObjectId( ConsoleObject* object )

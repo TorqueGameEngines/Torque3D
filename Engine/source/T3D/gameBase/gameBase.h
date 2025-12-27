@@ -469,6 +469,8 @@ private:
    void _onDatablockModified();
 protected:
    void    onScopeIdChange() override { setMaskBits(ScopeIdMask); }
+
+   DECLARE_CALLBACK(void, onAdd, (SimObjectId ID));
 };
 
 

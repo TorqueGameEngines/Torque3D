@@ -88,16 +88,6 @@ EndImplementBitfieldType;
 
 IMPLEMENT_CONOBJECT( SimObject );
 
-IMPLEMENT_CALLBACK(SimObject, onAdd, void, (SimObjectId ID), (ID),
-   "Called when this SimObject is added to the system, if the className is set to something\n"
-   "@param ID Unique object ID assigned when created (%this in script).\n"
-);
-
-IMPLEMENT_CALLBACK(SimObject, onRemove, void, (SimObjectId ID), (ID),
-   "Called when this SimObject is removed from the system, if the className is set to something\n"
-   "@param ID Unique object ID assigned when created (%this in script).\n"
-);
-
 // See full description in the new CHM manual
 ConsoleDocClass( SimObject,
    "@brief Base class for almost all objects involved in the simulation.\n\n"
@@ -1699,8 +1689,6 @@ bool SimObject::onAdd()
 
    linkNamespaces();
 
-   onAdd_callback(getId());
-
    return true;
 }
 
@@ -1709,8 +1697,6 @@ bool SimObject::onAdd()
 void SimObject::onRemove()
 {
    mFlags.clear(Added);
-
-   onRemove_callback(getId());
 
    unlinkNamespaces();
 }

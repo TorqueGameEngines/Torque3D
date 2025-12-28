@@ -1,0 +1,67 @@
+
+// ----------------------------------------------------------------------------
+// WeaponHUD
+// ----------------------------------------------------------------------------
+
+// Update the Ammo Counter with current ammo, if not any then hide the counter.
+function clientCmdSetAmmoAmountHud(%amount, %amountInClips)
+{
+   if (!%amount)
+      AmmoAmount.setVisible(false);
+   else
+   {
+      AmmoAmount.setVisible(true);
+      AmmoAmount.setText("Ammo: " @ %amount @ "/" @ %amountInClips);
+   }
+}
+
+// Here we update the Weapon Preview image & reticle for each weapon.  We also
+// update the Ammo Counter (just so we don't have to call it separately).
+// Passing an empty parameter ("") hides the HUD component.
+
+function clientCmdRefreshWeaponHUD(%amount, %preview, %ret, %zoomRet, %amountInClips)
+{
+   if (!%amount)
+      AmmoAmount.setVisible(false);
+   else
+   {
+      AmmoAmount.setVisible(true);
+      AmmoAmount.setText("Ammo: " @ %amount @ "/" @ %amountInClips);
+   }
+
+   if (%preview $= "" || detag(%preview) $= "blank")
+   {
+      WeaponHUD.setVisible(false);
+      PreviewImage.setBitmap("");
+   }
+   else
+   {
+      WeaponHUD.setVisible(true);
+      PreviewImage.setbitmap(detag(%preview));
+   }
+
+   if (%ret $= "" || detag(%ret) $= "blank")
+   {
+      Reticle.setVisible(false);
+      Reticle.setBitmap("");
+   }
+   else
+   {
+      Reticle.setVisible(true);
+      Reticle.setbitmap(detag(%ret));
+   }
+
+   if (isObject(ZoomReticle) || detag(%zoomRet) $= "blank")
+   {
+      if (%zoomRet $= "" || detag(%zoomRet) $= "blank")
+      {
+         ZoomReticle.setVisible(false);
+         ZoomReticle.setBitmap("");
+      }
+      else
+      {
+         ZoomReticle.setVisible(true);
+         ZoomReticle.setBitmap(detag(%zoomRet));
+      }
+   }
+}

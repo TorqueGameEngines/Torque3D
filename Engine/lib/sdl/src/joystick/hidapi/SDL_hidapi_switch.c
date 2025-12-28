@@ -62,9 +62,7 @@
 #define SWITCH_GYRO_SCALE  14.2842f
 #define SWITCH_ACCEL_SCALE 4096.f
 
-#define SWITCH_GYRO_SCALE_OFFSET  13371.0f
 #define SWITCH_GYRO_SCALE_MULT    936.0f
-#define SWITCH_ACCEL_SCALE_OFFSET 16384.0f
 #define SWITCH_ACCEL_SCALE_MULT   4.0f
 
 typedef enum
@@ -819,7 +817,7 @@ static SDL_bool LoadStickCalibration(SDL_DriverSwitch_Context *ctx)
     SwitchSPIOpData_t readFactoryParams;
     const int MAX_ATTEMPTS = 3;
     int attempt;
-    
+
     /* Read User Calibration Info */
     readUserParams.unAddress = k_unSPIStickUserCalibrationStartOffset;
     readUserParams.ucLength = k_unSPIStickUserCalibrationLength;
@@ -925,6 +923,8 @@ static SDL_bool LoadIMUCalibration(SDL_DriverSwitch_Context *ctx)
     if (WriteSubcommand(ctx, k_eSwitchSubcommandIDs_SPIFlashRead, (uint8_t *)&readParams, sizeof(readParams), &reply)) {
         Uint8 *pIMUScale;
         Sint16 sAccelRawX, sAccelRawY, sAccelRawZ, sGyroRawX, sGyroRawY, sGyroRawZ;
+        Sint16 sAccelSensCoeffX, sAccelSensCoeffY, sAccelSensCoeffZ;
+        Sint16 sGyroSensCoeffX, sGyroSensCoeffY, sGyroSensCoeffZ;
 
         /* IMU scale gives us multipliers for converting raw values to real world values */
         pIMUScale = reply->spiReadData.rgucReadData;
@@ -933,9 +933,17 @@ static SDL_bool LoadIMUCalibration(SDL_DriverSwitch_Context *ctx)
         sAccelRawY = (pIMUScale[3] << 8) | pIMUScale[2];
         sAccelRawZ = (pIMUScale[5] << 8) | pIMUScale[4];
 
+        sAccelSensCoeffX = (pIMUScale[7] << 8) | pIMUScale[6];
+        sAccelSensCoeffY = (pIMUScale[9] << 8) | pIMUScale[8];
+        sAccelSensCoeffZ = (pIMUScale[11] << 8) | pIMUScale[10];
+
         sGyroRawX = (pIMUScale[13] << 8) | pIMUScale[12];
         sGyroRawY = (pIMUScale[15] << 8) | pIMUScale[14];
         sGyroRawZ = (pIMUScale[17] << 8) | pIMUScale[16];
+
+        sGyroSensCoeffX = (pIMUScale[19] << 8) | pIMUScale[18];
+        sGyroSensCoeffY = (pIMUScale[21] << 8) | pIMUScale[20];
+        sGyroSensCoeffZ = (pIMUScale[23] << 8) | pIMUScale[22];
 
         /* Check for user calibration data. If it's present and set, it'll override the factory settings */
         readParams.unAddress = k_unSPIIMUUserScaleStartOffset;
@@ -953,14 +961,14 @@ static SDL_bool LoadIMUCalibration(SDL_DriverSwitch_Context *ctx)
         }
 
         /* Accelerometer scale */
-        ctx->m_IMUScaleData.fAccelScaleX = SWITCH_ACCEL_SCALE_MULT / (SWITCH_ACCEL_SCALE_OFFSET - (float)sAccelRawX) * SDL_STANDARD_GRAVITY;
-        ctx->m_IMUScaleData.fAccelScaleY = SWITCH_ACCEL_SCALE_MULT / (SWITCH_ACCEL_SCALE_OFFSET - (float)sAccelRawY) * SDL_STANDARD_GRAVITY;
-        ctx->m_IMUScaleData.fAccelScaleZ = SWITCH_ACCEL_SCALE_MULT / (SWITCH_ACCEL_SCALE_OFFSET - (float)sAccelRawZ) * SDL_STANDARD_GRAVITY;
+        ctx->m_IMUScaleData.fAccelScaleX = SWITCH_ACCEL_SCALE_MULT / ((float)sAccelSensCoeffX - (float)sAccelRawX) * SDL_STANDARD_GRAVITY;
+        ctx->m_IMUScaleData.fAccelScaleY = SWITCH_ACCEL_SCALE_MULT / ((float)sAccelSensCoeffY - (float)sAccelRawY) * SDL_STANDARD_GRAVITY;
+        ctx->m_IMUScaleData.fAccelScaleZ = SWITCH_ACCEL_SCALE_MULT / ((float)sAccelSensCoeffZ - (float)sAccelRawZ) * SDL_STANDARD_GRAVITY;
 
         /* Gyro scale */
-        ctx->m_IMUScaleData.fGyroScaleX = SWITCH_GYRO_SCALE_MULT / (SWITCH_GYRO_SCALE_OFFSET - (float)sGyroRawX) * (float)M_PI / 180.0f;
-        ctx->m_IMUScaleData.fGyroScaleY = SWITCH_GYRO_SCALE_MULT / (SWITCH_GYRO_SCALE_OFFSET - (float)sGyroRawY) * (float)M_PI / 180.0f;
-        ctx->m_IMUScaleData.fGyroScaleZ = SWITCH_GYRO_SCALE_MULT / (SWITCH_GYRO_SCALE_OFFSET - (float)sGyroRawZ) * (float)M_PI / 180.0f;
+        ctx->m_IMUScaleData.fGyroScaleX = SWITCH_GYRO_SCALE_MULT / ((float)sGyroSensCoeffX - (float)sGyroRawX) * (float)M_PI / 180.0f;
+        ctx->m_IMUScaleData.fGyroScaleY = SWITCH_GYRO_SCALE_MULT / ((float)sGyroSensCoeffY - (float)sGyroRawY) * (float)M_PI / 180.0f;
+        ctx->m_IMUScaleData.fGyroScaleZ = SWITCH_GYRO_SCALE_MULT / ((float)sGyroSensCoeffZ - (float)sGyroRawZ) * (float)M_PI / 180.0f;
 
     } else {
         /* Use default values */
@@ -982,15 +990,17 @@ static Sint16 ApplyStickCalibration(SDL_DriverSwitch_Context *ctx, int nStick, i
 {
     sRawValue -= ctx->m_StickCalData[nStick].axis[nAxis].sCenter;
 
-    if (sRawValue > ctx->m_StickExtents[nStick].axis[nAxis].sMax) {
-        ctx->m_StickExtents[nStick].axis[nAxis].sMax = sRawValue;
+    if (sRawValue >= 0) {
+        if (sRawValue > ctx->m_StickExtents[nStick].axis[nAxis].sMax) {
+            ctx->m_StickExtents[nStick].axis[nAxis].sMax = sRawValue;
+        }
+        return (Sint16)HIDAPI_RemapVal(sRawValue, 0, ctx->m_StickExtents[nStick].axis[nAxis].sMax, 0, SDL_MAX_SINT16);
+    } else {
+        if (sRawValue < ctx->m_StickExtents[nStick].axis[nAxis].sMin) {
+            ctx->m_StickExtents[nStick].axis[nAxis].sMin = sRawValue;
+        }
+        return (Sint16)HIDAPI_RemapVal(sRawValue, ctx->m_StickExtents[nStick].axis[nAxis].sMin, 0, SDL_MIN_SINT16, 0);
     }
-    if (sRawValue < ctx->m_StickExtents[nStick].axis[nAxis].sMin) {
-        ctx->m_StickExtents[nStick].axis[nAxis].sMin = sRawValue;
-    }
-
-    return (Sint16)HIDAPI_RemapVal(sRawValue, ctx->m_StickExtents[nStick].axis[nAxis].sMin, ctx->m_StickExtents[nStick].axis[nAxis].sMax,
-                                   SDL_MIN_SINT16, SDL_MAX_SINT16);
 }
 
 static Sint16 ApplySimpleStickCalibration(SDL_DriverSwitch_Context *ctx, int nStick, int nAxis, Sint16 sRawValue)
@@ -1000,15 +1010,17 @@ static Sint16 ApplySimpleStickCalibration(SDL_DriverSwitch_Context *ctx, int nSt
 
     sRawValue -= usJoystickCenter;
 
-    if (sRawValue > ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMax) {
-        ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMax = sRawValue;
+    if (sRawValue >= 0) {
+        if (sRawValue > ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMax) {
+            ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMax = sRawValue;
+        }
+        return (Sint16)HIDAPI_RemapVal(sRawValue, 0, ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMax, 0, SDL_MAX_SINT16);
+    } else {
+        if (sRawValue < ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMin) {
+            ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMin = sRawValue;
+        }
+        return (Sint16)HIDAPI_RemapVal(sRawValue, ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMin, 0, SDL_MIN_SINT16, 0);
     }
-    if (sRawValue < ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMin) {
-        ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMin = sRawValue;
-    }
-
-    return (Sint16)HIDAPI_RemapVal(sRawValue, ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMin, ctx->m_SimpleStickExtents[nStick].axis[nAxis].sMax,
-                                   SDL_MIN_SINT16, SDL_MAX_SINT16);
 }
 
 static void SDLCALL SDL_GameControllerButtonReportingHintChanged(void *userdata, const char *name, const char *oldValue, const char *hint)

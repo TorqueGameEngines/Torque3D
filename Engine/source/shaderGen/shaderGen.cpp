@@ -258,7 +258,7 @@ void ShaderGen::_processVertFeatures( Vector<GFXShaderMacro> &macros, bool macro
       S32 index;
       const FeatureType &type = features.getAt( i, &index );
       void* args = features.getArguments(i);
-      ShaderFeature* feature = nullptr;
+      ShaderFeature* feature = NULL;
       if(args)
          feature = FEATUREMGR->createFeature(type, args);
       else
@@ -307,7 +307,7 @@ void ShaderGen::_processPixFeatures( Vector<GFXShaderMacro> &macros, bool macros
       S32 index;
       const FeatureType &type = features.getAt( i, &index );
       void* args = features.getArguments(i);
-      ShaderFeature* feature = nullptr;
+      ShaderFeature* feature = NULL;
       if (args)
          feature = FEATUREMGR->createFeature(type, args);
       else
@@ -354,7 +354,7 @@ void ShaderGen::_printFeatureList(Stream &stream)
       S32 index;
       const FeatureType &type = features.getAt( i, &index );
       void* args = features.getArguments(i);
-      ShaderFeature* feature = nullptr;
+      ShaderFeature* feature = NULL;
       if (args)
          feature = FEATUREMGR->createFeature(type, args);
       else

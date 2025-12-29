@@ -195,7 +195,7 @@ namespace ColladaUtils
             return -1;
          }
 
-         meshLODData() : shapeInst(nullptr), meshTransform(true), originatingObject(nullptr), scale(0)
+         meshLODData() : shapeInst(NULL), meshTransform(true), originatingObject(NULL), scale(0)
          {}
       };
 

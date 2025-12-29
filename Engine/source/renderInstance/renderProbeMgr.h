@@ -329,7 +329,7 @@ protected:
          }
       }
 
-      return nullptr;
+      return NULL;
    }
 
 public:
@@ -482,7 +482,7 @@ public:
 
 RenderProbeMgr* RenderProbeMgr::getProbeManager()
 {
-   if (smProbeManager == nullptr)
+   if (smProbeManager == NULL)
    {
       RenderProbeMgr* probeManager = new RenderProbeMgr();
 

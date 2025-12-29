@@ -803,7 +803,7 @@ void GuiInspector::sendInspectPostApply()
 
 S32 GuiInspector::createInspectorGroup(StringTableEntry groupName, S32 index)
 {
-   GuiInspectorGroup* newGroup = nullptr;
+   GuiInspectorGroup* newGroup = NULL;
    newGroup = findExistentGroup(groupName);
    if (newGroup)
       return newGroup->getId();  //if we already have a group under this name, just return it
@@ -830,7 +830,7 @@ S32 GuiInspector::createInspectorGroup(StringTableEntry groupName, S32 index)
 void GuiInspector::removeInspectorGroup(StringTableEntry groupName)
 {
    GuiInspectorGroup* group = findExistentGroup(groupName);
-   if (group == nullptr)
+   if (group == NULL)
       return;
 
    mGroups.remove(group);

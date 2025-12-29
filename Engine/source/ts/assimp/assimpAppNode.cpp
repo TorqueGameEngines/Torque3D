@@ -296,7 +296,7 @@ aiNode* AssimpAppNode::findChildNodeByName(const char* nodeName, aiNode* rootNod
       if (retNode)
          return retNode;
    }
-   return nullptr;
+   return NULL;
 }
 
 void AssimpAppNode::addChild(AssimpAppNode* child)

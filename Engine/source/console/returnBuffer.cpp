@@ -24,7 +24,7 @@
 
 ReturnBuffer::ReturnBuffer()
 {
-   mBuffer = nullptr;
+   mBuffer = NULL;
    mBufferSize = 0;
    mStart = 0;
 

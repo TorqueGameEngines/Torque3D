@@ -783,7 +783,7 @@ DefineEngineMethod( GameBase, applyRadialImpulse, void, ( Point3F origin, F32 ra
 DefineEngineMethod(GameBase, attachChild, bool, (GameBase* _subObject), (nullAsType<GameBase*>()), "(SceneObject subObject)"
               "attach an object to this one, preserving its present transform.")
 {
-    if (_subObject != nullptr)
+    if (_subObject != NULL)
     {              
 		if (_subObject->getParent() != object){
 			Con::errorf("Object is (%d)", _subObject->getId());
@@ -805,7 +805,7 @@ DefineEngineMethod(GameBase, attachChild, bool, (GameBase* _subObject), (nullAsT
 DefineEngineMethod(GameBase, detachChild, bool, (GameBase* _subObject), (nullAsType<GameBase*>()), "(SceneObject subObject)"
               "attach an object to this one, preserving its present transform.")
 {
-   if (_subObject != nullptr)
+   if (_subObject != NULL)
 	{
       _subObject->clearProcessAfter();
 		return _subObject->attachToParent(NULL);

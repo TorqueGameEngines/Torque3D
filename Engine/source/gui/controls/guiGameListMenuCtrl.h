@@ -86,7 +86,7 @@ protected:
       GFXTexHandle               mBitmapTex;
 
       Row() : mLabel(StringTable->EmptyString()), mScriptCallback(StringTable->EmptyString()), mTooltip(StringTable->EmptyString()), mIconIndex(-1), mHeightPad(0), mUseHighlightIcon(false), mEnabled(true),
-         mSelectedOption(0), mWrapOptions(false), mMode(Mode::Default), mValue(0), mStepSize(1), mRange(Point2F(0, 1)), mBitmap(StringTable->EmptyString()), mBitmapTex(nullptr)
+         mSelectedOption(0), mWrapOptions(false), mMode(Mode::Default), mValue(0), mStepSize(1), mRange(Point2F(0, 1)), mBitmap(StringTable->EmptyString()), mBitmapTex(NULL)
       {
          VECTOR_SET_ASSOCIATION(mOptions);
       }

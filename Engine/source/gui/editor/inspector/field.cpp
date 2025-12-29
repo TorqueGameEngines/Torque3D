@@ -269,7 +269,7 @@ void GuiInspectorField::setWordData(const S32& wordIndex, const char* data, bool
 
    if (mSpecialEditField)
    {
-      if (mTargetObject != nullptr && mVariableName != StringTable->EmptyString())
+      if (mTargetObject != NULL && mVariableName != StringTable->EmptyString())
       {
          const char* fieldData = mTargetObject->getDataField(mVariableName, NULL);
          const char* wordData = StringUnit::getUnit(fieldData, wordIndex, " \t\n");
@@ -495,7 +495,7 @@ void GuiInspectorField::setData( const char* data, bool callbacks )
 {
    if (mSpecialEditField)
    {
-      if (mTargetObject != nullptr && mVariableName != StringTable->EmptyString())
+      if (mTargetObject != NULL && mVariableName != StringTable->EmptyString())
       {
          mTargetObject->setDataField(mVariableName, NULL, data);
 
@@ -645,7 +645,7 @@ const char* GuiInspectorField::getData( U32 inspectObjectIndex )
    }
    else
    {
-      if (mTargetObject != nullptr && mVariableName != StringTable->EmptyString())
+      if (mTargetObject != NULL && mVariableName != StringTable->EmptyString())
       {
          return mTargetObject->getDataField(mVariableName, NULL);
       }
@@ -911,7 +911,7 @@ void GuiInspectorField::_registerEditControl(GuiControl* ctrl, StringTableEntry 
    ctrl->setInternalName(suffix);
 
    char szName[512];
-   if (mInspector->getInspectObject() != nullptr)
+   if (mInspector->getInspectObject() != NULL)
       dSprintf(szName, 512, "IE_%s_%d_%s_%s_Field", ctrl->getClassName(), mInspector->getInspectObject()->getId(), suffix, mCaption);
    else
       dSprintf(szName, 512, "IE_%s_%s_%s_Field", ctrl->getClassName(), suffix, mCaption);

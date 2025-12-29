@@ -122,8 +122,8 @@ SimObject::SimObject()
    mOriginalName         = NULL;
    mInternalName         = NULL;
    mInheritFrom          = NULL;
-   nextNameObject        = nullptr;
-   nextManagerNameObject = nullptr;
+   nextNameObject        = NULL;
+   nextManagerNameObject = NULL;
    nextIdObject          = NULL;
 
    mFilename             = NULL;
@@ -174,10 +174,10 @@ SimObject::~SimObject()
    if( mCopySource )
       mCopySource->unregisterReference( &mCopySource );
 
-   AssertFatal(nextNameObject == nullptr,avar(
+   AssertFatal(nextNameObject == NULL,avar(
       "SimObject::~SimObject:  Not removed from dictionary: name %s, id %i",
 	   mObjectName, mId));
-   AssertFatal(nextManagerNameObject == nullptr,avar(
+   AssertFatal(nextManagerNameObject == NULL,avar(
       "SimObject::~SimObject:  Not removed from manager dictionary: name %s, id %i",
 	   mObjectName,mId));
    AssertFatal(mFlags.test(Added) == 0, "SimObject::object "
@@ -1008,7 +1008,7 @@ void SimObject::assignFieldsFrom(SimObject *parent)
             dMemcpy( bufferSecure, szBuffer, dStrlen( szBuffer ) );
 
             //If we have an index worth mentioning, process it for pass-along as well to ensure we set stuff correctly
-            char* elementIdxBuffer = nullptr;
+            char* elementIdxBuffer = NULL;
             if (f->elementCount > 1)
             {
                elementIdxBuffer = Con::getArgBuffer(256);

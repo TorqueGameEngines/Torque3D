@@ -180,7 +180,7 @@ void GuiMenuBar::onRemove()
    if (Sim::findObject("PopUpMenuControl", backgroundCtrl))
    {
       if (backgroundCtrl->mMenuBarCtrl == this)
-         backgroundCtrl->mMenuBarCtrl = nullptr;
+         backgroundCtrl->mMenuBarCtrl = NULL;
    }
 
    Parent::onRemove();
@@ -310,7 +310,7 @@ void GuiMenuBar::onMouseMove(const GuiEvent &event)
 {
    MenuEntry *hit = findHitMenu(event.mousePoint);
 
-   if (mouseDownMenu != nullptr && hit != nullptr)
+   if (mouseDownMenu != NULL && hit != NULL)
    {
       //we have a standing click, so just update and go
       mouseDownMenu = mouseOverMenu = hit;
@@ -526,15 +526,15 @@ void GuiMenuBar::processTick()
 
 void GuiMenuBar::insert(SimObject* pObject, S32 pos)
 {
-   PopupMenu* menu = nullptr;
-   if (pObject != nullptr)
+   PopupMenu* menu = NULL;
+   if (pObject != NULL)
    {
       menu = dynamic_cast<PopupMenu*>(pObject);
    }
 
-   if (menu == nullptr)
+   if (menu == NULL)
    {
-      if (pObject != nullptr)
+      if (pObject != NULL)
       {
          Con::errorf("GuiMenuBar::insert() - attempted to insert non-popupMenu object: %d", pObject->getId());
       }
@@ -564,15 +564,15 @@ void GuiMenuBar::insert(SimObject* pObject, S32 pos)
 
 void GuiMenuBar::remove(SimObject* pObject)
 {
-   PopupMenu* menu = nullptr;
-   if (pObject != nullptr)
+   PopupMenu* menu = NULL;
+   if (pObject != NULL)
    {
       menu = dynamic_cast<PopupMenu*>(pObject);
    }
 
-   if (menu == nullptr)
+   if (menu == NULL)
    {
-      if (pObject != nullptr)
+      if (pObject != NULL)
       {
          Con::errorf("GuiMenuBar::insert() - attempted to insert non-popupMenu object: %d", pObject->getId());
       }
@@ -597,7 +597,7 @@ void GuiMenuBar::remove(SimObject* pObject)
 PopupMenu* GuiMenuBar::getMenu(U32 index)
 {
    if (index >= mMenuList.size())
-      return nullptr;
+      return NULL;
 
    return mMenuList[index].popupMenu;
 }
@@ -610,7 +610,7 @@ PopupMenu* GuiMenuBar::findMenu(String barTitle)
          return mMenuList[i].popupMenu;
    }
 
-   return nullptr;
+   return NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -631,7 +631,7 @@ DefineEngineMethod(GuiMenuBar, removeFromCanvas, void, (), , "()")
    GuiCanvas* canvas = object->getRoot();
 
    if(canvas)
-      canvas->setMenuBar(nullptr);
+      canvas->setMenuBar(NULL);
 }
 #endif
 
@@ -648,7 +648,7 @@ DefineEngineMethod(GuiMenuBar, getMenu, S32, (S32 index), (0), "(Index)")
 //-----------------------------------------------------------------------------
 DefineEngineMethod(GuiMenuBar, insert, void, (SimObject* pObject, S32 pos), (nullAsType<SimObject*>(), -1), "(object, pos) insert object at position")
 {
-   if(pObject == nullptr)
+   if(pObject == NULL)
    {
       Con::errorf("GuiMenuBar::insert() - null object");
       return;
@@ -658,7 +658,7 @@ DefineEngineMethod(GuiMenuBar, insert, void, (SimObject* pObject, S32 pos), (nul
 
 DefineEngineMethod(GuiMenuBar, remove, void, (SimObject* pObject), (nullAsType<SimObject*>()), "(object, pos) remove object")
 {
-   if (pObject == nullptr)
+   if (pObject == NULL)
    {
       Con::errorf("GuiMenuBar::remove() - null object");
       return;

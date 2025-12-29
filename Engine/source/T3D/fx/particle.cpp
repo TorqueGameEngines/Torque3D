@@ -933,7 +933,7 @@ GuiControl* GuiInspectorTypeParticleDataList::constructEditControl()
    Parent::updateValue();
    const char* data = getData();
 
-   if (data != nullptr && !String::isEmpty(data))
+   if (data != NULL && !String::isEmpty(data))
    {
       U32 particlesCount = StringUnit::getUnitCount(data, " ");
       for (U32 i=1; i < particlesCount; i++)
@@ -988,7 +988,7 @@ GuiControl* GuiInspectorTypeParticleDataList::_buildParticleEntryField(const S32
       Parent::updateValue();
       const char* data = getData();
 
-      if (data != nullptr && !String::isEmpty(data))
+      if (data != NULL && !String::isEmpty(data))
       {
          const char* particleSlotData = StringUnit::getUnit(data, index, " ");
          listBtn->setText(particleSlotData);

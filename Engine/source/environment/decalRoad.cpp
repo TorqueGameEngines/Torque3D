@@ -290,7 +290,7 @@ DecalRoad::DecalRoad()
 
    INIT_ASSET(Material);
 
-   mMaterialInst = nullptr;
+   mMaterialInst = NULL;
 }
 
 DecalRoad::~DecalRoad()
@@ -1087,7 +1087,7 @@ void DecalRoad::_initMaterial()
 
       SAFE_DELETE(mMaterialInst);
 
-      Material* tMat = nullptr;
+      Material* tMat = NULL;
 
       if (!Sim::findObject(mMaterialAsset->getMaterialDefinitionName(), tMat))
          Con::errorf("DecalRoad::_initMaterial - Material %s was not found.", mMaterialAsset->getMaterialDefinitionName());

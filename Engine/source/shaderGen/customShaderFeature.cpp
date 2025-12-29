@@ -53,10 +53,10 @@ ConsoleDocClass(CustomShaderFeatureData,
 CustomShaderFeatureData::CustomShaderFeatureData()
 {
 #ifdef TORQUE_D3D11
-   mFeatureHLSL = nullptr;
+   mFeatureHLSL = NULL;
 #endif
 #ifdef TORQUE_OPENGL
-   mFeatureGLSL = nullptr;
+   mFeatureGLSL = NULL;
 #endif
 }
 

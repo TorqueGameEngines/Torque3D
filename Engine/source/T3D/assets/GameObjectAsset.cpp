@@ -221,7 +221,7 @@ const char* GameObjectAsset::create()
    //Entity* e = dynamic_cast<Entity*>(pSimObject);
    //e->_setGameObject(getAssetId());
 
-   pSimObject->setDataField(StringTable->insert("GameObject"), nullptr, getAssetId());
+   pSimObject->setDataField(StringTable->insert("GameObject"), NULL, getAssetId());
 
    return pSimObject->getIdString();
 }

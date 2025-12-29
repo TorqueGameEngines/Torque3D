@@ -939,7 +939,7 @@ bool ConvexShape::buildExportPolyList(ColladaUtils::ExportData* exportData, cons
       ColladaUtils::ExportData::meshLODData* meshData = &exportData->meshData.last();
 
       //Fill out the info we'll need later to actually append our mesh data for the detail levels during the processing phase
-      meshData->shapeInst = nullptr;
+      meshData->shapeInst = NULL;
       meshData->originatingObject = this;
       meshData->meshTransform = mObjToWorld;
       meshData->scale = mObjScale;
@@ -1266,7 +1266,7 @@ void ConvexShape::_updateMaterial()
 
       Material* material = mSurfaceTextures[i].getMaterialResource();
 
-      if (material == nullptr)
+      if (material == NULL)
          continue;
 
       mSurfaceTextures[i].materialInst = material->createMatInstance();
@@ -1291,7 +1291,7 @@ void ConvexShape::_updateMaterial()
 
    Material* material = getMaterialResource();
 
-   if (material == nullptr)
+   if (material == NULL)
       return;
 
    mMaterialInst = material->createMatInstance();

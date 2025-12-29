@@ -244,7 +244,7 @@ public: \
          if (m##name && String(m##name##Asset->getMaterialDefinitionName()).equal(m##name->getName(), String::NoCase))\
             return false;\
          \
-         Material* tempMat = nullptr;\
+         Material* tempMat = NULL;\
          \
          if (!Sim::findObject(m##name##Asset->getMaterialDefinitionName(), tempMat))\
             Con::errorf("%s::_set%s() - Material %s was not found.", macroText(className), macroText(name), m##name##Asset->getMaterialDefinitionName());\

@@ -719,7 +719,7 @@ public:
    /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
    /// <para>@return AssetImportObject that was found</para>
    /// </summary>
-   AssetImportObject* findImportingAssetByName(String assetName, AssetImportObject* assetItem = nullptr);
+   AssetImportObject* findImportingAssetByName(String assetName, AssetImportObject* assetItem = NULL);
 
    /// <summary>
    /// Finds the module associated with a given file path
@@ -800,7 +800,7 @@ public:
    /// Process AssetImportObject's to prepare them for importing.
    /// <para>@param assetItem, If null, will loop over the top-level asset items list, if a specific item is provided, will process it's children</para>
    /// </summary>
-   void processImportAssets(AssetImportObject* assetItem = nullptr);
+   void processImportAssets(AssetImportObject* assetItem = NULL);
 
    /// <summary>
    /// Process a specific AssetImportObject that is an ImageAsset type to prepare it for importing
@@ -854,7 +854,7 @@ public:
    /// Reset the validation status of asset items
    /// <para>@param assetItem, If null, will loop over the top-level asset items list, if a specific item is provided, will reset it's children</para>
    /// </summary>
-   void resetAssetValidationStatus(AssetImportObject* assetItem = nullptr);
+   void resetAssetValidationStatus(AssetImportObject* assetItem = NULL);
 
    /// <summary>
    /// Checks asset items for any collisions in the current import session
@@ -862,7 +862,7 @@ public:
    /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
    /// <para>@return If a collision was detected</para>
    /// </summary>
-   bool checkAssetForCollision(AssetImportObject* assetItemToCheckFor, AssetImportObject* assetItem = nullptr);
+   bool checkAssetForCollision(AssetImportObject* assetItemToCheckFor, AssetImportObject* assetItem = NULL);
 
    /// <summary>
    /// Attempts to automatically resolve import issues according to the import config settings
@@ -882,7 +882,7 @@ public:
    /// Runs the import process in the current session
    /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
    /// </summary>
-   void importAssets(AssetImportObject* assetItem = nullptr);
+   void importAssets(AssetImportObject* assetItem = NULL);
 
    /// <summary>
    /// Runs the import processing on a specific ImageAsset item
@@ -923,7 +923,7 @@ public:
    /// Iterates over all the items in the current session and acquires them, which jumpstarts the loading/init'ng process on them, making the available for use immediately
    /// <para>@param assetItem, if null, will loop over and recurse the main import asset items, if a specific AssetImportObject is passed in, it will recurse it's children</para>
    /// </summary>
-   void acquireAssets(AssetImportObject* assetItem = nullptr);
+   void acquireAssets(AssetImportObject* assetItem = NULL);
 
    //
    /// <summary>
@@ -934,7 +934,7 @@ public:
 
    void setImportConfig(AssetImportConfig* importConfig)
    {
-      if (importConfig != nullptr)
+      if (importConfig != NULL)
       {
          dSprintf(importLogBuffer, sizeof(importLogBuffer), "Loading import config: %s!", importConfig->getName());
          activityLog.push_back(importLogBuffer);

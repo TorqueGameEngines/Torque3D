@@ -1033,7 +1033,7 @@ void GuiGameListMenuCtrl::clearRows()
    for (U32 i = 0; i < mRows.size(); i++)
    {
       if (mRows[i]->mBitmap != StringTable->EmptyString())
-         mRows[i]->mBitmapTex = nullptr;
+         mRows[i]->mBitmapTex = NULL;
    }
 
    mRows.clear();

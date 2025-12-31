@@ -65,7 +65,7 @@ GuiInputCtrl::GuiInputCtrl()
    mSendModifierEvents(false),
    mIgnoreMouseEvents(false)
 {
-   mActionmap = nullptr;
+   mActionmap = NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -123,7 +123,7 @@ bool GuiInputCtrl::onWake()
    if( !smDesignTime && !mIgnoreMouseEvents)
       mouseLock();
 
-   if(mActionmap != nullptr)
+   if(mActionmap != NULL)
    {
       if (getRoot()->isActive())
       {
@@ -144,7 +144,7 @@ void GuiInputCtrl::onSleep()
    Parent::onSleep();
    mouseUnlock();
 
-   if (mActionmap != nullptr)
+   if (mActionmap != NULL)
    {
       SimSet* actionMapSet = Sim::getActiveActionMapSet();
       actionMapSet->removeObject(mActionmap);
@@ -174,7 +174,7 @@ void GuiInputCtrl::setActive(bool value)
 
 void GuiInputCtrl::handleCanvasSetActive(GuiCanvas* canvas, bool isActive)
 {
-   if (mActionmap == nullptr)
+   if (mActionmap == NULL)
       return;
 
    if (getRoot() == canvas)
@@ -231,7 +231,7 @@ bool GuiInputCtrl::onInputEvent( const InputEventInfo &event )
    if (mIgnoreMouseEvents && event.deviceType == MouseDeviceType)
       return false;
 
-   if (mActionmap != nullptr)
+   if (mActionmap != NULL)
          return false;
 
    char deviceString[32];

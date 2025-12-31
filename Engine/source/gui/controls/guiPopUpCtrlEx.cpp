@@ -338,7 +338,7 @@ GuiPopUpMenuCtrlEx::GuiPopUpMenuCtrlEx(void)
    mSc = NULL;
    mReplaceText = false;
    mTextSearchItems = false;
-   mSearchEdit = nullptr;
+   mSearchEdit = NULL;
 }
 
 //------------------------------------------------------------------------------

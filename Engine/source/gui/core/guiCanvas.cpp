@@ -162,8 +162,8 @@ GuiCanvas::GuiCanvas(): GuiControl(),
                         mLastRenderMs(0),
                         mPlatformWindow(NULL),
                         mDisplayWindow(true),
-                        mMenuBarCtrl(nullptr),
-                        mMenuBackground(nullptr),
+                        mMenuBarCtrl(NULL),
+                        mMenuBackground(NULL),
                         mConstrainMouse(false)
 {
    setBounds(0, 0, 640, 480);
@@ -359,7 +359,7 @@ void GuiCanvas::setMenuBar(SimObject *obj)
           return;
        }
 
-       if (mMenuBackground == nullptr)
+       if (mMenuBackground == NULL)
        {
            mMenuBackground = new GuiControl();
            mMenuBackground->registerObject();

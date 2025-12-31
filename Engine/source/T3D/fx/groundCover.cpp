@@ -510,13 +510,13 @@ GroundCover::GroundCover()
       mMinElevation[i] = -99999.0f;
       mMaxElevation[i] = 99999.0f;
 
-      mLayerAsset[i] = nullptr;
+      mLayerAsset[i] = NULL;
       mLayerFile[i] = StringTable->EmptyString();
 
-      mShapeAsset[i] = nullptr;
+      mShapeAsset[i] = NULL;
       mShapeFile[i] = StringTable->EmptyString();
 
-      mInvertLayer[i] = false;
+      mInvertLayer[i] = NULL;
 
       mMinClumpCount[i] = 1;
       mMaxClumpCount[i] = 1;
@@ -895,7 +895,7 @@ void GroundCover::_initShapes()
 
    for ( S32 i=0; i < MAX_COVERTYPES; i++ )
    {
-      if ( mShapeAsset[i].isNull() || getShape(i) == nullptr)
+      if ( mShapeAsset[i].isNull() || getShape(i) == NULL)
          continue;
 
       if ( isClientObject() && !getShape(i)->preloadMaterialList(getShapeFile(i)) && NetConnection::filesWereDownloaded() )
@@ -1573,7 +1573,7 @@ void GroundCover::_updateCoverGrid( const Frustum &culler )
 void GroundCover::prepRenderImage( SceneRenderState *state )
 {
    // Reset stats each time we hit the diffuse pass.
-   if (mMaterialInst == nullptr)
+   if (mMaterialInst == NULL)
       return;
 
    if( state->isDiffusePass() )

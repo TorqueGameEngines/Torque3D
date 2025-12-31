@@ -1888,7 +1888,7 @@ WorldEditor::WorldEditor()
    mFadeIcons = true;
    mFadeIconsDist = 8.f;
 
-   mActiveEditorTool = nullptr;
+   mActiveEditorTool = NULL;
 }
 
 WorldEditor::~WorldEditor()
@@ -1982,7 +1982,7 @@ void WorldEditor::on3DMouseMove(const Gui3DMouseEvent & event)
    mHitObject = NULL;
 
    //If we have an active tool and it's intercepted our input, bail out
-   if (mActiveEditorTool != nullptr && mActiveEditorTool->onMouseMove(event))
+   if (mActiveEditorTool != NULL && mActiveEditorTool->onMouseMove(event))
       return;
 
    //
@@ -2014,7 +2014,7 @@ void WorldEditor::on3DMouseMove(const Gui3DMouseEvent & event)
 void WorldEditor::on3DMouseDown(const Gui3DMouseEvent & event)
 {
    //If we have an active tool and it's intercepted our input, bail out
-   if (mActiveEditorTool != nullptr && mActiveEditorTool->onMouseDown(event))
+   if (mActiveEditorTool != NULL && mActiveEditorTool->onMouseDown(event))
       return;
 
    mMouseDown = true;
@@ -2085,7 +2085,7 @@ void WorldEditor::on3DMouseDown(const Gui3DMouseEvent & event)
 void WorldEditor::on3DMouseUp( const Gui3DMouseEvent &event )
 {
    //If we have an active tool and it's intercepted our input, bail out
-   if (mActiveEditorTool != nullptr && mActiveEditorTool->onMouseUp(event))
+   if (mActiveEditorTool != NULL && mActiveEditorTool->onMouseUp(event))
       return;
 
    const bool wasUsingAxisGizmo = mUsingAxisGizmo;
@@ -2249,7 +2249,7 @@ void WorldEditor::on3DMouseUp( const Gui3DMouseEvent &event )
 void WorldEditor::on3DMouseDragged(const Gui3DMouseEvent & event)
 {
    //If we have an active tool and it's intercepted our input, bail out
-   if (mActiveEditorTool != nullptr && mActiveEditorTool->onMouseDragged(event))
+   if (mActiveEditorTool != NULL && mActiveEditorTool->onMouseDragged(event))
       return;
 
    if ( !mMouseDown )
@@ -2488,7 +2488,7 @@ void WorldEditor::renderScene( const RectI &updateRect )
 
    smRenderSceneSignal.trigger(this);
 
-   if (mActiveEditorTool != nullptr)
+   if (mActiveEditorTool != NULL)
       mActiveEditorTool->render();
 	
    // Grab this before anything here changes it.

@@ -94,7 +94,7 @@ SFXSndStream* SFXSndStream::create(Stream* stream)
       return sfxStream;
 
    delete sfxStream;
-   return nullptr;
+   return NULL;
 }
 
 void SFXSndStream::reset()

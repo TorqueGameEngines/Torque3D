@@ -199,7 +199,7 @@ bool GuiControlProfile::protectedSetBitmap( void *object, const char *index, con
    if( profile->mLoadCount > 0 )
    {
       profile->mBitmapArrayRects.clear();
-      profile->mBitmap = nullptr;
+      profile->mBitmap = NULL;
 
       if (profile->mBitmapName != StringTable->EmptyString())
       {

@@ -59,7 +59,7 @@ extern bool gEditingMission;
 extern ColorI gCanvasClearColor;
 bool Skylight::smRenderSkylights = true;
 
-SimObjectPtr<Skylight> Skylight::smSkylightProbe = nullptr;
+SimObjectPtr<Skylight> Skylight::smSkylightProbe = NULL;
 
 IMPLEMENT_CO_NETOBJECT_V1(Skylight);
 
@@ -176,7 +176,7 @@ void Skylight::prepRenderImage(SceneRenderState *state)
    PROBEMGR->submitProbe(&mProbeInfo);
 
 #ifdef TORQUE_TOOLS
-   if (Skylight::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != nullptr)
+   if (Skylight::smRenderPreviewProbes && gEditingMission && mEditorShapeInst && mPrefilterMap != NULL)
    {
       GFXTransformSaver saver;
 

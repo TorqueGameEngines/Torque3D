@@ -3911,7 +3911,7 @@ void Player::updateActionThread()
 
             if (!footfallDustOverride && rInfo.t <= 0.5f && mWaterCoverage == 0.0f
                                          && material && material->mShowDust
-                                         && mDataBlock->footPuffEmitter != nullptr)
+                                         && mDataBlock->footPuffEmitter != NULL)
             {
                // New emitter every time for visibility reasons
                ParticleEmitter * emitter = new ParticleEmitter;

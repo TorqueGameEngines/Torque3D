@@ -696,7 +696,7 @@ void GuiInspectorGroup::addInspectorField(StringTableEntry name, StringTableEntr
    else
       fieldGui = constructField(fieldType);
 
-   if (fieldGui == nullptr)
+   if (fieldGui == NULL)
    {
       //call down into script and see if there's special handling for that type of field
       //this allows us to have completely special-case field types implemented entirely in script
@@ -750,7 +750,7 @@ void GuiInspectorGroup::removeInspectorField(StringTableEntry name)
    {
       GuiInspectorField* field = dynamic_cast<GuiInspectorField*>(mStack->getObject(i));
 
-      if (field == nullptr)
+      if (field == NULL)
          continue;
 
       if (field->getFieldName() == name || field->getSpecialEditVariableName() == name)
@@ -764,7 +764,7 @@ void GuiInspectorGroup::removeInspectorField(StringTableEntry name)
 void GuiInspectorGroup::hideInspectorField(StringTableEntry fieldName, bool setHidden)
 {
    SimObject* inspectObj = mParent->getInspectObject();
-   if (inspectObj == nullptr)
+   if (inspectObj == NULL)
       return;
 
    AbstractClassRep::Field* field = const_cast<AbstractClassRep::Field*>(inspectObj->getClassRep()->findField(fieldName));
@@ -787,7 +787,7 @@ void GuiInspectorGroup::replaceInspectorField(StringTableEntry fieldName, GuiIns
    {
       GuiInspectorField* field = dynamic_cast<GuiInspectorField*>(mStack->getObject(i));
 
-      if (field == nullptr)
+      if (field == NULL)
          continue;
 
       if (field->getFieldName() == fieldName || field->getSpecialEditVariableName() == fieldName)
@@ -878,7 +878,7 @@ DefineEngineMethod(GuiInspectorGroup, findField, S32, (const char* fieldName),,
       return 0;
 
    GuiInspectorField* field = object->findField(StringTable->insert(fieldName));
-   if (field == nullptr)
+   if (field == NULL)
       return 0;
 
    return field->getId();

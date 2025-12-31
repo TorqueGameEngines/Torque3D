@@ -932,8 +932,8 @@ void Namespace::shutdown()
 
    gNamespaceCache.clear();
 
-   mNamespaceList = nullptr;
-   mGlobalNamespace = nullptr;
+   mNamespaceList = NULL;
+   mGlobalNamespace = NULL;
    mAllocator.freeBlocks();
 }
 

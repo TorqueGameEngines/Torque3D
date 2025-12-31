@@ -1049,7 +1049,7 @@ ModuleDefinition* ModuleManager::findModuleByFilePath(StringTableEntry filePath)
       }
    }
 
-   return nullptr;
+   return NULL;
 }
 
 //-----------------------------------------------------------------------------

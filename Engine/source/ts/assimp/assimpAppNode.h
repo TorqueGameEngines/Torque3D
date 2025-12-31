@@ -78,7 +78,7 @@ protected:
 
 public:
 
-   AssimpAppNode(const aiScene* scene, const aiNode* node, AssimpAppNode* parentNode = nullptr);
+   AssimpAppNode(const aiScene* scene, const aiNode* node, AssimpAppNode* parentNode = NULL);
    virtual ~AssimpAppNode()
    {
       //

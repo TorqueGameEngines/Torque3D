@@ -134,7 +134,7 @@ MaterialAsset::MaterialAsset()
    mScriptFile = StringTable->EmptyString();
    mScriptPath = StringTable->EmptyString();
    mMatDefinitionName = StringTable->EmptyString();
-   mMaterialDefinition = nullptr;
+   mMaterialDefinition = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -419,7 +419,7 @@ SimObjectPtr<Material> MaterialAsset::findMaterialDefinitionByAssetId(StringTabl
       SimObjectPtr<Material> matDef = dynamic_cast<Material*>(matSet->findObjectByInternalName(assetId));
       return matDef;
    }
-   return nullptr;
+   return NULL;
 }
 
 #ifdef TORQUE_TOOLS
@@ -482,11 +482,11 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
 
    const char* previewImage;
 
-   if (mInspector->getInspectObject() != nullptr)
+   if (mInspector->getInspectObject() != NULL)
    {
       StringBuilder varNameStr;
       varNameStr.append(mCaption);
-      if (mFieldArrayIndex != nullptr)
+      if (mFieldArrayIndex != NULL)
       {
          varNameStr.append("[");
          varNameStr.append(mFieldArrayIndex);
@@ -523,7 +523,7 @@ GuiControl* GuiInspectorTypeMaterialAssetPtr::constructEditControl()
    if (Sim::findObject("ToolsGuiTextEditProfile", toolEditProfile))
       editTextCtrl->setControlProfile(toolEditProfile);
 
-   GuiControlProfile* toolDefaultProfile = nullptr;
+   GuiControlProfile* toolDefaultProfile = NULL;
    Sim::findObject("ToolsGuiDefaultProfile", toolDefaultProfile);
 
    //
@@ -609,7 +609,7 @@ void GuiInspectorTypeMaterialAssetPtr::updateValue()
 void GuiInspectorTypeMaterialAssetPtr::updatePreviewImage()
 {
    const char* matAssetId;
-   if (mInspector->getInspectObject() != nullptr)
+   if (mInspector->getInspectObject() != NULL)
       matAssetId = mInspector->getInspectObject()->getDataField(mCaption, NULL);
    else
       matAssetId = Con::getVariable(mVariableName);

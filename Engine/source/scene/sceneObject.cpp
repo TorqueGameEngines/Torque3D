@@ -1855,7 +1855,7 @@ DefineEngineMethod(SceneObject, getChild, S32, (S32 _index), (0), "getChild(S32 
 DefineEngineMethod(SceneObject, attachChildAt, bool, (SceneObject* _subObject, MatrixF _offset, S32 _node), (nullAsType<SceneObject*>(), MatrixF::Identity, 0), "(SceneObject subObject, MatrixF offset, S32 offset)"
               "Mount object to this one with the specified offset expressed in our coordinate space.")
 {   
-   if (_subObject != nullptr)
+   if (_subObject != NULL)
    {
       return object->attachChildAt(_subObject, _offset, _node);
    }

@@ -200,7 +200,7 @@ void ShapeAnimationAsset::setAnimationFile(const char* pAnimationFile)
 
 S32 ShapeAnimationAsset::getAnimationCount()
 { 
-   if (mSourceShape == nullptr)
+   if (mSourceShape == NULL)
       return 0;
 
    return mSourceShape->sequences.size(); 

@@ -165,7 +165,7 @@ Material * MaterialManager::getMaterialDefinitionByName(const String &matName)
 Material* MaterialManager::getMaterialDefinitionByMapTo(const String& mapTo)
 {
    // Get the material
-   Material* foundMat = nullptr;
+   Material* foundMat = NULL;
 
    for (SimSet::iterator itr = mMaterialSet->begin(); itr != mMaterialSet->end(); ++itr)
    {
@@ -546,7 +546,7 @@ DefineEngineFunction(getMaterialInstances, void, (BaseMaterialDefinition* target
    "@brief Dumps a formatted list of currently allocated material instances to the console.\n\n"
    "@ingroup Materials")
 {
-   if (target == nullptr || tree == nullptr)
+   if (target == NULL || tree == NULL)
       return;
 
    MATMGR->getMaterialInstances(target, tree);

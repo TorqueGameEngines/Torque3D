@@ -73,7 +73,7 @@ S32 RenderProbeMgr::smProbeBakeResolution = 64;
 //
 ProbeRenderInst::ProbeRenderInst() :
    mCubemapIndex(0),
-   mProbeInfo(nullptr)
+   mProbeInfo(NULL)
 {
 }
 
@@ -171,8 +171,8 @@ void ProbeShaderConstants::_onShaderReload()
 //
 RenderProbeMgr::RenderProbeMgr()
 : RenderBinManager(RenderPassManager::RIT_Probes, 1.0f, 1.0f),
-   mLastShader(nullptr),
-   mLastConstants(nullptr),
+   mLastShader(NULL),
+   mLastConstants(NULL),
    mHasSkylight(false),
    mSkylightCubemapIdx(-1),
    mSkylightDamp(true),
@@ -182,7 +182,7 @@ RenderProbeMgr::RenderProbeMgr()
    mEffectiveProbeCount = 0;
    mMipCount = 0;
 
-   mProbeArrayEffect = nullptr;
+   mProbeArrayEffect = NULL;
 
    smProbeManager = this;
 
@@ -205,7 +205,7 @@ RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 proce
    mHasSkylight = false;
    mSkylightCubemapIdx = -1;
    mSkylightDamp = true;
-   mLastConstants = nullptr;
+   mLastConstants = NULL;
    mMipCount = 0;
    mUseHDRCaptures = true;
 }
@@ -412,7 +412,7 @@ void RenderProbeMgr::registerProbe(ReflectionProbe::ProbeInfo* newProbe)
 void RenderProbeMgr::unregisterProbe(ReflectionProbe::ProbeInfo* probeInfo)
 {
    ProbeRenderInst* probe = findProbeInst(probeInfo);
-   if (probe == nullptr)
+   if (probe == NULL)
       return;
 
    if (probe->mCubemapIndex == INVALID_CUBE_SLOT)
@@ -438,7 +438,7 @@ PostEffect* RenderProbeMgr::getProbeArrayEffect()
       mProbeArrayEffect = dynamic_cast<PostEffect*>(Sim::findObject("reflectionProbeArrayPostFX"));
 
       if (!mProbeArrayEffect)
-         return nullptr;
+         return NULL;
 
       mProbeArrayEffect->setShaderConst("$numProbes", (S32)0);
       mProbeArrayEffect->setShaderConst("$skylightCubemapIdx", (S32)-1);
@@ -466,7 +466,7 @@ void RenderProbeMgr::updateProbeTexture(ReflectionProbe::ProbeInfo* probeInfo)
 {
    //If we don't have a registered probe, there's no point in updating the cubemap array for it
    ProbeRenderInst* probe = findProbeInst(probeInfo);
-   if (probe == nullptr)
+   if (probe == NULL)
       return;
    U32 scaledSize = getProbeTexSize();
    //Some basic sanity checking that we have valid cubemaps to work with
@@ -527,14 +527,14 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
    U32 prefilterMipLevels = mLog2(F32(resolution)) + 1;
    bool renderWithProbes = Con::getIntVariable("$pref::ReflectionProbes::RenderWithProbes", false);
 
-   ReflectionProbe* clientProbe = nullptr;
+   ReflectionProbe* clientProbe = NULL;
 
    if (probe->isServerObject())
       clientProbe = static_cast<ReflectionProbe*>(probe->getClientObject());
    else
       return;
 
-   if (clientProbe == nullptr)
+   if (clientProbe == NULL)
       return;
 
    String probePrefilterPath = clientProbe->getPrefilterMapPath();
@@ -832,7 +832,7 @@ void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState* state)
 
 void RenderProbeMgr::render( SceneRenderState *state )
 {
-   if (getProbeArrayEffect() == nullptr)
+   if (getProbeArrayEffect() == NULL)
    {
       mActiveProbes.clear();
       return;
@@ -953,7 +953,7 @@ DefineEngineMethod(RenderProbeMgr, bakeProbe, void, (ReflectionProbe* probe), (n
    "@brief Bakes the cubemaps for a reflection probe\n\n.")
 {
    object->preBake();
-   if(probe != nullptr)
+   if(probe != NULL)
       object->bakeProbe(probe);
    object->postBake();
 }

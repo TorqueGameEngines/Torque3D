@@ -215,7 +215,7 @@ void GuiDragAndDropControl::onMouseDragged( const GuiEvent& event )
    
    // Allow the control under the drag to react to a potential drop
    GuiControl* enterTarget = findDragTarget( event.mousePoint, "onControlDragEnter" );
-   if(enterTarget != nullptr)
+   if(enterTarget != NULL)
       Con::printf("GuiDragAndDropControl::onMouseDragged() - enterTarget: %d", enterTarget->getId());
 
    if( mLastTarget != enterTarget )

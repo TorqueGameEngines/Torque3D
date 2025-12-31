@@ -278,7 +278,7 @@ GuiMLTextCtrl::GuiMLTextCtrl()
   mTypeOverTimeSpeedMS(10),
   mTypeOverTimeIndex(0),
    mTypeoutSoundRate(-1),
-   mTypeoutSound(nullptr)
+   mTypeoutSound(NULL)
 {   
    mActive = true;
    //mInitialText = StringTable->EmptyString();

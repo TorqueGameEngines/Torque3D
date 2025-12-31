@@ -636,7 +636,7 @@ ShapeAnimationAsset* ShapeAsset::getAnimation(S32 index)
       return mAnimationAssets[index];
    }
 
-   return nullptr;
+   return NULL;
 }
 
 #ifdef TORQUE_TOOLS
@@ -805,11 +805,11 @@ GuiControl* GuiInspectorTypeShapeAssetPtr::constructEditControl()
 
    const char* previewImage;
 
-   if (mInspector->getInspectObject() != nullptr)
+   if (mInspector->getInspectObject() != NULL)
    {
       StringBuilder varNameStr;
       varNameStr.append(mCaption);
-      if (mFieldArrayIndex != nullptr)
+      if (mFieldArrayIndex != NULL)
       {
          varNameStr.append("[");
          varNameStr.append(mFieldArrayIndex);
@@ -846,7 +846,7 @@ GuiControl* GuiInspectorTypeShapeAssetPtr::constructEditControl()
    if (Sim::findObject("ToolsGuiTextEditProfile", toolEditProfile))
       editTextCtrl->setControlProfile(toolEditProfile);
 
-   GuiControlProfile* toolDefaultProfile = nullptr;
+   GuiControlProfile* toolDefaultProfile = NULL;
    Sim::findObject("ToolsGuiDefaultProfile", toolDefaultProfile);
 
    //
@@ -932,7 +932,7 @@ void GuiInspectorTypeShapeAssetPtr::updateValue()
 void GuiInspectorTypeShapeAssetPtr::updatePreviewImage()
 {
    const char* previewImage;
-   if (mInspector->getInspectObject() != nullptr)
+   if (mInspector->getInspectObject() != NULL)
       previewImage = mInspector->getInspectObject()->getDataField(mCaption, NULL);
    else
       previewImage = Con::getVariable(mVariableName);

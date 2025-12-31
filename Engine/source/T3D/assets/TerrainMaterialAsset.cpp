@@ -129,8 +129,8 @@ TerrainMaterialAsset::TerrainMaterialAsset()
    mScriptFile = StringTable->EmptyString();
    mScriptPath = StringTable->EmptyString();
    mMatDefinitionName = StringTable->EmptyString();
-   mMaterialDefinition = nullptr;
-   mFXMaterialDefinition = nullptr;
+   mMaterialDefinition = NULL;
+   mFXMaterialDefinition = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -432,7 +432,7 @@ SimObjectPtr<TerrainMaterial> TerrainMaterialAsset::findMaterialDefinitionByAsse
    SimSet* terrainMatSet;
    if (!Sim::findObject("TerrainMaterialSet", terrainMatSet))
    {
-      return nullptr;
+      return NULL;
    }
 
    SimObjectPtr<TerrainMaterial> matDef = dynamic_cast<TerrainMaterial*>(terrainMatSet->findObjectByInternalName(assetId));
@@ -516,7 +516,7 @@ GuiControl* GuiInspectorTypeTerrainMaterialAssetPtr::constructEditControl()
 
    StringBuilder varNameStr;
    varNameStr.append(mCaption);
-   if (mFieldArrayIndex != nullptr)
+   if (mFieldArrayIndex != NULL)
    {
       varNameStr.append("[");
       varNameStr.append(mFieldArrayIndex);

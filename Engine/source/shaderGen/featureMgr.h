@@ -97,8 +97,8 @@ public:
    /// <param name="feature">The shader feature (can be null if featureDelegate defined)</param>
    /// <param name="featureDelegate">The feature delegate create function.</param>
    void registerFeature(const FeatureType& type,
-                        ShaderFeature* feature = nullptr,
-                        CreateShaderFeatureDelegate featureDelegate = nullptr);
+                        ShaderFeature* feature = NULL,
+                        CreateShaderFeatureDelegate featureDelegate = NULL);
 
    // Unregister a feature.
    void unregisterFeature( const FeatureType &type );

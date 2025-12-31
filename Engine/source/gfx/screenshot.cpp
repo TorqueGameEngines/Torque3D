@@ -26,7 +26,7 @@
 #include "math/util/frustum.h"
 #include "core/stream/fileStream.h"
 #include "gui/core/guiCanvas.h"
-#include "gfx/bitmap/imageUtils.h"
+#include "gfx/bitmap/pngUtils.h"
 #include "console/engineAPI.h"
 
 
@@ -132,7 +132,7 @@ void ScreenShot::capture( GuiCanvas *canvas )
 
    // Open a PNG stream for the final image
    DeferredPNGWriter pngWriter;
-   pngWriter.begin(outBuffer->getFormat(), outBuffer->getWidth(), canvasSize.y * mTiles - overlapPixels.y * mTiles * 2, fs);
+   pngWriter.begin(outBuffer->getFormat(), outBuffer->getWidth(), canvasSize.y * mTiles - overlapPixels.y * mTiles * 2, fs, 0);
 
    //// Render each tile to generate a huge screenshot.
    for (U32 ty = 0; ty < mTiles; ty++)

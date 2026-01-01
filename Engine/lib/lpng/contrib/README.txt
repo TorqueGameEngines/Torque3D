@@ -1,5 +1,3 @@
-External contributions to libpng
---------------------------------
 
 This "contrib" directory contains contributions which are not necessarily under
 the libpng license, although all are open source.  They are not part of

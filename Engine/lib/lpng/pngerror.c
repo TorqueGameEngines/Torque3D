@@ -1,6 +1,7 @@
+
 /* pngerror.c - stub functions for i/o and memory allocation
  *
- * Copyright (c) 2018-2025 Cosmin Truta
+ * Copyright (c) 2018 Cosmin Truta
  * Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson
  * Copyright (c) 1996-1997 Andreas Dilger
  * Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.
@@ -19,14 +20,13 @@
 
 #if defined(PNG_READ_SUPPORTED) || defined(PNG_WRITE_SUPPORTED)
 
-static PNG_FUNCTION(void /* PRIVATE */,
-png_default_error,(png_const_structrp png_ptr, png_const_charp error_message),
-    PNG_NORETURN);
+static PNG_FUNCTION(void, png_default_error,PNGARG((png_const_structrp png_ptr,
+    png_const_charp error_message)),PNG_NORETURN);
 
 #ifdef PNG_WARNINGS_SUPPORTED
 static void /* PRIVATE */
-png_default_warning(png_const_structrp png_ptr,
-    png_const_charp warning_message);
+png_default_warning PNGARG((png_const_structrp png_ptr,
+    png_const_charp warning_message));
 #endif /* WARNINGS */
 
 /* This function is called whenever there is a fatal error.  This function
@@ -39,6 +39,46 @@ PNG_FUNCTION(void,PNGAPI
 png_error,(png_const_structrp png_ptr, png_const_charp error_message),
     PNG_NORETURN)
 {
+#ifdef PNG_ERROR_NUMBERS_SUPPORTED
+   char msg[16];
+   if (png_ptr != NULL)
+   {
+      if ((png_ptr->flags &
+         (PNG_FLAG_STRIP_ERROR_NUMBERS|PNG_FLAG_STRIP_ERROR_TEXT)) != 0)
+      {
+         if (*error_message == PNG_LITERAL_SHARP)
+         {
+            /* Strip "#nnnn " from beginning of error message. */
+            int offset;
+            for (offset = 1; offset<15; offset++)
+               if (error_message[offset] == ' ')
+                  break;
+
+            if ((png_ptr->flags & PNG_FLAG_STRIP_ERROR_TEXT) != 0)
+            {
+               int i;
+               for (i = 0; i < offset - 1; i++)
+                  msg[i] = error_message[i + 1];
+               msg[i - 1] = '\0';
+               error_message = msg;
+            }
+
+            else
+               error_message += offset;
+         }
+
+         else
+         {
+            if ((png_ptr->flags & PNG_FLAG_STRIP_ERROR_TEXT) != 0)
+            {
+               msg[0] = '0';
+               msg[1] = '\0';
+               error_message = msg;
+            }
+         }
+      }
+   }
+#endif
    if (png_ptr != NULL && png_ptr->error_fn != NULL)
       (*(png_ptr->error_fn))(png_constcast(png_structrp,png_ptr),
           error_message);
@@ -176,6 +216,21 @@ void PNGAPI
 png_warning(png_const_structrp png_ptr, png_const_charp warning_message)
 {
    int offset = 0;
+   if (png_ptr != NULL)
+   {
+#ifdef PNG_ERROR_NUMBERS_SUPPORTED
+   if ((png_ptr->flags &
+       (PNG_FLAG_STRIP_ERROR_NUMBERS|PNG_FLAG_STRIP_ERROR_TEXT)) != 0)
+#endif
+      {
+         if (*warning_message == PNG_LITERAL_SHARP)
+         {
+            for (offset = 1; offset < 15; offset++)
+               if (warning_message[offset] == ' ')
+                  break;
+         }
+      }
+   }
    if (png_ptr != NULL && png_ptr->warning_fn != NULL)
       (*(png_ptr->warning_fn))(png_constcast(png_structrp,png_ptr),
           warning_message + offset);
@@ -200,7 +255,7 @@ void
 png_warning_parameter_unsigned(png_warning_parameters p, int number, int format,
     png_alloc_size_t value)
 {
-   char buffer[PNG_NUMBER_BUFFER_SIZE] = {0};
+   char buffer[PNG_NUMBER_BUFFER_SIZE];
    png_warning_parameter(p, number, PNG_FORMAT_NUMBER(buffer, format, value));
 }
 
@@ -210,7 +265,7 @@ png_warning_parameter_signed(png_warning_parameters p, int number, int format,
 {
    png_alloc_size_t u;
    png_charp str;
-   char buffer[PNG_NUMBER_BUFFER_SIZE] = {0};
+   char buffer[PNG_NUMBER_BUFFER_SIZE];
 
    /* Avoid overflow by doing the negate in a png_alloc_size_t: */
    u = (png_alloc_size_t)value;
@@ -657,9 +712,42 @@ png_default_error,(png_const_structrp png_ptr, png_const_charp error_message),
     PNG_NORETURN)
 {
 #ifdef PNG_CONSOLE_IO_SUPPORTED
-   fprintf(stderr, "libpng error: %s", error_message ? error_message :
-      "undefined");
-   fprintf(stderr, PNG_STRING_NEWLINE);
+#ifdef PNG_ERROR_NUMBERS_SUPPORTED
+   /* Check on NULL only added in 1.5.4 */
+   if (error_message != NULL && *error_message == PNG_LITERAL_SHARP)
+   {
+      /* Strip "#nnnn " from beginning of error message. */
+      int offset;
+      char error_number[16];
+      for (offset = 0; offset<15; offset++)
+      {
+         error_number[offset] = error_message[offset + 1];
+         if (error_message[offset] == ' ')
+            break;
+      }
+
+      if ((offset > 1) && (offset < 15))
+      {
+         error_number[offset - 1] = '\0';
+         fprintf(stderr, "libpng error no. %s: %s",
+             error_number, error_message + offset + 1);
+         fprintf(stderr, PNG_STRING_NEWLINE);
+      }
+
+      else
+      {
+         fprintf(stderr, "libpng error: %s, offset=%d",
+             error_message, offset);
+         fprintf(stderr, PNG_STRING_NEWLINE);
+      }
+   }
+   else
+#endif
+   {
+      fprintf(stderr, "libpng error: %s", error_message ? error_message :
+         "undefined");
+      fprintf(stderr, PNG_STRING_NEWLINE);
+   }
 #else
    PNG_UNUSED(error_message) /* Make compiler happy */
 #endif
@@ -697,8 +785,40 @@ static void /* PRIVATE */
 png_default_warning(png_const_structrp png_ptr, png_const_charp warning_message)
 {
 #ifdef PNG_CONSOLE_IO_SUPPORTED
-   fprintf(stderr, "libpng warning: %s", warning_message);
-   fprintf(stderr, PNG_STRING_NEWLINE);
+#  ifdef PNG_ERROR_NUMBERS_SUPPORTED
+   if (*warning_message == PNG_LITERAL_SHARP)
+   {
+      int offset;
+      char warning_number[16];
+      for (offset = 0; offset < 15; offset++)
+      {
+         warning_number[offset] = warning_message[offset + 1];
+         if (warning_message[offset] == ' ')
+            break;
+      }
+
+      if ((offset > 1) && (offset < 15))
+      {
+         warning_number[offset + 1] = '\0';
+         fprintf(stderr, "libpng warning no. %s: %s",
+             warning_number, warning_message + offset);
+         fprintf(stderr, PNG_STRING_NEWLINE);
+      }
+
+      else
+      {
+         fprintf(stderr, "libpng warning: %s",
+             warning_message);
+         fprintf(stderr, PNG_STRING_NEWLINE);
+      }
+   }
+   else
+#  endif
+
+   {
+      fprintf(stderr, "libpng warning: %s", warning_message);
+      fprintf(stderr, PNG_STRING_NEWLINE);
+   }
 #else
    PNG_UNUSED(warning_message) /* Make compiler happy */
 #endif
@@ -738,7 +858,7 @@ png_get_error_ptr(png_const_structrp png_ptr)
    if (png_ptr == NULL)
       return NULL;
 
-   return (png_voidp)png_ptr->error_ptr;
+   return ((png_voidp)png_ptr->error_ptr);
 }
 
 
@@ -746,8 +866,12 @@ png_get_error_ptr(png_const_structrp png_ptr)
 void PNGAPI
 png_set_strip_error_numbers(png_structrp png_ptr, png_uint_32 strip_mode)
 {
-   PNG_UNUSED(png_ptr)
-   PNG_UNUSED(strip_mode)
+   if (png_ptr != NULL)
+   {
+      png_ptr->flags &=
+         ((~(PNG_FLAG_STRIP_ERROR_NUMBERS |
+         PNG_FLAG_STRIP_ERROR_TEXT))&strip_mode);
+   }
 }
 #endif
 
@@ -809,39 +933,31 @@ png_safe_warning(png_structp png_nonconst_ptr, png_const_charp warning_message)
 #endif
 
 int /* PRIVATE */
-png_safe_execute(png_imagep image, int (*function)(png_voidp), png_voidp arg)
+png_safe_execute(png_imagep image_in, int (*function)(png_voidp), png_voidp arg)
 {
-   const png_voidp saved_error_buf = image->opaque->error_buf;
+   volatile png_imagep image = image_in;
+   volatile int result;
+   volatile png_voidp saved_error_buf;
    jmp_buf safe_jmpbuf;
 
-   /* Safely execute function(arg), with png_error returning back here. */
-   if (setjmp(safe_jmpbuf) == 0)
+   /* Safely execute function(arg) with png_error returning to this function. */
+   saved_error_buf = image->opaque->error_buf;
+   result = setjmp(safe_jmpbuf) == 0;
+
+   if (result != 0)
    {
-      int result;
 
       image->opaque->error_buf = safe_jmpbuf;
       result = function(arg);
-      image->opaque->error_buf = saved_error_buf;
-
-      if (result)
-         return 1; /* success */
    }
 
-   /* The function failed either because of a caught png_error and a regular
-    * return of false above or because of an uncaught png_error from the
-    * function itself.  Ensure that the error_buf is always set back to the
-    * value saved above:
-    */
    image->opaque->error_buf = saved_error_buf;
 
-   /* On the final false return, when about to return control to the caller, the
-    * image is freed (png_image_free does this check but it is duplicated here
-    * for clarity:
-    */
-   if (saved_error_buf == NULL)
+   /* And do the cleanup prior to any failure return. */
+   if (result == 0)
       png_image_free(image);
 
-   return 0; /* failure */
+   return result;
 }
 #endif /* SIMPLIFIED READ || SIMPLIFIED_WRITE */
 #endif /* READ || WRITE */

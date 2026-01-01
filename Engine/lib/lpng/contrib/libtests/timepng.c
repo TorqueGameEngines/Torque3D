@@ -2,6 +2,8 @@
  *
  * Copyright (c) 2013,2016 John Cunningham Bowler
  *
+ * Last changed in libpng 1.6.22 [May 26, 2016]
+ *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
  * and license in png.h
@@ -526,7 +528,7 @@ int main(int argc, char **argv)
       }
    }
 
-   else if (nfiles == 0) /* Read from stdin without --dissemble */
+   else if (nfiles == 0) /* Read from stdin withoout --dissemble */
    {
       char filename[FILENAME_MAX+1];
 

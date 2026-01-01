@@ -26,9 +26,8 @@
 
 #include <png.h>
 
-#if !defined(PNG_iCCP_SUPPORTED) || !defined(PNG_READ_SUPPORTED)
-#error This program requires libpng supporting the iCCP chunk and the read API
-#endif
+#if defined(PNG_READ_SUPPORTED) && defined(PNG_STDIO_SUPPORTED) && \
+    defined (PNG_iCCP_SUPPORTED)
 
 
 static int verbose = 1;
@@ -37,8 +36,7 @@ static png_byte no_profile[] = "no profile";
 static png_bytep
 extract(FILE *fp, png_uint_32 *proflen)
 {
-   png_structp png_ptr =
-      png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+   png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,0,0,0);
    png_infop info_ptr = NULL;
    png_bytep result = NULL;
 
@@ -71,7 +69,7 @@ extract(FILE *fp, png_uint_32 *proflen)
       png_bytep profile;
 
       if (png_get_iCCP(png_ptr, info_ptr, &name, &compression_type, &profile,
-                       proflen) & PNG_INFO_iCCP)
+         proflen) & PNG_INFO_iCCP)
       {
          result = malloc(*proflen);
          if (result != NULL)
@@ -82,7 +80,7 @@ extract(FILE *fp, png_uint_32 *proflen)
       }
 
       else
-         result = no_profile;
+	result = no_profile;
    }
 
    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
@@ -109,7 +107,7 @@ extract_one_file(const char *filename)
             const char *ep = strrchr(filename, '.');
 
             if (ep != NULL)
-               len = ep - filename;
+               len = ep-filename;
 
             else
                len = strlen(filename);
@@ -121,14 +119,14 @@ extract_one_file(const char *filename)
             FILE *of;
 
             memcpy(output, filename, len);
-            strcpy(output + len, ".icc");
+            strcpy(output+len, ".icc");
 
             of = fopen(output, "wb");
             if (of != NULL)
             {
                if (fwrite(profile, proflen, 1, of) == 1 &&
-                   fflush(of) == 0 &&
-                   fclose(of) == 0)
+                  fflush(of) == 0 &&
+                  fclose(of) == 0)
                {
                   if (verbose)
                      printf("%s -> %s\n", filename, output);
@@ -157,14 +155,11 @@ extract_one_file(const char *filename)
       }
 
       else if (verbose && profile == no_profile)
-         printf("%s has no profile\n", filename);
+	printf("%s has no profile\n", filename);
    }
 
    else
       fprintf(stderr, "%s: could not open file\n", filename);
-
-   if (fp != NULL)
-      fclose(fp);
 
    return result;
 }
@@ -175,7 +170,7 @@ main(int argc, char **argv)
    int i;
    int extracted = 0;
 
-   for (i = 1; i < argc; ++i)
+   for (i=1; i<argc; ++i)
    {
       if (strcmp(argv[i], "-q") == 0)
          verbose = 0;
@@ -187,3 +182,4 @@ main(int argc, char **argv)
    /* Exit code is true if any extract succeeds */
    return extracted == 0;
 }
+#endif /* READ && STDIO && iCCP */

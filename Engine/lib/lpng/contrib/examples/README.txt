@@ -1,3 +1,4 @@
+
 This directory (contrib/examples) contains examples of libpng usage.
 
 NO COPYRIGHT RIGHTS ARE CLAIMED TO ANY OF THE FILES IN THIS DIRECTORY.

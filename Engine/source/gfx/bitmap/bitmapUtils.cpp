@@ -288,6 +288,13 @@ enum ChannelSemantic : U8
    CH_B
 };
 
+struct PackedChannelDesc
+{
+   ChannelSemantic semantic;
+   U8 bits;
+   U8 shift;
+};
+
 //--------------------------------------------------------------------------------
 // Bitmap format descriptor
 struct GBitmapFormatDesc
@@ -299,7 +306,9 @@ struct GBitmapFormatDesc
    bool premultiplied;
    bool isFloat;
    U8 bytesPerChannel;
-
+   bool isPacked = false;
+   U8 bytesPerPixel = 0;
+   PackedChannelDesc packed[4] = {};
    bool is8()  const { return !isFloat && bytesPerChannel == 1; }
    bool is16() const { return !isFloat && bytesPerChannel == 2; }
 };
@@ -316,17 +325,47 @@ GBitmapFormatDesc getFormatDesc(GFXFormat fmt)
    case GFXFormatL8:
       return { 1, {CH_L, CH_NONE, CH_NONE, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
    case GFXFormatA4L4:
-      return { 2, {CH_L, CH_A, CH_NONE, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+      return { 2, {CH_L, CH_A, CH_NONE, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 0, true, 1,
+         {
+            { CH_L, 4, 0 }, // CH_L must be declared before CH_A
+            { CH_A, 4, 4 }
+         }
+      };
 
       // 16-bit formats
    case GFXFormatR5G6B5:
-      return { 3, {CH_R, CH_G, CH_B, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+      return { 3, {CH_R, CH_G, CH_B, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 0, true, 2,
+         {
+            { CH_R, 5, 11 },
+            { CH_G, 6, 5  },
+            { CH_B, 5, 0  }
+         }
+      };
    case GFXFormatR5G5B5A1:
-      return { 4, {CH_R, CH_G, CH_B, CH_A}, STBIR_TYPE_UINT8, false, false, false, 1 };
+      return { 4, {CH_R, CH_G, CH_B, CH_A}, STBIR_TYPE_UINT8, false, false, false, 0, true, 2,
+         {
+            { CH_R, 5, 11 },
+            { CH_G, 5, 6  },
+            { CH_B, 5, 1  },
+            { CH_A, 1, 0  }
+         }
+      };
    case GFXFormatR5G5B5X1:
-      return { 4, {CH_R, CH_G, CH_B, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+      return { 4, {CH_R, CH_G, CH_B, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 0, true, 2,
+         {
+            { CH_R, 5, 11 },
+            { CH_G, 5, 6  },
+            { CH_B, 5, 1  },
+            { CH_A, 1, 0  }
+         }
+      };
    case GFXFormatA8L8:
-      return { 2, {CH_L, CH_A, CH_NONE, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 1 };
+      return { 2, {CH_L, CH_A, CH_NONE, CH_NONE}, STBIR_TYPE_UINT8, false, false, false, 0, true, 2,
+         {
+            { CH_L, 8, 0 }, // CH_L must be declared before CH_A
+            { CH_A, 8, 8 }
+         }
+      };
    case GFXFormatL16:
       return { 1, {CH_L, CH_NONE, CH_NONE, CH_NONE}, STBIR_TYPE_UINT16, false, false, false, 2 };
    case GFXFormatR16F:
@@ -403,10 +442,73 @@ inline float linearToSrgb(float c)
    return (c <= 0.0031308f) ? c * 12.92f : 1.055f * powf(c, 1.f / 2.4f) - 0.055f;
 }
 
+static inline LinearPixel loadPackedPixel(
+   const void* src,
+   const GBitmapFormatDesc& fmt,
+   U32 index)
+{
+   LinearPixel p;
+   p.r = p.g = p.b = 0.f;
+   p.a = 1.f;
+
+   const U8* base = (const U8*)src + index * fmt.bytesPerPixel;
+
+   U32 raw = 0;
+   dMemcpy(&raw, base, fmt.bytesPerPixel);
+
+#ifdef TORQUE_BIG_ENDIAN
+   if (fmt.bytesPerPixel == 2)
+      raw = convertLEndianToHost((U16)raw);
+   else if (fmt.bytesPerPixel == 4)
+      raw = convertLEndianToHost((U32)raw);
+#endif
+
+   for (U32 i = 0; i < fmt.channels; ++i)
+   {
+      const PackedChannelDesc& ch = fmt.packed[i];
+
+      U32 mask = (1u << ch.bits) - 1u;
+      U32 v = (raw >> ch.shift) & mask;
+
+      // Expand to 8-bit exactly like GBitmap getColor code
+      U8 expanded8;
+      if (ch.bits == 5)
+         expanded8 = (v << 3) | (v >> 2);
+      else if (ch.bits == 6)
+         expanded8 = (v << 2) | (v >> 4);
+      else if (ch.bits == 4)
+         expanded8 = v * 17;
+      else if (ch.bits == 1)
+         expanded8 = v ? 255 : 0;
+      else // 8-bit
+         expanded8 = (U8)v;
+
+      float f = expanded8 / 255.f;
+
+      switch (ch.semantic)
+      {
+      case CH_R: p.r = f; break;
+      case CH_G: p.g = f; break;
+      case CH_B: p.b = f; break;
+      case CH_A: p.a = f; break;
+      case CH_L:
+         p.r = p.g = p.b = f;
+         break;
+      default:
+         break;
+      }
+   }
+
+   return p;
+}
+
 //--------------------------------------------------------------------------------
 // Load a pixel from src format into LinearPixel
 static inline LinearPixel loadPixel(const void* src, const GBitmapFormatDesc& fmt, U32 index)
 {
+   if (fmt.isPacked)
+      return loadPackedPixel(src, fmt, index);
+
    LinearPixel p;
    const U8* base = (const U8*)src + index * fmt.channels * fmt.bytesPerChannel;
 
@@ -441,10 +543,72 @@ static inline LinearPixel loadPixel(const void* src, const GBitmapFormatDesc& fm
    return p;
 }
 
+static inline void storePackedPixel(
+   void* dst,
+   const GBitmapFormatDesc& fmt,
+   U32 index,
+   const LinearPixel& p)
+{
+   U32 raw = 0;
+
+   for (U32 i = 0; i < fmt.channels; ++i)
+   {
+      const PackedChannelDesc& ch = fmt.packed[i];
+
+      float v = 0.f;
+      switch (ch.semantic)
+      {
+      case CH_R: v = p.r; break;
+      case CH_G: v = p.g; break;
+      case CH_B: v = p.b; break;
+      case CH_A: v = p.a; break;
+      case CH_L: v = p.r; break; // legacy behavior
+      default:  continue;
+      }
+
+      // Clamp
+      v = mClamp(v, 0.f, 1.f);
+
+      // Canonical float → U8
+      U32 expanded8 = U32(v * 255.f + 0.5f);
+
+      // Contract to bit depth EXACTLY like Gbitmap setColor code
+      U32 maxv = (1u << ch.bits) - 1u;
+      U32 iv;
+
+      if (ch.bits == 8)
+         iv = expanded8;
+      else
+         iv = expanded8 * maxv / 255;
+
+      raw |= (iv & maxv) << ch.shift;
+   }
+
+#ifdef TORQUE_BIG_ENDIAN
+   if (fmt.bytesPerPixel == 2)
+   {
+      U16 v = convertLEndianToHost((U16)raw);
+      dMemcpy((U8*)dst + index * fmt.bytesPerPixel, &v, 2);
+   }
+   else if (fmt.bytesPerPixel == 4)
+   {
+      U32 v = convertLEndianToHost(raw);
+      dMemcpy((U8*)dst + index * fmt.bytesPerPixel, &v, 4);
+   }
+#else
+   dMemcpy((U8*)dst + index * fmt.bytesPerPixel, &raw, fmt.bytesPerPixel);
+#endif
+}
 //--------------------------------------------------------------------------------
 // Store a LinearPixel into dst format
 static inline void storePixel(void* dst, const GBitmapFormatDesc& fmt, U32 index, const LinearPixel& p)
 {
+   if (fmt.isPacked)
+   {
+      storePackedPixel(dst, fmt, index, p);
+      return;
+   }
+
    U8* base = (U8*)dst + index * fmt.channels * fmt.bytesPerChannel;
    for (U32 c = 0; c < fmt.channels; ++c)
    {
@@ -455,7 +619,7 @@ static inline void storePixel(void* dst, const GBitmapFormatDesc& fmt, U32 index
       case CH_G: v = p.g; break;
       case CH_B: v = p.b; break;
       case CH_A: v = p.a; break;
-      case CH_L: v = (p.r + p.g + p.b) / 3.f; break;
+      case CH_L: v = p.r; break;
       default: break;
       }
 

@@ -202,10 +202,9 @@ bool GuiIconButtonCtrl::resize(const Point2I &newPosition, const Point2I &newExt
 
 void GuiIconButtonCtrl::setBitmap(const char *name)
 {
+   _setBitmap(name);
    if(!isAwake())
       return;
-
-   _setBitmap(name);
 
    // So that extent is recalculated if autoSize is set.
    resize( getPosition(), getExtent() );

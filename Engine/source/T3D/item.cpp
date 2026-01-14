@@ -312,6 +312,7 @@ IMPLEMENT_CALLBACK( Item, onLeaveLiquid, void, ( const char* objID, const char* 
 Item::Item()
 {
    mTypeMask |= ItemObjectType | DynamicShapeObjectType;
+   mPathfindingIgnore = true;
    mDataBlock = 0;
    mStatic = false;
    mRotate = false;

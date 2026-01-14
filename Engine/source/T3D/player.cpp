@@ -1552,7 +1552,7 @@ ConsoleDocClass( Player,
 Player::Player()
 {
    mTypeMask |= PlayerObjectType | DynamicShapeObjectType;
-
+   mPathfindingIgnore = true;
    mDelta.pos = mAnchorPoint = Point3F(0,0,100);
    mDelta.rot = mDelta.head = Point3F(0,0,0);
    mDelta.rotOffset.set(0.0f,0.0f,0.0f);

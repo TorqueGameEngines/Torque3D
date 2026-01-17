@@ -535,7 +535,7 @@ bool ParticleData::onAdd()
      {
        Con::warnf(ConsoleLogEntry::General, 
                   "ParticleData(%s) bad value(s) for animTexTiling [%d or %d <= 0], invalid datablock", 
-                  animTexTiling.x, animTexTiling.y, getName());
+                   getName(), animTexTiling.x, animTexTiling.y);
        return false;
      }
 

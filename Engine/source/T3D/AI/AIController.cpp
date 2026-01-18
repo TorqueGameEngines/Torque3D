@@ -316,7 +316,6 @@ bool AIController::Movement::isInWater()
 {
    ShapeBase* sbo = dynamic_cast<ShapeBase*>(getCtrl()->getAIInfo()->mObj.getPointer());
    if (!sbo) return false;
-   F32 waterDepth = 0.0f;
    return sbo->getWaterCoverage() > 0.0f;
 }
 

@@ -350,6 +350,13 @@ function DecalEditorGui::completeGizmoTransform( %this, %decalId, %nodeDetails )
 
 function DecalEditorGui::onSleep( %this )
 {
+   DecalEditorTreeView.clearSelection();
+   DecalDataList.setSelected( DecalDataList.getSelectedItems(), false );
+   
+   DecalEditorGui.currentDecalData = "";
+   DecalPreviewWindow-->decalPreview.setBitmap("");
+   DecalEditorGui.selDecalInstanceId = "";
+   DecalPreviewWindow-->instancePreview.setBitmap("");
 }
 
 function DecalEditorGui::syncNodeDetails( %this )

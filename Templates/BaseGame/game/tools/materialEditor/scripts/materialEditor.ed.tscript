@@ -641,16 +641,14 @@ function MaterialEditorGui::setActiveMaterial( %this, %material )
    MaterialEditorGui.currentMaterial = %material;
    MaterialEditorGui.lastMaterial = %material;
    
-   // we create or recreate a material to hold in a pristine state
-   // or, this crashes the ap. fix properly - BJR
-   //if(isObject(notDirtyMaterial))
-   //   notDirtyMaterial.delete();
-      
-   singleton Material(notDirtyMaterial)
+   if(!isObject(notDirtyMaterial))
    {
-      mapTo = "matEd_mappedMat";
-      diffuseMapAsset[0] = "ToolsModule:matEd_mappedMat_image";
-   };
+      singleton Material(notDirtyMaterial)
+      {
+         mapTo = "matEd_mappedMat";
+         diffuseMapAsset[0] = "ToolsModule:matEd_mappedMat_image";
+      };
+   }
    
    // Converts the texture files into absolute paths.
    MaterialEditorGui.convertTextureFields();

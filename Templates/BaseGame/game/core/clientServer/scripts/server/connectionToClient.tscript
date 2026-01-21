@@ -199,8 +199,13 @@ function GameConnectionListener::onSetSpawnPointComplete( %this, %client )
     %client.player = spawnObject(%client.spawnClass, %client.spawnDataBlock, "", %client.spawnProperties, %client.spawnScript);
     
     if(!isObject(%client.player))
+    {
        error("Failed to spawn player object!");
-    
+    }
+    else if (%client.player.isMemberOfClass("Camera"))
+    {
+        %client.camera = %client.player;
+    }
     if (!%client.player.isMemberOfClass(%client.spawnClass))
         warn("Trying to spawn a class that does not derive from "@ %client.spawnClass);
 

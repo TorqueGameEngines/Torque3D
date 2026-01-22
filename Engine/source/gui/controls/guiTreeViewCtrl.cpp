@@ -3389,7 +3389,7 @@ void GuiTreeViewCtrl::onMouseDown(const GuiEvent & event)
    mPossibleRenameItem = NULL;
    mRenamingItem = NULL;
    mTempItem = NULL;
-      
+   bool wasSelected = isSelected(item);
    //
    if( event.modifier & SI_MULTISELECT )
    {
@@ -3473,8 +3473,7 @@ void GuiTreeViewCtrl::onMouseDown(const GuiEvent & event)
    else if ( !hitFlags.test(OnImage) )
    {      
       mTempItem = item;
-
-      bool wasSelected = isSelected( item );
+      
       bool multiSelect = getSelectedItemsCount() > 1;
       
       if( !wasSelected || !multiSelect )
@@ -3520,7 +3519,7 @@ void GuiTreeViewCtrl::onMouseDown(const GuiEvent & event)
       return;
 
    //
-   if ( mFullRowSelect || hitFlags.test( OnImage ) )
+   if ((mFullRowSelect || hitFlags.test(OnImage)) && wasSelected)
    {
       item->setExpanded(!item->isExpanded());
       if( !item->isInspectorData() && item->mState.test(Item::VirtualParent) )

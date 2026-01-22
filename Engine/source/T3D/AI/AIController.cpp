@@ -180,6 +180,11 @@ bool AIController::getAIMove(Move* movePtr)
             if (obj->getContainer()->castRay(start, end, StaticShapeObjectType, &info))
             {
                getNav()->repath();
+               mMovement.mInAir = false;
+            }
+            else
+            {
+               mMovement.mInAir = true;
             }
             obj->enableCollision();
             getGoal()->mInRange = false;
@@ -307,6 +312,13 @@ void AIController::Movement::onStuck()
 #endif
 }
 
+bool AIController::Movement::isInWater()
+{
+   ShapeBase* sbo = dynamic_cast<ShapeBase*>(getCtrl()->getAIInfo()->mObj.getPointer());
+   if (!sbo) return false;
+   return sbo->getWaterCoverage() > 0.0f;
+}
+
 DefineEngineMethod(AIController, setMoveSpeed, void, (F32 speed), ,
    "@brief Sets the move speed for an AI object.\n\n"
 
@@ -335,6 +347,23 @@ DefineEngineMethod(AIController, stop, void, (), ,
    object->mMovement.stopMove();
 }
 
+DefineEngineMethod(AIController, isStopped, bool, (), ,
+   "@brief is the player moving?.\n\n")
+{
+   return object->mMovement.isStopped();
+}
+
+DefineEngineMethod(AIController, isInAir, bool, (), ,
+   "@brief is the player moving?.\n\n")
+{
+   return object->mMovement.isInAir();
+}
+
+DefineEngineMethod(AIController, isInWater, bool, (), ,
+   "@brief is the player in water?.\n\n")
+{
+   return object->mMovement.isInWater();
+}
 
 /**
  * Set the state of a movement trigger.

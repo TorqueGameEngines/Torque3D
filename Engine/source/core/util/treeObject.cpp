@@ -140,7 +140,7 @@ void TreeObject::deleteNode(S32 key)
       Node* parentNode = static_cast<Node*>(node->parent);
       for (S32 i = 0; i < parentNode->size(); i++)
       {
-         if ((*parentNode)[i] == static_cast<Tree<void*>*>(node))
+         if ((*parentNode)[i] == static_cast<TreeNode<void*>*>(node))
          {
             parentNode->erase(i);
             break;
@@ -181,7 +181,7 @@ S32 TreeObject::getParent(S32 key)
    Node* n = findNode(key);
    if (n == NULL || n->parent == NULL)
       return -1;
-   return static_cast<Node*>(n->getParentNode())->key;
+   return static_cast<Node*>(n->getParent())->key;
 }
 
 bool TreeObject::toParent(S32 key, S32 newParentKey)
@@ -201,7 +201,7 @@ bool TreeObject::toParent(S32 key, S32 newParentKey)
    }
    if (targetNode->parent)
    {
-      Tree<void*>* oldParent = targetNode->parent;
+      TreeNode<void*>* oldParent = targetNode->parent;
       for (S32 i = 0; i < oldParent->size(); i++) {
          if ((*oldParent)[i] == targetNode) {
             oldParent->erase(i);
@@ -222,7 +222,7 @@ Vector<S32> TreeObject::getChildren(S32 key)
    Node* n = findNode(key);
    if (n)
    {
-      Vector<Tree<void*>*> children = n->getChildrenNodes();
+      Vector<TreeNode<void*>*> children = n->getChildren();
       keys.reserve(children.size());
       for (U32 i = 0; i < children.size(); i++)
          keys.push_back(static_cast<Node*>(children[i])->key);
@@ -236,7 +236,7 @@ Vector<S32> TreeObject::getSiblings(S32 key)
    Node* n = findNode(key);
    if (n)
    {
-      Vector<Tree<void*>*> siblings = n->getSiblingsNodes();
+      Vector<TreeNode<void*>*> siblings = n->getSiblings();
       keys.reserve(siblings.size());
       for (U32 i = 0; i < siblings.size(); i++)
          keys.push_back(static_cast<Node*>(siblings[i])->key);

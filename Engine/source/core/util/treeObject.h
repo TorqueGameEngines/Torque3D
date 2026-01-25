@@ -25,59 +25,90 @@
 #include "core/util/tDictionary.h"
 #include "console/consoleTypes.h"
 template <class T>
-class Tree : public Vector<Tree<T>*> {
+class TreeNode : public Vector<TreeNode<T>*> {
 public:
    T data;
-   Tree<T>* parent;
+   TreeNode<T>* parent;
+   TreeNode(const T& val = T(), TreeNode<T>* p = NULL) : data(val), parent(p){}
+   virtual ~TreeNode() { clear();}
+   //description logic
+   inline bool isRoot() const { return parent == NULL; }
+   inline bool isLeaf() const { return size() == 0; }
 
-   Tree(const T& val = T(), Tree<T>* p = NULL) : data(val), parent(p) {}
-   virtual ~Tree() { clear();}
+   //parent logic
+   inline TreeNode<T>* getParent() const { return parent; }
+   inline void setParent(TreeNode<T>* p)
+   {
+      if (parent) parent->remove(this);
+      parent = p;
+      parent->push_back(this);
+   }
 
-   Tree<T>* addChild(const T& val) {
-      Tree<T>* child = new Tree<T>(val, this);
+   //children logic
+   inline TreeNode<T>* addChild(const T& val) {
+      TreeNode<T>* child = new TreeNode<T>(val, this);
       push_back(child);
       return child;
    }
-
-   void addChild(Tree<T>* child) {
+   inline void addChild(TreeNode<T>* child) {
       if (child) {
          child->parent = this;
          push_back(child);
       }
    }
+   inline void addChildren(const Vector<T>* children) {
+      if (!children) return;
+      for (U32 i = 0; i < children->size(); i++) {
+         TreeNode<T>* child = new TreeNode<T>((*children)[i], this);
+         push_back(child);
+      }
+   }
+   void operator =(Vector<T>* other) { clear(); addChildren(other); }
 
-   Tree<T>* getParentNode() const { return parent; }
-
-   Vector<Tree<T>*> getChildrenNodes() const {
-      Vector<Tree<T>*> children;
+   inline U32 getNumChildren() const { return size(); }
+   inline bool hasChildren() const { return size() > 0; }
+   inline Vector<TreeNode<T>*> getChildren() const {
+      Vector<TreeNode<T>*> children;
       children.reserve(size());
       for (U32 i = 0; i < size(); i++)
          children.push_back((*this)[i]);
       return children;
    }
+   inline void deleteChildren()
+   {
+      for (U32 i = 0; i < size(); i++)
+         delete (*this)[i];
+      clear();
+   }
 
-   Vector<Tree<T>*> getSiblingsNodes() const {
-      Vector<Tree<T>*> siblings;
+   //sibling logic
+   inline Vector<TreeNode<T>*> getSiblings() const {
+      Vector<TreeNode<T>*> siblings;
       if (!parent) return siblings;
 
       siblings.reserve(parent->size() - 1);
       for (U32 i = 0; i < parent->size(); i++) {
-         Tree<T>* sibling = (*parent)[i];
+         TreeNode<T>* sibling = (*parent)[i];
          if (sibling != this)
             siblings.push_back(sibling);
       }
       return siblings;
    }
+
+   //data logic
+   inline T getData() const { return data; }
+   inline void setData(const T& val) { data = val; }
+   inline void operator =(const T& val) { data = val; }
 };
 
 class TreeObject : public SimObject {
    typedef SimObject Parent;
 
 public:
-   struct Node : public Tree<void*> {
+   struct Node : public TreeNode<void*> {
       S32 key;
       ConsoleBaseType* type;
-      Node(S32 k, ConsoleBaseType* t) : Tree<void*>(NULL, NULL), key(k), type(t) {}
+      Node(S32 k, ConsoleBaseType* t) : TreeNode<void*>(NULL, NULL), key(k), type(t) {}
       ~Node() {
          if (data)
          {

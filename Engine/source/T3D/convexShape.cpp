@@ -2064,7 +2064,7 @@ void ConvexShape::Geometry::generate(const Vector< PlaneF > &planes, const Vecto
 
 		for ( S32 j = 0; j < newFace.points.size(); j++ )
 		{
-			F32 x = planex.distToPlane( points[ newFace.points[ j ] ] );
+			F32 x = -planex.distToPlane( points[ newFace.points[ j ] ] );
 			F32 y = planey.distToPlane( points[ newFace.points[ j ] ] );
 
 			if (!texOffset.empty())
@@ -2086,7 +2086,7 @@ void ConvexShape::Geometry::generate(const Vector< PlaneF > &planes, const Vecto
 	         if (vertFlip.size() > 0 && vertFlip[i])
 	            y *= -1;
 	
-	         newFace.texcoords[j].set(-x, -y);
+	         newFace.texcoords[j].set(x, y);
 		}
 
       // Data verification tests.

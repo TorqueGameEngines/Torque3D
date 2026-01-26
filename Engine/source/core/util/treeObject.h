@@ -20,17 +20,29 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
+#ifndef _TREEOBJECT_H_
+#define _TREEOBJECT_H_
 #include "core/util/tVector.h"
 #include "console/simObject.h"
 #include "core/util/tDictionary.h"
 #include "console/consoleTypes.h"
+
 template <class T>
 class TreeNode : public Vector<TreeNode<T>*> {
 public:
    T data;
    TreeNode<T>* parent;
    TreeNode(const T& val = T(), TreeNode<T>* p = NULL) : data(val), parent(p){}
-   virtual ~TreeNode() { clear();}
+   virtual ~TreeNode()
+   {
+      deleteChildren();
+      if (parent)
+      {
+         parent->remove(this);
+         parent = NULL;
+      }
+   }
+
    //description logic
    inline bool isRoot() const { return parent == NULL; }
    inline bool isLeaf() const { return size() == 0; }
@@ -45,29 +57,74 @@ public:
    }
 
    //children logic
-   inline TreeNode<T>* addChild(const T& val) {
+   inline TreeNode<T>* addChild(const T& val)
+   {
       TreeNode<T>* child = new TreeNode<T>(val, this);
       push_back(child);
       return child;
    }
-   inline void addChild(TreeNode<T>* child) {
+   inline void addChild(TreeNode<T>* child)
+   {
       if (child) {
          child->parent = this;
          push_back(child);
       }
    }
-   inline void addChildren(const Vector<T>* children) {
+   inline void setChild(U32 i, TreeNode<T>* child)
+   {
+      if (i >= size())
+      {
+         U32 oldSize = size();
+         increment((i + 1) - oldSize);
+         for (U32 j = oldSize; j < size(); j++)
+            (*this)[j] = NULL;
+      }
+
+      if (child == NULL)
+      {
+         removeChild(i);
+      }
+      else
+      {
+         (*this)[i] = child;
+         child->parent = this;
+      }
+   }
+
+   inline TreeNode<T>* getChild(U32 i) const
+   {
+      if (!this)
+         return NULL;
+      if (i < size())
+         return (*this)[i];
+      return NULL;
+   }
+
+   inline void addChildren(const Vector<T>* children)
+   {
       if (!children) return;
       for (U32 i = 0; i < children->size(); i++) {
          TreeNode<T>* child = new TreeNode<T>((*children)[i], this);
          push_back(child);
       }
    }
+
+   inline void removeChild(U32 i)
+   {
+      if (i < size())
+      {
+         TreeNode<T>* child = (*this)[i];
+         if (child)
+            child->parent = NULL;
+         erase(i);
+      }
+   }
    void operator =(Vector<T>* other) { clear(); addChildren(other); }
 
    inline U32 getNumChildren() const { return size(); }
    inline bool hasChildren() const { return size() > 0; }
-   inline Vector<TreeNode<T>*> getChildren() const {
+   inline Vector<TreeNode<T>*> getChildren() const
+   {
       Vector<TreeNode<T>*> children;
       children.reserve(size());
       for (U32 i = 0; i < size(); i++)
@@ -76,13 +133,25 @@ public:
    }
    inline void deleteChildren()
    {
-      for (U32 i = 0; i < size(); i++)
-         delete (*this)[i];
+      Vector<TreeNode<T>*> children;
+      for (U32 i = 0; i < size(); i++) {
+         children.push_back((*this)[i]);
+      }
       clear();
+
+      for (U32 i = 0; i < children.size(); i++)
+      {
+         if (children[i])
+         {
+            children[i]->parent = NULL;
+            delete children[i];
+         }
+      }
    }
 
    //sibling logic
-   inline Vector<TreeNode<T>*> getSiblings() const {
+   inline Vector<TreeNode<T>*> getSiblings() const
+   {
       Vector<TreeNode<T>*> siblings;
       if (!parent) return siblings;
 
@@ -99,6 +168,7 @@ public:
    inline T getData() const { return data; }
    inline void setData(const T& val) { data = val; }
    inline void operator =(const T& val) { data = val; }
+   inline T* getDataPtr() { return &data; }
 };
 
 class TreeObject : public SimObject {
@@ -157,3 +227,4 @@ public:
 
    DECLARE_CONOBJECT(TreeObject);
 };
+#endif //_TREEOBJECT_H_

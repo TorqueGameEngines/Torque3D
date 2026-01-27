@@ -53,7 +53,7 @@ public:
    {
       if (parent) parent->remove(this);
       parent = p;
-      parent->push_back(this);
+      if (parent) parent->push_back(this);
    }
 
    //children logic

@@ -26,9 +26,20 @@ IMPLEMENT_CONOBJECT(TreeObject);
 
 TreeObject::~TreeObject()
 {
-   if (mRoot != NULL)
-      _deleteNode(mRoot, false);
-
+   if (mRoot)
+   {
+      delete mRoot;
+      mRoot = NULL;
+   }
+   
+   // Clean up any orphaned nodes (safety measure)
+   for (Map<S32, Node*>::Iterator i = mKeyMap.begin(); i != mKeyMap.end(); ++i)
+   {
+      if (i->value && i->value->parent == NULL && i->value != mRoot)
+      {
+         delete i->value;
+      }
+   }
    mKeyMap.clear();
 }
 
@@ -132,42 +143,46 @@ S32 TreeObject::addNode(S32 parentKey, const char* scriptData, S32 forcedKey)
 void TreeObject::deleteNode(S32 key)
 {
    Node* node = findNode(key);
-   if (node == NULL)
+   if (!node)
       return;
 
-   if (node->parent != NULL)
-   {
-      Node* parentNode = static_cast<Node*>(node->parent);
-      for (S32 i = 0; i < parentNode->size(); i++)
-      {
-         if ((*parentNode)[i] == static_cast<TreeNode<void*>*>(node))
-         {
-            parentNode->erase(i);
-            break;
-         }
-      }
-   }
    if (node == mRoot)
+   {
       mRoot = NULL;
+   }
+
    _deleteNode(node, true);
 }
 
 void TreeObject::_deleteNode(Node* node, bool unlinkFromMap)
 {
-   if (!node) return;
+   if (!node)
+      return;
 
-   for (U32 i = 0; i < node->size(); i++)
+   // Collect all keys in subtree for map cleanup
+   Vector<S32> keysToRemove;
+   if (unlinkFromMap)
    {
-      Node* child = static_cast<Node*>((*node)[i]);
-      _deleteNode(child, unlinkFromMap);
+      node->forEachInSubtree([&keysToRemove](TreeNode<void*>* n) {
+         Node* scriptNode = static_cast<Node*>(n);
+         keysToRemove.push_back(scriptNode->key);
+      });
    }
-
-   if (unlinkFromMap) {
-      mKeyMap.erase(node->key);
-   }
-
-   if (node == mRoot) mRoot = NULL;
+   
+   // Remove from parent's children array
+   node->nullParent();
+   
+   // Delete the node (destructor handles children recursively)
    delete node;
+
+   // Clean up map entries
+   if (unlinkFromMap)
+   {
+      for (U32 i = 0; i < keysToRemove.size(); i++)
+      {
+         mKeyMap.erase(keysToRemove[i]);
+      }
+   }
 }
 
 TreeObject::Node* TreeObject::findNode(S32 key)
@@ -192,6 +207,7 @@ bool TreeObject::toParent(S32 key, S32 newParentKey)
    if (!targetNode || !newParentNode || key == newParentKey)
       return false;
 
+   // Check for circular reference (prevent making ancestor a child)
    Node* checkNode = newParentNode;
    while (checkNode != NULL)
    {
@@ -199,17 +215,9 @@ bool TreeObject::toParent(S32 key, S32 newParentKey)
          return false;
       checkNode = static_cast<Node*>(checkNode->parent);
    }
-   if (targetNode->parent)
-   {
-      TreeNode<void*>* oldParent = targetNode->parent;
-      for (S32 i = 0; i < oldParent->size(); i++) {
-         if ((*oldParent)[i] == targetNode) {
-            oldParent->erase(i);
-            break;
-         }
-      }
-   }
-
+   
+   // Remove from old parent and add to new parent
+   targetNode->nullParent();
    targetNode->parent = newParentNode;
    newParentNode->push_back(targetNode);
 

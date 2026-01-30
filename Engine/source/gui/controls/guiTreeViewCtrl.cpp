@@ -3519,7 +3519,7 @@ void GuiTreeViewCtrl::onMouseDown(const GuiEvent & event)
       return;
 
    //
-   if ((mFullRowSelect || hitFlags.test(OnImage)) && wasSelected)
+   if (hitFlags.test(OnImage) || ((mFullRowSelect || hitFlags.test(OnIcon)) && wasSelected))
    {
       item->setExpanded(!item->isExpanded());
       if( !item->isInspectorData() && item->mState.test(Item::VirtualParent) )

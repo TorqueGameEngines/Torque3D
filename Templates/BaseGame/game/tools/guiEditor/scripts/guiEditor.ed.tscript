@@ -907,7 +907,7 @@ function GuiEditorTabBook::onTabSelected( %this, %text, %index )
    switch$( %name )
    {
       case "guiPage":
-      
+         %sidebar-->button0.setVisible( false );
          %sidebar-->button1.setVisible( false );
          %sidebar-->button2.setVisible( false );
          %sidebar-->button3.setVisible( true );
@@ -922,7 +922,7 @@ function GuiEditorTabBook::onTabSelected( %this, %text, %index )
          %sidebar-->button3.tooltip = "Hide Selected Control(s)";
                   
       case "profilesPage":
-
+         %sidebar-->button0.setVisible( true );
          %sidebar-->button1.setVisible( true );
          %sidebar-->button2.setVisible( true );
          %sidebar-->button3.setVisible( true );
@@ -942,7 +942,11 @@ function GuiEditorTabBook::onTabSelected( %this, %text, %index )
 
          %sidebar-->button1.setBitmap( "ToolsModule:reset_icon_n_image" );
          %sidebar-->button1.command = "GuiEditor.revertProfile( GuiEditorProfilesTree.getSelectedProfile() );";
-         %sidebar-->button1.tooltip = "Revert Changes to the Selected Profile";
+         %sidebar-->button1.tooltip = "Revert Changes to the Selected Profile";         
+         
+         %sidebar-->button0.setBitmap( "ToolsModule:iconSave_image" );
+         %sidebar-->button0.command = "populateAllFonts();";
+         %sidebar-->button0.tooltip = "(Re)Generate font cache";
          
       case "toolboxPage":
       

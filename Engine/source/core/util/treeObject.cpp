@@ -169,9 +169,14 @@ void TreeObject::_deleteNode(Node* node, bool unlinkFromMap)
       });
    }
    
+
    // Remove from parent's children array
    node->nullParent();
-   
+
+   // If deleting the root node, clear mRoot
+   if (node == mRoot)
+      mRoot = NULL;
+
    // Delete the node (destructor handles children recursively)
    delete node;
 
@@ -333,8 +338,11 @@ void TreeObject::fromString(const char* data)
    if (!data || !*data)
       return;
 
-   if (mRoot)
+
+   if (mRoot) {
       _deleteNode(mRoot, true);
+      mRoot = NULL;
+   }
 
    mKeyMap.clear();
    mNextFreeKey = 0;

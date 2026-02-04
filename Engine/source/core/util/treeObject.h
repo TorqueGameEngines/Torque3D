@@ -40,10 +40,10 @@ public:
    //-------------------------------------------------------------------------
    // Constructors / Destructor
    //-------------------------------------------------------------------------
-   TreeNode(const T& val = T(), TreeNode<T, nullClears>* p = NULL)
+   inline TreeNode(const T& val = T(), TreeNode<T, nullClears>* p = NULL)
       : data(val), parent(p) {}
 
-   TreeNode(const Vector<TreeNode<T, nullClears>*>& children, TreeNode<T, nullClears>* p = NULL)
+   inline TreeNode(const Vector<TreeNode<T, nullClears>*>& children, TreeNode<T, nullClears>* p = NULL)
       : data(T()), parent(p)
    {
       increment(children.size());
@@ -65,7 +65,7 @@ public:
    // Deep Copy / Cloning
    //-------------------------------------------------------------------------
    // Creates a deep copy of this node and its entire subtree.
-   TreeNode<T, nullClears>* clone() const {
+   inline TreeNode<T, nullClears>* clone() const {
       auto* copy = new TreeNode<T, nullClears>(data, NULL);
       for (U32 i = 0; i < size(); ++i)
          if ((*this)[i])
@@ -74,7 +74,7 @@ public:
    }
 
    template<typename Func>
-   TreeNode<T, nullClears>* cloneIf(Func pred) const {
+   inline TreeNode<T, nullClears>* cloneIf(Func pred) const {
       if (!pred(this)) return NULL;
       auto* newNode = new TreeNode<T, nullClears>(data, NULL);
       for (U32 i = 0; i < size(); ++i)
@@ -86,7 +86,7 @@ public:
       return newNode;
    }
 
-   bool equals(const TreeNode<T, nullClears>* other) const {
+   inline bool equals(const TreeNode<T, nullClears>* other) const {
       if (!other || data != other->data || size() != other->size())
          return false;
       for (U32 i = 0; i < size(); ++i) {
@@ -100,23 +100,23 @@ public:
       }
       return true;
    }
-   // Stitches 'subtree' as a child of 'atNode' (re-parents, does not clone).
-   static TreeNode<T, nullClears>* mergeAt(TreeNode<T, nullClears>* atNode, TreeNode<T, nullClears>* subtree) {
+
+   static inline TreeNode<T, nullClears>* mergeAt(TreeNode<T, nullClears>* atNode, TreeNode<T, nullClears>* subtree) {
       if (!atNode || !subtree)
          return NULL;
       atNode->addChild(subtree);
       return subtree;
    }
 
-   // Clones 'subtree' and attaches the clone as a child of 'atNode'.
-   static TreeNode<T, nullClears>* cloneAt(TreeNode<T, nullClears>* atNode, const TreeNode<T, nullClears>* subtree) {
+   static inline TreeNode<T, nullClears>* cloneAt(TreeNode<T, nullClears>* atNode, const TreeNode<T, nullClears>* subtree) {
       if (!atNode || !subtree)
          return NULL;
       TreeNode<T, nullClears>* newClone = subtree->clone();
       atNode->addChild(newClone);
       return newClone;
    }
-   bool isSubtreeOf(const TreeNode<T, nullClears>* other) const {
+
+   inline bool isSubtreeOf(const TreeNode<T, nullClears>* other) const {
       if (!other) return false;
       if (equals(other)) return true;
       for (U32 i = 0; i < other->size(); ++i)
@@ -126,7 +126,8 @@ public:
    }
    // Assignment operator: shallow copy of data and parent pointer only.
    // Does NOT copy children or subtree.
-   TreeNode<T, nullClears>& operator=(const TreeNode<T, nullClears>& other) {
+
+   inline TreeNode<T, nullClears>& operator=(const TreeNode<T, nullClears>& other) {
       if (this == &other)
          return *this;
       data = other.data;
@@ -190,14 +191,14 @@ public:
       }
       return true;
    }
-   bool isVisited(const Vector<TreeNode<T, nullClears>*>& visited) const {
+   inline bool isVisited(const Vector<TreeNode<T, nullClears>*>& visited) const {
       for (U32 i = 0; i < visited.size(); ++i)
          if (visited[i] == this)
             return true;
       return false;
    }
    template<typename Func>
-   TreeNode<T, nullClears>* findLeafIf(Func pred) {
+   inline TreeNode<T, nullClears>* findLeafIf(Func pred) {
       if (isLeaf() && pred(this)) return this;
       for (U32 i = 0; i < size(); ++i)
          if ((*this)[i]) {
@@ -223,7 +224,7 @@ public:
          current = current->parent;
       return current;
    }
-   bool isAncestorOf(const TreeNode<T, nullClears>* other) const {
+   inline bool isAncestorOf(const TreeNode<T, nullClears>* other) const {
       const TreeNode<T, nullClears>* node = other->parent;
       while (node) {
          if (node == this) return true;
@@ -231,10 +232,10 @@ public:
       }
       return false;
    }
-   bool isDescendantOf(const TreeNode<T, nullClears>* other) const {
+   inline bool isDescendantOf(const TreeNode<T, nullClears>* other) const {
       return other->isAncestorOf(this);
    }
-   TreeNode<T, nullClears>* lowestCommonAncestor(TreeNode<T, nullClears>* other) {
+   inline TreeNode<T, nullClears>* lowestCommonAncestor(TreeNode<T, nullClears>* other) {
       Vector<TreeNode<T, nullClears>*> pathA, pathB;
       getPathToRoot(pathA);
       other->getPathToRoot(pathB);
@@ -246,7 +247,7 @@ public:
       }
       return lca;
    }
-   void getPathToRoot(Vector<const TreeNode<T, nullClears>*>& out) const {
+   inline void getPathToRoot(Vector<const TreeNode<T, nullClears>*>& out) const {
       const TreeNode<T, nullClears>* node = this;
       while (node) {
          out.push_back(node);
@@ -264,7 +265,7 @@ public:
          parent->removeChild(this);
       parent = NULL;
    }
-   static void safeDetachFromParent(TreeNode<T, nullClears>* node) {
+   static inline void safeDetachFromParent(TreeNode<T, nullClears>* node) {
       if (!node) return;
       if (node->parent) {
          for (U32 i = 0; i < node->parent->size(); ++i) {
@@ -276,14 +277,14 @@ public:
       }
       node->parent = NULL;
    }
-   void collectAncestors(Vector<TreeNode<T, nullClears>*>& outAncestors) const {
+   inline void collectAncestors(Vector<TreeNode<T, nullClears>*>& outAncestors) const {
       TreeNode<T, nullClears>* node = parent;
       while (node) {
          outAncestors.push_back_unique(node);
          node = node->parent;
       }
    }
-   void collectAncestorsSortedByDepth(const Vector<TreeNode<T, nullClears>*>& leaves, Vector<TreeNode<T, nullClears>*>& outAncestors) const {
+   inline void collectAncestorsSortedByDepth(const Vector<TreeNode<T, nullClears>*>& leaves, Vector<TreeNode<T, nullClears>*>& outAncestors) const {
       Map<TreeNode<T, nullClears>*, bool> ancestorSet;
       for (U32 i = 0; i < leaves.size(); ++i) {
          TreeNode<T, nullClears>* node = leaves[i]->getParent();
@@ -312,7 +313,7 @@ public:
       return depth;
    }
    template<typename Func>
-   void forEachAncestor(Func callback) const {
+   inline void forEachAncestor(Func callback) const {
       const TreeNode<T, nullClears>* node = parent;
       while (node) {
          callback(node);
@@ -603,7 +604,7 @@ public:
       for (U32 i = 0; i < size(); ++i)
          if ((*this)[i])
             (*this)[i]->collectSubtreeData(dataList);
-}
+   }
    // callback signature: void(TreeNode<T, nullClears>*)
    template<typename Func>
    inline void forEachChild(Func callback) {
@@ -638,7 +639,7 @@ public:
    }
    // callback signature: void(TreeNode<T, nullClears>*)
    template<typename Func>
-   void traverseBreadthFirst(Func callback) {
+   inline void traverseBreadthFirst(Func callback) {
       Vector<TreeNode<T, nullClears>*> queue;
       queue.push_back(this);
       while (!queue.empty()) {
@@ -654,18 +655,16 @@ public:
    // Typically used for propagating updates up the tree (e.g., refitting bounds).
    // callback signature: void(TreeNode<T, nullClears>*)
    template<typename Func>
-   void refitPathToRoot(Func refitFunc)
-   {
+   inline void refitPathToRoot(Func refitFunc) {
       TreeNode<T, nullClears>* node = parent;
-      while (node)
-      {
+      while (node) {
          refitFunc(node);
          node = node->parent;
       }
    }
    // callback signature: TreeNode<T, nullClears>* pred(TreeNode<T, nullClears>*)
    template<typename Func>
-   TreeNode<T, nullClears>* findIf(Func pred) {
+   inline TreeNode<T, nullClears>* findIf(Func pred) {
       if (pred(this)) return this;
       for (U32 i = 0; i < size(); ++i)
          if ((*this)[i]) {
@@ -676,7 +675,7 @@ public:
    }
    // callback signature: const TreeNode<T, nullClears>* pred(const TreeNode<T, nullClears>*)
    template<typename Func>
-   void findAllIf(Func pred, Vector<TreeNode<T, nullClears>*>& out) {
+   inline void findAllIf(Func pred, Vector<TreeNode<T, nullClears>*>& out) {
       if (pred(this))
          out.push_back(this);
       for (U32 i = 0; i < size(); ++i)
@@ -685,7 +684,7 @@ public:
    }
    // callback signature: const TreeNode<T, nullClears>* pred(const TreeNode<T, nullClears>*)
    template<typename Func>
-   U32 countIf(Func pred) const {
+   inline U32 countIf(Func pred) const {
       U32 count = pred(this) ? 1 : 0;
       for (U32 i = 0; i < size(); ++i)
          if ((*this)[i])
@@ -694,7 +693,7 @@ public:
    }
    // callback signature: bool pred(TreeNode<T, nullClears>*)
    template<typename Func>
-   void removeIf(Func pred) {
+   inline void removeIf(Func pred) {
       for (S32 i = size() - 1; i >= 0; --i) {
          if ((*this)[i] && pred((*this)[i])) {
             delete (*this)[i];
@@ -733,7 +732,7 @@ public:
    //-------------------------------------------------------------------------
    // Rotation/Balance Utilities
    //-------------------------------------------------------------------------
-   static U32 gatherRotationCandidates(TreeNode<T, nullClears>* parent, Vector<TreeNode<T, nullClears>*>& outNodes, U32 maxCandidates = 8) {
+   static inline U32 gatherRotationCandidates(TreeNode<T, nullClears>* parent, Vector<TreeNode<T, nullClears>*>& outNodes, U32 maxCandidates = 8) {
       outNodes.clear();
       for (U32 i = 0; i < parent->size() && outNodes.size() < maxCandidates; ++i) {
          TreeNode<T, nullClears>* child = (*parent)[i];
@@ -750,7 +749,7 @@ public:
       }
       return outNodes.size();
    }
-   static bool findBestRotationPairing(
+   static inline bool findBestRotationPairing(
       const Vector<TreeNode<T, nullClears>*>& nodes,
       U32 groupSize,
       F32(*costFunc)(const TreeNode<T, nullClears>*, const TreeNode<T, nullClears>*),
@@ -811,11 +810,11 @@ public:
    // Type Conversion Helpers
    //-------------------------------------------------------------------------
    template<typename Derived>
-   Derived* getChildAs(U32 i) { return static_cast<Derived*>(getChild(i)); }
+   inline Derived* getChildAs(U32 i) { return static_cast<Derived*>(getChild(i)); }
    template<typename Derived>
-   const Derived* getChildAs(U32 i) const { return static_cast<const Derived*>(getChild(i)); }
+   inline const Derived* getChildAs(U32 i) const { return static_cast<const Derived*>(getChild(i)); }
    template<typename Derived>
-   Vector<Derived*> getChildrenAs() {
+   inline Vector<Derived*> getChildrenAs() {
       Vector<Derived*> out;
       for (U32 i = 0; i < size(); ++i)
          if ((*this)[i])
@@ -823,7 +822,7 @@ public:
       return out;
    }
    template<typename Derived>
-   Vector<const Derived*> getChildrenAs() const {
+   inline Vector<const Derived*> getChildrenAs() const {
       Vector<const Derived*> out;
       for (U32 i = 0; i < size(); ++i)
          if ((*this)[i])

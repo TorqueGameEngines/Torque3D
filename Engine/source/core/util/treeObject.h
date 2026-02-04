@@ -31,26 +31,112 @@
 template <class T, bool nullClears = true>
 class TreeNode : public Vector<TreeNode<T, nullClears>*> {
 public:
+   //-------------------------------------------------------------------------
+   // Data Members
+   //-------------------------------------------------------------------------
    T data;
    TreeNode<T, nullClears>* parent;
-   TreeNode(const T& val = T(), TreeNode<T, nullClears>* p = NULL) : data(val), parent(p){}
+
+   //-------------------------------------------------------------------------
+   // Constructors / Destructor
+   //-------------------------------------------------------------------------
+   TreeNode(const T& val = T(), TreeNode<T, nullClears>* p = NULL)
+      : data(val), parent(p) {}
+
    TreeNode(const Vector<TreeNode<T, nullClears>*>& children, TreeNode<T, nullClears>* p = NULL)
       : data(T()), parent(p)
    {
       increment(children.size());
       for (U32 i = 0; i < children.size(); ++i) {
          (*this)[i] = children[i];
-         if (children[i])
+         if (children[i]) {
+            AssertFatal(children[i] != this, "TreeNode::Constructor - Circular parent relationship");
             children[i]->parent = this;
+         }
       }
    }
+
    virtual ~TreeNode()
    {
       deleteChildren();
       parent = NULL;
    }
+   //-------------------------------------------------------------------------
+   // Deep Copy / Cloning
+   //-------------------------------------------------------------------------
+   // Creates a deep copy of this node and its entire subtree.
+   TreeNode<T, nullClears>* clone() const {
+      auto* copy = new TreeNode<T, nullClears>(data, NULL);
+      for (U32 i = 0; i < size(); ++i)
+         if ((*this)[i])
+            copy->addChild((*this)[i]->clone());
+      return copy;
+   }
 
-   //description logic
+   template<typename Func>
+   TreeNode<T, nullClears>* cloneIf(Func pred) const {
+      if (!pred(this)) return NULL;
+      auto* newNode = new TreeNode<T, nullClears>(data, NULL);
+      for (U32 i = 0; i < size(); ++i)
+         if ((*this)[i]) {
+            auto* filteredChild = (*this)[i]->cloneIf(pred);
+            if (filteredChild)
+               newNode->addChild(filteredChild);
+         }
+      return newNode;
+   }
+
+   bool equals(const TreeNode<T, nullClears>* other) const {
+      if (!other || data != other->data || size() != other->size())
+         return false;
+      for (U32 i = 0; i < size(); ++i) {
+         if ((*this)[i] && other->getChild(i)) {
+            if (!(*this)[i]->equals(other->getChild(i)))
+               return false;
+         }
+         else if ((*this)[i] || other->getChild(i)) {
+            return false;
+         }
+      }
+      return true;
+   }
+   // Stitches 'subtree' as a child of 'atNode' (re-parents, does not clone).
+   static TreeNode<T, nullClears>* mergeAt(TreeNode<T, nullClears>* atNode, TreeNode<T, nullClears>* subtree) {
+      if (!atNode || !subtree)
+         return NULL;
+      atNode->addChild(subtree);
+      return subtree;
+   }
+
+   // Clones 'subtree' and attaches the clone as a child of 'atNode'.
+   static TreeNode<T, nullClears>* cloneAt(TreeNode<T, nullClears>* atNode, const TreeNode<T, nullClears>* subtree) {
+      if (!atNode || !subtree)
+         return NULL;
+      TreeNode<T, nullClears>* newClone = subtree->clone();
+      atNode->addChild(newClone);
+      return newClone;
+   }
+   bool isSubtreeOf(const TreeNode<T, nullClears>* other) const {
+      if (!other) return false;
+      if (equals(other)) return true;
+      for (U32 i = 0; i < other->size(); ++i)
+         if ((*other)[i] && isSubtreeOf((*other)[i]))
+            return true;
+      return false;
+   }
+   // Assignment operator: shallow copy of data and parent pointer only.
+   // Does NOT copy children or subtree.
+   TreeNode<T, nullClears>& operator=(const TreeNode<T, nullClears>& other) {
+      if (this == &other)
+         return *this;
+      data = other.data;
+      parent = other.parent;
+      // Children are NOT copied; this is a shallow assignment.
+      return *this;
+   }
+   //-------------------------------------------------------------------------
+   // Node Type & Relationship Queries
+   //-------------------------------------------------------------------------
    inline bool isRoot() const { return parent == NULL; }
    inline bool isLeaf() const {
       if constexpr (nullClears)
@@ -63,96 +149,230 @@ public:
          return true;
       }
    }
-   // Parent logic
-   inline TreeNode<T, nullClears>* getParent() const { return parent; }
-
-   inline void setParent(TreeNode<T, nullClears>* p)
-   {
+   inline bool hasChildren() const {
+      if constexpr (nullClears)
+         return size() > 0;
+      else {
+         for (U32 i = 0; i < size(); ++i)
+            if ((*this)[i]) return true;
+         return false;
+      }
+   }
+   inline U32 getNumChildren() const {
+      if constexpr (nullClears)
+         return size();
+      else {
+         U32 count = 0;
+         for (U32 i = 0; i < size(); ++i)
+            if ((*this)[i]) ++count;
+         return count;
+      }
+   }
+   inline bool hasChild(TreeNode<T, nullClears>* child) const {
+      if (!child) return false;
+      for (U32 i = 0; i < size(); i++)
+         if ((*this)[i] == child)
+            return true;
+      return false;
+   }
+   inline S32 getChildIndex(TreeNode<T, nullClears>* child) const {
+      if (!child) return -1;
+      for (U32 i = 0; i < size(); i++)
+         if ((*this)[i] == child)
+            return (S32)i;
+      return -1;
+   }
+   inline bool isValidTree() const {
+      for (U32 i = 0; i < size(); i++) {
+         TreeNode<T, nullClears>* child = (*this)[i];
+         if (child && child->parent != this)
+            return false;
+      }
+      return true;
+   }
+   bool isVisited(const Vector<TreeNode<T, nullClears>*>& visited) const {
+      for (U32 i = 0; i < visited.size(); ++i)
+         if (visited[i] == this)
+            return true;
+      return false;
+   }
+   template<typename Func>
+   TreeNode<T, nullClears>* findLeafIf(Func pred) {
+      if (isLeaf() && pred(this)) return this;
+      for (U32 i = 0; i < size(); ++i)
+         if ((*this)[i]) {
+            auto* found = (*this)[i]->findLeafIf(pred);
+            if (found) return found;
+         }
+      return NULL;
+   }
+   //-------------------------------------------------------------------------
+   // Parent/Ancestor Logic
+   //-------------------------------------------------------------------------
+   inline TreeNode<T, nullClears>* getParent() { return parent; }
+   inline const TreeNode<T, nullClears>* getParent() const { return parent; }
+   inline TreeNode<T, nullClears>* getRoot() {
+      TreeNode<T, nullClears>* current = this;
+      while (current->parent)
+         current = current->parent;
+      return current;
+   }
+   inline const TreeNode<T, nullClears>* getRoot() const {
+      const TreeNode<T, nullClears>* current = this;
+      while (current->parent)
+         current = current->parent;
+      return current;
+   }
+   bool isAncestorOf(const TreeNode<T, nullClears>* other) const {
+      const TreeNode<T, nullClears>* node = other->parent;
+      while (node) {
+         if (node == this) return true;
+         node = node->parent;
+      }
+      return false;
+   }
+   bool isDescendantOf(const TreeNode<T, nullClears>* other) const {
+      return other->isAncestorOf(this);
+   }
+   TreeNode<T, nullClears>* lowestCommonAncestor(TreeNode<T, nullClears>* other) {
+      Vector<TreeNode<T, nullClears>*> pathA, pathB;
+      getPathToRoot(pathA);
+      other->getPathToRoot(pathB);
+      TreeNode<T, nullClears>* lca = NULL;
+      S32 i = pathA.size() - 1, j = pathB.size() - 1;
+      while (i >= 0 && j >= 0 && pathA[i] == pathB[j]) {
+         lca = pathA[i];
+         --i; --j;
+      }
+      return lca;
+   }
+   void getPathToRoot(Vector<const TreeNode<T, nullClears>*>& out) const {
+      const TreeNode<T, nullClears>* node = this;
+      while (node) {
+         out.push_back(node);
+         node = node->parent;
+      }
+   }
+   inline void setParent(TreeNode<T, nullClears>* p) {
       if (parent == p) return;
-
       if (parent) parent->removeChild(this);
       parent = p;
       if (parent) parent->push_back_unique(this);
    }
-
-   //children logic
-   inline TreeNode<T, nullClears>* addChild(const T& val)
-   {
+   inline void nullParent(bool orphan = true) {
+      if (orphan && parent)
+         parent->removeChild(this);
+      parent = NULL;
+   }
+   static void safeDetachFromParent(TreeNode<T, nullClears>* node) {
+      if (!node) return;
+      if (node->parent) {
+         for (U32 i = 0; i < node->parent->size(); ++i) {
+            if ((*node->parent)[i] == node) {
+               node->parent->removeChild(node);
+               break;
+            }
+         }
+      }
+      node->parent = NULL;
+   }
+   void collectAncestors(Vector<TreeNode<T, nullClears>*>& outAncestors) const {
+      TreeNode<T, nullClears>* node = parent;
+      while (node) {
+         outAncestors.push_back_unique(node);
+         node = node->parent;
+      }
+   }
+   void collectAncestorsSortedByDepth(const Vector<TreeNode<T, nullClears>*>& leaves, Vector<TreeNode<T, nullClears>*>& outAncestors) const {
+      Map<TreeNode<T, nullClears>*, bool> ancestorSet;
+      for (U32 i = 0; i < leaves.size(); ++i) {
+         TreeNode<T, nullClears>* node = leaves[i]->getParent();
+         while (node) {
+            ancestorSet.insert(node, true);
+            node = node->getParent();
+         }
+      }
+      outAncestors.clear();
+      outAncestors.reserve(ancestorSet.size());
+      for (typename Map<TreeNode<T, nullClears>*, bool>::Iterator iter = ancestorSet.begin(); iter != ancestorSet.end(); ++iter)
+         outAncestors.push_back(iter->key);
+      outAncestors.sort([](TreeNode<T, nullClears>* a, TreeNode<T, nullClears>* b) {
+         U32 depthA = a->getDepth();
+         U32 depthB = b->getDepth();
+         return (depthA > depthB) ? -1 : (depthA < depthB) ? 1 : 0;
+      });
+   }
+   inline U32 getDepth() const {
+      U32 depth = 0;
+      TreeNode<T, nullClears>* current = parent;
+      while (current) {
+         depth++;
+         current = current->parent;
+      }
+      return depth;
+   }
+   template<typename Func>
+   void forEachAncestor(Func callback) const {
+      const TreeNode<T, nullClears>* node = parent;
+      while (node) {
+         callback(node);
+         node = node->parent;
+      }
+   }
+   //-------------------------------------------------------------------------
+   // Child Logic
+   //-------------------------------------------------------------------------
+   inline TreeNode<T, nullClears>* addChild(const T& val) {
       TreeNode<T, nullClears>* child = new TreeNode<T, nullClears>(val, this);
       push_back_unique(child);
       return child;
    }
-
-   inline void addChild(TreeNode<T, nullClears>* child)
-   {
-      // Prevent duplicate child
+   inline void addChild(TreeNode<T, nullClears>* child) {
       for (U32 i = 0; i < size(); i++)
          AssertFatal((*this)[i] != child, "TreeNode::addChild - Attempted to add duplicate child");
-
 #ifdef TORQUE_DEBUG
-      // Prevent cycles
       TreeNode<T, nullClears>* ancestor = this;
       while (ancestor) {
          AssertFatal(ancestor != child, "TreeNode::addChild - Would create circular parent relationship");
          ancestor = ancestor->parent;
       }
 #endif
-
-      // If child has a parent and it's not this, remove from old parent
       if (child->parent && child->parent != this) {
-         child->parent->removeChild(child); // Remove from old parent
+         child->parent->removeChild(child);
       }
-
       child->parent = this;
       push_back_unique(child);
    }
-
-   inline void setChild(U32 i, TreeNode<T, nullClears>* child)
-   {
-      if (i >= size())
-      {
+   inline void setChild(U32 i, TreeNode<T, nullClears>* child) {
+      if (i >= size()) {
          U32 oldSize = size();
          increment((i + 1) - oldSize);
          for (U32 j = oldSize; j < size(); j++)
             (*this)[j] = NULL;
       }
-
       TreeNode<T, nullClears>* oldChild = (*this)[i];
       if (oldChild == child) return;
-
-      // Unlink old child
       if (oldChild)
          oldChild->parent = NULL;
-
-      // If forcing to NULL, just clear the slot and return
-      if (child == NULL)
-      {
+      if (child == NULL) {
          if constexpr (nullClears)
             erase(i);
          else
             (*this)[i] = NULL;
          return;
       }
-
 #ifdef TORQUE_DEBUG
-      // Prevent cycles
       TreeNode<T, nullClears>* ancestor = this;
       while (ancestor) {
          AssertFatal(ancestor != child, "TreeNode::setChild - Would create circular parent relationship");
          ancestor = ancestor->parent;
       }
 #endif
-
-      // Remove from old parent if different
-      if (child->parent && child->parent != this)
-      {
+      if (child->parent && child->parent != this) {
          child->parent->removeChild(child);
       }
-      else if (child->parent == this)
-      {
-         // Moving within same parent, nullify other references
-         for (U32 j = 0; j < size(); j++)
-         {
+      else if (child->parent == this) {
+         for (U32 j = 0; j < size(); j++) {
             if (j != i && (*this)[j] == child)
                if constexpr (nullClears)
                   erase(j);
@@ -160,71 +380,65 @@ public:
                   (*this)[j] = NULL;
          }
       }
-
-      // Prevent duplicate child
       for (U32 j = 0; j < size(); j++)
          AssertFatal(j == i || (*this)[j] != child, "TreeNode::setChild - Attempted to set duplicate child");
-
       (*this)[i] = child;
       child->parent = this;
    }
-
-   inline TreeNode<T, nullClears>* getChild(U32 i) const
-   {
-      if (i < size())
-      {
-         // Defensive: validate pointer before returning
-         if ((*this)[i] && (*this)[i]->parent != this)
-         {
+   inline TreeNode<T, nullClears>* getChild(U32 i) {
+      if (i < size()) {
+         if ((*this)[i] && (*this)[i]->parent != this) {
             AssertFatal(false, "TreeNode::getChild - Child parent pointer mismatch");
          }
          return (*this)[i];
       }
       return NULL;
    }
-
-
-   inline void addChildren(const Vector<TreeNode<T, nullClears>*>* children)
+   inline const TreeNode<T, nullClears>* getChild(U32 i) const {
+      if (i < size()) {
+         if ((*this)[i] && (*this)[i]->parent != this) {
+            AssertFatal(false, "TreeNode::getChild - Child parent pointer mismatch");
+         }
+         return (*this)[i];
+      }
+      return NULL;
+   }
+   inline Vector<TreeNode<T, nullClears>*> getChildren() const
    {
+      Vector<TreeNode<T, nullClears>*> children;
+      for (U32 i = 0; i < size(); ++i) {
+         if ((*this)[i])
+            children.push_back((*this)[i]);
+      }
+      return children;
+   }
+
+   inline void addChildren(const Vector<TreeNode<T, nullClears>*>* children) {
       if (!children) return;
-      for (U32 i = 0; i < children->size(); i++)
-      {
+      for (U32 i = 0; i < children->size(); i++) {
          TreeNode<T, nullClears>* child = (*children)[i];
          if (!child)
-            continue; // Skip null children
-
-         // Prevent duplicate child
+            continue;
          bool isDuplicate = false;
-         for (U32 j = 0; j < size(); j++)
-         {
-            if ((*this)[j] == child)
-            {
+         for (U32 j = 0; j < size(); j++) {
+            if ((*this)[j] == child) {
                isDuplicate = true;
                break;
             }
          }
          if (isDuplicate)
             continue;
-
 #ifdef TORQUE_DEBUG
-         // Prevent cycles
          TreeNode<T, nullClears>* ancestor = this;
-         while (ancestor)
-         {
+         while (ancestor) {
             AssertFatal(ancestor != child, "TreeNode::addChildren - Would create circular parent relationship");
             ancestor = ancestor->parent;
          }
 #endif
-
-         // If child has a parent and it's not this, remove from old parent
-         if (child->parent && child->parent != this)
-         {
-            // Defensive: only remove if the parent still points to this child
+         if (child->parent && child->parent != this) {
             bool foundInParent = false;
-            for (U32 k = 0; k < child->parent->size(); ++k)
-            {
-               if ((*child->parent)[k] == child)
-               {
+            for (U32 k = 0; k < child->parent->size(); ++k) {
+               if ((*child->parent)[k] == child) {
                   foundInParent = true;
                   break;
                }
@@ -234,235 +448,58 @@ public:
             else
                child->parent = NULL;
          }
-
-         // Harden: skip if child is already correctly parented
          if (child->parent == this)
             continue;
-
          child->parent = this;
          push_back_unique(child);
       }
    }
-
-   inline void nullParent(bool orphan = true)
-   {
-      // Null the parent pointer with optional cleanup
-      // @param orphan If true (default), properly removes from parent's children array first.
-      //               If false, only nulls parent pointer (use during manual tree destruction).
-      if (orphan && parent)
-         parent->removeChild(this);
-      parent = NULL;
-   }
-
-/// Sets the child pointer at index i to NULL and clears its parent pointer.
-/// Does not erase the slot, regardless of nullClears.
-inline void nullChild(U32 i)
-{
-   if (i >= size())
-      return;
-   TreeNode<T, nullClears>* child = (*this)[i];
-   if (child && child->parent == this)
-      child->parent = NULL;
-   (*this)[i] = NULL;
-}
-
-   inline bool isValidTree() const
-   {
-      // Validate tree structure - check parent-child relationships
-      for (U32 i = 0; i < size(); i++)
-      {
+   inline void clearChildren() {
+      for (U32 i = 0; i < size(); i++) {
          TreeNode<T, nullClears>* child = (*this)[i];
-         if (child && child->parent != this)
-            return false;  // Child doesn't point back to parent
-      }
-      return true;
-   }
-
-   inline bool hasChild(TreeNode<T, nullClears>* child) const
-   {
-      if (!child) return false;
-      for (U32 i = 0; i < size(); i++)
-      {
-         if ((*this)[i] == child)
-            return true;
-      }
-      return false;
-   }
-
-   inline S32 getChildIndex(TreeNode<T, nullClears>* child) const
-   {
-      if (!child) return -1;
-      for (U32 i = 0; i < size(); i++)
-      {
-         if ((*this)[i] == child)
-            return (S32)i;
-      }
-      return -1;
-   }
-
-   inline void clearChildren()
-   {
-      // Remove all children without deleting them
-      for (U32 i = 0; i < size(); i++)
-      {
-         TreeNode<T, nullClears>* child = (*this)[i];
-         if (child)
-         {
-            // Harden: ensure child is actually parented to this node
-            if (child->parent != this)
-            {
+         if (child) {
+            if (child->parent != this) {
 #ifdef TORQUE_DEBUG
                Con::warnf("TreeNode::clearChildren - Child at index %u has incorrect parent pointer (corruption detected)", i);
 #endif
-               // Detach anyway to avoid dangling pointer
                child->parent = NULL;
             }
-            else
-            {
+            else {
                child->parent = NULL;
             }
          }
       }
       clear();
    }
-
-   inline void swapChildren(U32 i, U32 j)
-   {
-      if (i >= size() || j >= size() || i == j)
-         return;
-
-      TreeNode<T, nullClears>* childI = (*this)[i];
-      TreeNode<T, nullClears>* childJ = (*this)[j];
-
-      // Update parent pointers if needed
-      if (childI && childI->parent != this)
-         childI->parent = this;
-      if (childJ && childJ->parent != this)
-         childJ->parent = this;
-
-      // Swap the pointers
-      (*this)[i] = childJ;
-      (*this)[j] = childI;
-   }
-
-   inline TreeNode<T, nullClears>* findChild(const T& val)
-   {
-      for (U32 i = 0; i < size(); i++)
-      {
-         if ((*this)[i] && (*this)[i]->data == val)
-            return (*this)[i];
-      }
-      return NULL;
-   }
-
-   inline const TreeNode<T, nullClears>* findChild(const T& val) const
-   {
-      for (U32 i = 0; i < size(); i++)
-      {
-         if ((*this)[i] && (*this)[i]->data == val)
-            return (*this)[i];
-      }
-      return NULL;
-   }
-
-   template<typename Func>
-   inline void forEachChild(Func callback)
-   {
-      for (U32 i = 0; i < size(); i++)
-      {
-         if ((*this)[i])
-            callback((*this)[i]);
-      }
-   }
-
-   template<typename Func>
-   inline void forEachInSubtree(Func callback)
-   {
-      // Pre-order traversal: process node, then children
-      callback(this);
-      for (U32 i = 0; i < size(); i++)
-      {
-         if ((*this)[i])
-            (*this)[i]->forEachInSubtree(callback);
-      }
-   }
-   template<typename Func>
-   inline void forEachLeaf(Func callback)
-   {
-      if (isLeaf())
-      {
-         callback(this);
-      }
-      else
-      {
-         for (U32 i = 0; i < size(); i++)
-         {
-            if ((*this)[i])
-               (*this)[i]->forEachLeaf(callback);
-         }
-      }
-   }
-
-   inline void findLeaves(Vector<TreeNode<T, nullClears>*>& outLeaves)
-   {
-      forEachLeaf([&outLeaves](TreeNode<T, nullClears>* leaf) {
-         outLeaves.push_back_unique(leaf);
-         });
-   }
-   inline U32 getTreeSize() const
-   {
-      U32 count = 1;  // Count this node
-      for (U32 i = 0; i < size(); i++)
-      {
-         if ((*this)[i])
-            count += (*this)[i]->getTreeSize();
-      }
-      return count;
-   }
-
-   inline U32 getMaxDepth() const
-   {
-      if (isLeaf()) return 0;
-      
-      U32 maxDepth = 0;
-      for (U32 i = 0; i < size(); i++)
-      {
-         if ((*this)[i])
-         {
-            U32 childDepth = (*this)[i]->getMaxDepth();
-            if (childDepth > maxDepth)
-               maxDepth = childDepth;
-         }
-      }
-      return maxDepth + 1;
-   }
-
-   static void safeDetachFromParent(TreeNode<T, nullClears>* node)
-   {
-      if (!node) return;
-      if (node->parent)
-      {
-         // Only remove if the parent still points to this node
-         for (U32 i = 0; i < node->parent->size(); ++i)
-         {
-            if ((*node->parent)[i] == node)
-            {
-               node->parent->removeChild(node);
-               break;
+   inline void deleteChildren() {
+      Vector<TreeNode<T, nullClears>*> children;
+      for (U32 i = 0; i < size(); i++) {
+         TreeNode<T, nullClears>* child = (*this)[i];
+         if (child) {
+            if (child->parent != this) {
+#ifdef TORQUE_DEBUG
+               Con::warnf("TreeNode::deleteChildren - Child at index %u has incorrect parent pointer (corruption detected)", i);
+#endif
+               child->parent = NULL;
+            }
+            else {
+               child->parent = NULL;
             }
          }
+         children.push_back_unique(child);
       }
-      node->parent = NULL;
+      clear();
+      for (U32 i = 0; i < children.size(); i++) {
+         if (children[i]) {
+            delete children[i];
+         }
+      }
    }
-
-   inline void removeChild(TreeNode<T, nullClears>* child)
-   {
+   inline void removeChild(TreeNode<T, nullClears>* child) {
       AssertFatal(child != NULL, "TreeNode::removeChild - Attempted to remove NULL child");
       bool found = false;
-      for (U32 i = 0; i < size(); i++)
-      {
-         if ((*this)[i] == child)
-         {
+      for (U32 i = 0; i < size(); i++) {
+         if ((*this)[i] == child) {
             child->parent = NULL;
             if constexpr (nullClears)
                erase(i);
@@ -472,15 +509,10 @@ inline void nullChild(U32 i)
             break;
          }
       }
-      if (!found)
-      {
+      if (!found) {
 #ifdef TORQUE_DEBUG
-         // Defensive: attempt to repair if possible
-         for (U32 i = 0; i < size(); i++)
-         {
-            if ((*this)[i] && (*this)[i]->parent == this)
-            {
-               // Child pointer mismatch, but parent pointer matches: repair
+         for (U32 i = 0; i < size(); i++) {
+            if ((*this)[i] && (*this)[i]->parent == this) {
                (*this)[i]->parent = NULL;
                if constexpr (nullClears)
                   erase(i);
@@ -497,9 +529,7 @@ inline void nullChild(U32 i)
       }
       AssertFatal(found, "TreeNode::removeChild - Child not found in parent's children array");
    }
-
-   inline void removeChild(U32 i)
-   {
+   inline void removeChild(U32 i) {
       AssertFatal(i < size(), "TreeNode::removeChild - Index out of bounds");
       TreeNode<T, nullClears>* child = (*this)[i];
       if (child)
@@ -509,211 +539,201 @@ inline void nullChild(U32 i)
       else
          (*this)[i] = NULL;
    }
-
-   inline void replaceChild(TreeNode<T, nullClears>* oldChild, TreeNode<T, nullClears>* newChild)
-   {
+   inline void replaceChild(TreeNode<T, nullClears>* oldChild, TreeNode<T, nullClears>* newChild) {
       AssertFatal(oldChild != NULL, "TreeNode::replaceChild - Attempted to replace NULL child");
-
       S32 idx = getChildIndex(oldChild);
       AssertFatal(idx != -1, "TreeNode::replaceChild - oldChild not found in children");
-
-      // Use hardened setChild for all safety checks and pointer management
       setChild((U32)idx, newChild);
    }
-
-   inline void compact()
-   {
-      for (U32 i = 0; i < size(); )
-      {
-         TreeNode<T, nullClears>* child = (*this)[i];
-         if constexpr (nullClears)
-         {
-            // Compact style: erase NULL slots, keep only valid children.
-            if (child == NULL)
-            {
-               erase(i);
-               continue;
-            }
-            // Repair parent pointer if needed.
-            if (child->parent != this)
-               child->parent = this;
-            i++;
-         }
-         else
-         {
-            // BVH/slot-stable style: leave NULLs, just repair parent pointers.
-            if (child && child->parent != this)
-               child->parent = this;
-            i++;
-         }
-      }
+   inline void nullChild(U32 i) {
+      if (i >= size())
+         return;
+      TreeNode<T, nullClears>* child = (*this)[i];
+      if (child && child->parent == this)
+         child->parent = NULL;
+      (*this)[i] = NULL;
+   }
+   inline void swapChildren(U32 i, U32 j) {
+      if (i >= size() || j >= size() || i == j)
+         return;
+      TreeNode<T, nullClears>* childI = (*this)[i];
+      TreeNode<T, nullClears>* childJ = (*this)[j];
+      if (childI && childI->parent != this)
+         childI->parent = this;
+      if (childJ && childJ->parent != this)
+         childJ->parent = this;
+      (*this)[i] = childJ;
+      (*this)[j] = childI;
    }
 
-   inline bool hasChildren() const
-   {
-      if constexpr (nullClears)
-         return size() > 0;
-      else {
-         for (U32 i = 0; i < size(); ++i)
-            if ((*this)[i]) return true;
-         return false;
-      }
-   }
-
-   inline U32 getNumChildren() const {
-      if constexpr (nullClears)
-         return size();
-      else {
-         U32 count = 0;
-         for (U32 i = 0; i < size(); ++i)
-            if ((*this)[i]) ++count;
-         return count;
-      }
-   }
-
-   inline Vector<TreeNode<T, nullClears>*> getChildren() const
-   {
-      Vector<TreeNode<T, nullClears>*> children;
-      if constexpr (nullClears) {
-         // All slots are valid children
-         children = *this;
-      }
-      else {
-         // Only non-NULL slots are valid children
-         children.reserve(size());
-         for (U32 i = 0; i < size(); ++i)
-            if ((*this)[i])
-               children.push_back_unique((*this)[i]);
-      }
-      return children;
-   }
-
-   inline void deleteChildren()
-   {
-      Vector<TreeNode<T, nullClears>*> children;
-      for (U32 i = 0; i < size(); i++)
-      {
-         TreeNode<T, nullClears>* child = (*this)[i];
-         if (child)
-         {
-            if (child->parent != this)
-            {
-#ifdef TORQUE_DEBUG
-               Con::warnf("TreeNode::deleteChildren - Child at index %u has incorrect parent pointer (corruption detected)", i);
-#endif
-               // Detach anyway to avoid dangling pointer
-               child->parent = NULL;
-            }
-            else
-            {
-               child->parent = NULL;
-            }
-         }
-         children.push_back_unique(child);
-      }
-      clear();
-
-      for (U32 i = 0; i < children.size(); i++)
-      {
-         if (children[i])
-         {
-            // Child should already be detached
-            delete children[i];
-         }
-      }
-   }
-
-   inline void collectSubtree(Vector<TreeNode<T, nullClears>*>& nodes)
-   {
-      // Pre-order collection of all nodes in subtree
-      forEachInSubtree([&nodes](TreeNode<T, nullClears>* n) {
-         nodes.push_back_unique(n);
-      });
-   }
-
-   inline void collectSubtreeData(Vector<T>& dataList)
-   {
-      // Collect just the data from subtree
-      forEachInSubtree([&dataList](TreeNode<T, nullClears>* n) {
-         dataList.push_back_unique(n->data);
-      });
-   }
-
-   void collectAncestors(Vector<TreeNode<T, nullClears>*>& outAncestors) const
-   {
-      TreeNode<T, nullClears>* node = parent;
-      while (node)
-      {
-         outAncestors.push_back_unique(node);
-         node = node->parent;
-      }
-   }
-
-   //sibling logic
-   inline Vector<TreeNode<T, nullClears>*> getSiblings() const
-   {
+   //-------------------------------------------------------------------------
+   // Sibling Logic
+   //-------------------------------------------------------------------------
+   inline Vector<TreeNode<T, nullClears>*> getSiblings() const {
       Vector<TreeNode<T, nullClears>*> siblings;
       if (!parent) return siblings;
-
       siblings.reserve(parent->size() - 1);
-      for (U32 i = 0; i < parent->size(); i++)
-      {
+      for (U32 i = 0; i < parent->size(); i++) {
          TreeNode<T, nullClears>* sibling = (*parent)[i];
-         if (sibling && sibling != this)  // Skip NULLs
+         if (sibling && sibling != this)
             siblings.push_back_unique(sibling);
       }
       return siblings;
    }
 
-   //data logic
-   inline T getData() const { return data; }
-   inline void setData(const T& val) { data = val; }
-   inline void operator =(const T& val) { data = val; }
-   inline T* getDataPtr() { return &data; }
-
-   // Traversal helpers
-   inline U32 getDepth() const
-   {
-      U32 depth = 0;
-      TreeNode<T, nullClears>* current = parent;
-      while (current)
-      {
-         depth++;
-         current = current->parent;
+   //-------------------------------------------------------------------------
+   // Traversal & Collection
+   //-------------------------------------------------------------------------
+   inline void findLeaves(Vector<TreeNode<T, nullClears>*>& out) {
+      if (isLeaf())
+         out.push_back_unique(this);
+      else
+         for (U32 i = 0; i < size(); ++i)
+            if ((*this)[i])
+               (*this)[i]->getLeaves(out);
+   }
+   inline void collectSubtree(Vector<TreeNode<T, nullClears>*>& nodes) {
+      nodes.push_back_unique(this);
+      for (U32 i = 0; i < size(); ++i)
+         if ((*this)[i])
+            (*this)[i]->collectSubtree(nodes);
+   }
+   inline void collectSubtreeData(Vector<T>& dataList) {
+      dataList.push_back_unique(data);
+      for (U32 i = 0; i < size(); ++i)
+         if ((*this)[i])
+            (*this)[i]->collectSubtreeData(dataList);
+}
+   // callback signature: void(TreeNode<T, nullClears>*)
+   template<typename Func>
+   inline void forEachChild(Func callback) {
+      for (U32 i = 0; i < size(); i++)
+         if ((*this)[i])
+            callback((*this)[i]);
+   }
+   // callback signature: void(const TreeNode<T, nullClears>*)
+   template<typename Func>
+   inline void forEachChild(Func callback) const {
+      for (U32 i = 0; i < size(); i++)
+         if ((*this)[i])
+            callback((*this)[i]);
+   }
+   // callback signature: void(TreeNode<T, nullClears>*)
+   template<typename Func>
+   inline void forEachInSubtree(Func callback) {
+      callback(this);
+      for (U32 i = 0; i < size(); i++)
+         if ((*this)[i])
+            (*this)[i]->forEachInSubtree(callback);
+   }
+   // callback signature: void(const TreeNode<T, nullClears>*)
+   template<typename Func>
+   inline void forEachLeaf(Func callback) {
+      if (isLeaf())
+         callback(this);
+      else
+         for (U32 i = 0; i < size(); i++)
+            if ((*this)[i])
+               (*this)[i]->forEachLeaf(callback);
+   }
+   // callback signature: void(TreeNode<T, nullClears>*)
+   template<typename Func>
+   void traverseBreadthFirst(Func callback) {
+      Vector<TreeNode<T, nullClears>*> queue;
+      queue.push_back(this);
+      while (!queue.empty()) {
+         TreeNode<T, nullClears>* node = queue.first();
+         queue.erase(0);
+         callback(node);
+         for (U32 i = 0; i < node->size(); ++i)
+            if ((*node)[i])
+               queue.push_back((*node)[i]);
       }
-      return depth;
    }
-
-   inline TreeNode<T, nullClears>* getRoot()
+   // Calls the provided functor on each ancestor up to the root (excluding this node).
+   // Typically used for propagating updates up the tree (e.g., refitting bounds).
+   // callback signature: void(TreeNode<T, nullClears>*)
+   template<typename Func>
+   void refitPathToRoot(Func refitFunc)
    {
-      TreeNode<T, nullClears>* current = this;
-      while (current->parent)
-         current = current->parent;
-      return current;
-   }
-
-   inline const TreeNode<T, nullClears>* getRoot() const
-   {
-      const TreeNode<T, nullClears>* current = this;
-      while (current->parent)
-         current = current->parent;
-      return current;
-   }
-
-   /// Returns true if this node is present in the given vector (used for cycle detection).
-   bool isVisited(const Vector<TreeNode<T, nullClears>*>& visited) const
-   {
-      for (U32 i = 0; i < visited.size(); ++i)
+      TreeNode<T, nullClears>* node = parent;
+      while (node)
       {
-         if (visited[i] == this)
-            return true;
+         refitFunc(node);
+         node = node->parent;
       }
-      return false;
+   }
+   // callback signature: TreeNode<T, nullClears>* pred(TreeNode<T, nullClears>*)
+   template<typename Func>
+   TreeNode<T, nullClears>* findIf(Func pred) {
+      if (pred(this)) return this;
+      for (U32 i = 0; i < size(); ++i)
+         if ((*this)[i]) {
+            auto* found = (*this)[i]->findIf(pred);
+            if (found) return found;
+         }
+      return NULL;
+   }
+   // callback signature: const TreeNode<T, nullClears>* pred(const TreeNode<T, nullClears>*)
+   template<typename Func>
+   void findAllIf(Func pred, Vector<TreeNode<T, nullClears>*>& out) {
+      if (pred(this))
+         out.push_back(this);
+      for (U32 i = 0; i < size(); ++i)
+         if ((*this)[i])
+            (*this)[i]->findAllIf(pred, out);
+   }
+   // callback signature: const TreeNode<T, nullClears>* pred(const TreeNode<T, nullClears>*)
+   template<typename Func>
+   U32 countIf(Func pred) const {
+      U32 count = pred(this) ? 1 : 0;
+      for (U32 i = 0; i < size(); ++i)
+         if ((*this)[i])
+            count += (*this)[i]->countIf(pred);
+      return count;
+   }
+   // callback signature: bool pred(TreeNode<T, nullClears>*)
+   template<typename Func>
+   void removeIf(Func pred) {
+      for (S32 i = size() - 1; i >= 0; --i) {
+         if ((*this)[i] && pred((*this)[i])) {
+            delete (*this)[i];
+            if constexpr (nullClears)
+               erase(i);
+            else
+               (*this)[i] = NULL;
+         }
+         else if ((*this)[i]) {
+            (*this)[i]->removeIf(pred);
+         }
+      }
+   }
+   //-------------------------------------------------------------------------
+   // Tree Metrics
+   //-------------------------------------------------------------------------
+   inline U32 getTreeSize() const {
+      U32 count = 1;
+      for (U32 i = 0; i < size(); i++)
+         if ((*this)[i])
+            count += (*this)[i]->getTreeSize();
+      return count;
+   }
+   inline U32 getMaxDepth() const {
+      if (isLeaf()) return 0;
+      U32 maxDepth = 0;
+      for (U32 i = 0; i < size(); i++)
+         if ((*this)[i]) {
+            U32 childDepth = (*this)[i]->getMaxDepth();
+            if (childDepth > maxDepth)
+               maxDepth = childDepth;
+         }
+      return maxDepth + 1;
    }
 
-   // Gather up to maxCandidates leaves or grandchildren for rotation from a node.
-   static U32 gatherRotationCandidates(TreeNode<T, nullClears>* parent, Vector<TreeNode<T, nullClears>*>& outNodes, U32 maxCandidates = 8)
-   {
+   //-------------------------------------------------------------------------
+   // Rotation/Balance Utilities
+   //-------------------------------------------------------------------------
+   static U32 gatherRotationCandidates(TreeNode<T, nullClears>* parent, Vector<TreeNode<T, nullClears>*>& outNodes, U32 maxCandidates = 8) {
       outNodes.clear();
       for (U32 i = 0; i < parent->size() && outNodes.size() < maxCandidates; ++i) {
          TreeNode<T, nullClears>* child = (*parent)[i];
@@ -730,9 +750,6 @@ inline void nullChild(U32 i)
       }
       return outNodes.size();
    }
-
-   // Finds the best way to pair/group N nodes into two groups of groupSize each, minimizing cost.
-   // CostFunc: F32 (*costFunc)(const TreeNode<T, nullClears>*, const TreeNode<T, nullClears>*)
    static bool findBestRotationPairing(
       const Vector<TreeNode<T, nullClears>*>& nodes,
       U32 groupSize,
@@ -743,18 +760,14 @@ inline void nullChild(U32 i)
    {
       const U32 n = nodes.size();
       if (n < 2 * groupSize) return false;
-
       outBestCost = F32_MAX;
       bool found = false;
-
       Vector<U32> indices;
       indices.setSize(n);
       for (U32 i = 0; i < n; ++i) indices[i] = i;
-
       Vector<U32> groupA, groupB;
       groupA.setSize(groupSize);
       groupB.setSize(groupSize);
-
       while (true) {
          for (U32 i = 0; i < groupSize; ++i)
             groupA[i] = indices[i];
@@ -772,7 +785,6 @@ inline void nullChild(U32 i)
                found = true;
             }
          }
-
          S32 k = n - 2;
          while (k >= 0 && indices[k] >= indices[k + 1]) --k;
          if (k < 0) break;
@@ -786,26 +798,40 @@ inline void nullChild(U32 i)
       return found;
    }
 
-   //converters
+   //-------------------------------------------------------------------------
+   // Data Accessors
+   //-------------------------------------------------------------------------
+   inline T getData() const { return data; }
+   inline void setData(const T& val) { data = val; }
+   inline void operator =(const T& val) { data = val; }
+   inline T* getDataPtr() { return &data; }
+   inline const T* getDataPtr() const { return &data; }
 
+   //-------------------------------------------------------------------------
+   // Type Conversion Helpers
+   //-------------------------------------------------------------------------
    template<typename Derived>
    Derived* getChildAs(U32 i) { return static_cast<Derived*>(getChild(i)); }
    template<typename Derived>
    const Derived* getChildAs(U32 i) const { return static_cast<const Derived*>(getChild(i)); }
-
    template<typename Derived>
-   Vector<Derived*> getChildrenAs() const
-   {
+   Vector<Derived*> getChildrenAs() {
       Vector<Derived*> out;
       for (U32 i = 0; i < size(); ++i)
          if ((*this)[i])
             out.push_back(static_cast<Derived*>((*this)[i]));
       return out;
    }
-
+   template<typename Derived>
+   Vector<const Derived*> getChildrenAs() const {
+      Vector<const Derived*> out;
+      for (U32 i = 0; i < size(); ++i)
+         if ((*this)[i])
+            out.push_back(static_cast<const Derived*>((*this)[i]));
+      return out;
+   }
    template<typename Derived, typename Func>
-   inline void forEachLeafAs(Func callback)
-   {
+   inline void forEachLeafAs(Func callback) {
       if (isLeaf())
          callback(static_cast<Derived*>(this));
       else
@@ -813,7 +839,15 @@ inline void nullChild(U32 i)
             if ((*this)[i])
                (*this)[i]->template forEachLeafAs<Derived>(callback);
    }
-
+   template<typename Derived, typename Func>
+   inline void forEachLeafAs(Func callback) const {
+      if (isLeaf())
+         callback(static_cast<const Derived*>(this));
+      else
+         for (U32 i = 0; i < size(); i++)
+            if ((*this)[i])
+               (*this)[i]->template forEachLeafAs<Derived>(callback);
+   }
 };
 
 class TreeObject : public SimObject {

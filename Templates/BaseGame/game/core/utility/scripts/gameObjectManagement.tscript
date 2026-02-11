@@ -82,10 +82,17 @@ function GameBaseData::onNewDataBlock(%this, %obj, %reload)
 {
    if (%reload)
    {
+      %client = "";
+      if (isObject(%obj.client))
+         %client = %obj.client;
+         
       if(%this.isMethod("onRemove"))
          %this.onRemove(%obj);
       if(%this.isMethod("onAdd"))
          %this.onAdd(%obj);
+         
+      if (%client)
+         %client.setControlObject(%obj);
    }
 }
 

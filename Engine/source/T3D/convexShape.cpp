@@ -1436,15 +1436,13 @@ void ConvexShape::_updateGeometry( bool updateCollision )
                const Vector< U32 > &facePntMap = face.points;
                const Vector< ConvexShape::Triangle > &triangles = face.triangles;
 
-               const Point3F binormal = mCross(face.normal, face.tangent);
-
                for (S32 j = 0; j < triangles.size(); j++)
                {
                   for (S32 k = 0; k < 3; k++)
                   {
                      pVert->normal = face.normal;
                      pVert->T = face.tangent;
-                     pVert->B = mCross(face.normal,face.tangent);
+                     pVert->B = mCross(face.normal, face.tangent);
                      pVert->point = pointList[facePntMap[triangles[j][k]]];
                      pVert->texCoord = face.texcoords[triangles[j][k]];
                      pVert->texCoord2 = pVert->texCoord;
@@ -1966,10 +1964,12 @@ void ConvexShape::Geometry::generate(const Vector< PlaneF > &planes, const Vecto
 
 		U32 *vertMap = new U32[pntCount];
 
+      Point3F binormal = mCross(newFace.normal, newFace.tangent);
+
       MatrixF quadMat( true );
       quadMat.setPosition( averagePnt );
       quadMat.setColumn( 0, newFace.tangent );
-      quadMat.setColumn( 1, mCross( newFace.normal, newFace.tangent ) );
+      quadMat.setColumn( 1, binormal);
       quadMat.setColumn( 2, newFace.normal );
 		quadMat.inverse();
 
@@ -2055,8 +2055,8 @@ void ConvexShape::Geometry::generate(const Vector< PlaneF > &planes, const Vecto
 
 
 		// Calculate texture coordinates for each point in this face.
+      if (newFace.normal.z < -0.9f) binormal = -binormal;
 
-		const Point3F binormal = mCross( newFace.normal, newFace.tangent );
 		PlaneF planey( newFace.centroid - 0.5f * binormal, binormal );
 		PlaneF planex( newFace.centroid - 0.5f * newFace.tangent, newFace.tangent );
 
@@ -2064,7 +2064,7 @@ void ConvexShape::Geometry::generate(const Vector< PlaneF > &planes, const Vecto
 
 		for ( S32 j = 0; j < newFace.points.size(); j++ )
 		{
-			F32 x = planex.distToPlane( points[ newFace.points[ j ] ] );
+			F32 x = -planex.distToPlane( points[ newFace.points[ j ] ] );
 			F32 y = planey.distToPlane( points[ newFace.points[ j ] ] );
 
 			if (!texOffset.empty())
@@ -2086,7 +2086,7 @@ void ConvexShape::Geometry::generate(const Vector< PlaneF > &planes, const Vecto
 	         if (vertFlip.size() > 0 && vertFlip[i])
 	            y *= -1;
 	
-	         newFace.texcoords[j].set(-x, -y);
+	         newFace.texcoords[j].set(x, y);
 		}
 
       // Data verification tests.

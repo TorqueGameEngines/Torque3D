@@ -61,45 +61,39 @@ inline F32 convertHalfToFloat(U16 h)
    U32 exp = (h >> 10) & 0x0000001F;
    U32 mant = h & 0x000003FF;
 
-   U32 outSign = sign << 31;
-   U32 outExp, outMant;
+   U32 out;
 
    if (exp == 0)
    {
       if (mant == 0)
       {
          // Zero
-         outExp = 0;
-         outMant = 0;
+         out = sign;
       }
       else
       {
          // Subnormal number -> normalize
-         exp = 1;
-         while ((mant & 0x00000400) == 0)
+         exp = 127 - 14;
+         while ((mant & 0x0400) == 0)
          {
             mant <<= 1;
-            exp -= 1;
+            exp--;
          }
-         mant &= 0x000003FF;
-         outExp = (exp + (127 - 15)) << 23;
-         outMant = mant << 13;
+         mant &= 0x03FF;
+         out = sign | (exp << 23) | (mant << 13);
       }
    }
    else if (exp == 31)
    {
       // Inf or NaN
-      outExp = 0xFF << 23;
-      outMant = mant ? (mant << 13) : 0;
+      out = sign | 0x7F800000 | (mant << 13);
    }
    else
    {
       // Normalized
-      outExp = (exp + (127 - 15)) << 23;
-      outMant = mant << 13;
+      out = sign | ((exp + (127 - 15)) << 23) | (mant << 13);
    }
 
-   U32 out = outSign | outExp | outMant;
    F32 result;
    dMemcpy(&result, &out, sizeof(F32));
    return result;
@@ -110,40 +104,54 @@ inline U16 convertFloatToHalf(F32 f)
    U32 bits;
    dMemcpy(&bits, &f, sizeof(U32));
 
-   U32 sign = (bits >> 16) & 0x00008000;
-   U32 exp = ((bits >> 23) & 0x000000FF) - (127 - 15);
+   U32 sign = (bits >> 16) & 0x8000;
+   U32 exp = (bits >> 23) & 0xFF;
    U32 mant = bits & 0x007FFFFF;
 
-   if (exp <= 0)
+   if (exp == 255)
    {
-      if (exp < -10)
-         return (U16)sign; // Too small => 0
-      mant = (mant | 0x00800000) >> (1 - exp);
-      return (U16)(sign | (mant >> 13));
-   }
-   else if (exp == 0xFF - (127 - 15))
-   {
+      // Inf or NaN
       if (mant == 0)
-      {
-         // Inf
          return (U16)(sign | 0x7C00);
-      }
-      else
-      {
-         // NaN
-         mant >>= 13;
-         return (U16)(sign | 0x7C00 | mant | (mant == 0));
-      }
+      mant >>= 13;
+      return (U16)(sign | 0x7C00 | mant | (mant == 0));
    }
-   else
+
+   S32 newExp = (S32)exp - 127 + 15;
+
+   if (newExp >= 31)
    {
-      if (exp > 30)
-      {
-         // Overflow => Inf
-         return (U16)(sign | 0x7C00);
-      }
-      return (U16)(sign | (exp << 10) | (mant >> 13));
+      // Overflow → Inf
+      return (U16)(sign | 0x7C00);
    }
+   else if (newExp <= 0)
+   {
+      // Subnormal or underflow
+      if (newExp < -10)
+         return (U16)sign;
+
+      mant |= 0x800000;
+      U32 shifted = mant >> (1 - newExp);
+
+      // Round to nearest-even
+      if (shifted & 0x00001000)
+         shifted += 0x00002000;
+
+      return (U16)(sign | (shifted >> 13));
+   }
+
+   // Normalized with rounding
+   mant += 0x00001000;
+   if (mant & 0x00800000)
+   {
+      mant = 0;
+      newExp++;
+   }
+
+   if (newExp >= 31)
+      return (U16)(sign | 0x7C00);
+
+   return (U16)(sign | (newExp << 10) | (mant >> 13));
 }
 
 // Convert a single 16-bit value (0..65535) to 8-bit (0..255)

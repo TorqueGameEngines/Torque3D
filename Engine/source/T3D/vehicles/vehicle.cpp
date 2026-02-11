@@ -376,7 +376,7 @@ Vehicle::Vehicle()
 {
    mDataBlock = 0;
    mTypeMask |= VehicleObjectType | DynamicShapeObjectType;
-
+   mPathfindingIgnore = true;
    mDelta.pos = Point3F(0,0,0);
    mDelta.posVec = Point3F(0,0,0);
    mDelta.warpTicks = mDelta.warpCount = 0;

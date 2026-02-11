@@ -454,8 +454,8 @@ S32 NavMesh::getLink(const Point3F &pos)
    {
       if(mDeleteLinks[i])
          continue;
-      SphereF start(getLinkStart(i), mLinkRads[i]);
-      SphereF end(getLinkEnd(i), mLinkRads[i]);
+      SphereF start(getLinkStart(i), mMax(mLinkRads[i],0.25f));
+      SphereF end(getLinkEnd(i), mMax(mLinkRads[i], 0.25f));
       if(start.isContained(pos) || end.isContained(pos))
          return i;
    }
@@ -653,7 +653,7 @@ DefineEngineMethod(NavMesh, deleteLinks, void, (),,
 static void buildCallback(SceneObject* object, void* key)
 {
    SceneContainer::CallbackInfo* info = reinterpret_cast<SceneContainer::CallbackInfo*>(key);
-   if (!object->mPathfindingIgnore)
+   if (!object->mPathfindingIgnore && (object->getTypeMask() & MarkerObjectType) == 0)
       object->buildPolyList(info->context, info->polyList, info->boundingBox, info->boundingSphere);
 }
 

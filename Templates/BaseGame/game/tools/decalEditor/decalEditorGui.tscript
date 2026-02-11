@@ -350,6 +350,13 @@ function DecalEditorGui::completeGizmoTransform( %this, %decalId, %nodeDetails )
 
 function DecalEditorGui::onSleep( %this )
 {
+   DecalEditorTreeView.clearSelection();
+   DecalDataList.setSelected( DecalDataList.getSelectedItems(), false );
+   
+   DecalEditorGui.currentDecalData = "";
+   DecalPreviewWindow-->decalPreview.setBitmap("");
+   DecalEditorGui.selDecalInstanceId = "";
+   DecalPreviewWindow-->instancePreview.setBitmap("");
 }
 
 function DecalEditorGui::syncNodeDetails( %this )
@@ -629,14 +636,30 @@ function DecalEditorGui::updateInstancePreview( %this, %material )
    
    if( isObject( %material ) )
    {
-      %previewImage = %material.getDiffuseMap(0);
+      %previewImage = %material.getDiffuseMapAsset(0);
    }
-   else
+   else if(AssetDatabase.isDeclaredAsset(%material))
    {
-      if(AssetDatabase.isDeclaredAsset(%material))
+      if(AssetDatabase.getAssetType(%material) $= "MaterialAsset")
+      {
+         %matAsset = AssetDatabase.acquireAsset(%material);
+         
+         %previewImage = %matAsset.materialDefinitionName.getDiffuseMap(0);
+      }
+      else if(AssetDatabase.getAssetType(%material) $= "ImageAsset")
       {
          %previewImage = %material;
       }
+      else
+      {
+         error("DecalEditorGui::updateDecalPreview() - Tried to set an invalid asset type for the editor preview!");
+         return;
+      }
+   }
+   else
+   {
+      error("DecalEditorGui::updateDecalPreview() - Tried to set a non material, non asset value for the editor preview!");
+      return;  
    }
       
    DecalPreviewWindow-->instancePreview.setBitmap( getAssetPreviewImage(%previewImage) ); 

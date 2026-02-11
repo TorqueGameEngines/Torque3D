@@ -85,10 +85,11 @@ public:
       AIController* mControllerRef;
       AIController* getCtrl() { return mControllerRef; };
       MoveState mMoveState;
+      bool mInAir = false;
       F32 mMoveSpeed = 1.0;
       void setMoveSpeed(F32 speed) { mMoveSpeed = speed; };
       F32 getMoveSpeed() { return mMoveSpeed; };
-      bool mMoveSlowdown;                 // Slowdown as we near the destination
+      bool mMoveSlowdown = false;                 // Slowdown as we near the destination
       Point3F mLastLocation;              // For stuck check
       S32 mMoveStuckTestCountdown;        // The current countdown until at AI starts to check if it is stuck
       Point3F mAimLocation;
@@ -96,6 +97,9 @@ public:
       bool mMoveTriggers[MaxTriggerKeys];
       void stopMove();
       void onStuck();
+      bool isStopped() { return mMoveState == ModeStop; };
+      bool isInAir() { return mInAir; };
+      bool isInWater();
    } mMovement;
 
    struct TriggerState

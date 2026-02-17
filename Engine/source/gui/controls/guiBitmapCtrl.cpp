@@ -28,6 +28,8 @@
 #include "console/engineAPI.h"
 #include "gfx/gfxDevice.h"
 #include "gfx/gfxDrawUtil.h"
+#include "gfx/gfxAPI.h"
+#include "gui/buttons/guiButtonBaseCtrl.h"
 
 #include "materials/matTextureTarget.h"
 
@@ -55,11 +57,26 @@ ConsoleDocClass(GuiBitmapCtrl,
    "@ingroup GuiControls"
 );
 
+ImplementEnumType(BitmapDrawMode,
+   "Draw Mode of the bitmap control.\n\n"
+   "@ingroup GuiControls")
+{
+   GuiBitmapCtrl::BitmapMode_Stretch, "Stretch", "Stretches the bitmap to fill the control extents. Aspect ratio is not preserved."
+},
+{ GuiBitmapCtrl::BitmapMode_Tile,   "Tile",     "Repeats the bitmap to fill the control extents without scaling." },
+{ GuiBitmapCtrl::BitmapMode_Fit,    "Fit",      "Scales the bitmap to fit entirely within the control while preserving aspect ratio. May result in letterboxing." },
+{ GuiBitmapCtrl::BitmapMode_Fill,   "Fill",     "Scales the bitmap to completely fill the control while preserving aspect ratio. Portions of the bitmap may be cropped." },
+{ GuiBitmapCtrl::BitmapMode_Center, "Center",   "Draws the bitmap at its original size centered within the control. No scaling is applied." },
+
+EndImplementEnumType;
+
 GuiBitmapCtrl::GuiBitmapCtrl(void)
    : mStartPoint(0, 0),
    mColor(ColorI::WHITE),
    mAngle(0),
    mWrap(false),
+   mDrawMode(BitmapMode_Stretch),
+   mFilterType(GFXTextureFilterLinear),
    mBitmap(NULL),
    mBitmapName(StringTable->EmptyString())
 {
@@ -72,10 +89,12 @@ void GuiBitmapCtrl::initPersistFields()
 
    INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiBitmapCtrl, "The bitmap to render in this BitmapCtrl.")
 
-   addField("color", TypeColorI, Offset(mColor, GuiBitmapCtrl), "color mul");
+      addField("color", TypeColorI, Offset(mColor, GuiBitmapCtrl), "color mul");
    addField("wrap", TypeBool, Offset(mWrap, GuiBitmapCtrl), "If true, the bitmap is tiled inside the control rather than stretched to fit.");
+   addField("drawMode", TYPEID<BitmapMode>(), Offset(mDrawMode, GuiBitmapCtrl), "Sets the mode to draw this bitmap in this control (wrap forces Tile mode).");
+   addField("filterType", TYPEID<GFXTextureFilterType>(), Offset(mFilterType, GuiBitmapCtrl), "Sets the bitmap texture filter mode.");
    addFieldV("angle", TypeRangedF32, Offset(mAngle, GuiBitmapCtrl), &CommonValidators::DegreeRange, "rotation");
-   endGroup( "Bitmap" );
+   endGroup("Bitmap");
 
    Parent::initPersistFields();
 }
@@ -91,6 +110,7 @@ bool GuiBitmapCtrl::onWake()
 
 void GuiBitmapCtrl::onSleep()
 {
+   mBitmap = NULL;
    Parent::onSleep();
 }
 
@@ -171,36 +191,108 @@ void GuiBitmapCtrl::onRender(Point2I offset, const RectI& updateRect)
    {
       GFX->getDrawUtil()->clearBitmapModulation();
       GFX->getDrawUtil()->setBitmapModulation(mColor);
-      if (mWrap)
-      {
-         // We manually draw each repeat because non power of two textures will 
-         // not tile correctly when rendered with GFX->drawBitmapTile(). The non POT
-         // bitmap will be padded by the hardware, and we'll see lots of slack
-         // in the texture. So... lets do what we must: draw each repeat by itself:
-         GFXTextureObject* texture = mBitmap;
-         RectI srcRegion;
-         RectI dstRegion;
-         F32 xdone = ((F32)getExtent().x / (F32)texture->mBitmapSize.x) + 1;
-         F32 ydone = ((F32)getExtent().y / (F32)texture->mBitmapSize.y) + 1;
 
-         S32 xshift = mStartPoint.x % texture->mBitmapSize.x;
-         S32 yshift = mStartPoint.y % texture->mBitmapSize.y;
-         for (S32 y = 0; y < ydone; ++y)
-            for (S32 x = 0; x < xdone; ++x)
-            {
-               srcRegion.set(0, 0, texture->mBitmapSize.x, texture->mBitmapSize.y);
-               dstRegion.set(((texture->mBitmapSize.x * x) + offset.x) - xshift,
-                  ((texture->mBitmapSize.y * y) + offset.y) - yshift,
-                  texture->mBitmapSize.x,
-                  texture->mBitmapSize.y);
-               GFX->getDrawUtil()->drawBitmapStretchSR(texture, dstRegion, srcRegion, GFXBitmapFlip_None, GFXTextureFilterLinear, mAngle);
-            }
+      if (dynamic_cast<GuiButtonBaseCtrl*>(getParent()))
+      {
+         GuiButtonBaseCtrl* parent = static_cast<GuiButtonBaseCtrl*>(getParent());
+
+         GFX->getDrawUtil()->setBitmapModulation(mProfile->mFillColor);
+
+         if (parent->isHighlighted())
+            GFX->getDrawUtil()->setBitmapModulation(mProfile->mFillColorHL);
+         if (parent->isDepressed() || parent->getStateOn())
+            GFX->getDrawUtil()->setBitmapModulation(mProfile->mFillColorSEL);
+         if (!parent->isActive())
+            GFX->getDrawUtil()->setBitmapModulation(mProfile->mFillColorNA);
 
       }
-      else
+
+      if (mWrap && mDrawMode != BitmapMode_Tile)
+         mDrawMode = BitmapMode_Tile;
+
+      RectI ctrlRect(offset, getExtent());
+      GFXTextureObject* texture = mBitmap;
+
+      F32 texW = (F32)texture->getWidth();
+      F32 texH = (F32)texture->getHeight();
+      F32 ctrlW = (F32)getExtent().x;
+      F32 ctrlH = (F32)getExtent().y;
+
+      switch (mDrawMode)
       {
-         RectI rect(offset, getExtent());
-         GFX->getDrawUtil()->drawBitmapStretch(mBitmap, rect, GFXBitmapFlip_None, GFXTextureFilterLinear, false, mAngle);
+      case BitmapMode_Tile:
+      {
+         // How many repetitions needed (+1 ensures full coverage)
+         const S32 xCount = (ctrlW / texW) + 1;
+         const S32 yCount = (ctrlH / texH) + 1;
+
+         // Scroll offset (wrap-safe)
+         const S32 xShift = mStartPoint.x % (S32)texW;
+         const S32 yShift = mStartPoint.y % (S32)texH;
+
+         RectI srcRegion(0, 0, (S32)texW, (S32)texH);
+         RectI dstRegion;
+
+         for (S32 y = 0; y < yCount; ++y)
+         {
+            for (S32 x = 0; x < xCount; ++x)
+            {
+               dstRegion.set(
+                  offset.x + (x * texW) - xShift,
+                  offset.y + (y * texH) - yShift,
+                  texW,
+                  texH
+               );
+
+               GFX->getDrawUtil()->drawBitmapStretchSR(texture, dstRegion, srcRegion, GFXBitmapFlip_None, mFilterType, true, mAngle);
+            }
+         }
+
+         break;
+      }
+      case GuiBitmapCtrl::BitmapMode_Fit:
+      {
+         F32 scale = getMin(ctrlW / texW, ctrlH / texH);
+
+         S32 drawW = (S32)(texW * scale);
+         S32 drawH = (S32)(texH * scale);
+
+         S32 x = offset.x + (ctrlW - drawW) * 0.5f;
+         S32 y = offset.y + (ctrlH - drawH) * 0.5f;
+
+         RectI dst(x, y, drawW, drawH);
+         GFX->getDrawUtil()->drawBitmapStretch(texture, dst, GFXBitmapFlip_None, mFilterType, false, mAngle);
+         break;
+      }
+      case GuiBitmapCtrl::BitmapMode_Fill:
+      {
+         F32 scale = getMax(ctrlW / texW, ctrlH / texH);
+
+         S32 drawW = (S32)(texW * scale);
+         S32 drawH = (S32)(texH * scale);
+
+         S32 x = offset.x + (ctrlW - drawW) * 0.5f;
+         S32 y = offset.y + (ctrlH - drawH) * 0.5f;
+
+         RectI dst(x, y, drawW, drawH);
+         GFX->getDrawUtil()->drawBitmapStretch(texture, dst, GFXBitmapFlip_None, mFilterType, false, mAngle);
+         break;
+      }
+      case GuiBitmapCtrl::BitmapMode_Center:
+      {
+         S32 x = offset.x + (ctrlW - texW) * 0.5f;
+         S32 y = offset.y + (ctrlH - texH) * 0.5f;
+
+         RectI dst(x, y, texW, texH);
+
+         GFX->getDrawUtil()->drawBitmapStretch(texture, dst, GFXBitmapFlip_None, mFilterType, false, mAngle);
+         break;
+      }
+      default:
+      {
+         GFX->getDrawUtil()->drawBitmapStretch(texture, ctrlRect, GFXBitmapFlip_None, mFilterType, false, mAngle);
+         break;
+      }
       }
    }
 

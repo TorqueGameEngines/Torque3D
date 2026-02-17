@@ -89,7 +89,7 @@ void GuiBitmapCtrl::initPersistFields()
 
    INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiBitmapCtrl, "The bitmap to render in this BitmapCtrl.")
 
-      addField("color", TypeColorI, Offset(mColor, GuiBitmapCtrl), "color mul");
+   addField("color", TypeColorI, Offset(mColor, GuiBitmapCtrl), "color mul");
    addField("wrap", TypeBool, Offset(mWrap, GuiBitmapCtrl), "If true, the bitmap is tiled inside the control rather than stretched to fit.");
    addField("drawMode", TYPEID<BitmapMode>(), Offset(mDrawMode, GuiBitmapCtrl), "Sets the mode to draw this bitmap in this control (wrap forces Tile mode).");
    addField("filterType", TYPEID<GFXTextureFilterType>(), Offset(mFilterType, GuiBitmapCtrl), "Sets the bitmap texture filter mode.");

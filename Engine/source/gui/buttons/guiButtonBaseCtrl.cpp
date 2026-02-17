@@ -303,7 +303,10 @@ void GuiButtonBaseCtrl::onMouseEnter(const GuiEvent& event)
          SFX->playOnce(mProfile->getSoundButtonOverProfile());
 
       mHighlighted = true;
-      messageSiblings(mRadioGroup);
+
+      if (mButtonType != ButtonTypeRadio)
+         messageSiblings(mRadioGroup);
+
       onHighlighted_callback(mHighlighted);
    }
 }
@@ -320,7 +323,9 @@ void GuiButtonBaseCtrl::onMouseLeave(const GuiEvent&)
       mDepressed = false;
    mHighlighted = false;
    onHighlighted_callback(mHighlighted);
-   messageSiblings(mRadioGroup);
+
+   if (mButtonType != ButtonTypeRadio)
+      messageSiblings(mRadioGroup);
 }
 
 //-----------------------------------------------------------------------------

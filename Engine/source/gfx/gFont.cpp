@@ -705,10 +705,8 @@ bool GFont::read(Stream& io_rStream)
            delete bmp;
            return false;
        }*/
-       U32 len;
-       io_rStream.read(&len);
 
-       if (!bmp->readBitmapStream("png", io_rStream, len))
+       if (!bmp->readBitmapStream("png", io_rStream, U32_MAX))
        {
           delete bmp;
           return false;

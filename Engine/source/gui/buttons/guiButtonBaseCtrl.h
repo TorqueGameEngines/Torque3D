@@ -96,6 +96,7 @@ public:
    bool getStateOn() const { return mStateOn; }
 
    void setDepressed(bool depressed) { mDepressed = depressed; }
+   bool isDepressed() { return mDepressed; }
    void resetState() { mDepressed = false; mHighlighted = false; }
 
    void setHighlighted(bool highlighted);

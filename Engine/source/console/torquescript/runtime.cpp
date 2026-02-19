@@ -402,6 +402,8 @@ namespace TorqueScript
 #ifdef TORQUE_DEBUG
          Con::printf("Executing %s.", scriptFileName);
 #endif
+         if (Con::gTraceOn)
+            Con::printf("Executing %s.", scriptFileName);
 
          CodeBlock *newCodeBlock = new CodeBlock();
          StringTableEntry name = StringTable->insert(scriptFileName);

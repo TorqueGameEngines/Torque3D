@@ -364,6 +364,13 @@ Var* ShaderFeatureGLSL::getOutTexCoord(   const char *name,
       texCoord->setStructName( "OUT" );
       texCoord->setType( type );
 
+      // create detail variable
+      Var* tileScale = new Var;
+      tileScale->setType("vec2");
+      tileScale->setName("tileScale");
+      tileScale->uniform = true;
+      tileScale->constSortPos = cspPotentialPrimitive;
+
       if( useTexAnim )
       {
          inTex->setType( "vec4" );
@@ -377,15 +384,15 @@ Var* ShaderFeatureGLSL::getOutTexCoord(   const char *name,
          
 			// Statement allows for casting of different types which
 		   // eliminates vector truncation problems.
-         String statement = String::ToString( "   @ = %s(tMul(@, @).xy);\r\n", type );
-			meta->addStatement( new GenOp( statement , texCoord, texMat, inTex ) );      
+         String statement = String::ToString( "   @ = %s(tMul(@, @).xy * @);\r\n", type );
+			meta->addStatement( new GenOp( statement , texCoord, texMat, inTex, tileScale) );
       }
       else
 		{
 			// Statement allows for casting of different types which
 		   // eliminates vector truncation problems.
-         String statement = String::ToString( "   @ = %s(@);\r\n", type );
-         meta->addStatement( new GenOp( statement, texCoord, inTex ) );
+         String statement = String::ToString( "   @ = %s(@) * @;\r\n", type );
+         meta->addStatement( new GenOp( statement, texCoord, inTex, tileScale) );
 		}
 	}
 
@@ -3055,7 +3062,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    Var *ibl = (Var *)LangElement::find("ibl");
    if (!ibl)
    {
-      ibl = new Var("ibl", "float3");
+      ibl = new Var("ibl", "float4");
    }
 
    Var* eyePos = (Var*)LangElement::find("eyePosWorld");
@@ -3086,7 +3093,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
    //Reflection vec
    String computeForwardProbes = String("   @ = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String("@,@,@,@,@,@,\r\n\t\t");
-   computeForwardProbes += String("@,@).rgb; \r\n");
+   computeForwardProbes += String("@,@); \r\n");
 
    meta->addStatement(new GenOp(computeForwardProbes.c_str(), new DecOp(ibl), surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray, eyePos,
       skylightCubemapIdx, SkylightDamp, BRDFTexture, WetnessTexture, accumTime, dampness,
@@ -3100,7 +3107,7 @@ void ReflectionProbeFeatGLSL::processPix(Vector<ShaderComponent*>& componentList
       ambient->constSortPos = cspPass;
    }
    meta->addStatement(new GenOp("   @.rgb *= @.rgb;\r\n", ibl, ambient));
-   meta->addStatement(new GenOp("   @.rgb = @.rgb;\r\n", curColor, ibl));
+   meta->addStatement(new GenOp("   @ = @;\r\n", curColor, ibl));
 
    output = meta;
 }

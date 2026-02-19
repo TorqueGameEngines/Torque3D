@@ -781,7 +781,7 @@ GuiShaderNode* GuiShaderEditor::findHitNode(const Point2I& pt)
       }
    }
 
-   return nullptr;
+   return NULL;
 }
 
 bool GuiShaderEditor::findHitSocket(const Point2I& pt)
@@ -929,7 +929,7 @@ bool GuiShaderEditor::hasConnection(NodeSocket* inSocket, NodeConnection*& conn)
    {
       if (con->inSocket == dynamic_cast<NodeInput*>(inSocket) || con->outSocket == dynamic_cast<NodeOutput*>(inSocket))
       {
-         if (conn != nullptr)
+         if (conn != NULL)
             conn = con;
          return true;
       }

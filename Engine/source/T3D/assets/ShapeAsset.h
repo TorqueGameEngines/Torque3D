@@ -135,7 +135,7 @@ public:
    inline AssetPtr<MaterialAsset> getMaterialAsset(U32 matId)
    {
       if (matId >= mMaterialAssets.size())
-         return nullptr;
+         return NULL;
       else
          return mMaterialAssets[matId];
    }

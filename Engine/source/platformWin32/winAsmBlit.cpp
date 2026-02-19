@@ -195,7 +195,7 @@ void bitmapConvertRGB_to_5551_mmx(U8 *src, U32 pixels)
 void PlatformBlitInit()
 {
    bitmapExtrude5551 = bitmapExtrude5551_asm;
-   bitmapExtrudeRGB  = bitmapExtrudeRGB_c;
+   //bitmapExtrudeRGB  = bitmapExtrudeRGB_c;
 
    if (Platform::SystemInfo.processor.properties & CPU_PROP_MMX)
    {

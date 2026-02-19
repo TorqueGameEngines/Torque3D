@@ -1,0 +1,33 @@
+function ParticleEditorCreatePrompt::show(%this, %name, %typeFilter, %callback)
+{
+   Canvas.pushDialog(%this);
+   %this-->promptWindow.text = "Create New " @ %name;
+   
+   %this-->namePromptText.text = "Your new " @ %name @ " must have a name";
+   %this-->nameText.placeholderText = "new" @ %name;
+   
+   %this-->createBtn.command = %callback;
+   
+   // Need to prompt for a name.
+   %this-->nameText.setText("");
+   %this-->nameText.selectAllText();
+   
+   // Populate the copy source dropdown.
+   
+   %list = %this-->CopySourceDropdown;
+   %list.clear();
+   %list.add( "", 0 );
+   
+   %set = DataBlockSet;
+   %count = %set.getCount();
+   for( %i = 0; %i < %count; %i ++ )
+   {
+      %datablock = %set.getObject( %i );
+      %datablockClass = %datablock.getClassName();
+      
+      if( !isMemberOfClass( %datablockClass, %typeFilter ) )
+         continue;
+         
+      %list.add( %datablock.getName(), %i + 1 );
+   }
+}

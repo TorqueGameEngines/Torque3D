@@ -72,6 +72,13 @@ GFX_ImplementTextureProfile( ShadowMapProfile,
                               GFXTextureProfile::Pooled,
                               GFXTextureProfile::NONE );
 
+GFX_ImplementTextureProfile(CubeShadowMapProfile,
+                              GFXTextureProfile::DiffuseMap,
+                              GFXTextureProfile::PreserveSize |
+                              GFXTextureProfile::RenderTarget |
+                              GFXTextureProfile::Pooled | GFXTextureProfile::CubeMap,
+                              GFXTextureProfile::NONE);
+
 GFX_ImplementTextureProfile( ShadowMapZProfile,
                              GFXTextureProfile::DiffuseMap, 
                              GFXTextureProfile::PreserveSize | 

@@ -35,24 +35,9 @@
 #include "gfx/util/gfxFrustumSaver.h"
 #include "math/mathUtils.h"
 
-
 CubeLightShadowMap::CubeLightShadowMap( LightInfo *light )
    : Parent( light )
 {
-}
-
-bool CubeLightShadowMap::setTextureStage( U32 currTexFlag, LightingShaderConstants* lsc )
-{
-   if ( currTexFlag == Material::DynamicLight )
-   {
-      S32 reg = lsc->mShadowMapSC->getSamplerRegister();
-   	if ( reg != -1 )
-      	GFX->setCubeTexture( reg, mCubemap );
-
-      return true;
-   }
-
-   return false;
 }
 
 void CubeLightShadowMap::setShaderParameters(   GFXShaderConstBuffer *params, 
@@ -77,12 +62,6 @@ void CubeLightShadowMap::setShaderParameters(   GFXShaderConstBuffer *params,
    params->setSafe( lsc->mShadowSoftnessConst, p->shadowSoftness * ( 1.0f / mTexSize ) );
 }
 
-void CubeLightShadowMap::releaseTextures()
-{
-   Parent::releaseTextures();
-   mCubemap = NULL;
-}
-
 void CubeLightShadowMap::_render(   RenderPassManager* renderPass,
                                     const SceneRenderState *diffuseState )
 {
@@ -92,15 +71,16 @@ void CubeLightShadowMap::_render(   RenderPassManager* renderPass,
    const bool bUseLightmappedGeometry = lmParams ? !lmParams->representedInLightmap || lmParams->includeLightmappedGeometryInShadow : true;
 
    const U32 texSize = getBestTexSize();
-
-   if (  mCubemap.isNull() || 
-         mTexSize != texSize )
+   if (mShadowMapTex.isNull() ||
+      mTexSize != texSize)
    {
       mTexSize = texSize;
-      mCubemap = GFX->createCubemap();
-      mCubemap->initDynamic( mTexSize, LightShadowMap::ShadowMapFormat );
-   }
 
+      mShadowMapTex.set(mTexSize, mTexSize,
+         ShadowMapFormat, &CubeShadowMapProfile,
+         "CubeLightShadowMap");
+      mShadowMapDepth = _getDepthTarget(mShadowMapTex->getWidth(), mShadowMapTex->getHeight());
+   }
    // Setup the world to light projection which is used
    // in the shader to transform the light vector for the
    // shadow lookup.
@@ -155,20 +135,14 @@ void CubeLightShadowMap::_render(   RenderPassManager* renderPass,
       GFXDEBUGEVENT_START( CubeLightShadowMap_Render_Face, ColorI::RED );
 
       // create camera matrix
-      VectorF cross = mCross(vUpVec, vLookatPt);
-      cross.normalizeSafe();
-
       MatrixF lightMatrix(true);
-      lightMatrix.setColumn(0, cross);
-      lightMatrix.setColumn(1, vLookatPt);
-      lightMatrix.setColumn(2, vUpVec);
-      lightMatrix.setPosition( mLight->getPosition() );
+      lightMatrix.LookAt(mLight->getPosition(), vLookatPt, vUpVec);
       lightMatrix.inverse();
 
       GFX->setWorldMatrix( lightMatrix );
 
-      mTarget->attachTexture(GFXTextureTarget::Color0, mCubemap, i);
-      mTarget->attachTexture(GFXTextureTarget::DepthStencil, _getDepthTarget( mTexSize, mTexSize ));
+      mTarget->attachTexture(GFXTextureTarget::Color0, mShadowMapTex,0,0, i);
+      mTarget->attachTexture(GFXTextureTarget::DepthStencil, _getDepthTarget(mShadowMapTex->getWidth(), mShadowMapTex->getHeight()));
       GFX->setActiveRenderTarget(mTarget);
       GFX->clear( GFXClearTarget | GFXClearStencil | GFXClearZBuffer, ColorI(255,255,255,255), 0.0f, 0 );
 

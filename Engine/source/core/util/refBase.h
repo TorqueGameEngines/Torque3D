@@ -56,7 +56,7 @@ public:
       friend class WeakRefBase;
       constexpr explicit WeakReference(WeakRefBase *object) :mObject(object), mRefCount(0) {}
 
-      ~WeakReference() { AssertFatal(mObject==nullptr, "Deleting weak reference which still points at an object."); }
+      ~WeakReference() { AssertFatal(mObject==NULL, "Deleting weak reference which still points at an object."); }
 
       // Object we reference
       WeakRefBase *mObject;
@@ -66,7 +66,7 @@ public:
    };
 
 public:
-   constexpr WeakRefBase() : mReference(nullptr) {}
+   constexpr WeakRefBase() : mReference(NULL) {}
    virtual ~WeakRefBase()  { clearWeakReferences(); }
 
    WeakReference* getWeakReference();
@@ -88,11 +88,11 @@ template< typename T > class SimObjectPtr;
 template <class T> class WeakRefPtr
 {
 public:
-   constexpr WeakRefPtr()  : mReference(nullptr) {}
-   WeakRefPtr(T *ptr)      : mReference(nullptr) { set(ptr); }
-   WeakRefPtr(const WeakRefPtr<T> & ref) { mReference = nullptr; set(ref.mReference); }
+   constexpr WeakRefPtr()  : mReference(NULL) {}
+   WeakRefPtr(T *ptr)      : mReference(NULL) { set(ptr); }
+   WeakRefPtr(const WeakRefPtr<T> & ref) { mReference = NULL; set(ref.mReference); }
    
-   ~WeakRefPtr() { set(static_cast<WeakRefBase::WeakReference *>(nullptr)); }
+   ~WeakRefPtr() { set(static_cast<WeakRefBase::WeakReference *>(NULL)); }
 
    WeakRefPtr<T>& operator=(const WeakRefPtr<T>& ref)
    {
@@ -107,7 +107,7 @@ public:
    }
 
    /// Returns true if the pointer is not set.
-   [[nodiscard]] constexpr bool isNull()        const { return mReference == nullptr || mReference->get() == nullptr; }
+   [[nodiscard]] constexpr bool isNull()        const { return mReference == NULL || mReference->get() == NULL; }
    
    /// Returns true if the pointer is set.
    [[nodiscard]] constexpr bool isValid()       const { return mReference && mReference->get(); }
@@ -117,14 +117,14 @@ public:
    [[nodiscard]] constexpr operator T*()        const { return getPointer(); }
    
    /// Returns the pointer.
-   [[nodiscard]] constexpr T* getPointer()      const { return mReference ? (T*)mReference->get() : nullptr; }
+   [[nodiscard]] constexpr T* getPointer()      const { return mReference ? (T*)mReference->get() : NULL; }
 
 protected:
    void set(WeakRefBase::WeakReference* ref)
    {
       if (mReference)
          mReference->decRefCount();
-      mReference = nullptr;
+      mReference = NULL;
       if (ref)
       {
          mReference = ref;
@@ -132,10 +132,10 @@ protected:
       }
    }
 
-   void set(T* obj) { set(obj ? obj->getWeakReference() : nullptr); }
+   void set(T* obj) { set(obj ? obj->getWeakReference() : NULL); }
 private:
    template< typename > friend class SimObjectPtr;
-   WeakRefBase::WeakReference * mReference {nullptr};
+   WeakRefBase::WeakReference * mReference {NULL};
 };
 
 /// Union of an arbitrary type with a WeakRefBase.  The exposed type will
@@ -147,11 +147,11 @@ class WeakRefUnion
    typedef WeakRefUnion<ExposedType> Union;
 
 public:
-   constexpr WeakRefUnion() : mPtr(nullptr) {}
-   constexpr WeakRefUnion(const WeakRefPtr<WeakRefBase> & ref, ExposedType * ptr) : mPtr(nullptr) { set(ref, ptr); }
-   constexpr WeakRefUnion(const Union & lock)                                     : mPtr(nullptr) { *this = lock; }
-   constexpr WeakRefUnion(WeakRefBase * ref)       : mPtr(nullptr) { set(ref, dynamic_cast<ExposedType*>(ref)); }
-   ~WeakRefUnion() { mWeakReference = nullptr; }
+   constexpr WeakRefUnion() : mPtr(NULL) {}
+   constexpr WeakRefUnion(const WeakRefPtr<WeakRefBase> & ref, ExposedType * ptr) : mPtr(NULL) { set(ref, ptr); }
+   constexpr WeakRefUnion(const Union & lock)                                     : mPtr(NULL) { *this = lock; }
+   constexpr WeakRefUnion(WeakRefBase * ref)       : mPtr(NULL) { set(ref, dynamic_cast<ExposedType*>(ref)); }
+   ~WeakRefUnion() { mWeakReference = NULL; }
 
    Union & operator=(const Union & ptr)
    {
@@ -172,7 +172,7 @@ public:
    [[nodiscard]] constexpr bool operator != (const Union &t )        const { return getPointer() != t.getPointer(); }
    [[nodiscard]] constexpr bool isNull()                             const { return mWeakReference.isNull() || !mPtr; }
 
-   [[nodiscard]] constexpr ExposedType* getPointer()        const { return !mWeakReference.isNull() ? mPtr : nullptr; }
+   [[nodiscard]] constexpr ExposedType* getPointer()        const { return !mWeakReference.isNull() ? mPtr : NULL; }
    [[nodiscard]] constexpr ExposedType* operator->()        const { return getPointer(); }
    [[nodiscard]] constexpr ExposedType& operator*()         const { return *getPointer(); }
    [[nodiscard]] constexpr operator ExposedType*()          const { return getPointer(); }
@@ -223,7 +223,7 @@ class StrongObjectRef
 
 public:
    /// Constructor, assigns from the object and increments its reference count if it's not NULL
-   StrongObjectRef(StrongRefBase *object = nullptr) : mObject( object ) { incRef(); }
+   StrongObjectRef(StrongRefBase *object = NULL) : mObject( object ) { incRef(); }
 
    /// Destructor, dereferences the object, if there is one
    ~StrongObjectRef() { decRef(); }
@@ -281,8 +281,8 @@ public:
       return *this;
    }
 
-   [[nodiscard]] constexpr bool isNull()  const  { return mObject == nullptr; }
-   [[nodiscard]] constexpr bool isValid() const  { return mObject != nullptr; }
+   [[nodiscard]] constexpr bool isNull()  const  { return mObject == NULL; }
+   [[nodiscard]] constexpr bool isValid() const  { return mObject != NULL; }
    [[nodiscard]] T* operator->() const { return getPointer(); }
    T& operator*() const  { return *getPointer(); }
    operator T*() const { return getPointer(); }
@@ -299,13 +299,13 @@ class StrongRefUnion
    typedef StrongRefUnion<ExposedType> Union;
 
 public:
-   StrongRefUnion() : mPtr(nullptr) {}
+   StrongRefUnion() : mPtr(NULL) {}
 
-   StrongRefUnion(const StrongRefPtr<StrongRefBase> & ref, ExposedType * ptr) : mPtr(nullptr) { set(ref, ptr); }
-   StrongRefUnion(const Union & lock)                                         : mPtr(nullptr) { *this = lock; }
-   StrongRefUnion(StrongRefBase * ref)         : mPtr(nullptr) { set(ref, dynamic_cast<ExposedType*>(ref)); }
+   StrongRefUnion(const StrongRefPtr<StrongRefBase> & ref, ExposedType * ptr) : mPtr(NULL) { set(ref, ptr); }
+   StrongRefUnion(const Union & lock)                                         : mPtr(NULL) { *this = lock; }
+   StrongRefUnion(StrongRefBase * ref)         : mPtr(NULL) { set(ref, dynamic_cast<ExposedType*>(ref)); }
 
-   ~StrongRefUnion() { mReference = nullptr; }
+   ~StrongRefUnion() { mReference = NULL; }
 
    Union & operator=(const Union & ptr)
    {
@@ -351,8 +351,8 @@ template< class T >
 class StrongWeakRefPtr
 {
 public:
-   constexpr StrongWeakRefPtr()           : mReference( nullptr ) {}
-   constexpr StrongWeakRefPtr( T* ptr )   : mReference( nullptr ) { _set( ptr ); }
+   constexpr StrongWeakRefPtr()           : mReference( NULL ) {}
+   constexpr StrongWeakRefPtr( T* ptr )   : mReference( NULL ) { _set( ptr ); }
    ~StrongWeakRefPtr()
    {
       if( mReference )
@@ -365,7 +365,7 @@ public:
       }
    }
 
-   [[nodiscard]] constexpr bool isNull()              const { return ( _get() == nullptr ); }
+   [[nodiscard]] constexpr bool isNull()              const { return ( _get() == NULL ); }
    [[nodiscard]] constexpr bool operator ==( T* ptr ) const { return ( _get() == ptr ); }
    [[nodiscard]] constexpr bool operator !=( T* ptr ) const { return ( _get() != ptr ); }
    [[nodiscard]] constexpr bool operator !()          const { return isNull(); }
@@ -390,7 +390,7 @@ private:
       if( mReference )
          return static_cast< T* >( mReference->get() );
       else
-         return nullptr;
+         return NULL;
    }
    void _set( T* ptr )
    {
@@ -410,7 +410,7 @@ private:
          mReference->incRefCount();
       }
       else
-         mReference = nullptr;
+         mReference = NULL;
    }
 };
 
@@ -420,9 +420,9 @@ inline void WeakRefBase::clearWeakReferences()
 {
    if (mReference)
    {
-      mReference->mObject = nullptr;
+      mReference->mObject = NULL;
       mReference->decRefCount();
-      mReference = nullptr;
+      mReference = NULL;
    }
 }
 

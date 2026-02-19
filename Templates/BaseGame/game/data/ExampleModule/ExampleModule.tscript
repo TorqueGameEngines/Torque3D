@@ -29,11 +29,7 @@ function ExampleModule::initClient(%this)
     
     //client scripts
    exec("./scripts/client/defaultkeybinds");
-   
-   %prefPath = getPrefpath();
-   if(isScriptFile(%prefPath @ "/keybinds"))
-      exec(%prefPath @ "/keybinds");
-      
+         
    %this.queueExec("./scripts/shared/ExampleGameMode");
 }
 

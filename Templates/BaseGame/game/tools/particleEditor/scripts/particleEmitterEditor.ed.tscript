@@ -1,0 +1,605 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+
+$PE_EMITTEREDITOR_DEFAULT_FILENAME = "data/managedParticleEmitterData." @ $TorqueScriptFileExtension;
+
+
+//=============================================================================================
+//    PE_EmitterEditor.
+//=============================================================================================
+function PE_EmitterEditor::init(%this)
+{
+   datablock ParticleEmitterData(PE_EmitterEditor_NotDirtyEmitter)
+   {
+      particles = "DefaultParticle";
+   };
+   
+   %this.unlistedSet.add(PE_EmitterEditor_NotDirtyEmitter);
+}
+
+//---------------------------------------------------------------------------------------------
+function PE_EmitterEditor::openEditorTab(%this)
+{
+   PE_Window.text = ":: Particle Editor - Emitters";
+   %this.guiSync();
+   ParticleEditor.activeEditor = %this;
+
+   if( !%this.dirty )
+      %this.setNotDirty();
+}
+
+function PE_EmitterEditor::closeEditorTab(%this)
+{
+   if( isObject( $ParticleEditor::emitterNode) )
+      $ParticleEditor::emitterNode.delete();
+}
+//---------------------------------------------------------------------------------------------
+
+function PE_EmitterEditor::guiSync( %this )
+{
+   %this-->inspector.refresh();
+}
+
+function PE_EmitterEditor::resetVizNode(%this, %tform)
+{
+   if( !isObject( $ParticleEditor::emitterNode ) )
+   {
+      if( !isObject( TestEmitterNodeData ) )
+      {
+         datablock ParticleEmitterNodeData( TestEmitterNodeData )
+         {
+            timeMultiple = 1;
+         };
+      }
+
+      $ParticleEditor::emitterNode = new ParticleEmitterNode()
+      {
+         emitter = $ThisControl.currEmitter;
+         velocity = 1;
+         position = getWords( %tform, 0, 2 );
+         rotation = getWords( %tform, 3, 6 );
+         datablock = TestEmitterNodeData;
+         parentGroup = MissionCleanup;
+      };
+   }
+   else
+   {
+      $ParticleEditor::emitterNode.setTransform( %tform );
+      
+      %clientObject = $ParticleEditor::emitterNode.getClientObject();
+      if( isObject( %clientObject ) )
+         %clientObject.setTransform( %tform );
+      
+      %this.updateVizNode();
+   }
+   if (EWorldEditor.getSelectionSize()>0)
+   {
+        %obj = EWorldEditor.getSelectedObject(0);
+        if (%obj.isMemberOfClass("ParticleEmitterNode"))
+            $ParticleEditor::emitterNode.sethidden(true);
+   }  
+}
+
+function PE_EmitterEditor::updateVizNode(%this)
+{
+   if( isObject( $ParticleEditor::emitterNode ) )
+   {
+      %id = %this-->PopupMenu.getText();
+      
+      %clientObject = $ParticleEditor::emitterNode.getClientObject();
+      if( isObject( %clientObject ) )
+         %clientObject.setEmitterDataBlock( %id );
+   }
+   else
+      %this.resetVizNode();  
+}
+
+//------------------------------------------------------------------------------
+
+function PE_EmitterEditor::selectObject(%this, %obj)
+{
+   if( isObject(%obj )
+       && %obj.getName() $= %this-->popupMenu.text )
+      return;
+      
+   //FIXME: disregards particle tab dirty state
+   if( %this.dirty )
+   {   
+      if( PE_ParticleEditor.dirty )
+      {         
+         toolsMessageBoxYesNo("Save Existing Emitter?", 
+            "Do you want to save changes to <br><br>" @ %this.currParticle.getName(), 
+            "PE_ParticleEditor.saveParticle(" @ %this.currParticle @ ");"
+         );
+      }
+            
+      %savedEmitter = %this.currEmitter;
+      toolsMessageBoxYesNoCancel("Save Existing Emitter?", 
+         "Do you want to save changes to <br><br>" @ %savedEmitter.getName(), 
+         "PE_EmitterEditor.saveEmitter(" @ %savedEmitter@ "); PE_EmitterEditor.loadNewEmitter(" @ %obj @ ");", 
+         "PE_EmitterEditor.saveEmitterDialogDontSave(" @ %savedEmitter @ "); PE_EmitterEditor.loadNewEmitter(" @ %obj @ ");"
+      );
+   }
+   else
+   {
+      %this.loadNewEmitter(%obj);
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_EmitterEditor::loadNewEmitter( %this, %emitter )
+{
+   %this-->popupMenu.setText(%emitter.getName());
+   %this-->inspector.inspect(%emitter);
+   
+   if( isObject( %emitter ) )
+      %current = %emitter.getId();
+   else
+      %current = %this-->popupMenu.text;
+   
+   %this.currEmitter = %current;
+   PE_EmitterEditor_NotDirtyEmitter.assignFieldsFrom( %current );
+   PE_EmitterEditor_NotDirtyEmitter.originalName = %current.name;
+   
+   %this.guiSync();
+   %this.setNotDirty();
+      
+   //PE_ParticleEditor.loadNewParticle( getWord( %current.particles, 0 ) );
+
+   %this.guiSync();
+   
+   ParticleEditor.updateEmitterNode();
+}
+
+//---------------------------------------------------------------------------------------------
+function PE_EmitterEditor::onInspectorFieldModified(%this, %object, %fieldName, %arrayIndex, %oldValue, %newValue)
+{
+   %action = ParticleEditor.createUndo(ActionUpdateActiveEmitter, "Update Active Emitter");
+   %action.emitter = %object;
+   %action.field = %fieldName;
+   %action.isSlider = false;
+   %action.onMouseUp = true;
+   %action.newValue = %newValue;
+   %action.oldValue = %oldValue;
+   
+   ParticleEditor.submitUndo( %action );
+}
+
+// Generic updateEmitter method
+function PE_EmitterEditor::updateEmitter( %this, %propertyField, %value, %isSlider, %onMouseUp )
+{
+   PE_EmitterEditor.setDirty();
+         
+   %emitter = %this.currEmitter;
+      
+   %last = Editor.getUndoManager().getUndoAction(Editor.getUndoManager().getUndoCount() - 1);
+   if( (%isSlider) && (%last.isSlider) && (!%last.onMouseUp) )
+   {
+      %last.field = %propertyField;
+      %last.isSlider = %isSlider;
+      %last.onMouseUp = %onMouseUp;
+      %last.newValue = %value;
+   }
+   else
+   {
+      %action = ParticleEditor.createUndo(ActionUpdateActiveEmitter, "Update Active Emitter");
+      %action.emitter = %emitter;
+      %action.field = %propertyField;
+      %action.isSlider = %isSlider;
+      %action.onMouseUp = %onMouseUp;
+      %action.newValue = %value;
+      %action.oldValue = %emitter.getFieldValue( %propertyField );
+      
+      ParticleEditor.submitUndo( %action );
+   }
+   	
+	%emitter.setFieldValue( %propertyField, %value );
+	%emitter.reload();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_EmitterEditor::updateParticlesFields( %this )
+{
+   %particles = "";
+   for( %i = 1; %i < 5; %i ++ )
+   {
+      %emitterParticle = "PEE_EmitterParticle" @ %i;
+      %popup = %emitterParticle-->PopUpMenu;
+      %text = %popup.getText();
+      
+      if( %text $= "" || %text $= "None" )
+         continue;
+         
+      if( %particles $= "" )
+         %particles = %text;
+      else
+         %particles = %particles SPC %text;
+   }
+   
+   %changedEditParticle = 1;
+   %currParticle = PE_ParticleEditor.currParticle.getName();
+
+   foreach$( %particleName in %particles )
+   {
+      if( %particleName $= %currParticle )
+      {
+         %changedEditParticle = 0; 
+         break;
+      }
+   }
+   
+   // True only if the currently edited particle has not been found and the 
+   // ParticleEditor is dirty.
+   
+   if( %changedEditParticle && PE_ParticleEditor.dirty )
+   {
+      toolsMessageBoxYesNoCancel("Save Particle Changes?", 
+         "Do you wish to save the changes made to the <br>current particle before changing the particle?", 
+         "PE_ParticleEditor.saveParticle( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_EmitterEditor.updateEmitter( \"particles\"," @ %particles @ ");", 
+         "PE_ParticleEditor.saveParticleDialogDontSave( " @ PE_ParticleEditor.currParticle.getName() @ " ); PE_EmitterEditor.updateEmitter( \"particles\"," @ %particles @ ");", 
+         "PE_EmitterEditor.guiSync();" );
+   }
+   else
+   {
+      PE_EmitterEditor.updateEmitter( "particles", %particles );
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_EmitterEditor::setDirty( %this )
+{
+   %this.text = "*Emitter";
+   %this.dirty = true;
+   
+   if(!startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = "*" @ %this-->PopupMenu.text;
+   }
+   
+   %emitter = %this.currEmitter;
+   %filename = %emitter.getFilename();
+   %editorFilename = "tools/particleEditor/scripts/particleEmitterEditor.ed." @ $TorqueScriptFileExtension;
+   
+   if( %filename $= "" || %filename $= %editorFilename )
+      %this.saver.setDirty( %emitter, $PE_EMITTEREDITOR_DEFAULT_FILENAME );
+   else
+      %this.saver.setDirty( %emitter );
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_EmitterEditor::setNotDirty( %this )
+{   
+   PE_EmitterEditor.text = "Emitter";
+   PE_EmitterEditor.dirty = false;
+   
+   if(startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = stripChars(%this-->PopupMenu.text, "*");
+   }
+   
+   %this.saver.clearAll();
+}
+
+//---------------------------------------------------------------------------------------------
+
+// Create Functionality
+function PE_EmitterEditor::showNewDialog( %this )
+{
+   // Open a dialog if the current emitter is dirty.
+   if( PE_ParticleEditor.dirty )
+   {         
+      toolsMessageBoxYesNo("Save Existing Particle?", 
+         "Do you want to save changes to <br><br>" @ PE_ParticleEditor.currParticle.getName(), 
+         "PE_ParticleEditor.saveParticle(" @ PE_ParticleEditor.currParticle @ ");"
+      );
+   }   
+   
+   if( PE_EmitterEditor.dirty )
+   {
+      toolsMessageBoxYesNoCancel("Save Emitter Changes?", 
+         "Do you wish to save the changes made to the <br>current emitter before changing the emitter?", 
+         "PE_EmitterEditor.saveEmitter( " @ PE_EmitterEditor.currEmitter.getName() @ " ); PE_EmitterEditor.createEmitter();", 
+         "PE_EmitterEditor.saveEmitterDialogDontSave( " @ PE_EmitterEditor.currEmitter.getName() @ " ); PE_EmitterEditor.createEmitter();"
+      );
+   }
+   else
+   {
+      PE_EmitterEditor.createEmitter();
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_EmitterEditor::createEmitter( %this )
+{
+   AssetBrowser_SelectModule.showDialog("PE_EmitterEditor.pickedNewEmitterTargetModule");
+   AssetBrowser_SelectModuleWindow.selectWindow();
+}
+
+function PE_EmitterEditor::pickedNewEmitterTargetModule( %this, %module )
+{
+   ParticleEditorCreatePrompt.show("Emitter", "ParticleEmitterData", "PE_EMitterEditor.doCreateNewEmitter(\"" @ %module @ "\");" );
+}
+
+function PE_EmitterEditor::doCreateNewEmitter( %this, %module )
+{
+   //Sanity checks
+   %newName = ParticleEditorCreatePrompt-->nameText.getText();
+   if(%newName $= "")
+   {
+      toolsMessageBoxOK("Error", "New Emitter requires a name!");
+      return;
+   }
+   
+   Canvas.popDialog(ParticleEditorCreatePrompt);
+   
+   %sourceDB = ParticleEditorCreatePrompt-->CopySourceDropdown.getText();
+   
+   if(%sourceDB $= "")
+      %sourceDB = DefaultEmitter;
+   
+   %moduleDef = ModuleDatabase.findModule(%module);
+   PE_EmitterEditor.targetModule = %module;
+   $PE_EMITTEREDITOR_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedParticleEmitterData." @ $TorqueScriptFileExtension;
+   
+   if(!isDirectory(filePath($PE_EMITTEREDITOR_DEFAULT_FILENAME)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath($PE_EMITTEREDITOR_DEFAULT_FILENAME));
+   }
+   
+   // Create a new emitter.
+   %emitter = getUniqueName( %newName );
+   eval("datablock ParticleEmitterData( " @ %emitter @ " : " @ %sourceDB @ " ){};");
+   
+   // Submit undo.
+   
+   %action = ParticleEditor.createUndo( ActionCreateNewEmitter, "Create New Emitter" );
+   %action.prevEmitter = PE_EmitterEditor.currEmitter;
+   %action.emitter = %emitter.getId();
+   %action.emitterName = %emitter;
+
+   ParticleEditor.submitUndo( %action );
+
+   // Execute action.
+   %action.redo();
+   
+   %this.saver.setDirty(%emitter, $PE_EMITTEREDITOR_DEFAULT_FILENAME);
+   
+   %this.loadNewEmitter(%emitter);
+   %this.setDirty();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_EmitterEditor::showDeleteDialog( %this )
+{
+   if( PE_EmitterEditor.currEmitter.getName() $= "DefaultEmitter" )
+   {
+      toolsMessageBoxOK( "Error", "Cannot delete DefaultEmitter");
+      return;
+   }
+   
+   if( isObject( PE_EmitterEditor.currEmitter ) )
+   {
+      toolsMessageBoxYesNoCancel("Delete Emitter?", 
+         "Are you sure you want to delete<br><br>" @ PE_EmitterEditor.currEmitter.getName() @ "<br><br> Emitter deletion won't take affect until the level is exited.", 
+         "PE_EmitterEditor.saveEmitterDialogDontSave( " @ PE_EmitterEditor.currEmitter.getName() @ " ); PE_EmitterEditor.deleteEmitter();"
+      );
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_EmitterEditor::deleteEmitter( %this )
+{  
+   %emitter = PE_EmitterEditor.currEmitter;
+   
+   // Create undo.
+   
+   %action = ParticleEditor.createUndo( ActionDeleteEmitter, "Delete Emitter" );
+   %action.emitter = %emitter;
+   %action.emitterFname = %emitter.getFilename();
+
+   ParticleEditor.submitUndo( %action );
+   
+   // Execute action.
+
+   %action.redo();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_EmitterEditor::saveEmitter( %this, %emitter )
+{   
+   if ( %emitter $= "" )
+   {
+      %emitter = %this.currEmitter;
+      %newName = %this.currEmitter.getName();
+   }
+   else
+   {
+      %newName = %emitter.getName();
+   }
+   
+   %this.currEmitter.setName( %newName );
+   PE_EmitterEditor_NotDirtyEmitter.assignFieldsFrom( %emitter );
+   PE_EmitterEditor_NotDirtyEmitter.originalName = %newName;
+   
+   %this.saver.saveDirty(); 
+   
+   %this.loadNewEmitter(%newName.getId());
+
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_EmitterEditor::saveEmitterDialogDontSave( %this, %emitter)
+{  
+   %emitter.setName( PE_EmitterEditor_NotDirtyEmitter.originalName );
+   %emitter.assignFieldsFrom( PE_EmitterEditor_NotDirtyEmitter );
+   PE_EmitterEditor.setNotDirty();
+}
+
+//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+function ParticleEditor::addParticleSlot(%this, %field, %emitterObj)
+{
+   if(getWordCount(%emitterObj.particles) >= 4)
+   {
+      toolsMessageBoxOK("Error", "Cannot add more than 4 particle slots to this emitter.");
+      return;  
+   }
+   
+   %updatedParticlesList = %emitterObj.particles SPC "DefaultParticle";
+   
+   %action = ParticleEditor.createUndo(ActionUpdateActiveEmitter, "Add new Emitter Particle Slot");
+   %action.emitter = %emitterObj;
+   %action.field = "particles";
+   %action.newValue = %updatedParticlesList;
+   %action.oldValue = %emitterObj.particles;
+   
+   ParticleEditor.submitUndo( %action );
+}
+
+function ParticleEditor::changeParticleSlot(%this, %field, %emitterObj, %slotIdx)
+{
+   %groupIdx = PE_ParticleDataTypes.getIndexFromKey("Particle");
+   %typesList = getField(PE_ParticleDataTypes.getValue(%groupIdx), 0);
+   %editorName = getField(PE_ParticleDataTypes.getValue(%groupIdx), 1);
+
+   %listSet = new SimSet(){ internalName = "Particles[" @ %slotIdx @ "]"; };
+   
+   foreach( %obj in DatablockGroup )
+   {
+      echo(%typesList);
+      %typesListCount = getWordCount(%typesList);
+      for(%i=0; %i < %typesListCount; %i++)
+      {
+         %type = getWord(%typesList, %i);
+         
+         if( %obj.isMemberOfClass( %type ) )
+         {
+            // Filter out emitters on the PE_ParticleEditor.unlistedSet list.
+            
+            %unlistedFound = false;
+            foreach( %unlisted in PE_ParticleEditor.unlistedSet ){
+               if( %unlisted.getId() == %obj.getId() )
+               {
+                  %unlistedFound = true;
+                  break;
+               }
+            }
+         
+            if( %unlistedFound )
+               continue;
+               
+            // To prevent our default emitters from getting changed,
+            // prevent them from populating the list. Default emitters
+            // should only be used as a template for creating new ones.
+            if ( %obj.getName() $= "DefaultParticle")
+               continue;
+               
+            if(%slotIdx > 0)
+            {
+               //Confirm our options to the particle in slot 0's image to maintain batching
+               %slot0ParticleDB = getWord(%emitterObj.particles, 0);
+               %textureAsset = %slot0ParticleDB.textureAsset;
+               if(%textureAsset !$= %obj.textureAsset)
+                  continue;
+            }
+               
+            if(%typesListCount > 1)
+            {
+               %typeSet = %listSet.findObjectByInternalName(%type);
+               if(!isObject(%typeSet))
+               {
+                  %typeSet = new SimSet(){ internalName = %type; };
+                  %listSet.add(%typeSet);
+               }
+               
+               %typeSet.add(%obj);
+            }
+            else
+            {
+               %listSet.add(%obj);
+            }
+            %listCount++;
+         }
+      }
+   }
+   
+   ContextedDropdownListGui.show(%listSet, "Edit Particle Slot[" @ %slotIdx @ "]", "ParticleEditor.editSlot = " @ %slotIdx @ ";ParticleEditor.updateParticleSlot", %field);
+   %particleData = getWord(%emitterObj.particles, %slotIdx);
+   if(%particleData !$= "")
+   {
+      ContextedDropdownListGui.seekItemObject(%particleData.getId());
+   }
+}
+
+function ParticleEditor::updateParticleSlot(%this, %newParticle)
+{
+   if(ParticleEditor.editSlot $= "")
+      return;
+      
+   %updatedParticlesList = setWord(PE_EmitterEditor.currEmitter.particles, ParticleEditor.editSlot, %newParticle);
+   
+   %action = ParticleEditor.createUndo(ActionUpdateActiveEmitter, "Edit Active Emitter Particle Slot");
+   %action.emitter = PE_EmitterEditor.currEmitter;
+   %action.field = "particles";
+   %action.newValue = %updatedParticlesList;
+   %action.oldValue = PE_EmitterEditor.currEmitter.particles;
+   
+   ParticleEditor.submitUndo( %action );
+   
+   ParticleEditor.editSlot = "";
+   
+   //%field.apply(%updatedParticlesList, %slotIdx);
+   //%this-->inspector.refresh();
+}
+
+function ParticleEditor::editParticleSlot(%this, %field, %emitterObj, %slotIdx)
+{
+   %particleName = getWord(%emitterObj.particles, %slotIdx);
+   
+   ParticleEditor.open(%particleName);
+}
+
+function ParticleEditor::clearParticleSlot(%this, %field, %emitterObj, %slotIdx)
+{
+   %updatedParticlesList = removeWord(%emitterObj.particles, %slotIdx);
+   
+   %action = ParticleEditor.createUndo(ActionUpdateActiveEmitter, "Clear Active Emitter Particle Slot");
+   %action.emitter = %emitterObj;
+   %action.field = "particles";
+   %action.newValue = %updatedParticlesList;
+   %action.oldValue = %emitterObj.particles;
+   
+   ParticleEditor.submitUndo( %action );
+   
+   //%field.apply(%updatedParticlesList, %slotIdx);
+   //%this-->inspector.refresh();
+}

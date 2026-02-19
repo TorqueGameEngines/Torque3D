@@ -1326,7 +1326,7 @@ void MeshRoad::_initMaterial()
       {
          SAFE_DELETE(mMatInst[Top]);
 
-         Material* tMat = nullptr;
+         Material* tMat = NULL;
          if (!Sim::findObject(mTopMaterialAsset->getMaterialDefinitionName(), tMat))
             Con::errorf("MeshRoad::_initMaterial - Material %s was not found.", mTopMaterialAsset->getMaterialDefinitionName());
 
@@ -1348,7 +1348,7 @@ void MeshRoad::_initMaterial()
 
          SAFE_DELETE(mMatInst[Bottom]);
 
-         Material* tMat = nullptr;
+         Material* tMat = NULL;
          if (!Sim::findObject(mBottomMaterialAsset->getMaterialDefinitionName(), tMat))
             Con::errorf("MeshRoad::_initMaterial - Material %s was not found.", mBottomMaterialAsset->getMaterialDefinitionName());
 
@@ -1369,7 +1369,7 @@ void MeshRoad::_initMaterial()
       {
          SAFE_DELETE(mMatInst[Side]);
 
-         Material* tMat = nullptr;
+         Material* tMat = NULL;
          if (!Sim::findObject(mSideMaterialAsset->getMaterialDefinitionName(), tMat))
             Con::errorf("MeshRoad::_initMaterial - Material %s was not found.", mSideMaterialAsset->getMaterialDefinitionName());
 

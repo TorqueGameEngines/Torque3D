@@ -1,17 +1,42 @@
 ################# Initialize Common Variables ###################
 if(NOT DEFINED ENV{VCPKG_ROOT})
-	set(VCPKG_ROOT "${CMAKE_BINARY_DIR}/vcpkg" CACHE PATH "VCPKG Root")
-	if(NOT EXISTS "${VCPKG_ROOT}")
-		message(STATUS "Bootstrapping vcpkg...")
-		execute_process(
-			COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
-			WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-		)
-		if(WIN32)
-			execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat")
-		else()
-			execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.sh")
-		endif()
+    set(VCPKG_ROOT "${CMAKE_BINARY_DIR}/vcpkg" CACHE PATH "VCPKG Root")
+    if(NOT EXISTS "${VCPKG_ROOT}")    
+        message(STATUS "Bootstrapping vcpkg...")
+        if (GIT_IN_USE)
+            execute_process(
+                COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
+                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+        else()
+            set(VCPKG_MANIFEST_MODE OFF CACHE BOOL "Disable vcpkg manifest mode" FORCE)
+            set(VCPKG_ZIP_FILE "${CMAKE_BINARY_DIR}/vcpkg.zip")
+            set(VCPKG_EXTRACT_DEST "${CMAKE_BINARY_DIR}/vcpkg-extracted-temp")
+
+            # Use file(DOWNLOAD) to fetch the source archive
+            if(NOT EXISTS "${VCPKG_ZIP_FILE}")
+                message(STATUS "Downloading vcpkg source archive...")
+                file(DOWNLOAD "https://github.com/microsoft/vcpkg/archive/refs/heads/master.zip" "${VCPKG_ZIP_FILE}"
+                SHOW_PROGRESS)
+                message(STATUS "Downloading vcpkg source archive... done")
+            endif()
+
+            # Use file(ARCHIVE_EXTRACT) to unzip the source
+            if(NOT EXISTS "${VCPKG_EXTRACT_DEST}")
+                message(STATUS "Extracting vcpkg archive...")
+                file(ARCHIVE_EXTRACT INPUT "${VCPKG_ZIP_FILE}" DESTINATION "${VCPKG_EXTRACT_DEST}" )
+
+                # Move the extracted content (which is in a directory like vcpkg-master)
+                # to the desired VCPKG_ROOT path defined in your original script.
+                file(GLOB VCPKG_SOURCE_DIR_TMP "${VCPKG_EXTRACT_DEST}/vcpkg-*")
+                file(RENAME "${VCPKG_SOURCE_DIR_TMP}" "${VCPKG_ROOT}")
+                message(STATUS "Extracting vcpkg archive... done")
+            endif()
+        endif()
+        if(WIN32)
+            execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat")
+        else()
+            execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.sh")
+        endif()
 	endif()
 else()
 	file(TO_CMAKE_PATH $ENV{VCPKG_ROOT} VCPKG_ROOT)
@@ -52,7 +77,16 @@ set(ENV{VCPKG_KEEP_ENV_VARS} "VCPKG_LIB_SOURCE_ROOT")
 # All include directories to search. Modules should append to this when they want includes to point
 # into themselves.
 set(TORQUE_INCLUDE_DIRECTORIES "")
-
+if (NOT GIT_IN_USE)
+    execute_process(
+        COMMAND vcpkg install 
+        --classic
+        --triplet=${VCPKG_TARGET_TRIPLET}
+        --overlay-ports=${VCPKG_OVERLAY_PORTS}
+        --overlay-triplets=${VCPKG_OVERLAY_TRIPLETS}
+        libflac libogg libsndfile[external-libs] libtheora libvorbis opus
+        WORKING_DIRECTORY ${VCPKG_ROOT})
+endif()
 # All library binaries to install. Modules should append to this the path of any library binaries (.so, .dylib, .dll)
 # that should be installed next to the executable.
 set(TORQUE_ADDITIONAL_LIBRARY_BINARIES "")
@@ -63,7 +97,7 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 							   TORQUE_UNICODE UNICODE _UNICODE)
 
 # All link libraries. Modules should append to this the path to specify additional link libraries (.a, .lib, .dylib, .so)
-set(TORQUE_LINK_LIBRARIES tinyxml2 collada squish opcode assimp SDL2 glad pcre convexMath zlib)
+set(TORQUE_LINK_LIBRARIES png_static tinyxml2 collada squish opcode assimp SDL2 glad pcre convexMath zlib)
 
 if(TORQUE_TESTING)
 set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest gmock)

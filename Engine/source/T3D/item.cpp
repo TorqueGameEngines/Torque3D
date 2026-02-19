@@ -312,6 +312,7 @@ IMPLEMENT_CALLBACK( Item, onLeaveLiquid, void, ( const char* objID, const char* 
 Item::Item()
 {
    mTypeMask |= ItemObjectType | DynamicShapeObjectType;
+   mPathfindingIgnore = true;
    mDataBlock = 0;
    mStatic = false;
    mRotate = false;
@@ -658,9 +659,9 @@ void Item::updateWorkingCollisionSet(const U32 mask, const F32 dt)
 {
    // It is assumed that we will never accelerate more than 10 m/s for gravity...
    //
-   Point3F scaledVelocity = mVelocity * dt;
+   Point3F scaledVelocity = mVelocity * dt * TickSec;
    F32 len    = scaledVelocity.len();
-   F32 newLen = len + (10 * dt);
+   F32 newLen = len + (mDataBlock->getShape()->mRadius * dt * TickSec);
 
    // Check to see if it is actually necessary to construct the new working list,
    //  or if we can use the cached version from the last query.  We use the x

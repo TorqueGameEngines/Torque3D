@@ -152,7 +152,7 @@ void SimNameDictionary::remove(SimObject* obj)
       if (*walk == obj)
       {
          *walk = obj->nextNameObject;
-         obj->nextNameObject = nullptr;
+         obj->nextNameObject = NULL;
          hashEntryCount--;
 
          Mutex::unlockMutex(mutex);
@@ -281,7 +281,7 @@ void SimManagerNameDictionary::remove(SimObject* obj)
       if (*walk == obj)
       {
          *walk = obj->nextManagerNameObject;
-         obj->nextManagerNameObject = nullptr;
+         obj->nextManagerNameObject = NULL;
          hashEntryCount--;
 
          Mutex::unlockMutex(mutex);

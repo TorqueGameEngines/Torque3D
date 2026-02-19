@@ -21,7 +21,8 @@ function UI::onCreate( %this )
    // addLanguage("defaultTable","try","tr");
    createLangTable("defaultTable");
    setCoreLangTable("defaultTable");
-   exec("./langs/languageMap");
+   if(isFile("./langs/languageMap"))
+      exec("./langs/languageMap");
 }
 
 function UI::onDestroy( %this )
@@ -59,7 +60,6 @@ function UI::initClient(%this)
    
    %this.queueExec("./guis/remapDlg");
    %this.queueExec("./guis/remapDlg.gui");
-   %this.queueExec("./guis/remapConfirmDlg.gui");
    
    %this.queueExec("./guis/profiler");
    %this.queueExec("./guis/profiler.gui");
@@ -76,7 +76,6 @@ function UI::initClient(%this)
    %this.queueExec("./guis/SystemMenu.gui");
    
    //Load scripts
-   %this.queueExec("./scripts/controlsMenu");
    %this.queueExec("./scripts/cursors");
    
    if(isToolBuild())

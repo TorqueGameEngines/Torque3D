@@ -172,7 +172,7 @@ void GuiConvexEditorCtrl::setVisible( bool val )
          }
 
          Scene* scene = Scene::getRootScene();
-         if (scene != nullptr)
+         if (scene != NULL)
          {
             //Make our proxy objects "real" again
             for (U32 i = 0; i < mProxyObjects.size(); ++i)
@@ -228,7 +228,7 @@ void GuiConvexEditorCtrl::setVisible( bool val )
          mSavedGizmoFlags = mGizmoProfile->flags;
 
          Scene* scene = Scene::getRootScene();
-         if (scene != nullptr)
+         if (scene != NULL)
          {
             for (U32 c = 0; c < scene->size(); ++c)
             {

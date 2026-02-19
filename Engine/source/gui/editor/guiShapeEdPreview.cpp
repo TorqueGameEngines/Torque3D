@@ -570,7 +570,7 @@ bool GuiShapeEdPreview::mountShape(const char* shapeAssetId, const char* nodeNam
 
    ShapeAsset* model = AssetDatabase.acquireAsset<ShapeAsset>(shapeAssetId);
 
-   if (model == nullptr || !model->getShapeResource())
+   if (model == NULL || !model->getShapeResource())
       return false;
 
    TSShapeInstance* tsi = new TSShapeInstance(model->getShapeResource(), true );

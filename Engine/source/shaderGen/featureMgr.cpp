@@ -112,7 +112,7 @@ ShaderFeature* FeatureMgr::createFeature(const FeatureType& type, FeatureParamsB
       }
    }
 
-   return nullptr;
+   return NULL;
 }
 
 void FeatureMgr::registerFeatureParams(const FeatureType& type, const FeatureParamField* fields, U32 fieldCount, CreateFeatureParams createFn)
@@ -177,7 +177,7 @@ void FeatureMgr::registerFeature(   const FeatureType &type,
                                     ShaderFeature *feature,
                                     CreateShaderFeatureDelegate featureDelegate)
 {
-   if (feature == nullptr && featureDelegate == nullptr)
+   if (feature == NULL && featureDelegate == NULL)
    {
       AssertFatal(false, "FeatureMgr::registerFeature - no feature or featureDelegate defined, cannot create this feature.");
    }

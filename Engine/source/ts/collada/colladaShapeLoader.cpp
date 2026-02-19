@@ -50,6 +50,7 @@
 #include "core/util/zip/zipVolume.h"
 #include "gfx/bitmap/gBitmap.h"
 
+extern bool gTryUseDSQs;
 MODULE_BEGIN( ColladaShapeLoader )
    MODULE_INIT_AFTER( ShapeLoader )
    MODULE_INIT
@@ -548,7 +549,39 @@ bool ColladaShapeLoader::canLoadCachedDTS(const Torque::Path& path)
      
    return false;
 }
+bool ColladaShapeLoader::canLoadCachedDSQ(const Torque::Path& path)
+{
+   // Generate the cached filename
+   Torque::Path cachedPath(path);
+   cachedPath.setExtension("dsq");
 
+   // Check if a cached DSQ newer than this file is available
+   FileTime cachedModifyTime;
+   if (Platform::getFileTimes(cachedPath.getFullPath(), NULL, &cachedModifyTime))
+   {
+      bool forceLoadDAE = Con::getBoolVariable("$collada::forceLoadDAE", false);
+
+      FileTime daeModifyTime;
+      if (!Platform::getFileTimes(path.getFullPath(), NULL, &daeModifyTime) ||
+         (!forceLoadDAE && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0)))
+      {
+         // DAE not found, or cached DTS is newer
+         return true;
+      }
+   }
+
+   //assume the dts is good since it was zipped on purpose
+   Torque::FS::FileSystemRef ref = Torque::FS::GetFileSystem(cachedPath);
+   if (ref && !String::compare("Zip", ref->getTypeStr().c_str()))
+   {
+      bool forceLoadDAE = Con::getBoolVariable("$collada::forceLoadDAE", false);
+
+      if (!forceLoadDAE && Torque::FS::IsFile(cachedPath))
+         return true;
+   }
+
+   return false;
+}
 bool ColladaShapeLoader::checkAndMountSketchup(const Torque::Path& path, String& mountPoint, Torque::Path& daePath)
 {
    bool isSketchup = path.getExtension().equal("kmz", String::NoCase);
@@ -655,18 +688,36 @@ TSShape* loadColladaShape(const Torque::Path &path)
 #ifndef DAE2DTS_TOOL
    // Generate the cached filename
    Torque::Path cachedPath(path);
-   cachedPath.setExtension("cached.dts");
-
+   bool canLoadCached = false;
+   bool canLoadDSQ = false;
    // Check if an up-to-date cached DTS version of this file exists, and
    // if so, use that instead.
    if (ColladaShapeLoader::canLoadCachedDTS(path))
+   {
+      cachedPath.setExtension("cached.dts");
+      canLoadCached = true;
+   }
+   else if (gTryUseDSQs && ColladaShapeLoader::canLoadCachedDSQ(path))
+   {
+      cachedPath.setExtension("dsq");
+      canLoadDSQ = true;
+   }
+   if (canLoadCached || canLoadDSQ)
    {
       FileStream cachedStream;
       cachedStream.open(cachedPath.getFullPath(), Torque::FS::File::Read);
       if (cachedStream.getStatus() == Stream::Ok)
       {
          TSShape *shape = new TSShape;
-         bool readSuccess = shape->read(&cachedStream);
+         bool readSuccess = false;
+         if (canLoadCached)
+         {
+            readSuccess = shape->read(&cachedStream);
+         }
+         else
+         {
+            readSuccess = shape->importSequences(&cachedStream, cachedPath);
+         }
          cachedStream.close();
 
          if (readSuccess)
@@ -677,10 +728,13 @@ TSShape* loadColladaShape(const Torque::Path &path)
             return shape;
          }
          else
+         {
+         #ifdef TORQUE_DEBUG
+            Con::errorf("loadColladaShape: Load sequence file '%s' failed", cachedPath.getFullPath().c_str());
+         #endif
             delete shape;
+         }
       }
-
-      Con::warnf("Failed to load cached COLLADA shape from %s", cachedPath.getFullPath().c_str());
    }
 #endif // DAE2DTS_TOOL
 
@@ -732,28 +786,23 @@ TSShape* loadColladaShape(const Torque::Path &path)
                realMesh = true;
          }
 
-         if (!realMesh)
+         if (!realMesh && gTryUseDSQs)
          {
             Torque::Path dsqPath(cachedPath);
             dsqPath.setExtension("dsq");
             FileStream animOutStream;
-            for (S32 i = 0; i < tss->sequences.size(); i++)
+            dsqPath.setFileName(cachedPath.getFileName());
+            if (animOutStream.open(dsqPath.getFullPath(), Torque::FS::File::Write))
             {
-               const String& seqName = tss->getName(tss->sequences[i].nameIndex);
-               Con::printf("Writing DSQ Animation File for sequence '%s'", seqName.c_str());
-
-               dsqPath.setFileName(cachedPath.getFileName() + "_" + seqName);
-               if (animOutStream.open(dsqPath.getFullPath(), Torque::FS::File::Write))
-               {
-                  tss->exportSequence(&animOutStream, tss->sequences[i], false);
-                  animOutStream.close();
-               }
-
+               Con::printf("Writing DSQ Animation File for '%s'", dsqPath.getFileName().c_str());
+               tss->exportSequences(&animOutStream);
+               animOutStream.close();
             }
          }
          else
          {
             // Cache the Collada model to a DTS file for faster loading next time.
+            cachedPath.setExtension("cached.dts");
             FileStream dtsStream;
             if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))
             {

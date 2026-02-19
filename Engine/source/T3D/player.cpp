@@ -1552,7 +1552,7 @@ ConsoleDocClass( Player,
 Player::Player()
 {
    mTypeMask |= PlayerObjectType | DynamicShapeObjectType;
-
+   mPathfindingIgnore = true;
    mDelta.pos = mAnchorPoint = Point3F(0,0,100);
    mDelta.rot = mDelta.head = Point3F(0,0,0);
    mDelta.rotOffset.set(0.0f,0.0f,0.0f);
@@ -3911,7 +3911,7 @@ void Player::updateActionThread()
 
             if (!footfallDustOverride && rInfo.t <= 0.5f && mWaterCoverage == 0.0f
                                          && material && material->mShowDust
-                                         && mDataBlock->footPuffEmitter != nullptr)
+                                         && mDataBlock->footPuffEmitter != NULL)
             {
                // New emitter every time for visibility reasons
                ParticleEmitter * emitter = new ParticleEmitter;
@@ -6097,7 +6097,7 @@ void Player::updateWorkingCollisionSet()
    // box by the possible movement in that tick.
    Point3F scaledVelocity = mVelocity * TickSec;
    F32 len    = scaledVelocity.len();
-   F32 newLen = len + (10.0f * TickSec);
+   F32 newLen = len + (mDataBlock->getShape()->mRadius * TickSec);
 
    // Check to see if it is actually necessary to construct the new working list,
    // or if we can use the cached version from the last query.  We use the x

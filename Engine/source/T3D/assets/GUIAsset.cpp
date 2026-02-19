@@ -264,7 +264,7 @@ GuiControl* GuiInspectorTypeGUIAssetPtr::constructEditControl()
 
    StringBuilder varNameStr;
    varNameStr.append(mCaption);
-   if (mFieldArrayIndex != nullptr)
+   if (mFieldArrayIndex != NULL)
    {
       varNameStr.append("[");
       varNameStr.append(mFieldArrayIndex);

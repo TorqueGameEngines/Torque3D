@@ -32,6 +32,7 @@
 #include "math/mRandom.h"
 #include "math/mathIO.h"
 #include "console/engineAPI.h"
+#include "particleInspectors.h"
 
 IMPLEMENT_CO_DATABLOCK_V1( ParticleData );
 
@@ -534,7 +535,7 @@ bool ParticleData::onAdd()
      {
        Con::warnf(ConsoleLogEntry::General, 
                   "ParticleData(%s) bad value(s) for animTexTiling [%d or %d <= 0], invalid datablock", 
-                  animTexTiling.x, animTexTiling.y, getName());
+                   getName(), animTexTiling.x, animTexTiling.y);
        return false;
      }
 
@@ -814,3 +815,313 @@ void ParticleData::onPerformSubstitutions()
 }
 
 DEF_ASSET_BINDS_REFACTOR(ParticleData, Texture);
+
+ConsoleType(stringList, TypeParticleList, Vector<StringTableEntry>, "")
+
+ConsoleGetType(TypeParticleList)
+{
+   Vector<StringTableEntry>* vec = (Vector<StringTableEntry> *)dptr;
+   S32 buffSize = (vec->size() * 15) + 16;
+   char* returnBuffer = Con::getReturnBuffer(buffSize);
+   S32 maxReturn = buffSize;
+   returnBuffer[0] = '\0';
+   S32 returnLeng = 0;
+   for (Vector<const char*>::iterator itr = vec->begin(); itr != vec->end(); itr++)
+   {
+      // concatenate the next value onto the return string
+      dSprintf(returnBuffer + returnLeng, maxReturn - returnLeng, "%s ", *itr);
+      // update the length of the return string (so far)
+      returnLeng = dStrlen(returnBuffer);
+   }
+   // trim off that last extra space
+   if (returnLeng > 0 && returnBuffer[returnLeng - 1] == ' ')
+      returnBuffer[returnLeng - 1] = '\0';
+   return returnBuffer;
+}
+
+ConsoleSetType(TypeParticleList)
+{
+   Vector<StringTableEntry>* vec = (Vector<StringTableEntry> *)dptr;
+   // we assume the vector should be cleared first (not just appending)
+   vec->clear();
+   S32 numUnits = 0;
+   if (argc == 1)
+   {
+      const char* values = argv[0];
+      numUnits = StringUnit::getUnitCount(values, " ");
+
+      if (numUnits > 1)
+         bool dafgdf = true;
+
+      for (U32 i = 0; i < numUnits; i++)
+      {
+         const char* value = StringUnit::getUnit(values, i, " ");
+
+         vec->push_back(StringTable->insert(value));
+      }
+   }
+   else if (argc > 1)
+   {
+      for (S32 i = 0; i < argc; i++)
+         vec->push_back(StringTable->insert(argv[i]));
+   }
+   else
+      Con::printf("TypeParticleList must be set as { a, b, c, ... } or \"a b c ...\"");
+
+   if (numUnits > 1)
+   {
+      for (U32 x = 0; x < numUnits; x++)
+      {
+         Vector<const char*> testVec = *vec;
+         String test = testVec[x];
+         Con::printf("TypeParticleList vec results: %s", testVec[x]);
+      }
+   }
+   bool test = false;
+}
+
+#ifdef TORQUE_TOOLS
+//-----------------------------------------------------------------------------
+// GuiInspectorTypeExpandableIdList 
+//-----------------------------------------------------------------------------
+/**/IMPLEMENT_CONOBJECT(GuiInspectorTypeParticleDataList);
+
+ConsoleDocClass(GuiInspectorTypeParticleDataList,
+   "@brief Inspector field type for ParticleData lists\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+GuiControl* GuiInspectorTypeParticleDataList::constructEditControl()
+{
+   mStack = new GuiStackControl();
+
+   if (mStack == NULL)
+      return mStack;
+
+   mStack->registerObject();
+   mStack->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiDefaultProfile");
+   mStack->setPadding(3);
+
+   mNewParticleBtn = new GuiIconButtonCtrl();
+   mNewParticleBtn->registerObject();
+   mNewParticleBtn->_setBitmap(StringTable->insert("ToolsModule:iconAdd_image"));
+   mNewParticleBtn->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiDefaultProfile");
+   mNewParticleBtn->setHorizSizing(horizResizeRight);
+   mNewParticleBtn->mMakeIconSquare = true;
+   mNewParticleBtn->mFitBitmapToButton = true;
+   mNewParticleBtn->setExtent(20, 20);
+
+   char szBuffer[512];
+   dSprintf(szBuffer, sizeof(szBuffer), "ParticleEditor.addParticleSlot(%s, %s);",
+      mNewParticleBtn->getIdString(), mInspector->getInspectObject()->getIdString());
+   mNewParticleBtn->setField("Command", szBuffer);
+
+   GuiContainer* newBtnCtnr = new GuiContainer();
+   newBtnCtnr->registerObject();
+   newBtnCtnr->addObject(mNewParticleBtn);
+   newBtnCtnr->setHorizSizing(horizResizeWidth);
+
+   mStack->addObject(newBtnCtnr);
+
+   //Particle 0
+   mParticleSlot0Ctrl = _buildParticleEntryField(0);
+   
+   mStack->addObject(mParticleSlot0Ctrl);
+
+   //Now the non-default entries if we already have some
+   Parent::updateValue();
+   const char* data = getData();
+
+   if (data != NULL && !String::isEmpty(data))
+   {
+      U32 particlesCount = StringUnit::getUnitCount(data, " ");
+      for (U32 i=1; i < particlesCount; i++)
+      {
+         GuiControl* particleSlotCtrl = _buildParticleEntryField(i);
+         mStack->addObject(particleSlotCtrl);
+      }
+   }
+
+   _registerEditControl(mStack);
+
+   //constructEditControlChildren(retCtrl, getWidth());
+
+   //retCtrl->addObject(mScriptValue);
+
+   /*char szBuffer[512];
+   dSprintf(szBuffer, 512, "setClipboard(%d.getText());", mScriptValue->getId());
+   mCopyButton->setField("Command", szBuffer);
+   addObject(mCopyButton);*/
+
+   mUseHeightOverride = true;
+   mHeightOverride = (mStack->getCount() * 23) + 6;
+
+   return mStack;
+}
+
+GuiControl* GuiInspectorTypeParticleDataList::_buildParticleEntryField(const S32& index)
+{
+   Point2I editPos = mStack->getPosition();
+   Point2I editExtent = mStack->getExtent();
+
+   //Particle 0
+   GuiControl* particleSlotCtrl = new GuiControl();
+   particleSlotCtrl->registerObject();
+   particleSlotCtrl->setExtent(editExtent.x, 18);
+   particleSlotCtrl->setHorizSizing(horizResizeWidth);
+
+   GuiButtonCtrl* listBtn = new GuiButtonCtrl();
+   listBtn->registerObject();
+   listBtn->setHorizSizing(horizResizeLeft);
+   listBtn->setInternalName("particleDropdown");
+   listBtn->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiButtonProfile");
+   listBtn->setExtent(editExtent.x - 40, 18);
+
+   char szBuffer[512];
+   dSprintf(szBuffer, sizeof(szBuffer), "ParticleEditor.changeParticleSlot(%s, %s, %d);",
+      listBtn->getIdString(), mInspector->getInspectObject()->getIdString(), index);
+   listBtn->setField("Command", szBuffer);
+
+   if (mField && index != -1)
+   {
+      Parent::updateValue();
+      const char* data = getData();
+
+      if (data != NULL && !String::isEmpty(data))
+      {
+         const char* particleSlotData = StringUnit::getUnit(data, index, " ");
+         listBtn->setText(particleSlotData);
+      }
+   }
+
+   particleSlotCtrl->addObject(listBtn);
+
+   GuiButtonCtrl* editSlotBtn = new GuiIconButtonCtrl();
+   editSlotBtn->registerObject();
+   editSlotBtn->setText(StringTable->insert("..."));
+   editSlotBtn->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiButtonProfile");
+   editSlotBtn->setHorizSizing(horizResizeRight);
+   editSlotBtn->setInternalName("editBtn");
+   editSlotBtn->setPosition(editExtent.x - 40, 0);
+   editSlotBtn->setExtent(20, 20);
+
+   char cmdBuffer[512];
+   dSprintf(cmdBuffer, sizeof(cmdBuffer), "ParticleEditor.editParticleSlot(%s, %s, %d);",
+      this->getIdString(), mInspector->getInspectObject()->getIdString(), index);
+   editSlotBtn->setField("Command", cmdBuffer);
+
+   particleSlotCtrl->addObject(editSlotBtn);
+
+   if (index != 0)
+   {
+      GuiIconButtonCtrl* deleteSlotBtn = new GuiIconButtonCtrl();
+      deleteSlotBtn->registerObject();
+      deleteSlotBtn->_setBitmap(StringTable->insert("ToolsModule:iconCancel_image"));
+      deleteSlotBtn->setDataField(StringTable->insert("profile"), NULL, "ToolsGuiDefaultProfile");
+      deleteSlotBtn->setHorizSizing(horizResizeRight);
+      deleteSlotBtn->setInternalName("deleteBtn");
+      deleteSlotBtn->mMakeIconSquare = true;
+      deleteSlotBtn->mFitBitmapToButton = true;
+      deleteSlotBtn->setPosition(editExtent.x - 20, 0);
+      deleteSlotBtn->setExtent(20, 20);
+
+      char cmdBuffer[512];
+      dSprintf(cmdBuffer, sizeof(cmdBuffer), "ParticleEditor.clearParticleSlot(%s, %s, %d);",
+         this->getIdString(), mInspector->getInspectObject()->getIdString(), index);
+      deleteSlotBtn->setField("Command", cmdBuffer);
+
+      particleSlotCtrl->addObject(deleteSlotBtn);
+   }
+
+   return particleSlotCtrl;
+}
+
+void GuiInspectorTypeParticleDataList::_populateMenu(GuiPopUpMenuCtrlEx* menu)
+{
+   // Check whether we should show profiles from the editor category.
+
+   const bool showEditorProfiles = Con::getBoolVariable("$pref::GuiEditor::showEditorProfiles", false);
+
+   // Add the control profiles to the menu.
+
+   SimGroup* grp = Sim::getGuiDataGroup();
+   SimSetIterator iter(grp);
+   for (; *iter; ++iter)
+   {
+      GuiControlProfile* profile = dynamic_cast<GuiControlProfile*>(*iter);
+      if (!profile)
+         continue;
+
+      if (!showEditorProfiles && profile->mCategory.compare("Editor", 0, String::NoCase) == 0)
+         continue;
+
+      menu->addEntry(profile->getName(), profile->getId());
+   }
+
+   menu->sort();
+}
+
+bool GuiInspectorTypeParticleDataList::updateRects()
+{
+   S32 rowSize = 18;
+   S32 dividerPos, dividerMargin;
+   mInspector->getDivider(dividerPos, dividerMargin);
+   Point2I fieldExtent = getExtent();
+   Point2I fieldPos = getPosition();
+
+   mCaptionRect.set(0, 0, fieldExtent.x - dividerPos - dividerMargin, fieldExtent.y);
+
+   mEditCtrlRect.set(fieldExtent.x - dividerPos + dividerMargin, 1, dividerPos - dividerMargin, fieldExtent.y);
+   S32 cellWidth = mCeil((dividerPos - dividerMargin - 29));
+
+   mNewParticleBtn->resize(Point2I(mEditCtrlRect.extent.x - 20, 0), Point2I(20, 20));
+
+   //Particle Slot 0 is mandatory
+   auto c = mStack->getCount();
+   for (U32 i=0; i < mStack->getCount(); i++)
+   {
+      GuiControl* slot = static_cast<GuiControl*>(mStack->getObject(i));
+
+      slot->resize(Point2I(0, 0), Point2I(mEditCtrlRect.extent.x, rowSize));
+
+      GuiControl* dropdown = dynamic_cast<GuiControl*>(slot->findObjectByInternalName(StringTable->insert("particleDropdown")));
+      if (dropdown)
+      {
+         dropdown->setPosition(0, 0);
+         dropdown->setExtent(mEditCtrlRect.extent.x - 40, 20);
+      }
+
+      GuiControl* editBtn = dynamic_cast<GuiControl*>(slot->findObjectByInternalName(StringTable->insert("editBtn")));
+      if (editBtn)
+      {
+         editBtn->setPosition(mEditCtrlRect.extent.x - 40, 0);
+         editBtn->setExtent(20, 20);
+      }
+
+      GuiControl* deleteBtn = dynamic_cast<GuiControl*>(slot->findObjectByInternalName(StringTable->insert("deleteBtn")));
+      if (deleteBtn)
+      {
+         deleteBtn->setPosition(mEditCtrlRect.extent.x - 20, 0);
+         deleteBtn->setExtent(20, 20);
+      }
+   }
+
+   mEdit->resize(mEditCtrlRect.point, mEditCtrlRect.extent);
+
+   mHeightOverride = (mStack->getCount() * 23) + 6;
+
+   //mCopyButton->resize(Point2I(mProfile->mTextOffset.x, rowSize + 3), Point2I(45, 15));
+   //mPasteButton->resize(Point2I(mProfile->mTextOffset.x, rowSize + rowSize + 6), Point2I(45, 15));
+
+   return true;
+}
+
+
+void GuiInspectorTypeParticleDataList::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeParticleList)->setInspectorFieldType("GuiInspectorTypeParticleDataList");
+}
+#endif

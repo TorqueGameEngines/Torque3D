@@ -45,7 +45,15 @@ CubemapData::CubemapData()
 
 CubemapData::~CubemapData()
 {
-   mCubemap = NULL;
+   if (mCubeMapAsset.notNull())
+   {
+      mCubeMapAsset.clear();
+   }
+
+   if (mCubemap)
+   {
+      mCubemap.free();
+   }
 }
 
 ConsoleDocClass( CubemapData, 
@@ -101,7 +109,7 @@ void CubemapData::createMap()
        //check mCubeMapFile first
        if (mCubeMapAsset.notNull())
        {
-          mCubemap = TEXMGR->createCubemap(mCubeMapAsset->getImageFile());
+          mCubemap = mCubeMapAsset->getTexture(&GFXCubemapStaticTextureProfile);
           return;
        }
        else
@@ -125,11 +133,14 @@ void CubemapData::createMap()
 
        if( initSuccess )
        {
-           mCubemap = GFX->createCubemap();
-           if (mCubeMapFaceAsset->isNull())
-              return;
+          if (mCubeMapFaceAsset->isNull())
+             return;
 
-           mCubemap->initStatic(mCubeMapFaceTex);
+          mCubemap.set(mCubeMapFaceTex->getWidth(), mCubeMapFaceTex->getHeight(), mCubeMapFaceTex->getFormat(), &GFXCubemapStaticTextureProfile, "CubemapData-InitTexture", mCubeMapFaceTex->getPointer()->getMipLevels());
+          for (U32 i = 0; i < 6; i++)
+          {
+             mCubemap->updateTextureSlot(mCubeMapFaceTex[i],0, i);
+          }
        }
    }
 }
@@ -141,7 +152,7 @@ void CubemapData::updateFaces()
    //check mCubeMapFile first
    if (mCubeMapAsset.notNull())
    {
-      mCubemap = TEXMGR->createCubemap(mCubeMapAsset->getImageFile());
+      mCubemap = mCubeMapAsset->getTexture(&GFXCubemapStaticTextureProfile);
       return;
    }
    else
@@ -166,11 +177,14 @@ void CubemapData::updateFaces()
 	if( initSuccess )
 	{
 		mCubemap = NULL;
-		mCubemap = GFX->createCubemap();
       if (mCubeMapFaceAsset->isNull())
          return;
 
-		mCubemap->initStatic(mCubeMapFaceTex);
+      mCubemap.set(mCubeMapFaceTex->getWidth(), mCubeMapFaceTex->getHeight(), GFXFormatR16G16B16A16F, &GFXCubemapStaticTextureProfile, "CubemapData-InitTexture", mCubeMapFaceTex->getFormat());
+      for (U32 i = 0; i < 6; i++)
+      {
+         mCubemap->updateTextureSlot(mCubeMapFaceTex[i], 0, i);
+      }
 	}
 }
 

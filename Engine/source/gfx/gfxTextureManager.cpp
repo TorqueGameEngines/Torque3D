@@ -361,7 +361,7 @@ GFXTextureObject *GFXTextureManager::_createTexture(  GBitmap *bmp,
       if (  inObj->getWidth() != realWidth ||
             inObj->getHeight() != realHeight ||
             inObj->getFormat() != realFmt )
-         ret = _createTextureObject( realHeight, realWidth, 0, realFmt, profile, numMips, false, 0, inObj );
+         ret = _createTextureObject( realHeight, realWidth, 0, realFmt, profile, numMips, false, 0, 1, inObj );
       else
          ret = inObj;
    }
@@ -569,7 +569,7 @@ GFXTextureObject *GFXTextureManager::_createTexture(  DDSFile *dds,
             inObj->getMipLevels() != numMips )
          ret = _createTextureObject(   dds->getHeight(), dds->getWidth(), 0, 
                                        fmt, profile, numMips, 
-                                       true, 0, inObj );
+                                       true, 0, 1, inObj );
       else
          ret = inObj;
    }
@@ -744,7 +744,7 @@ GFXTextureObject *GFXTextureManager::createTexture(  U32 width, U32 height, void
    return createTexture( bmp, String::EmptyString, profile, true );
 }
 
-GFXTextureObject *GFXTextureManager::createTexture( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, U32 numMipLevels, S32 antialiasLevel )
+GFXTextureObject *GFXTextureManager::createTexture( U32 width, U32 height, GFXFormat format, GFXTextureProfile *profile, U32 numMipLevels, S32 antialiasLevel, U32 arraySize)
 {
    // Deal with sizing issues...
    U32 localWidth = width;
@@ -783,7 +783,7 @@ GFXTextureObject *GFXTextureManager::createTexture( U32 width, U32 height, GFXFo
    // Create the texture if we didn't get one from the pool.
    if ( !outTex )
    {
-      outTex = _createTextureObject( localHeight, localWidth, 0, format, profile, numMips, false, antialiasLevel );
+      outTex = _createTextureObject( localHeight, localWidth, 0, format, profile, numMips, false, antialiasLevel, arraySize );
 
       // Make sure we add it to the pool.
       if ( outTex && profile->isPooled() )
@@ -814,12 +814,13 @@ GFXTextureObject *GFXTextureManager::createTexture(   U32 width,
                                                       U32 depth,
                                                       GFXFormat format,
                                                       GFXTextureProfile *profile,
-                                                      U32 numMipLevels)
+                                                      U32 numMipLevels,
+                                                      U32 arraySize)
 {
    PROFILE_SCOPE( GFXTextureManager_CreateTexture_3D );
 
    // Create texture...
-   GFXTextureObject *ret = _createTextureObject( height, width, depth, format, profile, numMipLevels );
+   GFXTextureObject *ret = _createTextureObject( height, width, depth, format, profile, numMipLevels, arraySize );
 
    if(!ret)
    {

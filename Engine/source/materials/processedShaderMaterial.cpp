@@ -56,6 +56,7 @@
 void ShaderConstHandles::init( GFXShader *shader, CustomMaterial* mat /*=NULL*/)
 {
    mDiffuseColorSC = shader->getShaderConstHandle("$diffuseMaterialColor");
+   mTileScaleSC = shader->getShaderConstHandle(ShaderGenVars::tileScale);
    mTexMatSC = shader->getShaderConstHandle(ShaderGenVars::texMat);
    mToneMapTexSC = shader->getShaderConstHandle(ShaderGenVars::toneMap);
    mORMConfigSC = shader->getShaderConstHandle(ShaderGenVars::ormConfig);
@@ -854,11 +855,11 @@ void ProcessedShaderMaterial::setTextureStages( SceneRenderState *state, const S
             break;
 
          case Material::Cube:
-            GFX->setCubeTexture( i, rpd->mCubeMap );
+            GFX->setTexture( i, rpd->mCubeMap );
             break;
 
          case Material::SGCube:
-            GFX->setCubeTexture( i, sgData.cubemap );
+            GFX->setTexture( i, sgData.cubemap );
             break;
 
          case Material::BackBuff:
@@ -1142,6 +1143,8 @@ void ProcessedShaderMaterial::_setShaderConstants(SceneRenderState * state, cons
       shaderConsts->set( handles->mOneOverRTSizeSC, oneOverTargetSize );
    }
 
+   shaderConsts->setSafe(handles->mTileScaleSC, mMaterial->mTileScale[stageNum]);   
+
    // set detail scale
    shaderConsts->setSafe(handles->mDetailScaleSC, mMaterial->mDetailScale[stageNum]);
    shaderConsts->setSafe(handles->mDetailBumpStrength, mMaterial->mDetailNormalMapStrength[stageNum]);
@@ -1333,7 +1336,7 @@ void ProcessedShaderMaterial::setSceneInfo(SceneRenderState * state, const Scene
       }
    }
    if (sgData.cubemap)
-      shaderConsts->setSafe(handles->mCubeMipsSC, (F32)sgData.cubemap->getMipMapLevels());
+      shaderConsts->setSafe(handles->mCubeMipsSC, (F32)sgData.cubemap->getMipLevels());
    else
       shaderConsts->setSafe(handles->mCubeMipsSC, (F32)getBinLog2(PROBEMGR->getProbeTexSize()));
 

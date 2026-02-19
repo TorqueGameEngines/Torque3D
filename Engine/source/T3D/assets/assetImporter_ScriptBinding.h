@@ -117,7 +117,7 @@ DefineEngineMethod(AssetImporter, getAssetItemChildCount, S32, (AssetImportObjec
    "@param assetItem The AssetImportObject to get the number of children of.\n"
    "@return The number of child items")
 {
-   if (assetItem == nullptr)
+   if (assetItem == NULL)
       return 0;
 
    return object->getAssetItemChildCount(assetItem);
@@ -129,8 +129,8 @@ DefineEngineMethod(AssetImporter, getAssetItemChild, AssetImportObject*, (AssetI
    "@param index The index of the child to get.\n"
    "@return The child AssetImportObect")
 {
-   if (assetItem == nullptr)
-      return nullptr;
+   if (assetItem == NULL)
+      return NULL;
 
    return object->getAssetItemChild(assetItem, index);
 }

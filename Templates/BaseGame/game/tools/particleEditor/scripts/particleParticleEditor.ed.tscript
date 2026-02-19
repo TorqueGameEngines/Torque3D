@@ -1,0 +1,396 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+
+$PE_PARTICLEEDITOR_DEFAULT_FILENAME = "data/managedParticleData." @ $TorqueScriptFileExtension;
+
+
+//=============================================================================================
+//    PE_ParticleEditor.
+//=============================================================================================
+function PE_ParticleEditor::init(%this)
+{
+   datablock ParticleData(PE_ParticleEditor_NotDirtyParticle)
+   {
+      textureName = "art/particles/defaultParticle";
+   };  
+   
+   %this.unlistedSet.add(PE_ParticleEditor_NotDirtyParticle);
+}
+
+//---------------------------------------------------------------------------------------------
+function PE_ParticleEditor::openEditorTab(%this)
+{
+   PE_Window.text = ":: Particle Editor - Particles";
+   %this.guiSync();
+   ParticleEditor.activeEditor = %this;
+   
+   if( !%this.dirty )
+      %this.setNotDirty();
+}
+
+function PE_ParticleEditor::closeEditorTab(%this)
+{
+   if( isObject( $ParticleEditor::emitterNode) )
+      $ParticleEditor::emitterNode.delete();
+}
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::guiSync( %this )
+{
+   %this-->inspector.refresh();
+}
+
+function PE_ParticleEditor::resetVizNode(%this, %tform)
+{
+   PE_EmitterEditor.resetVizNode(%tform);
+}
+
+function PE_ParticleEditor::updateVizNode(%this)
+{
+   PE_EmitterEditor.updateVizNode();  
+}
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::selectObject(%this, %obj)
+{
+   // Bail if the user selected the same particle.
+   if( %obj == %this.currParticle )
+      return;
+   
+   // Load new particle if we're not in a dirty state
+   if( %this.dirty )
+   {         
+      toolsMessageBoxYesNoCancel("Save Existing Particle?", 
+         "Do you want to save changes to <br><br>" @ %this.currParticle.getName(), 
+         "PE_ParticleEditor.saveParticle(" @ %this.currParticle @ ");", 
+         "PE_ParticleEditor.saveParticleDialogDontSave(" @ %this.currParticle @ "); PE_ParticleEditor.loadNewParticle(" @ %obj @ ");"
+      );
+   }
+   else
+   {
+      %this.loadNewParticle(%obj);
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::loadNewParticle( %this, %particle )
+{
+   %this-->popupMenu.setText(%particle.getName());
+   %this-->inspector.inspect(%particle);  
+   
+   if( isObject( %particle ) )
+      %current = %particle.getId();
+   else
+      %current = %this-->popupMenu.text;
+      
+   %this.currParticle = %current; 
+   
+   error("PE_ParticleEditor::loadNewParticle() - Loading particle: " @ %current.getName());
+   error("Particle TextureName: " @ %current.getTexture());
+   
+   error("ReloadingParticle...");
+   %current.reload();
+   
+   PE_ParticleEditor_NotDirtyParticle.assignFieldsFrom( %current );
+   PE_ParticleEditor_NotDirtyParticle.originalName = %current.getName();
+
+   error("Post duplicate Particle TextureName: " @ %current.getTexture());
+   error("Post duplicate PE_ParticleEditor_NotDirtyParticle TextureName: " @ PE_ParticleEditor_NotDirtyParticle.getTexture());
+
+   %this.guiSync();
+   %this.setNotDirty();
+}
+
+//---------------------------------------------------------------------------------------------
+function PE_ParticleEditor::onInspectorFieldModified(%this, %object, %fieldName, %arrayIndex, %oldValue, %newValue)
+{
+   %action = ParticleEditor.createUndo(ActionUpdateActiveParticler, "Update Active Particle");
+   %action.particle = %object;
+   %action.field = %fieldName;
+   %action.isSlider = false;
+   %action.onMouseUp = true;
+   %action.newValue = %newValue;
+   %action.oldValue = %oldValue;
+   
+   ParticleEditor.submitUndo( %action );
+
+   %object.reload();
+}
+
+// Generic updateParticle method
+function PE_ParticleEditor::updateParticle(%this, %propertyField, %value, %isSlider, %onMouseUp)
+{
+   PE_ParticleEditor.setDirty();
+   %particle = PE_ParticleEditor.currParticle;
+      
+   %last = Editor.getUndoManager().getUndoAction(Editor.getUndoManager().getUndoCount() - 1);
+   if( (%isSlider) && (%last.isSlider) && (!%last.onMouseUp) )
+   {
+      %last.field = %propertyField;
+      %last.isSlider = %isSlider;
+      %last.onMouseUp = %onMouseUp;
+      %last.newValue = %value;
+   }
+   else
+   {
+      %action = ParticleEditor.createUndo(ActionUpdateActiveParticle, "Update Active Particle");
+      %action.particle = %particle;
+      %action.field = %propertyField;
+      %action.isSlider = %isSlider;
+      %action.onMouseUp = %onMouseUp;
+      %action.newValue = %value;
+      %action.oldValue = %particle.getFieldValue( %propertyField );
+      
+      ParticleEditor.submitUndo( %action );
+   }
+   
+   %particle.setFieldValue( %propertyField, %value );
+   %particle.reload();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::setDirty( %this )
+{
+   this.text = "*Particle";
+   this.dirty = true;
+
+   if(!startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = "*" @ %this-->PopupMenu.text;
+   }
+   
+   %particle = this.currParticle;
+   %filename = %particle.getFilename();
+   %editorFilename = "tools/particleEditor/scripts/particleParticleEditor.ed." @ $TorqueScriptFileExtension;
+   
+   if( %filename $= "" || %filename $= %editorFilename )
+      %this.saver.setDirty( %particle, $PE_PARTICLEEDITOR_DEFAULT_FILENAME );
+   else
+      %this.saver.setDirty( %particle );
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::setNotDirty( %this )
+{
+   PE_ParticleEditor.text = "Particle";
+   PE_ParticleEditor.dirty = false;
+
+   if(startsWith(%this-->PopupMenu.text, "*"))
+   {
+      %this-->PopupMenu.text = stripChars(%this-->PopupMenu.text, "*");
+   }
+   
+   %this.saver.clearAll();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::showNewDialog( %this, %replaceSlot )
+{
+   // Open a dialog if the current Particle is dirty
+   if( this.dirty ) 
+   {
+      toolsMessageBoxYesNoCancel("Save Particle Changes?", 
+         "Do you wish to save the changes made to the <br>current particle before changing the particle?", 
+         "PE_ParticleEditor.saveParticle( " @ this.currParticle.getName() @ " ); PE_ParticleEditor.createParticle( " @ %replaceSlot @ " );", 
+         "PE_ParticleEditor.saveParticleDialogDontSave( " @ this.currParticle.getName() @ " ); PE_ParticleEditor.createParticle( " @ %replaceSlot @ " );"
+      );
+   }
+   else
+   {
+      this.createParticle( %replaceSlot );
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::createParticle( %this, %replaceSlot )
+{
+   // Make sure we have a spare slot on the current emitter.
+   
+   if( !%replaceSlot )
+   {
+      %numExistingParticles = getWordCount( PE_EmitterEditor.currEmitter.particles );
+      if( %numExistingParticles > 3 )
+      {
+         toolsMessageBoxOK( "Error", "An emitter cannot have more than 4 particles assigned to it." );
+         return;
+      }
+      
+      %particleIndex = %numExistingParticles;
+   }
+   else
+      %particleIndex = %replaceSlot - 1;
+   
+   %this.newParticleSlot = %particleIndex;
+   
+   if(%replaceSlot $= "" || %replaceSlot != 0)
+   {
+      AssetBrowser_SelectModule.showDialog("PE_ParticleEditor.pickedNewParticleTargetModule");
+      AssetBrowser_SelectModuleWindow.selectWindow();
+   }
+   else
+   {
+      %this.pickedNewParticleTargetModule(PE_EmitterEditor.targetModule);
+   }
+}
+
+function PE_ParticleEditor::pickedNewParticleTargetModule( %this, %module )
+{
+   ParticleEditorCreatePrompt.show("Particle", "ParticleData", "PE_ParticleEditor.doCreateNewParticle(\"" @ %module @ "\");" );
+}
+
+function PE_ParticleEditor::doCreateNewEmitter(%this, %module)
+{
+   //Sanity checks
+   %newName = ParticleEditorCreatePrompt-->nameText.getText();
+   if(%newName $= "")
+   {
+      toolsMessageBoxOK("Error", "New Particle requires a name!");
+      return;
+   }
+   
+   Canvas.popDialog(ParticleEditorCreatePrompt);
+   
+   %sourceDB = ParticleEditorCreatePrompt-->CopySourceDropdown.getText();
+   
+   if(%sourceDB $= "")
+      %sourceDB = DefaultParticle;
+
+   %moduleDef = ModuleDatabase.findModule(%module);
+   $PE_PARTICLEEDITOR_DEFAULT_FILENAME = %moduleDef.ModulePath @ "/scripts/managedData/managedParticleData." @ $TorqueScriptFileExtension;
+   
+   if(!isDirectory(filePath($PE_PARTICLEEDITOR_DEFAULT_FILENAME)))
+   {
+      AssetBrowser.dirHandler.createFolder(filePath($PE_PARTICLEEDITOR_DEFAULT_FILENAME));
+   }
+   
+   // Create the particle datablock and add to the emitter.
+   %particle = getUniqueName( %newName );
+   eval("datablock ParticleData( " @ %particle @ " : " @ %sourceDB @ " ){};");
+   
+   // Submit undo.
+   %action = ParticleEditor.createUndo( ActionCreateNewParticle, "Create New Particle" );
+   %action.particle = %particle.getId();
+   %action.particleIndex = %this.newParticleSlot;
+   %action.prevParticle = ( "PEE_EmitterParticleSelector" @ ( PE_ParticleEditor.newParticleSlot + 1 ) ).getSelected();
+   %action.emitter = PE_EmitterEditor.currEmitter;
+   
+   ParticleEditor.submitUndo( %action );
+   
+   // Execute action.
+   %action.redo();
+
+   %this.saver.setDirty(%particle, $PE_PARTICLEEDITOR_DEFAULT_FILENAME);
+   
+   %this.loadNewParticle(%particle);
+   %this.setDirty();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::showDeleteDialog( %this )
+{
+   // Don't allow deleting DefaultParticle.
+   
+   if( PE_ParticleEditor.currParticle.getName() $= "DefaultParticle" )
+   {
+      toolsMessageBoxOK( "Error", "Cannot delete DefaultParticle");
+      return;
+   }
+   
+   // Check to see if the particle emitter has more than 1 particle on it.
+   
+   if( getWordCount( PE_EmitterEditor.currEmitter.particles ) == 1 )
+   {
+      toolsMessageBoxOK( "Error", "At least one particle must remain on the particle emitter.");
+      return;
+   }
+   
+   // Bring up requester for confirmation.
+   
+   if( isObject( PE_ParticleEditor.currParticle ) )
+   {
+      toolsMessageBoxYesNoCancel( "Delete Particle?", 
+         "Are you sure you want to delete<br><br>" @ %this.currParticle.getName() @ "<br><br> Particle deletion won't take affect until the engine is quit.", 
+         "PE_ParticleEditor.saveParticleDialogDontSave( " @ %this.currParticle.getName() @ " ); PE_ParticleEditor.deleteParticle();", 
+         "", 
+         ""
+      );
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::deleteParticle( %this )
+{
+   %particle = %this.currParticle;
+   
+   // Submit undo.
+   
+   %action = ParticleEditor.createUndo( ActionDeleteParticle, "Delete Particle" );
+   %action.particle = %particle;
+   %action.emitter = PE_EmitterEditor.currEmitter;
+
+   ParticleEditor.submitUndo( %action );
+   
+   // Execute action.
+   
+   %action.redo();
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::saveParticle( %this, %particle )
+{
+   if ( %particle $= "" )
+   {
+      %particle = %this.currParticle;
+      %newName = %this.currParticle.getName();
+   }
+   else
+   {
+      %newName = %particle.getName();
+   }
+   
+   %this.currParticle.setName( %newName );
+   PE_ParticleEditor_NotDirtyParticle.assignFieldsFrom( %particle );
+   PE_ParticleEditor_NotDirtyParticle.originalName = %newName;
+   
+   %this.saver.saveDirty(); 
+   
+   %this.loadNewParticle(%newName.getId()); 
+}
+
+//---------------------------------------------------------------------------------------------
+
+function PE_ParticleEditor::saveParticleDialogDontSave( %this, %particle )
+{
+   %particle.setName( PE_ParticleEditor_NotDirtyParticle.originalName );
+   %particle.assignFieldsFrom( PE_ParticleEditor_NotDirtyParticle );
+   
+   %this.setNotDirty();
+}

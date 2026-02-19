@@ -72,7 +72,7 @@ void GuiVariableInspector::update()
    for (U32 i = 0; i < mFields.size(); i++)
    {
       //first, get the var's group name. if the group exists, we'll add to it's list
-      GuiInspectorVariableGroup *group = nullptr;
+      GuiInspectorVariableGroup *group = NULL;
 
       for (U32 g = 0; g < mGroups.size(); g++)
       {
@@ -83,7 +83,7 @@ void GuiVariableInspector::update()
          }
       }
 
-      if (group == nullptr)
+      if (group == NULL)
       {
          group = new GuiInspectorVariableGroup();
 
@@ -164,7 +164,7 @@ void GuiVariableInspector::addField(const char* name, const char* label, const c
 
    //establish the field on the ownerObject(if we have one)
    //This way, we can let the field hook into the object's field and modify it when changed
-   if (newField->mOwnerObject != nullptr)
+   if (newField->mOwnerObject != NULL)
    {
       if (!newField->mOwnerObject->isField(newField->mFieldName))
       {

@@ -87,7 +87,7 @@ FeatureParamsBase* FeatureSet::getArguments(U32 index) const
    if (mFeatures[index].argStruct)
       return mFeatures[index].argStruct;
 
-   return nullptr;
+   return NULL;
 }
 
 void FeatureSet::clear()

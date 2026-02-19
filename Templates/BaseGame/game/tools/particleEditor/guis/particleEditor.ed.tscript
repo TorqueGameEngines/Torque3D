@@ -1,0 +1,326 @@
+//-----------------------------------------------------------------------------
+// Copyright (c) 2012 GarageGames, LLC
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+// IN THE SOFTWARE.
+//-----------------------------------------------------------------------------
+
+
+// Open the particle editor to spawn a test emitter in front of the player.
+// Edit the sliders, check boxes, and text fields and see the results in
+// realtime.  Switch between emitters and particles with the buttons in the
+// top left corner.  When in particle mode, the only particles available will
+// be those assigned to the current emitter to avoid confusion.  In the top
+// right corner, there is a button marked "Drop Emitter", which will spawn the
+// test emitter in front of the player again, and a button marked "Restart
+// Emitter", which will play the particle animation again.
+
+
+//=============================================================================================
+//    ParticleEditor.
+//=============================================================================================
+
+//---------------------------------------------------------------------------------------------
+
+function ParticleEditor::initEditor( %this )
+{
+   echo( "Initializing ParticleEmitterData and ParticleData DataBlocks..." );
+
+   PE_TabBook.clear();
+   
+   for(%i=0; %i < PE_ParticleDataTypes.count(); %i++)
+   {
+      %groupName = PE_ParticleDataTypes.getKey(%i);
+      %typesList = getField(PE_ParticleDataTypes.getValue(%i), 0);
+      %editorName = getField(PE_ParticleDataTypes.getValue(%i), 1);
+      
+      if(exec("./PETabTemplate.gui"))
+      {
+         echo("MADE A NEW TAB PAGE: " @ $guiContent);
+         
+         $guiContent.text = %groupName;
+         $guiContent.typesList = %typesList;
+         $guiContent.setName(%editorName);
+         
+         $guiContent.saver = new PersistenceManager( "PE_" @ %groupName @ "Saver" );
+         $guiContent.unlistedSet = new SimSet( "PE_Unlisted" @ %groupName );
+         
+         $guiContent-->CreateNewBtn.tooltip = "Create New " @ %groupName;
+         $guiContent-->CreateNewBtn.command = %editorName @ ".showNewDialog();";
+         
+         $guiContent-->SaveCurrentBtn.tooltip = "Save Current " @ %groupName;
+         $guiContent-->SaveCurrentBtn.command = %editorName @ ".save" @ %groupName @ "();";
+         
+         $guiContent-->DeleteCurrentBtn.tooltip = "Delete Current " @ %groupName;
+         $guiContent-->DeleteCurrentBtn.command = %editorName @ ".showDeleteDialog();";
+         
+         PE_TabBook.add($guiContent);
+         
+         if($guiContent.isMethod("init"))
+            $guiContent.init();
+      }
+      else
+      {
+         error("Something went wrong when trying to generatea a ParticleEditor tab for type: " @ %groupName);
+      }
+   }
+   
+   PE_Window-->EditorTabBook.selectPage( 0 );
+}
+
+function ParticleEditorGui::openList( %this, %editorCtrl )
+{
+   // This function creates the list of all particles and particle emitters
+   
+   %listCount = 0;
+   
+   %listSet = new SimSet(){ internalName = %editorCtrl.text; };
+   
+   foreach( %obj in DatablockGroup )
+   {
+      %typesListCount = getWordCount(%editorCtrl.typesList);
+      for(%i=0; %i < %typesListCount; %i++)
+      {
+         %type = getWord(%editorCtrl.typesList, %i);
+         
+         if( %obj.isMemberOfClass( %type ) )
+         {
+            // Filter out emitters on the PE_UnlistedEmitters list.
+            
+            %unlistedFound = false;
+            foreach( %unlisted in %editorCtrl.unlistedSet ){
+               if( %unlisted.getId() == %obj.getId() )
+               {
+                  %unlistedFound = true;
+                  break;
+               }
+            }
+         
+            if( %unlistedFound )
+               continue;
+               
+            // To prevent our default emitters from getting changed,
+            // prevent them from populating the list. Default emitters
+            // should only be used as a template for creating new ones.
+            if ( %obj.getName() $= "DefaultEmitter")
+               continue;
+               
+            if(%typesListCount > 1)
+            {
+               %typeSet = %listSet.findObjectByInternalName(%type);
+               if(!isObject(%typeSet))
+               {
+                  %typeSet = new SimSet(){ internalName = %type; };
+                  %listSet.add(%typeSet);
+               }
+               
+               %typeSet.add(%obj);
+            }
+            else
+            {
+               %listSet.add(%obj);
+            }
+            %listCount++;
+         }
+      }
+   }
+   
+   ContextedDropdownListGui.show(%listSet, "Select", "" @ %editorCtrl @ ".selectObject", %this-->PopupMenu);
+   if(%this-->PopupMenu.getText() !$= "")
+   {
+      %obj = %this-->PopupMenu.getText().getId();
+      ContextedDropdownListGui.seekItemObject(%obj);
+   }
+   
+   //ContextedDropdownListGui-->tree.sort(0, true);
+   
+   //Go through and mark any items that are indicated as dirty
+   for(%i=0; %i < %editorCtrl.saver.getDirtyObjectCount(); %i++)
+   {
+      %dirtyObj = %editorCtrl.saver.getDirtyObject(%i);
+      %itemId = ContextedDropdownListGui-->tree.findItemByObjectId(%dirtyObj.getId());
+      
+      if(%itemId != -1) //can happen if it was previously marked as unlisted or somehow removed
+      {
+         ContextedDropdownListGui-->tree.markItem(%itemId, true);
+      }
+   }
+}
+
+//---------------------------------------------------------------------------------------------
+
+function ParticleEditor::resetEmitterNode( %this )
+{
+   %tform = ServerConnection.getControlObject().getEyeTransform();
+   %vec = VectorNormalize( ServerConnection.getControlObject().getForwardVector() );
+   %vec = VectorScale( %vec, 4 );
+   %tform = setWord( %tform, 0, getWord( %tform, 0 ) + getWord( %vec, 0 ) );
+   %tform = setWord( %tform, 1, getWord( %tform, 1 ) + getWord( %vec, 1 ) );
+   %tform = setWord( %tform, 2, getWord( %tform, 2 ) + getWord( %vec, 2 ) );
+   
+   %this.selectedEditor.resetVizNode(%tform);
+}
+
+//---------------------------------------------------------------------------------------------
+
+function ParticleEditor::updateEmitterNode( %this )
+{
+   %this.selectedEditor.updateVizNode();
+}
+
+//------------------------------------------------------------------------------
+function ParticleEditor::open(%this, %datablock)
+{
+   //TODO:
+   //Check if we're dirty and if so, prompt about saving the change first
+   
+   for(%i=0; %i < PE_ParticleDataTypes.count(); %i++)
+   {
+      %groupName = PE_ParticleDataTypes.getKey(%i);
+      %typesList = getField(PE_ParticleDataTypes.getValue(%i), 0);
+      %editorName = getField(PE_ParticleDataTypes.getValue(%i), 1);
+      
+      %typesListCount = getWordCount(%typesList);
+      for(%t=0; %t < %typesListCount; %t++)
+      {
+         %type = getWord(%typesList, %t);
+         
+         if( %datablock.isMemberOfClass( %type ) )
+         {
+            PE_TabBook.selectPage(%i);
+            %editorName.selectObject(%datablock);
+            return true;
+         }         
+      }
+   } 
+   
+   return false; 
+}
+//=============================================================================================
+//    PE_TabBook.
+//=============================================================================================
+
+//---------------------------------------------------------------------------------------------
+
+function PE_TabBook::onTabSelected( %this, %text, %idx )
+{
+   if(isObject(ParticleEditor.selectedEditor))
+      ParticleEditor.selectedEditor.closeEditorTab();
+   
+   %tab = %this.getObject(%idx);
+   %tab.openEditorTab();
+   
+   ParticleEditor.selectedEditor = %tab;
+}
+
+//------------------------------------------------------------------------------
+// PE Window
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+
+function ParticleEditor::maxSize(%this, %window)
+{
+   // Resize the windows to the max height
+   // and force these to the right side if set
+   if(EditorSettings.value( "WorldEditor/forceSidebarToSide" ) == 1 && %this.resizing == true)
+   {  
+      // prevent onResize after a resize
+      %this.resizing = false;
+      
+      %offset = -1; // tweak the vertical offset so that it aligns neatly
+      %top = EditorGuiToolbar.extent.y + %offset;
+      %bottom = %top + 59;
+      %maxHeight = Canvas.extent.y - %top - %bottom;
+      
+      // --- Fixed window (top) ------------------------------------------------
+      // put it back if it moved
+      %window.position.x = Canvas.extent.x - %window.extent.x;
+      %window.position.y = %top;
+      
+      // don't go beyond the canvas
+      %window.extent.y = %maxHeight + 42;
+
+      %position = %window.position.x SPC %window.position.y;
+      %extent = %window.extent.x SPC %window.extent.y;
+      %window.resize(%position.x, %position.y, %extent.x, %extent.y);
+      
+      // --- AssetBrowser window  ----------------------------------------------
+      if(isObject(AssetBrowserWindow))
+      {
+         // Only resize the AssetBrowser if it's docked
+         if(AssetBrowserWindow.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %browserWidth = Canvas.extent.x - %extent.x;
+            %browserHeight = AssetBrowserWindow.extent.y;
+            %browserPosY = Canvas.extent.y - AssetBrowserWindow.extent.y - 33;
+            AssetBrowserWindow.resize(0, %browserPosY, %browserWidth, %browserHeight);
+         }
+      }
+      // --- Windowed Console --------------------------------------------------
+      if(isObject(windowConsoleControl))
+      {
+         // Only resize the AssetBrowser if it's docked
+         if(windowConsoleControl.docked == true)
+         {
+            // The width is relative to the sidepanel
+            %consoleWidth = Canvas.extent.x - %extent.x;
+            %consoleHeight = windowConsoleControl.extent.y;
+            %consolePosY = Canvas.extent.y - windowConsoleControl.extent.y - 33;
+            windowConsoleControl.resize(0, %consolePosY, %consoleWidth, %consoleHeight);
+         }
+      }
+   }
+}
+
+function PE_Window::onMouseDragged(%this)
+{
+   %parent = ParticleEditor;
+   
+   if(%parent.resizing == false)
+   {
+      %parent.resizing = true;
+      %parent.maxSize(%this);
+   }
+}
+
+function ParticleEditor::onResize(%this, %newPosition, %newExtent)
+{
+   // Window to focus on (mostly the fluid window)
+   %window = PE_Window;
+   
+   if(%this.resizing == false)
+   {  
+      // Only resize once
+      %this.resizing = true;
+      %this.maxSize(%window);
+   }
+   
+   FieldInfoControl.position = 5 SPC EWInspectorWindow.extent.y - 40;
+}
+
+//------------------------------------------------------------------------------
+function ParticleEditorInspector::onInspectorFieldModified(%this, %object, %fieldName, %arrayIndex, %oldValue, %newValue)
+{
+   if(%oldValue $= %newValue)
+      return;
+      
+   ParticleEditor.selectedEditor.onInspectorFieldModified(%object, %fieldName, %arrayIndex, %oldValue, %newValue);
+   ParticleEditor.selectedEditor.setDirty(true);
+}

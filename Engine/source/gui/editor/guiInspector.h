@@ -87,7 +87,7 @@ public:
       if (!mTargets.empty())
          return mTargets[index];
       else
-         return nullptr;
+         return NULL;
    }
 
    S32 getComponentGroupTargetId() { return mComponentGroupTargetId; }

@@ -47,6 +47,7 @@ const String ShaderGenVars::fogColor("$fogColor");
 const String ShaderGenVars::detailScale("$detailScale");
 const String ShaderGenVars::visibility("$visibility");
 const String ShaderGenVars::colorMultiply("$colorMultiply");
+const String ShaderGenVars::tileScale("$tileScale");
 const String ShaderGenVars::alphaTestValue("$alphaTestValue");
 const String ShaderGenVars::texMat("$texMat");
 const String ShaderGenVars::accumTime("$accumTime");

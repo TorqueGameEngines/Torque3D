@@ -71,4 +71,5 @@ function Core_Rendering::initClient(%this)
    // we can hide any splash screen we have, and show the canvas.
    // This keeps things looking nice, instead of having a blank window
    Canvas.showWindow();
+   resetLightManager(); //make sure
 }

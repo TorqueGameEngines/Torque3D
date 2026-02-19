@@ -27,7 +27,7 @@
 
 GuiPopupMenuBackgroundCtrl::GuiPopupMenuBackgroundCtrl()
 {
-   mMenuBarCtrl = nullptr;
+   mMenuBarCtrl = NULL;
 }
 
 void GuiPopupMenuBackgroundCtrl::onMouseDown(const GuiEvent &event)
@@ -62,7 +62,7 @@ void GuiPopupMenuBackgroundCtrl::close()
    if(getRoot())
       getRoot()->removeObject(this);
 
-   mMenuBarCtrl = nullptr;
+   mMenuBarCtrl = NULL;
 }
 
 S32 GuiPopupMenuBackgroundCtrl::findPopupMenu(PopupMenu* menu)
@@ -91,8 +91,8 @@ GuiPopupMenuTextListCtrl::GuiPopupMenuTextListCtrl()
 {
    isSubMenu = false; //  Added
 
-   mMenuBar = nullptr;
-   mPopup = nullptr;
+   mMenuBar = NULL;
+   mPopup = NULL;
 
    mLastHighlightedMenuIdx = -1;
    mBackground = NULL;
@@ -284,7 +284,7 @@ void GuiPopupMenuTextListCtrl::onCellHighlighted(Point2I cell)
    {
       MenuItem *list = &mPopup->mMenuItems[selectionIndex];
 
-      if (list->mIsSubmenu && list->mSubMenu != nullptr)
+      if (list->mIsSubmenu && list->mSubMenu != NULL)
       {
          list->mSubMenu->showPopup(getRoot(), getPosition().x + mCellSize.x, getPosition().y + (selectionIndex * mCellSize.y));
       }

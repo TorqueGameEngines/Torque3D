@@ -84,7 +84,11 @@ MatrixF AssimpAppNode::getTransform(F32 time)
       // no parent (ie. root level) => scale by global shape <unit>
       mLastTransform.identity();
       mLastTransform.scale(ColladaUtils::getOptions().unit * ColladaUtils::getOptions().formatScaleFactor);
-      ColladaUtils::convertTransform(mLastTransform);
+      if (!isBounds())
+      {
+         MatrixF axisFix = ColladaUtils::getOptions().axisCorrectionMat;
+         mLastTransform.mulL(axisFix);
+      }
    }
 
    // If this node is animated in the active sequence, fetch the animated transform
@@ -292,7 +296,7 @@ aiNode* AssimpAppNode::findChildNodeByName(const char* nodeName, aiNode* rootNod
       if (retNode)
          return retNode;
    }
-   return nullptr;
+   return NULL;
 }
 
 void AssimpAppNode::addChild(AssimpAppNode* child)

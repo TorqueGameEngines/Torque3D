@@ -182,11 +182,11 @@ function addLanguage(%langTable, %filename, %alias)
 {
     // generate an .lso file and if a languageMap file does not exist, it as well
     %needLangMap = true;
-    if(isFile("data/UI/langs/languageMap"))
-        %needLangMap = false;        
-        
-    CompileLanguage("data/UI/langs/"@ %filename @".txt", %needLangMap);    
-    %langTable.addLanguage("data/UI/langs/"@ %filename @".lso", %alias);
+    if(isFile("./langs/languageMap"))
+        %needLangMap = false;
+    
+    CompileLanguage("./langs/"@ %filename @".txt", %needLangMap);
+    %langTable.addLanguage("./langs/"@ %filename @".lso", %alias);
 }
 
 function switchLanguage(%language) //use here the #n as it's the order of inclusion
@@ -194,4 +194,27 @@ function switchLanguage(%language) //use here the #n as it's the order of inclus
     // swap existing language from the current core langtable and refresh the gui contents
 	getCoreLangTable().setCurrentLanguage(%language);
 	Canvas.setContent(Canvas.getContent());
+}
+
+function addKeyRemap(%name, %actionMap, %device, %command, %description)
+{
+   if(%name $= "" ||
+      %actionMap $= "" ||
+      %device $= "" ||
+      %command $= "")
+   {
+      error("addKeybindRemap() - tried to add a remap entry, but didn't have all the keeded info!");
+      return;
+   }
+
+   // "mouse" is accepted as a convenience, but the remappable actions related functions treat it same as "keyboard".
+   if(%device $= "mouse")
+      %device = "keyboard";
+
+   $RemapName[$RemapCount] = %name;
+   $RemapCmd[$RemapCount] = %command;
+   $RemapActionMap[$RemapCount] = %actionMap;
+   $RemapDevice[$RemapCount] = %device;
+   $RemapDescription[$RemapCount] = %description;
+   $RemapCount++;
 }

@@ -184,7 +184,7 @@ public:
       {
          AssertFatal(0, "GLCircularVolatileBuffer::lock - size must be > 0");
          outOffset = 0;
-         outPtr = nullptr;
+         outPtr = NULL;
          return;
       }
 

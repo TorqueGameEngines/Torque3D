@@ -97,7 +97,7 @@ bool GuiInspectorVariableField::onAdd()
 
 void GuiInspectorVariableField::setData( const char* data, bool callbacks )
 {   
-   if (mOwnerObject == nullptr && mVariableName == StringTable->EmptyString())
+   if (mOwnerObject == NULL && mVariableName == StringTable->EmptyString())
    {
       if (!mCaption || mCaption[0] == 0)
          return;
@@ -106,7 +106,7 @@ void GuiInspectorVariableField::setData( const char* data, bool callbacks )
    }
    else
    {
-      if (mOwnerObject != nullptr)
+      if (mOwnerObject != NULL)
       {
          //Special case: if our object is a Settings class, we'll assume that we're trying to get/set the fields via the Setting class's normal behavior
          //otherwise, use fields as normal

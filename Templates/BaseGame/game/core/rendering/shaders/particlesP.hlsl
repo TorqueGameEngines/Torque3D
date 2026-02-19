@@ -105,8 +105,9 @@ float4 main( Conn IN ) : TORQUE_TARGET0
    float3 colorScale = ( alphaFactor < 0.0 ? IN.color.rgb * diffuse.rgb : ( alphaFactor > 0.0 ? IN.color.a * diffuse.a * alphaFactor * softBlend : softBlend ) );
    if (glow)
    {
-      float4 glowCol = float4(pow(max((IN.color * diffuse).rgb*10,0.0),3.54406804435),(IN.color * diffuse).a);
-      colorScale *= glowCol.rgb;
+      float alphaLim = IN.color.a * diffuse.a;
+      float3 glowCol = pow(max((IN.color * diffuse).rgb*10,0.0),3.54406804435);
+      colorScale *= glowCol*alphaLim;
    }
    return hdrEncode( float4( IN.color.rgb * diffuse.rgb * colorScale,
                   IN.color.a * diffuse.a * softBlend * alphaScale ) );

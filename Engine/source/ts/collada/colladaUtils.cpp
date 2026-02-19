@@ -3019,7 +3019,7 @@ void ColladaUtils::ExportData::processData()
             curDetail->mesh.setTransform(&meshData[meshNum].meshTransform, meshData[meshNum].scale);
             curDetail->mesh.setObject(meshData[meshNum].originatingObject);
 
-            if (meshData[meshNum].shapeInst != nullptr)
+            if (meshData[meshNum].shapeInst != NULL)
             {
 
                if (!meshData[meshNum].shapeInst->buildPolyList(&curDetail->mesh, detailLevelIdx))
@@ -3032,7 +3032,7 @@ void ColladaUtils::ExportData::processData()
             {
                //special handling classes
                ConvexShape* convexShp = dynamic_cast<ConvexShape*>(meshData[meshNum].originatingObject);
-               if (convexShp != nullptr)
+               if (convexShp != NULL)
                {
                   if (!convexShp->buildPolyList(PLC_Export, &curDetail->mesh, meshData[meshNum].originatingObject->getWorldBox(), meshData[meshNum].originatingObject->getWorldSphere()))
                   {

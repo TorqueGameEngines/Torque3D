@@ -1008,7 +1008,7 @@ void TerrainBlock::addMaterial( const String &name, U32 insertAt )
             if (terrMatAsset && terrMatAsset->getMaterialDefinitionName() == terrMatName)
             {
                //Do iterative logic to find the next available slot and write to it with our new mat field
-               mTerrainAsset->setDataField(StringTable->insert("terrainMaterialAsset"), nullptr, aq->mAssetList[i]);
+               mTerrainAsset->setDataField(StringTable->insert("terrainMaterialAsset"), NULL, aq->mAssetList[i]);
             }
          }
       }

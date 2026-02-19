@@ -120,14 +120,16 @@ public:
       U32 depth,
       GFXFormat format,
       GFXTextureProfile *profile,
-      U32 numMipLevels = 1);
+      U32 numMipLevels = 1,
+      U32 arraySize = 1);
 
    virtual GFXTextureObject *createTexture(  U32 width,
       U32 height,
       GFXFormat format,
       GFXTextureProfile *profile,
       U32 numMipLevels,
-      S32 antialiasLevel);
+      S32 antialiasLevel,
+      U32 arraySize = 1);
 
    Torque::Path validatePath(const Torque::Path &path);
    GBitmap *loadUncompressedTexture(const Torque::Path& path, GFXTextureProfile* profile, U32 width, U32 height, bool genMips = false);
@@ -319,7 +321,8 @@ protected:
                                                    GFXTextureProfile *profile, 
                                                    U32 numMipLevels, 
                                                    bool forceMips = false, 
-                                                   S32 antialiasLevel = 0, 
+                                                   S32 antialiasLevel = 0,
+                                                   U32 arraySize = 1,
                                                    GFXTextureObject *inTex = NULL ) = 0;
 
    /// Load a texture from a proper DDSFile instance.

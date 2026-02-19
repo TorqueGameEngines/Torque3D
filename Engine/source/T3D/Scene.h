@@ -98,7 +98,7 @@ public:
    static Scene *getRootScene() 
    { 
       if (Scene::smSceneList.empty())
-         return nullptr;
+         return NULL;
 
       return Scene::smSceneList[0];
    }

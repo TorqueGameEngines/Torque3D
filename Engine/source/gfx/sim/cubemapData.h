@@ -48,7 +48,7 @@ class CubemapData : public SimObject
 
 public:   
 
-   GFXCubemapHandle  mCubemap;
+   GFXTexHandle  mCubemap;
 
    CubemapData();
    ~CubemapData();

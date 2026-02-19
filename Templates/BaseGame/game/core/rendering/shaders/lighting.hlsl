@@ -226,9 +226,11 @@ float getDistanceAtt( float3 unormalizedLightVector , float invSqrAttRadius )
 
 float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 {
+   if (surface.depth >= 0.9999f)
+      return float3(0.0,0.0,0.0);
+      
    // Compute Fresnel term
    float3 F = F_Schlick(surface.f0, surfaceToLight.HdotV);
-   F += lerp(0.04f, surface.baseColor.rgb, surface.metalness);
     
    // GGX Normal Distribution Function
    float D = D_GGX(surfaceToLight.NdotH, surface.linearRoughness);
@@ -465,7 +467,7 @@ float4 computeForwardProbes(Surface surface,
 {
    if (getFlag(surface.matFlag, 2))
    {
-      return float4(0,0,0,0);
+      return float4(0,0,0,surface.baseColor.a);
    }
 
    int i = 0;
@@ -599,7 +601,7 @@ float4 computeForwardProbes(Surface surface,
 
    float2 envBRDF = TORQUE_TEX2DLOD(BRDFTexture, float4(surface.NdotV, surface.roughness,0,0)).rg;
    float3 diffuse = irradiance * lerp(surface.baseColor.rgb, 0.04f, surface.metalness);
-   float3 specularCol = ((specular * surface.baseColor.rgb) * envBRDF.x + envBRDF.y)*surface.metalness; 
+   float3 specularCol = ((specular * surface.f0) * envBRDF.x + envBRDF.y)*surface.metalness; 
 
    float horizonOcclusion = 1.3;
    float horizon = saturate( 1 + horizonOcclusion * dot(surface.R, surface.N));
@@ -613,7 +615,8 @@ float4 computeForwardProbes(Surface surface,
       return float4(lerp((finalColor), surface.baseColor.rgb,surface.metalness),0);
    else
    {
-      return float4(finalColor, 0);
+      float reflectionOpacity = min(surface.baseColor.a+surface.baseColor.a*length(finalColor),1.0);
+      return float4(finalColor, reflectionOpacity);
    }
 }
 

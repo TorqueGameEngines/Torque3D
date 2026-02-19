@@ -1207,8 +1207,8 @@ void PostEffect::_setupCubemapTexture(U32 stage, GFXCubemapHandle &inputTex)
 {
    RectI viewport = GFX->getViewport();
 
-   mActiveTextures[stage] = nullptr;
-   mActiveNamedTarget[stage] = nullptr;
+   mActiveTextures[stage] = NULL;
+   mActiveNamedTarget[stage] = NULL;
    mActiveTextureViewport[stage] = viewport;
 
    if (inputTex.isValid())
@@ -1219,8 +1219,8 @@ void PostEffect::_setupCubemapArrayTexture(U32 stage, GFXCubemapArrayHandle &inp
 {
    RectI viewport = GFX->getViewport();
 
-   mActiveTextures[stage] = nullptr;
-   mActiveNamedTarget[stage] = nullptr;
+   mActiveTextures[stage] = NULL;
+   mActiveNamedTarget[stage] = NULL;
    mActiveTextureViewport[stage] = viewport;
 
    if (inputTex.isValid())

@@ -83,7 +83,7 @@ struct SceneData
   
    // misc
    const MatrixF *objTrans;
-   GFXCubemap *cubemap;
+   GFXTexHandle cubemap;
    F32 visibility;
 
    /// Enables wireframe rendering for the object.

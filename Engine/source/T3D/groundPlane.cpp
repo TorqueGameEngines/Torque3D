@@ -92,7 +92,7 @@ GroundPlane::GroundPlane()
 
 GroundPlane::~GroundPlane()
 {
-   mMaterial = nullptr;
+   mMaterial = NULL;
 
    if(mMaterialInst)
       SAFE_DELETE(mMaterialInst);

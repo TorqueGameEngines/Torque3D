@@ -657,27 +657,33 @@ void GuiPopUpMenuCtrl::addEntry( const char *buf, S32 id, U32 scheme )
    e.ascii = cp ? cp[1] : 0;
 
    //  See if there is a colour box defined with the text
-   char *cb = dStrchr( e.buf, '|' );
-   if ( cb )
+   char* firstBar = dStrchr(e.buf, '|');
+   if (firstBar)
    {
-      e.usesColorBox = true;
-      cb[0] = '\0';
+      char* red = firstBar + 1;
+      char* secondBar = dStrchr(red, '|');
+      if (secondBar)
+      {
+         char* green = secondBar + 1;
+         char* thirdBar = dStrchr(green, '|');
+         if (thirdBar)
+         {
+            char* blue = thirdBar + 1;
 
-      char* red = &cb[1];
-      cb = dStrchr(red, '|');
-      cb[0] = '\0';
-      char* green = &cb[1];
-      cb = dStrchr(green, '|');
-      cb[0] = '\0';
-      char* blue = &cb[1];
+            // Now we know the format is valid: text|r|g|b
+            firstBar[0] = '\0';
+            secondBar[0] = '\0';
+            thirdBar[0] = '\0';
 
-      U32 r = dAtoi(red);
-      U32 g = dAtoi(green);
-      U32 b = dAtoi(blue);
+            U32 r = dAtoi(red);
+            U32 g = dAtoi(green);
+            U32 b = dAtoi(blue);
 
-      e.colorbox = ColorI(r,g,b);
-
-   } 
+            e.colorbox = ColorI(r, g, b);
+            e.usesColorBox = true;
+         }
+      }
+   }
    else
    {
       e.usesColorBox = false;

@@ -27,6 +27,7 @@
 #include "gfx/gfxCubemap.h"
 #include "gfx/gfxDebugEvent.h"
 #include "gfx/gfxTransformSaver.h"
+#include "gfx/util/gfxFrustumSaver.h"
 #include "scene/sceneManager.h"
 #include "scene/sceneRenderState.h"
 #include "core/stream/bitStream.h"
@@ -319,15 +320,12 @@ void CubeReflector::updateReflection( const ReflectParams &params, Point3F expli
          mCubemap.isNull() ||
          mCubemap->getFormat() != reflectFormat )
    {
-      mCubemap = GFX->createCubemap();
-      mCubemap->initDynamic( texDim, reflectFormat);
+      mCubemap.set(texDim, texDim, reflectFormat, &GFXCubemapRenderTargetProfile, "CubeReflector::updateReflection", 0);
    }
 
    if ( mRenderTarget.isNull() )
       mRenderTarget = GFX->allocRenderToTextureTarget();   
 
-   mDepthBuff = LightShadowMap::_getDepthTarget(texDim, texDim);
-   mRenderTarget->attachTexture(GFXTextureTarget::DepthStencil, mDepthBuff);
    F32 oldVisibleDist = gClientSceneGraph->getVisibleDistance();
    gClientSceneGraph->setVisibleDistance( mDesc->farDist );   
 
@@ -335,15 +333,17 @@ void CubeReflector::updateReflection( const ReflectParams &params, Point3F expli
    TSShapeInstance::smDetailAdjust *= mDesc->detailAdjust;
 
    // store current matrices
+   GFXFrustumSaver fsaver;
    GFXTransformSaver saver;
-
-   // set projection to 90 degrees vertical and horizontal
-   F32 left, right, top, bottom;
-   MathUtils::makeFrustum(&left, &right, &top, &bottom, M_HALFPI_F, 1.0f, mDesc->nearDist);
-   GFX->setFrustum(left, right, bottom, top, mDesc->nearDist, mDesc->farDist);
+   {
+      // set projection to 90 degrees vertical and horizontal
+      F32 left, right, top, bottom;
+      MathUtils::makeFrustum(&left, &right, &top, &bottom, M_HALFPI_F, 1.0f, mDesc->nearDist);
+      GFX->setFrustum(left, right, bottom, top, mDesc->nearDist, mDesc->farDist);
+   }
 
    GFX->pushActiveRenderTarget();
-   for (S32 i = 5; i >= 0; i--) {
+   for (S32 i = 0; i < 6; i++) {
       updateFace(params, i, explicitPostion);
    }
    GFX->popActiveRenderTarget();
@@ -351,7 +351,6 @@ void CubeReflector::updateReflection( const ReflectParams &params, Point3F expli
    TSShapeInstance::smDetailAdjust = detailAdjustBackup;
 
    mCubemap->generateMipMaps();
-
 
    gClientSceneGraph->setVisibleDistance(oldVisibleDist);
 
@@ -413,19 +412,19 @@ void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx, Point3
 
    GFX->setWorldMatrix(lightMatrix);
    GFX->clearTextureStateImmediate(0);
-   mRenderTarget->attachTexture( GFXTextureTarget::Color0, mCubemap, faceidx );   // Setup textures and targets...
    S32 texDim = mDesc->texSize;
    texDim = getMax(texDim, 32);
+   mRenderTarget->attachTexture(GFXTextureTarget::Color0, mCubemap, 0, 0, faceidx);   // Setup textures and targets...
    mRenderTarget->attachTexture(GFXTextureTarget::DepthStencil, LightShadowMap::_getDepthTarget(texDim, texDim));
    
-   GFX->setActiveRenderTarget(mRenderTarget);
+   GFX->setActiveRenderTarget(mRenderTarget, true);
    GFX->clear( GFXClearStencil | GFXClearTarget | GFXClearZBuffer, gCanvasClearColor, 1.0f, 0);
 
    SceneRenderState reflectRenderState
    (
       gClientSceneGraph,
       SPT_Reflect,
-      SceneCameraState::fromGFX()
+      SceneCameraState::fromGFXWithViewport(GFX->getViewport())
    );
 
    reflectRenderState.getMaterialDelegate().bind( REFLECTMGR, &ReflectionManager::getReflectionMaterial );

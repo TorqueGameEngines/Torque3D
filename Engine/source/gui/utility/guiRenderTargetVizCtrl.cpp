@@ -60,10 +60,10 @@ GuiRenderTargetVizCtrl::GuiRenderTargetVizCtrl()
 {
    mTargetName = StringTable->EmptyString();
 
-   mTarget = nullptr;
-   mTargetTexture = nullptr;
+   mTarget = NULL;
+   mTargetTexture = NULL;
 
-   mCameraObject = nullptr;
+   mCameraObject = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -97,7 +97,7 @@ void GuiRenderTargetVizCtrl::onRender(Point2I      offset,
    //Draw backdrop
    GFX->getDrawUtil()->drawRectFill(boundsRect, ColorI::BLACK);
 
-   if (mCameraObject != nullptr)
+   if (mCameraObject != NULL)
    {
       Camera* camObject = dynamic_cast<Camera*>(mCameraObject);
 

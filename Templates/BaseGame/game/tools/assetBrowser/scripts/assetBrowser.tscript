@@ -686,22 +686,7 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    %tooltip = %assetName;
    
    %textBottomPad = 20;
-   
-   %previewButton = new GuiIconButtonCtrl()
-   {
-      class = "AssetBrowserPreviewButton";
-      useMouseEvents = true;
-      iconLocation = "Center";
-      sizeIconToButton = true;
-      makeIconSquare = true;
-      textLocation = "Bottom";
-      extent = %previewSize.x SPC %previewSize.y + %textBottomPad;
-      buttonType = "RadioButton";
-      buttonMargin = "0 -10";
-      profile = ToolsGuiDefaultIconBtnProfile;
-      assetBrowser = %this;
-   };
-   
+
    %previewScaleSize = %this-->previewSlider.getValue();
    
    if(%previewScaleSize $= "")
@@ -709,29 +694,6 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
       %previewScaleSize = 1;
       %this-->previewSlider.setValue(1);
    }
-   
-   if(%previewScaleSize == 0 || startsWith(%this.dirHandler.currentAddress, "Creator"))
-   {
-      %previewButton.iconLocation = "Left";
-      %previewButton.textLocation = "Right";
-      %previewButton.setextent(160,34);
-      %previewButton.buttonMargin = "8 8";
-      %previewButton.textMargin = "6";
-      
-      %this.previewListMode = true;
-   }
-   else
-   {
-      %size = %previewSize.x * %previewScaleSize;
-      %previewButton.setextent(%size,%size + %textBottomPad);
-      
-      %this.previewListMode = false;
-   }
-   
-   //%previewButton.extent = %previewSize.x + %previewBounds SPC %previewSize.y + %previewBounds + 24;
-   %previewButton.assetName = %assetName;
-   %previewButton.moduleName = %moduleName;
-   %previewButton.assetType = %assetType;
    
    if(%this.selectMode)
    {
@@ -754,22 +716,49 @@ function AssetBrowser::buildAssetPreview( %this, %asset, %moduleName )
    
    if(%this.previewData.doubleClickCommand !$= "")
       %doubleClickCommand = %this.previewData.doubleClickCommand;
+      
+   %previewButton = new GuiIconButtonCtrl()
+   {
+      class = "AssetBrowserPreviewButton";
+      useMouseEvents = true;
+      iconLocation = "Center";
+      sizeIconToButton = true;
+      makeIconSquare = true;
+      textLocation = "Bottom";
+      extent = %previewSize.x SPC %previewSize.y + %textBottomPad;
+      buttonType = "RadioButton";
+      buttonMargin = "0 -10";
+      profile = ToolsGuiDefaultIconBtnProfile;
+      tooltip =  %this.previewData.tooltip;
+      assetBrowser = %this;
+      assetName = %assetName;
+      moduleName = %moduleName;
+      assetType = %assetType;
+      bitmapAsset = %this.previewData.previewImage;
+      Command = %this @ ".updateSelection( $ThisControl.assetName, $ThisControl.moduleName );";
+      altCommand = %doubleClickCommand;
+      text = %this.previewData.assetName;
+      originalAssetName = %this.previewData.assetName;
+   };
    
-   %previewButton.assetName = %assetName;
-   %previewButton.moduleName = %moduleName;
-   %previewButton.assetType = %assetType;
-   %previewButton.assetBrowser = %this;
+   if(%previewScaleSize == 0 || startsWith(%this.dirHandler.currentAddress, "Creator"))
+   {
+      %previewButton.iconLocation = "Left";
+      %previewButton.textLocation = "Right";
+      %previewButton.setextent(160,34);
+      %previewButton.buttonMargin = "8 8";
+      %previewButton.textMargin = "6";
+      
+      %this.previewListMode = true;
+   }
+   else
+   {
+      %size = %previewSize.x * %previewScaleSize;
+      %previewButton.setextent(%size,%size + %textBottomPad);
+      
+      %this.previewListMode = false;
+   }
    
-   %previewButton.setBitmap(%this.previewData.previewImage);
-   
-   %previewButton.profile = "AssetBrowserPreview" @ %previewButton.assetType;
-   %previewButton.tooltip = %this.previewData.tooltip;
-   %previewButton.Command = %this @ ".updateSelection( $ThisControl.assetName, $ThisControl.moduleName );";
-   %previewButton.altCommand = %doubleClickCommand;
-   
-   %previewButton.text = %this.previewData.assetName;
-   %previewButton.text.originalAssetName = %this.previewData.assetName;
-
    // add to the gui control array
    %this-->assetList.add(%previewButton);
    

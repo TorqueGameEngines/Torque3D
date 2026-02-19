@@ -135,13 +135,15 @@ public:
    GBitmap(const U32  in_width,
            const U32  in_height,
            const bool in_extrudeMipLevels = false,
-           const GFXFormat in_format = GFXFormatR8G8B8 );
+           const GFXFormat in_format = GFXFormatR8G8B8,
+           const U32 in_numFaces = 1);
 
    // This builds a GBitmap with the R8G8B8A8 format using the passed in
    // data (assumes that there is width * height * 4 U8's in data)
    GBitmap(const U32  in_width,
            const U32  in_height,
-           const U8*  data );
+           const U8*  data,
+           const U32 in_numFaces = 1);
 
    virtual ~GBitmap();
 
@@ -163,12 +165,14 @@ public:
    void allocateBitmap(const U32  in_width,
                        const U32  in_height,
                        const bool in_extrudeMipLevels = false,
-                       const GFXFormat in_format = GFXFormatR8G8B8 );
+                       const GFXFormat in_format = GFXFormatR8G8B8,
+                       const U32 in_numFaces = 1);
 
    void allocateBitmapWithMips(const U32  in_width,
-      const U32  in_height,
-      const U32  in_numMips,
-      const GFXFormat in_format = GFXFormatR8G8B8);
+                              const U32  in_height,
+                              const U32  in_numMips,
+                              const GFXFormat in_format = GFXFormatR8G8B8,
+                              const U32 in_numFaces = 1);
 
    void extrudeMipLevels(bool clearBorders = false);
    void chopTopMips(U32 mipsToChop);
@@ -191,16 +195,18 @@ public:
 
    U32         getWidth(const U32 in_mipLevel  = 0) const;
    U32         getHeight(const U32 in_mipLevel = 0) const;
+   U32         _getFaceOffset(const U32 face = 0) const;
    U32         getDepth(const U32 in_mipLevel = 0) const;
 
-   U8*         getAddress(const S32 in_x, const S32 in_y, const U32 mipLevel = 0);
-   const U8*   getAddress(const S32 in_x, const S32 in_y, const U32 mipLevel = 0) const;
+   U8*         getAddress(const S32 in_x, const S32 in_y, const U32 mipLevel = 0, const U32 face = 0);
+   const U8*   getAddress(const S32 in_x, const S32 in_y, const U32 mipLevel = 0, const U32 face = 0) const;
 
-   const U8*   getBits(const U32 in_mipLevel = 0) const;
-   U8*         getWritableBits(const U32 in_mipLevel = 0);
+   const U8*   getBits(const U32 in_mipLevel = 0, const U32 face = 0) const;
+   U8*         getWritableBits(const U32 in_mipLevel = 0, const U32 face = 0);
 
    U32         getByteSize() const { return mByteSize; }
    U32         getBytesPerPixel() const { return mBytesPerPixel; }
+   U32         getFormatBytesPerPixel(GFXFormat fmt);
 
    U32         getSurfaceSize(const U32 mipLevel) const;
 
@@ -217,9 +223,10 @@ public:
    bool        checkForTransparency();
 
    LinearColorF      sampleTexel(F32 u, F32 v, bool retAlpha = false) const;
-   bool        getColor(const U32 x, const U32 y, ColorI& rColor) const;
+   bool        getColor(const U32 x, const U32 y, ColorI& rColor, const U32 mipLevel = 0, const U32 face = 0) const;
    bool        setColor(const U32 x, const U32 y, const ColorI& rColor);
    U8          getChanelValueAt(U32 x, U32 y, U32 chan);
+   U32         getNumFaces() const { return mNumFaces; }
 
    /// This method will combine bitmapA and bitmapB using the operation specified
    /// by combineOp. The result will be stored in the bitmap that this method is
@@ -275,7 +282,7 @@ public:
 
 private:
    GFXFormat mInternalFormat;
-
+   U32 mNumFaces;    // default 1, set to 6 for cubemap
    U8* mBits; // Master bytes
    U32 mByteSize;
    U32 mWidth;
@@ -284,6 +291,7 @@ private:
 
    U32 mNumMipLevels;
    U32 mMipLevelOffsets[c_maxMipLevels];
+   U32 mFaceOffsets[6];  // Maximum 6 for cubemaps; could also dynamically allocate if needed
 
    bool mHasTransparency;
 
@@ -316,32 +324,39 @@ inline U32 GBitmap::getHeight(const U32 in_mipLevel) const
    return (retVal != 0) ? retVal : 1;
 }
 
-inline const U8* GBitmap::getBits(const U32 in_mipLevel) const
+inline U32 GBitmap::_getFaceOffset(const U32 face) const
+{
+   AssertFatal(face < mNumFaces, "GBitmap::_getFaceOffset: invalid face index");
+
+   return mFaceOffsets[face];
+}
+
+inline const U8* GBitmap::getBits(const U32 in_mipLevel, const U32 face) const
 {
    AssertFatal(in_mipLevel < mNumMipLevels,
                avar("GBitmap::getBits: mip level out of range: (%d, %d)",
                     in_mipLevel, mNumMipLevels));
 
-   return &mBits[mMipLevelOffsets[in_mipLevel]];
+   return &mBits[_getFaceOffset(face) + mMipLevelOffsets[in_mipLevel]];
 }
 
-inline U8* GBitmap::getWritableBits(const U32 in_mipLevel)
+inline U8* GBitmap::getWritableBits(const U32 in_mipLevel, const U32 face)
 {
    AssertFatal(in_mipLevel < mNumMipLevels,
                avar("GBitmap::getWritableBits: mip level out of range: (%d, %d)",
                     in_mipLevel, mNumMipLevels));
 
-   return &mBits[mMipLevelOffsets[in_mipLevel]];
+   return &mBits[_getFaceOffset(face) + mMipLevelOffsets[in_mipLevel]];
 }
 
-inline U8* GBitmap::getAddress(const S32 in_x, const S32 in_y, const U32 mipLevel)
+inline U8* GBitmap::getAddress(const S32 in_x, const S32 in_y, const U32 mipLevel, const U32 face)
 {
-   return (getWritableBits(mipLevel) + (U64)(((in_y * getWidth(mipLevel)) + in_x) * mBytesPerPixel));
+   return (getWritableBits(mipLevel, face) + (U64)(((in_y * getWidth(mipLevel)) + in_x) * mBytesPerPixel));
 }
 
-inline const U8* GBitmap::getAddress(const S32 in_x, const S32 in_y, const U32 mipLevel) const
+inline const U8* GBitmap::getAddress(const S32 in_x, const S32 in_y, const U32 mipLevel, const U32 face) const
 {
-   return (getBits(mipLevel) + ((in_y * getWidth(mipLevel)) + in_x) * mBytesPerPixel);
+   return (getBits(mipLevel, face) + ((in_y * getWidth(mipLevel)) + in_x) * mBytesPerPixel);
 }
 
 template<class T, dsize_t mapLength>

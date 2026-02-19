@@ -83,7 +83,7 @@ void GameMode::onRemove()
 
 void GameMode::findGameModes(const char* gameModeList, Vector<GameMode*> *outGameModes)
 {
-   if (outGameModes == nullptr)
+   if (outGameModes == NULL)
       return;
 
    Vector<String> gameModeNames;

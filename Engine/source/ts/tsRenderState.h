@@ -74,7 +74,7 @@ protected:
    
    const SceneRenderState *mState;
 
-   GFXCubemap *mCubemap;
+   GFXTexHandle mCubemap;
 
    /// Used to override the normal
    /// fade value of an object.
@@ -134,8 +134,8 @@ public:
    void setSceneState( const SceneRenderState *state ) { mState = state; }
 
    ///@see mCubemap
-   GFXCubemap* getCubemap() const { return mCubemap; }
-   void setCubemap( GFXCubemap *cubemap ) { mCubemap = cubemap; }
+   GFXTexHandle getCubemap() const { return mCubemap; }
+   void setCubemap(GFXTexHandle cubemap ) { mCubemap = cubemap; }
 
    ///@see mFadeOverride
    F32 getFadeOverride() const { return mFadeOverride; }

@@ -26,7 +26,9 @@
 #include "gfx/gfxTextureObject.h"
 #include "gfx/gl/tGL/tGL.h"
 #include "gfx/gfxStateBlock.h"
-
+#ifndef _MRECT_H_
+#include "math/mRect.h"
+#endif
 class GFXGLDevice;
 
 class GFXGLTextureObject : public GFXTextureObject 
@@ -64,11 +66,13 @@ public:
 
    /// Get/set data from texture (for dynamic textures and render targets)
    /// @attention DO NOT READ FROM THE RETURNED RECT! It is not guaranteed to work and may incur significant performance penalties.
-   GFXLockedRect* lock(U32 mipLevel = 0, RectI *inRect = NULL) override;
-   void unlock(U32 mipLevel = 0 ) override;
+   GFXLockedRect* lock(U32 mipLevel = 0, RectI *inRect = NULL, U32 faceIndex = 0) override;
+   void unlock(U32 mipLevel = 0, U32 faceIndex = 0) override;
 
    bool copyToBmp(GBitmap *) override; ///< Not implemented
-   
+   void updateTextureSlot(const GFXTexHandle& texHandle, const U32 slot, const S32 face = -1) override;
+   void copyTo(GFXTextureObject* dstTex) override;
+   void generateMipMaps() override {};
    bool mIsNPoT2;
 
    // GFXResource interface

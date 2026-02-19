@@ -364,6 +364,13 @@ Var* ShaderFeatureHLSL::getOutTexCoord(   const char *name,
       texCoord->setStructName( "OUT" );
       texCoord->setType( type );
 
+      // create detail variable
+      Var* tileScale = new Var;
+      tileScale->setType("float2");
+      tileScale->setName("tileScale");
+      tileScale->uniform = true;
+      tileScale->constSortPos = cspPotentialPrimitive;
+
       if ( useTexAnim )
       {
          inTex->setType( "float2" );
@@ -377,15 +384,15 @@ Var* ShaderFeatureHLSL::getOutTexCoord(   const char *name,
          
          // Statement allows for casting of different types which
 		   // eliminates vector truncation problems.
-         String statement = String::ToString("   @ = (%s)mul(@, float4(@,1,1));\r\n", type);
-         meta->addStatement( new GenOp( statement, texCoord, texMat, inTex ) );
+         String statement = String::ToString("   @ = (%s)mul(@, float4(@,1,1))*@;\r\n", type);
+         meta->addStatement( new GenOp( statement, texCoord, texMat, inTex, tileScale) );
       }
       else
       {
 		   // Statement allows for casting of different types which
          // eliminates vector truncation problems.
-         String statement = String::ToString( "   @ = (%s)@;\r\n", type );
-         meta->addStatement( new GenOp( statement, texCoord, inTex ) );
+         String statement = String::ToString( "   @ = (%s)(@) * @;\r\n", type );
+         meta->addStatement( new GenOp( statement, texCoord, inTex, tileScale) );
       }
    }
 
@@ -3143,7 +3150,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
    Var* ibl = (Var*)LangElement::find("ibl");
    if (!ibl)
    {
-      ibl = new Var("ibl", "float3");
+      ibl = new Var("ibl", "float4");
    }
 
    Var* eyePos = (Var*)LangElement::find("eyePosWorld");
@@ -3174,7 +3181,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
 
    String computeForwardProbes = String("   @ = computeForwardProbes(@,@,@,@,@,@,@,@,@,\r\n\t\t");
    computeForwardProbes += String("@,@,TORQUE_SAMPLER2D_MAKEARG(@),TORQUE_SAMPLER2D_MAKEARG(@), @, @,\r\n\t\t"); 
-   computeForwardProbes += String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)).rgb; \r\n");
+   computeForwardProbes += String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@)); \r\n");
       
    meta->addStatement(new GenOp(computeForwardProbes.c_str(), new DecOp(ibl), surface, cubeMips, numProbes, worldToObjArray, probeConfigData, inProbePosArray, refScaleArray, inRefPosArray, eyePos,
       skylightCubemapIdx, SkylightDamp, BRDFTexture, WetnessTexture, accumTime, dampness,
@@ -3188,7 +3195,7 @@ void ReflectionProbeFeatHLSL::processPix(Vector<ShaderComponent*> &componentList
       ambient->constSortPos = cspPass;
    }
    meta->addStatement(new GenOp("   @.rgb *= @.rgb;\r\n", ibl, ambient));
-   meta->addStatement(new GenOp("   @.rgb = @.rgb;\r\n", curColor, ibl));
+   meta->addStatement(new GenOp("   @ = @;\r\n", curColor, ibl));
 
    output = meta;
 }

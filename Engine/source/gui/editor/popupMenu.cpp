@@ -47,7 +47,7 @@ public:
 PopupMenu::PopupMenu()
 {
    mMenuItems = 0;
-	mMenuBarCtrl = nullptr;
+	mMenuBarCtrl = NULL;
 
 	mBarTitle = StringTable->EmptyString();
 	mBounds = RectI(0, 0, 64, 64);
@@ -57,7 +57,7 @@ PopupMenu::PopupMenu()
 	mDrawBitmapOnly = false;
 	mDrawBorder = false;
 
-	mTextList = nullptr;
+	mTextList = NULL;
 
 	mIsSubmenu = false;
 
@@ -168,8 +168,8 @@ S32 PopupMenu::insertItem(S32 pos, const char *title, const char* accelerator, c
    newItem.mEnabled = !newItem.mIsSpacer;
 
    newItem.mIsSubmenu = false;
-   newItem.mSubMenu = nullptr;
-   newItem.mSubMenuParentMenu = nullptr;
+   newItem.mSubMenu = NULL;
+   newItem.mSubMenuParentMenu = NULL;
 
    mMenuItems.push_back(newItem);
 
@@ -308,7 +308,7 @@ void PopupMenu::showPopup(GuiCanvas *owner, S32 x /* = -1 */, S32 y /* = -1 */)
    if (!profile)
       return;
 
-   if (mTextList == nullptr)
+   if (mTextList == NULL)
    {
       mTextList = new GuiPopupMenuTextListCtrl();
       mTextList->registerObject();
@@ -350,7 +350,7 @@ void PopupMenu::showPopup(GuiCanvas *owner, S32 x /* = -1 */, S32 y /* = -1 */)
    owner->pushDialogControl(backgroundCtrl, 10);
 
    //Set the background control's menubar, if any, and if it's not already set
-   if(backgroundCtrl->mMenuBarCtrl == nullptr)
+   if(backgroundCtrl->mMenuBarCtrl == NULL)
       backgroundCtrl->mMenuBarCtrl = getMenuBarCtrl();
 
    backgroundCtrl->setExtent(owner->getExtent());
@@ -473,7 +473,7 @@ void PopupMenu::hidePopupSubmenus()
 {
    for (U32 i = 0; i < mMenuItems.size(); i++)
    {
-      if (mMenuItems[i].mSubMenu != nullptr)
+      if (mMenuItems[i].mSubMenu != NULL)
          mMenuItems[i].mSubMenu->hidePopup();
    }
 }

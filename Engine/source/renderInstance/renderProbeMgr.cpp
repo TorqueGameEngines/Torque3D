@@ -73,7 +73,7 @@ S32 RenderProbeMgr::smProbeBakeResolution = 64;
 //
 ProbeRenderInst::ProbeRenderInst() :
    mCubemapIndex(0),
-   mProbeInfo(nullptr)
+   mProbeInfo(NULL)
 {
 }
 
@@ -171,8 +171,8 @@ void ProbeShaderConstants::_onShaderReload()
 //
 RenderProbeMgr::RenderProbeMgr()
 : RenderBinManager(RenderPassManager::RIT_Probes, 1.0f, 1.0f),
-   mLastShader(nullptr),
-   mLastConstants(nullptr),
+   mLastShader(NULL),
+   mLastConstants(NULL),
    mHasSkylight(false),
    mSkylightCubemapIdx(-1),
    mSkylightDamp(true),
@@ -182,7 +182,7 @@ RenderProbeMgr::RenderProbeMgr()
    mEffectiveProbeCount = 0;
    mMipCount = 0;
 
-   mProbeArrayEffect = nullptr;
+   mProbeArrayEffect = NULL;
 
    smProbeManager = this;
 
@@ -205,7 +205,7 @@ RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 proce
    mHasSkylight = false;
    mSkylightCubemapIdx = -1;
    mSkylightDamp = true;
-   mLastConstants = nullptr;
+   mLastConstants = NULL;
    mMipCount = 0;
    mUseHDRCaptures = true;
 }
@@ -221,6 +221,9 @@ RenderProbeMgr::~RenderProbeMgr()
          SAFE_DELETE(i->value);
    }
    mConstantLookup.clear();
+
+   mIrradianceArray.free();
+   mPrefilterArray.free();
 }
 
 bool RenderProbeMgr::onAdd()
@@ -228,13 +231,11 @@ bool RenderProbeMgr::onAdd()
    if (!Parent::onAdd())
       return false;
 
-   mIrradianceArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
-   mPrefilterArray = GFXCubemapArrayHandle(GFX->createCubemapArray());
-
    U32 scaledSize = getProbeTexSize();
    //pre-allocate a few slots
-   mIrradianceArray->init(PROBE_ARRAY_SLOT_BUFFER_SIZE, scaledSize, PROBE_FORMAT);
-   mPrefilterArray->init(PROBE_ARRAY_SLOT_BUFFER_SIZE, scaledSize, PROBE_FORMAT);
+   mIrradianceArray.set(scaledSize, scaledSize, PROBE_FORMAT, &GFXCubemapStaticTextureProfile, "RenderProbeMgr::mIrradianceArray", 0,0, PROBE_ARRAY_SLOT_BUFFER_SIZE);
+   mPrefilterArray.set(scaledSize, scaledSize, PROBE_FORMAT, &GFXCubemapStaticTextureProfile, "RenderProbeMgr::mPrefilterArray", 0,0, PROBE_ARRAY_SLOT_BUFFER_SIZE);
+
    mCubeSlotCount = PROBE_ARRAY_SLOT_BUFFER_SIZE;
 
    String brdfTexturePath = GFXTextureManager::getBRDFTexturePath();
@@ -376,12 +377,12 @@ void RenderProbeMgr::registerProbe(ReflectionProbe::ProbeInfo* newProbe)
    if (cubeIndex >= mCubeSlotCount)
    {
       //alloc temp array handles
-      GFXCubemapArrayHandle irr = GFXCubemapArrayHandle(GFX->createCubemapArray());
-      GFXCubemapArrayHandle prefilter = GFXCubemapArrayHandle(GFX->createCubemapArray());
+      GFXTexHandle irr;
+      GFXTexHandle prefilter;
 
       U32 scaledSize = getProbeTexSize();
-      irr->init(mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE, scaledSize, PROBE_FORMAT);
-      prefilter->init(mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE, scaledSize, PROBE_FORMAT);
+      irr.set(scaledSize, scaledSize, PROBE_FORMAT, &GFXCubemapStaticTextureProfile, "RenderProbeMgr::mIrradianceArray_temp_expansion", 0, 0, mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE);
+      prefilter.set(scaledSize, scaledSize, PROBE_FORMAT, &GFXCubemapStaticTextureProfile, "RenderProbeMgr::mPrefilterArray_temp_expansion", 0, 0, mCubeSlotCount + PROBE_ARRAY_SLOT_BUFFER_SIZE);
 
       mIrradianceArray->copyTo(irr);
       mPrefilterArray->copyTo(prefilter);
@@ -389,6 +390,9 @@ void RenderProbeMgr::registerProbe(ReflectionProbe::ProbeInfo* newProbe)
       //assign the temp handles to the new ones, this will destroy the old ones as well
       mIrradianceArray = irr;
       mPrefilterArray = prefilter;
+
+      irr.free();
+      prefilter.free();
 
       mCubeSlotCount += PROBE_ARRAY_SLOT_BUFFER_SIZE;
    }
@@ -408,7 +412,7 @@ void RenderProbeMgr::registerProbe(ReflectionProbe::ProbeInfo* newProbe)
 void RenderProbeMgr::unregisterProbe(ReflectionProbe::ProbeInfo* probeInfo)
 {
    ProbeRenderInst* probe = findProbeInst(probeInfo);
-   if (probe == nullptr)
+   if (probe == NULL)
       return;
 
    if (probe->mCubemapIndex == INVALID_CUBE_SLOT)
@@ -434,7 +438,7 @@ PostEffect* RenderProbeMgr::getProbeArrayEffect()
       mProbeArrayEffect = dynamic_cast<PostEffect*>(Sim::findObject("reflectionProbeArrayPostFX"));
 
       if (!mProbeArrayEffect)
-         return nullptr;
+         return NULL;
 
       mProbeArrayEffect->setShaderConst("$numProbes", (S32)0);
       mProbeArrayEffect->setShaderConst("$skylightCubemapIdx", (S32)-1);
@@ -462,19 +466,17 @@ void RenderProbeMgr::updateProbeTexture(ReflectionProbe::ProbeInfo* probeInfo)
 {
    //If we don't have a registered probe, there's no point in updating the cubemap array for it
    ProbeRenderInst* probe = findProbeInst(probeInfo);
-   if (probe == nullptr)
+   if (probe == NULL)
       return;
    U32 scaledSize = getProbeTexSize();
    //Some basic sanity checking that we have valid cubemaps to work with
-   if (probeInfo->mIrradianceCubemap.isNull() || !probeInfo->mIrradianceCubemap->isInitialized() ||
-      probeInfo->mIrradianceCubemap->getSize() != scaledSize)
+   if (probeInfo->mIrradianceCubemap.isNull() || probeInfo->mIrradianceCubemap->getWidth() != scaledSize)
    {
       Con::errorf("RenderProbeMgr::updateProbeTexture() - tried to update a probe's texture with an invalid or uninitialized irradiance map!");
       return;
    }
 
-   if (probeInfo->mPrefilterCubemap.isNull() || !probeInfo->mPrefilterCubemap->isInitialized() ||
-      probeInfo->mPrefilterCubemap->getSize() != scaledSize)
+   if (probeInfo->mPrefilterCubemap.isNull() || probeInfo->mPrefilterCubemap->getWidth() != scaledSize)
    {
       Con::errorf("RenderProbeMgr::updateProbeTexture() - tried to update a probe's texture with an invalid or uninitialized specular map!");
       return;
@@ -482,12 +484,13 @@ void RenderProbeMgr::updateProbeTexture(ReflectionProbe::ProbeInfo* probeInfo)
 
    //Run the update on the array pair with the probe's cubemaps and index
    const U32 cubeIndex = probe->mCubemapIndex;
-   mIrradianceArray->updateTexture(probeInfo->mIrradianceCubemap, cubeIndex);
-   mPrefilterArray->updateTexture(probeInfo->mPrefilterCubemap, cubeIndex);
+   mIrradianceArray->updateTextureSlot(probeInfo->mIrradianceCubemap, cubeIndex);
+
+   mPrefilterArray->updateTextureSlot(probeInfo->mPrefilterCubemap, cubeIndex);
 
 #ifdef TORQUE_DEBUG
    Con::warnf("UpdatedProbeTexture - probe id: %u on cubeIndex %u, Irrad validity: %d, Prefilter validity: %d", probeInfo->mObject->getId(), cubeIndex,
-      probeInfo->mIrradianceCubemap->isInitialized(), probeInfo->mPrefilterCubemap->isInitialized());
+      probeInfo->mIrradianceCubemap.isValid(), probeInfo->mPrefilterCubemap.isValid());
 #endif
 }
 
@@ -524,14 +527,14 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
    U32 prefilterMipLevels = mLog2(F32(resolution)) + 1;
    bool renderWithProbes = Con::getIntVariable("$pref::ReflectionProbes::RenderWithProbes", false);
 
-   ReflectionProbe* clientProbe = nullptr;
+   ReflectionProbe* clientProbe = NULL;
 
    if (probe->isServerObject())
       clientProbe = static_cast<ReflectionProbe*>(probe->getClientObject());
    else
       return;
 
-   if (clientProbe == nullptr)
+   if (clientProbe == NULL)
       return;
 
    String probePrefilterPath = clientProbe->getPrefilterMapPath();
@@ -616,8 +619,8 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
       clientProbe->createClientResources();
 
       //Prep it with whatever resolution we've dictated for our bake
-      clientProbe->mIrridianceMap->mCubemap->initDynamic(resolution, reflectFormat);
-      clientProbe->mPrefilterMap->mCubemap->initDynamic(resolution, reflectFormat);
+      clientProbe->mIrridianceMap->mCubemap.set(resolution, resolution, reflectFormat, &GFXCubemapRenderTargetProfile, "ReflectionProbe::mIrridianceMap", 0);
+      clientProbe->mPrefilterMap->mCubemap.set(resolution, resolution, reflectFormat, &GFXCubemapRenderTargetProfile, "ReflectionProbe::mPrefilterMap", 0);
 
       GFXTextureTargetRef renderTarget = GFX->allocRenderToTextureTarget(false);
       clientProbe->mPrefilterMap->mCubemap = cubeRefl.getCubemap();
@@ -807,9 +810,9 @@ void RenderProbeMgr::_update4ProbeConsts(const SceneData& sgData,
       shaderConsts->setSafe(probeShaderConsts->mSkylightDampSC, (int)probeSet.skyLightDamp);
 
       if (probeShaderConsts->mProbeSpecularCubemapArraySC->getSamplerRegister() != -1)
-         GFX->setCubeArrayTexture(probeShaderConsts->mProbeSpecularCubemapArraySC->getSamplerRegister(), mPrefilterArray);
+         GFX->setTexture(probeShaderConsts->mProbeSpecularCubemapArraySC->getSamplerRegister(), mPrefilterArray);
       if (probeShaderConsts->mProbeIrradianceCubemapArraySC->getSamplerRegister() != -1)
-         GFX->setCubeArrayTexture(probeShaderConsts->mProbeIrradianceCubemapArraySC->getSamplerRegister(), mIrradianceArray);
+         GFX->setTexture(probeShaderConsts->mProbeIrradianceCubemapArraySC->getSamplerRegister(), mIrradianceArray);
 
       shaderConsts->setSafe(probeShaderConsts->mMaxProbeDrawDistanceSC, smMaxProbeDrawDistance);
    }
@@ -829,7 +832,7 @@ void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState* state)
 
 void RenderProbeMgr::render( SceneRenderState *state )
 {
-   if (getProbeArrayEffect() == nullptr)
+   if (getProbeArrayEffect() == NULL)
    {
       mActiveProbes.clear();
       return;
@@ -875,8 +878,8 @@ void RenderProbeMgr::render( SceneRenderState *state )
    mProbeArrayEffect->setShaderMacro("MAX_PROBES", probePerFrame);
 
    mProbeArrayEffect->setTexture(3, mBRDFTexture);
-   mProbeArrayEffect->setCubemapArrayTexture(4, mPrefilterArray);
-   mProbeArrayEffect->setCubemapArrayTexture(5, mIrradianceArray);
+   mProbeArrayEffect->setTexture(4, mPrefilterArray);
+   mProbeArrayEffect->setTexture(5, mIrradianceArray);
    mProbeArrayEffect->setTexture(6, mWetnessTexture);
    //ssao mask
    if (AdvancedLightBinManager::smUseSSAOMask)
@@ -898,7 +901,7 @@ void RenderProbeMgr::render( SceneRenderState *state )
    mProbeArrayEffect->setShaderConst("$skylightCubemapIdx", (S32)mProbeData.skyLightIdx);
    mProbeArrayEffect->setShaderConst(ShaderGenVars::skylightDamp, mProbeData.skyLightDamp);
 
-   mProbeArrayEffect->setShaderConst("$cubeMips", (float)mPrefilterArray->getMipMapLevels());
+   mProbeArrayEffect->setShaderConst("$cubeMips", (float)mPrefilterArray->getMipLevels());
 
    //also set up some colors
    Vector<Point4F> contribColors;
@@ -950,7 +953,7 @@ DefineEngineMethod(RenderProbeMgr, bakeProbe, void, (ReflectionProbe* probe), (n
    "@brief Bakes the cubemaps for a reflection probe\n\n.")
 {
    object->preBake();
-   if(probe != nullptr)
+   if(probe != NULL)
       object->bakeProbe(probe);
    object->postBake();
 }

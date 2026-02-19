@@ -1529,6 +1529,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
 
    CodeBlock::smInFunction = false;
 
+   setCurrentStringTable(&getGlobalStringTable());
    // check for argument setup
    for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
    {
@@ -1541,6 +1542,7 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
          ip = walk->defaultValue->compile(codeStream, ip, walkType);
       }
    }
+   setCurrentStringTable(&getFunctionStringTable());
 
    codeStream.emit(OP_FUNC_DECL);
    codeStream.emitSTE(fnName);

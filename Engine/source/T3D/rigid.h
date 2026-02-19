@@ -105,7 +105,7 @@ public:
    //
    void setSleepThresholds(F32 linVel2, F32 angVel2, F32 timeToSleep);
    void wake();
-   TORQUE_FORCEINLINE void updateAngularVelocity() { invWorldInertia.mulV(angMomentum, &angVelocity); }
+   TORQUE_FORCEINLINE void updateAngularVelocity(F32 delta) { Point3F deltaVel = angVelocity * delta; invWorldInertia.mulV(angMomentum, &deltaVel); }
 };
 
 

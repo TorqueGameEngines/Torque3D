@@ -3389,7 +3389,7 @@ void GuiTreeViewCtrl::onMouseDown(const GuiEvent & event)
    mPossibleRenameItem = NULL;
    mRenamingItem = NULL;
    mTempItem = NULL;
-      
+   bool wasSelected = isSelected(item);
    //
    if( event.modifier & SI_MULTISELECT )
    {
@@ -3473,8 +3473,7 @@ void GuiTreeViewCtrl::onMouseDown(const GuiEvent & event)
    else if ( !hitFlags.test(OnImage) )
    {      
       mTempItem = item;
-
-      bool wasSelected = isSelected( item );
+      
       bool multiSelect = getSelectedItemsCount() > 1;
       
       if( !wasSelected || !multiSelect )
@@ -3520,7 +3519,7 @@ void GuiTreeViewCtrl::onMouseDown(const GuiEvent & event)
       return;
 
    //
-   if ( mFullRowSelect || hitFlags.test( OnImage ) )
+   if (hitFlags.test(OnImage) || ((mFullRowSelect || hitFlags.test(OnIcon)) && wasSelected))
    {
       item->setExpanded(!item->isExpanded());
       if( !item->isInspectorData() && item->mState.test(Item::VirtualParent) )
@@ -4540,7 +4539,7 @@ void GuiTreeViewCtrl::reparentItems(Vector<Item*> selectedItems, Item* newParent
       // Snag the current parent set if any for future reference
       SimSet * parentSet = NULL;
 
-      if (oldParent != nullptr && oldParent->isInspectorData())
+      if (oldParent != NULL && oldParent->isInspectorData())
       {
          parentSet = dynamic_cast<SimSet*>(oldParent->getObject());
       }
@@ -4872,7 +4871,7 @@ void GuiTreeViewCtrl::reparentItems(Vector<Item*> selectedItems, Item* newParent
 S32 GuiTreeViewCtrl::getTabLevel(S32 itemId)
 {
    Item* item = getItem(itemId);
-   if (item != nullptr)
+   if (item != NULL)
    {
       return item->mTabLevel;
    }
@@ -5745,7 +5744,7 @@ DefineEngineMethod(GuiTreeViewCtrl, reparentItem, void, (S32 itemId, S32 parentI
 
    const Vector< GuiTreeViewCtrl::Item* > & selectedItems = object->getItems();
    Vector<GuiTreeViewCtrl::Item*> items;
-   GuiTreeViewCtrl::Item * parent = nullptr;
+   GuiTreeViewCtrl::Item * parent = NULL;
 
    for (S32 i = 0; i < selectedItems.size(); ++i)
    {
@@ -5760,7 +5759,7 @@ DefineEngineMethod(GuiTreeViewCtrl, reparentItem, void, (S32 itemId, S32 parentI
       }
    }
 
-   if (!items.empty() && parent != nullptr)
+   if (!items.empty() && parent != NULL)
    {
       object->reparentItems(items, parent);
    }

@@ -1986,13 +1986,13 @@ void GuiInspectorType2DValue::constructEditControlChildren(GuiControl* retCtrl, 
    retCtrl->addObject(mContainerY);
 
    mCtrlX->setDataField(StringTable->insert("tabComplete"), NULL, "true");
-   String tabCmdX = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder();}",
-      mCtrlX->getName(), mCtrlY->getName());
+   String tabCmdX = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder(); %s.selectAllText(); }",
+      mCtrlX->getName(), mCtrlY->getName(), mCtrlY->getName());
    Con::evaluatef(tabCmdX);
 
    mCtrlY->setDataField(StringTable->insert("tabComplete"), NULL, "true");
-   String tabCmdY = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder();}",
-      mCtrlY->getName(), mCtrlX->getName());
+   String tabCmdY = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder(); %s.selectAllText(); }",
+      mCtrlY->getName(), mCtrlX->getName(), mCtrlX->getName());
    Con::evaluatef(tabCmdY);
    //retCtrl->addObject(mScriptValue);
 }
@@ -2120,13 +2120,13 @@ void GuiInspectorType3DValue::constructEditControlChildren(GuiControl* retCtrl, 
    _registerEditControl(mContainerZ, "cz");
 
    mCtrlY->setDataField(StringTable->insert("tabComplete"), NULL, "true");
-   String tabCmdY = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder();}",
-      mCtrlY->getName(), mCtrlZ->getName());
+   String tabCmdY = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder(); %s.selectAllText(); }",
+      mCtrlY->getName(), mCtrlZ->getName(), mCtrlZ->getName());
    Con::evaluatef(tabCmdY);
 
    mCtrlZ->setDataField(StringTable->insert("tabComplete"), NULL, "true");
-   String tabCmdZ = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder();}",
-      mCtrlZ->getName(), mCtrlX->getName());
+   String tabCmdZ = String::ToString("function %s::onTabComplete(){ %s.setFirstResponder(); %s.selectAllText(); }",
+      mCtrlZ->getName(), mCtrlX->getName(), mCtrlX->getName());
    Con::evaluatef(tabCmdZ);
 
    retCtrl->addObject(mContainerZ);

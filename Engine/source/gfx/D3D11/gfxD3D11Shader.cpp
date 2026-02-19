@@ -842,9 +842,9 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
    if (!loadedFromCache)
    {
       if (SUCCEEDED(res) && code)
-      {
+      { 
          // Save cache
-         FileStream out;
+         FileStream out(FileStream::AsyncMode::Background);
          if (out.open(cachePath, Torque::FS::File::Write))
          {
             out.write(code->GetBufferSize(), code->GetBufferPointer());

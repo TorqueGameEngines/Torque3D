@@ -556,6 +556,8 @@ private:
    NetConnection *mNextTableHash;
    static NetConnection *mHashTable[HashTableSize];
 
+   U32 mGhostByteBudget;
+   U32 mGhostByteRemainder;
    /// @}
 
 protected:

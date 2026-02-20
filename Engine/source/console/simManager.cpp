@@ -280,6 +280,7 @@ U32 getTargetTime()
 
 SimGroup *gRootGroup = NULL;
 SimManagerNameDictionary *gNameDictionary;
+SceneStreaming* sgStreamingInstance = NULL;
 SimIdDictionary *gIdDictionary;
 U32 gNextObjectId;
 
@@ -287,7 +288,8 @@ static void initRoot()
 {
    gIdDictionary = new SimIdDictionary;
    gNameDictionary = new SimManagerNameDictionary;
-
+   sgStreamingInstance = new SceneStreaming;
+   sgStreamingInstance->smStreaming = false;
    gRootGroup = new SimGroup();
    gRootGroup->incRefCount();
  
@@ -305,6 +307,7 @@ static void shutdownRoot()
       gRootGroup->deleteObject();
    gRootGroup = NULL;
 
+   SAFE_DELETE(sgStreamingInstance);
    SAFE_DELETE(gNameDictionary);
    SAFE_DELETE(gIdDictionary);
 }

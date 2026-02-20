@@ -215,7 +215,7 @@ U32 NetConnection::getSequence()
 static U32 gPacketRateToServer = 32;
 static U32 gPacketUpdateDelayToServer = 32;
 static U32 gPacketRateToClient = 10;
-static U32 gPacketSize = 508;
+static U32 gPacketSize = 1500;
 
 void NetConnection::consoleInit()
 {
@@ -319,7 +319,7 @@ void NetConnection::checkMaxRate()
       // These changes introduced in T3D 1.1 Preview reduce the packet headroom which leads
       // to some spells and effects running out of room when dynamic variables are used
       // to send launch-time parameters to clients.
-      packetSize = 512;
+      packetSize = 1500;
    }
 
    gPacketUpdateDelayToServer = 1024 / packetRateToServer;
@@ -440,6 +440,9 @@ NetConnection::NetConnection()
 
    // Ensure NetAddress is cleared
    dMemset(&mNetAddress, '\0', sizeof(NetAddress));
+
+   mGhostByteBudget = 800; // test payload.
+   mGhostByteRemainder = mGhostByteBudget;
 }
 
 NetConnection::~NetConnection()

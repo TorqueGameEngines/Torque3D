@@ -43,6 +43,7 @@
 #include "console/script.h"
 
 #include "sim/netObject.h"
+#include "scene/sceneObject.h"
 
 ImplementBitfieldType(GameTypeMasksType,
    "The type of animation effect to apply to this material.\n"
@@ -109,6 +110,7 @@ namespace Sim
    // Defined in simManager.cpp
    extern SimGroup *gRootGroup;
    extern SimManagerNameDictionary *gNameDictionary;
+   extern SceneStreaming* sgStreamingInstance;
    extern SimIdDictionary *gIdDictionary;
    extern U32 gNextObjectId;
 }
@@ -724,6 +726,12 @@ bool SimObject::registerObject()
    Sim::gIdDictionary->insert(this);   
 
    Sim::gNameDictionary->insert(this);
+
+   if (Sim::sgStreamingInstance->smStreaming && dynamic_cast<SceneObject*>(this))
+   {
+      Sim::sgStreamingInstance->smPendingRegister.push_back(this);
+      return true; // pretend success
+   }
 
    // Notify object
    bool ret = onAdd();

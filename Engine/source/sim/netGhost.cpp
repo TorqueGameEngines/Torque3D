@@ -424,16 +424,43 @@ void NetConnection::ghostWritePacket(BitStream *bstream, PacketNotify *notify)
 
    bstream->writeInt(sendSize - 3, GhostIndexBitSize);
 
-   U32 count = 0;
+   S32 bytesThisPacket = 0;
+   U32 maxBytesPerPacket = mGhostByteBudget;
    //
    for(i = mGhostZeroUpdateIndex - 1; i >= 0 && !bstream->isFull(); i--)
    {
 	   walk = mGhostArray[i];
 		if(walk->flags & (GhostInfo::KillingGhost | GhostInfo::Ghosting))
 		   continue;
-		
-      bstream->writeFlag(true);
 
+      // Optional: skip low-priority objects if needed
+      if (walk->updateSkipCount == 0 && walk->updateMask == 0)
+         continue;
+		
+      U32 ghostSize = 0;
+
+      // If not-yet-ghosted, include the object's class ID and update mask overhead
+      if (walk->flags & GhostInfo::NotYetGhosted)
+         ghostSize += sizeof(U32) * 2; // rough estimate for class ID + flags
+
+      // Add actual object size
+      if (walk->obj)
+      {
+         U32 estimatedNetSize = walk->obj->getClassRep()->getSizeof() / 32; // rough estimate for object data
+         ghostSize += estimatedNetSize;
+      }
+
+      // Check against byte budget
+      if (bytesThisPacket + ghostSize > maxBytesPerPacket)
+      {
+         // stop here — packet is full
+         break;
+      }
+
+      bytesThisPacket += ghostSize;
+
+      // Existing code to write this ghost:
+      bstream->writeFlag(true);
       bstream->writeInt(walk->index, sendSize);
       U32 updateMask = walk->updateMask;
 
@@ -463,6 +490,7 @@ void NetConnection::ghostWritePacket(BitStream *bstream, PacketNotify *notify)
 #ifdef TORQUE_DEBUG_NET
          U32 startPos = bstream->getCurPos();
 #endif
+         U32 retMask = 0;
          if(walk->flags & GhostInfo::NotYetGhosted)
          {
             S32 classId = walk->obj->getClassId(getNetClassGroup());
@@ -470,26 +498,14 @@ void NetConnection::ghostWritePacket(BitStream *bstream, PacketNotify *notify)
 #ifdef TORQUE_DEBUG_NET
             bstream->writeInt(classId ^ DebugChecksum, 32);
 #endif
-
+            retMask = walk->obj->partialPackUpdate(this, updateMask, bstream);
             walk->flags &= ~GhostInfo::NotYetGhosted;
             walk->flags |= GhostInfo::Ghosting;
             upd->ghostInfoFlags = GhostInfo::Ghosting;
          }
-#ifdef TORQUE_DEBUG_NET
-         else {
-            S32 classId = walk->obj->getClassId(getNetClassGroup());
-            bstream->writeClassId(classId, NetClassTypeObject, getNetClassGroup());
-            bstream->writeInt(classId ^ DebugChecksum, 32);
+         else{
+            retMask = walk->obj->packUpdate(this, updateMask, bstream);
          }
-#endif
-         // update the object
-#ifdef TORQUE_NET_STATS
-         U32 beginSize = bstream->getBitPosition();
-#endif
-         U32 retMask = walk->obj->packUpdate(this, updateMask, bstream);
-#ifdef TORQUE_NET_STATS
-         walk->obj->getClassRep()->updateNetStatPack(updateMask, bstream->getBitPosition() - beginSize);
-#endif
          DEBUG_LOG(("PKLOG %d GHOST %d: %s", getId(), bstream->getBitPosition() - 16 - startPos, walk->obj->getClassName()));
 
          AssertFatal((retMask & (~updateMask)) == 0, "Cannot set new bits in packUpdate return");
@@ -508,7 +524,6 @@ void NetConnection::ghostWritePacket(BitStream *bstream, PacketNotify *notify)
 #endif
       }
       walk->updateSkipCount = 0;
-      count++;
    }
    //Con::printf("Ghosts updated: %d (%d remain)", count, mGhostZeroUpdateIndex);
    // no more objects...
@@ -545,7 +560,7 @@ void NetConnection::ghostReadPacket(BitStream *bstream)
       index = (U32) bstream->readInt(idSize);
       if(bstream->readFlag()) // is this ghost being deleted?
       {
-		 mGhostsActive--;
+		   mGhostsActive--;
          AssertFatal(mLocalGhosts[index] != NULL, "Error, NULL ghost encountered.");
          mLocalGhosts[index]->deleteObject();
          mLocalGhosts[index] = NULL;
@@ -589,13 +604,8 @@ void NetConnection::ghostReadPacket(BitStream *bstream)
             // give derived classes a chance to prepare ghost for reading
             ghostPreRead(mLocalGhosts[index],true);
 
-#ifdef TORQUE_NET_STATS
-            U32 beginSize = bstream->getBitPosition();
-#endif
-            mLocalGhosts[index]->unpackUpdate(this, bstream);
-#ifdef TORQUE_NET_STATS
-            mLocalGhosts[index]->getClassRep()->updateNetStatUnpack(bstream->getBitPosition() - beginSize);
-#endif
+            mLocalGhosts[index]->partialUnpackUpdate(this, bstream);
+
             // Setup the remote object pointers before
             // we register so that it can be used from onAdd.
             if( mRemoteConnection )
@@ -637,14 +647,7 @@ void NetConnection::ghostReadPacket(BitStream *bstream)
 #endif
             // give derived classes a chance to prepare ghost for reading
             ghostPreRead(mLocalGhosts[index],false);
-
-#ifdef TORQUE_NET_STATS
-            U32 beginSize = bstream->getBitPosition();
-#endif
             mLocalGhosts[index]->unpackUpdate(this, bstream);
-#ifdef TORQUE_NET_STATS
-            mLocalGhosts[index]->getClassRep()->updateNetStatUnpack(bstream->getBitPosition() - beginSize);
-#endif
             ghostReadExtra(mLocalGhosts[index],bstream,false);
          }
          //PacketStream::getStats()->addBits(PacketStats::Receive, bstream->getCurPos() - startPos, ghostRefs[index].localGhost->getPersistTag());

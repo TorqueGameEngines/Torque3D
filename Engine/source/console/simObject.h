@@ -40,7 +40,10 @@
 #ifndef _TAML_CALLBACKS_H_
 #include "persistence/taml/tamlCallbacks.h"
 #endif
+
+#ifndef _OBJECTTYPES_H_
 #include "T3D/objectTypes.h"
+#endif
 
 class Stream;
 class LightManager;

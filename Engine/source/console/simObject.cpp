@@ -44,6 +44,8 @@
 
 #include "sim/netObject.h"
 #include "scene/sceneObject.h"
+#include "T3D/camera.h"
+#include "T3D/player.h"
 
 ImplementBitfieldType(GameTypeMasksType,
    "The type of animation effect to apply to this material.\n"
@@ -114,7 +116,7 @@ namespace Sim
    extern SimIdDictionary *gIdDictionary;
    extern U32 gNextObjectId;
 }
-
+extern bool gEditingMission;
 
 //-----------------------------------------------------------------------------
 
@@ -723,14 +725,20 @@ bool SimObject::registerObject()
    AssertFatal(Sim::gIdDictionary && Sim::gNameDictionary, 
       "SimObject::registerObject - tried to register an object before Sim::init()!");
 
-   Sim::gIdDictionary->insert(this);   
-
-   Sim::gNameDictionary->insert(this);
-
-   if (Sim::sgStreamingInstance->smStreaming && dynamic_cast<SceneObject*>(this))
+   
+   if (true && dynamic_cast<SceneObject*>(this) &&
+      !(dynamic_cast<Camera*>(this) || dynamic_cast<Player*>(this)) &&
+      !gEditingMission
+      )
    {
       Sim::sgStreamingInstance->smPendingRegister.push_back(this);
       return true; // pretend success
+   }
+   else
+   {
+      Sim::gIdDictionary->insert(this);
+
+      Sim::gNameDictionary->insert(this);
    }
 
    // Notify object

@@ -425,7 +425,7 @@ void NetConnection::ghostWritePacket(BitStream *bstream, PacketNotify *notify)
    bstream->writeInt(sendSize - 3, GhostIndexBitSize);
 
    S32 bytesThisPacket = 0;
-   U32 maxBytesPerPacket = mGhostByteBudget;
+   U32 maxBytesPerPacket = mMaxRate.packetSize;
    //
    for(i = mGhostZeroUpdateIndex - 1; i >= 0 && !bstream->isFull(); i--)
    {

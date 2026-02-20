@@ -267,17 +267,3 @@ DefineEngineFunction( isValidObjectName, bool, (const char * name), , "( string 
 
 ConsoleFunctionGroupEnd( SimFunctions );
 
-void SceneStreaming::processTick()
-{
-   if (smStreaming)
-   {
-      for (U32 i = 0; i < mMaxObjects && !smPendingRegister.empty(); i++)
-      {
-         SimObject* obj = smPendingRegister.first();
-         smPendingRegister.pop_front();
-
-         if (!obj->onAdd())
-            obj->unregisterObject();
-      }
-   }
-}

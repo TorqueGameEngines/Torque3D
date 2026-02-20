@@ -628,3 +628,23 @@ void SimDataBlockGroup::sort()
       dQsort(mObjectList.address(), mObjectList.size(),sizeof(SimObject *),compareModifiedKey);
    }
 }
+
+void SceneStreaming::processTick()
+{
+   if (true)
+   {
+      for (U32 i = 0; i < mMaxObjects && !smPendingRegister.empty(); i++)
+      {
+         SimObject* obj = smPendingRegister.first();
+         smPendingRegister.pop_front();
+
+         Sim::gIdDictionary->insert(obj);
+
+         Sim::gNameDictionary->insert(obj);
+
+
+         if (!obj->onAdd())
+            obj->unregisterObject();
+      }
+   }
+}

@@ -35,6 +35,7 @@ using namespace Compiler;
 
 bool           CodeBlock::smInFunction = false;
 CodeBlock *    CodeBlock::smCodeBlockList = NULL;
+StringTableEntry CodeBlock::smCurrentLineText = StringTable->EmptyString();
 TorqueScriptParser *CodeBlock::smCurrentParser = NULL;
 
 extern FuncVars gEvalFuncVars;
@@ -578,6 +579,7 @@ Con::EvalResult CodeBlock::compileExec(StringTableEntry fileName, const char *in
    consoleAllocReset();
 
    name = fileName;
+   smCurrentLineText = inString;
 
    if (fileName)
    {

@@ -742,7 +742,10 @@ void Trigger::potentialEnterObject(GameBase* enter)
       {
          String command = String("%obj = ") + enter->getIdString() + ";";
          command = command + String("%this = ") + getIdString() + ";" + mEnterCommand;
-         Con::evaluate(command.c_str());
+
+         StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getIdString();
+         String context = String::ToString("%s, %s", getGroup(), objectName);
+         Con::evaluate(command.c_str(), false, context);
       }
 
       if( mDataBlock && testTrippable() && testCondition())
@@ -791,7 +794,10 @@ void Trigger::processTick(const Move* move)
             {
                String command = String("%obj = ") + remove->getIdString() + ";";
                command = command + String("%this = ") + getIdString() + ";" + mLeaveCommand;
-               Con::evaluate(command.c_str());
+
+               StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getIdString();
+               String context = String::ToString("%s, %s", getGroup(), objectName);
+               Con::evaluate(command.c_str(), false, context);
             }
             if (testTrippable() && testCondition())
                mDataBlock->onLeaveTrigger_callback( this, remove );
@@ -800,7 +806,11 @@ void Trigger::processTick(const Move* move)
       }
 
       if (evalCmD(&mTickCommand))
-         Con::evaluate(mTickCommand.c_str());
+      {
+         StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getIdString();
+         String context = String::ToString("%s, %s", getGroup(), objectName);
+         Con::evaluate(mTickCommand.c_str(), false, context);
+      }
 
       if (mObjects.size() != 0 && testTrippable() && testCondition())
          mDataBlock->onTickTrigger_callback( this );

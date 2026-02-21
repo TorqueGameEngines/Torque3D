@@ -1482,8 +1482,12 @@ bool ActionMap::processAction(const InputEventInfo* pEvent)
       if(pNode->flags & Node::BindCmd)
       {
          // it's a bind command
-         if(pNode->makeConsoleCommand)
-            Con::evaluate(pNode->makeConsoleCommand);
+         if (pNode->makeConsoleCommand)
+         {
+            StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
+            String context = String::ToString("%s, Object: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
+            Con::evaluate(pNode->makeConsoleCommand, false, context);
+         }
       }
       else if (pNode->flags & Node::Held)
       {

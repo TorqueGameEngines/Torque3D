@@ -1049,35 +1049,35 @@ DefineBitfieldType(GameTypeMasksType);
 template< typename T >
 class SimObjectPtr : public WeakRefPtr< T >
 {
-   public:
+public:
    
-      typedef WeakRefPtr< T > Parent;
+   typedef WeakRefPtr< T > Parent;
    
-      SimObjectPtr() = default;
-      SimObjectPtr(T *ptr) { set(ptr); }
-      SimObjectPtr( const SimObjectPtr& ref ) { this->mReference = ref.mReference; }
+   SimObjectPtr() = default;
+   SimObjectPtr(T *ptr) { set(ptr); }
+   SimObjectPtr( const SimObjectPtr& ref ) { this->mReference = ref.mReference; }
 
-      T* getObject() const { return Parent::getPointer(); }
+   T* getObject() const { return Parent::getPointer(); }
 
-      ~SimObjectPtr() { mReference = NULL; }
+   ~SimObjectPtr() { this->mReference = NULL; }
 
-      SimObjectPtr<T>& operator=(const SimObjectPtr ref)
-      {
-         mReference = ref.mReference;
-         return *this;
-      }
-      SimObjectPtr<T>& operator=(T *ptr)
-      {
-         set(ptr);
-         return *this;
-      }
+   SimObjectPtr<T>& operator=(const SimObjectPtr ref)
+   {
+      this->mReference = ref.mReference;
+      return *this;
+   }
+   SimObjectPtr<T>& operator=(T *ptr)
+   {
+      set(ptr);
+      return *this;
+   }
 
-   protected:
+protected:
 
-      void set(T * obj)
-      {
-         mReference = obj ? obj->getWeakReference() : nullptr;
-      }
+   void set(T * obj)
+   {
+      this->mReference = obj ? obj->getWeakReference() : NULL;
+   }
 };
 
 #endif // _SIMOBJECT_H_

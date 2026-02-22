@@ -609,6 +609,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
 
       /// @name Events
       /// @{
+      //virtual void onPrepare();
       
       /// Called when the object is added to the sim.
       virtual bool onAdd();

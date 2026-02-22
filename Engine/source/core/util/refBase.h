@@ -29,7 +29,17 @@
 #ifndef _TYPETRAITS_H_
 #  include "platform/typetraits.h"
 #endif
+#include <memory>
 
+class WeakRefBase;
+
+struct WeakControlBlock
+{
+   explicit WeakControlBlock(WeakRefBase* obj);
+   ~WeakControlBlock();
+
+   WeakRefBase* object;
+};
 
 /// Base class for objects which can be weakly referenced
 /// (i.e., reference goes away when object is destroyed).
@@ -37,45 +47,56 @@ class WeakRefBase
 {
 public:
 
-   /// Weak reference to WeakRefBase. 
    class WeakReference
    {
    public:
 
-      [[nodiscard]] constexpr WeakRefBase* get() const { return mObject; }
-      [[nodiscard]] constexpr U32 getRefCount()  const { return mRefCount; }
-
-      constexpr void incRefCount() { mRefCount++; }
-      constexpr void decRefCount() {
-         AssertFatal( mRefCount > 0, "WeakReference - decrementing count of zero!" );
-         if (--mRefCount==0)
-            delete this;
+      WeakRefBase* get() const
+      {
+         auto locked = mWeak.lock();
+         return locked ? locked->object : NULL;
       }
+
+      uint32_t getRefCount() const
+      {
+         return (uint32_t)mWeak.use_count();
+      }
+
+      void incRefCount() { /* compatibility no-op */ }
+      void decRefCount() { /* compatibility no-op */ }
+
    private:
-
       friend class WeakRefBase;
-      constexpr explicit WeakReference(WeakRefBase *object) :mObject(object), mRefCount(0) {}
 
-      ~WeakReference() { AssertFatal(mObject==NULL, "Deleting weak reference which still points at an object."); }
+      explicit WeakReference(const std::shared_ptr<WeakControlBlock>& ctrl)
+         : mWeak(ctrl) {
+      }
 
-      // Object we reference
-      WeakRefBase *mObject;
-
-      // reference count for this structure (not WeakObjectRef itself)
-      U32 mRefCount; 
+      std::weak_ptr<WeakControlBlock> mWeak;
    };
 
 public:
-   constexpr WeakRefBase() : mReference(NULL) {}
-   virtual ~WeakRefBase()  { clearWeakReferences(); }
+   constexpr WeakRefBase() {}
+   virtual ~WeakRefBase();
 
-   WeakReference* getWeakReference();
+   WeakReference* getWeakReference()
+   {
+      ensureControl();
+      return new WeakReference(mControl);
+   }
 
 protected:
-   void clearWeakReferences();
 
+   void ensureControl()
+   {
+      if (!mControl)
+         mControl = std::shared_ptr<WeakControlBlock>(new WeakControlBlock(this));
+   }
+
+   std::shared_ptr<WeakControlBlock> mControl;
 private:
-   WeakReference * mReference;
+
+   
 };
 
 template< typename T > class SimObjectPtr;
@@ -192,7 +213,12 @@ class StrongRefBase : public WeakRefBase
    friend class StrongObjectRef;
 
 public:
-   StrongRefBase() { mRefCount = 0; }
+   StrongRefBase()
+   {
+      mRefCount = 0;
+      ensureControl();
+      mStrongControlRef = mControl;
+   }
 
    U32 getRefCount() const { return mRefCount; }
 
@@ -209,12 +235,13 @@ public:
    void decRefCount()
    {
       AssertFatal(mRefCount, "Decrementing a reference with refcount 0!");
-      if(!--mRefCount)
+      if (!--mRefCount)
          destroySelf();
    }
 
 protected:
    U32 mRefCount; ///< reference counter for StrongRefPtr objects
+   std::shared_ptr<WeakControlBlock> mStrongControlRef;
 };
 
 /// Base class for StrongRefBase strong reference pointers.
@@ -415,27 +442,25 @@ private:
 };
 
 //---------------------------------------------------------------
-
-inline void WeakRefBase::clearWeakReferences()
-{
-   if (mReference)
-   {
-      mReference->mObject = NULL;
-      mReference->decRefCount();
-      mReference = NULL;
-   }
-}
-
-inline WeakRefBase::WeakReference* WeakRefBase::getWeakReference()
-{
-   if (!mReference)
-   {
-      mReference = new WeakReference(this);
-      mReference->incRefCount();
-   }
-   return mReference;
-}
-
+//inline void WeakRefBase::clearWeakReferences()
+//{
+//   if (mReference)
+//   {
+//      mReference->mObject = NULL;
+//      mReference->decRefCount();
+//      mReference = NULL;
+//   }
+//}
+//
+//inline WeakRefBase::WeakReference* WeakRefBase::getWeakReference()
+//{
+//   if (!mReference)
+//   {
+//      mReference = new WeakReference(this);
+//      mReference->incRefCount();
+//   }
+//   return mReference;
+//}
 //---------------------------------------------------------------
 
 template< typename T >

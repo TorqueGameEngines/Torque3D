@@ -46,6 +46,7 @@
 #include "scene/sceneObject.h"
 #include "T3D/camera.h"
 #include "T3D/player.h"
+#include "T3D/gameBase/gameConnection.h"
 
 ImplementBitfieldType(GameTypeMasksType,
    "The type of animation effect to apply to this material.\n"
@@ -725,9 +726,7 @@ bool SimObject::registerObject()
    AssertFatal(Sim::gIdDictionary && Sim::gNameDictionary, 
       "SimObject::registerObject - tried to register an object before Sim::init()!");
 
-   
-   if (true && dynamic_cast<SceneObject*>(this) &&
-      !(dynamic_cast<Camera*>(this) || dynamic_cast<Player*>(this)) &&
+   if (Sim::sgStreamingInstance->smStreaming && dynamic_cast<SceneObject*>(this) &&
       !gEditingMission
       )
    {

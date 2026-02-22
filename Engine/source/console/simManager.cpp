@@ -290,6 +290,7 @@ static void initRoot()
    gNameDictionary = new SimManagerNameDictionary;
    sgStreamingInstance = new SceneStreaming;
    sgStreamingInstance->smStreaming = false;
+
    gRootGroup = new SimGroup();
    gRootGroup->incRefCount();
  
@@ -631,20 +632,28 @@ void SimDataBlockGroup::sort()
 
 void SceneStreaming::processTick()
 {
-   if (true)
+   if (smPendingRegister.empty())
+      return;
+
+   U32 start = Platform::getRealMilliseconds();
+
+   while (!smPendingRegister.empty())
    {
-      for (U32 i = 0; i < mMaxObjects && !smPendingRegister.empty(); i++)
-      {
-         SimObject* obj = smPendingRegister.first();
-         smPendingRegister.pop_front();
+      SimObject* obj = smPendingRegister.first();
+      smPendingRegister.pop_front();
 
-         Sim::gIdDictionary->insert(obj);
+      Sim::gIdDictionary->insert(obj);
 
-         Sim::gNameDictionary->insert(obj);
+      Sim::gNameDictionary->insert(obj);
 
 
-         if (!obj->onAdd())
-            obj->unregisterObject();
-      }
+      if (!obj->onAdd())
+         obj->unregisterObject();
+
+      U32 now = Platform::getRealMilliseconds();
+      if ((now - start) >= 2)
+         break;
+
    }
+
 }

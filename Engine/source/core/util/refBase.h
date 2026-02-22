@@ -50,53 +50,71 @@ public:
    class WeakReference
    {
    public:
+      ~WeakReference();
 
-      WeakRefBase* get() const
-      {
-         auto locked = mWeak.lock();
-         return locked ? locked->object : NULL;
-      }
+	  WeakRefBase* get() const { return mStrong ? mStrong->object : NULL; }
 
-      uint32_t getRefCount() const
+      U32 getRefCount() const
       {
-         return (uint32_t)mWeak.use_count();
+         return (U32)mStrong.use_count();
       }
 
       void incRefCount() { /* compatibility no-op */ }
       void decRefCount() { /* compatibility no-op */ }
 
+      explicit WeakReference(const std::shared_ptr<WeakControlBlock>& ctrl)
+         : mStrong(ctrl) {
+      }
    private:
       friend class WeakRefBase;
-
-      explicit WeakReference(const std::shared_ptr<WeakControlBlock>& ctrl)
-         : mWeak(ctrl) {
-      }
-
-      std::weak_ptr<WeakControlBlock> mWeak;
+	   std::shared_ptr<WeakControlBlock> mStrong;
    };
 
 public:
-   constexpr WeakRefBase() {}
-   virtual ~WeakRefBase();
-
-   WeakReference* getWeakReference()
+   WeakRefBase()
    {
       ensureControl();
-      return new WeakReference(mControl);
+   }
+
+   virtual ~WeakRefBase();
+
+   // Copy constructor
+   WeakRefBase(const WeakRefBase& other)
+   {
+      mControl = other.mControl;
+      mReference = std::make_unique<WeakReference>(mControl);
+   }
+
+   // Copy assignment
+   WeakRefBase& operator=(const WeakRefBase& other)
+   {
+      if (this != &other)
+      {
+         mControl = other.mControl;
+         mReference = std::make_unique<WeakReference>(mControl);
+      }
+      return *this;
+   }
+
+   std::shared_ptr<WeakReference> getWeakReference()
+   {
+	   if (!mReference)
+		   mReference = std::make_shared<WeakReference>(mControl);
+	   return mReference;
    }
 
 protected:
 
    void ensureControl()
    {
-      if (!mControl)
-         mControl = std::shared_ptr<WeakControlBlock>(new WeakControlBlock(this));
+	   if (!mControl)
+		   mControl = std::make_shared<WeakControlBlock>(this);
    }
-
    std::shared_ptr<WeakControlBlock> mControl;
 private:
+	
+	std::shared_ptr<WeakReference> mReference;
 
-   
 };
 
 template< typename T > class SimObjectPtr;
@@ -109,29 +127,24 @@ template< typename T > class SimObjectPtr;
 template <class T> class WeakRefPtr
 {
 public:
-   constexpr WeakRefPtr()  : mReference(NULL) {}
-   WeakRefPtr(T *ptr)      : mReference(NULL) { set(ptr); }
-   WeakRefPtr(const WeakRefPtr<T> & ref) { mReference = NULL; set(ref.mReference); }
-   
-   ~WeakRefPtr() { set(static_cast<WeakRefBase::WeakReference *>(NULL)); }
+	WeakRefPtr() = default;
+	WeakRefPtr(T* obj) { set(obj); }
+	WeakRefPtr(const WeakRefPtr& other) { mReference = other.mReference; }
 
-   WeakRefPtr<T>& operator=(const WeakRefPtr<T>& ref)
-   {
-      if (this == &ref) { return *this; } // handle self assignment ( x = x; )
-      set(ref.mReference);
-      return *this;
-   }
-   WeakRefPtr<T>& operator=(T *ptr)
-   {
-      set(ptr);
-      return *this;
-   }
+	WeakRefPtr& operator=(const WeakRefPtr& other)
+	{
+		mReference = other.mReference;
+		return *this;
+	}
 
-   /// Returns true if the pointer is not set.
-   [[nodiscard]] constexpr bool isNull()        const { return mReference == NULL || mReference->get() == NULL; }
-   
-   /// Returns true if the pointer is set.
-   [[nodiscard]] constexpr bool isValid()       const { return mReference && mReference->get(); }
+	WeakRefPtr& operator=(T* obj)
+	{
+		set(obj);
+		return *this;
+	}
+
+	bool isValid() const { return mReference && mReference->get(); }
+	bool isNull() const { return !isValid(); }
    
    [[nodiscard]] constexpr T* operator->()      const { return getPointer(); }
    [[nodiscard]] constexpr T& operator*()       const { return *getPointer(); }
@@ -141,22 +154,13 @@ public:
    [[nodiscard]] constexpr T* getPointer()      const { return mReference ? (T*)mReference->get() : NULL; }
 
 protected:
-   void set(WeakRefBase::WeakReference* ref)
-   {
-      if (mReference)
-         mReference->decRefCount();
-      mReference = NULL;
-      if (ref)
-      {
-         mReference = ref;
-         mReference->incRefCount();
-      }
-   }
-
-   void set(T* obj) { set(obj ? obj->getWeakReference() : NULL); }
+	void set(T* obj)
+	{
+		mReference = obj ? obj->getWeakReference() : NULL;
+	}
 private:
    template< typename > friend class SimObjectPtr;
-   WeakRefBase::WeakReference * mReference {NULL};
+   std::shared_ptr<WeakRefBase::WeakReference> mReference;
 };
 
 /// Union of an arbitrary type with a WeakRefBase.  The exposed type will
@@ -210,39 +214,41 @@ private:
 /// when all strong references go away, object is destroyed).
 class StrongRefBase : public WeakRefBase
 {
-   friend class StrongObjectRef;
+	friend class StrongObjectRef;
 
 public:
-   StrongRefBase()
-   {
-      mRefCount = 0;
-      ensureControl();
-      mStrongControlRef = mControl;
-   }
+	StrongRefBase()
+	{
+		mRefCount = 0;
+		mReference = getWeakReference();
+	}
 
-   U32 getRefCount() const { return mRefCount; }
+	virtual ~StrongRefBase() = default;
 
-   /// object destroy self call (from StrongRefPtr).  Override if this class has specially allocated memory.
-   virtual void destroySelf() { delete this; }
+	U32 getRefCount() const { return mRefCount; }
 
-   /// Increments the reference count.
-   void incRefCount()
-   {
-      mRefCount++;
-   }
+	/// object destroy self call (from StrongRefPtr).  Override if this class has specially allocated memory.
+	virtual void destroySelf() { delete this; }
 
-   /// Decrements the reference count.
-   void decRefCount()
-   {
-      AssertFatal(mRefCount, "Decrementing a reference with refcount 0!");
-      if (!--mRefCount)
-         destroySelf();
-   }
+	/// Increments the reference count.
+	void incRefCount()
+	{
+		mRefCount++;
+	}
+
+	/// Decrements the reference count.
+	void decRefCount()
+	{
+		AssertFatal(mRefCount, "Decrementing a reference with refcount 0!");
+		if (!--mRefCount)
+			destroySelf();
+	}
 
 protected:
-   U32 mRefCount; ///< reference counter for StrongRefPtr objects
-   std::shared_ptr<WeakControlBlock> mStrongControlRef;
+	U32 mRefCount; ///< reference counter for StrongRefPtr objects
+	std::shared_ptr<WeakRefBase::WeakReference> mReference;
 };
+
 
 /// Base class for StrongRefBase strong reference pointers.
 class StrongObjectRef
@@ -374,71 +380,53 @@ private:
 /// StrongWeakRefs that keep object live as long as the superior entity doesn't
 /// step in and kill them (in which case, the client code sees the reference
 /// disappear).
-template< class T >
+template<class T>
 class StrongWeakRefPtr
 {
 public:
-   constexpr StrongWeakRefPtr()           : mReference( NULL ) {}
-   constexpr StrongWeakRefPtr( T* ptr )   : mReference( NULL ) { _set( ptr ); }
-   ~StrongWeakRefPtr()
-   {
-      if( mReference )
-      {
-         T* ptr = _get();
-         if( ptr )
-            ptr->decRefCount();
+	constexpr StrongWeakRefPtr() = default;
+	StrongWeakRefPtr(T* ptr) { set(ptr); }
+	StrongWeakRefPtr(const StrongWeakRefPtr& other) { mReference = other.mReference; }
 
-         mReference->decRefCount();
-      }
-   }
+	~StrongWeakRefPtr() = default; // no manual decRefCount needed
 
-   [[nodiscard]] constexpr bool isNull()              const { return ( _get() == NULL ); }
-   [[nodiscard]] constexpr bool operator ==( T* ptr ) const { return ( _get() == ptr ); }
-   [[nodiscard]] constexpr bool operator !=( T* ptr ) const { return ( _get() != ptr ); }
-   [[nodiscard]] constexpr bool operator !()          const { return isNull(); }
-   [[nodiscard]] constexpr T* operator ->()           const { return _get(); }
-   [[nodiscard]] constexpr T& operator *()            const { return *( _get() ); }
+	StrongWeakRefPtr& operator=(T* ptr)
+	{
+		set(ptr);
+		return *this;
+	}
 
-   constexpr operator T*() const { return _get(); } // consider making this explicit
+	StrongWeakRefPtr& operator=(const StrongWeakRefPtr& other)
+	{
+		mReference = other.mReference;
+		return *this;
+	}
 
-   T* getPointer() const { return _get(); }
+	[[nodiscard]] bool isNull() const { return !mReference || !mReference->get(); }
+	[[nodiscard]] bool operator==(T* ptr) const { return getPointer() == ptr; }
+	[[nodiscard]] bool operator!=(T* ptr) const { return getPointer() != ptr; }
+	[[nodiscard]] bool operator!() const { return isNull(); }
 
-   StrongWeakRefPtr& operator =( T* ptr )
-   {
-      _set( ptr );
-      return *this;
-   }
+	[[nodiscard]] T* operator->() const { return getPointer(); }
+	[[nodiscard]] T& operator*() const { return *getPointer(); }
+	constexpr operator T* () const { return getPointer(); }
+
+	T* getPointer() const { return mReference ? static_cast<T*>(mReference->get()) : NULL; }
 
 private:
-   WeakRefBase::WeakReference* mReference;
+	std::shared_ptr<typename WeakRefBase::WeakReference> mReference;
 
-   T* _get() const
-   {
-      if( mReference )
-         return static_cast< T* >( mReference->get() );
-      else
-         return NULL;
-   }
-   void _set( T* ptr )
-   {
-      if( mReference )
-      {
-         T* old = _get();
-         if( old )
-            old->decRefCount();
-
-         mReference->decRefCount();
-      }
-
-      if( ptr )
-      {
-         ptr->incRefCount();
-         mReference = ptr->getWeakReference();
-         mReference->incRefCount();
-      }
-      else
-         mReference = NULL;
-   }
+	void set(T* ptr)
+	{
+		if (ptr)
+		{
+			mReference = ptr->getWeakReference(); // shared_ptr returned
+		}
+		else
+		{
+			mReference.reset();
+		}
+	}
 };
 
 //---------------------------------------------------------------

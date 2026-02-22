@@ -3,7 +3,7 @@
 WeakRefBase::~WeakRefBase()
 {
    if (mControl)
-      mControl->object = nullptr;
+      mControl->object = NULL;
 }
 
 WeakControlBlock::WeakControlBlock(WeakRefBase* obj)
@@ -14,4 +14,8 @@ WeakControlBlock::WeakControlBlock(WeakRefBase* obj)
 WeakControlBlock::~WeakControlBlock()
 {
 
+}
+
+WeakRefBase::WeakReference::~WeakReference()
+{
 }

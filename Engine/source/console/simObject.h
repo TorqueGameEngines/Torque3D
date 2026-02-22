@@ -1053,17 +1053,17 @@ class SimObjectPtr : public WeakRefPtr< T >
    
       typedef WeakRefPtr< T > Parent;
    
-      SimObjectPtr() {}
-      SimObjectPtr(T *ptr) { this->mReference = NULL; set(ptr); }
-      SimObjectPtr( const SimObjectPtr& ref ) { this->mReference = NULL; set(ref.mReference); }
+      SimObjectPtr() = default;
+      SimObjectPtr(T *ptr) { set(ptr); }
+      SimObjectPtr( const SimObjectPtr& ref ) { this->mReference = ref.mReference; }
 
       T* getObject() const { return Parent::getPointer(); }
 
-      ~SimObjectPtr() { set((WeakRefBase::WeakReference*)NULL); }
+      ~SimObjectPtr() { mReference = NULL; }
 
       SimObjectPtr<T>& operator=(const SimObjectPtr ref)
       {
-         set(ref.mReference);
+         mReference = ref.mReference;
          return *this;
       }
       SimObjectPtr<T>& operator=(T *ptr)
@@ -1073,31 +1073,10 @@ class SimObjectPtr : public WeakRefPtr< T >
       }
 
    protected:
-      void set(WeakRefBase::WeakReference * ref)
-      {
-         if( ref == this->mReference )
-            return;
-
-         if( this->mReference )
-         {
-            // Auto-delete
-            T* obj = this->getPointer();
-            if ( this->mReference->getRefCount() == 2 && obj && obj->isAutoDeleted() )
-               obj->deleteObject();
-
-            this->mReference->decRefCount();
-         }
-         this->mReference = NULL;
-         if( ref )
-         {
-            this->mReference = ref;
-            this->mReference->incRefCount();
-         }
-      }
 
       void set(T * obj)
       {
-         set(obj ? obj->getWeakReference() : (WeakRefBase::WeakReference *)NULL);
+         mReference = obj ? obj->getWeakReference() : nullptr;
       }
 };
 

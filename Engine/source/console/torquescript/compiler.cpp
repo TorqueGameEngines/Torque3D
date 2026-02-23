@@ -160,8 +160,16 @@ S32 FuncVars::assign(StringTableEntry var, TypeReq currentType, S32 lineNumber, 
 
       if (found->second.isConstant)
       {
-         const char* lineTxt = CodeBlock::smCurrentLineText;
-         const char* str = avar("Script Warning: Reassigning variable %s when it is a constant. File: %s Line Num: %d \nLine: %s", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber, lineTxt);
+         const char* lineText = CodeBlock::smCurrentLineText;
+
+         String codeString = CodeBlock::smCurrentLineText;
+         Vector<String> splitLines;
+         codeString.split("\n", splitLines);
+
+         if (lineNumber > 0 && splitLines.size() > lineNumber)
+            lineText = splitLines[lineNumber - 1].c_str();
+
+         const char* str = avar("Script Warning: Reassigning variable %s when it is a constant. File: %s\nLine Num: %d\nLine: \"%s\"", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber, lineText);
          scriptErrorHandler(str);
       }
       return found->second.reg;
@@ -180,8 +188,16 @@ S32 FuncVars::lookup(StringTableEntry var, S32 lineNumber)
 
    if (found == vars.end())
    {
-      const char* lineTxt = CodeBlock::smCurrentLineText;
-      const char* str = avar("Script Warning: Variable %s referenced before used when compiling script. File: %s Line Num: %d \nLine: %s", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber, lineTxt);
+      const char* lineText = CodeBlock::smCurrentLineText;
+
+      String codeString = CodeBlock::smCurrentLineText;
+      Vector<String> splitLines;
+      codeString.split("\n", splitLines);
+
+      if (lineNumber > 0 && splitLines.size() > lineNumber)
+         lineText = splitLines[lineNumber - 1].c_str();
+
+      const char* str = avar("Script Warning: Variable %s referenced before used when compiling script. File: %s\nLine Num: %d\nLine: \"%s\"", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber, lineText);
       scriptErrorHandler(str);
 
       return assign(var, TypeReqString, lineNumber, false);
@@ -197,7 +213,15 @@ TypeReq FuncVars::lookupType(StringTableEntry var, S32 lineNumber)
    if (found == vars.end())
    {
       const char* lineText = CodeBlock::smCurrentLineText;
-      const char* str = avar("Script Warning: Variable %s referenced before used when compiling script. File: %s Line Num: %d \nLine: %s", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber, lineText);
+
+      String codeString = CodeBlock::smCurrentLineText;
+      Vector<String> splitLines;
+      codeString.split("\n", splitLines);
+
+      if (lineNumber > 0 && splitLines.size() > lineNumber)
+         lineText = splitLines[lineNumber-1].c_str();
+
+      const char* str = avar("Script Warning: Variable %s referenced before used when compiling script. File: %s\nLine Num: %d\nLine: \"%s\"", var, CodeBlock::smCurrentParser->getCurrentFile(), lineNumber, lineText);
       scriptErrorHandler(str);
 
       assign(var, TypeReqString, lineNumber, false);

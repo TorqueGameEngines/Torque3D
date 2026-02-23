@@ -60,7 +60,7 @@ inline FuncVars* getFuncVars(S32 lineNumber)
    if (gFuncVars == &gGlobalScopeFuncVars)
    {
       const char* lineTxt = CodeBlock::smCurrentLineText;
-      const char* str = avar("Attemping to use local variable in global scope. File: %s Line Num: %d \nLine: %s", CodeBlock::smCurrentParser->getCurrentFile(), lineNumber, lineTxt);
+      const char* str = avar("Attemping to use local variable in global scope. File: %s\nLine Num: %d\nLine: \"%s\"", CodeBlock::smCurrentParser->getCurrentFile(), lineNumber, lineTxt);
       scriptErrorHandler(str);
    }
    return gFuncVars;

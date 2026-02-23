@@ -61,7 +61,7 @@ private:
 public:
    static bool                      smInFunction;
    static TorqueScriptParser * smCurrentParser;
-   static StringTableEntry smCurrentLineText;
+   static const char* smCurrentLineText;
 
    static CodeBlock *getCodeBlockList()
    {

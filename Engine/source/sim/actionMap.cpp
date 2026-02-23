@@ -1485,7 +1485,7 @@ bool ActionMap::processAction(const InputEventInfo* pEvent)
          if (pNode->makeConsoleCommand)
          {
             StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
-            String context = String::ToString("%s, Object: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
+            String context = String::ToString("%s\nObject: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
             Con::evaluate(pNode->makeConsoleCommand, false, context);
          }
       }

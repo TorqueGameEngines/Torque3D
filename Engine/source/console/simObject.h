@@ -1054,16 +1054,42 @@ public:
    typedef WeakRefPtr< T > Parent;
    
    SimObjectPtr() = default;
-   SimObjectPtr(T* ptr) : Parent(ptr) {}
+   SimObjectPtr(T* ptr) { set(ptr); }
    SimObjectPtr(const SimObjectPtr&) = default;
    SimObjectPtr& operator=(const SimObjectPtr&) = default;
    SimObjectPtr& operator=(T* ptr)
    {
-      Parent::operator=(ptr);
+      set(ptr);
       return *this;
    }
 
    T* getObject() const { return Parent::getPointer(); }
+
+protected:
+   void set(T* obj)
+   {
+      // Nothing to do if same object
+      if (obj && mWeak.lock().get() == obj->getWeakControl().lock().get())
+         return;
+
+      // Before overwriting, check old object for auto-delete
+      if (auto old_ctrl = mWeak.lock())
+      {
+         T* old_obj = getObject();
+         if (mWeak.use_count() == 1 && old_obj && old_obj->isAutoDeleted())
+         {
+            old_obj->destroySelf();
+         }
+      }
+
+      // Assign new weak reference
+      mWeak.reset();
+      if (obj)
+      {
+         auto obj_ctrl = obj->getWeakControl().lock();
+         mWeak = obj_ctrl;
+      }
+   }
 };
 
 #endif // _SIMOBJECT_H_

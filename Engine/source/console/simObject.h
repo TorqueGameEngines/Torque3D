@@ -1054,30 +1054,16 @@ public:
    typedef WeakRefPtr< T > Parent;
    
    SimObjectPtr() = default;
-   SimObjectPtr(T *ptr) { set(ptr); }
-   SimObjectPtr( const SimObjectPtr& ref ) { this->mReference = ref.mReference; }
+   SimObjectPtr(T* ptr) : Parent(ptr) {}
+   SimObjectPtr(const SimObjectPtr&) = default;
+   SimObjectPtr& operator=(const SimObjectPtr&) = default;
+   SimObjectPtr& operator=(T* ptr)
+   {
+      Parent::operator=(ptr);
+      return *this;
+   }
 
    T* getObject() const { return Parent::getPointer(); }
-
-   ~SimObjectPtr() { this->mReference = NULL; }
-
-   SimObjectPtr<T>& operator=(const SimObjectPtr ref)
-   {
-      this->mReference = ref.mReference;
-      return *this;
-   }
-   SimObjectPtr<T>& operator=(T *ptr)
-   {
-      set(ptr);
-      return *this;
-   }
-
-protected:
-
-   void set(T * obj)
-   {
-      this->mReference = obj ? obj->getWeakReference() : NULL;
-   }
 };
 
 #endif // _SIMOBJECT_H_

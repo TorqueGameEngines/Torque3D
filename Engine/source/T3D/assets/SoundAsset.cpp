@@ -189,12 +189,6 @@ SoundAsset::SoundAsset()
 
 SoundAsset::~SoundAsset()
 {
-   
-   for (U32 i = 0; i < SFXPlayList::NUM_SLOTS; i++)
-   {
-      if(mSFXProfile[i].isProperlyAdded() && !mSFXProfile[i].isDeleted())
-         mSFXProfile[i].unregisterObject();
-   }
 
    if (mPlaylist.isProperlyAdded() && !mPlaylist.isDeleted())
       mPlaylist.unregisterObject();
@@ -404,22 +398,17 @@ U32 SoundAsset::load()
             {
                Con::errorf("SoundAsset::initializeAsset: Attempted to load file %s but it was not valid!", mSoundFile[i]);
                mLoadedState = BadFileReference;
-               mSFXProfile[i].setDescription(NULL);
-               mSFXProfile[i].setSoundFileName(StringTable->insert(StringTable->EmptyString()));
-               mSFXProfile[i].setPreload(false);
                return mLoadedState;
             }
             else
             {
-               SFXProfile* trackProfile = new SFXProfile();
-               trackProfile->setDescription(&mProfileDesc);
-               trackProfile->setSoundFileName(mSoundPath[i]);
-               trackProfile->setPreload(mPreload);
+               mSFXProfile[i] = new SFXProfile;
+               mSFXProfile[i]->setDescription(&mProfileDesc);
+               mSFXProfile[i]->setSoundFileName(mSoundPath[i]);
+               mSFXProfile[i]->setPreload(mPreload);
+               mSFXProfile[i]->registerObject(String::ToString("%s_profile_track%d", getAssetName()).c_str());
 
-               mSFXProfile[i] = *trackProfile;
-               mSFXProfile[i].registerObject(String::ToString("%s_profile_track%d", getAssetName()).c_str());
-
-               mPlaylist.mSlots.mTrack[i] = trackProfile;
+               mPlaylist.mSlots.mTrack[i] = mSFXProfile[i];
                
             }
          }
@@ -436,18 +425,15 @@ U32 SoundAsset::load()
          {
             Con::errorf("SoundAsset::initializeAsset: Attempted to load file %s but it was not valid!", mSoundFile[0]);
             mLoadedState = BadFileReference;
-            mSFXProfile[0].setDescription(NULL);
-            mSFXProfile[0].setSoundFileName(StringTable->insert(StringTable->EmptyString()));
-            mSFXProfile[0].setPreload(false);
             return mLoadedState;
          }
          else
          {
-            mSFXProfile[0].setDescription(&mProfileDesc);
-            mSFXProfile[0].setSoundFileName(mSoundPath[0]);
-            mSFXProfile[0].setPreload(mPreload);
-
-            mSFXProfile[0].registerObject(String::ToString("%s_profile", getAssetName()).c_str());
+            mSFXProfile[0] = new SFXProfile;
+            mSFXProfile[0]->setDescription(&mProfileDesc);
+            mSFXProfile[0]->setSoundFileName(mSoundPath[0]);
+            mSFXProfile[0]->setPreload(mPreload);
+            mSFXProfile[0]->registerObject(String::ToString("%s_profile", getAssetName()).c_str());
          }
 
       }

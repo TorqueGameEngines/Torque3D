@@ -79,28 +79,22 @@ public:
    virtual ~WeakRefBase();
 
    // Copy constructor
-   WeakRefBase(const WeakRefBase& other)
-   {
-      mControl = other.mControl;
-      mReference = std::make_unique<WeakReference>(mControl);
-   }
-
-   // Copy assignment
-   WeakRefBase& operator=(const WeakRefBase& other)
-   {
-      if (this != &other)
-      {
-         mControl = other.mControl;
-         mReference = std::make_unique<WeakReference>(mControl);
-      }
-      return *this;
-   }
+   WeakRefBase(const WeakRefBase&) = delete;
+   WeakRefBase& operator=(const WeakRefBase&) = delete;
+   WeakRefBase(WeakRefBase&&) = delete;
+   WeakRefBase& operator=(WeakRefBase&&) = delete;
 
    std::shared_ptr<WeakReference> getWeakReference()
    {
 	   if (!mReference)
 		   mReference = std::make_shared<WeakReference>(mControl);
 	   return mReference;
+   }
+
+   std::weak_ptr<WeakControlBlock> getWeakControl()
+   {
+      ensureControl();
+      return mControl;
    }
 
 protected:
@@ -127,15 +121,11 @@ template< typename T > class SimObjectPtr;
 template <class T> class WeakRefPtr
 {
 public:
-	WeakRefPtr() = default;
-	WeakRefPtr(T* obj) { set(obj); }
-	WeakRefPtr(const WeakRefPtr& other) { mReference = other.mReference; }
+   WeakRefPtr() = default;
+   WeakRefPtr(T* obj) { set(obj); }
 
-	WeakRefPtr& operator=(const WeakRefPtr& other)
-	{
-		mReference = other.mReference;
-		return *this;
-	}
+   WeakRefPtr(const WeakRefPtr&) = default;
+   WeakRefPtr& operator=(const WeakRefPtr&) = default;
 
 	WeakRefPtr& operator=(T* obj)
 	{
@@ -143,24 +133,36 @@ public:
 		return *this;
 	}
 
-	bool isValid() const { return mReference && mReference->get(); }
-	bool isNull() const { return !isValid(); }
+   bool isValid() const { return getPointer() != NULL; }
+   bool isNull() const { return getPointer() == NULL; }
    
    [[nodiscard]] constexpr T* operator->()      const { return getPointer(); }
    [[nodiscard]] constexpr T& operator*()       const { return *getPointer(); }
    [[nodiscard]] constexpr operator T*()        const { return getPointer(); }
    
    /// Returns the pointer.
-   [[nodiscard]] constexpr T* getPointer()      const { return mReference ? (T*)mReference->get() : NULL; }
+   [[nodiscard]] constexpr T* getPointer() const
+   {
+      auto obj_ctrl = mWeak.lock();
+      if (!obj_ctrl) return NULL;
+      return (T*)obj_ctrl->object;
+   }
 
 protected:
 	void set(T* obj)
 	{
-		mReference = obj ? obj->getWeakReference() : NULL;
+      if (!obj)
+      {
+         mWeak.reset();
+         return;
+      }
+
+      auto obj_ctrl = obj->getWeakControl().lock();
+      mWeak = obj_ctrl;
 	}
 private:
    template< typename > friend class SimObjectPtr;
-   std::shared_ptr<WeakRefBase::WeakReference> mReference;
+   std::weak_ptr<WeakControlBlock> mWeak;
 };
 
 /// Union of an arbitrary type with a WeakRefBase.  The exposed type will

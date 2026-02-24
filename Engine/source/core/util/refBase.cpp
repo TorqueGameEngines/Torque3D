@@ -16,6 +16,3 @@ WeakControlBlock::~WeakControlBlock()
 
 }
 
-WeakRefBase::WeakReference::~WeakReference()
-{
-}

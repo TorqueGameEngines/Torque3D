@@ -72,13 +72,15 @@ enum CpuFlags
 
    BIT_XSAVE_RESTORE = BIT(27),
    BIT_AVX = BIT(28),
+   BIT_AVX2 = BIT(5),
+   BIT_AVX512F = BIT(16)
 };
 
 static void detectCpuFeatures(Platform::SystemInfo_struct::Processor &processor)
 {
    S32 cpuInfo[4];
    __cpuid(cpuInfo, 1);
-   //U32 eax = cpuInfo[0];   // eax
+   int nIds = cpuInfo[0];
    U32 edx = cpuInfo[3];  // edx
    U32 ecx = cpuInfo[2]; // ecx
 
@@ -89,6 +91,18 @@ static void detectCpuFeatures(Platform::SystemInfo_struct::Processor &processor)
    processor.properties |= (ecx & BIT_SSE3ex) ? CPU_PROP_SSE3ex : 0;
    processor.properties |= (ecx & BIT_SSE4_1) ? CPU_PROP_SSE4_1 : 0;
    processor.properties |= (ecx & BIT_SSE4_2) ? CPU_PROP_SSE4_2 : 0;
+
+   if (nIds >= 7)
+   {
+      int ext[4];
+      __cpuidex(ext, 7, 0);
+
+      if (ext[1] & (BIT_AVX2)) // EBX bit 5
+         processor.properties |= CPU_PROP_AVX2;
+
+      if (ext[1] & (BIT_AVX512F)) // AVX-512 Foundation
+         processor.properties |= CPU_PROP_AVX512;
+   }
 
    // AVX detection requires that xsaverestore is supported
    if (ecx & BIT_XSAVE_RESTORE && ecx & BIT_AVX)
@@ -176,6 +190,10 @@ void Processor::init()
       Con::printf("      SSE4.2 detected" );
    if (Platform::SystemInfo.processor.properties & CPU_PROP_AVX)
       Con::printf("      AVX detected");
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_AVX2)
+      Con::printf("      AVX2 detected");
+   if (Platform::SystemInfo.processor.properties & CPU_PROP_AVX512)
+      Con::printf("      AVX512 detected");
 
    if (Platform::SystemInfo.processor.properties & CPU_PROP_MP)
       Con::printf("   MultiCore CPU detected [%i cores, %i logical]", Platform::SystemInfo.processor.numPhysicalProcessors, Platform::SystemInfo.processor.numLogicalProcessors);

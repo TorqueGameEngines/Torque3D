@@ -1069,25 +1069,25 @@ protected:
    void set(T* obj)
    {
       // Nothing to do if same object
-      if (obj && mWeak.lock().get() == obj->getWeakControl().lock().get())
+      if (obj && this->mWeak.lock() == obj->getWeakControl().lock())
          return;
 
       // Before overwriting, check old object for auto-delete
-      if (auto old_ctrl = mWeak.lock())
+      if (auto old_ctrl = this->mWeak.lock())
       {
          T* old_obj = getObject();
-         if (mWeak.use_count() == 1 && old_obj && old_obj->isAutoDeleted())
+         if (this->mWeak.use_count() == 1 && old_obj && old_obj->isAutoDeleted())
          {
             old_obj->destroySelf();
          }
       }
 
       // Assign new weak reference
-      mWeak.reset();
+      this->mWeak.reset();
       if (obj)
       {
          auto obj_ctrl = obj->getWeakControl().lock();
-         mWeak = obj_ctrl;
+         this->mWeak = obj_ctrl;
       }
    }
 };

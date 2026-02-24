@@ -28,6 +28,7 @@
 #include "console/engineAPI.h"
 #include "collision/boxConvex.h"
 #include "console/script.h"
+#include "console/consoleInternal.h"
 
 #include "core/stream/bitStream.h"
 #include "math/mathIO.h"
@@ -172,8 +173,9 @@ Trigger::Trigger()
 
    mPhysicsRep = NULL;
    mTripOnce = false;
+   mTripped = false;
    mTrippedBy = 0xFFFFFFFF;
-   mTripIf = "";
+   mTripIf.clear();
 
    //Default up a basic square
    Point3F vecs[3] = { Point3F(1.0, 0.0, 0.0),
@@ -748,21 +750,11 @@ void Trigger::potentialEnterObject(GameBase* enter)
       mObjects.push_back(enter);
       deleteNotify(enter);
 
-      if(evalCmD(&mEnterCommand))
+      if(isServerObject() && evalCmD(&mEnterCommand))
       {
          String command = String("%obj = ") + enter->getIdString() + ";";
          command = command + String("%this = ") + getIdString() + ";" + mEnterCommand;
-
-         StringTableEntry objectName = getName();
-         if (objectName != NULL)
-            objectName = getIdString();
-
-         StringTableEntry groupName = getGroup()->getName();
-         if (groupName != NULL)
-            groupName = getGroup()->getIdString();
-
-         String context = String::ToString("%s\nGroup: %s, Object: %s", getFilename(), groupName, objectName);
-         Con::evaluate(command.c_str(), false, context);
+         Con::evaluate(command.c_str(), false, Con::getCurrentScriptModulePath());
       }
 
       if( mDataBlock && testTrippable() && testCondition())
@@ -807,21 +799,11 @@ void Trigger::processTick(const Move* move)
             mObjects.erase(i);
             clearNotify(remove);
             
-            if (evalCmD(&mLeaveCommand))
+            if (isServerObject() && evalCmD(&mLeaveCommand))
             {
                String command = String("%obj = ") + remove->getIdString() + ";";
                command = command + String("%this = ") + getIdString() + ";" + mLeaveCommand;
-
-               StringTableEntry objectName = getName();
-               if (objectName != NULL)
-                  objectName = getIdString();
-
-               StringTableEntry groupName = getGroup()->getName();
-               if (groupName != NULL)
-                  groupName = getGroup()->getIdString();
-
-               String context = String::ToString("%s\nGroup: %s, Object: %s", getFilename(), groupName, objectName);
-               Con::evaluate(command.c_str(), false, context);
+               Con::evaluate(command.c_str(), false, Con::getCurrentScriptModulePath());
             }
             if (testTrippable() && testCondition())
                mDataBlock->onLeaveTrigger_callback( this, remove );
@@ -829,7 +811,7 @@ void Trigger::processTick(const Move* move)
          }
       }
 
-      if (evalCmD(&mTickCommand))
+      if (isServerObject() && evalCmD(&mTickCommand))
       {
          StringTableEntry objectName = getName();
          if (objectName != NULL)

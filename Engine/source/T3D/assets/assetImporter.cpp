@@ -3003,7 +3003,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 
       if (hasRoughness)
       {
-         newMat->mInvertRoughness[0] = true;
+         newMat->mInvertRoughness[0] = false;
       }
 
       newAsset->addObject(newMat);

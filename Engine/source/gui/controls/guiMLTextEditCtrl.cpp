@@ -213,7 +213,7 @@ bool GuiMLTextEditCtrl::onKeyDown(const GuiEvent& event)
             {
                StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
                String context = String::ToString("%s, Object: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
-               Con::evaluate( mEscapeCommand, false, context );
+               Con::evaluate( mEscapeCommand, false, context.c_str());
                return( true );
             }
             return( Parent::onKeyDown( event ) );

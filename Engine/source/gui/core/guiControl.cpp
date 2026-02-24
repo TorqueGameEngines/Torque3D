@@ -2495,7 +2495,15 @@ void GuiControl::getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent 
 const char* GuiControl::evaluate( const char* str )
 {
    smThisControl = this;
-   const char* result = Con::evaluate(str, false).value;
+   StringTableEntry objectName = getName();
+   if (getName() == NULL)
+      objectName = getInternalName();
+   StringTableEntry fileName = getFilename();
+   if (fileName != NULL)
+      fileName = Platform::makeRelativePathName(fileName, NULL);
+
+   String context = String::ToString("%s\nObject: %s", fileName, objectName);
+   const char* result = Con::evaluate(str, false, context).value;
    smThisControl = NULL;
 
    return result;

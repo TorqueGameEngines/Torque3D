@@ -154,7 +154,9 @@ function(add_math_backend name compile_defs)
 
     # ISA flags
     if(MSVC)
-        if(name STREQUAL "sse2" OR name STREQUAL "sse41")
+        if(name STREQUAL "sse2")
+            target_compile_options(math_${name} PRIVATE /arch:SSE2)
+        elseif(name STREQUAL "sse41")
             target_compile_options(math_${name} PRIVATE /arch:SSE2)
         elseif(name STREQUAL "avx")
             target_compile_options(math_${name} PRIVATE /arch:AVX)

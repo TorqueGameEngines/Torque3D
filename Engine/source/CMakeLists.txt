@@ -496,14 +496,31 @@ else()
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
 endif()
 
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" ARCH)
+
+set(IS_X86 FALSE)
+set(IS_ARM FALSE)
+
+if(ARCH MATCHES "x86_64|amd64|i[3-6]86")
+    set(IS_X86 TRUE)
+elseif(ARCH MATCHES "arm64|aarch64")
+    set(IS_ARM TRUE)
+endif()
+
+# always available
 add_math_backend(scalar  MATH_SIMD_SCALAR)
-add_math_backend(sse2    MATH_SIMD_SSE2)
-add_math_backend(sse41   MATH_SIMD_SSE41)
-add_math_backend(avx     MATH_SIMD_AVX)
-add_math_backend(avx2    MATH_SIMD_AVX2)
-# Only on ARM
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
-    add_math_backend(neon MATH_SIMD_NEON)
+
+# x86 family
+if(IS_X86)
+    add_math_backend(sse2  MATH_SIMD_SSE2)
+    add_math_backend(sse41 MATH_SIMD_SSE41)
+    add_math_backend(avx   MATH_SIMD_AVX)
+    add_math_backend(avx2  MATH_SIMD_AVX2)
+endif()
+
+# ARM family
+if(IS_ARM)
+    add_math_backend(neon  MATH_SIMD_NEON)
 endif()
 
 if(MSVC)

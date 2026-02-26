@@ -130,7 +130,7 @@ torqueAddSourceDirectories("windowManager" "windowManager/torque" "windowManager
 torqueAddSourceDirectories("scene" "scene/culling" "scene/zones" "scene/mixin")
 
 # Handle math
-torqueAddSourceDirectories("math" "math/util")
+torqueAddSourceDirectories("math" "math/util" "math/public" "math/impl") # note impl must skip the .inl files, never use them in engine code.
 
 # Handle persistence
 set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "persistence/rapidjson")
@@ -496,6 +496,15 @@ else()
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
 endif()
 
+add_math_backend(scalar  MATH_SIMD_SCALAR)
+add_math_backend(sse2    MATH_SIMD_SSE2)
+add_math_backend(sse41   MATH_SIMD_SSE41)
+add_math_backend(avx     MATH_SIMD_AVX)
+add_math_backend(avx2    MATH_SIMD_AVX2)
+# Only on ARM
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|ARM64")
+    add_math_backend(neon MATH_SIMD_NEON)
+endif()
 
 if(MSVC)
     # Match projectGenerator naming for executables

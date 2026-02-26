@@ -1,5 +1,6 @@
 #pragma once
 #include <cmath>   // for sqrtf, etc.
+#include "../mConstants.h"
 
 namespace math_backend::float4
 {
@@ -46,7 +47,7 @@ namespace math_backend::float4
    {
       f32x4 va = v_load(a);
       f32x4 vb = v_load(b);
-      f32x4 vr = _mm_div_ps(va, vb);
+      f32x4 vr = v_div(va, vb);
       v_store(r, vr);
    }
 
@@ -84,7 +85,7 @@ namespace math_backend::float4
    inline void float4_normalize_impl(float* a)
    {
       float len = float4_length_impl(a);
-      if (len > 1e-6f) // safe threshold
+      if (len > POINT_EPSILON) // safe threshold
       {
          float4_mul_scalar_impl(a, 1.0f / len, a);
       }
@@ -94,7 +95,7 @@ namespace math_backend::float4
    inline void float4_normalize_mag_impl(float* a, float r)
    {
       float len = float4_length_impl(a);
-      if (len > 1e-6f)
+      if (len > POINT_EPSILON)
       {
          float4_mul_scalar_impl(a, r / len, a);
       }

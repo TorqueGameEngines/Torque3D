@@ -1,5 +1,7 @@
+
 #include "float4_dispatch.h"
-#include <emmintrin.h> // SSE2 intrinsics
+#include <smmintrin.h> // SSE41 intrinsics
+
 namespace
 {
    typedef __m128 f32x4;
@@ -28,20 +30,27 @@ namespace
    // Horizontal sum of all 4 elements (for dot product, length, etc.)
    inline float v_hadd4(f32x4 a)
    {
-      __m128 shuf = _mm_shuffle_ps(a, a, _MM_SHUFFLE(2, 3, 0, 1));   // swap pairs
-      __m128 sums = _mm_add_ps(a, shuf);                             // sums: [a0+a1 a1+a0 a2+a3 a3+a2]
-      shuf = _mm_shuffle_ps(sums, sums, _MM_SHUFFLE(1, 0, 3, 2));    // move high pair to low
-      sums = _mm_add_ps(sums, shuf);                                 // total sum in lower float
-      return _mm_cvtss_f32(sums);
+      __m128 t1 = _mm_hadd_ps(a, a);  // sums pairs: [a0+a1, a2+a3, ...]
+      __m128 t2 = _mm_hadd_ps(t1, t1); // sums again: first element = a0+a1+a2+a3
+      return _mm_cvtss_f32(t2);       // extract first element
+   }
+
+   // specialized dot product for SSE4.1
+   float float4_dot_sse41(const float* a, const float* b)
+   {
+      f32x4 va = _mm_loadu_ps(a);
+      f32x4 vb = _mm_loadu_ps(b);
+      __m128 dp = _mm_dp_ps(va, vb, 0xF1); // multiply all 4, sum all 4, lowest lane
+      return _mm_cvtss_f32(dp);
    }
 }
 
-#include "../../impl/float4_impl.inl"
+#include "float4_impl.inl"
 
 namespace math_backend::float4::dispatch
 {
-   // Install SSE2 backend
-   void install_sse2()
+   // Install SSE41 backend
+   void install_sse41()
    {
       gFloat4.add          = float4_add_impl;
       gFloat4.sub          = float4_sub_impl;
@@ -49,7 +58,7 @@ namespace math_backend::float4::dispatch
       gFloat4.mul_scalar   = float4_mul_scalar_impl;
       gFloat4.div          = float4_div_impl;
       gFloat4.div_scalar   = float4_div_scalar_impl;
-      gFloat4.dot          = float4_dot_impl;
+      gFloat4.dot          = float4_dot_sse41;
       gFloat4.length       = float4_length_impl;
       gFloat4.lengthSquared = float4_length_squared_impl;
       gFloat4.normalize    = float4_normalize_impl;

@@ -27,6 +27,8 @@
 
 struct FPSTracker
 {
+   F32 fpsAccumTime;
+   F32 fpsAccumVirtualTime;
    F32 fpsRealLast;
    F32 fpsReal;
    F32 fpsRealMin;

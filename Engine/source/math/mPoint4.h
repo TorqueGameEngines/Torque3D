@@ -26,9 +26,11 @@
 #ifndef _MMATHFN_H_
 #include "math/mMathFn.h"
 #endif
-
 #ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
+#endif
+#ifndef _MATH_BACKEND_H_
+#include "math/public/math_backend.h"
 #endif
 
 
@@ -61,6 +63,8 @@ class Point4I
 /// Uses F32 internally.
 ///
 /// Useful for representing quaternions and other 4d beasties.
+using math_backend::float4::dispatch::gFloat4;
+
 class Point4F
 {
    //-------------------------------------- Public data
@@ -152,15 +156,12 @@ inline void Point4F::set(F32 _x, F32 _y, F32 _z, F32 _w)
 
 inline F32 Point4F::len() const
 {
-   return mSqrt(x*x + y*y + z*z + w*w);
+   return gFloat4.length(*this);
 }
 
 inline void Point4F::interpolate(const Point4F& _from, const Point4F& _to, F32 _factor)
 {
-   x = (_from.x * (1.0f - _factor)) + (_to.x * _factor);
-   y = (_from.y * (1.0f - _factor)) + (_to.y * _factor);
-   z = (_from.z * (1.0f - _factor)) + (_to.z * _factor);
-   w = (_from.w * (1.0f - _factor)) + (_to.w * _factor);
+   gFloat4.lerp(_from, _to, _factor, *this);
 }
 
 inline void Point4F::zero()
@@ -193,55 +194,55 @@ inline Point4F& Point4F::operator/=(F32 scalar)
    if (mIsZero(scalar))
       return *this;
 
-   F32 denom = 1 / scalar;
-
-   x *= denom;
-   y *= denom;
-   z *= denom;
-   w *= denom;
+   gFloat4.div_scalar(*this, scalar, *this);
 
    return *this;
 }
 
 inline Point4F Point4F::operator+(const Point4F& _add) const
 {
-   return Point4F( x + _add.x, y + _add.y, z + _add.z, w + _add.w );
+   Point4F res;
+   gFloat4.add(*this, _add, res);
+   return res;
 }
 
 inline Point4F& Point4F::operator+=(const Point4F& _add)
 {
-   x += _add.x;
-   y += _add.y;
-   z += _add.z;
-   w += _add.w;
-
+   gFloat4.add(*this, _add, *this);
    return *this;
 }
 
 inline Point4F Point4F::operator-(const Point4F& _rSub) const
 {
-   return Point4F( x - _rSub.x, y - _rSub.y, z - _rSub.z, w - _rSub.w );
+   Point4F res;
+   gFloat4.sub(*this, _rSub, res);
+   return res;
 }
 
 inline Point4F Point4F::operator*(const Point4F &_vec) const
 {
-   return Point4F(x * _vec.x, y * _vec.y, z * _vec.z, w * _vec.w);
+   Point4F res;
+   gFloat4.mul(*this, _vec, res);
+   return res;
 }
 
 inline Point4F Point4F::operator*(F32 _mul) const
 {
-   return Point4F(x * _mul, y * _mul, z * _mul, w * _mul);
+   Point4F res;
+   gFloat4.mul_scalar(*this, _mul, res);
+   return res;
 }
 
 inline Point4F Point4F::operator /(F32 t) const
 {
-   F32 f = 1.0f / t;
-   return Point4F( x * f, y * f, z * f, w * f );
+   Point4F res;
+   gFloat4.div_scalar(*this, t, res);
+   return res;
 }
 
 inline F32 mDot(const Point4F &p1, const Point4F &p2)
 {
-   return (p1.x*p2.x + p1.y*p2.y + p1.z*p2.z + p1.w*p2.w);
+   return  gFloat4.dot(p1, p2);
 }
 
 //------------------------------------------------------------------------------

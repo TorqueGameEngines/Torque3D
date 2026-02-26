@@ -65,8 +65,8 @@ namespace math_backend::float4
    {
       f32x4 va = v_load(a);
       f32x4 vb = v_load(b);
-      f32x4 vmul = v_mul(va, vb);
-      return v_hadd4(vmul);
+      f32x4 vdot = v_dot4(va, vb);   // calls ISA-specific implementation
+      return v_extract0(vdot);
    }
 
    // Length squared
@@ -84,21 +84,22 @@ namespace math_backend::float4
    // Normalize in-place
    inline void float4_normalize_impl(float* a)
    {
-      float len = float4_length_impl(a);
-      if (len > POINT_EPSILON) // safe threshold
-      {
-         float4_mul_scalar_impl(a, 1.0f / len, a);
-      }
+      f32x4 va = v_load(a);
+      f32x4 invLen = v_rsqrt_nr(v_dot4(va, va)); // fully abstracted
+      f32x4 vnorm = v_mul(va, invLen);
+      v_store(a, vnorm);
    }
 
    // Normalize with magnitude: r = normalize(a) * r
    inline void float4_normalize_mag_impl(float* a, float r)
    {
-      float len = float4_length_impl(a);
-      if (len > POINT_EPSILON)
-      {
-         float4_mul_scalar_impl(a, r / len, a);
-      }
+      f32x4 va = v_load(a);
+
+      // invLen = r / sqrt(dot(a,a)) = r * rsqrt(dot(a,a))
+      f32x4 invLen = v_mul(v_set1(r), v_rsqrt_nr(v_dot4(va, va)));
+
+      f32x4 vnorm = v_mul(va, invLen);
+      v_store(a, vnorm);
    }
 
    // Linear interpolation: r = from + (to - from) * f
@@ -109,6 +110,14 @@ namespace math_backend::float4
       f32x4 vf = v_set1(f);
       f32x4 vr = v_add(vfrom, v_mul(vf, v_sub(vto, vfrom)));
       v_store(r, vr);
+   }
+
+   inline void float4_cross_impl(const float* a, const float* b, float* r)
+   {
+      f32x4 va = v_load(a);
+      f32x4 vb = v_load(b);
+      f32x4 vcross = v_cross(va, vb);
+      v_store(r, vcross);
    }
 
 } // namespace math_backend::float4

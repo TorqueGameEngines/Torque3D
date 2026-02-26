@@ -1,4 +1,8 @@
 #pragma once
+#ifndef _FLOAT4_DISPATCH_H_
+#define _FLOAT4_DISPATCH_H_
+
+
 #include <cstdint>
 
 namespace math_backend::float4::dispatch
@@ -32,3 +36,5 @@ namespace math_backend::float4::dispatch
    // Centralized installer (engine calls this once)
    void install_preferred();
 }
+
+#endif // !_FLOAT4_DISPATCH_H_

@@ -49,19 +49,19 @@ namespace
 
 namespace math_backend::float4::dispatch
 {
-   // Install AVX2 backend
-   void install_avx2()
+   // Install AVX backend
+   void install_avx()
    {
-      gFloat4.add          = float4_add_impl;
-      gFloat4.sub          = float4_sub_impl;
-      gFloat4.mul          = float4_mul_impl;
-      gFloat4.mul_scalar   = float4_mul_scalar_impl;
-      gFloat4.div          = float4_div_impl;
-      gFloat4.div_scalar   = float4_div_scalar_impl;
-      gFloat4.dot          = float4_dot_avx;
-      gFloat4.length       = float4_length_impl;
+      gFloat4.add = float4_add_impl;
+      gFloat4.sub = float4_sub_impl;
+      gFloat4.mul = float4_mul_impl;
+      gFloat4.mul_scalar = float4_mul_scalar_impl;
+      gFloat4.div = float4_div_impl;
+      gFloat4.div_scalar = float4_div_scalar_impl;
+      gFloat4.dot = float4_dot_avx;
+      gFloat4.length = float4_length_impl;
       gFloat4.lengthSquared = float4_length_squared_impl;
-      gFloat4.normalize    = float4_normalize_impl;
-      gFloat4.lerp         = float4_lerp_impl;
+      gFloat4.normalize = float4_normalize_impl;
+      gFloat4.lerp = float4_lerp_impl;
    }
 }

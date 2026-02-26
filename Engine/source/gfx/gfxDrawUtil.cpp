@@ -853,7 +853,11 @@ void GFXDrawUtil::drawThickLine(F32 x1, F32 y1, F32 z1, F32 x2, F32 y2, F32 z2, 
 // 3D World Draw Misc
 //-----------------------------------------------------------------------------
 
-static SphereMesh gSphere;
+SphereMesh& getSphere()
+{
+   static SphereMesh instance;
+   return instance;
+}
 
 void GFXDrawUtil::drawSphere( const GFXStateBlockDesc &desc, F32 radius, const Point3F &pos, const ColorI &color, bool drawTop, bool drawBottom, const MatrixF *xfm )
 {
@@ -868,7 +872,7 @@ void GFXDrawUtil::drawSphere( const GFXStateBlockDesc &desc, F32 radius, const P
    GFX->pushWorldMatrix();
    GFX->multWorld(mat);
 
-   const SphereMesh::TriangleMesh * sphereMesh = gSphere.getMesh(2);
+   const SphereMesh::TriangleMesh * sphereMesh = getSphere().getMesh(2);
    S32 numPoly = sphereMesh->numPoly;
    S32 totalPoly = 0;
    GFXVertexBufferHandle<GFXVertexPCT> verts(mDevice, numPoly*3, GFXBufferTypeVolatile);

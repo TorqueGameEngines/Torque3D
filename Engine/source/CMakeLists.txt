@@ -503,12 +503,17 @@ set(IS_ARM FALSE)
 
 if(ARCH MATCHES "x86_64|amd64|i[3-6]86")
     set(IS_X86 TRUE)
-elseif(ARCH MATCHES "arm64|aarch64")
+endif()
+
+if(ARCH MATCHES "arm64|aarch64|arm")
     set(IS_ARM TRUE)
 endif()
 
 # always available
 add_math_backend(scalar  MATH_SIMD_SCALAR)
+message(STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "IS_X86=${IS_X86}")
+message(STATUS "IS_ARM=${IS_ARM}")
 
 # x86 family
 if(IS_X86)

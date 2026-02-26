@@ -1,13 +1,13 @@
 #pragma once
-#ifndef _FLOAT4_DISPATCH_H_
-#define _FLOAT4_DISPATCH_H_
+#ifndef _FLOAT3_DISPATCH_H_
+#define _FLOAT3_DISPATCH_H_
 
 
 #include <cstdint>
 
-namespace math_backend::float4::dispatch
+namespace math_backend::float3::dispatch
 {
-   struct Float4Funcs
+   struct Float3Funcs
    {
       void (*add)(const float*, const float*, float*) = nullptr;
       void (*sub)(const float*, const float*, float*) = nullptr;
@@ -25,7 +25,7 @@ namespace math_backend::float4::dispatch
    };
 
    // Global dispatch table
-   extern Float4Funcs gFloat4;
+   extern Float3Funcs gFloat3;
 
    // Backend installers (defined in ISA libraries)
    void install_scalar();

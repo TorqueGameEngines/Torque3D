@@ -136,7 +136,7 @@ macro(addFramework framework)
 endmacro()
 
 function(add_math_backend name compile_defs)
-    file(GLOB_RECURSE SRC CONFIGURE_DEPENDS "math/isa/${name}/*.cpp")
+    file(GLOB_RECURSE SRC CONFIGURE_DEPENDS "math/isa/${name}/*.cpp" "math/isa/${name}/*.h")
 
     if(NOT SRC)
         return()
@@ -144,6 +144,7 @@ function(add_math_backend name compile_defs)
 
     add_library(math_${name} OBJECT ${SRC})
 
+    message(STATUS "adding math library for isa ${name}")
     target_include_directories(math_${name} PUBLIC
         "math/public"
         "math/impl"

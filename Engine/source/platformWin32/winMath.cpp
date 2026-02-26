@@ -25,7 +25,7 @@
 #include "console/engineAPI.h"
 
 #include "math/mMath.h"
-
+#include "math/public/math_backend.h"
 
 extern void mInstallLibrary_C();
 extern void mInstallLibrary_ASM();
@@ -97,6 +97,8 @@ void Math::init(U32 properties)
    Con::printf("Math Init:");
    Con::printf("   Installing Standard C extensions");
    mInstallLibrary_C();
+
+   math_backend::install_from_cpu_flags(properties);
 
    Con::printf("   Installing Assembly extensions");
    mInstallLibrary_ASM();

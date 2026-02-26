@@ -76,7 +76,7 @@ enum ProcessorProperties
    CPU_PROP_SSE4_2    = (1<<8),  ///< Supports SSE4_2 instruction set extension.
    CPU_PROP_AVX       = (1<<9), ///< Supports AVX256 instruction set extension.
    CPU_PROP_AVX2      = (1<<10), ///< Supports AVX256 instruction set extension.
-   CPU_PROP_AVX512    = (1<<11), ///< Supports AVX256 instruction set extension.
+   CPU_PROP_AVX512    = (1<<11), ///< Supports AVX512 instruction set extension.
    CPU_PROP_MP        = (1<<12), ///< This is a multi-processor system.
    CPU_PROP_LE        = (1<<13), ///< This processor is LITTLE ENDIAN.
    CPU_PROP_64bit     = (1<<14), ///< This processor is 64-bit capable

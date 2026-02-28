@@ -184,7 +184,7 @@ protected:
    String cubeDescName;
    U32 cubeDescId;
    ReflectorDesc* reflectorDesc;
-   CubeReflector mCubeReflector;
+   CubeReflector* mCubeReflector;
 
    void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
    {

@@ -109,7 +109,8 @@ F32 TSStatic::smStaticObjectUnfadeableSize = 75;
 TSStatic::TSStatic()
    :
    cubeDescId(0),
-   reflectorDesc(NULL)
+   reflectorDesc(NULL),
+   mCubeReflector(NULL)
 {
    mNetFlags.set(Ghostable | ScopeAlways);
 
@@ -159,6 +160,11 @@ TSStatic::~TSStatic()
    delete mConvexList;
    mConvexList = NULL;
    mShapeAsset.unregisterRefreshNotify();
+   if (mCubeReflector)
+   {
+      mCubeReflector->unregisterReflector();
+      SAFE_DELETE(mCubeReflector);
+   }
 }
 
 ImplementEnumType(TSMeshType,
@@ -361,10 +367,17 @@ bool TSStatic::onAdd()
 
    if (isClientObject())
    {
-      mCubeReflector.unregisterReflector();
+      if (mCubeReflector)
+      {
+         mCubeReflector->unregisterReflector();
+         SAFE_DELETE(mCubeReflector);
+      }
 
       if (reflectorDesc)
-         mCubeReflector.registerReflector(this, reflectorDesc);
+      {
+         mCubeReflector = new CubeReflector();
+         mCubeReflector->registerReflector(this, reflectorDesc);
+      }
    }
 
    _updateShouldTick();
@@ -594,8 +607,11 @@ void TSStatic::onRemove()
    mShapeInstance = NULL;
 
    mAmbientThread = NULL;
-   if (isClientObject())
-      mCubeReflector.unregisterReflector();
+   if (isClientObject() && mCubeReflector)
+   {
+      mCubeReflector->unregisterReflector();
+      SAFE_DELETE(mCubeReflector);
+   }
 
    Parent::onRemove();
 }
@@ -780,7 +796,7 @@ void TSStatic::prepRenderImage(SceneRenderState* state)
 
    // If we're currently rendering our own reflection we
    // don't want to render ourselves into it.
-   if (mCubeReflector.isRendering())
+   if (mCubeReflector && mCubeReflector->isRendering())
       return;
 
 
@@ -800,8 +816,8 @@ void TSStatic::prepRenderImage(SceneRenderState* state)
    rdata.setFadeOverride(1.0f);
    rdata.setOriginSort(mUseOriginSort);
 
-   if (mCubeReflector.isEnabled())
-      rdata.setCubemap(mCubeReflector.getCubemap());
+   if (mCubeReflector && mCubeReflector->isEnabled())
+      rdata.setCubemap(mCubeReflector->getCubemap());
 
    // Acculumation
    rdata.setAccuTex(mAccuTex);
@@ -830,13 +846,13 @@ void TSStatic::prepRenderImage(SceneRenderState* state)
    mat.scale(mObjScale);
    GFX->setWorldMatrix(mat);
 
-   if (state->isDiffusePass() && mCubeReflector.isEnabled() && mCubeReflector.getOcclusionQuery())
+   if (state->isDiffusePass() && mCubeReflector && mCubeReflector->isEnabled() && mCubeReflector->getOcclusionQuery())
    {
       RenderPassManager* pass = state->getRenderPass();
       OccluderRenderInst* ri = pass->allocInst<OccluderRenderInst>();
 
       ri->type = RenderPassManager::RIT_Occluder;
-      ri->query = mCubeReflector.getOcclusionQuery();
+      ri->query = mCubeReflector->getOcclusionQuery();
       mObjToWorld.mulP(mObjBox.getCenter(), &ri->position);
       ri->scale.set(mObjBox.getExtents());
       ri->orientation = pass->allocUniqueXform(mObjToWorld);

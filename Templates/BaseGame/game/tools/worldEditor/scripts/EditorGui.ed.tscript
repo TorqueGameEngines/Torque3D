@@ -1051,9 +1051,9 @@ function WorldEditorPlugin::onActivated( %this )
       ETransformSelection.setVisible(true);
    }
    
-   EWorldEditor.UseGridSnap = EditorSettings.value("WorldEditor/Tools/UseGridSnap");
-   ESnapOptions-->GridSnapButton.setStateOn( EWorldEditor.UseGridSnap );
-   SnapToBar-->objectGridSnapBtn.setStateOn( EWorldEditor.UseGridSnap );
+   EWorldEditor.gridSnap = EditorSettings.value("WorldEditor/Tools/gridSnap");
+   ESnapOptions-->GridSnapButton.setStateOn( EWorldEditor.gridSnap );
+   SnapToBar-->objectGridSnapBtn.setStateOn( EWorldEditor.gridSnap );
    
    Parent::onActivated(%this);
 
@@ -2615,8 +2615,8 @@ function EWorldEditor::syncGui( %this )
    ESnapOptions-->SnapSize.setText( EWorldEditor.getSoftSnapSize() );
    ESnapOptions-->GridSize.setText( EWorldEditor.getGridSize() );
    
-   %this.UseGridSnap = EditorSettings.value("WorldEditor/Tools/UseGridSnap");
-   ESnapOptions-->GridSnapButton.setStateOn( %this.UseGridSnap );
+   %this.gridSnap = EditorSettings.value("WorldEditor/Tools/gridSnap");
+   ESnapOptions-->GridSnapButton.setStateOn( %this.gridSnap );
    
    %this.UseGroupCenter = EditorSettings.value("WorldEditor/Tools/UseGroupCenter");
    
@@ -2961,9 +2961,9 @@ function toggleSnappingOptions( %var )
    }
    else if( %var $= "grid" )
    {
- 	   EWorldEditor.UseGridSnap = !EWorldEditor.UseGridSnap;
-	   EditorSettings.setValue("WorldEditor/Tools/UseGridSnap", EWorldEditor.UseGridSnap );
-      EWorldEditor.setGridSnap( EWorldEditor.UseGridSnap );
+ 	   EWorldEditor.gridSnap = !EWorldEditor.gridSnap;
+	   EditorSettings.setValue("WorldEditor/Tools/gridSnap", EWorldEditor.gridSnap );
+      EWorldEditor.setGridSnap( EWorldEditor.gridSnap );
    }
    else if( %var $= "byGroup" )
    {

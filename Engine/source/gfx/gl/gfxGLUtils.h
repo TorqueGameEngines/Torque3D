@@ -28,6 +28,32 @@
 #include "gfx/gl/gfxGLStateCache.h"
 #include "gfx/bitmap/imageUtils.h"
 
+inline const char* glGetErrorString(GLenum error)
+{
+    switch (error)
+    {
+    case GL_NO_ERROR:          return "No Error";
+    case GL_INVALID_ENUM:      return "Invalid Enum";
+    case GL_INVALID_VALUE:     return "Invalid Value";
+    case GL_INVALID_OPERATION: return "Invalid Operation";
+    case GL_INVALID_FRAMEBUFFER_OPERATION: return "Invalid Framebuffer Operation";
+    case GL_OUT_OF_MEMORY:     return "Out of Memory";
+    case GL_STACK_UNDERFLOW:   return "Stack Underflow";
+    case GL_STACK_OVERFLOW:    return "Stack Overflow";
+    case GL_CONTEXT_LOST:      return "Context Lost";
+    default:                   return "Unknown Error";
+    }
+}
+
+inline void _glCheckErrors(const char *filename, int line)
+{
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR)
+        Con::printf("OpenGL Error: %s (%d) [%u] %s\n", filename, line, err, glGetErrorString(err));
+}
+
+#define glCheckErrors() _glCheckErrors(__FILE__, __LINE__)
+
 inline U32 getMaxMipmaps(U32 width, U32 height, U32 depth)
 {
    return getMax( getBinLog2(depth), getMax(getBinLog2(width), getBinLog2(height))) + 1;

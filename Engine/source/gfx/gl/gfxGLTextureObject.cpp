@@ -102,36 +102,79 @@ GFXLockedRect* GFXGLTextureObject::lock(U32 mipLevel /*= 0*/, RectI* inRect /*= 
 
 void GFXGLTextureObject::unlock(U32 mipLevel /*= 0*/, U32 faceIndex /*= 0*/)
 {
-   if(!mLockedRect.bits)
-      return;
+    if (!mLockedRect.bits)
+        return;
 
-   // I know this is in unlock, but in GL we actually do our submission in unlock.
-   PROFILE_SCOPE(GFXGLTextureObject_lockRT);
+    PROFILE_SCOPE(GFXGLTextureObject_unlock);
 
-   PRESERVE_TEXTURE(mBinding);
-   glBindTexture(mBinding, mHandle);
-   glBindBuffer(GL_PIXEL_UNPACK_BUFFER, mBuffer);
-   glBufferData(GL_PIXEL_UNPACK_BUFFER, (mLockedRectRect.extent.x + 1) * (mLockedRectRect.extent.y + 1) * mBytesPerTexel, mFrameAllocatorPtr, GL_STREAM_DRAW);
-   S32 z = getDepth();
-   if (mBinding == GL_TEXTURE_3D)
-      glTexSubImage3D(mBinding, mipLevel, mLockedRectRect.point.x, mLockedRectRect.point.y, z,
-      mLockedRectRect.extent.x, mLockedRectRect.extent.y, z, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], NULL);
-   else if(mBinding == GL_TEXTURE_2D)
-	   glTexSubImage2D(mBinding, mipLevel, mLockedRectRect.point.x, mLockedRectRect.point.y,
-		  mLockedRectRect.extent.x, mLockedRectRect.extent.y, GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], NULL);
-   else if(mBinding == GL_TEXTURE_1D)
-		glTexSubImage1D(mBinding, mipLevel, (mLockedRectRect.point.x > 1 ? mLockedRectRect.point.x : mLockedRectRect.point.y),
-		  (mLockedRectRect.extent.x > 1 ? mLockedRectRect.extent.x : mLockedRectRect.extent.y), GFXGLTextureFormat[mFormat], GFXGLTextureType[mFormat], NULL);
+    PRESERVE_TEXTURE(mBinding);
+    glBindTexture(mBinding, mHandle);
 
-   glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    // --- Save pixel store state ---
+    GLint prevUnpackAlign;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &prevUnpackAlign);
 
-   mLockedRect.bits = NULL;
-#if TORQUE_DEBUG
-   AssertFatal(mFrameAllocatorMarkGuard == FrameAllocator::getWaterMark(), "");
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    const U32 width  = mLockedRectRect.extent.x;
+    const U32 height = mLockedRectRect.extent.y;
+    const U32 depth  = getDepth();
+
+    if (mBinding == GL_TEXTURE_3D)
+    {
+        glTexSubImage3D(
+            mBinding,
+            mipLevel,
+            mLockedRectRect.point.x,
+            mLockedRectRect.point.y,
+            0,
+            width,
+            height,
+            depth,
+            GFXGLTextureFormat[mFormat],
+            GFXGLTextureType[mFormat],
+            mLockedRect.bits
+        );
+    }
+    else if (mBinding == GL_TEXTURE_2D)
+    {
+        glTexSubImage2D(
+            mBinding,
+            mipLevel,
+            mLockedRectRect.point.x,
+            mLockedRectRect.point.y,
+            width,
+            height,
+            GFXGLTextureFormat[mFormat],
+            GFXGLTextureType[mFormat],
+            mLockedRect.bits
+        );
+    }
+    else if (mBinding == GL_TEXTURE_1D)
+    {
+        glTexSubImage1D(
+            mBinding,
+            mipLevel,
+            mLockedRectRect.point.x,
+            width,
+            GFXGLTextureFormat[mFormat],
+            GFXGLTextureType[mFormat],
+            mLockedRect.bits
+        );
+    }
+
+    // --- Restore state ---
+    glPixelStorei(GL_UNPACK_ALIGNMENT, prevUnpackAlign);
+
+    mLockedRect.bits = NULL;
+
+    FrameAllocator::setWaterMark(mFrameAllocatorMark);
+    mFrameAllocatorMark = 0;
+    mFrameAllocatorPtr = NULL;
+   
+#ifdef TORQUE_DEBUG
+   glCheckErrors();
 #endif
-   FrameAllocator::setWaterMark(mFrameAllocatorMark);
-   mFrameAllocatorMark = 0;
-   mFrameAllocatorPtr = NULL;
 }
 
 void GFXGLTextureObject::release()

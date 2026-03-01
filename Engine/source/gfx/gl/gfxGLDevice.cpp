@@ -91,19 +91,74 @@ void loadGLExtensions(void *context)
    GL::gglPerformExtensionBinds(context);
 }
 
-void STDCALL glDebugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-	const GLchar *message, const void *userParam)
+void APIENTRY glDebugCallback(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam)
 {
-    // JTH [11/24/2016]: This is a temporary fix so that we do not get spammed for redundant fbo changes.
-    // This only happens on Intel cards. This should be looked into sometime in the near future.
-    if (dStrStartsWith(message, "API_ID_REDUNDANT_FBO"))
+    // Ignore non-significant notifications (optional)
+    if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
         return;
+
+    const char* srcStr = "UNKNOWN";
+    const char* typeStr = "UNKNOWN";
+    const char* sevStr = "UNKNOWN";
+
+    switch (source)
+    {
+        case GL_DEBUG_SOURCE_API:             srcStr = "API"; break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   srcStr = "WINDOW"; break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER: srcStr = "SHADER"; break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:     srcStr = "THIRD_PARTY"; break;
+        case GL_DEBUG_SOURCE_APPLICATION:     srcStr = "APP"; break;
+        case GL_DEBUG_SOURCE_OTHER:           srcStr = "OTHER"; break;
+    }
+
+    switch (type)
+    {
+        case GL_DEBUG_TYPE_ERROR:               typeStr = "ERROR"; break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: typeStr = "DEPRECATED"; break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  typeStr = "UNDEFINED"; break;
+        case GL_DEBUG_TYPE_PORTABILITY:         typeStr = "PORTABILITY"; break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         typeStr = "PERFORMANCE"; break;
+        case GL_DEBUG_TYPE_MARKER:              typeStr = "MARKER"; break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          typeStr = "PUSH"; break;
+        case GL_DEBUG_TYPE_POP_GROUP:           typeStr = "POP"; break;
+        case GL_DEBUG_TYPE_OTHER:               typeStr = "OTHER"; break;
+    }
+
+    switch (severity)
+    {
+        case GL_DEBUG_SEVERITY_HIGH:         sevStr = "HIGH"; break;
+        case GL_DEBUG_SEVERITY_MEDIUM:       sevStr = "MEDIUM"; break;
+        case GL_DEBUG_SEVERITY_LOW:          sevStr = "LOW"; break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION: sevStr = "NOTIFY"; break;
+    }
+
+    // Filter known noisy IDs here if needed
+    // Example:
+    // if (id == 131185) return;
+
     if (severity == GL_DEBUG_SEVERITY_HIGH)
-        Con::errorf("OPENGL: %s", message);
+    {
+        Con::errorf("OPENGL [%s][%s][%s][%u]: %s",
+            sevStr, srcStr, typeStr, id, message);
+        AssertFatal(false, "OpenGL HIGH severity error.");
+    }
     else if (severity == GL_DEBUG_SEVERITY_MEDIUM)
-        Con::warnf("OPENGL: %s", message);
-    else if (severity == GL_DEBUG_SEVERITY_LOW)
-        Con::printf("OPENGL: %s", message);
+    {
+        Con::warnf("OPENGL [%s][%s][%s][%u]: %s",
+            sevStr, srcStr, typeStr, id, message);
+    }
+    else
+    {
+        Con::printf("OPENGL [%s][%s][%s][%u]: %s",
+            sevStr, srcStr, typeStr, id, message);
+    }
 }
 
 void STDCALL glAmdDebugCallback(GLuint id, GLenum category, GLenum severity, GLsizei length,
@@ -157,27 +212,34 @@ void GFXGLDevice::initGLState()
 #endif
 
 #if TORQUE_DEBUG
-   if( gglHasExtension(ARB_debug_output) )
-   {
-      glEnable(GL_DEBUG_OUTPUT);
-      glDebugMessageCallbackARB(glDebugCallback, NULL);
-      glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-      GLuint unusedIds = 0;
-      glDebugMessageControlARB(GL_DONT_CARE,
-            GL_DONT_CARE,
-            GL_DONT_CARE,
-            0,
-            &unusedIds,
-            GL_TRUE);
-   }
-   else if(gglHasExtension(AMD_debug_output))
-   {
-      glEnable(GL_DEBUG_OUTPUT);
-      glDebugMessageCallbackAMD(glAmdDebugCallback, NULL);
-      //glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
-      GLuint unusedIds = 0;
-      glDebugMessageEnableAMD(GL_DONT_CARE, GL_DONT_CARE, 0,&unusedIds, GL_TRUE);
-   }
+
+bool debugInitialized = false;
+int flags;
+glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
+if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
+{
+   glEnable(GL_DEBUG_OUTPUT);
+   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+   glDebugMessageCallback(glDebugCallback, nullptr);
+
+   glDebugMessageControl(
+       GL_DONT_CARE,
+       GL_DONT_CARE,
+       GL_DONT_CARE,
+       0,
+       nullptr,
+       GL_TRUE);
+
+   Con::printf("OpenGL debug output enabled.");
+   debugInitialized = true;
+}
+   
+if (!debugInitialized)
+{
+    Con::warnf("OpenGL debug output NOT available.");
+}
+   
 #endif
 
    PlatformGL::setVSync(smEnableVSync);

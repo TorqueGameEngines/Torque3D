@@ -194,7 +194,9 @@ DefineEngineMethod(AIController, getAimObject, S32, (), ,
 
    "@see setAimObject()\n")
 {
-   SceneObject* obj = dynamic_cast<GameBase*>(object->getAim()->mObj.getPointer());
+   SceneObject* obj = NULL;
+   if (object->getAim())
+      obj = dynamic_cast<GameBase*>(object->getAim()->mObj.getPointer());
    return obj ? obj->getId() : -1;
 }
 

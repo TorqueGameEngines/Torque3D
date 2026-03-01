@@ -70,8 +70,24 @@ public:
 private:
    AICover* mCover;
 public:
-   void setCover(Point3F loc, F32 rad = 0.0f) { delete(mCover); mCover = new AICover(this, loc, rad); }
-   void setCover(SimObjectPtr<SceneObject> objIn, F32 rad = 0.0f) { delete(mCover); mCover = new AICover(this, objIn, rad); }
+   void setCover(Point3F loc, F32 rad = 0.0f)
+   {
+      if (mCover && mCover->mPosSet && mCover->getPosition() == loc)
+      {
+         mCover->mRadius == rad;
+         return;
+      }
+      delete(mCover); mCover = new AICover(this, loc, rad);
+   }
+   void setCover(SimObjectPtr<SceneObject> objIn, F32 rad = 0.0f)
+   {
+      if (mCover && mCover->mObj == objIn)
+      {
+         mCover->mRadius == rad;
+         return;
+      }
+      delete(mCover); mCover = new AICover(this, objIn, rad);
+   }
    AICover* getCover() { return mCover; }
    bool findCover(const Point3F& from, F32 radius);
    void clearCover();

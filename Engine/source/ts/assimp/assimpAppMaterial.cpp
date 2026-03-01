@@ -206,15 +206,15 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
          if (rmName.isNotEmpty())
          {
             mat->_setRoughMap(cleanTextureName(rmName, cleanFile, path, false), 0); // Roughness
-            mat->mRoughnessChan[0] = 1.0f;
-            mat->mInvertRoughness[0] = (floatVal == 1.0f);
+            mat->mRoughnessChan[0] = 1;
+            mat->mInvertRoughness[0] = false;
             mat->_setMetalMap(cleanTextureName(rmName, cleanFile, path, false), 0); // Metallic
-            mat->mMetalChan[0] = 2.0f;
+            mat->mMetalChan[0] = 2;
          }
          if (aoName.isNotEmpty())
          {
             mat->_setAOMap(cleanTextureName(aoName, cleanFile, path, false), 0); // occlusion
-            mat->mAOChan[0] = 0.0f;
+            mat->mAOChan[0] = 0;
          }
          else
          {

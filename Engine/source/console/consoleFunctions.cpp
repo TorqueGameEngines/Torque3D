@@ -2367,8 +2367,7 @@ DefineEngineFunction( exec, bool, ( const char* fileName, bool noCalls, bool jou
 
 DefineEngineFunction( eval, const char*, ( const char* consoleString, bool echo ), (false), "eval(consoleString)")
 {
-   Con::EvalResult returnValue = Con::evaluate(consoleString, echo, NULL);
-
+   Con::EvalResult returnValue = Con::evaluate(consoleString, echo, Platform::makeRelativePathName(Con::getCurrentScriptModulePath(), NULL));
    return Con::getReturnBuffer(returnValue.value.getString());
 }
 

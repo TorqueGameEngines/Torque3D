@@ -975,6 +975,7 @@ ShapeBase::ShapeBase()
    mMoveMotion( false ),
    mShapeBaseMount( NULL ),
    mShapeInstance( NULL ),
+   mCubeReflector(NULL),
    mConvexList( new Convex ),
    mEnergy( 0.0f ),
    mRechargeRate( 0.0f ),
@@ -1051,6 +1052,12 @@ ShapeBase::~ShapeBase()
    {
       delete mShapeInstance;
       mShapeInstance = NULL;
+   }
+
+   if (mCubeReflector)
+   {
+      mCubeReflector->unregisterReflector();
+      SAFE_DELETE(mCubeReflector);
    }
 
    CollisionTimeout* ptr = mTimeoutList;
@@ -1173,7 +1180,11 @@ void ShapeBase::onRemove()
 
    if ( isClientObject() )   
    {
-      mCubeReflector.unregisterReflector();
+      if (mCubeReflector)
+      {
+         mCubeReflector->unregisterReflector();
+         SAFE_DELETE(mCubeReflector);
+      }
    }
 }
 
@@ -1349,11 +1360,17 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
       mLightPlugin->reset();
    
    if ( isClientObject() )
-   {      
-      mCubeReflector.unregisterReflector();
-
-      if ( mDataBlock->reflectorDesc )
-         mCubeReflector.registerReflector( this, mDataBlock->reflectorDesc );      
+   {
+      if (mCubeReflector)
+      {
+         mCubeReflector->unregisterReflector();
+         SAFE_DELETE(mCubeReflector);
+      }
+      if (mDataBlock->reflectorDesc)
+      {
+         mCubeReflector = new CubeReflector();
+         mCubeReflector->registerReflector(this, mDataBlock->reflectorDesc);
+      }
    }
 
    return true;
@@ -2681,7 +2698,7 @@ void ShapeBase::_prepRenderImage(   SceneRenderState *state,
 
    // If we're currently rendering our own reflection we
    // don't want to render ourselves into it.
-   if ( mCubeReflector.isRendering() )
+   if (mCubeReflector && mCubeReflector->isRendering())
       return;
 
    // We force all the shapes to use the highest detail
@@ -2785,8 +2802,8 @@ void ShapeBase::prepBatchRender(SceneRenderState* state, S32 mountedImageIndex )
    // Set up our TS render state. 
    TSRenderState rdata;
    rdata.setSceneState( state );
-   if ( mCubeReflector.isEnabled() )
-      rdata.setCubemap( mCubeReflector.getCubemap() );
+   if (mCubeReflector && mCubeReflector->isEnabled())
+      rdata.setCubemap( mCubeReflector->getCubemap() );
    rdata.setFadeOverride( (1.0f - mCloakLevel) * mFadeVal );
 
    // We might have some forward lit materials
@@ -2810,14 +2827,14 @@ void ShapeBase::prepBatchRender(SceneRenderState* state, S32 mountedImageIndex )
       mat.scale( mObjScale );
       GFX->setWorldMatrix( mat );
 
-      if ( state->isDiffusePass() && mCubeReflector.isEnabled() && mCubeReflector.getOcclusionQuery() )
+      if ( state->isDiffusePass() && mCubeReflector && mCubeReflector->isEnabled() && mCubeReflector->getOcclusionQuery() )
       {
          RenderPassManager *pass = state->getRenderPass();
 
          OccluderRenderInst *ri = pass->allocInst<OccluderRenderInst>();   
 
          ri->type = RenderPassManager::RIT_Occluder;
-         ri->query = mCubeReflector.getOcclusionQuery();   
+         ri->query = mCubeReflector->getOcclusionQuery();
          mObjToWorld.mulP( mObjBox.getCenter(), &ri->position );
          ri->scale.set( mObjBox.getExtents() );
          ri->orientation = pass->allocUniqueXform( mObjToWorld );        

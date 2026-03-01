@@ -1207,7 +1207,7 @@ public:
    static F32  sFullCorrectionDistance;
    static F32  sCloakSpeed;               // Time to cloak, in seconds
       
-   CubeReflector mCubeReflector;
+   CubeReflector* mCubeReflector;
 
    /// @name Initialization
    /// @{

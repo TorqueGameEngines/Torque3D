@@ -402,6 +402,8 @@ protected:
    /// @{
    DECLARE_CALLBACK( void, onChange, () );
 
+   DECLARE_CALLBACK(void, onChangeHighlight, (S32 highlightedRow));
+
    DECLARE_CALLBACK(void, onInputEvent,  (const char* device, const char* action, bool state));
 
    DECLARE_CALLBACK(void, onAxisEvent, (const char* device, const char* action, F32 axisValue));

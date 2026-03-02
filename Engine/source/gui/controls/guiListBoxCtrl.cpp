@@ -23,6 +23,7 @@
 #include "gfx/gfxDrawUtil.h"
 #include "console/engineAPI.h"
 #include "console/script.h"
+#include "console/consoleInternal.h"
 
 IMPLEMENT_CONOBJECT(GuiListBoxCtrl);
 
@@ -1538,10 +1539,7 @@ StringTableEntry GuiListBoxCtrl::_makeMirrorItemName( SimObject *inObj )
    {
       Con::setIntVariable( "$ThisControl", getId() );
       Con::setIntVariable( "$ThisObject", inObj->getId() );
-
-      StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
-      String context = String::ToString("%s, Object: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
-      outName = StringTable->insert( Con::evaluate( mMakeNameCallback, false, context).value, true );
+      outName = StringTable->insert( Con::evaluate( mMakeNameCallback, false, Con::getCurrentScriptModulePath()).value, true );
    }
    else if ( inObj->getName() )
       outName = StringTable->insert( inObj->getName() );

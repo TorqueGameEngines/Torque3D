@@ -30,6 +30,7 @@
 #include "core/strings/stringUnit.h"
 #include "gui/core/guiDefaultControlRender.h"
 #include "console/typeValidators.h"
+#include "console/consoleInternal.h"
 
 //-----------------------------------------------------------------------------
 // GuiGameSettingsCtrl
@@ -494,9 +495,7 @@ void GuiGameSettingsCtrl::doScriptCommand(StringTableEntry command)
    if (command && command[0])
    {
       setThisControl();
-      StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
-      String context = String::ToString("%s\nObject: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
-      Con::evaluate(command, false, context.c_str());
+      Con::evaluate(command, false, Con::getCurrentScriptModulePath());
    }
 }
 

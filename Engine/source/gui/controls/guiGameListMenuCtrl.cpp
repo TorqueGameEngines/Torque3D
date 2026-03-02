@@ -30,6 +30,7 @@
 #include "sim/actionMap.h"
 #include "core/strings/stringUnit.h"
 #include "console/typeValidators.h"
+#include "console/consoleInternal.h"
 
 //-----------------------------------------------------------------------------
 // GuiGameListMenuCtrl
@@ -105,7 +106,7 @@ void GuiGameListMenuCtrl::onRender(Point2I offset, const RectI &updateRect)
          buttonTextureIndex = Profile::TEX_DISABLED;
          fontColor = profile->mFontColorNA;
       }
-      else if (row == &mRows[mSelected])
+      else if (mSelected != -1 && row == &mRows[mSelected])
       {
          if (iconIndex != NO_ICON)
          {
@@ -114,7 +115,7 @@ void GuiGameListMenuCtrl::onRender(Point2I offset, const RectI &updateRect)
          buttonTextureIndex = Profile::TEX_SELECTED;
          fontColor = profile->mFontColorSEL;
       }
-      else if ((mHighlighted != NO_ROW) && (row == &mRows[mHighlighted]))
+      else if ((mHighlighted != NO_ROW && mHighlighted < mRows.size()) && (row == &mRows[mHighlighted]))
       {
          if (iconIndex != NO_ICON && useHighlightIcon)
          {
@@ -663,6 +664,10 @@ void GuiGameListMenuCtrl::onMouseLeave(const GuiEvent &event)
 void GuiGameListMenuCtrl::onMouseMove(const GuiEvent &event)
 {
    S32 hitRow = getRow(event.mousePoint);
+
+   if(mHighlighted != hitRow)
+      onChangeHighlight_callback(hitRow);
+
    // allow mHighligetd to be set to NO_ROW so rows can be unhighlighted
    mHighlighted = hitRow;
 }
@@ -974,9 +979,7 @@ void GuiGameListMenuCtrl::doScriptCommand(StringTableEntry command)
    if (command && command[0])
    {
       setThisControl();
-      StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
-      String context = String::ToString("%s\nObject: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
-      Con::evaluate(command, false, context);
+      Con::evaluate(command, false, Con::getCurrentScriptModulePath());
    }
 }
 
@@ -1462,6 +1465,9 @@ ConsoleDocClass( GuiGameListMenuCtrl,
 
 IMPLEMENT_CALLBACK( GuiGameListMenuCtrl, onChange, void, (), (),
    "Called when the selected row changes." );
+
+IMPLEMENT_CALLBACK(GuiGameListMenuCtrl, onChangeHighlight, void, (S32 highlightedRow), (highlightedRow),
+   "Called when the highlighted row changes.");
 
 IMPLEMENT_CALLBACK(GuiGameListMenuCtrl, onInputEvent, void, (const char* device, const char* action, bool state),
    (device, action, state),

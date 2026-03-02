@@ -31,6 +31,7 @@
 #include "console/script.h"
 #include "math/mQuat.h"
 #include "math/mAngAxis.h"
+#include "console/consoleInternal.h"
 
 #define CONST_E 2.7182818284590452353602874f
 
@@ -1484,9 +1485,7 @@ bool ActionMap::processAction(const InputEventInfo* pEvent)
          // it's a bind command
          if (pNode->makeConsoleCommand)
          {
-            StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
-            String context = String::ToString("%s\nObject: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
-            Con::evaluate(pNode->makeConsoleCommand, false, context.c_str());
+            Con::evaluate(pNode->makeConsoleCommand, false, Con::getCurrentScriptModulePath());
          }
       }
       else if (pNode->flags & Node::Held)

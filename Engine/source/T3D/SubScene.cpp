@@ -13,6 +13,7 @@
 #include "gui/worldEditor/editor.h"
 #include "math/mathIO.h"
 #include "T3D/gameBase/gameBase.h"
+#include "console/consoleInternal.h"
 
 bool SubScene::smTransformChildren = false;
 
@@ -225,16 +226,7 @@ bool SubScene::evaluateCondition()
       Con::setBoolVariable(resVar.c_str(), false);
       String command = resVar + "=" + mLoadIf + ";";
 
-      StringTableEntry objectName = getName();
-      if (objectName != NULL)
-         objectName = getIdString();
-
-      StringTableEntry groupName = getGroup()->getName();
-      if (groupName != NULL)
-         groupName = getGroup()->getIdString();
-
-      String context = String::ToString("%s\nGroup: %s, Object: %s", getFilename(), groupName, objectName);
-      Con::evaluate(command.c_str(), false, context);
+      Con::evaluate(command.c_str(), false, Con::getCurrentScriptModulePath());
       return Con::getBoolVariable(resVar.c_str());
    }
    return true;

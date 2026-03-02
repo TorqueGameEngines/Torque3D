@@ -29,6 +29,7 @@
 #include "gfx/gfxDrawUtil.h"
 #include "console/engineAPI.h"
 #include "console/script.h"
+#include "console/consoleInternal.h"
 
 IMPLEMENT_CONOBJECT(GuiMLTextEditCtrl);
 
@@ -211,9 +212,7 @@ bool GuiMLTextEditCtrl::onKeyDown(const GuiEvent& event)
          case KEY_ESCAPE:
             if ( mEscapeCommand[0] )
             {
-               StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
-               String context = String::ToString("%s, Object: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
-               Con::evaluate( mEscapeCommand, false, context.c_str());
+               Con::evaluate( mEscapeCommand, false, Con::getCurrentScriptModulePath());
                return( true );
             }
             return( Parent::onKeyDown( event ) );

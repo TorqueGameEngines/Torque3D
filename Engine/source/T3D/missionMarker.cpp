@@ -25,6 +25,7 @@
 #include "core/color.h"
 #include "console/engineAPI.h"
 #include "console/script.h"
+#include "console/consoleInternal.h"
 
 extern bool gEditingMission;
 IMPLEMENT_CO_DATABLOCK_V1(MissionMarkerData);
@@ -368,16 +369,7 @@ bool SpawnSphere::testCondition()
    Con::setBoolVariable(resVar.c_str(), false);
    String command = resVar + "=" + mSpawnIf + ";";
 
-   StringTableEntry objectName = getName();
-   if (objectName != NULL)
-      objectName = getIdString();
-
-   StringTableEntry groupName = getGroup()->getName();
-   if (groupName != NULL)
-      groupName = getGroup()->getIdString();
-
-   String context = String::ToString("%s\nGroup: %s, Object: %s", getFilename(), groupName, objectName);
-   Con::evaluate(command.c_str(), false, context);
+   Con::evaluate(command.c_str(), false, Con::getCurrentScriptModulePath());
    if (Con::getBoolVariable(resVar.c_str()) == 1)
    {
       return true;

@@ -243,7 +243,7 @@ vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    float denominator = 4.0 * max(surface.NdotV, 0.0) * max(surfaceToLight.NdotL, 0.0) + 0.0001;
    vec3 specularBRDF = numerator / denominator;
 
-   vec3 diffuseBRDF = surface.baseColor.rgb * surface.ao * M_PI_F;
+   vec3 diffuseBRDF = surface.baseColor.rgb * surface.ao * M_HALFPI_F;
    
    // Final output combining all terms
    vec3 kS = F; // Specular reflectance

@@ -611,7 +611,7 @@ Con::EvalResult CodeBlock::compileExec(StringTableEntry fileName, const char *in
    Script::gStatementList = NULL;
 
    // we are an eval compile if we don't have a file name associated (no exec)
-   gIsEvalCompile = fileName == NULL;
+   gIsEvalCompile = fileName == NULL || setFrame == 0;
    gFuncVars = gIsEvalCompile ? &gEvalFuncVars : &gGlobalScopeFuncVars;
 
    // Set up the parser.

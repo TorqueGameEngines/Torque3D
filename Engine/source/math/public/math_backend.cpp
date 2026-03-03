@@ -18,6 +18,26 @@ namespace math_backend::mat44::dispatch
    Mat44Funcs gMat44{};
 }
 
+namespace math_backend
+{
+   // Use an anonymous namespace for the static initializer
+   namespace {
+      struct ScalarInitializer
+      {
+         ScalarInitializer()
+         {
+            // Install scalar defaults immediately for all types
+            float4::dispatch::install_scalar();
+            float3::dispatch::install_scalar();
+            mat44::dispatch::install_scalar();
+         }
+      };
+
+      // Static instance ensures constructor runs before main()
+      ScalarInitializer g_scalarInitializer;
+   }
+}
+
 
 math_backend::backend math_backend::choose_backend(U32 cpu_flags)
 {
@@ -47,21 +67,25 @@ void math_backend::install_from_cpu_flags(uint32_t cpu_flags)
       case backend::avx2:
          float4::dispatch::install_avx2();
          float3::dispatch::install_avx2();
+         mat44::dispatch::install_avx2();
          break;
 
       case backend::avx:
          float4::dispatch::install_avx();
          float3::dispatch::install_avx();
+         mat44::dispatch::install_avx();
          break;
 
       case backend::sse41:
          float4::dispatch::install_sse41();
          float3::dispatch::install_sse41();
+         mat44::dispatch::install_sse41();
          break;
 
       case backend::sse2:
          float4::dispatch::install_sse2();
          float3::dispatch::install_sse2();
+         mat44::dispatch::install_sse2();
          break;
 #elif defined(__aarch64__) || defined(__ARM_NEON)
       case backend::neon:

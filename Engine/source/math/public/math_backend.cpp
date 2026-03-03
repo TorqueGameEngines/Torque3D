@@ -91,6 +91,7 @@ void math_backend::install_from_cpu_flags(uint32_t cpu_flags)
       case backend::neon:
          float4::dispatch::install_neon();
          float3::dispatch::install_neon();
+         mat44::dispatch::install_neon();
          break;
 #endif
       default:

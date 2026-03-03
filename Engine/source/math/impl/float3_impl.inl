@@ -99,7 +99,7 @@ namespace math_backend::float3
       f32x4 invLen = v_mul(v_set1(r), v_rsqrt_nr(v_dot3(va, va)));
 
       f32x4 vnorm = v_mul(va, invLen);
-      v_store(a, vnorm);
+      v_store3(a, vnorm);
    }
 
    // Linear interpolation: r = from + (to - from) * f

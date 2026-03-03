@@ -8,7 +8,16 @@ namespace math_backend::mat44::dispatch
    struct Mat44Funcs
    {
       void (*transpose)(float*) = nullptr;
+      void (*inverse)(float*) = nullptr;
+      void (*affine_inverse)(float*) = nullptr;
+      void (*normalize)(float*) = nullptr;
+      void (*mul_mat44)(const float* a, const float* b, float* r) = nullptr;
+      void (*mul_pos3)(const float* a, const float* b, float* r) = nullptr;
+      void (*mul_vec3)(const float* a, const float* b, float* r) = nullptr;
+      void (*mul_float4)(const float* a, const float* b, float* r) = nullptr;
+      float (*determinant)(const float*) = nullptr;
       void (*scale)(float*, const float*) = nullptr;
+      void (*get_scale)(const float*, float*) = nullptr;
    };
 
    // Global dispatch table

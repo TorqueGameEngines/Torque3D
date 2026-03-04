@@ -177,9 +177,9 @@ inline SurfaceToLight createSurfaceToLight(in Surface surface, in float3 L)
     surfaceToLight.Lu = L;
 	surfaceToLight.L = normalize(L);
 	surfaceToLight.H = normalize(surface.V + surfaceToLight.L);
-	surfaceToLight.NdotL = saturate(dot(surfaceToLight.L, surface.N));
+	surfaceToLight.NdotL = saturate(dot(surface.N, surfaceToLight.L));
 	surfaceToLight.HdotV = saturate(dot(surfaceToLight.H, surface.V));
-	surfaceToLight.NdotH = saturate(dot(surfaceToLight.H, surface.N));
+	surfaceToLight.NdotH = saturate(dot(surface.N, surfaceToLight.H));
 
 	return surfaceToLight;
 }
@@ -243,12 +243,12 @@ float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
    float denominator = 4.0 * max(surface.NdotV, 0.0) * max(surfaceToLight.NdotL, 0.0) + 0.0001;
    float3 specularBRDF = numerator / denominator;
 
-   float3 diffuseBRDF = surface.baseColor.rgb * M_1OVER_PI_F * surface.ao;
+   float3 diffuseBRDF = surface.baseColor.rgb * surface.ao* M_HALFPI_F;
    
    // Final output combining all terms
    float3 kS = F; // Specular reflectance
    float3 kD = (1.0 - kS) * (1.0 - surface.metalness); // Diffuse reflectance
-   float3 returnBRDF = kD * (diffuseBRDF) + specularBRDF;
+   float3 returnBRDF = kD*diffuseBRDF + specularBRDF;
 
    if(isCapturing == 1)
       return lerp(returnBRDF ,surface.albedo.rgb,surface.metalness);
@@ -277,8 +277,8 @@ float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 l
    if(isCapturing != 1)
       lightfloor = 0.0;
       
-   float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);
-   
+   float attenuation = getDistanceAtt(surfaceToLight.Lu, radius);   
+
    // Calculate both specular and diffuse lighting in one BRDF evaluation
    float3 directLighting = evaluateStandardBRDF(surface, surfaceToLight);
    
@@ -297,7 +297,7 @@ float3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, float3 light
    float attenuation = 1.0f;
    attenuation *= getDistanceAtt(surfaceToLight.Lu, radius);
    attenuation *= getSpotAngleAtt(-surfaceToLight.L, lightDir, lightSpotParams.xy);
-   
+
    // Calculate both specular and diffuse lighting in one BRDF evaluation
    float3 directLighting = evaluateStandardBRDF(surface, surfaceToLight);
    

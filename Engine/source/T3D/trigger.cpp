@@ -711,12 +711,12 @@ bool Trigger::testCondition()
    if (objectName != NULL)
       objectName = getIdString();
 
-   StringTableEntry groupName = getGroup()->getName();
+   StringTableEntry groupName = getGroup() ? getGroup()->getName() : NULL;
    if (groupName != NULL)
       groupName = getGroup()->getIdString();
 
    String context = String::ToString("%s\nGroup: %s, Object: %s", getFilename(), groupName, objectName);
-   Con::evaluate(command.c_str(), false, context);
+   Con::evaluate(command.c_str(), false, context.c_str());
    if (Con::getBoolVariable(resVar.c_str()) == 1)
    {
       return true;
@@ -817,7 +817,7 @@ void Trigger::processTick(const Move* move)
          if (objectName != NULL)
             objectName = getIdString();
 
-         StringTableEntry groupName = getGroup()->getName();
+         StringTableEntry groupName = getGroup() ? getGroup()->getName() : NULL;
          if (groupName != NULL)
             groupName = getGroup()->getIdString();
 

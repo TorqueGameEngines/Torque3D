@@ -35,4 +35,61 @@ namespace math_backend
    void install_from_cpu_flags(uint32_t cpu_flags);
 }
 
+#include <mutex>
+
+namespace math_backend::float4::dispatch
+{
+   //--------------------------------------------------
+   // Thread-safe getter, ensures scalar installed if empty
+   //--------------------------------------------------
+   inline Float4Funcs& GetFloat4()
+   {
+      if (__builtin_expect(gFloat4.mul == nullptr, 0))
+      {
+         static std::once_flag once;
+         std::call_once(once, []{
+            install_scalar();
+         });
+      }
+      return gFloat4;
+   }
+}
+
+namespace math_backend::float3::dispatch
+{
+   //--------------------------------------------------
+   // Thread-safe getter, ensures scalar installed if empty
+   //--------------------------------------------------
+   inline Float3Funcs& GetFloat3()
+   {
+      if (__builtin_expect(gFloat3.mul == nullptr, 0))
+      {
+         static std::once_flag once;
+         std::call_once(once, []{
+            install_scalar();
+         });
+      }
+      return gFloat3;
+   }
+}
+
+
+namespace math_backend::mat44::dispatch
+{
+   //--------------------------------------------------
+   // Thread-safe getter, ensures scalar installed if empty
+   //--------------------------------------------------
+   inline Mat44Funcs& GetMat44()
+   {
+      if (__builtin_expect(gMat44.mul_mat44 == nullptr, 0))
+      {
+         static std::once_flag once;
+         std::call_once(once, []{
+            install_scalar();
+         });
+      }
+      return gMat44;
+   }
+}
+
 #endif // !_MATH_BACKEND_H_

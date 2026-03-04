@@ -63,7 +63,7 @@ class Point4I
 /// Uses F32 internally.
 ///
 /// Useful for representing quaternions and other 4d beasties.
-using math_backend::float4::dispatch::gFloat4;
+using namespace math_backend::float4::dispatch;
 
 class Point4F
 {
@@ -156,12 +156,12 @@ inline void Point4F::set(F32 _x, F32 _y, F32 _z, F32 _w)
 
 inline F32 Point4F::len() const
 {
-   return gFloat4.length(*this);
+   return GetFloat4().length(*this);
 }
 
 inline void Point4F::interpolate(const Point4F& _from, const Point4F& _to, F32 _factor)
 {
-   gFloat4.lerp(_from, _to, _factor, *this);
+   GetFloat4().lerp(_from, _to, _factor, *this);
 }
 
 inline void Point4F::zero()
@@ -194,7 +194,7 @@ inline Point4F& Point4F::operator/=(F32 scalar)
    if (mIsZero(scalar))
       return *this;
 
-   gFloat4.div_scalar(*this, scalar, *this);
+   GetFloat4().div_scalar(*this, scalar, *this);
 
    return *this;
 }
@@ -202,47 +202,47 @@ inline Point4F& Point4F::operator/=(F32 scalar)
 inline Point4F Point4F::operator+(const Point4F& _add) const
 {
    Point4F res;
-   gFloat4.add(*this, _add, res);
+   GetFloat4().add(*this, _add, res);
    return res;
 }
 
 inline Point4F& Point4F::operator+=(const Point4F& _add)
 {
-   gFloat4.add(*this, _add, *this);
+   GetFloat4().add(*this, _add, *this);
    return *this;
 }
 
 inline Point4F Point4F::operator-(const Point4F& _rSub) const
 {
    Point4F res;
-   gFloat4.sub(*this, _rSub, res);
+   GetFloat4().sub(*this, _rSub, res);
    return res;
 }
 
 inline Point4F Point4F::operator*(const Point4F &_vec) const
 {
    Point4F res;
-   gFloat4.mul(*this, _vec, res);
+   GetFloat4().mul(*this, _vec, res);
    return res;
 }
 
 inline Point4F Point4F::operator*(F32 _mul) const
 {
    Point4F res;
-   gFloat4.mul_scalar(*this, _mul, res);
+   GetFloat4().mul_scalar(*this, _mul, res);
    return res;
 }
 
 inline Point4F Point4F::operator /(F32 t) const
 {
    Point4F res;
-   gFloat4.div_scalar(*this, t, res);
+   GetFloat4().div_scalar(*this, t, res);
    return res;
 }
 
 inline F32 mDot(const Point4F &p1, const Point4F &p2)
 {
-   return  gFloat4.dot(p1, p2);
+   return  GetFloat4().dot(p1, p2);
 }
 
 //------------------------------------------------------------------------------

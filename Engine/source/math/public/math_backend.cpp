@@ -1,4 +1,3 @@
-#pragma once
 #include "math/public/math_backend.h"
 
 namespace math_backend::float4::dispatch

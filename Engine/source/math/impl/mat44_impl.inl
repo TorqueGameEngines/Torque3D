@@ -134,7 +134,7 @@ namespace math_backend::mat44
       // ---- Translation ----
 
       // Load original translation
-      f32x4 T = v_set(dst[3], dst[7], dst[11], 0.0f);
+      f32x4 T = v_set(m[3], m[7], m[11], 0.0f);
 
       // Compute -(Tx*ma.r0 + Ty*ma.r1 + Tz*ma.r2)
       f32x4 result = v_mul(ma.r0, v_swizzle_singular_mask(T, 0));

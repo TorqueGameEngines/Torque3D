@@ -381,8 +381,7 @@ inline MatrixF& MatrixF::inverse()
 
 inline void MatrixF::invertTo( MatrixF *out )
 {
-   out = this;
-   GetMat44().inverse(*out);
+   GetMat44().inverse_to(*this, *out);
 }
 
 inline MatrixF& MatrixF::affineInverse()

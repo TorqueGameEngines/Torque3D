@@ -592,16 +592,12 @@ inline void Point3F::neg()
 
 inline void Point3F::convolve(const Point3F& c)
 {
-   x *= c.x;
-   y *= c.y;
-   z *= c.z;
+   GetFloat3().mul(*this, c, *this);
 }
 
 inline void Point3F::convolveInverse(const Point3F& c)
 {
-   x /= c.x;
-   y /= c.y;
-   z /= c.z;
+   GetFloat3().div(*this, c, *this);
 }
 
 inline F32 Point3F::lenSquared() const

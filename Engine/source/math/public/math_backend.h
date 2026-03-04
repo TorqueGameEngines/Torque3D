@@ -44,7 +44,7 @@ namespace math_backend::float4::dispatch
    //--------------------------------------------------
    inline Float4Funcs& GetFloat4()
    {
-      if (__builtin_expect(gFloat4.mul == nullptr, 0))
+      if (gFloat4.mul == nullptr)
       {
          static std::once_flag once;
          std::call_once(once, []{
@@ -62,7 +62,7 @@ namespace math_backend::float3::dispatch
    //--------------------------------------------------
    inline Float3Funcs& GetFloat3()
    {
-      if (__builtin_expect(gFloat3.mul == nullptr, 0))
+      if (gFloat3.mul == nullptr)
       {
          static std::once_flag once;
          std::call_once(once, []{
@@ -81,7 +81,7 @@ namespace math_backend::mat44::dispatch
    //--------------------------------------------------
    inline Mat44Funcs& GetMat44()
    {
-      if (__builtin_expect(gMat44.mul_mat44 == nullptr, 0))
+      if (gMat44.mul_mat44 == nullptr)
       {
          static std::once_flag once;
          std::call_once(once, []{

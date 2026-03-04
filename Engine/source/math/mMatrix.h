@@ -59,7 +59,7 @@
 /// 4x4 Matrix Class
 ///
 /// This runs at F32 precision.
-using math_backend::mat44::dispatch::gMat44;
+using namespace math_backend::mat44::dispatch;
 class MatrixF
 {
    friend class MatrixFEngineExport;
@@ -131,7 +131,7 @@ public:
    EulerF toEuler() const;
 
    F32 determinant() const {
-      return gMat44.determinant(*this);
+      return GetMat44().determinant(*this);
    }
 
    /// Compute the inverse of the matrix.
@@ -375,52 +375,51 @@ inline MatrixF& MatrixF::identity()
 
 inline MatrixF& MatrixF::inverse()
 {
-   gMat44.inverse(m);
+   GetMat44().inverse(m);
    return (*this);
 }
 
 inline void MatrixF::invertTo( MatrixF *out )
 {
    out = this;
-   gMat44.inverse(*out);
+   GetMat44().inverse(*out);
 }
 
 inline MatrixF& MatrixF::affineInverse()
 {
-   gMat44.affine_inverse(m);
+   GetMat44().affine_inverse(m);
    return (*this);
 }
 
 inline MatrixF& MatrixF::transpose()
 {
-   gMat44.transpose(m);
+   GetMat44().transpose(m);
    return (*this);
 }
 
 inline MatrixF& MatrixF::scale(const Point3F& p)
 {
-   gMat44.scale(m, p);
+   GetMat44().scale(m, p);
    return *this;
 }
 
 inline Point3F MatrixF::getScale() const
 {
    Point3F scale;
-   gMat44.get_scale(m, scale);
+   GetMat44().get_scale(m, scale);
    return scale;
 }
 
 inline void MatrixF::normalize()
 {
-   gMat44.normalize(m);
+   GetMat44().normalize(m);
 }
 
 inline MatrixF& MatrixF::mul( const MatrixF &a )
 {  // M * a -> M
    AssertFatal(&a != this, "MatrixF::mul - a.mul(a) is invalid!");
    MatrixF tempThis(*this);
-   gMat44.mul_mat44(tempThis, a, tempThis);
-   *this = tempThis;
+   GetMat44().mul_mat44(tempThis, a, *this);
 
    return (*this);
 }
@@ -429,14 +428,14 @@ inline MatrixF& MatrixF::mulL( const MatrixF &a )
 {  // a * M -> M
    AssertFatal(&a != this, "MatrixF::mulL - a.mul(a) is invalid!");
    MatrixF tempThis(*this);
-   gMat44.mul_mat44(a, tempThis, *this);
+   GetMat44().mul_mat44(a, tempThis, *this);
    return (*this);
 }
 
 inline MatrixF& MatrixF::mul( const MatrixF &a, const MatrixF &b )
 {  // a * b -> M
    AssertFatal((&a != this) && (&b != this), "MatrixF::mul - a.mul(a, b) a.mul(b, a) a.mul(a, a) is invalid!");
-   gMat44.mul_mat44(a, b, *this);
+   GetMat44().mul_mat44(a, b, *this);
    return (*this);
 }
 
@@ -461,7 +460,7 @@ inline MatrixF& MatrixF::mul(const MatrixF &a, const F32 b)
 inline void MatrixF::mul( Point4F& p ) const
 {
    Point4F temp;
-   gMat44.mul_float4(*this, p, temp);
+   GetMat44().mul_float4(*this, p, temp);
    p = temp;
 }
 
@@ -469,28 +468,28 @@ inline void MatrixF::mulP( Point3F& p) const
 {
    // M * p -> d
    Point3F d;
-   gMat44.mul_pos3(*this, p, d);
+   GetMat44().mul_pos3(*this, p, d);
    p = d;
 }
 
 inline void MatrixF::mulP( const Point3F &p, Point3F *d) const
 {
    // M * p -> d
-   gMat44.mul_pos3(*this, p, *d);
+   GetMat44().mul_pos3(*this, p, *d);
 }
 
 inline void MatrixF::mulV( VectorF& v) const
 {
    // M * v -> v
    VectorF temp;
-   gMat44.mul_vec3(*this, v, temp);
+   GetMat44().mul_vec3(*this, v, temp);
    v = temp;
 }
 
 inline void MatrixF::mulV( const VectorF &v, Point3F *d) const
 {
    // M * v -> d
-   gMat44.mul_vec3(*this, v, *d);
+   GetMat44().mul_vec3(*this, v, *d);
 }
 
 inline void MatrixF::mul(Box3F& b) const
@@ -634,14 +633,14 @@ inline MatrixF operator * ( const MatrixF &m1, const MatrixF &m2 )
 {
    // temp = m1 * m2
    MatrixF temp;
-   gMat44.mul_mat44(m1, m2, temp);
+   GetMat44().mul_mat44(m1, m2, temp);
    return temp;
 }
 
 inline MatrixF& MatrixF::operator *= ( const MatrixF &m1 )
 {
    MatrixF tempThis(*this);
-   gMat44.mul_mat44(tempThis, m1, *this);
+   GetMat44().mul_mat44(tempThis, m1, *this);
    return (*this);
 }
 

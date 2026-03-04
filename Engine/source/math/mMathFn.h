@@ -76,11 +76,13 @@ extern void (*m_quatF_set_matF)( F32 x, F32 y, F32 z, F32 w, F32* m );
 extern void (*m_matF_set_euler)(const F32 *e, F32 *result);
 extern void (*m_matF_set_euler_point)(const F32 *e, const F32 *p, F32 *result);
 extern void (*m_matF_identity)(F32 *m);
-extern void (*m_matF_invert_to)(const F32* m, F32* d);
+extern void (*m_matF_inverse)(F32 *m);
+extern void (*m_matF_invert_to)(const F32 *m, F32 *d);
+extern void (*m_matF_affineInverse)(F32 *m);
 extern void (*m_matF_transpose)(F32 *m);
 extern void (*m_matF_scale)(F32 *m,const F32* p);
 extern void (*m_matF_normalize)(F32 *m);
-extern F32(*m_matF_determinant)(const F32* m);
+extern F32  (*m_matF_determinant)(const F32 *m);
 extern void (*m_matF_x_matF)(const F32 *a, const F32 *b, F32 *mresult);
 extern void (*m_matF_x_matF_aligned)(const F32 *a, const F32 *b, F32 *mresult);
 // extern void (*m_matF_x_point3F)(const F32 *m, const F32 *p, F32 *presult);
@@ -149,7 +151,7 @@ inline void m_matF_x_vectorF(const F32 *m, const F32 *v, F32 *vresult)
 inline bool mIsEqual( F32 a, F32 b, const F32 epsilon = __EQUAL_CONST_F )
 {
    F32 diff = a - b;
-   return diff > -epsilon && diff < epsilon; 
+   return diff > -epsilon && diff < epsilon;
 }
 
 inline bool mIsZero(const F32 val, const F32 epsilon = __EQUAL_CONST_F )
@@ -205,16 +207,16 @@ inline F32 mFmod(const F32 val, const F32 mod)
    return fmod(val, mod);
 }
 
-inline S32 mRound(const F32 val)  
-{  
-   return (S32)floor(val + 0.5f);  
-}  
+inline S32 mRound(const F32 val)
+{
+   return (S32)floor(val + 0.5f);
+}
       
-inline F32 mRound(const F32 val, const S32 n)  
-{  
-   S32 place = (S32) pow(10.0f, n);  
+inline F32 mRound(const F32 val, const S32 n)
+{
+   S32 place = (S32) pow(10.0f, n);
       
-   return mFloor((val*place)+0.5)/place;  
+   return mFloor((val*place)+0.5)/place;
 }
 
 inline F32 mRoundF(const F32 val, const F32 step)
@@ -259,15 +261,15 @@ inline F32 mClampF(F32 val, F32 low, F32 high)
 
 inline S32 mWrap(S32 val, S32 low, S32 high)
 {
-	int len = high - low;
-	return low + (val >= 0 ? val % len : -val % len ? len - (-val % len) : 0);
+   int len = high - low;
+   return low + (val >= 0 ? val % len : -val % len ? len - (-val % len) : 0);
 
 }
 
 inline F32 mWrapF(F32 val, F32 low, F32 high)
 {
-	F32 t = fmod(val - low, high - low);
-	return t < 0 ? t + high : t + low;
+   F32 t = fmod(val - low, high - low);
+   return t < 0 ? t + high : t + low;
 }
 
 /// Template function for doing a linear interpolation between any two
@@ -495,7 +497,7 @@ inline F64 mRadToDeg(F64 r)
 
 inline bool mIsNaN_F( const F32 x )
 {
-   // If x is a floating point variable, then (x != x) will be TRUE if x has the value NaN. 
+   // If x is a floating point variable, then (x != x) will be TRUE if x has the value NaN.
    // This is only going to work if the compiler is IEEE 748 compliant.
    //
    // Tested and working on VC2k5

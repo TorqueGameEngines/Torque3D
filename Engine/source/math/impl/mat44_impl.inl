@@ -239,24 +239,6 @@ namespace math_backend::mat44
       m_store(m, r);
    }
 
-   inline void mat44_trs_impl(float* m, const float* t, const float* r_euler, const float* s)
-   {
-      f32x4x4 mr;
-      mat44_rotation_euler_impl((float*)&mr, r_euler[0], r_euler[1], r_euler[2]);
-
-      f32x4 vs = v_load3_vec(s); // scale xyz
-      mr.r0 = v_mul(mr.r0, vs);
-      mr.r1 = v_mul(mr.r1, vs);
-      mr.r2 = v_mul(mr.r2, vs);
-
-      mr.r0 = v_insert_w(mr.r0, _mm_set_ss(t[0]));
-      mr.r1 = v_insert_w(mr.r1, _mm_set_ss(t[1]));
-      mr.r2 = v_insert_w(mr.r2, _mm_set_ss(t[2]));
-      mr.r3 = v_set(0, 0, 0, 1.0f);
-
-      m_store(m, mr);
-   }
-
    inline void mat44_lookat_impl(float* m, const float* eye, const float* target, const float* up)
    {
       f32x4 vEye = v_load3_pos(eye);

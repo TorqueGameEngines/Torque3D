@@ -216,8 +216,22 @@ namespace
 
    inline f32x4 v_normalize3(f32x4 v)
    {
-      f32x4 inv = v_rsqrt_nr(v_dot3(v, v));
-      return _mm_mul_ps(v, inv);
+      const f32x4 zero     = _mm_setzero_ps();
+      const f32x4 fallback = _mm_set_ps(0.0f, 1.0f, 0.0f, 0.0f); // {0,0,1,0}
+      f32x4 dot = v_dot3(v, v);
+
+      f32x4 inv = v_rsqrt_nr(dot);
+      f32x4 isZero = _mm_cmpeq_ps(dot, zero);
+
+      f32x4 norm = _mm_mul_ps(v, inv);
+
+      // vbsl equivalent
+      f32x4 result = _mm_or_ps(
+         _mm_and_ps(isZero, fallback),
+         _mm_andnot_ps(isZero, norm)
+      );
+      
+      return result;
    }
 
    // adds all 4 lanes together.

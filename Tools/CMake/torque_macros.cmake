@@ -142,7 +142,9 @@ function(add_math_backend name compile_defs)
         return()
     endif()
 
-    add_library(math_${name} OBJECT ${SRC})
+    file(GLOB_RECURSE INL CONFIGURE_DEPENDS "math/impl/*.inl")
+
+    add_library(math_${name} OBJECT ${SRC} ${INL})
 
     message(STATUS "adding math library for isa ${name}")
     target_include_directories(math_${name} PUBLIC

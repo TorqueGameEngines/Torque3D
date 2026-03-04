@@ -85,9 +85,8 @@ namespace math_backend::float3
    inline void float3_normalize_impl(float* a)
    {
       f32x4 va = v_load3_vec(a);
-      f32x4 invLen = v_rsqrt_nr(v_dot3(va, va)); // fully abstracted
-      f32x4 vnorm = v_mul(va, invLen);
-      v_store3(a, vnorm);
+      f32x4 vr = v_normalize3(va);
+      v_store3(a, vr);
    }
 
    // Normalize with magnitude: r = normalize(a) * r

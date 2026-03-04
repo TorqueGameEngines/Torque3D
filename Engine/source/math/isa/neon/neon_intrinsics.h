@@ -205,8 +205,19 @@ namespace
 
    inline f32x4 v_normalize3(f32x4 v)
    {
-      f32x4 inv = v_rsqrt_nr(v_dot3(v,v));
-      return vmulq_f32(v, inv);
+      const float32x4_t zero = vdupq_n_f32(0.0f);
+      const float32x4_t fallback = {0.0f, 0.0f, 1.0f, 0.0f};
+
+      f32x4 dot = v_dot3(v, v);
+
+      // dot == 0?
+      uint32x4_t isZero = vceqq_f32(dot, zero);
+
+      f32x4 inv = v_rsqrt_nr(dot);
+      f32x4 norm = vmulq_f32(v, inv);
+
+      // Select fallback when zero
+      return vbslq_f32(isZero, fallback, norm);
    }
 
    inline f32x4 v_hadd4(f32x4 a)

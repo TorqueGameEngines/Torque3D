@@ -85,7 +85,7 @@ namespace math_backend::mat44
       // Store inverse 3x3 (transpose of cofactor matrix)
 
       mTemp = m_transpose(mTemp);
-      mTemp.r3 = v_set(0, 0, 0, 1.0f);
+      mTemp.r3 = ma.r3;
 
       // ---- Translation ----
 
@@ -104,6 +104,50 @@ namespace math_backend::mat44
       m[3] = v_extract0(result);
       m[7] = v_extract0(v_swizzle_singular_mask(result, 1));
       m[11] = v_extract0(v_swizzle_singular_mask(result, 2));
+   }
+
+   // Matrix Inverse
+   inline void mat44_inverse_to_impl(const float* m, float* dst)
+   {
+      f32x4x4 ma = m_load(m);
+
+      // Compute cofactors using cross products
+      f32x4x4 mTemp;
+      mTemp.r0 = v_cross(ma.r1, ma.r2);
+      mTemp.r1 = v_cross(ma.r2, ma.r0);
+      mTemp.r2 = v_cross(ma.r0, ma.r1);
+
+      // Determinant = dot(ma.r0, c0)
+      f32x4 det = v_dot3(ma.r0, mTemp.r0);
+      f32x4 invDet = v_rcp_nr(det);
+
+      // Scale cofactors
+      mTemp.r0 = v_mul(mTemp.r0, invDet);
+      mTemp.r1 = v_mul(mTemp.r1, invDet);
+      mTemp.r2 = v_mul(mTemp.r2, invDet);
+
+      // Store inverse 3x3 (transpose of cofactor matrix)
+
+      mTemp = m_transpose(mTemp);
+      mTemp.r3 = ma.r3;
+
+      // ---- Translation ----
+
+      // Load original translation
+      f32x4 T = v_set(dst[3], dst[7], dst[11], 0.0f);
+
+      // Compute -(Tx*ma.r0 + Ty*ma.r1 + Tz*ma.r2)
+      f32x4 result = v_mul(ma.r0, v_swizzle_singular_mask(T, 0));
+      result = v_add(result, v_mul(ma.r1, v_swizzle_singular_mask(T, 1)));
+      result = v_add(result, v_mul(ma.r2, v_swizzle_singular_mask(T, 2)));
+      result = v_mul(result, v_set1(-1.0f));
+
+      m_store(dst, mTemp);
+
+      // Store translation
+      dst[3] = v_extract0(result);
+      dst[7] = v_extract0(v_swizzle_singular_mask(result, 1));
+      dst[11] = v_extract0(v_swizzle_singular_mask(result, 2));
    }
 
    // Matrix Affine Inverse

@@ -9,6 +9,7 @@ namespace math_backend::mat44::dispatch
    {
       void (*transpose)(float*) = nullptr;
       void (*inverse)(float*) = nullptr;
+      void (*inverse_to)(const float*, float*) = nullptr;
       void (*affine_inverse)(float*) = nullptr;
       void (*normalize)(float*) = nullptr;
       void (*mul_mat44)(const float* a, const float* b, float* r) = nullptr;

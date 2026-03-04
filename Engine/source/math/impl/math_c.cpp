@@ -263,6 +263,41 @@ namespace math_backend::mat44::dispatch
 
       };
 
+      gMat44.inverse_to = [](const float* m, float* d) {
+         // using Cramers Rule find the Inverse
+         // Minv = (1/det(M)) * adjoint(M)
+         F32 det = gMat44.determinant(m);
+         AssertFatal(det != 0.0f, "MatrixF::inverse: non-singular matrix, no inverse.");
+
+         F32 invDet = 1.0f / det;
+
+         d[0] = (m[5] * m[10] - m[6] * m[9]) * invDet;
+         d[1] = (m[9] * m[2] - m[10] * m[1]) * invDet;
+         d[2] = (m[1] * m[6] - m[2] * m[5]) * invDet;
+
+         d[4] = (m[6] * m[8] - m[4] * m[10]) * invDet;
+         d[5] = (m[10] * m[0] - m[8] * m[2]) * invDet;
+         d[6] = (m[2] * m[4] - m[0] * m[6]) * invDet;
+
+         d[8] = (m[4] * m[9] - m[5] * m[8]) * invDet;
+         d[9] = (m[8] * m[1] - m[9] * m[0]) * invDet;
+         d[10] = (m[0] * m[5] - m[1] * m[4]) * invDet;
+
+         // invert the translation
+         F32 temp[6];
+         temp[0] = -m[3];
+         temp[1] = -m[7];
+         temp[2] = -m[11];
+         gMat44.mul_vec3(d, temp, &temp[3]);
+         d[3] = temp[3];
+         d[7] = temp[4];
+         d[11] = temp[5];
+         d[12] = m[12];
+         d[13] = m[13];
+         d[14] = m[14];
+         d[15] = m[15];
+      };
+
       gMat44.affine_inverse = [](float* a) {
          F32 temp[16];
          dMemcpy(temp, a, 16 * sizeof(F32));

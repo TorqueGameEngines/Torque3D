@@ -109,15 +109,9 @@ void Math::init(U32 properties)
    Con::printf("Math Init:");
    Con::printf("   Installing Standard C extensions");
    mInstallLibrary_C();
-   
-   math_backend::install_from_cpu_flags(properties);
 
-   #ifdef TORQUE_CPU_X86
-   if( properties & CPU_PROP_SSE )
-   {
-      Con::printf( "   Installing SSE extensions" );
-   }
-   #endif
+   Con::printf( "   Installing ISA extensions" );
+   math_backend::install_from_cpu_flags(properties);
    
    Con::printf(" ");
 }   

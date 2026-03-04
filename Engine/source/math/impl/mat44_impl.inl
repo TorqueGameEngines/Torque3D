@@ -176,31 +176,37 @@ namespace math_backend::mat44
       m[11] = v_extract0(v_swizzle_singular_mask(result, 2));
    }
 
-   inline void mat44_normalize_impl(float* a)
+   inline void mat44_normalize_impl(float* m)
    {
-      // Load the matrix
-      f32x4x4 m = m_load(a);
+      // Load the matrix into SIMD registers
+      f32x4x4 mat = m_load(m);
 
-      // Extract axes (rows 0-2), zero out w using v_mask_xyz
-      f32x4 xaxis = v_mul(m.r0, v_mask_xyz());
-      f32x4 yaxis = v_mul(m.r1, v_mask_xyz());
-      f32x4 zaxis = v_mul(m.r2, v_mask_xyz());
+      // Transpose: now rows are columns
+      mat = m_transpose(mat);
 
-      xaxis = v_normalize3(xaxis);
+      // Extract columns (which are now rows)
+      f32x4 col0 = mat.r0;
+      f32x4 col1 = mat.r1;
 
-      float dotXY = v_extract0(v_hadd4(v_mul(xaxis, yaxis)));
-      f32x4 projYonX = v_mul(v_set1(dotXY), xaxis);
-      yaxis = v_normalize3(v_sub(yaxis, projYonX));
+      // Rebuild orthonormal basis
+      f32x4 col2 = v_cross(col0, col1);
+      col1 = v_cross(col2, col0);
 
-      zaxis = v_cross(xaxis, yaxis);
+      // Normalize columns
+      col0 = v_normalize3(col0);
+      col1 = v_normalize3(col1);
+      col2 = v_normalize3(col2);
 
-      // Store normalized axes back (preserve translation w)
-      m.r0 = v_preserve_w(xaxis, m.r0);
-      m.r1 = v_preserve_w(yaxis, m.r1);
-      m.r2 = v_preserve_w(zaxis, m.r2);
+      // Write back directly into transposed matrix
+      mat.r0 = col0;
+      mat.r1 = col1;
+      mat.r2 = col2;
 
-      // Store back to memory
-      m_store(a, m);
+      // Transpose back to row-major
+      mat = m_transpose(mat);
+
+      // Store back
+      m_store(m, mat);
    }
 
    // Matrix Multiply: a * b
@@ -227,7 +233,7 @@ namespace math_backend::mat44
    {
       f32x4x4 ma = m_load(m);
       f32x4 va = v_load3_vec(v);
-      f32x4 vr = m_mul_vec4(ma, va);
+      f32x4 vr = m_mul_vec3(ma, va);
       v_store3(r, vr);
    }
 

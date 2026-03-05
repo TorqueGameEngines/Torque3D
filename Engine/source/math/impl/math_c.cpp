@@ -488,11 +488,11 @@ namespace math_backend::mat44::dispatch
 
       };
 
-      gMat44.batch_mul_pos3 = [](const float* m, const float* pts, size_t count, float* result_ptrs) {
-         size_t i = 0;
+      gMat44.batch_mul_pos3 = [](const float* m, const float* pts, int count, float* result_ptrs) {
+         int i = 0;
          for (; i < count; i++)
          {
-            size_t idx = i * 3;
+            int idx = i * 3;
             gMat44.mul_pos3(m, &pts[idx], &result_ptrs[idx]);
          }
       };

@@ -21,7 +21,7 @@ namespace math_backend::mat44::dispatch
       void (*scale)(float*, const float*) = nullptr;
       void (*get_scale)(const float*, float*) = nullptr;
 
-      void (*batch_mul_pos3)(const float* m, const float* pts, size_t count, float* result_ptrs) = nullptr;
+      void (*batch_mul_pos3)(const float* m, const float* pts, int count, float* result_ptrs) = nullptr;
    };
 
    // Global dispatch table

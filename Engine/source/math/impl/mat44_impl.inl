@@ -392,9 +392,9 @@ namespace math_backend::mat44
    // MATRIX BATCH FUNCTIONS
    //--------------------------------------------------
 
-   inline void mat44_batch_mul_pos3(const float* m, const float* points, size_t count, float* result)
+   inline void mat44_batch_mul_pos3(const float* m, const float* points, int count, float* result)
    {
-      size_t i = 0;
+      int i = 0;
       f32x4x4 ma = m_load(m);
 
       // AVX has 8 lanes to play with

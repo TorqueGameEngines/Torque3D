@@ -422,9 +422,9 @@ namespace
    {
       vec4_batch4 r;
 
-      r.x = (f32x4){ ptr[9], ptr[6], ptr[3], ptr[0] };
-      r.y = (f32x4){ ptr[10], ptr[7], ptr[4], ptr[1] };
-      r.z = (f32x4){ ptr[11], ptr[8], ptr[5], ptr[2] };
+      r.x = (f32x4){ ptr[0], ptr[3], ptr[6], ptr[9] };
+      r.y = (f32x4){ ptr[1], ptr[4], ptr[7], ptr[10] };
+      r.z = (f32x4){ ptr[2], ptr[5], ptr[8], ptr[11] };
 
       if (fillW)
       {
@@ -456,20 +456,20 @@ namespace
    {
       vec4_batch4 r;
 
-      float32x4_t m00 = vdupq_n_f32(m.r0.m128_f32[0]);
-      float32x4_t m01 = vdupq_n_f32(m.r0.m128_f32[1]);
-      float32x4_t m02 = vdupq_n_f32(m.r0.m128_f32[2]);
-      float32x4_t m03 = vdupq_n_f32(m.r0.m128_f32[3]);
+      float32x4_t m00 = vdupq_n_f32(m.r0[0]);
+      float32x4_t m01 = vdupq_n_f32(m.r0[1]);
+      float32x4_t m02 = vdupq_n_f32(m.r0[2]);
+      float32x4_t m03 = vdupq_n_f32(m.r0[3]);
 
-      float32x4_t m10 = vdupq_n_f32(m.r1.m128_f32[0]);
-      float32x4_t m11 = vdupq_n_f32(m.r1.m128_f32[1]);
-      float32x4_t m12 = vdupq_n_f32(m.r1.m128_f32[2]);
-      float32x4_t m13 = vdupq_n_f32(m.r1.m128_f32[3]);
+      float32x4_t m10 = vdupq_n_f32(m.r1[0]);
+      float32x4_t m11 = vdupq_n_f32(m.r1[1]);
+      float32x4_t m12 = vdupq_n_f32(m.r1[2]);
+      float32x4_t m13 = vdupq_n_f32(m.r1[3]);
 
-      float32x4_t m20 = vdupq_n_f32(m.r2.m128_f32[0]);
-      float32x4_t m21 = vdupq_n_f32(m.r2.m128_f32[1]);
-      float32x4_t m22 = vdupq_n_f32(m.r2.m128_f32[2]);
-      float32x4_t m23 = vdupq_n_f32(m.r2.m128_f32[3]);
+      float32x4_t m20 = vdupq_n_f32(m.r2[0]);
+      float32x4_t m21 = vdupq_n_f32(m.r2[1]);
+      float32x4_t m22 = vdupq_n_f32(m.r2[2]);
+      float32x4_t m23 = vdupq_n_f32(m.r2[3]);
 
       // row0 dot
       r.x = vaddq_f32(

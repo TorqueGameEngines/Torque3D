@@ -136,7 +136,8 @@ namespace
    {
       f32x4 r = _mm_rcp_ps(b);
       f32x4 two = _mm_set1_ps(2.0f);
-      return _mm_mul_ps(r, _mm_sub_ps(two, _mm_mul_ps(b, r)));
+      r = _mm_sub_ps(_mm_add_ps(r, r), _mm_mul_ps(b, _mm_mul_ps(r, r)));
+      return _mm_sub_ps(_mm_add_ps(r, r), _mm_mul_ps(b, _mm_mul_ps(r, r)));
    }
 
    // Divide fast ( b = recip eg 1/b)
@@ -144,14 +145,12 @@ namespace
 
    inline f32x4 v_rsqrt_nr(f32x4 x)
    {
-      f32x4 r = _mm_rsqrt_ps(x);
-
       f32x4 half = _mm_set1_ps(0.5f);
       f32x4 three = _mm_set1_ps(3.0f);
 
-      r = _mm_mul_ps(r, _mm_sub_ps(three, _mm_mul_ps(_mm_mul_ps(x, r), r)));
-
-      return _mm_mul_ps(r, half);
+      f32x4 r = _mm_rsqrt_ps(x);
+      f32x4 nr = _mm_mul_ps(_mm_mul_ps(x, r), r);
+      return _mm_mul_ps(_mm_mul_ps(half, r), _mm_sub_ps(three, nr));
    }
 
    //------------------------------------------------------
@@ -161,13 +160,13 @@ namespace
    // full dot4
    inline f32x4 v_dot4(f32x4 a, f32x4 b)
    {
-      return _mm_dp_ps(a, b, 0xF1); // f32x4, 4 lanes into lane 1
+      return _mm_dp_ps(a, b, 0xFF); // f32x4, 4 lanes into lane 1
    }
 
    // dot3 (ignores w)
    inline f32x4 v_dot3(f32x4 a, f32x4 b)
    {
-      return _mm_dp_ps(a, b, 0x71); // f32x4, 3 last lanes into lane 1
+      return _mm_dp_ps(a, b, 0x7F); // f32x4, 3 last lanes into lane 1
    }
 
    // cross product xyz only.
@@ -392,4 +391,146 @@ namespace
       f32x4 c0 = v_cross(r1, r2);
       return v_dot3(r0, c0); // splatted determinant
    }
+
+   //---------------------------------------------------------
+   // BATCH INTRINSICS
+   //---------------------------------------------------------
+   typedef __m256 f32x8;
+
+   struct vec4_batch8
+   {
+      f32x8 x;
+      f32x8 y;
+      f32x8 z;
+      f32x8 w;
+   };
+
+   struct vec3_batch8
+   {
+      f32x8 x;
+      f32x8 y;
+      f32x8 z;
+   };
+
+   struct vec4_batch4
+   {
+      f32x4 x;
+      f32x4 y;
+      f32x4 z;
+      f32x4 w;
+   };
+
+   struct vec3_batch4
+   {
+      f32x4 x;
+      f32x4 y;
+      f32x4 z;
+   };
+
+   inline vec3_batch8 load_vec3_batch8(const float* ptr)
+   {
+      // ptr points to x0
+      // layout: x y z x y z ...
+
+      vec3_batch8 r;
+
+      r.x = _mm256_set_ps(
+         ptr[21], ptr[18], ptr[15], ptr[12],
+         ptr[9], ptr[6], ptr[3], ptr[0]);
+
+      r.y = _mm256_set_ps(
+         ptr[22], ptr[19], ptr[16], ptr[13],
+         ptr[10], ptr[7], ptr[4], ptr[1]);
+
+      r.z = _mm256_set_ps(
+         ptr[23], ptr[20], ptr[17], ptr[14],
+         ptr[11], ptr[8], ptr[5], ptr[2]);
+
+      return r;
+   }
+
+   inline vec3_batch4 load_vec3_batch4(const float* ptr)
+   {
+      vec3_batch4 r;
+
+      r.x = _mm_set_ps(
+         ptr[9], ptr[6], ptr[3], ptr[0]);
+
+      r.y = _mm_set_ps(
+         ptr[10], ptr[7], ptr[4], ptr[1]);
+
+      r.z = _mm_set_ps(
+         ptr[11], ptr[8], ptr[5], ptr[2]);
+
+      return r;
+   }
+
+   // Store the result back out to a float array 8 at a time
+   inline void store_f32x8(float* out, f32x8 v)
+   {
+      _mm256_storeu_ps(out, v);
+   }
+
+   // Store the result back out to a float array 4 at a time
+   inline void store_f32x4(float* out, f32x4 v)
+   {
+      _mm_storeu_ps(out, v);
+   }
+
+   // Store the result back to a float3 array with size of 8
+   inline void store_vec3_batch8(float* out, const vec3_batch8& v)
+   {
+      alignas(32) float xs[8];
+      alignas(32) float ys[8];
+      alignas(32) float zs[8];
+
+      _mm256_store_ps(xs, v.x);
+      _mm256_store_ps(ys, v.y);
+      _mm256_store_ps(zs, v.z);
+
+      for (int i = 0; i < 8; ++i)
+      {
+         out[i * 3 + 0] = xs[i];
+         out[i * 3 + 1] = ys[i];
+         out[i * 3 + 2] = zs[i];
+      }
+   }
+
+   // Store the result back to a float3 array with size of 4
+   inline void store_vec3_batch4(float* out, const vec3_batch4& v)
+   {
+      alignas(16) float xs[8];
+      alignas(16) float ys[8];
+      alignas(16) float zs[8];
+
+      _mm_store_ps(xs, v.x);
+      _mm_store_ps(ys, v.y);
+      _mm_store_ps(zs, v.z);
+
+      for (int i = 0; i < 4; ++i)
+      {
+         out[i * 3 + 0] = xs[i];
+         out[i * 3 + 1] = ys[i];
+         out[i * 3 + 2] = zs[i];
+      }
+   }
+
+   inline f32x4 vec3_batch4_dot(const vec3_batch4& a, const vec3_batch4& b)
+   {
+      f32x4 mulx = _mm_mul_ps(a.x, b.x);
+      f32x4 muly = _mm_mul_ps(a.y, b.y);
+      f32x4 mulz = _mm_mul_ps(a.z, b.z);
+
+      return _mm_add_ps(_mm_add_ps(mulx, muly), mulz);
+   }
+
+   inline f32x8 vec3_batch8_dot(const vec3_batch8& a, const vec3_batch8& b)
+   {
+      f32x8 mulx = _mm256_mul_ps(a.x, b.x);
+      f32x8 muly = _mm256_mul_ps(a.y, b.y);
+      f32x8 mulz = _mm256_mul_ps(a.z, b.z);
+
+      return _mm256_add_ps(_mm256_add_ps(mulx, muly), mulz);
+   }
+
 }

@@ -149,7 +149,7 @@ namespace
       return _mm_and_ps(v, mask);
    }
 
-   //------------------------------------------------------
+   //------------------------------------------------------ 
    // Fast recip
    //------------------------------------------------------
 
@@ -158,7 +158,8 @@ namespace
    {
       f32x4 r = _mm_rcp_ps(b);
       f32x4 two = _mm_set1_ps(2.0f);
-      return _mm_mul_ps(r, _mm_sub_ps(two, _mm_mul_ps(b, r)));
+      r = _mm_sub_ps(_mm_add_ps(r, r), _mm_mul_ps(b, _mm_mul_ps(r, r)));
+      return _mm_sub_ps(_mm_add_ps(r, r), _mm_mul_ps(b, _mm_mul_ps(r, r)));
    }
 
    // Divide fast ( b = recip eg 1/b)
@@ -166,14 +167,12 @@ namespace
 
    inline f32x4 v_rsqrt_nr(f32x4 x)
    {
-      f32x4 r = _mm_rsqrt_ps(x);
-
       f32x4 half = _mm_set1_ps(0.5f);
       f32x4 three = _mm_set1_ps(3.0f);
 
-      r = _mm_mul_ps(r, _mm_sub_ps(three, _mm_mul_ps(_mm_mul_ps(x, r), r)));
-
-      return _mm_mul_ps(r, half);
+      f32x4 r = _mm_rsqrt_ps(x);
+      f32x4 nr = _mm_mul_ps(_mm_mul_ps(x, r), r);
+      return _mm_mul_ps(_mm_mul_ps(half, r), _mm_sub_ps(three, nr));
    }
 
    //------------------------------------------------------
@@ -184,9 +183,9 @@ namespace
    inline f32x4 v_dot4(f32x4 a, f32x4 b)
    {
       f32x4 prod = _mm_mul_ps(a, b);           // multiply element-wise
-      f32x4 shuf = _mm_shuffle_ps(prod, prod, _MM_SHUFFLE(2, 3, 0, 1));
+      f32x4 shuf = _mm_shuffle_ps(prod, prod, _MM_SHUFFLE(0, 0, 3, 2));
       prod = _mm_add_ps(prod, shuf);
-      shuf = _mm_shuffle_ps(prod, prod, _MM_SHUFFLE(1, 0, 3, 2));
+      shuf = _mm_shuffle_ps(prod, prod, _MM_SHUFFLE(0, 0, 0, 1));
       prod = _mm_add_ps(prod, shuf);
       return prod;                             // f32x4, all lanes = dot(a,b)
    }
@@ -305,10 +304,11 @@ namespace
       f32x4 z = v_dot4(m.r2, v);
       f32x4 w = v_dot4(m.r3, v);
 
-      // Pack lowest lane of each into a vector
-      f32x4 xy = _mm_unpacklo_ps(x, y);
-      f32x4 zw = _mm_unpacklo_ps(z, w);
-      return _mm_movelh_ps(xy, zw);
+      // combine to a vector
+      return _mm_set_ps(_mm_cvtss_f32(w),
+         _mm_cvtss_f32(z),
+         _mm_cvtss_f32(y),
+         _mm_cvtss_f32(x));
    }
 
    inline f32x4 m_mul_vec3(const f32x4x4& m, f32x4 v)
@@ -530,5 +530,75 @@ namespace
 
       f32x4 c0 = v_cross(r1, r2);
       return v_dot3(r0, c0); // splatted determinant
+   }
+
+   //---------------------------------------------------------
+   // BATCH INTRINSICS
+   //---------------------------------------------------------
+
+   struct vec4_batch4
+   {
+      f32x4 x;
+      f32x4 y;
+      f32x4 z;
+      f32x4 w;
+   };
+
+   struct vec3_batch4
+   {
+      f32x4 x;
+      f32x4 y;
+      f32x4 z;
+   };
+
+
+   inline vec3_batch4 load_vec3_batch4(const float* ptr)
+   {
+      vec3_batch4 r;
+
+      r.x = _mm_set_ps(
+         ptr[9], ptr[6], ptr[3], ptr[0]);
+
+      r.y = _mm_set_ps(
+         ptr[10], ptr[7], ptr[4], ptr[1]);
+
+      r.z = _mm_set_ps(
+         ptr[11], ptr[8], ptr[5], ptr[2]);
+
+      return r;
+   }
+
+   // Store the result back out to a float array 4 at a time
+   inline void store_f32x4(float* out, f32x4 v)
+   {
+      _mm_storeu_ps(out, v);
+   }
+
+   // Store the result back to a float3 array with size of 4
+   inline void store_vec3_batch4(float* out, const vec3_batch4& v)
+   {
+      alignas(16) float xs[8];
+      alignas(16) float ys[8];
+      alignas(16) float zs[8];
+
+      _mm_store_ps(xs, v.x);
+      _mm_store_ps(ys, v.y);
+      _mm_store_ps(zs, v.z);
+
+      for (int i = 0; i < 4; ++i)
+      {
+         out[i * 3 + 0] = xs[i];
+         out[i * 3 + 1] = ys[i];
+         out[i * 3 + 2] = zs[i];
+      }
+   }
+
+   inline f32x4 vec3_batch4_dot(const vec3_batch4& a, const vec3_batch4& b)
+   {
+      f32x4 mulx = _mm_mul_ps(a.x, b.x);
+      f32x4 muly = _mm_mul_ps(a.y, b.y);
+      f32x4 mulz = _mm_mul_ps(a.z, b.z);
+
+      return _mm_add_ps(_mm_add_ps(mulx, muly), mulz);
    }
 }

@@ -32,6 +32,53 @@ namespace math_backend::mat44
       m_store(m, ma);
    }
 
+   inline void mat44_transform_plane_impl(const float* m, const float* scale, const float* plane, float* plane_result)
+   {
+      f32x4x4 M = m_load(m);
+
+      f32x4 plane_v = v_load(plane);
+      f32x4 scale_v = v_load3_vec(scale);
+      f32x4 invScale = v_rcp_nr(scale_v);
+
+      // normal = plane.xyz
+      f32x4 normal = plane_v;
+
+      // apply Inv(s)
+      normal = v_mul(normal, invScale);
+
+      // multiply by Inv(Tr(m)) (only the rotation part matters)
+      f32x4 nx = v_mul(v_swizzle_singular_mask(normal, 0), M.r0);
+      f32x4 ny = v_mul(v_swizzle_singular_mask(normal, 1), M.r1);
+      f32x4 nz = v_mul(v_swizzle_singular_mask(normal, 2), M.r2);
+
+      normal = v_add(v_add(nx, ny), nz);
+
+      normal = v_normalize3(normal);
+
+      // compute point on plane
+      float d = v_extract0(v_swizzle_singular_mask(plane_v, 3));
+
+      f32x4 point = v_mul(plane_v, v_set1(-d));
+      point = v_preserve_w(point, v_set1(1.0f));
+
+      // apply scale
+      point = v_mul(point, scale_v);
+
+      // transform point by matrix
+      point = m_mul_vec4(M, point);
+
+      // compute new plane distance
+      float newD = -v_extract0(v_dot3(point, normal));
+
+      alignas(16) float n[4];
+      v_store(n, normal);
+
+      plane_result[0] = n[0];
+      plane_result[1] = n[1];
+      plane_result[2] = n[2];
+      plane_result[3] = newD;
+   }
+
    inline void mat44_get_scale_impl(const float* m, float* s)
    {
       f32x4x4 ma = m_load(m);
@@ -339,6 +386,41 @@ namespace math_backend::mat44
       mo.r2 = v_set(0, 0, -2.0f / (zfar - znear), -(zfar + znear) / (zfar - znear));
       mo.r3 = v_set(0, 0, 0, 1.0f);
       m_store(m, mo);
+   }
+
+   //--------------------------------------------------
+   // MATRIX BATCH FUNCTIONS
+   //--------------------------------------------------
+
+   inline void mat44_batch_mul_pos3(const float* m, const float* points, size_t count, float* result)
+   {
+      size_t i = 0;
+      f32x4x4 ma = m_load(m);
+
+      // AVX has 8 lanes to play with
+#if defined(MATH_SIMD_AVX2) || defined(MATH_SIMD_AVX)
+      // 8-wide AVX only
+      for (; i + 8 <= count; i += 8)
+      {
+         vec4_batch8 va = load_vec3_batch8(&points[i*3], 1.0f, false);
+         vec4_batch8 vr = m_mul_pos3_batch8(ma, va);
+         store_vec3_batch8(&result[i*3], vr);
+      }
+#endif // MATH_SIMD_AVX2 || MATH_SIMD_AVX
+
+      // 4-wide
+      for (; i + 4 <= count; i += 4)
+      {
+         vec4_batch4 va = load_vec3_batch4(&points[i * 3], 1.0f, false);
+         vec4_batch4 vr = m_mul_pos3_batch4(ma, va);
+         store_vec3_batch4(&result[i * 3], vr);
+      }
+
+      for (; i < count; ++i)
+      {
+         size_t idx = i * 3;
+         mat44_mul_pos3_impl(m, &points[idx], &result[idx]);
+      }
    }
 
 } // namespace math_backend::mat44

@@ -381,8 +381,10 @@ void FrustumData::_update() const
 
    // Transform the points into the desired culling space.
 
-   for( U32 i = 0; i < mPoints.size(); ++ i )
-      mTransform.mulP( mPoints[ i ] );
+   /*for( U32 i = 0; i < mPoints.size(); ++ i )
+      mTransform.mulP( mPoints[ i ] );*/
+
+   mTransform.batch_mulP(mPoints.address(), mPoints.size());
 
    // Update the axis aligned bounding box from 
    // the newly transformed points.

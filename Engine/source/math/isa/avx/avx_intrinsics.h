@@ -57,7 +57,7 @@ namespace
    // Shuffle helpers
    //------------------------------------------------------
 
-   inline f32x4 v_shuffle_mask(f32x4 v1, f32x4 v2, const int x, const int y, const int z, const int w)
+   inline f32x4 v_shuffle_mask(f32x4 v1, f32x4 v2, int x, int y, int z, int w)
    {
       f32x4 lo = v1;
       f32x4 hi = v2;
@@ -160,13 +160,13 @@ namespace
    // full dot4
    inline f32x4 v_dot4(f32x4 a, f32x4 b)
    {
-      return _mm_dp_ps(a, b, 0xFF); // f32x4, 4 lanes into lane 1
+      return _mm_dp_ps(a, b, 0xFF); // f32x4, 4 lanes into all lanes
    }
 
    // dot3 (ignores w)
    inline f32x4 v_dot3(f32x4 a, f32x4 b)
    {
-      return _mm_dp_ps(a, b, 0x7F); // f32x4, 3 last lanes into lane 1
+      return _mm_dp_ps(a, b, 0x7F); // f32x4, 3 last lanes into all lanes
    }
 
    // cross product xyz only.
@@ -182,7 +182,7 @@ namespace
 
    inline f32x4 v_normalize3(f32x4 v)
    {
-      const f32x4 zero     = _mm_setzero_ps();
+      const f32x4 zero = _mm_setzero_ps();
       const f32x4 fallback = _mm_set_ps(0.0f, 1.0f, 0.0f, 0.0f); // {0,0,1,0}
       f32x4 dot = v_dot3(v, v);
 
@@ -405,13 +405,6 @@ namespace
       f32x8 w;
    };
 
-   struct vec3_batch8
-   {
-      f32x8 x;
-      f32x8 y;
-      f32x8 z;
-   };
-
    struct vec4_batch4
    {
       f32x4 x;
@@ -420,47 +413,37 @@ namespace
       f32x4 w;
    };
 
-   struct vec3_batch4
+   inline vec4_batch8 load_vec3_batch8(const float* ptr, float w, bool fillW)
    {
-      f32x4 x;
-      f32x4 y;
-      f32x4 z;
-   };
+      vec4_batch8 r;
 
-   inline vec3_batch8 load_vec3_batch8(const float* ptr)
-   {
-      // ptr points to x0
-      // layout: x y z x y z ...
+      r.x = _mm256_set_ps(ptr[0], ptr[3], ptr[6], ptr[9],
+         ptr[12], ptr[15], ptr[18], ptr[21]);
+      r.y = _mm256_set_ps(ptr[1], ptr[4], ptr[7], ptr[10],
+         ptr[13], ptr[16], ptr[19], ptr[22]);
+      r.z = _mm256_set_ps(ptr[2], ptr[5], ptr[8], ptr[11],
+         ptr[14], ptr[17], ptr[20], ptr[23]);
 
-      vec3_batch8 r;
-
-      r.x = _mm256_set_ps(
-         ptr[21], ptr[18], ptr[15], ptr[12],
-         ptr[9], ptr[6], ptr[3], ptr[0]);
-
-      r.y = _mm256_set_ps(
-         ptr[22], ptr[19], ptr[16], ptr[13],
-         ptr[10], ptr[7], ptr[4], ptr[1]);
-
-      r.z = _mm256_set_ps(
-         ptr[23], ptr[20], ptr[17], ptr[14],
-         ptr[11], ptr[8], ptr[5], ptr[2]);
+      if (fillW)
+      {
+         r.w = _mm256_set1_ps(w);
+      }
 
       return r;
    }
 
-   inline vec3_batch4 load_vec3_batch4(const float* ptr)
+   inline vec4_batch4 load_vec3_batch4(const float* ptr, float w, bool fillW)
    {
-      vec3_batch4 r;
+      vec4_batch4 r;
 
-      r.x = _mm_set_ps(
-         ptr[9], ptr[6], ptr[3], ptr[0]);
+      r.x = _mm_set_ps(ptr[0], ptr[3], ptr[6], ptr[9]);
+      r.y = _mm_set_ps(ptr[1], ptr[4], ptr[7], ptr[10]);
+      r.z = _mm_set_ps(ptr[2], ptr[5], ptr[8], ptr[11]);
 
-      r.y = _mm_set_ps(
-         ptr[10], ptr[7], ptr[4], ptr[1]);
-
-      r.z = _mm_set_ps(
-         ptr[11], ptr[8], ptr[5], ptr[2]);
+      if (fillW)
+      {
+         r.w = _mm_set1_ps(w);
+      }
 
       return r;
    }
@@ -478,7 +461,7 @@ namespace
    }
 
    // Store the result back to a float3 array with size of 8
-   inline void store_vec3_batch8(float* out, const vec3_batch8& v)
+   inline void store_vec3_batch8(float* out, const vec4_batch8& v)
    {
       alignas(32) float xs[8];
       alignas(32) float ys[8];
@@ -497,7 +480,7 @@ namespace
    }
 
    // Store the result back to a float3 array with size of 4
-   inline void store_vec3_batch4(float* out, const vec3_batch4& v)
+   inline void store_vec3_batch4(float* out, const vec4_batch4& v)
    {
       alignas(16) float xs[8];
       alignas(16) float ys[8];
@@ -515,7 +498,7 @@ namespace
       }
    }
 
-   inline f32x4 vec3_batch4_dot(const vec3_batch4& a, const vec3_batch4& b)
+   inline f32x4 vec3_batch4_dot(const vec4_batch4& a, const vec4_batch4& b)
    {
       f32x4 mulx = _mm_mul_ps(a.x, b.x);
       f32x4 muly = _mm_mul_ps(a.y, b.y);
@@ -524,13 +507,119 @@ namespace
       return _mm_add_ps(_mm_add_ps(mulx, muly), mulz);
    }
 
-   inline f32x8 vec3_batch8_dot(const vec3_batch8& a, const vec3_batch8& b)
+   inline f32x8 vec3_batch8_dot(const vec4_batch8& a, const vec4_batch8& b)
    {
       f32x8 mulx = _mm256_mul_ps(a.x, b.x);
       f32x8 muly = _mm256_mul_ps(a.y, b.y);
       f32x8 mulz = _mm256_mul_ps(a.z, b.z);
 
       return _mm256_add_ps(_mm256_add_ps(mulx, muly), mulz);
+   }
+
+   // Batch 8 mul_Vec4.
+   inline vec4_batch8 m_mul_pos3_batch8(const f32x4x4& m, const vec4_batch8& v)
+   {
+      vec4_batch8 r;
+
+      __m256 m00 = _mm256_set1_ps(m.r0.m128_f32[0]);
+      __m256 m01 = _mm256_set1_ps(m.r0.m128_f32[1]);
+      __m256 m02 = _mm256_set1_ps(m.r0.m128_f32[2]);
+      __m256 m03 = _mm256_set1_ps(m.r0.m128_f32[3]);
+
+      __m256 m10 = _mm256_set1_ps(m.r1.m128_f32[0]);
+      __m256 m11 = _mm256_set1_ps(m.r1.m128_f32[1]);
+      __m256 m12 = _mm256_set1_ps(m.r1.m128_f32[2]);
+      __m256 m13 = _mm256_set1_ps(m.r1.m128_f32[3]);
+
+      __m256 m20 = _mm256_set1_ps(m.r2.m128_f32[0]);
+      __m256 m21 = _mm256_set1_ps(m.r2.m128_f32[1]);
+      __m256 m22 = _mm256_set1_ps(m.r2.m128_f32[2]);
+      __m256 m23 = _mm256_set1_ps(m.r2.m128_f32[3]);
+
+      //
+      // row0 dot
+      //
+      r.x = _mm256_add_ps(
+         _mm256_add_ps(
+            _mm256_mul_ps(v.x, m00),
+            _mm256_mul_ps(v.y, m01)),
+         _mm256_add_ps(
+            _mm256_mul_ps(v.z, m02), m03));
+
+      //
+      // row1 dot
+      //
+      r.y = _mm256_add_ps(
+         _mm256_add_ps(
+            _mm256_mul_ps(v.x, m10),
+            _mm256_mul_ps(v.y, m11)),
+         _mm256_add_ps(
+            _mm256_mul_ps(v.z, m12), m13));
+
+      //
+      // row2 dot
+      //
+      r.z = _mm256_add_ps(
+         _mm256_add_ps(
+            _mm256_mul_ps(v.x, m20),
+            _mm256_mul_ps(v.y, m21)),
+         _mm256_add_ps(
+            _mm256_mul_ps(v.z, m22), m23));
+
+      return r;
+   }
+
+   // Batch 4 mul_Vec4.
+   inline vec4_batch4 m_mul_pos3_batch4(const f32x4x4& m, const vec4_batch4& v)
+   {
+      vec4_batch4 r;
+
+      f32x4 m00 = _mm_set1_ps(m.r0.m128_f32[0]);
+      f32x4 m01 = _mm_set1_ps(m.r0.m128_f32[1]);
+      f32x4 m02 = _mm_set1_ps(m.r0.m128_f32[2]);
+      f32x4 m03 = _mm_set1_ps(m.r0.m128_f32[3]);
+
+      f32x4 m10 = _mm_set1_ps(m.r1.m128_f32[0]);
+      f32x4 m11 = _mm_set1_ps(m.r1.m128_f32[1]);
+      f32x4 m12 = _mm_set1_ps(m.r1.m128_f32[2]);
+      f32x4 m13 = _mm_set1_ps(m.r1.m128_f32[3]);
+
+      f32x4 m20 = _mm_set1_ps(m.r2.m128_f32[0]);
+      f32x4 m21 = _mm_set1_ps(m.r2.m128_f32[1]);
+      f32x4 m22 = _mm_set1_ps(m.r2.m128_f32[2]);
+      f32x4 m23 = _mm_set1_ps(m.r2.m128_f32[3]);
+
+      //
+      // row0 dot
+      //
+      r.x = _mm_add_ps(
+         _mm_add_ps(
+            _mm_mul_ps(v.x, m00),
+            _mm_mul_ps(v.y, m01)),
+         _mm_add_ps(
+            _mm_mul_ps(v.z, m02), m03));
+
+      //
+      // row1 dot
+      //
+      r.y = _mm_add_ps(
+         _mm_add_ps(
+            _mm_mul_ps(v.x, m10),
+            _mm_mul_ps(v.y, m11)),
+         _mm_add_ps(
+            _mm_mul_ps(v.z, m12), m13));
+
+      //
+      // row2 dot
+      //
+      r.z = _mm_add_ps(
+         _mm_add_ps(
+            _mm_mul_ps(v.x, m20),
+            _mm_mul_ps(v.y, m21)),
+         _mm_add_ps(
+            _mm_mul_ps(v.z, m22), m23));
+
+      return r;
    }
 
 }

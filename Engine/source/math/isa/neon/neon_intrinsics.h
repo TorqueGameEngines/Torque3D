@@ -410,4 +410,95 @@ namespace
        return m_transpose(adj);
    }
 
+   struct vec4_batch4
+   {
+      f32x4 x;
+      f32x4 y;
+      f32x4 z;
+      f32x4 w;
+   };
+
+   inline vec4_batch4 load_vec3_batch4(const float* ptr, float w, bool fillW)
+   {
+      vec4_batch4 r;
+
+      r.x = (f32x4){ ptr[9], ptr[6], ptr[3], ptr[0] };
+      r.y = (f32x4){ ptr[10], ptr[7], ptr[4], ptr[1] };
+      r.z = (f32x4){ ptr[11], ptr[8], ptr[5], ptr[2] };
+
+      if (fillW)
+      {
+         r.w = vdupq_n_f32(w);
+      }
+
+      return r;
+   }
+
+   inline void store_vec3_batch4(float* out, const vec4_batch4& v)
+   {
+      alignas(16) float xs[4];
+      alignas(16) float ys[4];
+      alignas(16) float zs[4];
+
+      vst1q_f32(xs, v.x);
+      vst1q_f32(ys, v.y);
+      vst1q_f32(zs, v.z);
+
+      for (int i = 0; i < 4; ++i)
+      {
+         out[i * 3 + 0] = xs[i];
+         out[i * 3 + 1] = ys[i];
+         out[i * 3 + 2] = zs[i];
+      }
+   }
+
+   inline vec4_batch4 m_mul_pos3_batch4(const f32x4x4& m, const vec4_batch4& v)
+   {
+      vec4_batch4 r;
+
+      float32x4_t m00 = vdupq_n_f32(m.r0.m128_f32[0]);
+      float32x4_t m01 = vdupq_n_f32(m.r0.m128_f32[1]);
+      float32x4_t m02 = vdupq_n_f32(m.r0.m128_f32[2]);
+      float32x4_t m03 = vdupq_n_f32(m.r0.m128_f32[3]);
+
+      float32x4_t m10 = vdupq_n_f32(m.r1.m128_f32[0]);
+      float32x4_t m11 = vdupq_n_f32(m.r1.m128_f32[1]);
+      float32x4_t m12 = vdupq_n_f32(m.r1.m128_f32[2]);
+      float32x4_t m13 = vdupq_n_f32(m.r1.m128_f32[3]);
+
+      float32x4_t m20 = vdupq_n_f32(m.r2.m128_f32[0]);
+      float32x4_t m21 = vdupq_n_f32(m.r2.m128_f32[1]);
+      float32x4_t m22 = vdupq_n_f32(m.r2.m128_f32[2]);
+      float32x4_t m23 = vdupq_n_f32(m.r2.m128_f32[3]);
+
+      // row0 dot
+      r.x = vaddq_f32(
+         vaddq_f32(
+            vmulq_f32(v.x, m00),
+            vmulq_f32(v.y, m01)),
+         vaddq_f32(
+            vmulq_f32(v.z, m02),
+            m03));
+
+      // row1 dot
+      r.y = vaddq_f32(
+         vaddq_f32(
+            vmulq_f32(v.x, m10),
+            vmulq_f32(v.y, m11)),
+         vaddq_f32(
+            vmulq_f32(v.z, m12),
+            m13));
+
+      // row2 dot
+      r.z = vaddq_f32(
+         vaddq_f32(
+            vmulq_f32(v.x, m20),
+            vmulq_f32(v.y, m21)),
+         vaddq_f32(
+            vmulq_f32(v.z, m22),
+            m23));
+
+      return r;
+   }
+
 }

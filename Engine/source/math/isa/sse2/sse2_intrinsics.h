@@ -544,17 +544,10 @@ namespace
       f32x4 w;
    };
 
-   struct vec3_batch4
-   {
-      f32x4 x;
-      f32x4 y;
-      f32x4 z;
-   };
 
-
-   inline vec3_batch4 load_vec3_batch4(const float* ptr)
+   inline vec4_batch4 load_vec3_batch4(const float* ptr, float w, bool fillW)
    {
-      vec3_batch4 r;
+      vec4_batch4 r;
 
       r.x = _mm_set_ps(
          ptr[9], ptr[6], ptr[3], ptr[0]);
@@ -564,6 +557,11 @@ namespace
 
       r.z = _mm_set_ps(
          ptr[11], ptr[8], ptr[5], ptr[2]);
+
+      if (fillW)
+      {
+         r.w = _mm_set1_ps(w);
+      }
 
       return r;
    }
@@ -575,7 +573,7 @@ namespace
    }
 
    // Store the result back to a float3 array with size of 4
-   inline void store_vec3_batch4(float* out, const vec3_batch4& v)
+   inline void store_vec3_batch4(float* out, const vec4_batch4& v)
    {
       alignas(16) float xs[8];
       alignas(16) float ys[8];
@@ -593,12 +591,65 @@ namespace
       }
    }
 
-   inline f32x4 vec3_batch4_dot(const vec3_batch4& a, const vec3_batch4& b)
+   inline f32x4 vec3_batch4_dot(const vec4_batch4& a, const vec4_batch4& b)
    {
       f32x4 mulx = _mm_mul_ps(a.x, b.x);
       f32x4 muly = _mm_mul_ps(a.y, b.y);
       f32x4 mulz = _mm_mul_ps(a.z, b.z);
 
       return _mm_add_ps(_mm_add_ps(mulx, muly), mulz);
+   }
+
+   // Batch 4 mul_Vec4.
+   inline vec4_batch4 m_mul_pos3_batch4(const f32x4x4& m, const vec4_batch4& v)
+   {
+      vec4_batch4 r;
+
+      f32x4 m00 = _mm_set1_ps(m.r0.m128_f32[0]);
+      f32x4 m01 = _mm_set1_ps(m.r0.m128_f32[1]);
+      f32x4 m02 = _mm_set1_ps(m.r0.m128_f32[2]);
+      f32x4 m03 = _mm_set1_ps(m.r0.m128_f32[3]);
+
+      f32x4 m10 = _mm_set1_ps(m.r1.m128_f32[0]);
+      f32x4 m11 = _mm_set1_ps(m.r1.m128_f32[1]);
+      f32x4 m12 = _mm_set1_ps(m.r1.m128_f32[2]);
+      f32x4 m13 = _mm_set1_ps(m.r1.m128_f32[3]);
+
+      f32x4 m20 = _mm_set1_ps(m.r2.m128_f32[0]);
+      f32x4 m21 = _mm_set1_ps(m.r2.m128_f32[1]);
+      f32x4 m22 = _mm_set1_ps(m.r2.m128_f32[2]);
+      f32x4 m23 = _mm_set1_ps(m.r2.m128_f32[3]);
+
+      //
+      // row0 dot
+      //
+      r.x = _mm_add_ps(
+         _mm_add_ps(
+            _mm_mul_ps(v.x, m00),
+            _mm_mul_ps(v.y, m01)),
+         _mm_add_ps(
+            _mm_mul_ps(v.z, m02), m03));
+
+      //
+      // row1 dot
+      //
+      r.y = _mm_add_ps(
+         _mm_add_ps(
+            _mm_mul_ps(v.x, m10),
+            _mm_mul_ps(v.y, m11)),
+         _mm_add_ps(
+            _mm_mul_ps(v.z, m12), m13));
+
+      //
+      // row2 dot
+      //
+      r.z = _mm_add_ps(
+         _mm_add_ps(
+            _mm_mul_ps(v.x, m20),
+            _mm_mul_ps(v.y, m21)),
+         _mm_add_ps(
+            _mm_mul_ps(v.z, m22), m23));
+
+      return r;
    }
 }

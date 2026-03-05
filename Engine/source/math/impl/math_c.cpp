@@ -3,6 +3,7 @@
 #include "math/public/float3_dispatch.h"
 #include "math/public/mat44_dispatch.h"
 #include "math/mConstants.h"
+#include "math/mMatrix.h"
 #include <cmath>   // for sqrtf, etc.
 
 namespace math_backend::float4::dispatch
@@ -375,6 +376,88 @@ namespace math_backend::mat44::dispatch
          mresult[15]= a[12]*b[3]+ a[13]*b[7]+ a[14]*b[11]+ a[15]*b[15];
       };
 
+      gMat44.transform_plane = [](const F32* m, const F32* s, const F32* p, F32* presult) {
+         // We take in a matrix, a scale factor, and a plane equation.  We want to output
+         //  the resultant normal
+         // We have T = m*s
+         // To multiply the normal, we want Inv(Tr(m*s))
+         //  Inv(Tr(ms)) = Inv(Tr(s) * Tr(m))
+         //              = Inv(Tr(m)) * Inv(Tr(s))
+         //
+         //  Inv(Tr(s)) = Inv(s) = [ 1/x   0   0  0]
+         //                        [   0 1/y   0  0]
+         //                        [   0   0 1/z  0]
+         //                        [   0   0   0  1]
+         //
+         // Since m is an affine matrix,
+         //  Tr(m) = [ [       ] 0 ]
+         //          [ [   R   ] 0 ]
+         //          [ [       ] 0 ]
+         //          [ [ x y z ] 1 ]
+         //
+         // Inv(Tr(m)) = [ [    -1 ] 0 ]
+         //              [ [   R   ] 0 ]
+         //              [ [       ] 0 ]
+         //              [ [ A B C ] 1 ]
+         // Where:
+         //
+         //  P = (x, y, z)
+         //  A = -(Row(0, r) * P);
+         //  B = -(Row(1, r) * P);
+         //  C = -(Row(2, r) * P);
+
+         MatrixF invScale(true);
+         F32* pScaleElems = invScale;
+         pScaleElems[MatrixF::idx(0, 0)] = 1.0f / s[0];
+         pScaleElems[MatrixF::idx(1, 1)] = 1.0f / s[1];
+         pScaleElems[MatrixF::idx(2, 2)] = 1.0f / s[2];
+
+         const Point3F shear(m[MatrixF::idx(3, 0)], m[MatrixF::idx(3, 1)], m[MatrixF::idx(3, 2)]);
+
+         const Point3F row0(m[MatrixF::idx(0, 0)], m[MatrixF::idx(0, 1)], m[MatrixF::idx(0, 2)]);
+         const Point3F row1(m[MatrixF::idx(1, 0)], m[MatrixF::idx(1, 1)], m[MatrixF::idx(1, 2)]);
+         const Point3F row2(m[MatrixF::idx(2, 0)], m[MatrixF::idx(2, 1)], m[MatrixF::idx(2, 2)]);
+
+         const F32 A = -mDot(row0, shear);
+         const F32 B = -mDot(row1, shear);
+         const F32 C = -mDot(row2, shear);
+
+         MatrixF invTrMatrix(true);
+         F32* destMat = invTrMatrix;
+         destMat[MatrixF::idx(0, 0)] = m[MatrixF::idx(0, 0)];
+         destMat[MatrixF::idx(1, 0)] = m[MatrixF::idx(1, 0)];
+         destMat[MatrixF::idx(2, 0)] = m[MatrixF::idx(2, 0)];
+         destMat[MatrixF::idx(0, 1)] = m[MatrixF::idx(0, 1)];
+         destMat[MatrixF::idx(1, 1)] = m[MatrixF::idx(1, 1)];
+         destMat[MatrixF::idx(2, 1)] = m[MatrixF::idx(2, 1)];
+         destMat[MatrixF::idx(0, 2)] = m[MatrixF::idx(0, 2)];
+         destMat[MatrixF::idx(1, 2)] = m[MatrixF::idx(1, 2)];
+         destMat[MatrixF::idx(2, 2)] = m[MatrixF::idx(2, 2)];
+         destMat[MatrixF::idx(0, 3)] = A;
+         destMat[MatrixF::idx(1, 3)] = B;
+         destMat[MatrixF::idx(2, 3)] = C;
+         invTrMatrix.mul(invScale);
+
+         Point3F norm(p[0], p[1], p[2]);
+         Point3F point = norm * -p[3];
+         invTrMatrix.mulP(norm);
+         norm.normalize();
+
+         MatrixF temp;
+         dMemcpy(temp, m, sizeof(F32) * 16);
+         point.x *= s[0];
+         point.y *= s[1];
+         point.z *= s[2];
+         temp.mulP(point);
+
+         PlaneF resultPlane(point, norm);
+         presult[0] = resultPlane.x;
+         presult[1] = resultPlane.y;
+         presult[2] = resultPlane.z;
+         presult[3] = resultPlane.d;
+
+      };
+
       gMat44.normalize = [](float* a) {
          F32 col0[3], col1[3], col2[3];
          // extract columns 0 and 1
@@ -403,6 +486,15 @@ namespace math_backend::mat44::dispatch
          a[6] = col2[1];
          a[10] = col2[2];
 
+      };
+
+      gMat44.batch_mul_pos3 = [](const float* m, const float* pts, size_t count, float* result_ptrs) {
+         size_t i = 0;
+         for (; i < count; i++)
+         {
+            size_t idx = i * 3;
+            gMat44.mul_pos3(m, &pts[idx], &result_ptrs[idx]);
+         }
       };
    }
 }

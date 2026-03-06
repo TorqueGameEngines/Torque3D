@@ -571,24 +571,24 @@ namespace
    }
 
    // Batch 4 mul_Vec4.
-   inline vec4_batch4 m_mul_pos3_batch4(const f32x4x4& m, const vec4_batch4& v)
+   inline vec4_batch4 m_mul_pos3_batch4(const float* m, const vec4_batch4& v)
    {
       vec4_batch4 r;
 
-      f32x4 m00 = _mm_set1_ps(m.r0.m128_f32[0]);
-      f32x4 m01 = _mm_set1_ps(m.r0.m128_f32[1]);
-      f32x4 m02 = _mm_set1_ps(m.r0.m128_f32[2]);
-      f32x4 m03 = _mm_set1_ps(m.r0.m128_f32[3]);
+      f32x4 m00 = _mm_set1_ps(m[0]);
+      f32x4 m01 = _mm_set1_ps(m[1]);
+      f32x4 m02 = _mm_set1_ps(m[2]);
+      f32x4 m03 = _mm_set1_ps(m[3]);
 
-      f32x4 m10 = _mm_set1_ps(m.r1.m128_f32[0]);
-      f32x4 m11 = _mm_set1_ps(m.r1.m128_f32[1]);
-      f32x4 m12 = _mm_set1_ps(m.r1.m128_f32[2]);
-      f32x4 m13 = _mm_set1_ps(m.r1.m128_f32[3]);
+      f32x4 m10 = _mm_set1_ps(m[4]);
+      f32x4 m11 = _mm_set1_ps(m[5]);
+      f32x4 m12 = _mm_set1_ps(m[6]);
+      f32x4 m13 = _mm_set1_ps(m[7]);
 
-      f32x4 m20 = _mm_set1_ps(m.r2.m128_f32[0]);
-      f32x4 m21 = _mm_set1_ps(m.r2.m128_f32[1]);
-      f32x4 m22 = _mm_set1_ps(m.r2.m128_f32[2]);
-      f32x4 m23 = _mm_set1_ps(m.r2.m128_f32[3]);
+      f32x4 m20 = _mm_set1_ps(m[8]);
+      f32x4 m21 = _mm_set1_ps(m[9]);
+      f32x4 m22 = _mm_set1_ps(m[10]);
+      f32x4 m23 = _mm_set1_ps(m[11]);
 
       //
       // row0 dot

@@ -231,8 +231,8 @@ public:
    void mul( Point4F& p ) const;                       ///< M * p -> p (full [4x4] * [1x4])
    void mulP( Point3F& p ) const;                      ///< M * p -> p (assume w = 1.0f)
    void mulP( const Point3F &p, Point3F *d) const;     ///< M * p -> d (assume w = 1.0f)
-   void batch_mulP(Point3F* points, size_t count) const;
-   void batch_mulP(const Point3F* points, size_t count, Point3F* out) const;
+   void batch_mulP(Point3F* points, U32 count) const;
+   void batch_mulP(const Point3F* points, U32 count, Point3F* out) const;
    void mulV( VectorF& p ) const;                      ///< M * v -> v (assume w = 0.0f)
    void mulV( const VectorF &p, Point3F *d) const;     ///< M * v -> d (assume w = 0.0f)
 
@@ -479,7 +479,7 @@ inline void MatrixF::mulP( const Point3F &p, Point3F *d) const
    GetMat44().mul_pos3(*this, p, *d);
 }
 
-inline void MatrixF::batch_mulP(Point3F* points, size_t count) const
+inline void MatrixF::batch_mulP(Point3F* points, U32 count) const
 {
    // Allocate temporary buffer
    Point3F* temp = new Point3F[count];
@@ -487,7 +487,7 @@ inline void MatrixF::batch_mulP(Point3F* points, size_t count) const
    GetMat44().batch_mul_pos3(m, reinterpret_cast<const float*>(points), count, reinterpret_cast<float*>(temp));
 
    // Copy the results back to out
-   for (size_t i = 0; i < count; ++i)
+   for (U32 i = 0; i < count; ++i)
    {
       points[i] = temp[i];
    }
@@ -496,7 +496,7 @@ inline void MatrixF::batch_mulP(Point3F* points, size_t count) const
    delete[] temp;
 }
 
-inline void MatrixF::batch_mulP(const Point3F* points, size_t count, Point3F* out) const
+inline void MatrixF::batch_mulP(const Point3F* points, U32 count, Point3F* out) const
 {
    // Allocate temporary buffer
    Point3F* temp = new Point3F[count];
@@ -504,7 +504,7 @@ inline void MatrixF::batch_mulP(const Point3F* points, size_t count, Point3F* ou
    GetMat44().batch_mul_pos3(m, reinterpret_cast<const float*>(points), count, reinterpret_cast<float*>(temp));
 
    // Copy the results back to out
-   for (size_t i = 0; i < count; ++i)
+   for (U32 i = 0; i < count; ++i)
    {
       out[i] = temp[i];
    }

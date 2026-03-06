@@ -395,15 +395,13 @@ namespace math_backend::mat44
    inline void mat44_batch_mul_pos3(const float* m, const float* points, int count, float* result)
    {
       int i = 0;
-      f32x4x4 ma = m_load(m);
-
       // AVX has 8 lanes to play with
 #if defined(MATH_SIMD_AVX2) || defined(MATH_SIMD_AVX)
       // 8-wide AVX only
       for (; i + 8 <= count; i += 8)
       {
          vec4_batch8 va = load_vec3_batch8(&points[i*3], 1.0f, false);
-         vec4_batch8 vr = m_mul_pos3_batch8(ma, va);
+         vec4_batch8 vr = m_mul_pos3_batch8(m, va);
          store_vec3_batch8(&result[i*3], vr);
       }
 #endif // MATH_SIMD_AVX2 || MATH_SIMD_AVX
@@ -412,7 +410,7 @@ namespace math_backend::mat44
       for (; i + 4 <= count; i += 4)
       {
          vec4_batch4 va = load_vec3_batch4(&points[i * 3], 1.0f, false);
-         vec4_batch4 vr = m_mul_pos3_batch4(ma, va);
+         vec4_batch4 vr = m_mul_pos3_batch4(m, va);
          store_vec3_batch4(&result[i * 3], vr);
       }
 

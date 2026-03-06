@@ -452,24 +452,24 @@ namespace
       }
    }
 
-   inline vec4_batch4 m_mul_pos3_batch4(const f32x4x4& m, const vec4_batch4& v)
+   inline vec4_batch4 m_mul_pos3_batch4(const float* m, const vec4_batch4& v)
    {
       vec4_batch4 r;
 
-      float32x4_t m00 = vdupq_n_f32(m.r0[0]);
-      float32x4_t m01 = vdupq_n_f32(m.r0[1]);
-      float32x4_t m02 = vdupq_n_f32(m.r0[2]);
-      float32x4_t m03 = vdupq_n_f32(m.r0[3]);
+      float32x4_t m00 = vdupq_n_f32(m[0]);
+      float32x4_t m01 = vdupq_n_f32(m[1]);
+      float32x4_t m02 = vdupq_n_f32(m[2]);
+      float32x4_t m03 = vdupq_n_f32(m[3]);
 
-      float32x4_t m10 = vdupq_n_f32(m.r1[0]);
-      float32x4_t m11 = vdupq_n_f32(m.r1[1]);
-      float32x4_t m12 = vdupq_n_f32(m.r1[2]);
-      float32x4_t m13 = vdupq_n_f32(m.r1[3]);
+      float32x4_t m10 = vdupq_n_f32(m[4]);
+      float32x4_t m11 = vdupq_n_f32(m[5]);
+      float32x4_t m12 = vdupq_n_f32(m[6]);
+      float32x4_t m13 = vdupq_n_f32(m[7]);
 
-      float32x4_t m20 = vdupq_n_f32(m.r2[0]);
-      float32x4_t m21 = vdupq_n_f32(m.r2[1]);
-      float32x4_t m22 = vdupq_n_f32(m.r2[2]);
-      float32x4_t m23 = vdupq_n_f32(m.r2[3]);
+      float32x4_t m20 = vdupq_n_f32(m[8]);
+      float32x4_t m21 = vdupq_n_f32(m[9]);
+      float32x4_t m22 = vdupq_n_f32(m[10]);
+      float32x4_t m23 = vdupq_n_f32(m[11]);
 
       // row0 dot
       r.x = vaddq_f32(

@@ -976,7 +976,7 @@ void GuiGameListMenuCtrl::doScriptCommand(StringTableEntry command)
       setThisControl();
       StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
       String context = String::ToString("%s\nObject: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
-      Con::evaluate(command, false, context);
+      Con::evaluate(command, false, context.c_str());
    }
 }
 

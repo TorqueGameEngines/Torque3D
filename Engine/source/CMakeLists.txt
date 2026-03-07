@@ -505,7 +505,7 @@ if(ARCH MATCHES "x86_64|amd64|i[3-6]86")
     set(IS_X86 TRUE)
 endif()
 
-if(ARCH MATCHES "arm64|aarch64|arm")
+if(ARCH MATCHES "arm64|aarch64")
     set(IS_ARM TRUE)
 endif()
 

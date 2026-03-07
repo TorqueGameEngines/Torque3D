@@ -89,7 +89,7 @@ public:
    ///
    /// @todo Rethink this so we don't have a private public.
    virtual bool create( const char *name, dsize_t size, U32 charset = TGE_ANSI_CHARSET ) = 0;
-   static void enumeratePlatformFonts( Vector<StringTableEntry>& fonts, UTF16* fontFamily = NULL );
+   static void enumeratePlatformFonts( Vector<StringTableEntry,0, CustomAllocator<StringTableEntry, 0>>& fonts, UTF16* fontFamily = NULL );
 };
 
 extern PlatformFont *createPlatformFont(const char *name, dsize_t size, U32 charset = TGE_ANSI_CHARSET);

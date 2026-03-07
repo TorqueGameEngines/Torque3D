@@ -110,7 +110,7 @@ enum DriveType
 
 // Some forward declares for later.
 class Point2I;
-template<class T> class Vector;
+
 template<typename Signature> class Signal;
 struct InputEventInfo;
 
@@ -243,10 +243,10 @@ namespace Platform
    bool isFullPath(const char *path);
    StringTableEntry makeRelativePathName(const char *path, const char *to);
 
-   String stripExtension( String fileName, Vector< String >& validExtensions );
+   String stripExtension( String fileName, Vector<String, 0, CustomAllocator<String, 0> >& validExtensions );
 
-   bool dumpPath(const char *in_pBasePath, Vector<FileInfo>& out_rFileVector, S32 recurseDepth = -1);
-   bool dumpDirectories( const char *path, Vector<StringTableEntry> &directoryVector, S32 depth = 0, bool noBasePath = false );
+   bool dumpPath(const char *in_pBasePath, Vector<FileInfo, 0, CustomAllocator<FileInfo, 0> >& out_rFileVector, S32 recurseDepth = -1);
+   bool dumpDirectories( const char *path, Vector<StringTableEntry, 0, CustomAllocator<StringTableEntry, 0> >&directoryVector, S32 depth = 0, bool noBasePath = false );
    bool hasSubDirectory( const char *pPath );
    bool getFileTimes(const char *filePath, FileTime *createTime, FileTime *modifyTime);
    bool isFile(const char *pFilePath);
@@ -283,8 +283,8 @@ namespace Platform
    extern struct VolumeInformation  *PVolumeInformation;
 
    // Volume functions.
-   void getVolumeNamesList( Vector<const char*>& out_rNameVector, bool bOnlyFixedDrives = false );
-   void getVolumeInformationList( Vector<VolumeInformation>& out_rVolumeInfoVector, bool bOnlyFixedDrives = false );
+   void getVolumeNamesList(Vector<StringTableEntry, 0, CustomAllocator<StringTableEntry, 0> >& out_rNameVector, bool bOnlyFixedDrives = false );
+   void getVolumeInformationList(Vector<VolumeInformation, 0, CustomAllocator<VolumeInformation, 0> >& out_rVolumeInfoVector, bool bOnlyFixedDrives = false );
 
    struct SystemInfo_struct
    {

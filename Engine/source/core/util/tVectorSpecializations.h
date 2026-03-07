@@ -27,6 +27,8 @@
 #include "core/util/tVector.h"
 #endif
 
+template<typename T, U32 COUNT> struct CustomAllocator;
+template<typename T, U32 COUNT, typename Allocator> class Vector;
 // Not exactly a specialization, just a vector to use when speed is a concern
 template<class T>
 class FastVector : public Vector<T>

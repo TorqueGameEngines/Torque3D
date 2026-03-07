@@ -1539,7 +1539,9 @@ StringTableEntry GuiListBoxCtrl::_makeMirrorItemName( SimObject *inObj )
       Con::setIntVariable( "$ThisControl", getId() );
       Con::setIntVariable( "$ThisObject", inObj->getId() );
 
-      outName = StringTable->insert( Con::evaluate( mMakeNameCallback ).value, true );
+      StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
+      String context = String::ToString("%s, Object: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
+      outName = StringTable->insert( Con::evaluate( mMakeNameCallback, false, context.c_str()).value, true );
    }
    else if ( inObj->getName() )
       outName = StringTable->insert( inObj->getName() );

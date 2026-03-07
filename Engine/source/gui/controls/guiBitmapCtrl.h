@@ -35,6 +35,15 @@ public:
 
    typedef GuiControl Parent;
 
+   enum BitmapMode
+   {
+      BitmapMode_Stretch,
+      BitmapMode_Tile,
+      BitmapMode_Fit,
+      BitmapMode_Fill,
+      BitmapMode_Center
+   };
+
 protected:
 
    /// Name of the bitmap file.  If this is 'texhandle' the bitmap is not loaded
@@ -47,6 +56,8 @@ protected:
 
    /// If true, bitmap tiles inside control.  Otherwise stretches.
    bool mWrap;
+   BitmapMode mDrawMode;
+   GFXTextureFilterType mFilterType;
 
 public:
    GFXTexHandle mBitmap;
@@ -73,5 +84,8 @@ public:
    DECLARE_DESCRIPTION("A control that displays a single, static image from a file.n"
       "The bitmap can either be tiled or stretched inside the control.");
 };
+
+typedef GuiBitmapCtrl::BitmapMode BitmapDrawMode;
+DefineEnumType(BitmapDrawMode);
 
 #endif

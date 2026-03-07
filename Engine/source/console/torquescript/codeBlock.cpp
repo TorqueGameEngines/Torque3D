@@ -35,6 +35,7 @@ using namespace Compiler;
 
 bool           CodeBlock::smInFunction = false;
 CodeBlock *    CodeBlock::smCodeBlockList = NULL;
+const char* CodeBlock::smCurrentLineText = "\0";
 TorqueScriptParser *CodeBlock::smCurrentParser = NULL;
 
 extern FuncVars gEvalFuncVars;
@@ -578,6 +579,7 @@ Con::EvalResult CodeBlock::compileExec(StringTableEntry fileName, const char *in
    consoleAllocReset();
 
    name = fileName;
+   smCurrentLineText = inString;
 
    if (fileName)
    {
@@ -609,7 +611,7 @@ Con::EvalResult CodeBlock::compileExec(StringTableEntry fileName, const char *in
    Script::gStatementList = NULL;
 
    // we are an eval compile if we don't have a file name associated (no exec)
-   gIsEvalCompile = fileName == NULL;
+   gIsEvalCompile = fileName == NULL || setFrame == 0;
    gFuncVars = gIsEvalCompile ? &gEvalFuncVars : &gGlobalScopeFuncVars;
 
    // Set up the parser.
@@ -623,6 +625,7 @@ Con::EvalResult CodeBlock::compileExec(StringTableEntry fileName, const char *in
 
    if (!Script::gStatementList)
    {
+      smCurrentLineText = "\0";
       delete this;
       return Con::EvalResult(Con::getVariable("$ScriptError"));
    }
@@ -668,7 +671,10 @@ Con::EvalResult CodeBlock::compileExec(StringTableEntry fileName, const char *in
       Con::warnf(ConsoleLogEntry::General, "precompile size mismatch, precompile: %d compile: %d", codeSize, lastIp);
 
    // repurpose argc as local register counter for global state
-   return (exec(0, fileName, NULL, localRegisterCount, 0, noCalls, NULL, setFrame));
+   Con::EvalResult execResult = (exec(0, fileName, NULL, localRegisterCount, 0, noCalls, NULL, setFrame));
+
+   smCurrentLineText = "\0";
+   return execResult;
 }
 
 //-------------------------------------------------------------------------

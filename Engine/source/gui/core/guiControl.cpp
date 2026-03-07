@@ -2495,7 +2495,16 @@ void GuiControl::getCursor(GuiCursor *&cursor, bool &showCursor, const GuiEvent 
 const char* GuiControl::evaluate( const char* str )
 {
    smThisControl = this;
-   const char* result = Con::evaluate(str, false).value;
+   StringTableEntry objectName = getName();
+   if (objectName != NULL)
+      objectName = getIdString();
+
+   StringTableEntry groupName = getGroup() ? getGroup()->getName() : NULL;
+   if (groupName != NULL)
+      groupName = getGroup()->getIdString();
+
+   String context = String::ToString("%s\nGroup: %s, Object: %s", getFilename(), groupName, objectName);
+   const char* result = Con::evaluate(str, false, context.c_str()).value;
    smThisControl = NULL;
 
    return result;

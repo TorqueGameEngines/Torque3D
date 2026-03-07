@@ -211,7 +211,9 @@ bool GuiMLTextEditCtrl::onKeyDown(const GuiEvent& event)
          case KEY_ESCAPE:
             if ( mEscapeCommand[0] )
             {
-               Con::evaluate( mEscapeCommand );
+               StringTableEntry objectName = getName() != StringTable->EmptyString() ? getName() : getInternalName();
+               String context = String::ToString("%s, Object: %s", Platform::makeRelativePathName(getFilename(), NULL), objectName);
+               Con::evaluate( mEscapeCommand, false, context.c_str());
                return( true );
             }
             return( Parent::onKeyDown( event ) );

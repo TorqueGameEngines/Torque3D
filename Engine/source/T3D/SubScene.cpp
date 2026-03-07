@@ -225,7 +225,16 @@ bool SubScene::evaluateCondition()
       Con::setBoolVariable(resVar.c_str(), false);
       String command = resVar + "=" + mLoadIf + ";";
 
-      Con::evaluatef(command.c_str());
+      StringTableEntry objectName = getName();
+      if (objectName != NULL)
+         objectName = getIdString();
+
+      StringTableEntry groupName = getGroup() ? getGroup()->getName() : NULL;
+      if (groupName != NULL)
+         groupName = getGroup()->getIdString();
+
+      String context = String::ToString("%s\nGroup: %s, Object: %s", getFilename(), groupName, objectName);
+      Con::evaluate(command.c_str(), false, context.c_str());
       return Con::getBoolVariable(resVar.c_str());
    }
    return true;

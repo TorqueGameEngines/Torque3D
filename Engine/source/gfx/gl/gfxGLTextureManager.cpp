@@ -175,7 +175,7 @@ void GFXGLTextureManager::innerCreateTexture( GFXGLTextureObject *retTex,
    //calculate num mipmaps
    if(retTex->mMipLevels == 0)
       retTex->mMipLevels = getMaxMipmaps(width, height, 1);
-
+   
     glTexParameteri(binding, GL_TEXTURE_MAX_LEVEL, retTex->mMipLevels-1 );
 
     bool hasTexStorage = false;
@@ -364,34 +364,83 @@ void GFXGLTextureManager::innerCreateTexture( GFXGLTextureObject *retTex,
 // loadTexture - GBitmap
 //-----------------------------------------------------------------------------
 
-static void _textureUpload(const S32 width, const S32 height,const S32 bytesPerPixel,const GFXGLTextureObject* texture, const GFXFormat fmt, const U8* data,const S32 mip=0, const U32 face = 0, Swizzle<U8, 4> *pSwizzle = NULL)
+static void _textureUpload(
+    const S32 width,
+    const S32 height,
+    const S32 bytesPerPixel,
+    const GFXGLTextureObject* texture,
+    const GFXFormat fmt,
+    const U8* data,
+    const S32 mip = 0,
+    const U32 face = 0,
+    Swizzle<U8, 4>* pSwizzle = NULL)
 {
-   glBindBuffer(GL_PIXEL_UNPACK_BUFFER, texture->getBuffer());
-   U32 bufSize = width * height * bytesPerPixel;
-   glBufferData(GL_PIXEL_UNPACK_BUFFER, bufSize, NULL, GL_STREAM_DRAW);
+    const GLenum target = texture->getBinding();
 
-   if(pSwizzle)
-   {
-      PROFILE_SCOPE(Swizzle32_Upload);
-      U8* pboMemory = (U8*)dMalloc(bufSize);
-      pSwizzle->ToBuffer(pboMemory, data, bufSize);
-      glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, bufSize, pboMemory);
-      dFree(pboMemory);
-   }
-   else
-   {
-      PROFILE_SCOPE(SwizzleNull_Upload);
-      glBufferSubData(GL_PIXEL_UNPACK_BUFFER, 0, bufSize, data);
-   }
+    // Save pixel store state
+    GLint prevUnpackAlign;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &prevUnpackAlign);
 
-   if(texture->getBinding() == GL_TEXTURE_CUBE_MAP)
-      glTexSubImage2D(GFXGLFaceType[face], mip, 0, 0, width, height, GFXGLTextureFormat[fmt], GFXGLTextureType[fmt], NULL);
-   else if (texture->getBinding() == GL_TEXTURE_2D)
-      glTexSubImage2D(texture->getBinding(), mip, 0, 0, width, height, GFXGLTextureFormat[fmt], GFXGLTextureType[fmt], NULL);
-   else
-      glTexSubImage1D(texture->getBinding(), mip, 0, (width > 1 ? width : height), GFXGLTextureFormat[fmt], GFXGLTextureType[fmt], NULL);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-   glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    const U32 bufSize = width * height * bytesPerPixel;
+
+    const U8* uploadPtr = data;
+    U8* tempBuffer = nullptr;
+
+    if (pSwizzle)
+    {
+        tempBuffer = (U8*)dMalloc(bufSize);
+        pSwizzle->ToBuffer(tempBuffer, data, bufSize);
+        uploadPtr = tempBuffer;
+    }
+
+    if (target == GL_TEXTURE_CUBE_MAP)
+    {
+        glTexSubImage2D(
+            GFXGLFaceType[face],
+            mip,
+            0, 0,
+            width, height,
+            GFXGLTextureFormat[fmt],
+            GFXGLTextureType[fmt],
+            uploadPtr
+        );
+    }
+    else if (target == GL_TEXTURE_2D)
+    {
+        glTexSubImage2D(
+            GL_TEXTURE_2D,
+            mip,
+            0, 0,
+            width, height,
+            GFXGLTextureFormat[fmt],
+            GFXGLTextureType[fmt],
+            uploadPtr
+        );
+    }
+    else if (target == GL_TEXTURE_1D)
+    {
+        glTexSubImage1D(
+            GL_TEXTURE_1D,
+            mip,
+            0,
+            width,
+            GFXGLTextureFormat[fmt],
+            GFXGLTextureType[fmt],
+            uploadPtr
+        );
+    }
+
+    if (tempBuffer)
+        dFree(tempBuffer);
+
+    // Restore state
+    glPixelStorei(GL_UNPACK_ALIGNMENT, prevUnpackAlign);
+
+#ifdef TORQUE_DEBUG
+   glCheckErrors();
+#endif
 }
 
 bool GFXGLTextureManager::_loadTexture(GFXTextureObject *aTexture, GBitmap *pDL)

@@ -176,7 +176,7 @@ function(add_math_backend name compile_defs)
         elseif(name STREQUAL "avx2")
             target_compile_options(math_${name} PRIVATE -mavx2 -mfma)
         elseif(name STREQUAL "neon")
-            target_compile_options(math_${name} PRIVATE -march=armv8-a+simd)
+            target_compile_options(math_${name} PRIVATE -march=armv8-a)
         endif()
     endif()
 

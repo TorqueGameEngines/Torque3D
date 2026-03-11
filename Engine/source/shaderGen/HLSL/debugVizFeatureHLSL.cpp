@@ -167,7 +167,7 @@ void DebugVizHLSL::processPix(Vector<ShaderComponent*>& componentList,
       dSprintf(buf, sizeof(buf), "   @ = %s;\r\n", showDiff);
       newMeta->addStatement(new GenOp(buf, new DecOp(showDiffVar)));
 
-      String computeForwardProbes = String("   @ = debugVizForwardProbes(@,@,@,@,@,@,@,@,\r\n\t\t");
+      String computeForwardProbes = String("   @.rgb = debugVizForwardProbes(@,@,@,@,@,@,@,@,\r\n\t\t");
       computeForwardProbes += String("@,TORQUE_SAMPLER2D_MAKEARG(@),\r\n\t\t");
       computeForwardProbes += String("TORQUE_SAMPLERCUBEARRAY_MAKEARG(@),TORQUE_SAMPLERCUBEARRAY_MAKEARG(@), @, @, @, @).rgb; \r\n");
 

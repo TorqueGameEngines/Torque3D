@@ -64,109 +64,138 @@ uniform float4 scaleY;
 uniform float4 offsetX;
 uniform float4 offsetY;
 
-float4 AL_VectorLightShadowCast( TORQUE_SAMPLER2D(sourceShadowMap),
-                                float2 texCoord,
-                                float4x4 worldToLightProj,
-                                float3 worldPos,
-                                float4 scaleX,
-                                float4 scaleY,
-                                float4 offsetX,
-                                float4 offsetY,
-                                float4 farPlaneScalePSSM,
-                                float dotNL)
+float ComputeESMFactor(float cascadeNear, float cascadeFar, int shadowMapResolution, float targetShadow = 0.1)
 {
-      // Compute shadow map coordinate
-      float4 pxlPosLightProj = mul(worldToLightProj, float4(worldPos,1));
-      float2 baseShadowCoord = pxlPosLightProj.xy / pxlPosLightProj.w;   
+    float delta = (cascadeFar - cascadeNear) / shadowMapResolution;
+    float esmFactor = -log(targetShadow) / delta;
+    return esmFactor;
+}
 
-      // Distance to light, in shadowmap space
-      float distToLight = pxlPosLightProj.z / pxlPosLightProj.w;
-         
-      // Figure out which split to sample from.  Basically, we compute the shadowmap sample coord
-      // for all of the splits and then check if its valid.  
-      float4 shadowCoordX = baseShadowCoord.xxxx;
-      float4 shadowCoordY = baseShadowCoord.yyyy;
-      float4 farPlaneDists = distToLight.xxxx;      
-      shadowCoordX *= scaleX;
-      shadowCoordY *= scaleY;
-      shadowCoordX += offsetX;
-      shadowCoordY += offsetY;
-      farPlaneDists *= farPlaneScalePSSM;
-      
-      // If the shadow sample is within -1..1 and the distance 
-      // to the light for this pixel is less than the far plane 
-      // of the split, use it.
-      float4 finalMask;
-      if (  shadowCoordX.x > -0.99 && shadowCoordX.x < 0.99 && 
-            shadowCoordY.x > -0.99 && shadowCoordY.x < 0.99 &&
-            farPlaneDists.x < 1.0 )
-         finalMask = float4(1, 0, 0, 0);
+float4 AL_VectorLightShadowCast(
+    TORQUE_SAMPLER2D(sourceShadowMap),
+    float2 texCoord,
+    float4x4 worldToLightProj,
+    float3 worldPos,
+    float4 scaleX,
+    float4 scaleY,
+    float4 offsetX,
+    float4 offsetY,
+    float4 farPlaneScalePSSM,
+    float dotNL)
+{
+   // Compute shadow map coordinate
+   float4 pxlPosLightProj = mul(worldToLightProj, float4(worldPos,1));
+   float2 baseShadowCoord = pxlPosLightProj.xy / pxlPosLightProj.w;   
+   float distToLight = pxlPosLightProj.z / pxlPosLightProj.w;
 
-      else if (   shadowCoordX.y > -0.99 && shadowCoordX.y < 0.99 &&
-                  shadowCoordY.y > -0.99 && shadowCoordY.y < 0.99 && 
-                  farPlaneDists.y < 1.0 )
-         finalMask = float4(0, 1, 0, 0);
+   // PSSM split handling
+   float4 shadowCoordX = baseShadowCoord.xxxx;
+   float4 shadowCoordY = baseShadowCoord.yyyy;
+   float4 farPlaneDists = distToLight.xxxx;      
+   shadowCoordX *= scaleX;
+   shadowCoordY *= scaleY;
+   shadowCoordX += offsetX;
+   shadowCoordY += offsetY;
+   farPlaneDists *= farPlaneScalePSSM;
 
-      else if (   shadowCoordX.z > -0.99 && shadowCoordX.z < 0.99 && 
-                  shadowCoordY.z > -0.99 && shadowCoordY.z < 0.99 && 
-                  farPlaneDists.z < 1.0 )
-         finalMask = float4(0, 0, 1, 0);
-         
-      else
-         finalMask = float4(0, 0, 0, 1);
-         
-      float3 debugColor = float3(0,0,0);
-   
-      #ifdef NO_SHADOW
-         debugColor = float3(1.0,1.0,1.0);
-      #endif
-	  
-      #ifdef PSSM_DEBUG_RENDER
-         if ( finalMask.x > 0 )
-            debugColor += float3( 1, 0, 0 );
-         else if ( finalMask.y > 0 )
-            debugColor += float3( 0, 1, 0 );
-         else if ( finalMask.z > 0 )
-            debugColor += float3( 0, 0, 1 );
-         else if ( finalMask.w > 0 )
-            debugColor += float3( 1, 1, 0 );
-      #endif
+   const float cascadeBorder = 0.02;
+   float4 insideX = step(-1.0 + cascadeBorder, shadowCoordX) * step(shadowCoordX, 1.0 - cascadeBorder);
+   float4 insideY = step(-1.0 + cascadeBorder, shadowCoordY) * step(shadowCoordY, 1.0 - cascadeBorder);
+   float4 insideZ = step(farPlaneDists, 1.0);
 
-      // Here we know what split we're sampling from, so recompute the texcoord location
-      // Yes, we could just use the result from above, but doing it this way actually saves
-      // shader instructions.
-      float2 finalScale;
-      finalScale.x = dot(finalMask, scaleX);
-      finalScale.y = dot(finalMask, scaleY);
+   float4 cascadeValid = insideX * insideY * insideZ;
 
-      float2 finalOffset;
-      finalOffset.x = dot(finalMask, offsetX);
-      finalOffset.y = dot(finalMask, offsetY);
+   float4 finalMask;
 
-      float2 shadowCoord;                  
-      shadowCoord = baseShadowCoord * finalScale;      
-      shadowCoord += finalOffset;
+   finalMask.x = cascadeValid.x;
+   finalMask.y = (1 - finalMask.x) * cascadeValid.y;
+   finalMask.z = (1 - finalMask.x - finalMask.y) * cascadeValid.z;
+   finalMask.w = 1 - finalMask.x - finalMask.y - finalMask.z;
 
-      // Convert to texcoord space
-      shadowCoord = 0.5 * shadowCoord + float2(0.5, 0.5);
-      shadowCoord.y = 1.0f - shadowCoord.y;
+   float3 debugColor = float3(0,0,0);
 
-      // Move around inside of atlas 
-      float2 aOffset;
-      aOffset.x = dot(finalMask, atlasXOffset);
-      aOffset.y = dot(finalMask, atlasYOffset);
+#ifdef NO_SHADOW
+      debugColor = float3(1.0,1.0,1.0);
+#endif
 
-      shadowCoord *= atlasScale;
-      shadowCoord += aOffset;
-              
-      // Each split has a different far plane, take this into account.
-      float farPlaneScale = dot( farPlaneScalePSSM, finalMask );
-      distToLight *= farPlaneScale;
+#ifdef PSSM_DEBUG_RENDER
+   if ( finalMask.x > 0 )
+      debugColor += float3( 1, 0, 0 );
+   else if ( finalMask.y > 0 )
+      debugColor += float3( 0, 1, 0 );
+   else if ( finalMask.z > 0 )
+      debugColor += float3( 0, 0, 1 );
+   else if ( finalMask.w > 0 )
+      debugColor += float3( 1, 1, 0 );
+#endif
 
-      return float4(debugColor, softShadow_filter(  TORQUE_SAMPLER2D_MAKEARG(sourceShadowMap), texCoord, shadowCoord, farPlaneScale * shadowSoftness,
-                                distToLight, dotNL, dot( finalMask, overDarkPSSM ) ) );
-};
+   // Compute final scale & offset for PSSM atlas
+   float2 finalScale;
+   finalScale.x = dot(finalMask, scaleX);
+   finalScale.y = dot(finalMask, scaleY);
+   float2 finalOffset;
+   finalOffset.x = dot(finalMask, offsetX);
+   finalOffset.y = dot(finalMask, offsetY); 
 
+   float2 shadowCoord = baseShadowCoord * finalScale + finalOffset;
+
+   // Convert to texcoord space and atlas
+   shadowCoord = 0.5 *shadowCoord + 0.5;
+   shadowCoord.y = 1.0 - shadowCoord.y;
+   float2 aOffset;
+   aOffset.x = dot(finalMask, atlasXOffset);
+   aOffset.y = dot(finalMask, atlasYOffset);
+   shadowCoord = shadowCoord * atlasScale + aOffset;
+
+   // Compute atlas tile bounds
+   float2 tileMin = aOffset;
+   float2 tileMax = aOffset + atlasScale;
+
+   // Convert filter radius to atlas UV space
+   float2 filterRadiusUV = shadowSoftness * atlasScale;
+
+   // Adjust for PSSM far plane
+   float farPlaneScale = dot(farPlaneScalePSSM, finalMask);
+   distToLight *= farPlaneScale;
+
+
+   // Shadow map resolution per cascade
+   int shadowRes = 1024; 
+   float cascadeTexel = 1.0 / shadowRes;
+   float4 depthBiasPSSM = float4(
+      0.2 * cascadeTexel,
+      0.3 * cascadeTexel,
+      0.7 * cascadeTexel, 
+      1.5 * cascadeTexel 
+   );
+
+   float shadow_bias = dot(finalMask, depthBiasPSSM);
+   distToLight += shadow_bias;
+   distToLight = saturate(distToLight);
+
+   // Example cascade ranges 
+   float cascadeNear[4] = { 0.0, 0.2, 0.5, 0.75 };
+   float cascadeFar[4]  = { 0.2, 0.5, 0.75, 1.0 }; 
+
+   float4 overDarkPSSM; 
+   for(int i=0;i<4;i++) 
+   { 
+      overDarkPSSM[i] = ComputeESMFactor(cascadeNear[i], cascadeFar[i], shadowRes, 0.1);
+   }
+
+   return float4(
+      debugColor,  
+      softShadow_filter(
+         TORQUE_SAMPLER2D_MAKEARG(sourceShadowMap),
+         texCoord,
+         shadowCoord, 
+         shadowSoftness,  
+         distToLight,  
+         dotNL,
+         dot(finalMask, overDarkPSSM) // replace this with shadowBias for pcf.
+      )
+   ); 
+}
 
 float4 main(FarFrustumQuadConnectP IN) : SV_TARGET
 {

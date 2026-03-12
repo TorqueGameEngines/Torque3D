@@ -669,8 +669,8 @@ void ImageAsset::populateImage(void)
             mImageHeight = tempFile->mHeight;
          }
 
-         ddsFs->close();
          delete tempFile;
+         delete ddsFs;
       }
       else
       {

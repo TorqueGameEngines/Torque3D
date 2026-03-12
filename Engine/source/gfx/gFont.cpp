@@ -33,7 +33,7 @@
 #include "console/console.h"
 #include "console/engineAPI.h"
 #include "platform/threads/mutex.h"
-#include "zlib/zlib.h"
+#include "zlib.h"
 
 
 GFX_ImplementTextureProfile(GFXFontTextureProfile,

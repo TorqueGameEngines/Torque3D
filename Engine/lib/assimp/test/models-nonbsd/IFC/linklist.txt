@@ -1,4 +1,0 @@
-Good IFC test cases
-===================
-
-https://www.ifcwiki.org/index.php/Examples

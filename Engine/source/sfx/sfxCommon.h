@@ -24,25 +24,25 @@
 #define _SFXCOMMON_H_
 
 #ifndef _PLATFORM_H_
-   #include "platform/platform.h"
+#include "platform/platform.h"
 #endif
 #ifndef _MMATHFN_H_
-   #include "math/mMathFn.h"
+#include "math/mMathFn.h"
 #endif
 #ifndef _MRANDOM_H_
-   #include "math/mRandom.h"
+#include "math/mRandom.h"
 #endif
 #ifndef _MMATRIX_H_
-   #include "math/mMatrix.h"
+#include "math/mMatrix.h"
 #endif
 #ifndef _MPOINT3_H_
-   #include "math/mPoint3.h"
+#include "math/mPoint3.h"
 #endif
 #ifndef _TYPETRAITS_H_
-   #include "platform/typetraits.h"
+#include "platform/typetraits.h"
 #endif
 #ifndef _DYNAMIC_CONSOLETYPES_H_
-   #include "console/dynamicTypes.h"
+#include "console/dynamicTypes.h"
 #endif
 
 
@@ -52,12 +52,36 @@ class SFXPlayList;
 
 
 //-----------------------------------------------------------------------------
+//    SFXProviderType.
+//-----------------------------------------------------------------------------
+enum SFXProviderType
+{
+   OpenAL,
+   XAudio,
+   DirectSound,
+   NullProvider,
+   SFXProviderType_Count
+};
+DefineEnumType(SFXProviderType);
+
+//-----------------------------------------------------------------------------
+//    SFXDeviceType.
+//-----------------------------------------------------------------------------
+enum SFXDeviceType
+{
+   Output,
+   Input,
+   SFXDeviceType_Count
+};
+DefineEnumType(SFXDeviceType);
+
+//-----------------------------------------------------------------------------
 //    SFXStatus.
 //-----------------------------------------------------------------------------
 
 
 /// The sound playback state.
-enum SFXStatus 
+enum SFXStatus
 {
    /// Initial state; no operation yet performed on sound.
    SFXStatusNull,
@@ -83,23 +107,23 @@ enum SFXStatus
    SFXStatusTransition,
 };
 
-DefineEnumType( SFXStatus );
+DefineEnumType(SFXStatus);
 
 
-inline const char* SFXStatusToString( SFXStatus status )
+inline const char* SFXStatusToString(SFXStatus status)
 {
-   switch ( status )
+   switch (status)
    {
-      case SFXStatusPlaying:     return "playing";
-      case SFXStatusStopped:     return "stopped";
-      case SFXStatusPaused:      return "paused";
-      case SFXStatusBlocked:     return "blocked";
-      case SFXStatusTransition:  return "transition";
-      
-      case SFXStatusNull:
-      default: ;
+   case SFXStatusPlaying:     return "playing";
+   case SFXStatusStopped:     return "stopped";
+   case SFXStatusPaused:      return "paused";
+   case SFXStatusBlocked:     return "blocked";
+   case SFXStatusTransition:  return "transition";
+
+   case SFXStatusNull:
+   default:;
    }
-   
+
    return "null";
 }
 
@@ -135,12 +159,12 @@ enum SFXChannel
    SFXChannelUser1,
    SFXChannelUser2,
    SFXChannelUser3,
-   
+
    /// Total number of animatable channels.
    SFX_NUM_CHANNELS
 };
 
-DefineEnumType( SFXChannel );
+DefineEnumType(SFXChannel);
 
 
 //-----------------------------------------------------------------------------
@@ -156,7 +180,7 @@ enum SFXDistanceModel
    SFXDistanceModelExponent,           /// exponential falloff for distance attenuation.
 };
 
-DefineEnumType( SFXDistanceModel );
+DefineEnumType(SFXDistanceModel);
 
 /// Compute the distance attenuation based on the given distance model.
 ///
@@ -167,46 +191,52 @@ DefineEnumType( SFXDistanceModel );
 /// @param rolloffFactor Rolloff curve scale factor.
 ///
 /// @return The attenuated volume.
-inline F32 SFXDistanceAttenuation( SFXDistanceModel model, F32 minDistance, F32 maxDistance, F32 distance, F32 volume, F32 rolloffFactor )
+inline F32 SFXDistanceAttenuation(SFXDistanceModel model, F32 minDistance, F32 maxDistance, F32 distance, F32 volume, F32 rolloffFactor)
 {
    F32 gain = 1.0f;
-      
-   switch( model )
+
+   switch (model)
    {
-      case SFXDistanceModelLinear:
-      
-         distance = getMax( distance, minDistance );
-         distance = getMin( distance, maxDistance );
-         
-         gain = ( 1 - ( distance - minDistance ) / ( maxDistance - minDistance ) );
-         break;
-                  
-      case SFXDistanceModelLogarithmic:
-      
-         distance = getMax( distance, minDistance );
-         distance = getMin( distance, maxDistance );
-         
-         gain = minDistance / ( minDistance + rolloffFactor * ( distance - minDistance ) );
-         break;
+   case SFXDistanceModelLinear:
 
-         ///create exponential distance model    
-      case SFXDistanceModelExponent:
-         distance = getMax(distance, minDistance);
-         distance = getMin(distance, maxDistance);
+      distance = getMax(distance, minDistance);
+      distance = getMin(distance, maxDistance);
 
-         gain = pow((distance / minDistance), (-rolloffFactor));
-         break;
-         
+      gain = (1 - rolloffFactor * (distance - minDistance) / (maxDistance - minDistance));
+      break;
+
+   case SFXDistanceModelLogarithmic:
+
+      distance = getMax(distance, minDistance);
+      distance = getMin(distance, maxDistance);
+
+      gain = minDistance / (minDistance + rolloffFactor * (distance - minDistance));
+      break;
+
+      ///create exponential distance model    
+   case SFXDistanceModelExponent:
+      distance = getMax(distance, minDistance);
+      distance = getMin(distance, maxDistance);
+
+      gain = pow((distance / minDistance), (-rolloffFactor));
+      break;
+
    }
-   
-   return ( volume * gain );
+
+   return (volume * gain);
 }
 
 
 //-----------------------------------------------------------------------------
 //    SFXFormat.
 //-----------------------------------------------------------------------------
-
+enum SFXSampleType {
+   Sample_Int8,
+   Sample_Int16,
+   Sample_Float,
+   Sample_IMA4,
+   Sample_MSADPCM
+};
 
 /// This class defines the various types of sound data that may be
 /// used in the sound system.
@@ -216,101 +246,111 @@ inline F32 SFXDistanceAttenuation( SFXDistanceModel model, F32 minDistance, F32 
 /// channel.
 class SFXFormat
 {
-   protected:
+protected:
 
-      /// The number of sound channels in the data.
-      U8 mChannels;
+   /// The number of sound channels in the data.
+   U8 mChannels;
 
-      /// The number of bits per sound sample.
-      U8 mBitsPerSample;
+   /// The number of bits per sound sample.
+   U8 mBitsPerSample;
 
-      /// The frequency in samples per second.
-      U32 mSamplesPerSecond;
+   /// The frequency in samples per second.
+   U32 mSamplesPerSecond;
 
-   public:
+   SFXSampleType mSampleType;
+public:
 
-      SFXFormat(  U8 channels = 0,                  
-                  U8 bitsPerSample = 0,
-                  U32 samplesPerSecond = 0 )
-         :  mChannels( channels ),
-            mBitsPerSample( bitsPerSample ),
-            mSamplesPerSecond( samplesPerSecond )
-      {}
+   SFXFormat(U8 channels = 0,
+      U8 bitsPerSample = 0,
+      U32 samplesPerSecond = 0)
+      : mChannels(channels),
+      mBitsPerSample(bitsPerSample),
+      mSamplesPerSecond(samplesPerSecond),
+      mSampleType(SFXSampleType::Sample_Int16)
+   {
+   }
 
-      /// Copy constructor.
-      SFXFormat( const SFXFormat &format )
-         :  mChannels( format.mChannels ),
-            mBitsPerSample( format.mBitsPerSample ),
-            mSamplesPerSecond( format.mSamplesPerSecond )
-      {}
+   /// Copy constructor.
+   SFXFormat(const SFXFormat& format)
+      : mChannels(format.mChannels),
+      mBitsPerSample(format.mBitsPerSample),
+      mSamplesPerSecond(format.mSamplesPerSecond),
+      mSampleType(format.mSampleType)
+   {
+   }
 
-   public:
+public:
 
-      /// Sets the format.
-      void set(   U8 channels,                  
-                  U8 bitsPerSample,
-                  U32 samplesPerSecond )
-      {
-         mChannels = channels;
-         mBitsPerSample = bitsPerSample;
-         mSamplesPerSecond = samplesPerSecond;
-      }
+   /// Sets the format.
+   void set(U8 channels,
+      U8 bitsPerSample,
+      U32 samplesPerSecond,
+      SFXSampleType sampleType = Sample_Int16)
+   {
+      mChannels = channels;
+      mBitsPerSample = bitsPerSample;
+      mSamplesPerSecond = samplesPerSecond;
+      mSampleType = sampleType;
+   }
 
-      /// Comparision between formats.
-      bool operator == ( const SFXFormat& format ) const 
-      { 
-         return   mChannels == format.mChannels && 
-                  mBitsPerSample == format.mBitsPerSample &&
-                  mSamplesPerSecond == format.mSamplesPerSecond;
-      }
+   /// Comparision between formats.
+   bool operator == (const SFXFormat& format) const
+   {
+      return   mChannels == format.mChannels &&
+         mBitsPerSample == format.mBitsPerSample &&
+         mSamplesPerSecond == format.mSamplesPerSecond &&
+         mSampleType == format.mSampleType;
+   }
 
-      /// Returns the number of sound channels.
-      U8 getChannels() const { return mChannels; }
+   /// Returns the number of sound channels.
+   U8 getChannels() const { return mChannels; }
 
-      /// Returns true if there is a single sound channel.
-      bool isMono() const { return mChannels == 1; }
+   /// Returns true if there is a single sound channel.
+   bool isMono() const { return mChannels == 1; }
 
-      /// Is true if there are two sound channels.
-      bool isStereo() const { return mChannels == 2; }
+   /// Is true if there are two sound channels.
+   bool isStereo() const { return mChannels == 2; }
 
-      /// Is true if there are more than two sound channels.
-      bool isMultiChannel() const { return mChannels > 2; }
+   /// Is true if there are more than two sound channels.
+   bool isMultiChannel() const { return mChannels > 2; }
 
-      /// 
-      U32 getSamplesPerSecond() const { return mSamplesPerSecond; }
+   /// 
+   U32 getSamplesPerSecond() const { return mSamplesPerSecond; }
 
-      /// The bits of data per channel.
-      U8 getBitsPerChannel() const { return mBitsPerSample / mChannels; }
+   /// The bits of data per channel.
+   U8 getBitsPerChannel() const { return mBitsPerSample / mChannels; }
 
-      /// The number of bytes of data per channel.
-      U8 getBytesPerChannel() const { return getBitsPerChannel() / 8; }
+   /// The number of bytes of data per channel.
+   U8 getBytesPerChannel() const { return getBitsPerChannel() / 8; }
 
-      /// The number of bits per sound sample.
-      U8 getBitsPerSample() const { return mBitsPerSample; }
+   /// The number of bits per sound sample.
+   U8 getBitsPerSample() const { return mBitsPerSample; }
 
-      /// The number of bytes of data per sample.
-      /// @note Be aware that this comprises all channels.
-      U8 getBytesPerSample() const { return mBitsPerSample / 8; }
+   SFXSampleType getSampleType() const { return mSampleType; }
 
-      /// Returns the duration from the sample count.
-      U32 getDuration( U32 samples ) const
-      {
-         // Use 64bit types to avoid overflow during division. 
-         return ( (U64)samples * (U64)1000 ) / (U64)mSamplesPerSecond;
-      }
+   /// The number of bytes of data per sample.
+   /// @note Be aware that this comprises all channels.
+   U8 getBytesPerSample() const { return mBitsPerSample / 8; }
 
-      ///
-      U32 getSampleCount( U32 ms ) const
-      {
-         return U64( mSamplesPerSecond ) * U64( ms ) / U64( 1000 );
-      }
+   /// Returns the duration from the sample count.
+   U32 getDuration(U32 samples) const
+   {
+      // Use 64bit types to avoid overflow during division. 
+      return ((U64)samples * (U64)1000) / (U64)mSamplesPerSecond;
+   }
 
-      /// Returns the data length in bytes.
-      U32 getDataLength( U32 ms ) const
-      {
-         U32 bytes = ( ( (U64)ms * (U64)mSamplesPerSecond ) * (U64)getBytesPerSample() ) / (U64)1000;
-         return bytes;
-      }
+   ///
+   U32 getSampleCount(U32 ms) const
+   {
+      return U64(mSamplesPerSecond) * U64(ms) / U64(1000);
+   }
+
+   /// Returns the data length in bytes.
+   U32 getDataLength(U32 ms) const
+   {
+      U32 bytes = (((U64)ms * (U64)mSamplesPerSecond) * (U64)getBytesPerSample()) / (U64)1000;
+      return bytes;
+   }
 };
 
 
@@ -363,8 +403,8 @@ public:
       flGain = 0.0f;
       flGainHF = 0.0f;
       flGainLF = 0.0000f;
-      flDecayTime = 0.0f;
-      flDecayHFRatio = 0.0f;
+      flDecayTime = 0.1f;
+      flDecayHFRatio = 0.1f;
       flDecayLFRatio = 0.0f;
       flReflectionsGain = 0.0f;
       flReflectionsDelay = 0.0f;
@@ -372,15 +412,17 @@ public:
       flLateReverbGain = 0.0f;
       flLateReverbDelay = 0.0f;
       dMemset(flLateReverbPan, 0, sizeof(flLateReverbPan));
-      flEchoTime = 0.0f;
+      flEchoTime = 0.075f;
       flEchoDepth = 0.0f;
-      flModulationTime = 0.0f;
+      flModulationTime = 0.04f;
       flModulationDepth = 0.0f;
-      flAirAbsorptionGainHF = 0.0f;
+      flAirAbsorptionGainHF = 0.892f;
       flHFReference = 0.0f;
       flLFReference = 0.0f;
       flRoomRolloffFactor = 0.0f;
       iDecayHFLimit = 0;
+
+      validate();
    }
 
    void validate()
@@ -528,31 +570,33 @@ public:
 ///
 class SFXListenerProperties
 {
-   public:
-   
-      typedef void Parent;
-      
-      /// Position and orientation of the listener.
-      MatrixF mTransform;
-      
-      ///
-      Point3F mVelocity;
+public:
 
-      SFXListenerProperties()
-         : mTransform( true ),
-           mVelocity( 0.0f, 0.0f, 0.0f ) {}
-           
-      SFXListenerProperties( const MatrixF& transform, const Point3F& velocity )
-         : mTransform( transform ),
-           mVelocity( velocity ) {}
-           
-      ///
-      const MatrixF& getTransform() const { return mTransform; }
-      MatrixF& getTransform() { return mTransform; }
-      
-      ///
-      const Point3F& getVelocity() const { return mVelocity; }
-      Point3F& getVelocity() { return mVelocity; }
+   typedef void Parent;
+
+   /// Position and orientation of the listener.
+   MatrixF mTransform;
+
+   ///
+   Point3F mVelocity;
+
+   SFXListenerProperties()
+      : mTransform(true),
+      mVelocity(0.0f, 0.0f, 0.0f) {
+   }
+
+   SFXListenerProperties(const MatrixF& transform, const Point3F& velocity)
+      : mTransform(transform),
+      mVelocity(velocity) {
+   }
+
+   ///
+   const MatrixF& getTransform() const { return mTransform; }
+   MatrixF& getTransform() { return mTransform; }
+
+   ///
+   const Point3F& getVelocity() const { return mVelocity; }
+   Point3F& getVelocity() { return mVelocity; }
 };
 
 
@@ -564,29 +608,30 @@ class SFXListenerProperties
 ///
 class SFXMaterialProperties
 {
-   public:
-   
-      typedef void Parent;
-   
-      ///
-      bool mDoubleSided;
-   
-      ///
-      F32 mDirectOcclusion;
-      
-      ///
-      F32 mReverbOcclusion;
-      
-      SFXMaterialProperties()
-         : mDoubleSided( false ),
-           mDirectOcclusion( 0.5f ),
-           mReverbOcclusion( 0.5f ) {}
-      
-      void validate()
-      {
-         mDirectOcclusion = mClampF( mDirectOcclusion, 0.0f, 1.0f );
-         mReverbOcclusion = mClampF( mReverbOcclusion, 0.0f, 1.0f );
-      }
+public:
+
+   typedef void Parent;
+
+   ///
+   bool mDoubleSided;
+
+   ///
+   F32 mDirectOcclusion;
+
+   ///
+   F32 mReverbOcclusion;
+
+   SFXMaterialProperties()
+      : mDoubleSided(false),
+      mDirectOcclusion(0.5f),
+      mReverbOcclusion(0.5f) {
+   }
+
+   void validate()
+   {
+      mDirectOcclusion = mClampF(mDirectOcclusion, 0.0f, 1.0f);
+      mReverbOcclusion = mClampF(mReverbOcclusion, 0.0f, 1.0f);
+   }
 };
 
 
@@ -600,28 +645,28 @@ template< S32 NUM_VALUES >
 struct SFXVariantFloat
 {
    /// Base value.
-   F32 mValue[ NUM_VALUES ];
-      
+   F32 mValue[NUM_VALUES];
+
    /// Variance of value.  Final value will be
    ///
    ///   mClampF( randF( mValue + mVariance[ 0 ], mValue + mVariance[ 1 ] ), min, max )
    ///
    /// with min and max being dependent on the context of the value.
-   F32 mVariance[ NUM_VALUES ][ 2 ];
-            
-   F32 getValue( U32 index = 0, F32 min = TypeTraits< F32 >::MIN, F32 max = TypeTraits< F32 >::MAX ) const
+   F32 mVariance[NUM_VALUES][2];
+
+   F32 getValue(U32 index = 0, F32 min = TypeTraits< F32 >::MIN, F32 max = TypeTraits< F32 >::MAX) const
    {
-      AssertFatal( index < NUM_VALUES, "SFXVariantFloat::getValue() - index out of range!" );
-      
-      return mClampF( gRandGen.randF( mValue[ index ] + mVariance[ index ][ 0 ],
-                                      mValue[ index ] + mVariance[ index ][ 1 ] ),
-                      min, max );
+      AssertFatal(index < NUM_VALUES, "SFXVariantFloat::getValue() - index out of range!");
+
+      return mClampF(gRandGen.randF(mValue[index] + mVariance[index][0],
+         mValue[index] + mVariance[index][1]),
+         min, max);
    }
-   
+
    void validate()
    {
-      for( U32 i = 0; i < NUM_VALUES; ++ i )
-         mVariance[ i ][ 0 ] = getMin( mVariance[ i ][ 0 ], mVariance[ i ][ 1 ] );
+      for (U32 i = 0; i < NUM_VALUES; ++i)
+         mVariance[i][0] = getMin(mVariance[i][0], mVariance[i][1]);
    }
 };
 

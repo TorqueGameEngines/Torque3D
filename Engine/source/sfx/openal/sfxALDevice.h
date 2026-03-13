@@ -23,8 +23,6 @@
 #ifndef _SFXALDEVICE_H_
 #define _SFXALDEVICE_H_
 
-class SFXProvider;
-
 #ifndef _SFXDEVICE_H_
 #  include "sfx/sfxDevice.h"
 #endif
@@ -45,6 +43,9 @@ class SFXProvider;
 #  include "sfx/openal/LoadOAL.h"
 #endif
 
+#ifndef _SFXSYSTEM_H_
+#include "sfx/sfxSystem.h"
+#endif
 
 class SFXALDevice : public SFXDevice
 {
@@ -52,6 +53,8 @@ class SFXALDevice : public SFXDevice
 
       typedef SFXDevice Parent;
       friend class SFXALVoice; // mDistanceFactor, mRolloffFactor
+
+      static SFXDevice* createInstance(U32 adapterIndex);
 
       void printALInfo(ALCdevice* device);
       void printHRTFInfo(ALCdevice* device);
@@ -61,16 +64,12 @@ class SFXALDevice : public SFXDevice
       // Compatibility with pre openal 1.2
       S32 getMaxSourcesOld();
 
-      SFXALDevice(   SFXProvider *provider,
-                     const OPENALFNTABLE &openal, 
-                     String name, 
-                     bool useHardware, 
-                     S32 maxBuffers );
+      SFXALDevice(U32 providerIndex);
 
       virtual ~SFXALDevice();
 
    protected:
-
+      static SFXProvider::CreateProviderInstanceDelegate mCreateDeviceInstance;
       OPENALFNTABLE mOpenAL;
 
       ALCcontext *mContext;
@@ -85,7 +84,7 @@ class SFXALDevice : public SFXDevice
       void _setRolloffFactor( F32 factor );
 
    public:
-
+      static void enumerateProviders(Vector<SFXProvider*>& providerList);
       // SFXDevice.
       SFXBuffer* createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description ) override;
       SFXVoice* createVoice( bool is3D, SFXBuffer *buffer ) override;
@@ -93,17 +92,8 @@ class SFXALDevice : public SFXDevice
       void setDistanceModel( SFXDistanceModel model ) override;
       void setDopplerFactor( F32 factor ) override;
       void setRolloffFactor( F32 factor ) override;
-#if defined(AL_ALEXT_PROTOTYPES)
-      //function for openAL to open slots
-      virtual void openSlots();
-      //slots
-      ALuint	effectSlot[4] = { 0 };
-      ALuint	effect[2] = { 0 };
-      ALuint   uLoop;
-      //get values from sfxreverbproperties and pass it to openal device
-      virtual void setReverb(const SFXReverbProperties& reverb);
-#endif
       void resetReverb() override {}
+      void setSpeedOfSound(F32 speedOfSound) override;
 };
 
 #endif // _SFXALDEVICE_H_

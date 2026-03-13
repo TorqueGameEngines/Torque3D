@@ -231,6 +231,12 @@ bool GuiCanvas::onAdd()
 {
    // ensure that we have a cursor
    setCursor(dynamic_cast<GuiCursor*>(Sim::findObject("DefaultCursor")));
+
+   SFXSystem::enumerateProviders();
+   SFXProvider* p = SFXSystem::getBestProviderChoice();
+
+   if (p)
+      SFX->createDevice(p);
    
    // Enumerate things for GFX before we have an active device.
    GFXInit::enumerateAdapters();

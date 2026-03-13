@@ -47,8 +47,7 @@ class SFXALVoice : public SFXVoice
 
    protected:
 
-      SFXALVoice( const OPENALFNTABLE &oalft,
-                  SFXALBuffer *buffer, 
+      SFXALVoice( SFXALBuffer *buffer, 
                   ALuint sourceName );
 
       ALuint mSourceName;
@@ -64,8 +63,6 @@ class SFXALVoice : public SFXVoice
       U32 mSampleOffset;
 
       Mutex mMutex;
-
-      const OPENALFNTABLE &mOpenAL;
 
       ///
       SFXALBuffer* _getBuffer() const

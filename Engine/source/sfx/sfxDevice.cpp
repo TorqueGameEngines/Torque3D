@@ -29,20 +29,36 @@
 #include "console/consoleTypes.h"
 
 
-//-----------------------------------------------------------------------------
+S32 SFXDevice::smUpdateInterval = SFXInternal::DEFAULT_UPDATE_INTERVAL;
+S32 SFXDevice::smDeviceFrequency = 44100;
+S8 SFXDevice::smDeviceBitrate = 16;
+bool SFXDevice::smDeviceHRTF = false;
 
-SFXDevice::SFXDevice( const String& name, SFXProvider* provider, bool useHardware, S32 maxBuffers )
-   :  mName( name ),
-      mProvider( provider ),
-      mUseHardware( useHardware ),
-      mMaxBuffers( maxBuffers ),
-      mCaps( 0 ),
-      mStatNumBuffers( 0 ),
+void SFXDevice::initConsole()
+{
+   // Add global preferences for sfx devices.
+   Con::addVariable("$pref::SFX::bitrate", TypeS8, &smDeviceBitrate,
+      "The devices bitrate.\n"
+      "@ingroup SFX\n");
+
+   Con::addVariable("$pref::SFX::frequency", TypeS32, &smDeviceFrequency,
+      "The devices frequency.\n"
+      "@ingroup SFX\n");
+
+   Con::addVariable("$pref::SFX::useHRTF", TypeBool, &smDeviceHRTF,
+      "The device uses hrtf.\n"
+      "@ingroup SFX\n");
+
+   Con::addVariable("$pref::SFX::updateInterval", TypeS32, &smUpdateInterval,
+      "The update interval.\n"
+      "@ingroup SFX\n");
+}
+
+SFXDevice::SFXDevice()
+    : mStatNumBuffers( 0 ),
       mStatNumVoices( 0 ),
       mStatNumBufferBytes( 0 )
 {
-   AssertFatal( provider, "We must have a provider pointer on device creation!" );
-
    VECTOR_SET_ASSOCIATION( mBuffers );
    VECTOR_SET_ASSOCIATION( mVoices );
 
@@ -53,8 +69,6 @@ SFXDevice::SFXDevice( const String& name, SFXProvider* provider, bool useHardwar
    Con::addVariable( "SFX::Device::numVoices", TypeS32, &mStatNumVoices );
    Con::addVariable( "SFX::Device::numBufferBytes", TypeS32, &mStatNumBufferBytes );
 }
-
-//-----------------------------------------------------------------------------
 
 SFXDevice::~SFXDevice()
 {
@@ -78,13 +92,13 @@ void SFXDevice::_releaseAllResources()
    ThreadSafeRef< SFXUpdateThread > sfxThread = UPDATE_THREAD();
    if( sfxThread != NULL )
    {
-      gUpdateThread = NULL; // Kill the global reference.
-
       sfxThread->stop();
       sfxThread->triggerUpdate();
       sfxThread->join();
 
       sfxThread = NULL;
+      gUpdateThread = NULL; // Kill the global reference.
+
    }
 
    // Clean up voices.  Do this before cleaning up buffers so that
@@ -92,9 +106,11 @@ void SFXDevice::_releaseAllResources()
    // get released properly.
 
    SFXVoice::smVoiceDestroyedSignal.remove( this, &SFXDevice::_removeVoice );
-   for( VoiceIterator voice = mVoices.begin();
-        voice != mVoices.end(); voice++ )
-      ( *voice )->destroySelf();
+   for (VoiceIterator voice = mVoices.begin(); voice != mVoices.end(); voice++)
+   {
+      (*voice)->stop();
+      (*voice)->destroySelf();
+   }
    mVoices.clear();
 
    // Clean up buffers.

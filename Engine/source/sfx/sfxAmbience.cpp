@@ -85,6 +85,7 @@ SFXAmbience::ChangeSignal SFXAmbience::smChangeSignal;
 SFXAmbience::SFXAmbience()
    : mDopplerFactor( 0.5f ),
      mRolloffFactor( 1.f ),
+     mSpeedOfSound(343.3f),
      mEnvironment( NULL )
 {
    dMemset( mState, 0, sizeof( mState ) );
@@ -112,6 +113,10 @@ void SFXAmbience::initPersistFields()
          "The factor to apply to the doppler affect in this space.\n"
          "Defaults to 0.5.\n\n"
          "@ref SFXSource_doppler" );
+      addFieldV("speedOfSound", TypeRangedF32, Offset(mSpeedOfSound, SFXAmbience), &CommonValidators::PositiveFloat,
+         "The speed of sound in this space.\n"
+         "Defaults to 343.3.\n\n"
+         "@ref SFXSource_speedofsound");
       addField( "states",                 TypeSFXStateName,       Offset( mState, SFXAmbience ),
          MaxStates,
          "States to activate when the ambient zone is entered.\n"
@@ -177,6 +182,7 @@ void SFXAmbience::packData( BitStream* stream )
    
    stream->write( mRolloffFactor );
    stream->write( mDopplerFactor );
+   stream->write(mSpeedOfSound);
 
    for( U32 i = 0; i < MaxStates; ++ i )
       sfxWrite( stream, mState[ i ] );
@@ -193,6 +199,7 @@ void SFXAmbience::unpackData( BitStream* stream )
    
    stream->read( &mRolloffFactor );
    stream->read( &mDopplerFactor );
+   stream->read(&mSpeedOfSound);
 
    for( U32 i = 0; i < MaxStates; ++ i )
       sfxRead( stream, &mState[ i ] );

@@ -173,7 +173,8 @@ SoundAsset::SoundAsset()
    mProfileDesc.mPriority = 1.0f;
    mProfileDesc.mSourceGroup = NULL;
    mProfileDesc.mFadeInEase = EaseF();
-   mProfileDesc.mReverb = SFXSoundReverbProperties();
+   mProfileDesc.mSourceGroup = dynamic_cast<SFXSource*>(Sim::findObject("AudioChannelMaster"));
+
    dMemset(mProfileDesc.mParameters, 0, sizeof(mProfileDesc.mParameters));
    mIsPlaylist = false;
 

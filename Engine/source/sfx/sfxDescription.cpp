@@ -173,7 +173,6 @@ SFXDescription::SFXDescription( const SFXDescription& desc )
       mStreamPacketSize( desc.mStreamPacketSize ),
       mUseReverb( desc.mUseReverb ),
       mStreamReadAhead( desc.mStreamReadAhead ),
-      mReverb( desc.mReverb ),
       mScatterDistance( desc.mScatterDistance ),
       mPriority( desc.mPriority )
 {
@@ -206,7 +205,6 @@ SFXDescription::SFXDescription(const SFXDescription& other, bool temp_clone)
       mStreamPacketSize( other.mStreamPacketSize ),
       mStreamReadAhead( other.mStreamReadAhead ),
       mUseReverb( other.mUseReverb ),
-      mReverb( other.mReverb ),
       mPriority( other.mPriority ),
       mScatterDistance( other.mScatterDistance )
 {
@@ -396,48 +394,6 @@ void SFXDescription::initPersistFields()
       "a custom reverb setup can be defined using the \"Reverb\" properties that will then be assigned "
       "to sounds playing with the description.\n\n"
       "@ref SFX_reverb");
-   addFieldV("reverbDensity", TypeRangedF32, Offset(mReverb.flDensity, SFXDescription), &CommonValidators::PositiveFloat,
-      "Density of reverb environment.");
-   addFieldV("reverbDiffusion", TypeRangedF32, Offset(mReverb.flDiffusion, SFXDescription), &CommonValidators::PositiveFloat,
-      "Environment diffusion.");
-   addFieldV("reverbGain", TypeRangedF32, Offset(mReverb.flGain, SFXDescription), &CommonValidators::PositiveFloat,
-      "Reverb Gain Level.");
-   addFieldV("reverbGainHF", TypeRangedF32, Offset(mReverb.flGainHF, SFXDescription), &CommonValidators::PositiveFloat,
-      "Reverb Gain to high frequencies");
-   addFieldV("reverbGainLF", TypeRangedF32, Offset(mReverb.flGainLF, SFXDescription), &CommonValidators::PositiveFloat,
-      "Reverb Gain to high frequencies");
-   addFieldV("reverbDecayTime", TypeRangedF32, Offset(mReverb.flDecayTime, SFXDescription), &CommonValidators::PositiveFloat,
-      "Decay time for the reverb.");
-   addFieldV("reverbDecayHFRatio", TypeRangedF32, Offset(mReverb.flDecayHFRatio, SFXDescription), &CommonValidators::PositiveFloat,
-      "High frequency decay time ratio.");
-   addFieldV("reverbDecayLFRatio", TypeRangedF32, Offset(mReverb.flDecayLFRatio, SFXDescription), &CommonValidators::PositiveFloat,
-      "High frequency decay time ratio.");
-   addFieldV("reflectionsGain", TypeRangedF32, Offset(mReverb.flReflectionsGain, SFXDescription), &CommonValidators::PositiveFloat,
-      "Reflection Gain.");
-   addFieldV("reflectionDelay", TypeRangedF32, Offset(mReverb.flReflectionsDelay, SFXDescription), &CommonValidators::PositiveFloat,
-      "How long to delay reflections.");
-   addFieldV("lateReverbGain", TypeRangedF32, Offset(mReverb.flLateReverbGain, SFXDescription), &CommonValidators::PositiveFloat,
-      "Late reverb gain amount.");
-   addFieldV("lateReverbDelay", TypeRangedF32, Offset(mReverb.flLateReverbDelay, SFXDescription), &CommonValidators::PositiveFloat,
-      "Late reverb delay time.");
-   addFieldV("reverbEchoTime", TypeRangedF32, Offset(mReverb.flEchoTime, SFXDescription), &CommonValidators::PositiveFloat,
-      "Reverb echo time.");
-   addFieldV("reverbEchoDepth", TypeRangedF32, Offset(mReverb.flEchoDepth, SFXDescription), &CommonValidators::PositiveFloat,
-      "Reverb echo depth.");
-   addFieldV("reverbModTime", TypeRangedF32, Offset(mReverb.flModulationTime, SFXDescription), &CommonValidators::PositiveFloat,
-      "Reverb Modulation time.");
-   addFieldV("reverbModDepth", TypeRangedF32, Offset(mReverb.flModulationDepth, SFXDescription), &CommonValidators::NormalizedFloat,
-      "Reverb Modulation Depth.");
-   addFieldV("airAbsorbtionGainHF", TypeRangedF32, Offset(mReverb.flAirAbsorptionGainHF, SFXDescription), &CommonValidators::PositiveFloat,
-      "High Frequency air absorbtion");
-   addFieldV("reverbHFRef", TypeRangedF32, Offset(mReverb.flHFReference, SFXDescription), &CommonValidators::PositiveFloat,
-      "Reverb High Frequency Reference.");
-   addFieldV("reverbLFRef", TypeRangedF32, Offset(mReverb.flLFReference, SFXDescription), &CommonValidators::PositiveFloat,
-      "Reverb Low Frequency Reference.");
-   addFieldV("roomRolloffFactor", TypeRangedF32, Offset(mReverb.flRoomRolloffFactor, SFXDescription), &CommonValidators::NegDefaultF32,
-      "Rolloff factor for reverb.");
-   addFieldV("decayHFLimit", TypeRangedS32, Offset(mReverb.iDecayHFLimit, SFXDescription), &CommonValidators::PositiveInt,
-      "High Frequency decay limit.");
    endGroup("Reverb");
    
    Parent::initPersistFields();
@@ -496,10 +452,6 @@ void SFXDescription::validate()
    mConeOutsideAngle    = mClamp( mConeOutsideAngle, mConeInsideAngle, 360 );
    mConeOutsideVolume   = mClampF( mConeOutsideVolume, 0, 1 );
    
-   if( !mIs3D )
-      mUseReverb = false;
-   
-   mReverb.validate();
 }
 
 //-----------------------------------------------------------------------------
@@ -534,30 +486,6 @@ void SFXDescription::packData( BitStream *stream )
 
       stream->writeFloat( mConeOutsideVolume, 6 );
       
-      if( mUseReverb )
-      {
-         stream->write(mReverb.flDensity);
-         stream->write(mReverb.flDiffusion);
-         stream->write(mReverb.flGain);
-         stream->write(mReverb.flGainHF);
-         stream->write(mReverb.flGainLF);
-         stream->write(mReverb.flDecayTime);
-         stream->write(mReverb.flDecayHFRatio);
-         stream->write(mReverb.flDecayLFRatio);
-         stream->write(mReverb.flReflectionsGain);
-         stream->write(mReverb.flReflectionsDelay);
-         stream->write(mReverb.flLateReverbGain);
-         stream->write(mReverb.flLateReverbDelay);
-         stream->write(mReverb.flEchoTime);
-         stream->write(mReverb.flEchoDepth);
-         stream->write(mReverb.flModulationTime);
-         stream->write(mReverb.flModulationDepth);
-         stream->write(mReverb.flAirAbsorptionGainHF);
-         stream->write(mReverb.flHFReference);
-         stream->write(mReverb.flLFReference);
-         stream->write(mReverb.flRoomRolloffFactor);
-         stream->write(mReverb.iDecayHFLimit);
-      }
    }
 
    stream->write( mFadeInTime );
@@ -607,30 +535,6 @@ void SFXDescription::unpackData( BitStream *stream )
 
       mConeOutsideVolume   = stream->readFloat( 6 );
       
-      if( mUseReverb )
-      {
-         stream->read(&mReverb.flDensity);
-         stream->read(&mReverb.flDiffusion);
-         stream->read(&mReverb.flGain);
-         stream->read(&mReverb.flGainHF);
-         stream->read(&mReverb.flGainLF);
-         stream->read(&mReverb.flDecayTime);
-         stream->read(&mReverb.flDecayHFRatio);
-         stream->read(&mReverb.flDecayLFRatio);
-         stream->read(&mReverb.flReflectionsGain);
-         stream->read(&mReverb.flReflectionsDelay);
-         stream->read(&mReverb.flLateReverbGain);
-         stream->read(&mReverb.flLateReverbDelay);
-         stream->read(&mReverb.flEchoTime);
-         stream->read(&mReverb.flEchoDepth);
-         stream->read(&mReverb.flModulationTime);
-         stream->read(&mReverb.flModulationDepth);
-         stream->read(&mReverb.flAirAbsorptionGainHF);
-         stream->read(&mReverb.flHFReference);
-         stream->read(&mReverb.flLFReference);
-         stream->read(&mReverb.flRoomRolloffFactor);
-         stream->read(&mReverb.iDecayHFLimit);
-      }
    }
 
    stream->read( &mFadeInTime );

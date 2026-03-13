@@ -261,11 +261,6 @@ bool SFXSound::_allocVoice( SFXDevice* device )
       _setCone( mConeInsideAngle, mConeOutsideAngle, mConeOutsideVolume );
    }
    
-   // Set reverb, if enabled.
-
-   if( mDescription->mUseReverb )
-      mVoice->setReverb( mDescription->mReverb );
-   
    // Update the duration... it shouldn't have changed, but
    // its probably better that we're accurate if it did.
    mDuration = mBuffer->getDuration();
@@ -395,8 +390,10 @@ void SFXSound::_play()
 {
    Parent::_play();
    
-   if( mVoice )
-      mVoice->play( isLooping() );
+   if (mVoice)
+   {
+      mVoice->play(isLooping());
+   }
    else
    {
       // To ensure the fastest possible reaction 
@@ -447,6 +444,11 @@ void SFXSound::_updateStatus()
    
    if( mVoice )
    {
+
+      // properties can change while a voice is playing, respect that.
+      if (getSourceGroup())
+         mVoice->setReverb(getSourceGroup()->getDescription()->mUseReverb);
+
       SFXStatus voiceStatus = mVoice->getStatus();
       
       // Filter out SFXStatusBlocked.

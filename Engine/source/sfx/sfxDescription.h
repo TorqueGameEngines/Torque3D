@@ -170,9 +170,6 @@ class SFXDescription : public SimDataBlock
       /// The number of streaming packets to read and buffer in advance.
       /// Only relevant if "isStreaming" is true.
       U32 mStreamReadAhead;
-
-      /// Reverb properties for sound playback.
-      SFXSoundReverbProperties mReverb;
             
       /// Parameters to which sources playing with this description should automatically
       /// connect when created.

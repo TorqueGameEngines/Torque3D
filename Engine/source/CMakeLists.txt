@@ -520,12 +520,23 @@ string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" ARCH)
 set(IS_X86 FALSE)
 set(IS_ARM FALSE)
 
-if(ARCH MATCHES "x86_64|amd64|i[3-6]86")
-    set(IS_X86 TRUE)
-endif()
-
-if(ARCH MATCHES "arm64|aarch64")
-    set(IS_ARM TRUE)
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    # Use the CMAKE_OSX_ARCHITECTURES list for universal builds
+    foreach(arch IN LISTS CMAKE_OSX_ARCHITECTURES)
+        if(arch STREQUAL "x86_64")
+            set(IS_X86 TRUE)
+        elseif(arch STREQUAL "arm64")
+            set(IS_ARM TRUE)
+        endif()
+    endforeach()
+else()
+    # Non-macOS detection
+    if(ARCH MATCHES "arm64|aarch64")
+      set(IS_ARM TRUE)
+    endif()
+    if(ARCH MATCHES "x86_64|amd64|i[3-6]86")
+        set(IS_X86 TRUE)
+    endif()
 endif()
 
 # always available

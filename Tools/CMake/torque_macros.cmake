@@ -176,11 +176,27 @@ function(add_math_backend name compile_defs)
         elseif(name STREQUAL "avx2")
             target_compile_options(math_${name} PRIVATE -mavx2 -mfma)
         elseif(name STREQUAL "neon")
-            include(CheckCXXCompilerFlag)
-            check_cxx_compiler_flag("-march=armv8-a" HAS_ARMV8_FLAG)
-            if(HAS_ARMV8_FLAG)
+            if(APPLE)
+                set_target_properties(math_${name} PROPERTIES OSX_ARCHITECTURES "arm64")
+            else()
                 target_compile_options(math_${name} PRIVATE -march=armv8-a)
             endif()
+        endif()
+    endif()
+
+    if(APPLE)
+        # ARM-only backend
+        if(name STREQUAL "neon")
+            set_target_properties(math_${name} PROPERTIES
+                OSX_ARCHITECTURES "arm64"
+            )
+        endif()
+
+        # x86-only backends
+        if(name MATCHES "sse2|sse41|avx|avx2")
+            set_target_properties(math_${name} PROPERTIES
+                OSX_ARCHITECTURES "x86_64"
+            )
         endif()
     endif()
 

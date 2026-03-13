@@ -27,6 +27,7 @@
 #include "math/mMath.h"
 #include "core/strings/stringFunctions.h"
 #include "console/engineAPI.h"
+#include "math/public/math_backend.h"
 
 extern void mInstallLibrary_C();
 extern void mInstallLibrary_ASM();
@@ -90,29 +91,14 @@ void Math::init(U32 properties)
    Con::printf("   Installing Standard C extensions");
    mInstallLibrary_C();
 
+   Con::printf("   Installing ISA extensions");
+   math_backend::install_from_cpu_flags(properties);
+
 #if defined(TORQUE_CPU_X32) || defined(TORQUE_CPU_X64)
    Con::printf("   Installing Assembly extensions");
    mInstallLibrary_ASM();
 #endif
 
-   if (properties & CPU_PROP_FPU)
-   {
-      Con::printf("   Installing FPU extensions");
-   }
-
-   if (properties & CPU_PROP_MMX)
-   {
-      Con::printf("   Installing MMX extensions");
-   }
-
-#if !defined(__MWERKS__) || (__MWERKS__ >= 0x2400)
-   if (properties & CPU_PROP_SSE)
-   {
-      Con::printf("   Installing SSE extensions");
-   }
-#endif //mwerks>2.4
-
-   Con::printf(" ");
 }
 
 

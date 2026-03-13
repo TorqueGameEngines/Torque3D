@@ -443,7 +443,7 @@ bool SceneContainer::removeObject(SceneObject* obj)
    if ( obj->getTypeMask() & ( WaterObjectType | PhysicalZoneObjectType ) )
    {
       iter = std::find( mWaterAndZones.begin(), mWaterAndZones.end(), obj );
-      if( iter != mTerrains.end() )
+      if( iter != mWaterAndZones.end() )
          mWaterAndZones.erase_fast(iter);
    }
 

@@ -29,6 +29,11 @@
 #ifndef _MPOINT2_H_
 #include "math/mPoint2.h"
 #endif
+#ifndef _MATH_BACKEND_H_
+#include "math/public/math_backend.h"
+#endif
+
+#include <array>
 
 //------------------------------------------------------------------------------
 /// 3D integer point
@@ -97,6 +102,7 @@ public:
 class Point3D;
 
 //------------------------------------------------------------------------------
+using namespace math_backend::float3::dispatch;
 class Point3F
 {
    //-------------------------------------- Public data
@@ -497,7 +503,8 @@ inline void Point3F::setMax(const Point3F& _test)
 inline void Point3F::interpolate(const Point3F& _from, const Point3F& _to, F32 _factor)
 {
    AssertFatal(_factor >= 0.0f && _factor <= 1.0f, "Out of bound interpolation factor");
-   m_point3F_interpolate( _from, _to, _factor, *this);
+
+   GetFloat3().lerp(_from, _to, _factor, *this);
 }
 
 inline void Point3F::zero()
@@ -585,31 +592,27 @@ inline void Point3F::neg()
 
 inline void Point3F::convolve(const Point3F& c)
 {
-   x *= c.x;
-   y *= c.y;
-   z *= c.z;
+   GetFloat3().mul(*this, c, *this);
 }
 
 inline void Point3F::convolveInverse(const Point3F& c)
 {
-   x /= c.x;
-   y /= c.y;
-   z /= c.z;
+   GetFloat3().div(*this, c, *this);
 }
 
 inline F32 Point3F::lenSquared() const
 {
-   return (x * x) + (y * y) + (z * z);
+   return GetFloat3().lengthSquared(*this);
 }
 
 inline F32 Point3F::len() const
 {
-   return mSqrt(x*x + y*y + z*z);
+   return GetFloat3().length(*this);
 }
 
 inline void Point3F::normalize()
 {
-   m_point3F_normalize(*this);
+   GetFloat3().normalize(*this);
 }
 
 inline F32 Point3F::magnitudeSafe() const
@@ -626,18 +629,13 @@ inline F32 Point3F::magnitudeSafe() const
 
 inline void Point3F::normalizeSafe()
 {
-   F32 vmag = magnitudeSafe();
-
-   if( vmag > POINT_EPSILON )
-   {
-      *this *= F32(1.0 / vmag);
-   }
+   GetFloat3().normalize(*this);
 }
 
 
 inline void Point3F::normalize(F32 val)
 {
-   m_point3F_normalize_f(*this, val);
+   GetFloat3().normalize_mag(*this, val);
 }
 
 inline bool Point3F::operator==(const Point3F& _test) const
@@ -652,52 +650,49 @@ inline bool Point3F::operator!=(const Point3F& _test) const
 
 inline Point3F Point3F::operator+(const Point3F& _add) const
 {
-   return Point3F(x + _add.x, y + _add.y,  z + _add.z);
+   Point3F temp;
+   GetFloat3().add(*this, _add, temp);
+   return temp;
 }
 
 inline Point3F Point3F::operator-(const Point3F& _rSub) const
 {
-   return Point3F(x - _rSub.x, y - _rSub.y, z - _rSub.z);
+   Point3F temp;
+   GetFloat3().sub(*this, _rSub, temp);
+   return temp;
 }
 
 inline Point3F& Point3F::operator+=(const Point3F& _add)
 {
-   x += _add.x;
-   y += _add.y;
-   z += _add.z;
-
+   GetFloat3().add(*this, _add, *this);
    return *this;
 }
 
 inline Point3F& Point3F::operator-=(const Point3F& _rSub)
 {
-   x -= _rSub.x;
-   y -= _rSub.y;
-   z -= _rSub.z;
-
+   GetFloat3().sub(*this, _rSub, *this);
    return *this;
 }
 
 inline Point3F Point3F::operator*(F32 _mul) const
 {
-   return Point3F(x * _mul, y * _mul, z * _mul);
+   Point3F temp;
+   GetFloat3().mul_scalar(*this, _mul, temp);
+   return temp;
 }
 
 inline Point3F Point3F::operator/(F32 _div) const
 {
    AssertFatal(_div != 0.0f, "Error, div by zero attempted");
 
-   F32 inv = 1.0f / _div;
-
-   return Point3F(x * inv, y * inv, z * inv);
+   Point3F temp;
+   GetFloat3().div_scalar(*this, _div, temp);
+   return temp;
 }
 
 inline Point3F& Point3F::operator*=(F32 _mul)
 {
-   x *= _mul;
-   y *= _mul;
-   z *= _mul;
-
+   GetFloat3().mul_scalar(*this, _mul, *this);
    return *this;
 }
 
@@ -705,39 +700,35 @@ inline Point3F& Point3F::operator/=(F32 _div)
 {
    AssertFatal(_div != 0.0f, "Error, div by zero attempted");
 
-   F32 inv = 1.0f / _div;
-   x *= inv;
-   y *= inv;
-   z *= inv;
-
+   GetFloat3().div_scalar(*this, _div, *this);
    return *this;
 }
 
 inline Point3F Point3F::operator*(const Point3F &_vec) const
 {
-   return Point3F(x * _vec.x, y * _vec.y, z * _vec.z);
+   Point3F temp;
+   GetFloat3().mul(*this, _vec, temp);
+   return temp;
 }
 
 inline Point3F& Point3F::operator*=(const Point3F &_vec)
 {
-   x *= _vec.x;
-   y *= _vec.y;
-   z *= _vec.z;
+   GetFloat3().mul(*this, _vec, *this);
    return *this;
 }
 
 inline Point3F Point3F::operator/(const Point3F &_vec) const
 {
    AssertFatal(_vec.x != 0.0f && _vec.y != 0.0f && _vec.z != 0.0f, "Error, div by zero attempted");
-   return Point3F(x / _vec.x, y / _vec.y, z / _vec.z);
+   Point3F temp;
+   GetFloat3().div(*this, _vec, temp);
+   return temp;
 }
 
 inline Point3F& Point3F::operator/=(const Point3F &_vec)
 {
    AssertFatal(_vec.x != 0.0f && _vec.y != 0.0f && _vec.z != 0.0f, "Error, div by zero attempted");
-   x /= _vec.x;
-   y /= _vec.y;
-   z /= _vec.z;
+   GetFloat3().div(*this, _vec, *this);
    return *this;
 }
 
@@ -989,7 +980,9 @@ inline Point3I operator*(S32 mul, const Point3I& multiplicand)
 
 inline Point3F operator*(F32 mul, const Point3F& multiplicand)
 {
-   return multiplicand * mul;
+   Point3F temp;
+   GetFloat3().mul_scalar(multiplicand, mul, temp);
+   return temp;
 }
 
 inline Point3D operator*(F64 mul, const Point3D& multiplicand)
@@ -999,7 +992,7 @@ inline Point3D operator*(F64 mul, const Point3D& multiplicand)
 
 inline F32 mDot(const Point3F &p1, const Point3F &p2)
 {
-   return (p1.x*p2.x + p1.y*p2.y + p1.z*p2.z);
+   return GetFloat3().dot(p1, p2);
 }
 
 inline F64 mDot(const Point3D &p1, const Point3D &p2)
@@ -1009,9 +1002,7 @@ inline F64 mDot(const Point3D &p1, const Point3D &p2)
 
 inline void mCross(const Point3F &a, const Point3F &b, Point3F *res)
 {
-   res->x = (a.y * b.z) - (a.z * b.y);
-   res->y = (a.z * b.x) - (a.x * b.z);
-   res->z = (a.x * b.y) - (a.y * b.x);
+   GetFloat3().cross(a, b, *res);
 }
 
 inline void mCross(const Point3D &a, const Point3D &b, Point3D *res)
@@ -1024,7 +1015,7 @@ inline void mCross(const Point3D &a, const Point3D &b, Point3D *res)
 inline Point3F mCross(const Point3F &a, const Point3F &b)
 {
    Point3F r;
-   mCross( a, b, &r );
+   GetFloat3().cross(a, b, r);
    return r;
 }
 

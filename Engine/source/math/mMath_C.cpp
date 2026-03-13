@@ -152,8 +152,8 @@ static void m_point3F_interpolate_C(const F32 *from, const F32 *to, F32 factor, 
 #ifdef TORQUE_COMPILER_GCC
 // remove possibility of aliases
    const F32 inverse = 1.0f - factor;
-   const F32	from0 = from[0], from1 = from[1], from2 = from[2];
-   const F32	to0 = to[0], to1 = to[1], to2 = to[2];
+   const F32   from0 = from[0], from1 = from[1], from2 = from[2];
+   const F32   to0 = to[0], to1 = to[1], to2 = to[2];
    
    result[0] = from0 * inverse + to0 * factor;
    result[1] = from1 * inverse + to1 * factor;
@@ -182,8 +182,8 @@ static void m_point3D_interpolate_C(const F64 *from, const F64 *to, F64 factor, 
 #ifdef TORQUE_COMPILER_GCC
 // remove possibility of aliases
    const F64 inverse = 1.0f - factor;
-   const F64	from0 = from[0], from1 = from[1], from2 = from[2];
-   const F64	to0 = to[0], to1 = to[1], to2 = to[2];
+   const F64   from0 = from[0], from1 = from[1], from2 = from[2];
+   const F64   to0 = to[0], to1 = to[1], to2 = to[2];
    
    result[0] = from0 * inverse + to0 * factor;
    result[1] = from1 * inverse + to1 * factor;
@@ -436,8 +436,8 @@ static void affineInvertTo(const F32 * m, F32 * out)
 
    F32 invDet = 1.0f / (m[idx(0,0)] * d1 + m[idx(0,1)] * d2 + m[idx(0,2)] * d3);
 
-   F32 m00 = m[idx(0,0)] * invDet; 
-   F32 m01 = m[idx(0,1)] * invDet; 
+   F32 m00 = m[idx(0,0)] * invDet;
+   F32 m01 = m[idx(0,1)] * invDet;
    F32 m02 = m[idx(0,2)] * invDet;
 
    F32 * result = out;
@@ -950,4 +950,3 @@ void mInstallLibrary_C()
    m_matF_x_scale_x_planeF = m_matF_x_scale_x_planeF_C;
    m_matF_x_box3F          = m_matF_x_box3F_C;
 }
-

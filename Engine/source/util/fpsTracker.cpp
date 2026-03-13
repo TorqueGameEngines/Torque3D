@@ -36,6 +36,8 @@ void FPSTracker::reset()
 {
    fpsNext         = (F32)Platform::getRealMilliseconds()/1000.0f + mUpdateInterval;
 
+   fpsAccumTime      = 0.0f;
+   fpsAccumVirtualTime = 0.0f;
    fpsRealLast       = 0.0f;
    fpsReal           = 0.0f;
    fpsRealMin        = 0.000001f; // Avoid division by zero.
@@ -51,42 +53,60 @@ void FPSTracker::update()
    F32 realSeconds    = (F32)Platform::getRealMilliseconds()/1000.0f;
    F32 virtualSeconds = (F32)Platform::getVirtualMilliseconds()/1000.0f;
 
-   fpsFrames++;
-   if (fpsFrames > 1)
+   if (fpsRealLast == 0.0f)
    {
-      fpsReal    = fpsReal*(1.0-alpha) + (realSeconds-fpsRealLast)*alpha;
-      fpsVirtual = fpsVirtual*(1.0-alpha) + (virtualSeconds-fpsVirtualLast)*alpha;
-
-      if( fpsFrames > 10 ) // Wait a few frames before updating these.
-      {
-         // Update min/max.  This is a bit counter-intuitive, as the comparisons are
-         // inversed because these are all one-over-x values.
-
-         if( fpsReal > fpsRealMin )
-            fpsRealMin = fpsReal;
-         if( fpsReal < fpsRealMax )
-            fpsRealMax = fpsReal;
-      }
+      fpsRealLast = realSeconds;
+      fpsVirtualLast = virtualSeconds;
+      return;
    }
 
-   fpsRealLast    = realSeconds;
+   F32 frameTimeReal = realSeconds - fpsRealLast;
+   F32 frameTimeVirtual = virtualSeconds - fpsVirtualLast;
+
+   fpsRealLast = realSeconds;
    fpsVirtualLast = virtualSeconds;
 
-   // update variables every few frames
-   F32 update = fpsRealLast - fpsNext;
-   if (update > 0.5f)
-   {
-      F32 delta = realSeconds - fpsNext;
-      Con::setVariable( "fps::frameDelta",avar("%g", delta));
-      Con::setVariable( "fps::real",      avar( "%4.1f", 1.0f / fpsReal ) );
-      Con::setVariable( "fps::realMin",   avar( "%4.1f", 1.0f / fpsRealMin ) );
-      Con::setVariable( "fps::realMax",   avar( "%4.1f", 1.0f / fpsRealMax ) );
-      Con::setVariable( "fps::virtual",   avar( "%4.1f", 1.0f / fpsVirtual ) );
+   // Accumulate for windowed FPS calculation
+   fpsFrames++;
+   fpsAccumTime += frameTimeReal;
+   fpsAccumVirtualTime += frameTimeVirtual;
 
-      if (update > mUpdateInterval)
-         fpsNext  = fpsRealLast + mUpdateInterval;
-      else
-         fpsNext += mUpdateInterval;
+   // Only update console values at interval
+   if (realSeconds >= fpsNext)
+   {
+      fpsReal = 0.0f;
+      fpsVirtual = 0.0f;
+
+      if (fpsAccumTime > 0.0f)
+         fpsReal = fpsFrames / fpsAccumTime;
+
+      if (fpsAccumVirtualTime > 0.0f)
+         fpsVirtual = fpsFrames / fpsAccumVirtualTime;
+
+      // Update min/max correctly (these are FPS now)
+      if (fpsReal > 0.0f)
+      {
+         if (fpsReal < fpsRealMin)
+            fpsRealMin = fpsReal;
+
+         if (fpsReal > fpsRealMax)
+            fpsRealMax = fpsReal;
+      }
+
+      // frameDelta = actual accumulated real time over window
+      Con::setVariable("fps::frameTimeMs",   avar("%4.3f", (fpsAccumTime / fpsFrames) * 1000.0f));
+      Con::setVariable("fps::frameDelta",    avar("%g", fpsAccumTime));
+      Con::setVariable("fps::real",          avar("%4.1f", fpsReal));
+      Con::setVariable("fps::realMin",       avar("%4.1f", fpsRealMin));
+      Con::setVariable("fps::realMax",       avar("%4.1f", fpsRealMax));
+      Con::setVariable("fps::virtual",       avar("%4.1f", fpsVirtual));
+
+      // Reset window
+      fpsFrames = 0;
+      fpsAccumTime = 0.0f;
+      fpsAccumVirtualTime = 0.0f;
+
+      fpsNext = realSeconds + mUpdateInterval;
    }
 }
 

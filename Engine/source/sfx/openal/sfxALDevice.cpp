@@ -208,7 +208,10 @@ SFXALDevice::SFXALDevice(U32 providerIndex)
       mDistanceModel(SFXDistanceModelLinear),
       mDistanceFactor(1.0f),
       mRolloffFactor(1.0f),
-      mUserRolloffFactor(1.0f)
+      mUserRolloffFactor(1.0f),
+      mHasEFX(false),
+      mEffect(0),
+      mAuxSlot(0)
 {
    SFXProvider* p = SFXSystem::getProvider(providerIndex);
 
@@ -282,7 +285,7 @@ SFXALDevice::SFXALDevice(U32 providerIndex)
 #undef LOAD_PROC
 
       // generate our auxiliary slot for the effects.
-      // alGenAuxiliaryEffectSlots(1, &mAuxSlot);
+      alGenAuxiliaryEffectSlots(1, &mAuxSlot);
    }
 
    // --- Device frequency ---
@@ -308,6 +311,12 @@ SFXALDevice::SFXALDevice(U32 providerIndex)
 SFXALDevice::~SFXALDevice()
 {
    _releaseAllResources();
+
+   if (alIsEffect(mEffect))
+   {
+      alDeleteAuxiliaryEffectSlots(1, &mAuxSlot);
+      alDeleteEffects(1, &mEffect);
+   }
 
    ///cleanup of effects ends
    alcMakeContextCurrent( NULL );
@@ -445,6 +454,90 @@ void SFXALDevice::setDistanceModel( SFXDistanceModel model )
    }
    
    mDistanceModel = model;
+}
+
+//-----------------------------------------------------------------------------
+
+void SFXALDevice::setReverb(const SFXReverbProperties& r)
+{
+   if (!(mCaps & CAPS_Reverb))
+      return;
+
+   ALenum err;
+
+   /* Clear error state. */
+   alGetError();
+
+   if (alIsEffect(mEffect))
+      alDeleteEffects(1, &mEffect);
+
+   /* Create the effect object and check if we can do EAX reverb. */
+   alGenEffects(1, &mEffect);
+   alEffecti(mEffect, AL_EFFECT_TYPE, AL_EFFECT_EAXREVERB);
+   err = alGetError();
+
+   // Map your engine's properties to EFX parameters.
+   // Using EAX Reverb as an example:
+   if (err == AL_NO_ERROR)
+   {
+      alEffectf(mEffect, AL_EAXREVERB_DENSITY, r.flDensity);
+      alEffectf(mEffect, AL_EAXREVERB_DIFFUSION, r.flDiffusion);
+      alEffectf(mEffect, AL_EAXREVERB_GAIN, r.flGain);
+      alEffectf(mEffect, AL_EAXREVERB_GAINHF, r.flGainHF);
+      alEffectf(mEffect, AL_EAXREVERB_GAINLF, r.flGainLF);
+      alEffectf(mEffect, AL_EAXREVERB_DECAY_TIME, r.flDecayTime);
+      alEffectf(mEffect, AL_EAXREVERB_DECAY_HFRATIO, r.flDecayHFRatio);
+      alEffectf(mEffect, AL_EAXREVERB_DECAY_LFRATIO, r.flDecayLFRatio);
+
+      alEffectf(mEffect, AL_EAXREVERB_REFLECTIONS_GAIN, r.flReflectionsGain);
+      alEffectf(mEffect, AL_EAXREVERB_REFLECTIONS_DELAY, r.flReflectionsDelay);
+      alEffectfv(mEffect, AL_EAXREVERB_REFLECTIONS_PAN, r.flReflectionsPan);
+
+      alEffectf(mEffect, AL_EAXREVERB_LATE_REVERB_GAIN, r.flLateReverbGain);
+      alEffectf(mEffect, AL_EAXREVERB_LATE_REVERB_DELAY, r.flLateReverbDelay);
+      alEffectfv(mEffect, AL_EAXREVERB_LATE_REVERB_PAN, r.flLateReverbPan);
+
+      alEffectf(mEffect, AL_EAXREVERB_ECHO_TIME, r.flEchoTime);
+      alEffectf(mEffect, AL_EAXREVERB_ECHO_DEPTH, r.flEchoDepth);
+      alEffectf(mEffect, AL_EAXREVERB_MODULATION_TIME, r.flModulationTime);
+      alEffectf(mEffect, AL_EAXREVERB_MODULATION_DEPTH, r.flModulationDepth);
+
+      alEffectf(mEffect, AL_EAXREVERB_AIR_ABSORPTION_GAINHF, r.flAirAbsorptionGainHF);
+      alEffectf(mEffect, AL_EAXREVERB_HFREFERENCE, r.flHFReference);
+      alEffectf(mEffect, AL_EAXREVERB_LFREFERENCE, r.flLFReference);
+      alEffectf(mEffect, AL_EAXREVERB_ROOM_ROLLOFF_FACTOR, r.flRoomRolloffFactor);
+      alEffecti(mEffect, AL_EAXREVERB_DECAY_HFLIMIT, r.iDecayHFLimit);
+   }
+   else
+   {
+      alEffecti(mEffect, AL_EFFECT_TYPE, AL_EFFECT_REVERB);
+
+      alEffectf(mEffect, AL_REVERB_DENSITY, r.flDensity);
+      alEffectf(mEffect, AL_REVERB_DIFFUSION, r.flDiffusion);
+      alEffectf(mEffect, AL_REVERB_GAIN, r.flGain);
+      alEffectf(mEffect, AL_REVERB_GAINHF, r.flGainHF);
+      alEffectf(mEffect, AL_REVERB_DECAY_TIME, r.flDecayTime);
+      alEffectf(mEffect, AL_REVERB_DECAY_HFRATIO, r.flDecayHFRatio);
+      alEffectf(mEffect, AL_REVERB_REFLECTIONS_GAIN, r.flReflectionsGain);
+      alEffectf(mEffect, AL_REVERB_REFLECTIONS_DELAY, r.flReflectionsDelay);
+      alEffectf(mEffect, AL_REVERB_LATE_REVERB_GAIN, r.flLateReverbGain);
+      alEffectf(mEffect, AL_REVERB_LATE_REVERB_DELAY, r.flLateReverbDelay);
+      alEffectf(mEffect, AL_REVERB_AIR_ABSORPTION_GAINHF, r.flAirAbsorptionGainHF);
+      alEffectf(mEffect, AL_REVERB_ROOM_ROLLOFF_FACTOR, r.flRoomRolloffFactor);
+      alEffecti(mEffect, AL_REVERB_DECAY_HFLIMIT, r.iDecayHFLimit);
+   }
+
+   err = alGetError();
+   if (err != AL_NO_ERROR)
+   {
+      if (alIsEffect(mEffect))
+         alDeleteEffects(1, &mEffect);
+   }
+   else
+   {
+      // Bind updated effect to slot
+      alAuxiliaryEffectSloti(mAuxSlot, AL_EFFECTSLOT_EFFECT, (ALint)mEffect);
+   }
 }
 
 //-----------------------------------------------------------------------------

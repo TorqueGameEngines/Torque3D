@@ -43,36 +43,117 @@ bool SFXSndStream::_readHeader()
    vio_data.offset = 0;
    vio_data.data = mStream;
 
+   vio_data.sampleBlockAlign = 1;
+   vio_data.byteBlockAlign = 0;
+
    if ((sndFile = sf_open_virtual(&vio, SFM_READ, &sfinfo, &vio_data)) == NULL)
    {
       Con::printf("SFXSndStream - _readHeader failed: %s", sf_strerror(sndFile));
       return false;
    }
 
-   S32 bitsPerSample = 0;
-   switch ((sfinfo.format & SF_FORMAT_SUBMASK))
+   S32 bitsPerSample = 16;
+
+   switch (sfinfo.format & SF_FORMAT_SUBMASK)
    {
    case SF_FORMAT_PCM_S8:
    case SF_FORMAT_PCM_U8:
       bitsPerSample = 8;
+      mSampleType = Sample_Int8;  // Still decode using sf_readf_short()
       break;
+
    case SF_FORMAT_PCM_16:
       bitsPerSample = 16;
+      mSampleType = Sample_Int16;
       break;
-   case SF_FORMAT_VORBIS:
+
    case SF_FORMAT_PCM_24:
    case SF_FORMAT_PCM_32:
    case SF_FORMAT_FLOAT:
-      bitsPerSample = 16;
-      sf_command(sndFile, SFC_SET_SCALE_FLOAT_INT_READ, NULL, SF_TRUE);
+   case SF_FORMAT_DOUBLE:
+   case SF_FORMAT_VORBIS:
+   case SF_FORMAT_OPUS:
+   case SF_FORMAT_ALAC_20:
+   case SF_FORMAT_ALAC_24:
+   case SF_FORMAT_ALAC_32:
+   case 0x0080/*SF_FORMAT_MPEG_LAYER_I*/:
+   case 0x0081/*SF_FORMAT_MPEG_LAYER_II*/:
+   case 0x0082/*SF_FORMAT_MPEG_LAYER_III*/:
+      bitsPerSample = 32;
+      mSampleType = Sample_Float;
       break;
-   default:
-      // missed, set it to 16 anyway.
+
+   case SF_FORMAT_IMA_ADPCM:
       bitsPerSample = 16;
+      mSampleType = Sample_IMA4;
+      break;
+
+   case SF_FORMAT_MS_ADPCM:
+      bitsPerSample = 16;
+      mSampleType = Sample_MSADPCM;
+      break;
+
+   default:
+      bitsPerSample = 16;
+      mSampleType = Sample_Int16;
       break;
    }
 
-   mFormat.set(sfinfo.channels, bitsPerSample * sfinfo.channels, sfinfo.samplerate);
+   //------------------------------------------------------------
+   // Block alignment logic for ADPCM formats
+   //------------------------------------------------------------
+   int byteBlockAlign = 0;
+   int sampleBlockAlign = 1;
+
+   if (mSampleType == Sample_IMA4 || mSampleType == Sample_MSADPCM)
+   {
+      SF_CHUNK_INFO inf = { "fmt ", 4, 0, NULL };
+      SF_CHUNK_ITERATOR* iter = sf_get_chunk_iterator(sndFile, &inf);
+
+      if (!iter || sf_get_chunk_size(iter, &inf) != SF_ERR_NO_ERROR || inf.datalen < 14)
+         mSampleType = Sample_Int16;
+      else
+      {
+         uint8_t* fmtbuf = (uint8_t*)malloc(inf.datalen);
+         inf.data = fmtbuf;
+
+         if (sf_get_chunk_data(iter, &inf) != SF_ERR_NO_ERROR)
+            mSampleType = Sample_Int16;
+         else
+         {
+            byteBlockAlign = fmtbuf[12] | (fmtbuf[13] << 8);
+            int ch = sfinfo.channels;
+
+            if (mSampleType == Sample_IMA4)
+               sampleBlockAlign = (byteBlockAlign / ch - 4) / 4 * 8 + 1;
+            else
+               sampleBlockAlign = (byteBlockAlign / ch - 7) * 2 + 2;
+         }
+         dFree(fmtbuf);
+      }
+   }
+
+   //------------------------------------------------------------
+   // Commit alignment to class + VIO data
+   //------------------------------------------------------------
+   if (mSampleType == Sample_Int16)
+   {
+      sampleBlockAlign = 1;
+      byteBlockAlign = sfinfo.channels * 2;
+   }
+   else if (mSampleType == Sample_Float)
+   {
+      sampleBlockAlign = 1;
+      byteBlockAlign = sfinfo.channels * 4;
+   }
+
+   vio_data.sampleBlockAlign = sampleBlockAlign;
+   vio_data.byteBlockAlign = byteBlockAlign;
+
+   mSampleBlockAlign = sampleBlockAlign;
+   mByteBlockAlign = byteBlockAlign;
+
+   mFormat.set(sfinfo.channels, bitsPerSample * sfinfo.channels, sfinfo.samplerate, mSampleType);
 
    mSamples = sfinfo.frames;
 
@@ -136,22 +217,20 @@ U32 SFXSndStream::read(U8* buffer, U32 length)
 
    U32 framesRead = 0;
 
-   switch (sfinfo.format & SF_FORMAT_SUBMASK)
+   switch (mSampleType)
    {
-   case SF_FORMAT_PCM_S8:
-   case SF_FORMAT_PCM_U8:
-      framesRead = sf_readf_int(sndFile, (int*)buffer, framesToRead);
+   case SFXSampleType::Sample_Int8: framesRead = sf_readf_int(sndFile, (int*)buffer, framesToRead);
       break;
-   case SF_FORMAT_PCM_16:
-   case SF_FORMAT_VORBIS:
-   case SF_FORMAT_PCM_24:
-   case SF_FORMAT_PCM_32:
-   case SF_FORMAT_FLOAT:
-      framesRead = sf_readf_short(sndFile, (short*)buffer, framesToRead);
+   case SFXSampleType::Sample_Int16: framesRead = sf_readf_short(sndFile, (short*)buffer, framesToRead);
+      break;
+   case SFXSampleType::Sample_Float: framesRead = sf_readf_float(sndFile, (float*)buffer, framesToRead);
+      break;
+   case SFXSampleType::Sample_IMA4:
+   case SFXSampleType::Sample_MSADPCM:
+      framesRead = sf_read_raw(sndFile, buffer, framesToRead);
       break;
    default:
-      Con::errorf("SFXSndStream - read: Unsupported format.");
-      return 0;
+      break;
    }
 
    if (framesRead != framesToRead)

@@ -131,14 +131,30 @@ void SFXSoundscapeManager::update()
          SFXAmbience* ambience = mStack[ reverbIndex ]->getAmbience();
          AssertFatal( ambience->getEnvironment(), "SFXSoundscapeManager::update - Reverb lookup return ambience without reverb!" );
 
-         SFX->setRolloffFactor( ambience->getRolloffFactor() );
-         SFX->setDopplerFactor( ambience->getDopplerFactor() );
-         SFX->setReverb( ambience->getEnvironment()->getReverb() );
+         SFX->setRolloffFactor(ambience->getRolloffFactor());
+         SFX->setDopplerFactor(ambience->getDopplerFactor());
+         SFX->setSpeedOfSound(ambience->getSpeedOfSound());
+         if (ambience->getEnvironment())
+            SFX->setReverb(ambience->getEnvironment()->getReverb());
       }
 
       mCurrentReverbIndex = reverbIndex;
    }
-   
+
+   if (mStack[mStack.size() - 1]->mDirtyBits.test(SFXSoundscape::AmbienceDirty))
+   {
+      SFXAmbience* ambience = mStack[mStack.size() - 1]->getAmbience();
+      SFX->setRolloffFactor(ambience->getRolloffFactor());
+      SFX->setDopplerFactor(ambience->getDopplerFactor());
+      SFX->setSpeedOfSound(ambience->getSpeedOfSound());
+      if (ambience->getEnvironment())
+         SFX->setReverb(ambience->getEnvironment()->getReverb());
+
+      mCurrentReverbIndex = mStack.size() - 1;
+
+      mStack[mStack.size() - 1]->mDirtyBits.clear(SFXSoundscape::AmbienceDirty);
+   }
+
    // Update the active soundscapes.
    
    for( U32 i = 0; i < mStack.size(); ++ i )

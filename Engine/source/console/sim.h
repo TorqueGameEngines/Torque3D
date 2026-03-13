@@ -35,6 +35,9 @@
 #ifndef _CONSOLE_H_
 #include "console/console.h"
 #endif
+#ifndef _ITICKABLE_H_
+#include "core/iTickable.h"
+#endif
 
 // Forward Refs
 class SimSet;
@@ -43,6 +46,21 @@ class SimDataBlockGroup;
 class SimObject;
 class SimEvent;
 class Stream;
+
+class SceneStreaming : public virtual ITickable
+{
+protected:
+   U32 mMaxObjects = 20;
+public:
+   SceneStreaming(){}
+   ~SceneStreaming() {}
+    bool smStreaming;
+   Vector<SimObject*> smPendingRegister;
+
+   void interpolateTick(F32 delta) override {return;}
+   void processTick() override;
+   void advanceTime(F32 timeDelta) override { return; }
+};
 
 // Sim Types
 typedef U32 SimTime;

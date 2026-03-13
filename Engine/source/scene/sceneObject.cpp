@@ -898,6 +898,28 @@ bool SceneObject::_setSelectionEnabled( void *object, const char *index, const c
 
 //--------------------------------------------------------------------------
 
+U32 SceneObject::partialPackUpdate(NetConnection* conn, U32 mask, BitStream* stream)
+{
+   U32 retMask = Parent::partialPackUpdate(conn, mask, stream);
+
+   if (stream->writeFlag(mask & FlagMask))
+   {
+      stream->writeRangedU32((U32)mObjectFlags, 0, getObjectFlagMax());
+      retMask &= ~FlagMask;
+   }
+
+   return retMask;
+}
+
+void SceneObject::partialUnpackUpdate(NetConnection* conn, BitStream* stream)
+{
+   Parent::unpackUpdate(conn, stream);
+
+   // FlagMask
+   if (stream->readFlag())
+      mObjectFlags = stream->readRangedU32(0, getObjectFlagMax());
+}
+
 U32 SceneObject::packUpdate( NetConnection* conn, U32 mask, BitStream* stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );

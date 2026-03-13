@@ -266,3 +266,4 @@ DefineEngineFunction( isValidObjectName, bool, (const char * name), , "( string 
 }
 
 ConsoleFunctionGroupEnd( SimFunctions );
+

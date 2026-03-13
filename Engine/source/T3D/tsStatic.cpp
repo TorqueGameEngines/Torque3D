@@ -942,6 +942,86 @@ void TSStatic::setTransform(const MatrixF& mat)
    setRenderTransform(mat);
 }
 
+U32 TSStatic::partialPackUpdate(NetConnection* conn, U32 mask, BitStream* stream)
+{
+   U32 retMask = Parent::partialPackUpdate(conn,mask,stream);
+
+   if (stream->writeFlag(mask & TransformMask))
+   {
+      mathWrite(*stream, getTransform());
+      retMask &= ~TransformMask;
+   }
+
+   if (stream->writeFlag(mask & AdvancedStaticOptionsMask))
+   {
+      PACK_ASSET_REFACTOR(conn, Shape);
+
+      stream->writeInt(mDecalType, 4);
+
+      stream->writeFlag(mAllowPlayerStep);
+      stream->writeFlag(mMeshCulling);
+      stream->writeFlag(mUseOriginSort);
+
+      stream->write(mRenderNormalScalar);
+
+      stream->write(mForceDetail);
+
+      if (stream->writeFlag(mPlayAmbient && hasAnim()))
+      {
+         if (stream->writeFlag(mAnimOffset != 0.0f))
+            stream->writeFloat(mAnimOffset, 7);
+
+         if (stream->writeFlag(mAnimSpeed != 1.0f))
+            stream->writeSignedFloat(mAnimSpeed / AnimSpeedMax, 7);
+      }
+
+      retMask &= ~AdvancedStaticOptionsMask;
+   }
+
+   return retMask;
+}
+
+void TSStatic::partialUnpackUpdate(NetConnection* conn, BitStream* stream)
+{
+   Parent::partialUnpackUpdate(conn, stream);
+
+   if (stream->readFlag()) // TransformMask
+   {
+      MatrixF mat;
+      mathRead(*stream, &mat);
+      setTransform(mat);
+      setRenderTransform(mat);
+   }
+
+   if (stream->readFlag()) // AdvancedStaticOptionsMask
+   {
+      UNPACK_ASSET_REFACTOR(conn, Shape);
+
+      mDecalType = (MeshType)stream->readInt(4);
+
+      mAllowPlayerStep = stream->readFlag();
+      mMeshCulling = stream->readFlag();
+      mUseOriginSort = stream->readFlag();
+
+      stream->read(&mRenderNormalScalar);
+
+      stream->read(&mForceDetail);
+
+      mPlayAmbient = stream->readFlag();
+      if (mPlayAmbient)
+      {
+         if (stream->readFlag())
+            mAnimOffset = stream->readFloat(7);
+
+         if (stream->readFlag())
+            mAnimSpeed = stream->readSignedFloat(7) * AnimSpeedMax;
+      }
+
+      //update our shape, figuring that it likely changed
+      _createShape();
+   }
+}
+
 U32 TSStatic::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 {
    U32 retMask = Parent::packUpdate(con, mask, stream);

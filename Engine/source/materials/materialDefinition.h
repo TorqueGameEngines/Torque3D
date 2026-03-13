@@ -216,7 +216,38 @@ public:
    //-----------------------------------------------------------------------
    // Data
    //-----------------------------------------------------------------------
-   DECLARE_IMAGEASSET_ARRAY(Material, DiffuseMap, GFXStaticTextureSRGBProfile, MAX_STAGES)
+   private: AssetPtr<ImageAsset> mDiffuseMapAsset[MAX_STAGES]; StringTableEntry mDiffuseMapFile[MAX_STAGES] = { _getStringTable()->EmptyString() }; public: void _setDiffuseMap(StringTableEntry _in, const U32& index) {
+      if (mDiffuseMapAsset[index].getAssetId() == _in) return; if (getDiffuseMapFile(index) == _in) return; if (_in == 0 || !String::compare(_in, _getStringTable()->EmptyString())) {
+         mDiffuseMapAsset[index] = 0; mDiffuseMapFile[index] = ""; return;
+      } if (!AssetDatabase.isDeclaredAsset(_in)) {
+         StringTableEntry imageAssetId = _getStringTable()->EmptyString(); AssetQuery query; S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in); if (foundAssetcount != 0) {
+            imageAssetId = query.mAssetList[0];
+         }
+         else if (Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#')) {
+            imageAssetId = ImageAsset::getAssetIdByFilename(_in); if (imageAssetId == ImageAsset::smNoImageAssetFallback) {
+               ImageAsset* privateImage = new ImageAsset(); privateImage->setImageFile(_in); imageAssetId = AssetDatabase.addPrivateAsset(privateImage);
+            }
+         }
+         else {
+            Con::warnf("%s::%s: Could not find asset for: %s using fallback", "Material", "DiffuseMap", _in); imageAssetId = ImageAsset::smNoImageAssetFallback;
+         } mDiffuseMapAsset[index] = imageAssetId; mDiffuseMapFile[index] = _in;
+      }
+      else {
+         mDiffuseMapAsset[index] = _in; mDiffuseMapFile[index] = getDiffuseMapFile(index);
+      }
+   }; inline StringTableEntry _getDiffuseMap(const U32& index) const {
+      return mDiffuseMapAsset[index].getAssetId();
+   } GFXTexHandle getDiffuseMap(const U32& index) {
+      return getDiffuseMap(&GFXStaticTextureSRGBProfile, index);
+   } GFXTexHandle getDiffuseMap(GFXTextureProfile* requestedProfile, const U32& index) {
+      return mDiffuseMapAsset[index].notNull() ? mDiffuseMapAsset[index]->getTexture(requestedProfile) : 0;
+   } AssetPtr<ImageAsset> getDiffuseMapAsset(const U32& index) {
+      return mDiffuseMapAsset[index];
+   } static bool _setDiffuseMapData(void* obj, const char* index, const char* data) {
+      static_cast<Material*>(obj)->_setDiffuseMap(_getStringTable()->insert(data), dAtoi(index)); return false;
+   } StringTableEntry getDiffuseMapFile(const U32& idx) {
+      return mDiffuseMapAsset[idx].notNull() ? mDiffuseMapAsset[idx]->getImageFile() : "";
+   }
    DECLARE_IMAGEASSET_ARRAY(Material, NormalMap, GFXNormalMapProfile, MAX_STAGES)
    DECLARE_IMAGEASSET_ARRAY(Material, DetailNormalMap, GFXNormalMapProfile, MAX_STAGES)
    DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, GFXStaticTextureProfile, MAX_STAGES)

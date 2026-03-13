@@ -363,6 +363,8 @@ public:
    /// @{
    void interpolateTick(F32 dt) override;
    F32  getUpdatePriority( CameraScopeQuery *focusObject, U32 updateMask, S32 updateSkips ) override;
+   U32 partialPackUpdate(NetConnection* conn, U32 mask, BitStream* stream) override;
+   void partialUnpackUpdate(NetConnection* conn, BitStream* stream) override;
    U32  packUpdate  ( NetConnection *conn, U32 mask, BitStream *stream ) override;
    void unpackUpdate( NetConnection *conn,           BitStream *stream ) override;
 

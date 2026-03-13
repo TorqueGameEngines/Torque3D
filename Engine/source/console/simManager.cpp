@@ -280,6 +280,7 @@ U32 getTargetTime()
 
 SimGroup *gRootGroup = NULL;
 SimManagerNameDictionary *gNameDictionary;
+SceneStreaming* sgStreamingInstance = NULL;
 SimIdDictionary *gIdDictionary;
 U32 gNextObjectId;
 
@@ -287,6 +288,8 @@ static void initRoot()
 {
    gIdDictionary = new SimIdDictionary;
    gNameDictionary = new SimManagerNameDictionary;
+   sgStreamingInstance = new SceneStreaming;
+   sgStreamingInstance->smStreaming = false;
 
    gRootGroup = new SimGroup();
    gRootGroup->incRefCount();
@@ -305,6 +308,7 @@ static void shutdownRoot()
       gRootGroup->deleteObject();
    gRootGroup = NULL;
 
+   SAFE_DELETE(sgStreamingInstance);
    SAFE_DELETE(gNameDictionary);
    SAFE_DELETE(gIdDictionary);
 }
@@ -624,4 +628,32 @@ void SimDataBlockGroup::sort()
       mLastModifiedKey = SimDataBlock::getNextModifiedKey();
       dQsort(mObjectList.address(), mObjectList.size(),sizeof(SimObject *),compareModifiedKey);
    }
+}
+
+void SceneStreaming::processTick()
+{
+   if (smPendingRegister.empty())
+      return;
+
+   U32 start = Platform::getRealMilliseconds();
+
+   while (!smPendingRegister.empty())
+   {
+      SimObject* obj = smPendingRegister.first();
+      smPendingRegister.pop_front();
+
+      Sim::gIdDictionary->insert(obj);
+
+      Sim::gNameDictionary->insert(obj);
+
+
+      if (!obj->onAdd())
+         obj->unregisterObject();
+
+      U32 now = Platform::getRealMilliseconds();
+      if ((now - start) >= 2)
+         break;
+
+   }
+
 }

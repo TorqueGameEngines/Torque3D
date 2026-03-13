@@ -575,6 +575,64 @@ void GameBase::readPacketData(GameConnection*, BitStream*)
 {
 }
 
+U32 GameBase::partialPackUpdate(NetConnection* conn, U32 mask, BitStream* stream)
+{
+   U32 retMask = Parent::partialPackUpdate(conn, mask, stream);
+
+   if (stream->writeFlag(mask & ScaleMask))
+   {
+      // Only write one bit if the scale is one.
+      if (stream->writeFlag(mObjScale != Point3F::One))
+         mathWrite(*stream, mObjScale);
+
+      retMask &= ~ScaleMask;
+   }
+
+   if (stream->writeFlag((mask & DataBlockMask) && mDataBlock != NULL))
+   {
+      stream->writeRangedU32(mDataBlock->getId(),
+         DataBlockObjectIdFirst,
+         DataBlockObjectIdLast);
+      if (stream->writeFlag(mNetFlags.test(NetOrdered)))
+         stream->writeInt(mOrderGUID, 16);
+
+      retMask &= ~DataBlockMask;
+   }
+
+   return retMask;
+}
+
+void GameBase::partialUnpackUpdate(NetConnection* conn, BitStream* stream)
+{
+   Parent::partialUnpackUpdate(conn, stream);
+
+   // ScaleMask
+   if (stream->readFlag())
+   {
+      if (stream->readFlag())
+      {
+         VectorF scale;
+         mathRead(*stream, &scale);
+         setScale(scale);
+      }
+      else
+         setScale(Point3F::One);
+   }
+
+   // DataBlockMask
+   if (stream->readFlag())
+   {
+      GameBaseData* dptr = 0;
+      SimObjectId id = stream->readRangedU32(DataBlockObjectIdFirst,
+         DataBlockObjectIdLast);
+      if (stream->readFlag())
+         mOrderGUID = stream->readInt(16);
+
+      if (!Sim::findObject(id, dptr) || !setDataBlock(dptr))
+         conn->setLastError("Invalid packet GameBase::unpackUpdate()");
+   }
+}
+
 U32 GameBase::packUpdate( NetConnection *connection, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( connection, mask, stream );

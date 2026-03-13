@@ -328,6 +328,15 @@ F32 NetObject::getUpdatePriority(CameraScopeQuery*, U32, S32 updateSkips)
    return F32(updateSkips) * 0.1;
 }
 
+U32 NetObject::partialPackUpdate(NetConnection* conn, U32 mask, BitStream* stream)
+{
+    return mask;
+}
+
+void NetObject::partialUnpackUpdate(NetConnection*, BitStream*)
+{
+}
+
 U32 NetObject::packUpdate(NetConnection* conn, U32 mask, BitStream* stream)
 {
    return 0;

@@ -25,6 +25,13 @@ IMPLEMENT_CALLBACK(SubScene, onLoaded, void, (), (),
 IMPLEMENT_CALLBACK(SubScene, onUnloaded, void, (), (),
    "@brief Called when a subScene has been unloaded and has game mode implications.\n\n");
 
+namespace Sim
+{
+   // Defined in simManager.cpp
+   extern SceneStreaming* sgStreamingInstance;
+}
+
+
 SubScene::SubScene() :
    mSubSceneAssetId(StringTable->EmptyString()),
    mGameModesNames(StringTable->EmptyString()),
@@ -369,10 +376,12 @@ void SubScene::_loadFile(bool addFileNotify)
 
    String evalCmd = String::ToString("exec(\"%s\");", mSubSceneAsset->getLevelPath());
 
+   Sim::sgStreamingInstance->smStreaming = true;
    String instantGroup = Con::getVariable("InstantGroup");
    Con::setIntVariable("InstantGroup", this->getId());
    Con::evaluate((const char*)evalCmd.c_str(), false, mSubSceneAsset->getLevelPath());
    Con::setVariable("InstantGroup", instantGroup.c_str());
+   Sim::sgStreamingInstance->smStreaming = false;
 
    if (addFileNotify)
       Torque::FS::AddChangeNotification(mSubSceneAsset->getLevelPath(), this, &SubScene::_onFileChanged);

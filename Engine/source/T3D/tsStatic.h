@@ -254,6 +254,8 @@ public:
    void reSkin();
 
    // NetObject
+   U32 partialPackUpdate(NetConnection* conn, U32 mask, BitStream* stream) override;
+   void partialUnpackUpdate(NetConnection* conn, BitStream* stream) override;
    U32 packUpdate(NetConnection* conn, U32 mask, BitStream* stream) override;
    void unpackUpdate(NetConnection* conn, BitStream* stream) override;
 

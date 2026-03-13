@@ -440,6 +440,9 @@ NetConnection::NetConnection()
 
    // Ensure NetAddress is cleared
    dMemset(&mNetAddress, '\0', sizeof(NetAddress));
+
+   mGhostByteBudget = 800; // test payload.
+   mGhostByteRemainder = mGhostByteBudget;
 }
 
 NetConnection::~NetConnection()

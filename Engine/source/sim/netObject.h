@@ -304,6 +304,12 @@ public:
    /// @param   orMask   Bit(s) to set
    virtual void setMaskBits(U32 orMask);
 
+   /// <summary>
+   /// Used for ghosting to figure out what we can send.
+   /// </summary>
+   /// <returns>The network size of the data being sent for a full update.</returns>
+   virtual U32 getNetSize() const { return 900; }
+
    /// Clear the specified bits from the dirty mask.
    ///
    /// @param   orMask   Bits to clear
@@ -336,6 +342,22 @@ public:
    /// @param  updateSkips    Number of ticks we haven't been updated for.
    /// @returns A floating point value indicating priority. These are typically < 5.0.
    virtual F32 getUpdatePriority(CameraScopeQuery *focusObject, U32 updateMask, S32 updateSkips);
+
+   /// Instructs this object to pack its state for transfer over the network.
+   ///
+   /// @param   conn    Net connection being used
+   /// @param   mask    Mask indicating fields to transmit.
+   /// @param   stream  Bitstream to pack data to
+   ///
+   /// @returns Any bits which were not dealt with. The value is stored by the networking
+   ///          system. Don't set bits you weren't passed.
+   virtual U32  partialPackUpdate(NetConnection* conn, U32 mask, BitStream* stream);
+
+   /// Instructs this object to read state data previously packed with packUpdate.
+   ///
+   /// @param   conn    Net connection being used
+   /// @param   stream  stream to read from
+   virtual void partialUnpackUpdate(NetConnection* conn, BitStream* stream);
 
    /// Instructs this object to pack its state for transfer over the network.
    ///

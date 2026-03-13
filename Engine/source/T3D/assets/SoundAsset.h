@@ -87,9 +87,9 @@ class SoundAsset : public AssetBase
    typedef AssetPtr<SoundAsset> ConcreteAssetPtr;
 
 protected:
-   StringTableEntry        mSoundFile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
-   StringTableEntry        mSoundPath[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
-   SFXProfile              mSFXProfile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
+   StringTableEntry           mSoundFile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
+   StringTableEntry           mSoundPath[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
+   SimObjectPtr<SFXProfile>   mSFXProfile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
 
    SFXDescription          mProfileDesc;
    SFXPlayList             mPlaylist;
@@ -150,7 +150,7 @@ public:
    void copyTo(SimObject* object) override;
 
    //SFXResource* getSound() { return mSoundResource; }
-   Resource<SFXResource> getSoundResource(const U32 slotId = 0) { load(); return mSFXProfile[slotId].getResource(); }
+   Resource<SFXResource> getSoundResource(const U32 slotId = 0) { load(); return mSFXProfile[slotId]->getResource(); }
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
@@ -158,9 +158,9 @@ public:
    static bool _setSoundFile(void* object, const char* index, const char* data);
    U32 load() override;
    inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
-   SFXProfile* getSfxProfile(const U32 slotId = 0) { return &mSFXProfile[slotId]; }
+   SFXProfile* getSfxProfile(const U32 slotId = 0) { return mSFXProfile[slotId]; }
    SFXPlayList* getSfxPlaylist() { return &mPlaylist; }
-   SFXTrack* getSFXTrack() { load(); return mIsPlaylist ? dynamic_cast<SFXTrack*>(&mPlaylist) : dynamic_cast<SFXTrack*>(&mSFXProfile[0]); }
+   SFXTrack* getSFXTrack() { load(); return mIsPlaylist ? dynamic_cast<SFXTrack*>(&mPlaylist) : dynamic_cast<SFXTrack*>(mSFXProfile[0].getPointer()); }
    SFXDescription* getSfxDescription() { return &mProfileDesc; }
    bool isPlaylist(){ return mIsPlaylist; }
 

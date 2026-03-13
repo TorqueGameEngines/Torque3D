@@ -134,3 +134,53 @@ macro(addFramework framework)
       set(TORQUE_LINK_FRAMEWORKS ${TORQUE_LINK_FRAMEWORKS} "${_${framework}_FRAMEWORK_PATH}")
 	endif()
 endmacro()
+
+function(add_math_backend name compile_defs)
+    file(GLOB_RECURSE SRC CONFIGURE_DEPENDS "math/isa/${name}/*.cpp" "math/isa/${name}/*.h")
+
+    if(NOT SRC)
+        return()
+    endif()
+
+    file(GLOB_RECURSE INL CONFIGURE_DEPENDS "math/impl/*.inl")
+
+    add_library(math_${name} OBJECT ${SRC} ${INL})
+
+    message(STATUS "adding math library for isa ${name}")
+    target_include_directories(math_${name} PUBLIC
+        "math/public"
+        "math/impl"
+        "math/isa/${name}"
+    )
+
+    target_compile_definitions(math_${name} PRIVATE ${compile_defs})
+
+    # ISA flags
+    if(MSVC)
+        if(name STREQUAL "sse2")
+            target_compile_options(math_${name} PRIVATE /arch:SSE2)
+        elseif(name STREQUAL "sse41")
+            target_compile_options(math_${name} PRIVATE /arch:SSE2)
+        elseif(name STREQUAL "avx")
+            target_compile_options(math_${name} PRIVATE /arch:AVX)
+        elseif(name STREQUAL "avx2")
+            target_compile_options(math_${name} PRIVATE /arch:AVX2)
+        endif()
+    else()
+        if(name STREQUAL "sse2")
+            target_compile_options(math_${name} PRIVATE -msse2)
+        elseif(name STREQUAL "sse41")
+            target_compile_options(math_${name} PRIVATE -msse4.1)
+        elseif(name STREQUAL "avx")
+            target_compile_options(math_${name} PRIVATE -mavx)
+        elseif(name STREQUAL "avx2")
+            target_compile_options(math_${name} PRIVATE -mavx2 -mfma)
+        elseif(name STREQUAL "neon")
+            target_compile_options(math_${name} PRIVATE -march=armv8-a)
+        endif()
+    endif()
+
+    # Inject objects into engine
+    target_sources(${TORQUE_APP_NAME} PRIVATE $<TARGET_OBJECTS:math_${name}>)
+    set_target_properties(math_${name} PROPERTIES FOLDER "Libraries/Math")
+endfunction()

@@ -250,7 +250,7 @@ MatrixF AssimpAppNode::getNodeTransform(F32 time)
       // Check for inverted node coordinate spaces => can happen when modelers
       // use the 'mirror' tool in their 3d app. Shows up as negative <scale>
       // transforms in the collada model.
-      if (m_matF_determinant(nodeTransform) < 0.0f)
+      if (nodeTransform.determinant() < 0.0f)
       {
          // Mark this node as inverted so we can mirror mesh geometry, then
          // de-invert the transform matrix

@@ -25,7 +25,7 @@
 #include "console/engineAPI.h"
 
 #include "math/mMath.h"
-
+#include "math/public/math_backend.h"
 
 extern void mInstallLibrary_C();
 extern void mInstallLibrary_ASM();
@@ -98,23 +98,11 @@ void Math::init(U32 properties)
    Con::printf("   Installing Standard C extensions");
    mInstallLibrary_C();
 
+   Con::printf("   Installing ISA extensions");
+   math_backend::install_from_cpu_flags(properties);
+
    Con::printf("   Installing Assembly extensions");
    mInstallLibrary_ASM();
-
-   if (properties & CPU_PROP_FPU)
-   {
-      Con::printf("   Installing FPU extensions");
-   }
-
-   if (properties & CPU_PROP_MMX)
-   {
-      Con::printf("   Installing MMX extensions");
-   }
-
-   if (properties & CPU_PROP_SSE)
-   {
-      Con::printf("   Installing SSE extensions");
-   }
 
    Con::printf(" ");
 }

@@ -2139,7 +2139,7 @@ MatrixF River::getNodeTransform( U32 idx ) const
    mat.setColumn( 2, node.normal );
    mat.setColumn( 3, node.point );
 
-   AssertFatal( m_matF_determinant( mat ) != 0.0f, "no inverse!");
+   AssertFatal( mat.determinant() != 0.0f, "no inverse!");
 
    return mat; 
 }

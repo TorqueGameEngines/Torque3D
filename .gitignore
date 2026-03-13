@@ -180,6 +180,7 @@ pip-log.txt
 console.log
 *.cached.dts
 !Engine/bin
+My Projects/
 My_Projects/
 Project Manager.exe
 projects.xml

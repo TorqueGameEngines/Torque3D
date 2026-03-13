@@ -77,6 +77,14 @@ void Input::init()
    smLastJoystickActivated = true;
 
    SDL_InitSubSystem( SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS );
+   
+#ifdef TORQUE_OS_MAC
+   // Disable Ctrl+Click being treated as right-click
+   SDL_SetHint(SDL_HINT_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK, "0");
+
+   // Optionally, handle function keys as standard F1–F12
+   SDL_SetHint(SDL_HINT_MAC_BACKGROUND_APP, "0");
+#endif
 
    // Init the current modifier keys
    setModifierKeys(0);

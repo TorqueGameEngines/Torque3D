@@ -466,23 +466,41 @@ bool ActionMap::createEventDescriptor(const char* pEventString, EventDescriptor*
       pObjectString      = pSpace + 1;
       pSpace[0]          = '\0';
 
-      char* pModifier = dStrtok(copyBuffer, "-");
-      while (pModifier != NULL) {
-         if (dStricmp(pModifier, "shift") == 0) {
-            pDescriptor->flags |= SI_SHIFT;
-         } else if (dStricmp(pModifier, "ctrl") == 0) {
-            pDescriptor->flags |= SI_CTRL;
-         } else if (dStricmp(pModifier, "alt") == 0) {
-            pDescriptor->flags |= SI_ALT;
-         } else if (dStricmp(pModifier, "cmd") == 0) {
-            pDescriptor->flags |= SI_ALT;
-         } else if (dStricmp(pModifier, "opt") == 0) {
-            pDescriptor->flags |= SI_MAC_OPT;
-         }
-
-         pModifier = dStrtok(NULL, "-");
-      }
-   } else {
+		char* pModifier = dStrtok(copyBuffer, "-");
+		while (pModifier != NULL)
+		{
+#if defined(TORQUE_OS_MAC)
+			if (dStricmp(pModifier, "ctrl") == 0 || dStricmp(pModifier, "cmd") == 0)
+			{
+             pDescriptor->flags |= SI_CTRL;   // On Mac, map Ctrl/Cmd to the standard Mac command key
+			}
+			else if (dStricmp(pModifier, "shift") == 0)
+			{
+				 pDescriptor->flags |= SI_SHIFT;
+			}
+			else if (dStricmp(pModifier, "alt") == 0 || dStricmp(pModifier, "opt") == 0)
+			{
+             pDescriptor->flags |= SI_MAC_OPT;
+			}
+#else
+			if (dStricmp(pModifier, "ctrl") == 0 || (dStricmp(pModifier, "cmd") == 0)
+			{
+				 pDescriptor->flags |= SI_CTRL;
+			}
+			else if (dStricmp(pModifier, "shift") == 0)
+			{
+				 pDescriptor->flags |= SI_SHIFT;
+			}
+			else if (dStricmp(pModifier, "alt") == 0 || dStricmp(pModifier, "opt") == 0)
+			{
+				 pDescriptor->flags |= SI_ALT;
+			}
+#endif
+		   pModifier = dStrtok(NULL, "-");
+	   }
+   }
+   else
+   {
       // No.
       pDescriptor->flags = 0;
       pObjectString      = copyBuffer;
@@ -491,6 +509,47 @@ bool ActionMap::createEventDescriptor(const char* pEventString, EventDescriptor*
    // Now we need to map the key string to the proper KEY code from event.h
    //
    AssertFatal(dStrlen(pObjectString) != 0, "Error, no key was specified!");
+
+   // rebuild normalized modifier string from parsed flags
+   String newString;
+
+#if defined(TORQUE_OS_MAC)
+
+   if (pDescriptor->flags & SI_ALT || pDescriptor->flags & SI_CTRL)
+      newString += "Cmd";
+
+   if (pDescriptor->flags & SI_MAC_OPT)
+   {
+      if (newString.length()) newString += "-";
+      newString += "Opt";
+   }
+
+#else
+
+   if (pDescriptor->flags & SI_CTRL)
+      newString += "Ctrl";
+
+   if (pDescriptor->flags & SI_ALT)
+   {
+      if (newString.length()) newString += "-";
+      newString += "Alt";
+   }
+
+#endif
+
+   if (pDescriptor->flags & SI_SHIFT)
+   {
+      if (newString.length()) newString += "-";
+      newString += "Shift";
+   }
+
+   // rebuild full event string
+   if (newString.length())
+      newString = String::ToString("%s %s", newString.c_str(), pObjectString).c_str();
+   else
+      newString = String::ToString("%s", pObjectString).c_str();
+
+   dStrcpy(const_cast<char*>(pEventString), newString.c_str(), newString.length()+1);
 
    if (dStrlen(pObjectString) == 1)
    {
@@ -544,16 +603,7 @@ bool ActionMap::createEventDescriptor(const char* pEventString, EventDescriptor*
             }
          }
       }
-      // Didn't find an ascii match. Check the virtual map table
-      //for (U32 j = 0; gVirtualMap[j].code != 0xFFFFFFFF; j++)
-      //{
-      //   if (dStricmp(pObjectString, gVirtualMap[j].pDescription) == 0)
-      //   {
-      //      pDescriptor->eventType = gVirtualMap[j].type;
-      //      pDescriptor->eventCode = gVirtualMap[j].code;
-      //      return true;
-      //   }
-      //}
+
       InputEventManager::VirtualMapData* data = INPUTMGR->findVirtualMap(pObjectString);
       if(data)
       {

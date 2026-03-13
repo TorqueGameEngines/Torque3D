@@ -80,6 +80,10 @@ class SFXALDevice : public SFXDevice
       F32 mDistanceFactor;
       F32 mRolloffFactor;
       F32 mUserRolloffFactor;
+
+      ALuint mEffect;
+      ALuint mAuxSlot;
+      bool mHasEFX;
       
       void _setRolloffFactor( F32 factor );
 
@@ -91,9 +95,12 @@ class SFXALDevice : public SFXDevice
       void setListener( U32 index, const SFXListenerProperties& listener ) override;
       void setDistanceModel( SFXDistanceModel model ) override;
       void setDopplerFactor( F32 factor ) override;
+      void setReverb(const SFXReverbProperties& reverb) override;
       void setRolloffFactor( F32 factor ) override;
       void resetReverb() override {}
       void setSpeedOfSound(F32 speedOfSound) override;
+
+      ALuint getDeviceAuxSlot() { return mAuxSlot; }
 };
 
 #endif // _SFXALDEVICE_H_

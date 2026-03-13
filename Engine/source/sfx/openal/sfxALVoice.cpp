@@ -60,6 +60,13 @@ SFXALVoice* SFXALVoice::create( SFXALDevice* device, SFXALBuffer *buffer )
    SFXALVoice *voice = new SFXALVoice( buffer,
                                        sourceName );
 
+   // does our device support reverb
+   if (device->mCaps & SFXDevice::ECaps::CAPS_Reverb)
+   {
+      voice->mDeviceAuxSlot = (ALint)device->getDeviceAuxSlot();
+      alSource3i(sourceName, AL_AUXILIARY_SEND_FILTER, voice->mDeviceAuxSlot, 0, AL_FILTER_NULL);
+   }
+
    return voice;
 }
 
@@ -69,7 +76,9 @@ SFXALVoice::SFXALVoice( SFXALBuffer *buffer,
    :  Parent( buffer ),
       mSourceName( sourceName ),
       mResumeAtSampleOffset( -1.0f ),
-      mSampleOffset( 0 )
+      mDeviceAuxSlot(0),
+      mSampleOffset( 0 ),
+      mUseReverb(false)
 {
    AL_SANITY_CHECK();
 }
@@ -224,6 +233,19 @@ void SFXALVoice::setTransform( const MatrixF& transform )
 
    alSourcefv( mSourceName, AL_POSITION, pos );
    alSourcefv( mSourceName, AL_DIRECTION, dir );
+}
+
+void SFXALVoice::setReverb(bool useReverb)
+{
+   if (useReverb == mUseReverb)
+      return;
+
+   if (!useReverb)
+      alSource3i(mSourceName, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
+   else
+      alSource3i(mSourceName, AL_AUXILIARY_SEND_FILTER, mDeviceAuxSlot, 0, AL_FILTER_NULL);
+
+   mUseReverb = useReverb;
 }
 
 void SFXALVoice::setVolume( F32 volume )

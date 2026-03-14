@@ -847,7 +847,7 @@ SimObject* SimGroup::getObject(const S32& index)
 {
    if (index < 0 || index >= size())
    {
-      Con::errorf("Set::getObject - index out of range.");
+      Con::errorf("Set::getObject - index out of range [%d/%d].", index, this->size());
       return NULL;
    }
 
@@ -1036,7 +1036,7 @@ DefineEngineMethod( SimSet, getObject, SimObject*, ( U32 index ),,
 {
    if( index < 0 || index >= object->size() )
    {
-      Con::errorf( "Set::getObject - index out of range." );
+      Con::errorf("Set::getObject - index out of range [%d/%d].", index, object->size());
       return NULL;
    }
    

@@ -3,7 +3,7 @@ new SimGroup(AudioSettingsGroup)
    class = "PrimaryOptionsGroup";
    displayName = "Audio";
    
-   new SimGroup()
+   new SimGroup(AudioDeviceSettingsGroup)
    {
       class = "SubOptionsGroup";
       displayName = "Audio Settings";
@@ -65,16 +65,27 @@ function AudioSettingsGroup::populateSettings(%this)
    for(%i = 0; %i < %pCount; %i++)
    {
       %device = sfxGetProviderDevice(%i);
-      //Device Entry
-      %deviceEntry = new ArrayObject()
+      if(%device !$= "SFX Null Device")
       {
-         class = "OptionsQualityLevel";
-         displayName = %device;
-         provider = %provider; //this is for filtering later, if we need to
-         key["$pref::SFX::device"] = %device;
-      };
-      
-      AudioSettingsDeviceGroup.add(%deviceEntry);
+         %start   = strpos(%device,"(");
+         %end     = strpos(%device,"(", %start);
+         %displayName = %device;
+         if(%start != -1)
+         {
+            %displayName = getSubStr(%device, %start+1, %end-1);
+         }
+
+         //Device Entry
+         %deviceEntry = new ArrayObject()
+         {
+            class = "OptionsQualityLevel";
+            displayName = %displayName;
+            provider = %provider; //this is for filtering later, if we need to
+            key["$pref::SFX::device"] = %device;
+         };
+         
+         AudioSettingsDeviceGroup.add(%deviceEntry);
+      }
    }
 }
 

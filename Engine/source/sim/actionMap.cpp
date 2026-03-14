@@ -545,9 +545,9 @@ bool ActionMap::createEventDescriptor(const char* pEventString, EventDescriptor*
 
    // rebuild full event string
    if (newString.length())
-      newString = String::ToString("%s %s", newString.c_str(), pObjectString).c_str();
+      newString = String::ToString("%s %s", newString.c_str(), dStrupr(pObjectString)).c_str();
    else
-      newString = String::ToString("%s", pObjectString).c_str();
+      newString = String::ToString("%s", dStrupr(pObjectString)).c_str();
 
    dStrcpy(const_cast<char*>(pEventString), newString.c_str(), newString.length()+1);
 

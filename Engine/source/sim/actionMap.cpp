@@ -483,7 +483,7 @@ bool ActionMap::createEventDescriptor(const char* pEventString, EventDescriptor*
              pDescriptor->flags |= SI_MAC_OPT;
 			}
 #else
-			if (dStricmp(pModifier, "ctrl") == 0 || (dStricmp(pModifier, "cmd") == 0)
+			if (dStricmp(pModifier, "ctrl") == 0 || dStricmp(pModifier, "cmd") == 0)
 			{
 				 pDescriptor->flags |= SI_CTRL;
 			}

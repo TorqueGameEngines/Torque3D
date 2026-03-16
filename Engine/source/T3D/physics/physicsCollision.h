@@ -89,4 +89,11 @@ public:
                                  const MatrixF &localXfm ) = 0;
 };
 
+/// A strong pointer to a reference counted PhysicsCollision.
+typedef StrongRefPtr<PhysicsCollision> PhysicsCollisionRef;
+
+
+/// A weak pointer to a reference counted PhysicsCollision.
+typedef WeakRefPtr<PhysicsCollision> PhysicsCollisionWeakRef;
+
 #endif // _T3D_PHYSICS_PHYSICSCOLLISION_H_

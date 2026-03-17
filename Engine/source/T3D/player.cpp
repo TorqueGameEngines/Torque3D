@@ -264,7 +264,7 @@ IMPLEMENT_CALLBACK( PlayerData, onLeaveLiquid, void, ( Player* obj, const char* 
    "@param obj The Player object\n"
    "@param type The type of liquid the player has left\n" );
 
-IMPLEMENT_CALLBACK( PlayerData, animationDone, void, ( Player* obj, const char * animName), ( obj, animName),
+IMPLEMENT_CALLBACK( PlayerData, animationDone, void, ( Player* obj,const char * animName), ( obj, animName),
    "@brief Called on the server when a scripted animation completes.\n\n"
    "@param obj The Player object\n"
    "@see Player::setActionThread() for setting a scripted animation and its 'hold' parameter to "
@@ -4805,7 +4805,7 @@ Point3F Player::_move( const F32 travelTime, Collision *outCol )
    static Polyhedron sBoxPolyhedron;
    static ExtrudedPolyList sExtrudedPolyList;
    static ExtrudedPolyList sPhysZonePolyList;
-
+   Vector<VectorF> norms;
    for (; count < sMoveRetryCount; count++) {
       F32 speed = mVelocity.len();
       if (!speed && !mDeath.haveVelocity())
@@ -4931,7 +4931,7 @@ Point3F Player::_move( const F32 travelTime, Collision *outCol )
          mFalling = false;
 
          // Back off...
-         if ( velLen > 0.f ) {
+         if ( velLen > POINT_EPSILON) {
             F32 newT = getMin(0.01f / velLen, dt);
             start -= mVelocity * newT;
             totalMotion -= velLen * newT;
@@ -4983,30 +4983,82 @@ Point3F Player::_move( const F32 travelTime, Collision *outCol )
          // Subtract out velocity
          VectorF dv = collision->normal * (bd + sNormalElasticity);
          mVelocity += dv;
+
+         bool blocked = false;
          if (count == 0)
          {
             firstNormal = collision->normal;
          }
          else
          {
-            if (count == 1)
+            bool uniqueNorm = true;
+            for (U32 norm = 0; norm < norms.size(); norm++)
             {
-               // Re-orient velocity along the crease.
-               if (mDot(dv,firstNormal) < 0.0f &&
-                   mDot(collision->normal,firstNormal) < 0.0f)
+               if (mFabs(mDot(collision->normal, norms[norm])) > (1.0f - POINT_EPSILON))
                {
-                  VectorF nv;
-                  mCross(collision->normal,firstNormal,&nv);
-                  F32 nvl = nv.len();
-                  if (nvl)
-                  {
-                     if (mDot(nv,mVelocity) < 0.0f)
-                        nvl = -nvl;
-                     nv *= mVelocity.len() / nvl;
-                     mVelocity = nv;
-                  }
+                  uniqueNorm = false;
+                  break;
                }
             }
+            if (uniqueNorm)
+            {
+               VectorF n = collision->normal;
+               n.normalizeSafe();
+               norms.push_back(n);
+            }
+            // Use the number of unique normals to determine how to project velocity
+            if (norms.size() == 1)
+            {
+               VectorF n = norms[0];
+               mVelocity -= mDot(mVelocity, n) * n;
+               if (mVelocity.lenSquared() < POINT_EPSILON)
+                  blocked = true;
+            }
+            else if (norms.size() == 2)
+            {
+               VectorF nv;
+               mCross(norms[0], norms[1], &nv);
+               F32 nvl = nv.len();
+               if (nvl > POINT_EPSILON)
+               {
+                  nv /= nvl;
+                  F32 vel = mClampF(mDot(mVelocity, nv), -speed, speed);
+                  mVelocity = nv * vel;
+                  if (mVelocity.lenSquared() < POINT_EPSILON)
+                     blocked = true;
+               }
+               else blocked = true;
+            }
+            else // 3 or more unique normals: project off all using a Gram-Schmidt variant
+            {
+               Vector<VectorF> orthoNorms;
+               for (U32 i = 0; i < norms.size(); ++i)
+               {
+                  VectorF n = norms[i];
+                  for (U32 j = 0; j < orthoNorms.size(); ++j)
+                     n -= mDot(n, orthoNorms[j]) * orthoNorms[j];
+                  if (n.lenSquared() > POINT_EPSILON)
+                  {
+                     n.normalize();
+                     orthoNorms.push_back(n);
+                  }
+               }
+               for (U32 i = 0; i < orthoNorms.size(); ++i)
+                  mVelocity -= mDot(mVelocity, orthoNorms[i]) * orthoNorms[i];
+               if (mVelocity.lenSquared() < POINT_EPSILON)
+                  blocked = true;
+            }
+         }
+         if (blocked)
+         {
+            mVelocity.zero();
+            return start;
+         }
+         F32 newSpeed = mVelocity.len();
+         if (newSpeed > speed)
+         {
+            mVelocity.normalize();
+            mVelocity *= speed;
          }
       }
       else
@@ -5017,7 +5069,7 @@ Point3F Player::_move( const F32 travelTime, Collision *outCol )
       }
    }
 
-   if (count == sMoveRetryCount)
+   if (count == sMoveRetryCount || mVelocity.lenSquared() < POINT_EPSILON)
    {
       // Failed to move
       start = initialPosition;

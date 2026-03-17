@@ -1,6 +1,6 @@
 #include "platform/platform.h"
 #include "T3D/physics/jolt/joltBody.h"
-
+ 
 #include "math/mBox.h"
 #include "console/console.h"
 #include "scene/sceneObject.h"
@@ -78,8 +78,8 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
 
    JPH::BodyCreationSettings settings(
       joltShape,
-      toJolt(pos),              // initial position
-      toJolt(angPos),          // rotation
+      joltCast(pos),              // initial position
+      joltCast(angPos),          // rotation
       motionType,
       layer
    );
@@ -89,13 +89,18 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
    {
       settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
       settings.mMassPropertiesOverride.mMass = mass;
+      mIsDynamic = true;
    }
-
 
    JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
    JPH::Body* body = bi.CreateBody(settings);
-
    bi.AddBody(body->GetID(), JPH::EActivation::Activate);
+
+   if (bodyFlags & BF_TRIGGER)
+   {
+      body->SetIsSensor(true);
+   }
+
    mBody = body;
 
    mUserData.setObject(obj);
@@ -111,15 +116,13 @@ void JoltBody::setTransform(const MatrixF& xfm)
       return;
 
    Point3F pos = xfm.getPosition();
-
    QuatF q(xfm);
-   q.inverse();
    JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
 
    bi.SetPositionAndRotation(
       mBody->GetID(),
-      JPH::RVec3(pos.x, pos.y, pos.z),
-      JPH::Quat(q.x, q.y, q.z, q.w),
+      joltCast(pos),
+      joltCast(q),
       JPH::EActivation::Activate
    );
 }
@@ -132,35 +135,32 @@ void JoltBody::applyCorrection(const MatrixF& xfm)
 MatrixF& JoltBody::getTransform(MatrixF* outMatrix)
 {
    const JPH::Mat44 trans = mBody->GetWorldTransform();
-   *outMatrix = fromJolt(trans);
+   *outMatrix = joltCast(trans);
    return *outMatrix;
 }
 
 void JoltBody::applyImpulse(const Point3F& origin, const Point3F& force)
 {
-   mBody->AddImpulse(toJolt(force), toJolt(origin));
+   mBody->AddImpulse(joltCast(force), joltCast(origin));
 }
 
 void JoltBody::applyTorque(const Point3F& torque)
 {
-   mBody->AddTorque(toJolt(torque));
+   mBody->AddTorque(joltCast(torque));
 }
 
 void JoltBody::applyForce(const Point3F& force)
 {
-   mBody->AddForce(toJolt(force));
+   mBody->AddForce(joltCast(force));
 }
 
 void JoltBody::moveKinematicTo(const MatrixF& xfm)
 {
-   Point3F pos = xfm.getPosition();
-
-   QuatF q(xfm);
-
+   JPH::Mat44 objXfm = joltCast(xfm);
    mWorld->getPhysicsSystem()->GetBodyInterface().MoveKinematic(
       mBody->GetID(),
-      JPH::RVec3(pos.x, pos.y, pos.z),
-      JPH::Quat(q.x, q.y, q.z, q.w),
+      objXfm.GetTranslation(),
+      objXfm.GetQuaternion(),
       1.0f / 60.0f
    );
 }
@@ -170,8 +170,8 @@ Box3F JoltBody::getWorldBounds()
    JPH::AABox box = mBody->GetWorldSpaceBounds();
 
    return Box3F(
-      Point3F(box.mMin.GetX(), box.mMin.GetY(), box.mMin.GetZ()),
-      Point3F(box.mMax.GetX(), box.mMax.GetY(), box.mMax.GetZ())
+      Point3F(joltCast(box.mMin)),
+      Point3F(joltCast(box.mMax))
    );
 }
 
@@ -197,7 +197,7 @@ void JoltBody::setSleepThreshold(F32 linear, F32 angular)
 
    JPH::MotionProperties* mp = mBody->GetMotionProperties();
 
-   /*mp->SetLinearSleepThreshold(linear);
+  /* mp->SetLinearSleepThreshold(linear);
    mp->SetAngularSleepThreshold(angular);*/
 }
 
@@ -233,35 +233,60 @@ void JoltBody::getState(PhysicsState* outState)
    if (!outState)
       return;
 
+   const JPH::RMat44 worldXfm = mBody->GetWorldTransform();
+
+   outState->position = joltCast(worldXfm.GetTranslation());
+   outState->orientation = joltCast(mBody->GetRotation());
    outState->linVelocity = getLinVelocity();
    outState->angVelocity = getAngVelocity();
 
+   if (mBody->IsDynamic())
+   {
+      const JPH::MotionProperties* mp = mBody->GetMotionProperties();
+
+      // Linear momentum = m * v
+      F32 mass = mp->GetInverseMass() > 0.0f ? 1.0f / mp->GetInverseMass() : 0.0f;
+      outState->momentum = outState->linVelocity * mass;
+
+      // Angular momentum
+      JPH::Mat44 I_world = mBody->GetInverseInertia(); // 3x3 part
+      JPH::Vec3 angMomentum = I_world.Multiply3x3(mBody->GetAngularVelocity());
+      outState->angularMomentum = joltCast(angMomentum);
+   }
+   else
+   {
+      outState->momentum.set(0, 0, 0);
+      outState->angularMomentum.set(0, 0, 0);
+   }
+
+   // Sleeping?
+   outState->sleeping = !mBody->IsActive();
 }
 
 Point3F JoltBody::getCMassPosition() const
 {
    JPH::RVec3 p = mBody->GetCenterOfMassPosition();
-   return Point3F(p.GetX(), p.GetY(), p.GetZ());
+   return Point3F(joltCast(p));
 }
 
 Point3F JoltBody::getLinVelocity() const
 {
-   return fromJolt(mBody->GetLinearVelocity());
+   return joltCast(mBody->GetLinearVelocity());
 }
 
 Point3F JoltBody::getAngVelocity() const
 {
-   return fromJolt(mBody->GetAngularVelocity());
+   return joltCast(mBody->GetAngularVelocity());
 }
 
 void JoltBody::setLinVelocity(const Point3F& vel)
 {
-   mBody->SetLinearVelocity(toJolt(vel));
+   mBody->SetLinearVelocity(joltCast(vel));
 }
 
 void JoltBody::setAngVelocity(const Point3F& vel)
 {
-   mBody->SetAngularVelocity(toJolt(vel));
+   mBody->SetAngularVelocity(joltCast(vel));
 }
 
 void JoltBody::findContact(SceneObject** contactObject,

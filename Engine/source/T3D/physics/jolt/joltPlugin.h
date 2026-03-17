@@ -32,52 +32,55 @@
 #include <Jolt/Physics/Constraints/SixDOFConstraint.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 
-inline JPH::Vec3 toJolt(const Point3F& p)
+inline Point3F joltCast(const JPH::Vec3& vec)
 {
-   return JPH::Vec3(p.x, p.y, p.z);
+   return Point3F(vec.GetX(), vec.GetY(), vec.GetZ());
 }
 
-inline Point3F fromJolt(const JPH::Vec3& v)
+inline JPH::Vec3 joltCast(const Point3F& point)
 {
-   return Point3F(v.GetX(), v.GetY(), v.GetZ());
+   return JPH::Vec3(point.x, point.y, point.z);
 }
 
-inline Point3F fromJolt(const JPH::Float3& v)
+inline QuatF joltCast(const JPH::Quat& quat)
 {
-   return Point3F(v.x, v.y, v.z);
+   /// The Torque quat has the opposite winding order.
+   return QuatF(-quat.GetX(), -quat.GetY(), -quat.GetZ(), quat.GetW());
 }
 
-inline JPH::Quat toJolt(const QuatF& q)
+inline JPH::Quat joltCast(const QuatF& quat)
 {
-   return JPH::Quat(q.x, q.y, q.z, q.w);
+   /// The Torque quat has the opposite winding order.
+   return JPH::Quat(-quat.x, -quat.y, -quat.z, quat.w);
 }
 
-inline QuatF fromJolt(const JPH::Quat& q)
-{
-   return QuatF(q.GetX(), q.GetY(), q.GetZ(), q.GetW());
-}
-
-inline JPH::RMat44 toJolt(const MatrixF& m)
+inline JPH::RMat44 joltCast(const MatrixF& m)
 {
    return JPH::RMat44(
-      JPH::Vec4(m[0], m[1], m[2], m[3]),
-      JPH::Vec4(m[4], m[5], m[6], m[7]),
-      JPH::Vec4(m[8], m[9], m[10], m[11]),
-      JPH::Vec4(m[12], m[13], m[14], m[15])
+      JPH::Vec4(m[0], m[1], m[2], 0.0f),
+      JPH::Vec4(m[4], m[5], m[6], 0.0f),
+      JPH::Vec4(m[8], m[9], m[10], 0.0f),
+      JPH::Vec4(m[3], m[7], m[1], 1.0f)
    );
 }
 
-inline MatrixF fromJolt(const JPH::RMat44& m)
+inline MatrixF joltCast(const JPH::Mat44& xfm)
 {
    MatrixF out;
 
-   for (U32 r = 0; r < 4; r++)
-   {
-      for (U32 c = 0; c < 4; c++)
-      {
-         out[r * 4 + c] = (F32)m(r, c);
-      }
-   }
+   // Set the rotation.
+   out[0] = xfm(0, 0); out[1] = xfm(0, 1); out[2] = xfm(0, 2);
+   out[4] = xfm(1, 0); out[5] = xfm(1, 1); out[6] = xfm(1, 2);
+   out[8] = xfm(2, 0); out[9] = xfm(2, 1); out[10] = xfm(2, 2);
+
+   // The position.
+   out[3] = xfm.GetTranslation().GetX();
+   out[7] = xfm.GetTranslation().GetY();
+   out[11] = xfm.GetTranslation().GetZ();
+
+   // Clear out the rest.
+   out[12] = out[13] = out[14] = 0.0f;
+   out[15] = 1.0f;
 
    return out;
 }
@@ -87,26 +90,26 @@ inline void toJolt(const MatrixF& mat, JPH::RVec3& pos, JPH::Quat& rot)
    Point3F p;
    p = mat.getPosition();
 
-   pos = toJolt(p);
+   pos = joltCast(p);
 
    QuatF q(mat);
 
-   rot = toJolt(q);
+   rot = joltCast(q);
 }
 
 inline JPH::AABox toJolt(const Box3F& box)
 {
    return JPH::AABox(
-      toJolt(box.minExtents),
-      toJolt(box.maxExtents)
+      joltCast(box.minExtents),
+      joltCast(box.maxExtents)
    );
 }
 
 inline Box3F fromJolt(const JPH::AABox& box)
 {
    return Box3F(
-      fromJolt(box.mMin),
-      fromJolt(box.mMax)
+      joltCast(box.mMin),
+      joltCast(box.mMax)
    );
 }
 

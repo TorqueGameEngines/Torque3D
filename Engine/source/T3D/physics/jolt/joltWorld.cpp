@@ -1,6 +1,7 @@
 
 #include "platform/platform.h"
 #include "T3D/physics/jolt/joltWorld.h"
+ 
 #include "platform/profiler.h"
 #include "sim/netConnection.h"
 #include "console/console.h"
@@ -34,7 +35,7 @@ JoltWorld::~JoltWorld()
 bool JoltWorld::initWorld(bool isServer, ProcessList* processList)
 {
    const U32 cMaxBodies = 65536;
-   const U32 cNumBodyMutexes = 0;
+   const U32 cNumBodyMutexes = 1024;
    const U32 cMaxBodyPairs = 65536;
    const U32 cMaxContactConstraints = 10240;
 
@@ -59,12 +60,12 @@ bool JoltWorld::initWorld(bool isServer, ProcessList* processList)
 
    mIsEnabled = true;
 
-   mPhysicsSystem.SetGravity(JPH::Vec3(mGravity.x,mGravity.y, mGravity.z));
+   mPhysicsSystem.SetGravity(joltCast(mGravity));
 
 
    mProcessList = processList;
    mProcessList->preTickSignal().notify(this, &JoltWorld::getPhysicsResults);
-   mProcessList->postTickSignal().notify(this, &JoltWorld::tickPhysics, TickMs);
+   mProcessList->postTickSignal().notify(this, &JoltWorld::tickPhysics, 1000.0f);
 
    return true;
 }
@@ -115,9 +116,8 @@ bool JoltWorld::castRay(const Point3F& startPnt, const Point3F& endPnt, RayInfo*
 
    if (ri)
    {
-      ri->point.set((F32)hitPos.GetX(), (F32)hitPos.GetY(), (F32)hitPos.GetZ());
-
-      ri->normal.set(normal.GetX(), normal.GetY(), normal.GetZ());
+      ri->point.set(joltCast(hitPos));
+      ri->normal.set(joltCast(normal));
 
       ri->distance = result.mFraction * rayLength;
 
@@ -168,6 +168,9 @@ void JoltWorld::tickPhysics(U32 elapsedMs)
    if (!mIsEnabled)
       return;
 
+   if (mResetPending.exchange(false))
+      performReset();
+
    const F32 elapsedSec = (F32)elapsedMs * 0.001f;
 
    mPhysicsSystem.Update(
@@ -182,42 +185,38 @@ void JoltWorld::getPhysicsResults()
 {
 }
 
+void JoltWorld::performReset()
+{
+   JPH::BodyInterface& bodyInterface = mPhysicsSystem.GetBodyInterface();
+
+   JPH::BodyIDVector bodies;
+   mPhysicsSystem.GetBodies(bodies);
+
+   for (JPH::BodyID id : bodies)
+   {
+      if (!bodyInterface.IsAdded(id))
+         continue;
+
+      bodyInterface.ActivateBody(id);
+
+      bodyInterface.SetLinearAndAngularVelocity(
+         id,
+         JPH::Vec3::sZero(),
+         JPH::Vec3::sZero()
+      );
+   }
+
+   mPhysicsSystem.OptimizeBroadPhase();
+}
+
 void JoltWorld::reset()
 {
    if (!mIsEnabled)
       return;
 
-   JPH::BodyInterface& bodyInterface = mPhysicsSystem.GetBodyInterface();
+   // we operate with a threading environment o not reset right away.
+   mResetPending.store(true, std::memory_order_release);
 
-   JPH::BodyIDVector bodies;
-
-   mPhysicsSystem.GetBodies(bodies);
-
-   for (JPH::BodyID id : bodies)
-   {
-      JPH::BodyLockWrite lock(
-         mPhysicsSystem.GetBodyLockInterface(),
-         id
-      );
-
-      if (!lock.Succeeded())
-         continue;
-
-      JPH::Body& body = lock.GetBody();
-
-      // Wake body
-      bodyInterface.ActivateBody(id);
-
-      // Reset velocities
-      if (body.IsDynamic())
-      {
-         bodyInterface.SetLinearVelocity(id, JPH::Vec3::sZero());
-         bodyInterface.SetAngularVelocity(id, JPH::Vec3::sZero());
-      }
-   }
-
-   // Optional but recommended: optimize broadphase again
-   mPhysicsSystem.OptimizeBroadPhase();
 }
 
 void JoltWorld::setEnabled(bool enabled)

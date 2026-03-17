@@ -1,7 +1,7 @@
 
 #include "platform/platform.h"
 #include "T3D/physics/jolt/joltPlugin.h"
-
+ 
 #include "T3D/physics/jolt/joltWorld.h"
 #include "T3D/physics/jolt/joltCollision.h"
 #include "T3D/physics/jolt/joltBody.h"
@@ -211,12 +211,12 @@ JoltDebugRenderer::JoltDebugRenderer()
 
 void JoltDebugRenderer::DrawLine(JPH::RVec3Arg inFrom, JPH::RVec3Arg inTo, JPH::ColorArg inColor)
 {
-   DebugDrawer::get()->drawLine(fromJolt(inFrom), fromJolt(inTo), fromJolt(inColor));
+   DebugDrawer::get()->drawLine(joltCast(inFrom), joltCast(inTo), fromJolt(inColor));
 }
 
 void JoltDebugRenderer::DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH::RVec3Arg inV3, JPH::ColorArg inColor, ECastShadow inCastShadow)
 {
-   DebugDrawer::get()->drawTri(fromJolt(inV1), fromJolt(inV2), fromJolt(inV3), fromJolt(inColor));
+   DebugDrawer::get()->drawTri(joltCast(inV1), joltCast(inV2), joltCast(inV3), fromJolt(inColor));
 }
 
 JPH::DebugRenderer::Batch JoltDebugRenderer::CreateTriangleBatch(const Triangle* inTriangles, int inTriangleCount)
@@ -257,9 +257,9 @@ void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AA
    const BatchImpl* batch = static_cast<const BatchImpl*>(lod->mTriangleBatch.GetPtr());
    for (const JPH::DebugRenderer::Triangle& triangle : batch->mTriangles)
    {
-      JPH::RVec3 v0 = inModelMatrix * JPH::Vec3(triangle.mV[0].mPosition);
-      JPH::RVec3 v1 = inModelMatrix * JPH::Vec3(triangle.mV[1].mPosition);
-      JPH::RVec3 v2 = inModelMatrix * JPH::Vec3(triangle.mV[2].mPosition);
+      JPH::Vec3 v0 = inModelMatrix * JPH::Vec3(triangle.mV[0].mPosition);
+      JPH::Vec3 v1 = inModelMatrix * JPH::Vec3(triangle.mV[1].mPosition);
+      JPH::Vec3 v2 = inModelMatrix * JPH::Vec3(triangle.mV[2].mPosition);
       JPH::Color color = inModelColor * triangle.mV[0].mColor;
 
       DrawTriangle(v0, v1, v2, color, inCastShadow);

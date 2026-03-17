@@ -117,6 +117,7 @@ class JoltWorld : public PhysicsWorld
 {
 protected:
    bool	mIsEnabled;
+   std::atomic<bool> mResetPending{ false };
 
    F32 mEditorTimeScale;
    JPH::PhysicsSystem mPhysicsSystem;
@@ -142,6 +143,8 @@ public:
 
    void tickPhysics(U32 elapsedMs);
    void getPhysicsResults();
+
+   void performReset();
 
    void setEnabled(bool enabled);
    bool getEnabled() const { return mIsEnabled; }

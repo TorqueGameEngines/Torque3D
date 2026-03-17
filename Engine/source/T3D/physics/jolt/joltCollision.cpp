@@ -62,7 +62,7 @@ void JoltCollision::addBox(const Point3F& halfWidth, const MatrixF& localXfm)
    entry.shape = rtsShape;
    entry.localPos = localPos;
    entry.localRot = localRot;
-   entry.localXfm = toJolt(localXfm);
+   entry.localXfm = joltCast(localXfm);
    mChildren.push_back(entry);
 
    rebuildCompound();
@@ -84,7 +84,7 @@ void JoltCollision::addSphere(F32 radius, const MatrixF& localXfm)
    entry.shape = rtsShape;
    entry.localPos = localPos;
    entry.localRot = localRot;
-   entry.localXfm = toJolt(localXfm);
+   entry.localXfm = joltCast(localXfm);
    mChildren.push_back(entry);
 
    rebuildCompound();
@@ -106,7 +106,7 @@ void JoltCollision::addCapsule(F32 radius, F32 height, const MatrixF& localXfm)
    entry.shape = rtsShape;
    entry.localPos = localPos;
    entry.localRot = localRot;
-   entry.localXfm = toJolt(localXfm);
+   entry.localXfm = joltCast(localXfm);
    mChildren.push_back(entry);
 
    rebuildCompound();
@@ -136,7 +136,7 @@ bool JoltCollision::addConvex(const Point3F* points, U32 count, const MatrixF& l
    entry.shape = rtsShape;
    entry.localPos = localPos;
    entry.localRot = localRot;
-   entry.localXfm = toJolt(localXfm);
+   entry.localXfm = joltCast(localXfm);
    mChildren.push_back(entry);
 
    rebuildCompound();
@@ -184,7 +184,7 @@ bool JoltCollision::addTriangleMesh(const Point3F* vert, U32 vertCount, const U3
    entry.shape = rtsShape;
    entry.localPos = localPos;
    entry.localRot = localRot;
-   entry.localXfm = toJolt(localXfm);
+   entry.localXfm = joltCast(localXfm);
    mChildren.push_back(entry);
 
    rebuildCompound();
@@ -234,7 +234,7 @@ bool JoltCollision::addHeightfield(const U16* heightData, const bool* holes, U32
    entry.shape = rtsShape;
    entry.localPos = localPos;
    entry.localRot = localRot;
-   entry.localXfm = toJolt(localXfm);
+   entry.localXfm = joltCast(localXfm);
    mChildren.push_back(entry);
 
    rebuildCompound();

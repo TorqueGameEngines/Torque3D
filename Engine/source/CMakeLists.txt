@@ -130,7 +130,7 @@ torqueAddSourceDirectories("windowManager" "windowManager/torque" "windowManager
 torqueAddSourceDirectories("scene" "scene/culling" "scene/zones" "scene/mixin")
 
 # Handle math
-torqueAddSourceDirectories("math" "math/util")
+torqueAddSourceDirectories("math" "math/util" "math/public" "math/impl") # note impl must skip the .inl files, never use them in engine code.
 
 # Handle persistence
 set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "persistence/rapidjson")
@@ -496,6 +496,48 @@ else()
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
 endif()
 
+string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" ARCH)
+
+set(IS_X86 FALSE)
+set(IS_ARM FALSE)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    # Use the CMAKE_OSX_ARCHITECTURES list for universal builds
+    foreach(arch IN LISTS CMAKE_OSX_ARCHITECTURES)
+        if(arch STREQUAL "x86_64")
+            set(IS_X86 TRUE)
+        elseif(arch STREQUAL "arm64")
+            set(IS_ARM TRUE)
+        endif()
+    endforeach()
+else()
+    # Non-macOS detection
+    if(ARCH MATCHES "arm64|aarch64")
+      set(IS_ARM TRUE)
+    endif()
+    if(ARCH MATCHES "x86_64|amd64|i[3-6]86")
+        set(IS_X86 TRUE)
+    endif()
+endif()
+
+# always available
+add_math_backend(scalar  MATH_SIMD_SCALAR)
+message(STATUS "Processor: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "IS_X86=${IS_X86}")
+message(STATUS "IS_ARM=${IS_ARM}")
+
+# x86 family
+if(IS_X86)
+    add_math_backend(sse2  MATH_SIMD_SSE2)
+    add_math_backend(sse41 MATH_SIMD_SSE41)
+    add_math_backend(avx   MATH_SIMD_AVX)
+    add_math_backend(avx2  MATH_SIMD_AVX2)
+endif()
+
+# ARM family
+if(IS_ARM)
+    add_math_backend(neon  MATH_SIMD_NEON)
+endif()
 
 if(MSVC)
     # Match projectGenerator naming for executables

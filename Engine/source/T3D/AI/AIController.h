@@ -74,7 +74,7 @@ public:
    {
       if (mCover && mCover->mPosSet && mCover->getPosition() == loc)
       {
-         mCover->mRadius == rad;
+         mCover->mRadius = rad;
          return;
       }
       delete(mCover); mCover = new AICover(this, loc, rad);
@@ -83,7 +83,7 @@ public:
    {
       if (mCover && mCover->mObj == objIn)
       {
-         mCover->mRadius == rad;
+         mCover->mRadius = rad;
          return;
       }
       delete(mCover); mCover = new AICover(this, objIn, rad);

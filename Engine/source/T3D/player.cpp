@@ -5221,7 +5221,7 @@ bool Player::updatePos(const F32 travelTime)
             Collision& colCheck = collisionList[i];
             if (colCheck.object)
             {
-               SceneObject* obj = static_cast<SceneObject*>(col.object);
+               SceneObject* obj = static_cast<SceneObject*>(colCheck.object);
                if (obj->getTypeMask() & PlayerObjectType)
                {
                   _handleCollision( colCheck );

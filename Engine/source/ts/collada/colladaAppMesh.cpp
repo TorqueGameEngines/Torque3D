@@ -1099,7 +1099,7 @@ void ColladaAppMesh::lookupSkinData()
       // Inverted node coordinate spaces (negative scale factor) are corrected
       // in ColladaAppNode::getNodeTransform, so need to apply the same operation
       // here to match
-      if (m_matF_determinant(invBind) < 0.0f)
+      if (invBind.determinant() < 0.0f)
          initialTransforms[iJoint].scale(Point3F(1, 1, -1));
 
       initialTransforms[iJoint].mul(invBind);

@@ -5,7 +5,7 @@
 #include "T3D/physics/physicsPlugin.h"
 #endif
 
-#ifdef TORQUE_TOOLS
+#if defined(TORQUE_TOOLS) && defined(TORQUE_OS_WIN)
 #ifndef JPH_DEBUG_RENDERER
 #define JPH_DEBUG_RENDERER
 #endif
@@ -24,7 +24,7 @@
 #include <Jolt/Core/StreamWrapper.h>
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
-#ifdef TORQUE_TOOLS
+#ifdef JPH_DEBUG_RENDERER
 #include <Jolt/Renderer/DebugRenderer.h>
 #endif
 #include <Jolt/Core/JobSystemThreadPool.h>
@@ -140,7 +140,7 @@ inline ColorI fromJolt(const JPH::Color& c)
    return ColorI(c.r, c.g, c.b, c.a);
 }
 
-#ifdef TORQUE_TOOLS
+#ifdef JPH_DEBUG_RENDERER
 class JoltDebugRenderer final : public JPH::DebugRenderer
 {
 public:

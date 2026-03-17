@@ -21,7 +21,7 @@ JoltPlugin::JoltPlugin()
    JPH::Factory::sInstance = new JPH::Factory();
    JPH::RegisterTypes();
 
-#ifdef TORQUE_TOOLS
+#ifdef JPH_DEBUG_RENDERER
    JPH::DebugRenderer::sInstance = new JoltDebugRenderer();
 #endif // TORQUE_TOOLS
 }
@@ -29,9 +29,9 @@ JoltPlugin::JoltPlugin()
 JoltPlugin::~JoltPlugin()
 {
    delete JPH::Factory::sInstance;
-#ifdef TORQUE_TOOLS
-   /*delete JPH::DebugRenderer::sInstance;
-   JPH::DebugRenderer::sInstance = nullptr;*/
+#ifdef JPH_DEBUG_RENDERER
+   delete JPH::DebugRenderer::sInstance;
+   JPH::DebugRenderer::sInstance = nullptr;
 #endif
 }
 
@@ -203,7 +203,7 @@ U32 JoltPlugin::getWorldCount() const
    return mPhysicsWorldLookup.size();
 }
 
-#ifdef TORQUE_TOOLS
+#ifdef JPH_DEBUG_RENDERER
 JoltDebugRenderer::JoltDebugRenderer()
 {
    JPH::DebugRenderer::Initialize();

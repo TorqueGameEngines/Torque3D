@@ -16,8 +16,13 @@
     "openal-soft",
     {
       "name": "joltphysics",
-      "default-features": false, 
-      "features":["debugrenderer"]
+      "default-features": false
+    },
+    {
+      "name": "joltphysics",
+      "default-features": false,
+      "features": ["debugrenderer"],
+      "platform": "windows"
     },
     { 
         "name": "libsndfile", 

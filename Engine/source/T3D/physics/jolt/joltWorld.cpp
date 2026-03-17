@@ -155,7 +155,7 @@ void JoltWorld::explosion(const Point3F& pos, F32 radius, F32 forceMagnitude)
 
 void JoltWorld::onDebugDraw(const SceneRenderState* state)
 {
-#ifdef TORQUE_TOOLS
+#ifdef JPH_DEBUG_RENDERER
    if (!mIsEnabled)
       return;
 

@@ -873,8 +873,11 @@ bool Projectile::onAdd()
       }
    }
    if (mSourceObject.isValid())
+   {
       processAfter(mSourceObject);
-
+      if (isClientObject())
+         mSourceObject->getRenderMuzzlePoint(mSourceObjectSlot, &mCurrPosition);
+   }
    // Setup our bounding box
    if (bool(mDataBlock->getProjectileShape()) == true)
       mObjBox = mDataBlock->getProjectileShape()->mBounds;

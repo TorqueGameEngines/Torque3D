@@ -10,6 +10,7 @@
 #include <Jolt/Physics/Collision/Shape/CompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 
 JoltCollision::JoltCollision()
 {
@@ -37,9 +38,30 @@ void JoltCollision::addPlane(const PlaneF& plane)
 
 void JoltCollision::addBox(const Point3F& halfWidth, const MatrixF& localXfm)
 {
-   JPH::BoxShapeSettings settings(JPH::Vec3(halfWidth.x, halfWidth.y, halfWidth.z));
+   JPH::BoxShapeSettings boxSettings(JPH::Vec3(halfWidth.x, halfWidth.y, halfWidth.z));
+   auto result = boxSettings.Create();
+   if (result.HasError())
+   {
+      Con::errorf("Jolt Error: %s", result.GetError().c_str());
+      return;
+   }
+
+   auto baseShape = result.Get();
+
+   // Convert engine matrix to Jolt position + rotation
+   JPH::Vec3 localPos;
+   JPH::Quat localRot;
+   toJolt(localXfm, localPos, localRot);
+
+   // Wrap the base shape with RotatedTranslatedShape
+   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
+   auto rtsShape = rtsSettings->Create().Get();
+
+   // Store in child entry
    ChildShapeEntry entry;
-   entry.shape = settings.Create().Get();
+   entry.shape = rtsShape;
+   entry.localPos = localPos;
+   entry.localRot = localRot;
    entry.localXfm = toJolt(localXfm);
    mChildren.push_back(entry);
 
@@ -49,8 +71,19 @@ void JoltCollision::addBox(const Point3F& halfWidth, const MatrixF& localXfm)
 void JoltCollision::addSphere(F32 radius, const MatrixF& localXfm)
 {
    JPH::SphereShapeSettings settings(radius);
+   auto baseShape = settings.Create().Get();
+
+   JPH::Vec3 localPos;
+   JPH::Quat localRot;
+   toJolt(localXfm, localPos, localRot);
+
+   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
+   auto rtsShape = rtsSettings->Create().Get();
+
    ChildShapeEntry entry;
-   entry.shape = settings.Create().Get();
+   entry.shape = rtsShape;
+   entry.localPos = localPos;
+   entry.localRot = localRot;
    entry.localXfm = toJolt(localXfm);
    mChildren.push_back(entry);
 
@@ -60,8 +93,19 @@ void JoltCollision::addSphere(F32 radius, const MatrixF& localXfm)
 void JoltCollision::addCapsule(F32 radius, F32 height, const MatrixF& localXfm)
 {
    JPH::CapsuleShapeSettings settings(radius, height);
+   auto baseShape = settings.Create().Get();
+
+   JPH::Vec3 localPos;
+   JPH::Quat localRot;
+   toJolt(localXfm, localPos, localRot);
+
+   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
+   auto rtsShape = rtsSettings->Create().Get();
+
    ChildShapeEntry entry;
-   entry.shape = settings.Create().Get();
+   entry.shape = rtsShape;
+   entry.localPos = localPos;
+   entry.localRot = localRot;
    entry.localXfm = toJolt(localXfm);
    mChildren.push_back(entry);
 
@@ -70,7 +114,8 @@ void JoltCollision::addCapsule(F32 radius, F32 height, const MatrixF& localXfm)
 
 bool JoltCollision::addConvex(const Point3F* points, U32 count, const MatrixF& localXfm)
 {
-   if (count == 0) return false;
+   if (count == 0)
+      return false;
 
    std::vector<JPH::Vec3> verts;
    verts.reserve(count);
@@ -78,12 +123,17 @@ bool JoltCollision::addConvex(const Point3F* points, U32 count, const MatrixF& l
       verts.emplace_back(points[i].x, points[i].y, points[i].z);
 
    JPH::ConvexHullShapeSettings settings(verts.data(), verts.size());
-   ChildShapeEntry entry;
-   entry.shape = settings.Create().Get();
+   auto baseShape = settings.Create().Get();
+
    JPH::Vec3 localPos;
    JPH::Quat localRot;
    toJolt(localXfm, localPos, localRot);
 
+   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
+   auto rtsShape = rtsSettings->Create().Get();
+
+   ChildShapeEntry entry;
+   entry.shape = rtsShape;
    entry.localPos = localPos;
    entry.localRot = localRot;
    entry.localXfm = toJolt(localXfm);
@@ -121,14 +171,23 @@ bool JoltCollision::addTriangleMesh(const Point3F* vert, U32 vertCount, const U3
 
    // Create the MeshShape
    JPH::MeshShapeSettings settings(triangles);
+   auto baseShape = settings.Create().Get();
+
+   JPH::Vec3 localPos;
+   JPH::Quat localRot;
+   toJolt(localXfm, localPos, localRot);
+
+   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
+   auto rtsShape = rtsSettings->Create().Get();
 
    ChildShapeEntry entry;
-   entry.shape = settings.Create().Get();
+   entry.shape = rtsShape;
+   entry.localPos = localPos;
+   entry.localRot = localRot;
    entry.localXfm = toJolt(localXfm);
    mChildren.push_back(entry);
 
    rebuildCompound();
-
    return true;
 }
 
@@ -162,13 +221,20 @@ bool JoltCollision::addHeightfield(const U16* heightData, const bool* holes, U32
       // Optional: material indices and material list can be added if needed
    );
 
-   ChildShapeEntry entry;
-   entry.shape = settings.Create().Get();
-   JPH::RVec3 pos;
-   JPH::Quat rot;
-   toJolt(localXfm, pos, rot);
+   auto baseShape = settings.Create().Get();
 
-   entry.localXfm = JPH::RMat44::sRotationTranslation(rot, pos);
+   JPH::Vec3 localPos;
+   JPH::Quat localRot;
+   toJolt(localXfm, localPos, localRot);
+
+   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
+   auto rtsShape = rtsSettings->Create().Get();
+
+   ChildShapeEntry entry;
+   entry.shape = rtsShape;
+   entry.localPos = localPos;
+   entry.localRot = localRot;
+   entry.localXfm = toJolt(localXfm);
    mChildren.push_back(entry);
 
    rebuildCompound();

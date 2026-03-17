@@ -3,8 +3,7 @@
 
 #include "math/mBox.h"
 #include "console/console.h"
-
-
+#include "scene/sceneObject.h"
 
 JoltBody::JoltBody()
    :mBody(NULL),
@@ -71,21 +70,26 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
       layer = Layers::MOVING;
    }
 
-   // Compute center of the shape
-   JPH::AABox bounds = joltShape->GetLocalBounds();
-   JPH::Vec3 center = (bounds.mMin + bounds.mMax) * 0.5f;
+   MatrixF objXfm = obj->getTransform();
+
+   QuatF angPos(objXfm);
+   Point3F pos;
+   objXfm.getColumn(3, &pos);
 
    JPH::BodyCreationSettings settings(
       joltShape,
-      JPH::Vec3(0, 0, 0),              // initial position
-      JPH::Quat::sIdentity(),          // rotation
+      toJolt(pos),              // initial position
+      toJolt(angPos),          // rotation
       motionType,
       layer
    );
 
    // Mass override if dynamic
    if (motionType == JPH::EMotionType::Dynamic)
+   {
+      settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
       settings.mMassPropertiesOverride.mMass = mass;
+   }
 
 
    JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
@@ -109,7 +113,7 @@ void JoltBody::setTransform(const MatrixF& xfm)
    Point3F pos = xfm.getPosition();
 
    QuatF q(xfm);
-
+   q.inverse();
    JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
 
    bi.SetPositionAndRotation(
@@ -127,17 +131,8 @@ void JoltBody::applyCorrection(const MatrixF& xfm)
 
 MatrixF& JoltBody::getTransform(MatrixF* outMatrix)
 {
-   const JPH::RVec3 pos = mBody->GetPosition();
-   const JPH::Quat rot = mBody->GetRotation();
-
-   QuatF q(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
-
-   MatrixF mat(true);
-   q.setMatrix(&mat);
-
-   mat.setPosition(Point3F(pos.GetX(), pos.GetY(), pos.GetZ()));
-
-   *outMatrix = mat;
+   const JPH::Mat44 trans = mBody->GetWorldTransform();
+   *outMatrix = fromJolt(trans);
    return *outMatrix;
 }
 

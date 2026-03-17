@@ -71,7 +71,13 @@ bool JoltWorld::initWorld(bool isServer, ProcessList* processList)
 
 void JoltWorld::destroyWorld()
 {
-  
+   // Release the tick processing signals.
+   if (mProcessList)
+   {
+      mProcessList->preTickSignal().remove(this, &JoltWorld::getPhysicsResults);
+      mProcessList->postTickSignal().remove(this, &JoltWorld::tickPhysics);
+      mProcessList = NULL;
+   }
 }
 
 bool JoltWorld::castRay(const Point3F& startPnt, const Point3F& endPnt, RayInfo* ri, const Point3F& impulse)
@@ -149,9 +155,9 @@ void JoltWorld::onDebugDraw(const SceneRenderState* state)
 
    settings.mDrawShape = true;
    settings.mDrawWorldTransform = false;
-   settings.mDrawBoundingBox = false;
+   settings.mDrawBoundingBox = true;
    settings.mDrawVelocity = false;
-   settings.mDrawCenterOfMassTransform = false;
+   settings.mDrawCenterOfMassTransform = true;
 
    mPhysicsSystem.DrawBodies(settings, JPH::DebugRenderer::sInstance);
 #endif

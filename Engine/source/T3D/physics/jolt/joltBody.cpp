@@ -135,7 +135,10 @@ void JoltBody::applyCorrection(const MatrixF& xfm)
 MatrixF& JoltBody::getTransform(MatrixF* outMatrix)
 {
    const JPH::Mat44 trans = mBody->GetWorldTransform();
-   *outMatrix = joltCast(trans);
+
+   QuatF qang = joltCast(trans.GetQuaternion());
+   qang.setMatrix(outMatrix);
+   outMatrix->setPosition(joltCast(trans.GetTranslation()));
    return *outMatrix;
 }
 
@@ -156,11 +159,12 @@ void JoltBody::applyForce(const Point3F& force)
 
 void JoltBody::moveKinematicTo(const MatrixF& xfm)
 {
-   JPH::Mat44 objXfm = joltCast(xfm);
+   Point3F pos = xfm.getPosition();
+   QuatF angPos(xfm);
    mWorld->getPhysicsSystem()->GetBodyInterface().MoveKinematic(
       mBody->GetID(),
-      objXfm.GetTranslation(),
-      objXfm.GetQuaternion(),
+      joltCast(pos),
+      joltCast(angPos),
       1.0f / 60.0f
    );
 }

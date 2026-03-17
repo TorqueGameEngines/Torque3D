@@ -35,10 +35,16 @@ JoltCollision::~JoltCollision()
 void JoltCollision::addPlane(const PlaneF& plane)
 {
    JPH::Plane joltPlane({ plane.x, plane.y, plane.z }, plane.d);
-   JPH::PlaneShapeSettings settings(joltPlane);
+   JPH::PlaneShapeSettings planeSettings(joltPlane);
+   auto result = planeSettings.Create();
+   if (result.HasError())
+   {
+      Con::errorf("Jolt Error: %s", result.GetError().c_str());
+      return;
+   }
 
    ChildShapeEntry entry;
-   entry.shape = settings.Create().Get();
+   entry.shape = result.Get();
    entry.localXfm = JPH::Mat44::sIdentity();  // Plane at origin by default
    entry.localPos = JPH::Vec3::sZero();
    entry.localRot = JPH::Quat::sIdentity();
@@ -82,7 +88,14 @@ void JoltCollision::addBox(const Point3F& halfWidth, const MatrixF& localXfm)
 void JoltCollision::addSphere(F32 radius, const MatrixF& localXfm)
 {
    JPH::SphereShapeSettings settings(radius);
-   auto baseShape = settings.Create().Get();
+   auto result = settings.Create();
+   if (result.HasError())
+   {
+      Con::errorf("Jolt Error: %s", result.GetError().c_str());
+      return;
+   }
+
+   auto baseShape = result.Get();
 
    JPH::Vec3 localPos;
    JPH::Quat localRot;
@@ -104,7 +117,14 @@ void JoltCollision::addSphere(F32 radius, const MatrixF& localXfm)
 void JoltCollision::addCapsule(F32 radius, F32 height, const MatrixF& localXfm)
 {
    JPH::CapsuleShapeSettings settings(radius, height);
-   auto baseShape = settings.Create().Get();
+   auto result = settings.Create();
+   if (result.HasError())
+   {
+      Con::errorf("Jolt Error: %s", result.GetError().c_str());
+      return;
+   }
+
+   auto baseShape = result.Get();
 
    JPH::Vec3 localPos;
    JPH::Quat localRot;
@@ -134,7 +154,14 @@ bool JoltCollision::addConvex(const Point3F* points, U32 count, const MatrixF& l
       verts.emplace_back(points[i].x, points[i].y, points[i].z);
 
    JPH::ConvexHullShapeSettings settings(verts.data(), verts.size());
-   auto baseShape = settings.Create().Get();
+   auto result = settings.Create();
+   if (result.HasError())
+   {
+      Con::errorf("Jolt Error: %s", result.GetError().c_str());
+      return;
+   }
+
+   auto baseShape = result.Get();
 
    JPH::Vec3 localPos;
    JPH::Quat localRot;
@@ -182,7 +209,14 @@ bool JoltCollision::addTriangleMesh(const Point3F* vert, U32 vertCount, const U3
 
    // Create the MeshShape
    JPH::MeshShapeSettings settings(triangles);
-   auto baseShape = settings.Create().Get();
+   auto result = settings.Create();
+   if (result.HasError())
+   {
+      Con::errorf("Jolt Error: %s", result.GetError().c_str());
+      return;
+   }
+
+   auto baseShape = result.Get();
 
    JPH::Vec3 localPos;
    JPH::Quat localRot;
@@ -232,7 +266,14 @@ bool JoltCollision::addHeightfield(const U16* heightData, const bool* holes, U32
       // Optional: material indices and material list can be added if needed
    );
 
-   auto baseShape = settings.Create().Get();
+   auto result = settings.Create();
+   if (result.HasError())
+   {
+      Con::errorf("Jolt Error: %s", result.GetError().c_str());
+      return;
+   }
+
+   auto baseShape = result.Get();
 
    JPH::Vec3 localPos;
    JPH::Quat localRot;

@@ -107,6 +107,16 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
    mUserData.setBody(this);
    mBody->SetUserData(reinterpret_cast<U64>(&mUserData));
 
+   const JPH::Mat44 trans = mBody->GetCenterOfMassTransform();
+   MatrixF comMat;
+   QuatF qang = joltCast(trans.GetQuaternion());
+   qang.setMatrix(&comMat);
+   comMat.setPosition(joltCast(trans.GetTranslation()));
+
+   mCenterOfMass = new MatrixF(comMat);
+   mInvCenterOfMass = new MatrixF(*mCenterOfMass);
+   mInvCenterOfMass->inverse();
+
    return true;
 }
 

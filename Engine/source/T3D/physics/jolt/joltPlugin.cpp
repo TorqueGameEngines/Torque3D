@@ -176,7 +176,9 @@ void JoltPlugin::destroyWorld(const String& worldName)
 
    PhysicsWorld* world = (*iter).value;
    world->destroyWorld();
-   delete world;
+
+
+   mPhysicsWorldLookup.erase(iter);
 }
 
 PhysicsWorld* JoltPlugin::getWorld(const String& worldName) const

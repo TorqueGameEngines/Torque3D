@@ -283,6 +283,7 @@ function onServerDestroyed()
    }
    
    // Delete everything
+   physicsDestroyWorld( "server" );
    getScene(0).delete();
    MissionCleanup.delete();
    

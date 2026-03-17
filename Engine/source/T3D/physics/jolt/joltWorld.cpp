@@ -40,7 +40,6 @@ JoltWorld::JoltWorld()
 
 JoltWorld::~JoltWorld()
 {
-   destroyWorld();
 }
 
 bool JoltWorld::initWorld(bool isServer, ProcessList* processList)
@@ -81,15 +80,43 @@ bool JoltWorld::initWorld(bool isServer, ProcessList* processList)
    return true;
 }
 
-void JoltWorld::destroyWorld()
+void JoltWorld::destroyWorldInternal()
 {
-   // Release the tick processing signals.
+   // Stop ticking
+   mIsEnabled = false;
+
+   // Remove all bodies
+   JPH::BodyInterface& bi = mPhysicsSystem.GetBodyInterface();
+   JPH::BodyIDVector bodies;
+   mPhysicsSystem.GetBodies(bodies);
+
+   for (JPH::BodyID id : bodies)
+   {
+      if (bi.IsAdded(id))
+         bi.RemoveBody(id);
+   }
+
+   // Remove tick listeners
    if (mProcessList)
    {
       mProcessList->preTickSignal().remove(this, &JoltWorld::getPhysicsResults);
       mProcessList->postTickSignal().remove(this, &JoltWorld::tickPhysics);
-      mProcessList = NULL;
+      mProcessList = nullptr;
    }
+
+   // Delete job system and temp allocator
+   delete mJobSystem;
+   mJobSystem = nullptr;
+
+   delete mTempAllocator;
+   mTempAllocator = nullptr;
+
+   delete this;
+}
+
+void JoltWorld::destroyWorld()
+{
+   mDestroyPending.store(true, std::memory_order_release);
 }
 
 bool JoltWorld::castRay(const Point3F& startPnt, const Point3F& endPnt, RayInfo* ri, const Point3F& impulse)
@@ -169,6 +196,7 @@ void JoltWorld::onDebugDraw(const SceneRenderState* state)
    settings.mDrawBoundingBox = true;
    settings.mDrawVelocity = false;
    settings.mDrawCenterOfMassTransform = true;
+   settings.mDrawShapeColor = JPH::BodyManager::EShapeColor::SleepColor;
 
    mPhysicsSystem.DrawBodies(settings, JPH::DebugRenderer::sInstance);
 #endif
@@ -176,6 +204,13 @@ void JoltWorld::onDebugDraw(const SceneRenderState* state)
 
 void JoltWorld::tickPhysics(U32 elapsedMs)
 {
+   // Perform deferred destruction
+   if (mDestroyPending.exchange(false))
+   {
+      destroyWorldInternal();
+      return;
+   }
+
    if (!mIsEnabled)
       return;
 

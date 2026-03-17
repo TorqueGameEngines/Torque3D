@@ -118,6 +118,7 @@ class JoltWorld : public PhysicsWorld
 protected:
    bool	mIsEnabled;
    std::atomic<bool> mResetPending{ false };
+   std::atomic<bool> mDestroyPending{ false };
 
    F32 mEditorTimeScale;
    JPH::PhysicsSystem mPhysicsSystem;
@@ -133,6 +134,7 @@ public:
 
    // PhysicWorld
    virtual bool initWorld(bool isServer, ProcessList* processList);
+   void destroyWorldInternal();
    virtual void destroyWorld();
    virtual bool castRay(const Point3F& startPnt, const Point3F& endPnt, RayInfo* ri, const Point3F& impulse);
    virtual PhysicsBody* castRay(const Point3F& start, const Point3F& end, U32 bodyTypes);

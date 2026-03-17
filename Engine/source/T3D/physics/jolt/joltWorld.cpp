@@ -11,11 +11,22 @@
 
 #include "T3D/physics/physicsUserData.h"
 
+// Save and undefine the macro if it exists
+#ifdef Offset
+    #pragma push_macro("Offset")
+    #undef Offset
+#endif
+
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
+
+#ifdef Offset
+    // Restore the original macro after includes
+    #pragma pop_macro("Offset")
+#endif
 
 JoltWorld::JoltWorld()
    :mIsEnabled(false),

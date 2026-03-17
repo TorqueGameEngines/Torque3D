@@ -1,5 +1,11 @@
 #include "T3D/physics/jolt/joltCollision.h"
 
+// Save and undefine the macro if it exists
+#ifdef Offset
+    #pragma push_macro("Offset")
+    #undef Offset
+#endif
+
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
@@ -11,6 +17,11 @@
 #include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+
+#ifdef Offset
+    // Restore the original macro after includes
+    #pragma pop_macro("Offset")
+#endif
 
 JoltCollision::JoltCollision()
 {

@@ -11,6 +11,12 @@
 #endif
 #endif
 
+// Save and undefine the macro if it exists
+#ifdef Offset
+    #pragma push_macro("Offset")
+    #undef Offset
+#endif
+
 #include <Jolt/Jolt.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/RegisterTypes.h>
@@ -31,6 +37,11 @@
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Constraints/SixDOFConstraint.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
+
+#ifdef Offset
+    // Restore the original macro after includes
+    #pragma pop_macro("Offset")
+#endif
 
 inline Point3F joltCast(const JPH::Vec3& vec)
 {

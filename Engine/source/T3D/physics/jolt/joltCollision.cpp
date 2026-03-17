@@ -158,7 +158,7 @@ bool JoltCollision::addConvex(const Point3F* points, U32 count, const MatrixF& l
    if (result.HasError())
    {
       Con::errorf("Jolt Error: %s", result.GetError().c_str());
-      return;
+      return false;
    }
 
    auto baseShape = result.Get();
@@ -213,7 +213,7 @@ bool JoltCollision::addTriangleMesh(const Point3F* vert, U32 vertCount, const U3
    if (result.HasError())
    {
       Con::errorf("Jolt Error: %s", result.GetError().c_str());
-      return;
+      return false;
    }
 
    auto baseShape = result.Get();
@@ -270,7 +270,7 @@ bool JoltCollision::addHeightfield(const U16* heightData, const bool* holes, U32
    if (result.HasError())
    {
       Con::errorf("Jolt Error: %s", result.GetError().c_str());
-      return;
+      return false;
    }
 
    auto baseShape = result.Get();

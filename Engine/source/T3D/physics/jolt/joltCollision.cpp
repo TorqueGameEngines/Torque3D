@@ -236,35 +236,53 @@ bool JoltCollision::addTriangleMesh(const Point3F* vert, U32 vertCount, const U3
    return true;
 }
 
-bool JoltCollision::addHeightfield(const U16* heightData, const bool* holes, U32 size, F32 scale, const MatrixF& localXfm)
+bool JoltCollision::addHeightfield(
+   const U16* heightData,
+   const bool* holes,
+   U32 blockSize,
+   F32 metersPerSample,
+   const MatrixF& localXfm) // We won’t use localXfm directly
 {
-   if (!heightData) return false;
+   if (!heightData || blockSize == 0)
+      return false;
 
-   std::vector<float> samples(size * size);
+   const F32 heightScale = 0.03125f;
+   const F32 minHeight = 0;
+   const F32 maxHeight = 65535 * heightScale;
 
-   // Convert U16 height data to float and apply scale
-   for (U32 y = 0; y < size; ++y)
+   const U32 sampleCount = blockSize * blockSize;
+   std::vector<float> samples(sampleCount);
+
+   for (U32 x = 0; x < blockSize; ++x)
    {
-      for (U32 x = 0; x < size; ++x)
+      for (U32 y = 0; y < blockSize; ++y)
       {
-         U32 idx = y * size + x;
-         float h = static_cast<float>(heightData[idx]) * scale;
+         // Terrain storage (row-major)
+         U32 srcIdx = y * blockSize + x;
 
-         // Mark holes with a sentinel value (Jolt uses FLT_MAX for cNoCollisionValue)
-         if (holes && holes[idx])
+         // Flip Z direction for Jolt
+         U32 dstIdx = (blockSize - 1 - y) * blockSize + x;
+
+         float h = float(heightData[srcIdx]) * heightScale;
+
+         if (holes && holes[srcIdx])
             h = JPH::HeightFieldShapeConstants::cNoCollisionValue;
 
-         samples[idx] = h;
+         samples[dstIdx] = h;
       }
    }
 
-   JPH::HeightFieldShapeSettings settings(
-      samples.data(),                               // pointer to float samples
-      JPH::Vec3(0, 0, 0),                           // offset (can adjust for origin)
-      JPH::Vec3(1, 1, 1),                           // scale (can adjust per axis)
-      size                                          // sample count
-      // Optional: material indices and material list can be added if needed
-   );
+   float terrainSize = blockSize * metersPerSample;
+   float verticalAdjust = -heightScale * 0.5f;
+   JPH::Vec3 joltOffset(
+    0.0,
+    verticalAdjust,
+    -terrainSize
+);
+
+   JPH::Vec3 joltScale(metersPerSample,1.0f, metersPerSample);
+
+   JPH::HeightFieldShapeSettings settings(samples.data(), joltOffset, joltScale, blockSize);
 
    auto result = settings.Create();
    if (result.HasError())
@@ -278,6 +296,8 @@ bool JoltCollision::addHeightfield(const U16* heightData, const bool* holes, U32
    JPH::Vec3 localPos;
    JPH::Quat localRot;
    toJolt(localXfm, localPos, localRot);
+   JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f));
+   localRot = rotFix * localRot;
 
    auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
    auto rtsShape = rtsSettings->Create().Get();
@@ -286,10 +306,10 @@ bool JoltCollision::addHeightfield(const U16* heightData, const bool* holes, U32
    entry.shape = rtsShape;
    entry.localPos = localPos;
    entry.localRot = localRot;
-   entry.localXfm = joltCast(localXfm);
    mChildren.push_back(entry);
 
    rebuildCompound();
+
    return true;
 }
 

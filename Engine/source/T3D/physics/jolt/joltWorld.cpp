@@ -1,6 +1,7 @@
 
 #include "platform/platform.h"
 #include "T3D/physics/jolt/joltWorld.h"
+#include "T3D/physics/jolt/joltBody.h"
  
 #include "platform/profiler.h"
 #include "sim/netConnection.h"
@@ -30,6 +31,8 @@
 
 JoltWorld::JoltWorld()
    :mIsEnabled(false),
+   mIsSimulating(false),
+   mTickCount(0),
    mProcessList(NULL),
    mEditorTimeScale(1.0f)
 {
@@ -71,7 +74,6 @@ bool JoltWorld::initWorld(bool isServer, ProcessList* processList)
    mIsEnabled = true;
 
    mPhysicsSystem.SetGravity(joltCast(mGravity));
-
 
    mProcessList = processList;
    mProcessList->preTickSignal().notify(this, &JoltWorld::getPhysicsResults);
@@ -160,7 +162,7 @@ bool JoltWorld::castRay(const Point3F& startPnt, const Point3F& endPnt, RayInfo*
       ri->distance = result.mFraction * rayLength;
 
       // SceneObject mapping
-      PhysicsUserData* userData = reinterpret_cast<PhysicsUserData*>(body.GetUserData());
+      PhysicsUserData* userData = PhysicsUserData::cast((void*)body.GetUserData());
       ri->object = userData->getObject();
 
       ri->material = NULL;
@@ -219,16 +221,27 @@ void JoltWorld::tickPhysics(U32 elapsedMs)
 
    const F32 elapsedSec = (F32)elapsedMs * 0.001f;
 
+   PROFILE_SCOPE(JoltWorld_TickPhysics);
+
    mPhysicsSystem.Update(
       elapsedSec * mEditorTimeScale,
       smPhysicsMaxSubSteps, // collision steps
       mTempAllocator,
       mJobSystem
    );
+
+   mIsSimulating = true;
 }
 
 void JoltWorld::getPhysicsResults()
 {
+   if (!mIsSimulating)
+      return;
+
+   PROFILE_SCOPE(JoltWorld_getPhysicsResults);
+
+   mIsSimulating = false;
+   mTickCount++;
 }
 
 void JoltWorld::performReset()
@@ -272,5 +285,3 @@ void JoltWorld::setEnabled(bool enabled)
    if (!mIsEnabled)
       getPhysicsResults();
 }
-
-

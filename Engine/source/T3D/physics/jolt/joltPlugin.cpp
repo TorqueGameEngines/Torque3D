@@ -206,6 +206,7 @@ U32 JoltPlugin::getWorldCount() const
 }
 
 #ifdef JPH_DEBUG_RENDERER
+
 JoltDebugRenderer::JoltDebugRenderer()
 {
    JPH::DebugRenderer::Initialize();
@@ -224,10 +225,10 @@ void JoltDebugRenderer::DrawTriangle(JPH::RVec3Arg inV1, JPH::RVec3Arg inV2, JPH
 JPH::DebugRenderer::Batch JoltDebugRenderer::CreateTriangleBatch(const Triangle* inTriangles, int inTriangleCount)
 {
    BatchImpl* batch = new BatchImpl;
-   if (inTriangles == nullptr || inTriangleCount == 0)
-      return batch;
 
-   batch->mTriangles.assign(inTriangles, inTriangles + inTriangleCount);
+   if (inTriangles && inTriangleCount)
+      batch->mTriangles.assign(inTriangles, inTriangles + inTriangleCount);
+
    return batch;
 }
 
@@ -252,20 +253,35 @@ JPH::DebugRenderer::Batch JoltDebugRenderer::CreateTriangleBatch(const Vertex* i
 
 void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox& inWorldSpaceBounds, float inLODScaleSq, JPH::ColorArg inModelColor, const GeometryRef& inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
-   // Figure out which LOD to use
    const JPH::DebugRenderer::LOD* lod = inGeometry->mLODs.data();
 
-   // Draw the batch
    const BatchImpl* batch = static_cast<const BatchImpl*>(lod->mTriangleBatch.GetPtr());
-   for (const JPH::DebugRenderer::Triangle& triangle : batch->mTriangles)
+
+   if (!batch)
+      return;
+
+   const U32 triCount = batch->mTriangles.size();
+   if (triCount == 0)
+      return;
+
+   // Start one batched primitive build
+   GFX->setupGenericShaders();
+   GFXStateBlockDesc desc;
+   desc.setZReadWrite(false);
+   GFX->setStateBlockByDesc(desc);
+   PrimBuild::begin(GFXLineList, triCount * 3);
+   for (const auto& tri : batch->mTriangles)
    {
-      JPH::Vec3 v0 = inModelMatrix * JPH::Vec3(triangle.mV[0].mPosition);
-      JPH::Vec3 v1 = inModelMatrix * JPH::Vec3(triangle.mV[1].mPosition);
-      JPH::Vec3 v2 = inModelMatrix * JPH::Vec3(triangle.mV[2].mPosition);
-      JPH::Color color = inModelColor * triangle.mV[0].mColor;
-
-      DrawTriangle(v0, v1, v2, color, inCastShadow);
-
+      JPH::Vec3 v0 = inModelMatrix * JPH::Vec3(tri.mV[0].mPosition);
+      JPH::Vec3 v1 = inModelMatrix * JPH::Vec3(tri.mV[1].mPosition);
+      JPH::Vec3 v2 = inModelMatrix * JPH::Vec3(tri.mV[2].mPosition);
+      JPH::Color color = inModelColor * tri.mV[0].mColor;
+      PrimBuild::color(fromJolt(color));
+      PrimBuild::vertex3f(v0.GetX(), v0.GetY(), v0.GetZ());
+      PrimBuild::vertex3f(v1.GetX(), v1.GetY(), v1.GetZ());
+      PrimBuild::vertex3f(v2.GetX(), v2.GetY(), v2.GetZ());
    }
+
+   PrimBuild::end(true);
 }
 #endif

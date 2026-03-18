@@ -117,6 +117,10 @@ class JoltWorld : public PhysicsWorld
 {
 protected:
    bool	mIsEnabled;
+
+   U32 mTickCount;
+   bool mIsSimulating;
+
    std::atomic<bool> mResetPending{ false };
    std::atomic<bool> mDestroyPending{ false };
 
@@ -145,6 +149,7 @@ public:
 
    void tickPhysics(U32 elapsedMs);
    void getPhysicsResults();
+   bool isWritable() const { return !mIsSimulating; }
 
    void performReset();
 

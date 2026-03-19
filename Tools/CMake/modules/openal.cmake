@@ -24,4 +24,7 @@ if(TORQUE_SFX_OPENAL)
   set(ALSOFT_UPDATE_BUILD_VERSION OFF CACHE BOOL "Update build Version" UPDATE)
   
   add_subdirectory("${TORQUE_LIB_ROOT_DIRECTORY}/openal-soft" ${TORQUE_LIB_TARG_DIRECTORY}/openal-soft EXCLUDE_FROM_ALL)
+  if(APPLE)
+    target_compile_options(OpenAL PRIVATE -Wno-error=undef)
+  endif()
 endif(TORQUE_SFX_OPENAL)

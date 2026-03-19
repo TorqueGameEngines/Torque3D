@@ -94,8 +94,8 @@ namespace math_backend::mat44
       float planeD = -v_extract0(dp);
 
       presult[0] = v_extract0(normTransformed);
-      presult[1] = v_extract0(v_swizzle_mask(normTransformed, 1, 1, 1, 1));
-      presult[2] = v_extract0(v_swizzle_mask(normTransformed, 2, 2, 2, 2));
+      presult[1] = v_extract0(v_swizzle_singular_mask(normTransformed, 1));
+      presult[2] = v_extract0(v_swizzle_singular_mask(normTransformed, 2));
       presult[3] = planeD;
    }
 
@@ -195,8 +195,8 @@ namespace math_backend::mat44
 
       // Store translation 
       m[3] = v_extract0(t_new);
-      m[7] = v_extract0(v_swizzle_mask(t_new, 1, 1, 1, 1));
-      m[11] = v_extract0(v_swizzle_mask(t_new, 2, 2, 2, 2));
+      m[7] = v_extract0(v_swizzle_singular_mask(t_new, 1));
+      m[11] = v_extract0(v_swizzle_singular_mask(t_new, 2));
    }
 
    // Matrix Inverse

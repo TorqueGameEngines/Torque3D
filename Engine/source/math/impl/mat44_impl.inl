@@ -37,81 +37,66 @@ namespace math_backend::mat44
       m_store(m, ma);
    }
 
-   inline void mat44_transform_plane_impl(const float* m, const float* scale, const float* plane, float* presult)
+   inline void mat44_transform_plane_impl(const float* m, const float* s, const float* p, float* presult)
    {
-      f32x4 plane_v = v_load(plane);
-      f32x4 scale_v = v_load3_vec(scale);
-      f32x4 invScale = v_rcp_nr(scale_v);
+      f32x4 scale = v_load3_pos(s);
+      f32x4 invScale = v_div(v_set1(1.0f), scale);
+
+      //--------------------------------------------------
+      // Load affine 3x3 rows and translation
+      //--------------------------------------------------
+      f32x4 row0 = v_load3_vec(m + 0);
+      f32x4 row1 = v_load3_vec(m + 4);
+      f32x4 row2 = v_load3_vec(m + 8);
+      f32x4 shear = v_set(m[3], m[7], m[11], 1.0);
+
+      //--------------------------------------------------
+      // Compute A, B, C = -dot(row, shear)
+      //--------------------------------------------------
+      f32x4 A = v_mul(v_dot3(row0, shear), v_set1(-1.0f));
+      f32x4 B = v_mul(v_dot3(row1, shear), v_set1(-1.0f));
+      f32x4 C = v_mul(v_dot3(row2, shear), v_set1(-1.0f));
+
+
+      f32x4x4 invTrMatrix;
+      invTrMatrix.r0 = v_set(m[0], m[1], m[2], v_extract0(A));
+      invTrMatrix.r1 = v_set(m[4], m[5], m[6], v_extract0(B));
+      invTrMatrix.r2 = v_set(m[8], m[9], m[10], v_extract0(C));
+      invTrMatrix.r3 = v_set(0.0f, 0.0f, 0.0f, 1.0f);
+
+      // Apply inverse scale to upper-left 3x3
+      invTrMatrix.r0 = v_mul(invTrMatrix.r0, invScale);
+      invTrMatrix.r1 = v_mul(invTrMatrix.r1, invScale);
+      invTrMatrix.r2 = v_mul(invTrMatrix.r2, invScale);
+
+
+      f32x4 normal = v_load3_pos(p);               // plane normal {x,y,z,1}
+      f32x4 point = v_mul(normal, v_set1(-p[3])); // point = -d * normal
+
+      // Apply transform to normal
+      f32x4 normTransformed = m_mul_vec3(invTrMatrix, normal);
+      normTransformed = v_normalize3(normTransformed);
+
+      // transform point with original
+      f32x4 scaleVec = v_load3_pos(s);            // scale vector
+      f32x4 pointScaled = v_mul(point, scaleVec);
+
+      pointScaled = v_insert_w(pointScaled, v_set1(1.0f));
 
       f32x4x4 M = m_load(m);
+      // Transform point
+      f32x4 pointTransformed = m_mul_vec4(M, pointScaled);
 
-      f32x4 normal = plane_v;
-      normal = v_mul(normal, invScale);
+      //--------------------------------------------------
+      // Compute plane d = -dot(normal, transformedPoint)
+      //--------------------------------------------------
+      f32x4 dp = v_dot3( pointTransformed, normTransformed);
+      float planeD = -v_extract0(dp);
 
-      //---------------------------------------------------------
-      // Extract translation column (tx ty tz)
-      //---------------------------------------------------------
-      f32x4 shear = v_set(
-         v_extract0(v_swizzle_singular_mask(M.r0, 3)),
-         v_extract0(v_swizzle_singular_mask(M.r1, 3)),
-         v_extract0(v_swizzle_singular_mask(M.r2, 3)),
-         0.0f
-      );
-
-      float A = -v_extract0(v_dot3(M.r0, shear));
-      float B = -v_extract0(v_dot3(M.r1, shear));
-      float C = -v_extract0(v_dot3(M.r2, shear));
-
-      //---------------------------------------------------------
-      // Build columns of rotation
-      //---------------------------------------------------------
-
-      f32x4 col0 = v_set(
-         v_extract0(v_swizzle_singular_mask(M.r0, 0)),
-         v_extract0(v_swizzle_singular_mask(M.r1, 0)),
-         v_extract0(v_swizzle_singular_mask(M.r2, 0)),
-         0.0f
-      );
-
-      f32x4 col1 = v_set(
-         v_extract0(v_swizzle_singular_mask(M.r0, 1)),
-         v_extract0(v_swizzle_singular_mask(M.r1, 1)),
-         v_extract0(v_swizzle_singular_mask(M.r2, 1)),
-         0.0f
-      );
-
-      f32x4 col2 = v_set(
-         v_extract0(v_swizzle_singular_mask(M.r0, 2)),
-         v_extract0(v_swizzle_singular_mask(M.r1, 2)),
-         v_extract0(v_swizzle_singular_mask(M.r2, 2)),
-         0.0f
-      );
-
-      f32x4 nx = v_mul(v_swizzle_singular_mask(normal, 0), col0);
-      f32x4 ny = v_mul(v_swizzle_singular_mask(normal, 1), col1);
-      f32x4 nz = v_mul(v_swizzle_singular_mask(normal, 2), col2);
-
-      normal = v_add(v_add(nx, ny), nz);
-      normal = v_add(normal, v_set(A, B, C, 0.0f));
-      normal = v_normalize3(normal);
-
-      float d = v_extract0(v_swizzle_singular_mask(plane_v, 3));
-
-      f32x4 origNormal = plane_v;
-      f32x4 point = v_mul(origNormal, v_set1(-d));
-      point = v_insert_w(point, v_set1(1.0f));
-
-      point = v_mul(point, scale_v);
-      point = m_mul_vec4(M, point);
-      float newD = -v_extract0(v_dot3(point, normal));
-
-      alignas(16) float n[4];
-      v_store(n, normal);
-
-      presult[0] = n[0];
-      presult[1] = n[1];
-      presult[2] = n[2];
-      presult[3] = newD;
+      presult[0] = v_extract0(normTransformed);
+      presult[1] = v_extract0(v_swizzle_singular_mask(normTransformed, 1));
+      presult[2] = v_extract0(v_swizzle_singular_mask(normTransformed, 2));
+      presult[3] = planeD;
    }
 
    inline void mat44_get_scale_impl(const float* m, float* s)
@@ -157,75 +142,121 @@ namespace math_backend::mat44
    // Matrix Inverse
    inline void mat44_inverse_impl(float* m)
    {
-      // using Cramers Rule find the Inverse
-         // Minv = (1/det(M)) * adjoint(M)
+      //// using Cramers Rule find the Inverse
+      //// Minv = (1/det(M)) * adjoint(M)
+      f32x4 r0 = v_load3_vec(m + 0);  // row 0: m00 m01 m02
+      f32x4 r1 = v_load3_vec(m + 4);  // row 1: m10 m11 m12
+      f32x4 r2 = v_load3_vec(m + 8);  // row 2: m20 m21 m22
       float det = mat44_get_determinant(m);
-      float invDet = 1.0f / det;
-      float temp[16];
-      temp[0] = (m[5] * m[10] - m[6] * m[9]) * invDet;
-      temp[1] = (m[9] * m[2] - m[10] * m[1]) * invDet;
-      temp[2] = (m[1] * m[6] - m[2] * m[5]) * invDet;
+      f32x4 invDet = v_set1(1.0f / det);
 
-      temp[4] = (m[6] * m[8] - m[4] * m[10]) * invDet;
-      temp[5] = (m[10] * m[0] - m[8] * m[2]) * invDet;
-      temp[6] = (m[2] * m[4] - m[0] * m[6]) * invDet;
+      f32x4x4 temp;
 
-      temp[8] = (m[4] * m[9] - m[5] * m[8]) * invDet;
-      temp[9] = (m[8] * m[1] - m[9] * m[0]) * invDet;
-      temp[10] = (m[0] * m[5] - m[1] * m[4]) * invDet;
+      temp.r0 = v_set(
+         (m[5] * m[10] - m[6] * m[9]),
+         (m[9] * m[2] - m[10] * m[1]),
+         (m[1] * m[6] - m[2] * m[5]),
+         0
+      );
 
-      m[0] = temp[0];
-      m[1] = temp[1];
-      m[2] = temp[2];
+      temp.r1 = v_set(
+         (m[6] * m[8] - m[4] * m[10]),
+         (m[10] * m[0] - m[8] * m[2]),
+         (m[2] * m[4] - m[0] * m[6]),
+         0
+      );
 
-      m[4] = temp[4];
-      m[5] = temp[5];
-      m[6] = temp[6];
+      temp.r2 = v_set(
+         (m[4] * m[9] - m[5] * m[8]),
+         (m[8] * m[1] - m[9] * m[0]),
+         (m[0] * m[5] - m[1] * m[4]),
+         0
+      );
 
-      m[8] = temp[8];
-      m[9] = temp[9];
-      m[10] = temp[10];
+      temp.r0 = v_mul(temp.r0, invDet);
+      temp.r1 = v_mul(temp.r1, invDet);
+      temp.r2 = v_mul(temp.r2, invDet);
 
-      // invert the translation
-      temp[0] = -m[3];
-      temp[1] = -m[7];
-      temp[2] = -m[11];
-      mat44_mul_vec3_impl(m, temp, &temp[4]);
-      m[3] = temp[4];
-      m[7] = temp[5];
-      m[11] = temp[6];
+      // Compute new translation: -R^-1 * T
+      f32x4 t = v_set(m[3], m[7], m[11], 0.0f); // row-major: last element in row
+      f32x4 t_new;
+
+      t_new = v_set(
+         -v_extract0(v_dot3(temp.r0, t)),
+         -v_extract0(v_dot3(temp.r1, t)),
+         -v_extract0(v_dot3(temp.r2, t)),
+         0.0f
+      );
+
+      // Store back rotation
+      m[0] = v_extract0(temp.r0); m[1] = v_extract0(v_swizzle_singular_mask(temp.r0, 1)); m[2] = v_extract0(v_swizzle_singular_mask(temp.r0, 2));
+      m[4] = v_extract0(temp.r1); m[5] = v_extract0(v_swizzle_singular_mask(temp.r1, 1)); m[6] = v_extract0(v_swizzle_singular_mask(temp.r1, 2));
+      m[8] = v_extract0(temp.r2); m[9] = v_extract0(v_swizzle_singular_mask(temp.r2, 1)); m[10] = v_extract0(v_swizzle_singular_mask(temp.r2, 2));
+
+      // Store translation 
+      m[3] = v_extract0(t_new);
+      m[7] = v_extract0(v_swizzle_singular_mask(t_new, 1));
+      m[11] = v_extract0(v_swizzle_singular_mask(t_new, 2));
    }
 
    // Matrix Inverse
    inline void mat44_inverse_to_impl(const float* m, float* d)
    {
-      // using Cramers Rule find the Inverse
-        // Minv = (1/det(M)) * adjoint(M)
+      //// using Cramers Rule find the Inverse
+      //// Minv = (1/det(M)) * adjoint(M)
+      f32x4 r0 = v_load3_vec(m + 0);  // row 0: m00 m01 m02
+      f32x4 r1 = v_load3_vec(m + 4);  // row 1: m10 m11 m12
+      f32x4 r2 = v_load3_vec(m + 8);  // row 2: m20 m21 m22
       float det = mat44_get_determinant(m);
+      f32x4 invDet = v_set1(1.0f / det);
 
-      float invDet = 1.0f / det;
+      f32x4x4 temp;
 
-      d[0] = (m[5] * m[10] - m[6] * m[9]) * invDet;
-      d[1] = (m[9] * m[2] - m[10] * m[1]) * invDet;
-      d[2] = (m[1] * m[6] - m[2] * m[5]) * invDet;
+      temp.r0 = v_set(
+         (m[5] * m[10] - m[6] * m[9]),
+         (m[9] * m[2] - m[10] * m[1]),
+         (m[1] * m[6] - m[2] * m[5]),
+         0
+      );
 
-      d[4] = (m[6] * m[8] - m[4] * m[10]) * invDet;
-      d[5] = (m[10] * m[0] - m[8] * m[2]) * invDet;
-      d[6] = (m[2] * m[4] - m[0] * m[6]) * invDet;
+      temp.r1 = v_set(
+         (m[6] * m[8] - m[4] * m[10]),
+         (m[10] * m[0] - m[8] * m[2]),
+         (m[2] * m[4] - m[0] * m[6]),
+         0
+      );
 
-      d[8] = (m[4] * m[9] - m[5] * m[8]) * invDet;
-      d[9] = (m[8] * m[1] - m[9] * m[0]) * invDet;
-      d[10] = (m[0] * m[5] - m[1] * m[4]) * invDet;
+      temp.r2 = v_set(
+         (m[4] * m[9] - m[5] * m[8]),
+         (m[8] * m[1] - m[9] * m[0]),
+         (m[0] * m[5] - m[1] * m[4]),
+         0
+      );
 
-      // invert the translation
-      float temp[6];
-      temp[0] = -m[3];
-      temp[1] = -m[7];
-      temp[2] = -m[11];
-      mat44_mul_vec3_impl(d, temp, &temp[3]);
-      d[3] = temp[3];
-      d[7] = temp[4];
-      d[11] = temp[5];
+      temp.r0 = v_mul(temp.r0, invDet);
+      temp.r1 = v_mul(temp.r1, invDet);
+      temp.r2 = v_mul(temp.r2, invDet);
+
+      // Compute new translation: -R^-1 * T
+      f32x4 t = v_set(m[3], m[7], m[11], 0.0f); // row-major: last element in row
+      f32x4 t_new;
+
+      t_new = v_set(
+         -v_extract0(v_dot3(temp.r0, t)),
+         -v_extract0(v_dot3(temp.r1, t)),
+         -v_extract0(v_dot3(temp.r2, t)),
+         0.0f
+      );
+
+      // Store back rotation
+      d[0] = v_extract0(temp.r0); d[1] = v_extract0(v_swizzle_singular_mask(temp.r0, 1)); d[2] = v_extract0(v_swizzle_singular_mask(temp.r0, 2));
+      d[4] = v_extract0(temp.r1); d[5] = v_extract0(v_swizzle_singular_mask(temp.r1, 1)); d[6] = v_extract0(v_swizzle_singular_mask(temp.r1, 2));
+      d[8] = v_extract0(temp.r2); d[9] = v_extract0(v_swizzle_singular_mask(temp.r2, 1)); d[10] = v_extract0(v_swizzle_singular_mask(temp.r2, 2));
+
+      // Store translation 
+      d[3] = v_extract0(t_new);
+      d[7] = v_extract0(v_swizzle_singular_mask(t_new, 1));
+      d[11] = v_extract0(v_swizzle_singular_mask(t_new, 2));
       d[12] = m[12];
       d[13] = m[13];
       d[14] = m[14];

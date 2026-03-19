@@ -59,24 +59,6 @@ namespace
        );
    }
 
-   inline f32x4 v_swizzle_mask(f32x4 v, const int x, const int y, const int z, const int w)
-   {
-      uint8x16_t table = vreinterpretq_u8_f32(v);
-
-      // Each float = 4 bytes, so build byte indices
-      uint8_t idx_data[16] = {
-          x * 4 + 0, x * 4 + 1, x * 4 + 2, x * 4 + 3,
-          y * 4 + 0, y * 4 + 1, y * 4 + 2, y * 4 + 3,
-          z * 4 + 0, z * 4 + 1, z * 4 + 2, z * 4 + 3,
-          w * 4 + 0, w * 4 + 1, w * 4 + 2, w * 4 + 3
-      };
-
-      uint8x16_t idx = vld1q_u8(idx_data);
-
-      uint8x16_t result = vqtbl1q_u8(table, idx);
-      return vreinterpretq_f32_u8(result);
-   }
-
    inline f32x4 v_swizzle_singular_mask(f32x4 v, int x)
    {
        // base byte index of the float lane

@@ -189,9 +189,9 @@ namespace math_backend::mat44
       );
 
       // Store back rotation
-      m[0] = v_extract0(temp.r0); m[1] = v_extract0(v_swizzle_mask(temp.r0, 1, 1, 1, 1)); m[2] = v_extract0(v_swizzle_mask(temp.r0, 2, 2, 2, 2));
-      m[4] = v_extract0(temp.r1); m[5] = v_extract0(v_swizzle_mask(temp.r1, 1, 1, 1, 1)); m[6] = v_extract0(v_swizzle_mask(temp.r1, 2, 2, 2, 2));
-      m[8] = v_extract0(temp.r2); m[9] = v_extract0(v_swizzle_mask(temp.r2, 1, 1, 1, 1)); m[10] = v_extract0(v_swizzle_mask(temp.r2, 2, 2, 2, 2));
+      m[0] = v_extract0(temp.r0); m[1] = v_extract0(v_swizzle_singular_mask(temp.r0, 1)); m[2] = v_extract0(v_swizzle_singular_mask(temp.r0, 2));
+      m[4] = v_extract0(temp.r1); m[5] = v_extract0(v_swizzle_singular_mask(temp.r1, 1)); m[6] = v_extract0(v_swizzle_singular_mask(temp.r1, 2));
+      m[8] = v_extract0(temp.r2); m[9] = v_extract0(v_swizzle_singular_mask(temp.r2, 1)); m[10] = v_extract0(v_swizzle_singular_mask(temp.r2, 2));
 
       // Store translation 
       m[3] = v_extract0(t_new);
@@ -249,14 +249,14 @@ namespace math_backend::mat44
       );
 
       // Store back rotation
-      d[0] = v_extract0(temp.r0); d[1] = v_extract0(v_swizzle_mask(temp.r0, 1, 1, 1, 1)); d[2] = v_extract0(v_swizzle_mask(temp.r0, 2, 2, 2, 2));
-      d[4] = v_extract0(temp.r1); d[5] = v_extract0(v_swizzle_mask(temp.r1, 1, 1, 1, 1)); d[6] = v_extract0(v_swizzle_mask(temp.r1, 2, 2, 2, 2));
-      d[8] = v_extract0(temp.r2); d[9] = v_extract0(v_swizzle_mask(temp.r2, 1, 1, 1, 1)); d[10] = v_extract0(v_swizzle_mask(temp.r2, 2, 2, 2, 2));
+      d[0] = v_extract0(temp.r0); d[1] = v_extract0(v_swizzle_singular_mask(temp.r0, 1)); d[2] = v_extract0(v_swizzle_singular_mask(temp.r0, 2));
+      d[4] = v_extract0(temp.r1); d[5] = v_extract0(v_swizzle_singular_mask(temp.r1, 1)); d[6] = v_extract0(v_swizzle_singular_mask(temp.r1, 2));
+      d[8] = v_extract0(temp.r2); d[9] = v_extract0(v_swizzle_singular_mask(temp.r2, 1)); d[10] = v_extract0(v_swizzle_singular_mask(temp.r2, 2));
 
       // Store translation 
       d[3] = v_extract0(t_new);
-      d[7] = v_extract0(v_swizzle_mask(t_new, 1, 1, 1, 1));
-      d[11] = v_extract0(v_swizzle_mask(t_new, 2, 2, 2, 2));
+      d[7] = v_extract0(v_swizzle_singular_mask(t_new, 1));
+      d[11] = v_extract0(v_swizzle_singular_mask(t_new, 2));
       d[12] = m[12];
       d[13] = m[13];
       d[14] = m[14];

@@ -140,10 +140,8 @@ void JoltBody::applyCorrection(const MatrixF& xfm)
 MatrixF& JoltBody::getTransform(MatrixF* outMatrix)
 {
    const JPH::Mat44 trans = mBody->GetWorldTransform();
+   *outMatrix = joltCast(trans);
 
-   QuatF qang = joltCast(trans.GetQuaternion());
-   qang.setMatrix(outMatrix);
-   outMatrix->setPosition(joltCast(trans.GetTranslation()));
    return *outMatrix;
 }
 

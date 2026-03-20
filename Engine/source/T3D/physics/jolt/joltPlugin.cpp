@@ -270,7 +270,7 @@ void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AA
    GFXStateBlockDesc desc;
    desc.setZReadWrite(false);
    GFX->setStateBlockByDesc(desc);
-   PrimBuild::begin(GFXLineList, triCount * 3);
+   PrimBuild::begin(GFXLineList, triCount * 6);
    for (const auto& tri : batch->mTriangles)
    {
       JPH::Vec3 v0 = inModelMatrix * JPH::Vec3(tri.mV[0].mPosition);
@@ -278,9 +278,17 @@ void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AA
       JPH::Vec3 v2 = inModelMatrix * JPH::Vec3(tri.mV[2].mPosition);
       JPH::Color color = inModelColor * tri.mV[0].mColor;
       PrimBuild::color(fromJolt(color));
+      // Edge 1
       PrimBuild::vertex3f(v0.GetX(), v0.GetY(), v0.GetZ());
       PrimBuild::vertex3f(v1.GetX(), v1.GetY(), v1.GetZ());
+
+      // Edge 2
+      PrimBuild::vertex3f(v1.GetX(), v1.GetY(), v1.GetZ());
       PrimBuild::vertex3f(v2.GetX(), v2.GetY(), v2.GetZ());
+
+      // Edge 3
+      PrimBuild::vertex3f(v2.GetX(), v2.GetY(), v2.GetZ());
+      PrimBuild::vertex3f(v0.GetX(), v0.GetY(), v0.GetZ());
    }
 
    PrimBuild::end(true);

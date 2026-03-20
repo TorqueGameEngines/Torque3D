@@ -49,18 +49,17 @@ void JoltPlayer::setTransform(const MatrixF& xfm)
    if (!mCharacter)
       return;
 
-   Point3F pos = xfm.getPosition();
-   QuatF q(xfm);
+   JPH::Mat44 mat = joltCast(xfm);
 
+   mCharacter->SetPosition(mat.GetTranslation());
+   mCharacter->SetRotation(mat.GetQuaternion());
 
 }
 
 MatrixF& JoltPlayer::getTransform(MatrixF* outMatrix)
 {
    const JPH::Mat44 trans = mCharacter->GetWorldTransform();
-   QuatF qang = joltCast(trans.GetQuaternion());
-   qang.setMatrix(outMatrix);
-   outMatrix->setPosition(joltCast(trans.GetTranslation()));
+   *outMatrix = joltCast(trans);
    return *outMatrix;
 }
 
@@ -106,16 +105,16 @@ void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, 
    F32 halfHeight = (height * 0.5f) - radius;
    JPH::Vec3 offset(0, 0, halfHeight + radius);
 
-  
-
    JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f));
    JPH::Ref<JPH::Shape> shape = JPH::RotatedTranslatedShapeSettings( offset, rotFix, new JPH::CapsuleShape(halfHeight, radius) ).Create().Get();
 
-   JPH::CharacterVirtualSettings settings;
-   settings.mShape = shape;
-   settings.mMass = 120.0f;
-   settings.mInnerBodyShape = shape; // the same for now but inner shape would probably be something that actually follows the player geometry (ragdoll/hitboxes)
-   settings.mMaxSlopeAngle = mAcos(runSurfaceCos);
+   JPH::Ref<JPH::CharacterVirtualSettings> settings = new JPH::CharacterVirtualSettings();
+   settings->mShape = shape;
+   settings->mMass = 120.0f;
+   settings->mInnerBodyShape = shape; // the same for now but inner shape would probably be something that actually follows the player geometry (ragdoll/hitboxes)
+   settings->mInnerBodyLayer = Layers::MOVING;
+   settings->mSupportingVolume = JPH::Plane(JPH::Vec3::sAxisZ(), -radius);
+   settings->mMaxSlopeAngle = runSurfaceCos;
 
    mUserData.setObject(obj);
 
@@ -125,7 +124,7 @@ void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, 
    objXfm.getColumn(3, &pos);
 
    mCharacter = new JPH::CharacterVirtual(
-      &settings,
+      settings,
       joltCast(pos),
       joltCast(angPos),
       reinterpret_cast<U64>(&mUserData), // set scene object to the user data, physicsuserdata does not have an interface for setplayer....
@@ -160,12 +159,11 @@ void JoltPlayer::preUpdate(U32 elapsedMs)
 
    JPH::Vec3 groundVel = mCharacter->GetGroundVelocity();
 
+   const bool isOnGround = mCharacter->GetGroundState() == JPH::CharacterVirtual::EGroundState::OnGround;
+   const bool notJumping = (verticalVel - groundVel).Dot(up) < 0.1f;
+
    JPH::Vec3 newVel;
-
-   bool movingTowardGround = (verticalVel - groundVel).Dot(up) < 0.1f;
-
-   if (mCharacter->GetGroundState() == JPH::CharacterVirtual::EGroundState::OnGround
-      && movingTowardGround)
+   if (isOnGround && notJumping)
    {
       newVel = groundVel;
 
@@ -188,14 +186,18 @@ void JoltPlayer::preUpdate(U32 elapsedMs)
    settings.mWalkStairsStepUp = up * mStepHeight;
    settings.mStickToFloorStepDown = -up * mStepHeight;
 
+   // Filters for collision
+   JPH::BodyFilter bodyFilter;
+   JPH::ShapeFilter shapeFilter;
+
    mCharacter->ExtendedUpdate(
       dt,
       mWorld->getPhysicsSystem()->GetGravity(),
       settings,
       mWorld->getPhysicsSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
       mWorld->getPhysicsSystem()->GetDefaultLayerFilter(Layers::MOVING),
-      {},
-      {},
+      bodyFilter,
+      shapeFilter,
       *mWorld->getTempAllocator()
    );
 }
@@ -279,7 +281,8 @@ void JoltPlayer::findContact(SceneObject** contactObject, VectorF* contactNormal
       PhysicsUserData* userData = PhysicsUserData::cast((void*)contact.mUserData);
       obj = userData->getObject();
 
-      if (!obj)
+      // no object or if its us skip
+      if (!obj || mObject == obj)
          continue;
 
       // Add to overlap list if not already added
@@ -301,42 +304,42 @@ void JoltPlayer::findContact(SceneObject** contactObject, VectorF* contactNormal
 bool JoltPlayer::testSpacials(const Point3F& nPos, const Point3F& nSize) const
 {
    if (!mWorld || !mCharacter)
-      return true; // assume free if no world
+      return false; // assume free if no world
 
-   F32 height = nSize.z;
-   F32 radius = nSize.x * 0.5f;
-   F32 halfHeight = (height * 0.5f) - radius;
-   if (halfHeight < 0.01f) halfHeight = 0.01f;
+   return true;
 
-   JPH::Vec3 offset(0, 0, halfHeight + radius);
-   JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f));
-   JPH::Ref<JPH::Shape> testShape = JPH::RotatedTranslatedShapeSettings(offset, rotFix, new JPH::CapsuleShape(halfHeight, radius)).Create().Get();
+   //F32 height = nSize.z;
+   //F32 radius = nSize.x * 0.5f;
+   //F32 halfHeight = (height * 0.5f) - radius;
+   //if (halfHeight < 0.01f) halfHeight = 0.01f;
 
-   JPH::RMat44 transform = JPH::RMat44::sTranslation(JPH::RVec3(nPos.x, nPos.y, nPos.z));
+   //JPH::Vec3 offset(0, 0, halfHeight + radius);
+   //JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f));
+   //JPH::Ref<JPH::Shape> testShape = JPH::RotatedTranslatedShapeSettings(offset, rotFix, new JPH::CapsuleShape(halfHeight, radius)).Create().Get();
 
-   // Filters for collision
-   JPH::DefaultBroadPhaseLayerFilter broadPhaseFilter(mWorld->getObjectVsBroadPhaseLayerFilter(), Layers::MOVING);
-   JPH::DefaultObjectLayerFilter objectLayerFilter(mWorld->getObjectLayerPairFilter(), Layers::MOVING);
-   JPH::BodyFilter bodyFilter;
-   JPH::ShapeFilter shapeFilter;
+   //JPH::RMat44 transform = mCharacter->GetCenterOfMassTransform();
 
-   JPH::AnyHitCollisionCollector<JPH::CollideShapeCollector> collector;
+   //// Filters for collision
+   //JPH::BodyFilter bodyFilter;
+   //JPH::ShapeFilter shapeFilter;
 
-   JPH::CollideShapeSettings settings;
-   mWorld->getPhysicsSystem()->GetNarrowPhaseQuery().CollideShape(
-      testShape,
-      JPH::Vec3::sReplicate(1.0f), // scale
-      transform,
-      {},
-      JPH::RVec3::sZero(),
-      collector,
-      broadPhaseFilter,
-      objectLayerFilter,
-      bodyFilter,
-      shapeFilter
-   );
+   //JPH::AnyHitCollisionCollector<JPH::CollideShapeCollector> collector;
 
-   return !collector.HadHit();
+   //JPH::CollideShapeSettings settings;
+   //mWorld->getPhysicsSystem()->GetNarrowPhaseQuery().CollideShape(
+   //   testShape,
+   //   JPH::Vec3::sReplicate(1.0f), // scale
+   //   transform,
+   //   settings,
+   //   transform.GetTranslation(),
+   //   collector,
+   //   mWorld->getPhysicsSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
+   //   mWorld->getPhysicsSystem()->GetDefaultLayerFilter(Layers::MOVING),
+   //   bodyFilter,
+   //   shapeFilter
+   //);
+
+   //return !collector.HadHit();
 }
 
 void JoltPlayer::setSpacials(const Point3F& nPos, const Point3F& nSize)
@@ -347,20 +350,26 @@ void JoltPlayer::setSpacials(const Point3F& nPos, const Point3F& nSize)
    F32 height = nSize.z;
    F32 radius = nSize.x * 0.5f;
 
-   JPH::Ref<JPH::Shape> newShape = new JPH::CapsuleShape(0.5f * height, radius);
+   // Convert to Jolt capsule
+   F32 halfHeight = (height * 0.5f) - radius;
+   JPH::Vec3 offset(0, 0, halfHeight + radius);
+
+   JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f));
+   JPH::Ref<JPH::Shape> newShape = JPH::RotatedTranslatedShapeSettings(offset, rotFix, new JPH::CapsuleShape(halfHeight, radius)).Create().Get();
 
    const auto& system = mWorld->getPhysicsSystem();
 
-   JPH::BodyFilter body_filter;
-   JPH::ShapeFilter shape_filter;
+   // Filters for collision
+   JPH::BodyFilter bodyFilter;
+   JPH::ShapeFilter shapeFilter;
 
    bool success = mCharacter->SetShape(
       newShape,
       0.05f,
       system->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
       system->GetDefaultLayerFilter(Layers::MOVING),
-      body_filter,
-      shape_filter,
+      bodyFilter,
+      shapeFilter,
       *mWorld->getTempAllocator()
    );
 

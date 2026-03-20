@@ -67,31 +67,17 @@ inline JPH::Quat joltCast(const QuatF& quat)
 
 inline JPH::RMat44 joltCast(const MatrixF& m)
 {
-   return JPH::RMat44(
-      JPH::Vec4(m[0], m[1], m[2], 0.0f),
-      JPH::Vec4(m[4], m[5], m[6], 0.0f),
-      JPH::Vec4(m[8], m[9], m[10], 0.0f),
-      JPH::Vec4(m[3], m[7], m[1], 1.0f)
-   );
+   QuatF ang(m);
+   return JPH::Mat44::sRotationTranslation(joltCast(ang), joltCast(m.getPosition()));
 }
 
 inline MatrixF joltCast(const JPH::Mat44& xfm)
 {
    MatrixF out;
 
-   // Set the rotation.
-   out[0] = xfm(0, 0); out[1] = xfm(0, 1); out[2] = xfm(0, 2);
-   out[4] = xfm(1, 0); out[5] = xfm(1, 1); out[6] = xfm(1, 2);
-   out[8] = xfm(2, 0); out[9] = xfm(2, 1); out[10] = xfm(2, 2);
-
-   // The position.
-   out[3] = xfm.GetTranslation().GetX();
-   out[7] = xfm.GetTranslation().GetY();
-   out[11] = xfm.GetTranslation().GetZ();
-
-   // Clear out the rest.
-   out[12] = out[13] = out[14] = 0.0f;
-   out[15] = 1.0f;
+   QuatF ang = joltCast(xfm.GetQuaternion());
+   ang.setMatrix(&out);
+   out.setPosition(joltCast(xfm.GetTranslation()));
 
    return out;
 }

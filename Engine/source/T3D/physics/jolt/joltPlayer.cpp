@@ -147,15 +147,16 @@ void JoltPlayer::preUpdate(U32 elapsedMs)
    if (!mCharacter)
       return;
 
+   const auto& system = mWorld->getPhysicsSystem();
    const F32 dt = mWorld->getProcessList()->getLastInterpDelta();
 
    JPH::Vec3 up = mCharacter->GetUp();
 
    // --- Decompose current velocity ---
-   JPH::Vec3 currentVel = mDesirdVelocity / dt;
+   JPH::Vec3 desired_vel = mDesirdVelocity / dt;
    mDesirdVelocity = JPH::Vec3::sZero();
 
-   JPH::Vec3 verticalVel = currentVel.Dot(up) * up;
+   JPH::Vec3 verticalVel = mCharacter->GetLinearVelocity().Dot(mCharacter->GetUp()) * mCharacter->GetUp();
 
    JPH::Vec3 groundVel = mCharacter->GetGroundVelocity();
 
@@ -176,7 +177,10 @@ void JoltPlayer::preUpdate(U32 elapsedMs)
    }
 
    // Apply input
-   newVel += currentVel;
+   JPH::Vec3 gravity = -mCharacter->GetUp() * system->GetGravity().Length();
+
+   newVel += gravity * dt;
+   newVel += desired_vel;
 
    // --- Apply to character ---
    mCharacter->SetLinearVelocity(newVel);
@@ -192,7 +196,7 @@ void JoltPlayer::preUpdate(U32 elapsedMs)
 
    mCharacter->ExtendedUpdate(
       dt,
-      mWorld->getPhysicsSystem()->GetGravity(),
+      gravity,
       settings,
       mWorld->getPhysicsSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
       mWorld->getPhysicsSystem()->GetDefaultLayerFilter(Layers::MOVING),
@@ -272,7 +276,7 @@ void JoltPlayer::findContact(SceneObject** contactObject, VectorF* contactNormal
    for (const auto& contact : contacts)
    {
       // Only consider actual collisions
-      if (!contact.mHadCollision)
+      if (!contact.mHadCollision || contact.mDistance > 0.001f)
          continue;
 
       SceneObject* obj = NULL;

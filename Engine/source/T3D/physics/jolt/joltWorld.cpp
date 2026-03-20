@@ -2,6 +2,7 @@
 #include "platform/platform.h"
 #include "T3D/physics/jolt/joltWorld.h"
 #include "T3D/physics/jolt/joltBody.h"
+#include "T3D/physics/jolt/joltPlayer.h"
  
 #include "platform/profiler.h"
 #include "sim/netConnection.h"
@@ -38,6 +39,7 @@ JoltWorld::JoltWorld()
 {
    mTempAllocator = nullptr;
    mJobSystem = nullptr;
+   VECTOR_SET_ASSOCIATION(mPlayers);
 }
 
 
@@ -219,12 +221,12 @@ void JoltWorld::tickPhysics(U32 elapsedMs)
    if (mResetPending.exchange(false))
       performReset();
 
-   const F32 elapsedSec = (F32)elapsedMs * 0.001f;
+   const F32 dt = mProcessList->getLastInterpDelta();
 
    PROFILE_SCOPE(JoltWorld_TickPhysics);
 
    mPhysicsSystem.Update(
-      elapsedSec * mEditorTimeScale,
+      dt * mEditorTimeScale,
       smPhysicsMaxSubSteps, // collision steps
       mTempAllocator,
       mJobSystem
@@ -284,4 +286,21 @@ void JoltWorld::setEnabled(bool enabled)
 
    if (!mIsEnabled)
       getPhysicsResults();
+}
+
+void JoltWorld::addPlayer(JoltPlayer* player)
+{
+   if (!player)
+      return;
+
+   mPlayers.push_back(player);
+}
+
+void JoltWorld::removePlayer(JoltPlayer* player)
+{
+   for (Vector<JoltPlayer*>::iterator player_cur = mPlayers.begin(); player_cur != mPlayers.end(); ++player_cur)
+   {
+      if(player_cur && (*player_cur) == player)
+         mPlayers.erase(player_cur);
+   }
 }

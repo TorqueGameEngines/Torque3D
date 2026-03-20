@@ -19,11 +19,6 @@ JoltBody::JoltBody()
 
 JoltBody::~JoltBody()
 {
-   if (mBody && mWorld)
-   {
-      mWorld->getPhysicsSystem()->GetBodyInterface().RemoveBody(mBody->GetID());
-   }
-
    SAFE_DELETE(mCenterOfMass);
    SAFE_DELETE(mInvCenterOfMass);
 
@@ -94,7 +89,7 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
 
    JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
    JPH::Body* body = bi.CreateBody(settings);
-   bi.AddBody(body->GetID(), JPH::EActivation::Activate);
+   bi.AddBody(body->GetID(), JPH::EActivation::DontActivate);
 
    if (bodyFlags & BF_TRIGGER)
    {
@@ -175,7 +170,7 @@ void JoltBody::moveKinematicTo(const MatrixF& xfm)
       mBody->GetID(),
       joltCast(pos),
       joltCast(angPos),
-      1.0f / 60.0f
+      TickSec
    );
 }
 

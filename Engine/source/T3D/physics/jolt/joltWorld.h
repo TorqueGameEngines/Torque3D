@@ -11,9 +11,10 @@
 #include "T3D/physics/jolt/joltPlugin.h"
 #endif
 
+
 class ProcessList;
 class PhysicsBody;
-
+class JoltPlayer;
 
 namespace Layers
 {
@@ -132,6 +133,8 @@ protected:
    ObjectVsBroadPhaseLayerFilterImpl mObjectVsBroadPhaseLayerFilter;
    ObjectLayerPairFilterImpl mObjectLayerPairFilter;
    ProcessList* mProcessList;
+
+   Vector<JoltPlayer*> mPlayers;
 public:
    JoltWorld();
    virtual ~JoltWorld();
@@ -159,6 +162,16 @@ public:
    void setEditorTimeScale(F32 timeScale) { mEditorTimeScale = timeScale; }
    const F32 getEditorTimeScale() const { return mEditorTimeScale; }
    JPH::PhysicsSystem* getPhysicsSystem() { return &mPhysicsSystem; }
+
+
+   void addPlayer(JoltPlayer* player);
+   void removePlayer(JoltPlayer* player);
+
+   const JPH::BroadPhaseLayerInterface& getBroadPhaseLayerInterface() const { return mBroadPhaseLayerInterface; };
+   const JPH::ObjectLayerPairFilter& getObjectLayerPairFilter() const { return mObjectLayerPairFilter; }
+   const JPH::ObjectVsBroadPhaseLayerFilter& getObjectVsBroadPhaseLayerFilter() const { return mObjectVsBroadPhaseLayerFilter; }
+   JPH::TempAllocatorImpl* getTempAllocator() { return mTempAllocator; }
+   ProcessList* getProcessList() { return mProcessList; }
 
 };
 

@@ -5,6 +5,7 @@
 #include "T3D/physics/jolt/joltWorld.h"
 #include "T3D/physics/jolt/joltCollision.h"
 #include "T3D/physics/jolt/joltBody.h"
+#include "T3D/physics/jolt/joltPlayer.h"
 #include "T3D/gameBase/gameProcess.h"
 #include "core/util/tNamedFactory.h"
 #include "gfx/sim/debugDraw.h"
@@ -81,7 +82,7 @@ PhysicsBody* JoltPlugin::createBody()
 
 PhysicsPlayer* JoltPlugin::createPlayer()
 {
-   return nullptr;
+   return new JoltPlayer();
 }
 
 bool JoltPlugin::isSimulationEnabled() const

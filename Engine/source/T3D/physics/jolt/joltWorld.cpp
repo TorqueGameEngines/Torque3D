@@ -221,7 +221,13 @@ void JoltWorld::tickPhysics(U32 elapsedMs)
    if (mResetPending.exchange(false))
       performReset();
 
-   const F32 dt = mProcessList->getLastInterpDelta();
+   const F32 dt = (F32)elapsedMs * 0.001f;
+
+   for (auto& player : mPlayers)
+   {
+      if(player->isSimulationEnabled())
+         player->preUpdate(dt);
+   }
 
    PROFILE_SCOPE(JoltWorld_TickPhysics);
 

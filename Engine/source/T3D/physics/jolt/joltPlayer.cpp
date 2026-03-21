@@ -19,7 +19,6 @@
 #pragma pop_macro("Offset")
 #endif
 
-
 JoltPlayer::JoltPlayer()
    : mCharacter(NULL),
    mObject(NULL),
@@ -28,20 +27,11 @@ JoltPlayer::JoltPlayer()
    mStepHeight(0.0f),
    mIsEnabled(false)
 {
-   mDesirdVelocity = JPH::Vec3::sZero();
+   mDesiredVelocity = JPH::Vec3::sZero();
 }
 
 JoltPlayer::~JoltPlayer()
 {
-   if (mWorld && mWorld->getProcessList())
-   {
-      mWorld->getProcessList()->postTickSignal().remove(this, &JoltPlayer::preUpdate);
-   }
-}
-
-PhysicsWorld* JoltPlayer::getWorld()
-{
-   return mWorld;
 }
 
 void JoltPlayer::setTransform(const MatrixF& xfm)
@@ -53,7 +43,6 @@ void JoltPlayer::setTransform(const MatrixF& xfm)
 
    mCharacter->SetPosition(mat.GetTranslation());
    mCharacter->SetRotation(mat.GetQuaternion());
-
 }
 
 MatrixF& JoltPlayer::getTransform(MatrixF* outMatrix)
@@ -68,28 +57,12 @@ Box3F JoltPlayer::getWorldBounds()
    JPH::AABox box = mCharacter->GetShape()->GetWorldSpaceBounds(mCharacter->GetCenterOfMassTransform(), JPH::Vec3::sOne());
    return Box3F(
       Point3F(joltCast(box.mMin)),
-      Point3F(joltCast(box.mMax))
-   );
-}
-
-void JoltPlayer::setSimulationEnabled(bool enabled)
-{
-   if (!mCharacter)
-      return;
-
-   JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
-
-   if (enabled)
-      bi.AddBody(mCharacter->GetInnerBodyID(), JPH::EActivation::Activate);
-   else
-      bi.RemoveBody(mCharacter->GetInnerBodyID());
-
-   mIsEnabled = enabled;
+      Point3F(joltCast(box.mMax)));
 }
 
 void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, F32 stepHeight, SceneObject* obj, PhysicsWorld* world)
 {
-   if (!world || !obj)
+   if (!obj || !world)
       return;
 
    mObject = obj;
@@ -99,24 +72,23 @@ void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, 
       return;
 
    F32 height = size.z;
-   F32 radius = size.x * 0.5f;
-
-   // Convert to Jolt capsule
-   F32 halfHeight = (height * 0.5f) - radius;
-   JPH::Vec3 offset(0, 0, halfHeight + radius);
-
-   JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f));
-   JPH::Ref<JPH::Shape> shape = JPH::RotatedTranslatedShapeSettings( offset, rotFix, new JPH::CapsuleShape(halfHeight, radius) ).Create().Get();
+   F32 radius = mMax(size.x, size.y) * 0.5f;
+   JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f)); // zup 
+   JPH::Ref<JPH::Shape> shape = JPH::RotatedTranslatedShapeSettings(JPH::Vec3(0, 0, 0.5f * height + radius), rotFix, new JPH::CapsuleShape(0.5f * height, radius)).Create().Get();
+   JPH::Ref<JPH::Shape> inner_shape = JPH::RotatedTranslatedShapeSettings(JPH::Vec3(0, 0, 0.5f * height + radius), rotFix, new JPH::CapsuleShape(0.5f * height, 0.9f * radius)).Create().Get();
 
    JPH::Ref<JPH::CharacterVirtualSettings> settings = new JPH::CharacterVirtualSettings();
-   settings->mShape = shape;
-   settings->mMass = 120.0f;
-   settings->mInnerBodyShape = shape; // the same for now but inner shape would probably be something that actually follows the player geometry (ragdoll/hitboxes)
-   settings->mInnerBodyLayer = Layers::MOVING;
-   settings->mSupportingVolume = JPH::Plane(JPH::Vec3::sAxisZ(), -radius);
    settings->mMaxSlopeAngle = runSurfaceCos;
-
-   mUserData.setObject(obj);
+   settings->mMaxStrength = 100.0f;
+   settings->mShape = shape;
+   settings->mBackFaceMode = JPH::EBackFaceMode::CollideWithBackFaces;
+   settings->mCharacterPadding = 0.02f;
+   settings->mPenetrationRecoverySpeed = 1.0f;
+   settings->mPredictiveContactDistance = 0.1f;
+   settings->mSupportingVolume = JPH::Plane(JPH::Vec3::sAxisZ(), -radius);
+   settings->mEnhancedInternalEdgeRemoval = false;
+   settings->mInnerBodyShape = inner_shape;
+   settings->mInnerBodyLayer = Layers::MOVING;
 
    MatrixF objXfm = obj->getTransform();
    QuatF angPos(objXfm);
@@ -127,36 +99,30 @@ void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, 
       settings,
       joltCast(pos),
       joltCast(angPos),
-      reinterpret_cast<U64>(&mUserData), // set scene object to the user data, physicsuserdata does not have an interface for setplayer....
+      0, // set scene object to the user data, physicsuserdata does not have an interface for setplayer....
       mWorld->getPhysicsSystem()
-      );
+   );
 
-   mCharacter->SetUp(JPH::Vec3(0, 0, 1));
-   mMaxSlopeCos = runSurfaceCos;
-   mStepHeight = stepHeight;
+   mCharacter->SetUp(JPH::Vec3::sAxisZ());
 
-   if (mWorld && mWorld->getProcessList())
-   {
-      mWorld->getProcessList()->postTickSignal().notify(this, &JoltPlayer::preUpdate, 1000.0f);
-   }
-
+   mWorld->addPlayer(this);
+   setSimulationEnabled(true);
 }
 
-void JoltPlayer::preUpdate(U32 elapsedMs)
+void JoltPlayer::preUpdate(F32 dt)
 {
    if (!mCharacter)
       return;
 
    const auto& system = mWorld->getPhysicsSystem();
-   const F32 dt = mWorld->getProcessList()->getLastInterpDelta();
 
    JPH::Vec3 up = mCharacter->GetUp();
 
    // --- Decompose current velocity ---
-   JPH::Vec3 desired_vel = mDesirdVelocity / dt;
-   mDesirdVelocity = JPH::Vec3::sZero();
+   JPH::Vec3 desired_vel = mDesiredVelocity / dt;
+   mDesiredVelocity = JPH::Vec3::sZero();
 
-   JPH::Vec3 verticalVel = mCharacter->GetLinearVelocity().Dot(mCharacter->GetUp()) * mCharacter->GetUp();
+   JPH::Vec3 verticalVel = mCharacter->GetLinearVelocity().Dot(up) * up;
 
    JPH::Vec3 groundVel = mCharacter->GetGroundVelocity();
 
@@ -177,7 +143,7 @@ void JoltPlayer::preUpdate(U32 elapsedMs)
    }
 
    // Apply input
-   JPH::Vec3 gravity = -mCharacter->GetUp() * system->GetGravity().Length();
+   JPH::Vec3 gravity = -up * system->GetGravity().Length();
 
    newVel += gravity * dt;
    newVel += desired_vel;
@@ -185,14 +151,10 @@ void JoltPlayer::preUpdate(U32 elapsedMs)
    // --- Apply to character ---
    mCharacter->SetLinearVelocity(newVel);
 
-   // --- Extended update ---
    JPH::CharacterVirtual::ExtendedUpdateSettings settings;
-   settings.mWalkStairsStepUp = up * mStepHeight;
-   settings.mStickToFloorStepDown = -up * mStepHeight;
 
-   // Filters for collision
-   JPH::BodyFilter bodyFilter;
-   JPH::ShapeFilter shapeFilter;
+   settings.mStickToFloorStepDown = -up * settings.mStickToFloorStepDown.Length();
+   settings.mWalkStairsStepUp = up * settings.mWalkStairsStepUp.Length();
 
    mCharacter->ExtendedUpdate(
       dt,
@@ -200,8 +162,8 @@ void JoltPlayer::preUpdate(U32 elapsedMs)
       settings,
       mWorld->getPhysicsSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
       mWorld->getPhysicsSystem()->GetDefaultLayerFilter(Layers::MOVING),
-      bodyFilter,
-      shapeFilter,
+      {},
+      {},
       *mWorld->getTempAllocator()
    );
 }
@@ -211,189 +173,28 @@ Point3F JoltPlayer::move(const VectorF& displacement, CollisionList& outCol)
    if (!mCharacter)
       return Point3F::Zero;
 
-   JPH::Vec3 desiredVel(displacement.x, displacement.y, displacement.z);
-   mDesirdVelocity += desiredVel;
+   mDesiredVelocity = joltCast(displacement);
 
-   JPH::RVec3 pos = mCharacter->GetPosition();
-
-   // Clear previous collisions
-   outCol.clear();
-
-   // Iterate over all active contacts after movement
-   const auto& contacts = mCharacter->GetActiveContacts();
-   for (const auto& contact : contacts)
-   {
-      if (!contact.mHadCollision)
-         continue;
-
-      Collision& col = outCol.increment();
-
-      // Retrieve SceneObject from Jolt body user data
-      SceneObject* obj = NULL;
-      // Retrieve SceneObject from user data
-      PhysicsUserData* userData = PhysicsUserData::cast((void*)contact.mUserData);
-      obj = userData->getObject();
-
-      if (!obj)
-         continue;
-
-      col.object = obj;
-      col.point = joltCast(contact.mPosition);
-
-      col.normal = joltCast(contact.mSurfaceNormal);
-      col.normal.normalize();
-
-      col.distance = contact.mDistance;
-
-      // Optional: assign face/material if you have material mapping
-      col.material = nullptr;
-      col.generateTexCoord = false;
-   }
-
-   return Point3F(
-      pos.GetX(),
-      pos.GetY(),
-      pos.GetZ()
-   );
+   return joltCast(mCharacter->GetPosition());
 }
 
 void JoltPlayer::findContact(SceneObject** contactObject, VectorF* contactNormal, Vector<SceneObject*>* outOverlapObjects) const
 {
-   if (!mCharacter || !mWorld)
-      return;
-
-   *contactObject = nullptr;
-   if (contactNormal)
-      *contactNormal = VectorF(0, 0, 1);
-
-   if (!outOverlapObjects)
-      return;
-
-   outOverlapObjects->clear();
-
-   // Get the contact points from the CharacterVirtual
-   const auto& contacts = mCharacter->GetActiveContacts();
-   for (const auto& contact : contacts)
-   {
-      // Only consider actual collisions
-      if (!contact.mHadCollision || contact.mDistance > 0.001f)
-         continue;
-
-      SceneObject* obj = NULL;
-
-      // Retrieve SceneObject from user data
-      PhysicsUserData* userData = PhysicsUserData::cast((void*)contact.mUserData);
-      obj = userData->getObject();
-
-      // no object or if its us skip
-      if (!obj || mObject == obj)
-         continue;
-
-      // Add to overlap list if not already added
-      if (std::find(outOverlapObjects->begin(), outOverlapObjects->end(), obj) == outOverlapObjects->end())
-         outOverlapObjects->push_back(obj);
-
-      // Pick the first valid contact as main contact
-      if (!*contactObject)
-      {
-         *contactObject = obj;
-         if (contactNormal)
-         {
-            *contactNormal = joltCast(contact.mSurfaceNormal);
-            contactNormal->normalize();
-         }
-      }
-   }
 }
+
 bool JoltPlayer::testSpacials(const Point3F& nPos, const Point3F& nSize) const
 {
-   if (!mWorld || !mCharacter)
-      return false; // assume free if no world
-
-   return true;
-
-   //F32 height = nSize.z;
-   //F32 radius = nSize.x * 0.5f;
-   //F32 halfHeight = (height * 0.5f) - radius;
-   //if (halfHeight < 0.01f) halfHeight = 0.01f;
-
-   //JPH::Vec3 offset(0, 0, halfHeight + radius);
-   //JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f));
-   //JPH::Ref<JPH::Shape> testShape = JPH::RotatedTranslatedShapeSettings(offset, rotFix, new JPH::CapsuleShape(halfHeight, radius)).Create().Get();
-
-   //JPH::RMat44 transform = mCharacter->GetCenterOfMassTransform();
-
-   //// Filters for collision
-   //JPH::BodyFilter bodyFilter;
-   //JPH::ShapeFilter shapeFilter;
-
-   //JPH::AnyHitCollisionCollector<JPH::CollideShapeCollector> collector;
-
-   //JPH::CollideShapeSettings settings;
-   //mWorld->getPhysicsSystem()->GetNarrowPhaseQuery().CollideShape(
-   //   testShape,
-   //   JPH::Vec3::sReplicate(1.0f), // scale
-   //   transform,
-   //   settings,
-   //   transform.GetTranslation(),
-   //   collector,
-   //   mWorld->getPhysicsSystem()->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
-   //   mWorld->getPhysicsSystem()->GetDefaultLayerFilter(Layers::MOVING),
-   //   bodyFilter,
-   //   shapeFilter
-   //);
-
-   //return !collector.HadHit();
+   return false;
 }
 
 void JoltPlayer::setSpacials(const Point3F& nPos, const Point3F& nSize)
 {
-   if (!mCharacter)
-      return;
-
-   F32 height = nSize.z;
-   F32 radius = nSize.x * 0.5f;
-
-   // Convert to Jolt capsule
-   F32 halfHeight = (height * 0.5f) - radius;
-   JPH::Vec3 offset(0, 0, halfHeight + radius);
-
-   JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f));
-   JPH::Ref<JPH::Shape> newShape = JPH::RotatedTranslatedShapeSettings(offset, rotFix, new JPH::CapsuleShape(halfHeight, radius)).Create().Get();
-
-   const auto& system = mWorld->getPhysicsSystem();
-
-   // Filters for collision
-   JPH::BodyFilter bodyFilter;
-   JPH::ShapeFilter shapeFilter;
-
-   bool success = mCharacter->SetShape(
-      newShape,
-      0.05f,
-      system->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
-      system->GetDefaultLayerFilter(Layers::MOVING),
-      bodyFilter,
-      shapeFilter,
-      *mWorld->getTempAllocator()
-   );
-
-   if (success)
-      mCharacter->SetInnerBodyShape(newShape);
-
 }
 
 void JoltPlayer::enableCollision()
 {
-   if (mCharacter)
-      mCharacter->SetMaxStrength(10000.0f);
 }
 
 void JoltPlayer::disableCollision()
-{
-   if (mCharacter)
-      mCharacter->SetMaxStrength(0.0f);
-}
-
-void JoltPlayer::CharacterContactListener::OnContactAdded(const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2, JPH::Vec3Arg inContactPosition, JPH::Vec3Arg inContactNormal, JPH::CharacterContactSettings& ioSettings)
 {
 }

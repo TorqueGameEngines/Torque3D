@@ -31,7 +31,7 @@ protected:
    JoltWorld* mWorld;
    SceneObject* mObject;
    JPH::Ref<JPH::CharacterVirtual> mCharacter;
-   JPH::Vec3 mDesirdVelocity;
+   JPH::Vec3 mDesiredVelocity;
    F32 mMaxSlopeCos;
    F32 mStepHeight;
    /// Is the body participating in the physics simulation.
@@ -44,11 +44,11 @@ public:
    virtual ~JoltPlayer();
 
    // PhysicsObject
-   PhysicsWorld* getWorld() override;
+   PhysicsWorld* getWorld() override { return mWorld; }
    void setTransform(const MatrixF& xfm) override;
    MatrixF& getTransform(MatrixF* outMatrix) override;
    Box3F getWorldBounds() override;
-   void setSimulationEnabled(bool enabled) override;
+   void setSimulationEnabled(bool enabled) override { mIsEnabled = enabled; }
    bool isSimulationEnabled() override { return mIsEnabled; }
 
    // Physics Player.
@@ -59,7 +59,7 @@ public:
             SceneObject* obj,
             PhysicsWorld* world) override;
 
-   void preUpdate(U32 elapsedMs);
+   void preUpdate(F32 dt);
 
    Point3F move(const VectorF& displacement, CollisionList& outCol) override;
    void findContact(SceneObject** contactObject, VectorF* contactNormal, Vector<SceneObject*>* outOverlapObjects) const override;
@@ -70,18 +70,6 @@ public:
 
 private:
 
-   class CharacterContactListener : public JPH::CharacterContactListener
-   {
-   public:
-      CharacterContactListener(JoltPlayer* characterController)
-         : mJoltPlayer(characterController) {
-      }
-
-      void OnContactAdded(const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2, JPH::Vec3Arg inContactPosition, JPH::Vec3Arg inContactNormal, JPH::CharacterContactSettings& ioSettings);
-
-   private:
-      JoltPlayer* mJoltPlayer;
-   };
 };
 
 

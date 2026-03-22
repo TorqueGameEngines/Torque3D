@@ -20,7 +20,9 @@ namespace Layers
 {
    static constexpr JPH::ObjectLayer NON_MOVING = 0;
    static constexpr JPH::ObjectLayer MOVING = 1;
-   static constexpr JPH::ObjectLayer NUM_LAYERS = 2;
+   static constexpr JPH::ObjectLayer CHARACTER = 2;
+   static constexpr JPH::ObjectLayer DEBRIS = 3;
+   static constexpr JPH::ObjectLayer NUM_LAYERS = 4;
 }
 
 namespace BroadPhaseLayers
@@ -39,6 +41,8 @@ public:
    {
       mObjectToBroadPhase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
       mObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
+      mObjectToBroadPhase[Layers::CHARACTER] = BroadPhaseLayers::MOVING;
+      mObjectToBroadPhase[Layers::DEBRIS] = BroadPhaseLayers::MOVING;
    }
 
    virtual U32 GetNumBroadPhaseLayers() const override
@@ -81,10 +85,20 @@ public:
       switch (layer1)
       {
       case Layers::NON_MOVING:
-         return layer2 == Layers::MOVING;
+         return layer2 == Layers::MOVING
+            || layer2 == Layers::CHARACTER
+            || layer2 == Layers::DEBRIS;
 
       case Layers::MOVING:
          return true;
+
+      case Layers::CHARACTER:
+         return layer2 == Layers::NON_MOVING
+            || layer2 == Layers::MOVING
+            || layer2 == Layers::CHARACTER;
+
+      case Layers::DEBRIS:
+         return layer2 == Layers::NON_MOVING; // Only Statics
 
       default:
          return false;
@@ -106,7 +120,11 @@ public:
          return layer2 == BroadPhaseLayers::MOVING;
 
       case Layers::MOVING:
+      case Layers::CHARACTER:
          return true;
+
+      case Layers::DEBRIS:
+         return layer2 == BroadPhaseLayers::NON_MOVING;
 
       default:
          return false;
@@ -165,7 +183,6 @@ public:
 
 
    void addPlayer(JoltPlayer* player);
-   void removePlayer(JoltPlayer* player);
 
    const JPH::BroadPhaseLayerInterface& getBroadPhaseLayerInterface() const { return mBroadPhaseLayerInterface; };
    const JPH::ObjectLayerPairFilter& getObjectLayerPairFilter() const { return mObjectLayerPairFilter; }

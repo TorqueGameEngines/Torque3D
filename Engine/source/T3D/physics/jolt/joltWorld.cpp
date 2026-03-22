@@ -163,10 +163,51 @@ bool JoltWorld::castRay(const Point3F& startPnt, const Point3F& endPnt, RayInfo*
 
       ri->distance = result.mFraction * rayLength;
 
-      // SceneObject mapping
-      PhysicsUserData* userData = PhysicsUserData::cast((void*)body.GetUserData());
-      ri->object = userData->getObject();
+      if (body.GetObjectLayer() == Layers::CHARACTER)
+      {
+         float closestFraction = result.mFraction;
+         JoltPlayer* bestPlayer = nullptr;
 
+         for (auto& player : mPlayers)
+         {
+            const JPH::TransformedShape& ts =
+               player->getCharacter()->GetTransformedShape();
+
+            // Broadphase check (fast reject)
+            if (!ts.GetWorldSpaceBounds().Contains(hitPos))
+               continue;
+
+            // Narrow phase (correct)
+            JPH::RayCastResult charResult;
+            if (ts.CastRay(ray, charResult))
+            {
+               if (charResult.mFraction < closestFraction)
+               {
+                  closestFraction = charResult.mFraction;
+                  bestPlayer = player;
+               }
+            }
+         }
+
+         if (bestPlayer)
+         {
+            PhysicsUserData* userData =
+               PhysicsUserData::cast((void*)bestPlayer->getCharacter()->GetUserData());
+
+            ri->object = userData->getObject();
+            ri->distance = closestFraction * rayLength;
+         }
+         else
+         {
+            return false;
+         }
+      }
+      else
+      {
+         // SceneObject mapping
+         PhysicsUserData* userData = PhysicsUserData::cast((void*)body.GetUserData());
+         ri->object = userData->getObject();
+      }
       ri->material = NULL;
       ri->face = 0;
       ri->faceDot = 0;
@@ -302,11 +343,3 @@ void JoltWorld::addPlayer(JoltPlayer* player)
    mPlayers.push_back(player);
 }
 
-void JoltWorld::removePlayer(JoltPlayer* player)
-{
-   for (Vector<JoltPlayer*>::iterator player_cur = mPlayers.begin(); player_cur != mPlayers.end(); ++player_cur)
-   {
-      if(player_cur && (*player_cur) == player)
-         mPlayers.erase(player_cur);
-   }
-}

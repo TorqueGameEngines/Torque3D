@@ -30,7 +30,7 @@
 class PhysicsUserData;
 class SceneObject;
 class Point3F;
-class PhysicsBody;
+class PhysicsObject;
 
 
 /// Signal used for contact reports.
@@ -70,8 +70,8 @@ public:
    void setObject( SceneObject *object ) { mObject = object; }
    SceneObject* getObject() const { return mObject; }
 
-   void setBody( PhysicsBody *body ) { mBody = body; }
-   PhysicsBody* getBody() const { return mBody; }
+   void setBody(PhysicsObject*body ) { mBody = body; }
+   PhysicsObject* getBody() const { return mBody; }
 
    /// Helper method for casting a void pointer to a userdata pointer.
    static inline SceneObject* getObject( void *data )
@@ -115,7 +115,7 @@ protected:
 
    SceneObject *mObject;
 
-   PhysicsBody *mBody;
+   PhysicsObject *mBody;
 };
 
 #endif // _PHYSICS_PHYSICSUSERDATA_H_   

@@ -66,29 +66,29 @@ public:
       U32 bodyFlags,
       SceneObject* obj,
       PhysicsWorld* world);
-   virtual bool isDynamic() const { return mIsDynamic; }
-   virtual PhysicsCollision* getColShape();
-   virtual void setSleepThreshold(F32 linear, F32 angular);
-   virtual void setDamping(F32 linear, F32 angular);
-   virtual void getState(PhysicsState* outState);
-   virtual F32 getMass() const { return mMass; }
-   virtual Point3F getCMassPosition() const;
-   virtual void setLinVelocity(const Point3F& vel);
-   virtual void setAngVelocity(const Point3F& vel);
-   virtual Point3F getLinVelocity() const;
-   virtual Point3F getAngVelocity() const;
-   virtual void setSleeping(bool sleeping);
-   virtual void setMaterial(F32 restitution,
+   bool isDynamic() const override { return mIsDynamic; }
+   PhysicsCollision* getColShape() override;
+   void setSleepThreshold(F32 linear, F32 angular) override;
+   void setDamping(F32 linear, F32 angular) override;
+   void getState(PhysicsState* outState) override;
+   F32 getMass() const override { return mMass; }
+   Point3F getCMassPosition() const override;
+   void setLinVelocity(const Point3F& vel) override;
+   void setAngVelocity(const Point3F& vel) override;
+   Point3F getLinVelocity() const override;
+   Point3F getAngVelocity() const override;
+   void setSleeping(bool sleeping) override;
+   void setMaterial(F32 restitution,
       F32 friction,
-      F32 staticFriction);
-   virtual void applyCorrection(const MatrixF& xfm);
-   virtual void applyImpulse(const Point3F& origin, const Point3F& force);
-   virtual void applyTorque(const Point3F& torque);
-   virtual void applyForce(const Point3F& force);
-   virtual void findContact(SceneObject** contactObject, VectorF* contactNormal, Vector<SceneObject*>* outOverlapObjects) const;
-   virtual void moveKinematicTo(const MatrixF& xfm);
+      F32 staticFriction) override;
+   void applyCorrection(const MatrixF& xfm) override;
+   void applyImpulse(const Point3F& origin, const Point3F& force) override;
+   void applyTorque(const Point3F& torque) override;
+   void applyForce(const Point3F& force) override;
+   void findContact(SceneObject** contactObject, VectorF* contactNormal, Vector<SceneObject*>* outOverlapObjects) const override;
+   void moveKinematicTo(const MatrixF& xfm) override;
 
-   virtual bool isValid() { return mBody != nullptr; }
+   bool isValid() override;
 };
 
 #endif // !_JOLTBODY_H_

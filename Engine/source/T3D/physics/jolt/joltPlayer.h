@@ -68,6 +68,8 @@ public:
    void enableCollision() override;
    void disableCollision() override;
 
+   JPH::Ref<JPH::CharacterVirtual> getCharacter() { return mCharacter; }
+
 private:
 
 };

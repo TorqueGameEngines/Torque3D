@@ -81,6 +81,7 @@ void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, 
    settings->mMaxSlopeAngle = runSurfaceCos;
    settings->mMaxStrength = 100.0f;
    settings->mShape = shape;
+   settings->mMass = obj->getMass();
    settings->mBackFaceMode = JPH::EBackFaceMode::CollideWithBackFaces;
    settings->mCharacterPadding = 0.02f;
    settings->mPenetrationRecoverySpeed = 1.0f;
@@ -88,20 +89,26 @@ void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, 
    settings->mSupportingVolume = JPH::Plane(JPH::Vec3::sAxisZ(), -radius);
    settings->mEnhancedInternalEdgeRemoval = false;
    settings->mInnerBodyShape = inner_shape;
-   settings->mInnerBodyLayer = Layers::MOVING;
+   settings->mInnerBodyLayer = Layers::CHARACTER;
 
    MatrixF objXfm = obj->getTransform();
    QuatF angPos(objXfm);
    Point3F pos;
    objXfm.getColumn(3, &pos);
 
+  
+
    mCharacter = new JPH::CharacterVirtual(
       settings,
       joltCast(pos),
       joltCast(angPos),
-      0, // set scene object to the user data, physicsuserdata does not have an interface for setplayer....
+      0,
       mWorld->getPhysicsSystem()
    );
+
+   getUserData().setObject(obj);
+   getUserData().setBody(this);
+   mCharacter->SetUserData(reinterpret_cast<U64>(&mUserData));
 
    mCharacter->SetUp(JPH::Vec3::sAxisZ());
 
@@ -119,7 +126,7 @@ void JoltPlayer::preUpdate(F32 dt)
    JPH::Vec3 up = mCharacter->GetUp();
 
    // --- Decompose current velocity ---
-   JPH::Vec3 desired_vel = mDesiredVelocity / dt;
+   JPH::Vec3 desired_vel = mDesiredVelocity;
    mDesiredVelocity = JPH::Vec3::sZero();
 
    JPH::Vec3 verticalVel = mCharacter->GetLinearVelocity().Dot(up) * up;
@@ -173,13 +180,38 @@ Point3F JoltPlayer::move(const VectorF& displacement, CollisionList& outCol)
    if (!mCharacter)
       return Point3F::Zero;
 
-   mDesiredVelocity = joltCast(displacement);
+   mDesiredVelocity = joltCast(displacement) / TickSec;
 
    return joltCast(mCharacter->GetPosition());
 }
 
 void JoltPlayer::findContact(SceneObject** contactObject, VectorF* contactNormal, Vector<SceneObject*>* outOverlapObjects) const
 {
+   const bool isOnGround = mCharacter->GetGroundState() == JPH::CharacterVirtual::EGroundState::OnGround;
+   if (isOnGround)
+   {
+      JPH::BodyLockRead lock(
+         mWorld->getPhysicsSystem()->GetBodyLockInterface(),
+         mCharacter->GetGroundBodyID()
+      );
+
+      if (!lock.Succeeded())
+         return;
+
+      const JPH::Body& body = lock.GetBody();
+
+      if (body.GetObjectLayer() == Layers::CHARACTER)
+      {
+         return;
+      }
+
+      *contactNormal = joltCast(mCharacter->GetGroundNormal());
+      if (mCharacter->GetGroundUserData())
+      {
+         PhysicsUserData* userData = PhysicsUserData::cast((void*)mCharacter->GetGroundUserData());
+         *contactObject = userData->getObject();
+      }
+   }
 }
 
 bool JoltPlayer::testSpacials(const Point3F& nPos, const Point3F& nSize) const

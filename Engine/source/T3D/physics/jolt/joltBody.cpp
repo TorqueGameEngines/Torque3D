@@ -48,6 +48,8 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
    if (!mColShape)
       return false;
 
+   mIsDynamic = false;
+
    const JPH::Shape* joltShape = mColShape->getJoltShape();
 
    // Determine motion type
@@ -84,6 +86,7 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
    {
       settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
       settings.mMassPropertiesOverride.mMass = mass;
+      settings.mMaxLinearVelocity = 1000.0f; // stops an assert, this is torques upper limit, jolts is 500.0f by default.
       mIsDynamic = true;
    }
 
@@ -98,8 +101,8 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
 
    mBody = body;
 
-   mUserData.setObject(obj);
-   mUserData.setBody(this);
+   getUserData().setObject(obj);
+   getUserData().setBody(this);
    mBody->SetUserData(reinterpret_cast<U64>(&mUserData));
 
    const JPH::Mat44 trans = mBody->GetCenterOfMassTransform();
@@ -117,7 +120,7 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
 
 void JoltBody::setTransform(const MatrixF& xfm)
 {
-   if (!mBody)
+   if (!isValid())
       return;
 
    Point3F pos = xfm.getPosition();
@@ -130,6 +133,13 @@ void JoltBody::setTransform(const MatrixF& xfm)
       joltCast(q),
       JPH::EActivation::Activate
    );
+
+   if (isDynamic())
+   {
+      mBody->ResetMotion();// resets accumulated torque and forces, also velocity but do this explicitly
+      mBody->SetLinearVelocity(JPH::Vec3::sZero());
+      mBody->SetAngularVelocity(JPH::Vec3::sZero());
+   }
 }
 
 void JoltBody::applyCorrection(const MatrixF& xfm)
@@ -172,6 +182,11 @@ void JoltBody::moveKinematicTo(const MatrixF& xfm)
    );
 }
 
+bool JoltBody::isValid()
+{
+   return mBody != nullptr && mWorld != NULL;
+}
+
 Box3F JoltBody::getWorldBounds()
 {
    JPH::AABox box = mBody->GetWorldSpaceBounds();
@@ -184,7 +199,7 @@ Box3F JoltBody::getWorldBounds()
 
 void JoltBody::setSimulationEnabled(bool enabled)
 {
-   if (!mBody)
+   if (!isValid())
       return;
 
    JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
@@ -288,11 +303,27 @@ Point3F JoltBody::getAngVelocity() const
 
 void JoltBody::setLinVelocity(const Point3F& vel)
 {
+   if (!isValid())
+      return;
+
+   JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
+
+   if (!bi.IsAdded(mBody->GetID()))
+      return;
+
    mBody->SetLinearVelocity(joltCast(vel));
 }
 
 void JoltBody::setAngVelocity(const Point3F& vel)
 {
+   if (!isValid())
+      return;
+
+   JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
+
+   if (!bi.IsAdded(mBody->GetID()))
+      return;
+
    mBody->SetAngularVelocity(joltCast(vel));
 }
 

@@ -207,7 +207,20 @@ void JoltBody::setSimulationEnabled(bool enabled)
    if (enabled)
       bi.AddBody(mBody->GetID(), JPH::EActivation::Activate);
    else
+   {
+      JPH::AABox bounds = mBody->GetWorldSpaceBounds();
+
+      // Expand slightly to catch touching bodies
+      bounds.ExpandBy(JPH::Vec3(0.05f, 0.05f, 0.05f));
+
+      bi.ActivateBodiesInAABox(
+         bounds,
+         JPH::BroadPhaseLayerFilter(),  // allow all
+         JPH::ObjectLayerFilter()       // allow all
+      );
+
       bi.RemoveBody(mBody->GetID());
+   }
 
    mIsEnabled = enabled;
 }

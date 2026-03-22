@@ -228,11 +228,20 @@ void JoltWorld::explosion(const Point3F& pos, F32 radius, F32 forceMagnitude)
 void JoltWorld::onDebugDraw(const SceneRenderState* state)
 {
 #ifdef JPH_DEBUG_RENDERER
+   if (!state->isDiffusePass()) return;
+
    if (!mIsEnabled)
       return;
 
-   if (!JPH::DebugRenderer::sInstance)
+   auto* renderer = static_cast<JoltDebugRenderer*>(JPH::DebugRenderer::sInstance);
+   if (!renderer)
       return;
+
+   DebugRenderFrameState frame;
+   frame.frustum = state->getCullingFrustum();
+   frame.cameraPos = joltCast(state->getCameraPosition());
+
+   renderer->SetFrameState(frame);
 
    JPH::BodyManager::DrawSettings settings;
 
@@ -243,7 +252,7 @@ void JoltWorld::onDebugDraw(const SceneRenderState* state)
    settings.mDrawCenterOfMassTransform = true;
    settings.mDrawShapeColor = JPH::BodyManager::EShapeColor::SleepColor;
 
-   mPhysicsSystem.DrawBodies(settings, JPH::DebugRenderer::sInstance);
+   mPhysicsSystem.DrawBodies(settings, renderer);
 #endif
 }
 
@@ -264,8 +273,11 @@ void JoltWorld::tickPhysics(U32 elapsedMs)
 
    const F32 dt = (F32)elapsedMs * 0.001f;
 
-   for (auto& player : mPlayers)
+   for (auto player : mPlayers)
    {
+      if (!player)
+         continue;
+
       if(player->isSimulationEnabled())
          player->preUpdate(dt);
    }
@@ -343,3 +355,11 @@ void JoltWorld::addPlayer(JoltPlayer* player)
    mPlayers.push_back(player);
 }
 
+void JoltWorld::removePlayer(JoltPlayer* player)
+{
+   for (Vector<JoltPlayer*>::iterator player_cur = mPlayers.begin(); player_cur != mPlayers.end(); ++player_cur)
+   {
+      if (player_cur && (*player_cur) == player)
+         mPlayers.erase(player_cur);
+   }
+}

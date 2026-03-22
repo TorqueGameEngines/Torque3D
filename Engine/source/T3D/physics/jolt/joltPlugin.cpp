@@ -254,15 +254,22 @@ JPH::DebugRenderer::Batch JoltDebugRenderer::CreateTriangleBatch(const Vertex* i
 
 void JoltDebugRenderer::DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox& inWorldSpaceBounds, float inLODScaleSq, JPH::ColorArg inModelColor, const GeometryRef& inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode)
 {
-   const JPH::DebugRenderer::LOD* lod = inGeometry->mLODs.data();
+   const auto& lod = inGeometry->GetLOD(
+      mFrameState.cameraPos,
+      inWorldSpaceBounds,
+      inLODScaleSq
+   );
 
-   const BatchImpl* batch = static_cast<const BatchImpl*>(lod->mTriangleBatch.GetPtr());
+   const BatchImpl* batch = static_cast<const BatchImpl*>(lod.mTriangleBatch.GetPtr());
 
    if (!batch)
       return;
 
    const U32 triCount = batch->mTriangles.size();
    if (triCount == 0)
+      return;
+
+   if (!mFrameState.frustum.getBounds().isOverlapped(fromJolt(inWorldSpaceBounds)))
       return;
 
    // Start one batched primitive build

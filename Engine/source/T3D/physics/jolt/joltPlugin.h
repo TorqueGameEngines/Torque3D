@@ -5,6 +5,10 @@
 #include "T3D/physics/physicsPlugin.h"
 #endif
 
+#ifndef _SCENERENDERSTATE_H_
+#include "scene/sceneRenderState.h"
+#endif
+
 #if defined(TORQUE_TOOLS) && defined(TORQUE_OS_WIN)
 #ifndef JPH_DEBUG_RENDERER
 #define JPH_DEBUG_RENDERER
@@ -127,6 +131,12 @@ inline ColorI fromJolt(const JPH::Color& c)
 }
 
 #ifdef JPH_DEBUG_RENDERER
+struct DebugRenderFrameState
+{
+   Frustum frustum;
+   JPH::Vec3 cameraPos;
+};
+
 class JoltDebugRenderer final : public JPH::DebugRenderer
 {
 public:
@@ -138,6 +148,12 @@ public:
    virtual JPH::DebugRenderer::Batch CreateTriangleBatch(const Vertex* inVertices, int inVertexCount, const JPH::uint32* inIndices, int inIndexCount) override;
    virtual void DrawGeometry(JPH::RMat44Arg inModelMatrix, const JPH::AABox& inWorldSpaceBounds, float inLODScaleSq, JPH::ColorArg inModelColor, const GeometryRef& inGeometry, ECullMode inCullMode, ECastShadow inCastShadow, EDrawMode inDrawMode) override;
    virtual void DrawText3D(JPH::RVec3Arg inPosition, const JPH::string_view& inString, JPH::ColorArg inColor, float inHeight) override {};
+
+
+   void SetFrameState(const DebugRenderFrameState& state)
+   {
+      mFrameState = state;
+   }
 
    /// Implementation specific batch object
    class BatchImpl : public JPH::RefTargetVirtual
@@ -160,6 +176,9 @@ public:
    private:
       JPH::atomic<U32> mRefCount = 0;
    };
+
+private:
+   DebugRenderFrameState mFrameState;
 };
 #endif
 

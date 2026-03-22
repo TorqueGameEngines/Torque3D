@@ -184,6 +184,8 @@ public:
 
    void addPlayer(JoltPlayer* player);
 
+   void removePlayer(JoltPlayer* player);
+
    const JPH::BroadPhaseLayerInterface& getBroadPhaseLayerInterface() const { return mBroadPhaseLayerInterface; };
    const JPH::ObjectLayerPairFilter& getObjectLayerPairFilter() const { return mObjectLayerPairFilter; }
    const JPH::ObjectVsBroadPhaseLayerFilter& getObjectVsBroadPhaseLayerFilter() const { return mObjectVsBroadPhaseLayerFilter; }

@@ -48,7 +48,7 @@ public:
    void setTransform(const MatrixF& xfm) override;
    MatrixF& getTransform(MatrixF* outMatrix) override;
    Box3F getWorldBounds() override;
-   void setSimulationEnabled(bool enabled) override { mIsEnabled = enabled; }
+   void setSimulationEnabled(bool enabled) override;
    bool isSimulationEnabled() override { return mIsEnabled; }
 
    // Physics Player.

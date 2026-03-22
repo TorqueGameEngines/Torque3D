@@ -32,6 +32,14 @@ JoltPlayer::JoltPlayer()
 
 JoltPlayer::~JoltPlayer()
 {
+   if (mCharacter && mIsEnabled)
+   {
+      if (mWorld && mWorld->isEnabled())
+         mWorld->removePlayer(this);
+   }
+
+   mCharacter = NULL;
+   setSimulationEnabled(false);
 }
 
 void JoltPlayer::setTransform(const MatrixF& xfm)
@@ -58,6 +66,14 @@ Box3F JoltPlayer::getWorldBounds()
    return Box3F(
       Point3F(joltCast(box.mMin)),
       Point3F(joltCast(box.mMax)));
+}
+
+void JoltPlayer::setSimulationEnabled(bool enabled)
+{
+   if (!mCharacter || !mWorld)
+      return;
+
+   mIsEnabled = enabled;
 }
 
 void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, F32 stepHeight, SceneObject* obj, PhysicsWorld* world)
@@ -96,8 +112,6 @@ void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, 
    Point3F pos;
    objXfm.getColumn(3, &pos);
 
-  
-
    mCharacter = new JPH::CharacterVirtual(
       settings,
       joltCast(pos),
@@ -118,7 +132,7 @@ void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, 
 
 void JoltPlayer::preUpdate(F32 dt)
 {
-   if (!mCharacter)
+   if (!mCharacter || !mIsEnabled)
       return;
 
    const auto& system = mWorld->getPhysicsSystem();
@@ -187,6 +201,9 @@ Point3F JoltPlayer::move(const VectorF& displacement, CollisionList& outCol)
 
 void JoltPlayer::findContact(SceneObject** contactObject, VectorF* contactNormal, Vector<SceneObject*>* outOverlapObjects) const
 {
+   if (!mCharacter || !mIsEnabled)
+      return;
+
    const bool isOnGround = mCharacter->GetGroundState() == JPH::CharacterVirtual::EGroundState::OnGround;
    if (isOnGround)
    {
@@ -200,7 +217,7 @@ void JoltPlayer::findContact(SceneObject** contactObject, VectorF* contactNormal
 
       const JPH::Body& body = lock.GetBody();
 
-      if (body.GetObjectLayer() == Layers::CHARACTER)
+      if (body.GetObjectLayer() == Layers::CHARACTER || !body.GetUserData())
       {
          return;
       }
@@ -208,7 +225,7 @@ void JoltPlayer::findContact(SceneObject** contactObject, VectorF* contactNormal
       *contactNormal = joltCast(mCharacter->GetGroundNormal());
       if (mCharacter->GetGroundUserData())
       {
-         PhysicsUserData* userData = PhysicsUserData::cast((void*)mCharacter->GetGroundUserData());
+         PhysicsUserData* userData = PhysicsUserData::cast((void*)body.GetUserData());
          *contactObject = userData->getObject();
       }
    }
@@ -216,12 +233,64 @@ void JoltPlayer::findContact(SceneObject** contactObject, VectorF* contactNormal
 
 bool JoltPlayer::testSpacials(const Point3F& nPos, const Point3F& nSize) const
 {
-   return false;
+   if (!mCharacter || !mWorld)
+      return false;
+
+   const auto& system = mWorld->getPhysicsSystem();
+
+   JPH::BodyFilter body_filter;
+   JPH::ShapeFilter shape_filter;
+
+   F32 height = nSize.z;
+   F32 radius = mMax(nSize.x, nSize.y) * 0.5f;
+   JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f)); // zup 
+   JPH::Ref<JPH::Shape> shape = JPH::RotatedTranslatedShapeSettings(JPH::Vec3(0, 0, 0.5f * height + radius), rotFix, new JPH::CapsuleShape(0.5f * height, radius)).Create().Get();
+
+   const float maxPenetration = 0.05f; // tweak tolerance
+
+   return mCharacter->SetShape(
+      shape,
+      maxPenetration,
+      system->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
+      system->GetDefaultLayerFilter(Layers::MOVING),
+      body_filter,
+      shape_filter,
+      *mWorld->getTempAllocator());
+
 }
 
 void JoltPlayer::setSpacials(const Point3F& nPos, const Point3F& nSize)
 {
+   if (!mCharacter || !mWorld)
+      return;
+
+   const auto& system = mWorld->getPhysicsSystem();
+
+   JPH::BodyFilter body_filter;
+   JPH::ShapeFilter shape_filter;
+
+   F32 height = nSize.z;
+   F32 radius = mMax(nSize.x, nSize.y) * 0.5f;
+   JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f)); // zup 
+   JPH::Ref<JPH::Shape> shape = JPH::RotatedTranslatedShapeSettings(JPH::Vec3(0, 0, 0.5f * height + radius), rotFix, new JPH::CapsuleShape(0.5f * height, radius)).Create().Get();
+   JPH::Ref<JPH::Shape> inner_shape = JPH::RotatedTranslatedShapeSettings(JPH::Vec3(0, 0, 0.5f * height + radius), rotFix, new JPH::CapsuleShape(0.5f * height, 0.9f * radius)).Create().Get();
+
+   const float maxPenetration = 0.05f; // tweak tolerance
+
+   if (mCharacter->SetShape(
+      shape,
+      maxPenetration,
+      system->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
+      system->GetDefaultLayerFilter(Layers::MOVING),
+      body_filter,
+      shape_filter,
+      *mWorld->getTempAllocator())
+      )
+   {
+      mCharacter->SetInnerBodyShape(inner_shape);
+   }
 }
+
 
 void JoltPlayer::enableCollision()
 {

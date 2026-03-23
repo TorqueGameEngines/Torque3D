@@ -123,7 +123,7 @@ private:
    String               mBitmapFile; 
 public:
    void _setBitmap(StringTableEntry _in) {
-      if (_in == NULL || _in == StringTable->EmptyString() || _in == "")
+      if (_in == NULL || _in == StringTable->EmptyString() || _in[0] == '\0')
       {
          mBitmapAsset = NULL;
          mBitmapFile = "";

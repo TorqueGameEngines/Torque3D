@@ -173,15 +173,15 @@ function PE_ParticleEditor::updateParticle(%this, %propertyField, %value, %isSli
 
 function PE_ParticleEditor::setDirty( %this )
 {
-   this.text = "*Particle";
-   this.dirty = true;
+   %this.text = "*Particle";
+   %this.dirty = true;
 
    if(!startsWith(%this-->PopupMenu.text, "*"))
    {
       %this-->PopupMenu.text = "*" @ %this-->PopupMenu.text;
    }
    
-   %particle = this.currParticle;
+   %particle = %this.currParticle;
    %filename = %particle.getFilename();
    %editorFilename = "tools/particleEditor/scripts/particleParticleEditor.ed." @ $TorqueScriptFileExtension;
    
@@ -211,17 +211,17 @@ function PE_ParticleEditor::setNotDirty( %this )
 function PE_ParticleEditor::showNewDialog( %this, %replaceSlot )
 {
    // Open a dialog if the current Particle is dirty
-   if( this.dirty ) 
+   if( %this.dirty ) 
    {
       toolsMessageBoxYesNoCancel("Save Particle Changes?", 
          "Do you wish to save the changes made to the <br>current particle before changing the particle?", 
-         "PE_ParticleEditor.saveParticle( " @ this.currParticle.getName() @ " ); PE_ParticleEditor.createParticle( " @ %replaceSlot @ " );", 
-         "PE_ParticleEditor.saveParticleDialogDontSave( " @ this.currParticle.getName() @ " ); PE_ParticleEditor.createParticle( " @ %replaceSlot @ " );"
+         "PE_ParticleEditor.saveParticle( " @ %this.currParticle.getName() @ " ); PE_ParticleEditor.createParticle( " @ %replaceSlot @ " );", 
+         "PE_ParticleEditor.saveParticleDialogDontSave( " @ %this.currParticle.getName() @ " ); PE_ParticleEditor.createParticle( " @ %replaceSlot @ " );"
       );
    }
    else
    {
-      this.createParticle( %replaceSlot );
+      %this.createParticle( %replaceSlot );
    }
 }
 
@@ -263,7 +263,7 @@ function PE_ParticleEditor::pickedNewParticleTargetModule( %this, %module )
    ParticleEditorCreatePrompt.show("Particle", "ParticleData", "PE_ParticleEditor.doCreateNewParticle(\"" @ %module @ "\");" );
 }
 
-function PE_ParticleEditor::doCreateNewEmitter(%this, %module)
+function PE_ParticleEditor::doCreateNewParticle(%this, %module)
 {
    //Sanity checks
    %newName = ParticleEditorCreatePrompt-->nameText.getText();

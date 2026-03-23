@@ -660,12 +660,14 @@ DecalInstance* DecalManager::raycast( const Point3F &start, const Point3F &end, 
          RayInfo ri;
          bool containsPoint = false;
          if ( gServerContainer.castRayRendered( start, end, STATIC_COLLISION_TYPEMASK, &ri ) )
-         {        
+         {
+            RectF rect = inst->mDataBlock->texRect[inst->mTextureRectIdx];
+            rect.extent *= inst->mSize * 0.5f;
             Point2F poly[4];
-            poly[0].set( inst->mPosition.x - (inst->mSize / 2), inst->mPosition.y + (inst->mSize / 2));
-            poly[1].set( inst->mPosition.x - (inst->mSize / 2), inst->mPosition.y - (inst->mSize / 2));
-            poly[2].set( inst->mPosition.x + (inst->mSize / 2), inst->mPosition.y - (inst->mSize / 2));
-            poly[3].set( inst->mPosition.x + (inst->mSize / 2), inst->mPosition.y + (inst->mSize / 2));
+            poly[0].set(inst->mPosition.x - rect.extent.x, inst->mPosition.y + rect.extent.y);
+            poly[1].set( inst->mPosition.x - rect.extent.x, inst->mPosition.y - rect.extent.y);
+            poly[2].set( inst->mPosition.x + rect.extent.x, inst->mPosition.y - rect.extent.y);
+            poly[3].set( inst->mPosition.x + rect.extent.x, inst->mPosition.y + rect.extent.y);
             
             if ( MathUtils::pointInPolygon( poly, 4, Point2F(ri.point.x, ri.point.y) ) )
                containsPoint = true;

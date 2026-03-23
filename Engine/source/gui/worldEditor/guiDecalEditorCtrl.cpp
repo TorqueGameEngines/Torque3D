@@ -516,11 +516,12 @@ void GuiDecalEditorCtrl::renderScene(const RectI & updateRect)
       if ( gDecalManager->clipDecal( mSELDecal, &mSELEdgeVerts ) )
          _renderDecalEdge( mSELEdgeVerts, ColorI( 255, 255, 255, 255 ) );
 
-      const F32 &decalSize = mSELDecal->mSize;
+      const F32 &decalSize = mSELDecal->mSize * 0.5;
       Point3F boxSize( decalSize, decalSize, decalSize );
-
       MatrixF worldMat( true );
-      mSELDecal->getWorldMatrix( &worldMat, true );   
+      mSELDecal->getWorldMatrix( &worldMat, true );
+      RectF rect = mSELDecal->mDataBlock->texRect[mSELDecal->mTextureRectIdx];
+      worldMat.scale(Point3F(rect.extent.x, rect.extent.y, 0.25f));
 
       drawUtil->drawObjectBox( desc, boxSize, mSELDecal->mPosition, worldMat, ColorI( 255, 255, 255, 255 ) );
    }
@@ -531,11 +532,13 @@ void GuiDecalEditorCtrl::renderScene(const RectI & updateRect)
       if ( gDecalManager->clipDecal( mHLDecal, &mHLEdgeVerts ) )
          _renderDecalEdge( mHLEdgeVerts, ColorI( 255, 255, 255, 255 ) );
 
-      const F32 &decalSize = mHLDecal->mSize;
+      const F32 &decalSize = mHLDecal->mSize * 0.5;
       Point3F boxSize( decalSize, decalSize, decalSize );
 
       MatrixF worldMat( true );
       mHLDecal->getWorldMatrix( &worldMat, true );  
+      RectF rect = mHLDecal->mDataBlock->texRect[mHLDecal->mTextureRectIdx];
+      worldMat.scale(Point3F(rect.extent.x, rect.extent.y, 0.25f));
 
       drawUtil->drawObjectBox( desc, boxSize, mHLDecal->mPosition, worldMat, ColorI( 255, 255, 255, 255 ) );
    }

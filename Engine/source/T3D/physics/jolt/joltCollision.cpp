@@ -57,9 +57,6 @@ void JoltCollision::addBox(const Point3F& halfWidth, const MatrixF& localXfm)
 {
    JPH::BoxShapeSettings boxSettings(JPH::Vec3(halfWidth.x, halfWidth.y, halfWidth.z));
 
-   // sometimes our debris is really small, this makes sure something gets added to jolt.
-   boxSettings.mConvexRadius = 0.01f;
-
    auto result = boxSettings.Create();
    if (result.HasError())
    {

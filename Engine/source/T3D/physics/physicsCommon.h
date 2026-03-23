@@ -137,5 +137,7 @@ class PhysicsCollision;
 
 /// A strong reference to a physics collision shape.
 typedef StrongRefPtr<PhysicsCollision> PhysicsCollisionRef;
+/// A weak pointer to a reference counted PhysicsCollision.
+typedef WeakRefPtr<PhysicsCollision> PhysicsCollisionWeakRef;
 
 #endif // _T3D_PHYSICSCOMMON_H_

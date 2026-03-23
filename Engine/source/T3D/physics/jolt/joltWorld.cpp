@@ -24,6 +24,7 @@
 #include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
+#include <Jolt/Physics/Collision/CollideShape.h>
 
 #ifdef Offset
     // Restore the original macro after includes
@@ -156,6 +157,9 @@ bool JoltWorld::castRay(const Point3F& startPnt, const Point3F& endPnt, RayInfo*
 
    JPH::Vec3 normal = body.GetWorldSpaceSurfaceNormal( result.mSubShapeID2, hitPos );
 
+   if (!body.GetUserData())
+      return false;
+
    if (ri)
    {
       ri->point.set(joltCast(hitPos));
@@ -223,6 +227,84 @@ PhysicsBody* JoltWorld::castRay(const Point3F& start, const Point3F& end, U32 bo
 
 void JoltWorld::explosion(const Point3F& pos, F32 radius, F32 forceMagnitude)
 {
+   JPH::Vec3 center(pos.x, pos.y, pos.z);
+   float radiusSq = radius * radius;
+
+   // Broadphase query: get all bodies in sphere
+   JPH::SphereShape sphere(radius);
+
+   JPH::CollideShapeSettings settings;
+   settings.mMaxSeparationDistance = 0.0f;
+
+   JPH::RMat44 transform = JPH::RMat44::sTranslation(center);
+
+   struct ExplosionCollector : public JPH::CollideShapeCollector
+   {
+      std::vector<JPH::BodyID> bodies;
+
+      void AddHit(const JPH::CollideShapeResult& result) override
+      {
+         bodies.push_back(result.mBodyID2);
+      }
+   };
+
+   ExplosionCollector collector;
+
+   mPhysicsSystem.GetNarrowPhaseQuery().CollideShape(
+      &sphere,
+      JPH::Vec3::sOne(),
+      transform,
+      settings,
+      JPH::Vec3::sZero(),
+      collector
+   );
+
+   auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+
+   for (const JPH::BodyID& bodyID : collector.bodies)
+   {
+      if (!bodyInterface.IsAdded(bodyID))
+         continue;
+
+      // Wake the body FIRST
+      bodyInterface.ActivateBody(bodyID);
+
+      // Lock body safely
+      JPH::BodyLockWrite lock(
+         mPhysicsSystem.GetBodyLockInterface(),
+         bodyID
+      );
+
+      if (!lock.Succeeded())
+         continue;
+
+      JPH::Body& body = lock.GetBody();
+
+      // Ignore static/kinematic bodies
+      if (!body.IsDynamic())
+         continue;
+
+      JPH::Vec3 bodyPos = body.GetCenterOfMassPosition();
+      JPH::Vec3 offset = bodyPos - center;
+
+      float distSq = offset.LengthSq();
+      if (distSq > radiusSq || distSq <= 0.0001f)
+         continue;
+
+      float dist = sqrtf(distSq);
+
+      // Normalize direction
+      JPH::Vec3 dir = offset / dist;
+
+      // Falloff (linear)
+      float falloff = 1.0f - (dist / radius);
+
+      // Final impulse
+      JPH::Vec3 impulse = dir * (forceMagnitude * falloff);
+
+      // Apply impulse at center of mass
+      body.AddImpulse(impulse);
+   }
 }
 
 void JoltWorld::onDebugDraw(const SceneRenderState* state)
@@ -357,9 +439,9 @@ void JoltWorld::addPlayer(JoltPlayer* player)
 
 void JoltWorld::removePlayer(JoltPlayer* player)
 {
-   for (Vector<JoltPlayer*>::iterator player_cur = mPlayers.begin(); player_cur != mPlayers.end(); ++player_cur)
-   {
-      if (player_cur && (*player_cur) == player)
-         mPlayers.erase(player_cur);
-   }
+   if (!player || mPlayers.empty())
+      return;
+
+   mPlayers.remove(player);
+
 }

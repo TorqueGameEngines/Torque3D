@@ -23,6 +23,8 @@ JoltBody::~JoltBody()
    SAFE_DELETE(mInvCenterOfMass);
 
    mColShape = NULL;
+   mBody->SetUserData(NULL);
+   mBody = NULL;
 }
 
 PhysicsWorld* JoltBody::getWorld()

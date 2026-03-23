@@ -37,7 +37,7 @@ JoltPlayer::~JoltPlayer()
       if (mWorld && mWorld->isEnabled())
          mWorld->removePlayer(this);
    }
-
+   mCharacter->SetUserData(NULL);
    mCharacter = NULL;
    setSimulationEnabled(false);
 }

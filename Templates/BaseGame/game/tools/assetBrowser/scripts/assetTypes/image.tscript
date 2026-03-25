@@ -127,6 +127,28 @@ function ImageAsset::generatePreviewImage(%this, %previewButton, %forceRegenerat
    return false;
 }
 
+function ImageAsset::makeMaterialFrom(%this)
+{
+   %matName = %this.assetName @ "_Mat";
+   %assetLoc = AssetDatabase.getAssetPath(%this.getAssetId()) @"/"@ %this.assetName @"_Mat.asset.taml";
+   %newMat = new Material(%matName) {
+      diffuseMapAsset[0] = %this.getAssetId();
+      mapTo = %this.assetName;
+   };
+
+   %matAsset = new MaterialAsset() {
+      assetName = %matName;
+      materialDefinitionName = %matName;
+   };
+   
+   %matAsset.add(%newMat);
+      
+   TamlWrite(%matAsset, expandPath(%assetLoc));
+   AssetDatabase.addDeclaredAsset(AssetDatabase.getAssetModule(%this.getAssetId()), %assetLoc);
+   return %matAsset;
+}
+
+
 function ImageAsset::onShowActionMenu(%this)
 {
    GenericAsset::onShowActionMenu(%this);
@@ -134,6 +156,8 @@ function ImageAsset::onShowActionMenu(%this)
    %assetId = %this.getAssetId();
    
    EditAssetPopup.setItemPosition("Create Composite Texture" TAB "" TAB "CompositeTextureEditor.buildComposite(\"" @ %assetId @ "\");", 4);
+   EditAssetPopup.setItemPosition("Create Terrain Textures" TAB "" TAB "makeTerrainMapsFrom(\"" @ %assetId @ "\");", 5);
+   EditAssetPopup.setItemPosition("Create Material" TAB "" TAB %this @ ".makeMaterialFrom();", 6);
 
    EditAssetPopup.objectData = %assetId;
    EditAssetPopup.objectType = AssetDatabase.getAssetType(%assetId);

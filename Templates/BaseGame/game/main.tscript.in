@@ -9,7 +9,7 @@ trace(false);
 
 // Set the name of our application
 $appName = "@TORQUE_APP_NAME@";
-echo("Initializing" SPC $appName SPC getVersionString());
+echo("\nInitializing" SPC $appName SPC "["@getAppVersionString()@"] [Engine Version:"@getVersionString()@"]\n");
 //-----------------------------------------------------------------------------
 // Load up scripts to initialise subsystems.
 ModuleDatabase.setModuleExtension("module");

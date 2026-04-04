@@ -21,6 +21,7 @@ find_package(SndFile CONFIG REQUIRED)
 find_package(TinyXML2 CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(OpenAL CONFIG REQUIRED)
+find_package(Jolt CONFIG REQUIRED)
 
 # ------------------------------------------------------------------
 # Collect imported targets into a single variable
@@ -41,6 +42,7 @@ set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
     tinyxml2::tinyxml2
     assimp::assimp
     OpenAL::OpenAL
+    Jolt::Jolt
 )
 
 if (MSVC)
@@ -105,7 +107,7 @@ torqueAddSourceDirectories("platform/nativeDialogs")
 torqueAddSourceDirectories( "T3D" "T3D/AI" "T3D/assets" "T3D/decal" "T3D/examples" "T3D/fps" "T3D/fx" 
                            "T3D/gameBase" "T3D/gameBase/std"
                            "T3D/lighting"
-                           "T3D/physics"
+                           "T3D/physics" "T3D/physics/jolt"
 #                          "T3D/components" "T3D/sceneComponent" "T3D/systems" "T3D/gameOBjects" 
                            "T3D/sfx" "T3D/turret" "T3D/vehicles")
 

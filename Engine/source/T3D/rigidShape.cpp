@@ -348,6 +348,7 @@ bool RigidShapeData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < Body::MaxSounds; i++)
       {
+         _setBodySounds(getBodySounds(i), i);
          if (!isBodySoundsValid(i))
          {
             //return false; -TODO: trigger asset download
@@ -356,6 +357,7 @@ bool RigidShapeData::preload(bool server, String &errorStr)
 
       for (S32 j = 0; j < Sounds::MaxSounds; j++)
       {
+         _setWaterSounds(getWaterSounds(j), j);
          if (!isWaterSoundsValid(j))
          {
             //return false; -TODO: trigger asset download

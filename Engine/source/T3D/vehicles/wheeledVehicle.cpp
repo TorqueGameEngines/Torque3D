@@ -348,6 +348,7 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
       {
+         _setWheeledVehicleSounds(getWheeledVehicleSounds(i), i);
          if (!isWheeledVehicleSoundsValid(i))
          {
             //return false; -TODO: trigger asset download

@@ -2101,7 +2101,7 @@ function EditorTree::onRightMouseUp( %this, %itemId, %mouse, %obj )
       %popup.item[ 0 ] = "Delete" TAB "" TAB "EditorMenuEditDelete();";
       %popup.item[ 1 ] = "Group" TAB "" TAB "EWorldEditor.addSimGroup( true );";
       %popup.item[ 2 ] = "-";
-      %popup.item[ 3 ] = "Make selected a Prefab" TAB "" TAB "EWorldEditor.makeSelectionPrefab();";
+      %popup.item[ 3 ] = "Make selected a Prefab" TAB "" TAB "EditorMakePrefab();";
       %popup.item[ 4 ] = "Bake selected into Mesh" TAB "" TAB "AssetBrowser.setupCreateNewAsset(\"ShapeAsset\", AssetBrowser.selectedModule, \"makeSelectedAMesh\");";
       %popup.item[ 5 ] = "-";
       %popup.item[ 6 ] = "Make selected a Sub-Level" TAB "" TAB "MakeSelectionASublevel();";

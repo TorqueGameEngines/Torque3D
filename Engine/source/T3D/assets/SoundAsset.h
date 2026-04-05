@@ -87,21 +87,12 @@ class SoundAsset : public AssetBase
    typedef AssetPtr<SoundAsset> ConcreteAssetPtr;
 
 protected:
-   StringTableEntry           mSoundFile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
-   StringTableEntry           mSoundPath[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
-   SimObjectPtr<SFXProfile>   mSFXProfile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
 
-   SFXDescription          mProfileDesc;
-   SFXPlayList             mPlaylist;
-   // subtitles
-   StringTableEntry        mSubtitleString;
-   bool                    mPreload;
-   bool                    mIsPlaylist;
    //SFXPlayList::SlotData   mSlots;
 
    /*These will be needed in the refactor!
    Resource<SFXResource>   mSoundResource;
-   
+
 
    // SFXDesctriptions, some off these will be removed
    F32                     mPitchAdjust;
@@ -121,9 +112,6 @@ protected:
    F32                     mPriority;
    */
 
-   typedef Signal<void()> SoundAssetChanged;
-   SoundAssetChanged mChangeSignal;
-
 public:
    enum SoundAssetErrCode
    {
@@ -142,179 +130,147 @@ public:
       if (errCode > SoundAssetErrCode::Extended) return "undefined error";
       return mErrCodeStrings[errCode - Parent::Extended];
    };
+
+private:
+   StringTableEntry        mSoundFile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
+   Resource<SFXResource>   mSoundResource[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
+
+   SFXDescription          mProfileDesc;
+
+   SFXPlayList             mPlaylist;
+   // subtitles
+   StringTableEntry        mSubtitleString;
+   bool                    mPreload;
+   bool                    mIsPlaylist;
+   SFXTrack* mResolvedTrack;
+   SFXDescription* mResolvedDescription;
+
+public:
    SoundAsset();
    virtual ~SoundAsset();
 
    /// Engine.
    static void initPersistFields();
+   void onRemove() override;
+   void inspectPostApply() override;
    void copyTo(SimObject* object) override;
 
    //SFXResource* getSound() { return mSoundResource; }
-   Resource<SFXResource> getSoundResource(const U32 slotId = 0) { load(); return mSFXProfile[slotId]->getResource(); }
+   Resource<SFXResource> getSoundResource(const U32 slotId = 0) { load(); return mSoundResource[slotId]; }
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
 
-   static bool _setSoundFile(void* object, const char* index, const char* data);
+   // asset Base load
    U32 load() override;
-   inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
-   SFXProfile* getSfxProfile(const U32 slotId = 0) { return mSFXProfile[slotId]; }
-   SFXPlayList* getSfxPlaylist() { return &mPlaylist; }
-   SFXTrack* getSFXTrack() { load(); return mIsPlaylist ? dynamic_cast<SFXTrack*>(&mPlaylist) : dynamic_cast<SFXTrack*>(mSFXProfile[0].getPointer()); }
-   SFXDescription* getSfxDescription() { return &mProfileDesc; }
-   bool isPlaylist(){ return mIsPlaylist; }
+
+   void                    setSoundFile(StringTableEntry pSoundFile, U32 slot = 0);
+   inline StringTableEntry getSoundFile(U32 slot = 0) { return mSoundFile[slot]; }
+   inline StringTableEntry getRelativeSoundFile(U32 slot = 0) { return collapseAssetFilePath(mSoundFile[slot]); }
+
+   SFXTrack* getSFXTrack() { load(); return mResolvedTrack; }
+   SFXDescription* getSfxDescription() { return mResolvedDescription ? mResolvedDescription : &mProfileDesc; }
+   bool isPlaylist() { return mIsPlaylist; }
 
    bool isLoop() { return mProfileDesc.mIsLooping; }
    bool is3D() { return mProfileDesc.mIs3D; }
 
-   static StringTableEntry getAssetIdByFileName(StringTableEntry fileName);
+   static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<SoundAsset>* materialAsset);
-   static U32 getAssetByFileName(StringTableEntry fileName, AssetPtr<SoundAsset>* matAsset);
+   static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<SoundAsset>* matAsset);
+
+   void        buildDescription();
+   SFXProfile* buildProfile();
+   SFXPlayList* buildPlaylist();
+
+   void populateSFXTrack(void);
 
 protected:
-   void            initializeAsset(void) override;
-   void _onResourceChanged(const Torque::Path & path);
-   void            onAssetRefresh(void) override;
+   // Asset Base callback
+   void  initializeAsset(void) override;
+   void  _onResourceChanged(const Torque::Path& path);
+   void  onAssetRefresh(void) override;
+
+   /// Taml callbacks.
+   void onTamlPreWrite(void) override;
+   void onTamlPostWrite(void) override;
+   void onTamlCustomWrite(TamlCustomNodes& customNodes) override;
+   void onTamlCustomRead(const TamlCustomNodes& customNodes) override;
+
+protected:
+   static bool _setSoundFile(void* obj, const char* index, const char* data) { U32 idx = 0; if (index) idx = dAtoi(index); static_cast<SoundAsset*>(obj)->setSoundFile(data, idx); return false; }
+
 };
 
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)
 DefineConsoleType(TypeSoundAssetId, String)
 
-#pragma region Singular Asset Macros
-
-//Singular assets
-/// <Summary>
-/// Declares a sound asset
-/// This establishes the assetId, asset and legacy filepath fields, along with supplemental getter and setter functions
-/// </Summary>
-#define DECLARE_SOUNDASSET(className, name) public: \
-   Resource<SFXResource> m##name;\
-   StringTableEntry m##name##Name; \
-   StringTableEntry m##name##AssetId;\
-   AssetPtr<SoundAsset> m##name##Asset = NULL;\
-   SFXTrack* m##name##Profile = NULL;\
-   SFXDescription* m##name##Desc = NULL;\
-   SimObjectId m##name##SFXId = 0;\
-public: \
-   const StringTableEntry get##name##File() const { return m##name##Name; }\
-   void set##name##File(const FileName &_in) { m##name##Name = StringTable->insert(_in.c_str());}\
-   const AssetPtr<SoundAsset> & get##name##Asset() const { return m##name##Asset; }\
-   void set##name##Asset(const AssetPtr<SoundAsset> &_in) { m##name##Asset = _in;}\
-   \
-   bool _set##name(StringTableEntry _in)\
-   {\
-      if(m##name##AssetId != _in || m##name##Name != _in)\
-      {\
-         if (_in == NULL || !String::compare(_in,StringTable->EmptyString()))\
-         {\
-            m##name##Name = StringTable->EmptyString();\
-            m##name##AssetId = StringTable->EmptyString();\
-            m##name##Asset = NULL;\
-            m##name = NULL;\
-            return true;\
-         }\
-         \
-         if (AssetDatabase.isDeclaredAsset(_in))\
-         {\
-            m##name##AssetId = _in;\
-            \
-            U32 assetState = SoundAsset::getAssetById(m##name##AssetId, &m##name##Asset);\
-            \
-            if (SoundAsset::Ok == assetState)\
-            {\
-               m##name##Name = StringTable->EmptyString();\
-            }\
-         }\
-         else\
-         {\
-            StringTableEntry assetId = SoundAsset::getAssetIdByFileName(_in);\
-            if (assetId != StringTable->EmptyString())\
-            {\
-               m##name##AssetId = assetId;\
-               if(SoundAsset::getAssetById(m##name##AssetId, &m##name##Asset) == SoundAsset::Ok)\
-               {\
-                  m##name##Name = StringTable->EmptyString();\
-               }\
-            }\
-            else\
-            {\
-               m##name##Name = _in;\
-               m##name##AssetId = StringTable->EmptyString();\
-               m##name##Asset = NULL;\
-            }\
-         }\
-      }\
-      if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull())\
-      {\
-         m##name = m##name##Asset->getSoundResource();\
-      }\
-      else\
-      {\
-         m##name = NULL;\
-      }\
-      if(get##name() == StringTable->EmptyString())\
-         return true;\
-      \
-      if(get##name() == StringTable->EmptyString())\
-         return true;\
-      if (m##name##Asset.notNull() && m##name##Asset->getStatus() != SoundAsset::Ok)\
-      {\
-         Con::errorf("%s(%s)::_set%s() - sound asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name), _in, SoundAsset::getAssetErrstrn(m##name##Asset->getStatus()).c_str());\
-         return false; \
-      }\
-      else if (!m##name && (m##name##Name != StringTable->EmptyString() && !Sim::findObject(m##name##Name)))\
-      {\
-         Con::errorf("%s(%s)::_set%s() - Couldn't load sound \"%s\"", macroText(className), getName(), macroText(name), _in);\
-         return false;\
-      }\
-      return true;\
-   }\
-   \
-   const StringTableEntry get##name() const\
-   {\
-      if (m##name##Asset && (m##name##Asset->getSoundPath() != StringTable->EmptyString()))\
-         return m##name##Asset->getSoundPath();\
-      else if (m##name##AssetId != StringTable->EmptyString())\
-         return m##name##AssetId;\
-      else if (m##name##Name != StringTable->EmptyString())\
-         return StringTable->insert(m##name##Name);\
-      else\
-         return StringTable->EmptyString();\
-   }\
-   Resource<SFXResource> get##name##Resource() \
-   {\
-      return m##name;\
-   }\
-   SFXTrack* get##name##Profile()\
-   {\
-      if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull()){\
-            m##name##Profile = m##name##Asset->getSFXTrack(); \
-            return m##name##Profile;\
-      }\
-      return NULL;\
-   }\
+#define DECLARE_SOUNDASSET(className, name)                                                                                                                                   \
+private:                                                                                                                                                                      \
+   AssetPtr<SoundAsset> m##name##Asset;                                                                                                                                       \
+   StringTableEntry     m##name##File  = StringTable->EmptyString();                                                                                                          \
+public:                                                                                                                                                                       \
+   void _set##name(StringTableEntry _in){                                                                                                                                     \
+      if(m##name##Asset.getAssetId() == _in)                                                                                                                                  \
+         return;                                                                                                                                                              \
+      if(get##name##File() == _in)                                                                                                                                            \
+         return;                                                                                                                                                              \
+      if(_in == NULL || !String::compare(_in,StringTable->EmptyString()))                                                                                                     \
+      {                                                                                                                                                                       \
+         m##name##Asset = NULL;                                                                                                                                               \
+         m##name##File = "";                                                                                                                                                  \
+         return;                                                                                                                                                              \
+      }                                                                                                                                                                       \
+      if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
+      {                                                                                                                                                                       \
+         StringTableEntry soundAssetId = StringTable->EmptyString();                                                                                                          \
+         AssetQuery query;                                                                                                                                                    \
+         S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
+         if (foundAssetcount != 0)                                                                                                                                            \
+         {                                                                                                                                                                    \
+            soundAssetId = query.mAssetList[0];                                                                                                                               \
+         }                                                                                                                                                                    \
+         else if(Torque::FS::IsFile(_in))                                                                                                                                     \
+         {                                                                                                                                                                    \
+            soundAssetId = SoundAsset::getAssetIdByFilename(_in);                                                                                                             \
+            if (soundAssetId == StringTable->EmptyString())                                                                                                                   \
+            {                                                                                                                                                                 \
+               SoundAsset* privateSound = new SoundAsset();                                                                                                                   \
+               privateSound->setSoundFile(_in);                                                                                                                               \
+               soundAssetId = AssetDatabase.addPrivateAsset(privateSound);                                                                                                    \
+            }                                                                                                                                                                 \
+         }                                                                                                                                                                    \
+         else                                                                                                                                                                 \
+         {                                                                                                                                                                    \
+            Con::warnf("%s::%s: Could not find asset for: %s, there is no fallback for sound assets.", #className, #name, _in);                                               \
+            soundAssetId = StringTable->EmptyString();                                                                                                                        \
+         }                                                                                                                                                                    \
+         m##name##Asset = soundAssetId;                                                                                                                                       \
+         m##name##File = _in;                                                                                                                                                 \
+      }                                                                                                                                                                       \
+      else                                                                                                                                                                    \
+      {                                                                                                                                                                       \
+         m##name##Asset = _in;                                                                                                                                                \
+         m##name##File = get##name##File();                                                                                                                                   \
+      }                                                                                                                                                                       \
+   };                                                                                                                                                                         \
+                                                                                                                                                                              \
+   inline StringTableEntry _get##name(void) const { return m##name##Asset.getAssetId(); }                                                                                     \
+   AssetPtr<SoundAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
+   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}   \
+   StringTableEntry get##name##File(){ return m##name##Asset.notNull() ? m##name##Asset->getSoundFile() : ""; }                                                               \
    SFXDescription* get##name##Description()\
    {\
-      if (get##name() != StringTable->EmptyString() && m##name##Asset.notNull()){\
-         m##name##Desc = m##name##Asset->getSfxDescription();\
-         return m##name##Desc;}\
+      if (m##name##Asset.notNull())\
+         return m##name##Asset->getSfxDescription();\
       return NULL;\
    }\
-   bool is##name##Valid() { return (get##name() != StringTable->EmptyString() && m##name##Asset && m##name##Asset->getStatus() == AssetBase::Ok); }
+   SimObjectPtr<SFXTrack> get##name##SFXTrack(){ return m##name##Asset.notNull() ? m##name##Asset->getSFXTrack() : NULL; }
 
-#ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
-
-#define INITPERSISTFIELD_SOUNDASSET(name, consoleClass, docs) \
-   addProtectedField(assetText(name, File), TypeSoundFilename, Offset(m##name##Name, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs)); \
-   addProtectedField(assetText(name, Asset), TypeSoundAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));
-
-#else
-
-#define INITPERSISTFIELD_SOUNDASSET(name, consoleClass, docs) \
-   addProtectedField(assetText(name, File), TypeSoundFilename, Offset(m##name##Name, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
-   addProtectedField(assetText(name, Asset), TypeSoundAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, & defaultProtectedGetFn, assetText(name, asset reference.));
-
-#endif // TORQUE_SHOW_LEGACY_FILE_FIELDS
+#define INITPERSISTFIELD_SOUNDASSET(name, consoleClass, docs)                                                                                                                 \
+   addProtectedField(#name, TypeSoundFilename, Offset(m##name##File, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, file docs.), AbstractClassRep::FIELD_HideInInspectors); \
+   addProtectedField(assetText(name, Asset), TypeSoundAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.)); \
+   addProtectedField(assetText(name, File), TypeSoundFilename, Offset(m##name##File, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, file docs.), AbstractClassRep::FIELD_HideInInspectors);
 
 //network send - datablock
 #define PACKDATA_SOUNDASSET(name)\
@@ -374,136 +330,74 @@ public: \
    m##name##SFXId[index] = 0;\
 }
 
-#define DECLARE_SOUNDASSET_ARRAY(className,name,max) public: \
-   static const U32 sm##name##Count = max;\
-   Resource<SFXResource> m##name[max];\
-   StringTableEntry m##name##Name[max]; \
-   StringTableEntry m##name##AssetId[max];\
-   AssetPtr<SoundAsset> m##name##Asset[max];\
-   SFXTrack* m##name##Profile[max];\
-   SimObjectId m##name##SFXId[max];\
-public: \
-   const StringTableEntry get##name##File(const U32& index) const { return m##name##Name[index]; }\
-   void set##name##File(const FileName &_in, const U32& index) { m##name##Name[index] = StringTable->insert(_in.c_str());}\
-   const AssetPtr<SoundAsset> & get##name##Asset(const U32& index) const { return m##name##Asset[index]; }\
-   void set##name##Asset(const AssetPtr<SoundAsset> &_in, const U32& index) { m##name##Asset[index] = _in;}\
-   \
-   bool _set##name(StringTableEntry _in, const U32& index)\
-   {\
-      if(m##name##AssetId[index] != _in || m##name##Name[index] != _in)\
-      {\
-         if(index >= sm##name##Count || index < 0) \
-               return false;\
-         if (_in == NULL || !String::compare(_in,StringTable->EmptyString()))\
-         {\
-            m##name##Name[index] = StringTable->EmptyString();\
-            m##name##AssetId[index] = StringTable->EmptyString();\
-            m##name##Asset[index] = NULL;\
-            m##name[index] = NULL;\
-            return true;\
-         }\
-         else if(_in[0] == '$' || _in[0] == '#')\
-         {\
-            m##name##Name[index] = _in;\
-            m##name##AssetId[index] = StringTable->EmptyString();\
-            m##name##Asset[index] = NULL;\
-            m##name[index] = NULL;\
-            return true;\
-         }\
-         \
-         if (AssetDatabase.isDeclaredAsset(_in))\
-         {\
-            m##name##AssetId[index] = _in;\
-            \
-            U32 assetState = SoundAsset::getAssetById(m##name##AssetId[index], &m##name##Asset[index]);\
-            \
-            if (SoundAsset::Ok == assetState)\
-            {\
-               m##name##Name[index] = StringTable->EmptyString();\
-            }\
-         }\
-         else\
-         {\
-            StringTableEntry assetId = SoundAsset::getAssetIdByFileName(_in);\
-            if (assetId != StringTable->EmptyString())\
-            {\
-               m##name##AssetId[index] = assetId;\
-               if(SoundAsset::getAssetById(m##name##AssetId[index], &m##name##Asset[index]) == SoundAsset::Ok)\
-               {\
-                  m##name##Name[index] = StringTable->EmptyString();\
-               }\
-            }\
-            else\
-            {\
-               m##name##Name[index] = _in;\
-               m##name##AssetId[index] = StringTable->EmptyString();\
-               m##name##Asset[index] = NULL;\
-            }\
-         }\
-      }\
-      if (get##name(index) != StringTable->EmptyString() && m##name##Asset[index].notNull())\
-      {\
-         m##name[index] = m##name##Asset[index]->getSoundResource();\
-      }\
-      else\
-      {\
-         m##name[index] = NULL;\
-      }\
-      if(get##name(index) == StringTable->EmptyString())\
-         return true;\
-      \
-      if (m##name##Asset[index].notNull() && m##name##Asset[index]->getStatus() != SoundAsset::Ok)\
-      {\
-         Con::errorf("%s(%s)::_set%s(%i) - sound asset failure\"%s\" due to [%s]", macroText(className), getName(), macroText(name),index, _in, SoundAsset::getAssetErrstrn(m##name##Asset[index]->getStatus()).c_str());\
-         return false; \
-      }\
-      else if (!m##name[index] && (m##name##Name[index] != StringTable->EmptyString() && !Sim::findObject(m##name##Name[index])))\
-      {\
-         Con::errorf("%s(%s)::_set%s(%i) - Couldn't load sound \"%s\"", macroText(className), getName(), macroText(name),index, _in);\
-         return false;\
-      }\
-      return true;\
-   }\
-   \
-   const StringTableEntry get##name(const U32& index) const\
-   {\
-      if (m##name##Asset[index] && (m##name##Asset[index]->getSoundPath() != StringTable->EmptyString()))\
-         return m##name##Asset[index]->getSoundPath();\
-      else if (m##name##AssetId[index] != StringTable->EmptyString())\
-         return m##name##AssetId[index];\
-      else if (m##name##Name[index] != StringTable->EmptyString())\
-         return StringTable->insert(m##name##Name[index]);\
-      else\
-         return StringTable->EmptyString();\
-   }\
-   Resource<SFXResource> get##name##Resource(const U32& id) \
-   {\
-      if(id >= sm##name##Count || id < 0)\
-         return ResourceManager::get().load( "" );\
-      return m##name[id];\
-   }\
-   SFXTrack* get##name##Profile(const U32& id)\
-   {\
-         if (m##name##Asset[id].notNull())\
-            return  m##name##Asset[id]->getSFXTrack(); \
-      return NULL;\
-   }\
-   bool is##name##Valid(const U32& id) {return (get##name(id) != StringTable->EmptyString() && m##name##Asset[id] && m##name##Asset[id]->getStatus() == AssetBase::Ok); }
+#define DECLARE_SOUNDASSET_ARRAY(className,name,max)\
+private:                                                                                                                                                                      \
+   AssetPtr<SoundAsset> m##name##Asset[max];                                                                                                                                  \
+   StringTableEntry     m##name##File[max] = {StringTable->EmptyString() };                                                                                                   \
+public:                                                                                                                                                                       \
+void _set##name(StringTableEntry _in, const U32& index){                                                                                                                      \
+      if(m##name##Asset[index].getAssetId() == _in)                                                                                                                           \
+         return;                                                                                                                                                              \
+      if(get##name##File(index) == _in)                                                                                                                                       \
+         return;                                                                                                                                                              \
+      if(_in == NULL || !String::compare(_in,StringTable->EmptyString()))                                                                                                     \
+      {                                                                                                                                                                       \
+         m##name##Asset[index] = NULL;                                                                                                                                        \
+         m##name##File[index] = "";                                                                                                                                           \
+         return;                                                                                                                                                              \
+      }                                                                                                                                                                       \
+      if(!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                 \
+      {                                                                                                                                                                       \
+         StringTableEntry soundAssetId = StringTable->EmptyString();                                                                                                          \
+         AssetQuery query;                                                                                                                                                    \
+         S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
+         if (foundAssetcount != 0)                                                                                                                                            \
+         {                                                                                                                                                                    \
+            soundAssetId = query.mAssetList[0];                                                                                                                               \
+         }                                                                                                                                                                    \
+         else if(Torque::FS::IsFile(_in))                                                                                                                                     \
+         {                                                                                                                                                                    \
+            soundAssetId = SoundAsset::getAssetIdByFilename(_in);                                                                                                             \
+            if (soundAssetId == StringTable->EmptyString())                                                                                                                   \
+            {                                                                                                                                                                 \
+               SoundAsset* privateSound = new SoundAsset();                                                                                                                   \
+               privateSound->setSoundFile(_in);                                                                                                                               \
+               soundAssetId = AssetDatabase.addPrivateAsset(privateSound);                                                                                                    \
+            }                                                                                                                                                                 \
+         }                                                                                                                                                                    \
+         else                                                                                                                                                                 \
+         {                                                                                                                                                                    \
+            Con::warnf("%s::%s: Could not find asset for: %s, there is no fallback for sound assets.", #className, #name, _in);                                               \
+            soundAssetId = StringTable->EmptyString();                                                                                                                        \
+         }                                                                                                                                                                    \
+         m##name##Asset[index] = soundAssetId;                                                                                                                                \
+         m##name##File[index] = _in;                                                                                                                                          \
+      }                                                                                                                                                                       \
+      else                                                                                                                                                                    \
+      {                                                                                                                                                                       \
+         m##name##Asset[index] = _in;                                                                                                                                         \
+         m##name##File[index] = get##name##File(index);                                                                                                                       \
+      }                                                                                                                                                                       \
+   };                                                                                                                                                                         \
+                                                                                                                                                                              \
+   inline StringTableEntry _get##name(const U32& index) const { return m##name##Asset[index].getAssetId(); }                                                                  \
+   AssetPtr<SoundAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
+   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false; }   \
+   StringTableEntry get##name##File(const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getSoundFile() : ""; }                                \
+   SFXDescription* get##name##Description(const U32& index)                                                                                                                   \
+   {                                                                                                                                                                          \
+      if (m##name##Asset[index].notNull())                                                                                                                                    \
+         return m##name##Asset[index]->getSfxDescription();                                                                                                                   \
+      return NULL;                                                                                                                                                            \
+   }                                                                                                                                                                          \
+   SimObjectPtr<SFXTrack> get##name##SFXTrack(const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getSFXTrack() : NULL; }
 
-
-#ifdef TORQUE_SHOW_LEGACY_FILE_FIELDS
-
-#define INITPERSISTFIELD_IMAGEASSET_ARRAY(name, arraySize, consoleClass, docs) \
-   addProtectedField(#name, TypeSoundFilename, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, docs)); \
-   addProtectedField(assetText(name, Asset), TypeImageAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));
-
-#else
 
 #define INITPERSISTFIELD_SOUNDASSET_ARRAY(name, arraySize, consoleClass, docs) \
-   addProtectedField(#name, TypeSoundFilename, Offset(m##name##Name, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
-   addProtectedField(assetText(name, Asset), TypeSoundAssetId, Offset(m##name##AssetId, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));
+   addProtectedField(#name, TypeSoundFilename, Offset(m##name##File, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
+   addProtectedField(assetText(name, Asset), TypeSoundAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));\
+   addProtectedField(assetText(name, File), TypeSoundFilename, Offset(m##name##File, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
 
-#endif
 
 #define LOAD_SOUNDASSET_ARRAY(name, index)\
 if (m##name##AssetId[index] != StringTable->EmptyString())\
@@ -530,8 +424,8 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
       const char* enumString = castConsoleTypeToString(static_cast<enumType>(itter));\
       if (enumString && enumString[0])\
       {\
-         addField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##Name[0], consoleClass) + sizeof(m##name##Name[0])*i, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
-         addField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetId, Offset(m##name##AssetId[0], consoleClass) + sizeof(m##name##AssetId[0])*i, assetText(name, asset reference.));\
+         addField(assetEnumNameConcat(enumString, Asset), TypeSoundAssetPtr, Offset(m##name##Asset[0], consoleClass) + sizeof(m##name##Asset[0])*i, assetText(name, asset reference.));\
+         addField(assetEnumNameConcat(enumString, File), TypeSoundFilename, Offset(m##name##File[0], consoleClass) + sizeof(m##name##File[0])*i, assetText(name, docs), AbstractClassRep::FIELD_HideInInspectors); \
       }\
    }
 
@@ -543,6 +437,5 @@ if (m##name##AssetId[index] != StringTable->EmptyString())\
    m##name##AssetId[index] = AssetDatabase.unpackDataAsset(stream)
 
 #pragma endregion
-
 #endif // _ASSET_BASE_H_
 

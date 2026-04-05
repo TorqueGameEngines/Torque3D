@@ -158,9 +158,6 @@ HoverVehicleData::HoverVehicleData()
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
       jetEmitter[j] = 0;
-
-   for (S32 i = 0; i < MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(HoverSounds, i);
 }
 
 HoverVehicleData::~HoverVehicleData()
@@ -313,8 +310,7 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
 
       for (S32 i = 0; i < MaxSounds; i++)
       {
-         _setHoverSounds(getHoverSounds(i), i);
-         if (!isHoverSoundsValid(i))
+         if (!getHoverSoundsSFXTrack(i))
          {
             //return false; -TODO: trigger asset download
          }
@@ -366,10 +362,7 @@ void HoverVehicleData::packData(BitStream* stream)
    stream->write(triggerTrailHeight);
    stream->write(dustTrailFreqMod);
 
-   for (S32 i = 0; i < MaxSounds; i++)
-   {
-      PACKDATA_SOUNDASSET_ARRAY(HoverSounds, i);
-   }
+   PACKDATA_ASSET_ARRAY_REFACTOR(HoverSounds, MaxSounds);
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
    {
@@ -415,10 +408,7 @@ void HoverVehicleData::unpackData(BitStream* stream)
    stream->read(&triggerTrailHeight);
    stream->read(&dustTrailFreqMod);
 
-   for (S32 i = 0; i < MaxSounds; i++)
-   {
-      UNPACKDATA_SOUNDASSET_ARRAY(HoverSounds, i);
-   }
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(HoverSounds, MaxSounds);
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {
       jetEmitter[j] = NULL;
@@ -540,14 +530,14 @@ bool HoverVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mFloatSound );
       SFX_DELETE( mJetSound );
 
-      if ( mDataBlock->getHoverSounds(HoverVehicleData::EngineSound) )
-         mEngineSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::EngineSound), &getTransform() );
+      if ( mDataBlock->getHoverSoundsSFXTrack(HoverVehicleData::EngineSound) )
+         mEngineSound = SFX->createSource( mDataBlock->getHoverSoundsSFXTrack(HoverVehicleData::EngineSound), &getTransform() );
 
-      if ( !mDataBlock->getHoverSounds(HoverVehicleData::FloatSound) )
-         mFloatSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::FloatSound), &getTransform() );
+      if ( !mDataBlock->getHoverSoundsSFXTrack(HoverVehicleData::FloatSound) )
+         mFloatSound = SFX->createSource( mDataBlock->getHoverSoundsSFXTrack(HoverVehicleData::FloatSound), &getTransform() );
 
-      if ( mDataBlock->getHoverSounds(HoverVehicleData::JetSound) )
-         mJetSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::JetSound), &getTransform() );
+      if ( mDataBlock->getHoverSoundsSFXTrack(HoverVehicleData::JetSound) )
+         mJetSound = SFX->createSource( mDataBlock->getHoverSoundsSFXTrack(HoverVehicleData::JetSound), &getTransform() );
    }
 
    // Todo: Uncomment if this is a "leaf" class

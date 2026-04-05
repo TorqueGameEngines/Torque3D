@@ -82,8 +82,6 @@ ProximityMineData::ProximityMineData()
    triggerSequence( -1 ),
    explosionOffset( 0.05f )
 {
-   INIT_ASSET(ArmSound);
-   INIT_ASSET(TriggerSound);
 }
 
 void ProximityMineData::initPersistFields()
@@ -134,11 +132,11 @@ bool ProximityMineData::preload( bool server, String& errorStr )
 
    if ( !server )
    {
-      if(!isArmSoundValid() )
+      if(!getArmSoundSFXTrack() )
       {
          //return false; -TODO: trigger asset download
       }
-      if(!isTriggerSoundValid() )
+      if(!getTriggerSoundSFXTrack() )
       {
          //return false; -TODO: trigger asset download
       }
@@ -159,14 +157,14 @@ void ProximityMineData::packData( BitStream* stream )
    Parent::packData( stream );
 
    stream->write( armingDelay );
-   PACKDATA_ASSET(ArmSound);
+   PACKDATA_ASSET_REFACTOR(ArmSound);
 
    stream->write( autoTriggerDelay );
    stream->writeFlag( triggerOnOwner );
    stream->write( triggerRadius );
    stream->write( triggerSpeed );
    stream->write( triggerDelay );
-   PACKDATA_ASSET(TriggerSound);
+   PACKDATA_ASSET_REFACTOR(TriggerSound);
 }
 
 void ProximityMineData::unpackData( BitStream* stream )
@@ -174,14 +172,14 @@ void ProximityMineData::unpackData( BitStream* stream )
    Parent::unpackData(stream);
 
    stream->read( &armingDelay );
-   UNPACKDATA_ASSET(ArmSound);
+   UNPACKDATA_ASSET_REFACTOR(ArmSound);
 
    stream->read( &autoTriggerDelay );
    triggerOnOwner = stream->readFlag();
    stream->read( &triggerRadius );
    stream->read( &triggerSpeed );
    stream->read( &triggerDelay );
-   UNPACKDATA_ASSET(TriggerSound);
+   UNPACKDATA_ASSET_REFACTOR(TriggerSound);
 }
 
 //----------------------------------------------------------------------------
@@ -429,8 +427,8 @@ void ProximityMine::processTick( const Move* move )
                   mAnimThread = mShapeInstance->addThread();
                   mShapeInstance->setSequence( mAnimThread, mDataBlock->armingSequence, 0.0f );
                }
-               if ( mDataBlock->getArmSoundProfile() )
-                  SFX->playOnce( mDataBlock->getArmSoundProfile(), &getRenderTransform() );
+               if ( mDataBlock->getArmSoundSFXTrack() )
+                  SFX->playOnce( mDataBlock->getArmSoundSFXTrack(), &getRenderTransform() );
             }
             break;
 
@@ -470,8 +468,8 @@ void ProximityMine::processTick( const Move* move )
                   mAnimThread = mShapeInstance->addThread();
                   mShapeInstance->setSequence( mAnimThread, mDataBlock->triggerSequence, 0.0f );
                }
-               if ( mDataBlock->getTriggerSoundProfile() )
-                  SFX->playOnce( mDataBlock->getTriggerSoundProfile(), &getRenderTransform() );
+               if ( mDataBlock->getTriggerSoundSFXTrack() )
+                  SFX->playOnce( mDataBlock->getTriggerSoundSFXTrack(), &getRenderTransform() );
 
                if ( isServerObject() )
                   mDataBlock->onTriggered_callback( this, sql.mList[0] );

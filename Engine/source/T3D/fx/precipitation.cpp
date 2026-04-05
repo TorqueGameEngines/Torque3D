@@ -127,8 +127,6 @@ ConsoleDocClass( PrecipitationData,
 //----------------------------------------------------------
 PrecipitationData::PrecipitationData()
 {
-   INIT_ASSET(Sound);
-
    mDropShaderName   = StringTable->EmptyString();
 
    mSplashShaderName = StringTable->EmptyString();
@@ -175,7 +173,7 @@ bool PrecipitationData::preload( bool server, String &errorStr )
       return false;
    if (!server)
    {
-      if (!isSoundValid())
+      if (!getSoundSFXTrack())
       {
          //return false; -TODO: trigger asset download
       }
@@ -188,8 +186,7 @@ void PrecipitationData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(Sound);
-
+   PACKDATA_ASSET_REFACTOR(Sound);
    PACKDATA_ASSET_REFACTOR(Drop);
 
    stream->writeString(mDropShaderName);
@@ -205,8 +202,7 @@ void PrecipitationData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(Sound);
-
+   UNPACKDATA_ASSET_REFACTOR(Sound);
    UNPACKDATA_ASSET_REFACTOR(Drop);
 
    mDropShaderName = stream->readSTString();
@@ -587,9 +583,9 @@ bool Precipitation::onNewDataBlock( GameBaseData *dptr, bool reload )
    {
       SFX_DELETE( mAmbientSound );
 
-      if ( mDataBlock->getSoundProfile())
+      if ( mDataBlock->getSoundSFXTrack())
       {
-         mAmbientSound = SFX->createSource(mDataBlock->getSoundProfile(), &getTransform() );
+         mAmbientSound = SFX->createSource(mDataBlock->getSoundSFXTrack(), &getTransform() );
          if ( mAmbientSound )
             mAmbientSound->play();
       }

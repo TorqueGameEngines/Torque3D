@@ -267,7 +267,6 @@ struct ShapeBaseImageData: public GameBaseData, protected AssetPtrCallback
       //SFXTrack* sound;
       F32 emitterTime;              ///<
       S32 emitterNode[MaxShapes];   ///< Node ID on the shape to emit from
-      SoundAsset* sound;
       SFXTrack* soundTrack;         ///<Holdover for special, non-asset cases like SFXPlaylists
    };
    /// @name State Data
@@ -327,8 +326,7 @@ struct ShapeBaseImageData: public GameBaseData, protected AssetPtrCallback
 
    bool                    stateIgnoreLoadedForReady  [MaxStates];
 
-   DECLARE_SOUNDASSET_ARRAY(ShapeBaseImageData, stateSound, MaxStates);
-   DECLARE_ASSET_ARRAY_SETGET(ShapeBaseImageData, stateSound);
+   DECLARE_SOUNDASSET_ARRAY(ShapeBaseImageData, stateSound, MaxStates)
 
    //SFXTrack*               stateSound                 [MaxStates];
    const char*             stateScript                [MaxStates];

@@ -228,8 +228,6 @@ Material::Material()
 
    mFootstepSoundId = -1;     mImpactSoundId = -1;
    mImpactFXIndex = -1;
-   INIT_ASSET(CustomFootstepSound);
-   INIT_ASSET(CustomImpactSound);
    mFriction = 0.0;
 
    mDirectSoundOcclusion = 1.f;

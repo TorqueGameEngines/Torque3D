@@ -13,6 +13,54 @@ function SoundAsset::onChanged(%this)
         sfxStop($PreviewSoundSource);
 }
 
+function SoundAsset::onShowActionMenu(%this)
+{
+   GenericAsset::onShowActionMenu(%this);
+   
+   %assetId = %this.getAssetId();
+   
+   EditAssetPopup.objectData = %assetId;
+   EditAssetPopup.objectType = AssetDatabase.getAssetType(%assetId);
+   
+   EditAssetPopup.reloadItems();
+   
+   EditAssetPopup.showPopup(Canvas); 
+}
+
+
+function SoundAsset::onEditProperties(%this)
+{
+   Canvas.pushDialog(AssetBrowser_editAsset);
+   
+   AssetBrowser_editAssetWindow.text = "Asset Properties - " @ %this.getAssetId();
+   
+   AssetEditInspector.tempAsset = %this.deepClone();
+   
+   AssetEditInspector.inspect(%this);  
+   AssetBrowser_editAsset.editedObjectData = %this.getAssetId();
+   AssetBrowser_editAsset.editedObject = %this;
+   AssetBrowser_editAsset.editedObjectType = AssetDatabase.getAssetType(%this.getAssetId());
+   
+   //remove some of the groups we don't need:
+   for(%i=0; %i < AssetEditInspector.getCount(); %i++)
+   {
+      %caption = AssetEditInspector.getObject(%i).caption;
+      
+      if(%caption $= "Ungrouped" || %caption $= "Object" || %caption $= "Editing" 
+         || %caption $= "Persistence" || %caption $= "Dynamic Fields")
+      {
+         AssetEditInspector.remove(AssetEditInspector.getObject(%i));
+         %i--;
+      }
+   }
+}
+
+//Called when the AssetType has it's properties saved from the onEditProperties process
+function SoundAsset::onSaveProperties(%this)
+{
+   %this.refreshAsset();
+}
+
 function SoundAsset::buildBrowserElement(%this, %previewData)
 {
    %previewData.assetName = %this.assetName;

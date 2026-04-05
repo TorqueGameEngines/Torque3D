@@ -264,8 +264,7 @@ class GuiMLTextCtrl : public GuiControl
    bool mUseURLMouseCursor;
 
    // Too many chars sound:
-   DECLARE_SOUNDASSET(GuiMLTextCtrl, DeniedSound);
-   DECLARE_ASSET_SETGET(GuiMLTextCtrl, DeniedSound);
+   DECLARE_SOUNDASSET(GuiMLTextCtrl, DeniedSound)
    // Typeout over time
    bool mUseTypeOverTime;
    U32 mTypeOverTimeStartMS;

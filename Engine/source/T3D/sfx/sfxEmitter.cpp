@@ -223,8 +223,6 @@ SFXEmitter::SFXEmitter()
    mInstanceDescription = &mDescription;
    mLocalProfile = NULL;
 
-   INIT_ASSET(Sound);
-
    mObjBox.minExtents.set( -1.f, -1.f, -1.f );
    mObjBox.maxExtents.set( 1.f, 1.f, 1.f );
 }
@@ -409,7 +407,7 @@ U32 SFXEmitter::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 
    // track
    if (stream->writeFlag(mask & DirtyUpdateMask)){
-      PACK_ASSET(con, Sound);
+      PACK_ASSET_REFACTOR(con, Sound);
    }
    //if (stream->writeFlag(mDirty.test(Track)))
    //   sfxWrite( stream, mTrack );
@@ -524,7 +522,7 @@ void SFXEmitter::unpackUpdate( NetConnection *conn, BitStream *stream )
    if (stream->readFlag()) // DirtyUpdateMask
    {
       initialUpdate = false;
-      UNPACK_ASSET(conn, Sound);
+      UNPACK_ASSET_REFACTOR(conn, Sound);
    }
    /*if (_readDirtyFlag(stream, Track))
    {
@@ -775,7 +773,7 @@ void SFXEmitter::_update()
    SFXStatus prevState = mSource ? mSource->getStatus() : SFXStatusNull;
 
    // are we overriding the asset properties?
-   bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && mSoundAsset.notNull() && getSoundProfile());
+   bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && mSoundAsset.notNull() && getSoundSFXTrack());
 
    if (mSoundAsset.notNull())
    {
@@ -784,7 +782,7 @@ void SFXEmitter::_update()
       else
          mInstanceDescription = &mDescription;
 
-      mLocalProfile = getSoundProfile();
+      mLocalProfile = getSoundSFXTrack();
 
       // Make sure all the settings are valid.
       mInstanceDescription->validate();
@@ -798,12 +796,12 @@ void SFXEmitter::_update()
    if( mDirty.test( Track | Is3D | IsLooping | IsStreaming | TrackOnly ) )
    {
       SFX_DELETE( mSource );
-      if (getSoundProfile())
+      if (getSoundSFXTrack())
       {
          mSource = SFX->createSource(mLocalProfile, &transform, &velocity);
          if (!mSource)
             Con::errorf("SFXEmitter::_update() - failed to create sound for track %i (%s)",
-               getSoundProfile()->getId(), getSoundProfile()->getName());
+               getSoundSFXTrack()->getId(), getSoundSFXTrack()->getName());
 
          // If we're supposed to play when the emitter is 
          // added to the scene then also restart playback 
@@ -820,7 +818,7 @@ void SFXEmitter::_update()
    // is toggled on a local profile sound.  It makes the
    // editor feel responsive and that things are working.
    if(  gEditingMission &&
-        (SoundAsset::getAssetErrCode(mSoundAsset) || !mSoundAsset->getSfxProfile()) &&
+        (SoundAsset::getAssetErrCode(mSoundAsset)) &&
         mPlayOnAdd && 
         mDirty.test( IsLooping ) )
       prevState = SFXStatusPlaying;
@@ -1222,7 +1220,7 @@ void SFXEmitter::setScale( const VectorF &scale )
 {
    F32 maxDistance;
    
-   if( mUseTrackDescriptionOnly && mSoundAsset.notNull() && getSoundProfile())
+   if( mUseTrackDescriptionOnly && mSoundAsset.notNull())
       maxDistance = mSoundAsset->getSfxDescription()->mMaxDistance;
    else
    {

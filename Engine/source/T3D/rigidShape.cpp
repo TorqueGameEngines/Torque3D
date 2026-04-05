@@ -254,9 +254,6 @@ RigidShapeData::RigidShapeData()
    drag = 0.7f;
    density = 4;
 
-   for (S32 i = 0; i < Body::MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(BodySounds, i);
-
    dustEmitter = NULL;
    dustID = 0;
    triggerDustHeight = 3.0;
@@ -272,9 +269,6 @@ RigidShapeData::RigidShapeData()
    medSplashSoundVel = 2.0;
    hardSplashSoundVel = 3.0;
    enablePhysicsRep = true;
-
-   for (S32 i = 0; i < Sounds::MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(WaterSounds, i);
 
    dragForce            = 0.01f;
    vertFactor           = 0.25;
@@ -348,8 +342,7 @@ bool RigidShapeData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < Body::MaxSounds; i++)
       {
-         _setBodySounds(getBodySounds(i), i);
-         if (!isBodySoundsValid(i))
+         if (!getBodySoundsSFXTrack(i))
          {
             //return false; -TODO: trigger asset download
          }
@@ -357,8 +350,7 @@ bool RigidShapeData::preload(bool server, String &errorStr)
 
       for (S32 j = 0; j < Sounds::MaxSounds; j++)
       {
-         _setWaterSounds(getWaterSounds(j), j);
-         if (!isWaterSoundsValid(j))
+         if (!getWaterSoundsSFXTrack(j))
          {
             //return false; -TODO: trigger asset download
          }
@@ -421,11 +413,7 @@ void RigidShapeData::packData(BitStream* stream)
 
    stream->write(body.restitution);
    stream->write(body.friction);
-   for (U32 i = 0; i < Body::MaxSounds; ++i)
-   {
-      PACKDATA_SOUNDASSET_ARRAY(BodySounds, i);
-   }
-
+   PACKDATA_ASSET_ARRAY_REFACTOR(BodySounds, Body::MaxSounds);
    stream->write(minImpactSpeed);
    stream->write(softImpactSpeed);
    stream->write(hardImpactSpeed);
@@ -452,13 +440,7 @@ void RigidShapeData::packData(BitStream* stream)
    stream->write(medSplashSoundVel);
    stream->write(hardSplashSoundVel);
    stream->write(enablePhysicsRep);
-
-   // write the water sound profiles
-   for (U32 i = 0; i < Sounds::MaxSounds; ++i)
-   {
-      PACKDATA_SOUNDASSET_ARRAY(WaterSounds, i);
-   }
-
+   PACKDATA_ASSET_ARRAY_REFACTOR(WaterSounds, Sounds::MaxSounds);
    if (stream->writeFlag( dustEmitter ))
       stream->writeRangedU32( dustEmitter->getId(), DataBlockObjectIdFirst,  DataBlockObjectIdLast );
 
@@ -485,10 +467,7 @@ void RigidShapeData::unpackData(BitStream* stream)
    stream->read(&body.restitution);
    stream->read(&body.friction);
 
-   for (U32 i = 0; i < Body::Sounds::MaxSounds; i++)
-   {
-      UNPACKDATA_SOUNDASSET_ARRAY(BodySounds, i);
-   }
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(BodySounds, Body::Sounds::MaxSounds);
 
    stream->read(&minImpactSpeed);
    stream->read(&softImpactSpeed);
@@ -518,10 +497,7 @@ void RigidShapeData::unpackData(BitStream* stream)
    stream->read(&enablePhysicsRep);
 
    // write the water sound profiles
-   for (U32 i = 0; i < Sounds::MaxSounds; ++i)
-   {
-      UNPACKDATA_SOUNDASSET_ARRAY(WaterSounds, i);
-   }
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(WaterSounds, Sounds::MaxSounds);
 
    if( stream->readFlag() )
       dustID = (S32) stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
@@ -1212,27 +1188,27 @@ void RigidShape::updatePos(F32 dt)
             if (collSpeed >= mDataBlock->softImpactSpeed)
                impactSound = RigidShapeData::Body::SoftImpactSound;
 
-         if (impactSound != -1 && mDataBlock->getBodySoundsProfile(impactSound))
-            SFX->playOnce(mDataBlock->getBodySoundsProfile(impactSound), &getTransform());
+         if (impactSound != -1 && mDataBlock->getBodySoundsSFXTrack(impactSound))
+            SFX->playOnce(mDataBlock->getBodySoundsSFXTrack(impactSound), &getTransform());
       }
 
       // Water volume sounds
       F32 vSpeed = getVelocity().len();
       if (!inLiquid && mWaterCoverage >= 0.8f) {
          if (vSpeed >= mDataBlock->hardSplashSoundVel)
-            SFX->playOnce(mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactHard), &getTransform());
+            SFX->playOnce(mDataBlock->getWaterSoundsSFXTrack(RigidShapeData::ImpactHard), &getTransform());
          else
             if (vSpeed >= mDataBlock->medSplashSoundVel)
-               SFX->playOnce(mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactMedium), &getTransform());
+               SFX->playOnce(mDataBlock->getWaterSoundsSFXTrack(RigidShapeData::ImpactMedium), &getTransform());
             else
                if (vSpeed >= mDataBlock->softSplashSoundVel)
-                  SFX->playOnce(mDataBlock->getWaterSoundsProfile(RigidShapeData::ImpactSoft), &getTransform());
+                  SFX->playOnce(mDataBlock->getWaterSoundsSFXTrack(RigidShapeData::ImpactSoft), &getTransform());
          inLiquid = true;
       }
       else
          if (inLiquid && mWaterCoverage < 0.8f) {
             if (vSpeed >= mDataBlock->exitSplashSoundVel)
-               SFX->playOnce(mDataBlock->getWaterSoundsProfile(RigidShapeData::ExitWater), &getTransform());
+               SFX->playOnce(mDataBlock->getWaterSoundsSFXTrack(RigidShapeData::ExitWater), &getTransform());
             inLiquid = false;
          }
    }

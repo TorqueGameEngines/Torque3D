@@ -312,8 +312,6 @@ WheeledVehicleData::WheeledVehicleData()
    steeringSequence = -1;
    wheelCount = 0;
    dMemset(&wheel, 0, sizeof(wheel));
-   for (S32 i = 0; i < MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
    mDownForce = 0;
 }
 
@@ -348,8 +346,7 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
       {
-         _setWheeledVehicleSounds(getWheeledVehicleSounds(i), i);
-         if (!isWheeledVehicleSoundsValid(i))
+         if (!getWheeledVehicleSoundsSFXTrack(i))
          {
             //return false; -TODO: trigger asset download
          }
@@ -494,10 +491,7 @@ void WheeledVehicleData::packData(BitStream* stream)
       stream->writeRangedU32(mPacked ? SimObjectId((uintptr_t)tireEmitter):
          tireEmitter->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
 
-   for (S32 i = 0; i < MaxSounds; i++)
-   {
-      PACKDATA_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
-   }
+   PACKDATA_ASSET_ARRAY_REFACTOR(WheeledVehicleSounds, MaxSounds);
 
    stream->write(maxWheelSpeed);
    stream->write(engineTorque);
@@ -514,10 +508,7 @@ void WheeledVehicleData::unpackData(BitStream* stream)
       (ParticleEmitterData*)(uintptr_t)stream->readRangedU32(DataBlockObjectIdFirst,
          DataBlockObjectIdLast): 0;
 
-   for (S32 i = 0; i < MaxSounds; i++)
-   {
-      UNPACKDATA_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
-   }
+   UNPACKDATA_ASSET_ARRAY_REFACTOR(WheeledVehicleSounds, MaxSounds);
 
    stream->read(&maxWheelSpeed);
    stream->read(&engineTorque);
@@ -701,14 +692,14 @@ bool WheeledVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mSquealSound );
       SFX_DELETE( mJetSound );
 
-      if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::EngineSound) )
-         mEngineSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::EngineSound), &getTransform() );
+      if ( mDataBlock->getWheeledVehicleSoundsSFXTrack(WheeledVehicleData::EngineSound) )
+         mEngineSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsSFXTrack(WheeledVehicleData::EngineSound), &getTransform() );
 
-      if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::SquealSound) )
-         mSquealSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::SquealSound), &getTransform() );
+      if ( mDataBlock->getWheeledVehicleSoundsSFXTrack(WheeledVehicleData::SquealSound) )
+         mSquealSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsSFXTrack(WheeledVehicleData::SquealSound), &getTransform() );
 
-      if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::JetSound) )
-         mJetSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::JetSound), &getTransform() );
+      if ( mDataBlock->getWheeledVehicleSoundsSFXTrack(WheeledVehicleData::JetSound) )
+         mJetSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsSFXTrack(WheeledVehicleData::JetSound), &getTransform() );
    }
 
    scriptOnNewDataBlock(reload);

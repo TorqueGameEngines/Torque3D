@@ -356,10 +356,8 @@ public:
    /// Sound effect to play when walking on surface with this material.
    /// If defined, overrides mFootstepSoundId.
    /// @see mFootstepSoundId
-   DECLARE_SOUNDASSET(Material, CustomFootstepSound);
-   DECLARE_ASSET_SETGET(Material, CustomFootstepSound);
-   DECLARE_SOUNDASSET(Material, CustomImpactSound);
-   DECLARE_ASSET_SETGET(Material, CustomImpactSound);
+   DECLARE_SOUNDASSET(Material, CustomFootstepSound)
+   DECLARE_SOUNDASSET(Material, CustomImpactSound)
 
    F32 mFriction;                   ///< Friction coefficient when moving along surface.
 

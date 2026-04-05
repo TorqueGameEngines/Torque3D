@@ -205,8 +205,7 @@ void GuiSliderCtrl::onMouseDown(const GuiEvent &event)
    setFirstResponder();
    mDepressed = true;
 
-   if (mProfile->isSoundButtonDownValid())
-      SFX->playOnce(mProfile->getSoundButtonDownProfile());
+   SFX->playOnce(mProfile->getSoundButtonDownSFXTrack());
 
    Point2I curMousePos = globalToLocalCoord( event.mousePoint );
    F32 value;
@@ -262,11 +261,9 @@ void GuiSliderCtrl::onMouseEnter(const GuiEvent &event)
    }
    else
    {
-      if( mActive && mProfile->mSoundButtonOver )
+      if( mActive )
       {
-         //F32 pan = (F32(event.mousePoint.x)/F32(getRoot()->getWidth())*2.0f-1.0f)*0.8f;
-         if (mProfile->isSoundButtonOverValid())
-            SFX->playOnce(mProfile->getSoundButtonOverProfile());
+         SFX->playOnce(mProfile->getSoundButtonOverSFXTrack());
       }
       
       mMouseOver = true;

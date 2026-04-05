@@ -46,9 +46,7 @@ class PrecipitationData : public GameBaseData
    typedef GameBaseData Parent;
 
   public:
-     DECLARE_SOUNDASSET(PrecipitationData, Sound);
-     DECLARE_ASSET_SETGET(PrecipitationData, Sound);
-
+      DECLARE_SOUNDASSET(PrecipitationData, Sound)
       DECLARE_IMAGEASSET(PrecipitationData, Drop, GFXStaticTextureSRGBProfile) ///< Texture for drop particles
 
       StringTableEntry mDropShaderName;   ///< The name of the shader used for raindrops

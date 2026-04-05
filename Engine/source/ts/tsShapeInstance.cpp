@@ -239,8 +239,11 @@ void TSShapeInstance::initMeshObjects()
 void TSShapeInstance::setMaterialList( TSMaterialList *matList )
 {
    // get rid of old list
-   if ( mOwnMaterialList )
+   if (mOwnMaterialList)
+   {
       delete mMaterialList;
+      mMaterialList = NULL;
+   }
 
    mMaterialList = matList;
    mOwnMaterialList = false;
@@ -891,6 +894,9 @@ void TSShapeInstance::prepCollision()
 // Returns true is the shape contains any materials with accumulation enabled.
 bool TSShapeInstance::hasAccumulation()
 {
+   if (!mOwnMaterialList || mMaterialList == NULL)
+      return false;
+
    bool result = false;
    for ( U32 i = 0; i < mMaterialList->size(); ++i )
    {

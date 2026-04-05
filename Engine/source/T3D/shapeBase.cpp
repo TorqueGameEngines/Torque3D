@@ -1164,19 +1164,19 @@ void ShapeBase::onRemove()
 {
    mConvexList->nukeList();
 
-   Parent::onRemove();
-
-   // Stop any running sounds on the client
-   if (isGhost())
-      for (S32 i = 0; i < MaxSoundThreads; i++)
-         stopAudio(i);
-
    // Accumulation and environment mapping
    if (isClientObject() && mShapeInstance)
    {
       if (mShapeInstance->hasAccumulation())
          AccumulationVolume::removeObject(this);
    }
+
+   Parent::onRemove();
+
+   // Stop any running sounds on the client
+   if (isGhost())
+      for (S32 i = 0; i < MaxSoundThreads; i++)
+         stopAudio(i);
 
    if ( isClientObject() )   
    {

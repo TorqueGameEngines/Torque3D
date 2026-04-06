@@ -436,25 +436,22 @@ void dampen(inout Surface surface, TORQUE_SAMPLER2D(WetnessTexture), float accum
 {   
    if (degree<=0.0) return;
    float3 n = abs(surface.N);
-   float ang = clamp(n.z, 0.04, 0.96);
+   float ang = 1.1-(abs(surface.N.z)*sign(surface.N.z));
    
-   float speed = -accumTime*(1.0-surface.linearRoughnessSq)*clamp((2.0-ang), 0.04, 0.96);
-   if ((n.x > 0.0) || (n.y > 0.0))
-        speed *= -1.0;
-   float2 wetoffset = float2(speed,speed)*0.1; 
+   float speed = accumTime * (1.0 - surface.linearRoughnessSq); 
+   float3 wetoffset = (surface.P+float3(speed,speed,speed)) * 0.33;
    
-   float3 wetNormal = TORQUE_TEX2D(WetnessTexture, float2(surface.P.xy*0.1+wetoffset)).xyz;
-   wetNormal = lerp(wetNormal,TORQUE_TEX2D(WetnessTexture,float2(surface.P.zx*0.1+wetoffset)).rgb ,n.y);
-   wetNormal = lerp(wetNormal,TORQUE_TEX2D(WetnessTexture,float2(surface.P.zy*0.1+wetoffset)).rgb ,n.x);   
-   surface.N = lerp(surface.N, wetNormal, degree); 
-   
-   float wetness = TORQUE_TEX2D(WetnessTexture, float2(surface.P.xy*0.1+wetoffset)).b; 
-   wetness = lerp(wetness,TORQUE_TEX2D(WetnessTexture,float2(surface.P.zx*0.1+wetoffset)).b,n.y);
-   wetness = lerp(wetness,TORQUE_TEX2D(WetnessTexture,float2(surface.P.zy*0.1+wetoffset)).b,n.x);
-   wetness = pow(wetness*ang*degree,3);
+   float3 wetNormal = TORQUE_TEX2D(WetnessTexture, wetoffset.xy).xyz * (1.1-(n.z* n.z));
+   wetNormal = lerp(wetNormal, TORQUE_TEX2D(WetnessTexture, wetoffset.zx).rgb, n.y);
+   wetNormal = lerp(wetNormal, TORQUE_TEX2D(WetnessTexture, wetoffset.zy).rgb, n.x);
+   wetNormal = normalize(wetNormal);
+   float wetness = wetNormal.b* degree;
+
+   wetNormal = normalize(wetNormal * 2.0 - 1.0);   
+   surface.N = normalize(float3(surface.N.xy + wetNormal.xy * wetness, surface.N.z)); 
    
    surface.roughness = lerp(surface.roughness, 0.04f, wetness);
-   surface.baseColor.rgb = lerp(surface.baseColor.rgb, surface.baseColor.rgb*0.6+float3(0.4,0.4,0.4)*wetness, wetness);
+   surface.baseColor.rgb = lerp(surface.baseColor.rgb, surface.baseColor.rgb * 0.6 + float3(0.4, 0.4, 0.4) * wetness, wetness);
    surface.metalness = lerp(surface.metalness, 0.96, wetness); 
    surface.Update(); 
 }

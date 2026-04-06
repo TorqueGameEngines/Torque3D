@@ -259,13 +259,15 @@ public:                                                                         
    AssetPtr<SoundAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false;}   \
    StringTableEntry get##name##File(){ return m##name##Asset.notNull() ? m##name##Asset->getSoundFile() : ""; }                                                               \
-   SFXDescription* get##name##Description()\
-   {\
-      if (m##name##Asset.notNull())\
-         return m##name##Asset->getSfxDescription();\
-      return NULL;\
-   }\
-   SimObjectPtr<SFXTrack> get##name##SFXTrack(){ return m##name##Asset.notNull() ? m##name##Asset->getSFXTrack() : NULL; }
+   bool is##name##Valid() { return (get##name##File() != StringTable->EmptyString() && m##name##Asset && m##name##Asset->getStatus() == AssetBase::Ok); }                     \
+   SFXDescription* get##name##Description()                                                                                                                                   \
+   {                                                                                                                                                                          \
+      if (m##name##Asset.notNull())                                                                                                                                           \
+         return m##name##Asset->getSfxDescription();                                                                                                                          \
+      return NULL;                                                                                                                                                            \
+   }                                                                                                                                                                          \
+   SimObjectPtr<SFXTrack> get##name##SFXTrack(){ return m##name##Asset.notNull() ? m##name##Asset->getSFXTrack() : NULL; }                                                    \
+   SimObjectPtr<SFXTrack> get##name##Profile(){ return get##name##SFXTrack(); }
 
 #define INITPERSISTFIELD_SOUNDASSET(name, consoleClass, docs)                                                                                                                 \
    addProtectedField(#name, TypeSoundFilename, Offset(m##name##File, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, file docs.), AbstractClassRep::FIELD_HideInInspectors); \
@@ -384,13 +386,15 @@ void _set##name(StringTableEntry _in, const U32& index){                        
    AssetPtr<SoundAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
    static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false; }   \
    StringTableEntry get##name##File(const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getSoundFile() : ""; }                                \
+   bool is##name##Valid(const U32& id) {return (get##name##File(id) != StringTable->EmptyString() && m##name##Asset[id] && m##name##Asset[id]->getStatus() == AssetBase::Ok); } \
    SFXDescription* get##name##Description(const U32& index)                                                                                                                   \
    {                                                                                                                                                                          \
       if (m##name##Asset[index].notNull())                                                                                                                                    \
          return m##name##Asset[index]->getSfxDescription();                                                                                                                   \
       return NULL;                                                                                                                                                            \
    }                                                                                                                                                                          \
-   SimObjectPtr<SFXTrack> get##name##SFXTrack(const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getSFXTrack() : NULL; }
+   SimObjectPtr<SFXTrack> get##name##SFXTrack(const U32& index) { return m##name##Asset[index].notNull() ? m##name##Asset[index]->getSFXTrack() : NULL; }                     \
+   SimObjectPtr<SFXTrack> get##name##Profile(const U32& index){ return get##name##SFXTrack(index); }
 
 
 #define INITPERSISTFIELD_SOUNDASSET_ARRAY(name, arraySize, consoleClass, docs) \

@@ -582,8 +582,18 @@ void SoundAsset::populateSFXTrack(void)
 {
    U32 count = 0;
    for (U32 i = 0; i < SFXPlayList::SFXPlaylistSettings::NUM_SLOTS; ++i)
-      if (mSoundFile[i] != StringTable->EmptyString() && Torque::FS::IsFile(mSoundFile[i]))
+   {
+      if (mSoundFile[i] != StringTable->EmptyString())
+      {
+         if (!Torque::FS::IsFile(mSoundFile[i]))
+         {
+            mLoadedState = AssetErrCode::BadFileReference;
+            return;
+         }
+
          ++count;
+      }
+   }
 
    mIsPlaylist = (count > 1);
 

@@ -310,6 +310,15 @@ void SoundAsset::initPersistFields()
    // if streaming, a default packet size should be chosen for all sounds.
    addField("isStreaming", TypeBool, Offset(mProfileDesc.mIsStreaming, SoundAsset), "Use streaming.");
    //....why?
+   addFieldV("priority", TypeRangedF32, Offset(mProfileDesc.mPriority, SoundAsset), &CommonValidators::PositiveFloat, "Priority level for virtualization of sounds (1 = base level).\n"
+      "When there are more concurrently active sounds than supported by the audio mixer, some of the sounds "
+      "need to be culled.  Which sounds are culled first depends primarily on total audibility of individual sounds. "
+      "However, the priority of invidual sounds may be decreased or decreased through this field.\n\n"
+      "@ref SFXSound_virtualization");
+   addField("parameters", TypeSFXParameterName, Offset(mProfileDesc.mParameters, SoundAsset), SFXDescription::MaxNumParameters,
+      "Names of the parameters to which sources using this description will automatically be linked.\n\n"
+      "Individual parameters are identified by their #internalName.\n\n"
+      "@ref SFX_interactive");
    addField("useHardware", TypeBool, Offset(mProfileDesc.mUseHardware, SoundAsset), "Use hardware mixing for this sound.");
    addField("sourceGroup", TypeSFXSourceName, Offset(mProfileDesc.mSourceGroup, SoundAsset), "Group that sources playing with this description should be put into.");
    addField("preload", TypeBool, Offset(mPreload, SoundAsset), "Whether to preload sound data when the profile is added to system.");

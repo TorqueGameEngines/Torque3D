@@ -449,7 +449,7 @@ void dampen(inout Surface surface, sampler2D WetnessTexture, float accumTime, fl
    surface.N = normalize(vec3(surface.N.xy + wetNormal.xy * wetness, surface.N.z));
    
    surface.roughness = lerp(surface.roughness, 0.04f, wetness);
-   surface.baseColor.rgb = lerp(surface.baseColor.rgb, surface.baseColor.rgb*0.6+vec3(0.4,0.4,0.4)*wetness, wetness);
+   surface.baseColor = vec4(lerp(surface.baseColor.rgb, surface.baseColor.rgb*0.6+vec3(0.4,0.4,0.4)*wetness, wetness), max(surface.baseColor.a, 0.4* wetness));
    surface.metalness = lerp(surface.metalness, 0.96, wetness); 
    updateSurface(surface);
 }

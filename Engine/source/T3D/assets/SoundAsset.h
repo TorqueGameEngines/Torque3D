@@ -202,6 +202,7 @@ protected:
 
 };
 
+DECLARE_STRUCT(AssetPtr<SoundAsset>)
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)
 DefineConsoleType(TypeSoundAssetId, String)
 

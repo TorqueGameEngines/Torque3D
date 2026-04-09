@@ -471,6 +471,7 @@ bool PlayerData::preload(bool server, String &errorStr)
    if (!server) {
       for (U32 i = 0; i < MaxSounds; ++i)
       {
+         _setPlayerSound(getPlayerSound(i), i);
          if (!isPlayerSoundValid(i))
          {
             //return false; -TODO: trigger asset download

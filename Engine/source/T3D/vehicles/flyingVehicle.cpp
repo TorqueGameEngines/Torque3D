@@ -141,6 +141,7 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
       {
+         _setFlyingSounds(getFlyingSounds(i), i);
          if (!isFlyingSoundsValid(i))
          {
             //return false; -TODO: trigger asset download

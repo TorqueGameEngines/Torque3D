@@ -313,6 +313,7 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
 
       for (S32 i = 0; i < MaxSounds; i++)
       {
+         _setHoverSounds(getHoverSounds(i), i);
          if (!isHoverSoundsValid(i))
          {
             //return false; -TODO: trigger asset download

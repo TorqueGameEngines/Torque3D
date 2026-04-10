@@ -104,6 +104,12 @@ void APIENTRY glDebugCallback(
     if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
         return;
 
+    // This warning id appears safe to ignore, we clear states
+    // but leave programs active when rendering to a target
+    // this produces a warning during glClear 
+    if (id == 131204)
+       return;
+
     const char* srcStr = "UNKNOWN";
     const char* typeStr = "UNKNOWN";
     const char* sevStr = "UNKNOWN";
@@ -640,10 +646,6 @@ void GFXGLDevice::copyResource(GFXTextureObject* pDst, GFXCubemap* pSrc, const U
 
 void GFXGLDevice::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil)
 {
-   glUseProgram(0);
-   mCurrentShader = NULL;
-   mCurrentConstBuffer = NULL;
-
    // Make sure we have flushed our render target state.
    _updateRenderTargets();
 

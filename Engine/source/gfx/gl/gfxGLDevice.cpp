@@ -57,6 +57,9 @@
 #include "gfx/gl/tGL/tXGL.h"
 #endif
 
+// #131204 - Texture state usage warning: The texture object (0) bound to texture image unit 0
+#define GL_LOW_WARN_TEXTURE_STATE 131204
+
 GFXAdapter::CreateDeviceInstanceDelegate GFXGLDevice::mCreateDeviceInstance(GFXGLDevice::createInstance);
 
 GFXDevice *GFXGLDevice::createInstance( U32 adapterIndex )
@@ -104,10 +107,8 @@ void APIENTRY glDebugCallback(
     if (severity == GL_DEBUG_SEVERITY_NOTIFICATION)
         return;
 
-    // This warning id appears safe to ignore, we clear states
-    // but leave programs active when rendering to a target
-    // this produces a warning during glClear 
-    if (id == 131204)
+    // Silence: Texture state usage warning: The texture object (0) bound to texture image unit 0
+    if (id == GL_LOW_WARN_TEXTURE_STATE)
        return;
 
     const char* srcStr = "UNKNOWN";

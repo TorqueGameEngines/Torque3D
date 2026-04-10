@@ -640,6 +640,10 @@ void GFXGLDevice::copyResource(GFXTextureObject* pDst, GFXCubemap* pSrc, const U
 
 void GFXGLDevice::clear(U32 flags, const LinearColorF& color, F32 z, U32 stencil)
 {
+   glUseProgram(0);
+   mCurrentShader = NULL;
+   mCurrentConstBuffer = NULL;
+
    // Make sure we have flushed our render target state.
    _updateRenderTargets();
 

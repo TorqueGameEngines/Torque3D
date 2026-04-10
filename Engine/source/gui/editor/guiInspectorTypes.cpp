@@ -1174,7 +1174,7 @@ GuiControl* GuiInspectorTypeColor::constructEditControl()
    if( inspector->isMethod( "onInspectorPreFieldModification" ) )
    {
       dSprintf( szBuffer, sizeof( szBuffer ),
-         "%d.onInspectorPreFieldModification(\"%s\",\"%s\"); %s(%s, \"%d.onInspectorPostFieldModification(); %d.applyWithoutUndo\", %d.getRoot(), \"%d.applyWithoutUndo\", \"%d.onInspectorDiscardFieldModification(); %%unused=\");",
+         "%d.onInspectorPreFieldModification(\"%s\",\"%s\"); %s(%s, \"%d.onInspectorPostFieldModification(); %d.applyWithoutUndo\", %d.getRoot(), \"%d.applyWithoutUndo\", \"%d.onInspectorDiscardFieldModification(); %$unused=\");",
          inspector->getId(), getRawFieldName(), getArrayIndex(),
          mColorFunction, szColor, inspector->getId(), getId(),
          getId(),

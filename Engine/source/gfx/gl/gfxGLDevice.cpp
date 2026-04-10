@@ -57,8 +57,23 @@
 #include "gfx/gl/tGL/tXGL.h"
 #endif
 
+#pragma region GL WARNINGS
+
 // #131204 - Texture state usage warning: The texture object (0) bound to texture image unit 0
 #define GL_LOW_WARN_TEXTURE_STATE 131204
+
+// #131169 - Framebuffer detailed info: The driver allocated storage for renderbuffer 2. (severity: low)
+#define GL_LOW_WARN_FRAMEBUFFER 131169
+
+// #131185 - Buffer detailed info: Buffer object 1 (bound to GL_ELEMENT_ARRAY_BUFFER_ARB, usage hint is GL_ENUM_88e4)
+//           will use VIDEO memory as the source for buffer object operations. (severity: low)
+#define GL_LOW_WARN_VIDEO_MEMORY 131185
+
+// #131218 - Program/shader state performance warning: Vertex shader in program #
+//           is being recompiled based on GL state. (severity: medium)
+#define GL_MED_WARN_PERFORMANCE_RECOMPILE 131218
+
+#pragma endregion
 
 GFXAdapter::CreateDeviceInstanceDelegate GFXGLDevice::mCreateDeviceInstance(GFXGLDevice::createInstance);
 

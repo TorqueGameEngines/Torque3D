@@ -1094,7 +1094,7 @@ void ScatterSky::_render( ObjectRenderInst *ri, SceneRenderState *state, BaseMat
    }
    else
    {
-      GFX->setCubeTexture( 0, NULL );
+      GFX->setTexture( 0, NULL );
       mShaderConsts->setSafe( mUseCubemapSC, 0.0f );
    }
 

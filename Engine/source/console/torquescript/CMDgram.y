@@ -46,20 +46,28 @@ struct Token
 };
 
 %}
+
 %{
-        /* Reserved Word Definitions */
+   /* Reserved word token definitions */
 %}
+
 %token <i> rwDEFINE rwENDDEF rwDECLARE rwDECLARESINGLETON
 %token <i> rwBREAK rwELSE rwCONTINUE rwGLOBAL
 %token <i> rwIF rwNIL rwRETURN rwWHILE rwDO
 %token <i> rwENDIF rwENDWHILE rwENDFOR rwDEFAULT
 %token <i> rwFOR rwFOREACH rwFOREACHSTR rwIN rwDATABLOCK rwSWITCH rwCASE rwSWITCHSTR
-%token <i> rwCASEOR rwPACKAGE rwNAMESPACE rwCLASS
+%token <i> rwCASEOR rwPACKAGE
 %token <i> rwASSERT
 %token ILLEGAL_TOKEN
+// NOTE: rwNAMESPACE and rwCLASS were declared here previously but had no
+// lexer rules and appeared in no grammar productions.  They have been
+// removed.  If namespace/class syntax is added in future, add both the
+// token declaration AND the lexer rule at the same time.
+
 %{
-        /* Constants and Identifier Definitions */
+   /* Constant and identifier token definitions */
 %}
+
 %token <c>   CHRCONST
 %token <i>   INTCONST
 %token <s>   TTAG
@@ -72,16 +80,28 @@ struct Token
 %token <f>   FLTCONST
 
 %{
-        /* Operator Definitions */
+   /* Operator token definitions */
 %}
+
 %token <i> '+' '-' '*' '/' '<' '>' '=' '.' '|' '&' '%'
 %token <i> '(' ')' ',' ':' ';' '{' '}' '^' '~' '!' '@'
 %token <i> opINTNAME opINTNAMER
 %token <i> opMINUSMINUS opPLUSPLUS
-%token <i> STMT_SEP
+
+// NOTE: STMT_SEP was declared here but never returned by the lexer and never
+// used in any grammar production.  Removed to prevent confusion.
+
 %token <i> opSHL opSHR opPLASN opMIASN opMLASN opDVASN opMODASN opANDASN
 %token <i> opXORASN opORASN opSLASN opSRASN opCAT
-%token <i> opEQ opNE opGE opLE opAND opOR opSTREQ
+%token <i> opEQ opNE opGE opLE opAND opOR
+
+// FIX: opSTREQ and opSTRNE must be declared with their semantic type <i>.
+// Previously opSTRNE was only mentioned in the %left precedence line, which
+// does declare it as a token but gives it no type — causing a silent type
+// mismatch when used in grammar rules (even if $2 isn't used in the action,
+// the generated parser code is technically undefined behaviour).
+%token <i> opSTREQ opSTRNE
+
 %token <i> opCOLONCOLON
 
 %union {
@@ -143,8 +163,13 @@ struct Token
 %type <var>    var_list_decl
 %type <asn>    assign_op_struct
 
+// Operator precedence — lowest to highest.
+// FIX: opMDASN, opNDASN, opNTASN were listed here but were never defined
+// as tokens anywhere and were never returned by the lexer.  They appear to
+// be leftovers from an earlier revision.  Removed to prevent compiler
+// warnings about undeclared token names.
 %left '['
-%right opMODASN opANDASN opXORASN opPLASN opMIASN opMLASN opDVASN opMDASN opNDASN opNTASN opORASN opSLASN opSRASN '='
+%right opMODASN opANDASN opXORASN opPLASN opMIASN opMLASN opDVASN opORASN opSLASN opSRASN '='
 %left '?' ':'
 %left opOR
 %left opAND
@@ -229,17 +254,19 @@ stmt
    ;
 
 fn_decl_stmt
+   // Global function
    : rwDEFINE IDENT '(' var_list_decl ')' '{' statement_list '}'
       { $$ = FunctionDeclStmtNode::alloc( $1.lineNumber, $2.value, NULL, $4, $7 ); }
-    | rwDEFINE IDENT opCOLONCOLON IDENT '(' var_list_decl ')' '{' statement_list '}'
-     { $$ = FunctionDeclStmtNode::alloc( $1.lineNumber, $4.value, $2.value, $6, $9 ); }
+   // Namespaced method:  function Namespace::name(...) { }
+   | rwDEFINE IDENT opCOLONCOLON IDENT '(' var_list_decl ')' '{' statement_list '}'
+      { $$ = FunctionDeclStmtNode::alloc( $1.lineNumber, $4.value, $2.value, $6, $9 ); }
    ;
 
 var_list_decl
    :
-     { $$ = NULL; }
+      { $$ = NULL; }
    | var_list
-     { $$ = $1; }
+      { $$ = $1; }
    ;
 
 var_list
@@ -249,27 +276,31 @@ var_list
       { $$ = $1; ((StmtNode*)($1))->append((StmtNode*)$3 ); }
    ;
 
+// Parameter declaration forms:
+//
+//   %var            — required parameter
+//   %var ?          — optional parameter, evaluates to "" / 0 when absent
+//   %var = expr     — optional parameter with default value
+//   %var ? = expr   — same as above; the '?' makes the optionality explicit
+//
+// NOTE: the default `expr` can be any valid expression, including function
+// calls and variable references.  At present these are evaluated once at
+// declaration time (global scope).  The planned codelet change (see
+// FunctionDeclStmtNode::compileStmt in ast.cpp) will evaluate them at
+// each call site instead — no grammar change is required for that fix.
 param
-    : VAR
-      {
-        $$ = VarNode::allocParam($1.lineNumber, $1.value, NULL);
-      }
-    | VAR '?'
-      {
-        $$ = VarNode::allocParam($1.lineNumber, $1.value, NULL);
-      }
-    | VAR '=' expr
-      {
-        $$ = VarNode::allocParam($1.lineNumber, $1.value, $3);
-      }
-    | VAR '?' '=' expr
-      {
-        $$ = VarNode::allocParam($1.lineNumber, $1.value, $4);
-      }
-    ;
+   : VAR
+      { $$ = VarNode::allocParam($1.lineNumber, $1.value, NULL); }
+   | VAR '?'
+      { $$ = VarNode::allocParam($1.lineNumber, $1.value, NULL); }
+   | VAR '=' expr
+      { $$ = VarNode::allocParam($1.lineNumber, $1.value, $3); }
+   | VAR '?' '=' expr
+      { $$ = VarNode::allocParam($1.lineNumber, $1.value, $4); }
+   ;
 
 datablock_decl
-   : rwDATABLOCK class_name_expr '(' expr parent_block ')'  '{' slot_assign_list_opt '}' ';'
+   : rwDATABLOCK class_name_expr '(' expr parent_block ')' '{' slot_assign_list_opt '}' ';'
       { $$ = ObjectDeclNode::alloc( $1.lineNumber, $2, $4, NULL, $5.value, $8, NULL, true, false, false); }
    ;
 
@@ -341,6 +372,9 @@ switch_stmt
       { $$ = $6; $6->propagateSwitchExpr($3, true); }
    ;
 
+// NOTE: propagateSwitchExpr builds a recursive OR expression tree that is
+// O(n) deep for n cases.  Large switch statements (100+ cases) can overflow
+// the compiler stack.
 case_block
    : rwCASE case_expr ':' statement_list
       { $$ = IfStmtNode::alloc( $1.lineNumber, $2, $4, NULL, false); }
@@ -352,9 +386,9 @@ case_block
 
 case_expr
    : expr
-      { $$ = $1;}
+      { $$ = $1; }
    | case_expr rwCASEOR expr
-      { ($1)->append($3); $$=$1; }
+      { ($1)->append($3); $$ = $1; }
    ;
 
 if_stmt
@@ -389,7 +423,7 @@ for_stmt
    | rwFOR '('      ';'      ';'      ')' stmt_block
       { $$ = LoopStmtNode::alloc($1.lineNumber, NULL, NULL, NULL, $6, false); }
    ;
-   
+
 foreach_stmt
    : rwFOREACH '(' VAR rwIN expr ')' stmt_block
       { $$ = IterStmtNode::alloc( $1.lineNumber, $3.value, $5, $7, false ); }
@@ -455,6 +489,12 @@ expr
       { $$ = StreqExprNode::alloc( $1->dbgLineNumber, $1, $3, true); }
    | expr opSTRNE expr
       { $$ = StreqExprNode::alloc( $1->dbgLineNumber, $1, $3, false); }
+   // The '@' operator covers four cases via token value encoding in the lexer:
+   //   '@'  → value 0   (plain concatenation)
+   //   NL   → value '\n'
+   //   TAB  → value '\t'
+   //   SPC  → value ' '
+   // The appendChar is stored in $2.value and forwarded to StrcatExprNode.
    | expr '@' expr
       { $$ = StrcatExprNode::alloc( $1->dbgLineNumber, $1, $3, $2.value); }
    | '!' expr
@@ -482,23 +522,6 @@ expr
    | VAR '[' aidx_expr ']'
       { $$ = (ExprNode*)VarNode::alloc( $1.lineNumber, $1.value, $3 ); }
    ;
-/*
-   | rwDEFINE '(' var_list_decl ')' '{' statement_list '}'
-      {
-         const U32 bufLen = 64;
-         UTF8 buffer[bufLen];
-         dSprintf(buffer, bufLen, "__anonymous_function%d", gAnonFunctionID++);
-         StringTableEntry fName = StringTable->insert(buffer);
-         StmtNode *fndef = FunctionDeclStmtNode::alloc($1.lineNumber, fName, NULL, $3, $6);
-
-         if(!gAnonFunctionList)
-            gAnonFunctionList = fndef;
-         else
-            gAnonFunctionList->append(fndef);
-
-         $$ = StrConstNode::alloc( $1.lineNumber, (UTF8*)fName, false );
-      }
-*/
 
 slot_acc
    : expr '.' IDENT
@@ -509,9 +532,9 @@ slot_acc
 
 intslot_acc
    : expr opINTNAME class_name_expr
-     { $$.lineNumber = $1->dbgLineNumber; $$.object = $1; $$.slotExpr = $3; $$.recurse = false; }
+      { $$.lineNumber = $1->dbgLineNumber; $$.object = $1; $$.slotExpr = $3; $$.recurse = false; }
    | expr opINTNAMER class_name_expr
-     { $$.lineNumber = $1->dbgLineNumber; $$.object = $1; $$.slotExpr = $3; $$.recurse = true; }
+      { $$.lineNumber = $1->dbgLineNumber; $$.object = $1; $$.slotExpr = $3; $$.recurse = true; }
    ;
 
 class_name_expr
@@ -552,7 +575,7 @@ stmt_expr
    : funcall_expr
       { $$ = $1; }
    | assert_expr
-      { $$ = $1; }      
+      { $$ = $1; }
    | object_decl
       { $$ = $1; }
    | VAR '=' expr
@@ -572,18 +595,18 @@ stmt_expr
    ;
 
 funcall_expr
+   // Global function call:  name(args)
    : IDENT '(' expr_list_decl ')'
-     { $$ = FuncCallExprNode::alloc( $1.lineNumber, $1.value, NULL, $3, false); }
+      { $$ = FuncCallExprNode::alloc( $1.lineNumber, $1.value, NULL, $3, false); }
+   // Static/namespace call:  Namespace::name(args)
    | IDENT opCOLONCOLON IDENT '(' expr_list_decl ')'
-     { $$ = FuncCallExprNode::alloc( $1.lineNumber, $3.value, $1.value, $5, false); }
+      { $$ = FuncCallExprNode::alloc( $1.lineNumber, $3.value, $1.value, $5, false); }
+   // Method call:  object.method(args)
+   // The object expression is prepended to the arg list so that exec() can
+   // find it as callArgv[1] (the implicit 'this').
    | expr '.' IDENT '(' expr_list_decl ')'
       { $1->append($5); $$ = FuncCallExprNode::alloc( $1->dbgLineNumber, $3.value, NULL, $1, true); }
    ;
-/*
-   | expr '(' expr_list_decl ')'
-      { $$ = FuncPointerCallExprNode::alloc( $1->dbgLineNumber, $1, $3); }
-   ;
-*/
 
 assert_expr
    : rwASSERT '(' expr ')'
@@ -591,7 +614,7 @@ assert_expr
    | rwASSERT '(' expr ',' STRATOM ')'
       { $$ = AssertCallExprNode::alloc( $1.lineNumber, $3, $5.value ); }
    ;
-                  
+
 expr_list_decl
    :
       { $$ = NULL; }
@@ -605,7 +628,7 @@ expr_list
    | expr_list ',' expr
       { ($1)->append($3); $$ = $1; }
    ;
-   
+
 slot_assign_list_opt
    :
       { $$ = NULL; }
@@ -633,50 +656,58 @@ slot_assign
       { $$ = SlotAssignNode::alloc( $1.lineNumber, NULL, $4, $2.value, $7, $1.value); }
    ;
 
+// Array index expressions.  Multiple comma-separated indices get
+// concatenated with '_' separators at runtime (e.g. arr[1,2] → "arr_1_2").
 aidx_expr
    : expr
       { $$ = $1; }
    | aidx_expr ',' expr
       { $$ = CommaCatExprNode::alloc( $1->dbgLineNumber, $1, $3); }
    ;
+
 %%
 
 int
-yyreport_syntax_error (const yypcontext_t *ctx)
+yyreport_syntax_error(const yypcontext_t *ctx)
 {
    int ret = 0;
    String output;
-   const YYLTYPE *loc = yypcontext_location (ctx);
+   const YYLTYPE *loc = yypcontext_location(ctx);
    output += "syntax error: ";
 
    yysymbol_kind_t nxt = yypcontext_token(ctx);
    if (nxt != YYSYMBOL_YYEMPTY)
-      output += String::ToString("unexpected: %s at column: %d", yysymbol_name(nxt), loc->first_column);
+      output += String::ToString("unexpected: %s at column: %d",
+                                 yysymbol_name(nxt), loc->first_column);
 
    enum { TOKENMAX = 10 };
    yysymbol_kind_t expected[TOKENMAX];
 
    int exp = yypcontext_expected_tokens(ctx, expected, TOKENMAX);
    if (exp < 0)
+   {
       ret = exp;
+   }
    else
    {
       for (int i = 0; i < exp; ++i)
-         output += String::ToString("%s %s", i == 0 ? ": expected" : "or", yysymbol_name(expected[i]));
+         output += String::ToString("%s %s",
+                                    i == 0 ? ": expected" : "or",
+                                    yysymbol_name(expected[i]));
    }
 
-   if (lines.size() > 0) 
+   if (lines.size() > 0)
    {
       output += "\n";
       for (int i = 0; i < lines.size(); i++)
       {
          int line = lines.size() - i;
-         output += String::ToString("%5d | ", loc->first_line - (line-1)) + lines[i] + "\n";
+         output += String::ToString("%5d | ", loc->first_line - (line - 1))
+                 + lines[i] + "\n";
       }
       output += String::ToString("%5s | %*s", "", loc->first_column, "^");
    }
 
    yyerror("%s", output.c_str());
-
    return ret;
 }

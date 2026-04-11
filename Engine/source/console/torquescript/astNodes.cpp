@@ -178,15 +178,23 @@ U32 ReturnStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
 
 ExprNode* IfStmtNode::getSwitchOR(ExprNode* left, ExprNode* list, bool string)
 {
-   ExprNode* nextExpr = (ExprNode*)list->getNext();
-   ExprNode* test;
+   ExprNode* result;
    if (string)
-      test = StreqExprNode::alloc(left->dbgLineNumber, left, list, true);
+      result = StreqExprNode::alloc(left->dbgLineNumber, left, list, true);
    else
-      test = IntBinaryExprNode::alloc(left->dbgLineNumber, opEQ, left, list);
-   if (!nextExpr)
-      return test;
-   return IntBinaryExprNode::alloc(test->dbgLineNumber, opOR, test, getSwitchOR(left, nextExpr, string));
+      result = IntBinaryExprNode::alloc(left->dbgLineNumber, opEQ, left, list);
+
+   for (ExprNode* walk = (ExprNode*)list->getNext(); walk; walk = (ExprNode*)walk->getNext())
+   {
+      ExprNode* nextExpr;
+      if (string)
+         nextExpr = StreqExprNode::alloc(left->dbgLineNumber, left, list, true);
+      else
+         nextExpr = IntBinaryExprNode::alloc(left->dbgLineNumber, opEQ, left, list);
+
+      result = IntBinaryExprNode::alloc(result->dbgLineNumber, opOR, result, nextExpr);
+   }
+   return result;
 }
 
 void IfStmtNode::propagateSwitchExpr(ExprNode* left, bool string)
@@ -405,11 +413,14 @@ U32 ConditionalExprNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
 
 TypeReq ConditionalExprNode::getPreferredType()
 {
-   // We can't make it calculate a type based on subsequent expressions as the expression
-   // could be a string, or just numbers. To play it safe, stringify anything that deals with
-   // a conditional, and let the interpreter cast as needed to other types safely.
-   //
-   // See: Regression Test 7 in ScriptTest. It has a string result in the else portion of the ?: ternary.
+   TypeReq trueType = trueExpr->getPreferredType();
+   TypeReq falseType = falseExpr->getPreferredType();
+
+   // Both numeric and the same → keep numeric
+   if (trueType == falseType && trueType != TypeReqNone)
+      return trueType;
+
+   // One is numeric, other is string/none → string (can't avoid conversion)
    return TypeReqString;
 }
 
@@ -874,7 +885,7 @@ U32 ConstantNode::compile(CodeStream& codeStream, U32 ip, TypeReq type)
    case TypeReqNone:
       break;
    }
-   return ip;
+   return codeStream.tell();
 }
 
 TypeReq ConstantNode::getPreferredType()
@@ -1498,16 +1509,6 @@ TypeReq ObjectDeclNode::getPreferredType()
 
 U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
 {
-   // OP_FUNC_DECL
-   // func name
-   // namespace
-   // package
-   // hasBody?
-   // func end ip
-   // argc
-   // ident array[argc]
-   // code
-   // OP_RETURN_VOID
    setCurrentStringTable(&getFunctionStringTable());
    setCurrentFloatTable(&getFunctionFloatTable());
 
@@ -1523,52 +1524,51 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
    }
 
    CodeBlock::smInFunction = true;
-
    precompileIdent(fnName);
    precompileIdent(nameSpace);
    precompileIdent(package);
-
    CodeBlock::smInFunction = false;
 
-   setCurrentStringTable(&getGlobalStringTable());
-   // check for argument setup
-   for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
-   {
-      if (walk->defaultValue)
-      {
-         TypeReq walkType = walk->defaultValue->getPreferredType();
-         if (walkType == TypeReqNone)
-            walkType = TypeReqString;
-
-         ip = walk->defaultValue->compile(codeStream, ip, walkType);
-      }
-   }
-   setCurrentStringTable(&getFunctionStringTable());
-
+   // -------------------------------------------------------------------------
+   //     Layout (all relative to the first word after OP_FUNC_DECL):
+   //       +0,+1   fnName STE
+   //       +2,+3   nameSpace STE
+   //       +4,+5   package STE
+   //       +6      hasBody | (lineNumber << 1)
+   //       +7      endIp   (patched after codelets)
+   //       +8      argc
+   //       +9      local variable count  (patched after body)
+   //       +10 .. +10+argc-1           register mappings
+   //       +10+argc .. +10+2*argc-1    arg flags
+   //       +10+2*argc .. +10+3*argc-1  default codelet IPs  (patched below)
+   // -------------------------------------------------------------------------
    codeStream.emit(OP_FUNC_DECL);
    codeStream.emitSTE(fnName);
    codeStream.emitSTE(nameSpace);
    codeStream.emitSTE(package);
 
    codeStream.emit(U32(bool(stmts != NULL) ? 1 : 0) + U32(dbgLineNumber << 1));
-   const U32 endIp = codeStream.emit(0);
+   const U32 endIpSlot = codeStream.emit(0);  // patched after codelets
    codeStream.emit(argc);
-   const U32 localNumVarsIP = codeStream.emit(0);
+   const U32 localVarCountSlot = codeStream.emit(0);  // patched after body
 
+   // Register mappings (one per arg, in declaration order).
    for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
    {
-      StringTableEntry name = walk->varName;
-      codeStream.emit(getFuncVars(dbgLineNumber)->lookup(name, dbgLineNumber));
+      codeStream.emit(getFuncVars(dbgLineNumber)->lookup(walk->varName, dbgLineNumber));
    }
 
-   // check for argument setup
+   // Arg flags (bit 0x1 = this argument has a default expression).
    for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext())
    {
-      U32 flags = 0;
-      if (walk->defaultValue) flags |= 0x1;
-
-      codeStream.emit(flags);
+      codeStream.emit(walk->defaultValue ? 1 : 0);
    }
+
+   // Default codelet IP slots — emit 0 placeholders, patched after the body
+   Vector<U32> defaultOffsetSlots;
+   defaultOffsetSlots.setSize(argc);
+   for (S32 i = 0; i < argc; i++)
+      defaultOffsetSlots[i] = codeStream.emit(0);
 
    CodeBlock::smInFunction = true;
    ip = compileBlock(stmts, codeStream, ip);
@@ -1579,9 +1579,32 @@ U32 FunctionDeclStmtNode::compileStmt(CodeStream& codeStream, U32 ip)
 
    CodeBlock::smInFunction = false;
    codeStream.emit(OP_RETURN_VOID);
+   codeStream.patch(localVarCountSlot, getFuncVars(dbgLineNumber)->count());
 
-   codeStream.patch(localNumVarsIP, getFuncVars(dbgLineNumber)->count());
-   codeStream.patch(endIp, codeStream.tell());
+   S32 argIdx = 0;
+   for (VarNode* walk = args; walk; walk = (VarNode*)((StmtNode*)walk)->getNext(), ++argIdx)
+   {
+      if (walk->defaultValue)
+      {
+         // Record where this codelet begins and patch the header slot.
+         const U32 codeletStart = codeStream.tell();
+         codeStream.patch(defaultOffsetSlots[argIdx], codeletStart);
+
+         // Compile the default expression, preferring its natural type.
+         // Fall back to string if the type is indeterminate.
+         TypeReq walkType = walk->defaultValue->getPreferredType();
+         if (walkType == TypeReqNone)
+            walkType = TypeReqString;
+
+         ip = walk->defaultValue->compile(codeStream, ip, walkType);
+
+         // Terminate the codelet.  exec() handles this by taking the
+         // stack top as its return value and exiting the interpreter loop.
+         codeStream.emit(OP_DEFAULT_END);
+      }
+   }
+
+   codeStream.patch(endIpSlot, codeStream.tell());
 
    setCurrentStringTable(&getGlobalStringTable());
    setCurrentFloatTable(&getGlobalFloatTable());

@@ -81,51 +81,45 @@ extern int CMDdebug;
     rwSWITCHSTR = 282,             /* rwSWITCHSTR  */
     rwCASEOR = 283,                /* rwCASEOR  */
     rwPACKAGE = 284,               /* rwPACKAGE  */
-    rwNAMESPACE = 285,             /* rwNAMESPACE  */
-    rwCLASS = 286,                 /* rwCLASS  */
-    rwASSERT = 287,                /* rwASSERT  */
-    ILLEGAL_TOKEN = 288,           /* ILLEGAL_TOKEN  */
-    CHRCONST = 289,                /* CHRCONST  */
-    INTCONST = 290,                /* INTCONST  */
-    TTAG = 291,                    /* TTAG  */
-    VAR = 292,                     /* VAR  */
-    IDENT = 293,                   /* IDENT  */
-    TYPEIDENT = 294,               /* TYPEIDENT  */
-    DOCBLOCK = 295,                /* DOCBLOCK  */
-    STRATOM = 296,                 /* STRATOM  */
-    TAGATOM = 297,                 /* TAGATOM  */
-    FLTCONST = 298,                /* FLTCONST  */
-    opINTNAME = 299,               /* opINTNAME  */
-    opINTNAMER = 300,              /* opINTNAMER  */
-    opMINUSMINUS = 301,            /* opMINUSMINUS  */
-    opPLUSPLUS = 302,              /* opPLUSPLUS  */
-    STMT_SEP = 303,                /* STMT_SEP  */
-    opSHL = 304,                   /* opSHL  */
-    opSHR = 305,                   /* opSHR  */
-    opPLASN = 306,                 /* opPLASN  */
-    opMIASN = 307,                 /* opMIASN  */
-    opMLASN = 308,                 /* opMLASN  */
-    opDVASN = 309,                 /* opDVASN  */
-    opMODASN = 310,                /* opMODASN  */
-    opANDASN = 311,                /* opANDASN  */
-    opXORASN = 312,                /* opXORASN  */
-    opORASN = 313,                 /* opORASN  */
-    opSLASN = 314,                 /* opSLASN  */
-    opSRASN = 315,                 /* opSRASN  */
-    opCAT = 316,                   /* opCAT  */
-    opEQ = 317,                    /* opEQ  */
-    opNE = 318,                    /* opNE  */
-    opGE = 319,                    /* opGE  */
-    opLE = 320,                    /* opLE  */
-    opAND = 321,                   /* opAND  */
-    opOR = 322,                    /* opOR  */
-    opSTREQ = 323,                 /* opSTREQ  */
-    opCOLONCOLON = 324,            /* opCOLONCOLON  */
-    opMDASN = 325,                 /* opMDASN  */
-    opNDASN = 326,                 /* opNDASN  */
-    opNTASN = 327,                 /* opNTASN  */
-    opSTRNE = 328,                 /* opSTRNE  */
-    UNARY = 329                    /* UNARY  */
+    rwASSERT = 285,                /* rwASSERT  */
+    ILLEGAL_TOKEN = 286,           /* ILLEGAL_TOKEN  */
+    CHRCONST = 287,                /* CHRCONST  */
+    INTCONST = 288,                /* INTCONST  */
+    TTAG = 289,                    /* TTAG  */
+    VAR = 290,                     /* VAR  */
+    IDENT = 291,                   /* IDENT  */
+    TYPEIDENT = 292,               /* TYPEIDENT  */
+    DOCBLOCK = 293,                /* DOCBLOCK  */
+    STRATOM = 294,                 /* STRATOM  */
+    TAGATOM = 295,                 /* TAGATOM  */
+    FLTCONST = 296,                /* FLTCONST  */
+    opINTNAME = 297,               /* opINTNAME  */
+    opINTNAMER = 298,              /* opINTNAMER  */
+    opMINUSMINUS = 299,            /* opMINUSMINUS  */
+    opPLUSPLUS = 300,              /* opPLUSPLUS  */
+    opSHL = 301,                   /* opSHL  */
+    opSHR = 302,                   /* opSHR  */
+    opPLASN = 303,                 /* opPLASN  */
+    opMIASN = 304,                 /* opMIASN  */
+    opMLASN = 305,                 /* opMLASN  */
+    opDVASN = 306,                 /* opDVASN  */
+    opMODASN = 307,                /* opMODASN  */
+    opANDASN = 308,                /* opANDASN  */
+    opXORASN = 309,                /* opXORASN  */
+    opORASN = 310,                 /* opORASN  */
+    opSLASN = 311,                 /* opSLASN  */
+    opSRASN = 312,                 /* opSRASN  */
+    opCAT = 313,                   /* opCAT  */
+    opEQ = 314,                    /* opEQ  */
+    opNE = 315,                    /* opNE  */
+    opGE = 316,                    /* opGE  */
+    opLE = 317,                    /* opLE  */
+    opAND = 318,                   /* opAND  */
+    opOR = 319,                    /* opOR  */
+    opSTREQ = 320,                 /* opSTREQ  */
+    opSTRNE = 321,                 /* opSTRNE  */
+    opCOLONCOLON = 322,            /* opCOLONCOLON  */
+    UNARY = 323                    /* UNARY  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -134,7 +128,7 @@ extern int CMDdebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 87 "CMDgram.y"
+#line 107 "CMDgram.y"
 
    Token< char >           c;
    Token< int >            i;
@@ -152,7 +146,7 @@ union YYSTYPE
    AssignDecl              asn;
    IfStmtNode*             ifnode;
 
-#line 156 "CMDgram.h"
+#line 150 "CMDgram.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

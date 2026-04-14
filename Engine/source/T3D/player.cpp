@@ -461,6 +461,7 @@ PlayerData::PlayerData()
 
    physicsPlayerType = StringTable->EmptyString();
    mControlMap = StringTable->EmptyString();
+   mDynamicAnimsStart = NumTableActionAnims;
    dMemset( actionList, 0, sizeof(actionList) );
 }
 
@@ -512,7 +513,7 @@ bool PlayerData::preload(bool server, String &errorStr)
       // Extract ground transform velocity from animations
       // Get the named ones first so they can be indexed directly.
       ActionAnimation *dp = &actionList[0];
-      for (S32 i = 0; i < NumTableActionAnims; i++,dp++)
+      for (S32 i = 0; i < mDynamicAnimsStart; i++,dp++)
       {
          ActionAnimationDef *sp = &ActionAnimationList[i];
          dp->name          = sp->name;
@@ -690,7 +691,7 @@ bool PlayerData::isTableSequence(S32 seq)
 {
    // The sequences from the table must already have
    // been loaded for this to work.
-   for (S32 i = 0; i < NumTableActionAnims; i++)
+   for (S32 i = 0; i < mDynamicAnimsStart; i++)
       if (actionList[i].sequence == seq)
          return true;
    return false;
@@ -2801,7 +2802,7 @@ void Player::updateMove(const Move* move)
 
       // Cancel any script driven animations if we are going to move.
       if (moveVec.x + moveVec.y + moveVec.z != 0.0f &&
-          (mActionAnimation.action >= PlayerData::NumTableActionAnims
+          (mActionAnimation.action >= mDataBlock->mDynamicAnimsStart
                || mActionAnimation.action == PlayerData::LandAnim))
          mActionAnimation.action = PlayerData::NullAnimation;
    }
@@ -3711,7 +3712,7 @@ bool Player::inSittingAnim()
    U32   action = mActionAnimation.action;
    if (mActionAnimation.thread && action < mDataBlock->actionCount) {
       const char * name = mDataBlock->actionList[action].name;
-      if (!dStricmp(name, "Sitting") || !dStricmp(name, "Scoutroot"))
+      if (name && (!dStricmp(name, "Sitting") || !dStricmp(name, "Scoutroot")))
          return true;
    }
    return false;
@@ -3956,7 +3957,7 @@ void Player::updateActionThread()
    if (mMountPending)
       mMountPending = (isMounted() ? 0 : (mMountPending - 1));
 
-   if (isServerObject() && (mActionAnimation.action >= PlayerData::NumTableActionAnims) && mActionAnimation.atEnd)
+   if (isServerObject() && (mActionAnimation.action >= mDataBlock->mDynamicAnimsStart) && mActionAnimation.atEnd)
    {
       //The scripting language will get a call back when a script animation has finished...
       //  example: When the chat menu animations are done playing...
@@ -4057,7 +4058,7 @@ void Player::pickActionAnimation()
       // Go into root position unless something was set explicitly
       // from a script.
       if (mActionAnimation.action != PlayerData::RootAnim &&
-          mActionAnimation.action < PlayerData::NumTableActionAnims)
+          mActionAnimation.action < mDataBlock->mDynamicAnimsStart)
          setActionThread(PlayerData::RootAnim,true,false,false);
       return;
    }
@@ -5956,7 +5957,7 @@ void Player::getMuzzlePointAI(U32 imageSlot, Point3F* point)
 
    // If we are in one of the standard player animations, adjust the
    // muzzle to point in the direction we are looking.
-   if (mActionAnimation.action < PlayerData::NumTableActionAnims)
+   if (mActionAnimation.action < mDataBlock->mDynamicAnimsStart)
    {
       MatrixF xmat;
       xmat.set(EulerF(mHead.x, 0, 0));
@@ -6340,7 +6341,7 @@ U32 Player::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
 
    if (stream->writeFlag(mask & ActionMask &&
          mActionAnimation.action != PlayerData::NullAnimation &&
-         mActionAnimation.action >= PlayerData::NumTableActionAnims)) {
+         mActionAnimation.action >= mDataBlock->mDynamicAnimsStart)) {
       stream->writeInt(mActionAnimation.action,PlayerData::ActionAnimBits);
       stream->writeFlag(mActionAnimation.holdAtEnd);
       stream->writeFlag(mActionAnimation.atEnd);

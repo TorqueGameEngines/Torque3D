@@ -97,6 +97,10 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
    F32 maxLookAngle;          ///< Highest angle (radians) the player can look
    F32 maxFreelookAngle;      ///< Max left/right angle the player can look
 
+   F32 minProneLookAngle;   /// Skurps
+   F32 maxProneLookAngle;   /// Skurps
+
+
    /// @name Physics constants
    /// @{
 
@@ -183,10 +187,11 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
    F32 boxHeadPercentage;
    F32 boxTorsoPercentage;
 
-   F32 boxHeadLeftPercentage;
-   F32 boxHeadRightPercentage;
-   F32 boxHeadBackPercentage;
-   F32 boxHeadFrontPercentage;
+   //Skurps changed from Head to Torso
+   F32 boxTorsoLeftPercentage;
+   F32 boxTorsoRightPercentage;
+   F32 boxTorsoBackPercentage;
+   F32 boxTorsoFrontPercentage;
    /// @}
 
    F32 minImpactSpeed;        ///< Minimum impact speed required to apply fall damage
@@ -222,6 +227,7 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
       ImpactWaterMedium,
       ImpactWaterHard,
       ExitWater,
+	   Crawl,//Skurps
       MaxSounds
    };
 
@@ -273,6 +279,8 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
       ProneRootAnim,
       ProneForwardAnim,
       ProneBackwardAnim,
+	  ProneLeftAnim, //Skurps
+      ProneRightAnim, //Skurps
 
       SwimRootAnim,
       SwimForwardAnim,
@@ -688,6 +696,8 @@ protected:
    /// @param contactMaterial Material onto which the player stepped; may be NULL.
    /// @param contactObject Object onto which the player stepped; may be NULL.
    void playFootstepSound( bool triggeredLeft, Material* contactMaterial, SceneObject* contactObject );
+   /// Skurps prone crawl sound
+   void playCrawlSound();
    
    /// Play an impact sound.
    void playImpactSound();

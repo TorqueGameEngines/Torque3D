@@ -740,10 +740,10 @@ void PlayerData::initPersistFields()
       addFieldV( "maxFreelookAngle", TypeRangedF32, Offset(maxFreelookAngle, PlayerData), &CommonValidators::PositiveFloat,
          "@brief Defines the maximum left and right angles (in radians) the player can "
          "look in freelook mode.\n\n" );
-     addField( "minProneLookAngle", TypeF32, Offset(minProneLookAngle, PlayerData),
+      addFieldV( "minProneLookAngle", TypeF32, Offset(minProneLookAngle, PlayerData), &CommonValidators::DirFloatPi,
          "@brief Lowest angle (in radians) the player can look when Prone.\n\n"
          "@note An angle of zero is straight ahead, with positive up and negative down." ); //Skurps
-      addField( "maxProneLookAngle", TypeF32, Offset(maxProneLookAngle, PlayerData),
+      addFieldV( "maxProneLookAngle", TypeF32, Offset(maxProneLookAngle, PlayerData), &CommonValidators::DirFloatPi,
          "@brief Highest angle (in radians) the player can look when Prone.\n\n"
          "@note An angle of zero is straight ahead, with positive up and negative down." ); //Skurps
 

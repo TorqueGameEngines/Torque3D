@@ -1005,27 +1005,27 @@ void PlayerData::initPersistFields()
          "@see boundingBox" );
 
 	  // Damage collision boxes changed by Skurps
-      addField( "boxHeadPercentage", TypeF32, Offset(boxHeadPercentage, PlayerData),
+      addField( "boxHeadPercentage", TypeF32, Offset(boxHeadPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box height that represents the head.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
-      addField( "boxTorsoPercentage", TypeF32, Offset(boxTorsoPercentage, PlayerData),
+      addField( "boxTorsoPercentage", TypeF32, Offset(boxTorsoPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box height that represents the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
-      addField( "boxTorsoLeftPercentage", TypeF32, Offset(boxTorsoLeftPercentage, PlayerData),
+      addField( "boxTorsoLeftPercentage", TypeF32, Offset(boxTorsoLeftPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box width that represents the left side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
-      addField( "boxTorsoRightPercentage", TypeF32, Offset(boxTorsoRightPercentage, PlayerData),
+      addField( "boxTorsoRightPercentage", TypeF32, Offset(boxTorsoRightPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box width that represents the right side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
-      addField( "boxTorsoBackPercentage", TypeF32, Offset(boxTorsoBackPercentage, PlayerData),
+      addField( "boxTorsoBackPercentage", TypeF32, Offset(boxTorsoBackPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box depth that represents the back side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
-      addField( "boxTorsoFrontPercentage", TypeF32, Offset(boxTorsoFrontPercentage, PlayerData),
+      addField( "boxTorsoFrontPercentage", TypeF32, Offset(boxTorsoFrontPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box depth that represents the front side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );

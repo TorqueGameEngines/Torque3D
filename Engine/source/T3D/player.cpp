@@ -120,9 +120,9 @@ static U32 sCollisionMoveMask =  TerrainObjectType       |
                                  PlayerObjectType        |
                                  StaticShapeObjectType   | 
                                  VehicleObjectType       |
-                         PhysicalZoneObjectType  |
+                                 PhysicalZoneObjectType  |
 // PATHSHAPE
-                         PathShapeObjectType;
+                                 PathShapeObjectType;
 // PATHSHAPE END
 
 static U32 sServerCollisionContactMask = sCollisionMoveMask |

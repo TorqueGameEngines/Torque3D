@@ -120,9 +120,9 @@ static U32 sCollisionMoveMask =  TerrainObjectType       |
                                  PlayerObjectType        |
                                  StaticShapeObjectType   | 
                                  VehicleObjectType       |
-								 PhysicalZoneObjectType  |
+                         PhysicalZoneObjectType  |
 // PATHSHAPE
-								 PathShapeObjectType;
+                         PathShapeObjectType;
 // PATHSHAPE END
 
 static U32 sServerCollisionContactMask = sCollisionMoveMask |
@@ -740,14 +740,14 @@ void PlayerData::initPersistFields()
       addFieldV( "maxFreelookAngle", TypeRangedF32, Offset(maxFreelookAngle, PlayerData), &CommonValidators::PositiveFloat,
          "@brief Defines the maximum left and right angles (in radians) the player can "
          "look in freelook mode.\n\n" );
-	  addField( "minProneLookAngle", TypeF32, Offset(minProneLookAngle, PlayerData),
+     addField( "minProneLookAngle", TypeF32, Offset(minProneLookAngle, PlayerData),
          "@brief Lowest angle (in radians) the player can look when Prone.\n\n"
          "@note An angle of zero is straight ahead, with positive up and negative down." ); //Skurps
       addField( "maxProneLookAngle", TypeF32, Offset(maxProneLookAngle, PlayerData),
          "@brief Highest angle (in radians) the player can look when Prone.\n\n"
          "@note An angle of zero is straight ahead, with positive up and negative down." ); //Skurps
 
-		 
+       
 
    endGroup( "Camera" );
 
@@ -1004,28 +1004,28 @@ void PlayerData::initPersistFields()
          "@brief Collision bounding box used when the player is swimming.\n\n"
          "@see boundingBox" );
 
-	  // Damage collision boxes changed by Skurps
-      addField( "boxHeadPercentage", TypeF32, Offset(boxHeadPercentage, PlayerData), &CommonValidators::NormalizedFloat,
+     // Damage collision boxes changed by Skurps
+      addFieldV( "boxHeadPercentage", TypeRangedF32, Offset(boxHeadPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box height that represents the head.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
-      addField( "boxTorsoPercentage", TypeF32, Offset(boxTorsoPercentage, PlayerData), &CommonValidators::NormalizedFloat,
+      addFieldV( "boxTorsoPercentage", TypeRangedF32, Offset(boxTorsoPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box height that represents the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
-      addField( "boxTorsoLeftPercentage", TypeF32, Offset(boxTorsoLeftPercentage, PlayerData), &CommonValidators::NormalizedFloat,
+      addFieldV( "boxTorsoLeftPercentage", TypeRangedF32, Offset(boxTorsoLeftPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box width that represents the left side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
-      addField( "boxTorsoRightPercentage", TypeF32, Offset(boxTorsoRightPercentage, PlayerData), &CommonValidators::NormalizedFloat,
+      addFieldV( "boxTorsoRightPercentage", TypeRangedF32, Offset(boxTorsoRightPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box width that represents the right side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
-      addField( "boxTorsoBackPercentage", TypeF32, Offset(boxTorsoBackPercentage, PlayerData), &CommonValidators::NormalizedFloat,
+      addFieldV( "boxTorsoBackPercentage", TypeRangedF32, Offset(boxTorsoBackPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box depth that represents the back side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
-      addField( "boxTorsoFrontPercentage", TypeF32, Offset(boxTorsoFrontPercentage, PlayerData), &CommonValidators::NormalizedFloat,
+      addFieldV( "boxTorsoFrontPercentage", TypeRangedF32, Offset(boxTorsoFrontPercentage, PlayerData), &CommonValidators::NormalizedFloat,
          "@brief Percentage of the player's bounding box depth that represents the front side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
@@ -2061,18 +2061,18 @@ void Player::processTick(const Move* move)
    }
    // Warp to catch up to server
    if (mDelta.warpTicks > 0) {
-	   mDelta.warpTicks--;
+      mDelta.warpTicks--;
 
       // Set new pos
       getTransform().getColumn(3, &mDelta.pos);
-	  mDelta.pos += mDelta.warpOffset;
-	  mDelta.rot += mDelta.rotOffset;
+     mDelta.pos += mDelta.warpOffset;
+     mDelta.rot += mDelta.rotOffset;
 
       // Wrap yaw to +/-PI
       if (mDelta.rot.z < - M_PI_F)
-		  mDelta.rot.z += M_2PI_F;
+        mDelta.rot.z += M_2PI_F;
       else if (mDelta.rot.z > M_PI_F)
-		  mDelta.rot.z -= M_2PI_F;
+        mDelta.rot.z -= M_2PI_F;
 
       if (!ignore_updates)
       {
@@ -2082,8 +2082,8 @@ void Player::processTick(const Move* move)
       updateLookAnimation();
 
       // Backstepping
-	  mDelta.posVec = -mDelta.warpOffset;
-	  mDelta.rotVec = -mDelta.rotOffset;
+     mDelta.posVec = -mDelta.warpOffset;
+     mDelta.rotVec = -mDelta.rotOffset;
    }
    else {
       // If there is no move, the player is either an
@@ -2583,7 +2583,7 @@ void Player::updateMove(const Move* move)
    // Update current orientation
    if (mDamageState == Enabled) {
       F32 prevZRot = mRot.z;
-	  mDelta.headVec = mHead;
+     mDelta.headVec = mHead;
 
       bool doStandardMove = true;
       bool absoluteDelta = false;
@@ -2714,8 +2714,8 @@ void Player::updateMove(const Move* move)
          F32 p = move->pitch * (mPose == SprintPose ? mDataBlock->sprintPitchScale : 1.0f);
          if (p > M_PI_F) 
             p -= M_2PI_F;
-		 
-		 //Skurps - use different min/max if prone
+       
+       //Skurps - use different min/max if prone
          F32 curMinLookAngle  = mPose == PronePose ? mDataBlock->minProneLookAngle : mDataBlock->minLookAngle;
          F32 curMaxLookAngle  = mPose == PronePose ? mDataBlock->maxProneLookAngle : mDataBlock->maxLookAngle;
 
@@ -2749,21 +2749,21 @@ void Player::updateMove(const Move* move)
             mRot.z -= M_2PI_F;
       }
 
-	  mDelta.rot = mRot;
-	  mDelta.rotVec.x = mDelta.rotVec.y = 0.0f;
-	  mDelta.rotVec.z = prevZRot - mRot.z;
+     mDelta.rot = mRot;
+     mDelta.rotVec.x = mDelta.rotVec.y = 0.0f;
+     mDelta.rotVec.z = prevZRot - mRot.z;
       if (mDelta.rotVec.z > M_PI_F)
-		  mDelta.rotVec.z -= M_2PI_F;
+        mDelta.rotVec.z -= M_2PI_F;
       else if (mDelta.rotVec.z < -M_PI_F)
-		  mDelta.rotVec.z += M_2PI_F;
+        mDelta.rotVec.z += M_2PI_F;
 
-	  mDelta.head = mHead;
-	  mDelta.headVec -= mHead;
+     mDelta.head = mHead;
+     mDelta.headVec -= mHead;
 
       if (absoluteDelta)
       {
          mDelta.headVec = Point3F(0, 0, 0);
-		 mDelta.rotVec = Point3F(0, 0, 0);
+       mDelta.rotVec = Point3F(0, 0, 0);
       }
 
       for(U32 i=0; i<3; ++i)
@@ -2850,7 +2850,7 @@ void Player::updateMove(const Move* move)
    // Acceleration due to gravity
    VectorF acc(0.0f, 0.0f, mNetGravity/(1.0 - mBuoyancy) * TickSec);
    if (getParent() !=NULL)
-	   acc = VectorF::Zero;
+      acc = VectorF::Zero;
 
    // Determine ground contact normal. Only look for contacts if
    // we can move and aren't mounted.
@@ -3527,7 +3527,7 @@ void Player::updateLookAnimation(F32 dt)
      // Skurps
      F32 curMinLookAngle  = mPose == PronePose ? mDataBlock->minProneLookAngle : mDataBlock->minLookAngle;
      F32 curMaxLookAngle  = mPose == PronePose ? mDataBlock->maxProneLookAngle : mDataBlock->maxLookAngle;
-	   
+      
       if(mControlObject)
       {
          mShapeInstance->setPos(mArmAnimation.thread,0.5f);
@@ -3967,7 +3967,7 @@ void Player::updateActionThread()
             playFootstepSound( triggeredLeft, material, rInfo.object );
          }
       }
-	  //Prone crawl sound - Skurps
+     //Prone crawl sound - Skurps
       if( mShapeInstance->getTriggerState( 3 ) )
       {
         playCrawlSound();
@@ -4777,7 +4777,7 @@ void Player::updateAttachment()
        }
     }
     else
-    {	 
+    {  
        if (getParent() != NULL)
        {
           clearProcessAfter();
@@ -5280,8 +5280,8 @@ bool Player::updatePos(const F32 travelTime)
    if (isClientObject())
    {
       mDelta.pos = newPos;
-	  mDelta.posVec = mDelta.posVec - mDelta.pos;
-	  mDelta.dt = 1.0f;
+     mDelta.posVec = mDelta.posVec - mDelta.pos;
+     mDelta.dt = 1.0f;
    }
 
    setPosition( newPos, mRot );
@@ -6305,7 +6305,7 @@ void Player::readPacketData(GameConnection *connection, BitStream *stream)
       stream->read(&mVelocity.y);
       stream->read(&mVelocity.z);
       stream->setCompressionPoint(pos);
-	  mDelta.pos = pos;
+     mDelta.pos = pos;
       mJumpSurfaceLastContact = stream->readInt(4);
 
       if (stream->readFlag())
@@ -6421,12 +6421,12 @@ U32 Player::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       mRot.z = mWrapF(mRot.z, 0.0f, M_2PI_F);
 
       stream->writeFloat(mRot.z / M_2PI_F, 7);
-	  //Skurps - use different min/max if prone
+     //Skurps - use different min/max if prone
       F32 curMinLookAngle  = mPose == PronePose ? mDataBlock->minProneLookAngle : mDataBlock->minLookAngle;
       F32 curMaxLookAngle  = mPose == PronePose ? mDataBlock->maxProneLookAngle : mDataBlock->maxLookAngle;
       stream->writeSignedFloat(mHead.x / ( curMaxLookAngle - curMinLookAngle), 6); //Skurps
       stream->writeSignedFloat(mHead.z / mDataBlock->maxFreelookAngle, 6);
-	  mDelta.move.pack(stream);
+     mDelta.move.pack(stream);
       stream->writeFlag(!(mask & NoWarpMask));
    }
    // Ghost need energy to predict reliably
@@ -6530,33 +6530,33 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
       
       rot.y = rot.x = 0.0f;
       rot.z = stream->readFloat(7) * M_2PI_F;
-	  //Skurps - use different min/max if prone
+     //Skurps - use different min/max if prone
       F32 curMinLookAngle  = mPose == PronePose ? mDataBlock->minProneLookAngle : mDataBlock->minLookAngle; //Skurps
       F32 curMaxLookAngle  = mPose == PronePose ? mDataBlock->maxProneLookAngle : mDataBlock->maxLookAngle; //Skurps
       mHead.x = stream->readSignedFloat(6) * (curMaxLookAngle - curMinLookAngle); //Skurps
       mHead.z = stream->readSignedFloat(6) * mDataBlock->maxFreelookAngle;
-	  mDelta.move.unpack(stream);
+     mDelta.move.unpack(stream);
 
-	  mDelta.head = mHead;
-	  mDelta.headVec.set(0.0f, 0.0f, 0.0f);
+     mDelta.head = mHead;
+     mDelta.headVec.set(0.0f, 0.0f, 0.0f);
 
       if (stream->readFlag() && isProperlyAdded())
       {
          // Determine number of ticks to warp based on the average
          // of the client and server velocities.
-		  mDelta.warpOffset = pos - mDelta.pos;
+        mDelta.warpOffset = pos - mDelta.pos;
          F32 as = (speed + mVelocity.len()) * 0.5f * TickSec;
          F32 dt = (as > 0.00001f) ? mDelta.warpOffset.len() / as: sMaxWarpTicks;
-		 mDelta.warpTicks = (S32)((dt > sMinWarpTicks) ? getMax(mFloor(dt + 0.5f), 1.0f) : 0.0f);
+       mDelta.warpTicks = (S32)((dt > sMinWarpTicks) ? getMax(mFloor(dt + 0.5f), 1.0f) : 0.0f);
 
          if (mDelta.warpTicks)
          {
             // Setup the warp to start on the next tick.
             if (mDelta.warpTicks > sMaxWarpTicks)
-				mDelta.warpTicks = sMaxWarpTicks;
-			mDelta.warpOffset /= (F32)mDelta.warpTicks;
+            mDelta.warpTicks = sMaxWarpTicks;
+         mDelta.warpOffset /= (F32)mDelta.warpTicks;
 
-			mDelta.rotOffset = rot - mDelta.rot;
+         mDelta.rotOffset = rot - mDelta.rot;
 
             // Ignore small rotation differences
             if (mFabs(mDelta.rotOffset.z) < 0.001f)
@@ -6564,11 +6564,11 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
 
             // Wrap rotation to +/-PI
             if(mDelta.rotOffset.z < - M_PI_F)
-				mDelta.rotOffset.z += M_2PI_F;
+            mDelta.rotOffset.z += M_2PI_F;
             else if(mDelta.rotOffset.z > M_PI_F)
-				mDelta.rotOffset.z -= M_2PI_F;
+            mDelta.rotOffset.z -= M_2PI_F;
 
-			mDelta.rotOffset /= (F32)mDelta.warpTicks;
+         mDelta.rotOffset /= (F32)mDelta.warpTicks;
          }
          else
          {
@@ -6584,18 +6584,18 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
             else
             {
                F32 dti = 1.0f / mDelta.dt;
-			   mDelta.posVec = (cp - pos) * dti;
-			   mDelta.rotVec.z = mRot.z - rot.z;
+            mDelta.posVec = (cp - pos) * dti;
+            mDelta.rotVec.z = mRot.z - rot.z;
 
                if(mDelta.rotVec.z > M_PI_F)
                   mDelta.rotVec.z -= M_2PI_F;
                else if(mDelta.rotVec.z < -M_PI_F)
                   mDelta.rotVec.z += M_2PI_F;
 
-			   mDelta.rotVec.z *= dti;
+            mDelta.rotVec.z *= dti;
             }
-			mDelta.pos = pos;
-			mDelta.rot = rot;
+         mDelta.pos = pos;
+         mDelta.rot = rot;
             if (!ignore_updates)
                setPosition(pos,rot);
          }
@@ -6605,10 +6605,10 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
          // Set the player to the server position
          mDelta.pos = pos;
          mDelta.rot = rot;
-		 mDelta.posVec.set(0.0f, 0.0f, 0.0f);
-		 mDelta.rotVec.set(0.0f, 0.0f, 0.0f);
-		 mDelta.warpTicks = 0;
-		 mDelta.dt = 0.0f;
+       mDelta.posVec.set(0.0f, 0.0f, 0.0f);
+       mDelta.rotVec.set(0.0f, 0.0f, 0.0f);
+       mDelta.warpTicks = 0;
+       mDelta.dt = 0.0f;
          if (!ignore_updates)
             setPosition(pos,rot);
       }

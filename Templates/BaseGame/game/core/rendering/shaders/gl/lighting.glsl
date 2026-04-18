@@ -434,25 +434,22 @@ void dampen(inout Surface surface, sampler2D WetnessTexture, float accumTime, fl
 {   
    if (degree<=0.0) return;
    vec3 n = abs(surface.N);
-   float ang = clamp(n.z, 0.04, 0.96);
+   float ang = 1.1-(abs(surface.N.z)*sign(surface.N.z));
    
-   float speed = -accumTime*(1.0-surface.linearRoughnessSq)*clamp((2.0-ang), 0.04, 0.96);
-   if ((n.x > 0.0) || (n.y > 0.0))
-      speed *= -1.0;
-   vec2 wetoffset = vec2(speed,speed)*0.1;
+   float speed = accumTime * (1.0 - surface.linearRoughnessSq); 
+   vec3 wetoffset = (surface.P+vec3(speed,speed,speed)) * 0.33;
    
-   vec3 wetNormal = texture(WetnessTexture, float2(surface.P.xy*0.1+wetoffset)).xyz;
-   wetNormal = lerp(wetNormal,texture(WetnessTexture,float2(surface.P.zx*0.1+wetoffset)).rgb ,n.y);
-   wetNormal = lerp(wetNormal,texture(WetnessTexture,float2(surface.P.zy*0.1+wetoffset)).rgb ,n.x);   
-   surface.N = lerp(surface.N, wetNormal, degree); 
+   vec3 wetNormal = texture(WetnessTexture, wetoffset.xy).xyz * (1.1-(n.z* n.z));
+   wetNormal = lerp(wetNormal, texture(WetnessTexture, wetoffset.zx).rgb, n.y);
+   wetNormal = lerp(wetNormal, texture(WetnessTexture, wetoffset.zy).rgb, n.x);
+   wetNormal = normalize(wetNormal);
+   float wetness = wetNormal.b* degree;
    
-   float wetness = texture(WetnessTexture, vec2(surface.P.xy*0.1+wetoffset)).b;
-   wetness = lerp(wetness,texture(WetnessTexture,vec2(surface.P.zx*0.1+wetoffset)).b,n.y);
-   wetness = lerp(wetness,texture(WetnessTexture,vec2(surface.P.zy*0.1+wetoffset)).b,n.x);
-   wetness = pow(wetness*ang*degree,3);
+   wetNormal = normalize(wetNormal * 2.0 - 1.0);   
+   surface.N = normalize(vec3(surface.N.xy + wetNormal.xy * wetness, surface.N.z));
    
    surface.roughness = lerp(surface.roughness, 0.04f, wetness);
-   surface.baseColor.rgb = lerp(surface.baseColor.rgb, surface.baseColor.rgb*0.6+float3(0.4,0.4,0.4)*wetness, wetness);
+   surface.baseColor = vec4(lerp(surface.baseColor.rgb, surface.baseColor.rgb*0.6+vec3(0.4,0.4,0.4)*wetness, wetness), max(surface.baseColor.a, 0.4* wetness));
    surface.metalness = lerp(surface.metalness, 0.96, wetness); 
    updateSurface(surface);
 }

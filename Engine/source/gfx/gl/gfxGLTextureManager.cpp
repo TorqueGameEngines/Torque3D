@@ -480,10 +480,9 @@ bool GFXGLTextureManager::_loadTexture(GFXTextureObject *aTexture, GBitmap *pDL)
       }
    }
 
-   if(!ImageUtil::isCompressedFormat(pDL->getFormat()))
+   if (mipLevels > 1 && !ImageUtil::isCompressedFormat(pDL->getFormat()))
       glGenerateMipmap(texture->getBinding());
 
-   glBindTexture(target, 0);
    return true;
 }
 
@@ -560,10 +559,9 @@ bool GFXGLTextureManager::_loadTexture(GFXTextureObject *aTexture, DDSFile *dds)
       }
    }
 
-   if (numMips != 1 && !isCompressed)
+   if (numMips > 1 && !isCompressed)
       glGenerateMipmap(texture->getBinding());
 
-   glBindTexture(target, 0);
    return true;
 }
 
@@ -608,7 +606,7 @@ bool GFXGLTextureManager::_refreshTexture(GFXTextureObject *texture)
          _loadTexture(texture, texture->mBitmap);
       
       if(texture->mDDS)
-         return false;
+         _loadTexture(texture, texture->mDDS);
       
       usedStrategies++;
    }

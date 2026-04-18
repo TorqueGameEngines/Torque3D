@@ -40,7 +40,10 @@
 #ifndef _TAML_CALLBACKS_H_
 #include "persistence/taml/tamlCallbacks.h"
 #endif
+
+#ifndef _OBJECTTYPES_H_
 #include "T3D/objectTypes.h"
+#endif
 
 class Stream;
 class LightManager;
@@ -606,6 +609,7 @@ class SimObject: public ConsoleObject, public TamlCallbacks
 
       /// @name Events
       /// @{
+      //virtual void onPrepare();
       
       /// Called when the object is added to the sim.
       virtual bool onAdd();
@@ -1045,56 +1049,47 @@ DefineBitfieldType(GameTypeMasksType);
 template< typename T >
 class SimObjectPtr : public WeakRefPtr< T >
 {
-   public:
+public:
    
-      typedef WeakRefPtr< T > Parent;
+   typedef WeakRefPtr< T > Parent;
    
-      SimObjectPtr() {}
-      SimObjectPtr(T *ptr) { this->mReference = NULL; set(ptr); }
-      SimObjectPtr( const SimObjectPtr& ref ) { this->mReference = NULL; set(ref.mReference); }
+   SimObjectPtr() = default;
+   SimObjectPtr(T* ptr) { set(ptr); }
+   SimObjectPtr(const SimObjectPtr&) = default;
+   SimObjectPtr& operator=(const SimObjectPtr&) = default;
+   SimObjectPtr& operator=(T* ptr)
+   {
+      set(ptr);
+      return *this;
+   }
 
-      T* getObject() const { return Parent::getPointer(); }
+   T* getObject() const { return Parent::getPointer(); }
 
-      ~SimObjectPtr() { set((WeakRefBase::WeakReference*)NULL); }
+protected:
+   void set(T* obj)
+   {
+      // Nothing to do if same object
+      if (obj && this->mWeak.lock() == obj->getWeakControl().lock())
+         return;
 
-      SimObjectPtr<T>& operator=(const SimObjectPtr ref)
+      // Before overwriting, check old object for auto-delete
+      if (auto old_ctrl = this->mWeak.lock())
       {
-         set(ref.mReference);
-         return *this;
-      }
-      SimObjectPtr<T>& operator=(T *ptr)
-      {
-         set(ptr);
-         return *this;
-      }
-
-   protected:
-      void set(WeakRefBase::WeakReference * ref)
-      {
-         if( ref == this->mReference )
-            return;
-
-         if( this->mReference )
+         T* old_obj = getObject();
+         if (this->mWeak.use_count() == 1 && old_obj && old_obj->isAutoDeleted())
          {
-            // Auto-delete
-            T* obj = this->getPointer();
-            if ( this->mReference->getRefCount() == 2 && obj && obj->isAutoDeleted() )
-               obj->deleteObject();
-
-            this->mReference->decRefCount();
-         }
-         this->mReference = NULL;
-         if( ref )
-         {
-            this->mReference = ref;
-            this->mReference->incRefCount();
+            old_obj->destroySelf();
          }
       }
 
-      void set(T * obj)
+      // Assign new weak reference
+      this->mWeak.reset();
+      if (obj)
       {
-         set(obj ? obj->getWeakReference() : (WeakRefBase::WeakReference *)NULL);
+         auto obj_ctrl = obj->getWeakControl().lock();
+         this->mWeak = obj_ctrl;
       }
+   }
 };
 
 #endif // _SIMOBJECT_H_

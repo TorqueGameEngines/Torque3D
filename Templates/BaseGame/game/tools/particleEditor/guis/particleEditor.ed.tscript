@@ -51,8 +51,6 @@ function ParticleEditor::initEditor( %this )
       
       if(exec("./PETabTemplate.gui"))
       {
-         echo("MADE A NEW TAB PAGE: " @ $guiContent);
-         
          $guiContent.text = %groupName;
          $guiContent.typesList = %typesList;
          $guiContent.setName(%editorName);
@@ -199,7 +197,7 @@ function ParticleEditor::open(%this, %datablock)
       for(%t=0; %t < %typesListCount; %t++)
       {
          %type = getWord(%typesList, %t);
-         
+
          if( %datablock.isMemberOfClass( %type ) )
          {
             PE_TabBook.selectPage(%i);

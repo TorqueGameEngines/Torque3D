@@ -228,8 +228,8 @@ void PostEffectVis::onPFXProcessed( PostEffect *pfx )
 
             GFXTextureObject *tex;
 
-            if ( pfx->mTargetTex )
-               tex = pfx->mTargetTex;         
+            if ( pfx->mTargetTex[0])
+               tex = pfx->mTargetTex[0];         
             else
                tex = PFXMGR->getBackBufferTex();
 
@@ -245,7 +245,7 @@ void PostEffectVis::onPFXProcessed( PostEffect *pfx )
 
 
             if ( tex )
-               dSprintf( caption, 256, "%s[%i] target - %s [ %ix%i ]", name, pfx->getId(), pfx->mTargetName.c_str(), tex->getWidth(), tex->getHeight() );               
+               dSprintf( caption, 256, "%s[%i] target - %s [ %ix%i ]", name, pfx->getId(), pfx->mTargetName[0].c_str(), tex->getWidth(), tex->getHeight());
             else
                dSprintf( caption, 256, "%s[%i] target", name, pfx->getId() );
 

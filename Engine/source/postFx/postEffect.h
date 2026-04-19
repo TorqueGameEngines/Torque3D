@@ -67,14 +67,6 @@ class Frustum;
 class SceneRenderState;
 class ConditionerFeature;
 
-
-///
-GFX_DeclareTextureProfile( PostFxTargetProfile );
-
-
-
-
-///
 class PostEffect : public SimGroup
 {
    typedef SimGroup Parent;
@@ -86,389 +78,317 @@ public:
    enum
    {
       NumTextures = 16,
+
+      /// Maximum simultaneous color render target outputs (MRT)
+      NumMRTTargets = 4,
    };
 
 protected:
 
+   //--------------------------------------------------------------------------
+   // Input textures
+   //--------------------------------------------------------------------------
+
    DECLARE_IMAGEASSET_ARRAY(PostEffect, Texture, GFXStaticTextureSRGBProfile, NumTextures);
-   GFXTextureProfile* mTextureProfile[NumTextures];
-   GFXTexHandle mTexture[NumTextures];
+   GFXTextureProfile*    mTextureProfile[NumTextures];
+   GFXTexHandle          mTexture[NumTextures];
+   bool                  mTexSRGB[NumTextures];
 
-   bool mTexSRGB[NumTextures];
+   enum { NormalTextureType = 0, CubemapType, CubemapArrayType } mTextureType[NumTextures];
 
-   enum
-   {
-      NormalTextureType = 0,
-      CubemapType,
-      CubemapArrayType,
-   } mTextureType[NumTextures];
-
-   GFXCubemapHandle mCubemapTextures[NumTextures];
+   GFXCubemapHandle      mCubemapTextures[NumTextures];
    GFXCubemapArrayHandle mCubemapArrayTextures[NumTextures];
 
-   NamedTexTarget mNamedTarget;
-   NamedTexTarget mNamedTargetDepthStencil; 
+   GFXTextureObject*     mActiveTextures[NumTextures];
+   NamedTexTarget*       mActiveNamedTarget[NumTextures];
+   RectI                 mActiveTextureViewport[NumTextures];
 
-   GFXTextureObject *mActiveTextures[NumTextures];
+   //--------------------------------------------------------------------------
+   // MRT color output targets
+   //
+   // Replaces the original single: mNamedTarget, mTargetName, mTargetTex,
+   //                               mTargetFormat, mTargetClearColor, mTargetClear
+   //--------------------------------------------------------------------------
 
-   NamedTexTarget *mActiveNamedTarget[NumTextures];
+   String         mTargetName[NumMRTTargets];        ///< Per-slot output name.
+   GFXFormat      mTargetFormat[NumMRTTargets];      ///< Per-slot texture format.
+   LinearColorF   mTargetClearColor[NumMRTTargets];  ///< Per-slot clear colour.
+   PFXTargetClear mTargetClear[NumMRTTargets];       ///< Per-slot clear policy.
 
-   RectI mActiveTextureViewport[NumTextures];
+   GFXTexHandle   mTargetTex[NumMRTTargets];         ///< Runtime texture per slot.
+   NamedTexTarget mNamedTarget[NumMRTTargets];       ///< Named target per slot.
 
-   GFXStateBlockData *mStateBlockData;
+   // These remain single values — shared across ALL active MRT slots.
+   Point2F           mTargetScale;    ///< Relative size vs current GFX render target.
+   Point2I           mTargetSize;     ///< Absolute size override; (0,0) = use mTargetScale.
+   PFXTargetViewport mTargetViewport; ///< How the viewport rect is derived.
 
-   GFXStateBlockRef mStateBlock;
-
-   String mShaderName;
-
-   GFXShaderRef mShader;
-
-   Vector<GFXShaderMacro> mShaderMacros;
-   
-   GFXShaderConstBufferRef mShaderConsts;
-
-   GFXShaderConstHandle *mRTSizeSC;
-   GFXShaderConstHandle *mOneOverRTSizeSC;
-   GFXShaderConstHandle* mRTRatioSC;
-
-   GFXShaderConstHandle *mTexSizeSC[NumTextures];
-   GFXShaderConstHandle *mRenderTargetParamsSC[NumTextures];
-   GFXShaderConstHandle* mMipCountSC[NumTextures];
-
-   GFXShaderConstHandle *mViewportOffsetSC;
-
-   GFXShaderConstHandle *mTargetViewportSC;
-
-   GFXShaderConstHandle *mFogDataSC;
-   GFXShaderConstHandle *mFogColorSC;
-   GFXShaderConstHandle *mEyePosSC;
-   GFXShaderConstHandle *mMatWorldToScreenSC;
-   GFXShaderConstHandle *mMatScreenToWorldSC;
-   GFXShaderConstHandle *mMatPrevScreenToWorldSC;
-   GFXShaderConstHandle *mNearFarSC;
-   GFXShaderConstHandle *mInvNearFarSC;   
-   GFXShaderConstHandle *mWorldToScreenScaleSC;
-   GFXShaderConstHandle *mProjectionOffsetSC;
-   GFXShaderConstHandle *mWaterColorSC;
-   GFXShaderConstHandle *mWaterFogDataSC;     
-   GFXShaderConstHandle *mAmbientColorSC;
-   GFXShaderConstHandle *mWaterFogPlaneSC;
-   GFXShaderConstHandle *mWaterDepthGradMaxSC;
-   GFXShaderConstHandle *mScreenSunPosSC;
-   GFXShaderConstHandle *mLightDirectionSC;
-   GFXShaderConstHandle *mCameraForwardSC;
-   GFXShaderConstHandle *mAccumTimeSC;
-   GFXShaderConstHandle* mDampnessSC;
-   GFXShaderConstHandle *mDeltaTimeSC;
-   GFXShaderConstHandle *mInvCameraMatSC;
-   GFXShaderConstHandle *mMatCameraToWorldSC;
-   GFXShaderConstHandle *mInvCameraTransSC;
-   GFXShaderConstHandle *mMatCameraToScreenSC;
-   GFXShaderConstHandle *mMatScreenToCameraSC;
-
-   GFXShaderConstHandle* mIsCapturingSC;
-
-   bool mAllowReflectPass;
-
-   /// If true update the shader.
-   bool mUpdateShader;   
-
+   /// Single GFXTextureTarget — ALL active MRT slots attach to this one object.
    GFXTextureTargetRef mTarget;
 
-   String mTargetName;
-   GFXTexHandle mTargetTex;
    S32 mMipCap;
 
-   String mTargetDepthStencilName;
-   GFXTexHandle mTargetDepthStencil;
+   //--------------------------------------------------------------------------
+   // Depth stencil
+   //--------------------------------------------------------------------------
 
-   /// If mTargetSize is zero then this scale is
-   /// used to make a relative texture size to the
-   /// active render target.
-   Point2F mTargetScale;
+   String         mTargetDepthStencilName;
+   GFXTexHandle   mTargetDepthStencil;
+   NamedTexTarget mNamedTargetDepthStencil;
 
-   /// If non-zero this is used as the absolute
-   /// texture target size.
-   /// @see mTargetScale
-   Point2I mTargetSize;
+   //--------------------------------------------------------------------------
+   // State block / shader
+   //--------------------------------------------------------------------------
 
-   GFXFormat mTargetFormat;
+   GFXStateBlockData* mStateBlockData;
+   GFXStateBlockRef        mStateBlock;
+   String                  mShaderName;
+   GFXShaderRef            mShader;
+   Vector<GFXShaderMacro>  mShaderMacros;
+   GFXShaderConstBufferRef mShaderConsts;
 
-   /// The color to prefill the named target when
-   /// first created by the effect.
-   LinearColorF mTargetClearColor;
+   //--------------------------------------------------------------------------
+   // Auto shader constant handles
+   //--------------------------------------------------------------------------
 
+   GFXShaderConstHandle* mRTSizeSC;
+   GFXShaderConstHandle* mOneOverRTSizeSC;
+   GFXShaderConstHandle* mRTRatioSC;
+   GFXShaderConstHandle* mTexSizeSC[NumTextures];
+   GFXShaderConstHandle* mRenderTargetParamsSC[NumTextures];
+   GFXShaderConstHandle* mMipCountSC[NumTextures];
+   GFXShaderConstHandle* mViewportOffsetSC;
+   GFXShaderConstHandle* mTargetViewportSC;
+   GFXShaderConstHandle* mFogDataSC;
+   GFXShaderConstHandle* mFogColorSC;
+   GFXShaderConstHandle* mEyePosSC;
+   GFXShaderConstHandle* mMatWorldToScreenSC;
+   GFXShaderConstHandle* mMatScreenToWorldSC;
+   GFXShaderConstHandle* mMatPrevScreenToWorldSC;
+   GFXShaderConstHandle* mNearFarSC;
+   GFXShaderConstHandle* mInvNearFarSC;
+   GFXShaderConstHandle* mWorldToScreenScaleSC;
+   GFXShaderConstHandle* mProjectionOffsetSC;
+   GFXShaderConstHandle* mWaterColorSC;
+   GFXShaderConstHandle* mWaterFogDataSC;
+   GFXShaderConstHandle* mAmbientColorSC;
+   GFXShaderConstHandle* mWaterFogPlaneSC;
+   GFXShaderConstHandle* mWaterDepthGradMaxSC;
+   GFXShaderConstHandle* mScreenSunPosSC;
+   GFXShaderConstHandle* mLightDirectionSC;
+   GFXShaderConstHandle* mCameraForwardSC;
+   GFXShaderConstHandle* mAccumTimeSC;
+   GFXShaderConstHandle* mDampnessSC;
+   GFXShaderConstHandle* mDeltaTimeSC;
+   GFXShaderConstHandle* mInvCameraMatSC;
+   GFXShaderConstHandle* mMatCameraToWorldSC;
+   GFXShaderConstHandle* mInvCameraTransSC;
+   GFXShaderConstHandle* mMatCameraToScreenSC;
+   GFXShaderConstHandle* mMatScreenToCameraSC;
+   GFXShaderConstHandle* mIsCapturingSC;
+
+   //--------------------------------------------------------------------------
+   // Render scheduling
+   //--------------------------------------------------------------------------
+
+   bool          mAllowReflectPass;
+   bool          mUpdateShader;
    PFXRenderTime mRenderTime;
-   PFXTargetClear mTargetClear;
-   PFXTargetViewport mTargetViewport;
+   PFXTargetClear mTargetClear_unused; // kept for binary compat if needed — see arrays above
+   String        mRenderBin;
+   S16           mRenderPriority;
+   bool          mIsValid;
+   bool          mEnabled;
+   bool          mSkip;
+   bool          mPreProcessed;
+   bool          mOneFrameOnly;
+   bool          mOnThisFrame;
+   U32           mShaderReloadKey;
 
-   String mRenderBin;
-
-   S16 mRenderPriority;
-
-   /// This is true if the effect has been succesfully
-   /// initialized and all requirements are met for use.
-   bool mIsValid;
-
-   /// True if the effect has been enabled by the manager.
-   bool mEnabled;
-   
-   /// Skip processing of this PostEffect and its children even if its parent is enabled. 
-   /// Parent and sibling PostEffects in the chain are still processed.
-   /// This is intended for debugging purposes.
-   bool mSkip;
-   bool mPreProcessed;
-
-   bool mOneFrameOnly;
-   bool mOnThisFrame;  
-
-   U32 mShaderReloadKey;
+   //--------------------------------------------------------------------------
+   // EffectConst
+   //--------------------------------------------------------------------------
 
    class EffectConst
    {
    public:
-
-      EffectConst( const String &name, const String &val )
-         : mName( name ), 
-           mHandle( NULL ),
-           mDirty( true )
-      {
-         set( val );
-      }
-
-      EffectConst(const String &name, const F32 &val)
-         : mName(name),
-         mHandle(NULL),
-         mDirty(true)
-      {
+      EffectConst(const String& name, const String& val)
+         : mName(name), mHandle(NULL), mDirty(true) {
          set(val);
       }
-
+      EffectConst(const String& name, const F32& val)
+         : mName(name), mHandle(NULL), mDirty(true) {
+         set(val);
+      }
       EffectConst(const String& name, const int& val)
-         : mName(name),
-         mHandle(NULL),
-         mDirty(true)
-      {
+         : mName(name), mHandle(NULL), mDirty(true) {
+         set(val);
+      }
+      EffectConst(const String& name, const Point4F& val)
+         : mName(name), mHandle(NULL), mDirty(true) {
+         set(val);
+      }
+      EffectConst(const String& name, const MatrixF& val)
+         : mName(name), mHandle(NULL), mDirty(true) {
+         set(val);
+      }
+      EffectConst(const String& name, const Vector<Point4F>& val)
+         : mName(name), mHandle(NULL), mDirty(true) {
+         set(val);
+      }
+      EffectConst(const String& name, const Vector<MatrixF>& val)
+         : mName(name), mHandle(NULL), mDirty(true) {
          set(val);
       }
 
-      EffectConst(const String &name, const Point4F &val)
-         : mName(name),
-         mHandle(NULL),
-         mDirty(true)
-      {
-         set(val);
-      }
-
-      EffectConst(const String &name, const MatrixF &val)
-         : mName(name),
-         mHandle(NULL),
-         mDirty(true)
-      {
-         set(val);
-      }
-
-      EffectConst(const String &name, const Vector<Point4F> &val)
-         : mName(name),
-         mHandle(NULL),
-         mDirty(true)
-      {
-         set(val);
-      }
-
-      EffectConst(const String &name, const Vector<MatrixF> &val)
-         : mName(name),
-         mHandle(NULL),
-         mDirty(true)
-      {
-         set(val);
-      }
-
-      void set( const String &newVal );
-      void set(const F32 &newVal);
+      void set(const String& newVal);
+      void set(const F32& newVal);
       void set(const int& newVal);
-      void set(const Point4F &newVal);
-      void set(const MatrixF &newVal);
-      void set(const Vector<Point4F> &newVal);
-      void set(const Vector<MatrixF> &newVal);
+      void set(const Point4F& newVal);
+      void set(const MatrixF& newVal);
+      void set(const Vector<Point4F>& newVal);
+      void set(const Vector<MatrixF>& newVal);
+      void setToBuffer(GFXShaderConstBufferRef buff);
 
-      void setToBuffer( GFXShaderConstBufferRef buff );
-
-      String mName;
-
-      GFXShaderConstHandle *mHandle;
-
-      String mStringVal;
-
-      S32     mIntVal;
-      F32     mFloatVal;
-      Point4F mPointVal;
-      MatrixF mMatrixVal;
-
+      String   mName;
+      GFXShaderConstHandle* mHandle;
+      String   mStringVal;
+      S32      mIntVal;
+      F32      mFloatVal;
+      Point4F  mPointVal;
+      MatrixF  mMatrixVal;
       Vector<Point4F> mPointArrayVal;
       Vector<MatrixF> mMatrixArrayVal;
 
-      enum
-      {
-         StringType,
-         IntType,
-         FloatType,
-         PointType,
-         MatrixType,
-         PointArrayType,
-         MatrixArrayType
+      enum {
+         StringType, IntType, FloatType, PointType,
+         MatrixType, PointArrayType, MatrixArrayType
       } mValueType;
 
       bool mDirty;
    };
 
-   typedef HashTable<StringCase,EffectConst*> EffectConstTable;
-
+   typedef HashTable<StringCase, EffectConst*> EffectConstTable;
    EffectConstTable mEffectConsts;
 
-   ///
-   virtual void _updateScreenGeometry( const Frustum &frustum,
-                                       GFXVertexBufferHandle<PFXVertex> *outVB );
+   //--------------------------------------------------------------------------
+   // Internal methods
+   //--------------------------------------------------------------------------
 
-   ///
-   virtual void _setupStateBlock( const SceneRenderState *state );
-
-   /// 
-   virtual void _setupConstants( const SceneRenderState *state );
-
-   ///
+   virtual void _updateScreenGeometry(const Frustum& frustum, GFXVertexBufferHandle<PFXVertex>* outVB);
+   virtual void _setupStateBlock(const SceneRenderState* state);
+   virtual void _setupConstants(const SceneRenderState* state);
    virtual void _setupTransforms();
+   virtual void _setupTarget(const SceneRenderState* state, bool* outClearTarget);
+   virtual void _setupTexture(U32 slot, GFXTexHandle& inputTex, const RectI* inTexViewport);
+   virtual void _setupCubemapTexture(U32 stage, GFXCubemapHandle& inputTex);
+   virtual void _setupCubemapArrayTexture(U32 slot, GFXCubemapArrayHandle& inputTex);
 
-   ///
-   virtual void _setupTarget( const SceneRenderState *state, bool *outClearTarget );
+   static bool _setIsEnabled(void* object, const char* index, const char* data);
 
-   ///
-   virtual void _setupTexture( U32 slot, GFXTexHandle &inputTex, const RectI *inTexViewport );
-   virtual void _setupCubemapTexture(U32 stage, GFXCubemapHandle &inputTex);
-   virtual void _setupCubemapArrayTexture(U32 slot, GFXCubemapArrayHandle &inputTex);
-
-
-   /// Protected set method for toggling the enabled state.
-   static bool _setIsEnabled( void *object, const char *index, const char *data );
-
-   /// Called from the light manager activate signal.
-   /// @see LightManager::addActivateCallback
-   void _onLMActivate( const char*, bool activate )
+   void _onLMActivate(const char*, bool activate)
    {
-      if ( activate ) 
-         mUpdateShader = true; 
+      if (activate) mUpdateShader = true;
    }
 
-   /// We handle texture events to release named rendered targets.
-   /// @see GFXTextureManager::addEventDelegate
-   void _onTextureEvent( GFXTexCallbackCode code )
+   void _onTextureEvent(GFXTexCallbackCode code)
    {
-      if ( code == GFXZombify && (mNamedTarget.isRegistered() || mNamedTargetDepthStencil.isRegistered()) )
-         _cleanTargets();
+      if (code != GFXZombify) return;
+      bool anyNamed = mNamedTargetDepthStencil.isRegistered();
+      for (U32 c = 0; c < NumMRTTargets && !anyNamed; c++)
+         anyNamed = mNamedTarget[c].isRegistered();
+      if (anyNamed) _cleanTargets();
    }
 
-   ///
    void _updateConditioners();
-
-   ///
-   void _cleanTargets( bool recurse = false );
-
-   /// 
+   void _cleanTargets(bool recurse = false);
    void _checkRequirements();
+   GFXTextureObject* _getTargetTexture(U32 index);
 
-   ///
-   GFXTextureObject* _getTargetTexture( U32 index );
+   /// Map "$outTex" / "$outTex0".."$outTex3" to a slot index [0..NumMRTTargets-1].
+   /// Returns -1 if the name is not an $outTexN pattern.
+   S32 _outTexSlotFromName(const String& name)
+   {
+      if (name.compare("$outTex", 0, String::NoCase) == 0) return 0; // backwards compat
+      if (name.compare("$outTex0", 0, String::NoCase) == 0) return 0;
+      if (name.compare("$outTex1", 0, String::NoCase) == 0) return 1;
+      if (name.compare("$outTex2", 0, String::NoCase) == 0) return 2;
+      if (name.compare("$outTex3", 0, String::NoCase) == 0) return 3;
+      return -1;
+   }
+
+   S32 _inTexSlotFromName(const String& name)
+   {
+      if (name.compare("$inTex", 0, String::NoCase) == 0) return 0; // backwards compat
+      if (name.compare("$inTex0", 0, String::NoCase) == 0) return 0;
+      if (name.compare("$inTex1", 0, String::NoCase) == 0) return 1;
+      if (name.compare("$inTex2", 0, String::NoCase) == 0) return 2;
+      if (name.compare("$inTex3", 0, String::NoCase) == 0) return 3;
+      return -1;
+   }
 
 public:
 
-   /// Constructor.
    PostEffect();
-
-   /// Destructor.
    virtual ~PostEffect();
 
    DECLARE_CONOBJECT(PostEffect);
 
-   // SimObject
    bool onAdd() override;
    void onRemove() override;
    static void initPersistFields();
 
-   /// @name Callbacks
-   /// @{
+   DECLARE_CALLBACK(void, onAdd, ());
+   DECLARE_CALLBACK(void, preProcess, ());
+   DECLARE_CALLBACK(void, setShaderConsts, ());
+   DECLARE_CALLBACK(bool, onEnabled, ());
+   DECLARE_CALLBACK(void, onDisabled, ());
 
-   DECLARE_CALLBACK( void, onAdd, () );
-   DECLARE_CALLBACK( void, preProcess, () );
-   DECLARE_CALLBACK( void, setShaderConsts, () );
-   DECLARE_CALLBACK( bool, onEnabled, () );
-   DECLARE_CALLBACK( void, onDisabled, () );
+   virtual void process(const SceneRenderState* state,
+      GFXTexHandle& inOutTex,
+      const RectI* inTexViewport = NULL);
 
-   /// @}
-
-   virtual void process(   const SceneRenderState *state, 
-                           GFXTexHandle &inOutTex,
-                           const RectI *inTexViewport = NULL );
-
-   /// 
    void reload();
-
-   /// 
    void enable();
-
-   /// 
    void disable();
 
-   /// Dump the shader disassembly to a temporary text file.
-   /// Returns true and sets outFilename to the file if successful.
-   bool dumpShaderDisassembly( String &outFilename ) const;
-
-   /// Returns the SimSet which contains all PostEffects.
+   bool   dumpShaderDisassembly(String& outFilename) const;
    SimSet* getSet() const;
 
-   ///
    bool isEnabled() const { return mEnabled; }
-
-   /// Is set to skip rendering.
    bool isSkipped() const { return mSkip; }
-
-   /// Set the effect to skip rendering.
-   void setSkip( bool skip ) { mSkip = skip; }
+   void setSkip(bool s) { mSkip = s; }
 
    PFXRenderTime getRenderTime() const { return mRenderTime; }
+   const String& getRenderBin()  const { return mRenderBin; }
+   F32           getPriority()   const { return mRenderPriority; }
 
-   const String& getRenderBin() const { return mRenderBin; }
-
-   F32 getPriority() const { return mRenderPriority; }
-
-   void setTexture( U32 index, const String &filePath );
+   void setTexture(U32 index, const String& filePath);
    void setTexture(U32 index, const GFXTexHandle& texHandle);
-   void setCubemapTexture(U32 index, const GFXCubemapHandle &cubemapHandle);
-   void setCubemapArrayTexture(U32 index, const GFXCubemapArrayHandle &cubemapArrayHandle);
+   void setCubemapTexture(U32 index, const GFXCubemapHandle& handle);
+   void setCubemapArrayTexture(U32 index, const GFXCubemapArrayHandle& handle);
 
-   void setShaderMacro( const String &name, const String &value = String::EmptyString );
-   bool removeShaderMacro( const String &name );
+   void setShaderMacro(const String& name, const String& value = String::EmptyString);
+   bool removeShaderMacro(const String& name);
    void clearShaderMacros();
 
-   ///
-   void setShaderConst( const String &name, const String &val );   
-   void setShaderConst(const String &name, const F32 &val);
+   void setShaderConst(const String& name, const String& val);
+   void setShaderConst(const String& name, const F32& val);
    void setShaderConst(const String& name, const int& val);
-   void setShaderConst(const String &name, const Point4F &val);
-   void setShaderConst(const String &name, const MatrixF &val);
-   void setShaderConst(const String &name, const Vector<Point4F> &val);
-   void setShaderConst(const String &name, const Vector<MatrixF> &val);
+   void setShaderConst(const String& name, const Point4F& val);
+   void setShaderConst(const String& name, const MatrixF& val);
+   void setShaderConst(const String& name, const Vector<Point4F>& val);
+   void setShaderConst(const String& name, const Vector<MatrixF>& val);
 
-   void setOnThisFrame( bool enabled ) { mOnThisFrame = enabled; }
+   void setOnThisFrame(bool e) { mOnThisFrame = e; }
    bool isOnThisFrame() { return mOnThisFrame; }
-   void setOneFrameOnly( bool enabled ) { mOneFrameOnly = enabled; }
-   bool isOneFrameOnly() { return mOneFrameOnly; }   
+   void setOneFrameOnly(bool e) { mOneFrameOnly = e; }
+   bool isOneFrameOnly() { return mOneFrameOnly; }
 
-   F32 getAspectRatio() const;
-
-   GFXShaderRef getShader() { return mShader; }
+   F32                     getAspectRatio()     const;
+   GFXShaderRef            getShader() { return mShader; }
    Vector<GFXShaderMacro>* getShaderMacros() { return &mShaderMacros; }
    GFXShaderConstBufferRef getShaderConstBuffer() { return mShaderConsts; }
-   
 
    enum PostEffectRequirements
    {

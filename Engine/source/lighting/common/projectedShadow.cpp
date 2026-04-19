@@ -551,7 +551,7 @@ void ProjectedShadow::_renderToTexture( F32 camDist, const TSRenderState &rdata 
       }
 
       if ( smShadowFilter )
-         smShadowFilter->process( NULL, mShadowTexture );
+         smShadowFilter->process( NULL, &mShadowTexture );
    }
 
    // Restore frustum

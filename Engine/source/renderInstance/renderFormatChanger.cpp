@@ -144,7 +144,7 @@ void RenderFormatToken::process(SceneRenderState *state, RenderPassStateBin *cal
 
          // Run the PostEffect which copies data into the new target.
          if ( mCopyPostEffect.isValid() )
-            mCopyPostEffect->process( state, curBackBuffer, &mTarget.getViewport() );
+            mCopyPostEffect->process( state, &curBackBuffer,1, &mTarget.getViewport() );
       }
       break;
 
@@ -174,7 +174,7 @@ void RenderFormatToken::process(SceneRenderState *state, RenderPassStateBin *cal
          {
 		      // Need to create a texhandle here, since inOutTex gets assigned during process()
             GFXTexHandle inOutTex = mTargetColorTexture[mTargetChainIdx];
-            mResolvePostEffect->process( state, inOutTex, &mTarget.getViewport() );
+            mResolvePostEffect->process( state, &inOutTex, 1, &mTarget.getViewport() );
          }
       }
       break;

@@ -280,7 +280,7 @@ protected:
    virtual void _setupConstants(const SceneRenderState* state);
    virtual void _setupTransforms();
    virtual void _setupTarget(const SceneRenderState* state, bool* outClearTarget);
-   virtual void _setupTexture(U32 slot, GFXTexHandle& inputTex, const RectI* inTexViewport);
+   virtual void _setupTexture(U32 stage, GFXTexHandle* inputTex, U32 inputTexCount, const RectI* inTexViewport);
    virtual void _setupCubemapTexture(U32 stage, GFXCubemapHandle& inputTex);
    virtual void _setupCubemapArrayTexture(U32 slot, GFXCubemapArrayHandle& inputTex);
 
@@ -345,7 +345,8 @@ public:
    DECLARE_CALLBACK(void, onDisabled, ());
 
    virtual void process(const SceneRenderState* state,
-      GFXTexHandle& inOutTex,
+      GFXTexHandle* inOutTex,
+      U32 inOutTexCount = 1,
       const RectI* inTexViewport = NULL);
 
    void reload();

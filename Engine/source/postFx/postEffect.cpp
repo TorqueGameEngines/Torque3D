@@ -1169,7 +1169,10 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
    }
 }
 
-void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *inTexViewport )
+void PostEffect::_setupTexture(U32 stage,
+                              GFXTexHandle* inputTex,
+                              U32           inputTexCount,
+                              const RectI* inTexViewport)
 {
    const String &texFilename = mTextureAsset[stage].notNull() ? mTextureAsset[stage]->getImageFile() : "";
 
@@ -1178,17 +1181,17 @@ void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *
 
    RectI viewport = GFX->getViewport();
 
-   if ( _inTexSlotFromName(texFilename) >= 0 )
+   S32 inSlot = _inTexSlotFromName(texFilename);
+   if (inSlot >= 0)
    {
-      theTex = inputTex;
+      if ((U32)inSlot < inputTexCount)
+      {
+         theTex = inputTex[inSlot];
 
-      if ( inTexViewport )
-      {
-         viewport = *inTexViewport;
-      }
-      else if ( theTex )
-      {
-         viewport.set( 0, 0, theTex->getWidth(), theTex->getHeight() );
+         if (inSlot == 0 && inTexViewport)
+            viewport = *inTexViewport;
+         else if (theTex)
+            viewport.set(0, 0, theTex->getWidth(), theTex->getHeight());
       }
    }
    else if ( texFilename.compare( "$backBuffer", 0, String::NoCase ) == 0 )
@@ -1432,9 +1435,10 @@ void PostEffect::_cleanTargets( bool recurse )
    }
 }
 
-void PostEffect::process(  const SceneRenderState *state,
-                           GFXTexHandle& inOutTex,
-                           const RectI *inTexViewport )
+void PostEffect::process(  const SceneRenderState* state,
+                           GFXTexHandle* inOutTex,
+                           U32 inOutTexCount,
+                           const RectI* inTexViewport)
 {
    // If the shader is forced to be skipped... then skip.
    if ( mSkip )
@@ -1470,11 +1474,16 @@ void PostEffect::process(  const SceneRenderState *state,
    }
    GFXTransformSaver saver;
 
+   GFXTexHandle chain[NumMRTTargets];
+   U32 texCount = getMin(inOutTexCount, (U32)NumMRTTargets);
+   for (U32 c = 0; c < texCount; c++)
+      chain[c] = inOutTex[c];
+
    // Set the textures.
    for (U32 i = 0; i < NumTextures; i++)
    {
       if (mTextureType[i] == NormalTextureType)
-         _setupTexture(i, inOutTex, inTexViewport);
+         _setupTexture(i, chain, texCount, inTexViewport);
       else if (mTextureType[i] == CubemapType)
          _setupCubemapTexture(i, mCubemapTextures[i]);
       else if (mTextureType[i] == CubemapArrayType)
@@ -1490,12 +1499,13 @@ void PostEffect::process(  const SceneRenderState *state,
    const bool hasDepth = mTargetDepthStencil.isValid();
    bool hasColorTarget = false;
 
+   U32 curTargetCount = 0;
    for (U32 c = 0; c < NumMRTTargets; c++)
    {
       if (mTargetTex[c].isValid())
       {
          hasColorTarget = true;
-         break;
+         curTargetCount++;
       }
    }
 
@@ -1621,9 +1631,11 @@ void PostEffect::process(  const SceneRenderState *state,
       PFXMGR->releaseBackBufferTex();
    }
 
-   inOutTex = mTargetTex[0];
    for (U32 c = 0; c < NumMRTTargets; c++)
    {
+      if (c < texCount)
+         chain[c] = mTargetTex[c];
+
       if (!mNamedTarget[c].isRegistered())
          mTargetTex[c] = NULL;
    }
@@ -1632,12 +1644,13 @@ void PostEffect::process(  const SceneRenderState *state,
    // are processed as it screws up the viewport.
    saver.restore();
 
+   const U32 nextTexCount = getMax(getMax(texCount, curTargetCount), 1u);
    // Now process my children.
    iterator i = begin();
    for ( ; i != end(); i++ )
    {
       PostEffect *effect = static_cast<PostEffect*>(*i);
-      effect->process( state, inOutTex );
+      effect->process( state, chain, nextTexCount);
    }
 
    if ( mOneFrameOnly )
@@ -2048,19 +2061,13 @@ void PostEffect::clearShaderMacros()
    mUpdateShader = true;
 }
 
-GFXTextureObject* PostEffect::_getTargetTexture( U32 index)
+GFXTextureObject* PostEffect::_getTargetTexture(U32 index)
 {
-   // A TexGen PostEffect will generate its texture now if it
-   // has not already.
-   if (  mRenderTime == PFXTexGenOnDemand &&
-         ( !mTargetTex[index] || mUpdateShader ) )
+   if (mRenderTime == PFXTexGenOnDemand
+      && (!mTargetTex[index] || mUpdateShader))
    {
-      GFXTexHandle chainTex;
-      process( NULL, chainTex );
-      
-      // TODO: We should add a conditional copy
-      // to a non-RT texture here to reduce the
-      // amount of non-swappable RTs in use.      
+      GFXTexHandle chainTex[NumMRTTargets]; // zero-initialised by GFXTexHandle ctor
+      process(NULL, chainTex, NumMRTTargets);
    }
 
    return mTargetTex[index].getPointer();

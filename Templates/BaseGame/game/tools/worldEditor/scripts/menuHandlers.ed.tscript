@@ -371,8 +371,6 @@ function EditorSaveMission()
    %decalsFile = $Server::LevelAsset.getDecalsPath();
    if(isFile(%decalsFile))
    {
-      echo("===================================================================");
-      echo("DECALS FILE BE: " @ fileName(%decalsFile));
       $Server::LevelAsset.decalsFile = fileName(%decalsFile);
    }
    

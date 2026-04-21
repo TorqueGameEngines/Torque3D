@@ -361,19 +361,33 @@ function EditorSaveMission()
          %obj.onSaveMission( $Server::MissionFile );      
    } 
    
-   //We'll sanity check that we have a valid file association to our level asset first
+   //Force a refresh of the associated paths if they're valid files when we save out the assetDef
    %presetFile = $Server::LevelAsset.getPostFXPresetPath();
-   
-   if(!isFile(%presetFile))
+   if(isFile(%presetFile))
    {
-      //if it isn't valid, we'll fabricate a new one just to be sure
-      $Server::LevelAsset.PostFXPresetFile = fileBase($Server::LevelAsset.getLevelPath()) @ $PostFXManager::fileExtension;
-    
-      $Server::LevelAsset.saveAsset();
-      $Server::LevelAsset.refresh(); 
-      
-      %presetFile = $Server::LevelAsset.getPostFXPresetPath();
+      $Server::LevelAsset.postFXPresetFile = fileName(%presetFile);
    }
+   
+   %decalsFile = $Server::LevelAsset.getDecalsPath();
+   if(isFile(%decalsFile))
+   {
+      $Server::LevelAsset.decalsFile = fileName(%decalsFile);
+   }
+   
+   %forestFile = $Server::LevelAsset.getForestPath();
+   if(isFile(%forestFile))
+   {
+      $Server::LevelAsset.forestFile = fileName(%forestFile);
+   }
+   
+   %navMeshFile = $Server::LevelAsset.getNavmeshPath();
+   if(isFile(%navMeshFile))
+   {
+      $Server::LevelAsset.navmeshFile = fileName(%navMeshFile);
+   }
+   
+   $Server::LevelAsset.saveAsset();
+   $Server::LevelAsset.refresh(); 
    
    //Save out the PostFX config
    PostFXManager::savePresetHandler( %presetFile );

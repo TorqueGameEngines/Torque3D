@@ -2004,6 +2004,10 @@ function beginLevelImport()
          {
             %asset.decalsFile = %fileBase @ ".decal";
          }
+         else if(isFile(%filePath @ "/" @ %fileBase @ "decal"))
+         {
+            %asset.decalsFile = %fileBase @ "decal";
+         }
          else if(isFile(%filePath @ "/" @ %fileBase @ "mis.decal"))
          {
             %asset.decalsFile = %fileBase @ "mis.decal";

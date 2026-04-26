@@ -608,8 +608,6 @@ void Ribbon::createBuffers(SceneRenderState *state, GFXVertexBufferHandle<GFXVer
          tColor.interpolate(curColor, nextColor, positionDiff);
       }
 
-      if (i < 2 || i > segments - 2) tRadius = POINT_EPSILON * POINT_EPSILON;
-
       Point3F diff;
       F32 length;
       if (i == 0) {

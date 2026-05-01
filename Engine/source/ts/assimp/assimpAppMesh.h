@@ -119,6 +119,8 @@ public:
    /// @return The mesh transform at the specified time
    MatrixF getMeshTransform(F32 time) override;
    F32 getVisValue(F32 t) override;
+
+   static Vector<S32> sMaterialRemap;
 };
 
 #endif // _COLLADA_APPMESH_H_

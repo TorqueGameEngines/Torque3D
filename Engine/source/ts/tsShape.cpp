@@ -38,16 +38,33 @@
 #include "core/stream/fileStream.h"
 #include "core/fileObject.h"
 
-#ifdef TORQUE_COLLADA
-extern TSShape* loadColladaShape(const Torque::Path &path);
-#endif
+Vector<TSShape::ShapeRegistration>   TSShape::sRegistrations(__FILE__, __LINE__);
 
-#ifdef TORQUE_ASSIMP
-extern TSShape* assimpLoadShape(const Torque::Path &path);
-#endif
+void TSShape::sRegisterFormat(const ShapeRegistration& reg)
+{
+   U32 insert = sRegistrations.size();
+   sRegistrations.insert(insert, reg);
+}
+
+const TSShape::ShapeRegistration* TSShape::sFindRegInfo(const String& extension, bool exporting)
+{
+   for (U32 i = 0; i < TSShape::sRegistrations.size(); i++)
+   {
+      const TSShape::ShapeRegistration& reg = TSShape::sRegistrations[i];
+      const Vector<ShapeFormat>& extensions = exporting ? reg.export_extensions : reg.extensions;
+
+      for (U32 j = 0; j < extensions.size(); j++)
+      {
+         if (extensions[j].mExtension.equal(extension, String::NoCase))
+            return &reg;
+      }
+   }
+
+   return NULL;
+}
 
 /// most recent version -- this is the version we write
-S32 TSShape::smVersion = 28;
+S32 TSShape::smVersion = TORQUE_DTS_VERSION;
 /// the version currently being read...valid only during a read
 S32 TSShape::smReadVersion = -1;
 const U32 TSShape::smMostRecentExporterVersion = DTS_EXPORTER_CURRENT_VERSION;
@@ -166,6 +183,34 @@ TSShape::~TSShape()
 
    if( mShapeData )
       delete[] mShapeData;
+}
+
+void TSShape::compressionKey(U8* keyOut, U32 keyLen)
+{
+   // Concatenate app name and zip password at compile time
+   static const char kSeed[] = TORQUE_APP_NAME DEFAULT_ZIP_PASSWORD;
+
+   // djb2 hash to collapse the seed string into a 32-bit value
+   U32 state = 5381u;
+   for (const char* c = kSeed; *c; ++c)
+      state = ((state << 5) + state) ^ (U8)*c;
+
+   // Expand into a key stream via a linear-congruential generator
+   // (Numerical Recipes coefficients)
+   for (U32 i = 0; i < keyLen; ++i)
+   {
+      state = state * 1664525u + 1013904223u;
+      keyOut[i] = (U8)(state >> 16);
+   }
+}
+
+void TSShape::xorBufferAtOffset(void* data, U32 byteCount,
+   U32 startOffset,
+   const U8* key, U32 keyLen)
+{
+   U8* p = (U8*)data;
+   for (U32 i = 0; i < byteCount; ++i)
+      p[i] ^= key[(startOffset + i) % keyLen];
 }
 
 const String& TSShape::getName( S32 nameIndex ) const
@@ -1892,6 +1937,20 @@ void TSShape::write(Stream * s, bool saveOldFormat)
       size8 += 4;
    size8 >>= 2;
 
+   if (smVersion >= 29)
+   {
+      const U32 KEY_LEN = 256;
+      U8 key[KEY_LEN];
+      compressionKey(key, KEY_LEN);
+
+      U32 offset = 0;
+      xorBufferAtOffset(buffer32, size32 * 4, offset, key, KEY_LEN);
+      offset += size32 * 4;
+      xorBufferAtOffset(buffer16, size16 * 4, offset, key, KEY_LEN);
+      offset += size16 * 4;
+      xorBufferAtOffset(buffer8, size8 * 4, offset, key, KEY_LEN);
+   }
+
    S32 sizeMemBuffer, start16, start8;
    sizeMemBuffer = size32 + size16 + size8;
    start16 = size32;
@@ -1971,7 +2030,18 @@ bool TSShape::read(Stream * s)
       }
 
       S32 * tmp = new S32[sizeMemBuffer];
-      s->read(sizeof(S32)*sizeMemBuffer,(U8*)tmp);
+      s->read(sizeof(S32) * sizeMemBuffer, (U8*)tmp);
+
+      if (smReadVersion >= 29)
+      {
+         const U32 KEY_LEN = 256;
+         U8 key[KEY_LEN];
+         compressionKey(key, KEY_LEN);
+
+         // The whole tmp block is one contiguous encrypted region
+         xorBufferAtOffset(tmp, sizeMemBuffer * 4, 0, key, KEY_LEN);
+      }
+
       memBuffer32 = tmp;
       memBuffer16 = (S16*)(tmp+startU16);
       memBuffer8  = (S8*)(tmp+startU8);
@@ -2166,11 +2236,41 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
    TSShape * ret = 0;
    bool readSuccess = false;
    const String extension = path.getExtension();
+   bool canLoadCached = false;
 
-   if ( extension.equal( "dts", String::NoCase ) )
+   // Generate the cached filename
+   Torque::Path cachedPath(path);
+   cachedPath.setExtension("cached.dts");
+
+   // Check if a cached DTS newer than this file is available
+   FileTime cachedModifyTime;
+   if (Platform::getFileTimes(cachedPath.getFullPath(), NULL, &cachedModifyTime))
+   {
+      bool forceLoadDAE = Con::getBoolVariable("$collada::forceLoadDAE", false);
+
+      FileTime daeModifyTime;
+      if (!Platform::getFileTimes(path.getFullPath(), NULL, &daeModifyTime) ||
+         (!forceLoadDAE && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0)))
+      {
+         // Non DTS not found, or cached DTS is newer
+         canLoadCached = true;
+      }
+   }
+
+   //assume the dts is good since it was zipped on purpose
+   Torque::FS::FileSystemRef ref = Torque::FS::GetFileSystem(cachedPath);
+   if (ref && !String::compare("Zip", ref->getTypeStr().c_str()))
+   {
+      bool forceLoadDAE = Con::getBoolVariable("$collada::forceLoadDAE", false);
+
+      if (!forceLoadDAE && Torque::FS::IsFile(cachedPath))
+         canLoadCached = true;
+   }
+
+   if (extension.equal("dts", String::NoCase) || canLoadCached)
    {
       FileStream stream;
-      stream.open( path.getFullPath(), Torque::FS::File::Read );
+      stream.open(canLoadCached ? cachedPath.getFullPath() : path.getFullPath(), Torque::FS::File::Read);
       if ( stream.getStatus() != Stream::Ok )
       {
          Con::errorf( "Resource<TSShape>::create - Could not open '%s'", path.getFullPath().c_str() );
@@ -2180,46 +2280,16 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
       ret = new TSShape;
       readSuccess = ret->read(&stream);
    }
-   else if ( extension.equal( "dae", String::NoCase ) || extension.equal( "kmz", String::NoCase ) )
-   {
-#ifdef TORQUE_COLLADA
-      // Attempt to load the DAE file
-      ret = loadColladaShape(path);
-      readSuccess = (ret != NULL);
-#else
-      // No COLLADA support => attempt to load the cached DTS file instead
-      Torque::Path cachedPath = path;
-      cachedPath.setExtension("cached.dts");
-       
-      FileStream stream;
-      stream.open( cachedPath.getFullPath(), Torque::FS::File::Read );
-      if ( stream.getStatus() != Stream::Ok )
-      {
-         Con::errorf( "Resource<TSShape>::create - Could not open '%s'", cachedPath.getFullPath().c_str() );
-         return NULL;
-      }
-      ret = new TSShape;
-      readSuccess = ret->read(&stream);
-#endif
-   }
    else
    {
-      //Con::errorf( "Resource<TSShape>::create - '%s' has an unknown file format", path.getFullPath().c_str() );
-      //delete ret;
-      //return NULL;
-
-      // andrewmac: Open Asset Import Library
-#ifdef TORQUE_ASSIMP
-      ret = assimpLoadShape(path);
-      readSuccess = (ret != NULL);
-#endif
-
-      // andrewmac : I could have used another conditional macro but I think this is suffice:
-      if (!readSuccess)
+      const TSShape::ShapeRegistration* regInfo = TSShape::sFindRegInfo(extension);
+      if (regInfo == NULL)
       {
-         Con::errorf("Resource<TSShape>::create - '%s' has an unknown file format", path.getFullPath().c_str());
-         delete ret;
-         return NULL;
+         readSuccess = false;
+      }
+      else
+      {
+         readSuccess = regInfo->readFunc(path, ret);
       }
    }
 

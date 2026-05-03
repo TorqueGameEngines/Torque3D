@@ -1457,7 +1457,7 @@ bool DecalManager::_createDataFile()
    if(dot)
       *dot = '\0';
    
-   dSprintf( fileName, sizeof(fileName), "%s.mis.decals", missionName );
+   dSprintf( fileName, sizeof(fileName), "%s.decals", missionName );
 
    mDataFileName = StringTable->insert( fileName );
 
@@ -1572,8 +1572,8 @@ DefineEngineFunction( decalManagerSave, void, ( String decalSaveFile ), ( "" ),
    "@param decalSaveFile Filename to save the decals to.\n"
    "@tsexample\n"
    "// Set the filename to save the decals in. If no filename is set, then the\n"
-   "// decals will default to <activeMissionName>.mis.decals\n"
-   "%fileName = \"./missionDecals.mis.decals\";\n"
+   "// decals will default to <activeMissionName>.decals\n"
+   "%fileName = \"./missionDecals.decals\";\n"
    "// Inform the decal manager to save the decals for the active mission.\n"
    "decalManagerSave( %fileName );\n"
    "@endtsexample\n"
@@ -1603,7 +1603,7 @@ DefineEngineFunction( decalManagerLoad, bool, ( const char* fileName ),,
    "false if it could not.\n"
    "@tsexample\n"
    "// Set the filename to load the decals from.\n"
-   "%fileName = \"./missionDecals.mis.decals\";\n"
+   "%fileName = \"./missionDecals.decals\";\n"
    "// Inform the decal manager to load the decals from the entered filename.\n"
    "decalManagerLoad( %fileName );\n"
    "@endtsexample\n"

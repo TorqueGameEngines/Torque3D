@@ -113,6 +113,19 @@ function ParticleEditorPlugin::onActivated( %this )
    EditorGuiStatusBar.setInfo( "Particle editor." );
    EditorGuiStatusBar.setSelection( "" );
    
+   // Try to start with the object selected in the world editor
+   %count = EWorldEditor.getSelectionSize();
+   for (%i = 0; %i < %count; %i++)
+   {
+      %obj = EWorldEditor.getSelectedObject(%i);
+      %datablock = ParticleEditor.getObjectParticleData(%obj);
+      if (%datablock !$= "" && isObject(%datablock))
+      {
+         ParticleEditor.open(%datablock);
+         break;
+      }
+   }
+   
    Parent::onActivated( %this );
 }
 
@@ -213,3 +226,12 @@ function ParticleEditor::registerParticleEdType(%this, %groupName, %typesList, %
    PE_ParticleDataTypes.add(%groupName, %typesList TAB %editorName);
 }
 
+//------------------------------------------------------------------------------
+function ParticleEditor::getObjectParticleData( %this, %obj )
+{
+   %datablock = "";
+   if ( %obj.isMemberOfClass( "ParticleEmitterNode" ) )
+      %datablock = %obj.emitter;
+      
+   return %datablock;
+}

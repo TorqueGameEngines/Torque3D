@@ -56,6 +56,19 @@ static int Sc_ScanIdent();
 #endif
 
 Vector<String> lines;
+static S32 gCachedLineContextCount = -1;   // -1 = needs refresh
+
+static S32 getLineContextCount()
+{
+   if (gCachedLineContextCount < 0)
+      gCachedLineContextCount = Con::getIntVariable("$scriptErrorLineCount", 10);
+   return gCachedLineContextCount;
+}
+
+void CMDFlushLineContextCache()
+{
+   gCachedLineContextCount = -1;
+}
 
 // Install our own input code...
 #undef CMDgetc
@@ -65,24 +78,26 @@ int CMDgetc();
 #ifndef isatty
 inline int isatty(int) { return 0; }
 #endif
+
 static int yycolumn = 1;
-// Wrap our getc, so that lex doesn't try to do its own buffering/file IO.
-#define YY_INPUT(buf,result,max_size) \
-   { \
-      int c = '*', n; \
-      for ( n = 0; n < max_size && \
-            (c = CMDgetc()) != EOF && c != '\n'; ++n ) \
-         buf[n] = (char) c; \
-      if ( c == '\n' ) \
-         buf[n++] = (char) c; yycolumn = 1;\
-      result = n; \
+
+#define YY_INPUT(buf, result, max_size)                          \
+   {                                                             \
+      int c = '*', n;                                            \
+      for (n = 0; n < max_size &&                                \
+           (c = CMDgetc()) != EOF && c != '\n'; ++n)             \
+         buf[n] = (char)c;                                       \
+      if (c == '\n') { buf[n++] = (char)c; yycolumn = 1; }       \
+      result = n;                                                \
    }
 
-#define YY_USER_ACTION do { \
-    CMDlloc.first_line = CMDlloc.last_line = yylineno; \
-    CMDlloc.first_column = yycolumn; CMDlloc.last_column = yycolumn + yyleng - 1; \
-    yycolumn += yyleng; \
-    } while(0);
+#define YY_USER_ACTION                                           \
+   do {                                                          \
+      CMDlloc.first_line   = CMDlloc.last_line   = yylineno;     \
+      CMDlloc.first_column = yycolumn;                           \
+      CMDlloc.last_column  = yycolumn + yyleng - 1;              \
+      yycolumn += yyleng;                                        \
+   } while (0);
 
 // File state
 void CMDSetScanBuffer(const char *sb, const char *fn);
@@ -111,69 +126,85 @@ SPACE    [ \t\v\f]
 HEXDIGIT [a-fA-F0-9]
 
 %%
-         ;
-{SPACE}+ { }
-("///"([^/\n\r][^\n\r]*)?[\n\r]+)+ { return(Sc_ScanDocBlock()); }
-"//"[^\n\r]*   ;
-[\r]        ;
-\n.*        { 
+
+{SPACE}+   { /* consume whitespace */ }
+
+("///"([^/\n\r][^\n\r]*)?[\n\r]+)+   { return Sc_ScanDocBlock(); }
+"//"[^\n\r]*                          { /* line comment — discard */ }
+[\r]                                  { /* bare CR — discard */ }
+
+\n.*  {
    yycolumn = 1;
-   lines.push_back(String::ToString("%s", yytext+1));
-   if (lines.size() > Con::getIntVariable("$scriptErrorLineCount", 10))
+
+   // Push the line text (everything after the newline) into the error
+   // context buffer, then trim to the configured maximum.
+   lines.push_back(String::ToString("%s", yytext + 1));
+   S32 maxLines = getLineContextCount();
+   while (lines.size() > maxLines)
       lines.erase(lines.begin());
 
    yyless(1);
 }
-\"(\\.|[^\\"\n\r])*\"      { return(Sc_ScanString(STRATOM)); }
-\'(\\.|[^\\'\n\r])*\'      { return(Sc_ScanString(TAGATOM)); }
-"=="        { CMDlval.i = MakeToken< int >( opEQ, yylineno ); return opEQ; }
-"!="        { CMDlval.i = MakeToken< int >( opNE, yylineno ); return opNE; }
-">="        { CMDlval.i = MakeToken< int >( opGE, yylineno ); return opGE; }
-"<="        { CMDlval.i = MakeToken< int >( opLE, yylineno ); return opLE; }
-"&&"        { CMDlval.i = MakeToken< int >( opAND, yylineno ); return opAND; }
-"||"        { CMDlval.i = MakeToken< int >( opOR, yylineno ); return opOR; }
-"::"        { CMDlval.i = MakeToken< int >( opCOLONCOLON, yylineno ); return opCOLONCOLON; }
-"--"        { CMDlval.i = MakeToken< int >( opMINUSMINUS, yylineno ); return opMINUSMINUS; }
-"++"        { CMDlval.i = MakeToken< int >( opPLUSPLUS, yylineno ); return opPLUSPLUS; }
-"$="        { CMDlval.i = MakeToken< int >( opSTREQ, yylineno ); return opSTREQ; }
-"!$="       { CMDlval.i = MakeToken< int >( opSTRNE, yylineno ); return opSTRNE; }
-"<<"        { CMDlval.i = MakeToken< int >( opSHL, yylineno ); return opSHL; }
-">>"        { CMDlval.i = MakeToken< int >( opSHR, yylineno ); return opSHR; }
-"+="        { CMDlval.i = MakeToken< int >( opPLASN, yylineno ); return opPLASN; }
-"-="        { CMDlval.i = MakeToken< int >( opMIASN, yylineno ); return opMIASN; }
-"*="        { CMDlval.i = MakeToken< int >( opMLASN, yylineno ); return opMLASN; }
-"/="        { CMDlval.i = MakeToken< int >( opDVASN, yylineno ); return opDVASN; }
-"%="        { CMDlval.i = MakeToken< int >( opMODASN, yylineno ); return opMODASN; }
-"&="        { CMDlval.i = MakeToken< int >( opANDASN, yylineno ); return opANDASN; }
-"^="        { CMDlval.i = MakeToken< int >( opXORASN, yylineno ); return opXORASN; }
-"|="        { CMDlval.i = MakeToken< int >( opORASN, yylineno ); return opORASN; }
-"<<="       { CMDlval.i = MakeToken< int >( opSLASN, yylineno ); return opSLASN; }
-">>="       { CMDlval.i = MakeToken< int >( opSRASN, yylineno ); return opSRASN; }
-"->"        { CMDlval.i = MakeToken< int >( opINTNAME, yylineno ); return opINTNAME; }
-"-->"       { CMDlval.i = MakeToken< int >( opINTNAMER, yylineno ); return opINTNAMER; }
-"NL"        { CMDlval.i = MakeToken< int >( '\n', yylineno ); return '@'; }
-"TAB"       { CMDlval.i = MakeToken< int >( '\t', yylineno ); return '@'; }
-"SPC"       { CMDlval.i = MakeToken< int >( ' ', yylineno ); return '@'; }
-"@"         { CMDlval.i = MakeToken< int >( 0, yylineno ); return '@'; }
-"/*" { /* this comment stops syntax highlighting from getting messed up when editing the lexer in TextPad */
-         int c = 0, l;
-         for ( ; ; )
-         {
-            l = c;
-            c = yyinput();
 
-            // Is this an open comment?
-            if ( c == EOF )
-            {
-               CMDerror( "unexpected end of file found in comment" );
-               break;
-            }
+\"(\\.|[^\\"\n\r])*\"   { return Sc_ScanString(STRATOM); }
+\'(\\.|[^\\'\n\r])*\'   { return Sc_ScanString(TAGATOM); }
 
-            // Did we find the end of the comment?
-            else if ( l == '*' && c == '/' )
-               break;
-         }
+"=="    { CMDlval.i = MakeToken<int>(opEQ,          yylineno); return opEQ;          }
+"!="    { CMDlval.i = MakeToken<int>(opNE,          yylineno); return opNE;          }
+">="    { CMDlval.i = MakeToken<int>(opGE,          yylineno); return opGE;          }
+"<="    { CMDlval.i = MakeToken<int>(opLE,          yylineno); return opLE;          }
+"&&"    { CMDlval.i = MakeToken<int>(opAND,         yylineno); return opAND;         }
+"||"    { CMDlval.i = MakeToken<int>(opOR,          yylineno); return opOR;          }
+"::"    { CMDlval.i = MakeToken<int>(opCOLONCOLON,  yylineno); return opCOLONCOLON; }
+"--"    { CMDlval.i = MakeToken<int>(opMINUSMINUS,  yylineno); return opMINUSMINUS;  }
+"++"    { CMDlval.i = MakeToken<int>(opPLUSPLUS,    yylineno); return opPLUSPLUS;    }
+"$="    { CMDlval.i = MakeToken<int>(opSTREQ,       yylineno); return opSTREQ;       }
+"!$="   { CMDlval.i = MakeToken<int>(opSTRNE,       yylineno); return opSTRNE;       }
+"<<"    { CMDlval.i = MakeToken<int>(opSHL,         yylineno); return opSHL;         }
+">>"    { CMDlval.i = MakeToken<int>(opSHR,         yylineno); return opSHR;         }
+"+="    { CMDlval.i = MakeToken<int>(opPLASN,       yylineno); return opPLASN;       }
+"-="    { CMDlval.i = MakeToken<int>(opMIASN,       yylineno); return opMIASN;       }
+"*="    { CMDlval.i = MakeToken<int>(opMLASN,       yylineno); return opMLASN;       }
+"/="    { CMDlval.i = MakeToken<int>(opDVASN,       yylineno); return opDVASN;       }
+"%="    { CMDlval.i = MakeToken<int>(opMODASN,      yylineno); return opMODASN;      }
+"&="    { CMDlval.i = MakeToken<int>(opANDASN,      yylineno); return opANDASN;      }
+"^="    { CMDlval.i = MakeToken<int>(opXORASN,      yylineno); return opXORASN;      }
+"|="    { CMDlval.i = MakeToken<int>(opORASN,       yylineno); return opORASN;       }
+"<<="   { CMDlval.i = MakeToken<int>(opSLASN,       yylineno); return opSLASN;       }
+">>="   { CMDlval.i = MakeToken<int>(opSRASN,       yylineno); return opSRASN;       }
+"->"    { CMDlval.i = MakeToken<int>(opINTNAME,     yylineno); return opINTNAME;     }
+"-->"   { CMDlval.i = MakeToken<int>(opINTNAMER,    yylineno); return opINTNAMER;    }
+%{
+// String concatenation operators.  All four return the '@' token; the
+// distinguishing data is the separator character stored in the token value.
+// The grammar rule  expr '@' expr  uses $2.value as the appendChar
+// argument to StrcatExprNode — so plain '@' gets 0 (no separator),
+// NL/TAB/SPC get their respective ASCII codes.
+%}
+"NL"    { CMDlval.i = MakeToken<int>('\n', yylineno); return '@'; }
+"TAB"   { CMDlval.i = MakeToken<int>('\t', yylineno); return '@'; }
+"SPC"   { CMDlval.i = MakeToken<int>(' ',  yylineno); return '@'; }
+"@"     { CMDlval.i = MakeToken<int>(0,    yylineno); return '@'; }
+
+"/*" {
+   // Block comment — consume until '*/'
+   int c = 0, prev = 0;
+   for (;;)
+   {
+      prev = c;
+      c    = yyinput();
+      if (c == EOF)
+      {
+         CMDerror("unexpected end of file inside block comment");
+         break;
       }
+      if (prev == '*' && c == '/')
+         break;
+   }
+}
+%{
+// Single-character punctuation tokens.
+%}
 "?" |
 "[" |
 "]" |
@@ -197,40 +228,55 @@ HEXDIGIT [a-fA-F0-9]
 "%" |
 "^" |
 "~" |
-"="         { CMDlval.i = MakeToken< int >( CMDtext[ 0 ], yylineno ); return CMDtext[ 0 ]; }
-"in"        { CMDlval.i = MakeToken< int >( rwIN, yylineno ); return(rwIN); }
-"or"        { CMDlval.i = MakeToken< int >( rwCASEOR, yylineno ); return(rwCASEOR); }
-"break"     { CMDlval.i = MakeToken< int >( rwBREAK, yylineno ); return(rwBREAK); }
-"return"    { CMDlval.i = MakeToken< int >( rwRETURN, yylineno ); return(rwRETURN); }
-"else"      { CMDlval.i = MakeToken< int >( rwELSE, yylineno ); return(rwELSE); }
-"assert"    { CMDlval.i = MakeToken< int >( rwASSERT, yylineno ); return(rwASSERT); }
-"while"     { CMDlval.i = MakeToken< int >( rwWHILE, yylineno ); return(rwWHILE); }
-"do"        { CMDlval.i = MakeToken< int >( rwDO, yylineno ); return(rwDO); }
-"if"        { CMDlval.i = MakeToken< int >( rwIF, yylineno ); return(rwIF); }
-"foreach$"  { CMDlval.i = MakeToken< int >( rwFOREACHSTR, yylineno ); return(rwFOREACHSTR); }
-"foreach"   { CMDlval.i = MakeToken< int >( rwFOREACH, yylineno ); return(rwFOREACH); }
-"for"       { CMDlval.i = MakeToken< int >( rwFOR, yylineno ); return(rwFOR); }
-"continue"  { CMDlval.i = MakeToken< int >( rwCONTINUE, yylineno ); return(rwCONTINUE); }
-"function"  { CMDlval.i = MakeToken< int >( rwDEFINE, yylineno ); return(rwDEFINE); }
-"new"       { CMDlval.i = MakeToken< int >( rwDECLARE, yylineno ); return(rwDECLARE); }
-"singleton" { CMDlval.i = MakeToken< int >( rwDECLARESINGLETON, yylineno ); return(rwDECLARESINGLETON); }
-"datablock" { CMDlval.i = MakeToken< int >( rwDATABLOCK, yylineno ); return(rwDATABLOCK); }
-"case"      { CMDlval.i = MakeToken< int >( rwCASE, yylineno ); return(rwCASE); }
-"switch$"   { CMDlval.i = MakeToken< int >( rwSWITCHSTR, yylineno ); return(rwSWITCHSTR); }
-"switch"    { CMDlval.i = MakeToken< int >( rwSWITCH, yylineno ); return(rwSWITCH); }
-"default"   { CMDlval.i = MakeToken< int >( rwDEFAULT, yylineno ); return(rwDEFAULT); }
-"package"   { CMDlval.i = MakeToken< int >( rwPACKAGE, yylineno ); return(rwPACKAGE); }
-"namespace" { CMDlval.i = MakeToken< int >( rwNAMESPACE, yylineno ); return(rwNAMESPACE); }
-"true"      { CMDlval.i = MakeToken< int >( 1, yylineno ); return INTCONST; }
-"false"     { CMDlval.i = MakeToken< int >( 0, yylineno ); return INTCONST; }
-{VAR}       { return(Sc_ScanVar()); }
+"="   { CMDlval.i = MakeToken<int>(CMDtext[0], yylineno); return CMDtext[0]; }
+%{
+// Reserved words — must be listed before {ID} to take priority.
+// NOTE: "namespace" and "class" are intentionally NOT listed here.
+// rwNAMESPACE and rwCLASS were previously declared as grammar tokens but
+// had no productions that used them and no lexer rules that produced them.
+// They have been removed from the grammar.  The words "namespace" and
+// "class" therefore lex as plain IDENT tokens and can be used as object
+// names or field names in script without causing parse errors.  If you add
+// syntax that consumes those keywords, add both the lexer rule and the
+// grammar token declaration at the same time.
+%}
+"in"        { CMDlval.i = MakeToken<int>(rwIN,               yylineno); return rwIN;               }
+"or"        { CMDlval.i = MakeToken<int>(rwCASEOR,           yylineno); return rwCASEOR;           }
+"break"     { CMDlval.i = MakeToken<int>(rwBREAK,            yylineno); return rwBREAK;            }
+"return"    { CMDlval.i = MakeToken<int>(rwRETURN,           yylineno); return rwRETURN;           }
+"else"      { CMDlval.i = MakeToken<int>(rwELSE,             yylineno); return rwELSE;             }
+"assert"    { CMDlval.i = MakeToken<int>(rwASSERT,           yylineno); return rwASSERT;           }
+"while"     { CMDlval.i = MakeToken<int>(rwWHILE,            yylineno); return rwWHILE;            }
+"do"        { CMDlval.i = MakeToken<int>(rwDO,               yylineno); return rwDO;               }
+"if"        { CMDlval.i = MakeToken<int>(rwIF,               yylineno); return rwIF;               }
+"foreach$"  { CMDlval.i = MakeToken<int>(rwFOREACHSTR,       yylineno); return rwFOREACHSTR;       }
+"foreach"   { CMDlval.i = MakeToken<int>(rwFOREACH,          yylineno); return rwFOREACH;          }
+"for"       { CMDlval.i = MakeToken<int>(rwFOR,              yylineno); return rwFOR;              }
+"continue"  { CMDlval.i = MakeToken<int>(rwCONTINUE,         yylineno); return rwCONTINUE;         }
+"function"  { CMDlval.i = MakeToken<int>(rwDEFINE,           yylineno); return rwDEFINE;           }
+"new"       { CMDlval.i = MakeToken<int>(rwDECLARE,          yylineno); return rwDECLARE;          }
+"singleton" { CMDlval.i = MakeToken<int>(rwDECLARESINGLETON, yylineno); return rwDECLARESINGLETON; }
+"datablock" { CMDlval.i = MakeToken<int>(rwDATABLOCK,        yylineno); return rwDATABLOCK;        }
+"case"      { CMDlval.i = MakeToken<int>(rwCASE,             yylineno); return rwCASE;             }
+"switch$"   { CMDlval.i = MakeToken<int>(rwSWITCHSTR,        yylineno); return rwSWITCHSTR;        }
+"switch"    { CMDlval.i = MakeToken<int>(rwSWITCH,           yylineno); return rwSWITCH;           }
+"default"   { CMDlval.i = MakeToken<int>(rwDEFAULT,          yylineno); return rwDEFAULT;          }
+"package"   { CMDlval.i = MakeToken<int>(rwPACKAGE,          yylineno); return rwPACKAGE;          }
+%{
+// Boolean literals — return INTCONST so the parser treats them as integers.
+%}
+"true"      { CMDlval.i = MakeToken<int>(1, yylineno); return INTCONST; }
+"false"     { CMDlval.i = MakeToken<int>(0, yylineno); return INTCONST; }
 
-{ID}        { return Sc_ScanIdent(); }
-0[xX]{HEXDIGIT}+ return(Sc_ScanHex());
-{INTEGER}   { CMDtext[CMDleng] = 0; CMDlval.i = MakeToken< int >( dAtoi(CMDtext), yylineno ); return INTCONST; }
-{FLOAT}     return Sc_ScanNum();
-{ILID}      return(ILLEGAL_TOKEN);
-.           return(ILLEGAL_TOKEN);
+{VAR}                 { return Sc_ScanVar(); }
+{ID}                  { return Sc_ScanIdent(); }
+0[xX]{HEXDIGIT}+      { return Sc_ScanHex(); }
+{INTEGER}             { CMDtext[CMDleng] = 0;
+                        CMDlval.i = MakeToken<int>(dAtoi(CMDtext), yylineno);
+                        return INTCONST; }
+{FLOAT}               { return Sc_ScanNum(); }
+{ILID}                { return ILLEGAL_TOKEN; }
+.                     { return ILLEGAL_TOKEN; }
 %%
 
 static const char *scanBuffer;
@@ -238,77 +284,74 @@ static const char *fileName;
 static int scanIndex;
 extern YYLTYPE CMDlloc;
 
-const char * CMDGetCurrentFile()
+const char* CMDGetCurrentFile()  { return fileName; }
+int         CMDGetCurrentLine()  { return yylineno; }
+
+void CMDSetScanBuffer(const char* sb, const char* fn)
 {
-   return fileName;
+   scanBuffer              = sb;
+   fileName                = fn;
+   scanIndex               = 0;
+   yylineno                = 1;
+   gCachedLineContextCount = -1;   // re-read $scriptErrorLineCount for each file
+   lines.clear();
 }
 
-int CMDGetCurrentLine()
+int CMDgetc()
 {
-   return yylineno;
+   int c = scanBuffer[scanIndex];
+   if (c)
+      scanIndex++;
+   else
+      c = -1;  // EOF sentinel expected by YY_INPUT
+   return c;
+}
+
+int CMDwrap()
+{
+   return 1;
 }
 
 extern bool gConsoleSyntaxError;
 
-void CMDerror(const char *format, ...)
+void CMDerror(const char* format, ...)
 {
    Compiler::gSyntaxError = true;
 
    const int BUFMAX = 1024;
    char tempBuf[BUFMAX];
    va_list args;
-   va_start( args, format );
+   va_start(args, format);
 #ifdef TORQUE_OS_WIN
-   _vsnprintf( tempBuf, BUFMAX, format, args );
+   _vsnprintf(tempBuf, BUFMAX, format, args);
 #else
-   vsnprintf( tempBuf, BUFMAX, format, args );
+   vsnprintf(tempBuf, BUFMAX, format, args);
 #endif
    va_end(args);
 
-   if(fileName)
+   if (fileName)
    {
-      Con::errorf(ConsoleLogEntry::Script, "%s Line: %d - %s", fileName, yylineno, tempBuf);
-      // Update the script-visible error buffer.
-      const char *prevStr = Con::getVariable("$ScriptError");
+      Con::errorf(ConsoleLogEntry::Script, "%s Line: %d - %s",
+                  fileName, yylineno, tempBuf);
+
+      // Append to the script-visible error string and bump the hash so
+      // listeners know a new error arrived.
+      const char* prevStr = Con::getVariable("$ScriptError");
       if (prevStr[0])
-         dSprintf(tempBuf, sizeof(tempBuf), "%s\n%s Line: %d - Syntax error.", prevStr, fileName, yylineno);
+         dSprintf(tempBuf, sizeof(tempBuf), "%s\n%s Line: %d - Syntax error.",
+                  prevStr, fileName, yylineno);
       else
-         dSprintf(tempBuf, sizeof(tempBuf), "%s Line: %d - Syntax error.", fileName, yylineno);
+         dSprintf(tempBuf, sizeof(tempBuf), "%s Line: %d - Syntax error.",
+                  fileName, yylineno);
       Con::setVariable("$ScriptError", tempBuf);
 
-      // We also need to mark that we came up with a new error.
-      static S32 sScriptErrorHash=1000;
+      static S32 sScriptErrorHash = 1000;
       Con::setIntVariable("$ScriptErrorHash", sScriptErrorHash++);
-
    }
    else
    {
       Con::errorf(ConsoleLogEntry::Script, tempBuf);
    }
-}
-
-void CMDSetScanBuffer(const char *sb, const char *fn)
-{
-   scanBuffer = sb;
-   fileName = fn;
-   scanIndex = 0;
-   yylineno = 1;
-   lines.clear();
-}
-
-int CMDgetc()
-{
-   int ret = scanBuffer[scanIndex];
-   if(ret)
-      scanIndex++;
-   else
-      ret = -1;
-   return ret;
-}
-
-int CMDwrap()
-{
-   return 1;
 }
 
 static int Sc_ScanVar()
@@ -323,63 +366,60 @@ static int Sc_ScanVar()
 
 static int charConv(int in)
 {
-   switch(in)
+   switch (in)
    {
-      case 'r':
-         return '\r';
-      case 'n':
-         return '\n';
-      case 't':
-         return '\t';
-      default:
-         return in;
+   case 'r': return '\r';
+   case 'n': return '\n';
+   case 't': return '\t';
+   default:  return in;
    }
 }
 
 static int getHexDigit(char c)
 {
-   if(c >= '0' && c <= '9')
-      return c - '0';
-   if(c >= 'A' && c <= 'F')
-      return c - 'A' + 10;
-   if(c >= 'a' && c <= 'f')
-      return c - 'a' + 10;
+   if (c >= '0' && c <= '9') return c - '0';
+   if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+   if (c >= 'a' && c <= 'f') return c - 'a' + 10;
    return -1;
 }
 
 static int Sc_ScanDocBlock()
 {
-   S32 len = dStrlen(CMDtext);
-   char* text = (char *) consoleAlloc(len + 1);
-   S32 line = yylineno;
+   S32   len  = dStrlen(CMDtext);
+   char* text = (char*)consoleAlloc(len + 1);
+   S32   line = yylineno;
 
-   for( S32 i = 0, j = 0; j <= len; j++ )
+   for (S32 i = 0, j = 0; j <= len; j++)
    {
-      if( ( j <= (len - 2) ) && ( CMDtext[j] == '/' ) && ( CMDtext[j + 1] == '/' ) && ( CMDtext[j + 2] == '/' ) )
+      // Strip leading '///' on each doc line.
+      if ((j <= (len - 2)) &&
+          CMDtext[j]     == '/' &&
+          CMDtext[j + 1] == '/' &&
+          CMDtext[j + 2] == '/')
       {
          j += 2;
          continue;
       }
-
-      if( CMDtext[j] == '\r' )
-         continue;
-
+      if (CMDtext[j] == '\r') continue;
       text[i++] = CMDtext[j];
    }
 
-   CMDlval.str = MakeToken< char* >( text, line );
-   return(DOCBLOCK);
+   CMDlval.str = MakeToken<char*>(text, line);
+   return DOCBLOCK;
 }
 
 static int Sc_ScanString(int ret)
 {
-   CMDtext[CMDleng - 1] = 0;
-   if(!collapseEscape(CMDtext+1))
-      return -1;
+   // CMDtext arrives as  "content"  or  'content'  (with quotes).
+   // Replace the closing quote with a null terminator so collapseEscape
+   // can work on the interior without seeing the delimiter.
+   CMDtext[CMDleng - 1] = '\0';
+   if (!collapseEscape(CMDtext + 1))
+      return -1; 
 
-   dsize_t bufferLen = dStrlen( CMDtext );
-   char* buffer = ( char* ) consoleAlloc( bufferLen );
-   dStrcpy( buffer, CMDtext + 1, bufferLen );
+   dsize_t allocSize = dStrlen(CMDtext);   // = 1 + content_len  (see above)
+   char*   buffer    = (char*)consoleAlloc(allocSize);
+   dStrcpy(buffer, CMDtext + 1, allocSize);   // skip the opening quote
 
    CMDlval.str = MakeToken< char* >( buffer, yylineno );
    return ret;
@@ -387,20 +427,33 @@ static int Sc_ScanString(int ret)
 
 static int Sc_ScanIdent()
 {
-   ConsoleBaseType *type;
-
    CMDtext[CMDleng] = 0;
 
-   if((type = ConsoleBaseType::getTypeByName(CMDtext)) != NULL)
+   // Check if the identifier is a registered engine type name (e.g. "Point3F").
+   ConsoleBaseType* type = ConsoleBaseType::getTypeByName(CMDtext);
+   if (type)
    {
-      /* It's a type */
-      CMDlval.i = MakeToken< int >( type->getTypeID(), yylineno );
+      CMDlval.i = MakeToken<int>(type->getTypeID(), yylineno);
       return TYPEIDENT;
    }
 
-   /* It's an identifier */
-   CMDlval.s = MakeToken< StringTableEntry >( StringTable->insert(CMDtext), yylineno );
+   CMDlval.s = MakeToken<StringTableEntry>(StringTable->insert(CMDtext), yylineno);
    return IDENT;
+}
+
+static int Sc_ScanNum()
+{
+   CMDtext[CMDleng] = 0;
+   CMDlval.f = MakeToken<double>(dAtof(CMDtext), yylineno);
+   return FLTCONST;
+}
+
+static int Sc_ScanHex()
+{
+   S32 val = 0;
+   dSscanf(CMDtext, "%x", &val);
+   CMDlval.i = MakeToken<int>(val, yylineno);
+   return INTCONST;
 }
 
 void expandEscape(char *dest, const char *src)
@@ -568,21 +621,6 @@ bool collapseEscape(char *buf)
          i++;
    }
    return true;
-}
-
-static int Sc_ScanNum()
-{
-   CMDtext[CMDleng] = 0;
-   CMDlval.f = MakeToken< double >( dAtof(CMDtext), yylineno );
-   return(FLTCONST);
-}
-
-static int Sc_ScanHex()
-{
-   S32 val = 0;
-   dSscanf(CMDtext, "%x", &val);
-   CMDlval.i = MakeToken< int >( val, yylineno );
-   return INTCONST;
 }
 
 void CMD_reset()

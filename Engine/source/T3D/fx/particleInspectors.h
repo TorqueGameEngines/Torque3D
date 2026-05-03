@@ -33,8 +33,10 @@ public:
 
    GuiControl* constructEditControl() override;
    bool updateRects() override;
+   void updateValue() override;
 
    void _populateMenu(GuiPopUpMenuCtrlEx* menu);
    GuiControl* _buildParticleEntryField(const S32& index);
+   void _rebuildParticleEntryList();
 };
 #endif

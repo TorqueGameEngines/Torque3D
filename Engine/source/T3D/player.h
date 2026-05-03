@@ -303,7 +303,7 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
       ActionAnimBits = 9,
       NullAnimation = (1 << ActionAnimBits) - 1
    };
-
+   int mDynamicAnimsStart;
    static ActionAnimationDef ActionAnimationList[NumTableActionAnims];
    ActionAnimation actionList[NumActionAnims];
    U32 actionCount;
@@ -410,9 +410,9 @@ protected:
 
 class Player: public ShapeBase
 {
+public:
    typedef ShapeBase Parent;
 
-public:
    enum Pose {
       StandPose = 0,
       SprintPose,

@@ -120,12 +120,12 @@ typedef const char *StringTableEntry;
 
 enum ConsoleValueType
 {
-   cvNULL = -5,
-   cvInteger = -4,
-   cvFloat = -3,
-   cvString = -2,
-   cvSTEntry = -1,
-   cvConsoleValueType = 0
+   cvNULL =             -5,
+   cvInteger =          -4,
+   cvFloat =            -3,
+   cvString =           -2,   ///< Heap-allocated, owned (dMalloc/dFree)
+   cvSTEntry =          -1,   ///< StringTable pointer, NOT owned
+   cvConsoleValueType =  0    ///< First valid engine console type ID
 };
 
 class ConsoleValue
@@ -148,6 +148,7 @@ public:
          EnumTable* enumTable;
       };
    };
+#pragma warning(pop)
 
    S32 type;
    U32 bufferLen;
@@ -160,7 +161,10 @@ public:
 
    TORQUE_FORCEINLINE void cleanupData()
    {
-      if (type <= cvString && bufferLen > 0)
+      // Only cvString strings are heap-allocated and owned by this value.
+      // cvSTEntry points into the StringTable (managed externally).
+      // Numeric types use the f/i union fields — s is not valid for them.
+      if (type == ConsoleValueType::cvString && bufferLen > 0)
       {
          dFree(s);
          bufferLen = 0;
@@ -176,57 +180,38 @@ public:
       bufferLen = 0;
    }
 
-   ConsoleValue(const ConsoleValue& ref)
+   ConsoleValue(const ConsoleValue& other)
+      : type(ConsoleValueType::cvSTEntry)
+      , bufferLen(0)
    {
-      type = ConsoleValueType::cvSTEntry;
       s = const_cast<char*>(StringTable->EmptyString());
-      bufferLen = 0;
-
-      switch (ref.type)
-      {
-      case cvNULL:
-         std::cout << "Ref already cleared!";
-         break;
-      case cvInteger:
-         setInt(ref.i);
-         break;
-      case cvFloat:
-         setFloat(ref.f);
-         break;
-      case cvSTEntry:
-         setStringTableEntry(ref.s);
-         break;
-      case cvString:
-         setString(ref.s);
-         break;
-      default:
-         setConsoleData(ref.type, ref.dataPtr, ref.enumTable);
-         break;
-      }
+      copyFrom(other);
    }
 
-   ConsoleValue& operator=(const ConsoleValue& ref)
+   /// Move constructor — steals the heap buffer rather than copying it.
+   /// After the move, `other` is left as an empty-string value.
+   ConsoleValue(ConsoleValue&& other) noexcept
+      : type(other.type)
+      , bufferLen(other.bufferLen)
    {
-      switch (ref.type)
+      transferFrom(other);
+   }
+
+   ConsoleValue& operator=(const ConsoleValue& other)
+   {
+      if (this != &other)
+         copyFrom(other);
+      return *this;
+   }
+
+   ConsoleValue& operator=(ConsoleValue&& other) noexcept
+   {
+      if (this != &other)
       {
-      case cvNULL:
-         std::cout << "Ref already cleared!";
-         break;
-      case cvInteger:
-         setInt(ref.i);
-         break;
-      case cvFloat:
-         setFloat(ref.f);
-         break;
-      case cvSTEntry:
-         setStringTableEntry(ref.s);
-         break;
-      case cvString:
-         setString(ref.s);
-         break;
-      default:
-         setConsoleData(ref.type, ref.dataPtr, ref.enumTable);
-         break;
+         cleanupData();
+         type = other.type;
+         bufferLen = other.bufferLen;
+         transferFrom(other);
       }
       return *this;
    }
@@ -243,75 +228,105 @@ public:
 
    TORQUE_FORCEINLINE F64 getFloat() const
    {
-      if (type == ConsoleValueType::cvFloat)
+      switch (type)
+      {
+      case ConsoleValueType::cvFloat:
          return f;
-      if (type == ConsoleValueType::cvInteger)
-         return i;
-      if (type == ConsoleValueType::cvSTEntry)
-         return s == StringTable->EmptyString() ? 0.0f : dAtof(s);
-      if (type == ConsoleValueType::cvString)
-         return dStrcmp(s, "") == 0 ? 0.0f : dAtof(s);
-      return dAtof(getConsoleData());
+      case ConsoleValueType::cvInteger:
+         return static_cast<F64>(i);
+      case ConsoleValueType::cvSTEntry:
+         return (s == StringTable->EmptyString()) ? 0.0 : dAtof(s);
+      case ConsoleValueType::cvString:
+         return (s[0] == '\0') ? 0.0 : dAtof(s);
+      case ConsoleValueType::cvNULL:
+         return 0.0;
+      default:
+         return dAtof(getConsoleData());
+      }
    }
 
    TORQUE_FORCEINLINE S64 getInt() const
    {
-      if (type == ConsoleValueType::cvInteger)
+      switch (type)
+      {
+      case ConsoleValueType::cvInteger:
          return i;
-      if (type == ConsoleValueType::cvFloat)
-         return f;
-      if (type == ConsoleValueType::cvSTEntry)
-         return s == StringTable->EmptyString() ? 0 : dAtoi(s);
-      if (type == ConsoleValueType::cvString)
-         return dStrcmp(s, "") == 0 ? 0 : dAtoi(s);
-
-      return dAtoi(getConsoleData());
-   }
-
-   TORQUE_FORCEINLINE const char* getString() const
-   {
-      if (isStringType())
-         return s;
-      if (isNumberType())
-         return convertToBuffer();
-      return getConsoleData();
-   }
-
-   TORQUE_FORCEINLINE operator const char* () const
-   {
-      return getString();
+      case ConsoleValueType::cvFloat:
+         return static_cast<S64>(f);
+      case ConsoleValueType::cvSTEntry:
+         return (s == StringTable->EmptyString()) ? S64(0) : static_cast<S64>(dAtoi(s));
+      case ConsoleValueType::cvString:
+         return (s[0] == '\0') ? S64(0) : static_cast<S64>(dAtoi(s));
+      case ConsoleValueType::cvNULL:
+         return 0;
+      default:
+         return static_cast<S64>(dAtoi(getConsoleData()));
+      }
    }
 
    TORQUE_FORCEINLINE bool getBool() const
    {
-      if (type == ConsoleValueType::cvInteger)
-         return (bool)i;
-      if (type == ConsoleValueType::cvFloat)
-         return (bool)f;
-      if (type == ConsoleValueType::cvSTEntry)
-         return s == StringTable->EmptyString() ? false : dAtob(s);
-      if (type == ConsoleValueType::cvString)
-         return dStrcmp(s, "") == 0 ? false : dAtob(s);
-      return dAtob(getConsoleData());
+      switch (type)
+      {
+      case ConsoleValueType::cvInteger:
+         return (i != 0);
+      case ConsoleValueType::cvFloat:
+         return (f != 0.0);
+      case ConsoleValueType::cvSTEntry:
+         return (s != StringTable->EmptyString()) && dAtob(s);
+      case ConsoleValueType::cvString:
+         return (s[0] != '\0') && dAtob(s);
+      case ConsoleValueType::cvNULL:
+         return false;
+      default:
+         return dAtob(getConsoleData());
+      }
    }
 
-   TORQUE_FORCEINLINE void setFloat(const F64 val)
+   TORQUE_FORCEINLINE const char* getString() const
+   {
+      switch (type)
+      {
+      case ConsoleValueType::cvSTEntry:
+      case ConsoleValueType::cvString:
+         return s;
+      case ConsoleValueType::cvNULL:
+         return StringTable->EmptyString();
+      case ConsoleValueType::cvFloat:
+      case ConsoleValueType::cvInteger:
+         return convertToBuffer();
+      default:
+         return getConsoleData();
+      }
+   }
+
+   TORQUE_FORCEINLINE operator const char* () const { return getString(); }
+
+   TORQUE_FORCEINLINE void setFloat(F64 val)
    {
       cleanupData();
       type = ConsoleValueType::cvFloat;
       f = val;
+      // bufferLen is already 0 after cleanupData — correct for non-string types
    }
 
-   TORQUE_FORCEINLINE void setInt(const S64 val)
+   TORQUE_FORCEINLINE void setInt(S64 val)
    {
       cleanupData();
       type = ConsoleValueType::cvInteger;
       i = val;
    }
 
+   TORQUE_FORCEINLINE void setBool(bool val)
+   {
+      cleanupData();
+      type = ConsoleValueType::cvInteger;
+      i = val ? S64(1) : S64(0);
+   }
+
    TORQUE_FORCEINLINE void setString(const char* val)
    {
-      setString(val, val != NULL ? dStrlen(val) : 0);
+      setString(val, val ? static_cast<S32>(dStrlen(val)) : 0);
    }
 
    TORQUE_FORCEINLINE void setString(const char* val, S32 len)
@@ -321,67 +336,83 @@ public:
          setEmptyString();
          return;
       }
-
       cleanupData();
-
       type = ConsoleValueType::cvString;
-
-      s = (char*)dMalloc(len + 1);
-
-      bufferLen = len + 1;
+      bufferLen = static_cast<U32>(len) + 1u;   // allocation size, always > 0
+      s = static_cast<char*>(dMalloc(bufferLen));
       s[len] = '\0';
-      dStrcpy(s, val, len + 1);
+      dMemcpy(s, val, static_cast<dsize_t>(len));
    }
 
-   TORQUE_FORCEINLINE void setStringRef(const char* ref, S32 len)
+   /// Transfer ownership of a dMalloc'd buffer to this value.
+   ///
+   /// @param ownedBuf   Buffer allocated with dMalloc.  Must have a null
+   ///                   terminator at ownedBuf[len].  This value will call
+   ///                   dFree(ownedBuf) when it is cleaned up.
+   /// @param len        String length NOT including the null terminator.
+   ///                   If len == 0 the buffer still gets freed correctly
+   ///                   because bufferLen is stored as len+1.
+   TORQUE_FORCEINLINE void setStringOwned(char* ownedBuf, S32 len)
    {
       cleanupData();
       type = ConsoleValueType::cvString;
-      s = (char*)std::move(ref);
-      bufferLen = len;
+      bufferLen = static_cast<U32>(len) + 1;   // always > 0 → cleanupData will free
+      s = ownedBuf;
    }
 
-   TORQUE_FORCEINLINE void setBool(const bool val)
+   /// @deprecated  Use setStringOwned().  Kept so existing call sites compile.
+   ///              The old name "Ref" implied a non-owning borrow, which was
+   ///              the opposite of the actual semantics.
+   TORQUE_FORCEINLINE void setStringRef(const char* ownedBuf, S32 len)
    {
-      cleanupData();
-      type = ConsoleValueType::cvInteger;
-      i = (int)val;
+      setStringOwned(const_cast<char*>(ownedBuf), len);
    }
 
    TORQUE_FORCEINLINE void setStringTableEntry(StringTableEntry val)
    {
       cleanupData();
       type = ConsoleValueType::cvSTEntry;
-      s = (char*)(StringTable->insert(val));
-      bufferLen = 0;
+      // StringTable::insert accepts NULL and returns EmptyString
+      s = const_cast<char*>(StringTable->insert(val ? val : ""));
+      bufferLen = 0;   // NOT owned — StringTable manages this memory
    }
 
    TORQUE_FORCEINLINE void setEmptyString()
    {
-      setStringTableEntry(StringTable->EmptyString());
+      // cleanupData already sets s = EmptyString and type = cvNULL.
+      // We then promote the type to cvSTEntry so queries return a valid
+      // empty string rather than having to special-case cvNULL everywhere.
+      cleanupData();
+      type = ConsoleValueType::cvSTEntry;
    }
 
-   TORQUE_FORCEINLINE void setConsoleData(S32 inConsoleType, void* inDataPtr, const EnumTable* inEnumTable)
+   TORQUE_FORCEINLINE void setConsoleData(S32 inType, void* inDataPtr, const EnumTable* inEnumTable)
    {
       cleanupData();
-      type = inConsoleType;
+      type = inType;
       dataPtr = inDataPtr;
       enumTable = const_cast<EnumTable*>(inEnumTable);
-   };
-
-   TORQUE_FORCEINLINE S32 getType() const
-   {
-      return type;
+      bufferLen = 0;
    }
 
-   TORQUE_FORCEINLINE bool isStringType() const
+   TORQUE_FORCEINLINE void setFastFloat(F64 val) { type = ConsoleValueType::cvFloat;   f = val; }
+   TORQUE_FORCEINLINE F64  getFastFloat()  const { return f; }
+
+   TORQUE_FORCEINLINE void setFastInt(S64 val) { type = ConsoleValueType::cvInteger; i = val; }
+   TORQUE_FORCEINLINE S64  getFastInt()    const { return i; }
+
+   TORQUE_FORCEINLINE S32  getType()       const { return type; }
+
+   TORQUE_FORCEINLINE bool isStringType()  const
    {
-      return type == ConsoleValueType::cvString || type == ConsoleValueType::cvSTEntry;
+      return type == ConsoleValueType::cvString
+         || type == ConsoleValueType::cvSTEntry;
    }
 
-   TORQUE_FORCEINLINE bool isNumberType() const
+   TORQUE_FORCEINLINE bool isNumberType()  const
    {
-      return type == ConsoleValueType::cvFloat || type == ConsoleValueType::cvInteger;
+      return type == ConsoleValueType::cvFloat
+         || type == ConsoleValueType::cvInteger;
    }
 
    TORQUE_FORCEINLINE bool isConsoleType() const
@@ -391,40 +422,89 @@ public:
 
    TORQUE_FORCEINLINE S32 getConsoleType() const
    {
-      if(type >= ConsoleValueType::cvConsoleValueType)
-      {
-         return type;
-      }
-      else
-      {
-         return NULL;
-      }
-   }
-
-   TORQUE_FORCEINLINE void setFastFloat(F64 flt)
-   {
-      type = ConsoleValueType::cvFloat;
-      f = flt;
-   }
-
-   TORQUE_FORCEINLINE F64 getFastFloat() const
-   {
-      return f;
-   }
-
-   TORQUE_FORCEINLINE void setFastInt(S64 flt)
-   {
-      type = ConsoleValueType::cvInteger;
-      i = flt;
-   }
-
-   TORQUE_FORCEINLINE S64 getFastInt() const
-   {
-      return i;
+      return (type >= ConsoleValueType::cvConsoleValueType) ? type : 0;
    }
 
    static void init();
    static void resetConversionBuffer();
+
+private:
+   /// Deep-copy from `other` into `this` (assumes `this` has already been
+  /// cleaned up or is freshly constructed).
+   void copyFrom(const ConsoleValue& other)
+   {
+      switch (other.type)
+      {
+      case ConsoleValueType::cvNULL:
+         // Another value was already cleaned up.  Treat as empty string.
+         // Do NOT assert here — cvNULL is a valid transient state that can
+         // appear e.g. when an entry is moved out of.
+         setEmptyString();
+         break;
+
+      case ConsoleValueType::cvInteger:
+         setInt(other.i);
+         break;
+
+      case ConsoleValueType::cvFloat:
+         setFloat(other.f);
+         break;
+
+      case ConsoleValueType::cvSTEntry:
+         // s already points into StringTable — just share the pointer.
+         setStringTableEntry(other.s);
+         break;
+
+      case ConsoleValueType::cvString:
+      {
+         // bufferLen == allocation size (len+1), so string length == bufferLen-1.
+         // Guard defensively: if somehow bufferLen is 0 (pre-fix bug state),
+         // fall back to dStrlen.
+         S32 strLen = (other.bufferLen > 0)
+            ? static_cast<S32>(other.bufferLen) - 1
+            : static_cast<S32>(dStrlen(other.s));
+         setString(other.s, strLen);
+         break;
+      }
+
+      default:
+         setConsoleData(other.type, other.dataPtr, other.enumTable);
+         break;
+      }
+   }
+
+   /// Steal the payload from `other` (which must already have its type and
+   /// bufferLen copied into `this`), then leave `other` in a safe empty state.
+   /// Called only from move constructor / move assignment after copying type.
+   TORQUE_FORCEINLINE void transferFrom(ConsoleValue& other) noexcept
+   {
+      // Copy the right union field based on the type we already copied.
+      switch (type)
+      {
+      case ConsoleValueType::cvFloat:
+         f = other.f;
+         break;
+      case ConsoleValueType::cvInteger:
+         i = other.i;
+         break;
+      case ConsoleValueType::cvString:
+      case ConsoleValueType::cvSTEntry:
+      case ConsoleValueType::cvNULL:
+         s = other.s;
+         break;
+      default:
+         dataPtr = other.dataPtr;
+         enumTable = other.enumTable;
+         break;
+      }
+
+      // Leave `other` as a valid empty-string value.
+      // Critically: if we stole a cvString buffer, other must NOT keep a
+      // non-zero bufferLen, or its destructor will double-free.
+      other.s = const_cast<char*>(StringTable->EmptyString());
+      other.type = ConsoleValueType::cvSTEntry;
+      other.bufferLen = 0;
+   }
 };
 
 // Transparently converts ConsoleValue[] to const char**

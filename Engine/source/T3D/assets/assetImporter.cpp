@@ -238,6 +238,11 @@ void AssetImportConfig::initPersistFields()
 
 void AssetImportConfig::loadImportConfig(Settings* configSettings, String configName)
 {
+   if (!configSettings)
+   {
+      Con::errorf("AssetImportConfig::loadImportConfig - No config settings!");
+      return;
+   }
    //General
    DuplicateAutoResolution = configSettings->value(String(configName + "/General/DuplicateAutoResolution").c_str());
    WarningsAsErrors = dAtob(configSettings->value(String(configName + "/General/WarningsAsErrors").c_str()));

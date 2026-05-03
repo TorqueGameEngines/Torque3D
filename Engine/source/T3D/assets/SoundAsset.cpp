@@ -225,128 +225,143 @@ void SoundAsset::initPersistFields()
    docsURL;
    // Call parent.
    Parent::initPersistFields();
-   addGroup("SoundSlots");
-   addArray("slots", SFXPlayList::SFXPlaylistSettings::NUM_SLOTS);
-   addProtectedField("soundFile", TypeAssetLooseFilePath, Offset(mSoundFile, SoundAsset),
-      &_setSoundFile, &defaultProtectedGetFn, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS, "Path to the sound file.");
+   GROUP("SoundSlots")
+   { 
+      ARRAY_BEGIN("slots", SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+         .showWhen(&slotVisible);
 
-   addField("replay", TYPEID< SFXPlayList::EReplayMode >(), Offset(mPlaylist.mSlots.mReplayMode, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Behavior when an already playing sound is encountered on this slot from a previous cycle.\n"
-      "Each slot can have an arbitrary number of sounds playing on it from previous cycles.  This field determines "
-      "how SFXController will handle these sources.");
-   addField("transitionIn", TYPEID< SFXPlayList::ETransitionMode >(), Offset(mPlaylist.mSlots.mTransitionIn, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Behavior when moving into this slot.\n"
-      "After the delayIn time has expired (if any), this slot determines what the controller "
-      "will do before actually playing the slot.");
-   addField("transitionOut", TYPEID< SFXPlayList::ETransitionMode >(), Offset(mPlaylist.mSlots.mTransitionOut, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Behavior when moving out of this slot.\n"
-      "After the #detailTimeOut has expired (if any), this slot determines what the controller "
-      "will do before moving on to the next slot.");
-   addFieldV("delayTimeIn", TypeRangedF32, Offset(mPlaylist.mSlots.mDelayTimeIn.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Seconds to wait after moving into slot before #transitionIn.");
-   addField("delayTimeInVariance", TypePoint2F, Offset(mPlaylist.mSlots.mDelayTimeIn.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Bounds on randomization of #delayTimeIn.\n\n"
-      "@ref SFXPlayList_randomization\n");
-   addFieldV("delayTimeOut", TypeRangedF32, Offset(mPlaylist.mSlots.mDelayTimeOut.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Seconds to wait before moving out of slot after #transitionOut.");
-   addField("delayTimeOutVariance", TypePoint2F, Offset(mPlaylist.mSlots.mDelayTimeOut.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Bounds on randomization of #delayTimeOut.\n\n"
-      "@ref SFXPlayList_randomization\n");
-   addFieldV("fadeTimeIn", TypeRangedF32, Offset(mPlaylist.mSlots.mFadeTimeIn.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Seconds to fade sound in (-1 to use the track's own fadeInTime.)\n"
-      "@see SFXDescription::fadeTimeIn");
-   addField("fadeTimeInVariance", TypePoint2F, Offset(mPlaylist.mSlots.mFadeTimeIn.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Bounds on randomization of #fadeInTime.\n\n"
-      "@ref SFXPlayList_randomization\n");
-   addFieldV("fadeTimeOut", TypeRangedF32, Offset(mPlaylist.mSlots.mFadeTimeOut.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Seconds to fade sound out (-1 to use the track's own fadeOutTime.)\n"
-      "@see SFXDescription::fadeTimeOut");
-   addField("fadeTimeOutVariance", TypePoint2F, Offset(mPlaylist.mSlots.mFadeTimeOut.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Bounds on randomization of #fadeOutTime\n\n"
-      "@ref SFXPlayList_randomization\n");
-   addFieldV("referenceDistance", TypeRangedF32, Offset(mPlaylist.mSlots.mMinDistance.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "@c referenceDistance to set for 3D sounds in this slot (<1 to use @c referenceDistance of track's own description).\n"
-      "@see SFXDescription::referenceDistance");
-   addField("referenceDistanceVariance", TypePoint2F, Offset(mPlaylist.mSlots.mMinDistance.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Bounds on randomization of #referenceDistance.\n\n"
-      "@ref SFXPlayList_randomization\n");
-   addFieldV("maxSlotDistance", TypeRangedF32, Offset(mPlaylist.mSlots.mMaxDistance.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "@c maxDistance to apply to 3D sounds in this slot (<1 to use @c maxDistance of track's own description).\n"
-      "@see SFXDescription::maxDistance");
-   addField("maxSlotDistanceVariance", TypePoint2F, Offset(mPlaylist.mSlots.mMaxDistance.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Bounds on randomization of #maxDistance.\n\n"
-      "@ref SFXPlayList_randomization\n");
-   addFieldV("volumeScale", TypeRangedF32, Offset(mPlaylist.mSlots.mVolumeScale.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Scale factor to apply to volume of sounds played on this list slot.\n"
-      "This value will scale the actual volume level set on the track assigned to the slot, i.e. a value of 0.5 will "
-      "cause the track to play at half-volume.");
-   addField("volumeScaleVariance", TypePoint2F, Offset(mPlaylist.mSlots.mVolumeScale.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Bounds on randomization of #volumeScale.\n\n"
-      "@ref SFXPlayList_randomization\n");
-   addFieldV("pitchScale", TypeRangedF32, Offset(mPlaylist.mSlots.mPitchScale.mValue, SoundAsset), &CommonValidators::PositiveFloat, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Scale factor to apply to pitch of sounds played on this list slot.\n"
-      "This value will scale the actual pitch set on the track assigned to the slot, i.e. a value of 0.5 will "
-      "cause the track to play at half its assigned speed.");
-   addField("pitchScaleVariance", TypePoint2F, Offset(mPlaylist.mSlots.mPitchScale.mVariance, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Bounds on randomization of #pitchScale.\n\n"
-      "@ref SFXPlayList_randomization\n");
-   addFieldV("repeatCount", TypeRangedS32, Offset(mPlaylist.mSlots.mRepeatCount, SoundAsset), &CommonValidators::PositiveInt, SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Number of times to loop this slot.");
-   addField("state", TypeSFXStateName, Offset(mPlaylist.mSlots.mState, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "State that must be active for this slot to play.\n\n"
-      "@ref SFXPlayList_states");
-   addField("stateMode", TYPEID< SFXPlayList::EStateMode >(), Offset(mPlaylist.mSlots.mStateMode, SoundAsset), SFXPlayList::SFXPlaylistSettings::NUM_SLOTS,
-      "Behavior when assigned state is deactivated while slot is playing.\n\n"
-      "@ref SFXPlayList_states");
-   endArray("slots");
-   endGroup("SoundSlots");
+         ADD_FIELD("soundFile", TypeAssetLooseFilePath, Offset(mSoundFile, SoundAsset))
+            .doc("Path to the sound file.")
+            .elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .onSet(&_setSoundFile);
 
-   addGroup("General Profile");
-   addFieldV("pitchAdjust", TypeRangedF32, Offset(mProfileDesc.mPitch, SoundAsset), &CommonValidators::PositiveFloat, "Adjustment of the pitch value 1 is default.");
-   addFieldV("volumeAdjust", TypeRangedF32, Offset(mProfileDesc.mVolume, SoundAsset), &CommonValidators::PositiveFloat, "Adjustment to the volume.");
-   addField("is3D", TypeBool, Offset(mProfileDesc.mIs3D, SoundAsset), "Set this sound to 3D.");
-   addField("isLooping", TypeBool, Offset(mProfileDesc.mIsLooping, SoundAsset), "Does this sound loop.");
-   // if streaming, a default packet size should be chosen for all sounds.
-   addField("isStreaming", TypeBool, Offset(mProfileDesc.mIsStreaming, SoundAsset), "Use streaming.");
-   //....why?
-   addFieldV("priority", TypeRangedF32, Offset(mProfileDesc.mPriority, SoundAsset), &CommonValidators::PositiveFloat, "Priority level for virtualization of sounds (1 = base level).\n"
-      "When there are more concurrently active sounds than supported by the audio mixer, some of the sounds "
-      "need to be culled.  Which sounds are culled first depends primarily on total audibility of individual sounds. "
-      "However, the priority of invidual sounds may be decreased or decreased through this field.\n\n"
-      "@ref SFXSound_virtualization");
-   addField("parameters", TypeSFXParameterName, Offset(mProfileDesc.mParameters, SoundAsset), SFXDescription::MaxNumParameters,
-      "Names of the parameters to which sources using this description will automatically be linked.\n\n"
-      "Individual parameters are identified by their #internalName.\n\n"
-      "@ref SFX_interactive");
-   addField("useHardware", TypeBool, Offset(mProfileDesc.mUseHardware, SoundAsset), "Use hardware mixing for this sound.");
-   addField("sourceGroup", TypeSFXSourceName, Offset(mProfileDesc.mSourceGroup, SoundAsset), "Group that sources playing with this description should be put into.");
-   addField("preload", TypeBool, Offset(mPreload, SoundAsset), "Whether to preload sound data when the profile is added to system.");
-   endGroup("General Profile");
+         ADD_FIELD("replay", TYPEID< SFXPlayList::EReplayMode >(), Offset(mPlaylist.mSlots.mReplayMode, SoundAsset))
+            .doc("Behavior when an already playing sound is encountered on this slot from a previous cycle.\n"
+            "Each slot can have an arbitrary number of sounds playing on it from previous cycles.  This field determines "
+            "how SFXController will handle these sources.")
+            .elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS);
 
-   addGroup("Fading");
-   addFieldV("fadeInTime", TypeRangedF32, Offset(mProfileDesc.mFadeInTime, SoundAsset), &CommonValidators::PositiveFloat, "Number of seconds to gradually fade in volume from zero when playback starts.");
-   addFieldV("fadeOutTime", TypeRangedF32, Offset(mProfileDesc.mFadeOutTime, SoundAsset), &CommonValidators::PositiveFloat, "Number of seconds to gradually fade out volume down to zero when playback is stopped or paused.");
-   addField("fadeInEase", TypeEaseF, Offset(mProfileDesc.mFadeInEase, SoundAsset), "Easing curve for fade-in transition.");
-   addField("fadeOutEase", TypeEaseF, Offset(mProfileDesc.mFadeOutEase, SoundAsset), "Easing curve for fade-out transition.");
-   addField("fadeLoops", TypeBool, Offset(mProfileDesc.mFadeLoops, SoundAsset), "Fade each cycle of a loop in and/or out; otherwise only fade-in first cycle.");
-   endGroup("Fading");
+         ADD_FIELD("transitionIn", TYPEID< SFXPlayList::ETransitionMode >(), Offset(mPlaylist.mSlots.mTransitionIn, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Behavior when moving into this slot.\n"
+            "After the delayIn time has expired (if any), this slot determines what the controller "
+            "will do before actually playing the slot.");
+         ADD_FIELD("transitionOut", TYPEID< SFXPlayList::ETransitionMode >(), Offset(mPlaylist.mSlots.mTransitionOut, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Behavior when moving out of this slot.\n"
+            "After the #detailTimeOut has expired (if any), this slot determines what the controller "
+            "will do before moving on to the next slot.");
+         ADD_FIELD("delayTimeIn", TypeRangedF32, Offset(mPlaylist.mSlots.mDelayTimeIn.mValue, SoundAsset)).validate(&CommonValidators::PositiveFloat).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Seconds to wait after moving into slot before #transitionIn.");
+         ADD_FIELD("delayTimeInVariance", TypePoint2F, Offset(mPlaylist.mSlots.mDelayTimeIn.mVariance, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Bounds on randomization of #delayTimeIn.\n\n"
+            "@ref SFXPlayList_randomization\n");
+         ADD_FIELD("delayTimeOut", TypeRangedF32, Offset(mPlaylist.mSlots.mDelayTimeOut.mValue, SoundAsset)).validate(&CommonValidators::PositiveFloat).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Seconds to wait before moving out of slot after #transitionOut.");
+         ADD_FIELD("delayTimeOutVariance", TypePoint2F, Offset(mPlaylist.mSlots.mDelayTimeOut.mVariance, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Bounds on randomization of #delayTimeOut.\n\n"
+            "@ref SFXPlayList_randomization\n");
+         ADD_FIELD("fadeTimeIn", TypeRangedF32, Offset(mPlaylist.mSlots.mFadeTimeIn.mValue, SoundAsset)).validate(&CommonValidators::PositiveFloat).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Seconds to fade sound in (-1 to use the track's own fadeInTime.)\n"
+            "@see SFXDescription::fadeTimeIn");
+         ADD_FIELD("fadeTimeInVariance", TypePoint2F, Offset(mPlaylist.mSlots.mFadeTimeIn.mVariance, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Bounds on randomization of #fadeInTime.\n\n"
+            "@ref SFXPlayList_randomization\n");
+         ADD_FIELD("fadeTimeOut", TypeRangedF32, Offset(mPlaylist.mSlots.mFadeTimeOut.mValue, SoundAsset)).validate(&CommonValidators::PositiveFloat).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Seconds to fade sound out (-1 to use the track's own fadeOutTime.)\n"
+            "@see SFXDescription::fadeTimeOut");
+         ADD_FIELD("fadeTimeOutVariance", TypePoint2F, Offset(mPlaylist.mSlots.mFadeTimeOut.mVariance, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Bounds on randomization of #fadeOutTime\n\n"
+            "@ref SFXPlayList_randomization\n");
+         ADD_FIELD("referenceDistance", TypeRangedF32, Offset(mPlaylist.mSlots.mMinDistance.mValue, SoundAsset)).validate(&CommonValidators::PositiveFloat).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("@c referenceDistance to set for 3D sounds in this slot (<1 to use @c referenceDistance of track's own description).\n"
+            "@see SFXDescription::referenceDistance");
+         ADD_FIELD("referenceDistanceVariance", TypePoint2F, Offset(mPlaylist.mSlots.mMinDistance.mVariance, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Bounds on randomization of #referenceDistance.\n\n"
+            "@ref SFXPlayList_randomization\n");
+         ADD_FIELD("maxSlotDistance", TypeRangedF32, Offset(mPlaylist.mSlots.mMaxDistance.mValue, SoundAsset)).validate(&CommonValidators::PositiveFloat).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("@c maxDistance to apply to 3D sounds in this slot (<1 to use @c maxDistance of track's own description).\n"
+            "@see SFXDescription::maxDistance");
+         ADD_FIELD("maxSlotDistanceVariance", TypePoint2F, Offset(mPlaylist.mSlots.mMaxDistance.mVariance, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Bounds on randomization of #maxDistance.\n\n"
+            "@ref SFXPlayList_randomization\n");
+         ADD_FIELD("volumeScale", TypeRangedF32, Offset(mPlaylist.mSlots.mVolumeScale.mValue, SoundAsset)).validate(&CommonValidators::PositiveFloat).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Scale factor to apply to volume of sounds played on this list slot.\n"
+            "This value will scale the actual volume level set on the track assigned to the slot, i.e. a value of 0.5 will "
+            "cause the track to play at half-volume.");
+         ADD_FIELD("volumeScaleVariance", TypePoint2F, Offset(mPlaylist.mSlots.mVolumeScale.mVariance, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Bounds on randomization of #volumeScale.\n\n"
+            "@ref SFXPlayList_randomization\n");
+         ADD_FIELD("pitchScale", TypeRangedF32, Offset(mPlaylist.mSlots.mPitchScale.mValue, SoundAsset)).validate(&CommonValidators::PositiveFloat).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Scale factor to apply to pitch of sounds played on this list slot.\n"
+            "This value will scale the actual pitch set on the track assigned to the slot, i.e. a value of 0.5 will "
+            "cause the track to play at half its assigned speed.");
+         ADD_FIELD("pitchScaleVariance", TypePoint2F, Offset(mPlaylist.mSlots.mPitchScale.mVariance, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Bounds on randomization of #pitchScale.\n\n"
+            "@ref SFXPlayList_randomization\n");
+         ADD_FIELD("repeatCount", TypeRangedS32, Offset(mPlaylist.mSlots.mRepeatCount, SoundAsset)).validate(&CommonValidators::PositiveInt).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Number of times to loop this slot.");
+         ADD_FIELD("state", TypeSFXStateName, Offset(mPlaylist.mSlots.mState, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("State that must be active for this slot to play.\n\n"
+            "@ref SFXPlayList_states");
+         ADD_FIELD("stateMode", TYPEID< SFXPlayList::EStateMode >(), Offset(mPlaylist.mSlots.mStateMode, SoundAsset)).elements(SFXPlayList::SFXPlaylistSettings::NUM_SLOTS)
+            .doc("Behavior when assigned state is deactivated while slot is playing.\n\n"
+            "@ref SFXPlayList_states");
 
-   addGroup("3D");
-   addFieldV("minDistance", TypeRangedF32, Offset(mProfileDesc.mMinDistance, SoundAsset), &CommonValidators::PositiveFloat, "Minimum distance for sound.");
-   addFieldV("maxDistance", TypeRangedF32, Offset(mProfileDesc.mMaxDistance, SoundAsset), &CommonValidators::PositiveFloat, "Max distance for sound.");
-   addFieldV("coneInsideAngle", TypeRangedS32, Offset(mProfileDesc.mConeInsideAngle, SoundAsset), &CommonValidators::S32_PosDegreeRange, "Cone inside angle.");
-   addFieldV("coneOutsideAngle", TypeRangedS32, Offset(mProfileDesc.mConeOutsideAngle, SoundAsset), &CommonValidators::S32_PosDegreeRange, "Cone outside angle.");
-   addFieldV("coneOutsideVolume", TypeRangedF32, Offset(mProfileDesc.mConeOutsideVolume, SoundAsset), &CommonValidators::NormalizedFloat, "Cone outside volume.");
-   addFieldV("rolloffFactor", TypeRangedF32, Offset(mProfileDesc.mRolloffFactor, SoundAsset), &CommonValidators::NegDefaultF32, "Rolloff factor.");
-   addField("scatterDistance", TypePoint3F, Offset(mProfileDesc.mScatterDistance, SoundAsset), "Randomization to the spacial position of the sound.");
-   endGroup("3D");
+      ARRAY_END("slots");
+   }
 
-   addGroup("Playlist settings");
-   addField("random", TYPEID< SFXPlayList::ERandomMode >(), Offset(mPlaylist.mRandomMode, SoundAsset), "Slot playback order randomization pattern.");
-   addField("loopMode", TYPEID< SFXPlayList::ELoopMode >(), Offset(mPlaylist.mLoopMode, SoundAsset), "Behavior when description has looping enabled.");
-   addFieldV("numSlotsToPlay", TypeRangedS32, Offset(mPlaylist.mNumSlotsToPlay, SoundAsset), &playlistSlotRange, "Number of slots to play.");
-   addField("trace", TypeBool, Offset(mPlaylist.mTrace, SoundAsset), "Enable/disable execution tracing for this playlist (local only).");
-   endGroup("Playlist settings");
+   GROUP("General Profile")
+   {
+      ADD_FIELD("pitchAdjust", TypeRangedF32, Offset(mProfileDesc.mPitch, SoundAsset))
+         .doc("Adjustment of the pitch value 1 is default.")
+         .validate(&CommonValidators::PositiveFloat);
+
+      ADD_FIELD("volumeAdjust", TypeRangedF32, Offset(mProfileDesc.mVolume, SoundAsset))
+         .doc("Adjustment to the volume.")
+         .validate(&CommonValidators::PositiveFloat);
+
+      ADD_FIELD("is3D", TypeBool, Offset(mProfileDesc.mIs3D, SoundAsset)).doc("Set this sound to 3D.");
+      ADD_FIELD("isLooping", TypeBool, Offset(mProfileDesc.mIsLooping, SoundAsset)).doc("Does this sound loop.");
+      // if streaming, a default packet size should be chosen for all sounds.
+      ADD_FIELD("isStreaming", TypeBool, Offset(mProfileDesc.mIsStreaming, SoundAsset)).doc("Use streaming.");
+      //....why?
+      ADD_FIELD("useHardware", TypeBool, Offset(mProfileDesc.mUseHardware, SoundAsset)).doc("Use hardware mixing for this sound.");
+      ADD_FIELD("sourceGroup", TypeSFXSourceName, Offset(mProfileDesc.mSourceGroup, SoundAsset)).doc("Group that sources playing with this description should be put into.");
+      ADD_FIELD("preload", TypeBool, Offset(mPreload, SoundAsset)).doc("Whether to preload sound data when the profile is added to system.");
+   }
+
+   GROUP("Fading")
+   {
+      ADD_FIELD("fadeInTime", TypeRangedF32, Offset(mProfileDesc.mFadeInTime, SoundAsset))
+         .validate(&CommonValidators::PositiveFloat)
+         .doc("Number of seconds to gradually fade in volume from zero when playback starts.");
+
+      ADD_FIELD("fadeOutTime", TypeRangedF32, Offset(mProfileDesc.mFadeOutTime, SoundAsset))
+         .validate(&CommonValidators::PositiveFloat)
+         .doc("Number of seconds to gradually fade out volume down to zero when playback is stopped or paused.");
+
+      ADD_FIELD("fadeInEase", TypeEaseF, Offset(mProfileDesc.mFadeInEase, SoundAsset)).doc("Easing curve for fade-in transition.");
+      ADD_FIELD("fadeOutEase", TypeEaseF, Offset(mProfileDesc.mFadeOutEase, SoundAsset)).doc("Easing curve for fade-out transition.");
+      ADD_FIELD("fadeLoops", TypeBool, Offset(mProfileDesc.mFadeLoops, SoundAsset)).doc("Fade each cycle of a loop in and/or out; otherwise only fade-in first cycle.");
+   }
+
+   GROUP("3D")
+   {
+      ADD_FIELD("minDistance", TypeRangedF32, Offset(mProfileDesc.mMinDistance, SoundAsset)).validate(&CommonValidators::PositiveFloat).doc("Minimum distance for sound.");
+      ADD_FIELD("maxDistance", TypeRangedF32, Offset(mProfileDesc.mMaxDistance, SoundAsset)).validate(&CommonValidators::PositiveFloat).doc("Max distance for sound.");
+      ADD_FIELD("coneInsideAngle", TypeRangedS32, Offset(mProfileDesc.mConeInsideAngle, SoundAsset)).validate(&CommonValidators::S32_PosDegreeRange).doc("Cone inside angle.");
+      ADD_FIELD("coneOutsideAngle", TypeRangedS32, Offset(mProfileDesc.mConeOutsideAngle, SoundAsset)).validate(&CommonValidators::S32_PosDegreeRange).doc("Cone outside angle.");
+      ADD_FIELD("coneOutsideVolume", TypeRangedF32, Offset(mProfileDesc.mConeOutsideVolume, SoundAsset)).validate(&CommonValidators::NormalizedFloat).doc("Cone outside volume.");
+      ADD_FIELD("rolloffFactor", TypeRangedF32, Offset(mProfileDesc.mRolloffFactor, SoundAsset)).validate(&CommonValidators::NegDefaultF32).doc("Rolloff factor.");
+      ADD_FIELD("scatterDistance", TypePoint3F, Offset(mProfileDesc.mScatterDistance, SoundAsset)).doc("Randomization to the spacial position of the sound.");
+   }
+
+   GROUP("Playlist settings")
+   {
+      ADD_FIELD("random", TYPEID< SFXPlayList::ERandomMode >(), Offset(mPlaylist.mRandomMode, SoundAsset)).doc("Slot playback order randomization pattern.");
+      ADD_FIELD("loopMode", TYPEID< SFXPlayList::ELoopMode >(), Offset(mPlaylist.mLoopMode, SoundAsset)).doc("Behavior when description has looping enabled.");
+      ADD_FIELD("numSlotsToPlay", TypeRangedS32, Offset(mPlaylist.mNumSlotsToPlay, SoundAsset)).validate(&playlistSlotRange).doc("Number of slots to play.");
+      ADD_FIELD("trace", TypeBool, Offset(mPlaylist.mTrace, SoundAsset)).doc("Enable/disable execution tracing for this playlist (local only).");
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -441,6 +456,36 @@ U32 SoundAsset::load()
 
    mLoadedState = Ok;
    return mLoadedState;
+}
+
+bool SoundAsset::_setSoundFile(void* object, const char* index, const char* data)
+{
+   SoundAsset* pData = static_cast<SoundAsset*>(object);
+
+   U32 id = 0;
+   if (index)
+      id = dAtoui(index);
+
+   // Update.
+   pData->mSoundFile[id] = StringTable->insert(data, true);
+   if (pData->mSoundFile[id] == StringTable->EmptyString())
+      pData->mSoundPath[id] = StringTable->EmptyString();
+
+   // Refresh the asset.
+   pData->refreshAsset();
+   return true;
+}
+
+bool SoundAsset::slotVisible(void* object, const char* index)
+{
+   S32 idx = index ? dAtoi(index) : 0;
+   if (idx == 0) return true;
+
+   SoundAsset* sa = static_cast<SoundAsset*>(object);
+   if (!sa)
+      return false;
+
+   return sa->mSoundFile[idx - 1] != NULL && sa->mSoundFile[idx - 1][0] != '\0';
 }
 
 StringTableEntry SoundAsset::getAssetIdByFileName(StringTableEntry fileName)

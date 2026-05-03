@@ -164,6 +164,7 @@ class GuiInspectorField : public GuiControl
       
       ///
       StringTableEntry getArrayIndex() const { return mFieldArrayIndex; }
+      AbstractClassRep::Field* getField() const { return mField; }
 
       /// Called from within setData to allow child classes
       /// to perform their own verification.

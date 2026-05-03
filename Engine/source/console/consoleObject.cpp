@@ -356,6 +356,72 @@ static char* suppressSpaces(const char* in_pname)
    return replacebuf;
 }
 
+void ConsoleObject::registerField(const char* name, U32 type, dsize_t offset, const FieldDescriptor& desc)
+{
+   AbstractClassRep::Field f;
+   // Remove spaces.
+   
+   const bool isCollection = desc.isArrayBegin || desc.isArrayEnd || desc.isGroupBegin || desc.isGroupEnd;
+   if (isCollection)
+   {
+      char* pFieldNameBuf = suppressSpaces(name);
+      if (desc.isGroupBegin)
+      {
+         // Append group begin type to fieldname.
+         dStrcat(pFieldNameBuf, "_begingroup", 1024);
+         f.type = AbstractClassRep::StartGroupFieldType;
+      }
+
+      if (desc.isGroupEnd)
+      {
+         // Append group end type to fieldname.
+         dStrcat(pFieldNameBuf, "_endgroup", 1024);
+         f.type = AbstractClassRep::EndGroupFieldType;
+      }
+
+      if (desc.isArrayBegin)
+      {
+         // Append array type to fieldname.
+         dStrcat(pFieldNameBuf, "_beginarray", 1024);
+         f.type = AbstractClassRep::StartArrayFieldType;
+      }
+
+      if (desc.isArrayEnd)
+      {
+         // Append array end type to fieldname.
+         dStrcat(pFieldNameBuf, "_endarray", 1024);
+         f.type = AbstractClassRep::EndArrayFieldType;
+      }
+
+      f.pFieldname = StringTable->insert(pFieldNameBuf);
+      f.pGroupname = StringTable->insert(name);
+   }
+   else
+   {
+      ConsoleBaseType* conType = ConsoleBaseType::getType(desc._type);
+      AssertFatal(conType, avar("ConsoleObject::addProtectedField[%s] - invalid console type", name));
+      f.pFieldname = StringTable->insert(name);
+      f.type = desc._type;
+      f.table = conType->getEnumTable();
+   }
+
+   if (desc.docs)
+      f.pFieldDocs = desc.docs;
+
+   f.offset       = desc._offset;
+   f.validator    = desc.validator;
+   f.setDataFn    = desc.setFn;
+   f.getDataFn    = desc.getFn;
+   f.writeDataFn  = desc.writeFn;
+   f.visibilityFn = desc.visibilityFn;
+   f.elementCount = desc.elementCount;
+   f.groupExpand  = desc.isExpanded;
+   f.networkMask  = desc.networkMask;
+   f.flag         = desc.flags;
+
+   sg_tempFieldList.push_back(f);
+}
+
 void ConsoleObject::addGroup(const char* in_pGroupname, const char* in_pGroupDocs)
 {
    // Remove spaces.
@@ -1130,3 +1196,23 @@ DefineEngineFunction(linkNamespaces, bool, ( String childNSName, String parentNS
    return true;
 }
 
+FieldDescriptor::~FieldDescriptor()
+{
+   if (!_active)
+      return;
+
+   if (_name == NULL || _name[0] == '\0')
+      return;
+
+   _active = false;
+
+   // if we are a collection, sanitize some properties.
+   if (isGroupBegin || isGroupEnd || isArrayBegin || isArrayEnd)
+   {
+      elementCount = isArrayBegin ? elementCount : 0;
+      validator = NULL;
+      networkMask = 0;
+   }
+
+   ConsoleObject::registerField(_name, _type, _offset, *this);
+}

@@ -785,6 +785,59 @@ void GuiInspector::refresh()
 
 //-----------------------------------------------------------------------------
 
+void GuiInspector::updateVisibility()
+{
+	const U32 numTargets = getNumInspectObjects();
+
+	for (U32 i = 0; i < numTargets; i++)
+	{
+
+		SimObject* target = getInspectObject(i);
+		if (!target) return;
+
+		for (GuiInspectorGroup* group : mGroups)
+		{
+			const AbstractClassRep::Field* g = target->findField(group->getGroupName().c_str());
+
+			// if group has its own visibility function let it control it.
+			bool group_visible = (!g || !g->visibilityFn) ? true : g->visibilityFn(target, "0");
+			if (!group_visible)
+			{
+				group->setVisible(group_visible);
+				return;
+			}
+
+			bool anyVisible = false;
+			for (GuiInspectorField* field : group->mChildren)
+			{
+				const AbstractClassRep::Field* f = field->getField();
+				StringTableEntry idx = field->getArrayIndex();
+				bool visible = (!f || !f->visibilityFn) ? true : f->visibilityFn(target, idx);
+
+				field->setVisible(visible);
+				if (visible)
+					anyVisible = true;
+			}
+
+			// Per-array-element rollout visibility
+			for (GuiInspectorGroup::ArrayElementEntry& elem : group->mArrayElements)
+			{
+				bool visible = false;
+				if (!elem.arrayField || !elem.arrayField->visibilityFn || elem.elementIndex == 0)
+					visible = true;
+
+				if (!visible)
+					visible = elem.arrayField->visibilityFn(target, String::ToString(elem.elementIndex));
+
+				elem.rollout->setVisible(visible);
+				if (visible) anyVisible = true;
+			}
+
+			group->setVisible(anyVisible);
+		}
+	}
+}
+
 void GuiInspector::sendInspectPreApply()
 {
    const U32 numObjects = getNumInspectObjects();

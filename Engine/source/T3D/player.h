@@ -631,7 +631,8 @@ protected:
    F32 _doCollisionImpact( const Collision *collision, bool fallingCollision);
    void _handleCollision( const Collision &collision );
    virtual bool updatePos(const F32 travelTime = TickSec);
-
+   Box3F getOBB(const Point3F& worldCenter) const;
+   void _renderOBB(ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance*);
    // PATHSHAPE
    virtual void updateAttachment();
    // PATHSHAPE END

@@ -62,6 +62,7 @@
 #include "materials/baseMatInstance.h"
 #include "math/mathUtils.h"
 #include "gfx/sim/debugDraw.h"
+#include "gfx/gfxDrawUtil.h"
 
 #ifdef TORQUE_EXTENDED_MOVE
    #include "T3D/gameBase/extended/extendedMove.h"
@@ -3271,9 +3272,7 @@ bool Player::checkDismountPosition(const MatrixF& oldMat, const MatrixF& mat)
       return false;
    }
 
-   Box3F wBox = mObjBox;
-   wBox.minExtents += pos;
-   wBox.maxExtents += pos;
+   Box3F wBox = getOBB(pos);
 
    EarlyOutPolyList polyList;
    polyList.mNormal.set(0.0f, 0.0f, 0.0f);
@@ -4649,10 +4648,8 @@ void Player::updateAnimationTree(bool firstPerson)
 bool Player::step(Point3F *pos,F32 *maxStep,F32 time)
 {
    const Point3F& scale = getScale();
-   Box3F box;
    VectorF offset = mVelocity * time;
-   box.minExtents = mObjBox.minExtents + offset + *pos;
-   box.maxExtents = mObjBox.maxExtents + offset + *pos;
+   Box3F box = getOBB(offset + *pos);
    box.maxExtents.z += mDataBlock->maxStepHeight * scale.z + sMinFaceDistance;
 
    SphereF sphere;
@@ -4829,9 +4826,7 @@ Point3F Player::_move( const F32 travelTime, Collision *outCol )
       {
          // We can potentially early out of this.  If there are no polys in the clipped polylist at our
          //  end position, then we can bail, and just set start = end;
-         Box3F wBox = mScaledBox;
-         wBox.minExtents += end;
-         wBox.maxExtents += end;
+         Box3F wBox = getOBB(end);
 
          static EarlyOutPolyList eaPolyList;
          eaPolyList.clear();
@@ -5285,6 +5280,52 @@ bool Player::updatePos(const F32 travelTime)
       //return false;
 }
 
+Box3F Player::getOBB(const Point3F& worldCenter) const
+{
+   // Select the correct box size based on the current pose
+   Point3F boxSize;
+   switch (mPose)
+   {
+   case CrouchPose:
+      boxSize = mDataBlock->crouchBoxSize;
+      break;
+   case PronePose:
+      boxSize = mDataBlock->proneBoxSize;
+      break;
+   case SwimPose:
+      boxSize = mDataBlock->swimBoxSize;
+      break;
+   case SprintPose:
+   case StandPose:
+   default:
+      boxSize = mDataBlock->boxSize;
+      break;
+   }
+
+   // Build a box centered at the origin, then rotate and translate it
+   Box3F localBox;
+   localBox.minExtents.set(-boxSize.x * 0.5f, -boxSize.y * 0.5f, 0.0f);
+   localBox.maxExtents.set(boxSize.x * 0.5f, boxSize.y * 0.5f, boxSize.z);
+
+   MatrixF yawMat;
+   yawMat.set(EulerF(0, 0, mRot.z));
+
+   Box3F worldBox;
+   for (U32 i = 0; i < 8; ++i)
+   {
+      Point3F pt = localBox.computeVertex(i);
+      yawMat.mulP(pt);
+      pt += worldCenter;
+      if (i == 0)
+         worldBox.minExtents = worldBox.maxExtents = pt;
+      else
+      {
+         worldBox.minExtents.setMin(pt);
+         worldBox.maxExtents.setMax(pt);
+      }
+   }
+   return worldBox;
+}
 
 //----------------------------------------------------------------------------
  
@@ -5295,12 +5336,10 @@ void Player::_findContact( SceneObject **contactObject,
    Point3F pos;
    getTransform().getColumn(3,&pos);
 
-   Box3F wBox;
-   Point3F exp(0,0,sTractionDistance);
-   wBox.minExtents = pos + mScaledBox.minExtents - exp;
-   wBox.maxExtents.x = pos.x + mScaledBox.maxExtents.x;
-   wBox.maxExtents.y = pos.y + mScaledBox.maxExtents.y;
-   wBox.maxExtents.z = pos.z + mScaledBox.minExtents.z + sTractionDistance;
+   Box3F wBox = getOBB(pos);
+   Point3F exp(0, 0, sTractionDistance);
+   wBox.minExtents -= exp;
+   wBox.maxExtents.z += sTractionDistance;
 
    static ClippedPolyList polyList;
    polyList.clear();
@@ -6094,7 +6133,8 @@ bool Player::buildPolyList(PolyListContext, AbstractPolyList* polyList, const Bo
    IMat.setColumn(3,pos);
    polyList->setTransform(&IMat, Point3F(1.0f,1.0f,1.0f));
    polyList->setObject(this);
-   polyList->addBox(mObjBox);
+   Box3F obb = getOBB(pos);
+   polyList->addBox(obb);
    return true;
 }
 
@@ -6112,7 +6152,7 @@ void Player::buildConvex(const Box3F& box, Convex* convex)
    realBox.minExtents.convolveInverse(mObjScale);
    realBox.maxExtents.convolveInverse(mObjScale);
 
-   if (realBox.isOverlapped(getObjBox()) == false)
+   if (realBox.isOverlapped(getOBB(getPosition())) == false)
       return;
 
    Convex* cc = 0;
@@ -7339,13 +7379,57 @@ void Player::prepRenderImage( SceneRenderState* state )
       if( !sRenderMyItems )
          renderItems = false;
    }
-
+   if (gShowBoundingBox)
+   {
+      ObjectRenderInst *ri = state->getRenderPass()->allocInst<ObjectRenderInst>();
+      ri->renderDelegate.bind( this, &Player::_renderOBB);
+      ri->objectIndex = -1;
+      ri->type = RenderPassManager::RIT_Editor;
+      state->getRenderPass()->addInst(ri);
+   }
    // Call the protected base class to do the work 
    // now that we know if we're rendering the player
    // and mounted shapes.
    return ShapeBase::_prepRenderImage( state, 
                                        renderPlayer, 
                                        renderItems );
+}
+
+void Player::_renderOBB(ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat)
+{
+   // If we got an override mat then this some
+   // special rendering pass... skip out of it.
+   if (overrideMat)
+      return;
+
+   GFXStateBlockDesc desc;
+   desc.setZReadWrite(true, false);
+   desc.setBlend(true);
+   desc.fillMode = GFXFillWireframe;
+
+   GFXDrawUtil* drawer = GFX->getDrawUtil();
+
+   if (ri->objectIndex != -1)
+   {
+      MountedImage& image = mMountedImageList[ri->objectIndex];
+
+      if (image.shapeInstance)
+      {
+         MatrixF mat;
+         getRenderImageTransform(ri->objectIndex, &mat);
+
+         // Use getOBB for the image's bounding box
+         const Box3F objBox = getOBB(mat.getPosition());
+
+         drawer->drawCube(desc, objBox, ColorI(255, 255, 255), &mat);
+      }
+   }
+   else
+   {
+      // Use getOBB for the player's bounding box
+      Box3F obb = getOBB(getRenderPosition());
+      drawer->drawCube(desc, obb, ColorI(255, 255, 255), &mRenderObjToWorld);
+   }
 }
 
 void Player::renderConvex( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat )

@@ -356,12 +356,14 @@ static char* suppressSpaces(const char* in_pname)
    return replacebuf;
 }
 
+static U32 sg_currentArrayElementCount = 1;
+
 void ConsoleObject::registerField(const char* name, U32 type, dsize_t offset, const FieldDescriptor& desc)
 {
    AbstractClassRep::Field f;
-   // Remove spaces.
-   
+
    const bool isCollection = desc.isArrayBegin || desc.isArrayEnd || desc.isGroupBegin || desc.isGroupEnd;
+
    if (isCollection)
    {
       char* pFieldNameBuf = suppressSpaces(name);
@@ -395,6 +397,7 @@ void ConsoleObject::registerField(const char* name, U32 type, dsize_t offset, co
 
       f.pFieldname = StringTable->insert(pFieldNameBuf);
       f.pGroupname = StringTable->insert(name);
+      f.elementCount = desc.elementCount;
    }
    else
    {
@@ -405,8 +408,17 @@ void ConsoleObject::registerField(const char* name, U32 type, dsize_t offset, co
       f.table = conType->getEnumTable();
    }
 
+   if (desc.isArrayBegin)
+      sg_currentArrayElementCount = desc.elementCount;
+
+   if (desc.isArrayEnd)
+      sg_currentArrayElementCount = 1;
+
    if (desc.docs)
       f.pFieldDocs = desc.docs;
+
+   if (!isCollection)
+      f.elementCount = desc.elementCount > 1 ? desc.elementCount : sg_currentArrayElementCount;
 
    f.offset       = desc._offset;
    f.validator    = desc.validator;
@@ -414,7 +426,6 @@ void ConsoleObject::registerField(const char* name, U32 type, dsize_t offset, co
    f.getDataFn    = desc.getFn;
    f.writeDataFn  = desc.writeFn;
    f.visibilityFn = desc.visibilityFn;
-   f.elementCount = desc.elementCount;
    f.groupExpand  = desc.isExpanded;
    f.networkMask  = desc.networkMask;
    f.flag         = desc.flags;

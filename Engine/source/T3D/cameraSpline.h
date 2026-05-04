@@ -76,8 +76,8 @@ public:
    void push_front(Knot *w) { push_back(w); mFront = w; mIsMapDirty = true; }
 
    Knot* getKnot(S32 i);
-   Knot* next(Knot *k) { return (k && k->next == mFront) ? k : k->next; }
-   Knot* prev(Knot *k) { return (k && k == mFront) ? k : k->prev; }
+   Knot* next(Knot *k) { return (k && k->next != mFront) ? k->next : mFront; }
+   Knot* prev(Knot *k) { return (k && k->prev != mFront) ? k->prev : mFront; }
 
    F32 advanceTime(F32 t, S32 delta_ms);
    F32 advanceDist(F32 t, F32 meters);
@@ -85,7 +85,7 @@ public:
 
    F32 getDistance(F32 t);
    F32 getTime(F32 d);
-
+   void useEase(bool ease = true) { mUseEase = ease; }
    void renderTimeMap();
 
 
@@ -93,7 +93,7 @@ private:
    Knot *mFront;
    S32 mSize;
    bool mIsMapDirty;
-
+   bool mUseEase;
    struct TimeMap {
       F32 mTime;
       F32 mDistance;

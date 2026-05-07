@@ -855,6 +855,8 @@ function OptionsMenu::resetSettings(%this)
 function OptionsMenu::populateAudioSettings(%this)
 {
    AudioSettingsList.clear();
+   OptionsMenu.optsListCount = -1;
+   
    AudioSettingsGroup.populateSettings();
 
    //Process the lists

@@ -82,9 +82,6 @@ class SFXDevice
       typedef BufferVector::iterator BufferIterator;
       typedef VoiceVector::iterator VoiceIterator;
 
-      /// The name of this device.
-      String mName;
-
       /// The provider which created this device.
       SFXProvider mProvider;
 
@@ -146,7 +143,7 @@ public:
       S32 getMaxBuffers() const { return mMaxBuffers; }
 
       /// Returns the name of this device.
-      const String& getName() const { return mName; }
+      const String& getName() const { return mProvider.getName(); }
 
       /// Return the device capability flags.
       U32 getCaps() const { return mCaps; }

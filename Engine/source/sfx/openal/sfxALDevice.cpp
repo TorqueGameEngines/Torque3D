@@ -352,6 +352,30 @@ void SFXALDevice::printALInfo(ALCdevice* device)
          for (ALCint i = 0; i < profileCount; i++)
             Con::printf("|       [%d] %s", i,
                alcGetStringiSOFT(device, ALC_HRTF_SPECIFIER_SOFT, i));
+
+      bool use_hrtf = Con::getBoolVariable("$pref::SFX::useHRTF");
+      if (use_hrtf && (mCaps & CAPS_HotReconnect))
+      {
+         ALCint attr[5];
+         ALCint index = Con::getIntVariable("$pref::SFX::hrtfProfile");
+         ALCint i;
+
+         i = 0;
+         attr[i++] = ALC_HRTF_SOFT;
+         attr[i++] = ALC_TRUE;
+         // load the default device hrtf.
+         if (index >= 0 && index < profileCount)
+         {
+            attr[i++] = ALC_HRTF_ID_SOFT;
+            attr[i++] = index;
+         }
+         attr[i] = 0;
+
+         if (!alcResetDeviceSOFT(mDevice, attr))
+         {
+            Con::printf("Failed to reset device: %s", alcGetString(mDevice, alcGetError(mDevice)));
+         }
+      }
    }
 
    // --- EFX ---

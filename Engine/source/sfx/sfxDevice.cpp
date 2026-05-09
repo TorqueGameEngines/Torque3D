@@ -33,6 +33,7 @@ S32 SFXDevice::smUpdateInterval = SFXInternal::DEFAULT_UPDATE_INTERVAL;
 S32 SFXDevice::smDeviceFrequency = 44100;
 S32 SFXDevice::smMaxSendsPerSource = 4;
 S32 SFXDevice::smMaxEffectSlots = 4;
+S32 SFXDevice::smDeviceHRTFProfile = -1;
 S8 SFXDevice::smDeviceBitrate = 16;
 bool SFXDevice::smDeviceHRTF = false;
 
@@ -49,6 +50,11 @@ void SFXDevice::initConsole()
 
    Con::addVariable("$pref::SFX::useHRTF", TypeBool, &smDeviceHRTF,
       "The device uses hrtf.\n"
+      "@ingroup SFX\n");
+
+   Con::addVariable("$pref::SFX::hrtfProfile", TypeS32, &smDeviceHRTFProfile,
+      "Index of the HRTF profile to use. -1 = driver default. "
+      "Use sfxGetHRTFProfileCount/sfxGetHRTFProfileName to enumerate available profiles.\n"
       "@ingroup SFX\n");
 
    Con::addVariable("$pref::SFX::updateInterval", TypeS32, &smUpdateInterval,

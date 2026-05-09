@@ -81,6 +81,8 @@ class SFXDevice
       static S32 smUpdateInterval;
       /// The device frequency, used when reading in buffers for the device.
       static S32 smDeviceFrequency;
+      /// The device hrtf profile to use.
+      static S32 smDeviceHRTFProfile;
       /// The device bitrate.
       static S8 smDeviceBitrate;
       /// Does the device use hrtf

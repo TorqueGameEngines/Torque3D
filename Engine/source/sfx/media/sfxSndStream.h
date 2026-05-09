@@ -39,11 +39,18 @@ public:
 
 protected:
 
+   SFXSampleType mSampleType;
+   S32 mSampleBlockAlign;
+   S32 mByteBlockAlign;
+
    // setup our vio_data struct.
    typedef struct
    {
       sf_count_t offset, length;
       Stream* data;
+
+      S32 sampleBlockAlign;
+      S32 byteBlockAlign;
    } VIO_DATA;
 
    /// Total number of bytes read from the stream so far.
@@ -58,11 +65,11 @@ protected:
 
    // vio callbacks
    static sf_count_t sndSeek(sf_count_t offset, int whence, void* user_data);
-   static sf_count_t sndRead(void *ptr, sf_count_t count, void* user_data);
+   static sf_count_t sndRead(void* ptr, sf_count_t count, void* user_data);
    static sf_count_t sndWrite(const void* ptr, sf_count_t count, void* user_data);
    static sf_count_t sndTell(void* user_data);
    static sf_count_t sndFileLen(void* user_data);
-   
+
    // SFXStream
    bool _readHeader() override;
    void _close() override;

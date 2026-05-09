@@ -24,15 +24,30 @@
 #include "sfx/null/sfxNullBuffer.h"
 #include "sfx/sfxInternal.h"
 
-
-SFXNullDevice::SFXNullDevice( SFXProvider* provider, 
-                              String name, 
-                              bool useHardware, 
-                              S32 maxBuffers )
-
-   :  SFXDevice( name, provider, useHardware, maxBuffers )
+class SFXNULLRegisterProvider
 {
-   mMaxBuffers = getMax( maxBuffers, 8 );
+public:
+   SFXNULLRegisterProvider()
+   {
+      SFXSystem::getRegisterProviderSignal().notify(&SFXNullDevice::enumerateProviders);
+   }
+};
+
+static SFXNULLRegisterProvider pSFXNULLRegisterProvider;
+
+
+SFXProvider::CreateProviderInstanceDelegate SFXNullDevice::mCreateDeviceInstance(SFXNullDevice::createInstance);
+
+SFXDevice* SFXNullDevice::createInstance(U32 providerIndex)
+{
+   SFXNullDevice* dev = new SFXNullDevice(providerIndex);
+   return dev;
+}
+
+
+SFXNullDevice::SFXNullDevice( U32 providerIndex )
+{
+   mMaxBuffers = 8;
 }
 
 SFXNullDevice::~SFXNullDevice()
@@ -63,6 +78,17 @@ SFXVoice* SFXNullDevice::createVoice( bool is3D, SFXBuffer *buffer )
 
    _addVoice( voice );
 	return voice;
+}
+
+void SFXNullDevice::enumerateProviders(Vector<SFXProvider*>& providerList)
+{
+   SFXProvider* toAdd = new SFXProvider;
+   toAdd->mName = String::ToString("SFX Null Device");
+   toAdd->mIndex = providerList.size();
+   toAdd->mDeviceType = Output;
+   toAdd->mType = NullProvider;
+   toAdd->mCreateDeviceInstanceDelegate = mCreateDeviceInstance;
+   providerList.push_back(toAdd);
 }
 
 void SFXNullDevice::update()

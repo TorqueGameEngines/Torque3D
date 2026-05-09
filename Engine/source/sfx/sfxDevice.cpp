@@ -31,6 +31,8 @@
 
 S32 SFXDevice::smUpdateInterval = SFXInternal::DEFAULT_UPDATE_INTERVAL;
 S32 SFXDevice::smDeviceFrequency = 44100;
+S32 SFXDevice::smMaxSendsPerSource = 4;
+S32 SFXDevice::smMaxEffectSlots = 4;
 S8 SFXDevice::smDeviceBitrate = 16;
 bool SFXDevice::smDeviceHRTF = false;
 
@@ -52,12 +54,23 @@ void SFXDevice::initConsole()
    Con::addVariable("$pref::SFX::updateInterval", TypeS32, &smUpdateInterval,
       "The update interval.\n"
       "@ingroup SFX\n");
+
+   Con::addVariable("$pref::SFX::maxSendsPerSource", TypeS32, &smMaxSendsPerSource,
+      "The maximum number sends allowed per source.\n"
+      "@ingroup SFX\n");
+
+   Con::addVariable("$pref::SFX::maxEffectSlots", TypeS32, &smMaxEffectSlots,
+      "The maximum number of effect slots supported by this device.\n"
+      "@ingroup SFX\n");
 }
 
 SFXDevice::SFXDevice()
     : mStatNumBuffers( 0 ),
       mStatNumVoices( 0 ),
-      mStatNumBufferBytes( 0 )
+      mStatNumBufferBytes( 0 ),
+      mMaxBuffers(16),
+      mUseHardware(false),
+      mCaps(0)
 {
    VECTOR_SET_ASSOCIATION( mBuffers );
    VECTOR_SET_ASSOCIATION( mVoices );

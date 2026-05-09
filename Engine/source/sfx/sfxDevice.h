@@ -55,13 +55,25 @@ class SFXDevice
       enum ECaps
       {
          CAPS_Reverb = BIT(0),               ///< Device supports reverb environments.
-         CAPS_VoiceManagement = BIT(1),      ///< Device manages voices on its own; deactivates virtualization code in SFX system.
-         CAPS_Occlusion = BIT(2),            ///< Device has its own sound occlusion handling (SFXOcclusionManager).
-         CAPS_DSPEffects = BIT(3),           ///< Device implements DSP effects (SFXDSPManager).
-         CAPS_MultiListener = BIT(4),        ///< Device supports multiple listeners.
-         CAPS_HRTF = BIT(5),                 ///< Device supports HRTF (3D audio positioning).
-         CAPS_Float32 = BIT(6),              ///< Device supports 32-bit float playback.
-         CAPS_MonoStereo = BIT(7),           ///< Device supports mono/stereo output modes.
+         CAPS_EXTReverb = BIT(1),            ///< Device supports extended reverb environments.
+         CAPS_VoiceManagement = BIT(2),      ///< Device manages voices on its own; deactivates virtualization code in SFX system.
+         CAPS_Occlusion = BIT(3),            ///< Device has its own sound occlusion handling (SFXOcclusionManager).
+         CAPS_DSPEffects = BIT(4),           ///< Device implements DSP effects (SFXDSPManager).
+         CAPS_MultiListener = BIT(5),        ///< Device supports multiple listeners.
+         CAPS_HRTF = BIT(6),                 ///< Device supports HRTF (3D audio positioning).
+         CAPS_Float32 = BIT(7),              ///< Device supports 32-bit float playback.
+         CAPS_MonoStereo = BIT(8),           ///< Device supports mono/stereo output modes.
+         CAPS_EFX_EQ = BIT(9),               ///< Device Supports Equalizer effect
+         CAPS_EFX_Compressor = BIT(10),      ///< Device Supports Compressor effect
+         CAPS_EFX_Echo = BIT(11),            ///< Device Supports Echo effect
+         CAPS_EFX_Chorus = BIT(12),          ///< Device Supports Chorus effect
+         CAPS_EFX_Distortion = BIT(13),      ///< Device Supports Distortion effect
+         CAPS_EFX_Flanger = BIT(14),         ///< Device Supports Flanger effect
+         CAPS_SourceFilters = BIT(15),       ///< Device Supports Per-source send filters (low/high/band pass)
+         CAPS_SourceSpatialize = BIT(16),    ///< Device Supports Explicit per-source spatialize control
+         CAPS_HotReconnect = BIT(17),        ///< Device Supports Device can be reopened without destroying context
+         CAPS_DeviceClock = BIT(18),         ///< Device Supports High precision device clock
+         CAPS_DisconnectDetect = BIT(19),    ///< Device Can detect hardware disconnection
       };
 
       static void initConsole();
@@ -73,7 +85,10 @@ class SFXDevice
       static S8 smDeviceBitrate;
       /// Does the device use hrtf
       static bool smDeviceHRTF;
-
+      /// How many effect slots does this device support.
+      static S32 smMaxEffectSlots;
+      /// How many sends can each source have.
+      static S32 smMaxSendsPerSource;
    protected:
 
       typedef Vector< SFXBuffer* > BufferVector;
@@ -83,7 +98,7 @@ class SFXDevice
       typedef VoiceVector::iterator VoiceIterator;
 
       /// The provider which created this device.
-      SFXProvider mProvider;
+      SFXProvider* mProvider;
 
       /// Should the device try to use hardware processing.
       bool mUseHardware;
@@ -133,8 +148,8 @@ public:
       virtual ~SFXDevice();
 
       /// Returns the provider which created this device.
-      virtual const SFXProvider& getProvider() { return mProvider; }
-      virtual void setProvider(const SFXProvider& provider) { mProvider = provider; }
+      virtual SFXProvider* getProvider() { return mProvider; }
+      virtual void setProvider(SFXProvider* provider) { mProvider = provider; }
 
       /// Is the device set to use hardware processing.
       bool getUseHardware() const { return mUseHardware; }
@@ -143,7 +158,7 @@ public:
       S32 getMaxBuffers() const { return mMaxBuffers; }
 
       /// Returns the name of this device.
-      const String& getName() const { return mProvider.getName(); }
+      const String& getName() const { return mProvider->getName(); }
 
       /// Return the device capability flags.
       U32 getCaps() const { return mCaps; }
@@ -191,6 +206,9 @@ public:
       
       /// Set the global reverb environment.
       virtual void setReverb( const SFXReverbProperties& reverb ) {}
+
+      virtual bool isDeviceConnected() { return true; }
+      virtual bool reconnectDevice(U32 provider) { return false; }
       
       /// Reset the global reverb environment to its default.
       virtual void resetReverb() {}

@@ -49,58 +49,64 @@
 
 class SFXALDevice : public SFXDevice
 {
-   public:
+private:
+   void _initExtensions();
+   void _initEFX();
+   void _probeEFXEffectCaps();
+public:
 
-      typedef SFXDevice Parent;
-      friend class SFXALVoice; // mDistanceFactor, mRolloffFactor
+   typedef SFXDevice Parent;
+   friend class SFXALVoice; // mDistanceFactor, mRolloffFactor
 
-      static SFXDevice* createInstance(U32 adapterIndex);
+   static SFXDevice* createInstance(U32 adapterIndex);
 
-      void printALInfo(ALCdevice* device);
-      void printHRTFInfo(ALCdevice* device);
-      void getEFXInfo(ALCdevice* device);
-      S32 getMaxSources();
+   void printALInfo(ALCdevice* device);
+   S32 getMaxSources();
    
-      // Compatibility with pre openal 1.2
-      S32 getMaxSourcesOld();
+   // Compatibility with pre openal 1.2
+   S32 getMaxSourcesOld();
 
-      SFXALDevice(U32 providerIndex);
+   SFXALDevice(U32 providerIndex);
 
-      virtual ~SFXALDevice();
+   virtual ~SFXALDevice();
 
-   protected:
-      static SFXProvider::CreateProviderInstanceDelegate mCreateDeviceInstance;
-      OPENALFNTABLE mOpenAL;
+protected:
+   static SFXProvider::CreateProviderInstanceDelegate mCreateDeviceInstance;
+   OPENALFNTABLE mOpenAL;
 
-      ALCcontext *mContext;
+   ALCcontext *mContext;
 
-      ALCdevice *mDevice;
+   ALCdevice *mDevice;
       
-      SFXDistanceModel mDistanceModel;
-      F32 mDistanceFactor;
-      F32 mRolloffFactor;
-      F32 mUserRolloffFactor;
+   SFXDistanceModel mDistanceModel;
+   F32 mDistanceFactor;
+   F32 mRolloffFactor;
+   F32 mUserRolloffFactor;
 
-      ALuint mEffect;
-      ALuint mAuxSlot;
-      bool mHasEFX;
-      
-      void _setRolloffFactor( F32 factor );
+   ALuint mEffect;
+   ALuint mAuxSlot;
+   bool mHasEFX;
+   bool mHasSoftHRTF;
+   bool mHasSoftReopen;
 
-   public:
-      static void enumerateProviders(Vector<SFXProvider*>& providerList);
-      // SFXDevice.
-      SFXBuffer* createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description ) override;
-      SFXVoice* createVoice( bool is3D, SFXBuffer *buffer ) override;
-      void setListener( U32 index, const SFXListenerProperties& listener ) override;
-      void setDistanceModel( SFXDistanceModel model ) override;
-      void setDopplerFactor( F32 factor ) override;
-      void setReverb(const SFXReverbProperties& reverb) override;
-      void setRolloffFactor( F32 factor ) override;
-      void resetReverb() override {}
-      void setSpeedOfSound(F32 speedOfSound) override;
+   void _setRolloffFactor( F32 factor );
 
-      ALuint getDeviceAuxSlot() { return mAuxSlot; }
+public:
+   static void enumerateProviders(Vector<SFXProvider*>& providerList);
+   // SFXDevice.
+   SFXBuffer* createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description ) override;
+   SFXVoice* createVoice( bool is3D, SFXBuffer *buffer ) override;
+   void setListener( U32 index, const SFXListenerProperties& listener ) override;
+   void setDistanceModel( SFXDistanceModel model ) override;
+   void setDopplerFactor( F32 factor ) override;
+   void setReverb(const SFXReverbProperties& reverb) override;
+   void setRolloffFactor( F32 factor ) override;
+   void resetReverb() override {}
+   void setSpeedOfSound(F32 speedOfSound) override;
+   bool isDeviceConnected() override;
+   bool reconnectDevice(U32 providerIndex) override;
+
+   ALuint getDeviceAuxSlot() { return mAuxSlot; }
 };
 
 #endif // _SFXALDEVICE_H_

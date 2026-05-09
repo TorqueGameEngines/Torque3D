@@ -87,21 +87,12 @@ class SoundAsset : public AssetBase
    typedef AssetPtr<SoundAsset> ConcreteAssetPtr;
 
 protected:
-   StringTableEntry           mSoundFile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
-   StringTableEntry           mSoundPath[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
-   SimObjectPtr<SFXProfile>   mSFXProfile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
 
-   SFXDescription          mProfileDesc;
-   SFXPlayList             mPlaylist;
-   // subtitles
-   StringTableEntry        mSubtitleString;
-   bool                    mPreload;
-   bool                    mIsPlaylist;
    //SFXPlayList::SlotData   mSlots;
 
    /*These will be needed in the refactor!
    Resource<SFXResource>   mSoundResource;
-   
+
 
    // SFXDesctriptions, some off these will be removed
    F32                     mPitchAdjust;
@@ -121,9 +112,6 @@ protected:
    F32                     mPriority;
    */
 
-   typedef Signal<void()> SoundAssetChanged;
-   SoundAssetChanged mChangeSignal;
-
 public:
    enum SoundAssetErrCode
    {
@@ -142,41 +130,79 @@ public:
       if (errCode > SoundAssetErrCode::Extended) return "undefined error";
       return mErrCodeStrings[errCode - Parent::Extended];
    };
+
+private:
+   StringTableEntry        mSoundFile[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
+   Resource<SFXResource>   mSoundResource[SFXPlayList::SFXPlaylistSettings::NUM_SLOTS];
+
+   SFXDescription          mProfileDesc;
+
+   SFXPlayList             mPlaylist;
+   // subtitles
+   StringTableEntry        mSubtitleString;
+   bool                    mPreload;
+   bool                    mIsPlaylist;
+   SFXTrack* mResolvedTrack;
+   SFXDescription* mResolvedDescription;
+
+public:
    SoundAsset();
    virtual ~SoundAsset();
 
    /// Engine.
    static void initPersistFields();
+   void onRemove() override;
+   void inspectPostApply() override;
    void copyTo(SimObject* object) override;
 
    //SFXResource* getSound() { return mSoundResource; }
-   Resource<SFXResource> getSoundResource(const U32 slotId = 0) { load(); return mSFXProfile[slotId]->getResource(); }
+   Resource<SFXResource> getSoundResource(const U32 slotId = 0) { load(); return mSoundResource[slotId]; }
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
 
-   static bool _setSoundFile(void* object, const char* index, const char* data);
+   // asset Base load
    U32 load() override;
-   inline StringTableEntry getSoundPath(const U32 slotId = 0) const { return mSoundPath[slotId]; };
-   SFXProfile* getSfxProfile(const U32 slotId = 0) { return mSFXProfile[slotId]; }
-   SFXPlayList* getSfxPlaylist() { return &mPlaylist; }
-   SFXTrack* getSFXTrack() { load(); return mIsPlaylist ? dynamic_cast<SFXTrack*>(&mPlaylist) : dynamic_cast<SFXTrack*>(mSFXProfile[0].getPointer()); }
-   SFXDescription* getSfxDescription() { return &mProfileDesc; }
-   bool isPlaylist(){ return mIsPlaylist; }
+
+   void                    setSoundFile(StringTableEntry pSoundFile, U32 slot = 0);
+   inline StringTableEntry getSoundFile(U32 slot = 0) { return mSoundFile[slot]; }
+   inline StringTableEntry getRelativeSoundFile(U32 slot = 0) { return collapseAssetFilePath(mSoundFile[slot]); }
+
+   SFXTrack* getSFXTrack() { load(); return mResolvedTrack; }
+   SFXDescription* getSfxDescription() { return mResolvedDescription ? mResolvedDescription : &mProfileDesc; }
+   bool isPlaylist() { return mIsPlaylist; }
 
    bool isLoop() { return mProfileDesc.mIsLooping; }
    bool is3D() { return mProfileDesc.mIs3D; }
 
    static StringTableEntry getAssetIdByFileName(StringTableEntry fileName);
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<SoundAsset>* materialAsset);
-   static U32 getAssetByFileName(StringTableEntry fileName, AssetPtr<SoundAsset>* matAsset);
+   static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<SoundAsset>* matAsset);
+
+   void        buildDescription();
+   SFXProfile* buildProfile();
+   SFXPlayList* buildPlaylist();
+
+   void populateSFXTrack(void);
 
 protected:
-   void            initializeAsset(void) override;
-   void _onResourceChanged(const Torque::Path & path);
-   void            onAssetRefresh(void) override;
+   // Asset Base callback
+   void  initializeAsset(void) override;
+   void  _onResourceChanged(const Torque::Path& path);
+   void  onAssetRefresh(void) override;
+
+   /// Taml callbacks.
+   void onTamlPreWrite(void) override;
+   void onTamlPostWrite(void) override;
+   void onTamlCustomWrite(TamlCustomNodes& customNodes) override;
+   void onTamlCustomRead(const TamlCustomNodes& customNodes) override;
+
+protected:
+   static bool _setSoundFile(void* obj, const char* index, const char* data) { U32 idx = 0; if (index) idx = dAtoi(index); static_cast<SoundAsset*>(obj)->setSoundFile(data, idx); return false; }
+
 };
 
+DECLARE_STRUCT(AssetPtr<SoundAsset>)
 DefineConsoleType(TypeSoundAssetPtr, SoundAsset)
 DefineConsoleType(TypeSoundAssetId, String)
 
@@ -272,8 +298,8 @@ public: \
    \
    const StringTableEntry get##name() const\
    {\
-      if (m##name##Asset && (m##name##Asset->getSoundPath() != StringTable->EmptyString()))\
-         return m##name##Asset->getSoundPath();\
+      if (m##name##Asset && (m##name##Asset->getSoundFile() != StringTable->EmptyString()))\
+         return m##name##Asset->getSoundFile();\
       else if (m##name##AssetId != StringTable->EmptyString())\
          return m##name##AssetId;\
       else if (m##name##Name != StringTable->EmptyString())\
@@ -467,8 +493,8 @@ public: \
    \
    const StringTableEntry get##name(const U32& index) const\
    {\
-      if (m##name##Asset[index] && (m##name##Asset[index]->getSoundPath() != StringTable->EmptyString()))\
-         return m##name##Asset[index]->getSoundPath();\
+      if (m##name##Asset[index] && (m##name##Asset[index]->getSoundFile() != StringTable->EmptyString()))\
+         return m##name##Asset[index]->getSoundFile();\
       else if (m##name##AssetId[index] != StringTable->EmptyString())\
          return m##name##AssetId[index];\
       else if (m##name##Name[index] != StringTable->EmptyString())\

@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <type_traits>
+#include <atomic>
 
 class WeakRefBase;
 
@@ -137,37 +138,38 @@ private:
 /// when all strong references go away, object is destroyed).
 class StrongRefBase : public WeakRefBase
 {
-	friend class StrongObjectRef;
+   friend class StrongObjectRef;
 
 public:
-	StrongRefBase()
-	{
-		mRefCount = 0;
-	}
+   StrongRefBase() = default;
+   virtual ~StrongRefBase() = default;
 
-	virtual ~StrongRefBase() = default;
+   U32 getRefCount() const
+   {
+      return mRefCount.load(std::memory_order_relaxed);
+   }
 
-	U32 getRefCount() const { return mRefCount; }
+   virtual void destroySelf()
+   {
+      delete this;
+   }
 
-	/// object destroy self call (from StrongRefPtr).  Override if this class has specially allocated memory.
-	virtual void destroySelf() { delete this; }
+   void incRefCount()
+   {
+      mRefCount.fetch_add(1, std::memory_order_relaxed);
+   }
 
-	/// Increments the reference count.
-	void incRefCount()
-	{
-		mRefCount++;
-	}
-
-	/// Decrements the reference count.
-	void decRefCount()
-	{
-		AssertFatal(mRefCount, "Decrementing a reference with refcount 0!");
-		if (!--mRefCount)
-			destroySelf();
-	}
+   void decRefCount()
+   {
+      if (mRefCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+      {
+         std::atomic_thread_fence(std::memory_order_acquire);
+         destroySelf();
+      }
+   }
 
 protected:
-	U32 mRefCount; ///< reference counter for StrongRefPtr objects
+   std::atomic<U32> mRefCount{ 0 };
 };
 
 
@@ -308,8 +310,14 @@ private:
       release();
       if (!ptr) return;
 
-      // Always hold the identity
-      mControl = ptr->getWeakControl().lock();
+      if constexpr (std::is_base_of_v<StrongRefBase, T>)
+      {
+         mControl = ptr->getSharedControl();
+      }
+      else
+      {
+         mControl = ptr->getWeakControl().lock();
+      }
       if (!mControl) return;
 
       mPtr = ptr;
@@ -318,7 +326,9 @@ private:
       // runtime check: only strong ref if T inherits StrongRefBase
       if constexpr (std::is_base_of_v<StrongRefBase, T>)
       {
-         mPtr->incRefCount();
+         T* live = getPointer();
+         if (live)
+            live->incRefCount();
       }
    }
 
@@ -328,7 +338,9 @@ private:
       {
          if constexpr (std::is_base_of_v<StrongRefBase, T>)
          {
-            mPtr->decRefCount();
+            T* live = getPointer();
+            if (live)
+               live->decRefCount();
          }
       }
 

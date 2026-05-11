@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(flierdae)
 {
-   baseShapeAsset = "./flier.dae";
+   baseShapeAsset = "Prototyping:flier_shape";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

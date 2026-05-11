@@ -1,6 +1,6 @@
 //--- OBJECT WRITE BEGIN ---
 new TSShapeConstructor(SpherePrimitive_fbx) {
-   baseShapeAsset = "Prototyping:SpherePrimitive";
+   baseShapeAsset = "Prototyping:SpherePrimitive_shape";
    upAxis = "DEFAULT";
    unit = "-1";
    LODType = "TrailingNumber";

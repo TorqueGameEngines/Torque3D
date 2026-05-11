@@ -1144,7 +1144,7 @@ F32 afxCamera::getDamageFlash() const
   {
     const GameBase *castObj = mOrbitObject;
     const ShapeBase* psb = dynamic_cast<const ShapeBase*>(castObj);
-    if (psb)
+    if (psb && !(dynamic_cast<const Camera*>(psb) || dynamic_cast<const afxCamera*>(psb)) )
       return psb->getDamageFlash();
   }
 

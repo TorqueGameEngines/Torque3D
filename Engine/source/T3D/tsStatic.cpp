@@ -1188,6 +1188,10 @@ bool TSStatic::castRay(const Point3F& start, const Point3F& end, RayInfo* info)
       info->material = NULL;
       return true;
    }
+   else if (mDecalType == VisibleMesh) //if we want decals at high fidelity, probly want the same for sounds, projectles, ect
+   { 
+     return castRayRendered(start, end, info);
+   }  
    else
    {
       RayInfo shortest = *info;

@@ -30,6 +30,7 @@ struct PathShapeData: public StaticShapeData {
    static void initPersistFields();
    void packData(BitStream* stream) override;
    void unpackData(BitStream* stream) override;
+   bool mUseEase;
 };
 
 

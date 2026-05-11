@@ -1,6 +1,6 @@
 //--- OBJECT WRITE BEGIN ---
 new TSShapeConstructor(CylinderPrimitive_fbx) {
-   baseShapeAsset = "Prototyping:CylinderPrimitive";
+   baseShapeAsset = "Prototyping:CylinderPrimitive_shape";
    upAxis = "DEFAULT";
    unit = "-1";
    LODType = "TrailingNumber";

@@ -556,6 +556,7 @@ void AssetImporter::initPersistFields()
    addField("finalImportedAssetPath", TypeRealString, Offset(finalImportedAssetPath, AssetImporter), "The Id of the module the assets are to be imported into");
    addField("targetPath", TypeRealString, Offset(targetPath, AssetImporter), "The path any imported assets are placed in as their destination");
    addField("dumpLogs", TypeBool, Offset(mDumpLogs, AssetImporter), "Indicates if the importer always dumps its logs or not");
+   addField("isReimport", TypeBool, Offset(isReimport, AssetImporter), "Indicates if the importing action being performed is a re-import of an existing asset");
 }
 
 //
@@ -2896,7 +2897,7 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 
    if (!isReimport && Torque::FS::IsFile(qualifiedFromFile))
    {
-   newAsset->setDataField(StringTable->insert("originalFilePath"), NULL, qualifiedFromFile);
+      newAsset->setDataField(StringTable->insert("originalFilePath"), NULL, qualifiedFromFile);
    }
 
    newAsset->setDataField(StringTable->insert("materialDefinitionName"), NULL, assetName);
@@ -3051,6 +3052,8 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
    String originalPath = assetItem->filePath.getFullPath().c_str();
    String originalConstructorPath = assetItem->filePath.getPath() + "/" + constructorFileName;
+   String fullAssetName = assetItem->moduleName + ":" + assetItem->assetName;
+   TSShapeConstructor* constructor = NULL;
 
    newAsset->setAssetName(assetName);
    newAsset->setShapeFile(shapeFileName.c_str());
@@ -3153,132 +3156,141 @@ Torque::Path AssetImporter::importShapeAsset(AssetImportObject* assetItem)
          }
       }
    }
+   else
+   {
+      //If we're re-importing, we probably have an existing constructor. Try to find it
+      constructor = TSShapeConstructor::findShapeConstructorByAssetId(StringTable->insert(fullAssetName.c_str()));
+      if (constructor)
+         makeNewConstructor = false;
+   }
 
+   dSprintf(importLogBuffer, sizeof(importLogBuffer), "Beginning setup of TSShapeConstructor file: %s", constructorPath.c_str());
+   activityLog.push_back(importLogBuffer);
+
+   //find/create shape constructor
    if (makeNewConstructor)
    {
-      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Beginning creation of new TSShapeConstructor file: %s", constructorPath.c_str());
-      activityLog.push_back(importLogBuffer);
+      constructor = new TSShapeConstructor(StringTable->insert(fullAssetName.c_str()));
 
-      //find/create shape constructor
-      TSShapeConstructor* constructor = TSShapeConstructor::findShapeConstructorByFilename(Torque::Path(constructorPath).getFullPath());
-      if (constructor == NULL)
-      {
-         String fullAssetName = assetItem->moduleName + ":" + assetItem->assetName;
-         constructor = new TSShapeConstructor(StringTable->insert(fullAssetName.c_str()));
-
-         String constructorName = assetItem->filePath.getFileName() + assetItem->filePath.getExtension().substr(0, 3);
-         constructorName.replace(" ", "_");
-         constructorName.replace("-", "_");
-         constructorName.replace(".", "_");
-         constructorName = Sim::getUniqueName(constructorName.c_str());
-         constructor->registerObject(constructorName.c_str());
-      }
-
-      //now we write the import config logic into the constructor itself to ensure we load like we wanted it to
-      String neverImportMats;
-
-      if (activeImportConfig->IgnoreMaterials.isNotEmpty())
-      {
-         U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ",;\t");
-         for (U32 i = 0; i < ignoredMatNamesCount; i++)
-         {
-            if (i == 0)
-               neverImportMats = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;\t");
-            else
-               neverImportMats += String("\t") + StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;\t");
-         }
-      }
-
-      if (activeImportConfig->DoUpAxisOverride)
-      {
-         S32 upAxis = domUpAxisType::UPAXISTYPE_Z_UP;
-         if (activeImportConfig->UpAxisOverride.compare("X_AXIS") == 0)
-         {
-            upAxis = domUpAxisType::UPAXISTYPE_X_UP;
-         }
-         else if (activeImportConfig->UpAxisOverride.compare("Y_AXIS") == 0)
-         {
-            upAxis = domUpAxisType::UPAXISTYPE_Y_UP;
-         }
-         else if (activeImportConfig->UpAxisOverride.compare("Z_AXIS") == 0)
-         {
-            upAxis = domUpAxisType::UPAXISTYPE_Z_UP;
-         }
-         constructor->mOptions.upAxis = (domUpAxisType)upAxis;
-      }
-
-      if (activeImportConfig->DoScaleOverride)
-         constructor->mOptions.unit = activeImportConfig->ScaleOverride;
-      else
-         constructor->mOptions.unit = -1;
-
-      enum eAnimTimingType
-      {
-         FrameCount = 0,
-         Seconds = 1,
-         Milliseconds = 1000
-      };
-
-      S32 lodType = ColladaUtils::ImportOptions::eLodType::TrailingNumber;
-      if (activeImportConfig->LODType.compare("TrailingNumber") == 0)
-         lodType = ColladaUtils::ImportOptions::eLodType::TrailingNumber;
-      else if (activeImportConfig->LODType.compare("SingleSize") == 0)
-         lodType = ColladaUtils::ImportOptions::eLodType::SingleSize;
-      else if (activeImportConfig->LODType.compare("DetectDTS") == 0)
-         lodType = ColladaUtils::ImportOptions::eLodType::DetectDTS;
-      constructor->mOptions.lodType = (ColladaUtils::ImportOptions::eLodType)lodType;
-
-      constructor->mOptions.singleDetailSize = activeImportConfig->singleDetailSize;
-      constructor->mOptions.alwaysImport = activeImportConfig->AlwaysImportedNodes;
-      constructor->mOptions.neverImport = activeImportConfig->AlwaysIgnoreNodes;
-      constructor->mOptions.alwaysImportMesh = activeImportConfig->AlwaysImportMeshes;
-      constructor->mOptions.neverImportMesh = activeImportConfig->AlwaysIgnoreMeshes;
-      constructor->mOptions.ignoreNodeScale = activeImportConfig->IgnoreNodeScale;
-      constructor->mOptions.adjustCenter = activeImportConfig->AdjustCenter;
-      constructor->mOptions.adjustFloor = activeImportConfig->AdjustFloor;
-
-      constructor->mOptions.convertLeftHanded = activeImportConfig->convertLeftHanded;
-      constructor->mOptions.calcTangentSpace = activeImportConfig->calcTangentSpace;
-      constructor->mOptions.genUVCoords = activeImportConfig->genUVCoords;
-      constructor->mOptions.flipUVCoords = activeImportConfig->flipUVCoords;
-      constructor->mOptions.findInstances = activeImportConfig->findInstances;
-      constructor->mOptions.limitBoneWeights = activeImportConfig->limitBoneWeights;
-      constructor->mOptions.joinIdenticalVerts = activeImportConfig->JoinIdenticalVerts;
-      constructor->mOptions.reverseWindingOrder = activeImportConfig->reverseWindingOrder;
-      constructor->mOptions.invertNormals = activeImportConfig->invertNormals;
-      constructor->mOptions.removeRedundantMats = activeImportConfig->removeRedundantMats;
-
-      S32 animTimingType;
-      if (activeImportConfig->animTiming.compare("FrameCount") == 0)
-         animTimingType = ColladaUtils::ImportOptions::eAnimTimingType::FrameCount;
-      else if (activeImportConfig->animTiming.compare("Seconds") == 0)
-         animTimingType = ColladaUtils::ImportOptions::eAnimTimingType::Seconds;
-      else// (activeImportConfig->animTiming.compare("Milliseconds") == 0)
-         animTimingType = ColladaUtils::ImportOptions::eAnimTimingType::Milliseconds;
-
-      constructor->mOptions.animTiming = (ColladaUtils::ImportOptions::eAnimTimingType)animTimingType;
-
-      constructor->mOptions.animFPS = activeImportConfig->animFPS;
-
-      constructor->mOptions.neverImportMat = neverImportMats;
-
-      PersistenceManager* constructorPersist = new PersistenceManager();
-      constructorPersist->registerObject();
-      constructorPersist->setDirty(constructor, constructorPath);
-
-      if (!constructorPersist->saveDirtyObject(constructor))
-      {
-         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Failed to save shape constructor file to %s", constructorPath.c_str());
-         activityLog.push_back(importLogBuffer);
-      }
-      else
-      {
-         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Finished creating shape constructor file to %s", constructorPath.c_str());
-         activityLog.push_back(importLogBuffer);
-      }
-
-      constructorPersist->destroySelf();
+      String constructorName = assetItem->filePath.getFileName() + assetItem->filePath.getExtension().substr(0, 3);
+      constructorName.replace(" ", "_");
+      constructorName.replace("-", "_");
+      constructorName.replace(".", "_");
+      constructorName = Sim::getUniqueName(constructorName.c_str());
+      constructor->registerObject(constructorName.c_str());
    }
+
+   if (!constructor)
+   {
+      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Faled to find or create a new shape constructor for shape file: ", shapeFileName.c_str());
+      activityLog.push_back(importLogBuffer);
+      return "";
+   }
+
+   //now we write the import config logic into the constructor itself to ensure we load like we wanted it to
+   String neverImportMats;
+
+   if (activeImportConfig->IgnoreMaterials.isNotEmpty())
+   {
+      U32 ignoredMatNamesCount = StringUnit::getUnitCount(activeImportConfig->IgnoreMaterials, ",;\t");
+      for (U32 i = 0; i < ignoredMatNamesCount; i++)
+      {
+         if (i == 0)
+            neverImportMats = StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;\t");
+         else
+            neverImportMats += String("\t") + StringUnit::getUnit(activeImportConfig->IgnoreMaterials, i, ",;\t");
+      }
+   }
+
+   if (activeImportConfig->DoUpAxisOverride)
+   {
+      S32 upAxis = domUpAxisType::UPAXISTYPE_Z_UP;
+      if (activeImportConfig->UpAxisOverride.compare("X_AXIS") == 0)
+      {
+         upAxis = domUpAxisType::UPAXISTYPE_X_UP;
+      }
+      else if (activeImportConfig->UpAxisOverride.compare("Y_AXIS") == 0)
+      {
+         upAxis = domUpAxisType::UPAXISTYPE_Y_UP;
+      }
+      else if (activeImportConfig->UpAxisOverride.compare("Z_AXIS") == 0)
+      {
+         upAxis = domUpAxisType::UPAXISTYPE_Z_UP;
+      }
+      constructor->mOptions.upAxis = (domUpAxisType)upAxis;
+   }
+
+   if (activeImportConfig->DoScaleOverride)
+      constructor->mOptions.unit = activeImportConfig->ScaleOverride;
+   else
+      constructor->mOptions.unit = -1;
+
+   enum eAnimTimingType
+   {
+      FrameCount = 0,
+      Seconds = 1,
+      Milliseconds = 1000
+   };
+
+   S32 lodType = ColladaUtils::ImportOptions::eLodType::TrailingNumber;
+   if (activeImportConfig->LODType.compare("TrailingNumber") == 0)
+      lodType = ColladaUtils::ImportOptions::eLodType::TrailingNumber;
+   else if (activeImportConfig->LODType.compare("SingleSize") == 0)
+      lodType = ColladaUtils::ImportOptions::eLodType::SingleSize;
+   else if (activeImportConfig->LODType.compare("DetectDTS") == 0)
+      lodType = ColladaUtils::ImportOptions::eLodType::DetectDTS;
+   constructor->mOptions.lodType = (ColladaUtils::ImportOptions::eLodType)lodType;
+
+   constructor->mOptions.singleDetailSize = activeImportConfig->singleDetailSize;
+   constructor->mOptions.alwaysImport = activeImportConfig->AlwaysImportedNodes;
+   constructor->mOptions.neverImport = activeImportConfig->AlwaysIgnoreNodes;
+   constructor->mOptions.alwaysImportMesh = activeImportConfig->AlwaysImportMeshes;
+   constructor->mOptions.neverImportMesh = activeImportConfig->AlwaysIgnoreMeshes;
+   constructor->mOptions.ignoreNodeScale = activeImportConfig->IgnoreNodeScale;
+   constructor->mOptions.adjustCenter = activeImportConfig->AdjustCenter;
+   constructor->mOptions.adjustFloor = activeImportConfig->AdjustFloor;
+
+   constructor->mOptions.convertLeftHanded = activeImportConfig->convertLeftHanded;
+   constructor->mOptions.calcTangentSpace = activeImportConfig->calcTangentSpace;
+   constructor->mOptions.genUVCoords = activeImportConfig->genUVCoords;
+   constructor->mOptions.flipUVCoords = activeImportConfig->flipUVCoords;
+   constructor->mOptions.findInstances = activeImportConfig->findInstances;
+   constructor->mOptions.limitBoneWeights = activeImportConfig->limitBoneWeights;
+   constructor->mOptions.joinIdenticalVerts = activeImportConfig->JoinIdenticalVerts;
+   constructor->mOptions.reverseWindingOrder = activeImportConfig->reverseWindingOrder;
+   constructor->mOptions.invertNormals = activeImportConfig->invertNormals;
+   constructor->mOptions.removeRedundantMats = activeImportConfig->removeRedundantMats;
+
+   S32 animTimingType;
+   if (activeImportConfig->animTiming.compare("FrameCount") == 0)
+      animTimingType = ColladaUtils::ImportOptions::eAnimTimingType::FrameCount;
+   else if (activeImportConfig->animTiming.compare("Seconds") == 0)
+      animTimingType = ColladaUtils::ImportOptions::eAnimTimingType::Seconds;
+   else// (activeImportConfig->animTiming.compare("Milliseconds") == 0)
+      animTimingType = ColladaUtils::ImportOptions::eAnimTimingType::Milliseconds;
+
+   constructor->mOptions.animTiming = (ColladaUtils::ImportOptions::eAnimTimingType)animTimingType;
+
+   constructor->mOptions.animFPS = activeImportConfig->animFPS;
+
+   constructor->mOptions.neverImportMat = neverImportMats;
+
+   PersistenceManager* constructorPersist = new PersistenceManager();
+   constructorPersist->registerObject();
+   constructorPersist->setDirty(constructor, constructorPath);
+
+   if (!constructorPersist->saveDirtyObject(constructor))
+   {
+      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Failed to save shape constructor file to %s", constructorPath.c_str());
+      activityLog.push_back(importLogBuffer);
+   }
+   else
+   {
+      dSprintf(importLogBuffer, sizeof(importLogBuffer), "Finished creating shape constructor file to %s", constructorPath.c_str());
+      activityLog.push_back(importLogBuffer);
+   }
+
+   constructorPersist->destroySelf();
 
    //restore the cached version just in case we loaded a sis file
    cachedConfig->CopyTo(activeImportConfig);

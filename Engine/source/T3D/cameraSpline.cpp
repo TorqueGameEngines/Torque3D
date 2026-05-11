@@ -71,6 +71,7 @@ CameraSpline::CameraSpline()
    mFront = NULL;
    mSize = 0;
    mIsMapDirty = true;
+   mUseEase = true;
    VECTOR_SET_ASSOCIATION(mTimeMap);
 }
 
@@ -296,7 +297,7 @@ F32 CameraSpline::getTime(F32 d)
 void CameraSpline::value(F32 t, CameraSpline::Knot *result, bool skip_rotation)
 {
    // Do some easing in and out for t.
-   if(!gBuilding)
+   if(!gBuilding && mUseEase)
    {
       F32 oldT = t;
       if(oldT < 0.5f)

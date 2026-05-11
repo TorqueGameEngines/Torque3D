@@ -90,7 +90,7 @@ class Ribbon : public GameBase
    F32 mFadeAwayStep;   ///< How quickly the ribbons is faded away after deletion.
    F32 mFadeOut;
    F32 mTravelledDistance; ///< How far the ribbon has travelled in it's lifetime.
-
+   U32 mImmobileTicks;
    Vector<Point3F> mSegmentPoints; ///< The points in space where the ribbon has spawned segments.
    U32 mSegmentOffset;
    U32 mSegmentIdx;

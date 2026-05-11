@@ -79,5 +79,9 @@ bool SFXResource::exists( String filename )
 
 ThreadSafeRef<SFXStream> SFXResource::openStream()
 {
-   return mStream;
+   // Open a fresh independent stream from the file each time
+   ThreadSafeRef<SFXStream> freshStream = SFXFileStream::create(mFileName);
+   if (!freshStream)
+      Con::errorf("SFXResource::openStream() - failed to reopen '%s'", mFileName.c_str());
+   return freshStream;
 }

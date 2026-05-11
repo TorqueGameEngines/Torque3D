@@ -275,21 +275,41 @@ void SFXProfile::_onResourceChanged( const Torque::Path& path )
 
 bool SFXProfile::_preloadBuffer()
 {
-   AssertFatal( !mDescription->mIsStreaming, "SFXProfile::_preloadBuffer() - must not be called for streaming profiles" );
+   AssertFatal(!mDescription->mIsStreaming, "SFXProfile::_preloadBuffer() - must not be called for streaming profiles");
+   if (!SFX)
+      return false;
+
+   if (mFilename == StringTable->EmptyString())
+   {
+      Con::errorf("SFXProfile::_preloadBuffer(%s) - no filename set", getName());
+      return false;
+   }
+
+#ifdef TORQUE_DEBUG
+   Con::printf("SFXProfile::_preloadBuffer(%s) - attempting to preload '%s'", getName(), mFilename);
+#endif
 
    mBuffer = _createBuffer();
-   return ( !mBuffer.isNull() );
+   if (mBuffer.isNull())
+   {
+      Con::errorf("SFXProfile::_preloadBuffer(%s) - _createBuffer() returned null for '%s'", getName(), mFilename);
+      return false;
+   }
+
+   return true;
 }
 
 //-----------------------------------------------------------------------------
 
 Resource<SFXResource>& SFXProfile::getResource()
 {
-   if (!mResource && SFXResource::exists(mFilename))
-      mResource = SFXResource::load(mFilename);
-   else
-      mResource = NULL;
-
+   if (!mResource)
+   {
+      if (SFXResource::exists(mFilename))
+         mResource = SFXResource::load(mFilename);
+      else
+         Con::errorf("SFXProfile::getResource(%s) - file does not exist: '%s'", getName(), mFilename);
+   }
    return mResource;
 }
 
@@ -317,48 +337,43 @@ SFXBuffer* SFXProfile::getBuffer()
 
 SFXBuffer* SFXProfile::_createBuffer()
 {
-   SFXBuffer* buffer = 0;
-   
-   // Try to create through SFXDevie.
-   
-   if( mFilename != StringTable->EmptyString() && SFX )
-   {
-      buffer = SFX->_createBuffer( mFilename, mDescription );
-      if( buffer )
-      {
-         #ifdef TORQUE_DEBUG
-         const SFXFormat& format = buffer->getFormat();
-         Con::printf( "%s SFX: %s (%i channels, %i kHz, %.02f sec, %i kb)",
-            mDescription->mIsStreaming ? "Streaming" : "Loaded", mFilename,
-            format.getChannels(),
-            format.getSamplesPerSecond() / 1000,
-            F32( buffer->getDuration() ) / 1000.0f,
-            format.getDataLength( buffer->getDuration() ) / 1024 );
-         #endif
-      }
-   }
-   
-   // If that failed, load through SFXResource.
-   
-   if( !buffer )
-   {
-      Resource< SFXResource >& resource = getResource();
-      if( resource != NULL && SFX )
-      {
-         #ifdef TORQUE_DEBUG
-         const SFXFormat& format = resource->getFormat();
-         Con::printf( "%s SFX: %s (%i channels, %i kHz, %.02f sec, %i kb)",
-            mDescription->mIsStreaming ? "Streaming" : "Loading", resource->getFileName().c_str(),
-            format.getChannels(),
-            format.getSamplesPerSecond(),
-            F32( resource->getDuration() ) / 1000.0f,
-            format.getDataLength( resource->getDuration() ) / 1024 );
-         #endif
+   SFXBuffer* buffer = NULL;
 
-         ThreadSafeRef< SFXStream > sfxStream = resource->openStream();
-         buffer = SFX->_createBuffer( sfxStream, mDescription );
-      }
+   if (mFilename == StringTable->EmptyString())
+   {
+      Con::errorf("SFXProfile::_createBuffer(%s) - mFilename is empty!", getName());
+      return NULL;
    }
+
+   if (!SFX)
+   {
+      Con::errorf("SFXProfile::_createBuffer(%s) - No SFX system available!", getName());
+      return NULL;
+   }
+
+   if (!SFXResource::exists(mFilename))
+   {
+      Con::errorf("SFXProfile::_createBuffer(%s) - SFXResource::exists() returned false for '%s'", getName(), mFilename);
+      return NULL;
+   }
+
+   Resource< SFXResource >& resource = getResource();
+   if (resource == NULL)
+   {
+      Con::errorf("SFXProfile::_createBuffer(%s) - getResource() returned NULL for '%s'", getName(), mFilename);
+      return NULL;
+   }
+
+   ThreadSafeRef< SFXStream > sfxStream = resource->openStream();
+   if (!sfxStream)
+   {
+      Con::errorf("SFXProfile::_createBuffer(%s) - openStream() returned NULL for '%s'", getName(), mFilename);
+      return NULL;
+   }
+
+   buffer = SFX->_createBuffer(sfxStream, mDescription);
+   if (!buffer)
+      Con::errorf("SFXProfile::_createBuffer(%s) - Device _createBuffer from stream also failed for '%s'", getName(), mFilename);
 
    return buffer;
 }

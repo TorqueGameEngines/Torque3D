@@ -10,6 +10,13 @@ function DamageModel::onDestroy(%this)
 function DamageModel::initServer(%this)
 {
    %this.queueExec("./scripts/server/player");
+}
+
+//This is called when the server is created for an actual game/map to be played
+function DamageModel::onCreateGameServer(%this)
+{
+   %this.registerDatablock("./scripts/managedData/managedParticleData");
+   %this.registerDatablock("./scripts/managedData/managedParticleEmitterData");
    %this.queueExec("./scripts/server/utility");
    %this.queueExec("./scripts/server/radiusDamage");
    %this.queueExec("./scripts/server/projectile");

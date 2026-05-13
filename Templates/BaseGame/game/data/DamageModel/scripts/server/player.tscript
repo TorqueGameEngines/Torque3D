@@ -17,6 +17,11 @@ function PlayerData::damage(%this, %obj, %sourceObject, %position, %damage, %dam
    %damageLoc = "body";
    if (%damageType !$= "Suicide") {
       %getDamageLoc = %obj.getDamageLocation(%position);
+
+   %this.setDamageDirection(%rootObj, %sourceObject, %position);
+
+   if (%damageType !$= "Suicide") {
+      %getDamageLoc = %rootObj.getDamageLocation(%position);
       %damageLoc = firstWord(%getDamageLoc);
    }
 

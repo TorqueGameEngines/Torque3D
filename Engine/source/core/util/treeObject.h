@@ -67,7 +67,7 @@ public:
    // Creates a deep copy of this node and its entire subtree.
    inline TreeNode<T, nullClears>* clone() const {
       auto* copy = new TreeNode<T, nullClears>(data, NULL);
-      for (U32 i = 0; i < size(); ++i)
+      for (U32 i = 0; i < this->size(); ++i)
          if ((*this)[i])
             copy->addChild((*this)[i]->clone());
       return copy;
@@ -77,7 +77,7 @@ public:
    inline TreeNode<T, nullClears>* cloneIf(Func pred) const {
       if (!pred(this)) return NULL;
       auto* newNode = new TreeNode<T, nullClears>(data, NULL);
-      for (U32 i = 0; i < size(); ++i)
+      for (U32 i = 0; i < this->size(); ++i)
          if ((*this)[i]) {
             auto* filteredChild = (*this)[i]->cloneIf(pred);
             if (filteredChild)
@@ -87,9 +87,9 @@ public:
    }
 
    inline bool equals(const TreeNode<T, nullClears>* other) const {
-      if (!other || data != other->data || size() != other->size())
+      if (!other || data != other->data || this->size() != other->size())
          return false;
-      for (U32 i = 0; i < size(); ++i) {
+      for (U32 i = 0; i < this->size(); ++i) {
          if ((*this)[i] && other->getChild(i)) {
             if (!(*this)[i]->equals(other->getChild(i)))
                return false;
@@ -141,9 +141,9 @@ public:
    inline bool isRoot() const { return parent == NULL; }
    inline bool isLeaf() const {
       if constexpr (nullClears)
-         return size() == 0;
+         return this->size() == 0;
       else {
-         for (U32 i = 0; i < size(); ++i) {
+         for (U32 i = 0; i < this->size(); ++i) {
             if ((*this)[i] != NULL)
                return false;
          }
@@ -152,39 +152,39 @@ public:
    }
    inline bool hasChildren() const {
       if constexpr (nullClears)
-         return size() > 0;
+         return this->size() > 0;
       else {
-         for (U32 i = 0; i < size(); ++i)
+         for (U32 i = 0; i < this->size(); ++i)
             if ((*this)[i]) return true;
          return false;
       }
    }
    inline U32 getNumChildren() const {
       if constexpr (nullClears)
-         return size();
+         return this->size();
       else {
          U32 count = 0;
-         for (U32 i = 0; i < size(); ++i)
+         for (U32 i = 0; i < this->size(); ++i)
             if ((*this)[i]) ++count;
          return count;
       }
    }
    inline bool hasChild(TreeNode<T, nullClears>* child) const {
       if (!child) return false;
-      for (U32 i = 0; i < size(); i++)
+      for (U32 i = 0; i < this->size(); i++)
          if ((*this)[i] == child)
             return true;
       return false;
    }
    inline S32 getChildIndex(TreeNode<T, nullClears>* child) const {
       if (!child) return -1;
-      for (U32 i = 0; i < size(); i++)
+      for (U32 i = 0; i < this->size(); i++)
          if ((*this)[i] == child)
             return (S32)i;
       return -1;
    }
    inline bool isValidTree() const {
-      for (U32 i = 0; i < size(); i++) {
+      for (U32 i = 0; i < this->size(); i++) {
          TreeNode<T, nullClears>* child = (*this)[i];
          if (child && child->parent != this)
             return false;
@@ -200,7 +200,7 @@ public:
    template<typename Func>
    inline TreeNode<T, nullClears>* findLeafIf(Func pred) {
       if (isLeaf() && pred(this)) return this;
-      for (U32 i = 0; i < size(); ++i)
+      for (U32 i = 0; i < this->size(); ++i)
          if ((*this)[i]) {
             auto* found = (*this)[i]->findLeafIf(pred);
             if (found) return found;
@@ -329,7 +329,7 @@ public:
       return child;
    }
    inline void addChild(TreeNode<T, nullClears>* child) {
-      for (U32 i = 0; i < size(); i++)
+      for (U32 i = 0; i < this->size(); i++)
          AssertFatal((*this)[i] != child, "TreeNode::addChild - Attempted to add duplicate child");
 #ifdef TORQUE_DEBUG
       TreeNode<T, nullClears>* ancestor = this;
@@ -345,10 +345,10 @@ public:
       push_back_unique(child);
    }
    inline void setChild(U32 i, TreeNode<T, nullClears>* child) {
-      if (i >= size()) {
-         U32 oldSize = size();
+      if (i >= this->size()) {
+         U32 oldSize = this->size();
          increment((i + 1) - oldSize);
-         for (U32 j = oldSize; j < size(); j++)
+         for (U32 j = oldSize; j < this->size(); j++)
             (*this)[j] = NULL;
       }
       TreeNode<T, nullClears>* oldChild = (*this)[i];
@@ -357,7 +357,7 @@ public:
          oldChild->parent = NULL;
       if (child == NULL) {
          if constexpr (nullClears)
-            erase(i);
+            this->erase(i);
          else
             (*this)[i] = NULL;
          return;
@@ -373,21 +373,21 @@ public:
          child->parent->removeChild(child);
       }
       else if (child->parent == this) {
-         for (U32 j = 0; j < size(); j++) {
+         for (U32 j = 0; j < this->size(); j++) {
             if (j != i && (*this)[j] == child)
                if constexpr (nullClears)
-                  erase(j);
+                  this->erase(j);
                else
                   (*this)[j] = NULL;
          }
       }
-      for (U32 j = 0; j < size(); j++)
+      for (U32 j = 0; j < this->size(); j++)
          AssertFatal(j == i || (*this)[j] != child, "TreeNode::setChild - Attempted to set duplicate child");
       (*this)[i] = child;
       child->parent = this;
    }
    inline TreeNode<T, nullClears>* getChild(U32 i) {
-      if (i < size()) {
+      if (i < this->size()) {
          if ((*this)[i] && (*this)[i]->parent != this) {
             AssertFatal(false, "TreeNode::getChild - Child parent pointer mismatch");
          }
@@ -396,7 +396,7 @@ public:
       return NULL;
    }
    inline const TreeNode<T, nullClears>* getChild(U32 i) const {
-      if (i < size()) {
+      if (i < this->size()) {
          if ((*this)[i] && (*this)[i]->parent != this) {
             AssertFatal(false, "TreeNode::getChild - Child parent pointer mismatch");
          }
@@ -407,7 +407,7 @@ public:
    inline Vector<TreeNode<T, nullClears>*> getChildren() const
    {
       Vector<TreeNode<T, nullClears>*> children;
-      for (U32 i = 0; i < size(); ++i) {
+      for (U32 i = 0; i < this->size(); ++i) {
          if ((*this)[i])
             children.push_back((*this)[i]);
       }
@@ -421,7 +421,7 @@ public:
          if (!child)
             continue;
          bool isDuplicate = false;
-         for (U32 j = 0; j < size(); j++) {
+         for (U32 j = 0; j < this->size(); j++) {
             if ((*this)[j] == child) {
                isDuplicate = true;
                break;
@@ -456,7 +456,7 @@ public:
       }
    }
    inline void clearChildren() {
-      for (U32 i = 0; i < size(); i++) {
+      for (U32 i = 0; i < this->size(); i++) {
          TreeNode<T, nullClears>* child = (*this)[i];
          if (child) {
             if (child->parent != this) {
@@ -470,11 +470,11 @@ public:
             }
          }
       }
-      clear();
+      this->clear();
    }
    inline void deleteChildren() {
       Vector<TreeNode<T, nullClears>*> children;
-      for (U32 i = 0; i < size(); i++) {
+      for (U32 i = 0; i < this->size(); i++) {
          TreeNode<T, nullClears>* child = (*this)[i];
          if (child) {
             if (child->parent != this) {
@@ -489,7 +489,7 @@ public:
          }
          children.push_back_unique(child);
       }
-      clear();
+      this->clear();
       for (U32 i = 0; i < children.size(); i++) {
          if (children[i]) {
             delete children[i];
@@ -499,11 +499,11 @@ public:
    inline void removeChild(TreeNode<T, nullClears>* child) {
       AssertFatal(child != NULL, "TreeNode::removeChild - Attempted to remove NULL child");
       bool found = false;
-      for (U32 i = 0; i < size(); i++) {
+      for (U32 i = 0; i < this->size(); i++) {
          if ((*this)[i] == child) {
             child->parent = NULL;
             if constexpr (nullClears)
-               erase(i);
+               this->erase(i);
             else
                (*this)[i] = NULL;
             found = true;
@@ -512,11 +512,11 @@ public:
       }
       if (!found) {
 #ifdef TORQUE_DEBUG
-         for (U32 i = 0; i < size(); i++) {
+         for (U32 i = 0; i < this->size(); i++) {
             if ((*this)[i] && (*this)[i]->parent == this) {
                (*this)[i]->parent = NULL;
                if constexpr (nullClears)
-                  erase(i);
+                  this->erase(i);
                else
                   (*this)[i] = NULL;
                Con::warnf("TreeNode::removeChild - Repaired mismatched child pointer at index %u", i);
@@ -531,12 +531,12 @@ public:
       AssertFatal(found, "TreeNode::removeChild - Child not found in parent's children array");
    }
    inline void removeChild(U32 i) {
-      AssertFatal(i < size(), "TreeNode::removeChild - Index out of bounds");
+      AssertFatal(i < this->size(), "TreeNode::removeChild - Index out of bounds");
       TreeNode<T, nullClears>* child = (*this)[i];
       if (child)
          child->parent = NULL;
       if constexpr (nullClears)
-         erase(i);
+         this->erase(i);
       else
          (*this)[i] = NULL;
    }
@@ -547,7 +547,7 @@ public:
       setChild((U32)idx, newChild);
    }
    inline void nullChild(U32 i) {
-      if (i >= size())
+      if (i >= this->size())
          return;
       TreeNode<T, nullClears>* child = (*this)[i];
       if (child && child->parent == this)
@@ -555,7 +555,7 @@ public:
       (*this)[i] = NULL;
    }
    inline void swapChildren(U32 i, U32 j) {
-      if (i >= size() || j >= size() || i == j)
+      if (i >= this->size() || j >= this->size() || i == j)
          return;
       TreeNode<T, nullClears>* childI = (*this)[i];
       TreeNode<T, nullClears>* childJ = (*this)[j];
@@ -589,33 +589,33 @@ public:
       if (isLeaf())
          out.push_back_unique(this);
       else
-         for (U32 i = 0; i < size(); ++i)
+         for (U32 i = 0; i < this->size(); ++i)
             if ((*this)[i])
                (*this)[i]->getLeaves(out);
    }
    inline void collectSubtree(Vector<TreeNode<T, nullClears>*>& nodes) {
       nodes.push_back_unique(this);
-      for (U32 i = 0; i < size(); ++i)
+      for (U32 i = 0; i < this->size(); ++i)
          if ((*this)[i])
             (*this)[i]->collectSubtree(nodes);
    }
    inline void collectSubtreeData(Vector<T>& dataList) {
       dataList.push_back_unique(data);
-      for (U32 i = 0; i < size(); ++i)
+      for (U32 i = 0; i < this->size(); ++i)
          if ((*this)[i])
             (*this)[i]->collectSubtreeData(dataList);
    }
    // callback signature: void(TreeNode<T, nullClears>*)
    template<typename Func>
    inline void forEachChild(Func callback) {
-      for (U32 i = 0; i < size(); i++)
+      for (U32 i = 0; i < this->size(); i++)
          if ((*this)[i])
             callback((*this)[i]);
    }
    // callback signature: void(const TreeNode<T, nullClears>*)
    template<typename Func>
    inline void forEachChild(Func callback) const {
-      for (U32 i = 0; i < size(); i++)
+      for (U32 i = 0; i < this->size(); i++)
          if ((*this)[i])
             callback((*this)[i]);
    }
@@ -623,7 +623,7 @@ public:
    template<typename Func>
    inline void forEachInSubtree(Func callback) {
       callback(this);
-      for (U32 i = 0; i < size(); i++)
+      for (U32 i = 0; i < this->size(); i++)
          if ((*this)[i])
             (*this)[i]->forEachInSubtree(callback);
    }
@@ -633,7 +633,7 @@ public:
       if (isLeaf())
          callback(this);
       else
-         for (U32 i = 0; i < size(); i++)
+         for (U32 i = 0; i < this->size(); i++)
             if ((*this)[i])
                (*this)[i]->forEachLeaf(callback);
    }
@@ -666,7 +666,7 @@ public:
    template<typename Func>
    inline TreeNode<T, nullClears>* findIf(Func pred) {
       if (pred(this)) return this;
-      for (U32 i = 0; i < size(); ++i)
+      for (U32 i = 0; i < this->size(); ++i)
          if ((*this)[i]) {
             auto* found = (*this)[i]->findIf(pred);
             if (found) return found;
@@ -678,7 +678,7 @@ public:
    inline void findAllIf(Func pred, Vector<TreeNode<T, nullClears>*>& out) {
       if (pred(this))
          out.push_back(this);
-      for (U32 i = 0; i < size(); ++i)
+      for (U32 i = 0; i < this->size(); ++i)
          if ((*this)[i])
             (*this)[i]->findAllIf(pred, out);
    }
@@ -686,7 +686,7 @@ public:
    template<typename Func>
    inline U32 countIf(Func pred) const {
       U32 count = pred(this) ? 1 : 0;
-      for (U32 i = 0; i < size(); ++i)
+      for (U32 i = 0; i < this->size(); ++i)
          if ((*this)[i])
             count += (*this)[i]->countIf(pred);
       return count;
@@ -694,11 +694,11 @@ public:
    // callback signature: bool pred(TreeNode<T, nullClears>*)
    template<typename Func>
    inline void removeIf(Func pred) {
-      for (S32 i = size() - 1; i >= 0; --i) {
+      for (S32 i = this->size() - 1; i >= 0; --i) {
          if ((*this)[i] && pred((*this)[i])) {
             delete (*this)[i];
             if constexpr (nullClears)
-               erase(i);
+               this->erase(i);
             else
                (*this)[i] = NULL;
          }
@@ -712,7 +712,7 @@ public:
    //-------------------------------------------------------------------------
    inline U32 getTreeSize() const {
       U32 count = 1;
-      for (U32 i = 0; i < size(); i++)
+      for (U32 i = 0; i < this->size(); i++)
          if ((*this)[i])
             count += (*this)[i]->getTreeSize();
       return count;
@@ -720,7 +720,7 @@ public:
    inline U32 getMaxDepth() const {
       if (isLeaf()) return 0;
       U32 maxDepth = 0;
-      for (U32 i = 0; i < size(); i++)
+      for (U32 i = 0; i < this->size(); i++)
          if ((*this)[i]) {
             U32 childDepth = (*this)[i]->getMaxDepth();
             if (childDepth > maxDepth)
@@ -816,7 +816,7 @@ public:
    template<typename Derived>
    inline Vector<Derived*> getChildrenAs() {
       Vector<Derived*> out;
-      for (U32 i = 0; i < size(); ++i)
+      for (U32 i = 0; i < this->size(); ++i)
          if ((*this)[i])
             out.push_back(static_cast<Derived*>((*this)[i]));
       return out;
@@ -824,7 +824,7 @@ public:
    template<typename Derived>
    inline Vector<const Derived*> getChildrenAs() const {
       Vector<const Derived*> out;
-      for (U32 i = 0; i < size(); ++i)
+      for (U32 i = 0; i < this->size(); ++i)
          if ((*this)[i])
             out.push_back(static_cast<const Derived*>((*this)[i]));
       return out;
@@ -834,7 +834,7 @@ public:
       if (isLeaf())
          callback(static_cast<Derived*>(this));
       else
-         for (U32 i = 0; i < size(); i++)
+         for (U32 i = 0; i < this->size(); i++)
             if ((*this)[i])
                (*this)[i]->template forEachLeafAs<Derived>(callback);
    }
@@ -843,7 +843,7 @@ public:
       if (isLeaf())
          callback(static_cast<const Derived*>(this));
       else
-         for (U32 i = 0; i < size(); i++)
+         for (U32 i = 0; i < this->size(); i++)
             if ((*this)[i])
                (*this)[i]->template forEachLeafAs<Derived>(callback);
    }

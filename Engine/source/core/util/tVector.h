@@ -33,7 +33,9 @@
 #include <algorithm>
 #include "console/engineTypes.h"
 #include "console/engineTypeInfo.h"
-
+#ifndef _MMATHFN_H_
+#include "math/mMathFn.h"
+#endif
 //-----------------------------------------------------------------------------
 // Helper definitions for the vector class.
 

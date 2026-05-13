@@ -5,12 +5,18 @@ function PlayerData::damage(%this, %obj, %sourceObject, %position, %damage, %dam
 
    %rootObj = %obj;
    if (%obj.healthFromMount)
+   {
       %rootObj = findRootObject(%obj);
-
-   %this.setDamageDirection(%rootObj, %sourceObject, %position);
-
+      %this.setDamageDirection(%rootObj, %sourceObject, %position);
+   }
+   else
+   {
+      %this.setDamageDirection(%obj, %sourceObject, %position);
+   }
+   
+   %damageLoc = "body";
    if (%damageType !$= "Suicide") {
-      %getDamageLoc = %rootObj.getDamageLocation(%position);
+      %getDamageLoc = %obj.getDamageLocation(%position);
       %damageLoc = firstWord(%getDamageLoc);
    }
 

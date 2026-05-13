@@ -1012,7 +1012,7 @@ public:
          return EngineFieldTable::Field{
             "elementCount", "", 1,
             TYPE(((ThisType*)16)->mState.mElementCount),
-            FIELDOFFSET(mState.mElementCount)
+            static_cast<U32>(FIELDOFFSET(mState.mElementCount))
          };
       }
       else
@@ -1028,7 +1028,7 @@ public:
          return EngineFieldTable::Field{
             "arraySize", "", 1,
             TYPE(((ThisType*)16)->mState.mArraySize),
-            FIELDOFFSET(mState.mArraySize)
+            static_cast<U32>(FIELDOFFSET(mState.mArraySize))
          };
       }
       else

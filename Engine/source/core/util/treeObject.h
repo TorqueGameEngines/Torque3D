@@ -150,7 +150,7 @@ public:
       }
       else
       {
-         const U32 n = getMin<U32>(children.size(), CHILD_COUNT);
+         const U32 n = getMin(children.size(), CHILD_COUNT);
          for (U32 i = 0; i < n; ++i)
          {
             (*this)[i] = children[i];

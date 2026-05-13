@@ -9,6 +9,7 @@ function DamageModel::onDestroy(%this)
 //This is called when the server is initially set up by the game application
 function DamageModel::initServer(%this)
 {
+   %this.queueExec("./scripts/server/player");
 }
 
 //This is called when the server is created for an actual game/map to be played
@@ -22,7 +23,6 @@ function DamageModel::onCreateGameServer(%this)
    %this.queueExec("./scripts/server/weapon");
    %this.queueExec("./scripts/server/shapeBase");
    %this.queueExec("./scripts/server/vehicle");
-   %this.queueExec("./scripts/server/player");
    %this.queueExec("./scripts/server/commands");
 }
 

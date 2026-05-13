@@ -4,220 +4,87 @@
 #include "gfx/gl/gfxGLDevice.h"
 #include "gfx/gl/gfxGLUtils.h"
 
-class GLFenceRange 
-{
-public:
-   GLFenceRange() : mStart(0), mEnd(0), mSync(0)
-   {         
-     
-   }
-
-   ~GLFenceRange()
-   {
-      //the order of creation/destruction of static variables is indetermined... depends on detail of the build
-      //looks like for some reason on windows + sdl + opengl the order make invalid / wrong the process TODO: Refactor -LAR
-      //AssertFatal( mSync == 0, "");
-   }
-
-   void init(U32 start, U32 end)
-   {  
-      PROFILE_SCOPE(GFXGLQueryFence_issue);
-      mStart = start;
-      mEnd = end;
-      mSync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-   }
-
-   bool checkOverlap(U32 start, U32 end) 
-   {         
-      if ((mStart < end - 1) && (start < mEnd - 1))
-         return true;
-
-      return false;
-   }
-
-   void wait()
-   {   
-      PROFILE_SCOPE(GFXGLQueryFence_block);
-      GLbitfield waitFlags = 0;
-      GLuint64 waitDuration = 0;
-      while( 1 ) 
-      {
-         GLenum waitRet = glClientWaitSync( mSync, waitFlags, waitDuration );
-         if( waitRet == GL_ALREADY_SIGNALED || waitRet == GL_CONDITION_SATISFIED ) 
-         {
-            break;
-         }
-
-         if( waitRet == GL_WAIT_FAILED ) 
-         {
-            AssertFatal(0, "GLSync failed.");
-            break;
-         }
-         
-         waitFlags = GL_SYNC_FLUSH_COMMANDS_BIT;
-         waitDuration = scOneSecondInNanoSeconds;
-      }     
-
-      glDeleteSync(mSync);
-      mSync = 0;
-   }
-
-   void swap( GLFenceRange &r )
-   {
-      GLFenceRange temp;
-      temp = *this;
-      *this = r;
-      r = temp;
-   }
-
-protected:
-   U32 mStart, mEnd;
-   GLsync mSync;
-   static const GLuint64 scOneSecondInNanoSeconds = 1000000000;
-
-   GLFenceRange( const GLFenceRange &);
-   GLFenceRange& operator=(const GLFenceRange &r)
-   {
-      mStart = r.mStart;
-      mEnd = r.mEnd;
-      mSync = r.mSync;
-      return *this;
-   }
-};
-
-class GLOrderedFenceRangeManager
-{
-public:
-
-   ~GLOrderedFenceRangeManager( )
-   {
-      //the order of creation/destruction of static variables is indetermined... depends on detail of the build
-      //looks like for some reason on windows + sdl + opengl the order make invalid / wrong the process TODO: Refactor -LAR
-      //waitAllRanges( );
-   }
-
-   void protectOrderedRange( U32 start, U32 end )
-   {
-      mFenceRanges.increment();
-      GLFenceRange &range = mFenceRanges.last();
-      range.init( start, end );
-   }
-
-   void waitFirstRange( U32 start, U32 end )
-   {
-      if( !mFenceRanges.size() || !mFenceRanges[0].checkOverlap( start, end ) )
-         return;
-         
-      mFenceRanges[0].wait();
-      mFenceRanges.pop_front();
-   }
-
-   void waitOverlapRanges( U32 start, U32 end )
-   {
-      for( U32 i = 0; i < mFenceRanges.size(); ++i )
-      {
-         if( !mFenceRanges[i].checkOverlap( start, end ) )
-            continue;
-         
-         mFenceRanges[i].wait();
-         mFenceRanges.erase(i);
-      }
-   }
-
-   void waitAllRanges()
-   {
-      for( int i = 0; i < mFenceRanges.size(); ++i )            
-         mFenceRanges[i].wait();      
-
-      mFenceRanges.clear();
-   }
-
-protected:
-   Vector<GLFenceRange> mFenceRanges;
-};
-
 class GLCircularVolatileBuffer
 {
 public:
-   GLCircularVolatileBuffer(GLuint binding) 
-      : mBinding(binding), mBufferName(0), mBufferPtr(NULL), mBufferSize(0), mBufferFreePos(0), mCurrectUsedRangeStart(0)
-   { 
+   GLCircularVolatileBuffer(GLuint binding)
+      : mBinding(binding),
+      mBufferName(0),
+      mBufferPtr(nullptr),
+      mBufferSize(0),
+      mBufferFreePos(0),
+      mCurrentRangeStart(0),
+      mMapped(false)
+   {
       init();
    }
 
    ~GLCircularVolatileBuffer()
    {
+      // Ensure any active non-persistent mapping is released before we
+      // block on fences — unmap requires the buffer to be bound.
+      if (mMapped && !GFXGL->mCapabilities.bufferStorage)
+      {
+         PRESERVE_BUFFER(mBinding);
+         glBindBuffer(mBinding, mBufferName);
+         glUnmapBuffer(mBinding);
+         mMapped = false;
+      }
+
+      waitAll();
       glDeleteBuffers(1, &mBufferName);
    }
+
+   // Non-copyable: owns GL resources and raw fence handles.
+   GLCircularVolatileBuffer(const GLCircularVolatileBuffer&) = delete;
+   GLCircularVolatileBuffer& operator=(const GLCircularVolatileBuffer&) = delete;
 
    void init()
    {
       glGenBuffers(1, &mBufferName);
 
-      PRESERVE_BUFFER( mBinding );
+      PRESERVE_BUFFER(mBinding);
       glBindBuffer(mBinding, mBufferName);
-     
+
       const U32 cSizeInMB = 10;
       mBufferSize = (cSizeInMB << 20);
 
-      if( GFXGL->mCapabilities.bufferStorage )
-      {      
+      if (GFXGL->mCapabilities.bufferStorage)
+      {
          const GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
-         glBufferStorage(mBinding, mBufferSize, NULL, flags);
+         glBufferStorage(mBinding, mBufferSize, nullptr, flags);
          mBufferPtr = glMapBufferRange(mBinding, 0, mBufferSize, flags);
       }
       else
       {
-         glBufferData(mBinding, mBufferSize, NULL, GL_DYNAMIC_DRAW);
+         glBufferData(mBinding, mBufferSize, nullptr, GL_DYNAMIC_DRAW);
       }
    }
 
-   struct 
-   {
-      U32 mOffset = 0;
-      U32 mSize = 0;
-   }_getBufferData;
-
+   // Acquire a sub-range of [size] bytes aligned to [offsetAlign].
+   // On return, [outOffset] is the byte offset into the buffer and
+   // [outPtr] is the CPU-writable pointer.  Call unlock() when done writing.
    void lock(const U32 size, U32 offsetAlign, U32& outOffset, void*& outPtr)
    {
-      if (!size)
-      {
-         AssertFatal(0, "GLCircularVolatileBuffer::lock - size must be > 0");
-         outOffset = 0;
-         outPtr = NULL;
-         return;
-      }
+      AssertFatal(size > 0, "Size must be > 0");
+      AssertFatal(!mMapped, "lock() called while a range is already mapped");
 
-      // Align free pos first (before wraparound check)
-      if (offsetAlign)
-      {
-         mBufferFreePos = ((mBufferFreePos + offsetAlign - 1) / offsetAlign) * offsetAlign;
-      }
+      align(mBufferFreePos, offsetAlign);
 
-      // If the size won't fit from current pos to end, wrap around
+      // Wrap-around: protect whatever has been written since the last protect
+      // call, then reset the write cursor to the start of the buffer.
       if (mBufferFreePos + size > mBufferSize)
       {
-         // Protect the remaining space
-         if (mBufferFreePos < mBufferSize)
-            mUsedRanges.push_back(UsedRange(mBufferFreePos, mBufferSize - 1));
+         if (mCurrentRangeStart < mBufferFreePos)
+            protectRange(mCurrentRangeStart, mBufferFreePos - 1);
 
-         // Reset free pos
          mBufferFreePos = 0;
-
-         // Realign after wrap
-         if (offsetAlign)
-         {
-            mBufferFreePos = ((mBufferFreePos + offsetAlign - 1) / offsetAlign) * offsetAlign;
-         }
-
-         // Now check for overlaps *after* wrapping
-         mLockManager.waitOverlapRanges(mBufferFreePos, mBufferFreePos + size - 1);
+         mCurrentRangeStart = 0;
+         align(mBufferFreePos, offsetAlign);
       }
-      else
-      {
-         // Normal range wait
-         mLockManager.waitOverlapRanges(mBufferFreePos, mBufferFreePos + size - 1);
-      }
+
+      // Block until the GPU has finished reading any overlapping region.
+      waitOverlap(mBufferFreePos, mBufferFreePos + size - 1);
 
       outOffset = mBufferFreePos;
 
@@ -225,96 +92,141 @@ public:
       {
          outPtr = static_cast<U8*>(mBufferPtr) + mBufferFreePos;
       }
-      else if (GFXGL->glUseMap())
+      else
       {
          PRESERVE_BUFFER(mBinding);
          glBindBuffer(mBinding, mBufferName);
-
-         const GLbitfield access = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
-         outPtr = glMapBufferRange(mBinding, outOffset, size, access);
-      }
-      else
-      {
-         _getBufferData.mOffset = outOffset;
-         _getBufferData.mSize = size;
-
-         outPtr = mFrameAllocator.lock(size);
+         outPtr = glMapBufferRange(
+            mBinding,
+            outOffset,
+            size,
+            GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT
+         );
+         mMapped = (outPtr != nullptr);
       }
 
       mBufferFreePos += size;
-
-      //align 4bytes
-      mBufferFreePos = ((mBufferFreePos + 4 - 1) / 4) * 4;
+      align(mBufferFreePos, 4);
    }
 
+   // Release the CPU mapping for non-persistent paths.  Safe to call on
+   // persistent-mapped buffers (no-op).
    void unlock()
    {
-      if( GFXGL->mCapabilities.bufferStorage )
+      if (!GFXGL->mCapabilities.bufferStorage && mMapped)
       {
-         return;
-      }
-      else if( GFXGL->glUseMap() )
-      {
-         PRESERVE_BUFFER( mBinding );
+         PRESERVE_BUFFER(mBinding);
          glBindBuffer(mBinding, mBufferName);
-
          glUnmapBuffer(mBinding);
+         mMapped = false;
       }
-      else
-      {
-         PRESERVE_BUFFER( mBinding );
-         glBindBuffer(mBinding, mBufferName);
-
-         glBufferSubData( mBinding, _getBufferData.mOffset, _getBufferData.mSize, mFrameAllocator.getlockedPtr() );
-
-         _getBufferData.mOffset = 0;
-         _getBufferData.mSize = 0;
-
-         mFrameAllocator.unlock();
-      }
-      
    }
 
-   U32 getHandle() const { return mBufferName; }
-
+   // Insert a fence covering everything written since the last protect call.
+   // Call this after submitting draw calls that read from the buffer so that
+   // lock() can wait for completion before re-using the same bytes.
    void protectUsedRange()
    {
-      for( int i = 0; i < mUsedRanges.size(); ++i )
+      if (mCurrentRangeStart < mBufferFreePos)
       {
-         mLockManager.protectOrderedRange( mUsedRanges[i].start, mUsedRanges[i].end );
-      }
-      mUsedRanges.clear();
-
-      if( mCurrectUsedRangeStart < mBufferFreePos )
-      {
-         mLockManager.protectOrderedRange( mCurrectUsedRangeStart, mBufferFreePos-1 );      
-         mCurrectUsedRangeStart = mBufferFreePos;
+         protectRange(mCurrentRangeStart, mBufferFreePos - 1);
+         mCurrentRangeStart = mBufferFreePos;
       }
    }
 
-protected:   
+   GLuint getHandle() const { return mBufferName; }
 
-   GLuint mBinding;
-   GLuint mBufferName;
-   void *mBufferPtr;
-   U32 mBufferSize;
-   U32 mBufferFreePos;
-   U32 mCurrectUsedRangeStart;
+protected:
 
-   GLOrderedFenceRangeManager mLockManager;
-   FrameAllocatorLockableHelper mFrameAllocator;
-
-   struct UsedRange
+   struct FenceRange
    {
-      UsedRange(U32 _start = 0, U32 _end = 0)
-         : start(_start), end(_end)
-      {
-
-      }
-      U32 start, end;
+      U32    start;
+      U32    end;
+      GLsync fence;
    };
-   Vector<UsedRange> mUsedRanges;
-};
 
+   GLuint          mBinding;
+   GLuint          mBufferName;
+   void* mBufferPtr;
+   U32             mBufferSize;
+   U32             mBufferFreePos;
+   U32             mCurrentRangeStart;
+   bool            mMapped;           // true while a non-persistent mapping is live
+   Vector<FenceRange> mFenceRanges;
+
+   // -----------------------------------------------------------------------
+   // Helpers
+   // -----------------------------------------------------------------------
+
+   static void align(U32& value, U32 alignment)
+   {
+      if (alignment)
+         value = (value + alignment - 1) & ~(alignment - 1);
+   }
+
+   static bool overlaps(U32 a0, U32 a1, U32 b0, U32 b1)
+   {
+      return a0 <= b1 && b0 <= a1;
+   }
+
+   // Block until [fence] is signalled.  Returns false if the driver reports
+   // GL_WAIT_FAILED (context loss or similar), true otherwise.
+   static bool waitFence(GLsync fence)
+   {
+      // GL_SYNC_FLUSH_COMMANDS_BIT ensures the commands are actually submitted
+      // to the GPU before we block, preventing a deadlock when the command
+      // queue has not yet been flushed.
+      // GL_TIMEOUT_IGNORED makes the call block until the fence is signalled
+      // rather than polling with a zero-nanosecond timeout.
+      const GLenum result =
+         glClientWaitSync(fence, GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+
+      AssertWarn(result != GL_WAIT_FAILED,
+         "GLCircularVolatileBuffer: glClientWaitSync returned GL_WAIT_FAILED "
+         "(possible context loss).");
+
+      return result != GL_WAIT_FAILED;
+   }
+
+   void protectRange(U32 start, U32 end)
+   {
+      FenceRange r;
+      r.start = start;
+      r.end = end;
+      r.fence = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+      mFenceRanges.push_back(r);
+   }
+
+   void waitOverlap(U32 start, U32 end)
+   {
+      // Collect indices of completed (or waited-on) fences into a separate
+      // list so we can erase them without invalidating the iterator mid-loop.
+      Vector<U32> toErase;
+
+      for (U32 i = 0; i < mFenceRanges.size(); ++i)
+      {
+         if (!overlaps(start, end, mFenceRanges[i].start, mFenceRanges[i].end))
+            continue;
+
+         waitFence(mFenceRanges[i].fence);
+         glDeleteSync(mFenceRanges[i].fence);
+         toErase.push_back(i);
+      }
+
+      // Erase in reverse order so indices remain valid.
+      for (S32 i = (S32)toErase.size() - 1; i >= 0; --i)
+         mFenceRanges.erase(mFenceRanges.begin() + toErase[i]);
+   }
+
+   void waitAll()
+   {
+      for (auto& r : mFenceRanges)
+      {
+         waitFence(r.fence);
+         glDeleteSync(r.fence);
+      }
+      mFenceRanges.clear();
+   }
+};
 
 #endif

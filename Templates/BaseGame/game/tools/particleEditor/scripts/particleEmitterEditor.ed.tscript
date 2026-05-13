@@ -122,7 +122,6 @@ function PE_EmitterEditor::selectObject(%this, %obj)
        && %obj.getName() $= %this-->popupMenu.text )
       return;
       
-   //FIXME: disregards particle tab dirty state
    if( %this.dirty )
    {   
       if( PE_ParticleEditor.dirty )
@@ -483,6 +482,8 @@ function ParticleEditor::addParticleSlot(%this, %field, %emitterObj)
    %action.oldValue = %emitterObj.particles;
    
    ParticleEditor.submitUndo( %action );
+   
+   %field.apply(%action.newValue);
 }
 
 function ParticleEditor::changeParticleSlot(%this, %field, %emitterObj, %slotIdx)
@@ -495,7 +496,6 @@ function ParticleEditor::changeParticleSlot(%this, %field, %emitterObj, %slotIdx
    
    foreach( %obj in DatablockGroup )
    {
-      echo(%typesList);
       %typesListCount = getWordCount(%typesList);
       for(%i=0; %i < %typesListCount; %i++)
       {
@@ -552,7 +552,7 @@ function ParticleEditor::changeParticleSlot(%this, %field, %emitterObj, %slotIdx
       }
    }
    
-   ContextedDropdownListGui.show(%listSet, "Edit Particle Slot[" @ %slotIdx @ "]", "ParticleEditor.editSlot = " @ %slotIdx @ ";ParticleEditor.updateParticleSlot", %field);
+   ContextedDropdownListGui.show(%listSet, "Edit Particle Slot[" @ %slotIdx @ "]", "ParticleEditor.fieldObj = " @ %field @ ";ParticleEditor.editSlot = " @ %slotIdx @ ";ParticleEditor.updateParticleSlot", %field);
    %particleData = getWord(%emitterObj.particles, %slotIdx);
    if(%particleData !$= "")
    {
@@ -562,10 +562,10 @@ function ParticleEditor::changeParticleSlot(%this, %field, %emitterObj, %slotIdx
 
 function ParticleEditor::updateParticleSlot(%this, %newParticle)
 {
-   if(ParticleEditor.editSlot $= "")
+   if(ParticleEditor.editSlot $= "" || !isObject(%newParticle))
       return;
       
-   %updatedParticlesList = setWord(PE_EmitterEditor.currEmitter.particles, ParticleEditor.editSlot, %newParticle);
+   %updatedParticlesList = setWord(PE_EmitterEditor.currEmitter.particles, ParticleEditor.editSlot, %newParticle.getName());
    
    %action = ParticleEditor.createUndo(ActionUpdateActiveEmitter, "Edit Active Emitter Particle Slot");
    %action.emitter = PE_EmitterEditor.currEmitter;
@@ -575,15 +575,18 @@ function ParticleEditor::updateParticleSlot(%this, %newParticle)
    
    ParticleEditor.submitUndo( %action );
    
-   ParticleEditor.editSlot = "";
+   ParticleEditor.fieldObj.apply(%action.newValue);
    
-   //%field.apply(%updatedParticlesList, %slotIdx);
-   //%this-->inspector.refresh();
+   ParticleEditor.editSlot = "";
+   ParticleEditor.fieldObj = "";
 }
 
 function ParticleEditor::editParticleSlot(%this, %field, %emitterObj, %slotIdx)
 {
    %particleName = getWord(%emitterObj.particles, %slotIdx);
+   
+   ParticleEditor.editSlot = "";
+   ParticleEditor.fieldObj = "";
    
    ParticleEditor.open(%particleName);
 }
@@ -600,6 +603,5 @@ function ParticleEditor::clearParticleSlot(%this, %field, %emitterObj, %slotIdx)
    
    ParticleEditor.submitUndo( %action );
    
-   //%field.apply(%updatedParticlesList, %slotIdx);
-   //%this-->inspector.refresh();
+   %field.apply(%action.newValue);
 }

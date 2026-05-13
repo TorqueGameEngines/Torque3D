@@ -195,6 +195,7 @@ Ribbon::Ribbon()
    mSegmentIdx = 0;
 
    mTravelledDistance = 0;
+   mImmobileTicks = 0;
 }
 
 Ribbon::~Ribbon()
@@ -346,7 +347,7 @@ void Ribbon::addSegmentPoint(Point3F &point, MatrixF &mat) {
    xform.setColumn(3, point);
    setTransform(xform);
 
-   if(mSegmentIdx < mDataBlock->mSegmentSkipAmount)
+   if (mSegmentIdx < mDataBlock->mSegmentSkipAmount)
    {
       mSegmentIdx++;
       return;
@@ -356,7 +357,26 @@ void Ribbon::addSegmentPoint(Point3F &point, MatrixF &mat) {
 
    U32 segmentsToDelete = checkRibbonDistance(mDataBlock->segmentsPerUpdate);
 
-   for (U32 i = 0; i < segmentsToDelete; i++) {
+   U32 i;
+
+   F32 maxSize = mDataBlock->mSizes[0];
+   for (i = 1; i < RibbonData::NumFields; ++i) {
+      if (mDataBlock->mSizes[i] > 0.0f && mDataBlock->mSizes[i] > maxSize)
+         maxSize = mDataBlock->mSizes[i];
+   }
+   F32 movementThreshold = maxSize * 0.1f;
+   if (mSegmentPoints.size() && ((point - mSegmentPoints[0]).lenSquared() < movementThreshold * movementThreshold))
+   {
+      mImmobileTicks++;
+      if (mImmobileTicks > TickMs)
+      {
+         segmentsToDelete = mMax(segmentsToDelete, 1);
+         mImmobileTicks = 0;
+      }
+   }
+   else mImmobileTicks = 0;
+
+   for (i = 0; i < segmentsToDelete; i++) {
       S32 last = mSegmentPoints.size() - 1;
       if (last < 0)
          break;
@@ -374,10 +394,13 @@ void Ribbon::addSegmentPoint(Point3F &point, MatrixF &mat) {
       return;
    }
 
+   if (mImmobileTicks > 0)
+      return;
+
    Point3F startPoint = mSegmentPoints[0];
 
    //add X points based on how many segments Per Update from last point to current point
-   for (U32 i = 0; i < mDataBlock->segmentsPerUpdate; i++) {
+   for (i = 0; i < mDataBlock->segmentsPerUpdate; i++) {
 
       F32 interp = (F32(i+1) / (F32)mDataBlock->segmentsPerUpdate);
       //(end - start) * percentage) + start
@@ -450,7 +473,7 @@ U32 Ribbon::checkRibbonDistance(S32 segments) {
    if (difference < 0)
       return mAbs(difference);
 
-   return 0;  //do not delete any points
+   return 0;
 }
 
 void Ribbon::setShaderParams() {

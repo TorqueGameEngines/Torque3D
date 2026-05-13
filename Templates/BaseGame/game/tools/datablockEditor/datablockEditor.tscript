@@ -111,6 +111,19 @@ function DatablockEditorPlugin::onExitMission( %this )
 
 function DatablockEditorPlugin::openDatablock( %this, %datablock )
 {
+   //We want to do a special-case catch here for any datablock types that have their own unique editor.
+   //The main culprit is the particle editor, but this could be expanded later
+   if(%datablock.isMemberOfClass("ParticleData") || 
+      %datablock.isMemberOfClass("ParticleEmitterData") ||
+      %datablock.isMemberOfClass("ExplosionData") || 
+      %datablock.isMemberOfClass("RibbonData") ||
+      %datablock.isMemberOfClass("afxZodiacData") ||
+      %datablock.isMemberOfClass("afxChoreographerData"))
+   {
+      EditorGui.setEditor( ParticleEditorPlugin );
+      return;
+   }
+   
    EditorGui.setEditor( DatablockEditorPlugin );
    %this.selectDatablock( %datablock );
    DatablockEditorTreeTabBook.selectedPage = 0;
@@ -631,6 +644,21 @@ function DatablockEditorPlugin::deleteDatablock( %this )
 //---------------------------------------------------------------------------------------------
 function DatablockEditorPlugin::createNewDatablockOfType(%this, %class, %inheritFrom)
 {
+   //We want to do a special-case catch here for any datablock types that have their own unique editor.
+   //The main culprit is the particle editor, but this could be expanded later
+   if(%class.isMemberOfClass("ParticleData") || 
+      %class.isMemberOfClass("ParticleEmitterData") ||
+      %class.isMemberOfClass("ExplosionData") || 
+      %class.isMemberOfClass("RibbonData") ||
+      %class.isMemberOfClass("afxZodiacData") ||
+      %class.isMemberOfClass("afxChoreographerData"))
+   {
+      EditorGui.setEditor( ParticleEditorPlugin );
+      
+      ParticleEditorPlugin::createNewDatablockOfType(%class, %inheritFrom);
+      return;
+   }
+   
    $DATABLOCK_EDITOR_NEWDB_CLASS = %class;
    $DATABLOCK_EDITOR_NEWDB_INHERITFROM = %inheritFrom;
 

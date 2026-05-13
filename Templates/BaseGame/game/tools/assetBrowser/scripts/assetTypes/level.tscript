@@ -29,7 +29,7 @@ function LevelAsset::onCreateNew(%this)
       AssetName = %assetName;
       versionId = 1;
       LevelFile = %assetName @ %misExtension;
-      DecalsFile = %assetName @ ".mis.decals";
+      DecalsFile = %assetName @ ".decals";
       PostFXPresetFile = %assetName @ ".postfxpreset." @ $TorqueScriptFileExtension;
       ForestFile = %assetName @ ".forest";
       NavmeshFile = %assetName @ ".nav";

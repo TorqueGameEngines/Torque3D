@@ -94,7 +94,7 @@ struct VectorTraits;
 template<typename T, U32 COUNT, typename Allocator>
 struct VectorTraits<Vector<T, COUNT, Allocator>>
 {
-   static constexpr U32 COUNT = COUNT;
+   static constexpr U32 mTCount = COUNT;
    using allocator = Allocator;
    using value_type = T;
 };
@@ -203,7 +203,7 @@ namespace VectorHelpers
       U32 vecCapacity = vec.capacity();
       if (!buffer || n == 0 || offset >= vecCapacity) return;
       if (offset + n > vecCapacity) n = vecCapacity - offset;
-      if (!toBuffer && U32(0) == 0 && offset + n > vec.size()) vec.setSize(offset + n);
+      if (offset + n > vec.size()) vec.setSize(offset + n);
       T* vecArray = vec.array();
       if (!moveElements) {
          if (toBuffer) toBuffer(&vec, buffer, n, offset);
@@ -561,7 +561,7 @@ namespace VectorHelpers
       U32 len = n ? n : targLen - targOffset;
       if (len == 0) return;
       if constexpr (std::is_trivially_copyable<T>::value)
-         std::memmove(targ->array() + targOffset, src + srcOffset, len * sizeof(T));
+         dMemmove(targ->array() + targOffset, src + srcOffset, len * sizeof(T));
       else
          for (U32 i = 0; i < len; ++i)
             targ->array()[targOffset + i] = src[srcOffset + i];
@@ -578,7 +578,7 @@ namespace VectorHelpers
       U32 len = n ? n : targLen - targOffset;
       if (len == 0) return;
       if constexpr (std::is_trivially_copyable<T>::value)
-         std::memmove(targ->array() + targOffset, src->array() + srcOffset, len * sizeof(T));
+         dMemmove(targ->array() + targOffset, src->array() + srcOffset, len * sizeof(T));
       else if constexpr (std::is_move_assignable<T>::value && std::is_move_constructible<T>::value)
          for (U32 i = 0; i < len; ++i) {
             targ->array()[targOffset + i] = std::move(src->array()[srcOffset + i]);
@@ -612,7 +612,7 @@ namespace VectorHelpers
       if constexpr (std::is_trivially_copyable<T>::value) {
          if constexpr (std::is_integral<T>::value || std::is_floating_point<T>::value || std::is_pointer<T>::value) {
             if (val == T()) {
-               std::memset(vec->array() + offset, 0, n * sizeof(T));
+               dMemset(vec->array() + offset, 0, n * sizeof(T));
                return;
             }
          }
@@ -640,7 +640,7 @@ namespace VectorHelpers
             targ->setSize(targOffset + n);
       if (n == 0) return;
       if constexpr (isPod)
-         std::memmove(targ->array() + targOffset, src->array() + srcOffset, n * sizeof(T));
+         dMemmove(targ->array() + targOffset, src->array() + srcOffset, n * sizeof(T));
       else if constexpr (std::is_copy_assignable<T>::value) {
          if (targ == src && std::abs((int)targOffset - (int)srcOffset) < (int)n) {
             std::unique_ptr<T[]> temp(new T[n]);
@@ -755,7 +755,7 @@ namespace VectorHelpers
       if (!vec || !src || n == 0) return;
       T* arr = vec->array();
       if constexpr (std::is_trivially_copyable<T>::value) {
-         std::memmove(arr + destOffset, src, n * sizeof(T));
+         dMemmove(arr + destOffset, src, n * sizeof(T));
       }
       else if (arr + destOffset > src && arr + destOffset < src + n) {
          for (S32 i = n - 1; i >= 0; --i)
@@ -1005,7 +1005,7 @@ public:
    static EngineFieldTable::Field getElementCountField()
    {
       typedef Vector<T> ThisType;
-      if constexpr (VectorTraits<ThisType>::COUNT == 0)
+      if constexpr (VectorTraits<ThisType>::mTCount == 0)
       {
          return EngineFieldTable::Field{
             "elementCount", "", 1,
@@ -1021,7 +1021,7 @@ public:
    {
       typedef Vector<T> ThisType;
 
-      if constexpr (VectorTraits<ThisType>::COUNT == 0)
+      if constexpr (VectorTraits<ThisType>::mTCount == 0)
       {
          return EngineFieldTable::Field{
             "arraySize", "", 1,
@@ -1763,7 +1763,7 @@ template<typename SrcVec>
 inline void Vector<T, COUNT, Allocator>::moveFrom(SrcVec& src)
 {
    // Moves data from another vector, leaving it in a valid but unspecified state.
-   U32 n = mMin(COUNT, src.size());
+   U32 n = mMin(COUNT > 0 ? COUNT : this->arraySize(), src.size());
    for (U32 i = 0; i < n; ++i)
       mArray[i] = std::move(src.mArray[i]);
    src.clear();

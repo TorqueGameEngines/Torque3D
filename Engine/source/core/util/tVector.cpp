@@ -197,9 +197,12 @@ void test_Vector_dynamic() {
    v.removeIf([](U8 x) { return x == 1; });
    AssertFatal(v.size() == 0, "removeIf failed");
    v.set(arr, 3);
-   AssertFatal(v.countIf([](U8 x) { return x > 1; }) == 2, "countIf failed");
-   AssertFatal(v.anyOf([](U8 x) { return x == 2; }), "anyOf failed");
-   AssertFatal(v.allOf([](U8 x) { return x > 0; }), "allOf failed");
+   U32 countifResult = v.countIf([](U8 x) { return x > 2; });
+   AssertFatal(countifResult, "countIf failed");
+   U8 anyofResult = v.anyOf([](U8 x) { return x == 2; });
+   AssertFatal(anyofResult, "anyOf failed");
+   U8 allofResult = v.allOf([](U8 x) { return x > 0; });
+   AssertFatal(allofResult, "allOf failed");
 }
 
 void test_Vector_fixed() {
@@ -252,9 +255,12 @@ void test_Vector_fixed() {
    v.removeIf([](U8 x) { return x == 4; });
    AssertFatal(v.size() == 10, "removeIf should not change size for fixed vector");
    v.copy(arr);
-   AssertFatal(v.countIf([](U8 x) { return x > 5; }) == 4, "countIf failed");
-   AssertFatal(v.anyOf([](U8 x) { return x == 7; }), "anyOf failed");
-   AssertFatal(v.allOf([](U8 x) { return x < 10; }), "allOf failed");
+   U32 countifResult = v.countIf([](U8 x) { return x > 5; });
+   AssertFatal(countifResult == 4, "countIf failed");
+   U8 anyofResult = v.anyOf([](U8 x) { return x == 7; });
+   AssertFatal(anyofResult, "anyOf failed");
+   U8 allofResult = v.allOf([](U8 x) { return x < 10; });
+   AssertFatal(allofResult, "allOf failed");
 }
 
 DefineEngineFunction(test_Vector, void, (), ,

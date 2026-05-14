@@ -13,6 +13,7 @@ new ScriptObject( VerveEditorPlugin )
 
 function VerveEditorPlugin::onWorldEditorStartup( %this )
 {
+   return; //disabled for now
     //----------------------------------------------------------------------
     //
     // Editor Toggles

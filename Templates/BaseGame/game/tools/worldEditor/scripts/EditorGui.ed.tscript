@@ -924,7 +924,7 @@ function EditorGui::syncCameraGui( %this )
       EditorFreeCameraTypeOptions.checkRadioItem( 0, 4, %flyModeRadioItem);
       EditorPlayerCameraTypeOptions.checkRadioItem( 0, 4, -1);
    }
-   else if (!$isFirstPersonVar) // if 3rd person
+   else if ($editorCameraMode $= "3rd Person")
    {
       EditorGui-->trdPersonCamera.setStateOn(true);
       EWorldEditorToggleCamera.setBitmap("ToolsModule:3rd_person_camera_n_image");
@@ -934,7 +934,7 @@ function EditorGui::syncCameraGui( %this )
       EditorPlayerCameraTypeOptions.checkRadioItem( 0, 2, %flyModeRadioItem);
       EditorGuiStatusBar.setCamera("3rd Person Camera");
    }
-   else if ($isFirstPersonVar) // if 1st Person
+   else if ($editorCameraMode $= "1st Person")
    {
       EditorGui-->PlayerCamera.setStateOn(true);
       EWorldEditorToggleCamera.setBitmap("ToolsModule:player_n_image");
@@ -944,7 +944,12 @@ function EditorGui::syncCameraGui( %this )
       EditorPlayerCameraTypeOptions.checkRadioItem( 0, 2, %flyModeRadioItem);
       EditorFreeCameraTypeOptions.checkRadioItem( 0, 4, -1);
       EditorGuiStatusBar.setCamera("1st Person Camera");
-   }      
+   } 
+   else if ($editorCameraMode !$= "")
+   {
+      //Unclear what the status is, but presumably it was set elsewhere, so we'll just make sure we adhere  
+      EditorGuiStatusBar.setCamera($editorCameraMode);
+   }
  }
  
  //------------------------------------------------------------------------------
@@ -2449,7 +2454,6 @@ function Editor::open(%this)
 
    %this.editorEnabled();
    Canvas.setContent(EditorGui);   
-   $isFirstPersonVar = true;
    EditorGui.syncCameraGui();
    
    if(EditorSettings.value("WorldEditor/Layout/LayoutMode", "Classic") $= "Modern")
@@ -3228,6 +3232,8 @@ function EWorldEditorStatusBarCamera::onWake( %this )
    %this.add( "Isometric View" );
    %this.add( "Smooth Camera" );
    %this.add( "Smooth Rot Camera" );
+   
+   callOnModules("onCameraModesListWake", "", %this);
 }
 
 function EWorldEditorStatusBarCamera::onSelect( %this, %id, %text )
@@ -3285,6 +3291,9 @@ function EWorldEditorStatusBarCamera::onSelect( %this, %id, %text )
       case "Smooth Rot Camera":
          commandToServer( 'SetEditorCameraNewtonDamped' );
          EditorGui.setDisplayType( $EditTsCtrl::DisplayTypePerspective );
+         
+      default:
+         callOnModules("onCameraModesListSelect", "", %text);
    }
 }
 

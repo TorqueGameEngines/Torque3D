@@ -3,40 +3,29 @@ function PlayerData::damage(%this, %obj, %sourceObject, %position, %damage, %dam
    if (!isObject(%obj) || %obj.getDamageState() !$= "Enabled" || !%damage)
       return;
 
-   %rootObj = %obj;
-   if (%obj.healthFromMount)
-   {
-      %rootObj = findRootObject(%obj);
-      %this.setDamageDirection(%rootObj, %sourceObject, %position);
-   }
-   else
-   {
-      %this.setDamageDirection(%obj, %sourceObject, %position);
-   }
-   
-   %damageLoc = "body";
-   if (%damageType !$= "Suicide") {
-      %getDamageLoc = %obj.getDamageLocation(%position);
-
-   %this.setDamageDirection(%rootObj, %sourceObject, %position);
-
-   if (%damageType !$= "Suicide") {
+   if (%damageType !$= "Suicide"){
       %getDamageLoc = %rootObj.getDamageLocation(%position);
       %damageLoc = firstWord(%getDamageLoc);
    }
 
-   %rootObj.applyDamage(%damage);
-   %this.onDamage(%rootObj, %damage);
+   %obj.applyDamage(%damage);
+   %this.onDamage(%obj, %damage);
 
    // Deal with client callbacks here because we don't have this
    // information in the onDamage or onDisable methods
    %client = %rootObj.client;
    %sourceClient = %sourceObject ? %sourceObject.client : 0;
 
-   if (isObject(%client))
-   {
-      if (%rootObj.getDamageState() !$= "Enabled")
-      {
+   if (isObject(%client)){
+      if (%obj.healthFromMount) {
+         %rootObj = findRootObject(%obj);
+         %rootObj.setDamageDirection(%sourceObject, %position);
+      }
+      else{
+         %obj.setDamageDirection(%sourceObject, %position);
+      }
+      
+      if (%obj.getDamageState() !$= "Enabled"){
          callGamemodeFunction("onDeath", %client, %sourceObject, %sourceClient, %damageType, %damageLoc);
       }
    }

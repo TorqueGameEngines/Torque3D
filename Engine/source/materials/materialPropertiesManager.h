@@ -192,7 +192,7 @@ public:
 
 extern MaterialPropertiesManager MaterialFXManager;
 
-struct MaterialEffectResult
+struct MaterialPropertiesResult
 {
    MaterialPropertiesData* mat_effect = NULL;
    bool didRicochet = false;
@@ -203,7 +203,7 @@ struct MaterialEffectResult
    F32 finalDamageMultiplier = 1.0f;
 };
 
-MaterialEffectResult resolveImpact(BaseMatInstance* mat,
+MaterialPropertiesResult resolveImpact(BaseMatInstance* mat,
    const VectorF& incomingVelocity,
    const VectorF& surfaceNormal,
    F32 impactForce,

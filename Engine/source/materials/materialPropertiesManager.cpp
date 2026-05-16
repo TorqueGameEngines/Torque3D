@@ -550,14 +550,14 @@ void MaterialPropertiesManager::setDefaultEffect(MaterialPropertiesData* data)
    mDefault = data;
 }
 
-MaterialEffectResult resolveImpact( BaseMatInstance* mat,
+MaterialPropertiesResult resolveImpact( BaseMatInstance* mat,
                                     const VectorF& incomingVelocity,
                                     const VectorF& surfaceNormal,
                                     F32 impactForce,
                                     bool isMelee)
 {
 
-   MaterialEffectResult result;
+   MaterialPropertiesResult result;
 
    result.mat_effect = MaterialFXManager.resolve(mat);
    if (!result.mat_effect)

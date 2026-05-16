@@ -26,6 +26,7 @@ MaterialPropertiesData::MaterialPropertiesData()
    INIT_ASSET(SoftImpactSound);
    INIT_ASSET(MediumImpactSound);
    INIT_ASSET(HardImpactSound);
+   INIT_ASSET(RicochetSound);
    INIT_ASSET(MeleeSoftSound);
    INIT_ASSET(MeleeHardSound);
 
@@ -106,6 +107,8 @@ void MaterialPropertiesData::initPersistFields()
       "Sound for medium-velocity impacts.");
    INITPERSISTFIELD_SOUNDASSET(HardImpactSound, MaterialPropertiesData,
       "Sound for high-velocity impacts (bullets, fast projectiles).");
+   INITPERSISTFIELD_SOUNDASSET(RicochetSound, MaterialPropertiesData,
+      "Sound for high-velocity ricochets (bullets, fast projectiles).");
    INITPERSISTFIELD_SOUNDASSET(MeleeSoftSound, MaterialPropertiesData,
       "Melee soft hit sound override. Falls back to SoftImpactSound.");
    INITPERSISTFIELD_SOUNDASSET(MeleeHardSound, MaterialPropertiesData,
@@ -262,6 +265,11 @@ bool MaterialPropertiesData::preload(bool server, String& errorStr)
          getHardImpactSoundProfile();
       }
 
+      if (isRicochetSoundValid())
+      {
+         getRicochetSoundProfile();
+      }
+
       if (isMeleeSoftSoundValid())
       {
          getMeleeSoftSoundProfile();
@@ -287,6 +295,7 @@ void MaterialPropertiesData::packData(BitStream* stream)
    PACKDATA_SOUNDASSET(SoftImpactSound);
    PACKDATA_SOUNDASSET(MediumImpactSound);
    PACKDATA_SOUNDASSET(HardImpactSound);
+   PACKDATA_SOUNDASSET(RicochetSound);
    PACKDATA_SOUNDASSET(MeleeSoftSound);
    PACKDATA_SOUNDASSET(MeleeHardSound);
 
@@ -338,6 +347,7 @@ void MaterialPropertiesData::unpackData(BitStream* stream)
    UNPACKDATA_SOUNDASSET(SoftImpactSound);
    UNPACKDATA_SOUNDASSET(MediumImpactSound);
    UNPACKDATA_SOUNDASSET(HardImpactSound);
+   UNPACKDATA_SOUNDASSET(RicochetSound);
    UNPACKDATA_SOUNDASSET(MeleeSoftSound);
    UNPACKDATA_SOUNDASSET(MeleeHardSound);
 
@@ -462,6 +472,7 @@ void MaterialPropertiesManager::fireEffect(BaseMatInstance* mat,
                                        F32 impactVelocity,
                                        F32 impactForce,
                                        bool isMelee,
+                                       bool isRicochet,
                                        bool clientOnly)
 {
    MaterialPropertiesData* fx = resolve(mat);
@@ -491,6 +502,9 @@ void MaterialPropertiesManager::fireEffect(BaseMatInstance* mat,
             snd = fx->getHardImpactSoundProfile();
         else
             snd = fx->getMediumImpactSoundProfile();
+
+      if (isRicochet && fx->isRicochetSoundValid())
+         snd = fx->getRicochetSoundProfile();
    }
 
    if (snd)
@@ -579,7 +593,7 @@ MaterialPropertiesResult resolveImpact( BaseMatInstance* mat,
       F32 glanceDeg = mRadToDeg(mAcos(mClampF(cosGlance, 0.0f, 1.0f)));
 
 
-      bool angleOk = (90.0f - glanceDeg) >= fx->ricochetMinAngle;
+      bool angleOk = glanceDeg >= fx->ricochetMinAngle;
 
       if (angleOk && gRandGen.randF() < fx->ricochetChance)
       {

@@ -55,6 +55,8 @@ public:
    DECLARE_ASSET_SETGET(MaterialPropertiesData, MediumImpactSound)
    DECLARE_SOUNDASSET(MaterialPropertiesData, HardImpactSound)
    DECLARE_ASSET_SETGET(MaterialPropertiesData, HardImpactSound)
+   DECLARE_SOUNDASSET(MaterialPropertiesData, RicochetSound)
+   DECLARE_ASSET_SETGET(MaterialPropertiesData, RicochetSound)
 
    // Optional: separate sounds for melee (crowbar clink vs bullet ping
    // on the same metal surface feel very different)
@@ -180,6 +182,7 @@ public:
                   F32 impactVelocity,
                   F32 impactForce,
                   bool isMelee,
+                  bool isRicochet,
                   bool clientOnly = true);
 
    void setDefaultEffect(MaterialPropertiesData* data);

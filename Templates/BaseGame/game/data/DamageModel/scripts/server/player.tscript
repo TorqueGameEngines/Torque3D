@@ -4,29 +4,20 @@ function PlayerData::damage(%this, %obj, %sourceObject, %position, %damage, %dam
       return;
 
    %rootObj = %obj;
-   if (%obj.healthFromMount)
+   
+   %damageLoc = "";   
+   //if we're not commiting sudoku, nor mounted and get our health there...
+   if (%damageType !$= "Suicide" && !(%obj.healthFromMount && isObject(%obj.getObjectMount())))
    {
       %rootObj = findRootObject(%obj);
-      %this.setDamageDirection(%rootObj, %sourceObject, %position);
-   }
-   else
-   {
-      %this.setDamageDirection(%obj, %sourceObject, %position);
-   }
-   
-   %damageLoc = "body";
-   if (%damageType !$= "Suicide") {
       %getDamageLoc = %obj.getDamageLocation(%position);
-
-   %this.setDamageDirection(%rootObj, %sourceObject, %position);
-
-   if (%damageType !$= "Suicide") {
-      %getDamageLoc = %rootObj.getDamageLocation(%position);
       %damageLoc = firstWord(%getDamageLoc);
    }
 
+   %this.setDamageDirection(%rootObj, %sourceObject, %position);
+
    %rootObj.applyDamage(%damage);
-   %this.onDamage(%rootObj, %damage);
+   %rootObj.getDatablock().onDamage(%rootObj, %damage);
 
    // Deal with client callbacks here because we don't have this
    // information in the onDamage or onDisable methods

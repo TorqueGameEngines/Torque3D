@@ -55,7 +55,7 @@ function ImportAssetWindow::Close(%this)
    if(ImportAssetWindow.isAwake())
       ImportAssetWindow.refresh();
       
-   //ImportAssetItems.empty();
+   ImportAssetWindow.importer.isReimport = false;
       
    Canvas.popDialog();  
 }
@@ -336,8 +336,8 @@ function AssetBrowser::addImportingAsset( %this, %assetType, %filePath, %parentA
    if(%filePath !$= "")
       %filePath = filePath(%filePath) @ "/" @ fileBase(%filePath) @ fileExt(%filePath);
    
-   %moduleName = AssetBrowser.SelectedModule;
-   ImportAssetModuleList.text = %moduleName;
+   %moduleName = %this.SelectedModule;
+   AssetImportTargetModule.text = %moduleName;
    
    %assetName = strreplace( %assetName, " ", "_" );
    

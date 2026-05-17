@@ -672,13 +672,13 @@ Namespace::Entry::Entry()
    mPackage = StringTable->EmptyString();
    mToolOnly = false;
    VECTOR_SET_ASSOCIATION(mArgFlags);
-   VECTOR_SET_ASSOCIATION(mDefaultValues);
+   VECTOR_SET_ASSOCIATION(mDefaultOffsets);
 }
 
 void Namespace::Entry::clear()
 {
    mArgFlags.clear();
-   mDefaultValues.clear();
+   mDefaultOffsets.clear();
 
    if (mModule)
    {

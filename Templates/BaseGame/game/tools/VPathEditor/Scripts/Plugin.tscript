@@ -12,6 +12,7 @@ new ScriptObject( VPathEditorPlugin )
 
 function VPathEditorPlugin::onWorldEditorStartup( %this )
 {
+   return; //disabled for now
     //----------------------------------------------------------------------
     //
     // Editor Init

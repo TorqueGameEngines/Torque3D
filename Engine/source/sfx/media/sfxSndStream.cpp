@@ -166,6 +166,7 @@ void SFXSndStream::_close()
       return;
 
    sf_close(sndFile);
+   sndFile = NULL;
 }
 
 SFXSndStream* SFXSndStream::create(Stream* stream)
@@ -180,26 +181,39 @@ SFXSndStream* SFXSndStream::create(Stream* stream)
 
 void SFXSndStream::reset()
 {
+   if (!sndFile)
+      return;
    vio_data.offset = 0;
+   sf_seek(sndFile, 0, SEEK_SET);
 }
 
 U32 SFXSndStream::read(U8* buffer, U32 length)
 {
    if (!sndFile)
    {
-      Con::errorf("SFXSndStream - read: Called on uninitialized stream.");
+      Con::errorf("SFXSndStream - read: Called on uninitialized or closed stream.");
       return 0;
    }
 
-   const U32 bytesPerFrame = mFormat.getBytesPerSample();
-   U32 framesToRead = length / bytesPerFrame;
-
-   // Enforce sample block alignment (important for ADPCM / compressed)
-   if (mSampleBlockAlign > 1)
-      framesToRead -= (framesToRead % mSampleBlockAlign);
-
-   if (framesToRead == 0)
+   if (!buffer)
+   {
+      Con::errorf("SFXSndStream - read: NULL buffer passed.");
       return 0;
+   }
+
+   const U32 bytesPerSample = mFormat.getBytesPerSample();
+   if (bytesPerSample == 0)
+   {
+      Con::errorf("SFXSndStream - read: bytesPerSample is zero, format not initialized?");
+      return 0;
+   }
+
+   U32 framesToRead = length / bytesPerSample;
+   if (framesToRead == 0)
+   {
+      Con::errorf("SFXSndStream - read: length %d too small for bytesPerSample %d", length, bytesPerSample);
+      return 0;
+   }
 
    U32 framesRead = 0;
 
@@ -224,12 +238,13 @@ U32 SFXSndStream::read(U8* buffer, U32 length)
       Con::errorf("SFXSndStream - read: %s", sf_strerror(sndFile));
    }
 
-   // (convert to frames) - number of frames available < MAX_BUFFER? reset
-   if (((getPosition() / mFormat.getBytesPerSample()) - sfinfo.frames) < MAX_BUFFER)
+   sf_count_t currentFrame = sf_seek(sndFile, 0, SEEK_CUR);
+   if (currentFrame >= sfinfo.frames - (sf_count_t)MAX_BUFFER)
    {
-      // reset stream
-      setPosition(0);
+      sf_seek(sndFile, 0, SEEK_SET);
+      vio_data.offset = 0;
    }
+
 
    return framesRead * mFormat.getBytesPerSample();
 }

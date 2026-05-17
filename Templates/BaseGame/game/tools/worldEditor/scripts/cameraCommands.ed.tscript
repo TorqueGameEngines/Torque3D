@@ -57,14 +57,30 @@ function serverCmdToggleCamera(%client)
       }
       
       %client.camera.setVelocity("0 0 0");
+      
+      %client.lastControlObject = %client.getControlObject();
+      %client.lastCameraObject = %client.getCameraObject();
+      
       %control = %client.camera;
+      %camera = %client.camera;
    }
    else
    {
       %client.player.setVelocity("0 0 0");
-      %control = %client.player;
+      
+      //Toggle back onto whatever we had been last
+      %control = %client.lastControlObject;
+      %camera = %client.lastCameraObject;
    }
-   %client.setControlObject(%control);
+   
+   
+   //%client.lastCameraObject = %client.getCameraObject();
+   //%client.lastControlObject = %client.getControlObject();
+   if(%control != %client.getControlObject() && %camera != %client.getCameraObject())
+   {
+      %client.setControlObject(%control);
+      %client.setCameraObject(%camera);
+   }
    clientCmdSyncEditorGui();
 }
 
@@ -72,9 +88,18 @@ function serverCmdSetEditorCameraPlayer(%client)
 {
    // Switch to Player Mode
    %client.player.setVelocity("0 0 0");
-   %client.setControlObject(%client.player);
-   ServerConnection.setFirstPerson(1);
-   $isFirstPersonVar = 1;
+   
+   if(%client.player != %client.getControlObject())
+   {
+      %client.lastCameraObject = %client.getCameraObject();
+      %client.lastControlObject = %client.getControlObject();
+      
+      %client.setControlObject(%client.player);
+      %client.setCameraObject(%client.player);
+   }
+   
+   $editorCameraMode = "1st Person";
+   ServerConnection.setFirstPerson(true);
 
    clientCmdSyncEditorGui();
 }
@@ -83,9 +108,18 @@ function serverCmdSetEditorCameraPlayerThird(%client)
 {
    // Swith to Player Mode
    %client.player.setVelocity("0 0 0");
-   %client.setControlObject(%client.player);
-   ServerConnection.setFirstPerson(0);
-   $isFirstPersonVar = 0;
+   
+   if(%client.player != %client.getControlObject())
+   {
+      %client.lastCameraObject = %client.getCameraObject();
+      %client.lastControlObject = %client.getControlObject();
+      
+      %client.setControlObject(%client.player);
+      %client.setCameraObject(%client.player);
+   }
+   
+   $editorCameraMode = "3rd Person";
+   ServerConnection.setFirstPerson(false);
 
    clientCmdSyncEditorGui();
 }
@@ -101,7 +135,11 @@ function serverCmdDropPlayerAtCamera(%client)
    %obj.setTransform(%client.camera.getTransform());
    %obj.setVelocity("0 0 0");
 
+   %client.lastCameraObject = %client.getCameraObject();
+   %client.lastControlObject = %client.getControlObject();
+   
    %client.setControlObject(%client.player);
+   %client.setCameraObject(%client.player);
    clientCmdSyncEditorGui();
 }
 
@@ -109,7 +147,12 @@ function serverCmdDropCameraAtPlayer(%client)
 {
    %client.camera.setTransform(%client.player.getEyeTransform());
    %client.camera.setVelocity("0 0 0");
+   
+   %client.lastCameraObject = %client.getCameraObject();
+   %client.lastControlObject = %client.getControlObject();
+      
    %client.setControlObject(%client.camera);
+   %client.setCameraObject(%client.camera);
    clientCmdSyncEditorGui();
 }
 
@@ -137,7 +180,12 @@ function serverCmdCycleCameraFlyType(%client)
 			%client.camera.newtonMode = "0";
 			%client.camera.newtonRotation = "0";
 		}
+		
+		%client.lastCameraObject = %client.getCameraObject();
+        %client.lastControlObject = %client.getControlObject();
+   
 		%client.setControlObject(%client.camera);
+		%client.setCameraObject(%client.camera);
 		clientCmdSyncEditorGui();
 	}
 }
@@ -148,7 +196,16 @@ function serverCmdSetEditorCameraStandard(%client)
    %client.camera.setFlyMode();
    %client.camera.newtonMode = "0";
    %client.camera.newtonRotation = "0";
-   %client.setControlObject(%client.camera);
+   
+   if(%client.camera != %client.getControlObject() && %client.camera != %client.getCameraObject())
+   {
+      %client.lastCameraObject = %client.getCameraObject();
+      %client.lastControlObject = %client.getControlObject();
+      
+      %client.setControlObject(%client.camera);
+      %client.setCameraObject(%client.camera);
+   }
+   
    clientCmdSyncEditorGui();
 }
 
@@ -159,7 +216,12 @@ function serverCmdSetEditorCameraNewton(%client)
    %client.camera.newtonMode = "1";
    %client.camera.newtonRotation = "0";
    %client.camera.setVelocity("0 0 0");
+   
+   %client.lastCameraObject = %client.getCameraObject();
+   %client.lastControlObject = %client.getControlObject();
+   
    %client.setControlObject(%client.camera);
+   %client.setCameraObject(%client.camera);
    clientCmdSyncEditorGui();
 }
 
@@ -170,21 +232,36 @@ function serverCmdSetEditorCameraNewtonDamped(%client)
    %client.camera.newtonMode = "1";
    %client.camera.newtonRotation = "1";
    %client.camera.setAngularVelocity("0 0 0");
+   
+   %client.lastCameraObject = %client.getCameraObject();
+   %client.lastControlObject = %client.getControlObject();
+   
    %client.setControlObject(%client.camera);
+   %client.setCameraObject(%client.camera);
    clientCmdSyncEditorGui();
 }
 
 function serverCmdSetEditorOrbitCamera(%client)
 {
    %client.camera.setEditOrbitMode();
+   
+   %client.lastCameraObject = %client.getCameraObject();
+   %client.lastControlObject = %client.getControlObject();
+   
    %client.setControlObject(%client.camera);
+   %client.setCameraObject(%client.camera);
    clientCmdSyncEditorGui();
 }
 
 function serverCmdSetEditorFlyCamera(%client)
 {
    %client.camera.setFlyMode();
+   
+   %client.lastCameraObject = %client.getCameraObject();
+   %client.lastControlObject = %client.getControlObject();
+   
    %client.setControlObject(%client.camera);
+   %client.setCameraObject(%client.camera);
    clientCmdSyncEditorGui();
 }
 
@@ -204,6 +281,11 @@ function serverCmdEditorOrbitCameraSelectChange(%client, %size, %center)
 function serverCmdEditorCameraAutoFit(%client, %radius)
 {
    %client.camera.autoFitRadius(%radius);
+   
+   %client.lastCameraObject = %client.getCameraObject();
+   %client.lastControlObject = %client.getControlObject();
+   
    %client.setControlObject(%client.camera);
-  clientCmdSyncEditorGui();
-}
+   %client.setCameraObject(%client.camera);
+   clientCmdSyncEditorGui();
+} 

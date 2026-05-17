@@ -74,7 +74,8 @@ function PE_ParticleEditor::updateVizNode(%this)
 function PE_ParticleEditor::selectObject(%this, %obj)
 {
    // Bail if the user selected the same particle.
-   if( %obj == %this.currParticle )
+   if( isObject(%obj )
+       && %obj.getName() $= %this-->popupMenu.text )
       return;
    
    // Load new particle if we're not in a dirty state

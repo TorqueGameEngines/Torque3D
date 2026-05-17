@@ -38,7 +38,7 @@
 #include "scene/sceneRenderState.h"
 #include "renderInstance/renderBinManager.h"
 #include "console/typeValidators.h"
-
+#include <console/consoleInternal.h>
 #include "T3D/Scene.h"
 
 IMPLEMENT_CONOBJECT(EditTSCtrl);
@@ -826,8 +826,11 @@ void EditTSCtrl::_renderScene( ObjectRenderInst*, SceneRenderState *state, BaseM
             char buf[2][16];
             dSprintf(buf[0], 16, object->isSelected() ? "true" : "false");
             dSprintf(buf[1], 16, object->isExpanded() ? "true" : "false");
-            
+
+            bool tracing = Con::gTraceOn;
+            Con::gTraceOn = false;
             Con::executef( object, "onEditorRender", getIdString(), buf[0], buf[1] );
+            Con::gTraceOn = tracing;
          }
       }
 

@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(carwheeldae)
 {
-   baseShapeAsset = "./carwheel.dae";
+   baseShapeAsset = "Prototyping:carwheel_shape";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

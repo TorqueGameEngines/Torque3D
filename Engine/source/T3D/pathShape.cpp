@@ -46,16 +46,20 @@ void PathShapeData::initPersistFields()
 {
    docsURL;
    Parent::initPersistFields();
+   addField("useEase", TypeBool, Offset(mUseEase, PathShapeData), "Whether to use ease in and out when moving along the path.\n");
+
 }
 
 void PathShapeData::packData(BitStream* stream)
 {
    Parent::packData(stream);
+   stream->writeFlag(mUseEase);
 }
 
 void PathShapeData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
+   mUseEase = stream->readFlag();
 }
 
 
@@ -109,7 +113,7 @@ bool PathShape::onAdd()
          CameraSpline::Knot::NORMAL, CameraSpline::Knot::SPLINE));
       mNodeCount = 1;
    }
-
+   mSpline.useEase(mDataBlock->mUseEase);
    if (isServerObject()) scriptOnAdd();
    return true;
 
@@ -135,6 +139,7 @@ bool PathShape::onNewDataBlock(GameBaseData* dptr, bool reload)
       return false;
 
    scriptOnNewDataBlock(reload);
+   mSpline.useEase(mDataBlock->mUseEase);
    return true;
 }
 
@@ -152,9 +157,7 @@ void PathShape::initPersistFields()
    addField( "Path", TYPEID< SimObjectRef<SimPath::Path> >(), Offset( mSimPath, PathShape ),
          "@brief Name of a Path to follow." );
 
-   addField("Controler", TypeString, Offset(mControl, PathShape), 4, "controlers");
-
-   Parent::initPersistFields();
+   addField("Controler", TypeString, Offset(mControl, PathShape), 4, "controlers");   Parent::initPersistFields();
 
 }
 

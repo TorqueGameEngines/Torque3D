@@ -132,7 +132,7 @@ public:
 
       // Offsets to get default values for arguments.
       Vector<U32> mArgFlags;
-      Vector<ConsoleValue> mDefaultValues;
+      Vector<U32> mDefaultOffsets;
 
       /// If it's a script function, this is the line of the declaration in code.
       /// @note 0 for functions read from legacy DSOs that have no line number information.

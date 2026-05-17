@@ -186,6 +186,13 @@ void LevelAsset::loadAsset()
 {
    // Ensure the image-file is expanded.
    mLevelPath = getOwned() ? expandAssetFilePath(mLevelFile) : mLevelPath;
+
+   if (mLevelPath == StringTable->EmptyString())
+   {
+      mLoadedState = AssetErrCode::BadFileReference;
+      return;
+   }
+
    mPostFXPresetPath = getOwned() ? expandAssetFilePath(mPostFXPresetFile) : mPostFXPresetPath;
    mDecalsPath = getOwned() ? expandAssetFilePath(mDecalsFile) : mDecalsPath;
    mForestPath = getOwned() ? expandAssetFilePath(mForestFile) : mForestPath;
@@ -198,6 +205,8 @@ void LevelAsset::loadAsset()
       mPreviewImageAssetId = previewImageAssetId;
       mPreviewImageAsset = mPreviewImageAssetId;
    }
+
+   mLoadedState = AssetErrCode::Ok;
 }
 
 //
@@ -248,7 +257,7 @@ void LevelAsset::setEditorFile(const char* pEditorFile)
       return;
 
    // Update.
-   mEditorFile = getOwned() ? expandAssetFilePath(pEditorFile) : pEditorFile;
+   mEditorFile = pEditorFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -267,7 +276,7 @@ void LevelAsset::setBakedSceneFile(const char* pBakedSceneFile)
       return;
 
    // Update.
-   mBakedSceneFile = getOwned() ? expandAssetFilePath(pBakedSceneFile) : pBakedSceneFile;
+   mBakedSceneFile = pBakedSceneFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -286,7 +295,7 @@ void LevelAsset::setPostFXPresetFile(const char* pPostFXPresetFile)
       return;
 
    // Update.
-   mPostFXPresetFile = getOwned() ? expandAssetFilePath(pPostFXPresetFile) : pPostFXPresetFile;
+   mPostFXPresetFile = pPostFXPresetFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -305,7 +314,7 @@ void LevelAsset::setDecalsFile(const char* pDecalsFile)
       return;
 
    // Update.
-   mDecalsFile = getOwned() ? expandAssetFilePath(pDecalsFile) : pDecalsFile;
+   mDecalsFile = pDecalsFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -324,7 +333,7 @@ void LevelAsset::setForestFile(const char* pForestFile)
       return;
 
    // Update.
-   mForestFile = getOwned() ? expandAssetFilePath(pForestFile) : pForestFile;
+   mForestFile = pForestFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -343,7 +352,7 @@ void LevelAsset::setNavmeshFile(const char* pNavmeshFile)
       return;
 
    // Update.
-   mNavmeshFile = getOwned() ? expandAssetFilePath(pNavmeshFile) : pNavmeshFile;
+   mNavmeshFile = pNavmeshFile;
 
    // Refresh the asset.
    refreshAsset();
@@ -398,35 +407,88 @@ DefineEngineMethod(LevelAsset, getPreviewImagePath, const char*, (), ,
    "Gets the full path of the asset's defined preview image file.\n"
    "@return The string result of the level preview image path")
 {
-   return object->getPreviewImagePath();
+   String previewPath = object->getPreviewImagePath();
+   if (previewPath.isEmpty() || !Torque::FS::IsFile(previewPath))
+   {
+      Torque::Path levelPath = object->getLevelPath();
+      previewPath = String(levelPath.getPath() + "/" + levelPath.getFileName()) + ".png";
+   }
+
+   char* returnBuffer = Con::getReturnBuffer(previewPath.size());
+   dSprintf(returnBuffer, 256, "%s", previewPath.c_str());
+
+   return returnBuffer;
 }
 
 DefineEngineMethod(LevelAsset, getPostFXPresetPath, const char*, (), ,
    "Gets the full path of the asset's defined postFX preset file.\n"
    "@return The string result of the postFX preset path")
 {
-   return object->getPostFXPresetPath();
+   String pfxPath = object->getPostFXPresetPath();
+   if (pfxPath.isEmpty() || !Torque::FS::IsFile(pfxPath))
+   {
+      Torque::Path levelPath = object->getLevelPath();
+      pfxPath = String(levelPath.getPath() + "/" + levelPath.getFileName()) + ".postfxpreset.tscript";
+   }
+
+   char* returnBuffer = Con::getReturnBuffer(pfxPath.size());
+   dSprintf(returnBuffer, 256, "%s", pfxPath.c_str());
+
+   return returnBuffer;
 }
 
 DefineEngineMethod(LevelAsset, getDecalsPath, const char*, (), ,
    "Gets the full path of the asset's defined decal file.\n"
    "@return The string result of the decal path")
 {
-   return object->getDecalsPath();
+   String decalPath = object->getDecalsPath();
+   if (decalPath.isEmpty() || !Torque::FS::IsFile(decalPath))
+   {
+      Torque::Path levelPath = object->getLevelPath();
+      decalPath = String(levelPath.getPath() + levelPath.getFileName()) + ".decals";
+
+      if (!Torque::FS::IsFile(decalPath)) //Legacy pattern support if it kept the '.mis' sub extension in there
+         decalPath = String(levelPath.getFullPath()) + ".decals";
+   }
+
+   char* returnBuffer = Con::getReturnBuffer(decalPath.size());
+   dSprintf(returnBuffer, 256, "%s", decalPath.c_str());
+
+   return returnBuffer;
 }
 
 DefineEngineMethod(LevelAsset, getForestPath, const char*, (), ,
    "Gets the full path of the asset's defined forest file.\n"
    "@return The string result of the forest path")
 {
-   return object->getForestPath();
+   String forestPath = object->getForestPath();
+   if (forestPath.isEmpty() || !Torque::FS::IsFile(forestPath))
+   {
+      Torque::Path levelPath = object->getLevelPath();
+      forestPath = String(levelPath.getPath() + "/" + levelPath.getFileName()) + ".forest";
+   }
+
+   char* returnBuffer = Con::getReturnBuffer(forestPath.size());
+   dSprintf(returnBuffer, 256, "%s", forestPath.c_str());
+
+   return returnBuffer;
 }
 
 DefineEngineMethod(LevelAsset, getNavmeshPath, const char*, (), ,
    "Gets the full path of the asset's defined navmesh file.\n"
    "@return The string result of the navmesh path")
 {
-   return object->getNavmeshPath();
+   String navPath = object->getNavmeshPath();
+   if (navPath.isEmpty() || !Torque::FS::IsFile(navPath))
+   {
+      Torque::Path levelPath = object->getLevelPath();
+      navPath = String(levelPath.getPath() + "/" + levelPath.getFileName()) + ".nav";
+   }
+
+   char* returnBuffer = Con::getReturnBuffer(navPath.size());
+   dSprintf(returnBuffer, 256, "%s", navPath.c_str());
+
+   return returnBuffer;
 }
 
 DefineEngineMethod(LevelAsset, loadDependencies, void, (), ,

@@ -86,6 +86,8 @@ function CoreModule::onCreate(%this)
    
    //This is used to build the remap keybind sets for the different actionMaps.
    $RemapCount = 0;
+   
+   $editorCameraMode = "1st Person"; //largely just used for camera mode toggling
 }
 
 function CoreModule::onDestroy(%this)

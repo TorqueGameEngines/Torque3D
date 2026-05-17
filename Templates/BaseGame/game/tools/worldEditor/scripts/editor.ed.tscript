@@ -87,11 +87,18 @@ function Editor::onAdd(%this)
 
 function Editor::checkActiveLoadDone()
 {
-   if(isObject(EditorGui) && EditorGui.loadingMission)
+   if(isObject(EditorGui))
    {
-      Canvas.setContent(EditorGui);
-      EditorGui.loadingMission = false;
-      return true;
+      if(EditorGui.loadingMission)
+      {
+         Canvas.setContent(EditorGui);
+         EditorGui.loadingMission = false;
+         return true;
+      }
+      if(EditorGui.isAwake())
+      {
+         return true;  
+      }
    }
    return false;
 }

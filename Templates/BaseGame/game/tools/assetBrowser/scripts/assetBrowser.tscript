@@ -1213,13 +1213,16 @@ function AssetBrowser::changeAsset(%this)
 function AssetBrowser::reImportAsset(%this)
 {
    //Find out what type it is
-   %assetDef = AssetDatabase.acquireAsset(EditAssetPopup.assetId);
-   %assetType = AssetDatabase.getAssetType(EditAssetPopup.assetId);
+   %assetDef = AssetDatabase.acquireAsset(%this.popupMenu.objectData);
+   %assetType = %this.popupMenu.objectType;
       
    if(%assetType $= "ShapeAsset" || %assetType $= "ImageAsset" || %assetType $= "SoundAsset")
    {
-      AssetBrowser.isAssetReImport = true;
-      AssetBrowser.reImportingAssetId = EditAssetPopup.assetId;
+      %this.isAssetReImport = true;
+      %this.reImportingAssetId = %assetDef.getAssetId();
+      
+      //just to force it to be fully loaded and prepped on the off chance the asset isn't yet
+      %assetDef.load();
       
       %reimportingPath = %assetDef.originalFilePath;
       
@@ -1262,14 +1265,15 @@ function AssetBrowser::reImportAsset(%this)
          %dlg.delete();
       }
       
-      AssetBrowser.onBeginDropFiles();
-      AssetBrowser.onDropFile(%reimportingPath);
-      AssetBrowser.onEndDropFiles();
+      ImportAssetWindow.importer.isReimport = true;
+      %this.onBeginDropFiles();
+      %this.onDropFile(%reimportingPath);
+      %this.onEndDropFiles();
       
-      %module = AssetDatabase.getAssetModule(EditAssetPopup.assetId);
+      %module = AssetDatabase.getAssetModule(%this.reImportingAssetId);
       
       //get the selected module data
-      ImportAssetModuleList.setText(%module.ModuleId);
+      AssetImportTargetModule.setText(%module.ModuleId);
    }
 }
 

@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(cardae)
 {
-   baseShapeAsset = "./car.dae";
+   baseShapeAsset = "Prototyping:car_shape";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

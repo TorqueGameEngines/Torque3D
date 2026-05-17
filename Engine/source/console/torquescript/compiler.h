@@ -54,6 +54,7 @@ namespace Compiler
    enum CompiledInstructions
    {
       OP_FUNC_DECL,
+      OP_DEFAULT_END,
       OP_CREATE_OBJECT,
       OP_ADD_OBJECT,
       OP_END_OBJECT,

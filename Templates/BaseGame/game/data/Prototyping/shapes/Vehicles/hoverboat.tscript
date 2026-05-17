@@ -1,7 +1,7 @@
 
 singleton TSShapeConstructor(hoverboatdae)
 {
-   baseShapeAsset = "./hoverboat.dae";
+   baseShapeAsset = "Prototyping:hoverboat_shape";
    singleDetailSize = "0";
    flipUVCoords = "0";
    JoinIdenticalVerts = "0";

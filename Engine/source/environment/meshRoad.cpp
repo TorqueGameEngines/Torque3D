@@ -2587,11 +2587,15 @@ void MeshRoad::_generateSegments()
          polylist.triangulate();
 
          PhysicsCollision *colShape = PHYSICSMGR->createCollision();
-         colShape->addTriangleMesh( polylist.mVertexList.address(),
+         if (!colShape->addTriangleMesh(polylist.mVertexList.address(),
             polylist.mVertexList.size(),
             polylist.mIndexList.address(),
             polylist.mIndexList.size() / 3,
-            MatrixF::Identity );
+            getWorldTransform()))
+         {
+            // failed to create mesh, get out GET OUT NOWWWW
+            return;
+         }
 
          PhysicsWorld *world = PHYSICSMGR->getWorld( isServerObject() ? "server" : "client" );
          mPhysicsRep = PHYSICSMGR->createBody();

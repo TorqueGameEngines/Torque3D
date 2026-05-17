@@ -1,47 +1,4 @@
 ################# Initialize Common Variables ###################
-if(NOT DEFINED ENV{VCPKG_ROOT})
-    set(VCPKG_ROOT "${CMAKE_BINARY_DIR}/vcpkg" CACHE PATH "VCPKG Root")
-    if(NOT EXISTS "${VCPKG_ROOT}")    
-        message(STATUS "Bootstrapping vcpkg...")
-        if (GIT_IN_USE)
-            execute_process(
-                COMMAND git clone https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}"
-                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
-        else()
-            set(VCPKG_MANIFEST_MODE OFF CACHE BOOL "Disable vcpkg manifest mode" FORCE)
-            set(VCPKG_ZIP_FILE "${CMAKE_BINARY_DIR}/vcpkg.zip")
-            set(VCPKG_EXTRACT_DEST "${CMAKE_BINARY_DIR}/vcpkg-extracted-temp")
-
-            # Use file(DOWNLOAD) to fetch the source archive
-            if(NOT EXISTS "${VCPKG_ZIP_FILE}")
-                message(STATUS "Downloading vcpkg source archive...")
-                file(DOWNLOAD "https://github.com/microsoft/vcpkg/archive/refs/heads/master.zip" "${VCPKG_ZIP_FILE}"
-                SHOW_PROGRESS)
-                message(STATUS "Downloading vcpkg source archive... done")
-            endif()
-
-            # Use file(ARCHIVE_EXTRACT) to unzip the source
-            if(NOT EXISTS "${VCPKG_EXTRACT_DEST}")
-                message(STATUS "Extracting vcpkg archive...")
-                file(ARCHIVE_EXTRACT INPUT "${VCPKG_ZIP_FILE}" DESTINATION "${VCPKG_EXTRACT_DEST}" )
-
-                # Move the extracted content (which is in a directory like vcpkg-master)
-                # to the desired VCPKG_ROOT path defined in your original script.
-                file(GLOB VCPKG_SOURCE_DIR_TMP "${VCPKG_EXTRACT_DEST}/vcpkg-*")
-                file(RENAME "${VCPKG_SOURCE_DIR_TMP}" "${VCPKG_ROOT}")
-                message(STATUS "Extracting vcpkg archive... done")
-            endif()
-        endif()
-        if(WIN32)
-            execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.bat")
-        else()
-            execute_process(COMMAND "${VCPKG_ROOT}/bootstrap-vcpkg.sh")
-        endif()
-	endif()
-else()
-	file(TO_CMAKE_PATH $ENV{VCPKG_ROOT} VCPKG_ROOT)
-endif()
-set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 if(WIN32)
 	if(GIT_CI_BUILD)
 		set(VCPKG_TARGET_TRIPLET "x64-windows-mixed-release" CACHE STRING "")
@@ -71,7 +28,6 @@ endif()
 
 set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/triplets" CACHE STRING "")
 set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/Tools/CMake/vcpkg/ports" CACHE STRING "")
-set(VCPKG_INSTALL_OPTIONS "--clean-after-build" CACHE STRING "")
 set(ENV{VCPKG_LIB_SOURCE_ROOT} "${CMAKE_SOURCE_DIR}/Engine/lib")
 set(ENV{VCPKG_KEEP_ENV_VARS} "VCPKG_LIB_SOURCE_ROOT")
 # All include directories to search. Modules should append to this when they want includes to point

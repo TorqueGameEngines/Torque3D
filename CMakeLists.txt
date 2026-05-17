@@ -17,6 +17,33 @@ endif()
 
 
 include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_macros.cmake")
+
+
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE
+        "${CMAKE_SOURCE_DIR}/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        CACHE STRING "vcpkg toolchain")
+endif()
+
+# Read-only by default — regular users just get cache hits
+set(ENV{VCPKG_BINARY_SOURCES}
+    "clear;files,${CMAKE_CURRENT_LIST_DIR}/Tools/vcpkg-binaries,read")
+set(ENV{VCPKG_ASSET_SOURCES}
+    "clear;x-azurl,file://${CMAKE_CURRENT_LIST_DIR}/Tools/vcpkg-assets,,read")
+
+# Maintainer override — cmake -DTORQUE_POPULATE_VCPKG_CACHE=ON
+if(TORQUE_POPULATE_VCPKG_CACHE)
+    message(STATUS "[vcpkg] Cache mode: READWRITE (populating cache)")
+    set(ENV{VCPKG_BINARY_SOURCES}
+        "clear;files,${CMAKE_CURRENT_LIST_DIR}/Tools/vcpkg-binaries,readwrite")
+    set(ENV{VCPKG_ASSET_SOURCES}
+        "clear;x-azurl,file://${CMAKE_CURRENT_LIST_DIR}/Tools/vcpkg-assets,,readwrite")
+else()
+    message(STATUS "[vcpkg] Cache mode: READ (using committed cache)")
+endif()
+
+set(ENV{VCPKG_KEEP_ENV_VARS} "VCPKG_BINARY_SOURCES;VCPKG_ASSET_SOURCES")
+
 include("${CMAKE_SOURCE_DIR}/Tools/CMake/torque_configs.cmake")
 
 # Ensure multi-core compilation is enabled for everything

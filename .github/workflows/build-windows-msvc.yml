@@ -31,14 +31,13 @@ jobs:
                 
         steps:
             - uses: actions/checkout@v4
+              with:
+                submodules: recursive
             - uses: ilammy/msvc-dev-cmd@v1.13.0
             - name: Print env
               run: |
                 echo github.event.action: ${{ github.event.action }}
                 echo github.event_name: ${{ github.event_name }}
-
-            - name: Run GIT Init
-              run: git init
 
             - name: Setup MSVC problem matcher
               uses: ammaraskar/msvc-problem-matcher@master

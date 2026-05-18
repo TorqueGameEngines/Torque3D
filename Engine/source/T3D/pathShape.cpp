@@ -27,6 +27,11 @@
 
 IMPLEMENT_CO_DATABLOCK_V1(PathShapeData);
 
+PathShapeData::PathShapeData()
+{
+   mUseEase = false;
+}
+
 void PathShapeData::consoleInit()
 {
 }
@@ -141,11 +146,6 @@ bool PathShape::onNewDataBlock(GameBaseData* dptr, bool reload)
    scriptOnNewDataBlock(reload);
    mSpline.useEase(mDataBlock->mUseEase);
    return true;
-}
-
-PathShapeData::PathShapeData()
-{
-
 }
 
 //----------------------------------------------------------------------------

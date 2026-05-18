@@ -229,7 +229,9 @@ void PathShape::advancePosition(S32 ms)
       }
 
    // Script callbacks
-   if (int(mPosition) != int(delta.timeVec))
+   if ((mState == Backward) && (int(mPosition) == 0) && (mSpline.advanceTime(delta.timeVec - mNodeBase, -ms) < TickSec))
+      onNode(0);
+   else if (int(mPosition)>0 && int(mPosition) != int(delta.timeVec))
       onNode(int(mPosition));
 
    // Set frame interpolation

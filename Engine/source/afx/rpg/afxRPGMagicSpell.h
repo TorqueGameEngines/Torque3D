@@ -22,6 +22,7 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
 
 #ifndef _AFX_RPG_MAGIC_SPELL_H_
 #define _AFX_RPG_MAGIC_SPELL_H_

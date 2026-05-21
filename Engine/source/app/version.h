@@ -19,9 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifndef _VERSION_H_
-#define _VERSION_H_
+#pragma once 
 
 /// Since we can build different engine "products" out of the same
 /// base engine source we need a way to differentiate which product
@@ -59,5 +57,3 @@ const char* getCompileTimeString();
 U32 getAppVersionNumber();
 /// Gets the human readable application version string.
 const char* getAppVersionString();
-
-#endif

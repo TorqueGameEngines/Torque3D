@@ -21,13 +21,12 @@
 //-----------------------------------------------------------------------------
 
 #include "console/simBase.h"
+#pragma once 
+#pragma once 
 
 #ifndef _SCRIPTMSGLISTENER_H_
 #define _SCRIPTMSGLISTENER_H_
-
-#ifndef _DISPATCHER_H_
 #include "util/messaging/dispatcher.h"
-#endif
 
 /// @addtogroup msgsys Message System
 // @{

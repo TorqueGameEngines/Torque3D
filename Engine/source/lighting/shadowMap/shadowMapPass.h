@@ -19,22 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SHADOWMAPPASS_H_
 #define _SHADOWMAPPASS_H_
-
-#ifndef _RENDERPASSMANAGER_H_
 #include "renderInstance/renderPassManager.h"
-#endif
-#ifndef _RENDERMESHMGR_H_
+
 #include "renderInstance/renderMeshMgr.h"
-#endif
-#ifndef _LIGHTINFO_H_
+
 #include "lighting/lightInfo.h"
-#endif
-#ifndef _SHADOW_COMMON_H_
 #include "lighting/shadowMap/shadowCommon.h"
-#endif
 
 class RenderMeshMgr;
 class LightShadowMap;

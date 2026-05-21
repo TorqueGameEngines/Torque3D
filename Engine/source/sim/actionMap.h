@@ -19,22 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifndef _ACTIONMAP_H_
-#define _ACTIONMAP_H_
-
-#ifndef _PLATFORM_H_
+#pragma once 
+ 
 #include "platform/platform.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _SIMBASE_H_
+
 #include "console/simBase.h"
-#endif
-#ifndef _ITICKABLE_H_  
+
 #include "core/iTickable.h"  
-#endif  
 
 class ContextAction;
 struct InputEventInfo;
@@ -218,4 +211,4 @@ public:
    void interpolateTick(F32 delta) override {}   
    void advanceTime(F32 timeDelta) override {}
 };
-#endif // _ACTIONMAP_H_
+

@@ -19,13 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXGLVERTEXBUFFER_H_
 #define _GFXGLVERTEXBUFFER_H_
-
-#ifndef _GFXVERTEXBUFFER_H_
 #include "gfx/gfxVertexBuffer.h"
-#endif
+
 #include "gfx/gl/tGL/tGL.h"
 #include "gfx/gl/util/glFrameAllocatorLockableHelper.h"
 

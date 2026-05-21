@@ -95,6 +95,33 @@ void AbstractClassRep::init()
    }
 }
 
+void AbstractClassRep::_buildPropertyTable(EnginePropertyTable& smPropTable, EnginePropertyTable& _smPropTable, const EngineTypeInfo* typeInfo)
+{
+   EnginePropertyTable::Property* props = new EnginePropertyTable::Property[sg_tempFieldList.size() + 1];
+
+   for (int i = 0; i < sg_tempFieldList.size(); ++i)
+   {
+      EnginePropertyTable::Property prop;
+      prop.mDocString = sg_tempFieldList[i].pFieldDocs;
+      prop.mName = sg_tempFieldList[i].pFieldname;
+      prop.mNumElements = sg_tempFieldList[i].elementCount;
+      prop.mFlags = 0;
+      if (sg_tempFieldList[i].type == StartGroupFieldType)
+         prop.mFlags |= EnginePropertyGroupBegin;
+      if (sg_tempFieldList[i].type == EndGroupFieldType)
+         prop.mFlags |= EnginePropertyGroupEnd;
+      prop.mType = sg_tempFieldList[i].type;
+
+      props[i] = prop;
+   }
+
+   _smPropTable = EnginePropertyTable(sg_tempFieldList.size(), props);
+   smPropTable = _smPropTable;
+
+   // After we hand it off, immediately delete if safe:
+   delete[] props;
+}
+
 const AbstractClassRep::Field *AbstractClassRep::findField(StringTableEntry name) const
 {
    for(U32 i = 0; i < mFieldList.size(); i++)

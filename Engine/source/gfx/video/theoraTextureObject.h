@@ -19,24 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _THEORATEXTUREOBJECT_H_
 #define _THEORATEXTUREOBJECT_H_
 
 #ifdef TORQUE_OGGTHEORA
-
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
 
-#ifndef _THEORATEXTURE_H_
 #include "gfx/video/theoraTexture.h"
-#endif
 
-#ifndef _MATTEXTURETARGET_H_
 #include "materials/matTextureTarget.h"
-#endif
-
 
 class SFXDescription;
 

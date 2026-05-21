@@ -19,21 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _RIBBON_H_
 #define _RIBBON_H_
-
-#ifndef _GAMEBASE_H_
 #include "T3D/gameBase/gameBase.h"
-#endif
 
-#ifndef _GFXPRIMITIVEBUFFER_H_
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
 
-#ifndef _GFXVERTEXBUFFER_H_
 #include "gfx/gfxVertexBuffer.h"
-#endif
 
 #include "materials/materialParameters.h"
 #include "math/util/matrixSet.h"

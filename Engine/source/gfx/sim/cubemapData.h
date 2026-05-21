@@ -19,25 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _CUBEMAPDATA_H_
 #define _CUBEMAPDATA_H_
-
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
 
-#ifndef _GFXCUBEMAP_H_
 #include "gfx/gfxCubemap.h"
-#endif
 
-#ifndef _GFXTARGET_H_
 #include "gfx/gfxTarget.h"
-#endif
 
-#ifndef _SCENEMANAGER_H_
 #include "scene/sceneManager.h"
-#endif
 
 #include "T3D/assets/ImageAsset.h"
 

@@ -19,21 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MATHIO_H_
 #define _MATHIO_H_
 
 //Includes
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _STREAM_H_
-#include "core/stream/stream.h"
-#endif
-#ifndef _MMATH_H_
-#include "math/mMath.h"
-#endif
 
+#include "core/stream/stream.h"
+
+#include "math/mMath.h"
 
 //------------------------------------------------------------------------------
 //-------------------------------------- READING

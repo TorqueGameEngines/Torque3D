@@ -19,18 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _DECALSPHERE_H_
 #define _DECALSPHERE_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _MSPHERE_H_
 #include "math/mSphere.h"
-#endif
-
 
 class DecalInstance;
 class SceneZoneSpaceManager;

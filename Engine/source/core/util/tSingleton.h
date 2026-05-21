@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSINGLETON_H_
 #define _TSINGLETON_H_
-
-#ifndef _PLATFORMASSERT_H_
 #include "platform/platformAssert.h"
-#endif
 
 /// This is a simple thread safe singleton class based on the 
 /// design of boost::singleton_default (see http://www.boost.org/).

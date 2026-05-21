@@ -19,16 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _FOREST_SHADERGEN_WINDDEFORMATION_H_
 #define _FOREST_SHADERGEN_WINDDEFORMATION_H_
-
-#ifndef _SHADERGEN_H_
 #include "shaderGen/shaderGen.h"
-#endif
-#ifndef _FEATURETYPE_H_
+
 #include "materials/materialFeatureTypes.h"
-#endif
 
 class GFXShaderConstHandle;
 

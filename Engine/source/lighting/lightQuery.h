@@ -19,22 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _LIGHTQUERY_H_
 #define _LIGHTQUERY_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _MSPHERE_H_
 #include "math/mSphere.h"
-#endif
 
-#ifndef _MBOX_H_
 #include "math/mBox.h"
-#endif
-
 
 class LightManager;
 class LightInfo;

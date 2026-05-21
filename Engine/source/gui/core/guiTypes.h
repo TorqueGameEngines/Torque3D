@@ -19,22 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUITYPES_H_
 #define _GUITYPES_H_
-
-#ifndef _GFONT_H_
 #include "gfx/gFont.h"
-#endif
-#ifndef _COLOR_H_
+
 #include "core/color.h"
-#endif
-#ifndef _SIMBASE_H_
+
 #include "console/simBase.h"
-#endif
-#ifndef _DYNAMIC_CONSOLETYPES_H_
 #include "console/dynamicTypes.h"
-#endif
 
 #ifndef SOUND_ASSET_H_
 #include "T3D/assets/SoundAsset.h"

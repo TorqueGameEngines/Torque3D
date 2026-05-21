@@ -22,6 +22,7 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
 
 #ifndef _AFX_SCRIPT_EVENT_H_
 #define _AFX_SCRIPT_EVENT_H_

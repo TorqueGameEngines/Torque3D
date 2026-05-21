@@ -22,19 +22,13 @@
 
 #ifndef _H_TRIGGER
 #define _H_TRIGGER
-
-#ifndef _GAMEBASE_H_
 #include "T3D/gameBase/gameBase.h"
-#endif
-#ifndef _MBOX_H_
+
 #include "math/mBox.h"
-#endif
-#ifndef _EARLYOUTPOLYLIST_H_
+
 #include "collision/earlyOutPolyList.h"
-#endif
-#ifndef _MPOLYHEDRON_H_
+
 #include "math/mPolyhedron.h"
-#endif
 
 class Convex;
 class PhysicsBody;

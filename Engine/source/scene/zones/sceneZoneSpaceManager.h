@@ -19,31 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENEZONESPACEMANAGER_H_
 #define _SCENEZONESPACEMANAGER_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
 
-#ifndef _DATACHUNKER_H_
 #include "core/dataChunker.h"
-#endif
 
-#ifndef _SCENECONTAINER_H_
 #include "scene/sceneContainer.h"
-#endif
-
-
 
 class SceneContainer;
 class SceneRootZone;

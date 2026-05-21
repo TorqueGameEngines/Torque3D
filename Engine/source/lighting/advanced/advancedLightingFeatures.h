@@ -19,13 +19,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-#ifndef _ADVANCEDLIGHTINGFEATURES_H_
-#define _ADVANCEDLIGHTINGFEATURES_H_
-
-#ifndef _GFXENUMS_H_
+#pragma once 
+ 
 #include "gfx/gfxEnums.h"
-#endif
-
 
 class AdvancedLightingFeatures
 {
@@ -38,5 +34,3 @@ private:
 
    static bool smFeaturesRegistered;
 };
-
-#endif // _ADVANCEDLIGHTINGFEATURES_H_

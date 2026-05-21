@@ -19,18 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUICONSOLE_H_
 #define _GUICONSOLE_H_
-
-#ifndef _GUIARRAYCTRL_H_
 #include "gui/core/guiArrayCtrl.h"
-#endif
-
-#ifndef _CONSOLE_LOGGER_H_
 #include "console/consoleLogger.h"
-#endif
-
 
 class GuiConsole : public GuiArrayCtrl
 {

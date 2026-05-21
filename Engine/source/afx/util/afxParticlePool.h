@@ -22,6 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+ 
+#pragma once 
 
 #ifndef _AFX_PARTICLE_POOL_H_
 #define _AFX_PARTICLE_POOL_H_

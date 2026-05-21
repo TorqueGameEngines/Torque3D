@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSDECAL_H_
 #define _TSDECAL_H_
-
-#ifndef _TSMESH_H_
 #include "ts/tsMesh.h"
-#endif
 
 /// Decals!  The lovely detailing thingies, e.g. bullet hole marks.
 /// DEPRECATED: This class is here for compatibility with old files only.

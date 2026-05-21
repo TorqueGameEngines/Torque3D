@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _VEHICLEBLOCKER_H_
 #define _VEHICLEBLOCKER_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _BOXCONVEX_H_
+
 #include "collision/boxConvex.h"
-#endif
 
 //--------------------------------------------------------------------------
 class VehicleBlocker : public SceneObject

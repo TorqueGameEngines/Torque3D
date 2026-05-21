@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MATINSTANCEHOOK_H_
 #define _MATINSTANCEHOOK_H_
-
-#ifndef _TDICTIONARY_H_
 #include "core/util/tDictionary.h"
-#endif
-
 
 /// The hook type wrapper object
 class MatInstanceHookType

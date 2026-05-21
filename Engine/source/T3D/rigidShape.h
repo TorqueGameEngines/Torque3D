@@ -19,21 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _RIGIDSHAPE_H_
 #define _RIGIDSHAPE_H_
-
-#ifndef _SHAPEBASE_H_
 #include "T3D/shapeBase.h"
-#endif
-#ifndef _RIGID_H_
+
 #include "T3D/rigid.h"
-#endif
-#ifndef _BOXCONVEX_H_
+
 #include "collision/boxConvex.h"
-#endif
-#ifndef _T3D_PHYSICS_PHYSICSBODY_H_
 #include "T3D/physics/physicsBody.h"
-#endif
 
 #include "T3D/assets/SoundAsset.h"
 

@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _CONTAINERQUERY_H_
 #define _CONTAINERQUERY_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
-#ifndef _STRINGTABLE_H_
+
 #include "core/stringTable.h"
-#endif
-#ifndef _MBOX_H_
+
 #include "math/mBox.h"
-#endif
 
 class SceneObject;
 class WaterObject;

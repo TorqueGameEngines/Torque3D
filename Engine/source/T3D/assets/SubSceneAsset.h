@@ -5,14 +5,9 @@
 #ifndef LEVEL_ASSET_H
 #include "LevelAsset.h"
 #endif
-
-#ifndef _ASSET_DEFINITION_H_
 #include "assets/assetDefinition.h"
-#endif
 
-#ifndef _GUI_INSPECTOR_TYPES_H_
 #include "gui/editor/guiInspectorTypes.h"
-#endif
 
 class SubSceneAsset : public LevelAsset
 {

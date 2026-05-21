@@ -22,9 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#ifndef _AFX_BILLBOARD_H_
-#define _AFX_BILLBOARD_H_
+ 
+#pragma once 
 
 #include "afx/afxEffectDefs.h"
 
@@ -115,7 +114,3 @@ public:
   DECLARE_CONOBJECT(afxBillboard);
   DECLARE_CATEGORY("UNLISTED");
 };
-
-//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#endif // _AFX_BILLBOARD_H_

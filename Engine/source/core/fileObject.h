@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FILEOBJECT_H_
 #define _FILEOBJECT_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
-#ifndef _FILESTREAM_H_
+
 #include "core/stream/fileStream.h"
-#endif
 
 class FileObject : public SimObject
 {

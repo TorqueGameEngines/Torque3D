@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _GUI_INSPECTOR_DYNAMICFIELD_H_
 #define _GUI_INSPECTOR_DYNAMICFIELD_H_

@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FORESTDATAFILE_H_
 #define _FORESTDATAFILE_H_
-
-#ifndef _FORESTITEM_H_
 #include "forest/forestItem.h"
-#endif
-#ifndef _TDICTIONARY_H_
+
 #include "core/util/tDictionary.h"
-#endif
 
 class ForestCell;
 class Forest;

@@ -19,17 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _MATERIALS_PROCESSEDCUSTOMMATERIAL_H_
 #define _MATERIALS_PROCESSEDCUSTOMMATERIAL_H_
-
-#ifndef _MATERIALS_PROCESSEDSHADERMATERIAL_H_
 #include "materials/processedShaderMaterial.h"
-#endif
-#ifndef _CUSTOMMATERIALDEFINITION_H_
-#include "materials/customMaterialDefinition.h"
-#endif
 
+#include "materials/customMaterialDefinition.h"
 
 ///
 class ProcessedCustomMaterial : public ProcessedShaderMaterial

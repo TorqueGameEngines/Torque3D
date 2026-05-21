@@ -19,25 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SHADOWMAPMANAGER_H_
 #define _SHADOWMAPMANAGER_H_
-
-#ifndef _TSINGLETON_H_
 #include "core/util/tSingleton.h"
-#endif
-#ifndef _SHADOWMANAGER_H_
+
 #include "lighting/shadowManager.h"
-#endif
-#ifndef _GFXENUMS_H_
+
 #include "gfx/gfxEnums.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
+
 #include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _MPOINT4_H_
+
 #include "math/mPoint4.h"
-#endif
 
 class LightShadowMap;
 class ShadowMapPass;

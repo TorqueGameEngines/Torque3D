@@ -19,50 +19,30 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _DECALMANAGER_H_
 #define _DECALMANAGER_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-
-#ifndef _MATHUTIL_FRUSTUM_H_
 #include "math/util/frustum.h"
-#endif
 
-#ifndef _GFXPRIMITIVEBUFFER_H_
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
 
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
 
-#ifndef _CLIPPEDPOLYLIST_H_
 #include "collision/clippedPolyList.h"
-#endif
 
-#ifndef _DECALDATAFILE_H_
 #include "decalDataFile.h"
-#endif
 
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif
-
-#ifndef _DECALINSTANCE_H_
 #include "decalInstance.h"
-#endif
 
-#ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
 
-#ifndef _DATACHUNKER_H_
 #include "core/dataChunker.h"
-#endif
-
 
 //#define DECALMANAGER_DEBUG
 

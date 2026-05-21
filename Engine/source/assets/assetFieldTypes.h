@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _ASSET_FIELD_TYPES_H_
 #define _ASSET_FIELD_TYPES_H_
-
-#ifndef _CONSOLE_BASE_TYPE_H_
 #include "console/consoleTypes.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

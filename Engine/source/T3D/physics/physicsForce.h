@@ -19,19 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _T3D_PHYSICS_PHYSICSFORCE_H_
 #define _T3D_PHYSICS_PHYSICSFORCE_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _T3D_PHYSICSCOMMON_H_
 #include "T3D/physics/physicsCommon.h"
-#endif
-#ifndef _T3D_PHYSICS_PHYSICSOBJECT_H_
+
 #include "T3D/physics/physicsObject.h"
-#endif
 
 class PhysicsBody;
 class PhysicsWorld;

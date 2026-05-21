@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _CREATOR_H_
 #define _CREATOR_H_
-
-#ifndef _GUIARRAYCTRL_H_
 #include "gui/core/guiArrayCtrl.h"
-#endif
-
 
 /// Creator tree from old editor.  Not used in current editor.
 class CreatorTree : public GuiArrayCtrl

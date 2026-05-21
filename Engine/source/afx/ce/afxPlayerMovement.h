@@ -22,6 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+ 
+#pragma once 
 
 #ifndef _AFX_PLAYER_MOVEMENT_H_
 #define _AFX_PLAYER_MOVEMENT_H_

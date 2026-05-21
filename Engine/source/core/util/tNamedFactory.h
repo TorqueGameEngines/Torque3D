@@ -19,17 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TFACTORY_H_
 #define _TFACTORY_H_
-
-#ifndef _TDICTIONARY_H_
 #include "core/util/tDictionary.h"
-#endif
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
-
 
 /// A helper template class for registering creation 
 /// methods to name strings.

@@ -19,17 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _GFX_GFXDRAWER_H_
 #define _GFX_GFXDRAWER_H_
-
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
 
-#ifndef _MPOLYHEDRON_H_
 #include "math/mPolyhedron.h"
-#endif
 
 class FontRenderBatcher;
 class Frustum;

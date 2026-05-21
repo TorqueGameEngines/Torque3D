@@ -22,15 +22,13 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
 
 #ifndef _ARCANE_FX_H_
 #define _ARCANE_FX_H_
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
 
 #define AFX_VERSION_STRING "2.0"
 #define AFX_VERSION         2.0
@@ -56,31 +54,19 @@
 #endif
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//
-
-#ifndef _CONSOLETYPES_H_
 #include "console/consoleTypes.h"
-#endif
 
-#ifndef _ENGINEAPI_H_
 #include "console/engineAPI.h"
-#endif
 
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
-#ifndef _BITSTREAM_H_
 #include "core/stream/bitStream.h"
-#endif
 
-#ifndef _GAMEBASE_H_
 #include "T3D/gameBase/gameBase.h"
-#endif
 
 #if defined(DGL_GRAPHICS_LAYER)
-#ifndef _DGL_H_
 #include "dgl/dgl.h"
-#endif
+
 #endif
 
 class afxChoreographer;

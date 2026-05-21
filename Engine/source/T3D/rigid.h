@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _RIGID_H_
 #define _RIGID_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _MPOINT3_H_
+
 #include "math/mPoint3.h"
-#endif
-#ifndef _MMATRIX_H_
+
 #include "math/mMatrix.h"
-#endif
-#ifndef _MQUAT_H_
+
 #include "math/mQuat.h"
-#endif
 
 //----------------------------------------------------------------------------
 

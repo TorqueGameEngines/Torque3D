@@ -30,6 +30,8 @@
 #include "core/util/safeDelete.h"
 #include "util/tempAlloc.h"
 
+#include <shellapi.h>
+
 //-----------------------------------------------------------------------------
 // Thread for executing in
 //-----------------------------------------------------------------------------

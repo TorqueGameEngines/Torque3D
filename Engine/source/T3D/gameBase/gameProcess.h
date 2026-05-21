@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GAMEPROCESS_H_
 #define _GAMEPROCESS_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _PROCESSLIST_H_
-#include "T3D/gameBase/processList.h"
-#endif
 
+#include "T3D/gameBase/processList.h"
 
 class GameBase;
 class GameConnection;

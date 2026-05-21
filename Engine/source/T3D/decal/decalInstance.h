@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _DECALINSTANCE_H_
 #define _DECALINSTANCE_H_
-
-#ifndef _GFXVERTEXBUFFER_H_
 #include "gfx/gfxVertexBuffer.h"
-#endif
 
-#ifndef _DECALDATA_H_
 #include "T3D/decal/decalData.h"
-#endif
 
 struct DecalVertex;
 class SceneRenderState;

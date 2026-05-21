@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXPRIMITIVEBUFFER_H_
 #define _GFXPRIMITIVEBUFFER_H_
-
-#ifndef _GFXSTRUCTS_H_
 #include "gfx/gfxStructs.h"
-#endif
 
 #ifdef TORQUE_ENABLE_PROFILER
 #include "platform/profiler.h"

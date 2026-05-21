@@ -19,22 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _BASICSCENEOBJECTLIGHTINGPLUGIN_H_
 #define _BASICSCENEOBJECTLIGHTINGPLUGIN_H_
-
-#ifndef _SCENEOBJECTLIGHTINGPLUGIN_H_
 #include "scene/sceneObjectLightingPlugin.h"
-#endif
 
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
 
-#ifndef _TSINGLETON_H_
 #include "core/util/tSingleton.h"
-#endif
-
 
 class ShadowBase;
 

@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MRANDOM_H_
 #define _MRANDOM_H_
-
-#ifndef _PLATFORMASSERT_H_
 #include "platform/platformAssert.h"
-#endif
-
 
 //--------------------------------------
 /// Base class for random number generators

@@ -19,12 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _SINGLELIGHTSHADOWMAP_H_
 #define _SINGLELIGHTSHADOWMAP_H_
-
-#ifndef _LIGHTSHADOWMAP_H_
 #include "lighting/shadowMap/lightShadowMap.h"
-#endif
 
 //
 // SingleLightShadowMap, holds the shadow map and various other things for a light.

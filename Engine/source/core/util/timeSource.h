@@ -19,22 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TIMESOURCE_H_
 #define _TIMESOURCE_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
 
-#ifndef _TSTREAM_H_
 #include "core/stream/tStream.h"
-#endif
 
-#ifndef _SIM_H_
 #include "console/sim.h"
-#endif
-
 
 /// Timer that queries the real-time ticker.
 struct RealMSTimer

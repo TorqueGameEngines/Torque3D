@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _STRINGFUNCTIONS_H_
 #define _STRINGFUNCTIONS_H_
@@ -27,14 +29,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <cstdarg>
-
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
 
-#ifndef _PLATFORMASSERT_H_
 #include "platform/platformAssert.h"
-#endif
 
 #if defined(TORQUE_OS_WIN)
 // These standard functions are not defined on Win32 and other Microsoft platforms...

@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXVERTEXFORMAT_H_
 #define _GFXVERTEXFORMAT_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-#ifndef _GFXENUMS_H_
-#include "gfx/gfxEnums.h"
-#endif
 
+#include "gfx/gfxEnums.h"
 
 /// The known Torque vertex element semantics.  You can use
 /// other semantic strings, but they will be interpreted as

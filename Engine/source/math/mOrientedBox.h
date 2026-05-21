@@ -19,18 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MORIENTEDBOX_H_
 #define _MORIENTEDBOX_H_
-
-#ifndef _MBOXBASE_H_
 #include "math/mBoxBase.h"
-#endif
 
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
-
 
 #ifndef USE_TEMPLATE_MATRIX
 class MatrixF;

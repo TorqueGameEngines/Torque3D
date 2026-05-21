@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _DEPTHSORTLIST_H_
 #define _DEPTHSORTLIST_H_
-
-#ifndef _CLIPPEDPOLYLIST_H_
 #include "collision/clippedPolyList.h"
-#endif
-
 
 //----------------------------------------------------------------------------
 

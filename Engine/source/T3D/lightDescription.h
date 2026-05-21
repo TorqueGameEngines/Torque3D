@@ -19,25 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _LIGHTDESCRIPTION_H_
 #define _LIGHTDESCRIPTION_H_
-
-#ifndef _SIMDATABLOCK_H_
 #include "console/simDatablock.h"
-#endif
-#ifndef _CONSOLETYPES_H_
+
 #include "console/consoleTypes.h"
-#endif
-#ifndef _COLOR_H_
+
 #include "core/color.h"
-#endif
-#ifndef _LIGHTANIMDATA_H_
+
 #include "T3D/lightAnimData.h"
-#endif
-#ifndef _LIGHTFLAREDATA_H_
+
 #include "T3D/lightFlareData.h"
-#endif
 
 struct LightState
 {

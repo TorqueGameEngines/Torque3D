@@ -19,17 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENEPOLYHEDRALSPACE_H_
 #define _SCENEPOLYHEDRALSPACE_H_
-
-#ifndef _SCENESPACE_H_
 #include "scene/sceneSpace.h"
-#endif
 
-#ifndef _SCENEPOLYHEDRALOBJECT_H_
 #include "scene/mixin/scenePolyhedralObject.h"
-#endif
+
 #include "scene/mixin/scenePolyhedralObject.impl.h"
 
 ///

@@ -19,28 +19,23 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXTEXTUREMANAGER_H_
 #define _GFXTEXTUREMANAGER_H_
-
-#ifndef _GFXTEXTUREOBJECT_H_
 #include "gfx/gfxTextureObject.h"
-#endif 
-#ifndef _GBITMAP_H_
+
 #include "gfx/bitmap/gBitmap.h"
-#endif 
-#ifndef _DDSFILE_H_
+
 #include "gfx/bitmap/ddsFile.h"
-#endif
-#ifndef _RESOURCEMANAGER_H_
+
 #include "core/resourceManager.h"
-#endif
-#ifndef _TDICTIONARY_H_
+
 #include "core/util/tDictionary.h"
-#endif
-#ifndef _TSIGNAL_H_
+
 #include "core/util/tSignal.h"
-#endif
+
 #include "gfxTextureHandle.h"
 
 

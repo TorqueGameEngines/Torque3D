@@ -24,22 +24,18 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
+#pragma once 
 
 #ifndef _NETCONNECTION_H_
 #define _NETCONNECTION_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
-#ifndef _NETOBJECT_H_
+
 #include "sim/netObject.h"
-#endif
-#ifndef _NETSTRINGTABLE_H_
+
 #include "sim/netStringTable.h"
-#endif
-#ifndef _DNET_H_
+
 #include "core/dnet.h"
-#endif
 
 #ifndef _H_CONNECTIONSTRINGTABLE
 #include "sim/connectionStringTable.h"

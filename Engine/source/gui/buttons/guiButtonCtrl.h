@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIBUTTONCTRL_H_
 #define _GUIBUTTONCTRL_H_
-
-#ifndef _GUIBUTTONBASECTRL_H_
 #include "gui/buttons/guiButtonBaseCtrl.h"
-#endif
 
 class GuiButtonCtrl : public GuiButtonBaseCtrl
 {

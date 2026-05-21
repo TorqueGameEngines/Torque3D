@@ -25,6 +25,8 @@
 // Core strings are out of date so this code is currently disabled.
 
 #include "i18n/CoreStrings.h"
+#pragma once 
+#pragma once 
 
 #ifndef _I18N_H_
 #define _I18N_H_

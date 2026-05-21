@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MEMSTREAM_H_
 #define _MEMSTREAM_H_
-
-#ifndef _STREAM_H_
 #include "core/stream/stream.h"
-#endif
-
 
 /// The MemStream class is used to read and write to a memory buffer.
 class MemStream : public Stream

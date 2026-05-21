@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _AICONNECTION_H_
 #define _AICONNECTION_H_
-
-#ifndef _GAMECONNECTION_H_
 #include "T3D/gameBase/gameConnection.h"
-#endif
-#ifndef _MOVEMANAGER_H_
+
 #include "T3D/gameBase/moveManager.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

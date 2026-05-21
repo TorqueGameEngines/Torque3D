@@ -19,33 +19,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SKYBOX_H_
 #define _SKYBOX_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
 
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
 
-#ifndef _CUBEMAPDATA_H_
 #include "gfx/sim/cubemapData.h"
-#endif
 
-#ifndef _MATERIALLIST_H_
 #include "materials/materialList.h"
-#endif
 
-#ifndef _GFXVERTEXBUFFER_H_
 #include "gfx/gfxVertexBuffer.h"
-#endif
 
-#ifndef _GFXPRIMITIVEBUFFER_H_
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
 
 #include "T3D/assets/MaterialAsset.h"
 

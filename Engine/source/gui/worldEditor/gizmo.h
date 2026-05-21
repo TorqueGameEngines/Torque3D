@@ -19,34 +19,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GIZMO_H_
 #define _GIZMO_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
 
-#ifndef _COLOR_H_
 #include "core/color.h"
-#endif
 
-#ifndef _GUITYPES_H_
 #include "gui/core/guiTypes.h"
-#endif
 
-#ifndef _MATHUTILS_H_
 #include "math/mathUtils.h"
-#endif
-
-#ifndef _DYNAMIC_CONSOLETYPES_H_
 #include "console/dynamicTypes.h"
-#endif
-
 
 enum GizmoMode
 {

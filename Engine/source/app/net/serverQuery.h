@@ -19,17 +19,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once
 
-#ifndef _SERVERQUERY_H_
-#define _SERVERQUERY_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _BITSET_H_
 #include "core/bitSet.h"
-#endif
-
 #include "platform/platformNet.h"
 
 //-----------------------------------------------------------------------------
@@ -121,5 +114,3 @@ extern void sendHeartbeat( U8 flags );
 #ifdef TORQUE_DEBUG
 extern void addFakeServers( S32 howMany );
 #endif // DEBUG
-
-#endif

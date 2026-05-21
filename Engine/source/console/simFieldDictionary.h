@@ -24,6 +24,8 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
+#pragma once 
 
 #ifndef _SIMFIELDDICTIONARY_H_
 #define _SIMFIELDDICTIONARY_H_
@@ -34,10 +36,7 @@ class SimObject;
 
 #include "core/stringTable.h"
 #include "core/stream/stream.h"
-
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
 
 /// Dictionary to keep track of dynamic fields on SimObject.
 class SimFieldDictionary

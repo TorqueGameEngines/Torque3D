@@ -19,21 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PERSISTENCEMANAGER_H_
 #define _PERSISTENCEMANAGER_H_
-
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
 
-#ifndef _SIMOBJECTLIST_H_
 #include "console/simObjectList.h"
-#endif
 
-#ifndef _TOKENIZER_H_
 #include "core/tokenizer.h"
-#endif
 
 class PersistenceManager : public SimObject
 {

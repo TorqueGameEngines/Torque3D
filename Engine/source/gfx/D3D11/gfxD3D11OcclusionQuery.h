@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _GFX_D3D11_OCCLUSIONQUERY_H_
 #define _GFX_D3D11_OCCLUSIONQUERY_H_

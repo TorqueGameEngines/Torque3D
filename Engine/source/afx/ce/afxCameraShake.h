@@ -22,6 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+ 
+#pragma once 
 
 #ifndef _AFX_CAMERA_SHAKE_H_
 #define _AFX_CAMERA_SHAKE_H_

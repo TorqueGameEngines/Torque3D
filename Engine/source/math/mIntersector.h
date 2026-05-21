@@ -19,42 +19,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MINTERSECTOR_H_
 #define _MINTERSECTOR_H_
-
-#ifndef _MCONSTANTS_H_
 #include "math/mConstants.h"
-#endif
 
-#ifndef _MBOX_H_
 #include "math/mBox.h"
-#endif
 
-#ifndef _MORIENTEDBOX_H_
 #include "math/mOrientedBox.h"
-#endif
 
-#ifndef _MSPHERE_H_
 #include "math/mSphere.h"
-#endif
 
-#ifndef _MPLANE_H_
 #include "math/mPlane.h"
-#endif
 
-#ifndef _MPOLYHEDRON_H_
 #include "math/mPolyhedron.h"
-#endif
 
-#ifndef _MPLANETRANSFORMER_H_
 #include "math/mPlaneTransformer.h"
-#endif
 
-#ifndef _PROFILER_H_
 #include "platform/profiler.h"
-#endif
-
 
 /// @file
 /// Precise and fast geometric intersection testing.

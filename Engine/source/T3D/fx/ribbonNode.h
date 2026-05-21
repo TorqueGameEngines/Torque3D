@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _RIBBON_NODE_H_
 #define _RIBBON_NODE_H_
-
-#ifndef _GAMEBASE_H_
 #include "T3D/gameBase/gameBase.h"
-#endif
 
 class RibbonData;
 class Ribbon;

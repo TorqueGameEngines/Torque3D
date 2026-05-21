@@ -19,34 +19,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MPLANESET_H_
 #define _MPLANESET_H_
-
-#ifndef _MPLANE_H_
 #include "math/mPlane.h"
-#endif
 
-#ifndef _MBOX_H_
 #include "math/mBox.h"
-#endif
 
-#ifndef _MSPHERE_H_
 #include "math/mSphere.h"
-#endif
 
-#ifndef _MORIENTEDBOX_H_
 #include "math/mOrientedBox.h"
-#endif
 
-#ifndef _TEMPALLOC_H_
 #include "util/tempAlloc.h"
-#endif
 
-#ifndef _TALGORITHM_H_
 #include "core/tAlgorithm.h"
-#endif
-
 
 /// Set of planes which can be tested against bounding volumes.
 ///

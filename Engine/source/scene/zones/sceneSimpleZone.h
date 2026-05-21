@@ -19,18 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENESIMPLEZONE_H_
 #define _SCENESIMPLEZONE_H_
-
-#ifndef _SCENEZONESPACE_H_
 #include "scene/zones/sceneZoneSpace.h"
-#endif
 
-#ifndef _MORIENTEDBOX_H_
 #include "math/mOrientedBox.h"
-#endif
-
 
 class SceneRenderState;
 class BaseMatInstance;

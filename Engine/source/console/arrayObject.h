@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _ARRAYOBJECT_H_
 #define _ARRAYOBJECT_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
 // This class is based on original code by community
 // member Daniel Neilsen:

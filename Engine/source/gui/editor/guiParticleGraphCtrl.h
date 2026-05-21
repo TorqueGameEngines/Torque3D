@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIPARTICLEGRAPHCTRL_H_
 #define _GUIPARTICLEGRAPHCTRL_H_
-
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
-#ifndef _STRINGTABLE_H_
-#include "core/stringTable.h"
-#endif
 
+#include "core/stringTable.h"
 
 class GuiParticleGraphCtrl : public GuiControl
 {

@@ -22,6 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+ 
+#pragma once 
 
 #ifndef _AFX_FORCE_SET_H_
 #define _AFX_FORCE_SET_H_

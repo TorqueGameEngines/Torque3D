@@ -50,6 +50,8 @@
 #include "T3D/gameBase/gameConnection.h"
 #include "T3D/accumulationVolume.h"
 
+template class Vector<SceneObject*>;
+
 IMPLEMENT_CONOBJECT(SceneObject);
 
 ConsoleDocClass( SceneObject,

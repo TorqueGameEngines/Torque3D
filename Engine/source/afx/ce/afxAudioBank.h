@@ -22,9 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#ifndef _AFX_AUDIO_BANK_H_
-#define _AFX_AUDIO_BANK_H_
+ 
+#pragma once 
 
 class SFXDescription;
 
@@ -60,7 +59,3 @@ public:
 
    DECLARE_CONOBJECT(afxAudioBank);
 };
-
-//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#endif  // _AFX_AUDIO_BANK_H_

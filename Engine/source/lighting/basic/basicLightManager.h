@@ -19,25 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _BASICLIGHTMANAGER_H_
 #define _BASICLIGHTMANAGER_H_
-
-#ifndef _LIGHTMANAGER_H_
 #include "lighting/lightManager.h"
-#endif 
-#ifndef _TDICTIONARY_H_
+
 #include "core/util/tDictionary.h"
-#endif
-#ifndef _GFXSHADER_H_
+
 #include "gfx/gfxShader.h"
-#endif
-#ifndef _SIMOBJECT_H_
+
 #include "console/simObject.h"
-#endif
-#ifndef _TSINGLETON_H_
+
 #include "core/util/tSingleton.h"
-#endif
 
 class AvailableSLInterfaces;
 class GFXShaderConstHandle;

@@ -19,18 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _SCENEDATA_H_
 #define _SCENEDATA_H_
-
-#ifndef _SCENERENDERSTATE_H_
 #include "scene/sceneRenderState.h"
-#endif
-#ifndef _LIGHTMANAGER_H_
+
 #include "lighting/lightManager.h"
-#endif
-#ifndef _GFXDEVICE_H_
+
 #include "gfx/gfxDevice.h"
-#endif
 
 class GFXTexHandle;
 class GFXCubemap;

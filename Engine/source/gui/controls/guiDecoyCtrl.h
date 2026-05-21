@@ -19,12 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _GUIDECOYCTRL_H_
 #define _GUIDECOYCTRL_H_
-
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
 
 class GuiDecoyCtrl : public GuiControl
 {

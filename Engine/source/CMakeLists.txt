@@ -426,75 +426,52 @@ if (NOT TORQUE_NET_CURL)
 endif()
 
 ################# Executable Generation ###################
+
 if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
-  set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_SHARED)
-
-  # Build the main engine library
-  add_library(TorqueEngine SHARED ${TORQUE_SOURCE_FILES})
-  target_compile_definitions(TorqueEngine PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
-  target_link_libraries(TorqueEngine ${TORQUE_LINK_LIBRARIES} ${TORQUE_LINK_THIRDPARTY})
-  target_include_directories(TorqueEngine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
-
-  set(TORQUE_SOURCE_FILES "main/main.cpp")
-  set(TORQUE_LINK_LIBRARIES TorqueEngine)
+    set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_SHARED)
+    add_library(TorqueEngine SHARED ${TORQUE_SOURCE_FILES})
+    target_compile_definitions(TorqueEngine PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
+    target_link_libraries(TorqueEngine ${TORQUE_LINK_LIBRARIES} ${TORQUE_LINK_THIRDPARTY})
+    target_include_directories(TorqueEngine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
+    set(TORQUE_SOURCE_FILES "main/main.cpp")
+    set(TORQUE_LINK_LIBRARIES TorqueEngine)
 else()
-  if(NOT TORQUE_TESTING)
-    set(TORQUE_SOURCE_FILES "main/main.cpp" ${TORQUE_SOURCE_FILES})
-  endif()
-endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
-
-if (APPLE)
-	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE 
-    ${TORQUE_SOURCE_FILES})
-
-  target_sources(${TORQUE_APP_NAME} PRIVATE "${TORQUE_APP_ROOT_DIRECTORY}/source/App.xcassets")
-
-  set_source_files_properties( "${TORQUE_APP_ROOT_DIRECTORY}/source/App.xcassets" PROPERTIES 
-        MACOSX_PACKAGE_LOCATION Resources)
-
-	set_target_properties(${TORQUE_APP_NAME} PROPERTIES 
-  MACOSX_BUNDLE true
-  MACOSX_BUNDLE_INFO_PLIST "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist"
-  XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.torque3d.${TORQUE_APP_NAME}"
-  INSTALL_RPATH "@executable_path/../Frameworks"
-  XCODE_ATTRIBUTE_SKIP_INSTALL NO
-  BUILD_WITH_INSTALL_RPATH ON
-  XCODE_ATTRIBUTE_INSTALL_PATH "/Applications"
-  XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
-  XCODE_ATTRIBUTE_LINKER_DISPLAYS_MANGLED_NAMES[variant=Debug] YES
-  XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH[variant=Debug] YES
-  XCODE_ATTRIBUTE_ENABLE_TESTABILITY[variant=Debug] YES
-  XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=Debug] parent
-  XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=RelWithDebInfo] parent
-  XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=Release] resource)
-
-elseif (WIN32)
-	add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})
-
-    set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "-DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS /MP /Ob2 /Oi /Ot /Oy /GT /Zi /W4 /nologo /GF /EHsc /GS- /Gy- /Qpar- /fp:precise /fp:except- /GR /Zc:wchar_t-" )
-    if( TORQUE_CPU_X32 )
-       set(TORQUE_CXX_FLAGS_COMMON_DEFAULT "${TORQUE_CXX_FLAGS_COMMON_DEFAULT} /arch:SSE2")
+    if(NOT TORQUE_TESTING)
+        set(TORQUE_SOURCE_FILES "main/main.cpp" ${TORQUE_SOURCE_FILES})
     endif()
-    set(TORQUE_CXX_FLAGS_COMMON ${TORQUE_CXX_FLAGS_COMMON_DEFAULT} CACHE STRING "")
-    mark_as_advanced(TORQUE_CXX_FLAGS_COMMON)
-
-    set(TORQUE_CXX_FLAGS_EXECUTABLES "/wd4018 /wd4100 /wd4121 /wd4127 /wd4130 /wd4244 /wd4245 /wd4389 /wd4511 /wd4512 /wd4800 /wd4995" CACHE STRING "")
-    mark_as_advanced(TORQUE_CXX_FLAGS_EXECUTABLES)
-
-    set(TORQUE_CXX_FLAGS "${TORQUE_CXX_FLAGS_COMMON_DEFAULT} ${TORQUE_CXX_FLAGS_EXECUTABLES}" CACHE STRING "")
-    mark_as_advanced(TORQUE_CXX_FLAGS)
-
-	# NOTE: On Windows, /Zc:wchar_t- is necessary otherwise you get unicode errors
-	set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "${TORQUE_CXX_FLAGS}")
-   if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
-      set_target_properties(TorqueEngine PROPERTIES COMPILE_FLAGS "${TORQUE_CXX_FLAGS_COMMON_DEFAULT}")
-   endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+ 
+if (APPLE)
+    add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE ${TORQUE_SOURCE_FILES})
+ 
+    target_sources(${TORQUE_APP_NAME} PRIVATE "${TORQUE_APP_ROOT_DIRECTORY}/source/App.xcassets")
+    set_source_files_properties("${TORQUE_APP_ROOT_DIRECTORY}/source/App.xcassets" PROPERTIES
+        MACOSX_PACKAGE_LOCATION Resources)
+ 
+    set_target_properties(${TORQUE_APP_NAME} PROPERTIES
+        MACOSX_BUNDLE true
+        MACOSX_BUNDLE_INFO_PLIST "${TORQUE_APP_ROOT_DIRECTORY}/source/Info.plist"
+        XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "com.torque3d.${TORQUE_APP_NAME}"
+        INSTALL_RPATH "@executable_path/../Frameworks"
+        XCODE_ATTRIBUTE_SKIP_INSTALL NO
+        BUILD_WITH_INSTALL_RPATH ON
+        XCODE_ATTRIBUTE_INSTALL_PATH "/Applications"
+        XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
+        XCODE_ATTRIBUTE_LINKER_DISPLAYS_MANGLED_NAMES[variant=Debug] YES
+        XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH[variant=Debug] YES
+        XCODE_ATTRIBUTE_ENABLE_TESTABILITY[variant=Debug] YES
+        XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=Debug] parent
+        XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=RelWithDebInfo] parent
+        XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=Release] resource)
+ 
+elseif (WIN32)
+    add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})
 else()
-	add_executable(${TORQUE_APP_NAME} ${TORQUE_SOURCE_FILES})
-
-	# NOTE: On Linux, we set the rpath to ./ so that shared objects next to the executable are used
-	set_target_properties(${TORQUE_APP_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
+    add_executable(${TORQUE_APP_NAME} ${TORQUE_SOURCE_FILES})
+    set_target_properties(${TORQUE_APP_NAME} PROPERTIES LINK_FLAGS "-Wl,-rpath,./")
 endif()
+ 
+################# Architecture Detection ###################
 
 string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" ARCH)
 
@@ -540,7 +517,204 @@ if(IS_ARM)
 endif()
 
 if(MSVC)
-    # Match projectGenerator naming for executables
+    if(IS_X86)
+        target_compile_options(${TORQUE_APP_NAME} PRIVATE
+            /arch:SSE2  # Safe baseline for all configs - dispatch handles ISA upgrades at runtime
+        )
+    endif()
+    if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+        if(IS_X86)
+            target_compile_options(TorqueEngine PRIVATE
+                /arch:SSE2
+            )
+        endif()
+    endif()
+endif()
+
+################# Compile Flags ###################
+# All flags use target_compile_options with generator expressions so they are
+# per-configuration and never bleed across build types.  The old flat
+# COMPILE_FLAGS string on the target has been removed entirely.
+ 
+# ----- Windows (MSVC) -----
+if (MSVC)
+    # Warnings we suppress engine-wide - all pre-existing
+    set(_TORQUE_MSVC_WARNINGS
+        /wd4018   # signed/unsigned mismatch
+        /wd4100   # unreferenced formal parameter
+        /wd4121   # alignment sensitive to packing
+        /wd4127   # conditional expression is constant
+        /wd4130   # logical op on address of string literal
+        /wd4244   # conversion, possible loss of data
+        /wd4245   # signed/unsigned mismatch on return/init
+        /wd4267   # conversion possible loss of data
+        /wd4389   # signed/unsigned mismatch on comparison
+        /wd4511   # copy constructor could not be generated
+        /wd4512   # assignment operator could not be generated
+        /wd4800   # forcing value to bool
+        /wd4995   # deprecated function
+    )
+ 
+    # Flags that are correct for every configuration
+    set(_TORQUE_MSVC_ALL
+        /MP         # Parallel compilation - single biggest build speed win
+        /FS         # Synchronous PDB writes - required when using /MP
+        /nologo     # Suppress banner
+        /W3         # Warning level 3  (W4 slows compilation noticeably)
+        /WX-        # Warnings are not errors
+        /EHsc       # Standard C++ exception handling only
+        /GR         # RTTI - required for dynamic_cast throughout the engine
+        /GF         # String pooling
+        /Gy         # Function-level linking (dead-code stripping at link time)
+        /Zc:wchar_t-  # Engine-wide ABI requirement
+        /fp:precise   # Consistent FP across the codebase
+        /fp:except-   # No FP exception overhead
+        /bigobj       # >64k sections - consoleObject.h template depth needs this
+        /Qpar-        # Disable auto-paralleliser (causes subtle correctness bugs)
+        /NODEFAULTLIB
+        ${_TORQUE_MSVC_WARNINGS}
+    )
+ 
+    # Debug - prioritise compilation speed and debuggability over all else
+    set(_TORQUE_MSVC_DEBUG
+        /Od     # No optimisation - fastest to compile, cleanest call stacks
+        /Ob0    # No inlining - keeps debugger call stacks honest
+        /RTCs   # Runtime checks: stack corruption + uninitialised variables
+        /GS     # Buffer security checks
+        /Zi     # Embed debug info in .obj - avoids PDB contention with /MP
+        /MDd    # Debug CRT
+    )
+ 
+    # RelWithDebInfo - ship-like speed, but still inspectable in a debugger
+    set(_TORQUE_MSVC_RELWITHDEBINFO
+        /O2     # Maximise speed (implies /Ob2 /Oi /Ot)
+        /Ob1    # Only inline functions explicitly marked - preserves some stack info
+        /Oi     # Intrinsic replacements for common functions
+        /Ot     # Favour fast code over small code
+        /Gw     # Package global data for linker dead-stripping
+        /GS-    # No buffer security checks
+        /Zi     # Debug info in .obj (not a separate PDB) - safer with /MP
+        /MD     # Release CRT
+    )
+ 
+    # Release - maximum runtime performance
+    set(_TORQUE_MSVC_RELEASE
+        /O2     # Maximise speed
+        /Ob2    # Inline any suitable function
+        /Oi     # Intrinsic functions
+        /Ot     # Favour fast code
+        /Oy     # Omit frame pointers (marginal perf gain; hurts external profiling)
+        /Gw     # Package global data
+        /GS-    # No buffer security checks
+        /MD     # Release CRT
+    )
+ 
+    target_compile_options(${TORQUE_APP_NAME} PRIVATE
+        ${_TORQUE_MSVC_ALL}
+        $<$<CONFIG:Debug>:${_TORQUE_MSVC_DEBUG}>
+        $<$<CONFIG:RelWithDebInfo>:${_TORQUE_MSVC_RELWITHDEBINFO}>
+        $<$<CONFIG:Release>:${_TORQUE_MSVC_RELEASE}>
+    )
+ 
+    target_link_options(${TORQUE_APP_NAME} PRIVATE
+        $<$<CONFIG:Debug>:/DEBUG:FASTLINK /INCREMENTAL>
+        $<$<CONFIG:RelWithDebInfo>:/INCREMENTAL /DEBUG:FASTLINK /OPT:REF /OPT:ICF>
+        $<$<CONFIG:Release>:/INCREMENTAL>
+    )
+ 
+    if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+        target_compile_options(TorqueEngine PRIVATE
+            ${_TORQUE_MSVC_ALL}
+            $<$<CONFIG:Debug>:${_TORQUE_MSVC_DEBUG}>
+            $<$<CONFIG:RelWithDebInfo>:${_TORQUE_MSVC_RELWITHDEBINFO}>
+            $<$<CONFIG:Release>:${_TORQUE_MSVC_RELEASE}>
+        )
+    endif()
+
+endif (MSVC)
+ 
+# ----- GCC / Clang  (Linux and macOS) -----
+if (UNIX)
+    # Flags correct for every configuration on GCC/Clang
+    set(_TORQUE_UNIX_ALL
+        -Wno-unused-parameter
+        -Wno-sign-compare
+        -Wno-reorder
+        -fno-exceptions          # Engine does not use C++ exceptions
+        -fmessage-length=0       # No line-wrapping in compiler messages
+        -pipe                    # Use pipes instead of temp files - faster compilation
+        -Wno-type-limits         # constant conditional expression
+        -Wno-unused-value
+        -Wno-deprecated-declarations
+        -Wno-conversion          # possible loss of data
+        -Wno-sign-conversion
+        -Wno-old-style-cast      # if legacy codebase
+        -Wno-invalid-offsetof    # offsetof non-standard-layout
+    )
+ 
+    # Debug
+    set(_TORQUE_UNIX_DEBUG
+        -O0                      # No optimisation - fastest to compile
+        -g3                      # Maximum debug info (includes macros)
+        -fno-omit-frame-pointer  # Keep frame pointers for sane stack traces
+        -fno-inline              # No inlining - keeps call stacks clean
+    )
+ 
+    # RelWithDebInfo
+    set(_TORQUE_UNIX_RELWITHDEBINFO
+        -O2
+        -g1                      # Minimal debug info - line numbers only
+        -fno-omit-frame-pointer  # Keep frame pointers so profilers work
+    )
+ 
+    # Release
+    set(_TORQUE_UNIX_RELEASE
+        -O3
+        -g0                      # No debug info
+        -fomit-frame-pointer
+        -DNDEBUG
+    )
+ 
+    # LTO in Release only - significantly extends link time so keep it out of Debug/RWD
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        list(APPEND _TORQUE_UNIX_ALL
+            -Wno-shorten-64-to-32
+            -Wno-implicit-int-conversion
+            -Wno-implicit-float-conversion
+            -Wno-nonportable-include-path
+        )
+        set(_TORQUE_UNIX_RELEASE_LINK -flto=thin)  # ThinLTO: much faster than full LTO, near-equivalent results
+    else()
+        set(_TORQUE_UNIX_RELEASE_LINK -flto)
+    endif()
+ 
+    target_compile_options(${TORQUE_APP_NAME} PRIVATE
+        ${_TORQUE_UNIX_ALL}
+        $<$<CONFIG:Debug>:${_TORQUE_UNIX_DEBUG}>
+        $<$<CONFIG:RelWithDebInfo>:${_TORQUE_UNIX_RELWITHDEBINFO}>
+        $<$<CONFIG:Release>:${_TORQUE_UNIX_RELEASE}>
+    )
+ 
+    target_link_options(${TORQUE_APP_NAME} PRIVATE
+        $<$<CONFIG:Release>:${_TORQUE_UNIX_RELEASE_LINK}>
+    )
+ 
+    if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+        target_compile_options(TorqueEngine PRIVATE
+            ${_TORQUE_UNIX_ALL}
+            $<$<CONFIG:Debug>:${_TORQUE_UNIX_DEBUG}>
+            $<$<CONFIG:RelWithDebInfo>:${_TORQUE_UNIX_RELWITHDEBINFO}>
+            $<$<CONFIG:Release>:${_TORQUE_UNIX_RELEASE}>
+        )
+        target_link_options(TorqueEngine PRIVATE
+            $<$<CONFIG:Release>:${_TORQUE_UNIX_RELEASE_LINK}>
+        )
+    endif()
+endif (UNIX)
+ 
+################# Output Naming (MSVC) ###################
+ 
+if(MSVC)
     set(OUTPUT_CONFIG DEBUG MINSIZEREL RELWITHDEBINFO)
     set(OUTPUT_SUFFIX DEBUG MINSIZE    OPTIMIZEDDEBUG)
     foreach(INDEX RANGE 2)
@@ -552,9 +726,10 @@ if(MSVC)
             set_property(TARGET TorqueEngine PROPERTY ${CONF}_OUTPUT_NAME ${TORQUE_APP_NAME})
         endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
     endforeach()
-    # Set Visual Studio startup project
     set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TORQUE_APP_NAME})
 endif()
+ 
+################# Folder Organisation ###################
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
@@ -564,8 +739,6 @@ foreach (TORQUE_LIBRARY ${TORQUE_LINK_LIBRARIES})
   endif()
   set_target_properties(${TORQUE_LIBRARY} PROPERTIES
   FOLDER "Libraries")
-  # remove warnings from 3rd parties.
-  #target_compile_options(${TORQUE_LIBRARY} PRIVATE "-w")
 endforeach()
 
 target_compile_definitions(${TORQUE_APP_NAME} PUBLIC ${TORQUE_COMPILE_DEFINITIONS})
@@ -589,7 +762,23 @@ target_link_options(${TORQUE_APP_NAME} PUBLIC ${TORQUE_LINK_OPTIONS})
 if (TORQUE_TARGET_PROPERTIES)
    set_target_properties(${TORQUE_APP_NAME} PROPERTIES ${TORQUE_TARGET_PROPERTIES})
 endif (TORQUE_TARGET_PROPERTIES)
-target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
+target_include_directories(${TORQUE_APP_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
+
+target_precompile_headers(${TORQUE_APP_NAME} PRIVATE
+    <vector>
+    <string>
+    <map>
+    <memory>
+    <algorithm>
+    <type_traits>
+    <cstring>
+    <cstdlib>
+    <cstdio>
+    <cmath>
+    <cstdint>
+    <cmath>
+    "console/engineObject.h"
+)
 
 if(TORQUE_TESTING)
   if(WIN32)

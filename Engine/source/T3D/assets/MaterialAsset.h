@@ -23,34 +23,17 @@
 
 #ifndef MATERIALASSET_H
 #define MATERIALASSET_H
-
-#ifndef _ASSET_BASE_H_
 #include "assets/assetBase.h"
-#endif
 
-#ifndef _ASSET_DEFINITION_H_
 #include "assets/assetDefinition.h"
-#endif
 
-#ifndef _STRINGUNIT_H_
-#include "string/stringUnit.h"
-#endif
-
-#ifndef _ASSET_FIELD_TYPES_H_
+#include "core/strings/stringUnit.h"
 #include "assets/assetFieldTypes.h"
-#endif
 
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
 
-#ifndef _NETCONNECTION_H_
 #include "sim/netConnection.h"
-#endif
-
-#ifndef _GUI_INSPECTOR_TYPES_H_
 #include "gui/editor/guiInspectorTypes.h"
-#endif
 
 #include "materials/matTextureTarget.h"
 #include "materials/materialDefinition.h"

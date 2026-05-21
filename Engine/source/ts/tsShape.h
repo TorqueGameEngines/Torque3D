@@ -19,23 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once
 
-#ifndef _TSSHAPE_H_
-#define _TSSHAPE_H_
-
-#ifndef _TSMESH_H_
 #include "ts/tsMesh.h"
-#endif
-#ifndef _TSINTEGERSET_H_
-#include "ts/tsIntegerSet.h"
-#endif
-#ifndef _TSTRANSFORM_H_
-#include "ts/tsTransform.h"
-#endif
-#ifndef _TSSHAPEALLOC_H_
-#include "ts/tsShapeAlloc.h"
-#endif
 
+#include "ts/tsIntegerSet.h"
+
+#include "ts/tsTransform.h"
+
+#include "ts/tsShapeAlloc.h"
 
 #define DTS_EXPORTER_CURRENT_VERSION 124
 
@@ -765,5 +757,3 @@ inline const TSShape::ObjectState & TSShape::getObjectState(const Sequence & seq
 {
    return objectStates[seq.baseObjectState + objectNum*seq.numKeyframes + keyframeNum];
 }
-
-#endif

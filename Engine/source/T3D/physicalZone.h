@@ -27,16 +27,11 @@
 
 #ifndef _H_PHYSICALZONE
 #define _H_PHYSICALZONE
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _EARLYOUTPOLYLIST_H_
+
 #include "collision/earlyOutPolyList.h"
-#endif
-#ifndef _MPOLYHEDRON_H_
+
 #include "math/mPolyhedron.h"
-#endif
 
 class Convex;
 

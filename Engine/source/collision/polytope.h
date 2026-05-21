@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _POLYTOPE_H_
 #define _POLYTOPE_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-
 
 //----------------------------------------------------------------------------
 

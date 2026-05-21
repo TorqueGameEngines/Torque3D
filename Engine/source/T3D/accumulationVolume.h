@@ -19,21 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
-#ifndef _ACCUMULATIONVOLUME_H_
-#define _ACCUMULATIONVOLUME_H_
-
-#ifndef _SCENEPOLYHEDRALSPACE_H_
 #include "scene/scenePolyhedralSpace.h"
-#endif
 
-#ifndef _MSILHOUETTEEXTRACTOR_H_
 #include "math/mSilhouetteExtractor.h"
-#endif
 
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
 
 /// A volume in space that blocks visibility.
 class AccumulationVolume : public ScenePolyhedralSpace
@@ -97,5 +89,3 @@ class AccumulationVolume : public ScenePolyhedralSpace
       void buildSilhouette( const SceneCameraState& cameraState, Vector< Point3F >& outPoints ) override;
       void setTransform( const MatrixF& mat ) override;
 };
-
-#endif // !_AccumulationVolume_H_

@@ -19,29 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
-#ifndef _ADVANCEDLIGHTBINMANAGER_H_
-#define _ADVANCEDLIGHTBINMANAGER_H_
-
-#ifndef _TEXTARGETBIN_MGR_H_
 #include "renderInstance/renderTexTargetBinManager.h"
-#endif
-#ifndef _TVECTOR_H_
-#include "core/util/tVector.h"
-#endif
-#ifndef _LIGHTINFO_H_
-#include "lighting/lightInfo.h"
-#endif
-#ifndef _MATHUTIL_FRUSTUM_H_
-#include "math/util/frustum.h"
-#endif
-#ifndef _MATINSTANCE_H_
-#include "materials/matInstance.h"
-#endif
-#ifndef _SHADOW_COMMON_H_
-#include "lighting/shadowMap/shadowCommon.h"
-#endif
 
+#include "core/util/tVector.h"
+
+#include "lighting/lightInfo.h"
+#include "math/util/frustum.h"
+
+#include "materials/matInstance.h"
+#include "lighting/shadowMap/shadowCommon.h"
 
 class AdvancedLightManager;
 class ShadowMapManager;
@@ -257,5 +245,3 @@ protected:
 
    static S32 QSORT_CALLBACK _lightScoreCmp(const LightBinEntry* a, const  LightBinEntry* b);
 };
-
-#endif // _ADVANCEDLIGHTBINMANAGER_H_

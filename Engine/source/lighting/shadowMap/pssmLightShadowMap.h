@@ -19,16 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _PSSMLIGHTSHADOWMAP_H_
 #define _PSSMLIGHTSHADOWMAP_H_
-
-#ifndef _LIGHTSHADOWMAP_H_
 #include "lighting/shadowMap/lightShadowMap.h"
-#endif
-#ifndef _MATHUTIL_FRUSTUM_H_
 #include "math/util/frustum.h"
-#endif
-
 
 class PSSMLightShadowMap : public LightShadowMap
 {

@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SHADOWMATHOOK_H_
 #define _SHADOWMATHOOK_H_
-
-#ifndef _MATINSTANCEHOOK_H_
 #include "materials/matInstanceHook.h"
-#endif
-#ifndef _MATINSTANCE_H_
+
 #include "materials/matInstance.h"
-#endif
 
 // TODO: Move ShadowType enum to somewhere 
 // with less dependancies.
-#ifndef _SHADOWMAPPASS_H_
 #include "lighting/shadowMap/shadowMapPass.h"
-#endif
 
 class ShadowMatInstance : public MatInstance
 {

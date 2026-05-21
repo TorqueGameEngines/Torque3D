@@ -19,20 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _NOISE2D_H_
 #define _NOISE2D_H_
-
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _MMATH_H_
+
 #include "math/mMath.h"
-#endif
-#ifndef _MRANDOM_H_
+
 #include "math/mRandom.h"
-#endif
 
 class Noise2D
 {

@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSMATERIALLIST_H_
 #define _TSMATERIALLIST_H_
-
-#ifndef _MATERIALLIST_H_
 #include "materials/materialList.h"
-#endif
-#ifndef _PATH_H_
-#include "core/util/path.h"
-#endif
 
+#include "core/util/path.h"
 
 /// Specialized material list for 3space objects.
 class TSMaterialList : public MaterialList

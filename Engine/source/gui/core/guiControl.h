@@ -24,31 +24,23 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
+#pragma once 
 
 #ifndef _GUICONTROL_H_
 #define _GUICONTROL_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
-#ifndef _MRECT_H_
+
 #include "math/mRect.h"
-#endif
-#ifndef _COLOR_H_
+
 #include "core/color.h"
-#endif
-#ifndef _SIMBASE_H_
+
 #include "console/simBase.h"
-#endif
-#ifndef _GUITYPES_H_ 
+
 #include "gui/core/guiTypes.h"
-#endif
-#ifndef _UTIL_DELEGATE_H_
 #include "core/util/delegate.h"
-#endif
-#ifndef _LANG_H_
+
 #include "i18n/lang.h"
-#endif
 
 class GuiCanvas;
 class GuiEditCtrl;

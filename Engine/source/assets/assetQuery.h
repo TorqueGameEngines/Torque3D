@@ -19,25 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _ASSET_QUERY_H_
 #define _ASSET_QUERY_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _STRINGUNIT_H_
 #include "core/strings/stringUnit.h"
-#endif
-
-#ifndef _TAML_CUSTOM_H_
 #include "persistence/taml/tamlCustom.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

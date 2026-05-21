@@ -1,10 +1,8 @@
+#pragma once 
+#pragma once 
 #ifndef _OFFMESHCONNTOOL_H_
 #define _OFFMESHCONNTOOL_H_
-
-
-#ifndef _NAVMESH_TOOL_H_
 #include "navigation/navMeshTool.h"
-#endif
 
 class OffMeshConnectionTool : public NavMeshTool
 {

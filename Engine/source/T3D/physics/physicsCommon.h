@@ -19,23 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _T3D_PHYSICSCOMMON_H_
 #define _T3D_PHYSICSCOMMON_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
-#ifndef _MQUAT_H_
-#include "math/mQuat.h"
-#endif
-#ifndef _MMATRIX_H_
-#include "math/mMatrix.h"
-#endif
-#ifndef _REFBASE_H_
-#include "core/util/refBase.h"
-#endif
 
+#include "math/mQuat.h"
+
+#include "math/mMatrix.h"
+
+#include "core/util/refBase.h"
 
 /// Helper structure which defines the state of a single physics body.
 struct PhysicsState

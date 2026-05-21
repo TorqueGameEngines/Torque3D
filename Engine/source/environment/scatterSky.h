@@ -19,37 +19,28 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCATTERSKY_H_
 #define _SCATTERSKY_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
+
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
+
 #include "gfx/gfxVertexBuffer.h"
-#endif
-#ifndef _GFXSTATEBLOCK_H_
+
 #include "gfx/gfxStateBlock.h"
-#endif
-#ifndef _RENDERPASSMANAGER_H_
+
 #include "renderInstance/renderPassManager.h"
-#endif
-#ifndef _PRIMBUILDER_H_
+
 #include "gfx/primBuilder.h"
-#endif
-#ifndef _LIGHTINFO_H_
+
 #include "lighting/lightInfo.h"
-#endif
-#ifndef _LIGHTFLAREDATA_H_
+
 #include "T3D/lightFlareData.h"
-#endif
-#ifndef _TRESPONSECURVE_H_
+
 #include "math/util/tResponseCurve.h"
-#endif
 
 #include "T3D/assets/MaterialAsset.h"
 

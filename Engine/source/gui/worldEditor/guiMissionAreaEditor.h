@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIMISSIONAREAEDITORCTRL_H_
 #define _GUIMISSIONAREAEDITORCTRL_H_
-
-#ifndef _EDITTSCTRL_H_
 #include "gui/worldEditor/editTSCtrl.h"
-#endif
-#ifndef _MISSIONAREA_H_
+
 #include "T3D/missionArea.h"
-#endif
 
 class GuiMissionAreaEditorCtrl : public EditTSCtrl
 {

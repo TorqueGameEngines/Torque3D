@@ -22,6 +22,7 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
 
 #ifndef _AFX_T3D_POINT_LIGHT_H_
 #define _AFX_T3D_POINT_LIGHT_H_

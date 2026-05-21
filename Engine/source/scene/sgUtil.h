@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SGUTIL_H_
 #define _SGUTIL_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _MPOINT3_H_
+
 #include "math/mPoint3.h"
-#endif
 
 class Frustum;
 class RectI;

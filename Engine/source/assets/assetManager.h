@@ -19,49 +19,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
-#ifndef _ASSET_MANAGER_H_
-#define _ASSET_MANAGER_H_
-
-#ifndef _SIMBASE_H_
 #include "console/sim.h"
-#endif
 
-#ifndef _TAML_H_
 #include "persistence/taml/taml.h"
-#endif
 
-#ifndef _MODULE_DEFINITION_H
 #include "module/moduleDefinition.h"
-#endif
-
-#ifndef _MODULE_CALLBACKS_H_
 #include "module/moduleCallbacks.h"
-#endif
 
-#ifndef _ASSET_BASE_H_
 #include "assets/assetBase.h"
-#endif
 
-#ifndef _ASSET_DEFINITION_H_
 #include "assets/assetDefinition.h"
-#endif
 
-#ifndef _ASSET_TAGS_MANIFEST_H_
 #include "assets/assetTagsManifest.h"
-#endif
 
-#ifndef _ASSET_QUERY_H_
 #include "assets/assetQuery.h"
-#endif
 
-#ifndef _ASSET_FIELD_TYPES_H_
 #include "assets/assetFieldTypes.h"
-#endif
 
-#ifndef _NETCONNECTION_H_
 #include "sim/netConnection.h"
-#endif
 
 // Debug Profiling.
 #include "platform/profiler.h"
@@ -448,4 +425,3 @@ private:
 
 extern AssetManager AssetDatabase;
 
-#endif // _ASSET_MANAGER_H_

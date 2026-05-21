@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENEZONECULLINGSTATE_H_
 #define _SCENEZONECULLINGSTATE_H_
-
-#ifndef _SCENECULLINGVOLUME_H_
 #include "scene/culling/sceneCullingVolume.h"
-#endif
-
 
 /// Culling state for a zone.
 ///

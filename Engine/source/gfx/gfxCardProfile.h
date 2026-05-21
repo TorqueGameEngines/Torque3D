@@ -19,20 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXCARDPROFILE_H_
 #define _GFXCARDPROFILE_H_
-
-#ifndef _TDICTIONARY_H_
 #include "core/util/tDictionary.h"
-#endif
-#ifndef _GFXDEVICE_H_
-#include "gfx/gfxDevice.h"
-#endif
-#ifndef _TORQUE_STRING_H_
-#include "core/util/str.h"
-#endif
 
+#include "gfx/gfxDevice.h"
+#include "core/util/str.h"
 
 /// GFXCardProfiler provides a device independent wrapper around both the 
 /// capabilities reported by the card/drivers and the exceptions recorded

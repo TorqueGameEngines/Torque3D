@@ -54,11 +54,11 @@ ENDMACRO()
 # specified directory then adds them to the TORQUE_SOURCE_FILES variable.
 macro (torqueAddSourceDirectories)
   foreach(ARGUMENT ${ARGV})
-    file(GLOB SCANNED_SOURCE_FILES "${ARGUMENT}/*.cpp")
-    file(GLOB SCANNED_INCLUDE_FILES "${ARGUMENT}/*.h")
+    file(GLOB SCANNED_SOURCE_FILES CONFIGURE_DEPENDS "${ARGUMENT}/*.cpp")
+    file(GLOB SCANNED_INCLUDE_FILES CONFIGURE_DEPENDS "${ARGUMENT}/*.h")
 
     if (APPLE)
-      file(GLOB SCANNED_MAC_FILES "${ARGUMENT}/*.mm")
+      file(GLOB SCANNED_MAC_FILES CONFIGURE_DEPENDS "${ARGUMENT}/*.mm")
     endif (APPLE)
 
     # Set in both current and parent scope so this macro can be used from loaded modules

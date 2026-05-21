@@ -24,25 +24,20 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
+#pragma once 
 
 #ifndef _GAMECONNECTION_H_
 #define _GAMECONNECTION_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
-#ifndef _GAMEBASE_H_
+
 #include "T3D/gameBase/gameBase.h"
-#endif
-#ifndef _NETCONNECTION_H_
+
 #include "sim/netConnection.h"
-#endif
-#ifndef _MOVEMANAGER_H_
+
 #include "T3D/gameBase/moveManager.h"
-#endif
-#ifndef _BITVECTOR_H_
+
 #include "core/bitVector.h"
-#endif
 
 enum GameConnectionConstants
 {

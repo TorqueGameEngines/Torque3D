@@ -24,19 +24,16 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
+#pragma once 
 
 #ifndef _BITSTREAM_H_
 #define _BITSTREAM_H_
-
-#ifndef _STREAM_H_
 #include "core/stream/stream.h"
-#endif
-#ifndef _MPOINT3_H_
+
 #include "math/mPoint3.h"
-#endif
-#ifndef _CRC_H_
+
 #include "core/crc.h"
-#endif
 
 //-------------------------------------- Some caveats when using this class:
 //                                        - Get/setPosition semantics are changed

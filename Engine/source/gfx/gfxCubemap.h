@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXCUBEMAP_H_
 #define _GFXCUBEMAP_H_
-
-#ifndef _GFXTEXTUREHANDLE_H_
 #include "gfx/gfxTextureHandle.h"
-#endif
 
 class GFXDevice;
 struct DDSFile;

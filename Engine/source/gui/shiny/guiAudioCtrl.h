@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIAUDIOCTRL_H_
 #define _GUIAUDIOCTRL_H_
-
-#ifndef _GUITICKCTRL_H_
 #include "gui/shiny/guiTickCtrl.h"
-#endif
 
 #ifndef SOUND_ASSET_H
 #include "T3D/assets/SoundAsset.h"

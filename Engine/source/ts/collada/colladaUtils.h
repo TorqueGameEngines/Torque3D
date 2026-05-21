@@ -19,40 +19,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifndef _COLLADA_UTILS_H_
-#define _COLLADA_UTILS_H_
+#pragma once 
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4786)  // disable warning about long debug symbol names
 #pragma warning(disable : 4355)  // disable "'this' : used in base member initializer list" warnings
 #endif
-
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
-#ifndef _MQUAT_H_
+
 #include "math/mQuat.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _TSSHAPE_LOADER_H_
 #include "ts/loader/tsShapeLoader.h"
-#endif
-#ifndef _OPTIMIZEDPOLYLIST_H_
+
 #include "collision/optimizedPolyList.h"
-#endif
+
 #ifndef TINYXML2_INCLUDED
 #include "tinyxml2.h"
 #endif
-#ifndef _CONSOLE_H_
 #include "console/console.h"
-#endif
 
-#ifndef _TSSHAPEINSTANCE_H_
 #include "ts/tsShapeInstance.h"
-#endif
 
 #include "platform/tmm_off.h"
 
@@ -982,5 +969,3 @@ typedef AnimatedElement<bool> AnimatedBool;
 typedef AnimatedElement<S32> AnimatedInt;
 typedef AnimatedElement<const char*> AnimatedString;
 typedef AnimatedElementList<domListOfFloats> AnimatedFloatList;
-
-#endif // _COLLADA_UTILS_H_

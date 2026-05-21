@@ -19,39 +19,29 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _BASEMATINSTANCE_H_
 #define _BASEMATINSTANCE_H_
-
-#ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
-#ifndef _BASEMATERIALDEFINITION_H_
+
 #include "materials/baseMaterialDefinition.h"
-#endif
-#ifndef _MATERIALPARAMETERS_H_
+
 #include "materials/materialParameters.h"
-#endif
-#ifndef _MMATRIX_H_
+
 #include "math/mMatrix.h"
-#endif
-#ifndef _GFXENUMS_H_
+
 #include "gfx/gfxEnums.h"
-#endif
-#ifndef _GFXSHADER_H_
+
 #include "gfx/gfxShader.h"
-#endif
-#ifndef _MATERIALFEATUREDATA_H_
+
 #include "materials/materialFeatureData.h"
-#endif
-#ifndef _MATINSTANCEHOOK_H_
+
 #include "materials/matInstanceHook.h"
-#endif
-#ifndef _MATSTATEHINT_H_
+
 #include "materials/matStateHint.h"
-#endif
-#ifndef _GFXDEVICE_H_
+
 #include "gfx/gfxDevice.h"
-#endif
 
 #ifndef CUSTOMSHADERBINDINGDATA_H
 #include "materials/customShaderBindingData.h"

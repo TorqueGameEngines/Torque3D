@@ -19,15 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 #ifndef _CONDITIONER_BASE_H_
 #define _CONDITIONER_BASE_H_
-
-#ifndef _SHADERFEATURE_H_
 #include "shaderGen/shaderFeature.h"
-#endif
-#ifndef _SHADER_DEPENDENCY_H_
 #include "shaderGen/shaderDependency.h"
-#endif
 
 class MultiLine;
 class ConditionerMethodDependency;

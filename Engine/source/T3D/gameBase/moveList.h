@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MOVELIST_H_
 #define _MOVELIST_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-#ifndef _MOVEMANAGER_H_
+
 #include "T3D/gameBase/moveManager.h"
-#endif
 
 class BitStream;
 class ResizeBitStream;

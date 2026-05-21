@@ -19,13 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIICONBUTTON_H_
 #define _GUIICONBUTTON_H_
-
-#ifndef _GUIBUTTONCTRL_H_
 #include "gui/buttons/guiButtonCtrl.h"
-#endif
+
 #ifndef GFX_Texture_Manager_H_
 #include "gfx/gfxTextureManager.h"
 #endif

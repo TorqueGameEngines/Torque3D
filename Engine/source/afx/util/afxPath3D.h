@@ -22,6 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+ 
+#pragma once 
 
 #ifndef _AFX_PATH3D_UTIL_H_
 #define _AFX_PATH3D_UTIL_H_

@@ -19,20 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSFORESTITEMDATA_H_
 #define _TSFORESTITEMDATA_H_
-
-#ifndef _FORESTITEM_H_
 #include "forest/forestItem.h"
-#endif
-#ifndef _TSSHAPE_H_
-#include "ts/tsShape.h"
-#endif
-#ifndef _RESOURCEMANAGER_H_
-#include "core/resourceManager.h"
-#endif
 
+#include "ts/tsShape.h"
+
+#include "core/resourceManager.h"
 
 class TSShapeInstance;
 class TSLastDetail;

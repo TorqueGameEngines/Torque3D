@@ -4,6 +4,8 @@
 //
 // SPDX-License-Identifier: MIT
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _DATACHUNKER_H_
 #define _DATACHUNKER_H_
@@ -14,9 +16,7 @@
 #ifndef _PLATFORMASSERT_H_
 #  include "platform/platformAssert.h"
 #endif
-#ifndef _FRAMEALLOCATOR_H_
 #include "core/frameAllocator.h"
-#endif
 
 #include <algorithm>
 #include <stdint.h>

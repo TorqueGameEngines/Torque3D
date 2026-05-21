@@ -19,12 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _MATERIALPARAMETERS_H_
 #define _MATERIALPARAMETERS_H_
-
-#ifndef _GFXSHADER_H_
 #include "gfx/gfxShader.h"
-#endif
 
 ///
 /// Similar class to GFXShaderConsts, but this is to describe generic material parameters.  

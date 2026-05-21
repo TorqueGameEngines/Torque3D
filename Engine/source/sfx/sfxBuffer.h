@@ -19,30 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SFXBUFFER_H_
 #define _SFXBUFFER_H_
-
-#ifndef _REFBASE_H_
 #include "core/util/refBase.h"
-#endif
 
-#ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
 
-#ifndef _TSTREAM_H_
 #include "core/stream/tStream.h"
-#endif
 
-#ifndef _SFXCOMMON_H_
 #include "sfx/sfxCommon.h"
-#endif
 
-#ifndef _THREADSAFEREFCOUNT_H_
 #include "platform/threads/threadSafeRefCount.h"
-#endif
-
 
 class SFXStream;
 class SFXDescription;

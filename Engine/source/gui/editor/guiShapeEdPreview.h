@@ -19,9 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifndef _GUISHAPEEDPREVIEW_H_
-#define _GUISHAPEEDPREVIEW_H_
+#pragma once
 
 #include "gui/worldEditor/editTSCtrl.h"
 #include "ts/tsShapeInstance.h"
@@ -263,5 +261,3 @@ public:
    GuiShapeEdPreview();
    ~GuiShapeEdPreview();
 };
-
-#endif

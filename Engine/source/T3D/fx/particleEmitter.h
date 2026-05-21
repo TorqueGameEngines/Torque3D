@@ -27,22 +27,15 @@
 
 #ifndef _H_PARTICLE_EMITTER
 #define _H_PARTICLE_EMITTER
-
-#ifndef _GAMEBASE_H_
 #include "T3D/gameBase/gameBase.h"
-#endif
-#ifndef _COLOR_H_
+
 #include "core/color.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
+
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
+
 #include "gfx/gfxVertexBuffer.h"
-#endif
-#ifndef _PARTICLE_H_
+
 #include "T3D/fx/particle.h"
-#endif
 
 class RenderPassManager;
 class ParticleData;

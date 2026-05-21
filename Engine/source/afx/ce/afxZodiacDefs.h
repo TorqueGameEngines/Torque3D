@@ -22,6 +22,7 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
 
 #ifndef _AFX_ZODIAC_DEFS_H_
 #define _AFX_ZODIAC_DEFS_H_

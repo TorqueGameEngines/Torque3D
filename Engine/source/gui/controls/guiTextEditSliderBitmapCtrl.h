@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUITEXTEDITSLIDERBITMAPCTRL_H_
 #define _GUITEXTEDITSLIDERBITMAPCTRL_H_
-
-#ifndef _GUITYPES_H_
 #include "gui/core/guiTypes.h"
-#endif
-#ifndef _GUITEXTEDITCTRL_H_
+
 #include "gui/controls/guiTextEditCtrl.h"
-#endif
 
 class GuiTextEditSliderBitmapCtrl : public GuiTextEditCtrl
 {

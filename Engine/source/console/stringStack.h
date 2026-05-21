@@ -19,21 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _STRINGSTACK_H_
 #define _STRINGSTACK_H_
-
-#ifndef _STRINGFUNCTIONS_H_
 #include "core/strings/stringFunctions.h"
-#endif
 
-#ifndef _STRINGTABLE_H_
 #include "core/stringTable.h"
-#endif
 
-#ifndef _CONSOLE_H_
 #include "console/console.h"
-#endif
 
 typedef U32 StringStackPtr;
 struct StringStack;

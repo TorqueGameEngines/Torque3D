@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _TAML_XMLWRITER_H_
 #define _TAML_XMLWRITER_H_
-
-#ifndef _TAML_H_
 #include "persistence/taml/taml.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

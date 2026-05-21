@@ -19,22 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _EVENTMANAGER_H_
 #define _EVENTMANAGER_H_
-
-#ifndef _CONSOLE_H_
 #include "console/console.h"
-#endif
 
-#ifndef _DISPATCHER_H_
 #include "util/messaging/dispatcher.h"
-#endif
-
-#ifndef _TSIMPLEHASHTABLE_H
 #include "core/tSimpleHashTable.h"
-#endif
-
 
 //-----------------------------------------------------------------------------
 /// Listener class used by the EventManager to dispatch messages to specific

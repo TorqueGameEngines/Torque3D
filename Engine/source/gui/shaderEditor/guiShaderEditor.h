@@ -19,19 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUISHADEREDITOR_H_
 #define _GUISHADEREDITOR_H_
-
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
-#ifndef _UNDO_H_
+
 #include "util/undo.h"
-#endif
-#ifndef _GFX_GFXDRAWER_H_
 #include "gfx/gfxDrawUtil.h"
-#endif
 
 #ifndef _SHADERNODE_H_
 #include "gui/shaderEditor/guiShaderNode.h"

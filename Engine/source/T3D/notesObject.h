@@ -1,17 +1,11 @@
 #pragma once
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _GFXSTATEBLOCK_H_
+
 #include "gfx/gfxStateBlock.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
+
 #include "gfx/gfxVertexBuffer.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
+
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
 
 //-----------------------------------------------------------------------------
 // This class implements a basic SceneObject that can exist in the world at a

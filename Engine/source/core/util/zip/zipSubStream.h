@@ -19,14 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _ZIPSUBSTREAM_H_
 #define _ZIPSUBSTREAM_H_
 
 //Includes
-#ifndef _FILTERSTREAM_H_
 #include "core/filterStream.h"
-#endif
 
 struct z_stream_s;
 

@@ -19,15 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once
 
 #ifndef _ENGINEFUNCTIONS_H_
 #define _ENGINEFUNCTIONS_H_
 
 #include <tuple>
-
-#ifndef _FIXEDTUPLE_H_
 #include "fixedTuple.h"
-#endif
 
 #ifndef _ENGINEEXPORTS_H_
    #include "console/engineExports.h"

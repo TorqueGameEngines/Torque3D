@@ -19,20 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _COLOR_H_
 #define _COLOR_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h" 
-#endif
-#ifndef _MPOINT4_H_
-#include "math/mPoint4.h" 
-#endif
 
-#ifndef _ENGINEAPI_H_
+#include "math/mPoint4.h" 
+
 #include "console/engineAPI.h"
-#endif
 
 #ifdef TORQUE_USE_LEGACY_GAMMA
 const F32 gGamma = 2.2f;

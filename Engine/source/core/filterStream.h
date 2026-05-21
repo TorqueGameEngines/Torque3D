@@ -19,17 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FILTERSTREAM_H_
 #define _FILTERSTREAM_H_
 
 //Includes
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _STREAM_H_
+
 #include "core/stream/stream.h"
-#endif
 
 class FilterStream : public Stream
 {

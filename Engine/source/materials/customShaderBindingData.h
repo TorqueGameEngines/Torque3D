@@ -2,9 +2,7 @@
 
 #ifndef CUSTOMSHADERBINDINGDATA_H
 #define CUSTOMSHADERBINDINGDATA_H
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
 
 struct CustomShaderBindingData
 {

@@ -1,10 +1,8 @@
 #pragma once
 
 #include "ImageAsset.h"
-
-#ifndef _GUI_INSPECTOR_TYPES_H_
 #include "gui/editor/guiInspectorTypes.h"
-#endif
+
 #include <gui/controls/guiBitmapCtrl.h>
 
 #ifdef TORQUE_TOOLS

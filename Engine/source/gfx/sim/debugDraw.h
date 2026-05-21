@@ -19,34 +19,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _DEBUGDRAW_H_
 #define _DEBUGDRAW_H_
-
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
 
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
 
-#ifndef _PRIMBUILDER_H_
 #include "gfx/primBuilder.h"
-#endif
 
-#ifndef _GFONT_H_
 #include "gfx/gFont.h"
-#endif
 
-#ifndef _DATACHUNKER_H_
 #include "core/dataChunker.h"
-#endif
 
-#ifndef _MPOLYHEDRON_H_
 #include "math/mPolyhedron.h"
-#endif
-
 
 class GFont;
 

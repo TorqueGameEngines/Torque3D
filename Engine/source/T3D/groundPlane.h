@@ -19,19 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _TORQUE_T3D_GROUNDPLANE_H_
 #define _TORQUE_T3D_GROUNDPLANE_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
+
 #include "gfx/gfxVertexBuffer.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
+
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
 
 #include "T3D/assets/MaterialAsset.h"
 

@@ -19,28 +19,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _REFLECTIONMANAGER_H_
 #define _REFLECTIONMANAGER_H_
-
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _UTIL_DELEGATE_H_
 #include "core/util/delegate.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
+
 #include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _TSINGLETON_H_
+
 #include "core/util/tSingleton.h"
-#endif
-#ifndef _REFLECTOR_H_
+
 #include "scene/reflector.h"
-#endif
 
 class PlatformTimer;
 class BaseMatInstance;

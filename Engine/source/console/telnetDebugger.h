@@ -19,13 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TELNETDEBUGGER_H_
 #define _TELNETDEBUGGER_H_
-
-#ifndef _PLATFORM_PLATFORMNET_H_
 #include "platform/platformNet.h"
-#endif
+
 #include "module.h"
 
 /// Telnet debug service implementation.

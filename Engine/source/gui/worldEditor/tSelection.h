@@ -19,18 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSELECTION_H_
 #define _TSELECTION_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
-
 
 template <class T>
 class Selection : public Vector<T>

@@ -19,13 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SDLINPUTMANAGER_H_
 #define _SDLINPUTMANAGER_H_
-
-#ifndef _PLATFORMINPUT_H_
 #include "platform/platformInput.h"
-#endif
+
 #include "SDL.h"
 
 //------------------------------------------------------------------------------

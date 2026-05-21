@@ -19,19 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _MATRIXSET_H_
 #define _MATRIXSET_H_
-
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
-#ifndef _UTIL_DELEGATE_H_
 #include "core/util/delegate.h"
-#endif
-#ifndef _MATRIXSETDELEGATES_H_
-#include "math/util/matrixSetDelegateMethods.h"
-#endif
 
+#include "math/util/matrixSetDelegateMethods.h"
 
 dALIGN_BEGIN
 

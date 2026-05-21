@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MOVEMANAGER_H_
 #define _MOVEMANAGER_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
 
 enum MoveConstants {
    MaxTriggerKeys = 6,

@@ -22,6 +22,8 @@
 
 #include "core/util/zip/zipArchive.h"
 #include "core/util/str.h"
+#pragma once 
+#pragma once 
 
 #ifndef _ZIPTEMPSTREAM_H_
 #define _ZIPTEMPSTREAM_H_

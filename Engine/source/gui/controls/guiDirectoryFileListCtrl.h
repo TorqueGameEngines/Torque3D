@@ -19,17 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _GUI_DIRECTORYFILELISTCTRL_H_
 #define _GUI_DIRECTORYFILELISTCTRL_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-
-#ifndef _GUI_LISTBOXCTRL_H_
 #include "gui/controls/guiListBoxCtrl.h"
-#endif
 
 class GuiDirectoryFileListCtrl : public GuiListBoxCtrl
 {

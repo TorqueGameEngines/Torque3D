@@ -19,50 +19,30 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENEMANAGER_H_
 #define _SCENEMANAGER_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
 
-#ifndef _SCENEZONESPACEMANAGER_H_
 #include "scene/zones/sceneZoneSpaceManager.h"
-#endif
 
-#ifndef _MRECT_H_
 #include "math/mRect.h"
-#endif
 
-#ifndef _COLOR_H_
 #include "core/color.h"
-#endif
 
-#ifndef _INTERPOLATEDCHANGEPROPERTY_H_
 #include "util/interpolatedChangeProperty.h"
-#endif
 
-#ifndef _GFXTEXTUREHANDLE_H_
 #include "gfx/gfxTextureHandle.h"
-#endif
 
-#ifndef _FOGSTRUCTS_H_
 #include "scene/fogStructs.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
 
-#ifndef _SCENECONTAINER_H_
 #include "scene/sceneContainer.h"
-#endif
-
 
 class LightManager;
 class SceneRootZone;

@@ -19,13 +19,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-#ifndef _ADVANCED_LIGHTBUFFER_CONDITIONER_H_
-#define _ADVANCED_LIGHTBUFFER_CONDITIONER_H_
-
-#ifndef _CONDITIONER_BASE_H_
+ 
+#pragma once 
 #include "shaderGen/conditionerFeature.h"
-#endif
-
 
 class AdvancedLightBufferConditioner : public ConditionerFeature
 {
@@ -61,5 +57,3 @@ protected:
    Var *printMethodHeader( MethodType methodType, const String &methodName, Stream &stream, MultiLine *meta ) override;
    void printMethodFooter( MethodType methodType, Var *retVar, Stream &stream, MultiLine *meta ) override;
 };
-
-#endif // _ADVANCED_LIGHTBUFFER_CONDITIONER_H_

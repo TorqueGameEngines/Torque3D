@@ -19,18 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MSILHOUETTEEXTRACTOR_H_
 #define _MSILHOUETTEEXTRACTOR_H_
-
-#ifndef _FRAMEALLOCATOR_H_
 #include "core/frameAllocator.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-
 
 /// @file
 /// Routines for extracting silhouette polygons from polyhedrons.

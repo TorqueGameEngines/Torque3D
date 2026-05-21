@@ -19,31 +19,23 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GROUNDCOVER_H_
 #define _GROUNDCOVER_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _MATHUTIL_FRUSTUM_H_
 #include "math/util/frustum.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
+
 #include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _GFX_GFXPRIMITIVEBUFFER_H_
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _RENDERPASSMANAGER_H_
+
 #include "renderInstance/renderPassManager.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
-#ifndef _SHADERFEATURE_H_
+
 #include "shaderGen/shaderFeature.h"
-#endif
+
 #ifndef SHAPE_ASSET_H
 #include "T3D/assets/ShapeAsset.h"
 #endif

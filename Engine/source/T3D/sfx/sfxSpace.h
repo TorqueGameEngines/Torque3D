@@ -19,26 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SFXSPACE_H_
 #define _SFXSPACE_H_
-
-#ifndef _SCENESPACE_H_
 #include "scene/sceneSpace.h"
-#endif
 
-#ifndef _SFXSOURCE_H_
 #include "sfx/sfxSource.h"
-#endif
 
-#ifndef _SCENEAMBIENTSOUNDOBJECT_H_
 #include "scene/mixin/sceneAmbientSoundObject.h"
-#endif
 
-#ifndef _SCENEPOLYHEDRALOBJECT_H_
 #include "scene/mixin/scenePolyhedralObject.h"
-#endif
-
 
 /// A convex space that defines a custom ambient sound space.
 class SFXSpace : public SceneAmbientSoundObject< ScenePolyhedralObject< SceneSpace > >

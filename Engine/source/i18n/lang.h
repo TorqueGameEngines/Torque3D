@@ -31,6 +31,8 @@
 #include "core/fileObject.h"
 #include "core/util/str.h"
 #include "core/strings/unicode.h"
+#pragma once 
+#pragma once 
 
 #ifndef _LANG_H_
 #define _LANG_H_

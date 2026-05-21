@@ -19,31 +19,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _WATEROBJECT_H_
 #define _WATEROBJECT_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _GFXSTRUCTS_H_
+
 #include "gfx/gfxStructs.h"
-#endif
-#ifndef _FOGSTRUCTS_H_
+
 #include "scene/fogStructs.h"
-#endif
-#ifndef _GFXSTATEBLOCK_H_
+
 #include "gfx/gfxStateBlock.h"
-#endif
-#ifndef _REFLECTOR_H_
+
 #include "scene/reflector.h"
-#endif
-#ifndef _ALIGNEDARRAY_H_
+
 #include "core/util/tAlignedArray.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
 
 #include "T3D/assets/ImageAsset.h"
 

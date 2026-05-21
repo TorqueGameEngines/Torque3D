@@ -19,18 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENEZONESPACE_H_
 #define _SCENEZONESPACE_H_
-
-#ifndef _SCENESPACE_H_
 #include "scene/sceneSpace.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-
 
 class SceneZoneSpaceManager;
 class SceneCullingState;

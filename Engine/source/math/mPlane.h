@@ -19,26 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MPLANE_H_
 #define _MPLANE_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
 
-#ifndef _MBOX_H_
 #include "math/mBox.h"
-#endif
 
-#ifndef _MORIENTEDBOX_H_
 #include "math/mOrientedBox.h"
-#endif
 
-#ifndef _MSPHERE_H_
 #include "math/mSphere.h"
-#endif
-
 
 /// A 3D plane defined by a normal and a distance along the normal.
 ///

@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXDEBUGEVENT_H_
 #define _GFXDEBUGEVENT_H_
-
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
 
 /// See TorqueConfig.h to enable this.
 #ifdef TORQUE_ENABLE_GFXDEBUGEVENTS

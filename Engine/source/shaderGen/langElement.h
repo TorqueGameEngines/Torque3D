@@ -19,20 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 #ifndef _LANG_ELEMENT_H_
 #define _LANG_ELEMENT_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _STREAM_H_
 #include "core/stream/stream.h"
-#endif
 
-#ifndef _GFXENUMS_H_
 #include "gfx/gfxEnums.h"
-#endif
 
 #define WRITESTR( a ){ stream.write( dStrlen(a), a ); }
 

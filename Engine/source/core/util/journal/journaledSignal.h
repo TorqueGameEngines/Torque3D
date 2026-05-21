@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _JOURNALEDSIGNAL_H_
 #define _JOURNALEDSIGNAL_H_
-
-#ifndef _UTIL_JOURNAL_JOURNAL_H_
 #include "core/util/journal/journal.h"
-#endif
-#ifndef _TSIGNAL_H_
+
 #include "core/util/tSignal.h"
-#endif
 
 template<typename Signature> class JournaledSignal;
 

@@ -19,16 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _GUI_WORLDEDITOR_UNDOACTIONS_H_
 #define _GUI_WORLDEDITOR_UNDOACTIONS_H_
-
-#ifndef _UNDO_H_
 #include "util/undo.h"
-#endif
-#ifndef _CONSOLE_SIMOBJECTMEMENTO_H_
 #include "console/simObjectMemento.h"
-#endif
 
 // Need full definition visible for SimObjectPtr<GuiInspectorField>
 #include "gui/editor/inspector/field.h"

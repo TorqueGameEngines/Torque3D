@@ -1,10 +1,8 @@
+#pragma once 
+#pragma once 
 #ifndef _TILETOOL_H_
 #define _TILETOOL_H_
-
-
-#ifndef _NAVMESH_TOOL_H_
 #include "navigation/navMeshTool.h"
-#endif
 
 class TileTool : public NavMeshTool
 {

@@ -19,17 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _GUI_VARIABLEINSPECTOR_H_
 #define _GUI_VARIABLEINSPECTOR_H_
-
-#ifndef _GUI_INSPECTOR_H_
 #include "gui/editor/guiInspector.h"
-#endif
-#ifndef _GUI_INSPECTOR_VARIABLEGROUP_H_
-#include "gui/editor/inspector/variableGroup.h"
-#endif
 
+#include "gui/editor/inspector/variableGroup.h"
 
 class GuiVariableInspector : public GuiInspector
 {

@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _MODULE_CALLBACKS_H_
 #define _MODULE_CALLBACKS_H_
-
-#ifndef _MODULE_DEFINITION_H
 #include "moduleDefinition.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

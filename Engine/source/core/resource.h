@@ -22,30 +22,17 @@
 
 #ifndef __RESOURCE_H__
 #define __RESOURCE_H__
-
-#ifndef _DATACHUNKER_H_
 #include "core/dataChunker.h"
-#endif
 
-#ifndef _PATH_H_
 #include "core/util/path.h"
-#endif
 
-#ifndef _REFBASE_H_
 #include "core/util/refBase.h"
-#endif
 
-#ifndef _TIMECLASS_H_
 #include "core/util/timeClass.h"
-#endif
 
-#ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
 
-#ifndef _PLATFORMASSERT_H_
 #include "platform/platformAssert.h"
-#endif
 
 #include <memory>
 

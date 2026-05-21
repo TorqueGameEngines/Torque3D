@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TERRFILE_H_
 #define _TERRFILE_H_
-
-#ifndef _TVECTOR_H_
 #include <core/util/tVector.h>
-#endif
-#ifndef _PATH_H_
+
 #include <core/util/path.h>
-#endif
-#ifndef _MATERIALLIST_H_
+
 #include "materials/materialList.h"
-#endif
-#ifndef _TERRMATERIAL_H_
+
 #include "terrain/terrMaterial.h"
-#endif
 
 class TerrainMaterial;
 class FileStream;

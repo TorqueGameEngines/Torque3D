@@ -19,21 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _TAML_MODULE_ID_UPDATE_VISITOR_H_
 #define _TAML_MODULE_ID_UPDATE_VISITOR_H_
-
-#ifndef _TAML_VISITOR_H_
 #include "persistence/taml/tamlVisitor.h"
-#endif
 
-#ifndef _TAML_PARSER_H_
 #include "persistence/taml/tamlParser.h"
-#endif
 
-#ifndef _ASSET_FIELD_TYPES_H_
 #include "assets/assetFieldTypes.h"
-#endif
 
 #include "platform/profiler.h"
 

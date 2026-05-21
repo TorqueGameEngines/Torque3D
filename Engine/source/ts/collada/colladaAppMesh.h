@@ -19,25 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _COLLADA_APPMESH_H_
 #define _COLLADA_APPMESH_H_
-
-#ifndef _TDICTIONARY_H_
 #include "core/util/tDictionary.h"
-#endif
-#ifndef _APPMESH_H_
+
 #include "ts/loader/appMesh.h"
-#endif
-#ifndef _TSSHAPELOADER_H_
+
 #include "ts/loader/tsShapeLoader.h"
-#endif
-#ifndef _COLLADA_APPNODE_H_
 #include "ts/collada/colladaAppNode.h"
-#endif
-#ifndef _COLLADA_EXTENSIONS_H_
+
 #include "ts/collada/colladaExtensions.h"
-#endif
 
 //-----------------------------------------------------------------------------
 // Torque unifies the vert position, normal and UV values, so that a single index

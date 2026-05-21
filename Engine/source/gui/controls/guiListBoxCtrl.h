@@ -19,29 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 #ifndef _GUI_LISTBOXCTRL_H_
 #define _GUI_LISTBOXCTRL_H_
-
-#ifndef _CONSOLETYPES_H_
 #include "console/consoleTypes.h"
-#endif
 
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
 
-#ifndef _DGL_H_
 #include "gfx/gfxDevice.h"
-#endif
 
 #ifndef _H_GUIDEFAULTCONTROLRENDER_
 #include "gui/core/guiDefaultControlRender.h"
 #endif
-
-#ifndef _GUISCROLLCTRL_H_
 #include "gui/containers/guiScrollCtrl.h"
-#endif
-
 
 class GuiListBoxCtrl : public GuiControl
 {

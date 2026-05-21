@@ -19,25 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
-#ifndef _DYNAMIC_CONSOLETYPES_H_
-#define _DYNAMIC_CONSOLETYPES_H_
-
-#ifndef _CONSOLE_H_
 #include "console/console.h"
-#endif
 
-#ifndef _STRINGFUNCTIONS_H_
 #include "core/strings/stringFunctions.h"
-#endif
 
-#ifndef _ENGINETYPEINFO_H_
 #include "console/engineTypeInfo.h"
-#endif
 
-#ifndef _STRINGTABLE_H_
 #include "core/stringTable.h"
-#endif
 
 /// @file
 /// Support for legacy TorqueScript console types.
@@ -454,5 +444,3 @@ const EngineTypeInfo* _MAPTYPE() { return TYPE< T >(); }
    END_IMPLEMENT_BITFIELD
 
 /// @}
-
-#endif

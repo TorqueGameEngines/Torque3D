@@ -19,19 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 #ifndef _GUI_PANEL_H_
 #define _GUI_PANEL_H_
-
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
-#ifndef _GUITICKCTRL_H_
-#include "gui/shiny/guiTickCtrl.h"
-#endif
-#ifndef _GUICONTAINER_H_
-#include "gui/containers/guiContainer.h"
-#endif
 
+#include "gui/shiny/guiTickCtrl.h"
+
+#include "gui/containers/guiContainer.h"
 
 /// The GuiPanel panel is a container that when rendered will render with the profile's fill colors
 ///

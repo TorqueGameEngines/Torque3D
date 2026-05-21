@@ -19,17 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _RENDER_PARTICLE_MGR_H_
 #define _RENDER_PARTICLE_MGR_H_
-
-#ifndef _TEXTARGETBIN_MGR_H_
 #include "renderInstance/renderTexTargetBinManager.h"
-#endif
 
-#ifndef _GFXPRIMITIVEBUFFER_H_
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
 
 GFXDeclareVertexFormat( CompositeQuadVert )
 {

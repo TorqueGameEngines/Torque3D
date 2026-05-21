@@ -22,15 +22,13 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
 
 #ifndef _AFX_ZODIAC_PLANE_H_
 #define _AFX_ZODIAC_PLANE_H_
 
 #include "afx/ce/afxZodiacDefs.h"
-
-#ifndef _AFX_ZODIAC_H_
 #include "afx/ce/afxZodiac.h"
-#endif
 
 class afxZodiacPlaneData : public GameBaseData, public afxZodiacDefs
 {

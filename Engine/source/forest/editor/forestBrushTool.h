@@ -19,24 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _FOREST_EDITOR_BRUSH_H_
 #define _FOREST_EDITOR_BRUSH_H_
-
-#ifndef _FOREST_EDITOR_TOOL_H_
 #include "forest/editor/forestTool.h"
-#endif
-#ifndef _FORESTITEM_H_
+
 #include "forest/forestItem.h"
-#endif
-#ifndef _FOREST_EDITOR_BRUSHELEMENT_H_
 #include "forest/editor/forestBrushElement.h"
-#endif
-#ifndef _COLOR_H_
+
 #include "core/color.h"
-#endif
-
-
 
 class Forest;
 class ForestUndoAction;

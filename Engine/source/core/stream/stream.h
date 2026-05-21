@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _STREAM_H_
 #define _STREAM_H_
-
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
-#ifndef _ENDIAN_H_
+
 #include "core/util/endian.h"
-#endif
-#ifndef _STRINGFUNCTIONS_H_
+
 #include "core/strings/stringFunctions.h"
-#endif
 
 /// @defgroup stream_overload Primitive Type Stream Operation Overloads
 /// These macros declare the read and write functions for all primitive types.

@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _LIGHTINFO_H_
 #define _LIGHTINFO_H_
-
-#ifndef _GFXSTRUCTS_H_
 #include "gfx/gfxStructs.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _TDICTIONARY_H_
+
 #include "core/util/tDictionary.h"
-#endif
 
 struct SceneData;
 class LightManager;

@@ -19,18 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _ASSIMP_SHAPELOADER_H_
 #define _ASSIMP_SHAPELOADER_H_
-
-#ifndef _TSSHAPELOADER_H_
 #include "ts/loader/tsShapeLoader.h"
-#endif
-
-
-#ifndef _ASSIMP_APPNODE_H_
 #include "ts/assimp/assimpAppNode.h"
-#endif
 
 #include <assimp/Importer.hpp>
 #include <assimp/texture.h>

@@ -22,6 +22,7 @@
 
 #include "platform/types.h"
 #include "platform/platformAssert.h"
+#pragma once 
 
 #ifndef _PLATFORM_THREADS_MUTEX_H_
 #define _PLATFORM_THREADS_MUTEX_H_

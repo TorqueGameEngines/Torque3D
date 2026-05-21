@@ -22,24 +22,16 @@
 
 #ifndef REFLECTIONPROBE_H
 #define REFLECTIONPROBE_H
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
-#include "gfx/gfxVertexBuffer.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
-#include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _TSSHAPEINSTANCE_H_
-#include "ts/tsShapeInstance.h"
-#endif
-#include "lighting/lightInfo.h"
 
-#ifndef _RENDERPASSMANAGER_H_
+#include "gfx/gfxVertexBuffer.h"
+
+#include "gfx/gfxPrimitiveBuffer.h"
+
+#include "ts/tsShapeInstance.h"
+
+#include "lighting/lightInfo.h"
 #include "renderInstance/renderPassManager.h"
-#endif
 
 class BaseMatInstance;
 

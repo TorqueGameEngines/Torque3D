@@ -19,23 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUITERRPREVIEWCTRL_H_
 #define _GUITERRPREVIEWCTRL_H_
-
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
-#ifndef _GUITSCONTROL_H_
-#include "gui/3d/guiTSControl.h"
-#endif
-#ifndef _GFX_GFXDRAWER_H_
-#include "gfx/gfxDrawUtil.h"
-#endif
-#ifndef _TERRAINEDITOR_H_
-#include "gui/worldEditor/terrainEditor.h"
-#endif
 
+#include "gui/3d/guiTSControl.h"
+#include "gfx/gfxDrawUtil.h"
+
+#include "gui/worldEditor/terrainEditor.h"
 
 class GuiTerrPreviewCtrl : public GuiControl
 {

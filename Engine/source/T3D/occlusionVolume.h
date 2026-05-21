@@ -19,19 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _OCCLUSIONVOLUME_H_
 #define _OCCLUSIONVOLUME_H_
-
-#ifndef _SCENEPOLYHEDRALSPACE_H_
 #include "scene/scenePolyhedralSpace.h"
-#endif
 
-#ifndef _MSILHOUETTEEXTRACTOR_H_
 #include "math/mSilhouetteExtractor.h"
-#endif
-
-
 
 /// A volume in space that blocks visibility.
 class OcclusionVolume : public ScenePolyhedralSpace

@@ -22,19 +22,11 @@
 
 #ifndef IBL_UTILS_H_
 #define IBL_UTILS_H_
-
-#ifndef _GFXTARGET_H_
 #include "gfx/gfxTarget.h"
-#endif
 
-#ifndef _GFXCUBEMAP_H_
 #include "gfx/gfxCubemap.h"
-#endif
 
-#ifndef _COLOR_H_
 #include "core/color.h"
-#endif
-
 
 namespace IBLUtilities
 {

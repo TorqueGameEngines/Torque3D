@@ -1,3 +1,4 @@
+#pragma once 
 #ifndef _SCRIPT_MODULE_H_
 #define _SCRIPT_MODULE_H_
 #include "runtime.h"

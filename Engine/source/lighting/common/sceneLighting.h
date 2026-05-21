@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENELIGHTING_H_
 #define _SCENELIGHTING_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _SGSCENEPERSIST_H_
+
 #include "lighting/common/scenePersist.h"
-#endif
-#ifndef _LIGHTINFO_H_
+
 #include "lighting/lightInfo.h"
-#endif
 
 class ShadowVolumeBSP;
 class LightInfo;

@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _CUBELIGHTSHADOWMAP_H_
 #define _CUBELIGHTSHADOWMAP_H_
-
-#ifndef _LIGHTSHADOWMAP_H_
 #include "lighting/shadowMap/lightShadowMap.h"
-#endif
-#ifndef _GFXCUBEMAP_H_
-#include "gfx/gfxCubemap.h"
-#endif
 
+#include "gfx/gfxCubemap.h"
 
 class CubeLightShadowMap : public LightShadowMap
 {

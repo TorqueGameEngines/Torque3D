@@ -19,17 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SIMEVENTS_H_
 #define _SIMEVENTS_H_
-
-#ifndef _SIM_H_
 #include "console/sim.h"
-#endif
-
-#ifndef _UTIL_DELEGATE_H_
 #include "core/util/delegate.h"
-#endif
 
 // Forward Refs
 class SimObject;

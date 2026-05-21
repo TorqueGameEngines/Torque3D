@@ -22,9 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#ifndef _AFX_ANIM_CURVE_H_
-#define _AFX_ANIM_CURVE_H_
+ 
+#pragma once 
 
 #include "core/util/tVector.h"
 
@@ -76,7 +75,3 @@ class afxAnimCurve
 		Point2F computeTangentK0( Point2F &k0, Point2F &k1, int start_index );
 		Point2F computeTangentK1( Point2F &k0, Point2F &k1, int end_index );
 };
-
-//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#endif // _AFX_ANIM_CURVE_H_

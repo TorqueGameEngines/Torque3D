@@ -19,34 +19,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _VIDEOCAPTURE_H_
 #define _VIDEOCAPTURE_H_
-
-#ifndef _TSINGLETON_H_
 #include "core/util/tSingleton.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
 
-#ifndef _GFXTEXTUREHANDLE_H_
 #include "gfx/gfxTextureHandle.h"
-#endif
 
-#ifndef _MPOINT2_H_
 #include "math/mPoint2.h"
-#endif
 
-#ifndef _THREADSAFEDEQUE_H_
 #include "platform/threads/threadSafeDeque.h"
-#endif
-
 
 class GuiCanvas;
 class VideoFrameGrabber;

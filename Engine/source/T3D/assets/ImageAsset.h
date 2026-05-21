@@ -21,37 +21,24 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 #pragma once
-
-#ifndef _ASSET_BASE_H_
 #include "assets/assetBase.h"
-#endif
-#ifndef _ASSET_DEFINITION_H_
+
 #include "assets/assetDefinition.h"
-#endif
-#ifndef _STRINGUNIT_H_
-#include "string/stringUnit.h"
-#endif
-#ifndef _ASSET_FIELD_TYPES_H_
+
+#include "core/strings/stringUnit.h"
 #include "assets/assetFieldTypes.h"
-#endif
-#ifndef _ASSET_PTR_H_
+
 #include "assets/assetPtr.h"
-#endif 
-#ifndef _GBITMAP_H_
+
 #include "gfx/bitmap/gBitmap.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
+
 #include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _NETCONNECTION_H_
+
 #include "sim/netConnection.h"
-#endif
-#ifndef _GFXDEVICE_H_
+
 #include "gfx/gfxDevice.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
 
 #include "assetMacroHelpers.h"
 

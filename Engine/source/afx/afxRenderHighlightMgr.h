@@ -30,13 +30,9 @@
 // Supporting code mods in other areas of the engine are marked as
 // "(selection-highlight)".
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
 
-#ifndef _afxRENDERHIGHLIGHTMGR_H_
-#define _afxRENDERHIGHLIGHTMGR_H_
-
-#ifndef _TEXTARGETBIN_MGR_H_
 #include "renderInstance/renderTexTargetBinManager.h"
-#endif
 
 
 class PostEffect;
@@ -71,6 +67,3 @@ protected:
    SimObjectPtr<PostEffect> mSelectionEffect;  
 
 };
-
-
-#endif // _afxRENDERHIGHLIGHTMGR_H_

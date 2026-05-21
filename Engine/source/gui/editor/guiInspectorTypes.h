@@ -19,32 +19,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 #ifndef _GUI_INSPECTOR_TYPES_H_
 #define _GUI_INSPECTOR_TYPES_H_
-
-#ifndef _GUI_INSPECTOR_H_
 #include "gui/editor/guiInspector.h"
-#endif
 
-#ifndef _GUI_INSPECTOR_FIELD_H_
 #include "gui/editor/inspector/field.h"
-#endif
 
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
 
-#ifndef _GUICHECKBOXCTRL_H_
 #include "gui/buttons/guiCheckBoxCtrl.h"
-#endif
 
-#ifndef _GUIBITMAPBUTTON_H_
 #include "gui/buttons/guiBitmapButtonCtrl.h"
-#endif
 
-#ifndef _GUITEXTEDITSLIDERCTRL_H_
 #include "gui/controls/guiTextEditSliderCtrl.h"
-#endif
+
 #include "gui/controls/guiPopUpCtrlEx.h"
 
 class GuiPopUpMenuCtrl;

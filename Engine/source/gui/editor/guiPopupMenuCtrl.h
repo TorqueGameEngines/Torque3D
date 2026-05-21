@@ -24,18 +24,9 @@
 
 #ifndef GUI_POPUP_MENU_CTRL_H
 #define GUI_POPUP_MENU_CTRL_H
-
-#ifndef _GUITEXTLISTCTRL_H_
 #include "gui/controls/guiTextListCtrl.h"
-#endif
 
-#ifndef _GUIMENUBAR_H_
 #include "gui/editor/guiMenuBar.h"
-#endif
-
-#ifndef _POPUPMENU_H_
-#include "platform/menus/popupMenu.h"
-#endif
 
 class GuiPopupMenuBackgroundCtrl;
 

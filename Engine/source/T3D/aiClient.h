@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _AICLIENT_H_
 #define _AICLIENT_H_
-
-#ifndef _AICONNECTION_H_
 #include "T3D/aiConnection.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
 
 class ShapeBase;
 class Player;

@@ -22,26 +22,14 @@
 
 #ifndef _MODULE_MANAGER_H
 #define _MODULE_MANAGER_H
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tvector.h"
-#endif
 
-#ifndef _TDICTIONARY_H_
 #include "core/util/tDictionary.h"
-#endif
 
-#ifndef _TAML_H_
 #include "persistence/taml/taml.h"
-#endif
-
-#ifndef _MODULE_DEFINITION_H
 #include "moduleDefinition.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _APPSEQUENCE_H_
 #define _APPSEQUENCE_H_
-
-#ifndef _MMATH_H_
 #include "math/mMath.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _TSSHAPE_H_
+
 #include "ts/tsShape.h"
-#endif
 
 class AppSequence
 {

@@ -19,35 +19,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _WATERPLANE_H_
 #define _WATERPLANE_H_
-
-#ifndef _GAMEBASE_H_
 #include "T3D/gameBase/gameBase.h"
-#endif
-#ifndef _GFXDEVICE_H_
-#include "gfx/gfxDevice.h"
-#endif
-#ifndef _SCENEDATA_H_
-#include "materials/sceneData.h"
-#endif
-#ifndef _MATINSTANCE_H_
-#include "materials/matInstance.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
-#include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _RENDERPASSMANAGER_H_
-#include "renderInstance/renderPassManager.h"
-#endif
-#ifndef _MATHUTIL_FRUSTUM_H_
-#include "math/util/frustum.h"
-#endif
-#ifndef _WATEROBJECT_H_
-#include "environment/waterObject.h"
-#endif
 
+#include "gfx/gfxDevice.h"
+
+#include "materials/sceneData.h"
+
+#include "materials/matInstance.h"
+
+#include "gfx/gfxPrimitiveBuffer.h"
+
+#include "renderInstance/renderPassManager.h"
+#include "math/util/frustum.h"
+
+#include "environment/waterObject.h"
 
 //*****************************************************************************
 // WaterPlane

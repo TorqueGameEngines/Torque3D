@@ -23,13 +23,8 @@
 
 #ifndef GUIRENDERTARGETVIZCTRL_H
 #define GUIRENDERTARGETVIZCTRL_H
-
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
-#ifndef _TEXTARGETBIN_MGR_H_
 #include "renderInstance/renderTexTargetBinManager.h"
-#endif
 
 class GuiRenderTargetVizCtrl : public GuiControl
 {

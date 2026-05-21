@@ -19,21 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TERRAINEDITOR_H_
 #define _TERRAINEDITOR_H_
-
-#ifndef _EDITTSCTRL_H_
 #include "gui/worldEditor/editTSCtrl.h"
-#endif
-#ifndef _TERRDATA_H_
+
 #include "terrain/terrData.h"
-#endif
-#ifndef _UNDO_H_
+
 #include "util/undo.h"
-#endif
-
-
 
 // Each 2D grid position must be associated with a terrainBlock
 struct GridPoint

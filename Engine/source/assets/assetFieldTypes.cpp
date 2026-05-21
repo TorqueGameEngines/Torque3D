@@ -37,7 +37,7 @@
 #endif*/
 
 #ifndef _STRINGUNIT_H_
-#include "string/stringUnit.h"
+#include "core/strings/stringUnit.h"
 #endif
 
 //-----------------------------------------------------------------------------

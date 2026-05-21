@@ -22,6 +22,8 @@
 
 #include "core/util/zip/extraField.h"
 #include "core/util/tVector.h"
+#pragma once 
+#pragma once 
 
 #ifndef _FILEHEADER_H_
 #define _FILEHEADER_H_

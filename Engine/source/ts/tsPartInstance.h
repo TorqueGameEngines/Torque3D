@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSPARTINSTANCE_H_
 #define _TSPARTINSTANCE_H_
-
-#ifndef _TSSHAPEINSTANCE_H_
 #include "ts/tsShapeInstance.h"
-#endif
 
 class TSPartInstance
 {

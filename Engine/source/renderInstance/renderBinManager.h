@@ -19,21 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _RENDERBINMANAGER_H_
 #define _RENDERBINMANAGER_H_
-
-#ifndef _CONSOLEOBJECT_H_
 #include "console/consoleObject.h"
-#endif
-#ifndef _RENDERPASSMANAGER_H_
+
 #include "renderInstance/renderPassManager.h"
-#endif
-#ifndef _BASEMATINSTANCE_H_
+
 #include "materials/baseMatInstance.h"
-#endif
-#ifndef _UTIL_DELEGATE_H_
 #include "core/util/delegate.h"
-#endif
 
 class SceneRenderState;
 

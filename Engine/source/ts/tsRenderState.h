@@ -19,21 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSRENDERDATA_H_
 #define _TSRENDERDATA_H_
-
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
 
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
 
-#ifndef _BASEMATINSTANCE_H_
 #include "materials/baseMatInstance.h"
-#endif
 
 class SceneRenderState;
 class GFXCubemap;

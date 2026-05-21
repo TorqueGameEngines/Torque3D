@@ -19,14 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _SHADER_DEPENDENCY_H_
 #define _SHADER_DEPENDENCY_H_
-
-#ifndef _PATH_H_
 #include "core/util/path.h"
-#endif
-
 
 class Stream;
 

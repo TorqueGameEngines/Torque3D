@@ -20,43 +20,31 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 #pragma once
+#pragma once 
+#pragma once 
 #ifndef _GFXDEVICE_H_
 #define _GFXDEVICE_H_
-
-#ifndef _GFXADAPTER_H_
 #include "gfx/gfxAdapter.h"
-#endif
-#ifndef _GFXTARGET_H_
-#include "gfx/gfxTarget.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
-#include "gfx/gfxVertexBuffer.h"
-#endif
-#ifndef _GFXSTATEBLOCK_H_
-#include "gfx/gfxStateBlock.h"
-#endif
-#ifndef _GFXSHADER_H_
-#include "gfx/gfxShader.h"
-#endif
-#ifndef _GFXCUBEMAP_H_
-#include "gfx/gfxCubemap.h"
-#endif
-#ifndef _TDICTIONARY_H_
-#include "core/util/tDictionary.h"
-#endif
-#ifndef _TSIGNAL_H_
-#include "core/util/tSignal.h"
-#endif
-#ifndef _GFXDEVICESTATISTICS_H_
-#include "gfx/gfxDeviceStatistics.h"
-#endif
-#ifndef _MATHUTIL_FRUSTUM_H_
-#include "math/util/frustum.h"
-#endif
 
-#ifndef _PLATFORM_PLATFORMTIMER_H_
+#include "gfx/gfxTarget.h"
+
+#include "gfx/gfxVertexBuffer.h"
+
+#include "gfx/gfxStateBlock.h"
+
+#include "gfx/gfxShader.h"
+
+#include "gfx/gfxCubemap.h"
+
+#include "core/util/tDictionary.h"
+
+#include "core/util/tSignal.h"
+
+#include "gfx/gfxDeviceStatistics.h"
+#include "math/util/frustum.h"
+
 #include "platform/platformTimer.h"
-#endif
+
 #include "gfxTextureArray.h"
 
 class FontRenderBatcher;

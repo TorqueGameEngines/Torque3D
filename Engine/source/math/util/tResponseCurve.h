@@ -23,22 +23,16 @@
 // Notice:
 // Some of this code originates from an article in AI Game Programming Wisdom 
 // by Dave Mark.
+#pragma once 
+#pragma once 
 
 #ifndef _TRESPONSECURVE_H_
 #define _TRESPONSECURVE_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _MMATHFN_H_
 #include "math/mMathFn.h"
-#endif
 
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
-
 
 // -------------------------------
 // Represents a sigmoid function

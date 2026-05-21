@@ -24,37 +24,27 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
+#pragma once 
 
 #ifndef _TSSTATIC_H_
 #define _TSSTATIC_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _CONVEX_H_
+
 #include "collision/convex.h"
-#endif
+
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif
-#ifndef _NETSTRINGTABLE_H_
 #include "sim/netStringTable.h"
-#endif
-#ifndef _TSSHAPE_H_
+
 #include "ts/tsShape.h"
-#endif
 
-#ifndef _REFLECTOR_H_
 #include "scene/reflector.h"
-#endif
-
-#ifndef _COLLADA_UTILS_H_
 #include "ts/collada/colladaUtils.h"
-#endif
 
-#ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
-#endif 
+
 #ifndef SHAPEASSET_H
 #include "T3D/assets/ShapeAsset.h"
 #endif 

@@ -1,17 +1,11 @@
 #pragma once
 #ifndef SCENE_H
 #include "console/engineAPI.h"
-
-#ifndef _NETOBJECT_H_
 #include "sim/netObject.h"
-#endif
 
-#ifndef _ITICKABLE_H_
 #include "core/iTickable.h"
-#endif
-#ifndef _SCENEOBJECT_H_
+
 #include "scene/sceneObject.h"
-#endif
 
 #ifndef GAME_MODE_H
 #include "gameMode.h"

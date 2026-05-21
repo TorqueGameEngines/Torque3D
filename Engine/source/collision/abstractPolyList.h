@@ -19,19 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
-#ifndef _ABSTRACTPOLYLIST_H_
-#define _ABSTRACTPOLYLIST_H_
-
-#ifndef _MMATH_H_
 #include "math/mMath.h"
-#endif
-#ifndef _MPLANETRANSFORMER_H_
 #include "math/mPlaneTransformer.h"
-#endif
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
 class SceneObject;
 class BaseMatInstance;
@@ -260,5 +252,3 @@ inline void AbstractPolyList::setObject(SceneObject* obj)
    mCurrObject = obj;
 }
 
-
-#endif // _ABSTRACTPOLYLIST_H_

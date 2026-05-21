@@ -19,17 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _GBUFFER_CONDITIONER_GLSL_H_
 #define _GBUFFER_CONDITIONER_GLSL_H_
-
-#ifndef _CONDITIONER_BASE_H_
 #include "shaderGen/conditionerFeature.h"
-#endif
-#ifndef _SHADEROP_H_
-#include "shaderGen/shaderOp.h"
-#endif
 
+#include "shaderGen/shaderOp.h"
 
 ///
 class GBufferConditionerGLSL : public ConditionerFeature

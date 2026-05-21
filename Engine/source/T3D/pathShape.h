@@ -2,21 +2,17 @@
 // Torque Game Engine
 // Copyright (C) GarageGames.com, Inc.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PATHSHAPE_H_
 #define _PATHSHAPE_H_
-
-#ifndef _STATICSHAPE_H_
 #include "T3D/staticShape.h"
-#endif
 
-#ifndef _CAMERASPLINE_H_
 #include "T3D/cameraSpline.h"
-#endif
 
-#ifndef _SIMPATH_H_
 #include "scene/simPath.h"
-#endif
+
 //----------------------------------------------------------------------------
 struct PathShapeData: public StaticShapeData {
    typedef StaticShapeData Parent;

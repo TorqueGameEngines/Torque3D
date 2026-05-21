@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUICONSOLETEXTCTRL_H_
 #define _GUICONSOLETEXTCTRL_H_
-
-#ifndef _GFONT_H_
 #include "gfx/gFont.h"
-#endif
-#ifndef _GUITYPES_H_
+
 #include "gui/core/guiTypes.h"
-#endif
-#ifndef _GUICONTROL_H_
+
 #include "gui/core/guiControl.h"
-#endif
 
 class GuiConsoleTextCtrl : public GuiControl
 {

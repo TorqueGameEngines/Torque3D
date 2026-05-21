@@ -19,14 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _WINCONSOLE_H_
 #define _WINCONSOLE_H_
 
 #define MAX_CMDS 10
-#ifndef _CONSOLE_H_
 #include "console/console.h"
-#endif
 
 class WinConsole
 {

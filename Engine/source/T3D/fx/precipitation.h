@@ -19,19 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PRECIPITATION_H_
 #define _PRECIPITATION_H_
 
 #include "gfx/gfxDevice.h"
 #include "T3D/gameBase/gameBase.h"
-
-#ifndef _GFXPRIMITIVEBUFFER_H_
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _RENDERPASSMANAGER_H_
+
 #include "renderInstance/renderPassManager.h"
-#endif
 
 #include "T3D/assets/ImageAsset.h"
 #include "T3D/assets/SoundAsset.h"

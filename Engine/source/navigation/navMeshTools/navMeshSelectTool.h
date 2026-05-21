@@ -1,10 +1,8 @@
+#pragma once 
+#pragma once 
 #ifndef _NAVMESHSELECTTOOL_H_
 #define _NAVMESHSELECTTOOL_H_
-
-
-#ifndef _NAVMESH_TOOL_H_
 #include "navigation/navMeshTool.h"
-#endif
 
 class NavMeshSelectTool : public NavMeshTool
 {

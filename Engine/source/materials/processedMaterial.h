@@ -19,25 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _MATERIALS_PROCESSEDMATERIAL_H_
 #define _MATERIALS_PROCESSEDMATERIAL_H_
-
-#ifndef _MATERIALDEFINITION_H_
 #include "materials/materialDefinition.h"
-#endif
-#ifndef _MATERIALFEATUREDATA_H_
+
 #include "materials/materialFeatureData.h"
-#endif
-#ifndef _GFXSTATEBLOCK_H_
+
 #include "gfx/gfxStateBlock.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
-#ifndef _MATSTATEHINT_H_
+
 #include "materials/matStateHint.h"
-#endif
 
 #ifndef CUSTOMSHADERBINDINGDATA_H
 #include "materials/customShaderBindingData.h"

@@ -19,25 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _CONSOLETYPES_H_
 #define _CONSOLETYPES_H_
-
-#ifndef _DYNAMIC_CONSOLETYPES_H_
 #include "console/dynamicTypes.h"
-#endif
 
-#ifndef _MATHTYPES_H_
 #include "math/mathTypes.h"
-#endif
 
-#ifndef _ENGINEPRIMITIVES_H_
 #include "console/enginePrimitives.h"
-#endif
 
-#ifndef _ENGINESTRUCTS_H_
 #include "console/engineStructs.h"
-#endif
 
 template<typename T> inline const T nullAsType(){ return NULL; }
 

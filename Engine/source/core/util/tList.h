@@ -22,10 +22,7 @@
 
 #ifndef _TORQUE_LIST_
 #define _TORQUE_LIST_
-
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
 
 namespace Torque
 {

@@ -19,25 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FORESTWINDMGR_H_
 #define _FORESTWINDMGR_H_
-
-#ifndef _FORESTWINDEMITTER_H_
 #include "forest/forestWindEmitter.h"
-#endif
-#ifndef _TDICTIONARY_H_
+
 #include "core/util/tDictionary.h"
-#endif
-#ifndef _ITICKABLE_H_
+
 #include "core/iTickable.h"
-#endif
-#ifndef _FORESTITEM_H_
+
 #include "forest/forestItem.h"
-#endif 
-#ifndef _TSINGLETON_H_
+
 #include "core/util/tSingleton.h"
-#endif
 
 struct TreePlacementInfo
 {

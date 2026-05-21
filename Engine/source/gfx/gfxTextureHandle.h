@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXTEXTUREHANDLE_H_
 #define _GFXTEXTUREHANDLE_H_
-
-#ifndef _GFXTEXTUREOBJECT_H_
 #include "gfx/gfxTextureObject.h"
-#endif
-#ifndef _MPOINT2_H_
-#include "math/mPoint2.h"
-#endif
 
+#include "math/mPoint2.h"
 
 class GFXTextureProfile;
 

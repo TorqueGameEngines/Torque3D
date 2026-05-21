@@ -22,26 +22,14 @@
 #ifndef SCRIPT_ASSET_H
 #define SCRIPT_ASSET_H
 #pragma once
-
-#ifndef _ASSET_BASE_H_
 #include "assets/assetBase.h"
-#endif
 
-#ifndef _ASSET_DEFINITION_H_
 #include "assets/assetDefinition.h"
-#endif
 
-#ifndef _STRINGUNIT_H_
-#include "string/stringUnit.h"
-#endif
-
-#ifndef _ASSET_FIELD_TYPES_H_
+#include "core/strings/stringUnit.h"
 #include "assets/assetFieldTypes.h"
-#endif
 
-#ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
-#endif
 
 //-----------------------------------------------------------------------------
 class ScriptAsset : public AssetBase

@@ -22,9 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#ifndef _AFX_AREA_DAMAGE_H_
-#define _AFX_AREA_DAMAGE_H_
+ 
+#pragma once 
 
 #include "afx/afxEffectDefs.h"
 
@@ -55,7 +54,3 @@ public:
 
   DECLARE_CONOBJECT(afxAreaDamageData);
 };
-
-//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#endif // _AFX_AREA_DAMAGE_H_

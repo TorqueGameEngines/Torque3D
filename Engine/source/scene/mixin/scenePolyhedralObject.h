@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENEPOLYHEDRALOBJECT_H_
 #define _SCENEPOLYHEDRALOBJECT_H_
-
-#ifndef _MPOLYHEDRON_H_
 #include "math/mPolyhedron.h"
-#endif
-
 
 /// Shared interface for polyhedral objects.
 struct IScenePolyhedralObject

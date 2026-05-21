@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _CAMERAFXMGR_H_
 #define _CAMERAFXMGR_H_
@@ -26,12 +28,9 @@
 #ifndef _TORQUE_LIST_
 #include "core/util/tList.h"
 #endif
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
-#ifndef _MMATRIX_H_
+
 #include "math/mMatrix.h"
-#endif
 
 //**************************************************************************
 // Abstract camera effect template

@@ -19,33 +19,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _RENDERPASSMANAGER_H_
 #define _RENDERPASSMANAGER_H_
-
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
-#ifndef _SCENEOBJECT_H_
+
 #include "scene/sceneObject.h"
-#endif
-#ifndef _SIMOBJECT_H_
+
 #include "console/simObject.h"
-#endif
-#ifndef _DATACHUNKER_H_
+
 #include "core/dataChunker.h"
-#endif
-#ifndef _SCENEMANAGER_H_
+
 #include "scene/sceneManager.h"
-#endif
-#ifndef _SCENEMANAGER_H_
+
 #include "scene/sceneManager.h"
-#endif
-#ifndef _CUBEMAPDATA_H_
+
 #include "gfx/sim/cubemapData.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
+
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
 
 class SceneRenderState;
 class ISceneObject;

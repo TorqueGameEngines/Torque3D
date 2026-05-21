@@ -22,27 +22,16 @@
 //-----------------------------------------------------------------------------
 #ifndef LEVEL_ASSET_H
 #define LEVEL_ASSET_H
-
-#ifndef _ASSET_BASE_H_
 #include "assets/assetBase.h"
-#endif
 
-#ifndef _ASSET_DEFINITION_H_
 #include "assets/assetDefinition.h"
-#endif
 
-#ifndef _STRINGUNIT_H_
-#include "string/stringUnit.h"
-#endif
-
-#ifndef _ASSET_FIELD_TYPES_H_
+#include "core/strings/stringUnit.h"
 #include "assets/assetFieldTypes.h"
-#endif
-#include "T3D/assets/ImageAsset.h"
 
-#ifndef _GUI_INSPECTOR_TYPES_H_
+#include "T3D/assets/ImageAsset.h"
 #include "gui/editor/guiInspectorTypes.h"
-#endif
+
 #include <gui/controls/guiBitmapCtrl.h>
 
 //-----------------------------------------------------------------------------

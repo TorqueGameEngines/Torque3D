@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _GUI_INSPECTOR_VARIABLEGROUP_H_
 #define _GUI_INSPECTOR_VARIABLEGROUP_H_
-
-#ifndef _GUI_INSPECTOR_GROUP_H_
 #include "gui/editor/inspector/group.h"
-#endif
 
 // Forward refs
 class GuiInspector;

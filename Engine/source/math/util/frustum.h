@@ -19,34 +19,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _MATHUTIL_FRUSTUM_H_
 #define _MATHUTIL_FRUSTUM_H_
-
-#ifndef _MPOLYHEDRON_H_
 #include "math/mPolyhedron.h"
-#endif
 
-#ifndef _MBOX_H_
 #include "math/mBox.h"
-#endif
 
-#ifndef _MPLANE_H_
 #include "math/mPlane.h"
-#endif
 
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
 
-#ifndef _MQUAT_H_
 #include "math/mQuat.h"
-#endif
 
-#ifndef _MSPHERE_H_
 #include "math/mSphere.h"
-#endif
-
 
 //TODO: Specialize intersection tests for frustums using octant tests
 

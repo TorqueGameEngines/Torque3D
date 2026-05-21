@@ -19,16 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _COLLADA_APP_MATERIAL_H_
 #define _COLLADA_APP_MATERIAL_H_
-
-#ifndef _APPMATERIAL_H_
 #include "ts/loader/appMaterial.h"
-#endif
-#ifndef _COLLADA_EXTENSIONS_H_
 #include "ts/collada/colladaExtensions.h"
-#endif
 
 class Material;
 

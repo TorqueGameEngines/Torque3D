@@ -19,22 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _FOREST_EDITOR_FORESTEDITORCTRL_H_
 #define _FOREST_EDITOR_FORESTEDITORCTRL_H_
-
-#ifndef _EDITTSCTRL_H_
 #include "gui/worldEditor/editTSCtrl.h"
-#endif
 
 #ifndef _H_FOREST_
 #include "forest/forest.h"
 #endif
-
-#ifndef _FOREST_EDITOR_TOOL_H_
 #include "forest/editor/forestTool.h"
-#endif
-
 
 class ForestEditorCtrl : public EditTSCtrl
 {

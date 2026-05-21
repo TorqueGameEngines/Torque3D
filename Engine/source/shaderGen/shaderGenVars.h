@@ -19,12 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _SHADERGENVARS_H_
 #define _SHADERGENVARS_H_
-
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
 
 ///
 /// ShaderGenVars, predefined string names for variables that shadergen based shaders use, this avoids

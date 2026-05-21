@@ -19,22 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _DECALDATAFILE_H_
 #define _DECALDATAFILE_H_
-
-#ifndef _DATACHUNKER_H_
 #include "core/dataChunker.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _DECALSPHERE_H_
 #include "T3D/decal/decalSphere.h"
-#endif
-
 
 class Stream;
 class DecalData;

@@ -19,43 +19,31 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXSHADER_H_
 #define _GFXSHADER_H_
-
-#ifndef _GFXRESOURCE_H_
 #include "gfx/gfxResource.h"
-#endif
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _ALIGNEDARRAY_H_
+
 #include "core/util/tAlignedArray.h"
-#endif
-#ifndef _MMATRIX_H_
+
 #include "math/mMatrix.h"
-#endif
-#ifndef _GFXENUMS_H_
+
 #include "gfx/gfxEnums.h"
-#endif
-#ifndef _GFXSTRUCTS_H_
+
 #include "gfx/gfxStructs.h"
-#endif
-#ifndef _COLOR_H_
+
 #include "core/color.h"
-#endif
-#ifndef _REFBASE_H_
+
 #include "core/util/refBase.h"
-#endif
-#ifndef _PATH_H_
+
 #include "core/util/path.h"
-#endif
-#ifndef _TSIGNAL_H_
+
 #include "core/util/tSignal.h"
-#endif
 
 class Point2I;
 class Point2F;

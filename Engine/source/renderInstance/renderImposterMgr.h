@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _IMPOSTERRENDERMGR_H_
 #define _IMPOSTERRENDERMGR_H_
-
-#ifndef _RENDERBINMANAGER_H_
 #include "renderInstance/renderBinManager.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
+
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
-#ifndef _TSLASTDETAIL_H_
+
 #include "ts/tsLastDetail.h"
-#endif
 
 class TSLastDetail;
 class GFXTextureObject;

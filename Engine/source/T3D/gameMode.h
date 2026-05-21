@@ -3,9 +3,8 @@
 #define GAME_MODE_H
 
 #ifdef TORQUE_TOOLS
-#ifndef _GUI_INSPECTOR_TYPES_H_
 #include "gui/editor/guiInspectorTypes.h"
-#endif
+
 #endif
 
 #ifndef SUB_SCENE_H

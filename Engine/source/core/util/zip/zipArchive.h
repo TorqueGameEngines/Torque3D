@@ -29,6 +29,8 @@
 #include "core/util/tVector.h"
 #include "core/util/tDictionary.h"
 #include "core/util/timeClass.h"
+#pragma once 
+#pragma once 
 
 #ifndef _ZIPARCHIVE_H_
 #define _ZIPARCHIVE_H_

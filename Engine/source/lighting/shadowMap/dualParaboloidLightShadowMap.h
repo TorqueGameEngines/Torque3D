@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _DUALPARABOLOIDLIGHTSHADOWMAP_H_
 #define _DUALPARABOLOIDLIGHTSHADOWMAP_H_
-
-#ifndef _PARABOLOIDLIGHTSHADOWMAP_H_
 #include "lighting/shadowMap/paraboloidLightShadowMap.h"
-#endif
 
 class DualParaboloidLightShadowMap : public ParaboloidLightShadowMap
 {

@@ -19,22 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _ASYNCPACKETQUEUE_H_
 #define _ASYNCPACKETQUEUE_H_
-
-#ifndef _TFIXEDSIZEQUEUE_H_
 #include "core/util/tFixedSizeDeque.h"
-#endif
 
-#ifndef _TSTREAM_H_
 #include "core/stream/tStream.h"
-#endif
 
-#ifndef _TYPETRAITS_H_
 #include "platform/typetraits.h"
-#endif
-
 
 //#define DEBUG_SPEW
 

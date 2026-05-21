@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIARRAYCTRL_H_
 #define _GUIARRAYCTRL_H_
-
-#ifndef _GUITYPES_H_
 #include "gui/core/guiTypes.h"
-#endif
-#ifndef _GUITEXTCTRL_H_
+
 #include "gui/controls/guiTextCtrl.h"
-#endif
 
 /// Renders a grid of cells.
 class GuiArrayCtrl : public GuiControl

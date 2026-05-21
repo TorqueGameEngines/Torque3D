@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUICONVEXSHAPEEDITORCTRL_H_
 #define _GUICONVEXSHAPEEDITORCTRL_H_
-
-#ifndef _EDITTSCTRL_H_
 #include "gui/worldEditor/editTSCtrl.h"
-#endif
-#ifndef _UNDO_H_
+
 #include "util/undo.h"
-#endif
-#ifndef _GIZMO_H_
+
 #include "gui/worldEditor/gizmo.h"
-#endif
-#ifndef _CONVEXSHAPE_H_
+
 #include "T3D/convexShape.h"
-#endif
 
 class GameBase;
 class GuiConvexEditorUndoAction;

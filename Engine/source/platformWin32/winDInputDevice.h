@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _WINDINPUTDEVICE_H_
 #define _WINDINPUTDEVICE_H_
-
-#ifndef _PLATFORMWIN32_H_
 #include "platformWin32/platformWin32.h"
-#endif
-#ifndef _PLATFORMINPUT_H_
+
 #include "platform/platformInput.h"
-#endif
 
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>

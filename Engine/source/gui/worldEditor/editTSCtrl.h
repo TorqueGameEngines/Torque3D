@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _EDITTSCTRL_H_
 #define _EDITTSCTRL_H_
-
-#ifndef _GUITSCONTROL_H_
 #include "gui/3d/guiTSControl.h"
-#endif
-#ifndef _GIZMO_H_
+
 #include "gizmo.h"
-#endif
 
 class TerrainBlock;
 class MissionArea;

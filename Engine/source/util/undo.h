@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _UNDO_H_
 #define _UNDO_H_
-
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _SIMBASE_H_
+
 #include "console/simBase.h"
-#endif
-#ifndef _ENGINEAPI_H_
+
 #include "console/engineAPI.h"
-#endif
 
 class UndoManager;
 

@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _ASSET_PTR_H_
 #define _ASSET_PTR_H_
-
-#ifndef _ASSET_MANAGER_H_
 #include "assetManager.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

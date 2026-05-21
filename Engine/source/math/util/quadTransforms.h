@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _QUADTOQUADTRANSFORMS_H_
 #define _QUADTOQUADTRANSFORMS_H_
-
-#ifndef _MPOINT2_H_
 #include "math/mPoint2.h"
-#endif
-#ifndef _MPOINT3_H_
+
 #include "math/mPoint3.h"
-#endif
-#ifndef _MMATRIX_H_
+
 #include "math/mMatrix.h"
-#endif
 
 // NOTE: The code in these classes originate from the Wild Magic Source Code
 // library by David Eberly and is used with permission.

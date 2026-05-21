@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _MATERIALS_PROCESSEDSHADERMATERIAL_H_
 #define _MATERIALS_PROCESSEDSHADERMATERIAL_H_
-
-#ifndef _MATERIALS_PROCESSEDMATERIAL_H_
 #include "processedMaterial.h"
-#endif
-#ifndef _GFXSHADER_H_
+
 #include "gfx/gfxShader.h"
-#endif
+
 #ifndef CUSTOMSHADERBINDINGDATA_H
 #include "materials/customShaderBindingData.h"
 #endif

@@ -19,16 +19,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
-#ifndef _BANLIST_H_
-#define _BANLIST_H_
-
-#ifndef _ENGINEAPI_H_
-   #include "console/engineAPI.h"
-#endif
-#ifndef _TVECTOR_H_
-   #include "core/util/tVector.h"
-#endif
+#include "console/engineAPI.h"
+#include "core/util/tVector.h"
 
 /// Helper class to keep track of bans.
 class BanList
@@ -64,4 +58,3 @@ class BanList
       void exportToFile(const char *fileName);
 };
 
-#endif

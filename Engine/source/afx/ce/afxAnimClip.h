@@ -22,9 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#ifndef _AFX_ANIM_CLIP_H_
-#define _AFX_ANIM_CLIP_H_
+ 
+#pragma once 
 
 class afxAnimClipData : public GameBaseData
 {
@@ -74,7 +73,3 @@ public:
 
   DECLARE_CONOBJECT(afxAnimClipData);
 };
-
-//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#endif // _AFX_ANIM_CLIP_H_

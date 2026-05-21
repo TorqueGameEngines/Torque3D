@@ -19,28 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifndef _ACCUFEATUREGLSL_H_
-#define _ACCUFEATUREGLSL_H_
-
-#ifndef _SHADERGEN_GLSL_SHADERFEATUREGLSL_H_
+#pragma once 
+ 
 #include "shaderGen/GLSL/shaderFeatureGLSL.h"
-#endif
-#ifndef _LANG_ELEMENT_H_
+
 #include "shaderGen/langElement.h"
-#endif
-#ifndef _GFXDEVICE_H_
+
 #include "gfx/gfxDevice.h"
-#endif
-#ifndef _FEATUREMGR_H_
+
 #include "shaderGen/featureMgr.h"
-#endif
-#ifndef _MATERIALFEATURETYPES_H_
+
 #include "materials/materialFeatureTypes.h"
-#endif
-#ifndef _MATERIALFEATUREDATA_H_
+
 #include "materials/materialFeatureData.h"
-#endif
 
 /// Accu texture
 class AccuTexFeatGLSL : public ShaderFeatureGLSL
@@ -181,5 +172,3 @@ public:
 
    String getName() override { return "Accu Specular"; }
 };
-
-#endif

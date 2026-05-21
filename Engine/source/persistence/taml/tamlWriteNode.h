@@ -19,21 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _TAML_WRITE_NODE_H_
 #define _TAML_WRITE_NODE_H_
-
-#ifndef _TAML_CUSTOM_H_
 #include "persistence/taml/tamlCustom.h"
-#endif
 
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
-#ifndef _VECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

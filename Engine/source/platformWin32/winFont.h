@@ -19,10 +19,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifndef _PLATFORMFONT_H_
 #include "platform/platformFont.h"
-#endif
+
+#pragma once 
+#pragma once 
 
 #ifndef _WINFONT_H_
 #define _WINFONT_H_

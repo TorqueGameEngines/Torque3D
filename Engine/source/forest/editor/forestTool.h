@@ -19,19 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _FOREST_EDITOR_TOOL_H_
 #define _FOREST_EDITOR_TOOL_H_
-
-#ifndef _FORESTITEM_H_
 #include "forest/forestItem.h"
-#endif
-#ifndef _SIMBASE_H_
+
 #include "console/simBase.h"
-#endif
-#ifndef _GUITYPES_H_
+
 #include "gui/core/guiTypes.h"
-#endif
 
 class Forest;
 class ForestEditorCtrl;

@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TERRCOLL_H_
 #define _TERRCOLL_H_
-
-#ifndef _CONVEX_H_
 #include "collision/convex.h"
-#endif
-
 
 class TerrainConvex : public Convex
 {

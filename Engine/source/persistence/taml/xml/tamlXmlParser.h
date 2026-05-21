@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _TAML_XMLPARSER_H_
 #define _TAML_XMLPARSER_H_
-
-#ifndef _TAML_PARSER_H_
 #include "persistence/taml/tamlParser.h"
-#endif
 
 #ifndef TINYXML2_INCLUDED
 #include <tinyxml2.h>

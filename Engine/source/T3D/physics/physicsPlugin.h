@@ -19,29 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _T3D_PHYSICS_PHYSICSPLUGIN_H_
 #define _T3D_PHYSICS_PHYSICSPLUGIN_H_
-
-#ifndef _SIMSET_H_
 #include "console/simSet.h"
-#endif
-#ifndef _TSIGNAL_H_
-#include "core/util/tSignal.h"
-#endif
-#ifndef _TORQUE_STRING_H_
-#include "core/util/str.h"
-#endif
-#ifndef _TDICTIONARY_H_
-#include "core/util/tDictionary.h"
-#endif
-#ifndef _UTIL_DELEGATE_H_
-#include "core/util/delegate.h"
-#endif
-#ifndef _T3D_PHYSICSCOMMON_H_
-#include "T3D/physics/physicsCommon.h"
-#endif
 
+#include "core/util/tSignal.h"
+#include "core/util/str.h"
+
+#include "core/util/tDictionary.h"
+#include "core/util/delegate.h"
+
+#include "T3D/physics/physicsCommon.h"
 
 class Player;
 class SceneRenderState;

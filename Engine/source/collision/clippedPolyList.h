@@ -19,20 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _CLIPPEDPOLYLIST_H_
 #define _CLIPPEDPOLYLIST_H_
-
-#ifndef _MMATH_H_
 #include "math/mMath.h"
-#endif
-#ifndef _TVECTORSPEC_H_
-#include "core/util/tVectorSpecializations.h"
-#endif
-#ifndef _ABSTRACTPOLYLIST_H_
-#include "collision/abstractPolyList.h"
-#endif
 
+#include "core/util/tVectorSpecializations.h"
+
+#include "collision/abstractPolyList.h"
 
 #define CLIPPEDPOLYLIST_FLAG_ALLOWCLIPPING		0x01
 

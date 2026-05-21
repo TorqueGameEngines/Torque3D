@@ -1,21 +1,12 @@
 #pragma once
 #ifndef _TAML_BINARYPARSER_H_
-
-#ifndef _TAML_PARSER_H_
 #include "persistence/taml/tamlParser.h"
-#endif
 
-#ifndef _TAML_VISITOR_H_
 #include "persistence/taml/tamlVisitor.h"
-#endif
 
-#ifndef _STREAM_H_
 #include "core/stream/stream.h"
-#endif
 
-#ifndef _FILESTREAM_H_
 #include "core/stream/fileStream.h"
-#endif
 
 class TamlBinaryParser : public TamlParser
 {

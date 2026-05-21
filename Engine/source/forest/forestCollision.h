@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FORESTCOLLISION_H_
 #define _FORESTCOLLISION_H_
-
-#ifndef _CONVEX_H_
 #include "collision/convex.h"
-#endif
-#ifndef _COLLISION_H_
-#include "collision/collision.h"
-#endif
 
+#include "collision/collision.h"
 
 class Forest;
 class ForestItem;

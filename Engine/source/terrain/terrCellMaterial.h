@@ -19,26 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TERRCELLMATERIAL_H_
 #define _TERRCELLMATERIAL_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
-#include "materials/matTextureTarget.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
-#include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _GFXSHADER_H_
-#include "gfx/gfxShader.h"
-#endif
-#ifndef _GFXSTATEBLOCK_H_
-#include "gfx/gfxStateBlock.h"
-#endif
 
+#include "materials/matTextureTarget.h"
+
+#include "gfx/gfxTextureHandle.h"
+
+#include "gfx/gfxShader.h"
+
+#include "gfx/gfxStateBlock.h"
 
 class GFXTextureArray;
 class SceneRenderState;

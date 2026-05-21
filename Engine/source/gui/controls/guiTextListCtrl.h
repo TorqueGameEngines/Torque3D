@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUITEXTLISTCTRL_H_
 #define _GUITEXTLISTCTRL_H_
-
-#ifndef _GUIARRAYCTRL_H_
 #include "gui/core/guiArrayCtrl.h"
-#endif
 
 class GuiTextListCtrl : public GuiArrayCtrl
 {

@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PHYSICSEVENTS_H_
 #define _PHYSICSEVENTS_H_
-
-#ifndef _NETCONNECTION_H_
 #include "sim/netConnection.h"
-#endif
 
 class SceneObject;
 class SceneContainer;

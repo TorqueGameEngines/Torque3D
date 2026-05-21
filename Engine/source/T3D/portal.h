@@ -19,18 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PORTAL_H_
 #define _PORTAL_H_
-
-#ifndef _ZONE_H_
 #include "T3D/zone.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-
 
 class SceneCullingState;
 class SceneCullingVolume;

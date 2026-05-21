@@ -19,29 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _ASSET_DEFINITION_H_
 #define _ASSET_DEFINITION_H_
-
-#ifndef _STRINGTABLE_H_
 #include "core/stringTable.h"
-#endif
 
-#ifndef _STRINGUNIT_H_
 #include "core/strings/stringUnit.h"
-#endif
 
-#ifndef _SIM_H_
 #include "console/sim.h"
-#endif
 
-#ifndef _SIMSET_H_
 #include "console/simSet.h"
-#endif
 
-#ifndef _CONSOLEOBJECT_H_
 #include "console/consoleObject.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

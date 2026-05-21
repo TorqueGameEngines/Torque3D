@@ -19,16 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 #ifndef __GFXSTATEBLOCKDATA_H_
 #define __GFXSTATEBLOCKDATA_H_
-
-#ifndef _GFXSTATEBLOCK_H_
 #include "gfx/gfxStateBlock.h"
-#endif
-#ifndef _SIMOBJECT_H_
-#include "console/simObject.h"
-#endif
 
+#include "console/simObject.h"
 
 class GFXSamplerStateData;
 

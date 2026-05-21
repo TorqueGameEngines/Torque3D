@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _RENDERFORMATCHANGER_H_
 #define _RENDERFORMATCHANGER_H_
-
-#ifndef _RENDERPASSSTATETOKEN_H_
 #include "renderInstance/renderPassStateToken.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
 
 class PostEffect;
 

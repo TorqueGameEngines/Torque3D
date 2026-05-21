@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TERRMATERIAL_H_
 #define _TERRMATERIAL_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
 #include "T3D/assets/ImageAsset.h"
 

@@ -19,35 +19,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSLASTDETAIL_H_
 #define _TSLASTDETAIL_H_
-
-#ifndef _MATHTYPES_H_
 #include "math/mathTypes.h"
-#endif
-#ifndef _MPOINT3_H_
+
 #include "math/mPoint3.h"
-#endif
-#ifndef _MMATRIX_H_
+
 #include "math/mMatrix.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
+
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif
-#ifndef _TSRENDERDATA_H_
 #include "ts/tsRenderState.h"
-#endif
-#ifndef _GFXVERTEXFORMAT_H_
-#include "gfx/gfxVertexFormat.h"
-#endif
-#ifndef _SIM_H_
-#include "console/simObject.h"
-#endif
 
+#include "gfx/gfxVertexFormat.h"
+
+#include "console/simObject.h"
 
 class TSShape;
 class TSRenderState;

@@ -19,30 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _DU_DEBUG_DRAW_TORQUE_H_
 #define _DU_DEBUG_DRAW_TORQUE_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
+
 #include <DebugDraw.h>
-
-#ifndef _GFXSTATEBLOCK_H_
 #include "gfx/gfxStateBlock.h"
-#endif
 
-#ifndef _GFXVERTEXTYPES_H_
 #include "gfx/gfxVertexTypes.h"
-#endif
 
-#ifndef _GFXVERTEXBUFFER_H_
 #include "gfx/gfxVertexBuffer.h"
-#endif
 
-#ifndef _SCENERENDERSTATE_H_
 #include "scene/sceneRenderState.h"
-#endif
 
 /**
 * @class duDebugDrawTorque

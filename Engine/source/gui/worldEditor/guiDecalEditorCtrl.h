@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIDECALEDITORCTRL_H_
 #define _GUIDECALEDITORCTRL_H_
-
-#ifndef _EDITTSCTRL_H_
 #include "gui/worldEditor/editTSCtrl.h"
-#endif
-#ifndef _UNDO_H_
+
 #include "util/undo.h"
-#endif
-#ifndef _DECALINSTANCE_H_
+
 #include "T3D/decal/decalInstance.h"
-#endif
 
 class GameBase;
 class Gizmo;

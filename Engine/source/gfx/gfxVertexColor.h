@@ -19,13 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXVERTEXCOLOR_H_
 #define _GFXVERTEXCOLOR_H_
-
-#ifndef _SWIZZLE_H_
 #include "core/util/swizzle.h"
-#endif
+
 #include "core/color.h"
 
 class GFXVertexColor 

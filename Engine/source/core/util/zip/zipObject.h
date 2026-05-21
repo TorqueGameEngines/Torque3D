@@ -25,6 +25,8 @@
 #include "core/util/tVector.h"
 #include "core/stream/streamObject.h"
 #include "core/util/str.h"
+#pragma once 
+#pragma once 
 
 #ifndef _ZIPOBJECT_H_
 #define _ZIPOBJECT_H_

@@ -19,25 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _REFLECTOR_H_
 #define _REFLECTOR_H_
-
-#ifndef _GFXCUBEMAP_H_
 #include "gfx/gfxCubemap.h"
-#endif
-#ifndef _GFXTARGET_H_
+
 #include "gfx/gfxTarget.h"
-#endif
-#ifndef _SIMDATABLOCK_H_
+
 #include "console/simDatablock.h"
-#endif
-#ifndef _MMATH_H_
+
 #include "math/mMath.h"
-#endif
-#ifndef _MATHUTIL_FRUSTUM_H_
 #include "math/util/frustum.h"
-#endif
 
 struct CameraQuery;
 class Point2I;

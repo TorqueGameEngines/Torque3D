@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIMLTEXTCTRL_H_
 #define _GUIMLTEXTCTRL_H_
-
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
 
-#ifndef _STRINGBUFFER_H_
 #include "core/stringBuffer.h"
-#endif
 
 #ifndef SOUND_ASSET_H
 #include "T3D/assets/SoundAsset.h"

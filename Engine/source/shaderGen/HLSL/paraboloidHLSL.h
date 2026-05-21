@@ -19,15 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 #ifndef _PARABOLOID_HLSL_H_
 #define _PARABOLOID_HLSL_H_
-
-#ifndef _SHADERGEN_HLSL_SHADERFEATUREHLSL_H_
 #include "shaderGen/HLSL/shaderFeatureHLSL.h"
-#endif
-#ifndef _SHADEROP_H_
+
 #include "shaderGen/shaderOp.h"
-#endif
 
 class GFXShaderConstHandle;
 

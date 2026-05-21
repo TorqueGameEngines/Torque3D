@@ -19,25 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MISSIONMARKER_H_
 #define _MISSIONMARKER_H_
-
-#ifndef _BITSTREAM_H_
 #include "core/stream/bitStream.h"
-#endif
-#ifndef _SIMBASE_H_
+
 #include "console/simBase.h"
-#endif
-#ifndef _SHAPEBASE_H_
+
 #include "T3D/shapeBase.h"
-#endif
-#ifndef _MATHIO_H_
+
 #include "math/mathIO.h"
-#endif
-#ifndef _COLOR_H_
+
 #include "core/color.h"
-#endif
 
 class MissionMarkerData : public ShapeBaseData
 {

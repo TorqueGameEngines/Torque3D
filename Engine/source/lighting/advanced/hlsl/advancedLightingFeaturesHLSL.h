@@ -19,9 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
-#ifndef _DEFERREDFEATURESHLSL_H_
-#define _DEFERREDFEATURESHLSL_H_
 
 #include "shaderGen/HLSL/shaderFeatureHLSL.h"
 #include "shaderGen/HLSL/bumpHLSL.h"
@@ -143,5 +142,3 @@ public:
       return "Sub-Surface Approximation [Deferred]";
    }
 };
-
-#endif // _DEFERREDFEATURESHLSL_H_

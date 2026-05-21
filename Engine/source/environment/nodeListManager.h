@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _NODELISTMANAGER_H_
 #define _NODELISTMANAGER_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-#ifndef _MPOINT3_H_
+
 #include "math/mPoint3.h"
-#endif
-#ifndef _MQUAT_H_
+
 #include "math/mQuat.h"
-#endif
-#ifndef _NETCONNECTION_H_
+
 #include "sim/netConnection.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

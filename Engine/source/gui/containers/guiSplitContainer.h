@@ -19,23 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 #ifndef _GUI_SPLTCONTAINER_H_
 #define _GUI_SPLTCONTAINER_H_
-
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
-#ifndef _GUICONTAINER_H_
+
 #include "gui/containers/guiContainer.h"
-#endif
-#ifndef _GUI_PANEL_H_
 #include "gui/containers/guiPanel.h"
-#endif
-#ifndef _PLATFORMINPUT_H_
+
 #include "platform/platformInput.h"
-#endif
-
-
 
 /// @addtogroup gui_container_group Containers
 ///

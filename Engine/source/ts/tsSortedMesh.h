@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSSORTEDMESH_H_
 #define _TSSORTEDMESH_H_
-
-#ifndef _TSMESH_H_
 #include "ts/tsMesh.h"
-#endif
 
 /// TSSortedMesh is for meshes that need sorting (obviously).  Such meshes
 /// are usually partially or completely composed of translucent/parent polygons.

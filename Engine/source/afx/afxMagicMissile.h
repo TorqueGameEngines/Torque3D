@@ -35,6 +35,8 @@
 //   http://www.garagegames.com/index.php?sec=mg&mod=resource&page=view&qid=5128
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+ 
+#pragma once 
 
 #ifndef _AFX_MAGIC_MISSILE_H_
 #define _AFX_MAGIC_MISSILE_H_

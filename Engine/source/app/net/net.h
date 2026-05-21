@@ -1,5 +1,4 @@
-#ifndef _NET_H_
-#define _NET_H_
+#pragma once
 
 #include "platform/platform.h"
 #include "core/dnet.h"
@@ -55,5 +54,3 @@ public:
 
    DECLARE_CONOBJECT(RemoteCommandEvent);
 };
-
-#endif

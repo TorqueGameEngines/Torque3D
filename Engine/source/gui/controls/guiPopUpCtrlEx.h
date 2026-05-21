@@ -19,22 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIPOPUPCTRLEX_H_
 #define _GUIPOPUPCTRLEX_H_
-
-#ifndef _GUITEXTCTRL_H_
 #include "gui/controls/guiTextCtrl.h"
-#endif
-#ifndef _GUITEXTLISTCTRL_H_
+
 #include "gui/controls/guiTextListCtrl.h"
-#endif
-#ifndef _GUIBUTTONCTRL_H_
+
 #include "gui/buttons/guiButtonCtrl.h"
-#endif
-#ifndef _GUISCROLLCTRL_H_
+
 #include "gui/containers/guiScrollCtrl.h"
-#endif
+
 #include "guiTextEditCtrl.h"
 class GuiPopUpMenuCtrlEx;
 class GuiPopupTextListCtrlEx;

@@ -19,21 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _BITMAPUTILS_H_
 #define _BITMAPUTILS_H_
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
-#ifndef _GFXENUMS_H_
+
 #include "gfx/gfxEnums.h"
-#endif
-#ifndef _MMATHFN_H_
+
 #include "math/mMathFn.h"
-#endif
 
 extern void (*bitmapExtrude5551)(const void *srcMip, void *mip, U32 height, U32 width);
 extern void (*bitmapExtrudeRGB)(const void *srcMip, void *mip, U32 height, U32 width, U32 bpp);

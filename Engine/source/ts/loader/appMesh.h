@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _APPMESH_H_
 #define _APPMESH_H_
-
-#ifndef _MMATH_H_
 #include "math/mMath.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _APPMATERIAL_H_
+
 #include "ts/loader/appMaterial.h"
-#endif
-#ifndef _APPSEQUENCE_H_
+
 #include "ts/loader/appSequence.h"
-#endif
 
 class AppNode;
 

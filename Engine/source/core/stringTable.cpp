@@ -24,6 +24,8 @@
 #include "core/stringTable.h"
 #include "platform/profiler.h"
 
+template class Vector<StringTableEntry>;
+
 _StringTable *_gStringTable = NULL;
 const U32 _StringTable::csm_stInitSize = 29;
 

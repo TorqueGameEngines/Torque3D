@@ -19,16 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _RENDER_TRANSLUCENT_MGR_H_
 #define _RENDER_TRANSLUCENT_MGR_H_
-
-#ifndef _RENDERBINMANAGER_H_
 #include "renderInstance/renderBinManager.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
 
 class RenderParticleMgr;
 

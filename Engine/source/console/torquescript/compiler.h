@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 
 #ifndef _COMPILER_H_
@@ -41,10 +43,7 @@ class DataChunker;
 #include "platform/platform.h"
 #include "ast.h"
 #include "codeBlock.h"
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
 //------------------------------------------------------------
 

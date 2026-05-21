@@ -19,34 +19,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXSTRUCTS_H_
 #define _GFXSTRUCTS_H_
-
-#ifndef _COLOR_H_
 #include "core/color.h"
-#endif
-#ifndef _GFXVERTEXCOLOR_H_
+
 #include "gfx/gfxVertexColor.h"
-#endif
-#ifndef _GFXENUMS_H_
+
 #include "gfx/gfxEnums.h"
-#endif
-#ifndef _MMATH_H_
+
 #include "math/mMath.h"
-#endif
-#ifndef _PROFILER_H_
+
 #include "platform/profiler.h"
-#endif
-#ifndef _GFXRESOURCE_H_
+
 #include "gfx/gfxResource.h"
-#endif
-#ifndef _REFBASE_H_
+
 #include "core/util/refBase.h"
-#endif
-#ifndef _GFXVERTEXTYPES_H_
+
 #include "gfx/gfxVertexTypes.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

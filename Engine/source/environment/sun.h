@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SUN_H_
 #define _SUN_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _COLOR_H_
+
 #include "core/color.h"
-#endif
-#ifndef _LIGHTINFO_H_
+
 #include "lighting/lightInfo.h"
-#endif
-#ifndef _LIGHTFLAREDATA_H_
+
 #include "T3D/lightFlareData.h"
-#endif
 
 #include "T3D/assets/MaterialAsset.h"
 

@@ -19,24 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TDICTIONARY_H_
 #define _TDICTIONARY_H_
-
-#ifndef _STRINGFUNCTIONS_H_
 #include "core/strings/stringFunctions.h"
-#endif
-#ifndef _HASHFUNCTION_H_
+
 #include "core/util/hashFunction.h"
-#endif
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
 
-#ifndef _DATACHUNKER_H_
 #include "core/dataChunker.h"
-#endif
-
 
 // TODO: Maybe move these into a more general Tuple class?
 

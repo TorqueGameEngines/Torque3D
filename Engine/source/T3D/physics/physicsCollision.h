@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _T3D_PHYSICS_PHYSICSCOLLISION_H_
 #define _T3D_PHYSICS_PHYSICSCOLLISION_H_
-
-#ifndef _REFBASE_H_
 #include "core/util/refBase.h"
-#endif
 
 class Point3F;
 #ifndef USE_TEMPLATE_MATRIX

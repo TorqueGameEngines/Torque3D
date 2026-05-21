@@ -19,16 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _BUMP_GLSL_H_
 #define _BUMP_GLSL_H_
-
-#ifndef _SHADERGEN_GLSL_SHADERFEATUREGLSL_H_
 #include "shaderGen/GLSL/shaderFeatureGLSL.h"
-#endif
-#ifndef _LANG_ELEMENT_H_
+
 #include "shaderGen/langElement.h"
-#endif
 
 struct RenderPassData;
 class MultiLine;

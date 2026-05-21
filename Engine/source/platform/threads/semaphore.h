@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _PLATFORM_THREAD_SEMAPHORE_H_
 #define _PLATFORM_THREAD_SEMAPHORE_H_
-
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
 
 // Forward ref used by platform code
 class PlatformSemaphore;

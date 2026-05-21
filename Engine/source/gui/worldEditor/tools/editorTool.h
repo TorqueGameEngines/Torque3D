@@ -22,10 +22,7 @@
 
 #ifndef _EDITOR_TOOL_
 #define _EDITOR_TOOL_
-
-#ifndef _WORLDEDITOR_H_
 #include "gui/worldEditor/worldEditor.h"
-#endif
 
 class EditorTool : public SimObject
 {

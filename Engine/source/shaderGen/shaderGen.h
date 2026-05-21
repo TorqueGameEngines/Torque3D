@@ -19,33 +19,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _SHADERGEN_H_
 #define _SHADERGEN_H_
-
-#ifndef _LANG_ELEMENT_H_
 #include "shaderGen/langElement.h"
-#endif
-#ifndef _SHADERFEATURE_H_
+
 #include "shaderGen/shaderFeature.h"
-#endif
-#ifndef _SHADERCOMP_H_
+
 #include "shaderGen/shaderComp.h"
-#endif
-#ifndef _GFXDEVICE_H_
+
 #include "gfx/gfxDevice.h"
-#endif
-#ifndef _AUTOPTR_H_
+
 #include "core/util/autoPtr.h"
-#endif
-#ifndef _TSINGLETON_H_
+
 #include "core/util/tSingleton.h"
-#endif
-#ifndef _VOLUME_H_
+
 #include "core/volume.h"
-#endif
-#ifndef _MATERIALFEATUREDATA_H_
+
 #include "materials/materialFeatureData.h"
-#endif
 
 /// Base class used by shaderGen to be API agnostic.  Subclasses implement the various methods
 /// in an API specific way.

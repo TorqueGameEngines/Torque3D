@@ -19,17 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _RESIZESTREAM_H_
 #define _RESIZESTREAM_H_
 
 //Includes
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _FILTERSTREAM_H_
+
 #include "core/filterStream.h"
-#endif
 
 class ResizeFilterStream : public FilterStream, public IStreamByteCount
 {

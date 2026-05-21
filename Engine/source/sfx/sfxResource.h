@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SFXRESOURCE_H_
 #define _SFXRESOURCE_H_
@@ -29,10 +31,7 @@
 #ifndef __RESOURCE_H__
    #include "core/resource.h"
 #endif
-
-#ifndef _SFXSTREAM_H_
 #include "sfx/sfxStream.h"
-#endif
 
 /// This is the base class for all sound file resources including
 /// streamed sound files.  It acts much like an always in-core

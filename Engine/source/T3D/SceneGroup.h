@@ -1,10 +1,7 @@
 #pragma once
 #ifndef SCENE_GROUP_H
 #define SCENE_GROUP_H
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
 
 class SceneGroup : public SceneObject
 {

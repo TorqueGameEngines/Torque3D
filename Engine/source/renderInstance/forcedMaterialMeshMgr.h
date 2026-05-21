@@ -19,12 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _RENDERFORCEDMATMESHMGR_H_
 #define _RENDERFORCEDMATMESHMGR_H_
-
-#ifndef _RENDERMESHMGR_H_
 #include "renderInstance/renderMeshMgr.h"
-#endif
 
 class Material;
 

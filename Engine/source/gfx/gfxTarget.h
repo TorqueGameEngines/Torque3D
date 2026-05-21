@@ -19,23 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXTARGET_H_
 #define _GFXTARGET_H_
-
-#ifndef _REFBASE_H_
 #include "core/util/refBase.h"
-#endif
-#ifndef _GFXENUMS_H_
-#include "gfx/gfxEnums.h"
-#endif
-#ifndef _GFXRESOURCE_H_
-#include "gfx/gfxResource.h"
-#endif
-#ifndef _MPOINT3_H_
-#include "math/mPoint3.h"
-#endif
 
+#include "gfx/gfxEnums.h"
+
+#include "gfx/gfxResource.h"
+
+#include "math/mPoint3.h"
 
 class Point2I;
 class PlatformWindow;

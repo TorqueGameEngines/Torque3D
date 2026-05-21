@@ -19,21 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 #ifndef _MATERIAL_MGR_H_
 #define _MATERIAL_MGR_H_
-
-#ifndef _MATERIALDEFINITION_H_
 #include "materials/materialDefinition.h"
-#endif
-#ifndef _FEATURESET_H_
+
 #include "shaderGen/featureSet.h"
-#endif
-#ifndef _GFXDEVICE_H_
+
 #include "gfx/gfxDevice.h"
-#endif
-#ifndef _TSINGLETON_H_
+
 #include "core/util/tSingleton.h"
-#endif
 
 class SimSet;
 class MatInstance;

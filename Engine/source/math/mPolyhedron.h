@@ -19,38 +19,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MPOLYHEDRON_H_
 #define _MPOLYHEDRON_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
 
-#ifndef _MPLANE_H_
 #include "math/mPlane.h"
-#endif
 
-#ifndef _MPLANESET_H_
 #include "math/mPlaneSet.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _TUNMANAGEDVECTOR_H_
 #include "core/util/tUnmanagedVector.h"
-#endif
 
-#ifndef _TFIXEDSIZEVECTOR_H_
 #include "core/util/tFixedSizeVector.h"
-#endif
 
-#ifndef _MCONSTANTS_H_
 #include "math/mConstants.h"
-#endif
-
 
 /// @file
 /// Templated polyhedron code to allow all code to use a central definition of polyhedrons and

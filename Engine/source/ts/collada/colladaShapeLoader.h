@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _COLLADA_SHAPELOADER_H_
 #define _COLLADA_SHAPELOADER_H_
-
-#ifndef _TSSHAPELOADER_H_
 #include "ts/loader/tsShapeLoader.h"
-#endif
 
 class domCOLLADA;
 class domAnimation;

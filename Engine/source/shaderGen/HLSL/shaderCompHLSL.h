@@ -19,14 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _SHADERCOMP_HLSL_H_
 #define _SHADERCOMP_HLSL_H_
-
-#ifndef _SHADERCOMP_H_
 #include "shaderGen/shaderComp.h"
-#endif
-
 
 class ShaderConnectorHLSL : public ShaderConnector
 {

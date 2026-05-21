@@ -22,10 +22,7 @@
 
 #ifndef _MODULE_MERGE_DEFINITION_H
 #define _MODULE_MERGE_DEFINITION_H
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

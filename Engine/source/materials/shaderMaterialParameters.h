@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SHADERMATERIALPARAMETERS_H_
 #define _SHADERMATERIALPARAMETERS_H_
-
-#ifndef _MATERIALPARAMETERS_H_
 #include "materials/materialParameters.h"
-#endif
-#ifndef _GFXSHADER_H_
-#include "gfx/gfxShader.h"
-#endif
 
+#include "gfx/gfxShader.h"
 
 class ShaderMaterialParameterHandle : public MaterialParameterHandle
 {

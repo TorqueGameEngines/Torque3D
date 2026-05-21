@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _COLLADA_APPSEQUENCE_H_
 #define _COLLADA_APPSEQUENCE_H_
-
-#ifndef _APPSEQUENCE_H_
 #include "ts/loader/appSequence.h"
-#endif
 
 class domAnimation_clip;
 class ColladaExtension_animation_clip;

@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _VERTEXPOLYLIST_H_
 #define _VERTEXPOLYLIST_H_
-
-#ifndef _ABSTRACTPOLYLIST_H_
 #include "collision/abstractPolyList.h"
-#endif
-
 
 /// A simple polylist which only gathers the unique verticies passed to it.
 class VertexPolyList : public AbstractPolyList

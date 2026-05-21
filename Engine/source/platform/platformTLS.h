@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PLATFORMTLS_H_
 #define _PLATFORMTLS_H_
-
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
 
 struct PlatformThreadStorage;
 

@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSSHAPECONSTRUCT_H_
 #define _TSSHAPECONSTRUCT_H_
@@ -26,21 +28,14 @@
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif
-#ifndef _MTRANSFORM_H_
 #include "math/mTransform.h"
-#endif
-#ifndef _TSSHAPE_H_
+
 #include "ts/tsShape.h"
-#endif
-#ifndef _SIMBASE_H_
+
 #include "console/simBase.h"
-#endif
-#ifndef _COLLADA_UTILS_H_
 #include "ts/collada/colladaUtils.h"
-#endif
-#ifndef _ENGINEAPI_H_
+
 #include "console/engineAPI.h"
-#endif
 
 #include "T3D/assets/ShapeAsset.h"
 #include "T3D/assets/ShapeAnimationAsset.h"

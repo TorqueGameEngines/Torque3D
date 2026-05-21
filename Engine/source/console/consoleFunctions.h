@@ -1,9 +1,8 @@
+#pragma once 
+#pragma once 
 #ifndef _CONSOLFUNCTIONS_H_
 #define _CONSOLFUNCTIONS_H_
-
-#ifndef _STRINGFUNCTIONS_H_
 #include "core/strings/stringFunctions.h"
-#endif
 
 bool isInt(const char* str);
 

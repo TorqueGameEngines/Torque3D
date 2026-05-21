@@ -19,27 +19,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFONT_H_
 #define _GFONT_H_
 
 //Includes
-#ifndef _RESOURCE_H_
 #include "core/resource.h"
-#endif
-#ifndef _PLATFORMFONT_H_
-#include "platform/platformFont.h"
-#endif
-#ifndef _GBITMAP_H_
-#include "gfx/bitmap/gBitmap.h"
-#endif
-#ifndef _GFXDEVICE_H_
-#include "gfx/gfxDevice.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
-#include "gfx/gfxTextureHandle.h"
-#endif
 
+#include "platform/platformFont.h"
+
+#include "gfx/bitmap/gBitmap.h"
+
+#include "gfx/gfxDevice.h"
+
+#include "gfx/gfxTextureHandle.h"
 
 GFX_DeclareTextureProfile(GFXFontTextureProfile);
 #define Font_Table_MAX 65536

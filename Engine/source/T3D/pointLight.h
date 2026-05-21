@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _POINTLIGHT_H_
 #define _POINTLIGHT_H_
-
-#ifndef _LIGHTBASE_H_
 #include "T3D/lightBase.h"
-#endif
-
 
 class PointLight : public LightBase
 {

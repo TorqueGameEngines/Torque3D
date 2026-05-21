@@ -19,38 +19,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
-#ifndef _ADVANCEDLIGHTMANAGER_H_
-#define _ADVANCEDLIGHTMANAGER_H_
-
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif 
-#ifndef _LIGHTMANAGER_H_
-#include "lighting/lightManager.h"
-#endif 
-#ifndef _LIGHTINFO_H_
-#include "lighting/lightInfo.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
-#include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _GFXTARGET_H_
-#include "gfx/gfxTarget.h"
-#endif
-#ifndef _TDICTIONARY_H_
-#include "core/util/tDictionary.h"
-#endif
-#ifndef _LIGHTSHADOWMAP_H_
-#include "lighting/shadowMap/lightShadowMap.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
-#include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
-#include "gfx/gfxVertexBuffer.h"
-#endif
 
+#include "lighting/lightManager.h"
+
+#include "lighting/lightInfo.h"
+
+#include "gfx/gfxTextureHandle.h"
+
+#include "gfx/gfxTarget.h"
+
+#include "core/util/tDictionary.h"
+
+#include "lighting/shadowMap/lightShadowMap.h"
+
+#include "gfx/gfxPrimitiveBuffer.h"
+
+#include "gfx/gfxVertexBuffer.h"
 
 class AvailableSLInterfaces;
 class AdvancedLightBinManager;
@@ -151,4 +138,3 @@ protected:
 #endif
 };
 
-#endif // _ADVANCEDLIGHTMANAGER_H_

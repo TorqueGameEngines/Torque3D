@@ -19,19 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _CONSOLE_H_
 #define _CONSOLE_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _BITSET_H_
+
 #include "core/bitSet.h"
-#endif
-#ifndef _REFBASE_H_
+
 #include "core/util/refBase.h"
-#endif
+
 #include <stdarg.h>
 
 #include "core/util/str.h"

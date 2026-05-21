@@ -5,6 +5,8 @@
 //  
 //   
 //-----------------------------------------------------------------------------  
+#pragma once 
+#pragma once 
   
 #ifndef _GUI3DPROJECTIONCTRL_H_  
 #define _GUI3DPROJECTIONCTRL_H_  

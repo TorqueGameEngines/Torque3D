@@ -19,38 +19,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _TAML_CUSTOM_H_
 #define _TAML_CUSTOM_H_
-
-#ifndef _FACTORY_CACHE_H_
 #include "core/factoryCache.h"
-#endif
 
-#ifndef _STRINGTABLE_H_
 #include "core/stringTable.h"
-#endif
 
-#ifndef _CONSOLE_H_
 #include "console/console.h"
-#endif
 
-#ifndef _CONSOLETYPES_H_
 #include "console/consoleTypes.h"
-#endif
 
 #ifndef B2_MATH_H
 //TODO: Look at this
 //#include "box2d/Common/b2Math.h"
 #endif
-
-#ifndef _COLOR_H_
 #include "core/color.h"
-#endif
 
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
 #include "core/util/safeDelete.h"
 

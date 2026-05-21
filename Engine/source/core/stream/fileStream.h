@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FILESTREAM_H_
 #define _FILESTREAM_H_
-
-#ifndef _VOLUME_H_
 #include "core/volume.h"
-#endif
-#ifndef _STREAM_H_
+
 #include "core/stream/stream.h"
-#endif
 
 class FileStream : public Stream
 {

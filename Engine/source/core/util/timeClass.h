@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TIMECLASS_H_
 #define _TIMECLASS_H_
-
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
-#ifndef _PLATFORM_H_
+
 #include "platform/platform.h"
-#endif
 
 #if defined(TORQUE_COMPILER_VISUALC)
    #define TORQUE_CONSTANT_S64(a) (a##I64)

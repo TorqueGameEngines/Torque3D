@@ -23,13 +23,12 @@
 //-----------------------------------------------------------------------------
 // Console implementation of STL map.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _XMLDOC_H_
 #define _XMLDOC_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
 #ifndef _TVECTOR_H_
 #include "core/util/tVector.h"

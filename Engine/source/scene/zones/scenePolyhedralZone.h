@@ -19,22 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENEPOLYHEDRALZONE_H_
 #define _SCENEPOLYHEDRALZONE_H_
-
-#ifndef _SCENESIMPLEZONE_H_
 #include "scene/zones/sceneSimpleZone.h"
-#endif
 
-#ifndef _SCENEPOLYHEDRALOBJECT_H_
 #include "scene/mixin/scenePolyhedralObject.h"
-#endif
 
-#ifndef _MINTERSECTOR_H_
 #include "math/mIntersector.h"
-#endif
-
 
 /// A simple zone space that is described by a polyhedron.
 ///

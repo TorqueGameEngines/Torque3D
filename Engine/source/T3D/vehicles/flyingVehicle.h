@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FLYINGVEHICLE_H_
 #define _FLYINGVEHICLE_H_
-
-#ifndef _VEHICLE_H_
 #include "T3D/vehicles/vehicle.h"
-#endif
 
-#ifndef _CLIPPEDPOLYLIST_H_
 #include "collision/clippedPolyList.h"
-#endif
 
 class ParticleEmitter;
 class ParticleEmitterData;

@@ -19,18 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _SHADERFEATURE_H_
 #define _SHADERFEATURE_H_
-
-#ifndef _MATERIALDEFINITION_H_
 #include "materials/materialDefinition.h"
-#endif
-#ifndef _SHADERCOMP_H_
+
 #include "shaderGen/shaderComp.h"
-#endif
-#ifndef _SHADER_DEPENDENCY_H_
 #include "shaderGen/shaderDependency.h"
-#endif
 
 class MultiLine;
 struct LangElement;

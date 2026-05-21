@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MATERIALFEATUREDATA_H_
 #define _MATERIALFEATUREDATA_H_
-
-#ifndef _UTIL_DELEGATE_H_
 #include "core/util/delegate.h"
-#endif
-#ifndef _FEATURESET_H_
-#include "shaderGen/featureSet.h"
-#endif
 
+#include "shaderGen/featureSet.h"
 
 class ProcessedMaterial;
 

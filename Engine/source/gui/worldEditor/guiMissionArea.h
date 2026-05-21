@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIMISSIONAREA_H_
 #define _GUIMISSIONAREA_H_
-
-#ifndef _GUIBITMAPCTRL_H_
 #include "gui/controls/guiBitmapCtrl.h"
-#endif
-#ifndef _GUITYPES_H_
-#include "gui/guiTypes.h"
-#endif
-#ifndef _MISSIONAREA_H_
+
+#include "gui/core/guiTypes.h"
+
 #include "T3D/missionArea.h"
-#endif
-#ifndef _UNDO_H_
+
 #include "util/undo.h"
-#endif
 
 class GBitmap;
 class TerrainBlock;

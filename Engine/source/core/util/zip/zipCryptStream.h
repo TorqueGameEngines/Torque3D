@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _ZIPCRYPTSTREAM_H_
 #define _ZIPCRYPTSTREAM_H_
-
-#ifndef _FILTERSTREAM_H_
 #include "core/filterStream.h"
-#endif
 
 class ZipCryptRStream : public FilterStream
 {

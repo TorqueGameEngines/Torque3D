@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSTRANSFORM_H_
 #define _TSTRANSFORM_H_
-
-#ifndef _MMATH_H_
 #include "math/mMath.h"
-#endif
 
 class Stream;
 

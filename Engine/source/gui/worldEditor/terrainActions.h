@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TERRAINACTIONS_H_
 #define _TERRAINACTIONS_H_
-
-#ifndef _TERRAINEDITOR_H_
 #include "gui/worldEditor/terrainEditor.h"
-#endif
-#ifndef _GUIFILTERCTRL_H_
+
 #include "gui/editor/guiFilterCtrl.h"
-#endif
-#ifndef _UNDO_H_
+
 #include "util/undo.h"
-#endif
-#ifndef _NOISE2D_H_
+
 #include "util/noise2d.h"
-#endif
 
 class TerrainAction
 {

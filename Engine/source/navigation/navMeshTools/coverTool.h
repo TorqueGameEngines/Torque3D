@@ -1,13 +1,10 @@
+#pragma once 
+#pragma once 
 #ifndef _COVERTOOL_H_
 #define _COVERTOOL_H_
-
-#ifndef _NAVMESH_TOOL_H_
 #include "navigation/navMeshTool.h"
-#endif
 
-#ifndef _NAVPATH_H_
 #include "navigation/navPath.h"
-#endif
 
 class CoverTool : public NavMeshTool
 {

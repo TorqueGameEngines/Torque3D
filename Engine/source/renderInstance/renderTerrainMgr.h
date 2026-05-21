@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _RENDERTERRAINMGR_H_
 #define _RENDERTERRAINMGR_H_
-
-#ifndef _RENDERBINMANAGER_H_
 #include "renderInstance/renderBinManager.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
+
 #include "gfx/gfxVertexBuffer.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
+
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
 
 class TerrCell;
 class GFXTextureObject;

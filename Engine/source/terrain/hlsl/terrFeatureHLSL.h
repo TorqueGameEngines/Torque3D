@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TERRFEATUREHLSL_H_
 #define _TERRFEATUREHLSL_H_
-
-#ifndef _SHADERGEN_HLSL_SHADERFEATUREHLSL_H_
 #include "shaderGen/HLSL/shaderFeatureHLSL.h"
-#endif
-#ifndef _LANG_ELEMENT_H_
-#include "shaderGen/langElement.h"
-#endif
 
+#include "shaderGen/langElement.h"
 
 /// A shared base class for terrain features which
 /// includes some helper functions.

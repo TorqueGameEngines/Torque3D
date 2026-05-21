@@ -19,16 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SHADOWMANAGER_H_
 #define _SHADOWMANAGER_H_
-
-#ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
 
 class SceneManager;
 

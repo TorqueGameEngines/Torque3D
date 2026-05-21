@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MISSIONAREA_H_
 #define _MISSIONAREA_H_
-
-#ifndef _NETOBJECT_H_
 #include "sim/netObject.h"
-#endif
 
 class MissionArea : public NetObject
 {

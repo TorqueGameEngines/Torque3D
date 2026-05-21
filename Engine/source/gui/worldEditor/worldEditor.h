@@ -19,42 +19,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _WORLDEDITOR_H_
 #define _WORLDEDITOR_H_
-
-#ifndef _EDITTSCTRL_H_
 #include "gui/worldEditor/editTSCtrl.h"
-#endif
 
-#ifndef _CONSOLETYPES_H_
 #include "console/consoleTypes.h"
-#endif
 
-#ifndef _GFXTEXTUREHANDLE_H_
 #include "gfx/gfxTextureHandle.h"
-#endif
 
-#ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
-
-#ifndef _CONSOLE_SIMOBJECTMEMENTO_H_
 #include "console/simObjectMemento.h"
-#endif
 
-#ifndef _UNDO_H_
 #include "util/undo.h"
-#endif
 
-#ifndef _SIMPATH_H_
 #include "scene/simPath.h"
-#endif
-
-#ifndef _DYNAMIC_CONSOLETYPES_H_
 #include "console/dynamicTypes.h"
-#endif
-
 
 class SceneObject;
 class WorldEditorSelection;

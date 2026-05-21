@@ -19,30 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MATHUTILS_H_
 #define _MATHUTILS_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
 
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
 
-#ifndef _MRECT_H_
 #include "math/mRect.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-
-#ifndef _MATHUTIL_FRUSTUM_H_
 #include "math/util/frustum.h"
-#endif
-
 
 class Box3F;
 class RectI;

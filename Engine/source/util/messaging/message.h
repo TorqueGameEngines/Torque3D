@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MESSAGE_H_
 #define _MESSAGE_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
-#ifndef _NETCONNECTION_H_
 #include "sim/netConnection.h"
-#endif
 
 // Forward Refs
 class MessageQueue;

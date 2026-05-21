@@ -21,10 +21,7 @@
 //-----------------------------------------------------------------------------
 #ifndef CUSTOMSHADERFEATURE_H
 #define CUSTOMSHADERFEATURE_H
-
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
 
 #ifdef TORQUE_D3D11
 class CustomFeatureHLSL;

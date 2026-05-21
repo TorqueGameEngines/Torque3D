@@ -1,4 +1,5 @@
-﻿#ifndef _TORQUESCRIPT_RUNTIME_H_
+#pragma once 
+#ifndef _TORQUESCRIPT_RUNTIME_H_
 #define _TORQUESCRIPT_RUNTIME_H_
 #include "ast.h"
 #include "console/runtime.h"

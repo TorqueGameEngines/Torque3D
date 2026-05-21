@@ -24,41 +24,31 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
+#pragma once 
 
 #ifndef _TERRDATA_H_
 #define _TERRDATA_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
-#ifndef _SCENEOBJECT_H_
+
 #include "scene/sceneObject.h"
-#endif
+
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif
-#ifndef _RENDERPASSMANAGER_H_
 #include "renderInstance/renderPassManager.h"
-#endif
-#ifndef _TSIGNAL_H_
-#include "core/util/tSignal.h"
-#endif
-#ifndef _TERRFILE_H_
-#include "terrain/terrFile.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
-#include "gfx/gfxPrimitiveBuffer.h"
-#endif
 
-#ifndef _ASSET_PTR_H_
+#include "core/util/tSignal.h"
+
+#include "terrain/terrFile.h"
+
+#include "gfx/gfxPrimitiveBuffer.h"
 #include "assets/assetPtr.h"
-#endif 
+
 #ifndef TERRAINASSET_H
 #include "T3D/assets/TerrainAsset.h"
 #endif
-#ifndef _CONVEX_H_
 #include "collision/convex.h"
-#endif
 
 class GBitmap;
 class TerrainBlock;

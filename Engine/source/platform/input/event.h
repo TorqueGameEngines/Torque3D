@@ -26,6 +26,8 @@
 /// in this file.
 
 ///
+#pragma once 
+#pragma once 
 #ifndef _EVENT_H_
 #define _EVENT_H_
 

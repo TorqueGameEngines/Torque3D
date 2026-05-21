@@ -19,31 +19,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSMESH_H_
 #define _TSMESH_H_
-
-#ifndef _STREAM_H_
 #include "core/stream/stream.h"
-#endif
-#ifndef _MMATH_H_
+
 #include "math/mMath.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _ABSTRACTPOLYLIST_H_
+
 #include "collision/abstractPolyList.h"
-#endif
-#ifndef _GFXDEVICE_H_
+
 #include "gfx/gfxDevice.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
+
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _TSPARSEARRAY_H_
+
 #include "core/tSparseArray.h"
-#endif
 
 #include "core/util/safeDelete.h"
 

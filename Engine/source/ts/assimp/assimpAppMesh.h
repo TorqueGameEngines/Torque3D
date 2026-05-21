@@ -19,19 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _ASSIMP_APPMESH_H_
 #define _ASSIMP_APPMESH_H_
-
-#ifndef _APPMESH_H_
 #include "ts/loader/appMesh.h"
-#endif
-#ifndef _TSSHAPELOADER_H_
+
 #include "ts/loader/tsShapeLoader.h"
-#endif
-#ifndef _ASSIMP_APPNODE_H_
 #include "ts/assimp/assimpAppNode.h"
-#endif
 
 class AssimpAppMesh : public AppMesh
 {

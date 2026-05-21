@@ -19,25 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _POSTEFFECTMANAGER_H_
 #define _POSTEFFECTMANAGER_H_
-
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _TDICTIONARY_H_
+
 #include "core/util/tDictionary.h"
-#endif
-#ifndef _TSINGLETON_H_
+
 #include "core/util/tSingleton.h"
-#endif
-#ifndef _POSTEFFECTCOMMON_H_
+
 #include "postFx/postEffectCommon.h"
-#endif
 
 class PostEffect;
 class RenderBinManager;

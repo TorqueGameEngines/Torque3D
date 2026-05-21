@@ -24,13 +24,12 @@
 // Portions Copyright (c) Microsoft Corporation. All rights reserved.
 // https://github.com/Microsoft/DirectXTex
 ////////////////////////////////////////////////////////////////////////////////
+#pragma once 
+#pragma once 
 
 #ifndef _DDSDATA_H_
 #define _DDSDATA_H_
-
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
 
 #include "core/util/fourcc.h"
 

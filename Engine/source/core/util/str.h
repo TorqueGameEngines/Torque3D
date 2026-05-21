@@ -19,15 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _TORQUE_STRING_H_
 #define _TORQUE_STRING_H_
 
 #include <cstdarg>
-
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
 
 #include <string.h>
 

@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _STREAMOBJECT_H_
 #define _STREAMOBJECT_H_
-
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
 
 /// @addtogroup zip_group
 // @{

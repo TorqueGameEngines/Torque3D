@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _COLLISION_H_
 #define _COLLISION_H_
-
-#ifndef _DATACHUNKER_H_
 #include "core/dataChunker.h"
-#endif
-#ifndef _MPLANE_H_
+
 #include "math/mPlane.h"
-#endif
-#ifndef _MPOINT2_H_
+
 #include "math/mPoint2.h"
-#endif
 
 class SceneObject;
 class BaseMatInstance;

@@ -19,25 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GAMECONNECTIONEVENTS_H_
 #define _GAMECONNECTIONEVENTS_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
-#ifndef _GAMECONNECTION_H_
 #include "T3D/gameBase/gameConnection.h"
-#endif
 
-#ifndef _SFXPROFILE_H_
 #include "sfx/sfxProfile.h"
-#endif
 
-#ifndef _BITSTREAM_H_
 #include "core/stream/bitStream.h"
-#endif
 
 #include "T3D/assets/SoundAsset.h"
 

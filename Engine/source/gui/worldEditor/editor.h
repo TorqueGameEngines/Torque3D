@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _EDITOR_H_
 #define _EDITOR_H_
-
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
-#ifndef _GUICONTROL_H_
+
 #include "gui/core/guiControl.h"
-#endif
 
 class GameBase;
 

@@ -19,37 +19,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _VOLUME_H_
 #define _VOLUME_H_
-
-#ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _REFBASE_H_
 #include "core/util/refBase.h"
-#endif
 
-#ifndef _TDICTIONARY_H_
 #include "core/util/tDictionary.h"
-#endif
 
 #ifndef _TORQUE_LIST_
 #include "core/util/tList.h"
 #endif
-
-#ifndef _PATH_H_
 #include "core/util/path.h"
-#endif
 
-#ifndef _TIMECLASS_H_
 #include "core/util/timeClass.h"
-#endif
 
 namespace Torque
 {

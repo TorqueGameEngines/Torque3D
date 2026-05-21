@@ -24,40 +24,20 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once
 #ifndef _CONSOLEOBJECT_H_
 #define _CONSOLEOBJECT_H_
 
-#ifndef _TVECTOR_H_
-   #include "core/util/tVector.h"
-#endif
-#ifndef _STRINGTABLE_H_
-   #include "core/stringTable.h"
-#endif
-#ifndef _STRINGFUNCTIONS_H_
-   #include "core/strings/stringFunctions.h"
-#endif
-#ifndef _BITSET_H_
-   #include "core/bitSet.h"
-#endif
-#ifndef _DYNAMIC_CONSOLETYPES_H_
-   #include "console/dynamicTypes.h"
-#endif
-#ifndef _ENGINEOBJECT_H_
-   #include "console/engineObject.h"
-#endif
-#ifndef _ENGINEFUNCTIONS_H_
-   #include "console/engineFunctions.h"
-#endif
-#ifndef _SIMOBJECTREF_H_
-   #include "console/simObjectRef.h"
-#endif
-#ifndef TINYXML_INCLUDED
-   #include "tinyxml2.h"
-#endif
-
-#ifndef _CONSOLFUNCTIONS_H_
+#include "core/util/tVector.h"
+#include "core/stringTable.h"
+#include "core/strings/stringFunctions.h"
+#include "core/bitSet.h"
+#include "console/dynamicTypes.h"
+#include "console/engineObject.h"
+#include "console/engineFunctions.h"
+#include "console/simObjectRef.h"
+#include "tinyxml2.h"
 #include "console/consoleFunctions.h"
-#endif
 
 /// @file
 /// Legacy console object system.
@@ -416,6 +396,9 @@ protected:
    AbstractClassRep * nextClass;
    AbstractClassRep * parentClass;
    Namespace *        mNamespace;
+   void _buildPropertyTable(EnginePropertyTable& smPropTable,
+                           EnginePropertyTable& _smPropTable,
+                           const EngineTypeInfo* typeInfo);
 
    /// @}
 
@@ -691,31 +674,9 @@ public:
       T::initPersistFields();
       T::consoleInit();
 
-      EnginePropertyTable::Property* props = new EnginePropertyTable::Property[sg_tempFieldList.size() + 1];
-
-      for (int i = 0; i < sg_tempFieldList.size(); ++i)
-      {
-         EnginePropertyTable::Property prop;
-         prop.mDocString = sg_tempFieldList[i].pFieldDocs;
-         prop.mName = sg_tempFieldList[i].pFieldname;
-         prop.mNumElements = sg_tempFieldList[i].elementCount;
-         prop.mFlags = 0;
-         if (sg_tempFieldList[i].type == StartGroupFieldType)
-            prop.mFlags |= EnginePropertyGroupBegin;
-         if (sg_tempFieldList[i].type == EndGroupFieldType)
-            prop.mFlags |= EnginePropertyGroupEnd;
-         prop.mType = sg_tempFieldList[i].type;
-
-         props[i] = prop;
-      }
-
-      _smPropertyTable = EnginePropertyTable(sg_tempFieldList.size(), props);
-      smPropertyTable = _smPropertyTable;
+      _buildPropertyTable(smPropertyTable, _smPropertyTable, mTypeInfo);
 
       const_cast<EngineTypeInfo*>(mTypeInfo)->mPropertyTable = &_smPropertyTable;
-
-      // After we hand it off, immediately delete if safe:
-      delete[] props;
       // Let the base finish up.
       AbstractClassRep::init();
    }

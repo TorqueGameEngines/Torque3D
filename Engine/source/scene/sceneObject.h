@@ -24,56 +24,31 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once
 
-#ifndef _SCENEOBJECT_H_
-#define _SCENEOBJECT_H_
-
-#ifndef _NETOBJECT_H_
 #include "sim/netObject.h"
-#endif
 
-#ifndef _COLLISION_H_
 #include "collision/collision.h"
-#endif
 
-#ifndef _OBJECTTYPES_H_
 #include "T3D/objectTypes.h"
-#endif
 
-#ifndef _COLOR_H_
 #include "core/color.h"
-#endif
 
-#ifndef _BITSET_H_
 #include "core/bitSet.h"
-#endif
 
-#ifndef _PROCESSLIST_H_
 #include "T3D/gameBase/processList.h"
-#endif
 
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
-#ifndef _TSRENDERDATA_H_
+
 #include "ts/tsRenderState.h"
-#endif
-
-#ifndef _COLLADA_UTILS_H_
 #include "ts/collada/colladaUtils.h"
-#endif
 
-#ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
-#endif 
+
 #ifndef GAME_OBJECT_ASSET_H
 #include "T3D/assets/GameObjectAsset.h"
 #endif
-
-#ifndef _SCENEQUERY_UTIL_H_
 #include "scene/sceneQueryUtil.h"
-#endif
-
 
 class SceneManager;
 class SceneRenderState;
@@ -90,6 +65,8 @@ class SceneContainer;
 struct ObjectRenderInst;
 struct Move;
 struct SceneRayHelper;
+
+extern template class Vector<SceneObject*>;
 
 /// A 3D object.
 ///
@@ -917,6 +894,3 @@ class SceneObject : public NetObject, public ProcessObject
 
    virtual void getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList) {}
 };
-
-#endif  // _SCENEOBJECT_H_
-

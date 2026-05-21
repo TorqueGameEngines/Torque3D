@@ -22,35 +22,22 @@
 #pragma once
 #ifndef RENDER_PROBE_MGR_H
 #define RENDER_PROBE_MGR_H
-
-#ifndef _RENDERBINMANAGER_H_
 #include "renderInstance/renderBinManager.h"
-#endif
-#ifndef _MATINSTANCE_H_
+
 #include "materials/matInstance.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
-#ifndef _GFXPRIMITIVEBUFFER_H_
+
 #include "gfx/gfxPrimitiveBuffer.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
+
 #include "gfx/gfxVertexBuffer.h"
-#endif
 
 //#include "core/util/systemInterfaceList.h"
-
-#ifndef _MATERIALS_PROCESSEDSHADERMATERIAL_H_
 #include "materials/processedShaderMaterial.h"
-#endif
-#ifndef _POSTEFFECTCOMMON_H_
-#include "postFx/postEffectCommon.h"
-#endif
 
-#ifndef _REFLECTOR_H_
+#include "postFx/postEffectCommon.h"
+
 #include "scene/reflector.h"
-#endif
 
 #ifndef REFLECTIONPROBE_H
 #include "T3D/lighting/reflectionProbe.h"

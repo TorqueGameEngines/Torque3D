@@ -19,19 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MPOINT3_H_
 #define _MPOINT3_H_
-
-#ifndef _MMATHFN_H_
 #include "math/mMathFn.h"
-#endif
-#ifndef _MPOINT2_H_
+
 #include "math/mPoint2.h"
-#endif
-#ifndef _MATH_BACKEND_H_
 #include "math/public/math_backend.h"
-#endif
 
 #include <array>
 

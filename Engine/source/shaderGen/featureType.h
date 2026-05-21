@@ -19,16 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FEATURETYPE_H_
 #define _FEATURETYPE_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
 
 class FeatureType;
 class FeatureSet;

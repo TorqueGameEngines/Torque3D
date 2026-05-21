@@ -35,13 +35,12 @@
 //   http://www.garagegames.com/index.php?sec=mg&mod=resource&page=view&qid=5471
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+ 
+#pragma once 
 
 #ifndef _AFX_CAMERA_H_
 #define _AFX_CAMERA_H_
-
-#ifndef _SHAPEBASE_H_
-#include "game/shapeBase.h"
-#endif
+#include "T3D/shapeBase.h"
 
 //----------------------------------------------------------------------------
 struct afxCameraData: public ShapeBaseData {

@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GJK_H_
 #define _GJK_H_
-
-#ifndef _MMATH_H_
 #include "math/mMath.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _CONVEX_H_
+
 #include "collision/convex.h"
-#endif
 
 class Convex;
 struct CollisionStateList;

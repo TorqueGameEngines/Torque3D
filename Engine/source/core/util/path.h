@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PATH_H_
 #define _PATH_H_
-
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
 
 namespace Torque
 {

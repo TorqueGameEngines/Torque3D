@@ -19,25 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once
 
-#ifndef _CONSOLEINTERNAL_H_
-#define _CONSOLEINTERNAL_H_
-
-#ifndef _STRINGFUNCTIONS_H_
 #include "core/strings/stringFunctions.h"
-#endif
-#ifndef _STRINGTABLE_H_
+
 #include "core/stringTable.h"
-#endif
-#ifndef _CONSOLETYPES_H
 #include "console/consoleTypes.h"
-#endif
-#ifndef _CONSOLEOBJECT_H_
+
 #include "console/simObject.h"
-#endif
-#ifndef _DATACHUNKER_H_
+
 #include "core/dataChunker.h"
-#endif
+
 #include "module.h"
 
 /// @ingroup console_system Console System
@@ -529,5 +521,3 @@ namespace Con
 }
 
 /// @}
-
-#endif

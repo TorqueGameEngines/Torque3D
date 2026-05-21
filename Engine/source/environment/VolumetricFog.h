@@ -19,37 +19,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
    
 #ifndef _VolumetricFog_H_
 #define _VolumetricFog_H_
-   
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
-#include "materials/matTextureTarget.h"
-#endif
-#ifndef _GFXSHADER_H_
-#include "gfx/gfxShader.h"
-#endif
-#ifndef _GFXTARGET_H_
-#include "gfx/gfxTarget.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
-#include "gfx/gfxVertexBuffer.h"
-#endif
-#ifndef _TSSHAPE_H_
-#include "ts/tsShape.h"
-#endif
-#ifndef _POST_EFFECT_H_
-#include "postFx/postEffect.h"
-#endif
-   
-#include "gui/core/guiCanvas.h"
 
-#ifndef _ASSET_PTR_H_
+#include "materials/matTextureTarget.h"
+
+#include "gfx/gfxShader.h"
+
+#include "gfx/gfxTarget.h"
+
+#include "gfx/gfxVertexBuffer.h"
+
+#include "ts/tsShape.h"
+#include "postFx/postEffect.h"
+
+#include "gui/core/guiCanvas.h"
 #include "assets/assetPtr.h"
-#endif 
+
 #ifndef SHAPEASSET_H
 #include "T3D/assets/ShapeAsset.h"
 #endif 

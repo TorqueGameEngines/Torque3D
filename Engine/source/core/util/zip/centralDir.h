@@ -21,6 +21,8 @@
 //-----------------------------------------------------------------------------
 
 #include "core/util/zip/fileHeader.h"
+#pragma once 
+#pragma once 
 
 #ifndef _CENTRALDIR_H_
 #define _CENTRALDIR_H_

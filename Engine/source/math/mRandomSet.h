@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MRANDOMSET_H_
 #define _MRANDOMSET_H_
-
-#ifndef _MRANDOM_H_
 #include "math/mRandom.h"
-#endif
 
 template <class T>
 class MRandomSet

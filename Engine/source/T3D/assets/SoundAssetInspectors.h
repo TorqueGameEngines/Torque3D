@@ -1,10 +1,7 @@
 #pragma once
 
 #include "SoundAsset.h"
-
-#ifndef _GUI_INSPECTOR_TYPES_H_
 #include "gui/editor/guiInspectorTypes.h"
-#endif
 
 #ifdef TORQUE_TOOLS
 class GuiInspectorTypeSoundAssetPtr : public GuiInspectorTypeFileName

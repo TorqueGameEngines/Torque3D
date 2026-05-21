@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIRADIOCTRL_H_
 #define _GUIRADIOCTRL_H_
-
-#ifndef _GUICHECKBOXCTRLL_H_
 #include "gui/buttons/guiCheckBoxCtrl.h"
-#endif
 
 // the radio button renders exactly the same as the check box
 // the only difference is it sends messages to its siblings to

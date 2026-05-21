@@ -19,14 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _CONSOLE_SIMOBJECTMEMENTO_H_
 #define _CONSOLE_SIMOBJECTMEMENTO_H_
-
-#ifndef _SIM_H_
 #include "console/sim.h"
-#endif
-
 
 /// This simple class is used to store an SimObject and 
 /// its state so it can be recreated at a later time.

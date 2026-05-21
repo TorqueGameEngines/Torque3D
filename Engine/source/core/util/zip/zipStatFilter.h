@@ -33,6 +33,8 @@
 // time to complete. With compression done on the fly the time consuming code
 // is pushed out to when writing to files, which is significantly easier to
 // do asynchronously.
+#pragma once 
+#pragma once 
 
 #ifndef _ZIPSTATFILTER_H_
 #define _ZIPSTATFILTER_H_

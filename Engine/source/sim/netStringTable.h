@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _NETSTRINGTABLE_H_
 #define _NETSTRINGTABLE_H_
-
-#ifndef _DATACHUNKER_H_
 #include "core/dataChunker.h"
-#endif
-#ifndef _CONSOLE_H_
+
 #include "console/console.h"
-#endif
 
 class NetConnection;
 

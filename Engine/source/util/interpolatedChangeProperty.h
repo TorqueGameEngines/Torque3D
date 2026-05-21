@@ -19,23 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _INTERPOLATEDCHANGEPROPERTY_H_
 #define _INTERPOLATEDCHANGEPROPERTY_H_
-
-#ifndef _SIM_H_
 #include "console/sim.h"
-#endif
 
-#ifndef _MEASE_H_
 #include "math/mEase.h"
-#endif
 
-#ifndef _TIMESOURCE_H_
 #include "core/util/timeSource.h"
-#endif
-
-
 
 /// A property that smoothly transitions to new values instead of assuming
 /// them right away.

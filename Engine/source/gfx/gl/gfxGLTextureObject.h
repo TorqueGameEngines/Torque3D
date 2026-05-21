@@ -26,9 +26,8 @@
 #include "gfx/gfxTextureObject.h"
 #include "gfx/gl/tGL/tGL.h"
 #include "gfx/gfxStateBlock.h"
-#ifndef _MRECT_H_
 #include "math/mRect.h"
-#endif
+
 class GFXGLDevice;
 
 class GFXGLTextureObject : public GFXTextureObject 

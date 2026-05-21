@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _GFX_GL_OCCLUSIONQUERY_H_
 #define _GFX_GL_OCCLUSIONQUERY_H_
-
-#ifndef _GFXOCCLUSIONQUERY_H_
 #include "gfx/gfxOcclusionQuery.h"
-#endif
 
 class GFXGLOcclusionQuery : public GFXOcclusionQuery
 {

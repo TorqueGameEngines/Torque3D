@@ -29,13 +29,12 @@
 //    code. Structures EmitChunk and SquareStackNode now contain an
 //    afxZodiacBitmask for keeping track of zodiac intersections.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
+#pragma once 
 
 #ifndef _TERRRENDER_H_
 #define _TERRRENDER_H_
-
-#ifndef _TERRDATA_H_
 #include "terrain/terrData.h"
-#endif
 
 #include "afx/ce/afxZodiacDefs.h"
 enum TerrConstants : U32

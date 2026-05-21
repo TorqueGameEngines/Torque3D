@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _ASSIMP_APPMATERIAL_H_
 #define _ASSIMP_APPMATERIAL_H_
-
-#ifndef _APPMATERIAL_H_
 #include "ts/loader/appMaterial.h"
-#endif
 
 #if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
 #ifdef new

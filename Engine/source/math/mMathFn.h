@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MMATHFN_H_
 #define _MMATHFN_H_
@@ -26,14 +28,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <limits>
-
-#ifndef _MCONSTANTS_H_
 #include "math/mConstants.h"
-#endif
-#ifndef _PLATFORMASSERT_H_
-#include "platform/platformAssert.h"
-#endif
 
+#include "platform/platformAssert.h"
 
 extern void MathConsoleInit();
 

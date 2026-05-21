@@ -19,19 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FORESTCELL_H_
 #define _FORESTCELL_H_
-
-#ifndef _FORESTITEM_H_
 #include "forest/forestItem.h"
-#endif
+
 #ifndef _H_FOREST_
 #include "forest/forest.h"
 #endif
-#ifndef _BITVECTOR_H_
 #include "core/bitVector.h"
-#endif
 
 class ForestCellBatch;
 class SceneRenderState;

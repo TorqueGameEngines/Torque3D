@@ -1,4 +1,5 @@
-﻿#ifndef _TORQUESCRIPT_PARSER_H_
+#pragma once 
+#ifndef _TORQUESCRIPT_PARSER_H_
 #define _TORQUESCRIPT_PARSER_H_
 #include <cstdio>
 

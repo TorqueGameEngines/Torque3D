@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MSPHERE_H_
 #define _MSPHERE_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
-
 
 class SphereF
 {

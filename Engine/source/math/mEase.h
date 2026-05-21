@@ -36,6 +36,8 @@
   http://www.robertpenner.com/profmx
   http://www.amazon.com/exec/obidos/ASIN/0072223561/robertpennerc-20
 */
+#pragma once 
+#pragma once 
 
 #ifndef _MEASE_H_
 #define _MEASE_H_

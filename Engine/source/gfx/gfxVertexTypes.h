@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXVERTEXTYPES_H_
 #define _GFXVERTEXTYPES_H_
-
-#ifndef _GFXVERTEXFORMAT_H_
 #include "gfx/gfxVertexFormat.h"
-#endif
-#ifndef _GFXVERTEXCOLOR_H_
+
 #include "gfx/gfxVertexColor.h"
-#endif
-#ifndef _MPOINT2_H_
+
 #include "math/mPoint2.h"
-#endif
-#ifndef _MPOINT3_H_
+
 #include "math/mPoint3.h"
-#endif
 
 GFXDeclareVertexFormat( GFXVertexP )
 {

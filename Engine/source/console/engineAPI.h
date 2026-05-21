@@ -19,36 +19,25 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _ENGINEAPI_H_
 #define _ENGINEAPI_H_
 
 #include <tuple>
 #include <utility>
-
-#ifndef _FIXEDTUPLE_H_
 #include "fixedTuple.h"
-#endif
 
-#ifndef _CONSOLETYPES_H_
 #include "console/consoleTypes.h"
-#endif
 
-#ifndef _CONSOLE_H_
 #include "console/console.h"
-#endif
 
-#ifndef _STRINGFUNCTIONS_H_
 #include "core/strings/stringFunctions.h"
-#endif
 
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
 
-#ifndef _ENGINEFUNCTIONS_H_
 #include "console/engineFunctions.h"
-#endif
 
 // Whatever types are used in API definitions, their DECLAREs must be visible to the
 // macros.  We include the basic primitive and struct types here.
@@ -61,10 +50,7 @@
 #endif
 
 // Needed for the executef macros. Blame GCC.
-#ifndef _SIMEVENTS_H_
 #include "console/simEvents.h"
-#endif
-
 
 /// @file
 /// Definitions for exposing engine functionality to the control layer.

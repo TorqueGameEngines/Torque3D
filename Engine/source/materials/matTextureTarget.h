@@ -19,28 +19,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MATTEXTURETARGET_H_
 #define _MATTEXTURETARGET_H_
-
-#ifndef _TDICTIONARY_H_
 #include "core/util/tDictionary.h"
-#endif
-#ifndef _REFBASE_H_
+
 #include "core/util/refBase.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
+
 #include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _MRECT_H_
+
 #include "math/mRect.h"
-#endif
-#ifndef _GFXSTATEBLOCK_H_
+
 #include "gfx/gfxStateBlock.h"
-#endif
-#ifndef _UTIL_DELEGATE_H_
 #include "core/util/delegate.h"
-#endif
 
 struct GFXShaderMacro;
 class ConditionerFeature;

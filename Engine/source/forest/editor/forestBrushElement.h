@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _FOREST_EDITOR_BRUSHELEMENT_H_
 #define _FOREST_EDITOR_BRUSHELEMENT_H_
@@ -26,10 +27,7 @@
 //#ifndef _SIMOBJECT_H_
 //#include "console/simObject.h"
 //#endif
-#ifndef _SIMSET_H_
 #include "console/simSet.h"
-#endif
-
 
 //-------------------------------------------------------------------------
 // ForestBrushElement

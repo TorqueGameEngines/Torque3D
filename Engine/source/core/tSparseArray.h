@@ -19,17 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSPARSEARRAY_H_
 #define _TSPARSEARRAY_H_
 
 //Includes
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _PLATFORMASSERT_H_
+
 #include "platform/platformAssert.h"
-#endif
 
 template <class T>
 class SparseArray

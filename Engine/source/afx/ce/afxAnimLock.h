@@ -22,9 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#ifndef _AFX_ANIM_LOCK_H_
-#define _AFX_ANIM_LOCK_H_
+ 
+#pragma once 
 
 class afxAnimLockData : public GameBaseData
 {
@@ -42,6 +41,3 @@ public:
   DECLARE_CONOBJECT(afxAnimLockData);
 };
 
-//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#endif // _AFX_ANIM_LOCK_H_

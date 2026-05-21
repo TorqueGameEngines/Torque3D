@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SHAPEREPLICATOR_H_
 #define _SHAPEREPLICATOR_H_
-
-#ifndef _TSSTATIC_H_
 #include "T3D/tsStatic.h"
-#endif
-#ifndef _TSSHAPEINSTANCE_H_
+
 #include "ts/tsShapeInstance.h"
-#endif
-#ifndef _RENDERPASSMANAGER_H_
+
 #include "renderInstance/renderPassManager.h"
-#endif
 
 #define AREA_ANIMATION_ARC         (1.0f / 360.0f)
 

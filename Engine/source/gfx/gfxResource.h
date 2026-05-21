@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXRESOURCE_H_
 #define _GFXRESOURCE_H_
-
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
 
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
 
 class GFXDevice;
 

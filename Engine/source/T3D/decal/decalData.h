@@ -19,22 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _DECALDATA_H_
 #define _DECALDATA_H_
-
-#ifndef _SIMDATABLOCK_H_
 #include "console/simDatablock.h"
-#endif
-#ifndef _MATERIALDEFINITION_H_
+
 #include "materials/materialDefinition.h"
-#endif
-#ifndef _MRECT_H_
+
 #include "math/mRect.h"
-#endif
-#ifndef _DYNAMIC_CONSOLETYPES_H_
 #include "console/dynamicTypes.h"
-#endif
 
 #include "T3D/assets/MaterialAsset.h"
 

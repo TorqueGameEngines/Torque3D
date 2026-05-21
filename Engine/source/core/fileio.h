@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FILEIO_H_
 #define _FILEIO_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
 
 class File
 {

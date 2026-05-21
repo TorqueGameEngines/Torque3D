@@ -1,14 +1,10 @@
+#pragma once 
+#pragma once 
 #ifndef _NAVMESHTESTTOOL_H_
 #define _NAVMESHTESTTOOL_H_
-
-
-#ifndef _NAVMESH_TOOL_H_
 #include "navigation/navMeshTool.h"
-#endif
 
-#ifndef _NAVPATH_H_
 #include "navigation/navPath.h"
-#endif
 
 class NavMeshTestTool : public NavMeshTool
 {

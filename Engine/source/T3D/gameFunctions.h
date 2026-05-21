@@ -19,25 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GAMEFUNCTIONS_H_
 #define _GAMEFUNCTIONS_H_
-
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
-#ifndef _MMATRIX_H_
+
 #include "math/mMatrix.h"
-#endif
-#ifndef _GFXTARGET_H_
+
 #include "gfx/gfxTarget.h"
-#endif
-#ifndef _MATHUTIL_FRUSTUM_H_
 #include "math/util/frustum.h"
-#endif
-#ifndef _COLOR_H_
+
 #include "core/color.h"
-#endif
 
 struct CameraQuery;
 

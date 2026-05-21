@@ -24,6 +24,8 @@
 // GuiMaterialPreview Control for Material Editor Written by Travis Vroman of Gaslight Studios
 // Updated 2-14-09
 // Portions based off Constructor viewport code.
+#pragma once 
+#pragma once 
 
 #ifndef _GUIMATERIALPREVIEW_H_
 #define _GUIMATERIALPREVIEW_H_

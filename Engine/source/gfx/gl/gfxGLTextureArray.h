@@ -1,3 +1,5 @@
+#pragma once 
+#pragma once 
 #ifndef _GFXGLTEXTUREARRAY_H_
 #define _GFXGLTEXTUREARRAY_H_
 

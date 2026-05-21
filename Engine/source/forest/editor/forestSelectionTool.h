@@ -19,20 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _FOREST_EDITOR_SELECTIONTOOL_H_
 #define _FOREST_EDITOR_SELECTIONTOOL_H_
-
-#ifndef _FOREST_EDITOR_TOOL_H_
 #include "forest/editor/forestTool.h"
-#endif
-#ifndef _FORESTITEM_H_
-#include "forest/forestItem.h"
-#endif
-#ifndef _TSELECTION_H_
-#include "gui/worldEditor/tSelection.h"
-#endif
 
+#include "forest/forestItem.h"
+
+#include "gui/worldEditor/tSelection.h"
 
 class Forest;
 class Gizmo;

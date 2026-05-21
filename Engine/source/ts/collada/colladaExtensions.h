@@ -19,16 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _COLLADA_EXTENSIONS_H_
 #define _COLLADA_EXTENSIONS_H_
-
-#ifndef _TSSHAPE_LOADER_H_
 #include "ts/loader/tsShapeLoader.h"
-#endif
-#ifndef _COLLADA_UTILS_H_
+
 #include "ts/collada/colladaUtils.h"
-#endif
 
 //-----------------------------------------------------------------------------
 // Collada allows custom data to be included with many elements using the <extra>

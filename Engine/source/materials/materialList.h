@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MATERIALLIST_H_
 #define _MATERIALLIST_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
-#include "gfx/gfxTextureHandle.h"
-#endif
 
+#include "gfx/gfxTextureHandle.h"
 
 class Material;
 class BaseMatInstance;

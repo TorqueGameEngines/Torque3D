@@ -19,12 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _BASEMATERIALDEFINITION_H_
 #define _BASEMATERIALDEFINITION_H_
-
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
 
 class BaseMatInstance;
 

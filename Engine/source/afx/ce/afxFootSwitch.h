@@ -22,9 +22,8 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#ifndef _AFX_FOOT_SWITCH_H_
-#define _AFX_FOOT_SWITCH_H_
+ 
+#pragma once 
 
 class afxFootSwitchData : public GameBaseData
 {
@@ -51,5 +50,3 @@ public:
 };
 
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
-
-#endif // _AFX_FOOT_SWITCH_H_

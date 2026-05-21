@@ -19,18 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PATHCAMERA_H_
 #define _PATHCAMERA_H_
-
-#ifndef _SHAPEBASE_H_
 #include "T3D/shapeBase.h"
-#endif
 
-#ifndef _CAMERASPLINE_H_
 #include "T3D/cameraSpline.h"
-#endif
-
 
 //----------------------------------------------------------------------------
 struct PathCameraData: public ShapeBaseData {

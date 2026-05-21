@@ -20,6 +20,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _CONSOLE_CONSOLE_VALUE_STACK_H_
 #define _CONSOLE_CONSOLE_VALUE_STACK_H_

@@ -19,25 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _LIGHTANIMDATA_H_
 #define _LIGHTANIMDATA_H_
-
-#ifndef _SIMDATABLOCK_H_
 #include "console/simDatablock.h"
-#endif
-#ifndef _CONSOLETYPES_H_
+
 #include "console/consoleTypes.h"
-#endif
-#ifndef _MMATRIX_H_
+
 #include "math/mMatrix.h"
-#endif
-#ifndef _MPOINT3_H_
+
 #include "math/mPoint3.h"
-#endif
-#ifndef _COLOR_H_
+
 #include "core/color.h"
-#endif
 
 class LightInfo;
 

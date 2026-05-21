@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _PHYSICS_DEBRIS_H_
 #define _PHYSICS_DEBRIS_H_
@@ -26,12 +27,8 @@
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif
-#ifndef _GAMEBASE_H_
 #include "T3D/gameBase/gameBase.h"
-#endif
-#ifndef _T3D_PHYSICSCOMMON_H_
 #include "T3D/physics/physicsCommon.h"
-#endif
 
 #include "T3D/assets/ShapeAsset.h"
 

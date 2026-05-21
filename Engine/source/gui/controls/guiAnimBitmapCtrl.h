@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIANIMBITMAPCTRL_H_
 #define _GUIANIMBITMAPCTRL_H_
-
-#ifndef _GUIBITMAPCTRL_H_
 #include "gui/controls/guiBitmapCtrl.h"
-#endif
 
 class guiAnimBitmapCtrl : public GuiBitmapCtrl
 {

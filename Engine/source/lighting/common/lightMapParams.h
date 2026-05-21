@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _LIGHTMAPPARAMS_H_
 #define _LIGHTMAPPARAMS_H_
-
-#ifndef _LIGHTINFO_H_
 #include "lighting/lightInfo.h"
-#endif
 
 class LightMapParams : public LightInfoEx
 {

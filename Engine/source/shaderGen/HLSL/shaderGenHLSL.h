@@ -19,14 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _SHADERGEN_HLSL_H_
 #define _SHADERGEN_HLSL_H_
-
-#ifndef _SHADERGEN_H_
 #include "shaderGen/shaderGen.h"
-#endif
-
 
 class ShaderGenPrinterHLSL : public ShaderGenPrinter
 {

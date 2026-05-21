@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _RENDERSHAPEEXAMPLE_H_
 #define _RENDERSHAPEEXAMPLE_H_
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _TSSHAPEINSTANCE_H_
+
 #include "ts/tsShapeInstance.h"
-#endif
 
 #include "T3D/assets/ShapeAsset.h"
 

@@ -19,25 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SIMSET_H_
 #define _SIMSET_H_
-
-#ifndef _SIMOBJECT_H_
 #include "console/simObject.h"
-#endif
 
-#ifndef _SIMOBJECTLIST_H_
 #include "console/simObjectList.h"
-#endif
 
-#ifndef _SIMDICTIONARY_H_
 #include "console/simDictionary.h"
-#endif
 
-#ifndef _TSIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
 
 #include "persistence/taml/tamlChildren.h"
 

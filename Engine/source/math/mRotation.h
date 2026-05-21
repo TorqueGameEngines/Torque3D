@@ -22,26 +22,15 @@
 
 #ifndef MROTATION_H
 #define MROTATION_H
-
-#ifndef _MMATHFN_H_
 #include "math/mMathFn.h"
-#endif
 
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
 
-#ifndef _MQUAT_H_
 #include "math/mQuat.h"
-#endif
 
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
 
-#ifndef _MANGAXIS_H_
 #include "math/mAngAxis.h"
-#endif
 
 //------------------------------------------------------------------------------
 /// Rotation Interop Utility class

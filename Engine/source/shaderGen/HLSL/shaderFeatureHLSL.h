@@ -19,12 +19,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 #ifndef _SHADERGEN_HLSL_SHADERFEATUREHLSL_H_
 #define _SHADERGEN_HLSL_SHADERFEATUREHLSL_H_
-
-#ifndef _SHADERFEATURE_H_
 #include "shaderGen/shaderFeature.h"
-#endif
 
 struct LangElement;
 struct MaterialFeatureData;

@@ -22,26 +22,15 @@
 
 #ifndef _MODULE_DEFINITION_H
 #define _MODULE_DEFINITION_H
-
-#ifndef _ASSET_DEFINITION_H_
 #include "assets/assetDefinition.h"
-#endif
 
-#ifndef _SIMSET_H_
 #include "console/simSet.h"
-#endif
 
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _STRINGUNIT_H_
 #include "core/strings/stringUnit.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

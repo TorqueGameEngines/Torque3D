@@ -1,3 +1,4 @@
+#pragma once 
 #ifndef _SCENEQUERY_UTIL_H_
 #define _SCENEQUERY_UTIL_H_
 

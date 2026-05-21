@@ -19,15 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TVECTOR_H_
 #define _TVECTOR_H_
 
 // TODO: This shouldn't be included in headers... it should
 // be included by the source file before all other includes.
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
+
 #include <algorithm>
 #include "console/engineTypes.h"
 #include "console/engineTypeInfo.h"
@@ -992,9 +993,7 @@ public:
 };
 
 // Include vector specializations
-#ifndef _TVECTORSPEC_H_
 #include "core/util/tVectorSpecializations.h"
-#endif
 
 #endif //_TVECTOR_H_
 

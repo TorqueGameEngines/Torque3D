@@ -19,12 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _CUSTOMMATERIALDEFINITION_H_
 #define _CUSTOMMATERIALDEFINITION_H_
-
-#ifndef _MATERIALDEFINITION_H_
 #include "materials/materialDefinition.h"
-#endif
 
 class ShaderData;
 class GFXStateBlockData;

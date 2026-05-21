@@ -19,20 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SIMOBJECTREF_H_
 #define _SIMOBJECTREF_H_
-
-
-#ifndef _DYNAMIC_CONSOLETYPES_H_
 #include "console/dynamicTypes.h"
-#endif
 
-#ifndef _SIM_H_
 #include "console/sim.h"
-#endif
-
-
 
 // SimObjectRef<T>
 

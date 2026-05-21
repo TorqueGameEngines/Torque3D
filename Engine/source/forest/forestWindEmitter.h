@@ -19,27 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FORESTWINDEMITTER_H_
 #define _FORESTWINDEMITTER_H_
-
-
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _MMATRIX_H_
-#include "math/mMatrix.h"
-#endif
-#ifndef _MPOINT3_H_
-#include "math/mPoint3.h"
-#endif
-#ifndef _MSPHERE_H_
-#include "math/mSphere.h"
-#endif
-#ifndef _TVECTOR_H_
-#include "core/util/tVector.h"
-#endif
 
+#include "math/mMatrix.h"
+
+#include "math/mPoint3.h"
+
+#include "math/mSphere.h"
+
+#include "core/util/tVector.h"
 
 class ForestWindEmitter;
 class ForestWindAccumulator;

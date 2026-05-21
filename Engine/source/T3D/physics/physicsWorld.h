@@ -19,16 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _T3D_PHYSICS_PHYSICSWORLD_H_
 #define _T3D_PHYSICS_PHYSICSWORLD_H_
-
-#ifndef _SIGNAL_H_
 #include "core/util/tSignal.h"
-#endif
-#ifndef _MPOINT3_H_
+
 #include "math/mPoint3.h"
-#endif
 
 class ProcessList;
 class Point3F;

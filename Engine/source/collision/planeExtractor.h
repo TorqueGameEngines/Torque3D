@@ -19,20 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PLANEEXTRACTOR_H_
 #define _PLANEEXTRACTOR_H_
-
-#ifndef _MMATH_H_
 #include "math/mMath.h"
-#endif
-#ifndef _TVECTOR_H_
-#include "core/util/tVector.h"
-#endif
-#ifndef _ABSTRACTPOLYLIST_H_
-#include "collision/abstractPolyList.h"
-#endif
 
+#include "core/util/tVector.h"
+
+#include "collision/abstractPolyList.h"
 
 //----------------------------------------------------------------------------
 

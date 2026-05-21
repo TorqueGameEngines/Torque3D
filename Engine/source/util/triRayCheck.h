@@ -21,11 +21,13 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-// Ray to triangle intersection test code originally by Tomas Akenine-Möller
+// Ray to triangle intersection test code originally by Tomas Akenine-MÃ¶ller
 // and Ben Trumbore.
 // http://www.cs.lth.se/home/Tomas_Akenine_Moller/code/
 // Ported to TGE by DAW, 2005-7-15
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TRIRAYCHECK_H_
 #define _TRIRAYCHECK_H_

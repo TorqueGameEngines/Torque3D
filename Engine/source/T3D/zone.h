@@ -19,22 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _ZONE_H_
 #define _ZONE_H_
-
-#ifndef _SCENEPOLYHEDRALZONE_H_
 #include "scene/zones/scenePolyhedralZone.h"
-#endif
 
-#ifndef _SCENEAMBIENTSOUNDOBJECT_H_
 #include "scene/mixin/sceneAmbientSoundObject.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-
 
 /// A volume in space that encloses objects.
 ///

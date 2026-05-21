@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _MOVELIST_STD_H_
 #define _MOVELIST_STD_H_
-
-#ifndef _MOVELIST_H_
 #include "T3D/gameBase/moveList.h"
-#endif
 
 class StdMoveList : public MoveList
 {

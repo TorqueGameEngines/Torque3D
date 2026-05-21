@@ -19,24 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _MATINSTANCE_H_
 #define _MATINSTANCE_H_
-
-#ifndef _MATERIALDEFINITION_H_
 #include "materials/materialDefinition.h"
-#endif
-#ifndef _BASEMATINSTANCE_H_
+
 #include "materials/baseMatInstance.h"
-#endif
-#ifndef _SCENEDATA_H_
+
 #include "materials/sceneData.h"
-#endif
-#ifndef _GFXSTATEBLOCK_H_
+
 #include "gfx/gfxStateBlock.h"
-#endif
-#ifndef _FEATURESET_H_
+
 #include "shaderGen/featureSet.h"
-#endif
 
 class GFXShader;
 class GFXCubemap;

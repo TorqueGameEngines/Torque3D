@@ -21,14 +21,9 @@
 //-----------------------------------------------------------------------------
 #ifndef _SG_SYSTEM_INTERFACE_H
 #define _SG_SYSTEM_INTERFACE_H
-
-#ifndef _SGSCENEPERSIST_H_
 #include "lighting/common/scenePersist.h"
-#endif
 
-#ifndef _SCENELIGHTING_H_
 #include "lighting/common/sceneLighting.h"
-#endif
 
 class ObjectProxy;
 class ObjectProxyList;

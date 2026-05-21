@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SHADOWVOLUMEBSP_H_
 #define _SHADOWVOLUMEBSP_H_
-
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
-#ifndef _MMATH_H_
+
 #include "math/mMath.h"
-#endif
-#ifndef _DATACHUNKER_H_
+
 #include "core/dataChunker.h"
-#endif
-#ifndef _LIGHTMANAGER_H_
+
 #include "lighting/lightManager.h"
-#endif
 
 /// Used to calculate shadows.
 class ShadowVolumeBSP

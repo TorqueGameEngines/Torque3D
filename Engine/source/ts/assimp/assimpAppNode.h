@@ -19,20 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _ASSIMP_APPNODE_H_
 #define _ASSIMP_APPNODE_H_
+#include "core/util/tDictionary.h"
 
-#ifndef _TDICTIONARY_H_
-#include "core/tDictionary.h"
-#endif
-#ifndef _APPNODE_H_
 #include "ts/loader/appNode.h"
-#endif
-#ifndef _COLLADA_EXTENSIONS_H_
 #include "ts/collada/colladaExtensions.h"
-#endif
-
 
 #if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
 #ifdef new

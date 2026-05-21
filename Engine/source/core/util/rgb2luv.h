@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _RGB2LUV_H_
 #define _RGB2LUV_H_
-
-#ifndef _COLOR_H_
 #include "core/color.h"
-#endif
 
 namespace ConvertRGB
 {

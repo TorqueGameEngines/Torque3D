@@ -19,9 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
-
-#ifndef _AUTH_H_
-#define _AUTH_H_
+#pragma once 
 
 /// Formerly contained a certificate, showing that something was valid.
 class Auth2Certificate
@@ -51,5 +49,3 @@ inline bool validateAuthenticatedClient()
 {
    return true;
 }
-
-#endif

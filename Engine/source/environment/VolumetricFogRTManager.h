@@ -19,23 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
    
 #ifndef _VolumetricFogRTManager_H_
 #define _VolumetricFogRTManager_H_
-   
-#ifndef _SCENEOBJECT_H_
 #include "scene/sceneObject.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
-#ifndef _GFXTARGET_H_
+
 #include "gfx/gfxTarget.h"
-#endif
-#ifndef _SIGNAL_H_
+
 #include "core/util/tSignal.h"
-#endif
-   
+
 class VolumetricFogRTManager;
    
 typedef Signal<void(VolumetricFogRTManager *VolumetricFogRTManager, bool resize)> VolumetricFogRTMResizeSignal;

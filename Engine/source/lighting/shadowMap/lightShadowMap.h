@@ -19,40 +19,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _LIGHTSHADOWMAP_H_
 #define _LIGHTSHADOWMAP_H_
-
-#ifndef _GFXTEXTUREHANDLE_H_
 #include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _GFXCUBEMAP_H_
+
 #include "gfx/gfxCubemap.h"
-#endif
-#ifndef _GFXTARGET_H_
+
 #include "gfx/gfxTarget.h"
-#endif
-#ifndef _LIGHTINFO_H_
+
 #include "lighting/lightInfo.h"
-#endif
-#ifndef _MATHUTIL_FRUSTUM_H_
 #include "math/util/frustum.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
-#ifndef _SHADOW_COMMON_H_
 #include "lighting/shadowMap/shadowCommon.h"
-#endif
-#ifndef _GFXSHADER_H_
+
 #include "gfx/gfxShader.h"
-#endif
-#ifndef _GFXOCCLUSIONQUERY_H_
+
 #include "gfx/gfxOcclusionQuery.h"
-#endif
-#ifndef _PLATFORM_PLATFORMTIMER_H_
 #include "platform/platformTimer.h"
-#endif
 
 class ShadowMapManager;
 class SceneManager;

@@ -19,13 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TELNETCONSOLE_H_
 #define _TELNETCONSOLE_H_
-
-#ifndef _CONSOLE_H_
 #include "console/console.h"
-#endif
+
 #include "platform/platformNet.h"
 
 /// Telnet admin console.

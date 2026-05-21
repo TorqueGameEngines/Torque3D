@@ -19,19 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _IMAGE_UTILS_H_
 #define _IMAGE_UTILS_H_
-
-#ifndef _SWIZZLE_H_
 #include "core/util/swizzle.h"
-#endif
-#ifndef _GFXENUMS_H_
+
 #include "gfx/gfxEnums.h"
-#endif
-#ifndef _MMATHFN_H_
+
 #include "math/mMathFn.h"
-#endif
 
 struct DDSFile;
 

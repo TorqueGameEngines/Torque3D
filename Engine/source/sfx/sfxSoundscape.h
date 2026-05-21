@@ -19,34 +19,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SFXSOUNDSCAPE_H_
 #define _SFXSOUNDSCAPE_H_
-
-#ifndef _SFXCOMMON_H_
 #include "sfx/sfxCommon.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _DATACHUNKER_H_
 #include "core/dataChunker.h"
-#endif
 
-#ifndef _BITSET_H_
 #include "core/bitSet.h"
-#endif
 
-#ifndef _TRESPONSECURVE_H_
 #include "math/util/tResponseCurve.h"
-#endif
 
-#ifndef _SFXAMBIENCE_H_
 #include "sfx/sfxAmbience.h"
-#endif
-
 
 /// @file
 /// The soundscape system is responsible for controlling ambient audio.

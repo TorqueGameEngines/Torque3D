@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FSTINYXML_H_
 #define _FSTINYXML_H_
@@ -29,10 +31,7 @@
 #endif
 
 #include "platform/platform.h"
-
-#ifndef _FILESTREAM_H_
 #include "core/stream/fileStream.h"
-#endif
 
 class VfsXMLPrinter : public tinyxml2::XMLPrinter
 {

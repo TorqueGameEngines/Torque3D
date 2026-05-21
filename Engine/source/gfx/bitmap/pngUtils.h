@@ -19,13 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _PNG_UTILS_H_
 #define _PNG_UTILS_H_
-
-#ifndef _GFXENUMS_H_
 #include "gfx/gfxEnums.h"
-#endif
 
 struct DeferredPNGWriterData; // This is used to avoid including png.h in this header
 class GBitmap;

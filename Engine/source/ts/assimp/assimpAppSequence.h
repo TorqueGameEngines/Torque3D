@@ -1,22 +1,15 @@
 #pragma once
-#ifndef _MMATH_H_
 #include "math/mMath.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
-#ifndef _TSSHAPE_H_
+
 #include "ts/tsShape.h"
-#endif
-#ifndef _APPNODE_H_
+
 #include "ts/loader/appNode.h"
-#endif
-#ifndef _APPMESH_H_
+
 #include "ts/loader/appMesh.h"
-#endif
-#ifndef _APPSEQUENCE_H_
+
 #include "ts/loader/appSequence.h"
-#endif
 
 #if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
 #ifdef new

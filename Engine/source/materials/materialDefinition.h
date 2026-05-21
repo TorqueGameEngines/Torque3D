@@ -19,34 +19,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 #ifndef _MATERIALDEFINITION_H_
 #define _MATERIALDEFINITION_H_
-
-#ifndef _BASEMATERIALDEFINITION_H_
 #include "materials/baseMaterialDefinition.h"
-#endif
-#ifndef _TDICTIONARY_H_
+
 #include "core/util/tDictionary.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
+
 #include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _GFXSTRUCTS_H_
+
 #include "gfx/gfxStructs.h"
-#endif
-#ifndef _GFXCUBEMAP_H_
+
 #include "gfx/gfxCubemap.h"
-#endif
-#ifndef _DYNAMIC_CONSOLETYPES_H_
 #include "console/dynamicTypes.h"
-#endif
 
 #ifndef IMAGE_ASSET_H
 #include "T3D/assets/ImageAsset.h"
 #endif
-#ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
-#endif
+
 #ifndef SOUND_ASSET_H
 #include "T3D/assets/SoundAsset.h"
 #endif

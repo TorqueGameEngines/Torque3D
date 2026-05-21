@@ -22,10 +22,7 @@
 
 #ifndef _H_GUIDEFAULTCONTROLRENDER_
 #define _H_GUIDEFAULTCONTROLRENDER_
-
-#ifndef _MRECT_H_
 #include "math/mRect.h"
-#endif
 
 class GuiControlProfile;
 class ColorI;

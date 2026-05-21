@@ -19,34 +19,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENECULLINGSTATE_H_
 #define _SCENECULLINGSTATE_H_
-
-#ifndef _SCENEZONECULLINGSTATE_H_
 #include "scene/culling/sceneZoneCullingState.h"
-#endif
-
-#ifndef _MATHUTIL_FRUSTUM_H_
 #include "math/util/frustum.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _SCENECAMERASTATE_H_
 #include "scene/sceneCameraState.h"
-#endif
 
-#ifndef _DATACHUNKER_H_
 #include "core/dataChunker.h"
-#endif
 
-#ifndef _BITVECTOR_H_
 #include "core/bitVector.h"
-#endif
-
 
 class SceneObject;
 class SceneManager;

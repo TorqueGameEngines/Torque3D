@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SFXPLAYLIST_H_
 #define _SFXPLAYLIST_H_
@@ -29,10 +31,7 @@
 #ifndef _SFXTRACK_H_
    #include "sfx/sfxTrack.h"
 #endif
-
-#ifndef _TYPEVALIDATORS_H_
 #include "console/typeValidators.h"
-#endif
 
 class SFXState;
 class SFXDescription;

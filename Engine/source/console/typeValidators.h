@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TYPEVALIDATORS_H_
 #define _TYPEVALIDATORS_H_
-
-#ifndef _MMATHFN_H_
 #include "math/mMathFn.h"
-#endif
 
 class TypeValidator
 {

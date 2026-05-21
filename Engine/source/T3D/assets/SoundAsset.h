@@ -22,59 +22,32 @@
 //-----------------------------------------------------------------------------
 #ifndef SOUND_ASSET_H
 #define SOUND_ASSET_H
-
-#ifndef _ASSET_BASE_H_
 #include "assets/assetBase.h"
-#endif
 
-#ifndef _ASSET_DEFINITION_H_
 #include "assets/assetDefinition.h"
-#endif
 
-#ifndef _STRINGUNIT_H_
-#include "string/stringUnit.h"
-#endif
-
-#ifndef _ASSET_FIELD_TYPES_H_
+#include "core/strings/stringUnit.h"
 #include "assets/assetFieldTypes.h"
-#endif
 
-#ifndef _ASSET_PTR_H_
 #include "assets/assetPtr.h"
-#endif 
 
-#ifndef _BITSTREAM_H_
 #include "core/stream/bitStream.h"
-#endif
 
-#ifndef _SFXRESOURCE_H_
 #include "sfx/sfxResource.h"
-#endif
 
 #ifndef _SFXDESCRIPTION_H_
 #include "sfx/sfxDescription.h"
 #endif // !_SFXDESCRIPTION_H_
-
-
-#ifndef _SFXTRACK_H_
 #include "sfx/sfxTrack.h"
-#endif
 
 #ifndef _SFXPROFILE_H_
 #include "sfx/sfxProfile.h"
 #endif // !_SFXPROFILE_H_
-
-#ifndef _RESOURCEMANAGER_H_
 #include "core/resourceManager.h"
-#endif
 
-#ifndef _SFXPLAYLIST_H_
 #include "sfx/sfxPlayList.h"
-#endif
 
-#ifndef _SFXTYPES_H_
 #include "sfx/sfxTypes.h"
-#endif
 
 #include "assetMacroHelpers.h"
 class SFXResource;

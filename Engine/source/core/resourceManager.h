@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _RESOURCEMANAGER_H_
 #define _RESOURCEMANAGER_H_
@@ -26,10 +28,7 @@
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif
-
-#ifndef _TDICTIONARY_H_
 #include "core/util/tDictionary.h"
-#endif
 
 class ResourceManager
 {

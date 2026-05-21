@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GAMETSCTRL_H_
 #define _GAMETSCTRL_H_
-
-#ifndef _GAME_H_
 #include "app/game.h"
-#endif
-#ifndef _GUITSCONTROL_H_
+
 #include "gui/3d/guiTSControl.h"
-#endif
 
 class ProjectileData;
 class GameBase;

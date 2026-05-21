@@ -19,22 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENECAMERASTATE_H_
 #define _SCENECAMERASTATE_H_
-
-#ifndef _MATHUTIL_FRUSTUM_H_
 #include "math/util/frustum.h"
-#endif
 
-#ifndef _MRECT_H_
 #include "math/mRect.h"
-#endif
 
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
-
 
 /// An object that combines all the state that is relevant to looking into the
 /// scene from a particular point of view.

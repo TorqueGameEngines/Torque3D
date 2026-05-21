@@ -19,33 +19,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PLATFORM_H_
 #define _PLATFORM_H_
 
 #include <stdlib.h>
-
-#ifndef _TORQUECONFIG_H_
 #include "torqueConfig.h"
-#endif
-#ifndef _TORQUE_TYPES_H_
 #include "platform/types.h"
-#endif
-#ifndef _PLATFORMASSERT_H_
+
 #include "platform/platformAssert.h"
-#endif
-#ifndef _MSGBOX_H_
+
 #include "platform/nativeDialogs/msgBox.h"
-#endif
-#ifndef _VERSION_H_
+
 #include "app/version.h"
-#endif
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
-#ifndef _TORQUE_SAFEDELETE_H_
+
 #include "core/util/safeDelete.h"
-#endif
 
 #include <new>
 #include <typeinfo>

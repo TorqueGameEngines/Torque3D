@@ -19,14 +19,9 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
-#ifndef _TCPOBJECT_H_
-#define _TCPOBJECT_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
-
 #include "platform/platformNet.h"
 
 class TCPObject : public SimObject
@@ -101,6 +96,3 @@ public:
    DECLARE_CONOBJECT(TCPObject);
 
 };
-
-
-#endif  // _H_TCPOBJECT_

@@ -19,13 +19,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXGLCUBEMAP_H_
 #define _GFXGLCUBEMAP_H_
-
-#ifndef _GFXCUBEMAP_H_
 #include "gfx/gfxCubemap.h"
-#endif
+
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif

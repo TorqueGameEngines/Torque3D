@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSINTEGERSET_H_
 #define _TSINTEGERSET_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _TVECTOR_H_
-#include "core/util/tVector.h"
-#endif
 
+#include "core/util/tVector.h"
 
 #if defined(TORQUE_MAX_LIB)
 #define MAX_TS_SET_DWORDS 32

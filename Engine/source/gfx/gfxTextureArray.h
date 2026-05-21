@@ -19,22 +19,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GFXTEXTUREARRAY_H_
 #define _GFXTEXTUREARRAY_H_
-
-#ifndef _REFBASE_H_
 #include "core/util/refBase.h"
-#endif
-#ifndef _GFXRESOURCE_H_
+
 #include "gfx/gfxResource.h"
-#endif
-#ifndef _GFXENUMS_H_
+
 #include "gfxEnums.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
+
 #include "gfxTextureHandle.h"
-#endif
+
 #include "core/util/tVector.h"
 
 

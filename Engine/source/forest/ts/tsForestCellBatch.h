@@ -19,25 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TSFORESTCELLBATCH_H_
 #define _TSFORESTCELLBATCH_H_
-
-#ifndef _IMPOSTERRENDERMGR_H_
 #include "renderInstance/renderImposterMgr.h"
-#endif
-#ifndef _FORESTCELLBATCH_H_
+
 #include "forest/forestCellBatch.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
+
 #include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
+
 #include "gfx/gfxVertexBuffer.h"
-#endif
-#ifndef _GFXSTRUCTS_H_
+
 #include "gfx/gfxStructs.h"
-#endif
 
 class GFXShader;
 

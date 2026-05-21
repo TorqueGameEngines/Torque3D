@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIBUBBLETEXTCTRL_H_
 #define _GUIBUBBLETEXTCTRL_H_
-
-#ifndef _GUITEXTCTRL_H_
 #include "gui/controls/guiTextCtrl.h"
-#endif
-#ifndef _GUIMLTEXTCTRL_H_
+
 #include "gui/controls/guiMLTextCtrl.h"
-#endif
 
 /// A single-line text control that displays its text in a multi-line popup when
 /// clicked.

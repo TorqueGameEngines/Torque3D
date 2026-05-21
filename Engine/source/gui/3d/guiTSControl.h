@@ -19,25 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUITSCONTROL_H_
 #define _GUITSCONTROL_H_
-
-#ifndef _GUICONTAINER_H_
 #include "gui/containers/guiContainer.h"
-#endif
-#ifndef _MMATH_H_
+
 #include "math/mMath.h"
-#endif
 
-
-#ifndef _MATTEXTURETARGET_H_
 #include "materials/matTextureTarget.h"
-#endif
 
-#ifndef _GUIOFFSCREENCANVAS_H_
 #include "gui/core/guiOffscreenCanvas.h"
-#endif
 
 class IDisplayDevice;
 class GuiOffscreenCanvas;

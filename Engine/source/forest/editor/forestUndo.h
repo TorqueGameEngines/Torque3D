@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _FOREST_EDITOR_UNDO_H_
 #define _FOREST_EDITOR_UNDO_H_
-
-#ifndef _UNDO_H_
 #include "util/undo.h"
-#endif
-#ifndef _FORESTITEM_H_
+
 #include "forest/forestItem.h"
-#endif
+
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif

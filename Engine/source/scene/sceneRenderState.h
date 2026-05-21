@@ -19,26 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENERENDERSTATE_H_
 #define _SCENERENDERSTATE_H_
-
-#ifndef _COLOR_H_
 #include "core/color.h"
-#endif
 
-#ifndef _SCENEMANAGER_H_
 #include "scene/sceneManager.h"
-#endif
 
-#ifndef _SCENECULLINGSTATE_H_
 #include "scene/culling/sceneCullingState.h"
-#endif
-
-#ifndef _UTIL_DELEGATE_H_
 #include "core/util/delegate.h"
-#endif
-
 
 class SceneObject;
 class RenderPassManager;

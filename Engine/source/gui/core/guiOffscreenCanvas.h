@@ -1,13 +1,12 @@
+#pragma once 
+#pragma once 
 #ifndef _GUIOFFSCREENCANVAS_H_
 #define _GUIOFFSCREENCANVAS_H_
 
 #include "math/mMath.h"
 #include "gui/core/guiCanvas.h"
 #include "core/util/tVector.h"
-
-#ifndef _MATTEXTURETARGET_H_
 #include "materials/matTextureTarget.h"
-#endif
 
 class GuiTextureDebug;
 

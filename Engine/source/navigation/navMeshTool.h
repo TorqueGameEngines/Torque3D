@@ -1,20 +1,15 @@
 #pragma once
+#pragma once 
 #ifndef _NAVMESH_TOOL_H_
 #define _NAVMESH_TOOL_H_
 #ifdef TORQUE_TOOLS
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
-#ifndef _GUITYPES_H_
-#include "gui/core/guiTypes.h"
-#endif
-#ifndef _NAVMESH_H_
-#include "navigation/navMesh.h"
-#endif
 
-#ifndef _GUINAVEDITORCTRL_H_
+#include "gui/core/guiTypes.h"
+
+#include "navigation/navMesh.h"
+
 #include "navigation/guiNavEditorCtrl.h"
-#endif
 
 class UndoAction;
 

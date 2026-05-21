@@ -19,46 +19,33 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _POST_EFFECT_H_
 #define _POST_EFFECT_H_
-
-#ifndef _SIMSET_H_
 #include "console/simSet.h"
-#endif
-#ifndef _MPOINT3_H_
+
 #include "math/mPoint3.h"
-#endif
-#ifndef _MPOINT2_H_
+
 #include "math/mPoint2.h"
-#endif
-#ifndef _GFXSHADER_H_
+
 #include "gfx/gfxShader.h"
-#endif
-#ifndef _GFXSTATEBLOCK_H_
+
 #include "gfx/gfxStateBlock.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
+
 #include "gfx/gfxTextureHandle.h"
-#endif
-#ifndef _GFXCUBEMAP_H_
+
 #include "gfx/gfxCubemap.h"
-#endif
-#ifndef _GFXTARGET_H_
+
 #include "gfx/gfxTarget.h"
-#endif
-#ifndef _GFXVERTEXBUFFER_H_
+
 #include "gfx/gfxVertexBuffer.h"
-#endif
-#ifndef _POSTEFFECTCOMMON_H_
+
 #include "postFx/postEffectCommon.h"
-#endif
-#ifndef _TDICTIONARY_H_
+
 #include "core/util/tDictionary.h"
-#endif
-#ifndef _MATTEXTURETARGET_H_
+
 #include "materials/matTextureTarget.h"
-#endif
 
 #include "T3D/assets/ImageAsset.h"
 

@@ -19,22 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PROJECTEDSHADOW_H_
 #define _PROJECTEDSHADOW_H_
-
-#ifndef _DEPTHSORTLIST_H_
 #include "collision/depthSortList.h"
-#endif
-#ifndef _SCENEOBJECT_H_
+
 #include "scene/sceneObject.h"
-#endif
-#ifndef _TSSHAPEINSTANCE_H_
+
 #include "ts/tsShapeInstance.h"
-#endif
-#ifndef _LIGHTINGSYSTEM_SHADOWBASE_H_
 #include "lighting/common/shadowBase.h"
-#endif
 
 class ShapeBase;
 class LightInfo;

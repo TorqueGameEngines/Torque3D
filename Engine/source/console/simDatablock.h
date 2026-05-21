@@ -24,12 +24,11 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
+#pragma once 
 #ifndef _SIMDATABLOCK_H_
 #define _SIMDATABLOCK_H_
-
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
 // Forward Refs
 class BitStream;

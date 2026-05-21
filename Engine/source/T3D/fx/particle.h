@@ -25,16 +25,14 @@
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
 #pragma once
+#pragma once 
+#pragma once 
 
 #ifndef _PARTICLE_H_
 #define _PARTICLE_H_
-
-#ifndef _GAMEBASE_H_
 #include "T3D/gameBase/gameBase.h"
-#endif
-#ifndef _GFXTEXTUREHANDLE_H_
+
 #include "gfx/gfxTextureHandle.h"
-#endif
 
 #include "T3D/assets/ImageAsset.h"
 

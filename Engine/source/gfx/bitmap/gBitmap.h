@@ -19,6 +19,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GBITMAP_H_
 #define _GBITMAP_H_
@@ -26,22 +28,14 @@
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif
-
-#ifndef _SWIZZLE_H_
 #include "core/util/swizzle.h"
-#endif
 
-#ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
-#endif
 
-#ifndef _GFXENUMS_H_
 #include "gfx/gfxEnums.h" // For the format
-#endif
 
-#ifndef _PROFILER_H_
 #include "platform/profiler.h"
-#endif
+
 //-------------------------------------- Forward decls.
 class Stream;
 class RectI;

@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIMATERIALCTRL_H_
 #define _GUIMATERIALCTRL_H_
-
-#ifndef _GUICONTAINER_H_
 #include "gui/containers/guiContainer.h"
-#endif
 
 #include "T3D/assets/MaterialAsset.h"
 

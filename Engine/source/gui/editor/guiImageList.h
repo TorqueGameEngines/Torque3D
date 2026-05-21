@@ -19,16 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIIMAGELIST_H_
 #define _GUIIMAGELIST_H_
 
 #include "console/simDatablock.h"
-
-#ifndef _GUITYPES_H_
 #include "gui/core/guiTypes.h"
-#endif
-
 
 class GuiImageList : public SimObject
 {

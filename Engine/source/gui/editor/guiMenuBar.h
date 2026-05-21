@@ -19,17 +19,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIMENUBAR_H_
 #define _GUIMENUBAR_H_
-
-#ifndef _GUITICKCTRL_H_
 #include "gui/shiny/guiTickCtrl.h"
-#endif
 
-#ifndef _POPUPMENU_H_
 #include "gui/editor/popupMenu.h"
-#endif
 
 class GuiMenuBar;
 class WindowInputGenerator;

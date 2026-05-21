@@ -19,18 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _RECTCLIPPER_H_
 #define _RECTCLIPPER_H_
 
 //Includes
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _MRECT_H_
-#include "math/mRect.h"
-#endif
 
+#include "math/mRect.h"
 
 class RectClipper
 {

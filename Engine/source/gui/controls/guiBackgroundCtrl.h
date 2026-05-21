@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIBACKGROUNDCTRL_H_
 #define _GUIBACKGROUNDCTRL_H_
-
-#ifndef _GUICONTROL_H_
 #include "gui/core/guiControl.h"
-#endif
 
 /// Renders a background, so you can have a backdrop for your GUI.
 class GuiBackgroundCtrl : public GuiControl

@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _PROFILER_H_
 #define _PROFILER_H_
-
-#ifndef _TORQUECONFIG_H_
 #include "torqueConfig.h"
-#endif
 
 #ifdef TORQUE_ENABLE_PROFILER
 

@@ -19,22 +19,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIRIVEREDITORCTRL_H_
 #define _GUIRIVEREDITORCTRL_H_
-
-#ifndef _EDITTSCTRL_H_
 #include "gui/worldEditor/editTSCtrl.h"
-#endif
-#ifndef _UNDO_H_
+
 #include "util/undo.h"
-#endif
-#ifndef _RIVER_H_
+
 #include "environment/river.h"
-#endif
-#ifndef _GIZMO_H_
+
 #include "gui/worldEditor/gizmo.h"
-#endif
 
 struct ObjectRenderInst;
 class SceneManager;

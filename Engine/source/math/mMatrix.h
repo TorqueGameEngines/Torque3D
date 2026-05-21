@@ -19,40 +19,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MMATRIX_H_
 #define _MMATRIX_H_
 #include <algorithm>
-#ifndef _MPLANE_H_
 #include "math/mPlane.h"
-#endif
 
-#ifndef _MBOX_H_
 #include "math/mBox.h"
-#endif
 
-#ifndef _MPOINT4_H_
 #include "math/mPoint4.h"
-#endif
 
-#ifndef _ENGINETYPEINFO_H_
 #include "console/engineTypeInfo.h"
-#endif
 
-#ifndef _FRAMEALLOCATOR_H_
 #include "core/frameAllocator.h"
-#endif
 
-#ifndef _STRINGFUNCTIONS_H_
 #include "core/strings/stringFunctions.h"
-#endif
 
-#ifndef _CONSOLE_H_
 #include "console/console.h"
-#endif
-#ifndef _MATH_BACKEND_H_
 #include "math/public/math_backend.h"
-#endif
 
 #ifndef USE_TEMPLATE_MATRIX
 

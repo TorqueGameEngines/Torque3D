@@ -21,7 +21,6 @@
 //-----------------------------------------------------------------------------
 
 // Grab the win32 headers so we can access QPC
-#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
 #include "platform/platformTimer.h"

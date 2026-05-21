@@ -20,13 +20,12 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 #pragma once
+#pragma once 
+#pragma once 
 
 #ifndef _GFXTEXTUREPROFILE_H_
 #define _GFXTEXTUREPROFILE_H_
-
-#ifndef _TORQUE_STRING_H_
 #include "core/util/str.h"
-#endif
 
 class GFXTextureObject;
 

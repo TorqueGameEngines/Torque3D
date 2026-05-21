@@ -19,19 +19,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _T3D_PHYSICS_PHYSICSOBJECT_H_
 #define _T3D_PHYSICS_PHYSICSOBJECT_H_
-
-#ifndef _PHYSICS_PHYSICSUSERDATA_H_
 #include "T3D/physics/physicsUserData.h"
-#endif
-#ifndef _UTIL_DELEGATE_H_
+
 #include "core/util/delegate.h"
-#endif
-#ifndef _REFBASE_H_
+
 #include "core/util/refBase.h"
-#endif
 
 class PhysicsWorld;
 #ifndef USE_TEMPLATE_MATRIX

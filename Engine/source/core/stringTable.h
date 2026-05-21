@@ -19,17 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once
 
 #ifndef _STRINGTABLE_H_
 #define _STRINGTABLE_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _DATACHUNKER_H_
-#include "core/dataChunker.h"
-#endif
 
+#include "core/util/tVector.h"
+#include "core/dataChunker.h"
+
+extern template class Vector<StringTableEntry>;
 
 //--------------------------------------
 /// A global table for the hashing and tracking of strings.

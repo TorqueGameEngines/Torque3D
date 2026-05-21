@@ -19,30 +19,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SFXVOICE_H_
 #define _SFXVOICE_H_
-
-#ifndef _REFBASE_H_
 #include "core/util/refBase.h"
-#endif
 
-#ifndef _TSTREAM_H_
 #include "core/stream/tStream.h"
-#endif
 
-#ifndef _MPOINT3_H_
 #include "math/mPoint3.h"
-#endif
 
-#ifndef _MMATRIX_H_
 #include "math/mMatrix.h"
-#endif
 
-#ifndef _SFXBUFFER_H_
 #include "sfx/sfxBuffer.h"
-#endif
-
 
 namespace SFXInternal {
    class SFXVoiceTimeSource;

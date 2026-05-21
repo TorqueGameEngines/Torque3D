@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _PLATFORMWIN32_H_
 #define _PLATFORMWIN32_H_
@@ -31,12 +32,9 @@
 #endif
 
 #include <windows.h>
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _MRECT_H_
+
 #include "math/mRect.h"
-#endif
 
 #if defined(TORQUE_COMPILER_CODEWARRIOR)
 #  include <ansi_prefix.win32.h>
@@ -50,8 +48,6 @@
 #ifdef _MSC_VER
 #pragma warning(disable: 4996) // turn off "deprecation" warnings
 #endif
-
-#define NOMINMAX
 
 // Hack to get a correct HWND instead of using global state.
 extern HWND getWin32WindowHandle();

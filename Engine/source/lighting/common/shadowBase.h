@@ -19,6 +19,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _LIGHTINGSYSTEM_SHADOWBASE_H_
 #define _LIGHTINGSYSTEM_SHADOWBASE_H_

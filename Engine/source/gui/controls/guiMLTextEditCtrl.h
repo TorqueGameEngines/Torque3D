@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _GUIMLTEXTEDITCTRL_H_
 #define _GUIMLTEXTEDITCTRL_H_
-
-#ifndef _GUIMLTEXTCTRL_H_
 #include "gui/controls/guiMLTextCtrl.h"
-#endif
 
 class GuiMLTextEditCtrl : public GuiMLTextCtrl
 {

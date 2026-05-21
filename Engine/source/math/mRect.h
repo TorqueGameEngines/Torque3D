@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _MRECT_H_
 #define _MRECT_H_
-
-#ifndef _MPOINT2_H_
 #include "math/mPoint2.h"
-#endif
-
 
 class RectI
 {

@@ -21,12 +21,14 @@
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
-// AABB-triangle overlap test code originally by Tomas Akenine-Möller
+// AABB-triangle overlap test code originally by Tomas Akenine-MÃ¶ller
 //               Assisted by Pierre Terdiman and David Hunt
 // http://www.cs.lth.se/home/Tomas_Akenine_Moller/code/
 // Ported to TSE by BJG, 2005-4-14
 // Modified to avoid a lot of copying by ASM, 2007-9-28
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TRIBOXCHECK_H_
 #define _TRIBOXCHECK_H_

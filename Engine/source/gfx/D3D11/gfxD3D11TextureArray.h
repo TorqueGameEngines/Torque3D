@@ -1,3 +1,5 @@
+#pragma once 
+#pragma once 
 #ifndef _GFXD3D11TEXTUREARRAY_H_
 #define _GFXD3D11TEXTUREARRAY_H_
 

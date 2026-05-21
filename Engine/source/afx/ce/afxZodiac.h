@@ -22,16 +22,13 @@
 // IN THE SOFTWARE.
 //
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
 
 #ifndef _AFX_ZODIAC_H_
 #define _AFX_ZODIAC_H_
-
-#ifndef _ARCANE_FX_H_
 #include "afx/arcaneFX.h"
-#endif
-#ifndef _AFX_ZODIAC_DEFS_H_
+
 #include "afx/ce/afxZodiacDefs.h"
-#endif
 
 #include "console/typeValidators.h"
 

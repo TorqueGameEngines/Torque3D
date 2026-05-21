@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _WINVOLUME_H_
 #define _WINVOLUME_H_
-
-#ifndef _VOLUME_H_
 #include "core/volume.h"
-#endif
 
 namespace Torque
 {

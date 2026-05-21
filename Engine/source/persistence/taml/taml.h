@@ -19,41 +19,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TAML_H_
 #define _TAML_H_
-
-#ifndef _TAML_CALLBACKS_H_
 #include "persistence/taml/tamlCallbacks.h"
-#endif
 
-#ifndef _TAML_CUSTOM_H_
 #include "persistence/taml/tamlCustom.h"
-#endif
 
-#ifndef _TAML_CHILDREN_H_
 #include "persistence/taml/tamlChildren.h"
-#endif
 
-#ifndef _TAML_WRITE_NODE_H_
 #include "persistence/taml/tamlWriteNode.h"
-#endif
 
-#ifndef _TAML_VISITOR_H_
 #include "persistence/taml/tamlVisitor.h"
-#endif
 
-#ifndef _SIMBASE_H_
 #include "console/simBase.h"
-#endif
 
-#ifndef _TDICTIONARY_H_
 #include "core/util/tDictionary.h"
-#endif
 
-#ifndef _FILESTREAM_H_
 #include "core/stream/fileStream.h"
-#endif
 
 //-----------------------------------------------------------------------------
 

@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _TERRFEATURETYPES_H_
 #define _TERRFEATURETYPES_H_
-
-#ifndef _FEATURETYPE_H_
 #include "shaderGen/featureType.h"
-#endif
 
 DeclareFeatureType( MFT_TerrainBaseMap );
 DeclareFeatureType( MFT_TerrainMacroMap );

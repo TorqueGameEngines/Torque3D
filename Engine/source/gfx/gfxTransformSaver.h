@@ -19,14 +19,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
 
 #ifndef _GFX_GFXTRANSFORMSAVER_H_
 #define _GFX_GFXTRANSFORMSAVER_H_
-
-#ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
-#endif
-
 
 /// Helper class to store viewport and matrix stack state, and restore it
 /// later.

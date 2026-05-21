@@ -19,19 +19,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _DDSFILE_H_
 #define _DDSFILE_H_
-
-#ifndef _GFXSTRUCTS_H_
 #include "gfx/gfxStructs.h"
-#endif
-#ifndef _BITSET_H_
+
 #include "core/bitSet.h"
-#endif
-#ifndef _TVECTOR_H_
+
 #include "core/util/tVector.h"
-#endif
+
 #ifndef __RESOURCE_H__
 #include "core/resource.h"
 #endif

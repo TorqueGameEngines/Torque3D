@@ -19,19 +19,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SIMDICTIONARY_H_
 #define _SIMDICTIONARY_H_
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
-#ifndef _STRINGTABLE_H_
-#include "core/stringTable.h"
-#endif
 
-#ifndef _PLATFORMMUTEX_H_
+#include "core/stringTable.h"
+
 #include "platform/threads/mutex.h"
-#endif
 
 #include "torqueConfig.h"
 
@@ -40,10 +37,7 @@ class SimObject;
 #ifdef USE_NEW_SIMDICTIONARY
 #include <string>
 #include <unordered_map>
-
-#ifndef _SIM_H_
 #include "console/sim.h"
-#endif
 
 struct StringTableEntryHash
 {

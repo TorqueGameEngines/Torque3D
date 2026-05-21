@@ -4,13 +4,12 @@
 //
 // SPDX-License-Identifier: MIT
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _FRAMEALLOCATOR_H_
 #define _FRAMEALLOCATOR_H_
-
-#ifndef _PLATFORM_H_
 #include "platform/platform.h"
-#endif
 
 /// Implements an buffer which allocates data based on the alignment of type T.
 /// 

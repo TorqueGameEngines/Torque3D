@@ -19,14 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _SCENECULLINGVOLUME_H_
 #define _SCENECULLINGVOLUME_H_
-
-#ifndef _MPLANESET_H_
 #include "math/mPlaneSet.h"
-#endif
-
 
 /// A volume used to include or exclude space in a scene.
 ///

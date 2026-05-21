@@ -19,13 +19,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
+#pragma once 
+#pragma once 
 
 #ifndef _VEHICLE_H_
 #define _VEHICLE_H_
-
-#ifndef _SHAPEBASE_H_
 #include "T3D/rigidShape.h"
-#endif
 
 #include "T3D/AI/AIController.h"
 

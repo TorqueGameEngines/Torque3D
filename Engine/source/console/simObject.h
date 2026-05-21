@@ -24,6 +24,8 @@
 // Arcane-FX for MIT Licensed Open Source version of Torque 3D from GarageGames
 // Copyright (C) 2015 Faust Logic, Inc.
 //~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~//~~~~~~~~~~~~~~~~~~~~~//
+#pragma once 
+#pragma once 
 #ifndef _SIMOBJECT_H_
 #define _SIMOBJECT_H_
 
@@ -36,14 +38,9 @@
 #ifndef _BITSET_H_
    #include "core/bitSet.h"
 #endif
-
-#ifndef _TAML_CALLBACKS_H_
 #include "persistence/taml/tamlCallbacks.h"
-#endif
 
-#ifndef _OBJECTTYPES_H_
 #include "T3D/objectTypes.h"
-#endif
 
 class Stream;
 class LightManager;

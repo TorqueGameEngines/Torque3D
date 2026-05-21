@@ -23,6 +23,8 @@
 #include "console/simBase.h"
 #include "util/messaging/dispatcher.h"
 #include "util/messaging/scriptMsgListener.h"
+#pragma once 
+#pragma once 
 
 #ifndef _MESSAGEFORWARDER_H_
 #define _MESSAGEFORWARDER_H_

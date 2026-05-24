@@ -387,7 +387,7 @@ void SFXWorld< NUM_DIMENSIONS, Object >::_onScopeOut( Object object )
    // Remove its soundscape.
    
    Scope& scope = mScopeStack[ index ];
-   if( scope.mSoundscape )
+   if( scope.mSoundscape && SFX )
       SFX->getSoundscapeManager()->removeSoundscape( scope.mSoundscape );
       
    mScopeStack.erase( index );

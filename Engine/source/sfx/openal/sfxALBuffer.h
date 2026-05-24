@@ -24,13 +24,13 @@
 #define _SFXALBUFFER_H_
 
 #ifndef _LOADOAL_H
-   #include "sfx/openal/LoadOAL.h"
+#include "sfx/openal/LoadOAL.h"
 #endif
 #ifndef _SFXINTERNAL_H_
-   #include "sfx/sfxInternal.h"
+#include "sfx/sfxInternal.h"
 #endif
 #ifndef _TVECTOR_H_
-   #include "core/util/tVector.h"
+#include "core/util/tVector.h"
 #endif
 
 
@@ -39,81 +39,95 @@ class SFXALVoice;
 
 class SFXALBuffer : public SFXBuffer
 {
-   public:
+public:
 
-      typedef SFXBuffer Parent;
+   typedef SFXBuffer Parent;
 
-      friend class SFXALDevice;
-      friend class SFXALVoice;
+   friend class SFXALDevice;
+   friend class SFXALVoice;
 
-   protected:
-      
-      /// AL buffer in case this is a static, non-streaming buffer.
-      ALuint mALBuffer;
-      
-      /// Free buffers for use in queuing in case this is a streaming buffer.
-      Vector< ALuint > mFreeBuffers;
+protected:
 
-      ///
-      SFXALBuffer(   const OPENALFNTABLE &oalft, 
-                     const ThreadSafeRef< SFXStream >& stream,
-                     SFXDescription* description,
-                     bool useHardware );
+   /// AL buffer in case this is a static, non-streaming buffer.
+   ALuint mALBuffer;
 
-      ///
-      bool mIs3d;
+   /// Free buffers for use in queuing in case this is a streaming buffer.
+   Vector< ALuint > mFreeBuffers;
 
-      ///
-      bool mUseHardware;
+   ///
+   SFXALBuffer(const ThreadSafeRef< SFXStream >& stream,
+      SFXDescription* description,
+      bool useHardware);
 
-      const OPENALFNTABLE &mOpenAL;
+   ///
+   bool mIs3d;
 
-      ///
-      ALenum _getALFormat() const
+   ///
+   bool mUseHardware;
+   ///
+   ALenum _getALFormat() const
+   {
+      return _sfxFormatToALFormat(getFormat());
+   }
+
+   ///
+   static ALenum _sfxFormatToALFormat(const SFXFormat& format)
+   {
+      const U32 channels = format.getChannels();
+      const SFXSampleType type = format.getSampleType();
+
+      switch (type)
       {
-         return _sfxFormatToALFormat( getFormat() );
+      case Sample_Int8:
+         if (channels == 1)  return AL_FORMAT_MONO8;
+         if (channels == 2)  return AL_FORMAT_STEREO8;
+         break;
+
+      case Sample_Int16:
+         if (channels == 1)  return AL_FORMAT_MONO16;
+         if (channels == 2)  return AL_FORMAT_STEREO16;
+         break;
+
+      case Sample_Float:
+         if (channels == 1)  return AL_FORMAT_MONO_FLOAT32;
+         if (channels == 2)  return AL_FORMAT_STEREO_FLOAT32;
+         break;
+
+      case Sample_IMA4:
+         if (channels == 1)  return AL_FORMAT_MONO_IMA4;
+         if (channels == 2)  return AL_FORMAT_STEREO_IMA4;
+         break;
+
+      case Sample_MSADPCM:
+         // Requires OpenAL Soft MSADPCM extension
+         if (channels == 1)  return AL_FORMAT_MONO_MSADPCM_SOFT;
+         if (channels == 2)  return AL_FORMAT_STEREO_MSADPCM_SOFT;
+         break;
       }
 
-      ///
-      static ALenum _sfxFormatToALFormat( const SFXFormat& format )
-      {
-         if( format.getChannels() == 2 )
-         {
-            const U32 bps = format.getBitsPerSample();
-            if( bps == 16 )
-               return AL_FORMAT_STEREO8;
-            else if( bps == 32 )
-               return AL_FORMAT_STEREO16;
-         }
-         else if( format.getChannels() == 1 )
-         {
-            const U32 bps = format.getBitsPerSample();
-            if( bps == 8 )
-               return AL_FORMAT_MONO8;
-            else if( bps == 16 )
-               return AL_FORMAT_MONO16;
-         }
-         return 0;
-      }
+      // Unsupported channel count or layout
+      Con::errorf("_sfxFormatToALFormat - Unsupported format: channels=%d, type=%d",
+         channels, type);
+      return 0;
+   }
 
-      ///
-      SFXALVoice* _getUniqueVoice() const
-      {
-         return ( SFXALVoice* ) mUniqueVoice.getPointer();
-      }
+   ///
+   SFXALVoice* _getUniqueVoice() const
+   {
+      return (SFXALVoice*)mUniqueVoice.getPointer();
+   }
 
-      // SFXBuffer.
-      void write( SFXInternal::SFXStreamPacket* const* packets, U32 num ) override;
-      void _flush() override;
+   // SFXBuffer.
+   void write(SFXInternal::SFXStreamPacket* const* packets, U32 num) override;
+   void _flush() override;
 
-   public:
+public:
 
-      static SFXALBuffer* create(   const OPENALFNTABLE &oalft, 
-                                    const ThreadSafeRef< SFXStream >& stream,
-                                    SFXDescription* description,
-                                    bool useHardware );
+   static SFXALBuffer* create(const ThreadSafeRef< SFXStream >& stream,
+      SFXDescription* description,
+      bool useHardware);
 
-      virtual ~SFXALBuffer();
+   virtual ~SFXALBuffer();
 };
 
 #endif // _SFXALBUFFER_H_

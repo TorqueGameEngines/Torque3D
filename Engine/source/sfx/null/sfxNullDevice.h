@@ -23,8 +23,6 @@
 #ifndef _SFXNULLDEVICE_H_
 #define _SFXNULLDEVICE_H_
 
-class SFXProvider;
-
 #ifndef _SFXDEVICE_H_
    #include "sfx/sfxDevice.h"
 #endif
@@ -37,27 +35,28 @@ class SFXProvider;
 #ifndef _SFXNULLVOICE_H_
    #include "sfx/null/sfxNullVoice.h"
 #endif
-
+#ifndef _SFXSYSTEM_H_
+#include "sfx/sfxSystem.h"
+#endif
 
 class SFXNullDevice : public SFXDevice
 {
    typedef SFXDevice Parent;
+protected:
+   static SFXProvider::CreateProviderInstanceDelegate mCreateDeviceInstance;
 
-   public:
+public:
+   static void enumerateProviders(Vector<SFXProvider*>& providerList);
+   SFXNullDevice( U32 providerIndex );
+   static SFXDevice* createInstance(U32 adapterIndex);
+   virtual ~SFXNullDevice();
 
-      SFXNullDevice( SFXProvider* provider, 
-                     String name, 
-                     bool useHardware, 
-                     S32 maxBuffers );
+public:
 
-      virtual ~SFXNullDevice();
-
-   public:
-
-      // SFXDevice.
-       SFXBuffer* createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description ) override;
-      SFXVoice* createVoice( bool is3D, SFXBuffer *buffer ) override;
-      void update() override;
+   // SFXDevice.
+      SFXBuffer* createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description ) override;
+   SFXVoice* createVoice( bool is3D, SFXBuffer *buffer ) override;
+   void update() override;
 };
 
 #endif // _SFXNULLDEVICE_H_

@@ -204,11 +204,11 @@ void TSShape::compressionKey(U8* keyOut, U32 keyLen)
    }
 }
 
-void TSShape::xorBufferAtOffset(void* data, U32 byteCount,
+void TSShape::xorBufferAtOffset(void* buffer, U32 byteCount,
    U32 startOffset,
    const U8* key, U32 keyLen)
 {
-   U8* p = (U8*)data;
+   U8* p = (U8*)buffer;
    for (U32 i = 0; i < byteCount; ++i)
       p[i] ^= key[(startOffset + i) % keyLen];
 }
@@ -2279,6 +2279,82 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
 
       ret = new TSShape;
       readSuccess = ret->read(&stream);
+   }
+   else if (extension.equal("dsq", String::NoCase))
+   {
+      // DSQ is an animation-only file. Try to find a companion shape to load
+      // sequences into; if none exists, create a minimal empty shape instead.
+      Torque::Path companionPath(path);
+      bool foundCompanion = false;
+
+      // Look for basename.cached.dts or basename.dts alongside the DSQ
+      String fileName = path.getFileName();
+      String::SizeType sep = fileName.find('_', 0, String::Right);
+      if (sep != String::NPos)
+      {
+         companionPath.setFileName(fileName.substr(0, sep));
+         companionPath.setExtension("cached.dts");
+         if (Torque::FS::IsFile(companionPath.getFullPath()))
+            foundCompanion = true;
+
+         if (!foundCompanion)
+         {
+            companionPath.setExtension("dts");
+            if (Torque::FS::IsFile(companionPath.getFullPath()))
+               foundCompanion = true;
+         }
+      }
+
+      if (!foundCompanion)
+      {
+         companionPath.setFileName(fileName);
+         companionPath.setExtension("cached.dts");
+         if (Torque::FS::IsFile(companionPath.getFullPath()))
+            foundCompanion = true;
+      }
+
+      if (!foundCompanion)
+      {
+         companionPath.setExtension("dts");
+         if (Torque::FS::IsFile(companionPath.getFullPath()))
+            foundCompanion = true;
+      }
+
+      if (foundCompanion)
+      {
+         FileStream shapeStream;
+         shapeStream.open(companionPath.getFullPath(), Torque::FS::File::Read);
+         if (shapeStream.getStatus() == Stream::Ok)
+         {
+            ret = new TSShape;
+            if (!ret->read(&shapeStream))
+            {
+               delete ret;
+               ret = NULL;
+            }
+         }
+      }
+
+      if (!ret || !foundCompanion)
+      {
+         // No companion shape found; build a minimal empty shape so sequences
+         // have somewhere to live (matches ShapeAnimationAsset's expectations).
+         ret = new TSShape;
+         ret->createEmptyShape();
+      }
+
+      FileStream dsqStream;
+      dsqStream.open(path.getFullPath(), Torque::FS::File::Read);
+      if (dsqStream.getStatus() != Stream::Ok)
+      {
+         Con::errorf("Resource<TSShape>::create - Could not open DSQ '%s'", path.getFullPath().c_str());
+         delete ret;
+         return NULL;
+      }
+
+      readSuccess = ret->importSequences(&dsqStream, path);
+      if (!readSuccess)
+         Con::errorf("Resource<TSShape>::create - Failed to import sequences from '%s'", path.getFullPath().c_str());
    }
    else
    {

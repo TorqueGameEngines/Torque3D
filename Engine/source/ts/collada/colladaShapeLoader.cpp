@@ -700,7 +700,21 @@ static bool sReadCollada(const Torque::Path& path, TSShape*& res_shape)
       if (tss)
       {
          TSShapeLoader::updateProgress(TSShapeLoader::Load_Complete, "Import complete");
-         Con::printf("[COLLADA] Shape created successfully.");
+
+         bool realMesh = false;
+         for (U32 i = 0; i < tss->meshes.size(); ++i)
+         {
+            if (tss->meshes[i] && tss->meshes[i]->getMeshType() != TSMesh::NullMeshType)
+            {
+               realMesh = true;
+               break;
+            }
+         }
+
+         if(realMesh)
+            Con::printf("[COLLADA] Shape created successfully.");
+         else
+            Con::printf("[COLLADA] Animation created successfully.");
 
          Torque::Path cachedPath(path);
          // Cache the model to a DTS file for faster loading next time.
@@ -716,7 +730,7 @@ static bool sReadCollada(const Torque::Path& path, TSShape*& res_shape)
          // Add collada materials to materials.tscript
          updateMaterialsScript(path, isSketchup);
 
-         if (tss->sequences.size() > 0)
+         if (tss->sequences.size() > 0 && realMesh)
          {
             Torque::Path dsqPath(cachedPath);
             dsqPath.setExtension("dsq");

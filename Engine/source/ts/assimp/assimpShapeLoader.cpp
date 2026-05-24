@@ -991,7 +991,22 @@ static bool sReadAssimp(const Torque::Path &path, TSShape*& res_shape)
    if (tss)
    {
       TSShapeLoader::updateProgress(TSShapeLoader::Load_Complete, "Import complete");
-      Con::printf("[ASSIMP] Shape created successfully.");
+
+      bool realMesh = false;
+      for (U32 i = 0; i < tss->meshes.size(); ++i)
+      {
+         if (tss->meshes[i] && tss->meshes[i]->getMeshType() != TSMesh::NullMeshType)
+         {
+            realMesh = true;
+            break;
+         }
+      }
+
+
+      if (realMesh)
+         Con::printf("[ASSIMP] Shape created successfully.");
+      else
+         Con::printf("[ASSIMP] Animation created successfully.");
 
       Torque::Path cachedPath(path);
       // Cache the model to a DTS file for faster loading next time.
@@ -1004,7 +1019,8 @@ static bool sReadAssimp(const Torque::Path &path, TSShape*& res_shape)
          tss->write(&dtsStream);
       }
 
-      if (tss->sequences.size() > 0)
+      // only save dsq if we have a real mesh to pair with it.
+      if (tss->sequences.size() > 0 && realMesh)
       {
          Torque::Path dsqPath(cachedPath);
          dsqPath.setExtension("dsq");

@@ -410,7 +410,7 @@ bool GuiShapeEdPreview::findCompanionShape(const Torque::Path& dsqPath, Torque::
    // AssimpLoader and ColladaLoader exports as "modelname_sequencename.dsq" alongside "modelname.cached.dts"
    // so strip everything from the last underscore to find the base name
    String fileName = dsqPath.getFileName();
-   String::SizeType sep = fileName.find('_');
+   String::SizeType sep = fileName.find('_',0, String::Right);
 
    if (sep != String::NPos)
    {

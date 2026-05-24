@@ -521,7 +521,7 @@ void SFXEmitter::unpackUpdate( NetConnection *conn, BitStream *stream )
    }
 
    // track
-   if (stream->readFlag()) // DirtyUpdateMask
+   if (_readDirtyFlag(stream, Track)) // DirtyUpdateMask
    {
       initialUpdate = false;
       UNPACK_ASSET(conn, Sound);

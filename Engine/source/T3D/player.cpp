@@ -1015,19 +1015,19 @@ void PlayerData::initPersistFields()
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
       addFieldV( "boxTorsoLeftPercentage", TypeRangedF32, Offset(boxTorsoLeftPercentage, PlayerData), &CommonValidators::NormalizedFloat,
-         "@brief Percentage of the player's bounding box width that represents the left side of the torso.\n\n"
+         "@brief Percentage of the player's bounding box width from center that represents the left side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
       addFieldV( "boxTorsoRightPercentage", TypeRangedF32, Offset(boxTorsoRightPercentage, PlayerData), &CommonValidators::NormalizedFloat,
-         "@brief Percentage of the player's bounding box width that represents the right side of the torso.\n\n"
+         "@brief Percentage of the player's bounding box width from center that represents the right side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
       addFieldV( "boxTorsoBackPercentage", TypeRangedF32, Offset(boxTorsoBackPercentage, PlayerData), &CommonValidators::NormalizedFloat,
-         "@brief Percentage of the player's bounding box depth that represents the back side of the torso.\n\n"
+         "@brief Percentage of the player's bounding box depth from center that represents the back side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
       addFieldV( "boxTorsoFrontPercentage", TypeRangedF32, Offset(boxTorsoFrontPercentage, PlayerData), &CommonValidators::NormalizedFloat,
-         "@brief Percentage of the player's bounding box depth that represents the front side of the torso.\n\n"
+         "@brief Percentage of the player's bounding box depth from center that represents the front side of the torso.\n\n"
          "Used when computing the damage location.\n"
          "@see Player::getDamageLocation" );
 
@@ -2395,10 +2395,10 @@ void Player::getDamageLocation(const Point3F& in_rPos, const char *&out_rpVert, 
    {
       F32 xWidth = boxSize.x;
 
-      //boxTorsoBackPercentage and boxTorsoLeftPercentage should both be negative floats
-      F32 backPoint  = yLength * mDataBlock->boxTorsoBackPercentage;
+      //boxTorsoBackPercentage and boxTorsoLeftPercentage need to be flipped negative
+      F32 backPoint  = (yLength * mDataBlock->boxTorsoBackPercentage) * -1.0f;
       F32 frontPoint = yLength * mDataBlock->boxTorsoFrontPercentage;
-      F32 leftPoint  = xWidth * mDataBlock->boxTorsoLeftPercentage;
+      F32 leftPoint  = (xWidth * mDataBlock->boxTorsoLeftPercentage) * -1.0f;
       F32 rightPoint = xWidth * mDataBlock->boxTorsoRightPercentage;
 
       S32 index = 0;                    //Middle hits are cases 0-2

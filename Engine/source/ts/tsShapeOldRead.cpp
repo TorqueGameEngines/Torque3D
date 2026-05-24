@@ -435,7 +435,8 @@ bool TSShape::importSequences(Stream * s, const String& sequencePath)
    {
       // error -- don't support future version yet :>
       Con::errorf(ConsoleLogEntry::General,
-                  "Sequence import failed:  shape exporter newer than running executable.");
+                  "Sequence import failed: attempt to load a version %i ddsq-animation, can currently only load version %i and before.",
+                  smReadVersion, smVersion);
       return false;
    }
    if (smReadVersion<19)

@@ -24,50 +24,411 @@
 #include "sfx/openal/sfxALBuffer.h"
 #include "platform/async/asyncUpdate.h"
 
+#include "AL/al.h"
+#include "AL/alc.h"
+#include "AL/efx.h"
+#include "AL/alext.h"
+
+#ifndef ALC_CONNECTED
+#define ALC_CONNECTED 0x313
+#endif
+
+#ifndef ALC_DEVICE_CLOCK_SOFT
+#define ALC_DEVICE_CLOCK_SOFT 0x1600
+#endif
+
+#ifndef ALC_DEVICE_LATENCY_SOFT
+#define ALC_DEVICE_LATENCY_SOFT 0x1601
+#endif
+
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define FUNCTION_CAST(T, ptr) (union{void *p; T f;}){ptr}.f
+#elif defined(__cplusplus)
+#define FUNCTION_CAST(T, ptr) reinterpret_cast<T>(ptr)
+#else
+#define FUNCTION_CAST(T, ptr) (T)(ptr)
+#endif
+
+#define SFX_LOAD_AL_PROC(T, x) \
+   (x) = FUNCTION_CAST(T, alGetProcAddress(#x)); \
+   if (!(x)) Con::warnf("SFXALDevice - Failed to load " #x);
+
+#define SFX_LOAD_ALC_PROC(T, x) \
+   (x) = FUNCTION_CAST(T, alcGetProcAddress(mDevice, #x)); \
+   if (!(x)) Con::warnf("SFXALDevice - Failed to load " #x);
+
+/* Effect object functions */
+static LPALGENFILTERS alGenFilters{ nullptr };
+static LPALDELETEFILTERS alDeleteFilters{ nullptr };
+static LPALISFILTER alIsFilter{ nullptr };
+static LPALFILTERF alFilterf{ nullptr };
+static LPALFILTERFV alFilterfv{ nullptr };
+static LPALFILTERI alFilteri{ nullptr };
+static LPALFILTERIV alFilteriv{ nullptr };
+static LPALGETFILTERF alGetFilterf{ nullptr };
+static LPALGETFILTERFV alGetFilterfv{ nullptr };
+static LPALGETFILTERI alGetFilteri{ nullptr };
+static LPALGETFILTERIV alGetFilteriv{ nullptr };
+static LPALGENEFFECTS alGenEffects{ nullptr };
+static LPALDELETEEFFECTS alDeleteEffects{ nullptr };
+static LPALISEFFECT alIsEffect{ nullptr };
+static LPALEFFECTF alEffectf{ nullptr };
+static LPALEFFECTFV alEffectfv{ nullptr };
+static LPALEFFECTI alEffecti{ nullptr };
+static LPALEFFECTIV alEffectiv{ nullptr };
+static LPALGETEFFECTF alGetEffectf{ nullptr };
+static LPALGETEFFECTFV alGetEffectfv{ nullptr };
+static LPALGETEFFECTI alGetEffecti{ nullptr };
+static LPALGETEFFECTIV alGetEffectiv{ nullptr };
+static LPALGENAUXILIARYEFFECTSLOTS alGenAuxiliaryEffectSlots{ nullptr };
+static LPALDELETEAUXILIARYEFFECTSLOTS alDeleteAuxiliaryEffectSlots{ nullptr };
+static LPALISAUXILIARYEFFECTSLOT alIsAuxiliaryEffectSlot{ nullptr };
+static LPALAUXILIARYEFFECTSLOTF alAuxiliaryEffectSlotf{ nullptr };
+static LPALAUXILIARYEFFECTSLOTFV alAuxiliaryEffectSlotfv{ nullptr };
+static LPALAUXILIARYEFFECTSLOTI alAuxiliaryEffectSloti{ nullptr };
+static LPALAUXILIARYEFFECTSLOTIV alAuxiliaryEffectSlotiv{ nullptr };
+static LPALGETAUXILIARYEFFECTSLOTF alGetAuxiliaryEffectSlotf{ nullptr };
+static LPALGETAUXILIARYEFFECTSLOTFV alGetAuxiliaryEffectSlotfv{ nullptr };
+static LPALGETAUXILIARYEFFECTSLOTI alGetAuxiliaryEffectSloti{ nullptr };
+static LPALGETAUXILIARYEFFECTSLOTIV alGetAuxiliaryEffectSlotiv{ nullptr };
+static LPALCGETSTRINGISOFT alcGetStringiSOFT{ nullptr };
+static LPALCRESETDEVICESOFT alcResetDeviceSOFT{ nullptr };
+static LPALCREOPENDEVICESOFT alcReopenDeviceSOFT{ nullptr };
+static LPALCGETINTEGER64VSOFT alcGetInteger64vSOFT{ nullptr };
+
+class SFXALRegisterProvider
+{
+public:
+   SFXALRegisterProvider()
+   {
+      SFXSystem::getRegisterProviderSignal().notify(&SFXALDevice::enumerateProviders);
+   }
+};
+
+static SFXALRegisterProvider pSFXALRegisterProvider;
+
+SFXProvider::CreateProviderInstanceDelegate SFXALDevice::mCreateDeviceInstance(SFXALDevice::createInstance);
+
+SFXDevice* SFXALDevice::createInstance(U32 providerIndex)
+{
+   SFXALDevice* dev = new SFXALDevice(providerIndex);
+   return dev;
+}
+
+void SFXALDevice::_initExtensions()
+{
+   // Device-level soft extensions — must be loaded before context creation
+   if (alcIsExtensionPresent(mDevice, "ALC_SOFT_reopen_device"))
+   {
+      SFX_LOAD_ALC_PROC(LPALCREOPENDEVICESOFT, alcReopenDeviceSOFT);
+      SFX_LOAD_ALC_PROC(LPALCRESETDEVICESOFT, alcResetDeviceSOFT);
+      if (alcReopenDeviceSOFT && alcResetDeviceSOFT)
+      {
+         mHasSoftReopen = true;
+         mCaps |= CAPS_HotReconnect;
+      }
+   }
+
+   if (alcIsExtensionPresent(mDevice, "ALC_SOFT_HRTF"))
+   {
+      SFX_LOAD_ALC_PROC(LPALCGETSTRINGISOFT, alcGetStringiSOFT);
+      if (alcGetStringiSOFT)
+      {
+         mHasSoftHRTF = true;
+         mCaps |= CAPS_HRTF;
+      }
+   }
+
+   if (alcIsExtensionPresent(mDevice, "ALC_SOFT_device_clock"))
+   {
+      SFX_LOAD_ALC_PROC(LPALCGETINTEGER64VSOFT, alcGetInteger64vSOFT);
+      if (alcGetInteger64vSOFT)
+         mCaps |= CAPS_DeviceClock;
+   }
+
+   if (alcIsExtensionPresent(mDevice, "ALC_EXT_disconnect"))
+      mCaps |= CAPS_DisconnectDetect;
+
+   // Context-level AL extensions — loaded after context is current
+   if (alIsExtensionPresent("AL_EXT_float32"))
+      mCaps |= CAPS_Float32;
+   if (alIsExtensionPresent("AL_EXT_MCFORMATS"))
+      mCaps |= CAPS_MonoStereo;
+   if (alIsExtensionPresent("AL_SOFT_source_spatialize"))
+      mCaps |= CAPS_SourceSpatialize;
+}
+
+void SFXALDevice::_initEFX()
+{
+   if (alcIsExtensionPresent(mDevice, "ALC_EXT_EFX") != AL_TRUE)
+      return;
+
+   // Load all EFX procs
+   SFX_LOAD_AL_PROC(LPALGENEFFECTS, alGenEffects);
+   SFX_LOAD_AL_PROC(LPALDELETEEFFECTS, alDeleteEffects);
+   SFX_LOAD_AL_PROC(LPALISEFFECT, alIsEffect);
+   SFX_LOAD_AL_PROC(LPALEFFECTI, alEffecti);
+   SFX_LOAD_AL_PROC(LPALEFFECTIV, alEffectiv);
+   SFX_LOAD_AL_PROC(LPALEFFECTF, alEffectf);
+   SFX_LOAD_AL_PROC(LPALEFFECTFV, alEffectfv);
+   SFX_LOAD_AL_PROC(LPALGETEFFECTI, alGetEffecti);
+   SFX_LOAD_AL_PROC(LPALGETEFFECTIV, alGetEffectiv);
+   SFX_LOAD_AL_PROC(LPALGETEFFECTF, alGetEffectf);
+   SFX_LOAD_AL_PROC(LPALGETEFFECTFV, alGetEffectfv);
+   SFX_LOAD_AL_PROC(LPALGENAUXILIARYEFFECTSLOTS, alGenAuxiliaryEffectSlots);
+   SFX_LOAD_AL_PROC(LPALDELETEAUXILIARYEFFECTSLOTS, alDeleteAuxiliaryEffectSlots);
+   SFX_LOAD_AL_PROC(LPALISAUXILIARYEFFECTSLOT, alIsAuxiliaryEffectSlot);
+   SFX_LOAD_AL_PROC(LPALAUXILIARYEFFECTSLOTI, alAuxiliaryEffectSloti);
+   SFX_LOAD_AL_PROC(LPALAUXILIARYEFFECTSLOTIV, alAuxiliaryEffectSlotiv);
+   SFX_LOAD_AL_PROC(LPALAUXILIARYEFFECTSLOTF, alAuxiliaryEffectSlotf);
+   SFX_LOAD_AL_PROC(LPALAUXILIARYEFFECTSLOTFV, alAuxiliaryEffectSlotfv);
+   SFX_LOAD_AL_PROC(LPALGETAUXILIARYEFFECTSLOTI, alGetAuxiliaryEffectSloti);
+   SFX_LOAD_AL_PROC(LPALGETAUXILIARYEFFECTSLOTIV, alGetAuxiliaryEffectSlotiv);
+   SFX_LOAD_AL_PROC(LPALGETAUXILIARYEFFECTSLOTF, alGetAuxiliaryEffectSlotf);
+   SFX_LOAD_AL_PROC(LPALGETAUXILIARYEFFECTSLOTFV, alGetAuxiliaryEffectSlotfv);
+   SFX_LOAD_AL_PROC(LPALGENFILTERS, alGenFilters);
+   SFX_LOAD_AL_PROC(LPALDELETEFILTERS, alDeleteFilters);
+   SFX_LOAD_AL_PROC(LPALISFILTER, alIsFilter);
+   SFX_LOAD_AL_PROC(LPALFILTERI, alFilteri);
+   SFX_LOAD_AL_PROC(LPALFILTERIV, alFilteriv);
+   SFX_LOAD_AL_PROC(LPALFILTERF, alFilterf);
+   SFX_LOAD_AL_PROC(LPALFILTERFV, alFilterfv);
+   SFX_LOAD_AL_PROC(LPALGETFILTERI, alGetFilteri);
+   SFX_LOAD_AL_PROC(LPALGETFILTERIV, alGetFilteriv);
+   SFX_LOAD_AL_PROC(LPALGETFILTERF, alGetFilterf);
+   SFX_LOAD_AL_PROC(LPALGETFILTERFV, alGetFilterfv);
+
+   // Verify the minimum set we can't live without
+   if (!alGenEffects || !alDeleteEffects ||
+      !alGenAuxiliaryEffectSlots || !alDeleteAuxiliaryEffectSlots ||
+      !alAuxiliaryEffectSloti)
+   {
+      Con::warnf("SFXALDevice - EFX proc loading incomplete, disabling reverb");
+      return;
+   }
+
+   mCaps |= CAPS_Reverb | CAPS_Occlusion;
+
+   // Filters require their own procs
+   if (alGenFilters && alDeleteFilters && alFilteri && alFilterf)
+      mCaps |= CAPS_SourceFilters;
+
+   // Probe individual effect type support and slot count
+   _probeEFXEffectCaps();
+}
+
+void SFXALDevice::_probeEFXEffectCaps()
+{
+   // Probe which effect types this driver actually supports
+   // by attempting to set each type on a temporary effect object.
+   // Some drivers report ALC_EXT_EFX but don't implement all types.
+
+   struct EffectProbe { ALenum alType; U32 cap; const char* name; };
+   static const EffectProbe probes[] =
+   {
+      { AL_EFFECT_EAXREVERB,  CAPS_Reverb | CAPS_EXTReverb, "EAX Reverb"  },
+      { AL_EFFECT_REVERB,     CAPS_Reverb,        "EAXReverb"  },
+      { AL_EFFECT_EQUALIZER,  CAPS_EFX_EQ,        "Equalizer"  },
+      { AL_EFFECT_COMPRESSOR, CAPS_EFX_Compressor,"Compressor" },
+      { AL_EFFECT_ECHO,       CAPS_EFX_Echo,      "Echo"       },
+      { AL_EFFECT_CHORUS,     CAPS_EFX_Chorus,    "Chorus"     },
+      { AL_EFFECT_DISTORTION, CAPS_EFX_Distortion,"Distortion" },
+      { AL_EFFECT_FLANGER,    CAPS_EFX_Flanger,   "Flanger"    },
+   };
+
+   ALuint testEffect = 0;
+   alGenEffects(1, &testEffect);
+
+   for (const EffectProbe& probe : probes)
+   {
+      alGetError();
+      alEffecti(testEffect, AL_EFFECT_TYPE, probe.alType);
+      if (alGetError() == AL_NO_ERROR)
+         mCaps |= probe.cap;
+   }
+
+   alDeleteEffects(1, &testEffect);
+   alGetError();
+
+   // Probe aux slot count
+   Vector<ALuint> slots;
+   alGetError();
+   while (slots.size() < 64)
+   {
+      ALuint slot = 0;
+      alGenAuxiliaryEffectSlots(1, &slot);
+      if (alGetError() != AL_NO_ERROR)
+         break;
+      slots.push_back(slot);
+   }
+
+   Con::setIntVariable("$pref::SFX::maxEffectSlots", (S32)slots.size());
+
+   ALCint sends = 0;
+   alcGetIntegerv(mDevice, ALC_MAX_AUXILIARY_SENDS, 1, &sends);
+   Con::setIntVariable("$pref::SFX::maxSendsPerSource", (S32)sends);
+
+   for (ALuint slot : slots)
+      alDeleteAuxiliaryEffectSlots(1, &slot);
+   alGetError();
+
+   // Allocate the device-level global reverb slot
+   alGenAuxiliaryEffectSlots(1, &mAuxSlot);
+   if (alGetError() != AL_NO_ERROR)
+   {
+      Con::warnf("SFXALDevice - Failed to create primary EFX slot");
+      mCaps &= ~(CAPS_Reverb | CAPS_Occlusion);
+      mAuxSlot = 0;
+   }
+}
+
 //----------------------------------------------------------------------------
 // STATIC OPENAL FUNCTIONS
 //----------------------------------------------------------------------------
 void SFXALDevice::printALInfo(ALCdevice* device)
 {
+   if (!device)
+      return;
+
+   Con::printBlankLine();
+   Con::printf("SFX Device Info:");
+   Con::printf("|------------------------------------------------");
+
+   // --- Device name ---
+   const ALCchar* devname = alcIsExtensionPresent(device, "ALC_ENUMERATE_ALL_EXT")
+      ? alcGetString(device, ALC_ALL_DEVICES_SPECIFIER)
+      : alcGetString(device, ALC_DEVICE_SPECIFIER);
+   Con::printf("| Device:       %s", devname);
+
+   // --- OpenAL version ---
    ALCint major, minor;
-   if (device)
+   alcGetIntegerv(device, ALC_MAJOR_VERSION, 1, &major);
+   alcGetIntegerv(device, ALC_MINOR_VERSION, 1, &minor);
+   Con::printf("| OpenAL:       %d.%d", major, minor);
+
+   // --- Audio format ---
+   ALCint freq = 0;
+   alcGetIntegerv(device, ALC_FREQUENCY, 1, &freq);
+   Con::printf("| Sample Rate:  %d Hz", freq > 0 ? freq : 44100);
+   Con::printf("| Bit Depth:    %d-bit", (mCaps & CAPS_Float32) ? 32 : 16);
+   Con::printf("| Max Voices:   %d", mMaxBuffers);
+
+   Con::printf("|------------------------------------------------");
+   Con::printf("| Capabilities:");
+
+   // --- Hot reconnect ---
+   Con::printf("|   Hot Reconnect:     %s", (mCaps & CAPS_HotReconnect) ? "Yes" : "No");
+   Con::printf("|   Disconnect Detect: %s", (mCaps & CAPS_DisconnectDetect) ? "Yes" : "No");
+   Con::printf("|   Device Clock:      %s", (mCaps & CAPS_DeviceClock) ? "Yes" : "No");
+   Con::printf("|   Multi-Listener:    %s", (mCaps & CAPS_MultiListener) ? "Yes" : "No");
+   Con::printf("|   Float32 Playback:  %s", (mCaps & CAPS_Float32) ? "Yes" : "No");
+   Con::printf("|   Multi-Channel:     %s", (mCaps & CAPS_MonoStereo) ? "Yes" : "No");
+   Con::printf("|   Spatialize:        %s", (mCaps & CAPS_SourceSpatialize) ? "Yes" : "No");
+
+   // --- HRTF ---
+   Con::printf("|   HRTF:              %s", (mCaps & CAPS_HRTF) ? "Yes" : "No");
+   if (mCaps & CAPS_HRTF)
    {
-      const ALCchar* devname = NULL;
-      Con::printBlankLine();
+      ALCint hrtfStatus = 0;
+      alcGetIntegerv(device, ALC_HRTF_STATUS_SOFT, 1, &hrtfStatus);
 
-      if (mOpenAL.alcIsExtensionPresent(device, "ALC_ENUMERATE_ALL_EXT") != AL_FALSE)
+      const char* statusStr = "Unknown";
+      switch (hrtfStatus)
       {
-         devname = mOpenAL.alcGetString(device, ALC_ALL_DEVICES_SPECIFIER);
+      case ALC_HRTF_DISABLED_SOFT:          statusStr = "Disabled";              break;
+      case ALC_HRTF_ENABLED_SOFT:           statusStr = "Enabled";               break;
+      case ALC_HRTF_DENIED_SOFT:            statusStr = "Denied by device";      break;
+      case ALC_HRTF_REQUIRED_SOFT:          statusStr = "Required by device";    break;
+      case ALC_HRTF_HEADPHONES_DETECTED_SOFT: statusStr = "Headphones detected"; break;
+      case ALC_HRTF_UNSUPPORTED_FORMAT_SOFT:  statusStr = "Unsupported format";  break;
       }
-      else
-      {
-         devname = mOpenAL.alcGetString(device, ALC_DEVICE_SPECIFIER);
-      }
+      Con::printf("|     Status:  %s", statusStr);
 
-      Con::printf("| Device info for: %s ", devname);
+      ALCint profileCount = 0;
+      alcGetIntegerv(device, ALC_NUM_HRTF_SPECIFIERS_SOFT, 1, &profileCount);
+      Con::printf("|     Profiles: %d", profileCount);
+
+      if (alcGetStringiSOFT && profileCount > 0)
+         for (ALCint i = 0; i < profileCount; i++)
+            Con::printf("|       [%d] %s", i,
+               alcGetStringiSOFT(device, ALC_HRTF_SPECIFIER_SOFT, i));
+
+      bool use_hrtf = Con::getBoolVariable("$pref::SFX::useHRTF");
+      if (use_hrtf && (mCaps & CAPS_HotReconnect))
+      {
+         ALCint attr[5];
+         ALCint index = Con::getIntVariable("$pref::SFX::hrtfProfile");
+         ALCint i;
+
+         i = 0;
+         attr[i++] = ALC_HRTF_SOFT;
+         attr[i++] = ALC_TRUE;
+         // load the default device hrtf.
+         if (index >= 0 && index < profileCount)
+         {
+            attr[i++] = ALC_HRTF_ID_SOFT;
+            attr[i++] = index;
+         }
+         attr[i] = 0;
+
+         if (!alcResetDeviceSOFT(mDevice, attr))
+         {
+            Con::printf("Failed to reset device: %s", alcGetString(mDevice, alcGetError(mDevice)));
+         }
+      }
    }
 
-   mOpenAL.alcGetIntegerv(device, ALC_MAJOR_VERSION, 1, &major);
-   mOpenAL.alcGetIntegerv(device, ALC_MINOR_VERSION, 1, &minor);
-   Con::printf("| OpenAL Version: %d.%d", major, minor);
-
-   if (device)
+   // --- EFX ---
+   Con::printf("|   EFX Reverb:        %s", (mCaps & CAPS_Reverb) ? "Yes" : "No");
+   if (mCaps & CAPS_Reverb)
    {
-      Con::printf("%s", mOpenAL.alcGetString(device, ALC_EXTENSIONS));
+      Con::printf("|     EQ:          %s", (mCaps & CAPS_EFX_EQ) ? "Yes" : "No");
+      Con::printf("|     Compressor:  %s", (mCaps & CAPS_EFX_Compressor) ? "Yes" : "No");
+      Con::printf("|     Echo:        %s", (mCaps & CAPS_EFX_Echo) ? "Yes" : "No");
+      Con::printf("|     Chorus:      %s", (mCaps & CAPS_EFX_Chorus) ? "Yes" : "No");
+      Con::printf("|     Distortion:  %s", (mCaps & CAPS_EFX_Distortion) ? "Yes" : "No");
+      Con::printf("|     Flanger:     %s", (mCaps & CAPS_EFX_Flanger) ? "Yes" : "No");
+      Con::printf("|     Filters:     %s", (mCaps & CAPS_SourceFilters) ? "Yes" : "No");
 
-      U32 err = mOpenAL.alcGetError(device);
-      if (err != ALC_NO_ERROR)
-         Con::errorf("SFXALDevice - Error Retrieving ALC Extensions: %s", mOpenAL.alcGetString(device, err));
+      Con::printf("|     Effect Slots: %d",
+         Con::getIntVariable("$pref::SFX::maxEffectSlots"));
+      Con::printf("|     Sends/Source: %d",
+         Con::getIntVariable("$pref::SFX::maxSendsPerSource"));
    }
+
+   Con::printf("|------------------------------------------------");
+
+   // --- Full extension list last so it doesn't bury the important info ---
+   const ALchar* extStr = alcGetString(device, ALC_EXTENSIONS);
+   if (extStr)
+   {
+      Con::printf("| ALC Extensions:");
+      char* extCopy = dStrdup(extStr);
+      char* token = dStrtok(extCopy, " ");
+      while (token)
+      {
+         Con::printf("|   %s", token);
+         token = dStrtok(NULL, " ");
+      }
+      dFree(extCopy);
+   }
+
+   Con::printf("|------------------------------------------------");
+   Con::printBlankLine();
+
+   U32 err = alcGetError(device);
+   if (err != ALC_NO_ERROR)
+      Con::errorf("SFXALDevice - ALC error after info query: %s",
+         alcGetString(device, err));
   
 }
 
 S32 SFXALDevice::getMaxSources()
 {
-   mOpenAL.alGetError();
+   alGetError();
    
    ALCint nummono;
-   mOpenAL.alcGetIntegerv(mDevice, ALC_MONO_SOURCES, 1, &nummono);
+   alcGetIntegerv(mDevice, ALC_MONO_SOURCES, 1, &nummono);
    
    if(nummono == 0)
       nummono = getMaxSourcesOld();
@@ -81,21 +442,21 @@ S32 SFXALDevice::getMaxSourcesOld()
    S32 sourceCount = 0;
    
    // clear errors.
-   mOpenAL.alGetError();
+   alGetError();
    
    for(sourceCount = 0; sourceCount < 256; sourceCount++)
    {
-      mOpenAL.alGenSources(1,&uiSource[sourceCount]);
-      if(mOpenAL.alGetError() != AL_NO_ERROR)
+      alGenSources(1,&uiSource[sourceCount]);
+      if(alGetError() != AL_NO_ERROR)
          break;
    }
    
-   mOpenAL.alDeleteSources(sourceCount, uiSource);
-   if(mOpenAL.alGetError() != AL_NO_ERROR)
+   alDeleteSources(sourceCount, uiSource);
+   if(alGetError() != AL_NO_ERROR)
    {
       for(U32 i = 0; i < 256; i++)
       {
-         mOpenAL.alDeleteSources(1,&uiSource[i]);
+         alDeleteSources(1,&uiSource[i]);
       }
    }
    
@@ -103,85 +464,69 @@ S32 SFXALDevice::getMaxSourcesOld()
    
 }
 
-//-----------------------------------------------------------------------------
-
-SFXALDevice::SFXALDevice(  SFXProvider *provider, 
-                           const OPENALFNTABLE &openal, 
-                           String name, 
-                           bool useHardware, 
-                           S32 maxBuffers )
-   :  Parent( name, provider, useHardware, maxBuffers ),
-      mOpenAL( openal ), 
-      mContext( NULL ),
-      mDevice( NULL ),
+SFXALDevice::SFXALDevice(U32 providerIndex)
+   :  mContext(NULL),
+      mDevice(NULL),
       mDistanceModel(SFXDistanceModelLinear),
       mDistanceFactor(1.0f),
-      mRolloffFactor( 1.0f ),
-      mUserRolloffFactor(1.0f)
+      mRolloffFactor(1.0f),
+      mUserRolloffFactor(1.0f),
+      mHasEFX(false),
+      mHasSoftReopen(false),
+      mHasSoftHRTF(false),
+      mEffect(0),
+      mAuxSlot(0)
 {
-   mMaxBuffers = getMax( maxBuffers, 8 );
+   SFXProvider* p = SFXSystem::getProvider(providerIndex);
 
-   // TODO: The OpenAL device doesn't set the primary buffer
-   // $pref::SFX::frequency or $pref::SFX::bitrate!
-   //check auxiliary device sends 4 and add them to the device
-   ALint attribs[4] = { 0 };
-#if defined(AL_ALEXT_PROTOTYPES)
-   ALCint iSends = 0;
-   attribs[0] = ALC_MAX_AUXILIARY_SENDS;
-#endif
-   attribs[1] = 4;
-
-   printALInfo(NULL);
-
-   mDevice = mOpenAL.alcOpenDevice( name );
-   U32 err = mOpenAL.alcGetError(mDevice);
-   if (err != ALC_NO_ERROR)
-      Con::errorf("SFXALDevice - Device Initialization Error: %s", mOpenAL.alcGetString(mDevice, err));
-
-   if( mDevice ) 
+   mDevice = alcOpenDevice(p->getName());
+   if (!mDevice)
    {
-      mContext = mOpenAL.alcCreateContext( mDevice, attribs );
-
-      if( mContext ) 
-         mOpenAL.alcMakeContextCurrent( mContext );
-
-#if defined(AL_ALEXT_PROTOTYPES)
-       mOpenAL.alcGetIntegerv(mDevice, ALC_MAX_AUXILIARY_SENDS, 1, &iSends);
-#endif
-       err = mOpenAL.alcGetError( mDevice );
-      
-      if( err != ALC_NO_ERROR )
-         Con::errorf( "SFXALDevice - Context Initialization Error: %s", mOpenAL.alcGetString( mDevice, err ) );
+      Con::errorf("SFXALDevice - Failed to open '%s'", p->getName());
+      return;
    }
 
-   AssertFatal( mDevice != NULL && mContext != NULL, "Failed to create OpenAL device and/or context!" );
+   // Extensions that must be loaded before context creation
+   _initExtensions();
 
-   // Start the update thread.
-   // TODO AsyncPeriodicUpdateThread support for Linux/Mac
-#ifdef TORQUE_OS_WIN
-   if( !Con::getBoolVariable( "$_forceAllMainThread" ) )
+   mContext = alcCreateContext(mDevice, NULL);
+   if (!mContext)
    {
-      SFXInternal::gUpdateThread = new AsyncPeriodicUpdateThread
-         ( "OpenAL Update Thread", SFXInternal::gBufferUpdateList,
-           Con::getIntVariable( "$pref::SFX::updateInterval", SFXInternal::DEFAULT_UPDATE_INTERVAL ) );
+      Con::errorf("SFXALDevice - Failed to create context (error %d)",
+         alcGetError(mDevice));
+      alcCloseDevice(mDevice);
+      mDevice = NULL;
+      return;
+   }
+
+   alcMakeContextCurrent(mContext);
+
+#ifdef TORQUE_OS_WIN
+
+   if (!Con::getBoolVariable("$_forceAllMainThread"))
+   {
+      SFXInternal::gUpdateThread = new AsyncPeriodicUpdateThread(
+         "OpenAL Update Thread", SFXInternal::gBufferUpdateList,
+         Con::getIntVariable("$pref::SFX::updateInterval",
+            SFXInternal::DEFAULT_UPDATE_INTERVAL));
       SFXInternal::gUpdateThread->start();
    }
 #endif
 
-#if defined(AL_ALEXT_PROTOTYPES)
-   dMemset(effectSlot, 0, sizeof(effectSlot));
-   dMemset(effect, 0, sizeof(effect));
-   uLoop = 0;
-#endif
+   // Context is current — load context-level extensions and EFX
+   _initExtensions();  // second pass picks up AL_* extensions now context is current
+   _initEFX();
+
+   // Read back what the device actually settled on
+   ALCint freq = 0;
+   alcGetIntegerv(mDevice, ALC_FREQUENCY, 1, &freq);
+   Con::setIntVariable("$pref::SFX::frequency", freq > 0 ? freq : 44100);
+   Con::setIntVariable("$pref::SFX::bitrate", (mCaps & CAPS_Float32) ? 32 : 16);
 
    printALInfo(mDevice);
-   
 
    mMaxBuffers = getMaxSources();
-
-   // this should be max sources.
-   Con::printf("| Max Sources: %d", mMaxBuffers);
-
+   Con::setIntVariable("$pref::SFX::maxSoftwareBuffers", mMaxBuffers);
 }
 
 //-----------------------------------------------------------------------------
@@ -189,26 +534,66 @@ SFXALDevice::SFXALDevice(  SFXProvider *provider,
 SFXALDevice::~SFXALDevice()
 {
    _releaseAllResources();
-   ///cleanup our effects
-#if defined(AL_ALEXT_PROTOTYPES)
-   mOpenAL.alDeleteAuxiliaryEffectSlots(4, effectSlot);
-   mOpenAL.alDeleteEffects(2, effect);
-#endif
+
+   if (alIsEffect(mEffect))
+   {
+      alDeleteAuxiliaryEffectSlots(1, &mAuxSlot);
+      alDeleteEffects(1, &mEffect);
+   }
+
    ///cleanup of effects ends
-   mOpenAL.alcMakeContextCurrent( NULL );
-	mOpenAL.alcDestroyContext( mContext );
-	mOpenAL.alcCloseDevice( mDevice );
+   alcMakeContextCurrent( NULL );
+	alcDestroyContext( mContext );
+	alcCloseDevice( mDevice );
 }
 
 //-----------------------------------------------------------------------------
+
+void SFXALDevice::enumerateProviders(Vector<SFXProvider*>& providerList)
+{
+   const ALCchar* devices;
+   U32 index = providerList.size();
+   const ALCchar* defaultDeviceName;
+
+   if (alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT") == AL_TRUE)
+   {
+      devices = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
+      defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_ALL_DEVICES_SPECIFIER);
+   }
+   else
+   {
+      devices = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+      defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+   }
+
+   const ALCchar* currentDevice = devices;
+
+   while (*currentDevice != '\0')
+   {
+      SFXProvider* toAdd = new SFXProvider;
+      toAdd->mName = String::ToString(currentDevice);
+      toAdd->mIndex = index;
+      toAdd->mDeviceType = Output;
+      toAdd->mType = OpenAL;
+      toAdd->mCreateDeviceInstanceDelegate = mCreateDeviceInstance;
+
+      if (String::compare(currentDevice, defaultDeviceName) == 0)
+         toAdd->mDefault = true;
+
+      currentDevice += dStrlen(currentDevice) + 1;
+      index++;
+
+      providerList.push_back(toAdd);
+   }
+
+}
 
 SFXBuffer* SFXALDevice::createBuffer( const ThreadSafeRef< SFXStream >& stream, SFXDescription* description )
 {
    AssertFatal( stream, "SFXALDevice::createBuffer() - Got null stream!" );
    AssertFatal( description, "SFXALDevice::createBuffer() - Got null description!" );
 
-   SFXALBuffer* buffer = SFXALBuffer::create(   mOpenAL, 
-                                                stream,
+   SFXALBuffer* buffer = SFXALBuffer::create(   stream,
                                                 description, 
                                                 mUseHardware );
    if ( !buffer )
@@ -258,14 +643,9 @@ void SFXALDevice::setListener( U32 index, const SFXListenerProperties& listener 
 
    const VectorF &velocity = listener.getVelocity();
 
-   mOpenAL.alListenerfv( AL_POSITION, pos );
-   mOpenAL.alListenerfv( AL_VELOCITY, velocity );
-   mOpenAL.alListenerfv( AL_ORIENTATION, (const F32 *)&tupple[0] );
-   ///Pass a unit size to openal, 1.0 assumes 1 meter to 1 game unit.
-   ///Crucial for air absorbtion calculations.
-#if defined(AL_ALEXT_PROTOTYPES)
-   mOpenAL.alListenerf(AL_METERS_PER_UNIT, 1.0f);
-#endif
+   alListenerfv( AL_POSITION, pos );
+   alListenerfv( AL_VELOCITY, velocity );
+   alListenerfv( AL_ORIENTATION, (const F32 *)&tupple[0] );
 }
 
 //-----------------------------------------------------------------------------
@@ -275,19 +655,19 @@ void SFXALDevice::setDistanceModel( SFXDistanceModel model )
    switch( model )
    {
       case SFXDistanceModelLinear:
-         mOpenAL.alDistanceModel( AL_LINEAR_DISTANCE_CLAMPED );
+         alDistanceModel( AL_LINEAR_DISTANCE_CLAMPED );
          if( mRolloffFactor != 1.0f )
             _setRolloffFactor( 1.0f ); // No rolloff on linear.
          break;
          
       case SFXDistanceModelLogarithmic:
-         mOpenAL.alDistanceModel( AL_INVERSE_DISTANCE_CLAMPED );
+         alDistanceModel( AL_INVERSE_DISTANCE_CLAMPED );
          if( mUserRolloffFactor != mRolloffFactor )
             _setRolloffFactor( mUserRolloffFactor );
          break;
          /// create a case for our exponential distance model
       case SFXDistanceModelExponent:
-         mOpenAL.alDistanceModel(AL_EXPONENT_DISTANCE_CLAMPED);
+         alDistanceModel(AL_EXPONENT_DISTANCE_CLAMPED);
          if (mUserRolloffFactor != mRolloffFactor)
             _setRolloffFactor(mUserRolloffFactor);
          break;
@@ -301,19 +681,103 @@ void SFXALDevice::setDistanceModel( SFXDistanceModel model )
 
 //-----------------------------------------------------------------------------
 
-void SFXALDevice::setDopplerFactor( F32 factor )
+void SFXALDevice::setReverb(const SFXReverbProperties& r)
 {
-   mOpenAL.alDopplerFactor( factor );
+   if (!(mCaps & CAPS_Reverb))
+      return;
+
+   /* Clear error state. */
+   alGetError();
+
+   if (alIsEffect(mEffect))
+      alDeleteEffects(1, &mEffect);
+
+   /* Create the effect object and check if we can do EAX reverb. */
+   alGenEffects(1, &mEffect);
+
+   // Map your engine's properties to EFX parameters.
+   // Using EAX Reverb as an example:
+   if (mCaps & CAPS_EXTReverb)
+   {
+      // Full EAX parameter set — panning vectors, LF params, modulation etc.
+      alEffecti(mEffect, AL_EFFECT_TYPE, AL_EFFECT_EAXREVERB);
+      if (alGetError() == AL_NO_ERROR)
+      {
+         alEffectf(mEffect, AL_EAXREVERB_DENSITY, r.flDensity);
+         alEffectf(mEffect, AL_EAXREVERB_DIFFUSION, r.flDiffusion);
+         alEffectf(mEffect, AL_EAXREVERB_GAIN, r.flGain);
+         alEffectf(mEffect, AL_EAXREVERB_GAINHF, r.flGainHF);
+         alEffectf(mEffect, AL_EAXREVERB_GAINLF, r.flGainLF);
+         alEffectf(mEffect, AL_EAXREVERB_DECAY_TIME, r.flDecayTime);
+         alEffectf(mEffect, AL_EAXREVERB_DECAY_HFRATIO, r.flDecayHFRatio);
+         alEffectf(mEffect, AL_EAXREVERB_DECAY_LFRATIO, r.flDecayLFRatio);
+
+         alEffectf(mEffect, AL_EAXREVERB_REFLECTIONS_GAIN, r.flReflectionsGain);
+         alEffectf(mEffect, AL_EAXREVERB_REFLECTIONS_DELAY, r.flReflectionsDelay);
+         alEffectfv(mEffect, AL_EAXREVERB_REFLECTIONS_PAN, r.flReflectionsPan);
+
+         alEffectf(mEffect, AL_EAXREVERB_LATE_REVERB_GAIN, r.flLateReverbGain);
+         alEffectf(mEffect, AL_EAXREVERB_LATE_REVERB_DELAY, r.flLateReverbDelay);
+         alEffectfv(mEffect, AL_EAXREVERB_LATE_REVERB_PAN, r.flLateReverbPan);
+
+         alEffectf(mEffect, AL_EAXREVERB_ECHO_TIME, r.flEchoTime);
+         alEffectf(mEffect, AL_EAXREVERB_ECHO_DEPTH, r.flEchoDepth);
+         alEffectf(mEffect, AL_EAXREVERB_MODULATION_TIME, r.flModulationTime);
+         alEffectf(mEffect, AL_EAXREVERB_MODULATION_DEPTH, r.flModulationDepth);
+
+         alEffectf(mEffect, AL_EAXREVERB_AIR_ABSORPTION_GAINHF, r.flAirAbsorptionGainHF);
+         alEffectf(mEffect, AL_EAXREVERB_HFREFERENCE, r.flHFReference);
+         alEffectf(mEffect, AL_EAXREVERB_LFREFERENCE, r.flLFReference);
+         alEffectf(mEffect, AL_EAXREVERB_ROOM_ROLLOFF_FACTOR, r.flRoomRolloffFactor);
+         alEffecti(mEffect, AL_EAXREVERB_DECAY_HFLIMIT, r.iDecayHFLimit);
+      }
+   }
+   else
+   {
+      // Standard reverb — subset of EAX, no panning/LF/modulation params
+      alEffecti(mEffect, AL_EFFECT_TYPE, AL_EFFECT_REVERB);
+      if (alGetError() == AL_NO_ERROR)
+      {
+         alEffectf(mEffect, AL_REVERB_DENSITY, r.flDensity);
+         alEffectf(mEffect, AL_REVERB_DIFFUSION, r.flDiffusion);
+         alEffectf(mEffect, AL_REVERB_GAIN, r.flGain);
+         alEffectf(mEffect, AL_REVERB_GAINHF, r.flGainHF);
+         alEffectf(mEffect, AL_REVERB_DECAY_TIME, r.flDecayTime);
+         alEffectf(mEffect, AL_REVERB_DECAY_HFRATIO, r.flDecayHFRatio);
+         alEffectf(mEffect, AL_REVERB_REFLECTIONS_GAIN, r.flReflectionsGain);
+         alEffectf(mEffect, AL_REVERB_REFLECTIONS_DELAY, r.flReflectionsDelay);
+         alEffectf(mEffect, AL_REVERB_LATE_REVERB_GAIN, r.flLateReverbGain);
+         alEffectf(mEffect, AL_REVERB_LATE_REVERB_DELAY, r.flLateReverbDelay);
+         alEffectf(mEffect, AL_REVERB_AIR_ABSORPTION_GAINHF, r.flAirAbsorptionGainHF);
+         alEffectf(mEffect, AL_REVERB_ROOM_ROLLOFF_FACTOR, r.flRoomRolloffFactor);
+         alEffecti(mEffect, AL_REVERB_DECAY_HFLIMIT, r.iDecayHFLimit);
+      }
+   }
+
+   if (alGetError() == AL_NO_ERROR)
+      alAuxiliaryEffectSloti(mAuxSlot, AL_EFFECTSLOT_EFFECT, (ALint)mEffect);
+   else
+   {
+      Con::warnf("SFXALDevice::setReverb - failed applying reverb parameters");
+      if (alIsEffect(mEffect))
+         alDeleteEffects(1, &mEffect);
+      mEffect = 0;
+   }
 }
 
 //-----------------------------------------------------------------------------
+
+void SFXALDevice::setDopplerFactor( F32 factor )
+{
+   alDopplerFactor( factor );
+}
 
 void SFXALDevice::_setRolloffFactor( F32 factor )
 {
    mRolloffFactor = factor;
    
    for( U32 i = 0, num = mVoices.size(); i < num; ++ i )
-      mOpenAL.alSourcef( ( ( SFXALVoice* ) mVoices[ i ] )->mSourceName, AL_ROLLOFF_FACTOR, factor );
+      alSourcef( ( ( SFXALVoice* ) mVoices[ i ] )->mSourceName, AL_ROLLOFF_FACTOR, factor );
 }
 
 //-----------------------------------------------------------------------------
@@ -328,110 +792,83 @@ void SFXALDevice::setRolloffFactor( F32 factor )
    mUserRolloffFactor = factor;
 }
 
-#if defined(AL_ALEXT_PROTOTYPES)
-void SFXALDevice::openSlots()
+void SFXALDevice::setSpeedOfSound(F32 speedOfSound)
 {
-   for (uLoop = 0; uLoop < 4; uLoop++)
-   {
-      mOpenAL.alGenAuxiliaryEffectSlots(1, &effectSlot[uLoop]);
-   }
-
-   for (uLoop = 0; uLoop < 2; uLoop++)
-   {
-      mOpenAL.alGenEffects(1, &effect[uLoop]);
-   }
-   ///debug string output so we know our slots are open
-   Platform::outputDebugString("Slots Open");
+   alSpeedOfSound(speedOfSound);
 }
 
-///create reverb effect
-void SFXALDevice::setReverb(const SFXReverbProperties& reverb)
+bool SFXALDevice::isDeviceConnected()
 {
-   ///output a debug string so we know each time the reverb changes
-   Platform::outputDebugString("Updated");
+   if (!mDevice)
+      return false;
 
-   ///load an efxeaxreverb default and add our values from
-   ///sfxreverbproperties to it
-   EFXEAXREVERBPROPERTIES prop = EFX_REVERB_PRESET_GENERIC;
-
-   prop.flDensity = reverb.flDensity;
-   prop.flDiffusion = reverb.flDiffusion;
-   prop.flGain = reverb.flGain;
-   prop.flGainHF = reverb.flGainHF;
-   prop.flGainLF = reverb.flGainLF;
-   prop.flDecayTime = reverb.flDecayTime;
-   prop.flDecayHFRatio = reverb.flDecayHFRatio;
-   prop.flDecayLFRatio = reverb.flDecayLFRatio;
-   prop.flReflectionsGain = reverb.flReflectionsGain;
-   prop.flReflectionsDelay = reverb.flReflectionsDelay;
-   prop.flLateReverbGain = reverb.flLateReverbGain;
-   prop.flLateReverbDelay = reverb.flLateReverbDelay;
-   prop.flEchoTime = reverb.flEchoTime;
-   prop.flEchoDepth = reverb.flEchoDepth;
-   prop.flModulationTime = reverb.flModulationTime;
-   prop.flModulationDepth = reverb.flModulationDepth;
-   prop.flAirAbsorptionGainHF = reverb.flAirAbsorptionGainHF;
-   prop.flHFReference = reverb.flHFReference;
-   prop.flLFReference = reverb.flLFReference;
-   prop.flRoomRolloffFactor = reverb.flRoomRolloffFactor;
-   prop.iDecayHFLimit = reverb.iDecayHFLimit;
-
-   if (mOpenAL.alGetEnumValue("AL_EFFECT_EAXREVERB") != 0)
+   // ALC_CONNECTED is a standard-ish extension, check it first
+   if (alcIsExtensionPresent(mDevice, "ALC_EXT_disconnect") == AL_TRUE)
    {
+      ALCint connected = ALC_FALSE;
+      alcGetIntegerv(mDevice, ALC_CONNECTED, 1, &connected);
 
-      /// EAX Reverb is available. Set the EAX effect type
+      if (connected == ALC_FALSE)
+      {
+         //SFXSystem::removeProvider(mDevice->getProvider());
+      }
 
-      mOpenAL.alEffecti(effect[0], AL_EFFECT_TYPE, AL_EFFECT_EAXREVERB);
-
-      ///add our values to the setup of the reverb
-
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_DENSITY, prop.flDensity);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_DIFFUSION, prop.flDiffusion);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_GAIN, prop.flGain);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_GAINHF, prop.flGainHF);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_GAINLF, prop.flGainLF);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_DECAY_TIME, prop.flDecayTime);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_DECAY_HFRATIO, prop.flDecayHFRatio);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_DECAY_LFRATIO, prop.flDecayLFRatio);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_REFLECTIONS_GAIN, prop.flReflectionsGain);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_REFLECTIONS_DELAY, prop.flReflectionsDelay);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_LATE_REVERB_GAIN, prop.flLateReverbGain);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_LATE_REVERB_DELAY, prop.flLateReverbDelay);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_ECHO_TIME, prop.flEchoTime);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_ECHO_DEPTH, prop.flEchoDepth);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_MODULATION_TIME, prop.flModulationTime);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_MODULATION_DEPTH, prop.flModulationDepth);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_AIR_ABSORPTION_GAINHF, prop.flAirAbsorptionGainHF);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_HFREFERENCE, prop.flHFReference);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_LFREFERENCE, prop.flLFReference);
-      mOpenAL.alEffectf(effect[0], AL_EAXREVERB_ROOM_ROLLOFF_FACTOR, prop.flRoomRolloffFactor);
-      mOpenAL.alEffecti(effect[0], AL_EAXREVERB_DECAY_HFLIMIT, prop.iDecayHFLimit);
-      mOpenAL.alAuxiliaryEffectSloti(1, AL_EFFECTSLOT_EFFECT, effect[0]);
-      Platform::outputDebugString("eax reverb properties set");
-
-   }
-   else
-   {
-
-      /// No EAX Reverb. Set the standard reverb effect
-      mOpenAL.alEffecti(effect[0], AL_EFFECT_TYPE, AL_EFFECT_REVERB);
-
-      mOpenAL.alEffectf(effect[0], AL_REVERB_DENSITY, prop.flDensity);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_DIFFUSION, prop.flDiffusion);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_GAIN, prop.flGain);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_GAINHF, prop.flGainHF);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_DECAY_TIME, prop.flDecayTime);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_DECAY_HFRATIO, prop.flDecayHFRatio);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_REFLECTIONS_GAIN, prop.flReflectionsGain);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_REFLECTIONS_DELAY, prop.flReflectionsDelay);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_LATE_REVERB_GAIN, prop.flLateReverbGain);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_LATE_REVERB_DELAY, prop.flLateReverbDelay);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_AIR_ABSORPTION_GAINHF, prop.flAirAbsorptionGainHF);
-      mOpenAL.alEffectf(effect[0], AL_REVERB_ROOM_ROLLOFF_FACTOR, prop.flRoomRolloffFactor);
-      mOpenAL.alEffecti(effect[0], AL_REVERB_DECAY_HFLIMIT, prop.iDecayHFLimit);
-      mOpenAL.alAuxiliaryEffectSloti(1, AL_EFFECTSLOT_EFFECT, effect[0]);
-
+      return (connected == ALC_TRUE);
    }
 
+   // If the extension isn't available, assume connected
+   return true;
 }
-#endif
+
+bool SFXALDevice::reconnectDevice(U32 providerIndex)
+{
+   if (!mDevice || !mContext)
+   {
+      Con::errorf("SFXALDevice::reconnectDevice - no active device/context to reconnect");
+      return false;
+   }
+
+   SFXProvider* p = SFXSystem::getProvider(providerIndex);
+
+   // If no new name given, reuse the current device name (i.e. reconnect same device)
+   if (!p->getName() || p->getName()[0] == '\0')
+   {
+      Con::errorf("SFXALDevice::reconnectDevice - unsupported provider given.");
+      return false;
+   }
+
+   Con::printf("SFXALDevice::reconnectDevice - reconnecting to '%s'", p->getName());
+
+   // Fast path: use ALC_SOFT_reopen_device to swap device without losing context.
+   // All sources/buffers remain valid, playback resumes automatically.
+   if (mHasSoftReopen && alcReopenDeviceSOFT)
+   {
+      // Build attribute list matching current device settings
+      ALCint attribs[] =
+      {
+         ALC_FREQUENCY,    smDeviceFrequency,
+         ALC_MONO_SOURCES, mMaxBuffers,
+         0
+      };
+
+      if (alcReopenDeviceSOFT(mDevice, p->getName(), attribs) == ALC_TRUE)
+      {
+         Con::printf("SFXALDevice::reconnectDevice - soft reopen succeeded");
+         return true;
+      }
+
+      Con::warnf("SFXALDevice::reconnectDevice - soft reopen failed (error %d), "
+         "falling back to full recreate", alcGetError(mDevice));
+   }
+
+   // Slow path: destroy context and reopen device from scratch.
+   // SFXSystem::createDevice will handle transitioning sounds to virtual playback.
+   Con::printf("SFXALDevice::reconnectDevice - performing full device recreate");
+
+   alcMakeContextCurrent(NULL);
+   alcDestroyContext(mContext);
+   mContext = NULL;
+   alcCloseDevice(mDevice);
+   mDevice = NULL;
+   return false;
+}

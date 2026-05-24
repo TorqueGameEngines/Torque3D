@@ -223,7 +223,6 @@ function OptionsMenu::openOptionsCategory(%this, %categoryName)
    else if(%categoryName $= "Audio")
    {
       $MenuList = AudioSettingsList;
-
       %this.currentCatgeoryIdx = 1;
    }
    else if(%categoryName $= "KBM")
@@ -856,6 +855,8 @@ function OptionsMenu::resetSettings(%this)
 function OptionsMenu::populateAudioSettings(%this)
 {
    AudioSettingsList.clear();
+   OptionsMenu.optsListCount = -1;
+   
    AudioSettingsGroup.populateSettings();
 
    //Process the lists

@@ -29,6 +29,9 @@
 #ifndef _TVECTOR_H_
 #include "core/util/tVector.h"
 #endif
+#ifndef _FEATUREMGR_H_
+#include "shaderGen/featureMgr.h"
+#endif
 
 class FeatureType;
 
@@ -42,7 +45,7 @@ protected:
    {      
       const FeatureType* type;
       S32 index;
-      void* argStruct;
+      FeatureParamsBase* argStruct;
    };
 
    /// The list of featurs.   
@@ -94,7 +97,7 @@ public:
    /// the feature index when it was added.
    const FeatureType& getAt( U32 index, S32 *outIndex = NULL ) const;
 
-   void* getArguments(U32 index) const;
+   FeatureParamsBase* getArguments(U32 index) const;
 
    /// Returns true if this handle has this feature.
    bool hasFeature( const FeatureType &type, S32 index = -1 ) const;
@@ -108,7 +111,7 @@ public:
    /// <param name="type">The shader feature type.</param>
    /// <param name="index">The inedx the shader feature will be sorted in the set.</param>
    /// <param name="argStruct">A struct representing arguments for a shader feature.</param>
-   void addFeature( const FeatureType &type, S32 index = -1, void* argStruct = nullptr );
+   void addFeature( const FeatureType &type, S32 index = -1, FeatureParamsBase* argStruct = nullptr );
 
    /// 
    void removeFeature( const FeatureType &type );

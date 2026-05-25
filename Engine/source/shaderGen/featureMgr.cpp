@@ -51,6 +51,7 @@ FeatureMgr::FeatureMgr()
    : mNeedsSort( false )
 {
    VECTOR_SET_ASSOCIATION( mFeatures );
+   VECTOR_SET_ASSOCIATION( mParamInfos );
 }
 
 FeatureMgr::~FeatureMgr()
@@ -96,7 +97,7 @@ ShaderFeature* FeatureMgr::getByType( const FeatureType &type )
    return NULL;
 }
 
-ShaderFeature* FeatureMgr::createFeature(const FeatureType& type, void* argStruct)
+ShaderFeature* FeatureMgr::createFeature(const FeatureType& type, FeatureParamsBase* argStruct)
 {
    FeatureInfoVector::iterator iter = mFeatures.begin();
 
@@ -112,6 +113,64 @@ ShaderFeature* FeatureMgr::createFeature(const FeatureType& type, void* argStruc
    }
 
    return NULL;
+}
+
+void FeatureMgr::registerFeatureParams(const FeatureType& type, const FeatureParamField* fields, U32 fieldCount, CreateFeatureParams createFn)
+{
+   // Replace if already exists
+   for (U32 i = 0; i < mParamInfos.size(); ++i)
+   {
+      if (*mParamInfos[i].type == type)
+      {
+         mParamInfos.erase(i);
+         break;
+      }
+   }
+
+   mParamInfos.increment();
+   mParamInfos.last().type = &type;
+   mParamInfos.last().fields = fields;
+   mParamInfos.last().fieldCount = fieldCount;
+   mParamInfos.last().createFn = createFn;
+
+}
+
+FeatureParamsBase* FeatureMgr::createFeatureParams(const FeatureType& type) const
+{
+   for (U32 i = 0; i < mParamInfos.size(); ++i)
+   {
+      if (*mParamInfos[i].type == type)
+         return mParamInfos[i].createFn();
+   }
+   return nullptr;
+}
+
+void FeatureMgr::applyFeatureParams(const FeatureType& type,
+                                    FeatureParamsBase* params,
+                                    const Vector<String>& args) const
+{
+   const FeatureParamInfo* info = nullptr;
+   for (U32 i = 0; i < mParamInfos.size(); ++i)
+   {
+      if (*mParamInfos[i].type == type)
+      {
+         info = &mParamInfos[i];
+         break;
+      }
+   }
+
+   if (!info || !params)
+      return;
+
+   for (U32 i = 0; i < info->fieldCount; ++i)
+   {
+      const FeatureParamField& f = info->fields[i];
+      const char* val = args[i].c_str();
+
+      void* fieldPtr = (U8*)params + f.offset;
+      // no array support yet.
+      Con::setData(f.type, fieldPtr, 0, 1, &val);
+   }
 }
 
 void FeatureMgr::registerFeature(   const FeatureType &type, 

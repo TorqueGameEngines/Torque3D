@@ -78,6 +78,8 @@ ShaderData::ShaderData()
    mOGLVertexShaderName = StringTable->EmptyString();
    mOGLPixelShaderName = StringTable->EmptyString();
    mOGLGeometryShaderName = StringTable->EmptyString();
+
+   mInstancingFormat = NULL;
 }
 
 void ShaderData::initPersistFields()
@@ -204,7 +206,7 @@ const Vector<GFXShaderMacro>& ShaderData::_getMacros()
    return mShaderMacros;
 }
 
-GFXShader* ShaderData::getShader( const Vector<GFXShaderMacro> &macros )
+GFXShader* ShaderData::getShader( const Vector<GFXShaderMacro> &macros)
 {
    PROFILE_SCOPE( ShaderData_GetShader );
 
@@ -217,6 +219,8 @@ GFXShader* ShaderData::getShader( const Vector<GFXShaderMacro> &macros )
    String cacheKey;
    GFXShaderMacro::stringize( macros, &cacheKey );
 
+   cacheKey = Torque::getStringHash64(cacheKey);
+
    // Lookup the shader for this instance.
    ShaderCache::Iterator iter = mShaders.find( cacheKey );
    if ( iter != mShaders.end() )
@@ -224,7 +228,7 @@ GFXShader* ShaderData::getShader( const Vector<GFXShaderMacro> &macros )
 
    // Create the shader instance... if it fails then
    // bail out and return nothing to the caller.
-   GFXShader *shader = _createShader( finalMacros );
+   GFXShader *shader = _createShader( finalMacros);
    if ( !shader )
       return NULL;
 
@@ -235,7 +239,7 @@ GFXShader* ShaderData::getShader( const Vector<GFXShaderMacro> &macros )
    return shader;
 }
 
-GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
+GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros)
 {
    F32 pixver = mPixVersion;
    if ( mUseDevicePixVersion )
@@ -257,30 +261,32 @@ GFXShader* ShaderData::_createShader( const Vector<GFXShaderMacro> &macros )
    {
       case Direct3D11:
       {
-         if (mDXVertexShaderName != String::EmptyString)
+         if (mDXVertexShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::VERTEX_SHADER, mDXVertexShaderName);
-         if (mDXPixelShaderName != String::EmptyString)
+         if (mDXPixelShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::PIXEL_SHADER, mDXPixelShaderName);
-         if (mDXGeometryShaderName != String::EmptyString)
+         if (mDXGeometryShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::GEOMETRY_SHADER, mDXGeometryShaderName);
          success = shader->init( pixver,
                                  macros,
-                                 samplers);
+                                 samplers,
+                                 mInstancingFormat);
          break;
       }
 
       case OpenGL:
       {
-         if(mOGLVertexShaderName != String::EmptyString)
+         if(mOGLVertexShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::VERTEX_SHADER, mOGLVertexShaderName);
-         if (mOGLPixelShaderName != String::EmptyString)
+         if (mOGLPixelShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::PIXEL_SHADER, mOGLPixelShaderName);
-         if (mOGLGeometryShaderName != String::EmptyString)
+         if (mOGLGeometryShaderName != StringTable->EmptyString())
             shader->setShaderStageFile(GFXShaderStage::GEOMETRY_SHADER, mOGLGeometryShaderName);
 
          success = shader->init( pixver,
                                  macros,
-                                 samplers);
+                                 samplers,
+                                 mInstancingFormat);
          break;
       }
 
@@ -346,6 +352,33 @@ void ShaderData::_onLMActivate( const char *lm, bool activate )
    // flush and rebuild all shaders.
 
    reloadAllShaders();
+}
+
+void ShaderData::setShaderStageFile(GFXShaderStage stage, String fileName)
+{
+   const bool isGL = GFX->getAdapterType() == GFXAdapterType::OpenGL;
+   switch (stage)
+   {
+   case VERTEX_SHADER:
+      isGL ? mOGLVertexShaderName = StringTable->insert(fileName) : mDXVertexShaderName = StringTable->insert(fileName);
+      break;
+   case PIXEL_SHADER:
+      isGL ? mOGLPixelShaderName = StringTable->insert(fileName) : mDXPixelShaderName = StringTable->insert(fileName);
+      break;
+   case GEOMETRY_SHADER:
+      isGL ? mOGLGeometryShaderName = StringTable->insert(fileName) : mDXGeometryShaderName = StringTable->insert(fileName);
+      break;
+   case DOMAIN_SHADER:
+      break;
+   case HULL_SHADER:
+      break;
+   case COMPUTE_SHADER:
+      break;
+   case ALL_STAGES:
+      break;
+   default:
+      break;
+   }
 }
 
 bool ShaderData::hasSamplerDef(const String &_samplerName, int &pos) const

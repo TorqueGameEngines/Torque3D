@@ -227,7 +227,7 @@ void ConditionerFeature::printFooterComment( MethodType methodType, const String
    meta->addStatement( new GenOp( "\r\n\r\n" ) );
 }
 
-void ConditionerMethodDependency::print( Stream &s ) const
+void ConditionerMethodDependency::print( Stream &s, GFXShaderStage stage) const
 {
    mConditioner->_printMethod(mMethodType, mConditioner->getShaderMethodName(mMethodType), s);
 }

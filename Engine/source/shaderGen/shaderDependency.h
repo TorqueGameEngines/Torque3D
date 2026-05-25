@@ -26,7 +26,9 @@
 #ifndef _PATH_H_
 #include "core/util/path.h"
 #endif
-
+#ifndef _GFXSHADER_H_
+#include "gfx/gfxShader.h"
+#endif
 
 class Stream;
 
@@ -35,6 +37,7 @@ class Stream;
 class ShaderDependency
 {
 public:
+   U32 stages;
    virtual ~ShaderDependency() {}
    
    /// Compare this dependency to another one.
@@ -44,7 +47,7 @@ public:
    }
 
    /// Print the dependency into the header of a shader.
-   virtual void print( Stream &s ) const = 0;
+   virtual void print( Stream &s, GFXShaderStage stage) const = 0;
 };
 
 
@@ -60,7 +63,7 @@ public:
    ShaderIncludeDependency( const Torque::Path &pathToInclude );
 
    bool operator==( const ShaderDependency &cmpTo ) const override;
-   void print( Stream &s ) const override;
+   void print( Stream &s, GFXShaderStage stage) const override;
 };
 
 #endif // _SHADER_DEPENDENCY_H_

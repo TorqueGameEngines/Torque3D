@@ -23,6 +23,7 @@
 #include "core/strings/stringFunctions.h"
 #include "core/util/str.h"
 #include "gfx/gfxDevice.h"
+#include "shaderGen/shaderOp.h"
 #include "langElement.h"
 
 //**************************************************************************
@@ -30,68 +31,157 @@
 //**************************************************************************
 Vector<LangElement*> LangElement::elementList( __FILE__, __LINE__ );
 
-const char* LangElement::constTypeToString(GFXShaderConstType constType)
+static const ShaderTypeInfo ShaderTypes[] =
 {
-   // Determine shader language based on GFXAdapterAPI
-   if (GFX->getAdapterType() == OpenGL)
+   // ---- FLOATS ----
+   { GFXSCT_Float,   "float",  "float",   STC_Scalar, 1, 1 },
+   { GFXSCT_Float2,  "vec2",   "float2",  STC_Vector, 1, 2 },
+   { GFXSCT_Float3,  "vec3",   "float3",  STC_Vector, 1, 3 },
+   { GFXSCT_Float4,  "vec4",   "float4",  STC_Vector, 1, 4 },
+
+   // ---- MATRICES ----
+   { GFXSCT_Float2x2, "mat2",    "float2x2", STC_Matrix, 2, 2 },
+   { GFXSCT_Float3x3, "mat3",    "float3x3", STC_Matrix, 3, 3 },
+   { GFXSCT_Float3x4, "mat3x4",  "float3x4", STC_Matrix, 3, 4 },
+   { GFXSCT_Float4x3, "mat4x3",  "float4x3", STC_Matrix, 4, 3 },
+   { GFXSCT_Float4x4, "mat4",    "float4x4", STC_Matrix, 4, 4 },
+
+   // ---- INT ----
+   { GFXSCT_Int,     "int",     "int",     STC_Scalar, 1, 1 },
+   { GFXSCT_Int2,    "ivec2",   "int2",    STC_Vector, 1, 2 },
+   { GFXSCT_Int3,    "ivec3",   "int3",    STC_Vector, 1, 3 },
+   { GFXSCT_Int4,    "ivec4",   "int4",    STC_Vector, 1, 4 },
+
+   // ---- UINT ----
+   { GFXSCT_UInt,    "uint",    "uint",    STC_Scalar, 1, 1 },
+   { GFXSCT_UInt2,   "uvec2",   "uint2",   STC_Vector, 1, 2 },
+   { GFXSCT_UInt3,   "uvec3",   "uint3",   STC_Vector, 1, 3 },
+   { GFXSCT_UInt4,   "uvec4",   "uint4",   STC_Vector, 1, 4 },
+
+   // ---- BOOL ----
+   { GFXSCT_Bool,    "bool",    "bool",    STC_Scalar, 1, 1 },
+   { GFXSCT_Bool2,   "bvec2",   "bool2",   STC_Vector, 1, 2 },
+   { GFXSCT_Bool3,   "bvec3",   "bool3",   STC_Vector, 1, 3 },
+   { GFXSCT_Bool4,   "bvec4",   "bool4",   STC_Vector, 1, 4 },
+
+   // ---- SAMPLERS ----
+   { GFXSCT_Sampler,             "sampler2D",         "Texture2D",         STC_Sampler, 0, 0 },
+   { GFXSCT_SamplerCube,         "samplerCube",       "TextureCube",       STC_Sampler, 0, 0 },
+   { GFXSCT_SamplerTextureArray, "sampler2DArray",    "Texture2DArray",    STC_Sampler, 0, 0 },
+   { GFXSCT_SamplerCubeArray,    "samplerCubeArray",  "TextureCubeArray",  STC_Sampler, 0, 0 },
+};
+
+static HashMap<String, GFXShaderConstType> glslToType;
+static HashMap<String, GFXShaderConstType> hlslToType;
+
+void LangElement::buildTypeMaps()
+{
+   for (auto& info : ShaderTypes)
    {
-      switch (constType)
-      {
-      case GFXSCT_Float:       return "float"; break;
-      case GFXSCT_Float2:      return "vec2"; break;
-      case GFXSCT_Float3:      return "vec3"; break;
-      case GFXSCT_Float4:      return "vec4"; break;
-      case GFXSCT_Float2x2:    return "mat2"; break;
-      case GFXSCT_Float3x3:    return "mat3"; break;
-      case GFXSCT_Float3x4:    return "mat3x4"; break;
-      case GFXSCT_Float4x3:    return "mat4x3"; break;
-      case GFXSCT_Float4x4:    return "mat4"; break;
-      case GFXSCT_Int:         return "int"; break;
-      case GFXSCT_Int2:        return "ivec2"; break;
-      case GFXSCT_Int3:        return "ivec3"; break;
-      case GFXSCT_Int4:        return "ivec4"; break;
-      case GFXSCT_UInt:        return "uint"; break;
-      case GFXSCT_UInt2:       return "uvec2"; break;
-      case GFXSCT_UInt3:       return "uvec3"; break;
-      case GFXSCT_UInt4:       return "uvec4"; break;
-      case GFXSCT_Bool:        return "bool"; break;
-      case GFXSCT_Bool2:       return "bvec2"; break;
-      case GFXSCT_Bool3:       return "bvec3"; break;
-      case GFXSCT_Bool4:       return "bvec4"; break;
-      default:                 return "unknown"; break;
-      }
+      glslToType[info.glslName] = info.type;
+      hlslToType[info.hlslName] = info.type;
    }
-   else // Assume DirectX/HLSL
+}
+
+const ShaderTypeInfo* LangElement::getTypeInfo(GFXShaderConstType type)
+{
+   for (auto& info : ShaderTypes)
+      if (info.type == type)
+         return &info;
+   return nullptr;
+}
+
+const char* LangElement::constTypeToString(GFXShaderConstType constType, bool sampler, bool matrix)
+{
+   const ShaderTypeInfo* info = getTypeInfo(constType);
+   if (!info)
+      return "unknown";
+
+   if (sampler)
    {
-      switch (constType)
+      if (!info->isSampler())
       {
-      case GFXSCT_Float:       return "float"; break;
-      case GFXSCT_Float2:      return "float2"; break;
-      case GFXSCT_Float3:      return "float3"; break;
-      case GFXSCT_Float4:      return "float4"; break;
-      case GFXSCT_Float2x2:    return "float2x2"; break;
-      case GFXSCT_Float3x3:    return "float3x3"; break;
-      case GFXSCT_Float3x4:    return "float3x4"; break;
-      case GFXSCT_Float4x3:    return "float4x3"; break;
-      case GFXSCT_Float4x4:    return "float4x4"; break;
-      case GFXSCT_Int:         return "int"; break;
-      case GFXSCT_Int2:        return "int2"; break;
-      case GFXSCT_Int3:        return "int3"; break;
-      case GFXSCT_Int4:        return "int4"; break;
-      case GFXSCT_UInt:        return "uint"; break;
-      case GFXSCT_UInt2:       return "uint2"; break;
-      case GFXSCT_UInt3:       return "uint3"; break;
-      case GFXSCT_UInt4:       return "uint4"; break;
-      case GFXSCT_Bool:        return "bool"; break;
-      case GFXSCT_Bool2:       return "bool2"; break;
-      case GFXSCT_Bool3:       return "bool3"; break;
-      case GFXSCT_Bool4:       return "bool4"; break;
-      default:                 return "unknown"; break;
+         Con::warnf("LangElement::Requested sampler but input const type is not a sampler");
+         return "unknown";
       }
    }
 
-   return "";
+   if (matrix)
+   {
+      if (!info->isMatrix())
+      {
+         Con::warnf("LangElement::Requested matrix but input const type is not a matrix");
+         return "unknown";
+      }
+   }
+
+   return (GFX->getAdapterType() == OpenGL)
+      ? info->glslName
+      : info->hlslName;
 }
+
+GFXShaderConstType LangElement::stringToConstType(const char* name)
+{
+   bool glsl = (GFX->getAdapterType() == OpenGL);
+
+   auto& map = glsl ? glslToType : hlslToType;
+   auto it = map.find(name);
+
+   if (it != map.end())
+      return it->value;
+
+   return GFXSCT_Uknown;
+}
+
+bool LangElement::resolveSourceType(LangElement* elem, Var*& outVar, const ShaderTypeInfo*& outInfo)
+{
+   outVar = nullptr;
+   outInfo = nullptr;
+
+   // DIRECT VAR
+   if (Var* v = dynamic_cast<Var*>(elem))
+   {
+      outVar = v;
+      outInfo = getTypeInfo(stringToConstType((const char*)v->type));
+      return outInfo != nullptr;
+   }
+
+   // INDEX OP: arrVar[index]
+   if (IndexOp* idx = dynamic_cast<IndexOp*>(elem))
+   {
+      Var* arr = dynamic_cast<Var*>(idx->mInput[0]);
+      if (!arr)
+         return false;
+
+      const ShaderTypeInfo* arrInfo = getTypeInfo(stringToConstType((const char*)arr->type));
+      if (!arrInfo)
+         return false;
+
+      // array element type = same as var type but no array dimension
+      outVar = arr;
+      outInfo = arrInfo;
+      return true;
+   }
+
+   // CAST OP: cast var
+   if (CastOp* cast = dynamic_cast<CastOp*>(elem))
+   {
+      Var* castVar = dynamic_cast<Var*>(cast->mInput[0]);
+      if (!castVar)
+         return false;
+
+      const ShaderTypeInfo* castInfo = getTypeInfo(cast->mTargetType);// get the casts target type.
+      if (!castInfo)
+         return false;
+
+      outVar = castVar; // we should probably return null as we should just write the castop langelement, not a var.
+      outInfo = castInfo;
+      return true;
+   }
+
+   return false;
+}
+
 
 //--------------------------------------------------------------------------
 // Constructor

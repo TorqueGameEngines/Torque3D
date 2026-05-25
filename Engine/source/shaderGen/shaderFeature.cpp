@@ -27,74 +27,74 @@
 #include "shaderGen/shaderOp.h"
 
 
-void ShaderFeature::addDependency( const ShaderDependency *dependsOn )
+void ShaderFeature::addDependency(const ShaderDependency* dependsOn)
 {
-   for ( U32 i = 0; i < mDependencies.size(); i++ )
+   for (U32 i = 0; i < mDependencies.size(); i++)
    {
-      if ( *mDependencies[i] == *dependsOn )
+      if (*mDependencies[i] == *dependsOn)
          return;
    }
 
-   mDependencies.push_back( dependsOn );
+   mDependencies.push_back(dependsOn);
 }
 
-ShaderFeature::Resources ShaderFeature::getResources( const MaterialFeatureData &fd )
+ShaderFeature::Resources ShaderFeature::getResources(const MaterialFeatureData& fd)
 {
-   Resources temp; 
-   return temp; 
+   Resources temp;
+   return temp;
 }
 
-const char* ShaderFeature::getOutputTargetVarName( OutputTarget target ) const
+const char* ShaderFeature::getOutputTargetVarName(OutputTarget target) const
 {
    const char* targName = "col";
 
-   switch(target)
+   switch (target)
    {
-      case DefaultTarget:
-         targName = "col";
-         break;
+   case DefaultTarget:
+      targName = "col";
+      break;
 
-      case RenderTarget1:
+   case RenderTarget1:
       targName = "col1";
-         break;
+      break;
 
-      case RenderTarget2:
-         targName = "col2";
-         break;
+   case RenderTarget2:
+      targName = "col2";
+      break;
 
-      case RenderTarget3:
-         targName = "col3";
-         break;
+   case RenderTarget3:
+      targName = "col3";
+      break;
 
-      case RenderTarget4:
-         targName = "col4";
-         break;
+   case RenderTarget4:
+      targName = "col4";
+      break;
 
-      case RenderTarget5:
-         targName = "col5";
-         break;
+   case RenderTarget5:
+      targName = "col5";
+      break;
    }
 
    return targName;
 }
 
-Var* ShaderFeature::findOrCreateLocal( const char *name, 
-                                       const char *type, 
-                                       MultiLine *multi )
+Var* ShaderFeature::findOrCreateLocal(const char* name,
+   const char* type,
+   MultiLine* multi)
 {
-   Var *outVar = (Var*)LangElement::find( name );
-   if ( !outVar )
+   Var* outVar = (Var*)LangElement::find(name);
+   if (!outVar)
    {
       outVar = new Var;
-      outVar->setType( type );
-      outVar->setName( name );
-      multi->addStatement( new GenOp( "   @;\r\n", new DecOp( outVar ) ) );
+      outVar->setType(type);
+      outVar->setName(name);
+      multi->addStatement(new GenOp("   @;\r\n", new DecOp(outVar)));
    }
 
    return outVar;
 }
 
-void ShaderFeature::setInstancingFormat(GFXVertexFormat *format)
+void ShaderFeature::setInstancingFormat(GFXVertexFormat* format)
 {
    mInstancingFormat = format;
 }

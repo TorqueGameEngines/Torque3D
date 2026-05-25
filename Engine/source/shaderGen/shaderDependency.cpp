@@ -30,6 +30,7 @@
 ShaderIncludeDependency::ShaderIncludeDependency( const Torque::Path &pathToInclude ) 
    : mIncludePath( pathToInclude )
 {
+   stages = (GFXShaderStage::VERTEX_SHADER | GFXShaderStage::PIXEL_SHADER);
 }
 
 bool ShaderIncludeDependency::operator==( const ShaderDependency &cmpTo ) const
@@ -39,9 +40,12 @@ bool ShaderIncludeDependency::operator==( const ShaderDependency &cmpTo ) const
                static_cast<const ShaderIncludeDependency*>( &cmpTo )->mIncludePath == mIncludePath );
 }
 
-void ShaderIncludeDependency::print( Stream &s ) const
+void ShaderIncludeDependency::print( Stream &s , GFXShaderStage stage) const
 {
    // Print the include... all shaders support #includes.
-   String include = String::ToString( "#include \"%s\"\r\n", mIncludePath.getFullPath().c_str() );
-   s.write( include.length(), include.c_str() );
+   if (stages & stage)
+   {
+      String include = String::ToString("#include \"%s\"\r\n", mIncludePath.getFullPath().c_str());
+      s.write(include.length(), include.c_str());
+   }
 }

@@ -39,9 +39,17 @@ public:
       BUFFER_INVALID = 0xffffffff   // file offsets must all be less than this
    };
 
+   enum AsyncMode
+   {
+      Blocking,      // current behavior
+      Background     // write-behind
+   };
+
    typedef char Ch;    //!< Character type. Only support char.
 public:
-   FileStream();                       // default constructor
+   AsyncMode mAsyncMode;
+   void dispatchAsyncClose();
+   FileStream(AsyncMode flushMode = Blocking);                       // default constructor
    virtual ~FileStream();              // destructor
 
    // This function will allocate a new FileStream and open it.
@@ -64,7 +72,7 @@ public:
    //rjson compatibility
    bool Flush() { return flush(); }
    FileStream* clone() const override;
-
+   static void calcBlockHead(const U32 i_position, U32* o_blockHead);
 protected:
    // more mandatory methods from Stream base class...
    bool _read(const U32 i_numBytes, void *o_pBuffer) override;
@@ -73,7 +81,7 @@ protected:
    void init();
    bool fillBuffer(const U32 i_startPosition);
    void clearBuffer();
-   static void calcBlockHead(const U32 i_position, U32 *o_blockHead);
+   
    static void calcBlockBounds(const U32 i_position, U32 *o_blockHead, U32 *o_blockTail);
    void setStatus();
 

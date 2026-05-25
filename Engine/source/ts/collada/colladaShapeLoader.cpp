@@ -803,7 +803,7 @@ TSShape* loadColladaShape(const Torque::Path &path)
          {
             // Cache the Collada model to a DTS file for faster loading next time.
             cachedPath.setExtension("cached.dts");
-            FileStream dtsStream;
+            FileStream dtsStream(FileStream::AsyncMode::Background);
             if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))
             {
                Torque::FS::FileSystemRef ref = Torque::FS::GetFileSystem(daePath);

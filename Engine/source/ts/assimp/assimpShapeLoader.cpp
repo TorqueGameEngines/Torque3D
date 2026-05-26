@@ -56,12 +56,13 @@
 #undef new
 #endif
 #endif
-// assimp include files. 
+// assimp include files.
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/types.h>
 #include <assimp/config.h>
+#include <assimp/Exporter.hpp>
 #include <exception>
 
 #if !defined(TORQUE_DISABLE_MEMORY_MANAGER)
@@ -69,56 +70,68 @@
 #  define new  _new
 #endif
 
-extern bool gTryUseDSQs;
+static bool sReadAssimp(const Torque::Path& path, TSShape*& shape);
 
-MODULE_BEGIN( AssimpShapeLoader )
-   MODULE_INIT_AFTER( ShapeLoader )
-   MODULE_INIT
+static struct _privateRegisterAssimp
+{
+   _privateRegisterAssimp()
    {
-      TSShapeLoader::addFormat("DirectX X", "x");
-      TSShapeLoader::addFormat("Autodesk FBX", "fbx");
-      TSShapeLoader::addFormat("Blender 3D", "blend" );
-      TSShapeLoader::addFormat("3ds Max 3DS", "3ds");
-      TSShapeLoader::addFormat("3ds Max ASE", "ase");
-      TSShapeLoader::addFormat("Wavefront Object", "obj");
-      TSShapeLoader::addFormat("Industry Foundation Classes (IFC/Step)", "ifc");
-      TSShapeLoader::addFormat("Stanford Polygon Library", "ply");
-      TSShapeLoader::addFormat("AutoCAD DXF", "dxf");
-      TSShapeLoader::addFormat("LightWave", "lwo");
-      TSShapeLoader::addFormat("LightWave Scene", "lws");
-      TSShapeLoader::addFormat("Modo", "lxo");
-      TSShapeLoader::addFormat("Stereolithography", "stl");
-      TSShapeLoader::addFormat("AC3D", "ac");
-      TSShapeLoader::addFormat("Milkshape 3D", "ms3d");
-      TSShapeLoader::addFormat("TrueSpace COB", "cob");
-      TSShapeLoader::addFormat("TrueSpace SCN", "scn");
-      TSShapeLoader::addFormat("Ogre XML", "xml");
-      TSShapeLoader::addFormat("Irrlicht Mesh", "irrmesh");
-      TSShapeLoader::addFormat("Irrlicht Scene", "irr");
-      TSShapeLoader::addFormat("Quake I", "mdl" );
-      TSShapeLoader::addFormat("Quake II", "md2" );
-      TSShapeLoader::addFormat("Quake III Mesh", "md3");
-      TSShapeLoader::addFormat("Quake III Map/BSP", "pk3");
-      TSShapeLoader::addFormat("Return to Castle Wolfenstein", "mdc");
-      TSShapeLoader::addFormat("Doom 3", "md5" );
-      TSShapeLoader::addFormat("Valve SMD", "smd");
-      TSShapeLoader::addFormat("Valve VTA", "vta");
-      TSShapeLoader::addFormat("Starcraft II M3", "m3");
-      TSShapeLoader::addFormat("Unreal", "3d");
-      TSShapeLoader::addFormat("BlitzBasic 3D", "b3d" );
-      TSShapeLoader::addFormat("Quick3D Q3D", "q3d");
-      TSShapeLoader::addFormat("Quick3D Q3S", "q3s");
-      TSShapeLoader::addFormat("Neutral File Format", "nff");
-      TSShapeLoader::addFormat("Object File Format", "off");
-      TSShapeLoader::addFormat("PovRAY Raw", "raw");
-      TSShapeLoader::addFormat("Terragen Terrain", "ter");
-      TSShapeLoader::addFormat("3D GameStudio (3DGS)", "mdl");
-      TSShapeLoader::addFormat("3D GameStudio (3DGS) Terrain", "hmp");
-      TSShapeLoader::addFormat("Izware Nendo", "ndo");
-      TSShapeLoader::addFormat("gltf", "gltf");
-      TSShapeLoader::addFormat("gltf binary", "glb");
+      TSShape::ShapeRegistration reg;
+
+      Assimp::Importer importer;
+      for (U32 i = 0; i < importer.GetImporterCount(); i++)
+      {
+         const aiImporterDesc* desc = importer.GetImporterInfo(i);
+
+         String extensions(desc->mFileExtensions);
+
+         Vector<String> tokens;
+         extensions.split(" ", tokens);
+         for (U32 t = 0; t < tokens.size(); ++t)
+         {
+            const String& ext = tokens[t];
+            if (ext.isEmpty() ||
+                  ext.equal("dae", String::NoCase) || // filter out collada importer formats (for now).
+                  ext.equal("zae", String::NoCase) ||
+                  ext.equal("xml", String::NoCase)
+               )
+               continue;
+
+            reg.extensions.push_back({
+                String(desc->mName), // convert from const char*
+                ext
+               });
+         }
+
+      }
+
+      Assimp::Exporter exporter;
+
+      for (U32 i = 0; i < exporter.GetExportFormatCount(); ++i)
+      {
+         const aiExportFormatDesc* desc = exporter.GetExportFormatDescription(i);
+         String ext(desc->fileExtension);
+
+         if (ext.isEmpty() ||
+            ext.equal("dae", String::NoCase) || // filter out collada importer formats (for now).
+            ext.equal("zae", String::NoCase) ||
+            ext.equal("xml", String::NoCase)
+            )
+            continue;
+
+         reg.export_extensions.push_back({
+             String(desc->description),
+             ext
+            });
+      }
+
+      reg.readFunc = sReadAssimp;
+      reg.writeFunc = NULL;
+
+      TSShape::sRegisterFormat(reg);
    }
-MODULE_END;
+} sStaticRegisterAssimp;
+
 
 //-----------------------------------------------------------------------------
 
@@ -272,7 +285,16 @@ void AssimpShapeLoader::enumerateScene()
 
    // Load all materials
    AssimpAppMaterial::sDefaultMatNumber = 0;
-   for (U32 i = 0; i < mScene->mNumMaterials; ++i) {
+   AssimpAppMesh::sMaterialRemap.setSize(mScene->mNumMaterials);
+   for (U32 i = 0; i < mScene->mNumMaterials; ++i)
+   {
+      if (FindMatch::isMatchMultipleExprs(ColladaUtils::getOptions().neverImportMat,
+         mScene->mMaterials[i]->GetName().C_Str(), false))
+      {
+         AssimpAppMesh::sMaterialRemap[i] = TSDrawPrimitive::NoMaterial; // TSDrawPrimitive::NoMaterial
+         continue;
+      }
+      AssimpAppMesh::sMaterialRemap[i] = AppMesh::appMaterials.size();
       AppMesh::appMaterials.push_back(new AssimpAppMaterial(mScene->mMaterials[i]));
    }
 
@@ -391,54 +413,34 @@ void AssimpShapeLoader::getRootAxisTransform()
 
    MatrixF rot(true);
 
-   // ===== Y-UP SOURCE =====
-   if (upAxis == 1)
+   // Build source basis
+   auto axisToVector = [](int axis, int sign) -> Point3F
    {
-      if (frontAxis == 2)
-      {
-         // Y-up, Z-forward  → Z-up, Y-forward
-         // Rotate 180° Y, then 90° X
-         rot(0, 0) = -1.0f;
-         rot(1, 1) = 0.0f;  rot(2, 1) = 1.0f;
-         rot(1, 2) = 1.0f;  rot(2, 2) = 0.0f;
-      }
-      else if (frontAxis == 0)
-      {
-         // Y-up, X-forward → Z-up, Y-forward
-         // Rotate -90° around Z then 90° around X
-         rot(0, 0) = 0.0f;   rot(0, 1) = -1.0f;
-         rot(1, 0) = 1.0f;   rot(1, 1) = 0.0f;
-         rot(2, 2) = 1.0f;
-      }
-   }
+      Point3F v(0, 0, 0);
+      v[axis] = (F32)sign;
+      return v;
+   };
 
-   // ===== Z-UP SOURCE =====
-   if (upAxis == 2)
-   {
-      if (frontAxis == 1)
-      {
-         // Already Z-up, Y-forward → no change
-      }
-      else if (frontAxis == 0)
-      {
-         // Z-up, X-forward → rotate -90° around Z
-         rot(0, 0) = 0.0f;  rot(0, 1) = -1.0f;
-         rot(1, 0) = 1.0f;  rot(1, 1) = 0.0f;
-      }
-   }
+   Point3F forward = axisToVector(frontAxis, -frontSign);
+   Point3F up = axisToVector(upAxis, upSign);
+   Point3F right = mCross(forward, up);
 
-   // ===== X-UP SOURCE =====
-   if (upAxis == 0)
-   {
-      if (frontAxis == 2)
-      {
-         // X-up, Z-forward → Z-up, Y-forward
-         // Rotate -90° around Y then -90° around Z
-         rot(0, 0) = 0.0f;  rot(0, 1) = 0.0f;  rot(0, 2) = -1.0f;
-         rot(1, 0) = 1.0f;  rot(1, 1) = 0.0f;  rot(1, 2) = 0.0f;
-         rot(2, 0) = 0.0f;  rot(2, 1) = -1.0f; rot(2, 2) = 0.0f;
-      }
-   }
+   // Recompute forward
+   forward = mCross(up, right);
+
+   // Normalize (defensive, though they should already be unit)
+   right.normalize();
+   forward.normalize();
+   up.normalize();
+
+   MatrixF srcBasis(true);
+   srcBasis.setColumn(0, right);
+   srcBasis.setColumn(1, forward);
+   srcBasis.setColumn(2, up);
+
+   // Convert to Torque space
+   rot = srcBasis;
+   rot.inverse();
 
    ColladaUtils::getOptions().axisCorrectionMat = rot;
 }
@@ -681,30 +683,6 @@ bool AssimpShapeLoader::canLoadCachedDTS(const Torque::Path& path)
       FileTime daeModifyTime;
       if (!Platform::getFileTimes(path.getFullPath(), NULL, &daeModifyTime) ||
          (!forceLoad && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0) ))
-      {
-         // Original file not found, or cached DTS is newer
-         return true;
-      }
-   }
-   return false;
-}
-
-/// Check if an up-to-date cached DSQ is available for this file
-bool AssimpShapeLoader::canLoadCachedDSQ(const Torque::Path& path)
-{
-   // Generate the cached filename
-   Torque::Path cachedPath(path);
-   cachedPath.setExtension("dsq");
-
-   // Check if a cached DTS newer than this file is available
-   FileTime cachedModifyTime;
-   if (Platform::getFileTimes(cachedPath.getFullPath(), NULL, &cachedModifyTime))
-   {
-      bool forceLoad = Con::getBoolVariable("$assimp::forceLoad", false);
-
-      FileTime daeModifyTime;
-      if (!Platform::getFileTimes(path.getFullPath(), NULL, &daeModifyTime) ||
-         (!forceLoad && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0)))
       {
          // Original file not found, or cached DTS is newer
          return true;
@@ -992,65 +970,12 @@ bool AssimpShapeLoader::getMetaString(const char* key, String& stringVal)
 }
 //-----------------------------------------------------------------------------
 /// This function is invoked by the resource manager based on file extension.
-TSShape* assimpLoadShape(const Torque::Path &path)
+static bool sReadAssimp(const Torque::Path &path, TSShape*& res_shape)
 {
-   // TODO: add .cached.dts generation.
-   // Generate the cached filename
-   Torque::Path cachedPath(path);
-   bool canLoadCached = false;
-   bool canLoadDSQ = false;
-
-   // Check if an up-to-date cached DTS version of this file exists, and
-   // if so, use that instead.
-   if (AssimpShapeLoader::canLoadCachedDTS(path))
-   {
-      cachedPath.setExtension("cached.dts");
-      canLoadCached = true;
-   }
-   else if (gTryUseDSQs && AssimpShapeLoader::canLoadCachedDSQ(path))
-   {
-      cachedPath.setExtension("dsq");
-      canLoadDSQ = true;
-   }
-   if (canLoadCached || canLoadDSQ)
-   {
-      FileStream cachedStream;
-      cachedStream.open(cachedPath.getFullPath(), Torque::FS::File::Read);
-      if (cachedStream.getStatus() == Stream::Ok)
-      {
-         TSShape *shape = new TSShape;
-         bool readSuccess = false;
-         if (canLoadCached)
-         {
-            readSuccess = shape->read(&cachedStream);
-         }
-         else
-         {
-            readSuccess = shape->importSequences(&cachedStream, cachedPath);
-         }
-         cachedStream.close();
-
-         if (readSuccess)
-         {
-         #ifdef TORQUE_DEBUG
-            Con::printf("Loaded cached shape from %s", cachedPath.getFullPath().c_str());
-         #endif
-            return shape;
-         }
-         else
-         {
-         #ifdef TORQUE_DEBUG
-            Con::errorf("assimpLoadShape: Load sequence file '%s' failed", cachedPath.getFullPath().c_str());
-         #endif
-            delete shape;
-         }
-      }
-   }
-
    if (!Torque::FS::IsFile(path))
    {
       // File does not exist, bail.
-      return NULL;
+      return false;
    }
 
    // Allow TSShapeConstructor object to override properties
@@ -1066,42 +991,58 @@ TSShape* assimpLoadShape(const Torque::Path &path)
    if (tss)
    {
       TSShapeLoader::updateProgress(TSShapeLoader::Load_Complete, "Import complete");
-      Con::printf("[ASSIMP] Shape created successfully.");
 
       bool realMesh = false;
       for (U32 i = 0; i < tss->meshes.size(); ++i)
       {
          if (tss->meshes[i] && tss->meshes[i]->getMeshType() != TSMesh::NullMeshType)
+         {
             realMesh = true;
+            break;
+         }
       }
 
-      if (!realMesh && gTryUseDSQs)
+
+      if (realMesh)
+         Con::printf("[ASSIMP] Shape created successfully.");
+      else
+         Con::printf("[ASSIMP] Animation created successfully.");
+
+      Torque::Path cachedPath(path);
+      // Cache the model to a DTS file for faster loading next time.
+      cachedPath.setExtension("cached.dts");
+      // Cache the model to a DTS file for faster loading next time.
+      FileStream dtsStream;
+      if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))
+      {
+         Con::printf("Writing cached shape to %s", cachedPath.getFullPath().c_str());
+         tss->write(&dtsStream);
+      }
+
+      // only save dsq if we have a real mesh to pair with it.
+      if (tss->sequences.size() > 0 && realMesh)
       {
          Torque::Path dsqPath(cachedPath);
          dsqPath.setExtension("dsq");
          FileStream animOutStream;
-         dsqPath.setFileName(cachedPath.getFileName());
-         if (animOutStream.open(dsqPath.getFullPath(), Torque::FS::File::Write))
+
+         for (S32 i = 0; i < tss->sequences.size(); i++)
          {
-            Con::printf("Writing DSQ Animation File for '%s'", dsqPath.getFileName().c_str());
-            tss->exportSequences(&animOutStream);
-         }
-      }
-      else
-      {
-         // Cache the model to a DTS file for faster loading next time.
-         cachedPath.setExtension("cached.dts");
-         // Cache the model to a DTS file for faster loading next time.
-         FileStream dtsStream;
-         if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))
-         {
-            Con::printf("Writing cached shape to %s", cachedPath.getFullPath().c_str());
-            tss->write(&dtsStream);
+            const String& seqName = tss->getName(tss->sequences[i].nameIndex);
+            Con::printf("Writing DSQ Animation File for sequence '%s'", seqName.c_str());
+
+            dsqPath.setFileName(cachedPath.getFileName() + "_" + seqName);
+            if (animOutStream.open(dsqPath.getFullPath(), Torque::FS::File::Write))
+            {
+               tss->exportSequence(&animOutStream, tss->sequences[i], false);
+               animOutStream.close();
+            }
          }
       }
    }
    loader.releaseImport();
-   return tss;
+   res_shape = tss;
+   return true;
 }
 
 DefineEngineFunction(GetShapeInfo, bool, (const char* shapePath, const char* ctrl, bool loadCachedDts), ("", "", true),

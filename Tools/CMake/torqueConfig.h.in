@@ -231,3 +231,4 @@
 
 /// Password to use when opening encrypted zip files. Change this to whatever the password is for your zips.
 #define DEFAULT_ZIP_PASSWORD     "@TORQUE_APP_PASSWORD@"
+#define TORQUE_DTS_VERSION @TORQUE_DTS_VERSION@

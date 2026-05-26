@@ -47,11 +47,13 @@ class EventManagerListener : public Dispatcher::IMessageListener
    /// Stores subscription information for a subscriber.
    struct Subscriber
    {
-      SimObjectPtr< SimObject > listener;       ///< The listener object.
-      StringTableEntry callback; ///< The callback to execute when the event is triggered.
-      StringTableEntry event;    ///< The event being listened for.
-	  U32 callDepth;
-	  bool removeFlag;
+      SimObjectPtr< SimObject > listener; ///< The listener object.
+      StringTableEntry callback;          ///< The callback to execute when the event is triggered.
+      StringTableEntry event;             ///< The event being listened for.
+
+      S32 priority;
+      U32 callDepth;
+      bool removeFlag;
    };
 
    /// Subscriber table hashed by event name.
@@ -154,7 +156,7 @@ public:
    /// Triggers an event.
    bool postEvent( const char* eventName, const char* data );
    /// Adds a subscription to an event.
-   bool subscribe( SimObject *callbackObj, const char* event, const char* callback = NULL );
+   bool subscribe( SimObject *callbackObj, const char* event, const char* callback = NULL, S32 priority = 0 );
    /// Remove a subscriber from an event.
    void remove( SimObject *cbObj, const char* event );
    void removeAll( SimObject *cbObj );

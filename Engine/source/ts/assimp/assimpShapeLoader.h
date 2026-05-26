@@ -41,8 +41,6 @@ struct aiMetadata;
 //-----------------------------------------------------------------------------
 class AssimpShapeLoader : public TSShapeLoader
 {
-   friend TSShape* assimpLoadShape(const Torque::Path &path);
-
 protected:
    Assimp::Importer mImporter;
    const aiScene* mScene;
@@ -79,7 +77,6 @@ public:
    bool fillGuiTreeView(const char* shapePath, GuiTreeViewCtrl* tree);
 
    static bool canLoadCachedDTS(const Torque::Path& path);
-   static bool canLoadCachedDSQ(const Torque::Path& path);
    static void assimpLogCallback(const char* message, char* user);
 };
 

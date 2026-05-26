@@ -114,6 +114,12 @@ advanced_option(TORQUE_DISABLE_MEMORY_MANAGER "Disable memory manager" ON)
 set(TORQUE_ENTRY_FUNCTION "" CACHE STRING "Specify a console function to execute instead of looking for a main.tscript file")
 mark_as_advanced(TORQUE_ENTRY_FUNCTION)
 
+set(TORQUE_DTS_VERSION "29" CACHE STRING "Device Tree Source version")
+
+set_property(CACHE TORQUE_DTS_VERSION PROPERTY STRINGS
+    28 29
+)
+
 #fileIO
 set(TORQUE_APP_PASSWORD "changeme" CACHE STRING "zip file password")
 advanced_option(TORQUE_DISABLE_VIRTUAL_MOUNT_SYSTEM "Disable virtual mount system" OFF)

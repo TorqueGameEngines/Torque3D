@@ -44,6 +44,7 @@
 
 bool AssimpAppMesh::fixedSizeEnabled = false;
 S32 AssimpAppMesh::fixedSize = 2;
+Vector<S32> AssimpAppMesh::sMaterialRemap;
 
 //------------------------------------------------------------------------------
 
@@ -164,7 +165,8 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    primitives.increment();
    TSDrawPrimitive& primitive = primitives.last();
    primitive.start = 0;
-   primitive.matIndex = (TSDrawPrimitive::Triangles | TSDrawPrimitive::Indexed) | (S32)mMeshData->mMaterialIndex;
+   S32 mappedMat = (mMeshData->mMaterialIndex < (U32)AssimpAppMesh::sMaterialRemap.size()) ? AssimpAppMesh::sMaterialRemap[mMeshData->mMaterialIndex] : TSDrawPrimitive::NoMaterial;
+   primitive.matIndex = (TSDrawPrimitive::Triangles | TSDrawPrimitive::Indexed) | mappedMat;
    primitive.numElements = indicesCount;
 
    for ( U32 n = 0; n < mMeshData->mNumFaces; ++n)

@@ -476,8 +476,14 @@ bool GuiShapeEdPreview::setObjectShapeAsset(const char* assetId)
          ShapeAnimationAsset* asset = AssetDatabase.acquireAsset<ShapeAnimationAsset>(id);
          StringTableEntry animPath = asset->getAnimationPath();
          AssetDatabase.releaseAsset(id);
-
          Torque::Path dsqPath(animPath);
+         String fileExt = String::ToLower(dsqPath.getExtension());
+
+         if (fileExt != String("dsq"))
+         {
+            return setObjectModel(animPath);
+         }
+
          Torque::Path shapePath;
          if (!findCompanionShape(dsqPath, shapePath))
          {

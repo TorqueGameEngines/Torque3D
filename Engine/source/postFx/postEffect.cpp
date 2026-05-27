@@ -137,9 +137,6 @@ GFX_ImplementTextureProfile(  PostFxTargetProfile,
                               GFXTextureProfile::Pooled,
                               GFXTextureProfile::NONE );
 
-IMPLEMENT_CONOBJECT(PostEffect);
-
-
 GFX_ImplementTextureProfile( PostFxTextureProfile,
                             GFXTextureProfile::DiffuseMap,
                             GFXTextureProfile::Static | GFXTextureProfile::PreserveSize,
@@ -161,6 +158,12 @@ GFX_ImplementTextureProfile( VRDepthProfile,
                             GFXTextureProfile::PreserveSize |
                             GFXTextureProfile::ZTarget,
                             GFXTextureProfile::NONE );
+
+IMPLEMENT_CONOBJECT(PostEffect);
+
+//---------------------------------------------------------------------
+// EffectConst
+//---------------------------------------------------------------------
 
 void PostEffect::EffectConst::set( const String &newVal )
 {
@@ -445,69 +448,77 @@ void PostEffect::EffectConst::setToBuffer( GFXShaderConstBufferRef buff )
    }
 }
 
+//---------------------------------------------------------------------
+// EffectConst END
+//---------------------------------------------------------------------
 
 //-------------------------------------------------------------------------
 // PostEffect
 //-------------------------------------------------------------------------
 
 PostEffect::PostEffect()
-   :  mRenderTime( PFXAfterDiffuse ),
-      mRenderPriority( 1.0 ),
-      mEnabled( false ),
-      mStateBlockData( NULL ),
-      mUpdateShader( true ),
-      mSkip( false ),
-      mPreProcessed(false),
-      mAllowReflectPass( false ),
-      mTargetClear( PFXTargetClear_None ),
-      mTargetScale( Point2F::One ),
-      mTargetViewport( PFXTargetViewport_TargetSize ),
-      mTargetSize( Point2I::Zero ),
-      mTargetFormat( GFXFormatR8G8B8A8 ),
-      mTargetClearColor( LinearColorF::BLACK ),
-      mOneFrameOnly( false ),
-      mOnThisFrame( true ),
-      mRTSizeSC( NULL ),
-      mIsValid( false ),
-      mShaderReloadKey( 0 ),
-      mOneOverRTSizeSC( NULL ),
-      mViewportOffsetSC( NULL ),
-      mTargetViewportSC( NULL ),
-      mFogDataSC( NULL ),
-      mFogColorSC( NULL ),
-      mEyePosSC( NULL ),
-      mMatWorldToScreenSC( NULL ),
-      mMatScreenToWorldSC( NULL ),
-      mMatPrevScreenToWorldSC( NULL ),
-      mNearFarSC( NULL ),
-      mInvNearFarSC( NULL ),
-      mWorldToScreenScaleSC( NULL ),
-      mProjectionOffsetSC( NULL ),
-      mWaterColorSC( NULL ),
-      mWaterFogDataSC( NULL ),
-      mAmbientColorSC( NULL ),
-      mWaterFogPlaneSC( NULL ),
-      mWaterDepthGradMaxSC( NULL ),
-      mScreenSunPosSC( NULL ),
-      mLightDirectionSC( NULL ),
-      mCameraForwardSC( NULL ),
-      mAccumTimeSC( NULL ),
-      mDampnessSC(NULL),   
-      mDeltaTimeSC( NULL ),
-      mInvCameraMatSC( NULL ),
-      mMatCameraToWorldSC( NULL),
-      mInvCameraTransSC(NULL),
-      mMatCameraToScreenSC(NULL),
-      mMatScreenToCameraSC(NULL),
-      mIsCapturingSC(NULL),
-      mMipCap(1)
+   : mRenderTime(PFXAfterDiffuse),
+   mRenderPriority(1.0),
+   mEnabled(false),
+   mStateBlockData(NULL),
+   mUpdateShader(true),
+   mSkip(false),
+   mPreProcessed(false),
+   mAllowReflectPass(false),
+   mTargetScale(Point2F::One),
+   mTargetSize(Point2I::Zero),
+   mTargetViewport(PFXTargetViewport_TargetSize),
+   mMipCap(1),
+   mOneFrameOnly(false),
+   mOnThisFrame(true),
+   mRTSizeSC(NULL),
+   mIsValid(false),
+   mShaderReloadKey(0),
+   mOneOverRTSizeSC(NULL),
+   mViewportOffsetSC(NULL),
+   mTargetViewportSC(NULL),
+   mFogDataSC(NULL),
+   mFogColorSC(NULL),
+   mEyePosSC(NULL),
+   mMatWorldToScreenSC(NULL),
+   mMatScreenToWorldSC(NULL),
+   mMatPrevScreenToWorldSC(NULL),
+   mNearFarSC(NULL),
+   mInvNearFarSC(NULL),
+   mWorldToScreenScaleSC(NULL),
+   mProjectionOffsetSC(NULL),
+   mWaterColorSC(NULL),
+   mWaterFogDataSC(NULL),
+   mAmbientColorSC(NULL),
+   mWaterFogPlaneSC(NULL),
+   mWaterDepthGradMaxSC(NULL),
+   mScreenSunPosSC(NULL),
+   mLightDirectionSC(NULL),
+   mCameraForwardSC(NULL),
+   mAccumTimeSC(NULL),
+   mDampnessSC(NULL),
+   mDeltaTimeSC(NULL),
+   mInvCameraMatSC(NULL),
+   mMatCameraToWorldSC(NULL),
+   mInvCameraTransSC(NULL),
+   mMatCameraToScreenSC(NULL),
+   mMatScreenToCameraSC(NULL),
+   mIsCapturingSC(NULL)
 {
-   dMemset( mTexSRGB, 0, sizeof(bool) * NumTextures);
-   dMemset( mActiveTextures, 0, sizeof( GFXTextureObject* ) * NumTextures );
-   dMemset( mActiveNamedTarget, 0, sizeof( NamedTexTarget* ) * NumTextures );
-   dMemset( mActiveTextureViewport, 0, sizeof( RectI ) * NumTextures );
-   dMemset( mTexSizeSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
-   dMemset( mRenderTargetParamsSC, 0, sizeof( GFXShaderConstHandle* ) * NumTextures );
+   // MRT arrays — slot 0 gets primary defaults, 1-3 are inactive.
+   for (U32 c = 0; c < NumMRTTargets; c++)
+   {
+      mTargetFormat[c] = GFXFormatR8G8B8A8;
+      mTargetClearColor[c] = LinearColorF::BLACK;
+      mTargetClear[c] = PFXTargetClear_None;
+   }
+
+   dMemset(mTexSRGB, 0, sizeof(bool) * NumTextures);
+   dMemset(mActiveTextures, 0, sizeof(GFXTextureObject*) * NumTextures);
+   dMemset(mActiveNamedTarget, 0, sizeof(NamedTexTarget*) * NumTextures);
+   dMemset(mActiveTextureViewport, 0, sizeof(RectI) * NumTextures);
+   dMemset(mTexSizeSC, 0, sizeof(GFXShaderConstHandle*) * NumTextures);
+   dMemset(mRenderTargetParamsSC, 0, sizeof(GFXShaderConstHandle*) * NumTextures);
    dMemset(mMipCountSC, 0, sizeof(GFXShaderConstHandle*) * NumTextures);
 }
 
@@ -527,9 +538,18 @@ void PostEffect::initPersistFields()
    addField( "stateBlock", TYPEID<GFXStateBlockData>(), Offset( mStateBlockData,  PostEffect ),
       "Name of a GFXStateBlockData for this effect." );
 
-   addField( "target", TypeRealString, Offset( mTargetName, PostEffect ),
+   addField( "target", TypeRealString, Offset( mTargetName, PostEffect ), NumMRTTargets,
       "String identifier of this effect's target texture.\n"
       "@see PFXTextureIdentifiers" );
+
+   addField("targetFormat", TypeGFXFormat, Offset(mTargetFormat, PostEffect), NumMRTTargets,
+      "Format of the target texture, not applicable if writing to the backbuffer.");
+
+   addField("targetClearColor", TypeColorF, Offset(mTargetClearColor, PostEffect), NumMRTTargets,
+      "Color to which the target texture is cleared before rendering.");
+
+   addField("targetClear", TYPEID< PFXTargetClear >(), Offset(mTargetClear, PostEffect), NumMRTTargets,
+      "Describes when the target texture should be cleared.");
    
    addField( "targetDepthStencil", TypeRealString, Offset( mTargetDepthStencilName, PostEffect ),
       "Optional string identifier for this effect's target depth/stencil texture.\n"
@@ -543,15 +563,6 @@ void PostEffect::initPersistFields()
        
    addField( "targetSize", TypePoint2I, Offset( mTargetSize, PostEffect ), 
       "If non-zero this is used as the absolute target size." );   
-      
-   addField( "targetFormat", TypeGFXFormat, Offset( mTargetFormat, PostEffect ),
-      "Format of the target texture, not applicable if writing to the backbuffer." );
-
-   addField( "targetClearColor", TypeColorF, Offset( mTargetClearColor, PostEffect ),
-      "Color to which the target texture is cleared before rendering." );
-
-   addField( "targetClear", TYPEID< PFXTargetClear >(), Offset( mTargetClear, PostEffect ),
-      "Describes when the target texture should be cleared." );
 
    addField( "targetViewport", TYPEID< PFXTargetViewport >(), Offset( mTargetViewport, PostEffect ),
       "Specifies how the viewport should be set up for a target texture." );
@@ -624,15 +635,21 @@ bool PostEffect::onAdd()
    }
 
    // Is the target a named target?
-   if ( mTargetName.isNotEmpty() && mTargetName[0] == '#' )
+   bool anyNamed = false;
+   for (U32 c = 0; c < NumMRTTargets; c++)
    {
-      mNamedTarget.registerWithName(mTargetName.substr(1));
-      mNamedTarget.getTextureDelegate().bind( this, &PostEffect::_getTargetTexture );
+      if (mTargetName[c].isNotEmpty() && mTargetName[c][0] == '#')
+      {
+         mNamedTarget[c].registerWithName(mTargetName[c].substr(1));
+         mNamedTarget[c].getTextureDelegate().bind(this, &PostEffect::_getTargetTexture);
+         anyNamed = true;
+      }
    }
+
    if ( mTargetDepthStencilName.isNotEmpty() && mTargetDepthStencilName[0] == '#' )
       mNamedTargetDepthStencil.registerWithName( mTargetDepthStencilName.substr( 1 ) );
 
-   if (mNamedTarget.isRegistered() || mNamedTargetDepthStencil.isRegistered())
+   if (anyNamed || mNamedTargetDepthStencil.isRegistered())
       GFXTextureManager::addEventDelegate( this, &PostEffect::_onTextureEvent );
 
    // Call onAdd in script
@@ -661,14 +678,19 @@ void PostEffect::onRemove()
    mShader = NULL;
    _cleanTargets();
 
-   if ( mNamedTarget.isRegistered() || mNamedTargetDepthStencil.isRegistered() )
-      GFXTextureManager::removeEventDelegate( this, &PostEffect::_onTextureEvent );
-
-   if ( mNamedTarget.isRegistered() )
+   bool anyNamed = false;
+   for (U32 c = 0; c < NumMRTTargets; c++)
    {
-      mNamedTarget.unregister();
-      mNamedTarget.getTextureDelegate().clear();
+      if (mNamedTarget[c].isRegistered())
+      {
+         mNamedTarget[c].unregister();
+         mNamedTarget[c].getTextureDelegate().clear();
+         anyNamed = true;
+      }
    }
+
+   if (anyNamed || mNamedTargetDepthStencil.isRegistered() )
+      GFXTextureManager::removeEventDelegate( this, &PostEffect::_onTextureEvent );
 
    if ( mNamedTargetDepthStencil.isRegistered() )
       mNamedTargetDepthStencil.unregister();
@@ -1147,7 +1169,10 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
    }
 }
 
-void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *inTexViewport )
+void PostEffect::_setupTexture(U32 stage,
+                              GFXTexHandle* inputTex,
+                              U32           inputTexCount,
+                              const RectI* inTexViewport)
 {
    const String &texFilename = mTextureAsset[stage].notNull() ? mTextureAsset[stage]->getImageFile() : "";
 
@@ -1156,17 +1181,17 @@ void PostEffect::_setupTexture( U32 stage, GFXTexHandle &inputTex, const RectI *
 
    RectI viewport = GFX->getViewport();
 
-   if ( texFilename.compare( "$inTex", 0, String::NoCase ) == 0 )
+   S32 inSlot = _inTexSlotFromName(texFilename);
+   if (inSlot >= 0)
    {
-      theTex = inputTex;
+      if ((U32)inSlot < inputTexCount)
+      {
+         theTex = inputTex[inSlot];
 
-      if ( inTexViewport )
-      {
-         viewport = *inTexViewport;
-      }
-      else if ( theTex )
-      {
-         viewport.set( 0, 0, theTex->getWidth(), theTex->getHeight() );
+         if (inSlot == 0 && inTexViewport)
+            viewport = *inTexViewport;
+         else if (theTex)
+            viewport.set(0, 0, theTex->getWidth(), theTex->getHeight());
       }
    }
    else if ( texFilename.compare( "$backBuffer", 0, String::NoCase ) == 0 )
@@ -1236,162 +1261,144 @@ void PostEffect::_setupTransforms()
 
 void PostEffect::_setupTarget( const SceneRenderState *state, bool *outClearTarget )
 {
-   if (  mNamedTarget.isRegistered() || 
-         mTargetName.compare( "$outTex", 0, String::NoCase ) == 0 )
+   Point2I targetSize;
+   if (!mTargetSize.isZero())
+      targetSize = mTargetSize;
+   else if (mActiveTextures[0])
    {
-      // Size it relative to the texture of the first stage or
-      // if NULL then use the current target.
-
-      Point2I targetSize;
-
-      // If we have an absolute target size then use that.
-      if ( !mTargetSize.isZero() )
-         targetSize = mTargetSize;
-
-      // Else generate a relative size using the target scale.
-      else if ( mActiveTextures[ 0 ] )
-      {
-         const Point3I &texSize = mActiveTextures[ 0 ]->getSize();
-
-         targetSize.set(   texSize.x * mTargetScale.x,
-                           texSize.y * mTargetScale.y );
-      }
-      else
-      {
-         GFXTarget *oldTarget = GFX->getActiveRenderTarget();
-         const Point2I &oldTargetSize = oldTarget->getSize();
-
-         targetSize.set(   oldTargetSize.x * mTargetScale.x,
-                           oldTargetSize.y * mTargetScale.y );
-      }
-
-      // Make sure its at least 1x1.
-      targetSize.setMax( Point2I::One );
-
-      if (  mNamedTarget.isRegistered() ||
-            !mTargetTex ||
-            mTargetTex.getWidthHeight() != targetSize )
-      {
-         mTargetTex.set( targetSize.x, targetSize.y, mTargetFormat,
-            &PostFxTargetProfile, "PostEffect::_setupTarget", mMipCap);
-
-         if ( mTargetClear == PFXTargetClear_OnCreate )
-            *outClearTarget = true;
-
-         if(mTargetViewport == PFXTargetViewport_GFXViewport)
-         {
-            // We may need to scale the GFX viewport to fit within
-            // our target texture size
-            GFXTarget *oldTarget = GFX->getActiveRenderTarget();
-            const Point2I &oldTargetSize = oldTarget->getSize();
-            Point2F scale(targetSize.x / F32(oldTargetSize.x), targetSize.y / F32(oldTargetSize.y));
-
-            const RectI &viewport = GFX->getViewport();
-
-            mNamedTarget.setViewport( RectI( viewport.point.x*scale.x, viewport.point.y*scale.y, viewport.extent.x*scale.x, viewport.extent.y*scale.y ) );
-         }
-         else if(mTargetViewport == PFXTargetViewport_NamedInTexture0 && mActiveNamedTarget[0] && mActiveNamedTarget[0]->getTexture())
-         {
-            // Scale the named input texture's viewport to match our target
-            const Point3I &namedTargetSize = mActiveNamedTarget[0]->getTexture()->getSize();
-            Point2F scale(targetSize.x / F32(namedTargetSize.x), targetSize.y / F32(namedTargetSize.y));
-
-            const RectI &viewport = mActiveNamedTarget[0]->getViewport();
-
-            mNamedTarget.setViewport( RectI( viewport.point.x*scale.x, viewport.point.y*scale.y, viewport.extent.x*scale.x, viewport.extent.y*scale.y ) );
-         }
-         else
-         {
-            // PFXTargetViewport_TargetSize
-            mNamedTarget.setViewport( RectI( 0, 0, targetSize.x, targetSize.y ) );
-         }
-      }
+      const Point3I& texSize = mActiveTextures[0]->getSize();
+      targetSize.set(texSize.x * mTargetScale.x, texSize.y * mTargetScale.y);
    }
    else
-      mTargetTex = NULL;
-
-   // Do we have a named depthStencil target?
-   if ( mNamedTargetDepthStencil.isRegistered() )
    {
-      // Size it relative to the texture of the first stage or
-      // if NULL then use the current target.
-      Point2I targetSize;
+      GFXTarget* oldTarget = GFX->getActiveRenderTarget();
+      const Point2I& oldTargetSize = oldTarget->getSize();
+      targetSize.set(oldTargetSize.x * mTargetScale.x, oldTargetSize.y * mTargetScale.y);
+   }
+   targetSize.setMax(Point2I::One);
 
-      // If we have an absolute target size then use that.
-      if ( !mTargetSize.isZero() )
-         targetSize = mTargetSize;
-
-      // Else generate a relative size using the target scale.
-      else if ( mActiveTextures[ 0 ] )
+   for (U32 c = 0; c < NumMRTTargets; c++)
+   {
+      if (mNamedTarget[c].isRegistered() || _outTexSlotFromName(mTargetName[c]) >= 0)
       {
-         const Point3I &texSize = mActiveTextures[ 0 ]->getSize();
+         if (mNamedTarget[c].isRegistered() ||
+            !mTargetTex[c] ||
+            mTargetTex[c].getWidthHeight() != targetSize)
+         {
+            mTargetTex[c].set(targetSize.x, targetSize.y, mTargetFormat[c],
+               &PostFxTargetProfile, "PostEffect::_setupTarget", mMipCap);
 
-         targetSize.set(   texSize.x * mTargetScale.x,
-                           texSize.y * mTargetScale.y );
+            if (mTargetClear[c] == PFXTargetClear_OnCreate)
+               *outClearTarget = true;
+
+            if (mTargetViewport == PFXTargetViewport_GFXViewport)
+            {
+               // We may need to scale the GFX viewport to fit within
+               // our target texture size
+               GFXTarget* oldTarget = GFX->getActiveRenderTarget();
+               const Point2I& oldTargetSize = oldTarget->getSize();
+               Point2F scale(targetSize.x / F32(oldTargetSize.x), targetSize.y / F32(oldTargetSize.y));
+               const RectI& viewport = GFX->getViewport();
+               mNamedTarget[c].setViewport(RectI(viewport.point.x * scale.x, viewport.point.y * scale.y,
+                  viewport.extent.x * scale.x, viewport.extent.y * scale.y));
+            }
+            else if (mTargetViewport == PFXTargetViewport_NamedInTexture0
+               && mActiveNamedTarget[0] && mActiveNamedTarget[0]->getTexture())
+            {
+               // Scale the named input texture's viewport to match our target
+               const Point3I& namedTargetSize = mActiveNamedTarget[0]->getTexture()->getSize();
+               Point2F scale(targetSize.x / F32(namedTargetSize.x), targetSize.y / F32(namedTargetSize.y));
+               const RectI& viewport = mActiveNamedTarget[0]->getViewport();
+               mNamedTarget[c].setViewport(RectI(viewport.point.x * scale.x, viewport.point.y * scale.y,
+                  viewport.extent.x * scale.x, viewport.extent.y * scale.y));
+            }
+            else
+            {
+               mNamedTarget[c].setViewport(RectI(0, 0, targetSize.x, targetSize.y));
+            }
+         }
       }
       else
+         mTargetTex[c] = NULL;
+   }
+
+   bool auxActive = false;
+   for (U32 c = 1; c < NumMRTTargets; c++)
+   {
+      if (mTargetTex[c].isValid())
       {
-         GFXTarget *oldTarget = GFX->getActiveRenderTarget();
-         const Point2I &oldTargetSize = oldTarget->getSize();
-
-         targetSize.set(   oldTargetSize.x * mTargetScale.x,
-                           oldTargetSize.y * mTargetScale.y );
+         auxActive = true;
+         break;
       }
+   }
 
-      // Make sure its at least 1x1.
-      targetSize.setMax( Point2I::One );
-      
-      if (  mNamedTargetDepthStencil.isRegistered() &&
-            mTargetDepthStencil.getWidthHeight() != targetSize )
-      {         
-         mTargetDepthStencil.set( targetSize.x, targetSize.y, GFXFormatD24S8,
-                     &GFXZTargetProfile, "PostEffect::_setupTarget" );
+   if (auxActive && !mTargetTex[0].isValid())
+   {
+      /* If we have issues later on, uncomment this!
+      Con::warnf("PostEffect '%s': auxiliary MRT slots are active but target[0] "
+         "has no texture. Auto-promoting slot 0 to a temporary. "
+         "Use a named target (#name) on slot 0 for MRT setups.", getName());*/
 
-         if ( mTargetClear == PFXTargetClear_OnCreate )
+      mTargetTex[0].set(targetSize.x, targetSize.y, mTargetFormat[0],
+         &PostFxTargetProfile, "PostEffect::MRTSlot[0]_auto", mMipCap);
+   }
+
+   if (mNamedTargetDepthStencil.isRegistered())
+   {
+      if (mNamedTargetDepthStencil.isRegistered() && mTargetDepthStencil.getWidthHeight() != targetSize)
+      {
+         mTargetDepthStencil.set(targetSize.x, targetSize.y, GFXFormatD24S8,
+            &GFXZTargetProfile, "PostEffect::_setupTarget");
+
+         if (mTargetClear[0] == PFXTargetClear_OnCreate)
             *outClearTarget = true;
 
-         if(mTargetViewport == PFXTargetViewport_GFXViewport)
+         if (mTargetViewport == PFXTargetViewport_GFXViewport)
          {
             // We may need to scale the GFX viewport to fit within
             // our target texture size
-            GFXTarget *oldTarget = GFX->getActiveRenderTarget();
-            const Point2I &oldTargetSize = oldTarget->getSize();
+            GFXTarget* oldTarget = GFX->getActiveRenderTarget();
+            const Point2I& oldTargetSize = oldTarget->getSize();
             Point2F scale(targetSize.x / F32(oldTargetSize.x), targetSize.y / F32(oldTargetSize.y));
+            const RectI& viewport = GFX->getViewport();
 
-            const RectI &viewport = GFX->getViewport();
-
-            mNamedTargetDepthStencil.setViewport( RectI( viewport.point.x*scale.x, viewport.point.y*scale.y, viewport.extent.x*scale.x, viewport.extent.y*scale.y ) );
+            mNamedTargetDepthStencil.setViewport(RectI(viewport.point.x * scale.x, viewport.point.y * scale.y, viewport.extent.x * scale.x, viewport.extent.y * scale.y));
          }
-         else if(mTargetViewport == PFXTargetViewport_NamedInTexture0 && mActiveNamedTarget[0] && mActiveNamedTarget[0]->getTexture())
+         else if (mTargetViewport == PFXTargetViewport_NamedInTexture0 && mActiveNamedTarget[0] && mActiveNamedTarget[0]->getTexture())
          {
             // Scale the named input texture's viewport to match our target
-            const Point3I &namedTargetSize = mActiveNamedTarget[0]->getTexture()->getSize();
+            const Point3I& namedTargetSize = mActiveNamedTarget[0]->getTexture()->getSize();
             Point2F scale(targetSize.x / F32(namedTargetSize.x), targetSize.y / F32(namedTargetSize.y));
+            const RectI& viewport = mActiveNamedTarget[0]->getViewport();
 
-            const RectI &viewport = mActiveNamedTarget[0]->getViewport();
-
-            mNamedTargetDepthStencil.setViewport( RectI( viewport.point.x*scale.x, viewport.point.y*scale.y, viewport.extent.x*scale.x, viewport.extent.y*scale.y ) );
+            mNamedTargetDepthStencil.setViewport(RectI(viewport.point.x * scale.x, viewport.point.y * scale.y, viewport.extent.x * scale.x, viewport.extent.y * scale.y));
          }
          else
          {
             // PFXTargetViewport_TargetSize
-            mNamedTargetDepthStencil.setViewport( RectI( 0, 0, targetSize.x, targetSize.y ) );
+            mNamedTargetDepthStencil.setViewport(RectI(0, 0, targetSize.x, targetSize.y));
          }
       }
    }
    else
       mTargetDepthStencil = NULL;
 
-   if ( mTargetClear == PFXTargetClear_OnDraw )
+   if (mTargetClear[0] == PFXTargetClear_OnDraw)
       *outClearTarget = true;
 
-   if ( !mTarget && (mTargetTex || mTargetDepthStencil) )
+   bool hasAny = mTargetDepthStencil.isValid();
+   for (U32 c = 0; c < NumMRTTargets && !hasAny; c++)
+      hasAny = mTargetTex[c].isValid();
+
+   if (!mTarget && hasAny)
       mTarget = GFX->allocRenderToTextureTarget();
 }
 
 void PostEffect::_cleanTargets( bool recurse )
 {
-   mTargetTex = NULL;
+   for (U32 c = 0; c < NumMRTTargets; c++)
+      mTargetTex[c] = NULL;
+
    mTargetDepthStencil = NULL;
    mTarget = NULL;
 
@@ -1406,9 +1413,10 @@ void PostEffect::_cleanTargets( bool recurse )
    }
 }
 
-void PostEffect::process(  const SceneRenderState *state,
-                           GFXTexHandle &inOutTex,
-                           const RectI *inTexViewport )
+void PostEffect::process(  const SceneRenderState* state,
+                           GFXTexHandle* inOutTex,
+                           U32 inOutTexCount,
+                           const RectI* inTexViewport)
 {
    // If the shader is forced to be skipped... then skip.
    if ( mSkip )
@@ -1444,11 +1452,16 @@ void PostEffect::process(  const SceneRenderState *state,
    }
    GFXTransformSaver saver;
 
+   GFXTexHandle chain[NumMRTTargets];
+   U32 texCount = getMin(inOutTexCount, (U32)NumMRTTargets);
+   for (U32 c = 0; c < texCount; c++)
+      chain[c] = inOutTex[c];
+
    // Set the textures.
    for (U32 i = 0; i < NumTextures; i++)
    {
       if (mTextureType[i] == NormalTextureType)
-         _setupTexture(i, inOutTex, inTexViewport);
+         _setupTexture(i, chain, texCount, inTexViewport);
       else if (mTextureType[i] == CubemapType)
          _setupCubemapTexture(i, mCubemapTextures[i]);
       else if (mTextureType[i] == CubemapArrayType)
@@ -1461,27 +1474,57 @@ void PostEffect::process(  const SceneRenderState *state,
    bool clearTarget = false;
    _setupTarget( state, &clearTarget );
 
-   if ( mTargetTex || mTargetDepthStencil )
+   const bool hasDepth = mTargetDepthStencil.isValid();
+   bool hasColorTarget = false;
+
+   U32 curTargetCount = 0;
+   for (U32 c = 0; c < NumMRTTargets; c++)
+   {
+      if (mTargetTex[c].isValid())
+      {
+         hasColorTarget = true;
+         curTargetCount++;
+      }
+   }
+
+   // Attach each color slot. NULL explicitly detaches unused slots,
+      // preventing stale attachments from a previous frame.
+   static const GFXTextureTarget::RenderSlot kSlots[NumMRTTargets] =
+   {
+      GFXTextureTarget::Color0,
+      GFXTextureTarget::Color1,
+      GFXTextureTarget::Color2,
+      GFXTextureTarget::Color3,
+   };
+
+   if (hasColorTarget || hasDepth)
    {
       const RectI &oldViewport = GFX->getViewport();
       GFXTarget *oldTarget = GFX->getActiveRenderTarget();
 
       GFX->pushActiveRenderTarget();
-      mTarget->attachTexture( GFXTextureTarget::Color0, mTargetTex );
+
+      for (U32 c = 0; c < NumMRTTargets; c++)
+      {
+         mTarget->attachTexture(kSlots[c], mTargetTex[c].isValid() ? mTargetTex[c] : NULL);
+      }
 
       // Set the right depth stencil target.
-      if ( !mTargetDepthStencil && mTargetTex.getWidthHeight() == GFX->getActiveRenderTarget()->getSize() )
-         mTarget->attachTexture( GFXTextureTarget::DepthStencil, GFXTextureTarget::sDefaultDepthStencil );
+      if (!hasDepth && mTargetTex[0].isValid() && mTargetTex[0].getWidthHeight() == oldTarget->getSize())
+         mTarget->attachTexture(GFXTextureTarget::DepthStencil, GFXTextureTarget::sDefaultDepthStencil);
       else
-         mTarget->attachTexture( GFXTextureTarget::DepthStencil, mTargetDepthStencil );
+         mTarget->attachTexture(GFXTextureTarget::DepthStencil, mTargetDepthStencil);
 
       // Set the render target but not its viewport.  We'll do that below.
       GFX->setActiveRenderTarget( mTarget, false );
 
-      if(mNamedTarget.isRegistered())
+      if (mNamedTarget[0].isRegistered())
       {
-         // Always use the name target's viewport, if available.  It was set up in _setupTarget().
-         GFX->setViewport(mNamedTarget.getViewport());
+         GFX->setViewport(mNamedTarget[0].getViewport());
+      }
+      else if (mTargetTex[0].isValid())
+      {
+         GFX->setViewport(RectI(Point2I::Zero, mTargetTex[0].getWidthHeight()));
       }
       else if(mTargetViewport == PFXTargetViewport_GFXViewport)
       {
@@ -1509,8 +1552,19 @@ void PostEffect::process(  const SceneRenderState *state,
       }
    }
 
-   if ( clearTarget )
-      GFX->clear( GFXClearTarget, mTargetClearColor, 1.f, 0 );
+   if (clearTarget)
+   {
+      LinearColorF clearColor = LinearColorF::BLACK;
+      for (U32 c = 0; c < NumMRTTargets; c++)
+      {
+         if (mTargetTex[c].isValid() && mTargetClear[c] != PFXTargetClear_None)
+         {
+            clearColor = mTargetClearColor[c];
+            break;
+         }
+      }
+      GFX->clear(GFXClearTarget, clearColor, 1.f, 0);
+   }
 
    // Setup the shader and constants.
    if ( mShader )
@@ -1545,35 +1599,36 @@ void PostEffect::process(  const SceneRenderState *state,
    // Allow PostEffecVis to hook in.
    PFXVIS->onPFXProcessed( this );
 
-   if ( mTargetTex || mTargetDepthStencil )
+   if (hasColorTarget || hasDepth)
    {
       mTarget->resolve();
       GFX->popActiveRenderTarget();
    }
    else
    {
-      // We wrote to the active back buffer, so release
-      // the current texture copy held by the manager.
-      //
-      // This ensures a new copy is made.
       PFXMGR->releaseBackBufferTex();
    }
 
-   // Return and release our target texture.
-   inOutTex = mTargetTex;
-   if ( !mNamedTarget.isRegistered() )
-      mTargetTex = NULL;
+   for (U32 c = 0; c < NumMRTTargets; c++)
+   {
+      if (c < texCount)
+         chain[c] = mTargetTex[c];
+
+      if (!mNamedTarget[c].isRegistered())
+         mTargetTex[c] = NULL;
+   }
 
    // Restore the transforms before the children
    // are processed as it screws up the viewport.
    saver.restore();
 
+   const U32 nextTexCount = getMax(getMax(texCount, curTargetCount), 1u);
    // Now process my children.
    iterator i = begin();
    for ( ; i != end(); i++ )
    {
       PostEffect *effect = static_cast<PostEffect*>(*i);
-      effect->process( state, inOutTex );
+      effect->process( state, chain, nextTexCount);
    }
 
    if ( mOneFrameOnly )
@@ -1842,19 +1897,22 @@ void PostEffect::_checkRequirements()
    }
 
    // First make sure the target format is supported.
-   if ( mNamedTarget.isRegistered() )
+   for (U32 c = 0; c < NumMRTTargets; c++)
    {
-      Vector<GFXFormat> formats;
-      formats.push_back( mTargetFormat );
-      GFXFormat format = GFX->selectSupportedFormat(  &PostFxTargetProfile,
-                                                      formats, 
-                                                      true,
-                                                      false,
-                                                      false );
-      
-      // If we didn't get our format out then its unsupported!
-      if ( format != mTargetFormat )
-         return;
+      if (mNamedTarget[c].isRegistered())
+      {
+         Vector<GFXFormat> formats;
+         formats.push_back(mTargetFormat[c]);
+         GFXFormat format = GFX->selectSupportedFormat(&PostFxTargetProfile,
+            formats,
+            true,
+            false,
+            false);
+
+         // If we didn't get our format out then its unsupported!
+         if (format != mTargetFormat[c])
+            return;
+      }
    }
 
    // Gather macros specified on this PostEffect.
@@ -1981,22 +2039,16 @@ void PostEffect::clearShaderMacros()
    mUpdateShader = true;
 }
 
-GFXTextureObject* PostEffect::_getTargetTexture( U32 )
+GFXTextureObject* PostEffect::_getTargetTexture(U32 index)
 {
-   // A TexGen PostEffect will generate its texture now if it
-   // has not already.
-   if (  mRenderTime == PFXTexGenOnDemand &&
-         ( !mTargetTex || mUpdateShader ) )
+   if (mRenderTime == PFXTexGenOnDemand
+      && (!mTargetTex[index] || mUpdateShader))
    {
-      GFXTexHandle chainTex;
-      process( NULL, chainTex );
-      
-      // TODO: We should add a conditional copy
-      // to a non-RT texture here to reduce the
-      // amount of non-swappable RTs in use.      
+      GFXTexHandle chainTex[NumMRTTargets]; // zero-initialised by GFXTexHandle ctor
+      process(NULL, chainTex, NumMRTTargets);
    }
 
-   return mTargetTex.getPointer();
+   return mTargetTex[index].getPointer();
 }
 
 DefineEngineMethod( PostEffect, reload, void, (),,

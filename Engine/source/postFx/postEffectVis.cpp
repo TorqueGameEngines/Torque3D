@@ -103,7 +103,7 @@ void PostEffectVis::open( PostEffect *pfx )
       // Only allocate window/bitmaps for input textures that are actually used.
       if ( i > Target )
       {
-         if ( pfx->mTextureAsset[i-1].notNull() && pfx->mTextureAsset[i - 1]->getImageFile() == StringTable->EmptyString())
+         if ( pfx->mTextureAsset[i-1].isNull())
          {
             window.window[i] = NULL;
             window.bmp[i] = NULL;
@@ -197,7 +197,7 @@ void PostEffectVis::onStartOfFrame()
          if ( !itr->bmp[i] || itr->pfx->getRenderTime() == PFXTexGenOnDemand )
             continue;
 
-         itr->bmp[i]->setBitmap( NULL );
+         itr->bmp[i]->setBitmap( "");
          _setDefaultCaption( *itr, i );
       }
    }
@@ -225,32 +225,32 @@ void PostEffectVis::onPFXProcessed( PostEffect *pfx )
          {            
             pBmpCtrl = itr->bmp[Target];
             pWinCtrl = itr->window[Target];
+            String caption;
 
-            GFXTextureObject *tex;
+            for (U32 c = 0; c < PostEffect::NumMRTTargets; c++)
+            {
+               GFXTextureObject* tex;
 
-            if ( pfx->mTargetTex )
-               tex = pfx->mTargetTex;         
-            else
-               tex = PFXMGR->getBackBufferTex();
+               if (pfx->mTargetTex[c])
+                  tex = pfx->mTargetTex[c];
+               else
+                  tex = PFXMGR->getBackBufferTex();
 
-            pBmpCtrl->setBitmapHandle( tex );
+               pBmpCtrl->setBitmapHandle(tex);
 
-            char caption[256];           
-            char name[256];
-
-            if ( pfx->getName() == NULL || dStrlen( pfx->getName() ) == 0 )
-               dSprintf( name, 256, "(none)" );
-            else
-               dSprintf( name, 256, "%s", pfx->getName() );
-
-
-            if ( tex )
-               dSprintf( caption, 256, "%s[%i] target - %s [ %ix%i ]", name, pfx->getId(), pfx->mTargetName.c_str(), tex->getWidth(), tex->getHeight() );               
-            else
-               dSprintf( caption, 256, "%s[%i] target", name, pfx->getId() );
+               if (pfx->getName() == NULL || dStrlen(pfx->getName()) == 0)
+                  caption += "(none)";
+               else
+                  caption += String::ToString(pfx->getName());
 
 
-            pWinCtrl->setDataField( StringTable->insert("text"), NULL, caption );
+               if (tex)
+                  caption += String::ToString("[%i] target - %s [ %ix%i ]", pfx->getId(), pfx->mTargetName[c].c_str(), tex->getWidth(), tex->getHeight());
+               else
+                  caption += String::ToString("[%i] target", pfx->getId());
+            }
+            
+            pWinCtrl->setDataField( StringTable->insert("text"), NULL, caption.c_str() );
          }
 
          for ( U32 i = Input1; i < TexCount; i++ )

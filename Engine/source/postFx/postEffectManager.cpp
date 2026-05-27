@@ -284,14 +284,14 @@ void PostEffectManager::renderEffects( const SceneRenderState *state,
 
    // This is used to pass the output texture
    // of one effect into the next effect.
-   GFXTexHandle chainTex;
+   GFXTexHandle chainTex[PostEffect::NumMRTTargets];
 
    // Process the effects.
    for ( U32 i = 0; i < effects->size(); i++ )
    {
       PostEffect *effect = (*effects)[i];
       AssertFatal( effect != NULL, "Somehow this happened" );
-      effect->process( state, chainTex );
+      effect->process(state, chainTex, PostEffect::NumMRTTargets);
    }
 }
 

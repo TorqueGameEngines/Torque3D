@@ -79,6 +79,7 @@ GuiInspectorGroup::GuiInspectorGroup( const String& groupName,
 
    mChildren.clear();
    mMargin.set(0,0,4,0);
+   VECTOR_SET_ASSOCIATION(mArrayElements);
 }
 
 //-----------------------------------------------------------------------------
@@ -229,6 +230,7 @@ void GuiInspectorGroup::clearFields()
    // that we keep for our own convenience.
    mArrayCtrls.clear();
    mChildren.clear();
+   mArrayElements.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -336,7 +338,7 @@ bool GuiInspectorGroup::inspectGroup()
                   GuiControlProfile* elementRolloutProfile = dynamic_cast<GuiControlProfile*>(Sim::findObject("GuiInspectorRolloutProfile0"));
 
                   char buf[256];
-                  dSprintf(buf, 256, "  [%i]", i);
+                  dSprintf(buf, 256, "  [%i/%i]", i, field->elementCount);
 
                   elementRollout->setControlProfile(elementRolloutProfile);
                   elementRollout->setCaption(buf);
@@ -349,6 +351,8 @@ bool GuiInspectorGroup::inspectGroup()
                   elementRollout->instantCollapse();
 
                   arrayStack->addObject(elementRollout);
+
+                  mArrayElements.push_back({ elementRollout, (S32)i, field });
                }
 
                pArrayRollout = arrayRollout;

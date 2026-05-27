@@ -456,24 +456,6 @@ U32 SoundAsset::load()
    return mLoadedState;
 }
 
-bool SoundAsset::_setSoundFile(void* object, const char* index, const char* data)
-{
-   SoundAsset* pData = static_cast<SoundAsset*>(object);
-
-   U32 id = 0;
-   if (index)
-      id = dAtoui(index);
-
-   // Update.
-   pData->mSoundFile[id] = StringTable->insert(data, true);
-   if (pData->mSoundFile[id] == StringTable->EmptyString())
-      pData->mSoundPath[id] = StringTable->EmptyString();
-
-   // Refresh the asset.
-   pData->refreshAsset();
-   return true;
-}
-
 bool SoundAsset::slotVisible(void* object, const char* index)
 {
    S32 idx = index ? dAtoi(index) : 0;

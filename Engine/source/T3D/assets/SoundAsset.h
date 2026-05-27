@@ -160,8 +160,7 @@ public:
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(SoundAsset);
-
-   static bool _setSoundFile(void* object, const char* index, const char* data);
+   
    static bool slotVisible(void* object, const char* index);
    U32 load() override;
 

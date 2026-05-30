@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "core/util/tVector.h"
 
@@ -121,5 +120,3 @@ TEST_FIX(Vector, Sorting)
       EXPECT_TRUE(v[i] <= v[i + 1])
          << "Element " << i << " was not in sorted order";
 }
-
-#endif

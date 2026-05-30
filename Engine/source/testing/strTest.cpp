@@ -218,9 +218,28 @@ TEST(String, Order)
    }
 }
 
-/// TODO
 TEST(String, Find)
 {
+   String str("foobarbarfoo");
+
+   // Character searches.
+   EXPECT_EQ(str.find('f'), 0);
+   EXPECT_EQ(str.find('o'), 1);
+   EXPECT_EQ(str.find('b'), 3);
+   EXPECT_EQ(str.find('r'), 5);
+
+   // Substring searches.
+   EXPECT_EQ(str.find("foo"), 0);
+   EXPECT_EQ(str.find("bar"), 3);
+   EXPECT_EQ(str.find("barfoo"), 6);
+
+   // Not found.
+   EXPECT_EQ(str.find("baz"), String::NPos);
+   EXPECT_EQ(str.find('x'), String::NPos);
+
+   // Empty string.
+   EXPECT_EQ(String("").find("foo"), String::NPos);
+   EXPECT_EQ(String("").find('f'), String::NPos);
 }
 
 TEST(String, Insert)

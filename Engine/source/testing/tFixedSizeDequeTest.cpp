@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "core/util/tFixedSizeDeque.h"
 
@@ -45,5 +44,3 @@ TEST(FixedSizeDeque, FixedSizeDeque)
    EXPECT_EQ( deque.popFront(), 2 );
    EXPECT_TRUE( deque.isEmpty() );
 };
-
-#endif

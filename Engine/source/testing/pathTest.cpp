@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "core/util/path.h"
 
@@ -36,5 +35,3 @@ TEST(MakeRelativePath, MakeRelativePath)
    EXPECT_EQ(Torque::Path::MakeRelativePath("levels/den/file.png", "art/interiors/burg/"), "../../../levels/den/file.png");
    EXPECT_EQ(Torque::Path::MakeRelativePath("art/interiors/burg/file.png", "art/dts/burg/"), "../../interiors/burg/file.png");
 };
-
-#endif

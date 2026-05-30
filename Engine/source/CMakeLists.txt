@@ -31,11 +31,6 @@ forwardDef(TORQUE_BASIC_LIGHTING)
 set(TORQUE_SDL ON) # we need sdl to do our platform interop
 forwardDef(TORQUE_SDL)
 
-if(TORQUE_TESTING)
-set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_TESTS_ENABLED)
-set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} "_VARIADIC_MAX=10")
-endif()
-
 # On Windows we disable CRT Security warnings - this comes from recommendations to use non-portable functions.
 if (WIN32)
 	set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} _CRT_SECURE_NO_WARNINGS WIN32)
@@ -253,11 +248,6 @@ if (UNIX AND NOT APPLE)
   torqueAddSourceDirectories("platformX11")
 endif (UNIX AND NOT APPLE)
 
-if(TORQUE_TESTING)
-  torqueAddSourceDirectories("testing")
-  set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_SHARED SDL_MAIN_HANDLED)
-endif(TORQUE_TESTING)
-
 # Add the collected files to our engine group
 source_group(TREE "${CMAKE_SOURCE_DIR}/Engine/source" PREFIX "Engine" FILES ${TORQUE_SOURCE_FILES})
 file(GLOB_RECURSE TORQUE_APP_GAME_SOURCES "${TORQUE_APP_ROOT_DIRECTORY}/source/*.cpp" "${TORQUE_APP_ROOT_DIRECTORY}/source/*.h")
@@ -389,10 +379,6 @@ if (APPLE)
   "${TORQUE_APP_GAME_DIRECTORY}/${TORQUE_APP_NAME}.torsion"
   "${TORQUE_APP_GAME_DIRECTORY}/Template.torsion.exports")
 
-  if(TORQUE_TESTING)
-    set(MACOSX_RESOURCES ${MACOSX_RESOURCES} "${TORQUE_APP_GAME_DIRECTORY}/runTests.${TORQUE_SCRIPT_EXTENSION}")
-  endif()
-
 	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_MAC_SOURCES} ${MACOSX_RESOURCES})
 
   source_group("Resources" FILES ${MACOSX_RESOURCES})
@@ -426,7 +412,7 @@ if (NOT TORQUE_NET_CURL)
 endif()
 
 ################# Executable Generation ###################
-if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+if (TORQUE_DYNAMIC_LIBRARY)
   set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_SHARED)
 
   # Build the main engine library
@@ -438,10 +424,8 @@ if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
   set(TORQUE_SOURCE_FILES "main/main.cpp")
   set(TORQUE_LINK_LIBRARIES TorqueEngine)
 else()
-  if(NOT TORQUE_TESTING)
-    set(TORQUE_SOURCE_FILES "main/main.cpp" ${TORQUE_SOURCE_FILES})
-  endif()
-endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+  set(TORQUE_SOURCE_FILES "main/main.cpp" ${TORQUE_SOURCE_FILES})
+endif (TORQUE_DYNAMIC_LIBRARY)
 
 if (APPLE)
 	add_executable(${TORQUE_APP_NAME} MACOSX_BUNDLE 
@@ -486,9 +470,9 @@ elseif (WIN32)
 
 	# NOTE: On Windows, /Zc:wchar_t- is necessary otherwise you get unicode errors
 	set_target_properties(${TORQUE_APP_NAME} PROPERTIES COMPILE_FLAGS "${TORQUE_CXX_FLAGS}")
-   if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+   if (TORQUE_DYNAMIC_LIBRARY)
       set_target_properties(TorqueEngine PROPERTIES COMPILE_FLAGS "${TORQUE_CXX_FLAGS_COMMON_DEFAULT}")
-   endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+   endif (TORQUE_DYNAMIC_LIBRARY)
 else()
 	add_executable(${TORQUE_APP_NAME} ${TORQUE_SOURCE_FILES})
 
@@ -539,6 +523,13 @@ if(IS_ARM)
     add_math_backend(neon  MATH_SIMD_NEON)
 endif()
 
+foreach(MATH_BACKEND ${TORQUE_MATH_BACKENDS})
+    target_sources(${TORQUE_APP_NAME}
+        PRIVATE
+        $<TARGET_OBJECTS:${MATH_BACKEND}>
+    )
+endforeach()
+
 if(MSVC)
     # Match projectGenerator naming for executables
     set(OUTPUT_CONFIG DEBUG MINSIZEREL RELWITHDEBINFO)
@@ -547,10 +538,10 @@ if(MSVC)
         list(GET OUTPUT_CONFIG ${INDEX} CONF)
         list(GET OUTPUT_SUFFIX ${INDEX} SUFFIX)
         set_property(TARGET ${TORQUE_APP_NAME} PROPERTY OUTPUT_NAME_${CONF} ${TORQUE_APP_NAME}_${SUFFIX})
-        if (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+        if (TORQUE_DYNAMIC_LIBRARY)
             set_property(TARGET TorqueEngine PROPERTY ${CONF}_POSTFIX "_${SUFFIX}")
             set_property(TARGET TorqueEngine PROPERTY ${CONF}_OUTPUT_NAME ${TORQUE_APP_NAME})
-        endif (TORQUE_DYNAMIC_LIBRARY AND NOT TORQUE_TESTING)
+        endif (TORQUE_DYNAMIC_LIBRARY)
     endforeach()
     # Set Visual Studio startup project
     set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TORQUE_APP_NAME})
@@ -590,14 +581,6 @@ if (TORQUE_TARGET_PROPERTIES)
    set_target_properties(${TORQUE_APP_NAME} PROPERTIES ${TORQUE_TARGET_PROPERTIES})
 endif (TORQUE_TARGET_PROPERTIES)
 target_include_directories(${TORQUE_APP_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
-
-if(TORQUE_TESTING)
-  if(WIN32)
-        target_link_options(${TORQUE_APP_NAME} PRIVATE "/SUBSYSTEM:CONSOLE")
-        set_target_properties(gtest PROPERTIES COMPILE_FLAGS "/Zc:wchar_t-")
-        set_target_properties(gmock PROPERTIES COMPILE_FLAGS "/Zc:wchar_t-")
-    endif()
-endif(TORQUE_TESTING)
 
 append_defs()
 
@@ -645,3 +628,94 @@ if (UNIX)
 	  endif()
 	endforeach()
 endif (UNIX)
+
+if(TORQUE_TESTING)
+
+    enable_testing()
+
+    # Start with the same sources as the main application
+    set(TORQUE_TEST_SOURCES ${TORQUE_SOURCE_FILES})
+
+    # Add test sources
+    file(GLOB_RECURSE TORQUE_TEST_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/testing/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/testing/*.h"
+    )
+
+    list(APPEND TORQUE_TEST_SOURCES ${TORQUE_TEST_FILES})
+
+    list(FILTER TORQUE_TEST_SOURCES EXCLUDE REGEX "main/main\\.cpp$")
+
+    add_executable(${TORQUE_APP_NAME}_unittests
+        ${TORQUE_TEST_SOURCES}
+    )
+
+    foreach(MATH_BACKEND ${TORQUE_MATH_BACKENDS})
+    target_sources(${TORQUE_APP_NAME}_unittests
+        PRIVATE
+        $<TARGET_OBJECTS:${MATH_BACKEND}>
+    )
+    endforeach()
+
+    target_include_directories(${TORQUE_APP_NAME}_unittests
+        PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            "${CMAKE_BINARY_DIR}/temp"
+            ${TORQUE_INCLUDE_DIRECTORIES}
+    )
+
+    target_compile_definitions(${TORQUE_APP_NAME}_unittests
+        PUBLIC
+            ${TORQUE_COMPILE_DEFINITIONS}
+            TORQUE_TESTS_ENABLED
+            "_VARIADIC_MAX=10"
+            TORQUE_SHARED
+            SDL_MAIN_HANDLED
+    )
+
+    target_link_libraries(${TORQUE_APP_NAME}_unittests
+        PRIVATE
+            ${TORQUE_LINK_LIBRARIES}
+            ${TORQUE_LINK_THIRDPARTY}
+            gtest
+            gmock
+    )
+
+    target_link_options(${TORQUE_APP_NAME}_unittests
+        PUBLIC
+            ${TORQUE_LINK_OPTIONS}
+    )
+
+    if(APPLE)
+    target_link_libraries(${TORQUE_APP_NAME}_unittests
+        PRIVATE
+        ${TORQUE_LINK_FRAMEWORKS}
+        )
+    endif()
+
+    if(WIN32)
+        target_link_libraries(${TORQUE_APP_NAME}_unittests
+            PRIVATE
+            ${TORQUE_LINK_WINDOWS}
+        )
+        set_target_properties(${TORQUE_APP_NAME}_unittests 
+            PROPERTIES COMPILE_FLAGS 
+                "${TORQUE_CXX_FLAGS}"
+        )
+
+        target_link_options(${TORQUE_APP_NAME}_unittests PRIVATE "/SUBSYSTEM:CONSOLE")
+        set_target_properties(gtest PROPERTIES COMPILE_FLAGS "/Zc:wchar_t-")
+        set_target_properties(gmock PROPERTIES COMPILE_FLAGS "/Zc:wchar_t-")
+    endif()
+
+    if(UNIX AND NOT APPLE)
+        target_link_libraries(${TORQUE_APP_NAME}_unittests
+            PRIVATE
+            ${TORQUE_LINK_LINUX}
+        )
+    endif()
+
+    include(GoogleTest)
+    gtest_discover_tests(${TORQUE_APP_NAME}_unittests)
+
+endif()

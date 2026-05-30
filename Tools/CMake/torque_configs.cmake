@@ -99,10 +99,6 @@ set(TORQUE_COMPILE_DEFINITIONS ICE_NO_DLL PCRE_STATIC TORQUE_ADVANCED_LIGHTING T
 # All link libraries. Modules should append to this the path to specify additional link libraries (.a, .lib, .dylib, .so)
 set(TORQUE_LINK_LIBRARIES png_static tinyxml2 collada squish opcode assimp SDL2 glad pcre convexMath zlib)
 
-if(TORQUE_TESTING)
-set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} gtest gmock)
-endif()
-
 if(NOT WIN32)
    set(WIN32 OFF CACHE BOOL "" FORCE)
 endif()

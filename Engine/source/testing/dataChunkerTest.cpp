@@ -5,7 +5,6 @@
 // SPDX-License-Identifier: MIT
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "core/dataChunker.h"
 
@@ -343,5 +342,3 @@ TEST(ThreeTieredChunkerTest,ThreeTieredChunker_Should_Function_Correctly)
    EXPECT_TRUE(threeChunker.getT3Chunker().getFreeListHead().isEmpty());
 }
 
-
-#endif

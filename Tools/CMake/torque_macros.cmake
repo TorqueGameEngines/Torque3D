@@ -201,6 +201,7 @@ function(add_math_backend name compile_defs)
     endif()
 
     # Inject objects into engine
-    target_sources(${TORQUE_APP_NAME} PRIVATE $<TARGET_OBJECTS:math_${name}>)
+    list(APPEND TORQUE_MATH_BACKENDS math_${name})
+    set(TORQUE_MATH_BACKENDS ${TORQUE_MATH_BACKENDS} PARENT_SCOPE)
     set_target_properties(math_${name} PROPERTIES FOLDER "Libraries/Math")
 endfunction()

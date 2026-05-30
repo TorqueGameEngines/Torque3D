@@ -645,6 +645,8 @@ if(TORQUE_TESTING)
     list(APPEND TORQUE_TEST_SOURCES ${TORQUE_TEST_FILES})
 
     list(FILTER TORQUE_TEST_SOURCES EXCLUDE REGEX "main/main\\.cpp$")
+    list(FILTER TORQUE_TEST_SOURCES EXCLUDE REGEX "gfx/D3D11/")
+    list(FILTER TORQUE_TEST_SOURCES EXCLUDE REGEX "gfx/gl/")
 
     add_executable(${TORQUE_APP_NAME}_unittests
         ${TORQUE_TEST_SOURCES}
@@ -667,8 +669,6 @@ if(TORQUE_TESTING)
     target_compile_definitions(${TORQUE_APP_NAME}_unittests
         PUBLIC
             ${TORQUE_COMPILE_DEFINITIONS}
-            TORQUE_TESTS_ENABLED
-            "_VARIADIC_MAX=10"
             TORQUE_SHARED
             SDL_MAIN_HANDLED
     )

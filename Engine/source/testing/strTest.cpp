@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "core/util/str.h"
 #include "core/util/tVector.h"
@@ -347,5 +346,3 @@ TEST(StringBuilder, StringBuilder)
 
    EXPECT_TRUE( str.end() == String( "foobarbarfoo" ) );
 }
-
-#endif

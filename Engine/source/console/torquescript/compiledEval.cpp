@@ -1981,10 +1981,22 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
          }
          else // it's a ParentCall
          {
-            ConsoleValue& simObjectLookupValue = callArgv[1];
-            thisObject = getThisObject(simObjectLookupValue);
+            if (callArgc > 1)
+            {
+               ConsoleValue& simObjectLookupValue = callArgv[1];
+               thisObject = getThisObject(simObjectLookupValue);
+            }
 
-            if (thisObject == NULL)
+            //   The grammar does NOT prepend anything. callArgv[1] is either
+            //   a plain script argument (Parent::func(%arg)) or an explicitly
+            //   passed %this (Parent::method(%this, %arg)) — the programmer's
+            //   choice. For plain function parent calls callArgv[1] is never
+            //   an object, so getThisObject returning NULL is expected and
+            //   correct, not an error condition. The old guard was aborting
+            //   these calls with a misleading "unable to find object" error
+            //   using the value of %arg as the object name.
+
+            /*if (thisObject == NULL)
             {
                Con::warnf(
                   ConsoleLogEntry::General,
@@ -1998,7 +2010,7 @@ Con::EvalResult CodeBlock::exec(U32 ip, const char* functionName, Namespace* thi
                stack[_STK + 1].setEmptyString();
                _STK++;
                break;
-            }
+            }*/
 
             if (thisNamespace)
             {

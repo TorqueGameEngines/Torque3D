@@ -299,7 +299,7 @@ PlayerData::PlayerData()
    imageAnimPrefixFP = StringTable->EmptyString();
    for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
    {
-      mShapeFPAsset[i].registerRefreshNotify(this);
+      shapeFPAssetRef[i].assetPtr.registerRefreshNotify(this);
       mCRCFP[i] = 0;
       mValidShapeFP[i] = false;
    }
@@ -506,12 +506,16 @@ bool PlayerData::preload(bool server, String &errorStr)
       Con::printf("PlayerData:: Jump delay exceeds range (0-%d)",jumpDelay);
    }
 
+   Resource<TSShape> shape;
+   if (shapeAssetRef.notNull())
+      shape = shapeAssetRef.assetPtr->getShapeResource();
+
    // If we don't have a shape don't crash out trying to
    // setup animations and sequences.
-   if (getShape())
+   if (shape)
    {
       // Go ahead a pre-load the player shape
-      TSShapeInstance* si = new TSShapeInstance(getShape(), false);
+      TSShapeInstance* si = new TSShapeInstance(shape, false);
       TSThread* thread = si->addThread();
 
       // Extract ground transform velocity from animations
@@ -522,7 +526,7 @@ bool PlayerData::preload(bool server, String &errorStr)
          ActionAnimationDef *sp = &ActionAnimationList[i];
          dp->name          = sp->name;
          dp->dir.set(sp->dir.x,sp->dir.y,sp->dir.z);
-         dp->sequence      = getShape()->findSequence(sp->name);
+         dp->sequence      = shape->findSequence(sp->name);
 
          // If this is a sprint action and is missing a sequence, attempt to use
          // the standard run ones.
@@ -530,7 +534,7 @@ bool PlayerData::preload(bool server, String &errorStr)
          {
             S32 offset = i-SprintRootAnim;
             ActionAnimationDef *standDef = &ActionAnimationList[RootAnim+offset];
-            dp->sequence = getShape()->findSequence(standDef->name);
+            dp->sequence = shape->findSequence(standDef->name);
          }
 
          dp->velocityScale = true;
@@ -538,12 +542,12 @@ bool PlayerData::preload(bool server, String &errorStr)
          if (dp->sequence != -1)
             getGroundInfo(si,thread,dp);
       }
-      for (S32 b = 0; b < getShape()->sequences.size(); b++)
+      for (S32 b = 0; b < shape->sequences.size(); b++)
       {
          if (!isTableSequence(b))
          {
             dp->sequence      = b;
-            dp->name          = getShape()->getName(getShape()->sequences[b].nameIndex);
+            dp->name          = shape->getName(shape->sequences[b].nameIndex);
             dp->velocityScale = false;
             getGroundInfo(si,thread,dp++);
          }
@@ -560,17 +564,17 @@ bool PlayerData::preload(bool server, String &errorStr)
             lookAction = c;
 
       // Resolve spine
-      spineNode[0] = getShape()->findNode("Bip01 Pelvis");
-      spineNode[1] = getShape()->findNode("Bip01 Spine");
-      spineNode[2] = getShape()->findNode("Bip01 Spine1");
-      spineNode[3] = getShape()->findNode("Bip01 Spine2");
-      spineNode[4] = getShape()->findNode("Bip01 Neck");
-      spineNode[5] = getShape()->findNode("Bip01 Head");
+      spineNode[0] = shape->findNode("Bip01 Pelvis");
+      spineNode[1] = shape->findNode("Bip01 Spine");
+      spineNode[2] = shape->findNode("Bip01 Spine1");
+      spineNode[3] = shape->findNode("Bip01 Spine2");
+      spineNode[4] = shape->findNode("Bip01 Neck");
+      spineNode[5] = shape->findNode("Bip01 Head");
 
       // Recoil animations
-      recoilSequence[0] = getShape()->findSequence("light_recoil");
-      recoilSequence[1] = getShape()->findSequence("medium_recoil");
-      recoilSequence[2] = getShape()->findSequence("heavy_recoil");
+      recoilSequence[0] = shape->findSequence("light_recoil");
+      recoilSequence[1] = shape->findSequence("medium_recoil");
+      recoilSequence[2] = shape->findSequence("heavy_recoil");
    }
 
    // Convert pickupRadius to a delta of boundingBox
@@ -613,40 +617,44 @@ bool PlayerData::preload(bool server, String &errorStr)
    {
       bool shapeError = false;
 
-      if (mShapeFPAsset[i].notNull())
+      if (shapeFPAssetRef[i].isNull())
+         continue;
+
+      Resource<TSShape> shapeFP = shapeFPAssetRef[i].assetPtr->getShapeResource();
+
+      if (!shapeFP)
       {
-         if (!getShapeFP(i))
+         errorStr = String::ToString("PlayerData: Couldn't load mounted image %d shape \"%s\"", i, shapeFPAssetRef[i].assetId);
+         return false;
+      }
+
+      if (!server && !shapeFPAssetRef[i].assetPtr->preloadMaterialList() && NetConnection::filesWereDownloaded())
+         shapeError = true;
+
+      if (computeCRC)
+      {
+         Con::printf("Validation required for mounted image %d shape: %s", i, shapeFPAssetRef[i].assetId);
+
+         Torque::Path shapeFPFilePath = shapeFPAssetRef[i].assetPtr->getShapeFile();
+
+         Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(shapeFPFilePath);
+
+         if (!fileRef)
          {
-            errorStr = String::ToString("PlayerData: Couldn't load mounted image %d shape \"%s\"", i, _getShapeFPAssetId(i));
+            errorStr = String::ToString("PlayerData: Mounted image %d loading failed, shape \"%s\" is not found.", i, shapeFPFilePath.getFullPath().c_str());
             return false;
          }
 
-         if (!server && !getShapeFP(i)->preloadMaterialList(getShapeFPFile(i)) && NetConnection::filesWereDownloaded())
-            shapeError = true;
-
-         if (computeCRC)
+         if (server)
+            mCRCFP[i] = fileRef->getChecksum();
+         else if (mCRCFP[i] != fileRef->getChecksum())
          {
-            Con::printf("Validation required for mounted image %d shape: %s", i, _getShapeFPAssetId(i));
-
-            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(getShapeFPFile(i));
-
-            if (!fileRef)
-            {
-               errorStr = String::ToString("PlayerData: Mounted image %d loading failed, shape \"%s\" is not found.", i, getShapeFPFile(i));
-               return false;
-            }
-
-            if (server)
-               mCRCFP[i] = fileRef->getChecksum();
-            else if (mCRCFP[i] != fileRef->getChecksum())
-            {
-               errorStr = String::ToString("PlayerData: Mounted image %d shape \"%s\" does not match version on server.", i, _getShapeFPAssetId(i));
-               return false;
-            }
+            errorStr = String::ToString("PlayerData: Mounted image %d shape \"%s\" does not match version on server.", i, shapeFPAssetRef[i].assetId);
+            return false;
          }
-
-         mValidShapeFP[i] = true;
       }
+
+      mValidShapeFP[i] = true;
    }
 
    return true;
@@ -1150,7 +1158,9 @@ void PlayerData::initPersistFields()
       // Mounted images arrays
       addArray( "Mounted Images", ShapeBase::MaxMountedImages );
 
-         INITPERSISTFIELD_SHAPEASSET_ARRAY_REFACTOR(ShapeFP, ShapeBase::MaxMountedImages, PlayerData, "@brief File name of this player's shape that will be used in conjunction with the corresponding mounted image.\n\n"
+      ADD_FIELD("shapeFPAsset", TypeShapeAssetRef, Offset(shapeFPAssetRef, PlayerData))
+         .elements(ShapeBase::MaxMountedImages)
+         .doc("@brief File name of this player's shape that will be used in conjunction with the corresponding mounted image.\n\n"
             "These optional parameters correspond to each mounted image slot to indicate a shape that is rendered "
             "in addition to the mounted image shape.  Typically these are a player's arms (or arm) that is "
             "animated along with the mounted image's state animation sequences.\n");
@@ -1357,9 +1367,9 @@ void PlayerData::packData(BitStream* stream)
       {
          stream->write(mCRCFP[i]);
       }
-   }
 
-   PACKDATA_ASSET_ARRAY_REFACTOR(ShapeFP, ShapeBase::MaxMountedImages)
+      AssetDatabase.packDataAsset(stream, shapeFPAssetRef[i].assetId);
+   }
 }
 
 void PlayerData::unpackData(BitStream* stream)
@@ -1539,9 +1549,10 @@ void PlayerData::unpackData(BitStream* stream)
       {
          stream->read(&(mCRCFP[i]));
       }
+
+      shapeFPAssetRef[i] = AssetDatabase.unpackDataAsset(stream);
    }
 
-   UNPACKDATA_ASSET_ARRAY_REFACTOR(ShapeFP, ShapeBase::MaxMountedImages)
 }
 
 
@@ -1878,9 +1889,13 @@ bool Player::onNewDataBlock( GameBaseData *dptr, bool reload )
    {
       for (U32 i=0; i<ShapeBase::MaxMountedImages; ++i)
       {
-         if (bool(mDataBlock->getShapeFP(i)))
+         if (mDataBlock->shapeFPAssetRef[i].isNull())
+            continue;
+
+         Resource<TSShape> shapeFP = mDataBlock->shapeFPAssetRef[i].assetPtr->getShapeResource();
+         if (bool(shapeFP))
          {
-            mShapeFPInstance[i] = new TSShapeInstance(mDataBlock->getShapeFP(i), isClientObject());
+            mShapeFPInstance[i] = new TSShapeInstance(shapeFP, isClientObject());
 
             mShapeFPInstance[i]->cloneMaterialList();
 
@@ -6166,6 +6181,13 @@ void Player::buildConvex(const Box3F& box, Convex* convex)
 
 void Player::updateWorkingCollisionSet()
 {
+   if (mDataBlock->shapeAssetRef.isNull())
+      return;
+
+   Resource<TSShape> shape = mDataBlock->shapeFPAssetRef->assetPtr->getShapeResource();
+   if (!shape)
+      return;
+
    // First, we need to adjust our velocity for possible acceleration.  It is assumed
    // that we will never accelerate more than 20 m/s for gravity, plus 10 m/s for
    // jetting, and an equivalent 10 m/s for jumping.  We also assume that the
@@ -6173,7 +6195,7 @@ void Player::updateWorkingCollisionSet()
    // box by the possible movement in that tick.
    Point3F scaledVelocity = mVelocity * TickSec;
    F32 len    = scaledVelocity.len();
-   F32 newLen = len + (mDataBlock->getShape()->mRadius * TickSec);
+   F32 newLen = len + (shape->mRadius * TickSec);
 
    // Check to see if it is actually necessary to construct the new working list,
    // or if we can use the cached version from the last query.  We use the x
@@ -7571,9 +7593,17 @@ F32 Player::getAnimationDurationByID(U32 anim_id)
 {
    if (anim_id == BAD_ANIM_ID)
       return 0.0f;
+
+   if (mDataBlock->shapeAssetRef.isNull())
+      return 0.0f;
+
+   Resource<TSShape> shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
+   if (!shape)
+      return 0.0f;
+
    S32 seq_id = mDataBlock->actionList[anim_id].sequence;
-   if (seq_id >= 0 && seq_id < mDataBlock->getShape()->sequences.size())
-      return mDataBlock->getShape()->sequences[seq_id].duration;
+   if (seq_id >= 0 && seq_id < shape->sequences.size())
+      return shape->sequences[seq_id].duration;
 
    return 0.0f;
 }
@@ -7584,10 +7614,16 @@ bool Player::isBlendAnimation(const char* name)
    if (anim_id == BAD_ANIM_ID)
       return false;
 
-   S32 seq_id = mDataBlock->actionList[anim_id].sequence;
-   if (seq_id >= 0 && seq_id < mDataBlock->getShape()->sequences.size())
-      return mDataBlock->getShape()->sequences[seq_id].isBlend();
+   if (mDataBlock->shapeAssetRef.isNull())
+      return false;
 
+   Resource<TSShape> shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
+   if (!shape)
+      return false;
+
+   S32 seq_id = mDataBlock->actionList[anim_id].sequence;
+   if (seq_id >= 0 && seq_id < shape->sequences.size())
+      return shape->sequences[seq_id].isBlend();
    return false;
 }
 

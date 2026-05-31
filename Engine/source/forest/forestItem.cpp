@@ -54,15 +54,15 @@ ForestItemData::ForestItemData()
       mDampingCoefficient( 0.7f )      
 {
    mShape = NULL;
-   mShapeAsset.registerRefreshNotify(this);
+   shapeAssetRef.assetPtr.registerRefreshNotify(this);
 }
 
 void ForestItemData::initPersistFields()
 {
    docsURL;
    addGroup( "Shapes" );
-
-      INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, ForestItemData, "Shape asset for this item type");
+   ADD_FIELD("shapeAsset", TypeShapeAssetRef, Offset(shapeAssetRef, ForestItemData))
+      .doc("Shape asset for this item type");
 
    endGroup( "Shapes" );
 
@@ -163,7 +163,7 @@ void ForestItemData::packData(BitStream* stream)
 
    stream->write( localName );
 
-   PACKDATA_ASSET_REFACTOR(Shape);
+   AssetDatabase.packDataAsset(stream, shapeAssetRef.assetId);
    
    stream->writeFlag( mCollidable );
 
@@ -189,7 +189,7 @@ void ForestItemData::unpackData(BitStream* stream)
    stream->read( &localName );
    setInternalName( localName );
 
-   UNPACKDATA_ASSET_REFACTOR(Shape);
+   shapeAssetRef = AssetDatabase.unpackDataAsset(stream);
    
    mCollidable = stream->readFlag();
 

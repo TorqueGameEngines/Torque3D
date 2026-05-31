@@ -61,7 +61,7 @@ class RenderShapeExample : public SceneObject
    //--------------------------------------------------------------------------
    // Rendering variables
    //--------------------------------------------------------------------------
-   DECLARE_SHAPEASSET_REFACTOR(RenderShapeExample, Shape)
+   AssetRef<ShapeAsset> mShapeAssetRef;
 
    // The actual shape instance
    TSShapeInstance*  mShapeInstance;

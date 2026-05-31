@@ -52,8 +52,8 @@ protected:
 
    MouseState  mMouseState;
 
-   DECLARE_SHAPEASSET_REFACTOR(GuiMaterialPreview, Model)
-   DECLARE_SHAPEASSET_REFACTOR(GuiMaterialPreview, MountedModel)
+   AssetRef<ShapeAsset> mShapeAssetRef;
+   AssetRef<ShapeAsset> mMountedShapeAssetRef;
 
    TSShapeInstance*  mModelInstance;
    TSShapeInstance*  mMountedModelInstance;
@@ -110,8 +110,8 @@ public:
    // For changing the ambient light color.
    void setAmbientLightColor( F32 r, F32 g, F32 b );
 
-   void setObjectModel(const char * modelName);
-   void deleteModel();
+   void setObjectShape(const char * assetId);
+   void deleteShape();
    void resetViewport();
    void setOrbitDistance(F32 distance);
 

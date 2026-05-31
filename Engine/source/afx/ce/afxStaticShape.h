@@ -85,7 +85,13 @@ public:
   U32           packUpdate(NetConnection*, U32, BitStream*) override;
   void          unpackUpdate(NetConnection*, BitStream*) override;
 
-  const char*           getShapeFileName() const { return mDataBlock->getShapeFile(); }
+  const char*           getShapeFileName() const
+  {
+     if (mDataBlock->shapeAssetRef.isNull())
+        return "";
+
+     return mDataBlock->shapeAssetRef.assetPtr->getShapeFile();
+  }
   void                  setVisibility(bool flag) { mIs_visible = flag; }
 
   DECLARE_CONOBJECT(afxStaticShape);

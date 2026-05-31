@@ -69,7 +69,7 @@ public:
 public:
    // variables set in datablock definition:
    // Shape related
-   DECLARE_SHAPEASSET_REFACTOR(afxMagicMissileData, ProjectileShape)
+   AssetRef<ShapeAsset> projectileShapeAssetRef;
   //StringTableEntry      projectileShapeName;
 
   //bool                  hasLight;

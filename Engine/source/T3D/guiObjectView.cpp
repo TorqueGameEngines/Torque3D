@@ -134,11 +134,16 @@ GuiObjectView::~GuiObjectView()
 void GuiObjectView::initPersistFields()
 {
    docsURL;
-   addGroup( "Model" );   
-      INITPERSISTFIELD_SHAPEASSET_REFACTOR(Model, GuiObjectView, "The source shape asset.");
+   addGroup( "Shape" );
+      ADD_FIELD("shapeAsset", TypeShapeAssetRef, Offset(mShapeAssetRef, GuiObjectView))
+         .doc("The source shape asset.");
+      ADD_FIELD("modelAsset", TypeShapeAssetRef, Offset(mShapeAssetRef, GuiObjectView))
+         .doc("The source shape asset.")
+         .withFlags(AbstractClassRep::FieldFlags::FIELD_HideInInspectors | AbstractClassRep::FieldFlags::FIELD_DontWriteToFile);
+
       addField( "skin", TypeRealString, Offset( mSkinName, GuiObjectView ),
          "The skin to use on the object model." );   
-   endGroup( "Model" );
+   endGroup( "Shape" );
    
    addGroup( "Animation" );
    
@@ -147,8 +152,12 @@ void GuiObjectView::initPersistFields()
 
    endGroup( "Animation" );
    
-   addGroup( "Mounting" );   
-   INITPERSISTFIELD_SHAPEASSET_REFACTOR(MountedModel, GuiObjectView, "The mounted shape asset.");
+   addGroup( "Mounting" );
+      ADD_FIELD("mountedShapeAsset", TypeShapeAssetRef, Offset(mMountedShapeAssetRef, GuiObjectView))
+         .doc("The mounted shape asset.");
+      ADD_FIELD("mountedModelAsset", TypeShapeAssetRef, Offset(mMountedShapeAssetRef, GuiObjectView))
+         .doc("The source shape asset.")
+         .withFlags(AbstractClassRep::FieldFlags::FIELD_HideInInspectors | AbstractClassRep::FieldFlags::FIELD_DontWriteToFile);
       addField( "mountedSkin", TypeRealString, Offset( mMountSkinName, GuiObjectView ),
          "Skin name used on mounted shape file." );
       addField( "mountedNode", TypeRealString, Offset( mMountNodeName, GuiObjectView ),
@@ -329,27 +338,34 @@ void GuiObjectView::setObjectAnimation( const String& sequenceName )
 
 //------------------------------------------------------------------------------
 
-bool GuiObjectView::setObjectModel( const String& modelName )
+bool GuiObjectView::setObjectShape( const String& assetId )
 {
    mRunThread = 0;
 
    // Load the shape if its not the one already set.
-   if (modelName.c_str() != _getModelAssetId())
-      _setModel(modelName.c_str());
+   if (assetId.c_str() != mShapeAssetRef.assetId)
+      mShapeAssetRef = assetId.c_str();
    else
       return true;
 
-   if( !getModel())
+   if (mShapeAssetRef.isNull())
    {
-      Con::warnf( "GuiObjectView::setObjectModel - Failed to load model '%s'", modelName.c_str() );
+      Con::warnf( "GuiObjectView::setObjectShape(%s) - Failed to load shape assetId '%s'", getName(), assetId.c_str() );
       return false;
    }
 
-   if (!getModel()->preloadMaterialList(getModelFile())) return false;
+   Resource<TSShape> shape = mShapeAssetRef.assetPtr->getShapeResource();
+   if( !shape)
+   {
+      Con::warnf( "GuiObjectView::setObjectShape(%s) - Failed to load shape '%s'", getName(), assetId.c_str());
+      return false;
+   }
+
+   if (!mShapeAssetRef.assetPtr->preloadMaterialList()) return false;
 
    // Instantiate it.
 
-   mModelInstance = new TSShapeInstance(getModel(), true );
+   mModelInstance = new TSShapeInstance(shape, true );
    mModelInstance->resetMaterialList();
    mModelInstance->cloneMaterialList();
    
@@ -357,12 +373,12 @@ bool GuiObjectView::setObjectModel( const String& modelName )
       mModelInstance->reSkin( mSkinName );
 
    TSMaterialList* pMatList = mModelInstance->getMaterialList();
-   pMatList->setTextureLookupPath(mModelAsset->getShapeFile());
+   pMatList->setTextureLookupPath(mShapeAssetRef.assetPtr->getShapeFile());
    mModelInstance->initMaterialList();
    // Initialize camera values.
    
-   mOrbitPos = getModel()->center;
-   mMinOrbitDist = getModel()->mRadius;
+   mOrbitPos = shape->center;
+   mMinOrbitDist = shape->mRadius;
 
    // Initialize animation.
    
@@ -384,23 +400,30 @@ void GuiObjectView::setSkin( const String& name )
 
 //------------------------------------------------------------------------------
 
-bool GuiObjectView::setMountedObject( const String& modelName )
+bool GuiObjectView::setMountedShape( const String& assetId )
 {
    // Load the model if it is not already the asset then set it..
-   if (modelName.c_str() != _getMountedModelAssetId())
-      _setMountedModel(modelName.c_str());
+   if (assetId.c_str() != mMountedShapeAssetRef.assetId)
+      mMountedShapeAssetRef = assetId.c_str();
    else
       return true;
 
-   if (!getMountedModel())
+   if (mMountedShapeAssetRef.isNull())
    {
-      Con::warnf("GuiObjectView::setMountedObject - Failed to load model '%s'", modelName.c_str());
+      Con::warnf("GuiObjectView::setMountedShape(%s) - Failed to load shape assetId '%s'", getName(), assetId.c_str());
       return false;
    }
 
-   if (!getMountedModel()->preloadMaterialList(getMountedModelFile())) return false;
+   Resource<TSShape> shape = mMountedShapeAssetRef.assetPtr->getShapeResource();
+   if (!shape)
+   {
+      Con::warnf("GuiObjectView::setMountedShape(%s) - Failed to load model '%s'", getName(), assetId.c_str());
+      return false;
+   }
 
-   mMountedModelInstance = new TSShapeInstance(getMountedModel(), true);
+   if (!mMountedShapeAssetRef.assetPtr->preloadMaterialList()) return false;
+
+   mMountedModelInstance = new TSShapeInstance(shape, true);
    mMountedModelInstance->resetMaterialList();
    mMountedModelInstance->cloneMaterialList();
 
@@ -628,22 +651,27 @@ void GuiObjectView::setLightDirection( const Point3F& direction )
 
 void GuiObjectView::_initAnimation()
 {
-   AssertFatal(getModel(), "GuiObjectView::_initAnimation - No model loaded!" );
+   AssertFatal(mModelInstance, "GuiObjectView::_initAnimation - No model loaded!" );
+
+   if (!mModelInstance)
+      return;
    
    if( mAnimationSeqName.isEmpty() && mAnimationSeq == -1 )
       return;
+
+   Resource<TSShape> shape = mShapeAssetRef.assetPtr->getShapeResource();
       
    // Look up sequence by name.
             
    if( !mAnimationSeqName.isEmpty() )
    {
-      mAnimationSeq = getModel()->findSequence( mAnimationSeqName );
+      mAnimationSeq = shape->findSequence( mAnimationSeqName );
       
       if( mAnimationSeq == -1 )
       {
          Con::errorf( "GuiObjectView::_initAnimation - Cannot find animation sequence '%s' on '%s'",
             mAnimationSeqName.c_str(),
-            _getModelAssetId()
+            mShapeAssetRef.assetId
          );
          
          return;
@@ -654,11 +682,11 @@ void GuiObjectView::_initAnimation()
       
    if( mAnimationSeq != -1 )
    {
-      if( mAnimationSeq >= getModel()->sequences.size() )
+      if( mAnimationSeq >= shape->sequences.size() )
       {
          Con::errorf( "GuiObjectView::_initAnimation - Sequence '%i' out of range for model '%s'",
             mAnimationSeq,
-            _getModelAssetId()
+            mShapeAssetRef.assetId
          );
          
          mAnimationSeq = -1;
@@ -682,6 +710,8 @@ void GuiObjectView::_initMount()
       
    if( !mModelInstance)
       return;
+
+   Resource<TSShape> shape = mShapeAssetRef.assetPtr->getShapeResource();
       
    mMountTransform.identity();
 
@@ -689,12 +719,12 @@ void GuiObjectView::_initMount()
    
    if( !mMountNodeName.isEmpty() )
    {
-      mMountNode = getModel()->findNode( mMountNodeName );
+      mMountNode = shape->findNode( mMountNodeName );
       if( mMountNode == -1 )
       {
          Con::errorf( "GuiObjectView::_initMount - No node '%s' on '%s'",
             mMountNodeName.c_str(),
-            _getModelAssetId()
+            mShapeAssetRef.assetId
          );
          
          return;
@@ -703,24 +733,28 @@ void GuiObjectView::_initMount()
    
    // Make sure mount node is valid.
    
-   if( mMountNode != -1 && mMountNode >= getModel()->nodes.size() )
+   if( mMountNode != -1 && mMountNode >= shape->nodes.size() )
    {
       Con::errorf( "GuiObjectView::_initMount - Mount node index '%i' out of range for '%s'",
          mMountNode,
-         _getModelAssetId()
+         mShapeAssetRef.assetId
       );
       
       mMountNode = -1;
       return;
    }
+
+   Resource<TSShape> mountShape;
+   if (mMountedShapeAssetRef.notNull())
+      mountShape = mMountedShapeAssetRef.assetPtr->getShapeResource();
    
    // Look up node on the mounted model from
    // which to mount to the primary model's node.
-   if (!getMountedModel()) return;
-   S32 mountPoint = getMountedModel()->findNode( "mountPoint" );
+   if (!mountShape) return;
+   S32 mountPoint = mountShape->findNode( "mountPoint" );
    if( mountPoint != -1 )
    {
-      getMountedModel()->getNodeWorldTransform(mountPoint, &mMountTransform),
+      mountShape->getNodeWorldTransform(mountPoint, &mMountTransform),
       mMountTransform.inverse();
    }
 }
@@ -738,26 +772,28 @@ DefineEngineMethod( GuiObjectView, getModel, const char*, (),,
    "// Request the displayed model name from the GuiObjectView object.\n"
    "%modelName = %thisGuiObjectView.getModel();\n"
    "@endtsexample\n\n"
-   "@return Name of the displayed model.\n\n"
-   "@see GuiControl")
+   "@return Id of the displayed shape.\n\n"
+   "@see GuiControl\n"
+   "@Deprecated\n\n")
 {
-   return Con::getReturnBuffer( object->_getModelAssetId() );
+   return Con::getReturnBuffer( object->getObjectShapeId() );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiObjectView, setModel, bool, (const char* shapeName),,
+DefineEngineMethod( GuiObjectView, setModel, bool, (const char* assetId),,
    "@brief Sets the model to be displayed in this control.\n\n"
-   "@param shapeName Name of the model to display.\n"
+   "@param shapassetIdeName Name of the shapeAsset to display.\n"
    "@tsexample\n"
-   "// Define the model we want to display\n"
-   "%shapeName = \"gideon.dts\";\n\n"
+   "// Define the shapeAsset we want to display\n"
+   "%assetId = \"MyModule:MyShapeAsset\";\n\n"
    "// Tell the GuiObjectView object to display the defined model\n"
-   "%thisGuiObjectView.setModel(%shapeName);\n"
+   "%thisGuiObjectView.setModel(%assetId);\n"
    "@endtsexample\n\n"
-   "@see GuiControl")
+   "@see GuiControl\n"
+   "@Deprecated\n\n")
 {
-   return object->setObjectModel( shapeName );
+   return object->setObjectShape(assetId);
 }
 
 //-----------------------------------------------------------------------------
@@ -769,25 +805,86 @@ DefineEngineMethod( GuiObjectView, getMountedModel, const char*, (),,
    "%mountedModelName = %thisGuiObjectView.getMountedModel();\n"
    "@endtsexample\n\n"
    "@return Name of the mounted model.\n\n"
-   "@see GuiControl")
+   "@see GuiControl\n"
+   "@Deprecated\n\n")
 {
-   return Con::getReturnBuffer( object->_getMountedModelAssetId() );
+   return Con::getReturnBuffer( object->getMountedShapeId() );
 }
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiObjectView, setMountedModel, void, (const char* shapeName),,
+DefineEngineMethod( GuiObjectView, setMountedModel, void, (const char* assetId),,
    "@brief Sets the model to be mounted on the primary model.\n\n"
-   "@param shapeName Name of the model to mount.\n"
+   "@param assetId Name of the shapeAsset to mount.\n"
    "@tsexample\n"
    "// Define the model name to mount\n"
-   "%modelToMount = \"GideonGlasses.dts\";\n\n"
+   "%shapeToMount = \"MyModule:MyMountedShapeAsset\";\n\n"
    "// Inform the GuiObjectView object to mount the defined model to the existing model in the control\n"
-   "%thisGuiObjectView.setMountedModel(%modelToMount);\n"
+   "%thisGuiObjectView.setMountedModel(%shapeToMount);\n"
+   "@endtsexample\n\n"
+   "@see GuiControl\n"
+   "@Deprecated\n\n")
+{
+   object->setMountedShape(assetId);
+}
+
+//-----------------------------------------------------------------------------
+DefineEngineMethod(GuiObjectView, getShape, const char*, (), ,
+   "@brief Return the model displayed in this view.\n\n"
+   "@tsexample\n"
+   "// Request the displayed model name from the GuiObjectView object.\n"
+   "%modelName = %thisGuiObjectView.getModel();\n"
+   "@endtsexample\n\n"
+   "@return Id of the displayed shape.\n\n"
+   "@see GuiControl")
+{
+   return Con::getReturnBuffer(object->getObjectShapeId());
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(GuiObjectView, setShape, bool, (const char* assetId), ,
+   "@brief Sets the shape to be displayed in this control.\n\n"
+   "@param shapassetIdeName Name of the shapeAsset to display.\n"
+   "@tsexample\n"
+   "// Define the shapeAsset we want to display\n"
+   "%assetId = \"MyModule:MyShapeAsset\";\n\n"
+   "// Tell the GuiObjectView object to display the defined model\n"
+   "%thisGuiObjectView.setshape(%assetId);\n"
    "@endtsexample\n\n"
    "@see GuiControl")
 {
-   object->setObjectModel(shapeName);
+   return object->setObjectShape(assetId);
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(GuiObjectView, getMountedShape, const char*, (), ,
+   "@brief Return the id of the mounted shape.\n\n"
+   "@tsexample\n"
+   "// Request the id of the mounted shape from the GuiObjectView object\n"
+   "%mountedShapeId = %thisGuiObjectView.getMounteShape();\n"
+   "@endtsexample\n\n"
+   "@return Name of the mounted shape.\n\n"
+   "@see GuiControl")
+{
+   return Con::getReturnBuffer(object->getMountedShapeId());
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(GuiObjectView, setMountedShape, void, (const char* assetId), ,
+   "@brief Sets the shape to be mounted on the primary shape.\n\n"
+   "@param assetId Name of the shapeAsset to mount.\n"
+   "@tsexample\n"
+   "// Define the shapeAsset name to mount\n"
+   "%shapeToMount = \"MyModule:MyMountedShapeAsset\";\n\n"
+   "// Inform the GuiObjectView object to mount the defined shapeAsset to the existing shape in the control\n"
+   "%thisGuiObjectView.setMountedShape(%shapeToMount);\n"
+   "@endtsexample\n\n"
+   "@see GuiControl")
+{
+   object->setMountedShape(assetId);
 }
 
 //-----------------------------------------------------------------------------
@@ -873,20 +970,20 @@ DefineEngineMethod( GuiObjectView, setSeq, void, (const char* indexOrName),,
 
 //-----------------------------------------------------------------------------
 
-DefineEngineMethod( GuiObjectView, setMount, void, ( const char* shapeName, const char* mountNodeIndexOrName),,
+DefineEngineMethod( GuiObjectView, setMount, void, ( const char* assetId, const char* mountNodeIndexOrName),,
    "@brief Mounts the given model to the specified mount point of the primary model displayed in this control.\n\n"
    "Detailed description\n\n"
-   "@param shapeName Name of the model to mount.\n"
+   "@param assetId Name of the shapeAsset to mount.\n"
    "@param mountNodeIndexOrName Index or name of the mount point to be mounted to. If index, corresponds to \"mountN\" in your shape where N is the number passed here.\n"
    "@tsexample\n"
    "// Set the shapeName to mount\n"
-   "%shapeName = \"GideonGlasses.dts\"\n\n"
+   "%assetId = \"MyModule:MyMountedShapeAsset\"\n\n"
    "// Set the mount node of the primary model in the control to mount the new shape at\n"
    "%mountNodeIndexOrName = \"3\";\n"
    "//OR:\n"
    "%mountNodeIndexOrName = \"Face\";\n\n"
    "// Inform the GuiObjectView object to mount the shape at the specified node.\n"
-   "%thisGuiObjectView.setMount(%shapeName,%mountNodeIndexOrName);\n"
+   "%thisGuiObjectView.setMount(%assetId,%mountNodeIndexOrName);\n"
    "@endtsexample\n\n"
    "@see GuiControl")
 {
@@ -895,7 +992,7 @@ DefineEngineMethod( GuiObjectView, setMount, void, ( const char* shapeName, cons
    else
       object->setMountNode( mountNodeIndexOrName );
       
-   object->setMountedObject( shapeName );
+   object->setMountedShape(assetId);
 }
 
 //-----------------------------------------------------------------------------

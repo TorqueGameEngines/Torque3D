@@ -281,7 +281,8 @@ RigidShapeData::RigidShapeData()
 
    dustTrailEmitter = NULL;
    dustTrailID = 0;
-   _setShape(ShapeAsset::smNoShapeAssetFallback);
+
+   shapeAssetRef = ShapeAsset::smNoShapeAssetFallback;
 }
 
 RigidShapeData::~RigidShapeData()
@@ -340,7 +341,7 @@ bool RigidShapeData::preload(bool server, String &errorStr)
    if (!collisionDetails.size() || collisionDetails[0] == -1)
    {
       Con::errorf("RigidShapeData::preload failed: Rigid shapes must define a collision-1 detail");
-      errorStr = String::ToString("RigidShapeData: Couldn't load shape asset \"%s\"", getShapeAsset().getAssetId());
+      errorStr = String::ToString("RigidShapeData: Couldn't load shape asset \"%s\"", shapeAssetRef.assetId);
       return false;
    }
 
@@ -1443,13 +1444,20 @@ void RigidShape::updateWorkingCollisionSet(const U32 mask)
 {
    PROFILE_SCOPE( Vehicle_UpdateWorkingCollisionSet );
 
+   if (mDataBlock->shapeAssetRef.isNull())
+      return;
+
+   Resource<TSShape> shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
+   if (!shape)
+      return;
+
    // First, we need to adjust our velocity for possible acceleration.  It is assumed
    // that we will never accelerate more than 20 m/s for gravity, plus 30 m/s for
    // jetting, and an equivalent 10 m/s for vehicle accel.  We also assume that our
    // working list is updated on a Tick basis, which means we only expand our box by
    // the possible movement in that tick, plus some extra for caching purposes
    Box3F convexBox = mConvex.getBoundingBox(getTransform(), getScale());
-   F32 len = (mRigid.linVelocity.len() + mDataBlock->getShape()->mRadius) * TickSec;
+   F32 len = (mRigid.linVelocity.len() + shape->mRadius) * TickSec;
    F32 l = (len * 1.1) + 0.1;  // fudge factor
    convexBox.minExtents -= Point3F(l, l, l);
    convexBox.maxExtents += Point3F(l, l, l);

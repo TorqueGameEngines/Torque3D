@@ -345,7 +345,7 @@ protected:
    RectF mBillboardRects[MAX_COVERTYPES];
 
    /// The cover shape filenames.
-   DECLARE_SHAPEASSET_ARRAY_NET_REFACTOR(GroundCover, Shape, MAX_COVERTYPES, -1)
+   AssetRef<ShapeAsset> mShapeAssetRef[MAX_COVERTYPES];
 
    /// The cover shape instances.
    TSShapeInstance* mShapeInstances[MAX_COVERTYPES];

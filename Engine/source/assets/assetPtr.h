@@ -182,4 +182,54 @@ public:
     bool isValid(void) const { return notNull() && static_cast<AssetBase*>(mpAsset.getObject())->isAssetValid(); }
 };
 
+//-----------------------------------------------------------------------------
+// AssetRef is a simple struct that contains an asset Id and an AssetPtr.
+// This is used in cases where we want to be able to track the asset Id even if the asset pointer is null (e.g. when the asset fails to load and we want to keep the asset Id around so that we can retry loading it later).
+//-----------------------------------------------------------------------------
+template <typename T>
+struct AssetRef
+{
+   StringTableEntry assetId;
+   AssetPtr<T> assetPtr;
+
+   AssetRef()
+   {
+      assetId = StringTable->EmptyString();
+   }
+   AssetRef<T>& operator=(const char* pAssetId)
+   {
+      assetId = StringTable->insert(pAssetId);
+      assetPtr = pAssetId;
+
+      // Return Reference.
+      return *this;
+   }
+   AssetRef<T>& operator=(const AssetPtr<T>& pAssetPtr)
+   {
+      if (pAssetPtr.notNull())
+         assetId = StringTable->insert(pAssetPtr->getAssetId());
+
+      assetPtr = pAssetPtr;
+
+      // Return Reference.
+      return *this;
+   }
+   AssetRef<T>& operator=(const AssetRef<T>& pAssetRef)
+   {
+      assetId = pAssetRef.assetId;
+      assetPtr = pAssetRef.assetPtr;
+
+      // Return Reference.
+      return *this;
+   }
+
+   StringTableEntry getAssetId(void) const { return assetId; }
+   bool isAssetId(const char* pAssetId) const { return assetId == StringTable->insert(pAssetId); }
+   bool hasAssetId() const { return assetId != StringTable->EmptyString(); }
+
+   /// Validity.
+   bool isNull(void) const { return assetPtr.isNull(); }
+   bool notNull(void) const { return !assetPtr.isNull(); }
+   bool isValid(void) const { return notNull() && static_cast<AssetBase*>(assetPtr)->isAssetValid(); }
+};
 #endif // _ASSET_PTR_H_

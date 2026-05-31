@@ -86,7 +86,7 @@ public:
    /// Is rendererd during shadow passes.
    bool castShadows;
 
-   DECLARE_SHAPEASSET_REFACTOR(PhysicsDebrisData, Shape)
+   AssetRef<ShapeAsset> shapeAssetRef;
 
    PhysicsDebrisData();
    virtual ~PhysicsDebrisData();

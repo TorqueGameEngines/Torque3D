@@ -332,9 +332,12 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
          return false;
       }
    }
+
+   Resource<TSShape> shape = shapeAssetRef.assetPtr->getShapeResource();
+
    // Resolve jet nodes
    for (S32 j = 0; j < MaxJetNodes; j++)
-      jetNode[j] = getShape()->findNode(sJetNode[j]);
+      jetNode[j] = shape->findNode(sJetNode[j]);
 
    return true;
 }

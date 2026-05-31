@@ -216,36 +216,43 @@ bool TurretShapeData::preload(bool server, String &errorStr)
    if (!Parent::preload(server, errorStr))
       return false;
 
+   if (shapeAssetRef.isNull())
+      return false;
+
+   Resource<TSShape> shape = shapeAssetRef.assetPtr->getShapeResource();
+   if (!shape)
+      return false;
+
    // We have mShape at this point.  Resolve nodes.
-   headingNode = getShape()->findNode("heading");
-   pitchNode = getShape()->findNode("pitch");
+   headingNode = shape->findNode("heading");
+   pitchNode = shape->findNode("pitch");
 
    // Find any mirror pitch nodes
    for (U32 i = 0; i < NumMirrorDirectionNodes; ++i)
    {
       char name[32];
       dSprintf(name, 31, "pitch%d", i+1);
-      pitchNodes[i] = getShape()->findNode(name);
+      pitchNodes[i] = shape->findNode(name);
 
       dSprintf(name, 31, "heading%d", i+1);
-      headingNodes[i] = getShape()->findNode(name);
+      headingNodes[i] = shape->findNode(name);
    }
 
    // Resolve weapon mount point node indexes
    for (U32 i = 0; i < ShapeBase::MaxMountedImages; i++) {
       char fullName[256];
       dSprintf(fullName,sizeof(fullName),"weaponMount%d",i);
-      weaponMountNode[i] = getShape()->findNode(fullName);
+      weaponMountNode[i] = shape->findNode(fullName);
    }
 
    // Recoil animations
-   recoilSequence[0] = getShape()->findSequence("light_recoil");
-   recoilSequence[1] = getShape()->findSequence("medium_recoil");
-   recoilSequence[2] = getShape()->findSequence("heavy_recoil");
+   recoilSequence[0] = shape->findSequence("light_recoil");
+   recoilSequence[1] = shape->findSequence("medium_recoil");
+   recoilSequence[2] = shape->findSequence("heavy_recoil");
 
    // Optional sequences used when the turret rotates
-   pitchSequence = getShape()->findSequence("pitch");
-   headingSequence = getShape()->findSequence("heading");
+   pitchSequence = shape->findSequence("pitch");
+   headingSequence = shape->findSequence("heading");
 
    return true;
 }

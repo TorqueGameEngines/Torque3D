@@ -83,7 +83,7 @@ struct DebrisData : public GameBaseData, protected AssetPtrCallback
    F32      terminalVelocity;    // max velocity magnitude
    bool     ignoreWater;
 
-   DECLARE_SHAPEASSET_REFACTOR(DebrisData, Shape)
+   AssetRef<ShapeAsset> shapeAssetRef;
 
    StringTableEntry  textureName;
 

@@ -602,7 +602,7 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    VectorF mOldScale = getScale();
    StringTableEntry oldTextureName = mTextureAsset.getAssetId();
    StringTableEntry oldShapeAsset = mShapeAssetRef.assetId;
-   StringTableEntry oldShape = mShapeAssetRef.assetPtr->getShapeFile();
+   StringTableEntry oldShape = mShapeAssetRef.notNull() ? mShapeAssetRef.assetPtr->getShapeFile() : StringTable->EmptyString();
 
    if (stream->readFlag())// Fog color
       stream->read(&mFogColor);

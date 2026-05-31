@@ -6184,7 +6184,7 @@ void Player::updateWorkingCollisionSet()
    if (mDataBlock->shapeAssetRef.isNull())
       return;
 
-   Resource<TSShape> shape = mDataBlock->shapeFPAssetRef->assetPtr->getShapeResource();
+   Resource<TSShape> shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
    if (!shape)
       return;
 

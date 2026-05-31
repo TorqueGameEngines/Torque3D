@@ -405,22 +405,23 @@ bool TSStatic::_createShape()
    mAmbientThread = NULL;
    //mShape = NULL;
 
-   if (mShapeAssetRef.assetId == StringTable->EmptyString())
-      return false;
-
    Resource<TSShape> shape;
-   if (!mShapeAssetRef.assetPtr.isValid())
+   if (mShapeAssetRef.assetPtr.isNull())
+   {
       shape = ShapeAsset::smNoShapeAssetFallbackAssetPtr->getShapeResource();
+   }
    else
+   {
       shape = mShapeAssetRef.assetPtr->getShapeResource();
 
-   if (shape)
-   {
       if (isClientObject() &&
          !mShapeAssetRef.assetPtr->preloadMaterialList() &&
          NetConnection::filesWereDownloaded())
          return false;
+   }
 
+   if (shape)
+   {
       mObjBox = shape->mBounds;
       resetWorldBox();
 

@@ -158,6 +158,7 @@ protected:
    /// Taml callbacks.
    void onTamlPreWrite(void) override;
    void onTamlPostWrite(void) override;
+   void onTamlCustomWrite(TamlCustomNodes& customNodes) override;
 
 protected:
    static bool setShapeFile(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ShapeAsset*>(obj)->setShapeFile(data); return false; }

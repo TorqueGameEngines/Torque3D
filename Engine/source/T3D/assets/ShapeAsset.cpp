@@ -626,6 +626,32 @@ void ShapeAsset::onTamlPostWrite(void)
    mNormalImposterFileName = expandAssetFilePath(mNormalImposterFileName);
 }
 
+void ShapeAsset::onTamlCustomWrite(TamlCustomNodes& customNodes)
+{
+   // Debug Profiling.
+   PROFILE_SCOPE(ShapeAsset_OnTamlCustomWrite);
+
+   // Call parent.
+   Parent::onTamlCustomWrite(customNodes);
+
+   if (!mShape)
+      return;
+
+   TamlCustomNode* materialsData = customNodes.addNode(StringTable->insert("Materials"));
+   U32 matCount = mShape->materialList->size();
+   Vector<String>& mat_names = const_cast<Vector<String>&>(mShape->materialList->getMaterialNameList());
+   for (U32 i=0; i < mat_names.size(); i++)
+   {
+      StringTableEntry matAssetId = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(mat_names[i].c_str()));
+      if (matAssetId != StringTable->EmptyString())
+      {
+         String fieldName = String::ToString("materialSlot%d", i);
+         String fieldData = String::ToString("%s%s", ASSET_ID_FIELD_PREFIX, matAssetId);
+         materialsData->addField(fieldName.c_str(), matAssetId);
+      }
+   }
+}
+
 #ifdef TORQUE_TOOLS
 const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overrideMaterial)
 {

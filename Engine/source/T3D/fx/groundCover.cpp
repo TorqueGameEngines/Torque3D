@@ -513,9 +513,6 @@ GroundCover::GroundCover()
       mLayerAsset[i] = NULL;
       mLayerFile[i] = StringTable->EmptyString();
 
-      mShapeAsset[i] = NULL;
-      mShapeFile[i] = StringTable->EmptyString();
-
       mInvertLayer[i] = NULL;
 
       mMinClumpCount[i] = 1;
@@ -526,7 +523,7 @@ GroundCover::GroundCover()
       mBillboardRects[i].point.set( 0.0f, 0.0f );
       mBillboardRects[i].extent.set( 1.0f, 1.0f );
 
-      mShapeAsset[i].registerRefreshNotify(this);
+      mShapeAssetRef[i].assetPtr.registerRefreshNotify(this);
 
       mShapeInstances[i] = NULL;
 
@@ -568,7 +565,10 @@ void GroundCover::initPersistFields()
 
          addField( "billboardUVs",  TypeRectUV,    Offset( mBillboardRects, GroundCover ), MAX_COVERTYPES,  "Subset material UV coordinates for this cover billboard." );
 
-         INITPERSISTFIELD_SHAPEASSET_ARRAY_REFACTOR(Shape, MAX_COVERTYPES, GroundCover, "The cover shape. [Optional]");
+         ADD_FIELD("shapeAsset", TypeShapeAssetRef, Offset(mShapeAssetRef, GroundCover))
+            .elements(MAX_COVERTYPES)
+            .doc("The cover shape. [Optional]")
+            .network(-1);
 
          INITPERSISTFIELD_TERRAINMATERIALASSET_ARRAY(Layer, MAX_COVERTYPES, GroundCover, "Terrain material assetId to limit coverage to, or blank to not limit.");
 
@@ -773,10 +773,11 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
          stream->write( mBillboardRects[i].point.y );
          stream->write( mBillboardRects[i].extent.x );
          stream->write( mBillboardRects[i].extent.y );
+
+         AssetDatabase.packUpdateAsset(connection, mask, stream, mShapeAssetRef[i].assetId);
       }
 
       PACK_ASSET_ARRAY_REFACTOR(connection, Layer, MAX_COVERTYPES)
-      PACK_ASSET_ARRAY_REFACTOR(connection, Shape, MAX_COVERTYPES)
 
       stream->writeFlag( mDebugRenderCells );
       stream->writeFlag( mDebugNoBillboards );
@@ -844,11 +845,11 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
          stream->read( &mBillboardRects[i].point.y );
          stream->read( &mBillboardRects[i].extent.x );
          stream->read( &mBillboardRects[i].extent.y );
+
+         mShapeAssetRef[i] = AssetDatabase.unpackUpdateAsset(connection, stream);
       }
 
       UNPACK_ASSET_ARRAY_REFACTOR(connection, Layer, MAX_COVERTYPES)
-
-      UNPACK_ASSET_ARRAY_REFACTOR(connection, Shape, MAX_COVERTYPES)
 
       mDebugRenderCells    = stream->readFlag();
       mDebugNoBillboards   = stream->readFlag();
@@ -895,17 +896,21 @@ void GroundCover::_initShapes()
 
    for ( S32 i=0; i < MAX_COVERTYPES; i++ )
    {
-      if ( mShapeAsset[i].isNull() || getShape(i) == NULL)
+      if ( mShapeAssetRef[i].isNull())
          continue;
 
-      if ( isClientObject() && !getShape(i)->preloadMaterialList(getShapeFile(i)) && NetConnection::filesWereDownloaded() )
+      Resource<TSShape> shape = mShapeAssetRef[i].assetPtr->getShapeResource();
+      if (!shape)
+         continue;
+
+      if ( isClientObject() && !mShapeAssetRef[i].assetPtr->preloadMaterialList() && NetConnection::filesWereDownloaded() )
       {
-         Con::warnf( "GroundCover::_initShapes() material preload failed for shape: %s", _getShapeAssetId(i));
+         Con::warnf( "GroundCover::_initShapes() material preload failed for shape: %s", mShapeAssetRef[i].assetId);
          continue;
       }
 
       // Create the shape instance.
-      mShapeInstances[i] = new TSShapeInstance(getShape(i), isClientObject() );
+      mShapeInstances[i] = new TSShapeInstance(shape, isClientObject() );
    }
 }
 

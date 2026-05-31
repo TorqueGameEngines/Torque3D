@@ -84,7 +84,7 @@ class VolumetricFog : public SceneObject
       Vector <U32> *indices;
    };
 
-   DECLARE_SHAPEASSET_REFACTOR(VolumetricFog, Shape)
+   AssetRef<ShapeAsset> mShapeAssetRef;
    
    protected:
       // Rendertargets;

@@ -71,7 +71,7 @@ protected:
    bool onAdd() override;
 
 public:
-   DECLARE_SHAPEASSET_REFACTOR(ProjectileData, ProjectileShape)
+   AssetRef<ShapeAsset> projectileShapeAssetRef;
 
    /// Set to true if it is a billboard and want it to always face the viewer, false otherwise
    bool faceViewer;

@@ -66,11 +66,12 @@ class GuiObjectView : public GuiTSCtrl, protected AssetPtrCallback
 
       /// @}
       
-      /// @name Model
+      /// @name Shape
       /// @{
       
-      ///Model loaded for display.
-      DECLARE_SHAPEASSET_REFACTOR(GuiObjectView, Model)
+      ///Shape loaded for display.
+      ///
+      AssetRef<ShapeAsset> mShapeAssetRef;
 
       TSShapeInstance* mModelInstance;
       /// Name of skin to use on model.
@@ -102,7 +103,7 @@ class GuiObjectView : public GuiTSCtrl, protected AssetPtrCallback
       /// @{
       
       ///Model to mount to the primary model.
-      DECLARE_SHAPEASSET_REFACTOR(GuiObjectView, MountedModel)
+      AssetRef<ShapeAsset> mMountedShapeAssetRef;
       TSShapeInstance* mMountedModelInstance;
       
       ///
@@ -176,8 +177,11 @@ class GuiObjectView : public GuiTSCtrl, protected AssetPtrCallback
       /// Set the skin to use on the primary model.
       void setSkin( const String& name );
 
-      /// Set the model to show in this view.
-      bool setObjectModel( const String& modelName );
+      /// Set the shape to show in this view.
+      bool setObjectShape( const String& assetId );
+   
+      /// Get the shape currently shown in this view.
+      StringTableEntry getObjectShapeId() const { return mShapeAssetRef.assetId; }
       
       /// @}
       
@@ -210,7 +214,8 @@ class GuiObjectView : public GuiTSCtrl, protected AssetPtrCallback
       void setMountNode( const String& nodeName );
       
       ///
-      bool setMountedObject( const String& modelName );
+      bool setMountedShape( const String& assetId );
+      StringTableEntry getMountedShapeId() const { return mMountedShapeAssetRef.assetId; }
             
       /// @}
       
@@ -274,11 +279,11 @@ class GuiObjectView : public GuiTSCtrl, protected AssetPtrCallback
 protected:
    void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
    {
-      if (getModel())
-         setObjectModel(_getModelAssetId());
+      if (mShapeAssetRef.notNull())
+         setObjectShape(mShapeAssetRef.assetId);
 
-      if (getMountedModel())
-         setMountedObject(_getMountedModelAssetId());
+      if (mMountedShapeAssetRef.notNull())
+         setMountedShape(mMountedShapeAssetRef.assetId);
    }
 };
 

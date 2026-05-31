@@ -144,11 +144,15 @@ bool ProximityMineData::preload( bool server, String& errorStr )
       }
    }
 
-   if ( getShape() )
+   if (shapeAssetRef.notNull())
    {
-      // Lookup animation sequences
-      armingSequence = getShape()->findSequence( "armed" );
-      triggerSequence = getShape()->findSequence( "triggered" );
+      Resource<TSShape> shape = shapeAssetRef.assetPtr->getShapeResource();
+      if (shape)
+      {
+         // Lookup animation sequences
+         armingSequence = shape->findSequence("armed");
+         triggerSequence = shape->findSequence("triggered");
+      }
    }
 
    return true;

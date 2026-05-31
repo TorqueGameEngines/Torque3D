@@ -99,13 +99,13 @@ void TSForestItemData::inspectPostApply()
 
 void TSForestItemData::_onResourceChanged( const Torque::Path &path )
 {
-   U32 assetStatus = ShapeAsset::getAssetErrCode(_getShapeAssetId());
+   U32 assetStatus = ShapeAsset::getAssetErrCode(shapeAssetRef.assetPtr);
    if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
    {
       return;
    }
 
-   if ( path != Path(getShapeFile()) )
+   if ( path != Path(shapeAssetRef.assetPtr->getShapeFile()) )
       return;
    
    SAFE_DELETE( mShapeInstance );
@@ -116,8 +116,11 @@ void TSForestItemData::_onResourceChanged( const Torque::Path &path )
 
 void TSForestItemData::_loadShape()
 {
-   mShape = getShape();
-   U32 assetStatus = ShapeAsset::getAssetErrCode(_getShapeAssetId());
+   if (shapeAssetRef.assetPtr.isNull())
+      return;
+
+   mShape = shapeAssetRef.assetPtr->getShape();
+   U32 assetStatus = ShapeAsset::getAssetErrCode(shapeAssetRef.assetPtr);
    if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
    {
       return;
@@ -127,7 +130,7 @@ void TSForestItemData::_loadShape()
       return;
 
    if ( mIsClientObject && 
-       !mShape->preloadMaterialList(getShapeFile()) )
+       !mShape->preloadMaterialList(shapeAssetRef.assetPtr->getShapeFile()) )
       return;
    
    // Lets add an autobillboard detail if don't have one.
@@ -165,7 +168,7 @@ TSShapeInstance* TSForestItemData::_getShapeInstance() const
 
 void TSForestItemData::_checkLastDetail()
 {
-   U32 assetStatus = ShapeAsset::getAssetErrCode(_getShapeAssetId());
+   U32 assetStatus = ShapeAsset::getAssetErrCode(shapeAssetRef.assetPtr);
    if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
    {
       return;
@@ -177,7 +180,7 @@ void TSForestItemData::_checkLastDetail()
    // TODO: Expose some real parameters to the datablock maybe?
    if ( detail->subShapeNum != -1 )
    {
-      mShape->addImposter(getShapeFile(), 10, 4, 0, 0, 256, 0, 0);
+      mShape->addImposter(shapeAssetRef.assetPtr->getShapeFile(), 10, 4, 0, 0, 256, 0, 0);
 
       // HACK: If i don't do this it crashes!
       while ( mShape->detailCollisionAccelerators.size() < mShape->details.size() )

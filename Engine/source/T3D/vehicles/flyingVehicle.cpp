@@ -135,7 +135,9 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
    if (!Parent::preload(server, errorStr))
       return false;
 
-   TSShapeInstance* si = new TSShapeInstance(getShape(), false);
+   Resource<TSShape> shape = shapeAssetRef.assetPtr->getShapeResource();
+
+   TSShapeInstance* si = new TSShapeInstance(shape, false);
 
    // Resolve objects transmitted from server
    if (!server) {
@@ -165,7 +167,7 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
 
    // Resolve jet nodes
    for (S32 j = 0; j < MaxJetNodes; j++)
-      jetNode[j] = getShape()->findNode(sJetNode[j]);
+      jetNode[j] = shape->findNode(sJetNode[j]);
 
    //
    maxSpeed = maneuveringForce / minDrag;

@@ -61,8 +61,8 @@ protected:
    virtual void _preload() {}
 
 public:
-   
-   DECLARE_SHAPEASSET_REFACTOR(ForestItemData, Shape)
+
+   AssetRef<ShapeAsset> shapeAssetRef;
 
    /// This is the radius used during placement to ensure
    /// the element isn't crowded up against other trees.

@@ -162,7 +162,9 @@ void VolumetricFog::initPersistFields()
    docsURL;
    Parent::initPersistFields();
    addGroup("Shapes");
-      INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, VolumetricFog, "The source shape asset.");
+   ADD_FIELD("shapeAsset", TypeShapeAssetRef, Offset(mShapeAssetRef, VolumetricFog))
+      .doc("The source shape asset.")
+      .network(FogShapeMask);
    endGroup("Shapes");
 
    addGroup("VolumetricFogData");
@@ -340,7 +342,7 @@ void VolumetricFog::handleResize(VolumetricFogRTManager *RTM, bool resize)
 
 bool VolumetricFog::setShapeAsset(const StringTableEntry shapeAssetId)
 {
-   _setShape(shapeAssetId);
+   mShapeAssetRef = shapeAssetId;
 
    LoadShape();
    return true;
@@ -349,27 +351,28 @@ bool VolumetricFog::setShapeAsset(const StringTableEntry shapeAssetId)
 bool VolumetricFog::LoadShape()
 {
    GFXPrimitiveType GFXdrawTypes[] = { GFXTriangleList, GFXTriangleStrip };
-   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAsset);
+   U32 assetStatus = ShapeAsset::getAssetErrCode(mShapeAssetRef.assetPtr);
    if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
    {
       Con::errorf("[VolumetricFog] Failed to load shape asset.");
       return false;
    }
 
-   if (!getShape())
+   Resource<TSShape> shape = mShapeAssetRef.assetPtr->getShapeResource();
+   if (!shape)
    {
       Con::errorf("VolumetricFog::_createShape() - Shape Asset had no valid shape!");
       return false;
    }
 
-   mObjBox = getShape()->mBounds;
-   mRadius = getShape()->mRadius;
+   mObjBox = shape->mBounds;
+   mRadius = shape->mRadius;
    resetWorldBox();
 
    if (!isClientObject())
       return false;
 
-   TSShapeInstance *mShapeInstance = new TSShapeInstance(getShape(), false);
+   TSShapeInstance *mShapeInstance = new TSShapeInstance(shape, false);
    meshes mesh_detail;
 
    for (S32 i = 0; i < det_size.size(); i++)
@@ -385,9 +388,9 @@ bool VolumetricFog::LoadShape()
 
    // browsing model for detail levels
 
-   for (U32 i = 0; i < getShape()->details.size(); i++)
+   for (U32 i = 0; i < shape->details.size(); i++)
    {
-      const TSDetail *detail = &getShape()->details[i];
+      const TSDetail *detail = &shape->details[i];
       mesh_detail.det_size = detail->size;
       mesh_detail.sub_shape = detail->subShapeNum;
       mesh_detail.obj_det = detail->objectDetailNum;
@@ -403,8 +406,8 @@ bool VolumetricFog::LoadShape()
       const S32 ss = det_size[i].sub_shape;
       if (ss >= 0)
       {
-         const S32 start = getShape()->subShapeFirstObject[ss];
-         const S32 end = start + getShape()->subShapeNumObjects[ss];
+         const S32 start = shape->subShapeFirstObject[ss];
+         const S32 end = start + shape->subShapeNumObjects[ss];
          for (S32 j = start; j < end; j++)
          {
             // Loading shape, only the first mesh for each detail will be used!
@@ -566,14 +569,17 @@ U32 VolumetricFog::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    }
    if (stream->writeFlag(mask & FogShapeMask))
    {
-      PACK_ASSET_REFACTOR(con, Shape);
+      AssetDatabase.packUpdateAsset(conn, mask, stream, mShapeAssetRef.assetId);
+
       mathWrite(*stream, getTransform());
       mathWrite(*stream, getScale());
 
-      if (mShapeAsset.notNull())
+      if (mShapeAssetRef.isValid())
       {
-         mObjBox = mShapeAsset->getShapeResource()->mBounds;
-         mRadius = mShapeAsset->getShapeResource()->mRadius;
+         Resource<TSShape> shape = mShapeAssetRef.assetPtr->getShapeResource();
+
+         mObjBox = shape->mBounds;
+         mRadius = shape->mRadius;
       }
       else
       {
@@ -595,8 +601,8 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    VectorF scale;
    VectorF mOldScale = getScale();
    StringTableEntry oldTextureName = mTextureAsset.getAssetId();
-   StringTableEntry oldShapeAsset = _getShapeAssetId();
-   StringTableEntry oldShape = getShapeFile();
+   StringTableEntry oldShapeAsset = mShapeAssetRef.assetId;
+   StringTableEntry oldShape = mShapeAssetRef.notNull() ? mShapeAssetRef.assetPtr->getShapeFile() : StringTable->EmptyString();
 
    if (stream->readFlag())// Fog color
       stream->read(&mFogColor);
@@ -665,11 +671,11 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    }
    if (stream->readFlag())//Fog shape
    {
-      UNPACK_ASSET_REFACTOR(con, Shape);
+      mShapeAssetRef = AssetDatabase.unpackUpdateAsset(conn, stream);
 
       mathRead(*stream, &mat);
       mathRead(*stream, &scale);
-      if (strcmp(oldShapeAsset, _getShapeAssetId()) != 0 || strcmp(oldShape, getShapeFile()) != 0)
+      if (strcmp(oldShapeAsset, mShapeAssetRef.assetId) != 0 || strcmp(oldShape, mShapeAssetRef.assetPtr->getShapeFile()) != 0)
       {
          mIsVBDirty = true;
          mShapeLoaded = LoadShape();

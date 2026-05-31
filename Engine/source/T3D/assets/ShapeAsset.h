@@ -77,9 +77,10 @@ public:
    };
 
    static StringTableEntry smNoShapeAssetFallback;
+   static AssetPtr<ShapeAsset> smNoShapeAssetFallbackAssetPtr;
 
    static const String mErrCodeStrings[U32(ShapeAssetErrCode::Extended) - U32(Parent::Extended) + 1];
-   static U32 getAssetErrCode(ConcreteAssetPtr checkAsset) { if (checkAsset) return checkAsset->mLoadedState; else return 0; }
+   static U32 getAssetErrCode(const ConcreteAssetPtr& checkAsset) { if (checkAsset) return checkAsset->mLoadedState; else return 0; }
 
    static String getAssetErrstrn(U32 errCode)
    {
@@ -94,14 +95,6 @@ private:
    StringTableEntry   mDiffuseImposterFileName;
    StringTableEntry   mNormalImposterFileName;
 
-   //Material assets we're dependent on and use
-   Vector<StringTableEntry> mMaterialAssetIds;
-   Vector<AssetPtr<MaterialAsset>> mMaterialAssets;
-
-   //Animation assets we're dependent on and use
-   Vector<StringTableEntry> mAnimationAssetIds;
-   Vector<AssetPtr<ShapeAnimationAsset>> mAnimationAssets;
-
    Resource<TSShape>	 mShape;
 public:
 
@@ -115,38 +108,16 @@ public:
    static void initPersistFields();
    void copyTo(SimObject* object) override;
 
-   virtual void setDataField(StringTableEntry slotName, StringTableEntry array, StringTableEntry value);
-
    /// Declare Console Object.
    DECLARE_CONOBJECT(ShapeAsset);
 
    U32 load() override;
+   bool preloadMaterialList();
 
-   TSShape* getShape() { load(); return mShape; }
-
-   Resource<TSShape> getShapeResource() { load(); return mShape; }
-
-   void SplitSequencePathAndName(String& srcPath, String& srcName);
+   TSShape* getShape();
+   Resource<TSShape> getShapeResource();
 
    U32 getShapeFilenameHash() { return _StringTable::hashString(mShapeFile); }
-
-   Vector<AssetPtr<MaterialAsset>> getMaterialAssets() { return mMaterialAssets; }
-
-   inline AssetPtr<MaterialAsset> getMaterialAsset(U32 matId)
-   {
-      if (matId >= mMaterialAssets.size())
-         return NULL;
-      else
-         return mMaterialAssets[matId];
-   }
-
-   void clearMaterialAssets() { mMaterialAssets.clear(); }
-
-   void addMaterialAssets(AssetPtr<MaterialAsset> matPtr) { mMaterialAssets.push_back(matPtr); }
-
-   S32 getMaterialCount() { return mMaterialAssets.size(); }
-   S32 getAnimationCount() { return mAnimationAssets.size(); }
-   ShapeAnimationAsset* getAnimation(S32 index);
 
    void _onResourceChanged(const Torque::Path& path);
 
@@ -163,10 +134,17 @@ public:
    void                    setNormalImposterFile(const char* pImageFile);
    inline StringTableEntry getNormalImposterFile(void) const { return mNormalImposterFileName; };
 
+
    static U32 getAssetByFilename(StringTableEntry fileName, AssetPtr<ShapeAsset>* shapeAsset);
 
    static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);
    static U32 getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* shapeAsset);
+
+   StringTableEntry getMaterial(const S32& index);
+   U32 getMaterialCount();
+
+   StringTableEntry getAnimation(const S32& index);
+   U32 getAnimationCount();
 
 #ifdef TORQUE_TOOLS
    const char* generateCachedPreviewImage(S32 resolution, String overrideMaterial = "");
@@ -180,6 +158,7 @@ protected:
    /// Taml callbacks.
    void onTamlPreWrite(void) override;
    void onTamlPostWrite(void) override;
+   void onTamlCustomWrite(TamlCustomNodes& customNodes) override;
 
 protected:
    static bool setShapeFile(void* obj, StringTableEntry index, StringTableEntry data) { static_cast<ShapeAsset*>(obj)->setShapeFile(data); return false; }
@@ -200,6 +179,9 @@ DefineConsoleType(TypeShapeAssetId, String)
 
 DECLARE_STRUCT(AssetPtr<ShapeAsset>)
 DefineConsoleType(TypeShapeAssetPtr, AssetPtr<ShapeAsset>)
+
+DECLARE_STRUCT(AssetRef<ShapeAsset>)
+DefineConsoleType(TypeShapeAssetRef, AssetRef<ShapeAsset>)
 
 #ifdef TORQUE_TOOLS
 //-----------------------------------------------------------------------------
@@ -236,255 +218,29 @@ public:
    static void consoleInit();
 };
 
+//-----------------------------------------------------------------------------
+class GuiInspectorTypeShapeAssetRef : public GuiInspectorTypeFileName
+{
+   typedef GuiInspectorTypeFileName Parent;
+public:
+
+   GuiTextCtrl* mLabel;
+   GuiBitmapButtonCtrl* mPreviewBorderButton;
+   GuiBitmapCtrl* mPreviewImage;
+   GuiButtonCtrl* mEditButton;
+
+   DECLARE_CONOBJECT(GuiInspectorTypeShapeAssetRef);
+   static void consoleInit();
+
+   GuiControl* constructEditControl() override;
+   bool updateRects() override;
+
+   void updateValue() override;
+
+   void updatePreviewImage();
+   void setPreviewImage(StringTableEntry assetId);
+};
+
 #endif
-
-//-----------------------------------------------------------------------------
-// REFACTOR
-//-----------------------------------------------------------------------------
-
-#pragma region Refactor Asset Macros
-
-#define DECLARE_SHAPEASSET_REFACTOR(className, name)                                                                                                                          \
-private:                                                                                                                                                                      \
-   AssetPtr<ShapeAsset> m##name##Asset;                                                                                                                                       \
-   StringTableEntry     m##name##File = StringTable->EmptyString();                                                                                                           \
-public:                                                                                                                                                                       \
-   void _set##name(StringTableEntry _in) {                                                                                                                                    \
-      if (m##name##Asset.getAssetId() == _in)                                                                                                                                 \
-         return;                                                                                                                                                              \
-      if(get##name##File() == _in)                                                                                                                                            \
-         return;                                                                                                                                                              \
-      if(_in == NULL || !String::compare(_in,StringTable->EmptyString()))                                                                                                       \
-      {                                                                                                                                                                       \
-         m##name##Asset = NULL;                                                                                                                                               \
-         m##name##File = "";                                                                                                                                                  \
-         return;                                                                                                                                                              \
-      }                                                                                                                                                                       \
-      if (!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                \
-      {                                                                                                                                                                       \
-         StringTableEntry shapeAssetId = StringTable->EmptyString();                                                                                                          \
-         AssetQuery query;                                                                                                                                                    \
-         S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
-         if (foundAssetcount != 0)                                                                                                                                            \
-         {                                                                                                                                                                    \
-            shapeAssetId = query.mAssetList[0];                                                                                                                               \
-         }                                                                                                                                                                    \
-         else if (Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                \
-         {                                                                                                                                                                    \
-            shapeAssetId = ShapeAsset::getAssetIdByFilename(_in);                                                                                                             \
-            if (shapeAssetId == ShapeAsset::smNoShapeAssetFallback)                                                                                                           \
-            {                                                                                                                                                                 \
-               ShapeAsset* privateShape = new ShapeAsset();                                                                                                                   \
-               privateShape->setShapeFile(_in);                                                                                                                               \
-               shapeAssetId = AssetDatabase.addPrivateAsset(privateShape);                                                                                                    \
-            }                                                                                                                                                                 \
-         }                                                                                                                                                                    \
-         else                                                                                                                                                                 \
-         {                                                                                                                                                                    \
-            Con::warnf("%s::%s: Could not find asset for: %s using fallback", #className, #name, _in);                                                                        \
-            shapeAssetId = ShapeAsset::smNoShapeAssetFallback;                                                                                                                \
-         }                                                                                                                                                                    \
-         m##name##Asset = shapeAssetId;                                                                                                                                       \
-         m##name##File = _in;                                                                                                                                                 \
-      }                                                                                                                                                                       \
-      else                                                                                                                                                                    \
-      {                                                                                                                                                                       \
-         m##name##Asset = _in;                                                                                                                                                \
-         m##name##File = get##name##File();                                                                                                                                   \
-      }                                                                                                                                                                       \
-   };                                                                                                                                                                         \
-                                                                                                                                                                              \
-   inline StringTableEntry _get##name##AssetId(void) const { return m##name##Asset.getAssetId(); }                                                                            \
-   TSShape* get##name() { if (m##name##Asset.notNull()) return m##name##Asset->getShape(); else return NULL; }                                                                \
-   AssetPtr<ShapeAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
-   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false; }  \
-   StringTableEntry get##name##File() { return m##name##Asset.notNull() ? m##name##Asset->getShapeFile() : ""; }
-
-#define DECLARE_SHAPEASSET_NET_REFACTOR(className, name, mask)                                                                                                                \
-private:                                                                                                                                                                      \
-   AssetPtr<ShapeAsset> m##name##Asset;                                                                                                                                       \
-   StringTableEntry     m##name##File = StringTable->EmptyString();                                                                                                           \
-public:                                                                                                                                                                       \
-   void _set##name(StringTableEntry _in) {                                                                                                                                    \
-      if (m##name##Asset.getAssetId() == _in)                                                                                                                                 \
-         return;                                                                                                                                                              \
-      if(get##name##File() == _in)                                                                                                                                            \
-         return;                                                                                                                                                              \
-      if(_in == NULL || !String::compare(_in,StringTable->EmptyString()))                                                                                                       \
-      {                                                                                                                                                                       \
-         m##name##Asset = NULL;                                                                                                                                               \
-         m##name##File = "";                                                                                                                                                  \
-         setMaskBits(mask);                                                                                                                                                   \
-         return;                                                                                                                                                              \
-      }                                                                                                                                                                       \
-      if (!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                \
-      {                                                                                                                                                                       \
-         StringTableEntry shapeAssetId = StringTable->EmptyString();                                                                                                          \
-         AssetQuery query;                                                                                                                                                    \
-         S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
-         if (foundAssetcount != 0)                                                                                                                                            \
-         {                                                                                                                                                                    \
-            shapeAssetId = query.mAssetList[0];                                                                                                                               \
-         }                                                                                                                                                                    \
-         else if (Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                \
-         {                                                                                                                                                                    \
-            shapeAssetId = ShapeAsset::getAssetIdByFilename(_in);                                                                                                             \
-            if (shapeAssetId == ShapeAsset::smNoShapeAssetFallback)                                                                                                           \
-            {                                                                                                                                                                 \
-               ShapeAsset* privateShape = new ShapeAsset();                                                                                                                   \
-               privateShape->setShapeFile(_in);                                                                                                                               \
-               shapeAssetId = AssetDatabase.addPrivateAsset(privateShape);                                                                                                    \
-            }                                                                                                                                                                 \
-         }                                                                                                                                                                    \
-         else                                                                                                                                                                 \
-         {                                                                                                                                                                    \
-            Con::warnf("%s::%s: Could not find asset for: %s using fallback", #className, #name, _in);                                                                        \
-            shapeAssetId = ShapeAsset::smNoShapeAssetFallback;                                                                                                                \
-         }                                                                                                                                                                    \
-         m##name##Asset = shapeAssetId;                                                                                                                                       \
-         m##name##File = _in;                                                                                                                                                 \
-      }                                                                                                                                                                       \
-      else                                                                                                                                                                    \
-      {                                                                                                                                                                       \
-         m##name##Asset = _in;                                                                                                                                                \
-         m##name##File = get##name##File();                                                                                                                                   \
-      }                                                                                                                                                                       \
-      setMaskBits(mask);                                                                                                                                                      \
-   };                                                                                                                                                                         \
-                                                                                                                                                                              \
-   inline StringTableEntry _get##name##AssetId(void) const { return m##name##Asset.getAssetId(); }                                                                            \
-   TSShape* get##name() { if (m##name##Asset.notNull()) return m##name##Asset->getShape(); else return NULL; }                                                                \
-   AssetPtr<ShapeAsset> get##name##Asset(void) { return m##name##Asset; }                                                                                                     \
-   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data)); return false; }  \
-   StringTableEntry get##name##File() { return m##name##Asset.notNull() ? m##name##Asset->getShapeFile() : ""; }  
-
-#define INITPERSISTFIELD_SHAPEASSET_REFACTOR(name, consoleClass, docs)                                                                                                        \
-   addProtectedField(assetText(name, Asset), TypeShapeAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, asset docs.)); \
-   addProtectedField(assetText(name, File), TypeFilename, Offset(m##name##File, consoleClass), _set##name##Data, &defaultProtectedGetFn, assetDoc(name, file docs.), AbstractClassRep::FIELD_HideInInspectors);
-
-
-#define DECLARE_SHAPEASSET_ARRAY_REFACTOR(className, name, max)                                                                                                               \
-private:                                                                                                                                                                      \
-   AssetPtr<ShapeAsset> m##name##Asset[max];                                                                                                                                  \
-   StringTableEntry     m##name##File[max] = {StringTable->EmptyString() };                                                                                                   \
-public:                                                                                                                                                                       \
-   void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
-      if (m##name##Asset[index].getAssetId() == _in)                                                                                                                          \
-         return;                                                                                                                                                              \
-      if(get##name##File(index) == _in)                                                                                                                                       \
-         return;                                                                                                                                                              \
-      if(_in == NULL || !String::compare(_in,StringTable->EmptyString()))                                                                                                       \
-      {                                                                                                                                                                       \
-         m##name##Asset[index] = NULL;                                                                                                                                        \
-         m##name##File[index] = "";                                                                                                                                           \
-         return;                                                                                                                                                              \
-      }                                                                                                                                                                       \
-      if (!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                \
-      {                                                                                                                                                                       \
-         StringTableEntry shapeAssetId = StringTable->EmptyString();                                                                                                          \
-         AssetQuery query;                                                                                                                                                    \
-         S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
-         if (foundAssetcount != 0)                                                                                                                                            \
-         {                                                                                                                                                                    \
-            shapeAssetId = query.mAssetList[0];                                                                                                                               \
-         }                                                                                                                                                                    \
-         else if (Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                \
-         {                                                                                                                                                                    \
-            shapeAssetId = ShapeAsset::getAssetIdByFilename(_in);                                                                                                             \
-            if (shapeAssetId == ShapeAsset::smNoShapeAssetFallback)                                                                                                           \
-            {                                                                                                                                                                 \
-               ShapeAsset* privateShape = new ShapeAsset();                                                                                                                   \
-               privateShape->setShapeFile(_in);                                                                                                                               \
-               shapeAssetId = AssetDatabase.addPrivateAsset(privateShape);                                                                                                    \
-            }                                                                                                                                                                 \
-         }                                                                                                                                                                    \
-         else                                                                                                                                                                 \
-         {                                                                                                                                                                    \
-            Con::warnf("%s::%s: Could not find asset for: %s using fallback", #className, #name, _in);                                                                        \
-            shapeAssetId = ShapeAsset::smNoShapeAssetFallback;                                                                                                                \
-         }                                                                                                                                                                    \
-         m##name##Asset[index] = shapeAssetId;                                                                                                                                \
-         m##name##File[index] = _in;                                                                                                                                          \
-      }                                                                                                                                                                       \
-      else                                                                                                                                                                    \
-      {                                                                                                                                                                       \
-         m##name##Asset[index] = _in;                                                                                                                                         \
-         m##name##File[index] = get##name##File(index);                                                                                                                       \
-      }                                                                                                                                                                       \
-   };                                                                                                                                                                         \
-                                                                                                                                                                              \
-   inline StringTableEntry _get##name##AssetId(const U32& index) const { return m##name##Asset[index].getAssetId(); }                                                         \
-   TSShape* get##name(const U32& index) { if (m##name##Asset[index].notNull()) return m##name##Asset[index]->getShape(); else return NULL; }                                  \
-   AssetPtr<ShapeAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
-   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}\
-   StringTableEntry get##name##File(const U32& idx) { return m##name##Asset[idx].notNull() ? m##name##Asset[idx]->getShapeFile() : ""; }
-
-#define DECLARE_SHAPEASSET_ARRAY_NET_REFACTOR(className, name, max, mask)                                                                                                     \
-private:                                                                                                                                                                      \
-   AssetPtr<ShapeAsset> m##name##Asset[max];                                                                                                                                  \
-   StringTableEntry     m##name##File[max] = {StringTable->EmptyString() };                                                                                                   \
-public:                                                                                                                                                                       \
-   void _set##name(StringTableEntry _in, const U32& index){                                                                                                                   \
-      if (m##name##Asset[index].getAssetId() == _in)                                                                                                                          \
-         return;                                                                                                                                                              \
-      if(get##name##File(index) == _in)                                                                                                                                       \
-         return;                                                                                                                                                              \
-      if (_in == NULL || !String::compare(_in,StringTable->EmptyString()))                                                                                                                   \
-      {                                                                                                                                                                       \
-         m##name##Asset[index] = NULL;                                                                                                                                        \
-         m##name##File[index] = "";                                                                                                                                           \
-         setMaskBits(mask);                                                                                                                                                   \
-         return;                                                                                                                                                              \
-      }                                                                                                                                                                       \
-      if (!AssetDatabase.isDeclaredAsset(_in))                                                                                                                                \
-      {                                                                                                                                                                       \
-         StringTableEntry shapeAssetId = StringTable->EmptyString();                                                                                                          \
-         AssetQuery query;                                                                                                                                                    \
-         S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);                                                                                                 \
-         if (foundAssetcount != 0)                                                                                                                                            \
-         {                                                                                                                                                                    \
-            shapeAssetId = query.mAssetList[0];                                                                                                                               \
-         }                                                                                                                                                                    \
-         else if (Torque::FS::IsFile(_in) || (_in[0] == '$' || _in[0] == '#'))                                                                                                \
-         {                                                                                                                                                                    \
-            shapeAssetId = ShapeAsset::getAssetIdByFilename(_in);                                                                                                             \
-            if (shapeAssetId == ShapeAsset::smNoShapeAssetFallback)                                                                                                           \
-            {                                                                                                                                                                 \
-               ShapeAsset* privateShape = new ShapeAsset();                                                                                                                   \
-               privateShape->setShapeFile(_in);                                                                                                                               \
-               shapeAssetId = AssetDatabase.addPrivateAsset(privateShape);                                                                                                    \
-            }                                                                                                                                                                 \
-         }                                                                                                                                                                    \
-         else                                                                                                                                                                 \
-         {                                                                                                                                                                    \
-            Con::warnf("%s::%s: Could not find asset for: %s using fallback", #className, #name, _in);                                                                        \
-            shapeAssetId = ShapeAsset::smNoShapeAssetFallback;                                                                                                                \
-         }                                                                                                                                                                    \
-         m##name##Asset[index] = shapeAssetId;                                                                                                                                \
-         m##name##File[index] = _in;                                                                                                                                          \
-      }                                                                                                                                                                       \
-      else                                                                                                                                                                    \
-      {                                                                                                                                                                       \
-         m##name##Asset[index] = _in;                                                                                                                                         \
-         m##name##File[index] = get##name##File(index);                                                                                                                       \
-      }                                                                                                                                                                       \
-      setMaskBits(mask);                                                                                                                                                      \
-   };                                                                                                                                                                         \
-                                                                                                                                                                              \
-   inline StringTableEntry _get##name##AssetId(const U32& index) const { return m##name##Asset[index].getAssetId(); }                                                         \
-   TSShape* get##name(const U32& index) { if (m##name##Asset[index].notNull()) return m##name##Asset[index]->getShape(); else return NULL; }                                   \
-   AssetPtr<ShapeAsset> get##name##Asset(const U32& index) { return m##name##Asset[index]; }                                                                                  \
-   static bool _set##name##Data(void* obj, const char* index, const char* data) { static_cast<className*>(obj)->_set##name(_getStringTable()->insert(data), dAtoi(index)); return false;}\
-   StringTableEntry get##name##File(const U32& idx) { return m##name##Asset[idx].notNull() ? m##name##Asset[idx]->getShapeFile() : ""; }
-
-#define INITPERSISTFIELD_SHAPEASSET_ARRAY_REFACTOR(name, arraySize, consoleClass, docs)                                                                                       \
-   addProtectedField(assetText(name, Asset), TypeShapeAssetPtr, Offset(m##name##Asset, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));\
-   addProtectedField(assetText(name, File), TypeFilename, Offset(m##name##File, consoleClass), _set##name##Data, &defaultProtectedGetFn, arraySize, assetDoc(name, asset docs.));
-
-#pragma endregion
-
-//-----------------------------------------------------------------------------
-// REFACTOR END
-//-----------------------------------------------------------------------------
 
 #endif

@@ -259,23 +259,30 @@ void GuiMaterialPreview::onMiddleMouseDragged(const GuiEvent &event)
 }
 
 // This is used to set the model we want to view in the control object.
-void GuiMaterialPreview::setObjectModel(StringTableEntry modelName)
+void GuiMaterialPreview::setObjectShape(StringTableEntry assetId)
 {
-   deleteModel();
+   deleteShape();
 
-   _setModel(modelName);
+   mShapeAssetRef = assetId;
 
-   if (!getModel())
+   if (mShapeAssetRef.isNull())
    {
-      Con::warnf("GuiMaterialPreview::setObjectModel - Failed to load model '%s'", modelName);
+      Con::warnf("GuiMaterialPreview::setObjectShape - Invalid assetId specified.");
       return;
    }
 
-   mModelInstance = new TSShapeInstance(getModel(), true);
+   Resource<TSShape> shape = mShapeAssetRef.assetPtr->getShapeResource();
+   if (!shape)
+   {
+      Con::warnf("GuiMaterialPreview::setObjectModel - Failed to load shape '%s'", assetId);
+      return;
+   }
+
+   mModelInstance = new TSShapeInstance(shape, true);
    mModelInstance->resetMaterialList();
    mModelInstance->cloneMaterialList();
 
-   AssertFatal(mModelInstance, avar("GuiMaterialPreview: Failed to load model %s. Please check your model name and load a valid model.", modelName));
+   AssertFatal(mModelInstance, avar("GuiMaterialPreview: Failed to load model %s. Please check your model name and load a valid model.", assetId));
 
    // Initialize camera values:
    mOrbitPos = mModelInstance->getShape()->center;
@@ -284,7 +291,7 @@ void GuiMaterialPreview::setObjectModel(StringTableEntry modelName)
    lastRenderTime = Platform::getVirtualMilliseconds();
 }
 
-void GuiMaterialPreview::deleteModel()
+void GuiMaterialPreview::deleteShape()
 {
    SAFE_DELETE(mModelInstance);
    runThread = 0;
@@ -499,17 +506,32 @@ ConsoleDocClass( GuiMaterialPreview,
 );
 
 // Set the model.
-DefineEngineMethod(GuiMaterialPreview, setModel, void, ( const char* shapeName ),,
-   "Sets the model to be displayed in this control\n\n"
-   "@param shapeName Name of the model to display.\n")
+DefineEngineMethod(GuiMaterialPreview, setModel, void, ( const char* assetId ),,
+   "Sets the shape to be displayed in this control\n\n"
+   "@param assetId Id of the shapeAsset to display.\n"
+   "@Deprecated\n\n")
 {
-   object->setObjectModel(StringTable->insert(shapeName));
+   object->setObjectShape(StringTable->insert(assetId));
+}
+
+DefineEngineMethod(GuiMaterialPreview, setShape, void, (const char* assetId), ,
+   "Sets the shape to be displayed in this control\n\n"
+   "@param assetId Id of the shapeAsset to display.\n")
+{
+   object->setObjectShape(StringTable->insert(assetId));
 }
 
 DefineEngineMethod(GuiMaterialPreview, deleteModel, void, (),,
+   "Deletes the preview model.\n"
+   "@Deprecated\n\n")
+{
+   object->deleteShape();
+}
+
+DefineEngineMethod(GuiMaterialPreview, deleteShape, void, (), ,
    "Deletes the preview model.\n")
 {
-   object->deleteModel();
+   object->deleteShape();
 }
 
 // Set orbit distance around the model.

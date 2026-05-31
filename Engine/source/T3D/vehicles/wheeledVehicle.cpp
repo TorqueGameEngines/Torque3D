@@ -86,24 +86,28 @@ WheeledVehicleTire::WheeledVehicleTire()
    longitudinalDamping = 1;
    longitudinalRelaxation = 1;
    mass = 1.f;
-   mShapeAsset.registerRefreshNotify(this);
+   shapeAssetRef.assetPtr.registerRefreshNotify(this);
 }
 
 bool WheeledVehicleTire::preload(bool server, String &errorStr)
 {
    // Load up the tire shape.  ShapeBase has an option to force a
    // CRC check, this is left out here, but could be easily added.
-   if (!getShape())
+   if (!shapeAssetRef.isNull())
    {
-      errorStr = String::ToString("WheeledVehicleTire: Couldn't load shape \"%s\"", _getShapeAssetId());
-      return false;
-   }
-   else
-   {
-      // Determinw wheel radius from the shape's bounding box.
+      Resource<TSShape> shape = shapeAssetRef.assetPtr->getShapeResource();
+      if (shape)
+      {
+         // Determinw wheel radius from the shape's bounding box.
       // The tire should be built with it's hub axis along the
       // object's Y axis.
-      radius = getShape()->mBounds.len_z() / 2;
+         radius = shape->mBounds.len_z() / 2;
+      }
+      else
+      {
+         errorStr = String::ToString("WheeledVehicleTire::preload Couldn't load shape \"%s\"", shapeAssetRef.assetId);
+         return false;
+      }
    }
 
    return true;
@@ -112,7 +116,8 @@ bool WheeledVehicleTire::preload(bool server, String &errorStr)
 void WheeledVehicleTire::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, WheeledVehicleTire, "The shape to use for the wheel.");
+   ADD_FIELD("shapeAsset", TypeShapeAssetRef, Offset(shapeAssetRef, WheeledVehicleTire))
+      .doc("The shape to use for the wheel.");
 
    addFieldV( "mass", TypeRangedF32, Offset(mass, WheeledVehicleTire), &CommonValidators::PositiveFloat,
       "The mass of the wheel.\nCurrently unused." );
@@ -177,7 +182,7 @@ void WheeledVehicleTire::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET_REFACTOR(Shape);
+   AssetDatabase.packDataAsset(stream, shapeAssetRef.assetId);
 
    stream->write(mass);
    stream->write(staticFriction);
@@ -196,7 +201,7 @@ void WheeledVehicleTire::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET_REFACTOR(Shape);
+   shapeAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    stream->read(&mass);
    stream->read(&staticFriction);
@@ -340,9 +345,11 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
    if (!Parent::preload(server, errorStr))
       return false;
 
+   Resource<TSShape> shape = shapeAssetRef.assetPtr->getShapeResource();
+
    // A temporary shape instance is created so that we can
    // animate the shape and extract wheel information.
-   TSShapeInstance* si = new TSShapeInstance(getShape(), false);
+   TSShapeInstance* si = new TSShapeInstance(shape, false);
 
    // Resolve objects transmitted from server
    if (!server) {
@@ -367,14 +374,14 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
 
       // The wheel must have a hub node to operate at all.
       dSprintf(buff,sizeof(buff),"hub%d",i);
-      wp->springNode = getShape()->findNode(buff);
+      wp->springNode = shape->findNode(buff);
       if (wp->springNode != -1) {
 
          // Check for spring animation.. If there is none we just grab
          // the current position of the hub. Otherwise we'll animate
          // and get the position at time 0.
          dSprintf(buff,sizeof(buff),"spring%d",i);
-         wp->springSequence = getShape()->findSequence(buff);
+         wp->springSequence = shape->findSequence(buff);
          if (wp->springSequence == -1)
             si->mNodeTransforms[wp->springNode].getColumn(3, &wp->pos);
          else {
@@ -403,17 +410,17 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
    // Check for steering. Should think about normalizing the
    // steering animation the way the suspension is, but I don't
    // think it's as critical.
-   steeringSequence = getShape()->findSequence("steering");
+   steeringSequence = shape->findSequence("steering");
 
    // Brakes
-   brakeLightSequence = getShape()->findSequence("brakelight");
+   brakeLightSequence = shape->findSequence("brakelight");
 
    // Extract collision planes from shape collision detail level
    if (collisionDetails[0] != -1) {
       MatrixF imat(1);
       SphereF sphere;
-      sphere.center = getShape()->center;
-      sphere.radius = getShape()->mRadius;
+      sphere.center = shape->center;
+      sphere.radius = shape->mRadius;
       PlaneExtractorPolyList polyList;
       polyList.mPlaneList = &rigidBody.mPlaneList;
       polyList.setTransform(&imat, Point3F(1,1,1));
@@ -1581,8 +1588,15 @@ void WheeledVehicle::unpackUpdate(NetConnection *con, BitStream *stream)
 
             // Create an instance of the tire for rendering
             delete wheel->shapeInstance;
-            wheel->shapeInstance = (wheel->tire->getShape() == NULL) ? 0:
-               new TSShapeInstance(wheel->tire->getShape());
+
+            if (wheel->tire->shapeAssetRef.notNull())
+            {
+               Resource<TSShape> shape = wheel->tire->shapeAssetRef.assetPtr->getShapeResource();
+               if (shape)
+               {
+                  wheel->shapeInstance = new TSShapeInstance(shape);
+               }
+            }
          }
       }
    }

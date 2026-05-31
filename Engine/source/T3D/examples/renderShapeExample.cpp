@@ -36,7 +36,7 @@
 IMPLEMENT_CO_NETOBJECT_V1(RenderShapeExample);
 
 ConsoleDocClass( RenderShapeExample, 
-   "@brief An example scene object which renders a DTS.\n\n"
+   "@brief An example scene object which renders a shape asset.\n\n"
    "This class implements a basic SceneObject that can exist in the world at a "
    "3D position and render itself. There are several valid ways to render an "
    "object in Torque. This class makes use of the 'TS' (three space) shape "
@@ -74,7 +74,9 @@ void RenderShapeExample::initPersistFields()
    docsURL;
    Parent::initPersistFields();
    addGroup( "Shapes" );
-   INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, RenderShapeExample, "The path to the shape file.")
+   ADD_FIELD("shapeAsset", TypeShapeAssetRef, Offset(mShapeAssetRef, RenderShapeExample))
+      .doc("The shape asset to render.")
+      .network(UpdateMask);
    endGroup( "Shapes" );
 
    // SceneObject already handles exposing the transform
@@ -83,10 +85,6 @@ void RenderShapeExample::initPersistFields()
 void RenderShapeExample::inspectPostApply()
 {
    Parent::inspectPostApply();
-
-   // Flag the network mask to send the updates
-   // to the client object
-   setMaskBits( UpdateMask );
 }
 
 bool RenderShapeExample::onAdd()
@@ -146,7 +144,7 @@ U32 RenderShapeExample::packUpdate( NetConnection *conn, U32 mask, BitStream *st
    // Write out any of the updated editable properties
    if ( stream->writeFlag( mask & UpdateMask ) )
    {
-      PACK_ASSET_REFACTOR(conn, Shape);
+      AssetDatabase.packUpdateAsset(conn, mask, stream, mShapeAssetRef.assetId);
 
       // Allow the server object a chance to handle a new shape
       createShape();
@@ -170,7 +168,7 @@ void RenderShapeExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if ( stream->readFlag() )  // UpdateMask
    {
-      UNPACK_ASSET_REFACTOR(conn, Shape);
+      mShapeAssetRef = AssetDatabase.unpackUpdateAsset(conn, stream);
 
       if ( isProperlyAdded() )
          createShape();
@@ -182,28 +180,35 @@ void RenderShapeExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 //-----------------------------------------------------------------------------
 void RenderShapeExample::createShape()
 {
-   if ( mShapeAsset.isNull() )
-      return;
-
    // Clean up our previous shape
    if ( mShapeInstance )
       SAFE_DELETE( mShapeInstance );
 
+   if (!mShapeAssetRef.hasAssetId()) //literally nothing to do here
+      return;
+
+   Resource<TSShape> shape;
+
+   if (mShapeAssetRef.assetPtr.notNull())
+      shape = mShapeAssetRef.assetPtr->getShapeResource();
+   else
+      shape = ShapeAsset::smNoShapeAssetFallbackAssetPtr->getShapeResource();
+
    // Attempt to preload the Materials for this shape
    if ( isClientObject() && 
-        !getShape()->preloadMaterialList(getShapeFile()) &&
+        !mShapeAssetRef.assetPtr->preloadMaterialList() &&
         NetConnection::filesWereDownloaded() )
    {
       return;
    }
 
    // Update the bounding box
-   mObjBox = getShape()->mBounds;
+   mObjBox = shape->mBounds;
    resetWorldBox();
    setRenderTransform(mObjToWorld);
 
    // Create the TSShapeInstance
-   mShapeInstance = new TSShapeInstance(getShape(), isClientObject() );
+   mShapeInstance = new TSShapeInstance(shape, isClientObject() );
 }
 
 void RenderShapeExample::prepRenderImage( SceneRenderState *state )

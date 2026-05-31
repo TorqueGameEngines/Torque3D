@@ -55,15 +55,11 @@
 #include "gfx/bitmap/imageUtils.h"
 
 StringTableEntry ShapeAsset::smNoShapeAssetFallback = NULL;
+AssetPtr<ShapeAsset> ShapeAsset::smNoShapeAssetFallbackAssetPtr = NULL;
 
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(ShapeAsset);
-
-
-//-----------------------------------------------------------------------------
-// REFACTOR
-//-----------------------------------------------------------------------------
 
 IMPLEMENT_STRUCT(AssetPtr<ShapeAsset>, AssetPtrShapeAsset, , "")
 END_IMPLEMENT_STRUCT
@@ -131,8 +127,50 @@ ConsoleSetType(TypeShapeAssetId)
 }
 
 //-----------------------------------------------------------------------------
-// REFACTOR END
-//-----------------------------------------------------------------------------
+IMPLEMENT_STRUCT(AssetRef<ShapeAsset>, AssetRefShapeAsset, , "")
+END_IMPLEMENT_STRUCT
+
+ConsoleType(ShapeAssetRef, TypeShapeAssetRef, AssetRef<ShapeAsset>, ASSET_ID_FIELD_PREFIX)
+
+
+ConsoleGetType(TypeShapeAssetRef)
+{
+   AssetRef<ShapeAsset>& ref = *((AssetRef<ShapeAsset>*)dptr);
+
+   if (ref.assetPtr.isNull())
+      return ref.assetId;
+   else
+      return ref.assetPtr.getAssetId();
+
+}
+
+ConsoleSetType(TypeShapeAssetRef)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset pointer.
+      AssetRef<ShapeAsset>* pAssetRef = (AssetRef<ShapeAsset>*)(dptr);
+
+      // Is the asset pointer the correct type?
+      if (pAssetRef == NULL)
+      {
+         Con::warnf("(TypeShapeAssetRef) - Failed to set asset Id '%d'.", pFieldValue);
+         return;
+      }
+
+      // Set asset.
+      *pAssetRef = pFieldValue;
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeShapeAssetRef) - Cannot set multiple args to a single asset.");
+}
 
 const String ShapeAsset::mErrCodeStrings[] =
 {
@@ -170,7 +208,7 @@ void ShapeAsset::consoleInit()
    Con::addVariable("$Core::NoShapeAssetFallback", TypeString, &smNoShapeAssetFallback,
       "The assetId of the shape to display when the requested shape asset is missing.\n"
       "@ingroup GFX\n");
-   
+
    smNoShapeAssetFallback = StringTable->insert(Con::getVariable("$Core::NoShapeAssetFallback"));
 }
 
@@ -192,20 +230,6 @@ void ShapeAsset::initPersistFields()
    addProtectedField("normalImposterFileName", TypeAssetLooseFilePath, Offset(mNormalImposterFileName, ShapeAsset),
       &setNormalImposterFile, &getNormalImposterFile, "Path to the normal imposter file we want to render");
 
-}
-
-void ShapeAsset::setDataField(StringTableEntry slotName, StringTableEntry array, StringTableEntry value)
-{
-   Parent::setDataField(slotName, array, value);
-
-   //Now, if it's a material slot of some fashion, set it up
-   StringTableEntry matSlotName = StringTable->insert("materialAsset");
-   if (String(slotName).startsWith(matSlotName))
-   {
-      StringTableEntry matId = StringTable->insert(value);
-
-      mMaterialAssetIds.push_back(matId);
-   }
 }
 
 void ShapeAsset::initializeAsset()
@@ -238,6 +262,16 @@ void ShapeAsset::initializeAsset()
    {
       String normalPath = String(mShapeFile) + "_imposter_normals.dds";
       mNormalImposterFileName = StringTable->insert(normalPath.c_str());
+   }
+
+   //Make sure our fallback is valid
+   if (smNoShapeAssetFallbackAssetPtr.isNull())
+   {
+      smNoShapeAssetFallbackAssetPtr = smNoShapeAssetFallback;
+      if (smNoShapeAssetFallbackAssetPtr.isNull())
+         Con::errorf("ShapeAsset::initializeAsset could not find fallback asset %s!", smNoShapeAssetFallback);
+      else
+         smNoShapeAssetFallbackAssetPtr->load();
    }
 }
 
@@ -313,9 +347,9 @@ void ShapeAsset::setNormalImposterFile(const char* pImageFile)
    refreshAsset();
 }
 
-void ShapeAsset::_onResourceChanged(const Torque::Path &path)
+void ShapeAsset::_onResourceChanged(const Torque::Path& path)
 {
-   if (path != Torque::Path(mShapeFile) )
+   if (path != Torque::Path(mShapeFile))
       return;
 
    refreshAsset();
@@ -325,115 +359,62 @@ U32 ShapeAsset::load()
 {
    if (mLoadedState == AssetErrCode::Ok) return mLoadedState;
 
-   mMaterialAssets.clear();
-   mMaterialAssetIds.clear();
-
-   //First, load any material, animation, etc assets we may be referencing in our asset
-   // Find any asset dependencies.
-   AssetManager::typeAssetDependsOnHash::Iterator assetDependenciesItr = mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
-
-   // Does the asset have any dependencies?
-   if (assetDependenciesItr != mpOwningAssetManager->getDependedOnAssets()->end())
-   {
-      // Iterate all dependencies.
-      while (assetDependenciesItr != mpOwningAssetManager->getDependedOnAssets()->end() && assetDependenciesItr->key == mpAssetDefinition->mAssetId)
-      {
-         StringTableEntry assetType = mpOwningAssetManager->getAssetType(assetDependenciesItr->value);
-
-         if (assetType == StringTable->insert("MaterialAsset"))
-         {
-            mMaterialAssetIds.push_front(assetDependenciesItr->value);
-
-            //Force the asset to become initialized if it hasn't been already
-            AssetPtr<MaterialAsset> matAsset = assetDependenciesItr->value;
-
-            mMaterialAssets.push_front(matAsset);
-         }
-         else if (assetType == StringTable->insert("ShapeAnimationAsset"))
-         {
-            mAnimationAssetIds.push_back(assetDependenciesItr->value);
-
-            //Force the asset to become initialized if it hasn't been already
-            AssetPtr<ShapeAnimationAsset> animAsset = assetDependenciesItr->value;
-
-            mAnimationAssets.push_back(animAsset);
-         }
-
-         // Next dependency.
-         assetDependenciesItr++;
-      }
-   }
-
    mShape = ResourceManager::get().load(mShapeFile);
 
    if (!mShape)
    {
       mLoadedState = BadFileReference;
+
       return mLoadedState; //if it failed to load, bail out
    }
+
    // Construct billboards if not done already
    if (GFXDevice::devicePresent())
       mShape->setupBillboardDetails(mShapeFile, mDiffuseImposterFileName, mNormalImposterFileName);
 
-   //If they exist, grab our imposters here and bind them to our shapeAsset
-
-   bool hasBlends = false;
-
-   //Now that we've successfully loaded our shape and have any materials and animations loaded
-   //we need to set up the animations we're using on our shape
-   for (S32 i = mAnimationAssets.size()-1; i >= 0; --i)
-   {
-      String srcName = mAnimationAssets[i]->getAnimationName();
-      String srcPath(mAnimationAssets[i]->getAnimationFilename());
-      //SplitSequencePathAndName(srcPath, srcName);
-
-      if (!mShape->addSequence(srcPath, mAnimationAssets[i]->getAssetId(), srcName, srcName,
-         mAnimationAssets[i]->getStartFrame(), mAnimationAssets[i]->getEndFrame(), mAnimationAssets[i]->getPadRotation(), mAnimationAssets[i]->getPadTransforms()))
-      {
-         mLoadedState = MissingAnimatons;
-         return mLoadedState;
-      }
-      if (mAnimationAssets[i]->isBlend())
-         hasBlends = true;
-   }
-
-   //if any of our animations are blends, set those up now
-   if (hasBlends)
-   {
-      for (U32 i=0; i < mAnimationAssets.size(); ++i)
-      {
-         if (mAnimationAssets[i]->isBlend() && mAnimationAssets[i]->getBlendAnimationName() != StringTable->EmptyString())
-         {
-            //gotta do a bit of logic here.
-            //First, we need to make sure the anim asset we depend on for our blend is loaded
-            AssetPtr<ShapeAnimationAsset> blendAnimAsset = mAnimationAssets[i]->getBlendAnimationName();
-
-            U32 assetStatus = ShapeAnimationAsset::getAssetErrCode(blendAnimAsset);
-            if (assetStatus != AssetBase::Ok)
-            {
-               Con::errorf("ShapeAsset::initializeAsset - Unable to acquire reference animation asset %s for asset %s to blend!", mAnimationAssets[i]->getBlendAnimationName(), mAnimationAssets[i]->getAssetName());
-               {
-                  mLoadedState = MissingAnimatons;
-                  return mLoadedState;
-               }
-            }
-
-            String refAnimName = blendAnimAsset->getAnimationName();
-            if (!mShape->setSequenceBlend(mAnimationAssets[i]->getAnimationName(), true, blendAnimAsset->getAnimationName(), mAnimationAssets[i]->getBlendFrame()))
-            {
-               Con::errorf("ShapeAnimationAsset::initializeAsset - Unable to set animation clip %s for asset %s to blend!", mAnimationAssets[i]->getAnimationName(), mAnimationAssets[i]->getAssetName());
-               {
-                  mLoadedState = MissingAnimatons;
-                  return mLoadedState;
-               }
-            }
-         }
-      }
-   }
-
    mLoadedState = Ok;
 
    return mLoadedState;
+}
+
+bool ShapeAsset::preloadMaterialList()
+{
+   if (!mShape)
+      return false;
+
+   return mShape->preloadMaterialList(getShapeFile());
+}
+
+TSShape* ShapeAsset::getShape()
+{
+   AssetErrCode result = static_cast<AssetErrCode>(load());
+
+   if (mShape)
+   {
+      return mShape;
+   }
+   else if (smNoShapeAssetFallbackAssetPtr.notNull())
+   {
+      return smNoShapeAssetFallbackAssetPtr->getShape();
+   }
+
+   return NULL;
+}
+
+Resource<TSShape> ShapeAsset::getShapeResource()
+{
+   AssetErrCode result = static_cast<AssetErrCode>(load());
+
+   if (mShape)
+   {
+      return mShape;
+   }
+   else if (smNoShapeAssetFallbackAssetPtr.notNull())
+   {
+      return smNoShapeAssetFallbackAssetPtr->getShapeResource();
+   }
+
+   return Resource<TSShape>(NULL);
 }
 
 //------------------------------------------------------------------------------
@@ -560,6 +541,44 @@ U32 ShapeAsset::getAssetById(StringTableEntry assetId, AssetPtr<ShapeAsset>* sha
       return AssetErrCode::UsingFallback;
    }
 }
+
+StringTableEntry ShapeAsset::getMaterial(const S32& index)
+{
+   if (!mShape)
+      return StringTable->EmptyString();
+
+   if (index < 0 || index >= mShape->materialList->size())
+      return StringTable->EmptyString();
+
+   return mShape->materialList->getMaterialName(index);
+}
+
+U32 ShapeAsset::getMaterialCount()
+{
+   if (!mShape)
+      return 0;
+
+   return mShape->materialList->size();
+}
+
+StringTableEntry ShapeAsset::getAnimation(const S32& index)
+{
+   if (!mShape)
+      return StringTable->EmptyString();
+
+   if (index < 0 || index >= mShape->sequences.size())
+      return StringTable->EmptyString();
+
+   return mShape->getName(mShape->sequences[index].nameIndex);
+}
+
+U32 ShapeAsset::getAnimationCount()
+{
+   if (!mShape)
+      return 0;
+
+   return mShape->sequences.size();
+}
 //------------------------------------------------------------------------------
 
 void ShapeAsset::copyTo(SimObject* object)
@@ -589,10 +608,10 @@ void ShapeAsset::onTamlPreWrite(void)
    Parent::onTamlPreWrite();
 
    // ensure paths are collapsed.
-   mShapeFile                 = collapseAssetFilePath(mShapeFile);
-   mConstructorFileName       = collapseAssetFilePath(mConstructorFileName);
-   mDiffuseImposterFileName   = collapseAssetFilePath(mDiffuseImposterFileName);
-   mNormalImposterFileName    = collapseAssetFilePath(mNormalImposterFileName);
+   mShapeFile = collapseAssetFilePath(mShapeFile);
+   mConstructorFileName = collapseAssetFilePath(mConstructorFileName);
+   mDiffuseImposterFileName = collapseAssetFilePath(mDiffuseImposterFileName);
+   mNormalImposterFileName = collapseAssetFilePath(mNormalImposterFileName);
 }
 
 void ShapeAsset::onTamlPostWrite(void)
@@ -601,42 +620,36 @@ void ShapeAsset::onTamlPostWrite(void)
    Parent::onTamlPostWrite();
 
    // ensure paths are expanded.
-   mShapeFile                 = expandAssetFilePath(mShapeFile);
-   mConstructorFileName       = expandAssetFilePath(mConstructorFileName);
-   mDiffuseImposterFileName   = expandAssetFilePath(mDiffuseImposterFileName);
-   mNormalImposterFileName    = expandAssetFilePath(mNormalImposterFileName);
+   mShapeFile = expandAssetFilePath(mShapeFile);
+   mConstructorFileName = expandAssetFilePath(mConstructorFileName);
+   mDiffuseImposterFileName = expandAssetFilePath(mDiffuseImposterFileName);
+   mNormalImposterFileName = expandAssetFilePath(mNormalImposterFileName);
 }
 
-void ShapeAsset::SplitSequencePathAndName(String& srcPath, String& srcName)
+void ShapeAsset::onTamlCustomWrite(TamlCustomNodes& customNodes)
 {
-   srcName = "";
+   // Debug Profiling.
+   PROFILE_SCOPE(ShapeAsset_OnTamlCustomWrite);
 
-   // Determine if there is a sequence name at the end of the source string, and
-   // if so, split the filename from the sequence name
-   S32 split = srcPath.find(' ', 0, String::Right);
-   S32 split2 = srcPath.find('\t', 0, String::Right);
-   if ((split == String::NPos) || (split2 > split))
-      split = split2;
-   if (split != String::NPos)
+   // Call parent.
+   Parent::onTamlCustomWrite(customNodes);
+
+   if (!mShape)
+      return;
+
+   TamlCustomNode* materialsData = customNodes.addNode(StringTable->insert("Materials"));
+   U32 matCount = mShape->materialList->size();
+   Vector<String>& mat_names = const_cast<Vector<String>&>(mShape->materialList->getMaterialNameList());
+   for (U32 i=0; i < mat_names.size(); i++)
    {
-      split2 = split + 1;
-      while ((srcPath[split2] != '\0') && dIsspace(srcPath[split2]))
-         split2++;
-
-      // now 'split' is at the end of the path, and 'split2' is at the start of the sequence name
-      srcName = srcPath.substr(split2);
-      srcPath = srcPath.erase(split, srcPath.length() - split);
+      StringTableEntry matAssetId = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(mat_names[i].c_str()));
+      if (matAssetId != StringTable->EmptyString())
+      {
+         String fieldName = String::ToString("materialSlot%d", i);
+         String fieldData = String::ToString("%s%s", ASSET_ID_FIELD_PREFIX, matAssetId);
+         materialsData->addField(fieldName.c_str(), matAssetId);
+      }
    }
-}
-
-ShapeAnimationAsset* ShapeAsset::getAnimation(S32 index)
-{
-   if (index < mAnimationAssets.size())
-   {
-      return mAnimationAssets[index];
-   }
-
-   return NULL;
 }
 
 #ifdef TORQUE_TOOLS
@@ -655,7 +668,7 @@ const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overri
 
    if (overrideMaterial.isNotEmpty())
    {
-      Material *tMat = dynamic_cast<Material*>(Sim::findObject(overrideMaterial));
+      Material* tMat = dynamic_cast<Material*>(Sim::findObject(overrideMaterial));
       if (tMat)
          shape->reSkin(tMat->mMapTo, mShape->materialList->getMaterialName(0));
    }
@@ -702,7 +715,7 @@ const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overri
    dSprintf(returnBuffer, 128, "%s", dumpPath.c_str());
 
    imposter->writeBitmap("png", dumpPath);
-   
+
    delete imposter;
    delete imposterNrml;
 
@@ -714,6 +727,13 @@ const char* ShapeAsset::generateCachedPreviewImage(S32 resolution, String overri
 }
 #endif
 
+DefineEngineMethod(ShapeAsset, getMaterial, const char*, (S32 index), (0),
+   "Gets the number of materials for this shape asset.\n"
+   "@return Material count.\n")
+{
+   return object->getMaterial(index);
+}
+
 DefineEngineMethod(ShapeAsset, getMaterialCount, S32, (), ,
    "Gets the number of materials for this shape asset.\n"
    "@return Material count.\n")
@@ -721,19 +741,19 @@ DefineEngineMethod(ShapeAsset, getMaterialCount, S32, (), ,
    return object->getMaterialCount();
 }
 
-DefineEngineMethod(ShapeAsset, getAnimationCount, S32, (), ,
-   "Gets the number of animations for this shape asset.\n"
-   "@return Animation count.\n")
-{
-   return object->getAnimationCount();
-}
-
-DefineEngineMethod(ShapeAsset, getAnimation, ShapeAnimationAsset*, (S32 index), (0),
+DefineEngineMethod(ShapeAsset, getAnimation, const char*, (S32 index), (0),
    "Gets a particular shape animation asset for this shape.\n"
    "@param animation asset index.\n"
    "@return Shape Animation Asset.\n")
 {
    return object->getAnimation(index);
+}
+
+DefineEngineMethod(ShapeAsset, getAnimationCount, S32, (), ,
+   "Gets the number of animations for this shape asset.\n"
+   "@return Animation count.\n")
+{
+   return object->getAnimationCount();
 }
 
 DefineEngineMethod(ShapeAsset, getShapePath, const char*, (), ,
@@ -784,7 +804,7 @@ ConsoleDocClass(GuiInspectorTypeShapeAssetPtr,
    "@brief Inspector field type for Shapes\n\n"
    "Editor use only.\n\n"
    "@internal"
-   );
+);
 
 void GuiInspectorTypeShapeAssetPtr::consoleInit()
 {
@@ -940,7 +960,7 @@ void GuiInspectorTypeShapeAssetPtr::updatePreviewImage()
    //if what we're working with isn't even a valid asset, don't present like we found a good one
    if (!AssetDatabase.isDeclaredAsset(previewImage))
    {
-      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      mPreviewImage->setBitmap(StringTable->EmptyString());
       return;
    }
 
@@ -953,7 +973,7 @@ void GuiInspectorTypeShapeAssetPtr::updatePreviewImage()
    }
 
    if (mPreviewImage->getBitmapAsset().isNull())
-      mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
+      mPreviewImage->setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
 }
 
 void GuiInspectorTypeShapeAssetPtr::setPreviewImage(StringTableEntry assetId)
@@ -961,7 +981,7 @@ void GuiInspectorTypeShapeAssetPtr::setPreviewImage(StringTableEntry assetId)
    //if what we're working with isn't even a valid asset, don't present like we found a good one
    if (!AssetDatabase.isDeclaredAsset(assetId))
    {
-      mPreviewImage->_setBitmap(StringTable->EmptyString());
+      mPreviewImage->setBitmap(StringTable->EmptyString());
       return;
    }
 
@@ -974,7 +994,7 @@ void GuiInspectorTypeShapeAssetPtr::setPreviewImage(StringTableEntry assetId)
    }
 
    if (mPreviewImage->getBitmapAsset().isNull())
-      mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
+      mPreviewImage->setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
 }
 
 IMPLEMENT_CONOBJECT(GuiInspectorTypeShapeAssetId);
@@ -990,5 +1010,205 @@ void GuiInspectorTypeShapeAssetId::consoleInit()
    Parent::consoleInit();
 
    ConsoleBaseType::getType(TypeShapeAssetId)->setInspectorFieldType("GuiInspectorTypeShapeAssetId");
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENT_CONOBJECT(GuiInspectorTypeShapeAssetRef);
+
+ConsoleDocClass(GuiInspectorTypeShapeAssetRef,
+   "@brief Inspector field type for Shapes\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeShapeAssetRef::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeShapeAssetRef)->setInspectorFieldType("GuiInspectorTypeShapeAssetRef");
+}
+
+GuiControl* GuiInspectorTypeShapeAssetRef::constructEditControl()
+{
+   // Create base filename edit controls
+   GuiControl* retCtrl = Parent::constructEditControl();
+   if (retCtrl == NULL)
+      return retCtrl;
+
+   // Change filespec
+   char szBuffer[512];
+
+   const char* previewImage;
+
+   if (mInspector->getInspectObject() != NULL)
+   {
+      StringBuilder varNameStr;
+      varNameStr.append(mCaption);
+      if (mFieldArrayIndex != NULL)
+      {
+         varNameStr.append("[");
+         varNameStr.append(mFieldArrayIndex);
+         varNameStr.append("]");
+      }
+
+      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ShapeAsset\", \"AssetBrowser.changeAsset\", %s, \"%s\");",
+         mInspector->getIdString(), varNameStr.end().c_str());
+      mBrowseButton->setField("Command", szBuffer);
+
+      setDataField(StringTable->insert("targetObject"), NULL, mInspector->getInspectObject()->getIdString());
+
+      previewImage = mInspector->getInspectObject()->getDataField(varNameStr.end().c_str(), NULL);
+   }
+   else
+   {
+      //if we don't have a target object, we'll be manipulating the desination value directly
+      dSprintf(szBuffer, sizeof(szBuffer), "AssetBrowser.showDialog(\"ShapeAsset\", \"AssetBrowser.changeAsset\", %s, \"%s\");",
+         mInspector->getIdString(), mVariableName);
+      mBrowseButton->setField("Command", szBuffer);
+
+      previewImage = Con::getVariable(mVariableName);
+   }
+
+   mLabel = new GuiTextCtrl();
+   mLabel->registerObject();
+   mLabel->setControlProfile(mProfile);
+   mLabel->setText(mCaption);
+   addObject(mLabel);
+
+   //
+   GuiTextEditCtrl* editTextCtrl = static_cast<GuiTextEditCtrl*>(retCtrl);
+   GuiControlProfile* toolEditProfile;
+   if (Sim::findObject("ToolsGuiTextEditProfile", toolEditProfile))
+      editTextCtrl->setControlProfile(toolEditProfile);
+
+   GuiControlProfile* toolDefaultProfile = NULL;
+   Sim::findObject("ToolsGuiDefaultProfile", toolDefaultProfile);
+
+   //
+   mPreviewImage = new GuiBitmapCtrl();
+   mPreviewImage->registerObject();
+
+   if (toolDefaultProfile)
+      mPreviewImage->setControlProfile(toolDefaultProfile);
+
+   updatePreviewImage();
+
+   addObject(mPreviewImage);
+
+   //
+   mPreviewBorderButton = new GuiBitmapButtonCtrl();
+   mPreviewBorderButton->registerObject();
+
+   if (toolDefaultProfile)
+      mPreviewBorderButton->setControlProfile(toolDefaultProfile);
+
+   mPreviewBorderButton->_setBitmap(StringTable->insert("ToolsModule:cubemapBtnBorder_n_image"));
+
+   mPreviewBorderButton->setField("Command", szBuffer); //clicking the preview does the same thing as the edit button, for simplicity
+   addObject(mPreviewBorderButton);
+
+   //
+   // Create "Open in Editor" button
+   mEditButton = new GuiBitmapButtonCtrl();
+
+   dSprintf(szBuffer, sizeof(szBuffer), "ShapeEditorPlugin.openShapeAssetId(%d.getText());", retCtrl->getId());
+   mEditButton->setField("Command", szBuffer);
+
+   mEditButton->setText("Edit");
+   mEditButton->setSizing(horizResizeLeft, vertResizeAspectTop);
+
+   mEditButton->setDataField(StringTable->insert("Profile"), NULL, "ToolsGuiButtonProfile");
+   mEditButton->setDataField(StringTable->insert("tooltipprofile"), NULL, "GuiToolTipProfile");
+   mEditButton->setDataField(StringTable->insert("hovertime"), NULL, "1000");
+   mEditButton->setDataField(StringTable->insert("tooltip"), NULL, "Open this asset in the Shape Editor");
+
+   mEditButton->registerObject();
+   addObject(mEditButton);
+
+   //
+   mUseHeightOverride = true;
+   mHeightOverride = 72;
+
+   return retCtrl;
+}
+
+bool GuiInspectorTypeShapeAssetRef::updateRects()
+{
+   S32 rowSize = 18;
+   S32 dividerPos, dividerMargin;
+   mInspector->getDivider(dividerPos, dividerMargin);
+   Point2I fieldExtent = getExtent();
+   Point2I fieldPos = getPosition();
+
+   mEditCtrlRect.set(0, 0, fieldExtent.x, fieldExtent.y);
+   mLabel->resize(Point2I(mProfile->mTextOffset.x, 0), Point2I(fieldExtent.x, rowSize));
+
+   RectI previewRect = RectI(Point2I(mProfile->mTextOffset.x, rowSize), Point2I(50, 50));
+   mPreviewBorderButton->resize(previewRect.point, previewRect.extent);
+   mPreviewImage->resize(previewRect.point, previewRect.extent);
+
+   S32 editPos = previewRect.point.x + previewRect.extent.x + 10;
+   mEdit->resize(Point2I(editPos, rowSize * 1.5), Point2I(fieldExtent.x - editPos - 5, rowSize));
+
+   mEditButton->resize(Point2I(fieldExtent.x - 105, previewRect.point.y + previewRect.extent.y - rowSize), Point2I(100, rowSize));
+
+   mBrowseButton->setHidden(true);
+
+   return true;
+}
+
+void GuiInspectorTypeShapeAssetRef::updateValue()
+{
+   Parent::updateValue();
+
+   updatePreviewImage();
+}
+
+void GuiInspectorTypeShapeAssetRef::updatePreviewImage()
+{
+   const char* previewImage;
+   if (mInspector->getInspectObject() != NULL)
+      previewImage = mInspector->getInspectObject()->getDataField(mCaption, NULL);
+   else
+      previewImage = Con::getVariable(mVariableName);
+
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(previewImage))
+   {
+      mPreviewImage->setBitmap(StringTable->EmptyString());
+      return;
+   }
+
+   String shpPreviewAssetId = String(previewImage) + "_PreviewImage";
+   shpPreviewAssetId.replace(":", "_");
+   shpPreviewAssetId = "ToolsModule:" + shpPreviewAssetId;
+   if (AssetDatabase.isDeclaredAsset(shpPreviewAssetId.c_str()))
+   {
+      mPreviewImage->setBitmap(StringTable->insert(shpPreviewAssetId.c_str()));
+   }
+
+   if (mPreviewImage->getBitmapAsset().isNull())
+      mPreviewImage->setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
+}
+
+void GuiInspectorTypeShapeAssetRef::setPreviewImage(StringTableEntry assetId)
+{
+   //if what we're working with isn't even a valid asset, don't present like we found a good one
+   if (!AssetDatabase.isDeclaredAsset(assetId))
+   {
+      mPreviewImage->setBitmap(StringTable->EmptyString());
+      return;
+   }
+
+   String shpPreviewAssetId = String(assetId) + "_PreviewImage";
+   shpPreviewAssetId.replace(":", "_");
+   shpPreviewAssetId = "ToolsModule:" + shpPreviewAssetId;
+   if (AssetDatabase.isDeclaredAsset(shpPreviewAssetId.c_str()))
+   {
+      mPreviewImage->setBitmap(StringTable->insert(shpPreviewAssetId.c_str()));
+   }
+
+   if (mPreviewImage->getBitmapAsset().isNull())
+      mPreviewImage->setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
 }
 #endif

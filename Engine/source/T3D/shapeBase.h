@@ -381,7 +381,7 @@ struct ShapeBaseImageData: public GameBaseData, protected AssetPtrCallback
    F32 scriptAnimTransitionTime;    ///< The amount of time to transition between the previous sequence and new sequence
                                     ///< when the script prefix has changed.
 
-   DECLARE_SHAPEASSET_ARRAY_REFACTOR(ShapeBaseImageData, Shape, MaxShapes)  ///< Name of shape to render.
+   AssetRef<ShapeAsset> shapeAssetRef[MaxShapes];
 
    StringTableEntry  imageAnimPrefix;     ///< Passed along to the mounting shape to modify
                                           ///  animation sequences played in 3rd person. [optional]
@@ -556,7 +556,7 @@ public:
    F32 shadowProjectionDistance;
    F32 shadowSphereAdjust;
 
-   DECLARE_SHAPEASSET_REFACTOR(ShapeBaseData, Shape)
+   AssetRef<ShapeAsset> shapeAssetRef;
 
    StringTableEntry  cloakTexName;
 
@@ -572,7 +572,7 @@ public:
    DebrisData *      debris;
    S32               debrisID;
 
-   DECLARE_SHAPEASSET_REFACTOR(ShapeBaseData, DebrisShape)
+   AssetRef<ShapeAsset> debrisShapeAssetRef;
 
    ExplosionData*    explosion;
    S32               explosionID;

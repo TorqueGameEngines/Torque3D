@@ -2343,6 +2343,7 @@ void ShapeBase::setImage(  U32 imageSlot,
    image.dataBlock = imageData;
    image.state = &image.dataBlock->state[0];
    image.skinNameHandle = skinNameHandle;
+   image.appliedSkinName = "Base";
    image.updateDoAnimateAllShapes(this);
 
    for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)

@@ -13,54 +13,19 @@ subject to the following restrictions:
 */
 //Originally written by Erwin Coumans
 
-
 #ifndef __OPENGL_INCLUDE_H
 #define __OPENGL_INCLUDE_H
 
-
-//think different
-#if defined(__APPLE__) && !defined (VMDMESA)
-#include <OpenGL/OpenGL.h>
-//#include <OpenGL/gl.h>
-//#include <OpenGL/glu.h>
-//#import <Cocoa/Cocoa.h>
-#if defined (USE_OPENGL2) || defined (NO_OPENGL3)
-#include <OpenGL/gl.h>
+#ifdef BT_NO_GLAD
+#include "third_party/GL/gl/include/EGL/egl.h"
+#include "third_party/GL/gl/include/EGL/eglext.h"
+#include "third_party/GL/gl/include/GL/gl.h"
 #else
-#include <OpenGL/gl3.h>
-#endif
+#ifdef B3_USE_GLFW
+#include <glad/gl.h>
+#include <GLFW/glfw3.h>
 #else
-
-#ifdef GLEW_STATIC
-#include "CustomGL/glew.h"
-#else
-#include <GL/glew.h>
-#endif //GLEW_STATIC
-
-#ifdef _WINDOWS
-#include <windows.h>
-//#include <GL/gl.h>
-//#include <GL/glu.h>
-#else
-//#include <GL/gl.h>
-//#include <GL/glu.h>
-#endif //_WINDOWS
-#endif //APPLE
-
-//disable glGetError
-//#undef glGetError
-//#define glGetError MyGetError
-//
-//GLenum inline MyGetError()
-//{
-//	return 0;
-//}
-
-///on Linux only glDrawElementsInstancedARB is defined?!?
-//#ifdef __linux
-//#define glDrawElementsInstanced glDrawElementsInstancedARB
-//
-//#endif //__linux
-
-#endif //__OPENGL_INCLUDE_H
-
+#include "glad/gl.h"
+#endif  //B3_USE_GLFW
+#endif  //BT_NO_GLAD
+#endif  //__OPENGL_INCLUDE_H

@@ -1,6 +1,6 @@
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -15,20 +15,16 @@ subject to the following restrictions:
 
 #include "btEmptyCollisionAlgorithm.h"
 
-
-
 btEmptyAlgorithm::btEmptyAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
 	: btCollisionAlgorithm(ci)
 {
 }
 
-void btEmptyAlgorithm::processCollision (const btCollisionObjectWrapper* ,const btCollisionObjectWrapper* ,const btDispatcherInfo& ,btManifoldResult* )
+void btEmptyAlgorithm::processCollision(const btCollisionObjectWrapper*, const btCollisionObjectWrapper*, const btDispatcherInfo&, btManifoldResult*)
 {
 }
 
-btScalar btEmptyAlgorithm::calculateTimeOfImpact(btCollisionObject* ,btCollisionObject* ,const btDispatcherInfo& ,btManifoldResult* )
+btScalar btEmptyAlgorithm::calculateTimeOfImpact(btCollisionObject*, btCollisionObject*, const btDispatcherInfo&, btManifoldResult*)
 {
 	return btScalar(1.);
 }
-
-

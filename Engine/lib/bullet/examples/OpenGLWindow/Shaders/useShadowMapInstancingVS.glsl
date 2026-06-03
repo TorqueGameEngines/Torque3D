@@ -8,14 +8,20 @@ layout (location = 2) in vec4 instance_quaternion;
 layout (location = 3) in vec2 uvcoords;
 layout (location = 4) in vec3 vertexnormal;
 layout (location = 5) in vec4 instance_color;
-layout (location = 6) in vec3 instance_scale;
+layout (location = 6) in vec4 instance_scale_obUid;
 
 
 uniform mat4 ModelViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform mat4 DepthBiasModelViewProjectionMatrix;
 uniform mat4 MVP;
-uniform vec3 lightDirIn;
+uniform vec3 lightPosIn;
+uniform vec3 cameraPositionIn;
+uniform mat4 ViewMatrixInverse;
+uniform float materialShininessIn;
+uniform float shadowmapIntensityIn;
+uniform vec3 lightSpecularIntensityIn;
+uniform vec3 materialSpecularColorIn;
 
 out vec4 ShadowCoord;
 
@@ -60,7 +66,14 @@ vec4 quatRotate ( in vec4 p, in vec4 q )
     return quatMul ( temp, vec4 ( -q.x, -q.y, -q.z, q.w ) );
 }
 
-out vec3 lightDir,normal,ambient;
+out vec3 lightPos,normal,ambient;
+out vec4 vertexPos;
+out vec3 cameraPosition;
+out float materialShininess;
+out float shadowmapIntensity;
+out vec3 lightSpecularIntensity;
+out vec3 materialSpecularColor;
+
 
 void main(void)
 {
@@ -69,15 +82,21 @@ void main(void)
 			
 	vec4 worldNormal = (quatRotate3( vertexnormal,q));
 	
-	normal = normalize(worldNormal).xyz;
+	normal = worldNormal.xyz;
 
-	lightDir = lightDirIn;
-		
+	lightPos = lightPosIn;
+	cameraPosition = cameraPositionIn;
+	materialShininess = materialShininessIn;
 	
-	vec4 localcoord = quatRotate3( position.xyz*instance_scale,q);
-	vec4 vertexPos = MVP* vec4((instance_position+localcoord).xyz,1);
-
-	gl_Position = vertexPos;
+	shadowmapIntensity = shadowmapIntensityIn;
+	lightSpecularIntensity = lightSpecularIntensityIn;
+	materialSpecularColor = materialSpecularColorIn;
+	
+	vec4 localcoord = quatRotate3( position.xyz*instance_scale_obUid.xyz,q);
+	vertexPos = vec4((instance_position+localcoord).xyz,1);
+	
+	vec4 vertexLoc = MVP* vec4((instance_position+localcoord).xyz,1);
+	gl_Position = vertexLoc;
 	ShadowCoord = DepthBiasModelViewProjectionMatrix * vec4((instance_position+localcoord).xyz,1);
 
 	fragment.color = instance_color;

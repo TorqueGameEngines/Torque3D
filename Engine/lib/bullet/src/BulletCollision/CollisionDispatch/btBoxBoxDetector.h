@@ -4,7 +4,7 @@
  * All rights reserved.  Email: russ@q12.org   Web: www.q12.org
 
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -19,10 +19,8 @@ subject to the following restrictions:
 #ifndef BT_BOX_BOX_DETECTOR_H
 #define BT_BOX_BOX_DETECTOR_H
 
-
 class btBoxShape;
 #include "BulletCollision/NarrowPhaseCollision/btDiscreteCollisionDetectorInterface.h"
-
 
 /// btBoxBoxDetector wraps the ODE box-box collision detector
 /// re-distributed under the Zlib license with permission from Russell L. Smith
@@ -32,13 +30,11 @@ struct btBoxBoxDetector : public btDiscreteCollisionDetectorInterface
 	const btBoxShape* m_box2;
 
 public:
+	btBoxBoxDetector(const btBoxShape* box1, const btBoxShape* box2);
 
-	btBoxBoxDetector(const btBoxShape* box1,const btBoxShape* box2);
+	virtual ~btBoxBoxDetector(){};
 
-	virtual ~btBoxBoxDetector() {};
-
-	virtual void	getClosestPoints(const ClosestPointInput& input,Result& output,class btIDebugDraw* debugDraw,bool swapResults=false);
-
+	virtual void getClosestPoints(const ClosestPointInput& input, Result& output, class btIDebugDraw* debugDraw, bool swapResults = false);
 };
 
-#endif //BT_BOX_BOX_DETECTOR_H
+#endif  //BT_BOX_BOX_DETECTOR_H

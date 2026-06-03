@@ -1,6 +1,6 @@
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2015 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2015 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -16,8 +16,6 @@ subject to the following restrictions:
 #ifndef HINGE2_VEHICLE_H
 #define HINGE2_VEHICLE_H
 
-class CommonExampleInterface*    Hinge2VehicleCreateFunc(struct CommonExampleOptions& options);
+class CommonExampleInterface* Hinge2VehicleCreateFunc(struct CommonExampleOptions& options);
 
-#endif // HINGE2_VEHICLE_H
-
-
+#endif  // HINGE2_VEHICLE_H

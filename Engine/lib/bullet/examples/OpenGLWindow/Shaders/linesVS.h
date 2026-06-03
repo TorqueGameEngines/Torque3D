@@ -8,7 +8,7 @@ static const char* linesVertexShader= \
 "out vec4 colourV;\n"
 "void main (void)\n"
 "{\n"
-"    colourV = colour;\n"
+"		colourV = colour;\n"
 "		gl_Position = ProjectionMatrix * ModelViewMatrix * position;\n"
 "		\n"
 "}\n"

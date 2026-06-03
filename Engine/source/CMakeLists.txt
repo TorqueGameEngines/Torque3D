@@ -83,6 +83,10 @@ torqueAddSourceDirectories( "T3D" "T3D/AI" "T3D/assets" "T3D/decal" "T3D/example
 #                          "T3D/components" "T3D/sceneComponent" "T3D/systems" "T3D/gameOBjects" 
                            "T3D/sfx" "T3D/turret" "T3D/vehicles")
 
+if(TORQUE_PHYSICS_BULLET)
+  torqueAddSourceDirectories("T3D/physics/bullet")
+endif()
+
 # Handle TS
 torqueAddSourceDirectories("ts" "ts/collada" "ts/assimp" "ts/loader" "ts/arch")
 

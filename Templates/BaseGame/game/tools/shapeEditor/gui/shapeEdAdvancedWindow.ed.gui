@@ -879,6 +879,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
                tooltipProfile = "GuiToolTipProfile";
                tooltip = "Select the method used to auto-generate the collision geometry";
                internalName = "colType";
+               command = "ShapeEdColWindow.onColTypeSelected();";
             };
             new GuiTextCtrl() {
                text = "Fit Target";
@@ -1127,7 +1128,7 @@ $guiContent = new GuiWindowCollapseCtrl(ShapeEdAdvancedWindow,EditorGuiGroup) {
             new GuiBitmapCtrl() {
                BitmapAsset = "ToolsModule:inactive_overlay_image";
                position = "0 47";
-               extent = "199 178";
+               extent = "342 178";
                profile = "ToolsGuiDefaultProfile";
                visible = "0";
                tooltipProfile = "GuiToolTipProfile";

@@ -3112,7 +3112,6 @@ function ShapeEdColWindow::update_onCollisionChanged( %this )
 
    if ( %this-->colType.getText() $= "Convex Hulls" )
    {
-      %this-->hullInactive.setVisible( false );
       %this-->hullDepth.setValue( getField( %colData, 2 ) );
       %this-->hullDepthText.setText( mFloor( %this-->hullDepth.getValue() ) );
       %this-->hullMergeThreshold.setValue( getField( %colData, 3 ) );
@@ -3129,6 +3128,15 @@ function ShapeEdColWindow::update_onCollisionChanged( %this )
       %this-->hullMaxCapsuleErrorText.setText( mFloor( %this-->hullMaxCapsuleError.getValue() ) );
       %fillModeID = %this-->fillMode.findText( getField( %colData, 9 ) );
       %this-->fillMode.setSelected( %fillModeID, false );
+   }
+}
+
+function ShapeEdColWindow::onColTypeSelected(%this)
+{
+   
+   if ( %this-->colType.getText() $= "Convex Hulls" )
+   {
+      %this-->hullInactive.setVisible( false );
    }
    else
    {

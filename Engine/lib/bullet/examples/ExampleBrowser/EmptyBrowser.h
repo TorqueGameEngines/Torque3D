@@ -7,7 +7,6 @@
 class EmptyBrowser : public ExampleBrowserInterface
 {
 public:
-
 	EmptyExample m_emptyExample;
 
 	virtual CommonExampleInterface* getCurrentExample()
@@ -29,10 +28,18 @@ public:
 		m_emptyExample.stepSimulation(deltaTime);
 	}
 
+	virtual void updateGraphics()
+	{
+	}
+
 	virtual bool requestedExit()
 	{
 		return false;
 	}
+
+	virtual void setSharedMemoryInterface(class SharedMemoryInterface* sharedMem)
+	{
+	}
 };
 
-#endif //EMPTY_BROWSER
+#endif  //EMPTY_BROWSER

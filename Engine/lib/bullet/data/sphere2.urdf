@@ -1,4 +1,4 @@
-<?xml version="0.0" ?>
+<?xml version="1.0" ?>
 <robot name="urdf_robot">
   <link name="baseLink">
   	<contact>
@@ -18,6 +18,7 @@
       </geometry>
       <material name="white">
         <color rgba="1 1 1 1"/>
+        <specular rgb="11 1 1"/>
       </material>
     </visual>
     <collision>

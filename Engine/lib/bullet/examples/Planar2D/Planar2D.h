@@ -1,6 +1,6 @@
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -15,7 +15,6 @@ subject to the following restrictions:
 #ifndef PLANAR2D_H
 #define PLANAR2D_H
 
-class CommonExampleInterface*    Planar2DCreateFunc(struct CommonExampleOptions& options);
+class CommonExampleInterface* Planar2DCreateFunc(struct CommonExampleOptions& options);
 
-#endif //BOX2D_DEMO_H
-
+#endif  //BOX2D_DEMO_H

@@ -1,6 +1,6 @@
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -23,18 +23,14 @@ subject to the following restrictions:
 class btMinkowskiPenetrationDepthSolver : public btConvexPenetrationDepthSolver
 {
 protected:
-
-	static btVector3*	getPenetrationDirections();
+	static btVector3* getPenetrationDirections();
 
 public:
-
-	virtual bool calcPenDepth( btSimplexSolverInterface& simplexSolver,
-	const btConvexShape* convexA,const btConvexShape* convexB,
-				const btTransform& transA,const btTransform& transB,
-			btVector3& v, btVector3& pa, btVector3& pb,
-			class btIDebugDraw* debugDraw
-			);
+	virtual bool calcPenDepth(btSimplexSolverInterface& simplexSolver,
+							  const btConvexShape* convexA, const btConvexShape* convexB,
+							  const btTransform& transA, const btTransform& transB,
+							  btVector3& v, btVector3& pa, btVector3& pb,
+							  class btIDebugDraw* debugDraw);
 };
 
-#endif //BT_MINKOWSKI_PENETRATION_DEPTH_SOLVER_H
-
+#endif  //BT_MINKOWSKI_PENETRATION_DEPTH_SOLVER_H

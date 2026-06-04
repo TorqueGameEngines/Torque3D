@@ -4,7 +4,6 @@ option(TORQUE_PHYSICS_BULLET "Use Bullet physics" OFF)
 if(TORQUE_PHYSICS_BULLET)
   message("Enabling Bullet Module")
 
-  torqueAddSourceDirectories("${CMAKE_SOURCE_DIR}/Engine/source/T3D/physics/bullet")
   set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} BulletSoftBody Bullet3Dynamics BulletInverseDynamics BulletCollision
                                                      Bullet2FileLoader BulletDynamics Bullet3OpenCL_clew Bullet3Common
                                                      LinearMath Bullet3Geometry Bullet3Collision)
@@ -15,5 +14,8 @@ if(TORQUE_PHYSICS_BULLET)
   set(BUILD_SHARED_LIBS OFF CACHE BOOL "Bullet Shared Libs" FORCE)
   set(BUILD_CPU_DEMOS OFF CACHE BOOL "Bullet CPU Demos" FORCE)
   set(BUILD_BULLET2_DEMOS OFF CACHE BOOL "Bullet2 Demos" FORCE)
+  set(BUILD_EXTRAS OFF CACHE BOOL "Set when you want to build the extras" FORCE)
+  set(USE_GRAPHICAL_BENCHMARK OFF CACHE BOOL "Use Graphical Benchmark" FORCE)
+  set(USE_GLUT OFF CACHE BOOL "Use Glut" FORCE)
   add_subdirectory("${TORQUE_LIB_ROOT_DIRECTORY}/bullet" ${TORQUE_LIB_TARG_DIRECTORY}/bullet EXCLUDE_FROM_ALL)
 endif(TORQUE_PHYSICS_BULLET)

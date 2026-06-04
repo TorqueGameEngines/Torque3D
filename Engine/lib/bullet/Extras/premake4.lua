@@ -6,4 +6,5 @@ include "InverseDynamics"
 include "Serialize/BulletFileLoader"
 include "Serialize/BulletWorldImporter"
 include "Serialize/BulletXmlWorldImporter"
-
+include "obj2sdf"
+include "BulletRobotics"

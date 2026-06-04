@@ -13,18 +13,14 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-
-
 #include "../CommonInterfaces/CommonExampleInterface.h"
 #include "../CommonInterfaces/CommonGUIHelperInterface.h"
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 #include "BulletCollision/CollisionShapes/btCollisionShape.h"
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
 
-
 #include "LinearMath/btTransform.h"
 #include "LinearMath/btHashMap.h"
-
 
 int main(int argc, char* argv[])
 {
@@ -32,10 +28,10 @@ int main(int argc, char* argv[])
 		DummyGUIHelper noGfx;
 
 		CommonExampleOptions options(&noGfx);
-		CommonExampleInterface*    example = StandaloneExampleCreateFunc(options);
+		CommonExampleInterface* example = StandaloneExampleCreateFunc(options);
 
 		example->initPhysics();
-		for (int i = 0; i < 1000; i++)
+		for (int i = 0; i < 100000; i++)
 		{
 			printf("Simulating step %d\n", i);
 			example->stepSimulation(1.f / 60.f);
@@ -46,5 +42,3 @@ int main(int argc, char* argv[])
 	}
 	return 0;
 }
-
-

@@ -21,9 +21,11 @@ subject to the following restrictions:
 */
 
 #include <math.h>
+
+#include <cmath>
 #include "LinearR3.h"
 
-
+#if 0
 
 /****************************************************************
 							 Axes 
@@ -65,10 +67,9 @@ static float zy[] = {
 static int zorder[] = {
 		1, 2, 3, 4, -5, 6
 		};
-
-#define LENFRAC		0.10
-#define BASEFRAC	1.10
-
+#endif
+#define LENFRAC 0.10
+#define BASEFRAC 1.10
 
 /****************************************************************
 							 Arrow 
@@ -76,67 +77,53 @@ static int zorder[] = {
 
 /* size of wings as fraction of length:					*/
 
-#define WINGS	0.10
-
+#define WINGS 0.10
 
 /* axes:								*/
 
-#define X	1
-#define Y	2
-#define Z	3
-
+#define X 1
+#define Y 2
+#define Z 3
 
 /* x, y, z, axes:							*/
 
-static float axx[3] = { 1., 0., 0. };
-static float ayy[3] = { 0., 1., 0. };
-static float azz[3] = { 0., 0., 1. };
-
-
+//static float axx[3] = { 1., 0., 0. };
+//static float ayy[3] = { 0., 1., 0. };
+//static float azz[3] = { 0., 0., 1. };
 
 /* function declarations:						*/
 
-void	cross( float [3], float [3], float [3] );
-float	dot( float [3], float [3] );
-float	unit( float [3], float [3] );
+void cross(float[3], float[3], float[3]);
+float dot(float[3], float[3]);
+float unit(float[3], float[3]);
 
-
-
-
-
-float dot( float v1[3], float v2[3] )
+float dot(float v1[3], float v2[3])
 {
-	return( v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2] );
+	return (v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]);
 }
 
-
-
-void
-cross( float v1[3], float v2[3], float vout[3] )
+void cross(float v1[3], float v2[3], float vout[3])
 {
 	float tmp[3];
 
-	tmp[0] = v1[1]*v2[2] - v2[1]*v1[2];
-	tmp[1] = v2[0]*v1[2] - v1[0]*v2[2];
-	tmp[2] = v1[0]*v2[1] - v2[0]*v1[1];
+	tmp[0] = v1[1] * v2[2] - v2[1] * v1[2];
+	tmp[1] = v2[0] * v1[2] - v1[0] * v2[2];
+	tmp[2] = v1[0] * v2[1] - v2[0] * v1[1];
 
 	vout[0] = tmp[0];
 	vout[1] = tmp[1];
 	vout[2] = tmp[2];
 }
 
-
-
-float
-unit( float vin[3], float vout[3] )
+float unit(float vin[3], float vout[3])
 {
-	float dist, f ;
+	float dist, f;
 
-	dist = vin[0]*vin[0] + vin[1]*vin[1] + vin[2]*vin[2];
+	dist = vin[0] * vin[0] + vin[1] * vin[1] + vin[2] * vin[2];
 
-	if( dist > 0.0 )
+	if (dist > 0.0)
 	{
-		dist = sqrt( dist );
+		dist = std::sqrt(dist);
 		f = 1. / dist;
 		vout[0] = f * vin[0];
 		vout[1] = f * vin[1];
@@ -149,5 +136,5 @@ unit( float vin[3], float vout[3] )
 		vout[2] = vin[2];
 	}
 
-	return( dist );
+	return (dist);
 }

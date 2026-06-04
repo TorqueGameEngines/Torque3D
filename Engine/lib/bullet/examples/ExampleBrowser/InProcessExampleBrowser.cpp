@@ -2,12 +2,12 @@
 
 //#define EXAMPLE_CONSOLE_ONLY
 #ifdef EXAMPLE_CONSOLE_ONLY
-	#include "EmptyBrowser.h"
-	typedef EmptyBrowser DefaultBrowser;
+#include "EmptyBrowser.h"
+typedef EmptyBrowser DefaultBrowser;
 #else
-	#include "OpenGLExampleBrowser.h"
-	typedef OpenGLExampleBrowser DefaultBrowser;
-#endif //EXAMPLE_CONSOLE_ONLY
+#include "OpenGLExampleBrowser.h"
+typedef OpenGLExampleBrowser DefaultBrowser;
+#endif  //EXAMPLE_CONSOLE_ONLY
 
 #include "Bullet3Common/b3CommandLineArgs.h"
 #include "../Utils/b3Clock.h"
@@ -16,8 +16,9 @@
 #include "Bullet3Common/b3Scalar.h"
 #include "../SharedMemory/InProcessMemory.h"
 
-void	ExampleBrowserThreadFunc(void* userPtr,void* lsMemory);
-void*	ExampleBrowserMemoryFunc();
+void ExampleBrowserThreadFunc(void* userPtr, void* lsMemory);
+void* ExampleBrowserMemoryFunc();
+void ExampleBrowserMemoryReleaseFunc(void* ptr);
 
 #include <stdio.h>
 //#include "BulletMultiThreaded/PlatformDefinitions.h"
@@ -28,54 +29,47 @@ void*	ExampleBrowserMemoryFunc();
 #include "EmptyExample.h"
 
 #include "../SharedMemory/PhysicsServerExample.h"
+#include "../SharedMemory/PhysicsServerExampleBullet2.h"
+#include "../SharedMemory/GraphicsServerExample.h"
+
+
 #include "../SharedMemory/PhysicsClientExample.h"
 
 #ifndef _WIN32
 #include "../MultiThreading/b3PosixThreadSupport.h"
 
-
-
 static b3ThreadSupportInterface* createExampleBrowserThreadSupport(int numThreads)
 {
 	b3PosixThreadSupport::ThreadConstructionInfo constructionInfo("testThreads",
-                                                                ExampleBrowserThreadFunc,
-                                                                ExampleBrowserMemoryFunc,
-                                                                numThreads);
-    b3ThreadSupportInterface* threadSupport = new b3PosixThreadSupport(constructionInfo);
+																  ExampleBrowserThreadFunc,
+																  ExampleBrowserMemoryFunc,
+																  ExampleBrowserMemoryReleaseFunc,
+																  numThreads);
+	b3ThreadSupportInterface* threadSupport = new b3PosixThreadSupport(constructionInfo);
 
 	return threadSupport;
-
 }
 
-
-
-#elif defined( _WIN32)
+#elif defined(_WIN32)
 #include "../MultiThreading/b3Win32ThreadSupport.h"
 
 b3ThreadSupportInterface* createExampleBrowserThreadSupport(int numThreads)
 {
-	b3Win32ThreadSupport::Win32ThreadConstructionInfo threadConstructionInfo("testThreads",ExampleBrowserThreadFunc,ExampleBrowserMemoryFunc,numThreads);
+	b3Win32ThreadSupport::Win32ThreadConstructionInfo threadConstructionInfo("testThreads", ExampleBrowserThreadFunc, ExampleBrowserMemoryFunc, ExampleBrowserMemoryReleaseFunc, numThreads);
 	b3Win32ThreadSupport* threadSupport = new b3Win32ThreadSupport(threadConstructionInfo);
 	return threadSupport;
-
 }
 #endif
 
-
-
-
-
 class ExampleEntriesPhysicsServer : public ExampleEntries
 {
-
 	struct ExampleEntriesInternalData2* m_data;
 
 public:
-
 	ExampleEntriesPhysicsServer();
 	virtual ~ExampleEntriesPhysicsServer();
 
-	static void registerExampleEntry(int menuLevel, const char* name,const char* description, CommonExampleInterface::CreateFunc* createFunc, int option=0);
+	static void registerExampleEntry(int menuLevel, const char* name, const char* description, CommonExampleInterface::CreateFunc* createFunc, int option = 0);
 
 	virtual void initExampleEntries();
 
@@ -89,53 +83,50 @@ public:
 
 	virtual const char* getExampleDescription(int index);
 
-	virtual int	getExampleOption(int index);
-
+	virtual int getExampleOption(int index);
 };
-
 
 struct ExampleEntryPhysicsServer
 {
-	int									m_menuLevel;
-	const char*							m_name;
-	const char*							m_description;
-	CommonExampleInterface::CreateFunc*		m_createFunc;
-	int									m_option;
+	int m_menuLevel;
+	const char* m_name;
+	const char* m_description;
+	CommonExampleInterface::CreateFunc* m_createFunc;
+	int m_option;
 
 	ExampleEntryPhysicsServer(int menuLevel, const char* name)
-		:m_menuLevel(menuLevel), m_name(name), m_description(0), m_createFunc(0), m_option(0)
+		: m_menuLevel(menuLevel), m_name(name), m_description(0), m_createFunc(0), m_option(0)
 	{
 	}
 
-	ExampleEntryPhysicsServer(int menuLevel, const char* name,const char* description, CommonExampleInterface::CreateFunc* createFunc, int option=0)
-		:m_menuLevel(menuLevel), m_name(name), m_description(description), m_createFunc(createFunc), m_option(option)
+	ExampleEntryPhysicsServer(int menuLevel, const char* name, const char* description, CommonExampleInterface::CreateFunc* createFunc, int option = 0)
+		: m_menuLevel(menuLevel), m_name(name), m_description(description), m_createFunc(createFunc), m_option(option)
 	{
 	}
 };
 
 struct ExampleEntriesInternalData2
 {
-        btAlignedObjectArray<ExampleEntryPhysicsServer> m_allExamples;
+	btAlignedObjectArray<ExampleEntryPhysicsServer> m_allExamples;
 };
 
-static ExampleEntryPhysicsServer gDefaultExamplesPhysicsServer[]=
-{
+static ExampleEntryPhysicsServer gDefaultExamplesPhysicsServer[] =
+	{
 
-	ExampleEntryPhysicsServer(0,"Robotics Control"),
+		ExampleEntryPhysicsServer(0, "Robotics Control"),
 
-	ExampleEntryPhysicsServer(1,"Physics Server", "Create a physics server that communicates with a physics client over shared memory",
-			PhysicsServerCreateFunc),
-    ExampleEntryPhysicsServer(1,"Physics Server (RTC)", "Create a physics server that communicates with a physics client over shared memory. At each update, the Physics Server will continue calling 'stepSimulation' based on the real-time clock (RTC).",
-			PhysicsServerCreateFunc,PHYSICS_SERVER_USE_RTC_CLOCK),
+		ExampleEntryPhysicsServer(1, "Physics Server", "Create a physics server that communicates with a physics client over shared memory",
+								  PhysicsServerCreateFuncBullet2),
+		ExampleEntryPhysicsServer(1, "Physics Server (RTC)", "Create a physics server that communicates with a physics client over shared memory. At each update, the Physics Server will continue calling 'stepSimulation' based on the real-time clock (RTC).",
+								  PhysicsServerCreateFuncBullet2, PHYSICS_SERVER_USE_RTC_CLOCK),
 
-	ExampleEntryPhysicsServer(1,"Physics Server (Logging)", "Create a physics server that communicates with a physics client over shared memory. It will log all commands to a file.",
-			PhysicsServerCreateFunc,PHYSICS_SERVER_ENABLE_COMMAND_LOGGING),
-	ExampleEntryPhysicsServer(1,"Physics Server (Replay Log)", "Create a physics server that replay a command log from disk.",
-			PhysicsServerCreateFunc,PHYSICS_SERVER_REPLAY_FROM_COMMAND_LOG),
-
+		ExampleEntryPhysicsServer(1, "Physics Server (Logging)", "Create a physics server that communicates with a physics client over shared memory. It will log all commands to a file.",
+								  PhysicsServerCreateFuncBullet2, PHYSICS_SERVER_ENABLE_COMMAND_LOGGING),
+		ExampleEntryPhysicsServer(1, "Physics Server (Replay Log)", "Create a physics server that replay a command log from disk.",
+								  PhysicsServerCreateFuncBullet2, PHYSICS_SERVER_REPLAY_FROM_COMMAND_LOG),
+		ExampleEntryPhysicsServer(1, "Graphics Server", "Create a graphics server", GraphicsServerCreateFuncBullet),
 
 };
-
 
 ExampleEntriesPhysicsServer::ExampleEntriesPhysicsServer()
 {
@@ -155,17 +146,14 @@ void ExampleEntriesPhysicsServer::initExampleEntries()
 {
 	m_data->m_allExamples.clear();
 
-
-
-	int numDefaultEntries = sizeof(gDefaultExamplesPhysicsServer)/sizeof(ExampleEntryPhysicsServer);
-	for (int i=0;i<numDefaultEntries;i++)
+	int numDefaultEntries = sizeof(gDefaultExamplesPhysicsServer) / sizeof(ExampleEntryPhysicsServer);
+	for (int i = 0; i < numDefaultEntries; i++)
 	{
 		m_data->m_allExamples.push_back(gDefaultExamplesPhysicsServer[i]);
 	}
-
 }
 
-void ExampleEntriesPhysicsServer::registerExampleEntry(int menuLevel, const char* name,const char* description, CommonExampleInterface::CreateFunc* createFunc, int option)
+void ExampleEntriesPhysicsServer::registerExampleEntry(int menuLevel, const char* name, const char* description, CommonExampleInterface::CreateFunc* createFunc, int option)
 {
 }
 
@@ -194,19 +182,16 @@ const char* ExampleEntriesPhysicsServer::getExampleDescription(int index)
 	return m_data->m_allExamples[index].m_description;
 }
 
-
-
-
-struct	ExampleBrowserArgs
+struct ExampleBrowserArgs
 {
 	ExampleBrowserArgs()
-		:m_fakeWork(1),m_argc(0)
+		: m_fakeWork(1), m_argc(0)
 	{
 	}
 	b3CriticalSection* m_cs;
 	float m_fakeWork;
-  int m_argc;
-  char** m_argv;
+	int m_argc;
+	char** m_argv;
 };
 
 struct ExampleBrowserThreadLocalStorage
@@ -224,17 +209,23 @@ enum TestExampleBrowserCommunicationEnums
 	eExampleBrowserHasTerminated
 };
 
-void	ExampleBrowserThreadFunc(void* userPtr,void* lsMemory)
+static double gMinUpdateTimeMicroSecs = 4000.;
+
+void ExampleBrowserThreadFunc(void* userPtr, void* lsMemory)
 {
 	printf("ExampleBrowserThreadFunc started\n");
 
-	ExampleBrowserThreadLocalStorage* localStorage = (ExampleBrowserThreadLocalStorage*) lsMemory;
+	ExampleBrowserThreadLocalStorage* localStorage = (ExampleBrowserThreadLocalStorage*)lsMemory;
 
-	ExampleBrowserArgs* args = (ExampleBrowserArgs*) userPtr;
-	int workLeft = true;
-  b3CommandLineArgs args2(args->m_argc,args->m_argv);
+	ExampleBrowserArgs* args = (ExampleBrowserArgs*)userPtr;
+	//int workLeft = true;
+	b3CommandLineArgs args2(args->m_argc, args->m_argv);
+	int minUpdateMs = 4000;
+	if (args2.GetCmdLineArgument("minGraphicsUpdateTimeMs", minUpdateMs))
+	{
+		gMinUpdateTimeMicroSecs = minUpdateMs;
+	}
 	b3Clock clock;
-
 
 	ExampleEntriesPhysicsServer examples;
 	examples.initExampleEntries();
@@ -242,47 +233,67 @@ void	ExampleBrowserThreadFunc(void* userPtr,void* lsMemory)
 	DefaultBrowser* exampleBrowser = new DefaultBrowser(&examples);
 	exampleBrowser->setSharedMemoryInterface(localStorage->m_sharedMem);
 
-	bool init = exampleBrowser->init(args->m_argc,args->m_argv);
+	bool init = exampleBrowser->init(args->m_argc, args->m_argv);
 	clock.reset();
 	if (init)
 	{
-
 		args->m_cs->lock();
-		args->m_cs->setSharedParam(0,eExampleBrowserIsInitialized);
+		args->m_cs->setSharedParam(0, eExampleBrowserIsInitialized);
 		args->m_cs->unlock();
 
 		do
 		{
-			float deltaTimeInSeconds = clock.getTimeMicroseconds()/1000000.f;
-			clock.reset();
-			exampleBrowser->update(deltaTimeInSeconds);
+			clock.usleep(0);
 
-		} while (!exampleBrowser->requestedExit() && (args->m_cs->getSharedParam(0)!=eRequestTerminateExampleBrowser));
-	} else
+			//B3_PROFILE("ExampleBrowserThreadFunc");
+			float deltaTimeInSeconds = clock.getTimeMicroseconds() / 1000000.f;
+			{
+				if (deltaTimeInSeconds > 0.1)
+				{
+					deltaTimeInSeconds = 0.1;
+				}
+				if (deltaTimeInSeconds < (gMinUpdateTimeMicroSecs / 1e6))
+				{
+					//B3_PROFILE("clock.usleep");
+					exampleBrowser->updateGraphics();
+				}
+				else
+				{
+					//B3_PROFILE("exampleBrowser->update");
+					clock.reset();
+					exampleBrowser->updateGraphics();
+					exampleBrowser->update(deltaTimeInSeconds);
+				}
+			}
+
+		} while (!exampleBrowser->requestedExit() && (args->m_cs->getSharedParam(0) != eRequestTerminateExampleBrowser));
+	}
+	else
 	{
 		args->m_cs->lock();
-		args->m_cs->setSharedParam(0,eExampleBrowserInitializationFailed);
+		args->m_cs->setSharedParam(0, eExampleBrowserInitializationFailed);
 		args->m_cs->unlock();
 	}
 
 	delete exampleBrowser;
 	args->m_cs->lock();
-	args->m_cs->setSharedParam(0,eExampleBrowserHasTerminated);
+	args->m_cs->setSharedParam(0, eExampleBrowserHasTerminated);
 	args->m_cs->unlock();
 	printf("finished\n");
 	//do nothing
 }
 
-
-void*	ExampleBrowserMemoryFunc()
+void* ExampleBrowserMemoryFunc()
 {
 	//don't create local store memory, just return 0
 	return new ExampleBrowserThreadLocalStorage;
 }
 
-
-
-
+void ExampleBrowserMemoryReleaseFunc(void* ptr)
+{
+	ExampleBrowserThreadLocalStorage* p = (ExampleBrowserThreadLocalStorage*)ptr;
+	delete p;
+}
 
 struct btInProcessExampleBrowserInternalData
 {
@@ -291,13 +302,11 @@ struct btInProcessExampleBrowserInternalData
 	SharedMemoryInterface* m_sharedMem;
 };
 
-
-
-btInProcessExampleBrowserInternalData* btCreateInProcessExampleBrowser(int argc,char** argv2)
+btInProcessExampleBrowserInternalData* btCreateInProcessExampleBrowser(int argc, char** argv2, bool useInProcessMemory)
 {
-
 	btInProcessExampleBrowserInternalData* data = new btInProcessExampleBrowserInternalData;
-	data->m_sharedMem = new InProcessMemory;
+
+	data->m_sharedMem = useInProcessMemory ? new InProcessMemory : 0;
 
 	int numThreads = 1;
 	int i;
@@ -305,32 +314,30 @@ btInProcessExampleBrowserInternalData* btCreateInProcessExampleBrowser(int argc,
 	data->m_threadSupport = createExampleBrowserThreadSupport(numThreads);
 
 	printf("argc=%d\n", argc);
-	for (i=0;i<argc;i++)
+	for (i = 0; i < argc; i++)
 	{
-		printf("argv[%d] = %s\n",i,argv2[i]);
+		printf("argv[%d] = %s\n", i, argv2[i]);
 	}
 
-	for (i=0;i<data->m_threadSupport->getNumTasks();i++)
+	for (i = 0; i < data->m_threadSupport->getNumTasks(); i++)
 	{
-		ExampleBrowserThreadLocalStorage* storage = (ExampleBrowserThreadLocalStorage*) data->m_threadSupport->getThreadLocalMemory(i);
+		ExampleBrowserThreadLocalStorage* storage = (ExampleBrowserThreadLocalStorage*)data->m_threadSupport->getThreadLocalMemory(i);
 		b3Assert(storage);
 		storage->threadId = i;
 		storage->m_sharedMem = data->m_sharedMem;
 	}
 
-
 	data->m_args.m_cs = data->m_threadSupport->createCriticalSection();
-	data->m_args.m_cs->setSharedParam(0,eExampleBrowserIsUnInitialized);
- 	data->m_args.m_argc = argc;
- 	data->m_args.m_argv = argv2;
+	data->m_args.m_cs->setSharedParam(0, eExampleBrowserIsUnInitialized);
+	data->m_args.m_argc = argc;
+	data->m_args.m_argv = argv2;
 
-
-	for (i=0;i<numThreads;i++)
+	for (i = 0; i < numThreads; i++)
 	{
-		data->m_threadSupport->runTask(B3_THREAD_SCHEDULE_TASK, (void*) &data->m_args, i);
+		data->m_threadSupport->runTask(B3_THREAD_SCHEDULE_TASK, (void*)&data->m_args, i);
 	}
 
-	while (data->m_args.m_cs->getSharedParam(0)==eExampleBrowserIsUnInitialized)
+	while (data->m_args.m_cs->getSharedParam(0) == eExampleBrowserIsUnInitialized)
 	{
 		b3Clock::usleep(1000);
 	}
@@ -340,7 +347,7 @@ btInProcessExampleBrowserInternalData* btCreateInProcessExampleBrowser(int argc,
 
 bool btIsExampleBrowserTerminated(btInProcessExampleBrowserInternalData* data)
 {
-	return (data->m_args.m_cs->getSharedParam(0)==eExampleBrowserHasTerminated);
+	return (data->m_args.m_cs->getSharedParam(0) == eExampleBrowserHasTerminated);
 }
 
 SharedMemoryInterface* btGetSharedMemoryInterface(btInProcessExampleBrowserInternalData* data)
@@ -353,25 +360,27 @@ void btShutDownExampleBrowser(btInProcessExampleBrowserInternalData* data)
 	int numActiveThreads = 1;
 
 	data->m_args.m_cs->lock();
-	data->m_args.m_cs->setSharedParam(0,eRequestTerminateExampleBrowser);
+	data->m_args.m_cs->setSharedParam(0, eRequestTerminateExampleBrowser);
 	data->m_args.m_cs->unlock();
 
 	while (numActiveThreads)
-                {
-			int arg0,arg1;
-                        if (data->m_threadSupport->isTaskCompleted(&arg0,&arg1,0))
-                        {
-                                numActiveThreads--;
-                                printf("numActiveThreads = %d\n",numActiveThreads);
-
-                        } else
-                        {
-//                              printf("polling..");
-							b3Clock::usleep(1000);
-                        }
-                };
+	{
+		int arg0, arg1;
+		if (data->m_threadSupport->isTaskCompleted(&arg0, &arg1, 0))
+		{
+			numActiveThreads--;
+			printf("numActiveThreads = %d\n", numActiveThreads);
+		}
+		else
+		{
+			//                              printf("polling..");
+			b3Clock::usleep(0);
+		}
+	};
 
 	printf("btShutDownExampleBrowser stopping threads\n");
+	data->m_threadSupport->deleteCriticalSection(data->m_args.m_cs);
+
 	delete data->m_threadSupport;
 	delete data->m_sharedMem;
 	delete data;
@@ -379,44 +388,45 @@ void btShutDownExampleBrowser(btInProcessExampleBrowserInternalData* data)
 
 struct btInProcessExampleBrowserMainThreadInternalData
 {
-    ExampleEntriesPhysicsServer m_examples;
-    DefaultBrowser*    m_exampleBrowser;
-    SharedMemoryInterface* m_sharedMem;
-    b3Clock m_clock;
+	ExampleEntriesPhysicsServer m_examples;
+	DefaultBrowser* m_exampleBrowser;
+	SharedMemoryInterface* m_sharedMem;
+	b3Clock m_clock;
 };
 
-btInProcessExampleBrowserMainThreadInternalData* btCreateInProcessExampleBrowserMainThread(int argc,char** argv)
+btInProcessExampleBrowserMainThreadInternalData* btCreateInProcessExampleBrowserMainThread(int argc, char** argv, bool useInProcessMemory)
 {
-    btInProcessExampleBrowserMainThreadInternalData* data = new btInProcessExampleBrowserMainThreadInternalData;
-    data->m_examples.initExampleEntries();
-    data->m_exampleBrowser = new DefaultBrowser(&data->m_examples);
-    data->m_sharedMem = new InProcessMemory;
-    data->m_exampleBrowser->setSharedMemoryInterface(data->m_sharedMem );
-    bool init = data->m_exampleBrowser->init(argc,argv);
-    data->m_clock.reset();
-    return data;
+	btInProcessExampleBrowserMainThreadInternalData* data = new btInProcessExampleBrowserMainThreadInternalData;
+	data->m_examples.initExampleEntries();
+	data->m_exampleBrowser = new DefaultBrowser(&data->m_examples);
+	data->m_sharedMem = useInProcessMemory ? new InProcessMemory : 0;
+	data->m_exampleBrowser->setSharedMemoryInterface(data->m_sharedMem);
+	bool init;
+	init = data->m_exampleBrowser->init(argc, argv);
+	data->m_clock.reset();
+	return data;
 }
 
 bool btIsExampleBrowserMainThreadTerminated(btInProcessExampleBrowserMainThreadInternalData* data)
 {
-    return data->m_exampleBrowser->requestedExit();
+	return data->m_exampleBrowser->requestedExit();
 }
 
 void btUpdateInProcessExampleBrowserMainThread(btInProcessExampleBrowserMainThreadInternalData* data)
 {
-    float deltaTimeInSeconds = data->m_clock.getTimeMicroseconds()/1000000.f;
-    data->m_clock.reset();
-    data->m_exampleBrowser->update(deltaTimeInSeconds);
+	float deltaTimeInSeconds = data->m_clock.getTimeMicroseconds() / 1000000.f;
+	data->m_clock.reset();
+	data->m_exampleBrowser->updateGraphics();
+	data->m_exampleBrowser->update(deltaTimeInSeconds);
 }
 void btShutDownExampleBrowserMainThread(btInProcessExampleBrowserMainThreadInternalData* data)
 {
-
-    data->m_exampleBrowser->setSharedMemoryInterface(0);
-    delete data->m_exampleBrowser;
-    delete data;
+	data->m_exampleBrowser->setSharedMemoryInterface(0);
+	delete data->m_exampleBrowser;
+	delete data;
 }
 
 class SharedMemoryInterface* btGetSharedMemoryInterfaceMainThread(btInProcessExampleBrowserMainThreadInternalData* data)
 {
-    return data->m_sharedMem;
+	return data->m_sharedMem;
 }

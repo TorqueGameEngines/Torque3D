@@ -764,6 +764,7 @@ if (TORQUE_TARGET_PROPERTIES)
 endif (TORQUE_TARGET_PROPERTIES)
 target_include_directories(${TORQUE_APP_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
 
+if(WIN32 OR APPLE)
 target_precompile_headers(${TORQUE_APP_NAME} PRIVATE
     <vector>
     <string>
@@ -778,6 +779,7 @@ target_precompile_headers(${TORQUE_APP_NAME} PRIVATE
     <cstdint>
     <cmath>
 )
+endif()
 
 if(TORQUE_TESTING)
   if(WIN32)

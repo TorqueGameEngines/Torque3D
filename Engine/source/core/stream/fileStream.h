@@ -39,15 +39,23 @@ public:
       BUFFER_INVALID = 0xffffffff   // file offsets must all be less than this
    };
 
+   enum AsyncMode
+   {
+      Blocking,      // current behavior
+      Background     // write-behind
+   };
+
    typedef char Ch;    //!< Character type. Only support char.
 public:
-   FileStream();                       // default constructor
+   AsyncMode mAsyncMode;
+   void dispatchAsyncClose();
+   FileStream(AsyncMode flushMode = Blocking);// default constructor
    virtual ~FileStream();              // destructor
 
    // This function will allocate a new FileStream and open it.
    //  If it fails to allocate or fails to open, it will return NULL.
    //  The caller is responsible for deleting the instance.
-   static FileStream *createAndOpen(const String &inFileName, Torque::FS::File::AccessMode inMode);
+   static FileStream *createAndOpen(const String &inFileName, Torque::FS::File::AccessMode inMode, AsyncMode flushMode = Blocking);
 
    // mandatory methods from Stream base class...
    bool hasCapability(const Capability i_cap) const override;
@@ -64,6 +72,7 @@ public:
    //rjson compatibility
    bool Flush() { return flush(); }
    FileStream* clone() const override;
+   static void calcBlockHead(const U32 i_position, U32 *o_blockHead);
 
 protected:
    // more mandatory methods from Stream base class...
@@ -73,7 +82,6 @@ protected:
    void init();
    bool fillBuffer(const U32 i_startPosition);
    void clearBuffer();
-   static void calcBlockHead(const U32 i_position, U32 *o_blockHead);
    static void calcBlockBounds(const U32 i_position, U32 *o_blockHead, U32 *o_blockTail);
    void setStatus();
 

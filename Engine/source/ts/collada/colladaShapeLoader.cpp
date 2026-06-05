@@ -720,7 +720,7 @@ static bool sReadCollada(const Torque::Path& path, TSShape*& res_shape)
          // Cache the model to a DTS file for faster loading next time.
          cachedPath.setExtension("cached.dts");
          // Cache the model to a DTS file for faster loading next time.
-         FileStream dtsStream;
+         FileStream dtsStream(FileStream::AsyncMode::Background);
          if (dtsStream.open(cachedPath.getFullPath(), Torque::FS::File::Write))
          {
             Con::printf("Writing cached shape to %s", cachedPath.getFullPath().c_str());

@@ -34,6 +34,8 @@ extern U32 hash(const U8 *k, U32 length, U32 initval);
 
 extern U64 hash64(const U8 *k, U32 length, U64 initval);
 
+extern String getStringHash64(const String& in);
+
 }
 
 #endif // _HASHFUNCTION_H_

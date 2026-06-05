@@ -484,7 +484,7 @@ void TSStatic::prepCollision()
    mLOSDetails.clear();
    mConvexList->nukeList();
 
-   Resource<TSShape> shape = mShapeAssetRef.assetPtr->getShapeResource();
+   TSShape* shape = mShapeInstance->getShape();
 
    if (mCollisionType == CollisionMesh || mCollisionType == VisibleMesh)
    {
@@ -515,7 +515,7 @@ void TSStatic::_updatePhysics()
    if (!PHYSICSMGR || mCollisionType == None)
       return;
 
-   Resource<TSShape> shape = mShapeAssetRef.assetPtr->getShapeResource();
+   TSShape* shape = mShapeInstance->getShape();
 
    PhysicsCollision* colShape = NULL;
    if (mCollisionType == Bounds)

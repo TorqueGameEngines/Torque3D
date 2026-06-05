@@ -542,6 +542,77 @@ bool GFXGLShader::_init()
    macros.last().name = "TORQUE_VERTEX_SHADER";
    macros.last().value = "";
 
+   Torque::Path cachePath = mVertexFile;
+   cachePath.setExtension("tso");
+   String macroHash;
+   GFXShaderMacro::stringize(macros, &macroHash);
+   macroHash = Torque::getStringHash64(macroHash);
+
+   String fileName = cachePath.getFileName();
+
+   if (!mVertexFile.isEmpty())
+      fileName += "_" + mVertexFile.getFileName();
+
+   if (!mPixelFile.isEmpty())
+      fileName += "_" + mPixelFile.getFileName();
+
+   if (!mGeometryFile.isEmpty())
+      fileName += "_" + mGeometryFile.getFileName();
+
+   fileName += "_" + macroHash;
+
+   cachePath.setFileName(fileName);
+
+   if (Torque::FS::IsFile(cachePath))
+   {
+      Torque::FS::FileNodeRef rawFile = Torque::FS::GetFileNode(mVertexFile);
+      Torque::FS::FileNodeRef cachedFile = Torque::FS::GetFileNode(cachePath);
+
+      if (rawFile != NULL && cachedFile != NULL)
+      {
+         if (cachedFile->getModifiedTime() >= rawFile->getModifiedTime())
+         {
+
+            FileStream fs;
+            if (fs.open(cachePath, Torque::FS::File::Read))
+            {
+               U32 size;
+               FrameAllocatorMarker bin;
+               GLenum gl_format;
+               fs.read(&gl_format);
+               fs.read(&size);
+
+               char* bin_data = (char*)bin.alloc(size);
+               fs.read(size, bin_data);
+
+               glProgramBinary(
+                  mProgram,
+                  gl_format,
+                  bin_data,
+                  size);
+
+
+               GLint linked;
+               glGetProgramiv(mProgram, GL_LINK_STATUS, &linked);
+               if (linked == GL_TRUE)
+               {
+                  initConstantDescs();
+                  initHandles();
+
+                  // Notify Buffers we might have changed in size.
+                  // If this was our first init then we won't have any activeBuffers
+                  // to worry about unnecessarily calling.
+                  Vector<GFXShaderConstBuffer*>::iterator biter = mActiveBuffers.begin();
+                  for (; biter != mActiveBuffers.end(); biter++)
+                     ((GFXGLShaderConstBuffer*)(*biter))->onShaderReload(this);
+
+                  return true;
+               }
+            }
+         }
+      }
+   }
+
    // Default to true so we're "successful" if a vertex/pixel shader wasn't specified.
    bool compiledVertexShader = true;
    bool compiledPixelShader = true;
@@ -658,6 +729,27 @@ bool GFXGLShader::_init()
    // If we failed to link, bail.
    if (linkStatus == GL_FALSE)
       return false;
+
+   GLint binaryLength;
+   glGetProgramiv(mProgram, GL_PROGRAM_BINARY_LENGTH, &binaryLength);
+
+   if (binaryLength)
+   {
+      FrameAllocatorMarker bin;
+      char* bin_data = (char*)bin.alloc(binaryLength);
+      GLenum binaryFormat;
+      GLint length;
+      glGetProgramBinary(mProgram, binaryLength, &length, &binaryFormat, bin_data);
+      AssertWarn(length == binaryLength, "GFXGLShader: Binary length does not match");
+
+      FileStream out(FileStream::AsyncMode::Background);
+      if (out.open(cachePath, Torque::FS::File::Write))
+      {
+         out.write(binaryFormat);
+         out.write(length);
+         out.write(length, bin_data);
+      }
+   }
 
    initConstantDescs();
    initHandles();

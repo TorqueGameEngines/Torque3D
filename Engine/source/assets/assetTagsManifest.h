@@ -27,7 +27,7 @@
 
 #include "core/util/tDictionary.h"
 
-#include "core/util/tvector.h"
+#include "core/util/tVector.h"
 
 #include "core/strings/stringUnit.h"
 

@@ -24,7 +24,7 @@
 #define _MODULE_MANAGER_H
 #include "console/simBase.h"
 
-#include "core/util/tvector.h"
+#include "core/util/tVector.h"
 
 #include "core/util/tDictionary.h"
 

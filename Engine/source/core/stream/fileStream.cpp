@@ -27,24 +27,6 @@
 //-----------------------------------------------------------------------------
 // FileStream methods...
 //-----------------------------------------------------------------------------
-static void writeBufferToFile(
-   Torque::FS::FileRef& file,
-   U32 buffHead,
-   U32 buffTail,
-   const U8* buffer)
-{
-   if (!file || buffHead == FileStream::BUFFER_INVALID)
-      return;
-
-   // match FileStream::flush logic
-   if (buffHead != file->getPosition())
-      file->setPosition(buffHead, Torque::FS::File::Begin);
-
-   U32 blockHead;
-   FileStream::calcBlockHead(buffHead, &blockHead);
-
-   file->write((char*)buffer + (buffHead - blockHead), buffTail - buffHead + 1);
-}
 
 struct FileCloseWorkItem : public ThreadPool::WorkItem
 {

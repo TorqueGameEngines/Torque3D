@@ -280,12 +280,12 @@ bool JoltCollision::addHeightfield(
     0.0,
     verticalAdjust,
     -terrainSize
-);
+   );
 
    JPH::Vec3 joltScale(metersPerSample,1.0f, metersPerSample);
 
    JPH::HeightFieldShapeSettings settings(samples.data(), joltOffset, joltScale, blockSize);
-   settings.mBlockSize = metersPerSample;
+   settings.mBlockSize = 2;
 
    auto result = settings.Create();
    if (result.HasError())

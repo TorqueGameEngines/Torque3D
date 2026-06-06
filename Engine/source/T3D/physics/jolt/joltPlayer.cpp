@@ -37,9 +37,18 @@ JoltPlayer::JoltPlayer()
 
 JoltPlayer::~JoltPlayer()
 {
-   mCharacter->SetUserData(NULL);
-   mCharacter = NULL;
-   setSimulationEnabled(false);
+   if (mCharacter)
+   {
+      // Remove the inner body from the physics world before the character is released.
+      // Setting mCharacter=nullptr first would make disableCollision() a no-op.
+      if (mCollisionEnabled)
+         disableCollision();
+
+      mCharacter->SetUserData(0);
+      mCharacter = nullptr;
+   }
+
+   mIsEnabled = false;
 }
 
 void JoltPlayer::setTransform(const MatrixF& xfm)
@@ -99,7 +108,6 @@ void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, 
    JPH::Ref<JPH::Shape> shape = JPH::RotatedTranslatedShapeSettings(JPH::Vec3(0, 0, mOriginOffset), rotFix, new JPH::CapsuleShape(0.5f * height, radius)).Create().Get();
    JPH::Ref<JPH::Shape> inner_shape = JPH::RotatedTranslatedShapeSettings(JPH::Vec3(0, 0, mOriginOffset), rotFix, new JPH::CapsuleShape(0.5f * 0.9f * height, 0.9f * radius)).Create().Get();
 
-
    JPH::Ref<JPH::CharacterVirtualSettings> settings = new JPH::CharacterVirtualSettings();
    Con::printf("JoltPlayer::init - maxSlopeAngle: %f degrees", mRadToDeg(mAcos(runSurfaceCos)));
    settings->mMaxSlopeAngle = mAcos(runSurfaceCos);
@@ -139,20 +147,12 @@ void JoltPlayer::init(const char* type, const Point3F& size, F32 runSurfaceCos, 
    setSimulationEnabled(true);
 }
 
-class CharacterBodyFilter : public JPH::BodyFilter
+void JoltPlayer::preUpdate(F32 dt)
 {
-public:
-   JPH::BodyID mCharacterBodyID;
-
-   CharacterBodyFilter(JPH::BodyID id)
-      : mCharacterBodyID(id) {
-   }
-
-   virtual bool ShouldCollide(const JPH::BodyID& inBodyID) const override
-   {
-      return inBodyID != mCharacterBodyID;
-   }
-};
+   // Intentionally empty. Ground velocity is refreshed inside move() on every
+   // call. If the calling code ever starts calling preUpdate() before move(),
+   // the refresh in move() will simply be a no-op on the same-frame data.
+}
 
 Point3F JoltPlayer::move(const VectorF& displacement, CollisionList& outCol)
 {
@@ -166,30 +166,31 @@ Point3F JoltPlayer::move(const VectorF& displacement, CollisionList& outCol)
    JPH::Vec3 velocity = joltCast(displacement) / dt;
 
    const auto& system = mWorld->getPhysicsSystem();
-   const JPH::Vec3 up = mCharacter->GetUp();
 
    mCharacter->UpdateGroundVelocity();
 
    const JPH::CharacterVirtual::EGroundState groundState = mCharacter->GetGroundState();
    const bool isOnGround = groundState == JPH::CharacterVirtual::EGroundState::OnGround;
 
-   // Temporary - log what displacement.z actually is each frame
-   /*Con::printf("groundState=%d  disp.z=%.4f  vel.z=%.4f",
-      (int)groundState,
-      displacement.z,
-      displacement.z / TickSec);*/
-
    if (isOnGround && !mCharacter->IsSlopeTooSteep(mCharacter->GetGroundNormal()))
    {
       JPH::Vec3 horizontalVel(velocity.GetX(), velocity.GetY(), 0.0f);
       mAllowSliding = horizontalVel.Length() > 0.01f;
 
-      if (velocity.GetZ() < 0.05f)
-         velocity.SetZ(0.00f);
+         velocity.SetZ(0.0f);
 
       JPH::Vec3 groundVel = mCharacter->GetGroundVelocity();
-      if (groundVel.LengthSq() > 0.001f)
-         velocity += groundVel;
+      // Threshold raised to filter static-surface floating-point residuals.
+      if (groundVel.LengthSq() > 0.01f)
+      {
+         // Always carry horizontal platform motion (conveyor belts, sliding floors).
+         velocity.SetX(velocity.GetX() + groundVel.GetX());
+         velocity.SetY(velocity.GetY() + groundVel.GetY());
+         // Only carry Z from platforms that are meaningfully moving upward (elevators).
+         // Static surfaces can produce tiny Z residuals that fight gravity resolution.
+         if (groundVel.GetZ() > 0.05f)
+            velocity.SetZ(velocity.GetZ() + groundVel.GetZ());
+      }
    }
    else
    {
@@ -199,28 +200,25 @@ Point3F JoltPlayer::move(const VectorF& displacement, CollisionList& outCol)
    mCharacter->SetLinearVelocity(velocity);
 
    //----------------------------------------
-   // Substep (bullet was doing a max of 10 iterations)
+   // Substep
    //----------------------------------------
    const U32 iterations = 3;
    const F32 subDt = dt / iterations;
 
-   JPH::CharacterVirtual::ExtendedUpdateSettings settings;
+   // Build settings once outside the loop — they don't change per-substep.
+   JPH::CharacterVirtual::ExtendedUpdateSettings extSettings;
+   extSettings.mWalkStairsStepUp = JPH::Vec3(0, 0, mStepHeight);
+   extSettings.mStickToFloorStepDown = JPH::Vec3(0, 0, -mStepHeight);
+   extSettings.mWalkStairsCosAngleForwardContact = mMaxSlopeCos;
 
-   for (int i = 0; i < iterations; ++i)
+   for (U32 i = 0; i < iterations; ++i)
    {
-      bool isLast = (i == iterations - 1);
-
-      settings.mWalkStairsStepUp = JPH::Vec3(0, 0, mStepHeight);
-      settings.mStickToFloorStepDown = JPH::Vec3(0, 0, -mStepHeight);
-      settings.mWalkStairsCosAngleForwardContact = mAcos(mMaxSlopeCos);
-
-
       mCharacter->ExtendedUpdate(
          subDt,
          system->GetGravity(),
-         settings,
-         system->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
-         system->GetDefaultLayerFilter(Layers::MOVING),
+         extSettings,
+         system->GetDefaultBroadPhaseLayerFilter(Layers::CHARACTER),
+         system->GetDefaultLayerFilter(Layers::CHARACTER),
          {},
          {},
          *mWorld->getTempAllocator()
@@ -411,8 +409,8 @@ void JoltPlayer::setSpacials(const Point3F& nPos, const Point3F& nSize)
    if (mCharacter->SetShape(
       shape,
       maxPenetration,
-      system->GetDefaultBroadPhaseLayerFilter(Layers::MOVING),
-      system->GetDefaultLayerFilter(Layers::MOVING),
+      system->GetDefaultBroadPhaseLayerFilter(Layers::CHARACTER),
+      system->GetDefaultLayerFilter(Layers::CHARACTER),
       body_filter,
       shape_filter,
       *mWorld->getTempAllocator())
@@ -420,8 +418,6 @@ void JoltPlayer::setSpacials(const Point3F& nPos, const Point3F& nSize)
    {
       mCharacter->SetInnerBodyShape(inner_shape);
    }
-
-   //mCharacter->SetPosition(joltCast(nPos));
 }
 
 void JoltPlayer::enableCollision()
@@ -480,26 +476,51 @@ void JoltPlayer::OnAdjustBodyVelocity(const JPH::CharacterVirtual* inCharacter, 
 {
 }
 
+bool JoltPlayer::OnContactValidate(const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2)
+{
+   if (inCharacter != mCharacter)
+      return true;
+
+   JPH::BodyLockRead lock(mWorld->getPhysicsSystem()->GetBodyLockInterface(), inBodyID2);
+   if (lock.Succeeded() && lock.GetBody().IsSensor())
+      return false;
+
+   return true;
+}
+
 void JoltPlayer::OnContactAdded(const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2, JPH::RVec3Arg inContactPosition, JPH::Vec3Arg inContactNormal, JPH::CharacterContactSettings& ioSettings)
 {
-   if (inCharacter == mCharacter)
-   {
-      JPH::CharacterVirtual::ContactKey c(inBodyID2, inSubShapeID2);
-      if (std::find(mActiveContacts.begin(), mActiveContacts.end(), c) != mActiveContacts.end())
-         AssertFatal(false, "JoltPlayer::OnContactAdded - Received a contact that should have been persisted");
+   if (inCharacter != mCharacter)
+      return;
 
-      mActiveContacts.push_back(c);
+   // Sensors are already rejected by OnContactValidate so this callback will
+   // never fire for them. No sensor check needed here.
+   JPH::CharacterVirtual::ContactKey c(inBodyID2, inSubShapeID2);
+   if (std::find(mActiveContacts.begin(), mActiveContacts.end(), c) != mActiveContacts.end())
+   {
+      Con::warnf("JoltPlayer::OnContactAdded - contact already present, skipping duplicate");
+      return;
    }
+   mActiveContacts.push_back(c);
+
+   OnContactCommon(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
 }
 
 void JoltPlayer::OnContactPersisted(const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2, JPH::RVec3Arg inContactPosition, JPH::Vec3Arg inContactNormal, JPH::CharacterContactSettings& ioSettings)
 {
-   if (inCharacter == mCharacter)
+   if (inCharacter != mCharacter)
+      return;
+
+   // Sensors are already rejected by OnContactValidate — this callback will
+   // not fire for them.
+   JPH::CharacterVirtual::ContactKey c(inBodyID2, inSubShapeID2);
+   if (std::find(mActiveContacts.begin(), mActiveContacts.end(), c) == mActiveContacts.end())
    {
-      JPH::CharacterVirtual::ContactKey c(inBodyID2, inSubShapeID2);
-      if (std::find(mActiveContacts.begin(), mActiveContacts.end(), c) == mActiveContacts.end())
-         AssertFatal(false, "JoltPlayer::OnContactPersisted - Received a contact that should have been added instead");
+      Con::warnf("JoltPlayer::OnContactPersisted - contact not in set, inserting as new");
+      mActiveContacts.push_back(c);
    }
+
+   OnContactCommon(inCharacter, inBodyID2, inSubShapeID2, inContactPosition, inContactNormal, ioSettings);
 }
 
 void JoltPlayer::OnContactRemoved(const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2)
@@ -509,8 +530,11 @@ void JoltPlayer::OnContactRemoved(const JPH::CharacterVirtual* inCharacter, cons
       JPH::CharacterVirtual::ContactKey c(inBodyID2, inSubShapeID2);
       ContactSet::iterator it = std::find(mActiveContacts.begin(), mActiveContacts.end(), c);
       if (it == mActiveContacts.end())
-         AssertFatal(false, "JoltPlayer::OnContactRemoved - Attempted to remove a contact that was not added");
-
+      {
+         // Can occur when the contact was never added due to an earlier ordering anomaly.
+         Con::warnf("JoltPlayer::OnContactRemoved - contact not found, ignoring");
+         return;
+      }
       mActiveContacts.erase(it);
    }
 }
@@ -537,4 +561,3 @@ void JoltPlayer::OnContactSolve(const JPH::CharacterVirtual* inCharacter, const 
    if (!mAllowSliding && inContactVelocity.IsNearZero() && !inCharacter->IsSlopeTooSteep(inContactNormal))
       ioNewCharacterVelocity = JPH::Vec3::sZero();
 }
-

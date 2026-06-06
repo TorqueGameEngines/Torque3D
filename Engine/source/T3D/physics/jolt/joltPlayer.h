@@ -56,11 +56,11 @@ public:
 
    // Physics Player.
    void init(const char* type,
-            const Point3F& size,
-            F32 runSurfaceCos,
-            F32 stepHeight,
-            SceneObject* obj,
-            PhysicsWorld* world) override;
+      const Point3F& size,
+      F32 runSurfaceCos,
+      F32 stepHeight,
+      SceneObject* obj,
+      PhysicsWorld* world) override;
 
    void preUpdate(F32 dt);
 
@@ -87,6 +87,10 @@ protected:
 public: // contact listener
    /// Callback to adjust the velocity of a body as seen by the character. Can be adjusted to e.g. implement a conveyor belt or an inertial dampener system of a sci-fi space ship.
    virtual void			OnAdjustBodyVelocity(const JPH::CharacterVirtual* inCharacter, const JPH::Body& inBody2, JPH::Vec3& ioLinearVelocity, JPH::Vec3& ioAngularVelocity) override;
+
+   // Called to check if the character can collide with a body at all. Return false to discard the contact
+   // before it reaches the constraint solver, stair walking, or stick-to-floor algorithms.
+   virtual bool			OnContactValidate(const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2) override;
 
    // Called whenever the character collides with a body.
    virtual void			OnContactAdded(const JPH::CharacterVirtual* inCharacter, const JPH::BodyID& inBodyID2, const JPH::SubShapeID& inSubShapeID2, JPH::RVec3Arg inContactPosition, JPH::Vec3Arg inContactNormal, JPH::CharacterContactSettings& ioSettings) override;

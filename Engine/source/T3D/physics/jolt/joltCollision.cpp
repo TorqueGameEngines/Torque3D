@@ -3,8 +3,8 @@
 
 // Save and undefine the macro if it exists
 #ifdef Offset
-    #pragma push_macro("Offset")
-    #undef Offset
+#pragma push_macro("Offset")
+#undef Offset
 #endif
 
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
@@ -21,7 +21,7 @@
 
 #ifdef Offset
     // Restore the original macro after includes
-    #pragma pop_macro("Offset")
+#pragma pop_macro("Offset")
 #endif
 
 JoltCollision::JoltCollision()
@@ -73,7 +73,7 @@ void JoltCollision::addBox(const Point3F& halfWidth, const MatrixF& localXfm)
    toJolt(localXfm, localPos, localRot);
 
    // Wrap the base shape with RotatedTranslatedShape
-   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
+   JPH::Ref<JPH::RotatedTranslatedShapeSettings> rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
    auto rtsShape = rtsSettings->Create().Get();
 
    // Store in child entry
@@ -103,7 +103,7 @@ void JoltCollision::addSphere(F32 radius, const MatrixF& localXfm)
    JPH::Quat localRot;
    toJolt(localXfm, localPos, localRot);
 
-   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
+   JPH::Ref<JPH::RotatedTranslatedShapeSettings> rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
    auto rtsShape = rtsSettings->Create().Get();
 
    ChildShapeEntry entry;
@@ -132,7 +132,7 @@ void JoltCollision::addCapsule(F32 radius, F32 height, const MatrixF& localXfm)
    JPH::Quat localRot;
    toJolt(localXfm, localPos, localRot);
 
-   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
+   JPH::Ref<JPH::RotatedTranslatedShapeSettings> rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
    auto rtsShape = rtsSettings->Create().Get();
 
    ChildShapeEntry entry;
@@ -150,33 +150,34 @@ bool JoltCollision::addConvex(const Point3F* points, U32 count, const MatrixF& l
    if (count == 0)
       return false;
 
+   // Pre-transform points into shape-local space for the same reason as
+   // addTriangleMesh: avoids the RTS wrapper and the double-transform in
+   // rebuildCompound when multiple shapes share a JoltCollision.
+   const bool isIdentity = localXfm.isIdentity();
+
    std::vector<JPH::Vec3> verts;
    verts.reserve(count);
    for (U32 i = 0; i < count; ++i)
-      verts.emplace_back(points[i].x, points[i].y, points[i].z);
+   {
+      Point3F p = points[i];
+      if (!isIdentity)
+         localXfm.mulP(points[i], &p);
+      verts.emplace_back(p.x, p.y, p.z);
+   }
 
-   JPH::ConvexHullShapeSettings settings(verts.data(), verts.size());
+   JPH::ConvexHullShapeSettings settings(verts.data(), (int)verts.size());
    auto result = settings.Create();
    if (result.HasError())
    {
-      Con::errorf("Jolt Error: %s", result.GetError().c_str());
+      Con::errorf("Jolt addConvex Error: %s", result.GetError().c_str());
       return false;
    }
 
-   auto baseShape = result.Get();
-
-   JPH::Vec3 localPos;
-   JPH::Quat localRot;
-   toJolt(localXfm, localPos, localRot);
-
-   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
-   auto rtsShape = rtsSettings->Create().Get();
-
    ChildShapeEntry entry;
-   entry.shape = rtsShape;
-   entry.localPos = localPos;
-   entry.localRot = localRot;
-   entry.localXfm = joltCast(localXfm);
+   entry.shape = result.Get();
+   entry.localPos = JPH::Vec3::sZero();
+   entry.localRot = JPH::Quat::sIdentity();
+   entry.localXfm = JPH::Mat44::sIdentity();
    mChildren.push_back(entry);
 
    rebuildCompound();
@@ -188,50 +189,53 @@ bool JoltCollision::addTriangleMesh(const Point3F* vert, U32 vertCount, const U3
    if (!vert || !index || vertCount == 0 || triCount == 0)
       return false;
 
-   // Build the TriangleList
+   // Bake localXfm directly into the vertex positions so the MeshShape sits in
+   // shape-local space with an identity transform. This avoids the need for an
+   // RTS wrapper and eliminates the double-transform bug that occurs when the
+   // wrapper's position is later re-applied by rebuildCompound's AddShape call.
+   const bool isIdentity = localXfm.isIdentity();
+
    JPH::TriangleList triangles;
    triangles.reserve(triCount);
 
    for (U32 i = 0; i < triCount; ++i)
    {
-      const Point3F& v0 = vert[index[i * 3 + 0]];
-      const Point3F& v1 = vert[index[i * 3 + 1]];
-      const Point3F& v2 = vert[index[i * 3 + 2]];
+      Point3F p0 = vert[index[i * 3 + 0]];
+      Point3F p1 = vert[index[i * 3 + 1]];
+      Point3F p2 = vert[index[i * 3 + 2]];
+
+      if (!isIdentity)
+      {
+         localXfm.mulP(vert[index[i * 3 + 0]], &p0);
+         localXfm.mulP(vert[index[i * 3 + 1]], &p1);
+         localXfm.mulP(vert[index[i * 3 + 2]], &p2);
+      }
 
       triangles.push_back(
          JPH::Triangle(
-            JPH::Float3(v0.x, v0.y, v0.z),
-            JPH::Float3(v2.x, v2.y, v2.z),
-            JPH::Float3(v1.x, v1.y, v1.z),
+            JPH::Float3(p0.x, p0.y, p0.z),
+            JPH::Float3(p2.x, p2.y, p2.z),  // winding order maintained
+            JPH::Float3(p1.x, p1.y, p1.z),
             0, // material index
             i  // user data = original triangle index
          )
       );
    }
 
-   // Create the MeshShape
    JPH::MeshShapeSettings settings(triangles);
    auto result = settings.Create();
    if (result.HasError())
    {
-      Con::errorf("Jolt Error: %s", result.GetError().c_str());
+      Con::errorf("Jolt addTriangleMesh Error: %s", result.GetError().c_str());
       return false;
    }
 
-   auto baseShape = result.Get();
-
-   JPH::Vec3 localPos;
-   JPH::Quat localRot;
-   toJolt(localXfm, localPos, localRot);
-
-   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
-   auto rtsShape = rtsSettings->Create().Get();
-
+   // Store at identity — vertices are already in shape-local space.
    ChildShapeEntry entry;
-   entry.shape = rtsShape;
-   entry.localPos = localPos;
-   entry.localRot = localRot;
-   entry.localXfm = joltCast(localXfm);
+   entry.shape = result.Get();
+   entry.localPos = JPH::Vec3::sZero();
+   entry.localRot = JPH::Quat::sIdentity();
+   entry.localXfm = JPH::Mat44::sIdentity();
    mChildren.push_back(entry);
 
    rebuildCompound();
@@ -248,49 +252,56 @@ bool JoltCollision::addHeightfield(
    if (!heightData || blockSize == 0)
       return false;
 
-   const F32 heightScale = 0.03125f;
-   const F32 minHeight = 0;
-   const F32 maxHeight = 65535 * heightScale;
+   // Jolt's internal BVH page size: power-of-2 between 2 and 8, independent of
+   // inSampleCount. Use 4 for larger terrains to produce a shallower BVH tree.
+   const U32 joltBlockSize = (blockSize >= 512) ? 4 : 2;
 
-   const U32 sampleCount = blockSize * blockSize;
-   std::vector<float> samples(sampleCount);
+   // inSampleCount must be a multiple of joltBlockSize. Round up so any blockSize
+   // works — padding columns/rows are edge-clamped to stay physically correct.
+   const U32 paddedSize = ((blockSize + joltBlockSize - 1) / joltBlockSize) * joltBlockSize;
+   const U32 totalSamples = paddedSize * paddedSize;
 
-   for (U32 x = 0; x < blockSize; ++x)
+   // Pass 1: build a flat (un-flipped) padded grid with edge-clamping.
+   std::vector<float> unflipped(totalSamples);
+   for (U32 y = 0; y < paddedSize; ++y)
    {
-      for (U32 y = 0; y < blockSize; ++y)
+      U32 srcY = (y < blockSize) ? y : blockSize - 1;
+      for (U32 x = 0; x < paddedSize; ++x)
       {
-         // Terrain storage (row-major)
-         U32 srcIdx = y * blockSize + x;
-
-         // Flip Z direction for Jolt
-         U32 dstIdx = (blockSize - 1 - y) * blockSize + x;
+         U32 srcX = (x < blockSize) ? x : blockSize - 1;
+         U32 srcIdx = srcY * blockSize + srcX;
 
          float h = fixedToFloat(heightData[srcIdx]);
-
          if (holes && holes[srcIdx])
             h = JPH::HeightFieldShapeConstants::cNoCollisionValue;
 
-         samples[dstIdx] = h;
+         unflipped[y * paddedSize + x] = h;
       }
    }
 
-   float terrainSize = blockSize * metersPerSample;
-   float verticalAdjust = -heightScale * 0.5f;
-   JPH::Vec3 joltOffset(
-    0.0,
-    verticalAdjust,
-    -terrainSize
-   );
+   // Pass 2: flip Y axis into the final sample array for Jolt's coordinate system.
+   std::vector<float> samples(totalSamples);
+   for (U32 y = 0; y < paddedSize; ++y)
+      for (U32 x = 0; x < paddedSize; ++x)
+         samples[(paddedSize - 1 - y) * paddedSize + x] = unflipped[y * paddedSize + x];
 
-   JPH::Vec3 joltScale(metersPerSample,1.0f, metersPerSample);
+   // Offset uses actual terrain extent (blockSize) so the padded fringe never
+   // shifts the visible terrain. The vertical adjustment centres quantisation error.
+   const float heightScale = 0.03125f;
+   const float verticalAdjust = -heightScale * 0.5f;
+   const float terrainSize = blockSize * metersPerSample;
 
-   JPH::HeightFieldShapeSettings settings(samples.data(), joltOffset, joltScale, blockSize);
-   settings.mBlockSize = 2;
+   JPH::Vec3 joltOffset(0.0f, verticalAdjust, -terrainSize);
+   JPH::Vec3 joltScale(metersPerSample, 1.0f, metersPerSample);
+
+   JPH::HeightFieldShapeSettings settings(samples.data(), joltOffset, joltScale, paddedSize);
+   settings.mBlockSize = joltBlockSize;
 
    auto result = settings.Create();
    if (result.HasError())
    {
-      Con::errorf("Jolt Error: %s", result.GetError().c_str());
+      Con::errorf("Jolt addHeightfield Error (blockSize=%u paddedSize=%u): %s",
+         blockSize, paddedSize, result.GetError().c_str());
       return false;
    }
 
@@ -302,7 +313,7 @@ bool JoltCollision::addHeightfield(
    JPH::Quat rotFix = JPH::Quat::sRotation(JPH::Vec3::sAxisX(), JPH::DegreesToRadians(90.0f));
    localRot = rotFix * localRot;
 
-   auto rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
+   JPH::Ref<JPH::RotatedTranslatedShapeSettings> rtsSettings = new JPH::RotatedTranslatedShapeSettings(localPos, localRot, baseShape);
    auto rtsShape = rtsSettings->Create().Get();
 
    ChildShapeEntry entry;
@@ -321,33 +332,35 @@ void JoltCollision::rebuildCompound()
    if (mChildren.empty())
       return;
 
-   JPH::CompoundShapeSettings* compoundSettings = nullptr;
-
-   if (mChildren.size() > 1)
+   if (mChildren.size() == 1)
    {
-      compoundSettings = new JPH::StaticCompoundShapeSettings();
+      // Single shape: use it directly. For primitive shapes this is the
+      // RotatedTranslatedShape with the local transform baked in. For
+      // triangle meshes and convex hulls it is the base shape at identity.
+      mCompundShape = mChildren[0].shape;
+      return;
    }
 
-   for (auto& colShape : mChildren)
+   // Multiple shapes: build a static compound. Each child's ChildShapeEntry
+   // already has its local transform baked into entry.shape (either as an RTS
+   // wrapper for primitives, or pre-transformed vertices for meshes/convex).
+   // Using localPos/localRot here would apply the offset a SECOND time.
+   JPH::StaticCompoundShapeSettings compoundSettings;
+   for (const auto& child : mChildren)
    {
-      if (compoundSettings)
-      {
-         compoundSettings->AddShape(
-            colShape.localPos,
-            colShape.localRot,
-            colShape.shape
-         );
-      }
-      else
-      {
-         mCompundShape = colShape.shape;
-      }
+      compoundSettings.AddShape(
+         JPH::Vec3::sZero(),
+         JPH::Quat::sIdentity(),
+         child.shape
+      );
    }
 
-   if (compoundSettings)
+   auto result = compoundSettings.Create();
+   if (result.HasError())
    {
-      mCompundShape = compoundSettings->Create().Get();
-      delete compoundSettings;
+      Con::errorf("Jolt rebuildCompound Error: %s", result.GetError().c_str());
+      return;
    }
 
+   mCompundShape = result.Get();
 }

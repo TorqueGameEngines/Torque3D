@@ -123,6 +123,15 @@ void JoltWorld::destroyWorld()
    mDestroyPending.store(true, std::memory_order_release);
 }
 
+class SensorExcludeFilter final : public JPH::BodyFilter
+{
+public:
+   bool ShouldCollideLocked(const JPH::Body& inBody) const override
+   {
+      return !inBody.IsSensor();
+   }
+};
+
 bool JoltWorld::castRay(const Point3F& startPnt, const Point3F& endPnt, RayInfo* ri, const Point3F& impulse)
 {
    JPH::Vec3 startV(startPnt.x, startPnt.y, startPnt.z);
@@ -134,10 +143,12 @@ bool JoltWorld::castRay(const Point3F& startPnt, const Point3F& endPnt, RayInfo*
       return false;
 
    JPH::RRayCast ray(startV, dir);
-
    JPH::RayCastResult result;
 
-   if (!mPhysicsSystem.GetNarrowPhaseQuery().CastRay(ray, result))
+   // Exclude sensor bodies: they are non-solid trigger volumes and must not
+   // appear as solid hits to projectiles or other physics ray casts.
+   SensorExcludeFilter sensorFilter;
+   if (!mPhysicsSystem.GetNarrowPhaseQuery().CastRay(ray, result, {}, {}, sensorFilter))
       return false;
 
    JPH::BodyLockRead lock(
@@ -154,21 +165,23 @@ bool JoltWorld::castRay(const Point3F& startPnt, const Point3F& endPnt, RayInfo*
 
    JPH::RVec3 hitPos = ray.GetPointOnRay(result.mFraction);
 
-   JPH::Vec3 normal = body.GetWorldSpaceSurfaceNormal( result.mSubShapeID2, hitPos );
-
-   if (!body.GetUserData())
-      return false;
+   JPH::Vec3 normal = body.GetWorldSpaceSurfaceNormal(result.mSubShapeID2, hitPos);
 
    if (ri)
    {
       ri->point.set(joltCast(hitPos));
       ri->normal.set(joltCast(normal));
-
       ri->distance = result.mFraction * rayLength;
-      // SceneObject mapping
-      PhysicsUserData* userData = PhysicsUserData::cast((void*)body.GetUserData());
-      ri->object = userData->getObject();
-      ri->material = NULL;
+
+      // A body with no UserData means no associated SceneObject (e.g. internal
+      // collision geometry). Return the hit but leave ri->object as null rather
+      // than hiding the hit entirely.
+      PhysicsUserData* userData = body.GetUserData()
+         ? PhysicsUserData::cast((void*)body.GetUserData())
+         : nullptr;
+
+      ri->object = userData ? userData->getObject() : nullptr;
+      ri->material = nullptr;
       ri->face = 0;
       ri->faceDot = 0;
    }
@@ -236,8 +249,9 @@ void JoltWorld::explosion(const Point3F& pos, F32 radius, F32 forceMagnitude)
 
       JPH::Body& body = lock.GetBody();
 
-      // Ignore static/kinematic bodies
-      if (!body.IsDynamic())
+      // Skip sensors and non-dynamic bodies — sensors are trigger volumes and
+      // static/kinematic bodies don't respond to impulses.
+      if (body.IsSensor() || !body.IsDynamic())
          continue;
 
       JPH::Vec3 bodyPos = body.GetCenterOfMassPosition();

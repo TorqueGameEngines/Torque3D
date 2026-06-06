@@ -1,6 +1,6 @@
 #include "platform/platform.h"
 #include "T3D/physics/jolt/joltBody.h"
- 
+
 #include "math/mBox.h"
 #include "console/console.h"
 #include "scene/sceneObject.h"
@@ -22,13 +22,21 @@ JoltBody::~JoltBody()
    SAFE_DELETE(mCenterOfMass);
    SAFE_DELETE(mInvCenterOfMass);
 
-   mColShape = NULL;
-   setSimulationEnabled(false);
+   mColShape = nullptr;
+
+   if (!isValid())
+      return;
+
+   // User data must be cleared BEFORE the body is removed or destroyed.
+   // DestroyBody returns the body to Jolt's internal pool; touching it
+   // afterwards is use-after-free undefined behaviour.
+   mBody->SetUserData(0);
+
+   setSimulationEnabled(false); // removes body from the simulation
+
    JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
-   
    bi.DestroyBody(mBody->GetID());
-   mBody->SetUserData(NULL);
-   mBody = NULL;
+   mBody = nullptr;
 }
 
 PhysicsWorld* JoltBody::getWorld()
@@ -93,6 +101,7 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
       settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
       settings.mMassPropertiesOverride.mMass = mass;
       settings.mMaxLinearVelocity = 1000.0f; // stops an assert, this is torques upper limit, jolts is 500.0f by default.
+      mMass = mass; // FIX: was never stored, getMass() always returned 0
       mIsDynamic = true;
    }
 
@@ -142,9 +151,15 @@ void JoltBody::setTransform(const MatrixF& xfm)
 
    if (isDynamic())
    {
-      mBody->ResetMotion();// resets accumulated torque and forces, also velocity but do this explicitly
-      mBody->SetLinearVelocity(JPH::Vec3::sZero());
-      mBody->SetAngularVelocity(JPH::Vec3::sZero());
+      // ResetMotion (clears accumulated forces/torques) is a Body method only,
+      // so acquire a write lock. Velocity is cleared through the thread-safe interface.
+      {
+         JPH::BodyLockWrite lock(mWorld->getPhysicsSystem()->GetBodyLockInterface(), mBody->GetID());
+         if (lock.Succeeded())
+            lock.GetBody().ResetMotion();
+      }
+      bi.SetLinearVelocity(mBody->GetID(), JPH::Vec3::sZero());
+      bi.SetAngularVelocity(mBody->GetID(), JPH::Vec3::sZero());
    }
 }
 
@@ -163,17 +178,26 @@ MatrixF& JoltBody::getTransform(MatrixF* outMatrix)
 
 void JoltBody::applyImpulse(const Point3F& origin, const Point3F& force)
 {
-   mBody->AddImpulse(joltCast(force), joltCast(origin));
+   if (!isValid())
+      return;
+   JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
+   bi.AddImpulse(mBody->GetID(), joltCast(force), joltCast(origin));
 }
 
 void JoltBody::applyTorque(const Point3F& torque)
 {
-   mBody->AddTorque(joltCast(torque));
+   if (!isValid())
+      return;
+   JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
+   bi.AddTorque(mBody->GetID(), joltCast(torque));
 }
 
 void JoltBody::applyForce(const Point3F& force)
 {
-   mBody->AddForce(joltCast(force));
+   if (!isValid())
+      return;
+   JPH::BodyInterface& bi = mWorld->getPhysicsSystem()->GetBodyInterface();
+   bi.AddForce(mBody->GetID(), joltCast(force));
 }
 
 void JoltBody::moveKinematicTo(const MatrixF& xfm)
@@ -237,8 +261,8 @@ void JoltBody::setSleepThreshold(F32 linear, F32 angular)
 
    JPH::MotionProperties* mp = mBody->GetMotionProperties();
 
-  /* mp->SetLinearSleepThreshold(linear);
-   mp->SetAngularSleepThreshold(angular);*/
+   /* mp->SetLinearSleepThreshold(linear);
+    mp->SetAngularSleepThreshold(angular);*/
 }
 
 void JoltBody::setDamping(F32 linear, F32 angular)
@@ -293,11 +317,7 @@ void JoltBody::getState(PhysicsState* outState)
       // Linear momentum = m * v
       F32 mass = mp->GetInverseMass() > 0.0f ? 1.0f / mp->GetInverseMass() : 0.0f;
       outState->momentum = outState->linVelocity * mass;
-
-      // Angular momentum
-      JPH::Mat44 I_world = mBody->GetInverseInertia(); // 3x3 part
-      JPH::Vec3 angMomentum = I_world.Multiply3x3(mBody->GetAngularVelocity());
-      outState->angularMomentum = joltCast(angMomentum);
+      outState->angularMomentum = outState->angVelocity;
    }
    else
    {
@@ -335,7 +355,7 @@ void JoltBody::setLinVelocity(const Point3F& vel)
    if (!bi.IsAdded(mBody->GetID()))
       return;
 
-   mBody->SetLinearVelocity(joltCast(vel));
+   bi.SetLinearVelocity(mBody->GetID(), joltCast(vel));
 }
 
 void JoltBody::setAngVelocity(const Point3F& vel)
@@ -348,7 +368,7 @@ void JoltBody::setAngVelocity(const Point3F& vel)
    if (!bi.IsAdded(mBody->GetID()))
       return;
 
-   mBody->SetAngularVelocity(joltCast(vel));
+   bi.SetAngularVelocity(mBody->GetID(), joltCast(vel));
 }
 
 void JoltBody::findContact(SceneObject** contactObject,

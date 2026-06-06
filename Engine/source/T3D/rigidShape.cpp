@@ -49,6 +49,7 @@
 #include "console/engineAPI.h"
 #include "T3D/physics/physicsPlugin.h"
 #include "T3D/physics/physicsCollision.h"
+#include "T3D/containerQuery.h"
 
 IMPLEMENT_CO_DATABLOCK_V1(RigidShapeData);
 
@@ -175,6 +176,7 @@ namespace {
                                                       // The larger this number the less often the working list
                                                       // will be updated due to motion, but any non-static shape
                                                       // that moves into the query box will not be noticed.
+// 
    // Client prediction
    const S32 sMaxWarpTicks = 3;           // Max warp duration in ticks
    const S32 sMaxPredictionTicks = 30;    // Number of ticks to predict
@@ -189,6 +191,8 @@ namespace {
 
    const U32 sServerCollisionMask = sCollisionMoveMask; // ItemObjectType
    const U32 sClientCollisionMask = sCollisionMoveMask;
+   bool smNoCorrections = false;
+   bool smNoSmoothing = false;
 
    void nonFilter(SceneObject* object,void *key)
    {
@@ -272,6 +276,7 @@ RigidShapeData::RigidShapeData()
    medSplashSoundVel = 2.0;
    hardSplashSoundVel = 3.0;
    enablePhysicsRep = true;
+   isDynamic = false;
 
    for (S32 i = 0; i < Sounds::MaxSounds; i++)
       INIT_SOUNDASSET_ARRAY(WaterSounds, i);
@@ -453,6 +458,7 @@ void RigidShapeData::packData(BitStream* stream)
    stream->write(medSplashSoundVel);
    stream->write(hardSplashSoundVel);
    stream->write(enablePhysicsRep);
+   stream->write(isDynamic);
 
    // write the water sound profiles
    for (U32 i = 0; i < Sounds::MaxSounds; ++i)
@@ -517,6 +523,7 @@ void RigidShapeData::unpackData(BitStream* stream)
    stream->read(&medSplashSoundVel);
    stream->read(&hardSplashSoundVel);
    stream->read(&enablePhysicsRep);
+   stream->read(&isDynamic);
 
    // write the water sound profiles
    for (U32 i = 0; i < Sounds::MaxSounds; ++i)
@@ -568,6 +575,12 @@ void RigidShapeData::initPersistFields()
    addGroup("Physics");
       addField("enablePhysicsRep", TypeBool, Offset(enablePhysicsRep, RigidShapeData),
          "@brief Creates a representation of the object in the physics plugin.\n");
+      addField("isDynamic", TypeBool, Offset(isDynamic, RigidShapeData),
+         "@brief When true and a physics plugin is active, the body is fully dynamic:\n"
+         "the plugin owns collision detection, constraint solving and sleep.\n"
+         "When false (default) the body is kinematic — the built-in Rigid integrator\n"
+         "drives the simulation, which is correct for player-controlled shapes that\n"
+         "receive Move input each tick.\n");
       addField("massCenter", TypePoint3F, Offset(massCenter, RigidShapeData), "Center of mass for rigid body.");
       addField("massBox", TypePoint3F, Offset(massBox, RigidShapeData), "Size of inertial box.");
       addFieldV("bodyRestitution", TypeRangedF32, Offset(body.restitution, RigidShapeData), &CommonValidators::PositiveFloat, "The percentage of kinetic energy kept by this object in a collision.");
@@ -652,7 +665,14 @@ RigidShape::RigidShape()
    mWorkingQueryBoxCountDown = sWorkingQueryBoxStaleThreshold;
 
    mPhysicsRep = NULL;
-}   
+   // NEW — initialise PhysicsState members used by the dynamic path
+   mState.position.set(0, 0, 0);
+   mState.orientation.identity();
+   mState.linVelocity.set(0, 0, 0);
+   mState.angVelocity.set(0, 0, 0);
+   mState.sleeping = false;
+   mRenderState[0] = mRenderState[1] = mState;
+}
 
 RigidShape::~RigidShape()
 {
@@ -799,16 +819,26 @@ void RigidShape::_createPhysics()
       return;
 
    TSShape* shape = mShapeInstance->getShape();
-   PhysicsCollision* colShape = NULL;
-   colShape = shape->buildColShape(false, getScale());
+   PhysicsCollision* colShape = shape->buildColShape(false, getScale());
+   if (!colShape)
+      return;
 
-   if (colShape)
-   {
-      PhysicsWorld* world = PHYSICSMGR->getWorld(isServerObject() ? "server" : "client");
-      mPhysicsRep = PHYSICSMGR->createBody();
-      mPhysicsRep->init(colShape, 0, PhysicsBody::BF_KINEMATIC, this, world);
-      mPhysicsRep->setTransform(getTransform());
-   }
+   const bool dynamic = mDataBlock->isDynamic;
+
+   PhysicsWorld* world = PHYSICSMGR->getWorld(isServerObject() ? "server" : "client");
+   mPhysicsRep = PHYSICSMGR->createBody();
+
+   mPhysicsRep->init(colShape, dynamic ? mDataBlock->mass : 0,
+      dynamic ? 0 : PhysicsBody::BF_KINEMATIC,
+      this, world);
+
+   mPhysicsRep->setMaterial(mDataBlock->body.restitution,
+      mDataBlock->body.friction,
+      mDataBlock->body.friction);
+
+   mPhysicsRep->setDamping(mDataBlock->minDrag, mDataBlock->minDrag);
+
+   mPhysicsRep->setTransform(getTransform());
 }
 
 //----------------------------------------------------------------------------
@@ -836,70 +866,156 @@ void RigidShape::processTick(const Move* move)
       mDelta.posVec.x = -mDelta.warpOffset.x;
       mDelta.posVec.y = -mDelta.warpOffset.y;
       mDelta.posVec.z = -mDelta.warpOffset.z;
+      return;
    }
-   else 
+
+   if (!move) 
    {
-      if (!move) 
+      if (isGhost()) 
       {
-         if (isGhost()) 
-         {
-            // If we haven't run out of prediction time,
-            // predict using the last known move.
-            if (mPredictionCount-- <= 0)
-               return;
-            move = &mDelta.move;
-         }
-         else
-            move = &NullMove;
+         // If we haven't run out of prediction time,
+         // predict using the last known move.
+         if (mPredictionCount-- <= 0)
+            return;
+         move = &mDelta.move;
+      }
+      else
+         move = &NullMove;
+   }
+
+   // Process input move
+   updateMove(move);
+
+   // =========================================================================
+   // DYNAMIC BODY PATH — physics plugin owns all simulation
+   // =========================================================================
+   if (mPhysicsRep && mPhysicsRep->isDynamic())
+   {
+      // Single-player shortcut: mirror server state directly to avoid a full
+      // network round-trip (mirrors PhysicsShape::processTick pattern).
+      if (PHYSICSMGR->isSinglePlayer() && isClientObject() && getServerObject())
+      {
+         RigidShape* srv = static_cast<RigidShape*>(getServerObject());
+         Parent::setTransform(srv->mState.getTransform());
+         mRenderState[0] = srv->mRenderState[0];
+         mRenderState[1] = srv->mRenderState[1];
+         mState = srv->mState;
+         // Keep mRigid in sync for anything that reads it (camera, sounds, etc.)
+         mRigid.linVelocity = mState.linVelocity;
+         mRigid.angVelocity = mState.angVelocity;
+         mRigid.linPosition = mState.position;
+         mRigid.angPosition = mState.orientation;
+         mRigid.atRest = mState.sleeping;
+         return;
       }
 
-      // Process input move
-      updateMove(move);
+      // Store previous render state for correction smoothing
+      mRenderState[0] = mRenderState[1];
+      Point3F errorDelta = mRenderState[1].position - mState.position;
+      const bool doSmoothing = !errorDelta.isZero() && !smNoSmoothing;
+      const bool wasSleeping = mState.sleeping;
 
-      // Save current rigid state interpolation
-      mDelta.posVec = mRigid.linPosition;
-      mDelta.rot[0] = mRigid.angPosition;
+      // Freeze support: put the body to sleep when movement is disabled
+      if (mDisableMove)
+      {
+         mPhysicsRep->setSleeping(true);
+      }
+      else
+      {
+         // Pull the newly-integrated state from the physics plugin
+         mPhysicsRep->getState(&mState);
+         _updateContainerForces();    // water, zones
+      }
 
-      // Update the physics based on the integration rate
-      S32 count = mDataBlock->integration;
-      --mWorkingQueryBoxCountDown;
+      // Smooth any server correction back into the render state
+      mRenderState[1] = mState;
+      if (doSmoothing)
+      {
+         F32 blend = mClampF(errorDelta.len() / 20.0f, 0.1f, 0.9f);
+         mRenderState[1].position.interpolate(mState.position,
+            mRenderState[0].position, blend);
+         mRenderState[1].orientation.interpolate(mState.orientation,
+            mRenderState[0].orientation, blend);
+      }
 
-      if (!mDisableMove)
-         updateWorkingCollisionSet(getCollisionMask());
-      for (U32 i = 0; i < count; i++)
-         updatePos(TickSec / count);
+      // Keep mRigid in sync for subsystems that read it directly
+      mRigid.linPosition = mState.position;
+      mRigid.angPosition = mState.orientation;
+      mRigid.linVelocity = mState.linVelocity;
+      mRigid.angVelocity = mState.angVelocity;
+      mRigid.atRest = mState.sleeping;
 
-      // Wrap up interpolation info
-      mDelta.pos     = mRigid.linPosition;
-      mDelta.posVec -= mRigid.linPosition;
-      mDelta.rot[1]  = mRigid.angPosition;
+      if (!wasSleeping || !mState.sleeping)
+      {
+         // Update engine transform from physics state
+         Parent::setTransform(mState.getTransform());
 
-      // Update container database
-      setPosition(mRigid.linPosition, mRigid.angPosition);
-      setMaskBits(PositionMask);
-      updateContainer();
+         if (isServerObject() && !smNoCorrections && !PHYSICSMGR->isSinglePlayer())
+            setMaskBits(PositionMask);
 
-      //TODO: Only update when position has actually changed
-      //no need to check if mDataBlock->enablePhysicsRep is false as mPhysicsRep will be NULL if it is
-      if (mPhysicsRep)
-         mPhysicsRep->moveKinematicTo(getTransform());
+         updateContainer();
+      }
+
+      if (isServerObject())
+      {
+         checkTriggers();
+         notifyCollision();
+      }
+      return;   // done — do NOT fall through to Rigid path
    }
+
+   // =========================================================================
+   // KINEMATIC / RIGID SIMULATION PATH (original behaviour, bug-fixed)
+   // =========================================================================
+
+   mDelta.posVec = mRigid.linPosition;
+   mDelta.rot[0] = mRigid.angPosition;
+
+   S32 count = mDataBlock->integration;
+   --mWorkingQueryBoxCountDown;
+
+   if (!mDisableMove)
+      updateWorkingCollisionSet(getCollisionMask());
+
+   for (U32 i = 0; i < count; i++)
+      updatePos(TickSec / count);
+
+   mDelta.pos = mRigid.linPosition;
+   mDelta.posVec -= mRigid.linPosition;
+   mDelta.rot[1] = mRigid.angPosition;
+
+   setPosition(mRigid.linPosition, mRigid.angPosition);
+   setMaskBits(PositionMask);
+   updateContainer();
+
+   // Keep the kinematic physics body in sync so other dynamic actors see us
+   if (mPhysicsRep)
+      mPhysicsRep->moveKinematicTo(getTransform());
 }
 
 void RigidShape::interpolateTick(F32 dt)
 {     
    Parent::interpolateTick(dt);
-   if ( isMounted() )
-      return;
+   if (isMounted()) return;
 
-   if(dt == 0.0f)
+   if (mPhysicsRep && mPhysicsRep->isDynamic())
+   {
+      PhysicsState state;
+      state.interpolate(mRenderState[1], mRenderState[0], dt);
+      setRenderTransform(state.getTransform());
+      mDelta.dt = dt;
+      return;
+   }
+
+   // Original Rigid path
+   if (dt == 0.0f)
       setRenderPosition(mDelta.pos, mDelta.rot[1]);
    else
    {
       QuatF rot;
       rot.interpolate(mDelta.rot[1], mDelta.rot[0], dt);
       Point3F pos = mDelta.pos + mDelta.posVec * dt;
-      setRenderPosition(pos,rot);
+      setRenderPosition(pos, rot);
    }
    mDelta.dt = dt;
 }
@@ -1062,13 +1178,21 @@ void RigidShape::getCameraTransform(F32* pos,MatrixF* mat)
 
 void RigidShape::getVelocity(const Point3F& r, Point3F* v)
 {
-   mRigid.getVelocity(r, v);
+   if (mPhysicsRep && mPhysicsRep->isDynamic())
+      *v = mState.linVelocity;
+   else
+      mRigid.getVelocity(r, v);
 }
 
 void RigidShape::applyImpulse(const Point3F &pos, const Point3F &impulse)
 {
+   if (mPhysicsRep && mPhysicsRep->isDynamic())
+   {
+      mPhysicsRep->applyImpulse(pos, impulse);
+      return;
+   }
    Point3F r;
-   mRigid.getOriginVector(pos,&r);
+   mRigid.getOriginVector(pos, &r);
    mRigid.applyImpulse(r, impulse);
 }
 
@@ -1104,6 +1228,17 @@ void RigidShape::setTransform(const MatrixF& newMat)
    Parent::setTransform(newMat);
    mRigid.atRest = false;
    mContacts.clear();
+
+   // For dynamic bodies, also keep mState consistent
+   if (mPhysicsRep && mPhysicsRep->isDynamic())
+   {
+      mState.position = newMat.getPosition();
+      mState.orientation.set(newMat);
+      mRenderState[0] = mRenderState[1] = mState;
+   }
+
+   if (mPhysicsRep)
+      mPhysicsRep->setTransform(newMat);   // covers both kinematic and dynamic
 }
 
 void RigidShape::forceClientTransform()
@@ -1153,8 +1288,8 @@ void RigidShape::updatePos(F32 dt)
       if (mCollisionList.getCount())
       {
          F32 k = mRigid.getKineticEnergy();
-         F32 G = mNetGravity* dt * TickMs / mDataBlock->integration;
-         F32 Kg = mRigid.mass * G * G * TickSec;
+         F32 G = mNetGravity * dt;
+         F32 Kg = mRigid.mass * G * G;
          if (k < sRestTol * Kg && ++restCount > sRestCount)
             mRigid.setAtRest();
       }
@@ -1237,6 +1372,53 @@ void RigidShape::updatePos(F32 dt)
             inLiquid = false;
          }
    }
+}
+
+//----------------------------------------------------------------------------
+
+void RigidShape::_updateContainerForces()
+{
+   if (!mPhysicsRep || !mPhysicsRep->isDynamic())
+      return;
+
+   ContainerQueryInfo info;
+   info.box = getWorldBox();
+   info.mass = mDataBlock->mass;
+
+   getContainer()->findObjects(getWorldBox(), WaterObjectType | PhysicalZoneObjectType,
+      findRouter, &info);
+
+   // Base drag from the datablock's dragForce field
+   F32 linDrag = mDataBlock->dragForce;
+   F32 angDrag = mDataBlock->dragForce;
+
+   Point3F cmass = mPhysicsRep->getCMassPosition();
+
+   if (info.waterCoverage > 0.0f)
+   {
+      // Scale drag by water viscosity
+      F32 waterScale = info.waterViscosity * 2.0f;
+      F32 pow4 = mPow(info.waterCoverage, 0.25f);
+      linDrag = mLerp(linDrag, linDrag * waterScale, pow4);
+      angDrag = mLerp(angDrag, angDrag * waterScale, pow4);
+
+      // Buoyancy — uses ShapeBaseData::density (inherited by RigidShapeData)
+      F32 density = mDataBlock->density;
+      if (density > 0.0f)
+      {
+         F32 buoyancy = (info.waterDensity / density) * mPow(info.waterCoverage, 2.0f);
+         // mNetGravity is signed (negative = downward in Torque Z-up).
+         // Buoyancy opposes gravity, so the force is in the +Z direction.
+         Point3F buoyancyForce(0.0f, 0.0f, buoyancy * -mNetGravity * TickSec * mDataBlock->mass);
+         mPhysicsRep->applyImpulse(cmass, buoyancyForce);
+      }
+   }
+
+   mPhysicsRep->setDamping(linDrag, angDrag);
+
+   // Physical zone forces (wind, push, etc.)
+   if (!info.appliedForce.isZero())
+      mPhysicsRep->applyImpulse(cmass, info.appliedForce);
 }
 
 //----------------------------------------------------------------------------
@@ -1542,41 +1724,80 @@ void RigidShape::writePacketData(GameConnection *connection, BitStream *stream)
 {
    Parent::writePacketData(connection, stream);
 
-   mathWrite(*stream, mRigid.linPosition);
-   if (!stream->writeFlag(mRigid.atRest))
+   if (mDataBlock->isDynamic)
    {
-      mathWrite(*stream, mRigid.angPosition);
-      mathWrite(*stream, mRigid.linMomentum);
-      mathWrite(*stream, mRigid.angMomentum);
+      mathWrite(*stream, mState.position);
+      if (!stream->writeFlag(mState.sleeping))
+      {
+         stream->writeQuat(mState.orientation, 9);
+         stream->writeVector(mState.linVelocity, 1000.0f, 16, 9);
+         stream->writeVector(mState.angVelocity, 10.0f, 10, 9);
+      }
    }
-   stream->writeFlag(mContacts.getCount() == 0);
+   else
+   {
+      mathWrite(*stream, mRigid.linPosition);
+      if (!stream->writeFlag(mRigid.atRest))
+      {
+         mathWrite(*stream, mRigid.angPosition);
+         mathWrite(*stream, mRigid.linMomentum);
+         mathWrite(*stream, mRigid.angMomentum);
+      }
+      stream->writeFlag(mContacts.getCount() == 0);
+   }
 
    stream->writeFlag(mDisableMove);
-   stream->setCompressionPoint(mRigid.linPosition);
+   stream->setCompressionPoint(mDataBlock->isDynamic ? mState.position : mRigid.linPosition);
 }
 
 void RigidShape::readPacketData(GameConnection *connection, BitStream *stream)
 {
    Parent::readPacketData(connection, stream);
 
-   mathRead(*stream, &mRigid.linPosition);
-   if (stream->readFlag())
+   if (mDataBlock->isDynamic)
    {
-      mRigid.setAtRest();
+      mathRead(*stream, &mState.position);
+      if (stream->readFlag())   // sleeping
+      {
+         mState.sleeping = true;
+         if (mPhysicsRep) mPhysicsRep->setSleeping(true);
+      }
+      else
+      {
+         mState.sleeping = false;
+         stream->readQuat(&mState.orientation, 9);
+         stream->readVector(&mState.linVelocity, 1000.0f, 16, 9);
+         stream->readVector(&mState.angVelocity, 10.0f, 10, 9);
+
+         if (mPhysicsRep && mPhysicsRep->isDynamic())
+         {
+            mPhysicsRep->setTransform(mState.getTransform());
+            mPhysicsRep->setLinVelocity(mState.linVelocity);
+            mPhysicsRep->setAngVelocity(mState.angVelocity);
+         }
+      }
    }
    else
    {
-      mathRead(*stream, &mRigid.angPosition);
-      mathRead(*stream, &mRigid.linMomentum);
-      mathRead(*stream, &mRigid.angMomentum);
-      mRigid.updateInertialTensor();
-      mRigid.updateVelocity();
+      mathRead(*stream, &mRigid.linPosition);
+      if (stream->readFlag())
+      {
+         mRigid.setAtRest();
+      }
+      else
+      {
+         mathRead(*stream, &mRigid.angPosition);
+         mathRead(*stream, &mRigid.linMomentum);
+         mathRead(*stream, &mRigid.angMomentum);
+         mRigid.updateInertialTensor();
+         mRigid.updateVelocity();
+      }
+      if (stream->readFlag())
+         mContacts.clear();
    }
-   if (stream->readFlag())
-      mContacts.clear();
 
    mDisableMove = stream->readFlag();
-   stream->setCompressionPoint(mRigid.linPosition);
+   stream->setCompressionPoint(mDataBlock->isDynamic ? mState.position : mRigid.linPosition);
 }   
 
 
@@ -1597,16 +1818,32 @@ U32 RigidShape::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
    {
       stream->writeFlag(mask & ForceMoveMask);
 
-      stream->writeCompressedPoint(mRigid.linPosition);
-      if (!stream->writeFlag(mRigid.atRest))
+      if (mDataBlock->isDynamic)
       {
-         mathWrite(*stream, mRigid.angPosition);
-         mathWrite(*stream, mRigid.linMomentum);
-         mathWrite(*stream, mRigid.angMomentum);
+         // PhysicsState packet: position, orientation, sleeping, velocities.
+         // mState was updated in processTick from mPhysicsRep->getState().
+         stream->writeCompressedPoint(mState.position);
+         stream->writeQuat(mState.orientation, 9);
+         if (!stream->writeFlag(mState.sleeping))
+         {
+            stream->writeVector(mState.linVelocity, 1000.0f, 16, 9);
+            stream->writeVector(mState.angVelocity, 10.0f, 10, 9);
+         }
+      }
+      else
+      {
+         // Original Rigid momentum packet
+         stream->writeCompressedPoint(mRigid.linPosition);
+         if (!stream->writeFlag(mRigid.atRest))
+         {
+            mathWrite(*stream, mRigid.angPosition);
+            mathWrite(*stream, mRigid.linMomentum);
+            mathWrite(*stream, mRigid.angMomentum);
+         }
       }
    }
-   
-   if(stream->writeFlag(mask & FreezeMask))
+
+   if (stream->writeFlag(mask & FreezeMask))
       stream->writeFlag(mDisableMove);
 
    return retMask;
@@ -1614,93 +1851,137 @@ U32 RigidShape::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
 
 void RigidShape::unpackUpdate(NetConnection *con, BitStream *stream)
 {
-   Parent::unpackUpdate(con,stream);
+   Parent::unpackUpdate(con, stream);
 
    if (stream->readFlag())
       return;
 
    mDelta.move.unpack(stream);
 
-   if (stream->readFlag()) 
+   if (stream->readFlag())   // PositionMask
    {
-      // Check if we need to jump to the given transform
-      // rather than interpolate to it.
       bool forceUpdate = stream->readFlag();
-
       mPredictionCount = sMaxPredictionTicks;
-      F32 speed = mRigid.linVelocity.len();
-      mDelta.warpRot[0] = mRigid.angPosition;
 
-      // Read in new position and momentum values
-      stream->readCompressedPoint(&mRigid.linPosition);
-
-      if (stream->readFlag())
+      if (mDataBlock->isDynamic)
       {
-         mRigid.setAtRest();
+         // --- Dynamic path ---
+         PhysicsState newState;
+         stream->readCompressedPoint(&newState.position);
+         stream->readQuat(&newState.orientation, 9);
+         newState.sleeping = stream->readFlag();
+         if (!newState.sleeping)
+         {
+            stream->readVector(&newState.linVelocity, 1000.0f, 16, 9);
+            stream->readVector(&newState.angVelocity, 10.0f, 10, 9);
+         }
+
+         if (mPhysicsRep && mPhysicsRep->isDynamic())
+         {
+            if (forceUpdate)
+            {
+               // Hard snap — no smoothing, straight to the authoritative position
+               mPhysicsRep->setTransform(newState.getTransform());
+            }
+            else if (!smNoCorrections)
+            {
+               // Soft correction — the physics body blends toward the new state
+               mPhysicsRep->applyCorrection(newState.getTransform());
+            }
+
+            mPhysicsRep->setSleeping(newState.sleeping);
+            if (!newState.sleeping)
+            {
+               mPhysicsRep->setLinVelocity(newState.linVelocity);
+               mPhysicsRep->setAngVelocity(newState.angVelocity);
+            }
+            // Re-read so mState reflects what the body is actually doing after
+            // the correction (applyCorrection may blend rather than snap).
+            mPhysicsRep->getState(&mState);
+         }
+         else
+         {
+            // No live physics rep — store state for extrapolation / render
+            mState = newState;
+         }
+
+         if (forceUpdate || !isProperlyAdded())
+         {
+            Parent::setTransform(mState.getTransform());
+            mRenderState[0] = mRenderState[1] = mState;
+         }
+
+         // Sync mRigid so anything reading it sees sane values
+         mRigid.linPosition = mState.position;
+         mRigid.angPosition = mState.orientation;
+         mRigid.linVelocity = mState.linVelocity;
+         mRigid.angVelocity = mState.angVelocity;
+         mRigid.atRest = mState.sleeping;
+         mRigid.updateCenterOfMass();
       }
       else
       {
-         mathRead(*stream, &mRigid.angPosition);
-         mathRead(*stream, &mRigid.linMomentum);
-         mathRead(*stream, &mRigid.angMomentum);
-         mRigid.updateVelocity();
-      }
+         // --- Original Rigid (kinematic) path ---
+         F32 speed = mRigid.linVelocity.len();
+         mDelta.warpRot[0] = mRigid.angPosition;
 
-      if (!forceUpdate && isProperlyAdded()) 
-      {
-         // Determine number of ticks to warp based on the average
-         // of the client and server velocities.
-         Point3F cp = mDelta.pos + mDelta.posVec * mDelta.dt;
-         mDelta.warpOffset = mRigid.linPosition - cp;
-
-         // Calc the distance covered in one tick as the average of
-         // the old speed and the new speed from the server.
-         F32 dt,as = (speed + mRigid.linVelocity.len()) * 0.5 * TickSec;
-
-         // Cal how many ticks it will take to cover the warp offset.
-         // If it's less than what's left in the current tick, we'll just
-         // warp in the remaining time.
-         if (!as || (dt = mDelta.warpOffset.len() / as) > sMaxWarpTicks)
-            dt = mDelta.dt + sMaxWarpTicks;
+         stream->readCompressedPoint(&mRigid.linPosition);
+         if (stream->readFlag())
+         {
+            mRigid.setAtRest();
+         }
          else
-            dt = (dt <= mDelta.dt)? mDelta.dt : mCeil(dt - mDelta.dt) + mDelta.dt;
-
-         // Adjust current frame interpolation
-         if (mDelta.dt) 
          {
-            mDelta.pos = cp + (mDelta.warpOffset * (mDelta.dt / dt));
-            mDelta.posVec = (cp - mDelta.pos) / mDelta.dt;
-            QuatF cr;
-            cr.interpolate(mDelta.rot[1],mDelta.rot[0],mDelta.dt);
-            mDelta.rot[1].interpolate(cr,mRigid.angPosition,mDelta.dt / dt);
-            mDelta.rot[0].extrapolate(mDelta.rot[1],cr,mDelta.dt);
+            mathRead(*stream, &mRigid.angPosition);
+            mathRead(*stream, &mRigid.linMomentum);
+            mathRead(*stream, &mRigid.angMomentum);
+            mRigid.updateVelocity();
          }
 
-         // Calculated multi-tick warp
-         mDelta.warpCount = 0;
-         mDelta.warpTicks = (S32)(mFloor(dt));
-         if (mDelta.warpTicks) 
+         if (!forceUpdate && isProperlyAdded())
          {
-            mDelta.warpOffset = mRigid.linPosition - mDelta.pos;
-            mDelta.warpOffset /= mDelta.warpTicks;
-            mDelta.warpRot[0] = mDelta.rot[1];
-            mDelta.warpRot[1] = mRigid.angPosition;
+            Point3F cp = mDelta.pos + mDelta.posVec * mDelta.dt;
+            mDelta.warpOffset = mRigid.linPosition - cp;
+            F32 dt, as = (speed + mRigid.linVelocity.len()) * 0.5f * TickSec;
+            if (!as || (dt = mDelta.warpOffset.len() / as) > sMaxWarpTicks)
+               dt = mDelta.dt + sMaxWarpTicks;
+            else
+               dt = (dt <= mDelta.dt) ? mDelta.dt : mCeil(dt - mDelta.dt) + mDelta.dt;
+
+            if (mDelta.dt)
+            {
+               mDelta.pos = cp + (mDelta.warpOffset * (mDelta.dt / dt));
+               mDelta.posVec = (cp - mDelta.pos) / mDelta.dt;
+               QuatF cr;
+               cr.interpolate(mDelta.rot[1], mDelta.rot[0], mDelta.dt);
+               mDelta.rot[1].interpolate(cr, mRigid.angPosition, mDelta.dt / dt);
+               mDelta.rot[0].extrapolate(mDelta.rot[1], cr, mDelta.dt);
+            }
+
+            mDelta.warpCount = 0;
+            mDelta.warpTicks = (S32)(mFloor(dt));
+            if (mDelta.warpTicks)
+            {
+               mDelta.warpOffset = mRigid.linPosition - mDelta.pos;
+               mDelta.warpOffset /= mDelta.warpTicks;
+               mDelta.warpRot[0] = mDelta.rot[1];
+               mDelta.warpRot[1] = mRigid.angPosition;
+            }
          }
+         else
+         {
+            mDelta.dt = 0;
+            mDelta.pos = mRigid.linPosition;
+            mDelta.posVec.set(0, 0, 0);
+            mDelta.rot[1] = mDelta.rot[0] = mRigid.angPosition;
+            mDelta.warpCount = mDelta.warpTicks = 0;
+            setPosition(mRigid.linPosition, mRigid.angPosition);
+         }
+         mRigid.updateCenterOfMass();
       }
-      else 
-      {
-         // Set the shape to the server position
-         mDelta.dt  = 0;
-         mDelta.pos = mRigid.linPosition;
-         mDelta.posVec.set(0,0,0);
-         mDelta.rot[1] = mDelta.rot[0] = mRigid.angPosition;
-         mDelta.warpCount = mDelta.warpTicks = 0;
-         setPosition(mRigid.linPosition, mRigid.angPosition);
-      }
-      mRigid.updateCenterOfMass();
    }
-   
-   if(stream->readFlag())
+
+   if (stream->readFlag())   // FreezeMask
       mDisableMove = stream->readFlag();
 }
 
@@ -1724,6 +2005,14 @@ void RigidShape::consoleInit()
       "The larger this number the less often the working list will be updated due to motion, but any non-static shape that "
       "moves into the query box will not be noticed.\n\n"
       "@ingroup GameObjects\n");
+
+   // NEW — mirrors PhysicsShape debug knobs for the dynamic path
+   Con::addVariable("$RigidShape::noCorrections", TypeBool, &smNoCorrections,
+      "@brief When true, the server will not send state corrections to the client "
+      "for dynamic RigidShapes.  Debug only.\n\n");
+   Con::addVariable("$RigidShape::noSmoothing", TypeBool, &smNoSmoothing,
+      "@brief When true, dynamic RigidShape clients snap to corrected positions "
+      "instead of smoothly interpolating.  Debug only.\n\n");
 }
 
 void RigidShape::initPersistFields()
@@ -1857,12 +2146,20 @@ void RigidShape::reset()
 {
    mRigid.clearForces();
    mRigid.setAtRest();
+   if (mPhysicsRep && mPhysicsRep->isDynamic())
+   {
+      mPhysicsRep->setLinVelocity(Point3F::Zero);
+      mPhysicsRep->setAngVelocity(Point3F::Zero);
+      mPhysicsRep->setSleeping(true);
+   }
 }
 
 void RigidShape::freezeSim(bool frozen)
 {
    mDisableMove = frozen;
    setMaskBits(FreezeMask);
+   if (mPhysicsRep && mPhysicsRep->isDynamic())
+      mPhysicsRep->setSleeping(frozen);
 }
 
 DefineEngineMethod( RigidShape, reset, void, (),,

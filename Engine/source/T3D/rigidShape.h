@@ -119,7 +119,7 @@ class RigidShapeData : public ShapeBaseData
    F32 splashVelEpsilon;
 
    bool enablePhysicsRep;
-
+   bool isDynamic;
 
    F32 dragForce;
    F32 vertFactor;
@@ -189,6 +189,10 @@ class RigidShape: public ShapeBase
    };
 
    PhysicsBody* mPhysicsRep;
+   /// Current physics state (used by the dynamic-body path).
+   PhysicsState mState;
+   /// Previous and current render states for the dynamic-body path.
+   PhysicsState mRenderState[2];
 
    StateDelta mDelta;
    S32 mPredictionCount;            ///< Number of ticks to predict
@@ -242,6 +246,8 @@ class RigidShape: public ShapeBase
    void _renderMassAndContacts( ObjectRenderInst *ri, SceneRenderState *state, BaseMatInstance *overrideMat );
 
    void updateForces(F32 dt);
+
+   void _updateContainerForces();
 
 public:
    // Test code...

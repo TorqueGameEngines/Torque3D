@@ -1361,7 +1361,7 @@ bool TSShape::isShapeFileType(Torque::Path filePath)
 {
    String fileExt = filePath.getExtension();
 
-   if (TSShape::sFindRegInfo(fileExt))
+   if (TSShape::sFindShapeRegInfo(fileExt))
       return true;
 
    return false;

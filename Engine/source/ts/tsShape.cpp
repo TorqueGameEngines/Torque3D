@@ -38,19 +38,28 @@
 #include "core/stream/fileStream.h"
 #include "core/fileObject.h"
 
-Vector<TSShape::ShapeRegistration>   TSShape::sRegistrations(__FILE__, __LINE__);
+// Vector<TSShape::ShapeRegistration>   TSShape::sShapeRegistrations(__FILE__, __LINE__);
+
+Vector<TSShape::ShapeRegistration>& TSShape::getRegistrations()
+{
+   static Vector<TSShape::ShapeRegistration>* regs =
+      new Vector<TSShape::ShapeRegistration>(__FILE__, __LINE__);
+
+   return *regs;
+}
 
 void TSShape::sRegisterFormat(const ShapeRegistration& reg)
 {
-   U32 insert = sRegistrations.size();
-   sRegistrations.insert(insert, reg);
+   U32 insert = TSShape::getRegistrations().size();
+   TSShape::getRegistrations().insert(insert, reg);
 }
 
-const TSShape::ShapeRegistration* TSShape::sFindRegInfo(const String& extension, bool exporting)
+
+const TSShape::ShapeRegistration* TSShape::sFindShapeRegInfo(const String& extension, bool exporting)
 {
-   for (U32 i = 0; i < TSShape::sRegistrations.size(); i++)
+   for (U32 i = 0; i < TSShape::getRegistrations().size(); i++)
    {
-      const TSShape::ShapeRegistration& reg = TSShape::sRegistrations[i];
+      const TSShape::ShapeRegistration& reg = TSShape::getRegistrations()[i];
       const Vector<ShapeFormat>& extensions = exporting ? reg.export_extensions : reg.extensions;
 
       for (U32 j = 0; j < extensions.size(); j++)
@@ -2358,7 +2367,7 @@ template<> void *Resource<TSShape>::create(const Torque::Path &path)
    }
    else
    {
-      const TSShape::ShapeRegistration* regInfo = TSShape::sFindRegInfo(extension);
+      const TSShape::ShapeRegistration* regInfo = TSShape::sFindShapeRegInfo(extension);
       if (regInfo == NULL)
       {
          readSuccess = false;

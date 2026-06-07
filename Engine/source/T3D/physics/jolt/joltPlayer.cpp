@@ -166,6 +166,7 @@ Point3F JoltPlayer::move(const VectorF& displacement, CollisionList& outCol)
    JPH::Vec3 velocity = joltCast(displacement) / dt;
 
    const auto& system = mWorld->getPhysicsSystem();
+   const JPH::Vec3 up = mCharacter->GetUp();
 
    mCharacter->UpdateGroundVelocity();
 
@@ -177,7 +178,8 @@ Point3F JoltPlayer::move(const VectorF& displacement, CollisionList& outCol)
       JPH::Vec3 horizontalVel(velocity.GetX(), velocity.GetY(), 0.0f);
       mAllowSliding = horizontalVel.Length() > 0.01f;
 
-         velocity.SetZ(0.0f);
+      if (velocity.GetZ() < 0.05f)
+         velocity.SetZ(0.00f);
 
       JPH::Vec3 groundVel = mCharacter->GetGroundVelocity();
       // Threshold raised to filter static-surface floating-point residuals.
@@ -309,6 +311,27 @@ void JoltPlayer::findContact(SceneObject** contactObject, VectorF* contactNormal
 
    for (const JPH::CharacterVirtual::Contact& c : mCharacter->GetActiveContacts())
    {
+      if (c.mBodyB.IsInvalid())
+         continue;
+
+      if (c.mIsSensorB)
+      {
+         JPH::BodyLockRead lock(mWorld->getPhysicsSystem()->GetBodyLockInterface(), c.mBodyB);
+         if (!lock.Succeeded())
+            continue;
+
+         const JPH::Body& body = lock.GetBody();
+         PhysicsUserData* ud = (PhysicsUserData*)body.GetUserData();
+         if (!ud)
+            continue;
+
+         SceneObject* obj = ud->getObject();
+         if (obj && !outOverlapObjects->contains(obj))
+            outOverlapObjects->push_back(obj);
+         continue; // do not use for physical contact normal
+      }
+
+
       if (c.mHadCollision)
       {
          JPH::BodyLockRead lock(mWorld->getPhysicsSystem()->GetBodyLockInterface(), c.mBodyB);

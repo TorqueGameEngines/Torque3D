@@ -122,8 +122,8 @@ public:
    };
 
    static void sRegisterFormat(const ShapeRegistration& reg);
-   static const ShapeRegistration* sFindRegInfo(const String& extension, bool exporting = false);
-   static Vector<ShapeRegistration>   sRegistrations;
+   static const ShapeRegistration* sFindShapeRegInfo(const String& extension, bool exporting = false);
+   static Vector<ShapeRegistration>&  getShapeRegistrations();
 
    /// Nodes hold the transforms in the shape's tree.  They are the bones of the skeleton.
    struct Node

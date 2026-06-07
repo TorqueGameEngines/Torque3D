@@ -1302,9 +1302,9 @@ String TSShapeLoader::getFormatExtensions()
 {
    // "*.dsq TAB *.dae TAB
    StringBuilder output;
-   for(U32 n = 0; n < TSShape::sRegistrations.size(); ++n)
+   for(U32 n = 0; n < TSShape::getShapeRegistrations().size(); ++n)
    {
-      TSShape::ShapeRegistration reg = TSShape::sRegistrations[n];
+      TSShape::ShapeRegistration reg = TSShape::getShapeRegistrations()[n];
       for (U32 i = 0; i < reg.extensions.size(); i++)
       {
          TSShape::ShapeFormat format = reg.extensions[i];
@@ -1320,9 +1320,9 @@ String TSShapeLoader::getFormatFilters()
 {
    // "DSQ Files|*.dsq|COLLADA Files|*.dae|"
    StringBuilder output;
-   for (U32 n = 0; n < TSShape::sRegistrations.size(); ++n)
+   for (U32 n = 0; n < TSShape::getShapeRegistrations().size(); ++n)
    {
-      TSShape::ShapeRegistration reg = TSShape::sRegistrations[n];
+      TSShape::ShapeRegistration reg = TSShape::getShapeRegistrations()[n];
       for (U32 i = 0; i < reg.extensions.size(); i++)
       {
          TSShape::ShapeFormat format = reg.extensions[i];

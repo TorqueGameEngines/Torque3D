@@ -681,6 +681,24 @@ bool GFXD3D11Shader::_init()
    return true;
 }
 
+static String buildMacroHash(const D3D_SHADER_MACRO* defines)
+{
+   String combined;
+
+   if (!defines)
+      return "";
+
+   for (const D3D_SHADER_MACRO* m = defines; m->Name != nullptr; ++m)
+   {
+      combined += m->Name;
+      combined += "=";
+      combined += m->Definition ? m->Definition : "";
+      combined += ";";
+   }
+
+   return Torque::getStringHash64(combined);
+}
+
 bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
                                     GFXShaderStage shaderStage,
                                     const D3D_SHADER_MACRO *defines)
@@ -706,8 +724,40 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
    Con::printf( "Compiling Shader: '%s'", filePath.getFullPath().c_str() );
 #endif
 
+   String macroHash = buildMacroHash(defines);
+
+   Torque::Path cachePath = filePath;
+   cachePath.setExtension("tso");
+   cachePath.setFileName(cachePath.getFileName() + "_" + macroHash);
+
+   if (Torque::FS::IsFile(cachePath))
+   {
+      Torque::FS::FileNodeRef rawFile = Torque::FS::GetFileNode(filePath);
+      Torque::FS::FileNodeRef cachedFile = Torque::FS::GetFileNode(cachePath);
+
+      if (rawFile != NULL && cachedFile != NULL)
+      {
+         if (cachedFile->getModifiedTime() >= rawFile->getModifiedTime())
+         {
+
+            FileStream fs;
+            if (fs.open(cachePath, Torque::FS::File::Read))
+            {
+               U32 size = fs.getStreamSize();
+
+               D3DCreateBlob(size, &code);
+               fs.read(size, code->GetBufferPointer());
+
+               res = 1;
+            }
+         }
+      }
+   }
+
+   bool loadedFromCache = (code != NULL);
+
    // Is it an HLSL shader?
-   if(filePath.getExtension().equal("hlsl", String::NoCase))
+   if(filePath.getExtension().equal("hlsl", String::NoCase) && !loadedFromCache)
    {
       // Set this so that the D3DInclude::Open will have this
       // information for relative paths.
@@ -787,6 +837,20 @@ bool GFXD3D11Shader::_compileShader( const Torque::Path &filePath,
       Con::errorf( "GFXD3D11Shader::_compileShader - no compiled code produced; possibly missing file '%s'.", filePath.getFullPath().c_str() );
 
    AssertISV(SUCCEEDED(res), "Unable to compile shader!");
+
+   // succeeded write out a cache
+   if (!loadedFromCache)
+   {
+      if (SUCCEEDED(res) && code)
+      {
+         // Save cache
+         FileStream out(FileStream::AsyncMode::Background);
+         if (out.open(cachePath, Torque::FS::File::Write))
+         {
+            out.write(code->GetBufferSize(), code->GetBufferPointer());
+         }
+      }
+   }
 
    if(code != NULL)
    {

@@ -771,7 +771,7 @@ void AssimpShapeLoader::extractTexture(U32 index, aiTexture* pTex)
    {  // Compressed format, write the data directly to disc
       texPath.setExtension(pTex->achFormatHint);
       FileStream *outputStream;
-      if ((outputStream = FileStream::createAndOpen(texPath.getFullPath(), Torque::FS::File::Write)) != NULL)
+      if ((outputStream = FileStream::createAndOpen(texPath.getFullPath(), Torque::FS::File::Write, FileStream::AsyncMode::Background)) != NULL)
       {
          outputStream->setPosition(0);
          outputStream->write(pTex->mWidth, pTex->pcData);

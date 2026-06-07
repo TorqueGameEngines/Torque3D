@@ -237,6 +237,8 @@ public:
    /// Allows the feature to add macros to vertex shader compiles.
    virtual void processVertMacros( Vector<GFXShaderMacro> &macros, const MaterialFeatureData &fd  ) {};
 
+   virtual U32 getShaderStages() { return (GFXShaderStage::VERTEX_SHADER | GFXShaderStage::PIXEL_SHADER); }
+
    /// Identifies what type of blending a feature uses.  This is used to
    /// group features with the same blend operation together in a multipass
    /// situation.

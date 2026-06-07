@@ -41,25 +41,25 @@
 // Vector<TSShape::ShapeRegistration>   TSShape::sShapeRegistrations(__FILE__, __LINE__);
 
 Vector<TSShape::ShapeRegistration>& TSShape::getShapeRegistrations()
-   {
-      static Vector<TSShape::ShapeRegistration>* regs =
-         new Vector<TSShape::ShapeRegistration>(__FILE__, __LINE__);
+{
+   static Vector<TSShape::ShapeRegistration>* regs =
+      new Vector<TSShape::ShapeRegistration>(__FILE__, __LINE__);
 
-      return *regs;
-   }
+   return *regs;
+}
 
 void TSShape::sRegisterFormat(const ShapeRegistration& reg)
 {
-   U32 insert = getShapeRegistrations().size();
-   getShapeRegistrations().insert(insert, reg);
+   U32 insert = TSShape::getShapeRegistrations().size();
+   TSShape::getShapeRegistrations().insert(insert, reg);
 }
 
 
 const TSShape::ShapeRegistration* TSShape::sFindShapeRegInfo(const String& extension, bool exporting)
 {
-   for (U32 i = 0; i < getShapeRegistrations().size(); i++)
+   for (U32 i = 0; i < TSShape::getShapeRegistrations().size(); i++)
    {
-      const TSShape::ShapeRegistration& reg = getShapeRegistrations()[i];
+      const TSShape::ShapeRegistration& reg = TSShape::getShapeRegistrations()[i];
       const Vector<ShapeFormat>& extensions = exporting ? reg.export_extensions : reg.extensions;
 
       for (U32 j = 0; j < extensions.size(); j++)

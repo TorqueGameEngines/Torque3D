@@ -38,8 +38,13 @@ using namespace Torque;
 
 const U32 GBitmap::csFileVersion   = 3;
 
-Vector<GBitmap::Registration>   GBitmap::sRegistrations( __FILE__, __LINE__ );
+Vector<GBitmap::Registration>& GBitmap::getBitmapRegistrations()
+{
+   static Vector<GBitmap::Registration> * regs =
+      new Vector<GBitmap::Registration>(__FILE__, __LINE__);
 
+   return *regs;
+}
 
 GBitmap::GBitmap()
  : mInternalFormat(GFXFormatR8G8B8),
@@ -198,24 +203,24 @@ U32 GBitmap::getFormatBytesPerPixel(GFXFormat fmt)
 
 void GBitmap::sRegisterFormat( const GBitmap::Registration &reg )
 {
-   U32 insert = sRegistrations.size();
-   for ( U32 i = 0; i < sRegistrations.size(); i++ )
+   U32 insert = GBitmap::getBitmapRegistrations().size();
+   for ( U32 i = 0; i < GBitmap::getBitmapRegistrations().size(); i++ )
    {
-      if ( sRegistrations[i].priority <= reg.priority )
+      if ( GBitmap::getBitmapRegistrations()[i].priority <= reg.priority )
       {
          insert = i;
          break;
       }
    }
 
-   sRegistrations.insert( insert, reg );
+   GBitmap::getBitmapRegistrations().insert( insert, reg );
 }
 
 const GBitmap::Registration   *GBitmap::sFindRegInfo( const String &extension )
 {
-   for ( U32 i = 0; i < GBitmap::sRegistrations.size(); i++ )
+   for ( U32 i = 0; i < GBitmap::getBitmapRegistrations().size(); i++ )
    {
-      const GBitmap::Registration   &reg = GBitmap::sRegistrations[i];
+      const GBitmap::Registration   &reg = GBitmap::getBitmapRegistrations()[i];
       const Vector<String>          &extensions = reg.extensions;
 
       for ( U32 j = 0; j < extensions.size(); ++j )
@@ -236,9 +241,9 @@ bool GBitmap::sFindFile( const Path &path, Path *outPath )
 
    Path tryPath( path );
 
-   for ( U32 i = 0; i < sRegistrations.size(); i++ )
+   for ( U32 i = 0; i < GBitmap::getBitmapRegistrations().size(); i++ )
    {
-      const Registration &reg = sRegistrations[i];
+      const Registration &reg = GBitmap::getBitmapRegistrations()[i];
       const Vector<String> &extensions = reg.extensions;
 
       for ( U32 j = 0; j < extensions.size(); ++j )
@@ -266,9 +271,9 @@ bool GBitmap::sFindFiles( const Path &path, Vector<Path> *outFoundPaths )
    
    Path  tryPath( path );
 
-   for ( U32 i = 0; i < GBitmap::sRegistrations.size(); i++ )
+   for ( U32 i = 0; i < GBitmap::getBitmapRegistrations().size(); i++ )
    {
-      const GBitmap::Registration   &reg = GBitmap::sRegistrations[i];
+      const GBitmap::Registration   &reg = GBitmap::getBitmapRegistrations()[i];
       const Vector<String>          &extensions = reg.extensions;
 
       for ( U32 j = 0; j < extensions.size(); ++j )
@@ -292,9 +297,9 @@ String GBitmap::sGetExtensionList()
 {
    String list;
 
-   for ( U32 i = 0; i < sRegistrations.size(); i++ )
+   for ( U32 i = 0; i < GBitmap::getBitmapRegistrations().size(); i++ )
    {
-      const Registration &reg = sRegistrations[i];
+      const Registration &reg = GBitmap::getBitmapRegistrations()[i];
       for ( U32 j = 0; j < reg.extensions.size(); j++ )
       {
          list += reg.extensions[j];

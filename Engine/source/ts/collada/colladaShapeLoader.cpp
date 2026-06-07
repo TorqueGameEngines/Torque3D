@@ -407,9 +407,9 @@ void ColladaShapeLoader::computeBounds(Box3F& bounds)
 String findTextureExtension(const Torque::Path &texPath)
 {
    Torque::Path path(texPath);
-   for(S32 i = 0;i < GBitmap::sRegistrations.size();++i)
+   for(S32 i = 0;i < GBitmap::getBitmapRegistrations().size();++i)
    {
-      GBitmap::Registration &reg = GBitmap::sRegistrations[i];
+      GBitmap::Registration &reg = GBitmap::getBitmapRegistrations()[i];
       for(S32 j = 0;j < reg.extensions.size();++j)
       {
          path.setExtension(reg.extensions[j]);

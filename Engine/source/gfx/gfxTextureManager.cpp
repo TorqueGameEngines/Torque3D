@@ -858,14 +858,14 @@ Torque::Path GFXTextureManager::validatePath(const Torque::Path &path)
 
    // Now loop through the rest of the GBitmap extensions
    // to see if we have any matches
-   for (U32 i = 0; i < GBitmap::sRegistrations.size(); i++)
+   for (U32 i = 0; i < GBitmap::getBitmapRegistrations().size(); i++)
    {
       // If we have gotten a match (either in this loop or before)
       // then we can exit
       if (textureExt)
          break;
 
-      const GBitmap::Registration   &reg = GBitmap::sRegistrations[i];
+      const GBitmap::Registration   &reg = GBitmap::getBitmapRegistrations()[i];
       const Vector<String>          &extensions = reg.extensions;
 
       for (U32 j = 0; j < extensions.size(); ++j)

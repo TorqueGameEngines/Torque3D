@@ -278,7 +278,7 @@ public:
    template<class T, dsize_t mapLength>
    void swizzle(const Swizzle<T,mapLength> *s);
 
-   static Vector<Registration>   sRegistrations;
+   static Vector<Registration>& getBitmapRegistrations();
 
 private:
    GFXFormat mInternalFormat;

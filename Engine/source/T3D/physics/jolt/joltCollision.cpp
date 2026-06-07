@@ -57,6 +57,7 @@ void JoltCollision::addPlane(const PlaneF& plane)
 void JoltCollision::addBox(const Point3F& halfWidth, const MatrixF& localXfm)
 {
    JPH::BoxShapeSettings boxSettings(JPH::Vec3(halfWidth.x, halfWidth.y, halfWidth.z));
+   boxSettings.mConvexRadius = 0.01f;
 
    auto result = boxSettings.Create();
    if (result.HasError())
@@ -329,6 +330,9 @@ bool JoltCollision::addHeightfield(
 
 void JoltCollision::rebuildCompound()
 {
+   // clear
+   mCompundShape = nullptr;
+
    if (mChildren.empty())
       return;
 

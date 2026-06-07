@@ -66,10 +66,6 @@ public:
 
    Point3F move(const VectorF& displacement, CollisionList& outCol) override;
 
-   bool _recoverFromPenetration(JPH::RVec3& inOutPos);
-   bool _sweep(JPH::RVec3& inOutPos, const JPH::Vec3& disp, CollisionList* outCol);
-   void _stepForward(JPH::RVec3& inOutPos, const JPH::Vec3& displacement, CollisionList* outCol);
-
    void findContact(SceneObject** contactObject, VectorF* contactNormal, Vector<SceneObject*>* outOverlapObjects) const override;
    bool testSpacials(const Point3F& nPos, const Point3F& nSize) const override;
    void setSpacials(const Point3F& nPos, const Point3F& nSize) override;

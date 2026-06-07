@@ -70,16 +70,18 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
    JPH::EMotionType motionType = JPH::EMotionType::Static;
    JPH::ObjectLayer layer = Layers::NON_MOVING;
 
-   if (bodyFlags & BF_KINEMATIC)
-   {
-      motionType = JPH::EMotionType::Kinematic;
-      layer = Layers::MOVING;
-   }
-   else if (mass > 0.0f)
+   if (mass > 0.0f)
    {
       motionType = JPH::EMotionType::Dynamic;
       layer = Layers::MOVING;
    }
+   else if (bodyFlags & BF_KINEMATIC)
+   {
+      motionType = JPH::EMotionType::Kinematic;
+      layer = Layers::MOVING;
+   }
+
+   mMass = mass;
 
    MatrixF objXfm = obj->getTransform();
 
@@ -101,7 +103,6 @@ bool JoltBody::init(PhysicsCollision* shape, F32 mass, U32 bodyFlags, SceneObjec
       settings.mOverrideMassProperties = JPH::EOverrideMassProperties::CalculateInertia;
       settings.mMassPropertiesOverride.mMass = mass;
       settings.mMaxLinearVelocity = 1000.0f; // stops an assert, this is torques upper limit, jolts is 500.0f by default.
-      mMass = mass; // FIX: was never stored, getMass() always returned 0
       mIsDynamic = true;
    }
 

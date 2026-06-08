@@ -211,7 +211,7 @@ bool ConvexShape::protectedSetSurface( void *object, const char *index, const ch
    Point2F offset;
    Point2F scale;
    F32 rot = 0;
-   S32 horz = 0, vert = 0;
+   S32 horz = 1, vert = 1;
 
 	/*
    dSscanf( data, "%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g", 

@@ -291,8 +291,11 @@ public:
    FrameTemp(const U32 numElements = 0)
    {
       mPosition = FrameAllocator::getWaterMark();
-      mData = (T*)FrameAllocator::alloc(sizeof(T) * numElements);
+      mData = reinterpret_cast<T*>(FrameAllocator::alloc(sizeof(T) * numElements));
       mSize = numElements;
+
+      for (S32 i = 0; i < numElements; i++)
+         constructInPlace<T>(&mData[i]);
    }
 
    ~FrameTemp()
@@ -303,6 +306,8 @@ public:
    }
 
    // Operators
+   inline TORQUE_FORCEINLINE T* operator~() { return mData; }
+   inline TORQUE_FORCEINLINE const T* operator~() const { return mData; }
 
    inline TORQUE_FORCEINLINE T&       operator*() { return *mData; }
    inline TORQUE_FORCEINLINE const T& operator*() const { return *mData; }
@@ -329,5 +334,34 @@ public:
    inline TORQUE_FORCEINLINE const U32 getObjectCount() const { return mSize; }
 };
 
+//-----------------------------------------------------------------------------
+// FrameTemp specializations for types with no constructor/destructor
+#define FRAME_TEMP_NC_SPEC(type) \
+   template<> \
+   inline FrameTemp<type>::FrameTemp( const U32 count ) \
+   { \
+      AssertFatal( count > 0, "Allocating a FrameTemp with less than one instance" ); \
+      mPosition = FrameAllocator::getWaterMark(); \
+      mSize = count;\
+      mData = reinterpret_cast<type *>( FrameAllocator::alloc( sizeof( type ) * count ) ); \
+   } \
+   template<>\
+   inline FrameTemp<type>::~FrameTemp() \
+   { \
+      FrameAllocator::setWaterMark( mPosition ); \
+   } \
+
+FRAME_TEMP_NC_SPEC(char);
+FRAME_TEMP_NC_SPEC(float);
+FRAME_TEMP_NC_SPEC(double);
+FRAME_TEMP_NC_SPEC(bool);
+FRAME_TEMP_NC_SPEC(int);
+FRAME_TEMP_NC_SPEC(short);
+
+FRAME_TEMP_NC_SPEC(unsigned char);
+FRAME_TEMP_NC_SPEC(unsigned int);
+FRAME_TEMP_NC_SPEC(unsigned short);
+
+#undef FRAME_TEMP_NC_SPEC
 
 #endif  // _H_FRAMEALLOCATOR_

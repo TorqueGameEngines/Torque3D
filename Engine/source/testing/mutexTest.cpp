@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "platform/threads/mutex.h"
 #include "platform/threads/thread.h"
@@ -66,5 +65,3 @@ TEST(Mutex, BasicSynchronization)
    // Kill mutex2, which was never touched.
    Mutex::destroyMutex(mutex2);
 }
-
-#endif

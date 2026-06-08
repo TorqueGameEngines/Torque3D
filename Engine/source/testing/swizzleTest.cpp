@@ -20,7 +20,6 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "platform/platform.h"
 #include "testing/unitTesting.h"
 #include "core/util/swizzle.h"
@@ -106,7 +105,7 @@ TEST(Swizzle, Swizzle)
       EXPECT_TRUE( same )
          << "Test object failed to be competent";
 
-      bgraObjSwizzle.InPlace( ~objTest, sizeof( TestStruct ) * ( sizeof( objIdx ) / sizeof( U32 ) ) );
+      bgraObjSwizzle.InPlace( objTest.address(), sizeof(TestStruct) * (sizeof(objIdx) / sizeof(U32)));
       same = true;
 
       for( U32 i = 0; i < sizeof( objIdx ) / sizeof( U32 ); i++ )
@@ -115,7 +114,7 @@ TEST(Swizzle, Swizzle)
       EXPECT_TRUE( same )
          << "Object RGBA->BGRA test failed.";
 
-      bgraObjSwizzle.InPlace( ~objTest, sizeof( TestStruct ) * ( sizeof( objIdx ) / sizeof( U32 ) ) );
+      bgraObjSwizzle.InPlace( objTest.address(), sizeof(TestStruct) * (sizeof(objIdx) / sizeof(U32)));
       same = true;
 
       for( U32 i = 0; i < sizeof( objIdx ) / sizeof( U32 ); i++ )
@@ -125,5 +124,3 @@ TEST(Swizzle, Swizzle)
          << "Object RGBA->BGRA reverse test failed.";
    }
 };
-
-#endif

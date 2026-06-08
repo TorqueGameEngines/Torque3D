@@ -63,7 +63,7 @@ jobs:
             - name: Unit Tests
               run: |
                 cd "${{github.workspace}}/My Projects/Torque3D/game"
-                ./Torque3D.exe runTests.tscript
+                ./Torque3D_unittests.exe
 
             - name: Test Reporter
               uses: phoenix-actions/test-reporting@v14

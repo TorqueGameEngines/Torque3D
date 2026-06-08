@@ -1,33 +1,132 @@
-﻿#include <gtest/gtest.h>
+#include <gtest/gtest.h>
 
+#include "gui/editor/guiInspector.h"
 #include "gui/editor/inspector/group.h"
+#include "gui/editor/inspector/field.h"
 #include "console/script.h"
-#include "T3D/fx/particle.h"
+#include "console/simDatablock.h"
 
-TEST(InspectorFieldTest, SetData_Should_Update_The_Field)
+class InspectorTestData : public SimDataBlock
 {
-   GuiInspector* inspector = new GuiInspector();
-   ASSERT_TRUE(inspector->registerObject());
+   typedef SimDataBlock Parent;
 
-   ParticleData* exampleObj = new ParticleData();
-   ASSERT_TRUE(exampleObj->registerObject());
-   // Add it to inspector so inspector field can find it
-   inspector->addInspectObject(exampleObj);
+public:
+   S32 testInt = 0;
+   F32 testFloat = 0.f;
+   bool testBool = false;
+   StringTableEntry testString;
 
-   AbstractClassRep::Field* field = const_cast<AbstractClassRep::Field*>(exampleObj->findField(StringTable->insert("lifetimeMS")));
+   DECLARE_CONOBJECT(InspectorTestData);
 
-   GuiInspectorGroup* group = new GuiInspectorGroup("testing", NULL);
-   ASSERT_TRUE(group->registerObject());
+   static void initPersistFields()
+   {
+      addField("testInt", TypeS32,        Offset(testInt, InspectorTestData));
+      addField("testFloat", TypeF32,      Offset(testFloat, InspectorTestData));
+      addField("testBool", TypeBool,      Offset(testBool, InspectorTestData));
+      addField("testString", TypeString,  Offset(testString, InspectorTestData));
 
-   GuiInspectorField* inspectorField = new GuiInspectorField(inspector, group, field);
-   ASSERT_TRUE(inspectorField->registerObject());
+      Parent::initPersistFields();
+   }
+};
 
-   inspectorField->setData("12345");
-   EXPECT_EQ(exampleObj->lifetimeMS, 12345);
+IMPLEMENT_CO_DATABLOCK_V1(InspectorTestData);
 
-   // Cleanup
-   inspectorField->deleteObject();
-   group->deleteObject();
-   inspector->deleteObject();
-   exampleObj->deleteObject();
+class GuiInspectorFieldFixture : public ::testing::Test
+{
+protected:
+   GuiInspector* inspector{};
+   GuiInspectorGroup* group{};
+
+   void SetUp() override
+   {
+      inspector = new GuiInspector();
+      ASSERT_TRUE(inspector->registerObject());
+
+      group = new GuiInspectorGroup("testing", nullptr);
+      ASSERT_TRUE(group->registerObject());
+   }
+
+   void TearDown() override
+   {
+      group->deleteObject();
+      inspector->deleteObject();
+   }
+
+   GuiInspectorField* createField(
+      SimObject* object,
+      const char* fieldName)
+   {
+      inspector->addInspectObject(object);
+
+      AbstractClassRep::Field* field =
+         const_cast<AbstractClassRep::Field*>(
+            object->findField(StringTable->insert(fieldName)));
+
+      EXPECT_NE(field, nullptr);
+
+      GuiInspectorField* inspectorField =  new GuiInspectorField(inspector, group, field);
+      EXPECT_TRUE(inspectorField->registerObject());
+
+      return inspectorField;
+   }
+};
+
+TEST_F(GuiInspectorFieldFixture, SetData_IntField)
+{
+   InspectorTestData* object = new InspectorTestData();
+   ASSERT_TRUE(object->registerObject());
+
+   GuiInspectorField* field = createField(object, "testInt");
+
+   field->setData("12345");
+
+   EXPECT_EQ(object->testInt, 12345);
+
+   field->deleteObject();
+   object->deleteObject();
+}
+
+TEST_F(GuiInspectorFieldFixture, SetData_FloatField)
+{
+   InspectorTestData* object = new InspectorTestData();
+   ASSERT_TRUE(object->registerObject());
+
+   GuiInspectorField* field = createField(object, "testFloat");
+
+   field->setData("123.5");
+
+   EXPECT_FLOAT_EQ(object->testFloat, 123.5f);
+
+   field->deleteObject();
+   object->deleteObject();
+}
+
+TEST_F(GuiInspectorFieldFixture, SetData_BoolField)
+{
+   InspectorTestData* object = new InspectorTestData();
+   ASSERT_TRUE(object->registerObject());
+
+   GuiInspectorField* field = createField(object, "testBool");
+
+   field->setData("1");
+
+   EXPECT_TRUE(object->testBool);
+
+   field->deleteObject();
+   object->deleteObject();
+}
+
+TEST_F(GuiInspectorFieldFixture, SetData_StringField)
+{
+   InspectorTestData* object = new InspectorTestData();
+   ASSERT_TRUE(object->registerObject());
+
+   GuiInspectorField* field = createField(object, "testString");
+
+   field->setData("Hello World");
+
+   EXPECT_STREQ(object->testString, "Hello World");
+
+   field->deleteObject();
+   object->deleteObject();
 }

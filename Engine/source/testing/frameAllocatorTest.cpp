@@ -5,7 +5,6 @@
 // SPDX-License-Identifier: MIT
 //-----------------------------------------------------------------------------
 
-#ifdef TORQUE_TESTS_ENABLED
 #include "testing/unitTesting.h"
 #include "core/frameAllocator.h"
 
@@ -192,4 +191,3 @@ TEST(FrameTempTest, FrameTempShould_Function_Correctly)
 }
 
 
-#endif

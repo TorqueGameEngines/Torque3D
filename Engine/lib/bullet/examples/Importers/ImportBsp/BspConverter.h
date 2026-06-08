@@ -1,6 +1,6 @@
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -23,17 +23,14 @@ class BspLoader;
 ///BspConverter turns a loaded bsp level into convex parts (vertices)
 class BspConverter
 {
-	public:
+public:
+	void convertBsp(BspLoader& bspLoader, float scaling);
+	virtual ~BspConverter()
+	{
+	}
 
-		void convertBsp(BspLoader& bspLoader,float scaling);
-		virtual ~BspConverter()
-		{
-		}
-
-		///this callback is called for each brush that succesfully converted into vertices
-		virtual void	addConvexVerticesCollider(btAlignedObjectArray<btVector3>& vertices, bool isEntity, const btVector3& entityTargetLocation) = 0;
-
+	///this callback is called for each brush that succesfully converted into vertices
+	virtual void addConvexVerticesCollider(btAlignedObjectArray<btVector3>& vertices, bool isEntity, const btVector3& entityTargetLocation) = 0;
 };
 
-#endif //BSP_CONVERTER_H
-
+#endif  //BSP_CONVERTER_H

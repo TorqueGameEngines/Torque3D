@@ -79,7 +79,7 @@ class ExplosionData : public GameBaseData, protected AssetPtrCallback {
    Point3F              explosionScale;
    F32                  playSpeed;
 
-   DECLARE_SHAPEASSET_REFACTOR(ExplosionData, ExplosionShape)
+   AssetRef<ShapeAsset> explosionShapeAssetRef;
 
    S32               explosionAnimation;
 

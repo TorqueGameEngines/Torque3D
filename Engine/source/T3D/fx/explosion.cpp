@@ -239,7 +239,7 @@ ExplosionData::ExplosionData()
    explosionScale.set(1.0f, 1.0f, 1.0f);
    playSpeed = 1.0f;
 
-   mExplosionShapeAsset.registerRefreshNotify(this);
+   explosionShapeAssetRef.assetPtr.registerRefreshNotify(this);
 
    explosionAnimation = -1;
 
@@ -315,7 +315,7 @@ ExplosionData::ExplosionData(const ExplosionData& other, bool temp_clone) : Game
    particleEmitterId = other.particleEmitterId; // -- for pack/unpack of particleEmitter ptr 
    explosionScale = other.explosionScale;
    playSpeed = other.playSpeed;
-   mExplosionShapeAsset = other.mExplosionShapeAsset;
+   explosionShapeAssetRef = other.explosionShapeAssetRef;
    explosionAnimation = other.explosionAnimation; // -- from explosionShape sequence "ambient"
    dMemcpy( emitterList, other.emitterList, sizeof( emitterList ) );
    dMemcpy( emitterIDList, other.emitterIDList, sizeof( emitterIDList ) ); // -- for pack/unpack of emitterList ptrs
@@ -360,8 +360,6 @@ ExplosionData::~ExplosionData()
    if (!isTempClone())
       return;
 
-   mExplosionShapeAsset.unregisterRefreshNotify();
-
    // particleEmitter, emitterList[*], debrisList[*], explosionList[*] will delete themselves
 
 #ifdef TRACK_EXPLOSION_DATA_CLONES
@@ -395,8 +393,9 @@ void ExplosionData::initPersistFields()
 {
    docsURL;
    addGroup("Shapes");
-      INITPERSISTFIELD_SHAPEASSET_REFACTOR(ExplosionShape, ExplosionData, "@brief Optional shape asset to place at the center of the explosion.\n\n"
-         "The <i>ambient</i> animation of this model will be played automatically at the start of the explosion.");
+      ADD_FIELD("explosionShapeAsset", TypeShapeAssetRef, Offset(explosionShapeAssetRef, ExplosionData))
+         .doc("@brief Optional shape asset to place at the center of the explosion.\n\n"
+            "The <i>ambient</i> animation of this model will be played automatically at the start of the explosion.");
    endGroup("Shapes");
 
    addGroup("Sounds");
@@ -673,7 +672,7 @@ void ExplosionData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET_REFACTOR(ExplosionShape);
+   AssetDatabase.packDataAsset(stream, explosionShapeAssetRef.assetId);
 
    //PACKDATA_SOUNDASSET(Sound);
    PACKDATA_ASSET(Sound);
@@ -778,7 +777,7 @@ void ExplosionData::unpackData(BitStream* stream)
 {
 	Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET_REFACTOR(ExplosionShape);
+   explosionShapeAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    UNPACKDATA_ASSET(Sound);
 
@@ -913,23 +912,21 @@ bool ExplosionData::preload(bool server, String &errorStr)
       }
    }
 
-   if (getExplosionShape()) {
-
-      // Resolve animations
-      explosionAnimation = getExplosionShape()->findSequence("ambient");
-
-      // Preload textures with a dummy instance...
-      TSShapeInstance* pDummy = new TSShapeInstance(getExplosionShape(), !server);
-      delete pDummy;
-
-   }
-   else if (mExplosionShapeAsset.notNull())
+   if (!explosionShapeAssetRef.isNull())
    {
-      errorStr = String::ToString("ExplosionData::preload: Couldn't load shape \"%s\"", _getExplosionShapeAssetId());
-      return false;
-   }
-   else {
-      explosionAnimation = -1;
+      Resource<TSShape> shape = explosionShapeAssetRef.assetPtr->getShapeResource();
+      if (shape)
+      {
+         TSShapeInstance* pDummy = new TSShapeInstance(shape, !server);
+         delete pDummy;
+         if (!server && !explosionShapeAssetRef.assetPtr->preloadMaterialList() && NetConnection::filesWereDownloaded())
+            return false;
+      }
+      else
+      {
+         errorStr = String::ToString("ExplosionData(%s)::preload: Couldn't load shape \"%s\"", getName(), explosionShapeAssetRef.assetId);
+         return false;
+      }
    }
 
    return true;
@@ -1417,8 +1414,12 @@ bool Explosion::explode()
    launchDebris( mInitialNormal );
    spawnSubExplosions();
 
-   if (bool(mDataBlock->getExplosionShape()) && mDataBlock->explosionAnimation != -1) {
-      mExplosionInstance = new TSShapeInstance(mDataBlock->getExplosionShape(), true);
+   Resource<TSShape> eShape;
+   if (mDataBlock->explosionShapeAssetRef.notNull())
+      eShape = mDataBlock->explosionShapeAssetRef.assetPtr->getShapeResource();
+
+   if (bool(eShape) && mDataBlock->explosionAnimation != -1) {
+      mExplosionInstance = new TSShapeInstance(eShape, true);
 
       mExplosionThread   = mExplosionInstance->addThread();
       mExplosionInstance->setSequence(mExplosionThread, mDataBlock->explosionAnimation, 0);
@@ -1428,7 +1429,7 @@ bool Explosion::explode()
       mEndingMS = U32(mExplosionInstance->getScaledDuration(mExplosionThread) * 1000.0f);
 
       mObjScale.convolve(mDataBlock->explosionScale);
-      mObjBox = mDataBlock->getExplosionShape()->mBounds;
+      mObjBox = eShape->mBounds;
       resetWorldBox();
    }
 

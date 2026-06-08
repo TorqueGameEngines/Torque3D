@@ -263,69 +263,102 @@ const char* SFXSystem::getProviderNameFromType(SFXProviderType type)
    return _names[type];
 }
 
+SFXProviderType SFXSystem::getProviderTypeFromName(const char* name)
+{
+   for (U32 i = 0; i < SFXProviderType_Count; i++)
+   {
+      if (dStrcmp(getProviderNameFromType((SFXProviderType)i), name) == 0)
+         return (SFXProviderType)i;
+   }
+
+   // Default to NullProvider if no match rather than silently falling through
+   Con::warnf("SFXSystem::getProviderTypeFromName - unknown provider '%s', defaulting to NullProvider", name);
+   return SFXProviderType::NullProvider;
+}
+
+SFXProvider* SFXSystem::getProviderByTypeAndName(SFXProviderType type, const char* deviceName)
+{
+   // First try exact type+name match
+   for (U32 i = 0; i < smProviders.size(); i++)
+   {
+      if (smProviders[i]->mType == type &&
+         String::compare(smProviders[i]->getName(), deviceName) == 0)
+         return smProviders[i];
+   }
+
+   // Fall back to default device for that type
+   for (U32 i = 0; i < smProviders.size(); i++)
+   {
+      if (smProviders[i]->mType == type && smProviders[i]->mDefault)
+         return smProviders[i];
+   }
+
+   // Last resort: any device of that type
+   for (U32 i = 0; i < smProviders.size(); i++)
+   {
+      if (smProviders[i]->mType == type)
+         return smProviders[i];
+   }
+
+   return NULL;
+}
+
 SFXProvider* SFXSystem::getBestProviderChoice()
 {
-   const String provider = Con::getVariable("$pref::SFX::provider");
-   const String device = Con::getVariable("$pref::SFX::device");
+   const String preferredProvider = Con::getVariable("$pref::SFX::provider");
+   const String preferredDevice = Con::getVariable("$pref::SFX::device");
 
+   // Resolve provider type.
    SFXProviderType providerType = OpenAL;
 
-   if (provider.isEmpty() || device.isEmpty())
+   if (!preferredProvider.isEmpty())
    {
-      for (U32 i = 0; i < smProviders.size(); i++)
-      {
-         if (smProviders[i]->mType == OpenAL)
-         {
-            if (smProviders[i]->mDefault)
-            {
-               Con::setVariable("pref::SFX::provider", "OpenAL");
-               Con::setVariable("pref::SFX::device", smProviders[i]->getName());
-               return smProviders[i];
-            }
-         }
-      }
-   }
-   else
-   {
-      S32 ret = -1;
       for (U32 i = 0; i < SFXProviderType_Count; i++)
       {
-         if (!dStrcmp(getProviderNameFromType((SFXProviderType)i), provider))
+         if (!dStrcmp(getProviderNameFromType((SFXProviderType)i),preferredProvider))
          {
-            ret = i;
+            providerType = (SFXProviderType)i;
             break;
          }
       }
-
-      if (ret == -1)
-         providerType = OpenAL;
    }
 
-   U32 i = 0;
-   for (i = 0; i < smProviders.size(); i++)
+   if (!preferredDevice.isEmpty())
    {
-      if (smProviders[i]->mType == providerType)
+      for (U32 i = 0; i < smProviders.size(); i++)
       {
-         if (String::compare(smProviders[i]->getName(), device.c_str()) == 0)
+         SFXProvider* provider = smProviders[i];
+
+         if (provider->mType != providerType)
+            continue;
+
+         if (String::compare(provider->getName(), preferredDevice.c_str()) == 0)
          {
-            return smProviders[i];
+            return provider;
          }
       }
    }
 
-   for (i = 0; i < smProviders.size(); i++)
+   for (U32 i = 0; i < smProviders.size(); i++)
    {
-      if (smProviders[i]->mType == providerType)
-      {
-         if (smProviders[i]->mDefault)
-         {
-            Con::setVariable("pref::SFX::device", smProviders[i]->getName());
-            return smProviders[i];
-         }
-      }
+      SFXProvider* provider = smProviders[i];
+
+      if (provider->mType != providerType)
+         continue;
+
+      if (provider->mDefault)
+         return provider;
    }
 
-   
+   for (U32 i = 0; i < smProviders.size(); i++)
+   {
+      SFXProvider* provider = smProviders[i];
+
+      if (provider->mType != providerType)
+         continue;
+
+      return provider;
+   }
 
    return NULL;
 }
@@ -579,13 +612,36 @@ void SFXSystem::removePlugin( SFXSystemPlugin* plugin )
       }
 }
 
+bool SFXSystem::createDeviceByName(const char* providerName, const char* deviceName)
+{
+   SFXProviderType type = getProviderTypeFromName(providerName);
+   SFXProvider* provider = getProviderByTypeAndName(type, deviceName);
+
+   if (!provider)
+   {
+      Con::errorf("SFXSystem::createDeviceByName - could not find provider '%s' device '%s'",
+         providerName, deviceName);
+      return false;
+   }
+
+   return createDevice(provider);
+}
+
 //-----------------------------------------------------------------------------
 
 bool SFXSystem::createDevice(SFXProvider* provider)
 {
    // this should probably just happen tbh.
    if (mDevice)
+   {
+      // called to create the same device bug out.
+      // this may need to be changed later to check if
+      // the provider names also match.
+      if (String::compare(mDevice->getName(), provider->getName()) == 0)
+         return false;
+
       deleteDevice();
+   }
 
    mDevice = provider->mCreateDeviceInstanceDelegate(provider->mIndex);
    if( !mDevice )
@@ -593,34 +649,17 @@ bool SFXSystem::createDevice(SFXProvider* provider)
       Con::errorf( "SFXSystem::createDevice - failed creating device '%s'", provider->getName());
       return false;
    }
-   mDevice->setProvider(*provider);
 
-   // Print capabilities.
-   Con::printf( "\nSFXSystem::createDevice - created device '%s'", provider->getName());
-   Con::printf("| Device Update Interval: %d ms", SFXDevice::smUpdateInterval);
-   Con::printf("| Device Sample rate: %d Hz", SFXDevice::smDeviceFrequency);
-   Con::printf("| Device Bitrate: %d", SFXDevice::smDeviceBitrate);
-   if (mDevice->getCaps() & SFXDevice::CAPS_Reverb)
-      Con::printf("| CAPS_Reverb");
-   if (mDevice->getCaps() & SFXDevice::CAPS_VoiceManagement)
-      Con::printf("| CAPS_VoiceManagement");
-   if (mDevice->getCaps() & SFXDevice::CAPS_Occlusion)
-      Con::printf("| CAPS_Occlusion");
-   if (mDevice->getCaps() & SFXDevice::CAPS_MultiListener)
-      Con::printf("| CAPS_MultiListener");
-   if (mDevice->getCaps() & SFXDevice::CAPS_HRTF)
-      Con::printf("| CAPS_HRTF");
-   if (mDevice->getCaps() & SFXDevice::CAPS_Float32)
-      Con::printf("| CAPS_Float32");
-   if (mDevice->getCaps() & SFXDevice::CAPS_MonoStereo)
-      Con::printf("| CAPS_MonoStereo");
-      
+   mDevice->setProvider(provider);
+
+   // device is responsible for printing its information.
+   
    // Set defaults.
    mDevice->setNumListeners( getNumListeners() );
    mDevice->setDistanceModel( mDistanceModel );
    mDevice->setDopplerFactor( mDopplerFactor );
    mDevice->setRolloffFactor( mRolloffFactor );
-   mDevice->setSpeedOfSound(mSpeedOfSound);
+   mDevice->setSpeedOfSound( mSpeedOfSound );
    //OpenAL requires slots for effects, this creates an empty function 
    //that will run when a sfxdevice is created.
    mDevice->openSlots();
@@ -640,8 +679,8 @@ String SFXSystem::getDeviceInfoString()
       return String();
 
   return String::ToString( "%s\t%s\t%s\t%d\t%d",
-      getProviderNameFromType(mDevice->getProvider().mType),
-      mDevice->getProvider().getName(),
+      getProviderNameFromType(mDevice->getProvider()->mType),
+      mDevice->getProvider()->getName(),
       mDevice->getUseHardware() ? "1" : "0",
       mDevice->getMaxBuffers(),
       mDevice->getCaps() );
@@ -961,8 +1000,10 @@ void SFXSystem::_update()
    }
 
    // If we have a device then update it.
-   if( mDevice )
+   if (mDevice)
+   {
       mDevice->update();
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -1499,6 +1540,26 @@ DefineEngineFunction( sfxCreateDevice, bool, (),,
 
 //-----------------------------------------------------------------------------
 
+DefineEngineFunction(sfxCreateDeviceFromName, bool, (const char* providerName, const char* deviceName), ("", ""),
+   "Create a sound device. Optionally specify provider and device name directly.\n"
+   "@param providerName Optional provider type name (e.g. \"OpenAL\", \"NullProvider\").\n"
+   "@param deviceName Optional device name to match against.\n"
+   "@ingroup SFX")
+{
+   // If explicit names were provided, use them directly
+   if (providerName[0] != '\0' && deviceName[0] != '\0')
+      return SFX->createDeviceByName(providerName, deviceName);
+
+   // Otherwise fall back to autodetect via prefs
+   SFXProvider* p = SFXSystem::getBestProviderChoice();
+   if (p)
+      return SFX->createDevice(p);
+
+   return false;
+}
+
+//-----------------------------------------------------------------------------
+
 DefineEngineFunction( sfxDeleteDevice, void, (),,
    "Delete the currently active sound device and release all its resources.\n"
    "SFXSources that are still playing will be transitioned to virtualized playback mode. "
@@ -1827,13 +1888,13 @@ DefineEngineFunction( sfxPlayOnce, S32, (StringTableEntry assetId, const char* a
 
       if (String::isEmpty(arg0) || !tempSoundAsset->is3D())
       {
-         source = SFX->playOnce(tempSoundAsset->getSfxProfile());
+         source = SFX->playOnce(tempSoundAsset->getSFXTrack());
       }
       else
       {
          MatrixF transform;
          transform.set(EulerF(0, 0, 0), Point3F(dAtof(arg0), dAtof(arg1), dAtof(arg2)));
-         source = SFX->playOnce(tempSoundAsset->getSfxProfile(), &transform, NULL, dAtof(arg3));
+         source = SFX->playOnce(tempSoundAsset->getSFXTrack(), &transform, NULL, dAtof(arg3));
       }
    }
    else

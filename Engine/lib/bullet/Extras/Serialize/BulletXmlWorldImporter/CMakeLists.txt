@@ -2,6 +2,7 @@ INCLUDE_DIRECTORIES(
 	${BULLET_PHYSICS_SOURCE_DIR}/src
 	${BULLET_PHYSICS_SOURCE_DIR}/Extras/Serialize/BulletFileLoader
 	${BULLET_PHYSICS_SOURCE_DIR}/Extras/Serialize/BulletWorldImporter
+	${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/tinyxml2
 )
 
 ADD_LIBRARY(
@@ -10,12 +11,7 @@ ADD_LIBRARY(
 	btBulletXmlWorldImporter.h
 	string_split.cpp
 	string_split.h
-	tinyxml.cpp
-	tinyxml.h
-	tinystr.cpp
-	tinystr.h
-	tinyxmlerror.cpp
-	tinyxmlparser.cpp
+	${BULLET_PHYSICS_SOURCE_DIR}/examples/ThirdPartyLibs/tinyxml2/tinyxml2.cpp
 )
 
 SET_TARGET_PROPERTIES(BulletXmlWorldImporter  PROPERTIES VERSION ${BULLET_VERSION})
@@ -32,7 +28,11 @@ IF (INSTALL_EXTRA_LIBS)
 			IF (APPLE AND BUILD_SHARED_LIBS AND FRAMEWORK)
 				INSTALL(TARGETS BulletXmlWorldImporter DESTINATION .)
 			ELSE (APPLE AND BUILD_SHARED_LIBS AND FRAMEWORK)
-				INSTALL(TARGETS BulletXmlWorldImporter DESTINATION lib${LIB_SUFFIX})
+				INSTALL(TARGETS BulletXmlWorldImporter 
+                                        RUNTIME DESTINATION bin
+                                        LIBRARY DESTINATION lib${LIB_SUFFIX}
+                                        ARCHIVE DESTINATION lib${LIB_SUFFIX})
+
 				INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 DESTINATION ${INCLUDE_INSTALL_DIR} FILES_MATCHING PATTERN "*.h"  PATTERN
 ".svn" EXCLUDE PATTERN "CMakeFiles" EXCLUDE)

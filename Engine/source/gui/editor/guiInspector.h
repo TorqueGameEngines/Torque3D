@@ -90,6 +90,8 @@ public:
          return NULL;
    }
 
+   void updateVisibility();
+
    S32 getComponentGroupTargetId() { return mComponentGroupTargetId; }
    void setComponentGroupTargetId(S32 compId) { mComponentGroupTargetId = compId; }
    

@@ -36,11 +36,9 @@ MODULE_BEGIN( ShapeLoader )
    MODULE_INIT
    {
       TSShapeLoader::addFormat("Torque DTS", "dts");
-      TSShapeLoader::addFormat("Torque DSQ", "dsq");
    }
 MODULE_END;
 
-bool gTryUseDSQs = false;
 const F32 TSShapeLoader::DefaultTime = -1.0f;
 const F64 TSShapeLoader::MinFrameRate = 15.0f;
 const F64 TSShapeLoader::MaxFrameRate = 60.0f;
@@ -1304,11 +1302,16 @@ String TSShapeLoader::getFormatExtensions()
 {
    // "*.dsq TAB *.dae TAB
    StringBuilder output;
-   for(U32 n = 0; n < smFormats.size(); ++n)
+   for(U32 n = 0; n < TSShape::getRegistrations().size(); ++n)
    {
-      output.append("*.");
-      output.append(smFormats[n].mExtension);
-      output.append("\t");
+      TSShape::ShapeRegistration reg = TSShape::getRegistrations()[n];
+      for (U32 i = 0; i < reg.extensions.size(); i++)
+      {
+         TSShape::ShapeFormat format = reg.extensions[i];
+         output.append("*.");
+         output.append(format.mExtension);
+         output.append("\t");
+      }
    }
    return output.end();
 }
@@ -1317,12 +1320,17 @@ String TSShapeLoader::getFormatFilters()
 {
    // "DSQ Files|*.dsq|COLLADA Files|*.dae|"
    StringBuilder output;
-   for(U32 n = 0; n < smFormats.size(); ++n)
+   for (U32 n = 0; n < TSShape::getRegistrations().size(); ++n)
    {
-      output.append(smFormats[n].mName);
-      output.append("|*.");
-      output.append(smFormats[n].mExtension);
-      output.append("|");
+      TSShape::ShapeRegistration reg = TSShape::getRegistrations()[n];
+      for (U32 i = 0; i < reg.extensions.size(); i++)
+      {
+         TSShape::ShapeFormat format = reg.extensions[i];
+         output.append(format.mName);
+         output.append("|*.");
+         output.append(format.mExtension);
+         output.append("|");
+      }
    }
    return output.end();
 }

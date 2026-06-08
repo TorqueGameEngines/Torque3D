@@ -116,7 +116,7 @@ DebrisData::DebrisData()
    terminalVelocity = 0.0f;
    ignoreWater = true;
 
-   mShapeAsset.registerRefreshNotify(this);
+   shapeAssetRef.assetPtr.registerRefreshNotify(this);
 }
 
 //#define TRACK_DEBRIS_DATA_CLONES
@@ -152,7 +152,7 @@ DebrisData::DebrisData(const DebrisData& other, bool temp_clone) : GameBaseData(
    terminalVelocity = other.terminalVelocity;
    ignoreWater = other.ignoreWater;
 
-   mShapeAsset = other.mShapeAsset;
+   shapeAssetRef = other.shapeAssetRef;
 
    textureName = other.textureName;
    explosionId = other.explosionId; // -- for pack/unpack of explosion ptr
@@ -190,8 +190,8 @@ DebrisData* DebrisData::cloneAndPerformSubstitutions(const SimObject* owner, S32
 }
 
 void DebrisData::onPerformSubstitutions() 
-{ 
-   _setShape(_getShapeAssetId());
+{
+   shapeAssetRef = shapeAssetRef.assetId;
 }
 
 bool DebrisData::onAdd()
@@ -278,17 +278,21 @@ bool DebrisData::preload(bool server, String &errorStr)
 
    if( server ) return true;
 
-   if (getShape())
+   if (!shapeAssetRef.isNull())
    {
-      TSShapeInstance* pDummy = new TSShapeInstance(getShape(), !server);
-      delete pDummy;
-      if (!server && !getShape()->preloadMaterialList(getShapeFile()) && NetConnection::filesWereDownloaded())
+      Resource<TSShape> shape = shapeAssetRef.assetPtr->getShapeResource();
+      if (shape)
+      {
+         TSShapeInstance* pDummy = new TSShapeInstance(shape, !server);
+         delete pDummy;
+         if (!server && !shapeAssetRef.assetPtr->preloadMaterialList() && NetConnection::filesWereDownloaded())
+            return false;
+      }
+      else
+      {
+         errorStr = String::ToString("DebrisData(%s)::preload: Couldn't load shape \"%s\"", getName(), shapeAssetRef.assetId);
          return false;
-   }
-   else if (!mShapeAsset.isNull())
-   {
-      errorStr = String::ToString("DebrisData::load: Couldn't load shape \"%s\"", _getShapeAssetId());
-      return false;
+      }
    }
 
    return true;
@@ -305,7 +309,8 @@ void DebrisData::initPersistFields()
    addGroup("Shapes");
       addField("texture",              TypeString,                  Offset(textureName,         DebrisData), 
          "@brief Texture imagemap to use for this debris object.\n\nNot used any more.\n", AbstractClassRep::FIELD_HideInInspectors);
-      INITPERSISTFIELD_SHAPEASSET_REFACTOR(Shape, DebrisData, "Shape to use for this debris object.");
+      ADD_FIELD("shapeAsset", TypeShapeAssetRef, Offset(shapeAssetRef, DebrisData))
+         .doc("Shape to use for this debris object.");
    endGroup("Shapes");
 
    addGroup("Particle Effects");
@@ -390,7 +395,7 @@ void DebrisData::packData(BitStream* stream)
 
    stream->writeString( textureName );
 
-   PACKDATA_ASSET_REFACTOR(Shape);
+   AssetDatabase.packDataAsset(stream, shapeAssetRef.assetId);
 
    for( S32 i=0; i<DDC_NUM_EMITTERS; i++ )
    {
@@ -434,7 +439,7 @@ void DebrisData::unpackData(BitStream* stream)
 
    textureName = stream->readSTString();
 
-   UNPACKDATA_ASSET_REFACTOR(Shape);
+   shapeAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    for( S32 i=0; i<DDC_NUM_EMITTERS; i++ )
    {
@@ -677,18 +682,19 @@ bool Debris::onAdd()
    mFriction = mDataBlock->friction;
 
    // Setup our bounding box
-   if( mDataBlock->getShape())
+   mObjBox = Box3F(Point3F(-1, -1, -1), Point3F(1, 1, 1));
+
+   Resource<TSShape> shape;
+   if( mDataBlock->shapeAssetRef.notNull())
    {
-      mObjBox = mDataBlock->getShape()->mBounds;
-   }
-   else
-   {
-      mObjBox = Box3F(Point3F(-1, -1, -1), Point3F(1, 1, 1));
+      shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
+      if (shape)
+         mObjBox = shape->mBounds;
    }
 
-   if( mDataBlock->getShape())
+   if(shape)
    {
-      mShape = new TSShapeInstance( mDataBlock->getShape(), true);
+      mShape = new TSShapeInstance(shape, true);
    }
 
    if( mPart )

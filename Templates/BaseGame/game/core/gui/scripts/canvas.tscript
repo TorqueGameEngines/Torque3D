@@ -25,6 +25,7 @@ function createCanvas(%windowTitle)
    if ($isDedicated)
    {
       GFXInit::createNullDevice();
+      sfxCreateDevice("Null","Null Device", false, 8);
       return true;
    }
    

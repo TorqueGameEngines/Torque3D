@@ -82,7 +82,7 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
                                                                   ///  that we don't create a TSThread on the player if we don't
                                                                   ///  need to.
 
-   DECLARE_SHAPEASSET_ARRAY_REFACTOR(PlayerData, ShapeFP, ShapeBase::MaxMountedImages)
+   AssetRef<ShapeAsset> shapeFPAssetRef[ShapeBase::MaxMountedImages];
 
    StringTableEntry  imageAnimPrefixFP;                           ///< Passed along to mounted images to modify
                                                                   ///  animation sequences played in first person. [optional]

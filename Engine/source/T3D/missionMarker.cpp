@@ -473,14 +473,23 @@ void SpawnSphere::unpackUpdate(NetConnection * con, BitStream * stream)
       {
          delete mShapeInstance;
          ShapeBaseData *spawnedDatablock = dynamic_cast<ShapeBaseData *>(Sim::findObject(mSpawnDataBlock.c_str()));
-         if (spawnedDatablock && spawnedDatablock->getShape())
+         if (spawnedDatablock)
          {
-               mShapeInstance = new TSShapeInstance(spawnedDatablock->getShape());
+            if (spawnedDatablock->shapeAssetRef.notNull())
+            {
+               Resource<TSShape> shape = spawnedDatablock->shapeAssetRef.assetPtr->getShapeResource();
+               if (shape)
+                  mShapeInstance = new TSShapeInstance(shape);
+            }
          }
          else if (mDataBlock)
          {
-            if (mDataBlock->getShape())
-               mShapeInstance = new TSShapeInstance(mDataBlock->getShape());
+            if (mDataBlock->shapeAssetRef.notNull())
+            {
+               Resource<TSShape> shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
+               if (shape)
+                  mShapeInstance = new TSShapeInstance(shape);
+            }
          }
       }
       stream->read(&mSpawnName);

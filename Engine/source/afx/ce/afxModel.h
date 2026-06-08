@@ -43,7 +43,7 @@ struct afxModelData : public GameBaseData, protected AssetPtrCallback
 {
   typedef GameBaseData Parent;
 
-  DECLARE_SHAPEASSET_REFACTOR(afxModelData, Shape)
+  AssetRef<ShapeAsset> shapeAssetRef;
 
   StringTableEntry      sequence;
 
@@ -155,9 +155,21 @@ public:
   void                  setSequenceRateFactor(F32 factor);
   void                  setSortPriority(S8 priority) { sort_priority = priority; }
 
-  const char*           getShapeFileName() const { return mDataBlock->getShapeFile(); }
+  const char*           getShapeFileName() const
+  {
+     if (mDataBlock->shapeAssetRef.isNull())
+        return "";
+
+     return mDataBlock->shapeAssetRef.assetPtr->getShapeFile();
+  }
   void                  setVisibility(bool flag) { is_visible = flag; }
-  TSShape*              getTSShape() { return mDataBlock->getShape(); }
+  TSShape*              getTSShape()
+  {
+     if (mDataBlock->shapeAssetRef.isNull())
+        return nullptr;
+
+     return mDataBlock->shapeAssetRef.assetPtr->getShape();
+  }
   TSShapeInstance*      getTSShapeInstance() { return shape_inst; }
 
   U32                   setAnimClip(const char* clip, F32 pos, F32 rate, F32 trans);

@@ -46,6 +46,9 @@
 #ifndef _MATERIALFEATUREDATA_H_
 #include "materials/materialFeatureData.h"
 #endif
+#ifndef _SHADERDATA_H_
+#include "materials/shaderData.h"
+#endif // !_SHADERDATA_H_
 
 /// Base class used by shaderGen to be API agnostic.  Subclasses implement the various methods
 /// in an API specific way.
@@ -146,9 +149,7 @@ public:
    /// this function.
    /// @param assignNum used to assign a specific number as the filename   
    void generateShader( const MaterialFeatureData &featureData,
-                        char *vertFile, 
-                        char *pixFile, 
-                        F32 *pixVersion,
+                        ShaderData* shaderData,
                         const GFXVertexFormat *vertexFormat,
                         const char* cacheName,
                         Vector<GFXShaderMacro> &macros);
@@ -192,9 +193,14 @@ protected:
    bool mRegisteredWithGFX;
    Torque::FS::FileSystemRef mMemFS;
    
-   /// Map of cache string -> shaders
-   typedef Map<String, GFXShaderRef> ShaderMap;
-   ShaderMap mProcShaders;
+   /// <summary>
+   /// Map of shaderdata, string should be built up of stage files
+   /// </summary>
+   typedef HashMap<String, SimObjectPtr<ShaderData>> ShaderDataMap;
+   ShaderDataMap mProcShaderData;
+
+   typedef HashMap<String, bool> FileCacheSet; // we use a hashmap because it is quicker for finding.
+   FileCacheSet mFileCache;
 
    ShaderGen();
 

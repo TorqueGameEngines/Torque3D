@@ -217,7 +217,7 @@ U32 LevelInfo::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
    mathWrite( *stream, mAmbientLightBlendCurve );
 
    sfxWrite( stream, mSoundAmbience );
-   stream->writeInt( mSoundDistanceModel, 1 );
+   stream->writeInt( mSoundDistanceModel, 4 );
 
    PACK_ASSET_REFACTOR(conn, AccuTexture);
 
@@ -251,7 +251,7 @@ void LevelInfo::unpackUpdate(NetConnection *conn, BitStream *stream)
    String errorStr;
    if( !sfxReadAndResolve( stream, &mSoundAmbience, errorStr ) )
       Con::errorf( "%s", errorStr.c_str() );
-   mSoundDistanceModel = ( SFXDistanceModel ) stream->readInt( 1 );
+   mSoundDistanceModel = ( SFXDistanceModel ) stream->readInt( 4 );
    
    if( isProperlyAdded() )
    {

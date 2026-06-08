@@ -456,6 +456,11 @@ public:
    /// This is a function pointer typedef to support optional writing for fields.
    typedef bool(*WriteDataNotify)(void* obj, StringTableEntry pFieldName);
 
+   /// <summary>
+   /// This is a function pointer typedef to support optional visibility of fields.
+   /// </summary>
+   typedef bool(*VisibilityNotify)(void* obj, const char* array);
+
    /// These are special field type values used to mark
    /// groups and arrays in the field list.
    /// @see Field::type
@@ -517,27 +522,29 @@ public:
             setDataFn( NULL ),
             getDataFn( NULL ),
             writeDataFn(NULL),
+            visibilityFn(NULL),
             networkMask(0)
       {
          doNotSubstitute = keepClearSubsOnly = false;
       }
 
-      StringTableEntry pFieldname;    ///< Name of the field.
-      const char*    pGroupname;      ///< Optionally filled field containing the group name.
-                                 ///
-                                 ///  This is filled when type is StartField or EndField
+      StringTableEntry pFieldname;     ///< Name of the field.
+      const char*    pGroupname;       ///< Optionally filled field containing the group name.
+                                       ///
+                                       ///  This is filled when type is StartField or EndField
 
-      const char*    pFieldDocs;    ///< Documentation about this field; see consoleDoc.cc.
-      bool           groupExpand;   ///< Flag to track expanded/not state of this group in the editor.
-      U32            type;          ///< A data type ID or one of the special custom fields. @see ACRFieldTypes
-      U32            offset;        ///< Memory offset from beginning of class for this field.
-      S32            elementCount;  ///< Number of elements, if this is an array.
-      const EnumTable *    table;   ///< If this is an enum, this points to the table defining it.
-      BitSet32       flag;          ///< Stores various flags
-      TypeValidator *validator;     ///< Validator, if any.
-      SetDataNotify  setDataFn;     ///< Set data notify Fn
-      GetDataNotify  getDataFn;     ///< Get data notify Fn
-	    WriteDataNotify writeDataFn;  ///< Function to determine whether data should be written or not.
+      const char*    pFieldDocs;       ///< Documentation about this field; see consoleDoc.cc.
+      bool           groupExpand;      ///< Flag to track expanded/not state of this group in the editor.
+      U32            type;             ///< A data type ID or one of the special custom fields. @see ACRFieldTypes
+      U32            offset;           ///< Memory offset from beginning of class for this field.
+      S32            elementCount;     ///< Number of elements, if this is an array.
+      const EnumTable *    table;      ///< If this is an enum, this points to the table defining it.
+      BitSet32       flag;             ///< Stores various flags
+      TypeValidator *validator;        ///< Validator, if any.
+      SetDataNotify  setDataFn;        ///< Set data notify Fn
+      GetDataNotify  getDataFn;        ///< Get data notify Fn
+      WriteDataNotify writeDataFn;     ///< Function to determine whether data should be written or not.
+      VisibilityNotify visibilityFn;   ///< Function to determine this field is visibile or not.
       bool           doNotSubstitute;
       bool           keepClearSubsOnly;
 
@@ -764,8 +771,172 @@ template< typename T > EnginePropertyTable& ConcreteAbstractClassRep< T >::smPro
 
 //------------------------------------------------------------------------------
 // Forward declaration of this function so  it can be used in the class
+bool defaultProtectedSetFn(void* object, const char* index, const char* data);
 const char *defaultProtectedGetFn( void *obj, const char *data );
 bool defaultProtectedWriteFn(void* obj, StringTableEntry pFieldName);
+
+struct FieldDescriptor {
+   // Context for auto-registration
+   const char* _name    = NULL;
+   U32 _type            = 0;
+   dsize_t _offset      = 0;
+   bool isExpanded      = false;
+   bool isGroupBegin    = false;
+   bool isGroupEnd      = false;
+   bool isArrayBegin    = false;
+   bool isArrayEnd      = false;
+   bool _active         = true;
+
+   // Field properties
+   const char* docs                             = NULL;
+   AbstractClassRep::SetDataNotify    setFn     = &defaultProtectedSetFn;
+   AbstractClassRep::GetDataNotify    getFn     = &defaultProtectedGetFn;
+   AbstractClassRep::WriteDataNotify  writeFn   = &defaultProtectedWriteFn;
+   TypeValidator* validator                     = NULL;
+   U32 elementCount                             = 1;
+   U32 flags                                    = 0;
+   U32 networkMask                              = 0;
+   AbstractClassRep::VisibilityNotify visibilityFn = NULL;
+
+   // Add documentation to this field.
+   FieldDescriptor& doc(const char* d)          { docs = d; return *this; }
+   // The number of elements for this field (U32 number)
+   FieldDescriptor& elements(U32 n)             { elementCount = n;   return *this; }
+   // The validator for this field.
+   FieldDescriptor& validate(TypeValidator* v)  { validator = v;   return *this; }
+   // The set data function.
+   FieldDescriptor& onSet(AbstractClassRep::SetDataNotify fn) { setFn = fn;  return *this; }
+   // The get data function.
+   FieldDescriptor& onGet(AbstractClassRep::GetDataNotify fn) { getFn = fn;  return *this; }
+   // The on write function
+   FieldDescriptor& onWrite(AbstractClassRep::WriteDataNotify fn) { writeFn = fn;  return *this; }
+   // The visibility function
+   FieldDescriptor& showWhen(AbstractClassRep::VisibilityNotify fn) { visibilityFn = fn;  return *this; }
+   // The network mask changes will trigger.
+   FieldDescriptor& network(U32 mask)           { networkMask = mask; return *this; }
+   // The flags for this field.
+   FieldDescriptor& withFlags(U32 f)            { flags = f;   return *this; }
+   // This field marks the start of a group.
+   FieldDescriptor& startGroup()                { isGroupBegin = true; return *this; }
+   // This field marks the end of a group.
+   FieldDescriptor& endGroup()                  { isGroupEnd = true; return *this; }
+   // This field marks the start of an array.
+   FieldDescriptor& startArray()                { isArrayBegin = true; return *this; }
+   // This field marks the end of an array.
+   FieldDescriptor& endArray()                  { isArrayEnd = true; return *this; }
+   // This field should start expanded in the inspector.
+   FieldDescriptor& expanded()                  { isExpanded = true; return *this; }
+
+   FieldDescriptor(const char* name, U32 type = 0, dsize_t offset = 0)
+      : _name(name), _type(type), _offset(offset)
+   {}
+
+   FieldDescriptor(const FieldDescriptor&) = delete;
+   FieldDescriptor& operator=(const FieldDescriptor&) = delete;
+
+   FieldDescriptor(FieldDescriptor&& other) noexcept
+   {
+      moveFrom(std::move(other));
+   }
+
+   FieldDescriptor& operator=(FieldDescriptor&& other) noexcept
+   {
+      if (this != &other)
+         moveFrom(std::move(other));
+      return *this;
+   }
+
+   void moveFrom(FieldDescriptor&& other)
+   {
+      // transfer all data
+      _name = other._name;
+      _type = other._type;
+      _offset = other._offset;
+
+      docs = other.docs;
+      setFn = other.setFn;
+      getFn = other.getFn;
+      writeFn = other.writeFn;
+      validator = other.validator;
+      elementCount = other.elementCount;
+      flags = other.flags;
+      networkMask = other.networkMask;
+      visibilityFn = other.visibilityFn;
+
+      isExpanded = other.isExpanded;
+      isGroupBegin = other.isGroupBegin;
+      isGroupEnd = other.isGroupEnd;
+      isArrayBegin = other.isArrayBegin;
+      isArrayEnd = other.isArrayEnd;
+
+      // transfer ownership of "registration responsibility"
+      _active = other._active;
+
+      // CRITICAL: disable the source so its destructor does NOTHING
+      other._active = false;
+   }
+
+   ~FieldDescriptor();
+
+};
+
+
+/// Registers a standard field.
+/// Usage:
+///    FIELD("health", TypeS32, Offset(mHealth, Player)).doc("Player health");
+#define ADD_FIELD(name, type, offset) \
+   FieldDescriptor(name, type, offset)
+
+/// Field with fixed element count.
+/// Usage:
+///    FIELD_ARRAY("color", TypeColorF, Offset(mColor, GuiControl), 4);
+#define FIELD_ARRAY(name, type, offset, count) \
+   FieldDescriptor(name, type, offset).elements(count)
+
+/// Begins a field group in the inspector.
+/// All fields declared after this will belong to the group until GROUP_END().
+/// Usage:
+///    GROUP_BEGIN("Rendering").expanded();
+#define GROUP_BEGIN(name) \
+   FieldDescriptor(name).startGroup()
+
+/// Ends the current field group.
+/// Must match a preceding GROUP_BEGIN().
+/// Usage:
+///    GROUP_END("Rendering");
+#define GROUP_END(name) \
+   FieldDescriptor(name).endGroup()
+
+/// Begins an array block in the inspector.
+/// Usage:
+///    ARRAY_BEGIN("Waypoints");
+#define ARRAY_BEGIN(name, count) \
+   FieldDescriptor(name).startArray().elements(count)
+
+/// Ends an array block.
+/// Usage:
+///    ARRAY_END("Waypoints");
+#define ARRAY_END(name) \
+   FieldDescriptor(name).endArray()
+
+/// Declares a scoped inspector group.
+///
+/// Provides a structured grouping of fields in the inspector UI using a scoped
+/// block. Internally, this macro guarantees that a matching group end marker
+/// is emitted, preventing mismatched begin/end pairs.
+#define GROUP(name) \
+   for (bool _once = true; _once; _once = false) \
+      for (FieldDescriptor(name).startGroup(); _once; FieldDescriptor(name).endGroup(), _once = false)
+
+/// Declares a scoped inspector array block.
+///
+/// Defines a logical array grouping in the inspector UI. Fields declared within
+/// the block are treated as elements of the array. Like GROUP, this macro
+/// ensures that the array begin/end markers are correctly paired using scoped
+/// execution.
+#define ARRAY(name, count) \
+   for (bool _once = true; _once; _once = false) \
+      for (FieldDescriptor(name).startArray().elements(count); _once; FieldDescriptor(name).endArray(), _once = false)
 
 //=============================================================================
 //    ConsoleObject.
@@ -871,6 +1042,7 @@ public:
 
    /// @name Fields
    /// @{
+   static void registerField(const char* name, U32 type, dsize_t offset, const FieldDescriptor& desc);
 
    /// Mark the beginning of a group of fields.
    ///

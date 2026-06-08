@@ -1361,16 +1361,7 @@ bool TSShape::isShapeFileType(Torque::Path filePath)
 {
    String fileExt = filePath.getExtension();
 
-   if (
-      fileExt.equal("dts", String::NoCase) ||
-      fileExt.equal("dsq", String::NoCase) ||
-      fileExt.equal("dae", String::NoCase) ||
-      fileExt.equal("fbx", String::NoCase) ||
-      fileExt.equal("blend", String::NoCase) ||
-      fileExt.equal("obj", String::NoCase) ||
-      fileExt.equal("gltf", String::NoCase) ||
-      fileExt.equal("glb", String::NoCase)
-      )
+   if (TSShape::sFindShapeRegInfo(fileExt))
       return true;
 
    return false;

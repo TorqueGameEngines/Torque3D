@@ -850,9 +850,6 @@ ConsoleSetType(TypeParticleList)
       const char* values = argv[0];
       numUnits = StringUnit::getUnitCount(values, " ");
 
-      if (numUnits > 1)
-         bool dafgdf = true;
-
       for (U32 i = 0; i < numUnits; i++)
       {
          const char* value = StringUnit::getUnit(values, i, " ");
@@ -877,7 +874,6 @@ ConsoleSetType(TypeParticleList)
          Con::printf("TypeParticleList vec results: %s", testVec[x]);
       }
    }
-   bool test = false;
 }
 
 #ifdef TORQUE_TOOLS

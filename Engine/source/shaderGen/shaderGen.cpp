@@ -30,6 +30,7 @@
 #include "gfx/gfxDevice.h"
 #include "core/memVolume.h"
 #include "core/module.h"
+#include "console/persistenceManager.h"
 
 #ifdef TORQUE_D3D11
 #include "shaderGen/HLSL/customFeatureHLSL.h"
@@ -55,6 +56,32 @@ MODULE_BEGIN( ShaderGen )
 
 MODULE_END;
 
+
+static const U32 gStageOrder[] =
+{
+   GFXShaderStage::VERTEX_SHADER,
+   GFXShaderStage::HULL_SHADER,
+   GFXShaderStage::DOMAIN_SHADER,
+   GFXShaderStage::GEOMETRY_SHADER,
+   GFXShaderStage::PIXEL_SHADER,
+   GFXShaderStage::COMPUTE_SHADER
+};
+
+static const char* _getStagePostfix(GFXShaderStage stage)
+{
+   switch (stage)
+   {
+   case GFXShaderStage::VERTEX_SHADER:   return "_V";
+   case GFXShaderStage::HULL_SHADER:     return "_H";
+   case GFXShaderStage::DOMAIN_SHADER:   return "_D";
+   case GFXShaderStage::GEOMETRY_SHADER: return "_G";
+   case GFXShaderStage::PIXEL_SHADER:    return "_P";
+   case GFXShaderStage::COMPUTE_SHADER:  return "_C";
+   }
+
+   return "_U"; // Unknown
+}
+
 String ShaderGen::smCommonShaderPath("shaders/common");
 
 ShaderGen::ShaderGen()
@@ -68,6 +95,14 @@ ShaderGen::~ShaderGen()
 {
    GFXDevice::getDeviceEventSignal().remove(this, &ShaderGen::_handleGFXEvent);
    _uninit();
+
+   for (ShaderDataMap::Pair data : mProcShaderData)
+   {
+      if (data.value->isProperlyAdded() && !data.value->isDeleted())
+         data.value->unregisterObject();
+   }
+
+   mProcShaderData.clear();
 }
 
 void ShaderGen::registerInitDelegate(GFXAdapterType adapterType, ShaderGenInitDelegate& initDelegate)
@@ -99,6 +134,7 @@ void ShaderGen::initShaderGen()
       return;
 
    const GFXAdapterType adapterType = GFX->getAdapterType();
+   const bool isGl = adapterType == GFXAdapterType::OpenGL;
    if (!mInitDelegates[adapterType])
       return;
 
@@ -133,17 +169,25 @@ void ShaderGen::initShaderGen()
 
    // Delete the auto-generated conditioner include file.
    Torque::FS::Remove( "shadergen:/" + ConditionerFeature::ConditionerIncludeFileName );
+
+   Vector<String> fileList;
+   String pattern = "*.";
+   pattern += isGl ? "glsl" : "hlsl";
+   S32 numShaderFiles = Torque::FS::FindByPattern("shadergen:/", pattern, false, fileList);
+   for (U32 i = 0; i < numShaderFiles; i++)
+   {
+      Torque::Path filePath = fileList[i];
+      mFileCache[filePath.getFileName()] = true;
+   }
 }
 
-void ShaderGen::generateShader( const MaterialFeatureData &featureData,
-                                char *vertFile,
-                                char *pixFile,
-                                F32 *pixVersion,
-                                const GFXVertexFormat *vertexFormat,
-                                const char* cacheName,
-                                Vector<GFXShaderMacro> &macros)
+void ShaderGen::generateShader(const MaterialFeatureData& featureData,
+                               ShaderData* shaderData,
+                               const GFXVertexFormat* vertexFormat,
+                               const char* cacheName,
+                               Vector<GFXShaderMacro>& macros)
 {
-   PROFILE_SCOPE( ShaderGen_GenerateShader );
+   PROFILE_SCOPE(ShaderGen_GenerateShader);
 
    mFeatureData = featureData;
    mVertexFormat = vertexFormat;
@@ -151,65 +195,115 @@ void ShaderGen::generateShader( const MaterialFeatureData &featureData,
    _uninit();
    _init();
 
-   char vertShaderName[256];
-   char pixShaderName[256];
+   const FeatureSet& features = mFeatureData.features;
+   U32 stages = 0;
 
-   // Note:  We use a postfix of _V/_P here so that it sorts the matching
-   // vert and pixel shaders together when listed alphabetically.
-   dSprintf( vertShaderName, sizeof(vertShaderName), "shadergen:/%s_V.%s", cacheName, mFileEnding.c_str() );
-   dSprintf( pixShaderName, sizeof(pixShaderName), "shadergen:/%s_P.%s", cacheName, mFileEnding.c_str() );
-
-   dStrcpy( vertFile, vertShaderName, 256 );
-   dStrcpy( pixFile, pixShaderName, 256 );
-
-   // this needs to change - need to optimize down to ps v.1.1
-   *pixVersion = GFX->getPixelShaderVersion();
-
-   if ( !Con::getBoolVariable( "ShaderGen::GenNewShaders", true ) )
+   // loop through and see which stages this featureset is expecting to make.
+   for (U32 i = 0; i < features.getCount(); i++)
    {
-      // If we are not regenerating the shader we will return here.
-      // But we must fill in the shader macros first!
 
-      _processVertFeatures( macros, true );
-      _processPixFeatures( macros, true );
+      const FeatureType& type = features.getAt(i);
+      ShaderFeature* feat = FEATUREMGR->getByType(type);
+      stages |= feat->getShaderStages();
 
-      return;
    }
 
-   // create vertex shader
-   //------------------------
-   FileStream* s = new FileStream();
-   if(!s->open(vertShaderName, Torque::FS::File::Write ))
+   for (U32 s = 0; s < (sizeof(gStageOrder) / sizeof(U32)); s++)
    {
-      AssertFatal(false, "Failed to open Shader Stream" );
-      return;
+      U32 stage = gStageOrder[s];
+
+      // skip unused stages
+      if (!(stages & stage))
+         continue;
+
+      bool macrosOnly = !Con::getBoolVariable("ShaderGen::GenNewShaders", true);
+      bool skipPrint = false;
+      GFXShaderStage curStage = (GFXShaderStage)stage;
+
+      char fileName[256];
+      const char* postfix = _getStagePostfix(curStage);
+      String stageName;
+
+      if (curStage & GFXShaderStage::VERTEX_SHADER)
+         stageName += vertexFormat->getDescription();
+
+      // build our filename.
+      for (U32 i = 0; i < features.getCount(); i++)
+      {
+         const FeatureType& type = features.getAt(i);
+         if (stage & FEATUREMGR->getByType(type)->getShaderStages())
+         {
+            stageName += type.getName();
+         }
+      }
+
+      stageName = Torque::getStringHash64(stageName);
+      stageName += postfix;
+
+      FileCacheSet::iterator file = mFileCache.find(stageName);
+      if (file != mFileCache.end())
+      {
+         // set the shaderdata file for this stage, shaderdata ptr needs to be passed in here.
+         dSprintf(fileName, sizeof(fileName), "shadergen:/%s.%s", stageName.c_str(), mFileEnding.c_str());
+         shaderData->setShaderStageFile(curStage, fileName);
+         if (!(curStage & GFXShaderStage::VERTEX_SHADER))
+         {
+            continue;
+         }
+
+         skipPrint = true;
+      }
+
+      mFileCache[stageName] = true;
+
+      dSprintf(fileName, sizeof(fileName), "shadergen:/%s.%s", stageName.c_str(), mFileEnding.c_str());
+
+      shaderData->setShaderStageFile(curStage, fileName);
+
+
+      FileStream* stream = new FileStream(FileStream::AsyncMode::Background);
+      if (!skipPrint)
+      {
+         if (!stream->open(fileName, Torque::FS::File::Write))
+         {
+            AssertFatal(false, "Failed to open Shader Stream");
+            return;
+         }
+      }
+
+      switch (curStage)
+      {
+      case VERTEX_SHADER:
+         mOutput = new MultiLine;
+         mInstancingFormat.clear();
+         _processVertFeatures(macros, macrosOnly);
+         if (!skipPrint || macrosOnly) _printVertShader(*stream);
+         delete stream;
+         ((ShaderConnector*)mComponents[C_CONNECTOR])->reset();
+         LangElement::deleteElements();
+         break;
+      case PIXEL_SHADER:
+         mOutput = new MultiLine;
+         _processPixFeatures(macros, macrosOnly);
+         if (!skipPrint || macrosOnly)_printPixShader(*stream);
+         delete stream;
+         LangElement::deleteElements();
+         break;
+      case GEOMETRY_SHADER:
+         break;
+      case DOMAIN_SHADER:
+         break;
+      case HULL_SHADER:
+         break;
+      case COMPUTE_SHADER:
+         break;
+      case ALL_STAGES:
+         break;
+      default:
+         break;
+      }
+
    }
-
-   mOutput = new MultiLine;
-   mInstancingFormat.clear();
-   _processVertFeatures(macros);
-   _printVertShader( *s );
-   delete s;
-
-   ((ShaderConnector*)mComponents[C_CONNECTOR])->reset();
-   LangElement::deleteElements();
-
-   // create pixel shader
-   //------------------------
-   s = new FileStream();
-   if(!s->open(pixShaderName, Torque::FS::File::Write ))
-   {
-      AssertFatal(false, "Failed to open Shader Stream" );
-      delete s;
-      return;
-   }
-
-   mOutput = new MultiLine;
-   _processPixFeatures(macros);
-   _printPixShader( *s );
-
-   delete s;
-   LangElement::deleteElements();
 }
 
 void ShaderGen::_init()
@@ -264,7 +358,7 @@ void ShaderGen::_processVertFeatures( Vector<GFXShaderMacro> &macros, bool macro
       else
          feature = FEATUREMGR->getByType( type );
 
-      if ( feature )
+      if ( feature && (feature->getShaderStages() & GFXShaderStage::VERTEX_SHADER) )
       {
          feature->setProcessIndex( index );
 
@@ -312,7 +406,7 @@ void ShaderGen::_processPixFeatures( Vector<GFXShaderMacro> &macros, bool macros
          feature = FEATUREMGR->createFeature(type, args);
       else
          feature = FEATUREMGR->getByType(type);
-      if ( feature )
+      if ( feature && (feature->getShaderStages() & GFXShaderStage::PIXEL_SHADER) )
       {
          feature->setProcessIndex( index );
 
@@ -466,60 +560,50 @@ void ShaderGen::_printPixShader( Stream &stream )
    mPrinter->printPixelShaderCloser(stream);
 }
 
-GFXShader* ShaderGen::getShader( const MaterialFeatureData &featureData, const GFXVertexFormat *vertexFormat, const Vector<GFXShaderMacro> *macros, const Vector<String> &samplers )
+GFXShader* ShaderGen::getShader(const MaterialFeatureData& featureData, const GFXVertexFormat* vertexFormat, const Vector<GFXShaderMacro>* macros, const Vector<String>& samplers)
 {
-   PROFILE_SCOPE( ShaderGen_GetShader );
+   PROFILE_SCOPE(ShaderGen_GetShader);
 
-   const FeatureSet &features = featureData.codify();
+   const FeatureSet& features = featureData.codify();
 
    // Build a description string from the features
    // and vertex format combination ( and macros ).
    String shaderDescription = vertexFormat->getDescription() + features.getDescription();
-   // Generate a single 64bit hash from the description string.
-   //
-   // Don't get paranoid!  This has 1 in 18446744073709551616
-   // chance for collision... it won't happen in this lifetime.
-   //
-   shaderDescription.replace("\n", " ");
-   U64 hash = Torque::hash64( (const U8*)shaderDescription.c_str(), shaderDescription.length(), 0 );
-   hash = convertHostToLEndian(hash);
-   U32 high = (U32)( hash >> 32 );
-   U32 low = (U32)( hash & 0x00000000FFFFFFFF );
-   String cacheKey = String::ToString( "%x%x", high, low );
-   // return shader if exists
-   GFXShader *match = mProcShaders[cacheKey];
-   if ( match )
-      return match;
 
-   // if not, then create it
-   char vertFile[256];
-   char pixFile[256];
-   F32  pixVersion;
+   String cacheKey = Torque::getStringHash64(shaderDescription);
 
    Vector<GFXShaderMacro> shaderMacros;
-   shaderMacros.push_back( GFXShaderMacro( "TORQUE_SHADERGEN" ) );
-   if ( macros )
-      shaderMacros.merge( *macros );
-   generateShader( featureData, vertFile, pixFile, &pixVersion, vertexFormat, cacheKey, shaderMacros );
+   shaderMacros.push_back(GFXShaderMacro("TORQUE_SHADERGEN"));
+   if (macros)
+      shaderMacros.merge(*macros);
 
-   GFXShader *shader = GFX->createShader();
-   shader->setShaderStageFile(GFXShaderStage::VERTEX_SHADER, vertFile);
-   shader->setShaderStageFile(GFXShaderStage::PIXEL_SHADER, pixFile);
-
-   if (!shader->init(pixVersion, shaderMacros, samplers, &mInstancingFormat))
+   ShaderDataMap::iterator dat = mProcShaderData.find(cacheKey);
+   if (dat != mProcShaderData.end())
    {
-      delete shader;
-      return NULL;
+      // should we loop vertex shader features to build mInstancingFormat before sending it down to see old hob?
+      return dat->value->getShader(shaderMacros);
    }
 
-   mProcShaders[cacheKey] = shader;
+   ShaderData* shaderData = new ShaderData;
 
-   return shader;
+   shaderData->setPixVersion(GFX->getPixelShaderVersion());
+
+   for (U32 samp = 0; samp < samplers.size(); samp++)
+   {
+      shaderData->setSamplerName(samplers[samp], samp);
+   }
+
+   generateShader(featureData, shaderData, vertexFormat, cacheKey, shaderMacros);
+
+   shaderData->setInstancingFormat(&mInstancingFormat);
+
+   mProcShaderData.insert(cacheKey, shaderData);
+   return shaderData->getShader(shaderMacros);
 }
 
 void ShaderGen::flushProceduralShaders()
 {
    // The shaders are reference counted, so we
    // just need to clear the map.
-   mProcShaders.clear();
+   mProcShaderData.clear();
 }

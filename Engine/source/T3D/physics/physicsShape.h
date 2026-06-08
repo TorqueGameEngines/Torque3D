@@ -74,7 +74,7 @@ public:
 
 public:
 
-   DECLARE_SHAPEASSET_REFACTOR(PhysicsShapeData, Shape)
+   AssetRef<ShapeAsset> shapeAsset;
 
    /// The shared unscaled collision shape.
    PhysicsCollisionRef colShape;

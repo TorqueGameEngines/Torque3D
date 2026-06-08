@@ -5,19 +5,20 @@
 
 class ExampleBrowserInterface
 {
-	public:
-
+public:
 	virtual ~ExampleBrowserInterface() {}
 
 	virtual CommonExampleInterface* getCurrentExample() = 0;
-	
-	virtual bool init(int argc, char* argv[])=0;
 
-	virtual void update(float deltaTime)=0;
+	virtual bool init(int argc, char* argv[]) = 0;
 
-	virtual bool requestedExit()=0;
+	virtual void update(float deltaTime) = 0;
+
+	virtual void updateGraphics() = 0;
+
+	virtual bool requestedExit() = 0;
+
+	virtual void setSharedMemoryInterface(class SharedMemoryInterface* sharedMem) = 0;
 };
 
-
-
-#endif //EXAMPLE_BROWSER_GUI_H
+#endif  //EXAMPLE_BROWSER_GUI_H

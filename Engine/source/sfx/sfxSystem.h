@@ -115,6 +115,8 @@ public:
    static const char* getProviderNameFromType(SFXProviderType type);
    static SFXProvider* getBestProviderChoice();
    static SFXProvider* getProvider(U32 index);
+   static SFXProviderType getProviderTypeFromName(const char* name);
+   static SFXProvider* getProviderByTypeAndName(SFXProviderType type, const char* deviceName);
 
    typedef Signal< void( SFXSystemEventType event ) > EventSignalType;
    typedef Vector< SFXSource* > SFXSourceVector;
@@ -274,9 +276,11 @@ public:
       
    /// Unregister the given plugin with the system.
    void removePlugin( SFXSystemPlugin* plugin );
-      
+
    /// @name Device Management
    /// @{
+
+   bool createDeviceByName(const char* providerName, const char* deviceName);
 
    /// This initializes a new device.
    ///

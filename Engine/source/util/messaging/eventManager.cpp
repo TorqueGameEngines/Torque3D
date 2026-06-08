@@ -79,26 +79,30 @@ bool EventManagerListener::onMessageReceived( StringTableEntry queue, const char
    if( subscribers == NULL )
       return true;
 
-   for (U32 i = 0; i < subscribers->size(); i++)
+   for (U32 i = 0; i < subscribers->size();)
    {
-      Subscriber* itter = &((*subscribers)[i]);
-      if (itter->listener == NULL)
+      Subscriber& itter = (*subscribers)[i];
+
+      if (itter.listener == NULL)
       {
-         (*subscribers).erase(i);
+         subscribers->erase(i);
+         continue;
       }
-      else if (!itter->removeFlag)
+
+      if (!itter.removeFlag)
       {
-         itter->callDepth++;
-         Con::executef(itter->listener, itter->callback, data);
-         itter->callDepth--;
-         if (itter->removeFlag && itter->callDepth == 0)
+         itter.callDepth++;
+         Con::executef(itter.listener, itter.callback, data);
+         itter.callDepth--;
+
+         if (itter.removeFlag && itter.callback == 0)
          {
-            (*subscribers).erase(i);
+            subscribers->erase(i);
+            continue;
          }
       }
 
-      if (subscribers->size() == 0)
-         return true;
+     i++;
    }
 
    return true;
@@ -270,7 +274,7 @@ bool EventManager::postEvent( const char* event, const char* data )
 
 // CodeReview [tom, 2/20/2007] The "listener" argument was an IMessageListener,
 // but it was actually used as a SimObject and never a listener. Thus, it is now a SimObject.
-bool EventManager::subscribe(SimObject *callbackObj, const char* event, const char* callback /*= NULL */)
+bool EventManager::subscribe(SimObject *callbackObj, const char* event, const char* callback /*= NULL */, S32 priority /*=0*/)
 {
    // Make sure the event is valid.
    if( !isRegisteredEvent( event ) )
@@ -300,6 +304,7 @@ bool EventManager::subscribe(SimObject *callbackObj, const char* event, const ch
    subscriber.listener = callbackObj;
    subscriber.event = StringTable->insert( event );
    subscriber.callback = StringTable->insert( cb );
+   subscriber.priority = priority;
    subscriber.callDepth = 0;
    subscriber.removeFlag = false;
 
@@ -311,8 +316,22 @@ bool EventManager::subscribe(SimObject *callbackObj, const char* event, const ch
    // If the event exists, there should always be a valid subscriber list.
    AssertFatal( subscribers, "Invalid event subscriber list." );
 
-   // Add the subscriber.
-   subscribers->push_back( subscriber );
+   // Add the subscriber at the appropriate index based on priority.
+   S32 insertIndex = subscribers->size();
+
+   for (S32 i = 0; i < subscribers->size(); i++)
+   {
+	   EventManagerListener::Subscriber& cur = (*subscribers)[i];
+
+	   if (subscriber.priority > cur.priority)
+	   {
+		   insertIndex = i;
+		   break;
+	   }
+   }
+
+   subscribers->insert(insertIndex);
+   (*subscribers)[insertIndex] = subscriber;
 
    return true;
 }
@@ -342,10 +361,10 @@ void EventManager::remove(SimObject *cbObj, const char* event)
       // Erase the event.
       if( iter->listener == cbObj )
       {
-		  if (iter->callDepth > 0)
-			  iter->removeFlag = true;
-		  else
-			  subscribers->erase_fast( iter );
+        if (iter->callDepth > 0)
+           iter->removeFlag = true;
+        else
+           subscribers->erase_fast( iter );
          break;
       }
    }
@@ -356,21 +375,21 @@ void EventManager::removeAll(SimObject *cbObj)
    // Iterate over all events.
    for( Vector<StringTableEntry>::const_iterator iter1 = mEvents.begin(); iter1 != mEvents.end(); iter1++ )
    {
-		Vector<EventManagerListener::Subscriber>* subscribers = mListener.mSubscribers.retreive( *iter1 );
-	   if( !subscribers )
-		  continue;
-	   for( Vector<EventManagerListener::Subscriber>::iterator iter2 = subscribers->begin(); iter2 != subscribers->end(); iter2++ )
-	   {
-		  // Erase the event.
-		  if( iter2->listener == cbObj )
-		  {
-			  if (iter2->callDepth > 0)
-				  iter2->removeFlag = true;
-			  else
-				  subscribers->erase_fast( iter2 );
-			 break;
-		  }
-	   }
+      Vector<EventManagerListener::Subscriber>* subscribers = mListener.mSubscribers.retreive( *iter1 );
+      if( !subscribers )
+        continue;
+      for( Vector<EventManagerListener::Subscriber>::iterator iter2 = subscribers->begin(); iter2 != subscribers->end(); iter2++ )
+      {
+        // Erase the event.
+        if( iter2->listener == cbObj )
+        {
+           if (iter2->callDepth > 0)
+              iter2->removeFlag = true;
+           else
+              subscribers->erase_fast( iter2 );
+          break;
+        }
+      }
    }
 
 }
@@ -460,7 +479,7 @@ DefineEngineMethod( EventManager, postEvent, bool, ( const char * evt, const cha
    return object->postEvent( evt, data );
 }
 
-DefineEngineMethod( EventManager, subscribe, bool, ( const char * listenerName, const char * evt, const char * callback ), (""), "( SimObject listener, String event, String callback )\n\n"
+DefineEngineMethod( EventManager, subscribe, bool, ( const char * listenerName, const char * evt, const char * callback, S32 priority ), ("", 0), "( SimObject listener, String event, String callback, int priority = 0 )\n\n"
               "Subscribe a listener to an event.\n"
               "@param listener The listener to subscribe.\n"
               "@param event The event to subscribe to.\n"
@@ -475,7 +494,7 @@ DefineEngineMethod( EventManager, subscribe, bool, ( const char * listenerName, 
       return false;
    }
 
-   return object->subscribe( cbObj, evt, callback );
+   return object->subscribe( cbObj, evt, callback, priority);
 }
 
 DefineEngineMethod( EventManager, remove, void, ( const char * listenerName, const char * evt), , "( SimObject listener, String event )\n\n"

@@ -22,23 +22,57 @@
 
 #include "platform/platform.h"
 #include "core/stream/fileStream.h"
-
+#include "platform/threads/threadPool.h"
 
 //-----------------------------------------------------------------------------
 // FileStream methods...
 //-----------------------------------------------------------------------------
 
-//-----------------------------------------------------------------------------
-FileStream::FileStream()
+struct FileCloseWorkItem : public ThreadPool::WorkItem
 {
+   Torque::FS::FileRef mFile;
+
+public:
+   FileCloseWorkItem(Torque::FS::FileRef file)
+      : mFile(file)
+   {
+   }
+
+protected:
+   void execute() override
+   {
+      if (!mFile)
+         return;
+
+      // When platforms free a file they
+      // remove the handle which causes the stall
+      // as they write metadata.
+      mFile->close();
+   }
+};
+
+void FileStream::dispatchAsyncClose()
+{
+   if (!mFile)
+      return;
+
+   FileCloseWorkItem* job = new FileCloseWorkItem(mFile);
+
+   ThreadPool::GLOBAL().queueWorkItem(job);
+}
+
+//-----------------------------------------------------------------------------
+FileStream::FileStream(AsyncMode flushMode)
+{
+   mAsyncMode = flushMode;
    dMemset(mBuffer, 0, sizeof(mBuffer));
    // initialize the file stream
    init();
 }
 
-FileStream *FileStream::createAndOpen(const String &inFileName, Torque::FS::File::AccessMode inMode)
+FileStream *FileStream::createAndOpen(const String &inFileName, Torque::FS::File::AccessMode inMode, AsyncMode flushMode)
 {
-   FileStream  *newStream = new FileStream;
+   FileStream  *newStream = new FileStream(flushMode);
 
    bool success = newStream->open( inFileName, inMode );
 
@@ -193,7 +227,13 @@ void FileStream::close()
       // and close the file
       mFile->close();
 
-      AssertFatal(mFile->getStatus() == Torque::FS::FileNode::Closed, "FileStream::close: close failed");
+      if (mAsyncMode == Background)
+         dispatchAsyncClose();
+      else
+      {
+         mFile->close();
+         AssertFatal(mFile->getStatus() == Torque::FS::FileNode::Closed, "FileStream::close: close failed");
+      }
 
       mFile = NULL;
    }

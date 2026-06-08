@@ -521,7 +521,7 @@ void SFXEmitter::unpackUpdate( NetConnection *conn, BitStream *stream )
    }
 
    // track
-   if (stream->readFlag()) // DirtyUpdateMask
+   if (_readDirtyFlag(stream, Track)) // DirtyUpdateMask
    {
       initialUpdate = false;
       UNPACK_ASSET(conn, Sound);
@@ -820,7 +820,7 @@ void SFXEmitter::_update()
    // is toggled on a local profile sound.  It makes the
    // editor feel responsive and that things are working.
    if(  gEditingMission &&
-        (SoundAsset::getAssetErrCode(mSoundAsset) || !mSoundAsset->getSfxProfile()) &&
+        (SoundAsset::getAssetErrCode(mSoundAsset) || !mSoundAsset->getSFXTrack()) &&
         mPlayOnAdd && 
         mDirty.test( IsLooping ) )
       prevState = SFXStatusPlaying;
@@ -1109,9 +1109,10 @@ void SFXEmitter::_renderCone( F32 radialIncrements, F32 sweepIncrements,
 
 void SFXEmitter::play()
 {
-   if( mSource )
+   if (mSource)
       mSource->play();
-   else
+
+   if(isServerObject())
    {
       // By clearing the playback masks first we
       // ensure the last playback command called 
@@ -1128,7 +1129,8 @@ void SFXEmitter::pause()
 {
    if (mSource)
       mSource->pause();
-   else
+
+   if(isServerObject())
    {
       // By clearing the playback masks first we
       // ensure the last playback command called 
@@ -1143,9 +1145,10 @@ void SFXEmitter::pause()
 
 void SFXEmitter::stop()
 {
-   if ( mSource )
+   if (mSource)
       mSource->stop();
-   else
+
+   if(isServerObject())
    {
       // By clearing the playback masks first we
       // ensure the last playback command called 

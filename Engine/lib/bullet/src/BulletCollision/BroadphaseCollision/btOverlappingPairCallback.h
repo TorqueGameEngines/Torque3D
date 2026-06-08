@@ -1,7 +1,7 @@
 
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -18,23 +18,24 @@ subject to the following restrictions:
 #define OVERLAPPING_PAIR_CALLBACK_H
 
 class btDispatcher;
-struct  btBroadphasePair;
+struct btBroadphasePair;
 
 ///The btOverlappingPairCallback class is an additional optional broadphase user callback for adding/removing overlapping pairs, similar interface to btOverlappingPairCache.
 class btOverlappingPairCallback
 {
+protected:
+	btOverlappingPairCallback() {}
+
 public:
 	virtual ~btOverlappingPairCallback()
 	{
-
 	}
-	
-	virtual btBroadphasePair*	addOverlappingPair(btBroadphaseProxy* proxy0,btBroadphaseProxy* proxy1) = 0;
 
-	virtual void*	removeOverlappingPair(btBroadphaseProxy* proxy0,btBroadphaseProxy* proxy1,btDispatcher* dispatcher) = 0;
+	virtual btBroadphasePair* addOverlappingPair(btBroadphaseProxy* proxy0, btBroadphaseProxy* proxy1) = 0;
 
-	virtual void	removeOverlappingPairsContainingProxy(btBroadphaseProxy* proxy0,btDispatcher* dispatcher) = 0;
+	virtual void* removeOverlappingPair(btBroadphaseProxy* proxy0, btBroadphaseProxy* proxy1, btDispatcher* dispatcher) = 0;
 
+	virtual void removeOverlappingPairsContainingProxy(btBroadphaseProxy* proxy0, btDispatcher* dispatcher) = 0;
 };
 
-#endif //OVERLAPPING_PAIR_CALLBACK_H
+#endif  //OVERLAPPING_PAIR_CALLBACK_H

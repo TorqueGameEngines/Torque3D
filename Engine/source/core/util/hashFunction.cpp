@@ -30,6 +30,7 @@
 #include "platform/platform.h"
 
 #include "core/util/hashFunction.h"
+#include "core/util/endian.h"
 
 namespace Torque
 {
@@ -266,6 +267,23 @@ U64 hash64( const U8 *k, U32 length, U64 initval )
   mix64(a,b,c);
   /*-------------------------------------------- report the result */
   return c;
+}
+
+// Generate a single 64bit hash from the input string.
+//
+// Don't get paranoid!  This has 1 in 18446744073709551616
+// chance for collision... it won't happen in this lifetime.
+//
+String getStringHash64(const String& in)
+{
+   String cacheKey = in;
+   cacheKey.replace("\n", " ");
+   U64 hash = hash64((const U8*)cacheKey.c_str(), cacheKey.length(), 0);
+   hash = convertHostToLEndian(hash);
+   U32 high = (U32)(hash >> 32);
+   U32 low = (U32)(hash & 0x00000000FFFFFFFF);
+   cacheKey = String::ToString("%x%x", high, low);
+   return cacheKey;
 }
 
 } // namespace

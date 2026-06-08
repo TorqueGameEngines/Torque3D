@@ -80,11 +80,6 @@ protected:
    /// them if the content has changed.
    const Vector<GFXShaderMacro>& _getMacros();
 
-   /// Helper for converting an array of macros
-   /// into a formatted string.
-   void _stringizeMacros(const Vector<GFXShaderMacro>& macros,
-      String* outString);
-
    /// Creates a new shader returning NULL on error.
    GFXShader* _createShader(const Vector<GFXShaderMacro>& macros);
 
@@ -98,6 +93,8 @@ protected:
 
    String mSamplerNames[NumTextures];
    bool mRTParams[NumTextures];
+   // the instancing format.
+   GFXVertexFormat* mInstancingFormat;
 
    bool _checkDefinition(GFXShader* shader);
 
@@ -105,9 +102,11 @@ public:
 
    void setSamplerName(const String& name, int idx) { mSamplerNames[idx] = name; }
    String getSamplerName(int idx) const { return mSamplerNames[idx]; }
+   void setShaderStageFile(GFXShaderStage stage, String fileName);
 
    bool hasSamplerDef(const String& samplerName, int& pos) const;
    bool hasRTParamsDef(const int pos) const { return mRTParams[pos]; }
+   void setInstancingFormat(GFXVertexFormat* instancingFormat) { mInstancingFormat = instancingFormat; }
 
    ShaderData();
 
@@ -122,6 +121,7 @@ public:
    /// all loaded ShaderData objects in the system.
    static void reloadAllShaders();
 
+   void setPixVersion(F32 pixVersion) { mPixVersion = pixVersion; }
    /// Returns the required pixel shader version for this shader.
    F32 getPixVersion() const { return mPixVersion; }
 

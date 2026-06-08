@@ -835,6 +835,8 @@ void GuiInspectorField::updateValue()
    }
    else
       setValue( getData() );
+
+   mInspector->updateVisibility();
 }
 
 //-----------------------------------------------------------------------------

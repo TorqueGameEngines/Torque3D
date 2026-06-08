@@ -2012,7 +2012,7 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
       {
          enumColladaForImport(filePath, shapeInfo, false);
       }
-      else if ((fileExt.compare("dts") == 0) || (fileExt.compare("dsq") == 0))
+      else if ((fileExt.compare("dts") == 0))
       {
          enumDTSForImport(filePath, shapeInfo);
       }
@@ -3309,30 +3309,19 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
 
    StringTableEntry assetName = StringTable->insert(assetItem->assetName.c_str());
 
-   String soundFileName = assetItem->filePath.getFileName() + "." + assetItem->filePath.getExtension();
-   String assetPath = targetPath + "/" + soundFileName;
+   String soundFileName = assetItem->filePath.getFullFileName();
+   String assetPath = "@" + soundFileName;
    String tamlPath = targetPath + "/" + assetName + ".asset.taml";
    String originalPath = assetItem->filePath.getFullPath().c_str();
 
-   char qualifiedFromFile[2048];
-   char qualifiedToFile[2048];
-
-#ifndef TORQUE_SECURE_VFS
-   Platform::makeFullPathName(originalPath.c_str(), qualifiedFromFile, sizeof(qualifiedFromFile));
-   Platform::makeFullPathName(assetPath.c_str(), qualifiedToFile, sizeof(qualifiedToFile));
-#else
-   dStrcpy(qualifiedFromFile, originalPath.c_str(), sizeof(qualifiedFromFile));
-   dStrcpy(qualifiedToFile, assetPath.c_str(), sizeof(qualifiedToFile));
-#endif
-
    newAsset->setAssetName(assetName);
-   newAsset->_setSoundFile(newAsset, "0", soundFileName.c_str());
+   newAsset->setSoundFile(assetPath.c_str());
 
    //If it's not a re-import, check that the file isn't being in-place imported. If it isn't, store off the original
    //file path for reimporting support later
-   if (!isReimport && String::compare(qualifiedFromFile, qualifiedToFile) && Torque::FS::IsFile(qualifiedFromFile))
+   if (!isReimport)
    {
-      newAsset->setDataField(StringTable->insert("originalFilePath"), NULL, qualifiedFromFile);
+      newAsset->setDataField(StringTable->insert("originalFilePath"), nullptr, originalPath.c_str());
    }
 
    Taml tamlWriter;
@@ -3343,18 +3332,6 @@ Torque::Path AssetImporter::importSoundAsset(AssetImportObject* assetItem)
       dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to write asset taml file %s", tamlPath.c_str());
       activityLog.push_back(importLogBuffer);
       return "";
-   }
-
-   if (!isReimport)
-   {
-      bool isInPlace = !String::compare(qualifiedFromFile, qualifiedToFile);
-
-      if (!isInPlace && !Torque::FS::CopyFile(qualifiedFromFile, qualifiedToFile, !isReimport))
-      {
-         dSprintf(importLogBuffer, sizeof(importLogBuffer), "Error! Unable to copy file %s", assetItem->filePath.getFullPath().c_str());
-         activityLog.push_back(importLogBuffer);
-         return "";
-      }
    }
 
    return tamlPath;

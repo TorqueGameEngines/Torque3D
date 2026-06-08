@@ -44,6 +44,13 @@ private:
    typedef GuiRolloutCtrl Parent;
 public:
    // Members
+   struct ArrayElementEntry
+   {
+      GuiRolloutCtrl*                  rollout;
+      S32                              elementIndex;
+      const AbstractClassRep::Field*   arrayField;  // the StartArrayFieldType field
+   };
+   Vector<ArrayElementEntry>           mArrayElements;
    SimObjectPtr<GuiInspector>          mParent;
    Vector<GuiInspectorField*>          mChildren;
    GuiStackControl*                    mStack;

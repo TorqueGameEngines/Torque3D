@@ -83,18 +83,47 @@ struct TSShapeVertexArray
 /// @see TSShapeInstance for a further discussion of the 3space system.
 class TSShape
 {
-  public:
-      enum
+public:
+   enum
+   {
+      UniformScale   = BIT(0),
+      AlignedScale   = BIT(1),
+      ArbitraryScale = BIT(2),
+      Blend          = BIT(3),
+      Cyclic         = BIT(4),
+      MakePath       = BIT(5),
+      HasTranslucency= BIT(6),
+      AnyScale       = UniformScale | AlignedScale | ArbitraryScale
+   };
+
+   struct ShapeFormat
+   {
+      String mName;
+      String mExtension;
+   };
+
+   struct ShapeRegistration
+   {
+      typedef bool(*ReadShape)(const Torque::Path& path, TSShape*& shape);
+      typedef bool(*WriteShape)(const Torque::Path& path, TSShape* shape);
+      Vector<ShapeFormat>   extensions;         ///< the list of file extensions for this Loader [these should be lower case]
+      Vector<ShapeFormat>   export_extensions;  ///< the list of file extensions for this Loader [these should be lower case]
+
+      ReadShape    readFunc;            ///< the read function to read from a file.
+      WriteShape   writeFunc;           ///< the write function to write to a file.
+
+      ShapeRegistration()
       {
-         UniformScale   = BIT(0),
-         AlignedScale   = BIT(1),
-         ArbitraryScale = BIT(2),
-         Blend          = BIT(3),
-         Cyclic         = BIT(4),
-         MakePath       = BIT(5),
-         HasTranslucency= BIT(6),
-         AnyScale       = UniformScale | AlignedScale | ArbitraryScale
-      };
+         readFunc = NULL;
+         writeFunc = NULL;
+         VECTOR_SET_ASSOCIATION(extensions);
+         VECTOR_SET_ASSOCIATION(export_extensions);
+      }
+   };
+
+   static void sRegisterFormat(const ShapeRegistration& reg);
+   static const ShapeRegistration* sFindShapeRegInfo(const String& extension, bool exporting = false);
+   static Vector<ShapeRegistration>&  getRegistrations();
 
    /// Nodes hold the transforms in the shape's tree.  They are the bones of the skeleton.
    struct Node
@@ -422,6 +451,8 @@ class TSShape
    // constructor/destructor
    TSShape();
    ~TSShape();
+   void compressionKey(U8* keyOut, U32 keyLen);
+   void xorBufferAtOffset(void* data, U32 byteCount, U32 startOffset, const U8* key, U32 keyLen);
    void init();
    void initMaterialList();    ///< you can swap in a new material list, but call this if you do
    void finalizeEditable();

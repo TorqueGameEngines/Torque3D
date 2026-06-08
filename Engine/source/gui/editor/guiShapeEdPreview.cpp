@@ -405,6 +405,53 @@ bool GuiShapeEdPreview::setObjectModel(const char* modelName)
    return true;
 }
 
+bool GuiShapeEdPreview::findCompanionShape(const Torque::Path& dsqPath, Torque::Path& outShapePath)
+{
+   // AssimpLoader and ColladaLoader exports as "modelname_sequencename.dsq" alongside "modelname.cached.dts"
+   // so strip everything from the last underscore to find the base name
+   String fileName = dsqPath.getFileName();
+   String::SizeType sep = fileName.find('_',0, String::Right);
+
+   if (sep != String::NPos)
+   {
+      Torque::Path candidate(dsqPath);
+      candidate.setFileName(fileName.substr(0, sep));
+
+      candidate.setExtension("cached.dts");
+      if (Torque::FS::IsFile(candidate.getFullPath()))
+      {
+         outShapePath = candidate;
+         return true;
+      }
+
+      candidate.setExtension("dts");
+      if (Torque::FS::IsFile(candidate.getFullPath()))
+      {
+         outShapePath = candidate;
+         return true;
+      }
+   }
+
+   // fallback: same filename, just swap extension
+   Torque::Path direct(dsqPath);
+
+   direct.setExtension("cached.dts");
+   if (Torque::FS::IsFile(direct.getFullPath()))
+   {
+      outShapePath = direct;
+      return true;
+   }
+
+   direct.setExtension("dts");
+   if (Torque::FS::IsFile(direct.getFullPath()))
+   {
+      outShapePath = direct;
+      return true;
+   }
+
+   return false;
+}
+
 bool GuiShapeEdPreview::setObjectShapeAsset(const char* assetId)
 {
    SAFE_DELETE(mModel);
@@ -422,16 +469,74 @@ bool GuiShapeEdPreview::setObjectShapeAsset(const char* assetId)
          ShapeAsset* asset = AssetDatabase.acquireAsset<ShapeAsset>(id);
          modelName = asset->getShapeFile();
          AssetDatabase.releaseAsset(id);
+         return setObjectModel(modelName);
       }
       else if (assetType == StringTable->insert("ShapeAnimationAsset"))
       {
          ShapeAnimationAsset* asset = AssetDatabase.acquireAsset<ShapeAnimationAsset>(id);
-         modelName = asset->getAnimationPath();
+         StringTableEntry animPath = asset->getAnimationPath();
          AssetDatabase.releaseAsset(id);
+         Torque::Path dsqPath(animPath);
+         String fileExt = String::ToLower(dsqPath.getExtension());
+
+         if (fileExt != String("dsq"))
+         {
+            return setObjectModel(animPath);
+         }
+
+         Torque::Path shapePath;
+         if (!findCompanionShape(dsqPath, shapePath))
+         {
+            Con::warnf("GuiShapeEdPreview::setObjectShapeAsset - "
+               "No companion shape found for '%s'", animPath);
+            return false;
+         }
+
+         if (!setObjectModel(shapePath.getFullPath()))
+         {
+            Con::warnf("GuiShapeEdPreview::setObjectShapeAsset - "
+               "Could not load companion shape for '%s'", animPath);
+            return false;
+         }
+
+         FileStream dsqStream;
+         if (!dsqStream.open(animPath, Torque::FS::File::Read))
+         {
+            Con::warnf("GuiShapeEdPreview::setObjectShapeAsset - "
+               "Could not open '%s'", animPath);
+            SAFE_DELETE(mModel);
+            return false;
+         }
+
+         TSShape* shape = mModel->getShape();
+
+         bool ok = shape->importSequences(&dsqStream, String(animPath));
+         dsqStream.close();
+
+         if (!ok)
+         {
+            Con::warnf("GuiShapeEdPreview::setObjectShapeAsset - "
+               "importSequences failed for '%s'", animPath);
+            SAFE_DELETE(mModel);
+            return false;
+         }
+
+         setAllMeshesHidden(true);
+         mRenderNodes = true;
+         if (shape->sequences.size() > 0)
+         {
+            // importSequences appends, so the new one is always last
+            const String& seqName = shape->getSequenceName(shape->sequences.size() - 1);
+            addThread();
+            mActiveThread = 0;
+            setActiveThreadSequence(seqName.c_str(), 0.0f, 0.0f, true);
+         }
+
+         return true;
       }
    }
 
-   return setObjectModel(modelName);
+   return false;
 }
 
 void GuiShapeEdPreview::_onResourceChanged(const Torque::Path& path)

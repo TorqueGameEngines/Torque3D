@@ -293,7 +293,7 @@ ShapeBaseImageData::ShapeBaseImageData()
       isAnimated[i] = false;
       hasFlash[i] = false;
       shapeIsValid[i] = false;
-      mShapeAsset[i].registerRefreshNotify(this);
+      shapeAssetRef[i].assetPtr.registerRefreshNotify(this);
    }
 
    shakeCamera = false;
@@ -439,7 +439,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
 
       if (i == FirstPersonImageShape)
       {
-         if ((useEyeOffset || useEyeNode) && !mShapeAsset[i].isNull())
+         if ((useEyeOffset || useEyeNode) && !shapeAssetRef[i].isNull())
          {
             // Make use of the first person shape
             useFirstPersonShape = true;
@@ -451,21 +451,22 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          }
       }
 
-      if (!mShapeAsset[i].isNull())
+      if (shapeAssetRef[i].notNull())
       {
-         if (!bool(getShape(i))) {
-            errorStr = String::ToString("Unable to load shape asset: %s", mShapeAsset[i]->getAssetId());
+         Resource<TSShape> shape = shapeAssetRef[i].assetPtr->getShapeResource();
+         if (!shape) {
+            errorStr = String::ToString("ShapeBaseImageData(%s)::preload: Couldn't to load shape asset: %s", getName(), shapeAssetRef[i].assetId);
             return false;
          }
          if(computeCRC)
          {
-            Con::printf("Validation required for shape asset: %s", mShapeAsset[i]->getAssetId());
+            Con::printf("ShapeBaseImageData(%s)::preload: Validation required for shape asset: %s", getName(), shapeAssetRef[i].assetId);
 
-            Torque::FS::FileNodeRef    fileRef = Torque::FS::GetFileNode(getShapeFile(i));
+            Torque::FS::FileNodeRef fileRef = Torque::FS::GetFileNode(shapeAssetRef[i].assetPtr->getShapeFile());
 
             if (!fileRef)
             {
-               errorStr = String::ToString("ShapeBaseImageData: Couldn't load shape asset\"%s\"", mShapeAsset[i]->getAssetId());
+               errorStr = String::ToString("ShapeBaseImageData(%s)::preload: Couldn't find shape asset \"%s\"'s file", getName(), shapeAssetRef[i].assetId);
                return false;
             }
 
@@ -475,29 +476,29 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             }
             else if(mCRC[i] != fileRef->getChecksum())
             {
-               errorStr = String::ToString("Shape asset\"%s\" does not match version on server.", mShapeAsset[i]->getAssetId());
+               errorStr = String::ToString("ShapeBaseImageData(%s)::preload: Shape asset\"%s\" does not match version on server.", getName(), shapeAssetRef[i].assetId);
                return false;
             }
          }
 
          // Resolve nodes & build mount transform
-         eyeMountNode[i]   = getShape(i)->findNode("eyeMount");
-         eyeNode[i]        = getShape(i)->findNode("eye");
+         eyeMountNode[i]   = shape->findNode("eyeMount");
+         eyeNode[i]        = shape->findNode("eye");
          if (eyeNode[i] == -1)
             eyeNode[i] = eyeMountNode[i];
-         ejectNode[i]      = getShape(i)->findNode("ejectPoint");
-         muzzleNode[i]     = getShape(i)->findNode("muzzlePoint");
-         retractNode[i]    = getShape(i)->findNode("retractionPoint");
+         ejectNode[i]      = shape->findNode("ejectPoint");
+         muzzleNode[i]     = shape->findNode("muzzlePoint");
+         retractNode[i]    = shape->findNode("retractionPoint");
          mountTransform[i] = mountOffset;
-         S32 node          = getShape(i)->findNode("mountPoint");
+         S32 node          = shape->findNode("mountPoint");
          if (node != -1) {
             MatrixF total(1);
             do {
                MatrixF nmat;
                QuatF q;
-               TSTransform::setMatrix(getShape(i)->defaultRotations[node].getQuatF(&q), getShape(i)->defaultTranslations[node],&nmat);
+               TSTransform::setMatrix(shape->defaultRotations[node].getQuatF(&q), shape->defaultTranslations[node],&nmat);
                total.mul(nmat);
-               node = getShape(i)->nodes[node].parentIndex;
+               node = shape->nodes[node].parentIndex;
             }
             while(node != -1);
             total.inverse();
@@ -510,7 +511,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
          for (U32 j = 0; j < MaxStates; j++) {
             StateData& s = state[j];
             if (stateSequence[j] && stateSequence[j][0])
-               s.sequence[i] = getShape(i)->findSequence(stateSequence[j]);
+               s.sequence[i] = shape->findSequence(stateSequence[j]);
             if (s.sequence[i] != -1)
             {
                // This state has an animation sequence
@@ -521,7 +522,7 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
                char bufferVis[128];
                dStrncpy(bufferVis, stateSequence[j], 100);
                dStrcat(bufferVis, "_vis", 128);
-               s.sequenceVis[i] = getShape(i)->findSequence(bufferVis);
+               s.sequenceVis[i] = shape->findSequence(bufferVis);
             }
             if (s.sequenceVis[i] != -1)
             {
@@ -533,13 +534,13 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
             s.ignoreLoadedForReady = stateIgnoreLoadedForReady[j];
 
             if (stateEmitterNode[j] && stateEmitterNode[j][0])
-               s.emitterNode[i] = getShape(i)->findNode(stateEmitterNode[j]);
+               s.emitterNode[i] = shape->findNode(stateEmitterNode[j]);
             if (s.emitterNode[i] == -1)
                s.emitterNode[i] = muzzleNode[i];
          }
 
-         ambientSequence[i]   = getShape(i)->findSequence("ambient");
-         spinSequence[i]      = getShape(i)->findSequence("spin");
+         ambientSequence[i]   = shape->findSequence("ambient");
+         spinSequence[i]      = shape->findSequence("spin");
 
          shapeIsValid[i] = true;
       }
@@ -564,7 +565,9 @@ bool ShapeBaseImageData::preload(bool server, String &errorStr)
    {
       if( shapeIsValid[i] )
       {
-         TSShapeInstance* pDummy = new TSShapeInstance(getShape(i), !server);
+         Resource<TSShape> shape = shapeAssetRef[i].assetPtr->getShapeResource();
+
+         TSShapeInstance* pDummy = new TSShapeInstance(shape, !server);
          delete pDummy;
       }
    }
@@ -625,7 +628,9 @@ void ShapeBaseImageData::initPersistFields()
 {
    docsURL;
    addGroup("Shapes");
-   INITPERSISTFIELD_SHAPEASSET_ARRAY_REFACTOR(Shape, MaxShapes, ShapeBaseImageData, "The shape assets for this shape image")
+   ADD_FIELD("shapeAsset", TypeShapeAssetRef, Offset(shapeAssetRef, ShapeBaseImageData))
+      .doc("The shape assets for this shape image")
+      .elements(MaxShapes);
 
       addField("casing", TYPEID< DebrisData >(), Offset(casing, ShapeBaseImageData),
             "@brief DebrisData datablock to use for ejected casings.\n\n"
@@ -999,7 +1004,10 @@ void ShapeBaseImageData::packData(BitStream* stream)
       }
    }
 
-   PACKDATA_ASSET_ARRAY_REFACTOR(Shape, MaxShapes);        // shape 0 for normal use, shape 1 for first person use (optional)
+   for (U32 j = 0; j < MaxShapes; ++j)
+   {
+      AssetDatabase.packDataAsset(stream, shapeAssetRef[j].assetId); // shape 0 for normal use, shape 1 for first person use (optional)
+   }
 
    stream->writeString(imageAnimPrefix);
    stream->writeString(imageAnimPrefixFP);
@@ -1180,7 +1188,10 @@ void ShapeBaseImageData::unpackData(BitStream* stream)
       }
    }
 
-   UNPACKDATA_ASSET_ARRAY_REFACTOR(Shape, MaxShapes);        // shape 0 for normal use, shape 1 for first person use (optional)
+   for (U32 j = 0; j < MaxShapes; ++j)
+   {
+      shapeAssetRef[j] = AssetDatabase.unpackDataAsset(stream);
+   }
 
    imageAnimPrefix = stream->readSTString();
    imageAnimPrefixFP = stream->readSTString();
@@ -2139,9 +2150,17 @@ S32 ShapeBase::getNodeIndex(U32 imageSlot,StringTableEntry nodeName)
 {
    MountedImage& image = mMountedImageList[imageSlot];
    if (image.dataBlock)
-      return image.dataBlock->getShape(getImageShapeIndex(image))->findNode(nodeName);
-   else
-      return -1;
+   {
+      U32 imageShapeidx = getImageShapeIndex(image);
+      if (image.dataBlock->shapeAssetRef[imageShapeidx].notNull())
+      {
+         Resource<TSShape> shape = image.dataBlock->shapeAssetRef[imageShapeidx].assetPtr->getShapeResource();
+         if (shape)
+            return shape->findNode(nodeName);
+      }
+   }
+
+   return -1;
 }
 
 // Modify muzzle if needed to aim at whatever is straight in front of the camera.  Let the
@@ -2324,12 +2343,16 @@ void ShapeBase::setImage(  U32 imageSlot,
    image.dataBlock = imageData;
    image.state = &image.dataBlock->state[0];
    image.skinNameHandle = skinNameHandle;
+   image.appliedSkinName = "Base";
    image.updateDoAnimateAllShapes(this);
 
    for (U32 i=0; i<ShapeBaseImageData::MaxShapes; ++i)
    {
       if (image.dataBlock->shapeIsValid[i])
-         image.shapeInstance[i] = new TSShapeInstance(image.dataBlock->getShape(i), isClientObject());
+      {
+         Resource<TSShape> shape = image.dataBlock->shapeAssetRef[i].assetPtr->getShapeResource();
+         image.shapeInstance[i] = new TSShapeInstance(shape, isClientObject());
+      }
    }
 
    if (isClientObject())

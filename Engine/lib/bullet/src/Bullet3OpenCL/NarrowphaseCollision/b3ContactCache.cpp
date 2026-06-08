@@ -2,7 +2,7 @@
 #if 0
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
+Copyright (c) 2003-2006 Erwin Coumans  https://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -14,7 +14,6 @@ subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-
 
 #include "b3ContactCache.h"
 #include "Bullet3Common/b3Transform.h"
@@ -69,7 +68,7 @@ int b3ContactCache::sortCachedPoints(const b3Vector3& pt)
 				maxPenetration = m_pointCache[i].getDistance();
 			}
 		}
-#endif //KEEP_DEEPEST_POINT
+#endif  //KEEP_DEEPEST_POINT
 		
 		b3Scalar res0(b3Scalar(0.)),res1(b3Scalar(0.)),res2(b3Scalar(0.)),res3(b3Scalar(0.));
 
@@ -250,9 +249,5 @@ void b3ContactCache::refreshContactPoints(const b3Transform& trA,const b3Transfo
 	
 
 }
-
-
-
-
 
 #endif

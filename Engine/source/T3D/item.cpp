@@ -657,11 +657,18 @@ void Item::setTransform(const MatrixF& mat)
 //----------------------------------------------------------------------------
 void Item::updateWorkingCollisionSet(const U32 mask, const F32 dt)
 {
+   if (mDataBlock->shapeAssetRef.isNull())
+      return;
+
+   Resource<TSShape> shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
+   if (!shape)
+      return;
+
    // It is assumed that we will never accelerate more than 10 m/s for gravity...
    //
    Point3F scaledVelocity = mVelocity * dt * TickSec;
    F32 len    = scaledVelocity.len();
-   F32 newLen = len + (mDataBlock->getShape()->mRadius * dt * TickSec);
+   F32 newLen = len + (shape->mRadius * dt * TickSec);
 
    // Check to see if it is actually necessary to construct the new working list,
    //  or if we can use the cached version from the last query.  We use the x

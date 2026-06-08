@@ -43,7 +43,7 @@ struct WheeledVehicleTire: public SimDataBlock, protected AssetPtrCallback
 {
    typedef SimDataBlock Parent;
 
-   DECLARE_SHAPEASSET_REFACTOR(WheeledVehicleTire, Shape)
+   AssetRef<ShapeAsset> shapeAssetRef;
 
    // Physical properties
    F32 mass;                  // Mass of the whole wheel

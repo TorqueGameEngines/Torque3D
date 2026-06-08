@@ -782,7 +782,6 @@ target_precompile_headers(${TORQUE_APP_NAME} PRIVATE
     <cstdint>
     <cmath>
     "console/engineObject.h"
-    "scene/sceneObject.h"
 )
 
 if(TORQUE_TESTING)

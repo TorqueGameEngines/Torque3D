@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ---------------------------------------------------------------------------
 */
 
-/** 
+/**
  * @file Implementation of the post-processing step to generate face
  * normals for all imported faces.
  */
@@ -50,6 +50,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <assimp/qnan.h>
 #include <assimp/scene.h>
 #include <assimp/DefaultLogger.hpp>
+
+#include <numeric>
+#include <memory>
 
 using namespace Assimp;
 
@@ -86,6 +89,64 @@ void GenFaceNormalsProcess::Execute(aiScene *pScene) {
     }
 }
 
+namespace {
+
+template<class XMesh>
+void updateXMeshVertices(XMesh *pMesh, std::vector<int> &uniqueVertices) {
+    // replace vertex data with the unique data sets
+    pMesh->mNumVertices = static_cast<unsigned int>(uniqueVertices.size());
+
+    // ----------------------------------------------------------------------------
+    // NOTE - we're *not* calling Vertex::SortBack() because it would check for
+    // presence of every single vertex component once PER VERTEX. And our CPU
+    // dislikes branches, even if they're easily predictable.
+    // ----------------------------------------------------------------------------
+
+    // Position, if present (check made for aiAnimMesh)
+    if (pMesh->mVertices) {
+        std::unique_ptr<aiVector3D[]> oldVertices(pMesh->mVertices);
+        pMesh->mVertices = new aiVector3D[pMesh->mNumVertices];
+        for (unsigned int a = 0; a < pMesh->mNumVertices; a++) {
+            pMesh->mVertices[a] = oldVertices[uniqueVertices[a]];
+        }
+    }
+
+    // Tangents, if present
+    if (pMesh->mTangents) {
+        std::unique_ptr<aiVector3D[]> oldTangents(pMesh->mTangents);
+        pMesh->mTangents = new aiVector3D[pMesh->mNumVertices];
+        for (unsigned int a = 0; a < pMesh->mNumVertices; a++) {
+            pMesh->mTangents[a] = oldTangents[uniqueVertices[a]];
+        }
+    }
+    // Bitangents as well
+    if (pMesh->mBitangents) {
+        std::unique_ptr<aiVector3D[]> oldBitangents(pMesh->mBitangents);
+        pMesh->mBitangents = new aiVector3D[pMesh->mNumVertices];
+        for (unsigned int a = 0; a < pMesh->mNumVertices; a++) {
+            pMesh->mBitangents[a] = oldBitangents[uniqueVertices[a]];
+        }
+    }
+    // Vertex colors
+    for (unsigned int a = 0; pMesh->HasVertexColors(a); a++) {
+        std::unique_ptr<aiColor4D[]> oldColors(pMesh->mColors[a]);
+        pMesh->mColors[a] = new aiColor4D[pMesh->mNumVertices];
+        for (unsigned int b = 0; b < pMesh->mNumVertices; b++) {
+            pMesh->mColors[a][b] = oldColors[uniqueVertices[b]];
+        }
+    }
+    // Texture coords
+    for (unsigned int a = 0; pMesh->HasTextureCoords(a); a++) {
+        std::unique_ptr<aiVector3D[]> oldTextureCoords(pMesh->mTextureCoords[a]);
+        pMesh->mTextureCoords[a] = new aiVector3D[pMesh->mNumVertices];
+        for (unsigned int b = 0; b < pMesh->mNumVertices; b++) {
+            pMesh->mTextureCoords[a][b] = oldTextureCoords[uniqueVertices[b]];
+        }
+    }
+}
+
+} // namespace
+
 // ------------------------------------------------------------------------------------------------
 // Executes the post-processing step on the given imported data.
 bool GenFaceNormalsProcess::GenMeshFaceNormals(aiMesh *pMesh) {
@@ -112,17 +173,21 @@ bool GenFaceNormalsProcess::GenMeshFaceNormals(aiMesh *pMesh) {
     // mask to indicate if a vertex was already referenced and needs to be duplicated
     std::vector<bool> alreadyReferenced;
     alreadyReferenced.resize(pMesh->mNumVertices, false);
-    std::vector<aiVector3D> duplicatedVertices;
+
+    std::vector<int> duplicatedVertices;
+    duplicatedVertices.resize(pMesh->mNumVertices);
+    std::iota(std::begin(duplicatedVertices), std::end(duplicatedVertices), 0);
 
     auto storeNormalSplitVertex = [&](unsigned int index, const aiVector3D& normal) {
         if (!alreadyReferenced[index]) {
             normals[index]           = normal;
             alreadyReferenced[index] = true;
         } else {
-            duplicatedVertices.push_back(pMesh->mVertices[index]);
             normals.push_back(normal);
-            index = pMesh->mNumVertices + static_cast<unsigned int>(duplicatedVertices.size() - 1);
+            duplicatedVertices.push_back(index);
+            index = static_cast<unsigned int>(duplicatedVertices.size() - 1);
         }
+
         return index;
     };
 
@@ -144,7 +209,7 @@ bool GenFaceNormalsProcess::GenMeshFaceNormals(aiMesh *pMesh) {
         const aiVector3D *pV3 = &pMesh->mVertices[face.mIndices[face.mNumIndices - 1]];
         // Boolean XOR - if either but not both of these flags are set, then the winding order has
         // changed and the cross-product to calculate the normal needs to be reversed
-        if (flippedWindingOrder_ != leftHanded_) 
+        if (flippedWindingOrder_ != leftHanded_)
             std::swap(pV2, pV3);
         const aiVector3D vNor = ((*pV2 - *pV1) ^ (*pV3 - *pV1)).NormalizeSafe();
 
@@ -154,16 +219,10 @@ bool GenFaceNormalsProcess::GenMeshFaceNormals(aiMesh *pMesh) {
     }
 
     // store normals (and additional vertices) back into the mesh
-    if (!duplicatedVertices.empty()) {
-        const aiVector3D * oldVertices = pMesh->mVertices;
-        auto oldNumVertices = pMesh->mNumVertices;
-        pMesh->mNumVertices += static_cast<unsigned int>(duplicatedVertices.size());
-        pMesh->mVertices = new aiVector3D[pMesh->mNumVertices];
-        memcpy(pMesh->mVertices, oldVertices, oldNumVertices * sizeof(aiVector3D));
-        memcpy(pMesh->mVertices + oldNumVertices, duplicatedVertices.data(), duplicatedVertices.size() * sizeof(aiVector3D));
-        delete[] oldVertices;
+    if (pMesh->mNumVertices != std::size(duplicatedVertices)) {
+        updateXMeshVertices(pMesh, duplicatedVertices);
     }
-    pMesh->mNormals = new aiVector3D[pMesh->mNumVertices];
+    pMesh->mNormals = new aiVector3D[normals.size()];
     memcpy(pMesh->mNormals, normals.data(), normals.size() * sizeof(aiVector3D));
 
     return true;

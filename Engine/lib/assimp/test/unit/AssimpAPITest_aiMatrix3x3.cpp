@@ -3,9 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
-
-
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -42,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "UnitTestPCH.h"
 #include "MathTest.h"
+#include <array>
 
 using namespace Assimp;
 
@@ -156,5 +155,20 @@ TEST_F(AssimpAPITest_aiMatrix3x3, aiMatrix3FromToTest) {
     const auto from = aiVector3D(1,2,1).Normalize(), to = aiVector3D(-1,1,1).Normalize();
     aiMatrix3x3::FromToMatrix(from, to, result_cpp);
     aiMatrix3FromTo(&result_c, &from, &to);
-    EXPECT_EQ(result_cpp, result_c);
+    EXPECT_TRUE(result_cpp.Equal(result_c, Epsilon));
+}
+
+TEST_F(AssimpAPITest_aiMatrix3x3, operatorTest) {
+    std::array<ai_real, 9> value = { 1, 2, 3, 4, 5, 6, 7, 8,9};
+    result_cpp = aiMatrix3x3( value[0], value[1], value[2], value[3],
+                              value[4], value[5], value[6], value[7],
+                              value[8]);
+    size_t idx=0;
+    for (unsigned int i = 0; i < 3; ++i) {
+       for (unsigned int j = 0; j < 3; ++j) {
+            ai_real curValue = result_cpp[i][j];
+            EXPECT_EQ(curValue, value[idx]);
+            idx++;
+       }
+    }
 }

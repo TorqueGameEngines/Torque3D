@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -79,7 +79,7 @@ TEST_F(utColladaExport, testExportCamera) {
 
     EXPECT_EQ(AI_SUCCESS, ex->Export(pTest, "collada", file));
     const unsigned int origNumCams(pTest->mNumCameras);
-    //std::vector<float> origFOV;
+
     std::unique_ptr<float[]> origFOV(new float[origNumCams]);
     std::unique_ptr<float[]> orifClipPlaneNear(new float[origNumCams]);
     std::unique_ptr<float[]> orifClipPlaneFar(new float[origNumCams]);

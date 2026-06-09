@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -85,8 +85,8 @@ SMDImporter::SMDImporter() :
         configFrameID(),
         mBuffer(),
         mEnd(nullptr),
-        pScene(nullptr), 
-        iFileSize( 0 ), 
+        pScene(nullptr),
+        iFileSize( 0 ),
         iSmallestFrame( INT_MAX ),
         dLengthOfAnim( 0.0 ),
         bHasUVs(false ),
@@ -982,7 +982,7 @@ bool SMDImporter::ParseFloat(const char *szCurrent, const char **szCurrentOut, c
         return false;
     }
 
-    *szCurrentOut = fast_atoreal_move<float>(szCurrent,out);
+    *szCurrentOut = fast_atoreal_move(szCurrent,out);
     return true;
 }
 

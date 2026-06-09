@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -237,7 +237,7 @@ std::string FBXConverter::MakeUniqueNodeName(const Model *const model, const aiN
 /// When a node becomes a child of another node, that node becomes its owner and mOwnership should be released.
 struct FBXConverter::PotentialNode {
     PotentialNode() : mOwnership(new aiNode), mNode(mOwnership.get()) {}
-    PotentialNode(const std::string& name) : mOwnership(new aiNode(name)), mNode(mOwnership.get()) {}
+    explicit PotentialNode(const std::string& name) : mOwnership(new aiNode(name)), mNode(mOwnership.get()) {}
     aiNode* operator->() { return mNode; }
     std::unique_ptr<aiNode> mOwnership;
     aiNode* mNode;
@@ -438,7 +438,8 @@ void FBXConverter::ConvertLight(const Light &light, const std::string &orig_name
             out_light->mType = aiLightSource_UNDEFINED;
             break;
         default:
-            ai_assert(false);
+            FBXImporter::LogError("Not handled light type: ", light.LightType());
+            break;
     }
 
     float decay = light.DecayStart();
@@ -463,7 +464,7 @@ void FBXConverter::ConvertLight(const Light &light, const std::string &orig_name
             out_light->mAttenuationQuadratic = 1.0f;
             break;
         default:
-            ai_assert(false);
+            FBXImporter::LogError("Not handled light decay type: ", light.DecayType());
             break;
     }
 }
@@ -601,7 +602,7 @@ const char *FBXConverter::NameTransformationCompProperty(TransformationComp comp
             return "GeometricRotationInverse";
         case TransformationComp_GeometricTranslationInverse:
             return "GeometricTranslationInverse";
-        case TransformationComp_MAXIMUM: // this is to silence compiler warnings
+        case TransformationComp_MAXIMUM:
             break;
     }
 
@@ -2957,7 +2958,7 @@ void FBXConverter::GenerateNodeAnimations(std::vector<aiNodeAnim *> &node_anims,
     // be invoked _later_ (animations come first). If this node has only rotation,
     // scaling and translation _and_ there are no animated other components either,
     // we can use a single node and also a single node animation channel.
-    if( !has_complex && !NeedsComplexTransformationChain(target)) {
+    if (!doc.Settings().preservePivots || (!has_complex && !NeedsComplexTransformationChain(target))) {
         aiNodeAnim* const nd = GenerateSimpleNodeAnim(fixed_name, target, chain,
                 node_property_map.end(),
                 start, stop,
@@ -3415,7 +3416,7 @@ FBXConverter::KeyFrameListList FBXConverter::GetRotationKeyframeList(const std::
     KeyFrameListList inputs;
     inputs.reserve(nodes.size() * 3);
 
-    //give some breathing room for rounding errors
+    // give some breathing room for rounding errors
     const int64_t adj_start = start - 10000;
     const int64_t adj_stop = stop + 10000;
 
@@ -3441,7 +3442,7 @@ FBXConverter::KeyFrameListList FBXConverter::GetRotationKeyframeList(const std::
             ai_assert(curve->GetKeys().size() == curve->GetValues().size());
             ai_assert(curve->GetKeys().size());
 
-            //get values within the start/stop time window
+            // get values within the start/stop time window
             std::shared_ptr<KeyTimeList> Keys(new KeyTimeList());
             std::shared_ptr<KeyValueList> Values(new KeyValueList());
             const size_t count = curve->GetKeys().size();
@@ -3461,8 +3462,7 @@ FBXConverter::KeyFrameListList FBXConverter::GetRotationKeyframeList(const std::
                         if (tnew >= adj_start && tnew <= adj_stop) {
                             Keys->push_back(tnew);
                             Values->push_back(vnew);
-                        }
-                        else {
+                        } else {
                             // Something broke
                             break;
                         }

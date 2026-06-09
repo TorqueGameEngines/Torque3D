@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -59,9 +59,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Header files, standard library.
 #include <cinttypes>
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <iostream>
+
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
 
 using namespace rapidjson;
 
@@ -551,12 +556,6 @@ void glTF2Exporter::GetMatTexProp(const aiMaterial &mat, unsigned int &prop, con
     mat.Get(textureKey.c_str(), tt, slot, prop);
 }
 
-void glTF2Exporter::GetMatTexProp(const aiMaterial &mat, float &prop, const char *propName, aiTextureType tt, unsigned int slot) {
-    std::string textureKey = std::string(_AI_MATKEY_TEXTURE_BASE) + "." + propName;
-
-    mat.Get(textureKey.c_str(), tt, slot, prop);
-}
-
 void glTF2Exporter::GetMatTex(const aiMaterial &mat, Ref<Texture> &texture, unsigned int &texCoord, aiTextureType tt, unsigned int slot = 0) {
     if (mat.GetTextureCount(tt) == 0) {
         return;
@@ -647,7 +646,7 @@ void glTF2Exporter::GetMatTex(const aiMaterial &mat, NormalTextureInfo &prop, ai
 
     if (texture) {
         // GetMatTexProp(mat, prop.texCoord, "texCoord", tt, slot);
-        GetMatTexProp(mat, prop.scale, "scale", tt, slot);
+        mat.Get(AI_MATKEY_GLTF_TEXTURE_SCALE(tt, slot), prop.scale);
     }
 }
 
@@ -658,7 +657,7 @@ void glTF2Exporter::GetMatTex(const aiMaterial &mat, OcclusionTextureInfo &prop,
 
     if (texture) {
         // GetMatTexProp(mat, prop.texCoord, "texCoord", tt, slot);
-        GetMatTexProp(mat, prop.strength, "strength", tt, slot);
+        mat.Get(AI_MATKEY_GLTF_TEXTURE_STRENGTH(tt, slot), prop.strength);
     }
 }
 
@@ -802,6 +801,22 @@ bool glTF2Exporter::GetMatIOR(const aiMaterial &mat, glTF2::MaterialIOR &ior) {
 
 bool glTF2Exporter::GetMatEmissiveStrength(const aiMaterial &mat, glTF2::MaterialEmissiveStrength &emissiveStrength) {
     return mat.Get(AI_MATKEY_EMISSIVE_INTENSITY, emissiveStrength.emissiveStrength) == aiReturn_SUCCESS;
+}
+
+bool glTF2Exporter::GetMatAnisotropy(const aiMaterial &mat, glTF2::MaterialAnisotropy &anisotropy) {
+    if (mat.Get(AI_MATKEY_ANISOTROPY_FACTOR, anisotropy.anisotropyStrength) != aiReturn_SUCCESS) {
+        return false;
+    }
+
+    // do not export anisotropy when strength is zero
+    if (anisotropy.anisotropyStrength == 0.0f) {
+        return false;
+    }
+
+    mat.Get(AI_MATKEY_ANISOTROPY_ROTATION, anisotropy.anisotropyRotation);
+    GetMatTex(mat, anisotropy.anisotropyTexture, AI_MATKEY_ANISOTROPY_TEXTURE);
+
+    return true;
 }
 
 void glTF2Exporter::ExportMaterials() {
@@ -955,6 +970,12 @@ void glTF2Exporter::ExportMaterials() {
                 if (GetMatEmissiveStrength(mat, emissiveStrength)) {
                     mAsset->extensionsUsed.KHR_materials_emissive_strength = true;
                     m->materialEmissiveStrength = Nullable<MaterialEmissiveStrength>(emissiveStrength);
+                }
+
+                MaterialAnisotropy anisotropy;
+                if (GetMatAnisotropy(mat, anisotropy)) {
+                    mAsset->extensionsUsed.KHR_materials_anisotropy = true;
+                    m->materialAnisotropy = Nullable<MaterialAnisotropy>(anisotropy);
                 }
             }
         }
@@ -1215,6 +1236,32 @@ void glTF2Exporter::ExportMeshes() {
             p.attributes.normal.push_back(n);
         }
 
+        /******************** Tangents ********************/
+        if (nullptr != aim->mTangents && nullptr != aim->mBitangents) {
+          // Find the handedness by calculating the bitangent without the handedness factor,
+          // the use a dot product to find out if the original bitangent was inverted (multiplied
+          // by a factor of -1.0) or not (multiplied by 1.0)
+          std::vector<ai_real> tangentsWithHandedness(aim->mNumVertices * 4);
+            for (uint32_t i = 0; i < aim->mNumVertices; ++i) {
+                aiVector3D calculatedBitangent = aim->mNormals[i] ^ aim->mTangents[i];
+                ai_real bitangentDotProduct = calculatedBitangent * aim->mBitangents[i];
+                ai_real handedness = std::copysign(1.0, bitangentDotProduct);
+                aim->mTangents[i].NormalizeSafe();
+                tangentsWithHandedness[i * 4] = aim->mTangents[i][0];
+                tangentsWithHandedness[i * 4 + 1] = aim->mTangents[i][1];
+                tangentsWithHandedness[i * 4 + 2] = aim->mTangents[i][2];
+                tangentsWithHandedness[i * 4 + 3] = handedness;
+            }
+
+            Ref<Accessor> t = ExportData(
+                *mAsset, meshId, b, aim->mNumVertices, &tangentsWithHandedness[0], AttribType::VEC4,
+                AttribType::VEC4, ComponentType_FLOAT, BufferViewTarget_ARRAY_BUFFER
+            );
+            if (t) {
+                p.attributes.tangent.push_back(t);
+            }
+        }
+
         /************** Texture coordinates **************/
         for (int i = 0; i < AI_MAX_NUMBER_OF_TEXTURECOORDS; ++i) {
             if (!aim->HasTextureCoords(i)) {
@@ -1463,6 +1510,10 @@ unsigned int glTF2Exporter::ExportNodeHierarchy(const aiNode *n) {
     Ref<Node> node = mAsset->nodes.Create(mAsset->FindUniqueID(n->mName.C_Str(), "node"));
 
     node->name = n->mName.C_Str();
+    if(n->mNumChildren > 0)
+        node->children.reserve(n->mNumChildren);
+    if(n->mNumMeshes > 0)
+        node->meshes.reserve(n->mNumMeshes);
 
     if (!n->mTransformation.IsIdentity(configEpsilon)) {
         node->matrix.isPresent = true;
@@ -1491,6 +1542,10 @@ unsigned int glTF2Exporter::ExportNode(const aiNode *n, Ref<Node> &parent) {
 
     node->parent = parent;
     node->name = name;
+    if(n->mNumChildren > 0)
+        node->children.reserve(n->mNumChildren);
+    if(n->mNumMeshes > 0)
+        node->meshes.reserve(n->mNumMeshes);
 
     ExportNodeExtras(n->mMetaData, node->extras);
 

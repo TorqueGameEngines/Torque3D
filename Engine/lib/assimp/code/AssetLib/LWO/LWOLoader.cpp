@@ -3,7 +3,7 @@
 Open Asset Import Library (assimp)
 ---------------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -46,7 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ASSIMP_BUILD_NO_LWO_IMPORTER
 
 // internal headers
-#include "AssetLib/LWO/LWOLoader.h"
+#include "LWOLoader.h"
 #include "PostProcessing/ConvertToLHProcess.h"
 #include "PostProcessing/ProcessHelper.h"
 #include "Geometry/GeometryUtils.h"
@@ -64,7 +64,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using namespace Assimp;
 
-static const aiImporterDesc desc = {
+static constexpr aiImporterDesc desc = {
     "LightWave/Modo Object Importer",
     "",
     "",
@@ -78,33 +78,9 @@ static const aiImporterDesc desc = {
 };
 
 // ------------------------------------------------------------------------------------------------
-// Constructor to be privately used by Importer
-LWOImporter::LWOImporter() :
-        mIsLWO2(),
-        mIsLXOB(),
-        mIsLWO3(),
-        mLayers(),
-        mCurLayer(),
-        mTags(),
-        mMapping(),
-        mSurfaces(),
-        mFileBuffer(),
-        fileSize(),
-        mScene(nullptr),
-        configSpeedFlag(),
-        configLayerIndex(),
-        hasNamedLayer() {
-    // empty
-}
-
-// ------------------------------------------------------------------------------------------------
-// Destructor, private as well
-LWOImporter::~LWOImporter() = default;
-
-// ------------------------------------------------------------------------------------------------
 // Returns whether the class can handle the format of the given file.
 bool LWOImporter::CanRead(const std::string &file, IOSystem *pIOHandler, bool /*checkSig*/) const {
-    static const uint32_t tokens[] = {
+    static constexpr uint32_t tokens[] = {
         AI_LWO_FOURCC_LWOB,
         AI_LWO_FOURCC_LWO2,
         AI_LWO_FOURCC_LXOB
@@ -155,6 +131,7 @@ void LWOImporter::InternReadFile(const std::string &pFile,
     }
 
     mFileBuffer = &mBuffer[0] + 12;
+    mFileBufferEnd = &mBuffer[0] + fileSize;
     fileSize -= 12;
 
     // Initialize some members with their default values

@@ -2,7 +2,7 @@
 Open Asset Import Library (assimp)
 ----------------------------------------------------------------------
 
-Copyright (c) 2006-2024, assimp team
+Copyright (c) 2006-2026, assimp team
 
 All rights reserved.
 
@@ -45,6 +45,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef ASSIMP_BUILD_NO_FBX_IMPORTER
 
+#include <algorithm>
+
 #include "FBXParser.h"
 #include "FBXDocument.h"
 #include "FBXMeshGeometry.h"
@@ -64,9 +66,6 @@ Deformer::Deformer(uint64_t id, const Element& element, const Document& doc, con
     const std::string& classname = ParseTokenAsString(GetRequiredToken(element,2));
     props = GetPropertyTable(doc,"Deformer.Fbx" + classname,element,sc,true);
 }
-
-// ------------------------------------------------------------------------------------------------
-Deformer::~Deformer() = default;
 
 // ------------------------------------------------------------------------------------------------
 Cluster::Cluster(uint64_t id, const Element& element, const Document& doc, const std::string& name)
@@ -113,10 +112,6 @@ Cluster::Cluster(uint64_t id, const Element& element, const Document& doc, const
     }
 }
 
-
-// ------------------------------------------------------------------------------------------------
-Cluster::~Cluster() = default;
-
 // ------------------------------------------------------------------------------------------------
 Skin::Skin(uint64_t id, const Element& element, const Document& doc, const std::string& name)
 : Deformer(id,element,doc,name)
@@ -142,9 +137,6 @@ Skin::Skin(uint64_t id, const Element& element, const Document& doc, const std::
     }
 }
 
-
-// ------------------------------------------------------------------------------------------------
-Skin::~Skin() = default;
 // ------------------------------------------------------------------------------------------------
 BlendShape::BlendShape(uint64_t id, const Element& element, const Document& doc, const std::string& name)
     : Deformer(id, element, doc, name)
@@ -154,15 +146,16 @@ BlendShape::BlendShape(uint64_t id, const Element& element, const Document& doc,
     for (const Connection* con : conns) {
         const BlendShapeChannel* const bspc = ProcessSimpleConnection<BlendShapeChannel>(*con, false, "BlendShapeChannel -> BlendShape", element);
         if (bspc) {
-            auto pr = blendShapeChannels.insert(bspc);
-            if (!pr.second) {
+            // Only add a channel if it doesn't exist already
+            if (std::find(blendShapeChannels.begin(), blendShapeChannels.end(), bspc) == blendShapeChannels.end()) {
+                blendShapeChannels.push_back(bspc);
+            } else {
                 FBXImporter::LogWarn("there is the same blendShapeChannel id ", bspc->ID());
             }
         }
     }
 }
-// ------------------------------------------------------------------------------------------------
-BlendShape::~BlendShape() = default;
+
 // ------------------------------------------------------------------------------------------------
 BlendShapeChannel::BlendShapeChannel(uint64_t id, const Element& element, const Document& doc, const std::string& name)
     : Deformer(id, element, doc, name)
@@ -181,17 +174,17 @@ BlendShapeChannel::BlendShapeChannel(uint64_t id, const Element& element, const 
     for (const Connection* con : conns) {
         const ShapeGeometry* const sg = ProcessSimpleConnection<ShapeGeometry>(*con, false, "Shape -> BlendShapeChannel", element);
         if (sg) {
-            auto pr = shapeGeometries.insert(sg);
-            if (!pr.second) {
+            // Only add a geometry if it doesn't exist already
+            if (std::find(shapeGeometries.begin(), shapeGeometries.end(), sg) == shapeGeometries.end()) {
+                shapeGeometries.push_back(sg);
+            } else {
                 FBXImporter::LogWarn("there is the same shapeGeometrie id ", sg->ID());
             }
         }
     }
 }
-// ------------------------------------------------------------------------------------------------
-BlendShapeChannel::~BlendShapeChannel() = default;
-// ------------------------------------------------------------------------------------------------
-}
-}
-#endif
 
+} // namespace FBX
+} // Namespace Assimp
+
+#endif // ASSIMP_BUILD_NO_FBX_IMPORTER

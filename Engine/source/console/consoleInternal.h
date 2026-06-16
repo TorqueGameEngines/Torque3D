@@ -275,6 +275,7 @@ public:
    static void printNamespaceEntries(Namespace * g, bool dumpScript = true, bool dumpEngine = true);
    static void unlinkPackages();
    static void relinkPackages();
+   static bool isPackageActive(StringTableEntry name);
    static bool isPackage(StringTableEntry name);
    static U32 getActivePackagesCount();
    static StringTableEntry getActivePackage(U32 index);

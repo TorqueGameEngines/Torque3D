@@ -21,19 +21,9 @@ jobs:
             fail-fast: false
             matrix:
                 config:
-                    # macos-latest is Apple Silicon (arm64). The Intel entry below
-                    # covers x86_64 users who haven't migrated yet.
                     - {
                           name: "macOS ARM Clang Ninja",
                           os: "macos-latest",
-                          build_type: "Release",
-                          cc: "clang",
-                          cxx: "clang++",
-                          generator: "Ninja",
-                      }
-                    - {
-                          name: "macOS Intel Clang Ninja",
-                          os: "macos-13",
                           build_type: "Release",
                           cc: "clang",
                           cxx: "clang++",

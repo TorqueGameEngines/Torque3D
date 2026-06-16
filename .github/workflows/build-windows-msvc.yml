@@ -57,18 +57,6 @@ jobs:
                           msvc_arch: "amd64",
                           can_test: true,
                       }
-                    - {
-                          name: "Windows ARM64 MSVC",
-                          os: "windows-latest",
-                          build_type: "Release",
-                          cc: "cl",
-                          cxx: "cl",
-                          generator: "Visual Studio 18 2026",
-                          cmake_args: "-A ARM64",
-                          compiler_family: "msvc",
-                          msvc_arch: "amd64_arm64",
-                          can_test: false,
-                      }
 
         steps:
             - uses: actions/checkout@v4

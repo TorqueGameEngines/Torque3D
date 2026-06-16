@@ -1748,6 +1748,28 @@ void Namespace::relinkPackages()
       activatePackage(mActivePackages[i]);
 }
 
+bool Namespace::isPackageActive(StringTableEntry name)
+{
+   S32 x;
+
+   for (x = 0; x < mNumActivePackages; x++)
+   {
+      if (mActivePackages[x] == name)
+      {
+         return true;
+      }
+   }
+
+   return false;
+}
+
+DefineEngineFunction(isPackageActive, bool, (String identifier), ,
+   "@brief Returns true if the identifier is a package and is active, otherwise false.\n\n"
+   "@ingroup Packages\n")
+{
+   StringTableEntry name = StringTable->insert(identifier.c_str());
+   return Namespace::isPackageActive(name);
+}
 
 DefineEngineFunction(isPackage, bool, (String identifier), ,
    "@brief Returns true if the identifier is the name of a declared package.\n\n"

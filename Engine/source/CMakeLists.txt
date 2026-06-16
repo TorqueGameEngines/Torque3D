@@ -767,20 +767,21 @@ if (TORQUE_TARGET_PROPERTIES)
 endif (TORQUE_TARGET_PROPERTIES)
 target_include_directories(${TORQUE_APP_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
 
-target_precompile_headers(${TORQUE_APP_NAME} PRIVATE
-    <vector>
-    <string>
-    <map>
-    <memory>
-    <algorithm>
-    <type_traits>
-    <cstring>
-    <cstdlib>
-    <cstdio>
-    <cmath>
-    <cstdint>
-    <cmath>
-)
+# target_precompile_headers(${TORQUE_APP_NAME} PRIVATE
+#     <vector>
+#     <string>
+#     <map>
+#     <memory>
+#     <algorithm>
+#     <type_traits>
+#     <cstring>
+#     <cstdlib>
+#     <cstdio>
+#     <cmath>
+#     <cstdint>
+#     <cmath>
+#     "console/engineObject.h"
+# )
 
 if(TORQUE_TESTING)
   if(WIN32)

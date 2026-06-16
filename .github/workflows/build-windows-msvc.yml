@@ -4,38 +4,71 @@ on:
         branches: [development]
     pull_request:
         branches: [development]
+
 concurrency:
     group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-windows
     cancel-in-progress: true
 
 permissions:
-  checks: write
+    checks: write
 
 jobs:
     build-windows:
         if: github.repository == 'TorqueGameEngines/Torque3D'
         name: ${{matrix.config.name}}
-        runs-on: windows-latest
+        runs-on: ${{matrix.config.os}}
         strategy:
             fail-fast: false
             matrix:
-              config: 
-              - {
-                  name: "Windows Latest MSVC",
-                  build_type: "Release",
-                  cc: "cl",
-                  cxx: "cl",
-                  environment_script: "C:/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat",
-                  generator: "Visual Studio 17 2022"
-                }
-                
+                config:
+                    - {
+                          name: "Windows MSVC Ninja",
+                          os: "windows-latest",
+                          build_type: "Release",
+                          cc: "cl",
+                          cxx: "cl",
+                          generator: "Ninja",
+                          cmake_args: "",
+                          compiler_family: "msvc",
+                          msvc_arch: "amd64",
+                          can_test: false,
+                      }
+                    - {
+                          name: "Windows MSVC Visual Studio 2022",
+                          os: "windows-2022",
+                          build_type: "Release",
+                          cc: "cl",
+                          cxx: "cl",
+                          generator: "Visual Studio 17 2022",
+                          cmake_args: "",
+                          compiler_family: "msvc",
+                          msvc_arch: "amd64",
+                          can_test: false,
+                      }
+                    - {
+                          name: "Windows MSVC Visual Studio 2026",
+                          os: "windows-latest",
+                          build_type: "Release",
+                          cc: "cl",
+                          cxx: "cl",
+                          generator: "Visual Studio 18 2026",
+                          cmake_args: "",
+                          compiler_family: "msvc",
+                          msvc_arch: "amd64",
+                          can_test: true,
+                      }
+
         steps:
             - uses: actions/checkout@v4
+
             - uses: ilammy/msvc-dev-cmd@v1.13.0
+              with:
+                  arch: ${{matrix.config.msvc_arch}}
+
             - name: Print env
               run: |
-                echo github.event.action: ${{ github.event.action }}
-                echo github.event_name: ${{ github.event_name }}
+                  echo github.event.action: ${{ github.event.action }}
+                  echo github.event_name: ${{ github.event_name }}
 
             - name: Run GIT Init
               run: git init
@@ -43,33 +76,39 @@ jobs:
             - name: Setup MSVC problem matcher
               uses: ammaraskar/msvc-problem-matcher@master
 
-            - name: Install Dependencies For ${{matrix.config.name}}
+            - name: Add Clang to PATH
+              if: matrix.config.compiler_family == 'clang-cl'
               run: |
-                cmake --version
-                cmd "${{matrix.config.environment_script}}"
+                  echo "C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+            - name: Verify toolchain
+              run: cmake --version
 
             - name: Configure, Build & Install
               uses: threeal/cmake-action@v1.3.0
               with:
-                source-dir: ${{github.workspace}}
-                build-dir: ${{github.workspace}}/build
-                c-compiler: ${{matrix.config.cc}}
-                cxx-compiler: ${{matrix.config.cxx}}
-                generator: ${{matrix.config.generator}}
-                options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
-                run-build: true
-                build-args: --config ${{matrix.config.build_type}} --target install
+                  source-dir: ${{github.workspace}}
+                  build-dir: ${{github.workspace}}/build
+                  c-compiler: ${{matrix.config.cc}}
+                  cxx-compiler: ${{matrix.config.cxx}}
+                  generator: ${{matrix.config.generator}}
+                  args: ${{matrix.config.cmake_args}}
+                  options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
+                  run-build: true
+                  build-args: --config ${{matrix.config.build_type}} --target install
 
+            # Skipped for ARM64 — binary cannot run on the x64 host runner.
             - name: Unit Tests
+              if: matrix.config.can_test
               run: |
-                cd "${{github.workspace}}/My Projects/Torque3D/game"
-                ./Torque3D.exe runTests.tscript
+                  cd "${{github.workspace}}/My Projects/Torque3D/game"
+                  ./Torque3D.exe runTests.tscript
 
             - name: Test Reporter
               uses: phoenix-actions/test-reporting@v14
               with:
-                name: Windows test results
-                path: "**/My Projects/Torque3D/game/test_detail.xml"
-                reporter: java-junit
-                fail-on-error: true
-              if: github.event_name != 'pull_request'
+                  name: ${{matrix.config.name}} test results
+                  path: "**/My Projects/Torque3D/game/test_detail.xml"
+                  reporter: java-junit
+                  fail-on-error: true
+              if: github.event_name != 'pull_request' && matrix.config.can_test

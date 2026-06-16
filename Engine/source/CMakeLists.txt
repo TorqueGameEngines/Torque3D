@@ -575,7 +575,6 @@ if (MSVC)
         /fp:except-   # No FP exception overhead
         /bigobj       # >64k sections - consoleObject.h template depth needs this
         /Qpar-        # Disable auto-paralleliser (causes subtle correctness bugs)
-        /NODEFAULTLIB
         ${_TORQUE_MSVC_WARNINGS}
     )
  
@@ -621,8 +620,8 @@ if (MSVC)
     )
  
     target_link_options(${TORQUE_APP_NAME} PRIVATE
-        $<$<CONFIG:Debug>:/DEBUG:FASTLINK /INCREMENTAL>
-        $<$<CONFIG:RelWithDebInfo>:/INCREMENTAL /DEBUG:FASTLINK /OPT:REF /OPT:ICF>
+        $<$<CONFIG:Debug>:/DEBUG:FULL /INCREMENTAL>
+        $<$<CONFIG:RelWithDebInfo>:/INCREMENTAL /DEBUG:FULL /OPT:REF /OPT:ICF>
         $<$<CONFIG:Release>:/INCREMENTAL>
     )
  
@@ -768,21 +767,21 @@ if (TORQUE_TARGET_PROPERTIES)
 endif (TORQUE_TARGET_PROPERTIES)
 target_include_directories(${TORQUE_APP_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_BINARY_DIR}/temp" ${TORQUE_INCLUDE_DIRECTORIES})
 
-target_precompile_headers(${TORQUE_APP_NAME} PRIVATE
-    <vector>
-    <string>
-    <map>
-    <memory>
-    <algorithm>
-    <type_traits>
-    <cstring>
-    <cstdlib>
-    <cstdio>
-    <cmath>
-    <cstdint>
-    <cmath>
-    "console/engineObject.h"
-)
+# target_precompile_headers(${TORQUE_APP_NAME} PRIVATE
+#     <vector>
+#     <string>
+#     <map>
+#     <memory>
+#     <algorithm>
+#     <type_traits>
+#     <cstring>
+#     <cstdlib>
+#     <cstdio>
+#     <cmath>
+#     <cstdint>
+#     <cmath>
+#     "console/engineObject.h"
+# )
 
 if(TORQUE_TESTING)
   if(WIN32)

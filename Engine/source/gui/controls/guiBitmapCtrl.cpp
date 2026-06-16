@@ -87,7 +87,8 @@ void GuiBitmapCtrl::initPersistFields()
    docsURL;
    addGroup("Bitmap");
 
-   INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiBitmapCtrl, "The bitmap to render in this BitmapCtrl.")
+   ADD_FIELD("bitmapAsset", TypeImageAssetRef, Offset(mBitmapAssetRef, GuiBitmapCtrl))
+      .doc("The bitmap asset to render in this BitmapCtrl.");
 
    addField("color", TypeColorI, Offset(mColor, GuiBitmapCtrl), "color mul");
    addField("wrap", TypeBool, Offset(mWrap, GuiBitmapCtrl), "If true, the bitmap is tiled inside the control rather than stretched to fit.");
@@ -127,6 +128,21 @@ void GuiBitmapCtrl::inspectPostApply()
    }
 }
 
+void GuiBitmapCtrl::_setBitmap(StringTableEntry _in)
+{
+   if (mBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mBitmapAssetRef.assetId = _in;
+      mBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+      return;
+   }
+
+   mBitmapAssetRef = _in;
+}
+
 void GuiBitmapCtrl::setBitmap(const char* name, bool resize)
 {
    // coming in here we are probably getting a filename.
@@ -144,9 +160,9 @@ void GuiBitmapCtrl::setBitmap(const char* name, bool resize)
          _setBitmap(StringTable->EmptyString());
    }
 
-   if (mBitmapAsset.notNull())
+   if (mBitmapAssetRef.notNull())
    {
-      mBitmap = mBitmapAsset->getTexture(&GFXDefaultGUIProfile);
+      mBitmap = mBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile);
 
       if (getBitmap() && resize)
       {
@@ -184,7 +200,7 @@ void GuiBitmapCtrl::updateSizing()
 
 void GuiBitmapCtrl::onRender(Point2I offset, const RectI& updateRect)
 {
-   if (mBitmap.isNull() && mBitmapAsset.notNull())
+   if (mBitmap.isNull() && mBitmapAssetRef.notNull())
       mBitmap = getBitmap();
 
    if (mBitmap)
@@ -309,8 +325,8 @@ void GuiBitmapCtrl::setValue(S32 x, S32 y)
 {
    if (getBitmap())
    {
-      x += mBitmapAsset->getTextureBitmapWidth() / 2;
-      y += mBitmapAsset->getTextureBitmapHeight() / 2;
+      x += mBitmapAssetRef.assetPtr->getTextureBitmapWidth() / 2;
+      y += mBitmapAssetRef.assetPtr->getTextureBitmapHeight() / 2;
    }
    while (x < 0)
       x += 256;
@@ -359,11 +375,11 @@ DefineEngineMethod(GuiBitmapCtrl, setBitmap, void, (const char* fileRoot, bool r
    object->setBitmap(filename, resize);
 }
 
-DefineEngineMethod(GuiBitmapCtrl, getBitmap, const char*, (), ,
-   "Gets the current bitmap set for this control.\n\n"
+DefineEngineMethod(GuiBitmapCtrl, getBitmapAsset, const char*, (), ,
+   "Gets the current asset Id of the bitmap set for this control.\n\n"
    "@hide")
 {
-   return object->_getBitmap();
+   return object->getBitmapAssetId();
 }
 
 DefineEngineMethod(GuiBitmapCtrl, setNamedTexture, bool, (String namedtexture), ,

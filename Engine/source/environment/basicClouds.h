@@ -94,7 +94,8 @@ protected:
    static U32 smVertCount;
    static U32 smTriangleCount;
 
-   DECLARE_IMAGEASSET_ARRAY_NET(BasicClouds, Texture, GFXStaticTextureSRGBProfile, TEX_COUNT, -1)
+   AssetRef<ImageAsset> mTextureAssetRef[TEX_COUNT];
+   GFXTexHandle getTexture(const U32& index) { return mTextureAssetRef[index].notNull() ? mTextureAssetRef[index].assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : GFXTexHandle(); }
 
    GFXStateBlockRef mStateblock;
 

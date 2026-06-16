@@ -55,9 +55,12 @@ GuiToolboxButtonCtrl::GuiToolboxButtonCtrl()
 void GuiToolboxButtonCtrl::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET(NormalBitmap, GuiToolboxButtonCtrl, "");
-   INITPERSISTFIELD_IMAGEASSET(LoweredBitmap, GuiToolboxButtonCtrl, "");
-   INITPERSISTFIELD_IMAGEASSET(HoverBitmap, GuiToolboxButtonCtrl, "");
+   ADD_FIELD("normalBitmapAsset", TypeImageAssetRef, Offset(mNormalBitmapAssetRef, GuiToolboxButtonCtrl))
+      .doc("Bitmap asset to display when the button is in its normal state.");
+   ADD_FIELD("loweredBitmapAsset", TypeImageAssetRef, Offset(mLoweredBitmapAssetRef, GuiToolboxButtonCtrl))
+      .doc("Bitmap asset to display when the button is pressed.");
+   ADD_FIELD("hoverBitmapAsset", TypeImageAssetRef, Offset(mHoverBitmapAssetRef, GuiToolboxButtonCtrl))
+      .doc("Bitmap asset to display when the button is hovered.");
 
    Parent::initPersistFields();
 }
@@ -94,6 +97,52 @@ void GuiToolboxButtonCtrl::inspectPostApply()
    }
 }
 
+
+//-------------------------------------
+void GuiToolboxButtonCtrl::_setNormalBitmap(StringTableEntry _in)
+{
+   if (mNormalBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mNormalBitmapAssetRef.assetId = _in;
+      mNormalBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+      return;
+   }
+
+   mNormalBitmapAssetRef = _in;
+}
+
+void GuiToolboxButtonCtrl::_setLoweredBitmap(StringTableEntry _in)
+{
+   if (mLoweredBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mLoweredBitmapAssetRef.assetId = _in;
+      mLoweredBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+      return;
+   }
+
+   mLoweredBitmapAssetRef = _in;
+}
+
+void GuiToolboxButtonCtrl::_setHoverBitmap(StringTableEntry _in)
+{
+   if (mHoverBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mHoverBitmapAssetRef.assetId = _in;
+      mHoverBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+      return;
+   }
+
+   mHoverBitmapAssetRef = _in;
+}
 
 //-------------------------------------
 void GuiToolboxButtonCtrl::setNormalBitmap( StringTableEntry bitmapName )
@@ -186,6 +235,32 @@ void GuiToolboxButtonCtrl::renderButton(GFXTexHandle texture, Point2I &offset, c
    }
 }
 
-DEF_ASSET_BINDS_REFACTOR(GuiToolboxButtonCtrl, NormalBitmap)
-DEF_ASSET_BINDS_REFACTOR(GuiToolboxButtonCtrl, LoweredBitmap)
-DEF_ASSET_BINDS_REFACTOR(GuiToolboxButtonCtrl, HoverBitmap)
+DefineEngineMethod(GuiToolboxButtonCtrl, getNormalBitmapAsset, StringTableEntry, (), , "Get the Normal Bitmap asset reference.")
+{
+   return object->getNormalBitmapAssetId();
+}
+
+DefineEngineMethod(GuiToolboxButtonCtrl, setNormalBitmap, void, (const char* assetName), , "Normal Bitmap assignment. First tries asset then flat file.")
+{
+   object->setNormalBitmap(StringTable->insert(assetName));
+}
+
+DefineEngineMethod(GuiToolboxButtonCtrl, getLoweredBitmapAsset, StringTableEntry, (), , "Get the Lowered Bitmap asset reference.")
+{
+   return object->getLoweredBitmapAssetId();
+}
+
+DefineEngineMethod(GuiToolboxButtonCtrl, setLoweredBitmap, void, (const char* assetName), , "Lowered Bitmap assignment. First tries asset then flat file.")
+{
+   object->setLoweredBitmap(StringTable->insert(assetName));
+}
+
+DefineEngineMethod(GuiToolboxButtonCtrl, getHoverBitmapAsset, StringTableEntry, (), , "Get the Hover Bitmap asset reference.")
+{
+   return object->getHoverBitmapAssetId();
+}
+
+DefineEngineMethod(GuiToolboxButtonCtrl, setHoverBitmap, void, (const char* assetName), , "Hover Bitmap assignment. First tries asset then flat file.")
+{
+   object->setHoverBitmap(StringTable->insert(assetName));
+}

@@ -38,17 +38,17 @@ class TerrainMaterial : public SimObject
 protected:
 
    ///
-   DECLARE_IMAGEASSET(TerrainMaterial, DiffuseMap, GFXStaticTextureSRGBProfile)
+   AssetRef<ImageAsset> mDiffuseMapAssetRef;
 
    /// The size of the diffuse base map in meters 
    /// used to generate its texture coordinates.
    F32 mDiffuseSize;
 
    ///
-   DECLARE_IMAGEASSET(TerrainMaterial, NormalMap, GFXNormalMapProfile)
+   AssetRef<ImageAsset> mNormalMapAssetRef;
 
    ///
-   DECLARE_IMAGEASSET(TerrainMaterial, DetailMap, GFXStaticTextureProfile)
+   AssetRef<ImageAsset> mDetailMapAssetRef;
    
    /// The size of the detail map in meters used
    /// to generate the texture coordinates for the
@@ -62,7 +62,7 @@ protected:
    F32 mDetailDistance;
 
    ///
-   DECLARE_IMAGEASSET(TerrainMaterial, ORMConfigMap, GFXStaticTextureProfile)
+   AssetRef<ImageAsset> mORMConfigMapAssetRef;
 
    bool mIsSRGB;
    bool mInvertRoughness;
@@ -73,7 +73,7 @@ protected:
    /// planes.
    bool mSideProjection;
 
-   DECLARE_IMAGEASSET(TerrainMaterial, MacroMap, GFXStaticTextureProfile)
+   AssetRef<ImageAsset> mMacroMapAssetRef;
 
    F32 mMacroSize;
    F32 mMacroStrength;
@@ -109,6 +109,27 @@ public:
    /// Returns the default warning terrain material used when
    /// a material is not found or defined.
    static TerrainMaterial* getWarningMaterial();
+
+   GFXTexHandle getDiffuseMap() { return mDiffuseMapAssetRef.notNull() ? mDiffuseMapAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
+   StringTableEntry getDiffuseMapAssetId() const { return mDiffuseMapAssetRef.getAssetId(); }
+   void setDiffuseMap(StringTableEntry assetId) { mDiffuseMapAssetRef = assetId; }
+
+   GFXTexHandle getNormalMap() { return mNormalMapAssetRef.notNull() ? mNormalMapAssetRef.assetPtr->getTexture(&GFXNormalMapProfile) : NULL; }
+   StringTableEntry getNormalMapAssetId() const { return mNormalMapAssetRef.getAssetId(); }
+   void setNormalMap(StringTableEntry assetId) { mNormalMapAssetRef = assetId; }
+
+   GFXTexHandle getDetailMap() { return mDetailMapAssetRef.notNull() ? mDetailMapAssetRef.assetPtr->getTexture(&GFXStaticTextureProfile) : NULL; }
+   StringTableEntry getDetailMapAssetId() const { return mDetailMapAssetRef.getAssetId(); }
+   void setDetailMap(StringTableEntry assetId) { mDetailMapAssetRef = assetId; }
+
+   GFXTexHandle getORMConfigMap() { return mORMConfigMapAssetRef.notNull() ? mORMConfigMapAssetRef.assetPtr->getTexture(&GFXStaticTextureProfile) : NULL; }
+   AssetPtr<ImageAsset> getORMConfigMapAsset() { return mORMConfigMapAssetRef.assetPtr; }
+   StringTableEntry getORMConfigMapAssetId() const { return mORMConfigMapAssetRef.getAssetId(); }
+   void setORMConfigMap(StringTableEntry assetId) { mORMConfigMapAssetRef = assetId; }
+
+   GFXTexHandle getMacroMap() { return mMacroMapAssetRef.notNull() ? mMacroMapAssetRef.assetPtr->getTexture(&GFXStaticTextureProfile) : NULL; }
+   StringTableEntry getMacroMapAssetId() const { return mMacroMapAssetRef.getAssetId(); }
+   void setMacroMap(StringTableEntry assetId) { mMacroMapAssetRef = assetId; }
 
    F32 getDiffuseSize() const { return mDiffuseSize; }
 

@@ -49,11 +49,17 @@ class PrecipitationData : public GameBaseData
      DECLARE_SOUNDASSET(PrecipitationData, Sound);
      DECLARE_ASSET_SETGET(PrecipitationData, Sound);
 
-      DECLARE_IMAGEASSET(PrecipitationData, Drop, GFXStaticTextureSRGBProfile) ///< Texture for drop particles
+      AssetRef<ImageAsset> mDropAssetRef;
+
+      GFXTexHandle getDrop() { return mDropAssetRef.notNull() ? mDropAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
+      AssetPtr<ImageAsset> getDropAsset() { return mDropAssetRef.assetPtr; }
 
       StringTableEntry mDropShaderName;   ///< The name of the shader used for raindrops
 
-      DECLARE_IMAGEASSET(PrecipitationData, Splash, GFXStaticTextureSRGBProfile) ///< Texture for splash particles
+      AssetRef<ImageAsset> mSplashAssetRef;
+
+      GFXTexHandle getSplash() { return mSplashAssetRef.notNull() ? mSplashAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
+      AssetPtr<ImageAsset> getSplashAsset() { return mSplashAssetRef.assetPtr; }
 
       StringTableEntry mSplashShaderName; ///< The name of the shader used for raindrops
 

@@ -64,7 +64,7 @@ protected:
    GFXTextureTargetRef mLevelTexture;
    Box3F mLevelBounds;
 
-   DECLARE_IMAGEASSET(GuiMissionAreaCtrl, HandleBitmap, GFXDefaultGUIProfile)
+   AssetRef<ImageAsset> mHandleBitmapAssetRef;
 
    Point2I           mHandleTextureSize;
    Point2F           mHandleTextureHalfSize;
@@ -111,6 +111,9 @@ public:
    virtual ~GuiMissionAreaCtrl();
 
    DECLARE_CONOBJECT(GuiMissionAreaCtrl);
+
+   GFXTexHandle getHandleBitmap() { return mHandleBitmapAssetRef.notNull() ? mHandleBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
+   StringTableEntry getHandleBitmapFile() { return mHandleBitmapAssetRef.notNull() ? mHandleBitmapAssetRef.assetPtr->getImageFile() : ""; }
 
    // SimObject
    bool onAdd() override;

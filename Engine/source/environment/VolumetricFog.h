@@ -52,7 +52,8 @@
 #endif 
 #ifndef SHAPEASSET_H
 #include "T3D/assets/ShapeAsset.h"
-#endif 
+#endif
+#include "T3D/assets/ImageAsset.h"
    
 class VolumetricFogRTManager;
    
@@ -161,7 +162,9 @@ class VolumetricFog : public SceneObject
       F32 mInvScale;
    
       // Fog Modulation data
-      DECLARE_IMAGEASSET_NET(VolumetricFog, Texture, GFXStaticTextureSRGBProfile, FogModulationMask)
+      AssetRef<ImageAsset> mTextureAssetRef;
+
+      GFXTexHandle getTexture() { return mTextureAssetRef.notNull() ? mTextureAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
 
       bool mIsTextured;
       F32 mTexTiles;

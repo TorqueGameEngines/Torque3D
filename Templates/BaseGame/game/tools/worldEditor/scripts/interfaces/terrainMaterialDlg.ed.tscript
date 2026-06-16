@@ -381,8 +381,8 @@ function TerrainMaterialDlg::activateMaterialCtrls( %this, %active )
       %parent.getObject( %i ).setActive( %active );      
 }
 
-   %detailz = %this-->texDetailMap.getBitmap();
-   if(%this-->texDetailMap.getBitmap() $= "" || %this-->texDetailMap.getBitmap() $= $TerrainMaterialEditor::emptyMaterialImage)
+   %detailz = %this-->texDetailMap.getBitmapAsset();
+   if(%detailz $= "" || %detailz $= $TerrainMaterialEditor::emptyMaterialImage)
    {
       NormalMapContainer.callOnChildren("setActive", false);  
       ORMConfigMapContainer.callOnChildren("setActive", false);
@@ -432,34 +432,34 @@ function TerrainMaterialDlg::setActiveMaterial( %this, %mat )
       %this-->matNameCtrl.setText( %mat.internalName );
 
       //
-      %imgPath = %mat.getDiffuseMap();
-      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getDiffuseMapAsset() : "None";
+      %imgAssetId = %mat.getDiffuseMapAsset();
+      %imgPathText = %imgAssetId !$= "" && %imgAssetId !$= $TerrainMaterialEditor::emptyMaterialImage ? %imgAssetId : "None";
       %this-->diffuseMapAssetId.setText( %imgPathText );
-      %this-->texDiffuseMap.setBitmap( getAssetPreviewImage(%imgPath) );
+      %this-->texDiffuseMap.setBitmap( getAssetPreviewImage(%imgAssetId) );
 
       //
-      %imgPath = %mat.getNormalMap();
-      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getNormalMapAsset() : "None";
+      %imgAssetId = %mat.getNormalMapAsset();
+      %imgPathText = %imgAssetId !$= "" && %imgAssetId !$= $TerrainMaterialEditor::emptyMaterialImage ? %imgAssetId : "None";
       %this-->normalMapAssetId.setText( %imgPathText );
-      %this-->texNormalMap.setBitmap( getAssetPreviewImage(%imgPath) );
+      %this-->texNormalMap.setBitmap( getAssetPreviewImage(%imgAssetId) );
 
       //
-      %imgPath = %mat.getORMConfigMap();
-      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getORMConfigMapAsset() : "None";
+      %imgAssetId = %mat.getORMConfigMapAsset();
+      %imgPathText = %imgAssetId !$= "" && %imgAssetId !$= $TerrainMaterialEditor::emptyMaterialImage ? %imgAssetId : "None";
       %this-->ORMConfigMapAssetId.setText( %imgPathText );
-      %this-->texORMConfigMap.setBitmap( getAssetPreviewImage(%imgPath) );
-       
+      %this-->texORMConfigMap.setBitmap( getAssetPreviewImage(%imgAssetId) );
+
       //
-      %imgPath = %mat.getDetailMap();
-      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getDetailMapAsset() : "None";
+      %imgAssetId = %mat.getDetailMapAsset();
+      %imgPathText = %imgAssetId !$= "" && %imgAssetId !$= $TerrainMaterialEditor::emptyMaterialImage ? %imgAssetId : "None";
       %this-->detailMapAssetId.setText( %imgPathText );
-      %this-->texDetailMap.setBitmap( getAssetPreviewImage(%imgPath) );
-      
+      %this-->texDetailMap.setBitmap( getAssetPreviewImage(%imgAssetId) );
+
       //
-      %imgPath = %mat.getMacroMap();
-      %imgPathText = %imgPath !$= "" && %imgPath !$= $TerrainMaterialEditor::emptyMaterialImage ? %mat.getMacroMapAsset() : "None";
+      %imgAssetId = %mat.getMacroMapAsset();
+      %imgPathText = %imgAssetId !$= "" && %imgAssetId !$= $TerrainMaterialEditor::emptyMaterialImage ? %imgAssetId : "None";
       %this-->macroMapAssetId.setText( %imgPathText );
-      %this-->texMacroMap.setBitmap( getAssetPreviewImage(%imgPath) );
+      %this-->texMacroMap.setBitmap( getAssetPreviewImage(%imgAssetId) );
       
       //
       %this-->detSizeCtrl.setText( %mat.detailSize );
@@ -714,11 +714,11 @@ function TerrainMaterialDlg::saveDirtyMaterial( %this, %materialAssetId )
    // return.
 
    if (  %mat.internalName $= %newName &&
-         %mat.getDiffuseMap() $= %newDiffuse &&
-         %mat.getNormalMap() $= %newNormal &&
-         %mat.getDetailMap() $= %newDetail &&
-         %mat.getORMConfigMap() $= %newormConfig &&
-         %mat.getMacroMap() $= %newMacro &&
+         %mat.getDiffuseMapAsset() $= %newDiffuse &&
+         %mat.getNormalMapAsset() $= %newNormal &&
+         %mat.getDetailMapAsset() $= %newDetail &&
+         %mat.getORMConfigMapAsset() $= %newormConfig &&
+         %mat.getMacroMapAsset() $= %newMacro &&
          %mat.detailSize == %detailSize &&
          %mat.diffuseSize == %diffuseSize &&
          %mat.detailStrength == %detailStrength &&
@@ -852,11 +852,11 @@ function TerrainMaterialDlg::snapshotMaterials( %this )
          parentGroup = %group;
          material = %mat;
          internalName = %mat.internalName;
-         diffuseMap = %mat.getDiffuseMap();
-         normalMap = %mat.getNormalMap();
-         ormConfigMap = %mat.getORMConfigMap();
-         detailMap = %mat.getDetailMap();
-         macroMap = %mat.getMacroMap();
+         diffuseMap = %mat.getDiffuseMapAsset();
+         normalMap = %mat.getNormalMapAsset();
+         ormConfigMap = %mat.getORMConfigMapAsset();
+         detailMap = %mat.getDetailMapAsset();
+         macroMap = %mat.getMacroMapAsset();
          detailSize = %mat.detailSize;
          diffuseSize = %mat.diffuseSize;
          detailStrength = %mat.detailStrength;

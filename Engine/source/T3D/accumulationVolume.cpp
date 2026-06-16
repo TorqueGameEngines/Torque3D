@@ -93,7 +93,9 @@ AccumulationVolume::~AccumulationVolume()
 void AccumulationVolume::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET(Texture, AccumulationVolume, "Accumulation texture.")
+   ADD_FIELD("textureAsset", TypeImageAssetRef, Offset(mTextureAssetRef, AccumulationVolume))
+      .network(U32(-1))
+      .doc("Accumulation texture asset");
 
    Parent::initPersistFields();
 }
@@ -229,7 +231,7 @@ U32 AccumulationVolume::packUpdate( NetConnection *connection, U32 mask, BitStre
 
    if (stream->writeFlag(mask & InitialUpdateMask))
    {
-      PACK_ASSET_REFACTOR(connection, Texture);
+      AssetDatabase.packUpdateAsset(connection, mask, stream, mTextureAssetRef.assetId);
    }
 
    return retMask;  
@@ -241,7 +243,7 @@ void AccumulationVolume::unpackUpdate( NetConnection *connection, BitStream *str
 
    if (stream->readFlag())
    {
-      UNPACK_ASSET_REFACTOR(connection, Texture);
+      mTextureAssetRef = AssetDatabase.unpackUpdateAsset(connection, stream);
       //setTexture(mTextureName);
    }
 }
@@ -256,7 +258,8 @@ void AccumulationVolume::inspectPostApply()
 
 void AccumulationVolume::setTexture( const String& name )
 {
-   _setTexture(StringTable->insert(name.c_str()));
+   mTextureAssetRef = StringTable->insert(name.c_str());
+   setMaskBits(-1);
    refreshVolumes();
 }
 

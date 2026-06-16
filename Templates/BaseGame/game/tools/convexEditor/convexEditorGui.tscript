@@ -24,7 +24,7 @@ function ConvexEditorGui::onWake( %this )
 {   
 	convexEditorToolbar-->gridSnapSizeEdit.setText(%this.getGridSnapSize());
 	
-	if(ConvexEditorOptionsWindow-->matPreviewBtn.getBitmap() $= "")
+	if(ConvexEditorOptionsWindow-->matPreviewBtn.getBitmapAsset() $= "")
 	{
 		//no active material, so set one	
 		ConvexEditorOptionsWindow-->matPreviewBtn.setText("");
@@ -38,7 +38,7 @@ function ConvexEditorGui::onWake( %this )
 		   %mat = %matName;
 		}
 		
-		ConvexEditorOptionsWindow-->matPreviewBtn.bitmapAsset = getAssetPreviewImage(%mat.getDiffuseMap(0));
+		ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(getAssetPreviewImage(%mat.getDiffuseMapAsset(0)));
 		
 		ConvexEditorOptionsWindow.activeMaterial = %mat;
 	}
@@ -82,8 +82,6 @@ function ConvexEditorGui::createConvexBox( %this )
 
 function ConvexEditorGui::onSelectionChanged( %this, %shape, %face )
 {
-   //echo( "onSelectionChanged: " @ %shape SPC %face );
-   
    ConvexEditorSplitFaceBtn.setActive( false );
    ConvexEditorSplitFaceBtn.ToolTip = "Split selected face [Disabled]" NL "Use Ctrl + Rotate instead for more control";
    ConvexEditorDeleteFaceBtn.setActive( false );
@@ -100,7 +98,7 @@ function ConvexEditorGui::onSelectionChanged( %this, %shape, %face )
 
    ConvexEditorOptionsWindow-->defMatPreviewBtn.setText("");
    %shapeMat = %shape.getMaterial();
-   ConvexEditorOptionsWindow-->defMatPreviewBtn.bitmapAsset = getAssetPreviewImage(%shapeMat.getDiffuseMap(0));
+   ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(getAssetPreviewImage(%shapeMat.getDiffuseMapAsset(0)));
 
    ConvexEditorOptionsWindow.activeShape = %shape;
       
@@ -205,7 +203,7 @@ function ConvexEditorMaterialLiftBtn::onClick(%this)
 {
    %mat = ConvexEditorGui.getSelectedFaceMaterial();
    ConvexEditorOptionsWindow.activeMaterial = %mat;
-   ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(getAssetPreviewImage(%mat.getDiffuseMap(0)));
+   ConvexEditorOptionsWindow-->matPreviewBtn.setBitmap(getAssetPreviewImage(%mat.getDiffuseMapAsset(0)));
 }
 
 function ConvexEditorMaterialResetBtn::onClick(%this)
@@ -248,18 +246,9 @@ function ConvexEditorDefaultMaterialBtn::gotMaterialName(%this, %name)
    //eval(%this.object @ "." @ %this.targetField @ " = " @ %name @ ";");
    //%this.object.changeMaterial(getTrailingNumber(%this.targetField), %name);
    //%this.object.inspectorApply();
-   %diffusemap = %materialAsset.materialDefinitionName.getDiffuseMap(0);
-   if(%diffusemap $= "")
-   {
-      %diffuseAsset = %materialAsset.materialDefinitionName.getDiffuseMapAsset(0);
-      if(%diffuseAsset !$= "")
-      {
-         %diffuseAssetDef = AssetDatabase.acquireAsset(%diffuseAsset);
-         %diffusemap = %diffuseAssetDef.getImagePath();
-      }
-   }
+   %diffuseAsset = %materialAsset.materialDefinitionName.getDiffuseMapAsset(0);
 
-   ConvexEditorOptionsWindow-->defMatPreviewBtn.bitmapAsset = getAssetPreviewImage(%diffusemap);
+   ConvexEditorOptionsWindow-->defMatPreviewBtn.setBitmap(getAssetPreviewImage(%diffuseAsset));
 
    ConvexEditorOptionsWindow.activeShape.setMaterial(%name);
 

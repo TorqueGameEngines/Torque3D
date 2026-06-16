@@ -65,7 +65,10 @@
 //-----------------------------------------------------------------------------
 
 StringTableEntry ImageAsset::smNoImageAssetFallback = NULL;
+AssetPtr<ImageAsset> ImageAsset::smNoImageAssetFallbackAssetPtr = NULL;
+
 StringTableEntry ImageAsset::smNamedTargetAssetFallback = NULL;
+AssetPtr<ImageAsset> ImageAsset::smNamedTargetAssetFallbackAssetPtr = NULL;
 
 //-----------------------------------------------------------------------------
 
@@ -117,13 +120,92 @@ ConsoleSetType(TypeImageAssetPtr)
 }
 
 //-----------------------------------------------------------------------------
+
+IMPLEMENT_STRUCT(AssetRef<ImageAsset>, AssetRefImageAsset, , "")
+END_IMPLEMENT_STRUCT
+
+ConsoleType(ImageAssetRef, TypeImageAssetRef, AssetRef<ImageAsset>, ASSET_ID_FIELD_PREFIX)
+
+
+ConsoleGetType(TypeImageAssetRef)
+{
+   AssetRef<ImageAsset>& ref = *((AssetRef<ImageAsset>*)dptr);
+
+   if (ref.assetPtr.isNull())
+      return ref.assetId;
+   else
+   {
+      if ((ref.assetId[0] == '$' || ref.assetId[0] == '#'))
+         return ref.assetId;
+
+      return ref.assetPtr.getAssetId();
+   }
+}
+
+AssetPtr<ImageAsset> ImageAsset::getNamedTargetAssetPtr(StringTableEntry filePath)
+{
+   // Do a lookup to see if we can find a hit on this path/id
+   // If not, then we'll register it as a private asset and keep going
+   // as if we're in this function, we're almost certainly dealing with
+   // a named target anyways and require the special case.
+   StringTableEntry imageAssetId = getAssetIdByFilename(filePath);
+   if (imageAssetId == smNoImageAssetFallback)
+   {
+      ImageAsset* privateImage = new ImageAsset();
+      privateImage->setImageFile(filePath);
+      imageAssetId = AssetDatabase.addPrivateAsset(privateImage);
+   }
+
+   AssetPtr<ImageAsset> assetPtr;
+   assetPtr = imageAssetId;
+   return assetPtr;
+}
+
+ConsoleSetType(TypeImageAssetRef)
+{
+   // Was a single argument specified?
+   if (argc == 1)
+   {
+      // Yes, so fetch field value.
+      const char* pFieldValue = argv[0];
+
+      // Fetch asset pointer.
+      AssetRef<ImageAsset>* pAssetRef = (AssetRef<ImageAsset>*)(dptr);
+
+      // Is the asset pointer the correct type?
+      if (pAssetRef == NULL)
+      {
+         Con::warnf("(TypeImageAssetRef) - Failed to set asset Id '%d'.", pFieldValue);
+         return;
+      }
+
+      StringTableEntry _in = StringTable->insert(pFieldValue);
+
+      if (ImageAsset::isNamedTarget(_in))
+      {
+         pAssetRef->assetId = _in;
+         pAssetRef->assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+         return;
+      }
+
+      // Set asset.
+      *pAssetRef = _in;
+
+      return;
+   }
+
+   // Warn.
+   Con::warnf("(TypeImageAssetRef) - Cannot set multiple args to a single asset.");
+}
+
+//-----------------------------------------------------------------------------
 // REFACTOR END
 //-----------------------------------------------------------------------------
 
 ImplementEnumType(ImageAssetType,
-   "Type of mesh data available in a shape.\n"
+   "Type of image data this asset describes.\n"
    "@ingroup gameObjects")
-{ ImageAsset::Albedo, "Albedo", "" },
+{ ImageAsset::Albedo,      "Albedo",      "" },
 { ImageAsset::Normal,      "Normal",      "" },
 { ImageAsset::ORMConfig,   "ORMConfig",   "" },
 { ImageAsset::GUI,         "GUI",         "" },
@@ -308,6 +390,26 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
    return imageAssetId;
 }
 
+StringTableEntry ImageAsset::getAssetIdFromFilePath(StringTableEntry filePath)
+{
+   if (filePath == StringTable->EmptyString())
+      return filePath;
+
+   // Already a valid asset id.
+   if (AssetDatabase.isDeclaredAsset(filePath))
+      return filePath;
+
+   StringTableEntry assetId = getAssetIdByFilename(filePath);
+   if (assetId == smNoImageAssetFallback)
+   {
+      ImageAsset* privateImage = new ImageAsset();
+      privateImage->setImageFile(filePath);
+      assetId = AssetDatabase.addPrivateAsset(privateImage);
+   }
+
+   return assetId;
+}
+
 U32 ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* imageAsset)
 {
    (*imageAsset) = assetId;
@@ -318,8 +420,13 @@ U32 ImageAsset::getAssetById(StringTableEntry assetId, AssetPtr<ImageAsset>* ima
    }
    else
    {
+      //Didn't work, so have us fall back to a placeholder asset
+      imageAsset->setAssetId(ImageAsset::smNoImageAssetFallback);
+
       if (imageAsset->isNull())
       {
+         //Well that's bad, loading the fallback failed.
+         Con::errorf("ImageAsset::getAssetById - Finding of asset with id %s failed with no fallback asset", assetId);
          return AssetErrCode::Failed;
       }
 
@@ -352,6 +459,25 @@ void ImageAsset::initializeAsset(void)
       Torque::FS::AddChangeNotification(mImageFile, this, &ImageAsset::_onResourceChanged);
 
    populateImage();
+
+   //Make sure our fallbacks are valid
+   if (smNoImageAssetFallbackAssetPtr.isNull())
+   {
+      smNoImageAssetFallbackAssetPtr = smNoImageAssetFallback;
+      if (smNoImageAssetFallbackAssetPtr.isNull())
+         Con::errorf("ImageAsset::initializeAsset could not find fallback asset %s!", smNoImageAssetFallback);
+      else
+         smNoImageAssetFallbackAssetPtr->load();
+   }
+
+   if (smNamedTargetAssetFallbackAssetPtr.isNull())
+   {
+      smNamedTargetAssetFallbackAssetPtr = smNamedTargetAssetFallback;
+      if (smNamedTargetAssetFallbackAssetPtr.isNull())
+         Con::errorf("ImageAsset::initializeAsset could not find named target fallback asset %s!", smNamedTargetAssetFallback);
+      else
+         smNamedTargetAssetFallbackAssetPtr->load();
+   }
 }
 
 void ImageAsset::onAssetRefresh(void)
@@ -470,23 +596,20 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
 
    if (isNamedTarget())
    {
-      GFXTexHandle tex;
-      AssetPtr<ImageAsset> fallbackAsset;
-      ImageAsset::getAssetById(smNamedTargetAssetFallback, &fallbackAsset);
       if (getNamedTarget().isValid())
       {
-         tex = getNamedTarget()->getTexture();
-         if (tex.isNull())
+         GFXTexHandle tex = getNamedTarget()->getTexture();
+         if (!tex.isNull())
          {
-            return fallbackAsset->getTexture(requestedProfile);
+            mResourceMap.insert(requestedProfile, tex);
+            return tex;
          }
-         mResourceMap.insert(requestedProfile, tex);
-         return tex;
       }
-      else
-      {
-         return fallbackAsset->getTexture(requestedProfile);
-      }
+
+      if (smNamedTargetAssetFallbackAssetPtr.notNull())
+         return smNamedTargetAssetFallbackAssetPtr->getTexture(requestedProfile);
+
+      return NULL;
    }
 
    if (mLoadedState == Ok)
@@ -500,6 +623,9 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
             return newTex;
          }
    }
+
+   if (smNoImageAssetFallbackAssetPtr.notNull() && smNoImageAssetFallbackAssetPtr != this)
+      return smNoImageAssetFallbackAssetPtr->getTexture(requestedProfile);
 
    return NULL;
 }
@@ -1046,5 +1172,22 @@ DefineEngineMethod(GuiInspectorTypeImageAssetPtr, setCaption, void, (String newC
 DefineEngineMethod(GuiInspectorTypeImageAssetPtr, setIsDeleteBtnVisible, void, (bool isVisible), (false), "() - Sets if the delete/clear button is visible for the field")
 {
    object->setIsDeleteBtnVisible(isVisible);
+}
+
+//-----------------------------------------------------------------------------
+
+IMPLEMENT_CONOBJECT(GuiInspectorTypeImageAssetRef);
+
+ConsoleDocClass(GuiInspectorTypeImageAssetRef,
+   "@brief Inspector field type for AssetRef<ImageAsset> fields\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeImageAssetRef::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeImageAssetRef)->setInspectorFieldType("GuiInspectorTypeImageAssetRef");
 }
 #endif

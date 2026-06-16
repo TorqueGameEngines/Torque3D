@@ -48,7 +48,7 @@ protected:
 
    /// Name of the bitmap file.  If this is 'texhandle' the bitmap is not loaded
    /// from a file but rather set explicitly on the control.
-   DECLARE_IMAGEASSET(GuiBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
+   AssetRef<ImageAsset> mBitmapAssetRef;
 
    Point2I mStartPoint;
    ColorI   mColor;
@@ -73,6 +73,11 @@ public:
 
    void setBitmap(const char* name, bool resize = true);
    void setBitmapHandle(GFXTexHandle handle, bool resize = false);
+
+   void _setBitmap(StringTableEntry _in);
+   inline StringTableEntry getBitmapAssetId() const { return mBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getBitmap() { return mBitmapAssetRef.notNull() ? mBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
+   AssetPtr<ImageAsset> getBitmapAsset() { return mBitmapAssetRef.assetPtr; }
 
    void updateSizing();
 

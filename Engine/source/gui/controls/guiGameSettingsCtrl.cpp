@@ -62,6 +62,51 @@ GuiGameSettingsCtrl::GuiGameSettingsCtrl() :
    mCallbackOnY = mCallbackOnA;
 }
 
+void GuiGameSettingsCtrl::setKeybindBitmap(StringTableEntry _in)
+{
+   if (mKeybindBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mKeybindBitmapAssetRef.assetId = _in;
+      mKeybindBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+      return;
+   }
+
+   mKeybindBitmapAssetRef = _in;
+}
+
+void GuiGameSettingsCtrl::setPreviousBitmap(StringTableEntry _in)
+{
+   if (mPreviousBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mPreviousBitmapAssetRef.assetId = _in;
+      mPreviousBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+      return;
+   }
+
+   mPreviousBitmapAssetRef = _in;
+}
+
+void GuiGameSettingsCtrl::setNextBitmap(StringTableEntry _in)
+{
+   if (mNextBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mNextBitmapAssetRef.assetId = _in;
+      mNextBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+      return;
+   }
+
+   mNextBitmapAssetRef = _in;
+}
+
 GuiGameSettingsCtrl::~GuiGameSettingsCtrl()
 {
    mOptions.clear();
@@ -430,7 +475,7 @@ void GuiGameSettingsCtrl::setKeybindSetting(const char* label, const char* bitma
 {
    static StringTableEntry DELIM = StringTable->insert("\t", true);
 
-   _setKeybindBitmap(StringTable->insert(bitmapName));
+   setKeybindBitmap(StringTable->insert(bitmapName));
 
    //if(mBitmap != StringTable->EmptyString())
    //   mBitmapTex.set(mBitmap, &GFXDefaultGUIProfile, avar("%s() - mTextureObject (line %d)", __FUNCTION__, __LINE__));
@@ -828,9 +873,12 @@ IMPLEMENT_CALLBACK(GuiGameSettingsCtrl, onAxisEvent, void, (const char* device, 
 void GuiGameSettingsCtrl::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET(KeybindBitmap, GuiGameSettingsCtrl, "Bitmap used to display the bound key for this keybind option.");
-   INITPERSISTFIELD_IMAGEASSET(PreviousBitmap, GuiGameSettingsCtrl, "Bitmap used for the previous button when in list mode.");
-   INITPERSISTFIELD_IMAGEASSET(NextBitmap, GuiGameSettingsCtrl, "Bitmap used for the next button when in list mode.");
+   ADD_FIELD("keybindBitmapAsset", TypeImageAssetRef, Offset(mKeybindBitmapAssetRef, GuiGameSettingsCtrl))
+      .doc("Bitmap asset used to display the bound key for this keybind option.");
+   ADD_FIELD("previousBitmapAsset", TypeImageAssetRef, Offset(mPreviousBitmapAssetRef, GuiGameSettingsCtrl))
+      .doc("Bitmap asset used for the previous button when in list mode.");
+   ADD_FIELD("nextBitmapAsset", TypeImageAssetRef, Offset(mNextBitmapAssetRef, GuiGameSettingsCtrl))
+      .doc("Bitmap asset used for the next button when in list mode.");
 
    addFieldV("arrowSize", TypeRangedS32, Offset(mArrowSize, GuiGameSettingsCtrl), &CommonValidators::PositiveInt,
       "Size of the arrow buttons' extents");

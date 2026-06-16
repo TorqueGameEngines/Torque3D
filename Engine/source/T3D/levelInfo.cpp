@@ -112,7 +112,7 @@ LevelInfo::LevelInfo()
 LevelInfo::~LevelInfo()
 {
    LightManager::smActivateSignal.remove(this, &LevelInfo::_onLMActivate);
-   if (!mAccuTextureAsset.isNull())
+   if (!mAccuTextureAssetRef.isNull())
    {
       gLevelAccuMap.free();
    }
@@ -169,7 +169,8 @@ void LevelInfo::initPersistFields()
       //addField( "advancedLightmapSupport", TypeBool, Offset( mAdvancedLightmapSupport, LevelInfo ),
       //   "Enable expanded support for mixing static and dynamic lighting (more costly)" );
 
-      INITPERSISTFIELD_IMAGEASSET(AccuTexture, LevelInfo, "Accumulation texture.");
+      ADD_FIELD("AccuTextureAsset", TypeImageAssetRef, Offset(mAccuTextureAssetRef, LevelInfo))
+         .doc("Accumulation texture asset");
 
    endGroup( "Lighting" );
    
@@ -219,7 +220,7 @@ U32 LevelInfo::packUpdate(NetConnection *conn, U32 mask, BitStream *stream)
    sfxWrite( stream, mSoundAmbience );
    stream->writeInt( mSoundDistanceModel, 4 );
 
-   PACK_ASSET_REFACTOR(conn, AccuTexture);
+   AssetDatabase.packUpdateAsset(conn, mask, stream, mAccuTextureAssetRef.assetId);
 
    return retMask;
 }
@@ -268,7 +269,7 @@ void LevelInfo::unpackUpdate(NetConnection *conn, BitStream *stream)
       SFX->setDistanceModel( mSoundDistanceModel );
    }
 
-   UNPACK_ASSET_REFACTOR(conn, AccuTexture);
+   mAccuTextureAssetRef = AssetDatabase.unpackUpdateAsset(conn, stream);
    setLevelAccuTexture();
 }
 

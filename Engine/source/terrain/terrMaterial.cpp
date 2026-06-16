@@ -92,10 +92,12 @@ FRangeValidator hardnessValidator(0.0f, 0.999f);
 void TerrainMaterial::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET(DiffuseMap, TerrainMaterial,"Base Albedo stretched over the whole map");
+   ADD_FIELD("diffuseMapAsset", TypeImageAssetRef, Offset(mDiffuseMapAssetRef, TerrainMaterial))
+      .doc("Base Albedo asset stretched over the whole map");
    addFieldV( "diffuseSize", TypeRangedF32, Offset( mDiffuseSize, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the diffuse map to the material square" );
 
-   INITPERSISTFIELD_IMAGEASSET(NormalMap, TerrainMaterial,"NormalMap");
+   ADD_FIELD("normalMapAsset", TypeImageAssetRef, Offset(mNormalMapAssetRef, TerrainMaterial))
+      .doc("NormalMap asset");
    addFieldV( "parallaxScale", TypeRangedF32, Offset( mParallaxScale, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the height from the normal map to give some self "
 
 	   "occlusion effect (aka parallax) to the terrain material" );
@@ -109,20 +111,23 @@ void TerrainMaterial::initPersistFields()
    addFieldV("blendHeightHardness", TypeRangedF32, Offset(mBlendHardness, TerrainMaterial), &hardnessValidator, "How sharply this layer blends with other textures."
       "0->1, soft->hard.");
 
-   INITPERSISTFIELD_IMAGEASSET(DetailMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo up close.");
+   ADD_FIELD("detailMapAsset", TypeImageAssetRef, Offset(mDetailMapAssetRef, TerrainMaterial))
+      .doc("Raises and lowers the RGB result of the Base Albedo up close.");
    addFieldV( "detailSize", TypeRangedF32, Offset( mDetailSize, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the detail map to the material square" );
    addFieldV( "detailStrength", TypeRangedF32, Offset( mDetailStrength, TerrainMaterial ), &CommonValidators::PositiveFloat, "Exponentially sharpens or lightens the detail map rendering on the material" );
    addFieldV( "detailDistance", TypeRangedF32, Offset( mDetailDistance, TerrainMaterial ), &CommonValidators::PositiveFloat, "Changes how far camera can see the detail map rendering on the material" );
    addField( "useSideProjection", TypeBool, Offset( mSideProjection, TerrainMaterial ),"Makes that terrain material project along the sides of steep "
 	   "slopes instead of projected downwards");
 
-   INITPERSISTFIELD_IMAGEASSET(ORMConfigMap, TerrainMaterial, "AO|Roughness|metalness map (uses DetailMap UV Coords)");
+   ADD_FIELD("ORMConfigMapAsset", TypeImageAssetRef, Offset(mORMConfigMapAssetRef, TerrainMaterial))
+      .doc("AO|Roughness|metalness map asset (uses DetailMap UV Coords)");
 
    addField("isSRGB", TypeBool, Offset(mIsSRGB, TerrainMaterial), "Is the PBR Config map's image in sRGB format?");
    addField("invertRoughness", TypeBool, Offset(mInvertRoughness, TerrainMaterial), "Should the roughness channel of the PBR Config map be inverted?");
 
    //Macro maps additions
-   INITPERSISTFIELD_IMAGEASSET(MacroMap, TerrainMaterial, "Raises and lowers the RGB result of the Base Albedo at a distance.");
+   ADD_FIELD("macroMapAsset", TypeImageAssetRef, Offset(mMacroMapAssetRef, TerrainMaterial))
+      .doc("Raises and lowers the RGB result of the Base Albedo at a distance.");
    addFieldV( "macroSize", TypeRangedF32, Offset( mMacroSize, TerrainMaterial ), &CommonValidators::PositiveFloat, "Used to scale the Macro map to the material square" );
    addFieldV( "macroStrength", TypeRangedF32, Offset( mMacroStrength, TerrainMaterial ), &CommonValidators::PositiveFloat, "Exponentially sharpens or lightens the Macro map rendering on the material" );
    addFieldV( "macroDistance", TypeRangedF32, Offset( mMacroDistance, TerrainMaterial ), &CommonValidators::PositiveFloat, "Changes how far camera can see the Macro map rendering on the material" );
@@ -197,7 +202,7 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
    {
       mat = new TerrainMaterial();
       mat->setInternalName( nameOrPath );
-      mat->_setDiffuseMap(nameOrPath);
+      mat->mDiffuseMapAssetRef = ImageAsset::getAssetIdFromFilePath(StringTable->insert(nameOrPath));
       mat->registerObject();
       Sim::getRootGroup()->addObject( mat );
       return mat;
@@ -206,11 +211,9 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
    // Ok... return a placeholder material then.
    mat = new TerrainMaterial();
    mat->setInternalName(nameOrPath);
-   mat->_setDiffuseMap(GFXTextureManager::getWarningTexturePath());
+   mat->mDiffuseMapAssetRef = ImageAsset::getAssetIdFromFilePath(StringTable->insert(GFXTextureManager::getWarningTexturePath()));
    mat->mDiffuseSize = 500;
-   mat->_setDetailMap(StringTable->EmptyString());
    mat->mDetailSize = 5;
-   mat->_setMacroMap(StringTable->EmptyString());
    mat->mMacroSize = 200;
    mat->registerObject();
       
@@ -219,14 +222,53 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
    return mat;
 }
 
-//declare general get<entry>, get<entry>Asset and set<entry> methods
+//declare general get<entry>Asset and set<entry> methods
 //signatures are:
 //using DiffuseMap as an example
-//material.getDiffuseMap(); //returns the raw file referenced
 //material.getDiffuseMapAsset(); //returns the asset id
 //material.setDiffuseMap(%texture); //tries to set the asset and failing that attempts a flat file reference
-DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, DiffuseMap)
-DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, NormalMap)
-DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, DetailMap)
-DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, ORMConfigMap)
-DEF_ASSET_BINDS_REFACTOR(TerrainMaterial, MacroMap)
+DefineEngineMethod(TerrainMaterial, getDiffuseMapAsset, StringTableEntry, (), , "DiffuseMap asset reference")
+{
+   return object->getDiffuseMapAssetId();
+}
+DefineEngineMethod(TerrainMaterial, setDiffuseMap, void, (const char* assetName), , "DiffuseMap assignment.")
+{
+   object->setDiffuseMap(StringTable->insert(assetName));
+}
+
+DefineEngineMethod(TerrainMaterial, getNormalMapAsset, StringTableEntry, (), , "NormalMap asset reference")
+{
+   return object->getNormalMapAssetId();
+}
+DefineEngineMethod(TerrainMaterial, setNormalMap, void, (const char* assetName), , "NormalMap assignment.")
+{
+   object->setNormalMap(StringTable->insert(assetName));
+}
+
+DefineEngineMethod(TerrainMaterial, getDetailMapAsset, StringTableEntry, (), , "DetailMap asset reference")
+{
+   return object->getDetailMapAssetId();
+}
+DefineEngineMethod(TerrainMaterial, setDetailMap, void, (const char* assetName), , "DetailMap assignment.")
+{
+   object->setDetailMap(StringTable->insert(assetName));
+}
+
+DefineEngineMethod(TerrainMaterial, getORMConfigMapAsset, StringTableEntry, (), , "ORMConfigMap asset reference")
+{
+   return object->getORMConfigMapAssetId();
+}
+DefineEngineMethod(TerrainMaterial, setORMConfigMap, void, (const char* assetName), , "ORMConfigMap assignment.")
+{
+   object->setORMConfigMap(StringTable->insert(assetName));
+}
+
+DefineEngineMethod(TerrainMaterial, getMacroMapAsset, StringTableEntry, (), , "MacroMap asset reference")
+{
+   return object->getMacroMapAssetId();
+}
+
+DefineEngineMethod(TerrainMaterial, setMacroMap, void, (const char* assetName), , "MacroMap assignment.")
+{
+   object->setMacroMap(StringTable->insert(assetName));
+}

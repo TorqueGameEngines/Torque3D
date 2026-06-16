@@ -98,7 +98,8 @@ void GuiMissionAreaCtrl::initPersistFields()
    docsURL;
    addField( "squareBitmap",        TypeBool,      Offset(mSquareBitmap, GuiMissionAreaCtrl));
 
-   INITPERSISTFIELD_IMAGEASSET(HandleBitmap, GuiMissionAreaCtrl, "Bitmap for the mission area handles.\n");
+   ADD_FIELD("handleBitmapAsset", TypeImageAssetRef, Offset(mHandleBitmapAssetRef, GuiMissionAreaCtrl))
+      .doc("Bitmap asset for the mission area handles.\n");
 
    addField( "missionBoundsColor",  TypeColorI,    Offset(mMissionBoundsColor, GuiMissionAreaCtrl));
    addField( "cameraColor",         TypeColorI,    Offset(mCameraColor, GuiMissionAreaCtrl));
@@ -122,7 +123,7 @@ bool GuiMissionAreaCtrl::onAdd()
    desc.setBlend(true, GFXBlendSrcAlpha, GFXBlendInvSrcAlpha);
    mBlendStateBlock = GFX->createStateBlock( desc );
 
-   if (!mHandleBitmapAsset.isNull())
+   if (mHandleBitmapAssetRef.notNull())
    {
       mHandleTextureSize = Point2I(getHandleBitmap()->getWidth(), getHandleBitmap()->getHeight());
       mHandleTextureHalfSize = Point2F(mHandleTextureSize.x, mHandleTextureSize.y) * 0.5f;

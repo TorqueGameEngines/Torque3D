@@ -1817,9 +1817,9 @@ WorldEditor::WorldEditor()
    mPopupBackgroundColor.set(100,100,100);
    mPopupTextColor.set(255,255,0);
 
-   mSelectHandleAsset = StringTable->insert("ToolsModule:SelectHandle_image");
-   mDefaultHandleAsset = StringTable->insert("ToolsModule:DefaultHandle_image");
-   mLockedHandleAsset = StringTable->insert("ToolsModule:LockedHandle_image");
+   mSelectHandleAssetRef = StringTable->insert("ToolsModule:SelectHandle_image");
+   mDefaultHandleAssetRef = StringTable->insert("ToolsModule:DefaultHandle_image");
+   mLockedHandleAssetRef = StringTable->insert("ToolsModule:LockedHandle_image");
 
    mObjectTextColor.set(255,255,255);
    mObjectsUseBoxCenter = true;
@@ -2839,9 +2839,12 @@ void WorldEditor::initPersistFields()
       addField( "renderObjHandle",        TypeBool,   Offset(mRenderObjHandle, WorldEditor) );
       addField( "renderSelectionBox",     TypeBool,   Offset(mRenderSelectionBox, WorldEditor) );
 
-      INITPERSISTFIELD_IMAGEASSET(SelectHandle, WorldEditor, "");
-      INITPERSISTFIELD_IMAGEASSET(DefaultHandle, WorldEditor, "");
-      INITPERSISTFIELD_IMAGEASSET(LockedHandle, WorldEditor, "");
+      ADD_FIELD("selectHandleAsset", TypeImageAssetRef, Offset(mSelectHandleAssetRef, WorldEditor))
+         .doc("Bitmap asset used for the selection handle.");
+      ADD_FIELD("defaultHandleAsset", TypeImageAssetRef, Offset(mDefaultHandleAssetRef, WorldEditor))
+         .doc("Bitmap asset used for the default handle.");
+      ADD_FIELD("lockedHandleAsset", TypeImageAssetRef, Offset(mLockedHandleAssetRef, WorldEditor))
+         .doc("Bitmap asset used for the locked handle.");
    
    endGroup( "Rendering" );
    

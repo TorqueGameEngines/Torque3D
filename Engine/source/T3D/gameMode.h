@@ -21,7 +21,7 @@ private:
    StringTableEntry mGameModeName;
    StringTableEntry mGameModeDesc;
 
-   DECLARE_IMAGEASSET(GameMode, PreviewImage, GFXStaticTextureSRGBProfile)
+   AssetRef<ImageAsset> mPreviewImageAssetRef;
 
    bool mIsActive;
    bool mIsAlwaysActive;
@@ -39,6 +39,8 @@ public:
 
    bool isAlwaysActive() { return mIsAlwaysActive; }
    void setAlwaysActive(const bool& alwaysActive);
+
+   GFXTexHandle getPreviewImage() { return mPreviewImageAssetRef.notNull() ? mPreviewImageAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
 
    DECLARE_CONOBJECT(GameMode);
 

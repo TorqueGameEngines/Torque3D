@@ -45,9 +45,9 @@ CubemapData::CubemapData()
 
 CubemapData::~CubemapData()
 {
-   if (mCubeMapAsset.notNull())
+   if (mCubeMapAssetRef.notNull())
    {
-      mCubeMapAsset.clear();
+      mCubeMapAssetRef.assetPtr.clear();
    }
 
    if (mCubemap)
@@ -78,7 +78,9 @@ ConsoleDocClass( CubemapData,
 void CubemapData::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET_ARRAY(CubeMapFace, 6, CubemapData, "@brief The 6 cubemap face textures for a static cubemap.\n\n"
+   ADD_FIELD("cubeMapFaceAsset", TypeImageAssetRef, Offset(mCubeMapFaceAssetRef, CubemapData))
+      .elements(6)
+      .doc("@brief The 6 cubemap face textures for a static cubemap.\n\n"
       "They are in the following order:\n"
       "  - cubeFace[0] is -X\n"
       "  - cubeFace[1] is +X\n"
@@ -87,7 +89,8 @@ void CubemapData::initPersistFields()
       "  - cubeFace[4] is -Y\n"
       "  - cubeFace[5] is +Y\n");
 
-   INITPERSISTFIELD_IMAGEASSET(CubeMap, CubemapData, "@brief Cubemap dds Image Asset.\n\n");
+   ADD_FIELD("cubeMapAsset", TypeImageAssetRef, Offset(mCubeMapAssetRef, CubemapData))
+      .doc("@brief Cubemap dds Image Asset.\n\n");
 }
 
 bool CubemapData::onAdd()
@@ -107,20 +110,20 @@ void CubemapData::createMap()
    {
        bool initSuccess = true;
        //check mCubeMapFile first
-       if (mCubeMapAsset.notNull())
+       if (mCubeMapAssetRef.notNull())
        {
-          mCubemap = mCubeMapAsset->getTexture(&GFXCubemapStaticTextureProfile);
+          mCubemap = mCubeMapAssetRef.assetPtr->getTexture(&GFXCubemapStaticTextureProfile);
           return;
        }
        else
        {
           for (U32 i = 0; i < 6; i++)
           {
-             if (mCubeMapFaceAsset[i].notNull())
+             if (mCubeMapFaceAssetRef[i].notNull())
              {
                 if (!getCubeMapFace(i))
                 {
-                   Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeMapFaceAsset[i]->getImageFile());
+                   Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeMapFaceAssetRef[i].assetPtr->getImageFile());
                    initSuccess = false;
                 }
                 else
@@ -133,7 +136,7 @@ void CubemapData::createMap()
 
        if( initSuccess )
        {
-          if (mCubeMapFaceAsset->isNull())
+          if (mCubeMapFaceAssetRef[0].isNull())
              return;
 
           mCubemap.set(mCubeMapFaceTex->getWidth(), mCubeMapFaceTex->getHeight(), mCubeMapFaceTex->getFormat(), &GFXCubemapStaticTextureProfile, "CubemapData-InitTexture", mCubeMapFaceTex->getPointer()->getMipLevels());
@@ -150,20 +153,20 @@ void CubemapData::updateFaces()
 	bool initSuccess = true;
 
    //check mCubeMapFile first
-   if (mCubeMapAsset.notNull())
+   if (mCubeMapAssetRef.notNull())
    {
-      mCubemap = mCubeMapAsset->getTexture(&GFXCubemapStaticTextureProfile);
+      mCubemap = mCubeMapAssetRef.assetPtr->getTexture(&GFXCubemapStaticTextureProfile);
       return;
    }
    else
    {
       for (U32 i = 0; i < 6; i++)
       {
-         if (mCubeMapFaceAsset[i].notNull())
+         if (mCubeMapFaceAssetRef[i].notNull())
          {
             if (!getCubeMapFace(i))
             {
-               Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeMapFaceAsset[i]->getImageFile());
+               Con::errorf("CubemapData::createMap - Failed to load texture '%s'", mCubeMapFaceAssetRef[i].assetPtr->getImageFile());
                initSuccess = false;
             }
             else
@@ -177,7 +180,7 @@ void CubemapData::updateFaces()
 	if( initSuccess )
 	{
 		mCubemap = NULL;
-      if (mCubeMapFaceAsset->isNull())
+      if (mCubeMapFaceAssetRef[0].isNull())
          return;
 
       mCubemap.set(mCubeMapFaceTex->getWidth(), mCubeMapFaceTex->getHeight(), GFXFormatR16G16B16A16F, &GFXCubemapStaticTextureProfile, "CubemapData-InitTexture", mCubeMapFaceTex->getFormat());
@@ -190,7 +193,32 @@ void CubemapData::updateFaces()
 
 void CubemapData::setCubemapFile(FileName newCubemapFile)
 {
-   _setCubeMap(newCubemapFile);
+   StringTableEntry _in = StringTable->insert(newCubemapFile.c_str());
+
+   if (_in == StringTable->EmptyString())
+   {
+      mCubeMapAssetRef = StringTable->EmptyString();
+      return;
+   }
+
+   if (AssetDatabase.isDeclaredAsset(_in))
+   {
+      mCubeMapAssetRef = _in;
+   }
+   else
+   {
+      AssetQuery query;
+      S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);
+      if (foundAssetcount != 0)
+      {
+         mCubeMapAssetRef = query.mAssetList[0];
+      }
+      else
+      {
+         mCubeMapAssetRef.assetId = _in;
+         mCubeMapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);                                                                                                                                                                \
+      }
+   }
 }
 
 void CubemapData::setCubeFaceFile(U32 index, FileName newFaceFile)
@@ -198,7 +226,32 @@ void CubemapData::setCubeFaceFile(U32 index, FileName newFaceFile)
    if (index >= 6)
       return;
 
-   _setCubeMapFace(newFaceFile, index);
+   StringTableEntry _in = StringTable->insert(newFaceFile.c_str());
+
+   if (_in == StringTable->EmptyString())
+   {
+      mCubeMapFaceAssetRef[index] = StringTable->EmptyString();
+      return;
+   }
+
+   if (AssetDatabase.isDeclaredAsset(_in))
+   {
+      mCubeMapFaceAssetRef[index] = _in;
+   }
+   else
+   {
+      AssetQuery query;
+      S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in);
+      if (foundAssetcount != 0)
+      {
+         mCubeMapFaceAssetRef[index] = query.mAssetList[0];
+      }
+      else
+      {
+         mCubeMapFaceAssetRef[index].assetId = _in;
+         mCubeMapFaceAssetRef[index].assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);                                                                                                                                                                \
+      }
+   }
 }
 
 void CubemapData::setCubeFaceTexture(U32 index, GFXTexHandle newFaceTexture)

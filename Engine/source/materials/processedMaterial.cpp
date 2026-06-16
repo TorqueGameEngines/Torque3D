@@ -410,7 +410,7 @@ void ProcessedMaterial::_setStageData()
       {
          mStages[i].setTex(MFT_OverlayMap, mMaterial->getOverlayMap(i));
          if (!mStages[i].getTex(MFT_OverlayMap))
-            mMaterial->logError("Failed to load overlay map %s for stage %i", mMaterial->_getOverlayMap(i), i);
+            mMaterial->logError("Failed to load overlay map %s for stage %i", mMaterial->getOverlayMapAssetId(i), i);
       }
 
       // LightMap
@@ -418,7 +418,7 @@ void ProcessedMaterial::_setStageData()
       {
          mStages[i].setTex(MFT_LightMap, mMaterial->getLightMap(i));
          if (!mStages[i].getTex(MFT_LightMap))
-            mMaterial->logError("Failed to load light map %s for stage %i", mMaterial->_getLightMap(i), i);
+            mMaterial->logError("Failed to load light map %s for stage %i", mMaterial->getLightMapAssetId(i), i);
       }
 
       // ToneMap
@@ -426,7 +426,7 @@ void ProcessedMaterial::_setStageData()
       {
          mStages[i].setTex(MFT_ToneMap, mMaterial->getToneMap(i));
          if (!mStages[i].getTex(MFT_ToneMap))
-            mMaterial->logError("Failed to load tone map %s for stage %i", mMaterial->_getToneMap(i), i);
+            mMaterial->logError("Failed to load tone map %s for stage %i", mMaterial->getToneMapAssetId(i), i);
       }
 
       // DetailMap
@@ -434,7 +434,7 @@ void ProcessedMaterial::_setStageData()
       {
          mStages[i].setTex(MFT_DetailMap, mMaterial->getDetailMap(i));
          if (!mStages[i].getTex(MFT_DetailMap))
-            mMaterial->logError("Failed to load detail map %s for stage %i", mMaterial->_getDetailMap(i), i);
+            mMaterial->logError("Failed to load detail map %s for stage %i", mMaterial->getDetailMapAssetId(i), i);
       }
 
       // NormalMap
@@ -454,7 +454,7 @@ void ProcessedMaterial::_setStageData()
       {
          mStages[i].setTex(MFT_DetailNormalMap, mMaterial->getDetailNormalMap(i));
          if (!mStages[i].getTex(MFT_DetailNormalMap))
-            mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->_getDetailNormalMap(i), i);
+            mMaterial->logError("Failed to load normal map %s for stage %i", mMaterial->getDetailNormalMapAssetId(i), i);
       }
 
       //depending on creation method this may or may not have been shoved into srgb space eroneously
@@ -467,7 +467,7 @@ void ProcessedMaterial::_setStageData()
       {
          mStages[i].setTex(MFT_OrmMap, mMaterial->getORMConfigMap(profile, i));
          if (!mStages[i].getTex(MFT_OrmMap))
-            mMaterial->logError("Failed to load PBR Config map %s for stage %i", mMaterial->_getORMConfigMap(i), i);
+            mMaterial->logError("Failed to load PBR Config map %s for stage %i", mMaterial->getORMConfigMapAssetId(i), i);
       }
       else
       {
@@ -489,7 +489,7 @@ void ProcessedMaterial::_setStageData()
       {
          mStages[i].setTex(MFT_GlowMap, mMaterial->getGlowMap(i));
          if (!mStages[i].getTex(MFT_GlowMap))
-            mMaterial->logError("Failed to load glow map %s for stage %i", mMaterial->_getGlowMap(i), i);
+            mMaterial->logError("Failed to load glow map %s for stage %i", mMaterial->getGlowMapAssetId(i), i);
       }
    }
 

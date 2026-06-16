@@ -149,7 +149,8 @@ void ParticleData::initPersistFields()
 {
    docsURL;
    addGroup("Basic");
-      INITPERSISTFIELD_IMAGEASSET(Texture, ParticleData, "Texture to use for this particle.");
+      ADD_FIELD("textureAsset", TypeImageAssetRef, Offset(mTextureAssetRef, ParticleData))
+         .doc("Texture asset to use for this particle");
       addField("useInvAlpha", TYPEID< bool >(), Offset(useInvAlpha, ParticleData),
          "@brief Controls how particles blend with the scene.\n\n"
          "If true, particles blend like ParticleBlendStyle NORMAL, if false, "
@@ -234,7 +235,8 @@ void ParticleData::initPersistFields()
    endGroup("Over Time");
 
    addGroup("AFX");
-      INITPERSISTFIELD_IMAGEASSET(TextureExt, ParticleData, "");
+      ADD_FIELD("textureExtAsset", TypeImageAssetRef, Offset(mTextureExtAssetRef, ParticleData))
+         .doc("");
       addField("constrainPos",         TypeBool,     Offset(constrain_pos,      ParticleData));
       addFieldV("angle", TypeRangedF32,      Offset(start_angle,        ParticleData), &CommonValidators::DegreeRange);
       addFieldV("angleVariance", TypeRangedF32,      Offset(angle_variance,     ParticleData), &CommonValidators::DegreeRange);
@@ -299,7 +301,7 @@ void ParticleData::packData(BitStream* stream)
       stream->writeFloat( times[i], 8);
    }
 
-   PACKDATA_ASSET_REFACTOR(Texture);
+   AssetDatabase.packDataAsset(stream, mTextureAssetRef.assetId);
 
    for (i = 0; i < 4; i++)
       mathWrite(*stream, texCoords[i]);
@@ -313,7 +315,7 @@ void ParticleData::packData(BitStream* stream)
       stream->writeInt(framesPerSec, 8);
    }
 
-   PACKDATA_ASSET_REFACTOR(TextureExt);
+   AssetDatabase.packDataAsset(stream, mTextureExtAssetRef.assetId);
 
    stream->writeFlag(constrain_pos);
    stream->writeFloat(start_angle/360.0f, 11);
@@ -384,7 +386,7 @@ void ParticleData::unpackData(BitStream* stream)
       times[i] = stream->readFloat(8);
    }
 
-   UNPACKDATA_ASSET_REFACTOR(Texture);
+   mTextureAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    for (i = 0; i < 4; i++)
       mathRead(*stream, &texCoords[i]);
@@ -397,7 +399,7 @@ void ParticleData::unpackData(BitStream* stream)
      framesPerSec = stream->readInt(8);
    }
 
-   UNPACKDATA_ASSET_REFACTOR(TextureExt);
+   mTextureExtAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    constrain_pos = stream->readFlag();
    start_angle = 360.0f*stream->readFloat(11);
@@ -669,6 +671,10 @@ bool ParticleData::preload(bool server, String &errorStr)
         delete [] tokCopy;
         numFrames = animTexFrames.size();
       }
+
+      if (!mTextureAssetRef.isNull())
+         mTextureAssetRef.assetPtr->load();
+      
    }
 
    return !error;
@@ -773,12 +779,12 @@ ParticleData::ParticleData(const ParticleData& other, bool temp_clone) : SimData
   animTexFramesString = other.animTexFramesString;
   animTexFrames = other.animTexFrames; // -- parsed from animTexFramesString
 
-  CLONE_ASSET_REFACTOR(Texture);
-  
+  mTextureAssetRef = other.mTextureAssetRef;
+
   spinBias = other.spinBias;
   randomizeSpinDir = other.randomizeSpinDir;
 
-  CLONE_ASSET_REFACTOR(TextureExt);
+  mTextureExtAssetRef = other.mTextureExtAssetRef;
 
   constrain_pos = other.constrain_pos;
   start_angle = other.start_angle;
@@ -814,7 +820,16 @@ void ParticleData::onPerformSubstitutions()
   reload(errorBuffer);
 }
 
-DEF_ASSET_BINDS_REFACTOR(ParticleData, Texture);
+DefineEngineMethod(ParticleData, getTextureAsset, StringTableEntry, (), ,
+   "Texture asset reference")
+{
+   return object->mTextureAssetRef.getAssetId();
+}
+DefineEngineMethod(ParticleData, setTexture, void, (const char* assetName), ,
+   "Texture assignment.")
+{
+   object->mTextureAssetRef = StringTable->insert(assetName);
+}
 
 ConsoleType(stringList, TypeParticleList, Vector<StringTableEntry>, "")
 
@@ -907,8 +922,8 @@ GuiControl* GuiInspectorTypeParticleDataList::constructEditControl()
    mNewParticleBtn->setDataField(StringTable->insert("hovertime"), NULL, "1000");
    mNewParticleBtn->setDataField(StringTable->insert("tooltip"), NULL, "Add new particle slot");
    mNewParticleBtn->setHorizSizing(horizResizeRight);
-   mNewParticleBtn->mMakeIconSquare = true;
-   mNewParticleBtn->mFitBitmapToButton = true;
+   mNewParticleBtn->setMakeIconSquare(true);
+   mNewParticleBtn->setFitBitmapToButton(true);
    mNewParticleBtn->setExtent(20, 20);
 
    char szBuffer[512];
@@ -1003,8 +1018,8 @@ GuiControl* GuiInspectorTypeParticleDataList::_buildParticleEntryField(const S32
       deleteSlotBtn->setDataField(StringTable->insert("tooltip"), NULL, "Delete this particle slot");
       deleteSlotBtn->setHorizSizing(horizResizeRight);
       deleteSlotBtn->setInternalName("deleteBtn");
-      deleteSlotBtn->mMakeIconSquare = true;
-      deleteSlotBtn->mFitBitmapToButton = true;
+      deleteSlotBtn->setMakeIconSquare(true);
+      deleteSlotBtn->setFitBitmapToButton(true);
       deleteSlotBtn->setPosition(editExtent.x - 20, 0);
       deleteSlotBtn->setExtent(20, 20);
 

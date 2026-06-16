@@ -17,7 +17,7 @@ private:
 
 protected:
 
-   DECLARE_IMAGEASSET(GuiChunkedBitmapCtrl, Bitmap, GFXDefaultGUIProfile)
+   AssetRef<ImageAsset> mBitmapAssetRef;
 
    bool  mUseVariable;
    bool  mTile;
@@ -35,6 +35,10 @@ public:
    void onSleep() override;
 
    void setBitmap(const char *name);
+
+   void _setBitmap(StringTableEntry _in);
+   inline StringTableEntry getBitmapAssetId() const { return mBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getBitmap() { return mBitmapAssetRef.notNull() ? mBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
 
    void onRender(Point2I offset, const RectI &updateRect) override;
 };

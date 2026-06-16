@@ -269,9 +269,14 @@ protected:
    F32 mDepthGradientMax;
 
    // Other textures
-   DECLARE_IMAGEASSET_NET(WaterObject, RippleTex, GFXStaticTextureProfile, TextureMask)
-   DECLARE_IMAGEASSET_NET(WaterObject, FoamTex, GFXStaticTextureSRGBProfile, TextureMask)
-   DECLARE_IMAGEASSET_NET(WaterObject, DepthGradientTex, GFXStaticTextureSRGBProfile, TextureMask)
+   AssetRef<ImageAsset> mRippleTexAssetRef;
+   GFXTexHandle getRippleTex() { return mRippleTexAssetRef.notNull() ? mRippleTexAssetRef.assetPtr->getTexture(&GFXStaticTextureProfile) : NULL; }
+
+   AssetRef<ImageAsset> mFoamTexAssetRef;
+   GFXTexHandle getFoamTex() { return mFoamTexAssetRef.notNull() ? mFoamTexAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
+
+   AssetRef<ImageAsset> mDepthGradientTexAssetRef;
+   GFXTexHandle getDepthGradientTex() { return mDepthGradientTexAssetRef.notNull() ? mDepthGradientTexAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
 
    StringTableEntry mCubemapName;
 

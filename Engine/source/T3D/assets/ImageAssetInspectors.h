@@ -51,4 +51,13 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeImageAssetId);
    static void consoleInit();
 };
+
+class GuiInspectorTypeImageAssetRef : public GuiInspectorTypeImageAssetPtr
+{
+   typedef GuiInspectorTypeImageAssetPtr Parent;
+public:
+
+   DECLARE_CONOBJECT(GuiInspectorTypeImageAssetRef);
+   static void consoleInit();
+};
 #endif

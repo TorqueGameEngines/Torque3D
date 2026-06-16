@@ -142,7 +142,8 @@ void PrecipitationData::initPersistFields()
    docsURL;
    INITPERSISTFIELD_SOUNDASSET(Sound, PrecipitationData, "Looping SFXProfile effect to play while Precipitation is active.");
       
-   INITPERSISTFIELD_IMAGEASSET(Drop, PrecipitationData, "@brief Texture for drop particles.\n\n"
+   ADD_FIELD("DropAsset", TypeImageAssetRef, Offset(mDropAssetRef, PrecipitationData))
+      .doc("@brief Texture asset for drop particles.\n\n"
       "The drop texture can contain several different drop sub-textures "
       "arranged in a grid. There must be the same number of rows as columns. A "
       "random frame will be chosen for each drop.");
@@ -150,7 +151,8 @@ void PrecipitationData::initPersistFields()
    addField( "dropShader", TypeString, Offset(mDropShaderName, PrecipitationData),
       "The name of the shader used for raindrops." );
       
-   INITPERSISTFIELD_IMAGEASSET(Splash, PrecipitationData, "@brief Texture for splash particles.\n\n"
+   ADD_FIELD("SplashAsset", TypeImageAssetRef, Offset(mSplashAssetRef, PrecipitationData))
+      .doc("@brief Texture asset for splash particles.\n\n"
       "The splash texture can contain several different splash sub-textures "
       "arranged in a grid. There must be the same number of rows as columns. A "
       "random frame will be chosen for each splash.");
@@ -179,6 +181,12 @@ bool PrecipitationData::preload( bool server, String &errorStr )
       {
          //return false; -TODO: trigger asset download
       }
+
+      if (!mDropAssetRef.isNull())
+         mDropAssetRef.assetPtr->load();
+
+      if (!mSplashAssetRef.isNull())
+         mSplashAssetRef.assetPtr->load();
    }
 
    return true;
@@ -190,11 +198,11 @@ void PrecipitationData::packData(BitStream* stream)
 
    PACKDATA_ASSET(Sound);
 
-   PACKDATA_ASSET_REFACTOR(Drop);
+   AssetDatabase.packDataAsset(stream, mDropAssetRef.assetId);
 
    stream->writeString(mDropShaderName);
 
-   PACKDATA_ASSET_REFACTOR(Splash);
+   AssetDatabase.packDataAsset(stream, mSplashAssetRef.assetId);
 
    stream->writeString(mSplashShaderName);
    stream->write(mDropsPerSide);
@@ -207,11 +215,11 @@ void PrecipitationData::unpackData(BitStream* stream)
 
    UNPACKDATA_ASSET(Sound);
 
-   UNPACKDATA_ASSET_REFACTOR(Drop);
+   mDropAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    mDropShaderName = stream->readSTString();
 
-   UNPACKDATA_ASSET_REFACTOR(Splash);
+   mSplashAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    mSplashShaderName = stream->readSTString();
    stream->read(&mDropsPerSide);

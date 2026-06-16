@@ -354,7 +354,10 @@ void GuiPopUpMenuCtrlEx::initPersistFields(void)
    addField("sbUsesNAColor",            TypeBool,         Offset(mRenderScrollInNA, GuiPopUpMenuCtrlEx), "Deprecated" "@internal");
    addField("reverseTextList",          TypeBool,         Offset(mReverseTextList, GuiPopUpMenuCtrlEx), "Reverses text list if popup extends up, instead of down");
 
-   addProtectedField("BitmapAsset", TypeImageAssetPtr, Offset(mBitmapAsset, GuiPopUpMenuCtrlEx), _setBitmaps, &defaultProtectedGetFn, "@brief ""Bitmap"" ""asset \"Name of bitmap asset to use\".");
+   ADD_FIELD("bitmapAsset", TypeImageAssetRef, Offset(mBitmapAssetRef, GuiPopUpMenuCtrlEx))
+      .elements(NumBitmapModes)
+      .onSet(_setBitmaps)
+      .doc("@brief ""Bitmap"" ""asset \"Name of bitmap asset to use\".");
 
    addField("bitmapBounds",             TypePoint2I,      Offset(mBitmapBounds, GuiPopUpMenuCtrlEx), "Boundaries of bitmap displayed");
    addField("hotTrackCallback",         TypeBool,         Offset(mHotTrackItems, GuiPopUpMenuCtrlEx),
@@ -807,18 +810,18 @@ void GuiPopUpMenuCtrlEx::setBitmap(const char *name)
 
       dStrcpy(p, "_n", pLen);
 
-      _setBitmap((StringTableEntry)buffer, Normal);
+      setBitmap((StringTableEntry)buffer, Normal);
 
       dStrcpy(p, "_d", pLen);
-      _setBitmap((StringTableEntry)buffer, Depressed);
+      setBitmap((StringTableEntry)buffer, Depressed);
 
-      if (mBitmapAsset[Depressed].isNull())
-         mBitmapAsset[Depressed] = mBitmapAsset[Normal];
+      if (mBitmapAssetRef[Depressed].isNull())
+         mBitmapAssetRef[Depressed] = mBitmapAssetRef[Normal];
    }
    else
    {
-      _setBitmap(StringTable->EmptyString(), Normal);
-      _setBitmap(StringTable->EmptyString(), Depressed);
+      setBitmap(StringTable->EmptyString(), Normal);
+      setBitmap(StringTable->EmptyString(), Depressed);
    }
    setUpdate();
 }   

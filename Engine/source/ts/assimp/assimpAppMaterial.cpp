@@ -181,14 +181,14 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
    {
       torquePath = texName.C_Str();
       if (!torquePath.isEmpty())
-         mat->_setDiffuseMap(cleanTextureName(torquePath, cleanFile, path, false), 0);
+         mat->setDiffuseMap(cleanTextureName(torquePath, cleanFile, path, false), 0);
    }
 
    if (AI_SUCCESS == mAIMat->Get(AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0), texName))
    {
       torquePath = texName.C_Str();
       if (!torquePath.isEmpty())
-         mat->_setNormalMap(cleanTextureName(torquePath, cleanFile, path, false), 0);
+         mat->setNormalMap(cleanTextureName(torquePath, cleanFile, path, false), 0);
    }
 
 #ifdef TORQUE_PBR_MATERIALS
@@ -205,20 +205,20 @@ void AssimpAppMaterial::initMaterial(const Torque::Path& path, Material* mat) co
       {  // If we have either map, fill all three slots
          if (rmName.isNotEmpty())
          {
-            mat->_setRoughMap(cleanTextureName(rmName, cleanFile, path, false), 0); // Roughness
+            mat->setRoughMap(cleanTextureName(rmName, cleanFile, path, false), 0); // Roughness
             mat->mRoughnessChan[0] = 1;
             mat->mInvertRoughness[0] = false;
-            mat->_setMetalMap(cleanTextureName(rmName, cleanFile, path, false), 0); // Metallic
+            mat->setMetalMap(cleanTextureName(rmName, cleanFile, path, false), 0); // Metallic
             mat->mMetalChan[0] = 2;
          }
          if (aoName.isNotEmpty())
          {
-            mat->_setAOMap(cleanTextureName(aoName, cleanFile, path, false), 0); // occlusion
+            mat->setAOMap(cleanTextureName(aoName, cleanFile, path, false), 0); // occlusion
             mat->mAOChan[0] = 0;
          }
          else
          {
-            mat->_setAOMap(cleanTextureName(aoName, cleanFile, path, false), 0); // occlusion
+            mat->setAOMap(cleanTextureName(aoName, cleanFile, path, false), 0); // occlusion
             mat->mAOChan[0] = 0.0f;
          }
       }

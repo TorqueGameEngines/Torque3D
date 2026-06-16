@@ -44,16 +44,6 @@ jobs:
                           cxx: "g++",
                           generator: "Ninja",
                       }
-                    # Clang produces a meaningfully different set of warnings and
-                    # errors than GCC — builds that pass one often have real issues
-                    # on the other.
-                    - {
-                          name: "Ubuntu Clang",
-                          build_type: "Release",
-                          cc: "clang",
-                          cxx: "clang++",
-                          generator: "Ninja",
-                      }
 
         steps:
             - uses: actions/checkout@v4

@@ -620,8 +620,8 @@ if (MSVC)
     )
  
     target_link_options(${TORQUE_APP_NAME} PRIVATE
-        $<$<CONFIG:Debug>:/DEBUG:FASTLINK /INCREMENTAL>
-        $<$<CONFIG:RelWithDebInfo>:/INCREMENTAL /DEBUG:FASTLINK /OPT:REF /OPT:ICF>
+        $<$<CONFIG:Debug>:/DEBUG:FULL /INCREMENTAL>
+        $<$<CONFIG:RelWithDebInfo>:/INCREMENTAL /DEBUG:FULL /OPT:REF /OPT:ICF>
         $<$<CONFIG:Release>:/INCREMENTAL>
     )
  

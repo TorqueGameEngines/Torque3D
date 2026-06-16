@@ -4,17 +4,13 @@ on:
         branches: [development]
     pull_request:
         branches: [development]
-env:
-    build_type: "Release"
-    cc: "gcc"
-    cxx: "g++"
 
 concurrency:
     group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-linux
     cancel-in-progress: true
 
 permissions:
-  checks: write
+    checks: write
 
 jobs:
     build-linux:
@@ -24,21 +20,48 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-              config: 
-              - {
-                  name: "Ubuntu Latest GCC",
-                  build_type: "Release",
-                  cc: "gcc",
-                  cxx: "g++",
-                  generator: "Ninja"
-                }
+                config:
+                    # Explicit older GCC versions catch deprecation warnings before
+                    # they become the runner default and break the build silently.
+                    - {
+                          name: "Ubuntu GCC 12",
+                          build_type: "Release",
+                          cc: "gcc-12",
+                          cxx: "g++-12",
+                          generator: "Ninja",
+                      }
+                    - {
+                          name: "Ubuntu GCC 13",
+                          build_type: "Release",
+                          cc: "gcc-13",
+                          cxx: "g++-13",
+                          generator: "Ninja",
+                      }
+                    - {
+                          name: "Ubuntu GCC Latest",
+                          build_type: "Release",
+                          cc: "gcc",
+                          cxx: "g++",
+                          generator: "Ninja",
+                      }
+                    # Clang produces a meaningfully different set of warnings and
+                    # errors than GCC — builds that pass one often have real issues
+                    # on the other.
+                    - {
+                          name: "Ubuntu Clang",
+                          build_type: "Release",
+                          cc: "clang",
+                          cxx: "clang++",
+                          generator: "Ninja",
+                      }
 
         steps:
             - uses: actions/checkout@v4
+
             - name: Print env
               run: |
-                echo github.event.action: ${{ github.event.action }}
-                echo github.event_name: ${{ github.event_name }}
+                  echo github.event.action: ${{ github.event.action }}
+                  echo github.event_name: ${{ github.event_name }}
 
             - name: Run GIT Init
               run: git init
@@ -48,62 +71,63 @@ jobs:
 
             - name: Install Linux Dependencies
               run: |
-                sudo apt-get install ninja-build
-                ninja --version
-                cmake --version
-                gcc --version
-                sudo apt-get update && \
-                sudo apt-get install -y \
-                    build-essential \
-                    nasm \
-                    libogg-dev \
-                    libxft-dev \
-                    libx11-dev \
-                    libxxf86vm-dev \
-                    libopenal-dev \
-                    libasound2-dev \
-                    libpipewire-0.3-dev \
-                    portaudio19-dev \
-                    oss4-dev \
-                    libjack-dev \
-                    libpulse-dev \
-                    libdbus-1-dev \
-                    libfreetype6-dev \
-                    libxcursor-dev \
-                    libxinerama-dev \
-                    libxi-dev \
-                    libxrandr-dev \
-                    libxss-dev \
-                    libglu1-mesa-dev \
-                    libgtk-3-dev
-                    
-                sudo apt-get install -y \
-                    python3
-                
-                pip install jinja2
+                  sudo apt-get update && \
+                  sudo apt-get install -y \
+                      ninja-build \
+                      build-essential \
+                      nasm \
+                      python3 \
+                      python3-pip \
+                      gcc-12 g++-12 \
+                      gcc-13 g++-13 \
+                      clang \
+                      libogg-dev \
+                      libxft-dev \
+                      libx11-dev \
+                      libxxf86vm-dev \
+                      libopenal-dev \
+                      libasound2-dev \
+                      libpipewire-0.3-dev \
+                      portaudio19-dev \
+                      oss4-dev \
+                      libjack-dev \
+                      libpulse-dev \
+                      libdbus-1-dev \
+                      libfreetype6-dev \
+                      libxcursor-dev \
+                      libxinerama-dev \
+                      libxi-dev \
+                      libxrandr-dev \
+                      libxss-dev \
+                      libglu1-mesa-dev \
+                      libgtk-3-dev
+                  ninja --version
+                  cmake --version
+                  ${{matrix.config.cc}} --version
+                  python3 -m pip install --break-system-packages jinja2
 
             - name: Configure, Build & Install
               uses: threeal/cmake-action@v1.3.0
               with:
-                source-dir: ${{github.workspace}}
-                build-dir: ${{github.workspace}}/build
-                c-compiler: ${{matrix.config.cc}}
-                cxx-compiler: ${{matrix.config.cxx}}
-                generator: ${{matrix.config.generator}}
-                options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
-                run-build: true
-                build-args: --config ${{matrix.config.build_type}} --target install
+                  source-dir: ${{github.workspace}}
+                  build-dir: ${{github.workspace}}/build
+                  c-compiler: ${{matrix.config.cc}}
+                  cxx-compiler: ${{matrix.config.cxx}}
+                  generator: ${{matrix.config.generator}}
+                  options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
+                  run-build: true
+                  build-args: --config ${{matrix.config.build_type}} --target install
 
             - name: Unit Tests
               run: |
-                cd "${{github.workspace}}/My Projects/Torque3D/game"
-                ./Torque3D runTests.tscript
+                  cd "${{github.workspace}}/My Projects/Torque3D/game"
+                  ./Torque3D runTests.tscript
 
             - name: Test Reporter
               uses: phoenix-actions/test-reporting@v14
               with:
-                name: Linux test results
-                path: "**/My Projects/Torque3D/game/test_detail.xml"
-                reporter: java-junit
-                fail-on-error: true
+                  name: ${{matrix.config.name}} test results
+                  path: "**/My Projects/Torque3D/game/test_detail.xml"
+                  reporter: java-junit
+                  fail-on-error: true
               if: github.event_name != 'pull_request'

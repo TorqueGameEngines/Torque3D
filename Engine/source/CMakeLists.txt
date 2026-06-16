@@ -575,7 +575,6 @@ if (MSVC)
         /fp:except-   # No FP exception overhead
         /bigobj       # >64k sections - consoleObject.h template depth needs this
         /Qpar-        # Disable auto-paralleliser (causes subtle correctness bugs)
-        /NODEFAULTLIB
         ${_TORQUE_MSVC_WARNINGS}
     )
  
@@ -781,7 +780,6 @@ target_precompile_headers(${TORQUE_APP_NAME} PRIVATE
     <cmath>
     <cstdint>
     <cmath>
-    "console/engineObject.h"
 )
 
 if(TORQUE_TESTING)

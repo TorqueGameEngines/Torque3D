@@ -39,9 +39,9 @@ private:
 
 protected:
 
-   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, NormalBitmap, GFXDefaultGUIProfile)
-   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, LoweredBitmap, GFXDefaultGUIProfile)
-   DECLARE_IMAGEASSET(GuiToolboxButtonCtrl, HoverBitmap, GFXDefaultGUIProfile)
+   AssetRef<ImageAsset> mNormalBitmapAssetRef;
+   AssetRef<ImageAsset> mLoweredBitmapAssetRef;
+   AssetRef<ImageAsset> mHoverBitmapAssetRef;
 
    void renderButton(GFXTexHandle texture, Point2I &offset, const RectI& updateRect);
    void renderStateRect( GFXTexHandle texture, const RectI& rect );
@@ -60,7 +60,19 @@ public:
    void setNormalBitmap( StringTableEntry bitmapName );
    void setLoweredBitmap( StringTableEntry bitmapName );
    void setHoverBitmap( StringTableEntry bitmapName );
-   
+
+   void _setNormalBitmap(StringTableEntry _in);
+   inline StringTableEntry getNormalBitmapAssetId() const { return mNormalBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getNormalBitmap() { return mNormalBitmapAssetRef.notNull() ? mNormalBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
+
+   void _setLoweredBitmap(StringTableEntry _in);
+   inline StringTableEntry getLoweredBitmapAssetId() const { return mLoweredBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getLoweredBitmap() { return mLoweredBitmapAssetRef.notNull() ? mLoweredBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
+
+   void _setHoverBitmap(StringTableEntry _in);
+   inline StringTableEntry getHoverBitmapAssetId() const { return mHoverBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getHoverBitmap() { return mHoverBitmapAssetRef.notNull() ? mHoverBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
+
 
    void onRender(Point2I offset, const RectI &updateRect) override;
 };

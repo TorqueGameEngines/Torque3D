@@ -129,7 +129,15 @@ function MaterialAsset::generatePreviewImage(%this, %previewButton, %forceRegene
    {
       if(isObject(%this.materialDefinitionName))
       {
-         if(compareFileTimes(%this.materialDefinitionName.getDiffuseMap(0), %previewFilePath) == 1 ||
+         %diffuseMapFile = "";
+         %diffuseMapAssetId = %this.materialDefinitionName.getDiffuseMapAsset(0);
+         if(AssetDatabase.isDeclaredAsset(%diffuseMapAssetId))
+         {
+            %diffuseMapFile = AssetDatabase.acquireAsset(%diffuseMapAssetId).getImagePath();
+            AssetDatabase.releaseAsset(%diffuseMapAssetId);
+         }
+
+         if(compareFileTimes(%diffuseMapFile, %previewFilePath) == 1 ||
             compareFileTimes(%this.materialDefinitionName.getFilename(), %previewFilePath) == 1)
             %generatePreview = true;
       }

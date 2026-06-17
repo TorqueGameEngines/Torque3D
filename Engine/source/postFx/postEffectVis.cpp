@@ -103,7 +103,7 @@ void PostEffectVis::open( PostEffect *pfx )
       // Only allocate window/bitmaps for input textures that are actually used.
       if ( i > Target )
       {
-         if ( pfx->mTextureAsset[i-1].notNull() && pfx->mTextureAsset[i - 1]->getImageFile() == StringTable->EmptyString())
+         if ( pfx->getTextureAssetId(i - 1) == StringTable->EmptyString())
          {
             window.window[i] = NULL;
             window.bmp[i] = NULL;
@@ -275,9 +275,9 @@ void PostEffectVis::onPFXProcessed( PostEffect *pfx )
 
 
             if ( tex )
-               dSprintf( caption, 256, "%s[%i] input%i - %s [ %ix%i ]", name, pfx->getId(), i-1, pfx->mTextureAsset[i - 1].notNull() ? pfx->mTextureAsset[i - 1]->getImageFile() : "", tex->getWidth(), tex->getHeight());
+               dSprintf( caption, 256, "%s[%i] input%i - %s [ %ix%i ]", name, pfx->getId(), i-1, pfx->getTextureAssetId(i - 1), tex->getWidth(), tex->getHeight());
             else
-               dSprintf( caption, 256, "%s[%i] input%i - %s", name, pfx->getId(), i-1, pfx->mTextureAsset[i - 1].notNull() ? pfx->mTextureAsset[i - 1]->getImageFile() : "");
+               dSprintf( caption, 256, "%s[%i] input%i - %s", name, pfx->getId(), i-1, pfx->getTextureAssetId(i - 1));
 
             pWinCtrl->setDataField( StringTable->insert("text"), NULL, caption );
          }
@@ -364,7 +364,7 @@ void PostEffectVis::_setDefaultCaption( VisWindow &vis, U32 texIndex )
       else
          dSprintf( name, 256, "%s", pfx->getName() );
 
-      dSprintf( caption, 256, "%s[%i] input%i - %s [NOT ENABLED]", name, pfx->getId(), texIndex-1, pfx->mTextureAsset[texIndex - 1].notNull() ? pfx->mTextureAsset[texIndex - 1]->getImageFile() : "");
+      dSprintf( caption, 256, "%s[%i] input%i - %s [NOT ENABLED]", name, pfx->getId(), texIndex-1, pfx->getTextureAssetId(texIndex - 1));
 
       winCtrl->setDataField( StringTable->insert("text"), NULL, caption );
    }

@@ -216,18 +216,70 @@ public:
    //-----------------------------------------------------------------------
    // Data
    //-----------------------------------------------------------------------
-   DECLARE_IMAGEASSET_ARRAY(Material, DiffuseMap, GFXStaticTextureSRGBProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, NormalMap, GFXNormalMapProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, DetailNormalMap, GFXNormalMapProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, OverlayMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, LightMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, ToneMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, DetailMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, ORMConfigMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, AOMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, RoughMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, MetalMap, GFXStaticTextureProfile, MAX_STAGES)
-   DECLARE_IMAGEASSET_ARRAY(Material, GlowMap, GFXStaticTextureProfile, MAX_STAGES)
+   AssetRef<ImageAsset> mDiffuseMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getDiffuseMapAssetId(const U32& index) const { return mDiffuseMapAssetRef[index].assetId; }
+   void setDiffuseMap(StringTableEntry assetId, const U32& index) { mDiffuseMapAssetRef[index] = assetId; }
+   GFXTexHandle getDiffuseMap(const U32& index) { return mDiffuseMapAssetRef[index].notNull() ? mDiffuseMapAssetRef[index].assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : GFXTexHandle(); }
+   AssetPtr<ImageAsset> getDiffuseMapAsset(const U32& index) { return mDiffuseMapAssetRef[index].assetPtr; }
+
+   AssetRef<ImageAsset> mNormalMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getNormalMapAssetId(const U32& index) const { return mNormalMapAssetRef[index].assetId; }
+   void setNormalMap(StringTableEntry assetId, const U32& index) { mNormalMapAssetRef[index] = assetId; }
+   GFXTexHandle getNormalMap(const U32& index) { return mNormalMapAssetRef[index].notNull() ? mNormalMapAssetRef[index].assetPtr->getTexture(&GFXNormalMapProfile) : GFXTexHandle(); }
+
+   AssetRef<ImageAsset> mDetailNormalMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getDetailNormalMapAssetId(const U32& index) const { return mDetailNormalMapAssetRef[index].assetId; }
+   void setDetailNormalMap(StringTableEntry assetId, const U32& index) { mDetailNormalMapAssetRef[index] = assetId; }
+   GFXTexHandle getDetailNormalMap(const U32& index) { return mDetailNormalMapAssetRef[index].notNull() ? mDetailNormalMapAssetRef[index].assetPtr->getTexture(&GFXNormalMapProfile) : GFXTexHandle(); }
+
+   AssetRef<ImageAsset> mOverlayMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getOverlayMapAssetId(const U32& index) const { return mOverlayMapAssetRef[index].assetId; }
+   void setOverlayMap(StringTableEntry assetId, const U32& index) { mOverlayMapAssetRef[index] = assetId; }
+   GFXTexHandle getOverlayMap(const U32& index) { return mOverlayMapAssetRef[index].notNull() ? mOverlayMapAssetRef[index].assetPtr->getTexture(&GFXStaticTextureProfile) : GFXTexHandle(); }
+
+   AssetRef<ImageAsset> mLightMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getLightMapAssetId(const U32& index) const { return mLightMapAssetRef[index].assetId; }
+   void setLightMap(StringTableEntry assetId, const U32& index) { mLightMapAssetRef[index] = assetId; }
+   GFXTexHandle getLightMap(const U32& index) { return mLightMapAssetRef[index].notNull() ? mLightMapAssetRef[index].assetPtr->getTexture(&GFXStaticTextureProfile) : GFXTexHandle(); }
+
+   AssetRef<ImageAsset> mToneMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getToneMapAssetId(const U32& index) const { return mToneMapAssetRef[index].assetId; }
+   void setToneMap(StringTableEntry assetId, const U32& index) { mToneMapAssetRef[index] = assetId; }
+   GFXTexHandle getToneMap(const U32& index) { return mToneMapAssetRef[index].notNull() ? mToneMapAssetRef[index].assetPtr->getTexture(&GFXStaticTextureProfile) : GFXTexHandle(); }
+
+   AssetRef<ImageAsset> mDetailMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getDetailMapAssetId(const U32& index) const { return mDetailMapAssetRef[index].assetId; }
+   void setDetailMap(StringTableEntry assetId, const U32& index) { mDetailMapAssetRef[index] = assetId; }
+   GFXTexHandle getDetailMap(const U32& index) { return mDetailMapAssetRef[index].notNull() ? mDetailMapAssetRef[index].assetPtr->getTexture(&GFXStaticTextureProfile) : GFXTexHandle(); }
+
+   AssetRef<ImageAsset> mORMConfigMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getORMConfigMapAssetId(const U32& index) const { return mORMConfigMapAssetRef[index].assetId; }
+   void setORMConfigMap(StringTableEntry assetId, const U32& index) { mORMConfigMapAssetRef[index] = assetId; }
+   GFXTexHandle getORMConfigMap(const U32& index) { return getORMConfigMap(&GFXStaticTextureProfile, index); }
+   GFXTexHandle getORMConfigMap(GFXTextureProfile* requestedProfile, const U32& index) { return mORMConfigMapAssetRef[index].notNull() ? mORMConfigMapAssetRef[index].assetPtr->getTexture(requestedProfile) : GFXTexHandle(); }
+
+   AssetRef<ImageAsset> mAOMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getAOMapAssetId(const U32& index) const { return mAOMapAssetRef[index].assetId; }
+   void setAOMap(StringTableEntry assetId, const U32& index) { mAOMapAssetRef[index] = assetId; }
+   GFXTexHandle getAOMap(const U32& index) { return mAOMapAssetRef[index].notNull() ? mAOMapAssetRef[index].assetPtr->getTexture(&GFXStaticTextureProfile) : GFXTexHandle(); }
+   StringTableEntry getAOMapFile(const U32& index) { return mAOMapAssetRef[index].notNull() ? mAOMapAssetRef[index].assetPtr->getImageFile() : StringTable->EmptyString(); }
+
+   AssetRef<ImageAsset> mRoughMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getRoughMapAssetId(const U32& index) const { return mRoughMapAssetRef[index].assetId; }
+   void setRoughMap(StringTableEntry assetId, const U32& index) { mRoughMapAssetRef[index] = assetId; }
+   GFXTexHandle getRoughMap(const U32& index) { return mRoughMapAssetRef[index].notNull() ? mRoughMapAssetRef[index].assetPtr->getTexture(&GFXStaticTextureProfile) : GFXTexHandle(); }
+   StringTableEntry getRoughMapFile(const U32& index) { return mRoughMapAssetRef[index].notNull() ? mRoughMapAssetRef[index].assetPtr->getImageFile() : StringTable->EmptyString(); }
+
+   AssetRef<ImageAsset> mMetalMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getMetalMapAssetId(const U32& index) const { return mMetalMapAssetRef[index].assetId; }
+   void setMetalMap(StringTableEntry assetId, const U32& index) { mMetalMapAssetRef[index] = assetId; }
+   GFXTexHandle getMetalMap(const U32& index) { return mMetalMapAssetRef[index].notNull() ? mMetalMapAssetRef[index].assetPtr->getTexture(&GFXStaticTextureProfile) : GFXTexHandle(); }
+   StringTableEntry getMetalMapFile(const U32& index) { return mMetalMapAssetRef[index].notNull() ? mMetalMapAssetRef[index].assetPtr->getImageFile() : StringTable->EmptyString(); }
+
+   AssetRef<ImageAsset> mGlowMapAssetRef[MAX_STAGES];
+   inline StringTableEntry getGlowMapAssetId(const U32& index) const { return mGlowMapAssetRef[index].assetId; }
+   void setGlowMap(StringTableEntry assetId, const U32& index) { mGlowMapAssetRef[index] = assetId; }
+   GFXTexHandle getGlowMap(const U32& index) { return mGlowMapAssetRef[index].notNull() ? mGlowMapAssetRef[index].assetPtr->getTexture(&GFXStaticTextureProfile) : GFXTexHandle(); }
 
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
    bool     mIsSRGb[MAX_STAGES];           // SRGB ORM

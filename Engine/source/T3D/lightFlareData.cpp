@@ -159,7 +159,8 @@ void LightFlareData::initPersistFields()
       addField( "flareEnabled", TypeBool, Offset( mFlareEnabled, LightFlareData ),
          "Allows the user to disable this flare globally for any lights referencing it." );
 
-      INITPERSISTFIELD_IMAGEASSET(FlareTexture, LightFlareData, "The texture / sprite sheet for this flare.");
+      ADD_FIELD("flareTextureAsset", TypeImageAssetRef, Offset(mFlareTextureAssetRef, LightFlareData))
+         .doc("The texture / sprite sheet asset for this flare.");
 
       addArray( "Elements", MAX_ELEMENTS );
 
@@ -218,7 +219,7 @@ void LightFlareData::packData( BitStream *stream )
 
    stream->writeFlag( mFlareEnabled );
 
-   PACKDATA_ASSET_REFACTOR(FlareTexture);
+   AssetDatabase.packDataAsset(stream, mFlareTextureAssetRef.assetId);
 
    stream->write( mScale );
    stream->write( mOcclusionRadius );
@@ -243,7 +244,7 @@ void LightFlareData::unpackData( BitStream *stream )
 
    mFlareEnabled = stream->readFlag();
 
-   UNPACKDATA_ASSET_REFACTOR(FlareTexture);
+   mFlareTextureAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    stream->read( &mScale );
    stream->read( &mOcclusionRadius );

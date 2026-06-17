@@ -328,9 +328,14 @@ class WorldEditor : public EditTSCtrl
       ColorI            mPopupBackgroundColor;
       ColorI            mPopupTextColor;
 
-      DECLARE_IMAGEASSET(WorldEditor, SelectHandle, GFXStaticTextureSRGBProfile)
-      DECLARE_IMAGEASSET(WorldEditor, DefaultHandle, GFXStaticTextureSRGBProfile)
-      DECLARE_IMAGEASSET(WorldEditor, LockedHandle, GFXStaticTextureSRGBProfile)
+      AssetRef<ImageAsset> mSelectHandleAssetRef;
+      GFXTexHandle getSelectHandle() { return mSelectHandleAssetRef.notNull() ? mSelectHandleAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
+
+      AssetRef<ImageAsset> mDefaultHandleAssetRef;
+      GFXTexHandle getDefaultHandle() { return mDefaultHandleAssetRef.notNull() ? mDefaultHandleAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
+
+      AssetRef<ImageAsset> mLockedHandleAssetRef;
+      GFXTexHandle getLockedHandle() { return mLockedHandleAssetRef.notNull() ? mLockedHandleAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
 
       ColorI            mObjectTextColor;
       bool              mObjectsUseBoxCenter;

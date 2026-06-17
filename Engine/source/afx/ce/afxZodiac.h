@@ -34,6 +34,7 @@
 #endif
 
 #include "console/typeValidators.h"
+#include "T3D/assets/ImageAsset.h"
 
 GFX_DeclareTextureProfile(AFX_GFXZodiacTextureProfile);
 
@@ -57,7 +58,9 @@ public:
   static void convertGradientRangeFromDegrees(Point2F& gradrange, const Point2F& gradrange_deg);
 
 public:
-   DECLARE_IMAGEASSET(afxZodiacData, Texture, AFX_GFXZodiacTextureProfile)
+   AssetRef<ImageAsset> mTextureAssetRef;
+
+   GFXTexHandle getTexture() { return mTextureAssetRef.notNull() ? mTextureAssetRef.assetPtr->getTexture(&AFX_GFXZodiacTextureProfile) : NULL; }
 
   F32               radius_xy;
   Point2F           vert_range;

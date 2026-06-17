@@ -126,7 +126,8 @@ void GuiIconButtonCtrl::initPersistFields()
    docsURL;
    addField( "buttonMargin",     TypePoint2I,   Offset( mButtonMargin, GuiIconButtonCtrl ),"Margin area around the button.\n");
 
-   INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiIconButtonCtrl, "Bitmap file for the icon to display on the button.\n");
+   ADD_FIELD("bitmapAsset", TypeImageAssetRef, Offset(mBitmapAssetRef, GuiIconButtonCtrl))
+      .doc("Bitmap asset for the icon to display on the button.");
 
    addField( "iconLocation",     TYPEID< IconLocation >(), Offset( mIconLocation, GuiIconButtonCtrl ),"Where to place the icon on the control. Options are 0 (None), 1 (Left), 2 (Right), 3 (Center).\n");
    addField( "sizeIconToButton", TypeBool,      Offset( mFitBitmapToButton, GuiIconButtonCtrl ),"If true, the icon will be scaled to be the same size as the button.\n");
@@ -198,6 +199,21 @@ bool GuiIconButtonCtrl::resize(const Point2I &newPosition, const Point2I &newExt
    }
 
    return Parent::resize( newPosition, autoExtent );
+}
+
+void GuiIconButtonCtrl::_setBitmap(StringTableEntry _in)
+{
+   if (mBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mBitmapAssetRef.assetId = _in;
+      mBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+      return;
+   }
+
+   mBitmapAssetRef = _in;
 }
 
 void GuiIconButtonCtrl::setBitmap(const char *name)
@@ -463,10 +479,12 @@ void GuiIconButtonCtrl::renderBitmapArray(RectI &bounds, S32 state)
    }
 }
 
-DefineEngineMethod(GuiIconButtonCtrl, getBitmap, StringTableEntry, (), , "get name") {
-   return object->getBitmapFile();
-}DefineEngineMethod(GuiIconButtonCtrl, getBitmapAsset, StringTableEntry, (), , assetText(Bitmap, asset reference)) {
-   return object->_getBitmap();
-}DefineEngineMethod(GuiIconButtonCtrl, setBitmap, void, (const char* assetName), , assetText(Bitmap, assignment.first tries asset then flat file.)) {
+DefineEngineMethod(GuiIconButtonCtrl, getBitmapAsset, StringTableEntry, (), , "Get the Bitmap asset reference.")
+{
+   return object->getBitmapAssetId();
+}
+
+DefineEngineMethod(GuiIconButtonCtrl, setBitmap, void, (const char* assetName), , "Bitmap assignment. First tries asset then flat file.")
+{
    object->setBitmap(StringTable->insert(assetName));
 }

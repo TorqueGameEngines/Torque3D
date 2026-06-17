@@ -42,7 +42,7 @@ private:
 
 protected:
 
-   DECLARE_IMAGEASSET(GuiIconButtonCtrl, Bitmap, GFXDefaultGUIProfile)
+   AssetRef<ImageAsset> mBitmapAssetRef;
 
    S32               mIconLocation;
    S32               mTextLocation;
@@ -113,9 +113,27 @@ public:
    //  Used to set the optional error bitmap
    void setErrorBitmap(const char *name);
 
+   void _setBitmap(StringTableEntry _in);
+   inline StringTableEntry getBitmapAssetId() const { return mBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getBitmap() { return mBitmapAssetRef.notNull() ? mBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
+
    void onRender(Point2I offset, const RectI &updateRect) override;
 
    void onImageChanged() {}
+
+   void setFitBitmapToButton(const bool& state) {
+      mFitBitmapToButton = state;
+   }
+   bool getFitBitmapToButton() const {
+      return mFitBitmapToButton;
+   }
+
+   void setMakeIconSquare(const bool& state) {
+      mMakeIconSquare = state;
+   }
+   bool getMakeIconSquare() const {
+      return mMakeIconSquare;
+   }
 };
 
 typedef GuiIconButtonCtrl::TextLocation GuiIconButtonTextLocation;

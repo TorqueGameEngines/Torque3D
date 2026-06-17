@@ -251,7 +251,9 @@ void Material::initPersistFields()
    addArray("Stages", MAX_STAGES);
 
    addGroup("Basic Texture Maps");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(DiffuseMap, MAX_STAGES, Material, "Albedo");
+      ADD_FIELD("diffuseMapAsset", TypeImageAssetRef, Offset(mDiffuseMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief Albedo.");
       addField("diffuseColor", TypeColorF, Offset(mDiffuse, Material), MAX_STAGES,
          "This color is multiplied against the diffuse texture color.  If no diffuse texture "
          "is present this is the material color.");
@@ -260,7 +262,9 @@ void Material::initPersistFields()
       addField("TileScale", TypePoint2F, Offset(mTileScale, Material), MAX_STAGES,
          "The scale factor for the detail map.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(NormalMap, MAX_STAGES, Material, "NormalMap");
+      ADD_FIELD("normalMapAsset", TypeImageAssetRef, Offset(mNormalMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief NormalMap.");
    endGroup("Basic Texture Maps");
 
    addGroup("Light Influence Maps");
@@ -270,43 +274,63 @@ void Material::initPersistFields()
       addFieldV("metalness", TypeRangedF32, Offset(mMetalness, Material), &CommonValidators::F32_8BitPercent, MAX_STAGES,
          "The degree of Metalness when not using a ORMConfigMap.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(ORMConfigMap, MAX_STAGES, Material, "AO|Roughness|metalness map");
+      ADD_FIELD("ORMConfigMapAsset", TypeImageAssetRef, Offset(mORMConfigMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief AO|Roughness|metalness map.");
       addField("isSRGb", TypeBool, Offset(mIsSRGb, Material), MAX_STAGES,
          "Substance Designer Workaround.");
       addField("invertRoughness", TypeBool, Offset(mInvertRoughness, Material), MAX_STAGES,
          "Treat Roughness as Roughness");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(AOMap, MAX_STAGES, Material, "AOMap");
+      ADD_FIELD("AOMapAsset", TypeImageAssetRef, Offset(mAOMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief AOMap.");
       addField("AOChan", TYPEID< SourceChannelType >(), Offset(mAOChan, Material), MAX_STAGES,
          "The input channel AO maps use.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(RoughMap, MAX_STAGES, Material, "RoughMap (also needs MetalMap)");
+      ADD_FIELD("roughMapAsset", TypeImageAssetRef, Offset(mRoughMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief RoughMap (also needs MetalMap).");
       addField("roughnessChan", TYPEID< SourceChannelType >(), Offset(mRoughnessChan, Material), MAX_STAGES,
          "The input channel roughness maps use.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(MetalMap, MAX_STAGES, Material, "MetalMap (also needs RoughMap)");
+      ADD_FIELD("metalMapAsset", TypeImageAssetRef, Offset(mMetalMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief MetalMap (also needs RoughMap).");
       addField("metalChan", TYPEID< SourceChannelType >(), Offset(mMetalChan, Material),  MAX_STAGES,
          "The input channel metalness maps use.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(GlowMap, MAX_STAGES, Material, "GlowMap (needs Albedo)");
+      ADD_FIELD("glowMapAsset", TypeImageAssetRef, Offset(mGlowMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief GlowMap (needs Albedo).");
 
       addFieldV("glowMul", TypeRangedF32, Offset(mGlowMul, Material),&glowMulRange, MAX_STAGES,
          "glow mask multiplier");
    endGroup("Light Influence Maps");
 
    addGroup("Advanced Texture Maps");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(DetailMap, MAX_STAGES, Material, "DetailMap");
+      ADD_FIELD("detailMapAsset", TypeImageAssetRef, Offset(mDetailMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief DetailMap.");
       addField("detailScale", TypePoint2F, Offset(mDetailScale, Material), MAX_STAGES,
          "The scale factor for the detail map.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(DetailNormalMap, MAX_STAGES, Material, "DetailNormalMap");
+      ADD_FIELD("detailNormalMapAsset", TypeImageAssetRef, Offset(mDetailNormalMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief DetailNormalMap.");
       addFieldV("detailNormalMapStrength", TypeRangedF32, Offset(mDetailNormalMapStrength, Material), &CommonValidators::PositiveFloat, MAX_STAGES,
 
          "Used to scale the strength of the detail normal map when blended with the base normal map.");
 
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(OverlayMap, MAX_STAGES, Material, "Overlay");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(LightMap, MAX_STAGES, Material, "LightMap");
-      INITPERSISTFIELD_IMAGEASSET_ARRAY(ToneMap, MAX_STAGES, Material, "ToneMap");
+      ADD_FIELD("overlayMapAsset", TypeImageAssetRef, Offset(mOverlayMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief Overlay.");
+      ADD_FIELD("lightMapAsset", TypeImageAssetRef, Offset(mLightMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief LightMap.");
+      ADD_FIELD("toneMapAsset", TypeImageAssetRef, Offset(mToneMapAssetRef, Material))
+         .elements(MAX_STAGES)
+         .doc("@brief ToneMap.");
    endGroup("Advanced Texture Maps");
    
    addGroup("Accumulation Properties");
@@ -609,7 +633,7 @@ bool Material::isLightmapped() const
 {
    bool ret = false;
    for (U32 i = 0; i < MAX_STAGES; i++)
-      ret |= mLightMapAsset[i].notNull() || mToneMapAsset[i].notNull() || mVertLit[i];
+      ret |= mLightMapAssetRef[i].notNull() || mToneMapAssetRef[i].notNull() || mVertLit[i];
    return ret;
 }
 
@@ -642,11 +666,11 @@ void Material::_mapMaterial()
    // If mapTo not defined in script, try to use the base texture name instead
    if (mMapTo.isEmpty())
    {
-      if (mDiffuseMapAsset->isNull())
+      if (mDiffuseMapAssetRef[0].isNull())
          return;
-      else if (mDiffuseMapAsset->notNull())
+      else if (mDiffuseMapAssetRef[0].notNull())
       {
-         mMapTo = mDiffuseMapAsset[0]->getImageFile();
+         mMapTo = mDiffuseMapAssetRef[0].assetPtr->getImageFile();
       }
    }
 
@@ -815,21 +839,140 @@ bool Material::_setAccuEnabled(void* object, const char* index, const char* data
    }
    return true;
 }
-//declare general get<entry>, get<entry>Asset and set<entry> methods
+//declare general get<entry>Asset and set<entry> methods
 //signatures are:
 //using DiffuseMap as an example
-//material.getDiffuseMap(%layer); //returns the raw file referenced
-//material.getDiffuseMapAsset(%layer); //returns the asset id
-//material.setDiffuseMap(%texture, %layer); //tries to set the asset and failing that attempts a flat file reference
-DEF_IMAGEASSET_ARRAY_BINDS(Material, DiffuseMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, NormalMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailNormalMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, OverlayMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, LightMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, ToneMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, DetailMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, ORMConfigMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, RoughMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, AOMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, MetalMap, Material::Constants::MAX_STAGES)
-DEF_IMAGEASSET_ARRAY_BINDS(Material, GlowMap, Material::Constants::MAX_STAGES)
+//material.getDiffuseMapAsset(%layer); //returns the assigned assetId (also covers raw file paths and #renderTarget names)
+//material.setDiffuseMap(%assetId, %layer); //assigns an ImageAsset id
+
+DefineEngineMethod(Material, getDiffuseMapAsset, const char*, (S32 index), , "Get the DiffuseMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getDiffuseMapAssetId(index);
+}
+DefineEngineMethod(Material, setDiffuseMap, void, (const char* assetId, S32 index), , "Set the DiffuseMap asset id for the given stage.")
+{
+   object->setDiffuseMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getNormalMapAsset, const char*, (S32 index), , "Get the NormalMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getNormalMapAssetId(index);
+}
+DefineEngineMethod(Material, setNormalMap, void, (const char* assetId, S32 index), , "Set the NormalMap asset id for the given stage.")
+{
+   object->setNormalMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getDetailNormalMapAsset, const char*, (S32 index), , "Get the DetailNormalMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getDetailNormalMapAssetId(index);
+}
+DefineEngineMethod(Material, setDetailNormalMap, void, (const char* assetId, S32 index), , "Set the DetailNormalMap asset id for the given stage.")
+{
+   object->setDetailNormalMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getOverlayMapAsset, const char*, (S32 index), , "Get the OverlayMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getOverlayMapAssetId(index);
+}
+DefineEngineMethod(Material, setOverlayMap, void, (const char* assetId, S32 index), , "Set the OverlayMap asset id for the given stage.")
+{
+   object->setOverlayMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getLightMapAsset, const char*, (S32 index), , "Get the LightMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getLightMapAssetId(index);
+}
+DefineEngineMethod(Material, setLightMap, void, (const char* assetId, S32 index), , "Set the LightMap asset id for the given stage.")
+{
+   object->setLightMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getToneMapAsset, const char*, (S32 index), , "Get the ToneMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getToneMapAssetId(index);
+}
+DefineEngineMethod(Material, setToneMap, void, (const char* assetId, S32 index), , "Set the ToneMap asset id for the given stage.")
+{
+   object->setToneMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getDetailMapAsset, const char*, (S32 index), , "Get the DetailMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getDetailMapAssetId(index);
+}
+DefineEngineMethod(Material, setDetailMap, void, (const char* assetId, S32 index), , "Set the DetailMap asset id for the given stage.")
+{
+   object->setDetailMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getORMConfigMapAsset, const char*, (S32 index), , "Get the ORMConfigMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getORMConfigMapAssetId(index);
+}
+DefineEngineMethod(Material, setORMConfigMap, void, (const char* assetId, S32 index), , "Set the ORMConfigMap asset id for the given stage.")
+{
+   object->setORMConfigMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getRoughMapAsset, const char*, (S32 index), , "Get the RoughMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getRoughMapAssetId(index);
+}
+DefineEngineMethod(Material, setRoughMap, void, (const char* assetId, S32 index), , "Set the RoughMap asset id for the given stage.")
+{
+   object->setRoughMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getAOMapAsset, const char*, (S32 index), , "Get the AOMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getAOMapAssetId(index);
+}
+DefineEngineMethod(Material, setAOMap, void, (const char* assetId, S32 index), , "Set the AOMap asset id for the given stage.")
+{
+   object->setAOMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getMetalMapAsset, const char*, (S32 index), , "Get the MetalMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getMetalMapAssetId(index);
+}
+DefineEngineMethod(Material, setMetalMap, void, (const char* assetId, S32 index), , "Set the MetalMap asset id for the given stage.")
+{
+   object->setMetalMap(StringTable->insert(assetId), index);
+}
+
+DefineEngineMethod(Material, getGlowMapAsset, const char*, (S32 index), , "Get the GlowMap asset id for the given stage.")
+{
+   if (index >= Material::Constants::MAX_STAGES || index < 0)
+      return "";
+   return object->getGlowMapAssetId(index);
+}
+DefineEngineMethod(Material, setGlowMap, void, (const char* assetId, S32 index), , "Set the GlowMap asset id for the given stage.")
+{
+   object->setGlowMap(StringTable->insert(assetId), index);
+}

@@ -131,7 +131,9 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
       NumBitmapModes = 2
    };
 
-   DECLARE_IMAGEASSET_ARRAY(GuiPopUpMenuCtrlEx, Bitmap, GFXDefaultGUIProfile, NumBitmapModes)
+   AssetRef<ImageAsset> mBitmapAssetRef[NumBitmapModes];
+   GFXTexHandle getBitmap(const U32& index) { return mBitmapAssetRef[index].notNull() ? mBitmapAssetRef[index].assetPtr->getTexture(&GFXDefaultGUIProfile) : GFXTexHandle(); }
+   void setBitmap(StringTableEntry assetId, const U32& index) { mBitmapAssetRef[index] = assetId; }
 
    Point2I mBitmapBounds; //  Added
 

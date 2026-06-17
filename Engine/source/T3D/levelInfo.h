@@ -106,7 +106,7 @@ class LevelInfo : public NetObject
       void _onLMActivate(const char *lm, bool enable);
    protected:
 
-      DECLARE_IMAGEASSET(LevelInfo, AccuTexture, GFXStaticTextureSRGBProfile)
+      AssetRef<ImageAsset> mAccuTextureAssetRef;
 
    public:
 
@@ -144,6 +144,8 @@ class LevelInfo : public NetObject
       U32 packUpdate( NetConnection *conn, U32 mask, BitStream *stream ) override;
       void unpackUpdate( NetConnection *conn, BitStream *stream ) override;
       void setLevelAccuTexture();
+
+      GFXTexHandle getAccuTexture() { return mAccuTextureAssetRef.notNull() ? mAccuTextureAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
       /// @}
 };
 

@@ -174,7 +174,9 @@ void BasicClouds::initPersistFields()
          addField( "layerEnabled", TypeBool, Offset( mLayerEnabled, BasicClouds ), TEX_COUNT,
             "Enable or disable rendering of this layer." );
 
-         INITPERSISTFIELD_IMAGEASSET_ARRAY(Texture, TEX_COUNT, BasicClouds, "Texture for this layer.");
+         ADD_FIELD("textureAsset", TypeImageAssetRef, Offset(mTextureAssetRef, BasicClouds))
+            .elements(TEX_COUNT)
+            .doc("Texture asset for this layer.");
 
          addFieldV( "texScale", TypeRangedF32, Offset( mTexScale, BasicClouds ), &CommonValidators::PositiveFloat, TEX_COUNT,
             "Texture repeat for this layer." );
@@ -212,10 +214,10 @@ U32 BasicClouds::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );
 
-   PACK_ASSET_ARRAY_REFACTOR(conn, Texture, TEX_COUNT)
-
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
+      AssetDatabase.packUpdateAsset( conn, mask, stream, mTextureAssetRef[i].assetId );
+
       stream->writeFlag( mLayerEnabled[i] );
       stream->write( mTexScale[i] );
       mathWrite( *stream, mTexDirection[i] );
@@ -232,10 +234,10 @@ void BasicClouds::unpackUpdate( NetConnection *conn, BitStream *stream )
 {
    Parent::unpackUpdate( conn, stream );
 
-   UNPACK_ASSET_ARRAY_REFACTOR(conn, Texture, TEX_COUNT)
-
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
+      mTextureAssetRef[i] = AssetDatabase.unpackUpdateAsset( conn, stream );
+
       mLayerEnabled[i] = stream->readFlag();
       stream->read( &mTexScale[i] );      
       mathRead( *stream, &mTexDirection[i] );
@@ -310,14 +312,14 @@ void BasicClouds::renderObject( ObjectRenderInst *ri, SceneRenderState *state, B
 
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {      
-      if ( !mLayerEnabled[i] || mTextureAsset[i].isNull())
+      if ( !mLayerEnabled[i] || mTextureAssetRef[i].isNull())
          continue;
 
       mShaderConsts->setSafe( mTexScaleSC, mTexScale[i] );
       mShaderConsts->setSafe( mTexDirectionSC, mTexDirection[i] * mTexSpeed[i] );
-      mShaderConsts->setSafe( mTexOffsetSC, mTexOffset[i] );         
+      mShaderConsts->setSafe( mTexOffsetSC, mTexOffset[i] );
 
-      GFX->setTexture( mDiffuseMapSC->getSamplerRegister(), getTexture(i) );                            
+      GFX->setTexture( mDiffuseMapSC->getSamplerRegister(), getTexture(i) );
       GFX->setVertexBuffer( mVB[i] );            
 
       GFX->drawIndexedPrimitive( GFXTriangleList, 0, 0, smVertCount, 0, smTriangleCount );

@@ -72,9 +72,9 @@ protected:
    Point2F                    mRange;           ///< When working as a slider, this sets our min/max range
 
    //Keybind option
-   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, KeybindBitmap, GFXDefaultGUIProfile)
-   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, PreviousBitmap, GFXDefaultGUIProfile)
-   DECLARE_IMAGEASSET(GuiGameSettingsCtrl, NextBitmap, GFXDefaultGUIProfile)
+   AssetRef<ImageAsset> mKeybindBitmapAssetRef;
+   AssetRef<ImageAsset> mPreviousBitmapAssetRef;
+   AssetRef<ImageAsset> mNextBitmapAssetRef;
 
    S32 mArrowSize;
    S32 mColumnSplit; //Padding between the leftmost edge of the control, and the left side of the 'option'.
@@ -84,7 +84,19 @@ protected:
    bool mSelected;
 
 public:
-   /// Sets the control as selected . Only controls that are enabled can be selected. 
+   void setKeybindBitmap(StringTableEntry _in);
+   inline StringTableEntry getKeybindBitmapAssetId() const { return mKeybindBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getKeybindBitmap() { return mKeybindBitmapAssetRef.notNull() ? mKeybindBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
+
+   void setPreviousBitmap(StringTableEntry _in);
+   inline StringTableEntry getPreviousBitmapAssetId() const { return mPreviousBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getPreviousBitmap() { return mPreviousBitmapAssetRef.notNull() ? mPreviousBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
+
+   void setNextBitmap(StringTableEntry _in);
+   inline StringTableEntry getNextBitmapAssetId() const { return mNextBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getNextBitmap() { return mNextBitmapAssetRef.notNull() ? mNextBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
+
+   /// Sets the control as selected . Only controls that are enabled can be selected.
    virtual void setSelected();
 
    /// Determines if the specified control is enabled or disabled.

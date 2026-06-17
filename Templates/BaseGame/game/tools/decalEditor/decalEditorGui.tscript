@@ -608,7 +608,7 @@ function DecalEditorGui::updateDecalPreview( %this, %material )
       {
          %matAsset = AssetDatabase.acquireAsset(%material);
          
-         %previewImage = %matAsset.materialDefinitionName.getDiffuseMap(0);
+         %previewImage = %matAsset.materialDefinitionName.getDiffuseMapAsset(0);
          //AssetDatabase.releaseAsset(%material);
       }
       else if(AssetDatabase.getAssetType(%material) $= "ImageAsset")
@@ -644,7 +644,7 @@ function DecalEditorGui::updateInstancePreview( %this, %material )
       {
          %matAsset = AssetDatabase.acquireAsset(%material);
          
-         %previewImage = %matAsset.materialDefinitionName.getDiffuseMap(0);
+         %previewImage = %matAsset.materialDefinitionName.getDiffuseMapAsset(0);
       }
       else if(AssetDatabase.getAssetType(%material) $= "ImageAsset")
       {

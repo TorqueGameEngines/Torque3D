@@ -299,7 +299,10 @@ void GuiPopUpMenuCtrl::initPersistFields(void)
    addField("sbUsesNAColor",            TypeBool,         Offset(mRenderScrollInNA, GuiPopUpMenuCtrl));
    addField("reverseTextList",          TypeBool,         Offset(mReverseTextList, GuiPopUpMenuCtrl));
 
-   addProtectedField("BitmapAsset", TypeImageAssetPtr, Offset(mBitmapAsset, GuiPopUpMenuCtrl), _setBitmaps, &defaultProtectedGetFn, "@brief ""Bitmap"" ""asset \"\".");
+   ADD_FIELD("bitmapAsset", TypeImageAssetRef, Offset(mBitmapAssetRef, GuiPopUpMenuCtrl))
+      .elements(NumBitmapModes)
+      .onSet(_setBitmaps)
+      .doc("@brief ""Bitmap"" ""asset \"\".");
 
    addField("bitmapBounds",             TypePoint2I,      Offset(mBitmapBounds, GuiPopUpMenuCtrl));
 
@@ -580,18 +583,18 @@ void GuiPopUpMenuCtrl::setBitmap( const char *name )
 
       dStrcpy(p, "_n", pLen);
 
-      _setBitmap((StringTableEntry)buffer, Normal);
+      setBitmap((StringTableEntry)buffer, Normal);
 
       dStrcpy(p, "_d", pLen);
-      _setBitmap((StringTableEntry)buffer, Depressed);
+      setBitmap((StringTableEntry)buffer, Depressed);
 
-      if ( mBitmapAsset[Depressed].isNull() )
-         mBitmapAsset[Depressed] = mBitmapAsset[Normal];
+      if ( mBitmapAssetRef[Depressed].isNull() )
+         mBitmapAssetRef[Depressed] = mBitmapAssetRef[Normal];
    }
    else
    {
-      _setBitmap(StringTable->EmptyString(), Normal);
-      _setBitmap(StringTable->EmptyString(), Depressed);
+      setBitmap(StringTable->EmptyString(), Normal);
+      setBitmap(StringTable->EmptyString(), Depressed);
    }
    setUpdate();
 }   

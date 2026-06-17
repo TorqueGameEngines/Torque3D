@@ -94,6 +94,8 @@ public:
    void packData( BitStream *stream ) override;
    void unpackData( BitStream *stream ) override;
 
+   GFXTexHandle getFlareTexture() { return mFlareTextureAssetRef.notNull() ? mFlareTextureAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
+
    /// Submits render instances for corona and flare effects.
    void prepRender( SceneRenderState *state, LightFlareState *flareState );
 
@@ -118,7 +120,7 @@ protected:
    F32 mScale;
    bool mFlareEnabled;
 
-   DECLARE_IMAGEASSET(LightFlareData, FlareTexture, GFXStaticTextureSRGBProfile)
+   AssetRef<ImageAsset> mFlareTextureAssetRef;
 
    F32 mOcclusionRadius;
    bool mRenderReflectPass;

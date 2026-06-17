@@ -119,46 +119,19 @@ class GuiBitmapButtonCtrl : public GuiButtonCtrl, protected AssetPtrCallback
       BitmapMode mBitmapMode;
 
 private:
-   AssetPtr<ImageAsset> mBitmapAsset;
-   String               mBitmapFile; 
+   AssetRef<ImageAsset> mBitmapAssetRef;
 public:
-   void _setBitmap(StringTableEntry _in) {
-      if (_in == NULL || _in == StringTable->EmptyString() || _in[0] == '\0')
-      {
-         mBitmapAsset = NULL;
-         mBitmapFile = "";
-         return;
-      }
-   if (mBitmapAsset.getAssetId() == _in) return; if (!AssetDatabase.isDeclaredAsset(_in)) {
-      StringTableEntry imageAssetId = ImageAsset::smNoImageAssetFallback; AssetQuery query; S32 foundAssetcount = AssetDatabase.findAssetLooseFile(&query, _in); if (foundAssetcount != 0) {
-         imageAssetId = query.mAssetList[0];
-      } mBitmapAsset = imageAssetId;
-   }
-   else {
-      mBitmapAsset = _in;
-      mBitmapName = _in;
-      mBitmap = getBitmap();
-   }
-}; inline StringTableEntry _getBitmap(void) const {
-   return mBitmapAsset.getAssetId();
-} GFXTexHandle getBitmap() {
-   return mBitmapAsset.notNull() ? mBitmapAsset->getTexture(&GFXDefaultGUIProfile) : 0;
-} AssetPtr<ImageAsset> getBitmapAsset(void) {
-   return mBitmapAsset;
-} static bool _setBitmapData(void* obj, const char* index, const char* data) {
-   static_cast<GuiBitmapButtonCtrl*>(obj)->_setBitmap(_getStringTable()->insert(data)); return false;
-}
-StringTableEntry getBitmapFile() { return mBitmapAsset.notNull() ? mBitmapAsset->getImageFile() : ""; }
+   void _setBitmap(StringTableEntry _in);
+   inline StringTableEntry getBitmapAssetId() const { return mBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getBitmap() { return mBitmapAssetRef.notNull() ? mBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
 
 protected:
 
       void onAssetRefreshed(AssetPtrBase* pAssetPtrBase) override
       {
-         setBitmap(mBitmapName);
+         setBitmap(mBitmapAssetRef.assetId);
       }
 
-      GFXTexHandle mBitmap;
-      StringTableEntry mBitmapName;
       /// alpha masking
       bool mMasked;
       
@@ -202,7 +175,6 @@ protected:
 
       void setAutoFitExtents( bool state );
       void setBitmap( StringTableEntry name );
-      void setBitmapHandles( GFXTexHandle normal, GFXTexHandle highlighted, GFXTexHandle depressed, GFXTexHandle inactive );
 
       //Parent methods
       bool onWake() override;

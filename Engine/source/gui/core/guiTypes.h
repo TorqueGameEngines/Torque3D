@@ -348,7 +348,7 @@ class GuiCursor : public SimObject
 private:
    typedef SimObject Parent;
 
-   DECLARE_IMAGEASSET(GuiCursor, Bitmap, GFXGuiCursorProfile)
+   AssetRef<ImageAsset> mBitmapAssetRef;
 
    Point2I mHotSpot;
    Point2F mRenderOffset;
@@ -357,6 +357,10 @@ private:
 public:
    Point2I getHotSpot() { return mHotSpot; }
    Point2I getExtent() { return mExtent; }
+
+   void setBitmap(StringTableEntry _in) { mBitmapAssetRef = _in; }
+   inline StringTableEntry getBitmapAssetId() const { return mBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getBitmap() { return mBitmapAssetRef.notNull() ? mBitmapAssetRef.assetPtr->getTexture(&GFXGuiCursorProfile) : NULL; }
 
    DECLARE_CONOBJECT(GuiCursor);
    GuiCursor(void);
@@ -458,7 +462,13 @@ public:
    /// 
 public: 
 
-   DECLARE_IMAGEASSET(GuiControlProfile, Bitmap, GFXDefaultGUIProfile)
+   AssetRef<ImageAsset> mBitmapAssetRef;
+
+   void setBitmap(StringTableEntry _in);
+   inline StringTableEntry getBitmapAssetId() const { return mBitmapAssetRef.getAssetId(); }
+   GFXTexHandle getBitmap() { return mBitmapAssetRef.notNull() ? mBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
+   AssetPtr<ImageAsset> getBitmapAsset() { return mBitmapAssetRef.assetPtr; }
+   StringTableEntry getBitmapFile() { return mBitmapAssetRef.notNull() ? mBitmapAssetRef.assetPtr->getImageFile() : ""; }
 
    GFXTexHandle mBitmap;
    StringTableEntry mBitmapName;
@@ -488,7 +498,7 @@ public:
 protected:
    GuiControlProfile* mChildrenProfile;         ///< Profile used with children controls (such as the scroll bar on a popup menu) when defined.
 
-   static bool protectedSetBitmap( void *object, const char *index, const char *data );
+   static bool _setBitmap( void *object, const char *index, const char *data );
 
 public:
    DECLARE_CONOBJECT(GuiControlProfile);

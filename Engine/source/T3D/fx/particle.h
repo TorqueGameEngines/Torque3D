@@ -87,7 +87,10 @@ class ParticleData : public SimDataBlock
    StringTableEntry  animTexFramesString;
    Vector<U8>        animTexFrames;
 
-   DECLARE_IMAGEASSET(ParticleData, Texture, GFXStaticTextureSRGBProfile)
+   AssetRef<ImageAsset> mTextureAssetRef;
+
+   GFXTexHandle getTexture() { return mTextureAssetRef.notNull() ? mTextureAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
+   AssetPtr<ImageAsset> getTextureAsset() { return mTextureAssetRef.assetPtr; }
 
    static bool protectedSetSizes(void* object, const char* index, const char* data);
    static bool protectedSetTimes(void* object, const char* index, const char* data);
@@ -115,7 +118,9 @@ public:
    F32   spinBias;
    bool  randomizeSpinDir;
   public:
-   DECLARE_IMAGEASSET(ParticleData, TextureExt,GFXStaticTextureSRGBProfile)
+   AssetRef<ImageAsset> mTextureExtAssetRef;
+
+   GFXTexHandle getTextureExt() { return mTextureExtAssetRef.notNull() ? mTextureExtAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
 
    bool   constrain_pos;
    F32    start_angle;

@@ -65,7 +65,7 @@ afxBillboardData::afxBillboardData(const afxBillboardData& other, bool temp_clon
   : GameBaseData(other, temp_clone)
 {
   color = other.color;
-  CLONE_ASSET_REFACTOR(Texture);
+  mTextureAssetRef = other.mTextureAssetRef;
   dimensions = other.dimensions;
   texCoords[0] = other.texCoords[0];
   texCoords[1] = other.texCoords[1];
@@ -95,7 +95,7 @@ void afxBillboardData::initPersistFields()
     "The color assigned to the quadrangle geometry. The way it combines with the given "
     "texture varies according to the setting of the textureFunction field.");
 
-  INITPERSISTFIELD_IMAGEASSET(Texture, afxBillboardData, "An image to use as the billboard's texture.");
+  addField("textureAsset", TypeImageAssetRef, Offset(mTextureAssetRef, afxBillboardData), "An image asset to use as the billboard's texture.");
 
   addField("dimensions",      TypePoint2F,    myOffset(dimensions),
     "A value-pair that specifies the horizontal and vertical dimensions of the billboard "
@@ -123,7 +123,7 @@ void afxBillboardData::packData(BitStream* stream)
 	Parent::packData(stream);
 
   stream->write(color);
-  PACKDATA_ASSET_REFACTOR(Texture);
+  AssetDatabase.packDataAsset(stream, mTextureAssetRef.assetId);
 
   mathWrite(*stream, dimensions);
   mathWrite(*stream, texCoords[0]);
@@ -140,7 +140,7 @@ void afxBillboardData::unpackData(BitStream* stream)
   Parent::unpackData(stream);
 
   stream->read(&color);
-  UNPACKDATA_ASSET_REFACTOR(Texture);
+  mTextureAssetRef = AssetDatabase.unpackDataAsset(stream);
   mathRead(*stream, &dimensions);
   mathRead(*stream, &texCoords[0]);
   mathRead(*stream, &texCoords[1]);

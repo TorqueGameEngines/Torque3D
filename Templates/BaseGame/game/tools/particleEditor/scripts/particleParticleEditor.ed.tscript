@@ -108,7 +108,7 @@ function PE_ParticleEditor::loadNewParticle( %this, %particle )
    %this.currParticle = %current; 
    
    error("PE_ParticleEditor::loadNewParticle() - Loading particle: " @ %current.getName());
-   error("Particle TextureName: " @ %current.getTexture());
+   error("Particle TextureName: " @ %current.getTextureAsset());
    
    error("ReloadingParticle...");
    %current.reload();
@@ -116,8 +116,8 @@ function PE_ParticleEditor::loadNewParticle( %this, %particle )
    PE_ParticleEditor_NotDirtyParticle.assignFieldsFrom( %current );
    PE_ParticleEditor_NotDirtyParticle.originalName = %current.getName();
 
-   error("Post duplicate Particle TextureName: " @ %current.getTexture());
-   error("Post duplicate PE_ParticleEditor_NotDirtyParticle TextureName: " @ PE_ParticleEditor_NotDirtyParticle.getTexture());
+   error("Post duplicate Particle TextureName: " @ %current.getTextureAsset());
+   error("Post duplicate PE_ParticleEditor_NotDirtyParticle TextureName: " @ PE_ParticleEditor_NotDirtyParticle.getTextureAsset());
 
    %this.guiSync();
    %this.setNotDirty();

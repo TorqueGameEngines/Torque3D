@@ -98,7 +98,9 @@ protected:
 
 public:
 
-   DECLARE_IMAGEASSET_NET(CloudLayer,Texture, GFXStaticTextureSRGBProfile, CloudLayerMask)
+   AssetRef<ImageAsset> mTextureAssetRef;
+
+   GFXTexHandle getTexture() { return mTextureAssetRef.notNull() ? mTextureAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
 
    GFXShaderRef mShader;
 

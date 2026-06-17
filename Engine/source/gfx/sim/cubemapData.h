@@ -73,9 +73,12 @@ public:
    GFXTexHandle* getCubeFaceTexture(U32 faceIdx) { return &mCubeMapFaceTex[faceIdx]; }
 
 protected:
-   DECLARE_IMAGEASSET(CubemapData, CubeMap, GFXStaticTextureSRGBProfile);
+   AssetRef<ImageAsset> mCubeMapAssetRef;
+   GFXTexHandle getCubeMap() { return mCubeMapAssetRef.notNull() ? mCubeMapAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
 
-   DECLARE_IMAGEASSET_ARRAY(CubemapData, CubeMapFace, GFXStaticTextureSRGBProfile, 6);
+   AssetRef<ImageAsset> mCubeMapFaceAssetRef[6];
+   GFXTexHandle getCubeMapFace(const U32& index) { return mCubeMapFaceAssetRef[index].notNull() ? mCubeMapFaceAssetRef[index].assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : GFXTexHandle(); }
+   AssetPtr<ImageAsset> getCubeMapFaceAsset(const U32& index) { return mCubeMapFaceAssetRef[index].assetPtr; }
 
    GFXTexHandle mCubeMapFaceTex[6];
    GFXTexHandle mDepthBuff;

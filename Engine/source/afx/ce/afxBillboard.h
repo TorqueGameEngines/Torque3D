@@ -27,6 +27,7 @@
 #define _AFX_BILLBOARD_H_
 
 #include "afx/afxEffectDefs.h"
+#include "T3D/assets/ImageAsset.h"
 
 #define BLEND_UNDEFINED GFXBlend_COUNT
 
@@ -47,7 +48,9 @@ public:
    };
 
 public:
-   DECLARE_IMAGEASSET(afxBillboardData, Texture, GFXStaticTextureSRGBProfile)
+   AssetRef<ImageAsset> mTextureAssetRef;
+
+   GFXTexHandle getTexture() { return mTextureAssetRef.notNull() ? mTextureAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
 
 
   LinearColorF            color;

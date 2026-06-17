@@ -131,14 +131,30 @@ GuiProgressBitmapCtrl::GuiProgressBitmapCtrl()
 void GuiProgressBitmapCtrl::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiProgressBitmapCtrl, "Bitmap file to use for rendering the progress bar.\n\n"
+   ADD_FIELD("bitmapAsset", TypeImageAssetRef, Offset(mBitmapAssetRef, GuiProgressBitmapCtrl))
+      .doc("Bitmap asset to use for rendering the progress bar.\n\n"
       "If the profile assigned to the control already has a bitmap assigned, this property need not be "
       "set in which case the bitmap from the profile is used.");
-   
+
    Parent::initPersistFields();
 }
 
 //-----------------------------------------------------------------------------
+
+void GuiProgressBitmapCtrl::_setBitmap(StringTableEntry _in)
+{
+   if (mBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mBitmapAssetRef.assetId = _in;
+      mBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+      return;
+   }
+
+   mBitmapAssetRef = _in;
+}
 
 void GuiProgressBitmapCtrl::setBitmap( const char* name )
 {

@@ -67,7 +67,8 @@ void GuiChunkedBitmapCtrl::initPersistFields()
 {
    docsURL;
    addGroup("GuiChunkedBitmapCtrl");
-      INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiChunkedBitmapCtrl, "This is the bitmap to render to the control.");
+      ADD_FIELD("bitmapAsset", TypeImageAssetRef, Offset(mBitmapAssetRef, GuiChunkedBitmapCtrl))
+         .doc("This is the bitmap asset to render to the control.");
 
       addField( "useVariable",   TypeBool,      Offset( mUseVariable, GuiChunkedBitmapCtrl ), "This decides whether to use the \"bitmap\" file "
                                                                                             "or a bitmap stored in \"variable\"");
@@ -90,6 +91,21 @@ GuiChunkedBitmapCtrl::GuiChunkedBitmapCtrl()
 {
    mUseVariable = false;
    mTile = false;
+}
+
+void GuiChunkedBitmapCtrl::_setBitmap(StringTableEntry _in)
+{
+   if (mBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mBitmapAssetRef.assetId = _in;
+      mBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+      return;
+   }
+
+   mBitmapAssetRef = _in;
 }
 
 void GuiChunkedBitmapCtrl::setBitmap(const char *name)

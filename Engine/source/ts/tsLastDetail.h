@@ -156,6 +156,10 @@ protected:
    /// Helper which returns the imposter normal map path.
    String _getNormalMapPath() const { return mNormalPath; }
 
+   /// Helper which returns the assetId associated to the imposter file,
+   /// generating a private one if required for generated imposters
+   static StringTableEntry _getImposterAssetId( const String &filePath );
+
 public:
 
    TSLastDetail(  TSShape *shape, 

@@ -118,7 +118,7 @@ afxZodiacData::afxZodiacData()
 
 afxZodiacData::afxZodiacData(const afxZodiacData& other, bool temp_clone) : GameBaseData(other, temp_clone)
 {
-   CLONE_ASSET_REFACTOR(Texture);
+   mTextureAssetRef = other.mTextureAssetRef;
 
   radius_xy = other.radius_xy;
   vert_range = other.vert_range;
@@ -155,7 +155,7 @@ EndImplementEnumType;
 void afxZodiacData::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_IMAGEASSET(Texture, afxZodiacData, "An image to use as the zodiac's texture.");
+   addField("textureAsset", TypeImageAssetRef, Offset(mTextureAssetRef, afxZodiacData), "An image asset to use as the zodiac's texture.");
   addField("radius",                TypeF32,        Offset(radius_xy,         afxZodiacData),
     "The zodiac's radius in scene units.");
   addField("verticalRange",         TypePoint2F,    Offset(vert_range,        afxZodiacData),
@@ -268,7 +268,7 @@ void afxZodiacData::packData(BitStream* stream)
 
   merge_zflags();
 
-  PACKDATA_ASSET_REFACTOR(Texture);
+  AssetDatabase.packDataAsset(stream, mTextureAssetRef.assetId);
   stream->write(radius_xy);
   stream->write(vert_range.x);
   stream->write(vert_range.y);
@@ -293,7 +293,7 @@ void afxZodiacData::unpackData(BitStream* stream)
 {
   Parent::unpackData(stream);
 
-  UNPACKDATA_ASSET_REFACTOR(Texture);
+  mTextureAssetRef = AssetDatabase.unpackDataAsset(stream);
   stream->read(&radius_xy);
   stream->read(&vert_range.x);
   stream->read(&vert_range.y);

@@ -190,7 +190,9 @@ void CloudLayer::initPersistFields()
    docsURL;
    addGroup( "CloudLayer" );
 
-   INITPERSISTFIELD_IMAGEASSET(Texture, CloudLayer, "An RGBA texture which should contain normals and opacity (density).")
+   ADD_FIELD("textureAsset", TypeImageAssetRef, Offset(mTextureAssetRef, CloudLayer))
+      .network(CloudLayerMask)
+      .doc("An RGBA texture asset which should contain normals and opacity (density).");
 
       addArray( "Textures", TEX_COUNT );
 
@@ -239,10 +241,8 @@ U32 CloudLayer::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );
 
-   if (stream->writeFlag(getTexture())) {
-      NetStringHandle assetIdStr = mTextureAsset.getAssetId(); conn->packNetStringHandleU(stream, assetIdStr);
-   }
-   
+   AssetDatabase.packUpdateAsset(conn, mask, stream, mTextureAssetRef.assetId);
+
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
       stream->write( mTexScale[i] );      
@@ -263,9 +263,7 @@ void CloudLayer::unpackUpdate( NetConnection *conn, BitStream *stream )
 {
    Parent::unpackUpdate( conn, stream );
 
-   if (stream->readFlag()) {
-      mTextureAsset.setAssetId(_getStringTable()->insert(conn->unpackNetStringHandleU(stream).getString()));
-   }
+   mTextureAssetRef = AssetDatabase.unpackUpdateAsset(conn, stream);
 
    for ( U32 i = 0; i < TEX_COUNT; i++ )
    {
@@ -331,7 +329,7 @@ void CloudLayer::renderObject( ObjectRenderInst *ri, SceneRenderState *state, Ba
 {
    GFXTransformSaver saver;
 
-   if (!mTextureAsset)
+   if (mTextureAssetRef.isNull())
       return;
 
    const Point3F &camPos = state->getCameraPosition();
@@ -382,7 +380,7 @@ void CloudLayer::renderObject( ObjectRenderInst *ri, SceneRenderState *state, Ba
 
    mShaderConsts->setSafe( mExposureSC, mExposure );
 
-   GFX->setTexture( mNormalHeightMapSC->getSamplerRegister(), mTextureAsset->getTexture(&GFXStaticTextureSRGBProfile));
+   GFX->setTexture( mNormalHeightMapSC->getSamplerRegister(), mTextureAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile));
    GFX->setVertexBuffer( mVB );            
    GFX->setPrimitiveBuffer( mPB );
 

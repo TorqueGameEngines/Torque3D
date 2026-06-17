@@ -35,6 +35,8 @@
 #include "gfx/gfxDevice.h"
 #endif
 
+#include "T3D/assets/ImageAsset.h"
+
 /// A volume in space that blocks visibility.
 class AccumulationVolume : public ScenePolyhedralSpace
 {
@@ -61,7 +63,7 @@ class AccumulationVolume : public ScenePolyhedralSpace
       // SceneSpace.
       void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat ) override;
 
-      DECLARE_IMAGEASSET_NET(AccumulationVolume, Texture, GFXStaticTextureSRGBProfile, -1)
+      AssetRef<ImageAsset> mTextureAssetRef;
 
    public:
 
@@ -77,6 +79,8 @@ class AccumulationVolume : public ScenePolyhedralSpace
       void onRemove() override;
       void inspectPostApply() override;
       void setTexture( const String& name );
+
+      GFXTexHandle getTexture() { return mTextureAssetRef.notNull() ? mTextureAssetRef.assetPtr->getTexture(&GFXStaticTextureSRGBProfile) : NULL; }
 
       // Static Functions.
       static void consoleInit();

@@ -181,7 +181,9 @@ void VolumetricFog::initPersistFields()
    endGroup("VolumetricFogData");
 
    addGroup("VolumetricFogModulation");
-   INITPERSISTFIELD_IMAGEASSET(Texture, VolumetricFog, "A texture which contains Fogdensity modulator in the red channel and color with 1-green channel. No texture disables modulation.");
+   ADD_FIELD("textureAsset", TypeImageAssetRef, Offset(mTextureAssetRef, VolumetricFog))
+      .network(FogModulationMask)
+      .doc("A texture which contains Fogdensity modulator in the red channel and color with 1-green channel. No texture disables modulation.");
 
    addFieldV("tiles", TypeRangedF32, Offset(mTexTiles, VolumetricFog), &CommonValidators::PositiveFloat,
       "How many times the texture is mapped to the object.");
@@ -329,8 +331,8 @@ void VolumetricFog::handleResize(VolumetricFogRTManager *RTM, bool resize)
 
       // load texture.
       getTexture();
-      mTexScale.x = 2.0f - ((F32)mTextureAsset->getTextureBitmapWidth() / width);
-      mTexScale.y = 2.0f - ((F32)mTextureAsset->getTextureBitmapHeight() / height);
+      mTexScale.x = 2.0f - ((F32)mTextureAssetRef.assetPtr->getTextureBitmapWidth() / width);
+      mTexScale.y = 2.0f - ((F32)mTextureAssetRef.assetPtr->getTextureBitmapHeight() / height);
    }
 
    UpdateBuffers(0,true);
@@ -545,7 +547,7 @@ U32 VolumetricFog::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       stream->write(mFogDensity);
    if (stream->writeFlag(mask & FogModulationMask))
    {
-      PACK_ASSET_REFACTOR(con, Texture);
+      AssetDatabase.packUpdateAsset(con, mask, stream, mTextureAssetRef.assetId);
       mTexTiles = mFabs(mTexTiles);
       stream->write(mTexTiles);
       stream->write(mStrength);
@@ -600,7 +602,7 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    MatrixF mat;
    VectorF scale;
    VectorF mOldScale = getScale();
-   StringTableEntry oldTextureName = mTextureAsset.getAssetId();
+   StringTableEntry oldTextureName = mTextureAssetRef.getAssetId();
    StringTableEntry oldShapeAsset = mShapeAssetRef.assetId;
    StringTableEntry oldShape = mShapeAssetRef.notNull() ? mShapeAssetRef.assetPtr->getShapeFile() : StringTable->EmptyString();
 
@@ -618,7 +620,7 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
    }
    if (stream->readFlag())// Fog Modulation
    {
-      UNPACK_ASSET_REFACTOR(con, Texture);
+      mTextureAssetRef = AssetDatabase.unpackUpdateAsset(con, stream);
       stream->read(&mTexTiles);
       mTexTiles = mFabs(mTexTiles);
       stream->read(&mStrength);
@@ -628,9 +630,9 @@ void VolumetricFog::unpackUpdate(NetConnection *con, BitStream *stream)
 
       if (isProperlyAdded())
       {
-         if (oldTextureName != mTextureAsset.getAssetId())
+         if (oldTextureName != mTextureAssetRef.getAssetId())
             InitTexture();
-         if (oldTextureName != StringTable->EmptyString() && mTextureAsset.isNull())
+         if (oldTextureName != StringTable->EmptyString() && mTextureAssetRef.isNull())
          {
             mIsTextured = false;
          }
@@ -1219,21 +1221,24 @@ void VolumetricFog::InitTexture()
 {
    mIsTextured = false;
 
-   U32 assetStatus = ImageAsset::getAssetErrCode(mTextureAsset);
-   if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
+   if (!mTextureAssetRef.isNull())
    {
-      return;
-   }
-   if (!mTextureAsset.isNull())
-   {
+      mTextureAssetRef.assetPtr->load();
+   	  
+      U32 assetStatus = ImageAsset::getAssetErrCode(mTextureAssetRef.assetPtr);
+      if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
+      {
+         return;
+      }
+   
       mIsTextured = true;
       // load asset.
       getTexture();
       F32 width = (F32)mPlatformWindow->getClientExtent().x;
       F32 height = (F32)mPlatformWindow->getClientExtent().y;
 
-      mTexScale.x = 2.0f - ((F32)mTextureAsset->getTextureBitmapWidth() / width);
-      mTexScale.y = 2.0f - ((F32)mTextureAsset->getTextureBitmapHeight() / height);
+      mTexScale.x = 2.0f - ((F32)mTextureAssetRef.assetPtr->getTextureBitmapWidth() / width);
+      mTexScale.y = 2.0f - ((F32)mTextureAssetRef.assetPtr->getTextureBitmapHeight() / height);
    }
 }
 

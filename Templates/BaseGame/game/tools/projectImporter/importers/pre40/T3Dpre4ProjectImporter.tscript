@@ -784,8 +784,8 @@ T3Dpre4ProjectImporter::genProcessor("Sun", "coronaMaterial coronaMaterialAsset"
 T3Dpre4ProjectImporter::genProcessor("VolumetricFog", "shape ShapeAsset texture textureAsset");
 T3Dpre4ProjectImporter::genProcessor("WaterObject", "rippleTex rippleTexAsset foamTex foamTexAsset depthGradientTex depthGradientTexAsset");
 T3Dpre4ProjectImporter::genProcessor("ConvexShape", "material materialAsset");
-T3Dpre4ProjectImporter::genProcessor("RenderMesh", "material materialAsset");
-T3Dpre4ProjectImporter::genProcessor("RenderShape", "shape shapeAsset");
+T3Dpre4ProjectImporter::genProcessor("RenderMeshExample", "material materialAsset");
+T3Dpre4ProjectImporter::genProcessor("RenderShapeExample", "shape shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("GroundCover", "material materialAsset shape shapeAsset shapeFilename shapeAsset");
 T3Dpre4ProjectImporter::genProcessor("GroundPlane", "material materialAsset");
 T3Dpre4ProjectImporter::genProcessor("LevelInfo", "accuTexture accuTextureAsset");
@@ -856,6 +856,7 @@ T3Dpre4ProjectImporter::genProcessor("GuiMissionArea", "handleBitmap handleBitma
 T3Dpre4ProjectImporter::genProcessor("WorldEditor", "selectHandle selectHandleAsset defaultHandle defaultHandleAsset lockedHandle lockedHandleAsset");
 T3Dpre4ProjectImporter::genProcessor("GuiControlProfile", "bitmap bitmapAsset");
 T3Dpre4ProjectImporter::genProcessor("GuiMLTextCtrl", "deniedSound deniedSoundAsset");
+T3Dpre4ProjectImporter::genProcessor("GuiObjectView", "shapeName shapeAsset shapeFile shapeAsset model modelAsset mountedShapeName mountedShapeAsset mountedModelName mountedModelAsset");
 
 function T3Dpre4ProjectImporter::processGuiBitmapButtonCtrlLine(%this, %line)
 {

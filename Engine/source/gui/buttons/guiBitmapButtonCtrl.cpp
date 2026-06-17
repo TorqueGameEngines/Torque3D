@@ -120,6 +120,22 @@ IMPLEMENT_CALLBACK( GuiBitmapButtonCtrl, onShiftClick, void, (), (),
 
 //-----------------------------------------------------------------------------
 
+void GuiBitmapButtonCtrl::_setBitmap(StringTableEntry _in)
+{
+   if (mBitmapAssetRef.assetId == _in)
+      return;
+
+   if (ImageAsset::isNamedTarget(_in))
+   {
+      mBitmapAssetRef.assetId = _in;
+      mBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
+   }
+   else
+   {
+      mBitmapAssetRef = _in;
+   }
+}
+
 GuiBitmapButtonCtrl::GuiBitmapButtonCtrl()
 {
    mBitmapMode = BitmapStretched;
@@ -129,10 +145,7 @@ GuiBitmapButtonCtrl::GuiBitmapButtonCtrl()
    setExtent( 140, 30 );
    mMasked = false;
    mColor = ColorI::WHITE;
-   mBitmapName = StringTable->EmptyString();
-   mBitmap = NULL;
-   mBitmapAsset.registerRefreshNotify(this);
-   mBitmapFile = String::EmptyString;
+   mBitmapAssetRef.assetPtr.registerRefreshNotify(this);
 }
 
 //-----------------------------------------------------------------------------
@@ -142,10 +155,11 @@ void GuiBitmapButtonCtrl::initPersistFields()
    docsURL;
    addGroup( "Bitmap" );
 
-      INITPERSISTFIELD_IMAGEASSET(Bitmap, GuiBitmapButtonCtrl,"Texture file to display on this button.\n"
+      ADD_FIELD("bitmapAsset", TypeImageAssetRef, Offset(mBitmapAssetRef, GuiBitmapButtonCtrl))
+         .doc("Texture asset to display on this button.\n"
          "If useStates is false, this will be the file that renders on the control.  Otherwise, this will "
          "specify the default texture name to which the various state and modifier suffixes are appended "
-         "to find the per-state and per-modifier (if enabled) textures.")
+         "to find the per-state and per-modifier (if enabled) textures.");
 
       addField("color", TypeColorI, Offset(mColor, GuiBitmapButtonCtrl), "color mul");
 
@@ -183,7 +197,7 @@ bool GuiBitmapButtonCtrl::onWake()
       return false;
       
    setActive( true );
-   setBitmap( mBitmapName );
+   setBitmap(mBitmapAssetRef.assetId);
    
    return true;
 }
@@ -192,17 +206,13 @@ bool GuiBitmapButtonCtrl::onWake()
 
 void GuiBitmapButtonCtrl::onSleep()
 {
-   if( dStricmp(mBitmapName, "texhandle") != 0 )
-      for( U32 i = 0; i < NumModifiers; ++ i )
-      {
-         mTextures[ i ].mTextureNormal = NULL;
-         mTextures[ i ].mTextureHilight = NULL;
-         mTextures[ i ].mTextureDepressed = NULL;
-         mTextures[ i ].mTextureInactive = NULL;
-      }
-
-   if (mBitmapAsset.notNull())
-      mBitmap = NULL;
+   for( U32 i = 0; i < NumModifiers; ++ i )
+   {
+      mTextures[ i ].mTextureNormal = NULL;
+      mTextures[ i ].mTextureHilight = NULL;
+      mTextures[ i ].mTextureDepressed = NULL;
+      mTextures[ i ].mTextureInactive = NULL;
+   }
 
    Parent::onSleep();
 }
@@ -241,7 +251,7 @@ void GuiBitmapButtonCtrl::inspectPostApply()
 {
    Parent::inspectPostApply();
 
-   setBitmap(mBitmapName);
+   setBitmap(mBitmapAssetRef.assetId);
 
    // if the extent is set to (0,0) in the gui editor and appy hit, this control will
    // set it's extent to be exactly the size of the normal bitmap (if present)
@@ -258,7 +268,7 @@ void GuiBitmapButtonCtrl::setAutoFitExtents( bool state )
 {
    mAutoFitExtents = state;
    if( mAutoFitExtents )
-      setBitmap( mBitmapName );
+      setBitmap(mBitmapAssetRef.assetId);
 }
 
 //-----------------------------------------------------------------------------
@@ -271,143 +281,140 @@ void GuiBitmapButtonCtrl::setBitmap( StringTableEntry name )
    if( !isAwake() )
       return;
 
-   if( mBitmapAsset.notNull())
+   if( mBitmapAssetRef.notNull())
    {
-      if( dStricmp( mBitmapName, "texhandle" ) != 0 )
+      const U32 count = mUseModifiers ? NumModifiers : 1;
+      for( U32 i = 0; i < count; ++ i )
       {
-         const U32 count = mUseModifiers ? NumModifiers : 1;
-         for( U32 i = 0; i < count; ++ i )
+         static String modifiers[] =
          {
-            static String modifiers[] =
+            "",
+            "_ctrl",
+            "_alt",
+            "_shift"
+         };
+         
+         static String s_n[2] = { "_n", "_n_image" };
+         static String s_d[2] = { "_d", "_d_image" };
+         static String s_h[2] = { "_h", "_h_image" };
+         static String s_i[2] = { "_i", "_i_image" };
+
+         String baseName = mBitmapAssetRef.getAssetId();
+
+         //strip any pre-assigned suffix, just in case
+         baseName = baseName.replace("_n_image", "");
+         baseName = baseName.replace("_n", "");
+
+         if( mUseModifiers )
+            baseName += modifiers[ i ];
+
+         mTextures[i].mTextureNormal = getBitmap();
+         
+         if( mUseStates )
+         {
+            //normal lookup
+            StringTableEntry lookupName;
+            for (U32 s = 0; s < 2; s++)
             {
-               "",
-               "_ctrl",
-               "_alt",
-               "_shift"
-            };
-            
-            static String s_n[2] = { "_n", "_n_image" };
-            static String s_d[2] = { "_d", "_d_image" };
-            static String s_h[2] = { "_h", "_h_image" };
-            static String s_i[2] = { "_i", "_i_image" };
-
-            String baseName = mBitmapAsset.getAssetId();
-
-            //strip any pre-assigned suffix, just in case
-            baseName = baseName.replace("_n_image", "");
-            baseName = baseName.replace("_n", "");
-
-            if( mUseModifiers )
-               baseName += modifiers[ i ];
-
-            mTextures[i].mTextureNormal = getBitmap();
-            
-            if( mUseStates )
-            {
-               //normal lookup
-               StringTableEntry lookupName;
-               for (U32 s = 0; s < 2; s++)
+               if (!mTextures[i].mTextureNormal)
                {
-                  if (!mTextures[i].mTextureNormal)
-                  {
-                     lookupName = StringTable->insert(String(baseName + s_n[s]).c_str());
-                     if (AssetDatabase.isDeclaredAsset(lookupName))
-                     {
-                        mTextures[i].mTextureNormalAssetId = lookupName;
-                        mTextures[i].mTextureNormalAsset = mTextures[i].mTextureNormalAssetId;
-                     }
-
-                     if (mTextures[i].mTextureNormalAsset.notNull())
-                     {
-                        mTextures[i].mTextureNormalAsset->load();
-                        if (mTextures[i].mTextureNormalAsset->getStatus() == AssetBase::Ok)
-                        {
-                           mTextures[i].mTextureNormal = mTextures[i].mTextureNormalAsset->getTexture(&GFXDefaultGUIProfile);
-                           break;
-                        }
-                     }
-                  }
-               }
-
-               //Hilight lookup
-               for (U32 s = 0; s < 2; s++)
-               {
-                  lookupName = StringTable->insert(String(baseName + s_h[s]).c_str());
+                  lookupName = StringTable->insert(String(baseName + s_n[s]).c_str());
                   if (AssetDatabase.isDeclaredAsset(lookupName))
                   {
-                     mTextures[i].mTextureHilightAssetId = lookupName;
-                     mTextures[i].mTextureHilightAsset = mTextures[i].mTextureHilightAssetId;
+                     mTextures[i].mTextureNormalAssetId = lookupName;
+                     mTextures[i].mTextureNormalAsset = mTextures[i].mTextureNormalAssetId;
                   }
 
-                  if (mTextures[i].mTextureHilightAsset.notNull())
+                  if (mTextures[i].mTextureNormalAsset.notNull())
                   {
-                     mTextures[i].mTextureHilightAsset->load();
-                     if (mTextures[i].mTextureHilightAsset->getStatus() == AssetBase::Ok)
+                     mTextures[i].mTextureNormalAsset->load();
+                     if (mTextures[i].mTextureNormalAsset->getStatus() == AssetBase::Ok)
                      {
-                        mTextures[i].mTextureHilight = mTextures[i].mTextureHilightAsset->getTexture(&GFXDefaultGUIProfile);
+                        mTextures[i].mTextureNormal = mTextures[i].mTextureNormalAsset->getTexture(&GFXDefaultGUIProfile);
                         break;
                      }
                   }
                }
-
-               if( !mTextures[ i ].mTextureHilight )
-                  mTextures[ i ].mTextureHilight = mTextures[ i ].mTextureNormal;
-
-               //Depressed lookup
-               for (U32 s = 0; s < 2; s++)
-               {
-                  lookupName = StringTable->insert(String(baseName + s_d[s]).c_str());
-                  if (AssetDatabase.isDeclaredAsset(lookupName))
-                  {
-                     mTextures[i].mTextureDepressedAssetId = lookupName;
-                     mTextures[i].mTextureDepressedAsset = mTextures[i].mTextureDepressedAssetId;
-                  }
-
-                  if (mTextures[i].mTextureDepressedAsset.notNull())
-                  {
-                     mTextures[i].mTextureDepressedAsset->load();
-                     if (mTextures[i].mTextureDepressedAsset->getStatus() == AssetBase::Ok)
-                     {
-                        mTextures[i].mTextureDepressed = mTextures[i].mTextureDepressedAsset->getTexture(&GFXDefaultGUIProfile);
-                        break;
-                     }
-                  }
-               }
-
-               if( !mTextures[ i ].mTextureDepressed )
-                  mTextures[ i ].mTextureDepressed = mTextures[ i ].mTextureHilight;
-
-               //Depressed lookup
-               for (U32 s = 0; s < 2; s++)
-               {
-                  lookupName = StringTable->insert(String(baseName + s_i[s]).c_str());
-                  if (AssetDatabase.isDeclaredAsset(lookupName))
-                  {
-                     mTextures[i].mTextureInactiveAssetId = lookupName;
-                     mTextures[i].mTextureInactiveAsset = mTextures[i].mTextureInactiveAssetId;
-                  }
-
-                  if (mTextures[i].mTextureInactiveAsset.notNull())
-                  {
-                     mTextures[i].mTextureInactiveAsset->load();
-                     if (mTextures[i].mTextureInactiveAsset->getStatus() == AssetBase::Ok)
-                     {
-                        mTextures[i].mTextureInactive = mTextures[i].mTextureInactiveAsset->getTexture(&GFXDefaultGUIProfile);
-                        break;
-                     }
-                  }
-               }
-
-               if( !mTextures[ i ].mTextureInactive )
-                  mTextures[ i ].mTextureInactive = mTextures[ i ].mTextureNormal;
             }
 
-            if( i == 0 && mTextures[ i ].mTextureNormal.isNull() && mTextures[ i ].mTextureHilight.isNull() && mTextures[ i ].mTextureDepressed.isNull() && mTextures[ i ].mTextureInactive.isNull() )
+            //Hilight lookup
+            for (U32 s = 0; s < 2; s++)
             {
-               Con::warnf( "GuiBitmapButtonCtrl::setBitmap - Unable to load texture: %s", mBitmapName );
-               this->setBitmap( StringTable->insert(GFXTextureManager::getUnavailableTexturePath().c_str()) );
-               return;
+               lookupName = StringTable->insert(String(baseName + s_h[s]).c_str());
+               if (AssetDatabase.isDeclaredAsset(lookupName))
+               {
+                  mTextures[i].mTextureHilightAssetId = lookupName;
+                  mTextures[i].mTextureHilightAsset = mTextures[i].mTextureHilightAssetId;
+               }
+
+               if (mTextures[i].mTextureHilightAsset.notNull())
+               {
+                  mTextures[i].mTextureHilightAsset->load();
+                  if (mTextures[i].mTextureHilightAsset->getStatus() == AssetBase::Ok)
+                  {
+                     mTextures[i].mTextureHilight = mTextures[i].mTextureHilightAsset->getTexture(&GFXDefaultGUIProfile);
+                     break;
+                  }
+               }
             }
+
+            if( !mTextures[ i ].mTextureHilight )
+               mTextures[ i ].mTextureHilight = mTextures[ i ].mTextureNormal;
+
+            //Depressed lookup
+            for (U32 s = 0; s < 2; s++)
+            {
+               lookupName = StringTable->insert(String(baseName + s_d[s]).c_str());
+               if (AssetDatabase.isDeclaredAsset(lookupName))
+               {
+                  mTextures[i].mTextureDepressedAssetId = lookupName;
+                  mTextures[i].mTextureDepressedAsset = mTextures[i].mTextureDepressedAssetId;
+               }
+
+               if (mTextures[i].mTextureDepressedAsset.notNull())
+               {
+                  mTextures[i].mTextureDepressedAsset->load();
+                  if (mTextures[i].mTextureDepressedAsset->getStatus() == AssetBase::Ok)
+                  {
+                     mTextures[i].mTextureDepressed = mTextures[i].mTextureDepressedAsset->getTexture(&GFXDefaultGUIProfile);
+                     break;
+                  }
+               }
+            }
+
+            if( !mTextures[ i ].mTextureDepressed )
+               mTextures[ i ].mTextureDepressed = mTextures[ i ].mTextureHilight;
+
+            //Depressed lookup
+            for (U32 s = 0; s < 2; s++)
+            {
+               lookupName = StringTable->insert(String(baseName + s_i[s]).c_str());
+               if (AssetDatabase.isDeclaredAsset(lookupName))
+               {
+                  mTextures[i].mTextureInactiveAssetId = lookupName;
+                  mTextures[i].mTextureInactiveAsset = mTextures[i].mTextureInactiveAssetId;
+               }
+
+               if (mTextures[i].mTextureInactiveAsset.notNull())
+               {
+                  mTextures[i].mTextureInactiveAsset->load();
+                  if (mTextures[i].mTextureInactiveAsset->getStatus() == AssetBase::Ok)
+                  {
+                     mTextures[i].mTextureInactive = mTextures[i].mTextureInactiveAsset->getTexture(&GFXDefaultGUIProfile);
+                     break;
+                  }
+               }
+            }
+
+            if( !mTextures[ i ].mTextureInactive )
+               mTextures[ i ].mTextureInactive = mTextures[ i ].mTextureNormal;
+         }
+
+         if( i == 0 && mTextures[ i ].mTextureNormal.isNull() && mTextures[ i ].mTextureHilight.isNull() && mTextures[ i ].mTextureDepressed.isNull() && mTextures[ i ].mTextureInactive.isNull() )
+         {
+            Con::warnf( "GuiBitmapButtonCtrl::setBitmap - Unable to load texture: %s", mBitmapAssetRef.assetId);
+            this->setBitmap( StringTable->insert(GFXTextureManager::getUnavailableTexturePath().c_str()) );
+            return;
          }
       }
       
@@ -426,37 +433,6 @@ void GuiBitmapButtonCtrl::setBitmap( StringTableEntry name )
    }
    
    setUpdate();
-}
-
-//-----------------------------------------------------------------------------
-
-void GuiBitmapButtonCtrl::setBitmapHandles(GFXTexHandle normal, GFXTexHandle highlighted, GFXTexHandle depressed, GFXTexHandle inactive)
-{
-   const U32 count = mUseModifiers ? NumModifiers : 1;
-   for( U32 i = 0; i < count; ++ i )
-   {
-      mTextures[ i ].mTextureNormal = normal;
-      mTextures[ i ].mTextureHilight = highlighted;
-      mTextures[ i ].mTextureDepressed = depressed;
-      mTextures[ i ].mTextureInactive = inactive;
-
-      if (!mTextures[ i ].mTextureHilight)
-         mTextures[ i ].mTextureHilight = mTextures[ i ].mTextureNormal;
-      if (!mTextures[ i ].mTextureDepressed)
-         mTextures[ i ].mTextureDepressed = mTextures[ i ].mTextureHilight;
-      if (!mTextures[ i ].mTextureInactive)
-         mTextures[ i ].mTextureInactive = mTextures[ i ].mTextureNormal;
-
-      if (mTextures[ i ].mTextureNormal.isNull() && mTextures[ i ].mTextureHilight.isNull() && mTextures[ i ].mTextureDepressed.isNull() && mTextures[ i ].mTextureInactive.isNull())
-      {
-         Con::warnf("GuiBitmapButtonCtrl::setBitmapHandles() - Invalid texture handles");
-         setBitmap( StringTable->insert(GFXTextureManager::getUnavailableTexturePath().c_str()) );
-         
-         return;
-      }
-   }
-
-   mBitmapName = "texhandle";
 }
 
 //------------------------------------------------------------------------------
@@ -644,7 +620,7 @@ bool GuiBitmapButtonCtrl::pointInControl(const Point2I& parentCoordPoint)
       bmp = getTextureForCurrentState().getBitmap();
       if (!bmp)
       {
-         setBitmap(mBitmapName);
+         setBitmap(mBitmapAssetRef.assetId);
          bmp = getTextureForCurrentState().getBitmap();
       }
 
@@ -669,10 +645,12 @@ bool GuiBitmapButtonCtrl::pointInControl(const Point2I& parentCoordPoint)
       return Parent::pointInControl(parentCoordPoint);
 }
 
-DefineEngineMethod(GuiBitmapButtonCtrl, getBitmap, StringTableEntry, (), , "get name") {
-   return object->getBitmapFile();
-}DefineEngineMethod(GuiBitmapButtonCtrl, getBitmapAsset, StringTableEntry, (), , assetText(Bitmap, asset reference)) {
-   return object->_getBitmap();
-}DefineEngineMethod(GuiBitmapButtonCtrl, setBitmap, void, (const char* assetName), , assetText(Bitmap, assignment.first tries asset then flat file.)) {
+DefineEngineMethod(GuiBitmapButtonCtrl, getBitmapAsset, StringTableEntry, (), , "Get the Bitmap asset reference.")
+{
+   return object->getBitmapAssetId();
+}
+
+DefineEngineMethod(GuiBitmapButtonCtrl, setBitmap, void, (const char* assetName), , "Bitmap assignment. First tries asset then flat file.")
+{
    object->setBitmap(StringTable->insert(assetName));
 }

@@ -2982,27 +2982,27 @@ Torque::Path AssetImporter::importMaterialAsset(AssetImportObject* assetItem)
 
          if (imageType == ImageAsset::ImageTypes::Albedo || childItem->imageSuffixType.isEmpty())
          {
-            newMat->_setDiffuseMap(assetMapFillInStr,0);
+            newMat->setDiffuseMap(assetMapFillInStr,0);
          }
          else if (imageType == ImageAsset::ImageTypes::Normal)
          {
-            newMat->_setNormalMap(assetMapFillInStr, 0);
+            newMat->setNormalMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::ORMConfig)
          {
-            newMat->_setORMConfigMap(assetMapFillInStr, 0);
+            newMat->setORMConfigMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::Metalness)
          {
-            newMat->_setMetalMap(assetMapFillInStr, 0);
+            newMat->setMetalMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::AO)
          {
-            newMat->_setAOMap(assetMapFillInStr, 0);
+            newMat->setAOMap(assetMapFillInStr, 0);
          }
          else if (imageType == ImageAsset::ImageTypes::Roughness)
          {
-            newMat->_setRoughMap(assetMapFillInStr, 0);
+            newMat->setRoughMap(assetMapFillInStr, 0);
             hasRoughness = true;
          }
       }

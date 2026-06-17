@@ -53,7 +53,7 @@ function MaterialEditorGui::establishMaterials(%this)
       singleton CustomMaterial( materialEd_justAlphaMaterial )
       {
          mapTo = "matEd_mappedMatB";
-         texture[0] = materialEd_previewMaterial.getdiffuseMap(0);
+         texture[0] = materialEd_previewMaterial.getDiffuseMapAsset(0);
       };
    }
 
@@ -650,9 +650,6 @@ function MaterialEditorGui::setActiveMaterial( %this, %material )
       };
    }
    
-   // Converts the texture files into absolute paths.
-   MaterialEditorGui.convertTextureFields();
-
    // If we're allowing for name changes, make sure to save the name seperately
    %this.originalName = MaterialEditorGui.currentMaterial.name;
 
@@ -731,50 +728,6 @@ function MaterialEditorGui::setMaterialDirty(%this)
    }
    else
       matEd_PersistMan.setDirty(MaterialEditorGui.currentMaterial, MaterialEditorGui.defaultMaterialFile);
-}
-
-function MaterialEditorGui::convertTextureFields(%this)
-{
-   // Find the absolute paths for the texture filenames so that
-   // we can properly wire up the preview materials and controls.
-   
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "DiffuseMap");
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "NormalMap");
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "OverlayMap");
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "DetailMap");
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "LightMap");
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "ToneMap");
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "ORMConfigMap");
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "RoughMap");
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "AOMap");
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "MetalMap");
-   %this.convertMaterialTextureField(MaterialEditorGui.currentMaterial, "GlowMap");
-   }
-   
-function MaterialEditorGui::convertMaterialTextureField(%this, %material, %mapName)
-{
-   for(%index = 0; %index < 4; %index++)
-   {
-      %mapFile = %material.call("get" @ %mapName, %index);
-      if(%mapFile !$= "")
-      {
-         if(isFile(%mapFile))
-         {
-            //see if we can't go finding it 
-            %mapFile = MaterialEditorGui.searchForTexture(MaterialEditorGui.currentMaterial, %mapFile);      
-            MaterialEditorGui.currentMaterial.call("set" @ %mapName, %mapFile, %index);
-         }
-         else
-         {
-            %firstChar = getSubStr( %mapFile, 0, 1 );
-            if(%firstChar $= "#" || %firstChar $= "$" ) // we are a named target
-            {
-               %assetPtr = %material.call("get" @ %mapName @ "Asset", %index);
-               MaterialEditorGui.currentMaterial.call("set" @ %mapName, %assetPtr, %index);
-            }
-         }
-      }
-   }
 }
 
 // still needs to be optimized further

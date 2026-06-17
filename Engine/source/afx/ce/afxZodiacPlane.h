@@ -57,7 +57,9 @@ public:
   };
 
 public:
-   DECLARE_IMAGEASSET(afxZodiacPlaneData, Texture, AFX_GFXZodiacTextureProfile)
+   AssetRef<ImageAsset> mTextureAssetRef;
+
+   GFXTexHandle getTexture() { return mTextureAssetRef.notNull() ? mTextureAssetRef.assetPtr->getTexture(&AFX_GFXZodiacTextureProfile) : NULL; }
 
   F32               radius_xy;
   F32               start_ang;

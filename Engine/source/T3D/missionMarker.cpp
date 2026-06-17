@@ -471,7 +471,7 @@ void SpawnSphere::unpackUpdate(NetConnection * con, BitStream * stream)
       stream->read(&mSpawnDataBlock);
       if (oldSDB != mSpawnDataBlock)
       {
-         delete mShapeInstance;
+         SAFE_DELETE(mShapeInstance);
          ShapeBaseData *spawnedDatablock = dynamic_cast<ShapeBaseData *>(Sim::findObject(mSpawnDataBlock.c_str()));
          if (spawnedDatablock)
          {

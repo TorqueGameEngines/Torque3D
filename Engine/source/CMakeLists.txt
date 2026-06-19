@@ -14,6 +14,12 @@ find_package(FLAC CONFIG REQUIRED)
 find_package(Opus CONFIG REQUIRED)
 find_package(unofficial-theora CONFIG REQUIRED)
 find_package(SndFile CONFIG REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(PNG REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
+find_package(unofficial-pcre CONFIG REQUIRED)
+find_package(tinyxml2 CONFIG REQUIRED)
+find_package(unofficial-libsquish CONFIG REQUIRED)
 set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
     Ogg::ogg
     Vorbis::vorbis
@@ -22,7 +28,23 @@ set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
     Opus::opus
     unofficial::theora::theora unofficial::theora::theoradec unofficial::theora::theoraenc
     SndFile::sndfile
+    ZLIB::ZLIB
+    PNG::PNG
+    $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+    $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    unofficial::pcre::pcre unofficial::pcre::pcre16 unofficial::pcre::pcre32 unofficial::pcre::pcrecpp
+    tinyxml2::tinyxml2
+    unofficial::libsquish::squish
 )
+
+if(TORQUE_TESTING)
+find_package(GTest CONFIG REQUIRED)
+set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
+    GTest::gtest GTest::gmock
+)
+
+endif()
+
 ################# Helper Function Calls ###################
 forwardDef(TORQUE_OPENGL)
 forwardDef(TORQUE_D3D11)
@@ -786,8 +808,6 @@ target_include_directories(${TORQUE_APP_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR
 if(TORQUE_TESTING)
   if(WIN32)
         target_link_options(${TORQUE_APP_NAME} PRIVATE "/SUBSYSTEM:CONSOLE")
-        set_target_properties(gtest PROPERTIES COMPILE_FLAGS "/Zc:wchar_t-")
-        set_target_properties(gmock PROPERTIES COMPILE_FLAGS "/Zc:wchar_t-")
     endif()
 endif(TORQUE_TESTING)
 

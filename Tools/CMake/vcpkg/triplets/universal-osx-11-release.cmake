@@ -17,3 +17,7 @@ set(VCPKG_C_FLAGS -mmacosx-version-min=11.0)
 set(VCPKG_CXX_FLAGS -mmacosx-version-min=11.0)
 
 set(VCPKG_BUILD_TYPE release)
+
+set(VCPKG_CMAKE_CONFIGURE_OPTIONS
+    -DPNG_ARM_NEON=off
+)

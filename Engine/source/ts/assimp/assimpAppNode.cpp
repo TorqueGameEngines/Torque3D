@@ -48,16 +48,16 @@ aiAnimation* AssimpAppNode::sActiveSequence = NULL;
 F32 AssimpAppNode::sTimeMultiplier = 1.0f;
 
 AssimpAppNode::AssimpAppNode(const aiScene* scene, const aiNode* node, AssimpAppNode* parentNode)
-   :  mScene(scene),
-      mNode(node ? node : scene->mRootNode),
-      mInvertMeshes(false),
-      mLastTransformTime(TSShapeLoader::DefaultTime - 1),
-      mDefaultTransformValid(false)
+   : mScene(scene),
+   mNode(node ? node : scene->mRootNode),
+   mInvertMeshes(false),
+   mLastTransformTime(TSShapeLoader::DefaultTime - 1),
+   mDefaultTransformValid(false)
 {
    appParent = parentNode;
    // Initialize node and parent names.
    mName = dStrdup(mNode->mName.C_Str());
-   if ( dStrlen(mName) == 0 )
+   if (dStrlen(mName) == 0)
    {
       const char* defaultName = "null";
       mName = dStrdup(defaultName);
@@ -84,6 +84,14 @@ MatrixF AssimpAppNode::getTransform(F32 time)
       // no parent (ie. root level) => scale by global shape <unit>
       mLastTransform.identity();
       mLastTransform.scale(ColladaUtils::getOptions().unit * ColladaUtils::getOptions().formatScaleFactor);
+
+      if (mScene && mScene->mRootNode)
+      {
+         MatrixF sceneRootMat(true);
+         assimpToTorqueMat(mScene->mRootNode->mTransformation, sceneRootMat);
+         mLastTransform.mulL(sceneRootMat);
+      }
+
       if (!isBounds())
       {
          MatrixF axisFix = ColladaUtils::getOptions().axisCorrectionMat;

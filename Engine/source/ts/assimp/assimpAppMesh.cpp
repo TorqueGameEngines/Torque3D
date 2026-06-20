@@ -69,7 +69,7 @@ const char* AssimpAppMesh::getName(bool allowFixed)
    // actual object node. Detect this and return the object node name instead
    // of the pivot node.
    const char* nodeName = appNode->getName();
-   if ( dStrEqual(nodeName, "null") || dStrEndsWith(nodeName, "PIVOT") )
+   if (dStrEqual(nodeName, "null") || dStrEndsWith(nodeName, "PIVOT"))
       nodeName = appNode->getParentName();
 
    // If all geometry is being fixed to the same size, append the size
@@ -79,7 +79,37 @@ const char* AssimpAppMesh::getName(bool allowFixed)
 
 MatrixF AssimpAppMesh::getMeshTransform(F32 time)
 {
-   return appNode->getNodeTransform(time);
+   MatrixF transform = appNode->getNodeTransform(time);
+
+   // AssimpAppNode::getTransform() deliberately skips axis correction for the
+   // bounds node itself, since its (uncorrected) transform is used elsewhere
+   // as the reference frame the rest of the shape gets normalized against
+   // (see TSShapeLoader::getLocalNodeMatrix). But if this mesh's geometry was
+   // hand-modeled as part of the source scene (as opposed to the empty,
+   // auto-generated bounds node added when none exists), it lives in the same
+   // source up-axis space as every other mesh and needs the same correction
+   // baked into its locked vertex data - otherwise it ends up sitting in the
+   // model's original, unrotated space instead of Torque's Z-up space.
+   if (appNode->isBounds())
+   {
+      MatrixF axisFix = ColladaUtils::getOptions().axisCorrectionMat;
+      transform.mulL(axisFix);
+   }
+
+   return transform;
+}
+
+void AssimpAppMesh::computeBounds(Box3F& bounds)
+{
+   if (appNode->isBounds())
+   {
+      bounds = Box3F::Invalid;
+      for (S32 iVert = 0; iVert < points.size(); iVert++)
+         bounds.extend(points[iVert]);
+      return;
+   }
+
+   Parent::computeBounds(bounds);
 }
 
 void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
@@ -94,7 +124,7 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    bool flipNormals = ColladaUtils::getOptions().invertNormals;
 
    bool noUVFound = false;
-   for (U32 i = 0; i<mMeshData->mNumVertices; i++)
+   for (U32 i = 0; i < mMeshData->mNumVertices; i++)
    {
       // Points and Normals
       aiVector3D pt = mMeshData->mVertices[i];
@@ -169,10 +199,10 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
    primitive.matIndex = (TSDrawPrimitive::Triangles | TSDrawPrimitive::Indexed) | mappedMat;
    primitive.numElements = indicesCount;
 
-   for ( U32 n = 0; n < mMeshData->mNumFaces; ++n)
+   for (U32 n = 0; n < mMeshData->mNumFaces; ++n)
    {
       const struct aiFace* face = &mMeshData->mFaces[n];
-      if ( face->mNumIndices == 3 )
+      if (face->mNumIndices == 3)
       {
          U32 indexCount = face->mNumIndices;
          for (U32 ind = 0; ind < indexCount; ind++)
@@ -180,8 +210,8 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
             U32 index = face->mIndices[ind];
             indices.push_back(index);
          }
-      } 
-      else 
+      }
+      else
       {
          Con::printf("[ASSIMP] Non-Triangle Face Found. Indices: %d", face->mNumIndices);
       }
@@ -281,7 +311,7 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
       }
    }
 
-   if ( noUVFound )
+   if (noUVFound)
       Con::warnf("[ASSIMP] No UV Data for mesh.");
 }
 

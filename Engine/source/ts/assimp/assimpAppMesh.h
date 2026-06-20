@@ -119,7 +119,7 @@ public:
    /// @return The mesh transform at the specified time
    MatrixF getMeshTransform(F32 time) override;
    F32 getVisValue(F32 t) override;
-
+   void computeBounds(Box3F& bounds) override;
    static Vector<S32> sMaterialRemap;
 };
 

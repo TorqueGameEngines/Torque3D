@@ -1,5 +1,3 @@
-
-add_subdirectory(nativeFileDialogs ${TORQUE_LIB_TARG_DIRECTORY}/nfd EXCLUDE_FROM_ALL)
 add_subdirectory(convexMath ${TORQUE_LIB_TARG_DIRECTORY}/convexMath EXCLUDE_FROM_ALL)
 
 # Assimp

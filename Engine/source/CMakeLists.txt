@@ -20,6 +20,7 @@ find_package(SDL2 CONFIG REQUIRED)
 find_package(unofficial-pcre CONFIG REQUIRED)
 find_package(tinyxml2 CONFIG REQUIRED)
 find_package(unofficial-libsquish CONFIG REQUIRED)
+find_package(nfd CONFIG REQUIRED)
 set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
     Ogg::ogg
     Vorbis::vorbis
@@ -35,6 +36,7 @@ set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY}
     unofficial::pcre::pcre unofficial::pcre::pcre16 unofficial::pcre::pcre32 unofficial::pcre::pcrecpp
     tinyxml2::tinyxml2
     unofficial::libsquish::squish
+    nfd::nfd
 )
 
 if(TORQUE_TESTING)

@@ -113,6 +113,7 @@ set(TORQUE_VCPKG_PACKAGES
     libogg libvorbis libflac opus libtheora
     libsndfile[core,external-libs] 
     libsquish
+    nativefiledialog-extended
 )
 if(TORQUE_TESTING)
     list(APPEND TORQUE_VCPKG_PACKAGES gtest)

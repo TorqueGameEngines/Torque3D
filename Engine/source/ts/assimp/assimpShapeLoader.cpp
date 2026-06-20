@@ -996,8 +996,6 @@ static bool sReadAssimp(const Torque::Path &path, TSShape*& res_shape)
       tscon->mOptions = ColladaUtils::getOptions();
    }
 
-   AssimpShapeLoader loader;
-   TSShape* tss = loader.generateShape(path);
    if (tss)
    {
       TSShapeLoader::updateProgress(TSShapeLoader::Load_Complete, "Import complete");

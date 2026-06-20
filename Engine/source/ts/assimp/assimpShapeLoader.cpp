@@ -981,9 +981,19 @@ static bool sReadAssimp(const Torque::Path &path, TSShape*& res_shape)
    // Allow TSShapeConstructor object to override properties
    ColladaUtils::getOptions().reset();
    TSShapeConstructor* tscon = TSShapeConstructor::findShapeConstructorByFilename(path.getFullPath());
+   bool autoDetectUpAxis = true;
    if (tscon)
    {
       ColladaUtils::getOptions() = tscon->mOptions;
+      autoDetectUpAxis = (tscon->mOptions.upAxis == UPAXISTYPE_COUNT);
+   }
+
+   AssimpShapeLoader loader;
+   TSShape* tss = loader.generateShape(path);
+
+   if (tscon && autoDetectUpAxis)
+   {
+      tscon->mOptions = ColladaUtils::getOptions();
    }
 
    AssimpShapeLoader loader;

@@ -2864,7 +2864,10 @@ void Player::updateMove(const Move* move)
    speed_bias = speed_bias + (speed_bias_goal - speed_bias)*0.1f;
    moveSpeed *= speed_bias;
    // Acceleration due to gravity
-   VectorF acc(0.0f, 0.0f, mNetGravity/(1.0 - mBuoyancy) * TickSec);
+   F32 invBuoyancy = (1.0 - mBuoyancy);
+   if (mFabs(invBuoyancy) < POINT_EPSILON)
+      invBuoyancy = POINT_EPSILON;
+   VectorF acc(0.0f, 0.0f, mNetGravity / invBuoyancy * TickSec);
    if (getParent() !=NULL)
       acc = VectorF::Zero;
 

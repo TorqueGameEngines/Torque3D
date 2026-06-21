@@ -131,7 +131,9 @@ void AssimpAppNode::getAnimatedTransform(MatrixF& mat, F32 t, aiAnimation* animS
    for (U32 k = 0; k < animSeq->mNumChannels; ++k)
    {
       const aiNodeAnim* nodeAnim = animSeq->mChannels[k];
-      if (dStrcmp(mName, nodeAnim->mNodeName.C_Str()) != 0)
+      String m_node_name = mName;
+      String ai_node_name = nodeAnim->mNodeName.C_Str();
+      if (!ai_node_name.equal(m_node_name))
          continue;
 
       Point3F translation(Point3F::Zero);
@@ -275,6 +277,37 @@ MatrixF AssimpAppNode::getNodeTransform(F32 time)
 
       return nodeTransform;
    }
+}
+
+MatrixF AssimpAppNode::getBoundsReferenceTransform(F32 time)
+{
+   // Deliberately independent of this node's own raw local data (rotation,
+   // scale) and of axisCorrectionMat
+   MatrixF mat(true);
+   mat.scale(ColladaUtils::getOptions().unit * ColladaUtils::getOptions().formatScaleFactor);
+
+   if (mScene && mScene->mRootNode)
+   {
+      MatrixF sceneRootMat(true);
+      assimpToTorqueMat(mScene->mRootNode->mTransformation, sceneRootMat);
+      mat.mulL(sceneRootMat);
+   }
+
+   return mat;
+}
+
+MatrixF AssimpAppNode::getOwnRotationOnly(F32 time)
+{
+   // This node's own raw mNodeTransform
+   MatrixF rotOnly(mNodeTransform);
+   Point3F rawScale = rotOnly.getScale();
+   Point3F invScale(
+      rawScale.x ? 1.0f / rawScale.x : 0.0f,
+      rawScale.y ? 1.0f / rawScale.y : 0.0f,
+      rawScale.z ? 1.0f / rawScale.z : 0.0f);
+   rotOnly.scale(invScale);
+   rotOnly.setPosition(Point3F::Zero);
+   return rotOnly;
 }
 
 void AssimpAppNode::assimpToTorqueMat(const aiMatrix4x4& inAssimpMat, MatrixF& outMat)

@@ -122,6 +122,8 @@ public:
    }
 
    MatrixF getNodeTransform(F32 time) override;
+   MatrixF getBoundsReferenceTransform(F32 time) override;
+   MatrixF getOwnRotationOnly(F32 time) override;
    bool animatesTransform(const AppSequence* appSeq) override;
    bool isParentRoot() override { return (appParent == NULL); }
 

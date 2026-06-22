@@ -151,7 +151,8 @@ Taml::Taml() :
    mAutoFormat(true),
    mProgenitorUpdate(true),
    mAutoFormatBinaryExtension("baml"),
-   mAutoFormatJSONExtension("json")
+   mAutoFormatJSONExtension("json"),
+   mWriteLocked(false)
 {
    // Reset the file-path buffer.
    mFilePathBuffer[0] = 0;
@@ -215,6 +216,10 @@ bool Taml::write(SimObject* pSimObject, const char* pFilename)
    AssertFatal(pSimObject != NULL, "Cannot write a NULL object.");
    AssertFatal(pFilename != NULL, "Cannot write to a NULL filename.");
 
+   if (mWriteLocked)
+      return false;
+
+   mWriteLocked = true;
    // Expand the file-name into the file-path buffer unless we're a secure VFS
 #ifndef TORQUE_SECURE_VFS
    Con::expandToolScriptFilename(mFilePathBuffer, sizeof(mFilePathBuffer), pFilename);
@@ -230,6 +235,7 @@ bool Taml::write(SimObject* pSimObject, const char* pFilename)
    {
       // No, so warn.
       Con::warnf("Taml::writeFile() - Could not open filename '%s' for write.", mFilePathBuffer);
+      mWriteLocked = false;
       return false;
    }
 
@@ -247,7 +253,7 @@ bool Taml::write(SimObject* pSimObject, const char* pFilename)
 
    // Reset the compilation.
    resetCompilation();
-
+   mWriteLocked = false;
    return status;
 }
 
@@ -487,6 +493,10 @@ void Taml::resetCompilation(void)
 {
    // Debug Profiling.
    PROFILE_SCOPE(Taml_ResetCompilation);
+
+   // make sure we don't reset while writing, as this can cause a crash
+   if (mWriteLocked)
+      return;
 
    // Clear compiled nodes.
    for (typeNodeVector::iterator itr = mCompiledNodes.begin(); itr != mCompiledNodes.end(); ++itr)
@@ -926,8 +936,12 @@ void Taml::compileCustomState(TamlWriteNode* pTamlWriteNode)
       tamlCustomWrite(pTamlWriteNode->mpTamlCallbacks, customNodes);
    }
 
+   // make sure we have compiled nodes to work with
+   if (mCompiledNodes.size() == 0)
+      return;
+
    // Fetch custom nodes.
-   const TamlCustomNodeVector& nodes = customNodes.getNodes();
+   TamlCustomNodeVector nodes = customNodes.getNodes();
 
    // Finish if no custom nodes to process.
    if (nodes.size() == 0)

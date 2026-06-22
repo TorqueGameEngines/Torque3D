@@ -99,6 +99,7 @@ private:
     bool                mAutoFormat;
     bool                mWriteDefaults;
     bool                mProgenitorUpdate;
+    bool                mWriteLocked;
     char                mFilePathBuffer[1024];
 
 private:

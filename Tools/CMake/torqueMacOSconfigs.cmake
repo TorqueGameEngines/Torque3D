@@ -64,32 +64,4 @@ set(CMAKE_INSTALL_RPATH "@executable_path/../Frameworks")
 set(CMAKE_BUILD_RPATH "@executable_path/../Frameworks")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-function(sign_dylibs_post_build TARGET)
-    if(NOT APPLE)
-        return()
-    endif()
-
-    if(NOT ARGN)
-        message(WARNING "sign_dylibs_post_build: no dylibs provided for target '${TARGET}'")
-        return()
-    endif()
-
-    if(NOT DEFINED APPLE_CODESIGN_IDENTITY)
-        set(APPLE_CODESIGN_IDENTITY "-")
-    endif()
-
-    foreach(DYLIB_PATH IN LISTS ARGN)
-        add_custom_command(TARGET ${TARGET} POST_BUILD
-            COMMAND codesign
-                --force
-                --sign "${APPLE_CODESIGN_IDENTITY}"
-                --timestamp
-                --options runtime
-                "${DYLIB_PATH}"
-            COMMENT "Signing ${DYLIB_PATH}"
-            VERBATIM
-        )
-    endforeach()
-endfunction()
-
 endif(APPLE)

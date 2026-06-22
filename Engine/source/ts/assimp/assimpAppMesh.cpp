@@ -123,6 +123,10 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
 
    bool flipNormals = ColladaUtils::getOptions().invertNormals;
 
+   MatrixF normalMat(objOffset);
+   normalMat.inverse();
+   normalMat.transpose();
+
    bool noUVFound = false;
    for (U32 i = 0; i < mMeshData->mNumVertices; i++)
    {
@@ -143,6 +147,10 @@ void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)
          tmpNormal *= -1.0f;
 
       objOffset.mulP(tmpVert);
+
+      normalMat.mulV(tmpNormal);
+      if (mMeshData->HasNormals())
+         tmpNormal.normalize();
 
       points.push_back(tmpVert);
 

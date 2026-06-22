@@ -91,9 +91,9 @@ static struct _privateRegisterAssimp
          {
             const String& ext = tokens[t];
             if (ext.isEmpty() ||
-                  ext.equal("dae", String::NoCase) || // filter out collada importer formats (for now).
-                  ext.equal("zae", String::NoCase) ||
-                  ext.equal("xml", String::NoCase)
+               ext.equal("dae", String::NoCase) || // filter out collada importer formats (for now).
+               ext.equal("zae", String::NoCase) ||
+               ext.equal("xml", String::NoCase)
                )
                continue;
 
@@ -135,7 +135,7 @@ static struct _privateRegisterAssimp
 
 //-----------------------------------------------------------------------------
 
-AssimpShapeLoader::AssimpShapeLoader() 
+AssimpShapeLoader::AssimpShapeLoader()
 {
    mScene = NULL;
 }
@@ -275,8 +275,6 @@ void AssimpShapeLoader::enumerateScene()
       }
    }
 
-   ColladaUtils::getOptions().upAxis = UPAXISTYPE_Z_UP;
-   // Compute & apply axis conversion matrix
    getRootAxisTransform();
 
    for (U32 i = 0; i < mScene->mNumTextures; ++i) {
@@ -311,11 +309,9 @@ void AssimpShapeLoader::enumerateScene()
       }
    }
 
-   // Add a bounds node if none exists
    if (!boundsNode) {
-      
       aiNode* reqNode = new aiNode("bounds");
-      reqNode->mTransformation = aiMatrix4x4();// *sceneRoot;
+      reqNode->mTransformation = aiMatrix4x4();
       AssimpAppNode* appBoundsNode = new AssimpAppNode(mScene, reqNode);
       if (!processNode(appBoundsNode)) {
          delete appBoundsNode;
@@ -383,34 +379,42 @@ void AssimpShapeLoader::configureImportUnits() {
 
 void AssimpShapeLoader::getRootAxisTransform()
 {
-   aiMetadata* meta = mScene->mMetaData;
-   if (!meta)
-   {
-      // assume y up
-      ColladaUtils::getOptions().upAxis = UPAXISTYPE_Y_UP;
-      return;
-   }
-
-   // Fetch metadata values
    int upAxis = 1, upSign = 1;
    int frontAxis = 2, frontSign = -1;
    int coordAxis = 0, coordSign = 1;
 
-   meta->Get("UpAxis", upAxis);
-   meta->Get("UpAxisSign", upSign);
-   meta->Get("FrontAxis", frontAxis);
-   meta->Get("FrontAxisSign", frontSign);
-   meta->Get("CoordAxis", coordAxis);
-   meta->Get("CoordAxisSign", coordSign);
-
-   switch (upAxis)
+   aiMetadata* meta = mScene->mMetaData;
+   if (meta)
    {
-      case 0: ColladaUtils::getOptions().upAxis = UPAXISTYPE_X_UP; break;
-      case 1: ColladaUtils::getOptions().upAxis = UPAXISTYPE_Y_UP; break;
-      case 2: ColladaUtils::getOptions().upAxis = UPAXISTYPE_Z_UP; break;
-      default: ColladaUtils::getOptions().upAxis = UPAXISTYPE_Y_UP; break;
+      meta->Get("UpAxis", upAxis);
+      meta->Get("UpAxisSign", upSign);
+      meta->Get("FrontAxis", frontAxis);
+      meta->Get("FrontAxisSign", frontSign);
+      meta->Get("CoordAxis", coordAxis);
+      meta->Get("CoordAxisSign", coordSign);
    }
 
+   if (ColladaUtils::getOptions().upAxis != UPAXISTYPE_COUNT)
+   {
+      switch (ColladaUtils::getOptions().upAxis)
+      {
+      case UPAXISTYPE_X_UP: upAxis = 0; break;
+      case UPAXISTYPE_Y_UP: upAxis = 1; break;
+      case UPAXISTYPE_Z_UP: upAxis = 2; break;
+      default: break;
+      }
+   }
+
+   domUpAxisType canonicalAxis;
+   switch (upAxis)
+   {
+   case 0: canonicalAxis = UPAXISTYPE_X_UP; break;
+   case 1: canonicalAxis = UPAXISTYPE_Y_UP; break;
+   case 2: canonicalAxis = UPAXISTYPE_Z_UP; break;
+   default: canonicalAxis = UPAXISTYPE_Y_UP; break;
+   }
+
+   ColladaUtils::getOptions().upAxis = canonicalAxis;
    MatrixF rot(true);
 
    // Build source basis
@@ -531,7 +535,7 @@ void AssimpShapeLoader::computeBounds(Box3F& bounds)
             {
                for (S32 iFrame = 0; iFrame < seq.numKeyframes; iFrame++)
                {
-                  S32 index = seq.baseTranslation + seq.translationMatters.count(iNode)*seq.numKeyframes + iFrame;
+                  S32 index = seq.baseTranslation + seq.translationMatters.count(iNode) * seq.numKeyframes + iFrame;
                   shape->nodeTranslations[index] += shapeOffset;
                }
             }
@@ -682,7 +686,7 @@ bool AssimpShapeLoader::canLoadCachedDTS(const Torque::Path& path)
 
       FileTime daeModifyTime;
       if (!Platform::getFileTimes(path.getFullPath(), NULL, &daeModifyTime) ||
-         (!forceLoad && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0) ))
+         (!forceLoad && (Platform::compareFileTimes(cachedModifyTime, daeModifyTime) >= 0)))
       {
          // Original file not found, or cached DTS is newer
          return true;
@@ -770,7 +774,7 @@ void AssimpShapeLoader::extractTexture(U32 index, aiTexture* pTex)
    if (pTex->mHeight == 0)
    {  // Compressed format, write the data directly to disc
       texPath.setExtension(pTex->achFormatHint);
-      FileStream *outputStream;
+      FileStream* outputStream;
       if ((outputStream = FileStream::createAndOpen(texPath.getFullPath(), Torque::FS::File::Write, FileStream::AsyncMode::Background)) != NULL)
       {
          outputStream->setPosition(0);
@@ -784,7 +788,7 @@ void AssimpShapeLoader::extractTexture(U32 index, aiTexture* pTex)
       GFXTexHandle shapeTex;
       shapeTex.set(pTex->mWidth, pTex->mHeight, GFXFormatR8G8B8A8_SRGB, &GFXDynamicTextureSRGBProfile,
          String::ToString("AssimpShapeLoader (%s:%i)", __FILE__, __LINE__), 1, 0);
-      GFXLockedRect *rect = shapeTex.lock();
+      GFXLockedRect* rect = shapeTex.lock();
 
       for (U32 y = 0; y < pTex->mHeight; ++y)
       {
@@ -970,7 +974,7 @@ bool AssimpShapeLoader::getMetaString(const char* key, String& stringVal)
 }
 //-----------------------------------------------------------------------------
 /// This function is invoked by the resource manager based on file extension.
-static bool sReadAssimp(const Torque::Path &path, TSShape*& res_shape)
+static bool sReadAssimp(const Torque::Path& path, TSShape*& res_shape)
 {
    if (!Torque::FS::IsFile(path))
    {
@@ -991,11 +995,9 @@ static bool sReadAssimp(const Torque::Path &path, TSShape*& res_shape)
    AssimpShapeLoader loader;
    TSShape* tss = loader.generateShape(path);
 
+   // override default options with the ones provided by the assimp import.
    if (tscon && autoDetectUpAxis)
-   {
       tscon->mOptions = ColladaUtils::getOptions();
-   }
-
    if (tss)
    {
       TSShapeLoader::updateProgress(TSShapeLoader::Load_Complete, "Import complete");

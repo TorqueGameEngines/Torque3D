@@ -490,7 +490,11 @@ if (APPLE)
         XCODE_ATTRIBUTE_ENABLE_TESTABILITY[variant=Debug] YES
         XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=Debug] parent
         XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=RelWithDebInfo] parent
-        XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=Release] resource)
+        XCODE_ATTRIBUTE_SDL_FILE_DIR[variant=Release] resource
+    )
+
+    get_target_property(_sdl2_loc SDL2::SDL2 IMPORTED_LOCATION)
+    sign_dylib_post_build(${TORQUE_APP_NAME} "${_sdl2_loc}")
  
 elseif (WIN32)
     add_executable(${TORQUE_APP_NAME} WIN32 ${TORQUE_SOURCE_FILES})

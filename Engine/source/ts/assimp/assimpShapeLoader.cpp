@@ -372,8 +372,8 @@ void AssimpShapeLoader::configureImportUnits() {
       }
 
       F32 fps;
-      getMetaFloat("CustomFrameRate", fps);
-      opts.animFPS = fps;
+      if(getMetaFloat("CustomFrameRate", fps))
+         opts.animFPS = fps;
    }
 }
 
@@ -451,47 +451,266 @@ void AssimpShapeLoader::getRootAxisTransform()
 
 void AssimpShapeLoader::processAnimations()
 {
-   // add all animations into 1 ambient animation.
-   aiAnimation* ambientSeq = new aiAnimation();
-   ambientSeq->mName = "ambient";
+   if (mScene->mNumAnimations == 0)
+      return;
 
-   Vector<aiNodeAnim*> ambientChannels;
-   F32 duration = 0.0f;
-   F32 maxKeyTime = 0.0f;
-   if (mScene->mNumAnimations > 0)
+   // First pass: check whether this is an export with multiple actions.
+   // tested on Blender -> FBX only, gltf doesnt work.
+   bool hasMultipleActions = false;
+   if(mScene->mNumAnimations > 1)
+      hasMultipleActions = true;
+
+   if (!hasMultipleActions)
    {
+      F64 srcTPS = mScene->mAnimations[0]->mTicksPerSecond;
+      F64 srcDur = mScene->mAnimations[0]->mDuration;
+
+      ColladaUtils::ImportOptions& opts = ColladaUtils::getOptions();
+      if (srcTPS <= 0.0 && srcDur < 100.0)
+         opts.animTiming = ColladaUtils::ImportOptions::Seconds;
+      else if (srcTPS >= 999.0 && srcTPS <= 1001.0)
+         opts.animTiming = ColladaUtils::ImportOptions::Milliseconds;
+      else
+         opts.animTiming = ColladaUtils::ImportOptions::FrameCount;
+
+      F64 targetTPS = (srcTPS > 0.0) ? srcTPS : ColladaUtils::getOptions().animFPS;
+
+      // Original single-timeline path (no '|' in any animation name).
+      // Concatenate all channels into one ambient sequence, exactly as before.
+      aiAnimation* ambientSeq = new aiAnimation();
+      ambientSeq->mName = "ambient";
+
+      Vector<aiNodeAnim*> ambientChannels;
+      F32 maxKeyTime = 0.0f;
+
       for (U32 i = 0; i < mScene->mNumAnimations; ++i)
       {
          aiAnimation* anim = mScene->mAnimations[i];
-
-         duration = 0.0f;
          for (U32 j = 0; j < anim->mNumChannels; j++)
          {
             aiNodeAnim* nodeAnim = anim->mChannels[j];
-            // Determine the maximum keyframe time for this animation
-            for (U32 k = 0; k < nodeAnim->mNumPositionKeys; k++) {
+            for (U32 k = 0; k < nodeAnim->mNumPositionKeys; k++)
                maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mPositionKeys[k].mTime);
-            }
-            for (U32 k = 0; k < nodeAnim->mNumRotationKeys; k++) {
+            for (U32 k = 0; k < nodeAnim->mNumRotationKeys; k++)
                maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mRotationKeys[k].mTime);
-            }
-            for (U32 k = 0; k < nodeAnim->mNumScalingKeys; k++) {
+            for (U32 k = 0; k < nodeAnim->mNumScalingKeys; k++)
                maxKeyTime = getMax(maxKeyTime, (F32)nodeAnim->mScalingKeys[k].mTime);
-            }
-
             ambientChannels.push_back(nodeAnim);
-
-            duration = getMax(duration, maxKeyTime);
          }
       }
 
       ambientSeq->mNumChannels = ambientChannels.size();
       ambientSeq->mChannels = ambientChannels.address();
-      ambientSeq->mDuration = duration;
-      ambientSeq->mTicksPerSecond = ColladaUtils::getOptions().animFPS;
+      ambientSeq->mDuration = maxKeyTime;
+      ambientSeq->mTicksPerSecond = targetTPS;
 
-      AssimpAppSequence* defaultAssimpSeq = new AssimpAppSequence(ambientSeq);
-      appSequences.push_back(defaultAssimpSeq);
+      appSequences.push_back(new AssimpAppSequence(ambientSeq));
+      return;
+   }
+
+   // Calculate the timing used for this import.
+   {
+      F64 srcTPS = mScene->mAnimations[0]->mTicksPerSecond;
+      F64 srcDur = mScene->mAnimations[0]->mDuration;
+
+      ColladaUtils::ImportOptions& opts = ColladaUtils::getOptions();
+      if (srcTPS <= 0.0 && srcDur < 100.0)
+         opts.animTiming = ColladaUtils::ImportOptions::Seconds;
+      else if (srcTPS >= 999.0 && srcTPS <= 1001.0)
+         opts.animTiming = ColladaUtils::ImportOptions::Milliseconds;
+      else
+         opts.animTiming = ColladaUtils::ImportOptions::FrameCount;
+
+      Con::printf("[ASSIMP] Animation timing: %s (mTicksPerSecond=%.1f)",
+         opts.animTiming == ColladaUtils::ImportOptions::Seconds ? "Seconds" :
+         opts.animTiming == ColladaUtils::ImportOptions::Milliseconds ? "Milliseconds" : "FrameCount",
+         (F32)srcTPS);
+   }
+
+   // Seperated action path.
+   // Data structures (kept as parallel vectors to avoid STL map dependency):
+   //    actionNames[i]     - unique action name (after '|')
+   //    actionDurations[i] - duration (ticks) of that action
+   //    actionChannels[i]  - correctly-matched channels for that action
+   //    actionNodesSeen[i] - node names already added (deduplication guard)
+   Vector<String>               actionNames;
+   Vector<F64>                  actionDurations;
+   Vector< Vector<aiNodeAnim*> > actionChannels;
+   Vector< Vector<String> >     actionNodesSeen;
+
+   F64 ticksPerSecond = mScene->mAnimations[0]->mTicksPerSecond;
+   if (ticksPerSecond <= 0.0) ticksPerSecond = 30.0;
+
+   // GLTF stores times in seconds (mTicksPerSecond==0, mDuration < 100).
+   // FBX stores frame-count ticks (mTicksPerSecond > 0, mDuration in hundreds).
+   // Detect and rescale to ticks so both formats produce the same units downstream.
+   F64 srcTPS = mScene->mAnimations[0]->mTicksPerSecond;
+   F64 srcDur = mScene->mAnimations[0]->mDuration;
+   bool timesInSeconds = (srcTPS <= 0.0 && srcDur < 100.0);
+   F32  timeScale = timesInSeconds ? (F32)ticksPerSecond : 1.0f;
+
+   if (timesInSeconds)
+   {
+      // Rescale all key timestamps in every animation channel in-place
+      for (U32 i = 0; i < mScene->mNumAnimations; ++i)
+      {
+         aiAnimation* anim = mScene->mAnimations[i];
+         anim->mDuration *= timeScale;
+         for (U32 j = 0; j < anim->mNumChannels; ++j)
+         {
+            aiNodeAnim* ch = anim->mChannels[j];
+            for (U32 k = 0; k < ch->mNumPositionKeys; ++k) ch->mPositionKeys[k].mTime *= timeScale;
+            for (U32 k = 0; k < ch->mNumRotationKeys; ++k) ch->mRotationKeys[k].mTime *= timeScale;
+            for (U32 k = 0; k < ch->mNumScalingKeys; ++k) ch->mScalingKeys[k].mTime *= timeScale;
+         }
+      }
+   }
+
+   for (U32 i = 0; i < mScene->mNumAnimations; ++i)
+   {
+      aiAnimation* anim = mScene->mAnimations[i];
+      const char* fullName = anim->mName.C_Str();
+      const char* pipe = dStrchr(fullName, '|');
+
+      // Extract "NodePrefix" and "ActionName" from "NodePrefix|ActionName"
+      String nodePrefix = pipe ? String(fullName, (U32)(pipe - fullName)) : String("");
+      String actionName = pipe ? String(pipe + 1) : String(fullName);
+
+      // Find or create the action slot
+      S32 slot = -1;
+      for (S32 k = 0; k < (S32)actionNames.size(); ++k)
+      {
+         if (actionNames[k] == actionName) { slot = k; break; }
+      }
+      if (slot == -1)
+      {
+         slot = (S32)actionNames.size();
+         actionNames.push_back(actionName);
+         actionDurations.push_back(0.0);
+         actionChannels.push_back(Vector<aiNodeAnim*>());
+         actionNodesSeen.push_back(Vector<String>());
+      }
+
+      // Track maximum duration for this action
+      if (anim->mDuration > actionDurations[slot])
+         actionDurations[slot] = anim->mDuration;
+
+      // Accept channels whose node name matches the prefix
+      for (U32 j = 0; j < anim->mNumChannels; ++j)
+      {
+         aiNodeAnim* chan = anim->mChannels[j];
+         String chanNode = chan->mNodeName.C_Str();
+
+         if (!nodePrefix.isEmpty() && nodePrefix != chanNode)
+            continue;
+
+         // Deduplicate: first channel for a given node in this action wins
+         bool alreadyAdded = false;
+         for (U32 n = 0; n < actionNodesSeen[slot].size(); ++n)
+         {
+            if (actionNodesSeen[slot][n] == chanNode) { alreadyAdded = true; break; }
+         }
+         if (!alreadyAdded)
+         {
+            actionChannels[slot].push_back(chan);
+            actionNodesSeen[slot].push_back(chanNode);
+         }
+      }
+   }
+
+   // -----------------------------------------------------------------------
+   // AMBIENT and NAMED SEQUENCES both use own-action-only channels.
+   // -----------------------------------------------------------------------
+   {
+      // AMBIENT: use ONLY each node's own canonical action channel.
+      Vector<aiNodeAnim*> ownChans;
+      F64 ambientDuration = 0.0;
+
+      for (U32 i = 0; i < actionNames.size(); ++i)
+      {
+         String      ownerName;
+         aiNodeAnim* ownerChan = nullptr;
+
+         for (U32 j = 0; j < actionChannels[i].size(); ++j)
+         {
+            const String& nodeName = actionNodesSeen[i][j];
+            U32 nodeLen = nodeName.length();
+            // Exact owner match: action name = nodeName + "Action" [+ optional suffix].
+            const char* actionStr = actionNames[i].c_str();
+            if (dStrnicmp(actionStr, nodeName.c_str(), nodeLen) == 0
+               && dStrnicmp(actionStr + nodeLen, "Action", 6) == 0
+               && nodeLen > ownerName.length())
+            {
+               ownerName = nodeName;
+               ownerChan = actionChannels[i][j];
+            }
+         }
+
+         if (ownerChan)
+         {
+            ownChans.push_back(ownerChan);
+            ambientDuration = getMax(ambientDuration, actionDurations[i]);
+            Con::printf("[ASSIMP] Ambient channel: node=%-25s action=%s  duration=%.1f ticks",
+               ownerName.c_str(), actionNames[i].c_str(), (F32)actionDurations[i]);
+         }
+      }
+
+      aiAnimation* ambientAnim = new aiAnimation();
+      ambientAnim->mName = aiString("ambient");
+      ambientAnim->mTicksPerSecond = ticksPerSecond;
+      ambientAnim->mDuration = ambientDuration;
+      ambientAnim->mNumChannels = ownChans.size();
+      ambientAnim->mChannels = new aiNodeAnim * [ownChans.size()];
+      for (U32 i = 0; i < ownChans.size(); ++i)
+         ambientAnim->mChannels[i] = ownChans[i];
+
+      Con::printf("[ASSIMP] Ambient: %d own-action channels, duration=%.1f ticks (%.2f sec)",
+         ambientAnim->mNumChannels, (F32)ambientDuration, (F32)(ambientDuration / ticksPerSecond));
+
+      appSequences.push_back(new AssimpAppSequence(ambientAnim));
+   }
+
+   // -----------------------------------------------------------------------
+   // NAMED SEQUENCES: one sequence per unique action, containing ONLY the
+   // owning node's channel. 
+   // -----------------------------------------------------------------------
+   for (U32 i = 0; i < actionNames.size(); ++i)
+   {
+      if (actionChannels[i].empty())
+         continue;
+
+      // Identify the owning node by exact nodeName+"Action" match (same logic as ambient)
+      String      ownerName;
+      aiNodeAnim* ownerChan = nullptr;
+      for (U32 j = 0; j < actionChannels[i].size(); ++j)
+      {
+         const String& nodeName = actionNodesSeen[i][j];
+         U32 nodeLen = nodeName.length();
+         const char* actionStr = actionNames[i].c_str();
+         if (dStrnicmp(actionStr, nodeName.c_str(), nodeLen) == 0
+            && dStrnicmp(actionStr + nodeLen, "Action", 6) == 0
+            && nodeLen > ownerName.length())
+         {
+            ownerName = nodeName;
+            ownerChan = actionChannels[i][j];
+         }
+      }
+
+      if (!ownerChan)
+         continue;
+
+      aiAnimation* seq = new aiAnimation();
+      seq->mName = aiString(actionNames[i].c_str());
+      seq->mTicksPerSecond = ticksPerSecond;
+      seq->mDuration = actionDurations[i];
+      seq->mNumChannels = 1;
+      seq->mChannels = new aiNodeAnim * [1];
+      seq->mChannels[0] = ownerChan;
+
+      Con::printf("[ASSIMP] Sequence '%s': owner=%s  duration=%.1f ticks",
+         actionNames[i].c_str(), ownerName.c_str(), (F32)actionDurations[i]);
+
+      appSequences.push_back(new AssimpAppSequence(seq));
    }
 }
 

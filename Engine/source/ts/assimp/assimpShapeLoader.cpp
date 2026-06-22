@@ -696,19 +696,33 @@ void AssimpShapeLoader::processAnimations()
          }
       }
 
-      if (!ownerChan)
-         continue;
-
       aiAnimation* seq = new aiAnimation();
       seq->mName = aiString(actionNames[i].c_str());
       seq->mTicksPerSecond = ticksPerSecond;
       seq->mDuration = actionDurations[i];
-      seq->mNumChannels = 1;
-      seq->mChannels = new aiNodeAnim * [1];
-      seq->mChannels[0] = ownerChan;
 
-      Con::printf("[ASSIMP] Sequence '%s': owner=%s  duration=%.1f ticks",
-         actionNames[i].c_str(), ownerName.c_str(), (F32)actionDurations[i]);
+      if (ownerChan)
+      {
+         // Per-object action: single owner channel only.
+         // Non-owner nodes inherit parent motion via Torque's hierarchy.
+         seq->mNumChannels = 1;
+         seq->mChannels = new aiNodeAnim * [1];
+         seq->mChannels[0] = ownerChan;
+         Con::printf("[ASSIMP] Sequence '%s': owner=%s  duration=%.1f ticks",
+            actionNames[i].c_str(), ownerName.c_str(), (F32)actionDurations[i]);
+      }
+      else
+      {
+         // No per-object naming match: this is a deliberately multi-node
+         // authored action (e.g. "GateOpen", "ArmSystemExtend"). Include
+         // all channels so the full choreography is preserved.
+         seq->mNumChannels = actionChannels[i].size();
+         seq->mChannels = new aiNodeAnim * [seq->mNumChannels];
+         for (U32 k = 0; k < actionChannels[i].size(); ++k)
+            seq->mChannels[k] = actionChannels[i][k];
+         Con::printf("[ASSIMP] Sequence '%s': multi-node (%d channels)  duration=%.1f ticks",
+            actionNames[i].c_str(), seq->mNumChannels, (F32)actionDurations[i]);
+      }
 
       appSequences.push_back(new AssimpAppSequence(seq));
    }

@@ -454,11 +454,8 @@ void AssimpShapeLoader::processAnimations()
    if (mScene->mNumAnimations == 0)
       return;
 
-   // First pass: check whether this is an export with multiple actions.
-   // tested on Blender -> FBX only, gltf doesnt work.
-   bool hasMultipleActions = false;
-   if(mScene->mNumAnimations > 1)
-      hasMultipleActions = true;
+   // Multiple animations = multiple actions; single animation = flat timeline.
+   bool hasMultipleActions = (mScene->mNumAnimations > 1);
 
    if (!hasMultipleActions)
    {
@@ -475,8 +472,7 @@ void AssimpShapeLoader::processAnimations()
 
       F64 targetTPS = (srcTPS > 0.0) ? srcTPS : ColladaUtils::getOptions().animFPS;
 
-      // Original single-timeline path (no '|' in any animation name).
-      // Concatenate all channels into one ambient sequence, exactly as before.
+      // Single-timeline path: concatenate all channels into one ambient sequence.
       aiAnimation* ambientSeq = new aiAnimation();
       ambientSeq->mName = "ambient";
 
@@ -527,19 +523,16 @@ void AssimpShapeLoader::processAnimations()
          (F32)srcTPS);
    }
 
-   // Seperated action path.
    // Data structures (kept as parallel vectors to avoid STL map dependency):
    //    actionNames[i]     - unique action name (after '|')
    //    actionDurations[i] - duration (ticks) of that action
-   //    actionChannels[i]  - correctly-matched channels for that action
-   //    actionNodesSeen[i] - node names already added (deduplication guard)
-   Vector<String>               actionNames;
-   Vector<F64>                  actionDurations;
+   //    actionChannels[i]  - channels for that action (deduped by mNodeName)
+   Vector<String>                actionNames;
+   Vector<F64>                   actionDurations;
    Vector< Vector<aiNodeAnim*> > actionChannels;
-   Vector< Vector<String> >     actionNodesSeen;
 
    F64 ticksPerSecond = mScene->mAnimations[0]->mTicksPerSecond;
-   if (ticksPerSecond <= 0.0) ticksPerSecond = 30.0;
+   if (ticksPerSecond <= 0.0) ticksPerSecond = ColladaUtils::getOptions().animFPS;
 
    // GLTF stores times in seconds (mTicksPerSecond==0, mDuration < 100).
    // FBX stores frame-count ticks (mTicksPerSecond > 0, mDuration in hundreds).
@@ -551,7 +544,6 @@ void AssimpShapeLoader::processAnimations()
 
    if (timesInSeconds)
    {
-      // Rescale all key timestamps in every animation channel in-place
       for (U32 i = 0; i < mScene->mNumAnimations; ++i)
       {
          aiAnimation* anim = mScene->mAnimations[i];
@@ -572,8 +564,9 @@ void AssimpShapeLoader::processAnimations()
       const char* fullName = anim->mName.C_Str();
       const char* pipe = dStrchr(fullName, '|');
 
-      // Extract "NodePrefix" and "ActionName" from "NodePrefix|ActionName"
-      String nodePrefix = pipe ? String(fullName, (U32)(pipe - fullName)) : String("");
+      // Strip "NodeName|" — only the action name (part after pipe) is needed.
+      // nodePrefix and the nodePrefix==chanNode filter are removed; node
+      // identity comes from chan->mNodeName on each channel directly.
       String actionName = pipe ? String(pipe + 1) : String(fullName);
 
       // Find or create the action slot
@@ -588,106 +581,58 @@ void AssimpShapeLoader::processAnimations()
          actionNames.push_back(actionName);
          actionDurations.push_back(0.0);
          actionChannels.push_back(Vector<aiNodeAnim*>());
-         actionNodesSeen.push_back(Vector<String>());
       }
 
       // Track maximum duration for this action
       if (anim->mDuration > actionDurations[slot])
          actionDurations[slot] = anim->mDuration;
 
-      // Accept channels whose node name matches the prefix
+      // Add channels, deduplicating by chan->mNodeName
       for (U32 j = 0; j < anim->mNumChannels; ++j)
       {
          aiNodeAnim* chan = anim->mChannels[j];
-         String chanNode = chan->mNodeName.C_Str();
+         const char* nodeName = chan->mNodeName.C_Str();
 
-         if (!nodePrefix.isEmpty() && nodePrefix != chanNode)
-            continue;
-
-         // Deduplicate: first channel for a given node in this action wins
          bool alreadyAdded = false;
-         for (U32 n = 0; n < actionNodesSeen[slot].size(); ++n)
+         for (U32 n = 0; n < actionChannels[slot].size(); ++n)
          {
-            if (actionNodesSeen[slot][n] == chanNode) { alreadyAdded = true; break; }
-         }
-         if (!alreadyAdded)
-         {
-            actionChannels[slot].push_back(chan);
-            actionNodesSeen[slot].push_back(chanNode);
-         }
-      }
-   }
-
-   // -----------------------------------------------------------------------
-   // AMBIENT and NAMED SEQUENCES both use own-action-only channels.
-   // -----------------------------------------------------------------------
-   {
-      // AMBIENT: use ONLY each node's own canonical action channel.
-      Vector<aiNodeAnim*> ownChans;
-      F64 ambientDuration = 0.0;
-
-      for (U32 i = 0; i < actionNames.size(); ++i)
-      {
-         String      ownerName;
-         aiNodeAnim* ownerChan = nullptr;
-
-         for (U32 j = 0; j < actionChannels[i].size(); ++j)
-         {
-            const String& nodeName = actionNodesSeen[i][j];
-            U32 nodeLen = nodeName.length();
-            // Exact owner match: action name = nodeName + "Action" [+ optional suffix].
-            const char* actionStr = actionNames[i].c_str();
-            if (dStrnicmp(actionStr, nodeName.c_str(), nodeLen) == 0
-               && dStrnicmp(actionStr + nodeLen, "Action", 6) == 0
-               && nodeLen > ownerName.length())
+            if (dStrcmp(actionChannels[slot][n]->mNodeName.C_Str(), nodeName) == 0)
             {
-               ownerName = nodeName;
-               ownerChan = actionChannels[i][j];
+               alreadyAdded = true; break;
             }
          }
-
-         if (ownerChan)
-         {
-            ownChans.push_back(ownerChan);
-            ambientDuration = getMax(ambientDuration, actionDurations[i]);
-            Con::printf("[ASSIMP] Ambient channel: node=%-25s action=%s  duration=%.1f ticks",
-               ownerName.c_str(), actionNames[i].c_str(), (F32)actionDurations[i]);
-         }
+         if (!alreadyAdded)
+            actionChannels[slot].push_back(chan);
       }
-
-      aiAnimation* ambientAnim = new aiAnimation();
-      ambientAnim->mName = aiString("ambient");
-      ambientAnim->mTicksPerSecond = ticksPerSecond;
-      ambientAnim->mDuration = ambientDuration;
-      ambientAnim->mNumChannels = ownChans.size();
-      ambientAnim->mChannels = new aiNodeAnim * [ownChans.size()];
-      for (U32 i = 0; i < ownChans.size(); ++i)
-         ambientAnim->mChannels[i] = ownChans[i];
-
-      Con::printf("[ASSIMP] Ambient: %d own-action channels, duration=%.1f ticks (%.2f sec)",
-         ambientAnim->mNumChannels, (F32)ambientDuration, (F32)(ambientDuration / ticksPerSecond));
-
-      appSequences.push_back(new AssimpAppSequence(ambientAnim));
    }
 
    // -----------------------------------------------------------------------
-   // NAMED SEQUENCES: one sequence per unique action, containing ONLY the
-   // owning node's channel. 
+   // Build NAMED SEQUENCES and collect AMBIENT
    // -----------------------------------------------------------------------
+
+   Vector<aiNodeAnim*> ownChans;
+   Vector<String>      ownNodesSeen;
+   F64 ambientDuration = 0.0;
+
    for (U32 i = 0; i < actionNames.size(); ++i)
    {
-      if (actionChannels[i].empty())
+      // Skip actions with no channels or no duration
+      if (actionChannels[i].empty() || actionDurations[i] <= 0.0)
+      {
+         Con::printf("[ASSIMP] Skipping action '%s' (empty or zero duration)",
+            actionNames[i].c_str());
          continue;
+      }
 
-      // Identify the owning node by exact nodeName+"Action" match (same logic as ambient)
+      // Find owner: chan->mNodeName that action name starts with + "Action"
       String      ownerName;
       aiNodeAnim* ownerChan = nullptr;
       for (U32 j = 0; j < actionChannels[i].size(); ++j)
       {
-         const String& nodeName = actionNodesSeen[i][j];
-         U32 nodeLen = nodeName.length();
+         const char* nodeName = actionChannels[i][j]->mNodeName.C_Str();
+         U32 nodeLen = dStrlen(nodeName);
          const char* actionStr = actionNames[i].c_str();
-         if (dStrnicmp(actionStr, nodeName.c_str(), nodeLen) == 0
+         if (dStrnicmp(actionStr, nodeName, nodeLen) == 0
             && dStrnicmp(actionStr + nodeLen, "Action", 6) == 0
             && nodeLen > ownerName.length())
          {
@@ -704,28 +649,75 @@ void AssimpShapeLoader::processAnimations()
       if (ownerChan)
       {
          // Per-object action: single owner channel only.
-         // Non-owner nodes inherit parent motion via Torque's hierarchy.
          seq->mNumChannels = 1;
          seq->mChannels = new aiNodeAnim * [1];
          seq->mChannels[0] = ownerChan;
          Con::printf("[ASSIMP] Sequence '%s': owner=%s  duration=%.1f ticks",
             actionNames[i].c_str(), ownerName.c_str(), (F32)actionDurations[i]);
+
+         // Collect owner channel for ambient (name-matched = safe data)
+         bool already = false;
+         for (U32 k = 0; k < ownNodesSeen.size(); ++k)
+            if (ownNodesSeen[k] == ownerName) { already = true; break; }
+         if (!already)
+         {
+            ownChans.push_back(ownerChan);
+            ownNodesSeen.push_back(ownerName);
+            ambientDuration = getMax(ambientDuration, actionDurations[i]);
+            Con::printf("[ASSIMP] Ambient channel: node=%-25s action=%s  duration=%.1f ticks",
+               ownerName.c_str(), actionNames[i].c_str(), (F32)actionDurations[i]);
+         }
       }
       else
       {
-         // No per-object naming match: this is a deliberately multi-node
-         // authored action (e.g. "GateOpen", "ArmSystemExtend"). Include
-         // all channels so the full choreography is preserved.
+         // No name match: renamed or multi-node authored action.
          seq->mNumChannels = actionChannels[i].size();
          seq->mChannels = new aiNodeAnim * [seq->mNumChannels];
          for (U32 k = 0; k < actionChannels[i].size(); ++k)
             seq->mChannels[k] = actionChannels[i][k];
          Con::printf("[ASSIMP] Sequence '%s': multi-node (%d channels)  duration=%.1f ticks",
             actionNames[i].c_str(), seq->mNumChannels, (F32)actionDurations[i]);
+
+         // Ambient fallback: only from no-owner slots so bystander channels
+         // from name-matched action evaluations never corrupt ambient.
+         // Each channel here came from NodeName|RenamedAction — own data.
+         for (U32 k = 0; k < actionChannels[i].size(); ++k)
+         {
+            const char* nodeName = actionChannels[i][k]->mNodeName.C_Str();
+            bool already = false;
+            for (U32 n = 0; n < ownNodesSeen.size(); ++n)
+               if (dStrcmp(ownNodesSeen[n].c_str(), nodeName) == 0) { already = true; break; }
+            if (!already)
+            {
+               ownChans.push_back(actionChannels[i][k]);
+               ownNodesSeen.push_back(String(nodeName));
+               ambientDuration = getMax(ambientDuration, actionDurations[i]);
+               Con::printf("[ASSIMP] Ambient fallback: node=%s  action=%s",
+                  nodeName, actionNames[i].c_str());
+            }
+         }
       }
 
       appSequences.push_back(new AssimpAppSequence(seq));
    }
+
+   // Build ambient from collected channels, inserted at index 0
+   {
+      aiAnimation* ambientAnim = new aiAnimation();
+      ambientAnim->mName = aiString("ambient");
+      ambientAnim->mTicksPerSecond = ticksPerSecond;
+      ambientAnim->mDuration = ambientDuration;
+      ambientAnim->mNumChannels = ownChans.size();
+      ambientAnim->mChannels = new aiNodeAnim * [ownChans.size()];
+      for (U32 i = 0; i < ownChans.size(); ++i)
+         ambientAnim->mChannels[i] = ownChans[i];
+
+      Con::printf("[ASSIMP] Ambient: %d channels, duration=%.1f ticks (%.2f sec)",
+         ambientAnim->mNumChannels, (F32)ambientDuration, (F32)(ambientDuration / ticksPerSecond));
+
+      appSequences.push_back( new AssimpAppSequence(ambientAnim));
+   }
+   
 }
 
 void AssimpShapeLoader::computeBounds(Box3F& bounds)

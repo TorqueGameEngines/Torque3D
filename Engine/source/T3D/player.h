@@ -572,7 +572,7 @@ protected:
    F32 mRecoverDelay;         ///< When bypassing the legacy recover system and only using the land sequence,
                               ///  this is how long the player will be in the land sequence.
 
-   F32 mProneRecoverDelay;    ///< How long player takes to get up from Prone -Skurps
+   F32 mProneRecoverDelay;    ///< Set by proneInSequenceTime, proneOutSequenceTime, or proneDiveSequenceTime -Skurps
 
    bool mInWater;            ///< Is true if WaterCoverage is greater than zero
    bool mSwimming;            ///< Is true if WaterCoverage is above the swimming threshold

@@ -149,11 +149,13 @@ PlayerData::ActionAnimationDef PlayerData::ActionAnimationList[NumTableActionAni
    // Root is the default animation
    { "root" },       // RootAnim,
 
-   // These are selected in the move state based on velocity
+   // These are selected in the move state based on velocity. 
    { "run",          { 0.0f, 1.0f, 0.0f } },       // RunForwardAnim,
    { "back",         { 0.0f,-1.0f, 0.0f } },       // BackBackwardAnim
    { "side",         {-1.0f, 0.0f, 0.0f } },       // SideLeftAnim,
    { "side_right",   { 1.0f, 0.0f, 0.0f } },       // SideRightAnim,
+   { "turn_left",   { 0.0f, 0.0f, 0.0f } },        //Skurps
+   { "turn_right",   { 0.0f, 0.0f, 0.0f } },        //Skurps
 
    { "sprint_root" },
    { "sprint_forward",  { 0.0f, 1.0f, 0.0f } },
@@ -166,12 +168,16 @@ PlayerData::ActionAnimationDef PlayerData::ActionAnimationList[NumTableActionAni
    { "crouch_backward", { 0.0f,-1.0f, 0.0f } },
    { "crouch_side",     {-1.0f, 0.0f, 0.0f } },
    { "crouch_right",    { 1.0f, 0.0f, 0.0f } },
+   { "crouch_turn_left",   { 0.0f, 0.0f, 0.0f } },        //Skurps
+   { "crouch_turn_right",   { 0.0f, 0.0f, 0.0f } },        //Skurps
 
    { "prone_root" },
    { "prone_forward",   { 0.0f, 1.0f, 0.0f } },
    { "prone_backward",  { 0.0f,-1.0f, 0.0f } },
    { "prone_side",     {-1.0f, 0.0f, 0.0f } }, //Skurps
    { "prone_right",    { 1.0f, 0.0f, 0.0f } }, //Skurps
+   { "prone_turn_left",   { 0.0f, 0.0f, 0.0f } },        //Skurps
+   { "prone_turn_right",   { 0.0f, 0.0f, 0.0f } },        //Skurps
 
    { "swim_root" },
    { "swim_forward",    { 0.0f, 1.0f, 0.0f } },
@@ -185,6 +191,9 @@ PlayerData::ActionAnimationDef PlayerData::ActionAnimationList[NumTableActionAni
    { "standjump" },  // StandJumpAnim
    { "land" },       // LandAnim
    { "jet" },        // JetAnim
+   { "proneIn"},     // ProneInAnim -Skurps
+   { "proneOut"},       // ProneOutAnim -Skurps
+   { "dive"},        //DiveAnim - Skurps
 };
 
 //----------------------------------------------------------------------------
@@ -310,6 +319,7 @@ PlayerData::PlayerData()
    minProneLookAngle = -.3491f; // Skurps
    maxProneLookAngle = .3491f; // Skurps
    maxFreelookAngle = 3.0f;
+
    maxTimeScale = 1.5f;
 
    mass = 9.0f;         // from ShapeBase
@@ -367,18 +377,27 @@ PlayerData::PlayerData()
    maxUnderwaterForwardSpeed = 6.0f;
    maxUnderwaterBackwardSpeed = 6.0f;
    maxUnderwaterSideSpeed = 6.0f;
+   swimYawScale = 1.0f;  //Skurps            
+   swimPitchScale = 1.0f; //Skurps     
 
    // Crouching
    crouchForce = 45.0f * 9.0f;
    maxCrouchForwardSpeed = 4.0f;
    maxCrouchBackwardSpeed = 4.0f;
-   maxCrouchSideSpeed = 4.0f;    
+   maxCrouchSideSpeed = 4.0f;
+   crouchYawScale = 1.0f; //Skurps
+   crouchPitchScale = 1.0f; //Skurps  
 
    // Prone
    proneForce = 45.0f * 9.0f;            
    maxProneForwardSpeed = 2.0f;  
    maxProneBackwardSpeed = 2.0f; 
-   maxProneSideSpeed = 0.0f;     
+   maxProneSideSpeed = 0.0f;
+   proneYawScale = 1.0f; //Skurps
+   pronePitchScale = 1.0f; //Skurps
+   proneOutSequenceTime = 0.0f; //Skurps
+   proneInSequenceTime = 0.0f; //Skurps
+   proneDiveSequenceTime = 0.0f; //Skurps
 
    // Jetting
    jetJumpForce = 0;
@@ -420,10 +439,10 @@ PlayerData::PlayerData()
    boxTorsoPercentage = 0.55f;
 
    // damage locations
-   boxTorsoLeftPercentage  = 0; //Skurps replaced left/right/front/back head percentages
-   boxTorsoRightPercentage = 1; //Skurps
-   boxTorsoBackPercentage  = 0; //Skurps
-   boxTorsoFrontPercentage = 1; //Skurps 
+   boxTorsoLeftPercentage  = 0.15; //Skurps replaced left/right/front/back head percentages
+   boxTorsoRightPercentage = 0.15; //Skurps
+   boxTorsoBackPercentage  = 0.15; //Skurps
+   boxTorsoFrontPercentage = 0.15; //Skurps 
 
    for (S32 i = 0; i < MaxSounds; i++)
       INIT_SOUNDASSET_ARRAY(PlayerSound, i);
@@ -493,7 +512,7 @@ bool PlayerData::preload(bool server, String &errorStr)
    if (jetMinJumpEnergy < jetJumpEnergyDrain)
       jetMinJumpEnergy = jetJumpEnergyDrain;
 
-   // Validate some of the data
+   // Validate some of the data  -Obsolete??? -Skurps
    if (fallingSpeedThreshold > 0.0f)
       Con::printf("PlayerData:: Falling speed threshold should be downwards (negative)");
 
@@ -539,8 +558,9 @@ bool PlayerData::preload(bool server, String &errorStr)
 
          dp->velocityScale = true;
          dp->death         = false;
-         if (dp->sequence != -1)
+         if (dp->sequence != -1){
             getGroundInfo(si,thread,dp);
+         }
       }
       for (S32 b = 0; b < shape->sequences.size(); b++)
       {
@@ -550,6 +570,7 @@ bool PlayerData::preload(bool server, String &errorStr)
             dp->name          = shape->getName(shape->sequences[b].nameIndex);
             dp->velocityScale = false;
             getGroundInfo(si,thread,dp++);
+
          }
       }
       actionCount = dp - actionList;
@@ -676,10 +697,14 @@ void PlayerData::getGroundInfo(TSShapeInstance* si, TSThread* thread,ActionAnima
    else
    {
       VectorF save = dp->dir;
+
       si->setSequence(thread,dp->sequence,0);
+      F32 duration = thread->getSequence()->duration;
       si->animate();
       si->advanceTime(1);
       si->animateGround();
+
+      // Linear ground translation
       si->getGroundTransform().getColumn(3,&dp->dir);
       if ((dp->speed = dp->dir.len()) < 0.01f)
       {
@@ -696,8 +721,31 @@ void PlayerData::getGroundInfo(TSShapeInstance* si, TSThread* thread,ActionAnima
       }
       else
          dp->dir *= 1.0f / dp->speed;
+
+     // Yaw ground rotation -Skurps
+     VectorF fwd;
+     si->getGroundTransform().getColumn(1,&fwd);
+     fwd.z = 0.0f;
+     if (fwd.len() > 0.0001f)
+     {
+         fwd.normalize();
+         F32 yaw = mAtan2(fwd.x, fwd.y);
+
+         // Wrap yaw into [-pi, pi]
+         if (yaw > M_PI)
+             yaw -= M_2PI;
+         else if (yaw < -M_PI)
+             yaw += M_2PI;
+
+         dp->angularSpeed = yaw; // radians per frame
+     }
+     else
+     {
+         dp->angularSpeed = 0.0f;
+     }
    }
 }
+
 
 bool PlayerData::isTableSequence(S32 seq)
 {
@@ -707,6 +755,12 @@ bool PlayerData::isTableSequence(S32 seq)
       if (actionList[i].sequence == seq)
          return true;
    return false;
+}
+
+bool PlayerData::isTurnAction(U32 action)    //Skurps
+{
+   return (action == TurnLeftAnim || action == TurnRightAnim || action == CrouchTurnLeftAnim || action == CrouchTurnRightAnim || action == ProneTurnLeftAnim 
+      || action == ProneTurnRightAnim);
 }
 
 bool PlayerData::isJumpAction(U32 action)
@@ -750,13 +804,11 @@ void PlayerData::initPersistFields()
          "@brief Defines the maximum left and right angles (in radians) the player can "
          "look in freelook mode.\n\n" );
       addFieldV( "minProneLookAngle", TypeF32, Offset(minProneLookAngle, PlayerData), &CommonValidators::DirFloatPi,
-         "@brief Lowest angle (in radians) the player can look when Prone.\n\n"
+         "@brief Lowest angle (in radians) the player can look when Prone Should be >= minLookAngle for correct animation position.\n\n"
          "@note An angle of zero is straight ahead, with positive up and negative down." ); //Skurps
       addFieldV( "maxProneLookAngle", TypeF32, Offset(maxProneLookAngle, PlayerData), &CommonValidators::DirFloatPi,
-         "@brief Highest angle (in radians) the player can look when Prone.\n\n"
+         "@brief Highest angle (in radians) the player can look when Prone.  Should be <= maxLookAngle for correct animation position.\n\n"
          "@note An angle of zero is straight ahead, with positive up and negative down." ); //Skurps
-
-       
 
    endGroup( "Camera" );
 
@@ -916,6 +968,10 @@ void PlayerData::initPersistFields()
          "@brief Maximum backward speed when underwater.\n\n" );
       addFieldV( "maxUnderwaterSideSpeed", TypeRangedF32, Offset(maxUnderwaterSideSpeed, PlayerData), &CommonValidators::PositiveFloat,
          "@brief Maximum sideways speed when underwater.\n\n" );
+      addFieldV( "swimYawScale", TypeRangedF32, Offset(swimYawScale, PlayerData), &CommonValidators::PositiveFloat,   //Skurps
+         "@brief Amount to scale yaw motion while swimming." );
+      addFieldV( "swimPitchScale", TypeRangedF32, Offset(swimPitchScale, PlayerData), &CommonValidators::PositiveFloat,  //Skurps
+         "@brief Amount to scale pitch motion while swimming." );
 
    endGroup( "Movement: Swimming" );
 
@@ -929,6 +985,10 @@ void PlayerData::initPersistFields()
          "@brief Maximum backward speed when crouching.\n\n" );
       addFieldV( "maxCrouchSideSpeed", TypeRangedF32, Offset(maxCrouchSideSpeed, PlayerData), &CommonValidators::PositiveFloat,
          "@brief Maximum sideways speed when crouching.\n\n" );
+      addFieldV( "crouchYawScale", TypeRangedF32, Offset(crouchYawScale, PlayerData), &CommonValidators::PositiveFloat,   //Skurps
+         "@brief Amount to scale yaw motion while crouching." );
+      addFieldV( "crouchPitchScale", TypeRangedF32, Offset(crouchPitchScale, PlayerData), &CommonValidators::PositiveFloat,  //Skurps
+         "@brief Amount to scale pitch motion while crouching." );
 
    endGroup( "Movement: Crouching" );
 
@@ -942,6 +1002,19 @@ void PlayerData::initPersistFields()
          "@brief Maximum backward speed when prone (laying down).\n\n" );
       addFieldV( "maxProneSideSpeed", TypeRangedF32, Offset(maxProneSideSpeed, PlayerData), &CommonValidators::PositiveFloat,
          "@brief Maximum sideways speed when prone (laying down).\n\n" );
+      addFieldV( "proneDiveSequenceTime", TypeRangedF32, Offset(proneDiveSequenceTime, PlayerData), &CommonValidators::PositiveFloat, //Skurps
+         "@brief Length of the proneRecoverState when diving into prone.\n\n"
+         "The dive sequence will be scaled to match this.\n");    
+      addFieldV( "proneInSequenceTime", TypeRangedF32, Offset(proneInSequenceTime, PlayerData), &CommonValidators::PositiveFloat, //Skurps
+         "@brief Length of the proneRecoverState when getting into prone.\n\n"
+         "The proneIn sequence will be scaled to match this.\n");
+      addFieldV( "proneOutSequenceTime", TypeRangedF32, Offset(proneOutSequenceTime, PlayerData), &CommonValidators::PositiveFloat, //Skurps
+         "@brief Length of the proneRecoverState when getting out of prone.\n\n"
+         "The proneOut sequence will be scaled to match this.\n");
+      addFieldV( "proneYawScale", TypeRangedF32, Offset(proneYawScale, PlayerData), &CommonValidators::PositiveFloat,   //Skurps
+         "@brief Amount to scale yaw motion while prone." );
+      addFieldV( "pronePitchScale", TypeRangedF32, Offset(pronePitchScale, PlayerData), &CommonValidators::PositiveFloat,  //Skurps
+         "@brief Amount to scale pitch motion while prone." );
 
    endGroup( "Movement: Prone" );
 
@@ -1200,6 +1273,7 @@ void PlayerData::packData(BitStream* stream)
    stream->write(maxFreelookAngle);
    stream->write(minProneLookAngle);//Skurps
    stream->write(maxProneLookAngle);//Skurps
+
    stream->write(maxTimeScale);
 
    stream->write(mass);
@@ -1250,18 +1324,28 @@ void PlayerData::packData(BitStream* stream)
    stream->write(maxUnderwaterForwardSpeed);
    stream->write(maxUnderwaterBackwardSpeed);
    stream->write(maxUnderwaterSideSpeed);
+   stream->write(swimYawScale); //Skurps
+   stream->write(swimPitchScale); //Skurps
 
    // Crouching
    stream->write(crouchForce);   
    stream->write(maxCrouchForwardSpeed);
    stream->write(maxCrouchBackwardSpeed);
    stream->write(maxCrouchSideSpeed);
+   stream->write(crouchYawScale); //Skurps
+   stream->write(crouchPitchScale); //Skurps
+
 
    // Prone
    stream->write(proneForce);   
    stream->write(maxProneForwardSpeed);
    stream->write(maxProneBackwardSpeed);
    stream->write(maxProneSideSpeed);
+   stream->write(proneInSequenceTime); //Skurps
+   stream->write(proneDiveSequenceTime); //Skurps
+   stream->write(proneOutSequenceTime); //Skurps
+   stream->write(proneYawScale); //Skurps
+   stream->write(pronePitchScale); //Skurps
 
    // Jetting
    stream->write(jetJumpForce);
@@ -1384,6 +1468,7 @@ void PlayerData::unpackData(BitStream* stream)
    stream->read(&maxFreelookAngle);
    stream->read(&minProneLookAngle); // Skurps
    stream->read(&maxProneLookAngle); // Skurps
+
    stream->read(&maxTimeScale);
 
    stream->read(&mass);
@@ -1432,19 +1517,28 @@ void PlayerData::unpackData(BitStream* stream)
    stream->read(&swimForce);
    stream->read(&maxUnderwaterForwardSpeed);
    stream->read(&maxUnderwaterBackwardSpeed);
-   stream->read(&maxUnderwaterSideSpeed);   
+   stream->read(&maxUnderwaterSideSpeed);
+   stream->read(&swimYawScale); //Skurps
+   stream->read(&swimPitchScale); //Skurps   
 
    // Crouching
    stream->read(&crouchForce);
    stream->read(&maxCrouchForwardSpeed);
    stream->read(&maxCrouchBackwardSpeed);
    stream->read(&maxCrouchSideSpeed);
+   stream->read(&crouchYawScale); //Skurps
+   stream->read(&crouchPitchScale); //Skurps
 
    // Prone
    stream->read(&proneForce);
    stream->read(&maxProneForwardSpeed);
    stream->read(&maxProneBackwardSpeed);
    stream->read(&maxProneSideSpeed);
+   stream->read(&proneInSequenceTime); //Skurps
+   stream->read(&proneDiveSequenceTime); //Skurps
+   stream->read(&proneOutSequenceTime); //Skurps
+   stream->read(&proneYawScale); //Skurps
+   stream->read(&pronePitchScale); //Skurps
 
    // Jetting
    stream->read(&jetJumpForce);
@@ -1598,10 +1692,13 @@ Player::Player()
    mRot = mDelta.rot;
    mHead = mDelta.head;
    mVelocity.set(0.0f, 0.0f, 0.0f);
+   mAngularVelocity.set(0.0f,0.0f,0.0f); //Skurps
+   mAnimVelocity.set(0.0f,0.0f,0.0f); //Skurps
    mDataBlock = 0;
    mHeadHThread = mHeadVThread = mRecoilThread = mImageStateThread = 0;
    mArmAnimation.action = PlayerData::NullAnimation;
    mArmAnimation.thread = 0;
+
    mActionAnimation.action = PlayerData::NullAnimation;
    mActionAnimation.thread = 0;
    mActionAnimation.delayTicks = 0;
@@ -1877,7 +1974,7 @@ bool Player::onNewDataBlock( GameBaseData *dptr, bool reload )
    // Reset the image state driven animation thread.  This will be properly built
    // in onImageStateAnimation() when needed.
    mImageStateThread = 0;
-
+   
    // Initialize the primary thread, the actual sequence is
    // set later depending on player actions.
    mActionAnimation.action = PlayerData::NullAnimation;
@@ -2090,6 +2187,7 @@ void Player::processTick(const Move* move)
       else if (mDelta.rot.z > M_PI_F)
         mDelta.rot.z -= M_2PI_F;
 
+
       if (!ignore_updates)
       {
          setPosition(mDelta.pos, mDelta.rot);
@@ -2140,6 +2238,7 @@ void Player::processTick(const Move* move)
          updateState();
          updateMove(move);
          updateLookAnimation();
+
          updateDeathOffsets();
          updatePos();
       }
@@ -2255,8 +2354,7 @@ void Player::setState(ActionState state, U32 recoverTicks)
       if (isProperlyAdded()) {
          switch (state) {
             case RecoverState: {
-               if (mDataBlock->landSequenceTime > 0.0f)
-               {
+               if (mDataBlock->landSequenceTime > 0.0f){
                   PlayerData::ActionAnimation& anim = mDataBlock->actionList[PlayerData::LandAnim];
                   if (anim.sequence != -1)
                   {
@@ -2276,12 +2374,72 @@ void Player::setState(ActionState state, U32 recoverTicks)
                }
                break;
             }
-            
+            case ProneRecoverState: {  // Skurps
+               F32 seqTime = 0.0f;
+               S32 action = -1;    
+               bool ProneIn = mPose == PronePose ? true : false;
+               VectorF vel;
+               mWorldToObj.mulV(mVelocity, &vel);
+
+               // Prone In
+               if (vel.lenSquared() > 0.01f && ProneIn) {
+                  PlayerData::ActionAnimation& anim = mDataBlock->actionList[PlayerData::DiveAnim];
+                  if (anim.sequence != -1) {
+                      action = PlayerData::DiveAnim;
+                      seqTime = mDataBlock->proneDiveSequenceTime;
+                  }
+               }
+
+               // Default to ProneIn if Dive failed
+               if (action == -1 && ProneIn) {
+                  PlayerData::ActionAnimation& anim = mDataBlock->actionList[PlayerData::ProneInAnim];
+                  if (anim.sequence != -1) {
+                     action = PlayerData::ProneInAnim;
+                     seqTime = mDataBlock->proneInSequenceTime;
+                  }
+               }
+
+               // Prone Out
+               if(!ProneIn){
+                  PlayerData::ActionAnimation& anim = mDataBlock->actionList[PlayerData::ProneOutAnim];
+                  if (anim.sequence != -1) {
+                     action = PlayerData::ProneOutAnim;
+                     seqTime = mDataBlock->proneOutSequenceTime;
+                  }
+               }
+
+               if (action != -1 && seqTime > 0.0f) {
+                  setActionThread(action, true, false, true, true);
+                  if (mActionAnimation.thread && mActionAnimation.thread->getSequence()) {
+                     F32 seqLength = mActionAnimation.thread->getSequence()->duration;
+                     F32 timeScale = seqLength / seqTime;
+                     mShapeInstance->setTimeScale(mActionAnimation.thread, timeScale);
+                  
+                      // No move input is allowed during proneRecoverState but we might want some animation driven velocity...
+                     mAnimVelocity.zero();
+                     if (mShapeInstance && mActionAnimation.thread){
+                        PlayerData::ActionAnimation &anim = mDataBlock->actionList[mActionAnimation.action];
+                        if (anim.sequence != -1){  
+                           Point3F groundVel = ((anim.speed * mShapeInstance->getTimeScale(mActionAnimation.thread))  * anim.dir); 
+
+                           // Convert from object-space to world-space.
+                           MatrixF rot(EulerF(0, 0, mRot.z));
+                           rot.mulV(groundVel);
+
+                           // Move the player with this velocity during the proneRecoverState
+                           mAnimVelocity = groundVel;
+                        }
+                     }
+                  }
+               }
+               // Set delay; if nothing valid, mProneRecoverDelay = 0 (instant pass)
+               mProneRecoverDelay = seqTime;
+            } 
+
             default:
                break;
          }
       }
-
       mState = state;
    }
 }
@@ -2335,7 +2493,10 @@ void Player::updateState()
             }
          }
          break;
-      
+      case ProneRecoverState:  //Skurps
+         mProneRecoverDelay -= TickSec;
+         if(mProneRecoverDelay <= 0.0f)
+            setState(MoveState);
       default:
          break;
    }
@@ -2349,6 +2510,9 @@ const char* Player::getStateName()
       return "Mounted";
    if (mState == RecoverState)
       return "Recover";
+   if (mState == ProneRecoverState)
+      return "ProneRecover";
+
    return "Move";
 }
 
@@ -2502,10 +2666,16 @@ void Player::setPose( Pose pose )
 
    // Initialize our scaled attributes as well...
    onScaleChanged();
-
+ 
    // Resize the PhysicsPlayer rep. should we have one
    if ( mPhysicsRep )
       mPhysicsRep->setSpacials( getPosition(), boxSize );
+
+
+   // Trigger Prone Recover State -Skurps 
+   if(mPose == PronePose || oldPose == PronePose){
+      setState(ProneRecoverState);
+   }
 
    if ( isServerObject() )
       mDataBlock->onPoseChange_callback( this, EngineMarshallData< PlayerPose >(oldPose), EngineMarshallData< PlayerPose >(mPose));
@@ -2566,7 +2736,7 @@ void Player::updateMove(const Move* move)
 
    // Is waterCoverage high enough to be 'swimming'?
    {
-      bool swimming = mWaterCoverage > 0.65f && canSwim();      
+      bool swimming = canSwim();      //Skurps
 
       if ( swimming != mSwimming )
       {
@@ -2727,7 +2897,28 @@ void Player::updateMove(const Move* move)
 
       if(doStandardMove)
       {
-         F32 p = move->pitch * (mPose == SprintPose ? mDataBlock->sprintPitchScale : 1.0f);
+         F32 yawScale = 1.0f; //Skurps
+         F32 pitchScale = 1.0f; //Skurps
+         switch (mPose){
+            case SprintPose:{
+               yawScale = mDataBlock->sprintYawScale;
+               pitchScale = mDataBlock->sprintPitchScale;
+            }
+            case CrouchPose:{
+                  yawScale = mDataBlock->crouchYawScale;
+                  pitchScale = mDataBlock->crouchPitchScale;
+            }
+            case PronePose: {
+                  yawScale = mDataBlock->proneYawScale;
+                  pitchScale = mDataBlock->pronePitchScale;
+            }
+             case SwimPose: {
+                  yawScale = mDataBlock->swimYawScale;
+                  pitchScale = mDataBlock->swimPitchScale;
+            }
+         }
+
+         F32 p = move->pitch * pitchScale; //Skurps
          if (p > M_PI_F) 
             p -= M_2PI_F;
        
@@ -2735,27 +2926,39 @@ void Player::updateMove(const Move* move)
          F32 curMinLookAngle  = mPose == PronePose ? mDataBlock->minProneLookAngle : mDataBlock->minLookAngle;
          F32 curMaxLookAngle  = mPose == PronePose ? mDataBlock->maxProneLookAngle : mDataBlock->maxLookAngle;
 
-         mHead.x = mClampF(mHead.x + p,curMinLookAngle,
-                           curMaxLookAngle); // Skurps
+         mHead.x = mClampF(mHead.x + p,curMinLookAngle, curMaxLookAngle); // Skurps
 
-         F32 y = move->yaw * (mPose == SprintPose ? mDataBlock->sprintYawScale : 1.0f);
+         F32 y = move->yaw * yawScale; //Skurps
          if (y > M_PI_F)
             y -= M_2PI_F;
 
          if (move->freeLook && ((isMounted() && getMountNode() == 0) || (con && !con->isFirstPerson())))
          {
-            mHead.z = mClampF(mHead.z + y,
-                              -mDataBlock->maxFreelookAngle,
-                              mDataBlock->maxFreelookAngle);
+            mHead.z = mClampF(mHead.z + y, -mDataBlock->maxFreelookAngle, mDataBlock->maxFreelookAngle);
+            mAngularVelocity.z = 0.0f;  //Skurps
          }
          else
          {
-            mRot.z += y;
-            // Rotate the head back to the front, center horizontal
-            // as well if we're controlling another object.
-            mHead.z *= 0.5f;
-            if (mControlObject)
-               mHead.x *= 0.5f;
+             mRot.z += y;
+             // --- Begin angular velocity calculation ---  Skurps
+             F32 prevYaw = mRot.z - y; // store the previous yaw
+             F32 deltaYaw = mRot.z - prevYaw;
+
+             // unwrap to avoid jumps over 180°
+             if (deltaYaw > M_PI_F)
+                 deltaYaw -= M_2PI_F;
+             else if (deltaYaw < -M_PI_F)
+                 deltaYaw += M_2PI_F;
+
+             // store angular velocity in radians/sec
+             mAngularVelocity.z = deltaYaw / TickSec;
+             // --- End angular velocity calculation ---
+
+             // Rotate the head back to the front, center horizontal
+             // as well if we're controlling another object.
+             mHead.z *= 0.5f;
+             if (mControlObject)
+                 mHead.x *= 0.5f;
          }
 
          // constrain the range of mRot.z
@@ -2853,6 +3056,11 @@ void Player::updateMove(const Move* move)
           (mActionAnimation.action >= mDataBlock->mDynamicAnimsStart
                || mActionAnimation.action == PlayerData::LandAnim))
          mActionAnimation.action = PlayerData::NullAnimation;
+   }
+   else if (mState == ProneRecoverState){  // Use the speedfrom the animation during ProneRecoverState -Skurps
+      moveSpeed = mAnimVelocity.len();
+      moveVec = mAnimVelocity;
+      moveVec.normalize(); 
    }
    else
    {
@@ -3026,19 +3234,23 @@ void Player::updateMove(const Move* move)
 
       // get the head pitch and add it to the moveVec
       // This more accurate swim vector calc comes from Matt Fairfax
-      MatrixF xRot;
-      xRot.set(EulerF(mHead.x, 0, 0));
-      zRot.set(EulerF(0, 0, mRot.z));
-      MatrixF rot;
-      rot.mul(zRot, xRot);
-      rot.getColumn(0,&moveVec);
+      // Added a check to keep the player from pose-jittering at the surface -Skurps
+      F32 offset = getPosition().z + (0.66f * mDataBlock->swimBoxSize.z);
+      if(offset < mLiquidHeight || mHead.x > 0.0f){  //Skurps
+         MatrixF xRot;
+         xRot.set(EulerF(mHead.x, 0, 0));
+         zRot.set(EulerF(0, 0, mRot.z));
+         MatrixF rot;
+         rot.mul(zRot, xRot);
+         rot.getColumn(0,&moveVec);
 
-      moveVec *= move->x;
-      VectorF tv;
-      rot.getColumn(1,&tv);
-      moveVec += tv * move->y;
-      rot.getColumn(2,&tv);
-      moveVec += tv * move->z;
+         moveVec *= move->x;
+         VectorF tv;
+         rot.getColumn(1,&tv);
+         moveVec += tv * move->y;
+         rot.getColumn(2,&tv);
+         moveVec += tv * move->z;
+      }
 
       // Force a 0 move if there is no energy, and only drain
       // move energy if we're moving.
@@ -3211,7 +3423,7 @@ void Player::updateMove(const Move* move)
    // Adjust velocity with all the move & gravity acceleration
    // TG: I forgot why doesn't the TickSec multiply happen here...
    mVelocity += acc;
-
+   
    // apply horizontal air resistance
 
    F32 hvel = mSqrt(mVelocity.x * mVelocity.x + mVelocity.y * mVelocity.y);
@@ -3287,7 +3499,7 @@ void Player::updateMove(const Move* move)
    {
       if ( mSwimming )
          desiredPose = SwimPose;
-      else if ( runSurface && move->trigger[sProneTrigger] && canProne() ) //Skurps swapped with crouch so crouch does not need to be released in order to go prone
+      else if ( move->trigger[sProneTrigger] && canProne() ) //Skurps swapped with crouch so crouch does not need to be released in order to go prone
          desiredPose = PronePose;
       else if ( runSurface && move->trigger[sCrouchTrigger] && canCrouch() )
          desiredPose = CrouchPose;
@@ -3364,8 +3576,8 @@ bool Player::canJetJump()
 
 bool Player::canSwim()
 {
-   // Make sure swim bounding box would be submerged enough go to swim pose, necessary when crouched or prone in shallow water - Skurps
-   return mAllowSwimming  && ((getPosition().z + mDataBlock->swimBoxSize.z) < mLiquidHeight);
+   // Make sure swim bounding box is/would be submerged enough for swim pose- Skurps
+      return mAllowSwimming  && ((getPosition().z + (0.65f * mDataBlock->swimBoxSize.z)) < mLiquidHeight);
 }
 
 //Fixed to work with small boxsize.z values - Skurps
@@ -3460,28 +3672,23 @@ bool Player::canStand()  //Fixed to work with small boxsize.z values - Skurps
    return mPhysicsRep->testSpacials( getPosition(), mDataBlock->boxSize );
 }
 
-bool Player::canProne()
-{
-   if (!mAllowProne)
+bool Player::canProne(){
+   if (!mAllowProne || mDamageState != Enabled || isMounted() || mSwimming || mFalling) 
       return false;
 
-   if ( mState != MoveState ||
-        mDamageState != Enabled ||
-        isMounted() ||
-        mSwimming ||
-        mFalling )
+   if (mState != MoveState && mState != ProneRecoverState) //Skurps
       return false;
 
    // Can't go prone if no prone animation!
    if ( mDataBlock->actionList[PlayerData::ProneRootAnim].sequence == -1 )
       return false;
 
-   // Do standard Torque physics test here!
-   if ( !mPhysicsRep )
+    // We are already in this pose, so don't test it again...
+   if ( mPose == PronePose)
       return true;
 
-   // We are already in this pose, so don't test it again...
-   if ( mPose == PronePose )
+   // Do standard Torque physics test here!
+   if ( !mPhysicsRep )
       return true;
 
    return mPhysicsRep->testSpacials( getPosition(), mDataBlock->proneBoxSize );
@@ -3542,19 +3749,16 @@ void Player::updateLookAnimation(F32 dt)
    // Adjust look pos.  This assumes that the animations match
    // the min and max look angles provided in the datablock.
    if (mArmAnimation.thread) 
-   {
-     // Skurps
-     F32 curMinLookAngle  = mPose == PronePose ? mDataBlock->minProneLookAngle : mDataBlock->minLookAngle;
-     F32 curMaxLookAngle  = mPose == PronePose ? mDataBlock->maxProneLookAngle : mDataBlock->maxLookAngle;
-      
+   {      
       if(mControlObject)
       {
          mShapeInstance->setPos(mArmAnimation.thread,0.5f);
       }
+      // Calculations assume maxLookAngle and minLookAngle range is >= than maxProneLookAngle and minProneLookAngle range
       else
       {
-         F32 d = curMaxLookAngle - curMinLookAngle; //Skurps
-         F32 tp = (renderHead.x - curMinLookAngle) / d; //Skurps
+         F32 d = mDataBlock->maxLookAngle - mDataBlock->minLookAngle; 
+         F32 tp = (renderHead.x - mDataBlock->minLookAngle) / d; 
 
          mShapeInstance->setPos(mArmAnimation.thread,mClampF(tp,0,1));
       }
@@ -3575,10 +3779,8 @@ void Player::updateLookAnimation(F32 dt)
    }
 }
 
-
 //----------------------------------------------------------------------------
 // Methods to get delta (as amount to affect velocity by)
-
 bool Player::inDeathAnim()
 {
    if ((anim_clip_flags & ANIM_OVERRIDDEN) != 0 && (anim_clip_flags & IS_DEATH_ANIM) == 0)
@@ -3841,14 +4043,16 @@ void Player::setActionThread(U32 action,bool forward,bool hold,bool wait,bool fs
       mActionAnimation.delayTicks      = (S32)sNewAnimationTickTime;
       mActionAnimation.atEnd           = false;
       mActionAnimation.callbackTripped = false;
-      if (sUseAnimationTransitions && (action != PlayerData::LandAnim || !(mDataBlock->landSequenceTime > 0.0f && !mDataBlock->transitionToLand)) && (isGhost()/* || mActionAnimation.animateOnServer*/))
+      if (sUseAnimationTransitions && (action != PlayerData::LandAnim || !(mDataBlock->landSequenceTime > 0.0f && !mDataBlock->transitionToLand)) && (isGhost() || mActionAnimation.animateOnServer))
       {
          // The transition code needs the timeScale to be set in the
          // right direction to know which way to go.
-         F32   transTime = sAnimationTransitionTime;
+         F32 transTime = sAnimationTransitionTime;
          if (mDataBlock && mDataBlock->isJumpAction(action))
             transTime = 0.15f;
-
+         else if (mDataBlock && (mDataBlock->isTurnAction(action) || mDataBlock->isTurnAction(lastAction))) //Skurps
+            transTime = 0.35f;
+   
          F32 timeScale = mActionAnimation.forward ? 1.0f : -1.0f;
          if (mDataBlock && mDataBlock->isJumpAction(action))
             timeScale *= 1.5f;
@@ -4020,23 +4224,30 @@ void Player::updateActionThread()
    // prevent scaling of AFX picked actions
    if ( (mActionAnimation.action != PlayerData::LandAnim) &&
         (mActionAnimation.action != PlayerData::NullAnimation) &&
-        !(anim_clip_flags & ANIM_OVERRIDDEN))
+        !(anim_clip_flags & ANIM_OVERRIDDEN) && (mActionAnimation.action != PlayerData::ProneOutAnim) && (mActionAnimation.action != PlayerData::ProneInAnim) 
+        && (mActionAnimation.action != PlayerData::DiveAnim)) // ProneIn/ProneOut/Dive excempt because their duration / scale is determined by datablock values -Skurps
    {
-      // Update action animation time scale to match ground velocity
-      PlayerData::ActionAnimation &anim =
-         mDataBlock->actionList[mActionAnimation.action];
-      F32 scale = 1;
-      if (anim.velocityScale && anim.speed) {
-         VectorF vel;
-         mWorldToObj.mulV(mVelocity,&vel);
-         scale = mFabs(mDot(vel, anim.dir) / anim.speed);
+         // Update action animation time scale to match ground velocity
+         PlayerData::ActionAnimation &anim = mDataBlock->actionList[mActionAnimation.action];
+         F32 scale = 1.0f;
+         F32 rotScale = 1.0f; //Skurps
 
-         if (scale > mDataBlock->maxTimeScale)
-            scale = mDataBlock->maxTimeScale;
-      }
+         // Linear animation scaling
+         if (anim.velocityScale && anim.speed) {  
+            VectorF vel;
+            mWorldToObj.mulV(mVelocity,&vel);
+            scale = mFabs(mDot(vel, anim.dir) / anim.speed);
+         }
 
-      mShapeInstance->setTimeScale(mActionAnimation.thread,
-                                   mActionAnimation.forward? scale: -scale);
+         // Angular animation scaling -Skurps
+         if (mFabs(mAngularVelocity.z) && anim.angularSpeed != 0.0f){ 
+             F32 yawPerFrame  = mAngularVelocity.z * TickSec;
+             rotScale = mFabs(yawPerFrame / anim.angularSpeed);
+         }
+
+         F32 finalScale = mMax(scale,rotScale); // Use the greater scale -Skurps
+         finalScale = mClampF(finalScale,0.0f,mDataBlock->maxTimeScale);
+         mShapeInstance->setTimeScale(mActionAnimation.thread, mActionAnimation.forward? finalScale: -finalScale);
    }
    PROFILE_END();
 }
@@ -4049,16 +4260,17 @@ void Player::pickBestMoveAction(U32 startAnim, U32 endAnim, U32 * action, bool *
    VectorF vel;
    mWorldToObj.mulV(mVelocity,&vel);
 
-   if (vel.lenSquared() > 0.01f)
-   {
-      // Bias the velocity towards picking the forward/backward anims over
-      // the sideways ones to prevent oscillation between anims.
-      vel *= VectorF(0.5f, 1.0f, 0.5f);
+   bool isMoving = vel.lenSquared() > 0.01f; //Skurps
+   bool isTurning = mFabs(mAngularVelocity.z) > 0.35f; //Skurps
 
-      // Pick animation that is the best fit for our current (local) velocity.
-      // Assumes that the root (stationary) animation is at startAnim.
+   // Pick animation that is the best fit for our current (local) velocity
+   // Assumes that the root (stationary) animation is at startAnim.
+   if(isMoving){
+      // Bias the velocity towards picking the forward/backward anims over
+      // the sideways ones to prevent oscillation between anims.    
+      vel *= VectorF(0.5f, 1.0f, 0.5f);
       F32 curMax = -0.1f;
-      for (U32 i = startAnim+1; i <= endAnim; i++)
+      for (U32 i = startAnim +1; i <= endAnim; i++)
       {
          const PlayerData::ActionAnimation &anim = mDataBlock->actionList[i];
          if (anim.sequence != -1 && anim.speed) 
@@ -4086,6 +4298,35 @@ void Player::pickBestMoveAction(U32 startAnim, U32 endAnim, U32 * action, bool *
          }
       }
    }
+   // Pick animation that is the best fit for current angularVelocity. Checks only side anims and turn-in-place anims, defaults to root if no match. -Skurps
+   else if (isTurning){
+      F32 curMax = 0.0f;
+      for (U32 i = startAnim +3; i <= endAnim; i++)
+      {
+         const PlayerData::ActionAnimation &anim = mDataBlock->actionList[i];
+         if (anim.sequence != -1 && anim.angularSpeed) 
+         {
+            F32 d = mAngularVelocity.z * anim.angularSpeed;
+            if (d > curMax)
+            {
+               curMax = d;
+               *action = i;
+               *forward = true;
+            }
+            else
+            {
+               // Check if reversing this animation would fit (as above)
+               d *= -0.75f;
+               if (d > curMax)
+               {
+                  curMax = d;
+                  *action = i;
+                  *forward = false;
+               }
+            }
+         }
+      }
+   }   
 }
 
 void Player::pickActionAnimation()
@@ -4106,7 +4347,6 @@ void Player::pickActionAnimation()
 
    bool forward = true;
    U32 action = PlayerData::RootAnim;
-   bool fsp = false;
    
    // Jetting overrides the fall animation condition
    if (mJetting)
@@ -4133,22 +4373,22 @@ void Player::pickActionAnimation()
       else
       {
          // Our feet are on something
-         pickBestMoveAction(PlayerData::RootAnim, PlayerData::SideRightAnim, &action, &forward);
+         pickBestMoveAction(PlayerData::RootAnim, PlayerData::TurnRightAnim, &action, &forward); 
       }
    }
    else if ( mPose == CrouchPose )
    {
-      pickBestMoveAction(PlayerData::CrouchRootAnim, PlayerData::CrouchRightAnim, &action, &forward);
+      pickBestMoveAction(PlayerData::CrouchRootAnim, PlayerData::CrouchTurnRightAnim, &action, &forward);
    }
    else if ( mPose == PronePose )
    {
-      pickBestMoveAction(PlayerData::ProneRootAnim, PlayerData::ProneRightAnim, &action, &forward); //Skurps
+      pickBestMoveAction(PlayerData::ProneRootAnim, PlayerData::ProneTurnRightAnim, &action, &forward); //Skurps
    }
    else if ( mPose == SprintPose )
    {
       pickBestMoveAction(PlayerData::SprintRootAnim, PlayerData::SprintRightAnim, &action, &forward);
    }
-   setActionThread(action,forward,false,false,fsp);
+   setActionThread(action,forward,false,false,false);
 }
 
 void Player::onImage(U32 imageSlot, bool unmount)
@@ -5565,7 +5805,6 @@ bool Player::displaceObject(const Point3F& displacement)
 #endif
 
 //----------------------------------------------------------------------------
-
 void Player::setPosition(const Point3F& pos,const Point3F& rot)
 {
    MatrixF mat;
@@ -6753,8 +6992,9 @@ DefineEngineMethod( Player, getState, const char*, (),,
    "<li>Mounted - The Player is mounted to an object such as a vehicle.</li>"
    "<li>Move - The Player is free to move.  The usual state.</li>"
    "<li>Recover - The Player is recovering from a fall.  See PlayerData::recoverDelay.</li></ul>\n"
+   "<li>ProneRecover - The Player is getting in / out of prone.  See PlayerData::proneRecoverDelay.</li></ul>\n"      //Skurps
 
-   "@return The current state; one of: \"Dead\", \"Mounted\", \"Move\", \"Recover\"\n" )
+   "@return The current state; one of: \"Dead\", \"Mounted\", \"Move\", \"Recover\",\"ProneRecover\"\n" )
 {
    return object->getStateName();
 }
@@ -6866,6 +7106,8 @@ DefineEngineMethod( Player, setActionThread, bool, ( const char* name, bool hold
    "<li>prone_root</li>"
    "<li>prone_forward</li>"
    "<li>prone_backward</li>"
+   "<li>prone_side</li>"
+   "<li>prone_right</li>"
    "<li>swim_root</li>"
    "<li>swim_forward</li>"
    "<li>swim_backward</li>"
@@ -6875,7 +7117,10 @@ DefineEngineMethod( Player, setActionThread, bool, ( const char* name, bool hold
    "<li>jump</li>"
    "<li>standjump</li>"
    "<li>land</li>"
-   "<li>jet</li></ul>\n\n"
+   "<li>jet</li></ul>"
+   "<li>proneIn</li>"
+   "<li>proneOut</li>"
+   "<li>dive</li>\n\n"
    
    "If the player moves in any direction then the animation sequence set using this "
    "method will be cancelled and the chosen mation-based sequence will take over.  This makes "
@@ -7225,7 +7470,6 @@ void Player::updateSplash()
       }
    }
 }
-
 
 //--------------------------------------------------------------------------
 

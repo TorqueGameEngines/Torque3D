@@ -512,7 +512,7 @@ bool PlayerData::preload(bool server, String &errorStr)
    if (jetMinJumpEnergy < jetJumpEnergyDrain)
       jetMinJumpEnergy = jetJumpEnergyDrain;
 
-   // Validate some of the data  -Obsolete??? -Skurps
+   // Validate some of the data  
    if (fallingSpeedThreshold > 0.0f)
       Con::printf("PlayerData:: Falling speed threshold should be downwards (negative)");
 
@@ -3057,7 +3057,7 @@ void Player::updateMove(const Move* move)
                || mActionAnimation.action == PlayerData::LandAnim))
          mActionAnimation.action = PlayerData::NullAnimation;
    }
-   else if (mState == ProneRecoverState){  // Use the speedfrom the animation during ProneRecoverState -Skurps
+   else if (mState == ProneRecoverState){  // Use the velocity from the animation during ProneRecoverState -Skurps
       moveSpeed = mAnimVelocity.len();
       moveVec = mAnimVelocity;
       moveVec.normalize(); 

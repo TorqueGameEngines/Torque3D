@@ -525,6 +525,7 @@ bool PlayerData::preload(bool server, String &errorStr)
       Con::printf("PlayerData:: Jump delay exceeds range (0-%d)",jumpDelay);
    }
 
+
    Resource<TSShape> shape;
    if (shapeAssetRef.notNull())
       shape = shapeAssetRef.assetPtr->getShapeResource();
@@ -2425,8 +2426,8 @@ void Player::setState(ActionState state, U32 recoverTicks)
                      }
                   }
                }
-               // Set delay; if nothing valid, mProneRecoverDelay = 0 (instant pass)
-               mProneRecoverDelay = seqTime;
+               // Set delay; if nothing valid, mRecoverDelay = 0 (instant pass)
+               mRecoverDelay = seqTime;
             } 
 
             default:
@@ -2487,8 +2488,8 @@ void Player::updateState()
          }
          break;
       case ProneRecoverState:  //Skurps
-         mProneRecoverDelay -= TickSec;
-         if(mProneRecoverDelay <= 0.0f)
+         mRecoverDelay -= TickSec;
+         if(mRecoverDelay <= 0.0f)
             setState(MoveState);
       default:
          break;
@@ -3228,7 +3229,10 @@ void Player::updateMove(const Move* move)
       // This more accurate swim vector calc comes from Matt Fairfax
       // Added a check to keep the player from pose-jittering at the surface -Skurps
       F32 offset = getPosition().z + (0.66f * mDataBlock->swimBoxSize.z);
-      if(offset < mLiquidHeight || mHead.x > 0.0f){  //Skurps
+      bool rising = (move->y > 0.0f && mHead.x < 0.0f) || (move->y < 0.0f && mHead.x > 0.0f);
+      bool skipPitch = (offset > mLiquidHeight) && rising; //Skip pitch contribution to velocity -Skurps
+
+      if(!skipPitch){  //Skurps
          MatrixF xRot;
          xRot.set(EulerF(mHead.x, 0, 0));
          zRot.set(EulerF(0, 0, mRot.z));
@@ -6550,7 +6554,7 @@ void Player::readPacketData(GameConnection *connection, BitStream *stream)
    if (stream->readFlag())
       mJumpDelay = stream->readInt(PlayerData::JumpDelayBits);
    else
-      mJumpDelay = 0;
+      mJumpDelay = 0.0f;
 
    Point3F pos,rot;
    if (stream->readFlag()) {

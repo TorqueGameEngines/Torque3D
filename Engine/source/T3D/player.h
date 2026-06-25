@@ -62,7 +62,6 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
    typedef ShapeBaseData Parent;
    enum Constants {
       RecoverDelayBits = 7,
-      ProneRecoverDelayBits = 7, //Skurps
       JumpDelayBits = 7,
       NumSpineNodes = 6,
       ImpactBits = 3,
@@ -319,7 +318,7 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
 
       NumExtraActionAnims = 512 - NumTableActionAnims,
       NumActionAnims = NumTableActionAnims + NumExtraActionAnims,
-      ActionAnimBits = 10, // Skurps changed from 9
+      ActionAnimBits = 9, 
       NullAnimation = (1 << ActionAnimBits) - 1
    };
    int mDynamicAnimsStart;
@@ -509,7 +508,7 @@ protected:
       MoveState,
       RecoverState,
       ProneRecoverState, // Skurps
-      NumStateBits = 4 // Skurps
+      NumStateBits = 3
    };
    ActionState mState;              ///< What is the player doing? @see ActionState
    bool mFalling;                   ///< Falling in mid-air?
@@ -570,9 +569,7 @@ protected:
 
    U32 mReversePending;
    F32 mRecoverDelay;         ///< When bypassing the legacy recover system and only using the land sequence,
-                              ///  this is how long the player will be in the land sequence.
-
-   F32 mProneRecoverDelay;    ///< Set by proneInSequenceTime, proneOutSequenceTime, or proneDiveSequenceTime -Skurps
+                              ///  this is how long the player will be in the land sequence.  Also used by proneRecoverState. -Skurps
 
    bool mInWater;            ///< Is true if WaterCoverage is greater than zero
    bool mSwimming;            ///< Is true if WaterCoverage is above the swimming threshold

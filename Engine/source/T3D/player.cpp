@@ -439,10 +439,10 @@ PlayerData::PlayerData()
    boxTorsoPercentage = 0.55f;
 
    // damage locations
-   boxTorsoLeftPercentage  = 0.15; //Skurps replaced left/right/front/back head percentages
-   boxTorsoRightPercentage = 0.15; //Skurps
-   boxTorsoBackPercentage  = 0.15; //Skurps
-   boxTorsoFrontPercentage = 0.15; //Skurps 
+   boxTorsoLeftPercentage  = 0.15f; //Skurps replaced left/right/front/back head percentages
+   boxTorsoRightPercentage = 0.15f; //Skurps
+   boxTorsoBackPercentage  = 0.15f; //Skurps
+   boxTorsoFrontPercentage = 0.15f; //Skurps 
 
    for (S32 i = 0; i < MaxSounds; i++)
       INIT_SOUNDASSET_ARRAY(PlayerSound, i);
@@ -732,10 +732,7 @@ void PlayerData::getGroundInfo(TSShapeInstance* si, TSThread* thread,ActionAnima
          F32 yaw = mAtan2(fwd.x, fwd.y);
 
          // Wrap yaw into [-pi, pi]
-         if (yaw > M_PI)
-             yaw -= M_2PI;
-         else if (yaw < -M_PI)
-             yaw += M_2PI;
+         yaw = mWrapF(yaw, -M_PI_F, M_PI_F);    
 
          dp->angularSpeed = yaw; // radians per frame
      }
@@ -2181,12 +2178,8 @@ void Player::processTick(const Move* move)
      mDelta.pos += mDelta.warpOffset;
      mDelta.rot += mDelta.rotOffset;
 
-      // Wrap yaw to +/-PI
-      if (mDelta.rot.z < - M_PI_F)
-        mDelta.rot.z += M_2PI_F;
-      else if (mDelta.rot.z > M_PI_F)
-        mDelta.rot.z -= M_2PI_F;
-
+     // Wrap yaw to +/-PI
+     mDelta.rot.z = mWrapF(mDelta.rot.z, -M_PI_F, M_PI_F);
 
       if (!ignore_updates)
       {
@@ -2943,12 +2936,7 @@ void Player::updateMove(const Move* move)
              // --- Begin angular velocity calculation ---  Skurps
              F32 prevYaw = mRot.z - y; // store the previous yaw
              F32 deltaYaw = mRot.z - prevYaw;
-
-             // unwrap to avoid jumps over 180°
-             if (deltaYaw > M_PI_F)
-                 deltaYaw -= M_2PI_F;
-             else if (deltaYaw < -M_PI_F)
-                 deltaYaw += M_2PI_F;
+             deltaYaw = mWrapF(deltaYaw,-M_PI_F, M_PI_F); 
 
              // store angular velocity in radians/sec
              mAngularVelocity.z = deltaYaw / TickSec;
@@ -2962,10 +2950,14 @@ void Player::updateMove(const Move* move)
          }
 
          // constrain the range of mRot.z
+         mRot.z = mWrapF(mRot.z, 0.0f, M_2PI_F);
+        
+        /*
          while (mRot.z < 0.0f)
             mRot.z += M_2PI_F;
          while (mRot.z > M_2PI_F)
             mRot.z -= M_2PI_F;
+         */   
       }
 
      mDelta.rot = mRot;
@@ -6828,10 +6820,7 @@ void Player::unpackUpdate(NetConnection *con, BitStream *stream)
                mDelta.rotOffset.z = 0;
 
             // Wrap rotation to +/-PI
-            if(mDelta.rotOffset.z < - M_PI_F)
-            mDelta.rotOffset.z += M_2PI_F;
-            else if(mDelta.rotOffset.z > M_PI_F)
-            mDelta.rotOffset.z -= M_2PI_F;
+            mDelta.rotOffset.z = mWrapF(mDelta.rotOffset.z, -M_PI_F, M_PI_F);
 
          mDelta.rotOffset /= (F32)mDelta.warpTicks;
          }

@@ -82,25 +82,27 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
    };
    new GuiControl(ChooseLevelMenuNavButtonOverlay) {
       position = "0 61";
-      extent = "1281 60";
-      horizSizing = "width";
+      extent = "1280 60";
+      horizSizing = "center";
       profile = "GuiNonModalDefaultProfile";
       tooltipProfile = "GuiToolTipProfile";
       isContainer = "1";
 
       new GuiBitmapCtrl(ChooseLevelMenuPrevNavIcon) {
          BitmapAsset = "UI:Keyboard_Black_Q_image";
-         position = "485 24";
+         position = "188 24";
          extent = "40 40";
          vertSizing = "top";
+         horizSizing = "right";
          profile = "GuiNonModalDefaultProfile";
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiBitmapCtrl(ChooseLevelMenuNextNavIcon) {
          BitmapAsset = "UI:Keyboard_Black_E_image";
-         position = "595 24";
+         position = "1050 24";
          extent = "40 40";
          vertSizing = "top";
+         horizSizing = "left";
          profile = "GuiNonModalDefaultProfile";
          tooltipProfile = "GuiToolTipProfile";
       };

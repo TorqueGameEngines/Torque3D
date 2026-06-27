@@ -48,17 +48,33 @@ AssimpAppSequence::~AssimpAppSequence()
 
 void AssimpAppSequence::determineTimeMultiplier(aiAnimation* a)
 {
-   // Assimp convention: if mTicksPerSecond == 0, assume 25 Hz
-   const float ticksPerSecond =
-      (a->mTicksPerSecond > 0.0)
-      ? (float)a->mTicksPerSecond
-      : 25.0f;
+   const ColladaUtils::ImportOptions& opts = ColladaUtils::getOptions();
 
-   mTimeMultiplier = 1.0f / ticksPerSecond;
+   switch (opts.animTiming)
+   {
+   case ColladaUtils::ImportOptions::Seconds:
+      mTimeMultiplier = 1.0f;
+      break;
+
+   case ColladaUtils::ImportOptions::Milliseconds:
+      mTimeMultiplier = 1.0f / 1000.0f;
+      break;
+
+   case ColladaUtils::ImportOptions::FrameCount:
+   default:
+   {
+      const float ticksPerSecond =
+         (a->mTicksPerSecond > 0.0)
+         ? (float)a->mTicksPerSecond
+         : (float)ColladaUtils::getOptions().animFPS; // safe fallback
+      mTimeMultiplier = 1.0f / ticksPerSecond;
+      break;
+   }
+   }
 
    Con::printf(
       "[Assimp] TicksPerSecond: %f, Time Multiplier: %f",
-      ticksPerSecond,
+      (a->mTicksPerSecond > 0.0) ? (float)a->mTicksPerSecond : (float)ColladaUtils::getOptions().animFPS,
       mTimeMultiplier
    );
 }

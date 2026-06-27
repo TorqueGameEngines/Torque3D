@@ -79,37 +79,7 @@ const char* AssimpAppMesh::getName(bool allowFixed)
 
 MatrixF AssimpAppMesh::getMeshTransform(F32 time)
 {
-   MatrixF transform = appNode->getNodeTransform(time);
-
-   // AssimpAppNode::getTransform() deliberately skips axis correction for the
-   // bounds node itself, since its (uncorrected) transform is used elsewhere
-   // as the reference frame the rest of the shape gets normalized against
-   // (see TSShapeLoader::getLocalNodeMatrix). But if this mesh's geometry was
-   // hand-modeled as part of the source scene (as opposed to the empty,
-   // auto-generated bounds node added when none exists), it lives in the same
-   // source up-axis space as every other mesh and needs the same correction
-   // baked into its locked vertex data - otherwise it ends up sitting in the
-   // model's original, unrotated space instead of Torque's Z-up space.
-   if (appNode->isBounds())
-   {
-      MatrixF axisFix = ColladaUtils::getOptions().axisCorrectionMat;
-      transform.mulL(axisFix);
-   }
-
-   return transform;
-}
-
-void AssimpAppMesh::computeBounds(Box3F& bounds)
-{
-   if (appNode->isBounds())
-   {
-      bounds = Box3F::Invalid;
-      for (S32 iVert = 0; iVert < points.size(); iVert++)
-         bounds.extend(points[iVert]);
-      return;
-   }
-
-   Parent::computeBounds(bounds);
+   return appNode->getNodeTransform(time);
 }
 
 void AssimpAppMesh::lockMesh(F32 t, const MatrixF& objOffset)

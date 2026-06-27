@@ -299,23 +299,39 @@ void AssimpShapeLoader::enumerateScene()
    // Setup LOD checks
    detectDetails();
 
-   aiNode* root = mScene->mRootNode;
-   for (S32 iNode = 0; iNode < root->mNumChildren; iNode++)
+   // Process mRootNode as an AppNode directly.
+   //
+   // Making it the single parentless node means the !appParent branch in
+   // AssimpAppNode::getTransform() fires exactly once — for this node only.
+   // Scale + axisCorrectionMat are therefore applied in exactly one place.
+   // Every child (bones, mesh nodes, bounds) inherits the correction naturally
+   // through the parent chain; no per-node special-casing is needed.
+   AssimpAppNode* sceneRootAppNode = new AssimpAppNode(mScene, mScene->mRootNode, nullptr);
+   if (!processNode(sceneRootAppNode))
    {
-      aiNode* child = root->mChildren[iNode];
-      AssimpAppNode* node = new AssimpAppNode(mScene, child);
-      if (!processNode(node)) {
-         delete node;
-      }
+      Con::errorf("[ASSIMP] Failed to process scene root node '%s'.",
+         mScene->mRootNode->mName.C_Str());
+      delete sceneRootAppNode;
+      sceneRootAppNode = nullptr;
    }
 
-   if (!boundsNode) {
-      aiNode* reqNode = new aiNode("bounds");
-      reqNode->mTransformation = aiMatrix4x4();
-      AssimpAppNode* appBoundsNode = new AssimpAppNode(mScene, reqNode);
-      if (!processNode(appBoundsNode)) {
+   // Bounds check — every Torque shape needs a bounds node.
+   // If the source file didn't include one, synthesise it
+   if (!boundsNode)
+   {
+      Con::printf("[ASSIMP] No 'bounds' node found - adding synthetic bounds node.");
+      aiNode* boundsAiNode = new aiNode("bounds");
+      boundsAiNode->mTransformation = aiMatrix4x4(); // identity
+      AssimpAppNode* appBoundsNode = new AssimpAppNode(mScene, boundsAiNode, nullptr);
+      if (!processNode(appBoundsNode))
+      {
+         Con::errorf("[ASSIMP] Failed to add synthetic bounds node.");
          delete appBoundsNode;
       }
+   }
+   else
+   {
+      Con::printf("[ASSIMP] Bounds node found in scene.");
    }
 
    // Process animations if available

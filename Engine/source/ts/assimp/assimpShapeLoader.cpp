@@ -277,6 +277,17 @@ void AssimpShapeLoader::enumerateScene()
 
    getRootAxisTransform();
 
+   bool fileHasBounds = false;
+   for (U32 i = 0; i < mScene->mNumMeshes && !fileHasBounds; ++i)
+   {
+      if (dStricmp(mScene->mMeshes[i]->mName.C_Str(), "bounds") == 0)
+         fileHasBounds = true;
+   }
+   if (!fileHasBounds)
+      fileHasBounds = (AssimpAppNode::findChildNodeByName("bounds", mScene->mRootNode) != nullptr);
+
+   Con::printf("[ASSIMP] Bounds pre-scan: %s", fileHasBounds ? "found in scene" : "not found - will synthesise");
+
    for (U32 i = 0; i < mScene->mNumTextures; ++i) {
       extractTexture(i, mScene->mTextures[i]);
    }
@@ -317,7 +328,7 @@ void AssimpShapeLoader::enumerateScene()
 
    // Bounds check — every Torque shape needs a bounds node.
    // If the source file didn't include one, synthesise it
-   if (!boundsNode)
+   if (!fileHasBounds)
    {
       Con::printf("[ASSIMP] No 'bounds' node found - adding synthetic bounds node.");
       aiNode* boundsAiNode = new aiNode("bounds");
@@ -396,7 +407,7 @@ void AssimpShapeLoader::configureImportUnits() {
 void AssimpShapeLoader::getRootAxisTransform()
 {
    int upAxis = 1, upSign = 1;
-   int frontAxis = 2, frontSign = -1;
+   int frontAxis = 2, frontSign = 1;
    int coordAxis = 0, coordSign = 1;
 
    aiMetadata* meta = mScene->mMetaData;
@@ -441,7 +452,7 @@ void AssimpShapeLoader::getRootAxisTransform()
       return v;
    };
 
-   Point3F forward = axisToVector(frontAxis, -frontSign);
+   Point3F forward = axisToVector(frontAxis, frontSign == 1 ? -frontSign : frontSign);
    Point3F up = axisToVector(upAxis, upSign);
    Point3F right = mCross(forward, up);
 

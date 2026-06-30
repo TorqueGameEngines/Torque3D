@@ -65,14 +65,6 @@ public:
 
    virtual MatrixF getNodeTransform(F32 time) = 0;
 
-   /// The transform TSShapeLoader::getLocalNodeMatrix() uses as the bounds
-	/// reference frame when this node is the shape's bounds node. 
-   virtual MatrixF getBoundsReferenceTransform(F32 time) { return getNodeTransform(time); }
-
-   /// This node's own raw local rotation only (no parent chain, no axis
-   /// correction, scale zapped out).
-   virtual MatrixF getOwnRotationOnly(F32 time) { return MatrixF(true); }
-
    virtual bool isEqual(AppNode* node) = 0;
 
    virtual bool animatesTransform(const AppSequence* appSeq) = 0;

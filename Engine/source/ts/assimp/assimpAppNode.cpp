@@ -49,7 +49,7 @@ F32 AssimpAppNode::sTimeMultiplier = 1.0f;
 
 AssimpAppNode::AssimpAppNode(const aiScene* scene, const aiNode* node, AssimpAppNode* parentNode)
    : mScene(scene),
-   mNode(node ? node : scene->mRootNode),
+   mNode(node),
    mInvertMeshes(false),
    mLastTransformTime(TSShapeLoader::DefaultTime - 1),
    mDefaultTransformValid(false)
@@ -62,7 +62,7 @@ AssimpAppNode::AssimpAppNode(const aiScene* scene, const aiNode* node, AssimpApp
       const char* defaultName = "null";
       mName = dStrdup(defaultName);
    }
-   mParentName = dStrdup(parentNode ? parentNode->mName : "ROOT");
+   mParentName = dStrdup(parentNode ? parentNode->mName : "DUMMY");
    // Convert transformation matrix
    assimpToTorqueMat(node->mTransformation, mNodeTransform);
    Con::printf("[ASSIMP] Node Created: %s, Parent: %s", mName, mParentName);
@@ -84,14 +84,6 @@ MatrixF AssimpAppNode::getTransform(F32 time)
       // no parent (ie. root level) => scale by global shape <unit>
       mLastTransform.identity();
       mLastTransform.scale(ColladaUtils::getOptions().unit * ColladaUtils::getOptions().formatScaleFactor);
-
-      if (mScene && mScene->mRootNode)
-      {
-         MatrixF sceneRootMat(true);
-         assimpToTorqueMat(mScene->mRootNode->mTransformation, sceneRootMat);
-         mLastTransform.mulL(sceneRootMat);
-      }
-
       if (!isBounds())
       {
          MatrixF axisFix = ColladaUtils::getOptions().axisCorrectionMat;
@@ -277,37 +269,6 @@ MatrixF AssimpAppNode::getNodeTransform(F32 time)
 
       return nodeTransform;
    }
-}
-
-MatrixF AssimpAppNode::getBoundsReferenceTransform(F32 time)
-{
-   // Deliberately independent of this node's own raw local data (rotation,
-   // scale) and of axisCorrectionMat
-   MatrixF mat(true);
-   mat.scale(ColladaUtils::getOptions().unit * ColladaUtils::getOptions().formatScaleFactor);
-
-   if (mScene && mScene->mRootNode)
-   {
-      MatrixF sceneRootMat(true);
-      assimpToTorqueMat(mScene->mRootNode->mTransformation, sceneRootMat);
-      mat.mulL(sceneRootMat);
-   }
-
-   return mat;
-}
-
-MatrixF AssimpAppNode::getOwnRotationOnly(F32 time)
-{
-   // This node's own raw mNodeTransform
-   MatrixF rotOnly(mNodeTransform);
-   Point3F rawScale = rotOnly.getScale();
-   Point3F invScale(
-      rawScale.x ? 1.0f / rawScale.x : 0.0f,
-      rawScale.y ? 1.0f / rawScale.y : 0.0f,
-      rawScale.z ? 1.0f / rawScale.z : 0.0f);
-   rotOnly.scale(invScale);
-   rotOnly.setPosition(Point3F::Zero);
-   return rotOnly;
 }
 
 void AssimpAppNode::assimpToTorqueMat(const aiMatrix4x4& inAssimpMat, MatrixF& outMat)

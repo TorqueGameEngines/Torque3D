@@ -252,8 +252,9 @@ bool Taml::write(SimObject* pSimObject, const char* pFilename)
    stream.close();
 
    // Reset the compilation.
-   resetCompilation();
    mWriteLocked = false;
+   resetCompilation();
+
    return status;
 }
 

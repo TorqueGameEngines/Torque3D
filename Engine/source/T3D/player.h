@@ -97,9 +97,8 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
    F32 maxLookAngle;          ///< Highest angle (radians) the player can look
    F32 maxFreelookAngle;      ///< Max left/right angle the player can look
 
-   F32 minProneLookAngle;   /// Skurps
-   F32 maxProneLookAngle;   /// Skurps
-
+   F32 minProneLookAngle;   //< Lowest angle (radians) the player can look when prone.  Should be >= minLookAngle. -Skurps
+   F32 maxProneLookAngle;   ///< Highest angle (radians) the player can look when prone. Should be <= maxLookAngle. -Skurps
 
    /// @name Physics constants
    /// @{
@@ -124,6 +123,10 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
                               ///  recover from a fall then becomes this parameter's time and the land
                               ///  sequence's playback will be scaled to match.
    bool transitionToLand;     ///< When going from a fall to a land, should we transition between the two?
+
+   F32 proneInSequenceTime;     ///< Time for getting in prone, proneIn sequence is scaled to match this-Skurps
+   F32 proneDiveSequenceTime;     ///< Time for diving into prone, dive sequence is scaled to match this-Skurps
+   F32 proneOutSequenceTime;     ///< Time for getting up from prone, proneOut sequence is scaled to match this-Skurps
 
    // Running/Walking
    F32 runForce;              ///< Force used to accelerate player
@@ -159,18 +162,24 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
    F32 maxUnderwaterForwardSpeed;   ///< Maximum underwater forward speed when running
    F32 maxUnderwaterBackwardSpeed;  ///< Maximum underwater backward speed when running
    F32 maxUnderwaterSideSpeed;      ///< Maximum underwater side speed when running
+   F32 swimYawScale;               ///< Amount to scale yaw motion while swimming -Skurps
+   F32 swimPitchScale;             ///< Amount to scale pitch motion while swimming -Skurps
 
    // Crouching
    F32 crouchForce;                 ///< Force used to accelerate player while crouching
    F32 maxCrouchForwardSpeed;       ///< Maximum forward speed when crouching
    F32 maxCrouchBackwardSpeed;      ///< Maximum backward speed when crouching
    F32 maxCrouchSideSpeed;          ///< Maximum side speed when crouching
+   F32 crouchYawScale;               ///< Amount to scale yaw motion while crouching -Skurps
+   F32 crouchPitchScale;             ///< Amount to scale pitch motion while crouching -Skurps
 
    // Prone
    F32 proneForce;                  ///< Force used to accelerate player while prone
    F32 maxProneForwardSpeed;        ///< Maximum forward speed when prone
    F32 maxProneBackwardSpeed;       ///< Maximum backward speed when prone
    F32 maxProneSideSpeed;           ///< Maximum side speed when prone
+   F32 proneYawScale;               ///< Amount to scale yaw motion while prone -Skurps
+   F32 pronePitchScale;             ///< Amount to scale pitch motion while prone -Skurps
 
    // Jetting
    F32 jetJumpForce;
@@ -227,7 +236,7 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
       ImpactWaterMedium,
       ImpactWaterHard,
       ExitWater,
-	   Crawl,//Skurps
+      Crawl,//Skurps
       MaxSounds
    };
 
@@ -252,6 +261,7 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
       F32      speed;         ///< Speed in m/s
       bool     velocityScale; ///< Scale animation by velocity
       bool     death;         ///< Are we dying?
+      F32      angularSpeed;  ///< Radians per frame -Skurps
    };
    enum {
       // *** WARNING ***
@@ -263,6 +273,8 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
       BackBackwardAnim,
       SideLeftAnim,
       SideRightAnim,
+      TurnLeftAnim,  //Skurps
+      TurnRightAnim,  //Skurps
 
       SprintRootAnim,
       SprintForwardAnim,
@@ -275,12 +287,16 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
       CrouchBackwardAnim,
       CrouchLeftAnim,
       CrouchRightAnim,
+      CrouchTurnLeftAnim,  //Skurps
+      CrouchTurnRightAnim,  //Skurps
 
       ProneRootAnim,
       ProneForwardAnim,
       ProneBackwardAnim,
-	  ProneLeftAnim, //Skurps
+      ProneLeftAnim, //Skurps
       ProneRightAnim, //Skurps
+      ProneTurnLeftAnim, //Skurps
+      ProneTurnRightAnim, //Skurps
 
       SwimRootAnim,
       SwimForwardAnim,
@@ -294,13 +310,15 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
       StandJumpAnim,
       LandAnim,
       JetAnim,
+      ProneInAnim, //Skurps
+      ProneOutAnim, //Skurps
+      DiveAnim, //Skurps
 
-      // 
-      NumTableActionAnims = JetAnim + 1,
+      NumTableActionAnims = DiveAnim + 1, //Skurps
 
       NumExtraActionAnims = 512 - NumTableActionAnims,
       NumActionAnims = NumTableActionAnims + NumExtraActionAnims,
-      ActionAnimBits = 9,
+      ActionAnimBits = 9, 
       NullAnimation = (1 << ActionAnimBits) - 1
    };
    int mDynamicAnimsStart;
@@ -374,6 +392,7 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
    void getGroundInfo(TSShapeInstance*,TSThread*,ActionAnimation*);
    bool isTableSequence(S32 seq);
    bool isJumpAction(U32 action);
+   bool isTurnAction(U32 action);//Skurps
 
    static void initPersistFields();
    void packData(BitStream* stream) override;
@@ -469,6 +488,8 @@ protected:
    Point3F mHead;                   ///< Head rotation, uses only x & z
    Point3F mRot;                    ///< Body rotation, uses only z
    VectorF mVelocity;               ///< Velocity
+   VectorF mAngularVelocity;        ///< Angular Velocity (only z), Radians / Sec - Skurps
+   VectorF mAnimVelocity;         ///< Skurps
    Point3F mAnchorPoint;            ///< Pos compression anchor
    S32 mImpactSound;
 
@@ -486,6 +507,7 @@ protected:
       NullState,
       MoveState,
       RecoverState,
+      ProneRecoverState, // Skurps
       NumStateBits = 3
    };
    ActionState mState;              ///< What is the player doing? @see ActionState
@@ -538,14 +560,16 @@ protected:
    TSThread* mHeadHThread;
    TSThread* mRecoilThread;
    TSThread* mImageStateThread;
+
    /// @}
 
    bool mInMissionArea;       ///< Are we in the mission area?
    //
    S32 mRecoverTicks;         ///< same as recoverTicks in the player datablock
+
    U32 mReversePending;
    F32 mRecoverDelay;         ///< When bypassing the legacy recover system and only using the land sequence,
-                              ///  this is how long the player will be in the land sequence.
+                              ///  this is how long the player will be in the land sequence.  Also used by proneRecoverState. -Skurps
 
    bool mInWater;            ///< Is true if WaterCoverage is greater than zero
    bool mSwimming;            ///< Is true if WaterCoverage is above the swimming threshold
@@ -644,7 +668,7 @@ protected:
    virtual void updateAttachment();
    // PATHSHAPE END
    ///Update head animation
-   void updateLookAnimation(F32 dT = 0.f);
+   void updateLookAnimation(F32 dt = 0.0f);
 
    ///Update other animations
    void updateAnimation(F32 dt);

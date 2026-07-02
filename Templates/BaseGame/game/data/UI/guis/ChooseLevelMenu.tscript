@@ -285,10 +285,7 @@ function ChooseLevelMenu::syncGUI(%this)
    %btn.setHighlighted(true);
    
    %buttonPosX = %btn.position.x + ChooseLevelMenuTabList.position.x;
-   
-   ChooseLevelMenuPrevNavIcon.position.x = %buttonPosX;
-   ChooseLevelMenuNextNavIcon.position.x = %buttonPosX + %btn.extent.x - 40;
-     
+        
    ChooseLevelBackBtn.setBitmap(BaseUIActionMap.getCommandButtonBitmap(%device, "BaseUIBackOut"));
    
    if(ChooseLevelMenu.currentMenuIdx == 0)

@@ -44,12 +44,16 @@
 #include "T3D/assets/assetImporter.h"
 
 StringTableEntry TerrainMaterialAsset::smNoTerrainMaterialAssetFallback = NULL;
+AssetPtr<TerrainMaterialAsset> TerrainMaterialAsset::smNoTerrainMaterialAssetFallbackAssetPtr = NULL;
 
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(TerrainMaterialAsset);
 
 IMPLEMENT_STRUCT(AssetPtr<TerrainMaterialAsset>, AssetPtrTerrainMaterialAsset, , "")
+END_IMPLEMENT_STRUCT
+
+IMPLEMENT_STRUCT(AssetRef<TerrainMaterialAsset>, AssetRefTerrainMaterialAsset, , "")
 END_IMPLEMENT_STRUCT
 
 ConsoleType(TerrainMaterialAssetPtr, TypeTerrainMaterialAssetPtr, AssetPtr<TerrainMaterialAsset>, ASSET_ID_FIELD_PREFIX)
@@ -122,6 +126,43 @@ ConsoleSetType(TypeTerrainMaterialAssetId)
    // Warn.
    Con::warnf("(TypeTerrainMaterialAssetId) - Cannot set multiple args to a single asset.");
 }
+
+//-----------------------------------------------------------------------------
+
+ConsoleType(TerrainMaterialAssetRef, TypeTerrainMaterialAssetRef, AssetRef<TerrainMaterialAsset>, ASSET_ID_FIELD_PREFIX)
+
+ConsoleGetType(TypeTerrainMaterialAssetRef)
+{
+   AssetRef<TerrainMaterialAsset>& ref = *((AssetRef<TerrainMaterialAsset>*)dptr);
+
+   if (ref.assetPtr.isNull())
+      return ref.assetId;
+   else
+      return ref.assetPtr.getAssetId();
+}
+
+ConsoleSetType(TypeTerrainMaterialAssetRef)
+{
+   if (argc == 1)
+   {
+      const char* pFieldValue = argv[0];
+
+      AssetRef<TerrainMaterialAsset>* pAssetRef = (AssetRef<TerrainMaterialAsset>*)(dptr);
+
+      if (pAssetRef == NULL)
+      {
+         Con::warnf("(TypeTerrainMaterialAssetRef) - Failed to set asset Id '%d'.", pFieldValue);
+         return;
+      }
+
+      *pAssetRef = pFieldValue;
+
+      return;
+   }
+
+   Con::warnf("(TypeTerrainMaterialAssetRef) - Cannot set multiple args to a single asset.");
+}
+
 //-----------------------------------------------------------------------------
 
 TerrainMaterialAsset::TerrainMaterialAsset()
@@ -254,12 +295,34 @@ void TerrainMaterialAsset::setScriptFile(const char* pScriptFile)
 
 //------------------------------------------------------------------------------
 
-U32 TerrainMaterialAsset::load()
+StringTableEntry TerrainMaterialAsset::getMaterialName()
 {
    if (mMaterialDefinition)
-      mMaterialDefinition->safeDeleteObject();
-   if (mFXMaterialDefinition)
-      mFXMaterialDefinition->safeDeleteObject();
+      return mMatDefinitionName;
+
+   if (smNoTerrainMaterialAssetFallbackAssetPtr.notNull())
+      return smNoTerrainMaterialAssetFallbackAssetPtr->getMaterialName();
+
+   return StringTable->EmptyString();
+}
+
+SimObjectPtr<TerrainMaterial> TerrainMaterialAsset::getMaterial()
+{
+   if (mMaterialDefinition)
+      return mMaterialDefinition;
+
+   if (smNoTerrainMaterialAssetFallbackAssetPtr.notNull())
+      return smNoTerrainMaterialAssetFallbackAssetPtr->getMaterial();
+
+   return NULL;
+}
+
+//------------------------------------------------------------------------------
+
+U32 TerrainMaterialAsset::load()
+{
+   if (mLoadedState == AssetErrCode::Ok)
+      return mLoadedState;
 
    if (mLoadedState == EmbeddedDefinition)
    {
@@ -355,7 +418,7 @@ U32 TerrainMaterialAsset::getAssetByMaterialName(StringTableEntry matName, Asset
       for (U32 i = 0; i < foundAssetcount; i++)
       {
          TerrainMaterialAsset* tMatAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(query.mAssetList[i]);
-         if (tMatAsset && tMatAsset->getMaterialDefinitionName() == matName)
+         if (tMatAsset && tMatAsset->getMaterialName() == matName)
          {
             matAsset->setAssetId(query.mAssetList[i]);
             AssetDatabase.releaseAsset(query.mAssetList[i]);
@@ -388,7 +451,7 @@ StringTableEntry TerrainMaterialAsset::getAssetIdByMaterialName(StringTableEntry
          TerrainMaterialAsset* matAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(query.mAssetList[i]);
          if (matAsset)
          {
-            if (matAsset->getMaterialDefinitionName() == matName)
+            if (matAsset->getMaterialName() == matName)
                materialAssetId = matAsset->getAssetId();
 
             AssetDatabase.releaseAsset(query.mAssetList[i]);
@@ -467,11 +530,11 @@ DefineEngineMethod(TerrainMaterialAsset, getScriptPath, const char*, (), ,
    return object->getScriptPath();
 }
 
-DefineEngineMethod(TerrainMaterialAsset, getMaterialDefinition, S32, (), ,
+DefineEngineMethod(TerrainMaterialAsset, getMaterial, S32, (), ,
    "Queries the Asset Database to see if any asset exists that is associated with the provided material name.\n"
    "@return The AssetId of the associated asset, if any.")
 {
-   SimObjectPtr<TerrainMaterial> mat = object->getMaterialDefinition();
+   SimObjectPtr<TerrainMaterial> mat = object->getMaterial();
    if (mat.isValid())
       return mat->getId();
    else
@@ -487,6 +550,26 @@ DefineEngineMethod(TerrainMaterialAsset, getFXMaterialDefinition, S32, (), ,
       return mat->getId();
    else
       return 0;
+}
+
+DefineEngineFunction(loadTerrainMaterialAssetFallback, S32, (), ,
+   "Forces the loading of the TerrainMaterialAsset fallback asset.\n"
+   "@return Load status code.")
+{
+   if (TerrainMaterialAsset::smNoTerrainMaterialAssetFallbackAssetPtr.isNull())
+   {
+      TerrainMaterialAsset::smNoTerrainMaterialAssetFallbackAssetPtr = TerrainMaterialAsset::smNoTerrainMaterialAssetFallback;
+      if (TerrainMaterialAsset::smNoTerrainMaterialAssetFallbackAssetPtr.isNull())
+         Con::errorf("loadTerrainMaterialAssetFallback could not find fallback asset %s!", TerrainMaterialAsset::smNoTerrainMaterialAssetFallback);
+      else
+         return (S32)TerrainMaterialAsset::smNoTerrainMaterialAssetFallbackAssetPtr->load();
+   }
+   else
+   {
+      return (S32)TerrainMaterialAsset::smNoTerrainMaterialAssetFallbackAssetPtr->getStatus();
+   }
+
+   return AssetBase::Failed;
 }
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId
@@ -590,5 +673,19 @@ void GuiInspectorTypeTerrainMaterialAssetId::consoleInit()
    Parent::consoleInit();
 
    ConsoleBaseType::getType(TypeTerrainMaterialAssetId)->setInspectorFieldType("GuiInspectorTypeTerrainMaterialAssetId");
+}
+
+IMPLEMENT_CONOBJECT(GuiInspectorTypeTerrainMaterialAssetRef);
+
+ConsoleDocClass(GuiInspectorTypeTerrainMaterialAssetRef,
+   "@brief Inspector field type for AssetRef<TerrainMaterialAsset> fields\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeTerrainMaterialAssetRef::consoleInit()
+{
+   Parent::consoleInit();
+   ConsoleBaseType::getType(TypeTerrainMaterialAssetRef)->setInspectorFieldType("GuiInspectorTypeTerrainMaterialAssetRef");
 }
 #endif

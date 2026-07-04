@@ -142,8 +142,7 @@ public:
 protected:
 
    // Material
-   DECLARE_MATERIALASSET(SkySphere, Material);
-   DECLARE_ASSET_NET_SETGET(SkySphere, Material, -1);
+   AssetRef<MaterialAsset> mMaterialAssetRef;
 
    BaseMatInstance* mMatInstance;
    SkyMatParams mMatParamHandle;

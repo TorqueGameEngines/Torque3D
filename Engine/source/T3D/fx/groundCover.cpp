@@ -460,7 +460,6 @@ GroundCover::GroundCover()
 
    mRandomSeed = 1;
 
-   INIT_ASSET(Material);
    mMaterialInst = NULL;
 
    mMatParams = NULL;
@@ -510,8 +509,6 @@ GroundCover::GroundCover()
       mMinElevation[i] = -99999.0f;
       mMaxElevation[i] = 99999.0f;
 
-      mLayerAsset[i] = NULL;
-      mLayerFile[i] = StringTable->EmptyString();
 
       mInvertLayer[i] = NULL;
 
@@ -545,7 +542,9 @@ void GroundCover::initPersistFields()
    docsURL;
    addGroup( "GroundCover General" );
 
-      INITPERSISTFIELD_MATERIALASSET(Material, GroundCover, "Material used by all GroundCover segments.");
+      ADD_FIELD( "materialAsset", TypeMaterialAssetRef, Offset( mMaterialAssetRef, GroundCover ) )
+         .network( InitialUpdateMask )
+         .doc( "Material asset used by all GroundCover segments." );
 
       addFieldV( "radius", TypeRangedF32,          Offset( mRadius, GroundCover ), &CommonValidators::PositiveFloat,              "Outer generation radius from the current camera position." );
       addFieldV( "dissolveRadius", TypeRangedF32,          Offset( mFadeRadius, GroundCover ), &CommonValidators::PositiveFloat,          "This is less than or equal to radius and defines when fading of cover elements begins." );
@@ -570,10 +569,10 @@ void GroundCover::initPersistFields()
             .doc("The cover shape. [Optional]")
             .network(-1);
 
-         INITPERSISTFIELD_TERRAINMATERIALASSET_ARRAY(Layer, MAX_COVERTYPES, GroundCover, "Terrain material assetId to limit coverage to, or blank to not limit.");
-
-         //Legacy field
-         addProtectedField("layer", TypeTerrainMaterialAssetPtr, Offset(mLayerAsset, GroundCover), &_setLayerData, &defaultProtectedGetFn, MAX_COVERTYPES, "Terrain material assetId to limit coverage to, or blank to not limit.", AbstractClassRep::FIELD_HideInInspectors); 
+         ADD_FIELD( "layerAsset", TypeTerrainMaterialAssetRef, Offset( mLayerAssetRef, GroundCover ) )
+            .elements( MAX_COVERTYPES )
+            .network( InitialUpdateMask )
+            .doc( "Terrain material asset to limit coverage to, or blank to not limit." );
 
          addField( "invertLayer",   TypeBool,      Offset( mInvertLayer, GroundCover ), MAX_COVERTYPES,     "Indicates that the terrain material index given in 'layer' is an exclusion mask." );
 
@@ -722,7 +721,7 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
       // TODO: We could probably optimize a few of these
       // based on reasonable units at some point.
 
-      PACK_ASSET(connection, Material);
+      AssetDatabase.packDataAsset( stream, mMaterialAssetRef.getAssetId() );
 
       stream->write( mRadius );
       stream->write( mZOffset );
@@ -777,7 +776,8 @@ U32 GroundCover::packUpdate( NetConnection *connection, U32 mask, BitStream *str
          AssetDatabase.packUpdateAsset(connection, mask, stream, mShapeAssetRef[i].assetId);
       }
 
-      PACK_ASSET_ARRAY_REFACTOR(connection, Layer, MAX_COVERTYPES)
+      for ( U32 i = 0; i < MAX_COVERTYPES; i++ )
+         AssetDatabase.packUpdateAsset( connection, mask, stream, mLayerAssetRef[i].getAssetId() );
 
       stream->writeFlag( mDebugRenderCells );
       stream->writeFlag( mDebugNoBillboards );
@@ -794,7 +794,7 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
 
    if (stream->readFlag())
    {
-      UNPACK_ASSET(connection, Material);
+      mMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
 
       stream->read( &mRadius );
       stream->read( &mZOffset );
@@ -849,7 +849,8 @@ void GroundCover::unpackUpdate( NetConnection *connection, BitStream *stream )
          mShapeAssetRef[i] = AssetDatabase.unpackUpdateAsset(connection, stream);
       }
 
-      UNPACK_ASSET_ARRAY_REFACTOR(connection, Layer, MAX_COVERTYPES)
+      for ( U32 i = 0; i < MAX_COVERTYPES; i++ )
+         mLayerAssetRef[i] = AssetDatabase.unpackUpdateAsset( connection, stream );
 
       mDebugRenderCells    = stream->readFlag();
       mDebugNoBillboards   = stream->readFlag();
@@ -873,8 +874,8 @@ void GroundCover::_initMaterial()
 {
    SAFE_DELETE(mMaterialInst);
 
-   if (mMaterialAsset.notNull() && mMaterialAsset->getStatus() == MaterialAsset::Ok)
-      mMaterialInst = mMaterial->createMatInstance();
+   if (mMaterialAssetRef.notNull() && mMaterialAssetRef.assetPtr->getStatus() == MaterialAsset::Ok)
+      mMaterialInst = mMaterialAssetRef.assetPtr->getMaterial()->createMatInstance();
    else
       mMaterialInst = MATMGR->createMatInstance("WarningMaterial");
    
@@ -1195,9 +1196,7 @@ GroundCoverCell* GroundCover::_generateCell( const Point2I& index,
       const Box3F typeShapeBounds = typeIsShape ? mShapeInstances[ type ]->getShape()->mBounds : Box3F();
       const F32 typeWindScale = mWindScale[type];
 
-      StringTableEntry typeLayer = StringTable->EmptyString();
-      if (mLayerAsset[type].notNull())
-         typeLayer = mLayerAsset[type]->getAssetId();
+      StringTableEntry typeLayer = mLayerAssetRef[type].getAssetId();
       const bool typeInvertLayer = mInvertLayer[type];
 
       // We can set this once here... all the placements for this are the same.

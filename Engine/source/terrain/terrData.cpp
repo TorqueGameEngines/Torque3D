@@ -493,7 +493,7 @@ bool TerrainBlock::saveAsset()
          {
             StringTableEntry intMatName = terr->mFile->mMaterials[m]->getInternalName();
 
-            StringTableEntry assetMatDefName = terrMatAsset->getMaterialDefinitionName();
+            StringTableEntry assetMatDefName = terrMatAsset->getMaterialName();
             if (assetMatDefName == intMatName)
             {
                mTerrainAsset->addAssetDependencyField("terrainMaterailAsset", terrMatAsset.getAssetId());
@@ -1005,7 +1005,7 @@ void TerrainBlock::addMaterial( const String &name, U32 insertAt )
          for (U32 i = 0; i < foundCount; i++)
          {
             TerrainMaterialAsset* terrMatAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(aq->mAssetList[i]);
-            if (terrMatAsset && terrMatAsset->getMaterialDefinitionName() == terrMatName)
+            if (terrMatAsset && terrMatAsset->getMaterialName() == terrMatName)
             {
                //Do iterative logic to find the next available slot and write to it with our new mat field
                mTerrainAsset->setDataField(StringTable->insert("terrainMaterialAsset"), NULL, aq->mAssetList[i]);

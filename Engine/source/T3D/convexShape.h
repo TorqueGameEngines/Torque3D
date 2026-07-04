@@ -137,19 +137,15 @@ public:
    struct surfaceMaterial
    {
       // The name of the Material we will use for rendering
-      DECLARE_MATERIALASSET(surfaceMaterial, Material);
-
-      DECLARE_ASSET_SETGET(surfaceMaterial, Material);
+      AssetRef<MaterialAsset> mMaterialAssetRef;
 
       // The actual Material instance
       BaseMatInstance* materialInst;
 
-      surfaceMaterial()
-      {
-         INIT_ASSET(Material);
+      surfaceMaterial() : materialInst( NULL ) {}
 
-         materialInst = NULL;
-      }
+      StringTableEntry getMaterial() const { return mMaterialAssetRef.getAssetId(); }
+      void setMaterial( const char* assetId ) { mMaterialAssetRef = StringTable->insert( assetId ); }
    };
 
    struct surfaceUV
@@ -248,7 +244,9 @@ public:
 
    /// @}
 
-   String getMaterialName() { return mMaterialName; }
+   StringTableEntry getMaterial() const { return mMaterialAssetRef.getAssetId(); }
+   String getMaterialName() const { return String( mMaterialAssetRef.getAssetId() ); }
+   void setMaterial( StringTableEntry assetId ) { mMaterialAssetRef = assetId; }
 
 protected:
 
@@ -268,8 +266,7 @@ protected:
 
 protected:
 
-   DECLARE_MATERIALASSET(ConvexShape, Material);
-   DECLARE_ASSET_SETGET(ConvexShape, Material);
+   AssetRef<MaterialAsset> mMaterialAssetRef;
 
    // The actual Material instance
    BaseMatInstance* mMaterialInst;

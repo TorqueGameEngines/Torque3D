@@ -75,7 +75,6 @@ GroundPlane::GroundPlane()
    : mSquareSize( 128.0f ),
      mScaleU( 1.0f ),
      mScaleV( 1.0f ),
-     mMaterial( NULL ),
      mMaterialInst(NULL),
      mPhysicsRep( NULL ),
      mMin( 0.0f, 0.0f ),
@@ -87,13 +86,10 @@ GroundPlane::GroundPlane()
    mConvexList = new Convex;
    mTypeMask |= TerrainLikeObjectType;
 
-   INIT_ASSET(Material);
 }
 
 GroundPlane::~GroundPlane()
 {
-   mMaterial = NULL;
-
    if(mMaterialInst)
       SAFE_DELETE(mMaterialInst);
 
@@ -110,7 +106,9 @@ void GroundPlane::initPersistFields()
       addFieldV( "scaleU", TypeRangedF32,          Offset( mScaleU, GroundPlane ), &CommonValidators::PositiveFloat, "Scale of texture repeat in the U direction." );
       addFieldV( "scaleV", TypeRangedF32,          Offset( mScaleV, GroundPlane ), &CommonValidators::PositiveFloat, "Scale of texture repeat in the V direction." );
 
-      INITPERSISTFIELD_MATERIALASSET(Material, GroundPlane, "The material used to render the ground plane.");
+      ADD_FIELD( "materialAsset", TypeMaterialAssetRef, Offset( mMaterialAssetRef, GroundPlane ) )
+         .network(-1)
+         .doc( "Material asset used to render the ground plane." );
 
    endGroup( "Plane" );
    
@@ -157,9 +155,9 @@ bool GroundPlane::onAdd()
 
 void GroundPlane::onRemove()
 {
-   U32 assetStatus = MaterialAsset::getAssetErrCode(mMaterialAsset);
+   U32 assetStatus = MaterialAsset::getAssetErrCode(mMaterialAssetRef.assetPtr);
    if (assetStatus == AssetBase::Ok)
-      AssetDatabase.releaseAsset(mMaterialAsset.getAssetId());
+      AssetDatabase.releaseAsset(mMaterialAssetRef.getAssetId());
 
    //SAFE_DELETE(mMaterialInst);
 
@@ -201,7 +199,7 @@ U32 GroundPlane::packUpdate( NetConnection* connection, U32 mask, BitStream* str
    stream->write( mScaleU );
    stream->write( mScaleV );
 
-   PACK_ASSET(connection, Material);
+   AssetDatabase.packDataAsset( stream, mMaterialAssetRef.getAssetId() );
 
    return retMask;
 }
@@ -214,7 +212,7 @@ void GroundPlane::unpackUpdate( NetConnection* connection, BitStream* stream )
    stream->read( &mScaleU );
    stream->read( &mScaleV );
 
-   UNPACK_ASSET(connection, Material);
+   mMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
 
    // If we're added then something possibly changed in 
    // the editor... do an update of the material and the
@@ -228,17 +226,17 @@ void GroundPlane::unpackUpdate( NetConnection* connection, BitStream* stream )
 
 void GroundPlane::_updateMaterial()
 {
-   if (mMaterialAsset.notNull())
+   if (mMaterialAssetRef.notNull())
    {
-      if (mMaterialInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
+      if (mMaterialInst && String(mMaterialAssetRef.assetPtr->getMaterialName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
          return;
 
       SAFE_DELETE(mMaterialInst);
 
-      mMaterialInst = MATMGR->createMatInstance(mMaterialAsset->getMaterialDefinitionName(), getGFXVertexFormat< VertexType >());
+      mMaterialInst = MATMGR->createMatInstance(mMaterialAssetRef.assetPtr->getMaterialName(), getGFXVertexFormat< VertexType >());
 
       if (!mMaterialInst)
-         Con::errorf("GroundPlane::_updateMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
+         Con::errorf("GroundPlane::_updateMaterial - no Material called '%s'", mMaterialAssetRef.assetPtr->getMaterialName());
    }
 }
 
@@ -356,7 +354,7 @@ void GroundPlane::prepRenderImage( SceneRenderState* state )
    // TODO: Should we skip rendering the ground plane into
    // the shadows?  Its not like you can ever get under it.
 
-   if ( !mMaterial )
+   if (mMaterialAssetRef.isNull())
       return;
 
    // If we don't have a material instance after the override then 
@@ -592,10 +590,10 @@ void GroundPlane::generateGrid( U32 width, U32 height, F32 squareSize,
 
 void GroundPlane::getUtilizedAssets(Vector<StringTableEntry>* usedAssetsList)
 {
-   U32 assetStatus = MaterialAsset::getAssetErrCode(mMaterialAsset);
+   U32 assetStatus = MaterialAsset::getAssetErrCode(mMaterialAssetRef.assetPtr);
    if (assetStatus == AssetBase::Ok)
    {
-      usedAssetsList->push_back_unique(mMaterialAsset->getAssetId());
+      usedAssetsList->push_back_unique(mMaterialAssetRef.getAssetId());
    }
 
 }

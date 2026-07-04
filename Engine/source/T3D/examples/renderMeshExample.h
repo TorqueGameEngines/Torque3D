@@ -73,8 +73,7 @@ class RenderMeshExample : public SceneObject
    //--------------------------------------------------------------------------
    BaseMatInstance* mMaterialInst;
 
-   DECLARE_MATERIALASSET(RenderMeshExample, Material);
-   DECLARE_ASSET_NET_SETGET(RenderMeshExample, Material, UpdateMask);
+   AssetRef<MaterialAsset> mMaterialAssetRef;
 
    // The GFX vertex and primitive buffers
    GFXVertexBufferHandle< VertexType > mVertexBuffer;

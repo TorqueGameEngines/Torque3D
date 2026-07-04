@@ -233,8 +233,7 @@ protected:
 
    bool mMoonEnabled;
 
-   DECLARE_MATERIALASSET(ScatterSky, MoonMat);
-   DECLARE_ASSET_NET_SETGET(ScatterSky, MoonMat, UpdateMask);
+   AssetRef<MaterialAsset> mMoonMatAssetRef;
 
    BaseMatInstance *mMoonMatInst;
    F32 mMoonScale;

@@ -459,25 +459,6 @@ void ImageAsset::initializeAsset(void)
       Torque::FS::AddChangeNotification(mImageFile, this, &ImageAsset::_onResourceChanged);
 
    populateImage();
-
-   //Make sure our fallbacks are valid
-   if (smNoImageAssetFallbackAssetPtr.isNull())
-   {
-      smNoImageAssetFallbackAssetPtr = smNoImageAssetFallback;
-      if (smNoImageAssetFallbackAssetPtr.isNull())
-         Con::errorf("ImageAsset::initializeAsset could not find fallback asset %s!", smNoImageAssetFallback);
-      else
-         smNoImageAssetFallbackAssetPtr->load();
-   }
-
-   if (smNamedTargetAssetFallbackAssetPtr.isNull())
-   {
-      smNamedTargetAssetFallbackAssetPtr = smNamedTargetAssetFallback;
-      if (smNamedTargetAssetFallbackAssetPtr.isNull())
-         Con::errorf("ImageAsset::initializeAsset could not find named target fallback asset %s!", smNamedTargetAssetFallback);
-      else
-         smNamedTargetAssetFallbackAssetPtr->load();
-   }
 }
 
 void ImageAsset::onAssetRefresh(void)
@@ -860,6 +841,45 @@ DefineEngineMethod(ImageAsset, isNamedTarget, bool, (), ,
    return object->isNamedTarget();
 }
 
+DefineEngineFunction(loadImageAssetFallback, S32, (), ,
+   "Forces the loading of the ImageAsset fallback asset.\n"
+   "@return Load status code.")
+{
+   if (ImageAsset::smNoImageAssetFallbackAssetPtr.isNull())
+   {
+      ImageAsset::smNoImageAssetFallbackAssetPtr = ImageAsset::smNoImageAssetFallback;
+      if (ImageAsset::smNoImageAssetFallbackAssetPtr.isNull())
+         Con::errorf("loadImageAssetFallback could not find fallback asset %s!", ImageAsset::smNoImageAssetFallback);
+      else
+         return (S32)ImageAsset::smNoImageAssetFallbackAssetPtr->load();
+   }
+   else
+   {
+      return (S32)ImageAsset::smNoImageAssetFallbackAssetPtr->getStatus();
+   }
+
+   return AssetBase::Failed;
+}
+
+DefineEngineFunction(loadNamedTargetFallback, S32, (), ,
+   "Forces the loading of the ImageAsset Named Target fallback asset.\n"
+   "@return Load status code.")
+{
+   if (ImageAsset::smNamedTargetAssetFallbackAssetPtr.isNull())
+   {
+      ImageAsset::smNamedTargetAssetFallbackAssetPtr = ImageAsset::smNamedTargetAssetFallback;
+      if (ImageAsset::smNamedTargetAssetFallbackAssetPtr.isNull())
+         Con::errorf("loadNamedTargetFallback could not find fallback asset %s!", ImageAsset::smNamedTargetAssetFallback);
+      else
+         return (S32)ImageAsset::smNamedTargetAssetFallbackAssetPtr->load();
+   }
+   else
+   {
+      return (S32)ImageAsset::smNamedTargetAssetFallbackAssetPtr->getStatus();
+   }
+
+   return AssetBase::Failed;
+}
 
 #ifdef TORQUE_TOOLS
 DefineEngineStaticMethod(ImageAsset, getAssetIdByFilename, const char*, (const char* filePath), (""),

@@ -190,7 +190,7 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
       TerrainMaterialAsset* terrMatAsset = AssetDatabase.acquireAsset<TerrainMaterialAsset>(assetId);
       if (terrMatAsset)
       {
-         mat = terrMatAsset->getMaterialDefinition();
+         mat = terrMatAsset->getMaterial();
          if (mat)
             return mat;
       }

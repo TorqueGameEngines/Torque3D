@@ -679,7 +679,7 @@ void TSStatic::_updateShouldTick()
 
 void TSStatic::prepRenderImage(SceneRenderState* state)
 {
-   if (!mShapeAssetRef.isValid() || !mShapeInstance)
+   if (!mShapeInstance)
       return;
 
    Point3F cameraOffset;
@@ -1582,7 +1582,7 @@ void TSStatic::updateMaterials()
          if (mChangingMaterials[m].slot == i)
          {
             //Fetch the actual material asset
-            pMatList->renameMaterial(i, mChangingMaterials[m].matAsset->getMaterialDefinitionName());
+            pMatList->renameMaterial(i, mChangingMaterials[m].matAsset->getMaterialName());
             found = true;
             break;
          }

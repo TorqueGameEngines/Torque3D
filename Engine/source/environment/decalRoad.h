@@ -246,8 +246,8 @@ protected:
 
    BaseMatInstance* mMaterialInst;
 
-   DECLARE_MATERIALASSET(DecalRoad, Material);
-   DECLARE_ASSET_NET_SETGET(DecalRoad, Material, DecalRoadMask);
+   AssetRef<MaterialAsset> mMaterialAssetRef;
+   StringTableEntry getMaterialAssetId() const { return mMaterialAssetRef.getAssetId(); }
 
    S16 mRenderPriority;
 

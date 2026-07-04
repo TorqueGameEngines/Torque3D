@@ -273,8 +273,7 @@ protected:
 
    BaseMatInstance* mMaterialInst;
 
-   DECLARE_MATERIALASSET(GroundCover, Material);
-   DECLARE_ASSET_NET_SETGET(GroundCover, Material, InitialUpdateMask);
+   AssetRef<MaterialAsset> mMaterialAssetRef;
 
    GroundCoverShaderConstData mShaderConstData;
 
@@ -319,7 +318,8 @@ protected:
 
    /// Terrain material assetId to limit coverage to, or
    /// left empty to cover entire terrain.
-   DECLARE_TERRAINMATERIALASSET_NET_ARRAY(GroundCover, Layer, MAX_COVERTYPES, -1)
+   AssetRef<TerrainMaterialAsset> mLayerAssetRef[MAX_COVERTYPES];
+   StringTableEntry getLayerAssetId( U32 index ) const { return mLayerAssetRef[index].getAssetId(); }
    
    /// Inverts the data layer test making the 
    /// layer an exclusion mask.

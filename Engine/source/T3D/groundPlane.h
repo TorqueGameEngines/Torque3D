@@ -108,8 +108,7 @@ private:
 
    BaseMatInstance* mMaterialInst;
 
-   DECLARE_MATERIALASSET(GroundPlane, Material);
-   DECLARE_ASSET_NET_SETGET(GroundPlane, Material, -1);
+   AssetRef<MaterialAsset> mMaterialAssetRef;
 
    PhysicsBody *mPhysicsRep;
 

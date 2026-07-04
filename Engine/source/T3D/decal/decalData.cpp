@@ -76,7 +76,6 @@ ConsoleDocClass( DecalData,
 DecalData::DecalData()
 {
    size = 5;
-   INIT_ASSET(Material);
 
    lifeSpan = 5000;
    fadeTime = 1000;
@@ -144,7 +143,7 @@ void DecalData::initPersistFields()
       addFieldV( "size", TypeRangedF32, Offset( size, DecalData ), &CommonValidators::PositiveFloat,
          "Width and height of the decal in meters before scale is applied." );
 
-      INITPERSISTFIELD_MATERIALASSET(Material, DecalData, "Material to use for this decal.");
+      ADD_FIELD( "materialAsset", TypeMaterialAssetRef, Offset( mMaterialAssetRef, DecalData ) ).doc( "Material asset to use for this decal." );
 
       addFieldV( "lifeSpan", TypeRangedS32, Offset( lifeSpan, DecalData ), &CommonValidators::PositiveInt,
          "Time (in milliseconds) before this decal will be automatically deleted." );
@@ -223,9 +222,9 @@ void DecalData::onStaticModified( const char *slotName, const char *newValue )
       return;
 
    // To allow changing materials live.
-   if ( dStricmp( slotName, "material" ) == 0 )
+   if ( dStricmp( slotName, "materialAsset" ) == 0 )
    {
-      _setMaterial(newValue);
+      mMaterialAssetRef = StringTable->insert( newValue );
       _updateMaterial();
    }
    // To allow changing name live.
@@ -259,7 +258,7 @@ void DecalData::packData( BitStream *stream )
    stream->write( lookupName );
    stream->write( size );
 
-   PACKDATA_ASSET(Material);
+   AssetDatabase.packDataAsset( stream, mMaterialAssetRef.getAssetId() );
 
    stream->write( lifeSpan );
    stream->write( fadeTime );
@@ -288,8 +287,8 @@ void DecalData::unpackData( BitStream *stream )
    assignName(lookupName);
    stream->read( &size );
 
-   UNPACKDATA_ASSET(Material);
-   
+   mMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
+
    _updateMaterial();
    stream->read( &lifeSpan );
    stream->read( &fadeTime );
@@ -314,11 +313,9 @@ void DecalData::_initMaterial()
 {
    SAFE_DELETE( matInst );
 
-   _setMaterial(getMaterial());
-
-   if (mMaterialAsset.notNull() && mMaterialAsset->getStatus() == MaterialAsset::Ok)
+   if ( mMaterialAssetRef.notNull() && mMaterialAssetRef.assetPtr->getStatus() == MaterialAsset::Ok )
    {
-      matInst = getMaterialResource()->createMatInstance();
+      matInst = mMaterialAssetRef.assetPtr->getMaterial()->createMatInstance();
    }
    else
       matInst = MATMGR->createMatInstance( "WarningMaterial" );
@@ -329,42 +326,42 @@ void DecalData::_initMaterial()
    matInst->addStateBlockDesc( desc );
 
    matInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat<DecalVertex>() );
-   if( !matInst->isValid() )
+   if ( !matInst->isValid() )
    {
-      Con::errorf( "DecalData::_initMaterial - failed to create material instance for '%s'", mMaterialAssetId );
+      Con::errorf( "DecalData::_initMaterial - failed to create material instance for '%s'", mMaterialAssetRef.getAssetId() );
       SAFE_DELETE( matInst );
       matInst = MATMGR->createMatInstance( "WarningMaterial" );
-      matInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat< DecalVertex >() );
+      matInst->init( MATMGR->getDefaultFeatures(), getGFXVertexFormat<DecalVertex>() );
    }
 }
 
 void DecalData::_updateMaterial()
 {
-   U32 assetStatus = MaterialAsset::getAssetErrCode(mMaterialAsset);
-   if (assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback)
-   {
+   U32 assetStatus = MaterialAsset::getAssetErrCode( mMaterialAssetRef.assetPtr );
+   if ( assetStatus != AssetBase::Ok && assetStatus != AssetBase::UsingFallback )
       return;
-   }
+
    // Only update material instance if we have one allocated.
    if ( matInst )
       _initMaterial();
 }
 
-Material* DecalData::getMaterialDefinition()
+Material* DecalData::getMaterial()
 {
-   if ( !getMaterialResource() )
+   if ( !mMaterialAssetRef.notNull() )
    {
       _updateMaterial();
-      if ( !mMaterial )
-         mMaterial = static_cast<Material*>( Sim::findObject("WarningMaterial") );
+      if ( !mMaterialAssetRef.notNull() )
+         return static_cast<Material*>( Sim::findObject( "WarningMaterial" ) );
    }
 
-   return mMaterial;
+   return mMaterialAssetRef.assetPtr->getMaterial();
 }
 
 BaseMatInstance* DecalData::getMaterialInstance()
 {
-   if ( !mMaterial || !matInst || matInst->getMaterial() != mMaterial)
+   Material* matDef = mMaterialAssetRef.notNull() ? mMaterialAssetRef.assetPtr->getMaterial() : nullptr;
+   if ( !matDef || !matInst || matInst->getMaterial() != matDef )
       _initMaterial();
 
    return matInst;

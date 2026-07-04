@@ -55,7 +55,6 @@ SkySphere::SkySphere()
    mTypeMask |= EnvironmentObjectType | StaticObjectType;
    mNetFlags.set(Ghostable | ScopeAlways);
 
-   INIT_ASSET(Material);
    mMatInstance = NULL;
 
    mIsVBDirty = false;
@@ -116,7 +115,9 @@ void SkySphere::initPersistFields()
    docsURL;
    addGroup("Sky Sphere");
 
-   INITPERSISTFIELD_MATERIALASSET(Material, SkySphere, "The name of a cubemap material for the sky box.");
+   ADD_FIELD( "materialAsset", TypeMaterialAssetRef, Offset( mMaterialAssetRef, SkySphere ) )
+      .network(-1)
+      .doc( "The material asset of a cubemap for the sky box." );
 
    addFieldV("fogBandHeight", TypeRangedF32, Offset(mFogBandHeight, SkySphere), &CommonValidators::NormalizedFloat,
       "The height (0-1) of the fog band from the horizon to the top of the SkySphere.");
@@ -136,7 +137,7 @@ U32 SkySphere::packUpdate(NetConnection* conn, U32 mask, BitStream* stream)
 {
    U32 retMask = Parent::packUpdate(conn, mask, stream);
 
-   PACK_ASSET(conn, Material);
+   AssetDatabase.packDataAsset( stream, mMaterialAssetRef.getAssetId() );
 
    stream->write(mFogBandHeight);
 
@@ -147,9 +148,9 @@ void SkySphere::unpackUpdate(NetConnection* conn, BitStream* stream)
 {
    Parent::unpackUpdate(conn, stream);
 
-   StringTableEntry oldMatName = getMaterial();
-   UNPACK_ASSET(conn, Material);
-   if (oldMatName != getMaterial())
+   StringTableEntry oldMatId = mMaterialAssetRef.getAssetId();
+   mMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
+   if ( oldMatId != mMaterialAssetRef.getAssetId() )
    {
       _updateMaterial();
    }
@@ -589,8 +590,8 @@ void SkySphere::_initMaterial()
    if (mMatInstance)
       SAFE_DELETE(mMatInstance);
 
-   if (mMaterial)
-      mMatInstance = mMaterial->createMatInstance();
+   if (mMaterialAssetRef.notNull())
+      mMatInstance = mMaterialAssetRef.assetPtr->getMaterial()->createMatInstance();
    else
       mMatInstance = MATMGR->createMatInstance("WarningMaterial");
 
@@ -615,21 +616,13 @@ void SkySphere::_initMaterial()
 
 void SkySphere::_updateMaterial()
 {
-   if (!getMaterialResource().isValid())
-   {
-      //If our materialDef isn't valid, try setting it
-      _setMaterial(getMaterial());
-   }
-
-   if (getMaterialResource().isValid())
-   {
+   if (mMaterialAssetRef.notNull())
       _initMaterial();
-   }
 }
 
 BaseMatInstance* SkySphere::_getMaterialInstance()
 {
-   if (!mMaterial || !mMatInstance || mMatInstance->getMaterial() != mMaterial)
+   if (!mMaterialAssetRef.notNull() || !mMatInstance || mMatInstance->getMaterial() != mMaterialAssetRef.assetPtr->getMaterial().getPointer())
       _initMaterial();
 
    if (!mMatInstance)

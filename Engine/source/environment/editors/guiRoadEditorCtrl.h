@@ -103,8 +103,8 @@ class GuiRoadEditorCtrl : public EditTSCtrl
 	
 	public:
 
-      DECLARE_MATERIALASSET(GuiRoadEditorCtrl, Material);
-      DECLARE_ASSET_SETGET(GuiRoadEditorCtrl, Material);
+      AssetRef<MaterialAsset> mMaterialAssetRef;
+      StringTableEntry getMaterialAssetId() const { return mMaterialAssetRef.getAssetId(); }
 
    protected:
 

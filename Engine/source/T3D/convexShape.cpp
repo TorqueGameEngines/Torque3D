@@ -261,9 +261,11 @@ bool ConvexShape::protectedSetSurfaceTexture(void *object, const char *index, co
 
    surfaceMaterial surface;
 
-   surface._setMaterial(StringTable->insert(data));
+   surface.mMaterialAssetRef = StringTable->insert( data );
 
    shape->mSurfaceTextures.push_back(surface);
+   
+   shape->setMaskBits(UpdateMask);
 
    return false;
 }
@@ -287,7 +289,6 @@ ConvexShape::ConvexShape()
    mSurfaceUVs.clear();
    mSurfaceTextures.clear();
 
-   INIT_ASSET(Material);
 }
 
 ConvexShape::~ConvexShape()
@@ -310,7 +311,9 @@ void ConvexShape::initPersistFields()
    docsURL;
    addGroup( "Rendering" );
 
-      INITPERSISTFIELD_MATERIALASSET(Material, ConvexShape, "Default material used to render the ConvexShape surface.");
+      ADD_FIELD( "materialAsset", TypeMaterialAssetRef, Offset( mMaterialAssetRef, ConvexShape ) )
+         .network( UpdateMask )
+         .doc( "Default material asset used to render the ConvexShape surface." );
 
    endGroup( "Rendering" );
 
@@ -461,9 +464,9 @@ void ConvexShape::writeFields( Stream &stream, U32 tabStop )
       char buffer[1024];
       dMemset(buffer, 0, 1024);
 
-      dSprintf(buffer, 1024, "surfaceTexture = \"%s\";", mSurfaceTextures[i].getMaterial());
+      dSprintf( buffer, 1024, "surfaceTexture = \"%s\";", mSurfaceTextures[i].mMaterialAssetRef.getAssetId() );
 
-      stream.writeLine((const U8*)buffer);
+      stream.writeLine( (const U8*)buffer );
    }
 
    for ( U32 i = 0; i < count; i++ )
@@ -541,9 +544,9 @@ const char* ConvexShape::getSpecialFieldOut(StringTableEntry fieldName, const U3
       char buffer[1024];
       dMemset(buffer, 0, 1024);
 
-      dSprintf(buffer, 1024, "surfaceTexture = \"%s\";", mSurfaceTextures[index].getMaterial());
+      dSprintf( buffer, 1024, "surfaceTexture = \"%s\";", mSurfaceTextures[index].mMaterialAssetRef.getAssetId() );
 
-      return StringTable->insert(buffer);
+      return StringTable->insert( buffer );
    }
 
    return NULL;
@@ -577,7 +580,7 @@ U32 ConvexShape::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 
    if ( stream->writeFlag( mask & UpdateMask ) )
    {
-      PACK_ASSET(conn, Material);
+      AssetDatabase.packDataAsset( stream, mMaterialAssetRef.getAssetId() );
       
       U32 surfCount = mSurfaces.size();
       stream->writeInt( surfCount, 32 );
@@ -604,14 +607,8 @@ U32 ConvexShape::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 	  stream->writeInt( surfaceTex, 32 );
 	  //next check for any texture coord or scale mods
 	  for(U32 i=0; i < surfaceTex; i++)
-     {
-         if (stream->writeFlag(mSurfaceTextures[i].mMaterialAsset.notNull()))
-         {
-            NetStringHandle assetIdStr = mSurfaceTextures[i].mMaterialAsset.getAssetId();
-            conn->packNetStringHandleU(stream, assetIdStr);
-         }
-         else
-            stream->writeString(mSurfaceTextures[i].mMaterialName);
+      {
+		AssetDatabase.packDataAsset( stream, mSurfaceTextures[i].mMaterialAssetRef.getAssetId() );
 	  }
    }
 
@@ -633,7 +630,7 @@ void ConvexShape::unpackUpdate( NetConnection *conn, BitStream *stream )
 
    if ( stream->readFlag() ) // UpdateMask
    {
-      UNPACK_ASSET(conn, Material);
+      mMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
 
       mSurfaces.clear();
       mSurfaceUVs.clear();
@@ -673,13 +670,7 @@ void ConvexShape::unpackUpdate( NetConnection *conn, BitStream *stream )
      {
         mSurfaceTextures.increment();
 
-        if (stream->readFlag())
-        {
-           mSurfaceTextures[i].mMaterialAssetId = StringTable->insert(conn->unpackNetStringHandleU(stream).getString());
-           mSurfaceTextures[i]._setMaterial(mSurfaceTextures[i].mMaterialAssetId);
-         }
-         else
-           mSurfaceTextures[i].mMaterialName = stream->readSTString();
+        mSurfaceTextures[i].mMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
 	  }
 
      if (isProperlyAdded())
@@ -1255,43 +1246,49 @@ void ConvexShape::_updateMaterial()
    //update our custom surface materials
    for (U32 i = 0; i<mSurfaceTextures.size(); i++)
    {
-      mSurfaceTextures[i]._setMaterial(mSurfaceTextures[i].getMaterial());
-      //If we already have the material inst and it hasn't changed, skip
-      if (mSurfaceTextures[i].materialInst &&
-         mSurfaceTextures[i].getMaterialAsset()->getMaterialDefinitionName() == mSurfaceTextures[i].materialInst->getMaterial()->getName() &&
-         mSurfaceTextures[i].materialInst->getVertexFormat() == getGFXVertexFormat<VertexType>())
+      if ( !mSurfaceTextures[i].mMaterialAssetRef.notNull() )
          continue;
 
-      SAFE_DELETE(mSurfaceTextures[i].materialInst);
+      Material* surfMat = mSurfaceTextures[i].mMaterialAssetRef.assetPtr->getMaterial();
 
-      Material* material = mSurfaceTextures[i].getMaterialResource();
-
-      if (material == NULL)
+	  //If we already have the material inst and it hasn't changed, skip
+      if ( mSurfaceTextures[i].materialInst &&
+           surfMat &&
+           surfMat->getName() == mSurfaceTextures[i].materialInst->getMaterial()->getName() &&
+           mSurfaceTextures[i].materialInst->getVertexFormat() == getGFXVertexFormat<VertexType>() )
          continue;
 
-      mSurfaceTextures[i].materialInst = material->createMatInstance();
+      SAFE_DELETE( mSurfaceTextures[i].materialInst );
+
+      if ( surfMat == NULL )
+         continue;
+
+      mSurfaceTextures[i].materialInst = surfMat->createMatInstance();
 
       FeatureSet features = MATMGR->getDefaultFeatures();
+      mSurfaceTextures[i].materialInst->init( features, getGFXVertexFormat<VertexType>() );
 
-      mSurfaceTextures[i].materialInst->init(features, getGFXVertexFormat<VertexType>());
-
-      if (!mSurfaceTextures[i].materialInst->isValid())
-      {
-         SAFE_DELETE(mSurfaceTextures[i].materialInst);
-      }
+      if ( !mSurfaceTextures[i].materialInst->isValid() )
+         SAFE_DELETE( mSurfaceTextures[i].materialInst );
    }
 
-   _setMaterial(getMaterial());
+   if ( !mMaterialAssetRef.notNull() )
+   {
+      SAFE_DELETE( mMaterialInst );
+      return;
+   }
+
+   Material* material = mMaterialAssetRef.assetPtr->getMaterial();
+   
    // If the material name matches then don't bother updating it.
-   if (mMaterialInst && getMaterialAsset()->getMaterialDefinitionName() == mMaterialInst->getMaterial()->getName() &&
-      mMaterialInst->getVertexFormat() == getGFXVertexFormat<VertexType>())
+   if ( mMaterialInst && material &&
+        material->getName() == mMaterialInst->getMaterial()->getName() &&
+        mMaterialInst->getVertexFormat() == getGFXVertexFormat<VertexType>() )
       return;
 
    SAFE_DELETE( mMaterialInst );
 
-   Material* material = getMaterialResource();
-
-   if (material == NULL)
+   if ( material == NULL )
       return;
 
    mMaterialInst = material->createMatInstance();
@@ -2112,4 +2109,16 @@ void ConvexShape::Geometry::generate(const Vector< PlaneF > &planes, const Vecto
    }
 }
 
-DEF_ASSET_BINDS(ConvexShape, Material);
+DefineEngineMethod( ConvexShape, getMaterial, String, (), , "Returns the primary material asset id." )
+{
+   return object->getMaterial();
+}
+DefineEngineMethod( ConvexShape, getMaterialAsset, String, (), , "Returns the primary material asset id." )
+{
+   return object->getMaterial();
+}
+DefineEngineMethod( ConvexShape, setMaterial, bool, ( const char* assetName ), , "Sets the primary material asset id." )
+{
+   object->setMaterial( StringTable->insert( assetName ) );
+   return true;
+}

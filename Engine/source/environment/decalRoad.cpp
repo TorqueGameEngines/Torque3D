@@ -288,8 +288,6 @@ DecalRoad::DecalRoad()
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
    mNetFlags.set(Ghostable);
 
-   INIT_ASSET(Material);
-
    mMaterialInst = NULL;
 }
 
@@ -307,7 +305,9 @@ void DecalRoad::initPersistFields()
    docsURL;
    addGroup( "DecalRoad" );
 
-      INITPERSISTFIELD_MATERIALASSET(Material, DecalRoad, "Material used for rendering.");
+      ADD_FIELD( "materialAsset", TypeMaterialAssetRef, Offset( mMaterialAssetRef, DecalRoad ) )
+         .network( DecalRoadMask )
+         .doc( "Material asset used for rendering." );
 
       addProtectedFieldV("textureLength", TypeRangedF32, Offset(mTextureLength, DecalRoad), &DecalRoad::ptSetTextureLength, &defaultProtectedGetFn, &drTextureLengthV,
          "The length in meters of textures mapped to the DecalRoad" );      
@@ -522,8 +522,7 @@ U32 DecalRoad::packUpdate(NetConnection * con, U32 mask, BitStream * stream)
 
    if ( stream->writeFlag( mask & DecalRoadMask ) )
    {
-      // Write Texture Name.
-      PACK_ASSET(con, Material);
+      AssetDatabase.packDataAsset( stream, mMaterialAssetRef.getAssetId() );
 
       stream->write( mBreakAngle );      
 
@@ -612,7 +611,7 @@ void DecalRoad::unpackUpdate( NetConnection *con, BitStream *stream )
    // DecalRoadMask
    if ( stream->readFlag() )
    {
-      UNPACK_ASSET(con, Material);
+      mMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
 
       if (isProperlyAdded())
          _initMaterial();
@@ -1078,29 +1077,21 @@ bool DecalRoad::addNodeFromField( void *object, const char *index, const char *d
 
 void DecalRoad::_initMaterial()
 {
-   _setMaterial(getMaterial());
-
-   if (mMaterialAsset.notNull())
+   if (mMaterialAssetRef.notNull())
    {
-      if (mMaterialInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
+      if (mMaterialInst && String(mMaterialAssetRef.assetPtr->getMaterialName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
          return;
 
       SAFE_DELETE(mMaterialInst);
 
-      Material* tMat = NULL;
-
-      if (!Sim::findObject(mMaterialAsset->getMaterialDefinitionName(), tMat))
-         Con::errorf("DecalRoad::_initMaterial - Material %s was not found.", mMaterialAsset->getMaterialDefinitionName());
-
-      mMaterial = tMat;
-
-      if (mMaterial)
-         mMaterialInst = mMaterial->createMatInstance();
+      Material* tMat = mMaterialAssetRef.assetPtr->getMaterial();
+      if (tMat)
+         mMaterialInst = tMat->createMatInstance();
       else
          mMaterialInst = MATMGR->createMatInstance("WarningMaterial");
 
       if (!mMaterialInst)
-         Con::errorf("DecalRoad::_initMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
+         Con::errorf("DecalRoad::_initMaterial - no Material called '%s'", mMaterialAssetRef.assetPtr->getMaterialName());
    }
 
    if (!mMaterialInst)

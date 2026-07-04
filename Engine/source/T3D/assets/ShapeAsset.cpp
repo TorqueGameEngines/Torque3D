@@ -263,16 +263,6 @@ void ShapeAsset::initializeAsset()
       String normalPath = String(mShapeFile) + "_imposter_normals.dds";
       mNormalImposterFileName = StringTable->insert(normalPath.c_str());
    }
-
-   //Make sure our fallback is valid
-   if (smNoShapeAssetFallbackAssetPtr.isNull())
-   {
-      smNoShapeAssetFallbackAssetPtr = smNoShapeAssetFallback;
-      if (smNoShapeAssetFallbackAssetPtr.isNull())
-         Con::errorf("ShapeAsset::initializeAsset could not find fallback asset %s!", smNoShapeAssetFallback);
-      else
-         smNoShapeAssetFallbackAssetPtr->load();
-   }
 }
 
 void ShapeAsset::setShapeFile(const char* pShapeFile)
@@ -773,6 +763,26 @@ DefineEngineMethod(ShapeAsset, getShapeConstructorFilePath, const char*, (), ,
 DefineEngineMethod(ShapeAsset, getStatusString, String, (), , "get status string")\
 {
    return ShapeAsset::getAssetErrstrn(object->getStatus());
+}
+
+DefineEngineFunction(loadShapeAssetFallback, S32, (), ,
+   "Forces the loading of the ShapeAsset fallback asset.\n"
+   "@return Load status code.")
+{
+   if (ShapeAsset::smNoShapeAssetFallbackAssetPtr.isNull())
+   {
+      ShapeAsset::smNoShapeAssetFallbackAssetPtr = ShapeAsset::smNoShapeAssetFallback;
+      if (ShapeAsset::smNoShapeAssetFallbackAssetPtr.isNull())
+         Con::errorf("loadShapeAssetFallback could not find fallback asset %s!", ShapeAsset::smNoShapeAssetFallback);
+      else
+         return (S32)ShapeAsset::smNoShapeAssetFallbackAssetPtr->load();
+   }
+   else
+   {
+      return (S32)ShapeAsset::smNoShapeAssetFallbackAssetPtr->getStatus();
+   }
+
+   return AssetBase::Failed;
 }
 
 #ifdef TORQUE_TOOLS

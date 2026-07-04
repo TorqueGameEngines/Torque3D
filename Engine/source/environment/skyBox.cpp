@@ -56,7 +56,6 @@ SkyBox::SkyBox()
    mTypeMask |= EnvironmentObjectType | StaticObjectType;
    mNetFlags.set(Ghostable | ScopeAlways);
 
-   INIT_ASSET(Material);
    mMatInstance = NULL;
 
    mIsVBDirty = false;
@@ -117,7 +116,9 @@ void SkyBox::initPersistFields()
    docsURL;
    addGroup( "Sky Box" );	
 
-   INITPERSISTFIELD_MATERIALASSET(Material, SkyBox, "The name of a cubemap material for the sky box.");
+   ADD_FIELD( "materialAsset", TypeMaterialAssetRef, Offset( mMaterialAssetRef, SkyBox ) )
+         .network(-1)
+         .doc( "The material asset for a cubemap material for the sky box." );
 
    addField( "drawBottom", TypeBool, Offset( mDrawBottom, SkyBox ),
       "If false the bottom of the skybox is not rendered." );
@@ -140,7 +141,7 @@ U32 SkyBox::packUpdate( NetConnection *conn, U32 mask, BitStream *stream )
 {
    U32 retMask = Parent::packUpdate( conn, mask, stream );
 
-   PACK_ASSET(conn, Material);
+   AssetDatabase.packDataAsset( stream, mMaterialAssetRef.getAssetId() );
 
    stream->writeFlag( mDrawBottom );
    stream->write( mFogBandHeight );
@@ -152,9 +153,9 @@ void SkyBox::unpackUpdate( NetConnection *conn, BitStream *stream )
 {
    Parent::unpackUpdate( conn, stream );
 
-   StringTableEntry oldMatName = getMaterial();
-   UNPACK_ASSET(conn, Material);
-   if (oldMatName != getMaterial())
+   StringTableEntry oldMatId = mMaterialAssetRef.getAssetId();
+   mMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
+   if ( oldMatId != mMaterialAssetRef.getAssetId() )
    {
       _updateMaterial();
    }
@@ -594,8 +595,8 @@ void SkyBox::_initMaterial()
    if ( mMatInstance )
       SAFE_DELETE( mMatInstance );
 
-   if ( mMaterial )
-      mMatInstance = mMaterial->createMatInstance();
+   if (mMaterialAssetRef.notNull())
+      mMatInstance = mMaterialAssetRef.assetPtr->getMaterial()->createMatInstance();
    else
       mMatInstance = MATMGR->createMatInstance( "WarningMaterial" );
 
@@ -621,21 +622,13 @@ void SkyBox::_initMaterial()
 
 void SkyBox::_updateMaterial()
 {
-   if (!getMaterialResource().isValid())
-   {
-      //If our materialDef isn't valid, try setting it
-      _setMaterial(getMaterial());
-   }
-
-   if (getMaterialResource().isValid())
-   {
+   if (mMaterialAssetRef.notNull())
       _initMaterial();
-   }
 }
 
 BaseMatInstance* SkyBox::_getMaterialInstance()
 {
-   if ( !mMaterial || !mMatInstance || mMatInstance->getMaterial() != mMaterial )
+   if (!mMaterialAssetRef.notNull() || !mMatInstance || mMatInstance->getMaterial() != mMaterialAssetRef.assetPtr->getMaterial().getPointer())
       _initMaterial();
 
    if ( !mMatInstance )

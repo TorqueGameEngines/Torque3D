@@ -91,8 +91,6 @@ Sun::Sun()
    mCoronaUseLightColor = true;
    mCoronaMatInst = NULL;
 
-   INIT_ASSET(CoronaMaterial);
-
    mMatrixSet = reinterpret_cast<MatrixSet *>(dMalloc_aligned(sizeof(MatrixSet), 16));
    constructInPlace(mMatrixSet);
 
@@ -181,7 +179,9 @@ void Sun::initPersistFields()
       addField( "coronaEnabled", TypeBool, Offset( mCoronaEnabled, Sun ), 
          "Enable or disable rendering of the corona sprite." );
 
-      INITPERSISTFIELD_MATERIALASSET(CoronaMaterial, Sun, "Material for the corona sprite.");
+      ADD_FIELD( "coronaMaterialAsset", TypeMaterialAssetRef, Offset( mCoronaMaterialAssetRef, Sun ) )
+         .network( UpdateMask )
+         .doc( "Material asset for the corona sprite." );
 
       addFieldV( "coronaScale", TypeRangedF32, Offset( mCoronaScale, Sun ), &CommonValidators::PositiveFloat,
          "Controls size the corona sprite renders, specified as a fractional amount of the screen height." );
@@ -242,7 +242,7 @@ U32 Sun::packUpdate(NetConnection *conn, U32 mask, BitStream *stream )
 
       stream->writeFlag( mCoronaEnabled );
 
-      PACK_ASSET(conn, CoronaMaterial);
+      AssetDatabase.packDataAsset( stream, mCoronaMaterialAssetRef.getAssetId() );
 
       stream->write( mCoronaScale );
       stream->write( mCoronaTint );
@@ -288,7 +288,7 @@ void Sun::unpackUpdate( NetConnection *conn, BitStream *stream )
 
       mCoronaEnabled = stream->readFlag();
 
-      UNPACK_ASSET(conn, CoronaMaterial);
+      mCoronaMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
 
       stream->read( &mCoronaScale );
       stream->read( &mCoronaTint );
@@ -453,7 +453,7 @@ void Sun::_initCorona()
       
    SAFE_DELETE( mCoronaMatInst );
 
-   if (mCoronaMaterialAsset.notNull())
+   if (mCoronaMaterialAssetRef.notNull())
    {
       FeatureSet features = MATMGR->getDefaultFeatures();
       features.removeFeature(MFT_RTLighting);
@@ -462,7 +462,7 @@ void Sun::_initCorona()
       features.addFeature(MFT_isBackground);
       features.addFeature(MFT_VertLit);
 
-      mCoronaMatInst = MATMGR->createMatInstance(mCoronaMaterialAsset->getMaterialDefinitionName(), features, getGFXVertexFormat<GFXVertexPCT>());
+      mCoronaMatInst = MATMGR->createMatInstance(mCoronaMaterialAssetRef.assetPtr->getMaterialName(), features, getGFXVertexFormat<GFXVertexPCT>());
 
       GFXStateBlockDesc desc;
       desc.setBlend(true);

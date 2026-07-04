@@ -920,10 +920,6 @@ MeshRoad::MeshRoad()
       mTriangleCount[i] = 0;
    }
 
-   INIT_ASSET(TopMaterial);
-   INIT_ASSET(BottomMaterial);
-   INIT_ASSET(SideMaterial);
-
    mSideProfile.mRoad = this;
 }
 
@@ -939,9 +935,15 @@ void MeshRoad::initPersistFields()
    docsURL;
    addGroup( "MeshRoad" );
 
-      INITPERSISTFIELD_MATERIALASSET(TopMaterial, MeshRoad, "Material for the upper surface of the road.");
-      INITPERSISTFIELD_MATERIALASSET(BottomMaterial, MeshRoad, "Material for the bottom surface of the road.");
-      INITPERSISTFIELD_MATERIALASSET(SideMaterial, MeshRoad, "Material for the side surface of the road.");
+      ADD_FIELD( "topMaterialAsset", TypeMaterialAssetRef, Offset( mTopMaterialAssetRef, MeshRoad ) )
+         .network( MeshRoadMask )
+         .doc( "Material asset for the upper surface of the road." );
+      ADD_FIELD( "bottomMaterialAsset", TypeMaterialAssetRef, Offset( mBottomMaterialAssetRef, MeshRoad ) )
+         .network( MeshRoadMask )
+         .doc( "Material asset for the bottom surface of the road." );
+      ADD_FIELD( "sideMaterialAsset", TypeMaterialAssetRef, Offset( mSideMaterialAssetRef, MeshRoad ) )
+         .network( MeshRoadMask )
+         .doc( "Material asset for the side surface of the road." );
 
       addFieldV( "textureLength", TypeRangedF32, Offset( mTextureLength, MeshRoad ), &mrTextureLengthV,
          "The length in meters of textures mapped to the MeshRoad." );      
@@ -1320,18 +1322,12 @@ void MeshRoad::prepRenderImage( SceneRenderState* state )
 
 void MeshRoad::_initMaterial()
 {
-   if (mTopMaterialAsset.notNull())
+   if (mTopMaterialAssetRef.notNull())
    {
-      if (!mMatInst[Top] || !String(mTopMaterialAsset->getMaterialDefinitionName()).equal(mMatInst[Top]->getMaterial()->getName(), String::NoCase))
+      if (!mMatInst[Top] || !String(mTopMaterialAssetRef.assetPtr->getMaterialName()).equal(mMatInst[Top]->getMaterial()->getName(), String::NoCase))
       {
          SAFE_DELETE(mMatInst[Top]);
-
-         Material* tMat = NULL;
-         if (!Sim::findObject(mTopMaterialAsset->getMaterialDefinitionName(), tMat))
-            Con::errorf("MeshRoad::_initMaterial - Material %s was not found.", mTopMaterialAsset->getMaterialDefinitionName());
-
-         mMaterial[Top] = tMat;
-
+         mMaterial[Top] = mTopMaterialAssetRef.assetPtr->getMaterial();
          if (mMaterial[Top])
             mMatInst[Top] = mMaterial[Top]->createMatInstance();
          else
@@ -1341,19 +1337,12 @@ void MeshRoad::_initMaterial()
       }
    }
 
-   if (mBottomMaterialAsset.notNull())
+   if (mBottomMaterialAssetRef.notNull())
    {
-      if (!mMatInst[Bottom] || !String(mBottomMaterialAsset->getMaterialDefinitionName()).equal(mMatInst[Bottom]->getMaterial()->getName(), String::NoCase))
+      if (!mMatInst[Bottom] || !String(mBottomMaterialAssetRef.assetPtr->getMaterialName()).equal(mMatInst[Bottom]->getMaterial()->getName(), String::NoCase))
       {
-
          SAFE_DELETE(mMatInst[Bottom]);
-
-         Material* tMat = NULL;
-         if (!Sim::findObject(mBottomMaterialAsset->getMaterialDefinitionName(), tMat))
-            Con::errorf("MeshRoad::_initMaterial - Material %s was not found.", mBottomMaterialAsset->getMaterialDefinitionName());
-
-         mMaterial[Bottom] = tMat;
-
+         mMaterial[Bottom] = mBottomMaterialAssetRef.assetPtr->getMaterial();
          if (mMaterial[Bottom])
             mMatInst[Bottom] = mMaterial[Bottom]->createMatInstance();
          else
@@ -1363,18 +1352,12 @@ void MeshRoad::_initMaterial()
       }
    }
 
-   if (mSideMaterialAsset.notNull())
+   if (mSideMaterialAssetRef.notNull())
    {
-      if (!mMatInst[Side] || !String(mSideMaterialAsset->getMaterialDefinitionName()).equal(mMatInst[Side]->getMaterial()->getName(), String::NoCase))
+      if (!mMatInst[Side] || !String(mSideMaterialAssetRef.assetPtr->getMaterialName()).equal(mMatInst[Side]->getMaterial()->getName(), String::NoCase))
       {
          SAFE_DELETE(mMatInst[Side]);
-
-         Material* tMat = NULL;
-         if (!Sim::findObject(mSideMaterialAsset->getMaterialDefinitionName(), tMat))
-            Con::errorf("MeshRoad::_initMaterial - Material %s was not found.", mSideMaterialAsset->getMaterialDefinitionName());
-
-         mMaterial[Side] = tMat;
-
+         mMaterial[Side] = mSideMaterialAssetRef.assetPtr->getMaterial();
          if (mMaterial[Side])
             mMatInst[Side] = mMaterial[Side]->createMatInstance();
          else
@@ -1472,9 +1455,9 @@ U32 MeshRoad::packUpdate(NetConnection * con, U32 mask, BitStream * stream)
       stream->writeAffineTransform( mObjToWorld );
 
       // Write Materials
-      PACK_ASSET(con, TopMaterial);
-      PACK_ASSET(con, BottomMaterial);
-      PACK_ASSET(con, SideMaterial);
+      AssetDatabase.packDataAsset( stream, mTopMaterialAssetRef.getAssetId() );
+      AssetDatabase.packDataAsset( stream, mBottomMaterialAssetRef.getAssetId() );
+      AssetDatabase.packDataAsset( stream, mSideMaterialAssetRef.getAssetId() );
 
       stream->write( mTextureLength );      
       stream->write( mBreakAngle );
@@ -1571,9 +1554,9 @@ void MeshRoad::unpackUpdate(NetConnection * con, BitStream * stream)
       stream->readAffineTransform(&ObjectMatrix);
       Parent::setTransform(ObjectMatrix);
 
-      UNPACK_ASSET(con, TopMaterial);
-      UNPACK_ASSET(con, BottomMaterial);
-      UNPACK_ASSET(con, SideMaterial);
+      mTopMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
+      mBottomMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
+      mSideMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
 
       if ( isProperlyAdded() )
          _initMaterial(); 

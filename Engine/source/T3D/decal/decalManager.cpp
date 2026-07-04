@@ -186,7 +186,7 @@ S32 QSORT_CALLBACK cmpDecalRenderOrder( const void *p1, const void *p2 )
 
       if ( (*pd2)->mFlags & SaveDecal )
       {
-         S32 id = ( (*pd1)->mDataBlock->getMaterialDefinition()->getId() - (*pd2)->mDataBlock->getMaterialDefinition()->getId() );
+         S32 id = ( (*pd1)->mDataBlock->getMaterial()->getId() - (*pd2)->mDataBlock->getMaterial()->getId() );
          if ( id != 0 )
             return id;
 
@@ -1181,7 +1181,7 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
    {
       DecalInstance *decal = mDecalQueue[i];      
       DecalData *data = decal->mDataBlock;
-      Material *mat = data->getMaterialDefinition();
+      Material *mat = data->getMaterial();
 
       if ( currentBatch == NULL )
       {

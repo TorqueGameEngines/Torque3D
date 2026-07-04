@@ -77,9 +77,8 @@ class DecalData : public SimDataBlock
       F32 fadeStartPixelSize;
       F32 fadeEndPixelSize;
 
-      DECLARE_MATERIALASSET(DecalData, Material);
-      DECLARE_ASSET_SETGET(DecalData, Material);
-      
+      AssetRef<MaterialAsset> mMaterialAssetRef;
+
       /// Material instance for decal.
       BaseMatInstance *matInst;
 
@@ -112,7 +111,7 @@ class DecalData : public SimDataBlock
       void packData( BitStream* ) override;
       void unpackData( BitStream* ) override;      
       
-      Material* getMaterialDefinition();
+      Material* getMaterial();
       BaseMatInstance* getMaterialInstance();
 
       static SimSet* getSet();

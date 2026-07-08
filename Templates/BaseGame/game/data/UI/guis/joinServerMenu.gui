@@ -48,7 +48,6 @@ $guiContent = new GuiControl(JoinServerMenu) {
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiTextEditCtrl(JoinServerPlayerNameTxt) {
-         text = "Visitor";
          position = "606 7";
          extent = "295 22";
          horizSizing = "left";
@@ -74,7 +73,6 @@ $guiContent = new GuiControl(JoinServerMenu) {
          tooltipProfile = "GuiToolTipProfile";
       };
       new GuiTextEditCtrl(JoinServerPasswordTxt) {
-         text = "Visitor";
          position = "606 7";
          extent = "295 22";
          horizSizing = "left";

@@ -255,7 +255,6 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiTextEditCtrl(playerNameCTRL) {
-                  text = "Visitor";
                   position = "606 4";
                   extent = "295 22";
                   horizSizing = "left";
@@ -281,7 +280,6 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiTextEditCtrl(serverNameCTRL) {
-                  text = "Torque 3D Server";
                   position = "606 4";
                   extent = "295 22";
                   horizSizing = "left";
@@ -332,7 +330,6 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiTextEditCtrl(serverInfoCTRL) {
-                  text = "This is a Torque 3D server.";
                   position = "606 4";
                   extent = "295 22";
                   horizSizing = "left";
@@ -358,7 +355,6 @@ $guiContent = new GuiControl(ChooseLevelMenu) {
                   tooltipProfile = "GuiToolTipProfile";
                };
                new GuiTextEditCtrl(serverMaxPlayersCTRL) {
-                  text = "64";
                   position = "606 4";
                   extent = "295 22";
                   horizSizing = "left";

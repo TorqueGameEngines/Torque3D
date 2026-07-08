@@ -211,3 +211,5 @@ $pref::PostFX::EnableHDR = 1;
 $pref::PostFX::EnableSSAO = 1;
 
 $pref::PostFX::EnableHDRBloom = 1;
+
+exec("core/clientServer/scripts/server/defaults");

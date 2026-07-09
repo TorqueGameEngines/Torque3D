@@ -78,8 +78,7 @@ protected:
 
    bool mCoronaEnabled;
 
-   DECLARE_MATERIALASSET(Sun, CoronaMaterial);
-   DECLARE_ASSET_NET_SETGET(Sun, CoronaMaterial, UpdateMask);
+   AssetRef<MaterialAsset> mCoronaMaterialAssetRef;
 
    BaseMatInstance *mCoronaMatInst;
    MatrixSet *mMatrixSet;   

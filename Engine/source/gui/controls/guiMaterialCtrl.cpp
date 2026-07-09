@@ -45,15 +45,13 @@ ConsoleDocClass( GuiMaterialCtrl,
 GuiMaterialCtrl::GuiMaterialCtrl()
    : mMaterialInst( NULL )
 {
-   INIT_ASSET(Material);
 }
 
 void GuiMaterialCtrl::initPersistFields()
 {
    docsURL;
    addGroup( "Material" );
-   INITPERSISTFIELD_MATERIALASSET(Material, GuiMaterialCtrl, "");
-   addProtectedField( "materialName", TypeStringFilename, Offset( mMaterialName, GuiMaterialCtrl ), &GuiMaterialCtrl::_setMaterialData, &defaultProtectedGetFn, "", AbstractClassRep::FIELD_HideInInspectors );
+   ADD_FIELD( "materialAsset", TypeMaterialAssetRef, Offset( mMaterialAssetRef, GuiMaterialCtrl ) ).doc( "Material asset to display in this control." );
    endGroup( "Material" );
 
    Parent::initPersistFields();
@@ -65,7 +63,7 @@ bool GuiMaterialCtrl::onWake()
       return false;
 
    setActive( true );
-   setMaterial( getMaterial() );
+   setMaterial( mMaterialAssetRef.assetId );
 
    return true;
 }
@@ -77,22 +75,26 @@ void GuiMaterialCtrl::onSleep()
    Parent::onSleep();
 }
 
-bool GuiMaterialCtrl::_setMaterial( void *object, const char *index, const char *data )
-{
-   static_cast<GuiMaterialCtrl *>( object )->setMaterial( data );
-
-   // Return false to keep the caller from setting the field.
-   return false;
-}
-
 bool GuiMaterialCtrl::setMaterial( const String &materialName )
 {
    SAFE_DELETE( mMaterialInst );
 
-   _setMaterial(StringTable->insert(materialName.c_str()));
+   StringTableEntry matId = StringTable->insert( materialName.c_str() );
+   if ( matId == StringTable->EmptyString() || AssetDatabase.isDeclaredAsset( matId ))
+   {
+      mMaterialAssetRef = matId;
+   }
+   else
+   {
+      StringTableEntry assetId = MaterialAsset::getAssetIdByMaterialName( matId );
+      if ( assetId != StringTable->EmptyString() )
+         mMaterialAssetRef = assetId;
+   }
 
-   if ( getMaterial() != StringTable->EmptyString() && isAwake() )
-      mMaterialInst = MATMGR->createMatInstance( getMaterial(), getGFXVertexFormat<GFXVertexPCT>() );
+   if ( mMaterialAssetRef.notNull() && isAwake() )
+      mMaterialInst = MATMGR->createMatInstance(
+         mMaterialAssetRef.assetPtr->getMaterialName(),
+         getGFXVertexFormat<GFXVertexPCT>() );
 
    return true;
 }

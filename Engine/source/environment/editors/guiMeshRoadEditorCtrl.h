@@ -159,14 +159,9 @@ class GuiMeshRoadEditorCtrl : public EditTSCtrl
       bool mHasCopied;
 	public:
 
-      DECLARE_MATERIALASSET(GuiMeshRoadEditorCtrl, TopMaterial);
-      DECLARE_ASSET_SETGET(GuiMeshRoadEditorCtrl, TopMaterial);
-
-      DECLARE_MATERIALASSET(GuiMeshRoadEditorCtrl, BottomMaterial);
-      DECLARE_ASSET_SETGET(GuiMeshRoadEditorCtrl, BottomMaterial);
-
-      DECLARE_MATERIALASSET(GuiMeshRoadEditorCtrl, SideMaterial);
-      DECLARE_ASSET_SETGET(GuiMeshRoadEditorCtrl, SideMaterial);
+      AssetRef<MaterialAsset> mTopMaterialAssetRef;
+      AssetRef<MaterialAsset> mBottomMaterialAssetRef;
+      AssetRef<MaterialAsset> mSideMaterialAssetRef;
 };
 
 class GuiMeshRoadEditorUndoAction : public UndoAction

@@ -170,7 +170,6 @@ ScatterSky::ScatterSky()
    mNightCubemapName = StringTable->EmptyString();
    mSunSize = 1.0f;
 
-   INIT_ASSET(MoonMat);
 
    mMoonMatInst = NULL;
 
@@ -413,7 +412,9 @@ void ScatterSky::initPersistFields()
       addField( "moonEnabled", TypeBool, Offset( mMoonEnabled, ScatterSky ),
          "Enable or disable rendering of the moon sprite during night." );
 
-      INITPERSISTFIELD_MATERIALASSET(MoonMat, ScatterSky, "Material for the moon sprite.");
+      ADD_FIELD( "moonMatAsset", TypeMaterialAssetRef, Offset( mMoonMatAssetRef, ScatterSky ) )
+         .network( UpdateMask )
+         .doc( "Material asset for the moon sprite." );
 
       addFieldV( "moonScale", TypeRangedF32, Offset( mMoonScale, ScatterSky ), &CommonValidators::PositiveFloat,
          "Controls size the moon sprite renders, specified as a fractional amount of the screen height." );
@@ -506,7 +507,7 @@ U32 ScatterSky::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
 
       stream->writeFlag( mMoonEnabled );
 
-      PACK_ASSET(con, MoonMat);
+      AssetDatabase.packDataAsset( stream, mMoonMatAssetRef.getAssetId() );
       
       stream->write( mMoonScale );
       stream->write( mMoonTint );
@@ -620,7 +621,7 @@ void ScatterSky::unpackUpdate(NetConnection *con, BitStream *stream)
 
       mMoonEnabled = stream->readFlag();
 
-      UNPACK_ASSET(con, MoonMat);
+      mMoonMatAssetRef = AssetDatabase.unpackDataAsset( stream );
 
       stream->read( &mMoonScale );
       stream->read( &mMoonTint );
@@ -914,14 +915,14 @@ void ScatterSky::_initMoon()
    if ( mMoonMatInst )
       SAFE_DELETE( mMoonMatInst );
 
-   if (mMoonMatAsset.notNull())
+   if (mMoonMatAssetRef.notNull())
    {
       FeatureSet features = MATMGR->getDefaultFeatures();
       features.removeFeature(MFT_RTLighting);
       features.removeFeature(MFT_Visibility);
       features.removeFeature(MFT_ReflectionProbes);      
       features.addFeature(MFT_isBackground);
-      mMoonMatInst = MATMGR->createMatInstance(mMoonMatAsset->getMaterialDefinitionName(), features, getGFXVertexFormat<GFXVertexPCT>());
+      mMoonMatInst = MATMGR->createMatInstance(mMoonMatAssetRef.assetPtr->getMaterialName(), features, getGFXVertexFormat<GFXVertexPCT>());
 
       GFXStateBlockDesc desc;
       desc.setBlend(true);

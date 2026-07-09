@@ -59,7 +59,6 @@ RenderMeshExample::RenderMeshExample()
    // Set it as a "static" object that casts shadows
    mTypeMask |= StaticObjectType | StaticShapeObjectType;
 
-   INIT_ASSET(Material);
    mMaterialInst = NULL;
 }
 
@@ -76,7 +75,9 @@ void RenderMeshExample::initPersistFields()
 {
    docsURL;
    addGroup( "Rendering" );
-   INITPERSISTFIELD_MATERIALASSET(Material, RenderMeshExample, "The material used to render the mesh.");
+   ADD_FIELD( "materialAsset", TypeMaterialAssetRef, Offset( mMaterialAssetRef, RenderMeshExample ) )
+      .network(UpdateMask)
+      .doc( "Material asset used to render the mesh." );
    endGroup( "Rendering" );
 
    // SceneObject already handles exposing the transform
@@ -145,7 +146,7 @@ U32 RenderMeshExample::packUpdate( NetConnection *conn, U32 mask, BitStream *str
    // Write out any of the updated editable properties
    if (stream->writeFlag(mask & UpdateMask))
    {
-      PACK_ASSET(conn, Material);
+      AssetDatabase.packDataAsset( stream, mMaterialAssetRef.getAssetId() );
    }
 
    return retMask;
@@ -166,7 +167,7 @@ void RenderMeshExample::unpackUpdate(NetConnection *conn, BitStream *stream)
 
    if ( stream->readFlag() )  // UpdateMask
    {
-      UNPACK_ASSET(conn, Material);
+      mMaterialAssetRef = AssetDatabase.unpackDataAsset( stream );
 
       if ( isProperlyAdded() )
          updateMaterial();
@@ -248,17 +249,17 @@ void RenderMeshExample::createGeometry()
 
 void RenderMeshExample::updateMaterial()
 {
-   if (mMaterialAsset.notNull())
+   if (mMaterialAssetRef.notNull())
    {
-      if (mMaterialInst && String(mMaterialAsset->getMaterialDefinitionName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
+      if (mMaterialInst && String(mMaterialAssetRef.assetPtr->getMaterialName()).equal(mMaterialInst->getMaterial()->getName(), String::NoCase))
          return;
 
       SAFE_DELETE(mMaterialInst);
 
-      mMaterialInst = MATMGR->createMatInstance(mMaterialAsset->getMaterialDefinitionName(), getGFXVertexFormat< VertexType >());
+      mMaterialInst = MATMGR->createMatInstance(mMaterialAssetRef.assetPtr->getMaterialName(), getGFXVertexFormat< VertexType >());
 
       if (!mMaterialInst)
-         Con::errorf("RenderMeshExample::updateMaterial - no Material called '%s'", mMaterialAsset->getMaterialDefinitionName());
+         Con::errorf("RenderMeshExample::updateMaterial - no Material called '%s'", mMaterialAssetRef.assetPtr->getMaterialName());
    }
 }
 

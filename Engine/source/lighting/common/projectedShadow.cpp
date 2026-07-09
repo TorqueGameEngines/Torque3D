@@ -100,7 +100,6 @@ ProjectedShadow::ProjectedShadow( SceneObject *object )
    Sim::findObject( "BL_ProjectedShadowMaterial", customMat );
    if ( customMat )
    {
-      mDecalData->mMaterial = customMat;
       mDecalData->matInst = customMat->createMatInstance();
    }
    else

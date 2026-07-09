@@ -17,6 +17,7 @@ function ActionMap::getCommandButtonBitmap(%this, %device, %command)
    }
 
    %assetId = getButtonBitmap(%device, %button);
+
    return %assetId;
 }
 
@@ -47,11 +48,11 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "Triangle";
       else if(%button $= "LB" || %button $= "btn_l")
          %assetId = %assetId @ "L1";
-      else if(%button $= "LT" || %button $= "btn_lt")
+      else if(%button $= "LT" || %button $= "btn_lt" || %button $= "triggerl")
          %assetId = %assetId @ "L2";
       else if(%button $= "RB" || %button $= "btn_r")
          %assetId = %assetId @ "R1";
-      else if(%button $= "RT" || %button $= "btn_rt")
+      else if(%button $= "RT" || %button $= "btn_rt" || %button $= "triggerr")
          %assetId = %assetId @ "R2";
       else if(%button $= "thumbrx" || %button $= "thumbry")
          %assetId = %assetId @ "Right_Stick";
@@ -61,13 +62,13 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "Options";
       else if(%button $= "back"|| %button $= "btn_back")
          %assetId = %assetId @ "Share";   
-      else if(%button $= "dpadu")
+      else if(%button $= "dpadu" || %button $= "upov")
          %assetId = %assetId @ "Dpad_Up";  
-      else if(%button $= "dpadd")
+      else if(%button $= "dpadd" || %button $= "dpov")
          %assetId = %assetId @ "Dpad_Down";  
-      else if(%button $= "dpadl")
+      else if(%button $= "dpadl" || %button $= "lpov")
          %assetId = %assetId @ "Dpad_Left";  
-      else if(%button $= "dpadr")
+      else if(%button $= "dpadr" || %button $= "rpov")
          %assetId = %assetId @ "Dpad_Right";  
       
       %assetId = %assetId @ "_image";
@@ -86,11 +87,11 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "X";
       else if(%button $= "LB" || %button $= "btn_l")
          %assetId = %assetId @ "LB";
-      else if(%button $= "LT" || %button $= "btn_lt")
+      else if(%button $= "LT" || %button $= "btn_lt" || %button $= "triggerl")
          %assetId = %assetId @ "LT";
       else if(%button $= "RB" || %button $= "btn_r")
          %assetId = %assetId @ "RB";
-      else if(%button $= "RT" || %button $= "btn_rt")
+      else if(%button $= "RT" || %button $= "btn_rt" || %button $= "triggerr")
          %assetId = %assetId @ "RT";
       else if(%button $= "thumbrx" || %button $= "thumbry")
          %assetId = %assetId @ "Right_Stick";
@@ -100,13 +101,13 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "Plus";
       else if(%button $= "back" || %button $= "btn_back" )
          %assetId = %assetId @ "Minus";   
-      else if(%button $= "dpadu")
+      else if(%button $= "dpadu" || %button $= "upov")
          %assetId = %assetId @ "Dpad_Up";  
-      else if(%button $= "dpadd")
+      else if(%button $= "dpadd" || %button $= "dpov")
          %assetId = %assetId @ "Dpad_Down";  
-      else if(%button $= "dpadl")
+      else if(%button $= "dpadl" || %button $= "lpov")
          %assetId = %assetId @ "Dpad_Left";  
-      else if(%button $= "dpadr")
+      else if(%button $= "dpadr" || %button $= "rpov")
          %assetId = %assetId @ "Dpad_Right"; 
          
       %assetId = %assetId @ "_image";
@@ -134,11 +135,11 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "Y";
       else if(%button $= "LB" || %button $= "btn_l")
          %assetId = %assetId @ "LB";
-      else if(%button $= "LT" || %button $= "btn_lt")
+      else if(%button $= "LT" || %button $= "btn_lt" || %button $= "triggerl")
          %assetId = %assetId @ "LT";
       else if(%button $= "RB" || %button $= "btn_r")
          %assetId = %assetId @ "RB";
-      else if(%button $= "RT" || %button $= "btn_rt")
+      else if(%button $= "RT" || %button $= "btn_rt" || %button $= "triggerr")
          %assetId = %assetId @ "RT";
       else if(%button $= "thumbrx" || %button $= "thumbry")
          %assetId = %assetId @ "Right_Stick";
@@ -148,13 +149,13 @@ function getButtonBitmap(%device, %button)
          %assetId = %assetId @ "Menu";
       else if(%button $= "back" || %button $= "btn_back" )
          %assetId = %assetId @ "Windows";   
-      else if(%button $= "dpadu")
+      else if(%button $= "dpadu" || %button $= "upov")
          %assetId = %assetId @ "Dpad_Up";  
-      else if(%button $= "dpadd")
+      else if(%button $= "dpadd" || %button $= "dpov")
          %assetId = %assetId @ "Dpad_Down";  
-      else if(%button $= "dpadl")
+      else if(%button $= "dpadl" || %button $= "lpov")
          %assetId = %assetId @ "Dpad_Left";  
-      else if(%button $= "dpadr")
+      else if(%button $= "dpadr" || %button $= "rpov")
          %assetId = %assetId @ "Dpad_Right"; 
          
       %assetId = %assetId @ "_image";

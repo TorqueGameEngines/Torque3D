@@ -1203,16 +1203,18 @@ function AutodetectGraphics()
    if(startsWith(getDisplayDeviceInformation(), "AMD Custom GPU 0405"))
    {
       //If we're on a steamdeck, we can specifically calibrate settings for the platform here
-      MeshQualityGroup.applySetting("Medium");
+      MeshDetailSettingsGroup.applySetting("Medium");
+      MeshDrawDistQualityGroup.applySetting("Medium");
       TextureQualityGroup.applySetting("Medium");
       GroundCoverDensityGroup.applySetting("Medium");
       DecalLifetimeGroup.applySetting("Medium");
       TerrainQualityGroup.applySetting("Medium");
-      ShaderQualityGroup.applySetting("High");
+      ShaderQualityOptionsGroup.applySetting("High");
       
       ShadowQualityList.applySetting("None");
-      
+      ShadowDistanceList.applySetting("Low");
       SoftShadowList.applySetting("Low");
+      LightDistanceList.applySetting("Medium");
       
       $pref::Shadows::useShadowCaching = true;
       
@@ -1237,16 +1239,18 @@ function AutodetectGraphics()
          // Allow specular and normals for 2.0a and 2.0b
          if ( %shaderVer > 2.0 )
          {
-            MeshQualityGroup.applySetting("Lowest");
+            MeshDetailSettingsGroup.applySetting("Lowest");
+            MeshDrawDistQualityGroup.applySetting("Lowest");
             TextureQualityGroup.applySetting("Lowest");
             GroundCoverDensityGroup.applySetting("Lowest");
             DecalLifetimeGroup.applySetting("None");
             TerrainQualityGroup.applySetting("Lowest");
-            ShaderQualityGroup.applySetting("High");
+            ShaderQualityOptionsGroup.applySetting("High");
             
             ShadowQualityList.applySetting("None");
-            
+            ShadowDistanceList.applySetting("Lowest");
             SoftShadowList.applySetting("Off");
+            LightDistanceList.applySetting("Low");
             
             $pref::Shadows::useShadowCaching = true;
             
@@ -1261,16 +1265,18 @@ function AutodetectGraphics()
          }
          else
          {
-            MeshQualityGroup.applySetting("Lowest");
+            MeshDetailSettingsGroup.applySetting("Lowest");
+            MeshDrawDistQualityGroup.applySetting("Lowest");
             TextureQualityGroup.applySetting("Lowest");
             GroundCoverDensityGroup.applySetting("Lowest");
             DecalLifetimeGroup.applySetting("None");
             TerrainQualityGroup.applySetting("Lowest");
-            ShaderQualityGroup.applySetting("Low");
+            ShaderQualityOptionsGroup.applySetting("Low");
             
             ShadowQualityList.applySetting("None");
-            
+            ShadowDistanceList.applySetting("Lowest");
             SoftShadowList.applySetting("Off");
+            LightDistanceList.applySetting("Lowest");
             
             $pref::Shadows::useShadowCaching = true;
             
@@ -1288,16 +1294,18 @@ function AutodetectGraphics()
       {
          if ( %videoMem > 1000 )
          {
-            MeshQualityGroup.applySetting("High");
+            MeshDetailSettingsGroup.applySetting("High");
+            MeshDrawDistQualityGroup.applySetting("High");
             TextureQualityGroup.applySetting("High");
             GroundCoverDensityGroup.applySetting("High");
             DecalLifetimeGroup.applySetting("High");
             TerrainQualityGroup.applySetting("High");
-            ShaderQualityGroup.applySetting("High");
+            ShaderQualityOptionsGroup.applySetting("High");
             
             ShadowQualityList.applySetting("High");
-            
+            ShadowDistanceList.applySetting("High");
             SoftShadowList.applySetting("High");
+            LightDistanceList.applySetting("High");
             
             //Should this default to on in ultra settings?
             $pref::Shadows::useShadowCaching = true;
@@ -1313,16 +1321,18 @@ function AutodetectGraphics()
          }
          else if ( %videoMem > 400 || %videoMem == 0 )
          {
-            MeshQualityGroup.applySetting("Medium");
+            MeshDetailSettingsGroup.applySetting("Medium");
+            MeshDrawDistQualityGroup.applySetting("Medium");
             TextureQualityGroup.applySetting("Medium");
             GroundCoverDensityGroup.applySetting("Medium");
             DecalLifetimeGroup.applySetting("Medium");
             TerrainQualityGroup.applySetting("Medium");
-            ShaderQualityGroup.applySetting("High");
+            ShaderQualityOptionsGroup.applySetting("High");
             
             ShadowQualityList.applySetting("Medium");
-            
+            ShadowDistanceList.applySetting("Medium");
             SoftShadowList.applySetting("Low");
+            LightDistanceList.applySetting("Medium");
             
             $pref::Shadows::useShadowCaching = true;
             
@@ -1340,16 +1350,18 @@ function AutodetectGraphics()
          }
          else
          {
-            MeshQualityGroup.applySetting("Low");
+            MeshDetailSettingsGroup.applySetting("Low");
+            MeshDrawDistQualityGroup.applySetting("Low");
             TextureQualityGroup.applySetting("Low");
             GroundCoverDensityGroup.applySetting("Low");
             DecalLifetimeGroup.applySetting("Low");
             TerrainQualityGroup.applySetting("Low");
-            ShaderQualityGroup.applySetting("Low");
+            ShaderQualityOptionsGroup.applySetting("Low");
             
             ShadowQualityList.applySetting("None");
-            
+            ShadowDistanceList.applySetting("Lowest");
             SoftShadowList.applySetting("Off");
+            LightDistanceList.applySetting("Low");
             
             $pref::Shadows::useShadowCaching = true;
             

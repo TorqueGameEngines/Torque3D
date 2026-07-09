@@ -44,6 +44,7 @@
 #include "T3D/assets/assetImporter.h"
 
 StringTableEntry MaterialAsset::smNoMaterialAssetFallback = NULL;
+AssetPtr<MaterialAsset> MaterialAsset::smNoMaterialAssetFallbackAssetPtr = NULL;
 
 const String MaterialAsset::mErrCodeStrings[] =
 {
@@ -55,6 +56,9 @@ const String MaterialAsset::mErrCodeStrings[] =
 //-----------------------------------------------------------------------------
 
 IMPLEMENT_CONOBJECT(MaterialAsset);
+
+IMPLEMENT_STRUCT(AssetRef<MaterialAsset>, AssetRefMaterialAsset, , "")
+END_IMPLEMENT_STRUCT
 
 ConsoleType(MaterialAssetPtr, TypeMaterialAssetPtr, MaterialAsset, ASSET_ID_FIELD_PREFIX)
 
@@ -126,6 +130,43 @@ ConsoleSetType(TypeMaterialAssetId)
    // Warn.
    Con::warnf("(TypeMaterialAssetId) - Cannot set multiple args to a single asset.");
 }
+
+//-----------------------------------------------------------------------------
+
+ConsoleType(MaterialAssetRef, TypeMaterialAssetRef, AssetRef<MaterialAsset>, ASSET_ID_FIELD_PREFIX)
+
+ConsoleGetType(TypeMaterialAssetRef)
+{
+   AssetRef<MaterialAsset>& ref = *((AssetRef<MaterialAsset>*)dptr);
+
+   if (ref.assetPtr.isNull())
+      return ref.assetId;
+   else
+      return ref.assetPtr.getAssetId();
+}
+
+ConsoleSetType(TypeMaterialAssetRef)
+{
+   if (argc == 1)
+   {
+      const char* pFieldValue = argv[0];
+
+      AssetRef<MaterialAsset>* pAssetRef = (AssetRef<MaterialAsset>*)(dptr);
+
+      if (pAssetRef == NULL)
+      {
+         Con::warnf("(TypeMaterialAssetRef) - Failed to set asset Id '%d'.", pFieldValue);
+         return;
+      }
+
+      *pAssetRef = pFieldValue;
+
+      return;
+   }
+
+   Con::warnf("(TypeMaterialAssetRef) - Cannot set multiple args to a single asset.");
+}
+
 //-----------------------------------------------------------------------------
 
 MaterialAsset::MaterialAsset()
@@ -245,12 +286,34 @@ void MaterialAsset::setScriptFile(const char* pScriptFile)
 
 //------------------------------------------------------------------------------
 
-U32 MaterialAsset::load()
+StringTableEntry MaterialAsset::getMaterialName()
 {
    if (mMaterialDefinition)
-   {
-      mMaterialDefinition->safeDeleteObject();
-   }
+      return mMatDefinitionName;
+
+   if (smNoMaterialAssetFallbackAssetPtr.notNull())
+      return smNoMaterialAssetFallbackAssetPtr->getMaterialName();
+
+   return StringTable->EmptyString();
+}
+
+SimObjectPtr<Material> MaterialAsset::getMaterial()
+{
+   if (mMaterialDefinition)
+      return mMaterialDefinition;
+
+   if (smNoMaterialAssetFallbackAssetPtr.notNull())
+      return smNoMaterialAssetFallbackAssetPtr->getMaterial();
+
+   return NULL;
+}
+
+//------------------------------------------------------------------------------
+
+U32 MaterialAsset::load()
+{
+   if (mLoadedState == AssetErrCode::Ok)
+      return mLoadedState;
 
    if (mLoadedState == EmbeddedDefinition)
    {
@@ -333,7 +396,7 @@ U32 MaterialAsset::getAssetByMaterialName(StringTableEntry matName, AssetPtr<Mat
       for (U32 i = 0; i < foundAssetcount; i++)
       {
          MaterialAsset* tMatAsset = AssetDatabase.acquireAsset<MaterialAsset>(query.mAssetList[i]);
-         if (tMatAsset && tMatAsset->getMaterialDefinitionName() == matName)
+         if (tMatAsset && tMatAsset->getMaterialName() == matName)
          {
             matAsset->setAssetId(query.mAssetList[i]);
             AssetDatabase.releaseAsset(query.mAssetList[i]);
@@ -366,7 +429,7 @@ StringTableEntry MaterialAsset::getAssetIdByMaterialName(StringTableEntry matNam
          MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(query.mAssetList[i]);
          if (matAsset)
          {
-            if (matAsset->getMaterialDefinitionName() == matName)
+            if (matAsset->getMaterialName() == matName)
                materialAssetId = matAsset->getAssetId();
 
             AssetDatabase.releaseAsset(query.mAssetList[i]);
@@ -420,6 +483,26 @@ SimObjectPtr<Material> MaterialAsset::findMaterialDefinitionByAssetId(StringTabl
       return matDef;
    }
    return NULL;
+}
+
+DefineEngineFunction(loadMaterialAssetFallback, S32, (), ,
+   "Forces the loading of the MaterialAsset fallback asset.\n"
+   "@return Load status code.")
+{
+   if (MaterialAsset::smNoMaterialAssetFallbackAssetPtr.isNull())
+   {
+      MaterialAsset::smNoMaterialAssetFallbackAssetPtr = MaterialAsset::smNoMaterialAssetFallback;
+      if (MaterialAsset::smNoMaterialAssetFallbackAssetPtr.isNull())
+         Con::errorf("loadMaterialAssetFallback could not find fallback asset %s!", MaterialAsset::smNoMaterialAssetFallback);
+      else
+         return (S32)MaterialAsset::smNoMaterialAssetFallbackAssetPtr->load();
+   }
+   else
+   {
+      return (S32)MaterialAsset::smNoMaterialAssetFallbackAssetPtr->getStatus();
+   }
+
+   return AssetBase::Failed;
 }
 
 #ifdef TORQUE_TOOLS
@@ -623,14 +706,14 @@ void GuiInspectorTypeMaterialAssetPtr::updatePreviewImage()
 
    AssetPtr<MaterialAsset> matAssetDef = matAssetId;
    if (matAssetDef.isNull() || matAssetDef->getStatus() != AssetBase::AssetErrCode::Ok ||
-      matAssetDef->getMaterialDefinitionName() == StringTable->EmptyString())
+      matAssetDef->getMaterialName() == StringTable->EmptyString())
    {
       mPreviewImage->_setBitmap(StringTable->insert("Core_Rendering:WarningMaterial"));
       return;
    }
 
    Material* matDef;
-   if (!Sim::findObject(matAssetDef->getMaterialDefinitionName(), matDef))
+   if (!Sim::findObject(matAssetDef->getMaterialName(), matDef))
    {
       mPreviewImage->_setBitmap(StringTable->insert("Core_Rendering:WarningMaterial"));
       return;
@@ -683,9 +766,9 @@ void GuiInspectorTypeMaterialAssetPtr::setPreviewImage(StringTableEntry assetId)
       if (AssetDatabase.isDeclaredAsset(assetId))
       {
          MaterialAsset* matAsset = AssetDatabase.acquireAsset<MaterialAsset>(assetId);
-         if (matAsset && matAsset->getMaterialDefinition())
+         if (matAsset && matAsset->getMaterial())
          {
-            mPreviewImage->_setBitmap(matAsset->getMaterialDefinition()->getDiffuseMapAssetId(0));
+            mPreviewImage->_setBitmap(matAsset->getMaterial()->getDiffuseMapAssetId(0));
          }
       }
    }
@@ -707,5 +790,22 @@ void GuiInspectorTypeMaterialAssetId::consoleInit()
    Parent::consoleInit();
 
    ConsoleBaseType::getType(TypeMaterialAssetId)->setInspectorFieldType("GuiInspectorTypeMaterialAssetId");
+}
+
+//-----------------------------------------------------------------------------
+
+IMPLEMENT_CONOBJECT(GuiInspectorTypeMaterialAssetRef);
+
+ConsoleDocClass(GuiInspectorTypeMaterialAssetRef,
+   "@brief Inspector field type for AssetRef<MaterialAsset> fields\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeMaterialAssetRef::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeMaterialAssetRef)->setInspectorFieldType("GuiInspectorTypeMaterialAssetRef");
 }
 #endif

@@ -40,12 +40,8 @@ private:
 
 protected:
 
-   DECLARE_MATERIALASSET(GuiMaterialCtrl, Material);
-   DECLARE_ASSET_SETGET(GuiMaterialCtrl, Material);
-
-   BaseMatInstance *mMaterialInst;
-
-   static bool _setMaterial( void *object, const char *index, const char *data );
+   AssetRef<MaterialAsset> mMaterialAssetRef;
+   BaseMatInstance* mMaterialInst;
 
 public:
 

@@ -102,8 +102,7 @@ public:
 protected:
 
    // Material
-   DECLARE_MATERIALASSET(SkyBox, Material);
-   DECLARE_ASSET_NET_SETGET(SkyBox, Material, -1);
+   AssetRef<MaterialAsset> mMaterialAssetRef;
 
    BaseMatInstance *mMatInstance;
    SkyMatParams mMatParamHandle;

@@ -39,6 +39,13 @@ function Core_Rendering::onDestroy(%this)
 
 function Core_Rendering::initClient(%this)
 {
+   //Lets init our fallback assets
+   loadImageAssetFallback();
+   loadNamedTargetFallback();
+   loadMaterialAssetFallback();
+   loadTerrainMaterialAssetFallback();
+   loadShapeAssetFallback();
+   
    // Start rendering and stuff.
    initRenderManager();
    initLightingSystems("Advanced Lighting"); 

@@ -85,7 +85,7 @@ GuiRoadEditorCtrl::GuiRoadEditorCtrl()
    mSavedDrag = false;
    mIsDirty = false;
 
-   mMaterialAssetId = Con::getVariable("$DecalRoadEditor::defaultMaterialAsset");
+   mMaterialAssetRef = Con::getVariable( "$DecalRoadEditor::defaultMaterialAsset" );
 }
 
 GuiRoadEditorCtrl::~GuiRoadEditorCtrl()
@@ -100,7 +100,7 @@ void GuiRoadEditorUndoAction::undo()
       return;
 
    // Temporarily save the roads current data.
-   String materialAssetId = road->mMaterialAssetId;
+   StringTableEntry materialAssetId = road->getMaterialAssetId();
    F32 textureLength = road->mTextureLength;
    F32 breakAngle = road->mBreakAngle;
    F32 segmentsPerBatch = road->mSegmentsPerBatch;
@@ -108,7 +108,7 @@ void GuiRoadEditorUndoAction::undo()
    nodes.merge( road->mNodes );
 
    // Restore the Road properties saved in the UndoAction
-   road->_setMaterial(materialAssetId);
+   road->mMaterialAssetRef = mMaterialAssetId;
    road->mBreakAngle = breakAngle;
    road->mSegmentsPerBatch = segmentsPerBatch;
    road->mTextureLength = textureLength;
@@ -165,7 +165,7 @@ void GuiRoadEditorCtrl::initPersistFields()
    addField( "HoverNodeColor",      TypeColorI, Offset( mHoverNodeColor, GuiRoadEditorCtrl ) );
    addField( "isDirty",             TypeBool,   Offset( mIsDirty, GuiRoadEditorCtrl ) );
 
-   INITPERSISTFIELD_MATERIALASSET(Material, GuiRoadEditorCtrl, "Default Material used by the Road Editor on road creation.");
+   ADD_FIELD( "materialAsset", TypeMaterialAssetRef, Offset( mMaterialAssetRef, GuiRoadEditorCtrl ) ).doc( "Default material asset used by the Road Editor on road creation." );
 
    //addField( "MoveNodeCursor", TYPEID< SimObject >(), Offset( mMoveNodeCursor, GuiRoadEditorCtrl) );
    //addField( "AddNodeCursor", TYPEID< SimObject >(), Offset( mAddNodeCursor, GuiRoadEditorCtrl) );
@@ -407,8 +407,8 @@ void GuiRoadEditorCtrl::on3DMouseDown(const Gui3DMouseEvent & event)
 
 		DecalRoad *newRoad = new DecalRoad;
 		
-      if (mMaterialAsset.notNull())
-         newRoad->_setMaterial(mMaterialAssetId);
+      if ( mMaterialAssetRef.notNull() )
+         newRoad->mMaterialAssetRef = mMaterialAssetRef.getAssetId();
 
       newRoad->registerObject();
 
@@ -1029,7 +1029,7 @@ void GuiRoadEditorCtrl::submitUndo( const UTF8 *name )
 
    action->mObjId = mSelRoad->getId();
    action->mBreakAngle = mSelRoad->mBreakAngle;
-   action->mMaterialAssetId = mSelRoad->mMaterialAssetId;
+   action->mMaterialAssetId = mSelRoad->getMaterialAssetId();
    action->mSegmentsPerBatch = mSelRoad->mSegmentsPerBatch;   
    action->mTextureLength = mSelRoad->mTextureLength;
    action->mRoadEditor = this;

@@ -473,7 +473,7 @@ namespace math_backend::mat44
 
       for (; i < count; ++i)
       {
-         size_t idx = i * 3;
+         int idx = i * 3;
          mat44_mul_pos3_impl(m, &points[idx], &result[idx]);
       }
    }

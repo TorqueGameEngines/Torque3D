@@ -245,6 +245,11 @@ function GuiInspectorTypeMaterialAssetPtr::onControlDropped( %this, %payload, %p
    EWorldEditor.isDirty = true;
 }
 
+function GuiInspectorTypeMaterialAssetRef::onControlDropped( %this, %payload, %position )
+{
+   GuiInspectorTypeMaterialAssetPtr::onControlDropped( %this, %payload, %position );
+}
+
 function GuiInspectorGroup::buildMaterialInheritListField(%this, %fieldName, %fieldLabel, %fieldDesc, %fieldDefaultVal, %fieldDataVals, %callbackName, %ownerObj)
 {
    %extent = 18;

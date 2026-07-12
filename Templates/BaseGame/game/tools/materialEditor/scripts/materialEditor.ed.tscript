@@ -48,7 +48,7 @@ function MaterialEditorGui::establishMaterials(%this)
       };
    }
 
-   if(!isObject(materialEd_previewMaterial))
+   if(!isObject(materialEd_justAlphaMaterial))
    {
       singleton CustomMaterial( materialEd_justAlphaMaterial )
       {
@@ -57,7 +57,7 @@ function MaterialEditorGui::establishMaterials(%this)
       };
    }
 
-   if(!isObject(materialEd_previewMaterial))
+   if(!isObject(materialEd_justAlphaShader))
    {
       //Custom shader to allow the display of just the alpha channel. 
       singleton ShaderData( materialEd_justAlphaShader )
@@ -526,7 +526,8 @@ function MaterialEditorGui::prepareActiveObject( %this, %override )
       {
          %fieldName = %obj.getField(%i);
          
-         if( %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetId" && %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetPtr")
+         if( %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetId" && %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetPtr" 
+               && %obj.getFieldType(%fieldName) !$= "TypeMaterialAssetRef")
             continue;
       
          if( !%canSupportMaterial )

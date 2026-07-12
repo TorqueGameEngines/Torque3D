@@ -95,6 +95,10 @@ public:
 
         // Acquire asset.
         mpAsset = AssetDatabase.acquireAsset<T>( pAssetId );
+#if TORQUE_DEBUG && TORQUE_TOOLS
+        if ( mpAsset )
+            AssetDatabase.debugRegisterAssetPtrInstance( pAssetId, this );
+#endif
     }
     AssetPtr( const AssetPtr<T>& assetPtr )
     {
@@ -103,14 +107,21 @@ public:
         {
             // Yes, so acquire the asset.
             mpAsset = AssetDatabase.acquireAsset<T>( assetPtr->getAssetId() );
+#if TORQUE_DEBUG && TORQUE_TOOLS
+            if ( mpAsset )
+                AssetDatabase.debugRegisterAssetPtrInstance( assetPtr->getAssetId(), this );
+#endif
         }
     }
     virtual ~AssetPtr()
     {
-        // Do we have an asset?
-        if ( notNull() )
+        // Do we have an asset, and is the asset manager still live?
+        if ( notNull() && AssetDatabase.isProperlyAdded() )
         {
             // Yes, so release it.
+#if TORQUE_DEBUG && TORQUE_TOOLS
+            AssetDatabase.debugUnregisterAssetPtrInstance( mpAsset->getAssetId(), this );
+#endif
             AssetDatabase.releaseAsset( mpAsset->getAssetId() );
         }
     }
@@ -126,6 +137,9 @@ public:
                 return *this;
 
             // No, so release it.
+#if TORQUE_DEBUG && TORQUE_TOOLS
+            AssetDatabase.debugUnregisterAssetPtrInstance( mpAsset->getAssetId(), this );
+#endif
             AssetDatabase.releaseAsset( mpAsset->getAssetId() );
         }
 
@@ -134,6 +148,11 @@ public:
         {
             // Yes, so acquire the asset.
             mpAsset = AssetDatabase.acquireAsset<T>( pAssetId );
+
+#if TORQUE_DEBUG && TORQUE_TOOLS
+            if ( mpAsset )
+                AssetDatabase.debugRegisterAssetPtrInstance( pAssetId, this );
+#endif
         }
         else
         {
@@ -161,6 +180,9 @@ public:
         if ( notNull() )
         {
             // Yes, so release it.
+#if TORQUE_DEBUG && TORQUE_TOOLS
+            AssetDatabase.debugUnregisterAssetPtrInstance( mpAsset->getAssetId(), this );
+#endif
             AssetDatabase.releaseAsset( mpAsset->getAssetId() );
         }
 

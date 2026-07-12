@@ -191,6 +191,9 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
       if (terrMatAsset)
       {
          mat = terrMatAsset->getMaterial();
+
+         AssetDatabase.releaseAsset(assetId);
+
          if (mat)
             return mat;
       }
@@ -203,9 +206,24 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
       mat = new TerrainMaterial();
       mat->setInternalName( nameOrPath );
       mat->mDiffuseMapAssetRef = ImageAsset::getAssetIdFromFilePath(StringTable->insert(nameOrPath));
-      mat->registerObject();
-      Sim::getRootGroup()->addObject( mat );
-      return mat;
+
+      if ( !mat->registerObject() )
+      {
+         // onAdd() failed, most likely due to an internal-name collision from a
+         // re-entrant findOrCreate() call made while acquiring assets above.
+         // Clear the prior object, and do a lookup instead.
+         delete mat;
+         mat = dynamic_cast<TerrainMaterial*>(set->findObjectByInternalName(StringTable->insert(nameOrPath)));
+         if ( mat )
+            return mat;
+            
+         // No idea what's going on, then, so fall through to the warning material.
+      }
+      else
+      {
+         Sim::getRootGroup()->addObject( mat );
+         return mat;
+      }
    }
 
    // Ok... return a placeholder material then.
@@ -215,8 +233,16 @@ TerrainMaterial* TerrainMaterial::findOrCreate( const char *nameOrPath )
    mat->mDiffuseSize = 500;
    mat->mDetailSize = 5;
    mat->mMacroSize = 200;
-   mat->registerObject();
-      
+
+   if ( !mat->registerObject() )
+   {
+      delete mat;
+      // Similar situation to above. If we've failed to register, could be some odd re-entrant/ordering
+      // behavior, so just runa lookup.
+      mat = dynamic_cast<TerrainMaterial*>( set->findObjectByInternalName( StringTable->insert( nameOrPath ) ) );
+      return mat;
+   }
+
    Sim::getRootGroup()->addObject(mat);
 
    return mat;

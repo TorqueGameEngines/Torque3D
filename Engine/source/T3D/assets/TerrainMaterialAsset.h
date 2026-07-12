@@ -91,6 +91,10 @@ public:
    void copyTo(SimObject* object) override;
 
    U32 load() override;
+   void unloadAsset() override;
+#ifdef TORQUE_TOOLS
+   U32 getAssetMemoryUsage() const override;
+#endif
 
    StringTableEntry getMaterialName();
    SimObjectPtr<TerrainMaterial> getMaterial();

@@ -163,6 +163,9 @@ public:
    
    static bool slotVisible(void* object, const char* index);
    U32 load() override;
+#ifdef TORQUE_TOOLS
+   U32 getAssetMemoryUsage() const override;
+#endif
 
    void                    setSoundFile(StringTableEntry pSoundFile, U32 slot = 0);
    inline StringTableEntry getSoundFile(U32 slot = 0) { return mSoundFile[slot]; }

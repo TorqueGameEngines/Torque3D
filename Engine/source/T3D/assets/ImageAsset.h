@@ -168,6 +168,10 @@ public:
 
    // asset Base load
    U32 load() override;
+#ifdef TORQUE_TOOLS
+   U32 getAssetMemoryUsage() const override;
+#endif
+   bool canBePurged() const override { return !mIsNamedTarget; }
 
    void                    setImageFile(StringTableEntry pImageFile);
    inline StringTableEntry getImageFile(void) const { return mImageFile; };

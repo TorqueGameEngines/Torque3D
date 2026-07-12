@@ -184,9 +184,14 @@ function endMission()
    // Delete everything
    getScene(0).delete();
    MissionCleanup.delete();
-   
+
    if(isObject($Server::LevelAsset))
-      AssetDatabase.releaseAsset($Server::LevelAsset.getAssetId()); //cleanup
+   {
+      $Server::LevelAsset.unloadDependencies();
+      AssetDatabase.releaseAsset($Server::LevelAsset.getAssetId());
+      $Server::LevelAsset = "";
+   }
+   AssetDatabase.schedule(32, "purgeAssets");
    
   if ($Pref::Server::EnableDatablockCache)
     resetDatablockCache();

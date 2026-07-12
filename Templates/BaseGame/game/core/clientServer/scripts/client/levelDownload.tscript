@@ -222,16 +222,15 @@ function clientCmdMissionStartPhase3(%seq, %levelAsset)
 {
    onPhaseComplete();
    StartClientReplication();
-   
-   %levelAssetDef = AssetDatabase.acquireAsset(%levelAsset);
-   
+
+   %levelAssetDef = $Client::LevelAsset;
+
    // Load the static mission decals.
    if(isFile(%levelAssetDef.getDecalsPath()))
       decalManagerLoad( %levelAssetDef.getDecalsPath() );
-   
+
    echo ("*** Phase 3: Mission Lighting");
    $MSeq = %seq;
-   $Client::LevelAsset = %levelAssetDef;
    $Client::MissionFile = %levelAssetDef.getLevelPath();
 
    // Need to light the mission before we are ready.

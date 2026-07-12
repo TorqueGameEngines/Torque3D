@@ -433,6 +433,14 @@ void SoundAsset::onAssetRefresh(void)
    populateSFXTrack();
 }
 
+#ifdef TORQUE_TOOLS
+U32 SoundAsset::getAssetMemoryUsage() const
+{
+   // TODO: Calculate the memory usage of the actual sound data as well as the SFXDescription and SFXTrack objects.
+   return sizeof(SFXDescription);
+}
+#endif
+
 U32 SoundAsset::load()
 {
    if (mLoadedState == AssetErrCode::Ok)

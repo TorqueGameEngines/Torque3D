@@ -83,6 +83,9 @@ public:
    inline Resource<TerrainFile> getTerrainResource(void) const { return mTerrainFile; };
 
    U32 load() override;
+#ifdef TORQUE_TOOLS
+   U32 getAssetMemoryUsage() const override;
+#endif
 
    static bool getAssetByFilename(StringTableEntry fileName, AssetPtr<TerrainAsset>* shapeAsset);
    static StringTableEntry getAssetIdByFilename(StringTableEntry fileName);

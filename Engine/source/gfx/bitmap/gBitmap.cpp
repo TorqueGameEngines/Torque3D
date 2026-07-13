@@ -36,82 +36,353 @@
 
 using namespace Torque;
 
-const U32 GBitmap::csFileVersion   = 3;
+// Version 5 switches the on-disk layout to a sequence of self-contained
+// per-face blocks (GBitmap::Face::write()/read()), replacing the old
+// single-contiguous-buffer-plus-face-offsets layout
+const U32 GBitmap::csFileVersion = 5;
 
 Vector<GBitmap::Registration>& GBitmap::getRegistrations()
 {
-   static Vector<GBitmap::Registration> * regs =
+   static Vector<GBitmap::Registration>* regs =
       new Vector<GBitmap::Registration>(__FILE__, __LINE__);
 
    return *regs;
 }
 
-GBitmap::GBitmap()
- : mInternalFormat(GFXFormatR8G8B8),
-   mBits(NULL),
+//-----------------------------------------------------------------------------
+// GBitmap::Face
+//-----------------------------------------------------------------------------
+
+GBitmap::Face::Face()
+   : mBits(NULL),
    mByteSize(0),
    mWidth(0),
    mHeight(0),
    mBytesPerPixel(0),
-   mNumMipLevels(0),
-   mHasTransparency(false),
-   mNumFaces(1)
+   mNumMipLevels(0)
 {
-   std::fill_n(mMipLevelOffsets, c_maxMipLevels, 0xffffffff);
-   std::fill_n(mFaceOffsets, 6, 0xffffffff);
+   dMemset(mMipLevelOffsets, 0, sizeof(mMipLevelOffsets));
+}
+
+GBitmap::Face::Face(const Face& copy)
+   : mBits(NULL),
+   mByteSize(copy.mByteSize),
+   mWidth(copy.mWidth),
+   mHeight(copy.mHeight),
+   mBytesPerPixel(copy.mBytesPerPixel),
+   mNumMipLevels(copy.mNumMipLevels)
+{
+   dMemcpy(mMipLevelOffsets, copy.mMipLevelOffsets, sizeof(mMipLevelOffsets));
+
+   if (copy.mBits != NULL)
+   {
+      mBits = new U8[mByteSize];
+      dMemcpy(mBits, copy.mBits, mByteSize);
+   }
+}
+
+GBitmap::Face::~Face()
+{
+   delete[] mBits;
+}
+
+GBitmap::Face& GBitmap::Face::operator=(const Face& copy)
+{
+   if (this == &copy)
+      return *this;
+
+   delete[] mBits;
+   mBits = NULL;
+
+   mByteSize = copy.mByteSize;
+   mWidth = copy.mWidth;
+   mHeight = copy.mHeight;
+   mBytesPerPixel = copy.mBytesPerPixel;
+   mNumMipLevels = copy.mNumMipLevels;
+   dMemcpy(mMipLevelOffsets, copy.mMipLevelOffsets, sizeof(mMipLevelOffsets));
+
+   if (copy.mBits != NULL)
+   {
+      mBits = new U8[mByteSize];
+      dMemcpy(mBits, copy.mBits, mByteSize);
+   }
+
+   return *this;
+}
+
+void GBitmap::Face::deleteImage()
+{
+   delete[] mBits;
+   mBits = NULL;
+   mByteSize = 0;
+   mWidth = 0;
+   mHeight = 0;
+   mNumMipLevels = 0;
+}
+
+void GBitmap::Face::allocate(const U32 in_width, const U32 in_height, const U32 in_numMips, const U32 in_bytesPerPixel)
+{
+   AssertFatal(in_width != 0 && in_height != 0, "GBitmap::Face::allocate: width or height is 0");
+
+   U8* svBits = mBits;
+   U32  svByteSize = mByteSize;
+
+   mWidth = in_width;
+   mHeight = in_height;
+   mBytesPerPixel = in_bytesPerPixel;
+
+   mNumMipLevels = 1;
+   mMipLevelOffsets[0] = 0;
+
+   U32 currWidth = in_width;
+   U32 currHeight = in_height;
+
+   // in_numMips == 0 means "build the full pyramid down to 1x1", otherwise
+   // build exactly in_numMips levels (fewer if the chain hits 1x1 first).
+   while ((currWidth != 1 || currHeight != 1) &&
+      (in_numMips == 0 || mNumMipLevels < in_numMips))
+   {
+      mMipLevelOffsets[mNumMipLevels] = mMipLevelOffsets[mNumMipLevels - 1] +
+         (currWidth * currHeight * mBytesPerPixel);
+      currWidth >>= 1;
+      currHeight >>= 1;
+      if (currWidth == 0) currWidth = 1;
+      if (currHeight == 0) currHeight = 1;
+
+      mNumMipLevels++;
+   }
+
+   AssertFatal(mNumMipLevels <= c_maxMipLevels, "GBitmap::Face::allocate: too many miplevels");
+
+   mByteSize = 0;
+   for (U32 mip = 0; mip < mNumMipLevels; mip++)
+      mByteSize += getWidth(mip) * getHeight(mip) * mBytesPerPixel;
+
+   mBits = new U8[mByteSize];
+   dMemset(mBits, 0xFF, mByteSize);
+
+   if (svBits != NULL)
+   {
+      dMemcpy(mBits, svBits, getMin(mByteSize, svByteSize));
+      delete[] svBits;
+   }
+}
+
+U32 GBitmap::Face::getWidth(const U32 mipLevel) const
+{
+   AssertFatal(mipLevel < mNumMipLevels,
+      avar("GBitmap::Face::getWidth: mip level out of range: (%d, %d)",
+         mipLevel, mNumMipLevels));
+
+   U32 retVal = mWidth >> mipLevel;
+   return (retVal != 0) ? retVal : 1;
+}
+
+U32 GBitmap::Face::getHeight(const U32 mipLevel) const
+{
+   AssertFatal(mipLevel < mNumMipLevels,
+      avar("GBitmap::Face::getHeight: mip level out of range: (%d, %d)",
+         mipLevel, mNumMipLevels));
+
+   U32 retVal = mHeight >> mipLevel;
+   return (retVal != 0) ? retVal : 1;
+}
+
+const U8* GBitmap::Face::getBits(const U32 mipLevel) const
+{
+   AssertFatal(mipLevel < mNumMipLevels,
+      avar("GBitmap::Face::getBits: mip level out of range: (%d, %d)",
+         mipLevel, mNumMipLevels));
+
+   return &mBits[mMipLevelOffsets[mipLevel]];
+}
+
+U8* GBitmap::Face::getWritableBits(const U32 mipLevel)
+{
+   AssertFatal(mipLevel < mNumMipLevels,
+      avar("GBitmap::Face::getWritableBits: mip level out of range: (%d, %d)",
+         mipLevel, mNumMipLevels));
+
+   return &mBits[mMipLevelOffsets[mipLevel]];
+}
+
+U8* GBitmap::Face::getAddress(const S32 x, const S32 y, const U32 mipLevel)
+{
+   return getWritableBits(mipLevel) + (U64)(((y * getWidth(mipLevel)) + x) * mBytesPerPixel);
+}
+
+const U8* GBitmap::Face::getAddress(const S32 x, const S32 y, const U32 mipLevel) const
+{
+   return getBits(mipLevel) + ((y * getWidth(mipLevel)) + x) * mBytesPerPixel;
+}
+
+void GBitmap::Face::convertFormat(GFXFormat oldFmt, GFXFormat newFmt, U32 newBytesPerPixel)
+{
+   // this is a nasty pointer math hack
+   // is there a quick way to calc pixels of a fully mipped bitmap?
+   U32 pixels = 0;
+   for (U32 i = 0; i < mNumMipLevels; i++)
+      pixels += getWidth(i) * getHeight(i);
+
+   if (oldFmt == GFXFormatR8G8B8 && newFmt == GFXFormatR5G5B5A1)
+   {
+#ifdef _XBOX
+      bitmapConvertRGB_to_1555(mBits, pixels);
+#else
+      bitmapConvertRGB_to_5551(mBits, pixels);
+#endif
+   }
+   else
+   {
+      bitmapConvertToOutput(&mBits, pixels, oldFmt, newFmt);
+   }
+
+   mBytesPerPixel = newBytesPerPixel;
+
+   U32 offset = 0;
+   for (U32 j = 0; j < mNumMipLevels; j++)
+   {
+      mMipLevelOffsets[j] = offset;
+      offset += getWidth(j) * getHeight(j) * mBytesPerPixel;
+   }
+   mByteSize = offset;
+}
+
+void GBitmap::Face::chopTopMips(const U32 scalePower)
+{
+   if (scalePower == 0)
+      return;
+
+   AssertFatal(scalePower < mNumMipLevels, "GBitmap::Face::chopTopMips: scalePower out of range");
+
+   U32 newWidth = getMax((U32)1, mWidth >> scalePower);
+   U32 newHeight = getMax((U32)1, mHeight >> scalePower);
+   U32 newMipCount = mNumMipLevels - scalePower;
+
+   U32 newByteSize = 0;
+   for (U32 i = scalePower; i < mNumMipLevels; i++)
+      newByteSize += getWidth(i) * getHeight(i) * mBytesPerPixel;
+
+   // Allocate fresh (rather than compacting in place) - since this face
+   // owns its own memory independently of every other face there's no
+   // cross-face bookkeeping to worry about, and a fresh allocation sidesteps
+   // any concern about overlapping src/dest ranges during compaction.
+   U8* newBits = new U8[newByteSize];
+   U32 newOffsets[c_maxMipLevels];
+
+   U8* dest = newBits;
+   for (U32 i = scalePower; i < mNumMipLevels; i++)
+   {
+      U32 surfaceSize = getWidth(i) * getHeight(i) * mBytesPerPixel;
+      dMemcpy(dest, getWritableBits(i), surfaceSize);
+      newOffsets[i - scalePower] = dest - newBits;
+      dest += surfaceSize;
+   }
+
+   delete[] mBits;
+   mBits = newBits;
+   mByteSize = newByteSize;
+   mWidth = newWidth;
+   mHeight = newHeight;
+   mNumMipLevels = newMipCount;
+   dMemcpy(mMipLevelOffsets, newOffsets, sizeof(newOffsets));
+}
+
+bool GBitmap::Face::write(Stream& s) const
+{
+   s.write(mWidth);
+   s.write(mHeight);
+   s.write(mBytesPerPixel);
+   s.write(mNumMipLevels);
+   for (U32 i = 0; i < c_maxMipLevels; i++)
+      s.write(mMipLevelOffsets[i]);
+   s.write(mByteSize);
+   s.write(mByteSize, mBits);
+
+   return (s.getStatus() == Stream::Ok);
+}
+
+bool GBitmap::Face::read(Stream& s)
+{
+   s.read(&mWidth);
+   s.read(&mHeight);
+   s.read(&mBytesPerPixel);
+   s.read(&mNumMipLevels);
+   for (U32 i = 0; i < c_maxMipLevels; i++)
+      s.read(&mMipLevelOffsets[i]);
+   s.read(&mByteSize);
+
+   delete[] mBits;
+   mBits = new U8[mByteSize];
+   s.read(mByteSize, mBits);
+
+   return (s.getStatus() == Stream::Ok);
+}
+
+//-----------------------------------------------------------------------------
+// GBitmap
+//-----------------------------------------------------------------------------
+
+GBitmap::GBitmap()
+   : mInternalFormat(GFXFormatR8G8B8),
+   mBytesPerPixel(0),
+   mHasTransparency(false)
+{
+   VECTOR_SET_ASSOCIATION(mFaces);
+   mFaces.setSize(1); // always at least one (possibly empty) face
 }
 
 GBitmap::GBitmap(const GBitmap& rCopy)
+   : mInternalFormat(rCopy.mInternalFormat),
+   mBytesPerPixel(rCopy.mBytesPerPixel),
+   mFaces(rCopy.mFaces),
+   mHasTransparency(rCopy.mHasTransparency)
 {
+   VECTOR_SET_ASSOCIATION(mFaces);
+}
+
+GBitmap& GBitmap::operator=(const GBitmap& rCopy)
+{
+   if (this == &rCopy)
+      return *this;
+
+   // NOTE: previously GBitmap had a custom copy constructor but relied
+   // on the compiler-generated copy-assignment operator, which did a
+   // shallow member-wise copy of the raw mBits pointer - two bitmaps
+   // could end up owning (and separately freeing) the same buffer.
+   // Now that each Face owns its memory via RAII and Vector<Face> has
+   // real copy semantics, a plain member-wise copy here is correct.
    mInternalFormat = rCopy.mInternalFormat;
-
-   mByteSize = rCopy.mByteSize;
-   mBits    = new U8[mByteSize];
-   dMemcpy(mBits, rCopy.mBits, mByteSize);
-
-   mWidth         = rCopy.mWidth;
-   mHeight        = rCopy.mHeight;
    mBytesPerPixel = rCopy.mBytesPerPixel;
-   mNumMipLevels  = rCopy.mNumMipLevels;
-   dMemcpy(mMipLevelOffsets, rCopy.mMipLevelOffsets, sizeof(mMipLevelOffsets));
-   dMemcpy(mFaceOffsets, rCopy.mFaceOffsets, sizeof(mFaceOffsets));
-
    mHasTransparency = rCopy.mHasTransparency;
-   mNumFaces = rCopy.mNumFaces;
+   mFaces = rCopy.mFaces;
+
+   return *this;
 }
 
-
 GBitmap::GBitmap(const U32  in_width,
-                 const U32  in_height,
-                 const bool in_extrudeMipLevels,
-                 const GFXFormat in_format,
-                 const U32 in_numFaces)
- : mBits(NULL),
-   mByteSize(0),
-   mNumFaces(in_numFaces)
+   const U32  in_height,
+   const bool in_extrudeMipLevels,
+   const GFXFormat in_format,
+   const U32 in_numFaces)
+   : mInternalFormat(GFXFormatR8G8B8),
+   mBytesPerPixel(0),
+   mHasTransparency(false)
 {
-   for (U32 i = 0; i < c_maxMipLevels; i++)
-      mMipLevelOffsets[i] = 0xffffffff;
-
-   for(U32 i = 0; i < 6; i++)
-      mFaceOffsets[i] = 0xffffffff;
-
+   VECTOR_SET_ASSOCIATION(mFaces);
    allocateBitmap(in_width, in_height, in_extrudeMipLevels, in_format, in_numFaces);
-
-   mHasTransparency = false;
 }
 
 GBitmap::GBitmap(const U32  in_width,
-                 const U32  in_height,
-                 const U8*  data,
-                 const U32 in_numFaces)
- : mBits(NULL),
-   mByteSize(0),
-   mNumFaces(in_numFaces)
+   const U32  in_height,
+   const U8* data,
+   const U32 in_numFaces)
+   : mInternalFormat(GFXFormatR8G8B8),
+   mBytesPerPixel(0),
+   mHasTransparency(false)
 {
+   VECTOR_SET_ASSOCIATION(mFaces);
    allocateBitmap(in_width, in_height, false, GFXFormatR8G8B8A8, in_numFaces);
-
-   mHasTransparency = false;
 
    for (U32 x = 0; x < in_width; x++)
    {
@@ -120,9 +391,9 @@ GBitmap::GBitmap(const U32  in_width,
          U32 offset = (x + y * in_width) * 4;
 
          ColorI color(data[offset],
-                      data[offset + 1],
-                      data[offset + 2],
-                      data[offset + 3]);
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3]);
 
          if (color.alpha < 255)
             mHasTransparency = true;
@@ -201,31 +472,31 @@ U32 GBitmap::getFormatBytesPerPixel(GFXFormat fmt)
 
 //--------------------------------------------------------------------------
 
-void GBitmap::sRegisterFormat( const GBitmap::Registration &reg )
+void GBitmap::sRegisterFormat(const GBitmap::Registration& reg)
 {
    U32 insert = GBitmap::getRegistrations().size();
-   for ( U32 i = 0; i < GBitmap::getRegistrations().size(); i++ )
+   for (U32 i = 0; i < GBitmap::getRegistrations().size(); i++)
    {
-      if ( GBitmap::getRegistrations()[i].priority <= reg.priority )
+      if (GBitmap::getRegistrations()[i].priority <= reg.priority)
       {
          insert = i;
          break;
       }
    }
 
-   GBitmap::getRegistrations().insert( insert, reg );
+   GBitmap::getRegistrations().insert(insert, reg);
 }
 
-const GBitmap::Registration   *GBitmap::sFindRegInfo( const String &extension )
+const GBitmap::Registration* GBitmap::sFindRegInfo(const String& extension)
 {
-   for ( U32 i = 0; i < GBitmap::getRegistrations().size(); i++ )
+   for (U32 i = 0; i < GBitmap::getRegistrations().size(); i++)
    {
-      const GBitmap::Registration   &reg = GBitmap::getRegistrations()[i];
-      const Vector<String>          &extensions = reg.extensions;
+      const GBitmap::Registration& reg = GBitmap::getRegistrations()[i];
+      const Vector<String>& extensions = reg.extensions;
 
-      for ( U32 j = 0; j < extensions.size(); ++j )
-      {    
-         if ( extensions[j].equal( extension, String::NoCase ) )
+      for (U32 j = 0; j < extensions.size(); ++j)
+      {
+         if (extensions[j].equal(extension, String::NoCase))
             return &reg;
       }
    }
@@ -233,30 +504,30 @@ const GBitmap::Registration   *GBitmap::sFindRegInfo( const String &extension )
    return NULL;
 }
 
-bool GBitmap::sFindFile( const Path &path, Path *outPath )
+bool GBitmap::sFindFile(const Path& path, Path* outPath)
 {
-   PROFILE_SCOPE( GBitmap_sFindFile );
+   PROFILE_SCOPE(GBitmap_sFindFile);
 
-   const String origExt( String::ToLower( path.getExtension() ) );
+   const String origExt(String::ToLower(path.getExtension()));
 
-   Path tryPath( path );
+   Path tryPath(path);
 
-   for ( U32 i = 0; i < GBitmap::getRegistrations().size(); i++ )
+   for (U32 i = 0; i < GBitmap::getRegistrations().size(); i++)
    {
-      const Registration &reg = GBitmap::getRegistrations()[i];
-      const Vector<String> &extensions = reg.extensions;
+      const Registration& reg = GBitmap::getRegistrations()[i];
+      const Vector<String>& extensions = reg.extensions;
 
-      for ( U32 j = 0; j < extensions.size(); ++j )
+      for (U32 j = 0; j < extensions.size(); ++j)
       {
          // We've already tried this one.
-         if ( extensions[j] == origExt )
+         if (extensions[j] == origExt)
             continue;
 
-         tryPath.setExtension( extensions[j] );
-         if ( !Torque::FS::IsFile( tryPath ) )
+         tryPath.setExtension(extensions[j]);
+         if (!Torque::FS::IsFile(tryPath))
             continue;
 
-         if ( outPath )
+         if (outPath)
             *outPath = tryPath;
          return true;
       }
@@ -265,25 +536,25 @@ bool GBitmap::sFindFile( const Path &path, Path *outPath )
    return false;
 }
 
-bool GBitmap::sFindFiles( const Path &path, Vector<Path> *outFoundPaths )
+bool GBitmap::sFindFiles(const Path& path, Vector<Path>* outFoundPaths)
 {
-   PROFILE_SCOPE( GBitmap_sFindFiles );
-   
-   Path  tryPath( path );
+   PROFILE_SCOPE(GBitmap_sFindFiles);
 
-   for ( U32 i = 0; i < GBitmap::getRegistrations().size(); i++ )
+   Path  tryPath(path);
+
+   for (U32 i = 0; i < GBitmap::getRegistrations().size(); i++)
    {
-      const GBitmap::Registration   &reg = GBitmap::getRegistrations()[i];
-      const Vector<String>          &extensions = reg.extensions;
+      const GBitmap::Registration& reg = GBitmap::getRegistrations()[i];
+      const Vector<String>& extensions = reg.extensions;
 
-      for ( U32 j = 0; j < extensions.size(); ++j )
+      for (U32 j = 0; j < extensions.size(); ++j)
       {
-         tryPath.setExtension( extensions[j] );
+         tryPath.setExtension(extensions[j]);
 
-         if ( Torque::FS::IsFile( tryPath ) )
+         if (Torque::FS::IsFile(tryPath))
          {
-            if ( outFoundPaths )
-               outFoundPaths->push_back( tryPath );
+            if (outFoundPaths)
+               outFoundPaths->push_back(tryPath);
             else
                return true;
          }
@@ -297,13 +568,13 @@ String GBitmap::sGetExtensionList()
 {
    String list;
 
-   for ( U32 i = 0; i < GBitmap::getRegistrations().size(); i++ )
+   for (U32 i = 0; i < GBitmap::getRegistrations().size(); i++)
    {
-      const Registration &reg = GBitmap::getRegistrations()[i];
-      for ( U32 j = 0; j < reg.extensions.size(); j++ )
+      const Registration& reg = GBitmap::getRegistrations()[i];
+      for (U32 j = 0; j < reg.extensions.size(); j++)
       {
          list += reg.extensions[j];
-         list += " ";         
+         list += " ";
       }
    }
 
@@ -313,219 +584,127 @@ String GBitmap::sGetExtensionList()
 //--------------------------------------------------------------------------
 void GBitmap::deleteImage()
 {
-   delete [] mBits;
-   mBits    = NULL;
-   mByteSize = 0;
-
-   mWidth        = 0;
-   mHeight       = 0;
-   mNumMipLevels = 0;
+   // Collapse back down to the one-empty-face invariant every other
+   // method relies on (see mFaces' declaration comment).
+   mFaces.setSize(1);
+   mFaces[0].deleteImage();
 }
 
 
 //--------------------------------------------------------------------------
 
-void GBitmap::copyRect(const GBitmap *src, const RectI &srcRect, const Point2I &dstPt, const U32 srcMipLevel, const U32 dstMipLevel)
+void GBitmap::copyRect(const GBitmap* src, const RectI& srcRect, const Point2I& dstPt, const U32 srcMipLevel, const U32 dstMipLevel)
 {
-   if(src->getFormat() != getFormat())
+   if (src->getFormat() != getFormat())
       return;
-   if(srcRect.extent.x + srcRect.point.x > src->getWidth(srcMipLevel) || srcRect.extent.y + srcRect.point.y > src->getHeight(srcMipLevel))
+   if (srcRect.extent.x + srcRect.point.x > src->getWidth(srcMipLevel) || srcRect.extent.y + srcRect.point.y > src->getHeight(srcMipLevel))
       return;
-   if(srcRect.extent.x + dstPt.x > getWidth(dstMipLevel) || srcRect.extent.y + dstPt.y > getHeight(dstMipLevel))
+   if (srcRect.extent.x + dstPt.x > getWidth(dstMipLevel) || srcRect.extent.y + dstPt.y > getHeight(dstMipLevel))
       return;
 
-   for(U32 i = 0; i < srcRect.extent.y; i++)
+   for (U32 i = 0; i < srcRect.extent.y; i++)
    {
       dMemcpy(getAddress(dstPt.x, dstPt.y + i, dstMipLevel),
-              src->getAddress(srcRect.point.x, srcRect.point.y + i, srcMipLevel),
-              mBytesPerPixel * srcRect.extent.x);
+         src->getAddress(srcRect.point.x, srcRect.point.y + i, srcMipLevel),
+         mBytesPerPixel * srcRect.extent.x);
    }
 }
 
 //--------------------------------------------------------------------------
 void GBitmap::allocateBitmap(const U32 in_width, const U32 in_height, const bool in_extrudeMipLevels, const GFXFormat in_format, const U32 in_numFaces)
 {
-   //-------------------------------------- Some debug checks...
-   U32 svByteSize = mByteSize;
-   U8 *svBits = mBits;
-
-   AssertFatal(in_width != 0 && in_height != 0, "GBitmap::allocateBitmap: width or height is 0");
-
-   if (in_extrudeMipLevels == true) 
+   if (in_extrudeMipLevels == true)
    {
-      AssertFatal(isPow2(in_width) == true && isPow2(in_height) == true, "GBitmap::GBitmap: in order to extrude mip levels, bitmap w/h must be pow2");
+      AssertFatal(isPow2(in_width) == true && isPow2(in_height) == true, "GBitmap::allocateBitmap: in order to extrude mip levels, bitmap w/h must be pow2");
    }
 
-   mInternalFormat = in_format;
-   mWidth          = in_width;
-   mHeight         = in_height;
-   mNumFaces       = in_numFaces;
+   // A full mip chain (0) if extruding, otherwise just the base level (1).
+   allocateBitmapWithMips(in_width, in_height, in_extrudeMipLevels ? 0 : 1, in_format, in_numFaces);
 
-   mBytesPerPixel = getFormatBytesPerPixel(mInternalFormat);
-
-   // Set up the mip levels, if necessary...
-   mNumMipLevels       = 1;
-   mMipLevelOffsets[0] = 0;
-
-   if (in_extrudeMipLevels == true) 
+   if (in_extrudeMipLevels == true)
    {
-      U32 currWidth  = in_width;
-      U32 currHeight = in_height;
-
-      while (currWidth != 1 || currHeight != 1)
-      {
-         mMipLevelOffsets[mNumMipLevels] = mMipLevelOffsets[mNumMipLevels - 1] +
-                                         (currWidth * currHeight * mBytesPerPixel);
-         currWidth  >>= 1;
-         currHeight >>= 1;
-         if (currWidth  == 0) currWidth  = 1;
-         if (currHeight == 0) currHeight = 1;
-
-         mNumMipLevels++;
-      }
-
       U32 expectedMips = mFloor(mLog2(mMax(in_width, in_height))) + 1;
-      AssertFatal(mNumMipLevels == expectedMips, "GBitmap::allocateBitmap: mipmap count wrong");
-   }
-   AssertFatal(mNumMipLevels <= c_maxMipLevels, "GBitmap::allocateBitmap: too many miplevels");
-
-   U32 faceStride = 0;
-   for (U32 mip = 0; mip < mNumMipLevels; mip++)
-      faceStride += getWidth(mip) * getHeight(mip) * mBytesPerPixel;
-
-   for (U32 face = 0; face < mNumFaces; face++)
-      mFaceOffsets[face] = face * faceStride;
-
-   U32 allocBytes = faceStride * mNumFaces;
-
-   // Set up the memory...
-   mByteSize = allocBytes;
-   mBits    = new U8[mByteSize];
-
-   dMemset(mBits, 0xFF, mByteSize);
-
-   if(svBits != NULL)
-   {
-      dMemcpy(mBits, svBits, getMin(mByteSize, svByteSize));
-      delete[] svBits;
+      AssertFatal(getNumMipLevels() == expectedMips, "GBitmap::allocateBitmap: mipmap count wrong");
    }
 }
 
 //--------------------------------------------------------------------------
 void GBitmap::allocateBitmapWithMips(const U32 in_width, const U32 in_height, const U32 in_numMips, const GFXFormat in_format, const U32 in_numFaces)
 {
-   //-------------------------------------- Some debug checks...
-   U32 svByteSize = mByteSize;
-   U8 *svBits = mBits;
-
-   AssertFatal(in_width != 0 && in_height != 0, "GBitmap::allocateBitmap: width or height is 0");
+   AssertFatal(in_width != 0 && in_height != 0, "GBitmap::allocateBitmapWithMips: width or height is 0");
+   AssertFatal(in_numFaces >= 1, "GBitmap::allocateBitmapWithMips: in_numFaces must be at least 1");
 
    mInternalFormat = in_format;
-   mWidth = in_width;
-   mHeight = in_height;
-   mNumFaces = in_numFaces;
-
    mBytesPerPixel = getFormatBytesPerPixel(mInternalFormat);
 
-   // Set up the mip levels, if necessary...
-   mNumMipLevels = 1;
-   mMipLevelOffsets[0] = 0;
+   mFaces.setSize(in_numFaces);
 
-   if (in_numMips != 0)
-   {
-      U32 currWidth = in_width;
-      U32 currHeight = in_height;
-
-      do
-      {
-         mMipLevelOffsets[mNumMipLevels] = mMipLevelOffsets[mNumMipLevels - 1] +
-            (currWidth * currHeight * mBytesPerPixel);
-         currWidth >>= 1;
-         currHeight >>= 1;
-         if (currWidth == 0) currWidth = 1;
-         if (currHeight == 0) currHeight = 1;
-
-         mNumMipLevels++;
-      } while ((currWidth != 1 || currHeight != 1) && (mNumMipLevels != in_numMips));
-   }
-   AssertFatal(mNumMipLevels <= c_maxMipLevels, "GBitmap::allocateBitmap: too many miplevels");
-
-   U32 faceStride = 0;
-   for (U32 mip = 0; mip < mNumMipLevels; mip++)
-      faceStride += getWidth(mip) * getHeight(mip) * mBytesPerPixel;
-
-   for (U32 face = 0; face < mNumFaces; face++)
-      mFaceOffsets[face] = face * faceStride;
-
-   U32 allocBytes = faceStride * mNumFaces;
-
-   // Set up the memory...
-   mByteSize = allocBytes;
-   mBits = new U8[mByteSize];
-
-   dMemset(mBits, 0xFF, mByteSize);
-
-   if (svBits != NULL)
-   {
-      dMemcpy(mBits, svBits, getMin(mByteSize, svByteSize));
-      delete[] svBits;
-   }
+   for (U32 i = 0; i < in_numFaces; i++)
+      mFaces[i].allocate(in_width, in_height, in_numMips, mBytesPerPixel);
 }
 
 //--------------------------------------------------------------------------
 void GBitmap::extrudeMipLevels(bool clearBorders)
 {
-   if(mNumMipLevels == 1)
-      allocateBitmap(getWidth(), getHeight(), true, getFormat());
+   if (getNumMipLevels() == 1)
+      // NOTE: previously this omitted getNumFaces(), so calling
+      // extrudeMipLevels() on a cubemap with only 1 mip level would
+      // silently reallocate it as a plain 2D (1-face) image.
+      allocateBitmap(getWidth(), getHeight(), true, getFormat(), getNumFaces());
 
+   for (U32 faceIndex = 0; faceIndex < getNumFaces(); faceIndex++)
+   {
+      Face& face = mFaces[faceIndex];
+      const U32 numMips = face.getNumMipLevels();
 
-   if (getFormat() == GFXFormatR5G5B5A1)
-   {
-      for (U32 i = 1; i < mNumMipLevels; i++)
-         bitmapExtrude5551(getBits(i - 1), getWritableBits(i), getHeight(i), getWidth(i));
-   }
-   else
-   {
-      for (U32 i = 1; i < mNumMipLevels; i++)
+      if (getFormat() == GFXFormatR5G5B5A1)
       {
-         bitmapResizeToOutput(
-            getBits(i - 1),
-            getHeight(i - 1),
-            getWidth(i - 1),
-            getWritableBits(i),
-            getHeight(i),
-            getWidth(i),
-            mBytesPerPixel,
-            getFormat()
-         );
+         for (U32 i = 1; i < numMips; i++)
+            bitmapExtrude5551(face.getBits(i - 1), face.getWritableBits(i), face.getHeight(i), face.getWidth(i));
       }
-   }
-
-   if (clearBorders)
-   {
-      for (U32 i = 1; i<mNumMipLevels; i++)
+      else
       {
-         U32 width = getWidth(i);
-         U32 height = getHeight(i);
-         if (height<3 || width<3)
-            // bmp is all borders at this mip level
-            dMemset(getWritableBits(i),0,width*height*mBytesPerPixel);
-         else
+         for (U32 i = 1; i < numMips; i++)
          {
-            width *= mBytesPerPixel;
-            U8 * bytes = getWritableBits(i);
-            U8 * end = bytes + (height-1)*width - mBytesPerPixel; // end = last row, 2nd column
-            // clear first row sans the last pixel
-            dMemset(bytes,0,width-mBytesPerPixel);
-            bytes -= mBytesPerPixel;
-            while (bytes<end)
+            bitmapResizeToOutput(
+               face.getBits(i - 1),
+               face.getHeight(i - 1),
+               face.getWidth(i - 1),
+               face.getWritableBits(i),
+               face.getHeight(i),
+               face.getWidth(i),
+               mBytesPerPixel,
+               getFormat()
+            );
+         }
+      }
+
+      if (clearBorders)
+      {
+         for (U32 i = 1; i < numMips; i++)
+         {
+            U32 width = face.getWidth(i);
+            U32 height = face.getHeight(i);
+            if (height < 3 || width < 3)
+               // bmp is all borders at this mip level
+               dMemset(face.getWritableBits(i), 0, width * height * mBytesPerPixel);
+            else
             {
-               // clear last pixel of row N-1 and first pixel of row N
-               bytes += width;
-               dMemset(bytes,0,mBytesPerPixel*2);
+               width *= mBytesPerPixel;
+               U8* bytes = face.getWritableBits(i);
+               U8* end = bytes + (height - 1) * width - mBytesPerPixel; // end = last row, 2nd column
+               // clear first row sans the last pixel
+               dMemset(bytes, 0, width - mBytesPerPixel);
+               bytes -= mBytesPerPixel;
+               while (bytes < end)
+               {
+                  // clear last pixel of row N-1 and first pixel of row N
+                  bytes += width;
+                  dMemset(bytes, 0, mBytesPerPixel * 2);
+               }
+               // clear last row sans the first pixel
+               dMemset(bytes + 2 * mBytesPerPixel, 0, width - mBytesPerPixel);
             }
-            // clear last row sans the first pixel
-            dMemset(bytes+2*mBytesPerPixel,0,width-mBytesPerPixel);
          }
       }
    }
@@ -535,67 +714,53 @@ void GBitmap::extrudeMipLevels(bool clearBorders)
 void GBitmap::chopTopMips(U32 mipsToChop)
 {
    U32 scalePower = getMin(mipsToChop, getNumMipLevels() - 1);
-   U32 newMipCount = getNumMipLevels() - scalePower;
 
-   U32 realWidth = getMax((U32)1, getWidth() >> scalePower);
-   U32 realHeight = getMax((U32)1, getHeight() >> scalePower);
-
-   U8 *destBits = mBits;
-
-   U32 destOffsets[c_maxMipLevels];
-
-   for (U32 i = scalePower; i<mNumMipLevels; i++)
-   {
-      // Copy to the new bitmap...
-      dMemcpy(destBits,
-         getWritableBits(i),
-         getSurfaceSize(i));
-
-      destOffsets[i - scalePower] = destBits - mBits;
-      destBits += getSurfaceSize(i);
-   }
-
-   dMemcpy(mMipLevelOffsets, destOffsets, sizeof(destOffsets));
-
-   mWidth = realWidth;
-   mHeight = realHeight;
-   mByteSize = destBits - mBits;
-   mNumMipLevels = newMipCount;
+   // Each face now owns its own memory independently, so chopping mips
+   // is just a per-face operation - see GBitmap::Face::chopTopMips().
+   for (U32 i = 0; i < getNumFaces(); i++)
+      mFaces[i].chopTopMips(scalePower);
 }
 
 //--------------------------------------------------------------------------
 void GBitmap::extrudeMipLevelsDetail()
 {
    AssertFatal(getFormat() == GFXFormatR8G8B8, "Error, only handles RGB for now...");
-   U32 i,j;
 
-   if(mNumMipLevels == 1)
-      allocateBitmap(getWidth(), getHeight(), true, getFormat());
+   if (getNumMipLevels() == 1)
+      allocateBitmap(getWidth(), getHeight(), true, getFormat(), getNumFaces());
 
-   for (i = 1; i < mNumMipLevels; i++) {
-      bitmapExtrudeRGB(getBits(i - 1), getWritableBits(i), getHeight(i-1), getWidth(i-1), mBytesPerPixel);
-   }
+   for (U32 faceIndex = 0; faceIndex < getNumFaces(); faceIndex++)
+   {
+      Face& face = mFaces[faceIndex];
+      const U32 numMips = face.getNumMipLevels();
+      U32 i, j;
 
-   // Ok, now that we have the levels extruded, we need to move the lower miplevels
-   //  closer to 0.5.
-   for (i = 1; i < mNumMipLevels - 1; i++) {
-      U8* pMipBits = (U8*)getWritableBits(i);
-      U32 numBytes = getWidth(i) * getHeight(i) * 3;
-
-      U32 shift    = i;
-      U32 start    = ((1 << i) - 1) * 0x80;
-
-      for (j = 0; j < numBytes; j++) {
-         U32 newVal = (start + pMipBits[j]) >> shift;
-         AssertFatal(newVal <= 255, "Error, oob");
-         pMipBits[j] = U8(newVal);
+      for (i = 1; i < numMips; i++) {
+         bitmapExtrudeRGB(face.getBits(i - 1), face.getWritableBits(i), face.getHeight(i - 1), face.getWidth(i - 1), mBytesPerPixel);
       }
+
+      // Ok, now that we have the levels extruded, we need to move the lower miplevels
+      //  closer to 0.5.
+      for (i = 1; i < numMips - 1; i++) {
+         U8* pMipBits = face.getWritableBits(i);
+         U32 numBytes = face.getWidth(i) * face.getHeight(i) * 3;
+
+         U32 shift = i;
+         U32 start = ((1 << i) - 1) * 0x80;
+
+         for (j = 0; j < numBytes; j++) {
+            U32 newVal = (start + pMipBits[j]) >> shift;
+            AssertFatal(newVal <= 255, "Error, oob");
+            pMipBits[j] = U8(newVal);
+         }
+      }
+      AssertFatal(face.getWidth(numMips - 1) == 1 && face.getHeight(numMips - 1) == 1,
+         "Error, last miplevel should be 1x1!");
+      U8* lastMip = face.getWritableBits(numMips - 1);
+      lastMip[0] = 0x80;
+      lastMip[1] = 0x80;
+      lastMip[2] = 0x80;
    }
-   AssertFatal(getWidth(mNumMipLevels - 1) == 1 && getHeight(mNumMipLevels - 1) == 1,
-               "Error, last miplevel should be 1x1!");
-   ((U8*)getWritableBits(mNumMipLevels - 1))[0] = 0x80;
-   ((U8*)getWritableBits(mNumMipLevels - 1))[1] = 0x80;
-   ((U8*)getWritableBits(mNumMipLevels - 1))[2] = 0x80;
 }
 
 //--------------------------------------------------------------------------
@@ -606,36 +771,18 @@ bool GBitmap::setFormat(GFXFormat fmt)
 
    PROFILE_SCOPE(GBitmap_setFormat);
 
-   // this is a nasty pointer math hack
-   // is there a quick way to calc pixels of a fully mipped bitmap?
-   U32 pixels = 0;
-   for (U32 i=0; i < mNumMipLevels; i++)
-      pixels += getHeight(i) * getWidth(i);
+   // NOTE: previously this converted mBits as one contiguous buffer
+   // sized from a single face's pixel count, so calling setFormat() on
+   // a cubemap silently reformatted only the first face and left the
+   // other 5 in the old format. Each face now converts independently.
+   const GFXFormat oldFmt = mInternalFormat;
+   const U32 newBytesPerPixel = getFormatBytesPerPixel(fmt);
 
-   if (getFormat() == GFXFormatR8G8B8 && fmt == GFXFormatR5G5B5A1)
-   {
-#ifdef _XBOX
-      bitmapConvertRGB_to_1555(mBits, pixels);
-#else
-      bitmapConvertRGB_to_5551(mBits, pixels);
-#endif
-      mInternalFormat = GFXFormatR5G5B5A1;
-      mBytesPerPixel = 2;
-   }
-   else
-   {
-      bitmapConvertToOutput(&mBits, pixels, getFormat(), fmt);
-      mInternalFormat = fmt;
-      mBytesPerPixel = getFormatBytesPerPixel(fmt);
-   }
+   for (U32 i = 0; i < getNumFaces(); i++)
+      mFaces[i].convertFormat(oldFmt, fmt, newBytesPerPixel);
 
-   
-   U32 offset = 0;
-   for (U32 j=0; j < mNumMipLevels; j++)
-   {
-      mMipLevelOffsets[j] = offset;
-      offset += getHeight(j) * getWidth(j) * mBytesPerPixel;
-   }
+   mInternalFormat = fmt;
+   mBytesPerPixel = newBytesPerPixel;
 
    return true;
 }
@@ -646,7 +793,7 @@ bool GBitmap::checkForTransparency()
 {
    mHasTransparency = false;
 
-   if (!mBits || mByteSize == 0)
+   if (getFaceByteSize() == 0)
       return false;
 
    ColorI pixel(255, 255, 255, 255);
@@ -670,9 +817,13 @@ bool GBitmap::checkForTransparency()
       return false; // skip formats with no alpha
    }
 
-   for (U32 x = 0; x < mWidth; x++)
+   // NOTE: this only checks face 0 / mip 0, same as before - a cubemap
+   // whose transparency lives only on another face will still be missed.
+   // Not addressed here; see getColor()/setColor() for the face-aware
+   // convenience overloads if you need to check every face.
+   for (U32 x = 0; x < getWidth(); x++)
    {
-      for (U32 y = 0; y < mHeight; y++)
+      for (U32 y = 0; y < getHeight(); y++)
       {
          if (getColor(x, y, pixel))
          {
@@ -695,21 +846,21 @@ LinearColorF GBitmap::sampleTexel(F32 u, F32 v, bool retAlpha) const
    // normally sampling wraps all the way around at 1.0,
    // but locking doesn't support this, and we seem to calc
    // the uv based on a clamped 0 - 1...
-   Point2F max((F32)(getWidth()-1), (F32)(getHeight()-1));
+   Point2F max((F32)(getWidth() - 1), (F32)(getHeight() - 1));
    Point2F posf;
-   posf.x = mClampF(((u) * max.x), 0.0f, max.x);
-   posf.y = mClampF(((v) * max.y), 0.0f, max.y);
+   posf.x = mClampF(((u)*max.x), 0.0f, max.x);
+   posf.y = mClampF(((v)*max.y), 0.0f, max.y);
    Point2I posi((S32)posf.x, (S32)posf.y);
 
-   const U8 *buffer = getBits();
+   const U8* buffer = getBits();
    U32 lexelindex = ((posi.y * getWidth()) + posi.x) * mBytesPerPixel;
 
-   if(mBytesPerPixel == 2)
+   if (mBytesPerPixel == 2)
    {
       //U16 *buffer = (U16 *)lockrect->pBits;
    }
-   else if(mBytesPerPixel > 2)
-   {     
+   else if (mBytesPerPixel > 2)
+   {
       col.red = F32(buffer[lexelindex + 0]) / 255.0f;
       col.green = F32(buffer[lexelindex + 1]) / 255.0f;
       col.blue = F32(buffer[lexelindex + 2]) / 255.0f;
@@ -728,10 +879,20 @@ LinearColorF GBitmap::sampleTexel(F32 u, F32 v, bool retAlpha) const
 //--------------------------------------------------------------------------
 bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor, const U32 mipLevel, const U32 face) const
 {
-   if (x >= mWidth || y >= mHeight)
+   // NOTE: previously these clamps used "getNumMipLevels() < mipLevel" /
+   // "getNumFaces() < face", which is off-by-one - passing exactly
+   // getNumMipLevels() (or getNumFaces()) as an index fell through
+   // unclamped instead of being pulled back to the last valid index.
+   const U32 targMip = (mipLevel >= getNumMipLevels()) ? getNumMipLevels() - 1 : mipLevel;
+   const U32 targFace = (face >= getNumFaces()) ? getNumFaces() - 1 : face;
+
+   // Bounds-check against the *target mip's* dimensions, not the base
+   // (mip 0) width/height - a higher mip level is smaller, so checking
+   // against mWidth/mHeight let out-of-range x/y through and read past
+   // the end of that mip's surface.
+   if (x >= getWidth(targMip) || y >= getHeight(targMip))
       return false;
-   U32 targMip = getNumMipLevels() < mipLevel ? getNumMipLevels()-1 : mipLevel;
-   U32 targFace = getNumFaces() < face ? getNumFaces()-1 : face;
+
    const U8* p = getAddress(x, y, targMip, targFace);
 
    switch (mInternalFormat)
@@ -827,7 +988,7 @@ bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor, const U32 mipLe
       rColor.set(p[0], p[1], p[2], 255);
       break;
 
-   // --- 32-bit ---
+      // --- 32-bit ---
    case GFXFormatR32F:
    {
       const F32* v = (F32*)p;
@@ -879,7 +1040,7 @@ bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor, const U32 mipLe
       rColor.set(p[2], p[1], p[0], p[3]);
       break;
 
-   // --- 64-bit ---
+      // --- 64-bit ---
    case GFXFormatR16G16B16A16:
    {
       const U16* v = (U16*)p;
@@ -934,17 +1095,20 @@ bool GBitmap::getColor(const U32 x, const U32 y, ColorI& rColor, const U32 mipLe
 //--------------------------------------------------------------------------
 
 
-bool GBitmap::setColor(const U32 x, const U32 y, const ColorI& rColor)
+bool GBitmap::setColor(const U32 x, const U32 y, const ColorI& rColor, const U32 mipLevel, const U32 face)
 {
-   if (x >= mWidth || y >= mHeight)
+   const U32 targMip = (mipLevel >= getNumMipLevels()) ? getNumMipLevels() - 1 : mipLevel;
+   const U32 targFace = (face >= getNumFaces()) ? getNumFaces() - 1 : face;
+
+   if (x >= getWidth(targMip) || y >= getHeight(targMip))
       return false;
 
-   U8* p = getAddress(x, y);
+   U8* p = getAddress(x, y, targMip, targFace);
 
    switch (mInternalFormat)
    {
 
-   // --- 8-bit ---
+      // --- 8-bit ---
    case GFXFormatA8:
       *p = rColor.alpha;
       break;
@@ -1020,7 +1184,7 @@ bool GBitmap::setColor(const U32 x, const U32 y, const ColorI& rColor)
       p[2] = rColor.blue;
       break;
 
-   // --- 32-bit ---
+      // --- 32-bit ---
    case GFXFormatR32F:
    {
       F32* v = (F32*)p;
@@ -1057,7 +1221,7 @@ bool GBitmap::setColor(const U32 x, const U32 y, const ColorI& rColor)
       p[3] = rColor.alpha;
       break;
 
-   // --- 64-bit ---
+      // --- 64-bit ---
    case GFXFormatR16G16B16A16:
    {
       U16* v = (U16*)p;
@@ -1098,10 +1262,10 @@ bool GBitmap::setColor(const U32 x, const U32 y, const ColorI& rColor)
 }
 
 //--------------------------------------------------------------------------
-U8 GBitmap::getChanelValueAt(U32 x, U32 y, U32 chan)
+U8 GBitmap::getChanelValueAt(U32 x, U32 y, U32 chan, const U32 mipLevel, const U32 face)
 {
-   ColorI pixelColor = ColorI(255,255,255,255);
-   getColor(x, y, pixelColor);
+   ColorI pixelColor = ColorI(255, 255, 255, 255);
+   getColor(x, y, pixelColor, mipLevel, face);
    if (mInternalFormat == GFXFormatL16 || mInternalFormat == GFXFormatL8)
    {
       chan = 0;
@@ -1116,10 +1280,21 @@ U8 GBitmap::getChanelValueAt(U32 x, U32 y, U32 chan)
 
 //-----------------------------------------------------------------------------
 
-bool GBitmap::combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const TextureOp combineOp )
+bool GBitmap::combine(const GBitmap* bitmapA, const GBitmap* bitmapB, const TextureOp combineOp)
 {
+   // combine() resizes/reformats based only on width/height and reads/
+   // writes via the default (face 0) accessors, so it silently ignores
+   // every other face of a multi-face (cubemap/array) bitmap. Fail
+   // loudly instead of returning a bitmap that looks plausible but is
+   // only correct on one face.
+   if (bitmapA->getNumFaces() > 1 || bitmapB->getNumFaces() > 1)
+   {
+      Con::errorf("GBitmap::combine - multi-face bitmaps (cubemaps/arrays) are not supported");
+      return false;
+   }
+
    // Check bitmapA format
-   switch( bitmapA->getFormat() )
+   switch (bitmapA->getFormat())
    {
    case GFXFormatR8G8B8:
    case GFXFormatR8G8B8X8:
@@ -1127,12 +1302,12 @@ bool GBitmap::combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const Tex
       break;
 
    default:
-      Con::errorf( "GBitmap::combine - invalid format for bitmapA" );
+      Con::errorf("GBitmap::combine - invalid format for bitmapA");
       return false;
    }
 
    // Check bitmapB format
-   switch( bitmapB->getFormat() )
+   switch (bitmapB->getFormat())
    {
    case GFXFormatR8G8B8:
    case GFXFormatR8G8B8X8:
@@ -1140,68 +1315,68 @@ bool GBitmap::combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const Tex
       break;
 
    default:
-      Con::errorf( "GBitmap::combine - invalid format for bitmapB" );
+      Con::errorf("GBitmap::combine - invalid format for bitmapB");
       return false;
    }
 
    // Determine format of result texture
    // CodeReview: This is dependent on the order of the GFXFormat enum. [5/11/2007 Pat]
-   GFXFormat resFmt = static_cast<GFXFormat>( getMax( bitmapA->getFormat(), bitmapB->getFormat() ) );
-   U32 resWidth = getMax( bitmapA->getWidth(), bitmapB->getWidth() );
-   U32 resHeight = getMax( bitmapA->getHeight(), bitmapB->getHeight() );
+   GFXFormat resFmt = static_cast<GFXFormat>(getMax(bitmapA->getFormat(), bitmapB->getFormat()));
+   U32 resWidth = getMax(bitmapA->getWidth(), bitmapB->getWidth());
+   U32 resHeight = getMax(bitmapA->getHeight(), bitmapB->getHeight());
 
    // Adjust size OF bitmap based on the biggest one
-   if( bitmapA->getWidth() != bitmapB->getWidth() ||
-       bitmapA->getHeight() != bitmapB->getHeight() )
+   if (bitmapA->getWidth() != bitmapB->getWidth() ||
+      bitmapA->getHeight() != bitmapB->getHeight())
    {
       // Delete old bitmap
       deleteImage();
 
       // Allocate new one
-      allocateBitmap( resWidth, resHeight, false, resFmt );
+      allocateBitmap(resWidth, resHeight, false, resFmt);
    }
-   
+
    // Adjust format of result bitmap (if resFmt == getFormat() it will not perform the format convert)
-   setFormat( resFmt );
+   setFormat(resFmt);
 
    // Perform combine
-   U8 *destBits = getWritableBits();
-   const U8 *aBits = bitmapA->getBits();
-   const U8 *bBits = bitmapB->getBits();
+   U8* destBits = getWritableBits();
+   const U8* aBits = bitmapA->getBits();
+   const U8* bBits = bitmapB->getBits();
 
-   for( S32 y = 0; y < getHeight(); y++ )
+   for (S32 y = 0; y < getHeight(); y++)
    {
-      for( S32 x = 0; x < getWidth(); x++ )
+      for (S32 x = 0; x < getWidth(); x++)
       {
-         for( S32 _byte = 0; _byte < mBytesPerPixel; _byte++ )
+         for (S32 _byte = 0; _byte < mBytesPerPixel; _byte++)
          {
             U8 pxA = 0;
             U8 pxB = 0;
 
             // Get contributions from A and B
-            if( y < bitmapA->getHeight() && 
-                x < bitmapA->getWidth() &&
-                _byte < bitmapA->mBytesPerPixel )
+            if (y < bitmapA->getHeight() &&
+               x < bitmapA->getWidth() &&
+               _byte < bitmapA->getBytesPerPixel())
                pxA = *aBits++;
 
-            if( y < bitmapB->getHeight() && 
+            if (y < bitmapB->getHeight() &&
                x < bitmapB->getWidth() &&
-               _byte < bitmapB->mBytesPerPixel )
+               _byte < bitmapB->getBytesPerPixel())
                pxB = *bBits++;
 
             // Combine them (clamp values 0-U8_MAX)
-            switch( combineOp )
+            switch (combineOp)
             {
-               case Add:
-                  *destBits++ = getMin( U8( pxA + pxB ), U8_MAX );
-                  break;
+            case Add:
+               *destBits++ = getMin(U8(pxA + pxB), U8_MAX);
+               break;
 
-               case Subtract:
-                  *destBits++ = getMax( U8( pxA - pxB ), U8( 0 ) );
-                  break;
-               default:
-                  AssertFatal(false, "GBitmap::combine - Invalid combineOp");
-                  break;
+            case Subtract:
+               *destBits++ = getMax(U8(pxA - pxB), U8(0));
+               break;
+            default:
+               AssertFatal(false, "GBitmap::combine - Invalid combineOp");
+               break;
             }
          }
       }
@@ -1210,37 +1385,43 @@ bool GBitmap::combine( const GBitmap *bitmapA, const GBitmap *bitmapB, const Tex
    return true;
 }
 
-void GBitmap::fill( const ColorI &rColor )
+void GBitmap::fill(const ColorI& rColor)
 {
-   // Set the first pixel using the slow 
-   // but proper method.
-   setColor( 0, 0, rColor );
    mHasTransparency = rColor.alpha < 255;
-      
-   // Now fill the first row of the bitmap by 
-   // copying the first pixel across the row.
-   const U32 stride = getWidth() * mBytesPerPixel;
-   const U8 *src = getBits();
-   U8 *dest = getWritableBits() + mBytesPerPixel;
-   const U8 *end = src + stride;
-   for ( ; dest != end; dest += mBytesPerPixel )
-      dMemcpy( dest, src, mBytesPerPixel );
 
-   // Now copy the first row to all the others.
-   // 
-   // TODO: This could adaptively size the copy 
-   // amount to copy more rows from the source
-   // and reduce the total number of memcpy calls.
-   //
-   dest = getWritableBits() + stride;
-   end = src + ( stride * getHeight() );
-   for ( ; dest != end; dest += stride )
-      dMemcpy( dest, src, stride );
+   for (U32 faceIndex = 0; faceIndex < getNumFaces(); faceIndex++)
+   {
+      Face& face = mFaces[faceIndex];
+
+      // Set the first pixel using the slow but proper (format-aware) method.
+      setColor(0, 0, rColor, 0, faceIndex);
+
+      // Now fill the first row of the face by copying the first
+      // pixel across the row.
+      const U32 stride = face.getWidth() * mBytesPerPixel;
+      const U8* src = face.getBits();
+      U8* dest = face.getWritableBits() + mBytesPerPixel;
+      const U8* end = src + stride;
+      for (; dest != end; dest += mBytesPerPixel)
+         dMemcpy(dest, src, mBytesPerPixel);
+
+      // Now copy the first row to all the others.
+      //
+      // TODO: This could adaptively size the copy
+      // amount to copy more rows from the source
+      // and reduce the total number of memcpy calls.
+      //
+      dest = face.getWritableBits() + stride;
+      end = src + (stride * face.getHeight());
+      for (; dest != end; dest += stride)
+         dMemcpy(dest, src, stride);
+   }
 }
 
 void GBitmap::fillWhite()
 {
-   dMemset( getWritableBits(), 255, mByteSize );
+   for (U32 i = 0; i < getNumFaces(); i++)
+      dMemset(mFaces[i].getWritableBits(), 255, mFaces[i].getByteSize());
    mHasTransparency = false;
 }
 
@@ -1255,32 +1436,38 @@ GBitmap* GBitmap::createPaddedBitmap() const
    U32 width = getWidth();
    U32 height = getHeight();
 
-   U32 newWidth  = getNextPow2(getWidth());
+   U32 newWidth = getNextPow2(getWidth());
    U32 newHeight = getNextPow2(getHeight());
 
-   GBitmap* pReturn = new GBitmap(newWidth, newHeight, false, getFormat());
+   GBitmap* pReturn = new GBitmap(newWidth, newHeight, false, getFormat(), getNumFaces());
 
-   for (U32 i = 0; i < height; i++) 
+   for (U32 faceIndex = 0; faceIndex < getNumFaces(); faceIndex++)
    {
-      U8*       pDest = (U8*)pReturn->getAddress(0, i);
-      const U8* pSrc  = (const U8*)getAddress(0, i);
+      const Face& srcFace = getFace(faceIndex);
+      Face& destFace = pReturn->getFace(faceIndex);
 
-      dMemcpy(pDest, pSrc, width * mBytesPerPixel);
+      for (U32 i = 0; i < height; i++)
+      {
+         U8* pDest = destFace.getAddress(0, i);
+         const U8* pSrc = srcFace.getAddress(0, i);
 
-      pDest += width * mBytesPerPixel;
-      // set the src pixel to the last pixel in the row
-      const U8 *pSrcPixel = pDest - mBytesPerPixel; 
+         dMemcpy(pDest, pSrc, width * mBytesPerPixel);
 
-      for(U32 j = width; j < newWidth; j++)
-         for(U32 k = 0; k < mBytesPerPixel; k++)
-            *pDest++ = pSrcPixel[k];
-   }
+         pDest += width * mBytesPerPixel;
+         // set the src pixel to the last pixel in the row
+         const U8* pSrcPixel = pDest - mBytesPerPixel;
 
-   for(U32 i = height; i < newHeight; i++)
-   {
-      U8* pDest = (U8*)pReturn->getAddress(0, i);
-      U8* pSrc = (U8*)pReturn->getAddress(0, height-1);
-      dMemcpy(pDest, pSrc, newWidth * mBytesPerPixel);
+         for (U32 j = width; j < newWidth; j++)
+            for (U32 k = 0; k < mBytesPerPixel; k++)
+               *pDest++ = pSrcPixel[k];
+      }
+
+      for (U32 i = height; i < newHeight; i++)
+      {
+         U8* pDest = destFace.getAddress(0, i);
+         U8* pSrc = destFace.getAddress(0, height - 1);
+         dMemcpy(pDest, pSrc, newWidth * mBytesPerPixel);
+      }
    }
 
    return pReturn;
@@ -1292,63 +1479,77 @@ GBitmap* GBitmap::createPow2Bitmap() const
       return NULL;
 
    AssertFatal(getNumMipLevels() == 1,
-               "Cannot have non-pow2 bitmap with miplevels");
+      "Cannot have non-pow2 bitmap with miplevels");
 
    U32 width = getWidth();
    U32 height = getHeight();
 
-   U32 newWidth  = getNextPow2(getWidth());
+   U32 newWidth = getNextPow2(getWidth());
    U32 newHeight = getNextPow2(getHeight());
 
-   GBitmap* pReturn = new GBitmap(newWidth, newHeight, false, getFormat());
+   GBitmap* pReturn = new GBitmap(newWidth, newHeight, false, getFormat(), getNumFaces());
 
-   U8*       pDest = (U8*)pReturn->getAddress(0, 0);
-   const U8* pSrc  = (const U8*)getAddress(0, 0);
+   F32 yCoeff = (F32)height / (F32)newHeight;
+   F32 xCoeff = (F32)width / (F32)newWidth;
 
-   F32 yCoeff = (F32) height / (F32) newHeight;
-   F32 xCoeff = (F32) width / (F32) newWidth;
-
-   F32 currY = 0.0f;
-   for (U32 y = 0; y < newHeight; y++)
+   for (U32 faceIndex = 0; faceIndex < getNumFaces(); faceIndex++)
    {
-      F32 currX = 0.0f;
-      //U32 yDestOffset = (pReturn->mWidth * pReturn->mBytesPerPixel) * y;
-      //U32 xDestOffset = 0;
-      //U32 ySourceOffset = (U32)((mWidth * mBytesPerPixel) * currY);
-      //F32 xSourceOffset = 0.0f;
-      for (U32 x = 0; x < newWidth; x++)
+      const Face& srcFace = getFace(faceIndex);
+      Face& destFace = pReturn->getFace(faceIndex);
+
+      F32 currY = 0.0f;
+      for (U32 y = 0; y < newHeight; y++)
       {
-         pDest = (U8*) pReturn->getAddress(x, y);
-         pSrc = (U8*) getAddress((S32)currX, (S32)currY);
-         for (U32 p = 0; p < pReturn->mBytesPerPixel; p++) 
+         F32 currX = 0.0f;
+         for (U32 x = 0; x < newWidth; x++)
          {
-            pDest[p] = pSrc[p];
+            U8* pDest = destFace.getAddress(x, y);
+            const U8* pSrc = srcFace.getAddress((S32)currX, (S32)currY);
+            for (U32 p = 0; p < mBytesPerPixel; p++)
+               pDest[p] = pSrc[p];
+            currX += xCoeff;
          }
-         currX += xCoeff;
+         currY += yCoeff;
       }
-      currY += yCoeff;
    }
 
    return pReturn;
 }
 
-void GBitmap::copyChannel( U32 index, GBitmap *outBitmap ) const
+void GBitmap::copyChannel(U32 index, GBitmap* outBitmap) const
 {
-   AssertFatal( index < mBytesPerPixel, "GBitmap::copyChannel() - Bad channel offset!" );
-   AssertFatal( outBitmap, "GBitmap::copyChannel() - Null output bitmap!" );   
-   AssertFatal( outBitmap->getWidth() == getWidth(), "GBitmap::copyChannel() - Width mismatch!" );
-   AssertFatal( outBitmap->getHeight() == getHeight(), "GBitmap::copyChannel() - Height mismatch!" );
+   AssertFatal(index < mBytesPerPixel, "GBitmap::copyChannel() - Bad channel offset!");
+   AssertFatal(outBitmap, "GBitmap::copyChannel() - Null output bitmap!");
+   AssertFatal(outBitmap->getWidth() == getWidth(), "GBitmap::copyChannel() - Width mismatch!");
+   AssertFatal(outBitmap->getHeight() == getHeight(), "GBitmap::copyChannel() - Height mismatch!");
+   AssertFatal(outBitmap->getNumFaces() == getNumFaces(), "GBitmap::copyChannel() - Face count mismatch!");
+   AssertFatal(outBitmap->getNumMipLevels() == getNumMipLevels(), "GBitmap::copyChannel() - Mip level count mismatch!");
 
-   U8 *outBits = outBitmap->getWritableBits();
+   // NOTE: the old implementation walked the *entire* buffer as one
+   // linear range (getBits() through getBits()+mByteSize), relying on
+   // every face/mip being contiguous in a single allocation to visit
+   // every face "for free". That's no longer true - each face now owns
+   // independent memory - so this walks faces and mip levels explicitly.
    const U32 outBytesPerPixel = outBitmap->getBytesPerPixel();
-   const U8 *srcBits = getBits() + index;
-   const U8 *endBits = getBits() + mByteSize;
 
-   for (  ; srcBits < endBits;  )
+   for (U32 faceIndex = 0; faceIndex < getNumFaces(); faceIndex++)
    {
-      *outBits = *srcBits;
-      outBits += outBytesPerPixel;
-      srcBits += mBytesPerPixel;
+      const Face& srcFace = getFace(faceIndex);
+      Face& destFace = outBitmap->getFace(faceIndex);
+
+      for (U32 mip = 0; mip < getNumMipLevels(); mip++)
+      {
+         const U8* srcBits = srcFace.getBits(mip) + index;
+         U8* destBits = destFace.getWritableBits(mip);
+         const U32 numPixels = srcFace.getWidth(mip) * srcFace.getHeight(mip);
+
+         for (U32 p = 0; p < numPixels; p++)
+         {
+            *destBits = *srcBits;
+            destBits += outBytesPerPixel;
+            srcBits += mBytesPerPixel;
+         }
+      }
    }
 }
 
@@ -1357,28 +1558,32 @@ void GBitmap::copyChannel( U32 index, GBitmap *outBitmap ) const
 bool GBitmap::read(Stream& io_rStream)
 {
    PROFILE_SCOPE(GBitmap_Read);
-   // Handle versioning
+
    U32 version;
    io_rStream.read(&version);
-   AssertFatal(version == csFileVersion, "Bitmap::read: incorrect file version");
+   if (version != csFileVersion)
+   {
+      // This is an internal binary cache format (.dbm alongside a
+      // source asset), not a durable file format - any version mismatch
+      // (including the pre-Face-refactor v3/v4 layout, which isn't
+      // compatible with the new per-face block layout at all) simply
+      // fails to load here; the caller (Resource<GBitmap>::create())
+      // regenerates the cache from the source asset in that case.
+      Con::errorf("GBitmap::read - cache file version (%d) does not match what this build writes (%d); it will be regenerated from source.", version, csFileVersion);
+      return false;
+   }
 
-   //-------------------------------------- Read the object
    U32 fmt;
    io_rStream.read(&fmt);
    mInternalFormat = GFXFormat(fmt);
    mBytesPerPixel = getFormatBytesPerPixel(mInternalFormat);
 
-   io_rStream.read(&mByteSize);
+   U32 numFaces;
+   io_rStream.read(&numFaces);
 
-   mBits = new U8[mByteSize];
-   io_rStream.read(mByteSize, mBits);
-
-   io_rStream.read(&mWidth);
-   io_rStream.read(&mHeight);
-
-   io_rStream.read(&mNumMipLevels);
-   for (U32 i = 0; i < c_maxMipLevels; i++)
-      io_rStream.read(&mMipLevelOffsets[i]);
+   mFaces.setSize(numFaces);
+   for (U32 i = 0; i < numFaces; i++)
+      mFaces[i].read(io_rStream);
 
    checkForTransparency();
 
@@ -1388,21 +1593,13 @@ bool GBitmap::read(Stream& io_rStream)
 bool GBitmap::write(Stream& io_rStream) const
 {
    PROFILE_SCOPE(GBitmap_Write);
-   // Handle versioning
+
    io_rStream.write(csFileVersion);
-
-   //-------------------------------------- Write the object
    io_rStream.write(U32(mInternalFormat));
+   io_rStream.write(getNumFaces());
 
-   io_rStream.write(mByteSize);
-   io_rStream.write(mByteSize, mBits);
-
-   io_rStream.write(mWidth);
-   io_rStream.write(mHeight);
-
-   io_rStream.write(mNumMipLevels);
-   for (U32 i = 0; i < c_maxMipLevels; i++)
-      io_rStream.write(mMipLevelOffsets[i]);
+   for (U32 i = 0; i < getNumFaces(); i++)
+      mFaces[i].write(io_rStream);
 
    return (io_rStream.getStatus() == Stream::Ok);
 }
@@ -1414,11 +1611,11 @@ bool GBitmap::write(Stream& io_rStream) const
 bool  GBitmap::readBitmap(const String& bmType, const Torque::Path& path)
 {
    PROFILE_SCOPE(ResourceGBitmap_readBitmap);
-   const GBitmap::Registration   *regInfo = GBitmap::sFindRegInfo( bmType );
+   const GBitmap::Registration* regInfo = GBitmap::sFindRegInfo(bmType);
 
-   if ( regInfo == NULL )
+   if (regInfo == NULL)
    {
-      Con::errorf( "[GBitmap::readBitmap] unable to find registration for extension [%s]", bmType.c_str() );
+      Con::errorf("[GBitmap::readBitmap] unable to find registration for extension [%s]", bmType.c_str());
       return false;
    }
 
@@ -1439,7 +1636,7 @@ bool GBitmap::readBitmapStream(const String& bmType, Stream& ioStream, U32 len)
    return regInfo->readStreamFunc(ioStream, this, len);
 }
 
-bool  GBitmap::writeBitmap( const String &bmType, const Torque::Path& path, U32 compressionLevel )
+bool  GBitmap::writeBitmap(const String& bmType, const Torque::Path& path, U32 compressionLevel)
 {
    FileStream stream;
    if (!stream.open(path, Torque::FS::File::Write))
@@ -1452,15 +1649,15 @@ bool  GBitmap::writeBitmap( const String &bmType, const Torque::Path& path, U32 
    // free file for stb
    stream.close();
 
-   const GBitmap::Registration   *regInfo = GBitmap::sFindRegInfo( bmType );
+   const GBitmap::Registration* regInfo = GBitmap::sFindRegInfo(bmType);
 
-   if ( regInfo == NULL )
+   if (regInfo == NULL)
    {
-      Con::errorf( "[GBitmap::writeBitmap] unable to find registration for extension [%s]", bmType.c_str() );
+      Con::errorf("[GBitmap::writeBitmap] unable to find registration for extension [%s]", bmType.c_str());
       return false;
    }
 
-   return regInfo->writeFunc(path, this, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel );
+   return regInfo->writeFunc(path, this, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel);
 }
 
 bool GBitmap::writeBitmapStream(const String& bmType, Stream& ioStream, U32 compressionLevel)
@@ -1476,12 +1673,12 @@ bool GBitmap::writeBitmapStream(const String& bmType, Stream& ioStream, U32 comp
    return regInfo->writeStreamFunc(bmType, ioStream, this, (compressionLevel == U32_MAX) ? regInfo->defaultCompression : compressionLevel);
 }
 
-template<> void *Resource<GBitmap>::create(const Torque::Path &path)
+template<> void* Resource<GBitmap>::create(const Torque::Path& path)
 {
-   PROFILE_SCOPE( ResourceGBitmap_create );
+   PROFILE_SCOPE(ResourceGBitmap_create);
 
 #ifdef TORQUE_DEBUG_RES_MANAGER
-   Con::printf( "Resource<GBitmap>::create - [%s]", path.getFullPath().c_str() );
+   Con::printf("Resource<GBitmap>::create - [%s]", path.getFullPath().c_str());
 #endif
 
    GBitmap* bmp = new GBitmap;
@@ -1509,16 +1706,16 @@ template<> void *Resource<GBitmap>::create(const Torque::Path &path)
       }
    }
 
-   stream.open( path.getFullPath(), Torque::FS::File::Read );
+   stream.open(path.getFullPath(), Torque::FS::File::Read);
 
-   if ( stream.getStatus() != Stream::Ok )
+   if (stream.getStatus() != Stream::Ok)
    {
-      Con::errorf( "Resource<GBitmap>::create - failed to open '%s'", path.getFullPath().c_str() );
+      Con::errorf("Resource<GBitmap>::create - failed to open '%s'", path.getFullPath().c_str());
       return NULL;
    }
 
    const String extension = path.getExtension();
-   if( !bmp->readBitmap( extension, path ) )
+   if (!bmp->readBitmap(extension, path))
    {
       // we can only get here if the stream was successful, so attempt to read the stream.
       Con::warnf("Was unable to load as file, going to try the stream instead.");
@@ -1535,72 +1732,79 @@ template<> void *Resource<GBitmap>::create(const Torque::Path &path)
 
 template<> ResourceBase::Signature  Resource<GBitmap>::signature()
 {
-   return MakeFourCC('b','i','t','m');
+   return MakeFourCC('b', 'i', 't', 'm');
 }
 
-Resource<GBitmap> GBitmap::load(const Torque::Path &path)
+Resource<GBitmap> GBitmap::load(const Torque::Path& path)
 {
-   Resource<GBitmap> ret = _load( path );
-   if ( ret != NULL )
+   Resource<GBitmap> ret = _load(path);
+   if (ret != NULL)
       return ret;
 
    // Do a recursive search.
-   return _search( path );
+   return _search(path);
 }
 
-Resource<GBitmap> GBitmap::_load(const Torque::Path &path)
+Resource<GBitmap> GBitmap::_load(const Torque::Path& path)
 {
-   PROFILE_SCOPE( GBitmap_load );
+   PROFILE_SCOPE(GBitmap_load);
 
-   if ( Torque::FS::IsFile( path ) )
-      return ResourceManager::get().load( path );
-  
+   if (Torque::FS::IsFile(path))
+      return ResourceManager::get().load(path);
+
    Path foundPath;
-   if ( GBitmap::sFindFile( path, &foundPath ) )
+   if (GBitmap::sFindFile(path, &foundPath))
    {
-      Resource<GBitmap> ret = ResourceManager::get().load( foundPath );
-      if ( ret != NULL )
+      Resource<GBitmap> ret = ResourceManager::get().load(foundPath);
+      if (ret != NULL)
          return ret;
    }
 
-   return Resource< GBitmap >( NULL );
+   return Resource< GBitmap >(NULL);
 }
 
-Resource<GBitmap> GBitmap::_search(const Torque::Path &path)
+Resource<GBitmap> GBitmap::_search(const Torque::Path& path)
 {
-   PROFILE_SCOPE( GBitmap_search );
+   PROFILE_SCOPE(GBitmap_search);
 
    // If unable to load texture in current directory
    // look in the parent directory.  But never look in the root.
-   Path newPath( path );
-   while ( true )
+   Path newPath(path);
+   while (true)
    {
       String filePath = newPath.getPath();
-      String::SizeType slash = filePath.find( '/', filePath.length(), String::Right );
+      String::SizeType slash = filePath.find('/', filePath.length(), String::Right);
 
-      if ( slash == String::NPos )
+      if (slash == String::NPos)
          break;
 
-      slash = filePath.find( '/', filePath.length(), String::Right );
-      if ( slash == String::NPos )
+      slash = filePath.find('/', filePath.length(), String::Right);
+      if (slash == String::NPos)
          break;
 
-      String truncPath = filePath.substr( 0, slash );
-      newPath.setPath( truncPath );
+      String truncPath = filePath.substr(0, slash);
+      newPath.setPath(truncPath);
 
-      Resource<GBitmap> ret = _load( newPath );
-      if ( ret != NULL )
+      Resource<GBitmap> ret = _load(newPath);
+      if (ret != NULL)
          return ret;
    }
 
-   return Resource< GBitmap >( NULL );
+   return Resource< GBitmap >(NULL);
+}
+
+U32 GBitmap::getByteSize() const
+{
+   U32 total = 0;
+   for (U32 i = 0; i < mFaces.size(); i++)
+      total += mFaces[i].getByteSize();
+   return total;
 }
 
 U32 GBitmap::getSurfaceSize(const U32 mipLevel) const
 {
-   // Bump by the mip level.
-   U32 height = getMax(U32(1), mHeight >> mipLevel);
-   U32 width = getMax(U32(1), mWidth >> mipLevel);
+   U32 height = getHeight(mipLevel);
+   U32 width = getWidth(mipLevel);
 
    if (mInternalFormat >= GFXFormatBC1 && mInternalFormat <= GFXFormatBC3)
    {
@@ -1627,23 +1831,23 @@ U32 GBitmap::getSurfaceSize(const U32 mipLevel) const
    }
    else
    {
-      return height * width* mBytesPerPixel;
+      return height * width * mBytesPerPixel;
    }
 }
 
-DefineEngineFunction( getBitmapInfo, String, ( const char *filename ),,
+DefineEngineFunction(getBitmapInfo, String, (const char* filename), ,
    "Returns image info in the following format: width TAB height TAB bytesPerPixel TAB format. "
    "It will return an empty string if the file is not found.\n"
-   "@ingroup Rendering\n" )
+   "@ingroup Rendering\n")
 {
-   Resource<GBitmap> image = GBitmap::load( filename );
-   if ( !image )
+   Resource<GBitmap> image = GBitmap::load(filename);
+   if (!image)
       return String::EmptyString;
 
-   return String::ToString( "%d\t%d\t%d\t%d", image->getWidth(), 
-                                          image->getHeight(),
-                                          image->getBytesPerPixel(),
-                                          image->getFormat());
+   return String::ToString("%d\t%d\t%d\t%d", image->getWidth(),
+      image->getHeight(),
+      image->getBytesPerPixel(),
+      image->getFormat());
 }
 
 DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const char* bitmapDest, S32 resolutionSize), ("", "", 256),
@@ -1721,14 +1925,14 @@ DefineEngineFunction(saveScaledImage, bool, (const char* bitmapSource, const cha
    Torque::Path destinationPath = Torque::Path(bitmapDest);
    destinationPath.setExtension("png");
 
-   if(!image->writeBitmap("png", destinationPath.getFullPath()))
+   if (!image->writeBitmap("png", destinationPath.getFullPath()))
    {
       Con::errorf("saveScaledImage() - Error writing %s !", bitmapDest);
       delete image;
       return false;
    }
 
-   
+
    delete image;
    return true;
 }

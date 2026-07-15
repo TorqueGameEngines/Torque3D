@@ -546,7 +546,40 @@ void ProcessedShaderMaterial::_determineFeatures(  U32 stageNum,
    fd.features.filter( features );
 }
 
-bool ProcessedShaderMaterial::_createPasses( MaterialFeatureData &stageFeatures, U32 stageNum, const FeatureSet &features )
+AssetPtr<ImageAsset> ProcessedShaderMaterial::_getStageImageAsset(const FeatureType& type, U32 stageNum)
+{
+   if (!mMaterial)
+      return NULL;
+
+   if (type == MFT_DiffuseMap)
+      return mMaterial->getDiffuseMapAsset(stageNum);
+   if (type == MFT_NormalMap)
+      return mMaterial->getNormalMapAsset(stageNum);
+   if (type == MFT_DetailNormalMap)
+      return mMaterial->getDetailNormalMapAsset(stageNum);
+   if (type == MFT_OverlayMap)
+      return mMaterial->getOverlayMapAsset(stageNum);
+   if (type == MFT_LightMap)
+      return mMaterial->getLightMapAsset(stageNum);
+   if (type == MFT_ToneMap)
+      return mMaterial->getToneMapAsset(stageNum);
+   if (type == MFT_DetailMap)
+      return mMaterial->getDetailMapAsset(stageNum);
+   if (type == MFT_OrmMap)
+      return mMaterial->getORMConfigMapAsset(stageNum);
+   /*if (type == MFT_AOMap)
+      return mMaterial->getAOMapAsset(stageNum);
+   if (type == MFT_RoughMap)
+      return mMaterial->getRoughMapAsset(stageNum);
+   if (type == MFT_MetalMap)
+      return mMaterial->getMetalMapAsset(stageNum);*/
+   if (type == MFT_GlowMap)
+      return mMaterial->getGlowMapAsset(stageNum);
+
+   return NULL;
+}
+
+bool ProcessedShaderMaterial::_createPasses(MaterialFeatureData& stageFeatures, U32 stageNum, const FeatureSet& features)
 {
    // Creates passes for the given stage
    ShaderRenderPassData passData;
@@ -574,11 +607,19 @@ bool ProcessedShaderMaterial::_createPasses( MaterialFeatureData &stageFeatures,
       passData.mNumTexReg += numTexReg;
       passData.mFeatureData.features.addFeature( *info.type );
 
-#if defined(TORQUE_DEBUG) && defined( TORQUE_OPENGL)
       U32 oldTexNumber = texIndex;
-#endif
 
-      info.feature->setTexData( mStages[stageNum], stageFeatures, passData, texIndex );
+      info.feature->setTexData(mStages[stageNum], stageFeatures, passData, texIndex);
+
+      if (texIndex != oldTexNumber)
+      {
+         AssetPtr<ImageAsset> stageImageAsset = _getStageImageAsset(*info.type, stageNum);
+         if (stageImageAsset.notNull())
+         {
+            for (U32 texNum = oldTexNumber; texNum < texIndex; texNum++)
+               passData.mTexSlot[texNum].texImageAsset = stageImageAsset;
+         }
+      }
 
 #if defined(TORQUE_DEBUG) && defined( TORQUE_OPENGL)
       if(oldTexNumber != texIndex)
@@ -618,7 +659,7 @@ bool ProcessedShaderMaterial::_createPasses( MaterialFeatureData &stageFeatures,
    }
 
    return true;
-} 
+}
 
 void ProcessedShaderMaterial::_initMaterialParameters()
 {   

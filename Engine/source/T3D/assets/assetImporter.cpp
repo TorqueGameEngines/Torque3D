@@ -980,7 +980,9 @@ void AssetImporter::dumpActivityLog()
    Torque::Time::DateTime curTime;
    Torque::Time::getCurrentDateTime(curTime);
 
-   String logName = String("tools/logs/AssetImportLog_") + String::ToString(curTime.year + 1900) + "-" +
+   String firstAssetName = importingAssets.size() > 0 ? importingAssets[0]->assetName : "NoAsset";
+
+   String logName = String("tools/logs/AssetImportLog_") + firstAssetName + "_" + String::ToString(curTime.year + 1900) + "-" +
       String::ToString(curTime.month + 1) + "-" + String::ToString(curTime.day) + "_" +
       String::ToString(curTime.hour) + "-" + String::ToString(curTime.minute) + "-" + String::ToString(curTime.second)
       + "-" + String::ToString(curTime.microsecond) + ".log";

@@ -8,7 +8,7 @@ namespace math_backend::float3::dispatch
     // Install NEON backend
     void install_neon()
     {
-        gFloat3.add = float3_add_impl;
+        /*gFloat3.add = float3_add_impl;
         gFloat3.sub = float3_sub_impl;
         gFloat3.mul = float3_mul_impl;
         gFloat3.mul_scalar = float3_mul_scalar_impl;
@@ -20,6 +20,6 @@ namespace math_backend::float3::dispatch
         gFloat3.normalize = float3_normalize_impl;
         gFloat3.normalize_mag = float3_normalize_mag_impl;
         gFloat3.lerp = float3_lerp_impl;
-        gFloat3.cross = float3_cross_impl;
+        gFloat3.cross = float3_cross_impl;*/
     }
 }

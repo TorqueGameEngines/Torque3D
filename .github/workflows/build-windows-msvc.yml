@@ -22,18 +22,6 @@ jobs:
             matrix:
                 config:
                     - {
-                          name: "Windows MSVC Ninja",
-                          os: "windows-latest",
-                          build_type: "Release",
-                          cc: "cl",
-                          cxx: "cl",
-                          generator: "Ninja",
-                          cmake_args: "",
-                          compiler_family: "msvc",
-                          msvc_arch: "amd64",
-                          can_test: false,
-                      }
-                    - {
                           name: "Windows MSVC Visual Studio 2022",
                           os: "windows-2022",
                           build_type: "Release",

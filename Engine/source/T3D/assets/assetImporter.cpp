@@ -2008,11 +2008,11 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
       GuiTreeViewCtrl* shapeInfo = new GuiTreeViewCtrl();
       shapeInfo->registerObject();
 
-      if (fileExt.compare("dae") == 0)
+      if (fileExt.equal("dae", String::NoCase))
       {
          enumColladaForImport(filePath, shapeInfo, false);
       }
-      else if ((fileExt.compare("dts") == 0))
+      else if (fileExt.equal("dts", String::NoCase))
       {
          enumDTSForImport(filePath, shapeInfo);
       }
@@ -2102,11 +2102,11 @@ void AssetImporter::processShapeAnimationAsset(AssetImportObject* assetItem)
       GuiTreeViewCtrl* shapeInfo = new GuiTreeViewCtrl();
       shapeInfo->registerObject();
 
-      if (fileExt.compare("dae") == 0)
+      if (fileExt.equal("dae", String::NoCase))
       {
          enumColladaForImport(filePath, shapeInfo, false);
       }
-      else if ((fileExt.compare("dts") == 0)|| (fileExt.compare("dsq") == 0))
+      else if (fileExt.equal("dts", String::NoCase) || fileExt.equal("dsq", String::NoCase))
       {
          enumDTSForImport(filePath, shapeInfo);
       }

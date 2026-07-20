@@ -69,6 +69,9 @@ public:
       /// @see mTexType
      NamedTexTargetRef texTarget;
 
+     /// The ImageAsset bound to this slot, if any.
+     AssetPtr<ImageAsset> texImageAsset;
+
    } mTexSlot[Material::MAX_TEX_PER_PASS];
 
    U32 mTexType[Material::MAX_TEX_PER_PASS];

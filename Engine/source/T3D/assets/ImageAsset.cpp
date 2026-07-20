@@ -230,6 +230,11 @@ ImageAsset::ImageAsset() :
    mImageFile(StringTable->EmptyString()),
    mUseMips(true),
    mIsHDRImage(false),
+   mFilterType(GFXTextureFilter_COUNT),
+   mAddressMode(GFXAddress_COUNT),
+   mMaxAnisotropy(0),
+   mUseMipLODBias(false),
+   mMipLODBias(0.0f),
    mImageType(Albedo),
    mIsNamedTarget(false),
    mImageWidth(-1),
@@ -281,6 +286,30 @@ void ImageAsset::initPersistFields()
 
    addProtectedField("useMips", TypeBool, Offset(mUseMips, ImageAsset), &setGenMips, &defaultProtectedGetFn, &writeGenMips, "Generate mip maps?");
    addProtectedField("isHDRImage", TypeBool, Offset(mIsHDRImage, ImageAsset), &setTextureHDR, &defaultProtectedGetFn, &writeTextureHDR, "HDR Image?");
+
+   addField("filterType", TYPEID< GFXTextureFilterType >(), Offset(mFilterType, ImageAsset),
+      "Explicit texture filtering override for this image. Leave as the default "
+      "(or set to GFXTextureFilterNone) to let the material's own filtering/anisotropy "
+      "settings apply as normal; set to Point, Linear, or Anisotropic to force that "
+      "filtering mode whenever this image is bound, regardless of the material.");
+
+   addField("addressMode", TYPEID< GFXTextureAddressMode >(), Offset(mAddressMode, ImageAsset),
+      "Explicit U/V wrap mode override for this image. Leave as the default "
+      "(or set to GFXAddressWrap) to let the material decide; set to Clamp, "
+      "Mirror, Border, or MirrorOnce to force that wrap mode whenever this "
+      "image is bound, regardless of the material.");
+
+   addField("maxAnisotropy", TypeS32, Offset(mMaxAnisotropy, ImageAsset),
+      "Explicit anisotropy level override (e.g. 2/4/8/16). 0 (default) means "
+      "let the material decide. Only has an effect when filterType is "
+      "Anisotropic (or left unset and the material picks Anisotropic itself).");
+
+   addField("useMipLODBias", TypeBool, Offset(mUseMipLODBias, ImageAsset),
+      "Whether mipLODBias below should override the material's default of 0.");
+
+   addField("mipLODBias", TypeF32, Offset(mMipLODBias, ImageAsset),
+      "Explicit mip LOD bias override for this image. Only applied when "
+      "useMipLODBias is true.");
 
    addField("imageType", TypeImageAssetType, Offset(mImageType, ImageAsset), "What the main use-case for the image is for.");
 }
@@ -377,7 +406,7 @@ StringTableEntry ImageAsset::getAssetIdByFilename(StringTableEntry fileName)
                      return imgAsset;
                   }
                }
-               
+
             }
          }
       }
@@ -489,6 +518,10 @@ void ImageAsset::copyTo(SimObject* object)
    pAsset->setImageFile(getImageFile());
    pAsset->setGenMips(getGenMips());
    pAsset->setTextureHDR(getTextureHDR());
+   pAsset->setFilterType(getFilterType());
+   pAsset->setAddressMode(getAddressMode());
+   pAsset->setMaxAnisotropy(getMaxAnisotropy());
+   pAsset->setMipLODBias(getUseMipLODBias(), getMipLODBias());
 }
 
 void ImageAsset::setImageFile(StringTableEntry pImageFile)
@@ -535,6 +568,36 @@ void ImageAsset::setTextureHDR(const bool pIsHDR)
    mIsHDRImage = pIsHDR;
 
    refreshAsset();
+}
+
+void ImageAsset::setupSamplerState(GFXSamplerStateDesc* ssd) const
+{
+   // FIRST (== GFXTextureFilterNone) and COUNT are both treated as "not
+   // explicitly set" -- leave the sampler desc alone and let the calling class
+   // fill out.
+   if (mFilterType != GFXTextureFilter_FIRST && mFilterType != GFXTextureFilter_COUNT)
+   {
+      ssd->minFilter = mFilterType;
+      ssd->magFilter = mFilterType;
+      ssd->mipFilter = mFilterType;
+
+      if (mFilterType != GFXTextureFilterAnisotropic)
+         ssd->maxAnisotropy = 1;
+   }
+
+   // Same "unset" convention for address mode: FIRST (== GFXAddressWrap)
+   if (mAddressMode != GFXAddress_FIRST && mAddressMode != GFXAddress_COUNT)
+   {
+      ssd->addressModeU = mAddressMode;
+      ssd->addressModeV = mAddressMode;
+   }
+
+   // 0 is not a valid anisotropy level, so it doubles as "unset".
+   if (mMaxAnisotropy > 0)
+      ssd->maxAnisotropy = mMaxAnisotropy;
+
+   if (mUseMipLODBias)
+      ssd->mipLODBias = mMipLODBias;
 }
 
 U32 ImageAsset::load()
@@ -595,14 +658,14 @@ GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
 
    if (mLoadedState == Ok)
    {
-         //If we don't have an existing map case to the requested format, we'll just create it and insert it in
-         GFXTexHandle newTex;
-         newTex.set(mImageFile, requestedProfile, avar("%s %s() - mTextureObject (line %d)", mImageFile, __FUNCTION__, __LINE__));
-         if (newTex)
-         {
-            mResourceMap.insert(requestedProfile, newTex);
-            return newTex;
-         }
+      //If we don't have an existing map case to the requested format, we'll just create it and insert it in
+      GFXTexHandle newTex;
+      newTex.set(mImageFile, requestedProfile, avar("%s %s() - mTextureObject (line %d)", mImageFile, __FUNCTION__, __LINE__));
+      if (newTex)
+      {
+         mResourceMap.insert(requestedProfile, newTex);
+         return newTex;
+      }
    }
 
    if (smNoImageAssetFallbackAssetPtr.notNull() && smNoImageAssetFallbackAssetPtr != this)
@@ -792,7 +855,7 @@ void ImageAsset::populateImage(void)
       }
 
       // we only support 2d textures..... for now ;)
-      mImageDepth = 1; 
+      mImageDepth = 1;
    }
 }
 
@@ -1004,9 +1067,28 @@ GuiControl* GuiInspectorTypeImageAssetPtr::constructEditControl()
    mEditButton->registerObject();
    addObject(mEditButton);
 
+   // Create inline filter type popup - lets you see/change the resolved
+   // ImageAsset's own filtering setting
+   mFilterTypePopup = new GuiPopUpMenuCtrl();
+   mFilterTypePopup->registerObject();
+
+   if (toolDefaultProfile)
+      mFilterTypePopup->setControlProfile(toolDefaultProfile);
+
+   GuiControlProfile* toolPopupProfile = NULL;
+   if (Sim::findObject("ToolsGuiPopUpMenuProfile", toolPopupProfile))
+      mFilterTypePopup->setControlProfile(toolPopupProfile);
+
+   dSprintf(szBuffer, sizeof(szBuffer), "%d.onFilterTypeSelected();", getId());
+   mFilterTypePopup->setField("Command", szBuffer);
+
+   addObject(mFilterTypePopup);
+
+   updateFilterTypePopup();
+
    //
    mUseHeightOverride = true;
-   mHeightOverride = 72;
+   mHeightOverride = 96;
 
    return retCtrl;
 }
@@ -1030,6 +1112,16 @@ bool GuiInspectorTypeImageAssetPtr::updateRects()
    mEdit->resize(Point2I(editPos, rowSize * 1.5), Point2I(fieldExtent.x - editPos - 5 - rowSize, rowSize));
 
    mEditButton->resize(Point2I(mEdit->getPosition().x + mEdit->getExtent().x, mEdit->getPosition().y), Point2I(rowSize, rowSize));
+
+   // Filter type popup gets its own row directly under the filename field,
+   // lined up on the same x-offset and spanning the same width mEdit +
+   // mEditButton together occupy.
+   if (mFilterTypePopup)
+   {
+      Point2I filterPos(editPos, mEdit->getPosition().y + rowSize + 4);
+      Point2I filterExtent(fieldExtent.x - editPos - 5, rowSize);
+      mFilterTypePopup->resize(filterPos, filterExtent);
+   }
 
    mBrowseButton->setHidden(true);
 
@@ -1114,6 +1206,7 @@ void GuiInspectorTypeImageAssetPtr::updateValue()
    Parent::updateValue();
 
    updatePreviewImage();
+   updateFilterTypePopup();
 }
 
 void GuiInspectorTypeImageAssetPtr::updatePreviewImage()
@@ -1176,6 +1269,69 @@ void GuiInspectorTypeImageAssetPtr::setPreviewImage(StringTableEntry assetId)
 
    if (mPreviewImage->getBitmapAsset().isNull())
       mPreviewImage->_setBitmap(StringTable->insert("ToolsModule:genericAssetIcon_image"));
+}
+
+AssetPtr<ImageAsset> GuiInspectorTypeImageAssetPtr::resolveImageAsset()
+{
+   const char* assetId = getData();
+   if (!assetId || !assetId[0] || ImageAsset::isNamedTarget(StringTable->insert(assetId)))
+      return NULL; // empty field, or a named render target ($backBuffer etc) - no per-asset filter setting
+
+   AssetPtr<ImageAsset> imageAsset;
+   U32 assetState = ImageAsset::getAssetById(assetId, &imageAsset);
+   if (imageAsset.isNull() || assetState == ImageAsset::Failed)
+      return NULL;
+
+   return imageAsset;
+}
+
+void GuiInspectorTypeImageAssetPtr::updateFilterTypePopup()
+{
+   if (!mFilterTypePopup)
+      return;
+
+   mFilterTypePopup->clear();
+   mFilterTypePopup->addEntry("Default", GFXTextureFilter_COUNT);
+   mFilterTypePopup->addEntry("Point", GFXTextureFilterPoint);
+   mFilterTypePopup->addEntry("Linear", GFXTextureFilterLinear);
+   mFilterTypePopup->addEntry("Anisotropic", GFXTextureFilterAnisotropic);
+
+   ImageAsset* imageAsset = resolveImageAsset();
+
+   // No resolvable asset (empty field, named target, bad ID) - hide it
+   // rather than show a control that can't do anything meaningful.
+   mFilterTypePopup->setVisible(imageAsset != NULL);
+   if (!imageAsset)
+      return;
+
+   GFXTextureFilterType currentType = imageAsset->getFilterType();
+
+   // FIRST and None share the value 0 -- both mean "not explicitly set",
+   // so show the same "Default" entry for either.
+   if (currentType == GFXTextureFilter_FIRST)
+      currentType = GFXTextureFilter_COUNT;
+
+   mFilterTypePopup->setSelected(currentType, false); // false: don't re-fire onFilterTypeSelected
+}
+
+void GuiInspectorTypeImageAssetPtr::onFilterTypeSelected()
+{
+   ImageAsset* imageAsset = resolveImageAsset();
+   if (!imageAsset || !mFilterTypePopup)
+      return;
+
+   imageAsset->setFilterType((GFXTextureFilterType)mFilterTypePopup->getSelected());
+
+   // Updates the live, in-memory instance immediately (so anything
+   // currently rendering with it picks it up on the next state block
+   // rebuild) AND writes it back to disk so the change survives a reload.
+   if (!imageAsset->saveAsset())
+      Con::errorf("GuiInspectorTypeImageAssetPtr::onFilterTypeSelected() - failed to save asset '%s'", imageAsset->getAssetId());
+}
+
+DefineEngineMethod(GuiInspectorTypeImageAssetPtr, onFilterTypeSelected, void, (), , "@internal - fired when the inline filter type popup's selection changes.")
+{
+   object->onFilterTypeSelected();
 }
 
 void GuiInspectorTypeImageAssetPtr::setCaption(StringTableEntry caption)

@@ -43,10 +43,10 @@ void RenderPassData::reset()
    for( U32 i = 0; i < Material::MAX_TEX_PER_PASS; ++ i )
    {
       destructInPlace( &mTexSlot[ i ] );
+      constructInPlace( &mTexSlot[i] );
       mSamplerNames[ i ].clear();
    }
 
-   dMemset( &mTexSlot, 0, sizeof(mTexSlot) );
    dMemset( &mTexType, 0, sizeof(mTexType) );
 
    mCubeMap = NULL;
@@ -275,6 +275,10 @@ void ProcessedMaterial::_initPassStateBlock( RenderPassData *rpd, GFXStateBlockD
                result.samplers[i].minFilter = GFXTextureFilterLinear;
                result.samplers[i].magFilter = GFXTextureFilterLinear;
             }
+
+            if (rpd->mTexSlot[i].texImageAsset)
+               rpd->mTexSlot[i].texImageAsset->setupSamplerState(&result.samplers[i]);
+
             break;
          }
 

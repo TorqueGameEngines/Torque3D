@@ -49,6 +49,9 @@
 #ifndef _GFXDEVICE_H_
 #include "gfx/gfxDevice.h"
 #endif
+#ifndef _GFXSTATEBLOCK_H_
+#include "gfx/gfxStateBlock.h"
+#endif
 #ifndef _MATTEXTURETARGET_H_
 #include "materials/matTextureTarget.h"
 #endif
@@ -139,6 +142,22 @@ private:
    StringTableEntry  mImageFile;
    bool              mUseMips;
    bool              mIsHDRImage;
+
+   /// Explicit filtering override for this image. Defaults to
+   /// GFXTextureFilter_COUNT (out of range / unset).
+   GFXTextureFilterType mFilterType;
+
+   /// Explicit U/V wrap mode override for this image. Same "unset" sentinel
+   /// convention as mFilterType: GFXAddress_FIRST (== GFXAddressWrap)
+   GFXTextureAddressMode mAddressMode;
+
+   /// Explicit anisotropy level override.
+   U32 mMaxAnisotropy;
+
+   /// Whether mMipLODBias below should override the material's default of
+   /// zero. 
+   bool mUseMipLODBias;
+   F32  mMipLODBias;
    ImageTypes        mImageType;
    ImageTextureMap   mResourceMap;
    bool              mIsNamedTarget;
@@ -178,6 +197,22 @@ public:
 
    void                    setTextureHDR(const bool pIsHDR);
    inline bool             getTextureHDR(void) const { return mIsHDRImage; };
+
+   inline void             setFilterType(const GFXTextureFilterType pFilterType) { mFilterType = pFilterType; };
+   inline GFXTextureFilterType getFilterType(void) const { return mFilterType; };
+
+   inline void             setAddressMode(const GFXTextureAddressMode pAddressMode) { mAddressMode = pAddressMode; };
+   inline GFXTextureAddressMode getAddressMode(void) const { return mAddressMode; };
+
+   inline void             setMaxAnisotropy(const U32 pMaxAnisotropy) { mMaxAnisotropy = pMaxAnisotropy; };
+   inline U32              getMaxAnisotropy(void) const { return mMaxAnisotropy; };
+
+   inline void             setMipLODBias(const bool pUseBias, const F32 pBias) { mUseMipLODBias = pUseBias; mMipLODBias = pBias; };
+   inline bool             getUseMipLODBias(void) const { return mUseMipLODBias; };
+   inline F32              getMipLODBias(void) const { return mMipLODBias; };
+
+   /// Populates the sampler state description based on this asset's own settings
+   void                    setupSamplerState(GFXSamplerStateDesc* ssd) const;
 
    GFXTexHandle            getTexture(GFXTextureProfile* requestedProfile);
 

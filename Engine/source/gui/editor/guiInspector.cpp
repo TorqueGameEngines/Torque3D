@@ -797,6 +797,8 @@ void GuiInspector::updateVisibility()
 
 		for (GuiInspectorGroup* group : mGroups)
 		{
+         if (!group) return;
+
 			const AbstractClassRep::Field* g = target->findField(group->getGroupName().c_str());
 
 			// if group has its own visibility function let it control it.

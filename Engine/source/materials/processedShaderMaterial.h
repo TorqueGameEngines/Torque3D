@@ -58,16 +58,16 @@ public:
    GFXShaderConstHandle* mAccuCoverageSC;
    GFXShaderConstHandle* mAccuSpecularSC;
    GFXShaderConstHandle* mFogDataSC;
-   GFXShaderConstHandle* mFogColorSC;   
+   GFXShaderConstHandle* mFogColorSC;
    GFXShaderConstHandle* mDetailScaleSC;
    GFXShaderConstHandle* mVisiblitySC;
    GFXShaderConstHandle* mColorMultiplySC;
    GFXShaderConstHandle* mAlphaTestValueSC;
    GFXShaderConstHandle* mModelViewProjSC;
-   GFXShaderConstHandle* mWorldViewOnlySC;     
+   GFXShaderConstHandle* mWorldViewOnlySC;
    GFXShaderConstHandle* mWorldToCameraSC;
    GFXShaderConstHandle* mCameraToWorldSC;
-   GFXShaderConstHandle* mWorldToObjSC;         
+   GFXShaderConstHandle* mWorldToObjSC;
    GFXShaderConstHandle* mViewToObjSC;
    GFXShaderConstHandle* mInvCameraTransSC;
    GFXShaderConstHandle* mCameraToScreenSC;
@@ -89,13 +89,13 @@ public:
    GFXShaderConstHandle* mBumpAtlasParamsSC;
    GFXShaderConstHandle* mDiffuseAtlasTileSC;
    GFXShaderConstHandle* mBumpAtlasTileSC;
-   GFXShaderConstHandle *mRTSizeSC;
-   GFXShaderConstHandle *mOneOverRTSizeSC;
+   GFXShaderConstHandle* mRTSizeSC;
+   GFXShaderConstHandle* mOneOverRTSizeSC;
    GFXShaderConstHandle* mDetailBumpStrength;
    GFXShaderConstHandle* mViewProjSC;
 
-   GFXShaderConstHandle *mImposterUVs;
-   GFXShaderConstHandle *mImposterLimits;
+   GFXShaderConstHandle* mImposterUVs;
+   GFXShaderConstHandle* mImposterLimits;
 
    // Deferred Shading : Material Info Flags
    GFXShaderConstHandle* mMatInfoFlagsSC;
@@ -108,13 +108,13 @@ public:
    GFXShaderConstHandle* mIsCapturingSC;
    struct customHandleData
    {
-	   StringTableEntry handleName;
-	   GFXShaderConstHandle* handle;
+      StringTableEntry handleName;
+      GFXShaderConstHandle* handle;
    };
    Vector<customHandleData> mCustomHandles;
 
-   void init( GFXShader* shader, CustomMaterial* mat = NULL);
-   
+   void init(GFXShader* shader, CustomMaterial* mat = NULL);
+
 };
 
 class ShaderRenderPassData : public RenderPassData
@@ -139,7 +139,7 @@ class ProcessedShaderMaterial : public ProcessedMaterial
 public:
 
    ProcessedShaderMaterial();
-   ProcessedShaderMaterial(Material &mat);
+   ProcessedShaderMaterial(Material& mat);
    ~ProcessedShaderMaterial();
 
    // ProcessedMaterial
@@ -152,12 +152,12 @@ public:
    void setNodeTransforms(const MatrixF *address, const U32 numTransforms, const U32 pass) override;
    void setCustomShaderData(Vector<CustomShaderBindingData> &shaderData, const U32 pass) override;
    void setSceneInfo(SceneRenderState *, const SceneData& sgData, U32 pass) override;
-   void setBuffers(GFXVertexBufferHandleBase* vertBuffer, GFXPrimitiveBufferHandle* primBuffer) override; 
+   void setBuffers(GFXVertexBufferHandleBase* vertBuffer, GFXPrimitiveBufferHandle* primBuffer) override;
    bool stepInstance() override;
    void dumpMaterialInfo() override;
    void getMaterialInfo(GuiTreeViewCtrl* tree, U32 item) override;
-   MaterialParameters* allocMaterialParameters() override;    
-   MaterialParameters* getDefaultMaterialParameters() override { return mDefaultParameters; }   
+   MaterialParameters* allocMaterialParameters() override;
+   MaterialParameters* getDefaultMaterialParameters() override { return mDefaultParameters; }
    MaterialParameterHandle* getMaterialParameterHandle(const String& name) override;
    U32 getNumStages() override;
 
@@ -183,27 +183,27 @@ protected:
 
       ~InstancingState()
       {
-         delete [] mBuffer;
+         delete[] mBuffer;
       }
 
-      void setFormat( const GFXVertexFormat *instFormat, const GFXVertexFormat *vertexFormat )
+      void setFormat(const GFXVertexFormat* instFormat, const GFXVertexFormat* vertexFormat)
       {
          mInstFormat = instFormat;
-         mDeclFormat.copy( *vertexFormat );
-         mDeclFormat.append( *mInstFormat, 1 );
+         mDeclFormat.copy(*vertexFormat);
+         mDeclFormat.append(*mInstFormat, 1);
          // Let the declaration know we have instancing.
          mDeclFormat.enableInstancing();
          mDeclFormat.getDecl();
 
-         delete [] mBuffer;
-         mBuffer = new U8[ mInstFormat->getSizeInBytes() * COUNT ];
+         delete[] mBuffer;
+         mBuffer = new U8[mInstFormat->getSizeInBytes() * COUNT];
          mCount = -1;
       }
 
-      bool step( U8 **outPtr )
+      bool step(U8** outPtr)
       {
          // Are we starting a new draw call?
-         if ( mCount < 0 )
+         if (mCount < 0)
          {
             *outPtr = mBuffer;
             mCount = 0;
@@ -240,7 +240,7 @@ protected:
    /// The instancing state if this material
    /// supports instancing.
    InstancingState *mInstancingState;
-   
+
    /// @name Internal functions
    ///
    /// @{
@@ -261,7 +261,11 @@ protected:
       const FeatureSet &features);
 
    /// Creates passes for the given stage
-   virtual bool _createPasses( MaterialFeatureData &fd, U32 stageNum, const FeatureSet &features );
+   virtual bool _createPasses(MaterialFeatureData& fd, U32 stageNum, const FeatureSet& features);
+
+   /// Resolves the ImageAsset (if any) that a given texture feature type
+   /// draws from for the given stage
+   virtual AssetPtr<ImageAsset> _getStageImageAsset(const FeatureType& type, U32 stageNum);
 
    /// Fills in the MaterialFeatureData for the given stage
    virtual void _determineFeatures( U32 stageNum, 

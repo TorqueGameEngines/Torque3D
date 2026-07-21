@@ -39,6 +39,7 @@
 #include "gui/controls/guiTreeViewCtrl.h"
 #include <console/persistenceManager.h>
 #include "console/typeValidators.h"
+#include "gfx/gfxAPI.h"
 
 IMPLEMENT_CONOBJECT(Material);
 
@@ -234,6 +235,8 @@ Material::Material()
 
    mDirectSoundOcclusion = 1.f;
    mReverbSoundOcclusion = 1.0;
+
+   mFilterType = GFXTextureFilterLinear;
 }
 
 IRangeValidator bmpChanRange(0, 3);
@@ -266,6 +269,14 @@ void Material::initPersistFields()
          .elements(MAX_STAGES)
          .doc("@brief NormalMap.");
    endGroup("Basic Texture Maps");
+
+   addGroup("Material Sampling");
+      ADD_FIELD("filterType", TYPEID< GFXTextureFilterType >(), Offset(mFilterType, Material))
+         .doc("@brief Texture filtering for the material.");
+
+      addField("useAnisotropic", TypeBool, Offset(mUseAnisotropic, Material), MAX_STAGES,
+         "Use anisotropic filtering for the textures of this stage.");
+   endGroup("Material Sampling");
 
    addGroup("Light Influence Maps");
 
@@ -364,8 +375,7 @@ void Material::initPersistFields()
          "Enables parallax mapping and defines the scale factor for the parallax effect.  Typically "
          "this value is less than 0.4 else the effect breaks down.");
 
-      addField("useAnisotropic", TypeBool, Offset(mUseAnisotropic, Material), MAX_STAGES,
-         "Use anisotropic filtering for the textures of this stage.");
+      
 
       addField("vertLit", TypeBool, Offset(mVertLit, Material), MAX_STAGES,
          "If true the vertex color is used for lighting.");

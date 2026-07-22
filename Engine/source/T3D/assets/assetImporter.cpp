@@ -2010,22 +2010,7 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
       GuiTreeViewCtrl* shapeInfo = new GuiTreeViewCtrl();
       shapeInfo->registerObject();
 
-      if (fileExt.compare("dae") == 0)
-      {
-         enumColladaForImport(filePath, shapeInfo, false);
-      }
-      else if ((fileExt.compare("dts") == 0))
-      {
-         enumDTSForImport(filePath, shapeInfo);
-      }
-      else
-      {
-         // Check if a cached DTS is available => no need to import the source file
-         // if we can load the DTS instead
-
-         AssimpShapeLoader loader;
-         loader.fillGuiTreeView(filePath.c_str(), shapeInfo);
-      }
+      enumDTSForImport(filePath, shapeInfo);
 
       assetItem->shapeInfo = shapeInfo;
    }
@@ -2104,22 +2089,7 @@ void AssetImporter::processShapeAnimationAsset(AssetImportObject* assetItem)
       GuiTreeViewCtrl* shapeInfo = new GuiTreeViewCtrl();
       shapeInfo->registerObject();
 
-      if (fileExt.compare("dae") == 0)
-      {
-         enumColladaForImport(filePath, shapeInfo, false);
-      }
-      else if ((fileExt.compare("dts") == 0)|| (fileExt.compare("dsq") == 0))
-      {
-         enumDTSForImport(filePath, shapeInfo);
-      }
-      else
-      {
-         // Check if a cached DTS is available => no need to import the source file
-         // if we can load the DTS instead
-
-         AssimpShapeLoader loader;
-         loader.fillGuiTreeView(filePath.c_str(), shapeInfo);
-      }
+      enumDTSForImport(filePath, shapeInfo);
 
       assetItem->shapeInfo = shapeInfo;
    }

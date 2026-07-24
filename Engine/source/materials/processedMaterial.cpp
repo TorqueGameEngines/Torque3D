@@ -264,17 +264,11 @@ void ProcessedMaterial::_initPassStateBlock( RenderPassData *rpd, GFXStateBlockD
             result.samplers[i].addressModeU = GFXAddressWrap;
             result.samplers[i].addressModeV = GFXAddressWrap;
 
-            if ( maxAnisotropy > 1 )
-            {
-               result.samplers[i].minFilter = GFXTextureFilterAnisotropic;
-               result.samplers[i].magFilter = GFXTextureFilterAnisotropic;
-               result.samplers[i].maxAnisotropy = maxAnisotropy;
-            }
-            else
-            {
-               result.samplers[i].minFilter = GFXTextureFilterLinear;
-               result.samplers[i].magFilter = GFXTextureFilterLinear;
-            }
+            result.samplers[i].minFilter = mMaterial->getFilterType();
+            result.samplers[i].magFilter = mMaterial->getFilterType();
+            result.samplers[i].mipFilter = mMaterial->getFilterType();
+            result.samplers[i].maxAnisotropy = maxAnisotropy;
+
             break;
          }
 

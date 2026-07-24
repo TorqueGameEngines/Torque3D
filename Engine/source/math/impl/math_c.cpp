@@ -61,6 +61,10 @@ namespace math_backend::float4::dispatch
             for (int i = 0; i < 4; i++)
                a[i] *= denom;
          }
+         else
+         {
+            a[0] = 1.0f; a[1] = 0.0f; a[2] = 0.0f; a[3] = 0.0f;
+         }
       };
 
       gFloat4.normalize_mag = [](float* a, float f) {
@@ -69,6 +73,10 @@ namespace math_backend::float4::dispatch
          {
             float denom = f / len;
             for (int i = 0; i < 4; i++) a[i] *= denom;
+         }
+         else
+         {
+            a[0] = f; a[1] = 0.0f; a[2] = 0.0f; a[3] = 0.0f;
          }
       };
 
@@ -143,8 +151,12 @@ namespace math_backend::float3::dispatch
          float len = gFloat3.length(a);
          if (len > POINT_EPSILON)
          {
-            float denom = 1.0 / len;
+            float denom = 1.0f / len;
             for (int i = 0; i < 3; i++) a[i] *= denom;
+         }
+         else
+         {
+            a[0] = 1.0f; a[1] = 0.0f; a[2] = 0.0f;
          }
       };
 
@@ -154,6 +166,10 @@ namespace math_backend::float3::dispatch
          {
             float denom = f / len;
             for (int i = 0; i < 3; i++) a[i] *= denom;
+         }
+         else
+         {
+            a[0] = f; a[1] = 0.0f; a[2] = 0.0f;
          }
       };
 

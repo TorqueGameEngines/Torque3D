@@ -281,6 +281,10 @@ public:
    void setGlowMap(StringTableEntry assetId, const U32& index) { mGlowMapAssetRef[index] = assetId; }
    GFXTexHandle getGlowMap(const U32& index) { return mGlowMapAssetRef[index].notNull() ? mGlowMapAssetRef[index].assetPtr->getTexture(&GFXStaticTextureProfile) : GFXTexHandle(); }
 
+   /// Explicit filtering override for this material. Defaults to
+   /// GFXTextureFilterLinear (out of range / unset).
+   GFXTextureFilterType mFilterType;
+
    bool     mDiffuseMapSRGB[MAX_STAGES];   // SRGB diffuse
    bool     mIsSRGb[MAX_STAGES];           // SRGB ORM
    U32      mAOChan[MAX_STAGES];
@@ -438,6 +442,8 @@ public:
    bool isLightmapped() const override;
    bool castsShadows() const override { return mCastShadows; }
    const String& getPath() const { return mPath; }
+
+   GFXTextureFilterType getFilterType() { return mFilterType; }
 
    void flush();
 

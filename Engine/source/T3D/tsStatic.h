@@ -249,6 +249,7 @@ public:
 
    // Skinning
    void setSkinName(const char* name);
+   const char* getSkinName() const { return mSkinNameHandle.getString(); }
    void reSkin();
 
    // NetObject

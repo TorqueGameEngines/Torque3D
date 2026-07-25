@@ -1901,16 +1901,30 @@ DefineEngineMethod(TSStatic, getNodeTransform, TransformF, (const char *nodeName
    return xf;
 }
 
-DefineEngineMethod(TSStatic, setSkinName, void, (const char* name), ,
+DefineEngineMethod(TSStatic, setSkinName, void, (const char* name, bool add), (false),
    "@brief Apply a new skin to this shape.\n\n"
 
    "'Skinning' the shape effectively renames the material targets, allowing "
    "different materials to be used on different instances of the same model.\n\n"
 
    "@param name name of the skin to apply\n\n"
-
+   "@param add whether to add to the skin replacement string, or replace the existing one\n"
    "@see skin\n"
    "@see getSkinName()\n")
 {
-   object->setSkinName(name);
+   if (add)
+      object->setSkinName(String::ToString("%s;%s", object->getSkinName(), name));
+   else
+      object->setSkinName(name);
+}
+
+DefineEngineMethod(TSStatic, getSkinName, const char*, (), ,
+   "@brief Get the name of the skin applied to this shape.\n\n"
+
+   "@return the name of the skin\n\n"
+
+   "@see skin\n"
+   "@see setSkinName()\n")
+{
+   return object->getSkinName();
 }

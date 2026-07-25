@@ -4996,18 +4996,21 @@ DefineEngineMethod( ShapeBase, getShapeName, const char*, (),,
    return object->getShapeName();
 }
 
-DefineEngineMethod( ShapeBase, setSkinName, void, ( const char* name ),,
+DefineEngineMethod( ShapeBase, setSkinName, void, ( const char* name, bool add ), (false),
    "@brief Apply a new skin to this shape.\n\n"
 
    "'Skinning' the shape effectively renames the material targets, allowing "
    "different materials to be used on different instances of the same model.\n\n"
 
-   "@param name name of the skin to apply\n\n"
-
+   "@param name name of the skin to apply\n"
+   "@param add whether to add to the skin replacement string, or replace the existing one\n"
    "@see skin\n"
    "@see getSkinName()\n")
 {
-   object->setSkinName( name );
+   if (add)
+      object->setSkinName(String::ToString("%s;%s", object->getSkinName(), name));
+   else
+      object->setSkinName( name );
 }
 
 DefineEngineMethod( ShapeBase, getSkinName, const char*, (),,

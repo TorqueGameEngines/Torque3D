@@ -173,8 +173,7 @@ enum SceneObjectTypes
    /// A turret object.
    /// @see TurretShape
    TurretObjectType = BIT(29),
-   N_A_31 = BIT(30),
-   AIObjectType = BIT(31),
+   AIObjectType = BIT(30),
 
    /// @}
 };

@@ -81,7 +81,6 @@ ImplementBitfieldType(GameTypeMasksType,
 { SceneObjectTypes::N_A_28, "$TypeMasks::N_A_28", "unused 28th bit.\n" },
 { SceneObjectTypes::PathShapeObjectType, "$TypeMasks::PathShapeObjectType", "Path-following Objects.\n" },
 { SceneObjectTypes::TurretObjectType, "$TypeMasks::TurretObjectType", "Turret Objects.\n" },
-{ SceneObjectTypes::N_A_31, "$TypeMasks::N_A_31", "unused 31st bit.\n" },
 { SceneObjectTypes::AIObjectType, "$TypeMasks::AIObjectType", "AIObjectType.\n" },
 
 EndImplementBitfieldType;

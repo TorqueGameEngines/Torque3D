@@ -462,6 +462,9 @@ void GuiControlProfile::initPersistFields()
    );
 
    Parent::initPersistFields();
+
+   removeField("hidden");
+   removeField("locked");
 }
 
 bool GuiControlProfile::onAdd()

@@ -63,6 +63,7 @@ public:
    void checkRange();
    void checkIncValue();
    void timeInc(U32 elapseTime);
+   bool cursorInArea();
 
    bool onKeyDown(const GuiEvent &event) override;
    void onMouseDown(const GuiEvent &event) override;

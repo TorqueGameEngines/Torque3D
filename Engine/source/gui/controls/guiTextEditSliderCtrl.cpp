@@ -222,6 +222,27 @@ void GuiTextEditSliderCtrl::onMouseDragged(const GuiEvent &event)
    }
 }
 
+bool GuiTextEditSliderCtrl::cursorInArea()
+{
+   GuiCanvas* root = getRoot();
+   if (!root) return false;
+
+   Point2I pt = root->getCursorPos();
+   pt = root->getPlatformWindow() ? root->getPlatformWindow()->screenToClient(pt) : pt;
+   Point2I extent = getExtent();
+   Point2I offset = localToGlobalCoord(Point2I(0, 0));
+   U32 pad = extent.y;
+   if (pt.x >= offset.x - pad && pt.y >= offset.y - pad &&
+      pt.x < offset.x + extent.x + pad && pt.y < offset.y + extent.y + pad)
+   {
+      return true;
+   }
+   else
+   {
+      return false;
+   }
+}
+
 void GuiTextEditSliderCtrl::onMouseUp(const GuiEvent &event)
 {
    // If we're not active then skip out.
@@ -237,14 +258,18 @@ void GuiTextEditSliderCtrl::onMouseUp(const GuiEvent &event)
    if ( mTextAreaHit != None )
       selectAllText();
 
-  //if we released the mouse within this control, then the parent will call
-  //the mConsoleCommand other wise we have to call it.
-   Parent::onMouseUp(event);
-
-   //if we didn't release the mouse within this control, then perform the action
-   // if (!cursorInControl())
-   execConsoleCallback();   
-   execAltConsoleCallback();
+   if (cursorInArea())
+   {
+      //if we released the mouse within this control, then the parent will call
+      //the mConsoleCommand other wise we have to call it.
+      Parent::onMouseUp(event);
+   }
+   else
+   {
+      //if we didn't release the mouse within this control, then perform the action
+      execConsoleCallback();
+      execAltConsoleCallback();
+   }
 
    //Set the cursor position to where the user clicked
    mCursorPos = calculateCursorPos( event.mousePoint );

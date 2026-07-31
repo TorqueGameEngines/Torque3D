@@ -71,8 +71,6 @@
 #include "console/persistenceManager.h"
 #include "AI/AIController.h"
 
-static DebrisData defaultDebrisData;
-
 IMPLEMENT_CO_DATABLOCK_V1(ShapeBaseData);
 
 ConsoleDocClass( ShapeBaseData,
@@ -2018,7 +2016,7 @@ void ShapeBase::blowUp()
 
    if( !mDataBlock->debris )
    {
-      mDataBlock->debris = &defaultDebrisData;
+      mDataBlock->debris = new DebrisData;
    }
 
    // cycle through partlist and create debris pieces

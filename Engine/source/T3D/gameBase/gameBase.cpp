@@ -666,7 +666,8 @@ void GameBase::onMount( SceneObject *obj, S32 node )
 
    if (!isGhost()) {
       setMaskBits(MountedMask);
-      mDataBlock->onMount_callback( this, obj, node );
+      if (mDataBlock)
+         mDataBlock->onMount_callback( this, obj, node );
    }
 }
 
@@ -681,7 +682,8 @@ void GameBase::onUnmount( SceneObject *obj, S32 node )
 
    if (!isGhost()) {
       setMaskBits(MountedMask);
-      mDataBlock->onUnmount_callback( this, obj, node );
+      if (mDataBlock)
+         mDataBlock->onUnmount_callback( this, obj, node );
    }
 }
 

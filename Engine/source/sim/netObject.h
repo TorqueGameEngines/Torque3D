@@ -411,9 +411,11 @@ public:
 
    /// @}
 protected:
+#ifdef TORQUE_AFX_ENABLED
    U16           mScope_id;
    U16           mScope_refs;
    bool          mScope_registered;
+#endif
    virtual void  onScopeIdChange() { }
 public:
    enum { SCOPE_ID_BITS = 14 };

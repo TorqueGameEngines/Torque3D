@@ -71,6 +71,8 @@
 #include "console/persistenceManager.h"
 #include "AI/AIController.h"
 
+static DebrisData defaultDebrisData;
+
 IMPLEMENT_CO_DATABLOCK_V1(ShapeBaseData);
 
 ConsoleDocClass( ShapeBaseData,
@@ -266,6 +268,7 @@ ShapeBaseData::ShapeBaseData(const ShapeBaseData& other, bool temp_clone) : Game
    remap_buffer = other.remap_buffer;
    txr_tag_remappings = other.txr_tag_remappings;
    silent_bbox_check = other.silent_bbox_check;
+   mAIControllData = other.mAIControllData;
 }
 
 struct ShapeBaseDataProto
@@ -336,7 +339,6 @@ bool ShapeBaseData::preload(bool server, String &errorStr)
 
       if( !debris && debrisID != 0 )
       {
-         Sim::findObject( debrisID, debris );
          if (Sim::findObject(debrisID, debris) == false)
          {
             errorStr = String::ToString("ShapeBaseData::preload: Invalid packet, bad datablockId(debris): 0x%x", debrisID);
@@ -1364,7 +1366,6 @@ bool ShapeBase::onNewDataBlock( GameBaseData *dptr, bool reload )
 
    mDrag = mDataBlock->drag;
    mCameraFov = mDataBlock->cameraDefaultFov;
-   updateMass();
 
    if( !isInitialDataBlock && mLightPlugin )
       mLightPlugin->reset();
@@ -1643,7 +1644,7 @@ void ShapeBase::setControllingObject(ShapeBase* obj)
       clearProcessAfter();
       // Catch the case of the controlling object actually
       // mounted on this object.
-      if (mControllingObject->mMount.object == this)
+      if (mControllingObject && mControllingObject->mMount.object == this)
          mControllingObject->processAfter(this);
    }
    mControllingObject = obj;
@@ -2017,7 +2018,7 @@ void ShapeBase::blowUp()
 
    if( !mDataBlock->debris )
    {
-      mDataBlock->debris = new DebrisData;
+      mDataBlock->debris = &defaultDebrisData;
    }
 
    // cycle through partlist and create debris pieces
@@ -2082,6 +2083,9 @@ void ShapeBase::getNodeTransform(const char* nodeName, MatrixF* outMat)
 {
    Resource<TSShape> shape;
    if (mDataBlock->shapeAssetRef.isNull() || !(shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource()))
+      return;
+
+   if (!mShapeInstance)
       return;
 
    S32 nodeIDx = shape->findNode(nodeName);
@@ -5182,7 +5186,8 @@ DefineEngineMethod( ShapeBase, getTargetName, const char*, ( S32 index ),,
       if ((ShapeBase*)obj->getClientObject())
          obj = (ShapeBase*)obj->getClientObject();
 
-      return obj->getShapeInstance()->getTargetName(index);
+      if (obj->getShapeInstance() != NULL)
+         return obj->getShapeInstance()->getTargetName(index);
    }
 
    return "";
@@ -5473,7 +5478,7 @@ const char* ShapeBase::getLastClipName(U32 clip_tag)
 
    S32 idx = shape->sequences[seq_id].nameIndex;
    if (idx < 0 || idx >= shape->names.size())
-      return 0;
+      return "";
 
    return shape->names[idx];
 }
@@ -5553,7 +5558,7 @@ bool ShapeBase::setAIController(SimObjectId controller)
    }
    Con::errorf("unable to find AIController : %i", controller);
    mAIController = NULL;
-   mTypeMask |= ~AIObjectType;
+   mTypeMask &= ~AIObjectType;
    return false;
 }
 

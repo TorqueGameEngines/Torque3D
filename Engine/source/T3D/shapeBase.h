@@ -126,6 +126,7 @@ class ShapeBaseConvex : public Convex
       hullId     = cv.hullId;
       nodeTransform = cv.nodeTransform;
       box        = cv.box;
+      mType = cv.mType;
       transform  = 0;
    }
 

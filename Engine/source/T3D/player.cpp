@@ -2897,18 +2897,21 @@ void Player::updateMove(const Move* move)
             case SprintPose:{
                yawScale = mDataBlock->sprintYawScale;
                pitchScale = mDataBlock->sprintPitchScale;
+               break;
             }
             case CrouchPose:{
-                  yawScale = mDataBlock->crouchYawScale;
-                  pitchScale = mDataBlock->crouchPitchScale;
+               yawScale = mDataBlock->crouchYawScale;
+               pitchScale = mDataBlock->crouchPitchScale;
+               break;
             }
             case PronePose: {
-                  yawScale = mDataBlock->proneYawScale;
-                  pitchScale = mDataBlock->pronePitchScale;
+               yawScale = mDataBlock->proneYawScale;
+               pitchScale = mDataBlock->pronePitchScale;
+               break;
             }
-             case SwimPose: {
-                  yawScale = mDataBlock->swimYawScale;
-                  pitchScale = mDataBlock->swimPitchScale;
+            case SwimPose: {
+               yawScale = mDataBlock->swimYawScale;
+               pitchScale = mDataBlock->swimPitchScale;
             }
          }
 

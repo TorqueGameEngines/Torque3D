@@ -2,14 +2,13 @@
 
 cd "`dirname "$0"`"
 
-for i in $(find . -type f \( -iname "*.dae" \))
+for i in $(find . -type f \( -iname "*.dae" -o -iname "*.fbx" -o -iname "*.gltf" -o -iname "*.glb" \))
 do
-	len=$((${#i} - 4))
-   file=${i:0:$len}.cached.dts
-   if [ -e $file ]
+   file="${i%.*}.cached.dts"
+   if [ -e "$file" ]
    then
    	echo "Removing ${file}"
-   	rm $file
+   	rm "$file"
    fi
 done
 

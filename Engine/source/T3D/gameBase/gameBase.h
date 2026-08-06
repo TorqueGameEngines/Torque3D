@@ -237,8 +237,12 @@ public:
    enum GameBaseMasks {      
       DataBlockMask     = Parent::NextFreeMask << 0,
       ExtendedInfoMask  = Parent::NextFreeMask << 1,
+#ifdef TORQUE_AFX_ENABLED
       ScopeIdMask       = Parent::NextFreeMask << 2,
       NextFreeMask      = Parent::NextFreeMask << 3,
+#else
+      NextFreeMask = Parent::NextFreeMask << 2,
+#endif
    };
 
    // net flags added by game base
@@ -467,8 +471,10 @@ private:
    /// within this callback.
    ///   
    void _onDatablockModified();
+#ifdef TORQUE_AFX_ENABLED
 protected:
    void    onScopeIdChange() override { setMaskBits(ScopeIdMask); }
+#endif
 };
 
 

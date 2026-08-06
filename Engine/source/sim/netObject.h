@@ -410,12 +410,11 @@ public:
    static T* getClientObject( T *netObj ) { return static_cast<T*>( netObj->getClientObject() ); }
 
    /// @}
-protected:
 #ifdef TORQUE_AFX_ENABLED
+protected:
    U16           mScope_id;
    U16           mScope_refs;
    bool          mScope_registered;
-#endif
    virtual void  onScopeIdChange() { }
 public:
    enum { SCOPE_ID_BITS = 14 };
@@ -424,6 +423,7 @@ public:
    void          removeScopeRef();
    void          setScopeRegistered(bool flag) { mScope_registered = flag; }
    bool          getScopeRegistered() const { return mScope_registered; }
+#endif
 
 protected:
    /// Add a networked field

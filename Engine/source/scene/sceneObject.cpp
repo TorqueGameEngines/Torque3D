@@ -1220,7 +1220,7 @@ void SceneObject::resolveMountPID()
    if ( mMountPID  )
    {
       SceneObject *obj = dynamic_cast< SceneObject* >( mMountPID->getObject() );
-      if ( obj != mMount.object)
+      if (obj && obj != mMount.object)
          obj->mountObject( this, mMount.node, mMount.xfm );
    }
 }
@@ -1678,15 +1678,7 @@ void SceneObject::PerformUpdatesForChildren(MatrixF mat){
 // parent have moved
 void SceneObject::updateChildTransform(){
 	if (getParent() != NULL){
-		MatrixF one;
-		MatrixF two;
-		MatrixF three;
-		MatrixF four;
 		MatrixF mat;
-		one= getTransform();
-		two = getParent()->getTransform();
-		one.affineInverse();
-		four.mul(two,one);
 		mat.mul(getParent()->mLastXform,getTransform());
 		setTransform(mat);
 	}

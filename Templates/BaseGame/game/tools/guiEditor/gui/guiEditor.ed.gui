@@ -30,7 +30,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
       hovertime = "1000";
       columns = "0 631";
       rows = "0";
-      borderWidth = "1";
       border = "0";
       borderEnable = "dynamic";
       borderMovable = "dynamic";
@@ -857,7 +856,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                new GuiFrameSetCtrl() {
                   columns = "0";
                   rows = "0 338";
-                  borderWidth = "1";
                   borderColor = "207 207 207 207";
                   borderEnable = "dynamic";
                   borderMovable = "dynamic";
@@ -1131,7 +1129,6 @@ $guiContent = new GuiControl(GuiEditorGui, EditorGuiGroup) {
                new GuiFrameSetCtrl() {
                   columns = "0";
                   rows = "0 338";
-                  borderWidth = "1";
                   borderColor = "207 207 207 207";
                   borderEnable = "dynamic";
                   borderMovable = "dynamic";

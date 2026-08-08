@@ -973,11 +973,11 @@ void GuiFrameSetCtrl::rebalance(const Point2I &newExtent)
    // look at old width offsets
    for (itr = mColumnOffsets.begin() + 1; itr < mColumnOffsets.end(); itr++)
       // multiply each by new_width/old_width
-      *itr = S32(F32(*itr) * widthScale);
+      *itr = mClamp(S32(F32(*itr) * widthScale + 0.5f), 0, newExtent.x);
    // look at old height offsets
    for (itr = mRowOffsets.begin() + 1; itr < mRowOffsets.end(); itr++)
       // multiply each by new_height/new_width
-      *itr = S32(F32(*itr) * heightScale);
+      *itr = mClamp(S32(F32(*itr) * heightScale + 0.5f), 0, newExtent.y);
 
 }
 

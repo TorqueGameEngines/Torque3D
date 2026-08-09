@@ -229,7 +229,7 @@ GuiControl::GuiControl() : mAddGroup( NULL ),
    mTooltip = StringTable->EmptyString();
    mRenderTooltipDelegate.bind( this, &GuiControl::defaultTooltipRender );
 
-   mCanSaveFieldDictionary = false;
+   mCanSaveFieldDictionary = true;
    mNotifyChildrenResized = true;
    fade_amt = 1.0f;
 }

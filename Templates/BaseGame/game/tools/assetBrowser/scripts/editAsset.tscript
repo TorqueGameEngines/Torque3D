@@ -77,17 +77,17 @@ function AssetBrowser::refreshAsset(%this, %assetId)
 //------------------------------------------------------------
 function AssetBrowser::regeneratePreviewImage(%this)
 {
-   %assetDef = AssetDatabase.acquireAsset(AssetBrowser.popupMenu.objectData);
+   %assetDef = AssetDatabase.acquireAsset(%this.popupMenu.objectData);
    %dummyObj = new ScriptObject();
-   %dummyObj.moduleName = AssetDatabase.getAssetModule(AssetBrowser.popupMenu.objectData).moduleId;
-   %dummyObj.assetName = AssetDatabase.getAssetName(AssetBrowser.popupMenu.objectData);
+   %dummyObj.moduleName = %this.getAssetModule(%this.popupMenu.objectData).moduleId;
+   %dummyObj.assetName = %this.getAssetName(%this.popupMenu.objectData);
    
-   %assetType = AssetBrowser.popupMenu.objectType;
+   %assetType = %this.popupMenu.objectType;
    
    AssetBrowser.callAssetTypeFunc(%assetType, "generatePreviewImage", %dummyObj, true);
 
    %dummyObj.delete();
-   AssetDatabase.releaseAsset(AssetBrowser.popupMenu.objectData);
+   AssetDatabase.releaseAsset(%this.popupMenu.objectData);
 }
 
 //------------------------------------------------------------
@@ -447,27 +447,21 @@ function AssetBrowser::updateAssetReference(%this, %targetPath, %oldAssetId, %ne
 
 function AssetBrowser::openFileLocation(%this)
 {
-   if(isFunction("systemCommand"))
-   {
-      warnf("AssetBrowser::openFileLocation() - systemCommand function disabled in this build. Unable to launch application to edit file.");
-      return;  
-   }
-   
    %filePath = "";
-   if(%this.popuMenu.assetId !$= "")
+   if(%this.popupMenu.objectData !$= "")
    {
-      if(AssetDatabase.isDeclaredAsset(%this.popuMenu.objectData))
+      if(AssetDatabase.isDeclaredAsset(%this.popupMenu.objectData))
       {
-         %filePath = AssetDatabase.getAssetPath(%this.popuMenu.objectData);
+         %filePath = AssetDatabase.getAssetPath(%this.popupMenu.objectData);
       }
       else
       {
          //probably a file path
-         %pathSplit = strpos(%this.popuMenu.objectData, ":");
+         %pathSplit = strpos(%this.popupMenu.objectData, ":");
          if(%pathSplit != -1)
          {
-            %path = getSubStr(%this.popuMenu.objectData, 0, %pathSplit);
-            %file = getSubStr(%this.popuMenu.objectData, %pathSplit + 1);
+            %path = getSubStr(%this.popupMenu.objectData, 0, %pathSplit);
+            %file = getSubStr(%this.popupMenu.objectData, %pathSplit + 1);
             
             //datablocks pack the originator file in the parent path as-is, so check that
             if(fileExt(%path) !$= "")
@@ -482,22 +476,9 @@ function AssetBrowser::openFileLocation(%this)
       }
    }
    
-   if(isFile(%filePath) || isDirectory(%filePath))
+   if(%filePath !$= "" && (isFile(%filePath) || isDirectory(%filePath)))
    {
-      %fullPath = makeFullPath(%filePath);
-      if(fileExt(%fullPath) $= ".tscript")
-         %fullPath = filePath(%fullPath);
-         
-      if($platform $= "windows")
-      {
-         %cmd = "cd \"" @ %fullPath @ "\" && start .";
-         systemCommand(%cmd);
-      }
-      else
-      {
-         %cmd = "open \"" @ %fullPath @ "\"";
-         systemCommand(%cmd);
-      }
+      gotoWebPage(makeRelativePath(%filePath));
    }
 }
 

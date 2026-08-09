@@ -131,43 +131,8 @@ GuiProgressBitmapCtrl::GuiProgressBitmapCtrl()
 void GuiProgressBitmapCtrl::initPersistFields()
 {
    docsURL;
-   ADD_FIELD("bitmapAsset", TypeImageAssetRef, Offset(mBitmapAssetRef, GuiProgressBitmapCtrl))
-      .doc("Bitmap asset to use for rendering the progress bar.\n\n"
-      "If the profile assigned to the control already has a bitmap assigned, this property need not be "
-      "set in which case the bitmap from the profile is used.");
 
    Parent::initPersistFields();
-}
-
-//-----------------------------------------------------------------------------
-
-void GuiProgressBitmapCtrl::_setBitmap(StringTableEntry _in)
-{
-   if (mBitmapAssetRef.assetId == _in)
-      return;
-
-   if (ImageAsset::isNamedTarget(_in))
-   {
-      mBitmapAssetRef.assetId = _in;
-      mBitmapAssetRef.assetPtr = ImageAsset::getNamedTargetAssetPtr(_in);
-      return;
-   }
-
-   mBitmapAssetRef = _in;
-}
-
-void GuiProgressBitmapCtrl::setBitmap( const char* name )
-{
-   bool awake = mAwake;
-   if( awake )
-      onSleep();
-
-   _setBitmap(StringTable->insert(name));
-
-   if( awake )
-      onWake();
-      
-   setUpdate();
 }
 
 //-----------------------------------------------------------------------------
@@ -215,6 +180,9 @@ void GuiProgressBitmapCtrl::onPreRender()
 
 void GuiProgressBitmapCtrl::onRender(Point2I offset, const RectI &updateRect)
 {	
+   if (mNumberOfBitmaps < 1 || mNumberOfBitmaps == 2)
+      return;
+
 	RectI ctrlRect(offset, getExtent());
 	
 	//grab lowest dimension
@@ -262,8 +230,6 @@ void GuiProgressBitmapCtrl::onRender(Point2I offset, const RectI &updateRect)
 			drawUtil->drawBitmapStretchSR(mProfile->getBitmap(), progressRectRight, mProfile->mBitmapArrayRects[2]);
 		}
 	}
-	else
-		Con::warnf("guiProgressBitmapCtrl only processes an array of bitmaps == 1 or >= 3");
 
 	//if there's a border, draw it
    if (mProfile->mBorder)
@@ -285,21 +251,10 @@ bool GuiProgressBitmapCtrl::onWake()
 
 	mNumberOfBitmaps = mProfile->constructBitmapArray();
 
+   if (mNumberOfBitmaps < 1 || mNumberOfBitmaps == 2)
+   {
+      Con::warnf("guiProgressBitmapCtrl only processes an array of bitmaps == 1 or >= 3");
+   }
+
    return true;
-}
-
-//=============================================================================
-//    Console Methods.
-//=============================================================================
-// MARK: ---- Console Methods ----
-
-//-----------------------------------------------------------------------------
-
-DefineEngineMethod( GuiProgressBitmapCtrl, setBitmap, void, ( const char* filename ),,
-   "Set the bitmap to use for rendering the progress bar.\n\n"
-   "@param filename ~Path to the bitmap file.\n\n"
-   "@note Directly assign to #bitmap rather than using this method.\n\n"
-   "@see GuiProgressBitmapCtrl::setBitmap" )
-{
-   object->setBitmap( filename );
 }

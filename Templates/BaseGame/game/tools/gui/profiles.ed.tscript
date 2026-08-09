@@ -34,6 +34,7 @@ $Gui::fontTypeBold = "Arial Bold";
 $Gui::fontTypeItalic = "Arial Italic";
 $Gui::fontTypeMono = "Arial";
 
+$GUI::fontSize[9] = 9;
 $GUI::fontSize[12] = 12;
 $GUI::fontSize[14] = 14;
 $GUI::fontSize[16] = 16;
@@ -1556,7 +1557,7 @@ new GuiControlProfile(ToolsGuiConsoleTinyProfile : ToolsGuiConsoleProfile)
 if(!isObject(ToolsGuiConsoleSmallProfile))
 new GuiControlProfile(ToolsGuiConsoleSmallProfile : ToolsGuiConsoleProfile)
 {
-   fontSize = $GUI::fontSize[10];
+   fontSize = $GUI::fontSize[12];
 };
 if(!isObject(ToolsGuiConsoleMediumProfile))
 new GuiControlProfile(ToolsGuiConsoleMediumProfile : ToolsGuiConsoleProfile)

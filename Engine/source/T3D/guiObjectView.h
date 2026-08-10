@@ -163,6 +163,9 @@ class GuiObjectView : public GuiTSCtrl, protected AssetPtrCallback
       ///
       void onStaticModified( StringTableEntry slotName, const char* newValue ) override;
 
+      static bool setShapeAsset(void* object, const char* index, const char* data);
+      static bool setMountedShapeAsset(void* object, const char* index, const char* data);
+
    public:
    
       GuiObjectView();

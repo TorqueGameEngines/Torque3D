@@ -46,9 +46,6 @@ class GuiProgressBitmapCtrl : public GuiTextCtrl
    protected:
 
       F32 mProgress;
-
-      AssetRef<ImageAsset> mBitmapAssetRef;
-
       bool mUseVariable;
       bool mTile;
       S32 mNumberOfBitmaps;
@@ -57,12 +54,6 @@ class GuiProgressBitmapCtrl : public GuiTextCtrl
    public:
          
       GuiProgressBitmapCtrl();
-
-      void setBitmap( const char* name );
-
-      void _setBitmap(StringTableEntry _in);
-      inline StringTableEntry getBitmapAssetId() const { return mBitmapAssetRef.getAssetId(); }
-      GFXTexHandle getBitmap() { return mBitmapAssetRef.notNull() ? mBitmapAssetRef.assetPtr->getTexture(&GFXDefaultGUIProfile) : NULL; }
       
       //console related methods
       const char *getScriptValue() override;

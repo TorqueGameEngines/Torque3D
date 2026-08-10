@@ -804,6 +804,10 @@ void GuiInspector::updateVisibility()
 		{
          if (!group) return;
 
+         //We want dynamic fields group ot always display even if there are no fields under it so you can add new ones
+         if (group->getGroupName() == String("Dynamic Fields"))
+            continue;
+
 			const AbstractClassRep::Field* g = target->findField(group->getGroupName().c_str());
 
 			// if group has its own visibility function let it control it.

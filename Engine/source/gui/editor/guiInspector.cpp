@@ -798,11 +798,13 @@ void GuiInspector::updateVisibility()
 	{
 
 		SimObject* target = getInspectObject(i);
-		if (!target) return;
+		if (!target) 
+		   return;
 
 		for (GuiInspectorGroup* group : mGroups)
 		{
-         if (!group) return;
+         if (!group) 
+            continue;
 
          //We want dynamic fields group ot always display even if there are no fields under it so you can add new ones
          if (group->getGroupName() == String("Dynamic Fields"))
@@ -815,7 +817,7 @@ void GuiInspector::updateVisibility()
 			if (!group_visible)
 			{
 				group->setVisible(group_visible);
-				return;
+            continue;
 			}
 
 			bool anyVisible = false;
@@ -841,7 +843,8 @@ void GuiInspector::updateVisibility()
 					visible = elem.arrayField->visibilityFn(target, String::ToString(elem.elementIndex));
 
 				elem.rollout->setVisible(visible);
-				if (visible) anyVisible = true;
+				if (visible) 
+				   anyVisible = true;
 			}
 
 			group->setVisible(anyVisible);

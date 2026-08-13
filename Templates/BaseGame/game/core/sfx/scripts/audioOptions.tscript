@@ -132,10 +132,3 @@ function updateAudioOptionsSettings()
                                              SPC $pref::SFX::device 
                                              SPC $pref::SFX::useHardware );
 }
-
-function AutodetectSound()
-{
-   // Nothing to actually do in here? 
-   // function here for convenience.
-   $pref::SFX::autoDetect = false;
-}

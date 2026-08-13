@@ -178,6 +178,12 @@ function OptionsMenuList::checkForUnappliedChanges(%this)
                $optionsChangeRequiresRestart = true;
          }
       }
+      else if(%option.class $= "OptionsListSliderEntry")
+      {
+         %tempValue = getVariable(%option.prefVar @ "_tempVar");
+         if(%tempValue !$= "" && getVariable(%option.prefVar) != %tempValue)
+            %unappliedChanges = true;
+      }
    }
 
    return %unappliedChanges;
@@ -477,19 +483,9 @@ function tryCloseOptionsMenu(%val)
 
    %unappliedVideoChanges = VideoSettingsList.checkForUnappliedChanges();
    %unappliedAudioChanges = AudioSettingsList.checkForUnappliedChanges();
+   %unappliedControlChanges = KBMControlsList.checkForUnappliedChanges();
 
-   //validate audio prefs
-   if($pref::SFX::masterVolume_tempVar !$= "" && $pref::SFX::masterVolume_tempVar != $pref::SFX::masterVolume)
-      %unappliedAudioChanges = true;
-
-   for(%i=1; %i < $AudioChannelCount; %i++)
-   {
-      %tempVolume = getVariable("$pref::SFX::channelVolume" @ %i @ "_tempVar");
-      if(%tempVolume !$= "" && $pref::SFX::channelVolume[ %i ] != %tempVolume)
-         %unappliedAudioChanges = true;
-   }
-
-   if(%unappliedVideoChanges || %unappliedAudioChanges)
+   if(%unappliedVideoChanges || %unappliedAudioChanges || %unappliedControlChanges)
    {
       MessageBoxOKCancel("Discard Changes?", "You have unapplied changes to your settings, do you wish to apply or discard them?",
          "OptionsMenu.applyChangedOptions(); BaseUIBackOut(1);", "BaseUIBackOut(1);",
@@ -510,14 +506,17 @@ function tryApplyOptions(%val)
 
    %unappliedVideoChanges = VideoSettingsList.checkForUnappliedChanges();
    %unappliedAudioChanges = AudioSettingsList.checkForUnappliedChanges();
+   %unappliedControlChanges = KBMControlsList.checkForUnappliedChanges();
 
-   if(%unappliedVideoChanges || %unappliedAudioChanges)
+   if(%unappliedVideoChanges || %unappliedAudioChanges || %unappliedControlChanges)
       OptionsMenu.applyChangedOptions();
 }
 
 function OptionsMenu::applyChangedOptions(%this)
 {
    VideoSettingsList.applyChanges();
+   %this.populateVideoSettings(); //Kick a refresh if we happened to change display mode, so resolutions can be selected(or not)
+    
    AudioSettingsList.applyChanges();
    KBMControlsList.applyChanges();  //Saves settings and binds from GamepadControlsList as well
 
@@ -706,6 +705,7 @@ function addOptionSlider(%optionName, %optionDesc, %prefName, %sliderMin, %slide
       vertSizing = "bottom";
       class = "OptionsListSliderEntry";
       canSave = false;
+      prefVar = %prefName;
 
       new GuiButtonCtrl() {
          profile = GuiMenuButtonProfile;

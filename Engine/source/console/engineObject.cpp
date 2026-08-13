@@ -41,6 +41,7 @@ EngineObject* EngineObject::smFirstEngineObject;
 
 IEngineObjectPool* IEngineObjectPool::DEFAULT = EngineCRuntimeObjectPool::instance();
 EngineCRuntimeObjectPool EngineCRuntimeObjectPool::smInstance;
+static thread_local IEngineObjectPool* sNewEngineObjectPool = NULL;
 
 // Helper to get to engine object's user data.  Not exposed through get/set methods
 // as the rest of the engine has no business accessing this data.  It is for the
@@ -53,8 +54,10 @@ void*& _USERDATA( EngineObject* object )
 //-----------------------------------------------------------------------------
 
 EngineObject::EngineObject()
-   : mEngineObjectPool(NULL), mEngineObjectUserData( NULL )
+   : mEngineObjectPool(sNewEngineObjectPool), mEngineObjectUserData( NULL )
 {
+   sNewEngineObjectPool = NULL;
+
    #ifdef TORQUE_DEBUG
    // Add to instance list.
 
@@ -130,8 +133,7 @@ void* EngineObject::operator new( size_t size )
       Platform::forceShutdown( -1 );
    }
    
-   EngineObject* object = reinterpret_cast< EngineObject* >( ptr );
-   object->mEngineObjectPool = IEngineObjectPool::DEFAULT;
+   sNewEngineObjectPool = IEngineObjectPool::DEFAULT;
    
    return ptr;
 }
@@ -159,9 +161,8 @@ void* EngineObject::operator new( size_t size, IEngineObjectPool* pool )
          Platform::forceShutdown( -1 );
       }
    }
-   
-   EngineObject* object = reinterpret_cast< EngineObject* >( ptr );
-   object->mEngineObjectPool = pool;
+
+   sNewEngineObjectPool = pool;
    
    return ptr;
 }
@@ -180,8 +181,7 @@ void* EngineObject::operator new( size_t size TORQUE_TMM_ARGS_DECL )
       Platform::forceShutdown( -1 );
    }
    
-   EngineObject* object = reinterpret_cast< EngineObject* >( ptr );
-   object->mEngineObjectPool = IEngineObjectPool::DEFAULT;
+   sNewEngineObjectPool = IEngineObjectPool::DEFAULT;
    
    return ptr;
 }
@@ -208,8 +208,7 @@ void* EngineObject::operator new( size_t size, IEngineObjectPool* pool TORQUE_TM
       }
    }
    
-   EngineObject* object = reinterpret_cast< EngineObject* >( ptr );
-   object->mEngineObjectPool = pool;
+   sNewEngineObjectPool = pool;
    
    return ptr;
 }

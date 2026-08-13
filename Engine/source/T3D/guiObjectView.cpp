@@ -136,7 +136,8 @@ void GuiObjectView::initPersistFields()
    docsURL;
    addGroup( "Shape" );
       ADD_FIELD("shapeAsset", TypeShapeAssetRef, Offset(mShapeAssetRef, GuiObjectView))
-         .doc("The source shape asset.");
+         .doc("The source shape asset.")
+         .onSet(&GuiObjectView::setShapeAsset);
       ADD_FIELD("modelAsset", TypeShapeAssetRef, Offset(mShapeAssetRef, GuiObjectView))
          .doc("The source shape asset.")
          .withFlags(AbstractClassRep::FieldFlags::FIELD_HideInInspectors | AbstractClassRep::FieldFlags::FIELD_DontWriteToFile);
@@ -154,7 +155,8 @@ void GuiObjectView::initPersistFields()
    
    addGroup( "Mounting" );
       ADD_FIELD("mountedShapeAsset", TypeShapeAssetRef, Offset(mMountedShapeAssetRef, GuiObjectView))
-         .doc("The mounted shape asset.");
+         .doc("The mounted shape asset.")
+         .onSet(&GuiObjectView::setMountedShapeAsset);
       ADD_FIELD("mountedModelAsset", TypeShapeAssetRef, Offset(mMountedShapeAssetRef, GuiObjectView))
          .doc("The source shape asset.")
          .withFlags(AbstractClassRep::FieldFlags::FIELD_HideInInspectors | AbstractClassRep::FieldFlags::FIELD_DontWriteToFile);
@@ -191,6 +193,26 @@ void GuiObjectView::initPersistFields()
    endGroup( "Camera" );
    
    Parent::initPersistFields();
+}
+
+//------------------------------------------------------------------------------
+
+bool GuiObjectView::setShapeAsset(void* object, const char* index, const char* data)
+{
+   GuiObjectView* ctrl = static_cast<GuiObjectView*>(object);
+   if (ctrl)
+      return ctrl->setObjectShape(data);;
+
+   return false;
+}
+
+bool GuiObjectView::setMountedShapeAsset(void* object, const char* index, const char* data)
+{
+   GuiObjectView* ctrl = static_cast<GuiObjectView*>(object);
+   if (ctrl)
+      return ctrl->setMountedShape(data);
+
+   return false;
 }
 
 //------------------------------------------------------------------------------

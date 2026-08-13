@@ -16,8 +16,5 @@ function Core_SFX::onDestroy(%this)
 
 function Core_SFX::initClient(%this)
 {
-   if($pref::SFX::autoDetect)
-   {
-      AutodetectSound();
-   }
+   sfxStartup();
 }

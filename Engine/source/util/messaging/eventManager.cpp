@@ -95,7 +95,7 @@ bool EventManagerListener::onMessageReceived( StringTableEntry queue, const char
          Con::executef(itter.listener, itter.callback, data);
          itter.callDepth--;
 
-         if (itter.removeFlag && itter.callback == 0)
+         if (itter.removeFlag && itter.callDepth == 0)
          {
             subscribers->erase(i);
             continue;

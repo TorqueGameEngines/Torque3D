@@ -213,21 +213,7 @@ bool StaticShape::onAdd()
 
    addToScene();
 
-   if (PHYSICSMGR)
-   {
-      PhysicsCollision* colShape = NULL;
-      
-      Resource<TSShape> shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
-      colShape = shape->buildColShape(true, getScale());
-
-      if (colShape)
-      {
-         PhysicsWorld* world = PHYSICSMGR->getWorld(isServerObject() ? "server" : "client");
-         mPhysicsRep = PHYSICSMGR->createBody();
-         mPhysicsRep->init(colShape, 0, 0, this, world);
-         mPhysicsRep->setTransform(getTransform());
-      }
-   }
+   _updatePhysics();
 
    if (isServerObject())
       scriptOnAdd();
@@ -240,23 +226,7 @@ bool StaticShape::onNewDataBlock(GameBaseData* dptr, bool reload)
    if (!mDataBlock || !Parent::onNewDataBlock(dptr, reload))
       return false;
 
-   if (PHYSICSMGR)
-   {
-      SAFE_DELETE(mPhysicsRep);
-
-      PhysicsCollision* colShape = NULL;
-
-      Resource<TSShape> shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
-      colShape = shape->buildColShape(true, getScale());
-
-      if (colShape)
-      {
-         PhysicsWorld* world = PHYSICSMGR->getWorld(isServerObject() ? "server" : "client");
-         mPhysicsRep = PHYSICSMGR->createBody();
-         mPhysicsRep->init(colShape, 0, 0, this, world);
-         mPhysicsRep->setTransform(getTransform());
-      }
-   }
+   _updatePhysics();
 
    scriptOnNewDataBlock(reload);
    return true;
@@ -272,6 +242,26 @@ void StaticShape::onRemove()
    Parent::onRemove();
 }
 
+//----------------------------------------------------------------------------
+
+void StaticShape::_updatePhysics()
+{
+   if (PHYSICSMGR)
+   {
+      PhysicsCollision* colShape = NULL;
+
+      Resource<TSShape> shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
+      colShape = shape->buildColShape(true, getScale());
+
+      if (colShape)
+      {
+         PhysicsWorld* world = PHYSICSMGR->getWorld(isServerObject() ? "server" : "client");
+         mPhysicsRep = PHYSICSMGR->createBody();
+         mPhysicsRep->init(colShape, 0, 0, this, world);
+         mPhysicsRep->setTransform(getTransform());
+      }
+   }
+}
 
 //----------------------------------------------------------------------------
 

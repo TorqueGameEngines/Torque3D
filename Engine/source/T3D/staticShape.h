@@ -77,6 +77,8 @@ protected:
       NextFreeMask = Parent::NextFreeMask << 1
    };
 
+   void _updatePhysics();
+
 public:
    DECLARE_CONOBJECT(StaticShape);
    DECLARE_CATEGORY("Object \t Destructable");

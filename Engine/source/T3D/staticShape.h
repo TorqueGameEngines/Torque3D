@@ -32,6 +32,8 @@
 #include "T3D/shapeBase.h"
 #endif
 
+class PhysicsBody;
+
 //----------------------------------------------------------------------------
 
 struct StaticShapeData: public ShapeBaseData {
@@ -64,6 +66,8 @@ class StaticShape: public ShapeBase
 
    StaticShapeData*  mDataBlock;
    bool              mPowered;
+
+   PhysicsBody*      mPhysicsRep;
 
    void onUnmount(SceneObject* obj,S32 node) override;
 

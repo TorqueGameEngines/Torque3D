@@ -39,6 +39,9 @@
 #include "math/mathIO.h"
 #include "sim/netConnection.h"
 #include "scene/sceneObjectLightingPlugin.h"
+#include "T3D/physics/physicsPlugin.h"
+#include "T3D/physics/physicsBody.h"
+#include "T3D/physics/physicsCollision.h"
 
 extern void wireCube(F32 size,Point3F pos);
 
@@ -183,6 +186,8 @@ StaticShape::StaticShape()
 {
    mTypeMask |= StaticShapeObjectType | StaticObjectType;
    mDataBlock = 0;
+
+   mPhysicsRep = NULL;
 }
 
 StaticShape::~StaticShape()
@@ -208,6 +213,8 @@ bool StaticShape::onAdd()
 
    addToScene();
 
+   _updatePhysics();
+
    if (isServerObject())
       scriptOnAdd();
    return true;
@@ -219,6 +226,8 @@ bool StaticShape::onNewDataBlock(GameBaseData* dptr, bool reload)
    if (!mDataBlock || !Parent::onNewDataBlock(dptr, reload))
       return false;
 
+   _updatePhysics();
+
    scriptOnNewDataBlock(reload);
    return true;
 }
@@ -227,9 +236,32 @@ void StaticShape::onRemove()
 {
    scriptOnRemove();
    removeFromScene();
+
+   SAFE_DELETE(mPhysicsRep);
+
    Parent::onRemove();
 }
 
+//----------------------------------------------------------------------------
+
+void StaticShape::_updatePhysics()
+{
+   if (PHYSICSMGR)
+   {
+      PhysicsCollision* colShape = NULL;
+
+      Resource<TSShape> shape = mDataBlock->shapeAssetRef.assetPtr->getShapeResource();
+      colShape = shape->buildColShape(true, getScale());
+
+      if (colShape)
+      {
+         PhysicsWorld* world = PHYSICSMGR->getWorld(isServerObject() ? "server" : "client");
+         mPhysicsRep = PHYSICSMGR->createBody();
+         mPhysicsRep->init(colShape, 0, 0, this, world);
+         mPhysicsRep->setTransform(getTransform());
+      }
+   }
+}
 
 //----------------------------------------------------------------------------
 
@@ -255,6 +287,10 @@ void StaticShape::interpolateTick(F32 delta)
 void StaticShape::setTransform(const MatrixF& mat)
 {
    Parent::setTransform(mat);
+
+   if (mPhysicsRep)
+      mPhysicsRep->setTransform(mat);
+
    setMaskBits(PositionMask);
 }
 

@@ -220,24 +220,6 @@ namespace math_backend::mat44::dispatch
             m[8] * (m[1] * m[6] - m[2] * m[5]);
       };
 
-      gMat44.mul_vec3 = [](const float* a, const float* b, float* r) {
-#ifdef TORQUE_COMPILER_GCC
-         const F32   v0 = b[0], v1 = b[1], v2 = b[2];
-         const F32   m0 = a[0], m1 = a[1], m2 = a[2];
-         const F32   m4 = a[4], m5 = a[5], m6 = a[6];
-         const F32   m8 = a[8], m9 = a[9], m10 = a[10];
-
-         r[0] = m0 * v0 + m1 * v1 + m2 * v2;
-         r[1] = m4 * v0 + m5 * v1 + m6 * v2;
-         r[2] = m8 * v0 + m9 * v1 + m10 * v2;
-#else
-         r[0] = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-         r[1] = a[4] * b[0] + a[5] * b[1] + a[6] * b[2];
-         r[2] = a[8] * b[0] + a[9] * b[1] + a[10] * b[2];
-#endif
-
-      };
-
       gMat44.inverse = [](float* m) {
          // using Cramers Rule find the Inverse
          // Minv = (1/det(M)) * adjoint(M)
@@ -288,17 +270,21 @@ namespace math_backend::mat44::dispatch
 
          F32 invDet = 1.0f / det;
 
-         d[0] = (m[5] * m[10] - m[6] * m[9]) * invDet;
-         d[1] = (m[9] * m[2] - m[10] * m[1]) * invDet;
-         d[2] = (m[1] * m[6] - m[2] * m[5]) * invDet;
+         const F32 m0 = m[0], m1 = m[1], m2 = m[2];
+         const F32 m4 = m[4], m5 = m[5], m6 = m[6];
+         const F32 m8 = m[8], m9 = m[9], m10 = m[10];
 
-         d[4] = (m[6] * m[8] - m[4] * m[10]) * invDet;
-         d[5] = (m[10] * m[0] - m[8] * m[2]) * invDet;
-         d[6] = (m[2] * m[4] - m[0] * m[6]) * invDet;
+         d[0] = (m5 * m10 - m6 * m9) * invDet;
+         d[1] = (m9 * m2 - m10 * m1) * invDet;
+         d[2] = (m1 * m6 - m2 * m5) * invDet;
 
-         d[8] = (m[4] * m[9] - m[5] * m[8]) * invDet;
-         d[9] = (m[8] * m[1] - m[9] * m[0]) * invDet;
-         d[10] = (m[0] * m[5] - m[1] * m[4]) * invDet;
+         d[4] = (m6 * m8 - m4 * m10) * invDet;
+         d[5] = (m10 * m0 - m8 * m2) * invDet;
+         d[6] = (m2 * m4 - m0 * m6) * invDet;
+
+         d[8] = (m4 * m9 - m5 * m8) * invDet;
+         d[9] = (m8 * m1 - m9 * m0) * invDet;
+         d[10] = (m0 * m5 - m1 * m4) * invDet;
 
          // invert the translation
          F32 temp[6];
@@ -343,53 +329,71 @@ namespace math_backend::mat44::dispatch
 
       gMat44.get_scale = [](const float* a, float* s) {
          // Note, doesn't allow scaling w...
-         s[0] = sqrt(a[0] * a[0] + a[4] * a[4] + a[8] * a[8]);
-         s[1] = sqrt(a[1] * a[1] + a[5] * a[5] + a[9] * a[9]);
-         s[2] = sqrt(a[2] * a[2] + a[6] * a[6] + a[10] * a[10]);
+         s[0] = std::sqrt(a[0] * a[0] + a[4] * a[4] + a[8] * a[8]);
+         s[1] = std::sqrt(a[1] * a[1] + a[5] * a[5] + a[9] * a[9]);
+         s[2] = std::sqrt(a[2] * a[2] + a[6] * a[6] + a[10] * a[10]);
+
+         // If the determinant is negative, we have a reflection, so we need to negate one of the scales.
+         if (gMat44.determinant(a) < 0.0f)
+            s[0] = -s[0];
       };
 
       gMat44.mul_float4 = [](const float* a, const float* b, float* r) {
          AssertFatal(b != r, "Error, aliasing matrix mul pointers not allowed here!");
-         r[0] = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
-         r[1] = a[4] * b[0] + a[5] * b[1] + a[6] * b[2] + a[7] * b[3];
-         r[2] = a[8] * b[0] + a[9] * b[1] + a[10] * b[2] + a[11] * b[3];
-         r[3] = a[12] * b[0] + a[13] * b[1] + a[14] * b[2] + a[15] * b[3];
+         const F32 b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+         r[0] = a[0] * b0 + a[1] * b1 + a[2] * b2 + a[3] * b3;
+         r[1] = a[4] * b0 + a[5] * b1 + a[6] * b2 + a[7] * b3;
+         r[2] = a[8] * b0 + a[9] * b1 + a[10] * b2 + a[11] * b3;
+         r[3] = a[12] * b0 + a[13] * b1 + a[14] * b2 + a[15] * b3;
       };
 
       gMat44.mul_pos3 = [](const float* a, const float* b, float* r) {
              AssertFatal(b != r, "Error, aliasing matrix mul pointers not allowed here!");
-             r[0] = a[0]*b[0] + a[1]*b[1] + a[2]*b[2]  + a[3];
-             r[1] = a[4]*b[0] + a[5]*b[1] + a[6]*b[2]  + a[7];
-             r[2] = a[8]*b[0] + a[9]*b[1] + a[10]*b[2] + a[11];
+             const F32 b0 = b[0], b1 = b[1], b2 = b[2];
+             r[0] = a[0]*b0 + a[1]*b1 + a[2]*b2  + a[3];
+             r[1] = a[4]*b0 + a[5]*b1 + a[6]*b2  + a[7];
+             r[2] = a[8]*b0 + a[9]*b1 + a[10]*b2 + a[11];
       };
 
       gMat44.mul_vec3 = [](const float* a, const float* b, float* r) {
          AssertFatal(b != r, "Error, aliasing matrix mul pointers not allowed here!");
-         r[0] = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-         r[1] = a[4] * b[0] + a[5] * b[1] + a[6] * b[2];
-         r[2] = a[8] * b[0] + a[9] * b[1] + a[10] * b[2];
+         const F32   v0 = b[0], v1 = b[1], v2 = b[2];
+         const F32   m0 = a[0], m1 = a[1], m2 = a[2];
+         const F32   m4 = a[4], m5 = a[5], m6 = a[6];
+         const F32   m8 = a[8], m9 = a[9], m10 = a[10];
+
+         r[0] = m0 * v0 + m1 * v1 + m2 * v2;
+         r[1] = m4 * v0 + m5 * v1 + m6 * v2;
+         r[2] = m8 * v0 + m9 * v1 + m10 * v2;
       };
 
       gMat44.mul_mat44 = [](const float* a, const float* b, float* mresult) {
-         mresult[0] = a[0]*b[0] + a[1]*b[4] + a[2]*b[8]  + a[3]*b[12];
-         mresult[1] = a[0]*b[1] + a[1]*b[5] + a[2]*b[9]  + a[3]*b[13];
-         mresult[2] = a[0]*b[2] + a[1]*b[6] + a[2]*b[10] + a[3]*b[14];
-         mresult[3] = a[0]*b[3] + a[1]*b[7] + a[2]*b[11] + a[3]*b[15];
+         AssertFatal(mresult != a && mresult != b, "Error, aliasing matrix mul pointers not allowed here!");
 
-         mresult[4] = a[4]*b[0] + a[5]*b[4] + a[6]*b[8]  + a[7]*b[12];
-         mresult[5] = a[4]*b[1] + a[5]*b[5] + a[6]*b[9]  + a[7]*b[13];
-         mresult[6] = a[4]*b[2] + a[5]*b[6] + a[6]*b[10] + a[7]*b[14];
-         mresult[7] = a[4]*b[3] + a[5]*b[7] + a[6]*b[11] + a[7]*b[15];
+         const F32 a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
+         const F32 a4 = a[4], a5 = a[5], a6 = a[6], a7 = a[7];
+         const F32 a8 = a[8], a9 = a[9], a10 = a[10], a11 = a[11];
+         const F32 a12 = a[12], a13 = a[13], a14 = a[14], a15 = a[15];
 
-         mresult[8] = a[8]*b[0] + a[9]*b[4] + a[10]*b[8] + a[11]*b[12];
-         mresult[9] = a[8]*b[1] + a[9]*b[5] + a[10]*b[9] + a[11]*b[13];
-         mresult[10]= a[8]*b[2] + a[9]*b[6] + a[10]*b[10]+ a[11]*b[14];
-         mresult[11]= a[8]*b[3] + a[9]*b[7] + a[10]*b[11]+ a[11]*b[15];
+         mresult[0] = a0*b[0] + a1*b[4] + a2*b[8]  + a3*b[12];
+         mresult[1] = a0*b[1] + a1*b[5] + a2*b[9]  + a3*b[13];
+         mresult[2] = a0*b[2] + a1*b[6] + a2*b[10] + a3*b[14];
+         mresult[3] = a0*b[3] + a1*b[7] + a2*b[11] + a3*b[15];
 
-         mresult[12]= a[12]*b[0]+ a[13]*b[4]+ a[14]*b[8] + a[15]*b[12];
-         mresult[13]= a[12]*b[1]+ a[13]*b[5]+ a[14]*b[9] + a[15]*b[13];
-         mresult[14]= a[12]*b[2]+ a[13]*b[6]+ a[14]*b[10]+ a[15]*b[14];
-         mresult[15]= a[12]*b[3]+ a[13]*b[7]+ a[14]*b[11]+ a[15]*b[15];
+         mresult[4] = a4*b[0] + a5*b[4] + a6*b[8]  + a7*b[12];
+         mresult[5] = a4*b[1] + a5*b[5] + a6*b[9]  + a7*b[13];
+         mresult[6] = a4*b[2] + a5*b[6] + a6*b[10] + a7*b[14];
+         mresult[7] = a4*b[3] + a5*b[7] + a6*b[11] + a7*b[15];
+
+         mresult[8] = a8*b[0] + a9*b[4] + a10*b[8] + a11*b[12];
+         mresult[9] = a8*b[1] + a9*b[5] + a10*b[9] + a11*b[13];
+         mresult[10]= a8*b[2] + a9*b[6] + a10*b[10]+ a11*b[14];
+         mresult[11]= a8*b[3] + a9*b[7] + a10*b[11]+ a11*b[15];
+
+         mresult[12]= a12*b[0]+ a13*b[4]+ a14*b[8] + a15*b[12];
+         mresult[13]= a12*b[1]+ a13*b[5]+ a14*b[9] + a15*b[13];
+         mresult[14]= a12*b[2]+ a13*b[6]+ a14*b[10]+ a15*b[14];
+         mresult[15]= a12*b[3]+ a13*b[7]+ a14*b[11]+ a15*b[15];
       };
 
       gMat44.transform_plane = [](const F32* m, const F32* s, const F32* p, F32* presult) {
@@ -422,6 +426,8 @@ namespace math_backend::mat44::dispatch
          //  B = -(Row(1, r) * P);
          //  C = -(Row(2, r) * P);
 
+         AssertFatal(mFabs(s[0]) > POINT_EPSILON&& mFabs(s[1]) > POINT_EPSILON&& mFabs(s[2]) > POINT_EPSILON,
+            "transform_plane: degenerate (near-zero) scale component");
          MatrixF invScale(true);
          F32* pScaleElems = invScale;
          pScaleElems[MatrixF::idx(0, 0)] = 1.0f / s[0];
@@ -484,6 +490,10 @@ namespace math_backend::mat44::dispatch
          col1[0] = a[1];
          col1[1] = a[5];
          col1[2] = a[9];
+
+         col2[0] = a[2];
+         col2[1] = a[6];
+         col2[2] = a[10];
 
          math_backend::float3::dispatch::gFloat3.normalize(col0);
          math_backend::float3::dispatch::gFloat3.normalize(col1);

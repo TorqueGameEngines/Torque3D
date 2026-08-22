@@ -123,21 +123,7 @@ public:
 
    MatrixF getNodeTransform(F32 time) override;
    bool animatesTransform(const AppSequence* appSeq) override;
-   bool isParentRoot() override
-   {
-      if (!appParent)
-         return false;   // the scene root itself has no parent — not a content root
-
-      // True when this node's immediate parent is the scene root node.
-      // mParentName is stored at construction from the AppNode's normalised name
-      // (empty names become "null"), so apply the same normalisation to the raw
-      // aiScene root name before comparing.
-      const char* rootName = mScene->mRootNode->mName.C_Str();
-      if (dStrlen(rootName) == 0)
-         rootName = "null";
-
-      return dStrcmp(mParentName, rootName) == 0;
-   }
+   bool isParentRoot() override { return (appParent == NULL); }
 
    static void assimpToTorqueMat(const aiMatrix4x4& inAssimpMat, MatrixF& outMat);
    static aiNode* findChildNodeByName(const char* nodeName, aiNode* rootNode);

@@ -244,6 +244,9 @@ void AssimpShapeLoader::enumerateScene()
    aiEnableVerboseLogging(true);
 #endif
 
+   //We already do transform stuff on our end, so we don't need assimp doing it as well and potentially causing a double-up
+   mImporter.SetPropertyBool(AI_CONFIG_IMPORT_FBX_IGNORE_UP_DIRECTION, true);
+
    // Read the file
    mScene = mImporter.ReadFile(shapePath.getFullPath().c_str(), flags);
 
@@ -310,20 +313,19 @@ void AssimpShapeLoader::enumerateScene()
    // Setup LOD checks
    detectDetails();
 
-   // Process mRootNode as an AppNode directly.
-   //
-   // Making it the single parentless node means the !appParent branch in
-   // AssimpAppNode::getTransform() fires exactly once — for this node only.
-   // Scale + axisCorrectionMat are therefore applied in exactly one place.
-   // Every child (bones, mesh nodes, bounds) inherits the correction naturally
-   // through the parent chain; no per-node special-casing is needed.
-   AssimpAppNode* sceneRootAppNode = new AssimpAppNode(mScene, mScene->mRootNode, nullptr);
-   if (!processNode(sceneRootAppNode))
+   // Register each direct child of mRootNode as its own parentless AppNode
+   // (mirrors ColladaShapeLoader::enumerateScene()) instead of one wrapper
+   // node. 
+   for (U32 iNode = 0; iNode < mScene->mRootNode->mNumChildren; iNode++)
    {
-      Con::errorf("[ASSIMP] Failed to process scene root node '%s'.",
-         mScene->mRootNode->mName.C_Str());
-      delete sceneRootAppNode;
-      sceneRootAppNode = nullptr;
+      aiNode* childNode = mScene->mRootNode->mChildren[iNode];
+      AssimpAppNode* appNode = new AssimpAppNode(mScene, childNode, nullptr);
+      if (!processNode(appNode))
+   {
+         Con::errorf("[ASSIMP] Failed to process root-level node '%s'.",
+            childNode->mName.C_Str());
+         delete appNode;
+      }
    }
 
    // Bounds check — every Torque shape needs a bounds node.
@@ -399,7 +401,8 @@ void AssimpShapeLoader::configureImportUnits() {
       }
 
       F32 fps;
-      if(getMetaFloat("CustomFrameRate", fps))
+      // FBX uses -1 to indicate "no custom frame rate", so only use it if it's positive
+      if (getMetaFloat("CustomFrameRate", fps) && fps > 0.0f)
          opts.animFPS = fps;
    }
 }
@@ -452,7 +455,7 @@ void AssimpShapeLoader::getRootAxisTransform()
       return v;
    };
 
-   Point3F forward = axisToVector(frontAxis, frontSign == 1 ? -frontSign : frontSign);
+   Point3F forward = axisToVector(frontAxis, -frontSign);
    Point3F up = axisToVector(upAxis, upSign);
    Point3F right = mCross(forward, up);
 
@@ -478,7 +481,7 @@ void AssimpShapeLoader::getRootAxisTransform()
 
 void AssimpShapeLoader::processAnimations()
 {
-   if (mScene->mNumAnimations == 0)
+   if (mScene->mNumAnimations == 0 || mScene->mAnimations[0] == NULL)
       return;
 
    // Multiple animations = multiple actions; single animation = flat timeline.
@@ -505,10 +508,14 @@ void AssimpShapeLoader::processAnimations()
 
       Vector<aiNodeAnim*> ambientChannels;
       F32 maxKeyTime = 0.0f;
+      F32 maxSourceDuration = 0.0f;
 
+      // mScene outlives this call, so reference its channels directly - no per-channel copy needed.
       for (U32 i = 0; i < mScene->mNumAnimations; ++i)
       {
          aiAnimation* anim = mScene->mAnimations[i];
+         maxSourceDuration = getMax(maxSourceDuration, (F32)anim->mDuration);
+
          for (U32 j = 0; j < anim->mNumChannels; j++)
          {
             aiNodeAnim* nodeAnim = anim->mChannels[j];
@@ -522,12 +529,21 @@ void AssimpShapeLoader::processAnimations()
          }
       }
 
-      ambientSeq->mNumChannels = ambientChannels.size();
-      ambientSeq->mChannels = ambientChannels.address();
-      ambientSeq->mDuration = maxKeyTime;
-      ambientSeq->mTicksPerSecond = targetTPS;
+      // no point in creating a NULL anim sequence...
+      if (ambientChannels.size() > 0)
+      {
+         ambientSeq->mNumChannels = ambientChannels.size();
+         ambientSeq->mChannels = ambientChannels.address();
+         // if we somehow dont have keys, just use the max source duration
+         ambientSeq->mDuration = (maxKeyTime > 0.0f) ? maxKeyTime : maxSourceDuration;
+         ambientSeq->mTicksPerSecond = targetTPS;
 
-      appSequences.push_back(new AssimpAppSequence(ambientSeq));
+         appSequences.push_back(new AssimpAppSequence(ambientSeq));
+      }
+      else
+      {
+         delete ambientSeq;
+      }
       return;
    }
 
@@ -1135,7 +1151,7 @@ bool AssimpShapeLoader::getMetabool(const char* key, bool& boolVal)
       {
          if (mScene->mMetaData->mValues[n].mType == AI_BOOL)
          {
-            boolVal = (bool)mScene->mMetaData->mValues[n].mData;
+            boolVal = *(bool*)mScene->mMetaData->mValues[n].mData;
             return true;
          }
       }

@@ -340,6 +340,8 @@ class SFXPlayList : public SFXTrack
 
       // SFXTrack.
       virtual bool isLooping() const;
+      
+      SFXPlayList(const SFXPlayList&, bool = false);
 
       // SimDataBlock.
       bool onAdd() override;

@@ -229,8 +229,6 @@ Material::Material()
 
    mFootstepSoundId = -1;     mImpactSoundId = -1;
    mImpactFXIndex = -1;
-   INIT_ASSET(CustomFootstepSound);
-   INIT_ASSET(CustomImpactSound);
    mFriction = 0.0;
 
    mDirectSoundOcclusion = 1.f;
@@ -506,8 +504,8 @@ void Material::initPersistFields()
          "- 16: PlayerData::impactWaterHard\n"
          "- 17: PlayerData::exitingWater\n");
 
-      INITPERSISTFIELD_SOUNDASSET(CustomFootstepSound, Material,
-         "The sound to play when the player walks over the material.  If this is set, it overrides #footstepSoundId.  This field is "
+      ADD_FIELD("CustomFootstepSoundAsset", TypeSoundAssetRef, Offset(mCustomFootstepSoundAssetRef, Material))
+         .doc("The sound to play when the player walks over the material.  If this is set, it overrides #footstepSoundId.  This field is "
          "useful for directly assigning custom footstep sounds to materials without having to rely on the PlayerData sound assignment.\n\n"
          "@warn Be aware that materials are client-side objects.  This means that the SFXTracks assigned to materials must be client-side, too.");
       addField("impactSoundId", TypeS32, Offset(mImpactSoundId, Material),
@@ -518,8 +516,8 @@ void Material::initPersistFields()
          "What FX to play from the PlayerData sound list when the player impacts on the surface with a velocity equal or greater "
          "than PlayerData::groundImpactMinSpeed.\n\n"
          "For a list of IDs, see #impactFXId");
-      INITPERSISTFIELD_SOUNDASSET(CustomImpactSound, Material,
-         "The sound to play when the player impacts on the surface with a velocity equal or greater than PlayerData::groundImpactMinSpeed.  "
+      ADD_FIELD("CustomImpactSoundAsset", TypeSoundAssetRef, Offset(mCustomImpactSoundAssetRef, Material))
+         .doc("The sound to play when the player impacts on the surface with a velocity equal or greater than PlayerData::groundImpactMinSpeed.  "
          "If this is set, it overrides #impactSoundId.  This field is useful for directly assigning custom impact sounds to materials "
          "without having to rely on the PlayerData sound assignment.\n\n"
          "@warn Be aware that materials are client-side objects.  This means that the SFXTracks assigned to materials must be client-side, too.");

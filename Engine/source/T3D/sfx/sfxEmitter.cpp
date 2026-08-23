@@ -223,7 +223,7 @@ SFXEmitter::SFXEmitter()
    mInstanceDescription = &mDescription;
    mLocalProfile = NULL;
 
-   INIT_ASSET(Sound);
+   mSoundAssetRef.assetPtr.registerRefreshNotify( this );
 
    mObjBox.minExtents.set( -1.f, -1.f, -1.f );
    mObjBox.maxExtents.set( 1.f, 1.f, 1.f );
@@ -233,8 +233,7 @@ SFXEmitter::SFXEmitter()
 
 SFXEmitter::~SFXEmitter()
 {
-   if (mLocalProfile && mLocalProfile->getRefCount() && !mLocalProfile->isDeleted())
-      mLocalProfile->onRemove();
+   _destroyLocalProfile();
 
    SFX_DELETE( mSource );
 }
@@ -292,17 +291,10 @@ void SFXEmitter::initPersistFields()
    docsURL;
    addGroup( "Media" );
 
-   INITPERSISTFIELD_SOUNDASSET(Sound, SFXEmitter, "");
+      ADD_FIELD("SoundAsset", TypeSoundAssetRef, Offset(mSoundAssetRef, SFXEmitter))
+         .network(DirtyUpdateMask)
+         .doc("The sound asset which the emitter should play.");
 
-      /*addField("track", TypeSFXTrackName, Offset(mTrack, SFXEmitter),
-         "The track which the emitter should play.\n"
-         "@note If assigned, this field will take precedence over a #fileName that may also be assigned to the "
-            "emitter." );
-      addField( "fileName",            TypeStringFilename,        Offset( mLocalProfile.mFilename, SFXEmitter),
-         "The sound file to play.\n"
-         "Use @b either this property @b or #track.  If both are assigned, #track takes precendence.  The primary purpose of this "
-         "field is to avoid the need for the user to define SFXTrack datablocks for all sounds used in a level." );*/
-   
    endGroup( "Media");
 
    addGroup( "Sound" );
@@ -409,7 +401,7 @@ U32 SFXEmitter::packUpdate(NetConnection* con, U32 mask, BitStream* stream)
 
    // track
    if (stream->writeFlag(mask & DirtyUpdateMask)){
-      PACK_ASSET(con, Sound);
+      AssetDatabase.packUpdateAsset(con, mask, stream, mSoundAssetRef.assetId);
    }
    //if (stream->writeFlag(mDirty.test(Track)))
    //   sfxWrite( stream, mTrack );
@@ -524,7 +516,7 @@ void SFXEmitter::unpackUpdate( NetConnection *conn, BitStream *stream )
    if (_readDirtyFlag(stream, Track)) // DirtyUpdateMask
    {
       initialUpdate = false;
-      UNPACK_ASSET(conn, Sound);
+      mSoundAssetRef = AssetDatabase.unpackUpdateAsset(conn, stream);
    }
    /*if (_readDirtyFlag(stream, Track))
    {
@@ -614,6 +606,14 @@ void SFXEmitter::unpackUpdate( NetConnection *conn, BitStream *stream )
       pause();
    if ( stream->readFlag() ) // SourceStopMask
       stop();
+}
+
+//-----------------------------------------------------------------------------
+
+void SFXEmitter::getUtilizedAssets( Vector<StringTableEntry>* usedAssetsList )
+{
+   if( mSoundAssetRef.notNull() )
+      usedAssetsList->push_back_unique( mSoundAssetRef.getAssetId() );
 }
 
 //-----------------------------------------------------------------------------
@@ -715,8 +715,8 @@ void SFXEmitter::inspectPostApply()
    // Parent will call setScale so sync up scale with distance.
    
    F32 maxDistance = mDescription.mMaxDistance;
-   if( mUseTrackDescriptionOnly && mSoundAsset )
-      maxDistance = mSoundAsset->getSfxDescription()->mMaxDistance;
+   if( mUseTrackDescriptionOnly && mSoundAssetRef.notNull() )
+      maxDistance = mSoundAssetRef.assetPtr->getSfxDescription()->mMaxDistance;
       
    mObjScale.set( maxDistance, maxDistance, maxDistance );
    
@@ -759,6 +759,7 @@ bool SFXEmitter::onAdd()
 void SFXEmitter::onRemove()
 {
    SFX_DELETE( mSource );
+   _destroyLocalProfile();
 
    removeFromScene();
    Parent::onRemove();
@@ -775,20 +776,17 @@ void SFXEmitter::_update()
    SFXStatus prevState = mSource ? mSource->getStatus() : SFXStatusNull;
 
    // are we overriding the asset properties?
-   bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && mSoundAsset.notNull() && getSoundProfile());
+   bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && mSoundAssetRef.notNull() && mSoundAssetRef.assetPtr->getSFXTrack());
 
-   if (mSoundAsset.notNull())
+   if (mSoundAssetRef.notNull())
    {
       if (useTrackDescriptionOnly)
-         mInstanceDescription = mSoundAsset->getSfxDescription();
+         mInstanceDescription = mSoundAssetRef.assetPtr->getSfxDescription();
       else
          mInstanceDescription = &mDescription;
 
-      mLocalProfile = getSoundProfile();
-
       // Make sure all the settings are valid.
       mInstanceDescription->validate();
-      mLocalProfile->setDescription(mInstanceDescription);
    }
 
    const MatrixF& transform = getTransform();
@@ -798,12 +796,34 @@ void SFXEmitter::_update()
    if( mDirty.test( Track | Is3D | IsLooping | IsStreaming | TrackOnly ) )
    {
       SFX_DELETE( mSource );
-      if (getSoundProfile())
+
+      // Pick the track to play from. useTrackDescriptionOnly plays the
+      // asset's shared track directly. Otherwise a private clone is built
+      // so mDescription can be attached without touching the asset's
+      // shared track, which other consumers of the same asset also use.
+      SFXTrack* playbackTrack = NULL;
+      if (mSoundAssetRef.notNull() && mSoundAssetRef.assetPtr->getSFXTrack())
       {
-         mSource = SFX->createSource(mLocalProfile, &transform, &velocity);
+         if (useTrackDescriptionOnly)
+         {
+            _destroyLocalProfile();
+            playbackTrack = mSoundAssetRef.assetPtr->getSFXTrack();
+         }
+         else
+      {
+            _buildLocalProfile();
+            playbackTrack = mLocalProfile;
+         }
+      }
+      else
+         _destroyLocalProfile();
+
+      if (playbackTrack)
+      {
+         mSource = SFX->createSource(playbackTrack, &transform, &velocity);
          if (!mSource)
             Con::errorf("SFXEmitter::_update() - failed to create sound for track %i (%s)",
-               getSoundProfile()->getId(), getSoundProfile()->getName());
+               playbackTrack->getId(), playbackTrack->getName());
 
          // If we're supposed to play when the emitter is 
          // added to the scene then also restart playback 
@@ -820,7 +840,7 @@ void SFXEmitter::_update()
    // is toggled on a local profile sound.  It makes the
    // editor feel responsive and that things are working.
    if(  gEditingMission &&
-        (SoundAsset::getAssetErrCode(mSoundAsset) || (mSoundAsset.isValid() && !mSoundAsset->getSFXTrack())) &&
+        (SoundAsset::getAssetErrCode(mSoundAssetRef.assetPtr) || (mSoundAssetRef.isValid() && !mSoundAssetRef.assetPtr->getSFXTrack())) &&
         mPlayOnAdd && 
         mDirty.test( IsLooping ) )
       prevState = SFXStatusPlaying;
@@ -841,8 +861,8 @@ void SFXEmitter::_update()
 
       if (mDirty.test(SourceGroup) && mInstanceDescription->mSourceGroup)
          mInstanceDescription->mSourceGroup->addObject(mSource);
-      else if (getSoundDescription() && getSoundDescription()->mSourceGroup)
-         getSoundDescription()->mSourceGroup->addObject(mSource);
+      else if (mSoundAssetRef.notNull() && mSoundAssetRef.assetPtr->getSfxDescription() && mSoundAssetRef.assetPtr->getSfxDescription()->mSourceGroup)
+         mSoundAssetRef.assetPtr->getSfxDescription()->mSourceGroup->addObject(mSource);
 
       // Skip these 3d only settings.
       if(mInstanceDescription->mIs3D )
@@ -874,6 +894,57 @@ void SFXEmitter::_update()
          
       mDirty.clear( Volume | Pitch | Transform | FadeInTime | FadeOutTime | SourceGroup );
    }
+}
+
+//-----------------------------------------------------------------------------
+
+void SFXEmitter::_buildLocalProfile()
+{
+   _destroyLocalProfile();
+
+   if( mSoundAssetRef.isNull() )
+      return;
+
+   SFXTrack* sharedTrack = mSoundAssetRef.assetPtr->getSFXTrack();
+   if( !sharedTrack )
+      return;
+
+   // Clone the asset's track so mDescription can be attached to the
+   // clone instead of the asset's shared track. 
+   SFXTrack* clone = NULL;
+   if( SFXProfile* profile = dynamic_cast< SFXProfile* >( sharedTrack ) )
+      clone = new SFXProfile( *profile, true );
+   else if( SFXPlayList* playlist = dynamic_cast< SFXPlayList* >( sharedTrack ) )
+      clone = new SFXPlayList( *playlist, true );
+
+   if( !clone )
+      return;
+
+   clone->setDescription( &mDescription );
+
+   mLocalProfile = clone;
+}
+
+//-----------------------------------------------------------------------------
+
+void SFXEmitter::_destroyLocalProfile()
+{
+   delete mLocalProfile;
+
+   mLocalProfile = NULL;
+}
+
+//-----------------------------------------------------------------------------
+
+void SFXEmitter::onAssetRefreshed( AssetPtrBase* pAssetPtrBase )
+{
+   if( !isClientObject() )
+      return;
+
+   // The asset's track or description may have been rebuilt; rebuild
+   // the source and, if overriding, the private clone from current state.
+   mDirty.set( Track );
+   _update();
 }
 
 //-----------------------------------------------------------------------------
@@ -1188,8 +1259,8 @@ SFXStatus SFXEmitter::_getPlaybackStatus() const
 
 bool SFXEmitter::is3D() const
 {
-   if( mSoundAsset.notNull() )
-      return mSoundAsset->getSfxDescription()->mIs3D;
+   if( mSoundAssetRef.notNull() )
+      return mSoundAssetRef.assetPtr->getSfxDescription()->mIs3D;
    else
       return mInstanceDescription->mIs3D;
 }
@@ -1225,8 +1296,8 @@ void SFXEmitter::setScale( const VectorF &scale )
 {
    F32 maxDistance;
    
-   if( mUseTrackDescriptionOnly && mSoundAsset.notNull() && getSoundProfile())
-      maxDistance = mSoundAsset->getSfxDescription()->mMaxDistance;
+   if( mUseTrackDescriptionOnly && mSoundAssetRef.notNull() && mSoundAssetRef.assetPtr->getSFXTrack())
+      maxDistance = mSoundAssetRef.assetPtr->getSfxDescription()->mMaxDistance;
    else
    {
       // Use the average of the three coords.

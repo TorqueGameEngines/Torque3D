@@ -225,6 +225,16 @@ SFXPlayList::SFXPlayList()
 {
 }
 
+SFXPlayList::SFXPlayList(const SFXPlayList& other, bool tempClone) : SFXTrack(other, tempClone)
+{
+   mTrace = other.mTrace;
+   mRandomMode = other.mRandomMode;
+   mLoopMode = other.mLoopMode;
+   mNumSlotsToPlay = other.mNumSlotsToPlay;
+   mSlots = other.mSlots;
+   mActiveSlots = other.mActiveSlots;
+}
+
 SFXPlayList::~SFXPlayList()
 {
    if (!isTempClone())

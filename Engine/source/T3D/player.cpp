@@ -444,9 +444,6 @@ PlayerData::PlayerData()
    boxTorsoBackPercentage  = 0.15f; //Skurps
    boxTorsoFrontPercentage = 0.15f; //Skurps 
 
-   for (S32 i = 0; i < MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(PlayerSound, i);
-
    footPuffEmitter = NULL;
    footPuffID = 0;
    footPuffNumParts = 15;
@@ -495,8 +492,7 @@ bool PlayerData::preload(bool server, String &errorStr)
    if (!server) {
       for (U32 i = 0; i < MaxSounds; ++i)
       {
-         _setPlayerSound(getPlayerSound(i), i);
-         if (!isPlayerSoundValid(i))
+         if (mPlayerSoundAssetRef[i].isNull())
          {
             //return false; -TODO: trigger asset download
          }
@@ -1143,7 +1139,17 @@ void PlayerData::initPersistFields()
    endGroup( "Interaction: Footsteps" );
 
    addGroup( "Interaction: Sounds" );
-   INITPERSISTFIELD_SOUNDASSET_ENUMED(PlayerSound, playerSoundsEnum, PlayerData::Sounds::MaxSounds, PlayerData, "Sounds related to player interaction.");
+   for (U32 i = 0; i < PlayerData::Sounds::MaxSounds; i++)
+   {
+      const playerSoundsEnum itter = static_cast<playerSoundsEnum>(i);
+      const char* enumString = castConsoleTypeToString(itter);
+      if (enumString && enumString[0])
+      {
+         ADD_FIELD(assetEnumNameConcat(enumString, Asset), TypeSoundAssetRef,
+            Offset(mPlayerSoundAssetRef[0], PlayerData) + sizeof(mPlayerSoundAssetRef[0]) * i)
+            .doc("Sounds related to player interaction.");
+      }
+   }
    endGroup( "Interaction: Sounds" );
 
    addGroup( "Interaction: Splashes" );
@@ -1376,7 +1382,7 @@ void PlayerData::packData(BitStream* stream)
    stream->write(minLateralImpactSpeed);
 
    for (U32 i = 0; i < MaxSounds; i++)
-      PACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
+      AssetDatabase.packDataAsset(stream, mPlayerSoundAssetRef[i].assetId);
 
    mathWrite(*stream, boxSize);
    mathWrite(*stream, crouchBoxSize);
@@ -1569,7 +1575,7 @@ void PlayerData::unpackData(BitStream* stream)
    stream->read(&minLateralImpactSpeed);
 
    for (U32 i = 0; i < MaxSounds; i++)
-      UNPACKDATA_SOUNDASSET_ARRAY(PlayerSound, i);
+      mPlayerSoundAssetRef[i] = AssetDatabase.unpackDataAsset(stream);
 
    mathRead(*stream, &boxSize);
    mathRead(*stream, &crouchBoxSize);
@@ -2024,10 +2030,10 @@ bool Player::onNewDataBlock( GameBaseData *dptr, bool reload )
       SFX_DELETE( mMoveBubbleSound );
       SFX_DELETE( mWaterBreathSound );
 
-      if ( mDataBlock->getPlayerSound(PlayerData::MoveBubbles) )
+      if ( mDataBlock->getPlayerSoundProfile(PlayerData::MoveBubbles) )
          mMoveBubbleSound = SFX->createSource( mDataBlock->getPlayerSoundProfile(PlayerData::MoveBubbles) );
 
-      if ( mDataBlock->getPlayerSound(PlayerData::WaterBreath) )
+      if ( mDataBlock->getPlayerSoundProfile(PlayerData::WaterBreath) )
          mWaterBreathSound = SFX->createSource( mDataBlock->getPlayerSoundProfile(PlayerData::WaterBreath) );
    }
 

@@ -123,8 +123,7 @@ public:
   SplashData* splash;                 // Water Splash Datablock
   S32 splashId;                       // Water splash ID
 
-  DECLARE_SOUNDASSET(afxMagicMissileData, ProjectileSound);
-  DECLARE_ASSET_SETGET(afxMagicMissileData, ProjectileSound);
+  AssetRef<SoundAsset> mProjectileSoundAssetRef;
 
   LightDescription *lightDesc;
   S32 lightDescId;   

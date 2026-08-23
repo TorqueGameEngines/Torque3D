@@ -40,7 +40,6 @@ ConsoleDocClass( GuiAudioCtrl,
 
 GuiAudioCtrl::GuiAudioCtrl()
 {
-   INIT_ASSET(Sound);
    mTickPeriodMS = 100;
    mLastThink = 0;
    mCurrTick = 0;
@@ -85,7 +84,7 @@ void GuiAudioCtrl::processTick()
    {
       mCurrTick = 0;
       mLastThink = 0;
-      if (isSoundValid())
+      if (mSoundAssetRef.notNull())
       {
          _update();
       }
@@ -116,7 +115,8 @@ bool GuiAudioCtrl::testCondition()
 void GuiAudioCtrl::initPersistFields()
 {
    addGroup("Sounds");
-      INITPERSISTFIELD_SOUNDASSET(Sound, GuiAudioCtrl, "Looping SoundAsset to play while GuiAudioCtrl is active.");
+      ADD_FIELD("SoundAsset", TypeSoundAssetRef, Offset(mSoundAssetRef, GuiAudioCtrl))
+         .doc("Looping SoundAsset to play while GuiAudioCtrl is active.");
       addFieldV("tickPeriodMS", TypeRangedS32, Offset(mTickPeriodMS, GuiAudioCtrl), &CommonValidators::MSTickRange,
          "@brief Time in milliseconds between calls to onTick().\n\n"
          "@see onTickTrigger()\n");
@@ -154,13 +154,16 @@ void GuiAudioCtrl::_update()
 
    if (testCondition() && isAwake())
    {
-      bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && getSoundProfile());
+      SFXTrack* soundProfile = NULL;
+      if (mSoundAssetRef.notNull())
+         soundProfile = mSoundAssetRef.assetPtr->getSFXTrack();
+      bool useTrackDescriptionOnly = (mUseTrackDescriptionOnly && soundProfile);
 
-      if (getSoundProfile())
+      if (soundProfile)
       {
          if (mSoundPlaying == NULL)
          {
-            mSoundPlaying = SFX->createSource(getSoundProfile(), &(SFX->getListener().getTransform()));
+            mSoundPlaying = SFX->createSource(soundProfile, &(SFX->getListener().getTransform()));
          }
       }
 
@@ -186,7 +189,7 @@ void GuiAudioCtrl::_update()
 
          }
          else
-            getSoundDescription()->mSourceGroup->addObject(mSoundPlaying);
+            mSoundAssetRef.assetPtr->getSfxDescription()->mSourceGroup->addObject(mSoundPlaying);
 
          mSoundPlaying->play();
       }

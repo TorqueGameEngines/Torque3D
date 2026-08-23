@@ -328,8 +328,7 @@ struct ShapeBaseImageData: public GameBaseData, protected AssetPtrCallback
 
    bool                    stateIgnoreLoadedForReady  [MaxStates];
 
-   DECLARE_SOUNDASSET_ARRAY(ShapeBaseImageData, stateSound, MaxStates);
-   DECLARE_ASSET_ARRAY_SETGET(ShapeBaseImageData, stateSound);
+   AssetRef<SoundAsset> mStateSoundAssetRef[MaxStates];
 
    //SFXTrack*               stateSound                 [MaxStates];
    const char*             stateScript                [MaxStates];

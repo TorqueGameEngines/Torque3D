@@ -46,8 +46,7 @@ class PrecipitationData : public GameBaseData
    typedef GameBaseData Parent;
 
   public:
-     DECLARE_SOUNDASSET(PrecipitationData, Sound);
-     DECLARE_ASSET_SETGET(PrecipitationData, Sound);
+     AssetRef<SoundAsset> mSoundAssetRef;
 
       AssetRef<ImageAsset> mDropAssetRef;
 

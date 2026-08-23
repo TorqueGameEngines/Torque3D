@@ -476,11 +476,11 @@ public:
    bool mUseBitmapArray;                           ///< Flag to use the bitmap array or to fallback to non-array rendering
    Vector<RectI> mBitmapArrayRects;                ///< Used for controls which use an array of bitmaps such as checkboxes
 
-   DECLARE_SOUNDASSET(GuiControlProfile, SoundButtonDown);     ///< Sound played when a button is pressed.
-   DECLARE_ASSET_SETGET(GuiControlProfile, SoundButtonDown);
+   AssetRef<SoundAsset> mSoundButtonDownAssetRef;  ///< Sound played when a button is pressed.
+   AssetRef<SoundAsset> mSoundButtonOverAssetRef;  ///< Sound played when a button is hovered.
 
-   DECLARE_SOUNDASSET(GuiControlProfile, SoundButtonOver);     ///< Sound played when a button is hovered.
-   DECLARE_ASSET_SETGET(GuiControlProfile, SoundButtonOver);
+   SFXTrack* getSoundButtonDownProfile() const { return mSoundButtonDownAssetRef.notNull() ? mSoundButtonDownAssetRef.assetPtr->getSFXTrack() : NULL; }
+   SFXTrack* getSoundButtonOverProfile() const { return mSoundButtonOverAssetRef.notNull() ? mSoundButtonOverAssetRef.assetPtr->getSFXTrack() : NULL; }
 
    StringTableEntry mChildrenProfileName;       ///< The name of the profile to use for the children controls
 

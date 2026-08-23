@@ -238,13 +238,6 @@ void LightningStrikeEvent::process(NetConnection*)
 //
 LightningData::LightningData()
 {
-   INIT_ASSET(StrikeSound);
-
-   for (S32 i = 0; i < MaxThunders; i++)
-   {
-      INIT_SOUNDASSET_ARRAY(ThunderSound, i);
-   }
-
    for (S32 i = 0; i < MaxTextures; i++)
    {
       strikeTextureNames[i] = NULL;
@@ -264,9 +257,12 @@ void LightningData::initPersistFields()
 {
    docsURL;
 
-   INITPERSISTFIELD_SOUNDASSET(StrikeSound, LightningData, "Sound to play when lightning STRIKES!");
+   ADD_FIELD("StrikeSoundAsset", TypeSoundAssetRef, Offset(mStrikeSoundAssetRef, LightningData))
+      .doc("Sound to play when lightning STRIKES!");
 
-   INITPERSISTFIELD_SOUNDASSET_ARRAY(ThunderSound, MaxThunders, LightningData, "Sounds for thunder.");
+   ADD_FIELD("ThunderSoundAsset", TypeSoundAssetRef, Offset(mThunderSoundAssetRef, LightningData))
+      .elements(MaxThunders)
+      .doc("Sounds for thunder.");
 
    addField( "strikeTextures", TypeString, Offset(strikeTextureNames, LightningData), MaxTextures,
       "List of textures to use to render lightning strikes." );
@@ -297,13 +293,13 @@ bool LightningData::preload(bool server, String &errorStr)
    {
       for (S32 i = 0; i < MaxThunders; i++)
       {
-         if (!isThunderSoundValid(i))
+         if (mThunderSoundAssetRef[i].isNull())
          {
             //return false; -TODO: trigger asset download
          }
 
       }
-      if (!isStrikeSoundValid())
+      if (mStrikeSoundAssetRef.isNull())
       {
          //return false; -TODO: trigger asset download
       }
@@ -332,7 +328,7 @@ void LightningData::packData(BitStream* stream)
    U32 i;
    for (i = 0; i < MaxThunders; i++)
    {
-      PACKDATA_SOUNDASSET_ARRAY(ThunderSound, i);
+      AssetDatabase.packDataAsset(stream, mThunderSoundAssetRef[i].assetId);
    }
 
    stream->writeInt(mNumStrikeTextures, 4);
@@ -340,7 +336,7 @@ void LightningData::packData(BitStream* stream)
    for (i = 0; i < MaxTextures; i++)
       stream->writeString(strikeTextureNames[i]);
 
-   PACKDATA_ASSET(StrikeSound);
+   AssetDatabase.packDataAsset(stream, mStrikeSoundAssetRef.assetId);
 }
 
 void LightningData::unpackData(BitStream* stream)
@@ -350,7 +346,7 @@ void LightningData::unpackData(BitStream* stream)
    U32 i;
    for (i = 0; i < MaxThunders; i++)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(ThunderSound, i);
+      mThunderSoundAssetRef[i] = AssetDatabase.unpackDataAsset(stream);
    }
 
    mNumStrikeTextures = stream->readInt(4);
@@ -358,7 +354,7 @@ void LightningData::unpackData(BitStream* stream)
    for (i = 0; i < MaxTextures; i++)
       strikeTextureNames[i] = stream->readSTString();
 
-   UNPACKDATA_ASSET(StrikeSound);
+   mStrikeSoundAssetRef = AssetDatabase.unpackDataAsset(stream);
 }
 
 
@@ -584,7 +580,10 @@ void Lightning::scheduleThunder(Strike* newStrike)
          if (t <= 0.03f) {
             // If it's really close, just play it...
             U32 thunder = sgLightningRand.randI(0, mDataBlock->numThunders - 1);
-            SFX->playOnce(mDataBlock->getThunderSoundProfile(thunder));
+            SFXTrack* thunderTrack = NULL;
+            if (mDataBlock->mThunderSoundAssetRef[thunder].notNull())
+               thunderTrack = mDataBlock->mThunderSoundAssetRef[thunder].assetPtr->getSFXTrack();
+            SFX->playOnce(thunderTrack);
          } else {
             Thunder* pThunder = new Thunder;
             pThunder->tRemaining = t;
@@ -651,7 +650,10 @@ void Lightning::advanceTime(F32 dt)
 
          // Play the sound...
          U32 thunder = sgLightningRand.randI(0, mDataBlock->numThunders - 1);
-         SFX->playOnce(mDataBlock->getThunderSoundProfile(thunder));
+         SFXTrack* thunderTrack = NULL;
+         if (mDataBlock->mThunderSoundAssetRef[thunder].notNull())
+            thunderTrack = mDataBlock->mThunderSoundAssetRef[thunder].assetPtr->getSFXTrack();
+         SFX->playOnce(thunderTrack);
       } else {
          pThunderWalker = &((*pThunderWalker)->next);
       }
@@ -735,9 +737,9 @@ void Lightning::processEvent(LightningStrikeEvent* pEvent)
       MatrixF trans(true);
       trans.setPosition( strikePoint );
 
-      if (mDataBlock->getStrikeSoundProfile())
+      if (mDataBlock->mStrikeSoundAssetRef.notNull() && mDataBlock->mStrikeSoundAssetRef.assetPtr->getSFXTrack())
       {
-         SFX->playOnce(mDataBlock->getStrikeSoundProfile(), &trans );
+         SFX->playOnce(mDataBlock->mStrikeSoundAssetRef.assetPtr->getSFXTrack(), &trans );
       }
 
 }

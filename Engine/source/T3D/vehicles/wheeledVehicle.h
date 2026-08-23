@@ -122,7 +122,7 @@ struct WheeledVehicleData: public VehicleData
       MaxSounds,
    };
 
-   DECLARE_SOUNDASSET_ARRAY(WheeledVehicleData, WheeledVehicleSounds, Sounds::MaxSounds);
+   AssetRef<SoundAsset> mWheeledVehicleSoundsAssetRef[Sounds::MaxSounds];
 
    ParticleEmitterData* tireEmitter;
 

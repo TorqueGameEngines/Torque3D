@@ -352,3 +352,10 @@ DefineEngineMethod(className, set##name, bool, (const char* assetName, S32 index
    }\
 }
 
+//
+#define assetEnumNameConcat(x, suff) ([](const char* base) { \
+   String result = String(base) + #suff; \
+   char* ret = Con::getReturnBuffer(result.length() + 1); \
+   dStrcpy(ret, result.c_str(), result.length() + 1); \
+   return ret; \
+})(x)

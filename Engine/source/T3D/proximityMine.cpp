@@ -82,8 +82,6 @@ ProximityMineData::ProximityMineData()
    triggerSequence( -1 ),
    explosionOffset( 0.05f )
 {
-   INIT_ASSET(ArmSound);
-   INIT_ASSET(TriggerSound);
 }
 
 void ProximityMineData::initPersistFields()
@@ -91,8 +89,10 @@ void ProximityMineData::initPersistFields()
    docsURL;
    Parent::initPersistFields();
    addGroup("Sounds");
-      INITPERSISTFIELD_SOUNDASSET(ArmSound, ProximityMineData, "Arming sound for this proximity mine.");
-      INITPERSISTFIELD_SOUNDASSET(TriggerSound, ProximityMineData, "Arming sound for this proximity mine.");
+      ADD_FIELD("ArmSoundAsset", TypeSoundAssetRef, Offset(mArmSoundAssetRef, ProximityMineData))
+         .doc("Arming sound for this proximity mine.");
+      ADD_FIELD("TriggerSoundAsset", TypeSoundAssetRef, Offset(mTriggerSoundAssetRef, ProximityMineData))
+         .doc("Arming sound for this proximity mine.");
    endGroup("Sounds");
 
    addGroup( "Arming" );
@@ -134,11 +134,11 @@ bool ProximityMineData::preload( bool server, String& errorStr )
 
    if ( !server )
    {
-      if(!isArmSoundValid() )
+      if(mArmSoundAssetRef.isNull() )
       {
          //return false; -TODO: trigger asset download
       }
-      if(!isTriggerSoundValid() )
+      if(mTriggerSoundAssetRef.isNull() )
       {
          //return false; -TODO: trigger asset download
       }
@@ -163,14 +163,14 @@ void ProximityMineData::packData( BitStream* stream )
    Parent::packData( stream );
 
    stream->write( armingDelay );
-   PACKDATA_ASSET(ArmSound);
+   AssetDatabase.packDataAsset(stream, mArmSoundAssetRef.assetId);
 
    stream->write( autoTriggerDelay );
    stream->writeFlag( triggerOnOwner );
    stream->write( triggerRadius );
    stream->write( triggerSpeed );
    stream->write( triggerDelay );
-   PACKDATA_ASSET(TriggerSound);
+   AssetDatabase.packDataAsset(stream, mTriggerSoundAssetRef.assetId);
 }
 
 void ProximityMineData::unpackData( BitStream* stream )
@@ -178,14 +178,14 @@ void ProximityMineData::unpackData( BitStream* stream )
    Parent::unpackData(stream);
 
    stream->read( &armingDelay );
-   UNPACKDATA_ASSET(ArmSound);
+   mArmSoundAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    stream->read( &autoTriggerDelay );
    triggerOnOwner = stream->readFlag();
    stream->read( &triggerRadius );
    stream->read( &triggerSpeed );
    stream->read( &triggerDelay );
-   UNPACKDATA_ASSET(TriggerSound);
+   mTriggerSoundAssetRef = AssetDatabase.unpackDataAsset(stream);
 }
 
 //----------------------------------------------------------------------------
@@ -433,8 +433,8 @@ void ProximityMine::processTick( const Move* move )
                   mAnimThread = mShapeInstance->addThread();
                   mShapeInstance->setSequence( mAnimThread, mDataBlock->armingSequence, 0.0f );
                }
-               if ( mDataBlock->getArmSoundProfile() )
-                  SFX->playOnce( mDataBlock->getArmSoundProfile(), &getRenderTransform() );
+               if ( mDataBlock->mArmSoundAssetRef.notNull() && mDataBlock->mArmSoundAssetRef.assetPtr->getSFXTrack() )
+                  SFX->playOnce( mDataBlock->mArmSoundAssetRef.assetPtr->getSFXTrack(), &getRenderTransform() );
             }
             break;
 
@@ -474,8 +474,8 @@ void ProximityMine::processTick( const Move* move )
                   mAnimThread = mShapeInstance->addThread();
                   mShapeInstance->setSequence( mAnimThread, mDataBlock->triggerSequence, 0.0f );
                }
-               if ( mDataBlock->getTriggerSoundProfile() )
-                  SFX->playOnce( mDataBlock->getTriggerSoundProfile(), &getRenderTransform() );
+               if ( mDataBlock->mTriggerSoundAssetRef.notNull() && mDataBlock->mTriggerSoundAssetRef.assetPtr->getSFXTrack() )
+                  SFX->playOnce( mDataBlock->mTriggerSoundAssetRef.assetPtr->getSFXTrack(), &getRenderTransform() );
 
                if ( isServerObject() )
                   mDataBlock->onTriggered_callback( this, sql.mList[0] );

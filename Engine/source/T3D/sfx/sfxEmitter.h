@@ -29,6 +29,9 @@
 #ifndef _SFXPROFILE_H_
    #include "sfx/sfxProfile.h"
 #endif
+#ifndef _SFXPLAYLIST_H_
+   #include "sfx/sfxPlayList.h"
+#endif
 #ifndef _SFXDESCRIPTION_H_
    #include "sfx/sfxDescription.h"
 #endif
@@ -70,7 +73,7 @@ public:
 /// Note that you can call SFXEmitter.play() and SFXEmitter.stop()
 /// to control playback from script.
 ///
-class SFXEmitter : public SceneObject
+class SFXEmitter : public SceneObject, protected AssetPtrCallback
 {
    public:
    
@@ -121,10 +124,10 @@ class SFXEmitter : public SceneObject
       /// The current dirty flags.
       BitSet32 mDirty;
 
-      DECLARE_SOUNDASSET(SFXEmitter, Sound);
-      DECLARE_ASSET_NET_SETGET(SFXEmitter, Sound, DirtyUpdateMask);
+      AssetRef<SoundAsset> mSoundAssetRef;
+
       /// returns the shape asset used for this object
-      StringTableEntry getTypeHint() const override { return (getSoundAsset()) ? getSoundAsset()->getAssetName() : StringTable->EmptyString(); }
+      StringTableEntry getTypeHint() const override { return mSoundAssetRef.notNull() ? mSoundAssetRef.assetPtr->getAssetName() : StringTable->EmptyString(); }
 
       /// The sound source for the emitter.
       SFXSource *mSource;
@@ -197,6 +200,17 @@ class SFXEmitter : public SceneObject
       /// dirty and the source needs to be updated.
       void _update();
       
+      /// Build mLocalProfile as a private, unregistered clone of the
+      /// asset's track, attached to mDescription. Destroys any previous
+      /// clone first.
+      void _buildLocalProfile();
+
+      /// Delete mLocalProfile if it holds a private clone.
+      void _destroyLocalProfile();
+
+      // AssetPtrCallback.
+      void onAssetRefreshed( AssetPtrBase* pAssetPtrBase ) override;
+
       /// Render emitter object in editor.
       void _renderObject( ObjectRenderInst* ri, SceneRenderState* state, BaseMatInstance* overrideMat );
       
@@ -256,6 +270,7 @@ class SFXEmitter : public SceneObject
       bool containsPoint( const Point3F& point ) override { return false; }
       void prepRenderImage( SceneRenderState* state ) override;
       void inspectPostApply() override;
+      void getUtilizedAssets( Vector<StringTableEntry>* usedAssetsList ) override;
 
       static void initPersistFields();
       static void consoleInit();

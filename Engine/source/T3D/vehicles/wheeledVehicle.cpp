@@ -317,8 +317,6 @@ WheeledVehicleData::WheeledVehicleData()
    steeringSequence = -1;
    wheelCount = 0;
    dMemset(&wheel, 0, sizeof(wheel));
-   for (S32 i = 0; i < MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
    mDownForce = 0;
 }
 
@@ -355,8 +353,7 @@ bool WheeledVehicleData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
       {
-         _setWheeledVehicleSounds(getWheeledVehicleSounds(i), i);
-         if (!isWheeledVehicleSoundsValid(i))
+         if (mWheeledVehicleSoundsAssetRef[i].isNull())
          {
             //return false; -TODO: trigger asset download
          }
@@ -468,7 +465,17 @@ void WheeledVehicleData::initPersistFields()
    endGroup("Particle Effects");
 
    addGroup("Sounds");
-   INITPERSISTFIELD_SOUNDASSET_ENUMED(WheeledVehicleSounds, WheeledVehicleSoundsEnum, MaxSounds, WheeledVehicleData, "Sounds related to wheeled vehicle.");
+   for (U32 i = 0; i < MaxSounds; i++)
+   {
+      const WheeledVehicleSoundsEnum itter = static_cast<WheeledVehicleSoundsEnum>(i);
+      const char* enumString = castConsoleTypeToString(itter);
+      if (enumString && enumString[0])
+      {
+         ADD_FIELD(assetEnumNameConcat(enumString, Asset), TypeSoundAssetRef,
+            Offset(mWheeledVehicleSoundsAssetRef[0], WheeledVehicleData) + sizeof(mWheeledVehicleSoundsAssetRef[0]) * i)
+            .doc("Sounds related to wheeled vehicle.");
+      }
+   }
    endGroup("Sounds");
 
    addGroup("Steering");
@@ -503,7 +510,7 @@ void WheeledVehicleData::packData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      PACKDATA_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
+      AssetDatabase.packDataAsset(stream, mWheeledVehicleSoundsAssetRef[i].assetId);
    }
 
    stream->write(maxWheelSpeed);
@@ -523,7 +530,7 @@ void WheeledVehicleData::unpackData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(WheeledVehicleSounds, i);
+      mWheeledVehicleSoundsAssetRef[i] = AssetDatabase.unpackDataAsset(stream);
    }
 
    stream->read(&maxWheelSpeed);
@@ -708,14 +715,17 @@ bool WheeledVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mSquealSound );
       SFX_DELETE( mJetSound );
 
-      if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::EngineSound) )
-         mEngineSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::EngineSound), &getTransform() );
+      AssetRef<SoundAsset>& engineSoundRef = mDataBlock->mWheeledVehicleSoundsAssetRef[WheeledVehicleData::EngineSound];
+      if ( engineSoundRef.notNull() && engineSoundRef.assetPtr->getSFXTrack() )
+         mEngineSound = SFX->createSource( engineSoundRef.assetPtr->getSFXTrack(), &getTransform() );
 
-      if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::SquealSound) )
-         mSquealSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::SquealSound), &getTransform() );
+      AssetRef<SoundAsset>& squealSoundRef = mDataBlock->mWheeledVehicleSoundsAssetRef[WheeledVehicleData::SquealSound];
+      if ( squealSoundRef.notNull() && squealSoundRef.assetPtr->getSFXTrack() )
+         mSquealSound = SFX->createSource( squealSoundRef.assetPtr->getSFXTrack(), &getTransform() );
 
-      if ( mDataBlock->getWheeledVehicleSounds(WheeledVehicleData::JetSound) )
-         mJetSound = SFX->createSource( mDataBlock->getWheeledVehicleSoundsProfile(WheeledVehicleData::JetSound), &getTransform() );
+      AssetRef<SoundAsset>& jetSoundRef = mDataBlock->mWheeledVehicleSoundsAssetRef[WheeledVehicleData::JetSound];
+      if ( jetSoundRef.notNull() && jetSoundRef.assetPtr->getSFXTrack() )
+         mJetSound = SFX->createSource( jetSoundRef.assetPtr->getSFXTrack(), &getTransform() );
    }
 
    scriptOnNewDataBlock(reload);

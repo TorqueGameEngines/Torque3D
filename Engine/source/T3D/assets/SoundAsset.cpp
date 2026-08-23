@@ -100,6 +100,45 @@ ConsoleSetType(TypeSoundAssetPtr)
 
 //-----------------------------------------------------------------------------
 
+IMPLEMENT_STRUCT(AssetRef<SoundAsset>, AssetRefSoundAsset, , "")
+END_IMPLEMENT_STRUCT
+
+ConsoleType(SoundAssetRef, TypeSoundAssetRef, AssetRef<SoundAsset>, ASSET_ID_FIELD_PREFIX)
+
+ConsoleGetType(TypeSoundAssetRef)
+{
+   AssetRef<SoundAsset>& ref = *((AssetRef<SoundAsset>*)dptr);
+
+   if (ref.assetPtr.isNull())
+      return ref.assetId;
+   else
+      return ref.assetPtr.getAssetId();
+}
+
+ConsoleSetType(TypeSoundAssetRef)
+{
+   if (argc == 1)
+   {
+      const char* pFieldValue = argv[0];
+
+      AssetRef<SoundAsset>* pAssetRef = (AssetRef<SoundAsset>*)(dptr);
+
+      if (pAssetRef == NULL)
+      {
+         Con::warnf("(TypeSoundAssetRef) - Failed to set asset Id '%d'.", pFieldValue);
+         return;
+      }
+
+      *pAssetRef = pFieldValue;
+
+      return;
+   }
+
+   Con::warnf("(TypeSoundAssetRef) - Cannot set multiple args to a single asset.");
+}
+
+//-----------------------------------------------------------------------------
+
 ConsoleType(assetIdString, TypeSoundAssetId, const char*, ASSET_ID_FIELD_PREFIX)
 
 ConsoleGetType(TypeSoundAssetId)
@@ -833,5 +872,20 @@ void GuiInspectorTypeSoundAssetId::consoleInit()
    Parent::consoleInit();
 
    ConsoleBaseType::getType(TypeSoundAssetId)->setInspectorFieldType("GuiInspectorTypeSoundAssetId");
+}
+
+IMPLEMENT_CONOBJECT(GuiInspectorTypeSoundAssetRef);
+
+ConsoleDocClass(GuiInspectorTypeSoundAssetRef,
+   "@brief Inspector field type for AssetRef<SoundAsset> fields\n\n"
+   "Editor use only.\n\n"
+   "@internal"
+);
+
+void GuiInspectorTypeSoundAssetRef::consoleInit()
+{
+   Parent::consoleInit();
+
+   ConsoleBaseType::getType(TypeSoundAssetRef)->setInspectorFieldType("GuiInspectorTypeSoundAssetRef");
 }
 #endif

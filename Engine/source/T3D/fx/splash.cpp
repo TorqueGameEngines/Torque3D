@@ -67,11 +67,6 @@ ConsoleDocClass( Splash,
 //--------------------------------------------------------------------------
 SplashData::SplashData()
 {
-   //soundProfile      = NULL;
-   //soundProfileId    = 0;
-
-   INIT_ASSET(Sound);
-
    scale.set(1, 1, 1);
 
    dMemset( emitterList, 0, sizeof( emitterList ) );
@@ -112,7 +107,8 @@ SplashData::SplashData()
 void SplashData::initPersistFields()
 {
       docsURL;
-   INITPERSISTFIELD_SOUNDASSET(Sound, SplashData, "Sound to play when splash, splashes.");
+   ADD_FIELD("SoundAsset", TypeSoundAssetRef, Offset(mSoundAssetRef, SplashData))
+      .doc("Sound to play when splash, splashes.");
 
    addField("scale",             TypePoint3F,                  Offset(scale,              SplashData), "The scale of this splashing effect, defined as the F32 points X, Y, Z.\n");
    addField("emitter",           TYPEID< ParticleEmitterData >(),   Offset(emitterList,        SplashData), NUM_EMITTERS, "List of particle emitters to create at the point of this Splash effect.\n");
@@ -173,7 +169,7 @@ void SplashData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(Sound);
+   AssetDatabase.packDataAsset(stream, mSoundAssetRef.assetId);
 
    mathWrite(*stream, scale);
    stream->write(delayMS);
@@ -227,7 +223,7 @@ void SplashData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(Sound);
+   mSoundAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    mathRead(*stream, &scale);
    stream->read(&delayMS);
@@ -284,10 +280,14 @@ bool SplashData::preload(bool server, String &errorStr)
 
    if (!server)
    {
-      if (!isSoundValid())
+      if (mSoundAssetRef.isNull())
       {
          Con::errorf(ConsoleLogEntry::General, "SplashData::preload: Invalid Sound asset.");
          //return false;
+      }
+      else
+      {
+         mSoundAssetRef.assetPtr->load();
       }
 
       S32 i;
@@ -693,7 +693,9 @@ void Splash::spawnExplosion()
 
    /// could just play the explosion one, but explosion could be weapon specific,
    /// splash sound could be liquid specific. food for thought.
-   SFXTrack* sound_prof = mDataBlock->getSoundProfile();
+   SFXTrack* sound_prof = NULL;
+   if (mDataBlock->mSoundAssetRef.notNull())
+      sound_prof = mDataBlock->mSoundAssetRef.assetPtr->getSFXTrack();
    if (sound_prof)
    {
       SFX->playOnce(sound_prof, &getTransform());

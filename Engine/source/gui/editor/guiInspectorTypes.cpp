@@ -1903,12 +1903,18 @@ void GuiInspectorTypeSFXSourceName::consoleInit()
 
 void GuiInspectorType2DValue::constructEditControlChildren(GuiControl* retCtrl, S32 width)
 {
-   mCtrlX = new GuiTextEditCtrl();
+   mCtrlX = new GuiTextEditSliderCtrl();
+   mCtrlX->setField("range", String::ToString("%f %f", F32_MIN_EX, F32_MAX));
+   mCtrlX->setField("increment", String::ToString("%f", POINT_EPSILON * 100.0f));
+   mCtrlX->setDataField(StringTable->insert("format"), NULL, "%g");
    _registerEditControl(mCtrlX, "x");
    mLabelX = new GuiControl();
    _registerEditControl(mLabelX, "lx");
 
-   mCtrlY = new GuiTextEditCtrl();
+   mCtrlY = new GuiTextEditSliderCtrl();
+   mCtrlY->setField("range", String::ToString("%f %f", F32_MIN_EX, F32_MAX));
+   mCtrlY->setField("increment", String::ToString("%f", POINT_EPSILON * 100.0f));
+   mCtrlY->setDataField(StringTable->insert("format"), NULL, "%g");
    _registerEditControl(mCtrlY, "y");
    mLabelY = new GuiControl();
    _registerEditControl(mLabelY, "ly");
@@ -2078,7 +2084,11 @@ void GuiInspectorType3DValue::constructEditControlChildren(GuiControl* retCtrl, 
 {
    Parent::constructEditControlChildren(retCtrl, width);
 
-   mCtrlZ = new GuiTextEditCtrl();
+   mCtrlZ = new GuiTextEditSliderCtrl();
+   mCtrlZ->setField("range", String::ToString("%f %f", F32_MIN_EX, F32_MAX));
+   mCtrlZ->setField("increment", String::ToString("%f", POINT_EPSILON*100.0f));
+   mCtrlZ->setDataField(StringTable->insert("format"), NULL, "%g");
+
    _registerEditControl(mCtrlZ, "z");
    mLabelZ = new GuiControl();
    _registerEditControl(mLabelZ, "lz");
@@ -2387,10 +2397,42 @@ GuiControl* GuiInspectorTypePoint2I::constructEditControl()
 {
    GuiControl* retCtrl = Parent::constructEditControl();
 
+   mCtrlX->setField("increment", "1");
+   mCtrlX->setField("range", String::ToString("%d %d", S32_MIN, S32_MAX));
    mCtrlX->setDataField(StringTable->insert("format"), NULL, "%d");
+   mCtrlY->setField("increment", "1");
+   mCtrlY->setField("range", String::ToString("%d %d", S32_MIN, S32_MAX));
    mCtrlY->setDataField(StringTable->insert("format"), NULL, "%d");
 
    return retCtrl;
+}
+
+void GuiInspectorTypePoint2I::updateValue()
+{
+   if (mField)
+   {
+      Parent::updateValue();
+      const char* data = getData();
+      if (!data)
+         data = "";
+      U32 elementCount = StringUnit::getUnitCount(data, " ");
+      if (elementCount > 0)
+      {
+         S32 value = dAtoi(StringUnit::getUnit(data, 0, " \t\n"));
+         char szBuffer[64];
+         dSprintf(szBuffer, 64, "%d", value);
+         mCtrlX->setText(szBuffer);
+      }
+      if (elementCount > 1)
+      {
+         S32 value = dAtoi(StringUnit::getUnit(data, 1, " \t\n"));
+         char szBuffer[64];
+         dSprintf(szBuffer, 64, "%d", value);
+         mCtrlY->setText(szBuffer);
+      }
+      mScriptValue->setText(data);
+      mEdit->setDataField(StringTable->insert("tooltip"), NULL, data);
+   }
 }
 
 //-----------------------------------------------------------------------------

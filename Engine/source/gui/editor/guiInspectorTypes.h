@@ -633,10 +633,10 @@ class GuiInspectorType2DValue : public GuiInspectorField
 private:
    typedef GuiInspectorField Parent;
 protected:
-   GuiTextEditCtrl* mCtrlX;
+   GuiTextEditSliderCtrl* mCtrlX;
    GuiControl* mLabelX;
    GuiControl* mContainerX;
-   GuiTextEditCtrl* mCtrlY;
+   GuiTextEditSliderCtrl* mCtrlY;
    GuiControl* mLabelY;
    GuiControl* mContainerY;
    GuiTextCtrl* mScriptValue;
@@ -663,7 +663,7 @@ class GuiInspectorType3DValue : public GuiInspectorType2DValue
 private:
    typedef GuiInspectorType2DValue Parent;
 protected:
-   GuiTextEditCtrl* mCtrlZ;
+   GuiTextEditSliderCtrl* mCtrlZ;
    GuiControl* mLabelZ;
    GuiControl* mContainerZ;
 
@@ -718,6 +718,7 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypePoint2I);
    static void consoleInit();
    GuiControl* constructEditControl() override;
+   void updateValue() override;
 };
 
 

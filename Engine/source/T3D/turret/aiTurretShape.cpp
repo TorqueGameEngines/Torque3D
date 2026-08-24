@@ -541,7 +541,7 @@ bool AITurretShape::onNewDataBlock(GameBaseData* dptr, bool reload)
 
    // For states
    mStateAnimThread = 0;
-   if (mDataBlock->isAnimated)
+   if (mDataBlock->isAnimated && mShapeInstance)
    {
       mStateAnimThread = mShapeInstance->addThread();
       mShapeInstance->setTimeScale(mStateAnimThread,0);
@@ -614,7 +614,7 @@ void AITurretShape::setTurretState(U32 newState, bool force)
 
    // Reset cyclic sequences back to the first frame to turn it off
    // (the first key frame should be it's off state).
-   if (mStateAnimThread && mStateAnimThread->getSequence()->isCyclic())
+   if (mShapeInstance && mStateAnimThread && mStateAnimThread->getSequence()->isCyclic())
    {
       mShapeInstance->setPos(mStateAnimThread,0);
       mShapeInstance->setTimeScale(mStateAnimThread,0);
@@ -646,7 +646,7 @@ void AITurretShape::setTurretState(U32 newState, bool force)
    mStateDelayTime = stateData.timeoutValue;
 
    // Play animation
-   if (mStateAnimThread && stateData.sequence != -1) 
+   if (mShapeInstance && mStateAnimThread && stateData.sequence != -1) 
    {
       mShapeInstance->setSequence(mStateAnimThread,stateData.sequence, stateData.direction ? 0.0f : 1.0f);
       F32 timeScale = (stateData.scaleAnimation && stateData.timeoutValue) ?
@@ -871,7 +871,7 @@ void AITurretShape::_trackTarget(F32 dt)
    VectorF toTarget;
    MatrixF mat;
    S32 node = mDataBlock->aimNode;
-   if (node != -1)
+   if (node != -1 && mShapeInstance)
    {
       // Get the current position of our node
       MatrixF* nodeTrans = &mShapeInstance->mNodeTransforms[node];
@@ -1150,7 +1150,7 @@ void AITurretShape::advanceTime(F32 dt)
 
    // Update any state thread
    AITurretShapeData::StateData& stateData = *mState;
-   if (mStateAnimThread && stateData.sequence != -1) 
+   if (mShapeInstance && mStateAnimThread && stateData.sequence != -1) 
    {
       mShapeInstance->advanceTime(dt,mStateAnimThread); 
 

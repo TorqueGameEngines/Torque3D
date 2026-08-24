@@ -357,21 +357,24 @@ bool TurretShape::onNewDataBlock(GameBaseData* dptr, bool reload)
    if (!mDataBlock || !Parent::onNewDataBlock(dptr, reload))
       return false;
 
-   // Mark these nodes for control by code only (will not animate in a sequence)
-   if (mDataBlock->headingNode != -1)
-      mShapeInstance->setNodeAnimationState(mDataBlock->headingNode, TSShapeInstance::MaskNodeHandsOff);
-   if (mDataBlock->pitchNode != -1)
-      mShapeInstance->setNodeAnimationState(mDataBlock->pitchNode, TSShapeInstance::MaskNodeHandsOff);
-   for (U32 i=0; i<TurretShapeData::NumMirrorDirectionNodes; ++i)
+   if (mShapeInstance)
    {
-      if (mDataBlock->pitchNodes[i] != -1)
+      // Mark these nodes for control by code only (will not animate in a sequence)
+      if (mDataBlock->headingNode != -1)
+         mShapeInstance->setNodeAnimationState(mDataBlock->headingNode, TSShapeInstance::MaskNodeHandsOff);
+      if (mDataBlock->pitchNode != -1)
+         mShapeInstance->setNodeAnimationState(mDataBlock->pitchNode, TSShapeInstance::MaskNodeHandsOff);
+      for (U32 i = 0; i < TurretShapeData::NumMirrorDirectionNodes; ++i)
       {
-         mShapeInstance->setNodeAnimationState(mDataBlock->pitchNodes[i], TSShapeInstance::MaskNodeHandsOff);
-      }
+         if (mDataBlock->pitchNodes[i] != -1)
+         {
+            mShapeInstance->setNodeAnimationState(mDataBlock->pitchNodes[i], TSShapeInstance::MaskNodeHandsOff);
+         }
 
-      if (mDataBlock->headingNodes[i] != -1)
-      {
-         mShapeInstance->setNodeAnimationState(mDataBlock->headingNodes[i], TSShapeInstance::MaskNodeHandsOff);
+         if (mDataBlock->headingNodes[i] != -1)
+         {
+            mShapeInstance->setNodeAnimationState(mDataBlock->headingNodes[i], TSShapeInstance::MaskNodeHandsOff);
+         }
       }
    }
 
@@ -418,7 +421,7 @@ bool TurretShape::onNewDataBlock(GameBaseData* dptr, bool reload)
    mRecoilThread = 0;
    if (isGhost())
       for (U32 s = 0; s < TurretShapeData::NumRecoilSequences; s++)
-         if (mDataBlock->recoilSequence[s] != -1) {
+         if (mShapeInstance && mDataBlock->recoilSequence[s] != -1) {
             mRecoilThread = mShapeInstance->addThread();
             mShapeInstance->setSequence(mRecoilThread, mDataBlock->recoilSequence[s], 0);
             mShapeInstance->setTimeScale(mRecoilThread, 0);
@@ -434,17 +437,20 @@ bool TurretShape::onNewDataBlock(GameBaseData* dptr, bool reload)
    mHeadingThread = 0;
    if (isGhost())
    {
-      if (mDataBlock->pitchSequence != -1)
+      if (mShapeInstance)
       {
-         mPitchThread = mShapeInstance->addThread();
-         mShapeInstance->setSequence(mPitchThread, mDataBlock->pitchSequence, 0);
-         mShapeInstance->setTimeScale(mPitchThread, 0);
-      }
-      if (mDataBlock->headingSequence != -1)
-      {
-         mHeadingThread = mShapeInstance->addThread();
-         mShapeInstance->setSequence(mHeadingThread, mDataBlock->headingSequence, 0);
-         mShapeInstance->setTimeScale(mHeadingThread, 0);
+         if (mDataBlock->pitchSequence != -1)
+         {
+            mPitchThread = mShapeInstance->addThread();
+            mShapeInstance->setSequence(mPitchThread, mDataBlock->pitchSequence, 0);
+            mShapeInstance->setTimeScale(mPitchThread, 0);
+         }
+         if (mDataBlock->headingSequence != -1)
+         {
+            mHeadingThread = mShapeInstance->addThread();
+            mShapeInstance->setSequence(mHeadingThread, mDataBlock->headingSequence, 0);
+            mShapeInstance->setTimeScale(mHeadingThread, 0);
+         }
       }
    }
 
@@ -460,6 +466,9 @@ bool TurretShape::onNewDataBlock(GameBaseData* dptr, bool reload)
 
 void TurretShape::updateAnimation(F32 dt)
 {
+   if (!mShapeInstance)
+      return;
+
    if (mRecoilThread)
       mShapeInstance->advanceTime(dt,mRecoilThread);
    if (mImageStateThread)
@@ -537,6 +546,8 @@ void TurretShape::onImageStateAnimation(U32 imageSlot, const char* seqName, bool
 {
    if (isGhost())
    {
+      if (!mShapeInstance)
+         return;
       S32 seqIndex = mShapeInstance->getShape()->findSequence(seqName);
 
       if (seqIndex != -1)
@@ -571,7 +582,7 @@ void TurretShape::updateDamageLevel()
 {
    if (!isGhost())
       setDamageState((mDamage >= mDataBlock->maxDamage)? Destroyed: Enabled);
-   if (mDamageThread)
+   if (mShapeInstance && mDamageThread)
       mShapeInstance->setPos(mDamageThread, mDamage / mDataBlock->destroyedLevel);
 }
 
@@ -772,7 +783,7 @@ void TurretShape::updateMove(const Move* move)
 
 bool TurretShape::getNodeTransform(S32 node, MatrixF& mat)
 {
-   if (node == -1)
+   if (node == -1 || !mShapeInstance)
       return false;
 
    MatrixF nodeTransform = mShapeInstance->mNodeTransforms[node];
@@ -802,13 +813,17 @@ void TurretShape::_setRotation(const Point3F& rot)
 {
    _updateNodes(rot);
 
-   mShapeInstance->animate();
+   if (mShapeInstance)
+      mShapeInstance->animate();
 
    mRot = rot;
 }
 
 void TurretShape::_updateNodes(const Point3F& rot)
 {
+   if (!mShapeInstance)
+      return;
+
    EulerF xRot(rot.x, 0.0f, 0.0f);
    EulerF zRot(0.0f, 0.0f, rot.z);
 
@@ -1148,7 +1163,7 @@ void TurretShape::unpackUpdate(NetConnection *connection, BitStream *stream)
 void TurretShape::getWeaponMountTransform( S32 index, const MatrixF &xfm, MatrixF *outMat )
 {
    // Returns mount point to world space transform
-   if ( index >= 0 && index < ShapeBase::MaxMountedImages) {
+   if (mShapeInstance && index >= 0 && index < ShapeBase::MaxMountedImages) {
       S32 ni = mDataBlock->weaponMountNode[index];
       if (ni != -1) {
          MatrixF mountTransform = mShapeInstance->mNodeTransforms[ni];

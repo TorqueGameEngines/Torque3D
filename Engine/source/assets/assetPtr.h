@@ -145,14 +145,17 @@ public:
         return *this;
     }
 
-    AssetPtr<T>& operator=( const AssetPtr<T>& assetPtr )
-    {
-        // Set asset pointer.
-        *this = assetPtr->getAssetId();
+   AssetPtr<T>& operator=( const AssetPtr<T>& assetPtr )
+   {
+      // Set asset pointer.
+      if (assetPtr.notNull())
+         *this = assetPtr->getAssetId();
+      else
+         clear();
 
-        // Return Reference.
-        return *this;
-    }
+      // Return Reference.
+      return *this;
+   }
 
     /// Referencing.
     void clear( void ) override

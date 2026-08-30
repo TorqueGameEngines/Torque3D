@@ -674,6 +674,7 @@ class SceneObject : public NetObject, public ProcessObject
 
       void resolveMountPID();
 
+      void setMountTransforms();
       /// @}
       
       /// @name Sound

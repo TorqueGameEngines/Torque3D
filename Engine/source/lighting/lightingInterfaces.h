@@ -34,7 +34,8 @@ class ObjectProxy;
 class ObjectProxyList;
 class SceneLightingInterface;
 
-template <class T> class Vector;
+template<typename T, U32 COUNT> struct CustomAllocator;
+template<typename T, U32 COUNT, typename Allocator> class Vector;
 typedef Vector<SceneLightingInterface*> SceneLightingInterfaces; 
 
 // List of available "systems" that the lighting kit can use

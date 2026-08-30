@@ -20,38 +20,44 @@
 // IN THE SOFTWARE.
 //-----------------------------------------------------------------------------
 
-#ifndef _ENGINESTRUCTS_H_
-#define _ENGINESTRUCTS_H_
+#ifndef _TVECTOROBJECT_H_
+#define _TVECTOROBJECT_H_
 
-#ifndef _ENGINETYPES_H_
-   #include "console/engineTypes.h"
-#endif
+#include "console/simObject.h"
 
-#include "math/mPlane.h"
-#include "math/mPolyhedron.h"
+class VectorObject : public SimObject {
+   typedef SimObject Parent;
 
-/// @file
-/// Definitions for the core engine structured types.
+protected:
+   ConsoleBaseType* mVarType;
+   Vector<void*> mData;
+public:
+   VectorObject(): mVarType(NULL) {};
+   DECLARE_CONOBJECT(VectorObject);
 
-namespace Torque {
-   class UUID;
+   static void initPersistFields();
+
+   void _internalSetType(const char* typeName);
+   static bool _setType(void* obj, const char* index, const char* data);
+   void setType(const char* typeName);
+   ConsoleBaseType* getVarType() { return mVarType; };
+
+   U32 size() const { return mData.size(); };
+   void* get(U32 index);
+   void set(U32 index, void* data);
+   void push_back(void* data);
+   void insert(U32 index, void* data);
+   void erase(U32 index);
+   void clear();
+   void fromString(char* data);
+   char* toString();
+};
+
+DefineConsoleType(TypeVector, VectorObject*);
+
+template<typename T>
+static inline S32 VecType() {
+   return TYPEID<VectorObject*>();
 }
 
-class ColorI;
-class LinearColorF;
-
-
-DECLARE_STRUCT_R(Vector< bool >);
-DECLARE_STRUCT_R(Vector< S32 >);
-DECLARE_STRUCT_R(Vector< F32 >);
-DECLARE_STRUCT_R(Vector< Point3F >);
-DECLARE_STRUCT_R(PlaneF);
-DECLARE_STRUCT_R(Vector< PlaneF >);
-DECLARE_STRUCT_R(PolyhedronData::Edge);
-DECLARE_STRUCT_R(Vector< PolyhedronData::Edge >);
-DECLARE_STRUCT_R(Vector< const char* >);
-DECLARE_STRUCT_R(Torque::UUID);
-DECLARE_STRUCT_R(ColorI);
-DECLARE_STRUCT_R(LinearColorF);
-
-#endif // !_ENGINESTRUCTS_H_
+#endif

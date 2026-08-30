@@ -47,7 +47,6 @@ class String;
 class FileName;
 class SimObject;
 class SimObjectType;
-template<class T> class Vector;
 
 //-----------------------------------------------------------------------------
 // String scan/print methods

@@ -63,7 +63,7 @@ class RigidShapeData : public ShapeBaseData
       F32 friction;
    } body;
 
-   DECLARE_SOUNDASSET_ARRAY(RigidShapeData, BodySounds, Body::Sounds::MaxSounds)
+   AssetRef<SoundAsset> mBodySoundsAssetRef[Body::Sounds::MaxSounds];
 
    enum RigidShapeConsts
    {
@@ -82,8 +82,7 @@ class RigidShapeData : public ShapeBaseData
       Wake,
       MaxSounds
    };
-   DECLARE_SOUNDASSET_ARRAY(RigidShapeData, WaterSounds, Sounds::MaxSounds)
-   DECLARE_ASSET_ARRAY_SETGET(RigidShapeData, WaterSounds);
+   AssetRef<SoundAsset> mWaterSoundsAssetRef[Sounds::MaxSounds];
 
    F32 exitSplashSoundVel;
    F32 softSplashSoundVel;

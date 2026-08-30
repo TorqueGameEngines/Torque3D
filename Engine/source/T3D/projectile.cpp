@@ -147,8 +147,6 @@ ProjectileData::ProjectileData()
 {
    projectileShapeAssetRef.assetPtr.registerRefreshNotify(this);
 
-   INIT_ASSET(ProjectileSound);
-
    explosion = NULL;
    explosionId = 0;
 
@@ -220,7 +218,7 @@ ProjectileData::ProjectileData(const ProjectileData& other, bool temp_clone) : G
    splashId = other.splashId; // -- for pack/unpack of splash ptr
    decal = other.decal;
    decalId = other.decalId; // -- for pack/unpack of decal ptr
-   CLONE_ASSET(ProjectileSound);
+   mProjectileSoundAssetRef = other.mProjectileSoundAssetRef;
    lightDesc = other.lightDesc;
    lightDescId = other.lightDescId; // -- for pack/unpack of lightDesc ptr
    projectileShapeAssetRef = other.projectileShapeAssetRef;// -- TSShape loads using projectileShapeAssetRef
@@ -266,7 +264,8 @@ void ProjectileData::initPersistFields()
    endGroup("Particle Effects");
 
    addGroup("Sounds");
-      INITPERSISTFIELD_SOUNDASSET(ProjectileSound, ProjectileData, "The sound for the projectile.");
+      ADD_FIELD("ProjectileSoundAsset", TypeSoundAssetRef, Offset(mProjectileSoundAssetRef, ProjectileData))
+         .doc("The sound for the projectile.");
    endGroup("Sounds");
 
    addGroup("Light Emitter");
@@ -413,7 +412,7 @@ bool ProjectileData::preload(bool server, String &errorStr)
          if (Sim::findObject(decalId, decal) == false)
             Con::errorf(ConsoleLogEntry::General, "ProjectileData::preload: Invalid packet, bad datablockId(decal): %d", decalId);
 
-      if (!isProjectileSoundValid())
+      if (mProjectileSoundAssetRef.isNull())
       {
          //return false; -TODO: trigger asset download
       }
@@ -481,7 +480,7 @@ void ProjectileData::packData(BitStream* stream)
    if (stream->writeFlag(decal != NULL))
       stream->writeRangedU32(decal->getId(), DataBlockObjectIdFirst,
                                               DataBlockObjectIdLast);
-   PACKDATA_ASSET(ProjectileSound);
+   AssetDatabase.packDataAsset(stream, mProjectileSoundAssetRef.assetId);
 
    if ( stream->writeFlag(lightDesc != NULL))
       stream->writeRangedU32(lightDesc->getId(), DataBlockObjectIdFirst,
@@ -543,7 +542,7 @@ void ProjectileData::unpackData(BitStream* stream)
    if (stream->readFlag())
       decalId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
 
-   UNPACKDATA_ASSET(ProjectileSound);
+   mProjectileSoundAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    if (stream->readFlag())
       lightDescId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
@@ -938,8 +937,8 @@ bool Projectile::onNewDataBlock( GameBaseData *dptr, bool reload )
 
       SFX_DELETE( mSound );
 
-      if ( mDataBlock->getProjectileSound() )
-         mSound = SFX->createSource( mDataBlock->getProjectileSoundProfile() );
+      if ( mDataBlock->mProjectileSoundAssetRef.notNull() && mDataBlock->mProjectileSoundAssetRef.assetPtr->getSFXTrack() )
+         mSound = SFX->createSource( mDataBlock->mProjectileSoundAssetRef.assetPtr->getSFXTrack() );
    }
 
    return true;
@@ -1153,7 +1152,7 @@ void Projectile::explode( const Point3F &p, const Point3F &n, const U32 collideT
 
 void Projectile::updateSound()
 {
-   if (!mDataBlock->isProjectileSoundValid())
+   if (mDataBlock->mProjectileSoundAssetRef.isNull())
       return;
 
    if ( mSound )

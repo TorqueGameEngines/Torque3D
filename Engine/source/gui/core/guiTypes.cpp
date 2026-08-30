@@ -250,8 +250,6 @@ GuiControlProfile::GuiControlProfile(void) :
    mTextOffset(0,0),
    mBitmapArrayRects(0)
 {
-   INIT_ASSET(SoundButtonDown);
-   INIT_ASSET(SoundButtonOver);
    mLoadCount = 0;
    mUseCount = 0;
    
@@ -328,19 +326,13 @@ GuiControlProfile::GuiControlProfile(void) :
       mTextOffset     = def->mTextOffset;
 
       // default sound
-      _setSoundButtonDown(def->getSoundButtonDown());
-      if (getSoundButtonDown() != StringTable->EmptyString())
-      {
-         if (!getSoundButtonDownProfile())
+      mSoundButtonDownAssetRef = def->mSoundButtonDownAssetRef;
+      if (mSoundButtonDownAssetRef.notNull() && !getSoundButtonDownProfile())
             Con::errorf(ConsoleLogEntry::General, "GuiControlProfile: Can't get default button pressed sound asset.");
-      }
 
-      _setSoundButtonOver(def->getSoundButtonOver());
-      if (getSoundButtonOver() != StringTable->EmptyString())
-      {
-         if (!getSoundButtonOverProfile())
+      mSoundButtonOverAssetRef = def->mSoundButtonOverAssetRef;
+      if (mSoundButtonOverAssetRef.notNull() && !getSoundButtonOverProfile())
             Con::errorf(ConsoleLogEntry::General, "GuiControlProfile: Can't get default button hover sound asset.");
-      }
 
       //used by GuiTextCtrl
       mModal         = def->mModal;
@@ -450,8 +442,10 @@ void GuiControlProfile::initPersistFields()
       addField("hasBitmapArray", TypeBool,      Offset(mUseBitmapArray, GuiControlProfile),
          "If true, 'bitmap' is an array of images." );
 
-      INITPERSISTFIELD_SOUNDASSET(SoundButtonDown, GuiControlProfile, "The sound button down.");
-      INITPERSISTFIELD_SOUNDASSET(SoundButtonOver, GuiControlProfile, "The sound button down.");
+      ADD_FIELD("SoundButtonDownAsset", TypeSoundAssetRef, Offset(mSoundButtonDownAssetRef, GuiControlProfile))
+         .doc("The sound button down.");
+      ADD_FIELD("SoundButtonOverAsset", TypeSoundAssetRef, Offset(mSoundButtonOverAssetRef, GuiControlProfile))
+         .doc("The sound button down.");
 
       addField("profileForChildren", TypeString,      Offset(mChildrenProfileName, GuiControlProfile));
    

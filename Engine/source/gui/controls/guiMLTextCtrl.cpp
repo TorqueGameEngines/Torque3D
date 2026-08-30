@@ -48,7 +48,7 @@ ConsoleDocClass( GuiMLTextCtrl,
    "    lineSpacing = \"2\";\n"
    "    allowColorChars = \"0\";\n"
    "    maxChars = \"-1\";\n"
-   "    deniedSound = \"DeniedSoundProfile\";\n"
+   "    DeniedSoundAsset = \"DeniedSoundProfile\";\n"
    "    text = \"The Text for This Control.\";\n"
    "    useURLMouseCursor = \"true\";\n"
    "    //Properties not specific to this control have been omitted from this example.\n"
@@ -282,7 +282,6 @@ GuiMLTextCtrl::GuiMLTextCtrl()
 {   
    mActive = true;
    //mInitialText = StringTable->EmptyString();
-   INIT_ASSET(DeniedSound);
 }
 
 //--------------------------------------------------------------------------
@@ -305,7 +304,8 @@ void GuiMLTextCtrl::initPersistFields()
       addFieldV("lineSpacing",       TypeRangedS32,    Offset(mLineSpacingPixels, GuiMLTextCtrl), &CommonValidators::PositiveInt, "The number of blank pixels to place between each line.\n");
       addField("allowColorChars",   TypeBool,   Offset(mAllowColorChars,   GuiMLTextCtrl), "If true, the control will allow characters to have unique colors.");
       addFieldV("maxChars", TypeRangedS32,    Offset(mMaxBufferSize,     GuiMLTextCtrl), &CommonValidators::NegDefaultInt, "Maximum number of characters that the control will display.");
-      INITPERSISTFIELD_SOUNDASSET(DeniedSound, GuiMLTextCtrl, "If the text will not fit in the control, the deniedSound is played.");
+      ADD_FIELD("DeniedSoundAsset", TypeSoundAssetRef, Offset(mDeniedSoundAssetRef, GuiMLTextCtrl))
+         .doc("If the text will not fit in the control, the deniedSound is played.");
       addField("text",              TypeCaseString,  Offset( mInitialText, GuiMLTextCtrl ), "Text to display in this control.");
       addField("useURLMouseCursor", TypeBool,   Offset(mUseURLMouseCursor,   GuiMLTextCtrl), "If true, the mouse cursor will turn into a hand cursor while over a link in the text.\n"
                                                                       "This is dependant on the markup language used by the GuiMLTextCtrl\n");
@@ -343,8 +343,6 @@ bool GuiMLTextCtrl::onAdd()
 
    if (!mTextBuffer.length() && mInitialText[0] != 0)
       setText(mInitialText, dStrlen(mInitialText)+1);
-
-   _setDeniedSound(getDeniedSound());
 
    return true;
 }
@@ -964,8 +962,8 @@ void GuiMLTextCtrl::insertChars(const char* inputChars,
    if (numCharsToInsert <= 0)
    {
       // Play the "Denied" sound:
-      if ( numInputChars > 0 && getDeniedSoundProfile())
-         SFX->playOnce(getDeniedSoundProfile());
+      if ( numInputChars > 0 && mDeniedSoundAssetRef.notNull() && mDeniedSoundAssetRef.assetPtr->getSFXTrack())
+         SFX->playOnce(mDeniedSoundAssetRef.assetPtr->getSFXTrack());
 
       return;
    }

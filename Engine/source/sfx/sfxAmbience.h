@@ -69,8 +69,7 @@ class SFXAmbience : public SimDataBlock
       F32 mRolloffFactor;
    
       /// Sound track to play when inside the ambient space.
-      DECLARE_SOUNDASSET(SFXAmbience, SoundTrack);
-      DECLARE_ASSET_SETGET(SFXAmbience, SoundTrack);
+      AssetRef<SoundAsset> mSoundTrackAssetRef;
 
       /// Reverb environment to apply when inside the ambient space.
       SFXEnvironment* mEnvironment;
@@ -96,6 +95,9 @@ class SFXAmbience : public SimDataBlock
 
       F32 getSpeedOfSound() const { return mSpeedOfSound; }
             
+      /// Return the resolved sound track to play in this ambient space, if any.
+      SFXTrack* getSoundTrackProfile() const { return mSoundTrackAssetRef.notNull() ? mSoundTrackAssetRef.assetPtr->getSFXTrack() : NULL; }
+
       /// Return the reverb environment of the ambient space.
       SFXEnvironment* getEnvironment() const { return mEnvironment; }
             

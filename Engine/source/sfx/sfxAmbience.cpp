@@ -89,7 +89,6 @@ SFXAmbience::SFXAmbience()
      mEnvironment( NULL )
 {
    dMemset( mState, 0, sizeof( mState ) );
-   INIT_ASSET(SoundTrack);
 }
 
 //-----------------------------------------------------------------------------
@@ -102,8 +101,8 @@ void SFXAmbience::initPersistFields()
       addField( "environment",            TypeSFXEnvironmentName, Offset( mEnvironment, SFXAmbience ),
          "Reverb environment active in the ambience zone.\n"
          "@ref SFX_reverb" );
-      INITPERSISTFIELD_SOUNDASSET(SoundTrack, SFXAmbience,
-         "Sound track to play in the ambience zone." );
+      ADD_FIELD("SoundTrackAsset", TypeSoundAssetRef, Offset(mSoundTrackAssetRef, SFXAmbience))
+         .doc("Sound track to play in the ambience zone.");
       addFieldV( "rolloffFactor",          TypeRangedF32, Offset( mRolloffFactor, SFXAmbience ), &CommonValidators::PositiveFloat,
          "The rolloff factor to apply to distance-based volume attenuation in this space.\n"
          "Defaults to 1.0.\n\n"
@@ -138,7 +137,6 @@ bool SFXAmbience::onAdd()
       
    Sim::getSFXAmbienceSet()->addObject( this );
 
-   _setSoundTrack(getSoundTrack());
    return true;
 }
 
@@ -158,7 +156,7 @@ bool SFXAmbience::preload( bool server, String& errorStr )
       if( !sfxResolve( &mEnvironment, errorStr ) )
          return false;
 
-      if (!isSoundTrackValid())
+      if (mSoundTrackAssetRef.isNull())
       {
          //return false; -TODO: trigger asset download
       }
@@ -178,7 +176,7 @@ void SFXAmbience::packData( BitStream* stream )
    Parent::packData( stream );
       
    sfxWrite( stream, mEnvironment );
-   PACKDATA_ASSET(SoundTrack);
+   AssetDatabase.packDataAsset(stream, mSoundTrackAssetRef.assetId);
    
    stream->write( mRolloffFactor );
    stream->write( mDopplerFactor );
@@ -195,7 +193,7 @@ void SFXAmbience::unpackData( BitStream* stream )
    Parent::unpackData( stream );
       
    sfxRead( stream, &mEnvironment );
-   UNPACKDATA_ASSET(SoundTrack);
+   mSoundTrackAssetRef = AssetDatabase.unpackDataAsset(stream);
    
    stream->read( &mRolloffFactor );
    stream->read( &mDopplerFactor );

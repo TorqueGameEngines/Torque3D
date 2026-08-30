@@ -64,11 +64,9 @@ class LightningData : public GameBaseData
    //-------------------------------------- Console set variables
   public:
 
-   DECLARE_SOUNDASSET_ARRAY(LightningData, ThunderSound, MaxThunders);
-   DECLARE_ASSET_ARRAY_SETGET(LightningData, ThunderSound);
+   AssetRef<SoundAsset> mThunderSoundAssetRef[MaxThunders];
 
-   DECLARE_SOUNDASSET(LightningData, StrikeSound);
-   DECLARE_ASSET_SETGET(LightningData, StrikeSound);
+   AssetRef<SoundAsset> mStrikeSoundAssetRef;
 
    StringTableEntry  strikeTextureNames[MaxTextures];
 

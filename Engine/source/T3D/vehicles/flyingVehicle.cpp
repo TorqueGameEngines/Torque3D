@@ -124,9 +124,6 @@ FlyingVehicleData::FlyingVehicleData()
    for (S32 j = 0; j < MaxJetEmitters; j++)
       jetEmitter[j] = 0;
 
-   for (S32 i = 0; i < MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(FlyingSounds, i);
-
    vertThrustMultiple = 1.0;
 }
 
@@ -143,8 +140,7 @@ bool FlyingVehicleData::preload(bool server, String &errorStr)
    if (!server) {
       for (S32 i = 0; i < MaxSounds; i++)
       {
-         _setFlyingSounds(getFlyingSounds(i), i);
-         if (!isFlyingSoundsValid(i))
+         if (mFlyingSoundsAssetRef[i].isNull())
          {
             //return false; -TODO: trigger asset download
          }
@@ -253,7 +249,17 @@ void FlyingVehicleData::initPersistFields()
    endGroup("Particle Effects");
 
    addGroup("Sounds");
-      INITPERSISTFIELD_SOUNDASSET_ENUMED(FlyingSounds, engineSounds, Sounds::MaxSounds, FlyingVehicleData, "EngineSounds.");
+      for (U32 i = 0; i < Sounds::MaxSounds; i++)
+      {
+         const engineSounds itter = static_cast<engineSounds>(i);
+         const char* enumString = castConsoleTypeToString(itter);
+         if (enumString && enumString[0])
+         {
+            ADD_FIELD(assetEnumNameConcat(enumString, Asset), TypeSoundAssetRef,
+               Offset(mFlyingSoundsAssetRef[0], FlyingVehicleData) + sizeof(mFlyingSoundsAssetRef[0]) * i)
+               .doc("EngineSounds.");
+         }
+      }
    endGroup("Sounds");
 }
 
@@ -263,7 +269,7 @@ void FlyingVehicleData::packData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      PACKDATA_SOUNDASSET_ARRAY(FlyingSounds, i);
+      AssetDatabase.packDataAsset(stream, mFlyingSoundsAssetRef[i].assetId);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
@@ -298,7 +304,7 @@ void FlyingVehicleData::unpackData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(FlyingSounds, i);
+      mFlyingSoundsAssetRef[i] = AssetDatabase.unpackDataAsset(stream);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {
@@ -388,11 +394,13 @@ bool FlyingVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mJetSound );
       SFX_DELETE( mEngineSound );
 
-      if ( mDataBlock->getFlyingSounds(FlyingVehicleData::EngineSound) )
-         mEngineSound = SFX->createSource( mDataBlock->getFlyingSoundsProfile(FlyingVehicleData::EngineSound), &getTransform() );
+      AssetRef<SoundAsset>& engineSoundRef = mDataBlock->mFlyingSoundsAssetRef[FlyingVehicleData::EngineSound];
+      if ( engineSoundRef.notNull() && engineSoundRef.assetPtr->getSFXTrack() )
+         mEngineSound = SFX->createSource( engineSoundRef.assetPtr->getSFXTrack(), &getTransform() );
 
-      if ( mDataBlock->getFlyingSounds(FlyingVehicleData::JetSound))
-         mJetSound = SFX->createSource( mDataBlock->getFlyingSoundsProfile(FlyingVehicleData::JetSound), &getTransform() );
+      AssetRef<SoundAsset>& jetSoundRef = mDataBlock->mFlyingSoundsAssetRef[FlyingVehicleData::JetSound];
+      if ( jetSoundRef.notNull() && jetSoundRef.assetPtr->getSFXTrack() )
+         mJetSound = SFX->createSource( jetSoundRef.assetPtr->getSFXTrack(), &getTransform() );
    }
 
    // Jet Sequences

@@ -70,8 +70,7 @@ class ExplosionData : public GameBaseData, protected AssetPtrCallback {
    S32 particleDensity;
    F32 particleRadius;
 
-   DECLARE_SOUNDASSET(ExplosionData, Sound);
-   DECLARE_ASSET_SETGET(ExplosionData, Sound);
+   AssetRef<SoundAsset> mSoundAssetRef;
 
    ParticleEmitterData* particleEmitter;
    S32                  particleEmitterId;

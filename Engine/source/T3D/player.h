@@ -240,7 +240,9 @@ struct PlayerData: public ShapeBaseData /*protected AssetPtrCallback < already i
       MaxSounds
    };
 
-   DECLARE_SOUNDASSET_ARRAY(PlayerData, PlayerSound, Sounds::MaxSounds);
+   AssetRef<SoundAsset> mPlayerSoundAssetRef[Sounds::MaxSounds];
+
+   SFXTrack* getPlayerSoundProfile(U32 idx) const { return mPlayerSoundAssetRef[idx].notNull() ? mPlayerSoundAssetRef[idx].assetPtr->getSFXTrack() : NULL; }
 
    Point3F boxSize;           ///< Width, depth, height
    Point3F crouchBoxSize;

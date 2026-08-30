@@ -159,8 +159,6 @@ HoverVehicleData::HoverVehicleData()
    for (S32 j = 0; j < MaxJetEmitters; j++)
       jetEmitter[j] = 0;
 
-   for (S32 i = 0; i < MaxSounds; i++)
-      INIT_SOUNDASSET_ARRAY(HoverSounds, i);
 }
 
 HoverVehicleData::~HoverVehicleData()
@@ -271,7 +269,17 @@ void HoverVehicleData::initPersistFields()
    endGroup("Sounds");
 
    addGroup("Particle Effects");
-      INITPERSISTFIELD_SOUNDASSET_ENUMED(HoverSounds, hoverSoundsEnum, Sounds::MaxSounds, HoverVehicleData, "Sounds for hover vehicle.");
+      for (U32 i = 0; i < Sounds::MaxSounds; i++)
+      {
+         const hoverSoundsEnum itter = static_cast<hoverSoundsEnum>(i);
+         const char* enumString = castConsoleTypeToString(itter);
+         if (enumString && enumString[0])
+         {
+            ADD_FIELD(assetEnumNameConcat(enumString, Asset), TypeSoundAssetRef,
+               Offset(mHoverSoundsAssetRef[0], HoverVehicleData) + sizeof(mHoverSoundsAssetRef[0]) * i)
+               .doc("Sounds for hover vehicle.");
+         }
+      }
    endGroup("Sounds");
 }
 
@@ -313,8 +321,7 @@ bool HoverVehicleData::preload(bool server, String &errorStr)
 
       for (S32 i = 0; i < MaxSounds; i++)
       {
-         _setHoverSounds(getHoverSounds(i), i);
-         if (!isHoverSoundsValid(i))
+         if (mHoverSoundsAssetRef[i].isNull())
          {
             //return false; -TODO: trigger asset download
          }
@@ -371,7 +378,7 @@ void HoverVehicleData::packData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      PACKDATA_SOUNDASSET_ARRAY(HoverSounds, i);
+      AssetDatabase.packDataAsset(stream, mHoverSoundsAssetRef[i].assetId);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++)
@@ -420,7 +427,7 @@ void HoverVehicleData::unpackData(BitStream* stream)
 
    for (S32 i = 0; i < MaxSounds; i++)
    {
-      UNPACKDATA_SOUNDASSET_ARRAY(HoverSounds, i);
+      mHoverSoundsAssetRef[i] = AssetDatabase.unpackDataAsset(stream);
    }
 
    for (S32 j = 0; j < MaxJetEmitters; j++) {
@@ -543,14 +550,17 @@ bool HoverVehicle::onNewDataBlock(GameBaseData* dptr, bool reload)
       SFX_DELETE( mFloatSound );
       SFX_DELETE( mJetSound );
 
-      if ( mDataBlock->getHoverSounds(HoverVehicleData::EngineSound) )
-         mEngineSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::EngineSound), &getTransform() );
+      AssetRef<SoundAsset>& engineSoundRef = mDataBlock->mHoverSoundsAssetRef[HoverVehicleData::EngineSound];
+      if ( engineSoundRef.notNull() && engineSoundRef.assetPtr->getSFXTrack() )
+         mEngineSound = SFX->createSource( engineSoundRef.assetPtr->getSFXTrack(), &getTransform() );
 
-      if ( !mDataBlock->getHoverSounds(HoverVehicleData::FloatSound) )
-         mFloatSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::FloatSound), &getTransform() );
+      AssetRef<SoundAsset>& floatSoundRef = mDataBlock->mHoverSoundsAssetRef[HoverVehicleData::FloatSound];
+      if ( floatSoundRef.notNull() && floatSoundRef.assetPtr->getSFXTrack()) 
+         mFloatSound = SFX->createSource( floatSoundRef.assetPtr->getSFXTrack(), &getTransform() );
 
-      if ( mDataBlock->getHoverSounds(HoverVehicleData::JetSound) )
-         mJetSound = SFX->createSource( mDataBlock->getHoverSoundsProfile(HoverVehicleData::JetSound), &getTransform() );
+      AssetRef<SoundAsset>& jetSoundRef = mDataBlock->mHoverSoundsAssetRef[HoverVehicleData::JetSound];
+      if ( jetSoundRef.notNull() && jetSoundRef.assetPtr->getSFXTrack() )
+         mJetSound = SFX->createSource( jetSoundRef.assetPtr->getSFXTrack(), &getTransform() );
    }
 
    // Todo: Uncomment if this is a "leaf" class

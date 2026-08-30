@@ -29,4 +29,13 @@ public:
    DECLARE_CONOBJECT(GuiInspectorTypeSoundAssetId);
    static void consoleInit();
 };
+
+class GuiInspectorTypeSoundAssetRef : public GuiInspectorTypeSoundAssetPtr
+{
+   typedef GuiInspectorTypeSoundAssetPtr Parent;
+public:
+
+   DECLARE_CONOBJECT(GuiInspectorTypeSoundAssetRef);
+   static void consoleInit();
+};
 #endif

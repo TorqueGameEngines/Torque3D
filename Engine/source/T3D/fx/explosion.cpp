@@ -230,8 +230,6 @@ ExplosionData::ExplosionData()
 
    faceViewer   = false;
 
-   INIT_ASSET(Sound);
-
    //soundProfile      = NULL;
    particleEmitter   = NULL;
    particleEmitterId = 0;
@@ -310,7 +308,7 @@ ExplosionData::ExplosionData(const ExplosionData& other, bool temp_clone) : Game
    faceViewer = other.faceViewer;
    particleDensity = other.particleDensity;
    particleRadius = other.particleRadius;
-   CLONE_ASSET(Sound);
+   mSoundAssetRef = other.mSoundAssetRef;
    particleEmitter = other.particleEmitter;
    particleEmitterId = other.particleEmitterId; // -- for pack/unpack of particleEmitter ptr 
    explosionScale = other.explosionScale;
@@ -399,7 +397,8 @@ void ExplosionData::initPersistFields()
    endGroup("Shapes");
 
    addGroup("Sounds");
-      INITPERSISTFIELD_SOUNDASSET(Sound, ExplosionData, "Sound to play when this explosion explodes.");
+      ADD_FIELD("SoundAsset", TypeSoundAssetRef, Offset(mSoundAssetRef, ExplosionData))
+         .doc("Sound to play when this explosion explodes.");
    endGroup("Sounds");
 
    addGroup("Particle Effects");
@@ -674,8 +673,7 @@ void ExplosionData::packData(BitStream* stream)
 
    AssetDatabase.packDataAsset(stream, explosionShapeAssetRef.assetId);
 
-   //PACKDATA_SOUNDASSET(Sound);
-   PACKDATA_ASSET(Sound);
+   AssetDatabase.packDataAsset(stream, mSoundAssetRef.assetId);
 
    if (stream->writeFlag(particleEmitter))
       stream->writeRangedU32(particleEmitter->getId(),DataBlockObjectIdFirst,DataBlockObjectIdLast);
@@ -779,7 +777,7 @@ void ExplosionData::unpackData(BitStream* stream)
 
    explosionShapeAssetRef = AssetDatabase.unpackDataAsset(stream);
 
-   UNPACKDATA_ASSET(Sound);
+   mSoundAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    if (stream->readFlag())
       particleEmitterId = stream->readRangedU32(DataBlockObjectIdFirst, DataBlockObjectIdLast);
@@ -885,7 +883,7 @@ bool ExplosionData::preload(bool server, String &errorStr)
    if (!server)
    {
 
-      if (!isSoundValid())
+      if (mSoundAssetRef.isNull())
       {
          //return false; -TODO: trigger asset download
       }
@@ -1433,7 +1431,10 @@ bool Explosion::explode()
       resetWorldBox();
    }
 
-   SFXProfile* sound_prof = static_cast<SFXProfile*>(mDataBlock->getSoundProfile());
+   SFXProfile* sound_prof = NULL;
+   if(mDataBlock->mSoundAssetRef.notNull())
+      sound_prof = static_cast<SFXProfile*>(mDataBlock->mSoundAssetRef.assetPtr->getSFXTrack());
+      
    if (sound_prof)
    {
       soundProfile_clone = sound_prof->cloneAndPerformSubstitutions(ss_object, ss_index);

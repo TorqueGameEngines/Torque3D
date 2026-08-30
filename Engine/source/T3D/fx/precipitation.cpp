@@ -127,8 +127,6 @@ ConsoleDocClass( PrecipitationData,
 //----------------------------------------------------------
 PrecipitationData::PrecipitationData()
 {
-   INIT_ASSET(Sound);
-
    mDropShaderName   = StringTable->EmptyString();
 
    mSplashShaderName = StringTable->EmptyString();
@@ -140,7 +138,8 @@ PrecipitationData::PrecipitationData()
 void PrecipitationData::initPersistFields()
 {
    docsURL;
-   INITPERSISTFIELD_SOUNDASSET(Sound, PrecipitationData, "Looping SFXProfile effect to play while Precipitation is active.");
+   ADD_FIELD("SoundAsset", TypeSoundAssetRef, Offset(mSoundAssetRef, PrecipitationData))
+      .doc("Looping SFXProfile effect to play while Precipitation is active.");
       
    ADD_FIELD("DropAsset", TypeImageAssetRef, Offset(mDropAssetRef, PrecipitationData))
       .doc("@brief Texture asset for drop particles.\n\n"
@@ -177,7 +176,7 @@ bool PrecipitationData::preload( bool server, String &errorStr )
       return false;
    if (!server)
    {
-      if (!isSoundValid())
+      if (mSoundAssetRef.isNull())
       {
          //return false; -TODO: trigger asset download
       }
@@ -196,7 +195,7 @@ void PrecipitationData::packData(BitStream* stream)
 {
    Parent::packData(stream);
 
-   PACKDATA_ASSET(Sound);
+   AssetDatabase.packDataAsset(stream, mSoundAssetRef.assetId);
 
    AssetDatabase.packDataAsset(stream, mDropAssetRef.assetId);
 
@@ -213,7 +212,7 @@ void PrecipitationData::unpackData(BitStream* stream)
 {
    Parent::unpackData(stream);
 
-   UNPACKDATA_ASSET(Sound);
+   mSoundAssetRef = AssetDatabase.unpackDataAsset(stream);
 
    mDropAssetRef = AssetDatabase.unpackDataAsset(stream);
 
@@ -595,9 +594,9 @@ bool Precipitation::onNewDataBlock( GameBaseData *dptr, bool reload )
    {
       SFX_DELETE( mAmbientSound );
 
-      if ( mDataBlock->getSoundProfile())
+      if ( mDataBlock->mSoundAssetRef.notNull() && mDataBlock->mSoundAssetRef.assetPtr->getSFXTrack())
       {
-         mAmbientSound = SFX->createSource(mDataBlock->getSoundProfile(), &getTransform() );
+         mAmbientSound = SFX->createSource(mDataBlock->mSoundAssetRef.assetPtr->getSFXTrack(), &getTransform() );
          if ( mAmbientSound )
             mAmbientSound->play();
       }

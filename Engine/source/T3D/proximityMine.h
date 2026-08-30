@@ -45,8 +45,7 @@ struct ProximityMineData: public ItemData
 public:
    F32               armingDelay;
    S32               armingSequence;
-   DECLARE_SOUNDASSET(ProximityMineData, ArmSound);
-   DECLARE_ASSET_SETGET(ProximityMineData, ArmSound);
+   AssetRef<SoundAsset> mArmSoundAssetRef;
 
    F32               autoTriggerDelay;
    bool              triggerOnOwner;
@@ -54,8 +53,7 @@ public:
    F32               triggerSpeed;
    F32               triggerDelay;
    S32               triggerSequence;
-   DECLARE_SOUNDASSET(ProximityMineData, TriggerSound);
-   DECLARE_ASSET_SETGET(ProximityMineData, TriggerSound);
+   AssetRef<SoundAsset> mTriggerSoundAssetRef;
 
    F32               explosionOffset;
 

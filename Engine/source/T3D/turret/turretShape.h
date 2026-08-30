@@ -188,7 +188,7 @@ public:
    virtual bool getAllowManualFire() { return allowManualFire; }
    virtual void setAllowManualFire(bool allow) { setMaskBits(TurretUpdateMask); allowManualFire = allow; }
 
-   virtual void updateMove(const Move* move);
+   void updateMove(const Move* move);
 
    bool getNodeTransform(S32 node, MatrixF& mat);
    bool getWorldNodeTransform(S32 node, MatrixF& mat);

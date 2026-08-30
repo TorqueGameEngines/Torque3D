@@ -9,3 +9,8 @@ else()
 endif()
 
 set(VCPKG_BUILD_TYPE release)
+
+if(PORT MATCHES "gtest")
+    set(VCPKG_CXX_FLAGS "-Zc:wchar_t-")
+    set(VCPKG_C_FLAGS "-Zc:wchar_t-")
+endif()

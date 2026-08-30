@@ -69,7 +69,7 @@ jobs:
                   generator: ${{matrix.config.generator}}
                   options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
                   run-build: true
-                  build-args: --config ${{matrix.config.build_type}} --target install
+                  build-args: --config ${{matrix.config.build_type}}
 
             - name: Unit Tests
               run: |

@@ -127,6 +127,7 @@ TSShape::TSShape()
    VECTOR_SET_ASSOCIATION(billboardDetails);
    VECTOR_SET_ASSOCIATION(detailCollisionAccelerators);
    VECTOR_SET_ASSOCIATION(names);
+   VECTOR_SET_ASSOCIATION(ikChains);
 
    VECTOR_SET_ASSOCIATION( nodes );
    VECTOR_SET_ASSOCIATION( objects );
@@ -257,6 +258,17 @@ const String& TSShape::getSequenceName( S32 seqIndex ) const
    return names[nameIdx];
 }
 
+const String& TSShape::getIKChainName(S32 ikIndex) const
+{
+   AssertFatal(ikIndex >= 0 && ikIndex < ikChains.size(), "TSShape::getIKChainName index beyond range");
+
+   S32 nameIdx = ikChains[ikIndex].nameIndex;
+   if (nameIdx < 0)
+      return String::EmptyString;
+
+   return names[nameIdx];
+}
+
 S32 TSShape::findName(const String &name) const
 {
    for (S32 i=0; i<names.size(); i++)
@@ -319,6 +331,14 @@ S32 TSShape::findSequence(S32 nameIndex) const
 {
    for (S32 i=0; i<sequences.size(); i++)
       if (sequences[i].nameIndex==nameIndex)
+         return i;
+   return -1;
+}
+
+S32 TSShape::findIKChain(S32 nameIndex) const
+{
+   for (S32 i = 0; i < ikChains.size(); i++)
+      if (ikChains[i].nameIndex == nameIndex)
          return i;
    return -1;
 }

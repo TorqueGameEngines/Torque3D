@@ -112,6 +112,18 @@ void ShadowMaterialHook::init( BaseMatInstance *inMat )
    
    mShadowMat[ShadowType_Spot] = newMat;
 
+   newMat = new ShadowMatInstance(shadowMat);
+   newMat->setUserObject(inMat->getUserObject());
+   newMat->getFeaturesDelegate().bind(&ShadowMaterialHook::_overrideFeatures);
+   forced.setCullMode(GFXCullCW);
+   forced.zBias = 1000.0f;
+   forced.zSlopeBias = 1.0f;
+   forced.setFillModeSolid();
+   newMat->addStateBlockDesc(forced);
+   forced.cullDefined = true;
+   newMat->init(features, inMat->getVertexFormat());
+   mShadowMat[ShadowType_PSSM] = newMat;
+
    newMat = new ShadowMatInstance( shadowMat );
    newMat->setUserObject( inMat->getUserObject() );
    newMat->getFeaturesDelegate().bind( &ShadowMaterialHook::_overrideFeatures );
@@ -161,12 +173,6 @@ void ShadowMaterialHook::init( BaseMatInstance *inMat )
 BaseMatInstance* ShadowMaterialHook::getShadowMat( ShadowType type ) const
 { 
    AssertFatal( type < ShadowType_Count, "ShadowMaterialHook::getShadowMat() - Bad light type!" );
-
-   // The cubemap and pssm shadows use the same
-   // spotlight material for shadows.
-   if (  type == ShadowType_Spot ||         
-         type == ShadowType_PSSM )
-      return mShadowMat[ShadowType_Spot];   
 
    // Get the specialized shadow material.
    return mShadowMat[type]; 

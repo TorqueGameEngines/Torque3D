@@ -72,6 +72,37 @@ static float2 sNonUniformTaps[NUM_PRE_TAPS] =
 /// rotations of the filter taps.
 TORQUE_UNIFORM_SAMPLER2D(gTapRotationTex, 2);
 
+float shadowCompare(float occluderDepth, float receiverDepth)
+{
+    return receiverDepth > occluderDepth ? 0.0 : 1.0;
+}
+
+float pcf_sampleTaps(
+    TORQUE_SAMPLER2D(shadowMap),
+    float2 sinCos,
+    float2 shadowPos,
+    float filterRadius,
+    float receiverDepth,
+    float factor_bias,
+    int startTap,
+    int endTap )
+{
+    float result = 0;
+
+    float2 tap;
+    for(int t = startTap; t < endTap; t++)
+    {
+        tap.x = (sNonUniformTaps[t].x * sinCos.y - sNonUniformTaps[t].y * sinCos.x) * filterRadius;
+        tap.y = (sNonUniformTaps[t].y * sinCos.y + sNonUniformTaps[t].x * sinCos.x) * filterRadius;
+
+        float occluder = TORQUE_TEX2DLOD(shadowMap, float4(shadowPos + tap,0,0)).r;
+
+        result += shadowCompare(occluder, receiverDepth);
+    }
+
+    return result / float(endTap - startTap);
+}
+
 float softShadow_sampleTaps(  TORQUE_SAMPLER2D(shadowMap1),
                               float2 sinCos,
                               float2 shadowPos,
@@ -81,6 +112,7 @@ float softShadow_sampleTaps(  TORQUE_SAMPLER2D(shadowMap1),
                               int startTap,
                               int endTap )
 {
+   
    float shadow = 0;
 
    float2 tap = 0;
@@ -88,9 +120,11 @@ float softShadow_sampleTaps(  TORQUE_SAMPLER2D(shadowMap1),
    {
       tap.x = ( sNonUniformTaps[t].x * sinCos.y - sNonUniformTaps[t].y * sinCos.x ) * filterRadius;
       tap.y = ( sNonUniformTaps[t].y * sinCos.y + sNonUniformTaps[t].x * sinCos.x ) * filterRadius;
+
       float occluder = TORQUE_TEX2DLOD( shadowMap1, float4( shadowPos + tap, 0, 0 ) ).r;
 
-      float esm = saturate( exp( esmFactor * ( occluder - distToLight ) ) );
+      float esm = exp( clamp(esmFactor * (occluder - distToLight), -80.0, 0.0) );
+      esm = saturate(esm);
       shadow += esm / float( endTap - startTap );
    }
 
@@ -98,61 +132,45 @@ float softShadow_sampleTaps(  TORQUE_SAMPLER2D(shadowMap1),
 }
 
 
-float softShadow_filter(   TORQUE_SAMPLER2D(shadowMap),
-                           float2 vpos,
-                           float2 shadowPos,
-                           float filterRadius,
-                           float distToLight,
-                           float dotNL,
-                           float esmFactor )
+float softShadow_filter(
+    TORQUE_SAMPLER2D(shadowMap),
+    float2 vpos,
+    float2 shadowPos,
+    float filterRadius,
+    float distToLight,
+    float dotNL,
+    float esmFactor)
 {
-   #ifndef SOFTSHADOW
+    float2 sinCos = (TORQUE_TEX2DLOD(gTapRotationTex, float4(vpos * 16,0,0)).rg - 0.5) * 2;
 
-      // If softshadow is undefined then we skip any complex 
-      // filtering... just do a single sample ESM.
+    float shadow = pcf_sampleTaps(
+        TORQUE_SAMPLER2D_MAKEARG(shadowMap),
+        sinCos,
+        shadowPos,
+        filterRadius,
+        distToLight,
+        esmFactor,
+        0,
+        NUM_PRE_TAPS);
 
-      float occluder = TORQUE_TEX2DLOD(shadowMap, float4(shadowPos, 0, 0)).r;
-      float shadow = saturate( exp( esmFactor * ( occluder - distToLight ) ) );
+#ifdef SOFTSHADOW_HIGH_QUALITY
 
-   #else
-      // Lookup the random rotation for this screen pixel.
-      float2 sinCos = ( TORQUE_TEX2DLOD(gTapRotationTex, float4(vpos * 16, 0, 0)).rg - 0.5) * 2;
+    if(shadow * (1.0-shadow) * max(dotNL,0) > 0.06)
+    {
+        shadow += pcf_sampleTaps(
+            TORQUE_SAMPLER2D_MAKEARG(shadowMap),
+            sinCos,
+            shadowPos,
+            filterRadius,
+            distToLight, 
+            esmFactor,
+            NUM_PRE_TAPS,
+            NUM_TAPS);
 
-      // Do the prediction taps first.
-      float shadow = softShadow_sampleTaps(  TORQUE_SAMPLER2D_MAKEARG(shadowMap),
-                                             sinCos,
-                                             shadowPos,
-                                             filterRadius,
-                                             distToLight,
-                                             esmFactor,
-                                             0,
-                                             NUM_PRE_TAPS );
+        shadow *= 0.5;
+    }
 
-      // We live with only the pretap results if we don't
-      // have high quality shadow filtering enabled.
-      #ifdef SOFTSHADOW_HIGH_QUALITY
+#endif
 
-         // Only do the expensive filtering if we're really
-         // in a partially shadowed area.
-         if ( shadow * ( 1.0 - shadow ) * max( dotNL, 0 ) > 0.06 )
-         {
-            shadow += softShadow_sampleTaps( TORQUE_SAMPLER2D_MAKEARG(shadowMap),
-                                             sinCos,
-                                             shadowPos,
-                                             filterRadius,
-                                             distToLight,
-                                             esmFactor,
-                                             NUM_PRE_TAPS,
-                                             NUM_TAPS );
-                                             
-            // This averages the taps above with the results
-            // of the prediction samples.
-            shadow *= 0.5;                              
-         }
-
-      #endif // SOFTSHADOW_HIGH_QUALITY
-
-   #endif // SOFTSHADOW
-
-   return shadow;
+    return shadow;
 }

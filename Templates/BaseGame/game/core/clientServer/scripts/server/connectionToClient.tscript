@@ -101,7 +101,7 @@ function GameConnection::GetEventManager(%this)
 {
    if( !isObject( %this.eventManager ) )
       %this.eventManager = new EventManager() { 
-         queue = "GameConnectionEventManager";
+         queue = "GameConnectionEventManager" @ %this;
       };
       
    return %this.eventManager;

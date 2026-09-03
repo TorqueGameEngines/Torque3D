@@ -286,6 +286,16 @@ if(TORQUE_TESTING)
 endif()
 #endif()
 
+set(JOLT_DEBUG OFF)
+
+if(WIN32)
+    set(JOLT_DEBUG ON)
+endif()
+advanced_option(DEBUG_RENDERER_IN_DEBUG_AND_RELEASE "Debug Renderer currently windows only" ${JOLT_DEBUG})
+advanced_option(USE_STATIC_MSVC_RUNTIME_LIBRARY "Static MSVC Runtimes" OFF)
+advanced_option(USE_STATIC_CRT "Static MSVC Runtimes MTd" OFF)
+add_subdirectory(JoltPhysics/Build ${TORQUE_LIB_TARG_DIRECTORY}/JoltPhysics EXCLUDE_FROM_ALL)
+
 #misc randoms
 mark_as_advanced(WINDRES)
 mark_as_advanced(AUDIOUNIT_INCLUDE_DIR)

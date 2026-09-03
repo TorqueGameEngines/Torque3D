@@ -285,7 +285,16 @@ function onServerDestroyed()
    // Delete everything
    getScene(0).delete();
    MissionCleanup.delete();
-   
+
+   if(isObject($Server::LevelAsset))
+   {
+      $Server::LevelAsset.unloadDependencies();
+      AssetDatabase.releaseAsset($Server::LevelAsset.getAssetId());
+      $Server::LevelAsset = "";
+   }
+
+   AssetDatabase.schedule(32, "purgeAssets");
+
    clearServerPaths();
    
   if ($Pref::Server::EnableDatablockCache)

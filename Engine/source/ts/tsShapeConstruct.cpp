@@ -182,6 +182,10 @@ TSShapeConstructor::TSShapeConstructor()
 
 TSShapeConstructor::~TSShapeConstructor()
 {
+   for (U32 i=0; i < mSequenceSources.size(); ++i)
+      AssetDatabase.releaseAsset(mSequenceSources[i]);
+
+   mSequenceSources.clear();
 }
 
 bool TSShapeConstructor::addSequenceFromField(void* obj, const char* index, const char* data)
@@ -537,6 +541,16 @@ void TSShapeConstructor::_onLoad(TSShape* shape)
    // Call script function
    onLoad_callback();
    mLoadingShape = false;
+
+   // A bit of a hack, but if we're handling pure animations, then
+   // because we already did the adding in above, so we don't need to hold onto
+   // the actual handles anymore and they can be cleared, which makes 
+   // the assetId more correctly decrement it's references for cleanup later
+   if (mShape && mShape->meshes.size() == 0 && mShapeAsset.notNull())
+   {
+      mShape = NULL;
+      mShapeAsset.clear();
+   }
 }
 
 //-----------------------------------------------------------------------------
@@ -2159,7 +2173,15 @@ DefineTSShapeConstructorMethod(addSequence, bool,
       {
          ShapeAsset* asset = AssetDatabase.acquireAsset<ShapeAsset>(assetId);
          srcPath = asset->getShapeFile();
-         AssetDatabase.releaseAsset(assetId);
+
+         // Hold the ref for our lifetime so onAssetReleased fires on the source
+         // when we are destroyed, which enables it to clear its own self-hold then.
+         // If we're already tracking this source, release the new acquire to avoid 
+         // redundancies/duplications
+         if (!mSequenceSources.contains(assetId))
+            mSequenceSources.push_back(assetId);
+         else
+            AssetDatabase.releaseAsset(assetId);
       }
       else if (assetType == StringTable->insert("ShapeAnimationAsset"))
       {

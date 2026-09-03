@@ -114,6 +114,12 @@ public:
    inline StringTableEntry getBakedSceneFile(void) const { return mBakedSceneFile; };
 
    U32 load() override { return Ok; };
+#ifdef TORQUE_TOOLS
+   U32 getAssetMemoryUsage() const override;
+#endif
+   /// We need LevelAssets to be there to be queried for level select menus at all times
+   /// So we don't want to purge them with any kind of cleanup.
+   bool canBePurged() const override { return false; }
 
 protected:
    static bool setLevelFile(void* obj, const char* index, const char* data) { static_cast<LevelAsset*>(obj)->setLevelFile(data); return false; }

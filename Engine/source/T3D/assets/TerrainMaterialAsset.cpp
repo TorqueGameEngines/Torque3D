@@ -184,6 +184,33 @@ TerrainMaterialAsset::~TerrainMaterialAsset()
       mFXMaterialDefinition->safeDeleteObject();
 }
 
+void TerrainMaterialAsset::unloadAsset()
+{
+   // Only delete the TerrainMaterial SimObject if this asset created it via script exec.
+   // EmbeddedDefinition materials are child objects and thus get cleaned up by the
+   // asset's own deleteObject() call, and DefinitionAlreadyExists means the Material
+   // was created externally (materials.tscript exec pass) and is not ours to delete.
+   if (mMaterialDefinition && mLoadedState == ScriptLoaded)
+      mMaterialDefinition->safeDeleteObject();
+   // mFXMaterialDefinition is only set via EmbeddedDefinition; SimGroup::clear() handles it.
+
+   mMaterialDefinition = nullptr;
+   mFXMaterialDefinition = nullptr;
+}
+
+#ifdef TORQUE_TOOLS
+U32 TerrainMaterialAsset::getAssetMemoryUsage() const
+{
+   // Actual texture memory is from the definition's ImageAssets.
+   U32 total = 0;
+   if ( mMaterialDefinition )
+      total += sizeof(TerrainMaterial);
+   if ( mFXMaterialDefinition )
+      total += sizeof(Material);
+   return total;
+}
+#endif
+
 //-----------------------------------------------------------------------------
 
 void TerrainMaterialAsset::consoleInit()

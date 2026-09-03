@@ -182,8 +182,37 @@ MaterialAsset::MaterialAsset()
 
 MaterialAsset::~MaterialAsset()
 {
-   //SAFE_DELETE(mMaterialDefinition);
+   // unloadAsset() handles cleanup when the AssetManager unloads us.
+   // As such, this handles the edge case of direct deletion without an
+   // AssetManager unload call like shutdown.
+   if (mMaterialDefinition && mLoadedState == ScriptLoaded)
+      SAFE_DELETE(mMaterialDefinition);
 }
+
+//-----------------------------------------------------------------------------
+
+void MaterialAsset::unloadAsset()
+{
+   // Only delete the Material SimObject if this asset created it via script exec.
+   // EmbeddedDefinition materials are child objects and thus get cleaned up by the
+   // asset's own deleteObject() call, and DefinitionAlreadyExists means the Material
+   // was created externally (materials.tscript exec pass) and is not ours to delete.
+   if (mMaterialDefinition && mLoadedState == ScriptLoaded)
+   {
+      MATMGR->reInitInstance(mMaterialDefinition);
+      mMaterialDefinition->safeDeleteObject();
+   }
+   mMaterialDefinition = nullptr;
+}
+
+#ifdef TORQUE_TOOLS
+U32 MaterialAsset::getAssetMemoryUsage() const
+{
+   // We only report the actual mat definition here, as the images
+   // would be reported via their own ImageAssets
+   return mMaterialDefinition ? sizeof(Material) : 0;
+}
+#endif
 
 //-----------------------------------------------------------------------------
 

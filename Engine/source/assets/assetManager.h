@@ -88,6 +88,10 @@ public:
    typedef HashTable<typeAssetId, typeAssetId> typeAssetIsDependedOnHash;
    typedef HashMap<AssetPtrBase*, AssetPtrCallback*> typeAssetPtrRefreshHash;
 
+#ifdef TORQUE_DEBUG
+   typedef HashTable<typeAssetId, AssetPtrBase*> typeDebugAssetPtrInstancesHash;
+#endif
+
    // ASSET NETWORK PACK
    typedef U32 typeAssetNetId;
    typedef HashMap<typeAssetNetId, typeAssetId> typeNetIdToAssetMap;
@@ -115,6 +119,12 @@ private:
 
     /// Asset pointer refresh notifications.
     typeAssetPtrRefreshHash             mAssetPtrRefreshNotifications;
+
+#ifdef TORQUE_DEBUG
+    /// Debug registry of live AssetPtr/AssetRef instances per asset Id, used to
+    /// distinguish untracked AssetPtr members from unbalanced raw acquireAsset() calls.
+    typeDebugAssetPtrInstancesHash       mDebugAssetPtrInstances;
+#endif
 
     /// Miscellaneous.
     bool                                mEchoInfo;
@@ -159,6 +169,7 @@ public:
     bool isDeclaredAsset( const char* pAssetId );
     bool doesAssetDependOn( const char* pAssetId, const char* pDependsOnAssetId );
     bool isAssetDependedOn( const char* pAssetId, const char* pDependedOnByAssetId );
+    bool hasLoadedDependents( const char* pAssetId );
 
     /// Referenced assets.
     bool compileReferencedAssets( ModuleDefinition* pModuleDefinition );
@@ -330,6 +341,10 @@ public:
         }
 
         // Acquire asset reference.
+#ifdef TORQUE_TOOLS
+        if ( pAcquiredAsset->getAcquiredReferenceCount() == 0 )
+            pAssetDefinition->mAcquireCount++;
+#endif
         pAcquiredAsset->acquireAssetReference();
 
         // Info.
@@ -369,6 +384,33 @@ public:
 
     bool releaseAsset( const char* pAssetId );
     void purgeAssets( void );
+
+#ifdef TORQUE_TOOLS
+    /// Per-asset stat accessors for tooling use
+    void findAssetHolders(const char* pAssetId);
+    S32  getAssetRefCount( const char* pAssetId );
+    void dumpAssetRefStats() const;
+    S32  getAssetMemoryUsageBytes( const char* pAssetId );
+    S32  getAssetAcquireCount( const char* pAssetId );
+    S32  getAssetReleaseCount( const char* pAssetId );
+    S32  getAssetPeakRefCount( const char* pAssetId );
+
+    /// Returns the SimObject ID string of an already-loaded asset WITHOUT
+    /// acquiring it. This is useful for tools that want to inspect an asset without
+    /// refCounting it.
+    const char* getLoadedAssetObject( const char* pAssetId );
+
+    /// Same as findAssetHolders but returns results as a
+    /// string of tab-delimited records, or blank if nothing holds the assset.
+    ///   className \t objectId \t objectName \t fieldName
+    String findAssetHoldersAsString( const char* pAssetId );
+
+#ifdef TORQUE_DEBUG
+    void debugRegisterAssetPtrInstance( const char* pAssetId, AssetPtrBase* pInstance );
+    void debugUnregisterAssetPtrInstance( const char* pAssetId, AssetPtrBase* pInstance );
+    S32 getDebugAssetPtrInstanceCount( const char* pAssetId );
+#endif
+#endif
 
     /// Asset deletion.
     bool deleteAsset( const char* pAssetId, const bool deleteLooseFiles, const bool deleteDependencies );

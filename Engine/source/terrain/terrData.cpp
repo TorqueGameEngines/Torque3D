@@ -1010,7 +1010,11 @@ void TerrainBlock::addMaterial( const String &name, U32 insertAt )
                //Do iterative logic to find the next available slot and write to it with our new mat field
                mTerrainAsset->setDataField(StringTable->insert("terrainMaterialAsset"), NULL, aq->mAssetList[i]);
             }
+
+            AssetDatabase.releaseAsset(aq->mAssetList[i]);
          }
+
+         delete aq;
       }
    }
    else

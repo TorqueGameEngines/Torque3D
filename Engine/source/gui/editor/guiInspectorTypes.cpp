@@ -1381,6 +1381,7 @@ GuiControl* GuiInspectorTypeRangedF32::constructEditControl()
    char szBuffer[512];
    dSprintf(szBuffer, 512, "%d.apply(%d.getText());", getId(), retCtrl->getId());
    retCtrl->setField("AltCommand", szBuffer);
+   retCtrl->setField("Validate", szBuffer);
    FRangeValidator* validator = dynamic_cast<FRangeValidator*>(mField->validator);
    if (validator)
    {
@@ -1431,6 +1432,7 @@ GuiControl* GuiInspectorTypeRangedS32::constructEditControl()
    char szBuffer[512];
    dSprintf(szBuffer, 512, "%d.apply(%d.getText());", getId(), retCtrl->getId());
    retCtrl->setField("AltCommand", szBuffer);
+   retCtrl->setField("Validate", szBuffer);
    IRangeValidator* validator = dynamic_cast<IRangeValidator*>(mField->validator);
 
    retCtrl->setField("increment", "1");

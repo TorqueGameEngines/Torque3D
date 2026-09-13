@@ -533,7 +533,8 @@ void AssimpShapeLoader::processAnimations()
       if (ambientChannels.size() > 0)
       {
          ambientSeq->mNumChannels = ambientChannels.size();
-         ambientSeq->mChannels = ambientChannels.address();
+         ambientSeq->mChannels = new aiNodeAnim* [ambientChannels.size()];
+         dMemcpy(ambientSeq->mChannels, ambientChannels.address(), ambientChannels.size() * sizeof(aiNodeAnim*));
          // if we somehow dont have keys, just use the max source duration
          ambientSeq->mDuration = (maxKeyTime > 0.0f) ? maxKeyTime : maxSourceDuration;
          ambientSeq->mTicksPerSecond = targetTPS;

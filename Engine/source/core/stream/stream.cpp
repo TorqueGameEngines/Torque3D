@@ -256,6 +256,12 @@ void Stream::_read(String * str)
       len = len8;
 
    char * buffer = (char*)FrameAllocator::alloc(len);
+   if (!buffer)
+   {
+      Con::errorf("Stream::_read - FrameAllocator failed for a %u-byte string.", len);
+      *str = String();
+      return;
+   }
    read(len, buffer);
    *str = String(buffer,len);
 }

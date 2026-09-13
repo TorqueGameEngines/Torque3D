@@ -292,7 +292,7 @@ public:
    {
       mPosition = FrameAllocator::getWaterMark();
       mData = (T*)FrameAllocator::alloc(sizeof(T) * numElements);
-      mSize = numElements;
+      mSize = mData ? numElements : 0;
    }
 
    ~FrameTemp()

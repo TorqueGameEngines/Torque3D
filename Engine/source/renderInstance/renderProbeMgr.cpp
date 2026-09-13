@@ -428,6 +428,9 @@ void RenderProbeMgr::unregisterProbe(ReflectionProbe::ProbeInfo* probeInfo)
 void RenderProbeMgr::submitProbe(ReflectionProbe::ProbeInfo* probe)
 {
    ProbeRenderInst* probeInst = findProbeInst(probe);
+   if (probeInst == NULL)
+      return;
+
    mActiveProbes.push_back(*probeInst);
 }
 

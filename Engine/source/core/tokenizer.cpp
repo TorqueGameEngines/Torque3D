@@ -529,14 +529,14 @@ bool Tokenizer::regressToken(const bool crossLine)
                U32 endLine = getCurrentLine();
                mStartPos--;
 
-               while (mpBuffer[mStartPos] != c)
+               while (mStartPos >= 0 && mpBuffer[mStartPos] != c)
                {
-                  AssertISV(mStartPos < 0,
-                            avar("Beginning of file reached before finding begin quote.  Quote ended: (%s: %d)",
-                                 getFileName(), endLine));
-
                   mCurrTokenBuffer[currPosition++] = mpBuffer[mStartPos--];
                }
+
+               AssertISV(mStartPos >= 0,
+                            avar("Beginning of file reached before finding begin quote.  Quote ended: (%s: %d)",
+                                 getFileName(), endLine));
 
                mTokenIsQuoted = true;
 

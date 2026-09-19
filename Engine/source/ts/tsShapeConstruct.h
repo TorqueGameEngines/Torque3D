@@ -90,6 +90,14 @@ public:
          CmdSetSequencePriority,
          CmdSetSequenceGroundSpeed,
 
+         CmdAddIKChain,
+         CmdRemoveIKChain,
+         CmdSetIKChainWeight,
+         CmdSetIKChainEnabled,
+         CmdSetIKChainThreshold,
+         CmdSetIKChainMaxIterations,
+         CmdSetIKChainTarget,
+
          CmdAddTrigger,
          CmdRemoveTrigger,
 
@@ -155,6 +163,14 @@ public:
       bool addCmd_setSequenceBlend(const Command& newCmd);
       bool addCmd_renameSequence(const Command& newCmd);
       bool addCmd_removeSequence(const Command& newCmd);
+
+      bool addCmd_addIKChain(const Command& newCmd);
+      bool addCmd_setIKChainWeight(const Command& newCmd);
+      bool addCmd_setIKChainEnabled(const Command& newCmd);
+      bool addCmd_setIKChainThreshold(const Command& newCmd);
+      bool addCmd_setIKChainMaxIterations(const Command& newCmd);
+      bool addCmd_setIKChainTarget(const Command& newCmd);
+      bool addCmd_removeIKChain(const Command& newCmd);
 
       bool addCmd_addTrigger(const Command& newCmd);
       bool addCmd_removeTrigger(const Command& newCmd);
@@ -338,6 +354,20 @@ public:
    bool renameSequence(const char* oldName, const char* newName);
    bool addSequence(const char* source, const char* name, S32 start = 0, S32 end = -1, bool padRot = true, bool padTrans = false);
    bool removeSequence(const char* name);
+   ///@}
+
+   /// @name IKChains
+   ///@{
+   S32 getIKChainCount();
+   S32 getIKChainIndex(const char* name);
+   const char* getIKChainName(S32 index);
+   bool addIKChain(const char* source, const char* nodeAName, const char* nodeBName);
+   bool setIKChainWeight(const char* name, F32 weight);
+   bool setIKChainEnabled(const char* name, bool isEnabled);
+   bool setIKChainThreshold(const char* name, F32 threshold);
+   bool setIKChainMaxIterations(const char* name, S32 maxIterations);
+   bool setIKChainTarget(const char* name, const char* targetNode);
+   bool removeIKChain(const char* name);
    ///@}
 
    /// @name Triggers

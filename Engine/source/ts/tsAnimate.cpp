@@ -866,7 +866,20 @@ void TSShapeInstance::animate(S32 dl)
 
    // animate nodes?
    if (dirtyFlags & TransformDirty)
+   {
       animateNodes(ss);
+
+      //---------------------------------------
+      // TODO: Implement different ik methods
+      //       add limits to ik chain nodes
+      //       cache bone lengths.
+      //---------------------------------------
+      for (U32 i = 0; i < mShape->ikChains.size(); i++)
+      {
+         if (mShape->ikChains[i].enabled)
+            solveCCD(mShape->ikChains[i]);
+      }
+   }
 
    // animate objects?
    if (dirtyFlags & VisDirty)

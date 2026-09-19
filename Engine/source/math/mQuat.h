@@ -70,10 +70,12 @@ public:
    QuatF& operator /=( F32 a );
 
    QuatF operator-( const QuatF &c ) const;
+   QuatF operator*(const QuatF& rhs) const;
    QuatF operator*( F32 a ) const;
 
    QuatF& square();
    QuatF& neg();
+   QuatF& conjugate();
    F32  dot( const QuatF &q ) const;
 
    MatrixF* setMatrix( MatrixF * mat ) const;
@@ -91,6 +93,7 @@ public:
 
    // Vectors passed in must be normalized
    QuatF& shortestArc( const VectorF &normalizedA, const VectorF &normalizedB );
+   QuatF& computeRotationFromTo(const VectorF& from, const VectorF& to);
 };
 
 // a couple simple utility methods
@@ -208,6 +211,18 @@ inline QuatF QuatF::operator -( const QuatF &c ) const
                  w - c.w );
 }
 
+inline QuatF QuatF::operator*(const QuatF& rhs) const
+{
+   QuatF out;
+
+   out.w = w * rhs.w - x * rhs.x - y * rhs.y - z * rhs.z;
+   out.x = w * rhs.x + x * rhs.w + y * rhs.z - z * rhs.y;
+   out.y = w * rhs.y - x * rhs.z + y * rhs.w + z * rhs.x;
+   out.z = w * rhs.z + x * rhs.y - y * rhs.x + z * rhs.w;
+
+   return out;
+}
+
 inline QuatF QuatF::operator *( F32 a ) const
 {
    return QuatF( x * a,
@@ -222,6 +237,14 @@ inline QuatF& QuatF::neg()
    y = -y;
    z = -z;
    w = -w;
+   return *this;
+}
+
+inline QuatF& QuatF::conjugate()
+{
+   x = -x;
+   y = -y;
+   z = -z;
    return *this;
 }
 

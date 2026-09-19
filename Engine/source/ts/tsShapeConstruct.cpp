@@ -679,6 +679,19 @@ TSShape::Sequence* var = &(mShape->sequences[var##Index]);        \
 TORQUE_UNUSED(var##Index);                                        \
 TORQUE_UNUSED(var);
 
+// Do an IKChain lookup
+#define GET_IKCHAIN(func, var, name, ret)                         \
+S32 var##Index = mShape->findIKChain(name);                       \
+if (var##Index < 0)                                               \
+{                                                                 \
+Con::errorf( "TSShapeConstructor::" #func ": Could not find "     \
+"ikchain named '%s'", name);                                      \
+return ret;                                                       \
+}                                                                 \
+TSShape::IKChain* var = &(mShape->ikChains[var##Index]);          \
+TORQUE_UNUSED(var##Index);                                        \
+TORQUE_UNUSED(var);
+
 
 //-----------------------------------------------------------------------------
 // DUMP
@@ -2298,6 +2311,164 @@ DefineEngineFunction(findShapeConstructorByFilename, S32, (const char* filename)
       return 0;
 }
 
+//------------------------------------------------------------------------------
+// IK CHAIN FUNCTIONS
+//------------------------------------------------------------------------------
+DefineTSShapeConstructorMethod(getIKChainCount, S32, (), , (), 0,
+   "Get the total number of ikChains in the shape.\n"
+   "@return the number of ikChains in the shape\n\n")
+{
+   return mShape->ikChains.size();
+}}
+
+DefineTSShapeConstructorMethod(getIKChainIndex, S32, (const char* name), ,
+   (name), -1,
+   "Find the index of the ikchain with the given name.\n"
+   "@param name name of the ikchain to lookup\n"
+   "@return index of the ikchain with matching name, or -1 if not found\n\n"
+   "@tsexample\n"
+   "// Check if a given sequence exists in the shape\n"
+   "if ( %this.getIKChainIndex( \"walk\" ) == -1 )\n"
+   "   echo( \"Could not find 'foot_ik' ikchain\" );\n"
+   "@endtsexample\n")
+{
+   return mShape->findIKChain(name);
+}}
+
+DefineTSShapeConstructorMethod(getIKChainName, const char*, (S32 index), ,
+   (index), "",
+   "Get the name of the indexed ikchain.\n"
+   "@param index index of the ikchain to query (valid range is 0 - getIKChainCount()-1)\n"
+   "@return the name of the ikchain\n\n"
+   "@tsexample\n"
+   "// print the name of all ikchain in the shape\n"
+   "%count = %this.getIKChainCount();\n"
+   "for ( %i = 0; %i < %count; %i++ )\n"
+   "   echo( %i SPC %this.getIKChainName( %i ) );\n"
+   "@endtsexample\n")
+{
+   CHECK_INDEX_IN_RANGE(getIKChainName, index, mShape->ikChains.size(), "");
+
+   return mShape->getName(mShape->ikChains[index].nameIndex);
+}}
+
+DefineTSShapeConstructorMethod(addIKChain, bool, (const char* name, const char* nodeAName, const char* nodeBName), ,
+   (name, nodeAName, nodeBName), false,
+   "Add a new ik chain.\n"
+   "@param name name of the sequence to modify\n"
+   "@param nodeAName root node for the chain\n"
+   "@param nodeBName end node for the chain\n"
+   "@return true if successful, false otherwise\n\n"
+   "@tsexample\n"
+   "%this.addIKChain( \"RightLegChain\", \"right_hip\", \"right_foot\" );\n"
+   "%this.addIKChain( \"LeftLegChain\", \"left_hip\", \"left_foot\" );\n"
+   "@endtsexample\n")
+{
+   if (!mShape->addIKChain(name, nodeAName, nodeBName))
+      return false;
+
+   ADD_TO_CHANGE_SET();
+   return true;
+}}
+
+DefineTSShapeConstructorMethod(setIKChainWeight, bool, (const char* name, F32 weight), ,
+   (name, weight), false,
+   "Set the ikchain weight.\n"
+   "@param name name of the ikchain to modify\n"
+   "@param weight new weight value\n"
+   "@return true if successful, false otherwise\n\n")
+{
+   GET_IKCHAIN(setIKChainWeight, ikchain, name, false);
+
+   if (!mShape->setIKChainWeight(name, weight))
+      return false;
+
+   ADD_TO_CHANGE_SET();
+   return true;
+}}
+
+DefineTSShapeConstructorMethod(setIKChainEnabled, bool, (const char* name, bool isEnabled), ,
+   (name, isEnabled), false,
+   "Set the ikchain enabled status.\n"
+   "@param name name of the ikchain to modify\n"
+   "@param isEnabled new enabled value\n"
+   "@return true if successful, false otherwise\n\n")
+{
+   GET_IKCHAIN(setIKChainEnabled, ikchain, name, false);
+
+   if (!mShape->setIKChainEnabled(name, isEnabled))
+      return false;
+    
+   ADD_TO_CHANGE_SET();
+   return true;
+}}
+
+DefineTSShapeConstructorMethod(setIKChainThreshold, bool, (const char* name, F32 threshold), ,
+   (name, threshold), false,
+   "Set the ikchain threshold.\n"
+   "@param name name of the ikchain to modify\n"
+   "@param threshold new threshold value\n"
+   "@return true if successful, false otherwise\n\n")
+{
+   GET_IKCHAIN(setIKChainThreshold, ikchain, name, false);
+
+   if (!mShape->setIKChainThreshold(name, threshold))
+      return false;
+
+   ADD_TO_CHANGE_SET();
+   return true;
+}}
+
+DefineTSShapeConstructorMethod(setIKChainMaxIterations, bool, (const char* name, S32 iterations), ,
+   (name, iterations), false,
+   "Set the ikchain threshold.\n"
+   "@param name name of the ikchain to modify\n"
+   "@param iterations new iterations value\n"
+   "@return true if successful, false otherwise\n\n")
+{
+   GET_IKCHAIN(setIKChainMaxIterations, ikchain, name, false);
+
+   if (!mShape->setIKChainMaxIterations(name, iterations))
+      return false;
+
+   ADD_TO_CHANGE_SET();
+   return true;
+}}
+
+DefineTSShapeConstructorMethod(setIKChainTarget, bool, (const char* name, const char* targetName), ,
+   (name, targetName), false,
+   "Set the ikchain threshold.\n"
+   "@param name name of the ikchain to modify\n"
+   "@param targetName new target node value\n"
+   "@return true if successful, false otherwise\n\n")
+{
+   GET_IKCHAIN(setIKChainTarget, ikchain, name, false);
+
+   if (!mShape->setIKChainTarget(name, targetName))
+      return false;
+
+   ADD_TO_CHANGE_SET();
+   return true;
+}}
+
+
+DefineTSShapeConstructorMethod(removeIKChain, bool, (const char* name), ,
+   (name), false,
+   "Remove an ikchain from the shape.\n"
+   "@param name name of the ikchain to remove.\n"
+   "@return true if successful, false otherwise.\n\n")
+{
+   if (!mShape->removeIKChain(name))
+      return false;
+
+   ADD_TO_CHANGE_SET();
+   return true;
+}}
+
+//------------------------------------------------------------------------------
+// IK CHAIN FUNCTIONS END
+//------------------------------------------------------------------------------
+
 //-----------------------------------------------------------------------------
 // Change-Set manipulation
 TSShapeConstructor::ChangeSet::eCommandType TSShapeConstructor::ChangeSet::getCmdType(const char* name)
@@ -2336,6 +2507,14 @@ else RETURN_IF_MATCH(SetSequenceCyclic);
 else RETURN_IF_MATCH(SetSequenceBlend);
 else RETURN_IF_MATCH(SetSequencePriority);
 else RETURN_IF_MATCH(SetSequenceGroundSpeed);
+
+else RETURN_IF_MATCH(AddIKChain);
+else RETURN_IF_MATCH(RemoveIKChain);
+else RETURN_IF_MATCH(SetIKChainWeight);
+else RETURN_IF_MATCH(SetIKChainEnabled);
+else RETURN_IF_MATCH(SetIKChainThreshold);
+else RETURN_IF_MATCH(SetIKChainMaxIterations);
+else RETURN_IF_MATCH(SetIKChainTarget);
 
 else RETURN_IF_MATCH(AddTrigger);
 else RETURN_IF_MATCH(RemoveTrigger);
@@ -2460,6 +2639,14 @@ void TSShapeConstructor::ChangeSet::add( TSShapeConstructor::ChangeSet::Command&
    case CmdSetSequenceBlend:        addCommand = addCmd_setSequenceBlend(cmd);          break;
    case CmdRenameSequence:          addCommand = addCmd_renameSequence(cmd);            break;
    case CmdRemoveSequence:          addCommand = addCmd_removeSequence(cmd);            break;
+
+   case CmdAddIKChain:              addCommand = addCmd_addIKChain(cmd);                break;
+   case CmdRemoveIKChain:           addCommand = addCmd_removeIKChain(cmd);             break;
+   case CmdSetIKChainWeight:        addCommand = addCmd_setIKChainWeight(cmd);          break;
+   case CmdSetIKChainEnabled:       addCommand = addCmd_setIKChainEnabled(cmd);         break;
+   case CmdSetIKChainThreshold:     addCommand = addCmd_setIKChainThreshold(cmd);       break;
+   case CmdSetIKChainMaxIterations: addCommand = addCmd_setIKChainMaxIterations(cmd);   break;
+   case CmdSetIKChainTarget:        addCommand = addCmd_setIKChainTarget(cmd);          break;
 
    case CmdAddTrigger:              addCommand = addCmd_addTrigger(cmd);                break;
    case CmdRemoveTrigger:           addCommand = addCmd_removeTrigger(cmd);             break;
@@ -2892,6 +3079,176 @@ bool TSShapeConstructor::ChangeSet::addCmd_removeSequence(const TSShapeConstruct
       case CmdAddTrigger:
       case CmdRemoveTrigger:
          if (namesEqual(cmd.argv[0], seqName))
+            mCommands.erase(index);           // Remove any commands that reference the removed sequence
+         break;
+
+      default:
+         break;
+      }
+   }
+
+   return true;
+}
+
+bool TSShapeConstructor::ChangeSet::addCmd_addIKChain(const Command& newCmd)
+{
+   for (S32 index = mCommands.size() - 1; index >= 0; index--)
+   {
+      Command& cmd = mCommands[index];
+      switch (cmd.type)
+      {
+      case CmdAddIKChain:
+         if (namesEqual(cmd.argv[0], newCmd.argv[0]))
+         {
+            return false;                       // command already exists
+         }
+         break;
+      case CmdRemoveIKChain:
+         if (namesEqual(cmd.argv[0], newCmd.argv[0]))
+         {
+            mCommands.erase(index);             // Remove previous removeIKChain command
+            return false;
+         }
+         break;
+      default:
+         break;
+      }
+   }
+
+   return true;
+}
+
+bool TSShapeConstructor::ChangeSet::addCmd_setIKChainWeight(const Command& newCmd)
+{
+   for (S32 index = mCommands.size() - 1; index >= 0; index--)
+   {
+      Command& cmd = mCommands[index];
+      switch (cmd.type)
+      {
+      case CmdSetIKChainWeight:
+         if (namesEqual(cmd.argv[0], newCmd.argv[0]))
+         {
+            cmd.argv[1] = newCmd.argv[1];       // Collapse successive set weight commands
+            return false;
+         }
+         break;
+      default:
+         break;
+      }
+   }
+
+   return true;
+}
+
+bool TSShapeConstructor::ChangeSet::addCmd_setIKChainEnabled(const Command& newCmd)
+{
+   for (S32 index = mCommands.size() - 1; index >= 0; index--)
+   {
+      Command& cmd = mCommands[index];
+      switch (cmd.type)
+      {
+      case CmdSetIKChainEnabled:
+         if (namesEqual(cmd.argv[0], newCmd.argv[0]))
+         {
+            cmd.argv[1] = newCmd.argv[1];       // Collapse successive set enabled commands
+            return false;
+         }
+         break;
+      default:
+         break;
+      }
+   }
+
+   return true;
+}
+
+bool TSShapeConstructor::ChangeSet::addCmd_setIKChainThreshold(const Command& newCmd)
+{
+   for (S32 index = mCommands.size() - 1; index >= 0; index--)
+   {
+      Command& cmd = mCommands[index];
+      switch (cmd.type)
+      {
+      case CmdSetIKChainThreshold:
+         if (namesEqual(cmd.argv[0], newCmd.argv[0]))
+         {
+            cmd.argv[1] = newCmd.argv[1];       // Collapse successive set threshold commands
+            return false;
+         }
+         break;
+      default:
+         break;
+      }
+   }
+
+   return true;
+}
+
+bool TSShapeConstructor::ChangeSet::addCmd_setIKChainMaxIterations(const Command& newCmd)
+{
+   for (S32 index = mCommands.size() - 1; index >= 0; index--)
+   {
+      Command& cmd = mCommands[index];
+      switch (cmd.type)
+      {
+      case CmdSetIKChainMaxIterations:
+         if (namesEqual(cmd.argv[0], newCmd.argv[0]))
+         {
+            cmd.argv[1] = newCmd.argv[1];       // Collapse successive set max iterations commands
+            return false;
+         }
+         break;
+      default:
+         break;
+      }
+   }
+
+   return true;
+}
+
+bool TSShapeConstructor::ChangeSet::addCmd_setIKChainTarget(const Command& newCmd)
+{
+   for (S32 index = mCommands.size() - 1; index >= 0; index--)
+   {
+      Command& cmd = mCommands[index];
+      switch (cmd.type)
+      {
+      case CmdSetIKChainTarget:
+         if (namesEqual(cmd.argv[0], newCmd.argv[0]))
+         {
+            cmd.argv[1] = newCmd.argv[1];       // Collapse successive set target commands
+            return false;
+         }
+         break;
+      default:
+         break;
+      }
+   }
+
+   return true;
+}
+
+bool TSShapeConstructor::ChangeSet::addCmd_removeIKChain(const Command& newCmd)
+{
+   for (S32 index = mCommands.size() - 1; index >= 0; index--)
+   {
+      Command& cmd = mCommands[index];
+      switch (cmd.type)
+      {
+      case CmdAddIKChain:
+         if (namesEqual(cmd.argv[0], newCmd.argv[0]))
+         {
+            mCommands.erase(index);             // Remove previous addIKChain command
+            return false;
+         }
+         break;
+
+      case CmdSetIKChainWeight:
+      case CmdSetIKChainEnabled:
+      case CmdSetIKChainThreshold:
+      case CmdSetIKChainMaxIterations:
+      case CmdSetIKChainTarget:
+         if (namesEqual(cmd.argv[0], newCmd.argv[0]))
             mCommands.erase(index);           // Remove any commands that reference the removed sequence
          break;
 

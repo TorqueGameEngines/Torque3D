@@ -104,7 +104,7 @@ class GuiPopUpMenuCtrlEx : public GuiTextCtrl
   protected:
    GuiPopupTextListCtrlEx *mTl;
    GuiScrollCtrl *mSc;
-   GuiPopUpBackgroundCtrlEx *mBackground;
+   SimObjectPtr<GuiPopUpBackgroundCtrlEx> mBackground;
    Vector<Entry> mEntries;
    Vector<Scheme> mSchemes;
    S32 mSelIndex;

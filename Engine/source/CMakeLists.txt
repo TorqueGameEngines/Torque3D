@@ -310,7 +310,7 @@ foreach (TORQUE_MODULE_PATH ${TORQUE_MODULE_PATHS})
 		include(${TORQUE_MODULE_SCRIPT})
 
         # Add this script's collected files to our Engine group
-        source_group(TREE "${CMAKE_SOURCE_DIR}/Engine" PREFIX "Engine" FILES ${TORQUE_SOURCE_FILES})
+        source_group(TREE "${CMAKE_SOURCE_DIR}/Engine/source" PREFIX "Engine" FILES ${TORQUE_SOURCE_FILES})
 
         set(TORQUE_SOURCE_FILES_TEMPORARY ${TORQUE_SOURCE_FILES_TEMPORARY} ${TORQUE_SOURCE_FILES})
         set(TORQUE_SOURCE_FILES "")

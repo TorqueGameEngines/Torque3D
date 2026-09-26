@@ -47,7 +47,7 @@ class GuiPopupMenuTextListCtrl : public GuiTextListCtrl
 private:
    typedef GuiTextListCtrl Parent;
 
-   GuiPopupMenuBackgroundCtrl* mBackground;
+   SimObjectPtr<GuiPopupMenuBackgroundCtrl> mBackground;
 
 public:
    bool isSubMenu; //  Indicates that this text list is in a submenu

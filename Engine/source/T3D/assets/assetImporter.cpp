@@ -1748,6 +1748,12 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
       //check to see if the definition for this already exists
       StringTableEntry existingMatAsset = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(assetName));
 
+      if (existingMatAsset == StringTable->EmptyString() && activeImportConfig->AlwaysAddMaterialSuffix)
+      {
+         //Fall back to the un-suffixed name for checking against if it matches the pattern lookup below.
+         existingMatAsset = MaterialAsset::getAssetIdByMaterialName(StringTable->insert(assetItem->cleanAssetName.c_str()));
+      }
+
       if (existingMatAsset != StringTable->EmptyString() && existingMatAsset != StringTable->insert("Core_Rendering:NoMaterial"))
       {
          assetItem->importStatus = AssetImportObject::UseForDependencies;

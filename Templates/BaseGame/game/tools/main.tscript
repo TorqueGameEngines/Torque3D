@@ -47,6 +47,8 @@ if(!$Tools::loaded)
    
    exec( "tools/gui/profiles.ed." @ $TorqueScriptFileExtension );
    exec("tools/gui/EditorLoadingGui.gui");
+   exec("tools/gui/assetRefStats.ed.gui");
+   exec("tools/gui/assetRefStats.ed." @ $TorqueScriptFileExtension);
 }
 
 function EditorIsActive()

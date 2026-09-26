@@ -563,6 +563,38 @@ U32 ImageAsset::load()
    return mLoadedState;
 }
 
+#ifdef TORQUE_TOOLS
+U32 ImageAsset::getAssetMemoryUsage() const
+{
+   // Named render targets ($backBuffer, #color, etc) are managed externally
+   // by the GFX system and are only 'assets' insofar as convenient handles/accessors
+   // consistent across the board. Their memory usage is a bit special-case so we'll just
+   // ignore them for now.
+   if ( mIsNamedTarget )
+      return 0;
+
+   // Sum memory use across every loaded texture profile for this image.
+   U32 total = 0;
+   for ( auto itr = mResourceMap.begin(); itr != mResourceMap.end(); ++itr )
+   {
+      const GFXTexHandle& tex = itr->value;
+      if ( tex.isValid() )
+         total += tex->getEstimatedSizeInBytes();
+   }
+
+   // mResourceMap is populated lazily on first getTexture() per profile. If no
+   // profile has been requested yet but the image dimensions are known, provide
+   // a rough estimate so the dump has at least some information.
+   if ( total == 0 && mImageWidth > 0 && mImageHeight > 0 && mImageChannels > 0 )
+   {
+      U32 depth = mImageDepth > 0 ? mImageDepth : 1;
+      total = mImageWidth * mImageHeight * depth * mImageChannels;
+   }
+
+   return total;
+}
+#endif
+
 GFXTexHandle ImageAsset::getTexture(GFXTextureProfile* requestedProfile)
 {
    if (mLoadedState == Ok && mResourceMap.contains(requestedProfile))

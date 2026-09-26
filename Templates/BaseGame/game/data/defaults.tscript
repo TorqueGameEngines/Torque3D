@@ -147,6 +147,10 @@ $pref::GroundCover::densityScale = 1.0;
 /// Smaller numbers makes the lod switch sooner.
 $pref::TS::detailAdjust = 1.0;
 
+//Forces a frontload of materail assets so they stay in memory and are ready to go.
+//This also helps minimize shader warmup needed as we don't need to keep loading/unloading 
+//shader objects.
+$pref::Asset::PreloadMaterialAssets = true;
 ///
 $pref::Decals::enabled = true;
 

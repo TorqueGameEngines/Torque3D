@@ -822,6 +822,25 @@ bool AssetManager::isAssetDependedOn( const char* pAssetId, const char* pDepende
 
 //-----------------------------------------------------------------------------
 
+bool AssetManager::hasLoadedDependents( const char* pAssetId )
+{
+    StringTableEntry assetId = StringTable->insert( pAssetId );
+
+    typeAssetIsDependedOnHash::Iterator itr = mAssetIsDependedOn.find( assetId );
+    while ( itr != mAssetIsDependedOn.end() && itr->key == assetId )
+    {
+        AssetDefinition* def = findAsset( itr->value );
+        if ( def && def->mpAssetBase &&
+             def->mAssetLoadedCount > def->mAssetUnloadedCount &&
+             def->mpAssetBase->getAcquiredReferenceCount() > 0 )
+            return true;
+        ++itr;
+    }
+    return false;
+}
+
+//-----------------------------------------------------------------------------
+
 bool AssetManager::isReferencedAsset( const char* pAssetId )
 {
     // Debug Profiling.
@@ -1244,6 +1263,9 @@ bool AssetManager::releaseAsset( const char* pAssetId )
     // Release asset reference.
     if ( pAssetDefinition->mpAssetBase->releaseAssetReference() )
     {
+#ifdef TORQUE_TOOLS
+        pAssetDefinition->mReleaseCount++;
+#endif
         // Are we ignoring auto-unloaded assets?
         if ( mIgnoreAutoUnload )
         {
@@ -1278,6 +1300,10 @@ bool AssetManager::releaseAsset( const char* pAssetId )
         Con::printSeparator();
     }
 
+    if ( pAssetDefinition->mpAssetBase &&
+         pAssetDefinition->mAssetLoadedCount > pAssetDefinition->mAssetUnloadedCount )
+        pAssetDefinition->mpAssetBase->onAssetReleased();
+
     return true;
 }
 
@@ -1295,26 +1321,41 @@ void AssetManager::purgeAssets( void )
     }
 
     // Iterate asset definitions.
-    for( typeDeclaredAssetsHash::iterator assetItr = mDeclaredAssets.begin(); assetItr != mDeclaredAssets.end(); ++assetItr )
+    // We do it as a while loop so we can purge any assets that were released
+    // from the last pass, until the loop no longer detects any changes.
+    bool anyPurged;
+    do
     {
-        // Fetch asset definition.
-        AssetDefinition* pAssetDefinition = assetItr->value;
+        anyPurged = false;
 
-        // Skip asset if private, not loaded or referenced.
-        if (    pAssetDefinition->mAssetPrivate ||
-                pAssetDefinition->mpAssetBase == NULL ||
-                pAssetDefinition->mpAssetBase->getAcquiredReferenceCount() > 0 )
-            continue;
-
-        // Info.
-        if ( mEchoInfo )
+        for( typeDeclaredAssetsHash::iterator assetItr = mDeclaredAssets.begin(); assetItr != mDeclaredAssets.end(); ++assetItr )
         {
-            Con::printf( "Asset Manager: Purging asset Id '%s'...", pAssetDefinition->mAssetId );
-        }
+            // Fetch asset definition.
+            AssetDefinition* pAssetDefinition = assetItr->value;
 
-        // Unload the asset.
-        unloadAsset( pAssetDefinition );
+            // Skip asset if private, not loaded, referenced, or the asset type
+            // has opted out of purging
+			const bool isLoaded = ( pAssetDefinition->mAssetLoadedCount > pAssetDefinition->mAssetUnloadedCount )
+                                  && ( pAssetDefinition->mpAssetBase != NULL );
+            if (    pAssetDefinition->mAssetPrivate ||
+                    !isLoaded ||
+                    pAssetDefinition->mpAssetBase->getAcquiredReferenceCount() > 0 ||
+                    !pAssetDefinition->mpAssetBase->canBePurged() )
+                continue;
+
+            // Info.
+            if ( mEchoInfo )
+            {
+                Con::printf( "Asset Manager: Purging asset Id '%s'...", pAssetDefinition->mAssetId );
+            }
+
+            // Unload the asset.
+            unloadAsset( pAssetDefinition );
+
+            anyPurged = true;
+        }
     }
+    while( anyPurged );
 
     // Info.
     if ( mEchoInfo )
@@ -1322,6 +1363,406 @@ void AssetManager::purgeAssets( void )
         Con::printf( "Asset Manager: ... Finished purging assets." );
     }
 }
+
+//-----------------------------------------------------------------------------
+#ifdef TORQUE_TOOLS
+String formatAssetUseBytes(U32 bytes)
+{
+   if (bytes >= 1024 * 1024 * 1024)
+      return String::ToString("%.2f GB", bytes / (1024.0 * 1024.0 * 1024.0));
+
+   if (bytes >= 1024 * 1024)
+      return String::ToString("%.2f MB", bytes / (1024.0 * 1024.0));
+
+   if (bytes >= 1024)
+      return String::ToString("%.2f KB", bytes / 1024.0);
+
+   return String::ToString("%u B", bytes);
+}
+
+struct AssetEntry
+{
+   StringTableEntry assetId;
+   U32              acquireCount;
+   U32              releaseCount;
+   U32              refCount;
+   U32              peakRefCount;
+   U32              memUsage;
+};
+typedef HashMap<StringTableEntry, Vector<AssetEntry>> typeAssetEntriesByType;
+
+void AssetManager::dumpAssetRefStats() const
+{
+    typeAssetEntriesByType entriesByType;
+
+    // Build per-type groups from all declared assets.
+    for ( typeDeclaredAssetsHash::const_iterator assetItr = mDeclaredAssets.begin(); assetItr != mDeclaredAssets.end(); ++assetItr )
+    {
+        const AssetDefinition* def = assetItr->value;
+
+        // Skip named render target ImageAssets ($backBuffer, #color etc.).
+        if ( def->mAssetId != NULL &&
+             ( def->mAssetId[0] == '$' || def->mAssetId[0] == '#' ) )
+            continue;
+
+        AssetEntry entry;
+        entry.assetId       = def->mAssetId;
+        entry.acquireCount  = def->mAcquireCount;
+        entry.releaseCount  = def->mReleaseCount;
+        entry.refCount      = def->mpAssetBase ? def->mpAssetBase->getAcquiredReferenceCount() : 0;
+        entry.peakRefCount  = def->mpAssetBase ? def->mpAssetBase->getPeakReferenceCount()     : 0;
+        entry.memUsage      = def->mpAssetBase ? def->mpAssetBase->getAssetMemoryUsage()       : 0;
+
+        entriesByType[def->mAssetType].push_back( entry );
+    }
+
+    Con::printSeparator();
+    Con::printf( "Asset Manager: Asset Ref + Memory Dump" );
+
+    for (typeAssetEntriesByType::iterator typeItr = entriesByType.begin(); typeItr != entriesByType.end(); ++typeItr )
+    {
+        StringTableEntry     type    = typeItr->key;
+        Vector<AssetEntry>&  entries = typeItr->value;
+
+        // Sort descending by memory.
+        dQsort( entries.address(), entries.size(), sizeof(AssetEntry),
+            []( const void* a, const void* b ) -> S32
+            {
+                U32 ma = static_cast<const AssetEntry*>(a)->memUsage;
+                U32 mb = static_cast<const AssetEntry*>(b)->memUsage;
+                return (mb > ma) ? 1 : (mb < ma) ? -1 : 0;
+            });
+
+        // Summarize type-level totals.
+        U32 typeTotal = 0;
+        U32 typeAcquired = 0, typeReleased = 0, activeRefs = 0, loadedCount = 0;
+        for ( const AssetEntry& e : entries )
+        {
+            typeTotal    += e.memUsage;
+            typeAcquired += e.acquireCount;
+            typeReleased += e.releaseCount;
+            if ( e.refCount > 0 )
+            {
+               activeRefs++;
+               loadedCount++;
+            }
+            else if ( e.peakRefCount > 0 )
+               loadedCount++; // idle but was loaded
+        }
+
+        String totalStr = typeTotal > 0 ? formatAssetUseBytes( typeTotal ) : String("-");
+        Con::printSeparator();
+        Con::printf( "[%s]  acquired: %u  released: %u  active refs: %u  loaded: %u  total mem: %s",
+            type, typeAcquired, typeReleased, activeRefs, loadedCount, totalStr.c_str() );
+
+        // "Refs" shows cur/peak; only print assets that were ever touched.
+        Con::printf( "    %s %s %s %s", "Acq/Rel", "Refs(cur/pk)", "Memory", "AssetId");
+        for ( const AssetEntry& e : entries )
+        {
+            if ( e.acquireCount == 0 && e.refCount == 0 )
+                continue;  // never loaded, skip
+
+            String acqStr = String::ToString( "%u/%u", e.acquireCount, e.releaseCount );
+            String refStr = String::ToString( "%u/%u", e.refCount, e.peakRefCount );
+            String memStr = e.memUsage > 0 ? formatAssetUseBytes( e.memUsage ) : String("-");
+
+            // Flag assets still holding refs for easy identification.
+            const char* flag = e.refCount > 0 ? " [*]" : "";
+            Con::printf( "    %s %s %s %s%s",
+                acqStr.c_str(), refStr.c_str(), memStr.c_str(), e.assetId, flag );
+        }
+    }
+
+    Con::printSeparator();
+}
+
+//-----------------------------------------------------------------------------
+
+void AssetManager::findAssetHolders( const char* pAssetId )
+{
+    AssertFatal( pAssetId != NULL, "Cannot search for NULL asset Id." );
+
+    const AssetDefinition* def = findAsset( pAssetId );
+    if ( def == NULL )
+    {
+        Con::warnf( "AssetManager::findAssetHolders - asset '%s' not found.", pAssetId );
+        return;
+    }
+    if ( def->mpAssetBase == NULL || def->mpAssetBase->getAcquiredReferenceCount() == 0 )
+    {
+        Con::printf( "AssetManager::findAssetHolders - '%s' has no active references.", pAssetId );
+        return;
+    }
+
+    Con::printSeparator();
+    Con::printf( "AssetManager: Searching for SimObjects holding a reference to '%s'  (refCount=%u)",
+        pAssetId, def->mpAssetBase->getAcquiredReferenceCount() );
+
+    // Walk every live SimObject and check its console fields for AssetRef values
+    // that match pAssetId. Type<X>AssetRef fields are stored as the assetId string.
+    StringTableEntry targetId = StringTable->insert( pAssetId );
+    bool found = false;
+
+    SimObject* rootGroup = Sim::getRootGroup();
+    if ( !rootGroup )
+        return;
+
+    SimSet* rootSet = dynamic_cast<SimSet*>( rootGroup );
+    if ( !rootSet )
+        return;
+
+    // Run through the full SimObject tree.
+    // We only inspect fields whose ConsoleBaseType name ends in "AssetRef"
+    static StringTableEntry sAssetRefSuffix = StringTable->insert( "AssetRef" );
+
+    Vector<SimObject*> queue;
+    queue.push_back( rootSet );
+
+    while ( !queue.empty() )
+    {
+        SimObject* obj = queue.back();
+        queue.pop_back();
+
+        for ( AbstractClassRep::FieldList::iterator fItr = obj->getClassRep()->mFieldList.begin();
+              fItr != obj->getClassRep()->mFieldList.end(); ++fItr )
+        {
+            const AbstractClassRep::Field& f = *fItr;
+
+            // Skip structural markers.
+            if ( f.type == AbstractClassRep::StartGroupFieldType ||
+                 f.type == AbstractClassRep::EndGroupFieldType   ||
+                 f.type == AbstractClassRep::StartArrayFieldType ||
+                 f.type == AbstractClassRep::EndArrayFieldType )
+                continue;
+
+            // Only check fields registered as an AssetRef type.
+            // All such types are named "Type<X>AssetRef" by convention.
+            const ConsoleBaseType* cbt = ConsoleBaseType::getType( f.type );
+            if ( !cbt )
+                continue;
+                
+            StringTableEntry typeName = cbt->getTypeName();
+            if ( !typeName || dStrlen( typeName ) < 8 )
+                continue;
+                
+            // Check that the type name ends with "AssetRef".
+            const char* suffix = typeName + dStrlen( typeName ) - 8;
+            if ( dStricmp( suffix, "AssetRef" ) != 0 )
+                continue;
+
+            // AssetRef getDatas return the assetId string.
+            const char* val = obj->getDataField( StringTable->insert( f.pFieldname ), NULL );
+            if ( val && *val && StringTable->insert( val ) == targetId )
+            {
+                Con::printf( "  [%s] id=%u  name='%s'  field='%s'  type='%s'",
+                    obj->getClassName(), obj->getId(),
+                    obj->getName() ? obj->getName() : "<unnamed>",
+                    f.pFieldname, typeName );
+                found = true;
+            }
+        }
+
+        // Recurse into SimSets/SimGroups.
+        SimSet* asSet = dynamic_cast<SimSet*>( obj );
+        if ( asSet )
+        {
+            for ( SimSet::iterator sItr = asSet->begin(); sItr != asSet->end(); ++sItr )
+                queue.push_back( *sItr );
+        }
+    }
+
+    if ( !found )
+        Con::printf( "  No SimObjects found with a field referencing this asset." );
+    Con::printSeparator();
+}
+
+//-----------------------------------------------------------------------------
+
+String AssetManager::findAssetHoldersAsString( const char* pAssetId )
+{
+    AssertFatal( pAssetId != NULL, "Cannot search for NULL asset Id." );
+
+    const AssetDefinition* def = findAsset( pAssetId );
+    if ( !def || !def->mpAssetBase || def->mpAssetBase->getAcquiredReferenceCount() == 0 )
+        return String::EmptyString;
+
+    StringTableEntry targetId = StringTable->insert( pAssetId );
+    static StringTableEntry sAssetRefSuffix = StringTable->insert( "AssetRef" );
+
+    String result;
+
+    SimObject* rootGroup = Sim::getRootGroup();
+    if ( !rootGroup ) 
+    	return result;
+    	
+    SimSet* rootSet = dynamic_cast<SimSet*>( rootGroup );
+    if ( !rootSet ) 
+    	return result;
+
+    Vector<SimObject*> queue;
+    queue.push_back( rootSet );
+
+    while ( !queue.empty() )
+    {
+        SimObject* obj = queue.back();
+        queue.pop_back();
+
+        for ( AbstractClassRep::FieldList::iterator fItr = obj->getClassRep()->mFieldList.begin();
+              fItr != obj->getClassRep()->mFieldList.end(); ++fItr )
+        {
+            const AbstractClassRep::Field& f = *fItr;
+            if ( f.type == AbstractClassRep::StartGroupFieldType ||
+                 f.type == AbstractClassRep::EndGroupFieldType   ||
+                 f.type == AbstractClassRep::StartArrayFieldType ||
+                 f.type == AbstractClassRep::EndArrayFieldType )
+                continue;
+
+            const ConsoleBaseType* cbt = ConsoleBaseType::getType( f.type );
+            if ( !cbt ) 
+            	continue;
+            	
+            StringTableEntry typeName = cbt->getTypeName();
+            if ( !typeName || dStrlen( typeName ) < 8 ) 
+            	continue;
+            	
+            const char* suffix = typeName + dStrlen( typeName ) - 8;
+            if ( dStricmp( suffix, "AssetRef" ) != 0 ) 
+            	continue;
+
+            const char* val = obj->getDataField( StringTable->insert( f.pFieldname ), NULL );
+            if ( val && *val && StringTable->insert( val ) == targetId )
+            {
+                const char* objName = obj->getName() ? obj->getName() : "";
+                String record = String::ToString( "%s\t%u\t%s\t%s",
+                    obj->getClassName(), obj->getId(), objName, f.pFieldname );
+                result = result.isEmpty() ? record : result + "\n" + record;
+            }
+        }
+
+        SimSet* asSet = dynamic_cast<SimSet*>( obj );
+        if ( asSet )
+        {
+            for ( SimSet::iterator sItr = asSet->begin(); sItr != asSet->end(); ++sItr )
+                queue.push_back( *sItr );
+        }
+    }
+
+    return result;
+}
+
+//-----------------------------------------------------------------------------
+
+#ifdef TORQUE_DEBUG
+void AssetManager::debugRegisterAssetPtrInstance( const char* pAssetId, AssetPtrBase* pInstance )
+{
+    if ( !pAssetId || !*pAssetId || !pInstance )
+        return;
+
+    mDebugAssetPtrInstances.insertEqual( StringTable->insert( pAssetId ), pInstance );
+}
+
+//-----------------------------------------------------------------------------
+
+void AssetManager::debugUnregisterAssetPtrInstance( const char* pAssetId, AssetPtrBase* pInstance )
+{
+    if ( !pAssetId || !*pAssetId || !pInstance )
+        return;
+
+    StringTableEntry assetId = StringTable->insert( pAssetId );
+
+    typeDebugAssetPtrInstancesHash::Iterator itr = mDebugAssetPtrInstances.find( assetId );
+    while ( itr != mDebugAssetPtrInstances.end() && itr->key == assetId )
+    {
+        if ( itr->value == pInstance )
+        {
+            mDebugAssetPtrInstances.erase( itr );
+            return;
+        }
+        ++itr;
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+S32 AssetManager::getDebugAssetPtrInstanceCount( const char* pAssetId )
+{
+    if ( !pAssetId || !*pAssetId )
+        return 0;
+
+    StringTableEntry assetId = StringTable->insert( pAssetId );
+
+    S32 count = 0;
+    typeDebugAssetPtrInstancesHash::Iterator itr = mDebugAssetPtrInstances.find( assetId );
+    while ( itr != mDebugAssetPtrInstances.end() && itr->key == assetId )
+    {
+        ++count;
+        ++itr;
+    }
+
+    return count;
+}
+#endif
+
+//-----------------------------------------------------------------------------
+S32 AssetManager::getAssetRefCount( const char* pAssetId )
+{
+    AssetDefinition* def = findAsset( pAssetId );
+    // Guard against unloaded assets: mpAssetBase may be dangling after unloadAsset()
+    // so we use load/unload counters as a safe enough proxy.
+    if ( !def || def->mAssetLoadedCount <= def->mAssetUnloadedCount )
+       return 0;
+
+    return def->mpAssetBase->getAcquiredReferenceCount();
+}
+
+S32 AssetManager::getAssetPeakRefCount( const char* pAssetId )
+{
+    AssetDefinition* def = findAsset( pAssetId );
+    if ( !def || def->mAssetLoadedCount <= def->mAssetUnloadedCount )
+       return 0;
+
+    return def->mpAssetBase->getPeakReferenceCount();
+}
+
+S32 AssetManager::getAssetMemoryUsageBytes( const char* pAssetId )
+{
+    AssetDefinition* def = findAsset( pAssetId );
+    if ( !def || def->mAssetLoadedCount <= def->mAssetUnloadedCount )
+       return 0;
+
+    return def->mpAssetBase->getAssetMemoryUsage();
+}
+
+S32 AssetManager::getAssetAcquireCount( const char* pAssetId )
+{
+    AssetDefinition* def = findAsset( pAssetId );
+    if ( !def )
+       return 0;
+
+    return def->mAcquireCount;
+}
+
+S32 AssetManager::getAssetReleaseCount( const char* pAssetId )
+{
+    AssetDefinition* def = findAsset( pAssetId );
+    if ( !def )
+       return 0;
+
+    return def->mReleaseCount;
+}
+
+const char* AssetManager::getLoadedAssetObject( const char* pAssetId )
+{
+    AssetDefinition* def = findAsset( pAssetId );
+    if ( !def ||
+         def->mAssetLoadedCount <= def->mAssetUnloadedCount ||
+         def->mpAssetBase == NULL )
+        return StringTable->EmptyString();
+
+    return def->mpAssetBase->getIdString();
+}
+
+#endif
 
 //-----------------------------------------------------------------------------
 

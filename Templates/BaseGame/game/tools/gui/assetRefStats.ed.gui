@@ -1,0 +1,102 @@
+//--- OBJECT WRITE BEGIN ---
+$guiContent = new GuiControl(AssetRefStatsGui) {
+   extent = "1280 720";
+   profile = "ToolsGuiDefaultProfile";
+   tooltipProfile = "GuiToolTipProfile";
+   isContainer = "1";
+   canSaveDynamicFields = "1";
+
+   new GuiWindowCtrl(AssetRefStatsWindow) {
+      Text = "Asset Ref Stats";
+      closeCommand = "AssetRefStatsGui.toggle();";
+      position = "92 168";
+      extent = "638 405";
+      minExtent = "480 260";
+      profile = "ToolsGuiWindowProfile";
+      tooltipProfile = "GuiToolTipProfile";
+
+      new GuiControl(AssetRefStatsToolbar) {
+         position = "6 24";
+         extent = "626 22";
+         profile = "ToolsGuiDefaultProfile";
+         tooltipProfile = "GuiToolTipProfile";
+         isContainer = "1";
+
+         new GuiTextEditCtrl(AssetRefStatsSearch) {
+            placeholderText = "Filter asset ID...";
+            position = "-2 0";
+            extent = "220 20";
+            horizSizing = "left";
+            profile = "ToolsGuiTextEditProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            ToolTip = "Filter by asset ID (case-insensitive substring match)";
+         };
+         new GuiTextCtrl() {
+            Text = "Sort:";
+            position = "226 2";
+            extent = "28 18";
+            horizSizing = "left";
+            profile = "ToolsGuiTextProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+         new GuiPopUpMenuCtrl(AssetRefStatsSortMenu) {
+            Text = "Memory Usage";
+            position = "258 0";
+            extent = "160 20";
+            horizSizing = "left";
+            profile = "ToolsGuiPopUpMenuProfile";
+            tooltipProfile = "GuiToolTipProfile";
+            ToolTip = "Sort assets within each type group";
+         };
+         new GuiButtonCtrl(AssetRefStatsRefreshBtn) {
+            Text = "Refresh";
+            position = "428 0";
+            extent = "80 21";
+            horizSizing = "left";
+            profile = "ToolsGuiButtonProfile";
+            command = "AssetRefStatsGui.refresh();";
+            tooltipProfile = "GuiToolTipProfile";
+            ToolTip = "Re-query asset stats";
+         };
+         new GuiButtonCtrl(AssetRefStatsIsolateBtn) {
+            Text = "Isolate Chain";
+            position = "516 0";
+            extent = "104 21";
+            horizSizing = "left";
+            profile = "ToolsGuiButtonProfile";
+            command = "AssetRefStatsGui.toggleIsolate();";
+            tooltipProfile = "GuiToolTipProfile";
+            ToolTip = "Filter the tree to the full dependency chain of the currently selected asset. Click again to clear.";
+         };
+      };
+      new GuiTextCtrl(AssetRefStatsHeader) {
+         Text = "  refs cur/pk   acq/rel    memory    assetId";
+         position = "6 48";
+         extent = "626 16";
+         profile = "ToolsGuiTextProfile";
+         tooltipProfile = "GuiToolTipProfile";
+      };
+      new GuiScrollCtrl(AssetRefStatsScroll) {
+         hScrollBar = "dynamic";
+         position = "6 66";
+         extent = "626 331";
+         minExtent = "8 8";
+         horizSizing = "width";
+         vertSizing = "height";
+         profile = "ToolsGuiScrollProfile";
+         tooltipProfile = "GuiToolTipProfile";
+
+         new GuiTreeViewCtrl(AssetRefStatsTree) {
+            itemHeight = "21";
+            destroyTreeOnSleep = "0";
+            position = "1 1";
+            extent = "608 19";
+            minExtent = "8 8";
+            horizSizing = "width";
+            profile = "ToolsGuiTreeViewProfile";
+            tooltipProfile = "GuiToolTipProfile";
+         };
+      };
+   };
+};
+//--- OBJECT WRITE END ---

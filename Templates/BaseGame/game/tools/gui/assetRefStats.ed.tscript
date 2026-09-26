@@ -1,0 +1,513 @@
+//-----------------------------------------------------------------------------
+// Asset Ref Stats gui shows per-type / per-asset reference counts and
+// memory footprint pulled live from AssetDatabase.
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// Constants
+//-----------------------------------------------------------------------------
+$AssetRefStats::Sort_PeakRefs    = 0;
+$AssetRefStats::Sort_CurrentRefs = 1;
+$AssetRefStats::Sort_Memory      = 2;
+$AssetRefStats::Sort_AcquireCount = 3;
+
+$AssetRefStats::sortMode = $AssetRefStats::Sort_Memory;
+$AssetRefStats::isolateMode    = false;
+$AssetRefStats::isolateAssetId = "";
+
+//-----------------------------------------------------------------------------
+function AssetRefStats::FormatBytes(%bytes)
+{
+   if (%bytes <= 0)         
+      return "-";
+
+   if (%bytes >= 1024 * 1024 * 1024) 
+      return mFloatLength(%bytes / (1024 * 1024 * 1024), 2) @ " GB";
+      
+   if (%bytes >= 1024 * 1024)     
+      return mFloatLength(%bytes / (1024 * 1024), 1) @ " MB";
+      
+   if (%bytes >= 1024) 
+      return mFloatLength(%bytes / 1024, 1) @ " KB";
+      
+   return %bytes @ " B";
+}
+
+// Insertion sort on a NL-separated "value\tfields..." list, descending.
+function AssetRefStats::SortDescending(%list)
+{
+   %count = getRecordCount(%list);
+   if (%count <= 1) 
+   return %list;
+
+   for (%i = 0; %i < %count; %i++)
+      $AssetRefStats::SortTmp[%i] = getRecord(%list, %i);
+
+   for (%i = 1; %i < %count; %i++)
+   {
+      %key    = $AssetRefStats::SortTmp[%i];
+      %keyVal = getField(%key, 0);
+      %j = %i - 1;
+      while (%j >= 0 && getField($AssetRefStats::SortTmp[%j], 0) < %keyVal)
+      {
+         $AssetRefStats::SortTmp[%j + 1] = $AssetRefStats::SortTmp[%j];
+         %j--;
+      }
+      $AssetRefStats::SortTmp[%j + 1] = %key;
+   }
+
+   %sorted = "";
+   for (%i = 0; %i < %count; %i++)
+      %sorted = (%sorted $= "") ? $AssetRefStats::SortTmp[%i] : %sorted NL $AssetRefStats::SortTmp[%i];
+   return %sorted;
+}
+
+/// Recursively walks depends-on and depended-on-by, marking every
+/// reachable asset in $AssetRefStats::ChainMember[assetId] as true.
+/// Accounts for mapTo for MaterialAssets to link back to ShapeAssets
+/// %depth guards against cycles / runaway graphs.
+function AssetRefStatsGui::collectChain(%this, %assetId, %depth)
+{
+   if ($AssetRefStats::ChainMember[%assetId] || %depth > 20)
+      return;
+      
+   $AssetRefStats::ChainMember[%assetId] = true;
+
+   // Track the set so we can clear it later without a re-scan
+   $AssetRefStats::ChainList = (%depth == 0 || $AssetRefStats::ChainList $= "")
+      ? %assetId
+      : $AssetRefStats::ChainList TAB %assetId;
+
+   // Formal dependency edges (both directions)
+   %q = new AssetQuery();
+   %count = AssetDatabase.findAssetDependsOn(%q, %assetId);
+   for (%i = 0; %i < %count; %i++)
+      %this.collectChain(%q.getAsset(%i), %depth + 1);
+   %q.delete();
+
+   %q = new AssetQuery();
+   %count = AssetDatabase.findAssetIsDependedOn(%q, %assetId);
+   for (%i = 0; %i < %count; %i++)
+      %this.collectChain(%q.getAsset(%i), %depth + 1);
+   %q.delete();
+
+   // Handling mapTos here
+   %assetType = AssetDatabase.getAssetType(%assetId);
+   if (%assetType $= "MaterialAsset")
+   {
+      //This avoids an acquireAsset so we don't throw off our refCount tracking
+      %assetObj = AssetDatabase.getLoadedAssetObject(%assetId);
+      if (isObject(%assetObj))
+      {
+         %matName = %assetObj.getMaterialName();
+         if (%matName !$= "" && isObject(%matName))
+         {
+            %mapToName = %matName.mapTo;
+            if (%mapToName !$= "")
+               %this.collectChainFromMapTo(%mapToName, %depth + 1);
+         }
+      }
+   }
+   else if (%assetType $= "ShapeAsset")
+   {
+      %assetObj = AssetDatabase.getLoadedAssetObject(%assetId);
+      if (isObject(%assetObj))
+      {
+         %matCount = %assetObj.getMaterialCount();
+         for (%m = 0; %m < %matCount; %m++)
+         {
+            %slotName = %assetObj.getMaterial(%m);
+            if (%slotName !$= "")
+               %this.collectChainFromMapTo(%slotName, %depth + 1);
+         }
+      }
+   }
+}
+
+/// Given a material slot name we'll find all
+/// MaterialAssets whose Material definition has that mapTo value and recurse.
+function AssetRefStatsGui::collectChainFromMapTo(%this, %mapToName, %depth)
+{
+   // Iterate all declared MaterialAssets looking for a matching mapTo.
+   %q = new AssetQuery();
+   AssetDatabase.findAssetType(%q, "MaterialAsset", false);
+   %count = %q.getCount();
+   
+   for (%i = 0; %i < %count; %i++)
+   {
+      %matAssetId = %q.getAsset(%i);
+      if ($AssetRefStats::ChainMember[%matAssetId])
+         continue;
+
+      %assetObj = AssetDatabase.getLoadedAssetObject(%matAssetId);
+      if (!isObject(%assetObj))
+         continue; // Nothing to do
+
+      %matName = %assetObj.getMaterialName();
+      if (%matName $= "" || !isObject(%matName))
+         continue;
+
+      if (%matName.mapTo $= %mapToName)
+         %this.collectChain(%matAssetId, %depth);
+   }
+   %q.delete();
+}
+
+function AssetRefStatsGui::toggleIsolate(%this)
+{
+   if ($AssetRefStats::isolateMode)
+   {
+      // Clear
+      $AssetRefStats::isolateMode    = false;
+      $AssetRefStats::isolateAssetId = "";
+      AssetRefStatsIsolateBtn.setText("Isolate Chain");
+      %this.refresh();
+      return;
+   }
+
+   // Get the current item's assetId
+   %selItemId = AssetRefStatsTree.getSelectedItem(0);
+   if (%selItemId <= 0)
+   {
+      messageBox("Asset Ref Stats Gui", "Must select a valid asset row to isolate");
+      return;
+   }
+   
+   %assetId = AssetRefStatsTree.getItemValue(%selItemId);
+   if (%assetId $= "")
+   {
+      messageBox("Asset Ref Stats Gui", "Must select a valid asset row to isolate");
+      return;
+   }
+
+   $AssetRefStats::isolateMode    = true;
+   $AssetRefStats::isolateAssetId = %assetId;
+   AssetRefStatsIsolateBtn.setText("Clear Isolate");
+   %this.refresh();
+}
+
+//-----------------------------------------------------------------------------
+// This is called for anything that has dependencies or is being depended on
+// Can potentially add either:
+//   "depends on" - Assets this one requires to keep loaded
+//   "depended on by" - Assets that require this one to keep loaded
+//-----------------------------------------------------------------------------
+function AssetRefStatsGui::insertDependencyNodes(%this, %parentId, %assetId)
+{
+   //Depends on
+   %depsOnQuery = new AssetQuery();
+   %depsOnCount = AssetDatabase.findAssetDependsOn(%depsOnQuery, %assetId);
+   if (%depsOnCount > 0)
+   {
+      %groupId = AssetRefStatsTree.insertItem(%parentId, "depends on  [" @ %depsOnCount @ "]", "", "");
+      for (%d = 0; %d < %depsOnCount; %d++)
+      {
+         %depAssetId  = %depsOnQuery.getAsset(%d);
+         %depRefCount = AssetDatabase.getAssetRefCount(%depAssetId);
+         %depPeakCount  = AssetDatabase.getAssetPeakRefCount(%depAssetId);
+         %depMemUsage = AssetRefStats::FormatBytes(AssetDatabase.getAssetMemoryUsage(%depAssetId));
+         %flag   = (%depRefCount > 0) ? " *" : ""; //Mark it if it's still actually in use
+         
+         AssetRefStatsTree.insertItem(%groupId,
+            "refs" SPC padLeft(%depRefCount, 3) @ "/" @ padLeft(%depPeakCount, 3)
+            @ "  mem" SPC padRight(%depMemUsage, 10)
+            @ "  " @ %depAssetId @ %flag,
+            %depAssetId, "");
+      }
+   }
+   %depsOnQuery.delete();
+
+   //Depended on by
+   %depOnByQuery = new AssetQuery();
+   %depOnByCount = AssetDatabase.findAssetIsDependedOn(%depOnByQuery, %assetId);
+   if (%depOnByCount > 0)
+   {
+      %groupId = AssetRefStatsTree.insertItem(%parentId, "depended on by  [" @ %depOnByCount @ "]", "", "");
+      for (%d = 0; %d < %depOnByCount; %d++)
+      {
+         %depAssetId  = %depOnByQuery.getAsset(%d);
+         %depRefCount = AssetDatabase.getAssetRefCount(%depAssetId);
+         %depPeakCount  = AssetDatabase.getAssetPeakRefCount(%depAssetId);
+         %depMemUsage = AssetRefStats::FormatBytes(AssetDatabase.getAssetMemoryUsage(%depAssetId));
+         %flag   = (%depRefCount > 0) ? " *è" : ""; //Mark it if it's still actually in use
+         
+         AssetRefStatsTree.insertItem(%groupId,
+            "refs" SPC padLeft(%depRefCount, 3) @ "/" @ padLeft(%depPeakCount, 3)
+            @ "  mem" SPC padRight(%depMemUsage, 10)
+            @ "  " @ %depAssetId @ %flag,
+            %depAssetId, "");
+      }
+   }
+   %depOnByQuery.delete();
+
+   // Find any cases where we're holding an asset via static fields
+   %holders = AssetDatabase.findAssetHoldersAsString(%assetId);
+   if (%holders !$= "")
+   {
+      %rowCount = getRecordCount(%holders);
+      %groupId  = AssetRefStatsTree.insertItem(%parentId, "held by SimObjects  [" @ %rowCount @ "]", "", "");
+      for (%h = 0; %h < %rowCount; %h++)
+      {
+         %entry       = getRecord(%holders, %h);
+         %className = getField(%entry, 0);
+         %objId     = getField(%entry, 1);
+         %objName   = getField(%entry, 2);
+         %fieldName = getField(%entry, 3);
+
+         %nameStr = (%objName !$= "") ? "'" @ %objName @ "'" : "<unnamed>";
+         %label   = "[" @ %className @ "] " @ %nameStr @ "(" @ %objId @ ")." @ %fieldName;
+
+         AssetRefStatsTree.insertItem(%groupId, %label, %objId, "");
+      }
+   }
+   else
+   {
+      // Only show the "none" note when the asset actually has live refs
+      // Otherwise we'll assume that with no holders and no refs it's *actually* not held
+      %curRef = AssetDatabase.getAssetRefCount(%assetId);
+      if (%curRef > 0)
+      {
+         %ptrCount = AssetDatabase.getDebugAssetPtrInstanceCount(%assetId);
+         if (%ptrCount > 0)
+         {
+            // If we hit this, then it's most likely the AssetPtrs or AssetRefs
+            // are being held in a way outside of static field usage. 
+            // Log it so we indicate it IS in use, we just can't readily map 'how'.
+            AssetRefStatsTree.insertItem(%parentId,
+               %ptrCount @ " ref(s) held by untracked AssetPtr/AssetRef members, not static fields", "", "");
+         }
+         else
+         {
+            // No AssetPtr/Ref instances at all are registered against this asset,
+            // but refcount > 0. The remaining ref(s) very likely come from an
+            // acquireAsset call that wasn't properly released.
+            AssetRefStatsTree.insertItem(%parentId,
+               %curRef @ " ref(s) from an unbalanced raw acquireAsset()/releaseAsset() calls, not AssetPtr/AssetRefs", "", "");
+         }
+      }
+   }
+}
+
+// Rebuild da tree
+function AssetRefStatsGui::refresh(%this)
+{
+   AssetRefStatsTree.removeItem(0);
+
+   %filterText = strlwr(AssetRefStatsSearch.getText());
+   %sortMode = $AssetRefStats::sortMode;
+
+   // If we're doing isolate mode, we'll just build the chain now
+   // to make the refresh go faster
+   $AssetRefStats::ChainList = "";
+   if ($AssetRefStats::isolateMode)
+      %this.collectChain($AssetRefStats::isolateAssetId, 0);
+
+   %query = new AssetQuery();
+   AssetDatabase.findAllAssets(%query, false, false);
+   %total = %query.getCount();
+
+   %typeList = "";
+
+   for (%i = 0; %i < %total; %i++)
+   {
+      %assetId = %query.getAsset(%i);
+      %type = AssetDatabase.getAssetType(%assetId);
+
+      // Isolate-chain filter: just skip if not in the collected chain set
+      if ($AssetRefStats::isolateMode && !$AssetRefStats::ChainMember[%assetId])
+         continue;
+
+      // Apply normal search filter
+      if (%filterText !$= "" && strstr(strlwr(%assetId), %filterText) == -1)
+         continue;
+
+      %refCount = AssetDatabase.getAssetRefCount(%assetId);
+      %peakRefCount = AssetDatabase.getAssetPeakRefCount(%assetId);
+      %memUsage = AssetDatabase.getAssetMemoryUsage(%assetId);
+      %acquireCount = AssetDatabase.getAssetAcquireCount(%assetId);
+      %releaseCount = AssetDatabase.getAssetReleaseCount(%assetId);
+
+      // Skip assets never touched
+      if (%peakRefCount == 0 && %acquireCount == 0)
+         continue;
+
+      switch (%sortMode)
+      {
+         case $AssetRefStats::Sort_PeakRefs:     
+            %sortVal = %peakRefCount;
+         case $AssetRefStats::Sort_CurrentRefs:  
+            %sortVal = %refCount;
+         case $AssetRefStats::Sort_Memory:       
+            %sortVal = %memUsage;
+         case $AssetRefStats::Sort_AcquireCount: 
+            %sortVal = %acquireCount;
+         default:                                
+            %sortVal = %memUsage;
+      }
+
+      //We run into this type yet?
+      if (!$AssetRefStats::TypeSeen[%type])
+      {
+         $AssetRefStats::TypeSeen[%type]        = true;
+         %typeList = (%typeList $= "") ? %type : %typeList TAB %type;
+         
+         $AssetRefStats::TypeEntries[%type]     = "";
+         $AssetRefStats::TypeTotalMem[%type]    = 0;
+         $AssetRefStats::TypeActiveRefs[%type]  = 0;
+         $AssetRefStats::TypeLoaded[%type]      = 0;
+      }
+
+      $AssetRefStats::TypeTotalMem[%type] += %memUsage;
+      if (%refCount > 0) 
+         $AssetRefStats::TypeActiveRefs[%type]++;
+      if (%peakRefCount > 0) 
+         $AssetRefStats::TypeLoaded[%type]++;
+
+      %row = %sortVal TAB %assetId TAB %refCount TAB %peakRefCount TAB %memUsage TAB %acquireCount TAB %releaseCount;
+      %existing = $AssetRefStats::TypeEntries[%type];
+      
+      $AssetRefStats::TypeEntries[%type] = (%existing $= "") ? %row : %existing NL %row;
+   }
+
+   %query.delete();
+
+   // Clear the chain membership stuff now that the asset loop is done.
+   if ($AssetRefStats::isolateMode)
+   {
+      %chainCount = getFieldCount($AssetRefStats::ChainList);
+      for (%ci = 0; %ci < %chainCount; %ci++)
+         $AssetRefStats::ChainMember[getField($AssetRefStats::ChainList, %ci)] = false;
+         
+      $AssetRefStats::ChainList = "";
+   }
+
+   // Actually populate
+   %typeCount = getFieldCount(%typeList);
+   for (%t = 0; %t < %typeCount; %t++)
+   {
+      %type = getField(%typeList, %t);
+
+      %totalMem   = $AssetRefStats::TypeTotalMem[%type];
+      %activeRefs = $AssetRefStats::TypeActiveRefs[%type];
+      %loaded     = $AssetRefStats::TypeLoaded[%type];
+
+      %typeLabel = %type @ "   loaded:" SPC %loaded @ "  active:" SPC %activeRefs @ "  mem:" SPC AssetRefStats::FormatBytes(%totalMem);
+      %typeId = AssetRefStatsTree.insertItem(0, %typeLabel, %type, "");
+
+      %sorted   = AssetRefStats::SortDescending($AssetRefStats::TypeEntries[%type]);
+      %rowCount = getRecordCount(%sorted);
+      for (%r = 0; %r < %rowCount; %r++)
+      {
+         %row     = getRecord(%sorted, %r);
+         %assetId = getField(%row, 1);
+         %refCount     = getField(%row, 2);
+         %peakCount    = getField(%row, 3);
+         %memUsage     = getField(%row, 4);
+         %acqCount     = getField(%row, 5);
+         %relCount     = getField(%row, 6);
+
+         // Column layout (stats first so assetId's don't jack up the formatting/push the stats off the side):
+         //  refs cur/pk   acq/rel    memory    assetId *
+         %refCol = padLeft(%refCount, 3) @ "/" @ padLeft(%peakCount, 3);
+         %acqCol = padLeft(%acqCount, 4) @ "/" @ padLeft(%relCount,  4);
+         %memCol = padRight(AssetRefStats::FormatBytes(%memUsage), 10);
+         %flag   = (%refCount > 0) ? " *" : "";
+
+         %label = "refs" SPC %refCol @ "  acq" SPC %acqCol @ "  mem" SPC %memCol @ "  " @ %assetId @ %flag;
+
+         %assetRowId = AssetRefStatsTree.insertItem(%typeId, %label, %assetId, "");
+
+         // Record the tree item ID so right-clicking a dependency entry can
+         // jump back to this row.
+         $AssetRefStats::RowId[%assetId] = %assetRowId;
+
+         // For assets still holding refs, show what depends on them and what
+         // they depend on
+         if (%refCount > 0)
+            AssetRefStatsGui.insertDependencyNodes(%assetRowId, %assetId);
+      }
+
+      if (%activeRefs > 0)
+         AssetRefStatsTree.expandItem(%typeId);
+
+      // Clean up per-type globals for next refresh.
+      $AssetRefStats::TypeSeen[%type]        = false;
+      $AssetRefStats::TypeEntries[%type]     = "";
+      $AssetRefStats::TypeTotalMem[%type]    = 0;
+      $AssetRefStats::TypeActiveRefs[%type]  = 0;
+      $AssetRefStats::TypeLoaded[%type]      = 0;
+   }
+}
+
+function AssetRefStatsSearch::onReturn(%this)
+{
+   AssetRefStatsGui.refresh();
+}
+
+function AssetRefStatsSearch::onClearBtn(%this)
+{
+   %this.setText("");
+   AssetRefStatsGui.refresh();
+}
+
+function AssetRefStatsSortMenu::onSelect(%this, %id, %text)
+{
+   $AssetRefStats::sortMode = %id;
+   AssetRefStatsGui.refresh();
+}
+
+//-----------------------------------------------------------------------------
+// Right-click on any tree item whose value is an assetId jumps to that
+// asset's main row in the tree
+//-----------------------------------------------------------------------------
+function AssetRefStatsTree::onRightMouseUp(%this, %itemId, %mousePos, %object)
+{
+   %assetId = %this.getItemValue(%itemId);
+   if (%assetId $= "")
+      return;
+
+   %targetId = $AssetRefStats::RowId[%assetId];
+   if (%targetId !$= "" && %targetId > 0)
+   {
+      %this.clearSelection();
+      %this.selectItem(%targetId, true);
+      %this.scrollVisible(%targetId);
+   }
+}
+
+function AssetRefStatsGui::onWake(%this)
+{
+   AssetRefStatsSortMenu.clear();
+   AssetRefStatsSortMenu.add("Memory Usage",   $AssetRefStats::Sort_Memory);
+   AssetRefStatsSortMenu.add("Peak Refs",      $AssetRefStats::Sort_PeakRefs);
+   AssetRefStatsSortMenu.add("Current Refs",   $AssetRefStats::Sort_CurrentRefs);
+   AssetRefStatsSortMenu.add("Acquire Count",  $AssetRefStats::Sort_AcquireCount);
+   AssetRefStatsSortMenu.setSelected($AssetRefStats::sortMode, false);
+
+   // Sync isolate button label in case mode was active when the window was hidden
+   if ($AssetRefStats::isolateMode)
+      AssetRefStatsIsolateBtn.setText("Clear Isolate");
+   else
+      AssetRefStatsIsolateBtn.setText("Isolate Chain");
+}
+
+function AssetRefStatsGui::toggle(%this)
+{
+   if (isObject(%this) && %this.isAwake())
+   {
+      Canvas.popDialog(%this);
+   }
+   else
+   {
+      Canvas.pushDialog(%this, 100);
+      %this.refresh();
+   }
+}
+
+function toggleAssetRefStats(%val)
+{
+   if (%val)
+      AssetRefStatsGui.toggle();
+}
+
+GlobalActionMap.bind(keyboard, "ctrl F5", toggleAssetRefStats);

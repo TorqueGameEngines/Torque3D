@@ -70,6 +70,9 @@ const String AssetBase::mErrCodeStrings[] =
 AssetBase::AssetBase() :
 mpOwningAssetManager(NULL),
 mAcquireReferenceCount(0),
+#ifdef TORQUE_TOOLS
+mPeakReferenceCount(0),
+#endif
 mAssetInitialized(false)
 {
    // Generate an asset definition.
@@ -423,6 +426,10 @@ void AssetBase::acquireAssetReference(void)
       mpOwningAssetManager->acquireAcquiredReferenceCount();
 
    mAcquireReferenceCount++;
+#ifdef TORQUE_TOOLS
+   if ( mAcquireReferenceCount > mPeakReferenceCount )
+      mPeakReferenceCount = mAcquireReferenceCount;
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -452,6 +459,15 @@ bool AssetBase::releaseAssetReference(void)
 
    // Return "don't unload".
    return false;
+}
+
+//-----------------------------------------------------------------------------
+
+bool AssetBase::canBePurged() const
+{
+   if ( mpOwningAssetManager == NULL )
+      return true;
+   return !mpOwningAssetManager->hasLoadedDependents( getAssetId() );
 }
 
 //-----------------------------------------------------------------------------

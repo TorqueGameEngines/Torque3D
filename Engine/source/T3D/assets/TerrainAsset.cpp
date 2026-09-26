@@ -189,6 +189,22 @@ void TerrainAsset::setTerrainFileName(const char* pScriptFile)
    refreshAsset();
 }
 
+#ifdef TORQUE_TOOLS
+U32 TerrainAsset::getAssetMemoryUsage() const
+{
+   if ( !mTerrainFile )
+      return 0;
+
+   // getHeightMap() is the only public accessor. Its element count equals mSize*mSize,
+   // so we derive the layer map size (U8 per cell) from the same count.
+   // TODO: Figuring the best way to get the raw ter file size, but this is a good enough approximation for now.
+   U32 cellCount = mTerrainFile->getHeightMap().size();
+   U32 total     = cellCount * sizeof(U16);   // heightmap
+         total  += cellCount * sizeof(U8);    // layermap
+   return total;
+}
+#endif
+
 U32 TerrainAsset::load()
 {
    if (mLoadedState == AssetErrCode::Ok)

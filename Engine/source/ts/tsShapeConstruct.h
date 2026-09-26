@@ -171,6 +171,12 @@ protected:
    Vector<StringTableEntry>  mSequenceAssetIds;
    Vector<AssetPtr<ShapeAnimationAsset>> mSequencesAssets;
 
+   // Asset IDs of assets acquired as addSequence sources. Held for our
+   // lifetime so onAssetReleased() fires on them when we are destroyed, letting
+   // source shapes whose only remaining ref is their own self-hold from constructors
+   // clean up. 
+   Vector<StringTableEntry> mSequenceSources;
+
    ChangeSet         mChangeSet;
 
    // Paths to shapes used by MeshFit

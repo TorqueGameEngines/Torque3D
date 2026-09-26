@@ -363,6 +363,109 @@ DefineEngineMethod(AssetManager, purgeAssets, void, (),,
 
 //-----------------------------------------------------------------------------
 
+#ifdef TORQUE_TOOLS
+DefineEngineMethod(AssetManager, dumpAssetRefStats, void, (),,
+   "Dump a per-type summary of how many assets have been acquired, released, and are currently active.\n"
+   "Required if you have > 2GB assets sue to S32_MAX limitations.\n")
+{
+    object->dumpAssetRefStats();
+}
+
+DefineEngineMethod(AssetManager, getAssetRefCount, S32, (const char* assetId), (""),
+   "Returns the current active reference count for the given assetId, or 0 if not loaded.\n"
+   "@param assetId The asset Id to query.\n"
+   "@return Current reference count.\n")
+{
+    return object->getAssetRefCount( assetId );
+}
+
+DefineEngineMethod(AssetManager, getAssetMemoryUsage, S32, (const char* assetId), (""),
+   "Returns an estimate of the asset's memory footprint in bytes, or 0 if not loaded/not tracked.\n"
+   "Note: capped at S32_MAX (~2 GB). Use the console dump for very large assets instead\n"
+   "@param assetId The asset Id to query.\n"
+   "@return Memory usage in bytes.\n")
+{
+    return object->getAssetMemoryUsageBytes(assetId);
+}
+
+DefineEngineMethod(AssetManager, getAssetAcquireCount, S32, (const char* assetId), (""),
+   "Returns the total number of times the asset has been acquired.\n"
+   "@param assetId The asset Id to query.\n"
+   "@return Lifetime acquire count.\n")
+{
+    return object->getAssetAcquireCount( assetId );
+}
+
+DefineEngineMethod(AssetManager, getAssetReleaseCount, S32, (const char* assetId), (""),
+   "Returns the total number of times the asset has been released.\n"
+   "@param assetId The asset Id to query.\n"
+   "@return Lifetime release count.\n")
+{
+    return object->getAssetReleaseCount( assetId );
+}
+
+DefineEngineMethod(AssetManager, getAssetPeakRefCount, S32, (const char* assetId), (""),
+   "Returns the peak (highest ever) reference count for the given asset Id.\n"
+   "@param assetId The asset Id to query.\n"
+   "@return Peak reference count.\n")
+{
+    return object->getAssetPeakRefCount( assetId );
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(AssetManager, getLoadedAssetObject, const char*, (const char* assetId), (""),
+   "Returns the SimObject ID of an already-loaded asset WITHOUT acquiring it (no refcount change).\n"
+   "Returns empty string if the asset is not currently loaded.\n"
+   "Use this instead of acquireAsset when you only need to inspect the object.\n"
+   "@param assetId The asset Id to look up.\n"
+   "@return SimObject ID string, or \"\" if not loaded.\n")
+{
+    return object->getLoadedAssetObject( assetId );
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(AssetManager, findAssetHoldersAsString, const char*, (const char* assetId), (""),
+   "Same search as findAssetHolders but returns results as a newline-delimited string of\n"
+   "tab-delimited records: className \\t objectId \\t objectName \\t fieldName.\n"
+   "Returns empty string when nothing holds the asset (0 refs or no SimObject holders found).\n"
+   "@param assetId The asset Id to search for.\n"
+   "@return Newline-delimited holder records, or \"\".\n")
+{
+    static String result;
+    result = object->findAssetHoldersAsString( assetId );
+    return result.c_str();
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(AssetManager, getDebugAssetPtrInstanceCount, S32, (const char* assetId), (""),
+   "Debug-only. Number of live AssetPtr<T> instances currently registered against assetId.\n"
+   "Compare against getAssetRefCount() - a gap between the two means some refs are held by a\n"
+   "raw acquireAsset()/releaseAsset() pair rather than an AssetPtr/AssetRef field, which is\n"
+   "otherwise invisible to findAssetHolders' field-reflection scan.\n"
+   "@param assetId The asset Id to search for.\n"
+   "@return Count of live AssetPtr instances referencing the asset.\n")
+{
+   return object->getDebugAssetPtrInstanceCount( assetId );
+}
+
+//-----------------------------------------------------------------------------
+
+DefineEngineMethod(AssetManager, findAssetHolders, void, (const char* assetId), (""),
+   "Search all live SimObjects for console fields referencing the given asset Id.\n"
+   "Useful for tracking down which objects are keeping an asset alive after level teardown.\n"
+   "Note: references held purely in C++ (AssetPtr<> locals, non-SimObject members) will not appear.\n"
+   "@param assetId The asset Id to search for.\n"
+   "@return No return value.\n")
+{
+    object->findAssetHolders( assetId );
+}
+#endif
+
+//-----------------------------------------------------------------------------
+
 DefineEngineMethod(AssetManager, deleteAsset, bool, (const char* assetId, bool deleteLooseFiles, bool deleteDependencies), ("", false, false),
    "Deletes the specified asset Id and optionally its loose files and asset dependencies.\n"
    "@param assetId The selected asset Id.\n"

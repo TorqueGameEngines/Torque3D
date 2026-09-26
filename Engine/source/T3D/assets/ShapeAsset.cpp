@@ -28,6 +28,12 @@
 #include "assets/assetManager.h"
 #endif
 
+#ifdef TORQUE_TOOLS
+#ifndef _TSMESH_H_
+#include "ts/tsMesh.h"
+#endif
+#endif
+
 #ifndef _CONSOLETYPES_H_
 #include "console/consoleTypes.h"
 #endif
@@ -53,6 +59,7 @@
 
 #include "ts/tsShapeInstance.h"
 #include "gfx/bitmap/imageUtils.h"
+#include "ts/tsShapeConstruct.h"
 
 StringTableEntry ShapeAsset::smNoShapeAssetFallback = NULL;
 AssetPtr<ShapeAsset> ShapeAsset::smNoShapeAssetFallbackAssetPtr = NULL;
@@ -349,6 +356,8 @@ U32 ShapeAsset::load()
 {
    if (mLoadedState == AssetErrCode::Ok) return mLoadedState;
 
+   mMaterialAssets.clear();
+
    mShape = ResourceManager::get().load(mShapeFile);
 
    if (!mShape)
@@ -362,9 +371,97 @@ U32 ShapeAsset::load()
    if (GFXDevice::devicePresent())
       mShape->setupBillboardDetails(mShapeFile, mDiffuseImposterFileName, mNormalImposterFileName);
 
+   // Hold a reference to every MaterialAsset dependency declared against this
+   // asset, so the Materials the TSShape's materialList resolves against can't
+   // be purged out from under it while the shape is still loaded.
+   //If we preload the material list, this doesn't actually matter so much, but having
+   // a proper chain of ownership/association is still a good idea for tracking.
+   StringTableEntry materialAssetType = StringTable->insert("MaterialAsset");
+
+   AssetManager::typeAssetDependsOnHash::Iterator depItr =
+      mpOwningAssetManager->getDependedOnAssets()->find(mpAssetDefinition->mAssetId);
+
+   while (depItr != mpOwningAssetManager->getDependedOnAssets()->end()
+          && depItr->key == mpAssetDefinition->mAssetId)
+   {
+      if (mpOwningAssetManager->getAssetType(depItr->value) == materialAssetType)
+      {
+         AssetPtr<MaterialAsset> matAsset = depItr->value;
+         mMaterialAssets.push_back(matAsset);
+      }
+      ++depItr;
+   }
+
    mLoadedState = Ok;
 
    return mLoadedState;
+}
+
+void ShapeAsset::unloadAsset()
+{
+   mMaterialAssets.clear();
+   mShape = NULL;
+   mLoadedState = AssetErrCode::NotLoaded;
+}
+
+#ifdef TORQUE_TOOLS
+U32 ShapeAsset::getAssetMemoryUsage() const
+{
+   if ( !mShape )
+      return 0;
+
+   U32 total = 0;
+
+   // Per-mesh geometry
+   for ( U32 i = 0; i < mShape->meshes.size(); ++i )
+   {
+      const TSMesh* mesh = mShape->meshes[i];
+      if ( !mesh )
+         continue;
+      total += mesh->mVertexData.mem_size();
+      total += mesh->mIndices.size();
+   }
+
+   // Shape data
+   total += (U32)mShape->nodes.size()              * sizeof(TSShape::Node);
+   total += (U32)mShape->objects.size()            * sizeof(TSShape::Object);
+   total += (U32)mShape->objectStates.size()       * sizeof(TSShape::ObjectState);
+   total += (U32)mShape->details.size()            * sizeof(TSShape::Detail);
+   total += (U32)mShape->sequences.size()          * sizeof(TSShape::Sequence);
+
+   // Animation data
+   total += (U32)mShape->nodeRotations.size()             * sizeof(Quat16);
+   total += (U32)mShape->nodeTranslations.size()          * sizeof(Point3F);
+   total += (U32)mShape->nodeUniformScales.size()         * sizeof(F32);
+   total += (U32)mShape->nodeAlignedScales.size()         * sizeof(Point3F);
+   total += (U32)mShape->nodeArbitraryScaleRots.size()    * sizeof(Quat16);
+   total += (U32)mShape->nodeArbitraryScaleFactors.size() * sizeof(Point3F);
+   total += (U32)mShape->groundRotations.size()           * sizeof(Quat16);
+   total += (U32)mShape->groundTranslations.size()        * sizeof(Point3F);
+   total += (U32)mShape->triggers.size()                  * sizeof(TSShape::Trigger);
+
+   // Default transforms data
+   total += (U32)mShape->defaultRotations.size()    * sizeof(Quat16);
+   total += (U32)mShape->defaultTranslations.size() * sizeof(Point3F);
+
+   return total;
+}
+#endif
+
+void ShapeAsset::onAssetReleased()
+{
+   // If the sole remaining reference is from our own TSShapeConstructor,
+   // Then we want to go ahead and do cleanup. Killing it will do the final
+   //ref count decrement, allowing this asset to be released and unloaded.
+   //
+   // Using safeDeleteObject() defers the deletion out of the current release
+   // call stack, avoiding any re-entrancy through releaseAsset().
+   if ( getAcquiredReferenceCount() != 1 )
+      return;
+
+   TSShapeConstructor* ctor = TSShapeConstructor::findShapeConstructorByAssetId( getAssetId() );
+   if ( ctor )
+      ctor->safeDeleteObject();
 }
 
 bool ShapeAsset::preloadMaterialList()

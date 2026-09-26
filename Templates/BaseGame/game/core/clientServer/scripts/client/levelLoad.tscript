@@ -56,16 +56,24 @@ function clientEndMission()
    physicsStopSimulation( "client" );
 
    // Stop game audio effects channels.
-   
    AudioChannelEffects.stop();
-   
+
    // Delete all the decals.
    decalManagerClear();
-  
-   // Delete client mission cleanup group. 
+
+   // Delete client mission cleanup group.
    if( isObject( ClientMissionCleanup ) )
       ClientMissionCleanup.delete();
-      
+
+   // Release the level asset acquired when we loaded.
+   if( isObject( $Client::LevelAsset ) )
+   {
+      AssetDatabase.releaseAsset( $Client::LevelAsset.getAssetId() );
+      $Client::LevelAsset = "";
+   }
+
+   AssetDatabase.schedule(32, "purgeAssets");
+
    clearClientPaths();
       
    // Done.

@@ -358,6 +358,14 @@ void LevelAsset::setNavmeshFile(const char* pNavmeshFile)
    refreshAsset();
 }
 
+#ifdef TORQUE_TOOLS
+U32 LevelAsset::getAssetMemoryUsage() const
+{
+   //TODO: Find best way to report mem usage of stuff like the decals or forest files.
+   return sizeof(LevelAsset);
+}
+#endif
+
 void LevelAsset::loadDependencies()
 {
    //First, load any material, animation, etc assets we may be referencing in our asset

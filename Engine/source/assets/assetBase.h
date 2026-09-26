@@ -67,6 +67,9 @@ protected:
    bool                    mAssetInitialized;
    AssetDefinition*        mpAssetDefinition;
    U32                     mAcquireReferenceCount;
+#ifdef TORQUE_TOOLS
+   U32                     mPeakReferenceCount;
+#endif
    U32                     mLoadedState;
 
 public:
@@ -114,6 +117,9 @@ public:
    inline StringTableEntry getAssetType(void) const                          { return mpAssetDefinition ? mpAssetDefinition->mAssetType: StringTable->EmptyString(); }
 
    inline S32              getAcquiredReferenceCount(void) const             { return mAcquireReferenceCount; }
+#ifdef TORQUE_TOOLS
+   inline U32              getPeakReferenceCount(void) const                 { return mPeakReferenceCount; }
+#endif
    inline bool             getOwned(void) const                              { return mpOwningAssetManager != NULL; }
 
    // Asset Id is only available once registered with the asset manager.
@@ -144,6 +150,32 @@ protected:
    virtual void            initializeAsset(void) {}
    virtual void            onAssetRefresh(void) {}
    virtual void            unloadAsset(void) {}
+
+public:
+#ifdef TORQUE_TOOLS
+   /// <summary>
+   /// Returns an estimate of this asset's current memory footprint in bytes.
+   /// Asset classes override this to provide more accurate estimates.
+   /// Defaults to 0.
+   /// </summary>
+   virtual U32             getAssetMemoryUsage() const { return 0; }
+#endif
+
+   /// <summary>
+   /// Called by AssetManager::releaseAsset() after every reference decrement.
+   /// Specific asset types can override this to handle special cases that require
+   /// cleanup when the ref count reaches zero.
+   /// </summary>
+   virtual void            onAssetReleased() {}
+
+   /// <summary>
+   /// Return false to prevent purgeAssets() from unloading this asset when its
+   /// ref count reaches zero.
+   /// By default we just check depdencies to make sure we don't purge an asset
+   /// that is still being relied on. Other asset types can override this to
+   /// handle special cases.
+   ///</summary>
+   virtual bool            canBePurged() const;
 
 protected:
    static bool             setAssetName(void *obj, const char *array, const char *data)           { static_cast<AssetBase*>(obj)->setAssetName(data); return false; }

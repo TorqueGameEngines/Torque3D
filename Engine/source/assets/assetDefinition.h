@@ -96,6 +96,12 @@ public:
     bool                        mAssetLoading;
     StringTableEntry            mAssetType;
     StringTableEntry            mAssetCategory;
+
+#ifdef TORQUE_TOOLS
+    /// Per-asset acquire/release counters.
+    U32                         mAcquireCount  = 0;
+    U32                         mReleaseCount  = 0;
+#endif
 };
 
 #endif // _ASSET_DEFINITION_H_

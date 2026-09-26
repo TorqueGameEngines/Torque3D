@@ -37,6 +37,16 @@ function ChooseLevelMenu::fillPrefEntries( %this )
     serverMaxPlayersCTRL.setText($Pref::Server::MaxPlayers);
 }
 
+function ChooseLevelMenu::releaseLevelAssets(%this)
+{
+   for (%i = 0; %i < LevelPreviewArray.getCount(); %i++)
+   {
+      %btn = LevelPreviewArray.getObject(%i);
+      if (%btn.levelAssetId !$= "")
+         AssetDatabase.releaseAsset(%btn.levelAssetId);
+   }
+}
+
 function ChooseLevelMenu::onWake(%this)
 {
    %this.fillPrefEntries();
@@ -138,6 +148,8 @@ function refreshGameModesList()
 
 function refreshLevelsList()
 {
+   // Release any previously acquired level assets before clearing the list.
+   ChooseLevelMenu.releaseLevelAssets();
    LevelPreviewArray.clear();
    
    //fetch the levelAssets   
@@ -172,10 +184,16 @@ function refreshLevelsList()
       %file = %levelAsset.getLevelPath();
       
       if ( !isFile(%file) )
+      {
+         AssetDatabase.releaseAsset(%assetId);
          continue;
+      }
          
       if( %levelAsset.isSubScene )
+      {
+         AssetDatabase.releaseAsset(%assetId);
          continue;
+      }
          
       //filter for selected gamemode
       %levelGameModes = %levelAsset.gameModesNames;
@@ -212,7 +230,10 @@ function refreshLevelsList()
       }
       
       if(!%foundGameModeMatch)
+      {
+         AssetDatabase.releaseAsset(%assetId);
          continue;
+      }
          
       %levelPreviewImg = %levelAsset.getPreviewImagePath();
    
@@ -490,6 +511,9 @@ function ChooseLevelBegin(%index)
 
 function ChooseLevelMenu::onSleep( %this )
 {
+   // Release all level asset refs acquired during list population.
+   %this.releaseLevelAssets();
+
    // This is set from the outside, only stays true for a single wake/sleep
    // cycle.
    %this.launchInEditor = false;

@@ -96,6 +96,11 @@ private:
    StringTableEntry   mNormalImposterFileName;
 
    Resource<TSShape>	 mShape;
+
+   // MaterialAsset dependencies held for the lifetime of the loaded shape, so
+   // the materials the TSShape's materialList resolves against can't be purged
+   // out from under it. Released in unloadAsset().
+   Vector<AssetPtr<MaterialAsset>> mMaterialAssets;
 public:
 
    ShapeAsset();
@@ -112,6 +117,11 @@ public:
    DECLARE_CONOBJECT(ShapeAsset);
 
    U32 load() override;
+   void unloadAsset() override;
+#ifdef TORQUE_TOOLS
+   U32 getAssetMemoryUsage() const override;
+#endif
+   void onAssetReleased() override;
    bool preloadMaterialList();
 
    TSShape* getShape();

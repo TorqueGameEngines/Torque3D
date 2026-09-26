@@ -1376,7 +1376,7 @@ void TSSkinMesh::createSkinBatchData()
             // Too many weights => find and replace the smallest one
             S32 minIndex = 0;
             F32 minWeight = batchOperations.last().transform[0].weight;
-            for ( S32 i = 1; i < batchOperations.last().transformCount; i++ )
+            for ( S32 i = 1; i < TSSkinMesh::BatchData::maxBonePerVert; i++ )
             {
                if ( batchOperations.last().transform[i].weight < minWeight )
                {

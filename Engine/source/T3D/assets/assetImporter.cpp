@@ -2010,7 +2010,31 @@ void AssetImporter::processShapeAsset(AssetImportObject* assetItem)
       GuiTreeViewCtrl* shapeInfo = new GuiTreeViewCtrl();
       shapeInfo->registerObject();
 
-      enumDTSForImport(filePath, shapeInfo);
+      bool handled = false;
+      if (fileExt.equal("dts", String::NoCase))
+      {
+         handled = enumDTSForImport(filePath, shapeInfo);
+      }
+      else
+      {
+         Torque::Path path(filePath);
+         if(fileExt.equal("dae", String::NoCase))
+         {
+         	if(!ColladaShapeLoader::canLoadCachedDTS(path))
+         		handled = enumColladaForImport(filePath, shapeInfo, false);
+         }
+         else
+         {
+         	if(!AssimpShapeLoader::canLoadCachedDTS(path))
+         	{
+         	   AssimpShapeLoader loader;
+               handled = loader.fillGuiTreeView(filePath.c_str(), shapeInfo);
+         	}
+         }
+      }
+
+      if (!handled)
+         enumDTSForImport(filePath, shapeInfo);
 
       assetItem->shapeInfo = shapeInfo;
    }

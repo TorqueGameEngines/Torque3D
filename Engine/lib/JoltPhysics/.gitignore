@@ -1,0 +1,14 @@
+.cache/
+.clangd/
+.fleet/
+.idea/
+.vs
+.vscode
+.DS_Store
+/profile_chart_*.html
+/stats*.html
+/snapshot.bin
+/*.jor
+/detlog.txt
+/Assets/Shaders/VK/*.spv
+/Assets/Shaders/MTL/*.metallib

@@ -47,8 +47,8 @@ Rigid::Rigid()
    friction = 0.5f;
    atRest = false;
 
-   sleepLinearThreshold = POINT_EPSILON;
-   sleepAngThreshold = POINT_EPSILON;
+   sleepLinearThreshold = 0.01f;
+   sleepAngThreshold = 0.01f;
    sleepTimeThreshold = 0.75f;
    sleepTimer = 0.0f;
 }
@@ -76,8 +76,8 @@ void Rigid::integrate(F32 delta)
    {
       QuatF dq;
       F32 sinHalfAngle;
-      mSinCos(angle * delta * -0.5f, sinHalfAngle, dq.w);
-      sinHalfAngle *= 1.0f / angle;
+      mSinCos(angle * -0.5f, sinHalfAngle, dq.w);
+      sinHalfAngle *= delta / angle;
       dq.x = angVelocity.x * sinHalfAngle;
       dq.y = angVelocity.y * sinHalfAngle;
       dq.z = angVelocity.z * sinHalfAngle;
@@ -101,7 +101,7 @@ void Rigid::integrate(F32 delta)
    }
 
    // 5. refresh ang velocity
-   updateAngularVelocity(delta);
+   updateAngularVelocity();
 
 
    // 6. CoM update
@@ -138,7 +138,7 @@ void Rigid::updateCenterOfMass()
 
 void Rigid::applyImpulse(const Point3F &r, const Point3F &impulse)
 {
-   if ((impulse.lenSquared() - mass) < POINT_EPSILON) return;
+   if (impulse.lenSquared() < POINT_EPSILON) return;
    wake();
 
    // Linear momentum and velocity

@@ -191,6 +191,16 @@ void PSSMLightShadowMap::_roundProjection(const MatrixF& lightMat, const MatrixF
 }
 
 void PSSMLightShadowMap::_adjustScaleAndOffset(Box3F& clipAABB, Point3F& scale, Point3F& offset) {
+
+   const ShadowMapParams* params = mLight->getExtended<ShadowMapParams>();
+
+   F32 padding = params->shadowSoftness * (2.0f / (F32)mTexSize);
+
+   clipAABB.minExtents.x -= padding;
+   clipAABB.minExtents.y -= padding;
+   clipAABB.maxExtents.x += padding;
+   clipAABB.maxExtents.y += padding;
+
    scale.x = 2.0f / (clipAABB.maxExtents.x - clipAABB.minExtents.x);
    scale.y = 2.0f / (clipAABB.maxExtents.y - clipAABB.minExtents.y);
    scale.z = 1.0f;
@@ -469,7 +479,7 @@ void PSSMLightShadowMap::setShaderParameters(GFXShaderConstBuffer* params, Light
    params->setSafe( lsc->mOverDarkFactorPSSM, p->overDarkFactor);
 
    // The softness is a factor of the texel size.
-   params->setSafe( lsc->mShadowSoftnessConst, p->shadowSoftness * ( 1.0f / mTexSize ) );
+   params->setSafe( lsc->mShadowSoftnessConst, p->shadowSoftness * ( 2.0f / mTexSize ) );
 }
 
 void PSSMLightShadowMap::_calcPlanesCullForShadowCasters(Vector< Vector<PlaneF> > &out, const Frustum &viewFrustum, const Point3F &_ligthDir)

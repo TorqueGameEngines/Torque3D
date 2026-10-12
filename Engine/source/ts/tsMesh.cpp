@@ -52,7 +52,7 @@
 #include "gfx/util/triListOpt.h"
 #include "util/triRayCheck.h"
 
-#include "opcode/Opcode.h"
+#include <Opcode.h>
 
 GFXPrimitiveType drawTypes[] = { GFXTriangleList, GFXTriangleStrip };
 #define getDrawType(a) (drawTypes[a])

@@ -34,11 +34,11 @@
 #include "collision/vertexPolyList.h"
 #include "platform/profiler.h"
 
-#include "opcode/Opcode.h"
-#include "opcode/Ice/IceAABB.h"
-#include "opcode/Ice/IcePoint.h"
-#include "opcode/OPC_AABBTree.h"
-#include "opcode/OPC_AABBCollider.h"
+#include <Opcode.h>
+#include <Ice/IceAABB.h>
+#include <Ice/IcePoint.h>
+#include <OPC_AABBTree.h>
+#include <OPC_AABBCollider.h>
 
 static bool gOpcodeInitialized = false;
 

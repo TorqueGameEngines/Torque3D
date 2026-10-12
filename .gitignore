@@ -181,6 +181,7 @@ console.log
 *.cached.dts
 !Engine/bin
 My Projects/
+Tools/CMake/vcpkg/local
 Project Manager.exe
 projects.xml
 Qt*.dll

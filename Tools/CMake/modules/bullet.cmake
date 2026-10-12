@@ -3,19 +3,8 @@ option(TORQUE_PHYSICS_BULLET "Use Bullet physics" OFF)
 
 if(TORQUE_PHYSICS_BULLET)
   message("Enabling Bullet Module")
-
-  set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} BulletSoftBody Bullet3Dynamics BulletInverseDynamics BulletCollision
-                                                     Bullet2FileLoader BulletDynamics Bullet3OpenCL_clew Bullet3Common
-                                                     LinearMath Bullet3Geometry Bullet3Collision)
+  find_package(Bullet CONFIG REQUIRED)
+  set(TORQUE_LINK_THIRDPARTY ${TORQUE_LINK_THIRDPARTY} BulletDynamics BulletCollision LinearMath Bullet3Common)
   set(TORQUE_COMPILE_DEFINITIONS ${TORQUE_COMPILE_DEFINITIONS} TORQUE_PHYSICS_BULLET TORQUE_PHYSICS_ENABLED)
-  set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} "${TORQUE_LIB_ROOT_DIRECTORY}/bullet/src" )
-
-  # Since Bullet lives elsewhere we need to ensure it is known to Torque when providing a link to it
-  set(BUILD_SHARED_LIBS OFF CACHE BOOL "Bullet Shared Libs" FORCE)
-  set(BUILD_CPU_DEMOS OFF CACHE BOOL "Bullet CPU Demos" FORCE)
-  set(BUILD_BULLET2_DEMOS OFF CACHE BOOL "Bullet2 Demos" FORCE)
-  set(BUILD_EXTRAS OFF CACHE BOOL "Set when you want to build the extras" FORCE)
-  set(USE_GRAPHICAL_BENCHMARK OFF CACHE BOOL "Use Graphical Benchmark" FORCE)
-  set(USE_GLUT OFF CACHE BOOL "Use Glut" FORCE)
-  add_subdirectory("${TORQUE_LIB_ROOT_DIRECTORY}/bullet" ${TORQUE_LIB_TARG_DIRECTORY}/bullet EXCLUDE_FROM_ALL)
+  # No more add_subdirectory — vcpkg's bullet3 port provides the targets above.
 endif(TORQUE_PHYSICS_BULLET)

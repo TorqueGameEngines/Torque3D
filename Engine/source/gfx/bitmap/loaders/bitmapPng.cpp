@@ -32,8 +32,8 @@
 
 #define PNG_INTERNAL 1
 #include <time.h>
-#include "lpng/png.h"
-#include "zlib/zlib.h"
+#include <png.h>
+#include <zlib.h>
 
 #ifdef NULL
 #undef NULL

@@ -336,13 +336,14 @@ void SceneObject::onRemove()
 {
    smSceneObjectRemove.trigger(this);
 
+   if (getParent() != NULL)   attachToParent(NULL);
    unmount();
    plUnlink();
 
+   if (mContainer)
+      mContainer->removeObject(this);
+
    Parent::onRemove();
-// PATHSHAPE
-   if ( getParent() != NULL)   attachToParent( NULL);
-// PATHSHAPE END
 }
 
 //-----------------------------------------------------------------------------
@@ -395,7 +396,7 @@ void SceneObject::inspectPostApply()
 //-----------------------------------------------------------------------------
 
 void SceneObject::setGlobalBounds()
-{ 
+{
    mGlobalBounds = true;
    mObjBox.minExtents.set( -1e10, -1e10, -1e10 );
    mObjBox.maxExtents.set(  1e10,  1e10,  1e10 );
@@ -434,6 +435,7 @@ void SceneObject::setTransform( const MatrixF& mat )
       mSceneManager->notifyObjectDirty( this );
 
    setRenderTransform( mat );
+   setMountTransforms();
 }
 
 //-----------------------------------------------------------------------------
@@ -1351,6 +1353,19 @@ void SceneObject::getRenderMountTransform( F32 delta, S32 index, const MatrixF &
    outMat->mul( mRenderObjToWorld, mountTransform );
 }
 
+void SceneObject::setMountTransforms()
+{
+   // Update all objects mounted to us
+   for (SceneObject* mounted = mMount.list; mounted; mounted = mounted->mMount.link)
+   {
+      // Compute mounted object's new world transform
+      MatrixF worldXfm;
+      getMountTransform(mounted->mMount.node, mounted->mMount.xfm, &worldXfm);
+      mounted->setTransform(worldXfm);
+   }
+}
+
+
 //=============================================================================
 //    Console API.
 //=============================================================================
@@ -1666,7 +1681,8 @@ void SceneObject::moveRender(const Point3F &delta)
 void SceneObject::PerformUpdatesForChildren(MatrixF mat){
 		for (U32 i=0; i < getNumChildren(); i++) {
 			SceneObject *o = getChild(i);
-			o->updateChildTransform(); //update the position of the child object
+         if (!o->isMounted())
+            o->updateChildTransform(); //update the position of the child object
 		}
 }
 

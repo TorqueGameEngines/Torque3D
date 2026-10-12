@@ -33,8 +33,6 @@
 /// @file
 /// Definitions for the core engine structured types.
 
-
-template< typename T > class Vector;
 namespace Torque {
    class UUID;
 }

@@ -30,9 +30,8 @@
 #endif
 
 #include <string.h>
-
-template< class T > class Vector;
-
+template<typename T, U32 COUNT> struct CustomAllocator;
+template<typename T, U32 COUNT, typename Allocator> class Vector;
 
 typedef UTF8 StringChar;
 
@@ -147,7 +146,7 @@ public:
    String collapseEscapes() const;
    
    /// Split the string into its components separated by the given delimiter.
-   void split( const char* delimiter, Vector< String >& outElements ) const;
+   void split( const char* delimiter, Vector<String, 0, CustomAllocator<String, 0> >& outElements ) const;
    
    /// Return true if the string starts with the given text.
    bool startsWith( const char* text ) const;

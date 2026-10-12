@@ -342,3 +342,40 @@ QuatF & QuatF::shortestArc( const VectorF &a, const VectorF &b )
    return *this;
 }
 
+QuatF& QuatF::computeRotationFromTo(const VectorF& from, const VectorF& to)
+{
+   VectorF f = from;
+   VectorF t = to;
+
+   f.normalizeSafe();
+   t.normalizeSafe();
+
+   if (f.isZero() || t.isZero())
+   {
+      return identity();
+   }
+
+   F32 dot = mClampF(mDot(f, t), -1.0f, 1.0f);
+
+   // Parallel = no rotation.
+   if (dot > 0.9999f)
+   {
+      return identity();
+   }
+
+   // Opposite = pick perpendicular.
+   if (dot < -0.9999f)
+   {
+      VectorF axis;
+      if (mFabs(f.x) < mFabs(f.z))
+         axis.set(0, -f.z, f.y);
+      else
+         axis.set(-f.y, f.x, 0);
+
+      axis.normalizeSafe();
+      return set(axis, M_PI_F); // 180 degrees
+   }
+
+   return shortestArc(f, t);
+}
+

@@ -584,6 +584,21 @@ protected:
    void setDirty(U32 dirty);
    void clearDirty(U32 dirty);
 
+   /// @name IKSolver functions
+   /// @{
+   static Vector<F32> smFabrikBoneLengths;
+   static Vector<Point3F> smFabrikPositions;
+   static Vector<S32> smIKChainNodes;
+   void updateChildWorldTransforms(S32 node);
+
+   bool solveCCD(TSShape::IKChain& chain);
+   bool calculateFabrikBoneLengths();
+   void applyFabrik(TSShape::IKChain& chain);
+   void solveFabrikForward(const Point3F& target);
+   void solveFabrikBackward(const Point3F& root);
+   bool solveFrabrik(TSShape::IKChain& chain);
+   /// @}
+
 //-------------------------------------------------------------------------------------
 // collision interface routines
 //-------------------------------------------------------------------------------------
@@ -824,6 +839,7 @@ public:
    U32 getSeqIndex() const { return sequence; }
    const TSSequence* getSequence() const { return &(mShapeInstance->mShape->sequences[sequence]); }
    const String& getSequenceName() const { return mShapeInstance->mShape->getSequenceName(sequence); }
+   const String& getIKChainName(S32 ikIndex) const { return mShapeInstance->mShape->getIKChainName(ikIndex); }
    S32 operator<(const TSThread &) const;
 };
 

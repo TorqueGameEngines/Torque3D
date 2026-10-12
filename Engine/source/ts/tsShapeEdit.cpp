@@ -31,7 +31,7 @@
 #include "core/stream/fileStream.h"
 #include "core/volume.h"
 #include "assets/assetManager.h"
-
+#include "ts/tsShapeConstruct.h"
 
 //-----------------------------------------------------------------------------
 
@@ -1868,6 +1868,219 @@ bool TSShape::removeSequence(const String& name)
 
    // Remove the sequence name if it is no longer in use
    removeName(name);
+
+   return true;
+}
+//-----------------------------------------------------------------------------
+
+bool TSShape::isAncestorOf(S32 ancestor, S32 descendant) const
+{
+   S32 n = descendant;
+   while (n != -1)
+   {
+      if (n == ancestor)
+         return true;
+      n = nodes[n].parentIndex;
+   }
+   return false;
+}
+
+bool TSShape::addIKChain(const String& name, const String& nodeAName, const String& nodeBName)
+{
+   // Check that there is not already an ikchain with this name
+   if (findIKChain(name) >= 0)
+   {
+      Con::errorf("TSShape::addIKChain: %s already exists!", name.c_str());
+      return false;
+   }
+
+   S32 nodeA = findNode(nodeAName);
+   S32 nodeB = findNode(nodeBName);
+
+   if (nodeA < 0)
+   {
+      Con::errorf("TSShape::addIKChain: bone '%s' not found.", nodeAName.c_str());
+      return false;
+   }
+
+   if (nodeB < 0)
+   {
+      Con::errorf("TSShape::addIKChain: bone '%s' not found.", nodeBName.c_str());
+      return false;
+   }
+
+   S32 rootNode = -1;
+   S32 endNode = -1;
+
+   if (isAncestorOf(nodeA, nodeB))
+   {
+      rootNode = nodeA;
+      endNode = nodeB;
+   }
+   else if (isAncestorOf(nodeB, nodeA))
+   {
+      rootNode = nodeB;
+      endNode = nodeA;
+   }
+   else
+   {
+      Con::errorf("TSShape::addIKChain: '%s' and '%s' are not related in the skeleton hierarchy.",
+         nodeAName.c_str(), nodeBName.c_str());
+      return false;
+   }
+
+   Vector<S32> chainNodes;
+   S32 n = endNode;
+   // loop through parents to get the root.
+   while (n != -1)
+   {
+      chainNodes.push_back(n);
+      if (n == rootNode)
+         break;
+      n = nodes[n].parentIndex;
+   }
+
+   String targetNodeName = name + "_target";
+   S32 targetNode = findNode(targetNodeName);
+   if (targetNode < 0)
+   {
+      Con::warnf("TSShape::addIKChain: default target node '%s' not found, adding one.", targetNodeName.c_str());
+      TransformF txfm = TransformF::Identity;
+      Point3F pos(txfm.getPosition());
+      QuatF rot(txfm.getOrientation());
+      addNode(targetNodeName, "", pos, rot);
+
+      targetNode = findNode(targetNodeName);
+   }
+
+   //------------------------------------
+   // Create IK Chain.
+   //------------------------------------
+   IKChain chain;
+   chain.nameIndex = addName(name);
+   chain.rootNode = rootNode;
+   chain.endNode = endNode;
+   chain.nodes = chainNodes;
+   chain.weight = 1.0f;
+   chain.threshold = 0.1f;
+   chain.maxIterations = 10;
+   chain.targetIndex = targetNode;
+   chain.enabled = true;
+
+   ikChains.push_back(chain);
+
+   return true;
+}
+
+bool TSShape::removeIKChain(const String& name)
+{
+   // Find the default target node, only remove this node as the ikchain added it.
+   String targetNodeName = name + "_target";
+   S32 targetNode = findNode(targetNodeName);
+   if (targetNode >= 0)
+   {
+      removeNode(targetNodeName);
+   }
+
+   // Find the ikchain to be removed
+   S32 ikChainIndex = findIKChain(name);
+   if (ikChainIndex < 0)
+   {
+      Con::errorf("TSShape::removeIKChain: Could not find ikchain '%s'", name.c_str());
+      return false;
+   }
+
+   ikChains.erase(ikChainIndex);
+
+   // Remove the ikchain name if it is no longer in use
+   removeName(name);
+
+   return true;
+}
+
+bool TSShape::setIKChainEnabled(const String& name, bool isEnabled)
+{
+   S32 ikIndex = findIKChain(name);
+   if (ikIndex < 0)
+   {
+      Con::errorf("TSShape::setIKChainEnabled: Could not find ikchain named '%s'", name.c_str());
+      return false;
+   }
+
+   TSShape::IKChain& ikChain = ikChains[ikIndex];
+
+   ikChain.enabled = isEnabled;
+
+   return true;
+}
+
+bool TSShape::setIKChainWeight(const String& name, F32 weight)
+{
+   S32 ikIndex = findIKChain(name);
+   if (ikIndex < 0)
+   {
+      Con::errorf("TSShape::setIKChainEnabled: Could not find ikchain named '%s'", name.c_str());
+      return false;
+   }
+
+   TSShape::IKChain& ikChain = ikChains[ikIndex];
+
+   ikChain.weight = weight;
+
+   return true;
+}
+
+bool TSShape::setIKChainThreshold(const String& name, F32 threshold)
+{
+   S32 ikIndex = findIKChain(name);
+   if (ikIndex < 0)
+   {
+      Con::errorf("TSShape::setIKChainThreshold: Could not find ikchain named '%s'", name.c_str());
+      return false;
+   }
+
+   TSShape::IKChain& ikChain = ikChains[ikIndex];
+
+   ikChain.threshold = threshold;
+
+   return true;
+}
+
+bool TSShape::setIKChainMaxIterations(const String& name, S32 maxIterations)
+{
+   S32 ikIndex = findIKChain(name);
+   if (ikIndex < 0)
+   {
+      Con::errorf("TSShape::setIKChainMaxIterations: Could not find ikchain named '%s'", name.c_str());
+      return false;
+   }
+
+   TSShape::IKChain& ikChain = ikChains[ikIndex];
+
+   ikChain.maxIterations = maxIterations;
+
+   return true;
+}
+
+bool TSShape::setIKChainTarget(const String& name, const String& targetNode)
+{
+   S32 ikIndex = findIKChain(name);
+   if (ikIndex < 0)
+   {
+      Con::errorf("TSShape::setIKChainTarget: Could not find ikchain named '%s'", name.c_str());
+      return false;
+   }
+
+   TSShape::IKChain& ikChain = ikChains[ikIndex];
+
+   S32 nodeIndex = findNode(targetNode);
+   if (nodeIndex < 0)
+   {
+      Con::errorf("TSShape::setIKChainTarget: Could not find target node named '%s'", targetNode.c_str());
+      return false;
+   }
+
+   ikChain.targetIndex = nodeIndex;
 
    return true;
 }

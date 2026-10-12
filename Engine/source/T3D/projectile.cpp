@@ -57,6 +57,7 @@
 #include "T3D/lightDescription.h"
 #include "console/engineAPI.h"
 #include "T3D/rigidShape.h"
+#include "materials/materialPropertiesManager.h"
 
 
 IMPLEMENT_CO_DATABLOCK_V1(ProjectileData);
@@ -1131,8 +1132,14 @@ void Projectile::explode( const Point3F &p, const Point3F &n, const U32 collideT
          }
       }
 
-      // Client (impact) decal.
-      if ( mDataBlock->decal )     
+      RayInfo matRay;
+      BaseMatInstance* hitMat = NULL;
+      if (gClientContainer.castRay(p + n * 0.05f, p - n * 0.01f, csmStaticCollisionMask, &matRay))
+         hitMat = matRay.material;
+
+      // Fallback to datablock decal if no surface effect matched
+      MaterialPropertiesData* fx = MaterialFXManager.resolve(hitMat);
+      if (!fx && mDataBlock->decal)
          gDecalManager->addDecal(p, n, 0.0f, mDataBlock->decal);
 
       // Client object
@@ -1276,10 +1283,62 @@ void Projectile::simulate( F32 dt )
       // specific code should be placed inside the function!
       onCollision( rInfo.point, rInfo.normal, rInfo.object );
       // Next order of business: do we explode on this hit?
-      if ( mCurrTick > mDataBlock->armingDelay || mDataBlock->armingDelay == 0 )
+      if (mCurrTick > mDataBlock->armingDelay || mDataBlock->armingDelay == 0)
       {
-         mCurrVelocity    = Point3F::Zero;
-         explode( rInfo.point, rInfo.normal, objectType );
+         MaterialPropertiesResult fx_result = resolveImpact(
+            rInfo.material,
+            mCurrVelocity,
+            rInfo.normal,
+            mDataBlock->impactForce,
+            false);
+
+         // Fire visual effects on client only
+         if (isClientObject())
+         {
+            MaterialFXManager.fireEffect(
+               rInfo.material,
+               rInfo.point,
+               rInfo.normal,
+               mCurrVelocity.len(),
+               mDataBlock->impactForce,
+               fx_result.didRicochet,
+               false);
+         }
+
+         if (fx_result.didRicochet)
+         {
+            mCurrVelocity = fx_result.ricochetDirection * fx_result.ricochetSpeed;
+            newPosition = rInfo.point + rInfo.normal * 0.05f;
+         }
+
+         if (fx_result.didPenetrate)
+         {
+            mCurrVelocity *= fx_result.remainingVelocityFactor;
+            VectorF normVel = mCurrVelocity;
+            normVel.normalizeSafe();
+            newPosition = rInfo.point + normVel * 0.1f;
+         }
+
+         if (fx_result.didPenetrate || fx_result.didRicochet)
+         {
+            if (isServerObject())
+               setMaskBits(BounceMask);
+
+            if (disableSourceObjCollision)
+               mSourceObject->enableCollision();
+            enableCollision();
+
+            mCurrDeltaBase = newPosition;
+            mCurrBackDelta = mCurrPosition - newPosition;
+            mCurrPosition = newPosition;
+
+            xform.setColumn(3, mCurrPosition);
+            setTransform(xform);
+            return;
+         }
+
+         mCurrVelocity = Point3F::Zero;
+         explode(rInfo.point, rInfo.normal, objectType);
       }
 
       if ( mDataBlock->isBallistic )

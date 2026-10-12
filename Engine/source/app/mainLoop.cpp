@@ -74,6 +74,11 @@
 #include "assets/assetManager.h"
 #endif
 
+#ifndef _MATERIAL_PROPERTIES_MANAGER_H_
+#include "materials/materialPropertiesManager.h"
+#endif // !_MATERIAL_PROPERTIES_MANAGER_H_
+
+
 DITTS( F32, gTimeScale, 1.0 );
 DITTS( U32, gTimeAdvance, 0 );
 DITTS( U32, gFrameSkip, 0 );
@@ -284,6 +289,8 @@ void StandardMainLoop::init()
 
    // Register the asset database as a module listener.
    ModuleDatabase.addListener(&AssetDatabase);
+
+   MaterialFXManager.registerObject("MaterialFXManager");
    
    ActionMap* globalMap = new ActionMap;
    globalMap->registerObject("GlobalActionMap");
@@ -309,6 +316,8 @@ void StandardMainLoop::shutdown()
 
    delete tm;
    preShutdown();
+
+   MaterialFXManager.unregisterObject();
 
    // Unregister the module database.
    ModuleDatabase.unregisterObject();

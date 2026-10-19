@@ -557,7 +557,7 @@ void Vehicle::processTick(const Move* move)
       mDelta.rot[0] = mRigid.angPosition;
 
       // Update the physics based on the integration rate
-      S32 count = mDataBlock->integration;
+      S32 count = mDataBlock->integration + (S32)(getVelocity().lenSquared() / TickMs);
       --mWorkingQueryBoxCountDown;
 
       if (!mDisableMove)
@@ -816,6 +816,9 @@ void Vehicle::updatePos(F32 dt)
    bool collided = false;
    if (!mRigid.atRest && !mDisableMove)
    {
+      mRigid.preIntegrateForces(dt);
+      mRigid.clearForces();
+
       collided = updateCollision(dt);
 
       // Now that all the forces have been processed, lets

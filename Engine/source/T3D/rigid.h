@@ -77,6 +77,7 @@ public:
    //
    Rigid();
    void clearForces();
+   void preIntegrateForces(F32 delta);
    void integrate(F32 delta);
 
    void updateInertialTensor();

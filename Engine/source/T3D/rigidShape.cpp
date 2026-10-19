@@ -1630,7 +1630,7 @@ U32 RigidShape::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       stream->writeFlag(mask & ForceMoveMask);
 
       stream->writeCompressedPoint(mRigid.linPosition);
-      !stream->writeFlag(mRigid.atRest);
+      stream->writeFlag(mRigid.atRest);
       mathWrite(*stream, mRigid.angPosition);
       mathWrite(*stream, mRigid.linMomentum);
       mathWrite(*stream, mRigid.angMomentum);

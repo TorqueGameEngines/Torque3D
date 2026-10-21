@@ -3272,6 +3272,7 @@ bool ColladaUtils::ExportWorkspace::gatherScene()
       }
    }
    toAssimpMat(mBaseXform, Point3F::One, mScene->mRootNode->mTransformation);
+   
 
    mMatMap.clear();
    mMatMap.insert(-1, -1);
@@ -3330,7 +3331,7 @@ bool ColladaUtils::ExportWorkspace::gatherScene()
       const ExportData::meshLODData& meshLod = mSrcData.meshData[shapeIdx];
 
       String rawName = (meshLod.originatingObject && meshLod.originatingObject->getName()) ?
-         meshLod.originatingObject->getName() : mPath.getFileName();
+         String(meshLod.originatingObject->getName()) : mPath.getFileName();
 
       S32 trailingNum;
       String baseName = String::GetTrailingNumber(rawName, trailingNum);

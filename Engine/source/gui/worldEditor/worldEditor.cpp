@@ -272,6 +272,8 @@ namespace {
 
 F32 WorldEditor::smProjectDistance = 20000.0f;
 
+StringTableEntry gMeshExportFormat;
+
 SceneObject* WorldEditor::getClientObj(SceneObject * obj)
 {
    AssertFatal(obj->isServerObject(), "WorldEditor::getClientObj: not a server object!");
@@ -2786,6 +2788,13 @@ void WorldEditor::renderScene( const RectI &updateRect )
 //------------------------------------------------------------------------------
 // Console stuff
 
+void WorldEditor::consoleInit()
+{
+   gMeshExportFormat = StringTable->insert(Con::getVariable("pref::editor::meshExportFormat", "fbx"));
+   Con::addVariable("pref::editor::meshExportFormat", TypeString, &gMeshExportFormat, "The format to use when exporting meshes from the World Editor.\n"
+      "@ingroup Editor\n");
+}
+
 void WorldEditor::initPersistFields()
 {
    docsURL;
@@ -3656,9 +3665,7 @@ DefineEngineMethod( WorldEditor, transformSelection, void,
 #endif
 
 void WorldEditor::colladaExportSelection( const String &path )
-{
-#ifdef TORQUE_COLLADA
-   
+{   
    Vector< SceneObject* > objectList;
 
    for ( S32 i = 0; i < mSelected->size(); i++ )
@@ -3711,10 +3718,11 @@ void WorldEditor::colladaExportSelection( const String &path )
       if ( !pObj->buildPolyList( PLC_Export, &polyList, pObj->getWorldBox(), pObj->getWorldSphere() ) )      
          Con::warnf( "colladaExportObjectList() - object %i returned no geometry.", pObj->getId() );               
    }
-
+#ifdef TORQUE_ASSIMP
+   ColladaUtils::exportMeshes(path, polyList, gMeshExportFormat);
+#elif
    // Use a ColladaUtils function to do the actual export to a Collada file
    ColladaUtils::exportToCollada( path, polyList );
-
 #endif
 }
 
@@ -4047,7 +4055,9 @@ bool WorldEditor::makeSelectionAMesh(const char *filename)
 
    //Now that we have all of our mesh data, process it so we can correctly collapse everything.
    exportData.processData();
-
+#ifdef TORQUE_ASSIMP
+   ColladaUtils::exportMeshes(filename, exportData, gMeshExportFormat);
+#elif
    //recenter generated visual mesh results
    for (U32 dl = 0; dl < exportData.colMeshes.size(); dl++)
    {
@@ -4065,10 +4075,8 @@ bool WorldEditor::makeSelectionAMesh(const char *filename)
          exportData.detailLevels[dl].mesh.mPoints[pnt] -= centroid;
       }
    }
-
-   // Use a ColladaUtils function to do the actual export to a Collada file
    ColladaUtils::exportToCollada(filename, exportData);
-   //
+#endif
 
    if (Platform::isFile(filename))
       return true;

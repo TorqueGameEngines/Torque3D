@@ -26,6 +26,7 @@ function ProbeBakeDlg_RunBake::onClick(%this)
    
    %numIter = ProbeBakeDlg_NumIterTxt.getText();
    $pref::ReflectionProbes::BakeResolution = ProbeBakeDlg_ProbeResList.getText();
+   $pref::ReflectionProbes::captureLightFloor = ProbeBakeDlg_LightFloorTxt.getText();
    %progressStep = 100 / (%numIter * %probeCount);
    %currentProgressValue = 0;
    

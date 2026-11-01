@@ -26,6 +26,8 @@
 
 uniform float maxProbeDrawDistance;
 uniform int isCapturing;
+//How much of a light's diffuse term survives in full shadow while a probe capture renders
+uniform float captureLightFloor;
 
 #ifndef TORQUE_SHADERGEN
 uniform vec3 eyePosWorld;
@@ -64,9 +66,6 @@ uniform vec4 albedo;
 #define DEBUGVIZ_CONTRIB 0
 #endif
 
-#ifndef CAPTURE_LIGHT_FLOOR
-#define CAPTURE_LIGHT_FLOOR 0.04
-#endif
 
 vec3 getDistanceVectorToPlane( vec3 origin, vec3 direction, vec4 plane )
 {
@@ -258,7 +257,7 @@ vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 
 vec3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float shadow)
 {
-   float lightfloor = CAPTURE_LIGHT_FLOOR;
+   float lightfloor = captureLightFloor;
    if(isCapturing != 1)
       lightfloor = 0.0;
       
@@ -273,7 +272,7 @@ vec3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, vec3 li
 
 vec3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float radius, float shadow)
 {
-   float lightfloor = CAPTURE_LIGHT_FLOOR;
+   float lightfloor = captureLightFloor;
    if(isCapturing != 1)
       lightfloor = 0.0;
       
@@ -290,7 +289,7 @@ vec3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, vec3 light
 
 vec3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float radius, vec3 lightDir, vec2 lightSpotParams, float shadow)
 {
-   float lightfloor = CAPTURE_LIGHT_FLOOR;
+   float lightfloor = captureLightFloor;
    if(isCapturing != 1)
       lightfloor = 0.0;
       
@@ -494,7 +493,8 @@ vec4 computeForwardProbes(Surface surface,
       else
          contribution[i] = 0.0;
 
-      if (inRefScaleArray[i].w>0)
+      //refScaleArray.w holds flags: bit 0 = wetness allowed, bit 1 = Interior probe
+      if ((int(inRefScaleArray[i].w + 0.5) & 1) != 0)
          wetAmmout += contribution[i];
       else
          wetAmmout -= contribution[i];

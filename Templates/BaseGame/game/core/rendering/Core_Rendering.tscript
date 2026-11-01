@@ -13,7 +13,8 @@ function Core_Rendering::onCreate(%this)
    $Core::NoMaterialAssetFallback = "Core_Rendering:noMaterial";
    $Core::NoShapeAssetFallback = "Core_Rendering:noShape";
    
-   $pref::ReflectionProbes::BakeResolution = ProjectSettings.value("Rendering/ProbeCaptureResolution", "64");
+   $pref::ReflectionProbes::bakeResolution = ProjectSettings.value("Rendering/ProbeCaptureResolution", "64");
+   $pref::ReflectionProbes::maxHighLODSlots = ProjectSettings.value("Rendering/ProbeMaxHighLODSlots", "32");
    
    $Terrain::LerpBlend = ProjectSettings.value("Terrain/LerpBlend");
    $Terrain::BlendDepth = ProjectSettings.value("Terrain/BlendDepth");

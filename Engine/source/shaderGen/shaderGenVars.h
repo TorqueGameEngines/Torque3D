@@ -88,6 +88,7 @@ struct ShaderGenVars
    const static String vectorLightBrightness;
 
    const static String isCapturing;
+   const static String captureLightFloor;
 
    const static String ormConfig;
    const static String roughness;

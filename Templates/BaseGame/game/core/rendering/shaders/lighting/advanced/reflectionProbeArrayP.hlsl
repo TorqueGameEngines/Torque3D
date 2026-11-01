@@ -26,6 +26,21 @@ TORQUE_UNIFORM_SAMPLER2D(WetnessTexture, 6);
 TORQUE_UNIFORM_SAMPLER2D(ssaoMask, 7);
 uniform float4 rtParams7;
 #endif
+//The interior amount (0-1) is how much of an Interior probe a pixel is in. It drives the skylight suppression, the
+//ambient blend and the sun darkening, which goes in the light buffer's alpha (the sun is scaled by 1 - alpha)
+#ifndef INTERIOR_SUN_ALPHA
+#define INTERIOR_SUN_ALPHA 0
+#endif
+#if INTERIOR_SUN_ALPHA == 1
+uniform float interiorSunResidual;
+uniform float4 interiorSunFade; //x = eye distance where the sun darkening starts, y = 1 / the length it fades in over
+uniform float4 zNearFar;
+#endif
+#if INTERIOR_SUN_ALPHA == 1
+#define INTERIOR_AMOUNT 1
+#else
+#define INTERIOR_AMOUNT 0
+#endif
 uniform float accumTime;
 uniform float dampness;
 
@@ -60,6 +75,11 @@ float4 main(PFXVertToPix IN) : SV_TARGET
       surface.ao = min(surface.ao, ssao);  
    #endif
 
+#if INTERIOR_AMOUNT == 1
+   //How much of an interior this pixel is in (0-1), worked out from the Interior probes below
+   float interiorAmt = 0.0;
+#endif
+
    float alpha = 1;
    float wetAmmout = 0;
 #if SKYLIGHT_ONLY == 0
@@ -81,21 +101,30 @@ float4 main(PFXVertToPix IN) : SV_TARGET
          contribution[i] = 0.0;
 
          float atten =1.0-(length(eyePosWorld-probePosArray[i].xyz)/maxProbeDrawDistance);
+         float influence = 0.0;
          if (probeConfigData[i].r == 0) //box
          { 
-            contribution[i] = defineBoxSpaceInfluence(surface.P, worldToObjArray[i], probeConfigData[i].b)*atten;
+            influence = defineBoxSpaceInfluence(surface.P, worldToObjArray[i], probeConfigData[i].b);
          }
          else if (probeConfigData[i].r == 1) //sphere  
          { 
-            contribution[i] = defineSphereSpaceInfluence(surface.P, probePosArray[i].xyz, probeConfigData[i].g, probeConfigData[i].b)*atten; 
+            influence = defineSphereSpaceInfluence(surface.P, probePosArray[i].xyz, probeConfigData[i].g, probeConfigData[i].b); 
          }
+
+            contribution[i] = influence*atten;
+            //refScaleArray.w holds flags: bit 0 = wetness allowed, bit 1 = Interior probe
+            int probeFlags = (int)(refScaleArray[i].w + 0.5);
+#if INTERIOR_AMOUNT == 1
+            if ((probeFlags & 2) != 0)
+               interiorAmt = max(interiorAmt, influence);
+#endif
 
             if (contribution[i]>0.0)
                probehits++;
          else
             contribution[i] = 0.0;
 
-         if (refScaleArray[i].w>0)
+         if ((probeFlags & 1) != 0)
             wetAmmout += contribution[i];
          else
             wetAmmout -= contribution[i];
@@ -114,11 +143,12 @@ float4 main(PFXVertToPix IN) : SV_TARGET
                blendFacSum += blendFactor[i]; //running tally of results
          }
 
+         float probeShare = lerp(blendCap, 1.0, interiorAmt);
          for (i = 0; i < numProbes; i++)
          {
             //normalize, but in the range of the highest value applied
             //to preserve blend vs skylight
-            contribution[i] = blendFactor[i]/blendFacSum*blendCap;
+            contribution[i] = blendFactor[i]/blendFacSum*probeShare;
          }
       }
       
@@ -149,6 +179,7 @@ float4 main(PFXVertToPix IN) : SV_TARGET
          alpha -= contrib;
       }
    }
+
 #endif
 
    float3 irradiance = float3(0, 0, 0);
@@ -209,6 +240,18 @@ float4 main(PFXVertToPix IN) : SV_TARGET
       return float4(lerp(finalColor, surface.baseColor.rgb,surface.metalness),0);
    else
    {
-      return float4((finalColor*ambientColor), 0);
+      float3 ambientScale = lerp(ambientColor, float3(1.0, 1.0, 1.0), interiorAmt);
+
+      //How much of the sun to reduce, written to alpha.
+      float sunDarken = 0.0;
+#if INTERIOR_SUN_ALPHA == 1 && SKYLIGHT_ONLY == 0
+      if (getFlag(surface.matFlag, 0) && surface.depth < 0.9999)
+      {
+         float zDist = zNearFar.x + zNearFar.y * surface.depth;
+         float gate = saturate((zDist - interiorSunFade.x) * interiorSunFade.y);
+         sunDarken = saturate(interiorAmt) * gate * (1.0 - interiorSunResidual);
+      }
+#endif
+      return float4((finalColor*ambientScale), sunDarken);
    }
 }

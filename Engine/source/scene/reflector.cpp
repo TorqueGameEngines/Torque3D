@@ -37,6 +37,8 @@
 #include "gfx/gfxOcclusionQuery.h"
 #include "lighting/lightManager.h"
 #include "lighting/shadowMap/lightShadowMap.h"
+#include "lighting/shadowMap/shadowMapManager.h"
+#include "lighting/shadowMap/shadowMapPass.h"
 #include "math/mathUtils.h"
 #include "math/util/frustum.h"
 #include "gfx/screenshot.h"
@@ -271,7 +273,8 @@ F32 ReflectorBase::calcScore( const ReflectParams &params )
 //-------------------------------------------------------------------------
 
 CubeReflector::CubeReflector()
- : mLastTexSize( 0 )
+ : mLastTexSize( 0 ),
+   mGenerateShadows( false )
 {
 }
 
@@ -414,6 +417,32 @@ void CubeReflector::updateFace( const ReflectParams &params, U32 faceidx, Point3
    GFX->clearTextureStateImmediate(0);
    S32 texDim = mDesc->texSize;
    texDim = getMax(texDim, 32);
+
+   // Without forcing it, the face would only have the shadow maps generated from
+   // the main client camera, yielding inaccuracies or missing shadows for probes/reflections
+   // that are further off. 
+   // This forces them to generate from the face's view, guaranteeing accuracy in the capture.
+   if (mGenerateShadows && SHADOWMGR && SHADOWMGR->getShadowMapPass())
+   {
+      GFXDEBUGEVENT_SCOPE(CubeReflector_UpdateFace_Shadows, ColorI::WHITE);
+
+      SceneRenderState shadowState
+      (
+         gClientSceneGraph,
+         SPT_Diffuse,
+         SceneCameraState::fromGFXWithViewport(GFX->getViewport())
+      );
+      shadowState.setDiffuseCameraTransform(lightMatrix);
+
+      LIGHTMGR->registerGlobalLights(&shadowState.getCullingFrustum(), false);
+      SHADOWMGR->getShadowMapPass()->render(gClientSceneGraph, &shadowState, (U32)-1);
+      LIGHTMGR->unregisterAllLights();
+
+      // Shadow rendering changes the world matrix and bound targets.
+      GFX->setWorldMatrix(lightMatrix);
+      GFX->clearTextureStateImmediate(0);
+   }
+
    mRenderTarget->attachTexture(GFXTextureTarget::Color0, mCubemap, 0, 0, faceidx);   // Setup textures and targets...
    mRenderTarget->attachTexture(GFXTextureTarget::DepthStencil, LightShadowMap::_getDepthTarget(texDim, texDim));
    

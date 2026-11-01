@@ -117,6 +117,7 @@ void ShaderConstHandles::init( GFXShader *shader, CustomMaterial* mat /*=NULL*/)
    mNodeTransforms = shader->getShaderConstHandle( "$nodeTransforms" );
 
    mIsCapturingSC = shader->getShaderConstHandle(ShaderGenVars::isCapturing);
+   mCaptureLightFloorSC = shader->getShaderConstHandle(ShaderGenVars::captureLightFloor);
 
    // Clear any existing texture handles.
    dMemset( mTexHandlesSC, 0, sizeof( mTexHandlesSC ) );
@@ -1094,7 +1095,10 @@ void ProcessedShaderMaterial::_setShaderConstants(SceneRenderState * state, cons
    shaderConsts->setSafe( handles->mAccumTimeSC, MATMGR->getTotalTime() );
 
    shaderConsts->setSafe(handles->mDampnessSC, MATMGR->getDampnessClamped());
-   shaderConsts->setSafe(handles->mIsCapturingSC, (S32)state->isCapturing());
+   const bool isCapturing = state->isCapturing();
+   shaderConsts->setSafe(handles->mIsCapturingSC, (S32)isCapturing);
+   if (isCapturing)
+      shaderConsts->setSafe(handles->mCaptureLightFloorSC, state->captureLightFloor());
    
    // If the shader constants have not been lost then
    // they contain the content from a previous render pass.

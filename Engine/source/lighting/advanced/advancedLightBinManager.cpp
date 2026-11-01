@@ -48,6 +48,7 @@ const String AdvancedLightBinManager::smBufferName( "specularLighting" );
 ShadowFilterMode AdvancedLightBinManager::smShadowFilterMode = ShadowFilterMode_SoftShadowHighQuality;
 bool AdvancedLightBinManager::smPSSMDebugRender = false;
 bool AdvancedLightBinManager::smUseSSAOMask = false;
+bool AdvancedLightBinManager::smUseProbeInteriorMask = true;
 bool AdvancedLightBinManager::smDiffuseLightViz = false;
 bool AdvancedLightBinManager::smSpecularLightViz = false;
 bool AdvancedLightBinManager::smDetailLightingViz = false;
@@ -137,6 +138,7 @@ AdvancedLightBinManager::AdvancedLightBinManager( AdvancedLightManager *lm /* = 
    Con::addVariableNotify( "$pref::Shadows::filterMode", callback );
    Con::addVariableNotify( "$AL::PSSMDebugRender", callback );
    Con::addVariableNotify( "$AL::UseSSAOMask", callback );
+   Con::addVariableNotify( "$pref::ReflectionProbes::interiorSunMask", callback );
    Con::addVariableNotify( "$AL::DiffuseLightViz", callback);
    Con::addVariableNotify( "$AL::SpecularLightViz", callback);
    Con::addVariableNotify( "$AL::DetailLightingViz", callback);
@@ -151,6 +153,7 @@ AdvancedLightBinManager::~AdvancedLightBinManager()
    Con::removeVariableNotify( "$pref::shadows::filterMode", callback );
    Con::removeVariableNotify( "$AL::PSSMDebugRender", callback );
    Con::removeVariableNotify( "$AL::UseSSAOMask", callback );
+   Con::removeVariableNotify( "$pref::ReflectionProbes::interiorSunMask", callback );
    Con::removeVariableNotify( "$AL::DiffuseLightViz", callback);
    Con::removeVariableNotify( "$AL::SpecularLightViz", callback);
    Con::removeVariableNotify( "$AL::DetailLightingViz", callback);
@@ -168,6 +171,11 @@ void AdvancedLightBinManager::consoleInit()
    Con::addVariable( "$AL::UseSSAOMask", TypeBool, &smUseSSAOMask,
       "Used by the SSAO PostEffect to toggle the sampling of ssaomask "
       "texture by the light shaders.\n"
+      "@ingroup AdvancedLighting\n" );
+
+   Con::addVariable( "$pref::ReflectionProbes::interiorSunMask", TypeBool, &smUseProbeInteriorMask,
+      "Used to toggle interior sun darkening. If on, the sun isn't applied to pixels under the probe's influence.\n"
+      "This means that interior areas can be darker than the sunlight/ambient light levels.\n"
       "@ingroup AdvancedLighting\n" );
 
    Con::addVariable( "$AL::PSSMDebugRender", TypeBool, &smPSSMDebugRender,
@@ -531,9 +539,13 @@ AdvancedLightBinManager::LightMaterialInfo* AdvancedLightBinManager::_getLightMa
 
    LightMaterialInfo *info = NULL;
 
+   //The sun scaled by the light buffer's alpha, which contains the areas marked as interior by probes, uses its own material, as it needs a
+   //different blend state
+   const bool useSunAlpha = smUseProbeInteriorMask && lightType == LightInfo::Vector;
+
    // First get the light material name and make sure
    // this light has a material in the first place.
-   const String &lightMatName = smLightMatNames[ lightType ];
+   const String lightMatName = useSunAlpha ? String( "AL_VectorLightMaterial_InteriorAlpha" ) : smLightMatNames[ lightType ];
    if ( lightMatName.isNotEmpty() )
    {
       Vector<GFXShaderMacro> shadowMacros;

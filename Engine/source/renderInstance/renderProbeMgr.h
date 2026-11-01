@@ -69,6 +69,11 @@ struct ProbeRenderInst
 
    U32 mCubemapIndex;
 
+   /// <summary>
+   /// Score based on camera proximity.
+   /// </summary>
+   F32 mPriorityScore;
+
 public:
 
    ProbeRenderInst();
@@ -170,24 +175,36 @@ class RenderProbeMgr : public RenderBinManager
    typedef RenderBinManager Parent;
 
 public:
-   //maximum number of allowed probes
-   static const U32 PROBE_MAX_COUNT = 340;
-   //maximum number of rendered probes per frame adjust as needed
-   static const U32 PROBE_MAX_FRAME = 8;
-   //number of slots to allocate at once in the cubemap array
-   static const U32 PROBE_ARRAY_SLOT_BUFFER_SIZE = 5;
+   enum PublicConstants {
+      //Default max number of rendered high-LOD probes per frame
+      DefaultMaxProbePerFrame = 8,
+      //Default max size of the high-LOD slot pool
+      DefaultMaxHighLodSlots = 32,
 
-   //These dictate the default resolution size for the probe arrays
-   static const GFXFormat PROBE_FORMAT = GFXFormatR16G16B16A16F;// GFXFormatR8G8B8A8;// when hdr fixed GFXFormatR16G16B16A16F; look into bc6h compression
-   static const U32 INVALID_CUBE_SLOT = U32_MAX;
+      //These dictate the default resolution size for the probe arrays
+      ProbeFormat = GFXFormatR16G16B16A16F,// GFXFormatR8G8B8A8 for non-HDR; look into bc6h compression
+      InvalidCubeSlot = U32_MAX
+   };
 
    static F32 smMaxProbeDrawDistance;
-   static S32 smMaxProbesPerFrame;
+
+   //The requested number of high LOD probes per frame. 
+   static S32 smMaxHighProbesPerFrame;
    static S32 smProbeBakeResolution;
+
+   //Size of the high-LOD slot pool. Read once in onAdd(), as the arrays are allocated at this size and never grow
+   static S32 smMaxHighLodSlots;
+
+   //How much of the sun is left inside an interior probe once its shadows have faded out (0 = none, 1 = full sun)
+   static F32 smInteriorSunResidual;
+
+   //Diffuse light floor a probe capture gives every light even in full shadow
+   static F32 smCaptureLightFloor;
+
 private:
    /// <summary>
    /// List of registered probes. These are not necessarily rendered in a given frame
-   /// but the Probe Manager is aware of them and they have cubemap array slots allocated
+   /// but the Probe Manager is aware of them. They are given a cubemap slot depending on scoring
    /// </summary>
    Vector<ProbeRenderInst>    mRegisteredProbes;
 
@@ -230,17 +247,9 @@ private:
    U32 mCubeMapCount;
 
    /// <summary>
-   /// The number of allocated slots for the array pair. Rather than adding slots one at a time to the arrays
-   /// We allocate in chunks so we don't have to resize/rebuild the arrays as often
+   /// List indicating if a given high-LOD slot is currently occupied by sufficiently scoring probe.
    /// </summary>
-   U32 mCubeSlotCount;
-
-   /// <summary>
-   /// List indicating if a given allocated slot is actually in use.
-   /// Due to the editor these may be mixed around as probes are added and deleted
-   /// </summary>
-   /// <returns></returns>
-   bool mCubeMapSlots[PROBE_MAX_COUNT];
+   Vector<bool> mCubeMapSlots;
 
    /// <summary>
    /// The prefilter cubemap array
@@ -290,6 +299,11 @@ private:
    /// </summary>
    bool mUseHDRCaptures;
 
+   /// <summary>
+   /// Timestamp when we last updated probe priorities, to avoid reruns in a frame
+   /// </summary>
+   U32  mLastPriorityUpdateMS;
+
 protected:
    /// The current active light manager.
    static RenderProbeMgr* smProbeManager;
@@ -302,14 +316,14 @@ protected:
    /// Simple utility function that finds the next free cubemap slot for the cubemap array
    /// </summary>
    /// <returns>U32 index of next available slot</returns>
-   U32 _findNextEmptyCubeSlot()
+   U32 findNextEmptyCubeSlot()
    {
-      for (U32 i = 0; i < PROBE_MAX_COUNT; i++)
+      for (U32 i = 0; i < mCubeMapSlots.size(); i++)
       {
          if (!mCubeMapSlots[i])
             return i;
       }
-      return INVALID_CUBE_SLOT;
+      return InvalidCubeSlot;
    }
 
    /// <summary>
@@ -322,7 +336,6 @@ protected:
    {
       for (U32 i = 0; i < mRegisteredProbes.size(); i++)
       {
-         auto asd = mRegisteredProbes[i];
          if (mRegisteredProbes[i].mProbeInfo == probeInfo)
          {
             return &mRegisteredProbes[i];
@@ -370,17 +383,15 @@ public:
    void getBestProbes(const Point3F& objPosition, ProbeDataSet* probeDataSet);
 
    /// <summary>
-   /// This function adds a ReflectionProbe to the registered list and also allocates
-   /// a slot in the cubemap array pair for its use
+   /// Registers a probe to the manager.
    /// </summary>
-   /// <param name="probeInfo">The probe info to be registered to the bin</param>
+   /// <param name="probeInfo">The probe info to be registered</param>
    void registerProbe(ReflectionProbe::ProbeInfo* probeInfo);
 
    /// <summary>
-   /// This function removes the ReflectionProbe from the registered list, and marks it's cubemap
-   /// array slots as unused, allowing them to be freed.
+   /// Removes the ReflectionProbe from the registered list, releasing its high-LOD slot first if it held one.
    /// </summary>
-   /// <param name="probeInfo">The probe info to be un-registered to the bin</param>
+   /// <param name="probeInfo">The probe info to be un-registered</param>
    void unregisterProbe(ReflectionProbe::ProbeInfo* probeInfo);
 
    /// <summary>
@@ -392,6 +403,39 @@ public:
    /// </summary>
    /// <param name="probe">The ProbeInfo being submitted to be rendered</param>
    void submitProbe(ReflectionProbe::ProbeInfo* probe);
+
+   /// <summary>
+   /// Acquires a high-LOD slot for the probeInfo if it doesn't already have one.
+   /// Replaces the lowest-scoring existing slot if no slots are free.
+   /// Returns true if the probeInfo has a slot.
+   /// </summary>
+   bool acquireSlot(ReflectionProbe::ProbeInfo* probeInfo);
+
+   /// <summary>
+   /// Frees probeInfo's high-LOD slot, if it holds one.
+   /// </summary>
+   void releaseSlot(ReflectionProbe::ProbeInfo* probeInfo);
+
+   /// <summary>
+   /// Picks the best-scoring probes for high-LOD slots. 
+   /// </summary>
+   void updateHighLodSlots();
+
+   /// <summary>
+   /// Updates the scores for all candidate probes.
+   /// Returns false if it had already run this frame, or this isn't the primary view pass
+   /// </summary>
+   bool updateProbeScores(const SceneRenderState* state);
+
+   /// <summary>
+   /// Returns true for the primary client camera view, which is used to dictate high-LOD scoring/slot assigments.
+   /// </summary>
+   static bool isPrimaryView(const SceneRenderState* state);
+
+   /// <summary>
+   /// The number of high LOD probes per frame in effect: smMaxProbesPerFrame held to what the shader supports
+   /// </summary>
+   static U32 getMaxHighLodProbes();
 
    /// <summary>
    /// Gets the PostEffect used by the bin for rendering the probe array in deferred

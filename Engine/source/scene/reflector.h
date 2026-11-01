@@ -158,6 +158,9 @@ public:
    void updateFace( const ReflectParams &params, U32 faceidx, Point3F explicitPostion = Point3F::Max);
    F32 calcFaceScore( const ReflectParams &params, U32 faceidx );
 
+   // When true, each face first forcefully generates shadow maps from its own view
+   bool mGenerateShadows;
+
 protected:
 
    GFXTexHandle mDepthBuff;

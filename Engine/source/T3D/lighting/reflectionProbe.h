@@ -112,10 +112,17 @@ public:
       bool mCanDamp;
 
       bool mInterior;
+
+      /// <summary>
+      /// The probe's flat average irradiance color (linear), set when it is baked
+      /// </summary>
+      F32 mAmbientColor[3];
+      bool mHasAmbient;
    public:
 
       ProbeInfo()
       {
+         mHasAmbient = false;
          mScore = 0;
          mAtten = 0.0f;
          mCanDamp = false;
@@ -399,6 +406,16 @@ public:
    /// Invokes a cubemap bake action for this probe
    /// </summary>
    void bake();
+
+   /// <summary>
+   /// The probe's persistent id string, used to key its baked cubemaps and probe atlas row
+   /// </summary>
+   const String& getProbeUniqueId() const { return mProbeUniqueID; }
+
+   /// <summary>
+   /// How this probe gets its cubemaps (baked, static, dynamic...)
+   /// </summary>
+   ReflectionModeType getReflectionMode() const { return mReflectionModeType; }
    ProbeInfo* getProbeInfo() { return &mProbeInfo; }
 };
 

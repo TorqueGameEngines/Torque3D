@@ -13,6 +13,7 @@
 #include "gui/worldEditor/editor.h"
 #include "math/mathIO.h"
 #include "T3D/gameBase/gameBase.h"
+#include "renderInstance/renderProbeMgr.h"
 
 bool SubScene::smTransformChildren = false;
 
@@ -36,9 +37,10 @@ SubScene::SubScene() :
    mGlobalLayer(false),
    mSaving(false),
    mUseSeparateLoadBounds(false),
-   mLoadBounds(Point3F::One)
+   mLoadBounds(Point3F::One),
+   mPinned(false)
 {
-   mNetFlags.set(Ghostable | ScopeAlways);
+   mNetFlags.set(Ghostable | ScopeAlways | SpecialScope);
 
    mTypeMask |= StaticObjectType;
 }
@@ -57,10 +59,21 @@ bool SubScene::onAdd()
     return true;
 }
 
+String SubScene::getProbeAtlasPath()
+{
+   if (getSubSceneAsset().isNull())
+      return String();
+
+   return getSubSceneAsset()->getProbeAtlasPath();
+}
+
 void SubScene::onRemove()
 {
     if (isClientObject())
+    {
+      PROBEMGR->unloadSubSceneAtlas(this);
       removeFromScene();
+    }
 
     unload();
 
@@ -124,6 +137,13 @@ U32 SubScene::packUpdate(NetConnection* conn, U32 mask, BitStream* stream)
       mathWrite(*stream, mLoadBounds);
    }
 
+   //Clients need the asset to find this SubScene's probe atlas, and the id is only set on the server
+   if (stream->writeFlag(mask & (AssetMask | InitialUpdateMask)))
+      AssetDatabase.packDataAsset(stream, mSubSceneAssetId);
+
+   //The probe atlas only applies while the server has this SubScene's content loaded
+   if (stream->writeFlag(mask & (LoadedMask | InitialUpdateMask)))
+      stream->writeFlag(mLoaded);
 
    return retMask;
 }
@@ -138,6 +158,30 @@ void SubScene::unpackUpdate(NetConnection* conn, BitStream* stream)
    if(mUseSeparateLoadBounds)
    {
       mathRead(*stream, &mLoadBounds);
+   }
+
+   bool atlasStateChanged = false;
+
+   if (stream->readFlag())
+   {
+      StringTableEntry assetId = AssetDatabase.unpackDataAsset(stream);
+      _setSubScene(assetId);
+      atlasStateChanged = true;
+   }
+
+   if (stream->readFlag())
+   {
+      mClientLoaded = stream->readFlag();
+      atlasStateChanged = true;
+   }
+
+   //The client's atlas roster only exists while the SubScene is loaded, so update it when the asset or loaded state arrives
+   if (isClientObject() && atlasStateChanged)
+   {
+      if (mClientLoaded && getSubSceneAsset().notNull())
+         PROBEMGR->loadSubSceneAtlas(this);
+      else
+         PROBEMGR->unloadSubSceneAtlas(this);
    }
 }
 
@@ -401,6 +445,7 @@ void SubScene::load()
 
    _loadFile(true);
    mLoaded = true;
+   setMaskBits(LoadedMask);
 
    onLoaded_callback();
    for (U32 i = 0; i < mGameModesList.size(); i++)
@@ -415,7 +460,7 @@ void SubScene::unload()
    if (!mLoaded)
       return;
 
-   if (mFreezeLoading)
+   if (mFreezeLoading || mPinned)
       return;
 
    if (mSaving)
@@ -465,6 +510,7 @@ void SubScene::unload()
 
    _closeFile(true);
    mLoaded = false;
+   setMaskBits(LoadedMask);
 
 }
 

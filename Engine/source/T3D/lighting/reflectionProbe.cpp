@@ -876,6 +876,10 @@ void ReflectionProbe::bake()
 
    PROBEMGR->preBake();
    PROBEMGR->bakeProbe(this);
+
+   //Merge the freshly baked row into the atlas
+   PROBEMGR->serializeProbeAtlas();
+
    PROBEMGR->postBake();
 
    setMaskBits(-1);

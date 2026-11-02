@@ -28,6 +28,7 @@
 #include "gfx/bitmap/cubemapSaver.h"
 #include "core/stream/fileStream.h"
 #include "gfx/bitmap/imageUtils.h"
+#include "gfx/bitmap/bitmapUtils.h"
 
 namespace IBLUtilities
 {
@@ -640,5 +641,51 @@ namespace IBLUtilities
       const F32 angle = areaElement(x0, y0) - areaElement(x0, y1) - areaElement(x1, y0) + areaElement(x1, y1);
 
       return angle;
+   }
+
+   //
+   //Average color
+   bool calculateAverageColor(GFXTexHandle cubemap, F32 outColor[3])
+   {
+      outColor[0] = outColor[1] = outColor[2] = 0.0f;
+
+      if (!cubemap.isValid() || cubemap->getFormat() != GFXFormatR16G16B16A16F)
+      {
+         Con::errorf("IBLUtilities::calculateAverageColor() - requires a valid R16G16B16A16F cubemap");
+         return false;
+      }
+
+      const U32 faceSize = cubemap->getWidth();
+      const bool hasMips = cubemap->getMipLevels() > 1;
+
+      GBitmap faces(faceSize, faceSize, hasMips, GFXFormatR16G16B16A16F, 6);
+      if (!cubemap.copyToBmp(&faces))
+      {
+         Con::errorf("IBLUtilities::calculateAverageColor() - failed to read back the cubemap");
+         return false;
+      }
+
+      //Every texel weighted by the solid angle it covers, over the whole sphere (4pi steradians). A texel covers the
+      //same angle on each of the six faces
+      for (U32 y = 0; y < faceSize; y++)
+      {
+         for (U32 x = 0; x < faceSize; x++)
+         {
+            const F32 solidAngle = texelSolidAngle(x, y, faceSize, faceSize);
+
+            for (U32 face = 0; face < 6; face++)
+            {
+               const U16* texel = (const U16*)faces.getAddress(x, y, 0, face);
+
+               for (U32 c = 0; c < 3; c++)
+                  outColor[c] += convertHalfToFloat(texel[c]) * solidAngle;
+            }
+         }
+      }
+
+      for (U32 c = 0; c < 3; c++)
+         outColor[c] /= (4.0f * M_PI_F);
+
+      return true;
    }
 };

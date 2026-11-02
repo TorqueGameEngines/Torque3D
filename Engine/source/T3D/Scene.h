@@ -45,8 +45,26 @@ class Scene : public NetObject, public virtual ITickable
    StringTableEntry mGameModesNames;
    Vector<GameMode*> mGameModesList;
 
+   enum GhostingStatus
+   {
+      Done,
+      InProgress
+   };
+
+   Map<NetConnection*, GhostingStatus> mClientGhostingStatus;
+
+   void updateGhostingStatus(SimGroup* clientGroup);
+
 protected:
    static Scene * smRootScene;
+
+   typedef Signal<void(NetConnection*, U32)> SceneGhostingStartSignal;
+   SceneGhostingStartSignal mServerGhostingStartSignal;
+   SceneGhostingStartSignal mClientGhostingStartSignal;
+
+   typedef Signal<void(NetConnection*)> SceneGhostingDoneSignal;
+   SceneGhostingDoneSignal mServerGhostingDoneSignal;
+   SceneGhostingDoneSignal mClientGhostingDoneSignal;
 
    DECLARE_CONOBJECT(Scene);
 
@@ -95,6 +113,16 @@ public:
 
    void loadAtPosition(const Point3F& position);
 
+   U32 getSubSceneCount() { return mSubScenes.size(); }
+   SubScene* getSubScene(U32 index);
+
+   /// Finds the SubScene that contains object, walking up its SimGroup chain. Returns NULL if it is not in one
+   SubScene* findOwningSubScene(SimObject* object);
+
+   /// Loads the SubScene and keeps it loaded until releaseSubScene() is called. Returns true if it is loaded.
+   bool loadSubScene(U32 index);
+   void releaseSubScene(U32 index);
+
    static Scene *getRootScene() 
    { 
       if (Scene::smSceneList.empty())
@@ -103,9 +131,23 @@ public:
       return Scene::smSceneList[0];
    }
 
+   /// Number of objects under root (this scene by default, or e.g. one SubScene) that are guaranteed to ghost to conn
+   /// (Ghostable + ScopeAlways, not SpecialScope) and have not been yet. 0 means everything expected has ghosted.
+   U32 getUnghostedObjectCount(NetConnection* conn, SimObject* root = NULL);
+
    static Vector<Scene*> smSceneList;
 
+public:
+   SceneGhostingStartSignal& getServerGhostingStartSignal() { return mServerGhostingStartSignal; }
+   SceneGhostingDoneSignal& getServerGhostingDoneSignal() { return mServerGhostingDoneSignal; }
+   SceneGhostingStartSignal& getClientGhostingStartSignal() { return mClientGhostingStartSignal; }
+   SceneGhostingDoneSignal& getClientGhostingDoneSignal() { return mClientGhostingDoneSignal; }
+
    DECLARE_CALLBACK(void, onSaving, (const char* fileName));
+   DECLARE_CALLBACK(void, onServerGhostingStart, (NetConnection* conn, U32 pendingGhosts));
+   DECLARE_CALLBACK(void, onServerGhostingDone, (NetConnection* conn));
+   DECLARE_CALLBACK(void, onClientGhostingStart, (NetConnection* conn, U32 pendingGhosts));
+   DECLARE_CALLBACK(void, onClientGhostingDone, (NetConnection* conn));
 };
 
 

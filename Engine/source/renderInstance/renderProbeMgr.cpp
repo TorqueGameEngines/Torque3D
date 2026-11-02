@@ -39,7 +39,13 @@
 #include "T3D/lighting/reflectionProbe.h"
 #include "T3D/lighting/IBLUtilities.h"
 #include "T3D/Scene.h"
+#include "T3D/assets/LevelAsset.h"
+#include "assets/assetPtr.h"
+#include "T3D/lighting/skylight.h"
 #include "T3D/gameBase/gameConnection.h"
+#include "core/volume.h"
+#include "core/stream/fileStream.h"
+#include "gfx/bitmap/ddsFile.h"
 
 //For our cameraQuery setup
 #include "T3D/gameTSCtrl.h"
@@ -75,6 +81,7 @@ S32 RenderProbeMgr::smMaxHighProbesPerFrame = 8;
 S32 RenderProbeMgr::smProbeBakeResolution = 64;
 
 S32 RenderProbeMgr::smMaxHighLodSlots = RenderProbeMgr::DefaultMaxHighLodSlots;
+S32 RenderProbeMgr::smBakeProgressIntervalMS = 250;
 
 F32 RenderProbeMgr::smInteriorSunResidual = 0.1f;
 F32 RenderProbeMgr::smCaptureLightFloor = 0.04f;
@@ -201,6 +208,8 @@ RenderProbeMgr::RenderProbeMgr()
    mSkylightDamp(true),
    mCubeMapCount(0),
    mUseHDRCaptures(true),
+   mBakeState(BakeIdle),
+   mBakeWaitStartMS(0),
    mLastPriorityUpdateMS(0)
 {
    mEffectiveProbeCount = 0;
@@ -224,6 +233,8 @@ RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 proce
    mLastConstants = NULL;
    mMipCount = 0;
    mUseHDRCaptures = true;
+   mBakeState = BakeIdle;
+   mBakeWaitStartMS = 0;
    mLastPriorityUpdateMS = 0;
 }
 
@@ -294,6 +305,7 @@ void RenderProbeMgr::consoleInit()
    Con::addVariable("$pref::ReflectionProbes::maxHighProbesPerFrame", TypeS32, &RenderProbeMgr::smMaxHighProbesPerFrame, "Max number of Environment Probes that can be rendered per-frame.\n");
    Con::addVariable("$pref::ReflectionProbes::bakeResolution", TypeS32, &RenderProbeMgr::smProbeBakeResolution, "");
    Con::addVariable("$pref::ReflectionProbes::maxHighLODSlots", TypeS32, &RenderProbeMgr::smMaxHighLodSlots, "Size of the high-LOD cubemap slot pool.\n");
+   Con::addVariable("$pref::ReflectionProbes::bakeProgressIntervalMS", TypeS32, &RenderProbeMgr::smBakeProgressIntervalMS, "How often a bake reports progress to script, in milliseconds. The progress callback is where the editor redraws, so a smaller value keeps the progress bar smoother and slows the bake down a little more.\n");
 
    Con::addVariable("$pref::ReflectionProbes::interiorSunResidual", TypeF32, &RenderProbeMgr::smInteriorSunResidual, "How much of the sun is left inside a probe flagged Interior once its shadows have faded out (0 = none, 1 = no effect).\n");
    Con::addVariable("$pref::ReflectionProbes::captureLightFloor", TypeF32, &RenderProbeMgr::smCaptureLightFloor, "How much of a light's diffuse term a probe capture keeps even in full shadow, so shadowed surfaces aren't pitch black in a probe (0 = none). Probes flagged Interior capture with none, so a sealed room can bake dark.\n");
@@ -711,10 +723,16 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
       return;
 
    if (clientProbe == NULL)
+   {
+      Con::warnf("RenderProbeMgr::bakeProbe() - probe %u has no client ghost yet, skipping its bake", probe->getId());
       return;
+   }
 
    //Captures give lights a small floor in full shadow, except Interior probes so a sealed room can bake dark
    Con::setFloatVariable("$ReflectionProbes::CaptureLightFloor", clientProbe->mProbeInfo.mInterior ? 0.0f : smCaptureLightFloor);
+
+   //Clear the old ambient color so a failed re-bake can't leave a stale one in the atlas
+   clientProbe->mProbeInfo.mHasAmbient = false;
 
    String probePrefilterPath = clientProbe->getPrefilterMapPath();
    String probeIrradPath = clientProbe->getIrradianceMapPath();
@@ -807,6 +825,12 @@ void RenderProbeMgr::bakeProbe(ReflectionProbe* probe)
 
       IBLUtilities::GenerateIrradianceMap(renderTarget, cubeRefl.getCubemap(), clientProbe->mIrridianceMap->mCubemap);
       //IBLUtilities::GeneratePrefilterMap(renderTarget, cubeRefl.getCubemap(), prefilterMipLevels, clientProbe->mPrefilterMap->mCubemap);
+
+      clientProbe->mProbeInfo.mHasAmbient = IBLUtilities::calculateAverageColor(cubeRefl.getCubemap(), clientProbe->mProbeInfo.mAmbientColor);
+      if (!clientProbe->mProbeInfo.mHasAmbient)
+      {
+         Con::warnf("RenderProbeMgr::bakeProbe() - probe %u: ambient color calculation failed; it will be left out of the probe atlas", probe->getId());
+      }
 
       U32 endMSTime = Platform::getRealMilliseconds();
       F32 diffTime = F32(endMSTime - startMSTime);
@@ -1165,19 +1189,615 @@ void RenderProbeMgr::render( SceneRenderState *state )
    getProbeArrayEffect()->setSkip(false);
 }
 
+void RenderProbeMgr::fillProbeAtlasRecord(ProbeAtlasRecord& record, ReflectionProbe* clientProbe)
+{
+   ReflectionProbe::ProbeInfo* info = clientProbe->getProbeInfo();
+
+   record.persistentProbeId = clientProbe->getProbeUniqueId().getHashCaseSensitive();
+
+   dMemcpy(record.worldToObj, (const F32*)info->mTransform, sizeof(record.worldToObj));
+
+   record.position = info->mPosition;
+   record.refOffset = info->mProbeRefOffset;
+   record.refScale = info->mProbeRefScale;
+
+   record.shapeType = (F32)info->mProbeShapeType;
+   record.radius = info->mRadius;
+   record.atten = info->mAtten;
+   record.flags = (info->mCanDamp ? ProbeAtlasRecord::CanDamp : 0) | (info->mInterior ? ProbeAtlasRecord::Interior : 0);
+
+   Box3F bounds = info->mBounds;
+   if (info->mProbeShapeType == ReflectionProbe::ProbeInfo::Sphere)
+   {
+      bounds.minExtents = info->mPosition - Point3F(info->mRadius, info->mRadius, info->mRadius);
+      bounds.maxExtents = info->mPosition + Point3F(info->mRadius, info->mRadius, info->mRadius);
+   }
+
+   record.boundsMin = bounds.minExtents;
+   record.boundsMax = bounds.maxExtents;
+
+   for (U32 channel = 0; channel < 3; channel++)
+      record.ambient[channel] = info->mAmbientColor[channel];
+}
+
+String RenderProbeMgr::rootAtlasPath() const
+{
+   //The client is given the level asset id by loadLevelAtlas(), the server gets it from the scene
+   StringTableEntry assetId = mLevelAssetId;
+   if (assetId == NULL || assetId[0] == '\0')
+   {
+      Scene* rootScene = Scene::getRootScene();
+      if (rootScene != NULL)
+         assetId = rootScene->getLevelAsset();
+   }
+
+   if (assetId != NULL && assetId[0] != '\0')
+   {
+      AssetPtr<LevelAsset> levelAsset = assetId;
+      if (levelAsset.notNull())
+      {
+         String path = levelAsset->getProbeAtlasPath();
+         if (path.isNotEmpty())
+            return path;
+      }
+   }
+
+   //No asset (a scene that isn't backed by a level asset), so fall back to the pref convention
+   return Con::getVariable("$pref::ReflectionProbes::CurrentLevelPath", "levels/") + String("ProbeAtlas.dds");
+}
+
+bool RenderProbeMgr::readProbeAtlasFile(const String& path, Vector<ProbeAtlasRecord>& outRoster, ProbeAtlasHeader* outHeader)
+{
+   outRoster.clear();
+
+   if (path.isEmpty() || !Torque::FS::IsFile(path))
+      return false;
+
+   Resource<DDSFile> atlas = DDSFile::load(path, 0);
+   if (!atlas)
+   {
+      Con::warnf("RenderProbeMgr::readProbeAtlasFile() - failed to load %s", path.c_str());
+      return false;
+   }
+
+   if (atlas->mFormat != GFXFormatR32G32B32A32F || atlas->mWidth != sProbeAtlasRowTexels || atlas->mHeight < 1)
+   {
+      Con::warnf("RenderProbeMgr::readProbeAtlasFile() - %s is not a valid probe atlas (older layout?), re-bake the probes", path.c_str());
+      return false;
+   }
+
+   const U8* data = atlas->mSurfaces[0]->mMips[0];
+
+   ProbeAtlasHeader header;
+   dMemcpy(&header, data, sizeof(header));
+
+   if (header.fileId != sProbeAtlasFileId)
+   {
+      Con::warnf("RenderProbeMgr::readProbeAtlasFile() - %s is not a probe atlas file", path.c_str());
+      return false;
+   }
+
+   if (header.version != sProbeAtlasVersion)
+   {
+      Con::warnf("RenderProbeMgr::readProbeAtlasFile() - %s is atlas version %u but this build reads version %u, re-bake the probes",
+         path.c_str(), header.version, sProbeAtlasVersion);
+      return false;
+   }
+
+   if (header.count != atlas->mHeight - 1)
+   {
+      Con::warnf("RenderProbeMgr::readProbeAtlasFile() - %s header says %u probes but the file has %u rows, re-bake the probes",
+         path.c_str(), header.count, atlas->mHeight - 1);
+      return false;
+   }
+
+   outRoster.setSize(header.count);
+   if (header.count > 0)
+      dMemcpy(&outRoster[0], data + sProbeAtlasRowBytes, sProbeAtlasRowBytes * header.count);
+
+   if (outHeader != NULL)
+      *outHeader = header;
+
+   return true;
+}
+
+void RenderProbeMgr::writeProbeAtlasFile(const String& path, const Vector<ProbeAtlasRecord>& records)
+{
+   if (path.isEmpty())
+      return;
+
+   if (records.empty())
+   {
+      if (Torque::FS::IsFile(path))
+         Torque::FS::Remove(path);
+      return;
+   }
+
+   const U32 count = records.size();
+   const U32 rowCount = count + 1; //row 0 is the header
+
+   //new U8[]: DDSFile::SurfaceData frees its mips with delete[]
+   U8* buffer = new U8[sProbeAtlasRowBytes * rowCount];
+   dMemset(buffer, 0, sProbeAtlasRowBytes * rowCount);
+
+   ProbeAtlasHeader header;
+   header.fileId = sProbeAtlasFileId;
+   header.version = sProbeAtlasVersion;
+   header.bakeStamp = Platform::getTime();
+   header.count = count;
+   dMemcpy(buffer, &header, sizeof(header));
+
+   //The rows are the records as they are
+   dMemcpy(buffer + sProbeAtlasRowBytes, &records[0], sProbeAtlasRowBytes * count);
+
+   //Wrap the buffer in a DDSFile so it can be written and reloaded straight into a GFXTexHandle
+   DDSFile ddsFile;
+   ddsFile.mFormat = GFXFormatR32G32B32A32F;
+   ddsFile.mBytesPerPixel = sizeof(F32) * 4;
+   ddsFile.mHeight = rowCount;
+   ddsFile.mWidth = sProbeAtlasRowTexels;
+   ddsFile.mMipMapCount = 1;
+   ddsFile.mSurfaces.push_back(new DDSFile::SurfaceData);
+   ddsFile.mSurfaces.last()->mMips.push_back(buffer); //ddsFile now owns buffer
+
+   FileStream* stream = FileStream::createAndOpen(path, Torque::FS::File::Write);
+   if (stream == NULL)
+   {
+      Con::errorf("RenderProbeMgr::writeProbeAtlasFile() - failed to open %s for writing", path.c_str());
+      return;
+   }
+
+   ddsFile.write(*stream);
+   stream->close();
+   delete stream;
+
+   Con::printf("RenderProbeMgr::writeProbeAtlasFile() - Wrote %u probes to %s", count, path.c_str());
+}
+
+void RenderProbeMgr::collectAtlasProbes(Vector<ReflectionProbe*>& outRootProbes, Map<SubScene*, Vector<ReflectionProbe*> >& outPartitions)
+{
+   Scene* rootScene = Scene::getRootScene();
+   if (rootScene == NULL)
+      return;
+
+   Vector<ReflectionProbe*> probes;
+   rootScene->findObjectByType<ReflectionProbe>(probes);
+
+   for (U32 i = 0; i < probes.size(); i++)
+   {
+      if (probes[i]->isClientObject() || dynamic_cast<Skylight*>(probes[i]) != NULL)
+         continue;
+
+      SubScene* owner = rootScene->findOwningSubScene(probes[i]);
+      if (owner != NULL)
+         outPartitions[owner].push_back(probes[i]);
+      else
+         outRootProbes.push_back(probes[i]);
+   }
+}
+
+const ProbeAtlasRecord* RenderProbeMgr::findAtlasRecord(const Vector<ProbeAtlasRecord>& records, U32 persistentProbeId)
+{
+   for (U32 i = 0; i < records.size(); i++)
+   {
+      if (records[i].persistentProbeId == persistentProbeId)
+         return &records[i];
+   }
+
+   return NULL;
+}
+
+U32 RenderProbeMgr::buildAtlasPartitionRecords(const String& path, const Vector<ReflectionProbe*>& serverProbes, Vector<ProbeAtlasRecord>& outRecords)
+{
+   Vector<ProbeAtlasRecord> existing;
+   readProbeAtlasFile(path, existing);
+
+   U32 skippedCount = 0;
+
+   for (U32 i = 0; i < serverProbes.size(); i++)
+   {
+      ReflectionProbe* serverProbe = serverProbes[i];
+      ReflectionProbe* clientProbe = static_cast<ReflectionProbe*>(serverProbe->getClientObject());
+
+      const U32 id = serverProbe->getProbeUniqueId().getHashCaseSensitive();
+      const ProbeAtlasRecord* existingRecord = findAtlasRecord(existing, id);
+
+      //Without a client ghost there is nothing to bake from, so an existing row is carried over as it is
+      if (clientProbe == NULL)
+      {
+         if (existingRecord != NULL)
+         {
+            Con::warnf("RenderProbeMgr::buildAtlasPartitionRecords() - probe %u has no client ghost; kept its existing atlas row without verifying it", serverProbe->getId());
+            outRecords.push_back(*existingRecord);
+         }
+         else
+         {
+            Con::warnf("RenderProbeMgr::buildAtlasPartitionRecords() - probe %u left out of the atlas: no client ghost", serverProbe->getId());
+            skippedCount++;
+         }
+         continue;
+      }
+
+      ReflectionProbe::ProbeInfo* info = clientProbe->getProbeInfo();
+
+      if (info->mHasAmbient)
+      {
+         //The ambient color comes from the scene capture, so in these modes it won't match the probe's own cubemap
+         if (clientProbe->getReflectionMode() != ReflectionProbe::BakedCubemap)
+         {
+            Con::warnf("RenderProbeMgr::serializeProbeAtlas() - probe %u uses a non-baked reflection mode (%d); its atlas ambient color comes from the scene capture, not its own cubemap",
+               serverProbe->getId(), (S32)clientProbe->getReflectionMode());
+         }
+
+         ProbeAtlasRecord record;
+         fillProbeAtlasRecord(record, clientProbe);
+         outRecords.push_back(record);
+         continue;
+      }
+
+      if (existingRecord != NULL)
+      {
+         //Not baked this session, so we just keep the row from the last bake
+         outRecords.push_back(*existingRecord);
+         continue;
+      }
+
+      Con::warnf("RenderProbeMgr::buildAtlasPartitionRecords() - probe %u left out of the atlas: no ambient color (not baked yet, or the calculation failed)", serverProbe->getId());
+      skippedCount++;
+   }
+
+   return skippedCount;
+}
+
+void RenderProbeMgr::serializeProbeAtlas()
+{
+   Scene* rootScene = Scene::getRootScene();
+   if (rootScene == NULL)
+      return;
+
+   Vector<ReflectionProbe*> rootProbes;
+   Map<SubScene*, Vector<ReflectionProbe*> > partitions;
+   collectAtlasProbes(rootProbes, partitions);
+
+   U32 skippedCount = 0;
+
+   String rootPath = rootAtlasPath();
+   Vector<ProbeAtlasRecord> rootRecords;
+   skippedCount += buildAtlasPartitionRecords(rootPath, rootProbes, rootRecords);
+   writeProbeAtlasFile(rootPath, rootRecords);
+
+   //Each SubScene has its own atlas. Unloaded ones are skipped, as they'd look like all their probes were deleted
+   const U32 subSceneCount = rootScene->getSubSceneCount();
+   for (U32 i = 0; i < subSceneCount; i++)
+   {
+      SubScene* subScene = rootScene->getSubScene(i);
+      if (!subScene->isLoaded())
+         continue;
+
+      const String path = subScene->getProbeAtlasPath();
+
+      Vector<ReflectionProbe*> subSceneProbes; //stays empty if this SubScene has no probes
+      partitions.tryGetValue(subScene, subSceneProbes);
+
+      Vector<ProbeAtlasRecord> records;
+      skippedCount += buildAtlasPartitionRecords(path, subSceneProbes, records);
+      writeProbeAtlasFile(path, records);
+   }
+
+   //Anything left out is a hole in the low LOD coverage
+   if (skippedCount != 0)
+      Con::warnf("RenderProbeMgr::serializeProbeAtlas() - %u probe(s) were left out of the atlas bake", skippedCount);
+
+   //Re-read the rosters so we hav up to date data
+   loadLevelAtlas();
+
+   Vector<SubScene*> loadedSubScenes;
+   for (Map<SubScene*, Vector<ProbeAtlasRecord> >::Iterator itr = mSubSceneAtlasRosters.begin(); itr != mSubSceneAtlasRosters.end(); itr++)
+      loadedSubScenes.push_back(itr->key);
+
+   //Plus every SubScene loaded on the client, so one with no atlas until now picks up its first
+   rootScene = Scene::getRootScene();
+   if (rootScene != NULL)
+   {
+      for (U32 i = 0; i < rootScene->getSubSceneCount(); i++)
+      {
+         SubScene* serverSubScene = rootScene->getSubScene(i);
+         SubScene* clientSubScene = serverSubScene != NULL ? dynamic_cast<SubScene*>(serverSubScene->getClientObject()) : NULL;
+         //Only SubScenes loaded on the client have a probe data we care about
+         if (clientSubScene != NULL && clientSubScene->isLoadedOnClient() && !loadedSubScenes.contains(clientSubScene))
+            loadedSubScenes.push_back(clientSubScene);
+      }
+   }
+
+   for (U32 i = 0; i < loadedSubScenes.size(); i++)
+      loadSubSceneAtlas(loadedSubScenes[i]);
+}
+
+bool RenderProbeMgr::loadLevelAtlas(const char* levelAssetId)
+{
+   if (levelAssetId != NULL && levelAssetId[0] != '\0')
+      mLevelAssetId = StringTable->insert(levelAssetId);
+
+   String path = rootAtlasPath();
+   ProbeAtlasHeader header;
+   bool loaded = readProbeAtlasFile(path, mRootAtlasRoster, &header);
+
+   if (loaded)
+      Con::printf("RenderProbeMgr::loadLevelAtlas() - loaded %u probes from %s", mRootAtlasRoster.size(), path.c_str());
+   return loaded;
+}
+
+bool RenderProbeMgr::loadSubSceneAtlas(SubScene* subScene)
+{
+   if (subScene == NULL)
+      return false;
+
+   String path = subScene->getProbeAtlasPath();
+
+   Vector<ProbeAtlasRecord> roster;
+   ProbeAtlasHeader header;
+   bool loaded = readProbeAtlasFile(path, roster, &header);
+
+   if (roster.empty())
+      mSubSceneAtlasRosters.erase(subScene);
+   else
+      mSubSceneAtlasRosters[subScene] = roster;
+
+   return loaded;
+}
+
+void RenderProbeMgr::unloadSubSceneAtlas(SubScene* subScene)
+{
+   mSubSceneAtlasRosters.erase(subScene);
+}
+
+U32 RenderProbeMgr::getAtlasRosterCount()
+{
+   U32 count = mRootAtlasRoster.size();
+
+   for (Map<SubScene*, Vector<ProbeAtlasRecord> >::Iterator itr = mSubSceneAtlasRosters.begin(); itr != mSubSceneAtlasRosters.end(); itr++)
+      count += itr->value.size();
+
+   return count;
+}
+
+IMPLEMENT_CALLBACK(RenderProbeMgr, onProbeBakeProgress, void, (U32 done, U32 total), (done, total),
+   "@brief Called after each probe of an async bake (startBakeProbes) has been baked.\n\n"
+   "@param done Number of probes handled so far.\n"
+   "@param total Number of probes in the bake.\n");
+
+IMPLEMENT_CALLBACK(RenderProbeMgr, onProbeBakeComplete, void, (bool success), (success),
+   "@brief Called when an async bake (startBakeProbes) has finished or was cancelled.\n\n"
+   "@param success False if the bake was cancelled or could not start.\n");
+
+class ProbeBakeRunEvent : public SimEvent
+{
+public:
+   void process(SimObject* object) override
+   {
+      RenderProbeMgr* manager = dynamic_cast<RenderProbeMgr*>(object);
+      if (manager != NULL)
+         manager->runBake();
+   }
+};
+
+U32 RenderProbeMgr::pendingGhostCount()
+{
+   Scene* rootScene = Scene::getRootScene();
+   if (rootScene == NULL)
+      return 0;
+
+   U32 pending = 0;
+   SimGroup* clientGroup = Sim::getClientGroup();
+   for (SimGroup::iterator itr = clientGroup->begin(); itr != clientGroup->end(); itr++)
+   {
+      NetConnection* conn = dynamic_cast<NetConnection*>(*itr);
+      if (conn != NULL)
+         pending += rootScene->getUnghostedObjectCount(conn);
+   }
+
+   return pending;
+}
+
+void RenderProbeMgr::beginBakeRun()
+{
+   Con::printf("RenderProbeMgr::beginBakeRun() - scene reports everything ghosted after %u ms; baking %u probe(s)", Platform::getRealMilliseconds() - mBakeWaitStartMS, mBakeProbes.size());
+
+   //Just past the frame's target time, so the loop starts on a later frame
+   mBakeState = BakeReady;
+   const U32 nextFrameTime = getMax(Sim::getCurrentTime(), Sim::getTargetTime()) + 1;
+   Sim::postEvent(this, new ProbeBakeRunEvent, nextFrameTime);
+}
+
+bool RenderProbeMgr::startBakeProbes()
+{
+   if (mBakeState != BakeIdle)
+   {
+      Con::warnf("RenderProbeMgr::startBakeProbes() - a bake is already running");
+      return false;
+   }
+
+   Scene* rootScene = Scene::getRootScene();
+   if (rootScene == NULL)
+   {
+      Con::warnf("RenderProbeMgr::startBakeProbes() - there is no scene to bake");
+      return false;
+   }
+
+   mBakeProbes.clear();
+
+   //Load every SubScene so its probes exist to bake. Their client ghosts follow once the network has sent them
+   const U32 subSceneCount = rootScene->getSubSceneCount();
+   for (U32 i = 0; i < subSceneCount; i++)
+   {
+      if (!rootScene->loadSubScene(i))
+      {
+         SubScene* subScene = rootScene->getSubScene(i);
+         Con::warnf("RenderProbeMgr::startBakeProbes() - SubScene %s did not load (frozen loading, a failing load condition, "
+            "or a load error), so its probes are not baked", subScene != NULL ? subScene->getName() : "<unknown>");
+      }
+   }
+
+   Vector<ReflectionProbe*> probes;
+   rootScene->findObjectByType<ReflectionProbe>(probes);
+
+   for (U32 i = 0; i < probes.size(); i++)
+   {
+      if (!probes[i]->isClientObject())
+         mBakeProbes.push_back(probes[i]);
+   }
+
+   mBakeState = BakeWaitingForGhosts;
+   mBakeWaitStartMS = Platform::getRealMilliseconds();
+
+   //Subscribe before checking the count so the signal can't be missed. Ghosting that never finishes has no signal,
+   //so cancelBake() is the way out of that
+   rootScene->getServerGhostingDoneSignal().notify(this, &RenderProbeMgr::onSceneGhostingDone);
+
+   //Nothing to ghost means no signal is coming
+   if (pendingGhostCount() == 0)
+      beginBakeRun();
+
+   return true;
+}
+
+void RenderProbeMgr::onSceneGhostingDone(NetConnection* conn)
+{
+   if (mBakeState != BakeWaitingForGhosts)
+      return;
+
+   //The signal is per client; carry on only once nothing is left pending for any of them
+   if (pendingGhostCount() == 0)
+      beginBakeRun();
+}
+
+void RenderProbeMgr::runBake()
+{
+   //A cancel or a newer bake may have come in since this was posted
+   if (mBakeState != BakeReady)
+      return;
+
+   //Probes stop rendering for the duration of the capture
+   preBake();
+   mBakeState = BakeRunning;
+
+   //Real time, as the sim clock is stopped during the loop. The progress callback is where the editor redraws
+   U32 lastProgressMS = Platform::getRealMilliseconds();
+
+   for (U32 i = 0; i < mBakeProbes.size(); i++)
+   {
+      ReflectionProbe* probe = mBakeProbes[i];
+      if (probe != NULL)
+         bakeProbe(probe);
+
+      const U32 nowMS = Platform::getRealMilliseconds();
+      if (nowMS - lastProgressMS >= (U32)getMax(smBakeProgressIntervalMS, 0))
+      {
+         onProbeBakeProgress_callback(i + 1, mBakeProbes.size());
+
+         if (mBakeState != BakeRunning)
+            return;
+
+         lastProgressMS = Platform::getRealMilliseconds();
+      }
+   }
+
+   onProbeBakeProgress_callback(mBakeProbes.size(), mBakeProbes.size());
+
+   serializeProbeAtlas();
+   finishBake(true);
+}
+
+void RenderProbeMgr::finishBake(bool success)
+{
+   Scene* rootScene = Scene::getRootScene();
+
+   if (rootScene != NULL)
+   {
+      rootScene->getServerGhostingDoneSignal().remove(this, &RenderProbeMgr::onSceneGhostingDone);
+
+      const U32 subSceneCount = rootScene->getSubSceneCount();
+      for (U32 i = 0; i < subSceneCount; i++)
+         rootScene->releaseSubScene(i);
+   }
+
+   if (mBakeState == BakeRunning)
+      postBake();
+
+   mBakeState = BakeIdle;
+   mBakeProbes.clear();
+
+   onProbeBakeComplete_callback(success);
+}
+
+void RenderProbeMgr::cancelBake()
+{
+   if (mBakeState == BakeIdle)
+      return;
+
+   finishBake(false);
+}
+
 //=============================================================================
 // Console functions
 //=============================================================================
-
-
-
 DefineEngineMethod(RenderProbeMgr, bakeProbe, void, (ReflectionProbe* probe), (nullAsType< ReflectionProbe*>()),
    "@brief Bakes the cubemaps for a reflection probe\n\n.")
 {
    object->preBake();
    if(probe != NULL)
+   {
       object->bakeProbe(probe);
+
+      //Keep the atlas in step with the cubemaps: merges this probe's new row into the existing atlas
+      object->serializeProbeAtlas();
+   }
    object->postBake();
+}
+
+DefineEngineMethod(RenderProbeMgr, loadLevelAtlas, bool, (const char* levelAssetId), (""),
+   "@brief Loads the root level's own probe atlas into the runtime roster\n\n"
+   "@param levelAssetId The LevelAsset id the server told this client about. The atlas path is resolved from that asset.\n")
+{
+   return object->loadLevelAtlas(levelAssetId);
+}
+
+DefineEngineMethod(RenderProbeMgr, loadSubSceneAtlas, bool, (SubScene* subScene), (nullAsType<SubScene*>()),
+   "@brief Loads a SubScene's own probe atlas into the runtime roster\n\n.")
+{
+   return object->loadSubSceneAtlas(subScene);
+}
+
+DefineEngineMethod(RenderProbeMgr, unloadSubSceneAtlas, void, (SubScene* subScene), (nullAsType<SubScene*>()),
+   "@brief Unloads a SubScene's probe atlas roster entries\n\n.")
+{
+   object->unloadSubSceneAtlas(subScene);
+}
+
+DefineEngineMethod(RenderProbeMgr, clearLevelAtlas, void, (), ,
+   "@brief Drops the root level's probe atlas roster and the level asset it was resolved from\n\n.")
+{
+   object->clearLevelAtlas();
+}
+
+DefineEngineMethod(RenderProbeMgr, startBakeProbes, bool, (), ,
+   "@brief Bakes every reflection probe in the scene, and every SubScene, by loading and waiting for subScenes to ghost first.\n
+   "Once everything is loaded, everything is baked and rendered to IBL files/atlases.\n\n"
+   "@return False if a bake was already running or there is no scene.\n")
+{
+   return object->startBakeProbes();
+}
+
+DefineEngineMethod(RenderProbeMgr, cancelBake, void, (), ,
+   "@brief Stops a bake currently running. Probes already baked stay baked.\n")
+{
+   object->cancelBake();
+}
+
+DefineEngineMethod(RenderProbeMgr, isBaking, bool, (), ,
+   "@brief True while a bake is running.\n")
+{
+   return object->isBaking();
 }
 
 DefineEngineMethod(RenderProbeMgr, bakeProbes, void, (),, "@brief Iterates over all reflection probes in the scene and bakes their cubemaps\n\n.")

@@ -156,6 +156,7 @@ IMPLEMENT_CONOBJECT(Path);
 
 Path::Path()
 {
+   mNetFlags.set(SpecialScope);
    mPathIndex = NoPathIndex;
    mIsLooping = true;
    mPathSpeed = 1.0f;
@@ -432,6 +433,7 @@ Marker::Marker()
 {
    // Not ghostable unless we're editing...
    mNetFlags.clear(Ghostable);
+   mNetFlags.set(SpecialScope);
 
    mTypeMask |= MarkerObjectType;
    mHitCommand = String::EmptyString;

@@ -55,9 +55,13 @@
 #ifndef REFLECTIONPROBE_H
 #include "T3D/lighting/reflectionProbe.h"
 #endif
+#ifndef _ENGINEAPI_H_
+#include "console/engineAPI.h"
+#endif
 
 class PostEffect;
 class ReflectionProbe;
+class SubScene;
 
 /// <summary>
 /// A simple container for a ReflectionProbe's ProbeInfo and index for it's associated
@@ -167,6 +171,73 @@ struct ProbeDataSet
    }
 };
 
+/// <summary>
+/// One probe's atlas record, which is also its row in the atlas texture.
+/// It's packed so that we can do early out tests in the shader like bounds checking with the fewest
+/// reads possible to keep cost low per probe we do as low-LOD rendering
+/// If the layout's changed, update sProbeAtlasVersion.
+/// </summary>
+#pragma pack(push, 4)
+struct ProbeAtlasRecord
+{
+   enum Flags
+   {
+      CanDamp = BIT(0),
+      Interior = BIT(1) //If flagged, we'll blend out the sun's light for the probe's influence area
+   };
+
+   //Texels 0-1: the bounds of the probe's influence
+   Point3F boundsMin = Point3F::Zero;
+   F32 reserved0 = 0;
+   Point3F boundsMax = Point3F::Zero;
+   F32 reserved1 = 0;
+
+   //Texels 2-4: ProbeInfo::mTransform
+   F32 worldToObj[3][4] = {};
+
+   //Texel 5
+   Point3F position = Point3F::Zero;
+   F32 shapeType = 0;
+
+   //Texel 6
+   F32 radius = 0;
+   F32 atten = 0;
+   U32 persistentProbeId = 0;
+   U32 reserved2 = 0;
+
+   //Texel 7
+   F32 ambient[3] = {};         //linear ambient average color
+   U32 flags = 0;
+
+   //Texels 8-9, only read on the CPU
+   Point3F refOffset = Point3F::Zero;
+   F32 reserved3 = 0;
+   Point3F refScale = Point3F::Zero;
+   F32 reserved4 = 0;
+
+   Box3F getBounds() const { return Box3F(boundsMin, boundsMax); }
+};
+#pragma pack(pop)
+
+/// <summary>
+/// Header stored in row 0 of every probe atlas file. It is copied over the start of that row
+/// </summary>
+#pragma pack(push, 4)
+struct ProbeAtlasHeader
+{
+   U32 fileId = 0;      //sProbeAtlasFileId
+   U32 version = 0;     //sProbeAtlasVersion
+   U32 bakeStamp = 0;   //Platform::getTime() when atlas was updated
+   U32 count = 0;       //number of probes
+};
+#pragma pack(pop)
+
+//Atlas file: a GFXFormatR32G32B32A32F texture of ProbeAtlasRecord rows, after a header row
+static const U32 sProbeAtlasFileId = 0x41425250; //'PRBA'
+static const U32 sProbeAtlasVersion = 1;
+static const U32 sProbeAtlasRowBytes = sizeof(ProbeAtlasRecord);
+static const U32 sProbeAtlasRowTexels = sProbeAtlasRowBytes / 16;
+
 //**************************************************************************
 // RenderObjectMgr
 //**************************************************************************
@@ -194,6 +265,9 @@ public:
 
    //Size of the high-LOD slot pool. Read once in onAdd(), as the arrays are allocated at this size and never grow
    static S32 smMaxHighLodSlots;
+
+   //Milliseconds between progress reports while a bake runs
+   static S32 smBakeProgressIntervalMS;
 
    //How much of the sun is left inside an interior probe once its shadows have faded out (0 = none, 1 = full sun)
    static F32 smInteriorSunResidual;
@@ -300,9 +374,49 @@ private:
    bool mUseHDRCaptures;
 
    /// <summary>
+   /// State of an bake. WaitingForGhosts runs from the SubScene load until the client ghosts
+   /// of the probes exist, Ready is that having happened and the loop being queued, and Running is the loop baking the probes
+   /// </summary>
+   enum BakeState
+   {
+      BakeIdle,
+      BakeWaitingForGhosts,
+      BakeReady,
+      BakeRunning
+   };
+
+   BakeState mBakeState;
+   U32 mBakeWaitStartMS;
+
+   /// <summary>
+   /// The server probes being baked.
+   /// </summary>
+   Vector<SimObjectPtr<ReflectionProbe> > mBakeProbes;
+
+   U32 pendingGhostCount();
+   void beginBakeRun();
+   void finishBake(bool success);
+   void onSceneGhostingDone(NetConnection* conn);
+
+   /// <summary>
    /// Timestamp when we last updated probe priorities, to avoid reruns in a frame
    /// </summary>
    U32  mLastPriorityUpdateMS;
+
+   /// <summary>
+   /// The root scene's probe atlas roster
+   /// </summary>
+   Vector<ProbeAtlasRecord> mRootAtlasRoster;
+
+   /// <summary>
+   /// Level assetId the client was told about at level start, used to look up the atlas
+   /// </summary>
+   StringTableEntry mLevelAssetId = NULL;
+
+   /// <summary>
+   /// Each loaded SubScene's roster, keyed to that SubScene instance
+   /// </summary>
+   Map<SubScene*, Vector<ProbeAtlasRecord> > mSubSceneAtlasRosters;
 
 protected:
    /// The current active light manager.
@@ -464,6 +578,62 @@ public:
    /// Runs the cubemap bake on all probes in the current scene
    /// </summary>
    void bakeProbes();
+
+   /// <summary>
+   /// Bakes every probe in the scene. For SubScemes, tt force loads them, then waits for the client ghosts
+   /// of their probes. Once ghosting is completed, the actual bake runs.
+   ///Returns false if a bake is already running or there is no scene somehow
+   /// </summary>
+   bool startBakeProbes();
+
+   /// <summary>
+   /// Stops a bake started, and releases any SubScenes it loaded. Probes already baked stay baked
+   /// </summary>
+   void cancelBake();
+
+   bool isBaking() const { return mBakeState != BakeIdle; }
+
+   /// <summary>
+   /// Runs the bake loop of a bake, once its ghosts have ghosted. Called after the ghosting is done.
+   /// </summary>
+   void runBake();
+
+   DECLARE_CALLBACK(void, onProbeBakeProgress, (U32 done, U32 total));
+   DECLARE_CALLBACK(void, onProbeBakeComplete, (bool success));
+
+   /// <summary>
+   /// Writes out every baked probe's data to an atlas file, respective its owner. Root level asset has its own, and then any given subscene has its own as well.
+   /// </summary>
+   void serializeProbeAtlas();
+
+   /// <summary>
+   /// Loads the root scene's probe atlas into the roster.
+   /// </summary>
+   bool loadLevelAtlas(const char* levelAssetId = "");
+   void clearLevelAtlas() { mRootAtlasRoster.clear(); mLevelAssetId = NULL; }
+
+   /// <summary>
+   /// The root level atlas file path
+   /// </summary>
+   String rootAtlasPath() const;
+
+   /// <summary>
+   /// Loads/unloads a SubScene's probe atlas into the roster
+   /// </summary>
+   bool loadSubSceneAtlas(SubScene* subScene);
+   void unloadSubSceneAtlas(SubScene* subScene);
+
+   /// <summary>
+   /// Total roster entries across the root scene and every loaded SubScene
+   /// </summary>
+   U32 getAtlasRosterCount();
+
+   static void fillProbeAtlasRecord(ProbeAtlasRecord& record, ReflectionProbe* clientProbe);
+   static bool readProbeAtlasFile(const String& path, Vector<ProbeAtlasRecord>& outRoster, ProbeAtlasHeader* outHeader = NULL);
+   static void writeProbeAtlasFile(const String& path, const Vector<ProbeAtlasRecord>& records);
+   static void collectAtlasProbes(Vector<ReflectionProbe*>& outRootProbes, Map<SubScene*, Vector<ReflectionProbe*> >& outPartitions);
+   static const ProbeAtlasRecord* findAtlasRecord(const Vector<ProbeAtlasRecord>& records, U32 persistentProbeId);
+   static U32 buildAtlasPartitionRecords(const String& path, const Vector<ReflectionProbe*>& serverProbes, Vector<ProbeAtlasRecord>& outRecords);
 
    /// <summary>
    /// Returns the active Probe Manager.

@@ -18,10 +18,12 @@ class SubScene : public SceneGroup
 public:
    enum MaskBits
    {
-      NextFreeMask = Parent::NextFreeMask << 0
+      AssetMask = Parent::NextFreeMask << 0,
+      LoadedMask = Parent::NextFreeMask << 1,
+      NextFreeMask = Parent::NextFreeMask << 2
    };
 
-   void onSubSceneChanged() {}
+   void onSubSceneChanged() { setMaskBits(AssetMask); }
 
 protected:
    static bool smTransformChildren;
@@ -40,6 +42,9 @@ private:
    S32 mStartUnloadTimerMS;
 
    bool mLoaded;
+
+   /// Client ghosts only: the server SubScene's loaded state, as last networked
+   bool mClientLoaded = false;
    bool mSaving;
    bool mFreezeLoading;
 
@@ -54,6 +59,9 @@ private:
 
    bool mUseSeparateLoadBounds;
    Point3F mLoadBounds;
+
+   /// While true, unload() is ignored
+   bool mPinned;
 
 public:
    SubScene();
@@ -114,12 +122,18 @@ public:
       BaseMatInstance* overrideMat);
 
    bool isLoaded() { return mLoaded; }
+   bool isLoadedOnClient() const { return mClientLoaded; }
+
+   /// The probe atlas file for this SubScene's asset, shared by every instance of it. An empty string if it has no asset
+   String getProbeAtlasPath();
    void setUnloadTimeMS(S32 unloadTimeMS) {
       mStartUnloadTimerMS = unloadTimeMS;
    }
    inline S32 getUnloadTimsMS() {
       return mStartUnloadTimerMS;
    }
+
+   void setPinned(bool pinned) { mPinned = pinned; }
 
    bool save(const String& filename = String());
 

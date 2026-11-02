@@ -3076,7 +3076,8 @@ function ShapeEdColWindow::onWake( %this )
    %this-->colType.add( "18-DOP" );
    %this-->colType.add( "26-DOP" );
    %this-->colType.add( "Convex Hulls" );
-
+   %this-->colType.setSelected(%this-->colType.size()-1, false);
+   
    %this-->fillMode.clear();
    %this-->fillMode.add("Flood fill");
    %this-->fillMode.add("Surface only");

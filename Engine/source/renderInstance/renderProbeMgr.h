@@ -137,6 +137,24 @@ struct ProbeDataSet
    Vector<Point4F> probeConfigArray;
 
    Vector<MatrixF> probeWorldToObjArray;
+
+   /// <summary>
+   /// The low LOD probes are not in the arrays above. Each is one entry here instead: x = row in the low LOD atlas
+   /// texture, y = distance fade (0-1)
+   /// </summary>
+   Vector<Point4F> lowLodList;
+   U32 lowLodProbeCount;
+
+   /// <summary>
+   /// For each high LOD probe, x = the atlas row it hands over to as it nears the draw distance (-1 if it has none)
+   /// </summary>
+   Vector<Point4F> highLodAtlasRow;
+
+   /// <summary>
+   /// The probes getBestProbes() picked to render from their cubemaps, in array order. Low LOD skips these
+   /// </summary>
+   Vector<ReflectionProbe::ProbeInfo*> renderedProbes;
+
    S32 skyLightIdx;
    bool skyLightDamp;
    U32 effectiveProbeCount;
@@ -150,6 +168,9 @@ struct ProbeDataSet
       probeConfigArray.setSize(0);
 
       probeWorldToObjArray.setSize(0);
+      lowLodList.setSize(0);
+      highLodAtlasRow.setSize(0);
+      lowLodProbeCount = 0;
       skyLightIdx = -1;
       effectiveProbeCount = 0;
       maxProbeCount = 0;
@@ -167,6 +188,7 @@ struct ProbeDataSet
 
       probeWorldToObjArray.setSize(maxProbeCount);
 
+      lowLodProbeCount = 0;
       effectiveProbeCount = 0;
    }
 };
@@ -238,6 +260,15 @@ static const U32 sProbeAtlasVersion = 1;
 static const U32 sProbeAtlasRowBytes = sizeof(ProbeAtlasRecord);
 static const U32 sProbeAtlasRowTexels = sProbeAtlasRowBytes / 16;
 
+/// <summary>
+/// A low LOD probe being considered for this frame: its row in the low LOD atlas and its distance from the camera
+/// </summary>
+struct LowLodProbeCandidate
+{
+   U32 row;
+   F32 distance;
+};
+
 //**************************************************************************
 // RenderObjectMgr
 //**************************************************************************
@@ -268,6 +299,14 @@ public:
 
    //Milliseconds between progress reports while a bake runs
    static S32 smBakeProgressIntervalMS;
+
+   //The requested number of low LOD probes (lit from their baked ambient color) per frame, on top of the high LOD ones. Use
+   //getMaxLowLodProbes() for the count in effect, which is held to what the shader supports. It is also a shader array
+   //size, so changing it recompiles the probe shader
+   static S32 smMaxLowLodProbes;
+
+   //Distance from the camera to the probe's volume past which low LOD probes fade out completely
+   static F32 smMaxLowLodProbeDrawDistance;
 
    //How much of the sun is left inside an interior probe once its shadows have faded out (0 = none, 1 = full sun)
    static F32 smInteriorSunResidual;
@@ -418,6 +457,15 @@ private:
    /// </summary>
    Map<SubScene*, Vector<ProbeAtlasRecord> > mSubSceneAtlasRosters;
 
+   GFXTexHandle mLowLodAtlas;
+   bool mLowLodAtlasDirty;
+
+   /// <summary>
+   /// The first row of each roster in the low LOD atlas (a roster's probe r is in row base + r)
+   /// </summary>
+   U32 mLowLodAtlasRootBase;
+   Map<SubScene*, U32> mLowLodAtlasSubSceneBase;
+
 protected:
    /// The current active light manager.
    static RenderProbeMgr* smProbeManager;
@@ -547,9 +595,47 @@ public:
    static bool isPrimaryView(const SceneRenderState* state);
 
    /// <summary>
-   /// The number of high LOD probes per frame in effect: smMaxProbesPerFrame held to what the shader supports
+   /// The number of high LOD probes per frame in effect
    /// </summary>
    static U32 getMaxHighLodProbes();
+   static U32 getMaxLowLodProbes();
+
+   /// Weight of a low LOD probe at distance from the camera: 1 up close, easing to 0 at smMaxLowLodProbeDrawDistance
+   static F32 lowLodDistanceFade(F32 distance);
+
+   static U32 copyRosterRows(const Vector<ProbeAtlasRecord>& roster, U8* data, U32 firstRow, U32 capacity);
+   static S32 QSORT_CALLBACK lowLodCandidateCmp(const LowLodProbeCandidate* a, const LowLodProbeCandidate* b);
+
+   /// <summary>
+   /// Picks the nearest in-view roster entries to light from their ambient color, up to getMaxLowLodProbes(), into
+   /// probeDataSet's low LOD list. Probes drawn from cubemaps this frame are skipped
+   /// </summary>
+   void gatherLowLodProbes(const SceneRenderState* state, ProbeDataSet* probeDataSet);
+
+   /// <summary>
+   /// Gives each high LOD probe drawn this frame its atlas row and the blend that eases it to its ambient color
+   /// with distance
+   /// </summary>
+   void applyHighLodSwitch(const Point3F& cameraPosition, ProbeDataSet* probeDataSet);
+
+   /// <summary>
+   /// Finds a loaded atlas roster entry (root or any SubScene) by its persistentProbeId hash. NULL if none
+   /// </summary>
+   const ProbeAtlasRecord* findRosterRecord(U32 persistentProbeId) const;
+
+   /// <summary>
+   /// Finds the row a loaded atlas roster entry has in the low LOD atlas texture, by its persistentProbeId hash.
+   /// -1 if none
+   /// </summary>
+   S32 findRosterRow(U32 persistentProbeId) const;
+
+   /// <summary>
+   /// The low LOD atlas: one texture holding a row for every probe in the root and SubScene rosters, which only
+   /// changes when a roster does, not when the probes picked for a frame do. Rebuilt (when needed) by render().
+   /// </summary>
+   void markLowLodAtlasDirty() { mLowLodAtlasDirty = true; }
+   void buildLowLodAtlas();
+   bool handleGFXEvent(GFXDevice::GFXDeviceEventType event);
 
    /// <summary>
    /// Gets the PostEffect used by the bin for rendering the probe array in deferred
@@ -607,10 +693,15 @@ public:
    void serializeProbeAtlas();
 
    /// <summary>
+   /// Prints a probe's row from the loaded atlas rosters (root scene or any SubScene)
+   /// </summary>
+   void dumpProbeAtlasRow(ReflectionProbe* probe);
+
+   /// <summary>
    /// Loads the root scene's probe atlas into the roster.
    /// </summary>
    bool loadLevelAtlas(const char* levelAssetId = "");
-   void clearLevelAtlas() { mRootAtlasRoster.clear(); mLevelAssetId = NULL; }
+   void clearLevelAtlas() { mRootAtlasRoster.clear(); mLevelAssetId = NULL; markLowLodAtlasDirty(); }
 
    /// <summary>
    /// The root level atlas file path

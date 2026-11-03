@@ -145,10 +145,11 @@ function setupEditorVisibilityMenu()
       
       item[ 0 ] = "Show Probe Attenuation" TAB "" TAB "toggleProbeViz(\"Attenuation\");";
       item[ 1 ] = "Show Probe Contribution" TAB "" TAB "toggleProbeViz(\"Contribution\");";
-      item[ 2 ] = "Show Probe Specular Reflections Only" TAB "" TAB "toggleProbeViz(\"Specular\");";
-      item[ 3 ] = "Show Probe Diffuse Reflections Only" TAB "" TAB "toggleProbeViz(\"Diffuse\");";
-      item[ 4 ] = "-";
-      item[ 5 ] = "Enable Live Updates on Selected Probe" TAB "" TAB "toggleProbeLiveUpdates();";
+      item[ 2 ] = "Show Probe LOD (Red High, Blue Low)" TAB "" TAB "toggleProbeViz(\"LOD\");";
+      item[ 3 ] = "Show Probe Specular Reflections Only" TAB "" TAB "toggleProbeViz(\"Specular\");";
+      item[ 4 ] = "Show Probe Diffuse Reflections Only" TAB "" TAB "toggleProbeViz(\"Diffuse\");";
+      item[ 5 ] = "-";
+      item[ 6 ] = "Enable Live Updates on Selected Probe" TAB "" TAB "toggleProbeLiveUpdates();";
    };
    
    %bufferVizpopup = new PopupMenu(EBufferVizModeOptions)

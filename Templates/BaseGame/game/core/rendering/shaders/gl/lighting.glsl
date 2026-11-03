@@ -411,7 +411,66 @@ float defineBoxSpaceInfluence(vec3 wsPosition, mat4 worldToObj, float attenuatio
    return saturate(smoothstep(baseVal, (baseVal-attenuation/2), dist));
 }
 
-// Box Projected IBL Lighting
+//A probe's entry in the atlas
+struct ProbeInfo
+{
+   vec3 ambientCol;
+   mat4 xform;
+   vec3 position;
+   int shape;
+   float radius;
+   float atten;
+   int flags;
+};
+
+//If a worldspace position is inside a probeInfo's bounds
+bool probeInfoContains(sampler2D atlasTex, int row, vec3 wsPosition)
+{
+   vec3 boundsMin = texelFetch(atlasTex, ivec2(0, row), 0).xyz;
+   vec3 boundsMax = texelFetch(atlasTex, ivec2(1, row), 0).xyz;
+   return all(greaterThanEqual(wsPosition, boundsMin)) && all(lessThanEqual(wsPosition, boundsMax));
+}
+
+//Gets the bulk of a probe's info from the atlas
+ProbeInfo loadProbeInfoVolume(sampler2D atlasTex, int row)
+{
+   ProbeInfo probeInfo;
+
+   probeInfo.xform = transpose(mat4(
+      texelFetch(atlasTex, ivec2(2, row), 0),
+      texelFetch(atlasTex, ivec2(3, row), 0),
+      texelFetch(atlasTex, ivec2(4, row), 0),
+      vec4(0, 0, 0, 1)));
+
+   vec4 positionShape = texelFetch(atlasTex, ivec2(5, row), 0);
+   probeInfo.position = positionShape.xyz;
+   probeInfo.shape = int(positionShape.w + 0.5);
+
+   vec4 params = texelFetch(atlasTex, ivec2(6, row), 0);
+   probeInfo.radius = params.x;
+   probeInfo.atten = params.y;
+
+   probeInfo.ambientCol = vec3(0, 0, 0);
+   probeInfo.flags = 0;
+
+   return probeInfo;
+}
+
+void loadProbeInfoColor(sampler2D atlasTex, int row, inout ProbeInfo probeInfo)
+{
+   vec4 ambientFlags = texelFetch(atlasTex, ivec2(7, row), 0);
+   probeInfo.ambientCol = ambientFlags.rgb;
+   probeInfo.flags = int(floatBitsToUint(ambientFlags.a));
+}
+
+float defineProbeInfoInfluence(vec3 wsPosition, ProbeInfo probeInfo)
+{
+   if (probeInfo.shape == 0)
+      return defineBoxSpaceInfluence(wsPosition, probeInfo.xform, probeInfo.atten);
+
+   return defineSphereSpaceInfluence(wsPosition, probeInfo.position, probeInfo.radius, probeInfo.atten);
+}
+
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
 // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
 vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 refScale, vec3 refPosition)

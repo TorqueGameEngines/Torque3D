@@ -82,6 +82,9 @@ S32 RenderProbeMgr::smProbeBakeResolution = 64;
 
 S32 RenderProbeMgr::smMaxHighLodSlots = RenderProbeMgr::DefaultMaxHighLodSlots;
 S32 RenderProbeMgr::smBakeProgressIntervalMS = 250;
+S32 RenderProbeMgr::smMaxLowLodProbes = 50;
+
+F32 RenderProbeMgr::smMaxLowLodProbeDrawDistance = 1000.0f;
 
 F32 RenderProbeMgr::smInteriorSunResidual = 0.1f;
 F32 RenderProbeMgr::smCaptureLightFloor = 0.04f;
@@ -93,6 +96,15 @@ static const F32 sProbeSwapMargin = 0.10f;
 static const S32 sMaxProbeSwapsPerFrame = 2;
 
 static const S32 sMaxHighLodProbes = 16;
+static const S32 sMaxLowLodProbes = 50;
+
+//Fraction of the draw distance where a high LOD probe starts easing to its ambient color
+static const F32 sProbeHighLodFadeStart = 0.5f;
+//Fraction of the low LOD draw distance where a low LOD probe starts fading out
+static const F32 sLowLodFadeStart = 0.8f;
+
+//Rows the low LOD atlas holds
+static const U32 sLowLodAtlasRows = 4096;
 
 //How far toward the sun's shadow fade distance the interior sun darkening starts (1 = only once shadows fade)
 static const F32 sInteriorSunFadeStart = 0.5f;
@@ -210,7 +222,9 @@ RenderProbeMgr::RenderProbeMgr()
    mUseHDRCaptures(true),
    mBakeState(BakeIdle),
    mBakeWaitStartMS(0),
-   mLastPriorityUpdateMS(0)
+   mLastPriorityUpdateMS(0),
+   mLowLodAtlasDirty(true),
+   mLowLodAtlasRootBase(0)
 {
    mEffectiveProbeCount = 0;
    mMipCount = 0;
@@ -236,6 +250,8 @@ RenderProbeMgr::RenderProbeMgr(RenderInstType riType, F32 renderOrder, F32 proce
    mBakeState = BakeIdle;
    mBakeWaitStartMS = 0;
    mLastPriorityUpdateMS = 0;
+   mLowLodAtlasDirty = true;
+   mLowLodAtlasRootBase = 0;
 }
 
 RenderProbeMgr::~RenderProbeMgr()
@@ -252,6 +268,7 @@ RenderProbeMgr::~RenderProbeMgr()
 
    mIrradianceArray.free();
    mPrefilterArray.free();
+   mLowLodAtlas.free();
 }
 
 bool RenderProbeMgr::onAdd()
@@ -282,11 +299,16 @@ bool RenderProbeMgr::onAdd()
       Con::errorf("RenderProbeMgr::onAdd: Failed to load Wetness Texture");
       return false;
    }
+
+   GFXDevice::getDeviceEventSignal().notify(this, &RenderProbeMgr::handleGFXEvent);
    return true;
 }
 
 void RenderProbeMgr::onRemove()
 {
+   GFXDevice::getDeviceEventSignal().remove(this, &RenderProbeMgr::handleGFXEvent);
+   mLowLodAtlas.free();
+
    Parent::onRemove();
 }
 
@@ -307,8 +329,11 @@ void RenderProbeMgr::consoleInit()
    Con::addVariable("$pref::ReflectionProbes::maxHighLODSlots", TypeS32, &RenderProbeMgr::smMaxHighLodSlots, "Size of the high-LOD cubemap slot pool.\n");
    Con::addVariable("$pref::ReflectionProbes::bakeProgressIntervalMS", TypeS32, &RenderProbeMgr::smBakeProgressIntervalMS, "How often a bake reports progress to script, in milliseconds. The progress callback is where the editor redraws, so a smaller value keeps the progress bar smoother and slows the bake down a little more.\n");
 
+   Con::addVariable("$pref::ReflectionProbes::maxLowLODProbes", TypeS32, &RenderProbeMgr::smMaxLowLodProbes, "Max number of low LOD probes (lit from their baked ambient color) rendered per frame, in addition to the high LOD ones.\n");
+   Con::addVariable("$pref::ReflectionProbes::maxLowLODProbeDrawDistance", TypeF32, &RenderProbeMgr::smMaxLowLodProbeDrawDistance, "Distance past which low LOD probes fade out completely.\n");
+
    Con::addVariable("$pref::ReflectionProbes::interiorSunResidual", TypeF32, &RenderProbeMgr::smInteriorSunResidual, "How much of the sun is left inside a probe flagged Interior once its shadows have faded out (0 = none, 1 = no effect).\n");
-   Con::addVariable("$pref::ReflectionProbes::captureLightFloor", TypeF32, &RenderProbeMgr::smCaptureLightFloor, "How much of a light's diffuse term a probe capture keeps even in full shadow, so shadowed surfaces aren't pitch black in a probe (0 = none). Probes flagged Interior capture with none, so a sealed room can bake dark.\n");
+   Con::addVariable("$pref::ReflectionProbes::captureLightFloor", TypeF32, &RenderProbeMgr::smCaptureLightFloor, "How much light is guaranteed to be applied in a probe capture when you hae a sun/ambient. Interior bakes ignore this so they can potentially be fully dark/local lit.\n");
 }
 
 //=============================================================================
@@ -371,12 +396,14 @@ void RenderProbeMgr::getBestProbes(const Point3F& objPosition, ProbeDataSet* pro
       return;
 
    //Grab our best probe picks
+   probeDataSet->renderedProbes.clear();
    for (U32 i = 0; i < bestPickProbes.size(); i++)
    {
       if (bestPickProbes[i] == -1)
          continue;
 
       const ProbeRenderInst& curEntry = mActiveProbes[bestPickProbes[i]];
+      probeDataSet->renderedProbes.push_back(curEntry.mProbeInfo);
       probeDataSet->probeConfigArray[i] = Point4F(curEntry.mProbeInfo->mProbeShapeType,
          curEntry.mProbeInfo->mRadius,
          curEntry.mProbeInfo->mAtten,
@@ -387,7 +414,7 @@ void RenderProbeMgr::getBestProbes(const Point3F& objPosition, ProbeDataSet* pro
       p2A.inverse();
       probeDataSet->refScaleArray[i] = curEntry.mProbeInfo->mProbeRefScale / (p2A.getScale()*2);
       //Flags for the shader: bit 0 = wetness allowed, bit 1 = Interior probe
-      probeDataSet->refScaleArray[i].w = (curEntry.mProbeInfo->mCanDamp ? 1.0f : 0.0f) + (curEntry.mProbeInfo->mInterior ? 2.0f : 0.0f);
+      probeDataSet->refScaleArray[i].w = (curEntry.mProbeInfo->mCanDamp ? 1.0f : 0.0f) + (curEntry.mProbeInfo->mInterior && AdvancedLightBinManager::smUseProbeInteriorMask ? 2.0f : 0.0f);
 
       Point3F probePos = curEntry.mProbeInfo->mObject->getPosition();
       Point3F refPos = curEntry.mProbeInfo->mProbeRefOffset;
@@ -495,7 +522,7 @@ bool RenderProbeMgr::isPrimaryView(const SceneRenderState* state)
 
 bool RenderProbeMgr::updateProbeScores(const SceneRenderState* state)
 {
-   PROFILE_SCOPE(ProbeManager_UpdateProbePriorities);
+   PROFILE_SCOPE(ProbeManager_UpdateProbeScores);
 
    //Several render bins can call this in one frame, so only do it once
    const U32 nowMS = Platform::getRealMilliseconds();
@@ -624,6 +651,7 @@ PostEffect* RenderProbeMgr::getProbeArrayEffect()
          return NULL;
 
       mProbeArrayEffect->setShaderConst("$numProbes", (S32)0);
+      mProbeArrayEffect->setShaderConst("$numLowLodProbes", (S32)0);
       mProbeArrayEffect->setShaderConst("$skylightCubemapIdx", (S32)-1);
       mProbeArrayEffect->setShaderConst(ShaderGenVars::skylightDamp, (S32)true);
       mProbeArrayEffect->setShaderConst("$cubeMips", (float)0);
@@ -1032,9 +1060,39 @@ void RenderProbeMgr::_setupPerFrameParameters(const SceneRenderState* state)
 {
    PROFILE_SCOPE(RenderProbeMgr_SetupPerFrameParameters);
 
-   mProbeData = ProbeDataSet(smMaxHighProbesPerFrame);
+   const U32 maxHighProbes = getMaxHighLodProbes();
+   mProbeData = ProbeDataSet(maxHighProbes);
 
    getBestProbes(state->getCameraPosition(), &mProbeData);
+
+   mProbeData.highLodAtlasRow.setSize(maxHighProbes);
+   for (U32 i = 0; i < maxHighProbes; i++)
+      mProbeData.highLodAtlasRow[i] = Point4F(-1.0f, 0.0f, 0.0f, 0.0f);
+
+   applyHighLodSwitch(state->getCameraPosition(), &mProbeData);
+   gatherLowLodProbes(state, &mProbeData);
+
+   mProbeData.probePositionArray.setSize(maxHighProbes);
+   mProbeData.probeRefPositionArray.setSize(maxHighProbes);
+   mProbeData.refScaleArray.setSize(maxHighProbes);
+   mProbeData.probeConfigArray.setSize(maxHighProbes);
+   mProbeData.probeWorldToObjArray.setSize(maxHighProbes);
+
+   for (U32 i = mProbeData.effectiveProbeCount; i < maxHighProbes; i++)
+   {
+      mProbeData.probePositionArray[i] = Point4F::Zero;
+      mProbeData.probeRefPositionArray[i] = Point4F::Zero;
+      mProbeData.refScaleArray[i] = Point4F::Zero;
+      mProbeData.probeConfigArray[i] = Point4F::Zero;
+      mProbeData.probeWorldToObjArray[i].identity();
+   }
+
+   const U32 maxLowProbes = getMaxLowLodProbes();
+   const U32 usedLowSlots = mProbeData.lowLodList.size();
+
+   mProbeData.lowLodList.setSize(maxLowProbes);
+   for (U32 i = usedLowSlots; i < maxLowProbes; i++)
+      mProbeData.lowLodList[i] = Point4F::Zero;
 }
 
 void RenderProbeMgr::render( SceneRenderState *state )
@@ -1057,11 +1115,15 @@ void RenderProbeMgr::render( SceneRenderState *state )
    if (updatedScores)
       updateHighLodSlots();
 
+   //The low LOD atlas only changes when the roster set does
+   if (mLowLodAtlasDirty || mLowLodAtlas.isNull())
+      buildLowLodAtlas();
+
    // Initialize and set the per-frame data
    _setupPerFrameParameters(state);
 
    // Early out if nothing to draw.
-   if (!RenderProbeMgr::smRenderReflectionProbes || (!mHasSkylight && mProbeData.effectiveProbeCount == 0))
+   if (!RenderProbeMgr::smRenderReflectionProbes || (!mHasSkylight && mProbeData.effectiveProbeCount + mProbeData.lowLodProbeCount == 0))
    {
       getProbeArrayEffect()->setSkip(true);
       mActiveProbes.clear();
@@ -1083,7 +1145,10 @@ void RenderProbeMgr::render( SceneRenderState *state )
    String useDebugContrib = Con::getVariable("$Probes::showProbeContrib", "0");
    mProbeArrayEffect->setShaderMacro("DEBUGVIZ_CONTRIB", useDebugContrib);
 
-   if(mHasSkylight && mProbeData.effectiveProbeCount == 0)
+   String useDebugLod = Con::getVariable("$Probes::showLOD", "0");
+   mProbeArrayEffect->setShaderMacro("DEBUGVIZ_LOD", useDebugLod);
+
+   if(mHasSkylight && mProbeData.effectiveProbeCount + mProbeData.lowLodProbeCount == 0)
       mProbeArrayEffect->setShaderMacro("SKYLIGHT_ONLY", "1");
    else
       mProbeArrayEffect->setShaderMacro("SKYLIGHT_ONLY", "0");
@@ -1123,6 +1188,11 @@ void RenderProbeMgr::render( SceneRenderState *state )
       mProbeArrayEffect->setShaderConst("$zNearFar", Point4F(frustum.getNearDist(), frustum.getFarDist(), 0.0f, 0.0f));
    }
 
+   //The probe arrays only hold high LOD probes. Low LOD probes are a list of atlas rows
+   const U32 maxLowLodProbes = getMaxLowLodProbes();
+   mProbeArrayEffect->setShaderMacro("TOTAL_PROBES", String::ToString("%u", getMaxHighLodProbes() + maxLowLodProbes));
+   mProbeArrayEffect->setShaderMacro("MAX_LOWLOD_PROBES", String::ToString("%u", maxLowLodProbes));
+
    mProbeArrayEffect->setTexture(3, mBRDFTexture);
    mProbeArrayEffect->setTexture(4, mPrefilterArray);
    mProbeArrayEffect->setTexture(5, mIrradianceArray);
@@ -1144,39 +1214,16 @@ void RenderProbeMgr::render( SceneRenderState *state )
       mProbeArrayEffect->setTexture(7, GFXTexHandle(NULL));
    }
    mProbeArrayEffect->setShaderConst("$numProbes", (S32)mProbeData.effectiveProbeCount);
+   mProbeArrayEffect->setShaderConst("$numLowLodProbes", (S32)mProbeData.lowLodProbeCount);
+
+   mProbeArrayEffect->setTexture(8, mLowLodAtlas);
+   mProbeArrayEffect->setShaderConst("$probeLowLodList", mProbeData.lowLodList);
+   mProbeArrayEffect->setShaderConst("$probeAtlasRow", mProbeData.highLodAtlasRow);
+
    mProbeArrayEffect->setShaderConst("$skylightCubemapIdx", (S32)mProbeData.skyLightIdx);
    mProbeArrayEffect->setShaderConst(ShaderGenVars::skylightDamp, mProbeData.skyLightDamp);
 
    mProbeArrayEffect->setShaderConst("$cubeMips", (float)mPrefilterArray->getMipLevels());
-
-   //also set up some colors
-   Vector<Point4F> contribColors;
-
-   contribColors.setSize(mProbeData.effectiveProbeCount);
-
-   if (mProbeData.effectiveProbeCount != 0)
-   {
-      if (useDebugContrib == String("1"))
-      {
-         MRandomLCG RandomGen;
-         RandomGen.setSeed(mProbeData.effectiveProbeCount);
-
-         for (U32 i = 0; i < mProbeData.effectiveProbeCount; i++)
-         {
-            //we're going to cheat here a little for consistent debugging behavior. The first 3 probes will always have R G and then B for their colors, every other will be random
-            if (i == 0)
-               contribColors[i] = Point4F(1, 0, 0, 1);
-            else if (i == 1)
-               contribColors[i] = Point4F(0, 1, 0, 1);
-            else if (i == 2)
-               contribColors[i] = Point4F(0, 0, 1, 1);
-            else
-               contribColors[i] = Point4F(RandomGen.randF(0, 1), RandomGen.randF(0, 1), RandomGen.randF(0, 1), 1);
-         }
-      }
-   }
-
-   mProbeArrayEffect->setShaderConst("$probeContribColors", contribColors);
 
    mProbeArrayEffect->setShaderConst("$probePosArray", mProbeData.probePositionArray);
    mProbeArrayEffect->setShaderConst("$refPosArray", mProbeData.probeRefPositionArray);
@@ -1521,6 +1568,7 @@ bool RenderProbeMgr::loadLevelAtlas(const char* levelAssetId)
    String path = rootAtlasPath();
    ProbeAtlasHeader header;
    bool loaded = readProbeAtlasFile(path, mRootAtlasRoster, &header);
+   markLowLodAtlasDirty();
 
    if (loaded)
       Con::printf("RenderProbeMgr::loadLevelAtlas() - loaded %u probes from %s", mRootAtlasRoster.size(), path.c_str());
@@ -1543,12 +1591,15 @@ bool RenderProbeMgr::loadSubSceneAtlas(SubScene* subScene)
    else
       mSubSceneAtlasRosters[subScene] = roster;
 
+   markLowLodAtlasDirty();
+
    return loaded;
 }
 
 void RenderProbeMgr::unloadSubSceneAtlas(SubScene* subScene)
 {
    mSubSceneAtlasRosters.erase(subScene);
+   markLowLodAtlasDirty();
 }
 
 U32 RenderProbeMgr::getAtlasRosterCount()
@@ -1738,6 +1789,298 @@ void RenderProbeMgr::cancelBake()
    finishBake(false);
 }
 
+S32 QSORT_CALLBACK RenderProbeMgr::lowLodCandidateCmp(const LowLodProbeCandidate* a, const LowLodProbeCandidate* b)
+{
+   const F32 diff = a->distance - b->distance;
+   return diff > 0 ? 1 : diff < 0 ? -1 : 0;
+}
+
+void RenderProbeMgr::gatherLowLodProbes(const SceneRenderState* state, ProbeDataSet* probeDataSet)
+{
+   PROFILE_SCOPE(RenderProbeMgr_GatherLowLodProbes);
+
+   probeDataSet->lowLodProbeCount = 0;
+
+   if (getAtlasRosterCount() == 0 || mLowLodAtlas.isNull())
+      return;
+
+   const Point3F cameraPosition = state->getCameraPosition();
+   const Frustum& viewFrustum = state->getCullingFrustum();
+
+   //Probes already drawn from their cubemaps this frame don't also get lit from the atlas
+   Vector<U32> renderedIds;
+   for (U32 i = 0; i < probeDataSet->renderedProbes.size(); i++)
+   {
+      ReflectionProbe* object = probeDataSet->renderedProbes[i]->mObject;
+      if (object != NULL)
+         renderedIds.push_back(object->getProbeUniqueId().getHashCaseSensitive());
+   }
+
+   Vector<LowLodProbeCandidate> candidates;
+
+   for (U32 i = 0; i <= mSubSceneAtlasRosters.size(); i++)
+   {
+      //Pass 0 is the root scene's roster, then one pass per loaded SubScene's roster
+      const Vector<ProbeAtlasRecord>* roster = &mRootAtlasRoster;
+      U32 rosterBase = mLowLodAtlasRootBase;
+      if (i > 0)
+      {
+         Map<SubScene*, Vector<ProbeAtlasRecord> >::Iterator itr = mSubSceneAtlasRosters.begin();
+         for (U32 skip = 1; skip < i; skip++)
+            ++itr;
+         roster = &itr->value;
+
+         Map<SubScene*, U32>::Iterator baseItr = mLowLodAtlasSubSceneBase.find(itr->key);
+         if (baseItr == mLowLodAtlasSubSceneBase.end())
+            continue;
+
+         rosterBase = baseItr->value;
+      }
+
+      for (U32 r = 0; r < roster->size(); r++)
+      {
+         const ProbeAtlasRecord& record = (*roster)[r];
+
+         bool alreadyRendered = false;
+         for (U32 i = 0; i < renderedIds.size() && !alreadyRendered; i++)
+            alreadyRendered = (renderedIds[i] == record.persistentProbeId);
+
+         if (alreadyRendered)
+            continue;
+
+         const Box3F probeBounds = record.getBounds();
+
+         const F32 distance = probeBounds.getDistanceToPoint(cameraPosition);
+         if (distance > smMaxLowLodProbeDrawDistance)
+            continue;
+
+         //Skip anything outside the view frustum
+         if (viewFrustum.isCulled(probeBounds))
+            continue;
+
+         //If it can't fit in the atlas, skip it
+         if (rosterBase + r >= mLowLodAtlas->getHeight())
+            continue;
+
+         LowLodProbeCandidate candidate;
+         candidate.row = rosterBase + r;
+         candidate.distance = distance;
+         candidates.push_back(candidate);
+      }
+   }
+
+   if (candidates.empty())
+      return;
+
+   candidates.sort(lowLodCandidateCmp);
+
+   const U32 count = getMin(getMaxLowLodProbes(), (U32)candidates.size());
+
+   //Each entry is just its row and the distance fade
+   probeDataSet->lowLodList.setSize(count);
+   for (U32 k = 0; k < count; k++)
+      probeDataSet->lowLodList[k] = Point4F((F32)candidates[k].row, lowLodDistanceFade(candidates[k].distance), 0.0f, 0.0f);
+
+   probeDataSet->lowLodProbeCount = count;
+}
+
+const ProbeAtlasRecord* RenderProbeMgr::findRosterRecord(U32 persistentProbeId) const
+{
+   for (U32 i = 0; i < mRootAtlasRoster.size(); i++)
+   {
+      if (mRootAtlasRoster[i].persistentProbeId == persistentProbeId)
+         return &mRootAtlasRoster[i];
+   }
+
+   for (Map<SubScene*, Vector<ProbeAtlasRecord> >::ConstIterator itr = mSubSceneAtlasRosters.begin(); itr != mSubSceneAtlasRosters.end(); itr++)
+   {
+      const Vector<ProbeAtlasRecord>& roster = itr->value;
+      for (U32 i = 0; i < roster.size(); i++)
+      {
+         if (roster[i].persistentProbeId == persistentProbeId)
+            return &roster[i];
+      }
+   }
+
+   return NULL;
+}
+
+S32 RenderProbeMgr::findRosterRow(U32 persistentProbeId) const
+{
+   for (U32 i = 0; i < mRootAtlasRoster.size(); i++)
+   {
+      if (mRootAtlasRoster[i].persistentProbeId == persistentProbeId)
+         return mLowLodAtlasRootBase + i;
+   }
+
+   for (Map<SubScene*, Vector<ProbeAtlasRecord> >::ConstIterator itr = mSubSceneAtlasRosters.begin(); itr != mSubSceneAtlasRosters.end(); itr++)
+   {
+      Map<SubScene*, U32>::ConstIterator baseItr = mLowLodAtlasSubSceneBase.find(itr->key);
+      if (baseItr == mLowLodAtlasSubSceneBase.end())
+         continue;
+
+      const Vector<ProbeAtlasRecord>& roster = itr->value;
+      for (U32 i = 0; i < roster.size(); i++)
+      {
+         if (roster[i].persistentProbeId == persistentProbeId)
+            return baseItr->value + i;
+      }
+   }
+
+   return -1;
+}
+
+U32 RenderProbeMgr::copyRosterRows(const Vector<ProbeAtlasRecord>& roster, U8* data, U32 firstRow, U32 capacity)
+{
+   const U32 count = getMin((U32)roster.size(), capacity - firstRow);
+   if (count > 0)
+      dMemcpy(data + firstRow * sProbeAtlasRowBytes, &roster[0], count * sProbeAtlasRowBytes);
+
+   return count;
+}
+
+void RenderProbeMgr::buildLowLodAtlas()
+{
+   PROFILE_SCOPE(RenderProbeMgr_BuildLowLodAtlas);
+
+   mLowLodAtlasDirty = false;
+   mLowLodAtlas.free();
+   mLowLodAtlasSubSceneBase.clear();
+   mLowLodAtlasRootBase = 0;
+
+   U32 totalRows = mRootAtlasRoster.size();
+
+   for (Map<SubScene*, Vector<ProbeAtlasRecord> >::Iterator itr = mSubSceneAtlasRosters.begin(); itr != mSubSceneAtlasRosters.end(); itr++)
+      totalRows += itr->value.size();
+
+   if (totalRows > sLowLodAtlasRows)
+   {
+      Con::warnf("RenderProbeMgr::buildLowLodAtlas() - Total rows: %u, Max rows: %u. Using only up to Max row count.",
+         totalRows, sLowLodAtlasRows);
+
+      totalRows = sLowLodAtlasRows;
+   }
+
+   const U32 rowCount = getMax(totalRows, (U32)1);
+
+   //new U8[]: DDSFile::SurfaceData frees its mips with delete[]
+   U8* buffer = new U8[sProbeAtlasRowBytes * rowCount];
+   dMemset(buffer, 0, sProbeAtlasRowBytes * rowCount);
+
+   U32 nextRow = 0;
+
+   mLowLodAtlasRootBase = nextRow;
+   nextRow += copyRosterRows(mRootAtlasRoster, buffer, nextRow, rowCount);
+
+   for (Map<SubScene*, Vector<ProbeAtlasRecord> >::Iterator itr = mSubSceneAtlasRosters.begin(); itr != mSubSceneAtlasRosters.end(); itr++)
+   {
+      mLowLodAtlasSubSceneBase[itr->key] = nextRow;
+      nextRow += copyRosterRows(itr->value, buffer, nextRow, rowCount);
+   }
+
+   DDSFile* ddsFile = new DDSFile;
+   ddsFile->mFormat = GFXFormatR32G32B32A32F;
+   ddsFile->mBytesPerPixel = sizeof(F32) * 4;
+   ddsFile->mHeight = rowCount;
+   ddsFile->mWidth = sProbeAtlasRowTexels;
+   ddsFile->mMipMapCount = 1;
+   ddsFile->mSurfaces.push_back(new DDSFile::SurfaceData);
+   ddsFile->mSurfaces.last()->mMips.push_back(buffer);
+
+   //Now set the sucker
+   mLowLodAtlas.set(ddsFile, &GFXTexturePersistentProfile, true, "RenderProbeMgr::mLowLodAtlas");
+}
+
+bool RenderProbeMgr::handleGFXEvent(GFXDevice::GFXDeviceEventType event)
+{
+   //On the off chance the device changes, we do a rebuild
+   if (event == GFXDevice::deDestroy || event == GFXDevice::deInit)
+   {
+      mLowLodAtlas.free();
+      markLowLodAtlasDirty();
+   }
+
+   return true;
+}
+
+void RenderProbeMgr::applyHighLodSwitch(const Point3F& cameraPosition, ProbeDataSet* probeDataSet)
+{
+   PROFILE_SCOPE(RenderProbeMgr_ApplyHighLodSwitch);
+
+   const F32 range = mMax(smMaxProbeDrawDistance, 0.001f);
+
+   for (U32 i = 0; i < probeDataSet->renderedProbes.size() && i < probeDataSet->effectiveProbeCount; i++)
+   {
+      ReflectionProbe::ProbeInfo* info = probeDataSet->renderedProbes[i];
+
+      //No atlas row to hand over to, so keep the plain distance falloff. .w < 0 on the
+      //position tells the shader and refPos.w is the cubemap share. 1 = cubemaps only
+      probeDataSet->probePositionArray[i].w = -1.0f;
+      probeDataSet->probeRefPositionArray[i].w = 1.0f;
+      probeDataSet->highLodAtlasRow[i] = Point4F(-1.0f, 0.0f, 0.0f, 0.0f);
+
+      if (info->mObject == NULL)
+         continue;
+
+      const U32 probeId = info->mObject->getProbeUniqueId().getHashCaseSensitive();
+      const ProbeAtlasRecord* record = findRosterRecord(probeId);
+      const S32 row = findRosterRow(probeId);
+      if (record == NULL || row < 0)
+         continue;
+
+      //Ease from cubemaps to the atlas ambient color toward the draw distance, keeping its weight continuous
+      const F32 closeness = 1.0f - (record->position - cameraPosition).len() / range;
+      const F32 cubemapShare = mClampF(closeness / (1.0f - sProbeHighLodFadeStart), 0.0f, 1.0f);
+      probeDataSet->probePositionArray[i].w = lowLodDistanceFade(record->getBounds().getDistanceToPoint(cameraPosition));
+      probeDataSet->probeRefPositionArray[i].w = cubemapShare;
+      probeDataSet->highLodAtlasRow[i] = Point4F((F32)row, 0.0f, 0.0f, 0.0f);
+   }
+}
+
+U32 RenderProbeMgr::getMaxLowLodProbes()
+{
+   return mClamp(smMaxLowLodProbes, 1, sMaxLowLodProbes);
+}
+
+F32 RenderProbeMgr::lowLodDistanceFade(F32 distance)
+{
+   const F32 fadeStart = smMaxLowLodProbeDrawDistance * sLowLodFadeStart;
+   return 1.0f - mClampF((distance - fadeStart) / mMax(smMaxLowLodProbeDrawDistance - fadeStart, 0.001f), 0.0f, 1.0f);
+}
+
+void RenderProbeMgr::dumpProbeAtlasRow(ReflectionProbe* probe)
+{
+   if (probe == NULL)
+      return;
+
+   const ProbeAtlasRecord* found = findRosterRecord(probe->getProbeUniqueId().getHashCaseSensitive());
+   if (found == NULL)
+   {
+      Con::warnf("RenderProbeMgr::dumpProbeAtlasRow() - probe %u has no row in the loaded probe atlases. Either not baked yet, or its scene isn't loaded", probe->getId());
+      return;
+   }
+
+   const ProbeAtlasRecord& record = *found;
+
+   MatrixF worldToObj(true);
+   dMemcpy((F32*)worldToObj, record.worldToObj, sizeof(record.worldToObj));
+
+   Con::printf("Probe %u atlas row:", probe->getId());
+   Con::printf("persistentProbeId: %u", record.persistentProbeId);
+   Con::printf("position: %g %g %g", record.position.x, record.position.y, record.position.z);
+   Con::printf("refOffset: %g %g %g  refScale: %g %g %g", record.refOffset.x, record.refOffset.y, record.refOffset.z,
+      record.refScale.x, record.refScale.y, record.refScale.z);
+   Con::printf("shapeType: %g  radius: %g  atten: %g  flags: %u", record.shapeType, record.radius, record.atten, record.flags);
+   Con::printf("bounds: [%g %g %g] - [%g %g %g]", record.boundsMin.x, record.boundsMin.y, record.boundsMin.z,
+      record.boundsMax.x, record.boundsMax.y, record.boundsMax.z);
+   Con::printf("worldToObj position: %g %g %g", worldToObj.getPosition().x, worldToObj.getPosition().y, worldToObj.getPosition().z);
+
+   Con::printf("ambient: %g %g %g", record.ambient[0], record.ambient[1], record.ambient[2]);
+
+   Con::printf("flags: canDamp %d, interior %d", (record.flags & ProbeAtlasRecord::CanDamp) != 0,
+      (record.flags & ProbeAtlasRecord::Interior) != 0);
+}
+
 //=============================================================================
 // Console functions
 //=============================================================================
@@ -1753,6 +2096,13 @@ DefineEngineMethod(RenderProbeMgr, bakeProbe, void, (ReflectionProbe* probe), (n
       object->serializeProbeAtlas();
    }
    object->postBake();
+}
+
+DefineEngineMethod(RenderProbeMgr, dumpProbeAtlasRow, void, (ReflectionProbe* probe), (nullAsType<ReflectionProbe*>()),
+   "@brief Prints a probe's row from the loaded probe atlases (root scene or SubScene)\n\n"
+   "@param probe The reflection probe to look up.\n")
+{
+   object->dumpProbeAtlasRow(probe);
 }
 
 DefineEngineMethod(RenderProbeMgr, loadLevelAtlas, bool, (const char* levelAssetId), (""),
@@ -1781,7 +2131,7 @@ DefineEngineMethod(RenderProbeMgr, clearLevelAtlas, void, (), ,
 }
 
 DefineEngineMethod(RenderProbeMgr, startBakeProbes, bool, (), ,
-   "@brief Bakes every reflection probe in the scene, and every SubScene, by loading and waiting for subScenes to ghost first.\n
+   "@brief Bakes every reflection probe in the scene, and every SubScene, by loading and waiting for subScenes to ghost first.\n"
    "Once everything is loaded, everything is baked and rendered to IBL files/atlases.\n\n"
    "@return False if a bake was already running or there is no scene.\n")
 {

@@ -826,7 +826,7 @@ function makeSelectedAMesh(%assetId, %createPrefab, %spawnNewStatic)
    %assetDef = AssetDatabase.acquireAsset(%assetId);
    
    %assetPath = AssetDatabase.getAssetPath(%assetId);
-   %filePath = %assetPath @ "/" @ %assetDef.AssetName @ ".dae";
+   %filePath = %assetPath @ "/" @ %assetDef.AssetName @ "." @ $pref::editor::meshExportFormat;
    
    %fileName = fileName(%filePath);
    

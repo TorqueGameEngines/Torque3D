@@ -399,11 +399,10 @@ ConsoleGetType( TypeMatrixF )
    static const U32 bufSize = 256;
    char* buffer = Con::getReturnBuffer(bufSize);
 
-   PropertyInfo::FormatPropertyBuffer<F32, 3>(col0, buffer, bufSize);
-   *buffer++ = ' ';
-   PropertyInfo::FormatPropertyBuffer<F32, 3>(col1, buffer, bufSize);
-   *buffer++ = ' ';
-   PropertyInfo::FormatPropertyBuffer<F32, 3>(col2, buffer, bufSize);
+   dSprintf(buffer, bufSize, "%g %g %g %g %g %g %g %g %g",
+      col0.x, col0.y, col0.z,
+      col1.x, col1.y, col1.z,
+      col2.x, col2.y, col2.z);
 
    return buffer;
 }
@@ -414,10 +413,14 @@ ConsoleSetType( TypeMatrixF )
    {
       F32 parsed[9];
 
-      char* buffer = new char[dStrlen(argv[0])];
-      dStrcpy(buffer, argv[0], sizeof(buffer));
+      U32 bufferSize = dStrlen(argv[0]) + 1;
+      char* buffer = new char[bufferSize];
+      dStrcpy(buffer, argv[0], bufferSize);
 
-      if (PropertyInfo::ParseProperty<F32, 9>(buffer, parsed)) {
+      bool parsedOk = PropertyInfo::ParseProperty<F32, 9>(buffer, parsed);
+      delete[] buffer;
+
+      if (parsedOk) {
          MatrixF* mat = (MatrixF*)dptr;
 
          mat->setColumn(0, Point3F(parsed[0], parsed[1], parsed[2]));

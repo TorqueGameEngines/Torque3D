@@ -844,7 +844,7 @@ void Item::updatePos(const U32 /*mask*/, const F32 dt)
          Point3F oldMin = testBox.minExtents;
          Point3F oldMax = testBox.maxExtents;
          testBox.minExtents.setMin(oldMin + (mVelocity * time));
-         testBox.maxExtents.setMin(oldMax + (mVelocity * time));
+         testBox.maxExtents.setMax(oldMax + (mVelocity * time));
 
          sEarlyOutPolyList.clear();
          sEarlyOutPolyList.mNormal.set(0,0,0);

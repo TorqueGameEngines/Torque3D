@@ -1070,7 +1070,7 @@ void TSShape::initMaterialList()
    for (S32 ss = 0; ss<numSubShapes; ss++)
    {
       S32 start = subShapeFirstObject[ss];
-      S32 end = subShapeNumObjects[ss];
+      S32 end = subShapeNumObjects[ss] + start;
       subShapeFirstTranslucentObject[ss] = end;
       for (i=start; i<end; i++)
       {
@@ -1126,7 +1126,7 @@ bool TSShape::buildConvexHull(S32 dl) const
    S32 od = detail.objectDetailNum;
 
    S32 start = subShapeFirstObject[ss];
-   S32 end   = subShapeNumObjects[ss];
+   S32 end   = subShapeNumObjects[ss] + start;
    for (S32 i=start; i<end; i++)
    {
       TSMesh * mesh = meshes[objects[i].startMeshIndex+od];

@@ -102,7 +102,7 @@ public:
 protected:
    GuiPopupTextListCtrl *mTl;
    GuiScrollCtrl *mSc;
-   GuiPopUpBackgroundCtrl *mBackground;
+   SimObjectPtr<GuiPopUpBackgroundCtrl> mBackground;
    Vector<Entry> mEntries;
    Vector<Scheme> mSchemes;
    S32 mSelIndex;

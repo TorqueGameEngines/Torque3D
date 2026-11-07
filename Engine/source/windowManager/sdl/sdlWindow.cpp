@@ -32,7 +32,7 @@
 #include "gfx/gfxDevice.h"
 
 #ifdef TORQUE_OS_LINUX
-#define SDL_VIDEO_DRIVER_X11  // TODO SDL
+#define SDL_VIDEO_DRIVER_WAYLAND  // TODO SDL
 #endif
 
 #include "SDL.h"
@@ -164,8 +164,8 @@ void* PlatformWindowSDL::getSystemWindow(const WindowSystem system)
 #endif
 
 #if defined(TORQUE_OS_LINUX)
-     if( system == WindowSystem_X11 && info.subsystem == SDL_SYSWM_X11)
-        return (void*)info.info.x11.window;
+     if( system == WindowSystem_Wayland && info.subsystem == SDL_SYSWM_WAYLAND)
+        return (void*)info.info.wl.surface;
 #endif
 
     AssertFatal(0, "");

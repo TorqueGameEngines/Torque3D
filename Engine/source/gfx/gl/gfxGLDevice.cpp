@@ -53,8 +53,6 @@
 
 #if defined(TORQUE_OS_WIN)
 #include "gfx/gl/tGL/tWGL.h"
-#elif defined(TORQUE_OS_LINUX)
-#include "gfx/gl/tGL/tXGL.h"
 #endif
 
 #pragma region GL WARNINGS
@@ -1213,15 +1211,9 @@ U32 GFXGLDevice::getTotalVideoMemory_GL_EXT()
    }
 #endif
 
-#if defined(TORQUE_OS_LINUX)
-   else if ( (gglHasXExtension(NULL, NULL, MESA_query_renderer)) )
-   {
-      // memory size is in mb
-      U32 memorySize;
-      glXQueryCurrentRendererIntegerMESA(GLX_RENDERER_VIDEO_MEMORY_MESA, &memorySize);
-      return memorySize;
-   }
-#endif
+   // Note: Linux used to query GLX_MESA_query_renderer here for video memory
+   // size, but that's an X11/GLX-only extension with no Wayland/EGL
+   // equivalent, so it's no longer available on Linux.
 
    // No other way, sad. Probably windows Intel.
    return 0;

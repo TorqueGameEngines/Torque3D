@@ -54,11 +54,16 @@ if (WIN32)
 	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_WIN_SOURCES})
 endif (WIN32)
 
-# Linux requires X11 & freetype
+# Linux uses Wayland for windowing (via SDL) and Fontconfig/FreeType for
+# font rendering - no X11/Xft dependency.
 if (UNIX AND NOT APPLE)
-	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_X11_SOURCES})
+	set(TORQUE_SOURCE_FILES ${TORQUE_SOURCE_FILES} ${TORQUE_PLATFORM_WAYLAND_SOURCES})
 	find_package(Freetype REQUIRED)
 	set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${FREETYPE_INCLUDE_DIRS})
+
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
+	set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${FONTCONFIG_INCLUDE_DIRS})
 endif (UNIX AND NOT APPLE)
 
 ################# Collect Source Files ###################
@@ -252,9 +257,9 @@ endif (WIN32)
 # Handle platformSDL
 torqueAddSourceDirectories("platformSDL" "platformSDL/threads")
 
-# Handle platformX11
+# Handle platformWayland
 if (UNIX AND NOT APPLE)
-  torqueAddSourceDirectories("platformX11")
+  torqueAddSourceDirectories("platformWayland")
 endif (UNIX AND NOT APPLE)
 
 if(TORQUE_TESTING)

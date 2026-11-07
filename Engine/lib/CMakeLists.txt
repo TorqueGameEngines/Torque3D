@@ -110,6 +110,14 @@ mark_as_advanced(SDL_WERROR)
 mark_as_advanced(SDL_X11)
 mark_as_advanced(SDL_XINPUT)
 mark_as_advanced(SDL2_DIR)
+
+# Torque uses Wayland as its Linux windowing system and no longer supports
+# X11. Force SDL to build with its Wayland backend and without X11.
+if (UNIX AND NOT APPLE)
+  set(SDL_WAYLAND ON CACHE BOOL "Use Wayland video driver" FORCE)
+  set(SDL_X11 OFF CACHE BOOL "Use X11 video driver" FORCE)
+endif (UNIX AND NOT APPLE)
+
 add_subdirectory(sdl ${TORQUE_LIB_TARG_DIRECTORY}/sdl2 EXCLUDE_FROM_ALL)
 
 add_subdirectory(nativeFileDialogs ${TORQUE_LIB_TARG_DIRECTORY}/nfd EXCLUDE_FROM_ALL)

@@ -1,12 +1,13 @@
 file(GLOB GLAD_SOURCES "src/*.c")
 
-# TODO EGL support if we ever use EGL instead of GLX
+# Linux no longer builds the GLX loader: GLX is an X11 extension, and Torque's
+# Linux windowing is Wayland-only now. GL entry points (including extensions)
+# are resolved generically from libGL.so regardless of whether the underlying
+# context was created via GLX or EGL, so no platform GL-context-extension
+# loader is required there.
 if (WIN32)
   file(GLOB GLAD_SOURCES_WGL "src/wgl/*.c")
   set(GLAD_SOURCES ${GLAD_SOURCES} ${GLAD_SOURCES_WGL})
-elseif (UNIX AND NOT APPLE)
-  file(GLOB GLAD_SOURCES_GLX "src/glx/*.c")
-  set(GLAD_SOURCES ${GLAD_SOURCES} ${GLAD_SOURCES_GLX})
 endif()
 
 add_library(glad STATIC ${GLAD_SOURCES})

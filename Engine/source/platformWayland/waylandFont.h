@@ -25,23 +25,27 @@
 #include "platform/platform.h"
 #endif
 
-#ifndef _X86UNIXFONT_H_
-#define _X86UNIXFONT_H_
-// Needed by createFont
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xos.h>
-#include <X11/Xatom.h>
+#ifndef _WAYLANDFONT_H_
+#define _WAYLANDFONT_H_
 
-class x86UNIXFont : public PlatformFont
+// Font rendering on Linux is implemented entirely on top of Fontconfig and
+// FreeType (see waylandFont.client.cpp). Both libraries are windowing-system
+// agnostic - they never open a display connection - so this code works
+// unmodified under Wayland (and, as a side effect, under X11/XWayland too)
+// without linking against libX11 or Xft the way the old X11-only
+// implementation did.
+
+class waylandFont : public PlatformFont
 {
 	private:
 		int baseline;
 		int height;
-		StringTableEntry  mFontName;
+		StringTableEntry mFontName;
+		int mFontIndex;
+		int mPixelSize;
 	public:
-		x86UNIXFont();
-		virtual ~x86UNIXFont();
+		waylandFont();
+		virtual ~waylandFont();
     
     	// PlatformFont virtual methods
 		virtual bool isValidChar(const UTF16 ch) const;

@@ -27,8 +27,6 @@
 
 #if defined(TORQUE_OS_WIN)
 #include "tWGL.h"
-#elif defined(TORQUE_OS_LINUX)
-#include "tXGL.h"
 #endif
 
 namespace GL
@@ -49,11 +47,12 @@ namespace GL
          AssertFatal(false, "Unable to load WGL in GLAD. Make sure your OpenGL drivers are up to date!");
       }
 #elif defined(TORQUE_OS_LINUX)
-
-      if (!gladLoadGLX(NULL, 0))
-      {
-         AssertFatal(false, "Unable to load GLX in GLAD. Make sure your OpenGL drivers are up to date!");
-      }
+      // Nothing to do here: on Linux, OpenGL entry points (including
+      // extensions) are resolved generically from libGL.so via
+      // gladLoadGL()/get_proc(), independent of whether the context was
+      // created through GLX (X11) or EGL (Wayland). We no longer load
+      // GLX-specific extensions here since Wayland has no GLX.
+      (void)context;
 #endif
    }
 }

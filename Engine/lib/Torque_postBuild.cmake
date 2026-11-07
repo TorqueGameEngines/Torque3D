@@ -30,10 +30,17 @@ endif (APPLE)
 
 set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} nativeFileDialogs)
 
-# Linux requires X11 & freetype
+# Linux uses Wayland (via SDL) for windowing, so we no longer link against
+# X11/Xft. Font rendering uses Fontconfig + FreeType instead, neither of
+# which depends on any windowing system.
 if (UNIX AND NOT APPLE)
-	set(TORQUE_LINK_LINUX ${TORQUE_LINK_LINUX} "X11" "Xft" "dl" "pthread")  
+	set(TORQUE_LINK_LINUX ${TORQUE_LINK_LINUX} "dl" "pthread")
 	find_package(Freetype REQUIRED)
 	set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${FREETYPE_INCLUDE_DIRS})
 	set(TORQUE_LINK_LINUX ${TORQUE_LINK_LINUX} ${FREETYPE_LIBRARIES})
+
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(FONTCONFIG REQUIRED fontconfig)
+	set(TORQUE_INCLUDE_DIRECTORIES ${TORQUE_INCLUDE_DIRECTORIES} ${FONTCONFIG_INCLUDE_DIRS})
+	set(TORQUE_LINK_LINUX ${TORQUE_LINK_LINUX} ${FONTCONFIG_LIBRARIES})
 endif (UNIX AND NOT APPLE)

@@ -6,6 +6,8 @@ function toggleProbeViz(%mode)
       %lastMode = "Contribution";
    else if($Probes::showSpecularCubemaps == 1)
       %lastMode = "Specular";
+   else if($Probes::showLOD == 1)
+      %lastMode = "LOD";
    else if($Probes::showDiffuseCubemaps == 1)
       %lastMode = "Diffuse";
    
@@ -13,8 +15,9 @@ function toggleProbeViz(%mode)
    $Probes::showSpecularCubemaps = 0;
    $Probes::showDiffuseCubemaps = 0;
    $Probes::showProbeContrib = 0;
+   $Probes::showLOD = 0;
    
-   for(%i=0; %i < 4; %i++)
+   for(%i=0; %i < 5; %i++)
    {
       EVisibilityProbesOptions.checkItem(%i, false);
    }
@@ -42,12 +45,16 @@ function toggleProbeViz(%mode)
       case "Contribution":
          $Probes::showProbeContrib = 1;
          EVisibilityProbesOptions.checkItem(1, true);
+      case "LOD":
+         //Red = high LOD (IBL cubemaps), green = blending between IBL and ambient color, blue = low LOD (ambient color)
+         $Probes::showLOD = 1;
+         EVisibilityProbesOptions.checkItem(2, true);
       case "Specular":
          $Probes::showSpecularCubemaps = 1;
-         EVisibilityProbesOptions.checkItem(2, true);
+         EVisibilityProbesOptions.checkItem(3, true);
       case "Diffuse":
          $Probes::showDiffuseCubemaps = 1;
-         EVisibilityProbesOptions.checkItem(3, true);
+         EVisibilityProbesOptions.checkItem(4, true);
    }
    
    //forces the forward materials to get dis viz properly
@@ -67,5 +74,5 @@ function toggleProbeLiveUpdates()
       
    $Probes::liveUpdates = !$Probes::liveUpdates;
    
-   EVisibilityProbesOptions.checkItem(5, $Probes::liveUpdates);
+   EVisibilityProbesOptions.checkItem(6, $Probes::liveUpdates);
 }

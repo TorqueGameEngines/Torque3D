@@ -89,6 +89,36 @@ singleton CustomMaterial( AL_VectorLightMaterial )
    pixVersion = 3.0;
 };
 
+// Vector light blended by the light buffer's alpha, which holds the interior sun darkening that the probe pass writes
+// there. Alpha is then cleared, so nothing after the sun sees it.
+singleton GFXStateBlockData( AL_VectorLightInteriorAlphaState : AL_VectorLightState )
+{
+   blendSrc = GFXBlendInvDestAlpha;
+   blendDest = GFXBlendOne;
+
+   colorWriteAlpha = true;
+   separateAlphaBlendDefined = true;
+   separateAlphaBlendEnable = true;
+   separateAlphaBlendSrc = GFXBlendZero;
+   separateAlphaBlendDest = GFXBlendZero;
+   separateAlphaBlendOp = GFXBlendOpAdd;
+};
+
+singleton CustomMaterial( AL_VectorLightMaterial_InteriorAlpha )
+{
+   shader = AL_VectorLightShader;
+   stateBlock = AL_VectorLightInteriorAlphaState;
+
+   sampler["deferredBuffer"] = "#deferred";
+   sampler["shadowMap"] = "$dynamiclight";
+   sampler["colorBuffer"] = "#color";
+   sampler["matInfoBuffer"] = "#matinfo";
+
+   target = "AL_FormatToken";
+
+   pixVersion = 3.0;
+};
+
 //------------------------------------------------------------------------------
 
 // Convex-geometry light states
@@ -307,6 +337,7 @@ singleton ShaderData( PFX_ReflectionProbeArray )
    samplerNames[5] = "$irradianceCubemapAR";
    samplerNames[6] = "$WetnessTexture";
    samplerNames[7] = "$ssaoMask";
+   samplerNames[8] = "$probeAtlas"; // the low LOD atlas
 
    pixVersion = 2.0;
 };  
@@ -337,4 +368,5 @@ singleton GFXStateBlockData( PFX_ReflectionProbeArrayStateBlock )
    samplerStates[5] = SamplerClampLinear;
    samplerStates[6] = SamplerWrapPoint;
    samplerStates[7] = SamplerClampPoint;
+   samplerStates[8] = SamplerClampPoint; // probeAtlas
 };

@@ -27,6 +27,8 @@
 //globals
 uniform float maxProbeDrawDistance;
 uniform int isCapturing;
+//How much of a light's diffuse term survives in full shadow while a probe capture renders
+uniform float captureLightFloor;
 #ifndef TORQUE_SHADERGEN
 uniform float3 eyePosWorld;
 
@@ -65,9 +67,6 @@ uniform float4 albedo;
 #define DEBUGVIZ_CONTRIB 0
 #endif
 
-#ifndef CAPTURE_LIGHT_FLOOR
-#define CAPTURE_LIGHT_FLOOR 0.04
-#endif
 
 inline float3 getDistanceVectorToPlane( float3 origin, float3 direction, float4 plane )
 {
@@ -258,7 +257,7 @@ float3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 
 float3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float shadow)
 {
-   float lightfloor = CAPTURE_LIGHT_FLOOR;
+   float lightfloor = captureLightFloor;
    if(isCapturing != 1)
       lightfloor = 0.0;
         
@@ -273,7 +272,7 @@ float3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, float
 
 float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float shadow)
 {
-   float lightfloor = CAPTURE_LIGHT_FLOOR;
+   float lightfloor = captureLightFloor;
    if(isCapturing != 1)
       lightfloor = 0.0;
       
@@ -290,7 +289,7 @@ float3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, float3 l
 
 float3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, float3 lightColor, float lightIntensity, float radius, float3 lightDir, float2 lightSpotParams, float shadow)
 {
-   float lightfloor = CAPTURE_LIGHT_FLOOR;
+   float lightfloor = captureLightFloor;
    if(isCapturing != 1)
       lightfloor = 0.0;
       
@@ -414,7 +413,63 @@ float defineBoxSpaceInfluence(float3 wsPosition, float4x4 worldToObj, float atte
    return saturate(smoothstep(baseVal, (baseVal-attenuation/2), dist));
 }
 
-// Box Projected IBL Lighting
+//A probe's entry in the atlas
+struct ProbeInfo
+{
+   float3 ambientCol;
+   float4x4 xform;
+   float3 position;
+   int shape;
+   float radius;
+   float atten;
+   int flags;
+};
+
+//If a worldspace position is inside a probeInfo's bounds
+bool probeInfoContains(TORQUE_SAMPLER2D(atlasTex), int row, float3 wsPosition)
+{
+   float3 boundsMin = TORQUE_TEX2D_PIX(atlasTex, int2(0, row)).xyz;
+   float3 boundsMax = TORQUE_TEX2D_PIX(atlasTex, int2(1, row)).xyz;
+   return all(wsPosition >= boundsMin) && all(wsPosition <= boundsMax);
+}
+
+//Gets the bulk of a probe's info from the atlas
+ProbeInfo loadProbeInfoVolume(TORQUE_SAMPLER2D(atlasTex), int row)
+{
+   ProbeInfo probeInfo = (ProbeInfo)0;
+
+   probeInfo.xform = float4x4(
+      TORQUE_TEX2D_PIX(atlasTex, int2(2, row)),
+      TORQUE_TEX2D_PIX(atlasTex, int2(3, row)),
+      TORQUE_TEX2D_PIX(atlasTex, int2(4, row)),
+      float4(0, 0, 0, 1));
+
+   float4 positionShape = TORQUE_TEX2D_PIX(atlasTex, int2(5, row));
+   probeInfo.position = positionShape.xyz;
+   probeInfo.shape = (int)(positionShape.w + 0.5);
+
+   float4 params = TORQUE_TEX2D_PIX(atlasTex, int2(6, row));
+   probeInfo.radius = params.x;
+   probeInfo.atten = params.y;
+
+   return probeInfo;
+}
+
+void loadProbeInfoColor(TORQUE_SAMPLER2D(atlasTex), int row, inout ProbeInfo probeInfo)
+{
+   float4 ambientFlags = TORQUE_TEX2D_PIX(atlasTex, int2(7, row));
+   probeInfo.ambientCol = ambientFlags.rgb;
+   probeInfo.flags = (int)asuint(ambientFlags.a);
+}
+
+float defineProbeInfoInfluence(float3 wsPosition, ProbeInfo probeInfo)
+{
+   if (probeInfo.shape == 0)
+      return defineBoxSpaceInfluence(wsPosition, probeInfo.xform, probeInfo.atten);
+
+   return defineSphereSpaceInfluence(wsPosition, probeInfo.position, probeInfo.radius, probeInfo.atten);
+}
+
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
 // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
 float3 boxProject(float3 wsPosition, float3 wsReflectVec, float4x4 worldToObj, float3 refScale, float3 refPosition)
@@ -498,7 +553,8 @@ float4 computeForwardProbes(Surface surface,
       else
          contribution[i] = 0.0;
 
-      if (inRefScaleArray[i].w>0)
+      //refScaleArray.w holds flags: bit 0 = wetness allowed, bit 1 = Interior probe
+      if ((((int)(inRefScaleArray[i].w + 0.5)) & 1) != 0)
          wetAmmout += contribution[i];
       else
          wetAmmout -= contribution[i];

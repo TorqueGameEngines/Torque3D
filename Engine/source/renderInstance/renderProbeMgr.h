@@ -55,9 +55,13 @@
 #ifndef REFLECTIONPROBE_H
 #include "T3D/lighting/reflectionProbe.h"
 #endif
+#ifndef _ENGINEAPI_H_
+#include "console/engineAPI.h"
+#endif
 
 class PostEffect;
 class ReflectionProbe;
+class SubScene;
 
 /// <summary>
 /// A simple container for a ReflectionProbe's ProbeInfo and index for it's associated
@@ -68,6 +72,11 @@ struct ProbeRenderInst
    ReflectionProbe::ProbeInfo* mProbeInfo;
 
    U32 mCubemapIndex;
+
+   /// <summary>
+   /// Score based on camera proximity.
+   /// </summary>
+   F32 mPriorityScore;
 
 public:
 
@@ -128,6 +137,24 @@ struct ProbeDataSet
    Vector<Point4F> probeConfigArray;
 
    Vector<MatrixF> probeWorldToObjArray;
+
+   /// <summary>
+   /// The low LOD probes are not in the arrays above. Each is one entry here instead: x = row in the low LOD atlas
+   /// texture, y = distance fade (0-1)
+   /// </summary>
+   Vector<Point4F> lowLodList;
+   U32 lowLodProbeCount;
+
+   /// <summary>
+   /// For each high LOD probe, x = the atlas row it hands over to as it nears the draw distance (-1 if it has none)
+   /// </summary>
+   Vector<Point4F> highLodAtlasRow;
+
+   /// <summary>
+   /// The probes getBestProbes() picked to render from their cubemaps, in array order. Low LOD skips these
+   /// </summary>
+   Vector<ReflectionProbe::ProbeInfo*> renderedProbes;
+
    S32 skyLightIdx;
    bool skyLightDamp;
    U32 effectiveProbeCount;
@@ -141,6 +168,9 @@ struct ProbeDataSet
       probeConfigArray.setSize(0);
 
       probeWorldToObjArray.setSize(0);
+      lowLodList.setSize(0);
+      highLodAtlasRow.setSize(0);
+      lowLodProbeCount = 0;
       skyLightIdx = -1;
       effectiveProbeCount = 0;
       maxProbeCount = 0;
@@ -158,8 +188,85 @@ struct ProbeDataSet
 
       probeWorldToObjArray.setSize(maxProbeCount);
 
+      lowLodProbeCount = 0;
       effectiveProbeCount = 0;
    }
+};
+
+/// <summary>
+/// One probe's atlas record, which is also its row in the atlas texture.
+/// It's packed so that we can do early out tests in the shader like bounds checking with the fewest
+/// reads possible to keep cost low per probe we do as low-LOD rendering
+/// If the layout's changed, update sProbeAtlasVersion.
+/// </summary>
+#pragma pack(push, 4)
+struct ProbeAtlasRecord
+{
+   enum Flags
+   {
+      CanDamp = BIT(0),
+      Interior = BIT(1) //If flagged, we'll blend out the sun's light for the probe's influence area
+   };
+
+   //Texels 0-1: the bounds of the probe's influence
+   Point3F boundsMin = Point3F::Zero;
+   F32 reserved0 = 0;
+   Point3F boundsMax = Point3F::Zero;
+   F32 reserved1 = 0;
+
+   //Texels 2-4: ProbeInfo::mTransform
+   F32 worldToObj[3][4] = {};
+
+   //Texel 5
+   Point3F position = Point3F::Zero;
+   F32 shapeType = 0;
+
+   //Texel 6
+   F32 radius = 0;
+   F32 atten = 0;
+   U32 persistentProbeId = 0;
+   U32 reserved2 = 0;
+
+   //Texel 7
+   F32 ambient[3] = {};         //linear ambient average color
+   U32 flags = 0;
+
+   //Texels 8-9, only read on the CPU
+   Point3F refOffset = Point3F::Zero;
+   F32 reserved3 = 0;
+   Point3F refScale = Point3F::Zero;
+   F32 reserved4 = 0;
+
+   Box3F getBounds() const { return Box3F(boundsMin, boundsMax); }
+};
+#pragma pack(pop)
+
+/// <summary>
+/// Header stored in row 0 of every probe atlas file. It is copied over the start of that row
+/// </summary>
+#pragma pack(push, 4)
+struct ProbeAtlasHeader
+{
+   U32 fileId = 0;      //sProbeAtlasFileId
+   U32 version = 0;     //sProbeAtlasVersion
+   U32 bakeStamp = 0;   //Platform::getTime() when atlas was updated
+   U32 count = 0;       //number of probes
+};
+#pragma pack(pop)
+
+//Atlas file: a GFXFormatR32G32B32A32F texture of ProbeAtlasRecord rows, after a header row
+static const U32 sProbeAtlasFileId = 0x41425250; //'PRBA'
+static const U32 sProbeAtlasVersion = 1;
+static const U32 sProbeAtlasRowBytes = sizeof(ProbeAtlasRecord);
+static const U32 sProbeAtlasRowTexels = sProbeAtlasRowBytes / 16;
+
+/// <summary>
+/// A low LOD probe being considered for this frame: its row in the low LOD atlas and its distance from the camera
+/// </summary>
+struct LowLodProbeCandidate
+{
+   U32 row;
+   F32 distance;
 };
 
 //**************************************************************************
@@ -170,24 +277,47 @@ class RenderProbeMgr : public RenderBinManager
    typedef RenderBinManager Parent;
 
 public:
-   //maximum number of allowed probes
-   static const U32 PROBE_MAX_COUNT = 340;
-   //maximum number of rendered probes per frame adjust as needed
-   static const U32 PROBE_MAX_FRAME = 8;
-   //number of slots to allocate at once in the cubemap array
-   static const U32 PROBE_ARRAY_SLOT_BUFFER_SIZE = 5;
+   enum PublicConstants {
+      //Default max number of rendered high-LOD probes per frame
+      DefaultMaxProbePerFrame = 8,
+      //Default max size of the high-LOD slot pool
+      DefaultMaxHighLodSlots = 32,
 
-   //These dictate the default resolution size for the probe arrays
-   static const GFXFormat PROBE_FORMAT = GFXFormatR16G16B16A16F;// GFXFormatR8G8B8A8;// when hdr fixed GFXFormatR16G16B16A16F; look into bc6h compression
-   static const U32 INVALID_CUBE_SLOT = U32_MAX;
+      //These dictate the default resolution size for the probe arrays
+      ProbeFormat = GFXFormatR16G16B16A16F,// GFXFormatR8G8B8A8 for non-HDR; look into bc6h compression
+      InvalidCubeSlot = U32_MAX
+   };
 
    static F32 smMaxProbeDrawDistance;
-   static S32 smMaxProbesPerFrame;
+
+   //The requested number of high LOD probes per frame. 
+   static S32 smMaxHighProbesPerFrame;
    static S32 smProbeBakeResolution;
+
+   //Size of the high-LOD slot pool. Read once in onAdd(), as the arrays are allocated at this size and never grow
+   static S32 smMaxHighLodSlots;
+
+   //Milliseconds between progress reports while a bake runs
+   static S32 smBakeProgressIntervalMS;
+
+   //The requested number of low LOD probes (lit from their baked ambient color) per frame, on top of the high LOD ones. Use
+   //getMaxLowLodProbes() for the count in effect, which is held to what the shader supports. It is also a shader array
+   //size, so changing it recompiles the probe shader
+   static S32 smMaxLowLodProbes;
+
+   //Distance from the camera to the probe's volume past which low LOD probes fade out completely
+   static F32 smMaxLowLodProbeDrawDistance;
+
+   //How much of the sun is left inside an interior probe once its shadows have faded out (0 = none, 1 = full sun)
+   static F32 smInteriorSunResidual;
+
+   //Diffuse light floor a probe capture gives every light even in full shadow
+   static F32 smCaptureLightFloor;
+
 private:
    /// <summary>
    /// List of registered probes. These are not necessarily rendered in a given frame
-   /// but the Probe Manager is aware of them and they have cubemap array slots allocated
+   /// but the Probe Manager is aware of them. They are given a cubemap slot depending on scoring
    /// </summary>
    Vector<ProbeRenderInst>    mRegisteredProbes;
 
@@ -230,17 +360,9 @@ private:
    U32 mCubeMapCount;
 
    /// <summary>
-   /// The number of allocated slots for the array pair. Rather than adding slots one at a time to the arrays
-   /// We allocate in chunks so we don't have to resize/rebuild the arrays as often
+   /// List indicating if a given high-LOD slot is currently occupied by sufficiently scoring probe.
    /// </summary>
-   U32 mCubeSlotCount;
-
-   /// <summary>
-   /// List indicating if a given allocated slot is actually in use.
-   /// Due to the editor these may be mixed around as probes are added and deleted
-   /// </summary>
-   /// <returns></returns>
-   bool mCubeMapSlots[PROBE_MAX_COUNT];
+   Vector<bool> mCubeMapSlots;
 
    /// <summary>
    /// The prefilter cubemap array
@@ -290,6 +412,60 @@ private:
    /// </summary>
    bool mUseHDRCaptures;
 
+   /// <summary>
+   /// State of an bake. WaitingForGhosts runs from the SubScene load until the client ghosts
+   /// of the probes exist, Ready is that having happened and the loop being queued, and Running is the loop baking the probes
+   /// </summary>
+   enum BakeState
+   {
+      BakeIdle,
+      BakeWaitingForGhosts,
+      BakeReady,
+      BakeRunning
+   };
+
+   BakeState mBakeState;
+   U32 mBakeWaitStartMS;
+
+   /// <summary>
+   /// The server probes being baked.
+   /// </summary>
+   Vector<SimObjectPtr<ReflectionProbe> > mBakeProbes;
+
+   U32 pendingGhostCount();
+   void beginBakeRun();
+   void finishBake(bool success);
+   void onSceneGhostingDone(NetConnection* conn);
+
+   /// <summary>
+   /// Timestamp when we last updated probe priorities, to avoid reruns in a frame
+   /// </summary>
+   U32  mLastPriorityUpdateMS;
+
+   /// <summary>
+   /// The root scene's probe atlas roster
+   /// </summary>
+   Vector<ProbeAtlasRecord> mRootAtlasRoster;
+
+   /// <summary>
+   /// Level assetId the client was told about at level start, used to look up the atlas
+   /// </summary>
+   StringTableEntry mLevelAssetId = NULL;
+
+   /// <summary>
+   /// Each loaded SubScene's roster, keyed to that SubScene instance
+   /// </summary>
+   Map<SubScene*, Vector<ProbeAtlasRecord> > mSubSceneAtlasRosters;
+
+   GFXTexHandle mLowLodAtlas;
+   bool mLowLodAtlasDirty;
+
+   /// <summary>
+   /// The first row of each roster in the low LOD atlas (a roster's probe r is in row base + r)
+   /// </summary>
+   U32 mLowLodAtlasRootBase;
+   Map<SubScene*, U32> mLowLodAtlasSubSceneBase;
+
 protected:
    /// The current active light manager.
    static RenderProbeMgr* smProbeManager;
@@ -302,14 +478,14 @@ protected:
    /// Simple utility function that finds the next free cubemap slot for the cubemap array
    /// </summary>
    /// <returns>U32 index of next available slot</returns>
-   U32 _findNextEmptyCubeSlot()
+   U32 findNextEmptyCubeSlot()
    {
-      for (U32 i = 0; i < PROBE_MAX_COUNT; i++)
+      for (U32 i = 0; i < mCubeMapSlots.size(); i++)
       {
          if (!mCubeMapSlots[i])
             return i;
       }
-      return INVALID_CUBE_SLOT;
+      return InvalidCubeSlot;
    }
 
    /// <summary>
@@ -322,7 +498,6 @@ protected:
    {
       for (U32 i = 0; i < mRegisteredProbes.size(); i++)
       {
-         auto asd = mRegisteredProbes[i];
          if (mRegisteredProbes[i].mProbeInfo == probeInfo)
          {
             return &mRegisteredProbes[i];
@@ -370,17 +545,15 @@ public:
    void getBestProbes(const Point3F& objPosition, ProbeDataSet* probeDataSet);
 
    /// <summary>
-   /// This function adds a ReflectionProbe to the registered list and also allocates
-   /// a slot in the cubemap array pair for its use
+   /// Registers a probe to the manager.
    /// </summary>
-   /// <param name="probeInfo">The probe info to be registered to the bin</param>
+   /// <param name="probeInfo">The probe info to be registered</param>
    void registerProbe(ReflectionProbe::ProbeInfo* probeInfo);
 
    /// <summary>
-   /// This function removes the ReflectionProbe from the registered list, and marks it's cubemap
-   /// array slots as unused, allowing them to be freed.
+   /// Removes the ReflectionProbe from the registered list, releasing its high-LOD slot first if it held one.
    /// </summary>
-   /// <param name="probeInfo">The probe info to be un-registered to the bin</param>
+   /// <param name="probeInfo">The probe info to be un-registered</param>
    void unregisterProbe(ReflectionProbe::ProbeInfo* probeInfo);
 
    /// <summary>
@@ -392,6 +565,77 @@ public:
    /// </summary>
    /// <param name="probe">The ProbeInfo being submitted to be rendered</param>
    void submitProbe(ReflectionProbe::ProbeInfo* probe);
+
+   /// <summary>
+   /// Acquires a high-LOD slot for the probeInfo if it doesn't already have one.
+   /// Replaces the lowest-scoring existing slot if no slots are free.
+   /// Returns true if the probeInfo has a slot.
+   /// </summary>
+   bool acquireSlot(ReflectionProbe::ProbeInfo* probeInfo);
+
+   /// <summary>
+   /// Frees probeInfo's high-LOD slot, if it holds one.
+   /// </summary>
+   void releaseSlot(ReflectionProbe::ProbeInfo* probeInfo);
+
+   /// <summary>
+   /// Picks the best-scoring probes for high-LOD slots. 
+   /// </summary>
+   void updateHighLodSlots();
+
+   /// <summary>
+   /// Updates the scores for all candidate probes.
+   /// Returns false if it had already run this frame, or this isn't the primary view pass
+   /// </summary>
+   bool updateProbeScores(const SceneRenderState* state);
+
+   /// <summary>
+   /// Returns true for the primary client camera view, which is used to dictate high-LOD scoring/slot assigments.
+   /// </summary>
+   static bool isPrimaryView(const SceneRenderState* state);
+
+   /// <summary>
+   /// The number of high LOD probes per frame in effect
+   /// </summary>
+   static U32 getMaxHighLodProbes();
+   static U32 getMaxLowLodProbes();
+
+   /// Weight of a low LOD probe at distance from the camera: 1 up close, easing to 0 at smMaxLowLodProbeDrawDistance
+   static F32 lowLodDistanceFade(F32 distance);
+
+   static U32 copyRosterRows(const Vector<ProbeAtlasRecord>& roster, U8* data, U32 firstRow, U32 capacity);
+   static S32 QSORT_CALLBACK lowLodCandidateCmp(const LowLodProbeCandidate* a, const LowLodProbeCandidate* b);
+
+   /// <summary>
+   /// Picks the nearest in-view roster entries to light from their ambient color, up to getMaxLowLodProbes(), into
+   /// probeDataSet's low LOD list. Probes drawn from cubemaps this frame are skipped
+   /// </summary>
+   void gatherLowLodProbes(const SceneRenderState* state, ProbeDataSet* probeDataSet);
+
+   /// <summary>
+   /// Gives each high LOD probe drawn this frame its atlas row and the blend that eases it to its ambient color
+   /// with distance
+   /// </summary>
+   void applyHighLodSwitch(const Point3F& cameraPosition, ProbeDataSet* probeDataSet);
+
+   /// <summary>
+   /// Finds a loaded atlas roster entry (root or any SubScene) by its persistentProbeId hash. NULL if none
+   /// </summary>
+   const ProbeAtlasRecord* findRosterRecord(U32 persistentProbeId) const;
+
+   /// <summary>
+   /// Finds the row a loaded atlas roster entry has in the low LOD atlas texture, by its persistentProbeId hash.
+   /// -1 if none
+   /// </summary>
+   S32 findRosterRow(U32 persistentProbeId) const;
+
+   /// <summary>
+   /// The low LOD atlas: one texture holding a row for every probe in the root and SubScene rosters, which only
+   /// changes when a roster does, not when the probes picked for a frame do. Rebuilt (when needed) by render().
+   /// </summary>
+   void markLowLodAtlasDirty() { mLowLodAtlasDirty = true; }
+   void buildLowLodAtlas();
+   bool handleGFXEvent(GFXDevice::GFXDeviceEventType event);
 
    /// <summary>
    /// Gets the PostEffect used by the bin for rendering the probe array in deferred
@@ -420,6 +664,67 @@ public:
    /// Runs the cubemap bake on all probes in the current scene
    /// </summary>
    void bakeProbes();
+
+   /// <summary>
+   /// Bakes every probe in the scene. For SubScemes, tt force loads them, then waits for the client ghosts
+   /// of their probes. Once ghosting is completed, the actual bake runs.
+   ///Returns false if a bake is already running or there is no scene somehow
+   /// </summary>
+   bool startBakeProbes();
+
+   /// <summary>
+   /// Stops a bake started, and releases any SubScenes it loaded. Probes already baked stay baked
+   /// </summary>
+   void cancelBake();
+
+   bool isBaking() const { return mBakeState != BakeIdle; }
+
+   /// <summary>
+   /// Runs the bake loop of a bake, once its ghosts have ghosted. Called after the ghosting is done.
+   /// </summary>
+   void runBake();
+
+   DECLARE_CALLBACK(void, onProbeBakeProgress, (U32 done, U32 total));
+   DECLARE_CALLBACK(void, onProbeBakeComplete, (bool success));
+
+   /// <summary>
+   /// Writes out every baked probe's data to an atlas file, respective its owner. Root level asset has its own, and then any given subscene has its own as well.
+   /// </summary>
+   void serializeProbeAtlas();
+
+   /// <summary>
+   /// Prints a probe's row from the loaded atlas rosters (root scene or any SubScene)
+   /// </summary>
+   void dumpProbeAtlasRow(ReflectionProbe* probe);
+
+   /// <summary>
+   /// Loads the root scene's probe atlas into the roster.
+   /// </summary>
+   bool loadLevelAtlas(const char* levelAssetId = "");
+   void clearLevelAtlas() { mRootAtlasRoster.clear(); mLevelAssetId = NULL; markLowLodAtlasDirty(); }
+
+   /// <summary>
+   /// The root level atlas file path
+   /// </summary>
+   String rootAtlasPath() const;
+
+   /// <summary>
+   /// Loads/unloads a SubScene's probe atlas into the roster
+   /// </summary>
+   bool loadSubSceneAtlas(SubScene* subScene);
+   void unloadSubSceneAtlas(SubScene* subScene);
+
+   /// <summary>
+   /// Total roster entries across the root scene and every loaded SubScene
+   /// </summary>
+   U32 getAtlasRosterCount();
+
+   static void fillProbeAtlasRecord(ProbeAtlasRecord& record, ReflectionProbe* clientProbe);
+   static bool readProbeAtlasFile(const String& path, Vector<ProbeAtlasRecord>& outRoster, ProbeAtlasHeader* outHeader = NULL);
+   static void writeProbeAtlasFile(const String& path, const Vector<ProbeAtlasRecord>& records);
+   static void collectAtlasProbes(Vector<ReflectionProbe*>& outRootProbes, Map<SubScene*, Vector<ReflectionProbe*> >& outPartitions);
+   static const ProbeAtlasRecord* findAtlasRecord(const Vector<ProbeAtlasRecord>& records, U32 persistentProbeId);
+   static U32 buildAtlasPartitionRecords(const String& path, const Vector<ReflectionProbe*>& serverProbes, Vector<ProbeAtlasRecord>& outRecords);
 
    /// <summary>
    /// Returns the active Probe Manager.

@@ -500,6 +500,7 @@ PostEffect::PostEffect()
       mMatCameraToScreenSC(NULL),
       mMatScreenToCameraSC(NULL),
       mIsCapturingSC(NULL),
+      mCaptureLightFloorSC(NULL),
       mMipCap(1)
 {
    dMemset( mTexSRGB, 0, sizeof(bool) * NumTextures);
@@ -809,10 +810,15 @@ void PostEffect::_setupConstants( const SceneRenderState *state )
       mMatCameraToScreenSC = mShader->getShaderConstHandle("$cameraToScreen");
       mMatScreenToCameraSC = mShader->getShaderConstHandle("$screenToCamera");
       mIsCapturingSC = mShader->getShaderConstHandle("$isCapturing");
+      mCaptureLightFloorSC = mShader->getShaderConstHandle("$captureLightFloor");
    }
 
+   const bool isCapturing = state->isCapturing();
    if (mIsCapturingSC->isValid())
-      mShaderConsts->set(mIsCapturingSC, (S32)state->isCapturing());
+      mShaderConsts->set(mIsCapturingSC, (S32)isCapturing);
+
+   if (isCapturing && mCaptureLightFloorSC->isValid())
+      mShaderConsts->set(mCaptureLightFloorSC, state->captureLightFloor());
 
    // Set up shader constants for source image size
    if ( mRTSizeSC->isValid() )

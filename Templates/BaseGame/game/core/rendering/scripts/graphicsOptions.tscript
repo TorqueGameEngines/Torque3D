@@ -563,6 +563,8 @@ new SimGroup(VideoSettingsGroup)
             key["$pref::useLightFade"] = true;
             key["$pref::lightFadeStart"] = 10;
             key["$pref::lightFadeEnd"] = 25;
+            key["$pref::ReflectionProbes::maxHighProbesPerFrame"] = 4;
+            key["$pref::ReflectionProbes::maxLowLODProbes"] = 8;
 
          };
          new ArrayObject()
@@ -576,6 +578,8 @@ new SimGroup(VideoSettingsGroup)
             key["$pref::useLightFade"] = true;
             key["$pref::lightFadeStart"] = 25;
             key["$pref::lightFadeEnd"] = 50;
+            key["$pref::ReflectionProbes::maxHighProbesPerFrame"] = 8;
+            key["$pref::ReflectionProbes::maxLowLODProbes"] = 16;
          };
          new ArrayObject()
          {
@@ -588,6 +592,8 @@ new SimGroup(VideoSettingsGroup)
             key["$pref::useLightFade"] = true;
             key["$pref::lightFadeStart"] = 50;
             key["$pref::lightFadeEnd"] = 75;
+            key["$pref::ReflectionProbes::maxHighProbesPerFrame"] = 12;
+            key["$pref::ReflectionProbes::maxLowLODProbes"] = 28;
          };
          new ArrayObject()
          {
@@ -600,6 +606,8 @@ new SimGroup(VideoSettingsGroup)
             key["$pref::useLightFade"] = false;
             key["$pref::lightFadeStart"] = 50;
             key["$pref::lightFadeEnd"] = 75;
+            key["$pref::ReflectionProbes::maxHighProbesPerFrame"] = 16;
+            key["$pref::ReflectionProbes::maxLowLODProbes"] = 32;
          };
       };
 

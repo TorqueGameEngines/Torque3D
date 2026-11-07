@@ -33,6 +33,7 @@ SceneGroup::SceneGroup()
 {
    // Not ghosted unless we're editing
    mNetFlags.clear(Ghostable | ScopeAlways);
+   mNetFlags.set(SpecialScope);
 
    mTypeMask |= StaticObjectType;
 }

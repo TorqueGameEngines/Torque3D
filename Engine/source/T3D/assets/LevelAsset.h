@@ -106,6 +106,8 @@ public:
    inline StringTableEntry getForestPath(void) const { return mForestPath; };
    inline StringTableEntry getNavmeshPath(void) const { return mNavmeshPath; };
 
+   virtual String getProbeAtlasPath(void) const;
+
    StringTableEntry        getPreviewImagePath(void) const;
 
    void                    setEditorFile(const char* pEditorFile);

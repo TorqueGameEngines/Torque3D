@@ -41,6 +41,9 @@ public:
    void _render( RenderPassManager* renderPass, const SceneRenderState *diffuseState ) override;
    void setShaderParameters(GFXShaderConstBuffer* params, LightingShaderConstants* lsc) override;
 
+   /// The eye space distance where the shadows start to fade out (x), and 1 / the length of that fade (y)
+   Point2F getFadeStartLength() const;
+
    /// Used to scale TSShapeInstance::smDetailAdjust to have
    /// objects lod quicker when in the PSSM shadow.
    /// @see TSShapeInstance::smDetailAdjust

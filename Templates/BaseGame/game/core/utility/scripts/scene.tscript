@@ -20,3 +20,19 @@ function callGamemodeFunction(%gameModeFuncName, %arg0, %arg1, %arg2, %arg3, %ar
    
    return %validGameModeCall;
 }
+
+function Scene::onServerGhostingStart(%this, %conn, %pendingGhosts)
+{
+}
+
+function Scene::onServerGhostingDone(%this, %conn)
+{
+}
+
+function Scene::onClientGhostingStart(%this, %conn, %pendingGhosts)
+{
+}
+
+function Scene::onClientGhostingDone(%this, %conn)
+{
+}

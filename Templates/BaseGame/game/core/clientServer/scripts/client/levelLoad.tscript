@@ -67,6 +67,10 @@ function clientEndMission()
       ClientMissionCleanup.delete();
       
    clearClientPaths();
+
+   // We're unloading the level, so clear the atlas too
+   if (isObject(ProbeBin))
+      ProbeBin.clearLevelAtlas();
       
    // Done.
    $Client::missionRunning = false;

@@ -2,12 +2,109 @@
 #include "T3D/assets/LevelAsset.h"
 #include "T3D/gameBase/gameConnection.h"
 #include "T3D/gameMode.h"
+#include "renderInstance/renderProbeMgr.h"
+#include "platform/profiler.h"
+
+//Tells a client that objects under the scene have started being ghosted to it.
+//The root scene may not exist on the client yet when this arrives, so it is checked for
+class ClientSceneGhostingStartingEvent : public NetEvent
+{
+   typedef NetEvent Parent;
+
+public:
+   U32 mNumGhostsPending;
+
+   ClientSceneGhostingStartingEvent() : mNumGhostsPending(0) { mGuaranteeType = Guaranteed; }
+   ~ClientSceneGhostingStartingEvent() {}
+
+   void pack(NetConnection* conn, BitStream* stream) override
+   {
+      stream->write(mNumGhostsPending);
+   }
+   void write(NetConnection* conn, BitStream* stream) override
+   {
+      pack(conn, stream);
+   }
+   void unpack(NetConnection* conn, BitStream* stream) override
+   {
+      stream->read(&mNumGhostsPending);
+   }
+
+   void process(NetConnection* conn) override
+   {
+      Scene* rootScene = Scene::getRootScene();
+      if (rootScene == NULL)
+         return;
+
+      rootScene->getClientGhostingStartSignal().trigger(conn, mNumGhostsPending);
+      rootScene->onClientGhostingStart_callback(conn, mNumGhostsPending);
+   }
+
+   DECLARE_CONOBJECT(ClientSceneGhostingStartingEvent);
+};
+
+IMPLEMENT_CO_NETEVENT_V1(ClientSceneGhostingStartingEvent);
+
+ConsoleDocClass(ClientSceneGhostingStartingEvent,
+   "@brief Event posted to a client when objects under the scene start being ghosted to it.\n\n"
+   "@internal");
+
+//Tells a client that every object the scene expects to ghost to it has been ghosted
+class ClientSceneGhostingDoneEvent : public NetEvent
+{
+   typedef NetEvent Parent;
+
+public:
+   ClientSceneGhostingDoneEvent() { mGuaranteeType = Guaranteed; }
+   ~ClientSceneGhostingDoneEvent() {}
+
+   void pack(NetConnection*, BitStream* bstream) override {}
+   void write(NetConnection*, BitStream* bstream) override {}
+   void unpack(NetConnection* /*ps*/, BitStream* bstream) override {}
+
+   void process(NetConnection* conn) override
+   {
+      Scene* rootScene = Scene::getRootScene();
+      if (rootScene == NULL)
+         return;
+
+      rootScene->getClientGhostingDoneSignal().trigger(conn);
+      rootScene->onClientGhostingDone_callback(conn);
+   }
+
+   DECLARE_CONOBJECT(ClientSceneGhostingDoneEvent);
+};
+IMPLEMENT_CO_NETEVENT_V1(ClientSceneGhostingDoneEvent);
+
+ConsoleDocClass(ClientSceneGhostingDoneEvent,
+   "@brief Event posted to a client when everything under the scene that is expected to ghost to it has.\n\n"
+   "@internal");
 
 Scene * Scene::smRootScene = NULL;
 Vector<Scene*> Scene::smSceneList;
 
-IMPLEMENT_CALLBACK(Scene, onSaving, void, (const char* fileName), (fileName),
-   "@brief Called when a scene is saved to allow scenes to special-handle prepwork for saving if required.\n\n"
+IMPLEMENT_CALLBACK(Scene, onServerGhostingStart, void, (NetConnection* conn, U32 pendingGhosts), (conn, pendingGhosts),
+   "@brief Called when a scene has detected that there are new objects in the scene heirarchy being ghosted down to a client.\n"
+   "This generally happens because of prefabs, subScenes or SceneGroups being created and prepped to ghost down.\n"
+   "This callback specifically for the server to respond to ghosting starting being sent to a client.\n\n"
+   "@param conn The NetConnection ghosts are being sent to.\n"
+   "@param pendingGhosts The number of ghosted objects that will be transmitted down to client.\n");
+IMPLEMENT_CALLBACK(Scene, onServerGhostingDone, void, (NetConnection* conn), (conn),
+   "@brief Called when a scene has finished ghosted down new objects in the scene heirarchy to a client.\n"
+   "This callback specifically for the server to respond to ghosting finshing being sent to a client.\n\n"
+   "@param conn The NetConnection ghosts are being sent to.\n");
+IMPLEMENT_CALLBACK(Scene, onClientGhostingStart, void, (NetConnection* conn, U32 pendingGhosts), (conn, pendingGhosts),
+   "@brief Called when a scene has detected that there are new objects in the scene heirarchy being ghosted down to a client.\n"
+   "This generally happens because of prefabs, subScenes or SceneGroups being created and prepped to ghost down.\n"
+   "This callback specifically for the client to respond to ghosting starting being sent from the server.\n\n"
+   "@param conn The NetConnection ghosts are being sent to.\n"
+   "@param pendingGhosts The number of ghosted objects that will be transmitted down to client.\n");
+IMPLEMENT_CALLBACK(Scene, onClientGhostingDone, void, (NetConnection* conn), (conn),
+   "@brief Called when a scene has finished ghosted down new objects in the scene heirarchy to a client.\n"
+   "This callback specifically for the client to respond to ghosting finishing being sent from the server.\n\n"
+   "@param conn The NetConnection ghosts are being sent to.\n");
+
+IMPLEMENT_CALLBACK(Scene, onSaving, void, (const char* fileName), (fileName),   "@brief Called when a scene is saved to allow scenes to special-handle prepwork for saving if required.\n\n"
 
    "@param fileName The level file being saved\n");
 
@@ -68,6 +165,10 @@ void Scene::onRemove()
       mGameModesList[i]->onSceneUnloaded_callback();
    }
 
+   //The level's probe atlas roster goes with the root scene
+   if (this == getRootScene())
+      PROBEMGR->clearLevelAtlas();
+
    Parent::onRemove();
 
    smSceneList.remove(this);
@@ -78,6 +179,10 @@ void Scene::onPostAdd()
 {
    if (isMethod("onPostAdd"))
       Con::executef(this, "onPostAdd");
+
+   //Only the root scene owns the level's probe atlas. $pref::ReflectionProbes::CurrentLevelPath is already set by now
+   if (this == getRootScene())
+      PROBEMGR->loadLevelAtlas();
 
    for (U32 i = 0; i < mGameModesList.size(); i++)
    {
@@ -185,12 +290,17 @@ void Scene::processTick()
    if (!isServerObject())
       return;
 
+   SimGroup* pClientGroup = Sim::getClientGroup();
+
+   //Only the root scene tracks ghosting, once per tick for each client
+   if (this == getRootScene())
+      updateGhostingStatus(pClientGroup);
+
    //iterate over our subscenes to update their status of loaded or unloaded based on if any control objects intersect their bounds
    for (U32 i = 0; i < mSubScenes.size(); i++)
    {
       bool hasClients = false;
 
-      SimGroup* pClientGroup = Sim::getClientGroup();
       for (SimGroup::iterator itr = pClientGroup->begin(); itr != pClientGroup->end(); itr++)
       {
          GameConnection* gc = dynamic_cast<GameConnection*>(*itr);
@@ -285,10 +395,12 @@ StringTableEntry Scene::getLevelAsset()
    query->registerObject();
 
    S32 foundAssetcount = AssetDatabase.findAssetLooseFile(query, levelFile);
-   if (foundAssetcount == 0)
-      return StringTable->EmptyString();
-   else
-      return query->mAssetList[0];
+   StringTableEntry assetId = StringTable->EmptyString();
+   if (foundAssetcount != 0)
+      assetId = query->mAssetList[0];
+
+   query->deleteObject();
+   return assetId;
 }
 
 bool Scene::saveScene(StringTableEntry fileName, const bool& saveSubScenes)
@@ -425,8 +537,149 @@ void Scene::loadAtPosition(const Point3F& position)
    }
 }
 
-DefineEngineFunction(getScene, Scene*, (U32 sceneId), (0),
-   "Get the root Scene object that is loaded.\n"
+U32 Scene::getUnghostedObjectCount(NetConnection* conn, SimObject* root)
+{
+   if (conn == NULL || !conn->isGhosting())
+      return 0;
+
+   if (root == NULL)
+      root = this;
+
+   //Only objects guaranteed to ghost to every client (Ghostable and ScopeAlways) are counted, as anything scoped by
+   //distance could stay unghosted indefinitely. SpecialScope objects are handled outside normal ghosting and are skipped
+   U32 unghostedObjects = 0;
+   for (SimGroupIterator itr(dynamic_cast<SimGroup*>(root)); *itr; ++itr)
+   {
+      NetObject* netObj = dynamic_cast<NetObject*>((*itr));
+
+      if (netObj == NULL || netObj->isSpecialScope() || !netObj->isGhostAlways())
+         continue;
+
+      if (conn->getGhostIndex(netObj) == -1)
+         unghostedObjects++;
+   }
+
+   return unghostedObjects;
+}
+
+void Scene::updateGhostingStatus(SimGroup* clientGroup)
+{
+   PROFILE_SCOPE(Scene_updateGhostingStatus);
+
+   //Drop connections that have gone away
+   for (Map<NetConnection*, GhostingStatus>::Iterator statusItr = mClientGhostingStatus.begin(); statusItr != mClientGhostingStatus.end();)
+   {
+      bool stillConnected = false;
+      for (SimGroup::iterator itr = clientGroup->begin(); itr != clientGroup->end() && !stillConnected; itr++)
+         stillConnected = (dynamic_cast<NetConnection*>(*itr) == statusItr->key);
+
+      if (stillConnected)
+      {
+         ++statusItr;
+      }
+      else
+      {
+         NetConnection* gone = statusItr->key;
+         ++statusItr;
+         mClientGhostingStatus.erase(gone);
+      }
+   }
+
+   for (SimGroup::iterator itr = clientGroup->begin(); itr != clientGroup->end(); itr++)
+   {
+      NetConnection* conn = dynamic_cast<NetConnection*>(*itr);
+      if (conn == NULL)
+         continue;
+
+      //Ensure we have tracking for this client
+      if (!mClientGhostingStatus.contains(conn))
+         mClientGhostingStatus.insert(conn, GhostingStatus::Done);
+
+      const U32 unghostedObjCount = getUnghostedObjectCount(conn);
+      if (unghostedObjCount != 0)
+      {
+         //Check if the status has changed, if so do our callbacks
+         if (mClientGhostingStatus[conn] == GhostingStatus::Done)
+         {
+            onServerGhostingStart_callback(conn, unghostedObjCount);
+
+            getServerGhostingStartSignal().trigger(conn, unghostedObjCount);
+
+            //Now inform the client
+            ClientSceneGhostingStartingEvent* event = new ClientSceneGhostingStartingEvent();
+            event->mNumGhostsPending = unghostedObjCount;
+            conn->postNetEvent(event);
+
+            mClientGhostingStatus[conn] = GhostingStatus::InProgress;
+         }
+      }
+      else if (mClientGhostingStatus[conn] == GhostingStatus::InProgress)
+      {
+         //We must've hit the end of the current run, so kick our callbacks
+         onServerGhostingDone_callback(conn);
+
+         getServerGhostingDoneSignal().trigger(conn);
+
+         //Now inform the client
+         ClientSceneGhostingDoneEvent* event = new ClientSceneGhostingDoneEvent();
+         conn->postNetEvent(event);
+
+         mClientGhostingStatus[conn] = GhostingStatus::Done;
+      }
+   }
+}
+
+SubScene* Scene::getSubScene(U32 index)
+{
+   if (index >= mSubScenes.size())
+      return NULL;
+
+   return mSubScenes[index];
+}
+
+SubScene* Scene::findOwningSubScene(SimObject* object)
+{
+   if (object == NULL)
+      return NULL;
+
+   //Walk up the SimGroup chain until a SubScene or this scene is reached
+   SimGroup* group = object->getGroup();
+   while (group != NULL && group != this)
+   {
+      SubScene* subScene = dynamic_cast<SubScene*>(group);
+      if (subScene != NULL)
+         return subScene;
+
+      group = group->getGroup();
+   }
+
+   return NULL;
+}
+
+bool Scene::loadSubScene(U32 index)
+{
+   SubScene* subScene = getSubScene(index);
+   if (subScene == NULL)
+      return false;
+
+   subScene->setPinned(true);
+   subScene->setUnloadTimeMS(-1);
+   subScene->load();
+
+   return subScene->isLoaded();
+}
+
+void Scene::releaseSubScene(U32 index)
+{
+   SubScene* subScene = getSubScene(index);
+   if (subScene == NULL)
+      return;
+
+   subScene->setPinned(false);
+   subScene->setUnloadTimeMS(Sim::getCurrentTime());
+}
+
+DefineEngineFunction(getScene, Scene*, (U32 sceneId), (0),   "Get the root Scene object that is loaded.\n"
    "@return The id of the Root Scene. Will be 0 if no root scene is loaded")
 {
    if (Scene::smSceneList.empty() || sceneId >= Scene::smSceneList.size())
@@ -482,6 +735,14 @@ DefineEngineMethod(Scene, removeDynamicObject, void, (SceneObject* sceneObj), (n
    "Removes an object from the scene's dynamic objects list.")
 {
    object->removeDynamicObject(sceneObj);
+}
+
+DefineEngineMethod(Scene, findOwningSubScene, SubScene*, (SimObject* sceneObj), (nullAsType<SimObject*>()),
+   "Finds the SubScene an object is in, by walking up its groups.\n"
+   "@param sceneObj The object to look up.\n"
+   "@return The SubScene that contains the object, or null if it is not in one.")
+{
+   return object->findOwningSubScene(sceneObj);
 }
 
 DefineEngineMethod(Scene, getObjectsByClass, String, (String className, bool checkSubScenes), ("", false),
@@ -546,8 +807,26 @@ DefineEngineMethod(Scene, save, bool, (const char* fileName, bool saveSubScenes)
    return object->saveScene(StringTable->insert(fileName), saveSubScenes);
 }
 
-DefineEngineMethod(Scene, loadAtPosition, void, (Point3F position), (Point3F::Zero),
-   "Loads any subscenes at a given point by force.\n")
+DefineEngineMethod(Scene, getSubSceneCount, S32, (), ,
+   "Gets the number of SubScenes in the scene, loaded or not.\n")
+{
+   return object->getSubSceneCount();
+}
+
+DefineEngineMethod(Scene, loadSubScene, bool, (S32 index), ,
+   "Loads the SubScene at the given index and keeps it loaded until releaseSubScene() is called.\n"
+   "@return True if the SubScene is loaded.")
+{
+   return object->loadSubScene(index);
+}
+
+DefineEngineMethod(Scene, releaseSubScene, void, (S32 index), ,
+   "Allows a SubScene loaded with loadSubScene() to unload normally again.\n")
+{
+   object->releaseSubScene(index);
+}
+
+DefineEngineMethod(Scene, loadAtPosition, void, (Point3F position), (Point3F::Zero),   "Loads any subscenes at a given point by force.\n")
 {
    object->loadAtPosition(position);
 }

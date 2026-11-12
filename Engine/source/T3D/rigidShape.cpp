@@ -245,7 +245,7 @@ RigidShapeData::RigidShapeData()
 
    minDrag = 0;
    maxDrag = 0;
-   integration = 1;
+   integration = 4;
    collisionTol = 0.1f;
    contactTol = 0.1f;
    massCenter.set(0,0,0);
@@ -874,7 +874,7 @@ void RigidShape::processTick(const Move* move)
       mDelta.rot[0] = mRigid.angPosition;
 
       // Update the physics based on the integration rate
-      S32 count = mDataBlock->integration;
+      S32 count = mDataBlock->integration + (S32)(getVelocity().lenSquared()/TickMs);
       --mWorkingQueryBoxCountDown;
 
       if (!mDisableMove)
@@ -1156,6 +1156,9 @@ void RigidShape::updatePos(F32 dt)
    bool collided = false;
    if (!mRigid.atRest && !mDisableMove)
    {
+      mRigid.preIntegrateForces(dt);
+      mRigid.clearForces();
+
       collided = updateCollision(dt);
 
       // Now that all the forces have been processed, lets
@@ -1627,12 +1630,10 @@ U32 RigidShape::packUpdate(NetConnection *con, U32 mask, BitStream *stream)
       stream->writeFlag(mask & ForceMoveMask);
 
       stream->writeCompressedPoint(mRigid.linPosition);
-      if (!stream->writeFlag(mRigid.atRest))
-      {
-         mathWrite(*stream, mRigid.angPosition);
-         mathWrite(*stream, mRigid.linMomentum);
-         mathWrite(*stream, mRigid.angMomentum);
-      }
+      stream->writeFlag(mRigid.atRest);
+      mathWrite(*stream, mRigid.angPosition);
+      mathWrite(*stream, mRigid.linMomentum);
+      mathWrite(*stream, mRigid.angMomentum);
    }
    
    if(stream->writeFlag(mask & FreezeMask))
@@ -1667,13 +1668,11 @@ void RigidShape::unpackUpdate(NetConnection *con, BitStream *stream)
       {
          mRigid.setAtRest();
       }
-      else
-      {
-         mathRead(*stream, &mRigid.angPosition);
-         mathRead(*stream, &mRigid.linMomentum);
-         mathRead(*stream, &mRigid.angMomentum);
-         mRigid.updateVelocity();
-      }
+
+      mathRead(*stream, &mRigid.angPosition);
+      mathRead(*stream, &mRigid.linMomentum);
+      mathRead(*stream, &mRigid.angMomentum);
+      mRigid.updateVelocity();
 
       if (!forceUpdate && isProperlyAdded()) 
       {

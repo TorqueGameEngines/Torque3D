@@ -112,6 +112,17 @@ void Rigid::integrate(F32 delta)
 
 }
 
+void Rigid::preIntegrateForces(F32 delta)
+{
+   // Update momentum and velocity, but don't integrate forward in time (don't move the object).
+   // This makes sure the current tick's changes in velocity, for example from gravity, are visible to the collision solver for this tick
+   angMomentum = angMomentum + torque * delta;
+   linMomentum = linMomentum + force * delta;
+   updateVelocity();
+   // This should only be called when paired with a follow-up call to integrate with the same delta,
+   // generally after collision and clearing the forces again
+}
+
 void Rigid::updateVelocity()
 {
    linVelocity.x = linMomentum.x * oneOverMass;

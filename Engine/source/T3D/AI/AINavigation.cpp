@@ -256,6 +256,11 @@ DefineEngineMethod(AIController, followObject, void, (SimObjectId obj, F32 radiu
 NavMesh* AINavigation::findNavMesh() const
 {
    GameBase* gbo = dynamic_cast<GameBase*>(mControllerRef->getAIInfo()->mObj.getPointer());
+   if (!gbo)
+   {
+      Con::errorf("AINavigation::findNavMesh: AIController not assigned to a GameBase derived object instance.");
+      return NULL;
+   }  
    // Search for NavMeshes that contain us entirely with the smallest possible
    // volume.
    NavMesh* mesh = NULL;

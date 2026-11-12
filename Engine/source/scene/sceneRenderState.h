@@ -224,6 +224,9 @@ class SceneRenderState
       bool isOtherPass() const { return mScenePassType >= SPT_Other; }
 
       bool isCapturing() const { return Con::getBoolVariable("$ReflectionProbes::Capturing", false); };
+
+      /// How much of a light's diffuse term survives in full shadow while a probe capture is rendering (see lighting.hlsl)
+      F32 captureLightFloor() const { return Con::getFloatVariable("$ReflectionProbes::CaptureLightFloor", 0.04f); }
       /// @}
 
       /// @name Render Style

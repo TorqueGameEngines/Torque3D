@@ -34,10 +34,11 @@ void main()
     vec3 N = getCubeDir(face, uv0);
     vec3 irradiance = vec3(0.0);
     
-    // tangent space calculation from origin point
-    vec3 up    = vec3(0.0, 0.0, 1.0);
-    vec3 right = cross(up, N);
-    up         = cross(N, right);
+    // tangent space calculation from origin point. If we don't do the extra check here, 
+    // then it's possible for it to collapse the values and you get darkening at the Z poles
+    vec3 up    = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+    vec3 right = normalize(cross(up, N));
+    up         = normalize(cross(N, right));
        
     float sampleDelta = 0.025;
     int nrSamples = 0;
@@ -50,7 +51,8 @@ void main()
             // tangent space to world
             vec3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N; 
 
-            irradiance += texture(environmentMap, sampleVec).rgb * cos(theta) * sin(theta);
+            //Explicit mip 0, to prevent sampleVec eating itself if the above check switches poles
+            irradiance += textureLod(environmentMap, sampleVec, 0.0).rgb * cos(theta) * sin(theta);
             nrSamples++;
         }
     }

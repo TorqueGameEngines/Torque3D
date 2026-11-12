@@ -105,6 +105,9 @@ public:
    /// light to compile in the SSAO mask.
    static bool smUseSSAOMask;
 
+   /// Interior sun darkenin. the probe pass adds it to the light buffer's alpha and the sun is scaled by 1 - alpha
+   static bool smUseProbeInteriorMask;
+
    //Used to toggle the visualization of diffuse and specular light contribution
    static bool smDiffuseLightViz;
    static bool smSpecularLightViz;

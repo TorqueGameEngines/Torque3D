@@ -172,6 +172,10 @@ public:
    ///
    void reloadTextures();
 
+   /// Forces a reread of a texture from it's file to ensure objects are up to date.
+   /// Does nothing if the file isn't loaded. File change notifications do this too, but less immediately.
+   void reloadTextureFromFile( const Torque::Path &path );
+
    /// This releases cached textures that have not
    /// been referenced for a period of time.
    void cleanupCache( U32 secondsToLive = 0 );

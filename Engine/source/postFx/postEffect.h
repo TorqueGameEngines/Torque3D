@@ -168,6 +168,7 @@ protected:
    GFXShaderConstHandle *mMatScreenToCameraSC;
 
    GFXShaderConstHandle* mIsCapturingSC;
+   GFXShaderConstHandle* mCaptureLightFloorSC;
 
    bool mAllowReflectPass;
 

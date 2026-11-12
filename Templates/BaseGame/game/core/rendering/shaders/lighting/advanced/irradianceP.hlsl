@@ -37,10 +37,11 @@ float4 main(ConnectData IN) : TORQUE_TARGET0
     float3 N = getCubeDir(face,IN.uv);
     float3 irradiance = 0;
     
-    // tangent space calculation from origin point
-    float3 up    = float3(0.0, 0.0, 1.0);
-    float3 right = cross(up, N);
-    up           = cross(N, right);
+    // tangent space calculation from origin point. If we don't do the extra check here, 
+    // then it's possible for it to collapse the values and you get darkening at the Z poles
+    float3 up    = abs(N.z) < 0.999 ? float3(0.0, 0.0, 1.0) : float3(1.0, 0.0, 0.0);
+    float3 right = normalize(cross(up, N));
+    up           = normalize(cross(N, right));
        
     float sampleDelta = 0.025;
     int nrSamples = 0;
@@ -53,7 +54,8 @@ float4 main(ConnectData IN) : TORQUE_TARGET0
             // tangent space to world
             float3 sampleVec = tangentSample.x * right + tangentSample.y * up + tangentSample.z * N; 
 
-            irradiance += TORQUE_TEXCUBE(environmentMap, sampleVec).rgb * cos(theta) * sin(theta);
+            //Explicit mip 0, to prevent sampleVec eating itself if the above check switches poles
+            irradiance += TORQUE_TEXCUBELOD(environmentMap, float4(sampleVec, 0.0)).rgb * cos(theta) * sin(theta);
             nrSamples++;
         }
     }

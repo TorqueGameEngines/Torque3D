@@ -1568,6 +1568,18 @@ void GFXTextureManager::_onFileChanged( const Torque::Path &path )
 
    Con::errorf( "[GFXTextureManager::_onFileChanged] : File changed [%s]", path.getFullPath().c_str() );
 
+   reloadTextureFromFile( path );
+}
+
+void GFXTextureManager::reloadTextureFromFile( const Torque::Path &path )
+{
+   String pathNoExt = Torque::Path::Join( path.getRoot(), ':', path.getPath() );
+   pathNoExt = Torque::Path::Join( pathNoExt, '/', path.getFileName() );
+
+   GFXTextureObject *obj = hashFind( pathNoExt );
+   if ( !obj || path != obj->getPath() )
+      return;
+
    const U32 scalePower = getTextureDownscalePower( obj->mProfile );
 
    if ( sDDSExt.equal( path.getExtension(), String::NoCase) )

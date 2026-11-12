@@ -26,6 +26,8 @@
 
 uniform float maxProbeDrawDistance;
 uniform int isCapturing;
+//How much of a light's diffuse term survives in full shadow while a probe capture renders
+uniform float captureLightFloor;
 
 #ifndef TORQUE_SHADERGEN
 uniform vec3 eyePosWorld;
@@ -64,9 +66,6 @@ uniform vec4 albedo;
 #define DEBUGVIZ_CONTRIB 0
 #endif
 
-#ifndef CAPTURE_LIGHT_FLOOR
-#define CAPTURE_LIGHT_FLOOR 0.04
-#endif
 
 vec3 getDistanceVectorToPlane( vec3 origin, vec3 direction, vec4 plane )
 {
@@ -258,7 +257,7 @@ vec3 evaluateStandardBRDF(Surface surface, SurfaceToLight surfaceToLight)
 
 vec3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float shadow)
 {
-   float lightfloor = CAPTURE_LIGHT_FLOOR;
+   float lightfloor = captureLightFloor;
    if(isCapturing != 1)
       lightfloor = 0.0;
       
@@ -273,7 +272,7 @@ vec3 getDirectionalLight(Surface surface, SurfaceToLight surfaceToLight, vec3 li
 
 vec3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float radius, float shadow)
 {
-   float lightfloor = CAPTURE_LIGHT_FLOOR;
+   float lightfloor = captureLightFloor;
    if(isCapturing != 1)
       lightfloor = 0.0;
       
@@ -290,7 +289,7 @@ vec3 getPunctualLight(Surface surface, SurfaceToLight surfaceToLight, vec3 light
 
 vec3 getSpotlight(Surface surface, SurfaceToLight surfaceToLight, vec3 lightColor, float lightIntensity, float radius, vec3 lightDir, vec2 lightSpotParams, float shadow)
 {
-   float lightfloor = CAPTURE_LIGHT_FLOOR;
+   float lightfloor = captureLightFloor;
    if(isCapturing != 1)
       lightfloor = 0.0;
       
@@ -412,7 +411,66 @@ float defineBoxSpaceInfluence(vec3 wsPosition, mat4 worldToObj, float attenuatio
    return saturate(smoothstep(baseVal, (baseVal-attenuation/2), dist));
 }
 
-// Box Projected IBL Lighting
+//A probe's entry in the atlas
+struct ProbeInfo
+{
+   vec3 ambientCol;
+   mat4 xform;
+   vec3 position;
+   int shape;
+   float radius;
+   float atten;
+   int flags;
+};
+
+//If a worldspace position is inside a probeInfo's bounds
+bool probeInfoContains(sampler2D atlasTex, int row, vec3 wsPosition)
+{
+   vec3 boundsMin = texelFetch(atlasTex, ivec2(0, row), 0).xyz;
+   vec3 boundsMax = texelFetch(atlasTex, ivec2(1, row), 0).xyz;
+   return all(greaterThanEqual(wsPosition, boundsMin)) && all(lessThanEqual(wsPosition, boundsMax));
+}
+
+//Gets the bulk of a probe's info from the atlas
+ProbeInfo loadProbeInfoVolume(sampler2D atlasTex, int row)
+{
+   ProbeInfo probeInfo;
+
+   probeInfo.xform = transpose(mat4(
+      texelFetch(atlasTex, ivec2(2, row), 0),
+      texelFetch(atlasTex, ivec2(3, row), 0),
+      texelFetch(atlasTex, ivec2(4, row), 0),
+      vec4(0, 0, 0, 1)));
+
+   vec4 positionShape = texelFetch(atlasTex, ivec2(5, row), 0);
+   probeInfo.position = positionShape.xyz;
+   probeInfo.shape = int(positionShape.w + 0.5);
+
+   vec4 params = texelFetch(atlasTex, ivec2(6, row), 0);
+   probeInfo.radius = params.x;
+   probeInfo.atten = params.y;
+
+   probeInfo.ambientCol = vec3(0, 0, 0);
+   probeInfo.flags = 0;
+
+   return probeInfo;
+}
+
+void loadProbeInfoColor(sampler2D atlasTex, int row, inout ProbeInfo probeInfo)
+{
+   vec4 ambientFlags = texelFetch(atlasTex, ivec2(7, row), 0);
+   probeInfo.ambientCol = ambientFlags.rgb;
+   probeInfo.flags = int(floatBitsToUint(ambientFlags.a));
+}
+
+float defineProbeInfoInfluence(vec3 wsPosition, ProbeInfo probeInfo)
+{
+   if (probeInfo.shape == 0)
+      return defineBoxSpaceInfluence(wsPosition, probeInfo.xform, probeInfo.atten);
+
+   return defineSphereSpaceInfluence(wsPosition, probeInfo.position, probeInfo.radius, probeInfo.atten);
+}
+
 // Based on: http://www.gamedev.net/topic/568829-box-projected-cubemap-environment-mapping/
 // and https://seblagarde.wordpress.com/2012/09/29/image-based-lighting-approaches-and-parallax-corrected-cubemap/
 vec3 boxProject(vec3 wsPosition, vec3 wsReflectVec, mat4 worldToObj, vec3 refScale, vec3 refPosition)
@@ -494,7 +552,8 @@ vec4 computeForwardProbes(Surface surface,
       else
          contribution[i] = 0.0;
 
-      if (inRefScaleArray[i].w>0)
+      //refScaleArray.w holds flags: bit 0 = wetness allowed, bit 1 = Interior probe
+      if ((int(inRefScaleArray[i].w + 0.5) & 1) != 0)
          wetAmmout += contribution[i];
       else
          wetAmmout -= contribution[i];

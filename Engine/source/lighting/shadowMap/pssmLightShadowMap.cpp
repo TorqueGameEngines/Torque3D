@@ -391,6 +391,21 @@ void PSSMLightShadowMap::_render(   RenderPassManager* renderPass,
    GFX->popActiveRenderTarget();
 }
 
+Point2F PSSMLightShadowMap::getFadeStartLength() const
+{
+   const ShadowMapParams *p = mLight->getExtended<ShadowMapParams>();
+
+   Point2F fadeStartLength(p->fadeStartDist, 0.0f);
+   if (fadeStartLength.x == 0.0f)
+   {
+      // By default, lets fade the last half of the last split.
+      fadeStartLength.x = (mSplitDist[mNumSplits-1] + mSplitDist[mNumSplits]) / 2.0f;
+   }
+   fadeStartLength.y = 1.0f / (mSplitDist[mNumSplits] - fadeStartLength.x);
+
+   return fadeStartLength;
+}
+
 void PSSMLightShadowMap::setShaderParameters(GFXShaderConstBuffer* params, LightingShaderConstants* lsc)
 {
    PROFILE_SCOPE( PSSMLightShadowMap_setShaderParameters );
@@ -457,14 +472,7 @@ void PSSMLightShadowMap::setShaderParameters(GFXShaderConstBuffer* params, Light
    Point4F lightParams( mLight->getRange().x, p->overDarkFactor.x, 0.0f, 0.0f );
    params->setSafe( lsc->mLightParamsSC, lightParams );
 
-   Point2F fadeStartLength(p->fadeStartDist, 0.0f);
-   if (fadeStartLength.x == 0.0f)
-   {
-      // By default, lets fade the last half of the last split.
-      fadeStartLength.x = (mSplitDist[mNumSplits-1] + mSplitDist[mNumSplits]) / 2.0f;
-   }
-   fadeStartLength.y = 1.0f / (mSplitDist[mNumSplits] - fadeStartLength.x);
-   params->setSafe( lsc->mFadeStartLength, fadeStartLength);
+   params->setSafe( lsc->mFadeStartLength, getFadeStartLength());
    
    params->setSafe( lsc->mOverDarkFactorPSSM, p->overDarkFactor);
 

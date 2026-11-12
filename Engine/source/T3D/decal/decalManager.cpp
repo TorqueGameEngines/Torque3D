@@ -48,6 +48,7 @@
 #include "core/module.h"
 #include "T3D/decal/decalData.h"
 #include "console/engineAPI.h"
+#include "renderInstance/renderProbeMgr.h"
 
 
 extern bool gEditingMission;
@@ -953,9 +954,10 @@ void DecalManager::prepRenderImage( SceneRenderState* state )
 
    // Decals only render in the diffuse pass!
    // We technically could render them into reflections but prefer to save
-   // the performance. This would also break the DecalInstance::mLastAlpha 
-   // optimization.
-   if ( !state->isDiffusePass() )
+   // the performance. This would also break the DecalInstance::mLastAlpha
+   // optimization. Probe captures are the exception, as a baked probe should
+   // see the decals that are in the scene.
+   if ( !state->isDiffusePass() && !RenderProbeMgr::smBakeReflectionProbes )
       return;
 
    PROFILE_START( DecalManager_RenderDecals_SphereTreeCull );

@@ -16,35 +16,73 @@ function ProbeBakeDlg::onWake(%this)
 
 function ProbeBakeDlg_RunBake::onClick(%this)
 {
-   %boxProbeIds = parseMissionGroupForIds("BoxEnvironmentProbe", "");
-   %sphereProbeIds = parseMissionGroupForIds("SphereEnvironmentProbe", "");
-   %skylightIds = parseMissionGroupForIds("Skylight", "");
-   
-   %probeIds = rtrim(ltrim(%boxProbeIds SPC %sphereProbeIds));
-   %probeIds = rtrim(ltrim(%probeIds SPC %skylightIds));
-   %probeCount = getWordCount(%probeIds);
-   
-   %numIter = ProbeBakeDlg_NumIterTxt.getText();
-   $pref::ReflectionProbes::BakeResolution = ProbeBakeDlg_ProbeResList.getText();
-   %progressStep = 100 / (%numIter * %probeCount);
-   %currentProgressValue = 0;
-   
-   ProbeBakeDlg_Progress.setValue(%currentProgressValue);
-   Canvas.repaint();
-   
-   for(%iter=0; %iter < %numIter; %iter++)
+   //While a bake is running the button is the cancel button
+   if (ProbeBin.isBaking())
    {
-      $pref::ReflectionProbes::RenderWithProbes = false;
-      
-      if(%iter != 0)
-         $pref::ReflectionProbes::RenderWithProbes = true;
-         
-      $pref::ReflectionProbes::CurrentLevelPath = filePath($Server::MissionFile) @ "/" @ fileBase($Server::MissionFile) @ "/probes/";
-      ProbeBin.bakeProbes();
-      
-      %currentProgressValue += %progressStep;
-      ProbeBakeDlg_Progress.setValue(%currentProgressValue);
+      ProbeBin.cancelBake();
+      return;
    }
-   
-   EWorldEditor.isDirty = true;
+
+   %numIter = ProbeBakeDlg_NumIterTxt.getText();
+   if (%numIter < 1)
+      %numIter = 1;
+
+   $ProbeBakeDlg::NumIter = %numIter;
+   $ProbeBakeDlg::Iter = 0;
+
+   $pref::ReflectionProbes::BakeResolution = ProbeBakeDlg_ProbeResList.getText();
+   $pref::ReflectionProbes::captureLightFloor = ProbeBakeDlg_LightFloorTxt.getText();
+
+   ProbeBakeDlg_Progress.setValue(0);
+   ProbeBakeDlg_RunBake.setText("Cancel");
+   Canvas.repaint();
+
+   ProbeBakeDlg.startIteration();
+}
+
+//The bake can't finish inside one call, as it has to wait for the network to deliver the ghosts of the SubScenes' probes.
+//So an iteration is started here and the next one is started from the completion callback
+function ProbeBakeDlg::startIteration(%this)
+{
+   $pref::ReflectionProbes::RenderWithProbes = ($ProbeBakeDlg::Iter != 0);
+   $pref::ReflectionProbes::CurrentLevelPath = filePath($Server::MissionFile) @ "/" @ fileBase($Server::MissionFile) @ "/probes/";
+
+   if (!ProbeBin.startBakeProbes())
+      ProbeBakeDlg.finishBake(false);
+}
+
+function ProbeBakeDlg::finishBake(%this, %success)
+{
+   ProbeBakeDlg_RunBake.setText("Update Probes");
+
+   if (%success)
+   {
+      ProbeBakeDlg_Progress.setValue(1);
+      EWorldEditor.isDirty = true;
+   }
+}
+
+function ProbeBin::onProbeBakeProgress(%this, %done, %total)
+{
+   if (!ProbeBakeDlg.isAwake())
+      return;
+
+   %fraction = 0;
+   if (%total > 0)
+      %fraction = %done / %total;
+
+   ProbeBakeDlg_Progress.setValue((($ProbeBakeDlg::Iter + %fraction) / $ProbeBakeDlg::NumIter));
+
+   //The bake loop runs inside one call, so the editor only redraws here
+   Canvas.repaint();
+}
+
+function ProbeBin::onProbeBakeComplete(%this, %success)
+{
+   $ProbeBakeDlg::Iter++;
+
+   if (%success && $ProbeBakeDlg::Iter < $ProbeBakeDlg::NumIter)
+      ProbeBakeDlg.startIteration();
+   else
+      ProbeBakeDlg.finishBake(%success);
 }

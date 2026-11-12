@@ -116,6 +116,11 @@ function clientCmdMissionStartPhase1(%seq, %levelAsset, %cache_crc)
    $Client::MissionFile = %levelAssetDef.getLevelPath();
    $pref::ReflectionProbes::CurrentLevelPath = filePath($Client::MissionFile) @ "/" @ fileBase($Client::MissionFile) @ "/probes/";
    
+   // Hand the level asset to the probe manager so the baked atlas path is resolved from the asset the server
+   // told us about. SubScenes get theirs from their own ghosts.
+   if (isObject(ProbeBin))
+      ProbeBin.loadLevelAtlas(%levelAsset);
+   
    //Prep the postFX stuff
    // Load the post effect presets for this mission.
    %path = %levelAssetDef.getPostFXPresetPath();

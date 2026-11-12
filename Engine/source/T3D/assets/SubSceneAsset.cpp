@@ -1,4 +1,5 @@
 #include "SubSceneAsset.h"
+#include "core/util/path.h"
 
 #include "T3D/SubScene.h"
 IMPLEMENT_CONOBJECT(SubSceneAsset);
@@ -68,6 +69,15 @@ void SubSceneAsset::initPersistFields()
    Parent::initPersistFields();
 }
 
+String SubSceneAsset::getProbeAtlasPath(void) const
+{
+   if (getLevelPath() == StringTable->EmptyString())
+      return String();
+
+   //A SubScene's atlas sits beside its own level file, so every instance of the asset finds the same one
+   Torque::Path levelPath(getLevelPath());
+   return levelPath.getRootAndPath() + "/" + levelPath.getFileName() + "_ProbeAtlas.dds";
+}
 
 //-----------------------------------------------------------------------------
 // GuiInspectorTypeAssetId

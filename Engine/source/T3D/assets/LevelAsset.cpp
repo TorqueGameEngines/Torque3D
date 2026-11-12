@@ -23,6 +23,7 @@
 #ifndef LEVEL_ASSET_H
 #include "LevelAsset.h"
 #endif
+#include "core/util/path.h"
 
 #ifndef _ASSET_MANAGER_H_
 #include "assets/assetManager.h"
@@ -356,6 +357,16 @@ void LevelAsset::setNavmeshFile(const char* pNavmeshFile)
 
    // Refresh the asset.
    refreshAsset();
+}
+
+String LevelAsset::getProbeAtlasPath(void) const
+{
+   if (mLevelPath == StringTable->EmptyString())
+      return String();
+
+   //<level dir>/<level name>/probes/ProbeAtlas.dds, the same folder the level's per-probe files are baked to
+   Torque::Path levelPath(mLevelPath);
+   return levelPath.getRootAndPath() + "/" + levelPath.getFileName() + "/probes/ProbeAtlas.dds";
 }
 
 void LevelAsset::loadDependencies()

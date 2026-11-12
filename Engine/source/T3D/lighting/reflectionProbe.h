@@ -110,13 +110,23 @@ public:
 
       ProbeShapeType mProbeShapeType;
       bool mCanDamp;
+
+      bool mInterior;
+
+      /// <summary>
+      /// The probe's flat average irradiance color (linear), set when it is baked
+      /// </summary>
+      F32 mAmbientColor[3];
+      bool mHasAmbient;
    public:
 
       ProbeInfo()
       {
+         mHasAmbient = false;
          mScore = 0;
          mAtten = 0.0f;
          mCanDamp = false;
+         mInterior = false;
          mDirty = false;
          mIsEnabled = true;
          mObject = NULL;
@@ -268,6 +278,7 @@ protected:
    bool mResourcesCreated;
    U32 mCaptureMask;
    bool mCanDamp;
+   bool mInterior;
 public:
    ReflectionProbe();
    virtual ~ReflectionProbe();
@@ -341,6 +352,22 @@ public:
    bool createClientResources();
 
    /// <summary>
+   /// Pushes this probe's loaded cubemaps to the manager's high-LOD array. Called by RenderProbeMgr when the probe is
+   /// promoted to a slot
+   /// </summary>
+   void submitCubemaps();
+
+   /// <summary>
+   /// Sets the CubemapData's handle directly from the file
+   /// </summary>
+   static void loadProbeCubemapFile(CubemapData* cubemapData, const String& path);
+
+   /// <summary>
+   /// Reloads a baked probe's cubemaps after a bake replaced them, and submits them if the probe holds a slot
+   /// </summary>
+   void refreshBakedCubemaps();
+
+   /// <summary>
    /// Updates the probe's cubemaps in the array when using dynamic reflections
    /// </summary>
    void processDynamicCubemap();
@@ -379,6 +406,16 @@ public:
    /// Invokes a cubemap bake action for this probe
    /// </summary>
    void bake();
+
+   /// <summary>
+   /// The probe's persistent id string, used to key its baked cubemaps and probe atlas row
+   /// </summary>
+   const String& getProbeUniqueId() const { return mProbeUniqueID; }
+
+   /// <summary>
+   /// How this probe gets its cubemaps (baked, static, dynamic...)
+   /// </summary>
+   ReflectionModeType getReflectionMode() const { return mReflectionModeType; }
    ProbeInfo* getProbeInfo() { return &mProbeInfo; }
 };
 

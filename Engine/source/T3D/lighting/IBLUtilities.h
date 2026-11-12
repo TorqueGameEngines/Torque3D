@@ -65,6 +65,10 @@ namespace IBLUtilities
    F32 texelSolidAngle(F32 aU, F32 aV, U32 width, U32 height);
 
    F32 areaElement(F32 x, F32 y);
+
+   //
+   //Average color of a cubemap over the whole sphere, in linear space. Needs an R16G16B16A16F cubemap
+   bool calculateAverageColor(GFXTexHandle cubemap, F32 outColor[3]);
 };
 
 #endif

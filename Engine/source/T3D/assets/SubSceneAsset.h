@@ -27,6 +27,8 @@ public:
 
    /// Declare Console Object.
    DECLARE_CONOBJECT(SubSceneAsset);
+   
+   String getProbeAtlasPath(void) const override;
 };
 
 #ifdef TORQUE_TOOLS

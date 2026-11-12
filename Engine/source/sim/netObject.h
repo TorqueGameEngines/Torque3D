@@ -274,6 +274,8 @@ protected:
       ScopeAlways       =  BIT(6),  ///< Object always ghosts to clients.
       ScopeLocal        =  BIT(7),  ///< Ghost only to local client.
       Ghostable         =  BIT(8),  ///< Set if this object CAN ghost.
+      SpecialScope      =  BIT(9),  ///< Set if this object is specially ghosted, such as entirely manually or in a special transmit phase and cannot
+                                    ///< be guaranteed to have a normal resolved ghostIndex
 
       MaxNetFlagBit     =  15
    };
@@ -378,7 +380,7 @@ public:
    bool isScopeable() const;     ///< Is this object subject to scoping?
    bool isGhostable() const;     ///< Is this object ghostable?
    bool isGhostAlways() const;   ///< Should this object always be ghosted?
-
+   bool isSpecialScope() const;   ///< Is this object specially handled for ghosting?
 
    /// @name Short-Circuited Networking
    ///
@@ -514,6 +516,11 @@ inline bool NetObject::isGhostAlways() const
    AssertFatal(mNetFlags.test(Ghostable) || mNetFlags.test(ScopeAlways) == false,
                "That's strange, a ScopeAlways non-ghostable object?  Something wrong here");
    return mNetFlags.test(Ghostable) && mNetFlags.test(ScopeAlways);
+}
+
+inline bool NetObject::isSpecialScope() const
+{
+   return mNetFlags.test(SpecialScope);
 }
 
 #endif

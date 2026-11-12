@@ -220,29 +220,48 @@ void TSShapeInstance::animateNodes(S32 ss)
       }
    }
 
-   // handle blend sequences
-   for (i=firstBlend; i<mThreadList.size(); i++)
+   // Transition the base pose before applying additive blends.  -NEW CODE, Skurps
+   if (inTransition())
+      handleTransitionNodes(a, b);
+
+   // Preserve the pre-blend scratch pose for transition-reference capture.
+   // updateTransitions() may decompose these local matrices later.
+   Vector<MatrixF> preBlendTransforms;
+   preBlendTransforms.setSize(b - a);
+
+   for (i = a; i < b; i++)
+      preBlendTransforms[i - a] = smNodeLocalTransforms[i];
+
+   TSIntegerSet preBlendDirty = smNodeLocalTransformDirty;
+
+   // Apply additive blends to the rendered pose only.
+   for (i = firstBlend; i < mThreadList.size(); i++)
    {
-      TSThread * th = mThreadList[i];
+      TSThread* th = mThreadList[i];
       if (th->blendDisabled)
          continue;
 
-      handleBlendSequence(th,a,b);
+      handleBlendSequence(th, a, b);
    }
 
-   // transitions...
-   if (inTransition())
-      handleTransitionNodes(a,b);
-
-   // multiply transforms...
-   for (i=a; i<b; i++)
+   // Build the final hierarchical transforms, including additive blends.
+   for (i = a; i < b; i++)
    {
       S32 parentIdx = mShape->nodes[i].parentIndex;
       if (parentIdx < 0)
          mNodeTransforms[i] = smNodeLocalTransforms[i];
       else
-         mNodeTransforms[i].mul(mNodeTransforms[parentIdx],smNodeLocalTransforms[i]);
+         mNodeTransforms[i].mul(
+            mNodeTransforms[parentIdx],
+            smNodeLocalTransforms[i]);
    }
+
+   // Leave the scratch matrices in their pre-blend state.
+   // The final rendered transforms above remain unchanged.
+   for (i = a; i < b; i++)
+      smNodeLocalTransforms[i] = preBlendTransforms[i - a];
+
+   smNodeLocalTransformDirty = preBlendDirty;
 }
 
 void TSShapeInstance::handleDefaultScale(S32 a, S32 b, TSIntegerSet & scaleBeenSet)

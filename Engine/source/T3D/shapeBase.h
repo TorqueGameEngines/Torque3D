@@ -764,7 +764,7 @@ protected:
       bool play;                    ///< Are we playing this sound?
       SimTime timeout;              ///< Time until we stop playing this sound.
       AssetPtr<SoundAsset> asset; ///< Asset on server
-      SFXSource* sound;             ///< Sound on client
+      SimObjectPtr<SFXSource> sound;             ///< Sound on client
    };
    SoundThread mSoundThread[MaxSoundThreads];
    /// @}
@@ -882,7 +882,7 @@ protected:
       SimTime lightStart;     ///< Starting time for light flashes.
       LightInfo* lightInfo;   ///< The real light (if any) associated with this weapon image.
 
-      Vector<SFXSource*> mSoundSources; ///< Vector of currently playing sounds
+      Vector<SimObjectPtr<SFXSource>> mSoundSources; ///< Vector of currently playing sounds
       void updateSoundSources(const MatrixF& renderTransform);  
       void addSoundSource(SFXSource* source);
 

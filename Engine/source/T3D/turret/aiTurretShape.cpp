@@ -1097,7 +1097,12 @@ void AITurretShape::getAimTransform(MatrixF& mat)
 
 void AITurretShape::processTick(const Move* move)
 {
+   SimObjectPtr<AITurretShape> safePtr(this);
+
    Parent::processTick(move);
+
+   if (!bool(safePtr))
+      return;
 
    if (isServerObject() && mDamageState == Enabled)
    {

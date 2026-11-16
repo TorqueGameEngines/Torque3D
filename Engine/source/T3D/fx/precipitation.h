@@ -129,7 +129,7 @@ class Precipitation : public GameBase
    Point2F* mTexCoords;     ///< texture coords for rain texture
    Point2F* mSplashCoords;  ///< texture coordinates for splash texture
 
-   SFXSource* mAmbientSound;        ///< Ambient sound
+   SimObjectPtr<SFXSource> mAmbientSound;        ///< Ambient sound
 
    GFXShaderRef mDropShader;     ///< The shader used for raindrops
    GFXTexHandle mDropHandle;     ///< Texture handle for raindrop

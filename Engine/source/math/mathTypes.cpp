@@ -388,49 +388,55 @@ ImplementConsoleTypeCasters( TypeMatrixF, MatrixF )
 // Oh merry confusion.  Torque stores matrices in row-major order yet to TorqueScript
 // matrices were passed in column-major order, so we need to stick to this here.
 
-ConsoleGetType( TypeMatrixF )
+ConsoleGetType(TypeMatrixF)
 {
    MatrixF* mat = (MatrixF*)dptr;
 
-   Point3F col0, col1, col2;
+   Point3F col0, col1, col2, col3;
    mat->getColumn(0, &col0);
    mat->getColumn(1, &col1);
    mat->getColumn(2, &col2);
+   mat->getColumn(3, &col3);
    static const U32 bufSize = 256;
    char* buffer = Con::getReturnBuffer(bufSize);
 
-   dSprintf(buffer, bufSize, "%g %g %g %g %g %g %g %g %g",
+   //Peel out the vectors in the order of: right, forward, up and store them in the buffer in column-major order
+   dSprintf(buffer, bufSize, "%g %g %g %g %g %g %g %g %g %g %g %g",
       col0.x, col0.y, col0.z,
       col1.x, col1.y, col1.z,
-      col2.x, col2.y, col2.z);
+      col2.x, col2.y, col2.z,
+      col3.x, col3.y, col3.z);
 
    return buffer;
 }
 
-ConsoleSetType( TypeMatrixF )
+ConsoleSetType(TypeMatrixF)
 {
    if (argc == 1)
    {
-      F32 parsed[9];
-
       U32 bufferSize = dStrlen(argv[0]) + 1;
       char* buffer = new char[bufferSize];
       dStrcpy(buffer, argv[0], bufferSize);
 
-      bool parsedOk = PropertyInfo::ParseProperty<F32, 9>(buffer, parsed);
-      delete[] buffer;
+      //We rebuild the Matrix from the vectors. Position is optional
+      F32 parsed[12];
+      parsed[9] = parsed[10] = parsed[11] = 0.0f;
 
-      if (parsedOk) {
+      PropertyInfo::ParseProperty<F32, 12>(buffer, parsed);
+      {
          MatrixF* mat = (MatrixF*)dptr;
 
          mat->setColumn(0, Point3F(parsed[0], parsed[1], parsed[2]));
          mat->setColumn(1, Point3F(parsed[3], parsed[4], parsed[5]));
          mat->setColumn(2, Point3F(parsed[6], parsed[7], parsed[8]));
+         mat->setColumn(3, Point3F(parsed[9], parsed[10], parsed[11]));
+
+         delete[] buffer;
          return;
       }
    }
 
-   Con::warnf("MatrixF must be set as \"c0x c0y c0z c1x c1y c1z c2x c2y c2z\"");
+   Con::warnf("MatrixF must be set as \"c0x c0y c0z c1x c1y c1z c2x c2y c2z\". If we have a position, it must be included as \"c0x c0y c0z c1x c1y c1z c2x c2y c2z px py pz\"");
 }
 
 //-----------------------------------------------------------------------------
@@ -652,38 +658,56 @@ ConsoleSetType( TypeBox3F )
 ConsoleType(EaseF, TypeEaseF, EaseF, "")
 ImplementConsoleTypeCasters( TypeEaseF, EaseF )
 
-ConsoleGetType( TypeEaseF )
+ConsoleGetType(TypeEaseF)
 {
+   EaseF* ease = (EaseF*)dptr;
+
    static const U32 bufSize = 256;
    char* buffer = Con::getReturnBuffer(bufSize);
 
-   EaseF* pEase = (EaseF*)dptr;
-   PropertyInfo::FormatPropertyBuffer<S32, 2>(pEase + 0, buffer, bufSize);
-   *buffer++ = ' ';
-   PropertyInfo::FormatPropertyBuffer<F32, 2>(pEase + 2, buffer, bufSize);
+   dSprintf(buffer, bufSize, "%i %i %g %g",
+      ease->mDir, ease->mType, ease->mParam[0], ease->mParam[1]);
 
    return buffer;
 }
 
-ConsoleSetType( TypeEaseF )
+ConsoleSetType(TypeEaseF)
 {
    if (argc >= 1)
    {
-      F32 parsed[4];
-      parsed[2] = -1.0f;
-      parsed[3] = -1.0f;
+      U32 bufferSize = dStrlen(argv[0]) + 1;
+      char* buffer = new char[bufferSize];
+      dStrcpy(buffer, argv[0], bufferSize);
 
-      // Combine argv into a single space-separated string if argc > 1
-      char buffer[256] = { 0 };
+      const U32 count = StringUnit::getUnitCount(argv[0], " \t");
+      bool success = false;
 
-      dStrncpy(buffer, *argv, sizeof(buffer));
-
-      // same as matrix do not hard fail based on count!
-      PropertyInfo::ParseProperty<F32, 4>(buffer, parsed);
+      if (count == 2 || count == 4)
       {
-         ((EaseF*)dptr)->set(mRound(parsed[0]), mRound(parsed[1]), parsed[2], parsed[3]);
-         return;
+         EaseF* ease = (EaseF*)dptr;
+
+         if (count == 2)
+         {
+            S32 parsed[2];
+            if (success = PropertyInfo::ParseProperty<S32, 2>(buffer, parsed))
+            {
+               ease->set((S32)parsed[0], (S32)parsed[1]);
+            }
+         }
+         else if (count == 4)
+         {
+            F32 parsed[4];
+            if (success = PropertyInfo::ParseProperty<F32, 4>(buffer, parsed))
+            {
+               ease->set((S32)parsed[0], (S32)parsed[1], parsed[2], parsed[3]);
+            }
+         }
       }
+
+      delete[] buffer;
+
+      if (success)
+         return;
    }
 
    Con::warnf("EaseF must be set as \"dir type [param0 param1]\"");

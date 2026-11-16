@@ -190,56 +190,48 @@ static const U32 convertUTF16toUTF8DoubleNULL(const UTF16 *unistring, UTF8  *out
 //
 bool FileDialog::Execute()
 {
-   String strippedFilters;
+   // Build an NFDe filter array from Torque's "Name|*.ext;*.ext|Name2|*.ext3"
+   // format. filterStorage owns the strings the array points into - it must
+   // stay alive for as long as the filters array is used below.
+   Vector<String> filterStorage;
+   Vector<nfdu8filteritem_t> filters;
 
-   U32 filtersCount = StringUnit::getUnitCount(mData.mFilters, "|");
+   U32 unitCount = StringUnit::getUnitCount(mData.mFilters, "|");
 
-   for (U32 i = 1; i < filtersCount; ++i)
+   // Pairs: Name, Pattern, Name, Pattern, ...
+   for (U32 i = 0; i + 1 < unitCount; i += 2)
    {
-      //The first of each pair is the name, which we'll skip because NFD doesn't support named filters atm
-      String filter = StringUnit::getUnit(mData.mFilters, i, "|");
+      String name = StringUnit::getUnit(mData.mFilters, i, "|");
+      String pattern = StringUnit::getUnit(mData.mFilters, i + 1, "|");
 
-      if (!String::compare(filter.c_str(), "*.*"))
-         continue;
+      if (pattern.equal("*.*"))
+         continue; // "All files" - an empty filter list means "allow anything"
 
-      U32 subFilterCount = StringUnit::getUnitCount(filter, ";");
-
-      //if we have a 'super filter', break it down to sub-options as well
-      if (subFilterCount > 1)
+      // "*.png;*.jpg" -> "png,jpg"
+      String spec;
+      U32 extCount = StringUnit::getUnitCount(pattern, ";");
+      for (U32 e = 0; e < extCount; ++e)
       {
-         String suffixFilter;
-         String subFilters;
-
-         for (U32 f = 0; f < subFilterCount; ++f)
-         {
-            String subFilter = StringUnit::getUnit(filter, f, ";");
-
-            suffixFilter += String::ToLower(subFilter) + "," + String::ToUpper(subFilter) + ",";
-            subFilters += String::ToLower(subFilter) + "," + String::ToUpper(subFilter) + ";";
-         }
-
-         suffixFilter = suffixFilter.substr(0, suffixFilter.length() - 1);
-         suffixFilter += ";";
-
-         strippedFilters += suffixFilter + subFilters;
-      }
-      else //otherwise, just add the filter
-      {
-         strippedFilters += String::ToLower(filter) + "," + String::ToUpper(filter) + ";";
+         String ext = StringUnit::getUnit(pattern, e, ";");
+         ext.replace("*.", "");
+         if (e > 0)
+            spec += ",";
+         spec += ext;
       }
 
-      ++i;
-      if (i < filtersCount - 2)
-         strippedFilters += String(";");
+      filterStorage.push_back(name);
+      filterStorage.push_back(spec);
    }
 
-   //strip the last character, if it's unneeded
-   if (strippedFilters.endsWith(";"))
+   // filterStorage is done growing past this point, so c_str() pointers
+   // below stay valid for the rest of this function.
+   for (U32 i = 0; i + 1 < filterStorage.size(); i += 2)
    {
-      strippedFilters = strippedFilters.substr(0, strippedFilters.length() - 1);
+      nfdu8filteritem_t item;
+      item.name = filterStorage[i].c_str();
+      item.spec = filterStorage[i + 1].c_str();
+      filters.push_back(item);
    }
-
-   strippedFilters.replace("*.", "");
 
    // Get the current working directory, so we can back up to it once Windows has
    // done its craziness and messed with it.
@@ -247,9 +239,9 @@ bool FileDialog::Execute()
    if (mData.mDefaultPath == StringTable->lookup("") || !Platform::isDirectory(mData.mDefaultPath))
       mData.mDefaultPath = cwd;
    String rootDir = String(cwd);
-   // Execute Dialog (Blocking Call)
-   nfdchar_t *outPath = NULL;
-   nfdpathset_t pathSet;
+
+   nfdu8char_t* outPath = NULL;
+   const nfdpathset_t* pathSet = NULL;
 
    nfdresult_t result = NFD_ERROR;
    String defaultPath = String(mData.mDefaultPath);
@@ -258,66 +250,90 @@ bool FileDialog::Execute()
    rootDir.replace("/", "\\");
 #endif
 
+   if (NFD_Init() != NFD_OKAY)
+   {
+      Con::errorf("NFD plugin failed to initialize: %s", NFD_GetError());
+      return false;
+   }
+
    if (mData.mStyle & FileDialogData::FDS_OPEN && !(mData.mStyle & FileDialogData::FDS_BROWSEFOLDER))
-      result = NFD_OpenDialog(strippedFilters.c_str(), defaultPath.c_str(), &outPath);
+      result = NFD_OpenDialog(&outPath, filters.address(), filters.size(), defaultPath.c_str());
    else if (mData.mStyle & FileDialogData::FDS_SAVE && !(mData.mStyle & FileDialogData::FDS_BROWSEFOLDER))
-      result = NFD_SaveDialog(strippedFilters.c_str(), defaultPath.c_str(), &outPath);
+      result = NFD_SaveDialog(&outPath, filters.address(), filters.size(), defaultPath.c_str(), mData.mDefaultFile);
    else if (mData.mStyle & FileDialogData::FDS_MULTIPLEFILES)
-      result = NFD_OpenDialogMultiple(strippedFilters.c_str(), defaultPath.c_str(), &pathSet);
+      result = NFD_OpenDialogMultiple(&pathSet, filters.address(), filters.size(), defaultPath.c_str());
    else if (mData.mStyle & FileDialogData::FDS_BROWSEFOLDER)
-	   result = NFD_PickFolder(defaultPath.c_str(), &outPath);
+      result = NFD_PickFolder(&outPath, defaultPath.c_str());
 
    if (result == NFD_CANCEL)
    {
+      NFD_Quit();
       return false;
    }
 
-   String resultPath = String(outPath).replace(rootDir, String(""));
-   if(resultPath[0] == '\\')
-      resultPath = resultPath.replace(0, 1, String("")).c_str(); //kill '\\' prefix
-   resultPath = resultPath.replace(String("\\"), String("/"));
-
-   // Did we select a file?
    if (result != NFD_OKAY)
    {
       Con::errorf("NFD plugin error: %s", NFD_GetError());
+      NFD_Quit();
       return false;
    }
+
    // Store the result on our object
-   if (mData.mStyle & FileDialogData::FDS_OPEN || mData.mStyle & FileDialogData::FDS_SAVE)
+   if (mData.mStyle & FileDialogData::FDS_OPEN || mData.mStyle & FileDialogData::FDS_SAVE || mData.mStyle & FileDialogData::FDS_BROWSEFOLDER)
    {
-      // Single file selection, do it the easy way
-      if(mForceRelativePath)
+      String resultPath = String(outPath).replace(rootDir, String(""));
+      if (resultPath[0] == '\\')
+         resultPath = resultPath.replace(0, 1, String("")).c_str(); //kill '\\' prefix
+      resultPath = resultPath.replace(String("\\"), String("/"));
+
+      if (mForceRelativePath)
          mData.mFile = Con::getReturnBuffer(Platform::makeRelativePathName(resultPath.c_str(), NULL));
       else
          mData.mFile = Con::getReturnBuffer(resultPath.c_str());
+
+      NFD_FreePath(outPath);
    }
    else if (mData.mStyle & FileDialogData::FDS_MULTIPLEFILES)
    {
-      //check if we have multiple files actually selected or not
-      U32 fileCount = (U32)NFD_PathSet_GetCount(&pathSet);
+      nfdpathsetsize_t fileCount = 0;
+      NFD_PathSet_GetCount(pathSet, &fileCount);
+
       if (fileCount > 1)
       {
-         //yep, so parse through them and prep our return
-         for (U32 i = 0; i < fileCount; ++i)
+         for (nfdpathsetsize_t i = 0; i < fileCount; ++i)
          {
-            nfdchar_t *path = NFD_PathSet_GetPath(&pathSet, i);
-            setDataField(StringTable->insert("files"), Con::getIntArg(i), path);
+            nfdu8char_t* path = NULL;
+            NFD_PathSet_GetPath(pathSet, i, &path);
+
+            String resultPath = String(path).replace(rootDir, String(""));
+            resultPath = resultPath.replace(String("\\"), String("/"));
+
+            setDataField(StringTable->insert("files"), Con::getIntArg(i),
+               mForceRelativePath ? Platform::makeRelativePathName(resultPath.c_str(), NULL) : resultPath.c_str());
+
+            NFD_PathSet_FreePath(path);
          }
-
-         setDataField(StringTable->insert("fileCount"), NULL, Con::getIntArg(fileCount));
+         setDataField(StringTable->insert("fileCount"), NULL, Con::getIntArg((S32)fileCount));
       }
-      else
+      else if (fileCount == 1)
       {
-         //nope, just one file, so set it as normal
-         if (mForceRelativePath)
-            setDataField(StringTable->insert("files"), "0", Platform::makeRelativePathName(resultPath.c_str(), NULL));
-         else
-            setDataField(StringTable->insert("files"), "0", resultPath.c_str());
+         nfdu8char_t* path = NULL;
+         NFD_PathSet_GetPath(pathSet, 0, &path);
 
+         String resultPath = String(path).replace(rootDir, String(""));
+         resultPath = resultPath.replace(String("\\"), String("/"));
+
+         setDataField(StringTable->insert("files"), "0",
+            mForceRelativePath ? Platform::makeRelativePathName(resultPath.c_str(), NULL) : resultPath.c_str());
          setDataField(StringTable->insert("fileCount"), NULL, "1");
+
+         NFD_PathSet_FreePath(path);
       }
+
+      NFD_PathSet_Free(pathSet);
    }
+
+   NFD_Quit();
 
    // Return success.
    return true;

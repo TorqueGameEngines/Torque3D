@@ -52,40 +52,38 @@ jobs:
 
             - name: Install Linux Dependencies
               run: |
-                  sudo apt-get update && \
-                  sudo apt-get install -y \
-                      ninja-build \
-                      build-essential \
-                      nasm \
-                      python3 \
-                      python3-pip \
-                      gcc-12 g++-12 \
-                      gcc-13 g++-13 \
-                      clang \
-                      libogg-dev \
-                      libxft-dev \
-                      libx11-dev \
-                      libxxf86vm-dev \
-                      libopenal-dev \
-                      libasound2-dev \
-                      libpipewire-0.3-dev \
-                      portaudio19-dev \
-                      oss4-dev \
-                      libjack-dev \
-                      libpulse-dev \
-                      libdbus-1-dev \
-                      libfreetype6-dev \
-                      libxcursor-dev \
-                      libxinerama-dev \
-                      libxi-dev \
-                      libxrandr-dev \
-                      libxss-dev \
-                      libglu1-mesa-dev \
-                      libgtk-3-dev
-                  ninja --version
-                  cmake --version
-                  ${{matrix.config.cc}} --version
-                  python3 -m pip install --break-system-packages jinja2
+                sudo apt-get install ninja-build
+                ninja --version
+                cmake --version
+                gcc --version
+                sudo apt-get update && \
+                sudo apt-get install -y \
+                    build-essential \
+                    nasm \
+                    git \
+                    curl \
+                    zip \
+                    unzip \
+                    pkg-config \
+                    autoconf \
+                    autoconf-archive \
+                    automake \
+                    make \
+                    libtool \
+                    libltdl-dev \
+                    libx11-dev \
+                    libxft-dev \
+                    libxext-dev \
+                    libwayland-dev \
+                    libxkbcommon-dev \
+                    libegl1-mesa-dev \
+                    libibus-1.0-dev \
+                    libgtk-3-dev
+
+                sudo apt-get install -y \
+                    python3
+                
+                pip install jinja2
 
             - name: Configure, Build & Install
               uses: threeal/cmake-action@v1.3.0
@@ -97,7 +95,7 @@ jobs:
                   generator: ${{matrix.config.generator}}
                   options: CMAKE_BUILD_TYPE=${{matrix.config.build_type}} TORQUE_APP_NAME=Torque3D TORQUE_TESTING=ON
                   run-build: true
-                  build-args: --config ${{matrix.config.build_type}} --target install
+                  build-args: --config ${{matrix.config.build_type}}
 
             - name: Unit Tests
               run: |

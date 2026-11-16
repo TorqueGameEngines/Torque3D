@@ -28,8 +28,6 @@ if (APPLE)
     endif()
 endif (APPLE)
 
-set(TORQUE_LINK_LIBRARIES ${TORQUE_LINK_LIBRARIES} nativeFileDialogs)
-
 # Linux requires X11 & freetype
 if (UNIX AND NOT APPLE)
 	set(TORQUE_LINK_LINUX ${TORQUE_LINK_LINUX} "X11" "Xft" "dl" "pthread")  

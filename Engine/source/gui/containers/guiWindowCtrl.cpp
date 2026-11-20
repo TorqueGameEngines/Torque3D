@@ -742,6 +742,9 @@ void GuiWindowCtrl::onSleep()
 
 void GuiWindowCtrl::onMouseDown(const GuiEvent &event)
 {
+   if (!mActive)
+      return;
+
    setUpdate();
 
    mOrigBounds = getBounds();
@@ -828,6 +831,9 @@ void GuiWindowCtrl::onMouseDown(const GuiEvent &event)
 
 void GuiWindowCtrl::onMouseDragged(const GuiEvent &event)
 {
+   if (!mActive)
+      return;
+
    GuiControl *parent = getParent();
    GuiCanvas *root = getRoot();
    if ( !root ) 
@@ -1035,6 +1041,9 @@ void GuiWindowCtrl::onMouseDragged(const GuiEvent &event)
 
 void GuiWindowCtrl::onMouseUp(const GuiEvent &event)
 {
+   if (!mActive)
+      return;
+
    bool closing = mCloseButtonPressed;
    bool maximizing = mMaximizeButtonPressed;
    bool minimizing = mMinimizeButtonPressed;

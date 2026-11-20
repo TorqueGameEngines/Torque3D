@@ -1521,7 +1521,15 @@ void Camera::_validateEyePoint(F32 pos, MatrixF *mat)
       // Use the eye transform to orient the camera
       Point3F dir;
       mat->getColumn(1, &dir);
-      if (mMaxOrbitDist - mMinOrbitDist > 0.0f)
+      if (mCurOrbitDist > 0.0f)
+      {
+         // Pull back by the initDistance, kept within [min, max] when a range is set.
+         F32 orbitDist = mCurOrbitDist;
+         if (mMaxOrbitDist > mMinOrbitDist)
+            orbitDist = mClampF(orbitDist, mMinOrbitDist, mMaxOrbitDist);
+         pos *= orbitDist;
+      }
+      else if (mMaxOrbitDist - mMinOrbitDist > 0.0f)
          pos *= mMaxOrbitDist - mMinOrbitDist;
       
       // Use the camera node's pos.

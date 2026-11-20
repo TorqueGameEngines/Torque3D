@@ -181,7 +181,7 @@ void AssetImportConfig::initPersistFields()
       addField("ImportMaterials", TypeBool, Offset(ImportMaterials, AssetImportConfig), "Does this config allow for importing of materials");
       addField("AlwaysAddMaterialSuffix", TypeBool, Offset(AlwaysAddMaterialSuffix, AssetImportConfig), "When importing a material, this indicates if it should automatically add a standard suffix onto the name");
       addField("AddedMaterialSuffix", TypeString, Offset(AddedMaterialSuffix, AssetImportConfig), " If AlwaysAddMaterialSuffix is on, this is the suffix to be added");
-      addField("CreateORMConfig", TypeBool, Offset(PreventImportWithErrors, AssetImportConfig), "When importing a material, should it automatically attempt to merge Roughness, AO and Metalness maps into a single, composited PBR Configuration map");
+      addField("CreateORMConfig", TypeBool, Offset(CreateORMConfig, AssetImportConfig), "When importing a material, should it automatically attempt to merge Roughness, AO and Metalness maps into a single, composited PBR Configuration map");
       addField("UseDiffuseSuffixOnOriginImage", TypeBool, Offset(UseDiffuseSuffixOnOriginImage, AssetImportConfig), "When generating a material off of an importing image, should the importer force appending a diffusemap suffix onto the end to avoid potential naming confusion.\n e.g. MyCoolStuff.png is imported, generating MyCoolStuff material asset and MyCoolStuff_Diffuse image asset");
       addField("UseExistingMaterials", TypeBool, Offset(UseExistingMaterials, AssetImportConfig), "Should the importer try and use existing material assets in the game directory if at all possible. (Not currently utilized)");
       addField("IgnoreMaterials", TypeRealString, Offset(IgnoreMaterials, AssetImportConfig), "A list of material names that should not be imported. Separated by either , or ;");
@@ -581,6 +581,36 @@ AssetImportObject* AssetImporter::addImportingFile(Torque::Path filePath)
    return newAssetItem;
 }
 
+static String sanitizeImportAssetName(const String& rawName)
+{
+   String processedString = rawName;
+   processedString = processedString.replace(" ", "_");
+
+   U32 len = processedString.length() + 2; //+1 for the terminator, +1 for a possible '_' prefix
+   char* sanitizedStr = Con::getReturnBuffer(len);
+
+   U32 outPos = 0;
+   for (const char* c = processedString.c_str(); *c; c++)
+   {
+      bool valid = ((U8)*c < 128 && dIsalnum(*c)) || *c == '_';
+      if (valid)
+         sanitizedStr[outPos++] = *c;
+   }
+   sanitizedStr[outPos] = '\0';
+
+   //A name can't start with a digit, so we prefix '_' ("1-2-abc" becomes "_12abc")
+   if (outPos > 0 && dIsdigit(sanitizedStr[0]))
+   {
+      dMemmove(sanitizedStr + 1, sanitizedStr, outPos + 1);
+      sanitizedStr[0] = '_';
+   }
+
+   if (sanitizedStr[0] == '\0')
+      return String("Asset");
+
+   return String(sanitizedStr);
+}
+
 void AssetImporter::addImportingAssetItem(AssetImportObject* assetItem, AssetImportObject* parentItem)
 {
    if (assetItem == NULL)
@@ -630,26 +660,7 @@ AssetImportObject* AssetImporter::addImportingAsset(String assetType, Torque::Pa
    assetImportObj->registerObject();
 
    //sanitize
-   String processedString = assetName;
-
-   U32 start;
-   U32 end;
-   String firstNumber = String::GetFirstNumber(processedString, start, end);
-   if (!firstNumber.isEmpty() && processedString.startsWith(firstNumber.c_str()))
-      processedString = processedString.replace(firstNumber, "");
-
-   processedString = processedString.replace(" ", "_");
-
-   U32 len = processedString.length() + 1;
-   char* sanitizedStr = Con::getReturnBuffer(len);
-   dStrcpy(sanitizedStr, processedString.c_str(), len);
-
-   U32 pos = dStrcspn(sanitizedStr, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
-   while (pos < dStrlen(sanitizedStr))
-   {
-      dStrcpy(sanitizedStr + pos, sanitizedStr + pos + 1, (dsize_t)(len - pos));
-      pos = dStrcspn(sanitizedStr, "-+*/%$&�=()[].?\\\"#,;!~<>|�^{}");
-   }
+   String sanitizedStr = sanitizeImportAssetName(assetName);
 
    origionalName = assetName;
 
@@ -758,6 +769,7 @@ String AssetImporter::parseImageSuffixes(String assetName, String* suffixType)
    while (suffixTypeIdx < 6)
    {
       String suffixList;
+      suffixType->clear();
       switch (suffixTypeIdx)
       {
          case 0:
@@ -1541,8 +1553,9 @@ void AssetImporter::processImportAssets(AssetImportObject* assetItem)
          continue;
 
       //Sanitize before modifying our asset name(suffix additions, etc)
-      if (item->assetName != item->cleanAssetName)
-         item->assetName = item->cleanAssetName;
+      String sanitizedName = sanitizeImportAssetName(item->cleanAssetName);
+      if (item->assetName != sanitizedName)
+         item->assetName = sanitizedName;
 
 		//process the asset items
 		if (item->assetType == String("ImageAsset"))
@@ -1769,6 +1782,15 @@ void AssetImporter::processMaterialAsset(AssetImportObject* assetItem)
 
       if (!mat)
          mat = MATMGR->getMaterialDefinitionByMapTo(assetName);
+
+      //The lookups above used the suffixed name. Circumstances depending, an existing mat may not have the suffix, so check that as well
+      if (!mat && activeImportConfig->AlwaysAddMaterialSuffix)
+      {
+         Sim::findObject(assetItem->assetName.c_str(), mat);
+
+         if (!mat)
+            mat = MATMGR->getMaterialDefinitionByMapTo(assetItem->assetName.c_str());
+      }
 
       if (!mat && assetItem->assetName != assetItem->cleanAssetName)
       {

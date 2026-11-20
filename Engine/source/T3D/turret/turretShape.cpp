@@ -632,7 +632,12 @@ void TurretShape::processTick(const Move* move)
       }
    }
 
+   SimObjectPtr<TurretShape> safePtr(this);
+
    Parent::processTick(move);
+
+   if (!bool(safePtr))
+      return;
 
    // Change our type based on our rest state
    if (mAtRest)

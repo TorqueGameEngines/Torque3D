@@ -418,7 +418,7 @@ class WorldEditor : public EditTSCtrl
 
       //
       void renderScene(const RectI & updateRect) override;
-
+      static void consoleInit();
       static void initPersistFields();
 
       DECLARE_CONOBJECT(WorldEditor);

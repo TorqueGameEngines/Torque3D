@@ -30,6 +30,11 @@
 #include "persistence/taml/fsTinyXml.h"
 #include "T3D/convexShape.h"
 
+#ifdef TORQUE_ASSIMP
+#include <assimp/cimport.h>
+#include "platform/threads/threadPool.h"
+#endif
+
 using namespace ColladaUtils;
 
 #define MAX_PATH_LENGTH 256
@@ -3062,3 +3067,954 @@ void ColladaUtils::ExportData::processData()
       }
    }
 }
+
+//-----------------------------------------------------------------------------
+#ifdef TORQUE_ASSIMP
+const String ExportErr::mErrCodeStrings[7] = { "None", "Gather", "Mat", "Graph", "Geom", "Hull", "Write" };
+//-----------------------------------------------------------------------------
+// Purpose: Bake out a single mesh in a thread pool.
+// This is important because the polylist building can be expensive, and we want to be able to do it in parallel for multiple meshes.
+
+class BakeJob : public ThreadPool::WorkItem
+{
+   aiMesh* mTargetMesh; // The target mesh to bake into.
+   const OptimizedPolyList* mSrcList; // The source polylist to bake out.
+   const Map<S32, S32>* mMatMap; // Maps from source material index to target material index.
+   S32 mMatFilterID; // Only bake out polys that belong to this material (or all if -1).
+   const SceneObject* mTargetObjMask; // Only bake out polys that belong to this object (or all if null).
+   MatrixF mInvBaseXform; // The inverse of the base transform to apply to the baked vertices.
+public:
+   BakeJob(aiMesh* outMesh, const OptimizedPolyList& inList, const Map<S32, S32>* inMatMap,
+      S32 inMatID, const SceneObject* inObjMask, const MatrixF& invBaseXform)
+      : mTargetMesh(outMesh), mSrcList(&inList), mMatMap(inMatMap),
+      mMatFilterID(inMatID), mTargetObjMask(inObjMask), mInvBaseXform(invBaseXform) {}
+
+protected:
+   void execute();
+};
+
+void BakeJob::execute()
+{
+   if (mSrcList->mPolyList.empty() || !mTargetMesh) return;
+
+   U32 instPolyCount = 0;
+   const U32 polyCount = mSrcList->mPolyList.size();
+
+   Map<S32, U32> vertMap;
+   Vector<U32> activePolyIDs;
+
+   for (U32 polyIdx = 0; polyIdx < polyCount; ++polyIdx)
+   {
+      const OptimizedPolyList::Poly& poly = mSrcList->mPolyList[polyIdx];
+      if (poly.vertexCount < 3) continue;
+
+      if (mTargetObjMask && poly.object != mTargetObjMask) continue;
+
+      S32 targMat = -1;
+      if (mMatMap && mMatMap->tryGetValue(poly.material, targMat))
+      {
+         if (mMatFilterID != -1 && targMat != mMatFilterID)
+            continue;
+      }
+      else if (mMatFilterID != -1)
+      {
+         continue;
+      }
+
+      activePolyIDs.push_back(polyIdx);
+      instPolyCount++;
+
+      for (U32 vertIdx = 0; vertIdx < poly.vertexCount; ++vertIdx)
+      {
+         U32 flatIdx = poly.vertexStart + vertIdx;
+         U32 vertexKey = mSrcList->mIndexList[flatIdx];
+         const OptimizedPolyList::VertIndex& node = mSrcList->mVertexList[vertexKey];
+
+         if (node.vertIdx >= 0)
+         {
+            U32 localIdx = 0;
+            if (!vertMap.tryGetValue(vertexKey, localIdx))
+            {
+               U32 nextLocalOffset = vertMap.size();
+               vertMap.insert(vertexKey, nextLocalOffset);
+            }
+         }
+      }
+   }
+   if (instPolyCount == 0 || vertMap.isEmpty()) return;
+
+   const U32 vertCount = vertMap.size();
+   mTargetMesh->mNumVertices = vertCount;
+   mTargetMesh->mVertices = new aiVector3D[vertCount];
+   mTargetMesh->mNormals = new aiVector3D[vertCount];
+
+   if (!mSrcList->mUV0s.empty())
+   {
+      mTargetMesh->mTextureCoords[0] = new aiVector3D[vertCount];
+      mTargetMesh->mNumUVComponents[0] = 2;
+   }
+   if (!mSrcList->mUV1s.empty())
+   {
+      mTargetMesh->mTextureCoords[1] = new aiVector3D[vertCount];
+      mTargetMesh->mNumUVComponents[1] = 2;
+   }
+
+   for (Map<S32, U32>::Iterator it = vertMap.begin(); it != vertMap.end(); ++it)
+   {
+      U32 targetVertexKey = it->key;
+      U32 localOffset = it->value;
+
+      const OptimizedPolyList::VertIndex& node = mSrcList->mVertexList[targetVertexKey];
+
+      Point3F position = mSrcList->mPoints[node.vertIdx];
+      mInvBaseXform.mulP(position);
+
+      mTargetMesh->mVertices[localOffset] = aiVector3D(position.x, position.y, position.z);
+      mTargetMesh->mNormals[localOffset] = aiVector3D(0.0f, 0.0f, 1.0f);
+   }
+
+   mTargetMesh->mMaterialIndex = (mMatFilterID != -1) ? (U32)mMatFilterID : 0;
+
+   mTargetMesh->mNumFaces = instPolyCount;
+   mTargetMesh->mFaces = new aiFace[instPolyCount];
+
+   U32 faceOffs = 0;
+   for (U32 i = 0; i < activePolyIDs.size(); ++i)
+   {
+      const OptimizedPolyList::Poly& poly = mSrcList->mPolyList[activePolyIDs[i]];
+
+      aiFace& face = mTargetMesh->mFaces[faceOffs++];
+      face.mNumIndices = poly.vertexCount;
+      face.mIndices = new U32[poly.vertexCount];
+
+      for (U32 vertIdx = 0; vertIdx < poly.vertexCount; ++vertIdx)
+      {
+         U32 flatIdx = poly.vertexStart + vertIdx;
+         U32 vertexKey = mSrcList->mIndexList[flatIdx];
+         const OptimizedPolyList::VertIndex& node = mSrcList->mVertexList[vertexKey];
+
+         U32 localTargetIdx = 0;
+         vertMap.tryGetValue(vertexKey, localTargetIdx);
+
+         face.mIndices[poly.vertexCount - 1 - vertIdx] = localTargetIdx;
+
+         if (node.normalIdx >= 0)
+         {
+            Point3F normal = mSrcList->mNormals[node.normalIdx];
+            normal.normalize();
+
+            mTargetMesh->mNormals[localTargetIdx] = aiVector3D(normal.x, normal.y, normal.z);
+         }
+
+         if (mTargetMesh->mTextureCoords && node.uv0Idx >= 0)
+         {
+            const Point2F& uvCoord = mSrcList->mUV0s[node.uv0Idx];
+            mTargetMesh->mTextureCoords[0][localTargetIdx] = aiVector3D(uvCoord.x, 1.0f - uvCoord.y, 0.0f);
+         }
+         if (mTargetMesh->mTextureCoords && node.uv1Idx >= 0) // for lightmaps, if present
+         {
+            const Point2F& uvCoord = mSrcList->mUV1s[node.uv1Idx];
+            mTargetMesh->mTextureCoords[1][localTargetIdx] = aiVector3D(uvCoord.x, 1.0f - uvCoord.y, 0.0f);
+         }
+      }
+   }
+}
+
+ExportWorkspace::ExportWorkspace(const ExportData& inData, const Torque::Path& inPath)
+   : mSrcData(inData), mPath(inPath), mScene(NULL)
+{
+   mScene = new aiScene();
+   mScene->mRootNode = new aiNode(mPath.getFileName().c_str());
+}
+
+
+ExportWorkspace::~ExportWorkspace()
+{
+   if (mScene)
+   {
+      mScene->mMeshes = NULL;
+      mScene->mNumMeshes = 0;
+
+      if (mScene->mRootNode)
+      {
+         mScene->mRootNode->mChildren = NULL;
+         mScene->mRootNode->mNumChildren = 0;
+      }
+      SAFE_DELETE(mScene);
+   }
+   mMeshList.clear();
+}
+
+bool ColladaUtils::ExportWorkspace::gatherScene()
+{
+   mError.mStage = ExportErr::Gather;
+   // reserve space for the meshes and materials
+   const U32 shapeCount = mSrcData.meshData.size();
+   const U32 lodCount = mSrcData.detailLevels.size();
+   const U32 matCount = mSrcData.materials.size();
+
+   if (shapeCount == 0 || !mScene)
+      return false;
+
+   //reconstruct the base transform for the scene by finding the largest object in the scene and using its transform as the base.
+   F32 maxLen = -1.0f;
+   for (U32 shapeIdx = 0; shapeIdx < shapeCount; ++shapeIdx)
+   {
+      SceneObject* sObj = mSrcData.meshData[shapeIdx].originatingObject;
+      if (sObj && !(sObj->isGlobalBounds()))
+      {
+         F32 testLen = sObj->getWorldBox().len_max();
+         if (testLen > maxLen)
+         {
+            maxLen = testLen;
+            mBaseXform = sObj->getTransform();
+         }
+      }
+   }
+   toAssimpMat(mBaseXform, Point3F::One, mScene->mRootNode->mTransformation);
+   
+
+   mMatMap.clear();
+   mMatMap.insert(-1, -1);
+   mPrunedMatNames.clear();
+
+   // raw material index -> target material index
+   Map<S32, S32> activeMatMap;
+
+   for (U32 matIdx = 0; matIdx < matCount; ++matIdx)
+   {
+      BaseMatInstance* matInst = mSrcData.materials[matIdx];
+      if (!matInst)
+         continue;
+
+      Material* matDef = dynamic_cast<Material*>(matInst->getMaterial());
+      S32 rawMatIdx = matDef ? (S32)matDef->getId() : (S32)matIdx;
+      S32 targMatIdx = -1;
+
+      if (activeMatMap.tryGetValue(rawMatIdx, targMatIdx))
+      {
+         mMatMap.insert((S32)matIdx, targMatIdx);
+         continue;
+      }
+
+      targMatIdx = (S32)activeMatMap.size();
+      activeMatMap.insert(rawMatIdx, targMatIdx);
+      mMatMap.insert((S32)matIdx, targMatIdx);
+
+      String mapTo = (matDef && !matDef->mMapTo.isEmpty()) ? matDef->mMapTo : String::ToString("Material%d", targMatIdx);
+      String matName = mapTo;
+      U32 nameLoops = 1;
+      while (mPrunedMatNames.contains(matName))
+      {
+         matName = String::ToString("%s_%02d", mapTo.c_str(), nameLoops++);
+      }
+      mPrunedMatNames.push_back(matName);
+   }
+
+   // set the caps
+   mCaps.mLODCount = lodCount;
+   mCaps.mMatCount = mPrunedMatNames.size();
+   mCaps.mNodeCount = shapeCount;
+   mCaps.mMeshCount = shapeCount * lodCount * mCaps.mMatCount;
+
+   mObjectBaseNames.clear();
+   mLODNameCache.clear();
+   mLODNameCache.setSize(shapeCount * lodCount);
+   mResourceOwnerMap.clear();
+
+   // raw shape pointer -> global shape index
+   Map<TSShape*, S32> shapeMap;
+
+   for (U32 shapeIdx = 0; shapeIdx < shapeCount; ++shapeIdx)
+   {
+      mError.mObjectIndex = shapeIdx;
+      const ExportData::meshLODData& meshLod = mSrcData.meshData[shapeIdx];
+
+      String rawName = (meshLod.originatingObject && meshLod.originatingObject->getName()) ?
+         String(meshLod.originatingObject->getName()) : mPath.getFileName();
+
+      S32 trailingNum;
+      String baseName = String::GetTrailingNumber(rawName, trailingNum);
+
+      String suffix = "";
+      U32 cloneIdx = shapeIdx;
+      do
+      {
+         suffix = String::ToString("%c%s", 'A' + (cloneIdx % 26), suffix.c_str());
+         cloneIdx = (cloneIdx / 26) - 1;
+      } while (cloneIdx != -1);
+
+      String uniqueBaseName = String::ToString("%s%s", baseName.c_str(), suffix.c_str());
+      mObjectBaseNames.push_back(uniqueBaseName);
+
+      TSShape* shapeRef = meshLod.shapeInst ? meshLod.shapeInst->getShape() : NULL;
+      S32 globalShapeIdx = (S32)shapeIdx;
+
+      // check if this has had reskinning applied,
+      // comparing the mat list of the current mesh to the original shape's mat list
+      bool reskinned = false;
+      if (shapeRef != NULL && shapeMap.tryGetValue(shapeRef, globalShapeIdx))
+      {
+         const ExportData::meshLODData& masterLodRef = mSrcData.meshData[globalShapeIdx];
+         if (meshLod.meshDetailLevels.size() != masterLodRef.meshDetailLevels.size())
+         {
+            reskinned = true;
+         }
+         else
+         {
+            for (U32 dl = 0; dl < meshLod.meshDetailLevels.size(); ++dl)
+            {
+               const ExportData::detailLevel& currentDetail = meshLod.meshDetailLevels[dl];
+               const ExportData::detailLevel& originDetail = masterLodRef.meshDetailLevels[dl];
+
+               if (currentDetail.mesh.mMaterialList.size() != originDetail.mesh.mMaterialList.size())
+               {
+                  reskinned = true;
+                  break;
+               }
+               for (U32 m = 0; m < currentDetail.mesh.mMaterialList.size(); ++m)
+               {
+                  if (currentDetail.mesh.mMaterialList[m] != originDetail.mesh.mMaterialList[m])
+                  {
+                     reskinned = true;
+                     break;
+                  }
+               }
+               if (reskinned) break;
+            }
+         }
+      }
+
+      if (shapeRef != NULL && !reskinned && shapeMap.tryGetValue(shapeRef, globalShapeIdx))
+      {
+         mResourceOwnerMap.insert((S32)shapeIdx, globalShapeIdx);
+      }
+      else if (shapeRef != NULL)
+      {
+         if (!reskinned)
+         {
+            shapeMap.insert(shapeRef, (S32)shapeIdx);
+         }
+         mResourceOwnerMap.insert((S32)shapeIdx, (S32)shapeIdx);
+      }
+      else
+      {
+         mResourceOwnerMap.insert((S32)shapeIdx, (S32)shapeIdx);
+      }
+
+      for (U32 lodIdx = 0; lodIdx < lodCount; ++lodIdx)
+      {
+         char lodSuffixName[256];
+         S32 detailSize = mSrcData.detailLevels[lodIdx].size;
+
+         if (detailSize >= 0)
+            dSprintf(lodSuffixName, 256, "%s%d", uniqueBaseName.c_str(), detailSize);
+         else
+            dSprintf(lodSuffixName, 256, "%s_%d", uniqueBaseName.c_str(), detailSize);
+
+         mLODNameCache[shapeIdx * lodCount + lodIdx] = String(lodSuffixName);
+      }
+   }
+
+   mError.mStage = ExportErr::None;
+   return true;
+}
+
+bool ColladaUtils::ExportWorkspace::buildSceneGraph()
+{
+   mError.mStage = ExportErr::Mat;
+   if (mCaps.mMatCount > 0)
+   {
+      mScene->mNumMaterials = mCaps.mMatCount;
+      mScene->mMaterials = new aiMaterial * [mCaps.mMatCount];
+      dMemset(mScene->mMaterials, 0, sizeof(aiMaterial*) * mCaps.mMatCount);
+
+      for (U32 i = 0; i < mCaps.mMatCount; ++i)
+      {
+         mError.mMaterialIndex = i;
+         const String& matName = mPrunedMatNames[i];
+
+         aiString nameAttribute;
+         nameAttribute.Set(matName.c_str());
+
+         aiMaterial* assimpMat = new aiMaterial();
+         assimpMat->AddProperty(&nameAttribute, AI_MATKEY_NAME);
+
+         // exporter does *not* play nice with no diffuse map atm -BJR
+
+         BaseMatInstance* matInst = (i < mSrcData.materials.size()) ? mSrcData.materials[i] : NULL;
+         Material* matDef = matInst ? dynamic_cast<Material*>(matInst->getMaterial()) : NULL;
+
+         if (matDef && matDef->getDiffuseMapAsset(0).notNull())
+         {
+            String imageFile = matDef->getDiffuseMapAsset(0)->getImageFile();
+            if (imageFile.isNotEmpty())
+            {
+               aiString texturePath(imageFile.c_str());
+               assimpMat->AddProperty(&texturePath, AI_MATKEY_TEXTURE_DIFFUSE(0));
+            }
+         }
+         mScene->mMaterials[i] = assimpMat;
+      }
+   }
+
+   mError.mStage = ExportErr::Graph;
+   const U32 shapeCount = mSrcData.meshData.size();
+   const U32 lodCount = mCaps.mLODCount;
+
+   mMeshList.setSize(mCaps.mMeshCount);
+   for (U32 i = 0; i < mCaps.mMeshCount; ++i)
+   {
+      mMeshList[i] = new aiMesh();
+      mMeshList[i]->mPrimitiveTypes = aiPrimitiveType_TRIANGLE;
+   }
+
+   mScene->mRootNode->mNumChildren = shapeCount * lodCount;
+   mScene->mRootNode->mChildren = new aiNode * [shapeCount * lodCount];
+
+   U32 flatNodeIdx = 0;
+
+   MatrixF invBaseXform = mBaseXform;
+   invBaseXform.inverse();
+   // here on down is where we reserve the actual ainodes and aimeshes for the scene graph.
+   // We don't fill them out yet, just reserve the space and set up the hierarchy.
+   // that's what fillmeshes and bakejobs are for, which will be done in parallel.
+   for (U32 shapeIdx = 0; shapeIdx < shapeCount; ++shapeIdx)
+   {
+      const ExportData::meshLODData& meshLod = mSrcData.meshData[shapeIdx];
+
+      for (U32 lodIdx = 0; lodIdx < lodCount; ++lodIdx)
+      {
+         aiNode* objectNode = new aiNode();
+
+         const String& cachedLodName = mLODNameCache[shapeIdx * lodCount + lodIdx];
+         objectNode->mName = aiString(cachedLodName.c_str());
+
+         MatrixF cloneXform;
+         cloneXform.mul(invBaseXform, meshLod.meshTransform);
+
+         aiMatrix4x4 xForm;
+         toAssimpMat(cloneXform, meshLod.scale, xForm);
+         objectNode->mTransformation = xForm;
+
+         objectNode->mNumMeshes = mCaps.mMatCount;
+         objectNode->mMeshes = new U32[mCaps.mMatCount];
+
+         U32 lodMeshBase = (shapeIdx * lodCount * mCaps.mMatCount) + (lodIdx * mCaps.mMatCount);
+
+         for (U32 matIdx = 0; matIdx < mCaps.mMatCount; ++matIdx)
+         {
+            objectNode->mMeshes[matIdx] = lodMeshBase + matIdx;
+         }
+
+         objectNode->mParent = mScene->mRootNode;
+         mScene->mRootNode->mChildren[flatNodeIdx++] = objectNode;
+      }
+   }
+
+   mScene->mNumMeshes = mCaps.mMeshCount;
+   mScene->mMeshes = new aiMesh * [mCaps.mMeshCount];
+   dMemcpy(mScene->mMeshes, mMeshList.address(), sizeof(aiMesh*) * mCaps.mMeshCount);
+
+   mError.mStage = ExportErr::None;
+   return true;
+}
+
+bool ColladaUtils::ExportWorkspace::fillMeshes()
+{
+   mError.mStage = ExportErr::Geom;
+
+   if (!mScene || mCaps.mNodeCount == 0 || mCaps.mLODCount == 0)
+      return false;
+
+   ThreadPool* pool = &ThreadPool::GLOBAL();
+
+   MatrixF invBaseXform = mBaseXform;
+   invBaseXform.inverse();
+
+   // filter out the meshes that are the original owners of the resources, and only bake those out.
+   // The others will be deep cloned from the originals.
+   for (U32 shapeIdx = 0; shapeIdx < mCaps.mNodeCount; ++shapeIdx)
+   {
+      S32 originShapeIdx = shapeIdx;
+      mResourceOwnerMap.tryGetValue((S32)shapeIdx, originShapeIdx);
+
+      if ((S32)shapeIdx != originShapeIdx)
+         continue;
+
+      const ExportData::meshLODData& meshLod = mSrcData.meshData[shapeIdx];
+
+      for (U32 lodIdx = 0; lodIdx < mCaps.mLODCount; ++lodIdx)
+      {
+         const OptimizedPolyList& activeMeshSrc = mSrcData.detailLevels[lodIdx].mesh;
+         U32 lodMeshBase = (shapeIdx * mCaps.mLODCount * mCaps.mMatCount) + (lodIdx * mCaps.mMatCount);
+
+         MatrixF cloneXform = meshLod.meshTransform;
+         cloneXform.mul(invBaseXform);
+         MatrixF localNodeInverseMatrix = cloneXform;
+         localNodeInverseMatrix.fullInverse();
+
+         for (U32 matIdx = 0; matIdx < mCaps.mMatCount; ++matIdx)
+         {
+            aiMesh* shell = mMeshList[lodMeshBase + matIdx];
+
+            S32 targMatIdx = -1;
+            for (U32 k = 0; k < mSrcData.materials.size(); ++k)
+            {
+               S32 prunedIdx = -1;
+               if (mMatMap.tryGetValue((S32)k, prunedIdx) && prunedIdx == (S32)matIdx)
+               {
+                  targMatIdx = (S32)k;
+                  break;
+               }
+            }
+            // unique? then we can bake it out in a thread pool job, otherwise we'll deep clone it later.
+            ThreadSafeRef<BakeJob> job(new BakeJob(shell, activeMeshSrc, &mMatMap, targMatIdx,
+               meshLod.originatingObject, localNodeInverseMatrix));
+            pool->queueWorkItem(job);
+         }
+      }
+   }
+   // wait for all the jobs to finish before we deep clone the other meshes.
+   pool->waitForAllItems();
+
+   for (U32 shapeIdx = 0; shapeIdx < mCaps.mNodeCount; ++shapeIdx)
+   {
+      S32 originShapeIdx = shapeIdx;
+      mResourceOwnerMap.tryGetValue((S32)shapeIdx, originShapeIdx);
+
+      if ((S32)shapeIdx == originShapeIdx)
+         continue;
+
+      for (U32 lodIdx = 0; lodIdx < mCaps.mLODCount; ++lodIdx)
+      {
+         U32 originLodIdx = (originShapeIdx * mCaps.mLODCount * mCaps.mMatCount) + (lodIdx * mCaps.mMatCount);
+         U32 cloneLodIdx = (shapeIdx * mCaps.mLODCount * mCaps.mMatCount) + (lodIdx * mCaps.mMatCount);
+
+         for (U32 matIdx = 0; matIdx < mCaps.mMatCount; ++matIdx)
+         {
+            aiMesh* srcMasterMesh = mMeshList[originLodIdx + matIdx];
+            aiMesh* destInstanceMesh = mMeshList[cloneLodIdx + matIdx];
+
+            // I think I'm a clone now...
+            deepCloneMesh(srcMasterMesh, destInstanceMesh);
+         }
+      }
+   }
+
+   mError.mStage = ExportErr::None;
+   return true;
+}
+
+void ExportWorkspace::deepCloneMesh(const aiMesh* srcMesh, aiMesh* destMesh)
+{
+   if (!srcMesh || !destMesh || srcMesh->mNumVertices == 0 || srcMesh->mNumFaces == 0)
+      return;
+
+   if (srcMesh == destMesh)
+      return;
+
+   destMesh->mNumVertices = srcMesh->mNumVertices;
+   destMesh->mPrimitiveTypes = srcMesh->mPrimitiveTypes;
+   destMesh->mMaterialIndex = srcMesh->mMaterialIndex;
+
+   if (srcMesh->mVertices)
+   {
+      destMesh->mVertices = new aiVector3D[srcMesh->mNumVertices];
+      dMemcpy(destMesh->mVertices, srcMesh->mVertices, sizeof(aiVector3D) * srcMesh->mNumVertices);
+   }
+
+   if (srcMesh->mNormals)
+   {
+      destMesh->mNormals = new aiVector3D[srcMesh->mNumVertices];
+      dMemcpy(destMesh->mNormals, srcMesh->mNormals, sizeof(aiVector3D) * srcMesh->mNumVertices);
+   }
+
+   if (srcMesh->mTangents)
+   {
+      destMesh->mTangents = new aiVector3D[srcMesh->mNumVertices];
+      dMemcpy(destMesh->mTangents, srcMesh->mTangents, sizeof(aiVector3D) * srcMesh->mNumVertices);
+   }
+   if (srcMesh->mBitangents)
+   {
+      destMesh->mBitangents = new aiVector3D[srcMesh->mNumVertices];
+      dMemcpy(destMesh->mBitangents, srcMesh->mBitangents, sizeof(aiVector3D) * srcMesh->mNumVertices);
+   }
+
+   for (U32 i = 0; i < AI_MAX_NUMBER_OF_TEXTURECOORDS; ++i)
+   {
+      if (srcMesh->mTextureCoords[i])
+      {
+         destMesh->mTextureCoords[i] = new aiVector3D[srcMesh->mNumVertices];
+         dMemcpy(destMesh->mTextureCoords[i], srcMesh->mTextureCoords[i], sizeof(aiVector3D) * srcMesh->mNumVertices);
+         destMesh->mNumUVComponents[i] = srcMesh->mNumUVComponents[i];
+      }
+      else
+      {
+         destMesh->mTextureCoords[i] = NULL;
+         destMesh->mNumUVComponents[i] = 0;
+      }
+   }
+
+   for (U32 i = 0; i < AI_MAX_NUMBER_OF_COLOR_SETS; ++i)
+   {
+      if (srcMesh->mColors[i])
+      {
+         destMesh->mColors[i] = new aiColor4D[srcMesh->mNumVertices];
+         dMemcpy(destMesh->mColors[i], srcMesh->mColors[i], sizeof(aiColor4D) * srcMesh->mNumVertices);
+      }
+      else
+      {
+         destMesh->mColors[i] = NULL;
+      }
+   }
+   // any other properties would continue on here, though keep in mind if you plan on doing bones, we're limited to TSShape::smMaxSkinBones
+   // so trying to stitch with a massive count is highly inadvisable and very likely to be game specific.
+
+   destMesh->mNumFaces = srcMesh->mNumFaces;
+   destMesh->mFaces = new aiFace[srcMesh->mNumFaces];
+
+   for (U32 faceIdx = 0; faceIdx < srcMesh->mNumFaces; ++faceIdx)
+   {
+      const aiFace& srcFace = srcMesh->mFaces[faceIdx];
+      aiFace& destFace = destMesh->mFaces[faceIdx];
+
+      destFace.mNumIndices = srcFace.mNumIndices;
+
+      if (srcFace.mIndices && srcFace.mNumIndices > 0)
+      {
+         destFace.mIndices = new U32[srcFace.mNumIndices];
+         dMemcpy(destFace.mIndices, srcFace.mIndices, sizeof(U32) * srcFace.mNumIndices);
+      }
+      else
+      {
+         destFace.mIndices = NULL;
+      }
+   }
+}
+
+bool ColladaUtils::ExportWorkspace::pruneScene()
+{
+   if (!mScene || !mScene->mRootNode || mScene->mRootNode->mNumChildren == 0)
+      return false;
+
+   // kill off any meshes that have no vertices or faces, and any nodes that have no meshes.
+   Vector<aiMesh*> prunedMeshes;
+   Vector<aiNode*> prunedNodes;
+   const U32 totalNodes = mScene->mRootNode->mNumChildren;
+
+   Map<U32, U32> meshMap;
+
+   for (U32 i = 0; i < mMeshList.size(); ++i)
+   {
+      aiMesh* mesh = mMeshList[i];
+      if (mesh && mesh->mNumVertices > 0 && mesh->mNumFaces > 0)
+      {
+         U32 prunedMeshIdx = (U32)prunedMeshes.size();
+         meshMap.insert(i, prunedMeshIdx);
+         prunedMeshes.push_back(mesh);
+      }
+      else
+      {
+         SAFE_DELETE(mesh);
+         mMeshList[i] = NULL;
+      }
+   }
+
+   for (U32 nodeIdx = 0; nodeIdx < totalNodes; ++nodeIdx)
+   {
+      aiNode* objectNode = mScene->mRootNode->mChildren[nodeIdx];
+      if (!objectNode)
+         continue;
+
+      Vector<U32> prunedMeshList;
+
+      for (U32 i = 0; i < objectNode->mNumMeshes; ++i)
+      {
+         U32 oldPoolIdx = objectNode->mMeshes[i];
+         U32 prunedIdx = 0;
+         if (meshMap.tryGetValue(oldPoolIdx, prunedIdx))
+         {
+            prunedMeshList.push_back(prunedIdx);
+         }
+      }
+
+      delete[] objectNode->mMeshes;
+
+      objectNode->mNumMeshes = prunedMeshList.size();
+
+      if (objectNode->mNumMeshes > 0)
+      {
+         objectNode->mMeshes = new U32[objectNode->mNumMeshes];
+         for (U32 i = 0; i < objectNode->mNumMeshes; ++i)
+         {
+            objectNode->mMeshes[i] = prunedMeshList[i];
+         }
+         prunedNodes.push_back(objectNode);
+      }
+      else
+      {
+         if (objectNode->mChildren != NULL)
+         {
+            SAFE_DELETE_ARRAY(objectNode->mChildren);
+         }
+         delete objectNode;
+      }
+   }
+
+   delete[] mScene->mRootNode->mChildren;
+
+   mScene->mRootNode->mNumChildren = prunedNodes.size();
+
+   if (mScene->mRootNode->mNumChildren > 0)
+   {
+      mScene->mRootNode->mChildren = new aiNode * [mScene->mRootNode->mNumChildren];
+      for (U32 i = 0; i < mScene->mRootNode->mNumChildren; ++i)
+      {
+         mScene->mRootNode->mChildren[i] = prunedNodes[i];
+         mScene->mRootNode->mChildren[i]->mParent = mScene->mRootNode;
+      }
+   }
+   else
+   {
+      mScene->mRootNode->mChildren = NULL;
+   }
+
+   delete[] mScene->mMeshes;
+
+   if (!prunedMeshes.empty())
+   {
+      mMeshList = prunedMeshes;
+      mCaps.mMeshCount = mMeshList.size();
+
+      mScene->mNumMeshes = mCaps.mMeshCount;
+      mScene->mMeshes = new aiMesh * [mCaps.mMeshCount];
+      dMemcpy(mScene->mMeshes, mMeshList.address(), sizeof(aiMesh*) * mCaps.mMeshCount);
+   }
+   else
+   {
+      mMeshList.clear();
+      mScene->mMeshes = NULL;
+      mScene->mNumMeshes = 0;
+      mCaps.mMeshCount = 0;
+   }
+
+   mError.mStage = ExportErr::None;
+   return true;
+}
+
+bool ExportWorkspace::configureExportMetadata(Assimp::ExportProperties* inProps)
+{
+   if (!mScene || !inProps) return false;
+
+   if (mScene->mMetaData) delete mScene->mMetaData;
+   mScene->mMetaData = new aiMetadata();
+
+   // this is so blender stops importing as a 1/100th scale.
+
+   F64 unitScale = 100.0;
+   mScene->mMetaData->Add("UnitScaleFactor", unitScale);
+   mScene->mMetaData->Add("OriginalUnitScaleFactor", unitScale);
+
+   S32 upAxis = 2;
+   S32 upSign = 1;
+   S32 frontAxis = 1;
+   S32 frontSign = 1;
+   S32 coordAxis = 0;
+   S32 coordSign = 1;
+
+   mScene->mMetaData->Add("UpAxis", upAxis);
+   mScene->mMetaData->Add("UpAxisSign", upSign);
+   mScene->mMetaData->Add("FrontAxis", frontAxis);
+   mScene->mMetaData->Add("FrontAxisSign", frontSign);
+   mScene->mMetaData->Add("CoordAxis", coordAxis);
+   mScene->mMetaData->Add("CoordAxisSign", coordSign);
+   mScene->mMetaData->Add("OriginalUpAxis", upAxis);
+   mScene->mMetaData->Add("OriginalUpAxisSign", upSign);
+
+   inProps->SetPropertyFloat("EXPORT_FBX_UNIT_SCALE", 100.0f);
+   return true;
+}
+
+bool ExportWorkspace::write()
+{
+   mError.mStage = ExportErr::Write;
+   if (!mScene) return false;
+
+   const String extension = mPath.getExtension();
+   if (extension.isEmpty()) return false;
+
+   // sanitize the format ID from the extension, in case you've pruned out some formats for your version of the engine.
+   String formatID = getFormatExtension(extension);
+   if (formatID.isEmpty()) return false;
+
+   Assimp::Exporter exporter;
+   Assimp::ExportProperties properties;
+   if (!configureExportMetadata(&properties)) return false;
+
+   const aiReturn result = exporter.Export(mScene, formatID.c_str(), mPath.getFullPath().c_str(), 0, &properties);
+
+   if (result == aiReturn_SUCCESS)
+   {
+      mError.mStage = ExportErr::None;
+      return true;
+   }
+   return false;
+}
+
+String ColladaUtils::getUniqueName(const String& baseName, const Vector<String>& usedNames)
+{
+   S32 suffix;
+   String outName = String::GetTrailingNumber(baseName, suffix);
+
+   if (!usedNames.contains(outName))
+      return outName;
+
+   U32 loops = 0;
+   const U32 maxLoops = 10000;
+
+   // general resoution here is pretty simple, just append a letter to the end of the name until we find one that isn't used.
+   // lods are already handled by the LOD name cache, so we don't need to worry about that here.
+   while (loops < maxLoops)
+   {
+      String suffix = "";
+      U32 cloneIDx = loops;
+      do
+      {
+         suffix = String::ToString("%c%s", 'A' + (cloneIDx % 26), suffix.c_str());
+         cloneIDx = (cloneIDx / 26) - 1;
+      } while (cloneIDx != -1);
+
+      String candName = String::ToString("%s%s", outName.c_str(), suffix.c_str());
+
+      if (!usedNames.contains(candName))
+      {
+         return candName;
+      }
+
+      loops++;
+   }
+
+   Con::errorf("[Assimp Export FATAL] Name resolution iterations exhausted. [Name: %s]", baseName.c_str());
+   return String::ToString("%sClashDef_0x%x", outName.c_str(), Platform::getRealMilliseconds());
+}
+
+String ColladaUtils::getFormatExtension(const String& format)
+{
+   if (format.isEmpty()) return String::EmptyString;
+
+   Assimp::Exporter expr;
+   for (U32 i = 0; i < expr.GetExportFormatCount(); ++i)
+   {
+      const aiExportFormatDesc* desc = expr.GetExportFormatDescription(i);
+      if (desc && format.equal(desc->id)) return String(desc->fileExtension);
+   }
+   return String::EmptyString;
+}
+
+void ColladaUtils::toAssimpMat(const MatrixF& inMat, const Point3F& scale, aiMatrix4x4& outMat)
+{
+   if (mIsNaN_F(scale.x) || mIsNaN_F(scale.y) || mIsNaN_F(scale.z))
+   {
+      outMat = aiMatrix4x4();
+      return;
+   }
+
+   outMat.a1 = inMat(0, 0) * scale.x;
+   outMat.a2 = inMat(0, 1) * scale.y;
+   outMat.a3 = inMat(0, 2) * scale.z;
+   outMat.a4 = inMat(0, 3);
+
+   outMat.b1 = inMat(1, 0) * scale.x;
+   outMat.b2 = inMat(1, 1) * scale.y;
+   outMat.b3 = inMat(1, 2) * scale.z;
+   outMat.b4 = inMat(1, 3);
+
+   outMat.c1 = inMat(2, 0) * scale.x;
+   outMat.c2 = inMat(2, 1) * scale.y;
+   outMat.c3 = inMat(2, 2) * scale.z;
+   outMat.c4 = inMat(2, 3);
+   outMat.d1 = inMat(3, 0);
+
+   outMat.d2 = inMat(3, 1);
+   outMat.d3 = inMat(3, 2);
+   outMat.d4 = inMat(3, 3);
+}
+
+bool ColladaUtils::exportMeshes(const Torque::Path& inPath, OptimizedPolyList& polyList, const String& format, const String& meshName)
+{
+   if (polyList.mPolyList.empty() || polyList.mVertexList.empty()) return false;
+
+   ExportData exportData;
+   ExportData::meshLODData meshData;
+   ExportData::detailLevel dl;
+
+   dl.mesh = polyList;
+   dl.size = 2;
+   meshData.meshTransform = MatrixF::Identity;
+   meshData.scale = Point3F::One;
+   meshData.shapeInst = NULL;
+   meshData.originatingObject = NULL;
+
+   meshData.meshDetailLevels.push_back(dl);
+   exportData.meshData.push_back(meshData);
+   exportData.detailLevels.push_back(dl);
+
+   for (U32 i = 0; i < polyList.mMaterialList.size(); ++i)
+   {
+      exportData.materials.push_back(polyList.mMaterialList[i]);
+      exportData.detailLevels[0].materialRefList.insert(i, i);
+   }
+
+   return exportMeshes(inPath, exportData, format);
+}
+
+bool ColladaUtils::exportMeshes(const Torque::Path& inPath, const ExportData& exportData, const String& format)
+{
+   if (exportData.meshData.empty())
+   {
+      Con::errorf("[Assimp Export] Failed: ExportData contains no mesh source data.");
+      return false;
+   }
+
+   ExportWorkspace work(exportData, inPath);
+
+   if (!work.gatherScene())
+   {
+      ExportErr err = work.getExportError();
+      Con::errorf("[Assimp Export] Failed during GATHER stage. Object Index: %d, LOD Size: %d",
+         err.mObjectIndex, err.mLODIndex);
+      return false;
+   }
+
+   if (!work.buildSceneGraph())
+   {
+      ExportErr err = work.getExportError();
+      Con::errorf("[Assimp Export] Failed during SCENE GRAPH stage. Material Index: %d",
+         err.mMaterialIndex);
+      return false;
+   }
+
+   if (!work.fillMeshes())
+   {
+      ExportErr err = work.getExportError();
+      Con::errorf("[Assimp Export] Failed during GEOMETRY translation. Object Index: %d, LOD Size: %d, Material Index: %d",
+         err.mObjectIndex, err.mLODIndex, err.mMaterialIndex);
+      return false;
+   }
+
+   work.pruneScene();
+
+   if (!work.write())
+   {
+      ExportErr err = work.getExportError();
+      Con::errorf("[Assimp Export] Assimp Exporter failed to write output file to disk: %s (Format ID lookup or file I/O error)",
+         inPath.getFullPath().c_str());
+      return false;
+   }
+
+   return true;
+}
+
+#endif // TORQUE_ASSIMP
+

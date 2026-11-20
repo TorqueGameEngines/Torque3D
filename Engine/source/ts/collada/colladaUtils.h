@@ -69,6 +69,12 @@
 #include "platform/tmm_on.h"
 #include "core/strings/findMatch.h"
 
+#ifdef TORQUE_ASSIMP
+#include <assimp/Exporter.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#endif
+
 namespace ColladaUtils
 {
    struct ImportOptions
@@ -315,6 +321,94 @@ namespace ColladaUtils
    // Export an OptimizedPolyList to a simple Collada file
    void exportToCollada(const Torque::Path& colladaFile, const OptimizedPolyList& mesh, const String& meshName = String::EmptyString);
    void exportToCollada(const Torque::Path& colladaFile, const ExportData& exportData);
+
+#ifdef TORQUE_ASSIMP
+   // Tracks the current execution stage and error indexing state
+   struct ExportErr
+   {
+      enum Stage { None = 0, Gather, Mat, Graph, Geom, Hull, Write };
+      static const String mErrCodeStrings[7];
+      Stage mStage = None;
+      S32   mObjectIndex = -1;
+      S32   mLODIndex = -1;
+      S32   mMaterialIndex = -1;
+   };
+
+   // Thread-safe asset consolidation context block
+   struct ExportWorkspace
+   {
+   public:
+      //for threading purposes, we reserve the maximum number of LODs, materials, nodes, and meshes that will be exported
+      struct Caps
+      { // Number of LODs
+         U32 mLODCount = 0;
+         // Number of unique materials
+         U32 mMatCount = 0;
+         // number of aiNodes
+         U32 mNodeCount = 0;
+         // Number of aiMeshes due to material splitting and LODs in the source data
+         U32 mMeshCount = 0; 
+      } mCaps;
+
+   public:
+      // the selected objects and their associated meshes, materials, and LODs to be exported
+      const ExportData& mSrcData;
+      // Path to the output file
+      const Torque::Path& mPath;
+      // The Assimp scene to be exported
+      aiScene* mScene = NULL;
+      // The Assimp meshes to be exported
+      Vector<aiMesh*> mMeshList;
+      // The current error state of the export process
+      ExportErr       mError;
+      // Caches the definitive, deduplicated name tokens matching each LOD sequential index
+      Vector<String>  mLODNameCache;
+      // Caches the definitive, deduplicated name tokens matching each source object sequential index
+      Vector<String>  mObjectBaseNames;
+
+      // Caches the definitive, deduplicated name tokens matching each Assimp material slot sequential index
+      Vector<String>  mPrunedMatNames;
+      // Key: Unpruned material index | Value: Pruned Assimp material index
+      Map<S32, S32>   mMatMap;
+      // Key: Current shapeIndex     | Value: Master owner shapeIndex reference
+      Map<S32, S32>   mResourceOwnerMap;
+      // The base transform to apply to all meshes in the scene
+      MatrixF         mBaseXform;
+   public:
+      ExportWorkspace(const ExportData& inData, const Torque::Path& inPath);
+      ~ExportWorkspace();
+
+      Caps getCaps() const { return mCaps; } //capacities
+      ExportErr getExportError() const { return mError; }
+
+      // Gather the scene data for conversion
+      bool gatherScene(); 
+      // Build the scene graph for the Assimp scene
+      bool buildSceneGraph();
+      // Fill the Assimp meshes with the source mesh data. include unique filtering/cloning
+      bool fillMeshes();
+      // Deep clone the source mesh into the destination mesh
+      void deepCloneMesh(const aiMesh* srcMesh, aiMesh* destMesh);
+      // Prune the scene to remove unused nodes, meshes, and materials
+      bool pruneScene();
+      // Configure the export metadata for the Assimp exporter
+      bool configureExportMetadata(Assimp::ExportProperties* inProps);
+      // Write the Assimp scene to the output file
+      bool write(); 
+   };
+
+   // Utility string parsers and coordinate systems transformation overrides
+
+   //resolver for unique names in the export workspace
+   String  getUniqueName(const String& baseName, const Vector<String>& usedNames);
+   //resolver for the file extension based on the export format
+   String  getFormatExtension(const String& format);
+   // Convert a Torque MatrixF to an Assimp aiMatrix4x4
+   void    toAssimpMat(const MatrixF& inMat, const Point3F& scale, aiMatrix4x4& outMat);
+   bool    exportMeshes(const Torque::Path& inPath, OptimizedPolyList& polyList, const String& format, const String& meshName = String::EmptyString);
+   bool    exportMeshes(const Torque::Path& inPath, const ExportData& exportData, const String& format);
+#endif
+
 };
 
 //-----------------------------------------------------------------------------
